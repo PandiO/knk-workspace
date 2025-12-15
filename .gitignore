@@ -1,6 +1,16 @@
-# We keep the code repos as separate git repositories.
-# Do not track them in the workspace repo:
+# --- Local working directories (do not track) ---
 Repository/*
+Documents/*
+MinecraftServer/*
+MySQLMigration/*
+Tests/*
+
+# Keep folder placeholders
+!Repository/.gitkeep
+!Documents/.gitkeep
+!MinecraftServer/.gitkeep
+!MySQLMigration/.gitkeep
+!Tests/.gitkeep
 
 # Optional OS junk
 **/.DS_Store
