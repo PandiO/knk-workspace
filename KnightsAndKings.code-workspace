@@ -1,7 +1,5 @@
 {
-  "folders": [
-    { "path": "." }
-  ],
+  "folders": [{ "path": "." }],
   "settings": {
     "github.copilot.chat.codeGeneration.useInstructionFiles": true,
 
@@ -11,6 +9,55 @@
     "chat.promptFilesLocations": {
       ".github/prompts": true
     },
+
+    "files.exclude": {
+      "**/node_modules": true,
+      "**/bin": true,
+      "**/obj": true,
+      "**/.gradle": true,
+      "**/build": true,
+      "**/dist": true,
+      "**/.next": true,
+      "**/coverage": true,
+
+      "Documents/**": true,
+      "MinecraftServer/**": true,
+      "MySQLMigration/**": true,
+      "Tests/**": true
+    },
+    "search.exclude": {
+      "**/node_modules": true,
+      "**/bin": true,
+      "**/obj": true,
+      "**/.gradle": true,
+      "**/build": true,
+      "**/dist": true,
+      "**/.next": true,
+      "**/.next/**": true,
+      "**/coverage": true,
+
+      "Documents/**": true,
+      "MinecraftServer/**": true,
+      "MySQLMigration/**": true,
+      "Tests/**": true
+    },
+    "files.watcherExclude": {
+      "**/node_modules/**": true,
+      "**/bin/**": true,
+      "**/obj/**": true,
+      "**/.gradle/**": true,
+      "**/build/**": true,
+      "**/dist/**": true,
+      "**/.next/**": true,
+      "**/coverage/**": true,
+
+      "Documents/**": true,
+      "MinecraftServer/**": true,
+      "MySQLMigration/**": true,
+      "Tests/**": true
+    },
+
+    "git.autoRepositoryDetection": "subFolders",
 
     "chat.tools.terminal.autoApprove": {
       "/^git\\s+(status|diff|log|show|branch|remote)\\b/": true,
@@ -36,10 +83,5 @@
       "chown": false,
       "/^Remove-Item\\b/i": false
     }
-
-    /*
-    Risicovol (niet aanbevolen): auto-approve ALLE tools.
-    "chat.tools.global.autoApprove": true
-    */
   }
 }
