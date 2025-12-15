@@ -1,0 +1,45 @@
+{
+  "folders": [
+    { "path": "." }
+  ],
+  "settings": {
+    "github.copilot.chat.codeGeneration.useInstructionFiles": true,
+
+    "chat.instructionsFilesLocations": {
+      ".github/instructions": true
+    },
+    "chat.promptFilesLocations": {
+      ".github/prompts": true
+    },
+
+    "chat.tools.terminal.autoApprove": {
+      "/^git\\s+(status|diff|log|show|branch|remote)\\b/": true,
+
+      "/^dotnet\\s+(build|test|run)\\b/": true,
+      "/^dotnet\\s+ef\\s+.*\\b/": false,
+
+      "/^npm\\s+(ci|install|run\\s+(dev|build|lint|test))\\b/": true,
+      "/^pnpm\\s+(install|run\\s+(dev|build|lint|test))\\b/": true,
+      "/^yarn\\s+(install|run\\s+(dev|build|lint|test))\\b/": true,
+
+      "/^(\\.\\/gradlew|gradle)\\s+(build|test|clean|shadowJar)\\b/": true,
+
+      "/^docker\\s+compose\\s+(ps|logs|build|up|down)\\b/": true,
+
+      "rm": false,
+      "rmdir": false,
+      "del": false,
+      "kill": false,
+      "curl": false,
+      "wget": false,
+      "chmod": false,
+      "chown": false,
+      "/^Remove-Item\\b/i": false
+    }
+
+    /*
+    Risicovol (niet aanbevolen): auto-approve ALLE tools.
+    "chat.tools.global.autoApprove": true
+    */
+  }
+}

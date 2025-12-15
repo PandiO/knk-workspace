@@ -1,0 +1,7 @@
+# We keep the code repos as separate git repositories.
+# Do not track them in the workspace repo:
+Repository/*
+
+# Optional OS junk
+**/.DS_Store
+**/Thumbs.db
