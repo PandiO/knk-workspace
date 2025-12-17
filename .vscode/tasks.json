@@ -1,0 +1,92 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "npm: start",
+      "type": "process",
+      "command": "npm",
+      "args": ["run", "start"],
+      "options": {
+        "cwd": "${workspaceFolder}/Repository/knk-web-app",
+        "env": {
+          "BROWSER": "none"
+        }
+      },
+      "isBackground": true,
+      "problemMatcher": {
+        "pattern": {
+          "regexp": "."
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "(Starting the development server|Compiling|VITE v|> .*start|ready in)",
+          "endsPattern": "(Compiled successfully!|webpack compiled|You can now view|Local:\\s+http|ready in)"
+        }
+      }
+    },
+
+    {
+      "label": "api: build",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "build",
+        "knkwebapi_v2.csproj",
+        "/property:GenerateFullPaths=true",
+        "/consoleloggerparameters:NoSummary"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/Repository/knk-web-api-v2"
+      },
+      "problemMatcher": "$msCompile",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+    {
+      "label": "api: publish",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "publish",
+        "knkwebapi_v2.csproj",
+        "/property:GenerateFullPaths=true",
+        "/consoleloggerparameters:NoSummary"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/Repository/knk-web-api-v2"
+      },
+      "problemMatcher": "$msCompile",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+    {
+      "label": "api: watch",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "watch",
+        "run",
+        "--project",
+        "knkwebapi_v2.csproj"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/Repository/knk-web-api-v2"
+      },
+      "problemMatcher": "$msCompile",
+      "isBackground": true,
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      }
+    },
+
+    {
+      "label": "build-backend",
+      "dependsOn": ["api: build"]
+    }
+  ]
+}

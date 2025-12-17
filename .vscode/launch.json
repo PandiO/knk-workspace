@@ -1,0 +1,43 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Launch Backend API (Swagger)",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "api: build",
+      "program": "${workspaceFolder}/Repository/knk-web-api-v2/bin/Debug/net8.0/knkwebapi_v2.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/Repository/knk-web-api-v2",
+      "stopAtEntry": false,
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "\\bNow listening on:\\s+(https?://\\S+)",
+        "uriFormat": "%s/swagger"
+      },
+      "env": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+    },
+    {
+      "name": "Launch Frontend (Chrome Debug)",
+      "type": "pwa-chrome",
+      "request": "launch",
+      "url": "http://localhost:3000",
+      "webRoot": "${workspaceFolder}/Repository/knk-web-app/src",
+      "preLaunchTask": "npm: start",
+      "userDataDir": "${workspaceFolder}/.vscode/chrome-profile",
+      "runtimeArgs": ["--new-window"]
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Launch Full Stack",
+      "configurations": [
+        "Launch Backend API (Swagger)",
+        "Launch Frontend (Chrome Debug)"
+      ],
+      "stopAll": true
+    }
+  ]
+}

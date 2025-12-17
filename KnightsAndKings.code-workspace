@@ -2,6 +2,7 @@
   "folders": [{ "path": "." }],
   "settings": {
     "github.copilot.chat.codeGeneration.useInstructionFiles": true,
+    "dotnet.defaultSolution": "Repository/knk-web-api-v2/knkwebapi_v2.sln",
 
     "chat.instructionsFilesLocations": {
       ".github/instructions": true
