@@ -12,6 +12,17 @@ Tests/*
 !MySQLMigration/.gitkeep
 !Tests/.gitkeep
 
-# Optional OS junk
+# --- VS Code workspace artifacts ---
+# Ignore Chrome debugging profile data (large binary cache)
+.vscode/chrome-profile/
+# Ignore VS Code-specific temp/state files
+.vscode/*.log
+.vscode/.history/
+
+# --- Dev server runtime directories ---
+# Ignore all dev server instances (runtime data, plugins, logs)
+DEV_SERVER_*/
+
+# --- Optional OS junk ---
 **/.DS_Store
 **/Thumbs.db
