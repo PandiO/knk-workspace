@@ -24,7 +24,9 @@
       "Documents/**": true,
       "MinecraftServer/**": true,
       "MySQLMigration/**": true,
-      "Tests/**": true
+      "Tests/**": true,
+
+      "Repository/Archive/**": true
     },
     "search.exclude": {
       "**/node_modules": true,
@@ -40,7 +42,9 @@
       "Documents/**": true,
       "MinecraftServer/**": true,
       "MySQLMigration/**": true,
-      "Tests/**": true
+      "Tests/**": true,
+
+      "Repository/Archive/**": true
     },
     "files.watcherExclude": {
       "**/node_modules/**": true,
@@ -55,7 +59,9 @@
       "Documents/**": true,
       "MinecraftServer/**": true,
       "MySQLMigration/**": true,
-      "Tests/**": true
+      "Tests/**": true,
+
+      "Repository/Archive/**": true
     },
 
     "git.autoRepositoryDetection": "subFolders",
