@@ -1,10 +1,62 @@
 # Unified Data Access Implementation Roadmap
 
-## Phase 1 — Discovery and Design Finalization
-- Confirm entity coverage: users, towns, districts, structures, domains, locations, streets, world tasks, health checks.
-- Review knk-core cache TTL defaults and CacheManager configuration surface; define per-entity defaults and override mechanism.
-- Finalize FetchPolicy and FetchResult shape; decide on package location (knk-core dataaccess?).
-- Decide on async contract (CompletableFuture) and whether sync adapters are needed.
+## Phase 1 — Discovery and Design Finalization ✅ COMPLETE (January 17, 2026)
+
+### Decisions Made
+
+**Entity Coverage (Priority Order):**
+1. **Users** (High Priority) - Pilot implementation, most critical for PlayerListener
+2. **Towns, Districts, Structures** (High Priority) - Core gameplay entities
+3. **Streets** (Medium Priority) - Less frequently accessed
+4. **WorldTasks** (Medium Priority) - Hybrid workflow support, read-only initially
+5. **Health** (Low Priority) - Minimal gateway, mostly pass-through
+6. **Domains** (Deferred) - Not clearly defined in current spec; defer to Phase 4
+7. **Locations** (Via Parent Entities) - Dependent entity; access via Towns/Districts/Structures initially
+
+**Cache TTL Defaults:**
+- Users: 15 minutes (max: 1 hour)
+- Towns/Districts: 30 minutes (max: 4 hours)
+- Structures: 20 minutes (max: 2 hours)
+- Streets: 1 hour (max: 8 hours)
+- WorldTasks: 5 minutes (max: 15 minutes)
+- Health: 30 seconds (max: 2 minutes)
+
+**Configuration Override Mechanism:**
+1. Global defaults in CacheManager (hardcoded fallbacks)
+2. Paper config (config.yml) overrides per entity type
+3. Runtime overrides via per-call FetchPolicy parameters
+
+**FetchPolicy Shape:**
+- CACHE_ONLY - Only check cache; never hit API
+- CACHE_FIRST - Check cache first; on miss, fetch from API and write-through
+- API_ONLY - Always fetch from API; ignore cache for read, write-through on success
+- API_THEN_CACHE_REFRESH - Fetch from API first; on failure try cache as fallback
+- STALE_OK - Check cache first (even if stale); on API failure return stale if available
+
+**FetchResult Shape:**
+```kotlin
+data class FetchResult<T>(
+	val status: FetchStatus,        // HIT, MISS_FETCHED, NOT_FOUND, ERROR, STALE_SERVED
+	val value: T?,
+	val error: Throwable?,
+	val isStale: Boolean = false,
+	val source: DataSource          // CACHE, API, UNKNOWN
+)
+```
+
+**Package Location:** `knk-core/src/main/kotlin/net/knightsandkings/core/dataaccess/`
+
+**Async Contract Decision:**
+- Primary API: Async (CompletableFuture)
+- Optional sync wrappers with explicit "Blocking" suffix for async-safe contexts
+- Clear documentation: "Never call sync methods on Paper main thread"
+
+**Retry Policy (Optional):**
+- Max attempts: 3
+- Initial delay: 100ms
+- Backoff multiplier: 2.0
+- Max delay: 5000ms
+- Retryable exceptions: SocketTimeoutException, ConnectException
 
 ## Phase 2 — Foundations
 - Add shared types: FetchPolicy enum, FetchResult<T> (status, value, error, isStale flag).

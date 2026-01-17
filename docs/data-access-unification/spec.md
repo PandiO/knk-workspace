@@ -8,15 +8,27 @@
   - **Paper Layer (knk-paper):** CacheManager wires caches with TTL; PlayerListener manually orchestrates cache then API with repeated code.
 
 ## Proposed Architecture
-- **DataAccessGateway (per domain):** A small service class per domain (e.g., UsersDataAccess) living in knk-core or knk-paper-core, injected with the domain cache and the corresponding API port(s).
-- **FetchPolicy enum:** CACHE_ONLY, CACHE_FIRST, API_ONLY, API_THEN_CACHE_REFRESH, STALE_OK (serve stale if API fails), mirroring/modernizing legacy Repository.FetchMode.
-- **Result wrapper:** `FetchResult<T>` with status (HIT, MISS_FETCHED, NOT_FOUND, ERROR), value (optional), and error cause. Avoid unchecked exceptions in listeners.
-- **Async-first API:** Methods return `CompletableFuture<FetchResult<T>>`, with sync convenience wrappers where needed (blocking on async thread only).
-- **Write-through behavior:** On API success, cache.put(key, value) respecting TTL. Bulk variants use cache.putAll.
-- **Invalidation hooks:** invalidate(key), invalidateAll() delegating to cache; optional refresh(key) that re-fetches from API and updates cache.
-- **Metrics integration:** Expose DomainCache metrics, plus per-gateway counters (hits, misses, stale-served, api-calls, failures). Log policy path at FINE level.
-- **Config surface:** Default fetch policy and TTL provided by CacheManager config; allow per-call override.
-- **Threading:** No blocking on Paper main thread. DataAccessGateway methods are async; sync wrappers must be used only on async events.
+- **DataAccessGateway (per domain):** A small service class per domain (e.g., UsersDataAccess) living in `knk-core/src/main/kotlin/net/knightsandkings/core/dataaccess/`, injected with the domain cache and the corresponding API port(s).
+- **Result wrapper:** `FetchResult<T>` with:
+  - `status: FetchStatus` (HIT, MISS_FETCHED, NOT_FOUND, ERROR, STALE_SERVED)
+  - `value: T?` (optional result)
+  - `error: Throwable?` (error cause if status=ERROR)
+  - `isStale: Boolean` (true if STALE_SERVED)
+  - `source: DataSource` (CACHE, API, UNKNOWN)
+- **Async-first API:** Methods return `CompletableFuture<FetchResult<T>>`, with optional sync wrappers suffixed with "Blocking" (use only on async threads).
+- **Config surface:** Default fetch policy and TTL provided by CacheManager config; allow per-call override. Example config.yml:
+  ```yaml
+  knk:
+    cache:
+      users:
+        ttl-minutes: 15
+        max-ttl-minutes: 60
+        default-policy: CACHE_FIRST
+      towns:
+        ttl-minutes: 30
+        max-ttl-minutes: 240
+        default-policy: CACHE_FIRST
+  ```
 
 ## Component Responsibilities
 - **UsersDataAccess (pattern template):**
