@@ -1,8 +1,8 @@
 # Frontend User Account Management - Implementation Roadmap
 
-**Status**: Ready for Implementation  
+**Status**: Phase 1 Completed  
 **Created**: January 16, 2026  
-**Last Updated**: January 16, 2026
+**Last Updated**: January 17, 2026
 
 ---
 
@@ -407,12 +407,12 @@ Email verified; unlock account
 ### Phase 1: Foundation & API Client (3-4 days)
 
 **Deliverables**:
-- [ ] Create `authClient.ts` (follows existing pattern)
-- [ ] Create `src/types/dtos/auth/` directory
-- [ ] Define TypeScript DTOs: `UserDtos.ts`, `AuthDtos.ts`
-- [ ] Create `authService.ts` in `src/services/`
-- [ ] Create `useAuth.ts` hook for auth state
-- [ ] Add session/token management utilities
+- [x] Create `authClient.ts` (follows existing pattern)
+- [x] Create `src/types/dtos/auth/` directory
+- [x] Define TypeScript DTOs: `UserDtos.ts`, `AuthDtos.ts`
+- [x] Create `authService.ts` in `src/services/`
+- [x] Create `useAuth.ts` hook for auth state
+- [x] Add session/token management utilities
 - [ ] Update `App.tsx` routing structure
 
 **Files to Create**:
@@ -468,10 +468,15 @@ src/
    - Auto-login logic
 
 4. **Update App.tsx**:
-   - Add auth routing
-   - Add protected route wrapper
-   - Add auto-login hook
-   - Hide navigation until login
+  - Add auth routing
+  - Add protected route wrapper
+  - Add auto-login hook
+  - Hide navigation until login
+
+**Phase 1 Completion Notes**:
+- Implemented client, DTOs, service, hooks, and utils following existing patterns.
+- Remember Me set to 30 days; auto-login logic added.
+- `App.tsx` routing update remains pending for Phase 2 integration.
 
 **Estimated Effort**: 12-16 hours
 
