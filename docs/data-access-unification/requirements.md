@@ -28,6 +28,12 @@ Provide a consistent, cache-aware data access strategy for knk-plugin-v2 that mi
 10. Safe for async/event threads: avoid blocking main thread; offer async variants (CompletableFuture).
 
 ## Non-Functional Requirements
+- **Performance:** Sub-50ms cache-path response in typical load; bounded API timeouts (reuse KnkApiClient defaults unless overridden).
+- **Thread safety:** Cache operations must remain thread-safe (reuse existing DomainCache and BaseCache guarantees).
+- **Observability:** Emit debug/trace logs for policy path taken; expose metrics (hit/miss, stale served, API calls, failures).
+- **Configurability:** Per-entity TTL and fetch policy defaults configurable via plugin config (paper layer), with sane defaults.
+- **Testability:** Components must be unit-testable via injected cache and API ports; no static singletons.
+- **Backward compatibility:** Do not break existing cache classes or KnkApiClient APIs; PlayerListener and others can adopt incrementally.
 - **Configurability:** Per-entity TTL and fetch policy defaults configurable via plugin config (paper layer), with defaults:
 	- Users: 15min TTL, CACHE_FIRST
 	- Towns/Districts: 30min TTL, CACHE_FIRST
