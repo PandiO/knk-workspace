@@ -8,7 +8,7 @@
 
 ## Executive Summary
 
-This document specifies the frontend (React/TypeScript web app) requirements for user account creation, login, and session management. It is derived from the backend specification ([SPEC_USER_ACCOUNT_MANAGEMENT.md](../spec/SPEC_USER_ACCOUNT_MANAGEMENT.md)) and provides UI/UX flows, form requirements, validation rules, and technical implementation guidance.
+This document specifies the frontend (React/TypeScript web app) requirements for user account creation, login, and session management. It is derived from the backend specification ([SPEC_USER_ACCOUNT_MANAGEMENT.md](../../specs/users/SPEC_USER_ACCOUNT_MANAGEMENT.md)) and provides UI/UX flows, form requirements, validation rules, and technical implementation guidance.
 
 **Key Features**:
 - User registration (email, password, Minecraft username)
