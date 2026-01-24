@@ -9,7 +9,7 @@
 ## Executive Summary
 
 This document provides a step-by-step implementation plan for user account creation, login, and session management in the knk-web-app frontend. It is derived from:
-- [SPEC_USER_ACCOUNT_MANAGEMENT.md](../spec/SPEC_USER_ACCOUNT_MANAGEMENT.md)
+- [SPEC_USER_ACCOUNT_MANAGEMENT.md](../../specs/users/SPEC_USER_ACCOUNT_MANAGEMENT.md)
 - [FRONTEND_USER_ACCOUNT_MANAGEMENT_REQUIREMENTS.md](./FRONTEND_USER_ACCOUNT_MANAGEMENT_REQUIREMENTS.md)
 - Analysis of existing web app architecture and component patterns
 

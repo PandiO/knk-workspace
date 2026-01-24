@@ -10,6 +10,8 @@
 
 I've analyzed the knk-web-app architecture and created a complete frontend implementation plan for user account creation, login, and session management. The plan respects existing code patterns, reuses components where applicable, and provides detailed step-by-step guidance.
 
+**Location**: This file is in `docs/ai/frontend-auth/` along with all other frontend authentication documentation.
+
 ### Key Highlights
 
 ✅ **Leverages Existing Architecture**:
