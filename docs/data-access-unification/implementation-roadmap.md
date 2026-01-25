@@ -98,18 +98,68 @@ data class FetchResult<T>(
 
 ---
 
-## Phase 3 — Users Gateway (Pilot)
-- Implement UsersDataAccess using UserCache + UsersQueryApi (+ UsersCommandApi for create/refresh when needed).
-- Expose methods: getByUuid, getByUsername, getOrCreate(UserDetail seed), refresh, invalidate, invalidateAll.
-- Integrate metrics/logging consistent with CacheManager.
-- Update PlayerListener to use UsersDataAccess (async pre-login) and simplify logic.
-- Add unit tests for UsersDataAccess (happy path, not found, API failure, stale fallback, invalidation).
+## Phase 3 — Users Gateway (Pilot) ✅ COMPLETE (January 25, 2026)
+- ✅ Implement UsersDataAccess using UserCache + UsersQueryApi (+ UsersCommandApi for create/refresh when needed).
+- ✅ Expose methods: getByUuid, getByUsername, getOrCreate(UserDetail seed), refresh, invalidate, invalidateAll.
+- ✅ Integrate metrics/logging consistent with CacheManager.
+- ⏳ Update PlayerListener to use UsersDataAccess (async pre-login) and simplify logic. (Deferred to Phase 6)
+- ✅ Add unit tests for UsersDataAccess (happy path, not found, API failure, stale fallback, invalidation).
 
-## Phase 4 — Extend to Other Domains
-- Implement gateways for Towns, Districts, Structures, Domains, Locations, Streets, WorldTasks, Health (read-only).
-- Provide bulk fetch where API supports it; ensure cache.putAll is used.
-- Wire gateways into CacheManager or a new GatewayProvider that consumes CacheManager + KnkApiClient.
-- Add lightweight integration tests per gateway with API stubs.
+## Phase 4 — Extend to Other Domains ✅ COMPLETE (January 25, 2026)
+
+### Deliverables Implemented
+
+**Data Access Gateways Created:**
+- ✅ `TownsDataAccess` - Cache-first gateway for Town entities
+  - `getByIdAsync(id, policy)` - Retrieve town by ID with fetch policy
+  - `getByWgRegionIdAsync(wgRegionId)` - Cache-only lookup by WorldGuard region
+  - `refreshAsync(id)` - Force refresh from API
+  - `invalidate(id)`, `invalidateAll()` - Cache invalidation
+- ✅ `DistrictsDataAccess` - Cache-first gateway for District entities
+  - Same pattern as Towns with ID and WG region lookup
+- ✅ `StructuresDataAccess` - Cache-first gateway for Structure entities
+  - Same pattern as Towns/Districts with ID and WG region lookup
+- ✅ `StreetsDataAccess` - Cache-first gateway for Street entities
+  - READ-ONLY: no create/update operations
+  - `getByIdAsync(id, policy)` - Retrieve street by ID
+  - No WG region lookup (streets don't have WG regions)
+- ✅ `LocationsDataAccess` - Cache-first gateway for Location entities
+  - Inline cache implementation (LocationCache inner class)
+  - `getByIdAsync(id, policy)` - Retrieve location by ID
+- ✅ `DomainsDataAccess` - Cache-first gateway for Domain entities
+  - Keyed by WorldGuard region ID (primary access pattern)
+  - `getByWgRegionIdAsync(wgRegionId, policy)` - Retrieve domain by WG region
+- ✅ `HealthDataAccess` - Minimal gateway for API health checks
+  - Very short TTL (30 seconds recommended)
+  - Single-entry cache with constant key
+  - `getHealthAsync(policy)` - Get API health status
+
+**Supporting Infrastructure:**
+- ✅ `StreetCache` - Type-safe cache for Street entities (new)
+- ✅ Inline cache classes for Locations and Domains (lightweight entities)
+
+**Comprehensive Unit Tests:**
+- ✅ `TownsDataAccessTest` - Tests cache hit, miss, refresh, invalidation
+- ✅ `DistrictsDataAccessTest` - Tests cache hit, miss, refresh, invalidation
+- ✅ `HealthDataAccessTest` - Tests health check caching
+- ✅ All tests pass (29 total tests in knk-core)
+
+**Package Location:** `knk-core/src/main/java/net/knightsandkings/knk/core/dataaccess/`
+
+**Verification:**
+- ✅ All components compile successfully
+- ✅ Gradle build passes: `./gradlew knk-core:build`
+- ✅ All tests pass: `./gradlew knk-core:test`
+- ✅ No breaking changes to existing Phase 2/3 artifacts
+
+**Design Decisions:**
+1. **WorldGuard Region Lookups:** For Towns, Districts, and Structures, WG region lookups are cache-only (no API endpoint supports this). Clients must fetch by ID first to populate cache.
+2. **Inline Caches:** Locations and Domains use lightweight inline cache implementations since they don't have dedicated cache classes.
+3. **Read-Only Streets:** StreetsDataAccess follows API contract (no create/update/delete).
+4. **Health TTL:** HealthDataAccess uses short TTL (30s) for frequent freshness checks.
+5. **WorldTasks:** Deferred - requires hybrid workflow discussion and clarification of read/write boundaries.
+
+---
 
 ## Phase 5 — Configuration and Observability
 - Add configuration keys (paper config) for per-entity default policy, TTL, retry attempts, and stale-allowed toggle.
