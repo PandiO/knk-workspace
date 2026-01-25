@@ -26,3 +26,4 @@ DEV_SERVER_*/
 # --- Optional OS junk ---
 **/.DS_Store
 **/Thumbs.db
+node_modules
