@@ -4,6 +4,11 @@
 
 `UsersDataAccess` is a cache-aware gateway for user retrieval in knk-plugin-v2. It provides a clean, async-first API that handles cache-first retrieval with automatic API fallback and write-through caching.
 
+## Paper Player Login (Phase 6)
+- Player login now uses `getByUuidAsync` with `FetchPolicy.STALE_OK` and triggers `refreshAsync` in the background when stale data is served.
+- Username fallback is used when UUID lookups miss; creation falls back to `getOrCreateAsync` so caches are primed before `PlayerJoinEvent` runs.
+- Keep the flow on async threads (AsyncPlayerPreLogin) to avoid blocking the main server thread.
+
 ## Basic Usage
 
 ### 1. Initialize the Gateway
