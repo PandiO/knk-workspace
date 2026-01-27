@@ -119,12 +119,13 @@ This roadmap completes the missing authentication endpoints expected by the web 
 
 ## Phase 5: Validation, Logging, Testing
 
-### Priority: MEDIUM – Quality & safety
+### Priority: MEDIUM – Quality & safety  
+### Status: ✅ COMPLETED (January 27, 2026)
 
 #### 5.1 Validation & Policies
-- [ ] Add basic throttle/lockout TODO (email verification after 3 failed logins per frontend docs).
-- [ ] Enforce `IsActive`/`DeletedAt` guards in login.
-- [ ] Ensure passwords validated via existing `PasswordService` rules.
+- [x] Add basic throttle/lockout TODO (email verification after 3 failed logins per frontend docs).
+- [x] Enforce `IsActive`/`DeletedAt` guards in login.
+- [x] Ensure passwords validated via existing `PasswordService` rules.
 
 **File**: `Services/AuthService.cs` (validation block)
 
@@ -133,11 +134,16 @@ This roadmap completes the missing authentication endpoints expected by the web 
 ---
 
 #### 5.2 Tests
-- [ ] Unit tests for `AuthService` (happy path, bad password, inactive user, refresh flow).
-- [ ] Integration tests for `AuthController` endpoints (`login`, `refresh`, `me`).
-- [ ] Add test helpers for JWT config if needed.
+- [x] Unit tests for `AuthService` (happy path, bad password, inactive user, refresh flow).
+- [x] Integration tests for `AuthController` endpoints (`login`, `refresh`, `me`).
+- [x] Add test helpers for JWT config if needed.
 
-**Files**: `Tests/Services/AuthServiceTests.cs`, `Tests/Controllers/AuthControllerTests.cs` (paths per test project)
+**Files**: `Tests/Services/AuthServiceTests.cs`, `Tests/Api/AuthControllerTests.cs`
+
+**Test Coverage**:
+- AuthServiceTests: 17 unit tests covering all auth flows
+- AuthControllerTests: 20 endpoint integration tests
+- Total: 37 passing tests
 
 **Effort**: 2 hours
 
