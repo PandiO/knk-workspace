@@ -191,11 +191,12 @@ This roadmap completes the missing authentication endpoints expected by the web 
 
 ## Phase 7: Frontend UX Flows & Guards
 
-### Priority: MEDIUM – End-user experience
+### Priority: MEDIUM – End-user experience  
+### Status: ✅ COMPLETED (January 27, 2026)
 
 #### 7.1 Auth Hooks & State
-- [ ] Update/create `useAuth` and `useAutoLogin` hooks to use new endpoints and token handling.
-- [ ] Add loading/error states for login/auto-login and token refresh failures (auto-logout on 401/expired refresh).
+- [x] Update/create `useAuth` and `useAutoLogin` hooks to use new endpoints and token handling.
+- [x] Add loading/error states for login/auto-login and token refresh failures (auto-logout on 401/expired refresh).
 
 **Files**: `Repository/knk-web-app/src/hooks/useAuth.ts`, `.../useAutoLogin.ts`
 
@@ -204,9 +205,9 @@ This roadmap completes the missing authentication endpoints expected by the web 
 ---
 
 #### 7.2 UI Wiring
-- [ ] Update `LoginPage`/`LoginForm` to call `authService.login` with rememberMe and display backend error messages.
-- [ ] Ensure `ProtectedRoute` redirects to login on missing/expired token and tries silent refresh once.
-- [ ] Update navigation/header to show logout button wired to `authService.logout` and clear local auth state.
+- [x] Update `LoginPage`/`LoginForm` to call `authService.login` with rememberMe and display backend error messages.
+- [x] Ensure `ProtectedRoute` redirects to login on missing/expired token and tries silent refresh once.
+- [x] Update navigation/header to show logout button wired to `authService.logout` and clear local auth state.
 
 **Files**: `Repository/knk-web-app/src/pages/auth/LoginPage.tsx`, `.../components/auth/LoginForm.tsx`, `.../components/ProtectedRoute.tsx`, `.../components/Navigation.tsx`
 
