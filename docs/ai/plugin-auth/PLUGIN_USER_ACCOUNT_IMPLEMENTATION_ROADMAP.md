@@ -246,6 +246,217 @@ messages:
 ---
 
 ## Phase 2: Player Join Handler & User Sync
+---
+
+## Phase 1 Wiring Guide
+
+### Integration Point 1: KnkPlugin.onEnable()
+
+**Location**: `knk-paper/src/main/java/net/knightsandkings/knk/paper/KnkPlugin.java` (around line 95)
+
+Add after API client initialization:
+
+```java
+// Wire UserAccountApi from client
+this.userAccountApi = apiClient.getUserAccountApi();
+getLogger().info("UserAccountApi wired from API client");
+
+// Create and register UserManager
+this.userManager = new UserManager(this, userAccountApi, getLogger(), config.account());
+getLogger().info("UserManager initialized");
+
+// Create ChatCaptureManager
+this.chatCaptureManager = new ChatCaptureManager(this, config.account(), config.messages(), getLogger());
+getLogger().info("ChatCaptureManager initialized");
+
+// Register listeners (Bukkit event handling)
+getServer().getPluginManager().registerEvents(
+    new PlayerJoinListener(userManager, config.messages(), getLogger()),
+    this
+);
+getServer().getPluginManager().registerEvents(
+    new ChatCaptureListener(chatCaptureManager),
+    this
+);
+getLogger().info("Account management listeners registered");
+
+// Register commands
+PluginCommand accountCmd = getCommand("account");
+if (accountCmd != null) {
+    accountCmd.setExecutor(new AccountCommand(userManager, config.messages(), getLogger()));
+} else {
+    getLogger().warning("Command /account not found in plugin.yml");
+}
+```
+
+### Integration Point 2: Plugin Fields
+
+**Location**: `knk-paper/src/main/java/net/knightsandkings/knk/paper/KnkPlugin.java` (field section)
+
+Add after existing API fields (around line 50):
+
+```java
+// User account management (Phase 2+)
+private UserAccountApi userAccountApi;
+private UserManager userManager;
+private ChatCaptureManager chatCaptureManager;
+
+// Public getters for listeners/commands
+public UserAccountApi getUserAccountApi() {
+    return userAccountApi;
+}
+
+public UserManager getUserManager() {
+    return userManager;
+}
+
+public ChatCaptureManager getChatCaptureManager() {
+    return chatCaptureManager;
+}
+```
+
+### Integration Point 3: plugin.yml Registration
+
+**Location**: `knk-paper/src/main/resources/plugin.yml`
+
+Add command section:
+
+```yaml
+commands:
+  account:
+    description: "Manage your in-game account (create, link, view status)"
+    usage: "/account [create|link]"
+    aliases: [acc]
+    permission: knk.account.use
+```
+
+### Configuration Validation Details
+
+**Location**: `knk-paper/src/main/java/net/knightsandkings/knk/paper/config/KnkConfig.java`
+
+Update to add validation methods:
+
+```java
+public record AccountConfig(
+    int linkCodeExpiryMinutes,
+    int chatCaptureTimeoutSeconds
+) {
+    public void validate() {
+        if (linkCodeExpiryMinutes <= 0) {
+            throw new IllegalArgumentException(
+                "account.link-code-expiry-minutes must be positive (got: " + 
+                linkCodeExpiryMinutes + ")"
+            );
+        }
+        if (chatCaptureTimeoutSeconds <= 0) {
+            throw new IllegalArgumentException(
+                "account.chat-capture-timeout-seconds must be positive (got: " + 
+                chatCaptureTimeoutSeconds + ")"
+            );
+        }
+    }
+    
+    public static AccountConfig defaultConfig() {
+        return new AccountConfig(20, 120);
+    }
+}
+
+public record MessagesConfig(
+    String prefix,
+    String accountCreated,
+    String accountLinked,
+    String linkCodeGenerated,
+    String invalidLinkCode,
+    String duplicateAccount,
+    String mergeComplete
+) {
+    /**
+     * Format a message template with placeholders.
+     * Example: format("{prefix}Code: {code}", Map.of("code", "ABC123"))
+     */
+    public String format(String template, Map<String, String> placeholders) {
+        String result = template;
+        for (Map.Entry<String, String> entry : placeholders.entrySet()) {
+            result = result.replace("{" + entry.getKey() + "}", entry.getValue());
+        }
+        return result;
+    }
+    
+    public static MessagesConfig defaultConfig() {
+        return new MessagesConfig(
+            "&8[&6KnK&8] &r",
+            "&aAccount created! Link email on web app to sync progress.",
+            "&aYour accounts have been linked!",
+            "&aLink code: &6{code} &a({minutes}min)",
+            "&cInvalid/expired code. Use &6/account link &cfor new one.",
+            "&cTwo accounts found. Use &6/account merge &cto resolve.",
+            "&aMerge complete! {coins} coins, {gems} gems, {exp} XP."
+        );
+    }
+}
+```
+
+### State Management: User Data Cache
+
+**Purpose**: Cache user account info during session to minimize API calls
+
+**Data Structure**:
+```java
+record PlayerUserData(
+    int userId,              // From API
+    String username,         // From API
+    UUID uuid,               // Player UUID
+    String email,            // May be null
+    int coins,               // Cached balance
+    int gems,                // Cached balance
+    int experiencePoints,    // Cached balance
+    boolean hasEmailLinked,  // Email verification status
+    boolean hasDuplicateAccount,  // Set if conflict detected
+    Integer conflictingUserId     // ID of conflicting account
+)
+```
+
+**Lifecycle**:
+1. **Created**: On `PlayerJoinEvent` (in `PlayerJoinListener`)
+   - AsyncPlayerPreLoginEvent fetches from API → cache
+   - PlayerJoinEvent reads cache
+2. **Updated**: When user runs account commands
+   - `/account create` → API call → cache update
+   - `/account link {code}` → API call → cache update
+3. **Cleared**: On `PlayerQuitEvent`
+   - Removes entry from memory
+   - Clears any active chat capture sessions for player
+
+**Thread Safety**:
+- UserManager uses `ConcurrentHashMap<UUID, PlayerUserData>` for thread-safe map operations
+- API calls are async (CompletableFuture) but wrapped in try-catch
+- Cache reads are sync (safe since reads are atomic on immutable records)
+- ChatCaptureManager also uses ConcurrentHashMap for session storage
+
+**Storage Locations**:
+- `knk-paper/src/main/java/net/knightsandkings/knk/paper/user/PlayerUserData.java` (immutable record)
+- `knk-paper/src/main/java/net/knightsandkings/knk/paper/user/UserManager.java` (map + sync logic)
+
+### API Error Handling Strategy
+
+**Retry Logic** (via BaseApiImpl):
+- Max 3 attempts for transient errors (HTTP 500, 503, timeout)
+- Exponential backoff: 100ms initial, 2.0 multiplier, 5s max
+- Non-retryable: 4xx errors (invalid request)
+
+**Player-Facing Errors** (config.messages):
+- Network timeout: "Server unreachable. Try again in a moment."
+- Invalid input: "Invalid email format" or "Password too weak"
+- Duplicate account: Show merge UI
+- Other errors: "Account service temporarily unavailable"
+
+**Logging**:
+- DEBUG: All API calls (URL, payload size, response time)
+- INFO: Account creations, merges, link codes generated
+- WARNING: Retry attempts, user-correctable errors
+- SEVERE: API failures, config errors, unhandled exceptions
+
+---
 
 ### Priority: HIGH - Core integration point
 ### Estimated Effort: 4-6 hours
