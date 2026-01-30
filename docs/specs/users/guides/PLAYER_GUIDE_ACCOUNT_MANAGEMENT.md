@@ -35,10 +35,69 @@ If you already have an account on the web app:
 
 1. Join the Minecraft server
 2. Log in to the web app
-3. Navigate to your profile and click "Link Minecraft Account"
-4. Copy the link code shown
-5. In Minecraft, type `/account link <code>`
-6. Your accounts are now linked!
+3. Click the **Account icon** (user profile icon) in the top-right navigation
+4. Select **"Account Settings"** from the dropdown menu
+5. Scroll to the **"Link Minecraft Account"** section
+6. Copy the link code shown
+7. In Minecraft, type `/account link <code>`
+8. Your accounts are now linked!
+
+---
+
+## Web App Account Management
+
+### Accessing Your Account Settings
+
+Once logged in to the web app:
+
+1. Look for the **Account icon** (user profile circle) in the top-right corner of the navigation bar
+2. **Hover over** or **click** the icon to open the dropdown menu
+3. Select **"Account Settings"** to view and manage your account
+
+### Account Settings Page
+
+The Account Settings page allows you to:
+
+#### 📋 View Account Information
+- **Username**: Your Minecraft or web app username
+- **Account Created**: When your account was created
+- **Minecraft UUID**: Your unique Minecraft player identifier (if linked)
+- **Coins**: Your premium currency balance
+- **Gems**: Your free currency balance
+
+#### ✉️ Update Email Address
+1. Click the **"Edit"** button next to your email
+2. Enter your new email address
+3. Click **"Save"** to update
+4. You'll see a success message when complete
+
+#### 🔑 Change Password
+1. Click **"Change Password"**
+2. Enter your **current password**
+3. Enter your **new password** (minimum 8 characters)
+4. **Confirm** your new password
+5. Click **"Update Password"**
+6. Your password is updated immediately
+
+#### 🔗 Link Minecraft Account
+If you created your account on the web app and haven't linked your Minecraft account yet:
+
+1. Scroll to the **"Link Minecraft Account"** section
+2. You'll see an input field for the link code
+3. In Minecraft, type `/account link` to generate a code
+4. Copy the code from Minecraft
+5. Paste it into the web app (format: XXXX-XXXX-XXXX)
+6. Click **"Link Account"**
+7. Your Minecraft and web accounts are now connected!
+
+**Note**: This section only appears if you don't have a linked Minecraft account yet.
+
+### Navigation Menu
+
+The account dropdown menu provides quick access to:
+
+- **Account Settings** - Manage your account, email, password, and linking
+- **Logout** - Sign out of the web app (you'll need to log in again)
 
 ---
 
@@ -446,6 +505,13 @@ Need help? Contact the server administrators:
 ---
 
 ## Changelog
+
+### Version 1.1 (January 30, 2026)
+- Added web app Account Management page
+- Added account dropdown menu in navigation (replaces standalone logout)
+- Players can now edit email and password directly in web app
+- Improved UI for linking Minecraft accounts via web interface
+- Updated authentication to use global state (AuthContext)
 
 ### Version 1.0 (January 30, 2026)
 - Initial release of account management system
