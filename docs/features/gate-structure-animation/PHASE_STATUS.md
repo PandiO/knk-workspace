@@ -6,7 +6,7 @@
 | --- | --- | --- | --- |
 | 1 | Backend Data Model | ✅ Complete | GateStructure + GateBlockSnapshot entity/migration already in place. |
 | 2 | Backend Logic (Repository, Service, DTOs) | ✅ Complete | Added read/create/update/nav DTOs, snapshot create DTO, mapping, and service overloads; added unit tests. |
-| 3 | Backend API (Controller & Endpoints) | ⏳ Pending | Not started. |
+| 3 | Backend API (Controller & Endpoints) | ✅ Complete | Gate API routes, validation, state/snapshot endpoints, and controller tests added. |
 | 4 | Frontend Types & API Client | ⏳ Pending | Not started. |
 | 5 | Frontend UI | ⏳ Pending | Not started. |
 | 6 | Plugin Core | ⏳ Pending | Not started. |
