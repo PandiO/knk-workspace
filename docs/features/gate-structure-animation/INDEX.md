@@ -40,6 +40,10 @@ All gate animation system documentation is now consolidated in this directory. S
 2. Review [SPEC.md](./SPEC.md#4-frontend-types--components) for TypeScript types
 3. Follow [IMPLEMENTATION_ROADMAP.md](./IMPLEMENTATION_ROADMAP.md#phase-4-frontend-types--api-client) Phases 4-5 (Frontend)
 
+**IMPORTANT**: Phase 5 (Frontend UI) uses **generic framework components** (FormWizardPage, DisplayWizard, PagedEntityTable)
+**NO custom pages** should be created. Only ObjectConfig definitions are needed.
+See [IMPLEMENTATION_ROADMAP.md Phase 5](./IMPLEMENTATION_ROADMAP.md#phase-5-frontend-ui-configuration-generic-framework) for details.
+
 ### For Plugin Developers
 1. Read [REQUIREMENTS.md](./REQUIREMENTS.md#paper-plugin-minecraft---java) (Plugin overview)
 2. Review [SPEC.md](./SPEC.md#5-plugin-animation-engine) for animation engine details
