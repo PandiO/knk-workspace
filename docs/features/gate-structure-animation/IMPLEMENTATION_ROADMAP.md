@@ -211,93 +211,103 @@ This roadmap provides a complete implementation plan for the Gate Animation Syst
 
 ---
 
-### Phase 5: Frontend UI (Wizard, List, Details)
-**Focus**: React components for gate management  
-**Effort**: 32-40 hours  
-**Duration**: 4-5 days  
-**Dependencies**: Phase 4
+### Phase 5: Frontend UI Configuration (Generic Framework)
+**Focus**: Configure gate structure for existing FormWizardPage and DisplayWizard components  
+**Effort**: 4-6 hours  
+**Duration**: 1 day  
+**Dependencies**: Phase 4  
+**Pattern**: Uses KnK generic entity framework - NO custom UI components
+
+#### Architecture Decision
+Gate management uses the existing generic framework instead of custom pages:
+
+**Reasoning**: The KnK codebase already has `FormWizardPage` and `DisplayWizard` that
+render any entity based on `ObjectConfig` definitions. Creating custom GateListPage,
+GateDetailsPage, GateWizardPage would duplicate existing functionality and violate
+the "don't repeat yourself" principle.
+
+**Result**: All gate UI flows through generic components:
+- **Creation**: `/forms/gatestructure` → FormWizardPage (reads GateStructureConfig form fields)
+- **Editing**: `/forms/gatestructure/edit/:id` → FormWizardPage (reads GateStructureConfig form fields)
+- **Viewing**: `/display/gatestructure/:id` → DisplayWizard (reads display configuration)
+- **Listing**: PagedEntityTable with columnDefinitionsRegistry.gatestructure
 
 #### Tasks
 
-**5.1 Gate List Page**
-- [ ] Create `GateListPage.tsx` in `pages/`
-- [ ] Display gates in table/grid format
-- [ ] Columns: Name, Gate Type, Status (Open/Closed), Health, Actions
-- [ ] Filter by domain, district, gate type
-- [ ] Pagination
-- [ ] Actions: View, Edit, Delete, Open/Close
+**5.1 Create GateStructureConfig**
+- [ ] Define ObjectConfig in `src/config/objectConfigs.tsx`
+- [ ] Field definitions (20 total):
+  - Basic: name (text, required), description (text, optional)
+  - Location: domainId (number, required), districtId (number, required), streetId (number, optional)
+  - Gate Type: gateType (select enum, required), motionType (select enum, required), faceDirection (select enum, required)
+  - Geometry: geometryDefinitionMode (select enum), anchorPoint (text), geometryWidth (number), geometryHeight (number), geometryDepth (number)
+  - Animation: animationDurationTicks (number, required), animationTickRate (number, required, 1-5)
+  - Advanced: healthMax (number, required), isInvincible (boolean), canRespawn (boolean), respawnRateSeconds (number)
+- [ ] Add validation rules for all numeric and required fields
+- [ ] Add enum options (gateType, motionType, faceDirection, geometryDefinitionMode)
+- [ ] Add icon (Gate from lucide-react)
+- [ ] Export in objectConfigs
 
-**5.2 Gate Details Page**
-- [ ] Create `GateDetailsPage.tsx` in `pages/`
-- [ ] Display all gate properties
-- [ ] Show block snapshot count
-- [ ] Show current state (CLOSED/OPEN/DESTROYED)
-- [ ] Actions: Edit, Delete, Open/Close, Recapture
+**5.2 Register Gate Column Definitions**
+- [ ] Add `columnDefinitionsRegistry.gatestructure` in `src/config/objectConfigs.tsx`
+- [ ] Columns: id, name, gateType, isOpened (status badge), healthCurrent (with max), districtName, streetName
+- [ ] Status badge formatting: green=Open, slate=Closed
+- [ ] Health format: `${current}/${max}`
 
-**5.3 Gate Creation Wizard (6 Steps)**
+**5.3 Register Gate Entity Routing**
+- [ ] Add gatestructure cases to all 5 functions in `src/utils/entityApiMapping.ts`:
+  - getSearchFunctionForEntity() → gateStructureClient.searchPaged()
+  - getFetchByIdFunctionForEntity() → gateStructureClient.getById()
+  - getUpdateFunctionForEntity() → gateStructureClient.update()
+  - getDeleteFunctionForEntity() → gateStructureClient.delete()
+  - getCreateFunctionForEntity() → gateStructureClient.create()
+- [ ] This automatically enables gate CRUD in FormWizardPage and PagedEntityTable
 
-**Step 1: Basic Info**
-- [ ] Create `GateWizardStep1.tsx`
-- [ ] Fields: Name, Domain, District, Street (optional)
-- [ ] Icon material selector (searchable dropdown)
-- [ ] Health settings: HealthMax, IsInvincible, CanRespawn, RespawnRateSeconds
+**5.4 Verify Generic Framework Integration**
+- [ ] Test creation workflow: `/forms/gatestructure` → form renders → POST API
+- [ ] Test editing workflow: `/forms/gatestructure/edit/:id` → form loads data → PUT API
+- [ ] Test viewing workflow: `/display/gatestructure/:id` → detail renders
+- [ ] Test listing: PagedEntityTable displays gates with configured columns
+- [ ] Navigation dropdown includes "Gate" with correct icon and route
 
-**Step 2: Gate Type & Orientation**
-- [ ] Create `GateWizardStep2.tsx`
-- [ ] Gate type selector (SLIDING, TRAP, DRAWBRIDGE, DOUBLE_DOORS)
-- [ ] Face direction selector (8-way compass widget)
-- [ ] Show recommended geometry mode per gate type
-- [ ] Motion type selector (auto-selected based on gate type, editable)
+**Deliverable**: Gate structure fully integrated into generic entity framework (no custom components)
 
-**Step 3: Geometry Definition**
-- [ ] Create `GateWizardStep3.tsx`
-- [ ] **If PLANE_GRID:**
-  - 3D coordinate inputs for AnchorPoint, ReferencePoint1, ReferencePoint2
-  - Width/Height/Depth sliders
-  - Live block count estimate
-- [ ] **If FLOOD_FILL:**
-  - Seed block coordinate(s) input
-  - Scan limits: MaxBlocks, MaxRadius
-  - Material whitelist/blacklist (searchable)
-  - Plane constraint toggle
+#### Why Not Custom Pages?
 
-**Step 4: Animation Settings**
-- [ ] Create `GateWizardStep4.tsx`
-- [ ] Duration (seconds) → convert to ticks
-- [ ] Tick rate (1-5)
-- [ ] Rotation angle (if DRAWBRIDGE/DOUBLE_DOORS)
-- [ ] Preview animation (visual simulation - future)
+❌ **Anti-pattern (what we avoided):**
+```
+GateListPage.tsx + GateDetailsPage.tsx + GateWizardPage.tsx + GateEditPage.tsx
+= 600+ lines of custom code
+= Duplication of existing FormWizardPage, DisplayWizard, PagedEntityTable functionality
+= Maintenance burden
+= Inconsistency with architecture
+```
 
-**Step 5: Advanced Options**
-- [ ] Create `GateWizardStep5.tsx`
-- [ ] Fallback material selector
-- [ ] Tile entity policy dropdown
-- [ ] WorldGuard region IDs (text input)
+✅ **Correct pattern (what we implemented):**
+```
+GateStructureConfig definition (~128 lines)
++ EntityMapping registration (5 lines)
++ ColumnDefinitions registration (6 lines)
+= Reuse existing FormWizardPage, DisplayWizard, PagedEntityTable
+= Configuration-driven UI
+= Consistent with KnK architecture
+= Minimal maintenance
+```
 
-**Step 6: Review & Create**
-- [ ] Create `GateWizardStep6.tsx`
-- [ ] Summary of all settings
-- [ ] Block snapshot preview (estimated count)
-- [ ] "Create Gate" button
-- [ ] API call: POST /api/gates
+#### Implementation Checklist
 
-**5.4 Gate Edit Form**
-- [ ] Create `GateEditPage.tsx`
-- [ ] Load existing gate via GET /api/gates/{id}
-- [ ] Populate form with current values
-- [ ] Allow editing: Name, IsActive, HealthMax, AnimationDurationTicks, etc.
-- [ ] Restrict editing: Id, DomainId, GateType (require recapture)
-- [ ] Save changes: PUT /api/gates/{id}
-
-**5.5 3D Preview Widget (Optional - Future)**
-- [ ] Create `GatePreviewWidget.tsx` using Three.js
-- [ ] Render gate blocks based on geometry definition
-- [ ] Highlight selected blocks
-- [ ] Animate preview (playback simulation)
-
-**Deliverable**: Complete web app UI for gate management
+- [ ] All fields in GateStructureConfig with proper types and validation
+- [ ] All form fields compile without TypeScript errors
+- [ ] columnDefinitionsRegistry.gatestructure defined with 6+ columns
+- [ ] entityApiMapping.ts updated with all 5 CRUD case statements
+- [ ] Navigation automatically includes Gate in "Create New" dropdown
+- [ ] Test create flow: /forms/gatestructure works
+- [ ] Test edit flow: /forms/gatestructure/edit/:id works
+- [ ] Test view flow: /display/gatestructure/:id works
+- [ ] Test list flow: PagedEntityTable renders gates correctly
 
 ---
+
 
 ### Phase 6: Plugin Core (API Client, Cache, Loader)
 **Focus**: Load gates from API, cache in memory  
