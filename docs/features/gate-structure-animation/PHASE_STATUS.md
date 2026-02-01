@@ -9,6 +9,9 @@
 | 3 | Backend API (Controller & Endpoints) | ✅ Complete | Gate API routes, validation, state/snapshot endpoints, and controller tests added. |
 | 4 | Frontend Types & API Client | ✅ Complete | Gate DTOs extended, snapshot DTOs added, gate client expanded, unit tests added. |
 | 5 | Frontend UI Configuration | ✅ Complete | GateStructureConfig defined with 20 fields; entity routing registered; uses generic FormWizardPage/DisplayWizard (no custom pages). |
+| 6 | Plugin Core (API Client, Cache, Loader) | ✅ Complete | Gate loader adapter caches gates from API; animation data precomputed; startup load wired. |
+| 7 | Plugin Animation Engine | ✅ Complete | Frame calculator, block placement, animation task, state machine, lag/chunk handling implemented. |
+| 8 | Plugin Entity Interaction | ✅ Complete | Collision prediction + entity push integration added with unit tests. |
 
 ## Phase 5 Implementation Details
 
