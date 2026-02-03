@@ -32,3 +32,12 @@ applyTo: "Repository/knk-web-api-v2/**/*.cs"
 
 ## Metadata
 - Ensure entities that must be manageable from the web app have EntityMetadata annotations required by FormConfig/DisplayConfig features.
+## WorldTask Integration Pattern
+When a feature involves Minecraft-captured data (e.g., Location coordinates) via WorldTasks:
+
+1. **Plugin Layer**: Capture raw data (e.g., coordinates) and send as JSON output.
+2. **Workflow Coordination**: `WorkflowService.FinalizeAsync()` validates all workflow steps are complete but does NOT create related entities.
+3. **Entity Services**: Extract task output data using `WorkflowService.ExtractLocationDataFromTaskOutput()` (or similar) ONLY when creating/updating the parent entity.
+4. **Database**: Related entities (Location, etc.) are persisted ONLY when the parent entity is successfully created.
+
+**Rationale**: Prevents orphaned records from abandoned workflows. Location data remains ephemeral in `WorldTask.OutputJson` until the complete workflow is finalized and the parent entity is created.
