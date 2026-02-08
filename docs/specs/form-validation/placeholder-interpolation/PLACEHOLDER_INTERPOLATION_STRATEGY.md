@@ -345,7 +345,7 @@ player.sendMessage("§c" + errorMsg);
    - **Key:** Extract values, return template + map. Do NOT call String.Replace()
 
 3. **Update ValidationRuleController:**
-   - Implement `POST /api/validations/validate-field` endpoint
+  - Implement `POST /api/field-validations/validate-field` endpoint
    - Accepts: rule config, field value, form context
    - Returns: ValidationResultDto with template + placeholders
 
@@ -359,7 +359,7 @@ player.sendMessage("§c" + errorMsg);
    - Simple string replacement logic
 
 2. **Update FieldRenderer:**
-   - Call `/api/validations/validate-field` on field change (debounced)
+  - Call `/api/field-validations/validate-field` on field change (debounced)
    - Receive ValidationResultDto
    - Call `interpolatePlaceholders()` before display
    - Show final message to user
