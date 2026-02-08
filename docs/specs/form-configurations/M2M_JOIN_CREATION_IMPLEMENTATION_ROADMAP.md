@@ -73,10 +73,10 @@ This document provides a step-by-step implementation plan organized by component
 ### Priority: HIGH
 
 #### 3.1 Join Entity Modal Workflow
-- [ ] Add a "Create Join Entry" action near the selection table for many-to-many steps.
-- [ ] When invoked, launch a join-entity modal using linked FormConfiguration.
-- [ ] Save join entity data into relationship card state.
-- [ ] Support multi-step join forms.
+- [x] Add a "Create Join Entry" action near the selection table for many-to-many steps.
+- [x] When invoked, launch a join-entity modal using linked FormConfiguration.
+- [x] Save join entity data into relationship card state.
+- [x] Support multi-step join forms.
 
 **Files**:
 - [Repository/knk-web-app/src/components/FormWizard/ManyToManyRelationshipEditor.tsx](Repository/knk-web-app/src/components/FormWizard/ManyToManyRelationshipEditor.tsx)
@@ -88,9 +88,9 @@ This document provides a step-by-step implementation plan organized by component
 ---
 
 #### 3.2 Persist Join Entries as Child Progress
-- [ ] Store join entity entries as child progress (using parent progress ID).
-- [ ] Ensure join data survives refresh/draft save.
-- [ ] On resume, rehydrate join entries into relationship cards.
+- [x] Store join entity entries as child progress (using parent progress ID).
+- [x] Ensure join data survives refresh/draft save.
+- [x] On resume, rehydrate join entries into relationship cards.
 
 **Files**:
 - [Repository/knk-web-app/src/components/FormWizard/FormWizard.tsx](Repository/knk-web-app/src/components/FormWizard/FormWizard.tsx)
