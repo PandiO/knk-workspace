@@ -22,10 +22,13 @@ As an admin, I want to be able to configure a m2m relationship with a join entit
 2. Admins can choose one of:
    - Use child steps (inline join fields) **or**
    - Link an existing FormConfiguration (full join-entity form)
-3. Builder must validate:
+3. **Join-entity form source of truth**:
+   - When a linked join-entity FormConfiguration is provided, it is the primary source for join fields and validation.
+   - When no linked configuration is provided, child steps act as the fallback source for join fields.
+4. Builder must validate:
    - `joinEntityType` is set when `isManyToManyRelationship` is true.
    - At least one join-field definition exists (child steps or linked join config).
-4. The builder should surface metadata hints (join entity fields) for guidance.
+5. The builder should surface metadata hints (join entity fields) for guidance.
 
 ### Wizard (FormWizard / ManyToManyRelationshipEditor)
 5. Users can add a relationship by selecting a related entity from the table (current behavior remains).
