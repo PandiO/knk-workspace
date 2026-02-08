@@ -42,9 +42,9 @@ This document provides a step-by-step implementation plan organized by component
 ### Priority: HIGH
 
 #### 2.1 Extend Step Configuration for Join Entity Form
-- [ ] Add UI support in the builder to select or link a join-entity FormConfiguration.
-- [ ] Store the linked configuration ID on the many-to-many step (e.g., `subConfigurationId`).
-- [ ] Ensure linked config is only available for join entity type.
+- [x] Add UI support in the builder to select or link a join-entity FormConfiguration.
+- [x] Store the linked configuration ID on the many-to-many step (e.g., `subConfigurationId`).
+- [x] Ensure linked config is only available for join entity type.
 
 **Files**:
 - [Repository/knk-web-app/src/components/FormConfigBuilder/StepEditor.tsx](Repository/knk-web-app/src/components/FormConfigBuilder/StepEditor.tsx)
@@ -55,10 +55,10 @@ This document provides a step-by-step implementation plan organized by component
 ---
 
 #### 2.2 Validation for Many-to-Many Steps
-- [ ] Validate `joinEntityType` is set when `isManyToManyRelationship` is true.
-- [ ] Validate presence of join field definition:
+- [x] Validate `joinEntityType` is set when `isManyToManyRelationship` is true.
+- [x] Validate presence of join field definition:
   - Either child steps exist, **or** linked join config is set.
-- [ ] Surface validation errors in UI.
+- [x] Surface validation errors in UI.
 
 **Files**:
 - [Repository/knk-web-app/src/components/FormConfigBuilder/StepEditor.tsx](Repository/knk-web-app/src/components/FormConfigBuilder/StepEditor.tsx)
