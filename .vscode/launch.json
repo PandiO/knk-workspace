@@ -24,10 +24,17 @@
       "type": "pwa-chrome",
       "request": "launch",
       "url": "http://localhost:3000",
-      "webRoot": "${workspaceFolder}/Repository/knk-web-app/src",
-      "preLaunchTask": "npm: start",
-      "userDataDir": "${workspaceFolder}/.vscode/chrome-profile",
-      "runtimeArgs": ["--new-window"]
+      "webRoot": "${workspaceFolder}/Repository/knk-web-app",
+      "sourceMaps": true,
+      "resolveSourceMapLocations": [
+        "${workspaceFolder}/Repository/knk-web-app/**",
+        "http://localhost:3000/**",
+        "!**/node_modules/**"
+      ],
+      "sourceMapPathOverrides": {
+        "http://localhost:3000/static/js/C:/*": "C:/*",
+        "http://localhost:3000/static/js/*": "${webRoot}/*"
+      }
     }
   ],
   "compounds": [
