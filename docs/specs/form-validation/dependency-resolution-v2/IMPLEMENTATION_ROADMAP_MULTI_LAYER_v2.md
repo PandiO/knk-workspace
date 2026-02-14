@@ -1489,7 +1489,7 @@ it('PathBuilder matches screenshot', () => {
 #### 7.1 Update WorldBoundFieldRenderer
 **Time:** 2 hours
 
-Use resolved dependencies from useEnrichedFormContext:
+Update the `WorldBoundFieldRenderer` component (the active component used by FormWizard) to use resolved dependencies from useEnrichedFormContext:
 
 ```tsx
 const formContext = useEnrichedFormContext(formConfiguration);
@@ -1514,19 +1514,13 @@ const handleCreateInMinecraft = async () => {
 };
 ```
 
-ConstraintLayout Criteria:**
-- ✅ Uses resolved dependencies
-- ✅ Passes dehydrated payload
+**Acceptance Criteria:**
+- ✅ Uses resolved dependencies from useEnrichedFormContext
+- ✅ Passes dehydrated payload with validation context
 - ✅ Backward compatible with existing tasks
+- ✅ **Note:** `WorldTaskCta.tsx` is dead code (not imported anywhere) and should be deleted as cleanup
 
----
-
-#### 7.2 Update WorldTaskCta
-**Time:** 2 hours
-
-Apply same pattern for CTA component resolution.
-
-#### 7.3 Test with Minecraft Plugin
+#### 7.2 Test with Minecraft Plugin
 **Time:** 3 hours
 
 - Connect to running Minecraft server
@@ -1537,7 +1531,7 @@ Apply same pattern for CTA component resolution.
   - Multi-layer paths resolve properly
 - Log any discrepancies
 
-#### 7.4 Validation Message Interpolation
+#### 7.3 Validation Message Interpolation
 **Time:** 2 hours
 
 Verify backend pre-interpolation working:
@@ -1545,7 +1539,7 @@ Verify backend pre-interpolation working:
 - Placeholders replaced with actual values
 - Plugin displays without additional processing
 
-#### 7.5 E2E Test Scenarios
+#### 7.4 E2E Test Scenarios
 **Time:** 2 hours
 
 Create comprehensive E2E tests:
@@ -1587,11 +1581,11 @@ describe('Multi-Layer Dependency Validation E2E', () => {
 
 ### Deliverables
 
-- ✅ Updated WorldBoundFieldRenderer
-- ✅ Updated WorldTaskCta
+- ✅ Updated WorldBoundFieldRenderer with resolved dependencies integration
 - ✅ Minecraft integration tested
 - ✅ E2E test scenarios passing
 - ✅ Message interpolation verified
+- ℹ️ **Cleanup Note:** Delete `WorldTaskCta.tsx` (dead code - not imported anywhere, safe to remove)
 
 ---
 
