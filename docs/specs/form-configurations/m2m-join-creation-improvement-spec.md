@@ -57,6 +57,11 @@ As an admin, I want to be able to configure a m2m relationship with a join entit
 3. **Join entity modal** should be wired similarly to the existing child form modal but scoped to join-entity creation.
 4. **Configuration model** should support an optional `subConfigurationId` or equivalent pointer for join entity forms.
 
+### Implementation Notes (Phase 4)
+- Join entity metadata is fetched for configured join types and used to resolve the related FK field (e.g., `EnchantmentDefinitionId`).
+- Normalization now preserves join entry objects and strips UI-only fields (`relatedEntity`, `relatedEntityId`, `__childProgressId`).
+- Submission is blocked with a clear error when metadata or related entity mapping is missing.
+
 ## Suggested Enhancements
 - Add a “Create new related entity” action in the selection table when none exists.
 - Add a “Clone join entry” action for repeated configurations (e.g., same enchantment with different levels).

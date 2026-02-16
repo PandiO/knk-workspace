@@ -105,9 +105,9 @@ This document provides a step-by-step implementation plan organized by component
 ### Priority: HIGH
 
 #### 4.1 Preserve Join Entity Objects in Submission Payload
-- [ ] Detect many-to-many steps and keep join objects rather than collapsing to ID arrays.
-- [ ] Map selected related entity to the correct FK field using metadata.
-- [ ] Include join fields (e.g., `Level`) in payload.
+- [x] Detect many-to-many steps and keep join objects rather than collapsing to ID arrays.
+- [x] Map selected related entity to the correct FK field using metadata.
+- [x] Include join fields (e.g., `Level`) in payload.
 
 **Files**:
 - [Repository/knk-web-app/src/utils/forms/normalizeFormSubmission.ts](Repository/knk-web-app/src/utils/forms/normalizeFormSubmission.ts)
@@ -117,8 +117,8 @@ This document provides a step-by-step implementation plan organized by component
 ---
 
 #### 4.2 End-to-End Payload Validation
-- [ ] Ensure payload matches backend DTO expectations (`defaultEnchantments` array).
-- [ ] Block form completion with clear error if join mapping fails.
+- [x] Ensure payload matches backend DTO expectations (`defaultEnchantments` array).
+- [x] Block form completion with clear error if join mapping fails.
 
 **Files**:
 - [Repository/knk-web-app/src/components/FormWizard/FormWizard.tsx](Repository/knk-web-app/src/components/FormWizard/FormWizard.tsx)
@@ -159,9 +159,9 @@ This document provides a step-by-step implementation plan organized by component
 ### Priority: HIGH
 
 #### 6.1 Unit Tests (Form Normalization)
-- [ ] Many-to-many payload retains join objects.
-- [ ] Mapping uses metadata and resolves correct FK.
-- [ ] Missing metadata produces blocked submission.
+- [x] Many-to-many payload retains join objects.
+- [x] Mapping uses metadata and resolves correct FK.
+- [x] Missing metadata produces blocked submission.
 
 **Files**:
 - [Repository/knk-web-app/src/utils/forms/__tests__/normalizeFormSubmission.test.ts](Repository/knk-web-app/src/utils/forms/__tests__/normalizeFormSubmission.test.ts)
