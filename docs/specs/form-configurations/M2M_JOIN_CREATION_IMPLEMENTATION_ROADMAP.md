@@ -132,27 +132,26 @@ This document provides a step-by-step implementation plan organized by component
 ### Priority: MEDIUM
 
 #### 5.1 Join-Entity Validation Rules
-- [ ] Apply existing validation rules to join-entity fields.
-- [ ] Display inline validation errors per relationship card.
+- [x] Apply existing validation rules to join-entity fields.
+- [x] Display inline validation errors per relationship card.
 
-**Files**:
+**Files**: 
 - [Repository/knk-web-app/src/components/FormWizard/ManyToManyRelationshipEditor.tsx](Repository/knk-web-app/src/components/FormWizard/ManyToManyRelationshipEditor.tsx)
 - [Repository/knk-web-app/src/components/FormWizard/FieldRenderers.tsx](Repository/knk-web-app/src/components/FormWizard/FieldRenderers.tsx)
 
+**Status**: ✅ Complete  
 **Effort**: 2-3 hours
 
 ---
 
 #### 5.2 Conflict Handling
-- [ ] If related entity is missing/deleted, block completion with clear message.
-- [ ] Provide guidance to re-select or reconfigure the relationship.
+- [x] If related entity is missing/deleted, block completion with clear message.
+- [x] Provide guidance to re-select or reconfigure the relationship.
 
 **Files**:
 - [Repository/knk-web-app/src/components/FormWizard/ManyToManyRelationshipEditor.tsx](Repository/knk-web-app/src/components/FormWizard/ManyToManyRelationshipEditor.tsx)
 
-**Effort**: 1-2 hours
-
----
+**Status**: ✅ Complete  
 
 ## Phase 6: Testing
 
@@ -204,9 +203,9 @@ This document provides a step-by-step implementation plan organized by component
 |------|-----------|----------|------|---------|--------|
 | 1 | Requirements & Contracts | 1h | Low | None | Not Started |
 | 2 | Builder Enhancements | 3-5h | Med | Phase 1 | Not Started |
-| 3 | Wizard UX + Join Creation | 7-10h | Med | Phase 2 | Not Started |
-| 4 | Payload Normalization | 3-5h | Med | Phase 3 | Not Started |
-| 5 | Validation + Error UX | 3-5h | Med | Phase 3 | Not Started |
+| 3 | Wizard UX + Join Creation | 7-10h | Med | Phase 2 | ✅ Complete |
+| 4 | Payload Normalization | 3-5h | Med | Phase 3 | ✅ Complete |
+| 5 | Validation + Error UX | 3-5h | Med | Phase 3 | ✅ Complete |
 | 6 | Testing | 5-8h | Med | Phase 4-5 | Not Started |
 | 7 | Documentation | 1-2h | Low | Phase 6 | Not Started |
 
