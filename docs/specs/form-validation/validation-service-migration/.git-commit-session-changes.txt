@@ -1,0 +1,75 @@
+================================================================================
+GIT COMMIT MESSAGE - Main Repository (Documentation)
+================================================================================
+
+Subject:
+docs: Add validator integration fix documentation and migration plan
+
+Description:
+Document the critical bug fix where FieldValidationService was using stub
+implementations instead of calling registered IValidationMethod validators,
+resulting in empty placeholder dictionaries being returned to the frontend.
+
+Added comprehensive documentation:
+- PHASE_9_VALIDATOR_INTEGRATION_FIX.md: Technical analysis of root cause,
+  solution implementation, and data flow diagrams
+- IMPLEMENTATION_STATUS_VALIDATOR_FIX.md: Quick reference status showing
+  build success and verification checklist
+
+Changes:
+- Root cause: FieldValidationService had hard-coded stubs that never
+  delegated to LocationInsideRegionValidator and other validators
+- Impact: Backend returned placeholders=0, causing literal {townName}
+  instead of interpolated values in UI
+- Documentation includes pros/cons analysis for consolidating
+  ValidationService vs FieldValidationService
+
+Related: eae1f70 (Fix: Delegate field validation to registered validators)
+
+================================================================================
+GIT COMMIT MESSAGE - knk-web-api-v2 Repository
+================================================================================
+
+Subject:
+fix(validation): Delegate field validation to registered IValidationMethod implementations
+
+Description:
+Fixed critical bug where FieldValidationService contained stub implementations
+that never called the registered validators, causing placeholders dictionary
+to always be empty (placeholders=0 in logs).
+
+Root Cause:
+- IValidationMethod validators (LocationInsideRegionValidator, 
+  RegionContainmentValidator, ConditionalRequiredValidator) were registered
+  in DI but never injected into FieldValidationService
+- Service had TODO comments with hardcoded "isValid = true" returns
+- Backend logs confirmed validators were not executing
+
+Changes:
+- Updated FieldValidationService constructor to inject IEnumerable<IValidationMethod>
+- Built internal Dictionary<string, IValidationMethod> lookup by ValidationType
+- Replaced stub implementations in:
+  * ValidateLocationInsideRegionAsync() - now calls LocationInsideRegionValidator
+  * ValidateRegionContainmentAsync() - now calls RegionContainmentValidator
+  * ValidateConditionalRequiredAsync() - now calls ConditionalRequiredValidator
+- Convert Dictionary<string, string> placeholders to Dictionary<string, object>
+  formContextData for validator.ValidateAsync() calls
+- Updated test constructors to pass empty validator list
+
+Impact:
+- Backend now properly creates placeholders via validators
+- LocationInsideRegionValidator creates: coordinates, townName, regionName
+- Frontend receives non-empty placeholders dictionary
+- End-to-end placeholder interpolation now functional
+
+Build Status:
+- Reduced from 8 errors to 0 errors
+- 32 warnings (28 pre-existing, 4 NuGet-related)
+
+Files Changed:
+- Services/FieldValidationService.cs (168 lines: -116 deletions, +58 insertions)
+- Tests/Integration/PlaceholderResolutionIntegrationTests.cs (constructor update)
+- Tests/Services/FieldValidationServiceTests.cs (constructor update)
+
+Breaking Changes: None
+Migrations Required: None
