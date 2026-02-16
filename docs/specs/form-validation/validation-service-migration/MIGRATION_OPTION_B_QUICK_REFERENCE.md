@@ -72,7 +72,7 @@ var result = rule.ValidationType switch {
 ```
 ✅ Placeholder pre-resolution | ❌ Single-rule only | ❌ No aggregation
 
-**Your Answer**: ________________
+**Your Answer**: ValidationService.cs Pattern________________
 
 ---
 
@@ -86,7 +86,7 @@ var result = rule.ValidationType switch {
 - Pros: Only resolve on failure
 - Cons: May miss some placeholder patterns
 
-**Your Answer**: ________________
+**Your Answer**: Go for Option B but use standardized resolution pattern.________________
 
 ---
 
@@ -100,7 +100,20 @@ Select-String -Pattern "IValidationService|IFieldValidationService" -Path "Contr
 
 **Your Results**:
 ```
-_______________
+  Controllers\FieldValidationRulesController.cs:14:    public class FieldValidationRulesController : ControllerBase
+  Controllers\FieldValidationRulesController.cs:15:    {
+> Controllers\FieldValidationRulesController.cs:16:        private readonly IValidationService _service;
+  Controllers\FieldValidationRulesController.cs:17:        private readonly IPlaceholderResolutionService _placeholderService;
+> Controllers\FieldValidationRulesController.cs:18:        private readonly IFieldValidationService _fieldValidationService;
+  Controllers\FieldValidationRulesController.cs:19:        private readonly IFieldValidationRuleRepository _ruleRepository;
+  Controllers\FieldValidationRulesController.cs:20:        private readonly IDependencyResolutionService _dependencyService;
+  Controllers\FieldValidationRulesController.cs:22:
+  Controllers\FieldValidationRulesController.cs:23:        public FieldValidationRulesController(
+> Controllers\FieldValidationRulesController.cs:24:            IValidationService service,
+  Controllers\FieldValidationRulesController.cs:25:            IPlaceholderResolutionService placeholderService,
+> Controllers\FieldValidationRulesController.cs:26:            IFieldValidationService fieldValidationService,
+  Controllers\FieldValidationRulesController.cs:27:            IFieldValidationRuleRepository ruleRepository,
+  Controllers\FieldValidationRulesController.cs:28:            IDependencyResolutionService dependencyService,
 ```
 
 ---
@@ -114,11 +127,11 @@ grep -r "field-validation-rules" src/
 ```
 
 Which endpoints does frontend call?
-- [ ] `/api/field-validation-rules/validate`
+- [X] `/api/field-validation-rules/validate`
 - [ ] `/api/field-validation-rules/validate-field-rule`
 - [ ] Both?
 
-**Your Answer**: ________________
+**Your Answer**: ____Option A____________
 
 ---
 
@@ -132,7 +145,7 @@ Which endpoints does frontend call?
 - Frontend loops through rules
 - Backend validates one rule at a time
 
-**Your Answer**: ________________
+**Your Answer**: Option A (Backend Aggregates)
 
 ---
 
@@ -148,21 +161,23 @@ Which endpoints does frontend call?
 - Add `/api/v2/field-validation-rules/validate` (new)
 - Gradual migration over 1-2 months
 
-**Your Answer**: ________________
+**Your Answer**: _____Option A___________
 
 ---
 
 ## 📊 Files Affected (Impact Analysis)
 
-### Create New (2 files)
+### Backend (.NET Core)
+
+#### Create New (2 files)
 - `Services/FieldValidationRuleService.cs`
 - `Services/Interfaces/IFieldValidationRuleService.cs`
 
-### Enhance (2 files)
+#### Enhance (2 files)
 - `Services/ValidationService.cs` - Add placeholder resolution
 - `Services/Interfaces/IValidationService.cs` - Add placeholder methods
 
-### Update (6+ files)
+#### Update (6 files)
 - `Controllers/FieldValidationRulesController.cs` - Update DI/endpoints
 - `DependencyInjection/ServiceCollectionExtensions.cs` - Register new service
 - `Tests/Services/ValidationServiceTests.cs` - Split/enhance
@@ -170,14 +185,60 @@ Which endpoints does frontend call?
 - `Tests/Integration/PlaceholderResolutionIntegrationTests.cs` - Update
 - `Tests/Controllers/FieldValidationRulesControllerTests.cs` - Update
 
-### Delete (2 files)
+#### Delete (2 files)
 - `Services/FieldValidationService.cs`
 - `Services/Interfaces/IFieldValidationService.cs`
 
-### Frontend (3+ files)
+### Frontend (React/TypeScript)
+
+#### Update (3 files)
 - `src/services/fieldValidationRuleClient.ts` - Update API calls
 - `src/components/FormWizard.tsx` - Update validation calls
 - `src/components/Workflow/WorldBoundFieldRenderer.tsx` - Update calls
+
+### Minecraft Plugin (Java/Gradle)
+
+Plugin contains validation logic that **receives** validation rules from backend and **executes** them locally (via `ValidationResult`). Changes needed:
+
+#### Update (5 files)
+
+**Domain Models** (`knk-core`):
+- `knk-core/src/main/java/net/knightsandkings/knk/core/domain/validation/WorldTaskValidationContext.java`
+  - Maps `FieldValidationRule` DTOs from backend
+  - No changes likely needed (DTO structure should remain compatible)
+
+- `knk-core/src/main/java/net/knightsandkings/knk/core/domain/validation/WorldTaskValidationRule.java`
+  - Represents individual validation rules (mirrors backend `FieldValidationRule`)
+  - **May need**: Align `validationType` enum with backend changes (if validation types are added/removed)
+
+- `knk-core/src/main/java/net/knightsandkings/knk/core/domain/validation/ValidationResult.java`
+  - Communicates validation pass/fail/warning to task handlers
+  - No changes needed (result format stable)
+
+**Paper Implementation** (`knk-paper`):
+- `knk-paper/src/main/java/net/knightsandkings/knk/paper/tasks/LocationTaskHandler.java`
+  - **Executes** validation rules received from backend
+  - **Key methods**: `validateLocation()`, `validateLocationInsideRegion()`
+  - **Potential changes**:
+    * If backend rule structure changes → update parsing logic
+    * If new validation types added → add corresponding handlers
+    * Placeholder interpolation calls to `PlaceholderInterpolationUtil` may need updates if placeholder format changes
+
+- `knk-paper/src/main/java/net/knightsandkings/knk/paper/utils/PlaceholderInterpolationUtil.java`
+  - **Interpolates placeholders** in validation error messages
+  - **Methods**: `interpolate()`, `mergePlaceholders()`
+  - **May need**: Update placeholder merging logic to align with new backend placeholder resolution patterns
+  - **Critical path**: If backend changes placeholder structure → must update merge/interpolation here
+
+#### Why Plugin Needs Updates
+
+1. **Rule Structure Alignment**: Plugin receives validation rules from backend via WorldTask InputJson. If backend rule DTO changes, plugin parsing breaks.
+
+2. **New Validation Types**: If new `validationType` values are added (e.g., `ConditionalRequired`), plugin won't know how to handle them → needs corresponding handler.
+
+3. **Placeholder Format**: Backend aggregates placeholders differently → plugin needs to merge them correctly for error messages.
+
+4. **Validation Execution**: Plugin currently executes rules locally (lines 317-370 in LocationTaskHandler). If backend validation logic changes materially, plugin may need alignment.
 
 ---
 
