@@ -83,6 +83,17 @@ As an admin, I want to be able to configure a m2m relationship with a join entit
 - Submission payload matches backend DTO expectations for join entities.
 - Existing many-to-many configurations continue to function without changes.
 
+## Final Decisions (Implemented)
+- Scope of on-the-fly creation is limited to **join entities**.
+- Join form source of truth: prefer linked FormConfiguration; fall back to child steps.
+- Multi-step join forms are supported.
+- Related FK mapping uses **join-entity metadata**; submission blocks if mapping fails.
+- Join entries are persisted as child progress for draft/resume.
+- Conflict handling blocks completion with guidance to re-select or reconfigure.
+
+## Developer Guide
+See [docs/specs/form-configurations/m2m-join-creation-developer-guide.md](docs/specs/form-configurations/m2m-join-creation-developer-guide.md) for configuration steps, expected payload shape, and troubleshooting.
+
 ## References
 - Many-to-many editor: [Repository/knk-web-app/src/components/FormWizard/ManyToManyRelationshipEditor.tsx](Repository/knk-web-app/src/components/FormWizard/ManyToManyRelationshipEditor.tsx)
 - Form wizard: [Repository/knk-web-app/src/components/FormWizard/FormWizard.tsx](Repository/knk-web-app/src/components/FormWizard/FormWizard.tsx)

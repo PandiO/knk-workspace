@@ -186,8 +186,8 @@ This document provides a step-by-step implementation plan organized by component
 ### Priority: MEDIUM
 
 #### 7.1 Documentation
-- [ ] Update improvement spec with final decisions.
-- [ ] Add a short developer guide for configuring join-entity forms.
+- [x] Update improvement spec with final decisions.
+- [x] Add a short developer guide for configuring join-entity forms.
 
 **Files**:
 - [docs/specs/form-configurations/m2m-join-creation-improvement-spec.md](docs/specs/form-configurations/m2m-join-creation-improvement-spec.md)
@@ -207,7 +207,7 @@ This document provides a step-by-step implementation plan organized by component
 | 4 | Payload Normalization | 3-5h | Med | Phase 3 | ✅ Complete |
 | 5 | Validation + Error UX | 3-5h | Med | Phase 3 | ✅ Complete |
 | 6 | Testing | 5-8h | Med | Phase 4-5 | Not Started |
-| 7 | Documentation | 1-2h | Low | Phase 6 | Not Started |
+| 7 | Documentation | 1-2h | Low | Phase 6 | ✅ Complete |
 
 **Total Estimated Effort**: ~23-36 hours
 
