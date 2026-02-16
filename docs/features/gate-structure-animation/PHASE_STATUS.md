@@ -1,6 +1,6 @@
 # Gate Animation System - Phase Status
 
-**Last Updated**: 2026-01-31
+**Last Updated**: 2026-02-16
 
 | Phase | Focus | Status | Notes |
 | --- | --- | --- | --- |
@@ -12,6 +12,8 @@
 | 6 | Plugin Core (API Client, Cache, Loader) | ✅ Complete | Gate loader adapter caches gates from API; animation data precomputed; startup load wired. |
 | 7 | Plugin Animation Engine | ✅ Complete | Frame calculator, block placement, animation task, state machine, lag/chunk handling implemented. |
 | 8 | Plugin Entity Interaction | ✅ Complete | Collision prediction + entity push integration added with unit tests. |
+| 9 | Plugin Commands & Events | ⏳ Pending | Command registration and gate event wiring still needed. |
+| 10 | WorldGuard & Health System | ✅ Complete | WorldGuard flags applied on state changes; health/damage/respawn logic implemented and persisted. |
 
 ## Phase 5 Implementation Details
 
