@@ -70,6 +70,12 @@
 
 ## Phase 3: Enhance ValidationService (Days 5-7)
 
+> **⚠️ PHASE NUMBERING MISMATCH ALERT**  
+> - **MASTER_CHECKLIST Phase 3**: DI registration update (✅ COMPLETED)
+> - **MIGRATION_PROGRESS_TRACKER Phase 3**: ValidationService placeholder enhancement (⏳ PENDING)
+> 
+> **Resolution**: This phase (enhance ValidationService with placeholder support) will be implemented as **Phase 3b** after MASTER_CHECKLIST Phase 4 (Controller Update) is complete. This allows for the full dependency graph to be wired before enhancing validation logic.
+
 ### Add Placeholder Support
 - [ ] Inject `IPlaceholderResolutionService` in constructor
 - [ ] Add `ResolvePlaceholdersForRuleAsync()` method
