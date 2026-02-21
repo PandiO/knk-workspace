@@ -411,34 +411,38 @@ public async Task<FieldValidationResultDto> ValidateFieldWithPlaceholdersAsync(
 
 ---
 
-## Phase 3: Dependency Injection Update (Day 7)
+## Phase 3: Dependency Injection Update (Day 7) ✅ COMPLETED
 
-### 3.1 Update ServiceCollectionExtensions
+> **Note**: MASTER_CHECKLIST Phase 3 ≠ MIGRATION_PROGRESS_TRACKER Phase 3  
+> - **MASTER_CHECKLIST Phase 3**: DI registration update (now complete)
+> - **MIGRATION_PROGRESS_TRACKER Phase 3**: ValidationService placeholder enhancement (pending, will implement later as Phase 3b)
 
-**File**: `DependencyInjection/ServiceCollectionExtensions.cs` (MODIFY)
+### 3.1 Update ServiceCollectionExtensions ✅
 
-**Find location**: Search for `AddValidationServices` method
+**File**: `DependencyInjection/ServiceCollectionExtensions.cs` (MODIFIED)
 
-**Current**:
+**Status**: ✅ COMPLETED on 2026-02-18
+
+**Changes Made**:
+- [x] Added: `services.AddScoped<IFieldValidationRuleService, FieldValidationRuleService>();`
+- [x] Removed: `services.AddScoped<IFieldValidationService, FieldValidationService>();`
+- [x] Verified: `IValidationService` registration exists
+- [x] Verified: `IPlaceholderResolutionService` registration exists
+
+**Current State**:
 ```csharp
 services.AddScoped<IValidationService, ValidationService>();
-services.AddScoped<IFieldValidationService, FieldValidationService>();  // ← DELETE
-```
-
-**Updated**:
-```csharp
-services.AddScoped<IValidationService, ValidationService>();
-services.AddScoped<IFieldValidationRuleService, FieldValidationRuleService>();  // ← ADD
+services.AddScoped<IFieldValidationRuleService, FieldValidationRuleService>();  // ← ADDED
 services.AddScoped<IFieldValidationRuleRepository, FieldValidationRuleRepository>();
 services.AddScoped<IPlaceholderResolutionService, PlaceholderResolutionService>();
 services.AddScoped<IDependencyResolutionService, DependencyResolutionService>();
-services.AddScoped<IPathResolutionService, IPathResolutionService>();
+services.AddScoped<IPathResolutionService, PathResolutionService>();
 ```
 
-**Verification**:
-- [ ] Compile: `dotnet build`
-- [ ] No errors about missing services
-- [ ] IFieldValidationRuleService properly registered
+**Verification Results**:
+- [x] Compile: `dotnet build` → Build succeeded ✅
+- [x] No errors about missing services
+- [x] IFieldValidationRuleService properly registered
 
 ---
 
