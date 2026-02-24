@@ -31,7 +31,7 @@ Three comprehensive specification documents are maintained in `docs/custom-encha
 
 **Includes**:
 - Module-level implementation breakdown
-- 7 implementation phases with deliverables and acceptance criteria
+- 8 implementation phases with deliverables and acceptance criteria
 - Sequencing, dependencies, and risk assessment
 - Notes for Copilot implementation
 
@@ -53,11 +53,14 @@ Three comprehensive specification documents are maintained in `docs/custom-encha
 Custom enchantments are documented as **abilities** that can be exposed through multiple contexts:
 
 1. As an enchantment in `EnchantmentDefinition` with `IsCustom = true`
-2. As assignments to `ItemBlueprint` instances (e.g., default enchantment/ability loadouts)
-3. As future personal skills attached to user instances (skill feature not yet implemented)
+2. As optional custom metadata in an extension entity linked to `EnchantmentDefinition`
+3. As assignments to `ItemBlueprint` instances (e.g., default enchantment/ability loadouts)
+4. As future personal skills attached to user instances (skill feature not yet implemented)
 
 `EnchantmentDefinition` is the canonical model for both vanilla and custom enchantments.  
 Custom entries are identified by `IsCustom = true`.
+
+The extension entity is optional, so vanilla enchantments remain first-class without custom metadata rows.
 
 ---
 
@@ -84,6 +87,7 @@ Custom entries are identified by `IsCustom = true`.
 ### Architecture Patterns
 
 - **Canonical persistence**: Web API entity model (`EnchantmentDefinition` and related assignment entities)
+- **Optional extension**: custom-only metadata hangs off `EnchantmentDefinition` via optional 1:1 extension
 - **Runtime adapter**: Plugin lore/event handling for in-game execution
 - **Threading**: Events → async parsing/checks → main thread effects
 - **Permissions**: Per-ability permission nodes
@@ -92,8 +96,9 @@ Custom entries are identified by `IsCustom = true`.
 ### Design Decisions
 
 1. **Unified Ability Model**: custom enchantments are modeled as abilities in the shared domain.
-2. **Dual Attachment Targets**: ability links are required for `ItemBlueprint`, and planned for user skills.
-3. **Canonical Entity Flag**: custom definitions must set `EnchantmentDefinition.IsCustom = true`.
+2. **Optional Extension Pattern**: custom-only metadata is kept in an optional extension linked to `EnchantmentDefinition`.
+3. **Dual Attachment Targets**: ability links are required for `ItemBlueprint`, and planned for user skills.
+4. **Canonical Entity Flag**: custom definitions must set `EnchantmentDefinition.IsCustom = true`.
 4. **Runtime Compatibility**: plugin execution keeps command/listener patterns for in-game behavior.
 
 ---
@@ -130,10 +135,11 @@ Custom entries are identified by `IsCustom = true`.
 ## Next Steps
 
 1. Finalize API model details for ability attachments to `ItemBlueprint`.
-2. Reserve/define user-instance attachment contract for future skill feature.
-3. Implement `IsCustom = true` enforcement for custom `EnchantmentDefinition` records.
-4. Align plugin runtime parsing/execution with API definitions.
-5. Execute roadmap phases and validate with test checklists.
+2. Implement optional extension entity mapping from `EnchantmentDefinition`.
+3. Reserve/define user-instance attachment contract for future skill feature.
+4. Implement `IsCustom = true` enforcement for custom `EnchantmentDefinition` records.
+5. Align plugin runtime parsing/execution with API definitions.
+6. Execute roadmap phases and validate with test checklists.
 
 ---
 
@@ -141,6 +147,7 @@ Custom entries are identified by `IsCustom = true`.
 
 ✅ Legacy behavior has been analyzed and preserved where needed.  
 ✅ Documentation now reflects the v2 unified ability model.  
+✅ Optional extension model is defined without replacing `EnchantmentDefinition`.  
 ✅ Custom abilities are explicitly tied to `EnchantmentDefinition.IsCustom = true`.  
 ✅ Attachment strategy now covers `ItemBlueprint` and future user skills.  
 ✅ Docs are ready for implementation across API, web app, and plugin layers.

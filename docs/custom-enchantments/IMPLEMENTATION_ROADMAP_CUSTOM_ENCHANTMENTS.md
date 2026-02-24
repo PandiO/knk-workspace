@@ -14,6 +14,7 @@ This roadmap outlines the step-by-step implementation plan for integrating the *
 
 Canonical rules for this roadmap:
 - Custom abilities are represented by `EnchantmentDefinition` rows with `IsCustom = true`.
+- Custom ability metadata should be modeled as an optional extension entity (e.g., `AbilityDefinition`) linked 1:1 to `EnchantmentDefinition`.
 - Ability assignments must support `ItemBlueprint` attachment.
 - Ability assignments must support future user-instance personal skill attachment (feature planned, not implemented).
 - Plugin lore/event logic is runtime adapter behavior, not canonical persistence.
@@ -60,6 +61,7 @@ src/main/java/net/knightsandkings/knk/api/
 ### knk-web-api-v2 (required alignment)
 **Responsibility**: Canonical definitions and attachment relationships
 - `EnchantmentDefinition` (custom abilities: `IsCustom = true`)
+- Optional `AbilityDefinition` extension entity linked to `EnchantmentDefinition`
 - `ItemBlueprint` assignment compatibility
 - User-instance skill assignment contract (placeholder until skill feature is built)
 
@@ -258,7 +260,66 @@ CompletableFuture<ItemStack> removeEnchantment(ItemStack item, String enchantmen
 
 ---
 
-## Phase 2: Passive Attack Enchantments
+## Phase 2: Optional Ability Extension Model (API-first)
+
+### Task 2.1: Add Ability Extension Entity (knk-web-api-v2)
+
+**Deliverables**:
+- `AbilityDefinition` (or similarly named) model entity
+- Optional 1:1 navigation: `EnchantmentDefinition -> AbilityDefinition?`
+- Reverse navigation: `AbilityDefinition -> EnchantmentDefinition`
+
+**Responsibility**:
+- Keep `EnchantmentDefinition` as canonical parent for vanilla and custom entries
+- Store custom-only behavior metadata in the extension entity
+- Ensure the extension remains optional and non-breaking for vanilla enchantments
+
+**Acceptance Criteria**:
+- Vanilla `EnchantmentDefinition` rows work without extension rows
+- Custom entries can include extension metadata via navigation
+- ORM mapping supports optional 1:1 relationship cleanly
+
+**Estimated Effort**: 3 hours
+
+---
+
+### Task 2.2: Enforce Domain Invariants (knk-web-api-v2)
+
+**Deliverables**:
+- Service/repository validation rules
+- DB-level uniqueness/foreign-key constraints for 1:1 mapping
+
+**Responsibility**:
+- Enforce `AbilityDefinition` allowed only when `EnchantmentDefinition.IsCustom = true`
+- Prevent multiple extension rows for the same enchantment definition
+
+**Acceptance Criteria**:
+- Invalid custom/non-custom combinations are rejected
+- 1:1 uniqueness is enforced
+
+**Estimated Effort**: 2 hours
+
+---
+
+### Task 2.3: Prepare User-Based Relationship Hooks (knk-web-api-v2)
+
+**Deliverables**:
+- Placeholder assignment contract (entity or documented stub) for future user-skill linking
+- Updated relationship notes for `ItemBlueprint` and user-side assignment parity
+
+**Responsibility**:
+- Keep implementation scope minimal (no full skill feature)
+- Define the attach-point so user-based system can integrate without schema refactor
+
+**Acceptance Criteria**:
+- Roadmap/spec references are aligned on future user assignment shape
+- No regression in current `ItemBlueprint` assignment behavior
+
+**Estimated Effort**: 1 hour
+
+---
+
+## Phase 3: Passive Attack Enchantments
 
 ### Task 2.1: Create Effect Base Classes (knk-paper)
 
@@ -434,7 +495,7 @@ CompletableFuture<ItemStack> removeEnchantment(ItemStack item, String enchantmen
 
 ---
 
-## Phase 3: Active Support Enchantments
+## Phase 4: Active Support Enchantments
 
 ### Task 3.1: Create SupportEnchantmentEffect Base (knk-paper)
 
@@ -547,7 +608,7 @@ CompletableFuture<ItemStack> removeEnchantment(ItemStack item, String enchantmen
 
 ---
 
-## Phase 4: Commands & Administration
+## Phase 5: Commands & Administration
 
 ### Task 4.1: Design Command Structure (knk-paper)
 
@@ -595,7 +656,7 @@ CompletableFuture<ItemStack> removeEnchantment(ItemStack item, String enchantmen
 
 ---
 
-## Phase 5: Configuration & Bootstrap
+## Phase 6: Configuration & Bootstrap
 
 ### Task 5.1: Design Configuration Format
 
@@ -672,7 +733,7 @@ public void initialize(Plugin plugin) {
 
 ---
 
-## Phase 6: Testing & Quality Assurance
+## Phase 7: Testing & Quality Assurance
 
 ### Task 6.1: Unit Tests (knk-core)
 
@@ -728,7 +789,7 @@ public void initialize(Plugin plugin) {
 
 ---
 
-## Phase 7: Documentation & Release
+## Phase 8: Documentation & Release
 
 ### Task 7.1: Create In-Game Help System
 
@@ -761,36 +822,40 @@ public void initialize(Plugin plugin) {
 | 1 | LocalEnchantmentRepositoryImpl | 4 | Not Started |
 | 1 | CooldownManager | 2 | Not Started |
 | **Phase 1 Total** | | **13** | |
-| 2 | Effect Base Classes | 1 | Not Started |
-| 2 | Poison Effect | 1.5 | Not Started |
-| 2 | Wither Effect | 1.5 | Not Started |
-| 2 | Freeze Effect | 3 | Not Started |
-| 2 | Blindness Effect | 1 | Not Started |
-| 2 | Confusion Effect | 1 | Not Started |
-| 2 | Strength Effect | 1.5 | Not Started |
-| 2 | Combat Listener | 2 | Not Started |
-| 2 | Enchant Table Listener | 1 | Not Started |
-| **Phase 2 Total** | | **14.5** | |
-| 3 | Support Effect Base | 1 | Not Started |
-| 3 | Support Effects (4) | 4 | Not Started |
-| 3 | Chaos Effects (2) | 3 | Not Started |
-| 3 | Interact Listener | 2 | Not Started |
-| **Phase 3 Total** | | **10** | |
-| 4 | Command Design | 1 | Not Started |
-| 4 | Command Implementation | 4 | Not Started |
-| **Phase 4 Total** | | **5** | |
-| 5 | Config Manager | 1 | Not Started |
-| 5 | Bootstrap | 1 | Not Started |
-| **Phase 5 Total** | | **2** | |
-| 6 | Unit Tests | 4 | Not Started |
-| 6 | Integration Tests | 5 | Not Started |
-| 6 | Manual Testing | 8 | Not Started |
-| **Phase 6 Total** | | **17** | |
-| 7 | Help System | 2 | Not Started |
-| 7 | Documentation | 2 | Not Started |
-| **Phase 7 Total** | | **4** | |
+| 2 | Ability extension entity | 3 | Not Started |
+| 2 | Domain invariants + constraints | 2 | Not Started |
+| 2 | User assignment hooks | 1 | Not Started |
+| **Phase 2 Total** | | **6** | |
+| 3 | Effect Base Classes | 1 | Not Started |
+| 3 | Poison Effect | 1.5 | Not Started |
+| 3 | Wither Effect | 1.5 | Not Started |
+| 3 | Freeze Effect | 3 | Not Started |
+| 3 | Blindness Effect | 1 | Not Started |
+| 3 | Confusion Effect | 1 | Not Started |
+| 3 | Strength Effect | 1.5 | Not Started |
+| 3 | Combat Listener | 2 | Not Started |
+| 3 | Enchant Table Listener | 1 | Not Started |
+| **Phase 3 Total** | | **14.5** | |
+| 4 | Support Effect Base | 1 | Not Started |
+| 4 | Support Effects (4) | 4 | Not Started |
+| 4 | Chaos Effects (2) | 3 | Not Started |
+| 4 | Interact Listener | 2 | Not Started |
+| **Phase 4 Total** | | **10** | |
+| 5 | Command Design | 1 | Not Started |
+| 5 | Command Implementation | 4 | Not Started |
+| **Phase 5 Total** | | **5** | |
+| 6 | Config Manager | 1 | Not Started |
+| 6 | Bootstrap | 1 | Not Started |
+| **Phase 6 Total** | | **2** | |
+| 7 | Unit Tests | 4 | Not Started |
+| 7 | Integration Tests | 5 | Not Started |
+| 7 | Manual Testing | 8 | Not Started |
+| **Phase 7 Total** | | **17** | |
+| 8 | Help System | 2 | Not Started |
+| 8 | Documentation | 2 | Not Started |
+| **Phase 8 Total** | | **4** | |
 | | | | |
-| **Grand Total** | | **65.5 hours** | |
+| **Grand Total** | | **71.5 hours** | |
 
 ---
 
@@ -799,15 +864,17 @@ public void initialize(Plugin plugin) {
 ```
 Phase 1 (Core Infrastructure)
     ↓
-Phase 2 (Passive Enchantments) + Phase 3 (Active Enchantments) [can run in parallel]
+Phase 2 (Optional Ability Extension Model)
     ↓
-Phase 4 (Commands)
+Phase 3 (Passive Enchantments) + Phase 4 (Active Enchantments) [can run in parallel]
     ↓
-Phase 5 (Bootstrap)
+Phase 5 (Commands)
     ↓
-Phase 6 (Testing)
+Phase 6 (Bootstrap)
     ↓
-Phase 7 (Documentation & Release)
+Phase 7 (Testing)
+    ↓
+Phase 8 (Documentation & Release)
 ```
 
 ---
