@@ -14,8 +14,11 @@ This specification defines the **Custom Enchantments** system for Knights & King
 
 The canonical entity is `EnchantmentDefinition`, which stores both vanilla and custom enchantments. Custom abilities must be represented with `EnchantmentDefinition.IsCustom = true`.
 
+Custom-only metadata should be modeled as an **optional extension** entity (for example `AbilityDefinition`) with an optional 1:1 relationship from `EnchantmentDefinition`.
+
 Attachment targets:
 - `EnchantmentDefinition` (canonical definition)
+- Optional custom extension entity (e.g., `AbilityDefinition`) linked from `EnchantmentDefinition`
 - `ItemBlueprint` (default item-side assignments)
 - User instances (future skill system; not implemented yet)
 
@@ -233,7 +236,7 @@ public record EnchantmentInstance(
 
 ### 2.3 API Client (knk-api-client)
 
-**v2 Requirement**: The canonical persistence model is the Web API (`EnchantmentDefinition` + assignment relations). Plugin lore is a runtime compatibility format for in-game execution.
+**v2 Requirement**: The canonical persistence model is the Web API (`EnchantmentDefinition` + optional custom extension entity + assignment relations). Plugin lore is a runtime compatibility format for in-game execution.
 
 API client implementations should resolve definitions/assignments from API-backed data, while still supporting lore parsing/writing where needed for runtime compatibility:
 
@@ -654,23 +657,28 @@ messages:
 3. Implement `LocalEnchantmentRepositoryImpl` (lore-based storage)
 4. Implement `CooldownManager` (in-memory per-player tracking)
 
-### Phase 2: Passive Enchantments (Attack)
+### Phase 2: Optional Ability Extension Model (API-first)
+1. Add optional custom extension entity (e.g., `AbilityDefinition`) linked to `EnchantmentDefinition`
+2. Enforce invariant: extension rows only allowed when `EnchantmentDefinition.IsCustom = true`
+3. Define user-assignment attach-point contract for future skill implementation
+
+### Phase 3: Passive Enchantments (Attack)
 1. Create effect base classes: `AttackEnchantmentEffect`
 2. Implement: Poison, Wither, Freeze, Blindness, Confusion, Strength
 3. Create `EnchantmentCombatListener` (EntityDamageByEntityEvent)
 4. Create `EnchantmentEnchantTableListener` (prevent re-enchanting)
 
-### Phase 3: Active Enchantments (Right-Click)
+### Phase 4: Active Enchantments (Right-Click)
 1. Implement: Health Boost, Armor Repair, Resistance, Invisibility
 2. Implement: Chaos, Flash Chaos
 3. Create `EnchantmentInteractListener` (PlayerInteractEvent)
 
-### Phase 4: Commands & Admin
+### Phase 5: Commands & Admin
 1. Implement `/ce add`, `/ce remove`, `/ce info`
 2. Implement `/ce cooldown clear`
 3. Add permission checks
 
-### Phase 5: Polish & Documentation
+### Phase 6: Polish & Documentation
 1. Improve particle/sound selection for better visuals
 2. Add configuration options for cooldown durations
 3. Create in-game help system
@@ -741,7 +749,7 @@ messages:
 ### 12.1 Open Questions
 1. **Bow Enchantments**: Should enchanted bows have special projectile effects? (Not in original plugin)
 2. **Armor Enchantments**: Should wearing armor with enchantments grant passive effects? (Original only has interact-based)
-3. **API Persistence Detail**: Confirm exact API assignment contracts for `ItemBlueprint` and future user skills.
+3. **API Persistence Detail**: Confirm exact API contracts for `EnchantmentDefinition` ↔ optional extension entity, `ItemBlueprint` assignment, and future user skills.
 4. **Stacking**: Can a single item have multiple different enchantments? (Original: yes)
 5. **Level Caps**: Should there be a global max enchantment level or per-enchantment caps? (Original: per-enchantment)
 
@@ -752,5 +760,5 @@ messages:
 - [ ] Add particle effect customization in config
 - [ ] Design cooldown notification UI (actionbar, title, or chat)
 - [ ] Consider ProtocolLib integration for better packet-level effects
-- [ ] Define migration/backfill strategy from legacy plugin-only enchantment lore into `EnchantmentDefinition` (`IsCustom = true`) and assignment entities.
+- [ ] Define migration/backfill strategy from legacy plugin-only enchantment lore into `EnchantmentDefinition` (`IsCustom = true`), optional extension rows, and assignment entities.
 

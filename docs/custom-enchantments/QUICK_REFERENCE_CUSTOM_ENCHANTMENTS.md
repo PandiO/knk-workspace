@@ -9,6 +9,7 @@
 ## v2 Requirement Snapshot (Critical)
 
 - Custom abilities are represented as `EnchantmentDefinition` entries with `IsCustom = true`.
+- Custom-only metadata should use an optional extension entity (e.g., `AbilityDefinition`) linked to `EnchantmentDefinition`.
 - Abilities must be attachable to `ItemBlueprint` instances.
 - Abilities are planned to be attachable to user instances as personal skills (skill feature pending).
 - Plugin lore/event logic is a runtime adapter and not the canonical persistence source.
@@ -148,6 +149,7 @@ CompletableFuture<Void> executeOnMeleeHit(...) {
 
 **Canonical model**:
 - `EnchantmentDefinition` (custom rows set `IsCustom = true`)
+- Optional `AbilityDefinition` extension row for custom-only metadata
 - `ItemBlueprint` attachment support
 - Future user-instance skill attachments
 
