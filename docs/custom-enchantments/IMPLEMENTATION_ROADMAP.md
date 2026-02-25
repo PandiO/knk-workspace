@@ -33,6 +33,9 @@ Canonical rules for this roadmap:
 - ✅ Phase 3 completed (passive attack runtime): added `EnchantmentEffect`/`AttackEnchantmentEffect` contract and passive effect implementations (`Poison`, `Wither`, `Freeze`, `Blindness`, `Confusion`, `Strength`) in `knk-paper`.
 - ✅ Phase 3 completed (event integration): added `EnchantmentCombatListener`, `EnchantmentEnchantTableListener`, `FreezeMovementListener`, and runtime wiring in `KnKPlugin`.
 - ✅ Phase 3 unit coverage added: deterministic probability and effect application tests for passive effects in `knk-paper` test module.
+- ✅ Phase 4 completed (active support runtime): added `SupportEnchantmentEffect` and active effects (`HealthBoost`, `ArmorRepair`, `Resistance`, `Invisibility`, `Chaos`, `FlashChaos`) in `knk-paper`.
+- ✅ Phase 4 completed (interact integration): added `EnchantmentInteractListener`, cooldown messaging/config wiring, and `executeOnInteract` support execution with cooldown application.
+- ✅ Phase 4 unit coverage added: listener filtering/cooldown behavior and support effect base execution tests in `knk-paper`.
 
 ---
 
