@@ -2,7 +2,7 @@
 
 **Document Version**: 1.1  
 **Date**: January 11, 2026  
-**Updated**: February 24, 2026  
+**Updated**: February 25, 2026  
 **Status**: DRAFT  
 **Target Release**: Knights & Kings v2 Phase 2
 
@@ -18,6 +18,18 @@ Canonical rules for this roadmap:
 - Ability assignments must support `ItemBlueprint` attachment.
 - Ability assignments must support future user-instance personal skill attachment (feature planned, not implemented).
 - Plugin lore/event logic is runtime adapter behavior, not canonical persistence.
+
+### Implementation Progress (as of 2026-02-24)
+
+- ✅ Phase 1.1 completed: Domain models added in `knk-core` under `core/domain/enchantment`.
+- ✅ Phase 1.2 completed: Port interfaces added in `knk-core` under `core/ports/enchantment` with `CompletableFuture` contracts and no Bukkit imports.
+- ✅ Phase 1.3 completed: `EnchantmentRegistry` implemented with all 12 roadmap enchantments and type/level lookup helpers.
+- ✅ Phase 1.4 completed: `LocalEnchantmentRepositoryImpl` added in `knk-api-client` as lore runtime adapter.
+- ✅ Phase 1.5 completed: `InMemoryCooldownManager` added in `knk-paper`.
+- ✅ Unit tests added for registry, lore parsing/apply/remove behavior, and cooldown logic.
+- ✅ Phase 2.1 completed: optional `AbilityDefinition` extension entity added with 1:1 navigation to `EnchantmentDefinition`.
+- ✅ Phase 2.2 completed: custom-only invariant checks implemented in `EnchantmentDefinitionService` and DB uniqueness/FK constraints added.
+- ✅ Phase 2.3 completed: user-assignment hook placeholder added via `AbilityDefinition.FutureUserAssignmentContract` and DTO contract updates.
 
 ---
 
@@ -816,15 +828,15 @@ public void initialize(Plugin plugin) {
 
 | Phase | Task | Estimated Hours | Status |
 |---|---|---|---|
-| 1 | Domain Models | 2 | Not Started |
-| 1 | Port Interfaces | 3 | Not Started |
-| 1 | EnchantmentRegistry | 2 | Not Started |
-| 1 | LocalEnchantmentRepositoryImpl | 4 | Not Started |
-| 1 | CooldownManager | 2 | Not Started |
+| 1 | Domain Models | 2 | Completed |
+| 1 | Port Interfaces | 3 | Completed |
+| 1 | EnchantmentRegistry | 2 | Completed |
+| 1 | LocalEnchantmentRepositoryImpl | 4 | Completed |
+| 1 | CooldownManager | 2 | Completed |
 | **Phase 1 Total** | | **13** | |
-| 2 | Ability extension entity | 3 | Not Started |
-| 2 | Domain invariants + constraints | 2 | Not Started |
-| 2 | User assignment hooks | 1 | Not Started |
+| 2 | Ability extension entity | 3 | Completed |
+| 2 | Domain invariants + constraints | 2 | Completed |
+| 2 | User assignment hooks | 1 | Completed |
 | **Phase 2 Total** | | **6** | |
 | 3 | Effect Base Classes | 1 | Not Started |
 | 3 | Poison Effect | 1.5 | Not Started |
