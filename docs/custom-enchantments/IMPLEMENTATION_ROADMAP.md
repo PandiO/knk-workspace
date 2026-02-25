@@ -36,6 +36,8 @@ Canonical rules for this roadmap:
 - ✅ Phase 4 completed (active support runtime): added `SupportEnchantmentEffect` and active effects (`HealthBoost`, `ArmorRepair`, `Resistance`, `Invisibility`, `Chaos`, `FlashChaos`) in `knk-paper`.
 - ✅ Phase 4 completed (interact integration): added `EnchantmentInteractListener`, cooldown messaging/config wiring, and `executeOnInteract` support execution with cooldown application.
 - ✅ Phase 4 unit coverage added: listener filtering/cooldown behavior and support effect base execution tests in `knk-paper`.
+- ✅ Phase 5 completed (commands/admin): added dedicated `/ce` command structure in `knk-paper` (`add`, `remove`, `info`, `cooldown clear`, `reload`) with validation framework, permissions, localization-backed messages, and shared runtime wiring with existing enchantment listeners.
+- ✅ Phase 5 compatibility alignment: `/ce` runtime command flow now complements existing `/knk enchantments` canonical/debug command flow without replacing it.
 
 ---
 
