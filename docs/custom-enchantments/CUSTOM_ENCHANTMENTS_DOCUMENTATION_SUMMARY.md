@@ -25,7 +25,7 @@ Three comprehensive specification documents are maintained in `docs/custom-encha
 - Configuration structure (messages, settings)
 - Implementation priorities and open decisions
 
-### 2. **IMPLEMENTATION_ROADMAP_CUSTOM_ENCHANTMENTS.md** (Execution Plan)
+### 2. **IMPLEMENTATION_ROADMAP.md** (Execution Plan)
 **Length**: ~800 lines  
 **Purpose**: Step-by-step implementation roadmap with effort estimates
 
@@ -125,7 +125,7 @@ The extension entity is optional, so vanilla enchantments remain first-class wit
 ```
 /Users/Pandi/Documents/Werk/KnightsAndKings/docs/custom-enchantments/
 ├── SPEC_CUSTOM_ENCHANTMENTS.md
-├── IMPLEMENTATION_ROADMAP_CUSTOM_ENCHANTMENTS.md
+├── IMPLEMENTATION_ROADMAP.md
 ├── QUICK_REFERENCE_CUSTOM_ENCHANTMENTS.md
 └── CUSTOM_ENCHANTMENTS_DOCUMENTATION_SUMMARY.md
 ```
@@ -134,12 +134,12 @@ The extension entity is optional, so vanilla enchantments remain first-class wit
 
 ## Next Steps
 
-1. Finalize API model details for ability attachments to `ItemBlueprint`.
-2. Implement optional extension entity mapping from `EnchantmentDefinition`.
-3. Reserve/define user-instance attachment contract for future skill feature.
-4. Implement `IsCustom = true` enforcement for custom `EnchantmentDefinition` records.
-5. Align plugin runtime parsing/execution with API definitions.
-6. Execute roadmap phases and validate with test checklists.
+1. ✅ Phase 1 core/plugin infrastructure implemented in `knk-plugin-v2` (models, ports, registry, lore adapter, cooldown manager, tests).
+2. ✅ Finalized API model details for ability attachments to `ItemBlueprint` through `EnchantmentDefinition` + extension DTO contracts.
+3. ✅ Implemented optional extension entity mapping from `EnchantmentDefinition` (`AbilityDefinition`, optional 1:1).
+4. ✅ Reserved user-instance attachment contract placeholder via `FutureUserAssignmentContract` on `AbilityDefinition`.
+5. ✅ Implemented `IsCustom = true` enforcement for custom `EnchantmentDefinition` records.
+6. Continue with roadmap Phase 3+ and cross-repo runtime integration.
 
 ---
 
