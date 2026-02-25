@@ -19,7 +19,7 @@ Canonical rules for this roadmap:
 - Ability assignments must support future user-instance personal skill attachment (feature planned, not implemented).
 - Plugin lore/event logic is runtime adapter behavior, not canonical persistence.
 
-### Implementation Progress (as of 2026-02-24)
+### Implementation Progress (as of 2026-02-25)
 
 - ✅ Phase 1.1 completed: Domain models added in `knk-core` under `core/domain/enchantment`.
 - ✅ Phase 1.2 completed: Port interfaces added in `knk-core` under `core/ports/enchantment` with `CompletableFuture` contracts and no Bukkit imports.
@@ -30,6 +30,9 @@ Canonical rules for this roadmap:
 - ✅ Phase 2.1 completed: optional `AbilityDefinition` extension entity added with 1:1 navigation to `EnchantmentDefinition`.
 - ✅ Phase 2.2 completed: custom-only invariant checks implemented in `EnchantmentDefinitionService` and DB uniqueness/FK constraints added.
 - ✅ Phase 2.3 completed: user-assignment hook placeholder added via `AbilityDefinition.FutureUserAssignmentContract` and DTO contract updates.
+- ✅ Phase 3 completed (passive attack runtime): added `EnchantmentEffect`/`AttackEnchantmentEffect` contract and passive effect implementations (`Poison`, `Wither`, `Freeze`, `Blindness`, `Confusion`, `Strength`) in `knk-paper`.
+- ✅ Phase 3 completed (event integration): added `EnchantmentCombatListener`, `EnchantmentEnchantTableListener`, `FreezeMovementListener`, and runtime wiring in `KnKPlugin`.
+- ✅ Phase 3 unit coverage added: deterministic probability and effect application tests for passive effects in `knk-paper` test module.
 
 ---
 
