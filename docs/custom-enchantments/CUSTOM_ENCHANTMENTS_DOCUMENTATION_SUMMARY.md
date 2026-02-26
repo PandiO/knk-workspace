@@ -141,7 +141,7 @@ The extension entity is optional, so vanilla enchantments remain first-class wit
 5. ✅ Implemented `IsCustom = true` enforcement for custom `EnchantmentDefinition` records.
 6. ✅ Phase 4 active support runtime implemented in `knk-paper` (support effects, right-click listener, cooldown messaging, and tests).
 7. ✅ Completed Phase 6 configuration/bootstrap wiring (`EnchantmentConfigManager`, `EnchantmentBootstrap`) in `knk-paper`.
-8. Continue with roadmap Phase 7+ testing and QA expansion.
+8. ✅ Completed roadmap Phase 7 automated test expansion and QA checklist documentation (`PHASE_7_TESTING_QA.md`).
 
 ---
 
