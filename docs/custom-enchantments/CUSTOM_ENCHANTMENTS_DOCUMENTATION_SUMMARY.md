@@ -9,7 +9,7 @@
 
 ## What Was Created
 
-Three comprehensive specification documents are maintained in `docs/custom-enchantments`:
+Four core specification documents are maintained in `docs/custom-enchantments`:
 
 ### 1. **SPEC_CUSTOM_ENCHANTMENTS.md** (Primary Specification)
 **Length**: ~700 lines  
@@ -45,6 +45,15 @@ Three comprehensive specification documents are maintained in `docs/custom-encha
 - Key files and implementation checklist
 - Threading rules, storage notes, config template
 - Common pitfalls and test checklist
+
+### 4. **ABILITY_DEFINITION_REFERENCE.md** (Canonical Ability Wiring Guide)
+**Purpose**: Operational reference for API-seeded `AbilityDefinition` rows and usage guidance
+
+**Includes**:
+- Canonical list of all 12 custom abilities
+- Admin-facing attachment guidance per ability
+- Player-facing usage/effect behavior per ability
+- Startup seeding/wiring behavior from `AbilityDefinition.CanonicalCatalog`
 
 ---
 
@@ -127,6 +136,7 @@ The extension entity is optional, so vanilla enchantments remain first-class wit
 ├── SPEC_CUSTOM_ENCHANTMENTS.md
 ├── IMPLEMENTATION_ROADMAP.md
 ├── QUICK_REFERENCE_CUSTOM_ENCHANTMENTS.md
+├── ABILITY_DEFINITION_REFERENCE.md
 └── CUSTOM_ENCHANTMENTS_DOCUMENTATION_SUMMARY.md
 ```
 
