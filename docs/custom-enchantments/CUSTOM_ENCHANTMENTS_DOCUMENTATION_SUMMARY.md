@@ -140,7 +140,8 @@ The extension entity is optional, so vanilla enchantments remain first-class wit
 4. ✅ Reserved user-instance attachment contract placeholder via `FutureUserAssignmentContract` on `AbilityDefinition`.
 5. ✅ Implemented `IsCustom = true` enforcement for custom `EnchantmentDefinition` records.
 6. ✅ Phase 4 active support runtime implemented in `knk-paper` (support effects, right-click listener, cooldown messaging, and tests).
-7. Continue with roadmap Phase 5+ command/config expansion.
+7. ✅ Completed Phase 6 configuration/bootstrap wiring (`EnchantmentConfigManager`, `EnchantmentBootstrap`) in `knk-paper`.
+8. Continue with roadmap Phase 7+ testing and QA expansion.
 
 ---
 
