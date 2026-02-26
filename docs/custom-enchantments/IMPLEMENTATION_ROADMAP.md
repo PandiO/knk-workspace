@@ -38,6 +38,7 @@ Canonical rules for this roadmap:
 - ✅ Phase 4 unit coverage added: listener filtering/cooldown behavior and support effect base execution tests in `knk-paper`.
 - ✅ Phase 5 completed (commands/admin): added dedicated `/ce` command structure in `knk-paper` (`add`, `remove`, `info`, `cooldown clear`, `reload`) with validation framework, permissions, localization-backed messages, and shared runtime wiring with existing enchantment listeners.
 - ✅ Phase 5 compatibility alignment: `/ce` runtime command flow now complements existing `/knk enchantments` canonical/debug command flow without replacing it.
+- ✅ Phase 6 completed (configuration/bootstrap): added `EnchantmentConfigManager` and `EnchantmentBootstrap` to centralize config access, listener registration, and `/ce` command runtime wiring.
 
 ---
 
