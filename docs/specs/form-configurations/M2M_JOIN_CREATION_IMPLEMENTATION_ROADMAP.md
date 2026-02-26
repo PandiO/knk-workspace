@@ -42,9 +42,9 @@ This document provides a step-by-step implementation plan organized by component
 ### Priority: HIGH
 
 #### 2.1 Extend Step Configuration for Join Entity Form
-- [ ] Add UI support in the builder to select or link a join-entity FormConfiguration.
-- [ ] Store the linked configuration ID on the many-to-many step (e.g., `subConfigurationId`).
-- [ ] Ensure linked config is only available for join entity type.
+- [x] Add UI support in the builder to select or link a join-entity FormConfiguration.
+- [x] Store the linked configuration ID on the many-to-many step (e.g., `subConfigurationId`).
+- [x] Ensure linked config is only available for join entity type.
 
 **Files**:
 - [Repository/knk-web-app/src/components/FormConfigBuilder/StepEditor.tsx](Repository/knk-web-app/src/components/FormConfigBuilder/StepEditor.tsx)
@@ -55,10 +55,10 @@ This document provides a step-by-step implementation plan organized by component
 ---
 
 #### 2.2 Validation for Many-to-Many Steps
-- [ ] Validate `joinEntityType` is set when `isManyToManyRelationship` is true.
-- [ ] Validate presence of join field definition:
+- [x] Validate `joinEntityType` is set when `isManyToManyRelationship` is true.
+- [x] Validate presence of join field definition:
   - Either child steps exist, **or** linked join config is set.
-- [ ] Surface validation errors in UI.
+- [x] Surface validation errors in UI.
 
 **Files**:
 - [Repository/knk-web-app/src/components/FormConfigBuilder/StepEditor.tsx](Repository/knk-web-app/src/components/FormConfigBuilder/StepEditor.tsx)
@@ -73,10 +73,10 @@ This document provides a step-by-step implementation plan organized by component
 ### Priority: HIGH
 
 #### 3.1 Join Entity Modal Workflow
-- [ ] Add a "Create Join Entry" action near the selection table for many-to-many steps.
-- [ ] When invoked, launch a join-entity modal using linked FormConfiguration.
-- [ ] Save join entity data into relationship card state.
-- [ ] Support multi-step join forms.
+- [x] Add a "Create Join Entry" action near the selection table for many-to-many steps.
+- [x] When invoked, launch a join-entity modal using linked FormConfiguration.
+- [x] Save join entity data into relationship card state.
+- [x] Support multi-step join forms.
 
 **Files**:
 - [Repository/knk-web-app/src/components/FormWizard/ManyToManyRelationshipEditor.tsx](Repository/knk-web-app/src/components/FormWizard/ManyToManyRelationshipEditor.tsx)
@@ -88,9 +88,9 @@ This document provides a step-by-step implementation plan organized by component
 ---
 
 #### 3.2 Persist Join Entries as Child Progress
-- [ ] Store join entity entries as child progress (using parent progress ID).
-- [ ] Ensure join data survives refresh/draft save.
-- [ ] On resume, rehydrate join entries into relationship cards.
+- [x] Store join entity entries as child progress (using parent progress ID).
+- [x] Ensure join data survives refresh/draft save.
+- [x] On resume, rehydrate join entries into relationship cards.
 
 **Files**:
 - [Repository/knk-web-app/src/components/FormWizard/FormWizard.tsx](Repository/knk-web-app/src/components/FormWizard/FormWizard.tsx)
@@ -105,9 +105,9 @@ This document provides a step-by-step implementation plan organized by component
 ### Priority: HIGH
 
 #### 4.1 Preserve Join Entity Objects in Submission Payload
-- [ ] Detect many-to-many steps and keep join objects rather than collapsing to ID arrays.
-- [ ] Map selected related entity to the correct FK field using metadata.
-- [ ] Include join fields (e.g., `Level`) in payload.
+- [x] Detect many-to-many steps and keep join objects rather than collapsing to ID arrays.
+- [x] Map selected related entity to the correct FK field using metadata.
+- [x] Include join fields (e.g., `Level`) in payload.
 
 **Files**:
 - [Repository/knk-web-app/src/utils/forms/normalizeFormSubmission.ts](Repository/knk-web-app/src/utils/forms/normalizeFormSubmission.ts)
@@ -117,8 +117,8 @@ This document provides a step-by-step implementation plan organized by component
 ---
 
 #### 4.2 End-to-End Payload Validation
-- [ ] Ensure payload matches backend DTO expectations (`defaultEnchantments` array).
-- [ ] Block form completion with clear error if join mapping fails.
+- [x] Ensure payload matches backend DTO expectations (`defaultEnchantments` array).
+- [x] Block form completion with clear error if join mapping fails.
 
 **Files**:
 - [Repository/knk-web-app/src/components/FormWizard/FormWizard.tsx](Repository/knk-web-app/src/components/FormWizard/FormWizard.tsx)
@@ -132,36 +132,35 @@ This document provides a step-by-step implementation plan organized by component
 ### Priority: MEDIUM
 
 #### 5.1 Join-Entity Validation Rules
-- [ ] Apply existing validation rules to join-entity fields.
-- [ ] Display inline validation errors per relationship card.
+- [x] Apply existing validation rules to join-entity fields.
+- [x] Display inline validation errors per relationship card.
 
-**Files**:
+**Files**: 
 - [Repository/knk-web-app/src/components/FormWizard/ManyToManyRelationshipEditor.tsx](Repository/knk-web-app/src/components/FormWizard/ManyToManyRelationshipEditor.tsx)
 - [Repository/knk-web-app/src/components/FormWizard/FieldRenderers.tsx](Repository/knk-web-app/src/components/FormWizard/FieldRenderers.tsx)
 
+**Status**: ✅ Complete  
 **Effort**: 2-3 hours
 
 ---
 
 #### 5.2 Conflict Handling
-- [ ] If related entity is missing/deleted, block completion with clear message.
-- [ ] Provide guidance to re-select or reconfigure the relationship.
+- [x] If related entity is missing/deleted, block completion with clear message.
+- [x] Provide guidance to re-select or reconfigure the relationship.
 
 **Files**:
 - [Repository/knk-web-app/src/components/FormWizard/ManyToManyRelationshipEditor.tsx](Repository/knk-web-app/src/components/FormWizard/ManyToManyRelationshipEditor.tsx)
 
-**Effort**: 1-2 hours
-
----
+**Status**: ✅ Complete  
 
 ## Phase 6: Testing
 
 ### Priority: HIGH
 
 #### 6.1 Unit Tests (Form Normalization)
-- [ ] Many-to-many payload retains join objects.
-- [ ] Mapping uses metadata and resolves correct FK.
-- [ ] Missing metadata produces blocked submission.
+- [x] Many-to-many payload retains join objects.
+- [x] Mapping uses metadata and resolves correct FK.
+- [x] Missing metadata produces blocked submission.
 
 **Files**:
 - [Repository/knk-web-app/src/utils/forms/__tests__/normalizeFormSubmission.test.ts](Repository/knk-web-app/src/utils/forms/__tests__/normalizeFormSubmission.test.ts)
@@ -187,8 +186,8 @@ This document provides a step-by-step implementation plan organized by component
 ### Priority: MEDIUM
 
 #### 7.1 Documentation
-- [ ] Update improvement spec with final decisions.
-- [ ] Add a short developer guide for configuring join-entity forms.
+- [x] Update improvement spec with final decisions.
+- [x] Add a short developer guide for configuring join-entity forms.
 
 **Files**:
 - [docs/specs/form-configurations/m2m-join-creation-improvement-spec.md](docs/specs/form-configurations/m2m-join-creation-improvement-spec.md)
@@ -204,11 +203,11 @@ This document provides a step-by-step implementation plan organized by component
 |------|-----------|----------|------|---------|--------|
 | 1 | Requirements & Contracts | 1h | Low | None | Not Started |
 | 2 | Builder Enhancements | 3-5h | Med | Phase 1 | Not Started |
-| 3 | Wizard UX + Join Creation | 7-10h | Med | Phase 2 | Not Started |
-| 4 | Payload Normalization | 3-5h | Med | Phase 3 | Not Started |
-| 5 | Validation + Error UX | 3-5h | Med | Phase 3 | Not Started |
+| 3 | Wizard UX + Join Creation | 7-10h | Med | Phase 2 | ✅ Complete |
+| 4 | Payload Normalization | 3-5h | Med | Phase 3 | ✅ Complete |
+| 5 | Validation + Error UX | 3-5h | Med | Phase 3 | ✅ Complete |
 | 6 | Testing | 5-8h | Med | Phase 4-5 | Not Started |
-| 7 | Documentation | 1-2h | Low | Phase 6 | Not Started |
+| 7 | Documentation | 1-2h | Low | Phase 6 | ✅ Complete |
 
 **Total Estimated Effort**: ~23-36 hours
 

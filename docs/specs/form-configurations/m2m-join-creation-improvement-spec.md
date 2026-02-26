@@ -57,6 +57,11 @@ As an admin, I want to be able to configure a m2m relationship with a join entit
 3. **Join entity modal** should be wired similarly to the existing child form modal but scoped to join-entity creation.
 4. **Configuration model** should support an optional `subConfigurationId` or equivalent pointer for join entity forms.
 
+### Implementation Notes (Phase 4)
+- Join entity metadata is fetched for configured join types and used to resolve the related FK field (e.g., `EnchantmentDefinitionId`).
+- Normalization now preserves join entry objects and strips UI-only fields (`relatedEntity`, `relatedEntityId`, `__childProgressId`).
+- Submission is blocked with a clear error when metadata or related entity mapping is missing.
+
 ## Suggested Enhancements
 - Add a “Create new related entity” action in the selection table when none exists.
 - Add a “Clone join entry” action for repeated configurations (e.g., same enchantment with different levels).
@@ -77,6 +82,17 @@ As an admin, I want to be able to configure a m2m relationship with a join entit
 - Wizard allows creating join entities with fields like `Level` and includes them in submission payload.
 - Submission payload matches backend DTO expectations for join entities.
 - Existing many-to-many configurations continue to function without changes.
+
+## Final Decisions (Implemented)
+- Scope of on-the-fly creation is limited to **join entities**.
+- Join form source of truth: prefer linked FormConfiguration; fall back to child steps.
+- Multi-step join forms are supported.
+- Related FK mapping uses **join-entity metadata**; submission blocks if mapping fails.
+- Join entries are persisted as child progress for draft/resume.
+- Conflict handling blocks completion with guidance to re-select or reconfigure.
+
+## Developer Guide
+See [docs/specs/form-configurations/m2m-join-creation-developer-guide.md](docs/specs/form-configurations/m2m-join-creation-developer-guide.md) for configuration steps, expected payload shape, and troubleshooting.
 
 ## References
 - Many-to-many editor: [Repository/knk-web-app/src/components/FormWizard/ManyToManyRelationshipEditor.tsx](Repository/knk-web-app/src/components/FormWizard/ManyToManyRelationshipEditor.tsx)
