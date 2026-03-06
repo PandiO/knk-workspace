@@ -105,6 +105,60 @@ public int? FallbackMaterialRefId { get; set; }      // Default material if snap
 public MinecraftMaterialRef? FallbackMaterial { get; set; } = null;
 public string TileEntityPolicy { get; set; } = "DECORATIVE_ONLY"; // NONE, DECORATIVE_ONLY, ALL
 
+// Advanced Features: Pass-Through & Permissions
+public bool AllowPassThrough { get; set; } = false;
+// Enable auto-open/auto-close for authorized players
+
+public int PassThroughDurationSeconds { get; set; } = 4;
+// How long gate stays open during pass-through (default 4 seconds)
+
+public string PassThroughConditionsJson { get; set; } = string.Empty;
+// JSON: Conditions for pass-through eligibility
+// Example: {"minExperience": 1000, "requiredClanId": 5, "minEthicsLevel": 3, "requiredDonatorRank": 1}
+
+// Guard & Defense System (Future Feature)
+public string GuardSpawnLocationsJson { get; set; } = string.Empty;
+// JSON array: [{x, y, z, yaw, pitch}, ...] - NPC guard spawn points
+
+public int GuardCount { get; set; } = 0;
+// Number of guards to spawn when gate is attacked (0 = disabled)
+
+public int? GuardNpcTemplateId { get; set; }
+// Foreign Key → NpcTemplate (defines guard type, equipment, behavior)
+
+// Health Display Configuration
+public bool ShowHealthDisplay { get; set; } = true;
+// Show floating ArmorStand with health/status above gate
+
+public string HealthDisplayMode { get; set; } = "ALWAYS";
+// Enum: ALWAYS, DAMAGED_ONLY, NEVER, SIEGE_ONLY
+
+public int HealthDisplayYOffset { get; set; } = 2;
+// Blocks above gate anchor to place health display entity
+
+// Siege Integration
+public bool IsOverridable { get; set; } = true;
+// Allow siege/admin to override normal gate behavior (emergency open/close)
+
+public bool AnimateDuringSiege { get; set; } = true;
+// Continue animating open/close during siege (default true)
+
+public int? CurrentSiegeId { get; set; }
+// Foreign Key → Siege (null if no active siege)
+
+public bool IsSiegeObjective { get; set; } = false;
+// Gate is a capturable objective in siege minigame
+
+// Combat System: Continuous Damage
+public bool AllowContinuousDamage { get; set; } = true;
+// Enable fire/lava damage over time from weapons
+
+public double ContinuousDamageMultiplier { get; set; } = 1.0;
+// Multiplier for continuous damage sources (fire aspect, flint & steel)
+
+public int ContinuousDamageDurationSeconds { get; set; } = 5;
+// How long continuous damage persists per application
+
 // Runtime State (not persisted - managed by plugin)
 // NOTE: These are managed in-memory by the Paper plugin during animation
 // Current animation state: CLOSED, OPENING, OPEN, CLOSING, JAMMED, BROKEN
@@ -416,6 +470,351 @@ ALL                - All tile entities allowed (including inventories - future)
 - Inventory tile entities (chests, barrels, furnaces, hoppers)
 - Redstone components (pistons, repeaters, comparators - causes side effects)
 - Liquids (water, lava - causes physics issues)
+
+---
+
+## Part F: Advanced Features & Systems
+
+### Pass-Through System
+
+**Purpose:**
+- Allow authorized players to pass through gates without manually opening/closing
+- Gate temporarily opens, player passes, gate auto-closes
+- Permissions + conditions-based access control
+
+**Fields:**
+- `AllowPassThrough`: Enable/disable feature
+- `PassThroughDurationSeconds`: Auto-close delay (default 4 seconds)
+- `PassThroughConditionsJson`: JSON conditions for eligibility
+
+**Pass-Through Conditions Schema:**
+```json
+{
+  "minExperience": 1000,           // Minimum XP required (optional)
+  "requiredClanId": 5,              // Must belong to specific clan (optional)
+  "minEthicsLevel": 3,              // Minimum ethics/karma level (optional)
+  "requiredDonatorRank": 1,         // Minimum donator tier (optional)
+  "requiredPermissions": [          // Additional permission nodes (optional)
+    "knk.gate.vip",
+    "knk.gate.passthrough.<gateId>"
+  ],
+  "allowedUserIds": [1, 2, 3],      // Whitelist specific users (optional)
+  "deniedUserIds": [99, 100]        // Blacklist specific users (optional)
+}
+```
+
+**Workflow:**
+1. Player approaches gate (within 3 blocks)
+2. Plugin checks: `AllowPassThrough` && `IsActive` && !`IsDestroyed`
+3. Evaluate `PassThroughConditionsJson` conditions:
+   - Check XP, clan, ethics, donator rank, permissions, whitelist/blacklist
+   - If ANY condition fails → deny pass-through
+4. If authorized → trigger pass-through:
+   - Set gate state: CLOSED → OPENING
+   - Animate to OPEN state
+   - Start timer: `PassThroughDurationSeconds`
+   - Detect when player exits gate area (5 blocks away OR timer expires)
+   - Set gate state: OPEN → CLOSING
+   - Animate back to CLOSED state
+
+**Event Sequence:**
+```
+Player enters gate proximity (3 blocks)
+  → Check conditions
+  → If authorized: Begin opening animation
+  → Gate reaches OPEN state
+  → Player passes through
+  → Player exits proximity (5 blocks) OR timer expires
+  → Begin closing animation
+  → Gate returns to CLOSED state
+```
+
+**Permissions Integration:**
+```
+knk.gate.passthrough.<gateId>    - Pass-through for specific gate
+knk.gate.passthrough.*           - Pass-through for all gates
+```
+
+**Future Extensions (v2+):**
+- Toll system (cost to pass through)
+- Dynamic conditions based on time of day, siege status, etc.
+- Multi-gate pass-through (network of gates)
+
+---
+
+### Guard Spawn System (Future Feature)
+
+**Purpose:**
+- Spawn NPC guards when gate is attacked or during siege
+- Defensive AI to protect gate and engage attackers
+- Configurable guard types, spawn locations, and behavior
+
+**Fields:**
+- `GuardSpawnLocationsJson`: JSON array of spawn points
+- `GuardCount`: Number of guards to spawn (0 = disabled)
+- `GuardNpcTemplateId`: Reference to NPC template defining guard properties
+
+**Guard Spawn Locations Schema:**
+```json
+[
+  {"x": 100, "y": 64, "z": 100, "yaw": 180.0, "pitch": 0.0},
+  {"x": 105, "y": 64, "z": 100, "yaw": 0.0, "pitch": 0.0},
+  {"x": 102, "y": 65, "z": 102, "yaw": 90.0, "pitch": 0.0}
+]
+```
+
+**Guard Spawn Triggers:**
+1. **Gate Damage**: When `HealthCurrent` decreases
+   - Spawn 1 guard per 100 damage taken (configurable)
+   - Maximum `GuardCount` guards active at once
+2. **Siege Start**: When gate becomes part of active siege
+   - Spawn all guards immediately
+3. **Manual**: Admin command `/gate admin spawn-guards <gateName>`
+
+**NpcTemplate Integration:**
+- `GuardNpcTemplateId` → NpcTemplate entity (future feature)
+- Template defines:
+  - Equipment (armor, weapons)
+  - Behavior AI (patrol, aggressive, defensive)
+  - Health, damage, speed
+  - Loot tables
+
+**Workflow:**
+1. Trigger event (damage/siege/command)
+2. Check: `GuardCount` > 0 && spawn locations defined
+3. Count currently alive guards (tracked by plugin)
+4. Spawn missing guards up to `GuardCount` limit
+5. Assign spawn location (round-robin or random)
+6. Load NpcTemplate behavior
+7. Guards engage attackers or patrol area
+8. On guard death: Respawn after cooldown (configurable)
+
+**Implementation Priority:**
+- Phase 1 (current): Define entity fields, admin UI for configuration
+- Phase 2 (future): NPC system + AI integration
+- Phase 3 (future): Guard behavior, combat, loot
+
+---
+
+### Health Display System
+
+**Purpose:**
+- Show gate health and status to nearby players
+- Visual feedback during combat/siege
+- Configurable visibility modes
+
+**Fields:**
+- `ShowHealthDisplay`: Master toggle (true = enabled)
+- `HealthDisplayMode`: When to show display (ALWAYS, DAMAGED_ONLY, NEVER, SIEGE_ONLY)
+- `HealthDisplayYOffset`: Vertical offset from gate anchor
+
+**Display Modes:**
+
+| Mode | Behavior |
+|------|----------|
+| ALWAYS | Display visible at all times when gate is active |
+| DAMAGED_ONLY | Display visible only when `HealthCurrent < HealthMax` |
+| NEVER | No display (health only visible via /gate info command) |
+| SIEGE_ONLY | Display visible only during active siege |
+
+**Display Implementation:**
+- ArmorStand entity positioned above gate anchor
+- Custom name: `[Gate Name] - [Health]/[MaxHealth]hp - [Status]`
+- Color coding:
+  - Green: `HealthCurrent >= 75% HealthMax`
+  - Yellow: `50% ≤ HealthCurrent < 75%`
+  - Orange: `25% ≤ HealthCurrent < 50%`
+  - Red: `HealthCurrent < 25%`
+  - Dark Red + Destroyed: `IsDestroyed = true`
+- Status indicators:
+  - 🟢 OPEN (IsOpened = true)
+  - 🔴 CLOSED (IsOpened = false)
+  - ⚙️ OPENING / CLOSING (mid-animation)
+  - 💀 DESTROYED (IsDestroyed = true)
+  - 🛡️ INVINCIBLE (IsInvincible = true)
+
+**Example Display Text:**
+```
+"§a[Castle Gate] - 450/500hp - §2🟢 OPEN"
+"§e[Main Portcullis] - 250/500hp - §c🔴 CLOSED"
+"§4[Broken Gate] - 0/500hp - §4💀 DESTROYED"
+```
+
+**Position Calculation:**
+```java
+org.bukkit.Location displayLocation = gate.getAnchorPoint()
+    .add(0, gate.HealthDisplayYOffset, 0)
+    .add(gate.getCenterOffset());  // Center of gate horizontally
+```
+
+**Update Triggers:**
+- Health change (damage/repair)
+- State change (opened/closed)
+- Siege start/end
+- Every 20 ticks (1 second) for nearby players
+
+---
+
+### Siege Integration System
+
+**Purpose:**
+- Gates participate in siege minigame as objectives or obstacles
+- Special behavior during siege (damage, override, animation)
+- Sync gate state with siege state machine
+
+**Fields:**
+- `IsOverridable`: Allow manual override during siege
+- `AnimateDuringSiege`: Continue animations (vs instant open/close)
+- `CurrentSiegeId`: Active siege reference
+- `IsSiegeObjective`: Gate is capturable objective
+
+**Siege States & Gate Behavior:**
+
+| Siege State | Gate Behavior |
+|-------------|---------------|
+| No Siege | Normal operation (players can open/close with permissions) |
+| Siege Preparing | Gates auto-close, lock (cannot be opened by players) |
+| Siege Active | Gates function per siege rules (see below) |
+| Siege Victory | Winning team gains gate control, gates unlock |
+| Siege Cleanup | Gates reset to domain owner control |
+
+**During Active Siege:**
+
+1. **IsSiegeObjective = true**:
+   - Gate is capturable (like capture point)
+   - Opening gate grants points/access to attackers
+   - Defenders try to keep gate closed
+   - `AnimateDuringSiege = true`: Opening/closing is animated (realistic, strategic)
+   - `AnimateDuringSiege = false`: Instant open/close (faster paced, arcade-style)
+
+2. **IsSiegeObjective = false**:
+   - Gate is obstacle (must be destroyed or bypassed)
+   - `IsInvincible` toggled to false during siege
+   - Attackers can damage gate to breach
+   - `CanRespawn = false` during siege (gate stays destroyed until siege ends)
+
+3. **IsOverridable = true**:
+   - Siege admins can force open/close gates via `/siege gate override`
+   - Use case: Emergency access, event scripting, bug recovery
+   - Override state persists until manually cleared or siege ends
+
+**Siege-Specific Damage Rules:**
+- During siege: `IsInvincible = false` (even if normally true)
+- Damage multipliers based on siege team:
+  - Attackers: 1.0x damage (normal)
+  - Defenders: 0.5x damage (friendly fire penalty)
+  - Spectators: 0.0x damage (no damage)
+- On gate destruction:
+  - Award points to attackers
+  - Spawn guard NPCs (if configured)
+  - Broadcast event to all siege participants
+
+**Animation During Siege:**
+```java
+if (gate.AnimateDuringSiege) {
+    // Normal animation (60 ticks default)
+    playGateAnimation(gate, targetState);
+} else {
+    // Instant state change
+    gate.IsOpened = targetState;
+    teleportBlocks(gate, targetState);  // Move blocks instantly
+}
+```
+
+**Workflow - Gate as Siege Objective:**
+1. Siege starts → `CurrentSiegeId` = siegeId
+2. Gate auto-closes, locks (players cannot open)
+3. Attackers must:
+   - Damage gate to 0 HP (if destructible)
+   - OR capture control point near gate
+   - OR use siege equipment (battering ram, explosives)
+4. Gate opens → attackers gain access to inner defenses
+5. Defenders can repair gate (if mechanics allow)
+6. Siege ends → `CurrentSiegeId` = null, gate unlocks
+
+**Permissions During Siege:**
+- Attackers: `knk.siege.attack.gate` (can damage gates)
+- Defenders: `knk.siege.defend.gate` (can repair gates, limited open/close)
+- Admins: `knk.siege.admin.override` (force any gate action)
+
+---
+
+### Continuous Damage System
+
+**Purpose:**
+- Apply damage over time from fire-based weapons
+- Visual feedback (blocks on fire)
+- Balanced combat mechanic (prevents instant destruction)
+
+**Fields:**
+- `AllowContinuousDamage`: Enable/disable feature
+- `ContinuousDamageMultiplier`: Damage scaling (default 1.0)
+- `ContinuousDamageDurationSeconds`: How long effect persists
+
+**Damage Sources:**
+1. **Flint & Steel**: Ignites gate blocks
+2. **Fire Aspect Enchantment**: Weapons with fire aspect
+3. **Lava Buckets**: Pour lava on gate (if enabled)
+4. **Fire Charge / Blaze Rod**: Projectile impacts
+
+**Mechanics:**
+- Base damage per second: 1.0 HP/sec
+- Modified by `ContinuousDamageMultiplier`
+- Duration: `ContinuousDamageDurationSeconds` (default 5 seconds)
+- Multiple applications stack duration (not damage rate)
+- Example: 
+  - Player hits gate with Fire Aspect II sword
+  - Gate takes 1.0 * 1.0 = 1.0 HP/sec for 5 seconds
+  - Total damage: 5.0 HP
+  - Player hits again 2 seconds later
+  - Duration resets to 5 seconds (not 7 seconds)
+
+**Visual Effects:**
+- Set random gate blocks on fire (cosmetic)
+- Fire spreads to adjacent gate blocks (does not damage nearby structures)
+- Fire extinguishes when continuous damage expires
+- Smoke particles during burn
+
+**Implementation (Plugin):**
+```java
+class ContinuousGateDamage {
+    Gate gate;
+    Block block;              // Block that was hit
+    double damagePerSecond;   // Modified by multiplier
+    int durationSeconds;
+    long expiryTime;
+    
+    void tick() {
+        if (System.currentTimeMillis() > expiryTime) {
+            extinguish();
+            remove();
+            return;
+        }
+        
+        // Apply damage every 20 ticks (1 second)
+        if (tickCounter % 20 == 0) {
+            gate.removeHealth(damagePerSecond);
+            spawnFireParticles(block);
+        }
+    }
+    
+    void extend(int additionalSeconds) {
+        // Reset timer when hit again
+        expiryTime = System.currentTimeMillis() + (durationSeconds * 1000);
+    }
+}
+```
+
+**Balance Considerations:**
+- Continuous damage is weaker than instant damage
+- Encourages sustained attacks vs burst damage
+- Allows defenders time to respond (repair, extinguish, defend)
+- Fire-resistant materials (stone, obsidian) could reduce continuous damage (future)
+
+**Best Practice:**
+- Keep as separate combat mechanic (not merged into standard health system)
+- Reason: Different behavior (duration, stacking rules, visuals)
+- Clean separation of concerns (instant damage vs damage-over-time)
 
 ---
 
@@ -1403,6 +1802,7 @@ north-west → (-0.707, 0, -0.707)
 /gate close <name>     - Close gate (requires permission)
 /gate info <name>      - Show gate status and health
 /gate list             - List nearby gates (within 50 blocks)
+/gate passthrough <name> - Trigger pass-through (auto-open/close)
 ```
 
 **Admin Commands:**
@@ -1414,6 +1814,17 @@ north-west → (-0.707, 0, -0.707)
 /gate admin health <name> <amount> - Set gate health
 /gate admin repair <name>         - Instant repair (full HP)
 /gate admin tp <name>             - Teleport to gate anchor
+/gate admin override <name> <on|off> - Toggle override state
+/gate admin display <name> <mode>  - Set health display mode (ALWAYS|DAMAGED_ONLY|NEVER|SIEGE_ONLY)
+/gate admin guards spawn <name>    - Manually spawn guards
+/gate admin guards clear <name>    - Remove all guards
+```
+
+**Siege Commands (executed during active siege):**
+```
+/siege gate override <name> <open|close> - Force gate state during siege
+/siege gate lock <name>                  - Lock gate (prevent player interaction)
+/siege gate unlock <name>                - Unlock gate
 ```
 
 ---
@@ -1428,6 +1839,15 @@ knk.gate.close.<gateId>      - Close specific gate
 knk.gate.close.*             - Close all gates
 knk.gate.info                - View gate information
 knk.gate.list                - List nearby gates
+knk.gate.passthrough.<gateId> - Pass-through specific gate (auto-open/close)
+knk.gate.passthrough.*       - Pass-through all gates
+```
+
+**Siege Permissions:**
+```
+knk.siege.attack.gate        - Damage gates during siege
+knk.siege.defend.gate        - Repair gates during siege (future)
+knk.siege.admin.override     - Override gate behavior during siege
 ```
 
 **Admin Permissions:**
@@ -1440,6 +1860,8 @@ knk.gate.admin.reload        - Reload gate definitions
 knk.gate.admin.recapture     - Recapture snapshots
 knk.gate.admin.health        - Modify gate health
 knk.gate.admin.bypass        - Bypass all access checks
+knk.gate.admin.override      - Force open/close any gate (override state)
+knk.gate.admin.guards        - Spawn/manage guards manually
 ```
 
 ---
