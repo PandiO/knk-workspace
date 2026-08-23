@@ -1,92 +1,131 @@
 {
-  "version": "2.0.0",
-  "tasks": [
-    {
-      "label": "npm: start",
-      "type": "process",
-      "command": "npm",
-      "args": ["run", "start"],
-      "options": {
-        "cwd": "${workspaceFolder}/Repository/knk-web-app",
-        "env": {
-          "BROWSER": "none"
-        }
-      },
-      "isBackground": true,
-      "problemMatcher": {
-        "pattern": {
-          "regexp": "."
-        },
-        "background": {
-          "activeOnStart": true,
-          "beginsPattern": "(Starting the development server|Compiling|VITE v|> .*start|ready in)",
-          "endsPattern": "(Compiled successfully!|webpack compiled|You can now view|Local:\\s+http|ready in)"
-        }
-      }
-    },
-
-    {
-      "label": "api: build",
-      "command": "dotnet",
-      "type": "process",
-      "args": [
-        "build",
-        "knkwebapi_v2.csproj",
-        "/property:GenerateFullPaths=true",
-        "/consoleloggerparameters:NoSummary"
-      ],
-      "options": {
-        "cwd": "${workspaceFolder}/Repository/knk-web-api-v2"
-      },
-      "problemMatcher": "$msCompile",
-      "presentation": {
-        "reveal": "always",
-        "panel": "new"
-      }
-    },
-    {
-      "label": "api: publish",
-      "command": "dotnet",
-      "type": "process",
-      "args": [
-        "publish",
-        "knkwebapi_v2.csproj",
-        "/property:GenerateFullPaths=true",
-        "/consoleloggerparameters:NoSummary"
-      ],
-      "options": {
-        "cwd": "${workspaceFolder}/Repository/knk-web-api-v2"
-      },
-      "problemMatcher": "$msCompile",
-      "presentation": {
-        "reveal": "always",
-        "panel": "new"
-      }
-    },
-    {
-      "label": "api: watch",
-      "command": "dotnet",
-      "type": "process",
-      "args": [
-        "watch",
-        "run",
-        "--project",
-        "knkwebapi_v2.csproj"
-      ],
-      "options": {
-        "cwd": "${workspaceFolder}/Repository/knk-web-api-v2"
-      },
-      "problemMatcher": "$msCompile",
-      "isBackground": true,
-      "presentation": {
-        "reveal": "always",
-        "panel": "shared"
-      }
-    },
-
-    {
-      "label": "build-backend",
-      "dependsOn": ["api: build"]
-    }
-  ]
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "api: test",
+			"command": "dotnet",
+			"type": "process",
+			"args": [
+				"test",
+				"--nologo"
+			],
+			"options": {
+				"cwd": "${workspaceFolder}/Repository/knk-web-api-v2/tests/knkwebapi_v2.Tests"
+			},
+			"group": "test",
+			"problemMatcher": "$msCompile"
+		},
+		{
+			"label": "npm: start",
+			"type": "process",
+			"command": "npm",
+			"args": [
+				"run",
+				"start"
+			],
+			"options": {
+				"cwd": "${workspaceFolder}/Repository/knk-web-app",
+				"env": {
+					"BROWSER": "none"
+				}
+			},
+			"isBackground": true,
+			"problemMatcher": {
+				"pattern": {
+					"regexp": "."
+				},
+				"background": {
+					"activeOnStart": true,
+					"beginsPattern": "(Starting the development server|Compiling|VITE v|> .*start|ready in)",
+					"endsPattern": "(Compiled successfully!|webpack compiled|You can now view|Local:\\s+http|ready in)"
+				}
+			}
+		},
+		{
+			"label": "api: build",
+			"command": "dotnet",
+			"type": "process",
+			"args": [
+				"build",
+				"knkwebapi_v2.csproj",
+				"/property:GenerateFullPaths=true",
+				"/consoleloggerparameters:NoSummary"
+			],
+			"options": {
+				"cwd": "${workspaceFolder}/Repository/knk-web-api-v2"
+			},
+			"problemMatcher": "$msCompile",
+			"presentation": {
+				"reveal": "always",
+				"panel": "new"
+			}
+		},
+		{
+			"label": "api: publish",
+			"command": "dotnet",
+			"type": "process",
+			"args": [
+				"publish",
+				"knkwebapi_v2.csproj",
+				"/property:GenerateFullPaths=true",
+				"/consoleloggerparameters:NoSummary"
+			],
+			"options": {
+				"cwd": "${workspaceFolder}/Repository/knk-web-api-v2"
+			},
+			"problemMatcher": "$msCompile",
+			"presentation": {
+				"reveal": "always",
+				"panel": "new"
+			}
+		},
+		{
+			"label": "api: watch",
+			"command": "dotnet",
+			"type": "process",
+			"args": [
+				"watch",
+				"run",
+				"--project",
+				"knkwebapi_v2.csproj"
+			],
+			"options": {
+				"cwd": "${workspaceFolder}/Repository/knk-web-api-v2"
+			},
+			"problemMatcher": "$msCompile",
+			"isBackground": true,
+			"presentation": {
+				"reveal": "always",
+				"panel": "shared"
+			}
+		},
+		{
+			"label": "build-backend",
+			"dependsOn": [
+				"api: build"
+			]
+		},
+		{
+			"label": "count-custom-loc",
+			"type": "shell",
+			"command": "powershell",
+			"args": [
+				"-NoProfile",
+				"-Command",
+				"$repos = @(\"Repository/knk-web-api-v2\",\"Repository/knk-web-app\",\"Repository/knk-plugin-v2\"); $codeExt = @(\".cs\",\".csproj\",\".sln\",\".ts\",\".tsx\",\".js\",\".jsx\",\".java\",\".kt\",\".kts\",\".gradle\",\".properties\",\".yml\",\".yaml\",\".json\",\".sql\",\".xml\",\".html\",\".css\",\".scss\",\".md\",\".ps1\",\".sh\"); $excludeDirs = @(\"node_modules\",\"bin\",\"obj\",\"dist\",\"build\",\".git\",\".next\",\"out\",\"target\",\".gradle\",\".idea\",\".vscode\"); $results = @(); foreach ($repo in $repos) { $files = Get-ChildItem -Path $repo -Recurse -File | Where-Object { $extOk = $codeExt -contains $_.Extension.ToLower(); if (-not $extOk) { return $false }; $pathLower = $_.FullName.ToLower(); foreach ($d in $excludeDirs) { if ($pathLower -match \"[\\\\/]$([regex]::Escape($d.ToLower()))[\\\\/]\") { return $false } }; return $true }; $totalLines = 0; $nonEmptyLines = 0; foreach ($f in $files) { try { $content = Get-Content -LiteralPath $f.FullName -ErrorAction Stop; $totalLines += $content.Count; $nonEmptyLines += ($content | Where-Object { $_.Trim().Length -gt 0 }).Count } catch {} }; $results += [PSCustomObject]@{ Repository = $repo; FilesCount = $files.Count; TotalLines = $totalLines; NonEmptyLines = $nonEmptyLines } }; $results | Format-Table -AutoSize; \"COMBINED_TOTAL_LINES=\" + (($results | Measure-Object -Property TotalLines -Sum).Sum); \"COMBINED_NON_EMPTY_LINES=\" + (($results | Measure-Object -Property NonEmptyLines -Sum).Sum); \"COMBINED_FILES=\" + (($results | Measure-Object -Property FilesCount -Sum).Sum)"
+			]
+		},
+		{
+			"label": "count-custom-loc-script",
+			"type": "shell",
+			"command": "powershell",
+			"args": [
+				"-NoProfile",
+				"-ExecutionPolicy",
+				"Bypass",
+				"-File",
+				"scripts/count-custom-loc.ps1"
+			]
+		}
+	]
 }
