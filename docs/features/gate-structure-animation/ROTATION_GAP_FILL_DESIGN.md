@@ -543,7 +543,16 @@ Decision-1-through-5's `AnimationDefinitionMode` removal.
     (animation completion) and `GateStateSyncTask` (startup reconciliation) -
     including a `RestingCell(position, blockData)` pairing so the stale-frame
     vacate step can still safely match-before-remove for a rasterized cell,
-    not just a plain scanned block.
+    not just a plain scanned block. **Investigating this further surfaced a
+    separate, broader gap** in world/DB synchronization generally (not
+    specific to rotation gap-fill) — `reconcileWorldOnStartup` silently
+    no-ops for any gate whose chunk isn't loaded at boot, with no retry, and
+    on-demand district loads never reconcile at all. That problem and its
+    proposed fix (lean on district-load rather than an eager startup pass,
+    plus a periodic health-check) are scoped out into their own document:
+    see [GATE_WORLD_SYNC_DESIGN.md](GATE_WORLD_SYNC_DESIGN.md) — proposed,
+    not started, and intentionally reuses `GateRestingFramePlacer` from this
+    phase as its shared placement/check primitive.
 - **New WorldTask type** `GateOpenedBlockScan`: `GateBlockScanTaskHandler.
   supports(...)` now accepts both task type names; `execute` resolves
   `useOpenAnchor` from the task's own `taskType()` and threads it through to
