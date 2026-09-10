@@ -448,76 +448,126 @@ Decision-1-through-5's `AnimationDefinitionMode` removal.
   branching) and the frontend `FormConfig` wiring — this phase only adds
   the backend surface those will call into.
 
-### Phase C — Plugin (knk-plugin-v2)
+### Phase C — Plugin (knk-plugin-v2) — **Done** (2026-09-10)
 
 - **Mechanism 1**:
-  - `GateFrameCalculator`: add a corner-rotation helper (rotate the 4 local
-    corners by a given angle around `hingeAxis`) and a rasterization helper
-    (AABB + per-cell `isWithinGeometryBounds`-style projection + nearest-
-    scanned-block material lookup). Both are pure functions, directly
-    unit-testable without Bukkit, matching this session's `GateFrameCalculator.
-    calculateRotationAngle` precedent.
-  - Compute the sublattice index (`a² + b²` from `uStep`'s horizontal
-    components) once per gate load (`GateLoaderAdapter`), cache it on
-    `CachedGate` alongside `uStep`/`vStep`/`nStep`.
-  - `GateAnimationTask.updateGateBlocks`/`finishOpening`/`finishClosing`: at
-    the resting endpoints (frame 0 and frame `totalFrames`), when index `> 1`
-    and `gate.getOpenBlocks()` is empty, source placements from the
-    rasterized set instead of the sparse rotated set.
-  - Add a plugin config toggle (e.g. `gates.rotationGapFill.rasterization-
-    enabled`, default `true`) checked before Mechanism 1 engages at all —
-    Decision 5's kill switch. `false` falls through to today's exact
-    unmodified sparse-lattice behavior, same as if index were 1.
+  - `VectorMath.sublatticeIndex(Vector step)` (new, `knk-core`): the `a²+b²`
+    formula, computed from `uStep`'s horizontal (X/Z) components. Cached on
+    `CachedGate.sublatticeIndex` by `GateLoaderAdapter.precomputeBasisVectors`
+    for every gate (cheap, purely geometric), alongside `uStep`/`vStep`/`nStep`.
+  - `GateFrameCalculator.rasterizeRotationFrame(gate, angleDegrees)` (new):
+    rotates the door's 4 local corners around `hingeAxis`, takes their AABB,
+    and tests every integer cell in it by **inverse-rotating it back into the
+    closed frame** and reusing a shared `projectOntoBasis` helper (extracted
+    from `isWithinGeometryBounds`) against the gate's own unrotated
+    `uStep`/`vStep`/`nStep` — equivalent to, and simpler than, rotating the
+    step basis forward, since it reuses the gate's already-stored steps
+    unchanged. A passing cell's material comes from whichever originally-
+    scanned block shares its (rounded) u/v index. Two bugs found and fixed
+    during implementation (both caught by unit tests, not left in): (1) a
+    naive AABB epsilon-padding let stray cells outside the true footprint
+    spuriously pass the projection check for a degenerate 1×1 gate — fixed by
+    computing the AABB with no padding, relying only on the projection
+    check's own epsilon; (2) the projection check only constrained u/v
+    indices, not the n (depth) index, so it accepted points anywhere along
+    the infinite line through the footprint, not just the true single-layer
+    sheet — fixed by requiring `|nIndex| ≈ 0` (every scanned block is a
+    single layer, per `GateBlockScanTaskHandler.computeCellPosition`; a
+    documented, known gap for a future `GeometryDepth > 1` extension).
+  - Pure, Bukkit-free, directly unit-tested (`GateFrameCalculatorTest`): exact
+    reproduction of the closed grid at angle 0, more cells than the naive
+    rotated-and-floored set at the open angle, and the trivial 1×1 edge case.
+  - `gates.rotationGapFill.rasterization-enabled` config key (default `true`,
+    `config.yml`) — Decision 5's kill switch, threaded through
+    `GateAnimationTask` and `GateStateSyncTask`'s constructors from `KnKPlugin`.
+  - Integration point: rather than touching the hot per-tick
+    `GateAnimationTask.updateGateBlocks` sweep at all, Mechanism 1 (and
+    Mechanism 2's converged endpoint) is applied only where the plan already
+    called for endpoints-only behavior (Decision 3) — `finishOpening`/
+    `finishClosing`'s existing force-placement passes, and
+    `resyncSpatialIndex`. Kept the mid-swing sweep byte-for-byte its original
+    self except for one small, always-safe addition (Mechanism 2's paired
+    blockdata substitution, below).
 - **Mechanism 2**:
-  - `GateLoaderAdapter.loadBlockSnapshots`: load `BlockSnapshots` into
-    `gate.getBlocks()` as today (unchanged); separately fetch the gate's
-    `OpenedBlockSnapshots` (new API call to Phase B's endpoint) into a new
-    `gate.getOpenBlocks()` (empty list, not null, when none exist — this
-    emptiness check *is* the Mechanism 1/2 selector, replacing the removed
-    enum check).
-  - `CachedGate`: add `openBlocks` (`List<BlockSnapshot>`).
-  - New pairing helper (`GateBlockPairing` or similar): nearest-neighbor
-    match each `blocks` entry to an `openBlocks` entry by 3D distance at
-    load time (once per gate, not per frame) — cache the pairing on
-    `CachedGate` alongside `openBlocks`.
-  - `GateFrameCalculator.calculateBlockPosition`: for `MotionType=VERTICAL`/
-    `LATERAL` with a non-empty `openBlocks`, `lerp` using the `SortOrder`
-    pairing (per `DUAL_SCAN`'s original design). For `MotionType=ROTATION`
-    with a non-empty `openBlocks`, apply the blend formula above using the
-    nearest-neighbor pairing, falling back to the pure arc (today's formula)
-    for any block with no pairing (Decision 1(a)). Per Decision 4: compute
-    the raw `arcPos(frame)` without applying `ClipToGeometryBounds` inside
-    the blend, add the correction term, and only then run the clipping check
-    against the resulting final position — never clip the intermediate arc
-    term, or the correction has nothing to add to.
-  - `finishOpening`'s force-placement loop (added this session): for a
-    `ROTATION` gate with `openBlocks`, force-places at the *converged* blend
-    result (`progress=1`, i.e. `openScanPos` exactly) rather than a rotated
-    derivation.
-  - `resyncSpatialIndex` and every other call site assuming `gate.getBlocks()`
-    + `calculateBlockPosition` is the sole source of truth (health system,
-    `GateDoorHitService`, `CollisionPredictor`): these already call
-    `calculateBlockPosition`, which now internally handles the blend/lerp —
-    audit that none of them cache a *pre-blend* position anywhere that would
-    go stale.
-  - `GateBlockOrientation` (added this session): applies only to the arc
-    term for unpaired `ROTATION` blocks. A paired block's orientation is
-    taken from `openScanPos`'s snapshot as-is once `progress` is high enough
-    that the position is dominated by the open-scan target — simplest
-    correct rule: use scanned `OPEN` orientation whenever a block has a
-    pairing at all, scanned `CLOSED` orientation rotated by the arc angle
-    otherwise.
-- New WorldTask type `GateOpenedBlockScan` (sibling to today's
-  `GateBlockScan`), matching Decision 6's one-property-one-task-type
-  convention. Reuses `GateBlockScanTaskHandler`'s existing scan geometry
-  (`buildScanWings`/`ChunkedScanRunnable`/`computeCellPosition` — identical
-  math, no changes needed there) but anchored at `gate.getOpenAnchorPoint()`
-  instead of `gate.getAnchorPoint()`, and posting its result to Phase B's
-  new `GateOpenedBlockSnapshot` endpoint instead of the existing one.
-  Simplest implementation: `GateBlockScanTaskHandler.supports(...)` accepts
-  both task type names, branching only on which anchor/output target to use
-  — the scan loop itself is identical for either. Scanning a `ROTATION`
-  gate's open state uses the exact same mechanism as `VERTICAL`.
+  - `GateLoaderAdapter`: `loadAndCacheGate` gained a 3-arg overload taking
+    `openedSnapshotDtos` (the 2-arg form now delegates with an empty list, so
+    every existing call site/test kept working unmodified); `loadAll`/
+    `loadForDistrict` now fetch `GateStructuresApi.getGateOpenedSnapshots`
+    (new API client method, mirroring `getGateSnapshots`) alongside the
+    existing snapshots call. `GateStructureDto` (api-client) gained
+    `openAnchorPoint`, parsed the same way as `anchorPoint`.
+  - `CachedGate`: `openBlocks` (`List<BlockSnapshot>`, empty not null),
+    `openAnchorPoint`, and `openBlockPairing` (`Map<Integer, BlockSnapshot>`,
+    keyed by the **closed** block's own `getId()` — chosen over a list-index
+    key so `GateFrameCalculator.calculateBlockPosition` needs no index
+    parameter at all, keeping every existing call site's signature and
+    behavior unchanged when a gate has no pairing).
+  - `GateBlockPairing.pairNearestNeighbor` (new, `knk-core`, pure/testable):
+    greedy nearest-3D-neighbor matching by absolute world position. Pins down
+    the many-to-one tie-break Decision 2 left open: closed blocks claim in
+    list (SortOrder) order, so "first-claimed-wins" — a later block wanting
+    an already-claimed open block falls back to its next-nearest available,
+    or is left unpaired (Decision 1(a)'s existing fallback) if none remain.
+  - `GateLoaderAdapter.loadOpenBlockSnapshots`: populates `openBlocks` and
+    computes the pairing — by `GateBlockPairing` (absolute world distance)
+    for `ROTATION`, by matching SortOrder-sorted list index for
+    `VERTICAL`/`LATERAL` (both scans "walk the same deterministic loop from
+    their own anchor", per the design).
+  - `GateFrameCalculator.calculateBlockPosition`: for a block with a pairing,
+    `VERTICAL`/`LATERAL` now `lerp`s between the closed position and the
+    paired open block's absolute world position; `ROTATION` applies the
+    `arcPos(frame) + (openScanPos - arcPos(totalFrames)) * progress` blend.
+    Both verified by unit test to reduce to exactly the closed position at
+    `progress=0` and exactly `openScanPos` at `progress=1`; an unpaired block
+    on the same gate is unaffected (falls through to the original formulas).
+    Per Decision 4, clipping is still checked only against the final blended
+    `position`, never an intermediate term — unchanged control flow, just a
+    different `position` value feeding into the existing check.
+  - Orientation (per the design's "simplest correct rule"): a paired block
+    always uses the paired open block's own blockdata as-is — never
+    `GateBlockOrientation`'s angle-based rotation — in both
+    `GateAnimationTask.updateGateBlocks` (mid-swing) and the shared
+    `GateRestingFramePlacer` (endpoints), unconditionally on pairing
+    presence, not gated on how far `progress` has converged (matches the
+    design's explicit choice of the simpler, unconditional rule).
+  - **Found while wiring up the endpoints (not originally called out in this
+    plan): `GateStateSyncTask.reconcileWorldOnStartup`** independently
+    force-places a gate's resting frame from scratch (to fix a world/DB
+    mismatch after a restart) and had its own separate per-block placement
+    loop — meaning a diagonal-hinge gate already `OPEN` when the server
+    booted would have been reconciled back to the *old* sparse/unpaired
+    footprint, silently undoing Mechanism 1/2 on every restart. Fixed by
+    extracting the shared "what does this gate's resting frame actually look
+    like" logic (rasterize-or-per-block, pairing-aware) into a new
+    `GateRestingFramePlacer` (`knk-paper`), used by both `GateAnimationTask`
+    (animation completion) and `GateStateSyncTask` (startup reconciliation) -
+    including a `RestingCell(position, blockData)` pairing so the stale-frame
+    vacate step can still safely match-before-remove for a rasterized cell,
+    not just a plain scanned block.
+- **New WorldTask type** `GateOpenedBlockScan`: `GateBlockScanTaskHandler.
+  supports(...)` now accepts both task type names; `execute` resolves
+  `useOpenAnchor` from the task's own `taskType()` and threads it through to
+  `buildScanWings`, which sources the wing's *origin* from `OpenAnchorPoint`
+  instead of `AnchorPoint` when set (the lattice basis itself is still always
+  derived from `ReferencePoint1/2` relative to the closed `AnchorPoint`, per
+  the design's own `GateStructure.cs` contract - only the origin moves). The
+  scan loop, chunking, and output JSON building are byte-for-byte unchanged -
+  the backend (`WorldTaskService`, Phase B) is what routes the identically-
+  shaped output to the right table based on `TaskType`, so this handler never
+  needed to know about `GateOpenedBlockSnapshot` at all. `FLOOD_FILL` +
+  `useOpenAnchor` fails fast with an explicit "not supported yet" message,
+  matching the plan's non-goal instead of silently scanning the wrong thing.
+- **Verified**: full multi-module build succeeds; 335 tests pass across
+  `knk-core`/`knk-api-client`/`knk-paper` (110 + 26 + 199, 12 pre-existing
+  skips unrelated to this work), including new coverage for
+  `VectorMath.sublatticeIndex`, `GateFrameCalculator`'s rasterization and
+  blend/lerp formulas, `GateBlockPairing`, `GateLoaderAdapter`'s opened-scan
+  loading and pairing (both motion-type branches), `GateBlockScanTaskHandler.
+  supports`/anchor branching, and `GateRestingFramePlacer`'s eligibility logic.
+  A few planned assertions needed a live Bukkit server to exercise (anything
+  touching `GateBlockOrientation.applyRotation`'s `Bukkit.createBlockData`
+  call) and were scoped down or left to manual/Phase F testing instead,
+  matching this codebase's existing convention for that class of test.
 
 ### Phase D — Frontend (knk-web-app)
 
