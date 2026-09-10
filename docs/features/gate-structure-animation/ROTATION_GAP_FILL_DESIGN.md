@@ -396,21 +396,57 @@ Decision-1-through-5's `AnimationDefinitionMode` removal.
   qualifies for near-instant DDL (metadata-only column add), so it should
   also be fast regardless of table size.
 
-### Phase B — Backend (knk-web-api-v2)
+### Phase B — Backend (knk-web-api-v2) — **Done** (2026-09-10)
 
-- No `AnimationDefinitionMode` enum/field needed (per Decision 1-5).
-- New scan-completion path for `GateOpenedBlockSnapshot`, mirroring
-  whatever `WorldTaskService` method currently applies a completed
-  `GateBlockScan` result to `GateBlockSnapshot` (clear-then-add), but
-  scoped to the new table — naturally correct by construction (Decision 6),
-  no `State`-scoping logic needed at all.
-- New/extended controller surface for `OpenedBlockSnapshots`, mirroring
-  whatever `GateStructuresController` already exposes for `BlockSnapshots`
-  (e.g. a `GET /GateStructures/{id}/openedSnapshots`-style endpoint,
-  named to match existing conventions once reviewed).
+- No `AnimationDefinitionMode` enum/field needed (per Decision 1-5) — not added.
+- **DTOs** (`Dtos/GateStructureDtos.cs`): `GateOpenedBlockSnapshotDto`/
+  `GateOpenedBlockSnapshotCreateDto` added, mirroring `GateBlockSnapshotDto`/
+  `GateBlockSnapshotCreateDto` exactly. `GateStructureDto` (and the legacy,
+  otherwise-unused `GateStructureReadDto`) gained `OpenAnchorPointId`/
+  `OpenAnchorPoint`/`OpenedBlockSnapshots` alongside their existing
+  `AnchorPoint*`/`BlockSnapshots` fields.
+- **Scan-result DTO** (`Dtos/GateBlockScanDtos.cs`): `WorldTaskTypes.
+  GateOpenedBlockScan` constant and `GateOpenedBlockScanResultDto` added,
+  mirroring `GateBlockScanResultDto` (same shape, targets
+  `GateOpenedBlockSnapshotCreateDto` instead).
+- **Scan-completion path** (`Services/WorldTaskService.cs`):
+  `CompleteAsync` now branches on `TaskType` between the existing
+  `GateBlockScan` handling and a new, structurally-identical
+  `TryApplyGateOpenedBlockScanResultAsync`, which calls the new
+  `ClearOpenedBlockSnapshotsAsync`/`AddOpenedBlockSnapshotsAsync` service
+  methods — naturally correct by construction (Decision 6), no
+  `State`-scoping logic needed at all. Covered by
+  `WorldTaskServiceGateScanTests` (new): a `GateOpenedBlockScan` completion
+  never touches `BlockSnapshots` and vice versa.
+- **Repository/service** (`GateStructureRepository`/`GateStructureService`
+  + interfaces): `GetOpenedBlockSnapshotsByGateIdAsync`/
+  `AddOpenedBlockSnapshotAsync`/`AddOpenedBlockSnapshotsAsync`/
+  `DeleteOpenedBlockSnapshotsByGateIdAsync` added, mirroring the existing
+  `*BlockSnapshot*` methods exactly. `DeleteAsync` now also clears
+  `OpenedBlockSnapshots` before deleting a gate (parity with the existing
+  `BlockSnapshots` cleanup, on top of the FK's own `OnDelete: Cascade`).
+  `ApplyLocationReferencesAsync` now resolves `OpenAnchorPointId`/
+  `OpenAnchorPoint` the same way it already does for `AnchorPoint`.
+  Fixed in passing: `BuildGateQuery()`/`SearchAsync` were missing an
+  `.Include(gs => gs.OpenAnchorPoint)` (present for `AnchorPoint` but never
+  added for its sibling when Phase A introduced it) — a gate's
+  `OpenAnchorPoint` navigation would otherwise never have loaded.
+- **Controller** (`Controllers/GateStructuresController.cs`): `GET
+  /{id}/openedSnapshots`, `POST /{id}/openedSnapshots/bulk`, `DELETE
+  /{id}/openedSnapshots` added, mirroring the existing `/snapshots`
+  endpoints' routes, verbs, and error handling exactly.
 - `GateStructuresController`: no new validation tied to a mode field — the
   existing `GateType`/`MotionType` validation from this session's earlier
   work is untouched.
+- Verified: full backend build succeeds with no new warnings; the new
+  `WorldTaskServiceGateScanTests` (2 tests) and the existing
+  `GateStructureMappingProfileTests` pass; full suite run confirms the same
+  5 pre-existing, unrelated failures noted in Phase A (client activity,
+  path resolution, form submission progress) and no new ones.
+- Not yet done (left for Phase C/D per the plan): the plugin-side
+  `GateOpenedBlockScan` `WorldTask` producer (`GateBlockScanTaskHandler`
+  branching) and the frontend `FormConfig` wiring — this phase only adds
+  the backend surface those will call into.
 
 ### Phase C — Plugin (knk-plugin-v2)
 
