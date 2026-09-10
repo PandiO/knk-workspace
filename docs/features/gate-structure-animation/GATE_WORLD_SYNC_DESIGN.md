@@ -1,6 +1,7 @@
 # Gate World/DB Synchronization: Design & Implementation Plan
 
-**Status:** Proposed (not started)
+**Status:** Implemented (2026-09-10) — Phases 1-4 done; Phase 5 unit tests done,
+manual/Phase-F-style live-server validation still outstanding (see Testing note below)
 **Author:** Claude (plan requested by Pandi), 2026-09-10
 **Related:** [ROTATION_GAP_FILL_DESIGN.md](ROTATION_GAP_FILL_DESIGN.md) (Phase C's
 `GateRestingFramePlacer`/`GateStateSyncTask` work is where this gap was found and
@@ -281,67 +282,121 @@ how `GateAnimationTask` and `GateStateSyncTask` already share it.
 
 ---
 
-## Implementation plan
+## Implementation (2026-09-10)
 
-### Phase 1 — `GateWorldSyncChecker` (knk-plugin-v2, `knk-paper`)
+### Phase 1 — `GateWorldSyncChecker` (knk-plugin-v2, `knk-paper`) — **Done**
 
 - New class alongside `GateRestingFramePlacer`: `check(world, gate,
-  rasterizationEnabled)` (read-only, returns `SyncResult`) and `fix(world,
-  gate, rasterizationEnabled)` (delegates to `GateRestingFramePlacer.
-  placeRestingFrame`).
+  fallbackMaterial, rasterizationEnabled)` (read-only, returns `SyncResult`)
+  and `fix(world, gate, fallbackMaterial, rasterizationEnabled)` (delegates
+  to `GateRestingFramePlacer.placeRestingFrame`). `fallbackMaterial` was
+  added to the signature beyond this doc's original sketch, since expected
+  blockdata parsing (`GateBlockPlacer.parseBlockData`) already needs one for
+  consistency with every other placement/removal call site.
+- `SyncResult(inSync, mismatchedCellCount, totalCellCount, uncheckedCellCount)`
+  plus a `fullyUnchecked()` helper (`uncheckedCellCount >= totalCellCount`) -
+  used by all three mechanisms to distinguish "verified and matched",
+  "verified and mismatched", and "couldn't verify at all right now" (Mechanisms
+  A/C never force a chunk load, so a gate can land in that third bucket).
 - `check()` built on `GateRestingFramePlacer.restingFrameCells`: for each
-  expected cell, read the actual block (skip - don't count as mismatch - if
-  its chunk isn't loaded) and compare material/blockdata; accumulate a
-  mismatch count.
-- Unit-testable for the "which cells are expected" part (already covered by
-  Phase C's `GateFrameCalculatorTest`/`GateRestingFramePlacerTest`); the
-  live-block-comparison part needs a loaded `World`, so - matching this
-  repo's existing convention (`GateBlockScanTaskHandlerTest`'s own note) -
-  gets scoped to a manual/Phase-F-style verification rather than a Bukkit-
-  free unit test, or exercised via MockBukkit if the project adopts it later.
+  expected cell, calls a new `GateBlockPlacer.blockMatches(world, position,
+  expectedBlockData, fallbackMaterial)` - a read-only tri-state helper
+  (`null` = chunk not loaded/unparseable, cannot determine) added alongside
+  the existing `placeBlockIfVacant`/`removeBlockIfMatches` - and accumulates
+  a mismatch count. Never mutates the world.
+- `restingFrame(CachedGate)` (package-visible): resolves a resting gate's
+  `CLOSED`/`OPEN` state to frame 0 or `totalFrames` - shared by `check()`,
+  `fix()`, and `GateStateSyncTask`'s chunk-resolution step (Mechanism B).
+- Tested: `restingFrame`'s pure CLOSED/OPEN → frame mapping
+  (`GateWorldSyncCheckerTest`). `check()`/`fix()`'s live-block-comparison
+  path needs a loaded `World` and is scoped to manual/Phase-F-style
+  verification, matching this repo's existing convention for that class of
+  test (see `GateBlockScanTaskHandlerTest`'s own note, and Phase C's
+  `GateRestingFramePlacerTest` hitting the same `GateBlockOrientation.
+  applyRotation` → `Bukkit.createBlockData` constraint).
 
-### Phase 2 — Startup diagnostic pass (replace `reconcileWorldOnStartup`'s force-fix)
+### Phase 2 — Startup diagnostic pass — **Done**
 
-- `GateStateSyncTask.reconcileWorldOnStartup()`: replace the current
-  unconditional `GateRestingFramePlacer.placeRestingFrame`/vacate-stale-cells
-  logic with the diagnose-only flow (Mechanism A above) - check only
-  already-loaded chunks, log mismatches and a summary line, never write.
-- No new config needed beyond what already exists; this is strictly less
-  work than what runs today (a check instead of a check-and-force-write).
+- `GateStateSyncTask.reconcileWorldOnStartup()` replaced outright by
+  `logStartupSyncDiagnostics()`: iterates every eligible (non-destroyed,
+  resting) gate, resolves its world, and calls `GateWorldSyncChecker.check`
+  - skipping (not logging as a mismatch) any gate whose result is
+  `fullyUnchecked()` (nothing loaded yet). Logs a `WARNING` per mismatched
+  gate and one `INFO` summary line (verified/mismatched/skipped counts).
+  Never calls `fix()` - purely diagnostic, per Decision 1.
+- `KnKPlugin`'s post-`reloadGates()` callback updated to call
+  `logStartupSyncDiagnostics()` instead of the old method name.
+- No new config; this does strictly less work than the code it replaced (a
+  read-only check instead of a check-and-force-write pass).
 
-### Phase 3 — District-load check-and-fix
+### Phase 3 — District-load check-and-fix — **Done**
 
-- `GateLoaderAdapter.loadForDistrict` (or a thin wrapper called right after
-  it from `DistrictGateLoader`): for each newly-cached, resting-state gate,
-  `World#getChunkAtAsync` its relevant cell(s), then on the main thread run
-  `GateWorldSyncChecker.check`/`fix`.
-- `DistrictGateLoader.forceReload` (admin-triggered re-load after editing a
-  gate) should also run this - an edited gate's geometry may have changed
-  the set of world cells it now expects to occupy.
+- `GateLoaderAdapter.loadForDistrict` now returns
+  `CompletableFuture<List<Integer>>` (the ids of gates it actually cached)
+  instead of `CompletableFuture<Void>` - the minimal change needed for a
+  caller to know which gates to run Mechanism B against, without a second,
+  redundant API round-trip.
+- `GateStateSyncTask.checkAndFixGates(Collection<Integer> gateIds)` (new,
+  public): hops onto the main thread, then per eligible gate collects the
+  distinct chunk coordinates its `restingFrameCells` touch, force-loads all
+  of them via `World#getChunkAtAsync` (parallel, non-blocking), and once
+  every chunk future for that gate completes, hops back onto the main
+  thread and runs `check`/`fix`. A gate spanning multiple chunks is handled
+  naturally (all its chunks are loaded before checking), not just single-chunk
+  gates.
+- `DistrictGateLoader` gained a `GateStateSyncTask` constructor dependency
+  and now calls `checkAndFixGates` on the ids `loadForDistrict` returns,
+  both from `loadIfNotAlreadyLoaded` (the normal on-demand-entry path) and
+  `forceReload` (admin-triggered re-load, so an edited gate's new geometry
+  is verified immediately rather than waiting for the next health-check pass).
+- `KnKPlugin`: `GateStateSyncTask` is now constructed *before*
+  `DistrictGateLoader` (previously the reverse), so it can be passed in.
 
-### Phase 4 — Periodic health-check task
+### Phase 4 — Periodic health-check task — **Done**
 
-- New `GateWorldHealthCheckTask` (or extend `GateStateSyncTask` with a
-  second timer): budgeted, round-robin batch processing of already-loaded
-  gates only (Mechanism C above).
-- New config keys (names indicative, finalize during implementation):
-  - `gates.world-sync.health-check-interval-seconds` (default e.g. `300`)
-  - `gates.world-sync.health-check-batch-size` (default e.g. `15`)
-- Wired up in `KnKPlugin` alongside the existing `GateStateSyncTask`/
-  `GateFireDamageTask`-style periodic task registrations.
+- Extended `GateStateSyncTask` itself with a second timer (rather than a new
+  sibling class - Decision 5's "one shared coordinator" already put all
+  sync orchestration here) via new constructor parameters
+  `healthCheckIntervalSeconds`/`healthCheckBatchSize` (existing 5- and
+  6-argument constructors delegate with defaults `300`/`15`, so no other
+  caller needed updating).
+- `start()` now also starts a `runTaskTimer` (main thread, not async - it
+  touches Bukkit block state directly) running `runHealthCheckBatch`;
+  `stop()` cancels both timers.
+- `runHealthCheckBatch`: snapshots and sorts the currently-cached gate ids
+  (a stable order independent of `HashMap` iteration/rehashing), computes
+  this run's batch via a new pure static helper `selectRoundRobinBatch
+  (totalCount, cursor, batchSize)`, and for each selected id calls
+  `checkAndFixGateIfAlreadyLoaded` - which, unlike Mechanism B's
+  `checkAndFixGate`, never force-loads a chunk: a gate that's
+  `fullyUnchecked()` right now is simply left for a later run (or Mechanism
+  B, if its district gets (re)entered first).
+- New config keys `gates.world-sync.health-check-interval-seconds` (default
+  `300`) and `gates.world-sync.health-check-batch-size` (default `15`),
+  read once in `KnKPlugin` and passed to `GateStateSyncTask`'s constructor.
 
-### Phase 5 — Testing & validation
+### Phase 5 — Testing — **Unit tests done; live-server validation outstanding**
 
-- Unit tests for `GateWorldSyncChecker`'s pure logic (expected-cell
-  computation reuses already-tested `GateRestingFramePlacer` code) and for
-  the round-robin batching logic in the periodic task (pure, no Bukkit
-  needed - "does it process gate N next, wrapping around" is testable with
-  a fake gate-id list).
-- Manual/Phase-F-style validation: force a gate out of sync (e.g. manually
-  break its blocks with WorldEdit, or edit its DB `IsOpened` directly),
-  confirm (a) startup only logs it, (b) entering its district fixes it and
-  logs the correction, (c) the periodic task also catches and fixes drift
-  introduced after that without needing a district re-entry.
+- `GateStateSyncTaskRoundRobinTest`: `selectRoundRobinBatch` extracted as a
+  pure, Bukkit-free static method specifically so the wraparound/cursor
+  logic could be tested directly (consecutive batch, wrap-around, batch
+  larger than total, cursor exactly at the end, a defensively-handled
+  negative cursor, and a full multi-run sweep asserting every index is
+  visited exactly once) - this is the part of Mechanism C with real
+  off-by-one risk; the surrounding `runHealthCheckBatch`/`checkAndFixGateIfAlreadyLoaded`
+  wiring is thin enough to review by inspection.
+- `GateWorldSyncCheckerTest`: `restingFrame`'s CLOSED→0 / OPEN→totalFrames mapping.
+- `DistrictGateLoaderTest`: extended with two new cases confirming
+  `checkAndFixGates` is called with exactly the ids `loadForDistrict`
+  returned, for both `loadIfNotAlreadyLoaded` and `forceReload`.
+- Verified: full multi-module build succeeds; 346 tests pass across
+  `knk-core`/`knk-api-client`/`knk-paper` (110 + 26 + 210, 12 pre-existing
+  skips unrelated to this work), no new failures.
+- **Not yet done**: the manual/Phase-F-style validation this doc's Phase 5
+  originally called for (force a gate out of sync via WorldEdit or a direct
+  DB edit; confirm startup only logs it, entering its district fixes it and
+  logs the correction, and the periodic task catches drift introduced after
+  that) needs a live server and hasn't been run yet.
 
 ---
 
