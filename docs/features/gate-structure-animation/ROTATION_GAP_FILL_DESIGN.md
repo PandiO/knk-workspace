@@ -578,26 +578,93 @@ Decision-1-through-5's `AnimationDefinitionMode` removal.
   call) and were scoped down or left to manual/Phase F testing instead,
   matching this codebase's existing convention for that class of test.
 
-### Phase D — Frontend (knk-web-app)
+### Phase D — Frontend (knk-web-app) — **Done** (2026-09-10)
 
 - No `AnimationDefinitionMode` dropdown needed — whether a gate uses
   dual-scan is entirely a function of whether the `OpenedBlockSnapshots`
-  scan was completed.
-- `FormConfig` for `GateStructure` gains a field for the new
-  `OpenedBlockSnapshots` property, mirroring however `BlockSnapshots` is
-  configured today (`worldTaskType: 'GateOpenedBlockScan'`, per Phase C) —
-  a genuinely separate, ordinary wizard step, optional for any gate, added
-  the same way any other `FormConfigurableEntity`-backed field is: no
-  special "scan state" selector UI needed at all, since it's just a second
-  property with its own scan trigger. An admin can add it, skip it, or come
-  back and add it later; its mere presence/completion is what activates
-  Mechanism 2 — this is the concrete UX improvement Decision 6 was about.
-- While touching gate-type/motion-type field config: add the `GateType`/
-  `MotionType` cross-validation flagged as missing during this session's
-  earlier work (a `DRAWBRIDGE` should default-suggest `ROTATION`, not
-  silently accept `VERTICAL`) — same class of bug as this session's
-  `MotionType` defaulting incident, worth closing while this area is already
-  being edited.
+  scan was completed. Unchanged from the plan; nothing to add here.
+- **`FormConfig` for `GateStructure` gaining an `OpenedBlockSnapshots` field
+  is an admin/data action, not a code change** — this was the first thing
+  Phase D had to clarify. `objectConfigs.tsx`'s static `GateStructureConfig`
+  (Phase 5's original 20-field config) turned out to no longer be what
+  actually drives the gate creation/edit wizard: `FormWizardPage`/
+  `FormWizard` render fields entirely from the *dynamic*, database-backed
+  `FormConfigurationDto` (built via the `FormConfigBuilder`/`FieldEditor`
+  admin UI) - the static config is only still consulted for the gate list's
+  column definitions. Per `GATE_FORMCONFIG.md` (Deel B) itself, no
+  `GateStructure` `FormConfiguration` has actually been seeded yet at all
+  (its own "Openstaande werkzaamheden" #4). So "add a field for
+  `OpenedBlockSnapshots`, mirroring `BlockSnapshots`" isn't a file to edit -
+  it's something whoever eventually builds that `FormConfiguration` does
+  through the admin UI, the same way they'll need to add `BlockSnapshots`
+  itself. **What Phase D *could* and did fix in code** is the supporting
+  infrastructure `BlockSnapshots`'s `worldTaskType: 'GateBlockScan'` field
+  already depends on, generalized to recognize its sibling:
+  - `FieldEditor.tsx`: `'GateOpenedBlockScan'` added to
+    `PREDEFINED_TASK_TYPES` (so it's selectable at all when an admin does
+    build the field), plus a hint explaining it scans the gate's open state
+    from its Open Anchor Point rather than the closed one.
+  - `WorldBoundFieldRenderer.tsx`: every place that special-cased the literal
+    string `'GateBlockScan'` (headless/no-player detection, the "send to
+    Minecraft" button's entity-id guard, the scan-progress/result-details
+    UI) generalized to a shared `GATE_BLOCK_SCAN_TASK_TYPES = ['GateBlockScan',
+    'GateOpenedBlockScan']` array and an `isGateBlockScanTask` helper - both
+    task types now get byte-for-byte identical treatment, matching the
+    backend's own "the scan loop itself is identical for either" design
+    (Phase C).
+  - New tests (`WorldBoundFieldRenderer.results.test.ts`, `it.each`-parameterized
+    over both task types): scan status/block-count/warning result details,
+    and headless-task-type detection.
+- **`GateType`/`MotionType` cross-validation** (the opportunistic cleanup
+  this plan flagged): the static `objectConfigs.tsx` field system's
+  `validation` callback is single-value-only (`(value: T) => string |
+  undefined`, no access to sibling fields), and the real admin form's
+  cross-field validation goes through the dynamic `FieldValidationRule` /
+  `IValidationMethod` backend system instead - but that system had no
+  validation type capable of expressing "field X must equal value Y when
+  dependency Z matches a condition" at all. The closest existing one,
+  `ConditionalRequiredValidator`, only checks presence/absence, never the
+  field's actual value. Added a new sibling, `ConditionalValueMatchValidator`
+  (`knk-web-api-v2`, registered in DI alongside the other `IValidationMethod`s):
+  `ConfigJson` names a `condition` (evaluated against the dependency field,
+  e.g. `GateType in "DRAWBRIDGE,DOUBLE_DOORS"`) and an `expected` clause
+  checked against the field's own value when the condition holds (e.g.
+  `MotionType equals "ROTATION"`) - same operator vocabulary as
+  `ConditionalRequiredValidator` (`equals`/`notEquals`/`greaterThan`/
+  `lessThan`/`contains`/`in`). This is a reusable building block, not
+  GateStructure-specific; wiring an actual `FieldValidationRule` row that
+  uses it onto `GateStructure.MotionType` is, like the `OpenedBlockSnapshots`
+  field above, an admin/data action that happens once a real `GateStructure`
+  `FormConfiguration` exists to attach it to.
+  - Found and fixed two bugs while writing this (both caught by new tests,
+    not shipped): (1) `System.Text.Json` deserializes an `object`-typed
+    config property as a boxed `JsonElement`, never a plain CLR `string` -
+    a naive `is string` check (the pattern `ConditionalRequiredValidator`
+    itself already uses for its own "in"/"contains" operators, apparently
+    never caught since its own test file is excluded from the build - see
+    below) silently always fails; fixed via an explicit `ToComparableString`
+    helper that unwraps `JsonElement` by `ValueKind` first. (2)
+    `JsonSerializer.Deserialize` is case-sensitive by default, so a
+    camelCase `ConfigJson` (the convention every other DTO in this API
+    uses) wouldn't populate PascalCase C# properties at all; fixed with
+    `PropertyNameCaseInsensitive = true` on the deserialize call.
+  - New `ConditionalValueMatchValidatorTests` (11 tests): the DRAWBRIDGE/
+    DOUBLE_DOORS + non-ROTATION-motion scenario directly, condition
+    operators (`in`, `equals`), unconstrained-when-condition-not-met for
+    every other `GateType`, missing/malformed config handling, and the
+    `expected` clause's own `in` operator. Written against the actual,
+    current `IValidationMethod.ValidateAsync(fieldValue, dependencyValue,
+    configJson, formContextData)` signature (confirmed from
+    `FieldValidationService`'s real call sites) rather than the older
+    `FieldValidationRule`-based signature `tests/.../ValidationMethodsTests.cs`
+    uses - that whole file (plus a few other validation-system test files)
+    is `<Compile Remove>`-excluded from the test project already, predating
+    the current interface; not touched here, out of scope for this plan.
+- **Verified**: frontend `tsc --noEmit` passes with no errors; the two
+  updated/new frontend test files pass (21/21, up from 15 before - 2 new
+  `it.each` blocks); backend full suite passes 288/293 (11 new tests, same
+  5 pre-existing unrelated failures as every prior phase - client activity,
+  path resolution, form submission progress).
 
 ### Phase E — Docs
 
