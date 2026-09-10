@@ -1,8 +1,55 @@
 # Dual-Scan Animation: Design & Implementation Plan
 
-**Status:** Proposed (not started)
+**Status:** Superseded (2026-09-10) — amended and implemented under a different
+schema by [ROTATION_GAP_FILL_DESIGN.md](ROTATION_GAP_FILL_DESIGN.md); see the
+amendment notice immediately below before reading further
 **Author:** Claude (plan requested by Pandi), 2026-09-07
-**Related:** [SPEC.md](SPEC.md), [REQUIREMENTS.md](REQUIREMENTS.md), [IMPLEMENTATION_ROADMAP.md](IMPLEMENTATION_ROADMAP.md), [DECISIONS.md](DECISIONS.md)
+**Related:** [SPEC.md](SPEC.md), [REQUIREMENTS.md](REQUIREMENTS.md), [IMPLEMENTATION_ROADMAP.md](IMPLEMENTATION_ROADMAP.md), [DECISIONS.md](DECISIONS.md), [ROTATION_GAP_FILL_DESIGN.md](ROTATION_GAP_FILL_DESIGN.md) (supersedes this doc's schema; see below)
+
+> **⚠️ Superseded.** This doc's core *goal* (let an admin capture an exact
+> open-state shape by scanning it, instead of fighting `MotionVector`/
+> `ClipToGeometryBounds` math) shipped, implemented, and is live today — but
+> under a materially different design than proposed below, worked out while
+> extending this same idea to `ROTATION` gates in
+> [ROTATION_GAP_FILL_DESIGN.md](ROTATION_GAP_FILL_DESIGN.md) ("Mechanism 2").
+> Two concrete divergences from this document, both already implemented:
+>
+> 1. **No `AnimationDefinitionMode` field.** The enum proposed below
+>    (`PROCEDURAL`/`DUAL_SCAN`, an explicit admin-selected mode) was never
+>    added. Instead, the trigger is *implicit*: a gate with any
+>    `OpenedBlockSnapshots` rows uses them; a gate with none animates
+>    procedurally. This applies uniformly to every `MotionType`
+>    (`VERTICAL`/`LATERAL`/`ROTATION`) instead of needing a mode field
+>    scoped to just PLANE_GRID VERTICAL/LATERAL gates, per Decision 1-5 in
+>    the amendment.
+> 2. **No `State` column on `GateBlockSnapshot`.** The single-table,
+>    `SnapshotState`-discriminated schema proposed below (Phase A/B) was
+>    replaced with a genuinely separate entity/table,
+>    `GateOpenedBlockSnapshot` (`gate_opened_block_snapshots`), mirroring
+>    `GateBlockSnapshot` column-for-column. See Decision 6 in the amendment
+>    for the reasoning (in short: the admin-facing FormWizard ties one
+>    scan to one property, one-shot, with no existing concept of
+>    "re-scan this property for a different purpose" — a second, ordinary
+>    property fits that convention with zero new UI concepts, where a
+>    shared table would need new special-casing).
+>
+> **What's unchanged / still accurate below**: the *motivating problem*
+> (Context), `VERTICAL`/`LATERAL`'s `SortOrder`-paired `lerp` animation
+> logic (Design → "Animating a DUAL_SCAN gate" — implemented essentially as
+> described, just reading from `GateOpenedBlockSnapshot` instead of a
+> `State='OPEN'` row), Open Question 1's "no live counterpart" fallback
+> (resolved as option (a), "pop in at the final frame" — simpler than this
+> doc's own recommended hybrid (b), once `ROTATION`'s blend formula proved
+> that a lightweight fallback was sufficient), and the general shape of the
+> scanning pipeline (`GateBlockScanTaskHandler`'s wing/chunking logic reused
+> unchanged, just anchored differently). **What's stale**: anything
+> referencing `AnimationDefinitionMode` or a `State` column specifically
+> (Design's schema subsections, all of Phase A/B, Phase C/D's `scanState`-
+> based field names) — read those as historical rationale for *why* dual-
+> scan is a good idea, not as the actual shipped schema.
+>
+> `ROTATION_GAP_FILL_DESIGN.md`'s own header formalizes this same amendment
+> from the other direction.
 
 ---
 
@@ -75,6 +122,10 @@ procedural one — it does not replace or migrate any existing gate.
 
 ### New concept: `AnimationDefinitionMode`
 
+> **⚠️ Not implemented as described.** This field was dropped entirely —
+> see the amendment notice at the top of this document. The trigger is
+> implicit (presence of `OpenedBlockSnapshots` rows) instead.
+
 A new gate-level enum, alongside the existing `GeometryDefinitionMode`
 (`PLANE_GRID` / `FLOOD_FILL`, `GateStructureEnums.cs:11-14`):
 
@@ -111,6 +162,12 @@ open-state counterpart — no new matching logic needed, just two labeled sets
 of the same shape.
 
 ### Storing two states of the same gate
+
+> **⚠️ Not implemented as described.** The `State`-discriminator column
+> proposed here was replaced by a genuinely separate table,
+> `GateOpenedBlockSnapshot` — see Decision 6 in
+> [ROTATION_GAP_FILL_DESIGN.md](ROTATION_GAP_FILL_DESIGN.md) and the
+> amendment notice at the top of this document.
 
 `GateBlockSnapshot` (`Models/GateBlockSnapshot.cs`) gains one discriminator
 column:

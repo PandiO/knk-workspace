@@ -2,6 +2,7 @@
 
 **Status**: Ontwerp, nog niet geïmplementeerd
 **Afhankelijk van**: Deel A (Display Conditions)
+**Gerelateerd**: [ROTATION_GAP_FILL_DESIGN.md](ROTATION_GAP_FILL_DESIGN.md) (`OpenAnchorPointId`/`OpenedBlockSnapshots`, zie sectie 2 hieronder)
 
 Dit document beschrijft welke FormConfiguration er voor `GateStructure` gebouwd moet worden en
 welke velden per gate type relevant zijn. Deze veldmatrix ontbrak in de bestaande documentatie.
@@ -56,6 +57,21 @@ invulbaar veld aangeboden. Hetzelfde geldt voor `MotionType`, behalve bij `SLIDI
 | `LeftDoorSeedBlockId` / `RightDoorSeedBlockId` | – | – | – | verplicht |
 | `MirrorRotation` | – | – | – | ja |
 
+### Optioneel, ongeacht type (Rotation Gap-Fill)
+
+Zie [ROTATION_GAP_FILL_DESIGN.md](ROTATION_GAP_FILL_DESIGN.md). Deze twee velden vormen samen
+Mechanisme 2 (handmatige override van de open-vorm) - er is geen apart modus-veld, de
+aanwezigheid van `OpenedBlockSnapshots` is zelf de trigger.
+
+| Veld | Zichtbaar wanneer | Verplicht |
+| --- | --- | --- |
+| `OpenAnchorPointId` | altijd (alle `GateType`s) | nee |
+| `OpenedBlockSnapshots` | altijd, maar alleen zinvol wanneer `OpenAnchorPointId` gezet is | nee |
+
+`OpenedBlockSnapshots` is een `WorldTask`-gebonden veld (`worldTaskType: 'GateOpenedBlockScan'`),
+op exact dezelfde manier geconfigureerd als `BlockSnapshots`/`GateBlockScan` (zie punt 4 in
+sectie 4 hieronder voor de status van beide).
+
 ### Veld-conditioneel binnen een step
 
 | Veld | Zichtbaar wanneer |
@@ -100,8 +116,19 @@ Step 5 bevat `HingeAxisId` en `RotationMaxAngleDegrees` voor beide types, plus
    Deze blijven ephemeral in `WorldTask.OutputJson` tot de `GateStructure` daadwerkelijk
    wordt aangemaakt.
 3. **Afgeleide velden** – `GeometryDefinitionMode` en (buiten SLIDING) `MotionType` moeten
-   server-side uit `GateType` gezet worden, zodat ze niet in het formulier hoeven te staan.
+   server-side uit `GateType` gezet worden, zodat ze niet in het formulier hoeven te staan. Tot
+   die server-side afleiding er is, is er nu tenminste een vangnet als het formulier `MotionType`
+   wél laat invullen: `ConditionalValueMatchValidator` (nieuw, `knk-web-api-v2`, zie
+   [ROTATION_GAP_FILL_DESIGN.md](ROTATION_GAP_FILL_DESIGN.md) Phase D) kan als
+   `FieldValidationRule` op `MotionType` gezet worden om te eisen dat de waarde `ROTATION` is
+   zodra `GateType` `DRAWBRIDGE` of `DOUBLE_DOORS` is - dat vereist alleen het aanmaken van de
+   rule-rij zodra er een echte `FormConfiguration` bestaat, geen nieuwe code.
 4. **Seeden van de configuratie** – de bovenstaande configuratie inclusief display conditions
    aanmaken als default voor `GateStructure`, via `POST /api/formconfigurations` of een seeder.
+   Nog niet gedaan - dit betekent dat ook `BlockSnapshots` (`worldTaskType: 'GateBlockScan'`) en
+   zijn Rotation Gap-Fill-tegenhanger `OpenedBlockSnapshots`
+   (`worldTaskType: 'GateOpenedBlockScan'`, zie sectie 2 hierboven) nog als velden toegevoegd
+   moeten worden zodra dit gebeurt - de ondersteunende code (FieldEditor-dropdown,
+   WorldBoundFieldRenderer-afhandeling) bestaat voor beide al.
 5. **End-to-end verificatie** – FormConfig → FormSubmission → `GateStructure` aangemaakt →
    plugin laadt gate → animatie draait → `IsOpened` synchroniseert.

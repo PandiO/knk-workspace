@@ -77,6 +77,13 @@ public int GeometryWidth { get; set; } = 0;  // Blocks along u-axis (ReferencePo
 public int GeometryHeight { get; set; } = 0;  // Blocks along v-axis (ReferencePoint2)
 public int GeometryDepth { get; set; } = 0;  // Blocks along n-axis (motion axis)
 
+// Optional second physical anchor for a separately-scanned, fully-open shape - see
+// "Rotation Gap-Fill" below. Uses the same ReferencePoint1/2 basis as AnchorPoint, just a
+// different physical origin. Null (the default) means the gate has no manual open-state
+// scan and animates procedurally, same as every gate before this feature existed.
+public int? OpenAnchorPointId { get; set; }
+public Location? OpenAnchorPoint { get; set; } = null;
+
 // === FLOOD_FILL Geometry (new) ===
 public string SeedBlocks { get; set; } = string.Empty;  // JSON: "[{x:100,y:64,z:100}, ...]"
 public int ScanMaxBlocks { get; set; } = 500;  // Limit on flood-fill scan
@@ -107,6 +114,10 @@ public Domain Domain { get; set; } = null!;
 public District District { get; set; } = null!;
 public Street? Street { get; set; } = null;
 public ICollection<GateBlockSnapshot> BlockSnapshots { get; set; } = new List<GateBlockSnapshot>();
+
+// Optional, separately-scanned fully-open shape - see "Rotation Gap-Fill" below. Empty for
+// every gate that doesn't opt into a manual open-state scan.
+public ICollection<GateOpenedBlockSnapshot> OpenedBlockSnapshots { get; set; } = new List<GateOpenedBlockSnapshot>();
 ```
 
 **Database Table** (`GateStructures`):
@@ -137,9 +148,11 @@ HingeAxis NVARCHAR(MAX) NOT NULL DEFAULT ''
 LeftDoorSeedBlock NVARCHAR(MAX) NOT NULL DEFAULT ''
 RightDoorSeedBlock NVARCHAR(MAX) NOT NULL DEFAULT ''
 MirrorRotation BIT NOT NULL DEFAULT 1
+OpenAnchorPointId INT NULL  -- Rotation gap-fill (Mechanism 2): see below
 
 -- Add foreign key
 FOREIGN KEY (FallbackMaterialRefId) REFERENCES MinecraftMaterialRef(Id)
+FOREIGN KEY (OpenAnchorPointId) REFERENCES Locations(Id)
 
 -- Add indexes
 CREATE INDEX idx_gate_domain ON GateStructures(DomainId) WHERE IsActive=1
@@ -198,6 +211,38 @@ CREATE CLUSTERED INDEX idx_snapshot_sort ON GateBlockSnapshots(GateStructureId, 
 - **One-to-Many**: One GateStructure has many GateBlockSnapshots
 - **Cascade Delete**: Deleting a gate automatically deletes all its snapshots
 - **Optional Reference**: MinecraftBlockRefId can be NULL (uses FallbackMaterial)
+
+---
+
+#### GateOpenedBlockSnapshot (New — Rotation Gap-Fill)
+
+**Purpose**: Optional, separately-scanned record of a gate's fully-open shape, mirroring
+`GateBlockSnapshot` column-for-column but keyed to `OpenAnchorPointId` instead of
+`AnchorPointId`. See
+[ROTATION_GAP_FILL_DESIGN.md](ROTATION_GAP_FILL_DESIGN.md) for the full design and rationale
+(Decision 6 explains why this is a separate table rather than a `State`-discriminated column
+on `GateBlockSnapshot`).
+
+Its presence (or absence) is itself the trigger for **Mechanism 2** below — there is no
+separate mode flag to select.
+
+**Fields**: identical shape to `GateBlockSnapshot` (`RelativeX/Y/Z`, `MaterialName`,
+`BlockDataJson`, `TileEntityJson`, `SortOrder`, `GateStructureId` FK) — see the actual model
+for the current field list (this doc's `GateBlockSnapshot` fields above predate several
+backend-only fields, e.g. `MaterialName`/`BlockDataJson`/`TileEntityJson`, that both entities
+share in the real implementation; [Models/GateOpenedBlockSnapshot.cs](../../../../Repository/knk-web-api-v2/Models/GateOpenedBlockSnapshot.cs)
+is authoritative).
+
+**Database Table** (`gate_opened_block_snapshots`): same shape as `gate_block_snapshots`,
+including the same three indexes (`GateStructureId`; `(GateStructureId, SortOrder)`;
+`(WorldX, WorldY, WorldZ)`), `OnDelete: Cascade` from `GateStructureId`.
+
+**Relationships**: One-to-Many from `GateStructure.OpenedBlockSnapshots`, cascade-deleted with
+the gate — exactly mirroring `BlockSnapshots`, just a second, independent collection.
+
+**Populated by**: a new `GateOpenedBlockScan` WorldTask type (sibling to `GateBlockScan`,
+identical scan geometry/chunking, anchored at `OpenAnchorPoint` instead of `AnchorPoint`) — see
+Rotation Gap-Fill below.
 
 ---
 
@@ -557,6 +602,45 @@ For each block in snapshot:
   - Place block at animatedPos
 ```
 
+#### Rotation Gap-Fill (Mechanisms 1 & 2)
+
+Full design in [ROTATION_GAP_FILL_DESIGN.md](ROTATION_GAP_FILL_DESIGN.md). Summary of the two
+mechanisms, both implemented (2026-09-10):
+
+**Mechanism 1 — automatic rasterization (diagonal-hinge `ROTATION` gates only).**
+A diagonal-facing `ROTATION` gate's naive rotated-block placement reaches only a sublattice of
+its true open footprint (checkerboard-sparse for a 45° hinge, sparser still for other
+diagonals — see the design doc's `a²+b²` formula). At the two resting endpoints (closed/open),
+`GateFrameCalculator.rasterizeRotationFrame` fills every real cell inside the rotated footprint
+instead of just the individually-rotated scanned points, sourcing each cell's material from the
+nearest original scanned block. Runs automatically, with zero admin action, for any gate whose
+computed sublattice index is `> 1` — a cardinal-hinge gate (index 1) is completely unaffected.
+Mid-swing frames stay on the original sparse placement (endpoints only, matching every other
+tick's placement cost). Guarded by a kill switch:
+`gates.rotationGapFill.rasterization-enabled` (`config.yml`, default `true`) — set to `false`
+to fall back to the exact pre-existing sparse-lattice behavior server-wide without a code
+deploy.
+
+**Mechanism 2 — manual open-scan override (any `MotionType`/`GateType`).**
+An admin who wants full control over the open shape (different material, a non-solid look, or
+just a diagonal gate's exact intended shape) can physically build and scan the true open state
+instead: the trigger is implicit — if a gate has any `OpenedBlockSnapshots` rows, those are
+used, no separate mode field. When present, they **always win outright** over Mechanism 1 or
+the plain procedural formula.
+- **`VERTICAL`/`LATERAL`**: each closed block is paired with its open-scan counterpart by
+  `SortOrder` (both scans walk the same deterministic loop from their own anchor) and `lerp`'d
+  between the two positions over the animation — the real motion already is a straight line, so
+  a plain interpolation is correct on its own.
+- **`ROTATION`**: a straight-line lerp would cut through the gate's own hinge geometry (e.g. a
+  log lying flat as a bridge plank), so the existing Rodrigues-rotation arc stays the base
+  motion, corrected toward the true scanned position as the swing progresses: closed blocks are
+  paired to their nearest open-scan block by 3D world distance (greedy nearest-neighbor), and
+  `finalPos(frame) = arcPos(frame) + (openScanPos - arcPos(totalFrames)) * progress(frame)` -
+  exactly `arcPos(frame)` at `progress=0` (no change to today's closed position) and exactly
+  `openScanPos` at `progress=1` (no pop), continuously blended in between.
+- A paired block's own scanned orientation/blockdata is used as-is, in place of the angle-based
+  reorientation applied to an unpaired block.
+
 #### Entity Push System
 
 **Algorithm**: `PredictAndPushEntities(gateFrames, nextFrame, affectedBlocks)`
@@ -594,6 +678,8 @@ For each block in snapshot:
 
 ## 🔗 References & Related Files
 
+- **Rotation Gap-Fill**: [ROTATION_GAP_FILL_DESIGN.md](ROTATION_GAP_FILL_DESIGN.md) — Mechanisms 1 & 2, `GateOpenedBlockSnapshot`, `GateWorldSyncChecker`
+- **Gate World/DB Sync**: [GATE_WORLD_SYNC_DESIGN.md](GATE_WORLD_SYNC_DESIGN.md) — district-load-triggered reconciliation
 - **Backend Entity**: [Models/GateStructure.cs](../../../../Repository/knk-web-api-v2/Models/GateStructure.cs)
 - **Backend Instructions**: [.github/instructions/knk-backend.instructions.md](../../../../.github/instructions/knk-backend.instructions.md)
 - **Plugin Architecture**: [Repository/knk-plugin-v2/ARCHITECTURE_AUDIT.md](../../../../Repository/knk-plugin-v2/ARCHITECTURE_AUDIT.md)

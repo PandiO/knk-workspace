@@ -1,8 +1,11 @@
 # Rotation Gap-Fill: Design & Implementation Plan
 
-**Status:** Proposed (not started)
+**Status:** Phases A-D implemented (2026-09-10) — backend schema/API, plugin
+Mechanisms 1 & 2, frontend/validation support all done and tested; Phase E
+(this doc's own cross-links, in progress) and Phase F (live-server pilot)
+remain
 **Author:** Claude (plan requested by Pandi), 2026-09-09
-**Related:** [SPEC.md](SPEC.md), [REQUIREMENTS.md](REQUIREMENTS.md), [IMPLEMENTATION_ROADMAP.md](IMPLEMENTATION_ROADMAP.md), [DECISIONS.md](DECISIONS.md), [DUAL_SCAN_ANIMATION_DESIGN.md](DUAL_SCAN_ANIMATION_DESIGN.md) (Open Question 3 — this plan resolves it: dual-scan extends to `ROTATION` gates)
+**Related:** [SPEC.md](SPEC.md), [REQUIREMENTS.md](REQUIREMENTS.md), [IMPLEMENTATION_ROADMAP.md](IMPLEMENTATION_ROADMAP.md), [DECISIONS.md](DECISIONS.md), [DUAL_SCAN_ANIMATION_DESIGN.md](DUAL_SCAN_ANIMATION_DESIGN.md) (Open Question 3 — this plan resolves it: dual-scan extends to `ROTATION` gates; that doc is now superseded by this one for `VERTICAL`/`LATERAL` too, per Decision 6), [GATE_WORLD_SYNC_DESIGN.md](GATE_WORLD_SYNC_DESIGN.md) (a related but separate gap found while implementing this plan's Phase C)
 
 > **Amends `DUAL_SCAN_ANIMATION_DESIGN.md`** in two ways:
 > 1. That doc proposes an explicit `AnimationDefinitionMode.PROCEDURAL`/
@@ -666,18 +669,38 @@ Decision-1-through-5's `AnimationDefinitionMode` removal.
   5 pre-existing unrelated failures as every prior phase - client activity,
   path resolution, form submission progress).
 
-### Phase E — Docs
+### Phase E — Docs — **Done** (2026-09-10)
 
-- `SPEC.md`/`REQUIREMENTS.md`: document Mechanism 1's automatic behavior
-  (including the kill-switch config), the new `GateOpenedBlockSnapshot`
-  entity/`OpenedBlockSnapshots` property, and Mechanism 2's implicit trigger
-  and per-`MotionType` blend/lerp semantics.
-- `GATE_FORMCONFIG.md`: add `OpenedBlockSnapshots` (and `OpenAnchorPointId`)
-  to the requirement matrix as their own entries, same as any other field.
-- Cross-link this doc and `DUAL_SCAN_ANIMATION_DESIGN.md` from each other,
-  with `DUAL_SCAN_ANIMATION_DESIGN.md` updated to point at this doc's
-  amendment — both the dropped `AnimationDefinitionMode` field and the
-  dropped `State`-column schema, per Decision 6.
+- `SPEC.md`: added `OpenAnchorPointId`/`OpenAnchorPoint` to `GateStructure`'s
+  field list and DB schema block, a new `GateOpenedBlockSnapshot` entity
+  subsection mirroring `GateBlockSnapshot`'s, and a "Rotation Gap-Fill
+  (Mechanisms 1 & 2)" subsection under Plugin Animation Engine documenting
+  the automatic-rasterization trigger/kill-switch and Mechanism 2's implicit
+  trigger with per-`MotionType` blend/lerp formulas.
+- `REQUIREMENTS.md`: same `OpenAnchorPointId` addition to the GateStructure
+  field list, plus a `GateOpenedBlockSnapshot Entity` subsection and two new
+  `Related Documentation` links (this doc, `GATE_WORLD_SYNC_DESIGN.md`).
+- `GATE_FORMCONFIG.md`: new "Optioneel, ongeacht type (Rotation Gap-Fill)"
+  section adding `OpenAnchorPointId`/`OpenedBlockSnapshots` to the
+  requirement matrix as their own entries (per-type, they apply to every
+  `GateType`, unlike the rest of section 2's type-dependent fields);
+  updated point 3 ("Afgeleide velden") to note `ConditionalValueMatchValidator`
+  (Phase D) as the available stop-gap for the `GateType`/`MotionType`
+  consistency check until real server-side derivation exists; updated point
+  4 ("Seeden van de configuratie") to note `OpenedBlockSnapshots` needs
+  adding alongside `BlockSnapshots` whenever that seeding finally happens.
+- `DUAL_SCAN_ANIMATION_DESIGN.md`: added a top-of-document amendment notice
+  (mirroring this doc's own header note, from the other direction) plus
+  inline `⚠️` callouts at the specific `AnimationDefinitionMode` and
+  `State`-column sections, clarifying exactly what shipped differently
+  (implicit trigger, separate `GateOpenedBlockSnapshot` table) versus what's
+  still accurate as historical rationale (the motivating problem, the
+  `VERTICAL`/`LATERAL` lerp logic's shape, Open Question 1's resolution).
+- This doc's own top-level `Status` line updated from "Proposed (not
+  started)" - stale since Phase A landed - to reflect Phases A-D actually
+  being done, and cross-linked to `GATE_WORLD_SYNC_DESIGN.md` (found while
+  implementing Phase C, documented as its own plan rather than folded in
+  here).
 
 ### Phase F — Pilot & validation
 

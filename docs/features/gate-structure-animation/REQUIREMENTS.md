@@ -107,6 +107,11 @@ public int RotationMaxAngleDegrees { get; set; } = 90;
 
 // Double Doors
 public bool MirrorRotation { get; set; } = true;
+
+// Rotation Gap-Fill (see ROTATION_GAP_FILL_DESIGN.md) - optional second physical anchor for a
+// separately-scanned, fully-open shape. Null means "no manual open scan" (the default, and
+// still the case for every gate that predates this feature).
+public int? OpenAnchorPointId { get; set; }
 ```
 
 ---
@@ -128,6 +133,36 @@ public class GateBlockSnapshot
     public MinecraftBlockRef? BlockRef { get; set; }
     
     public int SortOrder { get; set; }  // Hinge → outward
+}
+```
+
+---
+
+### GateOpenedBlockSnapshot Entity (Rotation Gap-Fill)
+
+Optional, mirrors `GateBlockSnapshot` exactly, keyed to `OpenAnchorPointId` instead of
+`AnchorPointId`. Its rows (if any) are a gate's manually-scanned, fully-open shape - see
+[ROTATION_GAP_FILL_DESIGN.md](ROTATION_GAP_FILL_DESIGN.md). A gate with none of these rows
+falls back to procedural animation (optionally with automatic diagonal-hinge gap-fill,
+Mechanism 1) exactly as before this feature existed - there is no mode flag, the presence of
+`OpenedBlockSnapshots` rows is the trigger.
+
+```csharp
+public class GateOpenedBlockSnapshot
+{
+    public int Id { get; set; }
+    public int GateStructureId { get; set; }
+    public GateStructure GateStructure { get; set; }
+
+    public int RelativeX { get; set; }
+    public int RelativeY { get; set; }
+    public int RelativeZ { get; set; }
+
+    public string MaterialName { get; set; }
+    public string BlockDataJson { get; set; } = "{}";
+    public string TileEntityJson { get; set; } = "{}";
+
+    public int SortOrder { get; set; }
 }
 ```
 
@@ -330,6 +365,8 @@ public class GateBlockSnapshot
 
 ## 🔗 Related Documentation
 
+- **Rotation Gap-Fill**: [ROTATION_GAP_FILL_DESIGN.md](ROTATION_GAP_FILL_DESIGN.md) — automatic diagonal-hinge gap-fill and the optional `GateOpenedBlockSnapshot` manual override
+- **Gate World/DB Sync**: [GATE_WORLD_SYNC_DESIGN.md](GATE_WORLD_SYNC_DESIGN.md) — keeping physical world blocks converged on DB-persisted gate state
 - **Current Entity**: [GateStructure.cs](../../../../Repository/knk-web-api-v2/Models/GateStructure.cs)
 - **Architecture Overview**: [docs/CODEMAP.md](../../CODEMAP.md)
 - **Project Structure**: [docs/specs/project-overview/SOURCES_LOCATION.md](../../specs/project-overview/SOURCES_LOCATION.md)
