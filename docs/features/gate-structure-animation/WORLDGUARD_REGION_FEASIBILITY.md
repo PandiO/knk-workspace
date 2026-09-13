@@ -1,9 +1,9 @@
 # Feasibility Assessment: WorldGuard/WorldEdit Regions for Gate Door Geometry
 
-**Status**: Decided — 2026-09-11 planning meeting; FLOOD_FILL viability confirmed-negative by live in-game test on 2026-09-12; item 6.1 design spike resolved 2026-09-13 (§9) — both previously-open sizing/design questions now have a concrete mechanism, so 6.2-6.7 are unblocked. See §6 for the final decision (supersedes the original recommendation), §7 for the original resolved/open question tracking, and §9 for the design spike itself.
+**Status**: Decided — 2026-09-11 planning meeting; FLOOD_FILL viability confirmed-negative by live in-game test on 2026-09-12; item 6.1 design spike resolved 2026-09-13 (§9) — both previously-open sizing/design questions now have a concrete mechanism, so 6.2-6.7 are unblocked; 6.6's found orientation gap resolved same day via `CONVEX_POLYHEDRON` capture (§9.4). See §6 for the final decision (supersedes the original recommendation), §7 for the original resolved/open question tracking, §9 for the design spike, and §9.4 for the convex-polyhedron follow-up.
 **Source item**: [QOL_BUGFIX_BACKLOG.md #6](../../QOL_BUGFIX_BACKLOG.md#6-non-rectangular-gate-door-shapes-via-worldguard-regions)
-**Scope**: `knk-plugin-v2` (with cross-references to `knk-web-api-v2` for persistence impact)
-**Researched**: 2026-09-11 · **Decided**: 2026-09-11 · **FLOOD_FILL tested**: 2026-09-12 · **Design spike (6.1) resolved**: 2026-09-13
+**Scope**: `knk-plugin-v2` (with cross-references to `knk-web-api-v2` for persistence impact) — both repos were renamed mid-session on 2026-09-13 to `knk-plugin`/`knk-web-api` respectively (dropping the "-v2" suffix); this doc keeps the original names in older sections for historical accuracy, new sections use the current names.
+**Researched**: 2026-09-11 · **Decided**: 2026-09-11 · **FLOOD_FILL tested**: 2026-09-12 · **Design spike (6.1) resolved**: 2026-09-13 · **Convex polyhedron follow-up (§9.4) resolved**: 2026-09-13
 
 ---
 
@@ -130,6 +130,16 @@ or, for a cuboid capture:
 }
 ```
 
+or, for a convex polyhedron capture (`//sel convex`, added in the §9.4 follow-up — the general-purpose answer for a shape that isn't genuinely horizontal or axis-aligned):
+
+```json
+{
+  "type": "CONVEX_POLYHEDRON",
+  "worldName": "world",
+  "points": [{"x": 100, "y": 64, "z": 200}, {"x": 104, "y": 67, "z": 200}, {"x": 100, "y": 64, "z": 206}]
+}
+```
+
 The `type` discriminator lets both the round-trip loader (9.2) and the headless region scanner (6.5) reconstruct the exact right WorldEdit `Region`/`RegionSelector` without re-deriving it from point count or other heuristics.
 
 ### 9.2 Round-trip region editing (resolves §7 item 5)
@@ -170,6 +180,19 @@ Also confirmed compatible with 6.5 (region-based scanning) already: `GateBlockSc
 **Effort estimate**: Small-to-Medium — roughly 1-1.5 days for `GateFrameCalculator`/`CachedGateDoor`/`GateLoaderAdapter` combined (6.6's core; separate from 6.5's own scan-handler work), smaller than the "explicitly unsized" framing in §5/§7 implied. The reason: steps 2/3/3b of `rasterizeRotationFrame` — the genuinely hard part, the diagonal-hinge lattice-collision handling from `ROTATION_GAP_FILL_DESIGN.md` — turn out to already be shape-agnostic, so generalizing is a two-point surgical swap (corner list, containment predicate) inside an algorithm that doesn't otherwise change, not a rewrite. Risk: Low-Medium — both swapped call sites are small, already covered by tests that must keep passing unmodified, and `pointInPolygon` is a well-known, easily-tested primitive.
 
 **Non-goal, confirmed still out of scope**: multi-layer (`GeometryDepth > 1`) `ROTATION`+`REGION` doors. `rasterizeRotationFrame`'s existing single-layer (`n≈0`) assumption (comment at lines 360-367) is unchanged by this generalization and remains unaddressed — exactly as already flagged for `PLANE_GRID` in `ROTATION_GAP_FILL_DESIGN.md`. Not a new limitation introduced here.
+
+### 9.4 Follow-up: `CONVEX_POLYHEDRON` capture, resolving the orientation gap found during 6.6
+
+**Gap found while implementing 9.3 (2026-09-13)**: `POLYGON2D` and `CUBOID` — the only two capture shapes 9.1 originally specified — can each only precisely represent a *specific* kind of footprint. `Polygonal2DRegion` is an X/Z-plane outline extruded through a Y range: every captured vertex collapses onto the region's own `minY`, so a vertically-standing door's real height variation is lost entirely (its outline degenerates toward a line). `CuboidRegion`'s two corner points are always world-axis-aligned, so it can't precisely bound a diagonally-oriented rectangular door (e.g., entity 14's diagonal hinge, per its fixture data in `GateFrameCalculatorTest.buildRealGate14`) outside the horizontal plane either. Both are solid for a genuinely horizontal-ish footprint (a rotating deck, viewed from above — the documented primary motivating case) but not an arbitrary 3D orientation. This was flagged to the user rather than silently worked around, since it directly affects whether entity 14's *actual* closed-state shape (unknown at the time — vertical wall vs. horizontal deck) can be captured precisely at all.
+
+**Resolution, requested and implemented same day**: add `CONVEX_POLYHEDRON` as a third capture shape, backed by WorldEdit's `ConvexPolyhedralRegion` (`//sel convex`). Each vertex carries its own independent `(x, y, z)` — nothing collapses — so it correctly represents *any* orientation, not just horizontal/axis-aligned ones.
+
+- **JSON shape**: `{"type": "CONVEX_POLYHEDRON", "worldName": "...", "points": [{"x","y","z"}, ...]}` — no `minY`/`maxY` needed, since Y is per-point now. Added to 9.1's shape family alongside `POLYGON2D`/`CUBOID`.
+- **API asymmetry worth knowing**: unlike `Polygonal2DRegionSelector`/`CuboidRegionSelector` (both take all points/corners in one constructor call), `ConvexPolyhedralRegionSelector` has no such constructor — it's built incrementally via `selectPrimary(firstVertex, limits)` then `selectSecondary(vertex, limits)` per remaining vertex (with `PermissiveSelectorLimits.getInstance()` for "no limit"), mirroring how WorldEdit's own `//sel convex` UX itself builds one click-by-click. This only affects round-trip redefine (9.2)'s reconstruction path, not capture (writing) or scanning (reading via `Region.iterator()`, which `ConvexPolyhedralRegion` supports for free via `AbstractRegion`'s generic bounding-box+`contains()` iterator, same as the other two types).
+- **The one new wrinkle, solved**: WorldEdit exposes a `ConvexPolyhedralRegion`'s vertices as an unordered `Set<BlockVector3>`, but `pointInPolygon`'s ray-casting (9.3, item 1) requires points traced around the boundary in order. Solved with a new `GateFrameCalculator.convexHull2D` (Andrew's monotone chain, O(n log n)) applied to the *projected* (u, v) points — safe specifically for this capture type because a convex 3D shape's projection onto any plane is itself convex, so re-deriving the 2D hull after projection recovers a valid boundary trace regardless of input order. Deliberately **not** applied to `POLYGON2D`/`CUBOID` footprints (gated on a new `GateRegionDataFormat.isConvexPolyhedron` check) — hulling a legitimately concave `POLYGON2D` capture (e.g. an L-shaped outline) would silently convexify away the concave notch.
+- **No changes needed in the rotation rasterizer or animation math itself** — confirms the 9.3 layering decision held up under a real follow-up requirement. `isWithinGeometryBounds`/`rasterizeRotationFrame` both already operate purely on the resulting `List<double[]> footprintUV`, agnostic to how those vertices were captured in 3D; the entire fix was scoped to the region-data-format/projection layer (`GateRegionDataFormat`, `GateLoaderAdapter.projectFootprintToUV`).
+- Implemented in `knk-plugin-v2` (now `knk-plugin` — see the September 13 repository rename note) commit `cf8cbd7`. New tests: 4 pure `convexHull2D` cases (shuffled square, interior-point exclusion, shuffled triangle, degenerate inputs) plus a disabled `GateLoaderAdapterTest` case (same WorldEdit-not-on-test-classpath constraint as the existing `POLYGON2D` one) demonstrating a vertically-standing door's shape survives intact where `POLYGON2D` would have degenerated.
+- **Still open**: whether entity 14's actual closed-state shape needs `CONVEX_POLYHEDRON` at all, or whether it's genuinely a horizontal deck that `POLYGON2D`/`CUBOID` already handle fine — unknown until 6.7's in-game testing against the real structure. `CONVEX_POLYHEDRON` is now available either way.
 
 ## 10. Sources
 
