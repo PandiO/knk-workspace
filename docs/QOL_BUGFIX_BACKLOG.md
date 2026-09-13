@@ -235,7 +235,7 @@ Strip `blockSnapshots`/`openedBlockSnapshots` (or more generally, any field back
 
 ## 5. Support for multiple gate doors per gate structure
 
-- **Status**: 🔶 In progress — backend complete 2026-09-12 (`knk-web-api-v2`), plugin/frontend not started. See [GATESTRUCTURE_QOL_IMPLEMENTATION_PLAN.md](features/gate-structure-animation/GATESTRUCTURE_QOL_IMPLEMENTATION_PLAN.md) Item 5 for details and follow-ups.
+- **Status**: ✅ Complete (2026-09-13) except for one deliberately deferred piece - building entity 14's real second (lateral/vertical) door, blocked on real in-game geometry rather than any remaining code work. See [GATESTRUCTURE_QOL_IMPLEMENTATION_PLAN.md](features/gate-structure-animation/GATESTRUCTURE_QOL_IMPLEMENTATION_PLAN.md) Item 5 for full details, including a live-dev-server-verified concurrency bug fix found along the way.
 - **Area**: knk-plugin-v2 (gate structure entity system)
 - **Reported**: 2026-09-11
 - **Entity context observed**: GateStructure id `14` ("Northern Gate", see item 4)
