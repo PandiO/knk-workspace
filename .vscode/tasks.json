@@ -106,6 +106,30 @@
 			]
 		},
 		{
+			"label": "api: free-port",
+			"type": "shell",
+			"command": "powershell",
+			"args": [
+				"-NoProfile",
+				"-Command",
+				"Get-NetTCPConnection -LocalPort 5294,7104 -State Listen -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique | ForEach-Object { Stop-Process -Id $_ -Force -ErrorAction SilentlyContinue }"
+			],
+			"presentation": {
+				"reveal": "silent",
+				"panel": "shared"
+			},
+			"problemMatcher": []
+		},
+		{
+			"label": "api: build (clean start)",
+			"dependsOn": [
+				"api: free-port",
+				"api: build"
+			],
+			"dependsOrder": "sequence",
+			"problemMatcher": "$msCompile"
+		},
+		{
 			"label": "count-custom-loc",
 			"type": "shell",
 			"command": "powershell",
