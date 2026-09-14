@@ -1,7 +1,7 @@
 # Ability Definition Reference (Admins + Players)
 
 This is the canonical reference for custom ability metadata that is hardcoded in:
-- `Repository/knk-web-api-v2/Models/Item/AbilityDefinition.cs` (`AbilityDefinition.CanonicalCatalog`)
+- `Repository/knk-web-api/Models/Item/AbilityDefinition.cs` (`AbilityDefinition.CanonicalCatalog`)
 
 On API startup, these entries are idempotently seeded and wired to matching custom `EnchantmentDefinition` records.
 

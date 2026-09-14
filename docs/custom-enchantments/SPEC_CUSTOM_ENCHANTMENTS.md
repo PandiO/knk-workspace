@@ -738,7 +738,7 @@ messages:
 ## 11. References & Source Materials
 
 - **Original Plugin**: CustomEnchantments-1.0.3.jar (decompiled source)
-- **KnK Architecture**: knk-plugin-v2 design (see ARCHITECTURE_AUDIT.md, MIGRATION_MODE_READONLY.md)
+- **KnK Architecture**: knk-plugin design (see ARCHITECTURE_AUDIT.md, MIGRATION_MODE_READONLY.md)
 - **Threading Guidance**: docs/API_CLIENT_PATTERN.md
 - **Configuration Pattern**: knk-paper Paper plugin adapter layer
 

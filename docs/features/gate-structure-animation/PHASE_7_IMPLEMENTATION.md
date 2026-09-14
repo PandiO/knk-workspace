@@ -182,7 +182,7 @@ Run with:
 
 **Modified**:
 - `knk-core/src/main/java/net/knightsandkings/knk/core/gates/GateManager.java` - Added state machine methods
-- `knk-plugin-v2/knk-paper/build.gradle.kts` - Fixed file path handling
+- `knk-plugin/knk-paper/build.gradle.kts` - Fixed file path handling
 - `knk-core/build.gradle.kts` - Added Paper API and Jackson dependencies
 
 ---

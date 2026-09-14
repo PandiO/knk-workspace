@@ -79,7 +79,7 @@ src/main/java/net/knightsandkings/knk/api/
 ### knk-paper
 **Responsibility**: Bukkit/Paper runtime execution (effects/listeners/commands/bootstrap)
 
-### knk-web-api-v2 (required alignment)
+### knk-web-api (required alignment)
 **Responsibility**: Canonical definitions and attachment relationships
 - `EnchantmentDefinition` (custom abilities: `IsCustom = true`)
 - Optional `AbilityDefinition` extension entity linked to `EnchantmentDefinition`
@@ -283,7 +283,7 @@ CompletableFuture<ItemStack> removeEnchantment(ItemStack item, String enchantmen
 
 ## Phase 2: Optional Ability Extension Model (API-first)
 
-### Task 2.1: Add Ability Extension Entity (knk-web-api-v2)
+### Task 2.1: Add Ability Extension Entity (knk-web-api)
 
 **Deliverables**:
 - `AbilityDefinition` (or similarly named) model entity
@@ -304,7 +304,7 @@ CompletableFuture<ItemStack> removeEnchantment(ItemStack item, String enchantmen
 
 ---
 
-### Task 2.2: Enforce Domain Invariants (knk-web-api-v2)
+### Task 2.2: Enforce Domain Invariants (knk-web-api)
 
 **Deliverables**:
 - Service/repository validation rules
@@ -322,7 +322,7 @@ CompletableFuture<ItemStack> removeEnchantment(ItemStack item, String enchantmen
 
 ---
 
-### Task 2.3: Prepare User-Based Relationship Hooks (knk-web-api-v2)
+### Task 2.3: Prepare User-Based Relationship Hooks (knk-web-api)
 
 **Deliverables**:
 - Placeholder assignment contract (entity or documented stub) for future user-skill linking
@@ -916,7 +916,7 @@ Phase 8 (Documentation & Release)
 
 When implementing the Custom Enchantments system, keep these guidelines in mind:
 
-1. **Architecture Compliance**: Follow knk-plugin-v2 patterns from ARCHITECTURE_AUDIT.md
+1. **Architecture Compliance**: Follow knk-plugin patterns from ARCHITECTURE_AUDIT.md
 2. **No Bukkit in Core**: knk-core must have zero Bukkit imports
 3. **Async Pattern**: Use CompletableFuture throughout; schedule Bukkit effects on main thread
 4. **Threading**: All potion/particle effects on main thread via Bukkit scheduler

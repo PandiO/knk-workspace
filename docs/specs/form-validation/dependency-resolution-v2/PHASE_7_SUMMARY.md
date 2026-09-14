@@ -188,7 +188,7 @@ npm test -- src/components/Workflow/__tests__/WorldBoundFieldRenderer.phase7.tes
 
 Ready for testing with:
 - FormWizard with world-bound field (e.g., "wgRegionId")
-- Minecraft server with knk-plugin-v2
+- Minecraft server with knk-plugin
 - Running workflow session
 
 Test procedure documented in PHASE_7_IMPLEMENTATION_COMPLETE.md

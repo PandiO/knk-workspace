@@ -14,7 +14,7 @@ Phase 2 implements the backend dependency resolution API, including batch resolu
 ## Deliverables Completed
 
 ### 1. Dependency Resolution DTOs
-**File:** Repository/knk-web-api-v2/Dtos/DependencyResolutionDtos.cs
+**File:** Repository/knk-web-api/Dtos/DependencyResolutionDtos.cs
 
 **Added:**
 - DependencyResolutionRequest
@@ -25,7 +25,7 @@ Phase 2 implements the backend dependency resolution API, including batch resolu
 ---
 
 ### 2. DependencyResolutionService (v2)
-**File:** Repository/knk-web-api-v2/Services/DependencyResolutionService.cs
+**File:** Repository/knk-web-api/Services/DependencyResolutionService.cs
 
 **Highlights:**
 - Batch resolution for field IDs
@@ -36,7 +36,7 @@ Phase 2 implements the backend dependency resolution API, including batch resolu
 ---
 
 ### 3. CachedDependencyResolutionService
-**File:** Repository/knk-web-api-v2/Services/CachedDependencyResolutionService.cs
+**File:** Repository/knk-web-api/Services/CachedDependencyResolutionService.cs
 
 **Highlights:**
 - MemoryCache-backed responses with 5-minute TTL
@@ -45,7 +45,7 @@ Phase 2 implements the backend dependency resolution API, including batch resolu
 ---
 
 ### 4. API Endpoints
-**File:** Repository/knk-web-api-v2/Controllers/FieldValidationRulesController.cs
+**File:** Repository/knk-web-api/Controllers/FieldValidationRulesController.cs
 
 **Added:**
 - POST /api/field-validation-rules/resolve-dependencies

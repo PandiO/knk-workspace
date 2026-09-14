@@ -5,7 +5,7 @@
 **Sources**:
 - `spec/api/swagger.json` (Streets endpoints + StreetDto/StreetListDto schemas)
 - `spec/api/API_CONTRACT_STREET.md`
-- Legacy repo: Not found (`knk-legacy-plugin/spec/SOURCES_STREET.md`, `SPEC_STREET.md`, `LOGIC_CANDIDATES_STREET.md` do not exist)
+- Legacy repo: Not found (`knk-v2-archive/spec/SOURCES_STREET.md`, `SPEC_STREET.md`, `LOGIC_CANDIDATES_STREET.md` do not exist)
 
 ## Field Reconciliation
 
@@ -35,7 +35,7 @@
 
 ## Domain Logic Candidates
 
-**Note**: Legacy spec files (`SOURCES_STREET.md`, `SPEC_STREET.md`, `LOGIC_CANDIDATES_STREET.md`) not found in `knk-legacy-plugin/spec/`. Business rules unknown.
+**Note**: Legacy spec files (`SOURCES_STREET.md`, `SPEC_STREET.md`, `LOGIC_CANDIDATES_STREET.md`) not found in `knk-v2-archive/spec/`. Business rules unknown.
 
 Potential legacy behaviors to investigate later:
 - Street creation workflow (out of scope for READ-ONLY)

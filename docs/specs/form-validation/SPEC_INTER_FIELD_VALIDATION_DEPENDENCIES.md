@@ -272,11 +272,11 @@ Final Message: "Location (X: 1234, Z: 5678) is outside Kingsport's boundaries."
 
 ---
 
-## Part B: Technical Specifications - Backend (knk-web-api-v2)
+## Part B: Technical Specifications - Backend (knk-web-api)
 
 ### B.1 Data Model: FieldValidationRule Entity
 
-**File:** `Repository/knk-web-api-v2/Models/FieldValidationRule.cs`
+**File:** `Repository/knk-web-api/Models/FieldValidationRule.cs`
 
 ```csharp
 using System;
@@ -361,7 +361,7 @@ namespace knkwebapi_v2.Models
 
 ### B.2 Data Model Updates: FormField Entity
 
-**File:** `Repository/knk-web-api-v2/Models/FormField.cs`
+**File:** `Repository/knk-web-api/Models/FormField.cs`
 
 **New Property to Add:**
 ```csharp
@@ -376,7 +376,7 @@ public List<FieldValidationRule> ValidationRules { get; set; } = new();
 
 ### B.3 DTOs - FieldValidationRule
 
-**File:** `Repository/knk-web-api-v2/Dtos/FieldValidationRuleDtos.cs`
+**File:** `Repository/knk-web-api/Dtos/FieldValidationRuleDtos.cs`
 
 ```csharp
 namespace knkwebapi_v2.Dtos
@@ -459,7 +459,7 @@ namespace knkwebapi_v2.Dtos
 
 ### B.4 Repository Interface: IFieldValidationRuleRepository
 
-**File:** `Repository/knk-web-api-v2/Repositories/Interfaces/IFieldValidationRuleRepository.cs`
+**File:** `Repository/knk-web-api/Repositories/Interfaces/IFieldValidationRuleRepository.cs`
 
 ```csharp
 using knkwebapi_v2.Models;
@@ -484,7 +484,7 @@ namespace knkwebapi_v2.Repositories.Interfaces
 
 ### B.5 Service Interface: IValidationService
 
-**File:** `Repository/knk-web-api-v2/Services/Interfaces/IValidationService.cs`
+**File:** `Repository/knk-web-api/Services/Interfaces/IValidationService.cs`
 
 ```csharp
 using knkwebapi_v2.Dtos;
@@ -517,7 +517,7 @@ namespace knkwebapi_v2.Services.Interfaces
 
 ### B.6 Validation Method Interface: IValidationMethod
 
-**File:** `Repository/knk-web-api-v2/Services/Interfaces/IValidationMethod.cs`
+**File:** `Repository/knk-web-api/Services/Interfaces/IValidationMethod.cs`
 
 ```csharp
 using knkwebapi_v2.Models;
@@ -556,7 +556,7 @@ namespace knkwebapi_v2.Services.Interfaces
 
 ### B.7 Controller: FieldValidationRulesController
 
-**File:** `Repository/knk-web-api-v2/Controllers/FieldValidationRulesController.cs`
+**File:** `Repository/knk-web-api/Controllers/FieldValidationRulesController.cs`
 
 ```csharp
 using Microsoft.AspNetCore.Mvc;
@@ -680,7 +680,7 @@ namespace KnKWebAPI.Controllers
 
 ### B.8 AutoMapper Profile
 
-**File:** `Repository/knk-web-api-v2/Mapping/FieldValidationRuleProfile.cs`
+**File:** `Repository/knk-web-api/Mapping/FieldValidationRuleProfile.cs`
 
 ```csharp
 using AutoMapper;
@@ -706,7 +706,7 @@ namespace knkwebapi_v2.Mapping
 
 ### B.9 Database Migration
 
-**File:** `Repository/knk-web-api-v2/Migrations/[timestamp]_AddFieldValidationRule.cs`
+**File:** `Repository/knk-web-api/Migrations/[timestamp]_AddFieldValidationRule.cs`
 
 ```sql
 -- FieldValidationRule table
@@ -1358,7 +1358,7 @@ export const ConfigurationHealthPanel: React.FC<ConfigurationHealthPanelProps> =
 
 1. **WorldGuard Region API Integration:**
    - Do we have an existing service/API for querying WorldGuard region boundaries and checking coordinate containment?
-   - If not, should this be implemented in the Minecraft plugin with API endpoints exposed to knk-web-api-v2?
+   - If not, should this be implemented in the Minecraft plugin with API endpoints exposed to knk-web-api?
    - What is the preferred integration pattern: REST API, database view, or direct plugin integration?
 
 2. **Validation Method Extensibility:**

@@ -219,7 +219,7 @@
 
 This documentation is based on analysis of the following commits:
 
-**knk-web-api-v2:**
+**knk-web-api:**
 - `3a64c0d` - Hybrid workflow with task integration
 - `b6fdad2` - WorldTask implementation
 
@@ -227,7 +227,7 @@ This documentation is based on analysis of the following commits:
 - `324fc4b` - Multi-step wizard UI and task monitoring
 - `c5d3cf5`, `b7cdc4b` - Improvements and testing
 
-**knk-plugin-v2:**
+**knk-plugin:**
 - `08bb1de` - WorldTask foundation
 - `a471b55` - WgRegionIdTaskHandler
 - `9164782` - Claiming and execution improvements

@@ -8,7 +8,7 @@
 ## File Tree
 
 ```
-Repository/knk-plugin-v2/
+Repository/knk-plugin/
 ├── knk-api-client/
 │   ├── build.gradle.kts (update: add dependencies)
 │   └── src/main/java/net/knightsandkings/knk/api/
@@ -471,7 +471,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 ### Gradle Build Command
 ```bash
-# From knk-plugin-v2 root
+# From knk-plugin root
 ./gradlew :knk-api-client:build
 ./gradlew :knk-paper:build
 ./gradlew :knk-paper:fatJar  # if packaging needed

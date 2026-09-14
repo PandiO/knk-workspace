@@ -6,7 +6,7 @@
 
 ## Overview
 
-Phase 6 successfully migrates the knk-plugin-v2 plugin listeners and services to use the unified data access gateways established in Phases 2–4. This completes the feature by:
+Phase 6 successfully migrates the knk-plugin plugin listeners and services to use the unified data access gateways established in Phases 2–4. This completes the feature by:
 1. Migrating PlayerListener to use UsersDataAccess with STALE_OK and background refresh
 2. Implementing background refresh hook for stale data recovery
 3. Adding usage documentation and anti-patterns guide

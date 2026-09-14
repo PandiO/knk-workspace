@@ -43,7 +43,7 @@ This document provides a comprehensive step-by-step implementation plan for the 
                   │ HTTPS (JSON)
                   ▼
 ┌────────────────────────────────────────────────────────────────────┐
-│                   Backend API (knk-web-api-v2 - .NET)             │
+│                   Backend API (knk-web-api - .NET)             │
 │                                                                    │
 │  POST   /api/gatestructures              (Create gate)           │
 │  GET    /api/gatestructures/{id}         (Get gate details)      │
@@ -69,7 +69,7 @@ This document provides a comprehensive step-by-step implementation plan for the 
                   │ HTTPS (JSON)
                   ▼
 ┌────────────────────────────────────────────────────────────────────┐
-│                Plugin (knk-plugin-v2 - Kotlin/Paper)              │
+│                Plugin (knk-plugin - Kotlin/Paper)              │
 │                                                                    │
 │  GateAnimationManager → Execute animations in Minecraft world    │
 │  ├─ AnimationExecutor (block changes, particle effects)          │
@@ -125,7 +125,7 @@ This document provides a comprehensive step-by-step implementation plan for the 
 
 ### 1.1 Extend GateStructure Entity
 
-**File**: `knk-web-api-v2/Models/Structures/GateStructure.cs`
+**File**: `knk-web-api/Models/Structures/GateStructure.cs`
 
 **Current State**: 13 fields (minimal)  
 **Target State**: 47 fields (complete)
@@ -241,7 +241,7 @@ modelBuilder.Entity<GateStructure>()
 
 ### 1.2 Create GateBlockSnapshot Entity
 
-**File**: `knk-web-api-v2/Models/Structures/GateBlockSnapshot.cs` (NEW)
+**File**: `knk-web-api/Models/Structures/GateBlockSnapshot.cs` (NEW)
 
 **Purpose**: Store immutable snapshot of block state at time of gate creation  
 **Related to**: Legacy `blockSnapshots` field mapping
@@ -283,13 +283,13 @@ public class GateBlockSnapshot
 
 ### 1.3 Create EF Core Migration
 
-**File**: `knk-web-api-v2/Migrations/[timestamp]_AddGateStructureAnimationFields.cs` (auto-generated)
+**File**: `knk-web-api/Migrations/[timestamp]_AddGateStructureAnimationFields.cs` (auto-generated)
 
 **Tasks**:
 
 - [ ] Run: `dotnet ef migrations add AddGateStructureAnimationFields`
   ```bash
-  cd knk-web-api-v2
+  cd knk-web-api
   dotnet ef migrations add AddGateStructureAnimationFields \
     --context ApplicationDbContext \
     --output-dir Migrations
@@ -334,8 +334,8 @@ public class GateBlockSnapshot
 ### 1.4 Create DTOs
 
 **Files**:
-- `knk-web-api-v2/Dtos/Structures/GateStructureDtos.cs` (NEW)
-- `knk-web-api-v2/Dtos/Structures/GateBlockSnapshotDtos.cs` (NEW)
+- `knk-web-api/Dtos/Structures/GateStructureDtos.cs` (NEW)
+- `knk-web-api/Dtos/Structures/GateBlockSnapshotDtos.cs` (NEW)
 
 **Create DTOs**:
 
@@ -406,7 +406,7 @@ public class GateBlockSnapshotDto
 
 ### 1.5 Extend IStructureRepository & GateStructureRepository
 
-**File**: `knk-web-api-v2/Repositories/StructureRepository.cs`
+**File**: `knk-web-api/Repositories/StructureRepository.cs`
 
 **Add Methods**:
 
@@ -472,7 +472,7 @@ public async Task UpdateGateHealthAsync(int id, double newHealth)
 
 ### 1.6 Create AutoMapper Mapping Profile
 
-**File**: `knk-web-api-v2/Mapping/GateStructureMappingProfile.cs` (NEW)
+**File**: `knk-web-api/Mapping/GateStructureMappingProfile.cs` (NEW)
 
 **Tasks**:
 
@@ -512,7 +512,7 @@ public class GateStructureMappingProfile : Profile
 
 ### 1.7 Register Services in Dependency Injection
 
-**File**: `knk-web-api-v2/Program.cs`
+**File**: `knk-web-api/Program.cs`
 
 **Tasks**:
 
@@ -562,8 +562,8 @@ services.AddAutoMapper(typeof(GateStructureMappingProfile));
 ### 2.1 Create GateStructureService Interface & Implementation
 
 **Files**:
-- `knk-web-api-v2/Services/Interfaces/IGateStructureService.cs` (NEW)
-- `knk-web-api-v2/Services/GateStructureService.cs` (NEW)
+- `knk-web-api/Services/Interfaces/IGateStructureService.cs` (NEW)
+- `knk-web-api/Services/GateStructureService.cs` (NEW)
 
 **Service Methods**:
 
@@ -639,7 +639,7 @@ public interface IGateStructureService
 
 ### 2.2 Create Geometry Calculation Utilities
 
-**File**: `knk-web-api-v2/Services/Utilities/GeometryCalculator.cs` (NEW)
+**File**: `knk-web-api/Services/Utilities/GeometryCalculator.cs` (NEW)
 
 **Purpose**: Math operations for gate geometry
 
@@ -685,8 +685,8 @@ public record Vector3(double X, double Y, double Z);
 ### 2.3 Create GateDamageService
 
 **Files**:
-- `knk-web-api-v2/Services/Interfaces/IGateDamageService.cs` (NEW)
-- `knk-web-api-v2/Services/GateDamageService.cs` (NEW)
+- `knk-web-api/Services/Interfaces/IGateDamageService.cs` (NEW)
+- `knk-web-api/Services/GateDamageService.cs` (NEW)
 
 **Methods**:
 
@@ -713,8 +713,8 @@ public interface IGateDamageService
 ### 2.4 Create GateAnimationService
 
 **Files**:
-- `knk-web-api-v2/Services/Interfaces/IGateAnimationService.cs` (NEW)
-- `knk-web-api-v2/Services/GateAnimationService.cs` (NEW)
+- `knk-web-api/Services/Interfaces/IGateAnimationService.cs` (NEW)
+- `knk-web-api/Services/GateAnimationService.cs` (NEW)
 
 **Methods**:
 
@@ -767,7 +767,7 @@ public interface IGateAnimationService
 
 ### 3.1 Create GateStructureController
 
-**File**: `knk-web-api-v2/Controllers/GateStructureController.cs` (NEW)
+**File**: `knk-web-api/Controllers/GateStructureController.cs` (NEW)
 
 **Endpoints**:
 
@@ -828,7 +828,7 @@ public class GateStructureController : ControllerBase
 
 ### 3.2 Create Supporting DTOs
 
-**File**: `knk-web-api-v2/Dtos/Structures/GateAnimationDtos.cs` (NEW)
+**File**: `knk-web-api/Dtos/Structures/GateAnimationDtos.cs` (NEW)
 
 **DTOs**:
 
@@ -878,7 +878,7 @@ public class GateGeometryDto
 
 ### 3.3 Add Validation & Error Handling
 
-**File**: `knk-web-api-v2/Controllers/GateStructureController.cs` (update)
+**File**: `knk-web-api/Controllers/GateStructureController.cs` (update)
 
 **Tasks**:
 
@@ -1402,7 +1402,7 @@ export const PassThroughConditionsEditor: React.FC<{
 
 ### 6.1 Create Gate Animation Manager
 
-**File**: `knk-plugin-v2/knk-paper/src/main/kotlin/com/mortisdevelopment/knk/paper/gate/GateAnimationManager.kt` (NEW)
+**File**: `knk-plugin/knk-paper/src/main/kotlin/com/mortisdevelopment/knk/paper/gate/GateAnimationManager.kt` (NEW)
 
 **Responsibilities**:
 - Load gate blocks from database
@@ -1444,7 +1444,7 @@ data class AnimationState(
 
 ### 6.2 Create Gate Damage Manager
 
-**File**: `knk-plugin-v2/knk-paper/src/main/kotlin/com/mortisdevelopment/knk/paper/gate/GateDamageManager.kt` (NEW)
+**File**: `knk-plugin/knk-paper/src/main/kotlin/com/mortisdevelopment/knk/paper/gate/GateDamageManager.kt` (NEW)
 
 **Responsibilities**:
 - Apply damage via API
@@ -1472,7 +1472,7 @@ class GateDamageManager(
 
 ### 6.3 Create Gate Commands
 
-**File**: `knk-plugin-v2/knk-paper/src/main/kotlin/com/mortisdevelopment/knk/paper/commands/GateCommand.kt` (NEW)
+**File**: `knk-plugin/knk-paper/src/main/kotlin/com/mortisdevelopment/knk/paper/commands/GateCommand.kt` (NEW)
 
 **Commands**:
 - `/gate animate {gateId} {open|close}` - Manually animate gate
@@ -1528,7 +1528,7 @@ class GateCommand(
 
 ### 6.4 Create Gate Event Listeners
 
-**File**: `knk-plugin-v2/knk-paper/src/main/kotlin/com/mortisdevelopment/knk/paper/listeners/GateEventListener.kt` (NEW)
+**File**: `knk-plugin/knk-paper/src/main/kotlin/com/mortisdevelopment/knk/paper/listeners/GateEventListener.kt` (NEW)
 
 **Events to Handle**:
 - `PlayerInteractEvent` - Player clicks gate block
@@ -1583,7 +1583,7 @@ class GateEventListener(
 
 ### 6.5 Create Gate API Client
 
-**File**: `knk-plugin-v2/knk-api-client/src/main/kotlin/com/mortisdevelopment/knk/api/client/GateStructureApiClient.kt` (NEW)
+**File**: `knk-plugin/knk-api-client/src/main/kotlin/com/mortisdevelopment/knk/api/client/GateStructureApiClient.kt` (NEW)
 
 **Endpoints Called**:
 - GET `/api/gatestructures/{id}` - Get gate details
@@ -1649,7 +1649,7 @@ class GateStructureApiClient(
 
 ### 7.1 Implement Block Change Engine
 
-**File**: `knk-plugin-v2/knk-paper/src/main/kotlin/com/mortisdevelopment/knk/paper/gate/BlockChangeEngine.kt` (NEW)
+**File**: `knk-plugin/knk-paper/src/main/kotlin/com/mortisdevelopment/knk/paper/gate/BlockChangeEngine.kt` (NEW)
 
 **Responsibilities**:
 - Load gate block snapshots from API
@@ -1698,7 +1698,7 @@ data class BlockChange(
 
 ### 7.2 Implement Animation State Machine
 
-**File**: `knk-plugin-v2/knk-paper/src/main/kotlin/com/mortisdevelopment/knk/paper/gate/AnimationStateMachine.kt` (NEW)
+**File**: `knk-plugin/knk-paper/src/main/kotlin/com/mortisdevelopment/knk/paper/gate/AnimationStateMachine.kt` (NEW)
 
 **State Transitions**:
 
@@ -1748,7 +1748,7 @@ enum class AnimationAction { OPEN, CLOSE, COMPLETE, CANCEL, ERROR }
 
 ### 7.3 Implement Geometry-Based Animation Calculation
 
-**File**: `knk-plugin-v2/knk-paper/src/main/kotlin/com/mortisdevelopment/knk/paper/gate/GeometryAnimator.kt` (NEW)
+**File**: `knk-plugin/knk-paper/src/main/kotlin/com/mortisdevelopment/knk/paper/gate/GeometryAnimator.kt` (NEW)
 
 **Responsibilities**:
 - Calculate block movements based on gate type
@@ -1839,7 +1839,7 @@ data class Vector3(val x: Double, val y: Double, val z: Double) {
 
 ### 7.4 Implement Animation Executor
 
-**File**: `knk-plugin-v2/knk-paper/src/main/kotlin/com/mortisdevelopment/knk/paper/gate/AnimationExecutor.kt` (NEW)
+**File**: `knk-plugin/knk-paper/src/main/kotlin/com/mortisdevelopment/knk/paper/gate/AnimationExecutor.kt` (NEW)
 
 **Responsibilities**:
 - Execute animation frames sequentially
@@ -1923,7 +1923,7 @@ class AnimationExecutor(
 
 ### 8.1 Implement Damage Calculator
 
-**File**: `knk-plugin-v2/knk-paper/src/main/kotlin/com/mortisdevelopment/knk/paper/gate/DamageCalculator.kt` (NEW)
+**File**: `knk-plugin/knk-paper/src/main/kotlin/com/mortisdevelopment/knk/paper/gate/DamageCalculator.kt` (NEW)
 
 **Responsibilities**:
 - Check invincibility
@@ -1962,7 +1962,7 @@ class DamageCalculator {
 
 ### 8.2 Implement Health Display Manager
 
-**File**: `knk-plugin-v2/knk-paper/src/main/kotlin/com/mortisdevelopment/knk/paper/gate/HealthDisplayManager.kt` (NEW)
+**File**: `knk-plugin/knk-paper/src/main/kotlin/com/mortisdevelopment/knk/paper/gate/HealthDisplayManager.kt` (NEW)
 
 **Responsibilities**:
 - Create ArmorStand for health display
@@ -2023,7 +2023,7 @@ class HealthDisplayManager(
 
 ### 8.3 Implement Continuous Damage System
 
-**File**: `knk-plugin-v2/knk-paper/src/main/kotlin/com/mortisdevelopment/knk/paper/gate/ContinuousDamageSystem.kt` (NEW)
+**File**: `knk-plugin/knk-paper/src/main/kotlin/com/mortisdevelopment/knk/paper/gate/ContinuousDamageSystem.kt` (NEW)
 
 **Responsibilities**:
 - Track active continuous damage effects
@@ -2077,7 +2077,7 @@ class ContinuousDamageSystem(
 
 ### 8.4 Integrate Health System into GateDamageManager
 
-**File**: `knk-plugin-v2/knk-paper/src/main/kotlin/com/mortisdevelopment/knk/paper/gate/GateDamageManager.kt` (update)
+**File**: `knk-plugin/knk-paper/src/main/kotlin/com/mortisdevelopment/knk/paper/gate/GateDamageManager.kt` (update)
 
 **Updates**:
 - Use DamageCalculator for damage calculation
@@ -2117,7 +2117,7 @@ class ContinuousDamageSystem(
 
 ### 9.1 Integrate Siege Events
 
-**File**: `knk-plugin-v2/knk-paper/src/main/kotlin/com/mortisdevelopment/knk/paper/siege/SiegeGateIntegration.kt` (NEW)
+**File**: `knk-plugin/knk-paper/src/main/kotlin/com/mortisdevelopment/knk/paper/siege/SiegeGateIntegration.kt` (NEW)
 
 **Responsibilities**:
 - Listen for siege start/end events
@@ -2178,7 +2178,7 @@ class SiegeGateIntegration(
 
 ### 9.2 Create Siege-Specific Gate Behaviors
 
-**File**: `knk-plugin-v2/knk-paper/src/main/kotlin/com/mortisdevelopment/knk/paper/siege/SiegeGateBehavior.kt` (NEW)
+**File**: `knk-plugin/knk-paper/src/main/kotlin/com/mortisdevelopment/knk/paper/siege/SiegeGateBehavior.kt` (NEW)
 
 **Behaviors**:
 - Gates animate during siege (if `AnimateDuringSiege` = true)
@@ -2204,7 +2204,7 @@ class SiegeGateBehavior(
 
 ### 9.3 Create Siege Damage Tracker
 
-**File**: `knk-plugin-v2/knk-paper/src/main/kotlin/com/mortisdevelopment/knk/paper/siege/SiegeDamageTracker.kt` (NEW)
+**File**: `knk-plugin/knk-paper/src/main/kotlin/com/mortisdevelopment/knk/paper/siege/SiegeDamageTracker.kt` (NEW)
 
 **Responsibilities**:
 - Track damage dealt to gates during siege

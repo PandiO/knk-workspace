@@ -16,7 +16,7 @@ Hard requirements:
 - Follow .github/copilot-instructions.md and docs/ai/ENTITY_SCAFFOLD_CHECKLIST.md
 - Reuse existing patterns by cloning the reference entity approach.
 
-In Repository/knk-web-api-v2:
+In Repository/knk-web-api:
 1) Create DTOs:
    - {Entity}ReadDto, {Entity}CreateDto, {Entity}UpdateDto
    - Navigation DTOs for related entities (avoid circular refs; only include necessary primitive fields)

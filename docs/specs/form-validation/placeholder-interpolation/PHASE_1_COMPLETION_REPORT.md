@@ -23,7 +23,7 @@ Phase 1 establishes the foundational data structures and utilities for the multi
 ## Deliverables
 
 ### 1. PlaceholderPath Utility Class
-**File**: `Repository/knk-web-api-v2/Models/PlaceholderPath.cs` (NEW)
+**File**: `Repository/knk-web-api/Models/PlaceholderPath.cs` (NEW)
 
 **Purpose**: Parse, analyze, and provide metadata about placeholder paths
 
@@ -65,7 +65,7 @@ var path = PlaceholderPath.Parse("{Town.Districts.Count}");
 ---
 
 ### 2. PlaceholderResolution DTOs
-**File**: `Repository/knk-web-api-v2/Dtos/PlaceholderResolutionDtos.cs` (NEW)
+**File**: `Repository/knk-web-api/Dtos/PlaceholderResolutionDtos.cs` (NEW)
 
 **Purpose**: Define API contract for placeholder resolution requests and responses
 
@@ -117,7 +117,7 @@ var path = PlaceholderPath.Parse("{Town.Districts.Count}");
 ---
 
 ### 3. Updated FieldValidationRuleDtos
-**File**: `Repository/knk-web-api-v2/Dtos/FieldValidationRuleDtos.cs` (UPDATED)
+**File**: `Repository/knk-web-api/Dtos/FieldValidationRuleDtos.cs` (UPDATED)
 
 **Changes**:
 - Added extensive XML documentation to `FieldValidationRuleDto` class explaining the four-layer placeholder resolution system

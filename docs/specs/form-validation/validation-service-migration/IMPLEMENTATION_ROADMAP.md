@@ -262,7 +262,7 @@ public class FieldValidationRuleServiceTests
 
 **Coverage tool**: 
 ```bash
-cd Repository/knk-web-api-v2
+cd Repository/knk-web-api
 dotnet test Tests/Services/FieldValidationRuleServiceTests.cs --collect:"XPlat Code Coverage"
 ```
 
@@ -561,8 +561,8 @@ public FieldValidationRulesController(
 
 ```bash
 # Delete both files
-rm Repository/knk-web-api-v2/Services/FieldValidationService.cs
-rm Repository/knk-web-api-v2/Services/Interfaces/IFieldValidationService.cs
+rm Repository/knk-web-api/Services/FieldValidationService.cs
+rm Repository/knk-web-api/Services/Interfaces/IFieldValidationService.cs
 
 # Search for any remaining references (should be zero)
 Select-String -Pattern "IFieldValidationService|FieldValidationService" -Path "**/*.cs"
@@ -573,7 +573,7 @@ Select-String -Pattern "IFieldValidationService|FieldValidationService" -Path "*
 #### 3.2 Verify Build & Tests (Day 9 - 1 hour)
 
 ```bash
-cd Repository/knk-web-api-v2
+cd Repository/knk-web-api
 
 # Clean build
 dotnet clean
@@ -795,7 +795,7 @@ public static String interpolate(String template, JsonObject placeholders) {
 #### 5.4 Plugin Testing (Day 13 - 1 hour)
 
 ```bash
-cd Repository/knk-plugin-v2
+cd Repository/knk-plugin
 
 # Build
 ./gradlew build
@@ -826,7 +826,7 @@ cd Repository/knk-plugin-v2
 
 ```bash
 # Backend
-cd Repository/knk-web-api-v2
+cd Repository/knk-web-api
 dotnet publish -c Release
 
 # Frontend
@@ -834,7 +834,7 @@ cd Repository/knk-web-app
 npm run build
 
 # Plugin
-cd Repository/knk-plugin-v2
+cd Repository/knk-plugin
 ./gradlew :knk-paper:build
 ```
 
@@ -897,7 +897,7 @@ git reset --hard backup-before-validation-consolidation
 git push -f origin main
 
 # Redeploy previous release
-cd Repository/knk-web-api-v2
+cd Repository/knk-web-api
 git checkout main
 dotnet publish -c Release
 # ... redeploy artifacts
@@ -1074,7 +1074,7 @@ git push -f origin main
 ### Build Commands
 ```bash
 # Backend
-cd Repository/knk-web-api-v2
+cd Repository/knk-web-api
 dotnet clean
 dotnet build
 dotnet test
@@ -1087,7 +1087,7 @@ npm run build
 npm test
 
 # Plugin
-cd Repository/knk-plugin-v2
+cd Repository/knk-plugin
 ./gradlew clean build
 ./gradlew :knk-paper:build
 ./gradlew :knk-core:test
@@ -1111,7 +1111,7 @@ grep -r "field-validation-rules" Repository/knk-web-app/src/
 dotnet test /p:CollectCoverage=true /p:CoverageFormat=opencover
 
 # View coverage
-# Open: Repository/knk-web-api-v2/coverage.opencover.xml in coverage viewer
+# Open: Repository/knk-web-api/coverage.opencover.xml in coverage viewer
 ```
 
 ---

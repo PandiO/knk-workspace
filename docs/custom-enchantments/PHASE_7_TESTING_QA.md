@@ -63,9 +63,9 @@ Manual checklist prepared for in-game verification:
 
 ## Repository Impact
 
-- `knk-web-api-v2`: no code changes required for Phase 7 scope
+- `knk-web-api`: no code changes required for Phase 7 scope
 - `knk-web-app`: no code changes required for Phase 7 scope
-- `knk-plugin-v2`: test and QA coverage expanded
+- `knk-plugin`: test and QA coverage expanded
 
 ---
 

@@ -82,7 +82,7 @@ Location:
 
 Status: Ready for implementation planning and scaffolding
 
-Related: GateStructure.cs (Repository/knk-web-api-v2/Models/)
+Related: GateStructure.cs (Repository/knk-web-api/Models/)
 See: docs/ai/gate-animation/INDEX.md for quick navigation
 Implementation estimate: 204-260 hours across three repositories
 ```

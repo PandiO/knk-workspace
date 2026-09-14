@@ -27,7 +27,7 @@ Changes:
 Related: eae1f70 (Fix: Delegate field validation to registered validators)
 
 ================================================================================
-GIT COMMIT MESSAGE - knk-web-api-v2 Repository
+GIT COMMIT MESSAGE - knk-web-api Repository
 ================================================================================
 
 Subject:

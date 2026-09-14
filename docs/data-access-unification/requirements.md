@@ -1,7 +1,7 @@
 # Unified Data Access Requirements
 
 ## Purpose
-Provide a consistent, cache-aware data access strategy for knk-plugin-v2 that minimizes repetitive code, prefers cache when possible, falls back to the Web API, and maintains alignment with existing core caches and API client.
+Provide a consistent, cache-aware data access strategy for knk-plugin that minimizes repetitive code, prefers cache when possible, falls back to the Web API, and maintains alignment with existing core caches and API client.
 
 ## In-Scope
 - Reads for player/user, towns, districts, structures, domains, locations, streets, world tasks (entities already exposed by KnkApiClient and caches).

@@ -106,7 +106,7 @@ public async Task<ValidationResultDto> ValidateFieldAsync(...)
 **Question 3: Controller usage verification**
 Please run this to see which service is actually being called:
 ```powershell
-cd Repository/knk-web-api-v2
+cd Repository/knk-web-api
 # Find all controller usages
 Select-String -Pattern "IValidationService|IFieldValidationService" -Path "Controllers/*.cs" -Context 2,2
 
@@ -534,7 +534,7 @@ rm Tests/Services/FieldValidationServiceTests.cs
 
 ### 7.5 Test Coverage Verification
 ```bash
-cd Repository/knk-web-api-v2
+cd Repository/knk-web-api
 dotnet test --collect:"XPlat Code Coverage"
 # Ensure coverage >= 80% for new/modified services
 ```
@@ -632,7 +632,7 @@ const result = await validateFieldV2({
 
 **Step 1: Backend Deploy**
 ```bash
-cd Repository/knk-web-api-v2
+cd Repository/knk-web-api
 dotnet publish -c Release
 # Deploy to staging first
 ```

@@ -4,9 +4,9 @@
 This document defines standardized commit message formats for all Knights & Kings repositories to ensure consistency, clarity, and traceability across the entire project. All AI-generated commit messages must adhere to these conventions.
 
 **Repositories covered:**
-- knk-web-api-v2 (.NET Web API)
+- knk-web-api (.NET Web API)
 - knk-web-app (React/TypeScript frontend)
-- knk-plugin-v2 (Minecraft plugin)
+- knk-plugin (Minecraft plugin)
 - Documentation repositories
 
 ---
@@ -212,7 +212,7 @@ Related: #445 (form UX improvements epic)
 
 ## Type-Specific Guidelines
 
-### Backend (.NET / knk-web-api-v2)
+### Backend (.NET / knk-web-api)
 
 **Scope Priority:**
 - `service`, `repository`, `dto`, `controller`, `validation`, `config`
@@ -246,7 +246,7 @@ Related: #445 (form UX improvements epic)
 
 ---
 
-### Plugin (Java/Kotlin / knk-plugin-v2)
+### Plugin (Java/Kotlin / knk-plugin)
 
 **Scope Priority:**
 - `core`, `cache`, `listener`, `command`, `service`, `mapper`, `api-client`
@@ -377,7 +377,7 @@ A: Ensure the squashed commit message still follows this format. The merge commi
 
 ## Examples by Repository
 
-### knk-web-api-v2 Examples
+### knk-web-api Examples
 ```
 feat(dto): add UserDetailDto with embedded preferences
 fix(controller): validate town owner permissions before update
@@ -395,7 +395,7 @@ test(form): add validation tests for email field
 style(form): align button spacing with design system
 ```
 
-### knk-plugin-v2 Examples
+### knk-plugin Examples
 ```
 feat(core): implement unified data access foundations (Phase 2)
 fix(listener): prevent player event race condition on login

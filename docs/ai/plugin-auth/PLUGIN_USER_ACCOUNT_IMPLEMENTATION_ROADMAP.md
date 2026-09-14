@@ -2,8 +2,8 @@
 
 **Status**: ✅ Documentation Complete (Phases 1-7 Done)  
 **Created**: January 29, 2026  
-**Plugin**: knk-plugin-v2 (Paper/Spigot)  
-**Dependencies**: knk-web-api-v2 (✅ Complete), knk-web-app (In Progress)
+**Plugin**: knk-plugin (Paper/Spigot)  
+**Dependencies**: knk-web-api (✅ Complete), knk-web-app (In Progress)
 
 ---
 
@@ -26,7 +26,7 @@ This document provides a step-by-step implementation plan for integrating user a
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                     Minecraft Plugin (knk-plugin-v2)            │
+│                     Minecraft Plugin (knk-plugin)            │
 │                                                                 │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐         │
 │  │   Commands   │  │ Join Handler │  │ Chat Capture │         │
@@ -44,7 +44,7 @@ This document provides a step-by-step implementation plan for integrating user a
                             │ HTTPS
                             ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│                     Backend API (knk-web-api-v2)                │
+│                     Backend API (knk-web-api)                │
 │                                                                 │
 │  POST   /api/users                        (Create user)        │
 │  GET    /api/users/check-duplicate        (Detect conflicts)   │
@@ -66,7 +66,7 @@ This document provides a step-by-step implementation plan for integrating user a
 
 #### 1.1 Create API Client Infrastructure
 
-**Module**: `knk-api-client` (already exists in knk-plugin-v2)
+**Module**: `knk-api-client` (already exists in knk-plugin)
 
 **Tasks**:
 - [x] Create `UserApiClient.kt` in `knk-api-client/src/main/kotlin/com/mortisdevelopment/knk/api/client/`
@@ -1436,7 +1436,7 @@ permissions:
 - [x] Create troubleshooting section
 
 **Files**:
-- `Repository/knk-plugin-v2/docs/PLAYER_GUIDE_ACCOUNT_MANAGEMENT.md` (new)
+- `Repository/knk-plugin/docs/PLAYER_GUIDE_ACCOUNT_MANAGEMENT.md` (new)
 
 **Effort**: 2 hours
 
@@ -1450,7 +1450,7 @@ permissions:
 - [x] Add code examples
 
 **Files**:
-- `Repository/knk-plugin-v2/docs/DEVELOPER_GUIDE_ACCOUNT_INTEGRATION.md` (new)
+- `Repository/knk-plugin/docs/DEVELOPER_GUIDE_ACCOUNT_INTEGRATION.md` (new)
 
 **Effort**: 2 hours
 
@@ -1587,7 +1587,7 @@ dependencies {
 - **Backend Specification**: [docs/specs/users/SPEC_USER_ACCOUNT_MANAGEMENT.md](../../specs/users/SPEC_USER_ACCOUNT_MANAGEMENT.md)
 - **Backend Roadmap**: [docs/specs/users/USER_ACCOUNT_MANAGEMENT_IMPLEMENTATION_ROADMAP.md](../../specs/users/USER_ACCOUNT_MANAGEMENT_IMPLEMENTATION_ROADMAP.md)
 - **Frontend Roadmap**: [docs/ai/frontend-auth/FRONTEND_USER_ACCOUNT_MANAGEMENT_IMPLEMENTATION_ROADMAP.md](../frontend-auth/FRONTEND_USER_ACCOUNT_MANAGEMENT_IMPLEMENTATION_ROADMAP.md)
-- **Plugin Architecture**: [Repository/knk-plugin-v2/docs/ARCHITECTURE_AUDIT.md](../../../Repository/knk-plugin-v2/docs/ARCHITECTURE_AUDIT.md)
+- **Plugin Architecture**: [Repository/knk-plugin/docs/ARCHITECTURE_AUDIT.md](../../../Repository/knk-plugin/docs/ARCHITECTURE_AUDIT.md)
 
 ---
 

@@ -115,9 +115,9 @@ The extension entity is optional, so vanilla enchantments remain first-class wit
 ## Integration with v2 Architecture
 
 ✅ **Layered Ownership**:
-- `knk-web-api-v2`: canonical ability/enchantment definitions and relationships
+- `knk-web-api`: canonical ability/enchantment definitions and relationships
 - `knk-web-app`: management UI for definitions and assignments
-- `knk-plugin-v2`: runtime effect execution adapter
+- `knk-plugin`: runtime effect execution adapter
 
 ✅ **Async Pattern**:
 - Asynchronous service boundaries where applicable
@@ -144,7 +144,7 @@ The extension entity is optional, so vanilla enchantments remain first-class wit
 
 ## Next Steps
 
-1. ✅ Phase 1 core/plugin infrastructure implemented in `knk-plugin-v2` (models, ports, registry, lore adapter, cooldown manager, tests).
+1. ✅ Phase 1 core/plugin infrastructure implemented in `knk-plugin` (models, ports, registry, lore adapter, cooldown manager, tests).
 2. ✅ Finalized API model details for ability attachments to `ItemBlueprint` through `EnchantmentDefinition` + extension DTO contracts.
 3. ✅ Implemented optional extension entity mapping from `EnchantmentDefinition` (`AbilityDefinition`, optional 1:1).
 4. ✅ Reserved user-instance attachment contract placeholder via `FutureUserAssignmentContract` on `AbilityDefinition`.

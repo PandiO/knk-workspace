@@ -65,9 +65,9 @@ cat << EOF
 [ ] Used Step 5.2 prompt template to generate commits
 [ ] Generated commits follow GIT_COMMIT_CONVENTIONS.md
 [ ] Commits cover all affected repositories:
-    [ ] knk-web-api-v2
+    [ ] knk-web-api
     [ ] knk-web-app
-    [ ] knk-plugin-v2
+    [ ] knk-plugin
     [ ] docs
 [ ] Executed: git add . && git commit -m "..." -m "..."
 [ ] Updated COMMIT_HISTORY.md with commit hashes

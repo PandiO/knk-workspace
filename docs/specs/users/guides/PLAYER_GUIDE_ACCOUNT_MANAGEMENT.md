@@ -2,7 +2,7 @@
 
 **Version**: 1.0  
 **Last Updated**: January 30, 2026  
-**Plugin**: knk-plugin-v2
+**Plugin**: knk-plugin
 
 ---
 

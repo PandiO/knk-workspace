@@ -35,9 +35,9 @@ PUT    /api/field-validation-rules/{id}                            → Validatio
 DELETE /api/field-validation-rules/{id}                            → ValidationService.DeleteAsync()
 ```
 
-**Source**: [FieldValidationRulesController.cs](Repository/knk-web-api-v2/Controllers/FieldValidationRulesController.cs) (lines 40-94)
+**Source**: [FieldValidationRulesController.cs](Repository/knk-web-api/Controllers/FieldValidationRulesController.cs) (lines 40-94)
 
-**Backend Implementation**: [ValidationService.cs](Repository/knk-web-api-v2/Services/ValidationService.cs) (lines 40-124)
+**Backend Implementation**: [ValidationService.cs](Repository/knk-web-api/Services/ValidationService.cs) (lines 40-124)
 
 #### Validation Endpoints (Currently split between Services)
 ```
@@ -47,11 +47,11 @@ POST   /api/field-validations/validate-field                   → FieldValidati
 GET    /api/field-validations/rules/{ruleId}/placeholders      → PlaceholderResolutionService.ExtractPlaceholdersAsync()
 ```
 
-**Source**: [FieldValidationRulesController.cs](Repository/knk-web-api-v2/Controllers/FieldValidationRulesController.cs) (lines 96-220)
+**Source**: [FieldValidationRulesController.cs](Repository/knk-web-api/Controllers/FieldValidationRulesController.cs) (lines 96-220)
 
-**Validation Service**: [ValidationService.cs](Repository/knk-web-api-v2/Services/ValidationService.cs) (lines 132-225)
+**Validation Service**: [ValidationService.cs](Repository/knk-web-api/Services/ValidationService.cs) (lines 132-225)
 
-**Field Validation Service** (DEPRECATED): [FieldValidationService.cs](Repository/knk-web-api-v2/Services/FieldValidationService.cs) (lines 38-127)
+**Field Validation Service** (DEPRECATED): [FieldValidationService.cs](Repository/knk-web-api/Services/FieldValidationService.cs) (lines 38-127)
 
 #### Health Check & Utility Endpoints (Currently in ValidationService)
 ```
@@ -62,9 +62,9 @@ POST   /api/field-validation-rules/validate-path                              �
 GET    /api/field-validation-rules/entity/{entityName}/properties             → PathResolutionService.GetEntityPropertiesAsync()
 ```
 
-**Source**: [FieldValidationRulesController.cs](Repository/knk-web-api-v2/Controllers/FieldValidationRulesController.cs) (lines 221-329)
+**Source**: [FieldValidationRulesController.cs](Repository/knk-web-api/Controllers/FieldValidationRulesController.cs) (lines 221-329)
 
-**Backend Implementation**: [ValidationService.cs](Repository/knk-web-api-v2/Services/ValidationService.cs) (lines 426-540)
+**Backend Implementation**: [ValidationService.cs](Repository/knk-web-api/Services/ValidationService.cs) (lines 426-540)
 
 ### Post-Migration (No API Changes)
 

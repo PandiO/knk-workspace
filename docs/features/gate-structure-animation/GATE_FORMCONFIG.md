@@ -11,7 +11,7 @@ welke velden per gate type relevant zijn. Deze veldmatrix ontbrak in de bestaand
 
 ## 1. Gate types
 
-Er zijn vier types, gedefinieerd in [GateStructureEnums.cs](../../../Repository/knk-web-api-v2/Models/GateStructureEnums.cs):
+Er zijn vier types, gedefinieerd in [GateStructureEnums.cs](../../../Repository/knk-web-api/Models/GateStructureEnums.cs):
 
 | GateType | MotionType | GeometryDefinitionMode | Rotatie |
 | --- | --- | --- | --- |
@@ -118,7 +118,7 @@ Step 5 bevat `HingeAxisId` en `RotationMaxAngleDegrees` voor beide types, plus
 3. **Afgeleide velden** – `GeometryDefinitionMode` en (buiten SLIDING) `MotionType` moeten
    server-side uit `GateType` gezet worden, zodat ze niet in het formulier hoeven te staan. Tot
    die server-side afleiding er is, is er nu tenminste een vangnet als het formulier `MotionType`
-   wél laat invullen: `ConditionalValueMatchValidator` (nieuw, `knk-web-api-v2`, zie
+   wél laat invullen: `ConditionalValueMatchValidator` (nieuw, `knk-web-api`, zie
    [ROTATION_GAP_FILL_DESIGN.md](ROTATION_GAP_FILL_DESIGN.md) Phase D) kan als
    `FieldValidationRule` op `MotionType` gezet worden om te eisen dat de waarde `ROTATION` is
    zodra `GateType` `DRAWBRIDGE` of `DOUBLE_DOORS` is - dat vereist alleen het aanmaken van de

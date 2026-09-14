@@ -1,6 +1,6 @@
 # Plugin-Frontend Coordination Guide
 
-**Purpose**: Show how knk-plugin-v2 and knk-web-app coordinate for user account management  
+**Purpose**: Show how knk-plugin and knk-web-app coordinate for user account management  
 **Related**: 
 - [PLUGIN_USER_ACCOUNT_IMPLEMENTATION_ROADMAP.md](PLUGIN_USER_ACCOUNT_IMPLEMENTATION_ROADMAP.md)
 - [IMPLEMENTATION_DETAILS_AND_EDGE_CASES.md](IMPLEMENTATION_DETAILS_AND_EDGE_CASES.md)
@@ -31,7 +31,7 @@
                                   ▼
                         ┌──────────────────┐
                         │  Backend API     │
-                        │  knk-web-api-v2  │
+                        │  knk-web-api  │
                         │                  │
                         │ POST /api/users  │
                         │ POST /api/users/ │
@@ -42,7 +42,7 @@
                                   │ HTTPS
                                   │
 ┌─────────────────────────────────┴─────────────────────────────────┐
-│                      Minecraft Server (knk-plugin-v2)             │
+│                      Minecraft Server (knk-plugin)             │
 │                                                                   │
 │  Player joins → Auto-sync account via checkDuplicate             │
 │     │                                                             │

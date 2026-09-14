@@ -198,9 +198,9 @@ Create `PHASE_STATUS.md`:
 ## Phase Commits
 
 ### Phase 1
-- [ ] knk-web-api-v2: (pending)
+- [ ] knk-web-api: (pending)
 - [ ] knk-web-app: (pending)
-- [ ] knk-plugin-v2: (pending)
+- [ ] knk-plugin: (pending)
 - [ ] docs: (pending)
 
 ### Phase 2
@@ -237,9 +237,9 @@ Implementation scope:
 [Copy the entire Phase [number] section from IMPLEMENTATION_ROADMAP.md]
 
 Affected repositories:
-- knk-web-api-v2: [list what to implement]
+- knk-web-api: [list what to implement]
 - knk-web-app: [list what to implement]
-- knk-plugin-v2: [list what to implement]
+- knk-plugin: [list what to implement]
 
 Guidelines:
 - Follow existing code patterns in each repository
@@ -279,9 +279,9 @@ Use docs/GIT_COMMIT_CONVENTIONS.md for commit format guidance (but don't commit 
 - ✅ [list items]
 
 **Build results:**
-- knk-web-api-v2: ✅ Successful
+- knk-web-api: ✅ Successful
 - knk-web-app: ✅ Successful
-- knk-plugin-v2: ✅ Successful
+- knk-plugin: ✅ Successful
 
 **Next steps:** Testing → Commit generation → Phase [N+1]
 ```
@@ -332,9 +332,9 @@ Deliverables implemented in this phase:
 [Paste the deliverables list from IMPLEMENTATION_ROADMAP.md]
 
 Affected repositories (generate one commit per repo that had changes):
-- knk-web-api-v2
+- knk-web-api
 - knk-web-app
-- knk-plugin-v2
+- knk-plugin
 - docs
 
 For each repository, generate:
@@ -355,7 +355,7 @@ Reference example commits from docs/GIT_COMMIT_CONVENTIONS.md (section: Plugin e
 
 Output format:
 ---
-## knk-web-api-v2
+## knk-web-api
 **Subject:** [commit subject]
 **Description:** [commit description]
 
@@ -382,7 +382,7 @@ Then update `COMMIT_HISTORY.md`:
 ```markdown
 ## Phase [number] Commits
 
-### knk-web-api-v2
+### knk-web-api
 - Commit: `[commit-hash]`
 - Subject: [subject]
 - Date: [date]

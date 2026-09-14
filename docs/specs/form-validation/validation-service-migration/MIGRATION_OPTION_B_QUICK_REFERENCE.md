@@ -94,7 +94,7 @@ var result = rule.ValidationType switch {
 
 **Run this command and paste results**:
 ```powershell
-cd Repository/knk-web-api-v2
+cd Repository/knk-web-api
 Select-String -Pattern "IValidationService|IFieldValidationService" -Path "Controllers/*.cs" -Context 2,2
 ```
 
@@ -265,7 +265,7 @@ git tag backup-before-validation-consolidation
 
 ### Build & Test
 ```bash
-cd Repository/knk-web-api-v2
+cd Repository/knk-web-api
 dotnet clean
 dotnet build
 dotnet test

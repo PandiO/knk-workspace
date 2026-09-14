@@ -5,7 +5,7 @@
 ### Component 1: Plugin - LocationTaskHandler.java
 **Status**: ✅ Enhanced
 
-**Location**: `Repository/knk-plugin-v2/knk-paper/src/main/java/net/knightsandkings/knk/paper/tasks/LocationTaskHandler.java`
+**Location**: `Repository/knk-plugin/knk-paper/src/main/java/net/knightsandkings/knk/paper/tasks/LocationTaskHandler.java`
 
 **Changes**:
 - ✅ completeTask() refactored with helper methods
@@ -32,7 +32,7 @@
 ### Component 2: Web API - WorkflowService.cs
 **Status**: ✅ Implemented
 
-**Location**: `Repository/knk-web-api-v2/Services/WorkflowService.cs`
+**Location**: `Repository/knk-web-api/Services/WorkflowService.cs`
 
 **Compiler Status**: ✅ No errors (verified with get_errors)
 
@@ -110,7 +110,7 @@
 ### Component 4: WgRegionIdTaskHandler.java
 **Status**: ✅ Verified Correct
 
-**Location**: `Repository/knk-plugin-v2/knk-paper/src/main/java/net/knightsandkings/knk/paper/tasks/WgRegionIdTaskHandler.java`
+**Location**: `Repository/knk-plugin/knk-paper/src/main/java/net/knightsandkings/knk/paper/tasks/WgRegionIdTaskHandler.java`
 
 **Verification**:
 - ✅ Already returns regionId in output JSON (Lines 360-378)

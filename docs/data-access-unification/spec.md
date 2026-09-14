@@ -1,8 +1,8 @@
 # Unified Data Access Spec
 
 ## Current State Analysis
-- **Legacy DAL (knk-legacy-plugin / dal):** DAO + Repository layers provided policy-driven fetch (AUTO, ONLY_CACHE, ONLY_DAO) and write controls, with cache integration and generic managers. Provides patterns for policy enums, write-through, and validation.
-- **Current Plugin (knk-plugin-v2):**
+- **Legacy DAL (knk-v2-archive / dal):** DAO + Repository layers provided policy-driven fetch (AUTO, ONLY_CACHE, ONLY_DAO) and write controls, with cache integration and generic managers. Provides patterns for policy enums, write-through, and validation.
+- **Current Plugin (knk-plugin):**
   - **Caches (knk-core/cache):** BaseCache/DomainCache with TTL, metrics, invalidate, putAll; concrete caches (UserCache, TownCache, DistrictCache, StructureCache).
   - **API Client (knk-api-client):** KnkApiClient exposes typed ports (UsersQueryApi, UsersCommandApi, etc.) using OkHttp + Jackson.
   - **Paper Layer (knk-paper):** CacheManager wires caches with TTL; PlayerListener manually orchestrates cache then API with repeated code.

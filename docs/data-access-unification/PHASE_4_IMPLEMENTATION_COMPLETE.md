@@ -6,7 +6,7 @@
 
 ## Overview
 
-Phase 4 successfully extends the unified data-access pattern established in Phase 3 (Users Gateway) to all remaining core domain entities in knk-plugin-v2. This provides consistent, cache-first data access gateways for Towns, Districts, Structures, Streets, Locations, Domains, and Health entities.
+Phase 4 successfully extends the unified data-access pattern established in Phase 3 (Users Gateway) to all remaining core domain entities in knk-plugin. This provides consistent, cache-first data access gateways for Towns, Districts, Structures, Streets, Locations, Domains, and Health entities.
 
 ## Deliverables Implemented
 

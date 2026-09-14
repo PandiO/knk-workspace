@@ -401,13 +401,13 @@ beforeEach(() => {
 
 1. Implementation to test:
    ```
-   Repository/knk-plugin-v2/knk-paper/src/main/java/.../tasks/RegionHttpServer.java
-   Repository/knk-plugin-v2/knk-paper/src/main/java/.../tasks/WgRegionIdTaskHandler.java
+   Repository/knk-plugin/knk-paper/src/main/java/.../tasks/RegionHttpServer.java
+   Repository/knk-plugin/knk-paper/src/main/java/.../tasks/WgRegionIdTaskHandler.java
    ```
 
 2. Existing test examples:
    ```
-   Repository/knk-plugin-v2/knk-core/src/test/java/... (any existing tests)
+   Repository/knk-plugin/knk-core/src/test/java/... (any existing tests)
    ```
 
 3. Test dependencies (check build.gradle.kts):
@@ -444,7 +444,7 @@ TEST REQUIREMENTS:
 8. World not found error handling
 
 TEST FILE: 
-Repository/knk-plugin-v2/knk-paper/src/test/java/.../tasks/RegionContainmentHandlerTest.java
+Repository/knk-plugin/knk-paper/src/test/java/.../tasks/RegionContainmentHandlerTest.java
 
 MOCKING NEEDED:
 - WorldGuardPlugin (mock WorldGuard API)
@@ -476,7 +476,7 @@ SCENARIO:
 8. Result returned through chain: Plugin → Backend → Validator → ValidationService
 
 TEST FILE:
-Repository/knk-plugin-v2/knk-paper/src/test/java/.../integration/ValidationIntegrationTest.java
+Repository/knk-plugin/knk-paper/src/test/java/.../integration/ValidationIntegrationTest.java
 
 SETUP REQUIRED:
 - Embedded HTTP server for plugin endpoint
@@ -498,7 +498,7 @@ Use real HTTP calls (not mocked) to test the full stack.
 ### Step 3.4: Run Plugin Tests
 
 ```bash
-cd Repository/knk-plugin-v2
+cd Repository/knk-plugin
 
 # Run all tests
 ./gradlew test
@@ -568,7 +568,7 @@ cd Repository
 dotnet new console -n knkwebapi_v2.Benchmarks
 cd knkwebapi_v2.Benchmarks
 dotnet add package BenchmarkDotNet
-dotnet add reference ../knk-web-api-v2/knkwebapi_v2.csproj
+dotnet add reference ../knk-web-api/knkwebapi_v2.csproj
 ```
 
 ### Step 4.2: Copilot Prompt for Benchmark Tests
@@ -724,7 +724,7 @@ dotnet run -c Release
 **K6:**
 ```bash
 # Ensure API is running
-cd Repository/knk-web-api-v2
+cd Repository/knk-web-api
 dotnet run
 
 # In another terminal

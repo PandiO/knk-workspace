@@ -64,13 +64,13 @@ Web App Layer (knk-web-app)
 ├── WorldBoundFieldRenderer
 └── Workflow API Client
 
-Web API Layer (knk-web-api-v2)
+Web API Layer (knk-web-api)
 ├── WorldTasksController (endpoints)
 ├── WorldTaskService (lifecycle management)
 ├── WorkflowService (workflow orchestration)
 └── WorldTask Repository (data access)
 
-Minecraft Plugin Layer (knk-plugin-v2)
+Minecraft Plugin Layer (knk-plugin)
 ├── WorldTaskHandlerRegistry (routing)
 ├── Task Handlers (IWorldTaskHandler implementations)
 │   ├── WgRegionIdTaskHandler
@@ -83,7 +83,7 @@ Minecraft Plugin Layer (knk-plugin-v2)
 
 Implementation across three repositories:
 
-**knk-web-api-v2:**
+**knk-web-api:**
 - `3a64c0d` - Hybrid workflow with task integration (models, services, API)
 - `b6fdad2` - WorldTask implementation (expanded controller, service logic)
 
@@ -91,7 +91,7 @@ Implementation across three repositories:
 - `324fc4b` - Multi-step wizard UI and task monitoring components
 - `c5d3cf5`, `b7cdc4b` - Improvements and functional testing
 
-**knk-plugin-v2:**
+**knk-plugin:**
 - `08bb1de` - WorldTask foundation (API client, DTO, commands, listeners)
 - `a471b55` - WgRegionIdTaskHandler implementation
 - `9164782` - Improved claiming and execution

@@ -12,7 +12,7 @@ The Location field was not being properly converted when a WorldTask was complet
 
 ### 1. Plugin Side: LocationTaskHandler.java
 
-**File**: `Repository/knk-plugin-v2/knk-paper/src/main/java/net/knightsandkings/knk/paper/tasks/LocationTaskHandler.java`
+**File**: `Repository/knk-plugin/knk-paper/src/main/java/net/knightsandkings/knk/paper/tasks/LocationTaskHandler.java`
 
 **Changes**:
 - Enhanced `completeTask()` to include detailed documentation
@@ -39,7 +39,7 @@ The Location field was not being properly converted when a WorldTask was complet
 
 ### 2. Web API Backend: WorkflowService.cs
 
-**File**: `Repository/knk-web-api-v2/Services/WorkflowService.cs`
+**File**: `Repository/knk-web-api/Services/WorkflowService.cs`
 
 **Changes**:
 
@@ -116,7 +116,7 @@ function isLocationTask(taskType: string, actualTaskType?: string): boolean {
 
 ### 4. WgRegionIdTaskHandler.java - Verification
 
-**File**: `Repository/knk-plugin-v2/knk-paper/src/main/java/net/knightsandkings/knk/paper/tasks/WgRegionIdTaskHandler.java`
+**File**: `Repository/knk-plugin/knk-paper/src/main/java/net/knightsandkings/knk/paper/tasks/WgRegionIdTaskHandler.java`
 
 **Status**: ✅ Already correctly implemented
 
@@ -211,11 +211,11 @@ This pattern is correctly extracted by the frontend.
 
 ## Files Modified
 
-1. **[LocationTaskHandler.java](Repository/knk-plugin-v2/knk-paper/src/main/java/net/knightsandkings/knk/paper/tasks/LocationTaskHandler.java)** (Plugin)
+1. **[LocationTaskHandler.java](Repository/knk-plugin/knk-paper/src/main/java/net/knightsandkings/knk/paper/tasks/LocationTaskHandler.java)** (Plugin)
    - Enhanced completeTask() method structure
    - Improved code clarity and documentation
 
-2. **[WorkflowService.cs](Repository/knk-web-api-v2/Services/WorkflowService.cs)** (Web API)
+2. **[WorkflowService.cs](Repository/knk-web-api/Services/WorkflowService.cs)** (Web API)
    - Added dependencies: IWorldTaskRepository, ILocationService
    - Implemented FinalizeAsync() with task output processing
    - Added ProcessLocationTaskOutput() helper method

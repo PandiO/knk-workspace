@@ -1,6 +1,6 @@
 ---
 name: KnK Minecraft Plugin Rules
-applyTo: "Repository/knk-plugin-v2/**/*.{java,kt,yml,gradle,kts}"
+applyTo: "Repository/knk-plugin/**/*.{java,kt,yml,gradle,kts}"
 ---
 
 ## General

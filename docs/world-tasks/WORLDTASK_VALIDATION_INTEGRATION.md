@@ -289,7 +289,7 @@ Please adjust your selection to fit within the parent region.
 
 ## Implementation Checklist
 
-### Phase 1: Backend (knk-web-api-v2)
+### Phase 1: Backend (knk-web-api)
 
 - [ ] **1.1** Create `WorldTaskValidationDtos.cs`
   - `WorldTaskValidationRuleDto`
@@ -332,7 +332,7 @@ Please adjust your selection to fit within the parent region.
 
 ---
 
-### Phase 3: Plugin (knk-plugin-v2)
+### Phase 3: Plugin (knk-plugin)
 
 - [ ] **3.1** Create plugin validation DTOs
   - `WorldTaskValidationRule.java`

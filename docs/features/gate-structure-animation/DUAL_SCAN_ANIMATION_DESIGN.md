@@ -268,7 +268,7 @@ Backward compatibility: every existing row defaults to `PROCEDURAL`/`CLOSED`,
 so `WHERE State = 'CLOSED'` reproduces exactly today's query results for every
 existing gate with zero data migration needed.
 
-### Phase B — Backend (knk-web-api-v2)
+### Phase B — Backend (knk-web-api)
 
 - `GateStructureEnums.cs`: add `AnimationDefinitionMode` and `SnapshotState` enums.
 - `GateBlockSnapshot.cs`/`GateStructure.cs`: add the two new properties.
@@ -276,7 +276,7 @@ existing gate with zero data migration needed.
 - `GateStructureService`: `ClearBlockSnapshotsAsync`/`AddBlockSnapshotsAsync` gain a `SnapshotState` parameter.
 - `GateStructuresController`: `GET /{id}/snapshots` gains an optional `?state=` query param, defaulting to `CLOSED` (preserves every existing caller's behavior unchanged, including `GateStructuresApi.getGateSnapshots` on the plugin side until it's updated in Phase C).
 
-### Phase C — Plugin (knk-plugin-v2)
+### Phase C — Plugin (knk-plugin)
 
 - `GateBlockScanTaskHandler.parseGateStructureId`-style parsing: also read an optional `scanState` from `InputJson` (default `"CLOSED"`).
 - `buildScanWings`: when `scanState == "OPEN"`, use `gate.getOpenAnchorPoint()` as the wing's anchor instead of `gate.getAnchorPoint()`; `uStep`/`vStep`/`nStep` derivation from `ReferencePoint1`/`ReferencePoint2` is unchanged (same shape, different origin).

@@ -230,7 +230,7 @@ separate mode flag to select.
 `BlockDataJson`, `TileEntityJson`, `SortOrder`, `GateStructureId` FK) — see the actual model
 for the current field list (this doc's `GateBlockSnapshot` fields above predate several
 backend-only fields, e.g. `MaterialName`/`BlockDataJson`/`TileEntityJson`, that both entities
-share in the real implementation; [Models/GateOpenedBlockSnapshot.cs](../../../../Repository/knk-web-api-v2/Models/GateOpenedBlockSnapshot.cs)
+share in the real implementation; [Models/GateOpenedBlockSnapshot.cs](../../../../Repository/knk-web-api/Models/GateOpenedBlockSnapshot.cs)
 is authoritative).
 
 **Database Table** (`gate_opened_block_snapshots`): same shape as `gate_block_snapshots`,
@@ -680,8 +680,8 @@ the plain procedural formula.
 
 - **Rotation Gap-Fill**: [ROTATION_GAP_FILL_DESIGN.md](ROTATION_GAP_FILL_DESIGN.md) — Mechanisms 1 & 2, `GateOpenedBlockSnapshot`, `GateWorldSyncChecker`
 - **Gate World/DB Sync**: [GATE_WORLD_SYNC_DESIGN.md](GATE_WORLD_SYNC_DESIGN.md) — district-load-triggered reconciliation
-- **Backend Entity**: [Models/GateStructure.cs](../../../../Repository/knk-web-api-v2/Models/GateStructure.cs)
+- **Backend Entity**: [Models/GateStructure.cs](../../../../Repository/knk-web-api/Models/GateStructure.cs)
 - **Backend Instructions**: [.github/instructions/knk-backend.instructions.md](../../../../.github/instructions/knk-backend.instructions.md)
-- **Plugin Architecture**: [Repository/knk-plugin-v2/ARCHITECTURE_AUDIT.md](../../../../Repository/knk-plugin-v2/ARCHITECTURE_AUDIT.md)
+- **Plugin Architecture**: [Repository/knk-plugin/ARCHITECTURE_AUDIT.md](../../../../Repository/knk-plugin/ARCHITECTURE_AUDIT.md)
 - **CODEMAP**: [docs/CODEMAP.md](../../CODEMAP.md)
 

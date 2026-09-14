@@ -6,7 +6,7 @@
 
 ## Overview
 
-Phase 3 successfully implements the **Users Gateway (Pilot)** for the unified data-access system, providing a clean, cache-first API for user retrieval and creation in the knk-plugin-v2 Minecraft server.
+Phase 3 successfully implements the **Users Gateway (Pilot)** for the unified data-access system, providing a clean, cache-first API for user retrieval and creation in the knk-plugin Minecraft server.
 
 ## Deliverables Implemented
 

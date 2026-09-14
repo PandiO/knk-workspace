@@ -1,6 +1,6 @@
 # WorldTask Implementation Checklist
 
-## Backend (knk-web-api-v2)
+## Backend (knk-web-api)
 
 ### Data Model & Database
 
@@ -145,7 +145,7 @@
 
 ---
 
-## Minecraft Plugin (knk-plugin-v2)
+## Minecraft Plugin (knk-plugin)
 
 ### Core API Integration
 

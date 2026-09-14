@@ -72,7 +72,7 @@ The `npm run build` command shows 8 warnings about `confirm()` usage in:
 1. **Start dev environment**:
    ```bash
    # Terminal 1: Backend API
-   cd Repository/knk-web-api-v2
+   cd Repository/knk-web-api
    dotnet watch run
    
    # Terminal 2: Frontend

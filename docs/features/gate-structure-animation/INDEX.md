@@ -134,9 +134,9 @@ See [DECISIONS.md](./DECISIONS.md) for detailed rationale.
 ## 🔗 Related Documentation & References
 
 ### Architecture & Codebase
-- **Backend Codebase**: [Repository/knk-web-api-v2/](../../../../Repository/knk-web-api-v2/)
+- **Backend Codebase**: [Repository/knk-web-api/](../../../../Repository/knk-web-api/)
 - **Frontend Codebase**: [Repository/knk-web-app/](../../../../Repository/knk-web-app/)
-- **Plugin Codebase**: [Repository/knk-plugin-v2/](../../../../Repository/knk-plugin-v2/)
+- **Plugin Codebase**: [Repository/knk-plugin/](../../../../Repository/knk-plugin/)
 - **Architecture Overview**: [docs/CODEMAP.md](../../CODEMAP.md)
 - **Project Structure**: [docs/specs/project-overview/SOURCES_LOCATION.md](../../specs/project-overview/SOURCES_LOCATION.md)
 
@@ -147,7 +147,7 @@ See [DECISIONS.md](./DECISIONS.md) for detailed rationale.
 
 ### External Resources
 - **Minecraft Materials**: [minecraft-materials.json](../../../../Repository/knk-minecraft-data/minecraft-materials.json)
-- **Plugin Architecture**: [Repository/knk-plugin-v2/ARCHITECTURE_AUDIT.md](../../../../Repository/knk-plugin-v2/ARCHITECTURE_AUDIT.md)
+- **Plugin Architecture**: [Repository/knk-plugin/ARCHITECTURE_AUDIT.md](../../../../Repository/knk-plugin/ARCHITECTURE_AUDIT.md)
 
 ---
 

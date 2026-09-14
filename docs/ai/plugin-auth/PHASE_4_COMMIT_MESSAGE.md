@@ -6,7 +6,7 @@
 
 ---
 
-## knk-plugin-v2
+## knk-plugin
 
 **Subject:**
 ```
@@ -69,7 +69,7 @@ Related: docs/ai/plugin-auth/PLUGIN_USER_ACCOUNT_IMPLEMENTATION_ROADMAP.md
 
 ## Notes
 
-**Single Repository Impact**: Only knk-plugin-v2 was modified in Phase 4. The backend API (knk-web-api-v2) and frontend (knk-web-app) were completed in prior phases and did not require changes.
+**Single Repository Impact**: Only knk-plugin was modified in Phase 4. The backend API (knk-web-api) and frontend (knk-web-app) were completed in prior phases and did not require changes.
 
 **Verification**: Build and test execution confirmed successful:
 - `.\gradlew.bat :knk-paper:test` → BUILD SUCCESSFUL (8 tasks, 3 unit tests passed)

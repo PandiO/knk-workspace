@@ -77,7 +77,7 @@ This feature enables administrators to configure validation rules where one form
 ## Quick Start
 
 ### For Developers (Backend)
-1. Read [SPEC Part B](SPEC_INTER_FIELD_VALIDATION_DEPENDENCIES.md#part-b-technical-specifications---backend-knk-web-api-v2) for backend architecture
+1. Read [SPEC Part B](SPEC_INTER_FIELD_VALIDATION_DEPENDENCIES.md#part-b-technical-specifications---backend-knk-web-api) for backend architecture
 2. Follow [Implementation Roadmap Phases 1-4](IMPLEMENTATION_ROADMAP.md#phase-1-backend-foundation-data-model--infrastructure)
 3. Reference [Quick Reference - API Endpoints](QUICK_REFERENCE.md#api-endpoints) for contract details
 
@@ -280,8 +280,8 @@ Before implementation begins, the following questions need answers:
 
 ## Related Documentation
 
-- [FormConfiguration Entity](../../../Repository/knk-web-api-v2/Models/FormConfiguration.cs)
-- [FormField Entity](../../../Repository/knk-web-api-v2/Models/FormField.cs)
+- [FormConfiguration Entity](../../../Repository/knk-web-api/Models/FormConfiguration.cs)
+- [FormField Entity](../../../Repository/knk-web-api/Models/FormField.cs)
 - [FormConfigBuilder Component](../../../Repository/knk-web-app/src/components/FormConfigBuilder/FormConfigBuilder.tsx)
 - [Hybrid Workflow Requirements](../towns/REQUIREMENTS_HYBRID_CREATE_EDIT_FLOW.md) (Section 23 - original validation framework proposal)
 

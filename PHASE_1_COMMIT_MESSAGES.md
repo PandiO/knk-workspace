@@ -7,7 +7,7 @@
 
 ---
 
-## Repository: knk-plugin-v2
+## Repository: knk-plugin
 
 ### Subject
 ```
@@ -167,9 +167,9 @@ knk-api-client/src/main/java/net/knightsandkings/knk/api/impl:
 ## Related Documentation
 
 Implementation: docs/ai/plugin-auth/PLUGIN_USER_ACCOUNT_IMPLEMENTATION_ROADMAP.md
-Status Report: Repository/knk-plugin-v2/PHASE_1_COMPLETION.md
-Status Report: Repository/knk-plugin-v2/PHASE_1_STATUS.md
-Issue Analysis: Repository/knk-plugin-v2/GRADLE_BUILD_ISSUE.md
+Status Report: Repository/knk-plugin/PHASE_1_COMPLETION.md
+Status Report: Repository/knk-plugin/PHASE_1_STATUS.md
+Issue Analysis: Repository/knk-plugin/GRADLE_BUILD_ISSUE.md
 
 Phase 1 is complete and ready for Phase 2 (command handlers & events).
 ```
@@ -258,7 +258,7 @@ for functional implementation.
 
 | Repository | Commit Count | Type | Scope | Status |
 |------------|-------------|------|-------|--------|
-| knk-plugin-v2 | 1 | `feat` | `api-client` | ✅ Complete |
+| knk-plugin | 1 | `feat` | `api-client` | ✅ Complete |
 | docs | 1 | `docs` | `plugin-auth` | ✅ Complete |
 
 **Total Commits**: 2  
@@ -271,7 +271,7 @@ for functional implementation.
 
 ## Commit Application Instructions
 
-### knk-plugin-v2
+### knk-plugin
 ```bash
 git add .
 git commit -m "feat(api-client): implement user account management api infrastructure

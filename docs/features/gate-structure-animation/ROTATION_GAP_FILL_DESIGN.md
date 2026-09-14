@@ -367,7 +367,7 @@ Decision-1-through-5's `AnimationDefinitionMode` removal.
 ### Phase A — Schema — **Done** (2026-09-09)
 
 - **Mechanism 1**: no schema change. Pure plugin-side runtime geometry.
-- **Mechanism 2**: implemented in `knk-web-api-v2` as migration
+- **Mechanism 2**: implemented in `knk-web-api` as migration
   `20260909201218_AddGateOpenAnchorAndOpenedBlockSnapshots`:
   - `gate_structures.OpenAnchorPointId` (nullable `int`, FK to `locations`,
     `OnDelete: Restrict`) — mirrors `AnchorPointId` exactly.
@@ -399,7 +399,7 @@ Decision-1-through-5's `AnimationDefinitionMode` removal.
   qualifies for near-instant DDL (metadata-only column add), so it should
   also be fast regardless of table size.
 
-### Phase B — Backend (knk-web-api-v2) — **Done** (2026-09-10)
+### Phase B — Backend (knk-web-api) — **Done** (2026-09-10)
 
 - No `AnimationDefinitionMode` enum/field needed (per Decision 1-5) — not added.
 - **DTOs** (`Dtos/GateStructureDtos.cs`): `GateOpenedBlockSnapshotDto`/
@@ -451,7 +451,7 @@ Decision-1-through-5's `AnimationDefinitionMode` removal.
   branching) and the frontend `FormConfig` wiring — this phase only adds
   the backend surface those will call into.
 
-### Phase C — Plugin (knk-plugin-v2) — **Done** (2026-09-10)
+### Phase C — Plugin (knk-plugin) — **Done** (2026-09-10)
 
 - **Mechanism 1**:
   - `VectorMath.sublatticeIndex(Vector step)` (new, `knk-core`): the `a²+b²`
@@ -628,7 +628,7 @@ Decision-1-through-5's `AnimationDefinitionMode` removal.
   dependency Z matches a condition" at all. The closest existing one,
   `ConditionalRequiredValidator`, only checks presence/absence, never the
   field's actual value. Added a new sibling, `ConditionalValueMatchValidator`
-  (`knk-web-api-v2`, registered in DI alongside the other `IValidationMethod`s):
+  (`knk-web-api`, registered in DI alongside the other `IValidationMethod`s):
   `ConfigJson` names a `condition` (evaluated against the dependency field,
   e.g. `GateType in "DRAWBRIDGE,DOUBLE_DOORS"`) and an `expected` clause
   checked against the field's own value when the condition holds (e.g.

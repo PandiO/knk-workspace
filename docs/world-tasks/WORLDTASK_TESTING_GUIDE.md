@@ -387,8 +387,8 @@ Messages are in JSX blocks:
 ## Related Documentation
 
 - [WORLDTASK_WORKFLOW_ANALYSIS.md](WORLDTASK_WORKFLOW_ANALYSIS.md) - Technical deep dive
-- [Minecraft Plugin Integration](../Repository/knk-plugin-v2/docs/PLUGIN_WORLDTASK_INTEGRATION.md)
-- [API Contract](../Repository/knk-web-api-v2/SWAGGER_CONTRACT.md)
+- [Minecraft Plugin Integration](../Repository/knk-plugin/docs/PLUGIN_WORLDTASK_INTEGRATION.md)
+- [API Contract](../Repository/knk-web-api/SWAGGER_CONTRACT.md)
 
 ---
 

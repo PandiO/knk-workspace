@@ -62,14 +62,14 @@ Phase Status: docs/features/gate-structure-animation/PHASE_STATUS.md
 
 ---
 
-## knk-web-api-v2
+## knk-web-api
 
 **Status**: No changes in Phase 5  
 **Note**: All API work completed in Phases 1-4 (data model, logic, DTOs, endpoints)
 
 ---
 
-## knk-plugin-v2
+## knk-plugin
 
 **Status**: No changes in Phase 5  
 **Note**: Plugin implementation scheduled for Phase 6+

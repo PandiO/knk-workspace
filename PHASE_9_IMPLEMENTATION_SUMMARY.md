@@ -114,34 +114,34 @@ permissions:
 ### Files Created
 
 #### Commands
-- [GateCommand.java](../../../../Repository/knk-plugin-v2/knk-paper/src/main/java/net/knightsandkings/knk/paper/commands/GateCommand.java)
+- [GateCommand.java](../../../../Repository/knk-plugin/knk-paper/src/main/java/net/knightsandkings/knk/paper/commands/GateCommand.java)
   - 326 lines
   - Implements all player and admin commands
   - Color-coded messaging
   - State machine integration
 
 #### Listeners
-- [GateEventListener.java](../../../../Repository/knk-plugin-v2/knk-paper/src/main/java/net/knightsandkings/knk/paper/listeners/GateEventListener.java)
+- [GateEventListener.java](../../../../Repository/knk-plugin/knk-paper/src/main/java/net/knightsandkings/knk/paper/listeners/GateEventListener.java)
   - 188 lines
   - Handles block breaks, explosions, interactions
   - Damage calculation and health management
   - Destruction and respawn framework
 
 #### Tests
-- [GateCommandTest.java](../../../../Repository/knk-plugin-v2/knk-paper/src/test/java/net/knightsandkings/knk/paper/commands/GateCommandTest.java)
+- [GateCommandTest.java](../../../../Repository/knk-plugin/knk-paper/src/test/java/net/knightsandkings/knk/paper/commands/GateCommandTest.java)
   - 252 lines
   - 14 comprehensive test cases
   - Mocked GateManager
   - Message capture and validation
   
-- [GateEventListenerTest.java](../../../../Repository/knk-plugin-v2/knk-paper/src/test/java/net/knightsandkings/knk/paper/gates/GateEventListenerTest.java)
+- [GateEventListenerTest.java](../../../../Repository/knk-plugin/knk-paper/src/test/java/net/knightsandkings/knk/paper/gates/GateEventListenerTest.java)
   - 246 lines
   - 13 comprehensive test cases
   - Event handler verification
   - State and health system validation
 
 #### Configuration
-- [plugin.yml](../../../../Repository/knk-plugin-v2/knk-paper/src/main/resources/plugin.yml)
+- [plugin.yml](../../../../Repository/knk-plugin/knk-paper/src/main/resources/plugin.yml)
   - Added gate command definition
   - Added complete permission hierarchy
   - Maintains backward compatibility

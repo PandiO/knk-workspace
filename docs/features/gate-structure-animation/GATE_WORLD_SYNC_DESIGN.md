@@ -284,7 +284,7 @@ how `GateAnimationTask` and `GateStateSyncTask` already share it.
 
 ## Implementation (2026-09-10)
 
-### Phase 1 — `GateWorldSyncChecker` (knk-plugin-v2, `knk-paper`) — **Done**
+### Phase 1 — `GateWorldSyncChecker` (knk-plugin, `knk-paper`) — **Done**
 
 - New class alongside `GateRestingFramePlacer`: `check(world, gate,
   fallbackMaterial, rasterizationEnabled)` (read-only, returns `SyncResult`)

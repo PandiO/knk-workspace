@@ -8,7 +8,7 @@ LocationTaskHandler is fully integrated across all three repositories (plugin, W
 
 ## Implementation Status
 
-### ✅ knk-plugin-v2: LocationTaskHandler Implementation
+### ✅ knk-plugin: LocationTaskHandler Implementation
 **File:** `knk-paper/src/main/java/net/knightsandkings/knk/paper/tasks/LocationTaskHandler.java`
 
 **Features:**

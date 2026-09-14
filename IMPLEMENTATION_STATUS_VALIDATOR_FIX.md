@@ -65,9 +65,9 @@ Build succeeded with 32 warning(s) in 3.7s
 ```
 
 ## Files Modified
-1. Repository/knk-web-api-v2/Services/FieldValidationService.cs
-2. Repository/knk-web-api-v2/Tests/Integration/PlaceholderResolutionIntegrationTests.cs
-3. Repository/knk-web-api-v2/Tests/Services/FieldValidationServiceTests.cs
+1. Repository/knk-web-api/Services/FieldValidationService.cs
+2. Repository/knk-web-api/Tests/Integration/PlaceholderResolutionIntegrationTests.cs
+3. Repository/knk-web-api/Tests/Services/FieldValidationServiceTests.cs
 
 ## Verification Checklist
 - ✅ Code compiles without errors

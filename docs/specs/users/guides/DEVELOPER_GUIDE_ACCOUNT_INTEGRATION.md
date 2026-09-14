@@ -2,7 +2,7 @@
 
 **Version**: 1.0  
 **Last Updated**: January 30, 2026  
-**Plugin**: knk-plugin-v2  
+**Plugin**: knk-plugin  
 **Target Audience**: Plugin developers, contributors
 
 ---
@@ -45,7 +45,7 @@ The account management system follows a layered architecture:
                          │ HTTPS
                          ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│                     Backend API (knk-web-api-v2)                │
+│                     Backend API (knk-web-api)                │
 │  UserController | UserService | UserRepository                  │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -1293,7 +1293,7 @@ class AccountCreateCommand(
 ## Further Reading
 
 - **Backend API Documentation**: `/docs/specs/users/SPEC_USER_ACCOUNT_MANAGEMENT.md`
-- **Plugin Architecture**: `/Repository/knk-plugin-v2/docs/ARCHITECTURE_AUDIT.md`
+- **Plugin Architecture**: `/Repository/knk-plugin/docs/ARCHITECTURE_AUDIT.md`
 - **Frontend Integration**: `/docs/ai/frontend-auth/FRONTEND_USER_ACCOUNT_MANAGEMENT_IMPLEMENTATION_ROADMAP.md`
 - **Git Conventions**: `/docs/GIT_COMMIT_CONVENTIONS.md`
 

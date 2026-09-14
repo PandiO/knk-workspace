@@ -63,7 +63,7 @@
 - **Length**: ~400 lines
 
 **Key sections**:
-- Complete file tree for knk-plugin-v2
+- Complete file tree for knk-plugin
 - Package structure breakdown
 - Phase 1 file details (9 files × 50-100 lines each)
 - Code checklist

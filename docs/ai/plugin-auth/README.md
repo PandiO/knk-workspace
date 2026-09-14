@@ -178,7 +178,7 @@ The plugin-auth feature is now fully documented across 4 interconnected guides:
 - Backend spec: `docs/specs/users/SPEC_USER_ACCOUNT_MANAGEMENT.md` (Part D: Plugin requirements)
 - Backend roadmap: `docs/specs/users/USER_ACCOUNT_MANAGEMENT_IMPLEMENTATION_ROADMAP.md`
 - Frontend roadmap: `docs/ai/frontend-auth/FRONTEND_USER_ACCOUNT_MANAGEMENT_IMPLEMENTATION_ROADMAP.md`
-- Plugin architecture: `Repository/knk-plugin-v2/docs/ARCHITECTURE_AUDIT.md`
+- Plugin architecture: `Repository/knk-plugin/docs/ARCHITECTURE_AUDIT.md`
 - Commit conventions: `docs/GIT_COMMIT_CONVENTIONS.md`
 
 ### Phase 1 (Already Completed)

@@ -129,12 +129,12 @@ All gate animation system documentation is organized in this directory. Start wi
 
 ## 🔗 Related Documentation
 
-- **Current Entity**: [GateStructure.cs](../../../Repository/knk-web-api-v2/Models/GateStructure.cs)
+- **Current Entity**: [GateStructure.cs](../../../Repository/knk-web-api/Models/GateStructure.cs)
 - **Architecture Overview**: [docs/CODEMAP.md](../../CODEMAP.md)
 - **Project Structure**: [docs/specs/project-overview/SOURCES_LOCATION.md](../../specs/project-overview/SOURCES_LOCATION.md)
 - **Minecraft Data**: [Repository/knk-minecraft-data/minecraft-materials.json](../../../Repository/knk-minecraft-data/minecraft-materials.json)
 - **Backend Instructions**: [.github/instructions/knk-backend.instructions.md](../../../.github/instructions/knk-backend.instructions.md)
-- **Plugin Architecture**: [Repository/knk-plugin-v2/ARCHITECTURE_AUDIT.md](../../../Repository/knk-plugin-v2/ARCHITECTURE_AUDIT.md)
+- **Plugin Architecture**: [Repository/knk-plugin/ARCHITECTURE_AUDIT.md](../../../Repository/knk-plugin/ARCHITECTURE_AUDIT.md)
 
 ---
 

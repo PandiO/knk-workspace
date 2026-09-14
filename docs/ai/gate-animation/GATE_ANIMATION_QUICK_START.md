@@ -145,7 +145,7 @@ BROKEN → CLOSED   (respawn after RespawnRateSeconds)
 
 ### Step 1: Update GateStructure Entity
 
-**File**: `Repository/knk-web-api-v2/Models/GateStructure.cs`
+**File**: `Repository/knk-web-api/Models/GateStructure.cs`
 
 ```csharp
 [FormConfigurableEntity("GateStructure")]
@@ -194,7 +194,7 @@ public class GateStructure : Structure
 
 ### Step 2: Create GateBlockSnapshot Entity
 
-**File**: `Repository/knk-web-api-v2/Models/GateBlockSnapshot.cs`
+**File**: `Repository/knk-web-api/Models/GateBlockSnapshot.cs`
 
 ```csharp
 using knkwebapi_v2.Attributes;
@@ -226,7 +226,7 @@ public class GateBlockSnapshot
 
 ### Step 3: Create DTOs
 
-**File**: `Repository/knk-web-api-v2/DTOs/GateStructureDtos.cs`
+**File**: `Repository/knk-web-api/DTOs/GateStructureDtos.cs`
 
 ```csharp
 namespace knkwebapi_v2.DTOs;
@@ -341,7 +341,7 @@ public class GateBlockSnapshotDto
 
 ### Step 4: Database Migration
 
-**File**: `Repository/knk-web-api-v2/Migrations/{Timestamp}_AddGateAnimation.cs`
+**File**: `Repository/knk-web-api/Migrations/{Timestamp}_AddGateAnimation.cs`
 
 ```sql
 ALTER TABLE GateStructures ADD COLUMN GateType VARCHAR(50) DEFAULT 'SLIDING';
@@ -366,9 +366,9 @@ CREATE TABLE GateBlockSnapshots (
 
 ### Step 5: Repository & Service (Follow Backend Instructions)
 
-**Repository**: `Repository/knk-web-api-v2/Repositories/GateStructureRepository.cs`  
-**Service**: `Repository/knk-web-api-v2/Services/GateStructureService.cs`  
-**Controller**: `Repository/knk-web-api-v2/Controllers/GateStructuresController.cs`
+**Repository**: `Repository/knk-web-api/Repositories/GateStructureRepository.cs`  
+**Service**: `Repository/knk-web-api/Services/GateStructureService.cs`  
+**Controller**: `Repository/knk-web-api/Controllers/GateStructuresController.cs`
 
 **Follow Pattern From**: Similar to `UserRepository`, `UserService`, `UsersController`
 
@@ -462,7 +462,7 @@ export interface GateCreateRequest {
 
 ### Core Data Structures
 
-**File**: `Repository/knk-plugin-v2/knk-paper/src/main/java/com/knockoffrealms/knk/gate/CachedGate.java`
+**File**: `Repository/knk-plugin/knk-paper/src/main/java/com/knockoffrealms/knk/gate/CachedGate.java`
 
 ```java
 package com.knockoffrealms.knk.gate;
@@ -521,7 +521,7 @@ public class BlockSnapshot {
 
 ### Animation Tick Task
 
-**File**: `Repository/knk-plugin-v2/knk-paper/src/main/java/com/knockoffrealms/knk/gate/GateAnimationTask.java`
+**File**: `Repository/knk-plugin/knk-paper/src/main/java/com/knockoffrealms/knk/gate/GateAnimationTask.java`
 
 ```java
 package com.knockoffrealms.knk.gate;
