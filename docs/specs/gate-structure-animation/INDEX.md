@@ -137,7 +137,7 @@ See [DECISIONS.md](./DECISIONS.md) for detailed rationale.
 - **Backend Codebase**: [Repository/knk-web-api/](../../../../Repository/knk-web-api/)
 - **Frontend Codebase**: [Repository/knk-web-app/](../../../../Repository/knk-web-app/)
 - **Plugin Codebase**: [Repository/knk-plugin/](../../../../Repository/knk-plugin/)
-- **Architecture Overview**: [docs/CODEMAP.md](../../CODEMAP.md)
+- **Architecture Overview**: [docs/CODEMAP.md](../../guides/developer/CODEMAP.md)
 - **Project Structure**: [docs/specs/project-overview/SOURCES_LOCATION.md](../../specs/project-overview/SOURCES_LOCATION.md)
 
 ### Instruction Guides

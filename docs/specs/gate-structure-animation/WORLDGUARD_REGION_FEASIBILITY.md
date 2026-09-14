@@ -1,7 +1,7 @@
 # Feasibility Assessment: WorldGuard/WorldEdit Regions for Gate Door Geometry
 
 **Status**: Decided — 2026-09-11 planning meeting; FLOOD_FILL viability confirmed-negative by live in-game test on 2026-09-12; item 6.1 design spike resolved 2026-09-13 (§9) — both previously-open sizing/design questions now have a concrete mechanism, so 6.2-6.7 are unblocked; 6.6's found orientation gap resolved same day via `CONVEX_POLYHEDRON` capture (§9.4). See §6 for the final decision (supersedes the original recommendation), §7 for the original resolved/open question tracking, §9 for the design spike, and §9.4 for the convex-polyhedron follow-up.
-**Source item**: [QOL_BUGFIX_BACKLOG.md #6](../../QOL_BUGFIX_BACKLOG.md#6-non-rectangular-gate-door-shapes-via-worldguard-regions)
+**Source item**: [QOL_BUGFIX_BACKLOG.md #6](../../backlog/QOL_BUGFIX_BACKLOG.md#6-non-rectangular-gate-door-shapes-via-worldguard-regions)
 **Scope**: `knk-plugin-v2` (with cross-references to `knk-web-api-v2` for persistence impact) — both repos were renamed mid-session on 2026-09-13 to `knk-plugin`/`knk-web-api` respectively (dropping the "-v2" suffix); this doc keeps the original names in older sections for historical accuracy, new sections use the current names.
 **Researched**: 2026-09-11 · **Decided**: 2026-09-11 · **FLOOD_FILL tested**: 2026-09-12 · **Design spike (6.1) resolved**: 2026-09-13 · **Convex polyhedron follow-up (§9.4) resolved**: 2026-09-13
 
@@ -85,7 +85,7 @@ Rationale (as originally recommended, now confirmed):
 
 **Rotation scope — decided in scope for v1**: DRAWBRIDGE/rotation-type gates get polygon support in v1, not deferred. This means Mechanism 1's rotation rasterizer generalization (§5, item 2) is **required scope for this item**, not optional follow-up work — it's the single biggest effort driver and should be estimated/designed accordingly.
 
-**Sequencing**: this item ships *after* [QOL_BUGFIX_BACKLOG.md #5](../../QOL_BUGFIX_BACKLOG.md#5-support-for-multiple-gate-doors-per-gate-structure) (multi-door support / the new `GateDoor` entity), so region data lands on `GateDoor` directly rather than requiring a second migration on the single-door `GateStructure` model.
+**Sequencing**: this item ships *after* [QOL_BUGFIX_BACKLOG.md #5](../../backlog/QOL_BUGFIX_BACKLOG.md#5-support-for-multiple-gate-doors-per-gate-structure) (multi-door support / the new `GateDoor` entity), so region data lands on `GateDoor` directly rather than requiring a second migration on the single-door `GateStructure` model.
 
 **FLOOD_FILL check is complete (§3)** — it does not work for this door, no scope reduction from it. The region-based approach is the only viable path forward for entity 14's drawbridge.
 

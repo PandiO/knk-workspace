@@ -683,5 +683,5 @@ the plain procedural formula.
 - **Backend Entity**: [Models/GateStructure.cs](../../../../Repository/knk-web-api/Models/GateStructure.cs)
 - **Backend Instructions**: [.github/instructions/knk-backend.instructions.md](../../../../.github/instructions/knk-backend.instructions.md)
 - **Plugin Architecture**: [Repository/knk-plugin/ARCHITECTURE_AUDIT.md](../../../../Repository/knk-plugin/ARCHITECTURE_AUDIT.md)
-- **CODEMAP**: [docs/CODEMAP.md](../../CODEMAP.md)
+- **CODEMAP**: [docs/CODEMAP.md](../../guides/developer/CODEMAP.md)
 

@@ -291,7 +291,7 @@ public async Task YourScenarioName_WithCondition_ExpectedOutcome()
 
 - [PHASE_8_IMPLEMENTATION_SUMMARY.md](./PHASE_8_IMPLEMENTATION_SUMMARY.md) - Full implementation details
 - [Backend Instructions](../../../.github/instructions/knk-backend.instructions.md) - Backend conventions
-- [Git Conventions](../../../GIT_COMMIT_CONVENTIONS.md) - Commit message format
+- [Git Conventions](../../../guides/developer/GIT_COMMIT_CONVENTIONS.md) - Commit message format
 
 ---
 

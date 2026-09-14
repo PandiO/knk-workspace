@@ -4,7 +4,7 @@ Running list of small bugs and quality-of-life improvements found while using th
 
 Status legend: `Open` (needs decision or implementation) · `Ready` (solution agreed, ready to implement) · `In Progress` · `Done`
 
-**Items 4–7** (all GateStructure-related) have a combined implementation plan with ordering rationale and phase breakdowns: [GATESTRUCTURE_QOL_IMPLEMENTATION_PLAN.md](features/gate-structure-animation/GATESTRUCTURE_QOL_IMPLEMENTATION_PLAN.md).
+**Items 4–7** (all GateStructure-related) have a combined implementation plan with ordering rationale and phase breakdowns: [GATESTRUCTURE_QOL_IMPLEMENTATION_PLAN.md](../specs/gate-structure-animation/GATESTRUCTURE_QOL_IMPLEMENTATION_PLAN.md).
 
 ---
 
@@ -175,14 +175,14 @@ Once implemented, `unlink` and `remove` should use the shared `useConfirm()` mec
 
 ## 4. GateStructure edit form fails to save after scanning `OpenedBlockSnapshots` (and latently `BlockSnapshots`)
 
-- **Status**: ✅ Done (2026-09-12) — see [GATESTRUCTURE_QOL_IMPLEMENTATION_PLAN.md](features/gate-structure-animation/GATESTRUCTURE_QOL_IMPLEMENTATION_PLAN.md) Item 4
+- **Status**: ✅ Done (2026-09-12) — see [GATESTRUCTURE_QOL_IMPLEMENTATION_PLAN.md](../specs/gate-structure-animation/GATESTRUCTURE_QOL_IMPLEMENTATION_PLAN.md) Item 4
 - **Area**: knk-web-app (frontend — root cause) / knk-web-api (backend — confirms the field is write-ignored anyway)
 - **Reported**: 2026-09-10
 - **Entity context observed**: GateStructure id `14` ("Northern Gate")
 - **Decision**: Fix generically in [normalizeFormSubmission.ts](../Repository/knk-web-app/src/utils/forms/normalizeFormSubmission.ts#L279) so any current/future `GateBlockScan`-family field is covered automatically, rather than hardcoding a GateStructure-specific exclusion. Cover **both** `blockSnapshots` and `openedBlockSnapshots` in the same change (not just `openedBlockSnapshots`), since both are confirmed to share the identical bug via the same `WorldBoundFieldRenderer.tsx` code path.
 
 ### Symptom
-Editing an existing Gate Structure and saving fails after a block scan has populated the "opened block snapshots" field (the separately-scanned fully-open shape, see [ROTATION_GAP_FILL_DESIGN.md](features/gate-structure-animation/ROTATION_GAP_FILL_DESIGN.md)). The `PUT /api/GateStructures/{id}` request returns a 400 with two validation errors.
+Editing an existing Gate Structure and saving fails after a block scan has populated the "opened block snapshots" field (the separately-scanned fully-open shape, see [ROTATION_GAP_FILL_DESIGN.md](../specs/gate-structure-animation/ROTATION_GAP_FILL_DESIGN.md)). The `PUT /api/GateStructures/{id}` request returns a 400 with two validation errors.
 
 ### Repro steps
 1. Open the Gate Structure edit form for a `DRAWBRIDGE`/rotation-type gate (or any gate configured with the "opened block scan" field/step).
@@ -235,7 +235,7 @@ Strip `blockSnapshots`/`openedBlockSnapshots` (or more generally, any field back
 
 ## 5. Support for multiple gate doors per gate structure
 
-- **Status**: ✅ Complete (2026-09-13) except for one deliberately deferred piece - building entity 14's real second (lateral/vertical) door, blocked on real in-game geometry rather than any remaining code work. See [GATESTRUCTURE_QOL_IMPLEMENTATION_PLAN.md](features/gate-structure-animation/GATESTRUCTURE_QOL_IMPLEMENTATION_PLAN.md) Item 5 for full details, including a live-dev-server-verified concurrency bug fix found along the way.
+- **Status**: ✅ Complete (2026-09-13) except for one deliberately deferred piece - building entity 14's real second (lateral/vertical) door, blocked on real in-game geometry rather than any remaining code work. See [GATESTRUCTURE_QOL_IMPLEMENTATION_PLAN.md](../specs/gate-structure-animation/GATESTRUCTURE_QOL_IMPLEMENTATION_PLAN.md) Item 5 for full details, including a live-dev-server-verified concurrency bug fix found along the way.
 - **Area**: knk-plugin (gate structure entity system)
 - **Reported**: 2026-09-11
 - **Entity context observed**: GateStructure id `14` ("Northern Gate", see item 4)
@@ -296,7 +296,7 @@ Each `GateDoor` instance belonging to a `GateStructure` should support **individ
 - **Status**: Ready for detailed design — capture approach and scope decided 2026-09-11; FLOOD_FILL confirmed non-viable by live test 2026-09-12; blocked only on item 5 landing first (sequencing decision, see item 5)
 - **Area**: knk-plugin (gate structure entity system)
 - **Reported**: 2026-09-11
-- **Assessment**: See [WORLDGUARD_REGION_FEASIBILITY.md](features/gate-structure-animation/WORLDGUARD_REGION_FEASIBILITY.md) (2026-09-11, updated 2026-09-12 with the FLOOD_FILL test result) for the full codebase-grounded feasibility assessment. Summary below.
+- **Assessment**: See [WORLDGUARD_REGION_FEASIBILITY.md](../specs/gate-structure-animation/WORLDGUARD_REGION_FEASIBILITY.md) (2026-09-11, updated 2026-09-12 with the FLOOD_FILL test result) for the full codebase-grounded feasibility assessment. Summary below.
 - **Decision**: WorldEdit-only capture (Option 2), with polygon/cuboid vertices persisted in KnK's own DB. **Additional requirement from the planning meeting**: the stored region must be re-loadable back into a WorldEdit session for editing (round-trip, not one-way capture-only) — an admin needs to be able to pull up an existing gate door's region and redraw/adjust it with WorldEdit tooling, not just define it once. Rotation-type (DRAWBRIDGE) gates **are in scope for v1** — Mechanism 1's rotation rasterizer (`rasterizeRotationFrame`) will need to be generalized for polygon footprints as part of this item, not deferred. Gate door geometry regions stay independent of the existing WG-backed access-control regions (`RegionClosedId`/`RegionOpenedId`) — confirmed, no unification.
 
 ### Current limitation
@@ -312,7 +312,7 @@ This lets the admin define the gate door shape freely (rectangular, polygonal, o
 The same approach should apply to the **open** state: if the shape/dimensions differ between open and closed states, that open-state region is captured the same way. The animation between the two states is then calculated/interpolated from the two captured block sets.
 
 ### Feasibility assessment — complete
-Full write-up: [WORLDGUARD_REGION_FEASIBILITY.md](features/gate-structure-animation/WORLDGUARD_REGION_FEASIBILITY.md). Key findings:
+Full write-up: [WORLDGUARD_REGION_FEASIBILITY.md](../specs/gate-structure-animation/WORLDGUARD_REGION_FEASIBILITY.md). Key findings:
 
 - **This isn't a new-dependency decision.** `knk-plugin` already has a hard `depend` on WorldGuard and a `softdepend` on WorldEdit (`knk-paper/src/main/resources/plugin.yml`), and WorldGuard already backs the plugin's core territory model (`RegionDomainResolver`, `WorldGuardRegionTracker`). There's also an existing, complete, tested pipeline for "draw a WorldEdit selection → persist as a WorldGuard region" (`WgRegionIdTaskHandler`), currently used for district/town regions — the exact mechanism this item would need, already built.
 - **A non-rectangular mode may already exist.** `GeometryDefinitionMode.FLOOD_FILL` (`GateBlockScanTaskHandler.java`) already produces non-rectangular block sets via material-boundary BFS, live and unit-tested. **Before scoping any new work, confirm whether the reported use case is already served by `FLOOD_FILL`** — this could close the item outright.

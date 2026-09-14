@@ -418,7 +418,7 @@ docs: update CODEMAP with new module structure
 
 - [Conventional Commits](https://www.conventionalcommits.org/) (inspiration)
 - Knights & Kings Architecture: [docs/CODEMAP.md](CODEMAP.md)
-- Project-specific conventions: [.github/](../.github/)
+- Project-specific conventions: [.github/](../../../.github)
 
 ---
 

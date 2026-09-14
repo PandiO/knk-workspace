@@ -368,7 +368,7 @@ public class GateBlockSnapshot
 - **Rotation Gap-Fill**: [ROTATION_GAP_FILL_DESIGN.md](ROTATION_GAP_FILL_DESIGN.md) — automatic diagonal-hinge gap-fill and the optional `GateOpenedBlockSnapshot` manual override
 - **Gate World/DB Sync**: [GATE_WORLD_SYNC_DESIGN.md](GATE_WORLD_SYNC_DESIGN.md) — keeping physical world blocks converged on DB-persisted gate state
 - **Current Entity**: [GateStructure.cs](../../../../Repository/knk-web-api/Models/GateStructure.cs)
-- **Architecture Overview**: [docs/CODEMAP.md](../../CODEMAP.md)
+- **Architecture Overview**: [docs/CODEMAP.md](../../guides/developer/CODEMAP.md)
 - **Project Structure**: [docs/specs/project-overview/SOURCES_LOCATION.md](../../specs/project-overview/SOURCES_LOCATION.md)
 - **Minecraft Data**: [Repository/knk-minecraft-data/minecraft-materials.json](../../../../Repository/knk-minecraft-data/minecraft-materials.json)
 - **Backend Instructions**: [.github/instructions/knk-backend.instructions.md](../../../../.github/instructions/knk-backend.instructions.md)

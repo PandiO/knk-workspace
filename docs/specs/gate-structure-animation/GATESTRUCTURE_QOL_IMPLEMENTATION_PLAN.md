@@ -1,7 +1,7 @@
 # GateStructure QOL Implementation Plan (Items 4–7)
 
 **Status**: Plan drafted 2026-09-12. Item 4 complete (2026-09-12). Item 5 complete (2026-09-13) except for one deliberately deferred piece - see below. Item 6's design spike (6.1), backend region persistence (6.2), the plugin WorldEdit capture/redefine command (6.3/6.4), region-based scanning (6.5), and the animation rework (6.6, including a same-day `CONVEX_POLYHEDRON` capture follow-up resolving 6.6's found orientation gap) complete (2026-09-13); only 6.7 (testing against entity 14's real drawbridge) and item 7 remain.
-**Scope**: [QOL_BUGFIX_BACKLOG.md](../../QOL_BUGFIX_BACKLOG.md) items 4, 5, 6, 7 — the GateStructure-related follow-up work that sits on top of the already-complete base gate animation system (see [PHASE_STATUS.md](./PHASE_STATUS.md), Phases 1–10 done, Phase 11 partial).
+**Scope**: [QOL_BUGFIX_BACKLOG.md](../../backlog/QOL_BUGFIX_BACKLOG.md) items 4, 5, 6, 7 — the GateStructure-related follow-up work that sits on top of the already-complete base gate animation system (see [PHASE_STATUS.md](./PHASE_STATUS.md), Phases 1–10 done, Phase 11 partial).
 **Explicitly out of scope for this plan**: reworking the GateStructure `FormConfiguration` (id 9)'s conditional step visibility — deferred until these four items are working (per 2026-09-12 discussion). Item 5 and item 6 below each need *some* minimal admin-facing CRUD to be usable at all; that's scoped narrowly (generic ObjectConfig CRUD, no bespoke wizard steps) and called out explicitly where it applies, so it isn't confused with the deferred form polish work.
 
 ---
@@ -19,7 +19,7 @@ This is the order proposed, and it holds up against the dependency graph:
 
 ## Item 4 — Fix GateStructure save-after-scan bug
 
-**Reference**: [QOL_BUGFIX_BACKLOG.md #4](../../QOL_BUGFIX_BACKLOG.md#4-gatestructure-edit-form-fails-to-save-after-scanning-openedblocksnapshots-and-latently-blocksnapshots). Decision already made — this is implementation only, no further design needed.
+**Reference**: [QOL_BUGFIX_BACKLOG.md #4](../../backlog/QOL_BUGFIX_BACKLOG.md#4-gatestructure-edit-form-fails-to-save-after-scanning-openedblocksnapshots-and-latently-blocksnapshots). Decision already made — this is implementation only, no further design needed.
 
 **Status**: ✅ Complete (2026-09-12, `knk-web-app` commit). `normalizeFormSubmission.ts` strips any field whose `settingsJson` marks it as rendered by a headless world-task type (via the existing `isHeadlessTaskType` helper), generically by renderer/task type rather than by field name - covers both `blockSnapshots` and `openedBlockSnapshots`. New tests added; full suite green.
 
@@ -38,7 +38,7 @@ This is the order proposed, and it holds up against the dependency graph:
 
 ## Item 5 — Multi-door support (`GateDoor` entity)
 
-**Reference**: [QOL_BUGFIX_BACKLOG.md #5](../../QOL_BUGFIX_BACKLOG.md#5-support-for-multiple-gate-doors-per-gate-structure). Key decisions already made: per-door independent state + a structure-level cascading force-state override (for admin commands/permissions and the future Siege capture event); automatic migration for existing single-door gates; sequenced before item 6.
+**Reference**: [QOL_BUGFIX_BACKLOG.md #5](../../backlog/QOL_BUGFIX_BACKLOG.md#5-support-for-multiple-gate-doors-per-gate-structure). Key decisions already made: per-door independent state + a structure-level cascading force-state override (for admin commands/permissions and the future Siege capture event); automatic migration for existing single-door gates; sequenced before item 6.
 
 **Status**: ✅ Complete (2026-09-13), except for one deliberately deferred piece. Backend (5.1-5.3), plugin (5.4-5.7), and frontend 5.8 all complete and committed (`knk-web-api` commits e704855, dea0ea2, `knk-plugin` commits 8c33f20, be280d3 on branch `gate-structure-animation`, `knk-web-app` commit b608225 on branch `gate-animation-2`). The `AddGateDoor` migration is applied and verified against the shared dev DB (2026-09-12), and a live dev-server run of the full stack (migrated DB + backend API + rebuilt plugin) confirmed all 4 existing gate structures - including entity 14 - load, cache, and animate correctly (2026-09-13; also surfaced and fixed a real `GateManager` cache-concurrency bug along the way, see below).
 - **Deferred by explicit decision (2026-09-13)**: building entity 14's real second (lateral/vertical) door, the live multi-door CRUD/animation test called for in 5.9, is postponed until real in-game geometry (anchor/reference/access points) for that door is available - not a blocker for the rest of item 5, which doesn't depend on it. Backend/plugin/frontend all already support creating and animating any number of doors per structure; this is purely "build the second real one" work, deferred at the user's request rather than abandoned.
@@ -228,7 +228,7 @@ Add a new persisted `GateDoorOpenState` enum: `CLOSED, OPENING, OPEN, CLOSING, J
 
 ## Item 6 — Non-rectangular gate door shapes (WorldGuard/WorldEdit regions)
 
-**Reference**: [QOL_BUGFIX_BACKLOG.md #6](../../QOL_BUGFIX_BACKLOG.md#6-non-rectangular-gate-door-shapes-via-worldguard-regions), [WORLDGUARD_REGION_FEASIBILITY.md](./WORLDGUARD_REGION_FEASIBILITY.md). Decision: WorldEdit-only capture with KnK-owned persistence, round-trip editing, rotation-type gates in scope for v1, region data lands on `GateDoor` (from item 5). FLOOD_FILL confirmed non-viable for entity 14's drawbridge by live test (2026-09-12) — this is the only remaining path to a non-rectangular drawbridge shape.
+**Reference**: [QOL_BUGFIX_BACKLOG.md #6](../../backlog/QOL_BUGFIX_BACKLOG.md#6-non-rectangular-gate-door-shapes-via-worldguard-regions), [WORLDGUARD_REGION_FEASIBILITY.md](./WORLDGUARD_REGION_FEASIBILITY.md). Decision: WorldEdit-only capture with KnK-owned persistence, round-trip editing, rotation-type gates in scope for v1, region data lands on `GateDoor` (from item 5). FLOOD_FILL confirmed non-viable for entity 14's drawbridge by live test (2026-09-12) — this is the only remaining path to a non-rectangular drawbridge shape.
 
 ### 6.1 — Design spike (do this before writing implementation code)
 ✅ Done 2026-09-13. Both explicitly-unsized/undesigned pieces from the feasibility assessment resolved; write-up appended to [WORLDGUARD_REGION_FEASIBILITY.md](./WORLDGUARD_REGION_FEASIBILITY.md) §9 (committed alongside the feasibility doc itself, which was previously untracked - `docs` repo commit `1d46d69`).
@@ -293,7 +293,7 @@ Add a new persisted `GateDoorOpenState` enum: `CLOSED, OPENING, OPEN, CLOSING, J
 
 ## Item 7 — Snow layer handling during gate door animation
 
-**Reference**: [QOL_BUGFIX_BACKLOG.md #7](../../QOL_BUGFIX_BACKLOG.md#7-snow-layer-handling-during-gate-door-animation). Decisions already made: silent removal (no item drop), presence/absence check only (no partial-layer-height tracking).
+**Reference**: [QOL_BUGFIX_BACKLOG.md #7](../../backlog/QOL_BUGFIX_BACKLOG.md#7-snow-layer-handling-during-gate-door-animation). Decisions already made: silent removal (no item drop), presence/absence check only (no partial-layer-height tracking).
 
 ### 7.1 — Implement
 - Add a snow-layer check into the block-movement/placement code path (`GateAnimationTask`/`GateBlockPlacer`, by this point already reshaped by items 5 and 6's per-door iteration and region-based scanning) that:

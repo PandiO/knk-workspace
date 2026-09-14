@@ -661,11 +661,11 @@ This roadmap provides a complete implementation plan for the Gate Animation Syst
 
 ## Documentation Deliverables
 
-- ✅ **Requirements**: [REQUIREMENTS_GATE_ANIMATION.md](../../specs/gate-structure/REQUIREMENTS_GATE_ANIMATION.md)
-- ✅ **Specification**: [SPEC_GATE_ANIMATION.md](../../specs/gate-structure/SPEC_GATE_ANIMATION.md)
+- ✅ **Requirements**: [REQUIREMENTS_GATE_ANIMATION.md](REQUIREMENTS_GATE_ANIMATION.md)
+- ✅ **Specification**: [SPEC_GATE_ANIMATION.md](SPEC_GATE_ANIMATION.md)
 - ✅ **Quick Start**: [GATE_ANIMATION_QUICK_START.md](./GATE_ANIMATION_QUICK_START.md)
 - ✅ **Roadmap**: This document
-- ✅ **Index**: [INDEX.md](./INDEX.md)
+- ✅ **Index**: [INDEX.md](AI_INDEX.md)
 - ⏳ **Visual Summary**: [VISUAL_SUMMARY_GATE_ANIMATION.md](./VISUAL_SUMMARY_GATE_ANIMATION.md) (future)
 - ⏳ **Implementation Checklist**: [IMPLEMENTATION_CHECKLIST.md](./IMPLEMENTATION_CHECKLIST.md) (future)
 

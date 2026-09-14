@@ -13,11 +13,11 @@ All gate animation system documentation is organized in this directory. Start wi
 
 | Document | Best For | Read Time |
 |----------|----------|-----------|
-| **[GATE_REQUIREMENTS_SUMMARY.md](../../specs/gate-structure/GATE_REQUIREMENTS_SUMMARY.md)** | **START HERE** - Complete feature set overview and master checklist | 30-40 min |
-| **[REQUIREMENTS_GATE_ANIMATION.md](../../specs/gate-structure/REQUIREMENTS_GATE_ANIMATION.md)** | Complete base animation requirements and specifications | 60-90 min |
-| **[REQUIREMENTS_GATE_ADVANCED_FEATURES.md](../../specs/gate-structure/REQUIREMENTS_GATE_ADVANCED_FEATURES.md)** | Advanced features (pass-through, guards, siege, health display) | 45-60 min |
-| **[REQUIREMENTS_GATE_FRONTEND.md](../../specs/gate-structure/REQUIREMENTS_GATE_FRONTEND.md)** | Frontend FormWizard, WorldTasks, and 3D preview implementation | 45-60 min |
-| **[SPEC_GATE_ANIMATION.md](../../specs/gate-structure/SPEC_GATE_ANIMATION.md)** | Technical specification grounded in architecture | 60-90 min |
+| **[GATE_REQUIREMENTS_SUMMARY.md](GATE_REQUIREMENTS_SUMMARY.md)** | **START HERE** - Complete feature set overview and master checklist | 30-40 min |
+| **[REQUIREMENTS_GATE_ANIMATION.md](REQUIREMENTS_GATE_ANIMATION.md)** | Complete base animation requirements and specifications | 60-90 min |
+| **[REQUIREMENTS_GATE_ADVANCED_FEATURES.md](REQUIREMENTS_GATE_ADVANCED_FEATURES.md)** | Advanced features (pass-through, guards, siege, health display) | 45-60 min |
+| **[REQUIREMENTS_GATE_FRONTEND.md](REQUIREMENTS_GATE_FRONTEND.md)** | Frontend FormWizard, WorldTasks, and 3D preview implementation | 45-60 min |
+| **[SPEC_GATE_ANIMATION.md](SPEC_GATE_ANIMATION.md)** | Technical specification grounded in architecture | 60-90 min |
 | **[GATE_ANIMATION_QUICK_START.md](./GATE_ANIMATION_QUICK_START.md)** | Quick reference during coding; cheat sheet | 15-20 min |
 | **[GATE_ANIMATION_IMPLEMENTATION_ROADMAP.md](./GATE_ANIMATION_IMPLEMENTATION_ROADMAP.md)** | Understanding full scope, phases, and detailed planning | 45-60 min |
 | **[VISUAL_SUMMARY_GATE_ANIMATION.md](./VISUAL_SUMMARY_GATE_ANIMATION.md)** | Quick visual reference of architecture, flows, and diagrams | 20-30 min |
@@ -27,11 +27,11 @@ All gate animation system documentation is organized in this directory. Start wi
 
 ## 🚀 Getting Started (5 Minutes)
 
-1. **First Time?** Read [GATE_REQUIREMENTS_SUMMARY.md](../../specs/gate-structure/GATE_REQUIREMENTS_SUMMARY.md) for complete feature matrix
-2. **Need Details?** Read [REQUIREMENTS_GATE_ANIMATION.md](../../specs/gate-structure/REQUIREMENTS_GATE_ANIMATION.md) for base animation system
-3. **Advanced Features?** Read [REQUIREMENTS_GATE_ADVANCED_FEATURES.md](../../specs/gate-structure/REQUIREMENTS_GATE_ADVANCED_FEATURES.md) for pass-through, guards, siege integration
-4. **Frontend Work?** Read [REQUIREMENTS_GATE_FRONTEND.md](../../specs/gate-structure/REQUIREMENTS_GATE_FRONTEND.md) for FormWizard and WorldTask specifications
-3. **Advanced Features?** Read [REQUIREMENTS_GATE_ADVANCED_FEATURES.md](../../specs/gate-structure/REQUIREMENTS_GATE_ADVANCED_FEATURES.md) for pass-through, siege, guards
+1. **First Time?** Read [GATE_REQUIREMENTS_SUMMARY.md](GATE_REQUIREMENTS_SUMMARY.md) for complete feature matrix
+2. **Need Details?** Read [REQUIREMENTS_GATE_ANIMATION.md](REQUIREMENTS_GATE_ANIMATION.md) for base animation system
+3. **Advanced Features?** Read [REQUIREMENTS_GATE_ADVANCED_FEATURES.md](REQUIREMENTS_GATE_ADVANCED_FEATURES.md) for pass-through, guards, siege integration
+4. **Frontend Work?** Read [REQUIREMENTS_GATE_FRONTEND.md](REQUIREMENTS_GATE_FRONTEND.md) for FormWizard and WorldTask specifications
+3. **Advanced Features?** Read [REQUIREMENTS_GATE_ADVANCED_FEATURES.md](REQUIREMENTS_GATE_ADVANCED_FEATURES.md) for pass-through, siege, guards
 4. **Starting to Code?** Open [GATE_ANIMATION_QUICK_START.md](./GATE_ANIMATION_QUICK_START.md) in a second window
 5. **Planning Implementation?** Use [GATE_ANIMATION_IMPLEMENTATION_ROADMAP.md](./GATE_ANIMATION_IMPLEMENTATION_ROADMAP.md)
 6. **Tracking Progress?** Copy [IMPLEMENTATION_CHECKLIST.md](./IMPLEMENTATION_CHECKLIST.md) and check off as you go
@@ -130,7 +130,7 @@ All gate animation system documentation is organized in this directory. Start wi
 ## 🔗 Related Documentation
 
 - **Current Entity**: [GateStructure.cs](../../../Repository/knk-web-api/Models/GateStructure.cs)
-- **Architecture Overview**: [docs/CODEMAP.md](../../CODEMAP.md)
+- **Architecture Overview**: [docs/CODEMAP.md](../../guides/developer/CODEMAP.md)
 - **Project Structure**: [docs/specs/project-overview/SOURCES_LOCATION.md](../../specs/project-overview/SOURCES_LOCATION.md)
 - **Minecraft Data**: [Repository/knk-minecraft-data/minecraft-materials.json](../../../Repository/knk-minecraft-data/minecraft-materials.json)
 - **Backend Instructions**: [.github/instructions/knk-backend.instructions.md](../../../.github/instructions/knk-backend.instructions.md)
@@ -141,7 +141,7 @@ All gate animation system documentation is organized in this directory. Start wi
 ## ❓ Common Questions
 
 **Q: Where do I start?**  
-A: Read [REQUIREMENTS_GATE_ANIMATION.md](../../specs/gate-structure/REQUIREMENTS_GATE_ANIMATION.md) first (60-90 min), then decide if you need the quick start or full roadmap.
+A: Read [REQUIREMENTS_GATE_ANIMATION.md](REQUIREMENTS_GATE_ANIMATION.md) first (60-90 min), then decide if you need the quick start or full roadmap.
 
 **Q: What's the difference between PLANE_GRID and FLOOD_FILL?**  
 A: PLANE_GRID is for rectangular gates (portcullis, drawbridge) using 3 reference points. FLOOD_FILL is for irregular shapes (double doors, decorative gates) using seed blocks and BFS.
