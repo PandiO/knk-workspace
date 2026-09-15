@@ -81,7 +81,7 @@ const message = interpolatePlaceholders(validationResult.message, validationResu
 
 ---
 
-### 3. Backend API (knk-web-api-v2)
+### 3. Backend API (knk-web-api)
 
 **Status:** ❓ **Not yet analyzed in implementation code**
 
@@ -325,7 +325,7 @@ player.sendMessage("§c" + errorMsg);
 
 ## Implementation Plan
 
-### Phase 1: Backend API (knk-web-api-v2)
+### Phase 1: Backend API (knk-web-api)
 
 1. **Create ValidationResultDto:**
    ```csharp
@@ -371,7 +371,7 @@ player.sendMessage("§c" + errorMsg);
 
 ---
 
-### Phase 3: Minecraft Plugin (knk-plugin-v2)
+### Phase 3: Minecraft Plugin (knk-plugin)
 
 **No changes needed!** Current implementation in `LocationTaskHandler.validateLocationInsideRegion()` is already correct.
 

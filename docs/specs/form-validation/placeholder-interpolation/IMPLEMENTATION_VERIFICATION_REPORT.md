@@ -28,7 +28,7 @@ The placeholder interpolation feature has been **successfully implemented** acro
 **Objective**: Create foundational data structures and DTOs
 
 #### Deliverable 1.1: PlaceholderPath Model
-- **File**: `Repository/knk-web-api-v2/Models/PlaceholderPath.cs`
+- **File**: `Repository/knk-web-api/Models/PlaceholderPath.cs`
 - **Status**: ✅ **EXISTS**
 - **Key Features**:
   - ✅ Properties: `FullPath`, `Segments`, `Depth`, `FinalSegment`, `NavigationPath`
@@ -43,7 +43,7 @@ The placeholder interpolation feature has been **successfully implemented** acro
 - Clear documentation with examples
 
 #### Deliverable 1.2: PlaceholderResolution DTOs
-- **File**: `Repository/knk-web-api-v2/Dtos/PlaceholderResolutionDtos.cs`
+- **File**: `Repository/knk-web-api/Dtos/PlaceholderResolutionDtos.cs`
 - **Status**: ✅ **EXISTS**
 - **Key Classes**:
   - ✅ `PlaceholderResolutionRequest` - All required properties present
@@ -56,7 +56,7 @@ The placeholder interpolation feature has been **successfully implemented** acro
 - Monitoring metrics (TotalPlaceholdersRequested, IsSuccessful)
 
 #### Deliverable 1.3: Updated FieldValidationRuleDtos
-- **File**: `Repository/knk-web-api-v2/Dtos/FieldValidationRuleDtos.cs`
+- **File**: `Repository/knk-web-api/Dtos/FieldValidationRuleDtos.cs`
 - **Status**: ✅ **UPDATED**
 - **Changes**:
   - ✅ ErrorMessage and SuccessMessage properties documented
@@ -72,7 +72,7 @@ The placeholder interpolation feature has been **successfully implemented** acro
 **Objective**: Implement placeholder resolution services
 
 #### Deliverable 2.1: IPlaceholderResolutionService Interface
-- **File**: `Repository/knk-web-api-v2/Services/Interfaces/IPlaceholderResolutionService.cs`
+- **File**: `Repository/knk-web-api/Services/Interfaces/IPlaceholderResolutionService.cs`
 - **Status**: ✅ **EXISTS**
 - **Key Methods**:
   - ✅ `ExtractPlaceholdersAsync()` - Regex-based placeholder extraction
@@ -86,7 +86,7 @@ The placeholder interpolation feature has been **successfully implemented** acro
 - Design principles documented in interface comments
 
 #### Deliverable 2.2: PlaceholderResolutionService Implementation
-- **File**: `Repository/knk-web-api-v2/Services/PlaceholderResolutionService.cs`
+- **File**: `Repository/knk-web-api/Services/PlaceholderResolutionService.cs`
 - **Status**: ✅ **EXISTS and COMPLETE**
 - **Key Features**:
   - ✅ ExtractPlaceholders: 6 overloads including async variants (713 lines)
@@ -106,7 +106,7 @@ The placeholder interpolation feature has been **successfully implemented** acro
 - 713 lines of production-quality code
 
 #### Deliverable 2.3: IFieldValidationService Interface
-- **File**: `Repository/knk-web-api-v2/Services/Interfaces/IFieldValidationService.cs`
+- **File**: `Repository/knk-web-api/Services/Interfaces/IFieldValidationService.cs`
 - **Status**: ✅ **EXISTS and EXTENDED**
 - **Key Methods**:
   - ✅ `ValidateFieldAsync()` - Main validation entry point
@@ -114,7 +114,7 @@ The placeholder interpolation feature has been **successfully implemented** acro
   - ✅ Validation type implementations for LocationInsideRegion, RegionContainment, ConditionalRequired
 
 #### Deliverable 2.4: FieldValidationService Implementation
-- **File**: `Repository/knk-web-api-v2/Services/FieldValidationService.cs`
+- **File**: `Repository/knk-web-api/Services/FieldValidationService.cs`
 - **Status**: ✅ **EXISTS and COMPLETE**
 - **Key Features**:
   - ✅ ValidateFieldAsync: Orchestrates placeholder resolution and validation dispatch
@@ -131,7 +131,7 @@ The placeholder interpolation feature has been **successfully implemented** acro
 - Metadata tracking for debugging
 
 #### Deliverable 2.5: DI Container Registration
-- **File**: `Repository/knk-web-api-v2/DependencyInjection/ServiceCollectionExtensions.cs`
+- **File**: `Repository/knk-web-api/DependencyInjection/ServiceCollectionExtensions.cs`
 - **Status**: ✅ **VERIFIED**
 - **Registrations**:
   - ✅ `AddScoped<IPlaceholderResolutionService, PlaceholderResolutionService>()`
@@ -146,7 +146,7 @@ The placeholder interpolation feature has been **successfully implemented** acro
 **Objective**: Expose placeholder resolution and validation via HTTP endpoints
 
 #### Deliverable 3.1: FieldValidationRulesController Endpoints
-- **File**: `Repository/knk-web-api-v2/Controllers/FieldValidationRulesController.cs`
+- **File**: `Repository/knk-web-api/Controllers/FieldValidationRulesController.cs`
 - **Status**: ✅ **EXISTS and EXTENDED**
 - **Key Endpoints**:
 
@@ -283,7 +283,7 @@ The placeholder interpolation feature has been **successfully implemented** acro
 **Objective**: Comprehensive testing across all layers
 
 #### 7.1: Backend Unit Tests - PlaceholderResolutionService
-- **File**: `Repository/knk-web-api-v2/Tests/Services/PlaceholderResolutionServiceTests.cs`
+- **File**: `Repository/knk-web-api/Tests/Services/PlaceholderResolutionServiceTests.cs`
 - **Status**: ✅ **EXISTS and COMPREHENSIVE**
 - **Test Coverage**: 30+ test cases spanning:
   - ✅ ExtractPlaceholders (6 tests)
@@ -301,7 +301,7 @@ The placeholder interpolation feature has been **successfully implemented** acro
   - ✅ Fail-open design verification (684 lines)
 
 #### 7.2: Backend Unit Tests - FieldValidationService
-- **File**: `Repository/knk-web-api-v2/Tests/Services/FieldValidationServiceTests.cs`
+- **File**: `Repository/knk-web-api/Tests/Services/FieldValidationServiceTests.cs`
 - **Status**: ✅ **EXISTS and COMPREHENSIVE**
 - **Test Coverage**: 16+ test cases spanning:
   - ✅ ValidateFieldAsync (4 tests)
@@ -317,7 +317,7 @@ The placeholder interpolation feature has been **successfully implemented** acro
   - ✅ Error handling (597 lines)
 
 #### 7.3: Backend Integration Tests
-- **File**: `Repository/knk-web-api-v2/Tests/Integration/PlaceholderResolutionIntegrationTests.cs`
+- **File**: `Repository/knk-web-api/Tests/Integration/PlaceholderResolutionIntegrationTests.cs`
 - **Status**: ✅ **EXISTS and COMPREHENSIVE**
 - **Test Coverage**: 25+ test cases spanning:
   - ✅ Layer 0 resolution (1 test)

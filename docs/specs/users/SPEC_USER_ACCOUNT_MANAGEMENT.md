@@ -127,7 +127,7 @@ All flows must provide:
 
 ---
 
-## Part B: API (knk-web-api-v2) Requirements
+## Part B: API (knk-web-api) Requirements
 
 ### B.1 Data Model Updates
 
@@ -541,7 +541,7 @@ linkExistingAccount(linkCode: string, email: string, password: string): Promise<
 
 ---
 
-## Part D: Minecraft Plugin (knk-plugin-v2) Requirements
+## Part D: Minecraft Plugin (knk-plugin) Requirements
 
 ### D.1 Commands
 

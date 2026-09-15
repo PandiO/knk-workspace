@@ -98,4 +98,4 @@ See [docs/specs/form-configurations/m2m-join-creation-developer-guide.md](docs/s
 - Many-to-many editor: [Repository/knk-web-app/src/components/FormWizard/ManyToManyRelationshipEditor.tsx](Repository/knk-web-app/src/components/FormWizard/ManyToManyRelationshipEditor.tsx)
 - Form wizard: [Repository/knk-web-app/src/components/FormWizard/FormWizard.tsx](Repository/knk-web-app/src/components/FormWizard/FormWizard.tsx)
 - Builder support for child steps: [Repository/knk-web-app/src/components/FormConfigBuilder/StepEditor.tsx](Repository/knk-web-app/src/components/FormConfigBuilder/StepEditor.tsx)
-- Backend DTO expectation for join entities: [Repository/knk-web-api-v2/Dtos/ItemBlueprintDtos.cs](Repository/knk-web-api-v2/Dtos/ItemBlueprintDtos.cs)
+- Backend DTO expectation for join entities: [Repository/knk-web-api/Dtos/ItemBlueprintDtos.cs](Repository/knk-web-api/Dtos/ItemBlueprintDtos.cs)

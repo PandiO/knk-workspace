@@ -6,7 +6,7 @@
 
 ---
 
-## knk-web-api-v2
+## knk-web-api
 
 **Subject:** `test(validation): add comprehensive e2e tests for dependency resolution`
 
@@ -144,11 +144,11 @@ These commits represent the completion of Phase 8 (Testing & Documentation) for
 the multi-layer dependency resolution v2.0 feature.
 
 **Repositories affected:**
-- ✅ knk-web-api-v2: E2E test suite (485 lines)
+- ✅ knk-web-api: E2E test suite (485 lines)
 - ✅ docs: Documentation and testing reports (70+ pages)
 
 **No changes to:**
 - knk-web-app: Testing/documentation phase (no code changes needed)
-- knk-plugin-v2: Testing/documentation phase (no code changes needed)
+- knk-plugin: Testing/documentation phase (no code changes needed)
 
 **Overall status:** Phase 8 COMPLETE - Ready for production deployment

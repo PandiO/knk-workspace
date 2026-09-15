@@ -187,7 +187,7 @@ Summary: 16+ tests PASS, 0 FAIL
 
 ### E2E Testing (Ready)
 - Test procedures documented in PHASE_7_IMPLEMENTATION_COMPLETE.md
-- Requires Minecraft server with knk-plugin-v2
+- Requires Minecraft server with knk-plugin
 - Requires FormWizard with world-bound field
 - Requires workflow session
 

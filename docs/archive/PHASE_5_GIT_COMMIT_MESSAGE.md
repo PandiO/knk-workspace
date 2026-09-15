@@ -7,7 +7,7 @@
 
 ---
 
-## knk-plugin-v2
+## knk-plugin
 
 **Subject:**
 ```
@@ -120,9 +120,9 @@ Related: docs/ai/plugin-auth/PLUGIN_USER_ACCOUNT_IMPLEMENTATION_ROADMAP.md
 
 Execute commits in this order:
 
-1. **knk-plugin-v2** (implementation)
+1. **knk-plugin** (implementation)
    ```bash
-   cd Repository/knk-plugin-v2
+   cd Repository/knk-plugin
    git add -A
    git commit -m "feat(command): add cooldowns, error handling, and logging (Phase 5)"
    # Paste full description from above

@@ -336,7 +336,7 @@ The system must support mapping a Web App admin to an in-game identity to allow 
 
 **Core Components:**
 
-1. **Entity Metadata System** ([Repository/knk-web-api-v2/Attributes](Repository/knk-web-api-v2/Attributes))
+1. **Entity Metadata System** ([Repository/knk-web-api/Attributes](Repository/knk-web-api/Attributes))
    - `[FormConfigurableEntity(string entityName)]` - marks entities as form-capable
    - `[RelatedEntityField(Type relatedType)]` - marks navigation/FK properties
    - `[NavigationPair(string navigationPropertyName)]` - pairs FK int with navigation object

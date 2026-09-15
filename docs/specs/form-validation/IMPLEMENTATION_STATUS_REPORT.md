@@ -30,7 +30,7 @@ The inter-field validation dependencies feature for the FormConfiguration system
 
 **Status:** Fully implemented in production code
 
-**File:** `Repository/knk-web-api-v2/Models/FormConfiguration/FieldValidationRule.cs`
+**File:** `Repository/knk-web-api/Models/FormConfiguration/FieldValidationRule.cs`
 
 **Verified Properties:**
 - ✅ `Id` (int, primary key)
@@ -59,7 +59,7 @@ The inter-field validation dependencies feature for the FormConfiguration system
 
 **Status:** Fully implemented in production code
 
-**File:** `Repository/knk-web-api-v2/Dtos/FieldValidationRuleDtos.cs`
+**File:** `Repository/knk-web-api/Dtos/FieldValidationRuleDtos.cs`
 
 **Implemented DTOs:**
 1. ✅ `FieldValidationRuleDto` (read operations)
@@ -82,7 +82,7 @@ The inter-field validation dependencies feature for the FormConfiguration system
 
 **Status:** Fully implemented in production code
 
-**File:** `Repository/knk-web-api-v2/Repositories/FieldValidationRuleRepository.cs`
+**File:** `Repository/knk-web-api/Repositories/FieldValidationRuleRepository.cs`
 
 **Implemented Methods:**
 - ✅ `GetByIdAsync(int id)` - with Include for navigation properties
@@ -100,7 +100,7 @@ The inter-field validation dependencies feature for the FormConfiguration system
 - ✅ Queue-based dependency traversal
 - ✅ Comprehensive null checks
 
-**Repository Interface:** `Repository/knk-web-api-v2/Repositories/Interfaces/IFieldValidationRuleRepository.cs` (verified exists)
+**Repository Interface:** `Repository/knk-web-api/Repositories/Interfaces/IFieldValidationRuleRepository.cs` (verified exists)
 
 ---
 
@@ -108,7 +108,7 @@ The inter-field validation dependencies feature for the FormConfiguration system
 
 **Status:** Fully implemented in production code
 
-**File:** `Repository/knk-web-api-v2/Services/ValidationService.cs`
+**File:** `Repository/knk-web-api/Services/ValidationService.cs`
 
 **Implemented Methods:**
 
@@ -156,7 +156,7 @@ The inter-field validation dependencies feature for the FormConfiguration system
 
 **Status:** All 3 validation methods fully implemented
 
-**Directory:** `Repository/knk-web-api-v2/Services/ValidationMethods/`
+**Directory:** `Repository/knk-web-api/Services/ValidationMethods/`
 
 #### 5.1 LocationInsideRegionValidator ✅
 
@@ -203,7 +203,7 @@ The inter-field validation dependencies feature for the FormConfiguration system
 
 **Status:** Fully implemented in production code
 
-**File:** `Repository/knk-web-api-v2/Controllers/FieldValidationRulesController.cs`
+**File:** `Repository/knk-web-api/Controllers/FieldValidationRulesController.cs`
 
 **API Endpoints:**
 
@@ -657,7 +657,7 @@ The **inter-field validation dependencies feature is fully implemented and opera
 
 ### Backend Files
 ```
-Repository/knk-web-api-v2/
+Repository/knk-web-api/
 ├── Models/FormConfiguration/
 │   └── FieldValidationRule.cs ✅ (116 lines)
 ├── Dtos/

@@ -35,7 +35,7 @@
 **Time:** 1 hour
 
 ```csharp
-// File: Repository/knk-web-api-v2/Models/FormConfiguration/FieldValidationRule.cs
+// File: Repository/knk-web-api/Models/FormConfiguration/FieldValidationRule.cs
 
 // ADD:
 /// <summary>
@@ -58,7 +58,7 @@ public string? DependencyPath { get; set; }
 **Time:** 1 hour
 
 ```sql
--- File: Repository/knk-web-api-v2/Migrations/[date]_AddDependencyPathToFieldValidationRules.cs
+-- File: Repository/knk-web-api/Migrations/[date]_AddDependencyPathToFieldValidationRules.cs
 
 CREATE MIGRATION: AddDependencyPathToFieldValidationRules
   ALTER TABLE dbo.FieldValidationRules
@@ -79,7 +79,7 @@ CREATE MIGRATION: AddDependencyPathToFieldValidationRules
 #### 1.3 Implement IPathResolutionService Interface
 **Time:** 2 hours
 
-**File:** `Repository/knk-web-api-v2/Services/Interfaces/IPathResolutionService.cs`
+**File:** `Repository/knk-web-api/Services/Interfaces/IPathResolutionService.cs`
 
 ```csharp
 public interface IPathResolutionService
@@ -120,7 +120,7 @@ public interface IPathResolutionService
 }
 ```
 
-**Implementation File:** `Repository/knk-web-api-v2/Services/PathResolutionService.cs`
+**Implementation File:** `Repository/knk-web-api/Services/PathResolutionService.cs`
 
 **Key Methods:**
 
@@ -350,7 +350,7 @@ public class PathResolutionService : IPathResolutionService
 #### 1.5 Write Unit Tests for PathResolutionService
 **Time:** 2 hours
 
-**Test File:** `Repository/knk-web-api-v2.Tests/Services/PathResolutionServiceTests.cs`
+**Test File:** `Repository/knk-web-api.Tests/Services/PathResolutionServiceTests.cs`
 
 ```csharp
 [TestClass]
@@ -787,7 +787,7 @@ public class CachedDependencyResolutionService : IDependencyResolutionService
 #### 2.5 Write Integration Tests
 **Time:** 2 hours
 
-**Test File:** `Repository/knk-web-api-v2.Tests/Controllers/FieldValidationRulesControllerTests.cs`
+**Test File:** `Repository/knk-web-api.Tests/Controllers/FieldValidationRulesControllerTests.cs`
 
 ```csharp
 [TestClass]

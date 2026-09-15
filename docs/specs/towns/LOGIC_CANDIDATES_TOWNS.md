@@ -5,7 +5,7 @@
 - **B) Plugin-Only**: Minecraft world interactions (WorldGuard/WorldEdit, block checks, world state)
 - **C) Shared Core Service**: Pure domain logic usable by both Plugin and API
 
-**Scope**: Legacy knk repository → knk-plugin-v2 architecture
+**Scope**: Legacy knk repository → knk-plugin architecture
 **Based On**: SOURCES_TOWNS.md, legacy code, SPEC_TOWNS.md
 
 ---

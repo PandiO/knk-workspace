@@ -22,7 +22,7 @@ This guide provides comprehensive end-to-end test scenarios to validate placehol
 ### Environment Setup
 - [ ] Backend API running on `localhost:5000`
 - [ ] Web application running on `localhost:3000`
-- [ ] Minecraft server running with knk-plugin-v2 installed
+- [ ] Minecraft server running with knk-plugin installed
 - [ ] Test database seeded with sample data
 - [ ] Browser developer tools accessible (F12)
 - [ ] Minecraft client connected to test server

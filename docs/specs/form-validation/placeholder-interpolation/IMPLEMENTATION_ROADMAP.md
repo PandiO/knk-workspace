@@ -928,7 +928,7 @@ Update `LocationTaskHandler.java`:
   - Layer 1: `{Town.Name}`
   - Computed: `{coordinates}`
 
-**File**: `knk-plugin-v2/knk-paper/src/main/java/.../tasks/LocationTaskHandler.java`
+**File**: `knk-plugin/knk-paper/src/main/java/.../tasks/LocationTaskHandler.java`
 
 **Effort**: 1 hour
 
@@ -944,7 +944,7 @@ Update `WgRegionIdTaskHandler.java` (if exists):
   
 - [ ] Test validation with pre-resolved placeholders
 
-**File**: `knk-plugin-v2/knk-paper/src/main/java/.../tasks/WgRegionIdTaskHandler.java`
+**File**: `knk-plugin/knk-paper/src/main/java/.../tasks/WgRegionIdTaskHandler.java`
 
 **Effort**: 1 hour
 
@@ -974,7 +974,7 @@ Create `PlaceholderInterpolationUtil.java`:
 - [ ] Add logging for unresolved placeholders (debug mode)
 - [ ] Use in both LocationTaskHandler and WgRegionIdTaskHandler
 
-**File**: `knk-plugin-v2/knk-paper/src/main/java/.../util/PlaceholderInterpolationUtil.java` (new)
+**File**: `knk-plugin/knk-paper/src/main/java/.../util/PlaceholderInterpolationUtil.java` (new)
 
 **Effort**: 30 minutes
 
@@ -1449,9 +1449,9 @@ To comply with the "Global Design Principles" section above, this checklist iden
 
 | Component | Location | How to Update | Phase |
 |-----------|----------|---------------|-------|
-| **LocationTaskHandler** | `knk-plugin-v2/knk-paper/src/main/java/.../tasks/LocationTaskHandler.java` | Update interpolation logic in `validateLocationInsideRegion` method | Phase 6 |
-| **WgRegionIdTaskHandler** | `knk-plugin-v2/knk-paper/src/main/java/.../tasks/WgRegionIdTaskHandler.java` | Apply same interpolation pattern as LocationTaskHandler | Phase 6 |
-| **TaskValidationContext** | `knk-plugin-v2/knk-paper/src/main/java/.../tasks/` | Use to pass pre-resolved placeholders from InputJson | Phase 6 |
+| **LocationTaskHandler** | `knk-plugin/knk-paper/src/main/java/.../tasks/LocationTaskHandler.java` | Update interpolation logic in `validateLocationInsideRegion` method | Phase 6 |
+| **WgRegionIdTaskHandler** | `knk-plugin/knk-paper/src/main/java/.../tasks/WgRegionIdTaskHandler.java` | Apply same interpolation pattern as LocationTaskHandler | Phase 6 |
+| **TaskValidationContext** | `knk-plugin/knk-paper/src/main/java/.../tasks/` | Use to pass pre-resolved placeholders from InputJson | Phase 6 |
 
 ### Testing Utilities to Leverage
 

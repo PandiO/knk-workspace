@@ -37,7 +37,7 @@ Phase 7 establishes a robust testing framework across all layers of the placehol
 ## Deliverables
 
 ### 7.1 Backend Unit Tests - PlaceholderResolutionService
-**File**: `Repository/knk-web-api-v2/Tests/Services/PlaceholderResolutionServiceTests.cs` (NEW)
+**File**: `Repository/knk-web-api/Tests/Services/PlaceholderResolutionServiceTests.cs` (NEW)
 
 **Purpose**: Test placeholder extraction, layer resolution, and interpolation logic
 
@@ -97,7 +97,7 @@ Phase 7 establishes a robust testing framework across all layers of the placehol
 ---
 
 ### 7.2 Backend Unit Tests - FieldValidationService
-**File**: `Repository/knk-web-api-v2/Tests/Services/FieldValidationServiceTests.cs` (NEW)
+**File**: `Repository/knk-web-api/Tests/Services/FieldValidationServiceTests.cs` (NEW)
 
 **Purpose**: Test validation execution with placeholder resolution integration
 
@@ -143,7 +143,7 @@ Phase 7 establishes a robust testing framework across all layers of the placehol
 ---
 
 ### 7.3 Backend Integration Tests - API Endpoints
-**File**: `Repository/knk-web-api-v2/Tests/Integration/PlaceholderResolutionIntegrationTests.cs` (NEW)
+**File**: `Repository/knk-web-api/Tests/Integration/PlaceholderResolutionIntegrationTests.cs` (NEW)
 
 **Purpose**: Test full flow from API request through database queries to resolved placeholders
 

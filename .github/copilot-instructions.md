@@ -2,9 +2,9 @@
 
 ## Objective
 Help implement Knights & Kings features by extending the existing architecture across:
-- Repository/knk-web-api-v2 (.NET Web API)
+- Repository/knk-web-api (.NET Web API)
 - Repository/knk-web-app (React/TypeScript web app)
-- Repository/knk-plugin-v2 (Minecraft plugin)
+- Repository/knk-plugin (Minecraft plugin)
 
 ## Global rules (apply always)
 - Prefer existing patterns. Before creating anything new, locate a “reference implementation” in the codebase and follow it.

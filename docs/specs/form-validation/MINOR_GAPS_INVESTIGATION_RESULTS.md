@@ -20,7 +20,7 @@ All originally suspected "missing" components have been **FOUND and verified**. 
 
 **Status:** Initially reported as "not found" → **Now verified as COMPLETE**
 
-**Location:** `Repository/knk-web-api-v2/Migrations/20251223135917_InitialCreate.cs`
+**Location:** `Repository/knk-web-api/Migrations/20251223135917_InitialCreate.cs`
 
 **Evidence:**
 - Migration file created: December 23, 2025
@@ -67,7 +67,7 @@ migrationBuilder.CreateTable(
 
 **Status:** Initially reported as "not verified" → **Now verified as COMPLETE**
 
-**Location:** `Repository/knk-web-api-v2/DependencyInjection/ServiceCollectionExtensions.cs`
+**Location:** `Repository/knk-web-api/DependencyInjection/ServiceCollectionExtensions.cs`
 
 **Evidence:**
 
@@ -104,7 +104,7 @@ services.AddScoped<IValidationMethod, ConditionalRequiredValidator>();
 
 **Status:** Initially reported as "not verified" → **Now verified as COMPLETE**
 
-**Location:** `Repository/knk-web-api-v2/Mapping/FieldValidationRuleProfile.cs`
+**Location:** `Repository/knk-web-api/Mapping/FieldValidationRuleProfile.cs`
 
 **Evidence:**
 

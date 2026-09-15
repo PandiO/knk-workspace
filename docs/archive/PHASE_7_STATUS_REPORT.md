@@ -33,7 +33,7 @@ Phase 7 implementation (Testing & Validation) has been **substantially completed
 ## Issues Encountered
 
 ### 1. Backend Compilation Error
-- **File**: `Repository/knk-web-api-v2/Services/ValidationMethods/ConditionalRequiredValidator.cs:121`
+- **File**: `Repository/knk-web-api/Services/ValidationMethods/ConditionalRequiredValidator.cs:121`
 - **Issue**: Nullable type pattern matching syntax error
 - **Cause**: C# language version doesn't support `int?` in switch patterns
 - **Fix**: Add `<LangVersion>latest</LangVersion>` to knkwebapi_v2.csproj

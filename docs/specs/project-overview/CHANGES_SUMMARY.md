@@ -7,7 +7,7 @@ This document summarizes the changes made to the requirements and new files crea
 ## Files Created
 
 ### 1. `FieldValidationRule.cs`
-**Location:** `Repository/knk-web-api-v2/Models/FormConfiguration/FieldValidationRule.cs`
+**Location:** `Repository/knk-web-api/Models/FormConfiguration/FieldValidationRule.cs`
 
 **Purpose:** Entity model for field-level validation rules
 
@@ -21,7 +21,7 @@ This document summarizes the changes made to the requirements and new files crea
 ---
 
 ### 2. `FieldValidationRuleDtos.cs`
-**Location:** `Repository/knk-web-api-v2/Dtos/Forms/FieldValidationRuleDtos.cs`
+**Location:** `Repository/knk-web-api/Dtos/Forms/FieldValidationRuleDtos.cs`
 
 **Contains:**
 - `FieldValidationRuleDto`: Read DTO
@@ -34,7 +34,7 @@ This document summarizes the changes made to the requirements and new files crea
 ---
 
 ### 3. `IMPLEMENTATION_ROADMAP.md`
-**Location:** `Repository/knk-plugin-v2/spec/IMPLEMENTATION_ROADMAP.md`
+**Location:** `Repository/knk-plugin/spec/IMPLEMENTATION_ROADMAP.md`
 
 **Purpose:** Clear separation of Workstream A (Hybrid Workflow) and Workstream B (Validation Framework)
 

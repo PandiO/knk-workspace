@@ -286,7 +286,7 @@ public class FieldValidationRule
 - **Parent Directory:** [../](../) - Form validation root specs
 - **Placeholder Interpolation:** [../placeholder-interpolation/](../placeholder-interpolation/)
 - **Original Spec (v1):** [../SPEC_INTER_FIELD_VALIDATION_DEPENDENCIES.md](../SPEC_INTER_FIELD_VALIDATION_DEPENDENCIES.md)
-- **Git Conventions:** [../../../GIT_COMMIT_CONVENTIONS.md](../../../GIT_COMMIT_CONVENTIONS.md)
+- **Git Conventions:** [../../../GIT_COMMIT_CONVENTIONS.md](../../../guides/developer/GIT_COMMIT_CONVENTIONS.md)
 
 ---
 

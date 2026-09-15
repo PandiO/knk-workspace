@@ -327,9 +327,9 @@ git checkout -b feature/validation-service-consolidation
 git tag backup-before-validation-consolidation
 
 # Build verification (run after each phase)
-cd Repository/knk-web-api-v2 && dotnet build
+cd Repository/knk-web-api && dotnet build
 cd ../knk-web-app && npm run build
-cd ../knk-plugin-v2 && ./gradlew build
+cd ../knk-plugin && ./gradlew build
 
 # Test verification
 dotnet test Tests/Services/ValidationServiceTests.cs

@@ -21,7 +21,7 @@ Phase 1 successfully implements the foundational backend infrastructure for mult
 ## ✅ Deliverables Completed
 
 ### 1. Updated FieldValidationRule Entity Model
-**File:** `Repository/knk-web-api-v2/Models/FormConfiguration/FieldValidationRule.cs`
+**File:** `Repository/knk-web-api/Models/FormConfiguration/FieldValidationRule.cs`
 
 **Changes:**
 - ✅ Added `DependencyPath` property (nullable string, max 500 chars)
@@ -56,7 +56,7 @@ public string? DependencyPath { get; set; }
 ---
 
 ### 2. Database Migration Script
-**File:** `Repository/knk-web-api-v2/Migrations/20260210000000_AddDependencyPathToFieldValidationRules.cs`
+**File:** `Repository/knk-web-api/Migrations/20260210000000_AddDependencyPathToFieldValidationRules.cs`
 
 **Changes:**
 - ✅ Adds `DependencyPath` column (varchar(500), nullable, case-insensitive)
@@ -82,7 +82,7 @@ ON dbo.fieldvalidationrules(FormFieldId, DependencyPath);
 ---
 
 ### 3. IPathResolutionService Interface
-**File:** `Repository/knk-web-api-v2/Services/Interfaces/IPathResolutionService.cs`
+**File:** `Repository/knk-web-api/Services/Interfaces/IPathResolutionService.cs`
 
 **Key Methods:**
 1. **ResolvePathAsync** - Navigate entity relationships to extract values
@@ -109,7 +109,7 @@ ON dbo.fieldvalidationrules(FormFieldId, DependencyPath);
 ---
 
 ### 4. PathResolutionService Implementation
-**File:** `Repository/knk-web-api-v2/Services/PathResolutionService.cs`
+**File:** `Repository/knk-web-api/Services/PathResolutionService.cs`
 
 **Implementation Highlights:**
 
@@ -189,7 +189,7 @@ ON dbo.fieldvalidationrules(FormFieldId, DependencyPath);
 ---
 
 ### 6. Dependency Injection Registration
-**File:** `Repository/knk-web-api-v2/DependencyInjection/ServiceCollectionExtensions.cs`
+**File:** `Repository/knk-web-api/DependencyInjection/ServiceCollectionExtensions.cs`
 
 **Change:**
 ```csharp
@@ -252,7 +252,7 @@ services.AddScoped<IPathResolutionService, PathResolutionService>();
 
 **Build Command:**
 ```bash
-cd Repository/knk-web-api-v2
+cd Repository/knk-web-api
 dotnet build knkwebapi_v2.csproj
 ```
 
@@ -300,15 +300,15 @@ Phase 2 will build upon this foundation to implement:
 ## 📄 Files Created/Modified
 
 ### Created (5 files)
-1. `Repository/knk-web-api-v2/Migrations/20260210000000_AddDependencyPathToFieldValidationRules.cs`
-2. `Repository/knk-web-api-v2/Services/Interfaces/IPathResolutionService.cs`
-3. `Repository/knk-web-api-v2/Services/PathResolutionService.cs`
+1. `Repository/knk-web-api/Migrations/20260210000000_AddDependencyPathToFieldValidationRules.cs`
+2. `Repository/knk-web-api/Services/Interfaces/IPathResolutionService.cs`
+3. `Repository/knk-web-api/Services/PathResolutionService.cs`
 4. `Repository/knkwebapi_v2.Tests/Services/PathResolutionServiceTests.cs`
 5. `docs/specs/form-validation/dependency-resolution-v2/PHASE_1_IMPLEMENTATION_SUMMARY.md` (this file)
 
 ### Modified (2 files)
-1. `Repository/knk-web-api-v2/Models/FormConfiguration/FieldValidationRule.cs`
-2. `Repository/knk-web-api-v2/DependencyInjection/ServiceCollectionExtensions.cs`
+1. `Repository/knk-web-api/Models/FormConfiguration/FieldValidationRule.cs`
+2. `Repository/knk-web-api/DependencyInjection/ServiceCollectionExtensions.cs`
 
 **Total:** 7 files (5 new, 2 modified)
 

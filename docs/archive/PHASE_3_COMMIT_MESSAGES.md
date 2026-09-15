@@ -7,7 +7,7 @@
 
 ---
 
-## knk-plugin-v2
+## knk-plugin
 
 ### Commit 1: Core Chat Capture Components
 
@@ -134,11 +134,11 @@ Documentation provides:
 ## Implementation Summary
 
 ### Affected Repositories
-- ✅ **knk-plugin-v2**: 6 new classes + 1 modified (KnKPlugin.java)
+- ✅ **knk-plugin**: 6 new classes + 1 modified (KnKPlugin.java)
 - ✅ **docs**: 4 new documentation files
 
 ### NOT Affected (Completed in Earlier Phases)
-- ❌ **knk-web-api-v2**: Phase 1 (API complete, no Phase 3 changes)
+- ❌ **knk-web-api**: Phase 1 (API complete, no Phase 3 changes)
 - ❌ **knk-web-app**: Not applicable to Phase 3 (frontend in progress)
 
 ### Build Status
@@ -161,10 +161,10 @@ Documentation provides:
 
 When submitting commits, use this order:
 
-1. **First**: knk-plugin-v2 Commit 1 (Core Chat Capture Components)
+1. **First**: knk-plugin Commit 1 (Core Chat Capture Components)
    - Introduces the new chat capture module
    
-2. **Second**: knk-plugin-v2 Commit 2 (Integration)
+2. **Second**: knk-plugin Commit 2 (Integration)
    - Wires chat capture into plugin
    - Depends on Commit 1
 

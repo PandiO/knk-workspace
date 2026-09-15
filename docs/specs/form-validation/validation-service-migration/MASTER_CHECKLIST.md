@@ -54,7 +54,7 @@ public interface IFieldValidationRuleService
 
 **File**: `Services/FieldValidationRuleService.cs` (CREATE)
 
-**Source Code Location**: Extract from [ValidationService.cs](../../../Repository/knk-web-api-v2/Services/ValidationService.cs)
+**Source Code Location**: Extract from [ValidationService.cs](../../../Repository/knk-web-api/Services/ValidationService.cs)
 
 **Methods to Extract** (Copy these exact line ranges):
 - [ ] Lines 40-45: `GetByIdAsync(int id)`
@@ -695,7 +695,7 @@ Remove-Item Tests/Services/FieldValidationServiceTests.cs
 ### 5.4 Verify Zero References to Deleted Code
 
 ```bash
-cd Repository/knk-web-api-v2
+cd Repository/knk-web-api
 
 # Search for deprecated service (should return 0 matches)
 Select-String -Pattern "IFieldValidationService|FieldValidationService" -Path "**/*.cs" -Recurse
@@ -719,7 +719,7 @@ Select-String -Pattern "ValidateFieldRule" -Path "**/*.cs"
 ### 5.5 Full Build & Test Verification
 
 ```bash
-cd Repository/knk-web-api-v2
+cd Repository/knk-web-api
 
 # Clean build
 dotnet clean
@@ -1038,7 +1038,7 @@ private static JsonObject mergePlaceholders(JsonObject target, JsonObject source
 ### 7.4 Plugin Build & Test
 
 ```bash
-cd Repository/knk-plugin-v2
+cd Repository/knk-plugin
 
 # Build
 ./gradlew clean build
@@ -1062,7 +1062,7 @@ cd Repository/knk-plugin-v2
 
 ```bash
 # Backend
-cd Repository/knk-web-api-v2
+cd Repository/knk-web-api
 dotnet publish -c Release
 
 # Frontend
@@ -1070,7 +1070,7 @@ cd Repository/knk-web-app
 npm run build
 
 # Plugin
-cd Repository/knk-plugin-v2
+cd Repository/knk-plugin
 ./gradlew :knk-paper:build
 
 # Deploy and smoke test (see IMPLEMENTATION_ROADMAP for details)

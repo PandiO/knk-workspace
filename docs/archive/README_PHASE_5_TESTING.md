@@ -246,9 +246,9 @@ knk-workspace/
 
 | Document | Purpose | Location |
 |----------|---------|----------|
-| SPEC_USER_ACCOUNT_MANAGEMENT.md | Full specification | knk-plugin-v2/spec/ |
-| USER_ACCOUNT_MANAGEMENT_IMPLEMENTATION_ROADMAP.md | Phased implementation plan | knk-plugin-v2/spec/ |
-| USER_ACCOUNT_MANAGEMENT_QUICK_REFERENCE.md | Design decisions reference | knk-plugin-v2/spec/ |
+| SPEC_USER_ACCOUNT_MANAGEMENT.md | Full specification | knk-plugin/spec/ |
+| USER_ACCOUNT_MANAGEMENT_IMPLEMENTATION_ROADMAP.md | Phased implementation plan | knk-plugin/spec/ |
+| USER_ACCOUNT_MANAGEMENT_QUICK_REFERENCE.md | Design decisions reference | knk-plugin/spec/ |
 | PHASE_5_TESTING_SUMMARY.md | Test overview | knkwebapi_v2/ |
 | PHASE_5_TESTING_IMPLEMENTATION_NOTES.md | Implementation details | knkwebapi_v2/ |
 | PHASE_5_COMPLETION_REPORT.md | Executive summary | knk-workspace/ |

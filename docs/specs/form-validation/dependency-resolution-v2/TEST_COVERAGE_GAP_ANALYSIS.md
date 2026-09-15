@@ -28,7 +28,7 @@
 
 ## Detailed Analysis
 
-### 1. Backend Testing (.NET / knk-web-api-v2)
+### 1. Backend Testing (.NET / knk-web-api)
 
 #### 1.1 Test Files Found
 
@@ -277,12 +277,12 @@ describe('District Creation with Validation', () => {
 
 ---
 
-### 4. Plugin Testing (Java / knk-plugin-v2)
+### 4. Plugin Testing (Java / knk-plugin)
 
 #### 4.1 Test Files Found
 
 ```
-Repository/knk-plugin-v2/
+Repository/knk-plugin/
 └── (11 test files found but NO validation-related tests)
 
 FILES:

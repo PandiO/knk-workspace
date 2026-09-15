@@ -184,7 +184,7 @@ npm test -- --coverage WorldBoundFieldRenderer.phase7.test.tsx
 
 #### Prerequisites
 
-1. Minecraft server running with knk-plugin-v2
+1. Minecraft server running with knk-plugin
 2. FormWizard with world-bound field (e.g., "wgRegionId")
 3. Workflow session ID available
 

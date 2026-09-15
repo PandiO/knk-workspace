@@ -44,7 +44,7 @@ This document provides a step-by-step implementation plan organized by component
 #### 1.1 Create FieldValidationRule Entity
 **Effort:** 30 minutes
 
-**File:** `Repository/knk-web-api-v2/Models/FieldValidationRule.cs`
+**File:** `Repository/knk-web-api/Models/FieldValidationRule.cs`
 
 **Tasks:**
 - [ ] Create FieldValidationRule class
@@ -77,7 +77,7 @@ public class FieldValidationRule
 #### 1.2 Update FormField Entity
 **Effort:** 10 minutes
 
-**File:** `Repository/knk-web-api-v2/Models/FormField.cs`
+**File:** `Repository/knk-web-api/Models/FormField.cs`
 
 **Tasks:**
 - [ ] Add `ValidationRules` navigation property
@@ -96,7 +96,7 @@ public List<FieldValidationRule> ValidationRules { get; set; } = new();
 #### 1.3 Update DbContext
 **Effort:** 15 minutes
 
-**File:** `Repository/knk-web-api-v2/Data/ApplicationDbContext.cs`
+**File:** `Repository/knk-web-api/Data/ApplicationDbContext.cs`
 
 **Tasks:**
 - [ ] Add `DbSet<FieldValidationRule> FieldValidationRules { get; set; }`
@@ -120,12 +120,12 @@ modelBuilder.Entity<FieldValidationRule>()
 ```
 
 ---
-- [ ] Run: `dotnet ef migrations add AddFieldValidationRule --project Repository/knk-web-api-v2`
+- [ ] Run: `dotnet ef migrations add AddFieldValidationRule --project Repository/knk-web-api`
     #### 1.1 Create FieldValidationRule Entity
     **Effort:** 30 minutes
     **Status:** ✅ COMPLETE
 
-    **File:** `Repository/knk-web-api-v2/Models/FieldValidationRule.cs`
+    **File:** `Repository/knk-web-api/Models/FieldValidationRule.cs`
 
     **Tasks:**
     - [x] Create FieldValidationRule class
@@ -139,8 +139,8 @@ modelBuilder.Entity<FieldValidationRule>()
   - FK to FormFields for DependsOnFieldId (NO ACTION)
   - Indexes on FormFieldId, DependsOnFieldId
 - [ ] Review generated SQL
-- [ ] Apply: `dotnet ef database update --project Repository/knk-web-api-v2`
-**Files:** `Repository/knk-web-api-v2/Migrations/[timestamp]_AddFieldValidationRule.cs`
+- [ ] Apply: `dotnet ef database update --project Repository/knk-web-api`
+**Files:** `Repository/knk-web-api/Migrations/[timestamp]_AddFieldValidationRule.cs`
     #### 1.2 Update FormField Entity
     **Effort:** 10 minutes
     **Status:** ✅ COMPLETE
@@ -150,7 +150,7 @@ modelBuilder.Entity<FieldValidationRule>()
 **Effort:** 20 minutes
 **Status:** ✅ COMPLETE
 
-**File:** `Repository/knk-web-api-v2/Repositories/Interfaces/IFieldValidationRuleRepository.cs`
+**File:** `Repository/knk-web-api/Repositories/Interfaces/IFieldValidationRuleRepository.cs`
 
 **Tasks:**
 - [x] Define repository interface
@@ -168,7 +168,7 @@ modelBuilder.Entity<FieldValidationRule>()
 **Effort:** 1.5 hours
 **Status:** ✅ COMPLETE
 
-**File:** `Repository/knk-web-api-v2/Repositories/FieldValidationRuleRepository.cs`
+**File:** `Repository/knk-web-api/Repositories/FieldValidationRuleRepository.cs`
 
 **Tasks:**
 - [x] Implement all interface methods
@@ -178,7 +178,7 @@ modelBuilder.Entity<FieldValidationRule>()
     **Effort:** 15 minutes
     **Status:** ✅ COMPLETE
 
-    **File:** `Repository/knk-web-api-v2/Data/ApplicationDbContext.cs`
+    **File:** `Repository/knk-web-api/Data/ApplicationDbContext.cs`
 
     **Tasks:**
     - [x] Add `DbSet<FieldValidationRule> FieldValidationRules { get; set; }`
@@ -187,7 +187,7 @@ modelBuilder.Entity<FieldValidationRule>()
 **Effort:** 15 minutes
 **Status:** ✅ COMPLETE
 
-**File:** `Repository/knk-web-api-v2/Services/Interfaces/IValidationMethod.cs`
+**File:** `Repository/knk-web-api/Services/Interfaces/IValidationMethod.cs`
 
 **Tasks:**
 - [x] Define interface for validation method implementations
@@ -208,7 +208,7 @@ modelBuilder.Entity<FieldValidationRule>()
 **Effort:** 20 minutes
 **Status:** ✅ COMPLETE
 
-**File:** `Repository/knk-web-api-v2/Services/Interfaces/IValidationService.cs`
+**File:** `Repository/knk-web-api/Services/Interfaces/IValidationService.cs`
 
 **Tasks:**
 - [x] Define service interface
@@ -219,7 +219,7 @@ modelBuilder.Entity<FieldValidationRule>()
 **Reference:** See SPEC Part B.5 for complete interface
 
     **Tasks:**
-    - [x] Run: `dotnet ef migrations add AddFieldValidationRule --project Repository/knk-web-api-v2`
+    - [x] Run: `dotnet ef migrations add AddFieldValidationRule --project Repository/knk-web-api`
     - [x] Verify migration includes:
         - FieldValidationRules table creation
         - FK to FormFields (cascade delete)
@@ -229,7 +229,7 @@ modelBuilder.Entity<FieldValidationRule>()
 **Effort:** 2 hours
 **Status:** ✅ COMPLETE
 
-**File:** `Repository/knk-web-api-v2/Services/ValidationService.cs`
+**File:** `Repository/knk-web-api/Services/ValidationService.cs`
 
 **Tasks:**
 - [x] Implement ValidateFieldAsync with rule execution orchestration
@@ -254,7 +254,7 @@ modelBuilder.Entity<FieldValidationRule>()
 **Effort:** 10 minutes
 **Status:** ✅ COMPLETE
 
-**File:** `Repository/knk-web-api-v2/DependencyInjection/ServiceCollectionExtensions.cs`
+**File:** `Repository/knk-web-api/DependencyInjection/ServiceCollectionExtensions.cs`
 
 **Tasks:**
 - [x] Register IFieldValidationRuleRepository → FieldValidationRuleRepository (Scoped)
@@ -290,7 +290,7 @@ modelBuilder.Entity<FieldValidationRule>()
 #### 2.1 Create IFieldValidationRuleRepository Interface
 **Effort:** 20 minutes
 
-**File:** `Repository/knk-web-api-v2/Repositories/Interfaces/IFieldValidationRuleRepository.cs`
+**File:** `Repository/knk-web-api/Repositories/Interfaces/IFieldValidationRuleRepository.cs`
 
 **Tasks:**
 - [ ] Add dependency analysis methods: GetRulesDependingOnFieldAsync, HasCircularDependencyAsync
@@ -301,7 +301,7 @@ public interface IFieldValidationRuleRepository
     **Effort:** 15 minutes
     **Status:** ✅ COMPLETE
 
-    **File:** `Repository/knk-web-api-v2/Mapping/FieldValidationRuleProfile.cs`
+    **File:** `Repository/knk-web-api/Mapping/FieldValidationRuleProfile.cs`
 
     **Tasks:**
     - [x] Create FieldValidationRuleProfile class
@@ -330,7 +330,7 @@ public interface IFieldValidationRuleRepository
 #### 2.2 Implement FieldValidationRuleRepository
 **Effort:** 1.5 hours
 
-**File:** `Repository/knk-web-api-v2/Repositories/FieldValidationRuleRepository.cs`
+**File:** `Repository/knk-web-api/Repositories/FieldValidationRuleRepository.cs`
 
 **Tasks:**
 - [ ] Implement all interface methods
@@ -394,7 +394,7 @@ public async Task<bool> HasCircularDependencyAsync(int fieldId, int dependsOnFie
 #### 2.3 Create IValidationMethod Interface
 **Effort:** 15 minutes
 
-**File:** `Repository/knk-web-api-v2/Services/Interfaces/IValidationMethod.cs`
+**File:** `Repository/knk-web-api/Services/Interfaces/IValidationMethod.cs`
 
 **Tasks:**
 - [ ] Define interface for validation method implementations
@@ -419,7 +419,7 @@ public interface IValidationMethod
 #### 2.4 Create IValidationService Interface
 **Effort:** 20 minutes
 
-**File:** `Repository/knk-web-api-v2/Services/Interfaces/IValidationService.cs`
+**File:** `Repository/knk-web-api/Services/Interfaces/IValidationService.cs`
 
 **Tasks:**
 - [ ] Define service interface
@@ -434,7 +434,7 @@ public interface IValidationMethod
 #### 2.5 Implement ValidationService
 **Effort:** 2 hours
 
-**File:** `Repository/knk-web-api-v2/Services/ValidationService.cs`
+**File:** `Repository/knk-web-api/Services/ValidationService.cs`
 
 **Tasks:**
 - [ ] Implement CRUD operations (use repository)
@@ -547,7 +547,7 @@ public async Task<IEnumerable<ValidationIssueDto>> ValidateConfigurationHealthAs
 #### 2.6 Register Services in DI Container
 **Effort:** 10 minutes
 
-**File:** `Repository/knk-web-api-v2/Program.cs` or `Startup.cs`
+**File:** `Repository/knk-web-api/Program.cs` or `Startup.cs`
 
 **Tasks:**
 - [ ] Register IFieldValidationRuleRepository → FieldValidationRuleRepository
@@ -583,7 +583,7 @@ builder.Services.AddScoped<IValidationMethod, ConditionalRequiredValidator>();
 #### 3.1 Implement LocationInsideRegionValidator
 **Effort:** 2 hours (+ integration time for WorldGuard API)
 
-**File:** `Repository/knk-web-api-v2/Services/ValidationMethods/LocationInsideRegionValidator.cs`
+**File:** `Repository/knk-web-api/Services/ValidationMethods/LocationInsideRegionValidator.cs`
 
 **Tasks:**
 - [x] Implement IValidationMethod interface
@@ -715,7 +715,7 @@ public class LocationInsideRegionConfig
 #### 3.2 Implement RegionContainmentValidator
 **Effort:** 2 hours
 
-**File:** `Repository/knk-web-api-v2/Services/ValidationMethods/RegionContainmentValidator.cs`
+**File:** `Repository/knk-web-api/Services/ValidationMethods/RegionContainmentValidator.cs`
 
 **Tasks:**
 - [x] Similar structure to LocationInsideRegionValidator
@@ -733,7 +733,7 @@ public class LocationInsideRegionConfig
 #### 3.3 Implement ConditionalRequiredValidator
 **Effort:** 1 hour
 
-**File:** `Repository/knk-web-api-v2/Services/ValidationMethods/ConditionalRequiredValidator.cs`
+**File:** `Repository/knk-web-api/Services/ValidationMethods/ConditionalRequiredValidator.cs`
 
 **Tasks:**
 - [x] Parse ConfigJson for condition (operator, value)
@@ -830,7 +830,7 @@ public class ConditionConfig
 #### 4.1 Create FieldValidationRulesController
 **Effort:** 1 hour
 
-**File:** `Repository/knk-web-api-v2/Controllers/FieldValidationRulesController.cs`
+**File:** `Repository/knk-web-api/Controllers/FieldValidationRulesController.cs`
 
 **Tasks:**
 - [x] Implement all CRUD endpoints

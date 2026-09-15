@@ -1,14 +1,14 @@
 ---
 name: KnK Backend Rules
-applyTo: "Repository/knk-web-api-v2/**/*.cs"
+applyTo: "Repository/knk-web-api/**/*.cs"
 ---
 
 ## Folder + naming conventions
-- Repositories go in: Repository/knk-web-api-v2/Repositories
-- Repository interfaces go in: Repository/knk-web-api-v2/Repositories/Interfaces
-- Services go in: Repository/knk-web-api-v2/Services
-- Service interfaces go in: Repository/knk-web-api-v2/Services/Interfaces
-- AutoMapper profiles go in: Repository/knk-web-api-v2/Mapping
+- Repositories go in: Repository/knk-web-api/Repositories
+- Repository interfaces go in: Repository/knk-web-api/Repositories/Interfaces
+- Services go in: Repository/knk-web-api/Services
+- Service interfaces go in: Repository/knk-web-api/Services/Interfaces
+- AutoMapper profiles go in: Repository/knk-web-api/Mapping
 - Controllers go in the existing Controllers folder used by the project
 
 ## DTO conventions

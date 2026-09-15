@@ -373,7 +373,7 @@ Status: HEALTHY ✓ (1 warning)
 
 ---
 
-## Part B: Technical Specifications - Backend (knk-web-api-v2)
+## Part B: Technical Specifications - Backend (knk-web-api)
 
 ### B.1 Entity Model Updates
 

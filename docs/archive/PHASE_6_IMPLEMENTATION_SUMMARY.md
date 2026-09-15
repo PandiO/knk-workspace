@@ -2,7 +2,7 @@
 
 ## Overview
 
-Phase 6 (Testing) has been successfully implemented for the plugin-auth feature in the knk-plugin-v2 repository. This phase provides comprehensive test coverage through unit tests, integration tests, and a detailed manual testing checklist.
+Phase 6 (Testing) has been successfully implemented for the plugin-auth feature in the knk-plugin repository. This phase provides comprehensive test coverage through unit tests, integration tests, and a detailed manual testing checklist.
 
 ## Deliverables ✅
 
@@ -61,7 +61,7 @@ knk-paper/src/test/java/net/knightsandkings/knk/paper/
 
 ### Documentation Files
 ```
-Repository/knk-plugin-v2/docs/ai/plugin-auth/
+Repository/knk-plugin/docs/ai/plugin-auth/
 ├── PHASE_6_MANUAL_TESTING_CHECKLIST.md
 └── PHASE_6_COMPLETION_REPORT.md
 
@@ -127,13 +127,13 @@ With testing infrastructure complete, the next phase should focus on:
 **Files to Commit**:
 ```bash
 # Test files
-git add Repository/knk-plugin-v2/knk-paper/src/test/java/net/knightsandkings/knk/paper/chat/ChatCaptureManagerTest.java
-git add Repository/knk-plugin-v2/knk-paper/src/test/java/net/knightsandkings/knk/paper/user/UserManagerTest.java
-git add Repository/knk-plugin-v2/knk-paper/src/test/java/net/knightsandkings/knk/paper/integration/AccountCommandIntegrationTest.java
+git add Repository/knk-plugin/knk-paper/src/test/java/net/knightsandkings/knk/paper/chat/ChatCaptureManagerTest.java
+git add Repository/knk-plugin/knk-paper/src/test/java/net/knightsandkings/knk/paper/user/UserManagerTest.java
+git add Repository/knk-plugin/knk-paper/src/test/java/net/knightsandkings/knk/paper/integration/AccountCommandIntegrationTest.java
 
 # Documentation
-git add Repository/knk-plugin-v2/docs/ai/plugin-auth/PHASE_6_MANUAL_TESTING_CHECKLIST.md
-git add Repository/knk-plugin-v2/docs/ai/plugin-auth/PHASE_6_COMPLETION_REPORT.md
+git add Repository/knk-plugin/docs/ai/plugin-auth/PHASE_6_MANUAL_TESTING_CHECKLIST.md
+git add Repository/knk-plugin/docs/ai/plugin-auth/PHASE_6_COMPLETION_REPORT.md
 git add PHASE_6_GIT_COMMIT_MESSAGE.md
 ```
 
@@ -160,4 +160,4 @@ The plugin-auth feature now has a robust testing infrastructure supporting:
 **Implementation Date**: January 30, 2026  
 **Phase**: 6/7  
 **Feature**: plugin-auth  
-**Repository**: knk-plugin-v2
+**Repository**: knk-plugin

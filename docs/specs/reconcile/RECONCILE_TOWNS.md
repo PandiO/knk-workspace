@@ -3,9 +3,9 @@
 Source-grounded reconciliation across legacy and API contract.
 Inputs:
 - Legacy sources: knk/spec/SOURCES_TOWNS.md
-- Legacy spec: knk-plugin-v2/spec/SPEC_TOWNS.md (with Hybrid Create Flow)
-- Logic classification: knk-plugin-v2/spec/LOGIC_CANDIDATES_TOWNS.md
-- API contract: knk-plugin-v2/spec/api/API_CONTRACT_TOWNS.md (+ swagger.json)
+- Legacy spec: knk-plugin/spec/SPEC_TOWNS.md (with Hybrid Create Flow)
+- Logic classification: knk-plugin/spec/LOGIC_CANDIDATES_TOWNS.md
+- API contract: knk-plugin/spec/api/API_CONTRACT_TOWNS.md (+ swagger.json)
 
 No assumptions or invented fields. All items are either in legacy sources or swagger. Otherwise marked TBD/NOT IN CONTRACT.
 

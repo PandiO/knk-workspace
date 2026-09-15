@@ -588,7 +588,7 @@ public class CoinUpdateDto
 
 ### Plugin-to-API Communication
 
-**On Player Join** (from knk-plugin-v2):
+**On Player Join** (from knk-plugin):
 ```
 1. Plugin calls: GET /api/Users/uuid/{playerUuid}
    → Returns UserSummaryDto or 404
@@ -681,7 +681,7 @@ public class CoinUpdateDto
 - `/Repository/knkwebapi_v2/Models/User.cs`
 - `/Repository/knkwebapi_v2/Controllers/UsersController.cs`
 - `/Repository/knkwebapi_v2/Dtos/UserDtos.cs`
-- `/Repository/knk-plugin-v2/spec/SPEC_USER.md`
+- `/Repository/knk-plugin/spec/SPEC_USER.md`
 
 **Legacy Source Files:**
 - `/Repository/knk/src/main/java/net/knightsandkings/model/user/User.java`

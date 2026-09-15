@@ -40,7 +40,7 @@ STEP 1: Requirements Refinement Prompt
 
 Feature Name: [feature-name]
 Context: [brief description]
-Related Components: [list affected repos: knk-web-api-v2, knk-web-app, knk-plugin-v2]
+Related Components: [list affected repos: knk-web-api, knk-web-app, knk-plugin]
 
 Request:
 Analyze the existing codebase and help me refine requirements for [feature-name].
@@ -168,9 +168,9 @@ Implementation scope:
 [Copy the entire Phase $Phase section from IMPLEMENTATION_ROADMAP.md]
 
 Affected repositories:
-- knk-web-api-v2: [list what to implement]
+- knk-web-api: [list what to implement]
 - knk-web-app: [list what to implement]
-- knk-plugin-v2: [list what to implement]
+- knk-plugin: [list what to implement]
 
 Guidelines:
 - Follow existing code patterns in each repository
@@ -242,9 +242,9 @@ Deliverables implemented in this phase:
 [Paste the deliverables list from IMPLEMENTATION_ROADMAP.md]
 
 Affected repositories (generate one commit per repo that had changes):
-- knk-web-api-v2
+- knk-web-api
 - knk-web-app
-- knk-plugin-v2
+- knk-plugin
 - docs
 
 For each repository, generate:
@@ -265,7 +265,7 @@ Reference example commits from docs/GIT_COMMIT_CONVENTIONS.md (section: Plugin e
 
 Output format:
 ---
-## knk-web-api-v2
+## knk-web-api
 **Subject:** [commit subject]
 **Description:** [commit description]
 
