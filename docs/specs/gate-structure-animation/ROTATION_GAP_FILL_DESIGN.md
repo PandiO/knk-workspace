@@ -3,7 +3,13 @@
 **Status:** Phases A-D implemented (2026-09-10) — backend schema/API, plugin
 Mechanisms 1 & 2, frontend/validation support all done and tested; Phase E
 (this doc's own cross-links, in progress) and Phase F (live-server pilot)
-remain
+remain. **Update (2026-09-16):** Phase F's live pilot against entity 14
+surfaced a real defect in Mechanism 2's per-block blend (non-rigid "fluid"
+swing motion once tested against a dense, real captured open scan) — see
+**Decision 7** below for the confirmed root cause, the options weighed, and
+the fix direction chosen (implemented as
+[GATESTRUCTURE_QOL_IMPLEMENTATION_PLAN.md](GATESTRUCTURE_QOL_IMPLEMENTATION_PLAN.md)
+item 6.10).
 **Author:** Claude (plan requested by Pandi), 2026-09-09
 **Related:** [SPEC.md](SPEC.md), [REQUIREMENTS.md](REQUIREMENTS.md), [IMPLEMENTATION_ROADMAP.md](IMPLEMENTATION_ROADMAP.md), [DECISIONS.md](DECISIONS.md), [DUAL_SCAN_ANIMATION_DESIGN.md](DUAL_SCAN_ANIMATION_DESIGN.md) (Open Question 3 — this plan resolves it: dual-scan extends to `ROTATION` gates; that doc is now superseded by this one for `VERTICAL`/`LATERAL` too, per Decision 6), [GATE_WORLD_SYNC_DESIGN.md](GATE_WORLD_SYNC_DESIGN.md) (a related but separate gap found while implementing this plan's Phase C)
 
@@ -236,6 +242,16 @@ bridge with logs lying flat already scanned the correct orientation directly,
 so `GateBlockOrientation`'s angle-based rotation (added this session) applies
 only to the arc term, never to a block that has a real open-scan pairing.
 
+> **Superseded 2026-09-16 (Decision 7, below).** Live-tested against a real,
+> dense captured open scan (entity 14, `//sel convex`), this per-block blend
+> is exactly what produces a visibly non-rigid ("fluid") swing — every block
+> is blended independently toward its own nearest-neighbor open match, so
+> neighboring blocks' correction vectors routinely disagree. Replaced by a
+> uniform rigid-transform base motion; see Decision 7 for the confirmed
+> evidence and reasoning, and
+> [GATESTRUCTURE_QOL_IMPLEMENTATION_PLAN.md](GATESTRUCTURE_QOL_IMPLEMENTATION_PLAN.md)
+> item 6.10 for the implementation.
+
 **Unpaired blocks**: an open-scan block with no reasonably-close arc-derived
 neighbor (e.g. the open shape is meaningfully bigger than the closed one) has
 no `arcPos` to blend from. This is the same shape of problem
@@ -359,6 +375,164 @@ adds — the same `FormWizard` constraint applies equally there.
 mechanism for every motion type; `DUAL_SCAN_ANIMATION_DESIGN.md`'s schema
 section should be read as superseded by this decision, not just by
 Decision-1-through-5's `AnimationDefinitionMode` removal.
+
+**7. Mid-swing rigidity for `ROTATION` gates with a dense/mismatched open
+scan — Decided (2026-09-16): fix with a uniform rigid-transform base
+motion (`GATESTRUCTURE_QOL_IMPLEMENTATION_PLAN.md` item 6.10). A richer
+rigid-plus-residual hybrid was designed alongside it and is deliberately
+deferred as a documented future improvement — not built now, not
+abandoned.**
+
+**What was found.** `GATESTRUCTURE_QOL_IMPLEMENTATION_PLAN.md` item 6.7's
+third round of live testing on entity 14 (32 closed blocks, 49 open-scan
+blocks after the real `//sel convex` capture) reported the mid-swing motion
+looking "weird" / "more like fluid than a drawbridge" — worse than the
+pre-item-6 pure-procedural rotation. The working hypothesis at the time
+(every closed block now gets Mechanism 2's linear correction term, most of
+them non-trivial, because the dense real scan pairs nearly everything) was
+confirmed with direct evidence in a follow-up diagnostic session, not just
+re-reasoned:
+
+- Diagnostic trace logging (`knk-plugin` commit `9c02f02`) captured a full
+  per-block, per-frame breakdown (`baseline`/`pairedOpen`/`openTarget`/
+  `correction`/`correctionMag`/`final`) for a live open *and* close cycle, in
+  both `GeometryDefinitionMode=REGION` and `GeometryDefinitionMode=PLANE_GRID`.
+- **The two modes' logs are byte-for-byte identical** (diffed directly, with
+  timestamps stripped) except for HTTP-latency noise and ordinary
+  tick-scheduling jitter between two separate real-time runs (one frame
+  logged once in one run, split across two ticks in the other). This rules
+  out `GeometryDefinitionMode` as the cause outright — confirmed by code
+  inspection too: neither `GateFrameCalculator.calculateBlockPositionBreakdown`
+  nor `GateAnimationTask.updateGateBlocks` reads `GeometryDefinitionMode` at
+  all. Mechanism 2 activates purely on `gate.getPairedOpenBlock(id) != null`,
+  independent of capture mode — so toggling REGION vs. PLANE_GRID on this
+  door was never going to change anything about the swing.
+- The trace confirms the hypothesis precisely: adjacent blocks carry wildly
+  different `correctionMag` values at the same frame (e.g. the hinge-row
+  block sits at `0.000` for the entire swing while its immediate neighbor
+  reaches `~5.0` blocks of extra drift by the final frame) — each block is
+  blended independently toward its own individually nearest-neighbor-matched
+  open cell (`GateBlockPairing`'s Hungarian match, optimal only in *total*
+  distance, never in per-block agreement with its neighbors), so the door
+  does not move as one rigid piece.
+- A second, compounding effect: the open scan has 49 cells against 32 closed
+  cells, so `GateBlockPairing` (inherently capped at `min(closed, open)`)
+  leaves 17 cells unpaired; those never enter `GateAnimationTask.
+  updateGateBlocks`'s per-tick loop (it only ever iterates the closed-block
+  list) and only appear in one shot when `GateRestingFramePlacer.
+  transitionRestingFrame` force-places the full open-scan set at the very
+  last tick — item 6.9's own accepted, documented trade-off, confirmed
+  working as designed, not a new problem.
+- Comparison against the pre-item-6 formula (`knk-plugin` git history,
+  commit `fbbb077` "feat(gate): implement rotation gap-fill Mechanisms 1 and
+  2" — the commit that introduced Mechanism 2 in the first place): before
+  this plan, `ROTATION` motion was simply `position = anchor + rotate
+  (relativePos, hingeAxis, angle)` — one rigid rotation, identical formula,
+  identical axis/angle, applied uniformly to every block, every frame. That
+  uniformity is exactly what guaranteed the "way smoother" look the user is
+  asking to get back; Mechanism 2's per-block correction term is what broke
+  it, by construction, once the pairing is dense enough that most/every
+  block gets a non-trivial correction — true for any real captured open scan
+  denser than the small hand-built fixtures Mechanism 2 was validated
+  against (see Decision 2's original "known risk," which materialized here
+  in a different, uglier form than the "crossing paths" it anticipated).
+
+**Options considered**, in increasing order of how much of Mechanism 2's
+original per-block intent they preserve:
+
+1. **Uniform rigid transform.** Replace the per-block correction with one
+   shared best-fit rotation+translation (least-squares/Procrustes/Kabsch,
+   fit once per door load from the paired closed/open points), applied
+   identically to every block, including the 17 open-only ones (by
+   inverse-transforming their real open-scan position back through the same
+   shared transform to synthesize a closed-side start point, instead of
+   leaving them un-animated as today). Rigid by construction — every block
+   shares the exact same motion, so no two neighbors can disagree — and,
+   unlike today's per-block scheme, it animates 100% of blocks, not just the
+   paired ones. Trade-off: mid-swing exactness for any individual block
+   whose true relationship to the fitted transform is a genuine outlier (see
+   below).
+2. **Keep per-block pairing, animate the open-only blocks too.** Smaller
+   patch, doesn't touch the per-block correction term at all, so the core
+   warping complaint is untouched.
+3. **Drop Mechanism 2's blend entirely, pure procedural rotation.**
+   Simplest, matches the pre-item-6 look exactly, but gives up the entire
+   point of a manually-scanned open state — an admin's real captured shape
+   stops being used for anything beyond the resting frame.
+4. **Hybrid — uniform rigid transform as the base motion, plus a small
+   residual correction on top, computed relative to the fitted transform's
+   own prediction rather than the raw rotation arc.** A block that's
+   genuinely rigid gets ~zero residual (rigid-looking, same as option 1);
+   only a block that's truly part of a non-rigid addition (e.g. a
+   decorative element or support strut with no real rotational relationship
+   to anything in the closed scan) gets a residual nudge, sized to how
+   non-rigid it actually is, instead of the uniform full correction every
+   block gets under today's shipped Mechanism 2. This is the option that
+   gives up *nothing* from the original design goals — full multi-material
+   support, full shape/dimension-mismatch support, **and** exact per-block
+   convergence even for a genuinely non-rigid open-state addition — at the
+   cost of materially more design and implementation work: choosing a fit
+   algorithm and its degenerate-input handling (too few pairs, collinear/
+   coplanar points), deciding how a residual is sized/tapered (so it
+   doesn't just reintroduce today's per-block disagreement in a smaller
+   dose), and a larger new test surface than option 1's.
+
+**Decision: ship option 1 now; option 4 (the hybrid) is deliberately
+deferred as a documented future improvement, not abandoned.** Reasoning:
+
+- **Timeline.** The immediate goal is a clean, presentable animation as soon
+  as possible. Option 1 is a materially smaller, better-understood change (a
+  standard rigid-registration fit, plus reusing the inverse-rotation math
+  `rasterizeRotationFrame` already established for a related problem) with a
+  clear, bounded test surface. Option 4 has open design questions
+  (fit-degeneracy handling, residual sizing/tapering) that would need their
+  own design pass before implementation could even start — not worth the
+  delay for a fix the user wants live soon.
+- **Fit to the actual, real data.** Entity 14's real open scan (49 blocks)
+  is the door's own closed structure (32 blocks) rotated open, plus a modest
+  extra row at the farthest edge from the hinge (per the user's own in-game
+  description, item 6.7's "Second round" — a few blocks wide, centered on
+  the door's width) — substantially explained by the closed/open
+  lattice-density difference this entire document's problem statement is
+  about, not a structurally disconnected addition. This is close enough to
+  "the same rigid body, rotated" that a single fitted transform should
+  already look clean for the overwhelming majority of blocks on this door;
+  the design's own motivating worst case for Mechanism 2 ("a log standing
+  vertical when closed and lying flat, a *different structure*, when open")
+  is a hypothetical extreme this gate's real data doesn't actually exercise.
+- **Nothing in the plan's stated goals is given up by option 1.**
+  Multi-material support and the resting-frame shape/dimension mismatch —
+  the two goals explicitly checked against this decision before it was made
+  — are both properties of `GateRestingFramePlacer`'s endpoint placement and
+  each block's own `BlockSnapshot`/open-scan blockdata, never of which
+  formula drives the *mid-swing* position. `GateRestingFramePlacer.
+  restingFrameCells` (item 6.9) places `gate.getOpenBlocks()`'s own
+  `blockData`/positions verbatim at the open resting frame regardless of the
+  swing formula above it, and continues to do so unmodified under option 1.
+- **What option 1 genuinely gives up**, stated plainly rather than glossed
+  over: mid-swing positional exactness for any block that is a true outlier
+  under a global least-squares fit — i.e. a hand-built open-state addition
+  that isn't well-explained by any single rotation of the closed shape. Such
+  a block still converges to its *exact* scanned position at the resting
+  frame (unaffected, per the point above) but follows a straighter/less
+  individually-tailored path getting there than today's per-block scheme
+  would (which is exact at every single frame, at the cost of being the
+  thing that's visibly broken today). For entity 14's actual geometry this
+  is expected to be a non-issue or a very minor one; it becomes a real
+  limitation only for a hypothetical future door built more like the "log
+  lying flat" example above.
+- **Option 4 is not rejected on the merits** — it is the strictly more
+  complete answer, and is worth building once there's a concrete door that
+  actually needs it (i.e. one where a global rigid fit visibly fails for
+  some of its blocks in live testing). Recorded here specifically so that
+  need is recognized quickly if/when it shows up, instead of rediscovering
+  this whole analysis from scratch.
+
+**Follow-up implication for `GateBlockPairing`**: option 1 removes the
+Hungarian nearest-neighbor matcher from the *position-driving* path — it no
+longer decides where a block goes, only (if at all) supplies the rough
+initial correspondence a rigid-registration fit needs between the two point
+sets to fit against. It is not being deleted.
 
 ---
 
@@ -754,6 +928,11 @@ Decision-1-through-5's `AnimationDefinitionMode` removal.
   doesn't read as a clean arc *or* a clean line — acceptable for v1 (still
   converges exactly, just not necessarily elegantly for extreme mismatches);
   flag as a known visual limitation, not a defect to fix now.
+  **Superseded 2026-09-16 (Decision 7)**: this "acceptable for v1" call
+  turned out to be wrong in practice once real dense scan data was tested
+  live — this is exactly what produced the reported "fluid"/non-rigid swing.
+  See Decision 7 for the confirmed root cause and the fix direction (item
+  6.10 of `GATESTRUCTURE_QOL_IMPLEMENTATION_PLAN.md`).
 - Multiple closed blocks nearest-neighbor-matching the *same* open block
   (many-to-one): needs an explicit tie-break rule (e.g. first-claimed-wins,
   remaining closed blocks fall back to unpaired behavior) — not yet decided,
