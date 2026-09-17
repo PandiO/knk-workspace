@@ -22,11 +22,9 @@ at `docs/ai-agents/GLOBAL_AGENT_INSTRUCTIONS.md`. Read it directly.
   via `@../../docs/ai-agents/GLOBAL_AGENT_INSTRUCTIONS.md`, which assumes
   that layout; if you ever reorganize where those repos are cloned, update
   the import path in all three.
-- `ACTIVE_SESSIONS.md` does not exist yet anywhere in this repo (checked
-  the repo root and `docs/` up to a few levels deep) — it's referenced by
-  the global instructions as the live cross-repo work tracker but hasn't
-  been created. Create it at `docs/ACTIVE_SESSIONS.md` the first time it's
-  needed, rather than assuming it already exists.
+- `ACTIVE_SESSIONS.md` lives at `docs/ACTIVE_SESSIONS.md` — the live
+  cross-repo work tracker referenced by the global instructions. Check it
+  before claiming work, update it when you start/pause/finish.
 - When editing docs, keep a consistent header (title, status, last-updated)
   across files of the same type — see the doc-audit instructions in
   `docs/guides/` for the format being standardized on.
