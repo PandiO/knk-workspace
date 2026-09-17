@@ -9,7 +9,11 @@ swing motion once tested against a dense, real captured open scan) — see
 **Decision 7** below for the confirmed root cause, the options weighed, and
 the fix direction chosen (implemented as
 [GATESTRUCTURE_QOL_IMPLEMENTATION_PLAN.md](GATESTRUCTURE_QOL_IMPLEMENTATION_PLAN.md)
-item 6.10).
+item 6.10). **Update (2026-09-17):** live-testing item 6.10 surfaced a more
+severe issue than Decision 7 anticipated - a uniform-transform-only mid-swing
+correction can jam the animation outright, not just lose some mid-swing
+positional exactness - see **Decision 8** below for the concrete evidence
+and the resulting move to the hybrid (option 4), tracked as item 6.11.
 **Author:** Claude (plan requested by Pandi), 2026-09-09
 **Related:** [SPEC.md](SPEC.md), [REQUIREMENTS.md](REQUIREMENTS.md), [IMPLEMENTATION_ROADMAP.md](IMPLEMENTATION_ROADMAP.md), [DECISIONS.md](DECISIONS.md), [DUAL_SCAN_ANIMATION_DESIGN.md](DUAL_SCAN_ANIMATION_DESIGN.md) (Open Question 3 — this plan resolves it: dual-scan extends to `ROTATION` gates; that doc is now superseded by this one for `VERTICAL`/`LATERAL` too, per Decision 6), [GATE_WORLD_SYNC_DESIGN.md](GATE_WORLD_SYNC_DESIGN.md) (a related but separate gap found while implementing this plan's Phase C)
 
@@ -533,6 +537,150 @@ Hungarian nearest-neighbor matcher from the *position-driving* path — it no
 longer decides where a block goes, only (if at all) supplies the rough
 initial correspondence a rigid-registration fit needs between the two point
 sets to fit against. It is not being deleted.
+
+**8. Option 1 upgraded to the hybrid (option 4) after live evidence — Decided
+(2026-09-17): option 1's uniform-transform-only formula, implemented as item
+6.10, does not just lose mid-swing exactness for an outlier block (the
+trade-off Decision 7 explicitly accepted) — live testing against entity 14
+found it can jam the animation outright, before it ever reaches the resting
+frame where that exactness would have been restored. This is the concrete
+"a global rigid fit visibly fails for some of its blocks in live testing"
+trigger Decision 7's own option 4 write-up said to watch for.**
+
+**What was found, with numbers, not just a re-statement of the theoretical
+risk.** Building and live-testing item 6.10 (`knk-plugin`, uncommitted at the
+time) against entity 14 in `GeometryDefinitionMode=REGION` surfaced two
+symptoms together: the animation never finished (froze at frame 89 of 90,
+retried every tick forever, spamming the trace log indefinitely), and
+`/knk gate info` reported the door **JAMMED**. The frozen frame's own trace
+log gave the exact mechanism, not just a symptom:
+
+- Closed block `1119` (paired to open block `82`) at frame 89/90: its own
+  real scanned open position (`openTarget`) is `(1374, 44, -591)`; the
+  uniform transform's prediction for it (what item 6.10's formula actually
+  drives it toward) is `(1377.32, 44, -586.32)` — **5.7 blocks away** from
+  where it actually belongs. That is not rounding noise; the fit is simply
+  wrong for this block, by a large margin.
+- That 5.7-block-wrong destination isn't empty space — it lands squarely
+  inside the region where several *other*, genuinely open-only blocks
+  (`pairedOpen=82` through `113` in the same trace window) have their own,
+  correct, real scanned positions. Two of the door's own blocks end up
+  targeting the same or an adjacent cell in the same tick;
+  `GateBlockPlacer.placeBlockIfVacant` refuses the second one; after
+  `JAM_THRESHOLD_TICKS` (5) consecutive blocked ticks the gate locks up.
+- **Root cause, one level deeper than "the fit has some error":** a uniform
+  rigid transform, applied to a *closed* block, can only ever predict a
+  rotated **copy of the sparse closed lattice** — 32 points, however they're
+  rotated. The real open scan is *denser* than that in exactly the region
+  Decision 7's own reasoning flagged as the fit's weak spot (the extra row
+  at the farthest-from-hinge edge — the reason Mechanism 2/dual-scan exists
+  at all). So as `progress → 1`, closed blocks converging on "the closed
+  shape, rotated" and open-only blocks converging on "the real, denser scan"
+  are converging on *different, easily-overlapping* target sets. Under the
+  old (pre-6.10) per-block Mechanism 2 formula this never happened, because
+  every paired block converged on its **own individually-correct** real
+  position — a subset of the one real, non-overlapping 49-block scan, by
+  construction. Item 6.10's uniform-transform formula gave that guarantee up
+  in exchange for rigidity, and it turns out that guarantee is what was
+  quietly preventing this exact collision.
+
+**Decision: build option 4 (the hybrid) now.** Not a new design — Decision
+7 already scoped its shape and explicitly deferred it only because there was
+no concrete evidence yet that it was *needed*; that evidence now exists.
+Formula (`ROTATION` branch, paired closed blocks only — see below for why
+open-only blocks and the degenerate/no-fit case need no change at all):
+
+```
+arcPos(frame)      = calculateRotationPosition(relativePos, progress)      // unchanged from 6.10/pre-6.10
+arcPosFinal        = calculateRotationPosition(relativePos, 1.0)           // unchanged
+closedWorldPos     = anchor + relativePos
+transformPos       = R · closedWorldPos + t                                // unchanged: the shared, uniform prediction
+uniformCorrection  = (transformPos − arcPosFinal) × progress                // unchanged from 6.10 - identical for the whole door's "shape" of motion
+
+residualTarget     = openTarget − transformPos     // NEW: this block's own gap between truth and the shared prediction
+residualTaper      = progress³                     // NEW: see the taper pitfall below
+residualCorrection = residualTarget × residualTaper
+
+position = arcPos(frame) + uniformCorrection + residualCorrection
+```
+
+**The one real design trap, worth documenting explicitly so it isn't
+rediscovered the hard way**: tapering the residual by plain `progress` (the
+same linear factor the uniform correction already uses) is **not** a smaller
+version of the hybrid — it is algebraically *identical* to the old, broken
+per-block formula:
+
+```
+uniformCorrection + residualCorrection
+  = (transformPos − arcPosFinal)×progress + (openTarget − transformPos)×progress
+  = (openTarget − arcPosFinal) × progress                                   <- exactly Mechanism 2's original formula
+```
+
+The `transformPos` terms cancel completely. A linear residual taper would
+have shipped a hybrid that *looks* like it does something, passes the same
+progress=0/1 exactness tests as the real fix, and reintroduces 100% of the
+original non-rigid "fluid" motion for every paired block, all while adding
+code and a new fit dependency for zero behavioral benefit. The residual's
+taper **must** be a different (non-linear) curve than the uniform
+correction's, or the two corrections aren't actually distinct contributions
+— they're the same correction split into two pieces that recombine.
+
+**Why cubic (`progress³`), and why the exact exponent is a tuning knob, not
+a correctness question**: for *any* taper function `f` with `f(0)=0` and
+`f(1)=1`, the endpoints stay exactly correct regardless of shape (`f(0)=0` ⇒
+zero residual contribution at the closed position; `f(1)=1` ⇒ the residual
+fully closes the gap, so `position(1) = arcPosFinal + (transformPos −
+arcPosFinal) + (openTarget − transformPos) = openTarget` exactly, for every
+paired block, no matter how large its individual residual is). So the
+exponent only shapes *when*, during the swing, an outlier block's
+"catch-up" motion becomes visible — it cannot break correctness, which is
+why this doesn't need to be a stakeholder decision, just a documented
+engineering default. `progress³` keeps a residual's visible contribution
+under ~13% through the first half of the swing (blocks with a good fit stay
+visually rigid alongside their neighbors for most of the animation) while
+still reaching ~97% by frame 89/90 of a 90-frame swing (`0.989³ ≈ 0.967`) —
+concretely, by the exact frame where entity 14's real data was observed to
+jam, the residual has already all but fully closed the gap that was causing
+the collision. If a future gate's live testing shows this exponent feels
+"too late" (visible last-second snapping) or "too early" (loses rigidity
+too soon), it is a one-line constant change, not a redesign — re-verify
+against this same reasoning (endpoints stay exact for any exponent; only
+the shape of the catch-up changes) before adjusting it.
+
+**Why open-only blocks and the no-fit fallback need zero code changes for
+this hybrid**: an open-only block's `transformPos` is *defined* as
+`transform.apply(synthesizedClosedWorldPos)`, and `synthesizedClosedWorldPos`
+is itself defined as `transform.applyInverse(openWorldPos)` — so
+`transformPos` reduces to that block's own real `openWorldPos` **exactly**,
+by construction, for every open-only block, always. Its `residualTarget`
+(`openTarget − transformPos`) is therefore always exactly zero — the hybrid
+formula degrades to item 6.10's existing (already correct) open-only path
+automatically, with no branching needed. Likewise, when
+`gate.getFittedOpenTransform()` is null (fewer than 3 non-collinear pairs),
+there is no `transformPos`/`residualTarget` to compute at all — the existing
+fallback to pure procedural rotation is unchanged.
+
+**What this does and doesn't fix, stated plainly**: every paired block once
+again converges *exactly* on its own real scanned position at `progress=1`
+(recovering Mechanism 2's original no-pop, no-collision guarantee), so the
+32+17=49 final target positions are, by construction, the one real,
+non-overlapping scanned set — the specific collision mechanism found above
+cannot recur at the endpoint. It does **not** carry a formal guarantee
+against every conceivable *mid-swing* collision for every possible future
+door's geometry (two blocks' hybrid-blended paths could in principle still
+cross at some intermediate progress for an unusually adversarial layout) —
+but it removes the systematic, structural cause found here (sparse-rotated-
+copy vs. dense-real-scan divergence growing throughout the whole second half
+of the swing), which is what actually happened. Confirming there's no
+residual mid-swing collision for entity 14's real geometry specifically is
+still a live-retest question, same as every other change in this plan.
+
+**Superseded by this decision**: Decision 7's choice of option 1 alone
+(2026-09-16) - kept above, unedited, specifically so the reasoning trail
+that led here (why option 1 looked sufficient, what evidence changed that)
+remains intact rather than being rewritten out of the record. Implementation
+tracked as item 6.11 in
+[GATESTRUCTURE_QOL_IMPLEMENTATION_PLAN.md](GATESTRUCTURE_QOL_IMPLEMENTATION_PLAN.md).
 
 ---
 
