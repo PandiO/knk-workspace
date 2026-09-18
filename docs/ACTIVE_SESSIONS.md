@@ -32,6 +32,7 @@ Live tracker of in-progress work across all four Knights and Kings repos
 | Feature | Repos touched | Finished | Notes / link |
 |---|---|---|---|
 | _(example)_ Codebase scan — knk-plugin | knk-plugin (read-only), knk-workspace (docs) | 2026-09-17 | See `docs/reports/plugin-scan-2026-09-17.md` |
+| Codebase scan — knk-web-app | knk-web-app (read-only), knk-workspace (docs) | 2026-09-18 | See `docs/reports/web-app-scan-2026-09-18.md`, `docs/architecture/web-app-architecture.md`, `docs/guides/web-app-reading-guide.md` |
 
 ## Paused / blocked
 
