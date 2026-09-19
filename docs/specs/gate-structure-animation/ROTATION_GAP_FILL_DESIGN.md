@@ -675,6 +675,141 @@ of the swing), which is what actually happened. Confirming there's no
 residual mid-swing collision for entity 14's real geometry specifically is
 still a live-retest question, same as every other change in this plan.
 
+**8.1 Follow-up (2026-09-18) — the hybrid alone still jammed; root cause was
+a different, more mundane mechanism than either Decision 7 or 8 anticipated:
+`Math.floor()`'s asymmetric rounding, not a fit-quality problem at all.**
+
+Item 6.11 (the hybrid above) was built, unit-tested, and live-tested against
+entity 14. The swing itself looked more rigid and the residual was
+confirmed working as designed (trace `residualMag` values reached 3-5+
+blocks for genuine outliers by frame 89, correctly pulling them close to
+their real positions) - but the animation **still jammed**, at the same
+frame 89/90 as before.
+
+**What the trace log actually showed**: two of the door's own *paired
+closed* blocks (ids `1112` and `1113`, not a paired-vs-open-only pair as
+Decision 8's own mechanism theorized) collided. Their real scanned targets
+are exactly 1 block apart in Z (`-588` and `-589` respectively) - adjacent,
+not overlapping. At frame 89, block `1112`'s computed position was
+`(1377.02, 44.02, -588.01)` - a mere **0.01 blocks** short of its own real
+target `(1377, 44, -588)`. `Math.floor(-588.01)` is `-589`, not `-588` -
+undershooting an integer target in the negative direction floors into the
+*neighboring* cell. `1112` landed exactly on `1113`'s already-occupied real
+position.
+
+**Root cause, stated precisely**: every term in the hybrid formula (arc,
+uniform correction, residual) is individually a function of `progress`, and
+only sums to exactly `openTarget` at `progress = 1.0` down to floating-point
+precision. Every tick before that leaves *some* nonzero drift, however
+small. `Math.floor()` has zero tolerance for that drift when a block's real
+target happens to sit immediately adjacent to another block's real target -
+which is common for a dense scan like entity 14's 49-block open state. This
+is unrelated to how well-fit a block is (both `1112` and `1113` had small
+`correctionMag` values, i.e. were well-fit, not outliers) - it's a pure
+floating-point-vs-integer-grid rounding hazard that exists for *any* block
+converging toward *any* real target, whenever that target has a real
+neighbor one block away.
+
+**Why capping only the residual's taper (an idea considered but not shipped
+between 6.10 and this follow-up) would not have fixed it**: the residual is
+only one of three progress-dependent terms. Freezing it early still leaves
+the arc and uniform-correction terms drifting for as long as raw `progress`
+keeps advancing - the block never actually stops moving until true
+`progress = 1.0` either way, so the same floor-boundary hazard remains,
+just slightly smaller in magnitude.
+
+**Fix shipped**: remap `progress` for the *entire* blend (not just the
+residual) via `effectiveProgress = min(1.0, progress / 0.95)`, for any
+block that has a real target to converge onto. This makes the whole
+position - arc, uniform correction, and residual together - reach its
+exact final value by 95% of the way through the swing, then hold there
+**motionless** (zero drift) for the remaining ~5% of ticks. During that
+held window every block sits at its exact, real, by-definition-distinct
+scanned position - the floor-boundary hazard has nothing to act on, because
+there's no drift left to round the wrong way. `0.95` is a tuning constant,
+not a load-bearing one: the guarantee (`position(0) = closed`,
+`position(1) = openTarget` exactly) holds for any settle threshold in
+`(0, 1]`; the only downside of a smaller threshold is a longer "already
+arrived, holding" tail before the animation's nominal end, which is a minor
+visual question (imperceptible at 0.95, i.e. ~4-5 ticks of a 90-tick swing),
+not a correctness one.
+
+Unit-tested directly: a block settles to bit-for-bit exactly its real
+target several ticks before the true final frame, and is confirmed still
+mid-approach (not yet settled) one tick before the threshold. Implementation
+folded into item 6.11 (not a new item number - same formula, a rounding-
+robustness fix on top of it) in
+[GATESTRUCTURE_QOL_IMPLEMENTATION_PLAN.md](GATESTRUCTURE_QOL_IMPLEMENTATION_PLAN.md).
+
+**Live-tested 2026-09-18 (same day) - found insufficient, a different pair
+jammed, earlier in the swing.** `SETTLE_PROGRESS = 0.95` was calibrated to
+where the *previous* jam happened to occur (frame 89/90) - but this run
+jammed at **frame 84/90** instead, well before the 0.95 threshold (frame
+~85.5) ever activates. Trace evidence: blocks `1132` and `1134` (a
+different pair than `1112`/`1113` from 8.1), whose real targets are again 1
+block apart, collided the same way - `1134` was only **0.225 blocks** short
+of its own real target `(1373,44,-589)`, computed position
+`(1372.92,44.19,-589.09)`, and `Math.floor()` put it in `1132`'s cell
+`(1372,44,-590)` instead.
+
+**8.2 Follow-up (2026-09-18, same day) — a fixed progress threshold is the
+wrong tool entirely; the danger zone isn't a fixed fraction of the swing.**
+
+The frame at which any specific pair of blocks gets dangerously close
+depends on those particular blocks' own residual/correction sizes, not on
+overall swing progress - proven directly by the same door jamming at frame
+89 for one pair and frame 84 for a different pair across two live tests.
+No single global progress threshold can be "early enough" to cover every
+case without guessing conservatively low enough to lose most of the
+intended rigidity, and even then there is no principled way to derive the
+right constant - it would just be tuning to the latest observed failure
+again.
+
+**Fix: replace the progress-based settle with a distance-based snap.** Once
+a block's blend has naturally converged to within `SNAP_DISTANCE = 0.5`
+blocks of its own real target - regardless of which frame that happens to
+be - snap to the target exactly. `0.5` is not an arbitrary tuning constant
+the way `SETTLE_PROGRESS` was: it is the largest radius that is
+*unconditionally* safe, provable directly from the geometry involved. Two
+distinct real scanned blocks are never less than 1 full block apart (both
+sit on the integer world lattice); by the triangle inequality, if a block's
+current position is strictly within 0.5 of its own target, it cannot
+simultaneously be within 0.5 of any *other* real target (`distance(me,
+other) ≥ distance(target, other) − distance(me, target) > 1.0 − 0.5 =
+0.5`). So being within the snap radius of one target rules out ambiguity
+with every other one by construction - `Math.floor()` cannot mistake it for
+a different block's cell once snapped, no matter which specific pair of
+blocks or which frame is involved. This is what actually adapts to each
+block's own convergence rate instead of guessing a global timing constant.
+
+Applying this to the live evidence: block `1134`'s actual shortfall at
+frame 84 was 0.225 blocks - comfortably inside the 0.5 radius - so under
+this fix it snaps to its exact real target `(1373,44,-589)` at that same
+frame instead of floor-rounding into `1132`'s cell. The specific collision
+observed is directly resolved by construction, not by having guessed a
+better constant.
+
+Unit-tested: walking every frame of a synthetic swing (rather than
+hand-predicting a boundary frame, since the whole point of this fix is that
+the boundary isn't reliably predictable by a simple formula) confirms a
+block reaches its exact target strictly before the true final frame, stays
+there for every subsequent frame once it arrives, and is confirmed not yet
+there the frame immediately before. (A first version of this test used the
+same large-translation fixture as this doc's other algebra-only tests and
+found the snap never triggered before the literal final frame - traced to
+`VectorMath.rotateAroundAxis` rotating around the world origin, not the
+gate's own anchor; combined with that fixture's deliberately huge
+translation, the uniform-correction term for any test point becomes over
+100 blocks, swamping the realistic few-block residual the test needed to
+isolate. A dedicated fixture with an anchor near the origin, matching real
+gate geometry's actual scale, fixed this - a reminder that this class of
+test needs realistic magnitudes to be meaningful, not just internally
+self-consistent ones.) Implementation folded into item 6.11 (not a new item
+number) in
+[GATESTRUCTURE_QOL_IMPLEMENTATION_PLAN.md](GATESTRUCTURE_QOL_IMPLEMENTATION_PLAN.md).
+Not yet confirmed live - this is the fourth live-test cycle for this item;
+still pending the user's retest.
+
 **Superseded by this decision**: Decision 7's choice of option 1 alone
 (2026-09-16) - kept above, unedited, specifically so the reasoning trail
 that led here (why option 1 looked sufficient, what evidence changed that)
