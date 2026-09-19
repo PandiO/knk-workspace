@@ -26,6 +26,7 @@ Live tracker of in-progress work across all four Knights and Kings repos
 | Feature | Repos / files claimed | Owner (human / session) | Status | Started | Last updated |
 |---|---|---|---|---|---|
 | _(example)_ Siege minigame — capture point sync | web-api: `Services/SiegeService.cs`; plugin: `siege/` package | Claude Code session A | Implementing capture-point event handling | 2026-09-17 | 2026-09-17 |
+| Gate rotation gap-fill — rigid mid-swing animation (item 6.7/6.10/6.11) | plugin: `knk-core/.../gates/{RigidTransform,GateFrameCalculator,GateBlockPairing}.java`, `knk-core/.../domain/gates/CachedGateDoor.java`, `knk-paper/.../gates/{GateAnimationTask,GateLoaderAdapter,GateRestingFramePlacer}.java`; workspace: `docs/specs/gate-structure-animation/{ROTATION_GAP_FILL_DESIGN.md,GATESTRUCTURE_QOL_IMPLEMENTATION_PLAN.md}` | Claude Code session | Jam fixed and confirmed live (Decision 8.2, `knk-plugin` `e11d2d1`); orphaned-stray-cell fix + quintic rigidity taper implemented/unit-tested (item 6.11.3, `knk-plugin` `17f016d`), **awaiting live retest** before 6.7/6.11 can be marked done | 2026-09-16 | 2026-09-19 |
 
 ## Recently completed
 
