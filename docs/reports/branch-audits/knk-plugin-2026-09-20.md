@@ -67,13 +67,15 @@ decision actually acts on.
 
 ## Deletion checklist
 
-- [ ] `UserFeatures` — content confirmed merged (ancestor of `integrate/UserFeatures`, itself matching ancestor-of-`main` squash commit `5d8feea`); no open PR found (unverified, gh unavailable).
-- [ ] `integrate/UserFeatures` — content confirmed merged (138-line residual vs. `5d8feea` is `main`-side cleanup only); no open PR found (unverified).
-- [ ] `archive/26/02/DataAccessUnification` — content confirmed merged (exact match to ancestor-of-`main` commit `f293633`); no open PR found (unverified).
-- [ ] `archive/26/02/DataAccessUnificationIntegration` — content confirmed merged (exact match to ancestor-of-`main` commit `ffc93c5`); no open PR found (unverified).
-- [ ] `integrate/WGRegionHandler` — content confirmed merged (exact match to ancestor-of-`main` commit `0c5a565`); no open PR found (unverified).
-- [ ] `integrate/main-wgregionhandler` — literal git ancestor of `main`; no open PR found (unverified).
-- [ ] `CustomEnchantments` — sole commit's patch-id confirmed identical to `main` commit `b7bc904`; no open PR found (unverified).
+- [x] `UserFeatures` — content confirmed merged (ancestor of `integrate/UserFeatures`, itself matching ancestor-of-`main` squash commit `5d8feea`); deleted locally and on `origin` 2026-09-20.
+- [x] `integrate/UserFeatures` — content confirmed merged (138-line residual vs. `5d8feea` is `main`-side cleanup only); deleted locally and on `origin` 2026-09-20.
+- [x] `archive/26/02/DataAccessUnification` — content confirmed merged (exact match to ancestor-of-`main` commit `f293633`); deleted locally and on `origin` 2026-09-20.
+- [x] `archive/26/02/DataAccessUnificationIntegration` — content confirmed merged (exact match to ancestor-of-`main` commit `ffc93c5`); deleted locally and on `origin` 2026-09-20.
+- [x] `integrate/WGRegionHandler` — content confirmed merged (exact match to ancestor-of-`main` commit `0c5a565`); deleted locally and on `origin` 2026-09-20.
+- [x] `integrate/main-wgregionhandler` — literal git ancestor of `main`; deleted locally and on `origin` 2026-09-20.
+- [x] `CustomEnchantments` — sole commit's patch-id confirmed identical to `main` commit `b7bc904`; deleted on `origin` 2026-09-20 (no local copy existed).
+
+Open PR status was never verified (`gh` unavailable) before these deletions. If any of the seven had an open PR pointing at it, GitHub will not have deleted the PR itself, but it can no longer be merged as-is — worth a check at github.com/PandiO/knk-plugin/pulls if there's reason to think one existed.
 
 ## Needs your judgment
 
