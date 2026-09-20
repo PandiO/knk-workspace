@@ -21,49 +21,65 @@ shared repo.
 |---|---|---|---|---|---|---|---|
 | `master` | 2026-02-26 | Pandi Obsidian | n/a (default branch) | n/a | n/a | **ACTIVE** | Protected default branch. |
 | `gate-animation` | 2026-09-17 | Pandi Obsidian | unmerged (41 ahead, 0 behind) | unknown (gh unavailable) | 40 commits, none yet in master | **ACTIVE** | Currently checked-out branch; last commit 3 days ago, well within the 30-day window. |
-| `UserFeatures` | 2026-02-01 | Pandi Obsidian | unmerged (23 ahead, 35 behind); `git cherry`: 23/23 not applied | unknown | All 23 commits (e.g. "feat: implement v2.0 registration flow with deferred link code generation") | **NEEDS REVIEW** | Real, non-trivial unmerged feature (registration flow v2.0), no activity in 231 days. Also the "keeper" side of a duplicate pair — see below; identical HEAD commit (`33ab4e1`) to `integrate/archive/26/02/UserFeatures`. |
-| `integrate/archive/26/02/UserFeatures` | 2026-02-01 | Pandi Obsidian | unmerged (23 ahead, 35 behind); `git cherry`: 23/23 not applied | unknown | Same 23 commits as `UserFeatures` | **LIKELY STALE** | Points at the exact same commit (`33ab4e1`) as `UserFeatures` — zero unique content. No activity in 231 days, no open PR found, not referenced in `ACTIVE_SESSIONS.md`. Redundant name for the same branch; superseded by `UserFeatures` per duplicate check below. |
-| `domainRegionMessages` | 2026-01-29 | Pandi Obsidian | unmerged (18 ahead, 35 behind); `git cherry`: 18/18 not applied | unknown | All 18 commits (e.g. "fix(validation): validate draft health checks") | **LIKELY STALE** | Strict ancestor of `integrate/domainRegionMessages` (see duplicate check) — every commit here is also on that branch, plus 2 more and a later date. No activity in 234 days, not referenced in `ACTIVE_SESSIONS.md`. Superseded by the integrate branch. |
-| `integrate/domainRegionMessages` (local name: `integrate/archive/26/02/domainRegionMessages`) | 2026-02-01 | Pandi Obsidian | unmerged (20 ahead, 35 behind); `git cherry`: 20/20 not applied | unknown | All 20 commits, incl. "feat(users): add web-app-first account linking endpoint" (the 2 commits beyond `domainRegionMessages`) | **NEEDS REVIEW** | Real unmerged feature work (account linking, draft health-check validation), superset/keeper of the `domainRegionMessages` pair, 231 days inactive. Decide whether to finish integrating or abandon. |
-| `archive/26/02/world-task-locationcapture` | 2026-02-26 | Pandi Obsidian | unmerged by ancestry/diff, but **cherry-matched 29/30** | unknown | 1 commit: `1e315f3` "feat(api): add enchantment ability extension model" (2026-02-25) | **NEEDS REVIEW** | 29 of 30 commits are already applied to `master` under different hashes (`git cherry` shows `-` for all but one) — master's "Merge branch 'world-task-locationcapture'" commit brought nearly everything in already. Only `1e315f3` (a real, non-trivial change: new `AbilityDefinition` model, EF migration, service + repository changes, and tests — 11 files, 2164 lines) is genuinely at risk of being lost if this branch is deleted. Per audit rules, this must go to NEEDS REVIEW rather than a delete recommendation despite the branch otherwise looking abandoned (206 days inactive). |
-
-No branch is a candidate for **SAFE TO DELETE**: none are merged into `master` by ancestry, none have an empty diff against `master`, and none have *all* commits cherry-matched (the closest, `archive/26/02/world-task-locationcapture`, is missing exactly one).
+| `UserFeatures` | 2026-02-01 | Pandi Obsidian | content-verified merged (squash commit `6b4ceb4`, "Merge UserFeatures into Main") | unknown | none | **SAFE TO DELETE** (deleted) | Original mechanical checks (ancestry/empty-diff/`git cherry`) all missed this — `6b4ceb4` is a single-parent squash commit, so it's an ancestor of `master` but `origin/UserFeatures`'s own tip isn't, and `master` kept evolving afterward. Manually verified: of the 44 files added by this branch, all are functionally present in current `master` (23 byte-identical, 12 further modified since, 9 renamed/regenerated — see correction note below); `LinkCode`/`UserAuth` functionality confirmed present via symbol grep across `master`. |
+| `integrate/archive/26/02/UserFeatures` | 2026-02-01 | Pandi Obsidian | content-verified merged (identical HEAD `33ab4e1` to `UserFeatures`, which is merged — see above) | unknown | none | **SAFE TO DELETE** (deleted) | Exact duplicate of `UserFeatures` (same commit hash), which is confirmed merged above. |
+| `domainRegionMessages` | 2026-01-29 | Pandi Obsidian | content-verified merged (squash commit `8eda9d4`, "Merge domainRegionMessages into Main") | unknown | none | **SAFE TO DELETE** (deleted) | Same squash-merge pattern as `UserFeatures`. All 21 newly-added files from this branch are present in current `master` (9 identical, 12 further modified since). |
+| `integrate/domainRegionMessages` (local name: `integrate/archive/26/02/domainRegionMessages`) | 2026-02-01 | Pandi Obsidian | content-verified merged — superset of `domainRegionMessages` (merged, see above) plus one extra commit whose content is also confirmed present in `master` | unknown | none functionally, but **not deleted this pass** — see note | **NEEDS REVIEW → likely SAFE TO DELETE, held back pending explicit confirmation** | All files touched by the one extra commit ("feat(users): add web-app-first account linking endpoint", `c1bc4ce`) exist in `master`, and `git grep` confirms `LinkMinecraftAccountAsync`/`link-minecraft-account` are present. Functionally this branch looks fully merged too, same as its sibling — but it wasn't named in the 2026-09-20 deletion request, so it was intentionally left alone this pass rather than deleted on inference. Recommend deleting in a follow-up once confirmed. |
+| `archive/26/02/world-task-locationcapture` | 2026-02-26 | Pandi Obsidian | content-verified merged (`3d89802`, "Merge branch 'world-task-locationcapture'") | unknown | none | **SAFE TO DELETE** (deleted) | Originally flagged NEEDS REVIEW because `git cherry` showed 1 of 30 commits (`1e315f3`, "feat(api): add enchantment ability extension model") as not patch-matched into `master`. Manually verified this was a false negative: `master` contains the identical migration file `Migrations/20260225171241_AddAbilityDefinitionExtensionModel.cs` plus `Models/Item/AbilityDefinition.cs` and the associated service/repository/test files — same content, different commit hash (the patch-id changed slightly because of surrounding-context differences from other work applied in between). |
 
 `ACTIVE_SESSIONS.md` in the docs repo does not reference any `knk-web-api` branch by name (it currently only tracks `knk-plugin`'s `gate-structure-animation` work). No Linear issue references were inferrable from these commit messages (best-effort check only).
+
+## Correction (2026-09-20, same-day follow-up)
+
+The initial pass of this audit classified `UserFeatures`, `integrate/archive/26/02/UserFeatures`, `domainRegionMessages`, and `archive/26/02/world-task-locationcapture` as LIKELY STALE / NEEDS REVIEW, because the three mechanical checks this audit relies on (ancestry, empty-diff-against-`master`-tip, and `git cherry` patch-id matching) all under-reported what was actually merged. The repo owner supplied the actual merge-commit hashes (`6b4ceb4`, `8eda9d4`, `3d89802`), which were then independently verified — not merely trusted — by checking that:
+
+1. each merge commit is a real ancestor of `origin/master`,
+2. the files each branch introduced are present (byte-identical or since-modified, not missing) in current `master`, and
+3. for the one apparent gap (`1e315f3` on `archive/26/02/world-task-locationcapture`), the same migration/model/service content exists in `master` under a different commit hash.
+
+Root cause: these were **squash-style single-parent "merge" commits** (not real 2-parent git merges), made against the branch's fork point rather than current `master` tip, and `master` continued to evolve afterward (EF migrations got regenerated with new timestamps, some top-level changelog/phase-report markdown files were cleaned up). That combination defeats ancestry checks, empty-diff checks, and patch-id-based `git cherry` checks simultaneously, even though the content is genuinely merged. This is a useful pattern to watch for in future audits of this repo: **if a branch's last commit predates a same-day commit titled "Merge X into Main" that *is* an ancestor of `master`, check content presence directly (added-file diff + symbol grep) rather than trusting the mechanical checks alone.**
+
+These four branches, plus their local counterparts, were deleted per explicit user request after the above verification (see Execution log).
 
 ## Summary
 
 | Classification | Count |
 |---|---|
 | ACTIVE | 2 (`master`, `gate-animation`) |
-| SAFE TO DELETE | 0 |
-| LIKELY STALE | 2 (`integrate/archive/26/02/UserFeatures`, `domainRegionMessages`) |
-| NEEDS REVIEW | 3 (`UserFeatures`, `integrate/domainRegionMessages`, `archive/26/02/world-task-locationcapture`) |
+| SAFE TO DELETE (deleted) | 4 (`UserFeatures`, `integrate/archive/26/02/UserFeatures`, `domainRegionMessages`, `archive/26/02/world-task-locationcapture`) |
+| NEEDS REVIEW | 1 (`integrate/domainRegionMessages` — functionally merged per above, held back pending explicit confirmation) |
+| LIKELY STALE | 0 |
 
 ## Duplicate / overlap pairs
 
-- **`UserFeatures` vs. `integrate/archive/26/02/UserFeatures`** — identical HEAD commit (`33ab4e1`), i.e. these are literally the same content under two names. **Recommended keeper: `UserFeatures`** (shorter, canonical name; the `integrate/` prefix suggests it was meant as a temporary staging copy). Once a human confirms `UserFeatures` is being kept, `integrate/archive/26/02/UserFeatures` can be deleted with zero content loss — but it's held in LIKELY STALE rather than SAFE TO DELETE here because the underlying feature itself is still unmerged into `master`.
-- **`domainRegionMessages` vs. `integrate/domainRegionMessages`** — `domainRegionMessages` is a strict git ancestor of `integrate/domainRegionMessages` (confirmed via `git merge-base --is-ancestor`); the integrate branch contains every commit from `domainRegionMessages` plus 2 more ("Updated from Main" and "feat(users): add web-app-first account linking endpoint"), and has a later last-commit date. **Recommended keeper: `integrate/domainRegionMessages`** — it's the strictly-newer, more-complete version. `domainRegionMessages` can be deleted without any content loss once `integrate/domainRegionMessages` is confirmed as the branch being carried forward.
+- **`UserFeatures` vs. `integrate/archive/26/02/UserFeatures`** — identical HEAD commit (`33ab4e1`). Both confirmed merged into `master`; both deleted.
+- **`domainRegionMessages` vs. `integrate/domainRegionMessages`** — `domainRegionMessages` is a strict git ancestor of `integrate/domainRegionMessages`. Both are now confirmed merged into `master` in substance. `domainRegionMessages` was deleted; `integrate/domainRegionMessages` was intentionally left in place pending explicit confirmation (see table above).
 
 ## Deletion checklist
 
-No branches currently qualify as SAFE TO DELETE under this audit's rules — every unmerged branch has at least some content not yet cherry-matched into `master` (or is an unmerged duplicate whose *sibling* copy, not the branch itself, is the redundant one). Nothing is checked off below; this section is intentionally empty pending human review of the NEEDS REVIEW / LIKELY STALE branches above.
-
-- [ ] _(none — see "Needs your judgment" below)_
+- [x] `UserFeatures` — content confirmed merged via squash commit `6b4ceb4`; deleted locally and on `origin` 2026-09-20.
+- [x] `integrate/archive/26/02/UserFeatures` — exact duplicate of `UserFeatures` (same commit); deleted locally and on `origin` 2026-09-20.
+- [x] `domainRegionMessages` — content confirmed merged via squash commit `8eda9d4`; deleted locally and on `origin` 2026-09-20.
+- [x] `archive/26/02/world-task-locationcapture` — content confirmed merged via `3d89802`, including the one commit `git cherry` had missed; deleted locally and on `origin` 2026-09-20.
 
 ## Needs your judgment
 
-**LIKELY STALE:**
-- [ ] `integrate/archive/26/02/UserFeatures` — exact duplicate of `UserFeatures` (same commit), 231 days inactive. Delete only after confirming `UserFeatures` is the copy being kept.
-- [ ] `domainRegionMessages` — strict subset of `integrate/domainRegionMessages`, 234 days inactive. Delete only after confirming `integrate/domainRegionMessages` is the copy being kept.
-
 **NEEDS REVIEW:**
-- [ ] `UserFeatures` — 23 unmerged commits implementing a v2.0 registration flow, 231 days inactive. Decide: finish/merge, or intentionally abandon (and if abandoning, take `integrate/archive/26/02/UserFeatures` with it).
-- [ ] `integrate/domainRegionMessages` — 20 unmerged commits (draft health-check validation + web-app-first account linking), 231 days inactive. Decide: finish/merge, or abandon (and take `domainRegionMessages` with it).
-- [ ] `archive/26/02/world-task-locationcapture` — 29/30 commits already merged into `master` under different hashes; only `1e315f3` ("feat(api): add enchantment ability extension model" — new `AbilityDefinition` model, EF migration, service/repository wiring, tests) is unique and unmerged. Recommend cherry-picking that one commit onto `master` (or a fresh short-lived branch) before deleting this branch, rather than deleting it outright.
+- [ ] `integrate/domainRegionMessages` — functionally merged per the correction above (superset of the now-deleted `domainRegionMessages`, plus one more commit also confirmed present in `master`), but not named in the 2026-09-20 deletion request, so left in place. Recommend a follow-up confirmation to delete it too.
 
 **Also flagged (not a branch-classification issue, but surfaced during this audit):**
-- The local checkout of `archive/26/02/world-task-locationcapture` in this environment has 32 commits that were never pushed to `origin/archive/26/02/world-task-locationcapture` (and is 30 commits behind what *is* on origin). Whoever owns that checkout should reconcile it — it currently only exists locally.
+- The local checkout of `archive/26/02/world-task-locationcapture` in this environment had 32 commits that were never pushed to `origin/archive/26/02/world-task-locationcapture` (and was 30 commits behind what *was* on origin) before this branch was deleted. Those local-only commits no longer have a remote home now that the origin branch is gone — whoever owns that local checkout should check whether that unpushed work is still needed (it may still be recoverable locally via reflog/`git fsck` if the local branch ref is later needed, but it is not on `origin` or in `master`).
 
 **Not checked:**
-- Open PR status for every branch above is **unknown** — the `gh` CLI was not available in this environment. Verify manually before deleting anything with a real reason to suspect an open PR (e.g. via github.com/PandiO/knk-web-api/pulls).
+- Open PR status for every branch above is **unknown** — the `gh` CLI was not available in this environment. This wasn't re-verified before deletion; if any of the four deleted branches had an open PR pointing at it, that PR is now pointing at a deleted branch (GitHub does not delete the PR itself, but it can no longer be merged as-is). Worth a quick check at github.com/PandiO/knk-web-api/pulls if there's reason to think one existed.
+
+## Execution log (2026-09-20)
+
+All four branches on the deletion checklist above were deleted, both locally (in the `Repository/knk-web-api` checkout under this workspace) and on `origin`:
+
+- [x] `UserFeatures` (local `33ab4e1`, origin deleted)
+- [x] `domainRegionMessages` (local `ea1422d`, origin deleted)
+- [x] `archive/26/02/world-task-locationcapture` (local `6e00821`, origin deleted)
+- [x] `integrate/archive/26/02/UserFeatures` (local `33ab4e1`, origin deleted)
+
+`gate-animation` (active) and `master` (default) were untouched. `integrate/domainRegionMessages` was untouched per the "Needs your judgment" note above.
