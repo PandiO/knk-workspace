@@ -14,6 +14,13 @@ severe issue than Decision 7 anticipated - a uniform-transform-only mid-swing
 correction can jam the animation outright, not just lose some mid-swing
 positional exactness - see **Decision 8** below for the concrete evidence
 and the resulting move to the hybrid (option 4), tracked as item 6.11.
+**Update (2026-09-20):** item 6.11.3 (the last follow-up - stray-cell vacate
++ quintic residual taper, see Decision 8.2's own follow-up note below)
+confirmed live: 4 full open/close cycles against entity 14
+(`GeometryDefinitionMode=REGION`), no orphaned blocks, no jam, swing reads
+as rigid. The mid-swing jam this doc's Decisions 7/8/8.1/8.2 chased across
+five live-test rounds is now resolved and confirmed; Phase F's live pilot
+for the `ROTATION`-gate case is complete.
 **Author:** Claude (plan requested by Pandi), 2026-09-09
 **Related:** [SPEC.md](SPEC.md), [REQUIREMENTS.md](REQUIREMENTS.md), [IMPLEMENTATION_ROADMAP.md](IMPLEMENTATION_ROADMAP.md), [DECISIONS.md](DECISIONS.md), [DUAL_SCAN_ANIMATION_DESIGN.md](DUAL_SCAN_ANIMATION_DESIGN.md) (Open Question 3 — this plan resolves it: dual-scan extends to `ROTATION` gates; that doc is now superseded by this one for `VERTICAL`/`LATERAL` too, per Decision 6), [GATE_WORLD_SYNC_DESIGN.md](GATE_WORLD_SYNC_DESIGN.md) (a related but separate gap found while implementing this plan's Phase C)
 
@@ -807,8 +814,18 @@ test needs realistic magnitudes to be meaningful, not just internally
 self-consistent ones.) Implementation folded into item 6.11 (not a new item
 number) in
 [GATESTRUCTURE_QOL_IMPLEMENTATION_PLAN.md](GATESTRUCTURE_QOL_IMPLEMENTATION_PLAN.md).
-Not yet confirmed live - this is the fourth live-test cycle for this item;
-still pending the user's retest.
+
+**Confirmed live 2026-09-19** (`knk-plugin` commit `e11d2d1`) - 4 full
+open/close cycles against entity 14, no jam. This resolved the mid-swing jam
+itself; two smaller follow-ups surfaced from that same test (an orphaned
+open-only block left behind after closing, and a request for more visible
+rigidity) were addressed as item 6.11.3 and **confirmed live 2026-09-20**
+(4 more cycles, `GeometryDefinitionMode=REGION`: no orphaned blocks, swing
+reads as rigid) - see
+[GATESTRUCTURE_QOL_IMPLEMENTATION_PLAN.md](GATESTRUCTURE_QOL_IMPLEMENTATION_PLAN.md)
+item 6.11.3 for the implementation detail. This is the fifth and final
+live-test cycle for this item; the mid-swing jam chased across Decisions
+7/8/8.1/8.2 is now resolved and confirmed.
 
 **Superseded by this decision**: Decision 7's choice of option 1 alone
 (2026-09-16) - kept above, unedited, specifically so the reasoning trail

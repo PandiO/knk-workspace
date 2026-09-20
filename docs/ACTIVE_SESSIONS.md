@@ -26,13 +26,14 @@ Live tracker of in-progress work across all four Knights and Kings repos
 | Feature | Repos / files claimed | Owner (human / session) | Status | Started | Last updated |
 |---|---|---|---|---|---|
 | _(example)_ Siege minigame — capture point sync | web-api: `Services/SiegeService.cs`; plugin: `siege/` package | Claude Code session A | Implementing capture-point event handling | 2026-09-17 | 2026-09-17 |
-| Gate rotation gap-fill — rigid mid-swing animation (item 6.7/6.10/6.11) | plugin: `knk-core/.../gates/{RigidTransform,GateFrameCalculator,GateBlockPairing}.java`, `knk-core/.../domain/gates/CachedGateDoor.java`, `knk-paper/.../gates/{GateAnimationTask,GateLoaderAdapter,GateRestingFramePlacer}.java`; workspace: `docs/specs/gate-structure-animation/{ROTATION_GAP_FILL_DESIGN.md,GATESTRUCTURE_QOL_IMPLEMENTATION_PLAN.md}` | Claude Code session | Jam fixed and confirmed live (Decision 8.2, `knk-plugin` `e11d2d1`); orphaned-stray-cell fix + quintic rigidity taper implemented/unit-tested (item 6.11.3, `knk-plugin` `17f016d`), **awaiting live retest** before 6.7/6.11 can be marked done | 2026-09-16 | 2026-09-19 |
 
 ## Recently completed
 
 | Feature | Repos touched | Finished | Notes / link |
 |---|---|---|---|
 | _(example)_ Codebase scan — knk-plugin | knk-plugin (read-only), knk-workspace (docs) | 2026-09-17 | See `docs/reports/plugin-scan-2026-09-17.md` |
+| Gate door snow-layer handling (item 7) | plugin: `knk-paper/.../gates/GateBlockPlacer.java` (`knk-plugin` branch `gate-structure-animation`); workspace: `docs/specs/gate-structure-animation/GATESTRUCTURE_QOL_IMPLEMENTATION_PLAN.md` | 2026-09-20 | Closed by explicit user decision **without** live verification: 7.1 implemented + unit-tested (`GateBlockPlacer.clearSnowLayerAbove`, `GateBlockPlacerTest`, 233/233 `knk-paper` green); 7.2's weather-dependent in-game retest on entity 14 was never done. If a hovering-snow report surfaces later, re-open with real evidence rather than assuming this already covers it. |
+| Gate rotation gap-fill — rigid mid-swing animation (items 6.7/6.10/6.11, incl. 6.11.1-6.11.3) | plugin: `knk-core/.../gates/{RigidTransform,GateFrameCalculator,GateBlockPairing}.java`, `knk-core/.../domain/gates/CachedGateDoor.java`, `knk-paper/.../gates/{GateAnimationTask,GateLoaderAdapter,GateRestingFramePlacer}.java` (`knk-plugin` `17f016d`, branch `gate-structure-animation`); workspace: `docs/specs/gate-structure-animation/{ROTATION_GAP_FILL_DESIGN.md,GATESTRUCTURE_QOL_IMPLEMENTATION_PLAN.md}` | 2026-09-20 | Confirmed live (4 open/close cycles, entity 14, `GeometryDefinitionMode=REGION`): no jam, no orphaned blocks, rigid swing. See `GATESTRUCTURE_QOL_IMPLEMENTATION_PLAN.md` item 6.11.3 and `ROTATION_GAP_FILL_DESIGN.md` Decision 8.2 for full history. Item 7 (snow layer handling) is next. |
 
 ## Paused / blocked
 
