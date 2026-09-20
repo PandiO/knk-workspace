@@ -96,4 +96,22 @@ Total branches analyzed: 10 named branches (`archive/25/BoltSupplementation` now
 
 ## Cross-branch summary: where does `WorldTaskCta.tsx` actually live?
 
-Confirmed present **only** on: `UserFeatures`, `integrate/archive/26/02/UserFeatures`, `archive/25/ChatGPT-UIObjectConfig`, `integrate/archive/26/02/ChatGPT-UIObjectConfig`, `archive/26/02/world-tasks`. Absent from `main` and from the active `gate-animation-2` branch. If the intent is to eventually delete all five of the branches above, this component disappears from the repo entirely — worth a deliberate yes/no rather than an implicit one via branch cleanup.
+Confirmed present **only** on: `UserFeatures`, `integrate/archive/26/02/UserFeatures`, `archive/25/ChatGPT-UIObjectConfig`, `integrate/archive/26/02/ChatGPT-UIObjectConfig`, `archive/26/02/world-tasks`. Absent from `main` and from the active `gate-animation-2` branch.
+
+**Owner decision (2026-09-20, later same day): `WorldTaskCta.tsx` is confirmed obsolete.** This was the last remaining real gap on `archive/25/ChatGPT-UIObjectConfig`, `integrate/archive/26/02/ChatGPT-UIObjectConfig`, `integrate/archive/26/02/UserFeatures`, and `archive/26/02/world-tasks` — with this confirmed obsolete, none of those four branches carry any known unrecovered content. Only `TownCreateWizardPage.tsx` on plain `UserFeatures` remains unresolved (see held-back note above — unaffected by this decision, it's a different file).
+
+## Final deletion list (2026-09-20)
+
+Safe to delete now, per the mechanical checks plus the owner decisions recorded in this report:
+
+- [ ] `feat/m2m-join-creation` — ancestry-merged into `main` via a real `git merge` commit (`29d8c37`).
+- [ ] `gate-animation` — confirmed zero unique content once `gate-animation-2` and `archive/25/ChatGPT-UIObjectConfig`'s content (already in `main`) are accounted for.
+- [ ] `archive/25/ChatGPT-UIObjectConfig` — substantially squash-merged into `main` (`dfbdeef`); its only remaining gap, `WorldTaskCta.tsx`, is now confirmed obsolete.
+- [ ] `integrate/archive/26/02/ChatGPT-UIObjectConfig` — squash-merged into `main` (`7a7903a`); same resolved `WorldTaskCta.tsx` gap.
+- [ ] `archive/26/02/world-tasks` — its one unique file, `WorldTaskCta.tsx`, is now confirmed obsolete; its other changes were already superseded by `gate-animation-2`.
+- [ ] `archive/25/BoltSupplementation` — old, self-contained, unreferenced prototype phase; owner-confirmed via the `archive/` policy.
+- [ ] `integrate/archive/26/02/UserFeatures` — squash-merged into `main` (`7fad30e`); its only known gap, `WorldTaskCta.tsx`, is now confirmed obsolete. **Still listed as held-back per the owner's request to check it personally — the data no longer shows a blocker, but the hold stands until the owner says otherwise.**
+
+**Not on this list, do not delete:**
+- `UserFeatures` (plain branch) — still holds `TownCreateWizardPage.tsx`, confirmed nowhere else in the repo. Unaffected by the `WorldTaskCta.tsx` decision.
+- `main`, `gate-animation-2` — protected / active, never candidates.
