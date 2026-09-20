@@ -115,3 +115,18 @@ Safe to delete now, per the mechanical checks plus the owner decisions recorded 
 **Not on this list, do not delete:**
 - `UserFeatures` (plain branch) — still holds `TownCreateWizardPage.tsx`, confirmed nowhere else in the repo. Unaffected by the `WorldTaskCta.tsx` decision.
 - `main`, `gate-animation-2` — protected / active, never candidates.
+
+## Execution log (2026-09-20)
+
+All 6 branches on the final deletion list above were deleted, both locally and on `origin`:
+
+- [x] `feat/m2m-join-creation` (origin only, no local ref existed)
+- [x] `gate-animation`
+- [x] `archive/25/ChatGPT-UIObjectConfig`
+- [x] `integrate/archive/26/02/ChatGPT-UIObjectConfig`
+- [x] `archive/26/02/world-tasks`
+- [x] `archive/25/BoltSupplementation`
+
+Confirmed via `git fetch --prune` afterward — repo now has exactly `main`, `gate-animation-2`, `UserFeatures`, `integrate/archive/26/02/UserFeatures` remaining, matching the held-back list above.
+
+**New finding during cleanup, unaudited by any earlier pass:** `origin/25/BoltSupplementation` (no `archive/` prefix) is a *separate ref* that happened to point at the exact same commit (`1831dc0`) as the just-deleted `archive/25/BoltSupplementation` — same content, not new unique work. It is also, unusually, set as this **repository's default branch on GitHub** (`origin/HEAD` pointed to it). `git push origin --delete "25/BoltSupplementation"` was attempted and rejected by GitHub for exactly that reason ("refusing to delete the current branch"). **Action needed from the repo owner:** on GitHub.com, go to Settings → Branches and change the default branch to `main`, then this leftover ref can be deleted. Not done here — outside git's/this tool's reach.
