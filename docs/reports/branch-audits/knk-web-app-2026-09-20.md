@@ -15,6 +15,30 @@
 
 This section is a decision log, not a new automated classification — the Classification column below still reflects what the git checks alone support.
 
+**Correction (2026-09-20, later same day):** the two passes above both compared each branch to `main` using `git diff main...branch` (three-dot / merge-base-relative) and `git cherry main branch`. Both are blind to a manual squash commit landed directly on `main` that doesn't share a patch-id with the original branch commits — which is exactly what happened here. Grepping `main`'s own log for `merge.*into main` turned up three such commits missed by both earlier passes:
+
+- `7fad30e` "(feat): Merged UserFeatures into Main" — squash-merged **`integrate/archive/26/02/UserFeatures`** into `main`.
+- `7a7903a` "(feat): merge ChatGPT-UIObjectConfig into Main" — squash-merged **`integrate/archive/26/02/ChatGPT-UIObjectConfig`** into `main` (230 files, ~46k lines — essentially the whole branch).
+- `dfbdeef` "Merged ChatGPT-UIObjectConfig into Main:" — a later, much smaller hand-port of just the field-validation-rule-builder fix from **`archive/25/ChatGPT-UIObjectConfig`** (197 lines, `FieldEditor.tsx`) that Duplicate pair #3 below had flagged as missing from the `integrate/` branch. That gap was already closed by hand before this audit ran.
+
+Recomputing with `git diff main branch` (two-dot, current tips, which correctly reflects squash-merged content) instead of the three-dot fork-point diff:
+
+| Branch | Real remaining diff vs. current `main` | Files that exist only on the branch (nowhere in `main`) |
+|---|---|---|
+| `UserFeatures` | 63 files, +4586/-11484 | `src/components/Workflow/WorldTaskCta.tsx`, `src/pages/TownCreateWizardPage.tsx` |
+| `integrate/archive/26/02/UserFeatures` | 62 files, +5412/-9516 | `src/components/Workflow/WorldTaskCta.tsx`, `src/components/FormWizard/FieldRenderer.tsx` (see note) |
+| `archive/25/ChatGPT-UIObjectConfig` | 102 files, +5410/-15479 | `src/components/FormWizard/FieldRenderer.tsx` (see note), `src/components/Workflow/WorldTaskCta.tsx` |
+| `integrate/archive/26/02/ChatGPT-UIObjectConfig` | 101 files, +5413/-15665 | same two as above |
+
+Most of the remaining diff in each row is `main` having moved on independently since the squash-merge (net deletions from the branch's perspective, not lost work). Two real findings survive:
+
+1. **`WorldTaskCta.tsx` (284 lines)** — a form-completion CTA component. Confirmed absent from `main` across all four rows above. This is the same gap flagged in the original NEEDS REVIEW reasoning for `archive/26/02/world-tasks`; it's now confirmed to survive the squash-merges too, not just present on branches nobody merged yet.
+2. **`TownCreateWizardPage.tsx` (253 lines, a real multi-step town-creation wizard page)** — exists **only** on plain `UserFeatures`. It is **not** on `integrate/archive/26/02/UserFeatures` (most likely deleted in that branch's one extra commit, whose message is literally "A bunch of stuff got removed for some reason") and not on `main`. **This reverses the earlier claim that `UserFeatures` has zero content beyond `integrate/archive/26/02/UserFeatures`** — it does not. `UserFeatures` should not be deleted on the assumption that `integrate/archive/26/02/UserFeatures` (or `main`) already has everything it has.
+
+`src/components/FormWizard/FieldRenderer.tsx` is a false alarm, not a real gap: `main` commit `9c82931` ("Removed unused duplicate of FieldRenderer") deliberately deleted 588 lines of it as dead code, so its absence from `main` is intentional, not lost work.
+
+No equivalent "merge.*into main" marker exists for `gate-animation`, `archive/25/BoltSupplementation`, or `archive/26/02/world-tasks` — those three were not found merged into `main` by any method and the earlier findings for them stand.
+
 ## Note on `archive/25/BoltSupplementation` — resolved, not a real divergence
 
 The first pass flagged local vs. remote as diverged (different tip commits). Re-checked with `git merge-base --is-ancestor`: **local `archive/25/BoltSupplementation` is a strict ancestor of `origin/archive/25/BoltSupplementation`** — the local branch ref is simply 4 commits behind its own remote-tracking branch (nobody ran `git pull` on it locally after those commits were pushed). There is no conflicting history, nothing to reconcile. The remote ref (`origin/archive/25/BoltSupplementation`, tip `1831dc0`) is authoritative and treated as "the branch" below; local is not a separate row anymore.
@@ -58,18 +82,18 @@ Total branches analyzed: 10 named branches (`archive/25/BoltSupplementation` now
 
 - [ ] `feat/m2m-join-creation` (remote-only) — content confirmed already in `main` via ancestry (`git merge-base --is-ancestor origin/feat/m2m-join-creation main`), 0 unique commits, no local checkout to worry about, not referenced in `ACTIVE_SESSIONS.md`. Note: `gh` was unavailable to confirm there's no open PR pointing at this branch — do a manual check on GitHub before deleting.
 
-## Deletion checklist — owner-confirmed (2026-09-20, see "Owner decision" note above)
+## Deletion checklist — owner-confirmed (2026-09-20, updated after the correction above)
 
-These are not SAFE TO DELETE by the mechanical git checks — several have confirmed-unique content — but the repo owner explicitly accepted deleting them anyway based on the `archive/`-namespace policy above:
+- [x] `archive/25/ChatGPT-UIObjectConfig` — its one real unique piece (field-validation-rule-builder) is **already in `main`** via `dfbdeef`, confirmed by the correction above, not just accepted-as-lost. Its only remaining gap is `WorldTaskCta.tsx`, shared with the rest of the family (see below). Safe per owner's `archive/` policy, and lower-risk than originally reported.
+- [ ] `archive/26/02/world-tasks` — owner accepts loss of `WorldTaskCta.tsx` (284 lines). This is now the **last remaining copy anywhere** once the other `archive/`/`integrate/` branches below are also deleted — worth a final check that nobody wants this component before this branch goes.
+- [ ] `archive/25/BoltSupplementation` — already LIKELY STALE by the mechanical checks; owner confirms via the same policy. Unaffected by this correction (no merge marker found for it on `main`).
+- [x] `integrate/archive/26/02/ChatGPT-UIObjectConfig` — confirmed **already squash-merged into `main`** via `7a7903a` (230 files, ~46k lines — essentially the full branch). Owner's "not relevant" call is now backed by a direct git finding, not just judgment. Only gap is the shared `WorldTaskCta.tsx`.
 
-- [ ] `archive/25/ChatGPT-UIObjectConfig` — owner accepts loss of its field-validation-rule-builder feature (~197 lines, see Duplicate pair #3).
-- [ ] `archive/26/02/world-tasks` — owner accepts loss of `WorldTaskCta.tsx` (284 lines, confirmed unique).
-- [ ] `archive/25/BoltSupplementation` — already LIKELY STALE by the mechanical checks; owner confirms via the same policy.
-- [ ] `integrate/archive/26/02/ChatGPT-UIObjectConfig` — owner believes not relevant (provisional; also carries the small nav-link/bugfix additions noted in Duplicate pair #3 — confirm those aren't wanted before deleting).
+## Held back — do not delete without reading this
 
-**Held back — do not delete:**
-- `integrate/archive/26/02/UserFeatures` — owner is checking this one personally before deciding. `UserFeatures` (plain branch) is a confirmed strict subset of it and has no independent content, so it doesn't need separate review — its outcome just follows whatever is decided here.
+- **`integrate/archive/26/02/UserFeatures`** — owner is checking this one personally. Confirmed **already squash-merged into `main`** via `7fad30e`; remaining diff is mostly `main`'s later independent work, plus the shared `WorldTaskCta.tsx` gap. Lower-risk than originally reported.
+- **`UserFeatures` (plain branch) — re-flagged, do NOT tie its fate to `integrate/archive/26/02/UserFeatures`.** The earlier report said this branch was a pure subset with nothing unique — **that was wrong.** It alone holds `src/pages/TownCreateWizardPage.tsx` (253 lines, a real town-creation wizard page), which is absent from `integrate/archive/26/02/UserFeatures`, from `main`, and from every other branch checked in this audit. If `UserFeatures` is deleted (or left to rot after `integrate/...` is decided on) without someone looking at this file, it is gone for good — there is no other copy anywhere in this repo.
 
-## Needs your judgment (not recommended for removal — surfaced only)
+## Cross-branch summary: where does `WorldTaskCta.tsx` actually live?
 
-Superseded by the owner-confirmed checklist above for everything except `integrate/archive/26/02/UserFeatures`, which remains open pending the owner's own check.
+Confirmed present **only** on: `UserFeatures`, `integrate/archive/26/02/UserFeatures`, `archive/25/ChatGPT-UIObjectConfig`, `integrate/archive/26/02/ChatGPT-UIObjectConfig`, `archive/26/02/world-tasks`. Absent from `main` and from the active `gate-animation-2` branch. If the intent is to eventually delete all five of the branches above, this component disappears from the repo entirely — worth a deliberate yes/no rather than an implicit one via branch cleanup.
