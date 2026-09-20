@@ -7,6 +7,14 @@
 
 **Revision note (same day):** the first pass of this audit classified several branches from `git diff --stat` / `git cherry` counts alone. A follow-up pass read the actual diff content and cross-branch `git cherry` comparisons (not just each branch vs. `main`) for every LIKELY STALE and NEEDS REVIEW branch. That changed the picture materially in three cases — see the per-branch reasons below, all of which now cite specific commits/files rather than "unclear."
 
+**Owner decision (same day, repo owner via chat, not derivable from git alone):** the repo owner (Pandi) reviewed the findings above and made an explicit call that overrides the mechanical classification for some branches — recorded here rather than silently changing the table, since the underlying git facts (e.g. `archive/25/ChatGPT-UIObjectConfig` genuinely having unique functionality) haven't changed, only the decision to accept that loss:
+- All branches under the top-level `archive/` namespace are to be treated as archived/not relevant, **including** `archive/25/ChatGPT-UIObjectConfig` and `archive/26/02/world-tasks` — accepting the loss of their confirmed-unique content (the field-validation-rule-builder feature and `WorldTaskCta.tsx` respectively, see the per-branch reasons and Duplicate pair #3 below).
+- `archive/25/BoltSupplementation` was already independently classified LIKELY STALE and is covered by the same "archive/ = not relevant" call.
+- `integrate/archive/26/02/ChatGPT-UIObjectConfig` (top-level `integrate/` namespace) is also believed not relevant, per the owner, and is being provisionally accepted on that basis.
+- `integrate/archive/26/02/UserFeatures` (top-level `integrate/` namespace) is **explicitly held back** — the owner will check this one personally before any decision. Do not delete it on the strength of this report alone. (`UserFeatures`, the plain top-level branch, is unaffected either way: it was already confirmed to be a strict content subset of this branch, so its fate follows whatever is decided for `integrate/archive/26/02/UserFeatures`.)
+
+This section is a decision log, not a new automated classification — the Classification column below still reflects what the git checks alone support.
+
 ## Note on `archive/25/BoltSupplementation` — resolved, not a real divergence
 
 The first pass flagged local vs. remote as diverged (different tip commits). Re-checked with `git merge-base --is-ancestor`: **local `archive/25/BoltSupplementation` is a strict ancestor of `origin/archive/25/BoltSupplementation`** — the local branch ref is simply 4 commits behind its own remote-tracking branch (nobody ran `git pull` on it locally after those commits were pushed). There is no conflicting history, nothing to reconcile. The remote ref (`origin/archive/25/BoltSupplementation`, tip `1831dc0`) is authoritative and treated as "the branch" below; local is not a separate row anymore.
@@ -50,15 +58,18 @@ Total branches analyzed: 10 named branches (`archive/25/BoltSupplementation` now
 
 - [ ] `feat/m2m-join-creation` (remote-only) — content confirmed already in `main` via ancestry (`git merge-base --is-ancestor origin/feat/m2m-join-creation main`), 0 unique commits, no local checkout to worry about, not referenced in `ACTIVE_SESSIONS.md`. Note: `gh` was unavailable to confirm there's no open PR pointing at this branch — do a manual check on GitHub before deleting.
 
+## Deletion checklist — owner-confirmed (2026-09-20, see "Owner decision" note above)
+
+These are not SAFE TO DELETE by the mechanical git checks — several have confirmed-unique content — but the repo owner explicitly accepted deleting them anyway based on the `archive/`-namespace policy above:
+
+- [ ] `archive/25/ChatGPT-UIObjectConfig` — owner accepts loss of its field-validation-rule-builder feature (~197 lines, see Duplicate pair #3).
+- [ ] `archive/26/02/world-tasks` — owner accepts loss of `WorldTaskCta.tsx` (284 lines, confirmed unique).
+- [ ] `archive/25/BoltSupplementation` — already LIKELY STALE by the mechanical checks; owner confirms via the same policy.
+- [ ] `integrate/archive/26/02/ChatGPT-UIObjectConfig` — owner believes not relevant (provisional; also carries the small nav-link/bugfix additions noted in Duplicate pair #3 — confirm those aren't wanted before deleting).
+
+**Held back — do not delete:**
+- `integrate/archive/26/02/UserFeatures` — owner is checking this one personally before deciding. `UserFeatures` (plain branch) is a confirmed strict subset of it and has no independent content, so it doesn't need separate review — its outcome just follows whatever is decided here.
+
 ## Needs your judgment (not recommended for removal — surfaced only)
 
-**LIKELY STALE:**
-- [ ] `gate-animation` — confirmed zero unique content beyond `gate-animation-2` + `archive/25/ChatGPT-UIObjectConfig` (see Duplicate pair #1). Safe once those two are retained.
-- [ ] `UserFeatures` — confirmed strict subset of `integrate/archive/26/02/UserFeatures` (see Duplicate pair #2). Safe once that branch is retained.
-- [ ] `archive/25/BoltSupplementation` — old, self-contained "Bolt AI" prototype phase, no overlap with any active or kept branch, superseded in `main` by an independently-built `ObjectView.tsx`. 82 files is large enough to warrant a quick human skim before deleting, but nothing here points to live, wanted work.
-
-**NEEDS REVIEW:**
-- [ ] `archive/25/ChatGPT-UIObjectConfig` — recommended as the **keeper** half of Duplicate pair #3; needs the two small `integrate/...`-only changes ported in before `integrate/...` is retired.
-- [ ] `integrate/archive/26/02/ChatGPT-UIObjectConfig` — losing half of Duplicate pair #3; do not delete until its two unique changes (nav link, `DynamicForm.tsx` fix) are ported to `archive/25/ChatGPT-UIObjectConfig`.
-- [ ] `integrate/archive/26/02/UserFeatures` — confirmed keeper of Duplicate pair #2, but still carries 68 substantial, genuinely-unmerged-to-`main` commits; a human should confirm this feature work is still wanted.
-- [ ] `archive/26/02/world-tasks` — contains one confirmed-unique file, `WorldTaskCta.tsx` (284 lines), not present anywhere else including the active `gate-animation-2` branch. Do not delete without deciding whether to port it forward.
+Superseded by the owner-confirmed checklist above for everything except `integrate/archive/26/02/UserFeatures`, which remains open pending the owner's own check.
