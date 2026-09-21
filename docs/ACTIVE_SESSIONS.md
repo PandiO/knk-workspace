@@ -26,6 +26,7 @@ Live tracker of in-progress work across all four Knights and Kings repos
 | Feature | Repos / files claimed | Owner (human / session) | Status | Started | Last updated |
 |---|---|---|---|---|---|
 | _(example)_ Siege minigame — capture point sync | web-api: `Services/SiegeService.cs`; plugin: `siege/` package | Claude Code session A | Implementing capture-point event handling | 2026-09-17 | 2026-09-17 |
+| InventoryMenu Phase 2 — rendering engine core | plugin: runtime `Menu`/`MenuSection`/`MenuItem`, template→runtime assembly, static-grid layout, `MenuSession` lifecycle, overflow/pagination, async rendering (`knk-plugin` branch `claude/inventory-menu-phase-2-x4y98c`, forked from Phase 1's `claude/inventory-menu-phase-1-wxl3z0`, which is now merged in) | Claude Code session | Starting: reading docs, verifying Phase 1 landed as expected | 2026-09-21 | 2026-09-21 |
 
 ## Recently completed
 
