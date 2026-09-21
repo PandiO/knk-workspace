@@ -1,8 +1,3 @@
----
-status: active
-last_updated: 2026-09-16
----
-
 # Knights & Kings — Game Vision
 
 > Working vision document. Sections are tagged where relevant:
@@ -73,6 +68,10 @@ Legacy split Structure subtypes inconsistently (partly a byproduct of the origin
 ### 2.6 Ownership (`controlledBy`) [Long-term] [OPEN]
 
 Kingdom/Province/Town/District are all meant to eventually carry a `controlledBy`/owner field — a new concept for v3, not present in either legacy codebase. Ownership derives from either a clan (NPC- or player-owned) or an individual, and ties closely into the clan-conquest system (Section 3). Needs further refinement beyond name, chat color, banner, and relations — parked as an open item, not a blocker for the rest of this document.
+
+### 2.7 Game world settings
+
+A global, admin-configurable game-world settings system — join/spawn location, weather settings, time settings, and similar server-wide rules — was already a confirmed work-in-progress direction, not fully built. Worth finishing for v3: it replaces ad hoc defaults like v2's current "teleport new players to whatever town happens to be first in an unordered list" with deliberate, configurable global rules instead.
 
 ---
 
@@ -154,15 +153,43 @@ Whether structures (particularly shops/resource-production) are single-owner or 
 
 ## 5. Player Progression & Social Status
 
-### 5.1 XP and titles
+### 5.1 Rank & permission architecture [decided]
 
-Experience points and noble titles are **the same progression axis** — titles *are* player levels, not a separate achievement-unlocked system. Once a player reaches the highest title, XP continues climbing as a pure "veteran" prestige signal, visible to other players independent of title.
+Drop the external permissions-plugin dependency (PermissionsEx, in the legacy versions) for rank/tier concerns. Rank/Tier becomes a first-class, KnK-owned concept living directly on `User` — queryable, admin-configurable, with expiry support for temporary tiers — rather than delegated to an external plugin's group membership. This is foundational: item purchase gating, premium kits, district access-gating, and the premium-tier direction below all depend on rank being real, first-class data.
 
-### 5.2 Premium tiers
+**Rationale:** minimizing dependence on external, Minecraft/Bukkit-ecosystem-specific plugins is a deliberate architectural principle here, not a one-off preference — it preserves freedom to fully customize behavior in-house, and matters specifically because a future migration off Minecraft entirely (e.g. to Unreal Engine or a custom engine) is a live possibility. Every system built as a thin wrapper around a Bukkit-ecosystem plugin is exactly the kind of thing that migration would have to rebuild from scratch; owning core systems like rank/permissions directly keeps that door open.
+
+**Feature bar to match:** despite dropping the *dependency*, the in-house system should match PermissionsEx/LuckPerms-style tooling feature-for-feature, not just replicate a minimal subset — it's mature, well-liked software worth using as the direct model:
+- Named permission groups, each with its own chat prefix and suffix (display-name formatting).
+- Per-group permission sets that support explicit **exclusions** (denies), not just grants.
+- Group **inheritance hierarchy**, where a group can inherit another group's full permission set but still override specific permissions via its own exclusions.
+- **One unified "permission holder" model, not a groups-only system**: premium ranks and staff roles are just two instances of the same underlying concept (a set of permissions + inclusions/exclusions + a chat prefix/suffix) — they aren't separate mechanisms. Individual players sit on top of that same model: a player can have explicit permission grants and exclusions of their own, layered on top of whatever their group(s) already give them.
+
+### 5.2 XP and titles
+
+Experience points and noble titles remain **the same progression axis** — titles *are* player levels, not a separate achievement-unlocked system. Once a player reaches the highest title, XP continues climbing as a pure "veteran" prestige signal, visible to other players independent of title.
+
+Demotion via experience deduction is possible — triggered by confirmed rule-breaking, crime, or other misconduct (ties into Section 6) — reusing the promotion/demotion pipeline in reverse. **[OPEN]** Flagged design tension: deducting a player's earned XP directly feels punitive in a way that sits uneasily, even though demoting a *title* for misconduct feels right. A future redesign might decouple "title" from "raw XP total" so title can be demoted independently without touching the underlying experience number. Keeping them coupled for now; worth revisiting.
+
+### 5.3 Premium tiers
 
 Rename "donor" tiers to **premium** tiers. Deliberate direction change from the original 2017 design (which explicitly avoided pay-to-win): the current preference is for premium tiers to grant real power/progress advantages rather than being purely cosmetic. This should be called out explicitly in any external-facing material as an intentional decision, not an oversight.
 
-### 5.3 Dropped ideas
+### 5.4 Salary system
+
+Kept. Hourly payout per hour played, scaled by global, personal, and rank-based multipliers — all admin-configurable via the web app, with more customization desired here than v1 had. Offline-gap handling: if a player leaves and at least one hour has passed by the time they next join, a payout covering that gap is made on that next join, rather than silently lost.
+
+**Account linking (underpins 5.3 and 5.4):** both premium tiers and the salary system assume a working connection between a player's in-game account and their web-app account. This connection is not new work — it's already extensively specced and largely built (web-API side: data model, DTOs, service layer, controllers, and tests complete; plugin side: link-code generation, duplicate-account handling, cache sync implemented), on the `UserFeatures` branch, not yet merged. Source of truth: `docs/specs/users/` and `docs/specs/plugin-auth/` in knk-workspace, not restated here.
+
+### 5.5 Owner-mode / staff-mode
+
+Confirmed essential, required for core staff functions. Rebuild for v3 — v2 never rebuilt this despite its own TODOs flagging it as still wanted.
+
+### 5.6 In-game rank & group management
+
+v1's in-plugin commands for moving players between server groups/ranks should be improved and rebuilt for v3, not left to an external plugin — consistent with 5.1's decision to bring rank/tier fully in-house.
+
+### 5.7 Dropped ideas
 
 A "random birth advantage" mechanic (starting conditions randomized at character creation) has been dropped — too complex and ambiguous to implement well.
 
@@ -262,6 +289,20 @@ Build the full kit system on top of v2's more mature model (persisted `Kit` enti
 
 ---
 
+## 10. Inventory & Menu Framework (Player UI)
+
+The clickable inventory-menu system is the primary in-game UI surface for players — how they reach houses, properties, skills, social features, the gem-shop, and (via legacy precedent) most other player-facing systems that aren't a dedicated screen of their own. It is also a hard prerequisite for the Items and Siege-minigame MVP work, since both rely on it for their player-facing UI.
+
+- **Status**: no v3 code exists yet — confirmed directly against `knk-plugin`'s `InventoryMenus` branch (still a single, unmerged planning commit). **The v1/v2 legacy menu system is still what's live.** What has changed since the last pass: the engine *architecture* is now decided, reconciled against the full legacy bug-mining findings, and actively being refined pre-implementation (see `docs/specs/inventory-menu/` and the reconciliation/design-review docs alongside it).
+- **Engine decision**: v3 adopts the flexbox-style composite architecture originally built (but never wired to the live game) as v2's orphaned `menu/`+`command/menu/` tree — Menu → MenuSection → MenuItem composition, a definition/rendered-instance split, an explicit `MenuSession`, and align/position/growth/overflow/priority-driven layout. This directly mirrors the `ItemTemplate`/`ItemInstance` split already decided in §9.1 — the same architectural principle applied consistently. Neither v1's god-class nor v2's live `model/menu`/`Menu2`/`ContentGroup` tree carries forward as architecture; both are content sources to port, not engines to keep.
+- **Reconciliation against known bugs**: the two structurally serious legacy bugs — v2's async off-thread `Inventory` mutation and the broken `%...%` variable-substitution regex — are fixed by this architecture's design (async rendering pattern; a properly escaped resolver). Three real design gaps were identified and are being closed before implementation: session cleanup on player quit (the new equivalent of v1's unbounded static-map growth bug), pagination/overflow living on the base class rather than being subclass-only (the same failure shape as v2's no-op `Menu.nextPage` stub), and permission-gating as a first-class item/section property (v2 had an accidentally-unguarded debug item for exactly this reason).
+- **New capabilities being designed in** (not present in either legacy system or the original January draft): search, conditional menu-button actions (condition checked at click time, not just render time — closes a staleness window the old lore-color-based affordability checks were vulnerable to), structured content filters, and first-class permissions (visibility vs. action-execution as separate checks).
+- **Templates are database-persisted, not hardcoded — authoring UI is a separate, later decision.** `Menu`/`MenuSection`/`MenuItem` exist as real backend entities from day one (no Java-constructed templates), loaded by the plugin through the existing data-access/cache layer. Authoring them via the `FormWizard`/`FormConfigBuilder` system (the same pattern `GateStructure` uses) is deferred to a future update rather than a day-one requirement — day one, templates are created directly (seed data / direct API), not through a generated admin form. See `docs/specs/inventory-menu/FORMCONFIG_INTEGRATION.md` for the full analysis, kept as forward-looking design for when that update happens.
+- **Known remaining gap either way**: v1-era feature parity (houses, properties, titles, social, gem-shop, and other screens reachable from v1's Personal Menu) plus the two currently-live v2 screens (Kit and Siege overviews) are not yet ported to any v3 framework, and porting them is separate, not-yet-planned scope from the engine work above.
+- An implementation plan (entities, phased build order) follows the same pattern as the Items plan (§9.1), once the design-review pass currently underway is settled.
+
+---
+
 ## Appendix: Open Questions
 
 Consolidated list of items flagged `[OPEN]` above, for future refinement:
@@ -273,3 +314,4 @@ Consolidated list of items flagged `[OPEN]` above, for future refinement:
 5. **Long-term ownership (`controlledBy`) refinement** for Kingdom/Province/Town/District — how it derives from clans vs. individuals, and how territory `controlledBy`/resource yield (2.3) integrates. The MVP-scope baseline (a minimal `Clan` model driving Town default team identity and clancastle control) is now defined in Section 3.2 and is not blocked by this.
 6. **Loot-box probability formula** — should factor in grade, enchantments, and soulbound/ghosted status; exact calculation deliberately deferred to dedicated loot/economy balancing work (Section 9.1).
 7. **`ItemInstance` persistence at scale** — millions of instances may eventually outgrow a relational MySQL store; not a near-term blocker, revisit once real numbers make it concrete (Section 9.1).
+8. **Title/XP coupling for demotion** — deducting a player's earned XP to demote their title feels punitive in a way that sits uneasily; a future redesign may want to decouple title from raw XP total so title can be demoted independently. Kept coupled for now (Section 5.2).
