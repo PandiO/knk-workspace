@@ -26,6 +26,7 @@ Live tracker of in-progress work across all four Knights and Kings repos
 | Feature | Repos / files claimed | Owner (human / session) | Status | Started | Last updated |
 |---|---|---|---|---|---|
 | _(example)_ Siege minigame — capture point sync | web-api: `Services/SiegeService.cs`; plugin: `siege/` package | Claude Code session A | Implementing capture-point event handling | 2026-09-17 | 2026-09-17 |
+| InventoryMenu Phase 3 — variable resolution | plugin: `knk-core/.../core/menu/` (`VariableResolver`, `MenuVariableRefreshPolicy`, `MenuDefinitionValidator`), `knk-paper/.../paper/menu/` (`MenuVariableContext`, `MenuDefinitionValidationRunner`, `MenuItemBukkitMapper`, `MenuRenderer`, `MenuService`), `KnKPlugin` wiring (`knk-plugin` branch `claude/inventory-menu-phase-2-x4y98c`, continuing Phase 2's branch since it's not merged to main yet); no web-api changes (schema already supports `RefreshPolicy`/`TtlTicks`) | Claude Code | Implementing three-tier RefreshPolicy resolver + load-time validator | 2026-09-21 | 2026-09-21 |
 
 ## Recently completed
 
