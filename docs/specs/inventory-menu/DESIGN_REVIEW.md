@@ -109,6 +109,22 @@ text-input is the common idiomatic approach in Bukkit/Paper plugins). Define
 an explicit empty-results state — neither legacy system had one, so this is
 genuinely new UX, not reuse.
 
+**Text-input mechanism, decided (2026-09-22):** AnvilGUI (the md5lukas fork,
+Paper-only), not chat capture. Phase 5's implementation reused this
+codebase's existing `ChatCaptureManager` instead — a reasonable-looking
+shortcut at the time (it was already built and idiomatic for other
+account-flow input), but a follow-up research pass confirmed it's the wrong
+call for this specifically: chat capture requires closing the menu Inventory
+entirely to type (vanilla Minecraft closes any open custom Inventory the
+instant chat opens), then reopening it after — a jarring close/reopen cycle
+for something that should feel like a normal menu interaction. AnvilGUI
+avoids that: it opens in place, captures the query via the anvil's rename
+field, and closes back into the originating menu with the result already
+applied. This is now the standard text-input mechanism for InventoryMenu,
+superseding Phase 5's chat-capture approach — see §2.5 below for the full
+interaction-model decision this is part of, and `docs/backlog/
+QOL_BUGFIX_BACKLOG.md` item 8 for the implementation follow-up this implies.
+
 ### 2.2 Conditional menu-button actions
 Add a `condition` check per action (or per `MenuItem`), evaluated **at click
 time**, distinct from visibility (Display modes control whether something
@@ -142,6 +158,58 @@ usually the same node, but not always (e.g. a preview visible to everyone,
 actionable only by the owner). Check both at render time (hide/disable) *and*
 at click time (defense in depth — never trust that hiding a button was
 sufficient, in case of any client/timing edge case).
+
+### 2.5 Interaction model: UI-first, command fallback (decided 2026-09-22)
+Added after Phase 5 shipped a command-triggered search/filter mechanism and
+the developer flagged that commands should never be the main or only way to
+drive these interactions — a dedicated research pass then produced this
+decision. It's broader than §2.1's text-input question alone: it's the
+general interaction principle for every InventoryMenu flow, current and
+future.
+
+**Principle:** InventoryMenu flows are click/GUI-driven by default. A command
+equivalent may exist for power users or scripting, but it is never required
+to complete a flow, and no menu action should force a close-command-reopen
+cycle.
+
+- **Browsing / pagination / filtering by category**: in-place re-render, no
+  external input — a click on a pagination arrow or filter-cycle item
+  re-renders the same Inventory in place.
+- **Free-text input** (search, naming, custom values): AnvilGUI. Opens in
+  place, captures text via the rename field, closes back into the
+  originating menu with the result applied. See §2.1's update above — this
+  supersedes Phase 5's chat-capture-based search input specifically.
+- **Numeric input** (quantities, amounts): click actions first — left-click
+  = +1/select, right-click = -1/deselect, shift-click = +stack or max,
+  matching the v1/v2 pattern. Anvil-based custom-amount entry is the
+  fallback only, for values outside the click-driven range.
+- **Confirmations**: an in-menu confirm/cancel item pair, not a chat y/n or
+  a command. (Also closes the loop on `MenuSectionKind.CONFIRM_DIALOG`,
+  which has existed as an enum value since Phase 2 with no defined
+  interaction behavior yet.)
+- **Commands**: kept only as an optional fallback path (e.g. `/inv search
+  <term>` still works for scripting/macros), but never the only path.
+
+**Library choices:** InvUI for chest-menu construction/pagination; AnvilGUI
+(md5lukas fork, Paper-only) for the free-text capture surface. Neither is a
+dependency of `knk-plugin` today.
+
+**Implementation impact — flagged, not yet actioned:** adopting InvUI for
+menu *construction*/pagination is a materially bigger change than it first
+sounds, because Phase 2 already built and shipped a hand-rolled equivalent
+(`MenuSlotCalculator`, `RuntimeMenuSection.resolveSlots`'s pagination,
+`MenuRenderer`, `MenuItemBukkitMapper`) that Phases 3-5 are all built on top
+of. This decision does **not** by itself specify how the two reconcile —
+whether InvUI replaces the Bukkit-facing rendering/pagination layer while
+the Bukkit-free template/domain model (`MenuTemplate`/`MenuSection`/
+`MenuItem`, `VariableBinding`, `MenuSession`) stays as the source of truth
+feeding it, or something else. That's real design work for whichever phase
+picks this up, not a decision to make silently while just updating docs.
+Similarly, click-driven pagination/search/filter/confirmation triggers all
+depend on `ActionRegistry` (Phase 6, not yet built) to do anything on click.
+See `docs/backlog/QOL_BUGFIX_BACKLOG.md` item 8 for the tracking entry and
+`ACTIVE_SESSIONS.md`'s Phase 5 entry for how the superseded chat-capture
+approach got built in the first place.
 
 ## 3. Cross-cutting recommendations
 
