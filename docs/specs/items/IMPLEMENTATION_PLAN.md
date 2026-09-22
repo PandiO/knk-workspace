@@ -1,7 +1,8 @@
 # Items — Implementation Plan
 
 **Status:** Draft — first version of this document
-**Last updated:** 2026-09-22 (revised same day to fold in `docs/specs/legacy/items.md`)
+**Last updated:** 2026-09-22 (revised twice same day: first to fold in `docs/specs/legacy/items.md`,
+then to bring `Tag`/`Category` enrichment and `Origin` into scope per explicit developer decision)
 
 Ref: `docs/vision/vision.md` §9.1 (Items). Sources checked while writing this:
 `docs/specs/legacy/items.md` (v1/v2 legacy spec-mining — see §0), `docs/reports/
@@ -37,6 +38,14 @@ plan, now informed by real legacy findings rather than none.
   follow) is therefore a *live, merged* pattern to build on, not one still stuck on a branch.
   Refreshing those two reports generally is out of scope here; this note exists so this plan
   isn't built on a stale premise.
+
+- **Second revision, same day**: after reading the reconciliation, the developer explicitly
+  decided to bring `Tag`/`Category` (§1.5's "newly-surfaced gap") and `Origin` into scope,
+  overriding this doc's earlier recommendation to defer both. Origin's shape was also given
+  explicitly: "a reference to either a structure, district, town, province or kingdom" —
+  Province/Kingdom acknowledged as not yet implemented. §1.5, §2, §3, §4, §6, §7 below are
+  updated accordingly; superseded text is struck through rather than deleted so the reasoning
+  trail stays visible.
 
 ## 1. Reconciliation — what's already built (read this before assuming greenfield)
 
@@ -163,8 +172,8 @@ v1 (`Products/*`, raw JDBC) had no class literally called `Item` — its item en
 | Grade | hardcoded `int` 1–5, feeds real drop-chance/drop-amount/lore tables | `Grade` entity (id/name/stars), data-driven, admin-creatable — but **nothing reads it**, no behavior wired | **absent entirely** |
 | Material/"itemtype" | two inconsistent resolution paths (`ItemType.BlockID` numeric parsing vs. `ProductMaterial`+`ItemType` string concat — a confirmed legacy bug) | `Itemtype` — one unified `Material`+`BlockData` path | **already present**, via `IconMaterialRefId`/`IconMaterial` → `MinecraftMaterialRef`. Despite being named/framed as an "icon" field in the current model and DTOs, `ItemBlueprintBukkitMapper.fromBlueprint` resolves the actual `ItemStack`'s `Material` from that same namespace key — i.e. **this field already does double duty as both display icon and real material identity**, matching v1/v2's `Itemtype` concept. Correcting §2 below: "itemtype" is not a gap. |
 | Price | `PriceMin`/`PriceMax` + a full property-category sellability matrix (`canProductbeSold`) | single flat `basePrice`, no matrix — vision.md §9.1 explicitly says this direction is **"kept"** for v3 (`basePriceMin`/`basePriceMax`), not `[OPEN]` | **absent entirely** |
-| Origin | no equivalent | `Item.origin` — `Set<Dominion>` multi-select, but **no code anywhere reads it for any gameplay effect** (legacy doc's own open question #4) | **absent entirely** |
-| Tag | no equivalent | `Category.tags` (M2M `Tag` entity) — attached to **Category, not Item** directly | **absent from both `Category` and `ItemBlueprint`** in current v3 — a real, separate gap (§7) |
+| Origin | no equivalent | `Item.origin` — `Set<Dominion>` multi-select, but **no code anywhere reads it for any gameplay effect** (legacy doc's own open question #4) | **absent entirely.** Now **in scope** (developer decision) as a single reference to a `Structure`/`District`/`Town`/`Province`/`Kingdom` — a materially different shape from v2's multi-select `Dominion` set. See §3 for the design (`OriginId` → `Domain`, not a new polymorphic mechanism). |
+| Tag | no equivalent | `Category.tags` (M2M `Tag` entity) — attached to **Category, not Item** directly | **absent from both `Category` and `ItemBlueprint`.** Now **in scope** (developer decision): a new `Tag` entity + `CategoryTag` join, attached to `Category` (matching v2's shape, reachable from `ItemBlueprint` transitively via `CategoryId`), not a direct `ItemBlueprint` field — see §3. |
 | Soulbound/Ghosted | lore-string convention only, never persisted as columns; the only real player-facing effect (blocking manual drop) worked, but death-protection was already dead/commented-out code | **no equivalent at all** | absent (vision.md instance-level, out of this plan's scope regardless) |
 | Custom enchantments | lore-string convention (`"Poison II"` etc.), hand-rolled Roman-numeral level parsing | **no equivalent at all** | v3's *current* custom-enchantment runtime (`EnchantmentRepository`/`LocalEnchantmentRepositoryImpl`, §1.2) is, mechanically, **the same lore-string approach v1 used** — never modernized even now, despite vision.md §9.1 wanting to eventually move away from lore-as-source-of-truth for `ItemInstance` |
 | Premium currency | `GemProducts extends Product` — same shape, separate table + `GemPrice` | **no trace found anywhere** in v2 (legacy doc's open question #1, never resolved) | absent; vision.md §9.1 already made the design call this legacy ambiguity couldn't: currency type is "a property of the template, not a separate class" — settled, not still open |
@@ -175,10 +184,16 @@ speculative additions — v1 had working (if crude) versions of both, v2 moderni
 *data model* (even though it never wired behavior to it, which is the win worth keeping), and
 vision.md explicitly names `Grade`/`Category`/pricing among the things to "keep... as the
 foundation." Treat all three as restorations of a previously-real feature, not invented scope.
-`Origin` and `Tag`-on-`Item` are the opposite case: legacy evidence for `Origin` shows it was
+
+~~`Origin` and `Tag`-on-`Item` are the opposite case: legacy evidence for `Origin` shows it was
 built but never actually used for anything, and `Tag` was never an `Item`-level concept in
-either legacy version — weaker justification for adding either right now. See the revised
-§3 scope decision and §7 open questions.
+either legacy version — weaker justification for adding either right now.~~ **Superseded by
+developer decision**: both are now in scope. `Origin`, though, is *not* a restoration of v2's
+`Item.origin` shape — v2's was a multi-select `Set<Dominion>`; what's wanted now is a single
+reference into the `Kingdom → Province → Town → District → Structure` region hierarchy
+(vision.md §2, "Kingdom, Province, Town, District are all fundamentally the same kind of
+thing... each nested inside the one above it"), with `Province`/`Kingdom` explicitly
+acknowledged as not built yet. See §3 for the design this drives.
 
 **Also directly relevant to the WorldTask item-scan design (§5):** v2 had
 `RegisterSession` (`model/item/RegisterSession.java`) — an in-memory, non-persisted, per-`User`
@@ -207,9 +222,9 @@ template half**, under the name `ItemBlueprint`. Cross-checked against legacy pr
 | category | **absent.** `Category` exists as its own self-referencing entity (`Models/Category.cs`, `ParentCategoryId`/`ChildCategories`, its own icon FK) but has **zero link** to `ItemBlueprint` — no `CategoryId` anywhere on the model. | v1 `ProductCategory` (flat), v2 `Category` (nested + tags) — a working, linked field in both legacy versions. A real regression, not new scope. |
 | grade | **absent.** No `Grade` entity, enum, or field exists anywhere in the current codebase, despite vision.md saying to "keep v2's `Item`/`Grade`/`Category`/`Origin` model." | v1: hardcoded int 1–5 driving real drop-chance/amount tables. v2: data-driven `Grade` entity, but unwired to any behavior. A real regression; v2's *data model* (not its inertness) is the part worth keeping. |
 | itemtype (material identity) | **already present**, not absent. `IconMaterialRefId`/`IconMaterial` → `MinecraftMaterialRef` is framed as an "icon" field in the model/DTOs, but `ItemBlueprintBukkitMapper.fromBlueprint` resolves the real `ItemStack`'s `Material` from that same namespace key — this field already does double duty as icon *and* material identity. | v1 had two inconsistent resolution paths for this (a confirmed bug); v2 unified it into one `Itemtype` (`Material`+`BlockData`) path — v3's `IconMaterialRefId`/`MinecraftMaterialRef` is that same unification, just under a different name. |
-| origin | **absent.** No such field exists. | v2 `Item.origin` (`Set<Dominion>`) existed but **nothing ever read it for any gameplay effect** — legacy doc's own open question. Weak justification for adding now; see §7. |
+| origin | **absent.** No such field exists. **Now in scope** — but not as a restoration of v2's `Item.origin` shape (a multi-select `Set<Dominion>`, never used for anything, per the legacy doc's own open question). Instead: a single `OriginId` FK to `Domain`, covering `Structure`/`District`/`Town` today and `Province`/`Kingdom` automatically once those are built as `Domain` subtypes — see §3 for why. | Weak legacy precedent for the *shape* (v2's version was unused dead weight), but the developer wants it restored anyway with a different, more useful shape. |
 | `basePriceMin`/`basePriceMax`, purchase-currency (coins/gems) | **absent.** No pricing fields anywhere on `ItemBlueprint`/its DTOs. | v1 had a real `PriceMin`/`PriceMax` + full sellability matrix; v2 flattened to a single `basePrice` with no matrix. Vision.md explicitly says the range is **"kept"** for v3 — a restoration, not invented scope (the *gating*/matrix logic stays deferred per vision.md, just not the plain range fields). |
-| tag | not named in vision.md's field list at all, and **absent** from both `Category` and `ItemBlueprint` today | v2 `Category.tags` (M2M) — attached to **Category, not Item**. Never an `Item`-level concept in either legacy version. New gap worth knowing about (§7), not something this plan needs to add to `ItemBlueprint` itself. |
+| tag | not named in vision.md's field list at all, and **absent** from both `Category` and `ItemBlueprint` today | v2 `Category.tags` (M2M) — attached to **Category, not Item**. Never an `Item`-level concept in either legacy version. **Now in scope** (developer decision): new `Tag` entity + `CategoryTag` join on `Category`, matching v2's shape — reachable from `ItemBlueprint` transitively via `CategoryId`, not a direct `ItemBlueprint` field (see §3 if direct item-level tagging turns out to be what's actually wanted instead). |
 | base drop amount, default loot/lore config | Partially covered by `DefaultQuantity`/`DefaultDisplayDescription` (used as default lore text), but no loot-table/probability concept. | v1 had real grade-weighted drop-chance/amount tables; v2 dropped them entirely. Vision.md keeps loot boxes but explicitly defers the formula — consistent with staying out of this plan. |
 | — (not in vision's template list, but present today) | `IconMaterialRefId`/`IconMaterial`, `DefaultDisplayName`, `MaxStackSize`, `DefaultEnchantmentIds`/`DefaultEnchantments` (M2M via `ItemBlueprintDefaultEnchantment`, with `Level`). | No direct v1/v2 equivalent for the M2M enchantment-default concept specifically — v1/v2 stored a single item's enchantments as a string blob (v1) or not at all (v2, no enchantment concept on `Item`). |
 
@@ -240,13 +255,77 @@ restorations of previously-real fields, not invented scope — the `GateType`-en
 bar this doc's first version was applying doesn't fit; that bar was for inventing a *new*
 concept with no history, not for restoring one both legacy versions already had in some form.
 
-**Still deferred**, now with legacy evidence backing the call rather than just an absence of
-one: `Origin` (v2 built it, `Set<Dominion>`, but no code anywhere ever read it for any
-gameplay effect — legacy doc's own open question, unresolved for years) and `Tag` (never an
-`Item`-level concept in either legacy version — it was always `Category`-scoped, and current
-v3 `Category` doesn't have it either; a separate gap, not this plan's to fix — see §7).
-Purchase gating/rank-requirements (the *logic*, not the plain price fields) stays deferred
-exactly as vision.md itself already scoped it.
+~~**Still deferred**, now with legacy evidence backing the call rather than just an absence of
+one: `Origin`... and `Tag`...~~ **Superseded**: the developer explicitly wants both in scope.
+Revised decision below.
+
+### 3.1 `Tag` and `Category` enrichment — now in scope
+
+Add a `Tag` entity (`Id`, `Name` unique) and a `CategoryTag` join entity (`CategoryId`+`TagId`
+composite key, no extra columns — the "plain" case of the same join-entity pattern
+`ItemBlueprintDefaultEnchantment` already establishes, just without a `Level`-equivalent
+field), matching v2's `Category.tags`/`Tag.categories` shape exactly. Attached to `Category`,
+not `ItemBlueprint` directly — reachable from an item transitively via `CategoryId` (Phase 1
+per above). This follows legacy precedent faithfully (§1.5: `Tag` was always `Category`-scoped
+in v2, never an `Item`-level field) rather than inventing a new direct `ItemBlueprint.Tags`
+relationship with no history. If the developer actually wants items taggable independently of
+their category (not just inheriting their category's tags), that's a different, bigger design
+than "restore what v2 had" — flagged as open question §7.9 rather than assumed.
+
+An explicit join entity (not EF Core's implicit skip-navigation many-to-many) is deliberate:
+`[RelatedEntityField]`/the `ManyToManyRelationshipEditor` mechanism (§1.4) is built around an
+explicit join *entity* with its own FK-bearing class — an implicit skip-navigation has no
+such class and wouldn't be pickable by that mechanism at all. `ItemBlueprintDefaultEnchantment`
+is the only real precedent for this pattern in the codebase; `CategoryTag` follows it exactly.
+
+### 3.2 `Origin` — a single reference into the region hierarchy, not a restoration of v2's shape
+
+The developer's own words: "a reference to either a structure, district, town, province or
+kingdom" (province/kingdom acknowledged not yet built). This is **not** v2's `Item.origin`
+(§1.5) — that was a multi-select `Set<Dominion>` nobody ever read. What's wanted is closer to
+vision.md §2's own framing: *"Kingdom, Province, Town, District are all fundamentally the same
+kind of thing: a region of the game world, each nested inside the one above it"*
+(`Kingdom → Province → Town → District → Street (cross-cutting) → Structure`).
+
+**Design: `ItemBlueprint.OriginId` (nullable `int`) → `Domain.Id`** (`Restrict` delete, same
+`[RelatedEntityField(typeof(Domain))]`/`[NavigationPair]` pattern as every other FK on this
+entity), not a discriminator+separate-FK polymorphic scheme. This works today and is
+automatically future-proof, confirmed directly against the current schema:
+
+- `Town`, `District`, and `Structure` (which `GateStructure` itself inherits from) are all
+  **TPT subtypes of `Domain`** (`Models/Town.cs:8`, `District.cs:8`, `Structure.cs:7`,
+  `GateStructure.cs:8`), and `Domain` already has its own base `DbSet<Domain>`
+  (`Properties/KnKDbContext.cs:19`) alongside the subtype-specific ones — querying it directly
+  returns every `Town`/`District`/`Structure` row, resolved to its concrete runtime type. One
+  FK to `Domain` already reaches all three of "structure, district, town" today.
+- `Domain` itself already carries `[FormConfigurableEntity("Domain")]` (`Models/Domain.cs:7`)
+  — the metadata plumbing a `[RelatedEntityField(typeof(Domain))]` picker needs is already in
+  place, same as every other entity in §1.1.
+- **When `Province`/`Kingdom` are eventually built**, the natural implementation (per vision.md
+  §2's framing above) is as two more `Domain` TPT subtypes, extending the existing
+  `Town`/`District`/`Structure` chain upward. If so, `ItemBlueprint.OriginId` needs **zero
+  schema change** to support them — they'd just start showing up in the same picker the moment
+  they exist. This is the concrete reason this design beats a closed enum/discriminator: it
+  doesn't need to know about `Province`/`Kingdom` today to be ready for them.
+- This *is* a real assumption, not a certainty: it assumes `Province`/`Kingdom` get built as
+  `Domain` subtypes rather than some structurally different concept. Vision.md's wording
+  strongly suggests this ("fundamentally the same kind of thing"), but it isn't a made
+  decision on record anywhere. Flagged as open question §7.8.
+
+**A genuine technical gap this surfaces, not just a data-entry addition**: unlike every other
+`RelatedEntityField`-picked entity in this codebase, `Domain` has **no paged search endpoint**
+today — `DomainsController` only has `GetAll` (unfiltered, unpaged; confirmed by reading the
+controller directly, only `GetAll`/`GetById`/`Create`/`Update`/`Delete`/`by-region`/
+`search-region-decisions` exist) and `DomainRepository` has no `SearchAsync` (unlike
+`TownRepository.SearchAsync(PagedQuery)`, the pattern every other picker relies on). The
+web-app side has **no `domainClient.ts` at all** and no `'domain'` case in
+`entityApiMapping.ts`'s dispatch tables — confirmed by direct grep, zero hits. The Origin
+picker needs both built: a `POST api/Domains/search` endpoint (mirroring `TownsController`'s,
+ideally surfacing the existing `domainType`/subtype-indicator convention already used by
+`DomainRegionDecisionDto`/`ParentDomainDto` so the picker can show "Ironhaven (Town)" rather
+than an ambiguous bare name) and a new `domainClient.ts` + `entityApiMapping.ts` registration
+on the frontend. This is real, additional Phase 1/2 scope (§6), not something the existing
+generic engine already covers for free the way `Category`/`Grade`/pricing were.
 
 Everything else vision.md §9.1 lists as `[OPEN]`, deferred, or belonging to a later pass —
 `ItemInstance`/live-instance tracking, soulbound/ghosted, cascade-to-instances, item-age/
@@ -266,12 +345,12 @@ for Items — but per §1.3, most of the *engine* work is already done. What's a
 unlike Gate's four-way type-dependent matrix, this is a single, flat step layout:
 
 Field order below follows v2's own proven `CreationStage` wizard sequence (§1.5) —
-name → displayName → description → category → itemtype(material) → grade — adjusted for
-what's actually in scope (no `origin` step, per §3):
+name → displayName → description → category → itemtype(material) → grade → origin — now
+including `origin`, revised from this doc's earlier version which left it out:
 
 | Step | Fields |
 |---|---|
-| General Information | `Name`, `DefaultDisplayName`, `Description`, `DefaultDisplayDescription`, `CategoryId` (new, §3 — object picker, existing `Category` rows only per §1.4), `IconMaterialRefId` (`HybridMinecraftMaterialRefPicker` → `HybridMaterialPicker`, picks `MinecraftMaterialRef` — doubles as material identity, §1.5), `GradeId` (new, §3 — object picker, existing `Grade` rows only, same inline-creation caveat as `Category`), `DefaultQuantity`, `MaxStackSize` |
+| General Information | `Name`, `DefaultDisplayName`, `Description`, `DefaultDisplayDescription`, `CategoryId` (new, §3.1 — object picker, existing `Category` rows only per §1.4), `IconMaterialRefId` (`HybridMinecraftMaterialRefPicker` → `HybridMaterialPicker`, picks `MinecraftMaterialRef` — doubles as material identity, §1.5), `GradeId` (new, §3 — object picker, existing `Grade` rows only, same inline-creation caveat as `Category`), `OriginId` (new, §3.2 — object picker on `Domain`, needs the new search endpoint/client described there), `DefaultQuantity`, `MaxStackSize` |
 | Pricing | `BasePriceMin`, `BasePriceMax` (new, §3) — kept as its own step so purchase-currency/gating fields (deferred, vision.md §9.1) have an obvious place to land later without reshuffling General Information |
 | Default Enchantments | M2M step: `isManyToManyRelationship=true`, `relatedEntityPropertyName="DefaultEnchantments"`, `joinEntityType="ItemBlueprintDefaultEnchantment"`, child step field `Level` (Integer) — reuses the already-working `ManyToManyRelationshipEditor` "Create New Join Entry" flow (§1.4) to pick an *existing* `EnchantmentDefinition` and set its `Level` |
 | (optional, see §5) Scan | One WorldTask-bound field, `taskType: "ItemScan"`, pre-filling several General Information fields — ephemeral in `WorldTask.OutputJson` until the `ItemBlueprint` is actually created, exactly like Gate's `BlockSnapshots`/`OpenedBlockSnapshots` fields |
@@ -279,20 +358,43 @@ what's actually in scope (no `origin` step, per §3):
 No field-conditional-within-a-step or step-display-condition logic is needed (nothing here is
 optional-based-on-another-field the way Gate's `AllowPassThrough`-gated fields are).
 
-### 4.2 `Category`, `Grade`, and `EnchantmentDefinition` need their own `FormConfiguration`s too
+**Tags are not an `ItemBlueprint` field** (§3.1) — they're authored on `Category`'s own form
+(a `Tags` M2M step there, `CategoryTag` join, same mechanism as above), and an item inherits
+its tags transitively through `CategoryId`. Nothing to add to this matrix for `Tag` itself.
+
+### 4.2 `Category`, `Tag`, `Grade`, and `EnchantmentDefinition` need their own `FormConfiguration`s too
 
 Because inline related-entity creation is unreachable (§1.4), an admin populating
 `ItemBlueprint.CategoryId`/`GradeId`/`DefaultEnchantments` needs `Category`, `Grade`, and
-`EnchantmentDefinition` rows to already exist. `Category` and `EnchantmentDefinition` already
-carry `[FormConfigurableEntity]` (confirmed §1.1); `Grade` doesn't exist yet at all, so it
-needs the attribute added as part of creating it in Phase 1 (mechanical — same pattern as
-every other entity in §1.1). This is the same "author a `FormConfiguration`" work as
-`ItemBlueprint` itself, just for three more entity types — not new engine work, but real
-additional scope. `Grade`'s own field list, per v2's proven shape (§1.5): `Name` (unique),
-`Stars` (int) — a two-field form, about as simple as this gets. `AbilityDefinition`'s own
-optional 1:1 extension (`EnchantmentDefinition.AbilityDefinition`) can stay out of the
-`EnchantmentDefinition` form for now (custom-ability authoring already has its own tooling
-per Custom Enchantments' completed status) unless the developer wants it folded in.
+`EnchantmentDefinition` rows to already exist — and now, per §3.1, `Category`'s own `Tags` M2M
+step means `Tag` rows need to pre-exist too, one level further removed from `ItemBlueprint`
+itself. `Category` and `EnchantmentDefinition` already carry `[FormConfigurableEntity]`
+(confirmed §1.1); `Grade` and `Tag` don't exist yet at all, so both need the attribute added
+as part of creating them in Phase 1 (mechanical — same pattern as every other entity in §1.1).
+This is the same "author a `FormConfiguration`" work as `ItemBlueprint` itself, just for four
+more entity types — not new engine work, but real additional scope:
+
+- `Grade`'s field list, per v2's proven shape (§1.5): `Name` (unique), `Stars` (int).
+- `Tag`'s field list: `Name` (unique) — a one-field form.
+- `Category`'s *own* `FormConfiguration` now needs its own `Tags` M2M step (`joinEntityType:
+  "CategoryTag"`, `relatedEntityPropertyName: "Tags"`, no child-step fields since `CategoryTag`
+  carries no extra columns) in addition to whatever fields it already needs for its existing
+  `ParentCategoryId`/`IconMaterialRefId`.
+
+`AbilityDefinition`'s own optional 1:1 extension (`EnchantmentDefinition.AbilityDefinition`)
+can stay out of the `EnchantmentDefinition` form for now (custom-ability authoring already has
+its own tooling per Custom Enchantments' completed status) unless the developer wants it
+folded in.
+
+`Domain` (for `OriginId`, §3.2) is the one exception that does **not** need a new
+`FormConfiguration` authored *by this plan* — `Origin` only ever *selects* an existing
+`Town`/`District`/`Structure`, never creates one, and Town/District/Structure creation is
+established, working functionality (not greenfield the way Items is), wired into the same
+generic FormConfiguration/DisplayConfiguration pipeline per `IMPLEMENTATION_STATUS_AUDIT.md`
+§10 — reasonable to assume real `FormConfiguration`s already exist for them, though this
+wasn't independently re-verified in this pass the way it was for Items. What `Domain` needs
+instead is the search endpoint/client infrastructure described in §3.2 — a different kind of
+gap than "author a form," and not contingent on Phase 2's FormConfig-authoring work at all.
 
 ### 4.3 Authoring/seeding the FormConfiguration itself
 
@@ -388,23 +490,34 @@ status/warnings/payload convention (`{"status": ..., "blockCount": ..., "snapsho
 (§0). InventoryMenu touches unrelated entities (`MenuTemplate`/etc.) on its own branch. Custom
 Enchantments is done and only reused, not modified. This can start immediately.
 
-1. **Phase 1 — Schema hardening.** Add `CategoryId`/`Category` (nullable FK, `Restrict`
-   delete, same `[RelatedEntityField(typeof(Category))]`/`[NavigationPair]` pattern as
-   `IconMaterialRefId`), a new `Grade` entity (`Id`/`Name`/`Stars`, `[FormConfigurableEntity]`,
-   per v2's proven shape — §1.5) + `GradeId` link, and `BasePriceMin`/`BasePriceMax` (plain
-   `int`/`decimal` fields, no gating logic) to `ItemBlueprint`; EF migration; DTO/mapper
-   updates (`ItemBlueprintDtos.cs`, `ItemBlueprintMapper.java` on the plugin side, plus
-   `KnkItemBlueprint` domain record). Mechanical, no dependencies. Resolves the §3 scope
-   decision — Category/Grade/pricing are now in scope as restorations, not new invention;
-   `Origin`/`Tag` stay explicitly out (§7.1/§7.7).
-2. **Phase 2 — `Category`, `Grade`, and `EnchantmentDefinition` admin `FormConfiguration`s.**
-   These need to be independently authorable *before* Phase 3 is useful, since inline
-   related-entity creation isn't reachable (§1.4/§4.2). Pure `FormConfigBuilder` authoring
-   work (or a seeder, pending §7.2) — no new engine code.
-3. **Phase 3 — `ItemBlueprint` admin `FormConfiguration`.** General Information step +
-   Default Enchantments M2M step (§4.1), using the already-built `RelatedEntityField`/M2M
-   machinery and Phase 1's new `CategoryId` field. This is the "web-app-centered admin
-   management" deliverable and is usable on its own without Phase 4/5.
+1. **Phase 1 — Schema hardening.** Grown from this doc's earlier version to cover §3.1/§3.2:
+   - `ItemBlueprint`: `CategoryId`/`Category` FK, a new `Grade` entity (`Id`/`Name`/`Stars`)
+     + `GradeId` link, `BasePriceMin`/`BasePriceMax` (plain fields, no gating logic), and
+     `OriginId`/`Origin` FK to `Domain` — all `[RelatedEntityField]`/`[NavigationPair]`,
+     same pattern as `IconMaterialRefId`.
+   - A new `Tag` entity (`Id`/`Name`) and `CategoryTag` join entity (`CategoryId`+`TagId`,
+     no extra columns) on `Category` (§3.1).
+   - `DomainsController`: a new `POST api/Domains/search` (paged, name-filtered, ideally
+     surfacing `domainType`) + matching `DomainRepository.SearchAsync` (§3.2) — needed for
+     the `OriginId` picker regardless of FormConfig authoring, since no such endpoint exists
+     today.
+   - `knk-web-app`: a new `domainClient.ts` + `'domain'` registration in
+     `entityApiMapping.ts`'s four dispatch functions (§3.2) — same reason.
+   - EF migration; DTO/mapper updates (`ItemBlueprintDtos.cs`, `CategoryDtos.cs`,
+     `ItemBlueprintMapper.java`/`CategoryMapper` on the plugin side if `Category`/`Tag` need
+     plugin-side representation — not yet confirmed either way, see §7.11). Mechanical for the
+     entity/field additions; the `Domain` search endpoint is the one piece here that's genuinely
+     new engine work, not just an additive column.
+2. **Phase 2 — `Category`, `Tag`, `Grade`, and `EnchantmentDefinition` admin
+   `FormConfiguration`s.** These need to be independently authorable *before* Phase 3 is
+   useful, since inline related-entity creation isn't reachable (§1.4/§4.2) — `Category`'s own
+   form now also needs its `Tags` M2M step. Pure `FormConfigBuilder` authoring work (or a
+   seeder, pending §7.2) — no new engine code. `Town`/`District`/`Structure` (for `Origin`)
+   are assumed already covered by existing tooling, not this plan's to build (§4.2).
+3. **Phase 3 — `ItemBlueprint` admin `FormConfiguration`.** General Information step
+   (now including `OriginId`) + Pricing step + Default Enchantments M2M step (§4.1), using the
+   already-built `RelatedEntityField`/M2M machinery and Phase 1's new fields. This is the
+   "web-app-centered admin management" deliverable and is usable on its own without Phase 4/5.
 4. **Phase 4 — `ItemScan` WorldTask capability.** Plugin `IWorldTaskHandler` (§5.1/5.2),
    web-api `taskType` constant (optional but recommended for parity with Gate's
    `WorldTaskTypes` class), web-app `FieldEditor`/`WorldBoundFieldRenderer` support (§5.3).
@@ -418,13 +531,15 @@ Enchantments is done and only reused, not modified. This can start immediately.
 
 Phases 1-3 deliver the admin-management requirement independently and are worth shipping even
 if Phase 4/5 (the scan flow) slips — they're the higher-value, lower-risk half of this plan.
+Phase 1 is now bigger than this doc's earlier version (five new/changed entities plus one new
+endpoint, instead of three field additions) — still no cross-repo blocking dependency, but
+worth re-confirming it's still comfortable as a single phase rather than splitting `Origin`'s
+`Domain`-search work out on its own, given it's the one piece that isn't purely additive.
 
 ## 7. Open questions / design gaps needing a decision
 
-1. ~~**Category-only now, or also Grade/Tag/pricing?**~~ **Resolved by §1.5's legacy
-   findings**: Category, Grade, and the plain price-range fields are now in scope for Phase 1
-   (they're restorations of fields both legacy versions had in some form, not invention).
-   `Origin` and `Tag` stay deferred — see the new §7.6/§7.7 below for why.
+1. ~~**Category-only now, or also Grade/Tag/pricing?**~~ **Resolved**: Category, Grade,
+   pricing, `Tag`, and `Origin` are all now in scope for Phase 1 — see §3/§3.1/§3.2.
 2. **FormConfiguration authoring mechanism.** (§4.3.) Live via `FormConfigBuilder` (no code,
    matches the apparent project convention of zero committed FormConfig seeders so far) vs. a
    small hand-written idempotent seeder (precedent: `AbilityDefinition.SeedCanonicalAsync`;
@@ -455,20 +570,42 @@ if Phase 4/5 (the scan flow) slips — they're the higher-value, lower-risk half
    `EnchantmentDefinition` forms) for now, same as the InventoryMenu plan chose not to fix the
    general M2M gap? Recommended: leave it — fixing the shared component is its own
    cross-cutting task, not specific to Items, and Phase 2 already provides a working path.
-8. **`Origin` — add it anyway for parity with vision.md's field list, or leave it out?** (§1.5,
-   §3.) v2 built `Item.origin` (`Set<Dominion>`) but no code ever read it for any gameplay
-   effect — it shipped as a form field with zero downstream behavior, for years. Recommended:
-   leave it out of this plan; if the developer has a concrete use in mind (e.g. gating what a
-   town/kingdom can sell), that's worth scoping as its own decision rather than restoring a
-   field that was already dead weight in the version it came from.
-9. **`Tag` on `Category` (not `Item`) — a newly-surfaced gap, separate from this plan.** (§1.5,
-   §2.) v2's `Category.tags` (M2M) doesn't exist on current v3 `Category` either — a
-   pre-existing `Category`-completeness gap this Items plan surfaced but doesn't need to fix
-   (Items never carried tags directly in any version). Worth a decision on whether it's
-   worth restoring for `Category` on its own, independent of this plan.
+8. ~~**`Origin` — add it anyway for parity, or leave it out?**~~ **Resolved**: in scope,
+   as a single `OriginId` FK to `Domain` (§3.2) — but two real sub-questions this decision
+   itself raises, neither settled yet:
+   - **8a. Is `Province`/`Kingdom`-as-future-`Domain`-subtypes a safe assumption?** §3.2's
+     whole "zero schema change later" argument rests on `Province`/`Kingdom` eventually being
+     built as `Domain` TPT subtypes, matching vision.md §2's "fundamentally the same kind of
+     thing" framing. That's a strong textual hint, not a made decision on record anywhere. If
+     it turns out wrong (e.g. `Province`/`Kingdom` get modeled as a structurally different
+     concept later), `OriginId` would need to be revisited then. Worth explicitly confirming
+     this reading rather than discovering the mismatch when `Province`/`Kingdom` actually get
+     built.
+   - **8b. Single reference confirmed, not v2's multi-select?** The developer's phrasing ("a
+     reference to either... ") was read as singular/exclusive-or — one `OriginId`, not a set.
+     Flagging so that reading can be confirmed rather than assumed; if an item can originate
+     from multiple places at once, this needs to be a M2M (`ItemBlueprintOrigin` join,
+     `Domain` on the far side) instead of a plain FK, which is a bigger addition (closer to
+     the `DefaultEnchantments` shape than to `CategoryId`'s).
+9. ~~**`Tag` on `Category` — separate from this plan?**~~ **Resolved**: in scope, as
+   `Category`-attached (§3.1), not a direct `ItemBlueprint` field. One sub-question: **is
+   category-inherited tagging actually what's wanted, or should items be taggable
+   independently of their category** (a direct `ItemBlueprint`↔`Tag` M2M, bigger than what
+   v2 ever had)? §3.1 assumed the former (restore v2's shape) since that's what has precedent;
+   confirm before Phase 1 if the latter was actually intended.
 10. **Premium-currency items (`GemProducts`) — confirm vision.md's design call is final.**
     (§1.5.) The legacy doc leaves this as an open question (no v2-era trace of `GemProducts`
     or a successor found anywhere); vision.md §9.1 already answers it for v3 ("premium-currency
     items live here as a property of the template, not a separate class"), so this plan treats
     it as settled rather than reopening it. Flagging only so the developer can confirm that
     reading is actually what they intended, since the legacy record itself never resolved it.
+11. **Does `knk-plugin` need `Grade`/`Tag`/`Origin` representation at all?** (§6 Phase 1.)
+    `ItemBlueprintsDataAccess`/`KnkItemBlueprint` (§1.2) currently only carry the fields
+    `ItemBlueprintBukkitMapper` actually needs to materialize an `ItemStack` (material, name,
+    lore, enchantments). `Grade`/pricing/`Origin` are arguably admin/display-only metadata with
+    no in-game rendering need yet (no star-lore rendering, no origin-based gameplay effect is
+    in scope per §3/§6) — plausibly web-api/web-app-only additions, with the plugin side
+    untouched. `Tag` likely doesn't need plugin representation at all (it's `Category`-level,
+    and `Category` itself isn't currently in `KnkItemBlueprint`'s plugin-side shape either).
+    Worth confirming before Phase 1 whether any of these need to reach the plugin, or if
+    catalog-only (web-api + web-app) is the right scope for all four.
