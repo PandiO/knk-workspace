@@ -370,4 +370,69 @@ and **removes the snow** in either case before/as the block move happens, so no 
 
 ---
 
+## 8. InventoryMenu pagination and search/filter are command-only, not real in-GUI controls
+
+- **Status**: Ready — interaction model + library choice decided 2026-09-22 (research pass by another session), not yet implemented. One question from the original research request (sequencing, see open questions below) is still genuinely open.
+- **Area**: knk-plugin (InventoryMenu engine, `knk-paper/.../paper/menu/`, `knk-paper/.../paper/commands/MenuDebugCommand.java`)
+- **Reported**: 2026-09-22, by the developer directly (not discovered during use — flagged proactively while reviewing InventoryMenu Phase 5)
+- **Related docs**: `docs/specs/inventory-menu/{IMPLEMENTATION_PLAN.md,DESIGN_REVIEW.md §2.1,§2.5}`; see the InventoryMenu Phase 2 and Phase 5 entries in `ACTIVE_SESSIONS.md`'s "Recently completed" table for full implementation detail
+
+### Symptom
+Two InventoryMenu capabilities that should eventually be normal in-GUI interactions are currently only reachable via chat commands:
+- **Pagination** (Phase 2): advancing a section's page requires typing `/knk menu page next|prev <sectionName>` in chat. There is no clickable next/previous-page item inside the menu itself.
+- **Search/filter** (Phase 5): starting a search or setting a filter facet requires `/knk menu search <sectionName> [clear]` / `/knk menu filter <sectionName> <facetKey> [clear]`, which then prompts a chat-based text capture for the actual query/value.
+
+The developer does **not** want commands to remain the main or only way to trigger these — they should be triggerable from inside the menu itself (e.g. a clickable pagination arrow item, a clickable search/filter button), with commands at most a secondary/debug path, not the primary UX.
+
+### Root cause (why it's built this way today, not a bug)
+This was an explicit, documented scope boundary in both phases, not an oversight:
+- `RuntimeMenuSection.resolveSlots` and `MenuSession`'s per-section page/content-query state are fully built and working — the *engine* underneath both features is real and functional.
+- What's missing is **click-driven** invocation. Clicking is currently a dead end for this: `MenuClickListener` identifies the clicked item and checks permissions, but Phase 6 ("Conditional actions") is what wires an actual `ActionRegistry` so a click can *do* something, and Phase 7 ("Preset section/item library") is what turns `MenuSectionKind.SEARCH_BAR`/`FILTER_BAR` (and a pagination-arrow item) into real, clickable, reusable components. Both phases still lay ahead per `IMPLEMENTATION_PLAN.md`'s phasing.
+- The `/knk menu ...` commands were built as a **dev harness** specifically to exercise/verify the engine on a live server before Phase 6/7 exist (see `MenuDebugCommand`'s own class-level javadoc, which says this explicitly) — not as the intended permanent player-facing interaction model. That intent apparently wasn't communicated clearly enough; this item makes it explicit and trackable.
+
+### Decision (research pass, 2026-09-22)
+**Principle: UI-first, command fallback.** InventoryMenu flows are
+click/GUI-driven by default. A command equivalent may exist for power users
+or scripting, but it is never required to complete a flow, and no menu
+action should force a close-command-reopen cycle.
+
+- **Browsing / pagination / filtering by category**: in-place re-render, no
+  external input — a click on a pagination arrow or filter-cycle item
+  re-renders the same Inventory in place.
+- **Free-text input** (search, naming, custom values): AnvilGUI. Opens in
+  place, captures text via the rename field, closes back into the
+  originating menu with the result applied.
+- **Numeric input** (quantities, amounts): click actions first —
+  left-click = +1/select, right-click = -1/deselect, shift-click = +stack
+  or max, matching the v1/v2 pattern. Anvil-based custom-amount entry is
+  the fallback only, for values outside the click-driven range.
+- **Confirmations**: an in-menu confirm/cancel item pair, not a chat y/n or
+  a command.
+- **Commands**: kept only as an optional fallback path (e.g. `/inv search
+  <term>` still works for scripting/macros), but never the only path.
+
+**Library**: InvUI for chest-menu construction/pagination; AnvilGUI
+(md5lukas fork, Paper-only) for the free-text capture surface. Neither is a
+`knk-plugin` dependency today — this is a new addition, not a reuse of
+something already wired in.
+
+Full writeup: `docs/specs/inventory-menu/DESIGN_REVIEW.md` §2.5 (new) and
+the updated §2.1. §2.1's own text-input question is now answered: AnvilGUI,
+not Phase 5's `ChatCaptureManager` reuse — that Phase 5 implementation is
+superseded, not just supplemented, by this decision.
+
+### Resolved questions (from the original research request)
+1. ~~Right Bukkit-native in-GUI control for pagination/search/filter trigger?~~ → A plain clickable `MenuItem` (InvUI-backed), wired through Phase 6's `ActionRegistry`. Confirmed nothing more exotic is needed.
+2. ~~Chat capture or anvil GUI once the trigger is a real click?~~ → AnvilGUI. Phase 5's chat-capture approach is explicitly superseded, not kept as an option.
+4. ~~Keep `/knk menu ...` commands as a fallback path?~~ → Yes, explicitly: "kept only as an optional fallback path... never the only path." Confirmed, not just a lean.
+
+### Open questions (still genuinely open — not addressed by this research pass)
+3. **Sequencing**, unresolved: does this get folded into Phase 6 (click → action wiring) and Phase 7 (preset components) as originally planned, or pulled forward as its own phase? The research pass answered *what* the interaction model and libraries should be, not *when*/*how* to sequence adopting them relative to Phase 6/7's existing scope.
+5. **New: InvUI/Phase 2 engine reconciliation.** Phase 2 already shipped a hand-rolled rendering/pagination engine (`MenuSlotCalculator`, `RuntimeMenuSection.resolveSlots`, `MenuRenderer`, `MenuItemBukkitMapper`) that Phases 3-5 build on. Adopting InvUI for menu construction/pagination doesn't specify how it reconciles with that existing engine — full replacement of the Bukkit-facing rendering layer (keeping the Bukkit-free `MenuTemplate`/`MenuSession`/`VariableBinding` model as the source of truth feeding it), a narrower integration, or something else. This is real architectural work for whichever phase implements this, not decided by the interaction-model research.
+
+### Acceptance criteria
+- Not yet fully defined pending open questions 3 and 5 above, but the interaction model itself is settled: once implemented, InventoryMenu pagination, search, filters, numeric input, and confirmations should all be completable via clicks alone with the menu staying open (AnvilGUI's in-place capture for free-text/custom-amount input counting as "staying in the flow," not a command detour) — `/knk menu ...` commands should keep working afterward as an optional fallback, not be required for any of the above.
+
+---
+
 <!-- Add new items below using the same structure: Status / Area / Reported date / Symptom / Repro steps / Evidence / Affected files / Root cause / Proposed solution / Open questions / Acceptance criteria -->
