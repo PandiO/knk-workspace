@@ -370,4 +370,35 @@ and **removes the snow** in either case before/as the block move happens, so no 
 
 ---
 
+## 8. InventoryMenu pagination and search/filter are command-only, not real in-GUI controls
+
+- **Status**: Open — needs research, explicitly not decided yet (user request 2026-09-22)
+- **Area**: knk-plugin (InventoryMenu engine, `knk-paper/.../paper/menu/`, `knk-paper/.../paper/commands/MenuDebugCommand.java`)
+- **Reported**: 2026-09-22, by the developer directly (not discovered during use — flagged proactively while reviewing InventoryMenu Phase 5)
+- **Related docs**: `docs/specs/inventory-menu/{IMPLEMENTATION_PLAN.md,DESIGN_REVIEW.md}`; see the InventoryMenu Phase 2 and Phase 5 entries in `ACTIVE_SESSIONS.md`'s "Recently completed" table for full implementation detail
+
+### Symptom
+Two InventoryMenu capabilities that should eventually be normal in-GUI interactions are currently only reachable via chat commands:
+- **Pagination** (Phase 2): advancing a section's page requires typing `/knk menu page next|prev <sectionName>` in chat. There is no clickable next/previous-page item inside the menu itself.
+- **Search/filter** (Phase 5): starting a search or setting a filter facet requires `/knk menu search <sectionName> [clear]` / `/knk menu filter <sectionName> <facetKey> [clear]`, which then prompts a chat-based text capture for the actual query/value.
+
+The developer does **not** want commands to remain the main or only way to trigger these — they should be triggerable from inside the menu itself (e.g. a clickable pagination arrow item, a clickable search/filter button), with commands at most a secondary/debug path, not the primary UX.
+
+### Root cause (why it's built this way today, not a bug)
+This was an explicit, documented scope boundary in both phases, not an oversight:
+- `RuntimeMenuSection.resolveSlots` and `MenuSession`'s per-section page/content-query state are fully built and working — the *engine* underneath both features is real and functional.
+- What's missing is **click-driven** invocation. Clicking is currently a dead end for this: `MenuClickListener` identifies the clicked item and checks permissions, but Phase 6 ("Conditional actions") is what wires an actual `ActionRegistry` so a click can *do* something, and Phase 7 ("Preset section/item library") is what turns `MenuSectionKind.SEARCH_BAR`/`FILTER_BAR` (and a pagination-arrow item) into real, clickable, reusable components. Both phases still lay ahead per `IMPLEMENTATION_PLAN.md`'s phasing.
+- The `/knk menu ...` commands were built as a **dev harness** specifically to exercise/verify the engine on a live server before Phase 6/7 exist (see `MenuDebugCommand`'s own class-level javadoc, which says this explicitly) — not as the intended permanent player-facing interaction model. That intent apparently wasn't communicated clearly enough; this item makes it explicit and trackable.
+
+### Open questions (for the research agent to investigate, not for whoever wrote this item to have guessed at)
+1. What's the right Bukkit-native in-GUI control for pagination arrows and a search/filter trigger — a plain clickable `MenuItem` (glass pane / arrow icon) wired through Phase 6's `ActionRegistry` once it exists, given `RuntimeMenuItem.slotOverride()` already supports pinning a nav item to a fixed slot outside pagination? Confirm this is sufficient before assuming anything more exotic (a scrollable/draggable widget, hotbar-based paging, etc.) is needed.
+2. For search/filter specifically: even with a clickable trigger *item*, Minecraft still has no native in-inventory text-input widget. Phase 5's `ChatCaptureManager`-based chat capture (confirmed reused rather than an anvil GUI, see the Phase 5 `ACTIVE_SESSIONS.md` entry's open question 3) already accounts for "click closes the GUI, then chat captures the query, then the menu reopens" — research whether that's still the right *text-input* mechanism once the *trigger* becomes a real click instead of a command, or whether an anvil-GUI-style capture (which keeps a inventory-like screen open the whole time, no jarring close/reopen) is worth reconsidering now that the trigger itself is changing. This is a genuine re-open of DESIGN_REVIEW.md §2.1's original anvil-GUI suggestion, not a foregone conclusion either way.
+3. Sequencing: does this get folded into Phase 6 (click → action wiring) and Phase 7 (preset components) as originally planned, or does it warrant being pulled forward as its own small phase once Phase 6 lands `ActionRegistry`, given the developer's stated priority that command-only isn't acceptable as a resting state? Flag a recommendation rather than deciding unilaterally — this affects phase ordering the developer may want to weigh in on.
+4. Should the existing `/knk menu ...` commands be kept permanently as a secondary/admin/debug path (useful for headless testing, support, or when a menu's UI is broken) once real in-GUI controls exist, or retired once they're redundant? Lean toward keeping them (cheap, already built, useful for #1's live-testing loop) unless research finds a reason not to — but confirm rather than assume.
+
+### Acceptance criteria
+- Not yet defined — this item is a research request, not a ready-to-implement spec. Acceptance criteria should be added once the research agent's findings are reviewed and a direction is chosen.
+
+---
+
 <!-- Add new items below using the same structure: Status / Area / Reported date / Symptom / Repro steps / Evidence / Affected files / Root cause / Proposed solution / Open questions / Acceptance criteria -->
