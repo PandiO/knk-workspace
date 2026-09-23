@@ -1,8 +1,13 @@
 # User Features — Implementation Plan (Rank/Permission/Progression)
 
-**Status:** Draft — phased plan, ready to start Phase 1. Open items in §7 are
-implementation-detail questions, not blockers.
-**Last updated:** 2026-09-23
+**Status:** Ready for implementation — all open questions resolved (§7 is now a decision
+record, not a blocker list).
+**Last updated:** 2026-09-23 (revised same day: `PermissionGrant.HolderId` is now a real FK
+into a shared `PermissionHolder` base table rather than polymorphic; salary's personal
+multiplier is a plain `User` field; title thresholds port v1's 5/10/12/15 as-is; owner/
+staff-mode vanish state persists across a restart; the tailored user-management admin module
+is confirmed a separate feature — see `docs/specs/user-management/`, which this plan's Phase 1
+now unblocks)
 
 Ref: `docs/vision/vision.md` §5. Sources: `docs/specs/user-features/DESIGN.md` (architecture,
 all decisions resolved), `docs/specs/user-features/COMMAND_PERMISSION_SCAN.md` (v1/v2/v3
@@ -22,11 +27,21 @@ document is sequencing and per-repo scope only. If something below conflicts wit
 ## 1. Cross-repo entity/API surface (built once, used by every phase)
 
 **knk-web-api:**
-- `Models/PermissionGroup.cs`, `Models/PermissionGrant.cs`, `Models/UserPermissionGroup.cs`
-  (join entity) — per `DESIGN.md` §2.1 shape, `[FormConfigurableEntity]`/`[RelatedEntityField]`
-  annotated per existing convention.
-- EF migration adding the three tables + FK from `UserPermissionGroup` to `User`/
-  `PermissionGroup`.
+- `Models/PermissionHolder.cs` — new TPT base class, `Id`/`ChatPrefix`/`ChatSuffix` (per
+  `DESIGN.md` §2.1). `Models/User.cs` changes to `class User : PermissionHolder` and
+  `Models/PermissionGroup.cs` is `class PermissionGroup : PermissionHolder`, same pattern as
+  `Town`/`District`/`Structure : Domain`. This is the one schema change here with real
+  migration risk: `User` already has many inbound FKs from other tables (everything currently
+  pointing at `User.Id`) — TPT keeps `Id` as the shared PK so those FKs are unaffected, but the
+  migration needs to be written and tested carefully against a real DB copy before applying,
+  not just trusted to "just work" the way the Items plan's `Domain` precedent did on a
+  from-scratch entity.
+- `Models/PermissionGrant.cs` — `HolderId` is now a real FK to `PermissionHolder.Id` (not
+  polymorphic — confirmed, `DESIGN.md` §1).
+- `Models/UserPermissionGroup.cs` (join entity) — per `DESIGN.md` §2.1 shape,
+  `[FormConfigurableEntity]`/`[RelatedEntityField]` annotated per existing convention.
+- EF migration: the `PermissionHolder` TPT split for `User`, plus new `PermissionGroup`/
+  `PermissionGrant`/`UserPermissionGroup` tables and their FKs.
 - `PermissionGroupsController`, `PermissionGrantsController` (CRUD, matching
   `CategoriesController`/`ItemBlueprintsController` shape).
 - `PermissionResolutionService` — the actual resolution engine (§2.2 of DESIGN.md): given a
@@ -38,6 +53,10 @@ document is sequencing and per-repo scope only. If something below conflicts wit
   `GET /api/users/{id}/permissions/check?node=...` endpoint — this is what `knk-plugin` calls
   per permission check, so it needs to be cheap (cached response, short TTL) rather than
   re-walking the whole resolution chain over REST on every `hasPermission`-equivalent call.
+- `GET /api/users/{id}/permissions/effective` — the full resolved permission set (every node,
+  its source holder, and whether it's a grant/deny), not just a single-node check. Confirmed
+  needed (§7 item 5) as a direct requirement of the separate user-management admin module's
+  composite player-profile view — build it here rather than bolting it on later.
 
 **knk-plugin:**
 - `knk-core`: `PermissionHolder`/`PermissionCheckResult` domain types (Bukkit-free, mirroring
@@ -73,18 +92,24 @@ Per `DESIGN.md` §2.3/§6.1, confirmed in scope:
 - Declare `knk.tasks` in `plugin.yml` while touching this file (currently used at a call site
   but never declared — a pre-existing gap unrelated to this feature, cheap to fix here).
 
-## 3. Owner-mode / staff-mode commands (knk-plugin, depends on §2)
+## 3. Owner-mode / staff-mode commands (knk-plugin + knk-web-api, depends on §2)
 
 Rebuild `/ownermode`, `/staffmode` (vision §5.5) as first-class commands using
-`KnkPermissible`. State: v1 kept this in static maps (not persisted) — carry that forward
-unless the developer wants vanish state to survive a restart (flagged §7).
+`KnkPermissible`. State **persists across a server restart** (confirmed, `DESIGN.md` §6.1) —
+not v1's in-memory-only maps:
+- `Models/User.cs` gets an `IsVanished`/`ActiveMode`-style field, part of the same migration
+  as §1's `PermissionHolder` split (both touch `User` — sequence together, one migration, not
+  two).
+- On login, the plugin reads this field back and re-applies vanish state rather than defaulting
+  everyone visible after a restart.
 
 ## 4. Title/XP track (knk-web-api service logic + knk-plugin display, depends on §1)
 
 - `TitleService` (web-api): given a `User.ExperiencePoints`, resolve the current title
   bracket. Jump-to-target on any XP change (`DESIGN.md` §3) — no tick-based catch-up.
-- Seed the title/XP bracket table itself — v1's thresholds at 5/10/12/15 are the starting
-  point (see §7 for confirming exact numbers/names for v3).
+- Seed the title/XP bracket table with v1's thresholds at 5/10/12/15, ported as-is (confirmed,
+  `DESIGN.md` §7 item 10) — placeholder content, retunable later via the admin UI once it
+  exists rather than a hardcoded constant.
 - Demotion path reuses the same bracket-resolution logic in reverse when XP is deducted for
   misconduct (ties to vision §6 — moderation — out of scope here beyond exposing the
   deduction hook).
@@ -108,43 +133,54 @@ unless the developer wants vanish state to survive a restart (flagged §7).
 
 ## 6. Salary system (knk-web-api, mostly independent of §1-5 — can run in parallel)
 
-- `SalaryConfiguration` (global multiplier, admin-editable via web app) +
-  `Models/User` gets a `LastSalaryPayoutAt` (or similar) timestamp field.
+- `SalaryConfiguration` (global multiplier, admin-editable via web app) + `Models/User` gets
+  `LastSalaryPayoutAt` (timestamp) and `PersonalSalaryMultiplier` (decimal, default 1.0 — a
+  plain field, not a permission grant, confirmed `DESIGN.md` §7 item 9) fields. Both land in
+  the same `User`-touching migration as §1/§3 — three separate features all adding columns to
+  `User` in one session is exactly the kind of thing worth one migration, not three.
 - `SalaryService`: on player join, if `now - LastSalaryPayoutAt >= 1 hour`, pay out the
-  covered gap (vision §5.4's offline-gap fix) scaled by global × personal × rank-based
-  multipliers. Rank-based multiplier reads the player's resolved `PermissionGroup` memberships
-  from §1 — this is the one place Salary actually depends on the permission model rather than
-  being fully independent; everything else here (config CRUD, the payout timer/hook) can be
-  built and tested against a stub multiplier before §1 lands if sequencing needs it.
-- Personal multiplier: per-user override field (see §7 for whether this needs its own
-  admin-editable field or can be modeled as a `PermissionGrant`-style flag).
+  covered gap (vision §5.4's offline-gap fix) scaled by global × `PersonalSalaryMultiplier` ×
+  rank-based multipliers. Rank-based multiplier reads the player's resolved `PermissionGroup`
+  memberships from §1 — this is the one place Salary actually depends on the permission model
+  rather than being fully independent; everything else here (config CRUD, the payout
+  timer/hook, the personal-multiplier field itself) can be built and tested against a stub
+  rank-multiplier before §1's resolution engine is fully wired, if sequencing needs it.
 
-## 7. Open items surfaced while writing this plan (implementation detail, not blocking)
+## 7. Decision record — items resolved 2026-09-23 (second round)
 
-1. Exact title bracket thresholds/names for v3 — port v1's 5/10/12/15 as-is, or set new
-   numbers/titles now that the mechanic is being rebuilt?
-2. Should owner/staff-mode vanish state persist across a server restart (v1 didn't), or is
-   in-memory-only still acceptable for v3?
-3. Salary's "personal multiplier" — a plain field on `User`, or modeled through the permission/
-   grant system for consistency with rank-based multipliers?
-4. `PermissionGrant.HolderId` is currently polymorphic-by-`HolderType` rather than a real FK
-   (§1) — acceptable for v1 of this feature, or worth a shared `PermissionHolder` base table
-   (with `User`/`PermissionGroup` as subtypes) to get real referential integrity? The Items
-   plan's `Domain`/TPT precedent (`Town`/`District`/`Structure`) is the direct analog if so —
-   flagging since it's a bigger schema decision than the rest of this plan.
-5. Should the `GET /api/users/{id}/permissions/check` endpoint be paired with a full
-   `GET /api/users/{id}/permissions/effective` (resolved permission set) for the web app's own
-   admin UI to show "what can this player currently do," or is per-node checking sufficient
-   for v1 of the admin screens?
+These were originally open items in this plan; all resolved directly with the developer and
+folded into `DESIGN.md` §7 (items 8-12) and the sections above. Kept here for traceability.
+
+1. Exact title bracket thresholds/names → port v1's 5/10/12/15 as-is (§4).
+2. Owner/staff-mode vanish persistence → persists across a restart (§3).
+3. Salary's "personal multiplier" → plain `PersonalSalaryMultiplier` field on `User` (§6).
+4. `PermissionGrant.HolderId` shape → real FK into a shared `PermissionHolder` base table
+   (TPT, `User`/`PermissionGroup` as subtypes — same pattern as `Domain`/`Town`), not
+   polymorphic (§1).
+5. Whether `GET /api/users/{id}/permissions/check` needs a companion
+   `GET /api/users/{id}/permissions/effective` (full resolved set) → **yes** — this is now a
+   concrete requirement of `docs/specs/user-management/DESIGN.md`'s composite player-profile
+   view (§1 of that doc), not an open question. Add both endpoints in this plan's Phase 1
+   rather than deferring the second one.
+6. Whether a tailored user-management admin module belongs in this plan → **no**, it's a
+   separate feature — see `docs/specs/user-management/DESIGN.md`, sequenced after this plan's
+   Phase 1 (§1 below) since it depends on the resolution engine and `/effective` endpoint that
+   Phase 1 produces.
 
 ## 8. Suggested sequencing
 
-1. §1 (entities/API/resolution engine) — foundation, nothing else can start without it.
+1. §1 (entities/API/resolution engine, including the `permissions/effective` endpoint) —
+   foundation, nothing else can start without it, including `docs/specs/user-management/`.
 2. §2 (legacy-check migration + `/knk` granularity) and §6 (salary config/payout scaffolding,
-   stubbed multiplier) can run in parallel once §1's schema is settled, even before the full
-   resolution engine is wired everywhere.
+   stubbed rank-multiplier) can run in parallel once §1's schema is settled, even before the
+   full resolution engine is wired everywhere. Note the shared migration: §1 (`PermissionHolder`
+   split), §3 (vanish/mode fields), and §6 (`LastSalaryPayoutAt`/`PersonalSalaryMultiplier`)
+   all add to `User` in the same window — write these as one migration, not three, to avoid
+   EF migration-ordering headaches on a table this central.
 3. §3 (owner/staff-mode commands) after §2.
 4. §4 (title/XP) and §5 (premium tiers) after §1 is fully wired — both are direct consumers
    of the resolution engine and `PermissionGroup` model.
 5. Web app admin UI (FormConfig screens from §1) can be built in parallel with §2-§5 once the
    controllers exist, same pattern as the Items plan.
+6. `docs/specs/user-management/` (the tailored admin module) starts once §1 ships — it's a
+   separate plan from here on, not a further phase of this one.

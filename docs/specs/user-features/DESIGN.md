@@ -1,9 +1,15 @@
 # User Features — Design (Player Progression & Social Status)
 
-**Status:** Ready for implementation — all open questions resolved (§7). See
-`IMPLEMENTATION_PLAN.md` for the phased build-out.
-**Last updated:** 2026-09-23 (revised same day: all §7 open questions walked through and
-resolved with the developer; verified account linking — which vision §5.4 called "not yet
+**Status:** Ready for implementation — all open questions resolved, including the smaller
+implementation-detail ones originally left in `IMPLEMENTATION_PLAN.md` §7. See
+`IMPLEMENTATION_PLAN.md` for the phased build-out, and `docs/specs/user-management/` for the
+separate tailored-admin-UI feature this design's data model now underpins.
+**Last updated:** 2026-09-23 (second revision same day: `User`/`PermissionGroup` are now
+TPT subtypes of a shared `PermissionHolder` base table rather than `PermissionGrant.HolderId`
+being an unconstrained polymorphic pointer; vanish/owner/staff-mode state now persists across
+a restart instead of matching v1's in-memory-only behavior; title thresholds confirmed as
+v1's 5/10/12/15 ported as-is. First revision same day: all §7 open questions walked through
+and resolved with the developer; verified account linking — which vision §5.4 called "not yet
 merged" on a `UserFeatures` branch — is in fact already merged to `main`/`master` in all
 three component repos, and confirmed no rank/tier/permission/premium/salary/title code exists
 anywhere yet, so this remains close to greenfield)
@@ -57,6 +63,27 @@ replaces.
   pattern is the first real consumer, but the engine itself is generic.
 - **Authoring surface is both web app FormConfig admin UI and in-game commands, from day
   one** — not staged. See §6.2.
+- **`User` and `PermissionGroup` are both TPT subtypes of a new `PermissionHolder` base
+  table**, giving `PermissionGrant.HolderId` a real, single, DB-enforced foreign key instead
+  of an unconstrained `HolderType`+`HolderId` pair. Same EF Core TPT pattern already used for
+  `Domain`/`Town`/`District`/`Structure` (`Town : Domain`, sharing `Domain.Id` as PK) — see §1
+  for the schema note. Chosen over the simpler polymorphic shape despite the extra upfront
+  migration work, since referential integrity on every permission grant matters more here than
+  it did for the Items plan's `Origin` polymorphism question.
+- **Owner/staff-mode vanish state persists across a server restart** — not v1's in-memory-only
+  behavior. A staff member's vanish state survives a restart rather than needing to be
+  re-toggled.
+- **Title/XP bracket thresholds port v1's 5/10/12/15 as-is** for now (placeholder content,
+  easy to retune later via the admin UI once it exists — not a design constraint).
+- **Salary's personal multiplier is a plain field on `User`** (`PersonalSalaryMultiplier`,
+  decimal), not modeled through the permission/grant system — it's a numeric override, not an
+  access-control concept.
+- **The tailored user-management admin module is a separate feature**, not a phase of this
+  plan — see `docs/specs/user-management/DESIGN.md`. It depends on this design's data model
+  (resolved permissions, groups, title/XP, premium tier, salary state) but is sequenced and
+  scoped independently, since it's genuinely its own chunk of work (composite views, new
+  aggregate endpoints, audit log) rather than a natural sub-phase of the permission engine
+  itself.
 
 ## 2. Rank/Permission architecture
 
@@ -71,16 +98,22 @@ the player's group(s) already give them.
 Entity shape (names indicative, `Models/` conventions — `[FormConfigurableEntity]`,
 `[RelatedEntityField]`/`[NavigationPair]` per `Category.cs`/`User.cs` precedent):
 
-- **PermissionGroup** — `Id`, `Name`, `ChatPrefix`, `ChatSuffix`, `ParentGroupId` (nullable FK
-  to `PermissionGroup`, single-parent inheritance — confirmed, see §1), `Weight` (int,
-  tie-break for prefix/suffix display when a user is in multiple groups, LuckPerms-style,
-  highest wins)
-- **PermissionGrant** — `Id`, `HolderType` (enum: Group | User), `HolderId` (int, polymorphic
-  by `HolderType` — not an FK constraint, matches the pattern until/unless a shared
-  `PermissionHolder` base table is introduced later), `Node` (string, dot-path,
-  wildcard-capable — e.g. `knk.gate.*`, `customenchantments.*`), `Value` (bool: true = grant,
-  false = explicit deny), `ExpiresAt` (nullable `DateTime` — temporary grants, matches vision
-  §5.1's expiry requirement for temporary tiers)
+- **PermissionHolder** — new base table (TPT), `Id`, `ChatPrefix`, `ChatSuffix` (the fields
+  every kind of holder needs). `User` and `PermissionGroup` both become `: PermissionHolder`
+  subtypes, sharing `PermissionHolder.Id` as their own PK — same pattern as `Town`/`District`/
+  `Structure : Domain`. **Note:** this means `User`'s own chat prefix/suffix (if it ever gets
+  a personal one, distinct from whatever its groups display) lives on the shared base row, not
+  duplicated per-subtype — worth confirming at implementation time whether `User` needs its
+  own `ChatPrefix`/`ChatSuffix` at all or purely inherits display formatting from group
+  membership (see `IMPLEMENTATION_PLAN.md` §7).
+- **PermissionGroup : PermissionHolder** — adds `Name`, `ParentGroupId` (nullable FK to
+  `PermissionGroup`, single-parent inheritance — confirmed, see §1), `Weight` (int, tie-break
+  for prefix/suffix display when a user is in multiple groups, LuckPerms-style, highest wins)
+- **PermissionGrant** — `Id`, `HolderId` (real FK to `PermissionHolder.Id` — confirmed, see
+  §1), `Node` (string, dot-path, wildcard-capable — e.g. `knk.gate.*`,
+  `customenchantments.*`), `Value` (bool: true = grant, false = explicit deny), `ExpiresAt`
+  (nullable `DateTime` — temporary grants, matches vision §5.1's expiry requirement for
+  temporary tiers)
 - **UserPermissionGroup** — join entity for `User` ↔ `PermissionGroup`, many-to-many (a player
   can hold multiple groups at once — e.g. a staff group *and* a premium-tier group
   simultaneously — confirmed, see §1), `ExpiresAt` (nullable — each membership independently
@@ -129,9 +162,8 @@ Kept as the earned-progression axis, per vision §5.2 and v1 precedent (`user-sy
 - Title changes (promotion or demotion) **jump straight to the target bracket** on any XP
   change, rather than porting v1's one-level-per-tick catch-up drain (confirmed, see §1) — a
   single `experiencePoints` write recomputes and applies the resulting title directly. v1's
-  reward/penalty thresholds at 5/10/12/15 are still worth carrying forward as the concrete
-  bracket boundaries unless the developer wants new ones defined at implementation time (see
-  `IMPLEMENTATION_PLAN.md` for the open item on exact thresholds/rewards).
+  reward/penalty thresholds at 5/10/12/15 are ported as-is for the bracket boundaries
+  (confirmed, see §1) — placeholder content, retunable later via the admin UI.
 
 ## 4. Premium tier track
 
@@ -159,6 +191,12 @@ on next join if ≥1 hour has passed, rather than lost (explicit vision requirem
 fix for v1's silent-loss behavior — `user-system.md` doesn't document v1 handling this at
 all, so this is new-in-v3 behavior, not a port).
 
+Multiplier sourcing: global (admin-set config), rank-based (read from the player's resolved
+`PermissionGroup` memberships — the one place Salary genuinely depends on §2's permission
+model), and personal (a plain `PersonalSalaryMultiplier` decimal field directly on `User` —
+confirmed, see §1; not modeled through the grant system, since it's a numeric override rather
+than an access-control concept).
+
 ## 6. Owner-mode / staff-mode and in-game rank management
 
 ### 6.1 Owner-mode / staff-mode (vision §5.5)
@@ -169,6 +207,10 @@ gated by the new permission model (e.g. `knk.mode.owner`/`knk.mode.staff`) inste
 §2.3 (`PlayerListener.java:140/171/190`, `ScoreboardUtil.java:51`) — each is rewired to a
 permission-engine lookup against the acting player's resolved grants, not a literal string
 check against a dead namespace.
+
+Unlike v1's in-memory-only state, vanish/mode state **persists across a server restart**
+(confirmed, see §1) — a new `IsVanished`/`ActiveMode`-style field on `User`, restored on
+login rather than defaulting off after every restart.
 
 `/knk`'s per-subcommand breakdown (§2.3) lands in the same phase as this, since both are
 "replace an ad hoc admin/owner check with a real permission node" work — see
@@ -206,6 +248,19 @@ as the decision record (also folded into §1 and the relevant body sections abov
 7. **Authoring surface** → both web app FormConfig UI and in-game commands, from day one
    (§6.2).
 
-See `IMPLEMENTATION_PLAN.md` §7 for the smaller open items surfaced *while writing the plan*
-(exact title thresholds/rewards, salary multiplier config shape, etc.) — those are
-implementation-detail questions, not architectural ones, and don't block starting.
+A second round, covering the smaller items originally left in `IMPLEMENTATION_PLAN.md` §7 plus
+one new question raised by the user-management module discussion, was also resolved
+2026-09-23:
+
+8. **`PermissionGrant.HolderId` shape** → shared `PermissionHolder` base table (TPT), real FK
+   — not the simpler polymorphic pair (§2.1).
+9. **Salary personal multiplier** → plain `PersonalSalaryMultiplier` field on `User`, not a
+   permission grant (§5).
+10. **Title/XP bracket thresholds** → port v1's 5/10/12/15 as-is, placeholder content (§3).
+11. **Owner/staff-mode vanish persistence** → persists across a restart, not v1's in-memory-only
+    behavior (§6.1).
+12. **Tailored user-management admin module** → separate feature/spec, sequenced after this
+    design's Phase 1, not folded into this plan (§1). See `docs/specs/user-management/
+    DESIGN.md`.
+
+All architectural and implementation-detail questions for this design are now closed.
