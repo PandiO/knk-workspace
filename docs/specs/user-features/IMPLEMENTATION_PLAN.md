@@ -1,8 +1,10 @@
 # User Features — Implementation Plan (Rank/Permission/Progression)
 
-**Status:** Phase 1 (§1) shipped 2026-09-23 — see "§1 status" below. §2-§6 not started, ready
+**Status:** Phase 1 (§1), Phase 2 (§2) and Phase 3 (§3) shipped 2026-09-23 — see "§1 status" and
+"§3 status" below (§2's writeup is its `ACTIVE_SESSIONS.md` entry). §4-§6 not started, ready
 whenever picked up (all open questions resolved, §7 is a decision record, not a blocker list).
-**Last updated:** 2026-09-23 (Phase 1 implementation session, same day as the design revision:
+**Last updated:** 2026-09-23 (Phase 3 implementation session added "§3 status"; earlier the same
+day, the Phase 1 implementation session and the design revision:
 `PermissionGrant.HolderId` is now a real FK into a shared `PermissionHolder` base table rather
 than polymorphic; salary's personal multiplier is a plain `User` field; title thresholds port
 v1's 5/10/12/15 as-is; owner/staff-mode vanish state persists across a restart; the tailored
@@ -145,6 +147,72 @@ not v1's in-memory-only maps:
   two).
 - On login, the plugin reads this field back and re-applies vanish state rather than defaulting
   everyone visible after a restart.
+
+### §3 status — shipped 2026-09-23
+
+Both repo bullets are done, on branch `claude/user-features-phase3-v8rmws` in knk-web-api (forked
+from §1's unmerged `claude/user-features-phase1-sg4rjw`) and knk-plugin (forked from §2's unmerged
+`claude/user-features-phase2-fvx5qj`). Full verification writeup: `ACTIVE_SESSIONS.md`, "User
+features Phase 3" in the "Recently completed" table.
+
+**Field shape decided (DESIGN.md §6.1 left it open):** a single `User.ActiveMode` enum
+(`None`/`Staff`/`Owner`, `int` column, default `0`) — no separate `IsVanished` flag. v1 never
+vanished a player outside a mode and the two modes were effectively exclusive (v1's `/staffmode`
+refused co-owners/owners), so vanish is simply `ActiveMode != None`. Written only via a dedicated
+`PUT /api/users/{id}/active-mode`; ignored by the generic `UserDto`→`User` update mapping so a
+web-app edit that omits it can't silently un-vanish a player. Exposed on `UserSummaryDto`, which
+is what the plugin already fetches at pre-login, so restoring on join needs no extra round trip.
+
+**Migration decision — standalone, not held for §6.** §8's "one shared `User` migration for
+§1/§3/§6" was already moot for §1 (shipped and migrated separately). Holding §3's column for §6
+would have blocked this phase on one nobody has claimed, to save one trivially additive
+`AddColumn` — two independent additive columns carry no real ordering risk (the only friction is a
+model-snapshot conflict if §6 is developed in parallel off an older base, fixed by regenerating
+§6's migration after rebasing). So `AddUserFeaturesPhase3ActiveMode` shipped on its own; **§6
+should just add its own additive migration too**, not try to fold into this one.
+
+**Behavior (ported from v1's `OwnerCommands`/`User.setOwnerMode`, read directly from
+`knk-v1-archive`):** `/ownermode` (`/om`), `/staffmode` (`/sm`) with v1's args (toggle, `on|enable`,
+`off|disable`, `<on|off> onquit|oq`, `help`); entering a mode hides the player from everyone who
+can't see vanished players and shows an action bar; join/leave messages are suppressed while
+vanished; on login the persisted mode is restored (and dropped, with a message, if the player's
+grant was revoked while offline). `onquit` now means "persist the new mode without applying it to
+the current session", which gives exactly v1's documented effect. **Deliberate deviations from v1,
+flagged:** (1) viewers who can see vanished players are holders of `knk.mode.staff` **or**
+`knk.mode.owner` (v1: only `k&k.staff` — owners relied on also having it via PermissionsEx group
+inheritance); (2) `/staffmode` isn't refused for owners — anyone with `knk.mode.staff` may use it;
+(3) v1's combat-tag clearing on enable is not ported (v3 has no combat-tag system yet); (4) v1's
+separate "ownermode"/"staffmode" scoreboard teams and all the scattered `inOwnerModus()` gameplay
+checks (pickup/crafting/gate/etc.) are not ported — separate follow-ups if wanted, none are in §3's
+scope.
+
+**Gaps/bugs carried forward:**
+
+1. **Fixed here, but it's a §2 bug worth knowing about:** `KnkPermissible.resolveUserId` read the
+   user cache with `getByUuid`, which returns empty once an entry's TTL lapses — and `UserCache`
+   uses the 60-second global `cache.ttl-seconds`, with nothing refreshing an online player's entry
+   mid-session. So about a minute after joining, **every** `KnkPermissible` check failed closed for
+   every non-op (ops were unaffected thanks to the op bypass, which is likely why nobody noticed).
+   Now reads `getStale` (a UUID's knk user id never changes). Proven with the behavior simulation
+   described in `ACTIVE_SESSIONS.md` — it fails without this one-line fix.
+2. **Pre-existing, not fixed:** `KnKPlugin.onEnable` constructs `CacheManager` twice (once before
+   `UserManager`, once again later), so `UserManager`'s "legacy" `UserCache` is an orphaned
+   instance nobody else reads — `UserManager`'s `legacyUserCache.put(...)` for brand-new users
+   never reaches the cache `PlayerListener`/`KnkPermissible`/`ModeService` use. Didn't affect §3
+   (pre-login populates the right cache), but worth a cleanup pass.
+3. **Visibility isn't re-evaluated when a viewer's permissions change mid-session** (e.g. a staff
+   grant added while they're online) — only on join and whenever a vanished player's mode changes.
+   Relog fixes it. Fine until §6.2's in-game grant commands exist; those should call
+   `ModeService.refreshVisibilityFor(player)` after changing a player's grants.
+4. **A `/reload` (or plugin re-enable) with players online** leaves them with no in-session mode
+   until they relog (visible, even if persisted as vanished). Not worth handling given `/reload`
+   is unsupported on Paper anyway.
+5. **If the API is unreachable at pre-login**, the user cache has no entry, so the player joins
+   visible (fail-open for visibility, same as v1's every-restart behavior). Accepted: failing
+   closed would mean refusing the login.
+6. `PUT /api/users/{id}/active-mode` with an unknown string (e.g. `"Wizard"`) returns 500 rather
+   than 400 — pre-existing global JSON-binding behavior, identical on the existing
+   `gate-passthrough-method` endpoint; an unknown *integer* is correctly rejected with 400.
 
 ## 4. Title/XP track (knk-web-api service logic + knk-plugin display, depends on §1)
 
