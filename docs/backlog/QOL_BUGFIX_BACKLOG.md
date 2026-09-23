@@ -447,4 +447,36 @@ Confirmations are also click-driven end-to-end (`menu.confirm.request`/`.accept`
 
 ---
 
+## 9. `DataAccessFactory`'s per-entity cache TTL config is dead — every gateway uses the global TTL instead
+
+- **Status**: Open — found and flagged during User features Phase 1 (2026-09-23), not fixed (out of that feature's scope)
+- **Area**: knk-plugin (`knk-paper/.../paper/dataaccess/DataAccessFactory.java`, `KnKPlugin.java`)
+- **Reported**: 2026-09-23, while wiring `PermissionsDataAccess` (see the User features Phase 1 entry in `ACTIVE_SESSIONS.md`'s "Recently completed" table)
+
+### Symptom
+`config.yml`'s `cache.entities.<name>.ttl-minutes`/`ttl-seconds` values (e.g. `towns.ttl-minutes: 30`, `health.ttl-seconds: 30`) are never actually used to size that entity's cache. Every `*DataAccess` gateway ends up using the single global `cache.ttl-seconds` (default 60s) instead, regardless of what's configured per-entity.
+
+### Root cause
+Every `DataAccessFactory.create*DataAccess(...)` method takes a `Duration ttl` parameter from its caller rather than reading it from `entitySettings.<name>().ttl()` itself. `buildSettings(entityConfig, name)` — the helper every `create*` method calls — only pulls `default-policy`/`allow-stale`/`retry-attempts`/`retry-backoff-ms` out of the per-entity config; it never touches `ttl()`. Every call site in `KnKPlugin.java` (`onEnable`, around the `dataAccessFactory.create*DataAccess(...)` block) passes `config.cache().ttl()` — the global default — as that `ttl` argument, for every one of the 11 pre-existing entities (users, towns, districts, structures, streets, locations, enchantments, itemBlueprints, minecraftMaterials, domains, health, menus — `CacheManager`'s four caches are also all constructed from the same global `config.cache().ttl()`). So the per-entity `ttl-minutes`/`ttl-seconds` values in `config.yml` are silently ignored everywhere except `entities.permissions`, which was wired correctly (see below) since it was added after this was noticed.
+
+### Evidence
+Direct code read, `knk-paper/.../paper/dataaccess/DataAccessFactory.java`: every `create*DataAccess` method's `ttl` parameter is passed straight through to the entity's `*DataAccess` constructor, never derived from `entitySettings`. `KnKPlugin.java`'s wiring block: every call passes `config.cache().ttl()` literally, e.g. `dataAccessFactory.createTownsDataAccess(cacheManager.getTownCache(), townsQueryApi)` (where `cacheManager` itself was constructed via `new CacheManager(config.cache().ttl())`) and `dataAccessFactory.createEnchantmentDefinitionsDataAccess(config.cache().ttl(), enchantmentDefinitionsQueryApi)`.
+
+### Affected files
+- `knk-paper/src/main/java/net/knightsandkings/knk/paper/dataaccess/DataAccessFactory.java` — every `create*DataAccess` method except `createPermissionsDataAccess` (the one exception, added 2026-09-23 specifically to read `entitySettings.permissions().ttl()` directly rather than repeat this bug — see `PermissionsDataAccess`'s own gateway for the pattern the other 11 should switch to)
+- `knk-paper/src/main/java/net/knightsandkings/knk/paper/KnKPlugin.java` — every `dataAccessFactory.create*DataAccess(...)` call site
+- `knk-paper/src/main/java/net/knightsandkings/knk/paper/cache/CacheManager.java` — constructed from the same global TTL, affecting the 4 entities it manages (users, towns, districts, structures)
+
+### Proposed solution
+Change each `create*DataAccess` method to stop taking a `Duration ttl` parameter and instead read `entitySettings.<name>().ttl()` internally, mirroring `createPermissionsDataAccess`'s shape. For the 4 `CacheManager`-backed entities (users/towns/districts/structures), `CacheManager` would need to construct each of its 4 caches with its own entity-specific TTL instead of one shared global TTL — a slightly bigger change than the other 7, since `CacheManager`'s constructor currently only takes one `Duration` for all four.
+
+### Open questions
+1. Is the global `cache.ttl-seconds` config value meant to stay as a fallback default when an entity's own `ttl-minutes`/`-seconds` is unset, or should every entity's block become required once this is fixed? (`EntitySettings.ttl()` already falls back to a hardcoded 15-minute default when both are null, independent of the global config value — worth deciding whether that fallback should route through the global value instead.)
+2. Is this worth fixing as one sweep across all 11 entities, or safer to do incrementally (a few entities per session) given it touches cache sizing for everything the plugin reads from the API?
+
+### Acceptance criteria
+Every entity's cache TTL, once changed in `config.yml`, actually takes effect without needing to touch the global `cache.ttl-seconds` — verified by setting a distinctly-different `ttl-seconds` on one entity (e.g. `towns`), restarting, and confirming (via `CacheManager.logMetrics()`/`getHealthSummary()` or direct cache inspection) that entity's cache expires on that schedule while others remain on their own configured values.
+
+---
+
 <!-- Add new items below using the same structure: Status / Area / Reported date / Symptom / Repro steps / Evidence / Affected files / Root cause / Proposed solution / Open questions / Acceptance criteria -->

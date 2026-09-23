@@ -1,13 +1,13 @@
 # User Features — Implementation Plan (Rank/Permission/Progression)
 
-**Status:** Ready for implementation — all open questions resolved (§7 is now a decision
-record, not a blocker list).
-**Last updated:** 2026-09-23 (revised same day: `PermissionGrant.HolderId` is now a real FK
-into a shared `PermissionHolder` base table rather than polymorphic; salary's personal
-multiplier is a plain `User` field; title thresholds port v1's 5/10/12/15 as-is; owner/
-staff-mode vanish state persists across a restart; the tailored user-management admin module
-is confirmed a separate feature — see `docs/specs/user-management/`, which this plan's Phase 1
-now unblocks)
+**Status:** Phase 1 (§1) shipped 2026-09-23 — see "§1 status" below. §2-§6 not started, ready
+whenever picked up (all open questions resolved, §7 is a decision record, not a blocker list).
+**Last updated:** 2026-09-23 (Phase 1 implementation session, same day as the design revision:
+`PermissionGrant.HolderId` is now a real FK into a shared `PermissionHolder` base table rather
+than polymorphic; salary's personal multiplier is a plain `User` field; title thresholds port
+v1's 5/10/12/15 as-is; owner/staff-mode vanish state persists across a restart; the tailored
+user-management admin module is confirmed a separate feature — see `docs/specs/user-management/`,
+which this plan's Phase 1 now unblocks)
 
 Ref: `docs/vision/vision.md` §5. Sources: `docs/specs/user-features/DESIGN.md` (architecture,
 all decisions resolved), `docs/specs/user-features/COMMAND_PERMISSION_SCAN.md` (v1/v2/v3
@@ -76,6 +76,49 @@ document is sequencing and per-repo scope only. If something below conflicts wit
 - `FormConfiguration` seed entries for `PermissionGroup`/`PermissionGrant` admin screens
   (`Category`/`ItemBlueprint` FormConfig precedent — live authoring, no seeder mechanism
   exists in this codebase, matching the Items plan's finding).
+
+### §1 status — shipped 2026-09-23
+
+Both repo bullets above are done. knk-web-api: `PermissionHolder`/`PermissionGroup`/
+`PermissionGrant`/`UserPermissionGroup` entities, the TPT migration (verified end-to-end against
+a real local MySQL 8.0 copy with pre-existing data — see the full writeup in `ACTIVE_SESSIONS.md`
+under "User features Phase 1" in the "Recently completed" table), `PermissionResolutionService`
+(22 unit tests + a live 4-level group-chain smoke test), `PermissionGroupsController`/
+`PermissionGrantsController`, and the `permissions/check`/`permissions/effective` endpoints.
+knk-plugin: knk-core domain types + `PermissionsApi` port + `PermissionsDataAccess` gateway,
+knk-api-client DTOs/mapper/impl wired into `KnkApiClient`, knk-paper config/wiring (its own
+short-TTL cache entry, unlike the other 11 entities — see backlog item 9 below). Branches:
+knk-web-api `claude/user-features-phase1-sg4rjw`, knk-plugin `claude/user-features-phase1-si2v8g`
+(neither merged to main/master yet).
+
+**Gaps intentionally left open, carried forward for whoever picks up the next phase:**
+
+1. **No `UserPermissionGroup` CRUD endpoint or UI exists yet** — there is currently no API path
+   to assign a user to a group. §1's own knk-web-api bullet lists the entity but no dedicated
+   controller (unlike `PermissionGroup`/`PermissionGrant`, which both got one); the knk-web-app
+   bullet only lists `permissionGroupClient`/`permissionGrantClient`, not a membership client.
+   Membership authoring is squarely §6.2's job ("in-game: assigning a player to a group... calls
+   the same service layer the web app CRUD uses"), so this isn't a bug, just worth flagging
+   explicitly rather than discovering it by surprise later: **whoever builds §6.2 needs to decide
+   and build this from scratch** (a `UserPermissionGroupsController` following the
+   `PermissionGroupsController` shape is the most direct option, but a nested
+   `PermissionGroup.Members`/`User.PermissionGroupMemberships` FormWizard M2M step, matching the
+   `Category.Tags` precedent from the Items plan, is the more idiomatic fit for the "web app" half
+   of §6.2's authoring surface — an implementation-time call, not decided here). This session's
+   own live verification seeded one test membership via raw SQL directly against the database,
+   confirming the resolution engine itself has no issue consuming memberships once they exist —
+   only the authoring path is missing.
+2. **No `KnkPermissible`-style `Player.hasPermission(...)` replacement helper exists yet**, even
+   though the original knk-plugin bullet for §1 named one ("a `KnkPermissible`-style helper that
+   call sites use instead of raw `Player.hasPermission(...)`"). Not built this session because no
+   call site needs it yet — §2 below (the four dead `k&k.*` checks, `/knk`'s per-subcommand nodes)
+   is its first real consumer. **Whoever picks up §2 should build this helper as that phase's
+   first step**, backed by `PermissionsDataAccess.checkAsync(userId, node)` (already shipped),
+   before rewiring `PlayerListener`/`ScoreboardUtil`/`KnkAdminCommand` onto it.
+3. **A real, pre-existing bug in `DataAccessFactory` was found while wiring `PermissionsDataAccess`**
+   (unrelated to this feature, not fixed here) — every other entity's configured cache TTL in
+   `config.yml` is silently ignored; only `PermissionsDataAccess` reads its own TTL correctly.
+   Tracked as `docs/backlog/QOL_BUGFIX_BACKLOG.md` item 9, not this plan's problem to fix.
 
 ## 2. Legacy-check migration + `/knk` granularity (knk-plugin only, depends on §1's resolution API)
 
