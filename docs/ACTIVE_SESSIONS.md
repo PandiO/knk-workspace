@@ -26,6 +26,7 @@ Live tracker of in-progress work across all four Knights and Kings repos
 | Feature | Repos / files claimed | Owner (human / session) | Status | Started | Last updated |
 |---|---|---|---|---|---|
 | _(example)_ Siege minigame — capture point sync | web-api: `Services/SiegeService.cs`; plugin: `siege/` package | Claude Code session A | Implementing capture-point event handling | 2026-09-17 | 2026-09-17 |
+| User features — Phase 1 (entities/API/resolution engine) | web-api: `Models/PermissionHolder.cs`, `Models/User.cs`, `Models/PermissionGroup.cs`, `Models/PermissionGrant.cs`, `Models/UserPermissionGroup.cs`, new EF migration, `PermissionGroupsController`, `PermissionGrantsController`, `Services/PermissionResolutionService.cs`, permission check/effective endpoints on `UsersController`; plugin (if reached): knk-core `PermissionHolder`/`PermissionCheckResult`, knk-api-client `PermissionApi`, knk-paper `dataaccess/PermissionsDataAccess` | Claude Code session (cloud) | Starting: reading DESIGN.md/IMPLEMENTATION_PLAN.md, then implementing knk-web-api entities/migration/controllers/resolution engine per plan §1 | 2026-09-23 | 2026-09-23 |
 
 ## Recently completed
 
