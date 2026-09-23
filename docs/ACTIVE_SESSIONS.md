@@ -26,6 +26,7 @@ Live tracker of in-progress work across all four Knights and Kings repos
 | Feature | Repos / files claimed | Owner (human / session) | Status | Started | Last updated |
 |---|---|---|---|---|---|
 | _(example)_ Siege minigame — capture point sync | web-api: `Services/SiegeService.cs`; plugin: `siege/` package | Claude Code session A | Implementing capture-point event handling | 2026-09-17 | 2026-09-17 |
+| User features — Phase 3 (owner/staff-mode commands) (`IMPLEMENTATION_PLAN.md` §3) | knk-web-api: `Models/User.cs` (new mode field), new EF migration, `Dtos/UserDtos.cs`, `Mapping/UserMappingProfile.cs`, `Controllers/UsersController.cs`, `Services/UserService.cs`, `Repositories/UserRepository.cs` (+ interfaces) — branch `claude/user-features-phase3-v8rmws`, fast-forwarded onto Phase 1's unmerged `claude/user-features-phase1-sg4rjw`; knk-plugin: new `/ownermode`+`/staffmode` commands + mode service/listener under `knk-paper/.../paper/`, `plugin.yml` (`knk.mode.staff`), knk-core `UserSummary`/`UsersCommandApi`, knk-api-client user DTO/mapper/command impl — branch `claude/user-features-phase3-v8rmws`, fast-forwarded onto Phase 2's unmerged `claude/user-features-phase2-fvx5qj` | Claude Code session (user-features-phase3-v8rmws) | Implementing | 2026-09-23 | 2026-09-23 |
 
 ## Recently completed
 
