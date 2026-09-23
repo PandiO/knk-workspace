@@ -26,6 +26,7 @@ Live tracker of in-progress work across all four Knights and Kings repos
 | Feature | Repos / files claimed | Owner (human / session) | Status | Started | Last updated |
 |---|---|---|---|---|---|
 | _(example)_ Siege minigame — capture point sync | web-api: `Services/SiegeService.cs`; plugin: `siege/` package | Claude Code session A | Implementing capture-point event handling | 2026-09-17 | 2026-09-17 |
+| Items Phase 4/5 — ItemScan WorldTask + FormConfig wiring | plugin: `knk-paper/.../tasks/ItemScanTaskHandler.java` (new), `KnKPlugin.java`/`KnkAdminCommand.java` wiring; web-api: `Dtos/GateBlockScanDtos.cs` (`WorldTaskTypes.ItemScan` constant); web-app: `FormConfigBuilder/FieldEditor.tsx`, `Workflow/WorldBoundFieldRenderer.tsx`, `FormWizard/FormWizard.tsx`, `apiClients/minecraftMaterialRefClient.ts` — all `claude/items-feature`; workspace: this row, committed straight to `main` | Claude Code session | Plugin/web-api/web-app code done and build/test-verified; about to author the live FormConfiguration Scan field + attempt end-to-end live verification | 2026-09-23 | 2026-09-23 |
 
 ## Recently completed
 
