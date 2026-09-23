@@ -26,6 +26,7 @@ Live tracker of in-progress work across all four Knights and Kings repos
 | Feature | Repos / files claimed | Owner (human / session) | Status | Started | Last updated |
 |---|---|---|---|---|---|
 | _(example)_ Siege minigame — capture point sync | web-api: `Services/SiegeService.cs`; plugin: `siege/` package | Claude Code session A | Implementing capture-point event handling | 2026-09-17 | 2026-09-17 |
+| Items Phase 3 — ItemBlueprint admin FormConfiguration | web-api: applying pending Phase 1 migration + Phase 2 FormConfigurations to the real dev DB (`192.168.50.119`/`knightsandkings_dev_v2`), then `ItemBlueprintCreateDto`/`UpdateDto.TagIds` DTO fix if needed; web-app: authoring `ItemBlueprint`'s `FormConfiguration` (General Info, Pricing, Default Enchantments/Origin/Tags M2M steps) live via FormConfigBuilder — all `knk-web-api`/`knk-web-app` branch `claude/items-feature`; workspace: this row | Claude Code session | Applying Phase 1 migration + Phase 2 FormConfigs to real dev DB, then implementing Phase 3 per `docs/specs/items/IMPLEMENTATION_PLAN.md` §6 item 3 | 2026-09-23 | 2026-09-23 |
 
 ## Recently completed
 
