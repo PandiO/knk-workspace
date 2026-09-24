@@ -1,9 +1,11 @@
 # User Features — Implementation Plan (Rank/Permission/Progression)
 
-**Status:** Phase 1 (§1), Phase 2 (§2) and Phase 3 (§3) shipped 2026-09-23 — see "§1 status" and
-"§3 status" below (§2's writeup is its `ACTIVE_SESSIONS.md` entry). §4-§6 not started, ready
-whenever picked up (all open questions resolved, §7 is a decision record, not a blocker list).
-**Last updated:** 2026-09-24 (branch-hygiene pass: see "Branch convention" immediately below).
+**Status:** Phase 1 (§1), Phase 2 (§2), Phase 3 (§3) and Phase 4 (§4) shipped — see "§1 status",
+"§3 status" and "§4 status" below (§2's writeup is its `ACTIVE_SESSIONS.md` entry). §5-§6 not
+started, ready whenever picked up (all open questions resolved, §7 is a decision record, not a
+blocker list).
+**Last updated:** 2026-09-24 (Phase 4 implementation session added "§4 status"; earlier the same
+day, a branch-hygiene pass added the "Branch convention" section below).
 Previously updated 2026-09-23 (Phase 3 implementation session added "§3 status"; earlier the same
 day, the Phase 1 implementation session and the design revision:
 `PermissionGrant.HolderId` is now a real FK into a shared `PermissionHolder` base table rather
@@ -13,7 +15,7 @@ user-management admin module is confirmed a separate feature — see `docs/specs
 which this plan's Phase 1 now unblocks)
 
 **Branch convention (starting 2026-09-24):** this feature uses exactly **one standing branch per
-repo, `claude/user-features`**, for every remaining phase (§4, §5, §6, and anything after). Do
+repo, `claude/user-features`**, for every remaining phase (§5, §6, and anything after). Do
 **not** create a new per-phase branch name. Every future session picks up on `claude/user-features`
 and commits directly onto it. This replaces the old per-phase-branch-name pattern
 (`claude/user-features-phase1-*`, `-phase2-*`, `-phase3-*`, `-docs-scan-*`), which caused every
@@ -245,6 +247,27 @@ scope.
 - Plugin-side: display title alongside prestige XP (past-final-title climbing, vision §5.2)
   in scoreboard/tab list — reuses whatever `ScoreboardUtil` already renders `User` stats
   through.
+
+### §4 status — shipped 2026-09-24
+
+Both repo bullets done — see `ACTIVE_SESSIONS.md`'s "User features Phase 4" row for the full
+writeup. Two things worth knowing before building §5/§6 on top of this:
+
+1. **The "port v1's 5/10/12/15" instruction above is about reward-crossing milestones, not
+   bracket boundaries** — v1's `Titles` table (19 rows, `MinExp`/`MaxExp`/`Salary`/bonuses per
+   title) was pure runtime DB content, never committed to source anywhere, so there was nothing
+   more specific to port. `TitleBracket` seeds exactly 5 rows using 5/10/12/15 (plus an implicit
+   0) as the bracket boundaries themselves, with placeholder names (Novice/Apprentice/Journeyman/
+   Veteran/Master) — already anticipated as placeholder content by `DESIGN.md` §7 item 10, not a
+   scope deviation.
+2. **`ScoreboardUtil` has no per-player sidebar stat rendering to "reuse"** — its `Scoreboard` is
+   one static instance shared by every player, so a sidebar `Objective` can't show a different
+   value per viewer. Title/prestige XP is shown in the tab list footer instead (already per-player).
+   Anyone adding more per-player stats to the scoreboard later hits the same constraint.
+
+Also added `PUT /api/users/{id}/balances`, wiring the pre-existing-but-unreachable
+`UserService.AdjustBalancesAsync` to an actual route — this is the "deduction hook" referenced
+above, and now the only way to change a user's XP short of the DB directly.
 
 ## 5. Premium tier track (knk-web-api + knk-plugin, depends on §1)
 
