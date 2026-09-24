@@ -1,9 +1,11 @@
 # User Management — Design (Tailored Admin Module)
 
-**Status:** Ready for implementation — depends on `docs/specs/user-features/
-IMPLEMENTATION_PLAN.md` Phase 1 (not yet built as of this writing). This design can proceed in
-parallel; the module itself cannot ship ahead of that dependency.
-**Last updated:** 2026-09-23
+**Status:** Phase 1 (§2, composite player-profile view) shipped 2026-09-24 — see
+`IMPLEMENTATION_PLAN.md`'s "Phase 1 status". §7 item 1 (premium-tier UI flag) resolved earlier
+(user-features Phase 5); item 4 (aggregate endpoint vs. several calls) resolved by Phase 1
+shipping the aggregate. Items 2 (presence tracking) and 3 (audit retention) remain open, needed
+before Phase 3 and before Phase 2 ships to production respectively.
+**Last updated:** 2026-09-24 (Phase 1 implementation session).
 
 Ref: `docs/vision/vision.md` §5. Sources: `docs/specs/user-features/DESIGN.md` +
 `IMPLEMENTATION_PLAN.md` (the rank/permission/progression data model this module is a UI over),
@@ -156,7 +158,6 @@ New scope, no existing precedent:
 3. **Audit log retention/volume**: does every `PermissionGrant`/`UserPermissionGroup` write
    need its own audit entry indefinitely, or should this get a retention policy (e.g. dropped
    after N months) given it's an append-only table on what could become a busy write path?
-4. **`profile-summary` endpoint vs. several parallel calls**: confirmed recommendation is one
-   aggregate endpoint (§2) — flagging as still open in case the developer prefers the frontend
-   composing several existing per-concern calls instead, trading one round trip for less
-   backend surface area.
+4. ~~**`profile-summary` endpoint vs. several parallel calls**~~ — **resolved 2026-09-24**: built
+   as one aggregate endpoint (`GET /api/users/{id}/profile-summary`), per the confirmed
+   recommendation. See `IMPLEMENTATION_PLAN.md`'s "Phase 1 status".
