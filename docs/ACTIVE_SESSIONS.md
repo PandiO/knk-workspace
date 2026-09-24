@@ -35,6 +35,7 @@ Live tracker of in-progress work across all four Knights and Kings repos
 | Feature | Repos / files claimed | Owner (human / session) | Status | Started | Last updated |
 |---|---|---|---|---|---|
 | _(example)_ Siege minigame — capture point sync | web-api: `Services/SiegeService.cs`; plugin: `siege/` package | Claude Code session A | Implementing capture-point event handling | 2026-09-17 | 2026-09-17 |
+| User features Phase 4 — Title/XP track (`IMPLEMENTATION_PLAN.md` §4, knk-web-api + knk-plugin) | knk-web-api: new `Models/TitleBracket.cs`, `TitleService`, migration seeding brackets, `UserDto`/`UserSummaryDto` title fields; knk-plugin: display wiring (TBD) — branch `claude/user-features` in both repos (see standing-branch convention above) | Claude Code session | Starting implementation | 2026-09-24 | 2026-09-24 |
 
 ## Recently completed
 
