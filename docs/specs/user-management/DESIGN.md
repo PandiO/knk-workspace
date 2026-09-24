@@ -144,10 +144,11 @@ New scope, no existing precedent:
 
 ## 7. Open questions
 
-1. **Premium-tier UI distinction**: does `PermissionGroup` need an explicit `IsPremiumTier`
-   (or similar) flag for the frontend to know which groups to show under "Premium Tier" versus
-   generic "Groups" in the profile view, or is a naming convention (e.g. a `Premium` prefix)
-   good enough?
+1. ~~**Premium-tier UI distinction**~~ — **resolved 2026-09-24** (user-features Phase 5):
+   `PermissionGroup.IsPremiumTier` bool, not a naming convention. The resolved current tier is
+   already on `UserDto`/`UserSummaryDto` (`premiumTierGroupId`/`premiumTierName`/
+   `premiumTierExpiresAt`), and `GET /api/UserPermissionGroups?userId=` lists every membership
+   with `isPremiumTier`/`isActive`. See `docs/specs/user-features/IMPLEMENTATION_PLAN.md` "§5 status".
 2. **Presence tracking mechanism**: a dedicated `POST /api/users/{id}/presence` endpoint hit on
    join/quit, or something lighter (e.g. updating `LastSeenAt` as a side effect of whatever
    periodic sync the plugin already does)? Affects whether "currently online" is real-time-ish

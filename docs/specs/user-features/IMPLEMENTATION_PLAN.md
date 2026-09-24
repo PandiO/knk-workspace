@@ -1,11 +1,11 @@
 # User Features — Implementation Plan (Rank/Permission/Progression)
 
-**Status:** Phase 1 (§1), Phase 2 (§2), Phase 3 (§3) and Phase 4 (§4) shipped — see "§1 status",
-"§3 status" and "§4 status" below (§2's writeup is its `ACTIVE_SESSIONS.md` entry). §5-§6 not
-started, ready whenever picked up (all open questions resolved, §7 is a decision record, not a
-blocker list).
-**Last updated:** 2026-09-24 (Phase 4 implementation session added "§4 status"; earlier the same
-day, a branch-hygiene pass added the "Branch convention" section below).
+**Status:** Phases 1-5 (§1-§5) shipped — see "§1 status", "§3 status", "§4 status" and "§5 status"
+below (§2's writeup is its `ACTIVE_SESSIONS.md` entry). §6 (salary) not started, ready whenever
+picked up (all open questions resolved, §7 is a decision record, not a blocker list).
+**Last updated:** 2026-09-24 (Phase 5 implementation session added "§5 status" and the
+"v1 Titles backup search" note under §4 status; earlier the same day, the Phase 4 session added
+"§4 status" and a branch-hygiene pass added the "Branch convention" section below).
 Previously updated 2026-09-23 (Phase 3 implementation session added "§3 status"; earlier the same
 day, the Phase 1 implementation session and the design revision:
 `PermissionGrant.HolderId` is now a real FK into a shared `PermissionHolder` base table rather
@@ -115,7 +115,9 @@ knk-web-api `claude/user-features-phase1-sg4rjw`, knk-plugin `claude/user-featur
 
 **Gaps intentionally left open, carried forward for whoever picks up the next phase:**
 
-1. **No `UserPermissionGroup` CRUD endpoint or UI exists yet** — there is currently no API path
+1. **[Closed by §5, 2026-09-24 — `UserPermissionGroupsController` now exists; see "§5 status".
+   The web-app UI and §6.2's in-game commands still need building on top of it.]**
+   **No `UserPermissionGroup` CRUD endpoint or UI exists yet** — there is currently no API path
    to assign a user to a group. §1's own knk-web-api bullet lists the entity but no dedicated
    controller (unlike `PermissionGroup`/`PermissionGrant`, which both got one); the knk-web-app
    bullet only lists `permissionGroupClient`/`permissionGrantClient`, not a membership client.
@@ -269,6 +271,28 @@ Also added `PUT /api/users/{id}/balances`, wiring the pre-existing-but-unreachab
 `UserService.AdjustBalancesAsync` to an actual route — this is the "deduction hook" referenced
 above, and now the only way to change a user's XP short of the DB directly.
 
+**v1 Titles backup search (2026-09-24, Phase 5 session) — no real data found, placeholder seed
+left exactly as-is.** The developer pointed at local backups that might hold v1's real `Titles`
+rows. Searched every database-like file under `D:\Shared\Werk\KnightsAndKings\archive\` (39
+files: `.sql` dumps, CoreProtect/LuckPerms/LiteBans DBs, zips):
+- `macbook/Database/Backup_22-03-21/KnightsAndKings_Test-7.sql` (the path given): a 2021
+  Hibernate-era (v2) phpMyAdmin dump — **no `Titles` table**; titles appear only as
+  `town.reguired_title` ints.
+- `macbook/K&K_Database.sql` (the file the original cloud-session prompt referred to, now
+  materialized) and `macbook/K&K_Database`: **schema only, zero `INSERT`s.** They do confirm
+  v1's column set — `ID, MaleName, FemaleName, Salary (default 250), CoinBonus (4000), GemBonus
+  (2), ExpBonus (5), MinExp (25), MaxExp (34)` — but those are column defaults, not per-title
+  values.
+- `macbook/Database/Players_before_tutorial.sql` (Nov 2018, the real v1 production DB
+  `mcph701458`): `Player.TitleID` has an FK to `Titles`, but only the `Player` table was exported.
+- Every other dump (2021 `db_backup_*`, `import.sql`, `KnightsAndKings_Test-Backup-07-09-21.sql`)
+  is v2-era with no title data.
+
+So there is still nothing real to swap in; `TitleBracket` keeps its 5 placeholder rows and no
+schema change was made. If v1's real 19 titles ever turn up (e.g. an older full dump of
+`mcph701458`), the swap is still the schema decision flagged then: 19 rows with per-title
+`MinExp`/`MaxExp`/`Salary`/bonuses and gendered names versus the current 3-column model.
+
 ## 5. Premium tier track (knk-web-api + knk-plugin, depends on §1)
 
 - Premium tiers are modeled as `PermissionGroup` rows (e.g. "Premium Bronze/Silver/Gold"),
@@ -282,6 +306,54 @@ above, and now the only way to change a user's XP short of the DB directly.
   convenience filter.
 - Depends on account linking (already shipped, confirmed — `DESIGN.md` §4) for tying a web
   purchase/grant action to the correct in-game `User` row; no new linking work.
+
+### §5 status — shipped 2026-09-24
+
+Both repos done, on the standing `claude/user-features` branch; full verification writeup in
+`ACTIVE_SESSIONS.md`, "User features Phase 5". **Doc/code conflict flagged before building:** the
+second bullet above assumes "the same `PermissionGroup`/`UserPermissionGroup` CRUD from §1", but
+§1 never built a membership endpoint (its own gap #1, which deferred it to §6.2), so there was no
+way to grant a tier. Developer decisions, confirmed before any code was written:
+
+1. **Membership authoring built here:** `UserPermissionGroupsController`
+   (`GET ?userId=` / `?permissionGroupId=`, `PUT` upsert with optional future `expiresAt`,
+   `DELETE {userId}/{permissionGroupId}`, `GET premium-tier/{userId}`). One row per user+group
+   (composite PK), so re-granting a tier the user already holds just changes its expiry.
+   `expiresAt` is stored and returned as UTC, matching the resolution engine's `DateTime.UtcNow`.
+   §6.2's in-game commands and any web-app membership screen should call this, not add a
+   second path.
+2. **`PermissionGroup.IsPremiumTier` bool** marks premium groups (also resolves
+   `docs/specs/user-management/DESIGN.md` §7 item 1). A user's **premium tier = their
+   highest-Weight active membership in a premium group**, exposed as
+   `premiumTierGroupId`/`premiumTierName`/`premiumTierExpiresAt` on `UserDto`/`UserSummaryDto`.
+   Group search gained an `isPremiumTier` filter (the "convenience filter" above).
+3. **Seeded v1's three donator tiers** Noble/Royal/Dragon Blood (weights 10/20/30, no grants, no
+   chat prefix; v1's `PrimaryColor`/`SecondColor` values aren't recoverable). This had to be raw
+   SQL rather than `InsertData`: `PermissionGroup` is a TPT subtype whose id comes from
+   `permission_holders`' auto-increment, which it shares with every `User`, so fixed seed ids
+   would collide. A tier is skipped if a group with that name already exists.
+4. **Plugin:** premium tier shown in the tab-list footer under the title line (with a UTC
+   "until" date for temporary tiers). Like the title, it refreshes on join only.
+
+**"Restore on expiry" confirmed working as designed:** a permanent Noble plus a temporary Royal
+shows Royal (and resolves Royal's grants) until the Royal membership expires, then Noble shows
+through again with no bookkeeping. This is v1's `DonatorTemp`/`previousDonatorID` behavior.
+Note that the bullets above and `DESIGN.md` §4 say `PermissionGrant.ExpiresAt` covers this; the
+field actually doing the work is `UserPermissionGroup.ExpiresAt`. `PermissionGrant.ExpiresAt`
+covers temporary single-node grants.
+
+**Carried forward:**
+1. **No perks yet.** The three tiers have no `PermissionGrant`s. What premium actually grants
+   (kits, stash slots, pet slots, salary multiplier per vision §5.3/§5.4) is later work; §6's
+   rank-based salary multiplier is the first expected consumer of "which premium tier is this
+   user".
+2. **Expired memberships are kept, not deleted** (`isActive: false` in listings). They are the
+   history of past temporary tiers. Nothing prunes them; add a cleanup job only if the table
+   ever gets large.
+3. **No web-app screen** for memberships yet (the controller exists; knk-web-app wasn't in scope).
+4. **No expiry notification in-game**, and an online player whose tier expires keeps the old
+   footer (and the plugin's cached permission answers, 30s TTL) until relog or cache refresh.
+   Permission checks themselves go through the API, which ignores expired memberships.
 
 ## 6. Salary system (knk-web-api, mostly independent of §1-5 — can run in parallel)
 

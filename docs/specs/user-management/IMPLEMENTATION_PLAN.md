@@ -97,8 +97,8 @@ into already-shipped code later to retrofit it. Flag this explicitly when pickin
 
 ## 5. Open items (carried from `DESIGN.md` §7 — implementation detail)
 
-1. Premium-tier UI flag (`IsPremiumTier` field vs. naming convention) — needed before Phase 1's
-   `profile-summary` endpoint finalizes its response shape.
+1. ~~Premium-tier UI flag~~ — resolved 2026-09-24: `PermissionGroup.IsPremiumTier` (shipped in
+   user-features Phase 5). Phase 1's `profile-summary` can use it directly.
 2. Presence-tracking mechanism — needed before Phase 3 starts.
 3. Audit log retention policy — needed before Phase 2 ships to production, not before it's
    built.
