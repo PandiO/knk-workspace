@@ -1,16 +1,18 @@
 # User Management — Implementation Plan (Tailored Admin Module)
 
-**Status:** Phase 1 (composite player-profile view) and Phase 2 (quick actions + audit log write
-path) shipped 2026-09-24 — see "Phase 1 status" and "Phase 2 status" under §5 below. §5 item 3
-(audit log retention policy) resolved 2026-09-24 — see "Audit log retention status" under §5.
-Phase 3 (moderation search/filters) not started, gated on §5 item 2 (presence tracking) per §4's
-sequencing note.
-**Last updated:** 2026-09-24 (audit log retention policy session added "Audit log retention
-status" under §5, resolved §5 item 3). Previously updated 2026-09-24 (Phase 2 implementation
-session added "Phase 2 status" under §5). Previously updated 2026-09-24 (Phase 1 implementation
-session added "Phase 1 status" under §5, resolved §5 item 4, and flagged a real generic-dashboard
-registration gap as carried-forward item 1 — see that section). Previously updated 2026-09-23
-(initial draft).
+**Status:** All three phases shipped 2026-09-24. Phase 1 (composite player-profile view) and
+Phase 2 (quick actions + audit log write path) — see "Phase 1 status" and "Phase 2 status" under
+§5 below. Phase 3 (moderation search/filters) — see "Phase 3 status" under §5. All §5 open items
+resolved: item 2 (presence tracking) and item 3 (audit log retention policy) — see "Audit log
+retention status". This module is feature-complete.
+**Last updated:** 2026-09-24 (Phase 3 implementation session added "Phase 3 status" under §5,
+resolved §5 item 2, and closed the Phase 1/2 carried-forward "no generic-dashboard entry point"
+item). Previously updated 2026-09-24 (audit log retention policy session added "Audit log
+retention status" under §5, resolved §5 item 3). Previously updated 2026-09-24 (Phase 2
+implementation session added "Phase 2 status" under §5). Previously updated 2026-09-24 (Phase 1
+implementation session added "Phase 1 status" under §5, resolved §5 item 4, and flagged a real
+generic-dashboard registration gap as carried-forward item 1 — see that section). Previously
+updated 2026-09-23 (initial draft).
 
 Ref: `DESIGN.md` in this folder. Depends on: `docs/specs/user-features/IMPLEMENTATION_PLAN.md`
 §1 (entities, resolution engine, `permissions/check`/`permissions/effective` endpoints) and,
@@ -107,7 +109,9 @@ not as a still-open task.
 
 1. ~~Premium-tier UI flag~~ — resolved 2026-09-24: `PermissionGroup.IsPremiumTier` (shipped in
    user-features Phase 5). Phase 1's `profile-summary` can use it directly.
-2. Presence-tracking mechanism — needed before Phase 3 starts.
+2. ~~Presence-tracking mechanism~~ — resolved 2026-09-24 as part of Phase 3: dedicated
+   `PUT /api/users/{id}/presence`, not a periodic sync. See "Phase 3 status" below and
+   `DESIGN.md` §7 item 2.
 3. ~~Audit log retention policy~~ — resolved 2026-09-24: `AuditLogRetentionConfiguration`
    singleton (default 180 days) + `RetentionPolicyService` cleanup. See "Audit log retention
    status" below.
@@ -486,3 +490,144 @@ confirmed via `git diff` on `appsettings.json` showing zero changes; every comma
 **Carried forward:** none new. This closes `DESIGN.md` §7 item 3 / this file's §5 item 3. The
 180-day default (decision 1 above) is worth a second look from the developer since it's this
 session's own placeholder judgment call, not a documented requirement.
+
+### Phase 3 status — shipped 2026-09-24
+
+`knk-web-api`: `Models/User.cs` gains `IsOnline`/`LastSeenAt` (migration
+`AddUserManagementPhase3Presence`, clean additive column-add, `IsOnline` defaults `false`,
+`LastSeenAt` nullable — no backfill needed for existing rows); `PUT /api/users/{id}/presence`
+(new `IUserRepository.UpdatePresenceAsync`/`IUserService.UpdatePresenceAsync`, not audit-logged —
+a passive system signal, not an admin action, see decision 1 below); `GET /api/Users/search?
+groupId=&onlineOnly=` (new `IUserRepository.SearchByGroupAsync`, joins `UserPermissionGroups`);
+`GET /api/PermissionGroups/{id}/expiring-memberships?withinDays=` (new
+`IPermissionGroupRepository.GetExpiringMembershipsAsync`, excludes permanent (`ExpiresAt=null`)
+and already-expired memberships); `GET /api/audit-log` gains `action`/`direction` query params
+(direction matches `TitleChanged` entries' freeform `Details` JSON via a string `Contains`, no
+dedicated column — see decision 2). `AuditLogServiceTests`/`UserServiceTests` extended (5 new
+tests) — commit `0e44410` on the standing `claude/user-management` branch.
+
+`knk-plugin`: new `UsersCommandApi.setPresenceById(int, boolean)` + `UsersCommandApiImpl`
+(`PUT /Users/{id}/presence`, matches the existing `setCoinsById`/`setGatePassThroughMethodById`
+per-user-id PUT pattern) + `PresenceUpdateDto`; `PlayerListener.onJoin`/`onLeave` now call it via
+a new constructor-injected `UsersCommandApi` field, resolving the target user id from
+`cacheManager.getUserCache()` (same cache `onJoin` already reads for the welcome message — no
+new reliability risk). Silently no-ops if the user isn't cached yet, logs a warning on API
+failure, never blocks login/quit on it. First commit on `claude/user-management` in this repo —
+Phase 1/2 didn't need the plugin — commit `89212c9`.
+
+`knk-web-app`: new `UserModerationPage.tsx` at `/admin/users`, three tabs each backed by one
+Phase 3 endpoint (by-group + online-only, premium-expiring-soon, recently-demoted), added to
+`App.tsx` routing and `Navigation.tsx` ("Moderation" link). `UserListDto` (shared with the
+generic `POST /api/users/search`) widened with `isOnline`/`lastSeenAt` rather than duplicated —
+low-risk additive fields, single existing consumer (`userClient.ts`) checked first. New
+`ExpiringMembershipDto` type. Commit `2428b10` on the standing `claude/user-management` branch.
+
+**Three decisions made and flagged, not silently picked, per this task's own instruction:**
+(1) **presence updates are not audit-logged** — `AuditLogEntry`/`DESIGN.md` §4 scope the audit
+trail to admin/system mutations *affecting a player's state* (balance, group, grant changes);
+join/quit presence pings would just be volume noise at every-login frequency, and nothing in
+`DESIGN.md` asked for a login history feature. (2) **the `onlineOnly` query param on
+`GET /api/Users/search`** — the plan's own Phase 3 bullet only named `groupId`; `onlineOnly` was
+added as this session's own reasonable extension so "currently online" (DESIGN.md §5) has
+somewhere to plug into the UI, since no standalone "list all online players" endpoint exists in
+the plan. **This means "currently online" in the shipped UI is scoped to "online within a
+selected group", not a server-wide online roster** — flagged explicitly in case the developer
+wants a groupless variant later (a straightforward addition: drop the `NOT NULL` groupId
+requirement in `SearchByGroupAsync`/`UsersController.SearchByGroup`). (3) **`direction` matching
+via `Details.Contains(...)` rather than a dedicated column** — matches this table's own "append-
+only, viewed not edited" scope from Phase 2; a dedicated `Direction` column would need a second
+migration and a backfill decision for existing `TitleChanged` rows for one query's sake, judged
+not worth it at current audit-log volume (confirmed live: a handful of rows in dev). If audit-log
+volume grows enough that this LIKE-style match becomes a real query-performance concern, it's a
+candidate to revisit.
+
+**Verification — cloud sandbox this session, live not just build/test-green, same rigor as prior
+phases.** `.NET 8 SDK`+`dotnet-ef` via `apt` (as in every prior phase). Docker's `mysql:8.0` pull
+hit a *persistent* 429 this session (four retries over several minutes, unlike prior phases'
+one-retry-and-it-clears experience) — fell back to `apt-get install mysql-server`, started
+manually (`mysqld_safe`, no systemd) per this project's own documented fallback. Migration
+generated against this real local MySQL 8.0, hand-reviewed before applying (clean additive
+column-add, nothing to hand-fix) — all 29 migrations applied clean. **Live API pass:** created
+real test users/groups via `curl`, exercised every new endpoint directly — group search,
+online-only filter (toggled via the real presence endpoint, confirmed the online user was
+included/excluded correctly as presence flipped), expiring-memberships (confirmed a permanent
+membership is correctly excluded, only the one with a real `ExpiresAt` inside the window showed),
+and the demotion filter (forced a real promotion then a real bracket-crossing demotion via
+`PUT .../balances`, confirmed `direction=demotion` returned exactly the demotion entry and
+`direction=promotion` returned exactly the promotion entry — not a coincidental single-entry
+match, both directions independently verified against the same player's history). 404 on an
+unknown user id for the presence endpoint confirmed. `dotnet test`: 396/401 (5 new), same 5
+pre-existing unrelated failures every prior phase documents — one real regression was caught and
+fixed here, not shipped: the pre-existing `AuditLogServiceTests.SearchAsync_ResolvesActorAndTargetUsernames`
+mocked the repository's old 4-arg `SearchAsync` overload, which the service's new 2-arg-forwarding
+implementation no longer calls, causing a `NullReferenceException` — fixed by updating the mock
+setup to the actual 6-arg call the service now makes, per this codebase's own precedent of
+updating call sites' tests rather than papering over a shape change.
+
+**knk-plugin verification:** `repo.papermc.io` policy-blocked in this sandbox (same finding every
+prior session), confirmed via the proxy's own status endpoint rather than assumed. Maven Central
+itself also hit intermittent 429s this session (a new wrinkle — Gradle's plugin-portal
+resolution for the unrelated `knk-paper` shadow-jar dependency chain failed outright on it, so
+even `./gradlew :knk-core:compileJava` couldn't be used since Gradle configures every module in
+the build regardless of which task is requested) — worked around by fetching the actual runtime
+dependency jars (Jackson, OkHttp, Gson, Kotlin stdlib, JUnit console) directly from
+`repo1.maven.org` via `curl` with retries, then compiling with plain `javac`/running with the
+JUnit console-standalone launcher, bypassing Gradle's build-graph resolution entirely — same
+spirit as Phase 1's workaround, adapted for this session's specific failure mode. All 140
+Bukkit-free `knk-core` files (including the touched `UsersCommandApi.java`) and all 120
+`knk-api-client` files (fully Bukkit-free, including the new `PresenceUpdateDto` and updated
+`UsersCommandApiImpl`) compiled with **zero errors**; confirmed `setPresenceById` present in the
+compiled bytecode via `javap`. All 350 Bukkit-free `knk-core` unit tests pass (0 failures),
+including the updated `UsersDataAccessTest`'s `StubUsersCommandApi`. The `knk-paper` changes
+(`PlayerListener.java`, `KnKPlugin.java` — Bukkit-dependent) are hand-reviewed only, not
+compiler-verified — needs a real `./gradlew build` on a machine that can reach
+`repo.papermc.io`/an unrate-limited Maven Central. Not live-tested against a real or simulated
+Minecraft client/server this session (no reachable dev server in this sandbox) — the live
+verification for presence specifically was via direct `curl` calls to the same
+`PUT /api/users/{id}/presence` endpoint `PlayerListener` calls, not an actual player join/quit;
+a real join/quit pass on the developer's own dev server is still worth doing before relying on
+this in production, though the code path itself (cache lookup → `UsersCommandApi` call →
+exception-swallowed-and-logged) mirrors `onValidateLogin`'s own established pattern closely
+enough that this is a low-risk gap, not an unknown one.
+
+**Full frontend pass:** `npm install` (`CYPRESS_INSTALL_BINARY=0`, same sandbox egress
+convention as every prior phase), `tsc --noEmit` clean, `npm run build` clean (only pre-existing
+lint warnings in untouched files, confirmed by name). Real **Playwright browser pass** (Playwright
+itself isn't a project dependency — installed standalone in a scratch directory, pointed at the
+sandbox's pre-installed Chromium via `executablePath`, since this Chromium build has removed
+"old" headless mode and needed `--headless=new` explicitly): logged in through the live
+`/auth/login` form with a real registered account, loaded `/admin/users` in actual Chromium,
+and **exercised all three tabs with real seeded data** — group search (2 rows), online-only
+filter (correctly narrowed to 1), premium-expiring-soon (correctly excluded a permanent
+membership, showed only the one with a real expiry), recently-demoted (1 row, correct
+promotion/demotion JSON). **Clicked a result row and confirmed it navigated to the real
+`PlayerProfilePage` at `/admin/users/:id`** with that player's actual data rendered — the
+concrete proof that this phase closes Phase 1/2's carried-forward "no generic-dashboard entry
+point into `PlayerProfilePage`" item (see below). Confirmed the "Moderation" nav link renders and
+highlights correctly. One real script-level pitfall hit and fixed during this pass, not a product
+bug: an early automation script's `text=Search` selector ambiguously matched the tab's own intro
+paragraph (which also contains the word "search") before the actual Search button, making it
+look like the search feature was silently no-op'ing (0 rows) until the selector was scoped to
+`button:has-text("Search")` — worth noting for whoever next drives this page via a headless
+script. Console clean of anything from this phase's own code (only the same TLS-proxy/cert noise
+prior phases documented). The LAN dev DB (`192.168.50.119`) was never touched — confirmed via
+`git diff` on `appsettings.json` showing zero changes throughout this session.
+
+**Closes the Phase 1/2 carried-forward item:** `User` still isn't registered in
+`objectConfigs.tsx` (unchanged — deliberately not attempted, since `DESIGN.md` §0's own reasoning
+for why this module exists at all is that `User`'s moderation needs don't fit the generic
+column-filter dashboard), but `/admin/users`'s row-links into `PlayerProfilePage.tsx` **are** the
+generic-dashboard-free entry point that item was always waiting on — confirmed live above. No
+longer an open item.
+
+**Closes `DESIGN.md` §7 item 2 / this file's §5 item 2 (presence-tracking mechanism).** All
+`DESIGN.md` §7 open items are now resolved — this module is feature-complete pending only the
+carried-forward verification gaps named above (a real `knk-paper` Gradle build, and a real
+Minecraft client join/quit pass), neither of which blocks anything else in the project.
+
+**Next:** none required for this module. If picked up again: (a) a real `./gradlew build` +
+live-server join/quit test for the plugin side, from a machine that can reach
+`repo.papermc.io`; (b) consider a groupless "currently online" endpoint if the developer wants a
+server-wide online roster rather than the shipped group-scoped one (decision 2 above); (c) the
+`AuditLogRetentionConfiguration` 180-day default is still worth a second look (carried from the
+retention-policy session, unrelated to this phase).
