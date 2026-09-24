@@ -1,11 +1,14 @@
 # User Management — Design (Tailored Admin Module)
 
-**Status:** Phase 1 (§2, composite player-profile view) shipped 2026-09-24 — see
-`IMPLEMENTATION_PLAN.md`'s "Phase 1 status". §7 item 1 (premium-tier UI flag) resolved earlier
-(user-features Phase 5); item 4 (aggregate endpoint vs. several calls) resolved by Phase 1
-shipping the aggregate. Items 2 (presence tracking) and 3 (audit retention) remain open, needed
-before Phase 3 and before Phase 2 ships to production respectively.
-**Last updated:** 2026-09-24 (Phase 1 implementation session).
+**Status:** Phase 1 (§2, composite player-profile view) and Phase 2 (§3 quick actions + §4 audit
+log) shipped 2026-09-24 — see `IMPLEMENTATION_PLAN.md`'s "Phase 1 status" and "Phase 2 status".
+§7 item 1 (premium-tier UI flag) resolved earlier (user-features Phase 5); item 4 (aggregate
+endpoint vs. several calls) resolved by Phase 1 shipping the aggregate. Item 3 (audit log
+retention) is unresolved but non-blocking (needed before Phase 2 ships to *production*, not before
+it was built — see IMPLEMENTATION_PLAN.md §5 item 3). Item 2 (presence tracking) remains open,
+needed before Phase 3.
+**Last updated:** 2026-09-24 (Phase 2 implementation session). Previously updated 2026-09-24
+(Phase 1 implementation session).
 
 Ref: `docs/vision/vision.md` §5. Sources: `docs/specs/user-features/DESIGN.md` +
 `IMPLEMENTATION_PLAN.md` (the rank/permission/progression data model this module is a UI over),

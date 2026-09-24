@@ -3,10 +3,16 @@
 **Status:** Phases 1-6 (§1-§6) shipped on knk-web-api/knk-plugin — see "§1 status", "§3 status",
 "§4 status", "§5 status", "§6 status" and "§6.1" below (§2's writeup is its `ACTIVE_SESSIONS.md`
 entry). §6.1 (knk-plugin calling the payout endpoint on player join) shipped 2026-09-24, closing
-out §6's own carried-forward item 1. This was the last phase §8 names; see §8 below for what's
-next — `docs/specs/user-management/` Phase 1 (a separate feature this plan unblocked) is now
-underway in parallel.
-**Last updated:** 2026-09-24 (§6.1 implementation session added "§6.1" and closed §6's carried-
+out §6's own carried-forward item 1. §6's carried-forward item 4 (no audit-log write hook in
+`SalaryService.PayOutAsync`) closed 2026-09-24 by `docs/specs/user-management/`'s Phase 2 session,
+which also retrofitted the same gap in `UserService.AdjustBalancesAsync` (the "own `// TODO: Log
+to audit trail`" item 4 pointed at) — see that plan's "Phase 2 status" for the full write-hook
+list, which covers every mutating service this plan built (TitleService's derived title-change
+detection, the owner/staff-mode toggle, and the group/grant CRUD services), not just Salary. This
+was the last phase §8 names; see §8 below for what's next — `docs/specs/user-management/` Phase 2
+(a separate feature this plan unblocked) shipped in parallel, see that plan's own status.
+**Last updated:** 2026-09-24 (user-management Phase 2 session closed §6's carried-forward item 4).
+Previously updated 2026-09-24 (§6.1 implementation session added "§6.1" and closed §6's carried-
 forward item 1; earlier the same day, the Phase 6 implementation session added "§6 status";
 earlier still, the Phase 5 implementation session added "§5 status" and the "v1 Titles backup
 search" note under §4 status; earlier still, the Phase 4 session added "§4 status" and a
@@ -481,15 +487,19 @@ diff.
 3. **Both `GlobalMultiplier` and `SalaryMultiplier` are placeholder 1.0 values** — nothing has
    been tuned to a real economy number yet, same "placeholder, retunable later" status §4's
    `TitleBracket` seed and §5's premium tiers carry.
-4. **No audit-log write hook in `SalaryService.PayOutAsync`'s coin mutation** —
-   `docs/specs/user-management/IMPLEMENTATION_PLAN.md` §0's cross-plan note asks every
-   `user-features` service mutation to thread in an `AuditLogEntry` write as it's built, rather
-   than retrofitting later. Checked before treating this as an oversight: no `AuditLogEntry`
-   entity/table exists anywhere in the codebase yet (confirmed by search) — `user-management`'s
-   own Phase 2 hasn't built it, and `UserService.AdjustBalancesAsync` (the exact same coin-mutation
-   pattern `SalaryService` reuses) already carries its own `// TODO: Log to audit trail` from §4.
-   There is genuinely nothing to thread in yet; whoever builds `user-management` Phase 2 needs to
-   retrofit both this call site and `AdjustBalancesAsync`'s, not just note the gap again.
+4. ~~No audit-log write hook in `SalaryService.PayOutAsync`'s coin mutation~~ — **closed
+   2026-09-24** by `docs/specs/user-management/IMPLEMENTATION_PLAN.md` Phase 2, which built
+   `AuditLogEntry`/`AuditLogService` and retrofitted this call site (action `SalaryPayout`, actor
+   null — system-initiated), `UserService.AdjustBalancesAsync`'s (action `BalanceAdjusted`, plus a
+   derived `TitleChanged` entry when the XP delta crosses a bracket — `TitleService` itself has no
+   mutating method to hook, per its own doc comment), the generic `UserService.UpdateAsync` PUT
+   path (a second, previously-unaudited route to the same Coins/Gems/ExperiencePoints/
+   PersonalSalaryMultiplier fields — found and flagged, not assumed covered, while doing this
+   retrofit), `UserService.UpdateActiveModeAsync` (action `VanishToggled`), and
+   `UserPermissionGroupService`/`PermissionGrantService`'s CRUD (actions `GroupAssigned`/
+   `GroupRemoved`/`GrantAdded`/`GrantUpdated`/`GrantRemoved` — grants on a `PermissionGroup`
+   holder rather than a `User` are intentionally not audited per-player, since there's no single
+   target user). See that plan's "Phase 2 status" for the full verification writeup.
 
 ### §6.1 — knk-plugin join-hook wiring — shipped 2026-09-24
 

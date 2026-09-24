@@ -1,10 +1,11 @@
 # User Management — Implementation Plan (Tailored Admin Module)
 
-**Status:** Phase 1 (composite player-profile view) shipped 2026-09-24 — see "Phase 1 status"
-under §5 below. Phase 2 (quick actions + audit log) and Phase 3 (moderation search/filters) not
-started; Phase 2's write-side coordination with `user-features`'s own services (§0) should start
-as soon as feasible per this plan's own sequencing note (§4 item 2).
-**Last updated:** 2026-09-24 (Phase 1 implementation session added "Phase 1 status" under §5,
+**Status:** Phase 1 (composite player-profile view) and Phase 2 (quick actions + audit log write
+path) shipped 2026-09-24 — see "Phase 1 status" and "Phase 2 status" under §5 below. Phase 3
+(moderation search/filters) not started, gated on §5 item 2 (presence tracking) per §4's
+sequencing note.
+**Last updated:** 2026-09-24 (Phase 2 implementation session added "Phase 2 status" under §5).
+Previously updated 2026-09-24 (Phase 1 implementation session added "Phase 1 status" under §5,
 resolved §5 item 4, and flagged a real generic-dashboard registration gap as carried-forward item
 1 — see that section). Previously updated 2026-09-23 (initial draft).
 
@@ -15,12 +16,14 @@ salary services).
 
 ## 0. Cross-plan coordination note
 
-This plan's Phase 2 (audit log) needs write hooks inside services that `user-features` is
-building (`TitleService`, `SalaryService`, the owner/staff-mode command handlers, the
-group/grant CRUD services). **Whoever implements those `user-features` services should thread
-in an `AuditLogEntry` write per mutation as they go**, rather than this module reaching back
-into already-shipped code later to retrofit it. Flag this explicitly when picking up
-`user-features` Phase 1/§3/§4/§5/§6 — don't let it silently fall on this plan's Phase 2 alone.
+**Resolved 2026-09-24 (Phase 2 session), the opposite way this note originally hoped for:**
+this note asked whoever built `user-features`'s services to thread in the audit write as they
+went, rather than this module retrofitting later. In practice `user-features` Phases 1/3/4/5/6
+all shipped before `AuditLogEntry`/`AuditLogService` existed (there was nothing to thread into),
+so this Phase 2 session did the retrofit itself — see "Phase 2 status" below and
+`user-features/IMPLEMENTATION_PLAN.md` §6's carried-forward item 4 for the full list of call
+sites. Left here for anyone comparing this plan's original intent against what actually happened,
+not as a still-open task.
 
 ## Phase 1 — Composite player profile view
 
@@ -223,15 +226,161 @@ zero changes; every command pointed at the disposable container via a
    `GatePassThroughMethod` pickers, etc.) or fold this into Phase 3's already-planned
    `/admin/users` moderation list (which will need row links into this same page anyway) —
    whichever is picked, don't build both.
-2. **No quick actions yet** — read-only view only, per this task's own Phase 1 scope; Phase 2 adds
-   assign/revoke group, grant/deny node, and vanish toggle directly on this page.
-3. **No dedicated component test for `PlayerProfilePage.tsx`** — matches this repo's existing
-   convention for admin pages (`GameSettingsPage.tsx` has none either), flagged rather than
-   silently assumed acceptable.
-4. **§0's audit-log cross-plan dependency remains exactly as `user-features`' own §6 carried-forward
-   item 4 describes it** — no `AuditLogEntry` entity exists yet, and this phase didn't add one
-   (that's Phase 2's own scope). `SalaryService.PayOutAsync`'s coin mutation and
-   `UserService.AdjustBalancesAsync` both still need retrofitting once Phase 2 builds the audit
-   service — not a new finding, just confirming it wasn't accidentally addressed as a side effect
-   of this phase's `SalaryService` changes (the only change here was the new read-only
-   `GetCurrentRankMultiplierAsync` method, which mutates nothing and needs no audit entry).
+2. ~~No quick actions yet~~ — **done 2026-09-24**, see "Phase 2 status" below.
+3. **No dedicated component test for `PlayerProfilePage.tsx`** — still true after Phase 2 added
+   controls to the same page; matches this repo's existing convention for admin pages
+   (`GameSettingsPage.tsx` has none either), flagged rather than silently assumed acceptable.
+4. ~~§0's audit-log cross-plan dependency~~ — **closed 2026-09-24**, see "Phase 2 status" below
+   and `user-features/IMPLEMENTATION_PLAN.md` §6's carried-forward item 4.
+
+### Phase 2 status — shipped 2026-09-24
+
+Both repo bullets done, on the same standing `claude/user-management` branch as Phase 1, in all
+three repos. Full verification writeup in `ACTIVE_SESSIONS.md`, "User management Phase 2".
+
+**knk-web-api** — new `Models/AuditLogEntry.cs` (append-only, `Action` stored as its
+PascalCase string name via `HasConversion<string>()`, not an int, matching this codebase's
+`System.Text.Json` enum-serialization convention), migration `AddUserManagementPhase2AuditLog`
+(clean new-table create, no risky-default backfill needed unlike prior column-add migrations),
+`Services/AuditLogService.RecordAsync`/`SearchAsync` (username resolution for the read path via
+plain per-id `IUserRepository.GetByIdAsync` lookups — no batch-get-by-ids method existed to reuse,
+and a paged admin view's per-page id count doesn't warrant adding one), new
+`Controllers/AuditLogController` (`GET /api/audit-log`, explicit `api/audit-log` route since the
+plan's own kebab-case spelling doesn't match the controller-name convention), and four new
+quick-action endpoints added directly to `UsersController` (`POST {id}/groups`,
+`DELETE {id}/groups/{groupId}`, `POST {id}/grants`, `POST {id}/vanish-mode`) — each a thin
+wrapper over the *same* `IUserPermissionGroupService`/`IPermissionGrantService`/`IUserService`
+methods the generic FormWizard CRUD controllers already call, per `DESIGN.md` §3's "not a
+parallel code path" instruction.
+
+**The retrofit (§0/user-features §6 item 4) went wider than "thread it into the two named call
+sites,"** found by reading each candidate service before assuming it was covered, not by
+guessing from the plan's own list:
+- `SalaryService.PayOutAsync` — action `SalaryPayout`, actor `null` (system-initiated, matching
+  `AuditLogEntry.ActorUserId`'s own doc comment), only recorded when `Paid == true`.
+- `UserService.AdjustBalancesAsync` — action `BalanceAdjusted` (the `// TODO: Log to audit trail`
+  this item pointed at). Also detects a resulting title-bracket change (comparing
+  `ITitleService.ResolveAsync` before/after, since `TitleService` itself has no mutating method —
+  it's pure XP-derived, per its own doc comment) and records a second `TitleChanged` entry with a
+  `direction` field derived from the XP delta's sign, **not** from comparing `TitleBracketId`
+  values directly — `TitleBracketId` is an auto-increment PK unrelated to rank order, an easy
+  mistake caught and fixed before it shipped (would have made "recently demoted" queries, planned
+  for Phase 3, silently wrong).
+- **A real, previously-unaudited second write route, found while doing this retrofit, not
+  assumed covered:** the generic `UserService.UpdateAsync` (the FormWizard's `PUT /api/Users/{id}`)
+  maps `Coins`/`Gems`/`ExperiencePoints`/`PersonalSalaryMultiplier` straight from `UserDto` onto
+  the entity — confirmed by reading `UserMappingProfile`, which explicitly `opt.Ignore()`s
+  `ActiveMode`/`LastSalaryPayoutAt` for exactly this reason ("a generic edit that omits it must
+  not silently reset/overwrite it") but does *not* ignore those four fields. So an admin editing
+  a player through the generic dashboard form could change coins/gems/XP/salary-multiplier with
+  zero audit trail, bypassing `AdjustBalancesAsync` entirely. Retrofitted the same way (diff
+  before/after, `BalanceAdjusted` + derived `TitleChanged`), actor from
+  `GetUserIdFromClaims(User)` threaded through a new optional `UserService.UpdateAsync` parameter.
+- `UserService.UpdateActiveModeAsync` — action `VanishToggled`, only recorded when the mode
+  actually changes (a no-op call, e.g. re-setting the same mode, writes nothing). This is the
+  same method the in-game `/staffmode`/`/ownermode` commands call via
+  `UsersCommandApi.setActiveModeById` → `PUT .../active-mode` (per `user-features` §6.1's
+  carried-forward note), so the owner/staff-mode command handlers `DESIGN.md` §0 names are
+  covered transitively — the plugin doesn't write to the DB directly, confirmed rather than
+  assumed.
+- `UserPermissionGroupService.UpsertAsync`/`DeleteAsync` — actions `GroupAssigned`/`GroupRemoved`.
+- `PermissionGrantService.CreateAsync`/`UpdateAsync`/`DeleteAsync` — actions `GrantAdded`/
+  `GrantUpdated`/`GrantRemoved`. **One design call made and tested, not glossed over:**
+  `PermissionGrant.HolderId` can point at a `User` *or* a `PermissionGroup` (TPT base
+  `PermissionHolder`, `DESIGN.md` §2.1) — a grant on a group affects every member indirectly, not
+  one player, so there's no single `TargetUserId` to log against. Resolved by checking
+  `IUserRepository.GetByIdAsync(holderId) != null` before writing an entry; group-holder grants
+  are silently *not* audited per-player rather than logged against a group id `AuditLogEntry`
+  doesn't have a column for. Verified live: granting a node on `PermissionGroup` id 2 produced no
+  audit-log row, granting on a `User` id did.
+
+All of the above are threaded through the *existing* mutation methods rather than adding new
+"AuditedX" wrapper methods, so the generic FormWizard CRUD controllers (`UserPermissionGroupsController`,
+`PermissionGrantsController`) get audit coverage for free too, not just the new quick-action
+endpoints — confirmed live (see below).
+
+**knk-web-app** — `PlayerProfilePage.tsx` gained: a mode-toggle button row (highlights the
+current mode, disabled while in flight); a group-assign form (`<select>` populated from a new
+narrow `permissionGroupClient.getAll()` — `PermissionGroup` still isn't registered in
+`objectConfigs.tsx`, Phase 1's carried-forward item 1, so this is page-scoped rather than the
+generic path) plus a per-row remove (×) button on the groups table; a grant/deny-node mini-form
+(node text input, grant/deny select, optional expiry). Every quick action re-fetches
+`getProfileSummary` *and* the new activity feed on success, per `DESIGN.md` §3. New "Recent
+Activity" section reads `GET /api/audit-log?targetUserId=...`, rendering a human-readable action
+label, actor username or "system" for a null actor, and timestamp. New types
+(`AuditLogEntryDto`/`AuditAction`/`AssignGroupRequest`/`GrantNodeRequest` in
+`UserProfileSummaryDtos.ts`; `PermissionGrantDto.ts`/`PermissionGroupDto.ts`) and client methods
+kept in the existing `userManagementClient.ts` rather than new files, except the narrow
+`permissionGroupClient.ts` (a different resource). Added `Controllers.AuditLog = 'audit-log'` and
+`Controllers.PermissionGroups` to `utils/enums.ts` (the audit-log route doesn't match the
+`api/[controller]` PascalCase convention, so `getAuditLog` passes an empty `operation` and lets
+`requestData` become the query string, rather than a path segment).
+
+**Verification — cloud sandbox this session, same rigor as Phase 1, not just build/test green.**
+`repo.papermc.io` doesn't apply (`knk-plugin` untouched — Phase 2 is web-api/web-app only per the
+plan's own per-repo bullets). `.NET 8 SDK` + `dotnet-ef` via `apt`. **Docker worked this
+session** — `dockerd` started manually (no systemd), `mysql:8.0` pulled clean on the first
+attempt (no rate-limit retry needed this time). Generated the migration against the real DB,
+hand-reviewed it before applying (this codebase's own precedent for risky auto-generated
+defaults) — a clean new-table create needed no hand-fixing, unlike prior column-add migrations.
+Applied all 27 prior migrations clean. `dotnet test`: 391/396 (13 new: 4 `AuditLogServiceTests`,
+2 `SalaryServiceTests`, 3 `UserServiceTests`, 2 `UserPermissionGroupServiceTests`, 4 new
+`PermissionGrantServiceTests` covering the User-vs-PermissionGroup holder branch specifically),
+same 5 pre-existing unrelated failures every prior phase documents.
+
+**Live API pass, not just unit tests:** created a real test user via the live API, then in
+sequence via `curl` — toggled vanish mode, granted a direct node, assigned a group, adjusted
+balances (+5000 XP, crossing several title brackets), removed the group, edited coins through the
+*generic* `PUT /api/Users/{id}` (to specifically exercise the newly-found second write route,
+not just the dedicated endpoint), backdated `LastSalaryPayoutAt` by 3 hours via SQL and triggered
+a real payout — then fetched `GET /api/audit-log?targetUserId=...` and confirmed all 8 entries
+present, correctly ordered (`Timestamp` descending), correctly attributed (`actorUserId: null` for
+every unauthenticated call), correct `TitleChanged` promotion detection (Novice → Master, correct
+direction), and correct coin-balance arithmetic reconciling across every mutation
+(250 → 200 → 977 → 980, matching `-50 balances` → `+777 generic edit` → `+3 payout` exactly).
+Logged in via the real `/api/Auth/login` endpoint and repeated the vanish-mode toggle with a
+bearer token: `actorUserId`/`actorUsername` correctly resolved to the authenticated caller instead
+of `null`. Confirmed a grant on a `PermissionGroup` holder produces zero audit rows (the
+User-vs-group branch, live not just mocked). Confirmed `404` on an unknown-user quick action.
+Confirmed Phase 1's `profile-summary` endpoint has no regression (re-fetched, all sections still
+resolve correctly against the now-mutated data).
+
+**Full frontend pass:** `npm install` (`CYPRESS_INSTALL_BINARY=0`, same sandbox egress block as
+every prior phase, unrelated to this one), `tsc --noEmit` clean, `npm run build` clean (only the
+same pre-existing lint warnings every other untouched file in the repo already has — none in any
+file this phase touched, confirmed by grepping the build output for this phase's filenames
+specifically), `npm run test:ci` unchanged from baseline (10 pre-existing failing suites,
+byte-for-byte the same list Phase 1 documented, none touching this phase's files). Then a real
+**Playwright browser pass**, not a static screenshot: registered/logged in through the live auth
+endpoints exactly like Phase 1 did, loaded `/admin/users/4` in actual Chromium, and — beyond just
+screenshotting — **actually clicked the "Staff mode" button** (not curl) and confirmed the badge,
+the highlighted button state, and the header all updated correctly after a real re-fetch.
+Screenshotted the fully-populated page (mode toggle, group picker, grant form, and a Recent
+Activity feed with all 8 seeded entries correctly labeled/attributed/timestamped) and the
+not-found state for an unknown id. Console clean of anything from this phase's own code — the
+only errors present are the same TLS-proxy/cert resource errors from the sandbox's own network
+policy Phase 1 already documented as environment noise, plus the *expected* logged 404 from the
+not-found test case itself.
+
+**dotnet test:** 391/396 (13 new — see above), same 5 pre-existing unrelated failures every prior
+phase's row documents (`PathResolutionServiceTests`×2, `FormSubmissionProgressRepositoryTests`,
+`FieldValidationServiceTests`, `ClientActivityStoreTests`). The LAN dev DB (`192.168.50.119`) was
+never touched — confirmed via `git diff` on `appsettings.json` showing zero changes; every command
+used a `ConnectionStrings__MySqlDbConnection` environment-variable override.
+
+**Carried forward:**
+1. **No entry point from the generic dashboard** — unchanged from Phase 1's own carried-forward
+   item 1 (still not registered in `objectConfigs.tsx`); this phase didn't resolve it either,
+   same reasoning (Phase 3's moderation list is the more natural place, don't build both).
+2. **No dedicated component test for `PlayerProfilePage.tsx`** or for the new quick-action forms —
+   matches this repo's existing convention, same as Phase 1's item 3.
+3. **Audit log retention policy** (`DESIGN.md` §7 item 3 / this file's §5 item 3) — still open,
+   needed before production, not before the table exists. Worth a glance now that real entries
+   are being written (8 rows for a handful of manual test actions on one player in one sitting —
+   a busy server's write volume over months is a real, not hypothetical, concern for this item).
+4. **Grants on a `PermissionGroup` holder are unaudited** — a deliberate scope boundary (see
+   above), not an oversight, but flagged in case a future phase decides group-level grant changes
+   *should* surface somewhere (e.g. an audit entry per affected member, or a separate
+   group-level audit view) — no such requirement exists today.
+5. **Phase 3 (moderation search/filters) not started** — gated on §5 item 2 (presence-tracking
+   mechanism), unchanged.
