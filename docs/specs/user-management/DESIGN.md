@@ -4,11 +4,10 @@
 log) shipped 2026-09-24 — see `IMPLEMENTATION_PLAN.md`'s "Phase 1 status" and "Phase 2 status".
 §7 item 1 (premium-tier UI flag) resolved earlier (user-features Phase 5); item 4 (aggregate
 endpoint vs. several calls) resolved by Phase 1 shipping the aggregate. Item 3 (audit log
-retention) is unresolved but non-blocking (needed before Phase 2 ships to *production*, not before
-it was built — see IMPLEMENTATION_PLAN.md §5 item 3). Item 2 (presence tracking) remains open,
-needed before Phase 3.
-**Last updated:** 2026-09-24 (Phase 2 implementation session). Previously updated 2026-09-24
-(Phase 1 implementation session).
+retention policy) resolved 2026-09-24 — see IMPLEMENTATION_PLAN.md's "Audit log retention status".
+Item 2 (presence tracking) remains open, needed before Phase 3.
+**Last updated:** 2026-09-24 (audit log retention policy session). Previously updated 2026-09-24
+(Phase 2 implementation session), 2026-09-24 (Phase 1 implementation session).
 
 Ref: `docs/vision/vision.md` §5. Sources: `docs/specs/user-features/DESIGN.md` +
 `IMPLEMENTATION_PLAN.md` (the rank/permission/progression data model this module is a UI over),
@@ -158,9 +157,13 @@ New scope, no existing precedent:
    join/quit, or something lighter (e.g. updating `LastSeenAt` as a side effect of whatever
    periodic sync the plugin already does)? Affects whether "currently online" is real-time-ish
    or has a sync-interval lag.
-3. **Audit log retention/volume**: does every `PermissionGrant`/`UserPermissionGroup` write
-   need its own audit entry indefinitely, or should this get a retention policy (e.g. dropped
-   after N months) given it's an append-only table on what could become a busy write path?
+3. ~~**Audit log retention/volume**~~ — **resolved 2026-09-24**: `AuditLogRetentionConfiguration`
+   singleton (admin GET/PUT `/api/AuditLogRetentionConfiguration`, default 180 days), read fresh
+   on each run by the existing `RetentionPolicyService` (which already handled
+   `FormSubmissionProgress` cleanup) and used to hard-delete `AuditLogEntry` rows older than the
+   configured window. No archival step — `AuditLogEntry` has no FK relationships by design, so a
+   straight delete matches this item's own "dropped after N months" framing. See
+   `IMPLEMENTATION_PLAN.md`'s "Audit log retention status" for the full writeup.
 4. ~~**`profile-summary` endpoint vs. several parallel calls**~~ — **resolved 2026-09-24**: built
    as one aggregate endpoint (`GET /api/users/{id}/profile-summary`), per the confirmed
    recommendation. See `IMPLEMENTATION_PLAN.md`'s "Phase 1 status".

@@ -1,13 +1,16 @@
 # User Management — Implementation Plan (Tailored Admin Module)
 
 **Status:** Phase 1 (composite player-profile view) and Phase 2 (quick actions + audit log write
-path) shipped 2026-09-24 — see "Phase 1 status" and "Phase 2 status" under §5 below. Phase 3
-(moderation search/filters) not started, gated on §5 item 2 (presence tracking) per §4's
+path) shipped 2026-09-24 — see "Phase 1 status" and "Phase 2 status" under §5 below. §5 item 3
+(audit log retention policy) resolved 2026-09-24 — see "Audit log retention status" under §5.
+Phase 3 (moderation search/filters) not started, gated on §5 item 2 (presence tracking) per §4's
 sequencing note.
-**Last updated:** 2026-09-24 (Phase 2 implementation session added "Phase 2 status" under §5).
-Previously updated 2026-09-24 (Phase 1 implementation session added "Phase 1 status" under §5,
-resolved §5 item 4, and flagged a real generic-dashboard registration gap as carried-forward item
-1 — see that section). Previously updated 2026-09-23 (initial draft).
+**Last updated:** 2026-09-24 (audit log retention policy session added "Audit log retention
+status" under §5, resolved §5 item 3). Previously updated 2026-09-24 (Phase 2 implementation
+session added "Phase 2 status" under §5). Previously updated 2026-09-24 (Phase 1 implementation
+session added "Phase 1 status" under §5, resolved §5 item 4, and flagged a real generic-dashboard
+registration gap as carried-forward item 1 — see that section). Previously updated 2026-09-23
+(initial draft).
 
 Ref: `DESIGN.md` in this folder. Depends on: `docs/specs/user-features/IMPLEMENTATION_PLAN.md`
 §1 (entities, resolution engine, `permissions/check`/`permissions/effective` endpoints) and,
@@ -105,8 +108,9 @@ not as a still-open task.
 1. ~~Premium-tier UI flag~~ — resolved 2026-09-24: `PermissionGroup.IsPremiumTier` (shipped in
    user-features Phase 5). Phase 1's `profile-summary` can use it directly.
 2. Presence-tracking mechanism — needed before Phase 3 starts.
-3. Audit log retention policy — needed before Phase 2 ships to production, not before it's
-   built.
+3. ~~Audit log retention policy~~ — resolved 2026-09-24: `AuditLogRetentionConfiguration`
+   singleton (default 180 days) + `RetentionPolicyService` cleanup. See "Audit log retention
+   status" below.
 4. ~~`profile-summary` as one aggregate endpoint vs. several parallel calls~~ — resolved
    2026-09-24: built as one aggregate endpoint per the plan's own recommendation. See "Phase 1
    status" below.
@@ -374,13 +378,111 @@ used a `ConnectionStrings__MySqlDbConnection` environment-variable override.
    same reasoning (Phase 3's moderation list is the more natural place, don't build both).
 2. **No dedicated component test for `PlayerProfilePage.tsx`** or for the new quick-action forms —
    matches this repo's existing convention, same as Phase 1's item 3.
-3. **Audit log retention policy** (`DESIGN.md` §7 item 3 / this file's §5 item 3) — still open,
-   needed before production, not before the table exists. Worth a glance now that real entries
-   are being written (8 rows for a handful of manual test actions on one player in one sitting —
-   a busy server's write volume over months is a real, not hypothetical, concern for this item).
+3. ~~**Audit log retention policy**~~ (`DESIGN.md` §7 item 3 / this file's §5 item 3) — resolved
+   2026-09-24. See "Audit log retention status" below.
 4. **Grants on a `PermissionGroup` holder are unaudited** — a deliberate scope boundary (see
    above), not an oversight, but flagged in case a future phase decides group-level grant changes
    *should* surface somewhere (e.g. an audit entry per affected member, or a separate
    group-level audit view) — no such requirement exists today.
 5. **Phase 3 (moderation search/filters) not started** — gated on §5 item 2 (presence-tracking
    mechanism), unchanged.
+
+### Audit log retention status — resolved 2026-09-24
+
+Small, scoped follow-up on the standing `claude/user-management` branch, knk-web-api only (see
+"Scope confirmation" below). Full writeup in `ACTIVE_SESSIONS.md`, "User management — audit log
+retention policy".
+
+**Three decisions made and flagged here, not silently picked, per this task's own instruction:**
+
+1. **Retention window: configurable, not a hardcoded constant.** New singleton
+   `AuditLogRetentionConfiguration` (`Id="global"`, `RetentionDays` int, default **180 days**),
+   admin GET/PUT at `/api/AuditLogRetentionConfiguration` — mirrors `SalaryConfiguration`'s
+   pattern exactly (lazy-created on first read, `UpsertAsync`, singleton row), and matches this
+   codebase's repeated precedent of "raw GET/PUT only, no FormConfiguration authored" for
+   admin-only config (`SalaryConfigurationController`, `GameSettingsController`). **The 180-day
+   default is a real product decision, not derived from any doc** — the existing
+   `RetentionPolicyService` precedent for `FormSubmissionProgress` is 14 days, but that's
+   transient in-progress form state, not an audit/compliance-adjacent trail; `DESIGN.md` §7 item
+   3's own phrasing ("dropped after N months") suggested something longer, so 180 (~6 months) was
+   chosen as a reasonable starting point. **Flagging this explicitly for the developer to revisit**
+   — there's no compliance requirement on record anywhere in this codebase's docs that pins the
+   number, so treat 180 as a placeholder tuned via `PUT` rather than a researched figure.
+2. **Deletion, not archival.** Confirmed `AuditLogEntry`'s own doc comment: `ActorUserId`/
+   `TargetUserId` are plain int columns with no FK navigation, deliberately, so there was nothing
+   an archive step would need to detach first. A straight `ExecuteDeleteAsync` bulk delete matches
+   `DESIGN.md` §7 item 3's own "dropped after N months" framing. No export/archive mechanism was
+   built — flagging in case a future compliance need changes this, but nothing in the current docs
+   asks for one.
+3. **`RetentionPolicyService` extended, not replaced or generalized.** Read the existing service
+   before deciding: it hardcodes one entity type (`FormSubmissionProgress`, 14-day retention) with
+   no generic "list of cleanup tasks" abstraction. Rather than refactor it into something generic
+   for two entity types (over-engineering for a "small, scoped follow-up"), added a second,
+   independently-try/caught `RunAuditLogCleanupAsync` step to the same `RunCleanupAsync` run, using
+   the same `IServiceProvider`-scoped-per-run pattern the existing code already uses. Reads
+   `AuditLogRetentionConfiguration` fresh on **every** run (not cached at startup like
+   `FormSubmissionProgress`'s 14-day constant is), so a `PUT` to the config endpoint changes
+   behavior on the next scheduled run with no restart needed — verified live (see below).
+
+**Scope confirmation, checked rather than assumed:** grepped every doc under
+`docs/specs/user-management/` and `docs/specs/user-features/` for "audit"/"retention" — nothing
+suggests a web-app or plugin surface for this; Phase 2's audit log is web-api only per its own
+per-repo bullets, and retention is purely a backend cleanup-job concern with an admin-only raw
+endpoint (no UI, per the precedent in decision 1 above). **knk-web-app and knk-plugin: confirmed
+untouched, not just skipped.**
+
+**Files (knk-web-api, all new except as noted):** `Models/AuditLogRetentionConfiguration.cs`;
+`Dtos/AuditLogRetentionConfigurationDtos.cs`; `Repositories/AuditLogRetentionConfigurationRepository.cs`
++ `Repositories/Interfaces/IAuditLogRetentionConfigurationRepository.cs`;
+`Services/AuditLogRetentionConfigurationService.cs` + `Services/Interfaces/IAuditLogRetentionConfigurationService.cs`;
+`Controllers/AuditLogRetentionConfigurationController.cs`; `Repositories/AuditLogRepository.cs`
+(+`DeleteOlderThanAsync`, bulk `ExecuteDeleteAsync`) and its interface (modified); `Properties/KnKDbContext.cs`
+(+`DbSet<AuditLogRetentionConfiguration>` and `OnModelCreating` entity config, modified);
+`Services/RetentionPolicyService.cs` (+`RunAuditLogCleanupAsync`, modified); migration
+`20260924150229_AddAuditLogRetentionConfiguration` (clean new-table create, no backfill needed,
+same as Phase 2's own audit-log migration). No DI registration changes needed — this codebase's
+convention-based reflection registration (`DependencyInjection/ServiceCollectionExtensions.cs`,
+matches any `IXxx`/`Xxx` Repository/Service pair by name) picks up all the new
+repository/service classes automatically, confirmed by their successful resolution at runtime.
+
+**Verification — cloud sandbox this session, live not just build/test green, per this task's own
+instruction.** `.NET 8 SDK` + `dotnet-ef` via `apt`. **Docker worked this session** — `dockerd`
+started manually (no systemd), `mysql:8.0` hit Docker Hub's `429` rate limit on the first pull
+attempt, succeeded on retry (same transient issue Phase 1's session hit). Generated the migration
+against the real DB, hand-reviewed before applying (this codebase's own precedent) — clean
+new-table create, nothing to hand-fix. Applied all 28 prior migrations clean.
+
+**Live retention-behavior pass, seeded and triggered directly rather than waiting for the real
+24h schedule:** seeded 5 `AuditLogEntry` rows via direct SQL with backdated `Timestamp` values
+(200/190/181/10/1 days old — no FK on this table, so no real `User` row was needed to seed
+against). Started the app — `RetentionPolicyService` already runs its cleanup immediately on
+startup, so no interval-shortening was needed. Confirmed via log output and a direct DB query: the
+config row was lazily created at the 180-day default, the three >180-day rows (200d/190d/181d)
+were deleted, and both recent rows (10d/1d) survived untouched. **Then verified the dynamic
+re-read specifically** (decision 3 above): `PUT /api/AuditLogRetentionConfiguration` with
+`{"retentionDays":30}` (confirmed via `GET` afterward), seeded one more row at 60 days old
+(inside the old 180-day window, outside the new 30-day one), restarted the app to trigger another
+run, and confirmed via log + DB query that the 60-day row was now deleted while the 10-day/1-day
+rows still survived — proving the config change took effect without a code change or a service
+restart being *required* for the config itself (a restart was used here only as a convenient way
+to force an out-of-schedule run, not because the config needed one). Also confirmed `PUT` with
+`{"retentionDays":0}` correctly returns `400` with a validation message (`retentionDays must be at
+least 1`).
+
+**dotnet test:** 391/396, same 5 pre-existing unrelated failures every prior phase's row documents
+(`PathResolutionServiceTests`×2, `FormSubmissionProgressRepositoryTests`, `FieldValidationServiceTests`,
+`ClientActivityStoreTests`) — no new failures. No new tests were added for this change (matches
+this repo's existing convention of not requiring dedicated tests for every admin-config
+controller — `SalaryConfigurationController`/`GameSettingsController` have none either — and the
+live verification above exercises the actual cleanup logic, migration, and endpoints end to end
+more directly than a mocked unit test would for this particular kind of change). Flagging this as
+a deliberate choice, not an oversight, in case the developer wants
+`AuditLogRetentionConfigurationServiceTests`/`AuditLogRepositoryTests.DeleteOlderThanAsync_...`
+added later for regression coverage. The LAN dev DB (`192.168.50.119`) was never touched —
+confirmed via `git diff` on `appsettings.json` showing zero changes; every command used a
+`ConnectionStrings__MySqlDbConnection` environment-variable override against a disposable
+`mysql:8.0` Docker container, removed after this session.
+
+**Carried forward:** none new. This closes `DESIGN.md` §7 item 3 / this file's §5 item 3. The
+180-day default (decision 1 above) is worth a second look from the developer since it's this
+session's own placeholder judgment call, not a documented requirement.
