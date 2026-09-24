@@ -1,14 +1,16 @@
 # User Features — Implementation Plan (Rank/Permission/Progression)
 
 **Status:** Phases 1-6 (§1-§6) shipped on knk-web-api/knk-plugin — see "§1 status", "§3 status",
-"§4 status", "§5 status" and "§6 status" below (§2's writeup is its `ACTIVE_SESSIONS.md` entry).
-§6's own knk-plugin half (calling the new payout endpoint on player join) was **not** built —
-confirmed out of scope by this plan's own knk-web-api-only phrasing for §6, re-read before
-starting rather than assumed. This was the last phase §8 names; see §8 below for what's next.
-**Last updated:** 2026-09-24 (Phase 6 implementation session added "§6 status"; earlier the same
-day, the Phase 5 implementation session added "§5 status" and the "v1 Titles backup search" note
-under §4 status; earlier still, the Phase 4 session added "§4 status" and a branch-hygiene pass
-added the "Branch convention" section below).
+"§4 status", "§5 status", "§6 status" and "§6.1" below (§2's writeup is its `ACTIVE_SESSIONS.md`
+entry). §6.1 (knk-plugin calling the payout endpoint on player join) shipped 2026-09-24, closing
+out §6's own carried-forward item 1. This was the last phase §8 names; see §8 below for what's
+next — `docs/specs/user-management/` Phase 1 (a separate feature this plan unblocked) is now
+underway in parallel.
+**Last updated:** 2026-09-24 (§6.1 implementation session added "§6.1" and closed §6's carried-
+forward item 1; earlier the same day, the Phase 6 implementation session added "§6 status";
+earlier still, the Phase 5 implementation session added "§5 status" and the "v1 Titles backup
+search" note under §4 status; earlier still, the Phase 4 session added "§4 status" and a
+branch-hygiene pass added the "Branch convention" section below).
 Previously updated 2026-09-23 (Phase 3 implementation session added "§3 status"; earlier the same
 day, the Phase 1 implementation session and the design revision:
 `PermissionGrant.HolderId` is now a real FK into a shared `PermissionHolder` base table rather
@@ -465,10 +467,14 @@ The LAN dev DB (`192.168.50.119`) was never touched — every command used a
 diff.
 
 **Carried forward:**
-1. **knk-plugin doesn't call the payout endpoint yet** — nothing triggers `POST
-   /api/users/{id}/salary/payout` on player join. Whoever picks this up should follow the same
-   cache-first/DataAccess gateway pattern every other plugin-side API consumer already uses
-   (`PermissionsDataAccess`/`UsersDataAccess` precedent), not invent a new call shape.
+1. ~~knk-plugin doesn't call the payout endpoint yet~~ — **done 2026-09-24**, see "§6.1 — knk-plugin
+   join-hook wiring" below. **Note for future readers:** this item's own text suggested following
+   "the cache-first/DataAccess gateway pattern" (`PermissionsDataAccess`/`UsersDataAccess`), but
+   that pattern is for cached *reads*; a payout is a one-shot *write* with a server-side side
+   effect, so it was built following the command-side `UsersCommandApi.setActiveModeById` shape
+   instead (per this session's own task instructions, which named that precedent explicitly) —
+   flagging the mismatch rather than silently picking one, since a future reader skimming only
+   this bullet would be pointed at the wrong pattern.
 2. **No web-app screen for `SalaryConfiguration`** beyond the raw `GET`/`PUT` — no
    `FormConfiguration` authored, consistent with every other admin-screen precedent in this plan
    (live authoring, no seeder mechanism exists).
@@ -484,6 +490,72 @@ diff.
    pattern `SalaryService` reuses) already carries its own `// TODO: Log to audit trail` from §4.
    There is genuinely nothing to thread in yet; whoever builds `user-management` Phase 2 needs to
    retrofit both this call site and `AdjustBalancesAsync`'s, not just note the gap again.
+
+### §6.1 — knk-plugin join-hook wiring — shipped 2026-09-24
+
+Wires the plugin side of §6's own intended trigger ("on player join, if now -
+LastSalaryPayoutAt >= 1 hour, pay out the covered gap") — commit on the standing
+`claude/user-features` branch in knk-plugin; full row in `ACTIVE_SESSIONS.md`.
+
+**Built**, following `UsersCommandApi.setActiveModeById`'s exact shape (per this task's own
+instruction), not a new interface:
+- knk-core: `UsersCommandApi.payOutSalaryById(int id)` returning
+  `CompletableFuture<SalaryPayoutResult>` — a new record (`domain/users/SalaryPayoutResult.java`)
+  mirroring the web-api's `SalaryPayoutResultDto` wire shape (`paid`/`amountPaid`/`hoursCovered`/
+  `globalMultiplier`/`personalMultiplier`/`rankMultiplier`/`newCoinsBalance`/`lastSalaryPayoutAt`/
+  `nextEligibleAt`).
+- knk-api-client: `SalaryPayoutResultDto` + `UsersMapper.mapSalaryPayoutResult`, and
+  `UsersCommandApiImpl.payOutSalaryById` — `POST {baseUrl}/Users/{id}/salary/payout` with an empty
+  `{}` body (the endpoint takes none), following `create()`'s POST-with-response-body pattern
+  (`postJson` → `objectMapper.readValue` → mapper), not the void `setActiveModeById`/
+  `setCoinsById` pattern.
+- knk-paper: `PlayerListener` gained a `UsersCommandApi` constructor param (wired from
+  `KnKPlugin`'s existing `usersCommandApi` field, already initialized before `registerEvents` runs)
+  and a `triggerBackgroundSalaryPayout(player, userId)` call at the end of `onJoin` — fire-and-forget,
+  same `.thenAccept(...).exceptionally(...)` shape `ModeService.setActiveModeById`'s caller already
+  uses, so it never blocks or delays the join.
+
+**Design call made, not silently picked (flagged per this task's own instruction):** chose a
+`CompletableFuture<SalaryPayoutResult>` return (mirroring the full DTO) over a `void`
+fire-and-forget call, specifically so the join hook could surface a real in-game notification
+rather than a second follow-up phase having to add a return type later. This is a deliberate
+precedent split from `setActiveModeById`/`setCoinsById`/`setGatePassThroughMethodById` (all
+`void`) — those are genuinely fire-and-forget with nothing useful to show the player, whereas a
+payout has an amount worth surfacing. `create()` already establishes the "POST returning a mapped
+domain type" shape in this same interface, so this isn't a new pattern, just the first command-side
+write to reuse it instead of `void`.
+
+**In-game messaging — built, not left as a follow-up:** on a successful payout
+(`result.paid() == true`), the player is sent "You earned N coins in salary while you were away."
+via the same `Component`/`ColorOptions.messageachievement` style `onJoin` already uses for its
+"Welcome back"/"You have N coins" lines — no new chat-message system, just one more message in the
+existing sequence. Silent (no message, no error) when `paid() == false` (not yet eligible) or the
+call fails — a failed payout is logged (`Level.WARNING`) but never shown to the player, matching
+how `triggerBackgroundUserRefresh`/`ModeService`'s persistence calls already fail silently
+in-game.
+
+**Verification — `repo.papermc.io` was policy-blocked this session** (confirmed via the proxy's
+own status endpoint, `connect_rejected`/403, not routed around), and Maven Central was also
+aggressively IP-rate-limiting individual artifact `GET`s from `repo1.maven.org` this session (a new
+wrinkle prior phases' rows didn't hit) — worked around by pulling the same jars from
+`repo.maven.apache.org` (the ASF's own mirror) instead, retrying individual artifacts a few times
+where even that mirror 429'd transiently. With those jars: `javac` against them compiled the
+**entire** `knk-core` (minus the same 9 pre-existing Bukkit-importing files every prior phase
+excludes, none touched) and the **entire** `knk-api-client` module, 0 errors — not just the new
+files in isolation. `knk-paper`'s two changed files (`PlayerListener.java`, `KnKPlugin.java`) were
+syntax-checked via `javac` with a classpath containing the compiled `knk-core`/`knk-api-client`
+output (to resolve as much as possible) but no `paper-api`: every resulting error was a
+"cannot find symbol"/"package does not exist" for `org.bukkit`/`io.papermc`/`net.kyori`/sibling
+`knk-paper` packages (expected, no `paper-api` reachable), and specifically **none** referenced
+`SalaryPayoutResult`'s accessor methods or the new constructor param — confirming the new code is
+type-correct against the parts of the classpath that could be resolved. **Not verified:** a real
+running Paper server + a live join (no `paper-api` jar was reachable to build/run the plugin
+itself this session, same constraint every prior phase's knk-plugin-side row already documents
+when this host is blocked).
+
+**Not started, out of scope for this small task:** no changes to `SalaryConfiguration`'s web-app
+screen or any further plugin-side salary UI (e.g. a `/knk salary` command to check status without
+waiting for a join) — flagged as a reasonable future follow-up, not built here.
 
 ## 7. Decision record — items resolved 2026-09-23 (second round)
 
