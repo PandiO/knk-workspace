@@ -3,13 +3,31 @@
 **Status:** Phase 1 (§1), Phase 2 (§2) and Phase 3 (§3) shipped 2026-09-23 — see "§1 status" and
 "§3 status" below (§2's writeup is its `ACTIVE_SESSIONS.md` entry). §4-§6 not started, ready
 whenever picked up (all open questions resolved, §7 is a decision record, not a blocker list).
-**Last updated:** 2026-09-23 (Phase 3 implementation session added "§3 status"; earlier the same
+**Last updated:** 2026-09-24 (branch-hygiene pass: see "Branch convention" immediately below).
+Previously updated 2026-09-23 (Phase 3 implementation session added "§3 status"; earlier the same
 day, the Phase 1 implementation session and the design revision:
 `PermissionGrant.HolderId` is now a real FK into a shared `PermissionHolder` base table rather
 than polymorphic; salary's personal multiplier is a plain `User` field; title thresholds port
 v1's 5/10/12/15 as-is; owner/staff-mode vanish state persists across a restart; the tailored
 user-management admin module is confirmed a separate feature — see `docs/specs/user-management/`,
 which this plan's Phase 1 now unblocks)
+
+**Branch convention (starting 2026-09-24):** this feature uses exactly **one standing branch per
+repo, `claude/user-features`**, for every remaining phase (§4, §5, §6, and anything after). Do
+**not** create a new per-phase branch name. Every future session picks up on `claude/user-features`
+and commits directly onto it. This replaces the old per-phase-branch-name pattern
+(`claude/user-features-phase1-*`, `-phase2-*`, `-phase3-*`, `-docs-scan-*`), which caused every
+phase so far to be handed a fresh branch forked from a stale base, requiring a fast-forward
+fix-up before work could start (see the Phase 2/Phase 3 entries in `ACTIVE_SESSIONS.md` for the
+recurring pattern this was meant to stop). As of this pass: `knk-plugin`, `knk-web-api`, and
+`knk-workspace` each have a `claude/user-features` branch created from the (verified, strict-
+ancestor) Phase 3 tip; `knk-web-api`/`knk-plugin`/`knk-workspace`'s old phase1/phase2/phase3/
+docs-scan branches are redundant and should be deleted once repo push permissions allow it (blocked
+this session by a destructive-git-operation guard — flagged to the developer). `knk-web-app` has no
+`claude/user-features` branch yet; create one only when a future phase actually needs to touch
+that repo. The historical "Recently completed" rows below for Phases 1-3 are left as-is — they
+correctly record which branch existed at the time work was done — this is a forward-looking policy
+note, not a rewrite of history.
 
 Ref: `docs/vision/vision.md` §5. Sources: `docs/specs/user-features/DESIGN.md` (architecture,
 all decisions resolved), `docs/specs/user-features/COMMAND_PERMISSION_SCAN.md` (v1/v2/v3

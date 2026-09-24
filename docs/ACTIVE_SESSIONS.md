@@ -20,6 +20,15 @@ Live tracker of in-progress work across all four Knights and Kings repos
 - Keep entries short — this is a status board, not a design doc. Link out
   to the relevant branch, PR, or `docs/reports/` file instead of restating
   detail here.
+- **Branch convention:** don't create a new branch per phase/session for a
+  feature that already has one. Check whether the feature already has a
+  standing branch per repo before forking a new one. Example: the
+  "User features" work (rank/permission/progression) uses exactly one
+  standing branch per repo, `claude/user-features` — see
+  `docs/specs/user-features/IMPLEMENTATION_PLAN.md`'s status header for the
+  full rationale. Repeatedly forking a new per-phase branch from a stale
+  base was a recurring, real problem for that feature (see its Phase 2/
+  Phase 3 rows below) before this convention was adopted 2026-09-24.
 
 ## In progress
 
