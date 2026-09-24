@@ -1,11 +1,14 @@
 # User Features — Implementation Plan (Rank/Permission/Progression)
 
-**Status:** Phases 1-5 (§1-§5) shipped — see "§1 status", "§3 status", "§4 status" and "§5 status"
-below (§2's writeup is its `ACTIVE_SESSIONS.md` entry). §6 (salary) not started, ready whenever
-picked up (all open questions resolved, §7 is a decision record, not a blocker list).
-**Last updated:** 2026-09-24 (Phase 5 implementation session added "§5 status" and the
-"v1 Titles backup search" note under §4 status; earlier the same day, the Phase 4 session added
-"§4 status" and a branch-hygiene pass added the "Branch convention" section below).
+**Status:** Phases 1-6 (§1-§6) shipped on knk-web-api/knk-plugin — see "§1 status", "§3 status",
+"§4 status", "§5 status" and "§6 status" below (§2's writeup is its `ACTIVE_SESSIONS.md` entry).
+§6's own knk-plugin half (calling the new payout endpoint on player join) was **not** built —
+confirmed out of scope by this plan's own knk-web-api-only phrasing for §6, re-read before
+starting rather than assumed. This was the last phase §8 names; see §8 below for what's next.
+**Last updated:** 2026-09-24 (Phase 6 implementation session added "§6 status"; earlier the same
+day, the Phase 5 implementation session added "§5 status" and the "v1 Titles backup search" note
+under §4 status; earlier still, the Phase 4 session added "§4 status" and a branch-hygiene pass
+added the "Branch convention" section below).
 Previously updated 2026-09-23 (Phase 3 implementation session added "§3 status"; earlier the same
 day, the Phase 1 implementation session and the design revision:
 `PermissionGrant.HolderId` is now a real FK into a shared `PermissionHolder` base table rather
@@ -392,6 +395,95 @@ covers temporary single-node grants.
   rather than being fully independent; everything else here (config CRUD, the payout
   timer/hook, the personal-multiplier field itself) can be built and tested against a stub
   rank-multiplier before §1's resolution engine is fully wired, if sequencing needs it.
+
+### §6 status — shipped 2026-09-24 (knk-web-api only)
+
+knk-web-api done; full verification writeup in `ACTIVE_SESSIONS.md`, "User features Phase 6".
+**knk-plugin (calling the new payout endpoint on player join) was not built** — confirmed out of
+scope by re-reading this section's own "knk-web-api, mostly independent of §1-5" framing before
+starting, not assumed from a stale summary.
+
+**The doc gap this section itself named — "no `PermissionGroup.SalaryMultiplier`-shaped field
+exists" — flagged to the developer before any code, per the task's explicit instruction, and
+resolved via two direct questions rather than picked silently:**
+
+1. **Where the rank multiplier lives:** a new `PermissionGroup.SalaryMultiplier` decimal, default
+   1.0 — parallel to §5's `IsPremiumTier`, and a direct match for v1's `Donator.Multiplier` column
+   (`docs/specs/legacy/user-system.md`). Rejected alternative: modeling it as a `PermissionGrant`
+   value — more indirection, and inconsistent with `PersonalSalaryMultiplier` already being kept a
+   plain field rather than a grant for the same reason (§7 item 9).
+2. **How multiple active memberships combine:** **multiply every active membership's
+   `SalaryMultiplier` together** — a deliberate departure from §5's highest-Weight-wins rule for
+   premium tier *display*, since stacking ranks is meant to reward holding more than one group at
+   once, not have the extra ones do nothing. An empty membership set yields 1.0 (an empty product),
+   not 0.
+
+**A third call, made directly rather than escalated since only one reading of this section's own
+text is available:** this section names three multipliers (global × personal × rank) with no
+separate "base hourly rate" field anywhere in `DESIGN.md` or here — `SalaryConfiguration
+.GlobalMultiplier` doubles as that base rate (at neutral 1.0 personal/rank multipliers, it *is*
+the hourly coin payout). Both it and the new `PermissionGroup.SalaryMultiplier` default to a
+placeholder 1.0, same as `PersonalSalaryMultiplier` — real economy tuning is a later admin-UI
+task.
+
+**Built:** `SalaryConfiguration` (singleton, mirrors `GameSettings`' pattern) +
+`SalaryConfigurationController` (`GET`/`PUT api/SalaryConfiguration`); `User.
+PersonalSalaryMultiplier`/`LastSalaryPayoutAt`; `PermissionGroup.SalaryMultiplier`; `SalaryService
+.PayOutAsync` (1-hour eligibility gate per this section's own "if now - LastSalaryPayoutAt >= 1
+hour", then pays the *entire* covered gap, not just whole hours) + `POST /api/users/{id}/salary
+/payout`. Own additive migration (`AddUserFeaturesPhase6Salary`), per §3 status's already-settled
+"§8's shared-migration idea is moot, each phase adds its own" precedent.
+
+**Migration — hand-fixed, not trusted to the auto-generated defaults, matching every prior
+phase's own precedent for this exact risk class:** EF's generated migration defaulted both new
+multiplier columns to `0m` (would zero out every existing user's/group's salary formula) and
+`LastSalaryPayoutAt` to `0001-01-01` (would make every pre-existing user's next join pay ~2
+million hours of back salary). Fixed by hand: both multipliers backfill to `1.0m`; `LastSalaryPayoutAt`
+adds with a throwaway placeholder default so the `NOT NULL` `ALTER` succeeds against a populated
+table, then an explicit `UPDATE users SET LastSalaryPayoutAt = UTC_TIMESTAMP(6)` overwrites every
+existing row to the migration's own apply time — `UTC_TIMESTAMP()` specifically, not `NOW()`/
+`CURRENT_TIMESTAMP`, since those read the server's session timezone rather than UTC.
+
+**A second real bug found and fixed while verifying live:** `UserDto.lastSalaryPayoutAt` came back
+with no UTC `Z` suffix — MySQL reads `DateTime` back as `Unspecified` kind, the same bug §5 already
+found and fixed for `UserPermissionGroup.ExpiresAt`. Fixed the same way in `UserMappingProfile`.
+
+**Verified live** (cloud sandbox this session, not the developer's own machine — `repo.papermc.io`
+concerns don't apply since knk-plugin is out of scope): a real local `mysql-server-8.0` via `apt`
+(Docker attempted first per this task's suggested fallback order, but the sandbox has no
+`dockerd`/systemd at all). All 26 prior migrations applied clean, one pre-existing user seeded to
+prove the backfill, migration generated/hand-fixed/applied, Down/Up round-tripped clean. `dotnet
+test`: 368/373 (10 new, all green), same 5 pre-existing unrelated failures every prior phase
+documents. Live API: config singleton create-on-read + update; `PermissionGroup.SalaryMultiplier`
+round-trips and rejects negative values; a real payout (global=10, personal=2.0, one active
+Weight-10 group at 1.5, ~3h elapsed) paid exactly 90 coins, persisted correctly, and correctly
+refused an immediate re-call; expiring that membership correctly dropped the rank multiplier to
+1.0 on the next payout; unknown user 404s; the generic user `PUT` writes `personalSalaryMultiplier`
+while leaving `lastSalaryPayoutAt` untouched (same convention `ActiveMode` already established).
+The LAN dev DB (`192.168.50.119`) was never touched — every command used a
+`ConnectionStrings__MySqlDbConnection` environment-variable override, `appsettings.json` has zero
+diff.
+
+**Carried forward:**
+1. **knk-plugin doesn't call the payout endpoint yet** — nothing triggers `POST
+   /api/users/{id}/salary/payout` on player join. Whoever picks this up should follow the same
+   cache-first/DataAccess gateway pattern every other plugin-side API consumer already uses
+   (`PermissionsDataAccess`/`UsersDataAccess` precedent), not invent a new call shape.
+2. **No web-app screen for `SalaryConfiguration`** beyond the raw `GET`/`PUT` — no
+   `FormConfiguration` authored, consistent with every other admin-screen precedent in this plan
+   (live authoring, no seeder mechanism exists).
+3. **Both `GlobalMultiplier` and `SalaryMultiplier` are placeholder 1.0 values** — nothing has
+   been tuned to a real economy number yet, same "placeholder, retunable later" status §4's
+   `TitleBracket` seed and §5's premium tiers carry.
+4. **No audit-log write hook in `SalaryService.PayOutAsync`'s coin mutation** —
+   `docs/specs/user-management/IMPLEMENTATION_PLAN.md` §0's cross-plan note asks every
+   `user-features` service mutation to thread in an `AuditLogEntry` write as it's built, rather
+   than retrofitting later. Checked before treating this as an oversight: no `AuditLogEntry`
+   entity/table exists anywhere in the codebase yet (confirmed by search) — `user-management`'s
+   own Phase 2 hasn't built it, and `UserService.AdjustBalancesAsync` (the exact same coin-mutation
+   pattern `SalaryService` reuses) already carries its own `// TODO: Log to audit trail` from §4.
+   There is genuinely nothing to thread in yet; whoever builds `user-management` Phase 2 needs to
+   retrofit both this call site and `AdjustBalancesAsync`'s, not just note the gap again.
 
 ## 7. Decision record — items resolved 2026-09-23 (second round)
 
