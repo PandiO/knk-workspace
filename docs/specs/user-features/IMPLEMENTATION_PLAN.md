@@ -293,6 +293,29 @@ schema change was made. If v1's real 19 titles ever turn up (e.g. an older full 
 `mcph701458`), the swap is still the schema decision flagged then: 19 rows with per-title
 `MinExp`/`MaxExp`/`Salary`/bonuses and gendered names versus the current 3-column model.
 
+**Second pass (2026-09-24, same session, developer-requested) — checked every file under
+`D:\Shared\Werk\KnightsAndKings\archive\macbook` by creation date, not just database-shaped
+files, on the theory that a pre-March-2021 backup might exist under a different name/format.**
+Nothing dated before March 2021 is a `Titles` dump either (oldest real candidate is still the
+Nov 2018 `Players_before_tutorial.sql` above — `Player` only, no `Titles`). This pass did surface
+a handful of real v1 title names/ids, scattered across non-database files, worth keeping for
+when the full list is available rather than re-deriving them from scratch:
+- `KnightsAndKings_iphone_notes.docx`: *"Knight(5): 1e huis & 1e property, Margrave(10): 2e huis
+  & 2e property, Prince(15): 3e property & 1e kasteel"* — i.e. titleID 5 = Knight, 10 = Margrave,
+  15 = Prince, confirming these line up with the 5/10/15 reward-crossing milestones (not
+  bracket-boundary placeholders).
+- WorldGuard region `entry-deny-message` strings (2018-2019 backups) and `Region_code.docx`
+  give gendered pairs at the low end: `Serf`/`Serf`, `Squire`/`Squire`, `Knight`/`Dame`.
+- Donator tiers (separate from Title, per §1) confirmed as **Noble, Royal, Dragon Blood** —
+  already what §5 seeded.
+
+That's 4 of the 19 titleIDs (0/5/10/15 sequence implied, exact id for Serf/Squire unconfirmed)
+plus the 3 donator names, no XP thresholds/salary/bonus numbers. **Developer decision
+2026-09-24: shelve the real-title swap entirely until a full 19-row list is available** (rather
+than partially seeding these 4 names) — don't revisit until then. Keep this note for whoever
+picks that up: it saves re-doing this search, and the "Knight(5)/Margrave(10)/Prince(15)"
+finding is a strong signal about which of the 19 land on the 5/10/15 milestones specifically.
+
 ## 5. Premium tier track (knk-web-api + knk-plugin, depends on §1)
 
 - Premium tiers are modeled as `PermissionGroup` rows (e.g. "Premium Bronze/Silver/Gold"),
