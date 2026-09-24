@@ -35,6 +35,7 @@ Live tracker of in-progress work across all four Knights and Kings repos
 | Feature | Repos / files claimed | Owner (human / session) | Status | Started | Last updated |
 |---|---|---|---|---|---|
 | _(example)_ Siege minigame — capture point sync | web-api: `Services/SiegeService.cs`; plugin: `siege/` package | Claude Code session A | Implementing capture-point event handling | 2026-09-17 | 2026-09-17 |
+| User management Phase 2 — quick actions + audit log write path (`docs/specs/user-management/IMPLEMENTATION_PLAN.md` Phase 2) | knk-web-api: new `Models/AuditLogEntry.cs` + migration, new `AuditLogService`, `UsersController`/new `UserActionsController` (quick-action endpoints), retrofitting audit hooks into `UserService.AdjustBalancesAsync`, `SalaryService.PayOutAsync`, `UserService.UpdateActiveModeAsync`, `UserPermissionGroupService.UpsertAsync`/`DeleteAsync`, `PermissionGrantService.CreateAsync`/`UpdateAsync`/`DeleteAsync` (per `user-management/IMPLEMENTATION_PLAN.md` §0 and `user-features/IMPLEMENTATION_PLAN.md` §6 carried-forward item 4); knk-web-app: `PlayerProfilePage.tsx` quick-action controls + Recent activity section. On standing branch `claude/user-management` in all three repos (same branch as Phase 1, per this file's branch convention). | Claude Code session | Starting — reading codebase before first edit | 2026-09-24 | 2026-09-24 |
 
 ## Recently completed
 
