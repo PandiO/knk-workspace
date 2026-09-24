@@ -35,6 +35,7 @@ Live tracker of in-progress work across all four Knights and Kings repos
 | Feature | Repos / files claimed | Owner (human / session) | Status | Started | Last updated |
 |---|---|---|---|---|---|
 | _(example)_ Siege minigame — capture point sync | web-api: `Services/SiegeService.cs`; plugin: `siege/` package | Claude Code session A | Implementing capture-point event handling | 2026-09-17 | 2026-09-17 |
+| User management Phase 3 — moderation search/filters (`docs/specs/user-management/IMPLEMENTATION_PLAN.md` Phase 3 / `DESIGN.md` §5) | knk-web-api: `User` presence fields + search/moderation endpoints; knk-plugin: `PlayerListener` presence wiring; knk-web-app: new `/admin/users` moderation view — all on the standing `claude/user-management` branch | Claude Code session | Resolving DESIGN.md §7 item 2 (presence mechanism), then implementing | 2026-09-24 | 2026-09-24 |
 
 ## Recently completed
 
