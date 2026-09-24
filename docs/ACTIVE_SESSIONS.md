@@ -35,6 +35,7 @@ Live tracker of in-progress work across all four Knights and Kings repos
 | Feature | Repos / files claimed | Owner (human / session) | Status | Started | Last updated |
 |---|---|---|---|---|---|
 | _(example)_ Siege minigame — capture point sync | web-api: `Services/SiegeService.cs`; plugin: `siege/` package | Claude Code session A | Implementing capture-point event handling | 2026-09-17 | 2026-09-17 |
+| User features Phase 6 — Salary system (`IMPLEMENTATION_PLAN.md` §6, knk-web-api, mostly independent of §1-5) | knk-web-api: `Models/User.cs` (`LastSalaryPayoutAt`/`PersonalSalaryMultiplier`), `Models/PermissionGroup.cs` (likely `SalaryMultiplier`, see note), new `SalaryConfiguration` model/controller, `SalaryService`, its own additive migration (not folded into §1/§3's) | Claude Code session | Flagging a doc gap before writing any code: neither `DESIGN.md` §5 nor `IMPLEMENTATION_PLAN.md` §6 defines where a `PermissionGroup`'s own rank-based salary multiplier value lives, or how multiple active group memberships combine. Confirming with the developer before touching the schema. | 2026-09-24 | 2026-09-24 |
 
 ## Recently completed
 
