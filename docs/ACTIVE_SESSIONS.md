@@ -35,6 +35,7 @@ Live tracker of in-progress work across all four Knights and Kings repos
 | Feature | Repos / files claimed | Owner (human / session) | Status | Started | Last updated |
 |---|---|---|---|---|---|
 | _(example)_ Siege minigame — capture point sync | web-api: `Services/SiegeService.cs`; plugin: `siege/` package | Claude Code session A | Implementing capture-point event handling | 2026-09-17 | 2026-09-17 |
+| User management — audit log retention policy (`docs/specs/user-management/DESIGN.md` §7 item 3 / `IMPLEMENTATION_PLAN.md` §5 item 3) | knk-web-api: `Services/RetentionPolicyService.cs`, new `Models/AuditLogRetentionConfiguration.cs` + repository/service/controller, `Repositories/AuditLogRepository.cs` (+`DeleteOlderThanAsync`), new migration | Claude Code session | Reading existing RetentionPolicyService/SalaryConfiguration precedent, about to implement | 2026-09-24 | 2026-09-24 |
 
 ## Recently completed
 
