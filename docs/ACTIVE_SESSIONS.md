@@ -35,6 +35,8 @@ Live tracker of in-progress work across all four Knights and Kings repos
 | Feature | Repos / files claimed | Owner (human / session) | Status | Started | Last updated |
 |---|---|---|---|---|---|
 | _(example)_ Siege minigame — capture point sync | web-api: `Services/SiegeService.cs`; plugin: `siege/` package | Claude Code session A | Implementing capture-point event handling | 2026-09-17 | 2026-09-17 |
+| User features §6 plugin wiring — knk-plugin calls salary payout endpoint on join (`IMPLEMENTATION_PLAN.md` §6 carried-forward item 1) | knk-plugin: knk-core `ports/api/UsersCommandApi.java`, knk-api-client `UsersCommandApiImpl`, knk-paper `PlayerListener.java` — standing `claude/user-features` branch | Claude Code session (this one) | Starting | 2026-09-24 | 2026-09-24 |
+| User management Phase 1 — composite player-profile view (`docs/specs/user-management/IMPLEMENTATION_PLAN.md` Phase 1) | knk-web-api, knk-web-app, knk-plugin per that plan's own per-repo bullets — branch TBD, see plan's branch convention | Claude Code session (this one) | Starting — reading DESIGN.md/IMPLEMENTATION_PLAN.md and §0 cross-plan dependency note first | 2026-09-24 | 2026-09-24 |
 
 ## Recently completed
 
