@@ -35,6 +35,7 @@ Live tracker of in-progress work across all four Knights and Kings repos
 | Feature | Repos / files claimed | Owner (human / session) | Status | Started | Last updated |
 |---|---|---|---|---|---|
 | _(example)_ Siege minigame — capture point sync | web-api: `Services/SiegeService.cs`; plugin: `siege/` package | Claude Code session A | Implementing capture-point event handling | 2026-09-17 | 2026-09-17 |
+| User features Phase 5 — Premium tier track (`IMPLEMENTATION_PLAN.md` §5) | web-api: `Models/PermissionGroup.cs` (+`IsPremiumTier`), new `UserPermissionGroup` controller/service/repo/DTOs, new migration seeding Noble/Royal/Dragon Blood, `UserDtos`/`UsersController`/`UserService` (premium tier on user summary); plugin: `UserSummary`/`UserSummaryDto`/`UsersMapper`, `ScoreboardUtil` tab footer — branch `claude/user-features` | Claude Code (local, Windows) | Implementing — developer confirmed: membership controller built here, `IsPremiumTier` bool, v1 tier names, tab-footer display | 2026-09-24 | 2026-09-24 |
 
 ## Recently completed
 
