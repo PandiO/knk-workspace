@@ -1,7 +1,22 @@
 # Kits — Implementation Plan
 
-**Status:** Draft, ready for implementation.
-**Last updated:** 2026-09-25 (`DESIGN.md` §0c: removed Phase 5's in-game CRUD fallback logic
+**Status:** Code-complete, all phases (1-8) — pending the developer's in-game/web-app verification
+(checklist under Phase 8 below). Standing branch `claude/kits` in all three repos; not merged to
+`master`/`main`.
+
+| Phase | Status | Commits |
+|---|---|---|
+| 1 — Schema | Done | web-api `7537c71` |
+| 2 — `KitService` + API | Done | web-api `3589593` (+ follow-ups `2c83019` audit-log `KitGranted`, `abc9d76` `KitDto` nav objects) |
+| 3 — Admin `FormConfiguration` | Server side done (`[FormConfigurableEntity("Kit")]` in `7537c71`); the `Kit` FormConfiguration itself is authored live in the dev DB via `FormConfigBuilder` and **has not been verified** from a cloud session (no access to the dev DB) | web-api `7537c71` |
+| 4/5 — Plugin data access, item-building, commands, first-join hook | Done | plugin `c6c633d` |
+| 6 — Web-app "Grant Kit" on the player profile | Done | web-app `71f69fb` |
+| 7 — `KitScan` WorldTask authoring flow | Done | web-api `c6950b5`, plugin `f70f0ac`, web-app `a41060a` |
+| 8 — Seed data | Done (unit tests + real MySQL 8 fresh-DB run; in-game check pending) | web-api `738cb3c` |
+
+**Last updated:** 2026-09-25 (Phase 8 seed data landed as a startup `KitSeed`; status table added;
+corrected the stale "no seeder mechanism exists" statements in §3 and §8). Previously updated
+2026-09-25 (`DESIGN.md` §0c: removed Phase 5's in-game CRUD fallback logic
 entirely — `/kit manage` is now a pure pointer to the FormWizard, no `KitsApi` CRUD client needed;
 `Kit` creation/editing/deletion is FormWizard-only). Previously updated 2026-09-25 (added a
 `GiveKitAsync` staff-grant path to Phase 2, an in-game CRUD fallback command tree to Phase 5, and
@@ -114,8 +129,12 @@ edits, or deletes a `Kit` row.
   server-side; the generic `MetadataService`/`FormConfigurationsController` engine picks it up
   automatically, per the same "no hardcoded entity allowlist" fact the Items plan already
   confirmed (`docs/specs/items/IMPLEMENTATION_PLAN.md` §1.3).
-- Author the `Kit` `FormConfiguration` live via `FormConfigBuilder` (no seeder mechanism exists
-  in this codebase — confirmed by both the Items and user-features plans, not re-litigated here):
+- Author the `Kit` `FormConfiguration` live via `FormConfigBuilder` (there is no FormConfiguration
+  seeder — a fresh database has zero `FormConfigurations` rows. *Correction 2026-09-25:* the
+  earlier claim that no seeder mechanism of any kind exists is out of date — knk-web-api now has
+  additive, create-only startup seeds for data rows (`ItemBlueprintExampleCatalogSeed`,
+  `MenuTemplateSeed`, and Phase 8's `KitSeed`, all run from `Program.cs`); FormConfigurations are
+  just not among them):
   - General Information: `Name`, `Description`, `HelmetId`/`ChestplateId`/`LeggingsId`/
     `BootsId`/`ShieldId`/`HandId` (each an `ItemBlueprint` object picker), `GrantOnFirstJoin`,
     `CooldownSeconds`.
@@ -289,6 +308,56 @@ natural way to verify Phases 1-5 end-to-end (create the two kits via the seed, `
 in-game, confirm the loadout is correct) — Phase 7 (`KitScan`) has its own independent
 verification path (scan a live inventory, confirm the form fills correctly) that doesn't need
 the seed data at all.
+
+
+### Phase 8 — as implemented (2026-09-25, web-api `738cb3c`)
+
+*Correction:* this plan was written assuming no seeder mechanism existed. That is no longer
+true — knk-web-api has an additive, create-only startup seed pattern
+(`Models/Item/ItemBlueprintExampleCatalogSeed.cs`, `Models/Menu/MenuTemplateSeed.cs`), and Phase 8
+follows it rather than seeding through an EF migration (migrations stay for schema plus fixed
+well-known rows like `title_brackets`; this is example content admins will edit).
+
+- `Models/Item/KitSeed.cs` — `KitSeed.SeedCanonicalAsync(KnKDbContext, IMinecraftMaterialCatalogService?, ILogger?)`,
+  called from `Program.cs`'s startup scope after `MenuTemplateSeed`. Seeds exactly `SEED_DATA.md`:
+  3 `Category` (+5 `CategoryTag` join rows), 4 `Tag`, 2 `Grade`, 9 `ItemBlueprint`, 2 `Kit`,
+  6 `KitContent`, plus the 9 `MinecraftMaterialRef` icon rows they need.
+- **Idempotent/additive:** every row is looked up by natural key (`Name`, case-insensitive;
+  `NamespaceKey` for material refs) and reused if it exists — never updated. Join rows
+  (`CategoryTag`, `KitContent`) are only added under a Category/Kit the seed itself created in
+  that run: a pre-existing (hand-authored) "Default" kit or "Weapons" category is left exactly as
+  is, and a slot an admin removes from a seeded kit is not re-added on the next restart.
+- **Icons:** get-or-create by namespace key, same semantics as
+  `MinecraftMaterialRefService.GetOrCreateAsync`; `Category`/`LegacyName`/`IconUrl` come from the
+  static material catalog (`Data/minecraft_material_catalog.json`), falling back to `ITEM`.
+- **Constraints checked:** none of `Kit.Name`, `Category.Name`, `Tag.Name`, `Grade.Name`,
+  `ItemBlueprint.Name` has a unique index (the only relevant unique index is
+  `MinecraftMaterialRef.NamespaceKey`, which the get-or-create respects); `KitContent`'s PK is
+  `(KitId, SlotIndex)`. No schema change, no migration.
+- **Not in `SEED_DATA.md`, decided here:** `ItemBlueprint.MaxStackSize` is set to the vanilla
+  stack size (1 for sword/armor/bow/axe, 64 for bread/arrow) instead of the entity default 64,
+  since `KitGrantPlacer` caps placed stacks by it.
+- **Environment scope — open decision for the developer:** like the other startup seeds, this
+  runs in *every* environment. `Default` has `GrantOnFirstJoin = true`, so every brand-new player
+  on any environment (including a future production DB) receives it. If that should be dev-only,
+  gate the `KitSeed` call in `Program.cs` on `app.Environment.IsDevelopment()` (or a config flag).
+
+**Verification done:** `KitSeedTests` (in-memory EF: first run creates exactly the rows with the
+right links; second run creates nothing; pre-existing same-named rows are reused and unchanged;
+works without a catalog). Full suite: 439 passed, same 5 pre-existing failures as the baseline.
+Real MySQL 8.0 fresh DB: all migrations applied, no pending model changes; first API start logged
+`Kit seed complete. Created: 9 MinecraftMaterialRef, 4 Tag, 5 CategoryTag, 3 Category, 2 Grade,
+9 ItemBlueprint, 6 KitContent, 2 Kit`, and SQL confirmed every FK; second start logged `Created:
+nothing` with identical query output.
+
+**Manual checklist for the developer (not possible from a cloud session):**
+- [ ] `/kit get Default` → iron helmet/chestplate/leggings/boots equipped, Iron Sword in hand, and
+      Maggoty Bread ×1, Arrow ×64, Wooden Bow, Iron Axe in storage slots 9–12.
+- [ ] `/kit get Archer` → iron armor, Maggoty Bread in hand (verbatim, by design), bow and
+      arrows ×64 in slots 9–10.
+- [ ] A brand-new player automatically receives `Default` on first join.
+- [ ] Both kits appear in the web-app Kit form and in the player-profile "Grant Kit" picker.
+- [ ] The `Kit` FormConfiguration (Phase 3) exists in the dev DB.
 
 ## 9. Sequencing summary
 
