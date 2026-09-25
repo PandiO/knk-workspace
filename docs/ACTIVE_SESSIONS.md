@@ -26,6 +26,7 @@ Live tracker of in-progress work across all four Knights and Kings repos
 | Feature | Repos / files claimed | Owner (human / session) | Status | Started | Last updated |
 |---|---|---|---|---|---|
 | _(example)_ Siege minigame — capture point sync | web-api: `Services/SiegeService.cs`; plugin: `siege/` package | Claude Code session A | Implementing capture-point event handling | 2026-09-17 | 2026-09-17 |
+| Kits — Phase 1 (schema) | web-api: `Models/Item/{Kit,KitContent,KitClaim,KitPurchase}.cs`, `Properties/KnKDbContext.cs`, `Dtos/KitDtos.cs`, `Mapping/KitProfile.cs`, EF migration. **One standing branch for the whole feature, `claude/kits`, in all four repos** (`docs/specs/kits/IMPLEMENTATION_PLAN.md` §0) — every future phase continues on this same branch, never a phase-specific fork. | Claude Code session (Phase 1) | Implementing Phase 1 schema per `docs/specs/kits/IMPLEMENTATION_PLAN.md` §1. **Dependency flag**: `knk-web-api`'s `claude/kits` was forked from `origin/claude/user-features`'s tip (commit `bc67f95`), not from `master` — `claude/user-features` was confirmed still unmerged into `master` at branch time (`git merge-base --is-ancestor` returned false). A parallel session must not re-fork `claude/kits` from `master` until `user-features` actually merges. | 2026-09-25 | 2026-09-25 |
 
 ## Recently completed
 
