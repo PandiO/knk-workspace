@@ -1,6 +1,6 @@
 # InventoryMenu — Content Port Plan (hub, Kits, Profile, Items, Premium, Player manager)
 
-**Status:** Ready for implementation. No phase started. Phases are numbered CP1–CP8 (content port) to keep them apart from the engine plan's Phases 1–9, which this document cites as "engine Phase N".
+**Status:** In progress — CP1 shipped on `claude/menu-content` (see the CPn status blocks). Phases are numbered CP1–CP8 (content port) to keep them apart from the engine plan's Phases 1–9, which this document cites as "engine Phase N".
 **Last updated:** 2026-09-25
 
 Ref: [../legacy/inventory-menu-screens.md](../legacy/inventory-menu-screens.md) (the legacy screen
@@ -121,6 +121,74 @@ Hidden tiles leave gaps (engine Phase 9 J7); that's accepted for the hub.
 
 **Tests:** `menu-available` unit tests (registered+valid, missing, blocked-by-validation); hub seed
 round-trip.
+
+### CP1 status — shipped 2026-09-25 (not live-verified)
+
+**Session environment (applies to every CP status below).** Cloud session, no server, no database.
+The component repos were already checked out as siblings (`/home/user/knk-web-api`,
+`/home/user/knk-plugin`) rather than under `Repository/`; same remotes, so no re-clone. Branch
+`claude/menu-content` in both, from `origin/master` `e949ed2` / `origin/main` `f1a4701`, then
+`git merge origin/claude/inventorymenus` (web-api `859b5fa`, plugin `3d93497`, no conflicts).
+web-api also cherry-picks `aaddbd5` → `338c578` (`MenuTemplateServicePhase9Tests`, which only
+exists on `claude/siege-minigame` — read, not touched). Tooling: the .NET 8 SDK came from Ubuntu's
+archive (Microsoft's CDN is blocked); **repo.papermc.io and maven.enginehub.org are blocked**, so
+`paper-api 1.21.10` was compiled from the PaperMC sources on raw.githubusercontent.com
+(`ver/1.21.10`, only the ~1.8k classes the plugin reaches) and WorldEdit/WorldGuard were replaced by
+hand-written compile stubs, served to Gradle from a scratch Maven repo through a per-run `-I` init
+script. None of that is committed. Consequence: plugin tests run against real Paper API
+signatures, but anything that only matters at runtime on a real server is unverified, and the
+`shadowJar` built here is not a deployable artifact.
+
+**Baseline (before CP1):** web-api `dotnet build` clean, `dotnet test` **463/468** (the 5 known
+failures). Plugin `./gradlew test shadowJar`: knk-core **512**, knk-api-client **28**, knk-paper
+**246** (14 skipped), 0 failures — identical to engine Phase 9's recorded numbers.
+
+**Shipped:**
+- knk-web-api `e266fff`: `Models/Menu/MenuTemplateSeed.Content.cs` (new partial, `ContentTemplates()`
+  wired into `CanonicalTemplates()` after the Phase 9 demos) with the `main` hub exactly as the
+  table above; `Tests/.../MenuTemplateContentSeedTests.cs` — seeds twice into EF InMemory,
+  round-trips every content template through `MenuMappingProfile` + `MenuTemplateService.CreateAsync`,
+  asserts the hub's tiles/conditions/permissions, and `ContentSeeds_ExportAsApiJson` (see below).
+- knk-plugin `03f3397`: `/menu` (`commands/MenuCommand`, `knk.menu` default true, registered via
+  `registerSimpleCommand`); engine condition `menu-available` (`MenuConditionHandlers`) backed by
+  `MenuService.markValidated`/`isMenuAvailable` (set by `MenuDefinitionValidationRunner` when a menu
+  passes every step; a later `blockMenu` wins); `menu/content/HubMenuFeature` (registers nothing,
+  owns `HUB_KEY`) in `KnKPlugin`'s feature list; node `knk.admin.user.manage` (child of `knk.admin`,
+  default false) declared now because the hub tile uses it.
+
+**Seed ↔ plugin contract test (convention for all later phases).** Rather than hand-copying `$…$`
+chains into a Java test (the `MenuPhase9PaperTest` pattern), knk-web-api's
+`ContentSeeds_ExportAsApiJson` writes every content template exactly as the API serves it
+(mapping profile + the API's JSON options) to `knk-plugin/knk-paper/src/test/resources/menu/content-seeds.json`
+when `KNK_MENU_CONTENT_SEED_EXPORT` is set; knk-paper's `ContentSeedFixture` loads that file through
+the real api-client DTOs + `MenuTemplateMapper`, assembles it and runs every startup validation step
+against `ContentFeatures.all()` (engine defaults + all content features). Regenerate the file whenever
+a content seed changes. knk-paper gained a `testImplementation` on jackson-databind for this.
+
+**Tests after CP1:** web-api **466/471** (same 5 failures; +3). Plugin knk-core 512, api-client 28,
+knk-paper **252** (+6: `HubMenuFeatureTest` ×4, `MenuCommandTest` ×2), 0 failures; `shadowJar` builds.
+
+**Judgment calls:**
+- Siege tile: static `MENU_TEMPLATES.md` C.1 copy only. C.1's `$siegeServer.getEntryHintLine$` line,
+  its `siege.open-own` action and its `knk.siege.play` permission need Siege 8b's root/action/node;
+  referencing them now would get the whole hub blocked by startup validation. The tile opens
+  `siege.overview` and appears once that menu validates. If Siege 8b wants C.1's extras, that is a
+  CRUD-API edit of the seeded hub (create-only seeds) — flag for Siege 8b.
+- `menu-available` only knows menus validated at startup; a template created through the CRUD API
+  while the server runs stays hidden until the next restart validates it (same rule as opening it).
+- Hub head tile: `SkullOwner = $player.getName$` as planned (E6 resolves an online player's profile).
+
+**Question for the owner (not blocking, fail-closed):** the menu engine checks
+`visibilityPermission`/`actionPermission`/`permission-node` with Bukkit's `Player.hasPermission`,
+while the plugin's own commands (`/knk user`, `/kit`) use `KnkPermissible` (web-app groups/grants).
+Nothing bridges the two, so a **non-op** staff member who holds `knk.admin.user.manage` only through
+a KnK group will not see the Player manager tile (ops and Bukkit-level grants work). CP8 inherits
+this for its `knk.admin.user.<property>` action permissions — the shared `UserAdminService` still
+enforces the real check through `KnkPermissible`. Fixing it means routing the engine's permission
+checks through `KnkPermissible` (a small engine change outside this plan's G1-only scope). Decide
+whether to do that as a follow-up.
+
+**Not verified:** nothing ran in-game; the hub seed was not applied to any database.
 
 ## 4. CP2 — Kits overview (`kits.overview`)
 
