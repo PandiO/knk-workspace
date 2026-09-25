@@ -1,12 +1,14 @@
 # Kits — Implementation Plan
 
 **Status:** Draft, ready for implementation.
-**Last updated:** 2026-09-25 (added a `GiveKitAsync` staff-grant path to Phase 2, an in-game CRUD
-fallback command tree to Phase 5, and a new Phase 6 for the web-app player-profile "Grant Kit" UI
-— see `DESIGN.md` §0b; renumbered `KitScan`/seed-data/sequencing/open-items phases accordingly).
-Previously updated 2026-09-25 (added `KitScan` WorldTask authoring flow, slot-indexed
-`KitContent`/unified grant-placement algorithm — see `DESIGN.md` §0a). Previously updated
-2026-09-25 (initial draft).
+**Last updated:** 2026-09-25 (`DESIGN.md` §0c: removed Phase 5's in-game CRUD fallback logic
+entirely — `/kit manage` is now a pure pointer to the FormWizard, no `KitsApi` CRUD client needed;
+`Kit` creation/editing/deletion is FormWizard-only). Previously updated 2026-09-25 (added a
+`GiveKitAsync` staff-grant path to Phase 2, an in-game CRUD fallback command tree to Phase 5, and
+a new Phase 6 for the web-app player-profile "Grant Kit" UI — see `DESIGN.md` §0b; renumbered
+`KitScan`/seed-data/sequencing/open-items phases accordingly). Previously updated 2026-09-25
+(added `KitScan` WorldTask authoring flow, slot-indexed `KitContent`/unified grant-placement
+algorithm — see `DESIGN.md` §0a). Previously updated 2026-09-25 (initial draft).
 
 Ref: `DESIGN.md` in this folder for the architecture and every decision this plan sequences.
 `SEED_DATA.md` for the legacy dev-DB backup mapped into v3 seed content. If anything below
@@ -82,9 +84,8 @@ session doesn't fork from a stale base.
 - `Controllers/KitsController.cs`:
   - Standard CRUD (`GetAll`/`GetById`/`Create`/`Update`/`Delete`/`search`) — same shape as
     `ItemBlueprintsController`, drives the generic web-app admin table for free once
-    `[FormConfigurableEntity]` is set (Phase 3), and is also what Phase 5's in-game CRUD fallback
-    commands call through (`DESIGN.md` §4.0/§4.5 — one implementation, two entry points, same
-    principle as granting).
+    `[FormConfigurableEntity]` is set (Phase 3). **`Kit` CRUD is FormWizard-only** (`DESIGN.md`
+    §4.0, revised) — unlike granting, no in-game surface calls these endpoints.
   - `GET api/Kits/available?userId=` → `GetAvailableForUserAsync`.
   - `POST api/Kits/{id}/claim?userId=` → `ClaimKitAsync`.
   - `POST api/Kits/{id}/purchase?userId=` → `PurchaseKitAsync`.
@@ -105,9 +106,9 @@ session doesn't fork from a stale base.
 
 ## 3. Phase 3 — Admin `FormConfiguration` (knk-web-app + knk-web-api)
 
-**This is the primary, full-featured Kit authoring surface** (`DESIGN.md` §4.0) — Phase 5's `/kit
-manage` command tree is an additional, deliberately thinner fallback on top of the same CRUD
-endpoints, not a substitute for this phase.
+**This is the *only* Kit authoring surface** (`DESIGN.md` §4.0, revised) — Phase 5's `/kit manage`
+command tree is a pure pointer back to this form, not a fallback editor; nothing in-game creates,
+edits, or deletes a `Kit` row.
 
 - Add `[FormConfigurableEntity("Kit")]` to `Kit.cs` (Phase 1, mechanical) — nothing else to build
   server-side; the generic `MetadataService`/`FormConfigurationsController` engine picks it up
@@ -140,12 +141,10 @@ endpoints, not a substitute for this phase.
   `listAsync`, `refreshAsync`, `invalidate*`), for the kit catalog and
   `getAvailableForUserAsync`. Wired into `DataAccessFactory`/`KnKPlugin.java` per the existing
   convention.
-- `knk-api-client`: `KitsApi` port + impl — **read side** (`getByIdAsync`/`listAsync`/
-  `searchAsync`, mirrors `ItemBlueprintsApi`) **plus CRUD** (`createAsync`/`updateAsync`/
-  `deleteAsync`, new — needed by Phase 5's `/kit manage` fallback, same shape
-  `ItemBlueprintsApi` would need if it exposed plugin-side CRUD, which it currently doesn't since
-  nothing in-game creates `ItemBlueprint`s; `Kit` is the first entity with a real in-game CRUD
-  fallback, per `DESIGN.md` §4.0). `KitsCommandApi` (write/action side:
+- `knk-api-client`: `KitsApi` port + impl — **read-only** (`getByIdAsync`/`listAsync`/
+  `searchAsync`, mirrors `ItemBlueprintsApi` exactly, no Kit-specific exception — `DESIGN.md`
+  §4.5, revised: `Kit` CRUD is FormWizard-only, so `knk-plugin` never needs a
+  `createAsync`/`updateAsync`/`deleteAsync` client for it). `KitsCommandApi` (write/action side:
   `claimAsync`/`purchaseAsync`/**`giveAsync(targetUserId, kitId)`** (new, §0b)/
   `grantFirstJoinKitsAsync`, mirrors `UsersCommandApi`'s per-action POST/PUT pattern).
 - `KnkKit` domain type (`knk-core/.../domain/item/`) — Bukkit-free DTO mirroring `KnkItemBlueprint`'s
@@ -161,7 +160,7 @@ endpoints, not a substitute for this phase.
   `firstEmpty()` in 0-35; no empty slot → `dropItemNaturally`) once, called once per item in
   order — not five copies of near-identical slot-conflict logic.
 
-## 5. Phase 5 — Command surface, in-game CRUD fallback, and first-join hook (knk-plugin)
+## 5. Phase 5 — Command surface and first-join hook (knk-plugin)
 
 - `commands/KitCommand.java` per `DESIGN.md` §4.3 (`/kit list`/`get`/`give`/`purchase`),
   Brigadier-based, matching `ItemCommand.java`/`GateCommand.java`'s existing structure. Permission
@@ -169,20 +168,16 @@ endpoints, not a substitute for this phase.
   `KnkPermissible` (the in-house resolution engine from `user-features`), not a `plugin.yml` node.
   `/kit give` calls **`KitsCommandApi.giveAsync(targetUserId, kitId)`** (Phase 4's `give` client
   method) → `POST api/Kits/{id}/give` → `GiveKitAsync` — **not** the same call path as `/kit get`.
-- **In-game CRUD fallback (new, §0b/`DESIGN.md` §4.5)** — a `/kit manage` sub-tree on the same
-  `KitCommand.java`, gated by its own `knk.kit.manage.*` nodes (separate from the
-  `list`/`get`/`give`/`purchase` player-facing nodes above): `create <name>`,
-  `set <name> <field> <value>` (one field per call — `description`, the six equipment fields by
-  `ItemBlueprint` name/id, `mintitlebracket`/`requiredpermissiongroup` by name/id,
-  `requiredpermissionnode`, `grantonfirstjoin`, `cooldownseconds`, `costamount`/`costcurrency`,
-  `issinglepurchasepremium`, `premiumpricegems`), `content add <name> <slot> <itemBlueprint>
-  <quantity>` / `content remove <name> <slot>`, `delete <name>`. All of these call
-  `KitsController`'s existing `Create`/`Update`/`Delete` (Phase 2) through a new, thin
-  `KitsApi.createAsync`/`updateAsync`/`deleteAsync` (Phase 4) — **no new backend logic**, this is
-  a plugin-side client of the same CRUD endpoints the web-app FormWizard already uses. Per
-  `DESIGN.md` §4.0, this is a deliberately thinner fallback, not a second full editor — no
-  live-search pickers, no gating-condition preview; resist the temptation to grow it toward
-  FormWizard parity.
+- **`/kit manage` — a FormWizard pointer, not a fallback editor (revised, §0c/`DESIGN.md` §4.5)**
+  — a `/kit manage` sub-tree on the same `KitCommand.java`, gated by a single `knk.kit.manage`
+  node (separate from the `list`/`get`/`give`/`purchase` player-facing nodes above). Recognized
+  subcommands: `create`, `set <name> <field> <value>`, `content add|remove`, `delete <name>` (kept
+  as literals so tab-completion/muscle memory lands somewhere useful) — **every one of them just
+  sends a chat message naming the FormWizard route** (e.g. `<web-app base URL>/forms/kit` to
+  create, `/forms/kit/edit/<id>` to edit an existing one) and returns; **none of them call
+  `KitsController` at all.** No parsing of `<field>`/`<value>`, no `ItemBlueprint` name resolution,
+  no `KitContent` manipulation — this is intentionally the simplest possible handler, since its
+  only job is redirecting.
 - `PlayerListener.java`: in the existing `if (user.isNewUser())` branch (currently just the
   welcome message, around line 142), add an async call to
   `kitsCommandApi.grantFirstJoinKitsAsync(user.id())`, following the exact pattern
@@ -191,9 +186,8 @@ endpoints, not a substitute for this phase.
 
 Phases 4 and 5 are the only two with a hard ordering dependency on each other (5 calls what 4
 builds); both depend on Phases 1-2 (the backend contract) being stable, and are independent of
-Phase 3 (the admin form is for authoring Kits, not for granting them) — including the new `/kit
-manage` fallback, which depends only on Phase 2's existing CRUD endpoints, not on Phase 3's
-`FormConfiguration` existing.
+Phase 3 (the admin form is for authoring Kits, not for granting them) — including `/kit manage`,
+which needs no backend dependency at all now that it's a pure pointer (§0c).
 
 ## 6. Phase 6 — Web-app: "Grant Kit" on the player profile page (new, `DESIGN.md` §4.6)
 
@@ -302,8 +296,7 @@ the seed data at all.
 Phase 1 (schema) ──▶ Phase 2 (service/API) ──┬──▶ Phase 3 (admin form) ──▶ Phase 7 (KitScan)
                                               ├──▶ Phase 6 (web-app Grant Kit UI)
                                               └──▶ Phase 4 (plugin data access/item-building)
-                                                        └──▶ Phase 5 (commands, CRUD fallback,
-                                                              first-join hook)
+                                                        └──▶ Phase 5 (commands, first-join hook)
                                                                   └──▶ Phase 8 (seed data, verification)
 ```
 
@@ -316,8 +309,9 @@ only needs Phase 2, Phase 7 only needs Phase 3 — neither blocks nor is blocked
 
 ## 10. Open items
 
-None outstanding — all five developer-escalated/-requested decisions (`DESIGN.md` §0/§0a/§0b) are
-resolved and folded into the design above. Two soft items worth re-confirming at kickoff:
+None outstanding — all six developer-escalated/-requested decisions (`DESIGN.md`
+§0/§0a/§0b/§0c) are resolved and folded into the design above. Two soft items worth
+re-confirming at kickoff:
 - §0's branch-base check (has `claude/user-features` merged to `main` yet?).
 - Phase 7's `WorldTaskTypes` constant question (does an `ItemScan` constant actually exist to
   extend, or is `TaskType` passed as a bare string today? Check before assuming either way).

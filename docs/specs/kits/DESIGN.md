@@ -1,11 +1,14 @@
 # Kits — Design
 
 **Status:** Draft, all open questions resolved with the developer — ready for implementation.
-**Last updated:** 2026-09-25 (added §0b/§4.0/§4.5/§4.6: explicit FormWizard-primary/in-game-
-fallback CRUD hierarchy, and a staff `GiveKitAsync` path reachable from both the in-game `/kit
-give` command and a new web-app player-profile quick action). Previously updated 2026-09-25
-(added §0a/§6: `KitScan` WorldTask authoring flow, slot-indexed `KitContent`, and the unified
-grant-placement algorithm). Previously updated 2026-09-25 (initial draft).
+**Last updated:** 2026-09-25 (§0c: removed `/kit manage`'s in-game CRUD logic entirely — it's now
+a pure pointer to the FormWizard, kept only as recognized subcommands so `/kit manage <anything>`
+redirects rather than erroring; `Kit` CRUD is FormWizard-only). Previously updated 2026-09-25
+(added §0b/§4.0/§4.5/§4.6: explicit FormWizard-primary/in-game-fallback CRUD hierarchy, and a
+staff `GiveKitAsync` path reachable from both the in-game `/kit give` command and a new web-app
+player-profile quick action). Previously updated 2026-09-25 (added §0a/§6: `KitScan` WorldTask
+authoring flow, slot-indexed `KitContent`, and the unified grant-placement algorithm). Previously
+updated 2026-09-25 (initial draft).
 
 Ref: `docs/vision/vision.md` §9.2 (Kits). Sources: `docs/specs/legacy/kits.md` (v1/v2
 source-mined spec), `docs/reports/LEGACY_VS_V2_GAP_ANALYSIS.md`, `docs/specs/items/
@@ -42,9 +45,9 @@ Added per explicit developer request, after §0a: two gaps in the original desig
 1. **CRUD authoring surface hierarchy was implicit, not stated.** The design already had the
    FormWizard (§3 in `IMPLEMENTATION_PLAN.md`) as the only way to create/edit/delete a `Kit`
    definition, with in-game commands covering grant/claim only (§4.3) — but nowhere said this was
-   a deliberate hierarchy rather than an oversight. Now explicit (§4.0): **FormWizard is the
-   primary, full-featured CRUD surface; a new in-game command set is an additional, deliberately
-   thinner fallback** (§4.5) for when the web app isn't reachable — not a second full editor.
+   a deliberate hierarchy rather than an oversight. Made explicit in this revision's first pass as
+   §4.0 (FormWizard primary, a thinner in-game CRUD fallback) — **superseded again by §0c below**,
+   which removes the in-game fallback's actual CRUD logic entirely.
 2. **Granting/giving a kit was plugin-only.** §4.1's `ClaimKitAsync`/`PurchaseKitAsync` were only
    ever called from `knk-plugin` — there was no way for an admin to grant a kit to a player from
    the web app at all. Fixed by splitting staff-initiated granting into its own method,
@@ -52,6 +55,16 @@ Added per explicit developer request, after §0a: two gaps in the original desig
    **and** a new web-app quick action on the player profile page (§4.6, new) — both call the same
    underlying service method, per this document's existing "one implementation, multiple entry
    points" principle (§4).
+
+## 0c. Revision note — `/kit manage` demoted from CRUD fallback to a pure FormWizard pointer
+
+Added per explicit developer instruction, after §0b: §0b/§4.0's "in-game CRUD fallback" was
+**removed as a functioning capability**. `Kit` creation/editing/deletion now happens *exclusively*
+through the web-app FormWizard (§4.0, revised) — `/kit manage`'s subcommands (§4.5, revised) are
+kept as recognized commands, but each one now only sends a chat message pointing the admin at the
+FormWizard route; none of them call `KitsController`'s `Create`/`Update`/`Delete` anymore. This
+also removes the need for any `Kit`-specific write client on the plugin side (`KitsApi` stays
+read-only) — see §4.5 and `IMPLEMENTATION_PLAN.md`'s Phase 4/5 for what this drops.
 
 ## 0. What this plan does not re-litigate
 
@@ -306,19 +319,26 @@ future menu, first-join hook, web-app quick action) calls one of these two. Ther
 in the codebase a Kit item is ever built and handed to a player. The same principle now applies
 to authoring, not just granting — see §4.0.
 
-### 4.0 Authoring surface hierarchy (§0b) — FormWizard primary, in-game commands fallback
+### 4.0 Authoring surface hierarchy (§0b, revised) — FormWizard is the *only* CRUD surface
 
-**Decided (developer instruction):** the web-app FormWizard (`IMPLEMENTATION_PLAN.md` Phase 3) is
-the **primary, full-featured** way to create/edit/delete `Kit` definitions — object pickers for
-every equipment/gating field, the M2M editor for `Contents`, live validation, everything §3
-(gating) and §2 (data model) describe. **In-game admin commands are an additional, deliberately
-thinner fallback** (§4.5) for when the web app isn't reachable (an admin in-game without a second
-device handy, a quick fix mid-event) — not a second full editor, and not expected to reach
-feature parity with the form (no live search/pickers; the admin supplies exact
-names/ids/values from memory or `/kit list`-style lookups). Both surfaces call the **same**
-`KitsController` CRUD endpoints (`Create`/`Update`/`Delete`) — the in-game commands are a thin
-client of the same API the FormWizard already uses, not a parallel implementation, matching this
-document's existing convention for grant/claim paths.
+**Revised, per explicit developer instruction (superseding this section's first version, which
+proposed an in-game CRUD fallback with real `Create`/`Update`/`Delete` logic behind it):**
+creating, editing, and deleting `Kit` definitions happens **exclusively** through the web-app
+FormWizard (`IMPLEMENTATION_PLAN.md` Phase 3) — object pickers for every equipment/gating field,
+the M2M editor for `Contents`, live validation, everything §3 (gating) and §2 (data model)
+describe. **No in-game command performs a create, edit, or delete of a `Kit` row** — not even a
+thinner version. `/kit manage` (§4.5, revised) still exists as a recognized command tree, but
+purely as a **pointer to the web app** — each subcommand's handler sends a chat message naming
+the FormWizard route and does nothing else. This keeps `KitsController`'s CRUD endpoints as the
+FormWizard's alone to call — `knk-plugin` never needs a `create`/`update`/`delete` client method
+for `Kit` at all (unlike this section's first draft, which would have added one).
+
+**Rationale, as given:** a full in-game editor for an entity with this many fields (six equipment
+pickers, gating fields, economy fields, a slot-indexed M2M list) either has to stay thin enough to
+risk being confusing/error-prone (typing exact `ItemBlueprint` names/ids from memory, no live
+validation) or grow toward FormWizard parity and become a second thing to maintain — neither
+outcome is worth it when the web app is the intended admin surface anyway. A pointer costs nothing
+to maintain and never drifts out of sync with what the form actually supports.
 
 Granting/giving a kit to a player is the opposite case: **both surfaces are first-class, neither
 is a fallback for the other.** A player self-claiming via `/kit get` and an admin granting via the
@@ -451,38 +471,33 @@ no separate starter-kit code path at all, just a `Kit` row with `GrantOnFirstJoi
 because it's driven by `isNewUser()` (§1) rather than a time-windowed listener flag, it cannot
 reproduce v1's `PlayerMoveEvent`-retrigger duplication bug (legacy bug #1).
 
-### 4.5 In-game CRUD command fallback (new, §0b) — thinner than the FormWizard by design
+### 4.5 `/kit manage` — a pointer to the FormWizard, not a command (revised, §0b)
 
-Per §4.0: the same `commands/KitCommand.java` (§4.3) gains a `manage` sub-tree, gated by its own
-permission nodes (`knk.kit.manage.*`, deliberately separate from the `get`/`give`/`purchase`/
-`list` player-facing nodes — creating/deleting Kit definitions is an admin capability, granting
-one is a broader staff capability, and the two shouldn't share a permission check just because
-they share a command root):
-- `/kit manage create <name>` — calls `KitsController`'s `Create` (via `KitsApi`), same as the
-  FormWizard's own "new Kit" action, just with only `Name` set; every other field starts
-  null/default and is filled in afterward via the commands below (or by switching to the web app
-  — nothing here is a one-way door).
-- `/kit manage set <name> <field> <value>` — a generic field setter covering every scalar and
-  single-reference field on `Kit` (§2.1): `description`, `helmet`/`chestplate`/`leggings`/
-  `boots`/`shield`/`hand` (value = an `ItemBlueprint` name or id — resolved via
-  `ItemBlueprintsDataAccess`'s existing search, no live-picker UI, so the admin needs to know
-  roughly what they're typing), `mintitlebracket`/`requiredpermissiongroup` (by name/id),
-  `requiredpermissionnode` (raw string), `grantonfirstjoin` (bool), `cooldownseconds`,
-  `costamount`/`costcurrency`, `issinglepurchasepremium`, `premiumpricegems`. One field per
-  invocation — deliberately not a single command with 15 positional arguments, both for
-  usability and so a typo only ever risks one field.
-- `/kit manage content add <name> <slot> <itemBlueprint> <quantity>` / `/kit manage content
-  remove <name> <slot>` — direct `KitContent` row add/remove by slot index, calling `Update` on
-  the parent `Kit` with its `Contents` collection modified (same as the FormWizard's M2M editor
-  writes, just issued one row at a time instead of through a UI).
-- `/kit manage delete <name>` — calls `Delete`.
+**Revised, per explicit developer instruction: this is no longer a functioning CRUD fallback.**
+The subcommand names are kept (so an admin who types `/kit manage create` gets a helpful redirect
+rather than "unknown command"), but **every handler in this sub-tree does exactly one thing: send
+a chat message pointing at the web app, and nothing else** — no `KitsApi` call, no field parsing,
+no `KitContent` manipulation:
+- `/kit manage create` / `/kit manage set` / `/kit manage content` / `/kit manage delete` (and
+  any bare `/kit manage`) → e.g. *"Kits are created and edited through the web app: `<web-app
+  base URL>/forms/kit` (or `/forms/kit/edit/<id>` for an existing kit). In-game kit management
+  isn't available."* The exact copy is an implementation detail; the requirement is that it names
+  the FormWizard route, not just "use the web app" with no pointer.
+- Gated by the same `knk.kit.manage` permission node this section originally proposed — even
+  though the handler no longer mutates anything, keeping it permission-gated avoids advertising
+  the FormWizard URL (and implicitly, "you can manage kits") to players who have no reason to see
+  it.
 
-**Explicitly not built here, left to the FormWizard**: any validation UI beyond what the backend
-already enforces (e.g. the form's live "does this `ItemBlueprint` exist" search), gating-condition
-previews, or a listing/browsing experience richer than `/kit list` already gives self-serve
-players. This command tree is a working, complete-enough fallback, not a competing feature set —
-if it ever grows enough live-search/validation sophistication to rival the form, that's scope
-creep against §4.0's own stated intent, worth pushing back on rather than building.
+**Why keep the subcommands at all, rather than deleting `manage` outright**: an admin's muscle
+memory or a tab-completion guess ("this plugin probably has `/kit manage` like similar commands
+do") should land on a helpful pointer, not a generic "unknown subcommand" error — cheap to keep,
+and it's the one place in the command tree that actively teaches the FormWizard-is-primary
+decision (§4.0) to whoever reaches for the in-game option first.
+
+**No `KitsApi.createAsync`/`updateAsync`/`deleteAsync` client methods are needed** (this section's
+first draft would have added them to `knk-api-client`) — `knk-plugin` never performs `Kit` CRUD,
+so it never needs a write client for it. `KitsApi` stays read-only (`getByIdAsync`/`listAsync`/
+`searchAsync`), matching `ItemBlueprintsApi`'s own shape exactly, no Kit-specific exception.
 
 ### 4.6 Web-app: granting a kit to a player (new, §0b)
 
