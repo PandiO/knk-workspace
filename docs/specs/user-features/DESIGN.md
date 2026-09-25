@@ -161,9 +161,36 @@ Kept as the earned-progression axis, per vision §5.2 and v1 precedent (`user-sy
   staying deferred, see §1).
 - Title changes (promotion or demotion) **jump straight to the target bracket** on any XP
   change, rather than porting v1's one-level-per-tick catch-up drain (confirmed, see §1) — a
-  single `experiencePoints` write recomputes and applies the resulting title directly. v1's
-  reward/penalty thresholds at 5/10/12/15 are ported as-is for the bracket boundaries
-  (confirmed, see §1) — placeholder content, retunable later via the admin UI.
+  single `experiencePoints` write recomputes and applies the resulting title directly.
+
+### 3.1 Real title data (2026-09-25) and what's deliberately not ported
+
+The placeholder seed this section originally described (5 brackets, `MinExperience` set to
+5/10/12/15) had a real bug — those numbers were v1's *title-ID* slot-unlock thresholds, not
+actual XP amounts. The developer supplied v1's real `Titles` table export (a phpMyAdmin JSON
+dump: 19 brackets, id 0–18, `MaleName`/`FemaleName`/`Salary`/`CoinBonus`/`GemBonus`/`ExpBonus`/
+real `MinExp` values like 2500/10000/30000), plus v1's `Gender` (Male/Female + Mylord/Mylady
+prefix) and `Donator` (Noble/Royal/Dragon Blood multipliers/prices) tables. `TitleBracket` now
+carries this real data (`Repository/knk-web-api/Migrations/
+20260925112304_AddUserFeaturesPhase6RealTitleDataAndFreeze.cs`), `User` gained a `Gender` enum
+for name resolution, and Noble/Royal/Dragon Blood's `SalaryMultiplier` was corrected to the real
+1.10/1.20/1.50 (the Phase 5 seed had left it at the 1.0 default).
+
+`CoinBonus`/`GemBonus`/`ExpBonus` are granted on promotion, consolidated across every bracket a
+single XP delta crosses (`UserService.AdjustBalancesAsync`) rather than fired once per tier —
+v1's `TitleChangeEvents` (`Repository/knk-v1-archive/src/Titles/TitleChangeEvents.java`) looped
+`userPromotion`/`userDemotion` once per tier crossed on a 2-second `BukkitRunnable` timer when
+a jump spanned multiple brackets (`setPromoteLoop`/`setDemoteLoop`), which this project
+explicitly does not repeat (developer-confirmed 2026-09-25).
+
+**Not ported** — v1's per-tier structural unlocks and skill-point mechanics
+(`TitleChangeEvents.userPromotion`/`userDemotion`, lines 149–244): +1 house/property slot at
+tier ≥5, +1 house/property slot + a "special skill point" at ≥10, +1 quest slot at ≥12, +1
+house/property/keep slot at ≥15, plus a generic skill-point grant/removal on every promotion/
+demotion. None of v3 has a house/property/quest/keep/skill system to attach these to (all
+dropped between v1 and v2, confirmed in `docs/specs/legacy/commands-v2.md`'s v1→v2 comparison
+section) — recorded here for whoever eventually builds one of those systems and wants to know
+what v1 tied to title tiers, not implemented now.
 
 ## 4. Premium tier track
 

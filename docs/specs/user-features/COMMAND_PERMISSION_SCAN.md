@@ -1,5 +1,11 @@
 # Command & Permission Scan — v1, v2, v3 (2026-09-23)
 
+> **See also:** this doc inventories permission *nodes*. For the full functional command catalog (every command's
+> syntax, arguments, and actual behavior, not just its permission node) see
+> [COMMAND_CATALOG_V3.md](COMMAND_CATALOG_V3.md) (v3) and
+> [docs/specs/legacy/commands-v1.md](../legacy/commands-v1.md) / [commands-v2.md](../legacy/commands-v2.md)
+> (v1/v2), added 2026-09-25 to close that gap.
+
 **Status:** Final — new scan, requested to fill the gap left by the legacy spec-mining pass.
 **Method:** v1/v2 findings are carried forward verbatim from [`legacy-spec-mining`'s
 `user-system.md`](../legacy/user-system.md) (already source-grounded — not re-derived here).

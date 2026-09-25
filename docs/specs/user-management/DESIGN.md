@@ -1,9 +1,17 @@
 # User Management — Design (Tailored Admin Module)
 
-**Status:** Ready for implementation — depends on `docs/specs/user-features/
-IMPLEMENTATION_PLAN.md` Phase 1 (not yet built as of this writing). This design can proceed in
-parallel; the module itself cannot ship ahead of that dependency.
-**Last updated:** 2026-09-23
+**Status:** All four phases shipped 2026-09-24. Phase 1 (§2, composite player-profile view) and
+Phase 2 (§3 quick actions + §4 audit log) — see `IMPLEMENTATION_PLAN.md`'s "Phase 1 status" and
+"Phase 2 status". Phase 3 (§5, moderation search/filters) — see "Phase 3 status". All §7 open
+items now resolved: item 1 (premium-tier UI flag) via user-features Phase 5; item 2 (presence
+tracking) via a dedicated `PUT /api/users/{id}/presence` endpoint, resolved as part of Phase 3 —
+see below; item 3 (audit log retention policy) via `IMPLEMENTATION_PLAN.md`'s "Audit log
+retention status"; item 4 (aggregate endpoint vs. several calls) via Phase 1 shipping the
+aggregate. This module is feature-complete; see `IMPLEMENTATION_PLAN.md`'s "Phase 3 status" for
+what a future session might still pick up (none of it blocking).
+**Last updated:** 2026-09-24 (Phase 3 implementation session). Previously updated 2026-09-24
+(audit log retention policy session), 2026-09-24 (Phase 2 implementation session), 2026-09-24
+(Phase 1 implementation session).
 
 Ref: `docs/vision/vision.md` §5. Sources: `docs/specs/user-features/DESIGN.md` +
 `IMPLEMENTATION_PLAN.md` (the rank/permission/progression data model this module is a UI over),
@@ -144,18 +152,27 @@ New scope, no existing precedent:
 
 ## 7. Open questions
 
-1. **Premium-tier UI distinction**: does `PermissionGroup` need an explicit `IsPremiumTier`
-   (or similar) flag for the frontend to know which groups to show under "Premium Tier" versus
-   generic "Groups" in the profile view, or is a naming convention (e.g. a `Premium` prefix)
-   good enough?
-2. **Presence tracking mechanism**: a dedicated `POST /api/users/{id}/presence` endpoint hit on
-   join/quit, or something lighter (e.g. updating `LastSeenAt` as a side effect of whatever
-   periodic sync the plugin already does)? Affects whether "currently online" is real-time-ish
-   or has a sync-interval lag.
-3. **Audit log retention/volume**: does every `PermissionGrant`/`UserPermissionGroup` write
-   need its own audit entry indefinitely, or should this get a retention policy (e.g. dropped
-   after N months) given it's an append-only table on what could become a busy write path?
-4. **`profile-summary` endpoint vs. several parallel calls**: confirmed recommendation is one
-   aggregate endpoint (§2) — flagging as still open in case the developer prefers the frontend
-   composing several existing per-concern calls instead, trading one round trip for less
-   backend surface area.
+1. ~~**Premium-tier UI distinction**~~ — **resolved 2026-09-24** (user-features Phase 5):
+   `PermissionGroup.IsPremiumTier` bool, not a naming convention. The resolved current tier is
+   already on `UserDto`/`UserSummaryDto` (`premiumTierGroupId`/`premiumTierName`/
+   `premiumTierExpiresAt`), and `GET /api/UserPermissionGroups?userId=` lists every membership
+   with `isPremiumTier`/`isActive`. See `docs/specs/user-features/IMPLEMENTATION_PLAN.md` "§5 status".
+2. ~~**Presence tracking mechanism**~~ — **resolved 2026-09-24**: a dedicated
+   `PUT /api/users/{id}/presence` endpoint, not a periodic sync — confirmed by reading
+   `UsersDataAccess` (knk-plugin) that no periodic sync loop exists for users, only an on-demand
+   refresh when a cached lookup is found stale, so there was nothing to piggyback on.
+   `knk-plugin`'s `PlayerListener.onJoin`/`onLeave` call it directly via a new
+   `UsersCommandApi.setPresenceById`, matching the existing `setCoinsById`/
+   `setGatePassThroughMethodById` per-user-id PUT pattern. "Currently online" is therefore
+   real-time-ish (set the instant a player joins/quits), not lagged behind a sync interval. See
+   `IMPLEMENTATION_PLAN.md`'s "Phase 3 status" for the full writeup.
+3. ~~**Audit log retention/volume**~~ — **resolved 2026-09-24**: `AuditLogRetentionConfiguration`
+   singleton (admin GET/PUT `/api/AuditLogRetentionConfiguration`, default 180 days), read fresh
+   on each run by the existing `RetentionPolicyService` (which already handled
+   `FormSubmissionProgress` cleanup) and used to hard-delete `AuditLogEntry` rows older than the
+   configured window. No archival step — `AuditLogEntry` has no FK relationships by design, so a
+   straight delete matches this item's own "dropped after N months" framing. See
+   `IMPLEMENTATION_PLAN.md`'s "Audit log retention status" for the full writeup.
+4. ~~**`profile-summary` endpoint vs. several parallel calls**~~ — **resolved 2026-09-24**: built
+   as one aggregate endpoint (`GET /api/users/{id}/profile-summary`), per the confirmed
+   recommendation. See `IMPLEMENTATION_PLAN.md`'s "Phase 1 status".
