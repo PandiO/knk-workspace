@@ -1,6 +1,6 @@
 # InventoryMenu — Content Port Plan (hub, Kits, Profile, Items, Premium, Player manager)
 
-**Status:** In progress — CP1 shipped on `claude/menu-content` (see the CPn status blocks). Phases are numbered CP1–CP8 (content port) to keep them apart from the engine plan's Phases 1–9, which this document cites as "engine Phase N".
+**Status:** In progress — CP1–CP2 shipped on `claude/menu-content` (see the CPn status blocks). Phases are numbered CP1–CP8 (content port) to keep them apart from the engine plan's Phases 1–9, which this document cites as "engine Phase N".
 **Last updated:** 2026-09-25
 
 Ref: [../legacy/inventory-menu-screens.md](../legacy/inventory-menu-screens.md) (the legacy screen
@@ -219,6 +219,55 @@ never worked) and `kits.md` bug #3 (menu claim skipped permission checks).
 
 **Tests:** `KitGrantFlow` shared by command + menu (command behaviour unchanged — existing kit
 command tests stay green); row mapping for each availability state; seed validation.
+
+### CP2 status — shipped 2026-09-25 (not live-verified)
+
+**Shipped:**
+- knk-web-api `936ee16`: `kits.overview` seed (Height 6, AutoRefreshTicks 20). Header 4 ARMOR_STAND,
+  8 Back; section `Kits` = content grid slots 9–44 over `kits.available`; pinned (absolute, J16) pager
+  45/53 and Confirm 48 / Cancel 50. The row template carries two actions picked by action-level Render
+  conditions on `$row.getIsPurchase$`: `kits.claim {kitId}` (false) and `menu.confirm.request
+  {actionTypeId: kits.purchase, actionParamsJson: {kitId}, prompt: $row.getPurchasePrompt$}` (true).
+  Cooldown line = `$row.getCooldownText$` with a `Ttl` 20 policy so it counts down.
+- knk-plugin `0ea4158`: `kit/KitGrantFlow` — the single grant path (node check via `KnkPermissible`,
+  claim/give/purchase API call, `KitGrantPlacer` resolve + place, feedback) used by `KitCommand`
+  (now arg parsing + name lookup only) and by `menu/content/KitsMenuFeature`: row source
+  `kits.available` → `KitMenuRow` (`getKitId`, `getName`, `getLoreLines`, `getMaterial`,
+  `getDisplayMode`, `getCooldownText`, `getIsPurchase`, `getPurchasePrompt`; implements `MenuRowKey`),
+  actions `kits.claim` / `kits.purchase`, condition `kits.purchase-pending`.
+
+**Tests after CP2:** web-api **468/473** (same 5; +2: kits seed round-trip + `KitsOverview_…`).
+Plugin knk-core 512, api-client 28, knk-paper **278** (+26: `KitMenuRowTest` 8, `KitsMenuFeatureTest`
+7 incl. the seed contract, `KitGrantFlowTest` 7, `KitCommandTest` 4), 0 failures.
+
+**Judgment calls:**
+- **Caching / fan-out:** a render (every second under auto-refresh) must not hit the API per row. The
+  viewer's availability list is cached in the feature for 5 s and dropped after their claim/purchase;
+  kits (`KitsDataAccess.getByIdAsync`) and item blueprints / material refs go through the existing
+  cache-first gateways, each id looked up once per fetch. The cooldown line is computed from
+  `cooldownExpiresAt` at getter time, so it counts down between fetches.
+- **Empty state:** the engine's built-in "No results found" marker only appears for an active
+  search/filter, so `kits.available` returns one disabled BARRIER row "No kits available right now"
+  instead. (Also used when the viewer's account isn't cached yet.)
+- **Confirm/Cancel buttons use a feature condition, not `has-pending-confirmation`.** Finding: the
+  engine keeps one pending confirmation per session and nothing clears it on navigation, so a
+  confirmation requested in one menu (e.g. a Player-manager ban) and abandoned would show up — and
+  could be accepted — behind the Confirm button of any other menu using the generic condition.
+  `kits.purchase-pending` only allows a pending `kits.purchase`. CP8 does the same for `users.*`. An
+  engine fix (clear the pending confirmation when a different menu opens) would be cleaner — owner
+  decision, not built (not G1).
+- **Kit name in chat** for menu actions comes from the viewer's cached availability (params carry only
+  `kitId`, so no user text is spliced into the nested `actionParamsJson`).
+- **Behaviour changes to `/kit`** (same grant semantics): a server denial (409 `ClaimDenied`/
+  `PurchaseDenied`) now prints its `message` instead of `HTTP 409` + raw JSON; the user id is read from
+  the stale user-cache entry like `KnkPermissible`/`ModeService` do — `KitCommand` used the fresh-only
+  `getByUuid`, which (per `KnkPermissible`'s own note) stops resolving about a minute after join,
+  i.e. "Your account isn't loaded yet" for every later `/kit get`. There were no pre-existing kit
+  command tests; `KitCommandTest` now pins the delegation.
+
+**Not verified:** in-game claim/purchase/cooldown/denial; Paper's rendering of the TTL line under
+auto-refresh; whether the kit contents' material keys all resolve to real materials (unresolvable
+ones fall back to PAPER with a one-time warning, E6).
 
 ## 5. CP3 — Profile & titles (`profile.main`)
 
