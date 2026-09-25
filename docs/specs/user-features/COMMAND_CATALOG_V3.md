@@ -676,6 +676,17 @@ enchantments`'s admin/debug catalog browsing and item-blueprint application.
    future work (e.g. a Siege capture-destroys-all-doors event, named
    directly in that same comment).
 
+### `/menu` — the InventoryMenu hub (added 2026-09-25, content port CP1)
+- **File:** `MenuCommand.java`, registered with `registerSimpleCommand("menu", …)` in `KnKPlugin`.
+- **Permission:** `knk.menu` (plugin.yml, `default: true`) on the command itself.
+- **Behaviour:** player-only; `MenuService.openMenu(player, "main", ctx = empty)` — opened from
+  outside a menu, so navigation starts fresh and the hub's Back button reads "Exit". The hub shows one
+  tile per ported feature (Profile, Kits, Sieges, Item catalogue, Premium tiers, Player manager),
+  each only while its target menu passed startup validation (`menu-available`). Not live-verified.
+  Details: `docs/specs/inventory-menu/CONTENT_PORT_PLAN.md` CP1.
+- **Feature allocation:** `inventory-menus` (content port).
+- **Status:** Implemented on `claude/menu-content`, not merged/live-verified.
+
 ---
 
 ## Appendix: full command inventory (flat list)
@@ -698,6 +709,7 @@ enchantments`'s admin/debug catalog browsing and item-blueprint application.
 | `/knk item enchantments list\|vanilla\|search\|apply` | custom-enchantments/items | Finished (debug) |
 | `/knk itemblueprints list\|search\|get\|give` | items/item-blueprints | Finished |
 | `/knk menu open\|page\|search\|filter\|broken` | inventory-menus | Dev harness |
+| `/menu` | inventory-menus | Implemented on `claude/menu-content` (2026-09-25), not live-verified |
 | `/knk streets`/`street` | towns | (listed above) |
 | `/knk tasks [status]` | world-tasks | Finished (debug) |
 | `/knk task-claim`, `/knk itemscan claim` | world-tasks | Finished |

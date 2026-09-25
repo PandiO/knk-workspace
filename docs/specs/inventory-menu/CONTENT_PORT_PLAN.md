@@ -1,6 +1,7 @@
 # InventoryMenu — Content Port Plan (hub, Kits, Profile, Items, Premium, Player manager)
 
-**Status:** In progress — CP1–CP6 shipped; CP7 server half stopped on an owner question (see CP7 status) on `claude/menu-content` (see the CPn status blocks). Phases are numbered CP1–CP8 (content port) to keep them apart from the engine plan's Phases 1–9, which this document cites as "engine Phase N".
+**Status:** CP1–CP6 and CP8 implemented on `claude/menu-content` (not merged, not live-verified); CP7's
+plugin half shipped, its server half **stopped on an owner question** (see CP7 status). Wrap-up done. on `claude/menu-content` (see the CPn status blocks). Phases are numbered CP1–CP8 (content port) to keep them apart from the engine plan's Phases 1–9, which this document cites as "engine Phase N".
 **Last updated:** 2026-09-25
 
 Ref: [../legacy/inventory-menu-screens.md](../legacy/inventory-menu-screens.md) (the legacy screen
@@ -631,7 +632,7 @@ service test), 0 failures; `shadowJar` builds.
 - **Rank check** (`users.outranks-target`): conditions run on the main thread, so the answer is
   computed by the `users.target`/`titles`/`groups` fetch and cached per (viewer, target); before the
   first fetch the condition denies with "Still checking your rank". The service re-checks the rank
-  server-trip-side for group/perm/freeze/mode/salary (as the commands did); balance/title steps rely on
+  itself for group/perm/freeze/mode/salary (as the commands did); balance/title steps rely on
   the menu condition, because `/knk user coins|gems|xp` never had a rank check and its behaviour was
   kept.
 - **Target identity** travels as `ctx.userId` + `ctx.name`; the target is read fresh by name (like
@@ -662,6 +663,74 @@ half — until then the actor is still null).
   current title and shows correct gendered names; catalogue search/paging; premium tier highlight;
   Player manager: rank-hierarchy denial, each stepper and step cycle, title/group/mode/salary/freeze,
   kick/ban confirmations, and the audit log in the web-app showing the staff member as actor.
+
+### Wrap-up status — 2026-09-25
+
+**Branches (pushed, not merged):** knk-web-api `claude/menu-content` @ `058dec5`, knk-plugin
+`claude/menu-content` @ `07a765f` (both = trunk + `origin/claude/inventorymenus` + this plan).
+knk-web-app: untouched (no change was needed). knk-workspace docs on `claude/admiring-cray-qk9fey`.
+
+**Final test numbers:** web-api `dotnet build` clean, `dotnet test` **486/491** — the same 5
+pre-existing failures as `master`, +23 new tests. Plugin `./gradlew test shadowJar`: knk-core **523**
+(+11), knk-api-client **32** (+4), knk-paper **326** (+80, 14 skipped as before), 0 failures (built
+against a partial paper-api compiled from source — see CP1's environment note).
+
+**Docs updated:** this file (CP1–CP8 status blocks); `docs/specs/legacy/inventory-menu-screens.md`
+§1/§2.2/§7 (ports #1, #3–#7 and G1 marked implemented); `IMPLEMENTATION_PLAN.md` ("Engine additions
+made by the content port"); `docs/specs/user-features/COMMAND_CATALOG_V3.md` (`/menu`);
+`docs/guides/users/commands.md` (a v3 pointer only — that page is the stale v1 reference);
+`docs/specs/user-management/DESIGN.md` §8 (in-game Player manager, actor attribution state);
+`docs/ACTIVE_SESSIONS.md`.
+
+**Open items for the owner:**
+1. **CP7 server half** — how the plugin should authenticate so the API can trust
+   `X-Acting-User-Id` (options in the CP7 status). Until then staff changes made in-game are still
+   audit-logged with a null actor.
+2. Optional engine follow-ups found on the way (not built, not required): clear a pending
+   confirmation when a different menu opens (CP2); route engine permission checks through
+   `KnkPermissible` if web-app group grants should drive menu visibility (CP1 note).
+3. Siege 8b: the hub's Sieges tile is static C.1 copy; add `siege.open-own` / the "you are in Siege N"
+   line by editing the seeded hub through the CRUD API if wanted (CP1).
+
+**Manual in-game checklist (owner; this session had no server or database).** Deploy the plugin
+branch (a real `./gradlew :knk-paper:dev` build — not the jar built here) and run the web-api branch.
+Starting the API runs the create-only seeds, so the ten content templates (`main`, `kits.overview`,
+`profile.main`, `items.catalog`, `premium.tiers`, `users.manager*`) are created in whatever database it
+points at — needs the owner's go-ahead for the shared dev DB, together with engine Phase 9's migration
+(`dotnet ef database update`). No new migration was added by this plan.
+1. Engine Phase 9's own `example.domain` checklist first (IMPLEMENTATION_PLAN.md "Verification").
+   Startup log: `InventoryMenu startup validation: checked N menu(s), 0 blocked` — none of the ten
+   content menus may be blocked.
+2. **`/menu`** as a non-op: Back reads "Exit"; tiles for Profile (own head), Kits, Item catalogue,
+   Premium tiers; **no** Sieges tile (no `siege.overview`) and **no** Player-manager tile. As an op:
+   the Player-manager tile at slot 22 appears. Every tile opens its menu and Back returns to the hub.
+3. **Kits:** claimable kit → click claims, items placed, "Kit … claimed" message, the row turns
+   DISABLED with "Available again in …" counting down each second; clicking a kit on cooldown does
+   nothing (DISABLED); a kit the player lacks the node/title for shows the server's denial text in
+   lore and chat is not spammed; a single-purchase premium kit → click → chat prompt + Confirm/Cancel
+   appear (row 5) → Confirm buys it (gems taken), the row becomes claimable; Cancel says "Cancelled.";
+   more than 36 kits page with 45/53; `/kit get <name>` still works and now shows denial messages as
+   text; `/kit get` more than a minute after joining no longer says "account isn't loaded".
+4. **Profile:** balances/XP match `/knk user <self> info`; title progress "Next: … - N XP to go" (or
+   "Highest title reached"); the current title glows (HIGHLIGHT), passed ones normal, future ones
+   greyed; a female account sees female title names; premium line shows tier + expiry.
+5. **Item catalogue:** header count matches the number of item blueprints (appears after the first
+   open at the latest); search via the sign (anvil prompt), shift-click clears; paging 45/53.
+6. **Premium tiers:** only premium groups, ordered by weight, with salary multiplier; the viewer's
+   tier glows and shows "Until …"/"Permanent"; header "Your tier: …" or "No premium tier".
+7. **Player manager** (two accounts, staff outranking a normal player; a third of equal/higher rank):
+   the online list only shows players you outrank; editor head shows title/balances/tier/mode;
+   `−`/`+` change coins/gems/XP by the step; clicking the value cycles the step (and it survives Back
+   → another player's editor, but resets after a fresh `/menu`); XP past a threshold shows the
+   promotion effect to the target; Title picker → Confirm sets the title (XP = bracket minimum);
+   Groups: highlighted memberships, click adds, removing asks for confirmation; Mode toggle
+   Normal↔Staff (refused if the target lacks `knk.mode.staff`); Salary payout message; Freeze/Unfreeze
+   toggle (and `/freeze`/`/unfreeze` still work); Kick and Ban ask for confirmation, then run Paper's
+   `/kick`/`/ban` as you (denied if you lack the vanilla permission); a non-op without the nodes sees
+   no Player-manager tile and gets permission messages for each action; acting on the equal/higher
+   account is refused ("You can only manage players ranked below you").
+8. **Audit log in the web-app:** after 7, entries exist for the changes — **the actor column will still
+   be empty** until CP7's server half is decided and built; verify again then.
 
 ## 12. What the session must not do
 
