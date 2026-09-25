@@ -1,10 +1,12 @@
 # Kits — Implementation Plan
 
-**Status:** Phase 1 (§1), Phase 2 (§2), Phase 3 (§3), Phase 4 (§4), and Phase 5 (§5) shipped
-2026-09-25 — see "§1 status"/"§2 status"/"§3 status"/"§4 status"/"§5 status" below. §6-§8 not
-started, ready whenever picked up on the same `claude/kits` branch in each repo (§0's
+**Status:** Phases 1-7 (§1-§7) shipped 2026-09-25 — see each section's "status" note below. The
+§2 audit-log gap (`GiveKitAsync` never wrote `KitGranted`) is closed — see "§2 follow-up". §8 (seed
+data) not started, ready whenever picked up on the same `claude/kits` branch in each repo (§0's
 one-branch-per-repo rule).
-**Last updated:** 2026-09-25 (§4/§5: knk-plugin data access, item-building/`KitGrantPlacer`, the
+**Last updated:** 2026-09-25 (§7: `KitScan` shipped in all three code repos and verified live in a
+browser against a local API; §2 audit-log gap closed after merging `knk-web-api` `master` into
+`claude/kits` — see "§7 status" and "§2 follow-up"). Previously updated 2026-09-25 (§4/§5: knk-plugin data access, item-building/`KitGrantPlacer`, the
 `/kit` command surface, and the first-join grant hook — see "§4 status"/"§5 status" for the
 branch-base merge this phase needed (`claude/kits` had never actually been forked from
 `claude/user-features`, despite Phase 1 assuming it was), the `javac`-against-Maven-Central
@@ -227,6 +229,46 @@ the migration to a live MySQL instance — no reachable MySQL existed in this sa
 **Next:** §3 and §6 can both start now — §3 only needs Phase 1's `[FormConfigurableEntity]` tag
 (already present), §6 only needs this phase's `give` endpoint (now shipped); §4/§5 are
 independent `knk-plugin` work with no dependency on §3/§6.
+
+### §2 follow-up — audit-log gap closed 2026-09-25 (Phase 7 session)
+
+The `TODO(kits-phase2)` described above is gone. **`knk-web-api` `claude/kits`: `fe151ef` (merge
+of `origin/master` `3be3226`), `2c83019` (the fix).**
+
+- **Merge first.** `claude/kits` was 7 commits behind `master` (merge base `bc67f95`), and
+  `IAuditLogService` only exists on `master` (user-management Phase 2, `d52bdfc`). The only
+  textual conflict was `Properties/KnKDbContext.cs`'s `DbSet` block (kept both sides).
+  `Migrations/KnKDbContextModelSnapshot.cs` auto-merged, even though the hand-off expected a
+  conflict there. **The merge also needed two semantic fixes git couldn't see:** master's
+  `3be3226` split `TitleBracket.Name` into `MaleName`/`FemaleName` + `NameFor(Gender?)` and gave
+  `ITitleService.ResolveAsync` a gender parameter. So `KitService`'s title-gating denial message
+  now uses `required.NameFor(user.Gender)`, and `KitServiceTests`' fixtures were updated to match.
+  Without this, `claude/kits` wouldn't compile after the merge. No migration file was touched.
+  `AddKitsPhase1Schema` (`20260925105914`) sorts between master's `SeedDefaultPermissionGroup` and
+  `AddUserFeaturesPhase6RealTitleDataAndFreeze`. It only creates new tables, so it's harmless in
+  that position, and EF applies it as pending on a DB that already has master's later migration.
+- **The fix.** `AuditAction.KitGranted = 11` was appended, with no renumbering. The column is a
+  32-char string, so no migration is needed. `IAuditLogService` is injected into `KitService`.
+  `GiveKitAsync` now calls `RecordAsync(actorUserId, targetUserId, AuditAction.KitGranted,
+  {kitId, kitName, claimId})` after writing the `KitClaim` row. The details are JSON-serialized,
+  like every other `RecordAsync` caller. The method is named `RecordAsync`, not the `Record` this
+  section's bullet uses.
+- **Tests.** `KitServiceTests` covers three cases: a give records exactly one `KitGranted` entry
+  with the right actor/target/details, a self-claim records none, and a failed give (unknown
+  target) records none.
+- **Verified for real.** `dotnet build` passes. On the full suite, the pre-merge `claude/kits`
+  baseline was 402 tests / 5 failed, `origin/master` was 406 / 5 failed, and the merged result is
+  **437 / 5 failed**. That's 406 + 29 Kit tests + 2 new, and the same 5 pre-existing failures by
+  name in all three runs (`ClientActivityStoreTests`, `FormSubmissionProgressRepositoryTests`,
+  `FieldValidationServiceTests`, two `PathResolutionServiceTests` cases). On a fresh local MySQL 8
+  DB, `dotnet ef database update` applied the whole merged chain cleanly, and
+  `dotnet ef migrations has-pending-model-changes` reported no drift, which confirms the
+  auto-merged snapshot. Live: a real `POST api/Kits/1/give` (JWT-authenticated staff user) returned
+  200, and `GET api/audit-log?targetUserId=` then returned a `KitGranted` row with
+  `actorUserId` = the caller from the JWT, not client-supplied. **The gap is closed end-to-end.**
+  The web-app's Phase 6 `'KitGranted'` label needed no change. Only its now-stale "not yet written
+  server-side" comments were updated (`knk-web-app` `ae24214`, which also adds master's
+  `PlayerFrozen`/`PlayerUnfrozen` to the TS union and labels).
 
 ## 3. Phase 3 — Admin `FormConfiguration` (knk-web-app + knk-web-api)
 
@@ -685,6 +727,10 @@ prose, plus the component-level build/test coverage above. This is a real gap re
 **Not required, not done**: `Kit`'s own generic admin table getting a "Give to player" row action
 (explicitly optional in `DESIGN.md` §4.6) — skipped, no time-to-spare nice-to-have attempted.
 
+**Addendum (Phase 7 session):** the audit-log gap above is closed — see "§2 follow-up" for the
+merge, fix, and live verification. Recent Activity now shows kit grants with no further change to
+this phase's code.
+
 **Not started, per this phase's own explicit scope**: §7 (`KitScan`), §8 (seed data). **Next**:
 either can start now; separately, and not blocking either, a future session with `knk-web-api`
 push access should merge `origin/master` into that repo's `claude/kits` and add the
@@ -758,6 +804,155 @@ otherwise); independent of Phases 4/5 (granting a kit doesn't need this authorin
   `task?.taskType === 'ItemScan'` check), add the matching `'KitScan'` branch calling
   `applyKitScanResult`.
 
+### §7 status — shipped 2026-09-25
+
+All three repos, on `claude/kits`. **`knk-plugin`: `009cd34`** (merge of `origin/main` `07d3ef6`,
+clean) **+ `f70f0ac`**. **`knk-web-api`: `c6950b5`**. **`knk-web-app`: `a41060a`**. No
+`main`/`master` push anywhere.
+
+**What shipped:**
+- **knk-plugin.**
+  - `tasks/ScannedItemJsonBuilder` holds the per-item JSON logic, extracted verbatim from
+    `ItemScanTaskHandler`: material, `maxStackSize`, display name with humanized fallback, lore,
+    vanilla enchantments, lore-parsed custom enchantments, and PDC. `ItemScanTaskHandler` now
+    copies the builder's fields onto its flat root.
+  - `tasks/KitScanTaskHandler` is single-shot, synchronous, and not headless. It captures:
+    - `helmet`/`chestplate`/`leggings`/`boots` via the armor getters
+    - `shield` via off-hand
+    - `hand` via main hand, with no slot recorded
+    - `contents` from `getStorageContents()` 0-35, skipping air and `getHeldItemSlot()`
+
+    Each item is the shared JSON plus `quantity` (and `slot` for contents). Empty equipment
+    slots are JSON `null`. An empty inventory gives `status: "Warning"` plus a warning line.
+  - Registered in `KnKPlugin.java` by field name **and** by taskType `"KitScan"`.
+  - `/knk kitscan claim <linkCode>` was added to `KnkAdminCommand.java`, mirroring
+    `/knk itemscan claim`, and dispatches into the same `KnkTaskClaimCommand`.
+- **knk-web-api.** `WorldTaskTypes.KitScan` was added (`Dtos/GateBlockScanDtos.cs`), because
+  `ItemScan`'s constant *did* land there (§10's open question, checked). There is no schema change.
+- **knk-web-app.**
+  - `FieldEditor.tsx`: `KitScan` dropdown option, plus a hint naming both claim commands.
+  - `WorldBoundFieldRenderer.tsx`: `KIT_SCAN_TASK_TYPE`/`isKitScanTask`, **not** in
+    `HEADLESS_TASK_TYPES`, plus a KitScan result summary (status / equipment slots / inventory
+    slots).
+  - `FormWizard.tsx`: `applyKitScanResult`, dispatched beside the `ItemScan` branch in
+    `onTaskCompleted`. The plan's "line ~2572" was accurate. It:
+    - snapshots step data before any `await`
+    - resolves each distinct scanned item via `searchPaged` exact match (`iconNamespaceKey`
+      case-insensitive + `defaultDisplayName`) or auto-creates it, using the same
+      `getHybrid`/`persistFromCatalog` material calls and `enchantmentDefinitionClient` matching
+      `applyItemScanResult` makes
+    - caches per material+name, so e.g. two arrow stacks resolve to one blueprint
+    - builds `ScanConflictField[]` (one per filled equipment field whose scan is non-null, one
+      for Contents as a whole) through the unmodified `ScanConflictModal`
+    - writes `Contents` as a full `{SlotIndex, ItemBlueprintId, Quantity}[]` replacement
+  - New unit test in `WorldBoundFieldRenderer.results.test.ts`.
+
+**Discrepancies between the plan/design text and the real code, flagged rather than silently
+resolved:**
+1. **`ItemScan` never emitted `quantity`.** `DESIGN.md` §6.1 lists quantity among the per-item
+   fields "`ItemScanTaskHandler` already extracts". It doesn't: it emits `maxStackSize`, not the
+   stack amount. To keep ItemScan's output unchanged (§7's own requirement), the shared builder
+   emits exactly ItemScan's fields and `KitScanTaskHandler` adds `quantity` itself.
+2. **`KnkTaskClaimCommand` does not dispatch "purely by `fieldName`"** (§7 bullet /
+   `DESIGN.md` §6.2). It calls `WorldTaskHandlerRegistry.startTask(player, taskType, fieldName,
+   …)`, which tries **taskType first** and then falls back to fieldName. The Kit form binds the
+   WorldTask to a *real* Kit field (the local run used `Description`; the claimed task came back
+   `fieldName=Description`). Registering only by `getFieldName()` would therefore make `/knk
+   task-claim` silently start nothing. So the handler is also registered under taskType
+   `"KitScan"`, the same dual registration `ItemScan` already needed for the same reason.
+3. **Which field hosts the KitScan panel was never specified, and the renderer assumes one
+   value per field.** `WorldBoundFieldRenderer` writes a completed task's extracted value into its
+   bound field via `onChange`. A kit scan has no single value for any one Kit field. So KitScan is
+   special-cased to **never** write into its bound field: the field is only an anchor for the
+   panel, and `applyKitScanResult` does every write. Confirmed live that the bound `Description`
+   kept its text across scans.
+4. **Conflict prompt before resolution, not after** (a deliberate ordering change from
+   `applyItemScanResult`). Resolution can *create* `ItemBlueprint` rows, so resolving first would
+   leave orphans whenever the admin keeps current values or cancels. Verified live: declined items
+   ("Diamond Boots", "Golden Apple") were never created.
+5. **An empty scanned inventory leaves `Contents` alone**, the same way a `null` equipment slot
+   leaves its picker alone. `DESIGN.md` §6.5 doesn't cover this case. The rule "a scan only
+   writes what it found" seemed safer than wiping the list.
+
+**Two pre-existing gaps found during live verification. Neither was caused by this phase, and
+neither was fixed here (out of scope):**
+- **Kit edit mode loses equipment on submit.** Phase 3 authored the equipment pickers on the
+  navigation property (`Helmet`, not `HelmetId`). `KitDto` exposes only `HelmetId`, and
+  `FormWizard.resolveObjectFieldValueForEdit`'s nav fallback only applies to fields ending in
+  `Id`. So `/forms/kit/edit/:id` loads every equipment picker **empty**, and an *untouched*
+  Submit writes `null` to all six FKs. Reproduced: kit 2 had `helmetId: 20`/`handId: 26` before
+  and `null`/`null` after. `Contents` survives. Fix options: have `KitDto` also carry the nav
+  objects, or broaden the edit loader's fallback.
+- **An M2M step's value only survives if the step declares a field named after
+  `relatedEntityPropertyName`.** `FormWizard.normalizeStepData` and `normalizeFormSubmission` both
+  walk `step.fields` only. FormConfigBuilder does **not** auto-add that field. My local Kit config
+  first had a field-less Contents step, and scanned contents were dropped on Next/Submit. Adding a
+  `Contents` List field fixed it. The real Phase 3 config lives only in the dev DB (not in any
+  repo), so **check it has a `Contents` field on its Contents step**. Without one, manual Contents
+  authoring wouldn't persist from the form either (Phase 3's Contents round-trip was verified via
+  direct API, not via the form).
+
+**Developer action needed before `KitScan` is usable on the real dev DB** (data, not code — same
+situation as Phase 3): in FormConfigBuilder, enable **World Task → `KitScan`** on one Kit field.
+Use a plain String field such as `Description`: KitScan never writes into it, so the field's
+content isn't at risk. Also confirm the Contents step has its `Contents` field (above).
+
+**Verification, with the method for each repo:**
+- **knk-plugin.** The `javac` fallback still applies, with one improvement over earlier sessions.
+  - **Gradle:** this sandbox's egress now reaches the Gradle plugin portal and Maven Central, so
+    `./gradlew` got past settings evaluation for the first time. But `knk-core` itself has
+    `compileOnly paper-api`, and `repo.papermc.io` is still a 403. The first attempt also hit
+    Maven Central 429 rate limits.
+  - **`knk-core` / `knk-api-client`:** `javac` against Maven-Central jars gave **0 errors** for
+    `knk-core` (163 Bukkit-free files) and `knk-api-client` (146 files).
+  - **Stronger than a syntax check:** `ScannedItemJsonBuilder`, `ItemScanTaskHandler`,
+    `KitScanTaskHandler` and `IWorldTaskHandler` were **really compiled** (0 errors) against
+    minimal hand-written Bukkit stubs. The stubs cover exactly the API those files touch, with
+    signatures matching Paper's.
+  - **Equivalence harness:** the *original* `ItemScanTaskHandler` (compiled from git) and the
+    refactored one were run side by side. **Output was byte-for-byte identical on 6/6 fixtures**
+    (minus `capturedAt`): empty hand, plain sword, snowball, renamed sword with a real
+    `LocalEnchantmentRepositoryImpl`-generated `Chaos I` lore line + 2 vanilla enchants + 3 PDC
+    keys (incl. an unreadable one), bread with empty meta, and arrows with lore.
+  - **KitScan output:** a sample inventory produced exactly the §6.3 shape. Held slot 2 and an
+    air slot were skipped, off-hand became `shield`, nulls were kept for empty armor, and an empty
+    inventory produced the warning.
+  - **Everything else in `knk-paper`:** a `javac` parse-only pass over all 211 files had **0
+    syntax errors**, including the `KnKPlugin.java`/`KnkAdminCommand.java` edits. A deliberately
+    broken control file did produce errors, so the check is real.
+  - **Not verified:** a real `./gradlew build` and an **in-game scan**, which can't run here.
+- **knk-web-api.** `dotnet build` passes, and the full suite is 437 / 5 pre-existing failures (see
+  "§2 follow-up").
+- **knk-web-app.** `npm install` (`CYPRESS_INSTALL_BINARY=0`; `package-lock.json` churn reverted),
+  then `npm run build` (clean apart from pre-existing warnings), then `CI=true npm run test:ci`:
+  **237 tests, 221 passed, 16 failed**. That's Phase 6's 236/220/16 plus the one new passing
+  test. A stash-and-rerun gave the **identical 16 failing suites**, and the ESLint warning list
+  was identical apart from one line number shifted by the new import.
+- **Live end-to-end (Playwright, Chromium) against a locally run `knk-web-api` (fresh MySQL, the
+  merged `claude/kits`) and `npm start`.** The Kit `FormConfiguration` was recreated locally
+  (Phase 3's lives only in the dev DB), with a `KitScan` World Task on `Description`. The
+  in-game half was stood in for by claiming and completing the real WorldTask through
+  `POST api/WorldTasks/{id}/claim|complete`, with the handler's output shape.
+  - **Scan 1** (fields empty): no modal, applied directly. The pre-existing "Iron Helmet"
+    blueprint was **reused**. Iron Boots / Shield / Iron Sword / Bread / Arrow were auto-created,
+    with **one** Arrow for two stacks.
+  - **Scan 2** (over filled fields): the modal listed exactly **Helmet, Boots, Contents (3
+    existing)**; the scan's null shield/hand raised none. Choices were Helmet → scan, Boots →
+    keep, Contents → keep. Declined items were **not** created.
+  - **Submit:** DB rows matched exactly — Helmet = the re-scanned reused "Leather Cap", Boots
+    kept, `kit_contents` = (0, Bread, 16), (9, Arrow, 64), (35, Arrow, 32).
+  - **Create mode** (`/forms/kit`): a new kit was persisted with a reused helmet, an auto-created
+    "Longbow" (`maxStackSize` 1 from the scan), and a Contents row.
+  - **Local-harness artifacts, not product changes:**
+    - `FormWizardPage` hardcodes `userId = '1'` (pre-existing TODO). User ids share the
+      `permission_holders` key space with `PermissionGroup` (TPT), and id 1 is the seeded Default
+      group, so the Playwright script rewrote that id in outgoing requests.
+    - My local config had no Economy step, so cost fields were nulled on submit.
+
+**Not done, per this phase's scope:** §8 (seed data). **Next:** §8 can start any time. Separately,
+the two pre-existing Kit-form gaps above are worth a small follow-up before admins rely on edit
+mode.
+
 ## 8. Phase 8 — Seed data
 
 Per `SEED_DATA.md`: seed `Category`/`Grade`/`Tag` rows (if not already present from other seed
@@ -798,4 +993,4 @@ None outstanding — all six developer-escalated/-requested decisions (`DESIGN.m
 re-confirming at kickoff:
 - §0's branch-base check (has `claude/user-features` merged to `main` yet?).
 - Phase 7's `WorldTaskTypes` constant question (does an `ItemScan` constant actually exist to
-  extend, or is `TaskType` passed as a bare string today? Check before assuming either way).
+  extend, or is `TaskType` passed as a bare string today? Check before assuming either way) — **resolved in "§7 status"**: it existed, and `KitScan` was added beside it.
