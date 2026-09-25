@@ -7,6 +7,10 @@ Central home for requirements, specifications, and implementation roadmaps acros
 - users/: user/account management specs and requirements (including linking, merge, password rules)
 - towns/: towns/world feature specs and hybrid create/edit flow notes
 - api/: API contract snapshots and backlog for REST endpoints
+- items/: item catalog (`ItemBlueprint`) design/implementation
+- kits/: Kit (equipment loadout) design, implementation plan, and legacy-DB seed data
+- user-features/: rank/permission/title/salary architecture
+- user-management/: tailored admin module built on top of user-features
 - legacy/: legacy reference notes kept for historical context
 - reconcile/: reconciliation guides for aligning legacy data with v2
 
@@ -15,6 +19,10 @@ Central home for requirements, specifications, and implementation roadmaps acros
 - Towns domain: [docs/specs/towns/SPEC_TOWNS.md](docs/specs/towns/SPEC_TOWNS.md), [docs/specs/towns/CREATE_FLOW_SPLIT_TOWNS.md](docs/specs/towns/CREATE_FLOW_SPLIT_TOWNS.md), [docs/specs/towns/LOGIC_CANDIDATES_TOWNS.md](docs/specs/towns/LOGIC_CANDIDATES_TOWNS.md), [docs/specs/towns/REQUIREMENTS_HYBRID_CREATE_EDIT_FLOW.md](docs/specs/towns/REQUIREMENTS_HYBRID_CREATE_EDIT_FLOW.md)
 - Portfolio overview: [docs/specs/project-overview/IMPLEMENTATION_ROADMAP.md](docs/specs/project-overview/IMPLEMENTATION_ROADMAP.md), [docs/specs/project-overview/CHANGES_SUMMARY.md](docs/specs/project-overview/CHANGES_SUMMARY.md), [docs/specs/project-overview/SOURCES_LOCATION.md](docs/specs/project-overview/SOURCES_LOCATION.md)
 - API contract snapshots: [docs/specs/api/README.md](docs/specs/api/README.md) (includes swagger export and contract notes)
+- Items domain: [docs/specs/items/IMPLEMENTATION_PLAN.md](docs/specs/items/IMPLEMENTATION_PLAN.md)
+- Kits domain: [docs/specs/kits/DESIGN.md](docs/specs/kits/DESIGN.md), [docs/specs/kits/IMPLEMENTATION_PLAN.md](docs/specs/kits/IMPLEMENTATION_PLAN.md), [docs/specs/kits/SEED_DATA.md](docs/specs/kits/SEED_DATA.md)
+- User features (rank/permissions/title/salary): [docs/specs/user-features/DESIGN.md](docs/specs/user-features/DESIGN.md), [docs/specs/user-features/IMPLEMENTATION_PLAN.md](docs/specs/user-features/IMPLEMENTATION_PLAN.md)
+- User management (admin module): [docs/specs/user-management/DESIGN.md](docs/specs/user-management/DESIGN.md), [docs/specs/user-management/IMPLEMENTATION_PLAN.md](docs/specs/user-management/IMPLEMENTATION_PLAN.md)
 - Reconciliation: [docs/specs/reconcile/README.md](docs/specs/reconcile/README.md)
 - Legacy reference: [docs/specs/legacy/README.md](docs/specs/legacy/README.md)
 
