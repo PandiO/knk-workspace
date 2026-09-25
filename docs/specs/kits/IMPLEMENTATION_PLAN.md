@@ -1,7 +1,8 @@
 # Kits — Implementation Plan
 
-**Status:** Phase 1 (§1) shipped 2026-09-25 — see "§1 status" below. §2-§8 not started, ready
-whenever picked up on the same `claude/kits` branch in each repo (§0's one-branch-per-repo rule).
+**Status:** Phase 1 (§1) and Phase 2 (§2) shipped 2026-09-25 — see "§1 status"/"§2 status" below.
+§3-§8 not started, ready whenever picked up on the same `claude/kits` branch in each repo (§0's
+one-branch-per-repo rule).
 **Last updated:** 2026-09-25 (`DESIGN.md` §0c: removed Phase 5's in-game CRUD fallback logic
 entirely — `/kit manage` is now a pure pointer to the FormWizard, no `KitsApi` CRUD client needed;
 `Kit` creation/editing/deletion is FormWizard-only). Previously updated 2026-09-25 (added a
@@ -153,6 +154,70 @@ everything after it — a follow-up session picks up Phase 2 on this same `claud
   regardless of state, placement algorithm still runs, `AuditLogService.Record` called exactly
   once per give)**. Mirrors the rigor `PermissionResolutionService`'s own 22-test suite set for
   this codebase (`user-features` §1 status).
+
+### §2 status — shipped 2026-09-25
+
+All of §2's bullets are done on the same `claude/kits` branch (knk-web-api), continued from
+Phase 1's commit `7537c71` — no new branch forked, per §0's one-standing-branch-per-repo rule.
+`Services/KitService.cs` (+ `Services/Interfaces/IKitService.cs`) implements all five
+`DESIGN.md` §4.1 methods (`GetAvailableForUserAsync`/`ClaimKitAsync`/`PurchaseKitAsync`/
+`GiveKitAsync`/`GrantFirstJoinKitsAsync`), calling straight into `ITitleService`/
+`IUserPermissionGroupService`/`IPermissionResolutionService` for gating (§3) — all three
+confirmed live in this codebase by direct code read before writing any Kits code, no new
+resolution logic written. `Repositories/KitRepository.cs` (+ `Repositories/Interfaces/
+IKitRepository.cs`) matches `ItemBlueprintRepository`'s CRUD/paged-search shape.
+`Controllers/KitsController.cs` (new) — standard CRUD plus `available`/`claim`/`purchase`/`give`/
+`grant-first-join`; `give` is `[Authorize]`-gated with `actorUserId` resolved from the caller's
+own JWT claims (the same `uid`/`sub`/`NameIdentifier` fallback chain `UsersController` already
+uses), never client-supplied. Additive DTOs `KitPurchaseResultDto`/`GiveKitRequestDto`
+(`Dtos/KitDtos.cs`) and a `Kit -> KitClaimResultDto` AutoMapper map (`Mapping/KitProfile.cs`).
+`Tests/knkwebapi_v2.Tests/Services/KitServiceTests.cs` (new) — 29 tests covering every
+combination this section's own bullet list names: gating (title-only/group-only/node-only/
+all-three/none), cooldown boundary (exactly-at/just-before/just-after expiry), cost deduction
+(sufficient/insufficient Coins/Gems, confirming the untouched currency field stays untouched),
+single-purchase premium (unpurchased blocked, purchased free with no cooldown check at all),
+first-join grant (cost/cooldown bypass, gating still enforced, only flagged kits granted), and
+`GiveKitAsync`'s full gating/cooldown/cost bypass.
+
+**Atomicity (`DESIGN.md` §5.1's "deduct-then-record, one transaction, a failed deduction never
+produces a claim row"):** `IKitRepository.AddClaimAsync`/`AddPurchaseAsync` take the
+already-mutated `User` entity alongside the new claim/purchase row and persist both via one
+`SaveChangesAsync()` call on the shared `KnKDbContext` — EF Core commits a single `SaveChanges`
+call as one DB transaction on its own, so no explicit `BeginTransactionAsync` was needed. Every
+balance/gating/cooldown check throws before either entity is even staged, so a failed check never
+produces a partial write.
+
+**One deliberate deviation from this section's own `IAuditLogService` bullet, flagged rather than
+silently dropped:** the bullet above (and `DESIGN.md` §4.1) describe `GiveKitAsync` injecting
+`IAuditLogService` and calling `Record(actorUserId, targetUserId, "KitGranted", ...)`, citing
+`docs/specs/user-management/IMPLEMENTATION_PLAN.md` Phase 2 as already shipped. **Re-verified
+false this session, by direct code read**: no `AuditLogEntry`/`AuditLogService`/`IAuditLogService`
+exists anywhere in `knk-web-api`, and that plan's own Phase 2 status line still reads "Draft" —
+not started. `GiveKitAsync` implements every other part of §4.1 in full (gating/cooldown/cost
+bypass, a normal `KitClaim` row written) and leaves a `// TODO(kits-phase2)` comment at the exact
+call site citing this paragraph, rather than inventing a stub/fake `IAuditLogService` that would
+need to be found and swapped out later. **Whoever ships `user-management` Phase 2 (or a later
+Kits phase) needs to wire the real call into `GiveKitAsync`** — this is the one remaining gap
+between this phase and `DESIGN.md` §4.1 as written.
+
+**Build/test verification — also resolves Phase 1's one open risk as a byproduct:** this
+session's sandbox, unlike Phase 1's, had a working path to a `dotnet` SDK — `apt-get install
+dotnet-sdk-8.0` succeeded after `apt-get update` (Phase 1's blocked `.NET` download hosts weren't
+needed; the Ubuntu-packaged SDK came through the distro mirror instead). `dotnet build` succeeded
+for both `knkwebapi_v2.csproj` and the test project, which incidentally **confirms Phase 1's
+previously build-unverified models/DbContext/hand-authored migration classes actually compile** —
+the one open item "§1 status" flagged. Full suite: 397 passed / 5 failed / 402 total, all 29 new
+Kit tests green; the 5 failures are pre-existing and unrelated to Kits (`FieldValidationService
+Tests`, two `PathResolutionServiceTests` cases, `ClientActivityStoreTests`,
+`FormSubmissionProgressRepositoryTests`), matching the same pre-existing-failure pattern other
+rows in this file document. **Not done, and still Phase 1's own open item:** actually applying
+the migration to a live MySQL instance — no reachable MySQL existed in this sandbox either.
+
+**Not started, per this phase's own explicit scope:** §3 (admin `FormConfiguration`), §4/§5
+(knk-plugin data access + commands), §6 (web-app Grant Kit UI), §7 (`KitScan`), §8 (seed data).
+**Next:** §3 and §6 can both start now — §3 only needs Phase 1's `[FormConfigurableEntity]` tag
+(already present), §6 only needs this phase's `give` endpoint (now shipped); §4/§5 are
+independent `knk-plugin` work with no dependency on §3/§6.
 
 ## 3. Phase 3 — Admin `FormConfiguration` (knk-web-app + knk-web-api)
 
