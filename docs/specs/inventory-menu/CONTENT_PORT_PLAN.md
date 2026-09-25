@@ -1,6 +1,6 @@
 # InventoryMenu — Content Port Plan (hub, Kits, Profile, Items, Premium, Player manager)
 
-**Status:** In progress — CP1–CP4 shipped on `claude/menu-content` (see the CPn status blocks). Phases are numbered CP1–CP8 (content port) to keep them apart from the engine plan's Phases 1–9, which this document cites as "engine Phase N".
+**Status:** In progress — CP1–CP5 shipped on `claude/menu-content` (see the CPn status blocks). Phases are numbered CP1–CP8 (content port) to keep them apart from the engine plan's Phases 1–9, which this document cites as "engine Phase N".
 **Last updated:** 2026-09-25
 
 Ref: [../legacy/inventory-menu-screens.md](../legacy/inventory-menu-screens.md) (the legacy screen
@@ -387,6 +387,35 @@ one (add nothing to the model). No migration.
 
 **Template `premium.tiers`** (Height 3–4): header 4 GOLD_BLOCK ("Your tier: X, expires …" or "No
 premium tier"), 8 back, row of tiers. Read-only.
+
+### CP5 status — shipped 2026-09-25 (not live-verified)
+
+**Shipped:**
+- knk-web-api `a112a4d`: `premium.tiers` seed (Height 3): header 4 GOLD_BLOCK with
+  `$premium.getTierLine$`, 8 Back; `Tiers` grid 9–17 over `premium.tiers` (pager 18/26). Read-only.
+  **No DTO/mapper change:** the plugin reads `GET /api/PermissionGroups`, which returns the full
+  `PermissionGroupDto` — `salaryMultiplier` is already on it (and on `PermissionGroupListDto`), and
+  `PermissionGroup` has no description to add.
+- knk-plugin `79d5560`: `PermissionGroupSummary.salaryMultiplier` (+ `PermissionGroupListItemDto`;
+  the old 4-arg constructor stays, defaulting to 1.0); knk-core `dataaccess/CachedList` (the TTL-list
+  logic from CP3, now shared) backing `TitleBracketsDataAccess` and new `PermissionGroupsDataAccess`
+  (2 min); knk-paper `PremiumMenuFeature` (row source `premium.tiers` → `PremiumTierRow`: premium
+  groups by weight, `getName`, `getSalaryMultiplierText`, `getLoreLines`, `getMaterial`,
+  `getDisplayMode` = HIGHLIGHT for the viewer's tier; root `premium` → `PremiumView`) and
+  `FreshViewers` (the CP3 fresh-viewer read, now shared by Profile and Premium).
+
+**Tests after CP5:** web-api **479/484** (same 5; +2). Plugin knk-core 515, api-client **31** (+1),
+knk-paper **293** (+4), 0 failures.
+
+**Judgment calls:**
+- Tier icons reuse v1's tier blocks by rank among premium tiers (IRON, GOLD, DIAMOND, REDSTONE, then
+  EMERALD, NETHERITE) — purely cosmetic, no data behind it.
+- "Description lines" = the salary multiplier plus, on the viewer's own tier, "Your current tier" and
+  its expiry ("Until yyyy-MM-dd" UTC, or "Permanent"). Nothing about perks/prices is invented; v1's
+  "benefits of lower ranks are included" copy was left out because v3 group inheritance isn't verified
+  to work that way for premium tiers.
+
+**Not verified:** in-game rendering; which groups are flagged `IsPremiumTier` in the dev DB.
 
 ## 8. CP6 — Engine G1: per-session menu state (steppers)
 
