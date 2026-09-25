@@ -34,6 +34,7 @@ Live tracker of in-progress work across all four Knights and Kings repos
 
 | Feature | Repos / files claimed | Owner (human / session) | Status | Started | Last updated |
 |---|---|---|---|---|---|
+| Kits — fix edit-mode data loss on equipment pickers (Kit form `/forms/kit/edit/:id` loads `Helmet`..`Hand` empty, untouched submit nulls all six FKs; found in §7) | web-app: `src/components/FormWizard/FormWizard.tsx` (edit-mode Object field resolution) and/or web-api: `Dtos/KitDtos.cs`, `Mapping/KitProfile.cs` — all on `claude/kits` | Claude Code (cloud session) | Investigating | 2026-09-25 | 2026-09-25 |
 | _(example)_ Siege minigame — capture point sync | web-api: `Services/SiegeService.cs`; plugin: `siege/` package | Claude Code session A | Implementing capture-point event handling | 2026-09-17 | 2026-09-17 |
 
 ## Recently completed
