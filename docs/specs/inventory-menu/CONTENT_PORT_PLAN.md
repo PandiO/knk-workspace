@@ -1,6 +1,6 @@
 # InventoryMenu — Content Port Plan (hub, Kits, Profile, Items, Premium, Player manager)
 
-**Status:** In progress — CP1–CP3 shipped on `claude/menu-content` (see the CPn status blocks). Phases are numbered CP1–CP8 (content port) to keep them apart from the engine plan's Phases 1–9, which this document cites as "engine Phase N".
+**Status:** In progress — CP1–CP4 shipped on `claude/menu-content` (see the CPn status blocks). Phases are numbered CP1–CP8 (content port) to keep them apart from the engine plan's Phases 1–9, which this document cites as "engine Phase N".
 **Last updated:** 2026-09-25
 
 Ref: [../legacy/inventory-menu-screens.md](../legacy/inventory-menu-screens.md) (the legacy screen
@@ -345,6 +345,31 @@ before adding any; the engine Phase 5 notes flag Category/Grade/Tag facets as bl
 Read-only — no click action on rows.
 
 **Tests:** seed round-trip; validation.
+
+### CP4 status — shipped 2026-09-25 (not live-verified)
+
+**Shipped:**
+- knk-web-api `480a80c`: `items.catalog` seed (Height 6), modelled on `example.catalog`: header 4
+  DIAMOND_SWORD "Item catalogue" ("A list of all items in the game" + `$itemsCatalog.getTotalLine$`),
+  8 Back; `Items` grid 9–44, `Searchable`, `catalog.itemblueprints`; pinned pager 45/53 and a search
+  button 49 (`menu.search.prompt`; shift-click clears — engine behaviour). No row actions.
+- knk-plugin `887fbbd`: `menu/content/ItemsCatalogMenuFeature` — root `itemsCatalog`
+  (`ItemsCatalogView.getTotalLine/getTotalCount`).
+
+**Tests after CP4:** web-api **477/482** (same 5; +2). Plugin knk-core 515, api-client 30, knk-paper
+**289** (+2), 0 failures.
+
+**Judgment calls:**
+- **No filter facets.** `catalog.itemblueprints` forwards the section's filter values as
+  `PagedQuery.filters`, but `ItemBlueprintRepository.SearchAsync` only applies the search term (it
+  loads Category/Grade/Tags but never filters on them), so any filter button would silently do
+  nothing. Adding Category/Grade/Tag filtering server-side is an Items task, not this plan's.
+- **Total count needed a feature root** (the plan's "ItemsCatalogMenuFeature if needed"): the engine
+  has no `$section$` total. The count is fetched in the background (a one-row page's `totalCount`) at
+  enable and refreshed when older than 60 s on read; the line is omitted until the first answer.
+
+**Not verified:** in-game search (anvil prompt) and paging over the real 18+ blueprints; material
+resolution of catalogue icons.
 
 ## 7. CP5 — Premium tiers (`premium.tiers`)
 
