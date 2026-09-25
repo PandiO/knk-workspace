@@ -1,11 +1,11 @@
 # Siege Minigame — Implementation Plan
 
-**Status:** Draft. Phases 1–7 + 9 = playable MVP (commands/chat UI), not started; Phase 8a (InventoryMenu
-engine extensions) built and merged into `claude/siege-minigame`, not verified live; Phase 8b open;
-Phase 10 is post-MVP.
-**Last updated:** 2026-09-25 (standing branch `claude/siege-minigame` created from current trunk in
-knk-web-api and knk-plugin with Phase 8a merged in; §0 trunk note corrected — user-management is on
-trunk)
+**Status:** Draft. Phases 1–7 + 9 = playable MVP (commands/chat UI): **Phases 1 and 2 code complete** on
+`claude/siege-minigame` (not verified live, migrations not applied); Phases 3–7 + 9 not started. Phase 8a
+(InventoryMenu engine extensions) built and merged into `claude/siege-minigame`, not verified live;
+Phase 8b open; Phase 10 is post-MVP.
+**Last updated:** 2026-09-25 (Phase 2 status block added: siege schema/services/API in knk-web-api,
+decisions to review, Swagger script, Phase 3 web-app wiring note)
 
 Ref: `DESIGN.md` (decisions — not restated here), `MENU_TEMPLATES.md`,
 `docs/reports/2026-09-25-siege-minigame-gap-analysis.md`. Plan format follows
@@ -121,6 +121,164 @@ not verified live.** Commits: web-api `3f19c9c`, plugin `11b0f3a`, web-app `ac7e
 ad-hoc), delete behaviour (deleting a scenario leaves `GateStructure`/`Location`/`Clan` intact; deleting
 a referenced gate is refused), runtime-config excludes unready scenarios.
 **Exit:** Swagger round-trip of a complete scenario graph; readiness goes green only when valid.
+
+**Phase 2 status (2026-09-25): code complete on `claude/siege-minigame` (knk-web-api), pushed; migration
+not applied, Swagger not run live.** Commits: `366f9e4` (schema + migration), `a58d388` (services/API),
+`a5e73e8` (tests). `origin/master` hadn't moved since the branch fork, so no trunk merge. Local `master`
+has the unpushed promotion-sync merge `2d256eb`; it wasn't merged here, to avoid publishing unpushed trunk
+commits. It has no migration, so it will merge cleanly later.
+- **Schema** (`Models/Siege/*`, `Enums/SiegeEnums.cs`, one commented "Siege Phase 2" block in
+  `KnKDbContext`, migration `20260925162632_AddSiegePhase2Schema`: 13 new `siege_*` tables plus the
+  `gate_structures.CurrentSiegeId` index/FK). `has-pending-model-changes` is clean. The migration clears
+  any stale placeholder `CurrentSiegeId` values before it adds the FK (hand-added `UPDATE`). Delete rules:
+  owned children cascade. Town/District/Location/GateStructure/Clan/BannerDesign/TitleBracket/User are
+  `Restrict`. Team references from objectives, gates and match history are `SetNull`. `SiegeMatch`
+  restricts its lobby/scenario. `CurrentSiegeId` is `SetNull`, with no navigation property (the gate's
+  form metadata and DTOs are unchanged). `[FormConfigurableEntity]` is on the 8 authored entities
+  (including the 3 join entities), not on `SiegeConfiguration` or `SiegeMatch*`.
+- **Endpoints** (PascalCase `api/[controller]` like every other controller). The two DESIGN §11.2
+  kebab-case paths are also served:
+  - `SiegeScenarios`: GET, GET `{id}`, POST, PUT `{id}`, DELETE `{id}`, POST `search` (filter `townId`),
+    GET/POST `{id}/teams`, GET/POST `{id}/objectives`, GET `{id}/readiness` = GET
+    `/api/siege-scenarios/{id}/readiness`.
+  - `SiegeTeams`: GET/PUT/DELETE `{id}`, POST `search` (filter `siegeScenarioId`, the picker for holder
+    and owner teams), GET/POST `{id}/spawnpoints`.
+  - `SiegeSpawnpoints` and `SiegeObjectives`: GET/PUT/DELETE `{id}`.
+  - `SiegeLobbies`: CRUD + `search`, plus GET `runtime-config` = GET `/api/siege-lobbies/runtime-config`.
+  - `SiegeConfiguration`: GET/PUT.
+
+  Scenario districts/gates and lobby rotation are M2M joins in the parent payload (replace-set; `null`
+  keeps them, `[]` clears them). Teams, spawnpoints and objectives are owned children, and the parent's
+  create/update ignores them. World-bound locations follow `GateStructureDto`: pass `xLocationId`, or an
+  inline `xLocation` (created when it has no id).
+- **Readiness** (`GET …/readiness` → `isReady`, `errors[]`, `warnings[]` with stable `code`s from
+  `SiegeReadinessCodes`, plus `spatialChecksRun`). There are 15 structural rules (`SiegeScenarioReadiness`,
+  a pure class shared with runtime-config) and 3 spatial ones. The spatial rules check the hub, the
+  spawnpoints and each objective's capture point (its own location, else its gate's) against the town's
+  WorldGuard region through the registered `LocationInsideRegion` `IValidationMethod` (the real validator,
+  so the plugin's region endpoint). Warnings never block: no instant-victory objective, lockdown with no
+  districts, spatial checks unavailable.
+- **Runtime-config**: the global `SiegeConfiguration` plus every enabled lobby with its rotation. Each
+  rotation scenario is fully resolved: team identity (team value, else Clan), the "first Defender"
+  default for objective holders and gate owners, objective capture point from the gate, and
+  `isObjectiveGate`. Only ready scenarios are included; unready ones appear per lobby under
+  `skippedScenarios`, with their errors.
+- **Delete guards on shared rows:** `GateStructureService` (selected gate / objective gate / match
+  snapshot), `ClanService` and `BannerDesignService` (used by a siege team) now throw → 409
+  `BusinessRuleViolation` instead of a raw FK error. `GateStructuresController` and `ClansController`
+  gained that catch.
+- **Tests:** 133 new (`SiegeScenarioReadinessTests`, `SiegeScenarioServiceTests`,
+  `SiegeDeleteBehaviourTests`, `SiegeLobbyServiceTests`, `SiegeConfigurationServiceTests`,
+  `Api/SiegeApiRoundTripTests`). The readiness matrix breaks each rule alone: exactly one error, 15
+  structural + 4 spatial cases. There are delete-rule assertions for every siege FK, and InMemory
+  real-repository tests for scenario/team deletion, runtime-config and identity. The round-trip test runs
+  the Swagger script below through the real controllers with the same JSON bodies. Suite **576/581**: the
+  5 failures are the ones that also fail on `master` (ClientActivityStore, 2× PathResolution `Town.*`,
+  FieldValidation ConditionalRequired, FormSubmissionProgressRepository).
+- **Decisions taken without the developer (review; each is cheap to change):**
+  1. **Spatial checks don't block when they can't run.** A missing town region or an unreachable
+     plugin/server is a warning, and `spatialChecksRun = false`, so authoring without the Minecraft server
+     can still reach "ready". A point that *is* checked and found outside is an error. Saves never call
+     the plugin; spatial rules exist only in readiness.
+  2. **Runtime-config uses the structural rules only.** The spatial check calls the plugin's region
+     endpoint, and the plugin is the one calling runtime-config (possibly during `onEnable`), so it stays
+     an authoring-time check.
+  3. **`RegionContainmentValidator` isn't used.** District and gate membership come from the
+     authoritative FKs (`District.TownId`, `Structure.DistrictId`), which the district/gate forms already
+     validate spatially. `LocationInsideRegion` is reused for points.
+  4. **"Selected gates belong to the scenario's town/districts"** means: the gate's district must be one
+     of the scenario's districts when any are selected, else any district of the town.
+  5. **Match history pins its lobby/scenario (`Restrict`).** Deleting a played scenario or lobby → 409
+     ("remove it from rotations / disable it instead"). History keeps rows when teams/objectives are
+     edited (`SetNull`).
+  6. **Deleting a team** resets objective holders and gate owners that named it to the first-Defender
+     default (`SetNull`) instead of refusing. Deleting a scenario silently drops it from lobby rotations
+     (cascade).
+  7. **`Scheduled` lobby mode is refused (400)** until Phase 10, rather than saving a lobby that would
+     never run. Lobby key: `[a-z0-9_-]{1,64}`, stored lowercase, unique (409). `MatchmakingSeconds` ≥ 60,
+     `VoteCandidateCount` 1–3, weights ≥ 1. Unready scenarios may sit in a rotation.
+  8. **Also checked on save** (not only in readiness): an ad-hoc team needs name + colour + banner; an
+     objective's gate must already be in the scenario's Gates (Gates is step 6, Objectives step 7);
+     holder/owner teams must belong to the scenario; `InitialState`/`GateStateOnCapture` must be OPEN or
+     CLOSED; districts must be in the town and gates in the area. Removing a gate that an objective uses
+     is still allowed; readiness flags it.
+  9. **`SiegeConfiguration`** is seeded lazily with the legacy defaults on first GET (the
+     SalaryConfiguration precedent, no migration `InsertData`). PUT is partial. List settings are CSV
+     columns exposed as arrays. Field naming: `KillAnnouncementThresholds` (5,10,15) +
+     `KillStreakAnnounceAbove` (3), `EnchantDropChancePerMille` (30). Two new values have no legacy
+     equivalent: **`MaxBooksAlive = 10`** (v2 had no cap) and **`AllowedEnchantmentKeys`** (v2 picked from
+     every weapon/wearable/bow/breakable enchantment at runtime; the default is that set's combat subset,
+     without curses or mending). Validation: voteClose ≥ draw ≥ hub ≥ teamSplit ≥ 1, headshot 1–10,
+     levels 1 ≤ min ≤ max ≤ 255.
+  10. **No `[Authorize]`** on the siege controllers, including runtime-config. That matches every
+      existing FormConfig CRUD controller (Phase 1 too); see the doc discrepancy below.
+- **Doc/code discrepancies found:**
+  - DESIGN §11.2 says the CRUD endpoints "require admin auth like every other FormConfig entity", but no
+    FormConfig CRUD controller has `[Authorize]` (only `Users`/`Auth`/`AdminClients` do). Either the doc
+    or the whole CRUD surface needs a decision; Phase 6's service-client auth on match writes is
+    unaffected.
+  - DESIGN §11.2 writes kebab-case routes, while every controller is PascalCase `api/[controller]`. Both
+    are served for the two named endpoints; the rest are PascalCase.
+  - DESIGN §8.5 says `IsSiegeObjective` is removed from the gate's admin form in "Phase 2", but that is
+    FormConfiguration data (web-app side), and this plan lists it under Phase 3. It's left for Phase 3;
+    Phase 2 only updated the model comment.
+  - DESIGN §4 says the `SiegeConfiguration` form is "like `SalaryConfiguration`", but the web-app has **no
+    UI for `SalaryConfiguration`** (raw GET/PUT only). Phase 3 needs a small singleton page or must defer
+    it (Swagger PUT works meanwhile).
+  - Code bug, not fixed (outside scope, one line): `LocationInsideRegionValidator.ExtractPropertyValue`
+    calls `GetProperty(name, IgnoreCase | Public)` without `BindingFlags.Instance`, so a plain entity
+    object's properties are never found (dictionaries/JSON work). Siege passes the town as a dictionary
+    for that reason.
+- **To finish Phase 2 (developer, needs the dev DB):**
+  1. `dotnet ef database update` in knk-web-api (applies `AddSiegePhase1ClanBanner`, the 8a migration if
+     not yet applied, and `AddSiegePhase2Schema`).
+  2. Swagger round-trip. Prerequisites: a Town with a `WgRegionId`, a District of that town, a
+     GateStructure in that district that has a Location, the Phase 1 Clan (+ its banner) and a second
+     BannerDesign, and 5 Locations (`POST /api/Locations`, or capture them in-game). Replace `{…}` with
+     your ids:
+     1. `POST /api/SiegeScenarios` `{ "name": "Siege of Cinix", "townId": {town}, "hubLocationId": {hub},
+        "playersMin": 2, "playersMax": 20, "districts": [ { "districtId": {district} } ] }` → 201, id `{s}`
+     2. `GET /api/siege-scenarios/{s}/readiness` → `isReady: false` (`TEAMS_MIN_TWO`, `DEFENDER_REQUIRED`,
+        `OBJECTIVES_MIN_ONE`)
+     3. `POST /api/SiegeScenarios/{s}/teams` `{ "role": "Defender", "allianceGroup": 1, "clanId": {clan} }`
+        → `{t1}` (`resolvedName` = the clan's name), then `{ "role": "Attacker", "allianceGroup": 2,
+        "name": "Raiders", "chatColor": "RED", "bannerDesignId": {banner2} }` → `{t2}`
+     4. `POST /api/SiegeTeams/{t1}/spawnpoints` `{ "name": "Keep", "locationId": {loc1} }`, then
+        `POST /api/SiegeTeams/{t2}/spawnpoints` `{ "name": "Camp", "locationId": {loc2} }`
+     5. `PUT /api/SiegeScenarios/{s}`: the step-1 body plus `"gates": [ { "gateStructureId": {gate},
+        "initialState": "CLOSED", "damageable": true } ]` → 204
+     6. `POST /api/SiegeScenarios/{s}/objectives` `{ "name": "Keep", "instantVictory": true, "locationId":
+        {loc3} }`, then `{ "name": "Gatehouse", "gateStructureId": {gate} }`
+     7. `GET /api/siege-scenarios/{s}/readiness` → `isReady: true`, and `spatialChecksRun: true` if the
+        server + plugin are up. Otherwise `SPATIAL_CHECKS_UNAVAILABLE` is a warning.
+     8. `GET /api/SiegeScenarios/{s}` → the full graph (2 teams with a spawnpoint each, 2 objectives,
+        1 gate, 1 district)
+     9. `POST /api/SiegeLobbies` `{ "name": "Siege — Cinix", "key": "cinix", "isEnabled": true, "rotation":
+        [ { "siegeScenarioId": {s}, "weight": 1 } ] }`, then `GET /api/siege-lobbies/runtime-config` → the
+        lobby with the resolved scenario (holders/owners = `{t1}`)
+     10. `GET /api/SiegeConfiguration` (creates the defaults), then `PUT` `{ "headshotMultiplier": 1.0 }`
+         → other values unchanged
+     11. `DELETE /api/GateStructures/{gate}` → 409 `BusinessRuleViolation`
+     12. `PUT /api/SiegeScenarios/{s}` with `"gates": []` → readiness shows `OBJECTIVE_GATE_NOT_SELECTED`
+         (red again)
+     13. `DELETE /api/SiegeLobbies/{lobby}`, then `DELETE /api/SiegeScenarios/{s}` → 204; the gate,
+         locations and clan still exist
+- **Follow-ups (not blocking):** the delete endpoints for `Locations`/`Towns`/`Districts`/`TitleBrackets`
+  don't catch `DbUpdateException`, so deleting one that a scenario still uses returns 500 rather than 409
+  (the FK `Restrict` still protects the data). Locations captured for a deleted scenario stay behind as
+  orphans (shared rows are never cascaded). Runtime-config doesn't yet list the *other* gates in the
+  scenario area that §8.1 forces open; add that in Phase 7 if the plugin's gate cache can't derive it.
+  Fix the `ExtractPropertyValue` binding-flags bug above.
+- **Note for Phase 3 (plan correction, same as Phase 1's):** every new `[FormConfigurableEntity]` needs
+  web-app wiring before the FormWizard/dashboard can use it: an API client, registration in
+  `src/utils/entityApiMapping.ts` (all five switches) and in `src/config/objectConfigs.tsx`. That covers
+  `SiegeScenario`, `SiegeTeam`, `SiegeSpawnpoint`, `SiegeObjective` and `SiegeLobby`. The three join
+  entities need no client (the ItemBlueprint join precedent), and `SiegeConfiguration` needs its own page.
+  Client shapes: create a team with `POST SiegeScenarios/{siegeScenarioId}/teams`, a spawnpoint with
+  `POST SiegeTeams/{siegeTeamId}/spawnpoints`, and an objective with
+  `POST SiegeScenarios/{siegeScenarioId}/objectives`. Get/update/delete use `SiegeTeams|SiegeSpawnpoints|
+  SiegeObjectives/{id}` (the `BannerLayerClient` shape). Only teams have a search endpoint; like
+  `bannerlayer`/`gatedoor`, spawnpoints and objectives don't.
 
 ## Phase 3 — Authoring in the web app (knk-web-app + FormConfig data)
 
