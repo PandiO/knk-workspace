@@ -1,6 +1,6 @@
 # InventoryMenu — Content Port Plan (hub, Kits, Profile, Items, Premium, Player manager)
 
-**Status:** In progress — CP1–CP5 shipped on `claude/menu-content` (see the CPn status blocks). Phases are numbered CP1–CP8 (content port) to keep them apart from the engine plan's Phases 1–9, which this document cites as "engine Phase N".
+**Status:** In progress — CP1–CP6 shipped on `claude/menu-content` (see the CPn status blocks). Phases are numbered CP1–CP8 (content port) to keep them apart from the engine plan's Phases 1–9, which this document cites as "engine Phase N".
 **Last updated:** 2026-09-25
 
 Ref: [../legacy/inventory-menu-screens.md](../legacy/inventory-menu-screens.md) (the legacy screen
@@ -436,6 +436,38 @@ knk-paper **293** (+4), 0 failures.
 
 **Tests:** state set/cycle/wrap/unset, defaults via `menu.open`, cleared on quit, validator accepts
 `$state.x$` and rejects nothing it shouldn't, interpolation into feature params.
+
+### CP6 status — shipped 2026-09-25 (not live-verified)
+
+**Shipped (knk-plugin `a119941`; no web-api change):**
+- knk-core `MenuSession`: state map with `getState`, `setState` (null unsets), `setStateIfAbsent`,
+  `cycleState(key, values)`, `stateSnapshot`.
+- knk-core `MenuStateView` + reserved engine root **`state`** (`MenuVariableProviderRegistry.ROOT_STATE`,
+  in `ENGINE_ROOTS` and the declared engine types). `VariableResolver`: on a `MenuStateView` every
+  remaining hop is joined into one dotted key (`$state.pm.coinStep$` → key `pm.coinStep`), `""` when
+  unset. `MenuDefinitionValidator`: hops after `state` are a `String` key lookup (nothing after it is
+  checked); `state` is always declared.
+- knk-paper: `state` is put into the render scope (`MenuRenderer`) and the click scope
+  (`MenuClickListener`), so it works in bindings and in interpolated action/condition/content-source
+  params (`{"delta": "-$state.pm.coinStep$"}` → `"-100"`). Actions `menu.state.set {key, value}`
+  (empty value unsets) and `menu.state.cycle {key, values}` (comma list, trimmed; unset or unknown →
+  first value; wraps) — both mark the session dirty and repaint via `refreshOpenMenu`. `menu.open`
+  applies every `state.<key>` param with `setStateIfAbsent` before opening.
+
+**Tests after CP6:** knk-core **523** (+8 `MenuStateG1Test`), api-client 31, knk-paper **297**
+(+4 `MenuStateActionsTest`), 0 failures. web-api unchanged (479/484).
+
+**Judgment calls:**
+- **Lifetime.** The plan says "cleared with the session (on quit and when the session ends)". A
+  `MenuSession` lives from first menu until quit (closing the inventory keeps it), so "session ends"
+  is taken as: the session is discarded on quit **and** its state is cleared by `openAsRoot` — i.e.
+  every `/menu` (or any command-opened menu) starts with fresh state, while navigating inside menus
+  and Back keep it (a staff member's chosen step survives moving between players' edit screens).
+- **Dotted keys.** The placeholder grammar splits on `.`, so a namespaced key can't be a single hop;
+  the resolver/validator treat everything after `state` as the key (rather than `ctx`'s single-hop
+  rule).
+
+**Not verified:** in-game repaint timing after a state change (next tick, via `refreshOpenMenus`).
 
 ## 9. CP7 — Actor attribution for plugin-originated staff actions
 
