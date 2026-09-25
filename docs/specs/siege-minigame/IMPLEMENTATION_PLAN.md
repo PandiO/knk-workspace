@@ -1,10 +1,11 @@
 # Siege Minigame — Implementation Plan
 
 **Status:** Draft. Phases 1–7 + 9 = playable MVP (commands/chat UI): **Phases 1 and 2 code complete** on
-`claude/siege-minigame` (not verified live, migrations not applied); Phases 3–7 + 9 not started. Phase 8a
+`claude/siege-minigame` (Phase 2 migration applied to the dev DB and API verified live with test data;
+not yet verified in-game); Phases 3–7 + 9 not started. Phase 8a
 (InventoryMenu engine extensions) built and merged into `claude/siege-minigame`, not verified live;
 Phase 8b open; Phase 10 is post-MVP.
-**Last updated:** 2026-09-25 (Phase 2 status block added: siege schema/services/API in knk-web-api,
+**Last updated:** 2026-09-25 (Phase 2 migration applied to the dev DB + test data; Phase 2 status block added: siege schema/services/API in knk-web-api,
 decisions to review, Swagger script, Phase 3 web-app wiring note)
 
 Ref: `DESIGN.md` (decisions — not restated here), `MENU_TEMPLATES.md`,
@@ -123,7 +124,7 @@ a referenced gate is refused), runtime-config excludes unready scenarios.
 **Exit:** Swagger round-trip of a complete scenario graph; readiness goes green only when valid.
 
 **Phase 2 status (2026-09-25): code complete on `claude/siege-minigame` (knk-web-api), pushed; migration
-not applied, Swagger not run live.** Commits: `366f9e4` (schema + migration), `a58d388` (services/API),
+applied to the dev DB and the API round-trip run live with test data (see "Applied to the dev DB" below).** Commits: `366f9e4` (schema + migration), `a58d388` (services/API),
 `a5e73e8` (tests). `origin/master` hadn't moved since the branch fork, so no trunk merge. Local `master`
 has the unpushed promotion-sync merge `2d256eb`; it wasn't merged here, to avoid publishing unpushed trunk
 commits. It has no migration, so it will merge cleanly later.
@@ -229,9 +230,33 @@ commits. It has no migration, so it will merge cleanly later.
     calls `GetProperty(name, IgnoreCase | Public)` without `BindingFlags.Instance`, so a plain entity
     object's properties are never found (dictionaries/JSON work). Siege passes the town as a dictionary
     for that reason.
-- **To finish Phase 2 (developer, needs the dev DB):**
-  1. `dotnet ef database update` in knk-web-api (applies `AddSiegePhase1ClanBanner`, the 8a migration if
-     not yet applied, and `AddSiegePhase2Schema`).
+- **Applied to the dev DB and verified live (2026-09-25, developer-approved):**
+  - Backup first: `C:\Users\Pandi\Documents\Werk\db-backups\knightsandkings_dev_v2_before_siege_phase2_20260925_192041.sql`
+    (full `mysqldump`). Phase 1 and 8a were already applied, so `dotnet ef database update` applied only
+    `AddSiegePhase2Schema`. No gate had a stale `CurrentSiegeId`. All 31 siege FK delete rules were
+    checked in `information_schema`.
+  - **Test data**, created through the running API (port 5099, this branch's Release build), which ran the
+    Swagger script below live against real Cinix data:
+    - banners `[TEST] Cinix crown` (id 1, 2 layers) and `[TEST] Raider skull` (id 2)
+    - clan `[TEST] Cinix Garrison` (id 1, **default clan for Cinix**, town 5)
+    - Locations 62–65: hub, two spawns and the Keep objective, copied from Market/Keep/Merchant Square and
+      the Keep Stair House coordinates
+    - scenario `[TEST] Siege of Cinix` (id 1): districts 6/7/8; Defender team 1 (clan-sourced) and Attacker
+      team 2 (ad-hoc "Raiders"); a spawnpoint each; South Gate (13) and Northern Gate (14) selected;
+      objectives "The Keep" (instant victory) and "South Gate" (gate 13, the gate's location as capture
+      point)
+    - **enabled** lobby `[TEST] Siege — Cinix` (id 1, key `test-cinix`)
+    - `SiegeConfiguration` seeded with the defaults
+
+    Readiness went red → green. Runtime-config resolved both identities and the first-Defender defaults.
+    `DELETE GateStructures/13` and `DELETE Clans/1` returned 409. The plugin wasn't running, so readiness
+    carries the `SPATIAL_CHECKS_UNAVAILABLE` warning; start the server and re-check readiness to have the
+    points verified against the Cinix region. **Cleanup** (API, in this order): `DELETE`
+    `SiegeLobbies/1`, `SiegeScenarios/1`, `Clans/1`, `BannerDesigns/1` and `/2`, `Locations/62`–`65`.
+  - Existing-data oddity (not changed): Location 6 ("Market Square", Cinix's own location) has world
+    `world_KNK_DEV`, while all 55 other locations use `world_KNK-DEV`. Probably a typo.
+- **Swagger script** (the manual version of the round-trip; already run live, see above):
+  1. (Already done: `dotnet ef database update`.)
   2. Swagger round-trip. Prerequisites: a Town with a `WgRegionId`, a District of that town, a
      GateStructure in that district that has a Location, the Phase 1 Clan (+ its banner) and a second
      BannerDesign, and 5 Locations (`POST /api/Locations`, or capture them in-game). Replace `{…}` with
