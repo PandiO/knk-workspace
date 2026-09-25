@@ -1,6 +1,6 @@
 # InventoryMenu — Content Port Plan (hub, Kits, Profile, Items, Premium, Player manager)
 
-**Status:** In progress — CP1–CP2 shipped on `claude/menu-content` (see the CPn status blocks). Phases are numbered CP1–CP8 (content port) to keep them apart from the engine plan's Phases 1–9, which this document cites as "engine Phase N".
+**Status:** In progress — CP1–CP3 shipped on `claude/menu-content` (see the CPn status blocks). Phases are numbered CP1–CP8 (content port) to keep them apart from the engine plan's Phases 1–9, which this document cites as "engine Phase N".
 **Last updated:** 2026-09-25
 
 Ref: [../legacy/inventory-menu-screens.md](../legacy/inventory-menu-screens.md) (the legacy screen
@@ -294,6 +294,44 @@ without paging but keep the pager for safety).
 
 **Tests:** endpoint + DTO tests; `ProfileView`/`TitleRow` mapping (current/reached/not-reached, both
 genders, highest bracket); seed validation.
+
+### CP3 status — shipped 2026-09-25 (not live-verified)
+
+**Shipped:**
+- knk-web-api `f541ab6`: `Controllers/TitleBracketsController` — `GET /api/title-brackets` → ordered
+  `TitleBracketDto` list (`id`, `maleName`, `femaleName`, `minExperience`, `salary`, `coinBonus`,
+  `gemBonus`, `expBonus`) over `ITitleService.GetAllOrderedAsync`; `UserSummaryDto.Gender`
+  (`"Male"`/`"Female"`/null) set by `GET /api/users/uuid/{uuid}` and `/username/{name}` and by the
+  `User → UserSummaryDto` map. No migration, no model change. `profile.main` seed (Height 6): 0 head
+  (title line, premium line), 1 GOLD_INGOT balances (coins, gems, XP, prestige when > 0), 2 IRON_HELMET
+  progress ("Next: X - N XP to go" / "Highest title reached"), 4 BOOK title count, 8 Back; `Titles`
+  grid 18–53 over `titles.brackets` with pager 45/53.
+- knk-plugin `b4e7592`: knk-core `TitleBracket` (+ `nameFor(gender)`), port `TitleBracketsQueryApi`,
+  `dataaccess/TitleBracketsDataAccess` (whole list cached 10 min, completed future while fresh, one
+  shared in-flight request, stale list on failure — CP8 reuses it); `UserSummary.gender` (new last
+  component; a telescoping constructor keeps every existing call site unchanged); api-client
+  `TitleBracketsQueryApiImpl`/DTO/mapper, `UserSummaryDto.gender`; knk-paper
+  `menu/content/ProfileMenuFeature` (root `profile` → `ProfileView`, row source `titles.brackets` →
+  `TitleRow`, helper `TitleProgress`).
+
+**Tests after CP3:** web-api **475/480** (same 5; +7: `TitleBracketsControllerTests` ×4,
+`UsersControllerTests.GetUserSummaryByUuid_IncludesGender`, profile seed ×2). Plugin knk-core **515**
+(+3), api-client **30** (+2), knk-paper **287** (+9), 0 failures.
+
+**Judgment calls:**
+- **Fresh read without blocking.** Providers run on the main thread and can't wait for HTTP, so the
+  `titles.brackets` fetch (async, runs before bindings resolve — engine Phase 9 §9.0) also does the
+  `UsersQueryApi.getByUuid` read and remembers it per viewer (LRU, 256 viewers); the `profile` root
+  reads that, falling back to the cached user (stale entry) — never I/O. If the fresh read fails, the
+  rows use the cached user too.
+- **Current bracket** = the server's `titleBracketId` when it is in the list, else the highest bracket
+  with `minExperience <= XP`. Gendered names follow the web-api rule (`Female` → female name, anything
+  else incl. unset → male). Rows show the other-gender name as "Also known as …" (v1 showed both).
+- **Route** is `api/title-brackets` as the plan says (kebab routes already exist: `api/audit-log`,
+  `api/field-validation-rules`), not `api/[controller]`.
+
+**Not verified:** in-game rendering/HIGHLIGHT glow; the live endpoint against the seeded
+`title_brackets` data (only unit-tested with mocks); gender values in the dev DB.
 
 ## 6. CP4 — Item catalogue (`items.catalog`)
 
