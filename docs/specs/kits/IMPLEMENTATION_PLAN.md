@@ -587,6 +587,111 @@ writing the same backend, not built on top of the FormWizard or the plugin).
   already established for its own group/grant quick actions).
 - No backend work here — Phase 2 already built everything this phase calls.
 
+### §6 status — shipped 2026-09-25
+
+**knk-web-app**, `claude/kits`, commit `71f69fb` (on top of `278becd`, a merge of `origin/main`
+into `claude/kits` — see the stale-plan finding below for why that merge was needed first).
+
+**A real, material stale-plan discrepancy found before writing any code, not silently trusted
+or worked around** (this plan's own established convention, per "§4 status"/"§5 status"): this
+section's own header and the hand-off briefing both asserted `PlayerProfilePage.tsx` "already
+exists (shipped, per `user-management`'s Phase 1 status)." A direct `Glob`/`Grep` of
+`knk-web-app`'s `claude/kits` tree found no such file anywhere, and
+`docs/specs/user-management/IMPLEMENTATION_PLAN.md` itself was still headed `**Status:** Draft`
+with no "§1 status" note of any kind — unlike this plan's own §1-§5, none of which ever shipped
+without one. Flagged to the developer directly rather than either (a) silently building a
+minimal stand-in profile page as a workaround, or (b) silently taking on all of `user-management`
+Phase 1-3 as unplanned scope. **Developer's answer, verified rather than taken on faith:**
+`user-management` is in fact fully implemented, just not yet merged into this plan's branch — the
+real code was sitting on `origin/main` in `knk-web-app` (`127581d`/`90c2ee8`/`2428b10`, User
+management Phases 1-3) and `origin/master` in `knk-web-api` (`2b5b122`/`d52bdfc`/`0e44410`, plus
+`AuditLogService` — see below), with the workspace-side status notes/`ACTIVE_SESSIONS.md` entries
+for that feature living on a separate `knk-workspace` branch, `claude/user-management`
+(`4ed634d`), not yet merged into `main` either. Confirmed by direct `git log`/`git show` on all
+three before proceeding, not assumed from the developer's summary alone. **Fix**: merged
+`origin/main` into `knk-web-app`'s `claude/kits` (commit `278becd`, clean auto-merge, no
+conflicts — `entityApiMapping.ts`/`enums.ts` were the only files both branches touched, and Kits'
+`'kit'` entries and User-management's own additions were in disjoint sections) — this is what
+actually brought in the real `PlayerProfilePage.tsx` (711 lines), `UserModerationPage.tsx`,
+`userManagementClient.ts`, and the `/admin/users/:id` route this phase needed. Did **not** merge
+`knk-workspace`'s `claude/user-management` doc branch into `claude/kits` — that would have pulled
+in a large amount of unrelated documentation (event-listener catalogs, command catalogs, etc.);
+this plan's own docs already had everything needed (`DESIGN.md` §2/§3's section/quick-action
+convention), and the real `PlayerProfilePage.tsx` code was read directly for the actual current
+shape rather than trusted from either doc.
+
+**What shipped, read against the real (post-merge) `PlayerProfilePage.tsx`, not assumed:**
+- `apiClients/kitClient.ts` — added `getAvailableForUser(userId)` (`GET api/Kits/available` with
+  `userId` as a query param) and `give(kitId, targetUserId)` (`POST api/Kits/{id}/give`, body
+  `{ targetUserId }`), following the exact `invokeServiceCall(data, operation, controller,
+  method)` shape every other method in this file and `itemBlueprintClient.ts` already use — no
+  new client pattern introduced. Phase 3's five CRUD methods are untouched.
+- `types/dtos/kit/KitDtos.ts` — added `KitAvailabilityDto`, `KitContentSlotDto`,
+  `KitClaimResultDto`, `GiveKitRequestDto`, each hand-checked field-for-field against
+  `knk-web-api`'s real `Dtos/KitDtos.cs` (read directly off `claude/kits`, commit `3589593`) —
+  not guessed from `DESIGN.md`'s prose description of the fields.
+- `pages/admin/PlayerProfilePage.tsx` — new "Kits" section, placed between the existing
+  Permissions and Recent Activity sections (same card styling/table pattern the Groups section
+  already established), listing every kit via `getAvailableForUser` with its status (Available /
+  the real `denialReason` text), active cooldown (`cooldownExpiresAt`, only shown while still in
+  the future), and cost (free / `costAmount` + `costCurrency` / premium gems price +
+  purchased-or-not), plus a per-row **Grant** button calling `give(kitId, targetUserId)`. On
+  success, re-fetches both the kit list and the Recent Activity feed in parallel — matched
+  exactly to this page's own established `refreshAfterAction` pattern (read directly from the
+  real group-assign/grant-node handlers already on the page, not invented fresh).
+- Added a `'KitGranted'` case to `AuditAction`/`auditActionLabel` (both already existed for
+  `user-management`'s own action types) so the Recent Activity feed already knows how to render a
+  kit grant the moment the entry exists — see the audit-log gap below for why none exist yet.
+
+**The audit-log gap (flagged at hand-off, re-verified here) is real but its status changed
+mid-session, and this phase still cannot close it — flagged again, not silently left unexplained:**
+`knk-web-api`'s `KitService.GiveKitAsync` (`claude/kits`, commit `3589593`) still has the literal
+`TODO(kits-phase2)` comment where an `AuditLogService.Record(...)` call belongs, confirmed by
+direct `git show` of the method body. What changed: `IAuditLogService`/`AuditLogService`/
+`AuditLogEntry` **do now exist** on `knk-web-api`'s `origin/master` (commit `d52bdfc`, "Add User
+management Phase 2: audit log + quick actions" — `user-management` Phase 2 has in fact shipped,
+just not documented as such anywhere in `knk-workspace/main` yet, matching the same
+"code shipped, workspace docs lag behind on a separate branch" pattern as Phase 1/3 above). So
+the service this TODO needs is real and ready to be wired in. **This session could not do that
+wiring**: it would require (a) merging `origin/master` into `knk-web-api`'s own `claude/kits`
+branch (still at `3589593`, based on an earlier `master`) and (b) adding the
+`AuditLogService.Record` call at the TODO site and pushing — and this session's `add_repo` request
+for push access to `knk-web-api` was denied by this environment's own auto-mode permission
+classifier. `knk-web-api` was only ever readable this session (its `claude/kits` tip, `3589593`,
+was cloned and read directly for the DTO/controller contracts above), never writable. **Net
+effect**: a real `Grant` click today writes a normal `KitClaim` row (so the kit list's own
+re-fetch correctly shows the grant took effect) but nothing shows up in Recent Activity, since
+`GiveKitAsync` still never calls `AuditLogService.Record`. The web-app side (the `'KitGranted'`
+case added above) is ready and needs no further change — a future session with `knk-web-api` push
+access just needs to merge `master` into `claude/kits` there and add the one call at the existing
+TODO site.
+
+**Verification**: real `npm install` (with `CYPRESS_INSTALL_BINARY=0` — the Cypress binary
+download itself failed on this sandbox's network, unrelated to anything in this phase; `test:ci`/
+`build` don't need it) and a real `npm run build` + `CI=true npm run test:ci`, not a
+build-only or hand-reviewed check. `npm run build`: clean, only pre-existing ESLint warnings in
+files this phase never touched. Tests: 236 total, 220 passed, 16 failed — confirmed via a real
+stash-and-rerun diff (stashed this phase's 4 changed files, reran, got the identical 16 failing
+suites by name, `diff` clean) that all 16 are pre-existing and unrelated, exactly matching Phase
+3's own documented baseline ("236 tests, the same 16 pre-existing/unrelated failures"), zero
+regressions from this phase's change. Did not have a reachable `knk-web-api` instance to drive a
+live Playwright round-trip against (no local MySQL/`dotnet` stood up this session, and no push
+access as noted above meant no reason to stand one up purely for read-only verification either) —
+verified instead by direct code-reading of the real, current `KitsController`/`KitService`
+contract (`available`/`give` request/response shapes) rather than guessing from `DESIGN.md`'s
+prose, plus the component-level build/test coverage above. This is a real gap relative to Phase
+3's own live-Playwright-verified bar, flagged rather than glossed over.
+
+**Not required, not done**: `Kit`'s own generic admin table getting a "Give to player" row action
+(explicitly optional in `DESIGN.md` §4.6) — skipped, no time-to-spare nice-to-have attempted.
+
+**Not started, per this phase's own explicit scope**: §7 (`KitScan`), §8 (seed data). **Next**:
+either can start now; separately, and not blocking either, a future session with `knk-web-api`
+push access should merge `origin/master` into that repo's `claude/kits` and add the
+`AuditLogService.Record` call at `GiveKitAsync`'s existing `TODO(kits-phase2)` site to close the
+audit-log gap for real — at that point this phase's web-app work needs zero further changes for
+Recent Activity to start showing kit grants.
+
 ## 7. Phase 7 — `KitScan` WorldTask authoring flow (new, `DESIGN.md` §6)
 
 An alternative to Phase 3's manual form authoring: scan a player's live inventory in-game and
