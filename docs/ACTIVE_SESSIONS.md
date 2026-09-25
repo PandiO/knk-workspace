@@ -35,6 +35,7 @@ Live tracker of in-progress work across all four Knights and Kings repos
 | Feature | Repos / files claimed | Owner (human / session) | Status | Started | Last updated |
 |---|---|---|---|---|---|
 | _(example)_ Siege minigame — capture point sync | web-api: `Services/SiegeService.cs`; plugin: `siege/` package | Claude Code session A | Implementing capture-point event handling | 2026-09-17 | 2026-09-17 |
+| Siege minigame Phase 2 — Siege schema, services, API (`docs/specs/siege-minigame/IMPLEMENTATION_PLAN.md` Phase 2) | knk-web-api branch `claude/siege-minigame`: new `Models/Siege/*`, `Enums/SiegeEnums.cs`, `Dtos/SiegeDtos.cs`, `Mapping/SiegeMappingProfile.cs`, `Repositories/Siege*`, `Services/Siege*`, `Controllers/Siege*`, migration `AddSiegePhase2Schema`, `Properties/KnKDbContext.cs` (one siege block), `GateStructure.CurrentSiegeId` FK; small delete guards in `GateStructureService`/`ClanService`/`BannerDesignService`; workspace: siege `IMPLEMENTATION_PLAN.md` | Claude Code session (Opus 5.5) | Implementing | 2026-09-25 | 2026-09-25 |
 
 ## Recently completed
 
