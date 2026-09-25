@@ -56,6 +56,45 @@ Phase 8 Menus = InventoryMenu Phase 9 engine extensions ─► siege menu handle
 **Exit:** an admin can create a banner and a default clan for a town in the web app; the plugin can
 fetch it and build the banner `ItemStack` (verified with a debug `/knk clans banner <id>` if cheap).
 
+**Phase 1 status (2026-09-25): code complete on `claude/siege-minigame` in all three repos, pushed;
+not verified live.** Commits: web-api `3f19c9c`, plugin `11b0f3a`, web-app `ac7ea41`.
+- **web-api:** entities/enum/`BannerPatternKeys` (43 keys, paper-api 1.21.10) as designed; migration
+  `20260925153517_AddSiegePhase1ClanBanner` (three new tables only). Layers are an **owned child
+  collection** (GateStructure → GateDoor pattern), not part of the banner payload: `GET/POST
+  /api/BannerDesigns/{id}/layers`, `GET/PUT/DELETE /api/BannerLayers/{id}`; the banner's own create/update
+  ignores `layers`. Also `GET /api/BannerDesigns/pattern-keys`, `GET /api/Clans/default-for-town/{townId}`.
+  Rules: ≤ 16 layers; pattern keys normalized (`stripe_top` → `minecraft:stripe_top`) and whitelisted;
+  omitted `sortOrder` appends on top; `SortOrder` deliberately **not unique** (so two layers can be
+  swapped one edit at a time; render order is `(SortOrder, Id)`); read DTO flags
+  `exceedsSurvivalLoomLimit` (> 6); banner delete while a clan uses it → 409; second default clan for a
+  town → 409; `ChatColor` limited to the 16 Bukkit colour names; a `DefaultForTownId` of 0 means none.
+  Tests: `BannerDesignServiceTests` + `ClanServiceTests` (30), suite 443/448 with the same 5
+  pre-existing failures as `master`.
+- **plugin:** `ClansQueryApi` port + `ClansQueryApiImpl` (404 → null), `KnkClan`/`KnkBannerDesign`/
+  `KnkBannerLayer` (layers always sorted), `KnkBannerDesign.toPatternSpec()` → the InventoryMenu
+  `BannerPatternSpec`, so 8b's menus and item building share one form. knk-paper
+  `paper/clan/BannerDesignBukkitMapper` + `/knk clans list|info|banner|design <id>` (`knk.admin.clans`).
+  No DataAccess/cache gateway yet — that's Phase 4's `SiegeDataAccess`. Tests green: knk-core 516 /
+  api-client 30 / knk-paper 249.
+- **web-app — plan correction:** the plan said "FormConfigurations authored live, no web-app code". Not
+  quite: the FormWizard/dashboard only work for entity types registered in
+  `src/utils/entityApiMapping.ts` (five switches) and `src/config/objectConfigs.tsx`, so Phase 1 added
+  `bannerDesignClient`/`bannerLayerClient`/`clanClient`, `types/dtos/clan/ClanDtos.ts` and those
+  registrations. Every later siege entity (Phase 2/3) needs the same wiring. The typecheck is clean; the 4
+  failing FormWizard test suites fail identically on `main`.
+- **To finish Phase 1 (developer, needs the dev DB + server):**
+  1. `dotnet ef database update` in knk-web-api (on this branch that also applies the 8a migration).
+  2. In FormConfigBuilder author **BannerLayer** (`BannerDesignId` Object → BannerDesign as the parent
+     link, `SortOrder` Integer optional, `PatternKey` String — see `GET /api/BannerDesigns/pattern-keys`,
+     `Color` Enum), **BannerDesign** (`Name`, `BaseColor` Enum, `Layers` List → BannerLayer with
+     settingsJson `{"ownedChildCollection": true}`), **Clan** (`Name`, `IsNpc`, `ChatColor` String,
+     `BannerDesignId` Object → BannerDesign, `DefaultForTownId` Object → Town).
+  3. Create a banner (save, then add layers) and a default clan for a town; in-game `/knk clans list`,
+     `/knk clans banner <id>` and check the banner matches.
+- **Follow-ups (not blocking):** `PatternKey` and `ChatColor` are free-text fields in the wizard
+  (validated server-side) — a picker for `pattern-keys` would be nicer; `MenuItemBukkitMapper`
+  duplicates the few lines of pattern application now in `BannerDesignBukkitMapper` (could share).
+
 ## Phase 2 — Siege schema, services, API (knk-web-api)
 
 **Scope** (DESIGN §3.3–3.10, §11.2)
