@@ -1,7 +1,7 @@
 # Siege Minigame — Design
 
 **Status:** Draft — seven decisions made with the developer over two rounds (§0); remaining open questions in §13.
-**Last updated:** 2026-09-25
+**Last updated:** 2026-09-26 (§7.2: capture constants tuned in the first live playtest)
 
 Ref: `docs/vision/vision.md` §3.2–3.4, §7.1–7.4, §10. Evidence base:
 `docs/reports/2026-09-25-siege-minigame-gap-analysis.md` (capability matrix, newly verified legacy
@@ -463,6 +463,20 @@ and fixes v2's `"cinixians"` literal.
   and the sidebar). v2 used "delta > 0", which ran a full player scan per menu render (N7).
 Both legacy versions carry the author's note that this formula is "probably not working correctly";
 making the constants tunables (not code) is the chosen mitigation, with balancing left to playtesting.
+
+**Playtest tuning (developer decision, 2026-09-26, first live playtest on the dev server):** with the legacy
+values a lone attacker needed 100 s for a 500-point objective and side objectives scaled weakly with more
+attackers, which felt too slow. Considered: lowering a side objective's own `CapturePoints` (per objective,
+leaves the main objective alone), a hard-coded side-objective multiplier (rejected: not a tunable), and raising
+the shared attack values (chosen). Target: the main objective at 300 points (after a side capture) in about
+30 s for one attacker and 15 s for two. **Values in use: `A1 = 10`, `A2 = 2` (side), `A2 = 10` (instant
+victory); `D1 = 6`, `D2 = 3`/`6` unchanged.** (7.5 was considered for `A1`; the columns are integers.) Effect,
+500 points undefended: main 50/25/17 s for 1/2/3 attackers, side 50/42/36 s; 300 points: main 30/15/10 s.
+**Accepted trade-off:** defenders no longer stall equal numbers - 1 v 1 progresses (125 s) and on the main
+objective each extra attacker (+10) outweighs each extra defender (+6), so 2 v 2 falls in about a minute.
+Holding the main objective now needs more defenders than attackers. These are the dev DB's `SiegeConfiguration`
+values; the seeded defaults (web-api) and `KnkSiegeConfiguration.legacyDefaults()` still carry the legacy
+5/2/5 · 6/3/6, to be aligned in the Phase 9 seed/balancing pass.
 
 ### 7.3 Capture
 At `Points = 0`: capturer = the closest living attacker in the radius (legacy rule); holder := the

@@ -936,8 +936,10 @@ trunk merge. No web-app or web-api change.
     (7.5 wasn't possible: the columns are ints). Undefended: Keep (500) 50 s / 25 s / 17 s for 1/2/3 attackers, South
     Gate 50 s / 42 s / 36 s. Defended: 1 v 1 now progresses on both (125 s); Keep 2 v 2 63 s, 3 v 2 28 s; South Gate
     2 v 1 84 s, 2 v 2 167 s. **Defenders can no longer hold even numbers on the main objective** (each extra attacker
-    +10 vs each extra defender +6) - the Phase 9 balancing pass should decide whether to scale the defend values.
-    Takes effect after `/siege admin reload` between matches. Seed defaults and `legacyDefaults()` still carry 5/2/5.
+    +10 vs each extra defender +6): **accepted by the developer as is** (2026-09-26; raising the defend values to
+    12/12 to restore the equal-numbers standstill was offered and declined). Rationale and alternatives: DESIGN §7.2
+    "Playtest tuning".
+    Takes effect after `/siege admin reload` between matches. Seed defaults and `legacyDefaults()` still carry 5/2/5 (align in Phase 9).
   - Tests after the fixes: knk-core 694, knk-api-client 38, knk-paper 259, all green.
 - **What Phase 6 must wire:** build the HTTP `SiegeMatchesCommandApiImpl` and pass it instead of
   `LoggingSiegeMatchesCommandApi` in `KnKPlugin.initializeSiege()` - the call sites already exist:
