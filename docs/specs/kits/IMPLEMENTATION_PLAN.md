@@ -172,10 +172,17 @@ otherwise); independent of Phases 4/5 (granting a kit doesn't need this authorin
   `getStorageContents()` indices 0-35, skipping `getHeldItemSlot()` and every empty slot,
   tagging each remaining entry with its index.
 - Register `KitScanTaskHandler` into `WorldTaskHandlerRegistry` (`KnKPlugin.java`, same
-  convention as every other handler).
-- `commands/KnkAdminCommand.java`: register `/knk kitscan claim <linkCode>` following the exact
-  block already registered for `/knk itemscan claim` (`DESIGN.md` §6.2) — both are thin wrappers
-  dispatching into the same `KnkTaskClaimCommand.onCommand`.
+  convention as every other handler). **This registration alone is what makes the generic
+  `/knk task-claim <linkCode>` command work for `KitScan`** (`DESIGN.md` §6.2 — confirmed by
+  reading `KnkTaskClaimCommand`, which dispatches purely by the claimed task's `fieldName`
+  against the registry, no per-type code). This is the primary, must-work entry point and is
+  **not optional** — do not treat the dedicated command below as a replacement for it.
+- `commands/KnkAdminCommand.java`: **additionally**, register `/knk kitscan claim <linkCode>`
+  following the exact block already registered for `/knk itemscan claim` (`DESIGN.md` §6.2) — a
+  purely additive convenience wrapper dispatching into the same `KnkTaskClaimCommand.onCommand`
+  that `/knk task-claim` already uses. Both commands must remain claimable; shipping only this
+  one and dropping generic `/knk task-claim` support would be a regression from every other
+  `WorldTask` field's behavior, not a simplification.
 
 **knk-web-api:**
 - No schema change (`WorldTask.TaskType` is already an open string field, per the Items plan's

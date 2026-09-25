@@ -460,12 +460,35 @@ Identical reasoning to `ItemScanTaskHandler`'s own doc-comment: a kit scan requi
 player's live inventory at the moment of the scan, so this is a single-shot, synchronous
 `IWorldTaskHandler` (not `IHeadlessWorldTaskHandler`) — `startTask` reads the inventory and
 completes the task in one call, no multi-step session, `isHandling`/`getTaskId` are no-ops
-matching `ItemScanTaskHandler`'s own. Both existing entry points apply unchanged: the standard
-`/knk task-claim` chat flow (`WorldTaskChatListener`, since this handler registers into
-`WorldTaskHandlerRegistry` like any other) and a dedicated faster command,
-**`/knk kitscan claim <linkCode>`**, following the exact `KnkAdminCommand.java` pattern already
-registered for `/knk itemscan claim` — both dispatch into the same
-`KnkTaskClaimCommand.onCommand` logic, no duplicated business logic.
+matching `ItemScanTaskHandler`'s own.
+
+**Correction to this section's original wording**: the earlier draft called the generic entry
+point a "`/knk task-claim` chat flow (`WorldTaskChatListener`)" — that's wrong on inspection.
+`WorldTaskChatListener` only routes **mid-task follow-up chat input** for already-claimed,
+stateful handlers (`onPlayerChat`, e.g. a `WgRegionId`/`Location` session's "save"/"cancel"
+messages) — it has nothing to do with *initial* claiming, and `ItemScanTaskHandler`/
+`KitScanTaskHandler` never register into it (`isHandling` always returns `false`, so there's no
+session for it to route into even if they did).
+
+**The two real, generic-by-construction entry points, both mandatory, neither optional**:
+1. **`/knk task-claim <id|linkCode>`** (`KnkTaskClaimCommand`, already registered for every
+   `WorldTask` field, no per-type special-casing) — confirmed by reading `KnkTaskClaimCommand`
+   directly: it looks up the claimed task's `fieldName` and dispatches via
+   `handlerRegistry.startTask(...)`, purely by registry lookup. **This means `/knk task-claim
+   <linkCode>` already works for `KitScan` the moment `KitScanTaskHandler` is registered into
+   `WorldTaskHandlerRegistry` (§6.2 above) — no additional command code is needed for this path
+   at all.** This is the primary, must-work entry point; it is not superseded or replaced by #2.
+2. **`/knk kitscan claim <linkCode>`** (new, this plan) — a thin, purely additive convenience
+   wrapper, following the exact precedent already registered for `/knk itemscan claim`
+   (`KnkAdminCommand.java`): it does nothing `/knk task-claim` couldn't already do, it just saves
+   typing `task-claim` plus remembering the code is a kit scan. Both commands call the identical
+   `KnkTaskClaimCommand.onCommand` logic underneath — there is exactly one claim implementation,
+   two ways to invoke it.
+
+Implementation-wise, this means Phase 6 (`IMPLEMENTATION_PLAN.md`) must not treat the dedicated
+`/knk kitscan claim` command as the only or primary way in — registering the handler into
+`WorldTaskHandlerRegistry` is what makes `/knk task-claim` work, and that registration is required
+regardless of whether the dedicated command is ever added.
 
 ### 6.3 `OutputJson` shape
 
