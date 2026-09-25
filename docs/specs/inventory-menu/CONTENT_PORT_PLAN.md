@@ -1,6 +1,6 @@
 # InventoryMenu — Content Port Plan (hub, Kits, Profile, Items, Premium, Player manager)
 
-**Status:** In progress — CP1–CP6 shipped on `claude/menu-content` (see the CPn status blocks). Phases are numbered CP1–CP8 (content port) to keep them apart from the engine plan's Phases 1–9, which this document cites as "engine Phase N".
+**Status:** In progress — CP1–CP6 shipped; CP7 server half stopped on an owner question (see CP7 status) on `claude/menu-content` (see the CPn status blocks). Phases are numbered CP1–CP8 (content port) to keep them apart from the engine plan's Phases 1–9, which this document cites as "engine Phase N".
 **Last updated:** 2026-09-25
 
 Ref: [../legacy/inventory-menu-screens.md](../legacy/inventory-menu-screens.md) (the legacy screen
@@ -488,6 +488,51 @@ or a scoped `withActor(userId)` wrapper — pick one, document it) that sets the
 
 **Tests:** header honoured for API-key auth, ignored for JWT, unknown id → null actor, audit row shows
 the actor; api-client sends the header; `/knk user` passes it.
+
+### CP7 status — STOPPED on the server half (question for the owner); plugin half shipped
+
+**Why it stopped.** The plan's premise — "the plugin authenticates with `X-API-Key`" and the rule
+"**API-key caller only** → honour `X-Acting-User-Id`" — doesn't match the code:
+- knk-web-api has **no API-key authentication**. `Program.cs` registers only the JWT bearer scheme;
+  nothing anywhere reads `X-API-Key` (searched `*.cs`/`*.json`). The audited mutations the plugin calls
+  carry no `[Authorize]` (`UsersController` balances/active-mode/freeze/unfreeze/payout,
+  `UserPermissionGroupsController` upsert/delete, `PermissionGrantsController` by-node upsert/revoke),
+  so the plugin's calls are simply **anonymous** requests; the actor is `GetUserIdFromClaims(User)` /
+  `User.GetUserId()` → null.
+- knk-plugin's `config.yml` ships `auth.type: none`; `apikey` only adds a header the API ignores.
+
+So there is no "API-key caller" to recognise. Implementing the plan literally would mean honouring
+`X-Acting-User-Id` for **any unauthenticated caller**, i.e. anyone who can reach the API could write
+audit rows in any user's name — the opposite of what attribution is for. Picking an auth scheme for the
+plugin is an owner decision, so nothing was built server-side.
+
+**Options (owner decides):**
+1. **Add real API-key auth for the plugin** (recommended): an `ApiKey` authentication scheme validating
+   `X-API-Key` against a secret in config (e.g. `Security:PluginApiKey`), giving the plugin a principal
+   with a `client=plugin` claim; `ActorResolver` then honours `X-Acting-User-Id` only for that principal
+   (JWT callers keep `uid`, anonymous callers get null). Needs the key set in the plugin's
+   `config.yml` (`auth.type: apikey`). Doesn't by itself lock the other endpoints — that is a separate
+   hardening step.
+2. **Trust the header from any non-JWT caller** until auth exists — cheap, matches today's "everything
+   is anonymous" reality, but the audit actor becomes forgeable by anyone on the network.
+3. **Plugin uses a JWT** (service account) and the API gets a "may act for" claim — bigger change.
+
+**Shipped anyway (knk-plugin `916a43e`) — independent of that answer:**
+- `UsersCommandApi.withActor(int actorUserId)` (the plan's "scoped `withActor` wrapper" choice): returns
+  an instance that sends `X-Acting-User-Id: <id>` on every request (`UsersCommandApiImpl.newRequest`
+  override); the plain instance is unchanged. Chosen over a per-call overload because it keeps the 14
+  port methods' signatures and lets a caller make one actor-bound instance per action.
+- `/knk user` (`UserManagementCommand`): group/perm changes use the actor resolved by the existing rank
+  check; balance changes resolve the sender's user id (cache-first `UsersDataAccess.getByUuidAsync`);
+  console and unresolvable accounts use the plain API (never blocks the action).
+- Until the server honours the header, audit rows keep a null actor — no behaviour change.
+
+**Tests:** api-client **32** (+1 `UsersCommandApiActorTest`: header on every call of the actor instance,
+absent on the plain one); knk-paper **299** (+2 `UserManagementCommandActorTest`); knk-core 523
+(stub updated). web-api unchanged (479/484) — none of the plan's server tests exist yet.
+
+**Also noted for the server half:** `POST /api/Users/{id}/salary/payout` → `SalaryService.PayOutAsync(id)`
+takes no actor at all, so salary payouts need an actor parameter as well, not just the resolver swap.
 
 ## 10. CP8 — Player manager (`users.manager*`)
 
