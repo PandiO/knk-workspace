@@ -1,20 +1,23 @@
 # Kits — Implementation Plan
 
-**Status:** Code-complete, all phases (1-8) — pending the developer's in-game/web-app verification
-(checklist under Phase 8 below). Standing branch `claude/kits` in all three repos; not merged to
-`master`/`main`.
+**Status:** Merged to the default branches 2026-09-25 — web-api `master` `4ed1998`, plugin `main`
+`9172b71`, web-app `main` `f8a1a12` (merges of the standing `claude/kits` branches, which are kept).
+Phase 3 `Kit` FormConfiguration authored and verified in the web-app against the dev DB
+(`PHASE_3_FORMCONFIGS.md`); Phase 8 seed loaded in the dev DB. Pending only the developer's in-game
+check (checklist under Phase 8 below).
 
 | Phase | Status | Commits |
 |---|---|---|
 | 1 — Schema | Done | web-api `7537c71` |
 | 2 — `KitService` + API | Done | web-api `3589593` (+ follow-ups `2c83019` audit-log `KitGranted`, `abc9d76` `KitDto` nav objects) |
-| 3 — Admin `FormConfiguration` | Server side done (`[FormConfigurableEntity("Kit")]` in `7537c71`); the `Kit` FormConfiguration itself is authored live in the dev DB via `FormConfigBuilder` and **has not been verified** from a cloud session (no access to the dev DB) | web-api `7537c71` |
+| 3 — Admin `FormConfiguration` | Done — `KitContent - Join Entry` (id 34) + `Kit - Default` (id 35) authored in the dev DB, create/edit/delete verified in the web-app (payloads: `PHASE_3_FORMCONFIGS.md`). The `MinTitleBracketId` picker needs the siege branch's `TitleBracket` endpoint/client until that merges | web-api `7537c71` |
 | 4/5 — Plugin data access, item-building, commands, first-join hook | Done | plugin `c6c633d` |
 | 6 — Web-app "Grant Kit" on the player profile | Done | web-app `71f69fb` |
 | 7 — `KitScan` WorldTask authoring flow | Done | web-api `c6950b5`, plugin `f70f0ac`, web-app `a41060a` |
-| 8 — Seed data | Done (unit tests + real MySQL 8 fresh-DB run; in-game check pending) | web-api `738cb3c` |
+| 8 — Seed data | Done; loaded in the dev DB 2026-09-25 (`Created: 8 MinecraftMaterialRef, 4 Tag, 5 CategoryTag, 3 Category, 1 Grade, 9 ItemBlueprint, 6 KitContent, 2 Kit`, existing `Common` grade reused; restart logs `Created: nothing`). Stays enabled in every environment (developer's call). In-game check pending | web-api `738cb3c` |
 
-**Last updated:** 2026-09-25 (Phase 8 seed data landed as a startup `KitSeed`; status table added;
+**Last updated:** 2026-09-25 (merged to `master`/`main`; Phase 3 form authored + verified, see
+`PHASE_3_FORMCONFIGS.md`; Phase 8 seed loaded in the dev DB). Previously updated 2026-09-25 (Phase 8 seed data landed as a startup `KitSeed`; status table added;
 corrected the stale "no seeder mechanism exists" statements in §3 and §8). Previously updated
 2026-09-25 (`DESIGN.md` §0c: removed Phase 5's in-game CRUD fallback logic
 entirely — `/kit manage` is now a pure pointer to the FormWizard, no `KitsApi` CRUD client needed;
