@@ -1,12 +1,13 @@
 # Siege Minigame — Implementation Plan
 
-**Status:** Draft. Phases 1–7 + 9 = playable MVP (commands/chat UI): **Phases 1 and 2 code complete** on
+**Status:** Draft. Phases 1–7 + 9 = playable MVP (commands/chat UI): **Phases 1, 2 and 3 code complete** on
 `claude/siege-minigame` (Phase 2 migration applied to the dev DB and API verified live with test data;
-not yet verified in-game); Phases 3–7 + 9 not started. Phase 8a
+Phase 3 FormConfigurations authored in the dev DB and the forms proven against the live API; nothing verified
+in-game yet); Phases 4–7 + 9 not started. Phase 8a
 (InventoryMenu engine extensions) built and merged into `claude/siege-minigame`, not verified live;
 Phase 8b open; Phase 10 is post-MVP.
-**Last updated:** 2026-09-25 (Phase 2 migration applied to the dev DB + test data; Phase 2 status block added: siege schema/services/API in knk-web-api,
-decisions to review, Swagger script, Phase 3 web-app wiring note)
+**Last updated:** 2026-09-25 (Phase 3 status block added: siege authoring forms, verification items 1–4,
+FormConfiguration ids, decisions to review, browser walkthrough for the developer)
 
 Ref: `DESIGN.md` (decisions — not restated here), `MENU_TEMPLATES.md`,
 `docs/reports/2026-09-25-siege-minigame-gap-analysis.md`. Plan format follows
@@ -330,6 +331,157 @@ commits. It has no migration, so it will merge cleanly later.
 
 **Exit:** an admin authors a complete scenario end-to-end in the browser, capturing hub/spawn/objective
 points in-game via "Send to Minecraft", and sees readiness go green.
+
+**Phase 3 status (2026-09-25): code complete on `claude/siege-minigame` (knk-web-app + a small knk-web-api
+change), pushed; FormConfigurations authored in the dev DB. Not yet clicked through in a browser, and
+nothing captured in-game (no Minecraft server) — see "Manual steps left".** Commits: web-app `dbf2fb6`
+(clients/DTOs/wiring), `b90d41f` (FormWizard engine: verification items 1–4), `4fc63e6` (API error reasons),
+`0fe5174` (SiegeConfiguration page), `d85c2d7` (page tests); web-api `c8ab607` (picker filters +
+TitleBrackets). Both branches were current with trunk (`origin/master` hadn't moved; web-api was
+fast-forwarded to the pushed `11788fe` merge first). Payloads and ids: `PHASE_3_FORMCONFIGS.md`.
+- **Phase 1 leftover done:** FormConfigurations **BannerLayer (23)**, **BannerDesign (24)** (`Layers` = owned
+  List, the GateDoor precedent), **Clan (25)**. `PatternKey` and `ChatColor` are dropdowns (String +
+  `enumValues`), which closes Phase 1's "free-text field" follow-up.
+- **Siege FormConfigurations:** join entries **SiegeScenarioDistrict (26)**, **SiegeScenarioGate (27)**,
+  **SiegeLobbyScenario (28)**; **SiegeSpawnpoint (29)**, **SiegeTeam (30)**, **SiegeObjective (31)**,
+  **SiegeScenario (32)**, **SiegeLobby (33)**. All pass the configuration health check. Scenario steps:
+  General · Districts (M2M) · Hub & entry · Match length · Rewards · Teams (owned) · Gates (M2M, 3 join
+  fields) · Objectives (owned) · Readiness. Objective: General · Capture point · Gate behaviour (shown only
+  when a gate is picked). Lobby: General · Timings · Voting · Rotation (M2M + Weight).
+- **`IsSiegeObjective` removed** from GateStructure form 9's "Siege Behaviour" step (form field 92 deleted by
+  the PUT; nothing referenced it; the other field ids are unchanged).
+- **Web-app wiring:** clients `siegeScenarioClient`/`siegeTeamClient`/`siegeSpawnpointClient`/
+  `siegeObjectiveClient`/`siegeLobbyClient`/`siegeConfigurationClient`/`titleBracketClient`,
+  `types/dtos/siege/SiegeDtos.ts`, all five `entityApiMapping` switches (spawnpoint/objective have no search,
+  like bannerlayer), `objectConfigs` entries for `siegescenario`/`siegelobby` + picker columns for
+  `siegeteam`/`siegelobby`/`titlebracket`. Teams, spawnpoints and objectives have no dashboard entry of their
+  own (BannerLayer precedent: owned children, edited inside the scenario).
+- **SiegeConfiguration:** built, not deferred — `/admin/siege-configuration` (nav "Siege Settings"),
+  `pages/admin/SiegeConfigurationPage.tsx`: grouped fields, lists as CSV/one-per-line, Save sends only the
+  changed values (partial PUT), shows the API's range errors.
+- **web-api (`c8ab607`):** GateStructure search `filters.townId` and `filters.siegeScenarioId` (gates saved in
+  that scenario); Clan search `filters.preferTownId` (the town's default clan first, then the usual sort —
+  orders, doesn't filter); a read-only `TitleBracketsController` (GET, GET {id}, POST search) because no
+  title-bracket endpoint existed for the scenario's `MinTitleBracketId` picker. 7 tests.
+- **Verification items:**
+  1. **Two-level owned nesting — works** with the existing `ownedChildCollection` + `ChildFormModal`: each
+     modal creates its own WorkflowSession (the gate QoL 5.11 fix holds at depth 2), so "Send to Minecraft"
+     renders on a spawnpoint opened from a team opened from the scenario, and the spawnpoint is created
+     under that team. Proven by `FormWizard.siegeNesting.ui.test.tsx` (real `ChildFormModal` at both depths).
+     Small fixes: an updated owned child's card re-reads the entity (a clan team shows its resolved name,
+     not the raw payload); cards/pickers label entities by name/displayName/`resolvedName`.
+  2. **Clan picker — ordered by the scenario's town.** Neither `ObjectField` nor `PagedEntityTable` could pass
+     any filter (form-validation dependency resolution v2 feeds validation rules/placeholders, not pickers), so
+     there is now a generic FormField setting: `settingsJson.pickerFilters` maps search filters to
+     `{parent.X}` (the record a child/join form was opened from — the wizard now passes this `parentContext`
+     for edits too, not just creates), `{X}` (the form's own field) or literals; `?` = optional; an unresolved
+     required token (e.g. an unsaved parent's -1 id) blocks the picker with a message instead of listing every
+     row (the paged searches ignore non-positive ids). The team form's `ClanId` uses
+     `{"preferTownId": "{parent.TownId?}"}`. Standalone team edits (no parent) get the plain order.
+  3. **M2M with 3 join fields — works after three engine fixes** (`FormWizard.siegeGatesJoin.ui.test.tsx`):
+     saved join rows were never hydrated for edit (every saved gate/district showed "Missing Entity" and
+     "Edit Join Entry" started from the form defaults) — now `utils/forms/manyToManyEditLoad.ts` re-keys them
+     to metadata names and builds `relatedEntity` from the row's `<nav>Name`, and the join form is seeded
+     with the row's saved values (initial values now win over a field's untouched default); the M2M editor
+     compared metadata types against the lowercase route name, so it resolved the parent's own FK as the
+     related side (the Items Phase 2 bug class — now passed the real type); enum fields can keep an authored
+     subset (`"enumValuesSubset": true`) so `InitialState`/`GateStateOnCapture` offer only OPEN/CLOSED. The
+     owner-team picker uses `{"siegeScenarioId": "{parent.id}"}` (blocked until the scenario is saved).
+  4. **Readiness panel — new small component.** No display-only step type existed. A field whose settingsJson
+     has `{"displayPanel": "siegeScenarioReadiness"}` renders `components/siege/SiegeReadinessPanel.tsx`
+     instead of an input; it sits on the read-only, not-required `Id` field (the template validator requires a
+     real property, and `Id` never changes the payload). Shows ready/not ready, errors and warnings with code
+     and entity (`TEAM_NO_SPAWNPOINT · Team #2`), the spatial-checks status, and Re-check; before the first
+     save it says to Submit first. It checks the *saved* scenario and says so.
+- **Proof against the live API** (dev DB, API on :5099): a temporary harness (not committed) rendered the real
+  FormWizard with the live FormConfigurations, metadata and entities, clicked Next through every step to
+  Submit, and sent the payload to the API exactly as the web-app clients do.
+  - **Scenario 1 is editable through the forms:** no-op edits of scenario 1, teams 1–2, spawnpoint 1,
+    objectives 1–2, lobby 1, banner 1 and clan 1 all saved (204) with **zero changed fields**; readiness
+    unchanged (ready + `SPATIAL_CHECKS_UNAVAILABLE`).
+  - **Create path:** scenario **2** `[TEST] Siege of Cinix (forms)` (districts 6/7/8, gate 13, hub = new
+    location 66), Defender team 3 (clan 1) + ad-hoc Attacker team 4 "Forms Raiders", spawnpoints on new
+    locations 67/68, objectives 3 "The Keep (forms)" (instant victory, location 69) and 4 "South Gate
+    (forms)" (gate 13, holder team 3, CLOSED on capture — the conditional step showed), and **disabled** lobby
+    **2** `test-forms` with scenario 2 (weight 2). Readiness went red (`TEAMS_MIN_TWO`, `DEFENDER_REQUIRED`,
+    `OBJECTIVES_MIN_ONE`) → **ready**. Picker selections and in-game captures were simulated by pre-filling
+    the values (existing town/districts/gate/clan/banner; new inline locations standing in for captures),
+    so the browser clicks themselves are still the developer's to do.
+  - An ad-hoc team without a banner returns `400 text/plain` "A team without a clan needs a name, a chat
+    colour and a banner." — before `4fc63e6` the web-app showed only "HTTP 400: Bad Request"
+    (`serviceCall` read `result.message` only); now both the child modals and the top-level "Submit failed"
+    dialog show the API's reason.
+  - Cleanup of the create-path data (API, in this order): `DELETE SiegeLobbies/2`, `SiegeScenarios/2`,
+    `Locations/66`–`69`. Scenario 1's cleanup order (Phase 2 status) is unchanged.
+- **Tests:** web-app typecheck clean; `npm run test:ci` **241 passed / 16 failed in 10 suites** — the failing
+  tests are *identical* (names diffed) to the unchanged tree (`git stash`: 220 passed / 16 failed), +21 new
+  tests in 7 new suites. web-api **583/588**, the same 5 failures as before (+7 new). **Baseline
+  correction:** the brief said "the 4 failing FormWizard suites"; on the unchanged tree 10 suites fail — the 4
+  FormWizard ones plus ConfigurationHealthPanel ×2, PathBuilder, LoginForm, useEnrichedFormContext and
+  authService.
+- **Decisions taken without the developer (review; each is cheap to change):**
+  1. **The scenario form has 9 steps, not 8:** an M2M step can hold nothing else, so Districts is its own
+     step after General (DESIGN §4 put it inside General).
+  2. **Picker scoping is a generic `pickerFilters` FormField setting** (above) rather than per-entity code.
+  3. **Clan picker orders, doesn't filter** (any clan may still be chosen; the town's default is first).
+  4. **Gate pickers are narrowed server-side:** the Gates step lists the town's gates; an objective's gate
+     picker lists only gates *already saved* in the scenario. The Phase 2 save rule (an objective's gate must
+     be in the saved Gates) is kept; the Gates/Objectives step descriptions say to Submit after adding gates.
+  5. **Owned-child parent links are read-only** (prefilled from the parent; children are only created from
+     their parent's form).
+  6. **Read-only `TitleBracketsController`** added. Quirk: the lowest bracket ("Serf") has id 0, which the API
+     treats as "no minimum" — equivalent for a *minimum* title.
+  7. **Lobby `Mode` offers only `Continuous`** (the API refuses `Scheduled` until Phase 10).
+  8. **Engine-wide behaviour changes** (all forms, not only siege): initial values beat untouched defaults;
+     an edit-loaded FK whose DTO has only `<nav>Name` shows `{id, name}`; the API's error text is shown on
+     failed saves.
+- **Doc/code discrepancies found:**
+  - DESIGN §4: scenario "8 steps" with Districts in General → 9 steps (decision 1).
+  - DESIGN §4: `SiegeConfiguration` "singleton form (like SalaryConfiguration)" → a dedicated page; there is no
+    SalaryConfiguration UI (already flagged in Phase 2).
+  - DESIGN §8.5 says `IsSiegeObjective` leaves the gate form in "Phase 2" — done here in Phase 3.
+  - Web-app test baseline: 10 failing suites, not 4 (above).
+  - Workspace gotcha (ACTIVE_SESSIONS, Phase 1): "`git add Tests/...`" only works for files already tracked. A
+    **new** file under `tests/` isn't matched by either casing; stage it with `git hash-object -w <disk path>`
+    + `git update-index --add --cacheinfo 100644,<hash>,Tests/<path>`.
+- **Manual steps left (developer; needs the web app, API, and the Minecraft server + knk-plugin for
+  captures) — browser walkthrough:**
+  1. **Banner** — `/forms/bannerdesign` → Name, Base colour → Submit. Open it again (dashboard → Edit) → Layers
+     → Create New → Pattern, Colour → Submit (the layer saves immediately) → repeat, close.
+  2. **Clan** — `/forms/clan` → Name, NPC, Chat colour → Identity: Banner, Default clan for town → Submit.
+  3. **Scenario, first save** — `/forms/siegescenario`: General (Name, Town via Select instance) → Districts:
+     "Create New Join Entry" → District (only the town's districts are listed) → Submit the entry; repeat →
+     Hub & entry: Hub location → **Send to Minecraft**, stand on the hub spot in-game and confirm → players,
+     minimum title (optional), rules → Match length, Rewards (defaults are fine) → Teams/Gates/Objectives: Create
+     New is disabled and the owner-team picker says to save first — expected → Readiness: "Submit to save the
+     scenario first" → **Submit**.
+  4. **Teams** — reopen the scenario (dashboard → Edit) → Teams → Create New: Role Defender, Alliance group 1,
+     Clan (the town's default clan is listed first) → Submit. Create New again: Role Attacker, Alliance group 2,
+     no clan → Name, Chat colour, Banner → Submit. For each team: **Edit instance** → Spawnpoints → Create New →
+     Name → Location → **Send to Minecraft** (stand on the spawn) → Submit; close the team modal (saved already).
+     Readiness now: `OBJECTIVES_MIN_ONE` (and `LOCKDOWN_WITHOUT_DISTRICTS` warning if you skipped districts).
+  5. **Gates** — Gates step → Create New Join Entry → Gate (the town's gates), Owner team (the scenario's teams;
+     empty = first Defender), State at match start, Damageable → Submit the entry → **Submit the scenario** (gates
+     save only here).
+  6. **Objectives** — reopen → Objectives → Create New: Name, Instant victory ✓ → Capture point: Location → **Send
+     to Minecraft** (stand on the objective) → Submit. Create New again for a gate objective: Gate (only saved
+     gates are listed) → the "Gate behaviour" step appears → state on capture → Submit.
+  7. **Readiness** — go to the last step: expect **Ready**. With the server up, "Spatial checks ran"; any point
+     outside the town region shows `HUB_OUTSIDE_TOWN` / `SPAWNPOINT_OUTSIDE_TOWN` / `OBJECTIVE_OUTSIDE_TOWN` —
+     re-capture it and Re-check. With the server down: Ready plus the amber "spatial checks did not run" banner.
+  8. **Lobby** — `/forms/siegelobby`: Name, Key (`[a-z0-9_-]`), Enabled → Timings (matchmaking ≥ 60) → Voting
+     (1–3) → Rotation: Create New Join Entry → Scenario + Weight → Submit. A duplicate key shows the API's 409
+     message.
+  9. **Siege Settings** — nav "Siege Settings": change e.g. Headshot multiplier → Save (1) → Reload shows it.
+  10. **Scenario 1** — open `[TEST] Siege of Cinix` → the Districts/Gates cards show names and join values
+      (no "Missing Entity"); Edit Join Entry on a gate starts from its saved state; Submit without changes.
+  11. **GateStructure form** — the "Siege Behaviour" step no longer has "Is siege objective".
+- **Follow-ups (not blocking):** a "save and stay" wizard action would let an admin add gates and gate
+  objectives in one sitting; fields of a *hidden* step are still submitted with their authored default
+  (`flattenAllStepsData`, pre-existing; harmless here since each default equals the API's); the M2M editor
+  has no inline "pick several existing" table, so districts are added one join entry at a time (existing UX);
+  owned-list saves submit the child list back to the API as `TeamIds`/`Teams` (ignored by the API, like
+  `GateDoors`); the dev DB keeps the scenario 2 / lobby 2 create-path data until cleaned up (above).
 
 ## Phase 4 — Plugin core, Bukkit-free (knk-core, knk-api-client)
 
