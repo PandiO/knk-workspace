@@ -17,6 +17,10 @@ Central home for requirements, specifications, and implementation roadmaps acros
 - API contract snapshots: [docs/specs/api/README.md](docs/specs/api/README.md) (includes swagger export and contract notes)
 - Reconciliation: [docs/specs/reconcile/README.md](docs/specs/reconcile/README.md)
 - Legacy reference: [docs/specs/legacy/README.md](docs/specs/legacy/README.md)
+- Command catalogs (every Minecraft command across all three codebases — syntax, permissions,
+  behavior, feature allocation): [docs/specs/legacy/commands-v1.md](docs/specs/legacy/commands-v1.md),
+  [docs/specs/legacy/commands-v2.md](docs/specs/legacy/commands-v2.md),
+  [docs/specs/user-features/COMMAND_CATALOG_V3.md](docs/specs/user-features/COMMAND_CATALOG_V3.md)
 
 ## Conventions
 - Keep feature requirements and roadmaps grouped by domain folder above.
