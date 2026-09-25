@@ -110,6 +110,18 @@ Judged by code shape and reachability: **v2's Siege system is architecturally th
 
 **On the project owner's "v2 has better architecture but v1 has more finished functionality" claim:** this system is strong supporting evidence, and the evidence is fairly unambiguous rather than mixed. The architecture comparison is clear-cut in v2's favor (generic base classes, ORM, N-team model, richer win-condition modeling). But the *finished functionality* comparison also comes out clearly in v1's favor on the two things that matter most for actually running a siege: (1) v1 can create new siege content and run indefinitely without admin intervention; v2 can do neither out of the box, and (2) v1's core scoring/win logic is correct for whatever two teams are assigned; v2's is silently wrong unless the defending team happens to be named "Cinixians". The one place v2 is unambiguously *more* finished than v1 is the `/siege join`/`/siege leave` commands themselves (v1 stubs `/siege join`; v2 implements it) — a genuine but narrow exception to the overall pattern.
 
+## Addendum (2026-09-25) — further verified defects and v3 answers
+
+A follow-up source read for the v3 design found 17 more defects not listed above (e.g. the vote draw
+picks the *lowest*-voted scenario, the Random vote has no click handler, XP rewards are computed but
+never granted, un-voting throws an NPE, pagination is dead in every siege menu). They are catalogued
+with citations as **N1–N17** in `docs/reports/2026-09-25-siege-minigame-gap-analysis.md` §3 rather
+than inlined here. Every legacy siege menu item is inventoried in
+`docs/specs/siege-minigame/MENU_TEMPLATES.md` Part A. Open questions 1, 2, 4 and 5 below are answered
+for v3 by `docs/specs/siege-minigame/DESIGN.md` §0 and §7 (holder-relative scoring; FormWizard
+authoring; configurable lobbies; one service path for command and menu join). Question 3 is moot, since
+v3 uses a new schema. Question 6: the v3 InventoryMenu engine descends from that rewrite.
+
 ## Open questions
 
 1. **Most important:** was the hardcoded `"cinixians"` team-name check in v2's capture-scoring (`MGObjective`/`SiegeObjective.calculateCapturePoints`) and win-resolution (`Siege.setComplete`) ever meant to be generalized to `scenario.getDefenders()`/`getAttackers()`, or was v2's Siege only ever built/tested against one specific town/team called Cinixians as defenders? This determines whether the N-team `allies`/`enemies` architecture on `SiegeTeam` was actually load-bearing for a real multi-team siege, or aspirational scaffolding around a system that in practice only ever ran one fixed matchup.

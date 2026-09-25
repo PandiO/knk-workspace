@@ -25,6 +25,11 @@ Central home for requirements, specifications, and implementation roadmaps acros
 - User management (admin module): [docs/specs/user-management/DESIGN.md](docs/specs/user-management/DESIGN.md), [docs/specs/user-management/IMPLEMENTATION_PLAN.md](docs/specs/user-management/IMPLEMENTATION_PLAN.md)
 - Reconciliation: [docs/specs/reconcile/README.md](docs/specs/reconcile/README.md)
 - Legacy reference: [docs/specs/legacy/README.md](docs/specs/legacy/README.md)
+- Siege minigame (MVP driver, vision §7): [siege-minigame/DESIGN.md](siege-minigame/DESIGN.md),
+  [siege-minigame/IMPLEMENTATION_PLAN.md](siege-minigame/IMPLEMENTATION_PLAN.md),
+  [siege-minigame/MENU_TEMPLATES.md](siege-minigame/MENU_TEMPLATES.md) (legacy siege menus inventoried
+  item-by-item + proposed v3 templates, documented only); evidence in
+  [../reports/2026-09-25-siege-minigame-gap-analysis.md](../reports/2026-09-25-siege-minigame-gap-analysis.md)
 
 ## Conventions
 - Keep feature requirements and roadmaps grouped by domain folder above.
