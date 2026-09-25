@@ -1,9 +1,11 @@
 # Kits — Implementation Plan
 
-**Status:** Phase 1 (§1) and Phase 2 (§2) shipped 2026-09-25 — see "§1 status"/"§2 status" below.
-§3-§8 not started, ready whenever picked up on the same `claude/kits` branch in each repo (§0's
-one-branch-per-repo rule).
-**Last updated:** 2026-09-25 (`DESIGN.md` §0c: removed Phase 5's in-game CRUD fallback logic
+**Status:** Phase 1 (§1), Phase 2 (§2), and Phase 3 (§3) shipped 2026-09-25 — see "§1 status"/
+"§2 status"/"§3 status" below. §4-§8 not started, ready whenever picked up on the same
+`claude/kits` branch in each repo (§0's one-branch-per-repo rule).
+**Last updated:** 2026-09-25 (§3: Kit admin `FormConfiguration` authored and verified end-to-end;
+see "§3 status" for the FormConfigBuilder-authoring-mechanism finding and the `entityApiMapping.ts`
+gap this phase closed). Previously updated 2026-09-25 (`DESIGN.md` §0c: removed Phase 5's in-game CRUD fallback logic
 entirely — `/kit manage` is now a pure pointer to the FormWizard, no `KitsApi` CRUD client needed;
 `Kit` creation/editing/deletion is FormWizard-only). Previously updated 2026-09-25 (added a
 `GiveKitAsync` staff-grant path to Phase 2, an in-game CRUD fallback command tree to Phase 5, and
@@ -248,6 +250,73 @@ edits, or deletes a `Kit` row.
   `Tag`/`EnchantmentDefinition` — `ItemBlueprint`, `TitleBracket`, and `PermissionGroup` all
   already have their own admin `FormConfiguration`s (Items and user-features plans, both
   shipped).
+
+### §3 status — shipped 2026-09-25
+
+`Kit.cs`'s `[FormConfigurableEntity("Kit")]` was already present from Phase 1 — confirmed by
+direct code read, nothing else needed server-side. **The FormConfiguration-authoring mechanism
+question this section flagged was investigated, not assumed**: it is not a seeder script or a
+call made against a running instance's admin API in the sense of a committed automation — it is
+the `FormConfigBuilder` React page (`knk-web-app src/components/FormConfigBuilder/
+FormConfigBuilder.tsx`) itself, a thin UI wrapper whose Save button does exactly one thing,
+`formConfigClient.create()` → `POST /api/FormConfigurations` with a `FormConfigurationDto`
+payload. There is no other path; `knk-web-api/test-phase3-4.sh` (a pre-existing ad-hoc
+verification script in that repo, unrelated to Kits) confirms this same "call the live API
+directly" pattern is already this codebase's own convention for exercising this engine outside
+the browser. This session authored the config by POSTing that exact DTO shape to a locally-run
+instance of that same endpoint — functionally identical to clicking through the builder UI, since
+there is no seeder and no other mechanism to imitate — then confirmed the result by loading the
+real `FormWizardPage` in a browser (Playwright) against it, not just checking the POST succeeded.
+
+**Local verification environment, since no reachable dev instance existed in this sandbox
+either:** `apt-get install dotnet-sdk-8.0 mysql-server` (same distro-mirror path Phase 2 used),
+a fresh local MySQL database, `dotnet ef database update` applying every migration through
+`20260925105914_AddKitsPhase1Schema` cleanly — **this also closes Phase 1's last open item**,
+"not migration-verified," which had been carried since Phase 1 pending a reachable MySQL
+instance. `knk-web-api` and `knk-web-app` (`npm start`) were then run locally against each other.
+
+**Steps/fields authored, exactly per this section's field matrix** (verified against live
+`Kit`/`KitContent` entity metadata before authoring, not assumed): General Information
+(`Name`, `Description`, six `ItemBlueprint` object pickers for `Helmet`/`Chestplate`/`Leggings`/
+`Boots`/`Shield`/`Hand`, `GrantOnFirstJoin`, `CooldownSeconds`); Contents (M2M step,
+`relatedEntityPropertyName: "Contents"`, `joinEntityType: "KitContent"`, one child step carrying
+`SlotIndex`/`Quantity`); Access Conditions (`TitleBracket`/`PermissionGroup` object pickers,
+`RequiredPermissionNode` plain text); Economy (`CostAmount`, `CostCurrency` enum dropdown sourced
+live from `KitCostCurrency`, `IsSinglePurchasePremium`, `PremiumPriceGems`). Object-picker fields
+were authored on the navigation property (`Helmet`, not `HelmetId`) per this engine's own
+`fieldName + "Id"` FK-normalization convention (`normalizeFormSubmission.ts`), matching how
+`ItemBlueprint.Category`/`DefaultEnchantments` are already authored — confirmed by reading that
+convention directly rather than guessing field names.
+
+**Confirmed rendering and a full round-trip, not just "wrote a payload that should work"**: a
+Playwright browser session logged into the running web app, opened `/forms/kit`, and screenshotted
+all four steps in sequence — General Information, Contents (M2M editor), Access Conditions, and
+Economy (enum dropdown correctly offering `Coins`/`Gems`) — every field rendered exactly as
+configured. Submitting the form initially failed with **"No API client configured for kit"** —
+a real, necessary gap this phase's plan hadn't named: `knk-web-app`'s generic
+`Create`/`Update`/`Delete`/fetch-by-id dispatch (`utils/entityApiMapping.ts`) is its own
+per-entity hardcoded registry (distinct from the metadata engine's "no allowlist" fact, and not
+mentioned by this section or by the Items-plan precedent it cites) that every FormWizard-authored
+entity needs an entry in before its Submit button can work at all. Added `apiClients/kitClient.ts`
+(mirrors `itemBlueprintClient.ts`'s shape exactly: `getAll`/`getById`/`create`/`update`/`delete`/
+`searchPaged`) and registered `'kit'` in all four `entityApiMapping.ts` dispatch functions, plus
+the matching `Controllers.Kits`/`KitOperation` enum entries and a `KitDto`/`KitContentDto` TS type
+mirroring `knk-web-api`'s `Dtos/KitDtos.cs` field-for-field. After that fix, a full submit
+returned `201` and a real `Kit` row persisted; a follow-up direct-API round-trip with every field
+populated (equipment FK, two `Contents` slots, `TitleBracket`/`PermissionGroup` FKs, permission
+node, cooldown, cost/currency, premium fields) read back byte-for-byte identical. `npm run build`
+and `npm run test:ci` both pass on the final state (236 tests, the same 16 pre-existing/unrelated
+failures confirmed via a stash-and-rerun diff — zero regressions from this phase's changes).
+
+**Commits, `claude/kits`:** `knk-web-app` `8b8849f` (the `entityApiMapping.ts`/`kitClient.ts`
+registration fix — the only code this phase adds; the `FormConfiguration` itself is database
+data, not a commit). No `knk-web-api` code changes this phase (Phase 1's tag was already there).
+Nothing pushed to `main`/`master` in any repo.
+
+**Not started, per this phase's own explicit scope:** §4/§5 (knk-plugin data access + commands),
+§6 (web-app Grant Kit UI), §7 (`KitScan`), §8 (seed data). **Next:** §4/§5/§6 can all start now —
+none of them depend on anything this phase added beyond Phase 2's already-shipped API surface;
+§7 (`KitScan`) additionally needs this phase's now-stable field set, which it has.
 
 ## 4. Phase 4 — Plugin data access and item-building (knk-plugin)
 
