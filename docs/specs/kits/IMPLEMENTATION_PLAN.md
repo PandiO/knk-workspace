@@ -1,6 +1,7 @@
 # Kits — Implementation Plan
 
-**Status:** Draft, ready for implementation.
+**Status:** Phase 1 (§1) shipped 2026-09-25 — see "§1 status" below. §2-§8 not started, ready
+whenever picked up on the same `claude/kits` branch in each repo (§0's one-branch-per-repo rule).
 **Last updated:** 2026-09-25 (`DESIGN.md` §0c: removed Phase 5's in-game CRUD fallback logic
 entirely — `/kit manage` is now a pure pointer to the FormWizard, no `KitsApi` CRUD client needed;
 `Kit` creation/editing/deletion is FormWizard-only). Previously updated 2026-09-25 (added a
@@ -64,6 +65,55 @@ session doesn't fork from a stale base.
   rows, since this is a wholly new set of tables with no pre-existing data to corrupt — lower
   risk than those migrations, but still worth a dry run against a local DB copy before applying,
   per that plan's established practice.
+
+### §1 status — shipped 2026-09-25
+
+All of §1's knk-web-api bullets are done: `Models/Item/{Kit,KitContent,KitClaim,KitPurchase}.cs`,
+`Properties/KnKDbContext.cs` (four new `DbSet`s + `OnModelCreating` config), `Dtos/KitDtos.cs`
+(`KitDto`/`KitContentDto`/`KitAvailabilityDto`/`KitClaimResultDto`/`KitContentSlotDto`),
+`Mapping/KitProfile.cs`, and migration `20260925105914_AddKitsPhase1Schema` (+ its `.Designer.cs`
+and the updated `KnKDbContextModelSnapshot.cs`). Branch: `claude/kits` in `knk-web-api`, forked
+from `origin/claude/user-features`'s tip at commit `bc67f95055ee6d4df5c5a4f29ed3569d7f15dbe2` —
+confirmed still unmerged into `master` at branch time
+(`git merge-base --is-ancestor origin/claude/user-features origin/master` returned false).
+Commit `7537c71` on that branch. `claude/kits` was also created and pushed (no commits needed) in
+`knk-plugin` (from `origin/main`) and `knk-web-app` (from `origin/main`), plus `knk-workspace`
+(from `origin/main`, this doc update's own branch) — per §0's one-standing-branch-per-repo rule,
+so no future phase session needs to re-derive the branch base.
+
+Delete behaviors verified by direct code read against the exact DESIGN.md §2.1/§2.2 requirement:
+`KitContent`'s composite key is `(KitId, SlotIndex)` (not `(KitId, ItemBlueprintId)`), its
+`ItemBlueprintId` FK is `Restrict` (the cascade-delete-bug fix) while its `KitId` FK is `Cascade`;
+`Kit`'s six equipment-slot FKs (`HelmetId`/.../`HandId`) and its two gating FKs
+(`MinTitleBracketId`/`RequiredPermissionGroupId`) are all `Restrict`, matching every other
+catalog-lookup FK precedent in this codebase (`ItemBlueprint.CategoryId`/`GradeId`/
+`IconMaterialRefId`). `KitClaim`/`KitPurchase` are intentionally not `[FormConfigurableEntity]`
+(append-only, viewed not edited, same convention as `AuditLogEntry`); `KitPurchase` has a unique
+index on `(KitId, UserId)`.
+
+**Not build- or migration-verified — the one real gap in this phase.** This sandbox has no
+`dotnet` SDK, no `dotnet-ef` tool, and no local MySQL instance, and every .NET download host
+(`builds.dotnet.microsoft.com`, `dotnetcli.azureedge.net`, `dotnetbuilds.azureedge.net`,
+`download.visualstudio.microsoft.com`) is policy-blocked by this sandbox's egress proxy (confirmed
+via the proxy's own status endpoint, same class of finding `user-features`'s own sessions
+repeatedly hit for `repo.papermc.io` on the plugin side); `apt-get install dotnet-sdk-8.0` also
+404s against the configured Ubuntu mirror. The migration `.cs`/`.Designer.cs` and the updated
+`KnKDbContextModelSnapshot.cs` were hand-authored, not `dotnet ef migrations add`-generated: built
+by directly extending the most recent real migration (`20260924094432_AddUserFeaturesPhase6Salary`
+and its `.Designer.cs`) with the four new entity blocks EF's snapshot format requires (property/
+key/index declarations, relationship declarations, and `Kit`'s one navigation-only block for its
+`Contents` collection), verified by `diff` against the original file to confirm only the four
+intended insertion points changed and nothing else drifted, plus a brace/paren balance check.
+Column types, FK/index naming, and collation follow the exact patterns of the four most recent
+real migrations in this repo. **Needs, before this phase is trusted the way earlier ones
+eventually were:** a real `dotnet build` (confirms the four new model files and the DbContext
+changes compile), then `dotnet ef database update` against a real local MySQL copy (confirms the
+hand-authored migration/snapshot pair is actually valid and applies cleanly) — on a machine that
+can reach the .NET download hosts, matching `user-features` Phase 5's own precedent for its
+similarly SDK-less migration.
+
+**Not started, per this phase's own explicit scope:** §2 (`KitService`/`KitsController`) and
+everything after it — a follow-up session picks up Phase 2 on this same `claude/kits` branch.
 
 ## 2. Phase 2 — `KitService` and API surface (knk-web-api)
 
