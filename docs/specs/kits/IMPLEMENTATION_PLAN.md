@@ -4,7 +4,7 @@
 §2 audit-log gap (`GiveKitAsync` never wrote `KitGranted`) is closed — see "§2 follow-up". §8 (seed
 data) not started, ready whenever picked up on the same `claude/kits` branch in each repo (§0's
 one-branch-per-repo rule).
-**Last updated:** 2026-09-25 (§7: `KitScan` shipped in all three code repos and verified live in a
+**Last updated:** 2026-09-25 (§7 follow-up: Kit edit mode no longer nulls equipment/access FKs on an untouched submit — see "§7 follow-up"). Previously updated 2026-09-25 (§7: `KitScan` shipped in all three code repos and verified live in a
 browser against a local API; §2 audit-log gap closed after merging `knk-web-api` `master` into
 `claude/kits` — see "§7 status" and "§2 follow-up"). Previously updated 2026-09-25 (§4/§5: knk-plugin data access, item-building/`KitGrantPlacer`, the
 `/kit` command surface, and the first-join grant hook — see "§4 status"/"§5 status" for the
@@ -876,7 +876,7 @@ resolved:**
 
 **Two pre-existing gaps found during live verification. Neither was caused by this phase, and
 neither was fixed here (out of scope):**
-- **Kit edit mode loses equipment on submit.** Phase 3 authored the equipment pickers on the
+- **Kit edit mode loses equipment on submit** — **fixed, see "§7 follow-up" below.** Phase 3 authored the equipment pickers on the
   navigation property (`Helmet`, not `HelmetId`). `KitDto` exposes only `HelmetId`, and
   `FormWizard.resolveObjectFieldValueForEdit`'s nav fallback only applies to fields ending in
   `Id`. So `/forms/kit/edit/:id` loads every equipment picker **empty**, and an *untouched*
@@ -952,6 +952,47 @@ content isn't at risk. Also confirm the Contents step has its `Contents` field (
 **Not done, per this phase's scope:** §8 (seed data). **Next:** §8 can start any time. Separately,
 the two pre-existing Kit-form gaps above are worth a small follow-up before admins rely on edit
 mode.
+
+### §7 follow-up — edit-mode equipment data loss fixed 2026-09-25
+
+Closes the first of the two gaps above ("Kit edit mode loses equipment on submit"). All on
+`claude/kits`: web-api `abc9d76`, web-app `3ede280`.
+
+- **Wider than reported.** The Access Conditions pickers (`MinTitleBracket`,
+  `RequiredPermissionGroup`) are navigation-authored too, so they had the same bug. Reproduced
+  locally with both fixes reverted: an untouched edit submit nulled `helmetId`, `chestplateId`,
+  `handId`, `minTitleBracketId` **and** `requiredPermissionGroupId`. `Contents` survived.
+- **Fix (primary, web-api).** `KitDto` now also emits read-only nav objects: `helmet` …
+  `hand` (`ItemBlueprintNavDto`), `minTitleBracket` (new `KitTitleBracketNavDto`; `name` =
+  `MaleName`, because `TitleBracket` has no single name), and `requiredPermissionGroup`
+  (`RelatedPermissionGroupDto`). This follows the existing precedent: `ItemBlueprintReadDto`
+  ships both `categoryId` and `category`. `KitRepository.WithIncludes()` already loaded every nav,
+  so only `KitProfile` changed. Create/update still read only the `*Id` fields. The plugin's
+  Java client ignores unknown JSON properties (`FAIL_ON_UNKNOWN_PROPERTIES` off), so it is
+  unaffected.
+- **Safety net (web-app).** `resolveObjectFieldValueForEdit` moved to
+  `src/utils/forms/objectFieldEditValue.ts` (now unit-tested). If a nav-named Object field finds no
+  nav object in the DTO, it now falls back to `{ id: <Name>Id }` instead of loading empty. This
+  stops the same silent data loss on any other entity whose DTO exposes only the FK. The picker
+  shows "Selected Item / ID: n" in that case, with no name, but submit keeps the FK.
+- **Verification.**
+  - web-api `dotnet test`: 434 passed / 5 failed. That is baseline 432/5 plus 2 new `KitServiceTests`,
+    with the same 5 pre-existing failures.
+  - web-app `test:ci`: 227 passed / 16 failed in 10 suites. That is baseline 221/16 plus 6 new tests,
+    with identical failing test names. `npm run build` is clean apart from pre-existing lint warnings.
+  - **Live** (Playwright against a local API + fresh MySQL, with a local Kit config mirroring the real
+    one's nav-named pickers): `/forms/kit/edit/1` shows each picker's item or title/group name.
+    An untouched Next → Next → Submit keeps all FKs and `Contents`. The web-app fallback alone,
+    against the unfixed API, also kept every FK.
+- **Still for the developer (dev DB only, can't be checked from a cloud session):** the second
+  gap, i.e. whether the real Kit config's Contents step has a `Contents` field. See above.
+- **Found while verifying (not fixed; unrelated to Kits):** on a **fresh** MySQL DB,
+  `dotnet ef database update` fails in `20260925112304_AddUserFeaturesPhase6RealTitleDataAndFreeze`
+  with `Duplicate entry '6' for key 'title_brackets.PRIMARY'`. The migration inserts
+  `(0, 'Serf', …)` into an AUTO_INCREMENT `Id`. Without `NO_AUTO_VALUE_ON_ZERO`, MySQL turns that 0
+  into the next counter value (6, after the placeholder rows are deleted), so the explicit 6 row
+  then collides. The already-migrated dev DB isn't affected, but any new environment is. Worked
+  around locally with `SET GLOBAL sql_mode = CONCAT(@@sql_mode, ',NO_AUTO_VALUE_ON_ZERO')`.
 
 ## 8. Phase 8 — Seed data
 
