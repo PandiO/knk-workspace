@@ -3,8 +3,9 @@
 **Status:** Merged to the default branches 2026-09-25 — web-api `master` `4ed1998`, plugin `main`
 `9172b71`, web-app `main` `f8a1a12` (merges of the standing `claude/kits` branches, which are kept).
 Phase 3 `Kit` FormConfiguration authored and verified in the web-app against the dev DB
-(`PHASE_3_FORMCONFIGS.md`); Phase 8 seed loaded in the dev DB. Pending only the developer's in-game
-check (checklist under Phase 8 below).
+(`PHASE_3_FORMCONFIGS.md`); Phase 8 seed loaded in the dev DB; `/kit get Default`/`Archer` confirmed
+in-game 2026-09-26. `KitContent.SlotIndex` 0-35 enforced server-side (web-api `e949ed2`). Pending only
+the first-join grant check (checklist under Phase 8 below).
 
 | Phase | Status | Commits |
 |---|---|---|
@@ -14,9 +15,10 @@ check (checklist under Phase 8 below).
 | 4/5 — Plugin data access, item-building, commands, first-join hook | Done | plugin `c6c633d` |
 | 6 — Web-app "Grant Kit" on the player profile | Done | web-app `71f69fb` |
 | 7 — `KitScan` WorldTask authoring flow | Done | web-api `c6950b5`, plugin `f70f0ac`, web-app `a41060a` |
-| 8 — Seed data | Done; loaded in the dev DB 2026-09-25 (`Created: 8 MinecraftMaterialRef, 4 Tag, 5 CategoryTag, 3 Category, 1 Grade, 9 ItemBlueprint, 6 KitContent, 2 Kit`, existing `Common` grade reused; restart logs `Created: nothing`). Stays enabled in every environment (developer's call). In-game check pending | web-api `738cb3c` |
+| 8 — Seed data | Done; loaded in the dev DB 2026-09-25 (`Created: 8 MinecraftMaterialRef, 4 Tag, 5 CategoryTag, 3 Category, 1 Grade, 9 ItemBlueprint, 6 KitContent, 2 Kit`, existing `Common` grade reused; restart logs `Created: nothing`). Stays enabled in every environment (developer's call). `/kit get Default`/`Archer` confirmed in-game 2026-09-26; first-join grant not yet confirmed | web-api `738cb3c` |
 
-**Last updated:** 2026-09-25 (merged to `master`/`main`; Phase 3 form authored + verified, see
+**Last updated:** 2026-09-26 (`/kit get` confirmed in-game; server-side `SlotIndex` 0-35 check,
+web-api `e949ed2`). Previously updated 2026-09-25 (merged to `master`/`main`; Phase 3 form authored + verified, see
 `PHASE_3_FORMCONFIGS.md`; Phase 8 seed loaded in the dev DB). Previously updated 2026-09-25 (Phase 8 seed data landed as a startup `KitSeed`; status table added;
 corrected the stale "no seeder mechanism exists" statements in §3 and §8). Previously updated
 2026-09-25 (`DESIGN.md` §0c: removed Phase 5's in-game CRUD fallback logic
@@ -354,13 +356,13 @@ Real MySQL 8.0 fresh DB: all migrations applied, no pending model changes; first
 nothing` with identical query output.
 
 **Manual checklist for the developer (not possible from a cloud session):**
-- [ ] `/kit get Default` → iron helmet/chestplate/leggings/boots equipped, Iron Sword in hand, and
+- [x] `/kit get Default` → iron helmet/chestplate/leggings/boots equipped, Iron Sword in hand, and
       Maggoty Bread ×1, Arrow ×64, Wooden Bow, Iron Axe in storage slots 9–12.
-- [ ] `/kit get Archer` → iron armor, Maggoty Bread in hand (verbatim, by design), bow and
+- [x] `/kit get Archer` → iron armor, Maggoty Bread in hand (verbatim, by design), bow and
       arrows ×64 in slots 9–10.
 - [ ] A brand-new player automatically receives `Default` on first join.
-- [ ] Both kits appear in the web-app Kit form and in the player-profile "Grant Kit" picker.
-- [ ] The `Kit` FormConfiguration (Phase 3) exists in the dev DB.
+- [x] Both kits appear in the web-app Kit form and in the player-profile "Grant Kit" picker.
+- [x] The `Kit` FormConfiguration (Phase 3) exists in the dev DB.
 
 ## 9. Sequencing summary
 

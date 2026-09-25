@@ -46,9 +46,10 @@ Items Phase 2).
   never writes into its own bound field.
 - **`CostCurrency`** is an `Enum` field with a `settingsJson.enumValues` snapshot of `KitCostCurrency`;
   `withLiveEnumOptions` refreshes it from live metadata anyway.
-- **`SlotIndex` 0-35 is documented, not enforced.** Neither the form engine (`Range` validations are
-  never applied client-side), the API (`KitService.BuildContentsAsync` only rejects duplicate slots)
-  nor the DB checks the range. Closing that gap needs a server-side check — open item.
+- **`SlotIndex` 0-35 is enforced server-side, not in the form.** The form engine never applies
+  `Range` validations client-side and the DB has no check constraint, so the range lives in
+  `KitService.BuildContentsAsync` (web-api `e949ed2`, 2026-09-26): Create/Update reject any slot
+  outside 0-35 with a 400 and the message shown in the wizard. The field description states the range.
 - **`MinTitleBracketId` needs the siege branch.** The `TitleBracket` object picker relies on the
   read-only `TitleBracketsController` (web-api `c8ab607`) and `TitleBracketClient`/`entityApiMapping`
   entry (web-app `dbf2fb6`), which exist only on `claude/siege-minigame` as of 2026-09-25. On
