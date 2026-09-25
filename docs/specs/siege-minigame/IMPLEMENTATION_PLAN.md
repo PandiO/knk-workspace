@@ -1,13 +1,14 @@
 # Siege Minigame — Implementation Plan
 
-**Status:** Draft. Phases 1–7 + 9 = playable MVP (commands/chat UI): **Phases 1, 2 and 3 code complete** on
+**Status:** Draft. Phases 1–7 + 9 = playable MVP (commands/chat UI): **Phases 1, 2, 3 and 4 code complete** on
 `claude/siege-minigame` (Phase 2 migration applied to the dev DB and API verified live with test data;
-Phase 3 FormConfigurations authored in the dev DB and the forms proven against the live API; nothing verified
-in-game yet); Phases 4–7 + 9 not started. Phase 8a
+Phase 3 FormConfigurations authored in the dev DB and the forms proven against the live API; Phase 4's
+Bukkit-free plugin core tested without a server, not yet wired into the plugin; nothing verified
+in-game yet); Phases 5–7 + 9 not started. Phase 8a
 (InventoryMenu engine extensions) built and merged into `claude/siege-minigame`, not verified live;
 Phase 8b open; Phase 10 is post-MVP.
-**Last updated:** 2026-09-25 (Phase 3 status block added: siege authoring forms, verification items 1–4,
-FormConfiguration ids, decisions to review, browser walkthrough for the developer)
+**Last updated:** 2026-09-25 (Phase 4 status block added: plugin core classes, test results, decisions to
+review, discrepancies, the effect → Paper wiring Phase 5 needs)
 
 Ref: `DESIGN.md` (decisions — not restated here), `MENU_TEMPLATES.md`,
 `docs/reports/2026-09-25-siege-minigame-gap-analysis.md`. Plan format follows
@@ -510,6 +511,178 @@ fast-forwarded to the pushed `11788fe` merge first). Payloads and ids: `PHASE_3_
 
 **Exit:** `knk-core` siege package green standalone (same `javac` + junit-console approach the
 InventoryMenu phases used when Gradle/Paper repos are unavailable).
+
+**Phase 4 status (2026-09-25): code complete on `claude/siege-minigame` (knk-plugin), pushed; tested
+without a server; nothing is wired into the running plugin yet (that's Phase 5).** Commits: `1022f53`
+(domain records + ports), `77f86a9` (api-client), `bb8b1ed` (`SiegeDataAccess` + `DataAccessFactory`),
+`acf6edc` (core logic), `8e81b27` (tests). `origin/main` hadn't moved since Phase 1, so no trunk merge.
+- **Packages and classes** (all under `net.knightsandkings.knk`):
+  - `core.domain.siege`: `KnkSiegeRuntimeConfig`, `KnkSiegeConfiguration` (+ `legacyDefaults()`),
+    `KnkSiegeLobby`, `KnkSiegeRotationEntry`, `KnkSiegeSkippedScenario`, `KnkSiegeScenario`, `KnkSiegeTeam`,
+    `KnkSiegeSpawnpoint`, `KnkSiegeObjective`, `KnkSiegeGate`, `KnkSiegeDistrict`, `KnkSiegeMatchLength`,
+    `KnkSiegeRewards`, `KnkSiegeReadiness`/`KnkSiegeReadinessIssue`, `KnkSiegeMatchRecords` (provisional Phase 6
+    shapes); enums `SiegeTeamRole`, `SiegeLobbyMode`, `SiegeGateState`, `SiegeNonMemberGateView`,
+    `SiegeEndReason`. They mirror the runtime-config payload; server-resolved values (identity, first-Defender
+    holders/owners, capture points, `isObjectiveGate`) are taken as is. Teams, spawnpoints and objectives are
+    kept in (sortOrder, id) order.
+  - `core.ports.api`: `SiegeLobbiesQueryApi` (runtime-config), `SiegeScenariosQueryApi` (readiness),
+    `SiegeMatchesCommandApi` (**interface only**).
+  - `api.dto.SiegeDtos`, `api.mapper.SiegeMapper`, `api.impl.SiegeLobbiesQueryApiImpl`
+    (`GET /SiegeLobbies/runtime-config`), `api.impl.SiegeScenariosQueryApiImpl`
+    (`GET /SiegeScenarios/{id}/readiness`, 404 → null); both registered in `KnkApiClient`.
+  - `core.dataaccess.SiegeDataAccess`: the whole runtime-config as one cache entry through
+    `DataAccessExecutor`, read cache-first; `refreshRuntimeConfigAsync()` asks the API and, if that fails,
+    keeps serving the last copy (stale if expired); readiness is passed through uncached. knk-paper:
+    `DataAccessFactory.createSiegeDataAccess(...)` with its own `entities.siege` block (`KnkConfig`,
+    `ConfigLoader`, `config.yml`: 30 min TTL, CACHE_FIRST, stale allowed; its own TTL like the permissions
+    gateway). **Not instantiated in `KnKPlugin` yet.**
+  - `core.siege` (no Bukkit/Paper import; grep in the final check found 0): `SiegePhase`,
+    `SiegeLobbyStateMachine`, `SiegeEffect` (sealed; 12 effect records), `SiegeTimeline`, `VoteTally`,
+    `WeightedPicker`, `TeamPartitioner`, `AllianceResolver`, `CaptureCalculator`, `ObjectiveState`,
+    `SiegeObjectiveBoard`, `WinResolver`, `MatchDurationCalculator`, `SiegeRuntimeLocks`. Time is the
+    `tick(memberCount)` call (one call = one second); randomness is an injected `RandomGenerator`.
+- **Plan-required tests, all present and green:**
+  - Legacy golden `CaptureCalculator` (`CaptureCalculatorTest`, 29): 1/2/5 attackers vs 0/1/3 defenders, IV and
+    non-IV, each checked against a verbatim port of v1 `Objective.calculateCapturePoints` (same as v2 minus the
+    "cinixians" check), plus a full 0–8 × 0–8 grid, capture times (lone attacker 100 s) and side-capture
+    reduction vs the legacy `orig/5*2/n` integer maths.
+  - N1/N2/N17 (`VoteTallyTest`, 13): highest wins; ties random within the tied set only; Random is counted
+    and wins only when strictly greater (from the rotation minus the candidates); un-voting is a normal
+    `REMOVED` result.
+  - 4 players / 3 teams (`TeamPartitionerTest`, 6): every team gets a player, and the test records that v2's
+    `Partition` made 2 chunks for 3 teams.
+  - Holder-relative scoring (`HolderRelativeScoringTest`, 4): a scripted 400 s, 4-team, 3-alliance match gives
+    identical step logs and result with the original names, the names swapped (including "cinixians" on an
+    attacker team) and blank names.
+  - `WinResolver` matrix (`WinResolverTest`, 13): IV capture; timeout with a single IV holder (defenders win
+    although attackers hold more side objectives); mixed IV holders → most objectives → Defender alliance →
+    draw; no-IV scenario; elimination; nobody left; admin stop/restart = aborted; `NOT_ENOUGH_PLAYERS` uses the
+    normal rules; membership check.
+  - Recapture D5 (`ObjectiveCaptureTest`, 10): off = final and stops scoring; on = points reset with the new
+    holder and the old holder's alliance attacks; IV objectives are final even with recapture; side pressure
+    only on an objective's first capture (no refund, no stacking); capture reward once per participant per
+    objective.
+  - State-machine timeline (`SiegeLobbyStateMachineTest`, 18): announcements exactly at 290/60/30/15 and nothing
+    else; voting closes at T-30 ("hub in 15 s"); draw T-25, HUB + hub teleport T-15, split T-10, start T-0; a
+    custom timeline and marks; not enough players at the draw → COOLDOWN with no draw effect and no lock, then
+    matchmaking again after the cooldown; hub drop-outs cancel the start; full loop through timeout → ENDING →
+    COOLDOWN; N9 skip in every phase; cross-lobby scenario and town locks; config frozen during a match.
+  - Also: `KnkSiegeDomainTest` (5), `SiegeDataAccessTest` (6), `MatchDurationCalculatorTest` (10),
+    `SiegeRuntimeLocksTest` (6), `SiegeMapperTest` (6, against the live sample), `DataAccessFactorySiegeTest` (2),
+    `SiegeQueryApiLiveTest` (2, skipped unless `KNK_LIVE_API_BASE_URL` is set).
+- **Test counts** (`./gradlew build --offline --rerun-tasks`, Gradle worked offline): knk-core **636** (baseline
+  516, +120), knk-api-client **38** (baseline 30, +6 run, +2 env-gated skipped), knk-paper **251** (baseline 249,
+  +2; the same 14 skipped). All green. **Standalone check (the exit criterion):** `core.siege` +
+  `core.domain.siege` (+ the clan/location/`BannerPatternSpec` classes they use) compile with plain `javac
+  --release 21` and **no Paper API on the classpath**; their 114 tests pass through the JUnit Platform launcher
+  (a 10-line launcher main; the console-standalone jar isn't in the Gradle cache).
+- **API sample and live check:** the mapper fixture `knk-api-client/src/test/resources/siege/
+  runtime-config-dev-2026-09-25.json` is a real `GET /api/siege-lobbies/runtime-config` response (API on :5099,
+  Release build of the web-api siege branch, dev DB, read-only; stopped afterwards). `SiegeQueryApiLiveTest`
+  ran green against it (lobby `test-cinix`: 1 ready, 0 skipped; readiness of a missing scenario → null).
+- **Decisions taken without the developer (review; each is cheap to change):**
+  1. **The scenario lock is taken at the draw (T-25)**, not at match start as DESIGN §6.5 lists it, and held
+     through ENDING (gate restore); released on cooldown/disable. The hub teleport at T-15 is already
+     scenario-specific, so two lobbies must not both draw it.
+  2. **The state machine draws itself** (it owns the `VoteTally` and asks `SiegeRuntimeLocks`);
+     `DrawScenarioEffect` tells the runtime the outcome. This avoids a draw → report-back handshake. The
+     runtime still removes title-excluded and over-capacity joiners (DESIGN §6.2) when it handles the effect.
+  3. **PlayersMin is checked at the draw and again at T-0** (the member count passed to `tick`). The T-0 check
+     catches hub drop-outs and joiners removed at the draw; it cancels with `membersInHub = true`. DESIGN only
+     names the draw check.
+  4. **Random votes draw by rotation weight**; if the rotation holds nothing besides the candidates, Random means
+     "any candidate". Tie-breaks and the no-vote pick are uniform. Candidates locked by another lobby at the
+     draw can't win; if all are locked, the draw falls back to the rest of the rotation (`CANDIDATES_UNAVAILABLE`),
+     else the round is cancelled (`NO_SCENARIO_AVAILABLE`) → COOLDOWN.
+  5. **No available scenario at matchmaking start** (all locked) → COOLDOWN, retried after a full cooldown. An
+     **empty rotation** (nothing ready) → DISABLED + `LobbyDisabledEffect(NO_READY_SCENARIO)` (DESIGN §6.1).
+  6. **ENDING lasts one tick:** the runtime does the whole end on `EndMatchEffect`; the next tick enters
+     COOLDOWN and emits `RefreshConfigEffect`.
+  7. **`stop()` (admin stop, shutdown) → DISABLED**, not COOLDOWN; `/siege admin start` restarts it.
+  8. **Admin skip in matchmaking only moves forward** to `voteClose + 1` (legacy T-31) and answers `TOO_LATE`
+     once there or past it (legacy set 31 again and re-ran the steps). A player's `/siege skip` works in
+     cooldown only; HUB answers `TOO_LATE` to admins.
+  9. **A capture needs an attacker:** it happens in a step with `delta > 0` that leaves the points at 0; the
+     closest living attacker is credited. Side-capture pressure can push an IV objective to 0 but doesn't
+     capture it; the next attacker step does (legacy would call `setCaptured` with possibly no capturer).
+  10. **Side pressure is applied after every objective has stepped** (it shows the next second). If two IV
+      objectives fall in the same second, the first in scenario order ends the match.
+  11. **Timeout with mixed IV holders:** only alliances holding an IV objective are contenders for "most
+      objectives"; a tie goes to the single tied alliance with a Defender team, else a draw (also when several
+      tied alliances contain a Defender). Without IV objectives every alliance is a contender.
+  12. **Spawnable objectives** are those held by the member's own team (not allies), with `SpawnWhenHeld`, not
+      contested (`SiegeObjectiveBoard.spawnableObjectives`).
+  13. **Snake-draft rank** is the title bracket (its MinExperience or index), not raw XP, so players in one
+      bracket are shuffled. With uneven counts the extra player goes to the team that picked last in the
+      previous round (4 players / 3 teams → 1/1/2).
+  14. **`SiegeScenariosQueryApi` has readiness only**: resolved scenarios exist only inside runtime-config.
+      `SiegeMatchesCommandApi` records are provisional and userId-based; gate snapshots are left to Phase 7.
+  15. **Unknown enum values:** role → ATTACKER, lobby mode → SCHEDULED (never auto-run), gate states → the
+      DESIGN defaults (initial CLOSED, on capture OPEN), gate view → PreLockdownView.
+  16. **The plugin re-validates the timeline** (`voteClose ≥ draw ≥ hub ≥ split ≥ 1`, and matchmaking longer
+      than voteClose); a bad config throws `IllegalArgumentException` (Phase 5: keep the old one, log).
+  17. **`HUB` is its own `SiegePhase` value** (DESIGN §5.4 calls it a sub-state), so menus/conditions can test it.
+- **Doc/code discrepancies found:**
+  - **Match length is not the v2 formula.** DESIGN §3.3 says the defaults are "the v2 formula", but v2 used
+    whole minutes: `ceil(members × 1.25)` min, at least 5 min, no cap. 5 players got 420 s in v2 and get 375 s
+    now (`MatchDurationCalculatorTest` records it). Implemented per DESIGN; one for the balancing pass (Phase 9).
+  - **Side-capture reduction** (DESIGN §7.4 `floor(cp × 0.4 / n)`) differs from legacy `cp/5*2/n` only when the
+    capture points aren't divisible by 5 (503 → 201 vs 200). Implemented per DESIGN.
+  - `legacy/siege-minigame.md` (business rules, step 4) words the IV values as "doubled to +5/+6"; the v1/v2
+    source has A2 = 5 and D2 = 6 on IV objectives, which is what DESIGN §7.2 says. DESIGN is right; the legacy
+    sentence is ambiguous.
+  - DESIGN §6.5 puts "Lock scenario" first at match start; see decision 1. DESIGN §5.1 calls the port
+    `SiegeMatchesApi`, §5.2 and this plan `SiegeMatchesCommandApi` (used).
+  - `Repository/knk-plugin/CLAUDE.md` still says "No dedicated `gui/`/`menus/` package exists yet"; InventoryMenu
+    (`menu/`) has shipped since. Stale, not touched here.
+  - **Dev-DB data, not code:** lobby 1's name is stored as mojibake `[TEST] Siege â€” Cinix` (the em dash
+    double-encoded when it was POSTed), and districts 6 and 7 have names ending in `\n`. Harmless now; both
+    would show in Phase 5 chat/menus. Fix by editing them in the web app.
+- **Runtime-config: prerequisites and notes for Phase 5/6 (API not changed):**
+  - Entry denials need the minimum title's **name** ("requires title X"); runtime-config has
+    `minTitleExperience` and `minTitleBracketId` only. Use the read-only `TitleBrackets` endpoint (Phase 3), or
+    add `minTitleName` to `SiegeRuntimeScenarioDto`.
+  - A lobby that is disabled simply disappears from runtime-config; Phase 5 must treat "missing after a
+    refresh" as "stop it when it's between matches".
+  - Still open from Phase 2: the other gates in the scenario area that §8.1 forces open aren't listed (Phase 7).
+- **What Phase 5 must wire:**
+  - **Startup:** `DataAccessFactory.createSiegeDataAccess(apiClient.getSiegeLobbiesQueryApi(),
+    apiClient.getSiegeScenariosQueryApi())` in `KnKPlugin`; one shared `SiegeRuntimeLocks` and one long-lived
+    `RandomGenerator` (don't create a new `Random` per draw: consecutive seeds give correlated first draws).
+    `getRuntimeConfigAsync()` → main thread → a `SiegeLobbyStateMachine` per `CONTINUOUS` lobby (catch
+    `IllegalArgumentException`: log, skip) → `start()` after ~2 s (§6.1).
+  - **Ticker (sync, 1 s):** `effects = machine.tick(memberCount)`, apply in order. While IN_PROGRESS, build
+    `Presence` per objective (living members within `captureRadius`, with distance) → `board.step(...)`. An IV
+    capture → `machine.endMatch(INSTANT_VICTORY)`; after a leave/quit → `winResolver.membershipEnd(...)` →
+    `machine.endMatch(reason)`. `onDisable` → `machine.stop(SERVER_RESTART)` for every lobby.
+  - **Effect → Paper action:**
+
+    | Effect | Paper runtime action |
+    |---|---|
+    | `PhaseChangedEffect` | refresh scoreboards/menus (`refreshOpenMenus` for `siege.*` in 8b) |
+    | `AnnounceEffect` | chat/title to online players (with the join command while `joinable`) or to members |
+    | `MatchmakingStartedEffect` | voting open for the candidates; `/siege vote` lists them |
+    | `DrawScenarioEffect` | remove members the scenario excludes (title, capacity) with a message; announce; Phase 6 `createMatch` |
+    | `SendToHubEffect` | `SiegePlayerVault` snapshot (memory + file), teleport to `hubLocation`; joining closed |
+    | `SplitTeamsEffect` | `TeamPartitioner.partition(entries by bracket, scenario team ids, random)` |
+    | `StartMatchEffect` | build `AllianceResolver`, `SiegeObjectiveBoard(scenario, new CaptureCalculator(machine.configuration()), …)`, `WinResolver`; §6.5 start (spawns, objectives, scoreboards, spawn picker); Phase 6 `startMatch` |
+    | `StartMessageEffect` | each team's `startMessage` on the action bar |
+    | `EndMatchEffect` | `WinResolver.resolve(reason, board, alliancesWithMembers)`; announce; restore members; release players; Phase 6 `completeMatch` (or `abortMatch` when aborted) |
+    | `CancelMatchmakingEffect` | announce the reason; restore members if `membersInHub`; `locks.releasePlayers(lobbyId)` |
+    | `RefreshConfigEffect` | `SiegeDataAccess.refreshRuntimeConfigAsync()` → main thread → `machine.offerConfiguration(...)` |
+    | `LobbyDisabledEffect` | log once |
+  - **Refresh points:** only `RefreshConfigEffect` (entering cooldown) and `/siege admin reload`. The machine
+    applies an offer immediately between matches and holds it until the next cooldown otherwise, so calling
+    `offerConfiguration` is always safe. New lobbies in the payload → new machines; missing ones → `stop(...)`
+    once they're between matches.
+  - **Locks:** join → `isJoinable()`, `joinCapacity()`, `joinMinTitleExperience()`, `locks.tryClaimPlayer(uuid,
+    lobbyId)`; leave → `locks.releasePlayer` + `machine.removeMember`. Scenario/town/gate locks are handled by the
+    machine; Phase 7 gate listeners use `locks.lobbyHoldingGate(gateId)`. Votes → `machine.vote(...)` and skip →
+    `machine.skip(PLAYER|ADMIN)`: map `VoteResult`/`SkipResult` to messages.
+- **Follow-ups (not blocking):** consider
+  `minTitleName` in runtime-config (above); fix the dev-DB name quirks; update the stale knk-plugin `CLAUDE.md`
+  line; the objective banner's 8-stage gradient maths (legacy `setCurrentCapturePoints`) is presentation and was
+  left to Phase 5's `SiegeWorldPresenter` (`ObjectiveState.capturePercent()` is there).
 
 ## Phase 5 — Paper runtime (knk-paper)
 
