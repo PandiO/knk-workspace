@@ -35,6 +35,7 @@ Live tracker of in-progress work across all four Knights and Kings repos
 | Feature | Repos / files claimed | Owner (human / session) | Status | Started | Last updated |
 |---|---|---|---|---|---|
 | _(example)_ Siege minigame — capture point sync | web-api: `Services/SiegeService.cs`; plugin: `siege/` package | Claude Code session A | Implementing capture-point event handling | 2026-09-17 | 2026-09-17 |
+| Kits — merge `claude/kits` to default branches, update `claude/siege-minigame`, author Phase 3 `Kit` FormConfiguration, load Phase 8 seed in dev DB | knk-web-api `master` + `claude/siege-minigame`; knk-plugin `main` + `claude/siege-minigame`; knk-web-app `main` + `claude/siege-minigame`; dev DB FormConfigurations; `docs/specs/kits/` | Claude Code session (Pandi) | Part 1: merging `claude/kits` onto `origin/master`/`origin/main` in `-merge` worktrees. Local unpushed promotion-sync merges on web-api `master` (`2d256eb`) / plugin `main` (`161428d`) deliberately left untouched and unpushed | 2026-09-25 | 2026-09-25 |
 
 ## Recently completed
 
