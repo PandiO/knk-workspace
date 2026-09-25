@@ -930,11 +930,14 @@ trunk merge. No web-app or web-api change.
     items the book can go on; v2 `PlayerEnchantMenu` behaviour). The developer expected a menu; cursor-onto-item stays.
   - **Owner/staff mode players are exempt from the inventory guards** (decision 14 narrowed). This reopens the
     duplication path for them: whatever they drop or store during a match is still given back by the restore.
-  - **Capture speed:** `SiegeConfiguration.CaptureAttackBase` 5 → **8** in the dev DB (row `global`, one UPDATE; the
-    developer asked for 7.5 or 8 and the column is an int). Lone attacker: 100 s → 63 s on both objectives; two
-    attackers: Keep 39 s, South Gate 50 s; 1 v 1 now progresses (250 s) instead of stalling. Takes effect after
-    `/siege admin reload` between matches (the runtime config is cached and frozen during a match). Seed defaults and
-    `KnkSiegeConfiguration.legacyDefaults()` still say 5 - revisit in the Phase 9 balancing pass.
+  - **Capture speed (dev DB `siege_configurations` row `global`, two UPDATEs):** `CaptureAttackBase` 5 → 8 → **10**
+    and `CaptureAttackPerExtraInstantVictory` 5 → **10** (side `CaptureAttackPerExtra` 2 and all defend values 6/3/6
+    unchanged). Developer target: The Keep at 300 points (after South Gate falls) in 30 s for one attacker, 15 s for two
+    (7.5 wasn't possible: the columns are ints). Undefended: Keep (500) 50 s / 25 s / 17 s for 1/2/3 attackers, South
+    Gate 50 s / 42 s / 36 s. Defended: 1 v 1 now progresses on both (125 s); Keep 2 v 2 63 s, 3 v 2 28 s; South Gate
+    2 v 1 84 s, 2 v 2 167 s. **Defenders can no longer hold even numbers on the main objective** (each extra attacker
+    +10 vs each extra defender +6) - the Phase 9 balancing pass should decide whether to scale the defend values.
+    Takes effect after `/siege admin reload` between matches. Seed defaults and `legacyDefaults()` still carry 5/2/5.
   - Tests after the fixes: knk-core 694, knk-api-client 38, knk-paper 259, all green.
 - **What Phase 6 must wire:** build the HTTP `SiegeMatchesCommandApiImpl` and pass it instead of
   `LoggingSiegeMatchesCommandApi` in `KnKPlugin.initializeSiege()` - the call sites already exist:
