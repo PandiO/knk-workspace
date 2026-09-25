@@ -1,14 +1,15 @@
 # Siege Minigame — Implementation Plan
 
-**Status:** Draft. Phases 1–7 + 9 = playable MVP (commands/chat UI): **Phases 1, 2, 3 and 4 code complete** on
+**Status:** Draft. Phases 1–7 + 9 = playable MVP (commands/chat UI): **Phases 1, 2, 3, 4 and 5 code complete** on
 `claude/siege-minigame` (Phase 2 migration applied to the dev DB and API verified live with test data;
 Phase 3 FormConfigurations authored in the dev DB and the forms proven against the live API; Phase 4's
-Bukkit-free plugin core tested without a server, not yet wired into the plugin; nothing verified
-in-game yet); Phases 5–7 + 9 not started. Phase 8a
-(InventoryMenu engine extensions) built and merged into `claude/siege-minigame`, not verified live;
-Phase 8b open; Phase 10 is post-MVP.
-**Last updated:** 2026-09-25 (Phase 4 status block added: plugin core classes, test results, decisions to
-review, discrepancies, the effect → Paper wiring Phase 5 needs)
+Bukkit-free core tested without a server; Phase 5's Paper runtime (5a loop/commands/vault, 5b listeners/presenters,
+5c enchant books) wired into the plugin and tested without a server, **not yet played live** - the manual checklist
+in "Phase 5 status" is the developer's sign-off; the match API is a logging placeholder until Phase 6); Phases 6–7 + 9
+not started. Phase 8a (InventoryMenu engine extensions) built and merged into `claude/siege-minigame`, not verified
+live; Phase 8b open; Phase 10 is post-MVP.
+**Last updated:** 2026-09-26 (Phase 5 status block added: Paper runtime classes, test results, 21 decisions to review,
+discrepancies, the live verification checklist, what Phases 6/7/8b must wire)
 
 Ref: `DESIGN.md` (decisions — not restated here), `MENU_TEMPLATES.md`,
 `docs/reports/2026-09-25-siege-minigame-gap-analysis.md`. Plan format follows
@@ -715,6 +716,233 @@ without a server; nothing is wired into the running plugin yet (that's Phase 5).
 rejoin; drop/chest/ender-chest dupes blocked; friendly fire and safe zones; non-member can't hit
 members; command filter.
 **Exit:** playable end-to-end with commands, with Phase 6 wired (below).
+
+**Phase 5 status (2026-09-26): 5a, 5b and 5c code complete on `claude/siege-minigame` (knk-plugin), pushed; wired
+into `KnKPlugin`; tested without a server; not deployed and not played live yet (sign-off below is the
+developer's).** Commits: `dfee9b1` (5a code), `bce4d27` (5a tests), `12cf3b6` (5b code), `865f366` (5b tests),
+`1305552` (5c code), `80cdeb8` (5c tests). `origin/main` hadn't moved since the last siege merge (`807ca2c`), so no
+trunk merge. No web-app or web-api change.
+- **Classes** (all under `net.knightsandkings.knk`):
+  - `paper.siege`: `SiegeService` (the runtime: lobbies, 1 s sync ticker, effects, every player/admin operation),
+    `SiegeLobbyRuntime` (machine + members + round state), `SiegeMatch` (a running match: alliances, board, win
+    resolver, roster, match token, spawn-pick windows, capture times), `SiegeMatchObserver` (hooks: lobbyChanged,
+    matchStarted, secondTicked, objectiveCaptured, memberRemoved, matchEnded, shutdown), `SiegePlayerVault`,
+    `SiegeWorldPresenter`, `SiegeScoreboardPresenter`, `SiegeEnchantBooks`, `SiegeMessages`, `SiegeBukkit`,
+    `LoggingSiegeMatchesCommandApi` (**Phase 6 placeholder**).
+  - `paper.commands.SiegeCommand`; `paper.listeners`: `SiegeSessionListener`, `SiegeCombatListener`,
+    `SiegeDeathRespawnListener`, `SiegeCommandFilterListener`, `SiegeInventoryGuardListener`,
+    `SiegeEnchantBookListener`. `BannerDesignBukkitMapper` gained `toPatterns`/`baseColor`/public `bannerMaterial`.
+  - `core.siege` (still no Bukkit/Paper/Adventure import; grep = 0): `SiegeMatchRoster`, `SiegeSpawnOptions`,
+    `SiegeCombatRules`, `SiegeCommandFilter`, `CaptureProgressGradient`, `SiegeEnchantMarkers`, `EnchantDropPlanner`,
+    `ProvisionalRewardCalculator`, `SiegeDisplayText`, `SiegeTitleRanks`.
+  - `core.domain.users.KnkTitleBracket` + port `core.ports.api.TitleBracketsQueryApi`; knk-api-client
+    `TitleBracketDto` + `TitleBracketsQueryApiImpl` (`GET /api/TitleBrackets`, read-only, exists on the web-api
+    siege branch since Phase 3), registered in `KnkApiClient`.
+  - `KnKPlugin.initializeSiege()` (after the gate/region setup): `createSiegeDataAccess`, one `SiegeService` with one
+    `SiegeRuntimeLocks` and one `SplittableRandom` shared with the book drops, presenters/books as observers, the
+    `/siege` command and the six listeners; `onDisable` calls `siegeService.shutdown()` **first** (before the API
+    client closes). `plugin.yml`: `/siege` and the §11.1 nodes; only `knk.siege.play` defaults to `true`.
+- **5a (loop, service, commands, vault):**
+  - Bootstrap: `getRuntimeConfigAsync()` → main thread → one machine per `Continuous` lobby (a bad timeline is
+    logged and the lobby skipped) → `start()` 40 ticks later. Title brackets fetched alongside.
+  - Ticker: `machine.tick(memberCount)` → exhaustive `switch` over `SiegeEffect` → while IN_PROGRESS, presence per
+    objective (online, alive, not spectating, same world, within `captureRadius`, with distance) →
+    `board.step` → captures (roster `Captures + 1`, capture time, announcements with sounds to the capturer's
+    alliance / the losing alliance / everyone else, `objectiveCaptured` hook) → observers → an IV capture calls
+    `endMatch(INSTANT_VICTORY)`. After every leave/quit/kick during IN_PROGRESS: `WinResolver.membershipEnd` →
+    `endMatch(reason)`. Every effect and observer runs in its own try/catch so one failure can't stop the ticker.
+  - Effects as in the Phase 4 wiring table: draw (match token + `createMatch`, title/capacity exclusions with a
+    message), hub (close inventory, vault snapshot, teleport), split (`TeamPartitioner` with bracket ranks, team
+    told), start (roster from the split, default-spawnpoint teleport, title, objective summary, spawn picker for
+    teams with 2+ options, `startMatch`), start messages (action bar per team), end (`WinResolver.resolve`,
+    announcement to everyone, per-member stats + **provisional** reward line, `completeMatch`/`abortMatch`,
+    observers, restore + release everyone), cancel (reason to members, `abortMatch` if the draw had created a row,
+    restore if in the hub, release), refresh, disabled (logged once per disable).
+  - Refresh: only on `RefreshConfigEffect` and `/siege admin reload`; one request in flight; `offerConfiguration` per
+    lobby (IAE → keep the old one); new lobbies → new machines; a lobby missing from the payload is stopped and
+    removed when between matches, otherwise at its next cooldown's refresh.
+  - `/siege` (overview), `join [lobby]`, `leave`, `info [lobby]` (per-phase chat fallback of `siege.information`),
+    `vote [n|name|random]` (no argument = clickable list with counts), `spawn [option]` (no argument = clickable
+    picker), `skip [lobby]`, `help`; `admin list|start|stop <lobby> [reason]|skip|kick <player>|reload|manage`, tab
+    completion. Each subcommand is one `SiegeService` call returning a `Reply`; every `VoteResult`/`SkipResult`/
+    cancel reason/end reason has a sentence (N9).
+  - Vault: see decisions 1 and 8–10.
+- **5b (listeners, presenters):**
+  - Combat (`HIGHEST`): attacker from projectiles (null-safe), `SiegeCombatRules` (member ↔ non-member always
+    denied, no fighting in the hub, allies denied, both own-spawn safe zones), allowed hits un-cancelled, headshot
+    (projectile Y above feet + 1.33, v2) × `headshotMultiplier` between enemies only. No WorldGuard flag is touched.
+  - Death (`HIGHEST`, members away in a match only): keepInventory/keepLevel, no drops/XP/death message, credit via
+    `SiegeMatchRoster.recordDeath` and announcements to the killer's team at the configured kill counts and at
+    streaks above the configured value, carrying the streak (N12). Respawn: spawn choice → default spawnpoint; hub
+    during HUB; pre-siege location for a member restored while dead; picker after `SpawnPickerDelayTicks`.
+  - Command filter (`LOWEST`), inventory guard (DESIGN §9.3, see decision 14), session listener (quit restore,
+    join restore two ticks later, then the 5c sweep).
+  - World: banner block with the 8-stage gradient (legacy index formula, verified for every point value 0–500) in
+    the holder's and the leading attacker's banner base colours; `TextDisplay` above it (name, holder, %, "Under
+    attack!"); flame capture rings and happy-villager rings round every spawnpoint's safe zone, sent with
+    `Player.spawnParticle` to members within 64 blocks only.
+  - Scoreboard: one board per team; sidebar = team, time left, objectives IV-first, green if the viewer's alliance
+    holds it, red otherwise, ⚔ while contested; every team is a Bukkit team on each board (name-tag colour +
+    `[Team]` prefix); tab list `[Team] name [K/D]`; previous scoreboard and tab name restored on leave/end/shutdown.
+- **5c (enchant books):** drop roll per second (chance per mille, `MaxBooksAlive`, allowed keys, level range, only
+  with `EnchantDropsEnabled`; uniform in the real radius, fixing v2's int cast), book level clamped to the
+  enchantment's max; PDC `siege_book = <matchToken>`, non-persistent `Item`s tracked and removed at match end;
+  pickup only by members of that match (un-cancelled at `HIGHEST` above `PlayerListener.onItemPickup` and the guard;
+  mobs, allays and hoppers can't take one); left/right-click the book on the cursor onto an item in your own
+  inventory: `canEnchantItem`, conflicts, `max(existing, book)`, book consumed, `siege_enchants` marker recorded
+  (first application per match keeps the pre-siege level); stripping sweep over inventory, ender chest and cursor
+  after every vault restore and on every join (reverts to `previousLevel` or removes; oldest record wins across
+  matches; stray books deleted).
+- **Test counts** (`./gradlew build --offline -x deployToDevServer`): knk-core **691** (baseline 636, +55),
+  knk-api-client **38** (unchanged; the same 2 env-gated tests skipped), knk-paper **259** (baseline 251, +8; the
+  same 14 skipped). All green. New test classes: `SiegeMatchRosterTest` (9), `SiegeSpawnOptionsTest` (6),
+  `ProvisionalRewardCalculatorTest` (3), `SiegeDisplayTextTest` (4), `SiegeTitleRanksTest` (4), `SiegeCombatRulesTest`
+  (8), `SiegeCommandFilterTest` (5), `CaptureProgressGradientTest` (4), `SiegeEnchantMarkersTest` (8),
+  `EnchantDropPlannerTest` (4); knk-paper `SiegeMessagesTest` (4), `SiegeCombatListenerTest` (3),
+  `SiegeWorldPresenterTest` (1). Plan-required 5c tests: stripping reverts/removes, stray books deleted,
+  non-member pickup blocked - as pure rules in `SiegeEnchantMarkersTest` (`ItemStack` can't be built without a
+  server; the Paper glue calls exactly these rules). The Paper runtime itself (effects, vault files, presenters,
+  listeners) has **no automated test**: it needs a live server - see the checklist.
+- **Decisions taken without the developer (review; each is cheap to change):**
+  1. **Vault file** is `plugins/KnightsAndKings/siege-vault/<uuid>.yml` (YAML; items as base64 of Paper's
+     `ItemStack.serializeItemsAsBytes`, data-version aware; written to a temp file then renamed). DESIGN says
+     `plugins/KnK/siege-vault/<uuid>.dat`; the plugin's data folder is named after the plugin.
+  2. **`knk.siege.play` also honours its `plugin.yml` default.** `KnkPermissible` fails closed for non-ops without a
+     grant, so with it alone no ordinary player could join; `SiegeService.hasPermission` accepts Bukkit's
+     `hasPermission` for this one node only. Every other siege node is `KnkPermissible`-only (ops always pass).
+  3. **Match token ≠ match id.** Each drawn round gets a random UUID token used for PDC tags, vault files and
+     markers; the Phase 6 match id is a separate future (the placeholder hands out negative ids).
+  4. **Title names** come from a new read-only `TitleBracketsQueryApi`; if brackets can't be fetched, denials say
+     "N XP" and the split ranks by raw XP. The split rank is the bracket MinExperience (Phase 4 decision 13).
+  5. **Joining needs the player's cached user profile** (user id for Phase 6); otherwise "Your profile is still
+     loading". A player with a leftover vault file is restored first and asked to join again.
+  6. **Snapshot failure** (file can't be written) removes the player from the lobby instead of taking them in.
+  7. **Hub location unresolvable** (world not loaded) → members are snapshotted but stay where they are; logged.
+  8. **Quit mid-match:** inventory, XP, effects and game mode restored inside `PlayerQuitEvent` (health/food only if
+     alive); the file is rewritten with `inventoryRestored: true` and the rest (location, health, food) is applied
+     on the next join. A crash leftover (flag false) gets everything on join.
+  9. **Dead at the end:** inventory/stats restored at once, pre-siege location applied on respawn.
+  10. **Restore sets health to the snapshot value** (DESIGN "exact"); a snapshot taken at 3 hearts restores 3 hearts.
+  11. **Spawn picks teleport only inside a 20 s window** after match start / a respawn (the chat picker's
+      equivalent of "picker opened by a respawn"); outside it `/siege spawn x` only sets the respawn choice.
+  12. **Respawn at a contested objective falls back** to the default spawnpoint, like the picker refuses it; the
+      objective spawn teleports to the capture point itself (MENU_TEMPLATES C.4 says "within 3 blocks").
+  13. **No fighting in the hub**; members who die in the hub keep their inventory and respawn at the hub.
+      Un-cancelling allowed hits is skipped when either player is admin-frozen or still loading (those features
+      cancel at HIGHEST/LOWEST on the same handler list).
+  14. **Inventory guard opens nothing that persists**: all world storage (container blocks, double chests, ender
+      chest, storage entities, merchants, crafters) is closed to members - taking out would also let the restore
+      wipe world items. InventoryMenu GUIs stay usable. Item-holding blocks (lectern, jukebox, chiseled bookshelf,
+      decorated pot, campfires, composter, flower pots) can't be used or placed; all entity/hanging placement is
+      denied. **Ordinary block placement is not denied** - see follow-ups.
+  15. **Command filter:** `/siege` is always allowed; labels compare case-insensitively without slash or namespace;
+      aliases aren't resolved (list `/r` and `/reply` separately if both should work).
+  16. **Objective banner** is placed only where the capture point block is air (logged otherwise); placed blocks are
+      logged to `siege-vault/world-blocks.yml` and cleared on the next enable after a crash. v1's hard-coded RED base
+      on stage 6 is not reproduced; a team without a banner uses its chat colour mapped to a dye.
+  17. **K/D is in the tab list only**, not the sidebar (per-viewer lines on a per-team board would need a board per
+      player).
+  18. **Lobby lifecycle on refresh:** a lobby disabled for "no ready scenario" starts by itself once a refresh brings
+      one, unless an admin stopped it (`/siege admin start` clears that). Non-Continuous lobbies are skipped (logged
+      once).
+  19. **Kill announcements go to the killer's team** (v2); captures are announced to every member of the match.
+  20. **An abort after the draw** reports `NOT_ENOUGH_PLAYERS` for both NOT_ENOUGH_PLAYERS and NO_SCENARIO cancels
+      (the only abort reasons besides admin stop / restart).
+  21. **Book application:** left/right-click on an item in your own inventory only; a book of another or no running
+      match is deleted when clicked; siege books can't be applied to books.
+- **Doc/code discrepancies found:**
+  - Vault path and format (decision 1); PDC keys are `knightsandkings:siege_book`/`siege_enchants` (plugin
+    namespace, as `GateDisplayManager` does), DESIGN §9.4 writes `knk:`.
+  - DESIGN §11.1 "no plugin.yml defaults beyond `knk.siege.play: true`" assumes Bukkit reads that default; siege
+    permissions go through `KnkPermissible`, which doesn't (decision 2).
+  - DESIGN §6.5 lists "Lock scenario → gate lockdown" at match start; the lock is taken at the draw (Phase 4
+    decision 1) and gate lockdown is a Phase 7 hook.
+  - `knk-paper/build.gradle.kts` makes `build` depend on `deployToDevServer`: a plain `./gradlew build` copies the jar
+    into DEV_SERVER_1.21.10. The plugin `CLAUDE.md` doesn't mention it. This session's baseline build did that once;
+    the deployed jar was already a siege-branch (Phase 4) build from 00:30 and the copy was byte-identical, so
+    nothing changed there. All later builds used `-x deployToDevServer`.
+  - `Repository/knk-plugin/CLAUDE.md` still says no gui/menus package exists (stale since InventoryMenu; not edited).
+- **Runtime-config / API prerequisites (not changed here):** `minTitleName` in runtime-config would remove the
+  `TitleBrackets` lookup; the Phase 6 `/api/siege-matches` endpoints; Phase 7's list of the scenario area's
+  non-selected gates.
+- **Manual live verification (developer; DEV_SERVER_1.21.10, API on :5099 from the web-api siege branch, dev DB,
+  3+ accounts A/B/C where A is op).** Deploy with `./gradlew :knk-paper:dev` once ACTIVE_SESSIONS shows the dev
+  server is free. For quick loops set lobby `test-cinix` to a short matchmaking time (≥ 60 s) and cooldown in the web
+  app, then `/siege admin reload`.
+  1. **Bootstrap:** server log shows "Siege runtime initialized", "Lobby test-cinix loaded (1 ready …)", and after ~2 s
+     an online "Matchmaking for [TEST] Siege — Cinix has started" (name repaired, not `â€”`). `/siege` lists it;
+     `/siege admin list` shows id 1, rotation 1 ready.
+  2. **Join + vote:** B and C `/siege join test-cinix` (and A); a non-op must be allowed (checks decision 2).
+     `/siege vote` lists `[TEST] Siege of Cinix` + Random with counts; vote, vote again → withdrawn; `/siege vote 9` →
+     "isn't one of this round's scenarios".
+  3. **Announcements:** countdown marks (290/60/30/15 or your marks) to everyone with a clickable join; at vote close
+     members get "teleported to the hub in 15 seconds"; draw at T-25 names the scenario and method.
+  4. **Hub (T-15):** members teleported to the hub; `plugins/KnightsAndKings/siege-vault/<uuid>.yml` exists for each;
+     `/siege join` by a latecomer → "already under way"; `/spawn`, `/kit` blocked, `/msg` works; dropping an item,
+     opening a chest/ender chest, placing a shulker box, using an item frame → denied; fighting in the hub denied.
+  5. **Split (T-10):** each member told their team (Defenders = clan team 1, Raiders = team 2).
+  6. **Start (T-0):** teleport to the team spawnpoint; title; sidebar (team, time left, The Keep ⚑ first, South Gate);
+     tab `[Team] name [0/0]`; name tags coloured; banners at both capture points; `TextDisplay` above them; flame rings
+     at the objectives and green (happy villager) rings at both spawnpoints - visible to members, **not** to a
+     non-member standing next to them; start message on the action bar ~2 s in.
+  7. **Combat:** attacker hits defender → damage; same-team hit → denied with a bass note; hit into or from inside a
+     spawn safe zone → denied with a message; a non-member hitting a member (and vice versa) → denied; a bow shot
+     above the head line → "Headshot!" and more damage (multiplier from Siege Settings).
+  8. **Death:** kill someone → no drops, no death message, keeps items and level; killer's team sees the 5-kill
+     message at 5 kills and a streak message with the streak number above 3; victim respawns at the team spawnpoint;
+     tab K/D updates.
+  9. **Capture + spawn choice:** a Raider stands in South Gate's ring → sidebar ⚔, banner gradient shifts toward
+     Raiders' colour, % rises; defenders in the ring push it back; at 100 % "X captured South Gate!" (capturer's side,
+     level-up sound) / "Lost objective South Gate" (defenders); Keep's % jumps by the side-capture reduction. Raider
+     `/siege spawn` now lists South Gate if it has SpawnWhenHeld; pick it, die, respawn there; while a defender stands
+     in its ring the option shows "being captured" and respawn falls back to the spawnpoint.
+  10. **IV-capture win:** capture The Keep → everyone sees "Raiders won … captured the main objective"; each member
+      gets stats + a provisional reward line; everyone is back where they were with their exact pre-siege inventory,
+      XP, health, effects and game mode; vault files deleted; banners and displays gone; scoreboard back to normal;
+      server log shows the `[match-api:no-op]` create/start/complete lines.
+  11. **Cooldown → next matchmaking:** `/siege info` shows the cooldown; `/siege skip` (non-op without
+      `knk.siege.skip`) denied, op skip → matchmaking starts again.
+  12. **Timeout win:** another round, nobody captures The Keep → at 00:00 Defenders win ("held the main objective").
+  13. **Leave / quit / kick:** mid-match `/siege leave` → restored at once, told no rewards; C quits mid-match →
+      rejoin puts C back at the pre-siege spot with the pre-siege inventory, file deleted; if only one side is left
+      the match ends "only one side has players left"; `/siege admin kick C` restores C.
+  14. **Crash leftover:** during a match stop the server hard (kill the process); on restart the Keep/South Gate
+      banners are gone ("Removed N objective banner(s)" in the log); each member's first join restores inventory +
+      position and deletes the file.
+  15. **Admin:** `/siege admin stop test-cinix too late` mid-match → aborted, everyone restored, no rewards, lobby
+      stays stopped; `/siege admin start test-cinix` → matchmaking; `/siege admin skip` in matchmaking → "voting
+      closes in 1 second", again → "Too late"; `/siege admin reload` → "Siege configuration refreshed"; `/siege admin
+      manage` → web-app pointer.
+  16. **Enchant books (5c):** with drops enabled and the chance raised in Siege Settings, books appear inside capture
+      rings; a member picks one up, a non-member (even op) can't; click it onto a sword → enchanted, book gone, message;
+      onto a book/unfit item → refused; at match end the sword is back to its pre-siege enchantments and ground books
+      are gone; `/give` yourself an old tagged book outside a match → deleted at next join.
+- **What Phase 6 must wire:** build the HTTP `SiegeMatchesCommandApiImpl` and pass it instead of
+  `LoggingSiegeMatchesCommandApi` in `KnKPlugin.initializeSiege()` - the call sites already exist:
+  `createMatch` in `SiegeService.onDraw` (future kept as `SiegeLobbyRuntime.matchIdFuture`), `startMatch` in
+  `onStartMatch` (userId + team id per roster member), `participantLeft` in `removeMember` (leave/quit/kick during
+  a match), `completeMatch` (with `completion(...)`: `WinResolver.Result`, roster stats, one `ObjectiveResult` per
+  capture with capturer userId and time, or the final holder when never captured) or `abortMatch` in `onEndMatch`,
+  `abortMatch` in `onCancel` when a row exists and via `stop(SERVER_RESTART)` on disable. `printRewardSummary`
+  already prints a non-empty `RewardSummary`; then drop the provisional line (`rewardLine`). Still Phase 6: retry +
+  `siege-vault/pending-results/<matchId>.json` spooling, startup recovery of rows left `InProgress`, and what to do
+  when `createMatch` fails (today later calls are skipped for that round).
+- **What Phase 7 must wire:** a `SiegeMatchObserver` for gates (`matchStarted` → lockdown; note it runs after the
+  spawn teleports - add a "before start" hook if the lockdown must come first as DESIGN §6.5 orders it;
+  `objectiveCaptured` → `transferOwnership(gate, capturer team, gateStateOnCapture)`; `matchEnded` → restore);
+  `SiegeGateListener` via `service.locks().lobbyHoldingGate(gateId)`, `service.lobbies()`, `SiegeMatch.alliances()`
+  and `SiegeMatch.board()` (current holder of an objective gate); lockdown and the non-member view in
+  `SiegeSessionListener` (region entry, teleport, join, respawn) with `service.activeLobbyOf(uuid)` for membership;
+  startup recovery of stale `CurrentSiegeId`.
+- **Phase 8b notes:** menu actions call the same `SiegeService` methods (`join`, `leave`, `vote`, `spawn`, `skip`);
+  `lobbyChanged` is the `refreshOpenMenus` hook; views read `SiegeLobbyRuntime`/`SiegeMatch`/
+  `SiegeSpawnOptions.forTeam` (spawn-options source) and `CaptureProgressGradient.banner` (objective banners);
+  replace the chat picker in `SiegeService.offerSpawnPicker` with opening `siege.spawnpoint`.
+- **Follow-ups (not blocking):** decide whether members may place ordinary blocks (placing consumes an item the
+  restore gives back; town WorldGuard build flags normally prevent it, but nothing siege-side does); arrows/tridents
+  shot during a match stay in the world after the restore; `minTitleName` in runtime-config; the stale plugin
+  `CLAUDE.md` menu line and its missing note that `build` deploys; the dev-DB name quirks (displayed repaired now);
+  a Paper integration test harness for the runtime if the live checklist finds regressions.
 
 ## Phase 6 — Match persistence and rewards (knk-web-api + knk-plugin wiring)
 
