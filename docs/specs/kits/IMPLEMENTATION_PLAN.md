@@ -1,9 +1,16 @@
 # Kits — Implementation Plan
 
-**Status:** Phase 1 (§1), Phase 2 (§2), and Phase 3 (§3) shipped 2026-09-25 — see "§1 status"/
-"§2 status"/"§3 status" below. §4-§8 not started, ready whenever picked up on the same
-`claude/kits` branch in each repo (§0's one-branch-per-repo rule).
-**Last updated:** 2026-09-25 (§3: Kit admin `FormConfiguration` authored and verified end-to-end;
+**Status:** Phase 1 (§1), Phase 2 (§2), Phase 3 (§3), Phase 4 (§4), and Phase 5 (§5) shipped
+2026-09-25 — see "§1 status"/"§2 status"/"§3 status"/"§4 status"/"§5 status" below. §6-§8 not
+started, ready whenever picked up on the same `claude/kits` branch in each repo (§0's
+one-branch-per-repo rule).
+**Last updated:** 2026-09-25 (§4/§5: knk-plugin data access, item-building/`KitGrantPlacer`, the
+`/kit` command surface, and the first-join grant hook — see "§4 status"/"§5 status" for the
+branch-base merge this phase needed (`claude/kits` had never actually been forked from
+`claude/user-features`, despite Phase 1 assuming it was), the `javac`-against-Maven-Central
+verification method, and a real correctness bug caught before commit (first-join kits were being
+claimed server-side but never placed into the player's inventory)). Previously updated 2026-09-25
+(§3: Kit admin `FormConfiguration` authored and verified end-to-end;
 see "§3 status" for the FormConfigBuilder-authoring-mechanism finding and the `entityApiMapping.ts`
 gap this phase closed). Previously updated 2026-09-25 (`DESIGN.md` §0c: removed Phase 5's in-game CRUD fallback logic
 entirely — `/kit manage` is now a pure pointer to the FormWizard, no `KitsApi` CRUD client needed;
@@ -344,6 +351,113 @@ none of them depend on anything this phase added beyond Phase 2's already-shippe
   `firstEmpty()` in 0-35; no empty slot → `dropItemNaturally`) once, called once per item in
   order — not five copies of near-identical slot-conflict logic.
 
+### §4 status — shipped 2026-09-25
+
+All of §4's bullets are done on `claude/kits` (knk-plugin), continued from Phase 3's state (no
+new branch forked, per §0's one-standing-branch-per-repo rule) — but **only after resolving a
+real, unassumed branch-base gap this section itself warned about**: see the "branch-base
+resolution" paragraph below before anything else.
+
+**`knk-core`/`knk-api-client` (Bukkit-free):** `dataaccess/KitsDataAccess.java` — same
+`FetchPolicy`/`FetchResult`/`DataAccessExecutor` cache-first shape as `ItemBlueprintsDataAccess`
+(`getByIdAsync`/`refreshAsync`/`searchAsync`/`listAsync`/`invalidate*`), plus a deliberately
+**never-cached** `getAvailableForUserAsync(userId)` passthrough — per-user cooldown/cost/purchase
+state must be fresh on every `/kit list`, the same reasoning `DESIGN.md` §4.1 gives for why
+`ClaimKitAsync` never trusts a caller's own prior availability read either. `ports/api/{
+KitsQueryApi,KitsCommandApi}.java` — `KitsQueryApi` is read-only (`search`/`getById`/
+`getAvailableForUser`), no `create`/`update`/`delete` client method exists at all (`DESIGN.md`
+§4.0/§4.5: `Kit` CRUD is FormWizard-only); `KitsCommandApi` covers `claimAsync`/`purchaseAsync`/
+`giveAsync(targetUserId, kitId)`/`grantFirstJoinKitsAsync`. `domain/item/{KnkKit,KnkKitContent,
+KnkKitAvailability,KnkKitClaimResult,KnkKitPurchaseResult}.java` — Bukkit-free records mirroring
+`knk-web-api`'s `KitDto`/`KitContentDto`+`KitContentSlotDto`/`KitAvailabilityDto`/
+`KitClaimResultDto`/`KitPurchaseResultDto` field-for-field (read directly from `Dtos/KitDtos.cs`,
+not assumed from this plan's summary — one deliberate simplification: `KitContentDto` and
+`KitContentSlotDto` are wire-identical `(SlotIndex, ItemBlueprintId, Quantity)` shapes server-side,
+so the plugin uses one shared `KitContentSlotDto`/`KnkKitContent` type for both instead of two
+structurally-identical client types). `dto/*`, `mapper/KitsMapper.java`, `impl/{KitsQueryApiImpl,
+KitsCommandApiImpl}.java` (new, built on `BaseApiImpl` like the newer `PermissionsApiImpl`, not
+the older raw-OkHttp shape `ItemBlueprintsQueryApiImpl` predates), wired into `KnkApiClient`
+(`getKitsQueryApi()`/`getKitsCommandApi()`). `DataAccessFactory.createKitsDataAccess` — passes
+`entitySettings.kits().ttl()` (the entity's own configured TTL) the same way
+`createPermissionsDataAccess` does, **not** the known-broken pattern this section's own bullet
+list flagged (most other `create*DataAccess` call sites pass the *global* cache TTL from
+`KnKPlugin.java` instead of the entity's own `ttl-minutes`/`-seconds`) — `KnKPlugin.java`'s call
+site still passes `config.cache().ttl()` like every other pre-existing call site, so this doesn't
+newly fix that pre-existing gap, but it does correctly wire the config plumbing
+(`KnkConfig.EntityCacheSettings.kits`, `ConfigLoader`, `config.yml`'s new `entities.kits` block)
+so a future cleanup pass fixing all 11 broken call sites at once picks Kits up for free.
+
+**`knk-paper` (Bukkit-dependent):** `kit/KitGrantPlacer.java` — one shared static routine,
+`resolveAsync` (network calls, off-main-thread safe: resolves each referenced `ItemBlueprint` via
+the existing `ItemBlueprintsDataAccess`, builds each `ItemStack` via the existing
+`ItemBlueprintBukkitMapper.fromBlueprint` — the same call `ItemBlueprintsDebugCommand` already
+makes) and `place` (main-thread only, touches `Player`/`Inventory`): applies `DESIGN.md` §4.2's
+exact five-step algorithm per item, in order Helmet→Chestplate→Leggings→Boots→Shield→Hand→
+Contents (ascending `SlotIndex`), using the item's own `ItemBlueprint.MaxStackSize` (not just
+Bukkit's material-default max stack) as the merge cap. **One deliberate, flagged scope narrowing
+against a plausible broader reading, not silently assumed:** `KitGrantPlacer` does **not** apply
+`ItemBlueprint.DefaultEnchantments` the way `/knk itemblueprints give` does — this section's own
+bullet list says only "build each ItemStack via the existing mapper" (i.e. the single
+`ItemBlueprintBukkitMapper.fromBlueprint` call), not the separate enchantment-application/
+lore-reordering logic `ItemBlueprintsDebugCommand#executeGive` layers on top of that call. Taken
+literally rather than assuming parity was intended. **If full `/knk itemblueprints give` parity
+turns out to matter for Kit contents, that enchantment-application logic isn't reusable as-is (it's
+private to `ItemBlueprintsDebugCommand`)** — a follow-up would need to extract it into a shared
+helper first, the same "reuse, don't reimplement" precedent `DESIGN.md` §6.1 already used for
+`ScannedItemJsonBuilder`.
+
+**Branch-base resolution (the open question `IMPLEMENTATION_PLAN.md` §0/§10 and the task's own
+instructions both named as real, not to be assumed either way):** checked directly, not assumed.
+`claude/user-features` is **still unmerged** into `knk-plugin`'s `main` (`git merge-base
+--is-ancestor origin/claude/user-features origin/main` → false). More importantly,
+**`knk-plugin`'s `claude/kits` was confirmed bit-identical to `origin/main`** (`git rev-parse`
+both → the same commit, `9cf81a7`) — i.e. still forked from `main`, never rebased onto
+`claude/user-features`, exactly the risk Phase 1's own status note flagged without resolving.
+`KnkPermissible`/`PermissionsDataAccess` were confirmed **absent** from `claude/kits` as checked
+out (`grep` for both classes found zero matches before this session's changes). **Fixed by
+merging `origin/claude/user-features` into `claude/kits` directly** (`git merge`, no `-m`-only
+squash) — this fast-forwarded cleanly with **zero conflicts**, since `claude/kits` had no
+divergent commits of its own yet to conflict with `user-features`' 14 commits. `claude/kits` is
+now at `user-features`' tip (`2df0383`) plus this phase's own commit on top; `KnkPermissible`/
+`PermissionsDataAccess`/`WorldTaskHandlerRegistry`/`ItemBlueprintsDataAccess`/
+`ItemBlueprintBukkitMapper` are all now confirmed present and were the base this phase's code was
+actually written and verified against. **Nothing pushed to `main`/`master`** — only `claude/kits`
+was updated.
+
+**Verification — real `javac` against Maven Central, not `./gradlew`, and why:** `repo.papermc.io`
+returned a `403`/`connect_rejected` via this sandbox's egress proxy (confirmed directly with
+`curl`, not assumed) — the same finding every prior session in this repo has hit. Worse than
+usual: even `./gradlew --offline :knk-core:compileJava` failed immediately at Gradle's own
+settings-evaluation stage (`knk-paper/build.gradle.kts`'s `com.gradleup.shadow` plugin isn't
+cached either), so Gradle wasn't usable for **any** module this session, not just the Bukkit-
+dependent ones. Fell back to the established precedent: fetched real `jackson-databind`/
+`jackson-core`/`jackson-annotations`/`jackson-datatype-jsr310`/`gson`/`okhttp`/`okio-jvm`/
+`kotlin-stdlib` jars directly from Maven Central (reachable, confirmed via `curl` `200`) and
+compiled with `javac` directly. **`knk-core`** (163 files, excluding only the 9 pre-existing
+Bukkit-`Vector`-dependent files in `util`/`gates`/`domain.gates` that predate this phase and were
+untouched by it) — **0 errors**. **`knk-api-client`** (146 files, the entire module including the
+full edited `KnkApiClient.java`, not just the new Kits files in isolation) against the `knk-core`
+output plus the fetched jars — **0 errors**. **`knk-paper`** (the Bukkit-dependent half, including
+`KitCommand.java`/`KitGrantPlacer.java` and every edited file) has no reachable `paper-api` jar in
+this sandbox (checked: not cached anywhere on disk either) — syntax-checked via `javac` with the
+`knk-core`/`knk-api-client` output on the classpath but no `paper-api`: every resulting error
+(2,722 across the whole module, dominated by the pre-existing, deeply Bukkit-integrated
+`KnKPlugin.java`) was confirmed to be a missing-package (`org.bukkit`/`io.papermc`/`net.kyori`) or
+a cascading missing-symbol error consequence of that, with **zero genuine syntax errors** among
+them — specifically confirmed for every new/edited file (`KitCommand.java`, `KitGrantPlacer.java`,
+`PlayerListener.java`, `KnKPlugin.java`'s touched lines, `DataAccessFactory.java` which had **zero
+errors at all**, being Bukkit-free itself). Hand-reviewed line-by-line against the real declared
+signatures of `ItemBlueprintsDataAccess`, `MinecraftMaterialRefsDataAccess`,
+`ItemBlueprintBukkitMapper`, `KnkPermissible`, `PlayerInventory`, and `CacheManager`/`UserCache`.
+**Not compiler- or live-verified:** the actual in-game behavior of `/kit list|get|give|purchase`,
+`/kit manage`, and the first-join grant — needs a real `./gradlew build` plus a live dev-server
+pass on a machine that can reach `repo.papermc.io`, the same gap every prior `knk-plugin`
+cloud-sandbox session in this file has carried forward.
+
+**Not started, per this phase's own explicit scope:** §6 (web-app Grant Kit UI), §7 (`KitScan`),
+§8 (seed data) — §5 (commands/first-join hook) was picked up in the same session, see "§5 status"
+below.
+
 ## 5. Phase 5 — Command surface and first-join hook (knk-plugin)
 
 - `commands/KitCommand.java` per `DESIGN.md` §4.3 (`/kit list`/`get`/`give`/`purchase`),
@@ -372,6 +486,87 @@ Phases 4 and 5 are the only two with a hard ordering dependency on each other (5
 builds); both depend on Phases 1-2 (the backend contract) being stable, and are independent of
 Phase 3 (the admin form is for authoring Kits, not for granting them) — including `/kit manage`,
 which needs no backend dependency at all now that it's a pure pointer (§0c).
+
+### §5 status — shipped 2026-09-25
+
+Done in the same session as Phase 4 (see "§4 status" for the branch-base merge and verification
+method both phases share), continued on the same `claude/kits` commit.
+
+`commands/KitCommand.java` (new) — plain `CommandExecutor` with manual subcommand dispatch,
+matching `ItemCommand.java`/`GateCommand.java`/`ItemBlueprintsDebugCommand.java`'s existing shape
+(confirmed by reading all three directly: none of them use Mojang's Brigadier library or Aikar's
+ACF, just a `switch` over `args[0]`, despite this plan's own "Brigadier-based" phrasing — matched
+the real, working convention rather than introducing a new command framework no other command in
+this codebase uses). `/kit list` (`GetAvailableForUserAsync`, gating/cooldown/cost/premium state
+per kit), `/kit get <name>` (self-claim via `claimAsync`), `/kit give <player> <name>` (staff-give
+via **`giveAsync`**, not `claimAsync` — a different call path, per `DESIGN.md` §4.1/§4.3), `/kit
+purchase <name>` (`purchaseAsync`, `IsSinglePurchasePremium` kits only). Kit names are resolved to
+ids via `KitsDataAccess.searchAsync` with a `Name` filter, then a client-side case-insensitive
+exact-name match against the returned page (defensive against the generic search filter's exact-
+vs-contains semantics not being nailed down anywhere in the docs — an inexact "first result"
+fallback was deliberately not used, since silently granting the wrong kit on a near-miss name is
+worse than a clean "not found"). Every subcommand's permission node (`knk.kit.list`/`.get`/`.give`/
+`.purchase`/`.manage`) is checked via `KnkPermissible.hasPermission(player, node)` inside the
+command, **not** a `plugin.yml` `permission:` entry — matching `/knk` and `/ownermode`/
+`/staffmode`'s existing precedent exactly (a `plugin.yml`-level node would be checked by Bukkit
+*before* this executor ever ran, making the five separate per-action nodes unreachable). The
+`knk.kit.*` nodes are still declared under `plugin.yml`'s `permissions:` block for documentation
+purposes only, with the same "this declaration isn't what's actually checked" caveat `knk.mode.
+owner`/`knk.mode.staff` already carry.
+
+**`/kit manage` — confirmed pure FormWizard pointer, no CRUD, per `DESIGN.md` §0c (not the earlier
+superseded draft):** `create`/`set`/`content`/`delete` (and bare `/kit manage`) each just send a
+chat message and return; none call `KitsController`, no field/value parsing, no `KitsApi` write
+client exists anywhere in `knk-plugin` (confirmed none was added). **One flagged, deliberate
+deviation from this section's own example copy:** `DESIGN.md`/this plan both write the pointer
+message as "`<web-app base URL>/forms/kit`" but explicitly say "the exact copy is an implementation
+detail." No web-app base URL exists anywhere in `knk-plugin`'s config today (`config.yml` only has
+`api.base-url`, the REST API's own origin, not the separate React web-app's) — rather than
+fabricating a plausible-looking but unconfigured domain into a player-facing message, or adding a
+whole new top-level `KnkConfig` record section (a disproportionate change for one chat message,
+and one that would've also required updating `AccountCommandRegistryTest.java`'s `KnkConfig`
+constructor call), the message names just the **route** (`/forms/kit`, `/forms/kit/edit/<id>`) —
+satisfying this section's actual requirement ("names the FormWizard route, not just 'use the web
+app' with no pointer") without inventing infrastructure. A future phase that adds a real
+`web-app.base-url` config value can prefix it here trivially.
+
+**First-join hook, with one real correctness fix over a literal reading of this section's own
+bullet:** `PlayerListener.java`'s `onJoin` — **this section's bullet describes "the existing `if
+(user.isNewUser())` branch... currently just the welcome message, around line 142"; that branch
+does not actually exist anywhere in current `PlayerListener.java`** (confirmed by `grep` — no
+`isNewUser()` call anywhere in this file; the join-time welcome message lives in a *different*
+listener, `UserAccountListener.onPlayerJoin`, and doesn't branch on new-vs-returning at all either).
+Read as stale plan text rather than silently worked around: added a **new** `if (user.isNewUser())`
+block, placed immediately after `triggerBackgroundSalaryPayout(player, user.id())` in `onJoin`
+(the nearest real anchor this section's own description points at), calling a new
+`triggerBackgroundFirstJoinKits(player, user.id())` that mirrors `triggerBackgroundSalaryPayout`'s
+exact fire-and-forget/logged-failure shape. **A second, more material fix over the first draft of
+this method written during the session:** an initial version called
+`kitsCommandApi.grantFirstJoinKitsAsync(userId)` and only logged the count of kits granted,
+without ever placing the resolved items into the player's inventory — technically satisfying this
+section's one-line bullet ("add an async call to grantFirstJoinKitsAsync") but making the whole
+feature pointless (the server would record a `KitClaim` and the player would receive nothing).
+Caught on review and fixed before committing: `triggerBackgroundFirstJoinKits` now resolves every
+returned `KnkKitClaimResult` via `KitGrantPlacer.resolveAsync` (off the main thread, in parallel
+across however many first-join kits exist) and, once resolution completes, hops onto the main
+thread (guarded by `Bukkit.getPlayer(uuid) == null` in case the player disconnected mid-resolve,
+the same guard `UserAccountListener` already uses) to call `KitGrantPlacer.place`, exactly like
+`KitCommand`'s own grant/place plumbing does for `/kit get`/`/kit give`. Needed threading
+`ItemBlueprintsDataAccess`/`MinecraftMaterialRefsDataAccess` through as two new `PlayerListener`
+constructor parameters (previously only `KitsCommandApi` was needed) — `KnKPlugin.java`'s
+construction call site updated accordingly.
+
+**Verification:** covered by "§4 status" above — same session, same `javac`-against-Maven-Central
+method for the Bukkit-free layer (N/A here, this phase is entirely `knk-paper`) and the same
+syntax-check-without-`paper-api` method for `KitCommand.java`/the `PlayerListener.java`/
+`KnKPlugin.java` edits, with zero genuine syntax errors found among them. **Not live-verified** —
+same carried-forward gap as §4.
+
+**Not started, per this phase's own explicit scope:** §6 (web-app Grant Kit UI), §7 (`KitScan`),
+§8 (seed data — the natural end-to-end verification path for `/kit get <name>` once real Kit rows
+exist, per §8's own text). **Next:** any of §6/§7/§8 can start now; §8 in particular would let a
+future session close the "not live-verified" gap both §4 and §5 carry forward, once seeded on a
+machine that can also reach `repo.papermc.io` for a real `./gradlew build`.
 
 ## 6. Phase 6 — Web-app: "Grant Kit" on the player profile page (new, `DESIGN.md` §4.6)
 
