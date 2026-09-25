@@ -761,4 +761,5 @@ messages:
 - [ ] Design cooldown notification UI (actionbar, title, or chat)
 - [ ] Consider ProtocolLib integration for better packet-level effects
 - [ ] Define migration/backfill strategy from legacy plugin-only enchantment lore into `EnchantmentDefinition` (`IsCustom = true`), optional extension rows, and assignment entities.
+  - Blueprint-level part done 2026-09-25: v1 item lore (`§7blindness III` etc.) recovered from v1 playerdata and seeded as `ItemBlueprintDefaultEnchantment` rows against the canonical custom definitions — see `docs/specs/items/V1_SEED_DATA.md` §2. Per-instance backfill still waits for `ItemInstance`.
 
