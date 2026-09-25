@@ -5,7 +5,9 @@
 > [commands-v2.md](../legacy/commands-v2.md) (the same style of catalog for the two prior codebases). Together the
 > three docs are the full command-history record for the project — read them when drafting a v3 feature design or
 > implementation plan for any area that had a predecessor command, so prior behavior/bugs/permission gaps are known
-> rather than silently reinvented or repeated.
+> rather than silently reinvented or repeated. For the passive/reactive half of the behavior surface (Bukkit event
+> listeners, not commands), see [EVENT_CATALOG_V3.md](EVENT_CATALOG_V3.md) and its v1/v2 siblings
+> [events-v1.md](../legacy/events-v1.md) / [events-v2.md](../legacy/events-v2.md).
 
 **Status:** Draft — fresh, source-grounded read of `knk-plugin` `main` at
 `Repository/knk-plugin` (checked out under the main repo checkout, not the

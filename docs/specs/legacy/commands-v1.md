@@ -4,6 +4,10 @@ Mined from `knk-v1-archive` (single-commit Bukkit import, no ORM — see
 `docs/specs/legacy/user-system.md` for the data-model side of this codebase
 and its citation conventions, which this doc follows: `v1:src/Path/File.java:line`).
 
+> **See also:** this doc covers commands only (behavior a player *typed*). For the passive/reactive
+> half of v1's behavior — Bukkit event listeners with no command counterpart — see
+> [events-v1.md](events-v1.md).
+
 ## Why this doc exists
 
 The original `legacy-spec-mining` pass (`user-system.md`, `inventory-menus.md`,

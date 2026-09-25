@@ -1,6 +1,6 @@
 # v2 command catalog (Minecraft commands, ACF `BaseCommand` classes)
 
-> Companion to [commands-v1.md](commands-v1.md) — same purpose (fill the command-inventory gap left by the original legacy-spec-mining pass), same citation convention. See that doc's header for the full rationale.
+> Companion to [commands-v1.md](commands-v1.md) — same purpose (fill the command-inventory gap left by the original legacy-spec-mining pass), same citation convention. See that doc's header for the full rationale. For the passive/reactive half of v2's behavior (Bukkit event listeners), see [events-v2.md](events-v2.md).
 
 Mined from `knk-v2-archive`, working tree as checked out under `Repository/knk-v2-archive` (read directly from the
 main checkout, not the isolated agent worktree, since the three component repos live outside this git
