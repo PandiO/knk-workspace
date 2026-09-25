@@ -1,9 +1,11 @@
 # Kits — Design
 
 **Status:** Draft, all open questions resolved with the developer — ready for implementation.
-**Last updated:** 2026-09-25 (added §0a/§6: `KitScan` WorldTask authoring flow, slot-indexed
-`KitContent`, and the unified grant-placement algorithm). Previously updated 2026-09-25 (initial
-draft).
+**Last updated:** 2026-09-25 (added §0b/§4.0/§4.5/§4.6: explicit FormWizard-primary/in-game-
+fallback CRUD hierarchy, and a staff `GiveKitAsync` path reachable from both the in-game `/kit
+give` command and a new web-app player-profile quick action). Previously updated 2026-09-25
+(added §0a/§6: `KitScan` WorldTask authoring flow, slot-indexed `KitContent`, and the unified
+grant-placement algorithm). Previously updated 2026-09-25 (initial draft).
 
 Ref: `docs/vision/vision.md` §9.2 (Kits). Sources: `docs/specs/legacy/kits.md` (v1/v2
 source-mined spec), `docs/reports/LEGACY_VS_V2_GAP_ANALYSIS.md`, `docs/specs/items/
@@ -32,6 +34,24 @@ per scanned item only makes sense if `KitContent` is keyed by slot, not by item 
 description (unconditional `setHelmet()`-style overwrite would silently delete gear a player is
 already wearing) — §4.2 is rewritten to apply the same "check what's already there" logic
 uniformly to every granted slot, not just `Contents`.
+
+## 0b. Revision note — authoring-surface hierarchy and staff "give" made explicit
+
+Added per explicit developer request, after §0a: two gaps in the original design.
+
+1. **CRUD authoring surface hierarchy was implicit, not stated.** The design already had the
+   FormWizard (§3 in `IMPLEMENTATION_PLAN.md`) as the only way to create/edit/delete a `Kit`
+   definition, with in-game commands covering grant/claim only (§4.3) — but nowhere said this was
+   a deliberate hierarchy rather than an oversight. Now explicit (§4.0): **FormWizard is the
+   primary, full-featured CRUD surface; a new in-game command set is an additional, deliberately
+   thinner fallback** (§4.5) for when the web app isn't reachable — not a second full editor.
+2. **Granting/giving a kit was plugin-only.** §4.1's `ClaimKitAsync`/`PurchaseKitAsync` were only
+   ever called from `knk-plugin` — there was no way for an admin to grant a kit to a player from
+   the web app at all. Fixed by splitting staff-initiated granting into its own method,
+   `GiveKitAsync` (§4.1, revised), exposed through **both** `/kit give` in-game (§4.3, revised)
+   **and** a new web-app quick action on the player profile page (§4.6, new) — both call the same
+   underlying service method, per this document's existing "one implementation, multiple entry
+   points" principle (§4).
 
 ## 0. What this plan does not re-litigate
 
@@ -276,13 +296,34 @@ also means Kit gating automatically benefits from anything those services alread
 correctly (group inheritance, wildcard nodes, expiring memberships) without Kit needing its own
 copy of that logic.
 
-## 4. Grant paths — permission parity by construction, not convention
+## 4. CRUD and grant paths — permission parity by construction, not convention
 
 Legacy spec bug #3 existed because v2's command and menu grant paths were two independent code
 paths that happened to diverge. This plan makes that structurally impossible: **there is exactly
-one grant path, `KitService.ClaimKitAsync(userId, kitId)`**, and every surface (command, future
-menu, first-join hook) calls it. There is nowhere else in the codebase a Kit item is ever built
-and handed to a player.
+one grant path, `KitService.ClaimKitAsync(userId, kitId)`**, and one staff-give path,
+`KitService.GiveKitAsync(actorUserId, targetUserId, kitId)` (§4.1) — every surface (command,
+future menu, first-join hook, web-app quick action) calls one of these two. There is nowhere else
+in the codebase a Kit item is ever built and handed to a player. The same principle now applies
+to authoring, not just granting — see §4.0.
+
+### 4.0 Authoring surface hierarchy (§0b) — FormWizard primary, in-game commands fallback
+
+**Decided (developer instruction):** the web-app FormWizard (`IMPLEMENTATION_PLAN.md` Phase 3) is
+the **primary, full-featured** way to create/edit/delete `Kit` definitions — object pickers for
+every equipment/gating field, the M2M editor for `Contents`, live validation, everything §3
+(gating) and §2 (data model) describe. **In-game admin commands are an additional, deliberately
+thinner fallback** (§4.5) for when the web app isn't reachable (an admin in-game without a second
+device handy, a quick fix mid-event) — not a second full editor, and not expected to reach
+feature parity with the form (no live search/pickers; the admin supplies exact
+names/ids/values from memory or `/kit list`-style lookups). Both surfaces call the **same**
+`KitsController` CRUD endpoints (`Create`/`Update`/`Delete`) — the in-game commands are a thin
+client of the same API the FormWizard already uses, not a parallel implementation, matching this
+document's existing convention for grant/claim paths.
+
+Granting/giving a kit to a player is the opposite case: **both surfaces are first-class, neither
+is a fallback for the other.** A player self-claiming via `/kit get` and an admin granting via the
+web app are just two different, equally legitimate ways to reach the same
+`ClaimKitAsync`/`GiveKitAsync` service methods (§4.1) — see §4.6 for the web-app side.
 
 ### 4.1 `KitService` (knk-web-api)
 
@@ -304,12 +345,29 @@ and handed to a player.
   `KitPurchase` row, deducts `PremiumPriceGems` from `User.Gems`, writes the `KitPurchase` row.
   Does not itself grant the kit — purchasing and claiming stay separate calls (a player can
   purchase now and claim later, or the purchase flow can immediately follow with a claim call).
+- **`GiveKitAsync(actorUserId, targetUserId, kitId)` (new, §0b)** — the staff-initiated
+  counterpart to self-serve `ClaimKitAsync`, backing `/kit give` (§4.3) and the web-app "Grant
+  Kit" quick action (§4.6). Deliberately **bypasses** §3's gating check, the §2.3 cooldown check,
+  and `CostAmount`/`CostCurrency` deduction entirely — the whole point of a staff override is to
+  hand a kit to a player regardless of whether they'd otherwise qualify or can afford it, mirroring
+  legacy v2's own `/kit give` having no such checks either. **Does not bypass** §4.2's placement
+  algorithm — a staff-given item still has to land somewhere sane in the target player's live
+  inventory, that's a physical-placement concern, not an eligibility one. Still writes a normal
+  `KitClaim` row (`ClaimedAt` = now, same table self-claims use — claim history doesn't
+  distinguish self vs. given), **plus a call into `AuditLogService.Record`** (the existing
+  `user-management` audit log, `docs/specs/user-management/DESIGN.md` §4) with `ActorUserId` =
+  the staff member, `TargetUserId` = the recipient, `Action` = a new `KitGranted` entry — every
+  other admin-initiated mutation in this codebase already goes through that log
+  (`user-features`'s group/grant/title/salary services), and a staff kit-give is exactly that
+  category of action.
 - `GrantFirstJoinKitsAsync(userId)` — see §4.4.
 
 ### 4.2 Grant execution (knk-plugin) — reuses the existing item-building pipeline
 
-`KitCommand`/the future menu handler call `KitsCommandApi.claimAsync(kitId)` (thin wrapper over
-`POST api/Kits/{id}/claim`), then use the response's `ItemBlueprintId`s to build each `ItemStack`
+`KitCommand`/the future menu handler call `KitsCommandApi.claimAsync(kitId)` or
+`KitsCommandApi.giveAsync(targetUserId, kitId)` (thin wrappers over `POST api/Kits/{id}/claim`/
+`POST api/Kits/{id}/give`) depending on which action triggered the grant, then use the response's
+`ItemBlueprintId`s to build each `ItemStack`
 via the **already-existing** `ItemBlueprintBukkitMapper`/`ItemBlueprintsDataAccess` pipeline
 (`ItemBlueprintsDebugCommand` already does exactly this for a single item) — no new
 item-construction logic. Every nullable slot (§2.1) is checked before acting (directly fixes
@@ -354,8 +412,10 @@ New `commands/KitCommand.java`, following the existing Brigadier-based `commands
 (`ItemCommand.java`/`GateCommand.java`, not ACF/`@CommandAlias` — v3 doesn't use Aikar's command
 framework anywhere, unlike legacy v2):
 - `/kit list` — calls `GetAvailableForUserAsync`, shows gating/cooldown/cost state per kit.
-- `/kit get <name>` — self-claim, gated by `knk.kit.get`.
-- `/kit give <player> <name>` — staff-to-other, gated by `knk.kit.give`.
+- `/kit get <name>` — self-claim via `ClaimKitAsync`, gated by `knk.kit.get`.
+- `/kit give <player> <name>` — staff-to-other via **`GiveKitAsync`** (§4.1, revised — not
+  `ClaimKitAsync`; bypasses the recipient's own gating/cooldown/cost by design), gated by
+  `knk.kit.give`.
 - `/kit purchase <name>` — gated by `knk.kit.purchase`, only for `IsSinglePurchasePremium` kits.
 
 Per-action permission nodes (not per-kit), matching legacy's structure — but checked through
@@ -390,6 +450,65 @@ This satisfies vision §9.2's "unify starter kit into the general Kit system" di
 no separate starter-kit code path at all, just a `Kit` row with `GrantOnFirstJoin = true` — and
 because it's driven by `isNewUser()` (§1) rather than a time-windowed listener flag, it cannot
 reproduce v1's `PlayerMoveEvent`-retrigger duplication bug (legacy bug #1).
+
+### 4.5 In-game CRUD command fallback (new, §0b) — thinner than the FormWizard by design
+
+Per §4.0: the same `commands/KitCommand.java` (§4.3) gains a `manage` sub-tree, gated by its own
+permission nodes (`knk.kit.manage.*`, deliberately separate from the `get`/`give`/`purchase`/
+`list` player-facing nodes — creating/deleting Kit definitions is an admin capability, granting
+one is a broader staff capability, and the two shouldn't share a permission check just because
+they share a command root):
+- `/kit manage create <name>` — calls `KitsController`'s `Create` (via `KitsApi`), same as the
+  FormWizard's own "new Kit" action, just with only `Name` set; every other field starts
+  null/default and is filled in afterward via the commands below (or by switching to the web app
+  — nothing here is a one-way door).
+- `/kit manage set <name> <field> <value>` — a generic field setter covering every scalar and
+  single-reference field on `Kit` (§2.1): `description`, `helmet`/`chestplate`/`leggings`/
+  `boots`/`shield`/`hand` (value = an `ItemBlueprint` name or id — resolved via
+  `ItemBlueprintsDataAccess`'s existing search, no live-picker UI, so the admin needs to know
+  roughly what they're typing), `mintitlebracket`/`requiredpermissiongroup` (by name/id),
+  `requiredpermissionnode` (raw string), `grantonfirstjoin` (bool), `cooldownseconds`,
+  `costamount`/`costcurrency`, `issinglepurchasepremium`, `premiumpricegems`. One field per
+  invocation — deliberately not a single command with 15 positional arguments, both for
+  usability and so a typo only ever risks one field.
+- `/kit manage content add <name> <slot> <itemBlueprint> <quantity>` / `/kit manage content
+  remove <name> <slot>` — direct `KitContent` row add/remove by slot index, calling `Update` on
+  the parent `Kit` with its `Contents` collection modified (same as the FormWizard's M2M editor
+  writes, just issued one row at a time instead of through a UI).
+- `/kit manage delete <name>` — calls `Delete`.
+
+**Explicitly not built here, left to the FormWizard**: any validation UI beyond what the backend
+already enforces (e.g. the form's live "does this `ItemBlueprint` exist" search), gating-condition
+previews, or a listing/browsing experience richer than `/kit list` already gives self-serve
+players. This command tree is a working, complete-enough fallback, not a competing feature set —
+if it ever grows enough live-search/validation sophistication to rival the form, that's scope
+creep against §4.0's own stated intent, worth pushing back on rather than building.
+
+### 4.6 Web-app: granting a kit to a player (new, §0b)
+
+Per §4.0, this is a first-class surface, not a fallback. Lives on the **player profile page**
+(`docs/specs/user-management/DESIGN.md` §2/§3, `PlayerProfilePage.tsx`) as a new "Kits" section,
+directly alongside that page's existing group/grant quick actions — architecturally the same kind
+of thing (`user-management DESIGN.md` §3: "a sequence of writes... not a single entity's
+create/edit form"):
+- Lists every `Kit` (from `GET api/Kits/available?userId=<the viewed player's id>`, reusing §4.1's
+  existing endpoint exactly as the in-game `/kit list` does — no new read endpoint), showing the
+  same gating/cooldown/cost/purchase state the in-game list shows, so an admin can see *why* a
+  kit might normally be blocked before consciously overriding it with Give.
+- A **"Grant"** button per kit, calling a new `POST api/Kits/{id}/give` (body:
+  `{ targetUserId }`, `actorUserId` taken from the authenticated admin's own session/JWT, not a
+  client-supplied field) → `GiveKitAsync` (§4.1) — the exact same bypass-gating/cooldown/cost
+  behavior `/kit give` has in-game, because it's the exact same method.
+- After a successful grant, re-fetch the kit list (same "re-fetch and show the resolved effect
+  immediately" convention `user-management DESIGN.md` §3 already established for its own quick
+  actions) and surface the new entry in the profile's existing "Recent activity" audit-log section
+  (§4.1's `AuditLogService.Record` call is what makes this appear there for free).
+
+**Not required here, left as an implementation-time choice**: whether `Kit`'s own admin table/
+detail view (the generic FormWizard page) *also* gets a "Give to player" row action as a second
+path to the same endpoint. The player-profile-page surface above is the one this design commits
+to; a second entry point on Kit's own page is a reasonable, low-risk addition but isn't needed to
+satisfy "granting works from the web app," so it's not mandated.
 
 ## 5. Economy
 

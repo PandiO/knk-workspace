@@ -1,9 +1,12 @@
 # Kits — Implementation Plan
 
 **Status:** Draft, ready for implementation.
-**Last updated:** 2026-09-25 (added Phase 6, the `KitScan` WorldTask authoring flow, and
-slot-indexed `KitContent`/unified grant-placement algorithm — see `DESIGN.md` §0a). Previously
-updated 2026-09-25 (initial draft).
+**Last updated:** 2026-09-25 (added a `GiveKitAsync` staff-grant path to Phase 2, an in-game CRUD
+fallback command tree to Phase 5, and a new Phase 6 for the web-app player-profile "Grant Kit" UI
+— see `DESIGN.md` §0b; renumbered `KitScan`/seed-data/sequencing/open-items phases accordingly).
+Previously updated 2026-09-25 (added `KitScan` WorldTask authoring flow, slot-indexed
+`KitContent`/unified grant-placement algorithm — see `DESIGN.md` §0a). Previously updated
+2026-09-25 (initial draft).
 
 Ref: `DESIGN.md` in this folder for the architecture and every decision this plan sequences.
 `SEED_DATA.md` for the legacy dev-DB backup mapped into v3 seed content. If anything below
@@ -62,30 +65,49 @@ session doesn't fork from a stale base.
 
 ## 2. Phase 2 — `KitService` and API surface (knk-web-api)
 
-- `Services/KitService.cs` implementing `DESIGN.md` §4.1's four methods:
-  `GetAvailableForUserAsync`, `ClaimKitAsync`, `PurchaseKitAsync`, `GrantFirstJoinKitsAsync`.
-  Injects `ITitleService`, `IUserPermissionGroupService`, `IPermissionResolutionService` (all
-  already exist, per `DESIGN.md` §3 — this service is a caller, not a reimplementer, of gating
-  logic) plus a `IUserService`/direct repository access for balance deduction.
+- `Services/KitService.cs` implementing `DESIGN.md` §4.1's five methods:
+  `GetAvailableForUserAsync`, `ClaimKitAsync`, `PurchaseKitAsync`, **`GiveKitAsync`** (new, §0b —
+  bypasses gating/cooldown/cost by design, still runs §4.2's placement algorithm),
+  `GrantFirstJoinKitsAsync`. Injects `ITitleService`, `IUserPermissionGroupService`,
+  `IPermissionResolutionService` (all already exist, per `DESIGN.md` §3 — this service is a
+  caller, not a reimplementer, of gating logic), an `IUserService`/direct repository access for
+  balance deduction, and **`IAuditLogService`** (new dependency, §0b — already exists per
+  `docs/specs/user-management/IMPLEMENTATION_PLAN.md` Phase 2; `GiveKitAsync` calls
+  `Record(actorUserId, targetUserId, "KitGranted", ...)`).
+- Add `KitGranted` to the `AuditLogEntry.Action` set (`Models/AuditLogEntry.cs`, per
+  `docs/specs/user-management/DESIGN.md` §4 — it's a string/enum value, not a schema change to
+  the table itself).
 - `Repositories/KitRepository.cs` — thin EF Core wrapper, matching the `ItemBlueprintRepository`
   shape (CRUD + a paged search for the generic `FormConfiguration` table).
 - `Controllers/KitsController.cs`:
   - Standard CRUD (`GetAll`/`GetById`/`Create`/`Update`/`Delete`/`search`) — same shape as
     `ItemBlueprintsController`, drives the generic web-app admin table for free once
-    `[FormConfigurableEntity]` is set (Phase 3).
+    `[FormConfigurableEntity]` is set (Phase 3), and is also what Phase 5's in-game CRUD fallback
+    commands call through (`DESIGN.md` §4.0/§4.5 — one implementation, two entry points, same
+    principle as granting).
   - `GET api/Kits/available?userId=` → `GetAvailableForUserAsync`.
   - `POST api/Kits/{id}/claim?userId=` → `ClaimKitAsync`.
   - `POST api/Kits/{id}/purchase?userId=` → `PurchaseKitAsync`.
+  - **`POST api/Kits/{id}/give`** (new, §0b — body `{ targetUserId }`, `actorUserId` resolved from
+    the authenticated caller, never client-supplied) → `GiveKitAsync`. Called by both `/kit give`
+    in-game (Phase 5) and the web-app player-profile "Grant Kit" action (Phase 6) — the one give
+    endpoint, two callers.
   - `POST api/Kits/grant-first-join?userId=` → `GrantFirstJoinKitsAsync` (called by the plugin's
     first-join hook, `DESIGN.md` §4.4 — not the generic CRUD path).
 - Unit tests for `KitService`: gating combinations (title-only, group-only, node-only, all three,
   none), cooldown boundary (exactly at expiry, just before, just after), cost deduction
   (sufficient/insufficient balance, wrong currency field touched), single-purchase premium
   (unpurchased → blocked, purchased → free/no-cooldown claim), first-join grant (cost bypass,
-  cooldown bypass, gating still enforced). Mirrors the rigor `PermissionResolutionService`'s own
-  22-test suite set for this codebase (`user-features` §1 status).
+  cooldown bypass, gating still enforced), **`GiveKitAsync` (gating/cooldown/cost all bypassed
+  regardless of state, placement algorithm still runs, `AuditLogService.Record` called exactly
+  once per give)**. Mirrors the rigor `PermissionResolutionService`'s own 22-test suite set for
+  this codebase (`user-features` §1 status).
 
 ## 3. Phase 3 — Admin `FormConfiguration` (knk-web-app + knk-web-api)
+
+**This is the primary, full-featured Kit authoring surface** (`DESIGN.md` §4.0) — Phase 5's `/kit
+manage` command tree is an additional, deliberately thinner fallback on top of the same CRUD
+endpoints, not a substitute for this phase.
 
 - Add `[FormConfigurableEntity("Kit")]` to `Kit.cs` (Phase 1, mechanical) — nothing else to build
   server-side; the generic `MetadataService`/`FormConfigurationsController` engine picks it up
@@ -118,9 +140,14 @@ session doesn't fork from a stale base.
   `listAsync`, `refreshAsync`, `invalidate*`), for the kit catalog and
   `getAvailableForUserAsync`. Wired into `DataAccessFactory`/`KnKPlugin.java` per the existing
   convention.
-- `knk-api-client`: `KitsApi` port + impl (read side, mirrors `ItemBlueprintsApi`) and a
-  `KitsCommandApi` (write side: `claimAsync`/`purchaseAsync`/`grantFirstJoinKitsAsync`, mirrors
-  `UsersCommandApi`'s per-action POST/PUT pattern).
+- `knk-api-client`: `KitsApi` port + impl — **read side** (`getByIdAsync`/`listAsync`/
+  `searchAsync`, mirrors `ItemBlueprintsApi`) **plus CRUD** (`createAsync`/`updateAsync`/
+  `deleteAsync`, new — needed by Phase 5's `/kit manage` fallback, same shape
+  `ItemBlueprintsApi` would need if it exposed plugin-side CRUD, which it currently doesn't since
+  nothing in-game creates `ItemBlueprint`s; `Kit` is the first entity with a real in-game CRUD
+  fallback, per `DESIGN.md` §4.0). `KitsCommandApi` (write/action side:
+  `claimAsync`/`purchaseAsync`/**`giveAsync(targetUserId, kitId)`** (new, §0b)/
+  `grantFirstJoinKitsAsync`, mirrors `UsersCommandApi`'s per-action POST/PUT pattern).
 - `KnkKit` domain type (`knk-core/.../domain/item/`) — Bukkit-free DTO mirroring `KnkItemBlueprint`'s
   existing separation pattern.
 - **Item-building reuses `ItemBlueprintBukkitMapper` as-is** — no new mapper. Given a
@@ -134,12 +161,28 @@ session doesn't fork from a stale base.
   `firstEmpty()` in 0-35; no empty slot → `dropItemNaturally`) once, called once per item in
   order — not five copies of near-identical slot-conflict logic.
 
-## 5. Phase 5 — Command surface + first-join hook (knk-plugin)
+## 5. Phase 5 — Command surface, in-game CRUD fallback, and first-join hook (knk-plugin)
 
 - `commands/KitCommand.java` per `DESIGN.md` §4.3 (`/kit list`/`get`/`give`/`purchase`),
   Brigadier-based, matching `ItemCommand.java`/`GateCommand.java`'s existing structure. Permission
   nodes `knk.kit.list`/`knk.kit.get`/`knk.kit.give`/`knk.kit.purchase`, checked via
   `KnkPermissible` (the in-house resolution engine from `user-features`), not a `plugin.yml` node.
+  `/kit give` calls **`KitsCommandApi.giveAsync(targetUserId, kitId)`** (Phase 4's `give` client
+  method) → `POST api/Kits/{id}/give` → `GiveKitAsync` — **not** the same call path as `/kit get`.
+- **In-game CRUD fallback (new, §0b/`DESIGN.md` §4.5)** — a `/kit manage` sub-tree on the same
+  `KitCommand.java`, gated by its own `knk.kit.manage.*` nodes (separate from the
+  `list`/`get`/`give`/`purchase` player-facing nodes above): `create <name>`,
+  `set <name> <field> <value>` (one field per call — `description`, the six equipment fields by
+  `ItemBlueprint` name/id, `mintitlebracket`/`requiredpermissiongroup` by name/id,
+  `requiredpermissionnode`, `grantonfirstjoin`, `cooldownseconds`, `costamount`/`costcurrency`,
+  `issinglepurchasepremium`, `premiumpricegems`), `content add <name> <slot> <itemBlueprint>
+  <quantity>` / `content remove <name> <slot>`, `delete <name>`. All of these call
+  `KitsController`'s existing `Create`/`Update`/`Delete` (Phase 2) through a new, thin
+  `KitsApi.createAsync`/`updateAsync`/`deleteAsync` (Phase 4) — **no new backend logic**, this is
+  a plugin-side client of the same CRUD endpoints the web-app FormWizard already uses. Per
+  `DESIGN.md` §4.0, this is a deliberately thinner fallback, not a second full editor — no
+  live-search pickers, no gating-condition preview; resist the temptation to grow it toward
+  FormWizard parity.
 - `PlayerListener.java`: in the existing `if (user.isNewUser())` branch (currently just the
   welcome message, around line 142), add an async call to
   `kitsCommandApi.grantFirstJoinKitsAsync(user.id())`, following the exact pattern
@@ -148,9 +191,30 @@ session doesn't fork from a stale base.
 
 Phases 4 and 5 are the only two with a hard ordering dependency on each other (5 calls what 4
 builds); both depend on Phases 1-2 (the backend contract) being stable, and are independent of
-Phase 3 (the admin form is for authoring Kits, not for granting them).
+Phase 3 (the admin form is for authoring Kits, not for granting them) — including the new `/kit
+manage` fallback, which depends only on Phase 2's existing CRUD endpoints, not on Phase 3's
+`FormConfiguration` existing.
 
-## 6. Phase 6 — `KitScan` WorldTask authoring flow (new, `DESIGN.md` §6)
+## 6. Phase 6 — Web-app: "Grant Kit" on the player profile page (new, `DESIGN.md` §4.6)
+
+Depends on Phase 2 (`GiveKitAsync`/`POST api/Kits/{id}/give` must exist) and on
+`docs/specs/user-management`'s `PlayerProfilePage.tsx` already existing (it does — shipped, per
+that plan's Phase 1 status). Independent of Phases 3-5 (this is a different repo surface reading/
+writing the same backend, not built on top of the FormWizard or the plugin).
+
+**knk-web-app:**
+- `apiClients/kitClient.ts` — `getAvailableForUser(userId)`, `give(kitId, targetUserId)`, mirroring
+  the existing per-resource REST client pattern (`itemBlueprintClient.ts`).
+- `PlayerProfilePage.tsx`: new "Kits" section (alongside the existing account/permissions/groups/
+  title/premium/salary/owner-staff-mode sections, `docs/specs/user-management/DESIGN.md` §2) —
+  lists every kit via `getAvailableForUser(the viewed player's id)` with its gating/cooldown/cost/
+  purchase state, a "Grant" button per row calling `give(kitId, targetUserId)`, and a re-fetch of
+  the list plus the page's existing "Recent activity" audit section afterward (same
+  re-fetch-and-show-the-resolved-effect convention `docs/specs/user-management/DESIGN.md` §3
+  already established for its own group/grant quick actions).
+- No backend work here — Phase 2 already built everything this phase calls.
+
+## 7. Phase 7 — `KitScan` WorldTask authoring flow (new, `DESIGN.md` §6)
 
 An alternative to Phase 3's manual form authoring: scan a player's live inventory in-game and
 relay it into the open Kit form. Depends on Phase 3 (the Kit `FormConfiguration`'s fields must
@@ -216,7 +280,7 @@ otherwise); independent of Phases 4/5 (granting a kit doesn't need this authorin
   `task?.taskType === 'ItemScan'` check), add the matching `'KitScan'` branch calling
   `applyKitScanResult`.
 
-## 7. Phase 7 — Seed data
+## 8. Phase 8 — Seed data
 
 Per `SEED_DATA.md`: seed `Category`/`Grade`/`Tag` rows (if not already present from other seed
 efforts), the 9 `ItemBlueprint` rows, and the two `Kit` rows (`Default`, `Archer`) +
@@ -225,32 +289,35 @@ efforts), the 9 `ItemBlueprint` rows, and the two `Kit` rows (`Default`, `Archer
 final live-game balance — flagged as such in `SEED_DATA.md` given the source data's own
 "Test"/"Open Beta" tags and joke item names (Maggoty Bread).
 
-This phase has no code dependency on Phases 1-6 being complete (it's just data), but is
+This phase has no code dependency on Phases 1-7 being complete (it's just data), but is
 sequenced last here since seeding before the schema exists is meaningless, and seeding is the
 natural way to verify Phases 1-5 end-to-end (create the two kits via the seed, `/kit get Default`
-in-game, confirm the loadout is correct) — Phase 6 (`KitScan`) has its own independent
+in-game, confirm the loadout is correct) — Phase 7 (`KitScan`) has its own independent
 verification path (scan a live inventory, confirm the form fills correctly) that doesn't need
 the seed data at all.
 
-## 8. Sequencing summary
+## 9. Sequencing summary
 
 ```
-Phase 1 (schema) ──▶ Phase 2 (service/API) ──┬──▶ Phase 3 (admin form) ──▶ Phase 6 (KitScan)
+Phase 1 (schema) ──▶ Phase 2 (service/API) ──┬──▶ Phase 3 (admin form) ──▶ Phase 7 (KitScan)
+                                              ├──▶ Phase 6 (web-app Grant Kit UI)
                                               └──▶ Phase 4 (plugin data access/item-building)
-                                                        └──▶ Phase 5 (commands/first-join hook)
-                                                                  └──▶ Phase 7 (seed data, verification)
+                                                        └──▶ Phase 5 (commands, CRUD fallback,
+                                                              first-join hook)
+                                                                  └──▶ Phase 8 (seed data, verification)
 ```
 
 Phases 1-3 deliver a fully admin-authorable Kit catalog on their own (creatable/editable via the
-web app, nothing to grant yet) and are worth shipping independently if Phases 4-7 slip, matching
+web app, nothing to grant yet) and are worth shipping independently if Phases 4-8 slip, matching
 the sequencing precedent both the Items and user-features plans already established for this
-codebase. Phase 6 (`KitScan`) is a pure add-on to Phase 3's admin form — nothing else depends on
-it, and it can slip without blocking granting (Phases 4/5) or seeding (Phase 7).
+codebase. Phase 6 (web-app Grant Kit UI) and Phase 7 (`KitScan`) are both pure add-ons — Phase 6
+only needs Phase 2, Phase 7 only needs Phase 3 — neither blocks nor is blocked by granting
+(Phases 4/5) or seeding (Phase 8).
 
-## 9. Open items
+## 10. Open items
 
-None outstanding — all four developer-escalated/-requested decisions (`DESIGN.md` §0/§0a) are
+None outstanding — all five developer-escalated/-requested decisions (`DESIGN.md` §0/§0a/§0b) are
 resolved and folded into the design above. Two soft items worth re-confirming at kickoff:
 - §0's branch-base check (has `claude/user-features` merged to `main` yet?).
-- Phase 6's `WorldTaskTypes` constant question (does an `ItemScan` constant actually exist to
+- Phase 7's `WorldTaskTypes` constant question (does an `ItemScan` constant actually exist to
   extend, or is `TaskType` passed as a bare string today? Check before assuming either way).
