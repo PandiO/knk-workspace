@@ -34,6 +34,7 @@ Live tracker of in-progress work across all four Knights and Kings repos
 
 | Feature | Repos / files claimed | Owner (human / session) | Status | Started | Last updated |
 |---|---|---|---|---|---|
+| Siege minigame Phase 4 — plugin core, Bukkit-free (knk-core domain/ports/`core/siege/` logic, knk-api-client runtime-config client, `SiegeDataAccess`) | knk-plugin branch `claude/siege-minigame`: `knk-core` `core/domain/siege/`, `core/siege/`, `core/ports/api/Siege*`, `core/dataaccess/SiegeDataAccess`; `knk-api-client` siege dto/mapper/impl; `knk-paper` `DataAccessFactory` wiring only; workspace: siege `IMPLEMENTATION_PLAN.md` "Phase 4 status" | Claude Code session (Phase 4) | Implementing | 2026-09-25 | 2026-09-25 |
 | _(example)_ Siege minigame — capture point sync | web-api: `Services/SiegeService.cs`; plugin: `siege/` package | Claude Code session A | Implementing capture-point event handling | 2026-09-17 | 2026-09-17 |
 
 ## Recently completed
