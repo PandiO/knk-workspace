@@ -8,7 +8,7 @@ Bukkit-free core tested without a server; Phase 5's Paper runtime (5a loop/comma
 in "Phase 5 status" is the developer's sign-off; the match API is a logging placeholder until Phase 6); Phases 6–7 + 9
 not started. Phase 8a (InventoryMenu engine extensions) built and merged into `claude/siege-minigame`, not verified
 live; Phase 8b open; Phase 10 is post-MVP.
-**Last updated:** 2026-09-26 (Phase 5 status block added: Paper runtime classes, test results, 21 decisions to review,
+**Last updated:** 2026-09-26 (first live playtest fixes recorded under Phase 5 status; Phase 5 status block added: Paper runtime classes, test results, 21 decisions to review,
 discrepancies, the live verification checklist, what Phases 6/7/8b must wire)
 
 Ref: `DESIGN.md` (decisions — not restated here), `MENU_TEMPLATES.md`,
@@ -917,6 +917,25 @@ trunk merge. No web-app or web-api change.
       rings; a member picks one up, a non-member (even op) can't; click it onto a sword → enchanted, book gone, message;
       onto a book/unfit item → refused; at match end the sword is back to its pre-siege enchantments and ground books
       are gone; `/give` yourself an old tagged book outside a match → deleted at next join.
+- **First live playtest (developer, 2026-09-26) and fixes** (plugin `1a8704c`, pushed; not redeployed by the session):
+  checklist steps 1-6, 8, 9, 11-13 and 15 passed; 4 (guards), 7 (friendly fire), 10 (IV win) and 14 (crash) not run yet.
+  Changes from the feedback:
+  - **Objective labels are per audience** (`SiegeObjectiveLabels` in core): one `TextDisplay` per alliance, shown only
+    to its members ("✔ Your side holds this" + Secure / Enemy progress X% / Under attack; "✖ Held by X" + Stand in the
+    ring to capture it / Being captured X%), plus a neutral one for non-members. The old "- captured X%" read as if the
+    holders still had to take it.
+  - **`/siege skip` also shortens matchmaking** to 1 minute left (`PLAYER_SKIP_MATCHMAKING_SECONDS`, never below
+    voteClose + 1); was cooldown-only (Phase 4 decision 8 revised for players; admin skip still goes to T-31).
+  - **Siege books: right-click in hand opens an item chooser** (`SiegeEnchantMenu`, plain Bukkit inventory, lists only
+    items the book can go on; v2 `PlayerEnchantMenu` behaviour). The developer expected a menu; cursor-onto-item stays.
+  - **Owner/staff mode players are exempt from the inventory guards** (decision 14 narrowed). This reopens the
+    duplication path for them: whatever they drop or store during a match is still given back by the restore.
+  - **Capture speed:** `SiegeConfiguration.CaptureAttackBase` 5 → **8** in the dev DB (row `global`, one UPDATE; the
+    developer asked for 7.5 or 8 and the column is an int). Lone attacker: 100 s → 63 s on both objectives; two
+    attackers: Keep 39 s, South Gate 50 s; 1 v 1 now progresses (250 s) instead of stalling. Takes effect after
+    `/siege admin reload` between matches (the runtime config is cached and frozen during a match). Seed defaults and
+    `KnkSiegeConfiguration.legacyDefaults()` still say 5 - revisit in the Phase 9 balancing pass.
+  - Tests after the fixes: knk-core 694, knk-api-client 38, knk-paper 259, all green.
 - **What Phase 6 must wire:** build the HTTP `SiegeMatchesCommandApiImpl` and pass it instead of
   `LoggingSiegeMatchesCommandApi` in `KnKPlugin.initializeSiege()` - the call sites already exist:
   `createMatch` in `SiegeService.onDraw` (future kept as `SiegeLobbyRuntime.matchIdFuture`), `startMatch` in
