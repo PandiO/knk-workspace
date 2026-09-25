@@ -253,8 +253,12 @@ commits. It has no migration, so it will merge cleanly later.
     carries the `SPATIAL_CHECKS_UNAVAILABLE` warning; start the server and re-check readiness to have the
     points verified against the Cinix region. **Cleanup** (API, in this order): `DELETE`
     `SiegeLobbies/1`, `SiegeScenarios/1`, `Clans/1`, `BannerDesigns/1` and `/2`, `Locations/62`–`65`.
-  - Existing-data oddity (not changed): Location 6 ("Market Square", Cinix's own location) has world
-    `world_KNK_DEV`, while all 55 other locations use `world_KNK-DEV`. Probably a typo.
+  - Existing-data typo, **fixed 2026-09-25 (developer-approved)**: Location 6 ("Market Square", Cinix's
+    own location) had world `world_KNK_DEV`, while every other location uses `world_KNK-DEV`. It was
+    updated to `world_KNK-DEV`; no other `World` column in the DB had the misspelling.
+  - **Still open from Phase 1, now folded into Phase 3:** the dev DB has **no FormConfigurations for
+    `BannerDesign`, `BannerLayer` or `Clan`** yet (Phase 1's manual step 2 was never done). Phase 3's team
+    form needs the Clan and BannerDesign pickers, so author them first.
 - **Swagger script** (the manual version of the round-trip; already run live, see above):
   1. (Already done: `dotnet ef database update`.)
   2. Swagger round-trip. Prerequisites: a Town with a `WgRegionId`, a District of that town, a
