@@ -35,6 +35,7 @@ Live tracker of in-progress work across all four Knights and Kings repos
 | Feature | Repos / files claimed | Owner (human / session) | Status | Started | Last updated |
 |---|---|---|---|---|---|
 | _(example)_ Siege minigame — capture point sync | web-api: `Services/SiegeService.cs`; plugin: `siege/` package | Claude Code session A | Implementing capture-point event handling | 2026-09-17 | 2026-09-17 |
+| Items — v1 ItemBlueprint port (seed from v1 playerdata) | web-api: new `Models/Item/ItemBlueprintV1Seed.cs`, `Program.cs` seed call, new seed test (branch `claude/v1-item-port`, worktree `Repository/_worktrees/knk-web-api-v1-item-port`); workspace: `scripts/v1-item-port/`, `docs/specs/items/V1_SEED_DATA.md` | Claude Code session (v1 item port) | Paused — seed implemented + run on dev DB (77 blueprints); branch committed, not pushed/merged. Needs developer review of the defaults in `docs/specs/items/V1_SEED_DATA.md` §4, then push + merge `claude/v1-item-port` to web-api `master` | 2026-09-25 | 2026-09-26 |
 | Legacy inventory-menu screen/item mining + feature allocation | knk-workspace: new `docs/specs/legacy/inventory-menu-screens.md`, `docs/specs/legacy/README.md`; read-only on `knk-v1-archive`/`knk-v2-archive` | Claude Code session (Pandi) | Mining v1/v2 menu screens and items | 2026-09-25 | 2026-09-25 |
 
 ## Recently completed

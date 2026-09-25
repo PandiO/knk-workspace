@@ -13,6 +13,8 @@ Document actual code patterns, entities, and migrations from legacy to avoid spe
   - [items.md](items.md) — the item/product entity and its features
   - [user-system.md](user-system.md) — users, roles, ranks, levels, permissions
   - [inventory-menus.md](inventory-menus.md) — the clickable inventory-menu UI framework
+  - [inventory-menu-screens.md](inventory-menu-screens.md) — every v1/v2 menu screen and item (what it
+    showed, what a click did), allocated to a v3 feature, with the engine gaps a port would hit
   - [towns-districts-gates.md](towns-districts-gates.md) — world hierarchy and gate structures
   - [kits.md](kits.md) — starter/premium kit system
   - [siege-minigame.md](siege-minigame.md) — Scenario/Siege minigame

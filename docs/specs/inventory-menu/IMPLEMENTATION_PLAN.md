@@ -12,6 +12,9 @@ it*; decisions themselves live in those docs and aren't restated here.
 - Porting v1's ~60 screens and the two live v2 screens (Kits, Sieges) — this
   is the engine the content gets built on, not the content itself. Separate
   effort, sequenced after this plan.
+  The first content batch (hub, Kits, Profile, Item catalogue, Premium tiers,
+  Player manager, plus engine gap G1) is planned in `CONTENT_PORT_PLAN.md`;
+  Sieges in `docs/specs/siege-minigame/MENU_TEMPLATES.md`.
 - Admin audit log, preview-as-player mode, spectate-another-player's-menu —
   real but non-blocking, noted in `DESIGN_REVIEW.md`, not part of the core
   engine build.

@@ -2,6 +2,8 @@
 
 > **Note:** A v3 rebuild of the inventory-menu system appears to have just landed (`Merge branch 'InventoryMenus' into main` in knk-workspace's recent git history). This document was written as forward-looking rebuild research but may now be more useful as **retrospective/comparison material** against whatever v3 already decided. See `docs/specs/legacy/README.md` for the index/principles of this folder. `docs/specs/inventory-menu/*` (the v3 spec) was intentionally not read while writing this file.
 
+> **See also (2026-09-25):** [inventory-menu-screens.md](inventory-menu-screens.md) catalogues every legacy screen and item and allocates each to a v3 feature (this doc's open question 4). Its §5 corrects two statements below: the Kit overview's pagination never worked (it runs on the base `Menu` stubs, not `ContentGroup`), and the `menu/` rewrite *was* used in normal play by the Creation wizard's multi-select stage.
+
 This covers the clickable chest/inventory GUI *framework* itself (how menus are opened, how clicks are routed, how pagination/back-navigation work, how items are built) — not the business logic of any one specific menu, which is used here only for illustration.
 
 ## Data model
