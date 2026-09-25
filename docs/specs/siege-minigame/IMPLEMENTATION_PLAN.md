@@ -1,10 +1,11 @@
 # Siege Minigame — Implementation Plan
 
-**Status:** Draft, not started. Phases 1–7 + 9 = playable MVP (commands/chat UI); Phase 8 adds menus
-(blocked on InventoryMenu engine extensions); Phase 10 is post-MVP.
-**Last updated:** 2026-09-25 (round-2 decisions D5–D7 folded in: recapture flag, lockdown + non-member
-gate view as Phase 7b, enchant-book drops + stripping as Phase 5c; Phase 8a delegated to its own
-session on branch `claude/inventorymenus`)
+**Status:** Draft. Phases 1–7 + 9 = playable MVP (commands/chat UI), not started; Phase 8a (InventoryMenu
+engine extensions) built and merged into `claude/siege-minigame`, not verified live; Phase 8b open;
+Phase 10 is post-MVP.
+**Last updated:** 2026-09-25 (standing branch `claude/siege-minigame` created from current trunk in
+knk-web-api and knk-plugin with Phase 8a merged in; §0 trunk note corrected — user-management is on
+trunk)
 
 Ref: `DESIGN.md` (decisions — not restated here), `MENU_TEMPLATES.md`,
 `docs/reports/2026-09-25-siege-minigame-gap-analysis.md`. Plan format follows
@@ -14,12 +15,15 @@ Ref: `DESIGN.md` (decisions — not restated here), `MENU_TEMPLATES.md`,
 
 - **One standing branch per repo, `claude/siege-minigame`** (ACTIVE_SESSIONS branch convention, adopted
   2026-09-24) — not one branch per phase.
-- **Fork from the trunk that contains user-features + user-management** (`TitleBracket`, permission
-  groups, `KnkPermissible`, `AuditLogService`). At time of writing that work sits on
-  `claude/user-management` in all three repos, not yet on `main`/`master` — re-check at start and fork
-  from the most advanced merged state. Gate structure animation is already on `master`/`main`.
-- **Kits is not a dependency** (DESIGN D2: own gear, no team kits). InventoryMenu Phases 1–8 are a
-  dependency only for Phase 8.
+- **Branch state (2026-09-25):** `claude/siege-minigame` exists in **knk-web-api** (forked from `master`
+  `3be3226`) and **knk-plugin** (forked from `main` `be2573d`), pushed, with Phase 8a
+  (`claude/inventorymenus`) merged in — see Phase 8. User-features + user-management (`TitleBracket`,
+  permission groups, `KnkPermissible`, `AuditLogService`) and gate structure animation are all on trunk
+  now, so the branch has every dependency. **knk-web-app** has no branch yet — create
+  `claude/siege-minigame` from `main` when Phase 1's web-app part starts. Merge trunk into the branch
+  before each phase if trunk has moved.
+- **Kits is not a dependency** (DESIGN D2: own gear, no team kits). InventoryMenu Phases 1–9 are a
+  dependency only for Phase 8 (Phase 9 = siege 8a, already on the siege branch).
 - Add an `ACTIVE_SESSIONS.md` row per phase when starting; move it to "Recently completed" when done.
 
 ```
@@ -216,16 +220,19 @@ unbreakable; everything restored after end **and** after a hard kill of the serv
 
 **8a — InventoryMenu Phase 9 "domain integration"** — *delegated 2026-09-25 to a separate Claude Code
 session, branch `claude/inventorymenus` in knk-web-api and knk-plugin (forked from `master`/`main`);
-built the same day (web-api `07b6174`, `86a72d9`; plugin `38abc14`, `2c3b0ad`, `216bb3b`), pushed, **not merged**,
+built the same day (web-api `07b6174`, `86a72d9`; plugin `38abc14`, `2c3b0ad`, `216bb3b`), pushed,
 not verified in-game; see `docs/specs/inventory-menu/IMPLEMENTATION_PLAN.md` Phase 9 for the syntax and the
 findings 8b must follow (absolute `SlotOverride`, one phase-aware Body source, `MenuFeature` registration,
-`menu.confirm.doubleclick` only on pinned items). Merge it before starting 8b.* (`MENU_TEMPLATES.md` Part B, E1–E9). Write it up
-in `docs/specs/inventory-menu/IMPLEMENTATION_PLAN.md` as Phase 9 and run a short design review first:
-E3 (row templates) and E5 (render-time conditions) are schema changes to `MenuSectionTemplate`/
-`MenuItemTemplate`/`ConditionBinding`; E4 adds `MenuTemplate.AutoRefreshTicks`. Kits' future menu
-benefits from the same work.
+`menu.confirm.doubleclick` only on pinned items).* **Merged 2026-09-25 into `claude/siege-minigame`**
+in both repos (no conflicts, no EF model drift; migration `20260925123418_AddInventoryMenuPhase9DomainIntegration`
+is still the newest). The web-api test file `MenuTemplateServicePhase9Tests` had been left untracked
+and was committed on the siege branch (`aaddbd5`). Post-merge tests: web-api 413/418 (the same 5 failures
+as `master`), knk-core 512 / api-client 28 / knk-paper 246, all green. **Still open:** live verification
+(the manual `example.domain` checklist in the InventoryMenu plan Phase 9) and applying the migration to a
+DB, both before trunk merge; the siege branch carries 8a until then. Scope reference:
+`MENU_TEMPLATES.md` Part B, E1–E9; Kits' future menu benefits from the same work.
 
-**8b — Siege menus:** register siege variable roots, content sources, actions and conditions
+**8b — Siege menus** (unblocked on `claude/siege-minigame`; still sequenced after Phase 5): register siege variable roots, content sources, actions and conditions
 (DESIGN §10.2–10.3) before `MenuDefinitionValidationRunner`; seed `siege.overview`,
 `siege.information`, `siege.spawnpoint` and the `siege.entry` item per `MENU_TEMPLATES.md` Part C
 (create-only seeds, `MenuTemplateSeed` convention); switch `/siege`, respawn and match start from chat

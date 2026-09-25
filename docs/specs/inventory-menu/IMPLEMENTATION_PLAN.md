@@ -153,6 +153,13 @@ session. **Last updated:** 2026-09-25
 `9cf81a7`), built in worktrees under `Repository/_worktrees/` so the
 `Repository/*` checkouts (on `claude/user-management`, with other sessions'
 uncommitted work) stay untouched. Both pushed, not merged to trunk.
+**Merged 2026-09-25 into `claude/siege-minigame`** (both repos, forked from
+current trunk: web-api `3be3226`, plugin `be2573d`; merge commits `4627101` /
+`55a995a`, no conflicts, no EF model drift). `MenuTemplateServicePhase9Tests`
+had been left untracked in the worktree despite `86a72d9`'s message; committed
+on `claude/siege-minigame` as `aaddbd5`. Post-merge: web-api 413/418 (the same
+5 failures as `master`), knk-core 512 / api-client 28 / knk-paper 246, all
+green. Trunk merge still waits for live verification.
 
 **Commits:**
 - knk-web-api: `07b6174` schema/API (`AutoRefreshTicks`, `IsRowTemplate`,
