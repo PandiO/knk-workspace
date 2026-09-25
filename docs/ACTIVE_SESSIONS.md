@@ -35,6 +35,7 @@ Live tracker of in-progress work across all four Knights and Kings repos
 | Feature | Repos / files claimed | Owner (human / session) | Status | Started | Last updated |
 |---|---|---|---|---|---|
 | _(example)_ Siege minigame — capture point sync | web-api: `Services/SiegeService.cs`; plugin: `siege/` package | Claude Code session A | Implementing capture-point event handling | 2026-09-17 | 2026-09-17 |
+| Siege minigame Phase 3 — authoring in the web app (FormConfigurations + web-app wiring) | knk-web-app branch `claude/siege-minigame`: `src/apiClients/siege*`, `src/types/dtos/siege/`, `src/utils/entityApiMapping.ts`, `src/config/objectConfigs.tsx`, FormWizard/ChildFormModal/M2M editor as the verification items need; knk-web-api `claude/siege-minigame` only if a verification item needs it; dev DB FormConfigurations (BannerLayer/BannerDesign/Clan, Siege*, GateStructure form 9); workspace: siege `IMPLEMENTATION_PLAN.md`, new `PHASE_3_FORMCONFIGS.md` | Claude Code session (siege Phase 3) | Starting: verification items first | 2026-09-25 | 2026-09-25 |
 
 ## Recently completed
 
