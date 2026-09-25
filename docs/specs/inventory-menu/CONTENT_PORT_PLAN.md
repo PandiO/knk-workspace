@@ -178,15 +178,14 @@ knk-paper **252** (+6: `HubMenuFeatureTest` ×4, `MenuCommandTest` ×2), 0 failu
   while the server runs stays hidden until the next restart validates it (same rule as opening it).
 - Hub head tile: `SkullOwner = $player.getName$` as planned (E6 resolves an online player's profile).
 
-**Question for the owner (not blocking, fail-closed):** the menu engine checks
-`visibilityPermission`/`actionPermission`/`permission-node` with Bukkit's `Player.hasPermission`,
-while the plugin's own commands (`/knk user`, `/kit`) use `KnkPermissible` (web-app groups/grants).
-Nothing bridges the two, so a **non-op** staff member who holds `knk.admin.user.manage` only through
-a KnK group will not see the Player manager tile (ops and Bukkit-level grants work). CP8 inherits
-this for its `knk.admin.user.<property>` action permissions — the shared `UserAdminService` still
-enforces the real check through `KnkPermissible`. Fixing it means routing the engine's permission
-checks through `KnkPermissible` (a small engine change outside this plan's G1-only scope). Decide
-whether to do that as a follow-up.
+**Permission model note (resolved in CP8, no action needed):** the menu engine checks
+`visibilityPermission`/`actionPermission`/`permission-node` with Bukkit's `Player.hasPermission`
+(ops, plugin.yml defaults), not `KnkPermissible` (web-app groups/grants). That matches `/knk user`
+itself, whose `knk.admin.user.*` checks are plain Bukkit nodes too (its own javadoc says so), so the
+Player manager's tile and actions behave exactly like the command. Features whose commands use
+`KnkPermissible` (`/kit`) keep that check inside their shared code path (`KitGrantFlow`), not in
+template permissions. If the owner ever wants web-app group grants to drive menu visibility, the
+engine's permission checks would need to go through `KnkPermissible` — a separate decision.
 
 **Not verified:** nothing ran in-game; the hub seed was not applied to any database.
 
@@ -579,6 +578,74 @@ handled as group memberships.
 **Tests:** `UserAdminService` shared by command + menu (existing command tests green); outranks
 condition; each action's permission gate; step interpolation incl. negation; kick/ban dispatch runs as
 the viewer; seed validation.
+
+### CP8 status — shipped 2026-09-25 (not live-verified; audit actor pending CP7's server half)
+
+**Shipped:**
+- knk-web-api `058dec5`: seeds `users.manager`, `users.manager.edit`, `users.manager.titles`,
+  `users.manager.groups` — every section `VisibilityPermission knk.admin.user.manage` (the engine
+  skips such a section entirely for a viewer without it).
+  - `users.manager` (H6): header (online count via `usersManager`), grid 9–44 over `users.online`
+    (row = head via `SkullOwner $row.getUuid$`, title/balances/tier/mode/frozen lore) → `menu.open
+    {users.manager.edit, ctx.userId, ctx.name, state.pm.coinStep 100, gemStep 10, xpStep 100}`;
+    pager 45/53.
+  - `users.manager.edit` (H6): slot 0 = the target head (1×1 section over `users.target`, which also
+    loads the target fresh + the viewer's rank over them); 8 Back; steppers coins 10/11/12, gems
+    19/20/21, XP 28/29/30 (`−`/`+` = `users.adjust` with `delta` `-$state.pm.*Step$` / `$state.pm.*Step$`,
+    `ActionPermission knk.admin.user.<field>`; the value item shows `$target.get…$` + "Step: N" and
+    `menu.state.cycle`s coins `1,10,100,1000,10000`, gems `1,10,100,1000`, XP `10,100,1000,10000`);
+    14 Title → `users.manager.titles`, 15 Groups → `users.manager.groups`, 16 mode toggle
+    (`users.mode` to `$target.getNextMode$`), 23 salary payout, 24 freeze/unfreeze (one slot, two
+    actions picked by Render `value-equals $target.getIsFrozen$`, Click `permission-node
+    knk.freeze`/`knk.unfreeze`), 32 kick / 33 ban (`menu.confirm.request` → `users.kick`/`users.ban`),
+    Confirm 48 / Cancel 50 (`users.pending`). Every mutating item has the Click condition
+    `users.outranks-target {userId}`.
+  - `users.manager.titles` (H4): brackets as seen by the target (`users.titles`), confirmed
+    `users.set-title {userId, bracketId}`; pager 27/35, confirm 30/32.
+  - `users.manager.groups` (H6): every group (`users.groups`), members HIGHLIGHT; `users.group add`
+    directly, `remove` via confirmation.
+- knk-plugin `07a765f`: `user/UserAdminService` — extracted from `UserManagementCommand` (target
+  resolution, `RankHierarchy.actorOutranks`, per-property `knk.admin.user.<property>`, balance "set" =
+  computed delta, group/perm add/remove, `ModeService.refreshVisibilityFor`, result messages) and
+  `FreezeCommand`; both commands are now thin callers (their messages are unchanged). Added for the
+  menu: `adjustBalance` (signed step), `setTitle` (XP delta to the bracket minimum), `setMode`,
+  `payOutSalary`, `kick`/`ban` (`staff.performCommand("kick <name> <reason>")` — runs as the staff
+  member, vanilla permissions decide). Every mutation goes through `UsersCommandApi.withActor`
+  (CP7 plugin half). `menu/content/UserManagerMenuFeature` (+ `TargetUserView`, `OnlinePlayerRow`,
+  `GroupRow`, `TitleRow.getPickerDisplayMode`). `ModeService.persist(player, mode, api)` overload.
+  New nodes `knk.admin.user.mode`, `knk.admin.user.salary` (children of `knk.admin`, default false).
+
+**Tests after CP8:** web-api **486/491** (same 5; +7: four seed round-trips + three `UserManager…`
+seed tests). Plugin knk-core 523, api-client 32, knk-paper **326** (+27: `UserAdminServiceTest` 12,
+`UserManagementCommandTest` 4 — `/knk user` + `/freeze` delegate to the service, `UserManagerMenuFeatureTest`
+13 incl. outranks condition, per-action permission gate, step interpolation incl. negation, kick/ban as
+the viewer, and the seed contract for all four menus; the CP7 command-actor test moved into the
+service test), 0 failures; `shadowJar` builds.
+
+**Judgment calls:**
+- **Freeze, mode, salary** were not part of `/knk user`. Freeze reuses `/freeze`'s logic (now in the
+  service, so `/freeze` and the menu share it; the menu freezes with the fixed reason "Frozen by a
+  member of staff"). Mode and salary are new staff abilities with new nodes; the mode toggle only
+  switches NONE ↔ STAFF (OWNER → NONE) and refuses a mode the target doesn't hold the node for (they'd
+  be vanished with no way to toggle it off); owner mode stays self-service (`/ownermode`).
+- **Rank check** (`users.outranks-target`): conditions run on the main thread, so the answer is
+  computed by the `users.target`/`titles`/`groups` fetch and cached per (viewer, target); before the
+  first fetch the condition denies with "Still checking your rank". The service re-checks the rank
+  server-trip-side for group/perm/freeze/mode/salary (as the commands did); balance/title steps rely on
+  the menu condition, because `/knk user coins|gems|xp` never had a rank check and its behaviour was
+  kept.
+- **Target identity** travels as `ctx.userId` + `ctx.name`; the target is read fresh by name (like
+  `/knk user`) and the id must match, so a renamed/other account never gets edited.
+- **Online list** = online players with a cached knk account whom the viewer outranks (self excluded);
+  one disabled row when there is nobody.
+- **Confirmations** use `users.pending` (pending action type `users.*`) for the same reason as Kits'
+  `kits.purchase-pending` (see CP2).
+- Kick/ban reasons are fixed: "You were kicked/banned by a member of staff." (v1's exact wording wasn't
+  available in this session).
+
+**Not verified:** anything in-game; that Paper's `/kick`/`/ban` accept `performCommand` from a
+player with the vanilla permission; audit rows showing the staff member (blocked on CP7's server
+half — until then the actor is still null).
 
 ## 11. Wrap-up — docs and hand-off
 
