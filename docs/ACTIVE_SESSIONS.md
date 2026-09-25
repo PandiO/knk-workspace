@@ -35,6 +35,7 @@ Live tracker of in-progress work across all four Knights and Kings repos
 | Feature | Repos / files claimed | Owner (human / session) | Status | Started | Last updated |
 |---|---|---|---|---|---|
 | _(example)_ Siege minigame — capture point sync | web-api: `Services/SiegeService.cs`; plugin: `siege/` package | Claude Code session A | Implementing capture-point event handling | 2026-09-17 | 2026-09-17 |
+| Kits Phase 8 — seed data (`docs/specs/kits/IMPLEMENTATION_PLAN.md` §8, `SEED_DATA.md`) | knk-web-api `claude/kits`: new `Models/Kit/KitSeed.cs` (or similar) + `Program.cs` registration + tests; knk-workspace: kits `IMPLEMENTATION_PLAN.md` status header | Claude Code session (kits-phase8) | Implementing startup seed | 2026-09-25 | 2026-09-25 |
 
 ## Recently completed
 
