@@ -34,6 +34,7 @@ Live tracker of in-progress work across all four Knights and Kings repos
 
 | Feature | Repos / files claimed | Owner (human / session) | Status | Started | Last updated |
 |---|---|---|---|---|---|
+| Siege minigame Phase 1 — `BannerDesign` + `BannerLayer` + `Clan` (`docs/specs/siege-minigame/IMPLEMENTATION_PLAN.md` Phase 1) | web-api: new `Models/Clan/*`, `Enums/BannerDyeColor.cs`, banner/clan DTOs, mapping, repos, services, `ClansController`, `BannerDesignsController`, `KnKDbContext.cs`, migration `AddSiegePhase1ClanBanner`; plugin: clans query API + DTO/mapper (knk-core/api-client), `BannerDesignBukkitMapper` (knk-paper); web-app: none expected (FormConfigs authored live). Branch `claude/siege-minigame` | Claude Code session (siege) | Started | 2026-09-25 | 2026-09-25 |
 | _(example)_ Siege minigame — capture point sync | web-api: `Services/SiegeService.cs`; plugin: `siege/` package | Claude Code session A | Implementing capture-point event handling | 2026-09-17 | 2026-09-17 |
 
 ## Recently completed
