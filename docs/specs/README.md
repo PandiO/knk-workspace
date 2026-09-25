@@ -30,6 +30,14 @@ Central home for requirements, specifications, and implementation roadmaps acros
   [siege-minigame/MENU_TEMPLATES.md](siege-minigame/MENU_TEMPLATES.md) (legacy siege menus inventoried
   item-by-item + proposed v3 templates, documented only); evidence in
   [../reports/2026-09-25-siege-minigame-gap-analysis.md](../reports/2026-09-25-siege-minigame-gap-analysis.md)
+- Command catalogs (every Minecraft command across all three codebases — syntax, permissions,
+  behavior, feature allocation): [docs/specs/legacy/commands-v1.md](docs/specs/legacy/commands-v1.md),
+  [docs/specs/legacy/commands-v2.md](docs/specs/legacy/commands-v2.md),
+  [docs/specs/user-features/COMMAND_CATALOG_V3.md](docs/specs/user-features/COMMAND_CATALOG_V3.md)
+- Event-listener catalogs (every Bukkit/Spigot event handler across all three codebases — the
+  passive/reactive behavior commands don't cover): [docs/specs/legacy/events-v1.md](docs/specs/legacy/events-v1.md),
+  [docs/specs/legacy/events-v2.md](docs/specs/legacy/events-v2.md),
+  [docs/specs/user-features/EVENT_CATALOG_V3.md](docs/specs/user-features/EVENT_CATALOG_V3.md)
 
 ## Conventions
 - Keep feature requirements and roadmaps grouped by domain folder above.
