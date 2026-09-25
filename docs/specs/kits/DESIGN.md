@@ -1,7 +1,9 @@
 # Kits — Design
 
 **Status:** Draft, all open questions resolved with the developer — ready for implementation.
-**Last updated:** 2026-09-25 (initial draft).
+**Last updated:** 2026-09-25 (added §0a/§6: `KitScan` WorldTask authoring flow, slot-indexed
+`KitContent`, and the unified grant-placement algorithm). Previously updated 2026-09-25 (initial
+draft).
 
 Ref: `docs/vision/vision.md` §9.2 (Kits). Sources: `docs/specs/legacy/kits.md` (v1/v2
 source-mined spec), `docs/reports/LEGACY_VS_V2_GAP_ANALYSIS.md`, `docs/specs/items/
@@ -12,6 +14,24 @@ rank/permission/progression model this plan hooks into, per explicit developer i
 `Models/PermissionGroup.cs`, `Models/TitleBracket.cs`, `Models/PermissionGrant.cs`, and
 `knk-plugin`'s `PlayerListener.java` (2026-09-25, on branch `claude/user-management`, which has
 Items Phases 1-5 and User Features/User Management merged in).
+
+## 0a. Revision note — WorldTask-scan authoring added, `Contents` becomes slot-indexed
+
+Added after the initial draft, per explicit developer request: an alternative, in-game way to
+author a Kit (scan a player's live inventory and relay it into the open web-app form), modeled
+directly on the **real, already-shipped** `ItemScan` mechanism (`ItemScanTaskHandler.java`,
+`FormWizard.tsx`'s `applyItemScanResult`, `WorldBoundFieldRenderer.tsx`'s `isItemScanTask`,
+`ScanConflictModal.tsx`) — confirmed by direct code read to be materially ahead of what
+`docs/specs/items/IMPLEMENTATION_PLAN.md` §5 itself describes (that doc's "no selective-field
+preservation" non-goal was superseded in the field by real 2026-09-23 live-testing feedback; the
+conflict-modal mechanism this plan reuses didn't exist when that doc was written). See §6.
+
+This also forced a real model change to §2.2's `KitContent`: capturing "the exact slot number"
+per scanned item only makes sense if `KitContent` is keyed by slot, not by item identity — see
+§2.2's rewritten shape. It also surfaced a correctness gap in the original §4.2 grant
+description (unconditional `setHelmet()`-style overwrite would silently delete gear a player is
+already wearing) — §4.2 is rewritten to apply the same "check what's already there" logic
+uniformly to every granted slot, not just `Contents`.
 
 ## 0. What this plan does not re-litigate
 
@@ -55,7 +75,7 @@ should fork from:
   `IsPremiumTier`, `Weight`, single-parent inheritance). Currently live on the unmerged
   `claude/user-features` branch (web-api and plugin) — not yet on `main`/`master`. **This plan's
   first phase needs to branch from `claude/user-features`'s tip, not from `main`**, until that
-  work merges — flag this in `ACTIVE_SESSIONS.md` when starting (§6).
+  work merges — flag this in `ACTIVE_SESSIONS.md` when starting (`IMPLEMENTATION_PLAN.md` §0).
 - **`User.Coins`/`User.Gems`** (both `int`) — the two currency fields Kit's cost model spends
   directly (§5).
 - **First-join detection** (`PlayerListener.onJoin`, `UserSummary.isNewUser()`) — already exists
@@ -145,39 +165,52 @@ No new "AccessCondition" entity, and no duplication of District/Territory's futu
 model — if that generic mechanism gets built later, Kit's three fields here are a strict subset
 of what it would need to express and can be migrated onto it then; nothing here blocks that.
 
-### 2.2 `KitContent` — the cascade-delete fix
+### 2.2 `KitContent` — slot-indexed, and the cascade-delete fix
+
+**Revised (§0a): keyed by slot, not by item.** Since a scanned kit (§6) must reproduce a
+player's inventory layout exactly — including two non-stacking stacks of the same
+`ItemBlueprint` sitting in two different slots, which a real inventory snapshot can genuinely
+contain — `KitContent` cannot be keyed by `(KitId, ItemBlueprintId)` the way a "one entry per
+distinct item" model would assume. It's keyed by `(KitId, SlotIndex)` instead: a Kit's general
+contents are modeled as *up to 36 positional slots* (Bukkit's `PlayerInventory` storage range,
+indices 0-35 — hotbar 0-8 plus the main storage grid 9-35), each independently holding one
+`ItemBlueprint` + quantity, mirroring an actual inventory rather than an unordered bag:
 
 ```csharp
 public class KitContent
 {
     public int KitId { get; set; }
     public Kit Kit { get; set; } = null!;         // cascade delete — fully owned by Kit
+    public int SlotIndex { get; set; }            // 0-35, Bukkit PlayerInventory storage index
     public int ItemBlueprintId { get; set; }
     public ItemBlueprint ItemBlueprint { get; set; } = null!; // Restrict delete — NOT cascade
-
-    public int? QuantityOverride { get; set; } // null = use ItemBlueprint.DefaultQuantity
+    public int Quantity { get; set; } = 1;        // the actual stack size for this slot
 }
 ```
 
-Composite key `(KitId, ItemBlueprintId)`. **This directly fixes legacy spec bug/edge-case #4**:
-v2's `Kit.contents` was `@ManyToMany(cascade = CascadeType.ALL)` against the shared `Item`
-entity, meaning deleting a Kit risked cascading a delete into `Item` rows still referenced by
-shops/storages/other kits. Here, deleting a `Kit` deletes its `KitContent` join rows (which are
-meaningless without their parent Kit) but the FK to `ItemBlueprint` is `DeleteBehavior.Restrict`
-— an `ItemBlueprint` still referenced by any `KitContent` (or equipment slot FK) cannot be
-deleted at all until every reference is removed first. **This is also the concrete instance of
-vision §9.2's standing rule** ("any entity referencing shared Item/ItemTemplate rows in v3" must
-not cascade-delete into it) — Kit's equipment-slot FKs (`HelmetId` etc.) get the same
-`Restrict` treatment for the same reason.
+Composite key `(KitId, SlotIndex)` — at most one item occupies a given slot, same as a real
+inventory. **This directly fixes legacy spec bug/edge-case #4**: v2's `Kit.contents` was
+`@ManyToMany(cascade = CascadeType.ALL)` against the shared `Item` entity, meaning deleting a Kit
+risked cascading a delete into `Item` rows still referenced by shops/storages/other kits. Here,
+deleting a `Kit` deletes its `KitContent` join rows (meaningless without their parent Kit) but the
+FK to `ItemBlueprint` is `DeleteBehavior.Restrict` — an `ItemBlueprint` still referenced by any
+`KitContent` (or equipment slot FK) cannot be deleted at all until every reference is removed
+first. **This is also the concrete instance of vision §9.2's standing rule** ("any entity
+referencing shared Item/ItemTemplate rows in v3" must not cascade-delete into it) — Kit's
+equipment-slot FKs (`HelmetId` etc.) get the same `Restrict` treatment for the same reason.
 
-**Quantity resolution** deliberately replaces legacy's hardcoded category/name heuristic
-(v2: weapons=1, item named "arrow"=64, everything else=32) with the item catalog's own
-`ItemBlueprint.DefaultQuantity` field (already exists, already means "how many of this item a
-player normally gets" per the Items plan) as the default, overridable per-kit via
-`QuantityOverride` on `KitContent` (contents) — equipment slots always grant exactly 1 (you
-cannot equip more than one helmet), so no per-slot quantity field exists there. This is simpler
-than porting the legacy heuristic and correctly reuses data that already exists on the template,
-rather than re-deriving "how many arrows" from the item's name at grant time.
+**Quantity is now a plain, required field** (the actual scanned/authored stack size), not an
+override on top of `ItemBlueprint.DefaultQuantity` — a positional slot model has no natural
+"default to fall back to" the way an unordered bag did; a slot either holds N of an item or it's
+empty. When hand-authoring a Kit through the web-app form (no scan involved, §3), the admin sets
+both `SlotIndex` and `Quantity` directly on each `Contents` entry.
+
+**Why armor/hand/shield stay separate named fields, not more `KitContent` slots**: `HelmetId`/
+`ChestplateId`/`LeggingsId`/`BootsId`/`ShieldId`/`HandId` (§2.1) remain their own FK fields rather
+than folding into `KitContent`'s slot range, because each maps to a distinct, non-interchangeable
+Bukkit API surface at grant time (armor/off-hand/main-hand setters, §4.2) rather than a raw
+storage-array index — and because giving them dedicated fields keeps the admin form (§3)
+readable ("what does this kit equip" vs. "what does this kit dump into a numbered slot").
 
 ### 2.3 `KitClaim` — cooldown and claim history
 
@@ -261,9 +294,9 @@ and handed to a player.
 - `ClaimKitAsync(userId, kitId)` — re-validates gating (§3) + cooldown (§2.3) +
   `IsSinglePurchasePremium` state (§2.4) + `CostAmount`/`CostCurrency` balance, atomically
   deducts cost (if any, and if not a purchased premium kit), writes a `KitClaim` row, and returns
-  the resolved loadout (`HelmetId`/`ChestplateId`/.../`HandId`/`ShieldId` + resolved
-  `(ItemBlueprintId, quantity)` list for `Contents`) for the caller to actually build/give
-  in-game. **Never trust a caller's own gating check** — this method re-checks everything itself
+  the resolved loadout (`HelmetId`/`ChestplateId`/.../`HandId`/`ShieldId` + a resolved
+  `(SlotIndex, ItemBlueprintId, Quantity)` list for `Contents`, §2.2) for the caller to actually
+  build/place in-game (§4.2). **Never trust a caller's own gating check** — this method re-checks everything itself
   even though `GetAvailableForUserAsync` already told the caller the answer moments earlier,
   since that's exactly the kind of staleness window vision §10 already flags as a bug class to
   avoid (menu condition-at-click-time, not just render-time).
@@ -279,9 +312,41 @@ and handed to a player.
 `POST api/Kits/{id}/claim`), then use the response's `ItemBlueprintId`s to build each `ItemStack`
 via the **already-existing** `ItemBlueprintBukkitMapper`/`ItemBlueprintsDataAccess` pipeline
 (`ItemBlueprintsDebugCommand` already does exactly this for a single item) — no new
-item-construction logic. Slot assignment defensively checks each nullable slot before acting
-(directly fixes legacy bug #5): a Kit with `HelmetId == null` simply doesn't touch the helmet
-slot, rather than assuming every Kit is a full loadout.
+item-construction logic. Every nullable slot (§2.1) is checked before acting (directly fixes
+legacy bug #5): a Kit with `HelmetId == null` simply doesn't touch the helmet slot, rather than
+assuming every Kit is a full loadout.
+
+**Revised (§0a) — a single, unified per-item placement routine, not a blind overwrite.** The
+original version of this section had armor/shield/hand grant unconditionally via
+`setHelmet()`/`setItemInOffHand()`/`setItemInMainHand()`, which would silently delete whatever
+the player already had equipped there. Since `KitContent`'s slot model (§2.2) already needs a
+"what's already in this slot" conflict routine, the same routine is applied to **every** granted
+item — armor, shield, hand, and each `KitContent` entry alike — not just `Contents`:
+
+For each resolved item to grant, in order Helmet → Chestplate → Leggings → Boots → Shield → Hand
+→ `Contents` (ascending `SlotIndex`):
+1. **Determine the target slot**: the item's own dedicated Bukkit slot for
+   Helmet/Chestplate/Leggings/Boots/Shield (armor slots, off-hand); **the player's currently
+   active hotbar slot** for Hand (i.e. whatever `getHeldItemSlot()` returns *at grant time* —
+   deliberately not the slot it happened to occupy when originally scanned, since "hand" means
+   "what the player is holding," which by definition is whichever hotbar slot is currently
+   selected); the stored `SlotIndex` (0-35) for a `Contents` entry.
+2. **Empty target** → place the built `ItemStack` there directly.
+3. **Occupied, and the existing stack is a Bukkit `ItemStack.isSimilar()` match** (same material,
+   display name, lore, enchantments — the exact check the developer asked for: "type matches
+   including name and lore") → merge into the existing stack up to `ItemBlueprint.MaxStackSize`;
+   any amount that doesn't fit continues to step 4 as its own remainder stack.
+4. **Occupied with a non-matching item (or a merge remainder from step 3)** → search the
+   player's general inventory (`PlayerInventory.firstEmpty()` over indices 0-35 — a displaced
+   item always goes to general storage, never bumps into a *different* armor slot) for the first
+   empty slot and place it there.
+5. **No empty slot anywhere** → `player.getWorld().dropItemNaturally(player.getLocation(), stack)`
+   — drop it on the ground rather than losing it silently, per the developer's explicit
+   instruction.
+
+This is the one grant-time algorithm every surface (command, first-join, future menu) shares —
+consistent with §4's "exactly one grant path" principle; it isn't a `Contents`-only special case
+bolted on top of a simpler armor-equip path.
 
 ### 4.3 Command surface (knk-plugin)
 
@@ -353,7 +418,134 @@ Noble/Royal/Dragon Blood tiers from `user-features` Phase 5), optionally combine
 `CostAmount`/`CooldownSeconds` like any other kit. No separate field or flag needed — §2.1's
 three gating fields already express "only players in this premium group" on their own.
 
-## 6. Menu grant path — deferred, blocked on InventoryMenu
+## 6. Kit authoring via WorldTask scan (`KitScanTaskHandler`) — new, §0a
+
+An alternative to hand-authoring a Kit through the FormWizard (§3): scan a player's live
+inventory in-game and relay it straight into the open Kit form, exactly the way `ItemScan`
+(`docs/specs/items/IMPLEMENTATION_PLAN.md` §5, now fully shipped — see §0a) pre-fills an
+`ItemBlueprint` form from a held item. This is additive — §3's manual authoring path is unchanged
+and still how an admin builds a Kit with no player physically holding the items.
+
+### 6.1 What gets scanned
+
+On trigger, the handler reads the **triggering player's entire inventory**, not just their held
+item:
+- `Helmet`/`Chestplate`/`Leggings`/`Boots` via `PlayerInventory.getHelmet()`/`getChestplate()`/
+  `getLeggings()`/`getBoots()`.
+- `Shield` (off-hand) via `getItemInOffHand()` — captured regardless of the actual item type; the
+  field name reflects its typical use, not a restriction on what can occupy it (unchanged from
+  §2.1's original framing).
+- `Hand` via `getItemInMainHand()` — no slot number is recorded for this one (§4.2 already
+  established that "hand" targets whatever hotbar slot is active *at grant time*, not a fixed
+  original index).
+- `Contents` via `PlayerInventory.getStorageContents()` (indices 0-35): every **non-air** slot
+  becomes one scanned content entry, tagged with its exact index — **except** whichever index
+  equals `getHeldItemSlot()` at scan time, which is excluded here since that item is already
+  captured as `Hand` above (avoids scanning the same physical item twice, once as `Hand` and
+  once as a `Contents` entry at its hotbar position).
+
+Each scanned item (all six named slots plus every `Contents` entry) captures the same per-item
+fields `ItemScanTaskHandler` already extracts for a single held item — material, display name
+(or humanized material name fallback), lore, vanilla enchantments, custom enchantments (via the
+same reused `EnchantmentRepository`/`LocalEnchantmentRepositoryImpl` lore parser), quantity (the
+stack's actual `getAmount()`, not a hardcoded default). **This logic is factored into one shared
+helper both `ItemScanTaskHandler` and `KitScanTaskHandler` call** (e.g. a
+`ScannedItemJsonBuilder.build(ItemStack)` extracted from `ItemScanTaskHandler`'s existing
+per-item logic) — per this codebase's own "reuse, don't reimplement" precedent (§1), not two
+copies of the same material/lore/enchantment-reading code.
+
+### 6.2 Execution model — same as `ItemScan`, not headless
+
+Identical reasoning to `ItemScanTaskHandler`'s own doc-comment: a kit scan requires a specific
+player's live inventory at the moment of the scan, so this is a single-shot, synchronous
+`IWorldTaskHandler` (not `IHeadlessWorldTaskHandler`) — `startTask` reads the inventory and
+completes the task in one call, no multi-step session, `isHandling`/`getTaskId` are no-ops
+matching `ItemScanTaskHandler`'s own. Both existing entry points apply unchanged: the standard
+`/knk task-claim` chat flow (`WorldTaskChatListener`, since this handler registers into
+`WorldTaskHandlerRegistry` like any other) and a dedicated faster command,
+**`/knk kitscan claim <linkCode>`**, following the exact `KnkAdminCommand.java` pattern already
+registered for `/knk itemscan claim` — both dispatch into the same
+`KnkTaskClaimCommand.onCommand` logic, no duplicated business logic.
+
+### 6.3 `OutputJson` shape
+
+```json
+{
+  "fieldName": "KitScan",
+  "status": "Success",
+  "helmet": { "material": "minecraft:iron_helmet", "displayName": "Iron Helmet", "lore": [], "quantity": 1, "vanillaEnchantments": [], "customEnchantments": [] },
+  "chestplate": null,
+  "leggings": null,
+  "boots": null,
+  "shield": null,
+  "hand": { "material": "minecraft:iron_sword", "displayName": "Iron Sword", "lore": [], "quantity": 1, "vanillaEnchantments": [], "customEnchantments": [] },
+  "contents": [
+    { "slot": 9, "material": "minecraft:arrow", "displayName": "Arrow", "lore": [], "quantity": 64, "vanillaEnchantments": [], "customEnchantments": [] }
+  ],
+  "capturedAt": 1674845123456,
+  "warnings": []
+}
+```
+
+A `null` named slot means that equipment slot was empty at scan time (mirrors `ItemScan`'s own
+`isEmptyHand` handling, generalized to six slots instead of one). `contents` omits empty slots
+entirely (there's no "empty content" concept the way a `null` equipment slot has one).
+
+### 6.4 Web-app: resolving each scanned item to an `ItemBlueprint`, then filling the Kit form
+
+This is the one place `KitScan` is genuinely more involved than `ItemScan`: `ItemScan` fills
+fields *on the one entity being edited*, but `KitScan` must populate **FK-picker fields**, each
+pointing at a *different, already-existing* `ItemBlueprint` row per scanned item. For each of the
+(up to seven) distinct scanned items:
+1. **Auto-match**: search `itemBlueprintClient.searchPaged({ searchTerm: displayName })` (the
+   exact pattern `applyItemScanResult` already uses for enchantment matching, §0a) and keep an
+   exact match on `IconMaterial.namespaceKey` (case-insensitive) + `DefaultDisplayName`.
+2. **No match → auto-create** a minimal `ItemBlueprint` (`DefaultDisplayName`, `IconMaterialRefId`
+   resolved/persisted via the same `minecraftMaterialRefClient.persistFromCatalog` call
+   `applyItemScanResult` already makes) so the Kit field has something concrete to reference. This
+   is deliberately **not** a per-item confirmation prompt — the developer's request was about
+   slot fidelity and the field-conflict check (§6.5) below, not an item-matching UX; auto-create
+   keeps a full-inventory scan (up to 41 items) from turning into up to 41 manual decisions.
+   Enchantment matching on each resolved item follows the same "auto-match with confirmation
+   deferred to the item's own edit screen" approach already established for `ItemScan` — not
+   re-litigated per Kit slot.
+3. **Write the resolved `ItemBlueprintId`** into the corresponding Kit form field
+   (`HelmetId`/.../`HandId`) or `Contents` entry (`{ SlotIndex, ItemBlueprintId, Quantity }`),
+   using the same `applyMultipleFieldChanges`-style functional-setState pattern
+   `applyItemScanResult` already uses to avoid the stale-closure race its own comments document.
+
+**Known cost, not a blocker**: up to ~41 sequential search-or-create round trips per scan (worse
+than `ItemScan`'s single-entity case). Acceptable for now — matches the existing per-enchantment
+loop's own N-round-trip shape — a future batch endpoint is a reasonable follow-up if this proves
+slow in practice, not a Phase 1 requirement.
+
+### 6.5 Field-conflict check — reuses `ScanConflictModal` unchanged
+
+Directly answers the developer's request ("do the check for existing data in those form fields,
+same as is done for scanning an item for ItemBlueprint"): before applying the resolved patch,
+build a `ScanConflictField[]` (the existing, generic `ScanConflictModal.tsx` component — no
+changes needed to it) for every Kit field that **already has a value** and that the scan also
+produced a value for:
+- One conflict entry per already-filled equipment field (`HelmetId`/`ChestplateId`/
+  `LeggingsId`/`BootsId`/`ShieldId`/`HandId`) whose scan result is non-null.
+- One conflict entry for `Contents` as a whole (labeled with its existing entry count, same
+  pattern `applyItemScanResult` already uses for the `DefaultEnchantments` M2M step) if the
+  Kit's `Contents` step already has any entries — the resolution is all-or-nothing for the whole
+  list (either replace every content slot with the fresh scan, or keep every existing entry),
+  not a per-slot merge; a per-slot three-way merge (kept slot + scanned slot + possibly-different
+  index) is real added complexity with no clear default behavior, and isn't what was asked for.
+
+Same defaulting behavior as `ItemScan`'s modal: every conflicting field defaults to "use scan
+result" (triggering a scan is itself a request for fresh data), with the admin able to flip
+individual fields back to "keep current" before applying. Fields with no existing value apply the
+scan result immediately with no prompt, exactly like `ItemScan`.
+
+### 6.6 Not added to `HEADLESS_TASK_TYPES`
+
+Same as `ItemScan` (`WorldBoundFieldRenderer.tsx`'s `HEADLESS_TASK_TYPES` set) — `KitScan` needs
+the normal claim-code banner UI, not the headless-task treatment.
+
+## 7. Menu grant path — deferred, blocked on InventoryMenu
 
 Vision §10 confirms `knk-plugin`'s `InventoryMenus` branch is still a single, unmerged planning
 commit — zero UI framework code exists to build a Kit menu screen against yet, and vision §10
@@ -366,7 +558,7 @@ structurally guaranteed rather than a checklist item to remember, since there is
 item-granting code path anywhere for a menu implementation to accidentally bypass (directly
 prevents legacy bug #3 from reproducing).
 
-## 7. Open items carried forward (not blocking this plan)
+## 8. Open items carried forward (not blocking this plan)
 
 - **`ItemInstance`** doesn't exist yet (§1) — Kit contents/equipment reference `ItemBlueprint`
   only. If/when `ItemInstance` is built, granting a kit item that should be soulbound/ghosted/

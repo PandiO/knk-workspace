@@ -1,7 +1,9 @@
 # Kits — Implementation Plan
 
 **Status:** Draft, ready for implementation.
-**Last updated:** 2026-09-25 (initial draft).
+**Last updated:** 2026-09-25 (added Phase 6, the `KitScan` WorldTask authoring flow, and
+slot-indexed `KitContent`/unified grant-placement algorithm — see `DESIGN.md` §0a). Previously
+updated 2026-09-25 (initial draft).
 
 Ref: `DESIGN.md` in this folder for the architecture and every decision this plan sequences.
 `SEED_DATA.md` for the legacy dev-DB backup mapped into v3 seed content. If anything below
@@ -30,9 +32,11 @@ session doesn't fork from a stale base.
   `RequiredPermissionNode` gating fields, `GrantOnFirstJoin`, `CooldownSeconds`,
   `CostAmount`/`CostCurrency` (new `KitCostCurrency` enum: `Coins`/`Gems`),
   `IsSinglePurchasePremium`/`PremiumPriceGems`.
-- `Models/Item/KitContent.cs` — composite-key join entity per `DESIGN.md` §2.2: `KitId`
-  (cascade delete) + `ItemBlueprintId` (**Restrict** delete — the cascade-delete-bug fix) +
-  `QuantityOverride`.
+- `Models/Item/KitContent.cs` — composite-key join entity per `DESIGN.md` §2.2 (revised, §0a):
+  `KitId` (cascade delete) + `SlotIndex` (0-35, the composite key's second half — **not**
+  `ItemBlueprintId`, since two different slots may legitimately hold the same `ItemBlueprint`) +
+  `ItemBlueprintId` (**Restrict** delete — the cascade-delete-bug fix) + `Quantity` (required,
+  the actual stack size for that slot).
 - `Models/Item/KitClaim.cs` — per `DESIGN.md` §2.3, not `[FormConfigurableEntity]` (append-only,
   viewed not edited, same convention as `AuditLogEntry`).
 - `Models/Item/KitPurchase.cs` — per `DESIGN.md` §2.4, unique constraint on
@@ -44,8 +48,10 @@ session doesn't fork from a stale base.
   Configure `KitPurchase`'s unique index on `(KitId, UserId)`.
 - `Dtos/KitDtos.cs` — `KitDto` (full CRUD shape, including nested `Contents`), `KitAvailabilityDto`
   (per `DESIGN.md` §4.1's `GetAvailableForUserAsync` — kit summary + `CanClaim`/`DenialReason`/
-  `CooldownExpiresAt`/`IsPurchased` fields), `KitClaimResultDto` (resolved loadout: slot →
-  `ItemBlueprintId`, contents → `(ItemBlueprintId, Quantity)[]`, for the plugin to build from).
+  `CooldownExpiresAt`/`IsPurchased` fields), `KitClaimResultDto` (resolved loadout: each named
+  equipment field → `ItemBlueprintId` or null, `Contents` →
+  `(SlotIndex, ItemBlueprintId, Quantity)[]`, for the plugin to place via `DESIGN.md` §4.2's
+  placement algorithm).
 - `Mapping/KitProfile.cs` — AutoMapper profile, same one-per-feature-area convention as every
   other entity.
 - EF migration. **Hand-check the same class of risk `user-features`'s migrations already hit
@@ -91,8 +97,10 @@ session doesn't fork from a stale base.
     `BootsId`/`ShieldId`/`HandId` (each an `ItemBlueprint` object picker), `GrantOnFirstJoin`,
     `CooldownSeconds`.
   - Contents: M2M step, `relatedEntityPropertyName: "Contents"`, `joinEntityType: "KitContent"`,
-    child step field `QuantityOverride` (nullable Integer) — same `ManyToManyRelationshipEditor`
-    pattern `ItemBlueprint.DefaultEnchantments` already uses.
+    child step fields `SlotIndex` (Integer, 0-35) and `Quantity` (Integer) — same
+    `ManyToManyRelationshipEditor` pattern `ItemBlueprint.DefaultEnchantments` already uses, now
+    with two child fields instead of one (mechanically no different — the editor already supports
+    an arbitrary child-step field list).
   - Access Conditions: `MinTitleBracketId` (`TitleBracket` object picker), `RequiredPermissionGroupId`
     (`PermissionGroup` object picker), `RequiredPermissionNode` (plain text, matching how
     `PermissionGrant.Node` is authored elsewhere).
@@ -116,16 +124,15 @@ session doesn't fork from a stale base.
 - `KnkKit` domain type (`knk-core/.../domain/item/`) — Bukkit-free DTO mirroring `KnkItemBlueprint`'s
   existing separation pattern.
 - **Item-building reuses `ItemBlueprintBukkitMapper` as-is** — no new mapper. Given a
-  `KitClaimResultDto` (slot → `ItemBlueprintId`, contents → `(ItemBlueprintId, Quantity)[]`),
-  resolve each `ItemBlueprint` via the existing `ItemBlueprintsDataAccess`, build the `ItemStack`
-  via the existing mapper (same call `ItemBlueprintsDebugCommand` already makes), then:
-  - Equip `Helmet`/`Chestplate`/`Leggings`/`Boots` directly into their armor slots — **skip any
-    slot whose resolved `ItemBlueprintId` is null** (the bug-#5 fix, `DESIGN.md` §2.1).
-  - `Shield` → off-hand, if set.
-  - `Hand` → main hand, if set.
-  - `Contents` → `addItem` each resolved `(ItemStack, quantity)` into the player's inventory,
-    respecting `MaxStackSize` (split across multiple stacks if `quantity > MaxStackSize`, same
-    concern any bulk item-give already has to handle).
+  `KitClaimResultDto`, resolve each referenced `ItemBlueprint` via the existing
+  `ItemBlueprintsDataAccess`, build each `ItemStack` via the existing mapper (same call
+  `ItemBlueprintsDebugCommand` already makes), then run **`DESIGN.md` §4.2's unified placement
+  algorithm** for every resolved item (Helmet → Chestplate → Leggings → Boots → Shield → Hand →
+  `Contents` by ascending `SlotIndex`) — not a simpler direct-equip/`addItem` path. A single
+  `KitGrantPlacer` helper class (`knk-paper/.../kit/`) implements the shared five-step routine
+  (empty → place; occupied+`isSimilar()` → merge with overflow; occupied+different →
+  `firstEmpty()` in 0-35; no empty slot → `dropItemNaturally`) once, called once per item in
+  order — not five copies of near-identical slot-conflict logic.
 
 ## 5. Phase 5 — Command surface + first-join hook (knk-plugin)
 
@@ -143,7 +150,66 @@ Phases 4 and 5 are the only two with a hard ordering dependency on each other (5
 builds); both depend on Phases 1-2 (the backend contract) being stable, and are independent of
 Phase 3 (the admin form is for authoring Kits, not for granting them).
 
-## 6. Phase 6 — Seed data
+## 6. Phase 6 — `KitScan` WorldTask authoring flow (new, `DESIGN.md` §6)
+
+An alternative to Phase 3's manual form authoring: scan a player's live inventory in-game and
+relay it into the open Kit form. Depends on Phase 3 (the Kit `FormConfiguration`'s fields must
+exist and be stable before a scan can target them) and Phase 1/2 (nothing to scan into
+otherwise); independent of Phases 4/5 (granting a kit doesn't need this authoring path to exist).
+
+**knk-plugin:**
+- Extract a shared `ScannedItemJsonBuilder.build(ItemStack)` helper from
+  `ItemScanTaskHandler`'s existing per-item JSON logic (material/displayName-or-humanized-
+  fallback/lore/vanilla+custom enchantments/quantity) — used by **both** `ItemScanTaskHandler`
+  and the new handler below, per `DESIGN.md` §6.1's explicit "reuse, don't reimplement" call.
+  This is a refactor of existing, working code — verify `ItemScanTaskHandler`'s own behavior is
+  unchanged after extraction (its existing tests, if any, are the check).
+- `tasks/KitScanTaskHandler.java` — new `IWorldTaskHandler` (single-shot, synchronous, not
+  headless — same shape as `ItemScanTaskHandler`, `DESIGN.md` §6.2), field name `"KitScan"`.
+  `buildOutputJson` per `DESIGN.md` §6.3: `Helmet`/`Chestplate`/`Leggings`/`Boots` via their
+  dedicated `PlayerInventory` getters, `Shield` via `getItemInOffHand()`, `Hand` via
+  `getItemInMainHand()` (no slot recorded), `Contents` by iterating
+  `getStorageContents()` indices 0-35, skipping `getHeldItemSlot()` and every empty slot,
+  tagging each remaining entry with its index.
+- Register `KitScanTaskHandler` into `WorldTaskHandlerRegistry` (`KnKPlugin.java`, same
+  convention as every other handler).
+- `commands/KnkAdminCommand.java`: register `/knk kitscan claim <linkCode>` following the exact
+  block already registered for `/knk itemscan claim` (`DESIGN.md` §6.2) — both are thin wrappers
+  dispatching into the same `KnkTaskClaimCommand.onCommand`.
+
+**knk-web-api:**
+- No schema change (`WorldTask.TaskType` is already an open string field, per the Items plan's
+  own finding — adding `"KitScan"` needs no migration).
+- Optional, for parity with `GateBlockScan`'s `WorldTaskTypes` class: add a `KitScan` constant
+  alongside `ItemScan`'s, if one was added for it — check first, since the Items plan's original
+  doc only recommended this, and confirm whether it actually landed before assuming the constant
+  exists to extend.
+
+**knk-web-app:**
+- `FieldEditor.tsx`: add a `KitScan` option alongside the existing `ItemScan` entry in the
+  `worldTaskType` dropdown.
+- `WorldBoundFieldRenderer.tsx`: add a `KIT_SCAN_TASK_TYPE = 'KitScan'` constant and an
+  `isKitScanTask` helper mirroring `isItemScanTask` exactly (`DESIGN.md` §6.6) — **not** added to
+  `HEADLESS_TASK_TYPES`.
+- `FormWizard.tsx`: add `applyKitScanResult`, structured identically to the existing
+  `applyItemScanResult` (`DESIGN.md` §6.4/§6.5):
+  - Snapshot the Kit form's current step data *before* any `await`, for the same
+    already-documented stale-closure race `applyItemScanResult`'s own comments warn about.
+  - For each of the (up to 7) distinct scanned items (6 named slots + however many `Contents`
+    entries), resolve to an `ItemBlueprintId` via `itemBlueprintClient.searchPaged` exact-match
+    or create (`DESIGN.md` §6.4) — reusing the exact `minecraftMaterialRefClient.persistFromCatalog`
+    call `applyItemScanResult` already makes for material resolution.
+  - Build the `ScanConflictField[]` list per `DESIGN.md` §6.5 (one per already-filled equipment
+    field the scan also produced a value for, one for `Contents` as a whole if it already has
+    entries) and route through the **existing, unmodified** `ScanConflictModal`.
+  - Apply the resolved patch via `applyMultipleFieldChanges`, writing `Contents` as a full
+    `{ SlotIndex, ItemBlueprintId, Quantity }[]` replacement (all-or-nothing, per `DESIGN.md`
+    §6.5 — not a per-slot merge).
+- Dispatch: in the task-poll handler (`FormWizard.tsx` line ~2572's
+  `task?.taskType === 'ItemScan'` check), add the matching `'KitScan'` branch calling
+  `applyKitScanResult`.
+
+## 7. Phase 7 — Seed data
 
 Per `SEED_DATA.md`: seed `Category`/`Grade`/`Tag` rows (if not already present from other seed
 efforts), the 9 `ItemBlueprint` rows, and the two `Kit` rows (`Default`, `Archer`) +
@@ -152,27 +218,32 @@ efforts), the 9 `ItemBlueprint` rows, and the two `Kit` rows (`Default`, `Archer
 final live-game balance — flagged as such in `SEED_DATA.md` given the source data's own
 "Test"/"Open Beta" tags and joke item names (Maggoty Bread).
 
-This phase has no code dependency on Phases 1-5 being complete (it's just data), but is
+This phase has no code dependency on Phases 1-6 being complete (it's just data), but is
 sequenced last here since seeding before the schema exists is meaningless, and seeding is the
 natural way to verify Phases 1-5 end-to-end (create the two kits via the seed, `/kit get Default`
-in-game, confirm the loadout is correct).
+in-game, confirm the loadout is correct) — Phase 6 (`KitScan`) has its own independent
+verification path (scan a live inventory, confirm the form fills correctly) that doesn't need
+the seed data at all.
 
-## 7. Sequencing summary
+## 8. Sequencing summary
 
 ```
-Phase 1 (schema) ──▶ Phase 2 (service/API) ──┬──▶ Phase 3 (admin form)
+Phase 1 (schema) ──▶ Phase 2 (service/API) ──┬──▶ Phase 3 (admin form) ──▶ Phase 6 (KitScan)
                                               └──▶ Phase 4 (plugin data access/item-building)
                                                         └──▶ Phase 5 (commands/first-join hook)
-                                                                  └──▶ Phase 6 (seed data, verification)
+                                                                  └──▶ Phase 7 (seed data, verification)
 ```
 
 Phases 1-3 deliver a fully admin-authorable Kit catalog on their own (creatable/editable via the
-web app, nothing to grant yet) and are worth shipping independently if Phases 4-6 slip, matching
+web app, nothing to grant yet) and are worth shipping independently if Phases 4-7 slip, matching
 the sequencing precedent both the Items and user-features plans already established for this
-codebase.
+codebase. Phase 6 (`KitScan`) is a pure add-on to Phase 3's admin form — nothing else depends on
+it, and it can slip without blocking granting (Phases 4/5) or seeding (Phase 7).
 
-## 8. Open items
+## 9. Open items
 
-None outstanding — all three developer-escalated questions (`DESIGN.md` §0) are resolved and
-folded into the design above. The one soft dependency worth re-confirming at kickoff is §0's
-branch-base check (has `claude/user-features` merged to `main` yet?).
+None outstanding — all four developer-escalated/-requested decisions (`DESIGN.md` §0/§0a) are
+resolved and folded into the design above. Two soft items worth re-confirming at kickoff:
+- §0's branch-base check (has `claude/user-features` merged to `main` yet?).
+- Phase 6's `WorldTaskTypes` constant question (does an `ItemScan` constant actually exist to
+  extend, or is `TaskType` passed as a bare string today? Check before assuming either way).

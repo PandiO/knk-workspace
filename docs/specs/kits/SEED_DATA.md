@@ -64,9 +64,10 @@ for the FK links. `display_name`'s `Â§7` prefix is a legacy encoding artifact 
 | Arrow | `§7Arrow` | `minecraft:arrow` | Weapons | Common |
 | Iron Axe | `§7Iron Axe` | `minecraft:iron_axe` | Weapons | Uncommon |
 
-`DefaultQuantity`: set `Arrow` to `64` and every other row to `1` — this is the field
-`KitContent.QuantityOverride` falls back to (`DESIGN.md` §2.2), replacing legacy's
-grant-time category/name heuristic (weapons=1, "arrow"=64, else=32). No `BasePriceMin`/
+`DefaultQuantity`: set `Arrow` to `64` and every other row to `1` — informational only for these
+seed rows (it's `ItemBlueprint`'s own "typical amount" field, used elsewhere in the catalog); it
+has no bearing on `KitContent.Quantity` below, which is now a required, independently-set value
+per slot (`DESIGN.md` §0a/§2.2), not a fallback derived from the template. No `BasePriceMin`/
 `BasePriceMax`, `Tags`, or `Origins` in the source backup for these rows — leave unset; they're
 independent, optional fields an admin can fill in later and aren't required for Kit to function.
 
@@ -111,11 +112,21 @@ if this kit is ever meant to be live-game content rather than a working example,
 
 ## 7. `KitContent` (6 rows, from `kit_contents`)
 
-| Kit | ItemBlueprint | QuantityOverride |
-|---|---|---|
-| Default | Maggoty Bread | *(unset → uses ItemBlueprint.DefaultQuantity = 1)* |
-| Default | Arrow | *(unset → 64)* |
-| Default | Wooden Bow | *(unset → 1)* |
-| Default | Iron Axe | *(unset → 1)* |
-| Archer | Wooden Bow | *(unset → 1)* |
-| Archer | Arrow | *(unset → 64)* |
+**Slot indices are not in the source backup — v2's `kit_contents` had no positional/slot concept
+at all** (it was an unordered `@ManyToMany`, `DESIGN.md` §2.2's "why this changed" note). v3's
+`KitContent` is keyed by `(KitId, SlotIndex)` (per `DESIGN.md` §0a), so seeding these rows means
+*assigning* arbitrary slot numbers rather than recovering real ones — the values below are simply
+sequential (9, 10, 11, ...), picked to land in the general storage grid rather than the hotbar
+(0-8) so they don't collide with wherever a player's own hotbar items already are on grant. If
+this seed content is ever promoted from example data to real live-game kits, revisiting these
+slot placements deliberately (e.g. arrows in a hotbar slot next to the bow) is a reasonable
+follow-up — nothing about the arbitrary seed values here is meaningful to preserve.
+
+| Kit | SlotIndex | ItemBlueprint | Quantity |
+|---|---|---|---|
+| Default | 9 | Maggoty Bread | 1 |
+| Default | 10 | Arrow | 64 |
+| Default | 11 | Wooden Bow | 1 |
+| Default | 12 | Iron Axe | 1 |
+| Archer | 9 | Wooden Bow | 1 |
+| Archer | 10 | Arrow | 64 |
