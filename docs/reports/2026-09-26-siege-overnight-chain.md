@@ -1,54 +1,24 @@
 # Siege overnight chain — morning report
 
-**Status:** Chain **stopped after link 1** (Phase 6a done, 6b blocked). Each chain session appends its phase section
+**Status:** Link 1 continuing on the developer's instruction (Phase 6 done; knk-paper code uncompiled). Each chain session appends its phase section
 and rewrites the Morning summary. Rules: `docs/ai-agents/handoffs/SIEGE_OVERNIGHT_CHAIN.md`.
-**Last updated:** 2026-09-26 (link 1: Phase 6a, chain stopped)
+**Last updated:** 2026-09-26 (link 1: Phase 6b done, starting 7a)
 
 ## Morning summary
 
-**The chain stopped at Phase 6b.** The cloud container can't build knk-plugin: its network policy denies
-`repo.papermc.io` (paper-api) and `maven.enginehub.org` (WorldEdit/WorldGuard), so Gradle can't resolve the
-dependencies. Every remaining phase (6b, 7a, 8b, 7b) changes the plugin, and a new cloud session would hit the same
-wall, so no next session was started (charter §1.3, §6.4). The web-api half of Phase 6 is done, tested and pushed.
+_Interim (link 1 is still working; rewritten when it stops)._ The chain first stopped at Phase 6b because the cloud
+container can't build knk-plugin (network policy denies `repo.papermc.io` and `maven.enginehub.org`). The developer
+then said **"just continue anyway, we will test once I am at my PC"**, so link 1 continues the phases itself. The
+**knk-paper code from 6b on is not compiled**; knk-core (non-Bukkit parts) and knk-api-client are compiled and tested
+in a scratch build that uses Maven Central only.
 
-**To resume:** add `repo.papermc.io` and `maven.enginehub.org` to the cloud environment's allowed domains
-(environment settings → Network access), then start a session with *"Read and execute
-`docs/ai-agents/handoffs/2026-09-26-siege-phase-6b.md` in the knk-workspace repository (branch main). It starts with
-a pointer to the chain charter."* - or run that prompt locally.
-
-| Phase | State | Branch heads after it | Stopped because |
+| Phase | State | Branch heads after it | Notes |
 |---|---|---|---|
-| 6 — Match persistence and rewards | **partial**: 6a (web-api) done; 6b (plugin wiring) not started | web-api `7d4fd44`; plugin unchanged `d41be49` | plugin can't be built in the cloud (egress policy: `repo.papermc.io`, `maven.enginehub.org`) |
-| 7a — Gate integration + area lockdown | not started | | chain stopped at 6b |
-| 8b — Siege menus | not started | | chain stopped at 6b |
-| 7b — Non-member gate view | not started | | chain stopped at 6b |
-| 9 — Seeds and docs (non-live parts) | not started | | chain stopped at 6b |
-
-### Review first
-1. **Phase 6 decision 1 - match write auth is opt-in and off by default.** The plugin ships `api.auth.type: none` and
-   no plugin service-client mechanism exists, so requiring a JWT would lock the plugin out. The writes carry a new
-   `[RequirePluginServiceKey]`: open while `Security:PluginServiceKey` is empty; set it (and the plugin's
-   `api.auth.type: apikey` + `api-key`) to enforce it.
-2. **Phase 6 decision 2 - siege XP uses the shared title path, bracket bonuses included.** The crossing logic moved
-   out of `UserService.AdjustBalancesAsync` into `TitleProgression` (unchanged behaviour there); a promotion from a
-   match grants the crossed brackets' bonuses and queues the usual `TitleChanged` notification. No AuditLog rows
-   for siege payouts (DESIGN §7.6).
-3. **knk-plugin `d41be49`** (trunk merge of the menu-content port into the siege branch, made before this chain
-   started) has never been built or tested by the chain. Build it before deploying.
-
-### Smoke-test order for the morning
-1. Redeploy: web-api from its `claude/siege-minigame` branch (`7d4fd44`; no new migration). The plugin is unchanged by
-   the chain - if you redeploy it from `claude/siege-minigame`, note that `d41be49` (trunk merge) is untested (see
-   Review first 3); `./gradlew :knk-paper:dev` after checking `ACTIVE_SESSIONS.md` (the shared checkout may be on
-   another branch - use a worktree).
-2. No new web-api migrations to apply.
-3. `/siege admin reload`.
-4. Phase 5 steps still open from playtest round 1: 4 (inventory guards, incl. the owner/staff-mode exemption),
-   7 (friendly fire, safe zones, headshots), 10 (main-objective capture win), 14 (crash test), 16 (book chooser by
-   right-click). Plan: Phase 5 status → "Manual live verification".
-5. Phase 6 steps 1-5 (Swagger only, the plugin still uses the logging placeholder): plan → "Phase 6 status" →
-   "Manual live verification". Step 5 (two `complete` calls at once) is the one thing the tests couldn't cover: the
-   MySQL row lock.
+| 6 — Match persistence and rewards | done (6a tested; 6b knk-paper uncompiled) | web-api `7d4fd44`; plugin `378f8a1` | see Phase 6 section |
+| 7a — Gate integration + area lockdown | in progress | | |
+| 8b — Siege menus | not started | | |
+| 7b — Non-member gate view | not started | | |
+| 9 — Seeds and docs (non-live parts) | not started | | |
 
 ## Phase sections
 
@@ -93,3 +63,22 @@ merge `d41be49` is unverified. 6b must replay the result spool **before** callin
 **Next link.** Not started: every remaining phase needs a plugin build, and the environment blocks it for any new
 cloud session too. Handoff written for 6b: `docs/ai-agents/handoffs/2026-09-26-siege-phase-6b.md` (it first checks
 the build and stops cleanly if it's still blocked; after 6b it hands over to 7a).
+
+### Phase 6b — plugin wiring (link 1, continued on the developer's go-ahead)
+
+**Commits.** knk-plugin `claude/siege-minigame`: `14ca0c8` (core: `SiegeMatchRecorder`, `SiegeResultSpool`, port +
+records), `a150719` (api-client: `SiegeMatchesCommandApiImpl`), `378f8a1` (paper wiring). **knk-paper part not
+compiled** - build it first.
+
+**Tests.** Scratch build (real sources, Maven Central only; knk-core minus its 9 Bukkit-importing files): knk-core
+606 → 622, knk-api-client 43 → 48 (2 skipped), all green. knk-paper: not run.
+
+**Flagged decisions** (full list: plan → "Phase 6b status"): ★1 a failed `createMatch` (after retries) runs the
+round unrecorded, members told; 2 unfinished-match recovery waits while the spool holds a result; 3 logging
+placeholder and `ProvisionalRewardCalculator` kept but unused; 4-7 minor.
+
+**Live checklist.** Plan → "Phase 6b status" → (a) play to the end, (b) API down → spool file → replay,
+(c) kill mid-match → startup recovery, (d) admin stop → Aborted.
+
+**Risks.** Uncompiled knk-paper edits (small: `KnKPlugin.initializeSiege`/`onDisable`, `SiegeService` reward lines,
+`LoggingSiegeMatchesCommandApi.abortUnfinished`); the untested `d41be49` trunk merge underneath.

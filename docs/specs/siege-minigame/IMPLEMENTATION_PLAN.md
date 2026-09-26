@@ -5,13 +5,13 @@
 Phase 3 FormConfigurations authored in the dev DB and the forms proven against the live API; Phase 4's
 Bukkit-free core tested without a server; Phase 5's Paper runtime (5a loop/commands/vault, 5b listeners/presenters,
 5c enchant books) wired into the plugin and tested without a server, partly verified live - the manual checklist
-in "Phase 5 status" is the developer's sign-off); **Phase 6a (web-api match endpoints + server-side rewards) code
-complete and tested; Phase 6b (plugin wiring) blocked** - the cloud chain couldn't build the plugin (see "Phase 6
-status"), so the match API in the plugin is still the logging placeholder; Phases 7 + 9 not started. Phase 8a
+in "Phase 5 status" is the developer's sign-off); **Phase 6 code complete**: 6a (web-api match endpoints +
+server-side rewards) tested; 6b (plugin wiring) written on the developer's go-ahead with its knk-paper part
+**not compiled** (the cloud chain can't reach paper-api - see "Phase 6b status"); Phases 7 + 9 not started. Phase 8a
 (InventoryMenu engine extensions) built and merged into `claude/siege-minigame`, not verified live; Phase 8b open;
 Phase 10 is post-MVP.
-**Last updated:** 2026-09-26 (overnight chain link 1: "Phase 6 status" block added - 6a web-api done, 6b blocked on the
-cloud build; earlier the same day: Phase 5 playtest fixes and status block)
+**Last updated:** 2026-09-26 (overnight chain link 1: "Phase 6 status" + "Phase 6b status" blocks - 6a web-api done,
+6b plugin wiring done but knk-paper uncompiled; earlier the same day: Phase 5 playtest fixes and status block)
 
 Ref: `DESIGN.md` (decisions — not restated here), `MENU_TEMPLATES.md`,
 `docs/reports/2026-09-25-siege-minigame-gap-analysis.md`. Plan format follows
@@ -988,7 +988,8 @@ idempotent double-complete, abort grants nothing, XP increments move the player'
 **Exit:** after a live match, `SiegeMatch` rows and balances match the in-game reward message.
 
 **Phase 6 status (2026-09-26, overnight chain link 1): 6a (knk-web-api) code complete, tested and pushed on
-`claude/siege-minigame`; 6b (plugin wiring) NOT started - blocked: knk-plugin can't be built in the cloud
+`claude/siege-minigame`; 6b (plugin wiring) at first NOT started - blocked (**superseded: done later the same night
+on the developer's go-ahead, see "Phase 6b status" below**): knk-plugin can't be built in the cloud
 container (the environment's network policy denies `repo.papermc.io` and `maven.enginehub.org`, so Gradle can't
 resolve `paper-api`/WorldEdit/WorldGuard).** Commits (knk-web-api): `b86d692` (TitleProgression extraction),
 `82b78a4` (match service/API), `7d4fd44` (tests). Trunk had already been merged into both siege branches before this
@@ -1112,6 +1113,54 @@ No knk-plugin, knk-web-app or DB change.
   audit history after all (DESIGN says no); a siege stats panel from `SiegeMatchParticipant` (DESIGN §13 Q7); the
   duplicate participant index `(SiegeMatchId, UserId)` isn't unique (the service prevents duplicates; a unique index
   would need a migration).
+
+**Phase 6b status (2026-09-26, overnight chain link 1, continued on the developer's instruction "just continue
+anyway, we will test at my PC"): code complete on knk-plugin `claude/siege-minigame`, pushed. knk-core and
+knk-api-client parts compiled and unit-tested; the knk-paper part is NOT compiled** (the cloud container still can't
+reach `repo.papermc.io`; the knk-paper edits were checked by reading and by a syntax-only parse). Commits: `14ca0c8`
+(core), `a150719` (api-client), `378f8a1` (paper).
+- **How it was verified:** a throwaway Gradle build in the session scratchpad compiled the real knk-core sources
+  minus the 9 files that import Bukkit (gates + 2 utils) and all of knk-api-client against Maven Central only, and ran
+  their tests. Baseline at `d41be49` in that build: knk-core 606 (non-Bukkit subset of the 694), knk-api-client 43
+  (2 skipped); after 6b: **622 and 48 (2 skipped), all green** (16 + 5 new). knk-paper: no build, no tests run - **build
+  it first** (`./gradlew build -x deployToDevServer`); expect 259 (14 skipped) as at `1a8704c` plus whatever the
+  menu-content merge added.
+- **Classes:** knk-core `core.siege.SiegeMatchRecorder` (implements `SiegeMatchesCommandApi`, wraps the HTTP one:
+  `RetryPolicy` on every call; transient `complete`/`abort` failures → `SiegeResultSpool`; 4xx = the server's final
+  answer, logged only; `spoolInFlight()` on disable; `recoverOnStartup()` = replay the spool, then
+  `abortUnfinished(SERVER_RESTART)` only if nothing is left in the spool; `createMatch` waits for the recovery and
+  completes with `null` after the retries → the round runs unrecorded; the spool is replayed again at each draw),
+  `core.siege.SiegeResultSpool` (`siege-vault/pending-results/<matchId>.json`, temp file + atomic move, flat JSON with
+  string enums/instants). Port: `abortUnfinished` added; records: `ParticipantReward(userId, presentAtEnd, won,
+  holdingCount, captureCount, coins, experience, gems)`, `RewardSummary.alreadyCompleted`. knk-api-client
+  `SiegeMatchDtos`, `SiegeMatchMapper`, `SiegeMatchesCommandApiImpl` (paths `/siege-matches…` under `api.base-url`;
+  instants sent as ISO strings because the client's ObjectMapper writes numeric timestamps), `KnkApiClient
+  .getSiegeMatchesCommandApi()`. knk-paper: `KnKPlugin.initializeSiege()` builds the spool + recorder, starts the
+  recovery, passes the recorder to `SiegeService`; `onDisable` spools in-flight results after `siegeService.shutdown()`;
+  `SiegeService` prints the server's breakdown ("Rewards granted: +250 coins +25 XP +1 gems (win, 2 objective(s)
+  gained, 1 capture(s))" or "No rewards this time."), keeps the stats line, drops the provisional wording, and tells
+  members when a round couldn't be recorded or the result couldn't be confirmed yet.
+- **Decisions (6b; ★ = review first):**
+  1. ★ **createMatch failure:** retried by `RetryPolicy` (network errors only, 3 attempts), then the round runs
+     unrecorded: logged SEVERE, members told at the end "no rewards this round". No mid-round re-create.
+  2. **Unfinished-match recovery is skipped while the spool still holds a result** (so a spooled completion is
+     never aborted first); it runs on the next enable instead.
+  3. **`LoggingSiegeMatchesCommandApi` kept** (unused; handy for running without the API). `ProvisionalRewardCalculator`
+     (knk-core) is now unused by the runtime - kept with its tests; delete later if you like.
+  4. Players without a cached userId are still skipped in `start`/`complete` (they can't be rewarded) - unchanged.
+  5. A null summary (spooled or refused) shows "Your rewards couldn't be confirmed yet … recorded automatically later"
+     - wrong wording for the rare refused case (logged SEVERE).
+  6. The retry policy is `RetryPolicy.defaultPolicy()` (3 attempts, 100 ms → 5 s backoff), not configurable in
+     `config.yml` yet.
+  7. The recorder doesn't announce title promotions; the API queues `TitleChanged` for the existing poller (6a
+     decision 2).
+- **Manual live verification (6b):** plan Phase 6 checklist step 6, plus: (a) `/siege admin start test-cinix`, play
+  a short match to the end → chat shows the stats line then "Rewards granted: …"; the `siege_matches` row is
+  `Completed`, participants' `*Awarded` match the chat and the balances. (b) Stop the web-api during a match, end it
+  → "couldn't be confirmed yet" and `plugins/KnightsAndKings/siege-vault/pending-results/<id>.json` appears; start
+  the API, start the next round (draw) or restart the server → the file disappears and the rewards are granted (log:
+  "Delivered spooled result"). (c) Kill the server mid-match, restart → log "Startup recovery aborted 1 match(es)".
+  (d) `/siege admin stop` during a match → row `Aborted` (`AdminStopped`), no balance change.
 
 ## Phase 7 — Gate integration and area lockdown (knk-paper + knk-web-api)
 
