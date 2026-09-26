@@ -2,7 +2,7 @@
 
 **Status:** Draft — awaiting developer review (open questions in [DESIGN.md §5](DESIGN.md#5-open-questions-for-the-developer))
 **Last updated:** 2026-09-26
-**Linear:** _TBD_
+**Linear:** [KNG-17](https://linear.app/kngpandi/issue/KNG-17/teleportation-staff-tp-tpa-requests-spawn-domain-warps-v1-port)
 **Sources:** [DESIGN.md](DESIGN.md); `docs/ACTIVE_SESSIONS.md` (branch convention); code read at knk-plugin `0fa6d06`
 (`claude/siege-minigame` head), knk-web-api `cd95dd1`, knk-web-app `9a6f347`.
 

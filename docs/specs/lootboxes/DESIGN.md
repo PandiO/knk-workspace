@@ -2,7 +2,7 @@
 
 **Status:** Draft — awaiting developer review (open questions in §5)
 **Last updated:** 2026-09-26
-**Linear:** _TBD_
+**Linear:** [KNG-19](https://linear.app/kngpandi/issue/KNG-19/lootboxes-per-category-world-lootboxes-with-grade-weighted-rolls-v1)
 **Sources:** `knk-v1-archive` (single commit `4117e7e`): `src/Products/{Product,SpecialItemEvents,Enchantment}.java`,
 `src/Treasure/*`, `src/Main/Main.java`, `src/KillsDeaths/KillDeathStat.java`, `src/Minigames/{BanditAmbushes,OcelotSpawn}.java`,
 `src/Votes/VoteEvent.java`, `src/Users/{Users,offlineUser}.java`, `src/Handlers/ColorOptions.java`; `knk-v2-archive` (`main` + all

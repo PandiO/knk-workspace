@@ -2,7 +2,7 @@
 
 **Status:** Draft — awaiting developer review (open questions in §5)
 **Last updated:** 2026-09-26
-**Linear:** _TBD_
+**Linear:** [KNG-20](https://linear.app/kngpandi/issue/KNG-20/domain-discovery-first-entry-rewards-for-townsdistrictsstructures)
 **Sources:** `knk-v1-archive` (`src/Towns/TownEvents.java`, `src/Towns/Town.java`, `src/DataManager/Towns.java`,
 `src/Users/User.java`, `src/Titles/Title.java`, `src/Main/Main.java`, `src/Menu/Menu.java`, `src/DataManager/Worldguard.java`);
 `knk-v2-archive` (`model/dominion/Dominion.java`, `listeners/RegionListener.java`); v3 checkouts on branch

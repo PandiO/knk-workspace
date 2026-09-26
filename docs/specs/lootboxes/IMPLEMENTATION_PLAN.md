@@ -2,7 +2,7 @@
 
 **Status:** Draft — awaiting developer review (open questions in DESIGN.md §5)
 **Last updated:** 2026-09-26
-**Linear:** _TBD_
+**Linear:** [KNG-19](https://linear.app/kngpandi/issue/KNG-19/lootboxes-per-category-world-lootboxes-with-grade-weighted-rolls-v1)
 **Sources:** [DESIGN.md](DESIGN.md); `docs/ACTIVE_SESSIONS.md` (branch convention); `specs/kits/IMPLEMENTATION_PLAN.md`,
 `specs/siege-minigame/IMPLEMENTATION_PLAN.md` (phase/test conventions); Linear KNG-15.
 

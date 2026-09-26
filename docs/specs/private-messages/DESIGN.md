@@ -2,7 +2,7 @@
 
 **Status:** Draft — awaiting developer review (open questions in §5)
 **Last updated:** 2026-09-26
-**Linear:** _TBD_
+**Linear:** [KNG-18](https://linear.app/kngpandi/issue/KNG-18/private-messages-harden-msg-and-r-social-spy-toggle-ignore-list)
 **Sources:** `docs/specs/legacy/commands-v1.md` (§ "/message … /reply … socialSpy"), `commands-v2.md`
 ("v1 → v2 command comparison"), `events-v1.md` / `events-v2.md` (chat listeners), v1 source
 `knk-v1-archive/src/UsefulCommands/MessageCommands.java`, `Main/Main.java`, `plugin.yml`, `Users/User.java`;

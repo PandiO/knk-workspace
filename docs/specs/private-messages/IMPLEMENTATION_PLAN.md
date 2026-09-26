@@ -2,7 +2,7 @@
 
 **Status:** Draft — awaiting developer review (open questions in DESIGN.md §5)
 **Last updated:** 2026-09-26
-**Linear:** _TBD_
+**Linear:** [KNG-18](https://linear.app/kngpandi/issue/KNG-18/private-messages-harden-msg-and-r-social-spy-toggle-ignore-list)
 **Sources:** [DESIGN.md](DESIGN.md); `knk-plugin` `main` @ `f65ae2e`; `knk-web-api` `master` @ `a102eea`;
 `docs/specs/inventory-menu/CONTENT_PORT_PLAN.md` §9 (CP7 plugin auth); `docs/ACTIVE_SESSIONS.md` (branch convention).
 

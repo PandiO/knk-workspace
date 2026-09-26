@@ -2,7 +2,7 @@
 
 **Status:** Draft — awaiting developer review (open questions in DESIGN.md §5)
 **Last updated:** 2026-09-26
-**Linear:** _TBD_
+**Linear:** [KNG-20](https://linear.app/kngpandi/issue/KNG-20/domain-discovery-first-entry-rewards-for-townsdistrictsstructures)
 **Sources:** [DESIGN.md](DESIGN.md); `docs/ACTIVE_SESSIONS.md` (branch convention); `specs/inventory-menu/CONTENT_PORT_PLAN.md`
 (menu content pattern, CP7 auth status); `specs/user-features/DESIGN.md` §5 (salary multipliers).
 
