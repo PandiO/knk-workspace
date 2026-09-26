@@ -364,6 +364,53 @@ give/spawn (plugin-only endpoints).
 
 ---
 
+### Phase 5 status — done 2026-09-26 (all three repos, `claude/lootboxes`)
+
+knk-web-api `3c2a6bf` (`LootboxToken`: random Guid token (unique), Status concurrency check, unique issue key;
+`LootboxTokenGrant` rules for premium tiers/kits; unique `lootbox_claims.LootboxTokenId`; migration `AddLootboxTokens`),
+`d616b1f` (issue/redeem/undelivered/delivered/revoke/search endpoints, grant-rule CRUD, hooks in `UserPermissionGroupService`
++ `KitService`, drop-log `source` filter), `bc0cb5d` (tests). knk-plugin `3d751ce` (ports, `KnkLootboxToken`,
+`TokenOpenGuard`, client), `21a8162` (`LootboxTokenTag` PDC `knightsandkings:knk_lootbox_token`, `LootboxTokenDelivery`,
+`LootboxTokenListener`, `/knk lootbox token <player> <category> [stars|any] [amount]` (`knk.lootbox.admin.token`),
+notification handler), `22da7a9`. knk-web-app `4b0685f` (Token items tab: list/revoke/grant-rule editor; drop-log source
+filter World/Token/AdminGive).
+Unforgeable (identity = PDC token id only; renamed items do nothing; forged id → 409 InvalidToken); single use (token
+flipped to Redeemed in the claim transaction before delivery; per-click idempotency key; duplicated copies → AlreadyRedeemed
+and the plugin removes every copy); token opens count towards the UTC daily cap; issuance: staff command, premium tier on
+join/return (not extension), kits (claim, staff give, first-join), `POST LootboxTokens/issue` hook for future PvP-kill/referral
+reasons; API-issued tokens delivered via a `LootboxTokensIssued` notification + on join; audit reuses `LootboxGranted` (14)
+with event TokensIssued/TokenRevoked.
+Tests: API 883 (876 pass, 5 baseline, 2 skipped); real MySQL 8: 5 rounds × 5 simultaneous opens of one token → exactly one
+claim + one ItemInstance each; 4 parallel retries → 1 fresh + 3 replays; unique index refuses a second claim; migration
+up/down/up. **A deadlock found by that test was fixed** (index including Status locked the issuee's row). Plugin CI green
+https://github.com/PandiO/knk-plugin/actions/runs/36277560506; web-app 16 baseline / 261 passed.
+Deviations: tokens are tradeable (issuee and opener recorded); no `RedeemedClaimId` on the token (link lives on the claim);
+extras: revoke, search, grant-rule editor, config key for the token material (default ENDER_CHEST); tokens can't be placed
+or crafted; grant rules accept premium tiers only; issuance hooks never block the rank change/kit.
+Developer to-do: apply `AddLootboxTokens`; grant `knk.lootbox.admin.token` to staff; add tier/kit rules in the Token items
+tab; smoke test (issue 2 → open one; creative-duplicate the other → first open works, second removes all copies; renamed
+ender chest does nothing; tier with a rule assigned while online → tokens arrive). Known: Paper-specific parts only unit-
+tested; a token dropped at the feet on a full inventory can be redelivered as a dead extra copy.
+
+### Final review — 2026-09-26 (all phases)
+
+Fixed: (1) **Medium** — a claim could be handed over twice on one server (failed/in-flight `delivered` confirmation followed by
+a replay or join-time pending read; always for stackables): `LootboxDelivery` remembers claims handed over since start and
+only re-confirms them (plugin `efcab62`). (2) **Low** — boxes claimable through walls with a modified client: line-of-sight
+check before any API call (`4fc937d`). (3) **Low** — `/knk lootbox give` had no idempotency key (OkHttp silent resend could
+mint two items): per-command `admin-give:<uuid>` key (`e284e08`). (4) **Low** — two spawn areas could share one `lootbox_`
+region, so deleting one removed the other's region: 409 `RegionInUse` (API `bca4065`). Checked sound: one transaction with
+the user row lock per claim/redeem (cap can't be raced), status check + unique indexes, replay returns the stored claim, UTC
+day cap (tokens count, admin gives don't), crypto RNG, odds preview = real roll, enchant caps/applicability, auth on every
+endpoint, non-persistent entities + orphan purge, area delete limited to `lootbox_` regions, main-thread Bukkit use.
+Left (by design): stackable redelivery after a real crash; per-user cap only (alts); camping just outside the min distance;
+staff toggling a tier re-issues tier tokens; timed-out token open delivers on next join. Tests: API 884 (877 pass, 2 skipped,
+5 baseline; lootbox subset 196 pass); plugin CI green https://github.com/PandiO/knk-plugin/actions/runs/36278548861.
+Smoke-test addition: a box right next to the player on flat ground must still open (line-of-sight check).
+
+**Feature status: Phases 0–5 complete on `claude/lootboxes`; awaiting developer smoke test + merge.** Independent of the
+other features except KNG-22 (merged in). Remaining manual steps: the 7 FormConfigurations (PHASE_4_FORMCONFIGS.md).
+
 ## Cross-feature dependencies
 
 - **KNG-15** (plugin sends no bearer token → 401 on Kits give): same root cause as Phase 0. Fix once, and share the scheme.
