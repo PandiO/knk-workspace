@@ -330,6 +330,47 @@ BackCommand.java` (`knk.teleport.back`), `plugin.yml`, `config.yml` `teleport.ba
 
 ---
 
+### Phase 7 status — done 2026-09-26 (knk-plugin + knk-web-api `claude/teleport`)
+
+knk-plugin `a68ecc8`: `/back` (`knk.teleport.back`, Dragon Blood; config `teleport.back.enabled` true,
+`teleport.back.expire-seconds` 300) — single use (consumed on arrival; cancelled warmup/guard refusal/unsafe spot gives it
+back), expiry checked when `/back` starts, full engine (warmup, BACK cooldown, combat tag, freeze/region/siege guards,
+safe-spot search: lava death → nearest safe ground, void death refused), knk-core `BackLocationBook`/`TeleportBackSettings`.
+Siege hook: `KnKPlugin.registerBackDeathExclusion(BackDeathExclusion)` — siege branch registers
+`p -> siegeService.activeLobbyOf(p.getUniqueId()).isPresent()` (checked at `PlayerDeathEvent` LOWEST; death recorded at
+MONITOR if not cancelled; a siege death wipes older deaths). knk-web-api `7b4e2da`: **durable void keys** — a refund that
+arrives before its charge writes a `teleport_fee_voids` row (keyed by idempotency key, inside the refund's user-lock
+transaction); warp charge and request fee check it under the same lock, so a late duplicate charge is refused after a
+restart or on another instance (in-memory cache removed). Tests: knk-core 635 pass, api-client 72; API 925 (904 pass, 16
+skipped, 5 baseline); requires-mysql 16/16 (8 parallel pre-charge refunds → one row, late charge refused); migration
+up/down/up. Plugin CI green https://github.com/PandiO/knk-plugin/actions/runs/36265661554.
+Deviations: `teleport.back.enabled` defaults true (node still limits to Dragon Blood); a recorded death survives relog
+within 5 min, lost on restart; void marker is its own table (ledger refuses empty transactions), kept permanently.
+Developer to-do: apply `20260926192445_AddTeleportFeeVoids`; grant `knk.teleport.back` to Dragon Blood; smoke test (die →
+`/back` within 5 min; second `/back` refused; after 5 min refused; lava death → safe ground; void death refused).
+
+### Final review — 2026-09-26 (all phases)
+
+Fixed (knk-plugin, HEAD `9b7efd1`, CI green https://github.com/PandiO/knk-plugin/actions/runs/36277325347):
+(1) **Medium** — a warp/`/tpa` charge in flight at plugin disable left the player charged without a teleport; `TeleportService`
+tracks open charges and `onDisable` abandons them (refund or void the key, never send an unsent charge), waiting ≤ 5 s
+before `apiClient.shutdown()`; refund hook registered before the charge (`401dad8`). (2) **Low** — a refused retry after an
+unanswered attempt could leave a charge; now refunded (`401dad8`). (3) **Low** — `Bukkit.getWorld` off the main thread in
+`TeleportCharges`; resolved on the main thread (`401dad8`). (4) **Low** — per-player warp caches never released; quit
+hooks (`c3f736d`). (5) **Low** — request expiry/cancel notices revealed vanished players; now only sent to viewers who can
+see them (`9b7efd1`). No API/web-app defects. Checked sound: per-attempt keys, post-warmup charge, refund on any
+non-arrival, durable void keys, row-lock serialisation, server-side title/tier/discovery checks, plugin-trusted bypass flags
+only on `[RequirePluginService]` routes (per DESIGN D6), staff rank checks, guards on every path (staff, requests, spawn,
+warp, menu, back), bounded safe-spot search, main-thread Bukkit use.
+Left: `/tpa` bait-and-switch (a `/tpahere` holder can replace a request after 10 s and the target's old [Accept] accepts
+the new direction — needs request ids in the click command; follow-up); cooldown per kind, not global (as planned); staff
+`/warp` audit lacks domainId; pre-existing direct `player.teleport` calls in gates/region-tracker.
+
+**Feature status: Phases 1–7 complete on `claude/teleport`; awaiting developer smoke test + merge.** Merge order:
+currency-payments → domain-discovery → teleport. At merge also: unify `VisibleTargetResolver` with private-messages'
+`VisiblePlayers`, wire `TeleportRequestService.setIgnoreCheck(IgnoreService::ignores)`, and siege must call
+`registerTeleportRestriction(...)` + `registerBackDeathExclusion(...)`.
+
 ## Cross-cutting
 
 - **Docs to update when phases land** (not now): `user-features/COMMAND_CATALOG_V3.md` (already stale — see DESIGN §1.3

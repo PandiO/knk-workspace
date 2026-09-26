@@ -313,6 +313,34 @@ answers can arrive as config changes).
 
 ---
 
+### Phase 3 status — done 2026-09-26 (all three repos, `claude/currency-payments`)
+
+knk-web-api `7c3a1ea` (transfers through the ledger: rules, confirmation step, limits, leaderboard, migration
+`SeedCurrencyPlayerNodes`), `2d4edd6` (`CurrencyController`, `PaymentReceived` notifications), `b7b5117` (tests). knk-plugin
+`b4f49f6` (`CurrencyApi` port/client, amount parser), `d1718de` (`/pay`, `/balance`, `/baltop`, `/transactions`, `/knk user
+<player> history`), `fce84da`. knk-web-app `574c508` (`/account/transactions`). Also covers the KNG-23 per-player history.
+Rules (enforced under both users' row locks): coins only (gems refused while the policy switch is off — default), 0% fee
+(fee leg to `SYS_FEES` if raised), sender ≥ 48 h + Peasant, min/max, daily caps, cooldown, confirmation for large amounts
+(confirm re-checks everything; second confirm replays; cancel-then-confirm 409), one `PLAYER_TRANSFER` posting, offline
+recipient told on next join via the notification queue.
+Tests: API 795 pass / 5 baseline / 24 skipped; requires-mysql 24/24 ×3 on MySQL 8.0.46 (concurrent sends can't overdraw; 15
+same-key retries pay once; daily cap exact across 10 concurrent sends; A→B vs B→A no deadlock; 10 concurrent confirms pay
+once; cancel racing confirm never both); migration up/down/up; plugin CI green
+https://github.com/PandiO/knk-plugin/actions/runs/36276610675; web-app = trunk baseline; curl walkthrough of all routes.
+Deviations: separate `ICurrencyTransferService` (same implementation); error codes 404 `PendingTransferNotFound`/
+`RecipientNotFound`, 409 `PendingTransferExpired`/`Closed`, 422 policy refusals; a new large `/pay` cancels the older open
+prompt; confirm key derived from the pending id; recipient at cap refused without revealing balance; `knk.baltop.exempt`
+exact grant only; leaderboard requires `knk.baltop` (seeded to Default); **security fix: `PlayerNotificationsController` is
+now game-server only** (was anonymous and would expose payment details); amount parsing in knk-core; minimal
+`currency/VisiblePlayers` (unify with private-messages' at merge); staff history node `knk.admin.user.history`.
+Auth: game-server-only transfers/confirm/cancel/notifications; leaderboard key or `knk.baltop`; balances/limits/transactions
+key, self, or `knk.admin.currency.history`.
+Developer to-do: `dotnet ef database update`; deploy API + plugin together (plugin needs `api.auth.api-key`); optional
+`currency.*`/`messages.currency.*` config; smoke test pay online/offline player, ≥ 100,000 confirm prompt, daily cap, API
+stopped mid-payment + retry (single payment), `/baltop` + `/transactions` vs the web page, vanished staff absent from `/pay`
+tab completion. Known: notifications are in memory (a restart loses the message, never the money); plugins without the key
+stop receiving promotion notices.
+
 ## Phase 4 — Admin tooling and web ledger views — size M
 
 **knk-web-api:** `CurrencyController` admin routes (`adjustments`, `transactions` query/detail,
