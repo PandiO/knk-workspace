@@ -1,8 +1,9 @@
 # InventoryMenu — Content Port Plan (hub, Kits, Profile, Items, Premium, Player manager)
 
 **Status:** CP1–CP6 and CP8 implemented on `claude/menu-content` (not merged, not live-verified); CP7's
-plugin half shipped, its server half **stopped on an owner question** (see CP7 status). Wrap-up done. on `claude/menu-content` (see the CPn status blocks). Phases are numbered CP1–CP8 (content port) to keep them apart from the engine plan's Phases 1–9, which this document cites as "engine Phase N".
-**Last updated:** 2026-09-25
+plugin half shipped, its server half **stopped on an owner question** (see CP7 status). Wrap-up done.
+Owner follow-up notes (2026-09-26) implemented, see "Follow-up 2026-09-26" before §12. on `claude/menu-content` (see the CPn status blocks). Phases are numbered CP1–CP8 (content port) to keep them apart from the engine plan's Phases 1–9, which this document cites as "engine Phase N".
+**Last updated:** 2026-09-26
 
 Ref: [../legacy/inventory-menu-screens.md](../legacy/inventory-menu-screens.md) (the legacy screen
 catalogue this plan ports from; its §7 records the decisions below),
@@ -731,6 +732,45 @@ points at — needs the owner's go-ahead for the shared dev DB, together with en
    account is refused ("You can only manage players ranked below you").
 8. **Audit log in the web-app:** after 7, entries exist for the changes — **the actor column will still
    be empty** until CP7's server half is decided and built; verify again then.
+
+## Follow-up 2026-09-26 — owner notes on the menus
+
+**Branches (pushed, not merged):** knk-web-api `claude/menu-content` @ `f7d0d09`, knk-plugin
+`claude/menu-content` @ `78583c7`.
+
+| # | Owner note | What was built |
+|---|---|---|
+| 1 | Menus shrink when there is little content (v2 minheight) | New `MenuTemplate.MinHeight` and `MenuSectionTemplate.MinHeight` (DTOs, validation: menu 1..Height, section 0..Height). `Growth = Dynamic` is implemented for the first time. After a render, `MenuRowCompactor` (knk-core) removes empty rows, bottom-most first, down to the menu's MinHeight, keeping a section's first MinHeight rows; rows below a removed one move up and the inventory is re-created at the new size. Static menus never change. The list menus (kits, profile, catalogue, premium, player manager, title and group pickers) are Dynamic. Confirm and Cancel moved into the header row (slots 2 and 6), so showing them never resizes a menu. The hub and the editor stay Static. |
+| 2 | Default background on every menu | New `MenuTemplate.BackgroundMaterial` (a material name) next to the existing `BackgroundMaterialRefId`; the RefId wins. Empty slots are filled with that material, or `LIGHT_GRAY_STAINED_GLASS_PANE` when none is set. The filler has no name, no lore and no actions; it uses `setHideTooltip`, which is not verified in game. |
+| 3 | Hide pagers on a single page | Pinned items whose actions are only `menu.page.next` or `menu.page.prev` are not drawn while the section has at most one page. |
+| 4 | Quick stats on the head; clearer title ladder | New `$profile.getQuickStatsLines$` on the hub's centre head and on the profile head: title, "Title rank n/N", next title and XP needed, a progress bar, coins, gems, XP, prestige and premium tier. Title rows now show their state at a glance: lime pane with ✔ for reached, a glowing golden helmet with » « for the current title, a gray pane for titles ahead. Each row's stack Amount is its position on the ladder, and the lore adds "Title n of N". The progress item gets the rank line and the bar. |
+| 5 | Catalogue shows items as granted; category filter | New plugin row source `items.catalog`, which replaces the engine's `catalog.itemblueprints` in this menu. Each blueprint is read in full by id and rendered with `ItemBlueprintBukkitMapper.fromBlueprint`, the same code a kit grant or `/knk itemblueprints give` uses; the template's lore lines are appended. The row template (PAPER + name) is only a fallback. New Category filter: `menu.filter.cycle` over `$itemsCatalog.getCategoryValues$`, a live list from `GET /api/Categories`, plus a clear button. The API's `ItemBlueprintRepository.SearchAsync` now honours the `Category` (name) and `CategoryId` filters, subcategories included. `menu.filter.cycle` now tells the player the active value in chat. |
+| 6 | Owner edits everyone, online and offline, self included | New node `knk.admin.user.manage.all` (default op, child of `knk.admin`). Holders see every account in the Player manager, from a paged, searchable `UsersQueryApi.search` sorted by username; each row shows an online or offline marker and "(you)". Holders pass `users.outranks-target`, and `UserAdminService.withRankCheck` skips `RankHierarchy`, so `/knk user` edits by holders also skip it. Per-property `knk.admin.user.<property>` nodes still apply. Mode and kick still need the target online. Staff without the node keep the old list (online players they outrank), which can now also be searched. |
+
+**Bug fixed on the way:** `ItemBlueprintsDataAccess.searchAsync` put the search's partial summaries
+into the by-id cache. As a result a later `getByIdAsync` (kit grants, `/knk itemblueprints give`) could build an item without its
+enchantments or lore. Search results are no longer cached by id.
+
+**Migration:** `20260926001951_AddMenuDynamicHeightAndBackground` (web-api) adds
+`menu_templates.MinHeight`, `menu_templates.BackgroundMaterial` and `menu_section_templates.MinHeight`.
+It is generated only, **not applied**.
+
+**Seeds are create-only.** A database that already holds the ten content templates keeps the old
+versions. To see these changes there, delete those templates and restart the API, or edit them
+through the CRUD API.
+
+**Tests:** web-api 496/501 (the same 5 pre-existing failures; +10 new). Plugin: knk-core 528 (+5),
+knk-api-client 33 (+1), knk-paper 335 (+9, 14 skipped); `shadowJar` builds. `content-seeds.json`
+regenerated.
+
+**Checklist additions (in game):**
+- `/menu` as a normal player: the kits and catalogue menus are shorter when there are few entries,
+  gaps are light gray panes with no tooltip, and there are no pager arrows on a single page.
+- A premium-kit purchase shows Confirm and Cancel in the header, and the menu does not resize.
+- The hub head's lore lists the quick stats. On the profile, reached, current and future titles are
+  distinguishable without reading the lore.
+- The catalogue items look exactly like `/knk itemblueprints give` output. The hopper cycles categories, with a chat line naming each one; the barrier clears the filter.
+- As an op (`knk.admin.user.manage.all`): the Player manager lists offline players and yourself; the search works; editing an offline player's coins works; editing yourself works.
 
 ## 12. What the session must not do
 
