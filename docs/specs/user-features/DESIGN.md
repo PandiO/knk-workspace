@@ -4,7 +4,7 @@
 implementation-detail ones originally left in `IMPLEMENTATION_PLAN.md` §7. See
 `IMPLEMENTATION_PLAN.md` for the phased build-out, and `docs/specs/user-management/` for the
 separate tailored-admin-UI feature this design's data model now underpins.
-**Last updated:** 2026-09-23 (second revision same day: `User`/`PermissionGroup` are now
+**Last updated:** 2026-09-26 (§5: salary pays the title's `Salary` per hour, with log decay over 30 days for gaps — KNG-16). Earlier: 2026-09-23 (second revision same day: `User`/`PermissionGroup` are now
 TPT subtypes of a shared `PermissionHolder` base table rather than `PermissionGrant.HolderId`
 being an unconstrained polymorphic pointer; vanish/owner/staff-mode state now persists across
 a restart instead of matching v1's in-memory-only behavior; title thresholds confirmed as
@@ -217,6 +217,17 @@ admin-configurable via the web app. Offline-gap handling: a payout covering the 
 on next join if ≥1 hour has passed, rather than lost (explicit vision requirement, direct
 fix for v1's silent-loss behavior — `user-system.md` doesn't document v1 handling this at
 all, so this is new-in-v3 behavior, not a port).
+
+Payout amount (developer-confirmed 2026-09-26, KNG-16): the base rate is the `Salary` of the
+player's current title bracket, per hour. A payout triggers once at least an hour has passed
+since the last one — on join, and every hour while online (knk-plugin `SalaryPayoutScheduler`).
+The time since the last payout is paid with **log decay over 30 days**: hour N of the gap pays
+1/N of an hour, so the first hour pays in full, and hours past `SalaryConfiguration.
+OfflinePayoutMaxHours` (default 720 = 30 days) pay nothing. That totals 1.5 hours of salary for
+2h away, ~2.7 for 8h, ~3.8 for a day, ~5.7 for a week and at most ~7.2 for 30 days or more.
+Online players are paid hourly, so their payouts barely decay. Setting the max to 1 pays a
+single hour however long the player was away. Formula:
+`title Salary × global × personal × rank × decayed hours` (`SalaryService.PaidHoursFor`).
 
 Multiplier sourcing: global (admin-set config), rank-based (read from the player's resolved
 `PermissionGroup` memberships — the one place Salary genuinely depends on §2's permission
