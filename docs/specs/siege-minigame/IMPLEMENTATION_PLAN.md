@@ -4,12 +4,14 @@
 `claude/siege-minigame` (Phase 2 migration applied to the dev DB and API verified live with test data;
 Phase 3 FormConfigurations authored in the dev DB and the forms proven against the live API; Phase 4's
 Bukkit-free core tested without a server; Phase 5's Paper runtime (5a loop/commands/vault, 5b listeners/presenters,
-5c enchant books) wired into the plugin and tested without a server, **not yet played live** - the manual checklist
-in "Phase 5 status" is the developer's sign-off; the match API is a logging placeholder until Phase 6); Phases 6–7 + 9
-not started. Phase 8a (InventoryMenu engine extensions) built and merged into `claude/siege-minigame`, not verified
-live; Phase 8b open; Phase 10 is post-MVP.
-**Last updated:** 2026-09-26 (first live playtest fixes recorded under Phase 5 status; Phase 5 status block added: Paper runtime classes, test results, 21 decisions to review,
-discrepancies, the live verification checklist, what Phases 6/7/8b must wire)
+5c enchant books) wired into the plugin and tested without a server, partly verified live - the manual checklist
+in "Phase 5 status" is the developer's sign-off); **Phase 6a (web-api match endpoints + server-side rewards) code
+complete and tested; Phase 6b (plugin wiring) blocked** - the cloud chain couldn't build the plugin (see "Phase 6
+status"), so the match API in the plugin is still the logging placeholder; Phases 7 + 9 not started. Phase 8a
+(InventoryMenu engine extensions) built and merged into `claude/siege-minigame`, not verified live; Phase 8b open;
+Phase 10 is post-MVP.
+**Last updated:** 2026-09-26 (overnight chain link 1: "Phase 6 status" block added - 6a web-api done, 6b blocked on the
+cloud build; earlier the same day: Phase 5 playtest fixes and status block)
 
 Ref: `DESIGN.md` (decisions — not restated here), `MENU_TEMPLATES.md`,
 `docs/reports/2026-09-25-siege-minigame-gap-analysis.md`. Plan format follows
@@ -984,6 +986,132 @@ trunk merge. No web-app or web-api change.
 **Tests:** reward matrix (winner/loser/left-early/captures/holding for 2- and 3-team scenarios),
 idempotent double-complete, abort grants nothing, XP increments move the player's `TitleBracket`.
 **Exit:** after a live match, `SiegeMatch` rows and balances match the in-game reward message.
+
+**Phase 6 status (2026-09-26, overnight chain link 1): 6a (knk-web-api) code complete, tested and pushed on
+`claude/siege-minigame`; 6b (plugin wiring) NOT started - blocked: knk-plugin can't be built in the cloud
+container (the environment's network policy denies `repo.papermc.io` and `maven.enginehub.org`, so Gradle can't
+resolve `paper-api`/WorldEdit/WorldGuard).** Commits (knk-web-api): `b86d692` (TitleProgression extraction),
+`82b78a4` (match service/API), `7d4fd44` (tests). Trunk had already been merged into both siege branches before this
+link started (web-api `6a480e6`, plugin `d41be49`, both bringing in `claude/menu-content`), so no trunk merge here.
+No migration: the Phase 2 match tables were complete (no model change, `has-pending-model-changes` unaffected).
+No knk-plugin, knk-web-app or DB change.
+- **Classes** (knk-web-api):
+  - `Services/SiegeMatchService` (+ `ISiegeMatchService`): create, start, left, complete, abort, abort-unfinished,
+    get, history. `Services/SiegeRewardCalculator` (pure: `Outcomes` = start/end holder per objective + capturers,
+    `For` = one participant's reward). `Services/TitleProgression` (pure: the bracket-crossing logic moved out of
+    `UserService.AdjustBalancesAsync` unchanged; both callers use it).
+  - `Repositories/SiegeMatchRepository` (+ interface): loads, history query, `RunLockedAsync` (one READ COMMITTED
+    transaction starting with `SELECT … FROM siege_matches … FOR UPDATE`; plain call on InMemory), `LockUsersAsync`.
+  - `Controllers/SiegeMatchesController`, served at `api/siege-matches` (DESIGN) and `api/SiegeMatches`:
+    `GET ?userId=&lobbyId=&status=&limit=` (history, newest first, default 50, max 200; with `userId` each row carries
+    that user's own participant row), `GET {id}`, `POST` (201), `POST {id}/start`, `POST {id}/participants/{userId}/left`
+    (204), `POST {id}/complete`, `POST {id}/abort`, `POST abort-unfinished`. Errors: 404 `NotFound`, 400
+    `ValidationFailed`, 409 `BusinessRuleViolation`. `GET {id}/gate-snapshots` is left to Phase 7.
+  - `Attributes/RequirePluginServiceKeyAttribute` on every write endpoint (decision 1). `Dtos/SiegeMatchDtos.cs`
+    (camelCase JSON, enums as PascalCase strings like the rest of the siege API).
+- **Request shapes** (what 6b's `SiegeMatchesCommandApiImpl` sends; they fit `KnkSiegeMatchRecords` as they are):
+  - create `{ siegeLobbyId, siegeScenarioId }` → `SiegeMatchDto` (`id`, `status`, …).
+  - start `{ participants: [ { userId, siegeTeamId } ], startedAt? }`.
+  - left `{ leftAt? }` (body optional).
+  - complete `{ endReason, winningAllianceGroup?, endedAt?, participants: [ { userId, siegeTeamId, kills, deaths,
+    highestKillStreak, captures } ], objectives: [ { siegeObjectiveId, finalHolderTeamId, capturedByUserId?,
+    capturedAt? } ] }` → `SiegeMatchResultDto { matchId, status, endReason, winningAllianceGroup, alreadyCompleted,
+    rewards: [ { userId, siegeTeamId, presentAtEnd, won, holdingCount, captureCount, coins, experience, gems,
+    titleChange? } ] }`.
+  - abort `{ endReason, endedAt? }` (default `ServerRestart`); abort-unfinished `{ endReason }` →
+    `{ abortedMatchIds: [] }`.
+- **Rewards** exactly per DESIGN §7.6: win (`CoinRewardWin`/`ExpRewardWin`/`GemRewardWin` when the participant's
+  team's alliance = `winningAllianceGroup`), holding (per objective whose end holder is the participant's team and
+  whose start holder wasn't: `InitialHolderTeamId`, else the first Defender - the runtime-config default), capture
+  (per distinct objective the participant captured). Only participants present at the end. Coins/gems/XP are added
+  to the `User` in the same transaction, amounts stored on `SiegeMatchParticipant`, match set `Completed`. No
+  AuditLog row. A second `complete` returns the stored amounts (`alreadyCompleted: true`) and grants nothing.
+- **Tests:** 33 new, all green: `SiegeRewardCalculatorTests` (12: 2-team winner/loser/left-early/captures/holding,
+  recapture ping-pong paid once, draw, 3 teams in 2 and in 3 alliances, explicit vs first-Defender start holder,
+  negative amounts, team-less participant), `SiegeMatchServiceTests` (16, InMemory with the real repository:
+  lifecycle, idempotent double-complete, abort grants nothing, XP moves the `TitleBracket` and grants its bonus once,
+  notification queued once, unreported participants, complete without start, invalid input, abort-unfinished,
+  history filters), `Api/SiegeMatchApiRoundTripTests` (2: plugin-shaped JSON through the controller, status codes),
+  `RequirePluginServiceKeyAttributeTests` (3). Suite **704/709**; the 5 failures are the known pre-existing ones
+  (baseline at `6a480e6` was 671/676 with the same 5: ClientActivityStore, 2× PathResolution `Town.*`,
+  FieldValidation ConditionalRequired, FormSubmissionProgressRepository). The row locks only run on MySQL, so the
+  InMemory tests don't exercise them (live step 5 below).
+- **Decisions taken without the developer** (review; ★ = review first):
+  1. ★ **Service-client auth is opt-in and OFF by default.** There is no plugin service-client mechanism today:
+     the plugin's `config.yml` ships `api.auth.type: none`, every endpoint it calls is anonymous, and
+     `RequireAdmin` needs a JWT role claim the plugin doesn't have - requiring it would lock the plugin out. New
+     `[RequirePluginServiceKey]`: with `Security:PluginServiceKey` empty (the shipped default) the match writes are
+     open like every other plugin endpoint; once set, they need that key in `Security:PluginServiceKeyHeader`
+     (default `X-API-Key`, what the plugin's existing `api.auth.type: apikey` + `api-key` sends on every request),
+     else 401. To turn it on: set the same secret in the API's `appsettings` (or user-secrets/env) and in the
+     plugin's `config.yml`. Cheap to change (one attribute).
+  2. ★ **Siege XP goes through the shared title path, bonuses included.** `TitleProgression` is the logic
+     `AdjustBalancesAsync` had (behaviour unchanged there), so a match that promotes a player also grants the crossed
+     brackets' Coin/Gem/Exp bonuses, and a `TitleChanged` notification is queued for the plugin's existing poller
+     (after the commit, only on the granting call). `SiegeMatchParticipant.*Awarded` store the siege amounts only;
+     the bonus is reported in `rewards[].titleChange`. 6b: don't also announce the promotion from `titleChange`, or
+     players see it twice.
+  3. **No AuditLog for rewards** (DESIGN §7.6), so siege payouts don't appear in a user's audit history - the match
+     rows are the trail. This is why siege doesn't call `AdjustBalancesAsync`.
+  4. **Retry/replay rules:** start on an `InProgress` match is a no-op (200); abort on an `Aborted` match is a no-op
+     and keeps the first reason; complete on `Completed` returns the stored result; complete on `Aborted`, abort on
+     `Completed`, start after either, and left after either → 409. Left: the first `leftAt` wins; unknown
+     participant → 404.
+  5. **`complete` is accepted on a `Created` match** (its `start` call was lost): the reported participants are
+     recorded then. Rows the report doesn't mention and that have no `leftAt` are closed with `leftAt = endedAt` and
+     get nothing (their `left` call was lost). Participants reported with a `leftAt` already set are not rewarded.
+  6. **Objective end holder** = the last entry for that objective in request order (the plugin sends captures in
+     order); objectives with no entry keep their start holder. Entries with no capturer are "final holder" rows.
+  7. `complete` rejects `AdminStopped`/`ServerRestart` (400, use abort) and accepts `NotEnoughPlayers` (the plugin
+     resolves winners for it). `abort` accepts any reason (the plugin's cancel after the draw sends
+     `NotEnoughPlayers`, Phase 5 decision 20).
+  8. **Extra endpoints beyond DESIGN §11.2:** `GET {id}`, `POST abort-unfinished` (one call for 6b's startup
+     recovery, returns the ids so Phase 7 can restore their gates), and `status`/`limit` on history.
+  9. Negative configured reward amounts count as 0; a participant whose team was deleted later only keeps capture
+     rewards in a rebuilt breakdown.
+  10. `GateStructure.CurrentSiegeId` is not touched by complete/abort (Phase 7 owns gates).
+  11. Validation on complete/start: teams must belong to the match's scenario, objectives too, users must exist
+      (400); `winningAllianceGroup` must be an alliance of the scenario.
+- **Doc/code discrepancies found:**
+  - knk-web-api `knkwebapi_v2.sln` references `tests/knkwebapi_v2.Tests/…` but the folder is `Tests/`, so
+    `dotnet build` of the solution fails on a case-sensitive file system, and the repo `CLAUDE.md`'s
+    `dotnet test tests/knkwebapi_v2.Tests/...` path is wrong on Linux. Build `knkwebapi_v2.csproj` and test
+    `Tests/knkwebapi_v2.Tests/knkwebapi_v2.Tests.csproj` directly. Not changed here.
+  - Charter §9's web-api baseline (633) predates the menu-content trunk merge; the real baseline is 676.
+  - `UserService.AdjustBalancesAsync` writes an AuditLog row for every balance change, which DESIGN §7.6 says siege
+    rewards must not - hence the extraction instead of reuse.
+- **Manual live verification (developer; after 6b is wired - until then only steps 1-5 with Swagger):**
+  1. Redeploy the web-api from `claude/siege-minigame` (no new migration). `GET /api/siege-matches` → `[]` (or
+     rows the logging placeholder never wrote - it writes none).
+  2. Swagger: `POST /api/siege-matches` `{ "siegeLobbyId": <test lobby>, "siegeScenarioId": <its scenario> }` → 201,
+     `status: "Created"`.
+  3. `POST /api/siege-matches/{id}/start` with two real user ids and the scenario's Defender/Attacker team ids →
+     `InProgress`; `POST …/participants/{userId}/left` for a third participant you added → 204.
+  4. `POST …/complete` with `endReason: "InstantVictory"`, the attackers' alliance, both participants, and one
+     objective entry with the attacker as `capturedByUserId` → `rewards` show win + holding + capture for the
+     attacker. Check `users.Coins/Gems/ExperiencePoints` in the DB moved by exactly those amounts (plus a bracket
+     bonus if a title was crossed) and `siege_match_participants.*Awarded` match.
+  5. Repeat the same `complete` twice quickly (two Swagger tabs or `curl … & curl …`) → one says
+     `alreadyCompleted: true`; balances moved only once. `POST …/abort` on it → 409. A fresh match: abort → no
+     balance change; `POST abort-unfinished` → aborts any leftover Created/InProgress rows.
+  6. (6b) Play a match on the dev server: rows appear at the draw/start/end, the in-game reward line equals the
+     `SiegeMatch` rows and the balance change (plan Phase 6 exit criterion).
+  7. (optional, decision 1) Set `Security:PluginServiceKey` + the plugin's `api.auth` to `apikey` with the same key:
+     writes without the header → 401, the plugin still records matches.
+- **What 6b must wire (plugin, unchanged from the Phase 5 list plus the API facts above):** `SiegeMatchesCommandApiImpl`
+  in knk-api-client (DTOs + mapper in the `SiegeLobbiesQueryApiImpl` style, register in `KnkApiClient`; paths
+  `/siege-matches…` relative to `api.base-url`, which already ends in `/api`), pass it instead of
+  `LoggingSiegeMatchesCommandApi` in `KnKPlugin.initializeSiege()`; `RewardSummary`/`ParticipantReward` may gain
+  `holdingCount`/`captureCount`/`presentAtEnd` for the breakdown line; drop the provisional `rewardLine` wording
+  (keep the stats line) and print the server's breakdown in `printRewardSummary`; `createMatch` returns `long` today
+  while the API id is `int` (fine). Retry complete/abort with the existing `RetryPolicy`; spool failures to
+  `siege-vault/pending-results/<matchId>.json` and replay on enable; call `POST abort-unfinished` on enable
+  (after replaying the spool, so a spooled complete isn't aborted first); decide `createMatch` failure handling.
+  Unit-test the spool/replay and the mapper in knk-core/knk-api-client.
+- **Follow-ups (not blocking):** fix the `.sln` test path; decide whether siege payouts should appear in the user's
+  audit history after all (DESIGN says no); a siege stats panel from `SiegeMatchParticipant` (DESIGN §13 Q7); the
+  duplicate participant index `(SiegeMatchId, UserId)` isn't unique (the service prevents duplicates; a unique index
+  would need a migration).
 
 ## Phase 7 — Gate integration and area lockdown (knk-paper + knk-web-api)
 
