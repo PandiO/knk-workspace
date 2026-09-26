@@ -1,6 +1,6 @@
 # Currency Payments & Ledger (coins/gems) — Design
 
-**Status:** Decided — implementation in progress (branch `claude/currency-payments`)
+**Status:** Decided — implementation on hold until KNG-16 merges (then branch `claude/currency-payments`)
 **Last updated:** 2026-09-26
 **Linear:** [KNG-21](https://linear.app/kngpandi/issue/KNG-21/currency-ledger-and-secure-player-payments-pay-balance-baltop-for) (Phase 0 split out as [KNG-22](https://linear.app/kngpandi/issue/KNG-22/security-coingem-write-endpoints-are-anonymous-phase-0-currency), urgent)
 **Sources:** `knk-v1-archive` (`src/Currency/*`, `src/Users/User.java`, `src/Main/Main.java`, `src/Listeners/PlayerListener.java`, `src/Menu/{PlayerManagerClick,DuelSetupClick}.java`, `src/Skills/PickpocketSkill.java`, `src/Events/FridayLottery.java`, `plugin.yml`); `knk-v2-archive` (`model/user/{User,KnKUser}.java`, `model/minigame/siege/Siege.java`); knk-web-api `claude/siege-minigame` @ `cd95dd1` (contains `master` up to the KNG-7/8 merge minus the chat-color diff) plus `origin/master` `a102eea` and the KNG-16 branch `claude/practical-clarke-od321q` `1d3f198` where they differ; knk-plugin `claude/siege-minigame` @ `0fa6d06`; knk-web-app `claude/siege-minigame` @ `9a6f347`. Docs: `specs/legacy/{commands-v1,commands-v2,user-system,events-v2,inventory-menu-screens}.md`, `specs/user-features/{DESIGN,COMMAND_CATALOG_V3}.md`, `specs/user-management/DESIGN.md`, `specs/kits/DESIGN.md`, `specs/inventory-menu/CONTENT_PORT_PLAN.md`, `architecture/web-api-architecture.md`, Linear KNG-15/KNG-16.
@@ -596,11 +596,16 @@ histogram `knk.currency.lock_wait_ms`.
 5. **Sender eligibility: account ≥ 48 h old and Peasant title** — agreed (Q5).
 6. **Merge: secondary balance forfeited, recorded in the ledger** — agreed (Q6).
 7. **No second-admin approval; alerts + per-admin daily cap** — agreed (Q9).
-8. **MySQL version (Q7):** not yet confirmed. Build proceeds with both app-level checks and DB CHECK constraints /
-   immutability triggers; the API logs the detected server version at startup and warns when < 8.0.16 (CHECKs are
-   silently ignored there, app-level checks still hold). If the migration fails on missing `TRIGGER` privilege, grant it
-   or drop the trigger step (reconciler still detects tampering).
+8. **MySQL version (Q7):** dev server runs **MySQL 9.6.0** (≥ 8.0.16, so CHECK constraints are enforced). Still to confirm:
+   the API's DB user holds `TRIGGER` (`SHOW GRANTS FOR CURRENT_USER();`); if not, grant it or drop the trigger step.
 9. **Hashed-IP alt signal (Q8):** default taken — later phase, flag-only.
+10. **KNG-23 folded in** (marked duplicate of KNG-21). Its extras join this scope: native `Set` operation, before/after balance
+    and initiator (user or system component) on every row, XP in the same ledger, a per-player "Balance history" tab, the
+    staff **balance event log** page (all ledger rows, sortable, filterable by currency/initiator/recipient/date/source,
+    server-side paging — spec in KNG-23), and `/knk user <player> history [coins|gems|xp]`.
+11. **Ledger data:** start empty (no backfill from audit entries) and keep forever (never pruned/archived).
+12. **Sequencing:** on hold until KNG-16 (`claude/practical-clarke-od321q`) is merged to trunk, since both change
+    `SalaryService`, `UserService`, `UserMappingProfile` and the `UsersController` actor/API key. Then start from trunk.
 
 Original questions below, kept for the record.
 
