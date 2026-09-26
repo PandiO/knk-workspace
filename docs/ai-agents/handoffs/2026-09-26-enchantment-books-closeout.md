@@ -1,7 +1,8 @@
 # Handoff — enchantment books + grade level cap: closed out (Linear KNG-5, KNG-6)
 
-**Status:** Done. Implemented, tested in-game by the developer, merged to trunk, feature branches deleted.
-Both Linear issues are Done.
+**Status:** Done. Implemented, tested in-game by the developer, and merged to trunk. Both Linear issues are Done.
+The feature branches are cleared for deletion; the developer deletes them, because the cloud session isn't
+allowed to delete branches (see below).
 **Last updated:** 2026-09-26
 
 This is the final note for the feature. The detailed handoffs are
@@ -36,22 +37,33 @@ enchantment is a book. It works with vanilla and custom (Poison, Chaos, …) enc
 | knk-workspace `main` | [design note](../../specs/items/GRADE_DROPCHANCE.md), [enchant-book spec](../../specs/enchantment-books/ENCHANTMENT_BOOK_APPLICATION.md) (incl. manual test results §6.1/§6.2), the handoffs above, `ACTIVE_SESSIONS.md` |
 | knk-web-app | no changes |
 
-## Feature branches deleted (2026-09-26)
+## Feature branches: safe to delete (developer action)
 
-Deleted from GitHub at the developer's request, after checking that everything on them was already on trunk
-(or, for the siege commits, on `claude/siege-minigame`). The last commit of each, in case one ever needs
-restoring while GitHub still has it:
+On 2026-09-26 I checked that everything on these branches is already on trunk (or, for the siege commits, on
+`claude/siege-minigame`). The developer approved deleting them. The cloud session's git proxy refuses branch
+deletions (HTTP 403, org policy), so they **still exist and need deleting by hand**. Use the "Branches" page of
+each repo on GitHub (`https://github.com/PandiO/<repo>/branches`), or run this locally:
+
+```sh
+# in knk-plugin, knk-web-api and knk-workspace each:
+git push origin --delete claude/linear-backlog-access-4cr50w claude/adoring-dirac-p4pn54
+```
+
+The last commit of each, in case one ever needs restoring:
 
 | Branch | knk-plugin | knk-web-api | knk-workspace |
 |---|---|---|---|
 | `claude/linear-backlog-access-4cr50w` (KNG-5) | `ba74efe` | `638b50e` | `5e5f74f` |
-| `claude/adoring-dirac-p4pn54` (KNG-6 work branch) | `bc654e3` | `70554f4` | `2c455dc` |
+| `claude/adoring-dirac-p4pn54` (KNG-6 work branch) | `bc654e3` | `70554f4` | `2c455dc`\* |
+
+\* After this note, the session pushed one more docs commit straight to workspace `main`, not to the branch.
 
 `claude/adoring-dirac-p4pn54` in knk-web-app was already gone. **`claude/siege-minigame` was not touched and
 must stay.** It holds the unfinished siege work and none of this feature.
 
 ## Still open (developer)
 
+0. **Delete the feature branches** (see above).
 1. **`./gradlew build` on knk-plugin `main`.** knk-paper was never compiled in the cloud: `repo.papermc.io` is
    blocked there. The changed Paper files were only type-checked against hand-written stubs.
 2. **Rename grades 6-10.** Mythic, Ascended, Relic, Exalted and Divine are placeholders; rename them in the web
@@ -65,8 +77,8 @@ must stay.** It holds the unfinished siege work and none of this feature.
 ## When siege merges into trunk
 
 - **knk-web-api:** siege's `KnKDbContextModelSnapshot.cs` doesn't have the two new grade columns. Expect a merge
-  conflict there and keep both sides. Siege has no copy of the grade migration; the only extra copy lived on the
-  deleted work branch.
+  conflict there and keep both sides. Siege has no copy of the grade migration. The only other copy (`20260926080330`)
+  is on the work branch `claude/adoring-dirac-p4pn54`, which should be deleted and never merged.
 - **knk-plugin:** siege books (`SiegeEnchantBooks`) stay uncapped by decision (their enchantments are
   temporary). Optionally, `SiegeEnchantBooks.evaluate` can delegate its compatible/conflict/improvement checks
   to `EnchantBookRules`. The siege listener still applies books from the cursor; that is separate from the

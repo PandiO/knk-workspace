@@ -25,9 +25,9 @@ the `menu-content` merge):
 - **knk-web-app:** nothing to merge (no changes).
 - `claude/siege-minigame` is unchanged. When siege merges later, it will meet these commits on trunk. Expect a
   snapshot conflict in knk-web-api `KnKDbContextModelSnapshot.cs` (keep both sides' properties).
-- The work branch `claude/adoring-dirac-p4pn54` and the KNG-5 branch were **deleted** afterwards, together with
-  the old migration copy (`20260926080330`) that lived only there. See the
-  [close-out handoff](2026-09-26-enchantment-books-closeout.md).
+- The work branch `claude/adoring-dirac-p4pn54` and the KNG-5 branch are cleared for deletion; the developer
+  deletes them. **Never merge the work branch**: it carries siege plus an old migration copy
+  (`20260926080330`) built on the siege schema. See the [close-out handoff](2026-09-26-enchantment-books-closeout.md).
 
 ## What to do next (at your PC)
 
