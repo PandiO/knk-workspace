@@ -2,7 +2,7 @@
 
 **Status:** Link 1 continuing on the developer's instruction (Phase 6 done; knk-paper code uncompiled). Each chain session appends its phase section
 and rewrites the Morning summary. Rules: `docs/ai-agents/handoffs/SIEGE_OVERNIGHT_CHAIN.md`.
-**Last updated:** 2026-09-26 (link 1: Phase 7a done, starting 8b)
+**Last updated:** 2026-09-26 (link 1: Phase 8b done, starting 7b)
 
 ## Morning summary
 
@@ -16,8 +16,8 @@ in a scratch build that uses Maven Central only.
 |---|---|---|---|
 | 6 — Match persistence and rewards | done (6a tested; 6b knk-paper uncompiled) | web-api `7d4fd44`; plugin `378f8a1` | see Phase 6 section |
 | 7a — Gate integration + area lockdown | done (web-api tested; knk-paper uncompiled) | web-api `07e0a5f`; plugin `16a1436` | see Phase 7a section |
-| 8b — Siege menus | in progress | | |
-| 7b — Non-member gate view | not started | | |
+| 8b — Siege menus | done (web-api + core/api-client tested incl. seed contract test; knk-paper uncompiled) | web-api `78945ca`; plugin `0522e44` | see Phase 8b section |
+| 7b — Non-member gate view | in progress | | |
 | 9 — Seeds and docs (non-live parts) | not started | | |
 
 ## Phase sections
@@ -103,3 +103,25 @@ crash recovery, area lockdown).
 
 **Risks.** Uncompiled and the largest knk-paper change so far (4 new classes); gate animation interplay (open/close
 while animating); WorldGuard queries on every block-changing move while a lockdown is active.
+
+### Phase 8b — siege menus (link 1)
+
+**Commits.** knk-web-api: `78945ca` (`MenuTemplateSeed.Siege.cs`: `siege.overview`, `siege.information`,
+`siege.spawnpoint`, + tests/export). knk-plugin: `901c599` (knk-core `core.siege.menu` views + ids; knk-api-client
+`SiegeMenuSeedContractTest` with the exported `menu/siege-seeds.json`), `0522e44` (paper: `SiegeMenuFeature`,
+`SiegeMenuSnapshots`, `SiegeMenuBridge`, `/siege` and the spawn picker open the menus). **knk-paper not compiled.**
+
+**Tests.** web-api 716/721 (+6, same 5 known failures). Scratch build: knk-core 632 (+6), knk-api-client 53 (+3), all
+green. The contract test runs the real menu validator over the exported seeds against the knk-core view classes
+(checked to fail on a misspelled getter), so seed ↔ view drift is caught without a server.
+
+**Flagged decisions** (plan → "Phase 8b status"): ★1 hub tile unchanged (already opens `siege.overview` once it
+validates; the "open own siege" hint lives on the overview header); 2 list getters for kind-dependent lore, one
+`siege.vote` action; 3 objective banners = holder team banner, no gate status; 4 "Rank" = premium tier; 5 no overview
+filler panes.
+
+**Live checklist.** Plan → "Phase 8b status" → 6 steps (seeds created/validated, overview, votes/join/leave, body,
+spawn picker, `/siege`).
+
+**Risks.** Uncompiled knk-paper glue (3 new classes + `SiegeService` additions); `lobbyChanged` repaints every open
+siege menu on each change (cheap at MVP scale).

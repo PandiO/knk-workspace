@@ -8,10 +8,11 @@ Bukkit-free core tested without a server; Phase 5's Paper runtime (5a loop/comma
 in "Phase 5 status" is the developer's sign-off); **Phase 6 code complete**: 6a (web-api match endpoints +
 server-side rewards) tested; 6b (plugin wiring) written on the developer's go-ahead with its knk-paper part
 **not compiled** (the cloud chain can't reach paper-api - see "Phase 6b status"); **Phase 7a (gate integration +
-area lockdown) code complete** the same way (web-api tested, knk-paper uncompiled); Phases 7b + 9 not started. Phase 8a
+area lockdown) and Phase 8b (siege menus) code complete** the same way (web-api tested, knk-paper uncompiled);
+Phases 7b + 9 not started. Phase 8a
 (InventoryMenu engine extensions) built and merged into `claude/siege-minigame`, not verified live; Phase 8b open;
 Phase 10 is post-MVP.
-**Last updated:** 2026-09-26 (overnight chain link 1: "Phase 6 status", "Phase 6b status", "Phase 7a status" blocks;
+**Last updated:** 2026-09-26 (overnight chain link 1: "Phase 6", "Phase 6b", "Phase 7a" and "Phase 8b status" blocks;
 knk-paper code from 6b on is uncompiled; earlier the same day: Phase 5 playtest fixes and status block)
 
 Ref: `DESIGN.md` (decisions — not restated here), `MENU_TEMPLATES.md`,
@@ -1299,6 +1300,64 @@ fallbacks to menus (fallback commands stay).
 
 **Manual verification:** every row of `MENU_TEMPLATES.md` C.5 against a live match, including the
 N-number fixes.
+
+**Phase 8b status (2026-09-26, overnight chain link 1): code complete on `claude/siege-minigame` - knk-web-api seeds
+tested; knk-plugin knk-core/knk-api-client compiled and tested (including a seed ↔ plugin contract test); knk-paper
+NOT compiled (paper-api unreachable from the cloud). Not verified in-game.** Commits: knk-web-api `78945ca`;
+knk-plugin `901c599` (core + api-client), `0522e44` (paper).
+- **knk-web-api:** `Models/Menu/MenuTemplateSeed.Siege.cs` (create-only, chained after the content-port seeds):
+  `siege.overview` (Height 5, AutoRefresh 20: header with lobby/player counts and the viewer's "you are in …" line;
+  `siege.lobbies` grid, matchmaking first, pager 36/44, empty-state BARRIER at 22 behind `siege.lobbies-empty`; a row
+  opens `siege.information` with `ctx.lobbyId`), `siege.information` (Height 6: change-spawn COMPASS [IN_PROGRESS +
+  participating], status banner, objective help [scenario known], back; `siege.vote-candidates` votes grid 9-12;
+  join/leave at 14 [MATCHMAKING] - join click-checked by `siege.join-eligible`, leave behind `menu.confirm.doubleclick`;
+  divider with the players/teams skull at 22; phase-aware `siege.body` grid 27-53 with pager 45/53), `siege.spawnpoint`
+  (Height 3: current choice, close; `siege.spawn-options` grid with pager 18/26; click → `siege.spawn` + `menu.close`,
+  re-checked by `siege.spawn-available`). `MenuTemplateSiegeSeedTests` (6): each template passes the API's create-path
+  validation, wiring checks, and `SiegeSeeds_ExportAsApiJson` writes the fixture when `KNK_SIEGE_MENU_SEED_EXPORT` is
+  set. Suite **716/721**, same 5 known failures.
+- **knk-core (compiled, tested):** `core.siege.menu`: `SiegeMenuIds` (every key/root/source/action/condition id),
+  `SiegeMenuSnapshot` (one lobby as the menus see it), `SiegeMenuFormat` (`&`-colours, durations, banner-pattern
+  strings), views `SiegeLobbyMenuView`, `SiegeViewerMenuView`, `SiegeServerMenuView`, `SiegeVoteOptionView`,
+  `SiegeBodyRowView`, `SpawnOptionView` (public zero-arg getters; rows implement `MenuRowKey`). `SiegeMenuViewsTest` (6).
+- **knk-api-client (compiled, tested):** `SiegeMenuSeedContractTest` loads `src/test/resources/menu/siege-seeds.json`
+  (exported from the web-api seeds) through the real DTO + mapper, assembles each template and runs knk-core's
+  `MenuDefinitionValidator` (bindings against the view classes, action/condition/source ids) - proven to fail on a
+  misspelled getter. Scratch build: knk-core **632** (+6), knk-api-client **53** (+3, 2 skipped), all green.
+- **knk-paper (uncompiled):** `SiegeMenuFeature` (registered in `KnKPlugin`'s menu-feature list before validation, with
+  a `SiegeService` supplier because the service is created later), `SiegeMenuSnapshots` (runtime → views),
+  `SiegeMenuBridge` (observer: repaints open `siege.*` menus on `lobbyChanged`/`objectiveCaptured`; implements the new
+  `SiegeService.MenuHooks`). `/siege` opens the viewer's own Information, else the overview (chat list stays as the
+  fallback); the spawn picker at match start/respawn opens `siege.spawnpoint` (chat list stays as the fallback).
+  `SiegeService` gains `vote(Player, VoteChoice)` (the text form reads small numbers as list positions), `joinDenial`
+  (join's checks without side effects), `cachedUser`, `setMenuHooks`/`openMenu`.
+- **Decisions (8b; ★ = review first):**
+  1. ★ **The hub's Siege tile (C.1) is unchanged**: it already opens `siege.overview` behind `menu-available` (content
+     port CP1), so it appears once the siege seeds validate. The `siege.open-own` action and the "you are in Siege N"
+     line exist (`siegeServer.getEntryHintLine` is on the overview header) but aren't on the hub tile - the hub is
+     already seeded in the dev DB (create-only); edit it via the CRUD API or re-seed with `scripts/reset-content-menus.ps1`.
+  2. Lore that depends on the row kind uses one list getter (`$row.getLines$`, `$row.getStatusLines$`) instead of
+     Part C's per-line bindings; the vote row has one `siege.vote` action (`scenarioId` = "random" for Random).
+     `siege.vote.random` is registered too.
+  3. Objective banners in the body are the holder team's banner, not the live capture gradient; the gate status in
+     the objective row is left out (the menu snapshot has no gate state).
+  4. "Rank" in member rows is the premium tier name (replaces v2's hard-coded "Donator"); "-" when none.
+  5. The overview's pinned filler panes (C.2 slots 37-43) are left out; the empty-state item at 22 is pinned, so a
+     15th lobby would skip that slot.
+- **Manual live verification (8b; after applying nothing - seeds run on the web-api start):**
+  1. Restart the web-api: the log's "MenuTemplate seed complete. Templates created: 3" (first start only); the plugin's
+     startup validation lists no blocked `siege.*` menu (`/knk menu broken` or the log).
+  2. `/menu` → the Siege tile appears → overview lists the lobbies (matchmaking first, banner colour by phase, member
+     count as stack size); a lobby opens its Information.
+  3. Matchmaking: vote candidates + Random with counts, your vote highlighted, click again removes it; non-members get
+     "You must join the Siege…"; the join button (and its denial line when you can't join) → join → the button becomes
+     "Click to leave" (double-click to confirm).
+  4. The body lists members (heads, title, rank, team after the split); in progress it lists objectives (holder,
+     captured %, captured by, gate, contested).
+  5. At match start and after a respawn with ≥ 2 options the spawn picker opens; a contested objective is DISABLED
+     and refused at click; picking sets the choice (teleports right after start/respawn).
+  6. `/siege` opens your own siege's Information (else the overview); with the web-api seeds missing, `/siege` still
+     prints the chat list.
 
 ## Phase 9 — Playtest, balancing, seed data, docs
 
