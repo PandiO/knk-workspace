@@ -1477,6 +1477,14 @@ knk-plugin `0fa6d06` (knk-paper uncompiled):
   them too; 806/811), plugin `277bd36`, web-app `3e5770e` (Siege Settings added to master's `NAV_LINKS`). Siege reward
   lines use the shared KNG-16 `RewardMessageFormat` (plugin `dfbdf79`). Live checklist:
   `docs/reports/2026-09-26-siege-smoke-test-checklist.md`.
+- **Second smoke-test round fixes** (plugin `1d00d39`, web-api `066a171`, web-app `df3f756`): the **area lockdown is
+  removed** (non-members stay in the area and just can't fight members, capture or use siege gates; the scenario's
+  `LockdownScenarioArea` flag and the `LOCKDOWN_WITHOUT_DISTRICTS` warning no longer have an effect - clean up later);
+  locked siege gates are **removed for non-members** and walking into a really closed door carries them across
+  (TELEPORT pass-through); objective banners are protected; the gate hover shows state + `(JAMMED)` + `INVINCIBLE` and
+  refreshes on animation start; the capture cue is a chime every 5 s; `siege.overview`/`siege.information` are Dynamic
+  and a lobby in cooldown isn't opened (seeds are create-only: delete the three `siege.*` templates to pick it up);
+  the web app hides Dashboard/Forms/builders/settings from non-staff.
 
 ## Phase 10 — Post-MVP
 

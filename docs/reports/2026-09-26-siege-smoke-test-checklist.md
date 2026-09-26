@@ -123,3 +123,30 @@ Accounts: **A** (op/owner), **B** (default player), **C** (third account, non-me
 - A `complete` call for a match that was already recorded returns the stored result without the multiplier
   breakdown: the reward line then shows the total only. A spooled result replayed later is the first real call, so
   it still has the breakdown.
+
+## Round 2 — re-test after the fixes (plugin `1d00d39`, web-api `066a171`, web-app `df3f756`)
+
+First round results: sections 0-7 passed apart from the items below; section 8 not tested yet. Before re-testing,
+delete the three `siege.*` menu templates (seeds are create-only; sections, items and bindings cascade) and
+restart the API:
+
+```sql
+DELETE FROM menu_templates WHERE `Key` IN ('siege.overview', 'siege.information', 'siege.spawnpoint');
+```
+
+- [ ] Web app as a non-staff player: no Dashboard, Forms, Form/Display Builder, Game/Siege Settings, no Create New;
+      `/admin/siege-configuration` shows "Staff only". Staff see everything as before.
+- [ ] Overview and Information menus are only as tall as their content.
+- [ ] Clicking a lobby in cooldown in the overview → "The siege … is in cooldown; the next round starts in …";
+      `/siege menu` / `/sgm` don't open a lobby in cooldown.
+- [ ] Reward lines use the new format (the screenshot was from a build before `dfbdf79`):
+      `Siege reward: 300 ×1.5 Personal = +450 coins`, `+30 XP`, `+1 gems`, then the grey reason line.
+- [ ] C (non-member) at T-15 is **not** moved out and can walk into the area; C can't hurt members, can't capture.
+- [ ] C sees every locked siege gate **removed** and walks straight through a closed one (a short teleport across);
+      members still see and collide with the real gates. Gates look normal to C again ~5 s after the match.
+- [ ] Nobody can break an objective banner or the block under it during the match.
+- [ ] Gate hover of an owner-controlled gate: CLOSED → OPENING → OPEN → CLOSING → CLOSED, with "· INVINCIBLE" on
+      gates that can't be damaged and "(JAMMED)" when blocked.
+- [ ] Capturing/defending: a chime every ~5 s (both sides), particles every second.
+- [ ] Section 8 (failure paths) still open.
+
