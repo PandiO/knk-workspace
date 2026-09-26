@@ -418,6 +418,30 @@ the plugin on presence; used as an R3 input only.
 
 ---
 
+### Phase 5 status — done 2026-09-27 (all three repos, `claude/currency-payments`)
+
+knk-web-api `0a242b6`: `CurrencyMonitorService` (every 60 s: R8/R9 in-memory findings → alerts; every 5 min ledger rules
+R3–R7; hourly + shortly after startup the reconciler R1/R2 — report only, never fixes), **R1 kill switch** (switches off
+transfers for the mismatched currency once per mismatch set; re-enabling in the policy page is respected), alerts deduped
+per rule/window, logged, counted and sent to online staff as `CurrencyAlert` notifications; routes `GET/POST
+api/currency/admin/alerts[/{id}/ack]`, `GET reconciliation` (`knk.admin.currency.history`), `POST reconciliation/run`
+(`knk.admin.currency.alerts`, 409 while running); meter `Knk.Currency` (postings, amount, denials, replays, lock_wait_ms,
+alerts, reconciliation duration, mismatches gauge — OTLP only, no Prometheus endpoint yet); migration
+`AddCurrencyAlertDedupKey`. `06501ee`: siege configuration writes + gate overrides now `[RequireServiceOrPermission]`; the
+`RequirePluginServiceKey` attribute and `Security:PluginServiceKey` removed. knk-plugin `bdbd9bf`: staff alert notices,
+`/knk currency alerts [all] [page]`, `/knk currency alerts ack <id>`. knk-web-app `47b94f6`: `/admin/economy/alerts` with a
+reconciliation panel. Tests: API 1091 pass / 5 baseline / 30 skipped; requires-mysql 30/30 ×3; migration up/down/up; live
+boot with the monitor; plugin CI green https://github.com/PandiO/knk-plugin/actions/runs/36280732627; web-app 282 / 16 baseline.
+Deviations: one monitor loop; R5 coins only; R7 noise floor 10,000 coins / 100 gems; R1/R2 one alert listing ≤ 50
+mismatches; last reconciliation kept in memory; acks recorded on the alert row; console can't ack.
+Developer to-do: `dotnet ef database update`; grant `knk.admin.currency.alerts`; **web staff editing siege setup now need
+`knk.siege.admin.manage`, gate overrides need `knk.gate.admin`** (these writes used to be open); optional `CurrencyMonitor`
+appsettings; smoke test (SQL-edit a balance → "Run now" → R1 alert + coin transfers off → in-game staff notice →
+`/knk currency alerts` + ack → re-enable in the policy page). Known: in-game notice is best effort; hourly full-ledger scan.
+Not built: optional `EconomyOverviewPage`; Phase 5b hashed-IP signal; ledger CSV export; Prometheus endpoint; plugin staff
+balance changes still on the deprecated `PUT Users/{id}/balances`; anonymous GateStructures/GateDoors CRUD, GameSettings,
+`POST api/Users` (outside currency scope).
+
 ## Cross-feature notes
 
 - **Lootboxes / domain discovery / teleport:** consume `ICurrencyService` (`SpendAsync` / `GrantAsync`)

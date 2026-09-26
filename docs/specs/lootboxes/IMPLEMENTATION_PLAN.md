@@ -411,6 +411,27 @@ Smoke-test addition: a box right next to the player on flat ground must still op
 **Feature status: Phases 0–5 complete on `claude/lootboxes`; awaiting developer smoke test + merge.** Independent of the
 other features except KNG-22 (merged in). Remaining manual steps: the 7 FormConfigurations (PHASE_4_FORMCONFIGS.md).
 
+### Siege integration — done 2026-09-27 (all three repos, `claude/lootboxes`)
+
+Trunk merged: API `5d13358` (both seeds run, LootboxSeed then SiegeLobbySeed; this branch's `AdjustBalancesAsync` kept +
+trunk's `TitleProgression` for siege; EF clean, 47 migrations, chain up/down 12/up on scratch MySQL; no AuditAction
+collision), plugin `7f62f6c` (no conflicts), web-app `4754c24` (Navigation/objectConfigs/entityApiMapping/enums merged, both
+sides verified). Plugin `ce9684f` (knk-core `LootboxSiegeRules`): players in a siege lobby (hub or match) can't open world
+boxes or token items (refused before any API call, token kept); tokens from `LootboxTokensIssued` notifications are held back
+during a siege; the spawn scheduler skips the areas of HUB/IN_PROGRESS lobbies (scenario district regions, or the town
+region). API 1097 pass / 5 baseline / 2 skipped; knk-core 750/750, api-client 85/85; plugin CI green
+https://github.com/PandiO/knk-plugin/actions/runs/36280516624; web-app 287 / 16 baseline. In-game: in a siege hub, box click
++ token right-click refused (token kept); after leaving both work; spawn area overlapping a scenario gets no new boxes
+during a match; a token issued mid-match arrives afterwards. Known: boxes spawned before a siege stay claimable by
+non-participants; siege's `RequirePluginServiceKey` and KNG-22's attributes coexist (unify later).
+Follow-up (plugin `45d017a`): `/knk lootbox give` and `/knk lootbox token` refuse a target who is in a siege (staff and
+console alike, before any API call: "… is in a siege - their inventory is restored afterwards, so the item would be lost");
+held-back tokens are delivered ~1 s after `SiegePlayerVault.setAfterRestore` fires (leave/kick/match end/restore on join), if
+the player is online and not in another siege (next join otherwise). 2 new tests; CI green (2nd attempt; attempt 1 failed on
+the unrelated, apparently flaky `WorldGuardCombatSafezonesTest.anExemptedPairIsNotProtected`)
+https://github.com/PandiO/knk-plugin/actions/runs/36280730111. In-game: give/token to a siege player refused (nothing in the
+drop log); a token issued mid-match lands ~1 s after the match ends without rejoining.
+
 ## Cross-feature dependencies
 
 - **KNG-15** (plugin sends no bearer token → 401 on Kits give): same root cause as Phase 0. Fix once, and share the scheme.
