@@ -3,7 +3,7 @@
 **Status:** Implemented on `claude/adoring-dirac-p4pn54` (knk-web-api `3c0d7aa` + `70554f4`, knk-plugin
 `8eaf977` + `d86b87b`), on top of KNG-5. knk-paper not compiled (the cloud blocks `repo.papermc.io`); in-game test open.
 Decisions in §6 were made without a synchronous review and are flagged for the developer.
-**Last updated:** 2026-09-26
+**Last updated:** 2026-09-26 (capped applies now ask for confirmation, knk-plugin `64f91ae`)
 
 This note recreates the design note an earlier KNG-6 session wrote but never committed, and records what
 this session built. The design itself (10 grades, v1's cap for 1-5, uncapped 6-10, a divisor per grade)
@@ -101,12 +101,13 @@ else APPLIED at result; on a bonus roll: result + 1 if that is still <= (cap ?? 
 - `KnkGrade.capEnchantLevel(int)` (knk-core) is the formula; `EnchantBookRules.evaluate` (knk-core) runs
   the check as one more step before `NO_IMPROVEMENT`. The order is: `INVALID_BOOK`, `NOT_ENCHANTABLE`,
   `CONFLICT`, **`LEVEL_CAPPED`**, `NO_IMPROVEMENT`, `APPLIED`.
-- **A book above the cap is applied at the cap, not refused.** A Sharpness III book on a 1-star sword gives
-  Sharpness I, and the book is consumed. This matches v1, where every book was usable while headroom
-  remained. The chooser shows "Grade limit: only up to I" on such items, and the action bar says "applied at
-  I, the most this item's grade allows", so the player sees it before clicking. Alternative, if you prefer:
-  refuse and keep the book whenever the book's level exceeds the cap (one line in
-  `EnchantBookRules.appliedLevel(Target, int)` and `evaluate`).
+- **A book above the cap is applied at the cap, after a confirmation.** A Sharpness III book on a 1-star sword
+  gives Sharpness I and is used up, matching v1, where a book could always add whatever headroom was left. It
+  never happens by accident: the chooser marks such items "Grade limit: only up to I / Click to review", and
+  clicking one opens a confirmation screen. That screen explains the item's grade, the highest level the grade
+  allows, and what the book will actually give, with Apply / Cancel buttons (the developer's call after the
+  2026-09-26 manual test; `EnchantBookMenu.ConfirmHolder`). Refusing such books outright would be one line in
+  `EnchantBookRules.appliedLevel(Target, int)` and `evaluate`.
 - **The bonus** is v1's +1 extra level, capped the same way. When uncapped (grades 6-10, custom
   enchantments) it stops at the definition max level: v1's highest cap (grade 5) was exactly the max level,
   so v1 never produced a level above the max either.
@@ -130,14 +131,14 @@ Scenarios (Sharpness, max 5):
 
 | Item | Book | Result |
 |---|---|---|
-| 1★ sword, no Sharpness | III | Applied at **I** (capped), book consumed |
+| 1★ sword, no Sharpness | III | Confirmation screen, then applied at **I** (capped), book consumed |
 | 1★ sword, Sharpness I | any | `LEVEL_CAPPED`, book kept |
-| 4★ sword, Sharpness I | V | Applied at **II** (capped) |
+| 4★ sword, Sharpness I | V | Confirmation, then applied at **II** (capped) |
 | 4★ sword, no Sharpness | I | Applied at I; bonus roll → II |
 | 5★ sword, Sharpness III | IV | Applied at IV; bonus roll → V |
 | 5★ sword, Sharpness III | II | `NO_IMPROVEMENT` (under the cap, just not better) |
 | 7★ sword, Sharpness IV | V | Applied at V; bonus can't go past the max (V) |
-| vanilla-crafted sword (ungraded → 1★) | V | Applied at I |
+| vanilla-crafted sword (ungraded → 1★) | V | Confirmation ("no grade, counts as Common"), then I |
 | 1★ sword, Poison (custom, max 3) | II | Applied at II: custom enchantments aren't capped by default |
 
 ## 4. Where the target item's grade comes from
@@ -191,7 +192,7 @@ editable in the web app. The API validates them to be at least 1, or empty for u
 | D1 | **Ungraded items** (vanilla-crafted, non-blueprint) | Treated as **grade 1** (most capped) | Otherwise vanilla gear is a loophole around the cap. `ungraded-stars` in config (0 = uncapped) |
 | D2 | **Siege books** (`claude/siege-minigame`) | **Uncapped**, untouched | Their enchantments are temporary and reverted after the match. `SiegeEnchantBooks` has its own checks; this change never touches that branch |
 | D3 | **Custom enchantments** | **Uncapped** by default (v1) | `apply-to-custom: true` caps them like vanilla ones |
-| D4 | **Book level above the cap** | Applied at the cap, book consumed (v1: usable while headroom remains) | See §3.2 for the "refuse instead" alternative |
+| D4 | **Book level above the cap** | Applied at the cap after a **confirmation screen** explaining the cap; book consumed | Decided by the developer 2026-09-26 (was: applied silently). See §3.2 |
 | D5 | **Bonus chance** | Configurable, default **20%** | v1 was 21% by an off-by-one; set `0.21` for exact v1 odds |
 | D6 | **Grades 4-5 DropChance** | 25% / 15% as decided, not v1's 5% / 1% | Recorded in §2; retune in the web app |
 | D7 | **Placeholder names 6-10** | Kept (Mythic, Ascended, Relic, Exalted, Divine) | Rename pending |

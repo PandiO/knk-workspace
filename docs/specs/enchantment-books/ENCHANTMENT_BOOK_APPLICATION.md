@@ -2,7 +2,7 @@
 
 **Status:** Implemented on `claude/linear-backlog-access-4cr50w` (knk-plugin `ba74efe`, knk-web-api `638b50e`);
 knk-paper code not compiled in the cloud container (see §6), in-game test open. Tracks Linear **KNG-5**; the level cap is **KNG-6**.
-**Last updated:** 2026-09-26 (developer's manual test: two fixes, §5/§6; KNG-6 grade level cap added: §3.2, §3.4. The initial version was written
+**Last updated:** 2026-09-26 (second manual test: right-click chooser is the only way to apply, grade-cap confirmation, §3.2/§5/§6.1; first manual test: two fixes; KNG-6 grade level cap added: §3.2, §3.4. The initial version was written
 alongside the KNG-5 implementation; the earlier local-only draft this path was reserved for was never
 committed.)
 
@@ -81,12 +81,18 @@ now calls it. Building a book therefore needs no extra API round trip and stays 
 
 ### 3.2 Applying a book
 
-There are two ways, both ported from siege:
+There is one way, the **right-click chooser**: right-click with the book in hand. A chest-style chooser lists
+every item in your inventory the book can go on; click one to apply the book.
 
-1. **Cursor onto an item:** hold the book on the cursor and left- or right-click an item in your own
-   inventory.
-2. **Right-click chooser:** right-click with the book in hand. A chest-style chooser lists every item in your
-   inventory the book can go on; click one to apply the book.
+- **No cursor apply.** Clicking a book from the cursor onto an item (ported from siege at first) was removed
+  after the developer's manual test on 2026-09-26: it was too easy to trigger by accident. A book on the cursor
+  is now an ordinary item.
+- **Grade-cap confirmation (KNG-6).** When the item's grade cap would give less than the book teaches, the
+  chooser entry reads "Grade limit: only up to I / Click to review". Clicking it opens a confirmation screen
+  that shows the item's grade, the highest level that grade allows, what the book will actually give, and that
+  the book is used up, with **Apply** / **Cancel** buttons. Cancel goes back to the chooser. Apply re-checks
+  that the book, the item and the resulting level haven't changed. Items that get the full book level still
+  apply with one click.
 
 The check is `EnchantBookRules.evaluate` (knk-core, pure, unit-tested), fed with facts the Paper side reads
 from the item. It returns the first result that applies:
@@ -144,8 +150,8 @@ Implemented on `claude/adoring-dirac-p4pn54`. Full design, v1 verification, work
   `knightsandkings:knk_enchant_book_max`.
 - **Check:** in `EnchantBookRules.evaluate`, before `NO_IMPROVEMENT`. An item already at or above its cap
   gives `LEVEL_CAPPED` and keeps the book. Otherwise the result is `min(max(existing, book), cap)`: a book
-  above the cap is applied at the cap (v1 let a book add whatever headroom was left), and the chooser shows
-  "Grade limit: only up to N".
+  above the cap is applied at the cap (v1 let a book add whatever headroom was left), but only after the player
+  confirms it on the confirmation screen (§3.2).
 - **Bonus level:** v1's extra level, `enchant-books.grade-cap.bonus-level-chance` (default 0.20; v1 was
   really 21%), never above the cap, or above the max level when uncapped.
 - **Target grade:** PDC tag `knightsandkings:knk_grade` (stars), stamped by
@@ -182,12 +188,11 @@ Implemented on `claude/adoring-dirac-p4pn54`. Full design, v1 verification, work
    `Teaches: Sharpness III`.
 4. Right-click it. The chooser lists only swords and axes. Click one: the sword gets Sharpness III and the
    book is gone.
-5. Put a book on the cursor and click it onto a pickaxe. You should see "That enchantment can't go on this
-   item." and the book stays. Try it in **both survival and creative**: the creative inventory reports clicks
-   differently (`InventoryCreativeEvent`) and has its own code path.
-6. `Enchanted Book (Poison II)` onto a diamond sword: the sword lore shows `Poison II` and hits apply poison.
-   Onto bread: refused. On a blueprint item with a description, `Poison II` is the **first** lore line, right
-   under the vanilla enchantments, and `Grade:`/`Origin:` stay at the bottom.
+5. Put a book on the cursor and click it onto a pickaxe (survival and creative): nothing enchants, it's an
+   ordinary item swap. Books only apply through the right-click chooser.
+6. Right-click `Enchanted Book (Poison II)`: the chooser lists a diamond sword but not bread. Apply it: the
+   sword lore shows `Poison II` and hits apply poison. On a blueprint item with a description, `Poison II` is
+   the **first** lore line, right under the vanilla enchantments, and `Grade:`/`Origin:` stay at the bottom.
 7. Hit a mob holding the Poison book itself: no poison effect.
 8. Put the book in an anvil with a sword: no result (no stored enchantment).
 9. Apply a lower-level book onto a higher-level item: "already has that enchantment at this level or higher".
@@ -218,3 +223,13 @@ Implemented on `claude/adoring-dirac-p4pn54`. Full design, v1 verification, work
 | 8-9 | Pass | — |
 
 Both fixes are on `claude/adoring-dirac-p4pn54` (knk-paper uncompiled); re-test steps 5-7 there.
+
+### 6.2 Manual test, round 2 (developer, 2026-09-26)
+
+| Check | Result | Follow-up |
+|---|---|---|
+| Lore order (custom enchantments under the vanilla list, Grade/Origin last) | Pass | — |
+| KNG-6 level caps | Pass | — |
+| Step 7: hit a mob holding the Poison book | Pass (no poison) | — |
+| Cursor apply | Works, but judged too accident-prone | **Removed** in knk-plugin `64f91ae`: right-click chooser only (§3.2) |
+| Capped apply without warning (Sharpness III → I on a low-grade item) | Unwanted | `64f91ae`: confirmation screen explaining the cap (§3.2) |
