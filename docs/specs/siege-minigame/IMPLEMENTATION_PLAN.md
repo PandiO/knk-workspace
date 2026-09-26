@@ -1441,6 +1441,38 @@ the developer's (live).**
 - **Left for the developer (live):** playtest and balance (durations, rewards, capture constants), and optionally record
   a reproducible first scenario in `SEED_DATA.md`.
 
+**Smoke-test follow-ups (2026-09-26, the developer's first live pass):** both siege branches merged with trunk
+(web-api `9069549`, plugin `d6753df`; the KNG-11 combat safezone now exempts hits the siege rules allow via
+`SiegeService.allowsCombat`). The menu background default is now `GRAY_STAINED_GLASS_PANE` (`b4a9623`). Then
+knk-plugin `0fa6d06` (knk-paper uncompiled):
+- **Remembered spawn choice:** the picker opens at match start (ignoring it stores the team default) and after a
+  respawn only while no choice is stored. A captured objective resets its choosers to their team's default spawnpoint,
+  with a message pointing at `/siege menu` ("Change spawnpoint" in Information).
+- **`/siege menu`**, plus `/siegemenu` (alias `/sgm`, because `/sm` is `/staffmode`): the member's own siege Information
+  menu from matchmaking to match end, refused for non-members. Both labels always pass the in-match command filter.
+- **Capture rings on the floor:** the ring and the capture distance use the floor under the capture point
+  (`SiegeFloor`: up to 4 blocks down, lifted out of a solid block). Objective banners still sit at the stored point.
+- **Coin multipliers** (web-api `843bca3`): siege coin rewards = base x `PersonalSalaryMultiplier` x rank multiplier
+  (product of active groups' `SalaryMultiplier`, premium tiers included; shared `CoinRewardMultipliers`, also used by
+  salary). Salary's `GlobalMultiplier` is not applied; XP and gems are unchanged. The reward DTO adds `baseCoins` and
+  `coinMultiplier`, and the plugin's reward line shows "(xN bonus)".
+- **Capture feedback** (plugin `002067c`, `CaptureActivityTracker` + `SiegeCaptureFeedback`): when an attack begins, the
+  attackers' alliance hears a goat horn, sees crits and is told who began capturing (or retaking) what; the holder's
+  alliance hears the alarm bell, sees angry-villager clouds and is told what is being captured, by which team, at how
+  many percent. When a defence begins (the holder pushing the points back up), the holders hear a second horn and see
+  happy-villager particles, and the other side hears a bass note and sees smoke; both get a chat line. Every second,
+  the players doing it hear a pling (attack) or chime (defence) whose pitch rises with progress, with particles
+  members nearby see. A capture adds a totem burst. Re-announce window 15 s per objective and activity, reset on
+  capture. The cues are constants at the top of `SiegeCaptureFeedback`.
+- **Objective banners** (plugin `725af30`): the holder's full team banner (patterns included) from match start while
+  fully held, the v2 8-stage gradient towards the leading attacker's colour while being captured, the attacker's full
+  banner at the capture moment. Fixed: an objective captured for good showed the old holder's colour. The banner now
+  stands on the floor under the capture point; a blocked spot logs a warning with coordinates.
+- **Trunk merges again** (KNG-7/8 chat and tab-list colours): web-api `37e589b` (771/776, same 5 known failures; new
+  trunk migrations `AddPermissionGroupDisplayColors`, `PremiumRanksInheritDefault`), plugin `f5f696e` (core 741,
+  api-client 67). Watch: trunk's tier re-sync calls `ScoreboardUtil.setScoreboard`, which would replace a siege
+  member's match scoreboard if staff change their rank mid-match.
+
 ## Phase 10 — Post-MVP
 
 - `Scheduled` lobby mode (`ScheduleJson`, next-start computation, announcements ahead of the slot) —

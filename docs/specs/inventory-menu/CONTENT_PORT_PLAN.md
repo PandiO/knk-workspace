@@ -606,6 +606,11 @@ the viewer; seed validation.
     `users.set-title {userId, bracketId}`; pager 27/35, confirm 30/32.
   - `users.manager.groups` (H6): every group (`users.groups`), members HIGHLIGHT; `users.group add`
     directly, `remove` via confirmation.
+    **Updated 2026-09-26 (KNG-7/KNG-8):** ranks (Default + premium tiers) are one per player - a rank
+    click asks for confirmation and switches (`users.group` op `set-rank`, `UserAdminService.setRank`),
+    removing a premium rank drops back to Default, Default can only be replaced. Other groups unchanged.
+    Confirm/Cancel now repaint live (`menu.confirm.*` handlers). See
+    [`../user-features/RANK_DISPLAY.md`](../user-features/RANK_DISPLAY.md) §6.
 - knk-plugin `07a765f`: `user/UserAdminService` — extracted from `UserManagementCommand` (target
   resolution, `RankHierarchy.actorOutranks`, per-property `knk.admin.user.<property>`, balance "set" =
   computed delta, group/perm add/remove, `ModeService.refreshVisibilityFor`, result messages) and
