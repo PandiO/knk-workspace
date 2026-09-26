@@ -81,6 +81,25 @@ Siege integration (guards) is part of Phase 1 through a registration interface, 
 
 ---
 
+### Phase 1 status — done 2026-09-26 (knk-plugin `claude/teleport`)
+
+Commits `f8597df` (knk-core `core/teleport/`: `WarmupBook`, `WarmupPolicy`, `TeleportCooldowns`, `CombatTagBook`,
+`SafeLocationFinder`, `RegionTransitionService.previewAccess`), `1277b44` (knk-paper `teleport/TeleportService` +
+restrictions, warmup/combat listeners, `knk.region.bypass`, `teleport:` config block), `b38e9f9` (`StaffTeleportCommand`:
+`/tp <p>`, `/tp <a> <b>`, `/tp x y z [world] [yaw pitch]` with `~`, `/tphere`, `-s`; `/knk tp` delegates to it), `141be98`
+(async hardening); trunk (KNG-16) merged in `7db6d66`. CI green: https://github.com/PandiO/knk-plugin/actions/runs/36251383587.
+
+Deviations: restrictions take a `TeleportCheck` and return `Optional<TeleportDenial>`; a staff member's region bypass
+carries to the player they move; frozen players can't escape via pearls/chorus/portals; `/knk tp` uses the shared rank
+check; own `VisibleTargetResolver` (to be unified with private-messages' `VisiblePlayers` at merge); every teleport now
+uses cause `COMMAND` (closes the siege-lockdown bypass). Siege guard hook: `KnKPlugin.registerTeleportRestriction(...)` —
+the siege branch should add a `SiegeTeleportRestriction` (`activeLobbyOf` + `blockingEntry`, bypass `knk.siege.bypass.*`).
+
+Developer to-do: grant `knk.teleport.staff`, `.staff.others`, `.staff.silent`, `knk.region.bypass` to staff groups and
+`knk.teleport.warmup.short` to Noble; smoke-test `/tp` forms, `-s`, `AllowEntry=false` town with/without bypass,
+`/minecraft:tp` still works. Known: `knk.region.bypass` read from cache only (first move after a cold cache fails
+closed); with bypass the domain-entered callback doesn't fire for that move.
+
 ## Phase 2 — Admin teleport audit
 
 **knk-web-api:**

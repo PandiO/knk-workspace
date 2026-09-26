@@ -1,6 +1,6 @@
 # Domain Discovery — Design
 
-**Status:** Decided — implementation on hold until KNG-16 merges (reuse its `RewardMultiplier`/`RewardMessageFormat`)
+**Status:** Decided — implementation in progress (branch `claude/domain-discovery`; KNG-16 merged to trunk 2026-09-26)
 **Last updated:** 2026-09-26
 **Linear:** [KNG-20](https://linear.app/kngpandi/issue/KNG-20/domain-discovery-first-entry-rewards-for-townsdistrictsstructures)
 **Sources:** `knk-v1-archive` (`src/Towns/TownEvents.java`, `src/Towns/Town.java`, `src/DataManager/Towns.java`,

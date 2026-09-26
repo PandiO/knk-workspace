@@ -91,6 +91,23 @@ feature (not the repo) in `ACTIVE_SESSIONS.md` before starting.
 
 ---
 
+### Phase 1 status — done 2026-09-26 (knk-plugin `claude/private-messages`)
+
+Commits `97ccfc5` (knk-core `messaging/`: `ParticipantId`, `ReplyTargets`, `RateLimiter`, `PrivateMessageGate` chain with
+`FrozenGate`/`RateLimitGate`, `PrivateMessageNodes`, `SpyRules`), `43fb9ac` (knk-paper: `commands/support/VisiblePlayers`,
+`MessagingService`, Adventure formatting + click-to-reply, console both ways, `/socialspy`, local PM log, vanilla
+`/minecraft:msg`/`/teammsg`/`/me` blocking, frozen players can message `knk.freeze` holders), `15d5f10` (test fix);
+trunk (KNG-16) merged in `8476d6d`. CI green: https://github.com/PandiO/knk-plugin/actions/runs/36251319236 (81 new tests).
+
+Deviations: gates live in knk-core with pre-resolved nodes; "started by partner" persists while replying to the same
+partner (so `/r` to a vanished staff member keeps working); PDC key `knightsandkings:socialspy`; ops bypass the vanilla
+rewrite (selectors keep working); over-long messages are truncated; refused messages are logged too; message text gray.
+
+Developer to-do: grant `knk.socialspy` (staff + owner groups), `knk.socialspy.exempt` (owner group), optionally
+`knk.msg.bypass.ratelimit` (staff); frozen players can only message `knk.freeze` holders. Run the 9 in-game acceptance
+steps above. Known: non-op spies join the spy audience once their user summary is cached (join, +5 s, every 60 s);
+Paper's command log still records PMs until Phase 3; the siege alias follow-up (Phase F) stands.
+
 ## Phase 2 — Ignore list (knk-web-api + knk-plugin)
 
 **knk-web-api (`claude/private-messages`):**
