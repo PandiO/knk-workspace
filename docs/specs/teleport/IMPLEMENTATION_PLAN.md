@@ -263,6 +263,32 @@ your new balance is M"; moving during warmup charges nothing; `AllowEntry=false`
 
 ---
 
+### Phase 5 status — done 2026-09-26 (all three repos, `claude/teleport`)
+
+Merges (commits, per merge order currency → discovery → teleport): API `829e409` (currency `d5c1418`), `bcaddf3` (discovery
+`fb94564`; AuditAction 12 + 17 kept; snapshot clean); plugin `b892d91` (`3630436`), `bfd7678` (`54b29ec`).
+knk-web-api `813c699`: five `Domain` fields + migration `AddDomainTeleportSettings` (`TeleportEnabled`, `TeleportPriceGems`,
+`TeleportMinTitleBracketId`, `TeleportMinPremiumGroupId`, `TeleportRequiresDiscovery`), `TeleportDestinationService`,
+`api/teleport-destinations` (GET list, POST `{domainId}/charge`, POST `request-fee`, POST `refund`; all
+`[RequirePluginService]`); `18b7ea4` TitleBrackets fetch/search routes (copied verbatim from siege). knk-plugin `87e6085`
+(core types, client, destination cache, retry-safe charger), `0c14238` (charge after warmup + guard re-check, refund when a
+paid teleport doesn't arrive; `/warp`, `/point`, `/warps`, `/warp list`, `/warp <d> <player> [-s]`; paid `/tpa` works),
+`eb8abfa`, `e47c73d`. knk-web-app `454ab70` (TitleBracket client, domain DTO fields).
+Tests: API 915 (910 pass, 5 baseline) incl. real MySQL: 12 parallel same-key charges → one charge; 20 parallel own-key warps
+never overdraw; charge racing refund → refunded or void, never charged without a teleport; 8 parallel refunds reverse once;
+migration up/down/up. Live API: charge → replay → refund → re-charge refused. Plugin CI green
+https://github.com/PandiO/knk-plugin/actions/runs/36264003007 (627 knk-paper tests); web-app 16 baseline failures only.
+Deviations: every warp (free ones too) calls charge after warmup so title/premium/discovery are always checked server-side;
+refund-before-charge voids the key in the API's **memory** for 30 min (single instance, lost on restart — to harden in
+review); refunds are ledger reversals `reverse:{txId}`; warp list is service-key only, locked destinations include the
+server's reason; bypass nodes applied plugin-side and sent with the charge; premium picker shows all groups (API refuses
+non-premium); staff `/warp <d> <player>` audit lacks `domainId`.
+Developer to-do: apply `20260926181358_AddDomainTeleportSettings`; grant `knk.teleport.warp` (Default),
+`knk.teleport.bypass.requirements` + `.bypass.cost` (staff); add the five fields to the Town/District/Structure
+FormConfigurations; enable 1–2 towns at 10 gems; smoke test `/warps`, move during warmup (no charge), paid warp message,
+title-locked refusal, staff `/warp town:X Bob`, paid `/tpa` with `price-coins > 0`. Known: a charge in flight at plugin
+shutdown isn't refunded; destination cache cleared only by `/knk cache refresh`.
+
 ## Phase 6 — Teleport menu
 
 **knk-web-api:** `Models/Menu/MenuTemplateSeed.Content.cs` (or a new `MenuTemplateSeed.Teleport.cs` partial) —

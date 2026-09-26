@@ -333,6 +333,24 @@ drop log without touching the DB. `tsc` is clean; test failures don't exceed the
 
 ---
 
+### Phase 4 status — done 2026-09-26 (knk-web-app `claude/lootboxes`)
+
+Step 0: fast-forward to KNG-22 `4a3c304`; cherry-picks `b43017d` (= `dceb5b3` `usePermission`) and `f0524f6` (= `1282595`
+`StaffRoute node`). `66253e1` (clients for types incl. odds, specials, areas, settings, spawns, claims, item instances;
+`src/types/dtos/lootbox/LootboxDtos.ts` with `LOOTBOX_ADMIN_NODE`; LootboxType/SpecialEntry/SpawnArea in
+`entityApiMapping.ts` + `objectConfigs.tsx`), `32cc464` (`/admin/lootboxes` behind `StaffRoute node=knk.admin.lootbox.manage`:
+Settings, Types (enable toggle, weights, stars, daily limit, pool size per grade with empty-grade warning), Specials, Areas,
+Odds (box-grade split, specials own vs first-hit, item-grade split, per-item odds, enchant hit %/`landPercent`/capped
+levels), Active boxes (despawn), Drop log (search/filters/paging, ItemInstance detail)), `5f2f3ba` (audit labels 13/14).
+Tests 16 failed (baseline) / 258 passed (+14); build + `tsc --noEmit` clean for new files. Live-checked against a local API
+on a scratch MySQL: every call's shape matched, 403 without the node, Weapons ★5 odds 50/31.25/18.75 %, Flaming Samurai
+0.05 %, FormWizard-shaped LootboxType PUT saved, all seven FormConfigurations passed API validation.
+Deviations: extra Specials/Areas tabs; no web Domain-region picker (WgRegionId string + `WgRegionId` world task).
+Developer to-do: POST the 7 FormConfigurations to the dev DB per [`PHASE_4_FORMCONFIGS.md`](PHASE_4_FORMCONFIGS.md)
+(join entries first); grant `knk.admin.lootbox.manage`; run that doc's browser checklist. Known: FormWizard M2M editing for
+the four join types not browser-tested (same pattern as KitContent); Types tab makes ~14 odds calls on load; no web admin
+give/spawn (plugin-only endpoints).
+
 ## Phase 5 — Lootbox token items (decided, Q5)
 
 - web-api: `LootboxToken` (`Token`, `LootboxTypeId`, `BoxGradeId`, `IssuedToUserId?`, `IssuedReason`, `RedeemedClaimId?`).
