@@ -304,6 +304,22 @@ real warmup in the info tile; clicking teleports via the Phase 5 path.
 
 ---
 
+### Phase 6 status — done 2026-09-26 (knk-web-api + knk-plugin, `claude/teleport`)
+
+knk-web-api `f074aaa`: `teleport.destinations` menu seed (`Models/Menu/MenuTemplateSeed.Teleport.cs`) + hub **Teleport tile in
+slot 24** (v1 COMPASS texts; slot 20 stays Discoveries). knk-plugin `5e0b117`: warp menu — paged grid (36/page) from the
+same cached list as `/warps` with the viewer's permissions/bypasses, per-domain-type icons, tooltip with type, gem price,
+required title/tier, discovered state, "Available!/Locked! <reason>" (locked tiles unclickable); header: Spawn (0), pending
+`/tpa` requests (2, re-sends clickable Accept/Deny in chat), info compass with the viewer's warmup (4), Back (8). Clicks run
+the command code (`WarpCommand.warpTo`, `SpawnCommand.teleportSelf`), so warmup, post-warmup charge and every registered
+restriction (siege hook) apply — test proves a registered restriction blocks a menu warp. Bare `/warp` opens the menu.
+API 922 (902 pass, 15 skipped, 5 baseline); plugin CI green https://github.com/PandiO/knk-plugin/actions/runs/36265081028.
+Deviations: `/warp list` stays the chat list; per-type icons (tier shown as a tooltip line); "discovered" shown as
+"Must be discovered first" when an earlier requirement fails first (API reports only the first failing requirement); no
+grid filters. Developer to-do: on an existing DB add the hub slot-24 tile via MenuTemplates or delete the `main` row to
+re-seed (same step as discovery's slot 20), restart Paper; smoke test `/menu` → Teleport, locked vs open tiles, `/warp` opens
+the menu, requests tile, Spawn tile. Siege branch must call `registerTeleportRestriction` at merge.
+
 ## Phase 7 — `/back` (optional, Q5)
 
 **knk-paper:** `teleport/BackLocationBook.java` (death location, expiry `teleport.back.expire-seconds`, cleared on use),
