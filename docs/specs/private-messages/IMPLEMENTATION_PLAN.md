@@ -269,3 +269,17 @@ with it. Phase F (siege command filter resolving aliases) remains on the siege b
 - **Docs:** refresh `docs/specs/user-features/COMMAND_CATALOG_V3.md` (missing `/msg`, `/reply`, `/staffchat`, `/freeze`,
   KNG-9 commands) and the plugin/web-api `CLAUDE.md` auth lines.
 - **Mute:** when the justice system is designed, implement it as one more `PrivateMessageGate` plus a public-chat check.
+
+### Phase F + siege integration — done 2026-09-27 (all three repos, `claude/private-messages`)
+
+Trunk merged: API `fbf280d`, web-app `354d4f4`, plugin `2aaceec` (conflicts kept both sides; EF clean; AuditAction 15 no
+collision). Trunk behaviour (read from code): the siege command filter compared the literal name after stripping `/plugin:`,
+no alias lookup — `/msg`, `/r`, `/minecraft:msg` allowed but `/tell`, `/w`, `/whisper`, `/m`, `/pm`, `/message`, `/reply`, `/sc`
+blocked. Fix (plugin `ff64f6b`, `0fed5f4`): `SiegeCommandFilter.isAllowed(message, list, resolver)` resolves typed command and
+list entries to the primary command via `SiegeCommandAliases` (server command map); namespaced forms count as the plain
+command; unknown commands only match themselves (`/teammsg`, `/spawn` stay blocked). Per siege DESIGN §3.8/§6.9 PMs are
+allowed in-match under every alias; `/sc` works via `/staffchat`. 8 new tests; CI green
+https://github.com/PandiO/knk-plugin/actions/runs/36279947482; API 952 pass; web-app 294 / 16 baseline. In-game: in a match
+`/tell`, `/w`, `/pm`, `/minecraft:tell`, `/knightsandkings:msg`, `/reply` deliver; `/spawn`, `/kit`, `/teammsg` refused.
+Note: trunk siege endpoints keep their own `[RequirePluginServiceKey]`, which reads the same `X-API-Key` and falls back to
+`PluginApiKey`, so one key covers both.

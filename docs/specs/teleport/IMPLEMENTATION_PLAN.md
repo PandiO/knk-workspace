@@ -371,6 +371,25 @@ currency-payments → domain-discovery → teleport. At merge also: unify `Visib
 `VisiblePlayers`, wire `TeleportRequestService.setIgnoreCheck(IgnoreService::ignores)`, and siege must call
 `registerTeleportRestriction(...)` + `registerBackDeathExclusion(...)`.
 
+### Siege integration — done 2026-09-27 (all three repos, `claude/teleport`)
+
+Plugin fast-forwarded to `940a87d` first (the `/tpa` request-id fix for the bait-and-switch, pushed from a separate session),
+then trunk merged: plugin `863eda4` (main `716fb3c`), API `d4daef5` (master `67f451e`), web-app `c12b39b` (main `4fba7d0`).
+Conflicts kept both sides (API `UserService` keeps this branch's capped/checked balance adjustment + trunk's `TitleProgression`
+helper used only by `SiegeMatchService`; DbContext/menu seeds: discovery (hub 20), teleport (hub 24) and siege menus all
+seeded; no AuditAction collisions; EF snapshot clean, full migration chain up/down/up on scratch MySQL; web-app enums/entity
+mapping and `TitleBracketDto` superset). Wired (plugin `c954c30`): `siege/SiegeTeleportRestriction` registered in
+`initializeSiege()` — a member's own `/tp`, `/spawn`, `/warp`, menu warp, `/tpa`, `/back` refused unless
+`knk.siege.bypass.commands`; `/tpahere` pulling a member out refused; staff/console moving a member refused ("use /siege admin
+kick first", D8); `/tpa` to a member refused; staff may `/tp` to a member to spectate. `registerBackDeathExclusion` — siege
+deaths never grant `/back`. Siege's own four teleports now go through `SiegeBukkit.teleport` with `TeleportCause.PLUGIN`
+(never through the engine). 13 tests; CI green https://github.com/PandiO/knk-plugin/actions/runs/36279721817.
+Deviations: no destination check (`SiegeAreaLockdown.blockingEntry` no longer exists on trunk). Known: on this branch siege
+rewards still bypass the ledger (fixed on `claude/currency-payments` `37bab02`; resolved by merge order); pre-existing on
+trunk — `WorldGuardRegionListener` judges PLUGIN-cause teleports, so a siege hub/return spot inside an AllowEntry/AllowExit=false
+domain could block siege's own teleports. In-game: members blocked from `/spawn`/`/warp`/`/tpa`/`/back`/menu warps in hub
+and match; staff `/tphere <member>` refused, `/tp <member>` allowed; match death → no `/back`; siege's own teleports work.
+
 ## Cross-cutting
 
 - **Docs to update when phases land** (not now): `user-features/COMMAND_CATALOG_V3.md` (already stale — see DESIGN §1.3

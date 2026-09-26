@@ -302,6 +302,18 @@ key read; corrupt spool file skipped. Tests: API 829 pass / 5 baseline / 14 skip
 currency-payments → domain-discovery → teleport. At merge, switch discovery's `ApplyTitleProgressionAsync` to currency
 Phase 2's identical-signature version (`234f8f3`) so title bonuses are ledger-posted too.
 
+### Siege integration — done 2026-09-27 (all three repos, `claude/domain-discovery`)
+
+Trunk merged: API `9b6f517`, web-app `b45c269`, plugin `49c2d1e` (conflicts kept both sides: menu seeds, DbSets, this
+branch's `UserService` + trunk's `TitleProgression` used only by siege, trunk's Navigation layout + Discovery link; EF clean,
+fresh-DB migration run; no AuditAction collision). Plugin `ae88055`: new `SiegeService.isParticipant(uuid)` (member of any
+siege lobby in any phase, per DESIGN §3.6); `DiscoveryEligibility.siegeParticipants(() -> siegeService)` looked up per check;
+`discovery.exclude-siege-participants` (default true); 2 tests; CI green https://github.com/PandiO/knk-plugin/actions/runs/36279536006.
+API 1049 pass / 14 skipped; web-app 308 / 16 baseline. **To confirm:** players in matchmaking (still in the normal world) are
+excluded too — change `isParticipant` to check the phase if discovery should only stop at hub/match. Known: siege rewards on
+this branch still write balances directly (resolved by merging currency first). In-game: in a lobby, entering an undiscovered
+town discovers nothing; no arena discoveries; after leaving, re-entering discovers; `exclude-siege-participants: false` restores.
+
 ## Risks / notes for whoever picks this up
 - `DomainService.SearchDomainRegionDecisionAsync` returns at most one Town/District/Structure and no GateStructures; discovery
   avoids it (server resolves raw region ids). Gate control in `SimpleRegionTransitionService` compares `domainType` to `"gate"`,
