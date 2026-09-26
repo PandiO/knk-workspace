@@ -1,7 +1,8 @@
 # Enchantment books outside siege — design and implementation plan
 
-**Status:** Implemented on `claude/linear-backlog-access-4cr50w` (knk-plugin `ba74efe`, knk-web-api `638b50e`);
-knk-paper code not compiled in the cloud container (see §6), in-game test open. Tracks Linear **KNG-5**; the level cap is **KNG-6**.
+**Status:** Implemented and **merged to trunk** 2026-09-26: knk-plugin `main` (`ba74efe` KNG-5; `b721384`, `a7bbcef`, `6dd638e`, `bc97d2e`, `8a8d5e2`), knk-web-api `master` (`638b50e` KNG-5; `45449a3`, `435a974`). Tested
+in-game by the developer over two rounds (§6.1, §6.2). knk-paper was never compiled in the cloud (see §6). Tracks
+Linear **KNG-5**; the level cap is **KNG-6**.
 **Last updated:** 2026-09-26 (second manual test: right-click chooser is the only way to apply, grade-cap confirmation, §3.2/§5/§6.1; first manual test: two fixes; KNG-6 grade level cap added: §3.2, §3.4. The initial version was written
 alongside the KNG-5 implementation; the earlier local-only draft this path was reserved for was never
 committed.)
@@ -156,7 +157,7 @@ vanilla one the V1 seed didn't create on a DB where it ran before this seed exis
 
 ### 3.4 Grade level cap (KNG-6)
 
-Implemented on `claude/adoring-dirac-p4pn54`. Full design, v1 verification, worked examples and edge cases:
+Implemented; merged to trunk 2026-09-26. Full design, v1 verification, worked examples and edge cases:
 [`../items/GRADE_DROPCHANCE.md`](../items/GRADE_DROPCHANCE.md).
 
 - **Formula (v1's `EnchantbookClick.canEnchant()`):** `cap = definitionMaxLevel / divisor(grade)`, integer
@@ -191,8 +192,8 @@ Implemented on `claude/adoring-dirac-p4pn54`. Full design, v1 verification, work
 | 4 | knk-plugin / knk-paper | `ItemBlueprintBukkitMapper.fromBlueprint` builds books; `/knk itemblueprints give` skips default enchantments on books | done |
 | 5 | knk-plugin / knk-paper | `paper/enchantbook/EnchantBooks` (evaluate/apply), `EnchantBookMenu` (chooser), `listeners/EnchantBookListener`; wired in `KnKPlugin` after the enchantment runtime | done |
 | 6 | knk-web-api | `Models/Item/EnchantBookSeed.cs` + `Program.cs` call + seed tests | done |
-| 7 | — | In-game test on the dev server (see §5) | **open, needs the developer's PC** |
-| 8 | all | KNG-6 grade level cap (§3.4, `../items/GRADE_DROPCHANCE.md`) | done on `claude/adoring-dirac-p4pn54`; knk-paper uncompiled |
+| 7 | — | In-game test on the dev server (see §5) | done (§6.1, §6.2) |
+| 8 | all | KNG-6 grade level cap (§3.4, `../items/GRADE_DROPCHANCE.md`) | done, merged to trunk |
 
 ## 5. Manual test checklist (dev server)
 
@@ -238,7 +239,7 @@ Implemented on `claude/adoring-dirac-p4pn54`. Full design, v1 verification, work
 | 7 | Not tested | — |
 | 8-9 | Pass | — |
 
-Both fixes are on `claude/adoring-dirac-p4pn54` (knk-paper uncompiled); re-test steps 5-7 there.
+Both fixes were re-tested in round 2 (§6.2) and are merged to trunk.
 
 ### 6.2 Manual test, round 2 (developer, 2026-09-26)
 

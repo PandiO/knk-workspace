@@ -1,8 +1,9 @@
 # Items — Grade scale, DropChance and the enchant-book level cap (Linear KNG-6)
 
-**Status:** Implemented on `claude/adoring-dirac-p4pn54` (knk-web-api `3c0d7aa` + `70554f4`, knk-plugin
-`8eaf977` + `d86b87b`), on top of KNG-5. knk-paper not compiled (the cloud blocks `repo.papermc.io`); in-game test open.
-Decisions in §6 were made without a synchronous review and are flagged for the developer.
+**Status:** Implemented and **merged to trunk** 2026-09-26: knk-web-api `master` (`638b50e` KNG-5; `45449a3`, `435a974`), knk-plugin `main` (`ba74efe` KNG-5; `b721384`, `a7bbcef`, `6dd638e`, `bc97d2e`, `8a8d5e2`). The migration is
+`20260926104605_AddGradeDropChanceAndEnchantCap` (regenerated on `master`). Tested in-game by the developer
+(caps, confirmation); knk-paper was never compiled in the cloud. Decisions in §6 were made without a synchronous
+review (D4 since decided by the developer).
 **Last updated:** 2026-09-26 (capped applies now ask for confirmation, knk-plugin `64f91ae`)
 
 This note recreates the design note an earlier KNG-6 session wrote but never committed, and records what
@@ -221,7 +222,7 @@ Other edge cases, handled:
 
 | Repo | Change |
 |---|---|
-| knk-web-api | `Models/Item/Grade.cs`: `DropChance` (`decimal(7,4)`, percent) and `EnchantLevelCapDivisor` (`int?`). `Dtos/GradeDtos.cs` (all five DTOs) and `Services/GradeService.cs` (create/update, validation, partial update). `Models/Item/GradeDefaults.cs`: the §2 table, used by both `KitSeed` and `ItemBlueprintV1Seed` (create-only; all 10 grades). Migration `20260926080330_AddGradeDropChanceAndEnchantCap`: both columns, with a backfill of grades 1-5 by stars in `Up` |
+| knk-web-api | `Models/Item/Grade.cs`: `DropChance` (`decimal(7,4)`, percent) and `EnchantLevelCapDivisor` (`int?`). `Dtos/GradeDtos.cs` (all five DTOs) and `Services/GradeService.cs` (create/update, validation, partial update). `Models/Item/GradeDefaults.cs`: the §2 table, used by both `KitSeed` and `ItemBlueprintV1Seed` (create-only; all 10 grades). Migration `20260926104605_AddGradeDropChanceAndEnchantCap`: both columns, with a backfill of grades 1-5 by stars in `Up` |
 | knk-plugin / knk-core | `KnkGrade` (+2 fields, `capEnchantLevel`), `GradeCatalog`, `GradeLore`, `EnchantBookRules` (`LEVEL_CAPPED`, capped `appliedLevel`, `withBonus`), `EnchantBookCapSettings` |
 | knk-plugin / knk-api-client | `GradeDto`, `GradeMapper`, `ItemBlueprintMapper` |
 | knk-plugin / knk-paper | `mapper/ItemGradeTag` (new), `ItemBlueprintBukkitMapper` (stamps the tag), `EnchantBookItems` (stamps the definition max), `EnchantBooks` (cap + bonus), `EnchantBookMenu`/`EnchantBookListener` (capped-level hint and messages), `EnchantmentConfigManager` + `EnchantmentBootstrap` (settings), `KnKPlugin` (grade table refresh), `config.yml` |

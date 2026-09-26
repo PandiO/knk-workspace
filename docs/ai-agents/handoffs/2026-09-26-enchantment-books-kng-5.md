@@ -1,7 +1,7 @@
 # Handoff — enchantment books outside siege (Linear KNG-5)
 
-**Status:** Code complete on `claude/linear-backlog-access-4cr50w` in knk-plugin (`ba74efe`) and knk-web-api
-(`638b50e`); needs a local plugin build and in-game test.
+**Status:** Done and **merged to trunk** 2026-09-26 together with KNG-6 (see the
+[KNG-6 handoff](2026-09-26-grade-enchant-cap-kng-6.md)). The steps below are kept for history.
 **Last updated:** 2026-09-26
 
 Design, decisions and the manual test checklist are in

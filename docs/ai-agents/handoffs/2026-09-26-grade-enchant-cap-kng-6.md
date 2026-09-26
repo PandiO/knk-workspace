@@ -1,42 +1,36 @@
 # Handoff — grade level cap for enchantment books + DropChance (Linear KNG-6)
 
-**Status:** Code complete on `claude/adoring-dirac-p4pn54` in knk-web-api (`3c0d7aa`, `70554f4`) and
-knk-plugin (`8eaf977`, `d86b87b`). Needs a local plugin build, the migration on the dev DB, and an in-game
-test.
+**Status:** Done. The developer tested it in-game and signed off; **merged to trunk** 2026-09-26: knk-web-api `master` (`638b50e` KNG-5; `45449a3`, `435a974`),
+knk-plugin `main` (`ba74efe` KNG-5; `b721384`, `a7bbcef`, `6dd638e`, `bc97d2e`, `8a8d5e2`). knk-paper was never compiled in the cloud, so run `./gradlew build` on `main`.
 **Last updated:** 2026-09-26 (added `8508f41` and `64f91ae`, fixes from the manual tests; see the enchant-book spec §6.1/§6.2)
 
 Design, v1 verification, worked examples and edge cases:
 [`docs/specs/items/GRADE_DROPCHANCE.md`](../../specs/items/GRADE_DROPCHANCE.md). Enchant-book spec §3.4 has
 the summary.
 
-## ⚠ Branch base: read this before merging
+## How it landed on trunk (2026-09-26)
 
-The designated branch `claude/adoring-dirac-p4pn54` was created from **`claude/siege-minigame`** in
-knk-plugin, knk-web-api and knk-web-app, not from trunk. Resetting it onto trunk would have needed a force
-push, which this session wasn't allowed to do. So, as instructed, KNG-5
-(`origin/claude/linear-backlog-access-4cr50w`) was **merged into** it. The branch therefore carries the
-siege work (22 commits in knk-plugin, 16 in knk-web-api) plus KNG-5 plus KNG-6.
+The work branch `claude/adoring-dirac-p4pn54` was based on `claude/siege-minigame`, so it was **not** merged
+as a whole: trunk would have received the unfinished siege work too. Instead, on top of current trunk (after
+the `menu-content` merge):
 
-- **Don't merge this branch to trunk as-is** unless siege is going in too.
-- To land KNG-6 on its own, cherry-pick just the KNG-6 commits onto `claude/linear-backlog-access-4cr50w`
-  (KNG-5 = trunk + one commit):
-  - knk-plugin: `8eaf977`, `d86b87b`, `8508f41` (manual-test fixes: lore order; its creative cursor-apply part
-    was removed again by the next commit), `64f91ae` (right-click chooser only, grade-cap confirmation) and
-    `bc654e3` (chooser lists every compatible item with its status). These touch
-    no siege files; the `KnKPlugin.java` hunk should apply
-    cleanly because it's next to the grades data-access setup, not the siege block.
-  - knk-web-api: `3c0d7aa`, `70554f4`. The migration's `.Designer.cs` and the `KnKDbContextModelSnapshot.cs`
-    hunk were generated on top of the siege schema, so a cherry-pick onto KNG-5 will conflict in the
-    snapshot (and the Designer would describe siege tables). Cleanest: cherry-pick, drop the two migration
-    files and the snapshot hunk, then re-run `dotnet ef migrations add AddGradeDropChanceAndEnchantCap`.
-    After that, paste the backfill loop from this branch's migration (`Backfill` array + the `foreach` in
-    `Up`) into the regenerated file. The `AddGradeDropChanceAndEnchantCapTests` test pins the class name
-    and the SQL.
-- knk-web-app and `claude/siege-minigame` itself were **not changed**.
+- **knk-plugin `main`:** merged `claude/linear-backlog-access-4cr50w` (KNG-5, `ba74efe`), then cherry-picked
+  the KNG-6 and manual-test commits (`b721384`, `a7bbcef`, `6dd638e`, `bc97d2e`, `8a8d5e2`). The only conflict
+  was siege context in `KnKPlugin.java`, resolved to trunk's side; no siege code came along. knk-core/api-client
+  tests 92/92, Paper files stub-type-checked.
+- **knk-web-api `master`:** merged KNG-5 (`638b50e`), then cherry-picked KNG-6 (`45449a3`, `435a974`). The
+  migration was **regenerated** on `master`'s schema as `20260926104605_AddGradeDropChanceAndEnchantCap`, with
+  the same backfill. Checked on MySQL 8: apply all, no pending model changes, roll back to 0, re-apply, and the
+  backfill on existing rows. `dotnet test` 524/529 (the 5 known failures).
+- **knk-web-app:** nothing to merge (no changes).
+- `claude/siege-minigame` and `claude/adoring-dirac-p4pn54` are unchanged. When siege merges later, it will
+  meet these commits on trunk. Expect a snapshot conflict in knk-web-api `KnKDbContextModelSnapshot.cs` (keep
+  both sides' properties). The branch's own copy of this migration (`20260926080330`) must be dropped, or the
+  columns get added twice.
 
 ## What to do next (at your PC)
 
-1. **knk-plugin:** `./gradlew build`. knk-paper has never been compiled with these changes (the cloud
+1. **knk-plugin:** `./gradlew build` on `main`. knk-paper has never been compiled with these changes (the cloud
    blocks `repo.papermc.io`). Likely fix-ups, if any, are small API mismatches in `paper/enchantbook/*`,
    `mapper/ItemGradeTag` or `KnKPlugin.refreshGradeCatalog`.
 2. **knk-web-api:** run it (or `dotnet ef database update`). Migration `AddGradeDropChanceAndEnchantCap`
