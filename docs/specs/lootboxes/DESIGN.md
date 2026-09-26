@@ -1,6 +1,6 @@
 # Lootboxes — Design
 
-**Status:** Draft — awaiting developer review (open questions in §5)
+**Status:** Partly decided — awaiting answers on spawn-area definition, daily cap and ItemInstance (see §5 resolved block)
 **Last updated:** 2026-09-26
 **Linear:** [KNG-19](https://linear.app/kngpandi/issue/KNG-19/lootboxes-per-category-world-lootboxes-with-grade-weighted-rolls-v1)
 **Sources:** `knk-v1-archive` (single commit `4117e7e`): `src/Products/{Product,SpecialItemEvents,Enchantment}.java`,
@@ -485,6 +485,22 @@ Grades 1-5 use v1 treasure's colours (§1.1). Grades 6-10 are new.
 | D14 | The v1 world-loot odds (80/70/60/10/1) are **not** used. `Grade.DropChance` (70/60/40/25/15/…) is the single source. | The brief says to use DropChance. `vision.md:284` asks for a richer formula (enchantments, soulbound); it stays deferred, and the roll engine is where it would go. |
 
 ## 5. Open questions for the developer
+
+### Resolved 2026-09-26 (developer) — and still open
+
+- **Q1 special items:** yes, the recovered one-offs minus the Donator pickaxe. The developer's "flaming samurai" sword was
+  searched for in all v1/v2 source and git history: **not found** (the only "Samurai" in v1 is a Royal bodyguard name,
+  `v1:Menu/Menu.java:2206`). It will be added as a new special blueprint once its display name/material/enchants are given.
+- **Q2 spawn areas:** admin-defined areas — agreed. *Follow-up asked:* how they are defined/stored (answer: `LootboxSpawnArea`
+  rows in MySQL via the API, each referencing a WorldGuard region; proposal to add in-game creation from a WorldEdit
+  selection). Awaiting confirmation.
+- **Q3 box grades ★1-5 only** — agreed.
+- **Q4 daily cap:** *follow-up asked* what "10 per day" means. Awaiting a number (or none).
+- **Q5 box token items as Phase 5** — agreed. *Follow-up asked:* ItemBlueprint vs ItemBlueprint instancing — awaiting a
+  choice between deferring `ItemInstance` (claim id in PDC) and building a minimal `ItemInstance` now.
+- **Q6 grade-capped odds** — default taken.
+
+Original questions below, kept for the record.
 
 1. **Which special items?** v1 source has no hardcoded ultra-rare items (§1.4). Options: (a) the 9 recovered one-offs in §1.4 minus
    Donator pickaxe; (b) (a) plus items you name from memory (give name, material, lore, enchants, abilities); (c) new v3 specials

@@ -1,6 +1,6 @@
 # Teleportation Commands — Design
 
-**Status:** Draft — awaiting developer review (open questions in §5)
+**Status:** Decided — implementation in progress (branch `claude/teleport`)
 **Last updated:** 2026-09-26
 **Linear:** [KNG-17](https://linear.app/kngpandi/issue/KNG-17/teleportation-staff-tp-tpa-requests-spawn-domain-warps-v1-port)
 **Sources:** `knk-v1-archive` (`src/UsefulCommands/PlayerTeleportCommand.java`, `src/UsefulCommands/SpawnCommand.java`,
@@ -519,6 +519,18 @@ teleport:
 - **D12 (review):** Request state is in-memory; no persistence across restarts.
 
 ## 5. Open questions for the developer
+
+### Resolved 2026-09-26 (developer)
+
+1. **Plugin owns `/tp` + `/tphere`** — agreed (Q1).
+2. **`/tpa` for everyone, `/tpahere` Dragon Blood only, price 0 configurable** — agreed (Q2).
+3. **Domain warps with per-domain `TeleportRequiresDiscovery` flag** — agreed (Q3), **including the warp inventory menu,
+   wired into the main menu** (Phase 5 + Phase 6 in scope).
+4. **Any Domain with `TeleportEnabled` can be a warp target** — agreed (Q4).
+5. **`/back`** — yes (Q5): death location only, Dragon Blood, 5 min, not after a siege death.
+6. **Currency (Q6):** default taken — gems for warps, coins for requests.
+
+Original questions below, kept for the record.
 
 1. **Own `/tp`?** (a) Plugin owns `/tp` + `/tphere` (vanilla via `/minecraft:tp`); (b) staff stay on `/knk tp …` only;
    (c) own `/tp` and `/teleport` both. **Recommended: (a)** — the familiar label gets rank checks, vanish and audit;

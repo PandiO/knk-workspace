@@ -35,6 +35,9 @@ Live tracker of in-progress work across all four Knights and Kings repos
 | Feature | Repos / files claimed | Owner (human / session) | Status | Started | Last updated |
 |---|---|---|---|---|---|
 | _(example)_ Siege minigame — capture point sync | web-api: `Services/SiegeService.cs`; plugin: `siege/` package | Claude Code session A | Implementing capture-point event handling | 2026-09-17 | 2026-09-17 |
+| Private messages (KNG-18) — implementation, phases 1-4 | knk-plugin/knk-web-api/knk-web-app branch `claude/private-messages` (plugin `messaging/`, `MessagingService`, social spy, ignore list, PM log) | Claude Code session (Pandi) `session_01EWRtnXV6N4KbkxbAsQhLq1` | Phase 1 in progress | 2026-09-26 | 2026-09-26 |
+| Teleport (KNG-17) — implementation, phases 1-7 | knk-plugin/knk-web-api/knk-web-app branch `claude/teleport` (plugin teleport engine + `/tp` `/tpa` `/spawn` `/warp` `/back`, warp menu; API domain teleport fields + audit/charge) | Claude Code session (Pandi) `session_01EWRtnXV6N4KbkxbAsQhLq1` | Phase 1 in progress | 2026-09-26 | 2026-09-26 |
+| Currency ledger (KNG-21/22) + domain discovery (KNG-20) — **on hold** | branches `claude/currency-payments` created (no commits yet); overlap with KNG-16 (`claude/practical-clarke-od321q`: SalaryService, UserService, UserMappingProfile, UsersController actor/API key, RewardMultiplier) and KNG-23 (same ledger as KNG-21) flagged to the developer | Claude Code session (Pandi) `session_01EWRtnXV6N4KbkxbAsQhLq1` | Waiting on developer: build on KNG-16 or wait for its merge | 2026-09-26 | 2026-09-26 |
 | Legacy inventory-menu screen/item mining + feature allocation | knk-workspace: new `docs/specs/legacy/inventory-menu-screens.md`, `docs/specs/legacy/README.md`; read-only on `knk-v1-archive`/`knk-v2-archive` | Claude Code session (Pandi) | Mining v1/v2 menu screens and items | 2026-09-25 | 2026-09-25 |
 
 ## Recently completed

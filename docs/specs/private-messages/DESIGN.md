@@ -1,6 +1,6 @@
 # Private Messages & Social Spy — Design
 
-**Status:** Draft — awaiting developer review (open questions in §5)
+**Status:** Decided — implementation in progress (branch `claude/private-messages`)
 **Last updated:** 2026-09-26
 **Linear:** [KNG-18](https://linear.app/kngpandi/issue/KNG-18/private-messages-harden-msg-and-r-social-spy-toggle-ignore-list)
 **Sources:** `docs/specs/legacy/commands-v1.md` (§ "/message … /reply … socialSpy"), `commands-v2.md`
@@ -460,6 +460,17 @@ count like the audit cleanup.
 ---
 
 ## 5. Open questions for the developer
+
+### Resolved 2026-09-26 (developer)
+
+1. **Socialspy:** staff + owners, owners' PMs hidden from staff (v1 parity) — agreed (Q5).
+2. **Ignore list in a knk-web-api `UserIgnore` table** — agreed (Q6).
+3. **Logging:** local file log now; server-side log with **30-day** retention once the plugin authenticates (KNG-22) —
+   agreed (Q1, Q2).
+4. **Q3 (Paper command log) / Q4 (tell players):** defaults taken — filter PM lines out of Paper's command log once the
+   server-side log exists; one usage line + server rules.
+
+Original questions below, kept for the record.
 
 1. **Server-side PM persistence — build it, and when?**
    (a) Plugin-local file log only; (b) server-side log after the plugin gets real API auth (CP7 option 1);

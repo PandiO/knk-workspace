@@ -1,6 +1,6 @@
 # Domain Discovery — Design
 
-**Status:** Draft — awaiting developer review (open questions in §5)
+**Status:** Decided — implementation in progress (branch `claude/domain-discovery`)
 **Last updated:** 2026-09-26
 **Linear:** [KNG-20](https://linear.app/kngpandi/issue/KNG-20/domain-discovery-first-entry-rewards-for-townsdistrictsstructures)
 **Sources:** `knk-v1-archive` (`src/Towns/TownEvents.java`, `src/Towns/Town.java`, `src/DataManager/Towns.java`,
@@ -223,9 +223,9 @@ Indexes: **unique `(UserId, DomainId)`** (the idempotency guarantee), `(DomainId
 
 | Field | Town | District | Structure | GateStructure |
 |---|---|---|---|---|
-| `IsEnabled` | true | true | true | **false** |
-| `ExpUnitsMin/Max` (decimal, × title unit, §3.3) | 1 / 4 (v1) | 0.5 / 2 | 0.1 / 0.5 | 0 / 0 |
-| `CoinSalaryHoursMin/Max` (decimal, × title `Salary`) | 2 / 8 | 0.5 / 2 | 0.1 / 0.5 | 0 / 0 |
+| `IsEnabled` | true | true | true | true (was false; developer 2026-09-26) |
+| `ExpUnitsMin/Max` (decimal, × title unit, §3.3) | 1 / 4 (v1) | 0.5 / 2 | 0.05 / 0.25 | 0.05 / 0.25 |
+| `CoinSalaryHoursMin/Max` (decimal, × title `Salary`) | 2 / 8 | 0.5 / 2 | 0.05 / 0.25 | 0.05 / 0.25 |
 | `GemsMin/Max` (int, flat) | 5 / 15 (v1) | 1 / 3 | 0 / 0 | 0 / 0 |
 | `IncludeAncestors` (bool) | – | true | true | true |
 | `UpdatedAt` | | | | |
@@ -459,6 +459,18 @@ action `menu.open {key: discoveries.main}`, Render `menu-available discoveries.m
 - **D12 (review)** Existing hub `main` row gets the tile via a documented one-time step, not by changing the create-only seed policy.
 
 ## 5. Open questions for the developer
+
+### Resolved 2026-09-26 (developer)
+
+1. **Scaling (Q1):** XP by title as v1, coins = salary-hours × title `Salary`, gems flat — agreed. **Change:** Structure
+   *and* GateStructure rewards smaller than the §3.1 placeholders, and GateStructure discovery **enabled**. New seeds:
+   Structure and GateStructure `ExpUnits 0.05/0.25`, `CoinSalaryHours 0.05/0.25`, `Gems 0/0`, `IsEnabled true`.
+2. **Structures (Q2):** all discoverable with small rewards — agreed.
+3. **Existing players (Q5):** treated as new — no backfill, nobody starts with discoveries.
+4. **Q3 (multiplier names) / Q4 (ship before plugin auth):** defaults taken — keep names; the grant endpoint ships behind
+   the KNG-22 `RequireServiceOrPermission` attribute (plugin API key), so Q4's exposure concern is resolved by Phase 0.
+
+Original questions below, kept for the record.
 
 1. **Coin and gem scaling.** v1 only title-scaled XP; coins (1 000–50 000) and gems (5–15) were flat.
    Options: (a) coins = salary-hours × title `Salary`, gems flat; (b) all flat (pure v1); (c) coins and gems both × a per-title
