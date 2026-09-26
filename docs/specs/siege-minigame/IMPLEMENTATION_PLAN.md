@@ -1472,6 +1472,11 @@ knk-plugin `0fa6d06` (knk-paper uncompiled):
   trunk migrations `AddPermissionGroupDisplayColors`, `PremiumRanksInheritDefault`), plugin `f5f696e` (core 741,
   api-client 67). Watch: trunk's tier re-sync calls `ScoreboardUtil.setScoreboard`, which would replace a siege
   member's match scoreboard if staff change their rank mid-match.
+- **Third trunk merge (KNG-16 salary/multipliers)**: web-api `6757812` (siege coins now use master's
+  `RankMultipliersDto`; master's scaled title bonuses moved into the shared `TitleProgression`, so siege promotions get
+  them too; 806/811), plugin `277bd36`, web-app `3e5770e` (Siege Settings added to master's `NAV_LINKS`). Siege reward
+  lines use the shared KNG-16 `RewardMessageFormat` (plugin `dfbdf79`). Live checklist:
+  `docs/reports/2026-09-26-siege-smoke-test-checklist.md`.
 
 ## Phase 10 — Post-MVP
 
