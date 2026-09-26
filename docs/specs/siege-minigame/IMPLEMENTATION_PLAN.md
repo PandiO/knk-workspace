@@ -1441,6 +1441,18 @@ the developer's (live).**
 - **Left for the developer (live):** playtest and balance (durations, rewards, capture constants), and optionally record
   a reproducible first scenario in `SEED_DATA.md`.
 
+**Smoke-test follow-ups (2026-09-26, the developer's first live pass):** both siege branches merged with trunk
+(web-api `9069549`, plugin `d6753df`; the KNG-11 combat safezone now exempts hits the siege rules allow via
+`SiegeService.allowsCombat`). The menu background default is now `GRAY_STAINED_GLASS_PANE` (`b4a9623`). Then
+knk-plugin `0fa6d06` (knk-paper uncompiled):
+- **Remembered spawn choice:** the picker opens at match start (ignoring it stores the team default) and after a
+  respawn only while no choice is stored. A captured objective resets its choosers to their team's default spawnpoint,
+  with a message pointing at `/siege menu` ("Change spawnpoint" in Information).
+- **`/siege menu`**, plus `/siegemenu` (alias `/sgm`, because `/sm` is `/staffmode`): the member's own siege Information
+  menu from matchmaking to match end, refused for non-members. Both labels always pass the in-match command filter.
+- **Capture rings on the floor:** the ring and the capture distance use the floor under the capture point
+  (`SiegeFloor`: up to 4 blocks down, lifted out of a solid block). Objective banners still sit at the stored point.
+
 ## Phase 10 — Post-MVP
 
 - `Scheduled` lobby mode (`ScheduleJson`, next-start computation, announcements ahead of the slot) —
