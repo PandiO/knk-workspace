@@ -50,6 +50,14 @@ found is *dead* event-handler code (whole classes registered as listeners with e
 purpose or still wanted" signal a v3 feature design needs before treating v1/v2 behavior as a
 spec to follow.
 
+## v3 port designs built on these reports
+
+Feature designs (legacy design, gap analysis, v3 design, implementation plan) mined from these reports and
+the source on 2026-09-26: [teleport](../teleport/DESIGN.md) (KNG-17), [private-messages](../private-messages/DESIGN.md)
+(KNG-18), [lootboxes](../lootboxes/DESIGN.md) (KNG-19), [domain-discovery](../domain-discovery/DESIGN.md) (KNG-20),
+[currency-payments](../currency-payments/DESIGN.md) (KNG-21/KNG-22). Corrections to `commands-v1.md` /
+`events-v1.md` found along the way are listed in each design's discrepancy notes.
+
 ## Principles
 - **Verbatim only:** All fields/relations extracted directly from source code.
 - **Annotated:** Include ORM/framework dependencies (Hibernate, Bukkit, etc.).
