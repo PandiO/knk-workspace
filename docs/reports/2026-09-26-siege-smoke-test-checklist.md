@@ -127,8 +127,12 @@ Accounts: **A** (op/owner), **B** (default player), **C** (third account, non-me
 ## Round 2 — re-test after the fixes (plugin `1d00d39`, web-api `066a171`, web-app `df3f756`)
 
 First round results: sections 0-7 passed apart from the items below; section 8 not tested yet. Before re-testing,
-delete the three `siege.*` menu templates (seeds are create-only) and restart the API:
-`DELETE FROM menu_templates WHERE `Key` IN ('siege.overview','siege.information','siege.spawnpoint');`
+delete the three `siege.*` menu templates (seeds are create-only; sections, items and bindings cascade) and
+restart the API:
+
+```sql
+DELETE FROM menu_templates WHERE `Key` IN ('siege.overview', 'siege.information', 'siege.spawnpoint');
+```
 
 - [ ] Web app as a non-staff player: no Dashboard, Forms, Form/Display Builder, Game/Siege Settings, no Create New;
       `/admin/siege-configuration` shows "Staff only". Staff see everything as before.
