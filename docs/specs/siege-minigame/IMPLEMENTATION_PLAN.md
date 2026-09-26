@@ -1464,6 +1464,14 @@ knk-plugin `0fa6d06` (knk-paper uncompiled):
   the players doing it hear a pling (attack) or chime (defence) whose pitch rises with progress, with particles
   members nearby see. A capture adds a totem burst. Re-announce window 15 s per objective and activity, reset on
   capture. The cues are constants at the top of `SiegeCaptureFeedback`.
+- **Objective banners** (plugin `725af30`): the holder's full team banner (patterns included) from match start while
+  fully held, the v2 8-stage gradient towards the leading attacker's colour while being captured, the attacker's full
+  banner at the capture moment. Fixed: an objective captured for good showed the old holder's colour. The banner now
+  stands on the floor under the capture point; a blocked spot logs a warning with coordinates.
+- **Trunk merges again** (KNG-7/8 chat and tab-list colours): web-api `37e589b` (771/776, same 5 known failures; new
+  trunk migrations `AddPermissionGroupDisplayColors`, `PremiumRanksInheritDefault`), plugin `f5f696e` (core 741,
+  api-client 67). Watch: trunk's tier re-sync calls `ScoreboardUtil.setScoreboard`, which would replace a siege
+  member's match scoreboard if staff change their rank mid-match.
 
 ## Phase 10 — Post-MVP
 
