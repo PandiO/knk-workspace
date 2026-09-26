@@ -163,6 +163,24 @@ warmup cancels; request to a siege member refused.
 
 ---
 
+### Phase 3 status — done 2026-09-26 (knk-plugin `claude/teleport`)
+
+Commits `0b81b56` (knk-core `TeleportRequestBook`: 30 s expiry, one outgoing request per requester, one pending per pair,
+per-target cap, take-on-answer; `TeleportRequestSettings`), `3311a92` (`/tpa`, `/tpahere`, `/tpaccept`|`/tpyes`,
+`/tpdeny`|`/tpno`, `/tpcancel`, v1 form `/tpa accept|deny [player]`; `TeleportRequestService`, `TeleportRequestCommand`,
+clickable [Accept]/[Deny]; `TeleportService.check(plan)`; requests cleared on quit/death), `b559df7` (vanish re-check after
+async checks). knk-core 563/563 locally (26 new); knk-paper 32 new tests; CI green
+https://github.com/PandiO/knk-plugin/actions/runs/36253711523.
+Nodes: `/tpa` = `knk.teleport.request`, `/tpahere` = `knk.teleport.request.here` (Dragon Blood). Warmup on whoever moves;
+all guards re-run at accept and after warmup for both players; destination = the other player's position at warmup end.
+Vanish-safe; pre-send refusal when the engine would refuse; 10 s send cooldown (`knk.teleport.bypass.cooldown`).
+Deviations: only price 0 works (non-zero refuses "Paid teleport requests aren't available yet." — charging lands with
+Phase 5's server-side charge path); reverse request refused with a `/tpaccept` pointer; `/tpahere` pre-check doesn't give
+the reason; accepted requests start the 30 s REQUEST cooldown on whoever moved. `setIgnoreCheck(...)` is ready for
+private-messages' `IgnoreService::ignores` (wire at merge). Developer to-do: grant `knk.teleport.request` (Default) and
+`knk.teleport.request.here` (Dragon Blood); new `teleport.request.*` config keys default 30/10/5/0; two-account smoke test.
+Known: players literally named "accept"/"deny" can't be `/tpa`'d; pending requests lost on restart.
+
 ## Phase 4 — `/spawn`
 
 **knk-core:** `ports/api/GameSettingsQueryApi.java`, `domain/settings/KnkSpawnReference.java`.

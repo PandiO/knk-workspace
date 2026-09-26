@@ -189,6 +189,27 @@ disappear after the daily run.
 
 ---
 
+### Phase 3 status — done 2026-09-26 (knk-web-api + knk-plugin, `claude/private-messages`)
+
+KNG-22 merged first (api `0240b7e` = 7d441be, plugin `2f8ab6e` = be0cfc3, web-app fast-forwarded to 4a3c304); ignore endpoints
+now `[RequirePluginService]` (`3772e4c`, shared `Tests/.../Api/ServiceAuthTestHelper.cs`).
+knk-web-api `09b8ccc`: `private_message_log_entries` (no user FKs, unique `ClientMessageId`), `PrivateMessageRetentionDays`
+(existing row → 30), migration `20260926160851_AddPrivateMessageLog`; `POST api/private-message-log/batch`
+`[RequirePluginService]` (≤ 200, deduped, UUIDs resolved server-side, fields capped, future timestamps clamped);
+`GET api/private-message-log?participantUserId=…` `[RequireServiceOrPermission("knk.pmlog.read")]`, newest first, ≤ 100/page,
+each read audited as `PrivateMessagesViewed = 15`; retention cleanup for PMs (each cleanup now isolated). knk-plugin
+`d37dc1c`: knk-core `PrivateMessageLogShipper` (queue 1000, batches of 50, retry with backoff, disable spool
+`private-messages-spool.jsonl`), `PrivateMessageLogApiImpl`, Log4j filter removing PM command lines from Paper's log,
+`/knk health` shows the queue; local file log kept. API tests 737 (732 pass, the 5 baseline; 33 new); plugin CI green
+https://github.com/PandiO/knk-plugin/actions/runs/36259294697; real-MySQL check: migration up/down/up, 40-day row purged /
+10-day kept, batch 401 without key / accepted with key / duplicates on resend, GET audited.
+Deviations: GET requires `participantUserId` (audit target); `api-enabled` defaults true + new `filter-command-log: true`;
+`log4j-core 2.24.1` compileOnly dependency. Developer to-do: `dotnet ef database update`; API key on both sides; on
+existing servers set `private-messages.api-enabled: true` and `filter-command-log: true`; grant `knk.pmlog.read` to the
+owner group; smoke test (PMs visible via the GET within ~5 s; API down → queue drains after restart; no `/msg` lines in
+`logs/latest.log`). Known: the filter is on the root Log4j logger (not verified on a live server); a crash (not a clean
+disable) loses the in-memory queue (the local file log still has it).
+
 ## Phase 4 — Web-app PM log viewer (knk-web-app)
 
 - New `src/apiClients/privateMessageLogClient.ts` (built on `objectManager.ts`/`serviceCall.ts`),

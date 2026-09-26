@@ -161,6 +161,28 @@ mismatches, and `Users.Update(user)` with a changed `Coins` doesn't change the D
 
 ---
 
+### Phase 1 status — done 2026-09-26 (knk-web-api `claude/currency-payments`)
+
+Commits `f0e39be` (ledger schema; migrations `AddCurrencyLedger` + separate `AddCurrencyLedgerImmutabilityTriggers`),
+`403d54f` (`ICurrencyService`/`CurrencyService`, `CurrencyReasons`, `CurrencyRepository`, `CurrencyReconciler`; ledger
+excluded from retention), `546a4d0` (tests), `d5c1418` (BOM fix). Suite: 701 pass, 5 baseline failures, 10 skipped
+(MySQL tests, `[Trait Category=requires-mysql]`, run when `KNK_TEST_MYSQL` is set). On local MySQL 8.0.46 all 38 currency
+tests passed 3× in a row: 50 parallel spends → exactly 10 succeed, balance 0, reconciler clean; 20 parallel same-key grants
+→ 1 posting + 19 replays; same key across users → `IdempotencyKeyReuse` (caught and fixed a real cleanup bug); no
+deadlock with opposite lock orders; presence/profile writes racing postings lose nothing; caller-transaction rollback
+leaves no trace; triggers refuse UPDATE/DELETE (SQLSTATE 45000); CHECKs reject bad rows; retention never deletes ledger rows.
+
+API: see `Services/Interfaces/ICurrencyService.cs` (Post/Grant/Spend/AdminAdjust with native `Set`/Reverse/GetBalances/
+GetHistory; `CurrencyContext.ForSystem`/`ForCaller`; replay-safe idempotency; joins the caller's transaction) and the reason
+codes in `CurrencyReasons` (incl. `DISCOVERY_REWARD` `discovery:{userId}:{domainId}`, `TELEPORT_FEE`, `LOOTBOX_*`).
+Deviations: no opening balances (start empty) — the reconciler checks each user's before/after chain against the users
+column; `PropertySaveBehavior.Ignore` + DB default 0 for balances moved to Phase 2; locking reuses
+`IUserRepository.RunWithUsersLockedAsync`; env-var MySQL fixture instead of Testcontainers; no ledger→users FKs; XP postings
+don't run title progression until Phase 2.
+Developer to-do: `dotnet ef database update` — the trigger migration needs `TRIGGER` plus SUPER or
+`log_bin_trust_function_creators=1` when binary logging is on (MySQL 9.6 default); otherwise run with
+`KNK_SKIP_LEDGER_TRIGGERS=true`. Run the reconciler against a copy of the dev DB (acceptance "0 mismatches" untested here).
+
 ## Phase 2 — Route every existing mutation path through the ledger — size M
 
 **Precondition:** `claude/siege-minigame` and KNG-16 merged into `master`, then this branch rebased.

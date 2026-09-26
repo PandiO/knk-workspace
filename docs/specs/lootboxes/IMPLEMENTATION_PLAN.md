@@ -144,6 +144,26 @@ Samurai shows up in the web app's ItemBlueprint list. Suite = baseline + new tes
 
 ---
 
+### Phase 1 status — done 2026-09-26 (knk-web-api `claude/lootboxes`)
+
+Commits `9f013af` (minimal `ItemInstance` + `ItemInstanceEnchantment`, migration `AddItemInstances`,
+`ItemInstanceService.BuildAsync` returns an unsaved row for the caller's transaction, `GET api/ItemInstances/{id}`, blueprint
+delete refused 409 when instances exist), `30b8b12` (10 lootbox tables, migration `AddLootboxes`, `AuditAction`
+`LootboxSpawnedByAdmin = 13` / `LootboxGranted = 14`), `ae9e291` (`LootboxRollEngine`, `ILootRandom`/`CryptoLootRandom`,
+`LootboxRollInputBuilder`, 30 engine tests incl. a 200k-roll statistical check), `321df07` (DTOs, services, 4 controllers,
+odds preview, `LootboxSeed`). Tests 693 (688 pass, the 5 baseline failures; 58 new). Migrations CI green:
+https://github.com/PandiO/knk-web-api/actions/runs/36254107623; on local MySQL 8.0 both migrations up/down/up, seed idempotent,
+Weapons ★5 odds ★3/★4/★5 = 50/31.25/18.75 %, Flaming Samurai 0.05 %, Skull splitter / Lavonian Bow 0.2 % own chance.
+
+Seed: 7 disabled types (one per category), 13 enchant rolls (Weapons/Armor/Tools), `Lootbox Special` tag, Flaming Samurai
+blueprint, 10 special entries (Flaming Samurai 500/M; v1 one-offs minus the Donator pickaxe 2000/M, each in its category's
+box), settings row. Deviations: admin endpoints use `[RequirePermission(StaffPermissions.ManageLootboxes)]` (new node
+`knk.admin.lootbox.manage`); join entities are `[FormConfigurableEntity]` like `KitContent`; saving a special entry tags its
+blueprint; deleting a referenced type → 409 `InUse` (disable instead); odds show specials' own and first-hit chance;
+books/stackables keep blueprint defaults without rolled enchants; `LootboxConfiguration.Enabled` defaults true (all types
+disabled). Developer to-do: apply `AddItemInstances` + `AddLootboxes` (seed runs on startup); grant
+`knk.admin.lootbox.manage` to web admins.
+
 ## Phase 2 — Runtime API (knk-web-api)
 
 **New/changed**

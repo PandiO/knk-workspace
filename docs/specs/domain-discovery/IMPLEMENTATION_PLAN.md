@@ -145,6 +145,29 @@ unique (lowest id wins); snapshot conflicts with other branches' migrations at m
 
 ---
 
+### Phase 2 status — done 2026-09-26 (knk-plugin `claude/domain-discovery`)
+
+Commits `42c582a` (knk-core `DiscoveriesApi` port, `DiscoveryTracker`, `DiscoverySpool`, `DiscoveryRecorder`), `163a7af`
+(knk-api-client `DiscoveriesApiImpl`, DTOs matching Phase 1 field-for-field), `ac32dcf` (knk-paper `UserDataLoadedEvent`,
+`DomainDiscoveryListener`, `DiscoveryEligibility`, `DiscoveryEffects`, `DiscoveryMessages`, `DiscoveryFlushTask`, `discovery:`
+config block). Local: knk-core 523/523 (24 new), api-client 54/54 (7 new); CI green
+https://github.com/PandiO/knk-plugin/actions/runs/36258798189.
+Detection from raw WG region ids on block-change moves and teleports (monitor priority, ignores cancelled events, next-tick
+re-check), plus join via `UserDataLoadedEvent` (loads the known set, queues current regions, replays the spool). Exclusions:
+loading, staff/owner mode (incl. vanish), frozen, creative/spectator, siege participants (hook
+`getDiscoveryEligibility().setSiegeParticipantCheck(...)` — siege isn't on trunk). Batching ≤ 50 ids, 12 requests/min/player,
+60 s back-off on RateLimited. Effects per place top-down (Town → District → Structure): sound, particles (+ firework for
+Towns), v1-coloured line, reward lines via KNG-16's `RewardMessageFormat` (new `discovery`/`discoveryTotals`), one
+`PromotionEffects.show` on title change, balance/scoreboard refresh. Spool: per-player JSON in
+`plugins/KnightsAndKings/discovery-spool/`, network/5xx only, replayed on enable / every 60 s / next join.
+Deviations: top-down order (plan's acceptance line said bottom-up, contradicting DESIGN §3.4); chat template has no
+`{rewards}` placeholder (separate lines); new keys `effects.spacing-ticks`, `effects.particle-spread`; leaving staff/creative
+inside a place discovers it on the next block move. Endpoints needing KNG-22 service auth: `POST api/users/{id}/discoveries`,
+`GET …/known`, `…/progress`, `…/summary`. Smoke test: new Town in/out/in; join inside a District; teleport into a Structure;
+no-entry domain bounce; staff/creative/frozen excluded; API down → spool file → restart API → delivered within ~60 s.
+Known: a refusal applied after a slow domain lookup can still reward; 4xx (incl. 401 bad key) only logged; one extra WG
+lookup per block move.
+
 ## Phase 3 — Discoveries menu, hub tile, commands (knk-web-api seed + knk-plugin)
 
 **Tasks**
