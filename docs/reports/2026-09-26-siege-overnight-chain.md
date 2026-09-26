@@ -2,7 +2,7 @@
 
 **Status:** Link 1 continuing on the developer's instruction (Phase 6 done; knk-paper code uncompiled). Each chain session appends its phase section
 and rewrites the Morning summary. Rules: `docs/ai-agents/handoffs/SIEGE_OVERNIGHT_CHAIN.md`.
-**Last updated:** 2026-09-26 (link 1: Phase 6b done, starting 7a)
+**Last updated:** 2026-09-26 (link 1: Phase 7a done, starting 8b)
 
 ## Morning summary
 
@@ -15,8 +15,8 @@ in a scratch build that uses Maven Central only.
 | Phase | State | Branch heads after it | Notes |
 |---|---|---|---|
 | 6 — Match persistence and rewards | done (6a tested; 6b knk-paper uncompiled) | web-api `7d4fd44`; plugin `378f8a1` | see Phase 6 section |
-| 7a — Gate integration + area lockdown | in progress | | |
-| 8b — Siege menus | not started | | |
+| 7a — Gate integration + area lockdown | done (web-api tested; knk-paper uncompiled) | web-api `07e0a5f`; plugin `16a1436` | see Phase 7a section |
+| 8b — Siege menus | in progress | | |
 | 7b — Non-member gate view | not started | | |
 | 9 — Seeds and docs (non-live parts) | not started | | |
 
@@ -82,3 +82,24 @@ placeholder and `ProvisionalRewardCalculator` kept but unused; 4-7 minor.
 
 **Risks.** Uncompiled knk-paper edits (small: `KnKPlugin.initializeSiege`/`onDisable`, `SiegeService` reward lines,
 `LoggingSiegeMatchesCommandApi.abortUnfinished`); the untested `d41be49` trunk merge underneath.
+
+### Phase 7a — gate integration + area lockdown (link 1)
+
+**Commits.** knk-web-api: `9328c4e` (gate-lockdown/-restore/restore-stale-gates/gate-snapshots endpoints,
+runtime-config `areaGateStructureIds`, overrides endpoint permission), `07e0a5f` (tests). knk-plugin: `b69b786`
+(core `SiegeGatePlan`, gate port/records, api-client impl), `16a1436` (paper: `SiegeGateController`,
+`SiegeGateListener`, `SiegeAreaLockdown`(+listener), observer hooks, wiring). **knk-paper not compiled.**
+
+**Tests.** web-api 710/715 (+6 new, same 5 known failures). Scratch build: knk-core 626 (+4), knk-api-client 50
+(+2), all green. No migration.
+
+**Flagged decisions** (full list: plan → "Phase 7a status"): ★1 gate lockdown at the hub (T-15), not T-0; ★2
+AnimateDuringSiege not honoured (every change animates); ★3 right-click opens/closes for the owner alliance; 4 the
+match proceeds if persisting the lockdown fails; 6 restore respawn/health write race; 8 area lockdown only with
+districts, bounding-box exit point, plugin teleports exempt.
+
+**Live checklist.** Plan → "Phase 7a status" → 7 steps (lockdown at hub, control, damage, capture hand-over, restore,
+crash recovery, area lockdown).
+
+**Risks.** Uncompiled and the largest knk-paper change so far (4 new classes); gate animation interplay (open/close
+while animating); WorldGuard queries on every block-changing move while a lockdown is active.

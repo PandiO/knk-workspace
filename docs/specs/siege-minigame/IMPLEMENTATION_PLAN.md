@@ -7,11 +7,12 @@ Bukkit-free core tested without a server; Phase 5's Paper runtime (5a loop/comma
 5c enchant books) wired into the plugin and tested without a server, partly verified live - the manual checklist
 in "Phase 5 status" is the developer's sign-off); **Phase 6 code complete**: 6a (web-api match endpoints +
 server-side rewards) tested; 6b (plugin wiring) written on the developer's go-ahead with its knk-paper part
-**not compiled** (the cloud chain can't reach paper-api - see "Phase 6b status"); Phases 7 + 9 not started. Phase 8a
+**not compiled** (the cloud chain can't reach paper-api - see "Phase 6b status"); **Phase 7a (gate integration +
+area lockdown) code complete** the same way (web-api tested, knk-paper uncompiled); Phases 7b + 9 not started. Phase 8a
 (InventoryMenu engine extensions) built and merged into `claude/siege-minigame`, not verified live; Phase 8b open;
 Phase 10 is post-MVP.
-**Last updated:** 2026-09-26 (overnight chain link 1: "Phase 6 status" + "Phase 6b status" blocks - 6a web-api done,
-6b plugin wiring done but knk-paper uncompiled; earlier the same day: Phase 5 playtest fixes and status block)
+**Last updated:** 2026-09-26 (overnight chain link 1: "Phase 6 status", "Phase 6b status", "Phase 7a status" blocks;
+knk-paper code from 6b on is uncompiled; earlier the same day: Phase 5 playtest fixes and status block)
 
 Ref: `DESIGN.md` (decisions — not restated here), `MENU_TEMPLATES.md`,
 `docs/reports/2026-09-25-siege-minigame-gap-analysis.md`. Plan format follows
@@ -1195,6 +1196,84 @@ reach `repo.papermc.io`; the knk-paper edits were checked by reading and by a sy
 stays destroyed; objective capture opens and hands over control; non-selected gates forced open and
 unbreakable; everything restored after end **and** after a hard kill of the server mid-match.
 **Exit:** D3 behaviour demonstrated live.
+
+**Phase 7a status (2026-09-26, overnight chain link 1, on the developer's "just continue anyway"): code complete on
+`claude/siege-minigame` in knk-web-api (tested) and knk-plugin (knk-core/knk-api-client compiled and tested;
+knk-paper NOT compiled - the cloud container can't reach paper-api), pushed. Not played live.** Commits: knk-web-api
+`9328c4e` (endpoints, runtime-config, overrides permission), `07e0a5f` (tests); knk-plugin `b69b786` (core +
+api-client), `16a1436` (paper). No migration (the Phase 2 snapshot table and `CurrentSiegeId` FK were enough).
+- **knk-web-api:** `SiegeMatchGateService` + `SiegeMatchesController` endpoints `POST {id}/gate-lockdown` (per gate:
+  a `SiegeMatchGateSnapshot` with the structure values it changes + each door's open state/health/destroyed is written
+  first, then `CurrentSiegeId`, `IsSiegeObjective` and the overrides - `AllowPassThroughOverride = false`,
+  `CanRespawnOverride = false`, `IsInvincibleOverride` per role, `OpenedStateOverride = OPEN` for area gates - in one
+  `SaveChanges`; a repeat keeps the first snapshot; a gate held by another running match → 409), `POST {id}/gate-restore`
+  (re-apply + delete, door rows back, transient states collapsed, returns the snapshots), `POST restore-stale-gates`
+  (startup recovery: every leftover snapshot + clears `CurrentSiegeId` on gates without one), `GET {id}/gate-snapshots`.
+  Runtime-config scenarios gain **`areaGateStructureIds`** (the other gates in the scenario's districts, or in the
+  town when it has none). `PATCH /api/GateStructures/{id}/overrides` now carries `[RequirePluginServiceKey(AllowAdmins
+  = true)]` - the gate QoL 5.3 "still open #5" permission settled as "service client + admins" (open while the key is
+  unset, as before). Tests: `SiegeMatchGateServiceTests` (6). Suite **710/715**, same 5 known failures.
+- **knk-core / knk-api-client (compiled, tested):** `SiegeGatePlan` (roles SELECTED/AREA, runtime owners, `canControl`
+  = owner's alliance, `canDamage` = enemies of the owner on damageable selected gates, `onCapture` = owner := capturer's
+  team + GateStateOnCapture, every recapture), `SiegeGatesCommandApi` + `KnkSiegeGateRecords`,
+  `SiegeGatesCommandApiImpl`, `KnkSiegeScenario.areaGateStructureIds`. Scratch build: knk-core 626, knk-api-client
+  50 (2 skipped), all green (+4, +2).
+- **knk-paper (uncompiled):** `SiegeMatchObserver.areaLockdownStarted` (fired at the hub, T-15) and `roundReleased`
+  (fired in `releaseAll`, i.e. every end/cancel/admin stop/shutdown, after members were released, before the round is
+  cleared). `SiegeGateController`: snapshots every affected structure from the gate cache, persists the lockdown, then
+  (when the API answered, or failed - then without crash safety) sets the local overrides and drives each door with
+  `GateManager.openGate/closeGate`; objective capture → hand-over; round release → local overrides back, destroyed
+  doors respawned (`HealthSystem.respawnGate`), health and open state restored, `POST gate-restore`; `recoverOnStartup`
+  → `restore-stale-gates`, then `GateManager.reloadGates()` (world blocks then follow via the gate world-sync
+  mechanisms B/C). `SiegeGateListener`: right-click on a closed locked gate (`GateDoorInteractEvent`) opens it, on an
+  open one (spatial-index lookup in `PlayerInteractEvent`) closes it - owner alliance only, pass-through never runs;
+  `GateDoorDamageEvent`/`GateDoorIgniteEvent` cancelled unless an enemy of the owner hits a damageable selected gate.
+  `SiegeAreaLockdown` + `SiegeAreaLockdownListener`: while a round is in HUB/IN_PROGRESS non-members can't walk or
+  teleport into the scenario's district regions (WorldGuard query, same API as `WorldGuardRegionTracker`) and are moved
+  just outside at lockdown; `knk.siege.bypass.lockdown` (new, plugin.yml) skips it. `KnKPlugin` keeps the gate
+  `HealthSystem` as a field and wires both.
+- **Decisions (7a; ★ = review first):**
+  1. ★ **The gate lockdown happens at the hub (T-15), not at T-0**, via the new `areaLockdownStarted` hook (DESIGN §6.5
+     "lock scenario" first; gives the API call time; players are at the hub, not at the gates).
+  2. ★ **AnimateDuringSiege is not honoured:** every siege state change animates (`openGate`/`closeGate`); the gate
+     package has no public instant-placement API (`GateRestingFramePlacer` is package-private). Instant changes need a
+     small public method in `gates/` - left for a follow-up.
+  3. ★ **Right-click is the control:** owners open a closed gate / close an open gate by right-clicking it (today a
+     right-click only triggers pass-through, which is off during the match). Opening/closing moves every non-destroyed
+     door of the structure.
+  4. The API persists the lockdown before the runtime changes; if that call fails the match still gets its gates (logged,
+     no crash safety for that match).
+  5. Area gates are forced open + invincible; destroyed doors stay destroyed until the end (`CanRespawnOverride =
+     false`); doors destroyed *before* the match are left alone at restore.
+  6. Restoring respawns doors with `HealthSystem.respawnGate` (broadcasts its usual "respawned" message, persists full
+     health once) and then sets the snapshot health in the cache; the API restore writes the snapshot health to the DB.
+     The two async writes can race - a door may briefly persist at full health.
+  7. On shutdown no blocks can change; the API restore (or next start's recovery + gate reload) fixes the database and
+     then the world.
+  8. Area lockdown only with districts (a scenario without districts isn't locked; readiness already warns). Exit point
+     = just outside the union bounding box of the locked regions, nearest side, highest block - may land in a
+     neighbouring locked district in odd shapes. Plugin-caused teleports are never blocked (the vault restore needs them).
+  9. Gate structures not in the plugin's gate cache are skipped (logged); a gate already locked by another lobby is
+     skipped (the runtime locks normally prevent that).
+- **Manual live verification (7a; after `restore-stale-gates` has run once on start):**
+  1. Start a round on `test-cinix`; at the hub (T-15): log "N gate structure(s) locked down for match X"; the DB
+     `siege_match_gate_snapshots` has one row per affected gate; `gate_structures.CurrentSiegeId` = X; South Gate/Northern
+     Gate go to their initial state, other gates in the districts open.
+  2. As a defender right-click the closed selected gate → it opens; again → closes. As an attacker → "held by the
+     enemy". A non-member → "part of the siege". Area gate → "held open".
+  3. Attackers hit a damageable selected gate until destroyed → stays destroyed; defenders can't damage their own gate;
+     area gates take no damage; nobody can pass through.
+  4. Capture the objective gate's objective → the gate opens (GateStateOnCapture) and now the attackers control it.
+  5. End the match → all gates back to their pre-lockdown state (destroyed door respawned, health, open/closed), snapshots
+     deleted, `CurrentSiegeId` null.
+  6. Kill the server mid-match, restart → log "Gate recovery restored N gate structure(s)"; DB back; gates in the world
+     correct after walking into the district (or within the periodic sync).
+  7. Area lockdown: a non-member inside a district at T-15 is moved out; walking or `/tp`-ing in is refused during the
+     round; a member who leaves is teleported back to their saved spot even inside the area; after the end entry works.
+- **What 7b must wire:** `SiegeGateController` owns the snapshot (`StructureSnapshot.doors`, pre-lockdown open state per
+  door) and knows locked structures (`isLocked`, the plan's roles); the non-member view needs those plus the member test
+  (`SiegeLobbyRuntime.isMember`) and the `areaLockdownStarted`/`roundReleased` hooks; `SiegeConfiguration.nonMemberGateView`
+  is already in the runtime config (`KnkSiegeConfiguration`).
 
 ## Phase 8 — Menus (knk-web-api, knk-plugin) — after Phase 5
 
