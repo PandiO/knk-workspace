@@ -2,8 +2,9 @@
 
 **Status:** Implemented on `claude/linear-backlog-access-4cr50w` (knk-plugin `ba74efe`, knk-web-api `638b50e`);
 knk-paper code not compiled in the cloud container (see §6), in-game test open. Tracks Linear **KNG-5**; the level cap is **KNG-6**.
-**Last updated:** 2026-09-26 (initial version, written alongside the implementation. The earlier
-local-only draft this path was reserved for was never committed; this replaces it.)
+**Last updated:** 2026-09-26 (KNG-6 grade level cap added: §3.2, §3.4. The initial version was written
+alongside the KNG-5 implementation; the earlier local-only draft this path was reserved for was never
+committed.)
 
 ## 1. Goal
 
@@ -95,11 +96,13 @@ from the item. It returns the first result that applies:
 | `INVALID_BOOK` | Not a permanent book; payload missing, malformed, or the enchantment isn't known on this server |
 | `NOT_ENCHANTABLE` | Target is air, a book, or an enchanted book; or vanilla `canEnchantItem` is false; or, for a custom enchantment, the target is not gear (no durability) |
 | `CONFLICT` | Vanilla only: the book's enchantment conflicts with one the target already has |
-| `NO_IMPROVEMENT` | New level `max(existing, book)` is not above the existing level |
+| `LEVEL_CAPPED` | KNG-6: the target's existing level is already at or above its grade cap (§3.4) |
+| `NO_IMPROVEMENT` | New level `min(max(existing, book), cap)` is not above the existing level |
 | `APPLIED` | Otherwise |
 
 On `APPLIED`:
 
+- the level is `max(existing, book)` lowered to the grade cap, plus one on a bonus roll (§3.4);
 - **vanilla:** `addEnchant(enchantment, level, ignoreLevelRestriction = true)`, the same unsafe policy as the
   v1 seed data and `/knk itemblueprints give`;
 - **custom:** `EnchantmentRepository.applyEnchantment` on the lore (replaces an existing line or appends one);
@@ -127,12 +130,30 @@ Blueprints are named `Enchanted Book (Poison II)`.
 An enchantment definition that doesn't exist yet is logged and skipped, never invented. For example, a
 vanilla one the V1 seed didn't create on a DB where it ran before this seed existed.
 
-### 3.4 Out of scope
+### 3.4 Grade level cap (KNG-6)
 
-- **KNG-6 grade cap.** Its formula is decided (v1's `maxLevel / (6 - grade)` for grades 1–5, uncapped for
-  6–10, divisor configurable per grade). But the `Grade.EnchantLevelCapDivisor`/`DropChance` patches from
-  that session were never committed. When KNG-6 is implemented, the cap belongs in `EnchantBookRules.evaluate`
-  as one more check before `NO_IMPROVEMENT`, fed from the target item's grade.
+Implemented on `claude/adoring-dirac-p4pn54`. Full design, v1 verification, worked examples and edge cases:
+[`../items/GRADE_DROPCHANCE.md`](../items/GRADE_DROPCHANCE.md).
+
+- **Formula (v1's `EnchantbookClick.canEnchant()`):** `cap = definitionMaxLevel / divisor(grade)`, integer
+  division. Divisors are a per-grade DB field (`Grade.EnchantLevelCapDivisor`): 5, 4, 3, 2, 1 for grades 1-5,
+  null (uncapped) for 6-10. The max level is the enchantment *definition's* (as v1), stamped on the book as
+  `knightsandkings:knk_enchant_book_max`.
+- **Check:** in `EnchantBookRules.evaluate`, before `NO_IMPROVEMENT`. An item already at or above its cap
+  gives `LEVEL_CAPPED` and keeps the book. Otherwise the result is `min(max(existing, book), cap)`: a book
+  above the cap is applied at the cap (v1 let a book add whatever headroom was left), and the chooser shows
+  "Grade limit: only up to N".
+- **Bonus level:** v1's extra level, `enchant-books.grade-cap.bonus-level-chance` (default 0.20; v1 was
+  really 21%), never above the cap, or above the max level when uncapped.
+- **Target grade:** PDC tag `knightsandkings:knk_grade` (stars), stamped by
+  `ItemBlueprintBukkitMapper.fromBlueprint`. The divisor is looked up live in knk-core's `GradeCatalog`,
+  refreshed from the API. Older items fall back to their `Grade: ★★★` lore line.
+- **Decided defaults (flagged):** ungraded items count as grade 1 (`ungraded-stars`); custom enchantments are
+  uncapped, as in v1 (`apply-to-custom`); siege books stay uncapped (their enchantments are temporary; the
+  siege branch is untouched).
+
+### 3.5 Out of scope
+
 - Siege book behavior: unchanged, it lives on `claude/siege-minigame` only.
 - Web app: no change needed. Blueprints with default enchantments are already editable there.
 
@@ -147,6 +168,7 @@ vanilla one the V1 seed didn't create on a DB where it ran before this seed exis
 | 5 | knk-plugin / knk-paper | `paper/enchantbook/EnchantBooks` (evaluate/apply), `EnchantBookMenu` (chooser), `listeners/EnchantBookListener`; wired in `KnKPlugin` after the enchantment runtime | done |
 | 6 | knk-web-api | `Models/Item/EnchantBookSeed.cs` + `Program.cs` call + seed tests | done |
 | 7 | — | In-game test on the dev server (see §5) | **open, needs the developer's PC** |
+| 8 | all | KNG-6 grade level cap (§3.4, `../items/GRADE_DROPCHANCE.md`) | done on `claude/adoring-dirac-p4pn54`; knk-paper uncompiled |
 
 ## 5. Manual test checklist (dev server)
 
