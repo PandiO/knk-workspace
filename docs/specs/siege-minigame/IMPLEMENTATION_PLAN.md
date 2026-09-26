@@ -9,10 +9,11 @@ in "Phase 5 status" is the developer's sign-off); **Phase 6 code complete**: 6a 
 server-side rewards) tested; 6b (plugin wiring) written on the developer's go-ahead with its knk-paper part
 **not compiled** (the cloud chain can't reach paper-api - see "Phase 6b status"); **Phase 7a (gate integration +
 area lockdown), Phase 8b (siege menus) and Phase 7b (non-member gate view) code complete** the same way (web-api
-tested, knk-paper uncompiled); Phase 9 not started. Phase 8a
-(InventoryMenu engine extensions) built and merged into `claude/siege-minigame`, not verified live; Phase 8b open;
+tested, knk-paper uncompiled); **Phase 9 non-live parts done** (seed/model defaults, disabled example lobby, docs;
+playtesting/balancing are the developer's). Phase 8a
+(InventoryMenu engine extensions) built and merged into `claude/siege-minigame`, not verified live; Phase 8b code complete (above);
 Phase 10 is post-MVP.
-**Last updated:** 2026-09-26 (overnight chain link 1: "Phase 6", "6b", "7a", "7b" and "8b status" blocks; knk-paper
+**Last updated:** 2026-09-26 (overnight chain link 1: "Phase 6", "6b", "7a", "7b", "8b" and "9 status" blocks; knk-paper
 code from 6b on is uncompiled; earlier the same day: Phase 5 playtest fixes and status block)
 
 Ref: `DESIGN.md` (decisions — not restated here), `MENU_TEMPLATES.md`,
@@ -943,7 +944,8 @@ trunk merge. No web-app or web-api change.
     +10 vs each extra defender +6): **accepted by the developer as is** (2026-09-26; raising the defend values to
     12/12 to restore the equal-numbers standstill was offered and declined). Rationale and alternatives: DESIGN §7.2
     "Playtest tuning".
-    Takes effect after `/siege admin reload` between matches. Seed defaults and `legacyDefaults()` still carry 5/2/5 (align in Phase 9).
+    Takes effect after `/siege admin reload` between matches. Seed defaults and `legacyDefaults()` still carry 5/2/5 (align in Phase 9). *(Phase 9: the web-api model defaults now
+    carry 10/2/10; `legacyDefaults()` stays 5/2/5 on purpose - see "Phase 9 status".)*
   - Tests after the fixes: knk-core 694, knk-api-client 38, knk-paper 259, all green.
 - **What Phase 6 must wire:** build the HTTP `SiegeMatchesCommandApiImpl` and pass it instead of
   `LoggingSiegeMatchesCommandApi` in `KnKPlugin.initializeSiege()` - the call sites already exist:
@@ -1299,9 +1301,8 @@ logic to unit-test here; the view needs a live server with a member and a non-me
      changes; if it looks bad live, switch the lobby's config to `PassThroughOnly` (the developer's stated minimum).
   2. ★ **The pass-through is triggered by right-click** (the gate's usual pass-through gesture), not by walking into
      the gate.
-  3. The pass-through is refused while the scenario area is locked down (the far side is the siege area) - so it only
-     helps on scenarios with `LockdownScenarioArea = false` or gates outside the locked districts' reach... in practice
-     rarely; see follow-ups.
+  3. The pass-through is refused while the scenario area is locked down (the far side is the siege area). So in practice
+     it only helps on scenarios with `LockdownScenarioArea = false`; see follow-ups.
   4. No `PlayerChunkLoadEvent` hook: leaving the 96-block range drops the record, so coming back re-sends; chunk
      reloads happen beyond that range.
   5. Mid-animation the "hidden" cells are the target resting frame's, an approximation.
@@ -1410,6 +1411,35 @@ knk-plugin `901c599` (core + api-client), `0522e44` (paper).
 - Balancing pass on capture constants, durations, rewards (DESIGN §7.2 note).
 - Update `docs/vision/vision.md` §7 status lines, `docs/specs/README.md`, and write
   `docs/guides/` admin how-to ("Authoring a siege scenario").
+
+**Phase 9 status (2026-09-26, overnight chain link 1): non-live parts done - seed/model defaults and the example
+lobby on knk-web-api `claude/siege-minigame` (`ee29768`, tested), docs in the workspace. Playtesting and balancing are
+the developer's (live).**
+- **Capture defaults:** `SiegeConfiguration.CaptureAttackBase` and `CaptureAttackPerExtraInstantVictory` default to
+  **10** (was 5): the dev DB's playtest tuning A1 10, A2 2, IV A2 10, D 6/3/6 (DESIGN §7.2 "Playtest tuning"). These
+  are C# property initializers only (the model snapshot has no `HasDefaultValue` for them), so **no migration**; the
+  API creates the configuration row from the model on first read, so this only affects a fresh DB. An existing row
+  (the dev DB) keeps its values. `KnkSiegeConfiguration.legacyDefaults()` in knk-core stays 5/2/5 (the charter: leave
+  it alone; it's the plugin's offline fallback, which mirrors the legacy plugin).
+- **Example lobby:** `Models/Siege/SiegeLobbySeed.cs`, create-only by key `example`: "Example siege (disabled)",
+  `IsEnabled = false`, Continuous, 300 s / 900 s, 2 candidates + Random, **no rotation**. Wired last in the
+  `Program.cs` seed block. Disabled lobbies aren't in runtime-config, so the plugin never sees it. **No seeded
+  scenario** (it needs real in-world points).
+- **Docs:** new admin how-to `docs/guides/authoring-a-siege-scenario.md` (banner/clan → scenario → readiness codes →
+  lobby → settings → `/siege admin reload`); `docs/vision/vision.md` §7 status lines; `docs/specs/README.md` siege
+  entry.
+- **Tests:** web-api **718/723**, the same 5 known failures (+2 new `SiegeLobbySeedTests`; 3 default assertions moved
+  from 5 to 10).
+- **Decisions (9):**
+  1. Only the two differing values changed; the model comment names the legacy values.
+  2. The example lobby has no rotation, so enabling it can't start a match until a ready scenario is added. That's
+     deliberate: a seed can't know a scenario id.
+- **Manual (developer):** on a **fresh** DB the configuration page shows A1 10 / IV A2 10 and the lobby list shows the
+  disabled `example`. On the dev DB the only change is a new `example` lobby row at the next API start. The seed is
+  create-only *by key*, so a **deleted** row comes back on the next start; to get rid of it, rename its key or just
+  leave it disabled.
+- **Left for the developer (live):** playtest and balance (durations, rewards, capture constants), and optionally record
+  a reproducible first scenario in `SEED_DATA.md`.
 
 ## Phase 10 — Post-MVP
 

@@ -205,16 +205,29 @@ A "random birth advantage" mechanic (starting conditions randomized at character
 
 ## 7. Combat, Siege & Minigames
 
+> **Status (2026-09-26):** the v3 siege minigame (7.1–7.4) is **code complete through its MVP phases** on the
+> `claude/siege-minigame` branches, not yet merged or playtested end to end: authoring in the web app, the plugin's
+> match loop with chat fallbacks, match history and server-side rewards, gate lockdown and the non-member gate view,
+> and siege menus. The plugin code from match recording on hasn't been compiled yet. What's left is playtesting and
+> balancing, then Phase 10 (scheduled lobbies, post-MVP). Spec and per-phase status:
+> [`docs/specs/siege-minigame/IMPLEMENTATION_PLAN.md`](../specs/siege-minigame/IMPLEMENTATION_PLAN.md); admin how-to:
+> [`docs/guides/authoring-a-siege-scenario.md`](../guides/authoring-a-siege-scenario.md).
+
 ### 7.1 Scenario vs. Siege [MVP]
 
 - **Scenario** = the persisted, admin-configurable "map and mode": number of sides (default 2: attackers/defenders, but can be more — e.g. two rival attacking teams vs. one defender), teams, per-team spawnpoints, objectives, and which side holds which objective at the start.
 - **Siege** = the live match instance running on top of a chosen Scenario.
+
+*Status: built as specified (N teams in alliance groups, readiness checks, weighted lobby rotation).*
 
 ### 7.2 Objectives [MVP]
 
 Classic 2-team layout: the town hall (or equivalent) is the main objective and determines the winner when captured; town gates and other strategic points are side objectives, destroyed once captured. Held objectives double as spawnpoints for the team holding them — **already implemented** in the legacy v2 codebase (confirmed: the respawn menu merges a team's held objectives with its dedicated spawnpoints) and should be carried forward as-is.
 
 Recommendation: adopt v2's generalization of "any objective can be flagged as game-ending" (an `instantVictory` flag per objective) rather than v1's hardcoded "only the Main Objective ends the match" — it's a strictly better version of the same mechanic.
+
+*Status: built: per-objective `InstantVictory`, spawn-when-held, gate objectives; capture constants tuned from a first
+playtest (DESIGN §7.2).*
 
 ### 7.3 Team identity [MVP]
 
@@ -224,9 +237,15 @@ Each Town has a default team identity for sieges, sourced directly from the mini
 
 Default ally/enemy standing between clans is a further, longer-term layer on top of this (ties to the diplomacy system in 3.6) — the name/color/banner template and the admin's default-vs-ad-hoc choice are the MVP-scope pieces.
 
+*Status: built: `BannerDesign` + `Clan` (default clan per town) and ad-hoc scenario teams. Ally/enemy standing
+between clans is not built (long-term).*
+
 ### 7.4 Build approach [MVP-relevant]
 
 Architecturally, v2's Siege system is the more sophisticated of the two legacy versions (proper data model, N-team/alliance scaffolding, richer objective flags) but was never a finished, correctly-functioning minigame — its core scoring and win-resolution logic is hardcoded to one specific team name and would misbehave for any other matchup, and there's no working in-game flow to create new Scenarios/Objectives/Teams from scratch. v1's simpler system, by contrast, is a genuinely complete, self-sustaining, correctly-scoring minigame. **Direction for v3: rebuild v1's actually-working functionality on top of v2's more robust architecture**, rather than treating either version as sufficient on its own.
+
+*Status: followed: v1's loop and scoring were rebuilt on the v3 stack (web-api owns data and rewards, the plugin
+runs matches).*
 
 ### 7.5 Other combat systems [Long-term]
 
