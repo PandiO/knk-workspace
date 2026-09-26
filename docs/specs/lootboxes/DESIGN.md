@@ -1,6 +1,6 @@
 # Lootboxes — Design
 
-**Status:** Partly decided — awaiting answers on spawn-area definition, daily cap and ItemInstance (see §5 resolved block)
+**Status:** Decided — implementation in progress (branch `claude/lootboxes`)
 **Last updated:** 2026-09-26
 **Linear:** [KNG-19](https://linear.app/kngpandi/issue/KNG-19/lootboxes-per-category-world-lootboxes-with-grade-weighted-rolls-v1)
 **Sources:** `knk-v1-archive` (single commit `4117e7e`): `src/Products/{Product,SpecialItemEvents,Enchantment}.java`,
@@ -8,7 +8,8 @@
 `src/Votes/VoteEvent.java`, `src/Users/{Users,offlineUser}.java`, `src/Handlers/ColorOptions.java`; `knk-v2-archive` (`main` + all
 branches, `git grep`); knk-web-api / knk-plugin / knk-web-app at `claude/intelligent-newton-73pcsl` (trunk + siege merged);
 docs `specs/legacy/{items,events-v1,commands-v1}.md`, `specs/items/{GRADE_DROPCHANCE,V1_SEED_DATA}.md`, `specs/kits/DESIGN.md`,
-`vision/vision.md` §9.1, `vision/source-notes-iphone.md`; Linear KNG-15.
+`vision/vision.md` §9.1, `vision/source-notes-iphone.md`; Linear KNG-15. The 2026-09-26 amendments (ItemInstance, area command,
+Flaming Samurai, daily cap) were checked against web-api `master` `1c90d0b` and plugin `main` `295ed7d`.
 
 ---
 
@@ -19,21 +20,29 @@ docs `specs/legacy/{items,events-v1,commands-v1}.md`, `specs/items/{GRADE_DROPCH
   has a **box grade** (its rarity), and it produces an item whose **item grade** is drawn with weights from `Grade.DropChance`.
 - A server-authoritative roll (API side): the item, its grade and its rolled enchantments are decided once and logged. A box can be
   claimed once, the claim is idempotent, and delivery survives a crash.
-- A "special" jackpot tier for hand-designed items. The candidates are the recovered v1 one-offs, already seeded as ItemBlueprints
-  (§1.4, §3.5).
+- A "special" jackpot tier for hand-designed items: the recovered v1 one-offs, already seeded as ItemBlueprints (§1.4), plus one
+  new v3 item, the **Flaming Samurai** (§3.5).
+- A **minimal `ItemInstance`** (vision §9.1): every non-stackable item a box gives is minted as an instance row in the claim
+  transaction, and the item carries the instance id in its PDC (§3.2, §3.4).
+- Box grades **★1-5 only**; the daily cap is **10 boxes per player per UTC calendar day** across all types (§3.3).
 - Admin configuration in the web app: per-category box config, box-grade weights, the item pool, enchant rolls, spawn areas, an
-  odds preview and the drop log. It also covers in-game admin commands, rare-drop announcements, anti-exploit rules and observability.
+  odds preview and the drop log. Spawn areas can also be created in game from a WorldEdit selection (`/knk lootbox area create`).
+  It also covers in-game admin commands, rare-drop announcements, anti-exploit rules and observability.
 
 **Out (explicitly):**
-- Soulbound / Ghosted flags on rolled items. v1's boxes set them, but v3 has no instance state for them yet (`vision.md` §9.1
-  `ItemInstance`). They are recorded in §1 so they can be ported later.
-- `ItemInstance` persistence. Delivered items carry a PDC claim id (§3.4) until `ItemInstance` exists.
+- Rolling and enforcing Soulbound / Ghosted. `ItemInstance` has the two flags (default false), but nothing sets or enforces them
+  yet. The v1 odds (46% each) are recorded in §1.1 for when they are ported.
+- The rest of vision §9.1 `ItemInstance`: ownership-transfer tracking (`OwnerCount` stays 1, `OwnerUserId` stays the claimer),
+  cascade-to-instances tooling, per-field override flags other than the display-name override, the item-age/owner-count bonuses,
+  and instances for items from other sources (kits, `/knk itemblueprints give`, the catalog menu). Stackable items get no
+  instance (§3.2).
+- Boxes ★6-10 (grades 6-10 are placeholders, KNG-6).
 - Coin/gem/XP rewards from boxes. v1's treasure chests gave gold and diamond *items*, not currency. If currency rewards are added
   later, they go through `UserService.AdjustBalancesAsync` (`knk-web-api:Services/UserService.cs:618`) with `reason="Lootbox"` and
   `metadata={claimId}`, and they adopt the `docs/specs/currency-payments/` ledger/idempotency design once that lands.
 - Placed "treasure chests" (v1 `/treasure`) as a separate feature. §1.1 records them because they are the v1 precedent for
   world-placed loot and box grades. A fixed-location spawn area (§3.3) covers the use case.
-- Lootbox **items** (v1's "Sword Box" consumables): optional Phase 5, and see Q5.
+- Lootbox **items** (v1's "Sword Box" consumables): Phase 5, after world boxes ship (Q5).
 
 ---
 
@@ -190,7 +199,9 @@ ItemBlueprints tagged `Legacy v1`. They are the proposed special pool (§3.5):
 | Donator pickaxe | diamond_pickaxe | `&2Donator pickaxe` | Tools | — | efficiency 2, unbreaking 2 | 1 |
 
 None of these has lore text (`DefaultDisplayDescription` is empty for every seeded item) or code-defined abilities beyond its custom
-enchantments. **The developer should confirm or name any others (Q1).**
+enchantments. **Confirmed (Q1):** all of them except the Donator pickaxe. The developer also remembered a "flaming samurai" sword.
+It isn't in any v1/v2 source or git history (the only "Samurai" in v1 is a Royal bodyguard name, `v1:Menu/Menu.java:2206`), so it
+is designed here as a **new v3 item** (§3.5).
 
 ### 1.5 v3 today
 There is **no lootbox code in any v3 repo** (`grep -ri lootbox`). These parts are reusable:
@@ -206,7 +217,9 @@ There is **no lootbox code in any v3 repo** (`grep -ri lootbox`). These parts ar
 | Grant placement | `KitGrantPlacer`: equipment slots → free slot → `dropItemNaturally`. The developer chose "drop rather than lose". | `knk-paper:kit/KitGrantPlacer.java`, `specs/kits/DESIGN.md` §6 |
 | Kits give (KNG-15) | `POST /api/Kits/{id}/give` is the **only** `[Authorize]` game endpoint (`KitsController.cs:160`). The plugin sends no `Authorization` header because `config.yml` has `api.auth.type: none` → 401. `ApiKeyAuthProvider` exists in the client, but the API has no API-key scheme (`Program.cs:65-83` is JWT only). **So the plugin has no service identity today, and every other endpoint is anonymous.** | KNG-15; `knk-api-client:api/auth/*`; `KnKPlugin.java:1190-1205` |
 | Timed world drops | `EnchantDropPlanner` (Bukkit-free chance/cap/uniform-disc planner). `SiegeEnchantBooks` (items with a PDC token and `setPersistent(false)`, cleared at match end). `SiegeWorldPresenter` (`TextDisplay` labels with a PDC token, plus a crash-recovery block log). **Only on `claude/siege-minigame`**, not on plugin `main`. | `knk-core:siege/EnchantDropPlanner.java`, `knk-paper:siege/*` |
-| Regions | `WorldGuardRegionLookup.at(Location)`, `WorldGuardIntegration.regionExists`, the `WgRegionIdTaskHandler` world task (define a region from the web app), `Domain.WgRegionId` (Town/District) | `knk-paper:regions/`, `integration/`, `tasks/` |
+| Regions | `WorldGuardRegionLookup.at(Location)`, `WorldGuardIntegration.regionExists`, the `WgRegionIdTaskHandler` world task (define a region from the web app; its private `createRegionFromSelection` builds a polygonal or cuboid `ProtectedRegion` from a WorldEdit selection, `:583-606`; final ids follow `domain_{id}`), `/knk wgm rename`, `Domain.WgRegionId` (Town/District) | `knk-paper:regions/`, `integration/`, `tasks/`, `commands/WorldGuardManagementCommand.java` |
+| Item instances | **None.** `EnchantmentDefinition.cs:38` has a TODO for `ItemInstanceEnchantment`. Items carry only PDC `knk_grade`, `knk_enchant_book` and `knk_enchant_book_max`. | `Models/Item/EnchantmentDefinition.cs`, `knk-paper:mapper/ItemGradeTag.java` |
+| `/knk` admin subcommands | `KnkAdminCommand` registers each through `CommandRegistry` with a `CommandMetadata(name, description, usage, permission)` | `knk-paper:commands/KnkAdminCommand.java` |
 | API → plugin messages | `PlayerNotificationPoller` (2 s poll, queue held for offline players) | `knk-paper:tasks/PlayerNotificationPoller.java` |
 | Singleton config pattern | `SiegeConfiguration`, `SalaryConfiguration` + `/admin/siege-configuration` page | web-api `Models/Siege`, web-app `pages/admin/SiegeConfigurationPage.tsx` |
 | Audit | `AuditLogEntry` + `AuditAction` (0-11, `KitGranted = 11`) | `Models/AuditLogEntry.cs`, `Enums/AuditAction.cs` |
@@ -231,14 +244,17 @@ There is **no lootbox code in any v3 repo** (`grep -ri lootbox`). These parts ar
 | Admin config UI | `/treasure create` only | none | FormWizard + `SiegeConfigurationPage` pattern | M |
 | Announcements | ocelot broadcast; none for boxes | none | Adventure in plugin, `GameSettings` template style | S |
 | Plugin → API auth | n/a | none (KNG-15) | `ApiKeyAuthProvider` (client), no server scheme | M (shared prerequisite) |
-| Soulbound/Ghosted on roll | 46% each | none | — | deferred to `ItemInstance` |
+| Spawn-area authoring | `/treasure create` on a chest | none (regions via world task only) | `createRegionFromSelection`, `KnkAdminCommand` | S (`/knk lootbox area`) |
+| Per-item identity | lore strings only | none | — | M (minimal `ItemInstance`, new) |
+| Soulbound/Ghosted on roll | 46% each | none | `ItemInstance` flags (new) | columns only; roll + enforcement deferred |
 
 **Reuse as-is:** `Grade`/`DropChance`/`GradeCatalog`, `Category`, `ItemBlueprint` + the v1 seed, `EnchantmentDefinition`,
 `KnkPermissible`, the FormWizard pipeline, `WorldGuardRegionLookup`, `ItemGradeTag`. **Extend:** extract the enchantment
-application from `ItemBlueprintsDebugCommand` into a shared `BlueprintItemAssembler`, which also fixes kits and the catalog, and
-port the `EnchantDropPlanner`/`SiegeWorldPresenter` patterns (not the code, because it lives on the siege branch) into
-`core/lootbox`. **New:** the lootbox entities, roll engine, spawn/claim API, plugin presenter/scheduler/listeners, admin page and
-plugin service auth (unless currency-payments/KNG-15 ships it first).
+application from `ItemBlueprintsDebugCommand` into a shared `BlueprintItemAssembler`, which also fixes kits and the catalog; make
+`createRegionFromSelection` a public `WorldGuardIntegration` method; and port the `EnchantDropPlanner`/`SiegeWorldPresenter`
+patterns (not the code, because it lives on the siege branch) into `core/lootbox`. **New:** the minimal `ItemInstance`, the
+lootbox entities, roll engine, spawn/claim API, plugin presenter/scheduler/listeners, the area command, admin page and plugin
+service auth (unless currency-payments/KNG-15 ships it first).
 
 ---
 
@@ -259,9 +275,9 @@ The plugin decides *where* a box can physically go (terrain, loaded chunks, regi
 
 **Spawn-time roll (API, `POST /api/LootboxSpawns`):**
 1. **Type:** weighted by `LootboxType.SpawnWeight` among the enabled types allowed in the area.
-2. **Box grade:** the grades with stars in `[MinBoxStars, MaxBoxStars]` (default 1-5), weighted by `LootboxTypeGradeWeight.Weight`
-   if the admin set one, else `Grade.DropChance`. Defaults for 1-5 (sum 210): ★1 33.3%, ★2 28.6%, ★3 19.0%, ★4 11.9%, ★5 7.1%.
-   With 1-10 (sum 224.55): ★6 3.6%, ★7 2.2%, ★8 0.45%, ★9 0.22%, ★10 0.02%.
+2. **Box grade:** the grades with stars in `[MinBoxStars, MaxBoxStars]` (default and maximum 1-5, Q3: no ★6-10 boxes), weighted
+   by `LootboxTypeGradeWeight.Weight` if the admin set one, else `Grade.DropChance`. Defaults for 1-5 (sum 210): ★1 33.3%,
+   ★2 28.6%, ★3 19.0%, ★4 11.9%, ★5 7.1%.
 
 **Claim-time roll (API, `POST /api/LootboxSpawns/{id}/claim`)**, box grade B stars:
 1. **Special check.** Run through enabled `LootboxSpecialEntry` rows for this type (or type-less ones) with `MinBoxStars ≤ B`, in
@@ -282,31 +298,55 @@ The plugin decides *where* a box can physically go (terrain, loaded chunks, regi
      definition max), the same formula as KNG-6 `KnkGrade.capEnchantLevel`. Drop the enchant if the result is below 1.
    - **Custom** enchants are clamped to the definition max only (KNG-6 D3: custom is uncapped by grade).
    - Merge with the blueprint's default enchantments as `max(default, rolled)`.
-   - Enchantment Books blueprints never get rolled enchantments (same rule as `ItemBlueprintsDebugCommand:236-240`).
-5. **Quantity** = the blueprint's `DefaultQuantity` (Food/Resources stacks); `ItemsPerBox` repeats steps 1-4 (default 1).
+   - Enchantment Books blueprints never get rolled enchantments (same rule as `ItemBlueprintsDebugCommand:236-240`), and neither
+     do stackable blueprints (`MaxStackSize > 1`), which have no instance to hold them.
+5. **Quantity** = the blueprint's `DefaultQuantity` (Food/Resources stacks). **One item per box**: v1 treasure's multi-item opens
+   would need a claim-item row per item and are not built (the earlier `ItemsPerBox` field is dropped).
+6. **Mint the instance** (non-stackable items only, `MaxStackSize == 1`): an `ItemInstance` with the item's blueprint, grade and
+   final enchantment set (defaults merged with rolls; for a special, its default enchantments), owned by the claimer (§3.2).
 
 **Worked example.** Weapons box ★5, dev-DB weapons: ★3 Standard Bow / Steel Axe / Steel Sword, ★4 Bladed Steel Sword, ★5 Golemheart
-Sword / Lavonian Bow, with Skull splitter special. The grade roll is 40:25:15 → 50% / 31.25% / 18.75%, so **Golemheart Sword = 9.4%**
-(v1 legendary box: 30.7%). The admin can raise it with a pool `WeightOverride` or grade weights; the odds preview shows the result.
+Sword. Skull splitter, Lavonian Bow and Flaming Samurai are ★5 too, but they carry the `Lootbox Special` tag, so they are only
+reachable through the special check (§3.5). The grade roll is 40:25:15 → 50% / 31.25% / 18.75%, so **Golemheart Sword ≈ 18.7%**
+after the ≈0.45% special hits (v1 legendary box: 30.7%). The admin can change it with a pool `WeightOverride` or grade weights;
+the odds preview shows the result.
 
-### 3.2 Data model (knk-web-api, `Models/Lootbox/`, one migration `AddLootboxes`)
+### 3.2 Data model (knk-web-api, migrations `AddItemInstances` then `AddLootboxes`)
+
+**Minimal `ItemInstance`** (`Models/Item/`, its own migration because it is a shared item concept that kits and admin gives will
+adopt later; vision §9.1):
 
 | Entity | Fields (beyond `Id`) | Notes |
 |---|---|---|
-| `LootboxType` `[FormConfigurableEntity]` | `Name`, `CategoryId` (**unique**), `IncludeSubcategories`=true, `Enabled`=false, `SpawnWeight`=10, `MinBoxStars`=1, `MaxBoxStars`=5, `ItemStarSpread`=2, `ItemsPerBox`=1, `DisplayMaterialRefId?` (model shown; default category icon, then `minecraft:chest`), `MaxClaimsPerPlayerPerDay?` (null = global), `AnnounceMinItemStars?` (null = global) | One per category, enforced by a unique index. Seed: one disabled row per existing category. |
+| `ItemInstance` | `Id` **long** (vision expects millions of rows), `ItemBlueprintId` (FK **Restrict**), `GradeId?` (FK Restrict; frozen at mint), `OwnerUserId?` (FK SetNull), `Origin` (`ItemInstanceOrigin`: `Unknown=0, Lootbox=1, Kit=2, Admin=3, Shop=4`; only `Lootbox` is written now), `OriginRef?` (string ≤64, e.g. the `LootboxClaim` id), `CreatedAt` (UTC), `OwnerCount`=1, `CustomDisplayName?` (≤128; non-null = the player/admin override that a future cascade must skip), `IsSoulbound`=false, `IsGhosted`=false | Indexes `(OwnerUserId)`, `(ItemBlueprintId)`, `(Origin, OriginRef)`. Not form-configurable; no create/update endpoint (services mint it). |
+| `ItemInstanceEnchantment` | `ItemInstanceId` (FK Cascade: the instance's own child rows), `EnchantmentDefinitionId` (FK Restrict), `Level` | PK `(ItemInstanceId, EnchantmentDefinitionId)`. The normalized child table vision §9.1 asks for; resolves the TODO at `EnchantmentDefinition.cs:38`. |
+
+**Minted only for non-stackable items** (`ItemBlueprint.MaxStackSize == 1`: weapons, armor, tools, books, specials). A per-item PDC
+id would stop Food/Resources stacks from stacking, and they carry no enchantments or flags worth tracking. Stackable claims have
+`ItemInstanceId = null`.
+
+**Deferred** (documented, not built): `OwnerCount`/`OwnerUserId` updates on trade or pickup, per-field override flags other than
+`CustomDisplayName`, cascade-to-instances tooling, setting/enforcing `IsSoulbound`/`IsGhosted`, the age/owner-count bonuses, and
+minting from kits, `/knk itemblueprints give` or the catalog menu.
+
+**Lootbox entities** (`Models/Lootbox/`):
+
+| Entity | Fields (beyond `Id`) | Notes |
+|---|---|---|
+| `LootboxType` `[FormConfigurableEntity]` | `Name`, `CategoryId` (**unique**), `IncludeSubcategories`=true, `Enabled`=false, `SpawnWeight`=10, `MinBoxStars`=1, `MaxBoxStars`=5 (validated ≤5), `ItemStarSpread`=2, `DisplayMaterialRefId?` (model shown; default category icon, then `minecraft:chest`), `MaxClaimsPerPlayerPerDay?` (extra per-type limit, null = none; §3.3), `AnnounceMinItemStars?` (null = global) | One per category, enforced by a unique index. Seed: one disabled row per existing category. |
 | `LootboxTypeGradeWeight` | `LootboxTypeId`, `GradeId`, `Weight` decimal | Optional override of `Grade.DropChance` for the box-grade roll |
 | `LootboxPoolEntry` | `LootboxTypeId`, `ItemBlueprintId`, `Mode` (Include/Exclude), `WeightOverride?`, `GradeIdOverride?` | Composite PK (type, blueprint). No cascade to `ItemBlueprint` (vision §9.2 rule): `DeleteBehavior.Restrict`, and the service refuses a blueprint delete while it is referenced. |
 | `LootboxEnchantRoll` | `LootboxTypeId`, `EnchantmentDefinitionId`, `ChancePercent` decimal(7,4), `MinLevel`, `MaxLevel`, `MinBoxStars`=1, `SortOrder` | |
 | `LootboxSpecialEntry` `[FormConfigurableEntity]` | `LootboxTypeId?` (null = any box), `ItemBlueprintId`, `ChancePerMillion`, `MinBoxStars`=5, `Enabled`, `SortOrder` | Its blueprint also gets the `Lootbox Special` tag (excluded from normal pools) |
-| `LootboxSpawnArea` `[FormConfigurableEntity]` | `Name`, `World`, `WgRegionId` (or picked from a `Domain`), `Enabled`, `MaxActive`=3, `SpawnIntervalSeconds`=600, `SpawnChancePercent`=100, `MinOnlinePlayers`=3, `MinDistanceFromPlayers`=24, `LifetimeMinutes`=30, `ExcludedRegionIds` (CSV) | Defaults echo v1 ocelots (600 s, ≥3 online). A fixed-point area (a tiny region) reproduces v1 treasure spots. |
+| `LootboxSpawnArea` `[FormConfigurableEntity]` | `Name` (**unique**, `[A-Za-z0-9_-]{1,32}`), `World`, `WgRegionId` (or picked from a `Domain`), `Enabled`, `MaxActive`=3, `SpawnIntervalSeconds`=600, `SpawnChancePercent`=100, `MinOnlinePlayers`=3, `MinDistanceFromPlayers`=24, `LifetimeMinutes`=30, `ExcludedRegionIds` (CSV), `CreatedByUserId?` (set by the in-game command) | Defaults echo v1 ocelots (600 s, ≥3 online). A fixed-point area (a tiny region) reproduces v1 treasure spots. Created in the web app or in game (`/knk lootbox area create`, §3.4); limits are edited in the web app. Unique `Name` because the in-game command addresses areas by name. |
 | `LootboxSpawnAreaType` | `LootboxSpawnAreaId`, `LootboxTypeId` | Empty = all enabled types |
-| `LootboxConfiguration` (singleton, like `SiegeConfiguration`) | `Enabled`, `GlobalMaxActive`=15, `MaxClaimsPerPlayerPerDay`=10, `AnnounceMinItemStars`=5, `AnnounceSpawnMinBoxStars`=6, `DropAnnouncementTemplate`=`"&6{player} &efound {item} &ein a {box}!"`, `SpawnAnnouncementTemplate`=`"&eA {box} &eappeared in &6{area}&e!"` | |
-| `LootboxSpawn` | `Token` Guid (unique), `LootboxTypeId`, `BoxGradeId`, `SpawnAreaId?`, `World`, `X`,`Y`,`Z` (int), `Status` (Active/Claimed/Expired/Removed) **`[ConcurrencyCheck]`**, `SpawnedAt`, `ExpiresAt`, `ClaimedAt?`, `ClaimedByUserId?`, `ServerId`, `CreatedByUserId?` (admin spawn) | Indexes `(Status, ExpiresAt)`, `(SpawnAreaId, Status)`. Not form-configurable. |
-| `LootboxClaim` | `LootboxSpawnId` (**unique**, nullable for future token items), `UserId`, `LootboxTypeId`, `BoxGradeId`, `ItemBlueprintId`, `ItemGradeId?`, `Quantity`, `IsSpecial`, `IdempotencyKey` (unique), `ClaimedAt`, `DeliveredAt?`, `DeliveryMethod?` (Inventory/DroppedOwned/Redelivered), `DeliveryNote?` | Append-only drop log, like `KitClaim`. Index `(UserId, ClaimedAt)`. |
-| `LootboxClaimEnchantment` | `LootboxClaimId`, `EnchantmentDefinitionId`, `Level` | Normalized per vision §9.1, so it can be copied onto a future `ItemInstance` |
+| `LootboxConfiguration` (singleton, like `SiegeConfiguration`) | `Enabled`, `GlobalMaxActive`=15, `MaxClaimsPerPlayerPerDay?`=10 (per **UTC calendar day**, all types together; null = no cap), `AnnounceMinItemStars`=5, `AnnounceSpawnMinBoxStars`=6, `DropAnnouncementTemplate`=`"&6{player} &efound {item} &ein a {box}!"`, `SpawnAnnouncementTemplate`=`"&eA {box} &eappeared in &6{area}&e!"` | `AnnounceSpawnMinBoxStars`=6 means spawn broadcasts are off while boxes are ★1-5 (Q3); set 5 to announce ★5 spawns. |
+| `LootboxSpawn` | `Token` Guid (unique), `LootboxTypeId`, `BoxGradeId`, `SpawnAreaId?` (FK **SetNull**, so deleting an area keeps the history), `World`, `X`,`Y`,`Z` (int), `Status` (Active/Claimed/Expired/Removed) **`[ConcurrencyCheck]`**, `SpawnedAt`, `ExpiresAt`, `ClaimedAt?`, `ClaimedByUserId?`, `ServerId`, `CreatedByUserId?` (admin spawn) | Indexes `(Status, ExpiresAt)`, `(SpawnAreaId, Status)`. Not form-configurable. |
+| `LootboxClaim` | `LootboxSpawnId` (**unique**, nullable for admin gives and Phase 5 token items), `UserId`, `LootboxTypeId`, `BoxGradeId`, `ItemBlueprintId`, `ItemGradeId?`, `Quantity`, `IsSpecial`, `ItemInstanceId?` (FK Restrict, **unique**; null for stackables), `IdempotencyKey` (unique), `ClaimedAt` (UTC), `DeliveredAt?`, `DeliveryMethod?` (Inventory/DroppedOwned/Redelivered), `DeliveryNote?` | Append-only drop log, like `KitClaim`. Index `(UserId, ClaimedAt)` serves the daily cap. The rolled enchantments live on the instance (`ItemInstanceEnchantment`), so there is no separate claim-enchantment table. |
 
-`AuditAction` gains `LootboxSpawnedByAdmin = 12` and `LootboxGranted = 13` (admin give). Player claims are logged in `LootboxClaim`,
-not in the audit log.
+`AuditAction` gains `LootboxSpawnedByAdmin`, `LootboxGranted` (admin give), `LootboxAreaCreated` and `LootboxAreaDeleted` (in-game
+area command), as the next free values when the branch merges (12-15 on `master` today). Player claims are logged in
+`LootboxClaim`, not in the audit log.
 
 ### 3.3 API (controllers under `api/[controller]`, PascalCase like `Kits`)
 
@@ -314,23 +354,34 @@ not in the audit log.
 |---|---|---|
 | CRUD + `search` on `LootboxTypes`, `LootboxSpecialEntries`, `LootboxSpawnAreas` (join rows edited through the type form, like `KitContent`); `GET/PUT LootboxConfiguration` | Admin config | Same as other FormWizard entities today (anonymous; `RequireAdmin` once the web app sends tokens, which is not specific to lootboxes) |
 | `GET LootboxTypes/{id}/odds?boxStars=` | Preview: per-grade %, per-item %, specials, per-enchant hit % and effective level range after the cap, plus box-grade distribution | Admin |
-| `GET LootboxSpawns/runtime-config` | Enabled types (id, name, category, display material, per-star name) and areas, plus the global config. Plugin caches it (`runtime-refresh-seconds`). | **PluginService** |
+| `GET LootboxSpawns/runtime-config` | Enabled types (id, name, category, display material, per-star name), **all** areas with their `enabled` flag (the scheduler skips disabled ones; `/knk lootbox area list` shows them), plus the global config. Plugin caches it (`runtime-refresh-seconds`). | **PluginService** |
+| `POST LootboxSpawnAreas/in-game` `{name, world, wgRegionId, actorUserId}` | Creates an **enabled** area with default limits (§3.2), audited `LootboxAreaCreated`. 201 area DTO; 409 `{code: NameTaken\|RegionInUse}`; 400 invalid name | PluginService |
+| `POST LootboxSpawnAreas/{id}/in-game-delete` `{actorUserId}` | Marks the area's active spawns Removed, deletes the row (spawns keep history via SetNull), audited `LootboxAreaDeleted`. 200 `{wgRegionId}` | PluginService |
 | `GET LootboxSpawns/active` | Active spawns: id, token, type, box stars, world/x/y/z, expiresAt | PluginService |
 | `POST LootboxSpawns` `{areaId, world, x, y, z, serverId}` | Checks caps (area `MaxActive`, `GlobalMaxActive`, `Enabled`), rolls type and box grade, inserts the row. 201 `LootboxSpawnDto`; 409 `{code: AreaFull\|GlobalFull\|NoEnabledType\|Disabled}` | PluginService |
 | `POST LootboxSpawns/admin` `{typeId, boxStars?, world, x, y, z, actorUserId}` | Manual spawn (ignores caps), audited | PluginService |
 | `POST LootboxSpawns/{id}/despawn` `{actorUserId?}` | Status → Removed | PluginService |
-| `POST LootboxSpawns/{id}/claim` `{token, userId, idempotencyKey}` | §3.1 roll. 200 `LootboxClaimResultDto {claimId, replay, itemBlueprintId, quantity, itemGradeStars, isSpecial, enchantments[{definitionId, key, isCustom, level}], announce, boxLabel}`; 409 `AlreadyClaimed\|Expired\|TokenMismatch`; 429 `DailyLimit` | PluginService |
+| `POST LootboxSpawns/{id}/claim` `{token, userId, idempotencyKey}` | §3.1 roll. 200 `LootboxClaimResultDto {claimId, replay, itemInstanceId?, itemBlueprintId, quantity, itemGradeStars, isSpecial, enchantments[{definitionId, key, isCustom, level}], announce, boxLabel}`; 409 `AlreadyClaimed\|Expired\|TokenMismatch`; 429 `{code: DailyLimit, scope: Global\|Type, limit, resetsAt}` | PluginService |
 | `POST LootboxClaims/{id}/delivered` `{method, note?}` | Sets `DeliveredAt` (idempotent) | PluginService |
-| `GET LootboxClaims/pending?userId=` | Undelivered claims older than 30 s | PluginService |
-| `POST LootboxClaims/search` | Paged drop log (filters: user, type, grade, special, date) | Admin |
+| `GET LootboxClaims/pending?userId=` | Undelivered claims older than 30 s (same payload as the claim result, including `itemInstanceId`) | PluginService |
+| `POST LootboxClaims/search` | Paged drop log (filters: user, type, grade, special, date; rows show the instance id) | Admin |
+| `POST LootboxClaims/admin-give` `{userId, typeId, boxStars?, actorUserId}` | Roll + mint without a world box (`LootboxSpawnId=null`), audited `LootboxGranted` | PluginService |
+| `GET ItemInstances/{id}` | One instance with its enchantments, owner and origin (admin lookup of an item's PDC id). No create/update/delete endpoints. | Admin |
 
 **Claim transaction** (explicit `BeginTransactionAsync`, as `SiegeMatchRepository.cs:107` does):
 1. Load the spawn. If `IdempotencyKey` already exists for this user, **return the stored claim with `replay=true`** (no roll).
 2. If Status ≠ Active or `ExpiresAt` has passed, return 409. If the token doesn't match, return 409.
-3. If the user has ≥ the limit of claims in the last 24 h, return 429.
+3. **Daily cap, per UTC calendar day** (the window is `[today 00:00 UTC, tomorrow 00:00 UTC)`, not a rolling 24 h). Count the
+   user's `LootboxClaim` rows with `ClaimedAt` in that window. If `LootboxConfiguration.MaxClaimsPerPlayerPerDay` (default 10) is set
+   and the count across **all types** has reached it, return 429 `scope=Global`. If the box's `LootboxType.MaxClaimsPerPlayerPerDay`
+   is set and the count for **that type** has reached it, return 429 `scope=Type`. Both limits apply; a per-type value above the
+   global one has no effect. `resetsAt` is the next 00:00 UTC. Admin gives don't count and aren't capped.
 4. Roll, set Status=Claimed (the `[ConcurrencyCheck]` makes a concurrent winner raise `DbUpdateConcurrencyException`, which maps
-   to 409 `AlreadyClaimed`), insert the claim and its enchant rows, commit.
-5. The unique index on `LootboxClaim.LootboxSpawnId` is the last line of defence on MySQL.
+   to 409 `AlreadyClaimed`). For a non-stackable item, insert the `ItemInstance` (Origin=Lootbox, owner = claimer) with its
+   `ItemInstanceEnchantment` rows and the claim pointing at it in one `SaveChanges`; then set `ItemInstance.OriginRef` to the new
+   claim id with a second `SaveChanges` inside the same transaction (the claim id doesn't exist before the first save). Commit.
+5. The unique indexes on `LootboxClaim.LootboxSpawnId` and `LootboxClaim.ItemInstanceId` are the last line of defence on MySQL.
+   A replay returns the stored claim and its instance; it never mints a second instance.
 
 **Expiry:** a lazy sweep (`UPDATE … SET Status=Expired WHERE Status=Active AND ExpiresAt<now`) runs at the start of `active`, `spawn`
 and `claim`. No hosted service is needed.
@@ -371,9 +422,29 @@ Components (new unless noted):
 | knk-paper | `listeners/LootboxChunkListener` | `ChunkLoadEvent` renders cached spawns in that chunk; `EntitiesLoadEvent` removes any entity carrying `knk_lootbox` whose token isn't active (belt and braces) |
 | knk-paper | `listeners/LootboxInteractListener` | `PlayerInteractEntityEvent` on the `Interaction`. Checks `knk.lootbox.open`, not in staff/owner/vanish mode (unless configured), distance ≤ `claim-max-distance`, a free slot (else "Your inventory is full — make room to open this lootbox", **no API call**), and `ClaimGuard`. Then claims async and delivers on the main thread. |
 | knk-paper | `item/BlueprintItemAssembler` (**extracted** from `ItemBlueprintsDebugCommand:233-320`) | Blueprint plus an enchant list → ItemStack. Skips enchantments that fail `canEnchantItem` or `conflictsWith` and reports them in `delivered.note`. Also used by `/knk itemblueprints give`, and kits can adopt it. |
-| knk-paper | `lootbox/LootboxDelivery` | Stamps PDC `knightsandkings:knk_lootbox_claim = claimId` on the item, adds it to the inventory, and if leftovers remain drops them with `Item#setOwner(uuid)` + `setCanMobPickup(false)`, then ACKs `delivered`. |
-| knk-paper | `listeners/LootboxJoinListener` | On join, `GET pending` and deliver. Before re-giving, it scans the inventory and ender chest for the same claim id, so a crash between give and ACK doesn't dupe. |
-| knk-paper | `commands/LootboxCommand` (`/lootbox`, alias `/lb`) | Player: `/lootbox` (help), `/lootbox odds <category>` (read-only preview). Admin: `spawn <category> [stars]`, `despawn [id\|nearest]`, `list [area]`, `tp <id>`, `give <player> <category> [stars]` (roll + deliver without a world box, audited), `reload` |
+| knk-paper | `mapper/ItemInstanceTag` (new, like `ItemGradeTag`) | PDC `knightsandkings:knk_item_instance` (LONG = `ItemInstance.Id`): `stamp(meta, id)` and `read(item)`. The item's identity from now on; lore stays display only (vision §9.1). |
+| knk-paper | `lootbox/LootboxDelivery` | Builds the item with `BlueprintItemAssembler` + `ItemGradeTag`, stamps `ItemInstanceTag` when the claim has an `itemInstanceId` (stackables get no tag, so they stack normally), adds it to the inventory, and if leftovers remain drops them with `Item#setOwner(uuid)` + `setCanMobPickup(false)`, then ACKs `delivered`. |
+| knk-paper | `listeners/LootboxJoinListener` | On join, `GET pending` and deliver. Before re-giving an instanced item, it scans the inventory and ender chest for the same instance id, so a crash between give and ACK doesn't dupe. Stackables can't be deduped this way; at worst one low-value stack is re-delivered, and the claim is logged `Redelivered`. |
+| knk-paper | `commands/LootboxCommand` (`/lootbox`, alias `/lb`) | **Player only:** `/lootbox` (help), `/lootbox odds <category>` (read-only preview) |
+| knk-paper | `commands/LootboxAdminCommand` (`/knk lootbox`, registered in `KnkAdminCommand`) | **Admin:** `spawn <category> [stars]`, `despawn [id\|nearest]`, `list [area]`, `tp <id>`, `give <player> <category> [stars]` (roll + deliver without a world box, audited), `reload`, and `area create\|list\|info\|delete` (below). All admin lootbox commands live under `/knk`, next to the other admin subcommands. |
+| knk-paper | `integration/WorldGuardIntegration.createRegionFromSelection` (**moved** from `WgRegionIdTaskHandler:583-606`, made public) | WorldEdit selection → `ProtectedPolygonalRegion` (poly2d) or `ProtectedCuboidRegion` (bounds of anything else). `WgRegionIdTaskHandler` calls it. |
+
+**In-game spawn areas (`/knk lootbox area …`, permission `knk.lootbox.admin.area`).** The area row stays the source of truth in
+MySQL; the command only saves the admin a trip through the web app's region world task. Limits (`MaxActive`, interval, chance,
+players, lifetime, excluded regions, allowed types) are edited in the web app.
+- `create <name>`: `<name>` must match `[A-Za-z0-9_-]{1,32}`. The region id is `lootbox_<slug>` (slug = lower-cased name), next
+  to the existing `domain_{id}` convention. The command reads the admin's current WorldEdit selection in their world (none →
+  "Make a WorldEdit selection first (//wand)"), refuses if a WG region with that id already exists, builds the region with
+  `createRegionFromSelection`, **stretches it to the world's full build height** (spawns sit on the surface, so a flat selection
+  would reject most points), adds it to the world's `RegionManager` with priority 0 and no flags, then calls
+  `POST LootboxSpawnAreas/in-game`. If the API refuses or is down, the region is removed again, so no orphan is left. On success
+  it refreshes the runtime config and says "Area `<name>` created (max 3 boxes, every 600 s, ≥3 online). Tune it in the web app."
+- `list`: all areas from the runtime config: name, enabled, region id, active boxes / `MaxActive`.
+- `info <name>`: the area's limits, region id and bounds, allowed types, active boxes.
+- `delete <name>`: asks to repeat the command within 10 s to confirm, then calls `in-game-delete` and removes the entities of its
+  active boxes. It removes the WG region **only if its id starts with `lootbox_`**; regions the area borrowed (a town/district
+  `Domain` region picked in the web app) are never deleted. A delete from the web app runs the same service logic but can't reach
+  WorldGuard, so it leaves a `lootbox_` region behind (`/rg remove` it, or delete in game instead).
 
 `config.yml`:
 ```yaml
@@ -393,17 +464,18 @@ lootboxes:
     particles-radius: 15
     grade-colors: { "1": "&9", "2": "&9", "3": "&b", "4": "&b", "5": "&d", "6": "&6", "7": "&6", "8": "&c", "9": "&c", "10": "&4" }
 ```
-Grades 1-5 use v1 treasure's colours (§1.1). Grades 6-10 are new.
+Grades 1-5 use v1 treasure's colours (§1.1). Grades 6-10 are new and unused while boxes are ★1-5 (Q3).
 
 **Permissions** (in-house model through `KnkPermissible`, declared in `plugin.yml` for documentation): `knk.lootbox.open` (players),
-`knk.lootbox.odds` (players), `knk.lootbox.admin.spawn`, `.despawn`, `.list`, `.tp`, `.give`, `.reload`. A seed grants
-`knk.lootbox.open` and `knk.lootbox.odds` to the Default `PermissionGroup` (§4 D8).
+`knk.lootbox.odds` (players), `knk.lootbox.admin.spawn`, `.despawn`, `.list`, `.tp`, `.give`, `.reload`, `.area` (all four
+`area` subcommands). A seed grants `knk.lootbox.open` and `knk.lootbox.odds` to the Default `PermissionGroup` (§4 D8).
 
 **Messages / UX:**
 - Hover label: `<colour><GradeName> <Category> Lootbox <stars>`.
 - Opening: a chest-open sound, then `&aYou opened a {box} and found {item}!`, where the item name is hoverable (Adventure `showItem`).
-- Already claimed: `&cSomeone else got there first.` Expired: `&cThis lootbox has crumbled away.` Daily limit: `&cYou've opened
-  {n} lootboxes today — come back tomorrow.` API down: `&cThe lootbox is stuck — try again in a moment.`
+- Already claimed: `&cSomeone else got there first.` Expired: `&cThis lootbox has crumbled away.` API down: `&cThe lootbox is
+  stuck — try again in a moment.` Daily limit: `&cYou've opened {n} lootboxes today — the limit resets at 00:00 UTC.` (per-type
+  limit: `…{n} {category} lootboxes today…`).
 - Rare drop (`isSpecial` or item ★ ≥ `AnnounceMinItemStars`): a server broadcast from `DropAnnouncementTemplate` with a hoverable
   item, plus a `UI_TOAST_CHALLENGE_COMPLETE` sound for the finder.
 - Spawns with box ★ ≥ `AnnounceSpawnMinBoxStars` broadcast `SpawnAnnouncementTemplate` (v1 ocelot precedent).
@@ -413,9 +485,34 @@ Grades 1-5 use v1 treasure's colours (§1.1). Grades 6-10 are new.
 - **Seed** (create-only, natural keys, after `ItemBlueprintV1Seed`, as `KitSeed` does):
   - one `LootboxType` per existing `Category` with `Enabled=false`;
   - tag `Lootbox Special`;
-  - `LootboxSpecialEntry` rows for the §1.4 one-offs, each `ChancePerMillion=2000` (0.2%) and `MinBoxStars=5`, limited to their own
-    category's box. **Donator pickaxe is excluded pending Q1.**
-  - Specials that are ungraded in the seed get `ItemGradeId` = ★5 on the claim for cap and announcement purposes.
+  - `LootboxSpecialEntry` rows for the §1.4 one-offs, each `ChancePerMillion=2000` (0.2%), `MinBoxStars=5`, `SortOrder` 10, 20, …,
+    limited to their own category's box. **Donator pickaxe is excluded (Q1).**
+  - the **Flaming Samurai** blueprint and its special entry (below).
+  - Specials that are ungraded in the seed get `ItemGradeId` = ★5 on the claim and instance, for cap and announcement purposes.
+- **Flaming Samurai: a new v3 item, not a v1 port.** The developer remembered it, but no v1/v2 source has it (§1.4), so this is
+  a fresh design. The seed creates it create-only by `Name`:
+
+  | Field | Value |
+  |---|---|
+  | `Name` / `DefaultDisplayName` | `Flaming Samurai` / `&cFlaming Samurai` (one colour code and no formatting, like the seeded one-offs; red for fire, a colour no other seeded item uses) |
+  | `IconMaterial` | `minecraft:netherite_sword` (in `Data/minecraft_material_catalog.json`; the seed creates the `MinecraftMaterialRef` if missing). No v1 item is netherite (v1 predates it), which sets it apart from the diamond Golemheart. |
+  | `DefaultDisplayDescription` | `&7Forged in the last fire of a fallen dojo.`<br>`&7Its edge never cools.` (newline-separated; `ItemBlueprintBukkitMapper.buildLore` renders one lore line each, above the plugin's grade line) |
+  | `Description` (admin-facing) | "New v3 lootbox special (2026-09-26). Not a v1 port." |
+  | Category / Grade | Weapons / ★5 Legendary |
+  | `DefaultQuantity` / `MaxStackSize` | 1 / 1 (so every copy is an `ItemInstance`) |
+  | Default enchantments | `minecraft:sharpness` 5, `minecraft:fire_aspect` 2, `minecraft:sweeping_edge` 3, `minecraft:unbreaking` 3, custom `strength` 2 |
+  | Tags | `Lootbox Special` only (**not** `Legacy v1`) |
+  | `LootboxSpecialEntry` | Weapons box, `MinBoxStars=5`, `ChancePerMillion=500` (0.05%), `SortOrder=0` (checked first) |
+
+  - **Enchantments.** Every vanilla level is its definition max (catalog max: Sharpness 5, Fire Aspect 2, Sweeping Edge 3,
+    Unbreaking 3), which is exactly the ★5 cap (divisor 1), so nothing is clamped. There is no fire-themed custom enchantment in
+    v3; `strength` (max 2, `AbilityDefinition.cs`: 15%/level on hit to give the wielder Strength for 15 s, 120 s cooldown) fits a
+    duelling warrior. The four vanilla enchantments don't conflict and all pass `canEnchantItem` on a sword. The seed creates the
+    `fire_aspect` and `sweeping_edge` definitions from the catalog if they don't exist, the way `ItemBlueprintV1Seed` does, and
+    skips `strength` with a warning if `AbilityDefinition.SeedCanonicalAsync` hasn't created it.
+  - **Rarity.** 500 per million is a quarter of the legacy specials' 0.2%, and equals ★10's `DropChance` (0.05%), the rarest
+    number in the grade table. Per ★5 Weapons box that is 1 in 2,000; per Weapons box of any grade (★5 = 7.1% by default) about
+    **1 in 28,000**. With the 10-per-day cap, it is a server-wide event, not something one player farms. Tunable in the web app.
 - **Weapons enchant rolls**, derived from v1's Legendary box and bounded by v3's grade cap:
 
   | Enchant | Chance | Levels | Min box ★ | v1 origin |
@@ -438,25 +535,26 @@ Grades 1-5 use v1 treasure's colours (§1.1). Grades 6-10 are new.
 - Clients `lootboxTypeClient.ts`, `lootboxSpecialEntryClient.ts`, `lootboxSpawnAreaClient.ts`, `lootboxConfigurationClient.ts` and
   `lootboxClaimClient.ts`, registered in `entityApiMapping`/`objectConfigs` (as siege Phase 3 did). FormConfigurations for
   `LootboxType` (steps: basics → box grades → pool → enchant rolls), `LootboxSpecialEntry` and `LootboxSpawnArea`. The area form has
-  a WgRegionId picker (existing Domain regions) and a "define new region" world task (`WgRegionIdTaskHandler`).
+  a WgRegionId picker (existing Domain regions) and a "define new region" world task (`WgRegionIdTaskHandler`). Areas created in
+  game (`/knk lootbox area create`) show up here like any other and are tuned with the same form.
 - New page `pages/admin/LootboxesPage.tsx` (`/admin/lootboxes`), styled like `SiegeConfigurationPage`, with tabs:
   - **Settings** (singleton form);
   - **Types** (table: category, enabled, spawn weight, pool size per grade, with a warning when a grade in the window has 0 items);
   - **Odds** (type + box-star selector → the odds endpoint, rendered as a table);
   - **Active boxes** (list + despawn);
-  - **Drop log** (paged claims with filters, special rows highlighted, undelivered claims flagged).
+  - **Drop log** (paged claims with filters, special rows highlighted, undelivered claims flagged, the item instance id shown).
 
 ### 3.7 Anti-exploit and concurrency
 
 | Threat | Mitigation |
 |---|---|
 | Chunk-reload farming | Spawns are time-scheduled and capped by the API. A chunk load only **re-renders** existing spawns. Entities are non-persistent. No roll happens at spawn or render time. |
-| Relog or crash to re-roll | The roll is persisted before delivery. Pending claims are delivered on join, deduped by the claim-id PDC. |
+| Relog or crash to re-roll | The roll is persisted before delivery. Pending claims are delivered on join, deduped by the instance-id PDC (stackables: not deduped, §3.4). |
 | Double click / retry / timeout | `ClaimGuard` in-flight lock. The idempotency key `"{token}:{userId}"` replays the stored result and never re-rolls. |
 | Two players clicking at once | Conditional status change (`[ConcurrencyCheck]`) inside a transaction, plus the unique `LootboxClaim.LootboxSpawnId`. Exactly one 200; the others get 409. |
-| Item dupes | A box is not an item. Delivered items carry the claim id, so the admin log can spot two stacks with the same id. `ItemInstance` later. |
+| Item dupes | A box is not an item. Every non-stackable item carries its `ItemInstance` id, so two items with the same id are a provable dupe (detection tooling is later work). |
 | Full inventory | Pre-check before the API call. If a race still leaves leftovers, they drop owner-locked and are logged as `DroppedOwned`. |
-| Spawn camping / AFK | `MinDistanceFromPlayers`, per-player daily cap (API), lifetime expiry, no claims in staff/owner/vanish mode. |
+| Spawn camping / AFK | `MinDistanceFromPlayers`, per-player daily cap (API, 10 per UTC calendar day), lifetime expiry, no claims in staff/owner/vanish mode. |
 | Alt accounts | Per-user daily cap only (no IP tracking). Noted. |
 | Direct API calls from a browser | Runtime endpoints require PluginService auth. |
 | v1 rename exploit | Box identity is a server token. No display-name matching anywhere. |
@@ -465,7 +563,10 @@ Grades 1-5 use v1 treasure's colours (§1.1). Grades 6-10 are new.
 
 ---
 
-## 4. Decisions taken by default (review)
+## 4. Decisions
+
+D1-D14 were defaults, accepted with the developer's 2026-09-26 answers (§5); D5, D11, D13 and D14 were amended then. D15-D17
+record those answers; D18-D19 follow from them.
 
 | # | Decision | Why / how to change |
 |---|---|---|
@@ -473,32 +574,38 @@ Grades 1-5 use v1 treasure's colours (§1.1). Grades 6-10 are new.
 | D2 | Runtime endpoints need a **PluginService API key** | Closes the anonymous-claim hole. Adopt currency-payments/KNG-15 service auth if it lands first. |
 | D3 | Box = **display entities** (`ItemDisplay` + `Interaction` + `TextDisplay`), non-persistent | No terrain edits and no orphans. Swap in a block by replacing `LootboxPresenter`. |
 | D4 | **Two-stage** item roll (grade by `DropChance`, then uniform item) with a grade window of box ★ − 2 … box ★ | Pool size doesn't dilute rare grades. Spread is per type. |
-| D5 | **Box grade = the existing `Grade` table**, weighted by `DropChance` (range 1-5 by default) | No second rarity table. Per-type overrides are available. |
+| D5 | **Box grade = the existing `Grade` table**, weighted by `DropChance`, **★1-5 only** (Q3; `MaxBoxStars` validated ≤5) | No second rarity table. Per-type overrides are available. Allow ★6-10 once KNG-6 names those grades and they have items. |
 | D6 | Rolled vanilla levels are **clamped by the item-grade cap**, custom enchants only by definition max | Consistent with KNG-6. v1's Sharpness 6-7 and Knockback 7 are not reproduced. |
 | D7 | Full inventory → **refuse before claiming**; any leftover race drops owner-locked | The Kits "drop, don't lose" rule, plus a pre-check so boxes aren't wasted |
 | D8 | `knk.lootbox.open`/`odds` are granted to the Default group by seed | `KnkPermissible` fails closed (the siege `knk.siege.play` precedent) |
 | D9 | One box type per **top-level or leaf** category row, `IncludeSubcategories=true`, all seeded **disabled** | The admin enables what they want. No surprise spawns after migrating. |
 | D10 | Claim is **first-come, one claimer per box** (not v1 treasure's once-per-player) | The brief asks for claim-once. A per-player mode would need a claim-per-(spawn, user) key. |
-| D11 | Soulbound/Ghosted rolls are dropped until `ItemInstance` | No v3 state to hold them. The v1 odds are recorded in §1.1. |
+| D11 | Soulbound/Ghosted: `ItemInstance` has the two flags (default false), but nothing **rolls or enforces** them yet | Adding the columns now avoids a second migration; their semantics (keep on death, …) are their own design. The v1 odds (46% each) are in §1.1. |
 | D12 | Expiry by lazy SQL sweep, not a hosted service | Fewer moving parts. A single API instance. |
-| D13 | Special entries at 0.2% for boxes ★5+ | Placeholder rarity, tunable in the web app |
-| D14 | The v1 world-loot odds (80/70/60/10/1) are **not** used. `Grade.DropChance` (70/60/40/25/15/…) is the single source. | The brief says to use DropChance. `vision.md:284` asks for a richer formula (enchantments, soulbound); it stays deferred, and the roll engine is where it would go. |
+| D13 | Special entries at 0.2% for ★5 boxes; the Flaming Samurai at 0.05% | Tunable in the web app. The rarity argument is in §3.5. |
+| D14 | The v1 world-loot odds (80/70/60/10/1) are **not** used. `Grade.DropChance` (70/60/40/25/15/…) is the single source; odds stay **grade-capped** (Q6). | The brief says to use DropChance. `vision.md:284` asks for a richer formula (enchantments, soulbound); it stays deferred, and the roll engine is where it would go. |
+| D15 | **Daily cap: 10 boxes per player per UTC calendar day**, all types together (`LootboxConfiguration.MaxClaimsPerPlayerPerDay`), plus an optional per-type limit (`LootboxType.MaxClaimsPerPlayerPerDay`); both apply | Developer, Q4. UTC (not server-local) so the reset is one unambiguous instant (00:00 UTC = 01:00/02:00 in the Netherlands). |
+| D16 | **Minimal `ItemInstance` now**, minted for every non-stackable lootbox item in the claim transaction; PDC `knightsandkings:knk_item_instance` replaces a claim-id tag | Developer, Q5 follow-up. Stackables get no instance (a unique PDC id would break stacking). Built in Phase 1 with its own migration; everything else in vision §9.1 is deferred (§0). |
+| D17 | **Spawn areas are `LootboxSpawnArea` rows** referencing a WG region, created in the web app or in game via `/knk lootbox area create <name>` from a WorldEdit selection (region `lootbox_<slug>`, full height) | Developer, Q2. Limits are edited only in the web app. `delete` only removes regions the command created. |
+| D18 | All admin lootbox commands live under **`/knk lootbox`**; `/lootbox` (`/lb`) is player-only | Follows from D17's `/knk lootbox area`: one admin root, like the other `/knk` subcommands. |
+| D19 | **One item per box** (`ItemsPerBox` dropped) | Keeps claim ↔ instance 1:1. Multi-item opens would need a claim-item row per item. |
 
-## 5. Open questions for the developer
+## 5. Questions for the developer (all resolved)
 
-### Resolved 2026-09-26 (developer) — and still open
+### Resolved 2026-09-26 (developer) — everything is decided
 
-- **Q1 special items:** yes, the recovered one-offs minus the Donator pickaxe. The developer's "flaming samurai" sword was
-  searched for in all v1/v2 source and git history: **not found** (the only "Samurai" in v1 is a Royal bodyguard name,
-  `v1:Menu/Menu.java:2206`). It will be added as a new special blueprint once its display name/material/enchants are given.
-- **Q2 spawn areas:** admin-defined areas — agreed. *Follow-up asked:* how they are defined/stored (answer: `LootboxSpawnArea`
-  rows in MySQL via the API, each referencing a WorldGuard region; proposal to add in-game creation from a WorldEdit
-  selection). Awaiting confirmation.
-- **Q3 box grades ★1-5 only** — agreed.
-- **Q4 daily cap:** *follow-up asked* what "10 per day" means. Awaiting a number (or none).
-- **Q5 box token items as Phase 5** — agreed. *Follow-up asked:* ItemBlueprint vs ItemBlueprint instancing — awaiting a
-  choice between deferring `ItemInstance` (claim id in PDC) and building a minimal `ItemInstance` now.
-- **Q6 grade-capped odds** — default taken.
+- **Q1 special items:** the recovered one-offs minus the Donator pickaxe, **plus the Flaming Samurai**. That sword isn't in any
+  v1/v2 source or git history (the only "Samurai" in v1 is a Royal bodyguard name, `v1:Menu/Menu.java:2206`), so the developer
+  asked for a new design: §3.5 (netherite sword, ★5, Sharpness V / Fire Aspect II / Sweeping Edge III / Unbreaking III /
+  Strength II, 0.05% in ★5 Weapons boxes).
+- **Q2 spawn areas:** admin-defined `LootboxSpawnArea` rows in MySQL via the API, each referencing a WorldGuard region and edited
+  in the web app, **plus** in-game creation from a WorldEdit selection with `/knk lootbox area create <name>` (and `list`,
+  `info`, `delete`). §3.3, §3.4, D17.
+- **Q3 box grades ★1-5 only.** D5.
+- **Q4 daily cap: 10 boxes per player per UTC calendar day** across all types, configurable globally with a per-type override.
+  §3.3, D15.
+- **Q5 box token items: Phase 5.** Follow-up: build a **minimal `ItemInstance` now** instead of deferring it. §3.2, D16.
+- **Q6 grade-capped odds** (the v3-capped Weapons profile, §3.5). D6, D14.
 
 Original questions below, kept for the record.
 
