@@ -35,6 +35,7 @@ Live tracker of in-progress work across all four Knights and Kings repos
 | Feature | Repos / files claimed | Owner (human / session) | Status | Started | Last updated |
 |---|---|---|---|---|---|
 | _(example)_ Siege minigame — capture point sync | web-api: `Services/SiegeService.cs`; plugin: `siege/` package | Claude Code session A | Implementing capture-point event handling | 2026-09-17 | 2026-09-17 |
+| Siege overnight chain (cloud sessions): Phases 6 → 7a → 8b → 7b → 9 (non-live parts) | knk-web-api, knk-plugin (and knk-web-app if a phase needs it): the standing `claude/siege-minigame` branches only; workspace: siege `IMPLEMENTATION_PLAN.md`/`DESIGN.md`, `docs/ai-agents/handoffs/`, `docs/reports/2026-09-26-siege-overnight-chain.md`. Never touches `claude/menu-content`, no DB migrations applied, no deploys | Claude Code cloud chain (started from the local siege Phase 5 session) | Starting link 1 (Phase 6). Rules: `docs/ai-agents/handoffs/SIEGE_OVERNIGHT_CHAIN.md`; each link adds its own row | 2026-09-26 | 2026-09-26 |
 | Legacy inventory-menu screen/item mining + feature allocation | knk-workspace: new `docs/specs/legacy/inventory-menu-screens.md`, `docs/specs/legacy/README.md`; read-only on `knk-v1-archive`/`knk-v2-archive` | Claude Code session (Pandi) | Mining v1/v2 menu screens and items | 2026-09-25 | 2026-09-25 |
 
 ## Recently completed
