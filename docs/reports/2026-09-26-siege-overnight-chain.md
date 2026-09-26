@@ -2,7 +2,7 @@
 
 **Status:** Link 1 continuing on the developer's instruction (Phase 6 done; knk-paper code uncompiled). Each chain session appends its phase section
 and rewrites the Morning summary. Rules: `docs/ai-agents/handoffs/SIEGE_OVERNIGHT_CHAIN.md`.
-**Last updated:** 2026-09-26 (link 1: Phase 8b done, starting 7b)
+**Last updated:** 2026-09-26 (link 1: Phase 7b done, starting 9)
 
 ## Morning summary
 
@@ -17,8 +17,8 @@ in a scratch build that uses Maven Central only.
 | 6 — Match persistence and rewards | done (6a tested; 6b knk-paper uncompiled) | web-api `7d4fd44`; plugin `378f8a1` | see Phase 6 section |
 | 7a — Gate integration + area lockdown | done (web-api tested; knk-paper uncompiled) | web-api `07e0a5f`; plugin `16a1436` | see Phase 7a section |
 | 8b — Siege menus | done (web-api + core/api-client tested incl. seed contract test; knk-paper uncompiled) | web-api `78945ca`; plugin `0522e44` | see Phase 8b section |
-| 7b — Non-member gate view | in progress | | |
-| 9 — Seeds and docs (non-live parts) | not started | | |
+| 7b — Non-member gate view | done (knk-paper only, uncompiled, untested) | plugin `d475195` | see Phase 7b section |
+| 9 — Seeds and docs (non-live parts) | in progress | | |
 
 ## Phase sections
 
@@ -125,3 +125,17 @@ spawn picker, `/siege`).
 
 **Risks.** Uncompiled knk-paper glue (3 new classes + `SiegeService` additions); `lobbyChanged` repaints every open
 siege menu on each change (cheap at MVP scale).
+
+### Phase 7b — non-member gate view (link 1)
+
+**Commits.** knk-plugin: `d475195` (`SiegeGateViewService`, `GateViewCells`, controller/listener/area-lockdown hooks,
+wiring). No web-api change. **Not compiled, not tested** (no pure logic to unit-test; needs two players live).
+
+**Flagged decisions** (plan → "Phase 7b status"): ★1 fakes re-sent on the next 5-tick pass after a real change (brief
+flicker during animations, no gate-engine hooks); ★2 pass-through by right-click; 3 pass-through refused while the
+area is locked (so it rarely applies - follow-up); 4 no chunk-load hook (range re-entry re-sends).
+
+**Live checklist.** Plan → "Phase 7b status" → 6 steps (member + non-member side by side; `PassThroughOnly` switch).
+
+**Risks.** The riskiest phase (charter): per-player block views under animation; if it misbehaves, set
+`NonMemberGateView = PassThroughOnly` - the degrade path needs no code change.

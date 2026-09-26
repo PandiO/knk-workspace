@@ -8,12 +8,12 @@ Bukkit-free core tested without a server; Phase 5's Paper runtime (5a loop/comma
 in "Phase 5 status" is the developer's sign-off); **Phase 6 code complete**: 6a (web-api match endpoints +
 server-side rewards) tested; 6b (plugin wiring) written on the developer's go-ahead with its knk-paper part
 **not compiled** (the cloud chain can't reach paper-api - see "Phase 6b status"); **Phase 7a (gate integration +
-area lockdown) and Phase 8b (siege menus) code complete** the same way (web-api tested, knk-paper uncompiled);
-Phases 7b + 9 not started. Phase 8a
+area lockdown), Phase 8b (siege menus) and Phase 7b (non-member gate view) code complete** the same way (web-api
+tested, knk-paper uncompiled); Phase 9 not started. Phase 8a
 (InventoryMenu engine extensions) built and merged into `claude/siege-minigame`, not verified live; Phase 8b open;
 Phase 10 is post-MVP.
-**Last updated:** 2026-09-26 (overnight chain link 1: "Phase 6", "Phase 6b", "Phase 7a" and "Phase 8b status" blocks;
-knk-paper code from 6b on is uncompiled; earlier the same day: Phase 5 playtest fixes and status block)
+**Last updated:** 2026-09-26 (overnight chain link 1: "Phase 6", "6b", "7a", "7b" and "8b status" blocks; knk-paper
+code from 6b on is uncompiled; earlier the same day: Phase 5 playtest fixes and status block)
 
 Ref: `DESIGN.md` (decisions — not restated here), `MENU_TEMPLATES.md`,
 `docs/reports/2026-09-25-siege-minigame-gap-analysis.md`. Plan format follows
@@ -1275,6 +1275,49 @@ api-client), `16a1436` (paper). No migration (the Phase 2 snapshot table and `Cu
   door) and knows locked structures (`isLocked`, the plan's roles); the non-member view needs those plus the member test
   (`SiegeLobbyRuntime.isMember`) and the `areaLockdownStarted`/`roundReleased` hooks; `SiegeConfiguration.nonMemberGateView`
   is already in the runtime config (`KnkSiegeConfiguration`).
+
+**Phase 7b status (2026-09-26, overnight chain link 1): code complete on knk-plugin `claude/siege-minigame`
+(`d475195`), knk-paper only, NOT compiled (paper-api unreachable from the cloud) and not tested - there is no pure
+logic to unit-test here; the view needs a live server with a member and a non-member side by side.** No web-api change
+(`SiegeConfiguration.NonMemberGateView` already exists and reaches the plugin in runtime-config).
+- **Classes:** `paper.siege.SiegeGateViewService` (a 5-tick task + listener), `paper.gates.GateViewCells` (new, public
+  read-only access to `GateRestingFramePlacer.restingFrameCells` - no gate engine class changed),
+  `SiegeGateController.lockedDoors()`/`LockedDoor` (pre-lockdown state per door of applied lockdowns) and
+  `tryNonMemberPassThrough`, `SiegeAreaLockdown.isLocked(lobbyId)`; `SiegeGateListener` tries the pass-through first
+  for non-members; `KnKPlugin` keeps the `GatePassThroughService` as a field and wires the view service.
+- **Behaviour:** for each locked door whose real state differs from its pre-lockdown state, non-members within 96
+  blocks get the pre-lockdown resting frame as `sendBlockChange`s and the real frame's other cells as air. Sent per
+  (viewer, door) only when the door's real state/frame changed, the viewer entered range, or after a teleport, respawn,
+  join or world change. Virtual collision: a non-member can't step (feet or head) into a cell that looks like a closed
+  door but is open/destroyed in reality. A non-member right-clicking a door that is closed now but was open before
+  gets the gate's **TELEPORT** pass-through (never DEFAULT/INSTANT_OPEN), refused while the scenario area is locked
+  down. When a lockdown ends, everyone who got fakes is sent the real blocks 5 s later (after the restore animations).
+  `NonMemberGateView = PassThroughOnly` → no fakes, no collision, pass-through only.
+- **Decisions (7b; ★ = review first):**
+  1. ★ **No per-frame hooks into the gate animation:** fakes are re-sent on the next 5-tick pass after a real change,
+     so a non-member sees the real animation briefly before their view is restored. Cheap and needs no gate-package
+     changes; if it looks bad live, switch the lobby's config to `PassThroughOnly` (the developer's stated minimum).
+  2. ★ **The pass-through is triggered by right-click** (the gate's usual pass-through gesture), not by walking into
+     the gate.
+  3. The pass-through is refused while the scenario area is locked down (the far side is the siege area) - so it only
+     helps on scenarios with `LockdownScenarioArea = false` or gates outside the locked districts' reach... in practice
+     rarely; see follow-ups.
+  4. No `PlayerChunkLoadEvent` hook: leaving the 96-block range drops the record, so coming back re-sends; chunk
+     reloads happen beyond that range.
+  5. Mid-animation the "hidden" cells are the target resting frame's, an approximation.
+- **Manual live verification (7b; member A, non-member B):**
+  1. With the default `PreLockdownView`: at the hub lockdown, B (outside the area) sees the gates as before; A sees
+     the siege state. Walk around, relog, teleport away and back → B's view stays pre-lockdown.
+  2. A gate that was open before and is closed now: B right-clicks it → refused while the area is locked ("this area is
+     closed"); on a scenario without area lockdown → carried across (TELEPORT).
+  3. A gate that was closed before and is open now (area gate): B can't walk through what they see as closed; A walks
+     through.
+  4. Owners animate a gate: B sees a short flicker, then the pre-lockdown view again.
+  5. After the match: B sees the real (restored) gates within ~5 s.
+  6. Set `SiegeConfiguration.NonMemberGateView = PassThroughOnly` (web app / PUT), `/siege admin reload` between
+     matches → B sees the siege state, no collision; the pass-through still works where allowed.
+- **Follow-ups:** decide whether the pass-through should also work *out of* a locked area or along its border (today
+  refused whenever the area is locked); per-frame re-send via a `GateManager` hook if the flicker is a problem.
 
 ## Phase 8 — Menus (knk-web-api, knk-plugin) — after Phase 5
 
