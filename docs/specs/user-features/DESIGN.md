@@ -4,7 +4,7 @@
 implementation-detail ones originally left in `IMPLEMENTATION_PLAN.md` §7. See
 `IMPLEMENTATION_PLAN.md` for the phased build-out, and `docs/specs/user-management/` for the
 separate tailored-admin-UI feature this design's data model now underpins.
-**Last updated:** 2026-09-26 (§5: salary pays the title's `Salary` per hour, with log decay over 30 days for gaps — KNG-16). Earlier: 2026-09-23 (second revision same day: `User`/`PermissionGroup` are now
+**Last updated:** 2026-09-26 (§5: salary pays the title's `Salary` per hour, with log decay over 30 days for gaps; §3: promotion bonuses scaled by per-currency personal/rank multipliers — KNG-16). Earlier: 2026-09-23 (second revision same day: `User`/`PermissionGroup` are now
 TPT subtypes of a shared `PermissionHolder` base table rather than `PermissionGrant.HolderId`
 being an unconstrained polymorphic pointer; vanish/owner/staff-mode state now persists across
 a restart instead of matching v1's in-memory-only behavior; title thresholds confirmed as
@@ -182,6 +182,15 @@ v1's `TitleChangeEvents` (`Repository/knk-v1-archive/src/Titles/TitleChangeEvent
 `userPromotion`/`userDemotion` once per tier crossed on a 2-second `BukkitRunnable` timer when
 a jump spanned multiple brackets (`setPromoteLoop`/`setDemoteLoop`), which this project
 explicitly does not repeat (developer-confirmed 2026-09-25).
+
+Each promotion bonus is scaled by the player's multipliers for that currency before it's
+credited (developer-confirmed 2026-09-26, KNG-16): `CoinBonus` × the salary multipliers
+(`User.PersonalSalaryMultiplier` × the product of active groups' `SalaryMultiplier`),
+`GemBonus` × `User.PersonalGemBonusMultiplier` × the product of `PermissionGroup.
+GemBonusMultiplier`, and `ExpBonus` × `User.PersonalExpBonusMultiplier` × the product of
+`PermissionGroup.ExpBonusMultiplier`. All default to a neutral 1.0; the salary system's global
+multiplier does not apply. The scaled XP bonus can itself carry the player into a further
+bracket.
 
 **Not ported** — v1's per-tier structural unlocks and skill-point mechanics
 (`TitleChangeEvents.userPromotion`/`userDemotion`, lines 149–244): +1 house/property slot at
