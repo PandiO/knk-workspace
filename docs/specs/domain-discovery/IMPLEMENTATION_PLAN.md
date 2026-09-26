@@ -238,6 +238,21 @@ re-enter rediscovers). Known: hub count/header use a summary cached ≤ 30 s; `C
 
 ---
 
+### Phase 4 status — done 2026-09-26 (knk-web-app `claude/domain-discovery`)
+
+Commits `42e8743` (`usePermission(node)` hook cherry-picked unchanged from private-messages `dceb5b3`), `35e04a3`
+(`discoveryClient.ts`, `DiscoveryDtos.ts`), `d19bc15` (account page "Discoveries" section for linked accounts: per-type
+progress + 10 latest; `PlayerDiscoveriesPanel` on the player profile for `knk.admin.discovery` holders with paged table,
+type filter and confirmed Reset; `DiscoveryReset` audit label), `1282595` (`StaffRoute` optional `node`; pick-only
+`SearchableDropdown`), `c84b77e` (`/admin/discovery`: inline type-rule editing with validation, live per-title preview using
+the API's formula, per-domain overrides, statistics with first discoverer + top explorers). Tests 16 failed (baseline) /
+282 passed (38 new); build + `tsc --noEmit` clean for touched files.
+Deviations: preview follows unsaved edits (server stays authoritative, reloads after save); dedicated page instead of
+FormConfig (computed preview); nav link after Game Settings. Known: domain picker loads ≤ 1,000 domains; own paging types
+(`pageNumber` vs shared `page`); small merge conflicts expected with private-messages (profile panel/audit labels) and siege
+(nav link). Smoke test: `/account` counts = in-game `/discoveries`; edit the Town rule and watch the preview; add/remove an
+override; reset a discovery → "Discovery reset" in Recent Activity.
+
 ## Phase 5 — Adopt currency-payments ledger/idempotency and plugin auth
 
 **Tasks**
@@ -251,6 +266,24 @@ re-enter rediscovers). Known: hub count/header use a summary cached ≤ 30 s; `C
 **Size:** S. **Depends on:** `specs/currency-payments/` implementation, inventory-menu CP7 server half.
 
 ---
+
+### Phase 5 status — done 2026-09-26 (knk-web-api + knk-plugin `claude/domain-discovery`)
+
+knk-web-api `616ef29` merges currency ledger `d5c1418` (snapshot conflict resolved; `has-pending-model-changes` clean, all
+migrations kept), `dd43b2d` adds `IUserService.ApplyTitleProgressionAsync(userId, previousExperience, …)` (title at old vs.
+current XP, pays crossed-bracket bonuses without re-adding XP, joins the caller's transaction), `1900b66` `DiscoveryService`
+posts through `ICurrencyService`: **one posting per domain**, `DISCOVERY_REWARD`, key `discovery:{userId}:{domainId}`
+(rediscovery after a reset uses `…:2`, `:3`), `SourceType "Domain"`/`SourceRef` = domain id, shared `CorrelationId` per
+request, metadata with base amounts + multipliers; the reward's `BalanceAdjusted` audit row is dropped (ledger records it);
+ledger refusals → 409. knk-plugin `45e80b6` merges `3630436` (service key never logged). API 828 pass / 14 skipped / 5
+baseline; requires-mysql 14/14 ×3 on MySQL 8.0.46 (10 concurrent grants → one posting per domain, reconciler clean; reset +
+rediscovery clean; ledger refusal rolls back the discovery rows; title crossing adds XP once, bonus once). Plugin CI green
+https://github.com/PandiO/knk-plugin/actions/runs/36261765260. Plugin auth: nothing left (grant/known
+`[RequirePluginService]`, progress/summary `[RequireServiceSelfOrPermission]`, reset `[RequireServiceOrPermission]`).
+Known: until currency Phase 2 routes title bonuses through the ledger, a discovery that triggers a promotion shows a
+reconciler chain mismatch (expected); at merge, switch `ApplyTitleProgressionAsync` to currency Phase 2's ledger-based
+equivalent. Discovery rewards no longer appear as `BalanceAdjusted` in Recent Activity (they're in the discoveries panel
+and, later, the ledger history views).
 
 ## Risks / notes for whoever picks this up
 - `DomainService.SearchDomainRegionDecisionAsync` returns at most one Town/District/Structure and no GateStructures; discovery

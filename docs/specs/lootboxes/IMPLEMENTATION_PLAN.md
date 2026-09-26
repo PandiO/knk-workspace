@@ -295,6 +295,27 @@ claims briefly lock the player's `users` row; web-app area delete not audited.
 
 ---
 
+### Phase 3 status — done 2026-09-26 (knk-plugin + knk-web-api `claude/lootboxes`)
+
+knk-web-api `f21799c`: **enchant applicability fix** — `Services/Lootbox/VanillaEnchantmentRules.cs` (which items each vanilla
+enchantment fits + mutual exclusions); rolled vanilla enchants that don't fit or conflict are skipped, custom/defaults
+never filtered; odds preview adds `applicableItemCount` + `landPercent` per roll (checked against a 200k-roll simulation).
+`81f8071`: seed grants `knk.lootbox.open` + `knk.lootbox.odds` to the Default group if missing. knk-plugin: `fb2496f` (trunk
+merge), `da13ca5` (KNG-22 `be0cfc3`), `3bc60a0` (knk-core `core/lootbox`: records, `LootboxRejectedException`,
+`LootboxSpawnPlanner`, `ActiveLootboxCache`, `ClaimGuard` with key `{token}:{userId}`, ports; api-client impls with service
+key + `X-Acting-User-Id`), `e6cf0bd` (`WorldGuardIntegration.createRegionFromSelection`/`createFullHeightRegion`/
+`addRegion`/`removeRegion`), `af40c7b` (knk-paper `LootboxPresenter`, `LootboxRuntime`, `LootboxSpawnScheduler`,
+`LootboxRegions`, `LootboxDelivery`, `LootboxAnnouncer`, `ItemInstanceTag`, interact/chunk/join listeners, `/lootbox` | `/lb`,
+`/knk lootbox`, plugin.yml nodes, `lootboxes:` config). API 850 (845 pass, 5 baseline); plugin CI green
+https://github.com/PandiO/knk-plugin/actions/runs/36262963984; 35 new core/api-client tests pass locally.
+Deviations: delivery in two passes (blueprint defaults as authored, rolled enchants with vanilla rules; any skip logged +
+written to the claim's `deliveryNote`); conservative table (Fire Aspect on swords/maces only); `LootboxRuntime` refreshes on
+its own timer; `/knk lootbox` actions check `knk.lootbox.admin.<action>` via `KnkPermissible`; left-click also opens; new key
+`lootboxes.server-id`. Developer to-do: API key on both sides; restart the API (seed adds Default grants); run the 11-step
+in-game checklist above. Known: Paper-specific parts (display entities, interpolation, `getChunkAtAsync`, WE selection)
+untested live; first click can be refused until the permission cache warms; stackables can double-deliver after a crash
+(accepted); join redelivery only picks up claims older than 30 s.
+
 ## Phase 4 — Web-app admin (knk-web-app)
 
 - `src/apiClients/`: `lootboxTypeClient.ts`, `lootboxSpecialEntryClient.ts`, `lootboxSpawnAreaClient.ts`,

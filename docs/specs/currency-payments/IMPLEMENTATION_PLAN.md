@@ -230,6 +230,44 @@ sessions that `ICurrencyService` is live.
 
 ---
 
+### Phase 2 status — done 2026-09-26 (all three repos, `claude/currency-payments`)
+
+knk-web-api `33dd9eb` (every write path through the ledger), `46929ba` (write-guard + MySQL routing tests), `234f8f3`
+(`IUserService.ApplyTitleProgressionAsync(userId, previousExperience, reason, metadata?, actorUserId?, notifyPlayer)` —
+same signature as discovery's `dd43b2d`; lower level `ITitleProgressionService.ApplyForPostingAsync(posting, actor)`);
+migration `RouteBalancesThroughLedger`. knk-plugin `3630436` (KNG-22 follow-up: `X-API-Key`/`Authorization`/cookies
+redacted wherever headers are logged; `api.debug-logging` default false), `e785ba7` (Add/Remove/Set + `Idempotency-Key`),
+`8a23e32`. knk-web-app `ad4c7ab` (profile quick actions send Add/Remove/Set + key).
+- EF can no longer write `Coins`/`Gems`/`ExperiencePoints` (DB default 0); `CurrencyRepository` writes them via
+  `ExecuteUpdate` inside the locked transaction. New users get `SIGNUP_GRANT` (`signup:{id}`, `CurrencyPolicy.SignupGrant`
+  250 coins / 50 gems) in the insert transaction.
+- `PUT /Users/{id}/balances` takes `changes:[{currency, mode Add|Remove|Set, amount, expectedCurrent?}]` + required
+  `Idempotency-Key`; response has before/after + ledger id per change (old delta fields removed).
+- Title bonuses via `TitleProgressionService`, once per player per bracket (`title-bonus:{userId}:{bracketId}`) — **fixes
+  A5** (re-grant loop); salary `SALARY` (`salary:{userId}:{prev:O}`, KNG-16 formula/breakdown unchanged); kits
+  `KIT_CLAIM_COST`/`KIT_PURCHASE`; merge forfeits the secondary's coins/gems (`MERGE_FORFEIT`, XP stays on the archived row);
+  audit entries carry ledger ids. Plugin `/knk user … set`, Player-manager steppers and set-title send modes, not deltas.
+- Tests: API 731 pass / 5 baseline / 18 skipped; requires-mysql 18/18 ×3 on MySQL 8.0.46 (full-row `Update()` can't write
+  balances; 6 concurrent salary calls pay once; kit purchase racing presence + stale write charges once; retried claim pays
+  once; stale `expectedCurrent` → 409; demote/re-promote pays the bonus once; scripted session of every path reconciles
+  with **0 mismatches**). Migration up/down/up clean. Plugin CI green https://github.com/PandiO/knk-plugin/actions/runs/36263071335;
+  web-app = trunk baseline.
+- Deviations: salary/kit purchase use server-fixed keys (no client key); OkHttp `retryOnConnectionFailure` stays on (keyed
+  writes are retry-safe); new `ICurrencyService.FindAsync`/`GetPoliciesAsync` (sibling fakes need them at merge);
+  per-player history endpoint + `/knk user … history` deferred (not in the plan's Phase 2).
+- **Developer to-do:** `dotnet ef database update`; **deploy API and plugin together** (old plugins get 400 without a key);
+  smoke test `/knk user X coins set 1000 <reason>`, set-title, kit claim with cost, kit purchase. **Confirm:** on
+  link-minecraft-account the Minecraft account is the secondary, so its in-game coins/gems are forfeited (pre-existing
+  behaviour, matches Q6).
+- **Siege merge instruction:** in `SiegeMatchService.CompleteAsync` delete the `user.Coins/Gems/ExperiencePoints +=` lines and
+  `TitleProgression.ApplyExperienceChange` calls; build legs per grantee (scaled coins, gems, XP); inside `RunLockedAsync`
+  call `_currency.PostAsync(legs, CurrencyContext.ForSystem("SiegeMatchService", CurrencyReasons.SiegeReward,
+  $"siege-match:{match.Id}") with { SourceType = "SiegeMatch", SourceRef = match.Id.ToString() })`, then
+  `_titleProgression.ApplyForPostingAsync(posting, null)`; keep `CoinsAwarded/…` as display copies; inject
+  `ICurrencyService` + `ITitleProgressionService`, use `TitleProgressionService.ScaleBonus`, delete `Services/TitleProgression.cs`;
+  point `SiegeMatchRepository.LockUsersAsync` at `IUserRepository` (or drop it); `RequirePluginServiceKey` →
+  `[RequirePluginService]`; siege tests need `FakeCurrencyService` or the real service with SQL-seeded balances.
+
 ## Phase 3 — Player transfers (`/pay`, `/balance`, `/baltop`, `/transactions`) — size L
 
 **knk-web-api**
