@@ -358,9 +358,10 @@ READ-ONLY in its own class javadoc where present.
 - **Status:** Finished, admin-facing debug tool. Actively restructured
   (merge from standalone command) as of 2026-09-23.
 
-### `/knk itemblueprints list|search|get|give` (alias `/knk itemblueprint`)
+### `/knk itemblueprints list|search|get|give` (aliases `/knk itemblueprint`, `/knk ib`)
 - **File:** `ItemBlueprintsDebugCommand.java`, registered as `itemblueprints`
-  with alias `itemblueprint` (`KnkAdminCommand.java:217-233`)
+  with alias `itemblueprint` (`KnkAdminCommand.java:217-233`); `ib` added by
+  KNG-10 (PandiO/knk-plugin#1, pending merge as of 2026-09-26)
 - **Permission:** `knk.admin.itemblueprints` (`KnkAdminCommand.java:222`)
 - **Subcommands:**
   - `list [page] [size]` (`:92-106`) — paginated blueprint listing.
