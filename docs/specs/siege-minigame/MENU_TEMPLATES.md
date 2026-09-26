@@ -1,11 +1,12 @@
 # Siege Minigame — Inventory Menu Templates
 
-**Status:** Documented, **not implemented** (developer instruction 2026-09-25). Part A is a
-source-verified inventory of every legacy Siege menu; Part C is the proposed v3 template set,
-blocked on the InventoryMenu engine extensions in Part B (built 2026-09-25 on branch
-`claude/inventorymenus`, not merged; Part C corrected afterwards for absolute slots and a single Body
-section).
-**Last updated:** 2026-09-25
+**Status:** **Implemented** — merged into the default branches on 2026-09-26 and smoke-tested live. Part A
+is a source-verified inventory of every legacy Siege menu; Part B's InventoryMenu engine extensions are
+built and merged; Part C is the v3 template set, seeded create-only by knk-web-api
+`Models/Menu/MenuTemplateSeed.Siege.cs` (`siege.overview`, `siege.information`, `siege.spawnpoint`).
+Where the seeds differ from the original draft, Part C says so inline.
+**Last updated:** 2026-09-26 (synced with the smoke-tested seeds: Dynamic heights, cooldown lobbies not
+opened, remembered spawn choice)
 
 Ref: `DESIGN.md` §10 (menus in the Siege design), `docs/specs/inventory-menu/` (engine),
 `docs/specs/legacy/inventory-menus.md` (legacy engine bugs), gap report
@@ -174,9 +175,9 @@ why Part C reuses its structure.
 
 ## Part B — InventoryMenu engine extensions required first
 
-The v3 engine (`docs/specs/inventory-menu/IMPLEMENTATION_PLAN.md` Phases 1–8) cannot express these menus
-yet (gap report §4). Proposed as **InventoryMenu Phase 9 — domain integration**, a prerequisite of
-Siege implementation Phase 8 (`IMPLEMENTATION_PLAN.md`). Each is generic — Kits' future menu needs the
+The v3 engine (`docs/specs/inventory-menu/IMPLEMENTATION_PLAN.md` Phases 1–8) could not express these
+menus (gap report §4). Built as **InventoryMenu Phase 9 — domain integration**, a prerequisite of Siege
+implementation Phase 8 (`IMPLEMENTATION_PLAN.md`); merged with the siege work *(updated 2026-09-26)*. Each is generic — Kits' future menu needs the
 same set.
 
 | # | Extension | Why Siege needs it | Sketch |
@@ -195,7 +196,8 @@ Siege itself registers (DESIGN §10.2): variable roots `siege`, `siegeViewer`, `
 sources `siege.lobbies`, `siege.vote-candidates`, `siege.body` (phase-aware members/objectives),
 `siege.spawn-options`; actions `siege.join`, `siege.leave`, `siege.vote`, `siege.vote.random`,
 `siege.spawn`, `siege.open-own`; conditions `siege.phase`, `siege.participating`,
-`siege.join-eligible`, `siege.vote-open`, `siege.spawn-available`, `siege.lobbies-empty`.
+`siege.join-eligible`, `siege.vote-open`, `siege.spawn-available`, `siege.lobbies-empty`,
+`siege.lobby-open` (added 2026-09-26).
 
 ---
 
@@ -206,7 +208,9 @@ lines are listed in `SortOrder`. `S` = `Static`, `D` = `OnDirty`, `T20` = `Ttl` 
 number is an **absolute inventory slot** — that is how the engine interprets `SlotOverride`
 (`RuntimeMenuItem`; confirmed by the Phase 9 session 2026-09-25), not section-local. Colours use `&`-codes (E7): `&7` GRAY, `&a` GREEN,
 `&c` RED, `&e` YELLOW, `&6` GOLD, `&5` DARK_PURPLE, `&b` AQUA. All view getters named here are
-defined in DESIGN §10.3.
+defined in DESIGN §10.3. *(Updated 2026-09-26, as built: lore that depends on the row kind uses one
+list getter — `$row.getLines$`, `$row.getStatusLines$` — instead of per-line bindings. Seeds are
+create-only: delete the three `siege.*` templates to pick up a changed seed.)*
 
 ### C.1 `siege.entry` — main-menu button (an item, placed in whatever root menu template exists)
 
@@ -218,7 +222,16 @@ defined in DESIGN §10.3.
 | Action | `siege.open-own` (opens the viewer's own siege Information if participating — v1 behaviour — else `menu.open {key: siege.overview}`) |
 | Permissions | `VisibilityPermission`/`ActionPermission`: `knk.siege.play` (DESIGN §11) |
 
-### C.2 `siege.overview` — Height 5, `AutoRefreshTicks` 20
+*(Updated 2026-09-26, as built:)* `siege.entry` is the hub's existing Siege tile in the content menu seed.
+It opens `siege.overview` behind `menu-available` and has **no** `siege.open-own` action, no entry-hint
+lore line and no permission binding. `siege.open-own` and `$siegeServer.getEntryHintLine$` exist (the
+hint is on the overview header) but aren't on the tile; `/siege` and `/siege menu` open your own
+Information instead.
+
+### C.2 `siege.overview` — Dynamic height (max 5, `MinHeight` 2), `AutoRefreshTicks` 20
+
+*(Updated 2026-09-26, smoke test: was a fixed Height 5; the menu now shrinks to the header + the lobby
+rows in use.)*
 
 | Section | Kind | DisplaySlot | W×H | Overflow | Content |
 |---|---|---|---|---|---|
@@ -241,14 +254,16 @@ defined in DESIGN §10.3.
 | Name | `&7$row.getName$` (S) — the lobby's configured name replaces "Siege N" (fixes N5 label mismatch) |
 | Lore | `&7Scenario: $row.getScenarioLabel$` · `&7Joined players: $row.getMemberCountLabel$` · `&7Current stage: &a$row.getPhaseLabel$` · `$row.getEntryRequirementLine$` (null unless the next scenario has a title gate) · `` · `&7$row.getTimerLabel$` · `&a$row.getTimeRemaining$` · `` · `$row.getJoinHintLines$` (List: `&aClick to view and join!` \| `&cCan't join match!`+`&cWait for matchmaking to start` \| `&cYou don't meet the entry requirement`) — all T20 |
 | Action | `menu.open {key: siege.information, ctx.lobbyId: $row.getLobbyId$}` |
+| Click condition | `siege.lobby-open {lobbyId: $row.getLobbyId$}` — a lobby in cooldown or disabled is listed but doesn't open *(added 2026-09-26, smoke test)* |
 | Sort | content source orders matchmaking → in progress → cooldown (fixes N5) |
 
-**Pinned in `Sieges`** (slots 36–44): `36` Prev (`ARROW`, `&aPrevious page`, lore `&7Page $section.getPage$/$section.getPageCount$`, `menu.page.prev`) · `44` Next (`menu.page.next`) · `37–43` `BLACK_STAINED_GLASS_PANE` " ". Empty state: when the source returns no rows, a pinned `BARRIER` at slot 22 `&cNo Sieges` / `&7There are currently no active Sieges.` / `&7Sieges start automatically — check back soon.` with render condition `siege.lobbies-empty` (the v2 "ask a Donator" line is obsolete: lobbies self-start).
+**Pinned in `Sieges`** (slots 36–44): `36` Prev (`ARROW`, `&aPrevious page`, lore `&7Page $section.getPage$/$section.getPageCount$`, `menu.page.prev`) · `44` Next (`menu.page.next`). ~~`37–43` `BLACK_STAINED_GLASS_PANE` " "~~ — no filler panes; the engine's default gray background (`GRAY_STAINED_GLASS_PANE`) fills empty slots *(updated 2026-09-26)*. Empty state: when the source returns no rows, a pinned `BARRIER` at slot 22 `&cNo Sieges` / `&7There are currently no active Sieges.` / `&7Sieges start automatically — check back soon.` with render condition `siege.lobbies-empty` (the v2 "ask a Donator" line is obsolete: lobbies self-start).
 
-### C.3 `siege.information` — Height 6, `AutoRefreshTicks` 20, requires `ctx.lobbyId`
+### C.3 `siege.information` — Dynamic height (max 6, `MinHeight` 3), `AutoRefreshTicks` 20, requires `ctx.lobbyId`
 
-Opening in COOLDOWN is allowed in v3 (shows the countdown and the next rotation) instead of v2's
-bounce-back. Every phase-specific item carries a **Render** condition `siege.phase {lobbyId: $ctx.lobbyId$, phases: …}` (E5).
+~~Opening in COOLDOWN is allowed in v3 (shows the countdown and the next rotation) instead of v2's
+bounce-back.~~ *(Updated 2026-09-26, smoke test: a lobby in cooldown or disabled is **not** opened —
+`siege.lobby-open` on the overview row; `/siege` and `/siege menu` refuse too. Height was a fixed 6.)* Every phase-specific item carries a **Render** condition `siege.phase {lobbyId: $ctx.lobbyId$, phases: …}` (E5).
 
 | Section | Kind | DisplaySlot | W×H | Content |
 |---|---|---|---|---|
@@ -306,7 +321,7 @@ returns member rows in `MATCHMAKING`/`HUB` and objective rows in `IN_PROGRESS`/`
 | `BannerPatterns` `$row.getBannerPatterns$` | null | live capture gradient |
 | `DisplayMode` `$row.getDisplayMode$` | `HIGHLIGHT` for the viewer (v1 glow) | `HIGHLIGHT` while contested |
 | Name `$row.getTitle$` | `&a<name>` | `&7<objective>` + `&7(&aWin&7)` for instant-victory |
-| Lore `$row.getLines$` (E8 list) | `&bTitle: &a<title>` · `&bRank: &a<rank>` (replaces hardcoded "Donator") · team line after the split | `&7Held by: <holder>` · `` · `&7Captured: <n>%` · captured-by line (last capturer; with recapture enabled also `&7Captures: &a<n>`) · gate line (`&7Gate: &a<name> &7(<Open/Closed/Destroyed>)`) · contested line |
+| Lore `$row.getLines$` (E8 list) | `&bTitle: &a<title>` · `&bRank: &a<rank>` (premium tier name, "-" when none; replaces hardcoded "Donator") · team line after the split | `&7Held by: <holder>` · `` · `&7Captured: <n>%` · captured-by line (last capturer; with recapture enabled also `&7Captures: &a<n>`) · contested line. *(As built: no gate Open/Closed/Destroyed line — the menu snapshot has no gate state; the objective banner is the holder team's banner, not the live gradient.)* |
 | Click | — | — (spawning only via the spawn picker) |
 
 In `COOLDOWN` the source returns an empty page.
@@ -316,8 +331,11 @@ Pinned pager in Body: none by default (27 capacity); if the member list exceeds 
 
 ### C.4 `siege.spawnpoint` — respawn picker, Height 3, `AutoRefreshTicks` 20
 
-Opened by the runtime (match start + respawn, only if the team has ≥ 2 options — v1 rule) and by C.3's
-"Change spawnpoint". No `ctx` needed — resolves the viewer's own match.
+Opened by the runtime at match start and by C.3's "Change spawnpoint", only if the team has ≥ 2 options
+(v1 rule). After a respawn it opens only while the member has no stored choice. *(Updated 2026-09-26,
+smoke test: the choice is remembered — ignoring the picker at match start stores the team default, so it
+doesn't reopen on every death; a captured objective resets its choosers to the team default with a chat
+hint to `/siege menu`.)* No `ctx` needed — resolves the viewer's own match.
 
 | Section | Kind | DisplaySlot | W×H | Content |
 |---|---|---|---|---|
