@@ -285,6 +285,23 @@ reconciler chain mismatch (expected); at merge, switch `ApplyTitleProgressionAsy
 equivalent. Discovery rewards no longer appear as `BalanceAdjusted` in Recent Activity (they're in the discoveries panel
 and, later, the ledger history views).
 
+### Final review — 2026-09-26 (all phases)
+
+Fixed: (1) **Medium** — a title bonus over the balance cap threw from `ApplyTitleProgressionAsync` as a 500, which the plugin
+spooled and replayed forever, blocking every player's spool; grant now returns 409 `BalanceCapExceeded` (API `dc22372`).
+(2) **Low–medium** — the plugin treated every 4xx as final, so an API-key mismatch (401) dropped live grants and deleted
+spooled ones; 401/403/408/429 are now transient (plugin `f40a73e`). Verified sound: no double-grant path (unique index +
+row lock + ledger keys in one transaction; replays return already-discovered), plugin-only grant/known routes, server-side
+hourly cap, reward math per the developer's decisions, `RequireServiceSelfOrPermission` limited to own data, migrations
+clean, main-thread Bukkit use, staff/vanish exclusions, atomic spool writes, web-app gating. Left: frozen flag loads async on
+join (negligible); riders discover only after dismounting; reset audit row outside the delete transaction; per-grant ledger
+key read; corrupt spool file skipped. Tests: API 829 pass / 5 baseline / 14 skipped, requires-mysql 14/14; migrations CI
+36263326069 green; plugin CI green https://github.com/PandiO/knk-plugin/actions/runs/36263324190; web-app 282 pass / 16 baseline.
+
+**Feature status: Phases 1–5 complete on `claude/domain-discovery`; awaiting developer smoke test + merge.** Merge order:
+currency-payments → domain-discovery → teleport. At merge, switch discovery's `ApplyTitleProgressionAsync` to currency
+Phase 2's identical-signature version (`234f8f3`) so title bonuses are ledger-posted too.
+
 ## Risks / notes for whoever picks this up
 - `DomainService.SearchDomainRegionDecisionAsync` returns at most one Town/District/Structure and no GateStructures; discovery
   avoids it (server resolves raw region ids). Gate control in `SimpleRegionTransitionService` compares `domainType` to `"gate"`,
