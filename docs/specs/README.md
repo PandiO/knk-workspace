@@ -9,6 +9,7 @@ Central home for requirements, specifications, and implementation roadmaps acros
 - api/: API contract snapshots and backlog for REST endpoints
 - items/: item catalog (`ItemBlueprint`) design/implementation
 - kits/: Kit (equipment loadout) design, implementation plan, and legacy-DB seed data
+- enchantment-books/: permanent enchantment books outside siege (Linear KNG-5)
 - user-features/: rank/permission/title/salary architecture
 - user-management/: tailored admin module built on top of user-features
 - legacy/: legacy reference notes kept for historical context
@@ -20,6 +21,7 @@ Central home for requirements, specifications, and implementation roadmaps acros
 - Portfolio overview: [docs/specs/project-overview/IMPLEMENTATION_ROADMAP.md](docs/specs/project-overview/IMPLEMENTATION_ROADMAP.md), [docs/specs/project-overview/CHANGES_SUMMARY.md](docs/specs/project-overview/CHANGES_SUMMARY.md), [docs/specs/project-overview/SOURCES_LOCATION.md](docs/specs/project-overview/SOURCES_LOCATION.md)
 - API contract snapshots: [docs/specs/api/README.md](docs/specs/api/README.md) (includes swagger export and contract notes)
 - Items domain: [docs/specs/items/IMPLEMENTATION_PLAN.md](docs/specs/items/IMPLEMENTATION_PLAN.md)
+- Enchantment books (KNG-5): [enchantment-books/ENCHANTMENT_BOOK_APPLICATION.md](enchantment-books/ENCHANTMENT_BOOK_APPLICATION.md)
 - Kits domain: [docs/specs/kits/DESIGN.md](docs/specs/kits/DESIGN.md), [docs/specs/kits/IMPLEMENTATION_PLAN.md](docs/specs/kits/IMPLEMENTATION_PLAN.md), [docs/specs/kits/SEED_DATA.md](docs/specs/kits/SEED_DATA.md)
 - User features (rank/permissions/title/salary): [docs/specs/user-features/DESIGN.md](docs/specs/user-features/DESIGN.md), [docs/specs/user-features/IMPLEMENTATION_PLAN.md](docs/specs/user-features/IMPLEMENTATION_PLAN.md)
 - User management (admin module): [docs/specs/user-management/DESIGN.md](docs/specs/user-management/DESIGN.md), [docs/specs/user-management/IMPLEMENTATION_PLAN.md](docs/specs/user-management/IMPLEMENTATION_PLAN.md)
