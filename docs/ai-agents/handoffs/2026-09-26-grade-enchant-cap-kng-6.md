@@ -23,10 +23,11 @@ the `menu-content` merge):
   the same backfill. Checked on MySQL 8: apply all, no pending model changes, roll back to 0, re-apply, and the
   backfill on existing rows. `dotnet test` 524/529 (the 5 known failures).
 - **knk-web-app:** nothing to merge (no changes).
-- `claude/siege-minigame` and `claude/adoring-dirac-p4pn54` are unchanged. When siege merges later, it will
-  meet these commits on trunk. Expect a snapshot conflict in knk-web-api `KnKDbContextModelSnapshot.cs` (keep
-  both sides' properties). The branch's own copy of this migration (`20260926080330`) must be dropped, or the
-  columns get added twice.
+- `claude/siege-minigame` is unchanged. When siege merges later, it will meet these commits on trunk. Expect a
+  snapshot conflict in knk-web-api `KnKDbContextModelSnapshot.cs` (keep both sides' properties).
+- The work branch `claude/adoring-dirac-p4pn54` and the KNG-5 branch were **deleted** afterwards, together with
+  the old migration copy (`20260926080330`) that lived only there. See the
+  [close-out handoff](2026-09-26-enchantment-books-closeout.md).
 
 ## What to do next (at your PC)
 
