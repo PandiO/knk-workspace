@@ -9,7 +9,7 @@ see below; item 3 (audit log retention policy) via `IMPLEMENTATION_PLAN.md`'s "A
 retention status"; item 4 (aggregate endpoint vs. several calls) via Phase 1 shipping the
 aggregate. This module is feature-complete; see `IMPLEMENTATION_PLAN.md`'s "Phase 3 status" for
 what a future session might still pick up (none of it blocking).
-**Last updated:** 2026-09-25 (§8 in-game front end + actor attribution note, InventoryMenu content
+**Last updated:** 2026-09-26 (§8 actor header honoured, §9 staff-only moderation). Earlier: 2026-09-25 (§8 in-game front end + actor attribution note, InventoryMenu content
 port). Previously updated 2026-09-24 (Phase 3 implementation session), 2026-09-24
 (audit log retention policy session), 2026-09-24 (Phase 2 implementation session), 2026-09-24
 (Phase 1 implementation session).
@@ -198,4 +198,37 @@ branch `claude/menu-content` in knk-web-api/knk-plugin, **not merged, not live-v
   plugin authenticates (CONTENT_PORT_PLAN.md CP7 status lists the options), plugin-made changes keep
   a null `ActorUserId` exactly as before. `POST /api/users/{id}/salary/payout` also takes no actor at
   all today.
+- **Update 2026-09-26 (developer request, knk-web-api `0970ff3`): the header is now honoured.**
+  `UsersController.GetActorUserId` uses the caller's JWT identity when there is one (a logged-in
+  user is always their own actor), and otherwise the `X-Acting-User-Id` header. The forging risk
+  above is handled by an optional shared key: when `Security:PluginApiKey` is set, the header only
+  counts on requests carrying that key in `X-API-Key` (plugin `config.yml` `api.auth.type: apikey`
+  with the same `api-key`). With no key configured (the dev default) any anonymous caller's header
+  is trusted, so set the key before production.
+
+## 9. Staff-only access to the web moderation pages — 2026-09-26
+
+Developer request: the moderation pages are staff only. "Staff" = the permission node
+**`knk.admin.user.manage`** (developer choice: the same node as the in-game Player manager, §8; also
+matched by `knk.admin.*` and `*`).
+
+- **knk-web-api:** `[RequirePermission(StaffPermissions.ManageUsers)]` (`Attributes/
+  RequirePermissionAttribute.cs`; 401 without a JWT, 403 without the node) on the endpoints only the
+  web moderation pages use: `GET /api/audit-log`, `GET /api/users/{id}/profile-summary`,
+  `POST /api/users/{id}/groups`, `DELETE /api/users/{id}/groups/{groupId}`,
+  `POST /api/users/{id}/grants`, `POST /api/users/{id}/vanish-mode`, `GET /api/users/search`.
+- **Not gated yet:** endpoints the plugin shares with those pages (`PUT /balances`, `/freeze`,
+  `/unfreeze`, `/active-mode`, `/permissions/*`, `POST /search`, ...). The plugin calls them
+  anonymously, so gating them waits on the plugin authenticating (§8). The generic dashboard/
+  FormWizard CRUD (e.g. editing a User or PermissionGrant) is likewise open to any logged-in user.
+- **knk-web-app:** `StaffRoute` guards `/admin/users` and `/admin/users/:id` (non-staff see a
+  "Staff only" notice), and the Moderation nav link only shows for staff (`useStaffAccess`, one
+  `GET /api/users/{id}/permissions/check` per login).
+- **Recent Activity** on the player profile now spells out each entry's details (amounts with
+  before/after balances, reason, salary rate/hours/multipliers, title/group/grant/mode changes;
+  `utils/auditDetails.ts`). BalanceAdjusted and SalaryPayout entries record before/after balances
+  from this change on; older entries show what they have.
+- A global, filterable **balance event log** page under Moderation is deferred to KNG-23 (the
+  balance ledger), by developer decision.
+
 
