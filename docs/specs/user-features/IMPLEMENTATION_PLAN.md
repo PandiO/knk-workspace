@@ -1,6 +1,8 @@
 # User Features — Implementation Plan (Rank/Permission/Progression)
 
-**Status:** Phases 1-6 (§1-§6) shipped on knk-web-api/knk-plugin — see "§1 status", "§3 status",
+**Status:** Phases 1-6 (§1-§6) shipped on knk-web-api/knk-plugin; rank display in chat/tab list and one
+rank per player (KNG-7/KNG-8) merged 2026-09-26, see "§5 follow-up" and [`RANK_DISPLAY.md`](RANK_DISPLAY.md).
+See "§1 status", "§3 status",
 "§4 status", "§5 status", "§6 status" and "§6.1" below (§2's writeup is its `ACTIVE_SESSIONS.md`
 entry). §6.1 (knk-plugin calling the payout endpoint on player join) shipped 2026-09-24, closing
 out §6's own carried-forward item 1. §6's carried-forward item 4 (no audit-log write hook in
@@ -388,6 +390,23 @@ covers temporary single-node grants.
 4. **No expiry notification in-game**, and an online player whose tier expires keeps the old
    footer (and the plugin's cached permission answers, 30s TTL) until relog or cache refresh.
    Permission checks themselves go through the API, which ignores expired memberships.
+
+### §5 follow-up — rank display + one rank per player (KNG-7, KNG-8), merged 2026-09-26
+
+Full description: [`RANK_DISPLAY.md`](RANK_DISPLAY.md). What it changes relative to the status above:
+
+- Point 3 is out of date: v1's `Donator` colors **were** recovered (live NAS database), and
+  `PermissionGroup` now has `ChatPrimaryColor`/`ChatSecondaryColor`/`NameColor` (`&` codes), seeded for
+  Default, Noble, Royal and Dragon Blood and resolved onto `UserSummaryDto`.
+- Point 4 is extended: the tier (and title) now also shows in **chat** (`-{Noble Title}- Name: msg`) and as
+  the tab-list/nametag color, not only in the footer.
+- Carried-forward item 4 is partly addressed: a staff change in the Player manager (or `/knk user`)
+  refreshes the target's cache and redraws their tab list at once, and a login always reads the player
+  from the API. A web-app change or an expiry mid-session still shows only after relog.
+- **One rank per player in the Player manager:** Default (free) and the three premium tiers form one rank
+  set; picking one replaces the other (confirmed). The premium tiers now inherit from Default
+  (`ParentGroupId`). `/knk user … group add` and the web app can still stack a temporary higher tier on a
+  permanent one, so "restore on expiry" above still works where it's used.
 
 ## 6. Salary system (knk-web-api, mostly independent of §1-5 — can run in parallel)
 
