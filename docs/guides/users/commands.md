@@ -8,6 +8,12 @@ related_repo: knk-v1-archive
 
 > `K&K_Commands.docx` — a v1-era permission-node reference. The source document itself ends mid-entry (`k&k.room` has no listed description) — not a conversion artifact, the original is unfinished. Likely superseded by the current plugin's actual permission set; kept as historical reference only.
 >
+> **v3 note (2026-09-25):** `/menu` exists again in v3 — it opens the InventoryMenu hub (permission
+> `knk.menu`, default true; v1's node was `k&k.menu`). See
+> [COMMAND_CATALOG_V3.md](../../specs/user-features/COMMAND_CATALOG_V3.md) §5 and
+> [CONTENT_PORT_PLAN.md](../../specs/inventory-menu/CONTENT_PORT_PLAN.md) CP1. The rest of this page is
+> the unchanged v1 reference.
+>
 > **Superseded by** [docs/specs/legacy/commands-v1.md](../../specs/legacy/commands-v1.md), a complete
 > source-grounded catalog of every v1 command (not just this partial permission-node list), with v2/v3
 > counterparts at [commands-v2.md](../../specs/legacy/commands-v2.md) and

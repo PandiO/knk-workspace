@@ -9,7 +9,8 @@ see below; item 3 (audit log retention policy) via `IMPLEMENTATION_PLAN.md`'s "A
 retention status"; item 4 (aggregate endpoint vs. several calls) via Phase 1 shipping the
 aggregate. This module is feature-complete; see `IMPLEMENTATION_PLAN.md`'s "Phase 3 status" for
 what a future session might still pick up (none of it blocking).
-**Last updated:** 2026-09-24 (Phase 3 implementation session). Previously updated 2026-09-24
+**Last updated:** 2026-09-25 (§8 in-game front end + actor attribution note, InventoryMenu content
+port). Previously updated 2026-09-24 (Phase 3 implementation session), 2026-09-24
 (audit log retention policy session), 2026-09-24 (Phase 2 implementation session), 2026-09-24
 (Phase 1 implementation session).
 
@@ -176,3 +177,25 @@ New scope, no existing precedent:
 4. ~~**`profile-summary` endpoint vs. several parallel calls**~~ — **resolved 2026-09-24**: built
    as one aggregate endpoint (`GET /api/users/{id}/profile-summary`), per the confirmed
    recommendation. See `IMPLEMENTATION_PLAN.md`'s "Phase 1 status".
+
+## 8. In-game front end (InventoryMenu Player manager) and staff actor attribution — 2026-09-25
+
+Added by the InventoryMenu content port (`docs/specs/inventory-menu/CONTENT_PORT_PLAN.md` CP7/CP8,
+branch `claude/menu-content` in knk-web-api/knk-plugin, **not merged, not live-verified**):
+
+- **In-game Player manager** (`/menu` → Player manager tile, node `knk.admin.user.manage`): templates
+  `users.manager` (online players the viewer outranks), `users.manager.edit` (coins/gems/XP steppers
+  with a per-session step size, title, groups, owner/staff mode, salary payout, freeze, kick/ban),
+  `users.manager.titles`, `users.manager.groups`. It is a front end over the same endpoints as §3 —
+  through knk-plugin's new `UserAdminService`, which `/knk user` and `/freeze`/`/unfreeze` now also
+  call (one code path). Kick/ban run Paper's own `/kick`/`/ban` as the staff member. New plugin nodes:
+  `knk.admin.user.manage`, `knk.admin.user.mode`, `knk.admin.user.salary`.
+- **Actor attribution (§4's `ActorUserId`) for plugin-originated changes — partly done.** The plugin
+  now sends `X-Acting-User-Id: <staff user id>` on every `UsersCommandApi` call made for `/knk user`,
+  `/freeze` and the Player manager (`UsersCommandApi.withActor`). **knk-web-api does not honour it
+  yet:** the plugin's calls are anonymous (no API-key authentication exists in the API — only JWT),
+  so trusting the header would let any caller forge the audit actor. Until the owner picks how the
+  plugin authenticates (CONTENT_PORT_PLAN.md CP7 status lists the options), plugin-made changes keep
+  a null `ActorUserId` exactly as before. `POST /api/users/{id}/salary/payout` also takes no actor at
+  all today.
+

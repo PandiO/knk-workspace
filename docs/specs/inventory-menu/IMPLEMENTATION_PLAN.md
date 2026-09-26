@@ -560,3 +560,34 @@ web-api branch with `dotnet ef database update`, restart:
    again); Exit closes. Re-open by command → Exit (fresh stack).
 5. `deop` yourself from the console while `example.domain` is open: within a second the
    op/non-op items swap (auto-refresh re-evaluates Render conditions).
+
+---
+
+## Engine additions made by the content port (2026-09-25)
+
+Built by [CONTENT_PORT_PLAN.md](CONTENT_PORT_PLAN.md) on `claude/menu-content` (knk-plugin; forked from
+trunk + `claude/inventorymenus`), **not merged, not live-verified** — they inherit Phase 9's status and
+are verified live together with it. Generic engine code, no feature logic:
+
+- **Condition `menu-available {key}`** (CP1, `MenuConditionHandlers`): allows when a template with that
+  key was registered at startup **and** passed `MenuDefinitionValidationRunner` (the runner now calls
+  `MenuService.markValidated`; `MenuService.isMenuAvailable` = validated and not blocked). Used as a
+  Render condition so a hub tile appears once its target menu exists. A template created through the
+  CRUD API while the server runs stays unavailable until the next restart validates it.
+- **Engine gap G1 — per-session menu state** (CP6):
+  - `MenuSession` state map (`getState`/`setState`/`setStateIfAbsent`/`cycleState`/`stateSnapshot`),
+    dropped with the session on quit and cleared by `openAsRoot` (every command-opened menu starts
+    fresh; in-menu navigation and Back keep it).
+  - Reserved engine root **`state`** → `MenuStateView` (added to `ENGINE_ROOTS` and the declared engine
+    types): every hop after `state` is one dotted key (`$state.pm.coinStep$` → `"pm.coinStep"`), `""`
+    when unset; the validator treats it as a `String` key lookup. Available in bindings and in
+    interpolated action/condition/content-source params.
+  - Actions **`menu.state.set {key, value}`** (empty value unsets) and **`menu.state.cycle {key,
+    values}`** (comma list; unset/unknown → first; wraps); both mark dirty and repaint.
+  - `menu.open` applies `state.<key>` params with set-if-unset semantics (template-declared defaults).
+- Everything else the content port needed is feature code (`paper/menu/content/`), not engine.
+
+Findings about the engine recorded there (not changed): one pending confirmation per session that
+survives navigation (features scope their Confirm buttons with their own `*.pending` conditions);
+engine permission checks are Bukkit-only (`Player.hasPermission`), not `KnkPermissible`.
+
