@@ -1452,6 +1452,18 @@ knk-plugin `0fa6d06` (knk-paper uncompiled):
   menu from matchmaking to match end, refused for non-members. Both labels always pass the in-match command filter.
 - **Capture rings on the floor:** the ring and the capture distance use the floor under the capture point
   (`SiegeFloor`: up to 4 blocks down, lifted out of a solid block). Objective banners still sit at the stored point.
+- **Coin multipliers** (web-api `843bca3`): siege coin rewards = base x `PersonalSalaryMultiplier` x rank multiplier
+  (product of active groups' `SalaryMultiplier`, premium tiers included; shared `CoinRewardMultipliers`, also used by
+  salary). Salary's `GlobalMultiplier` is not applied; XP and gems are unchanged. The reward DTO adds `baseCoins` and
+  `coinMultiplier`, and the plugin's reward line shows "(xN bonus)".
+- **Capture feedback** (plugin `002067c`, `CaptureActivityTracker` + `SiegeCaptureFeedback`): when an attack begins, the
+  attackers' alliance hears a goat horn, sees crits and is told who began capturing (or retaking) what; the holder's
+  alliance hears the alarm bell, sees angry-villager clouds and is told what is being captured, by which team, at how
+  many percent. When a defence begins (the holder pushing the points back up), the holders hear a second horn and see
+  happy-villager particles, and the other side hears a bass note and sees smoke; both get a chat line. Every second,
+  the players doing it hear a pling (attack) or chime (defence) whose pitch rises with progress, with particles
+  members nearby see. A capture adds a totem burst. Re-announce window 15 s per objective and activity, reset on
+  capture. The cues are constants at the top of `SiegeCaptureFeedback`.
 
 ## Phase 10 — Post-MVP
 
