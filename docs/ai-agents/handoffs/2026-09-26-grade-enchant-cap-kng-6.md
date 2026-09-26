@@ -21,7 +21,8 @@ siege work (22 commits in knk-plugin, 16 in knk-web-api) plus KNG-5 plus KNG-6.
 - To land KNG-6 on its own, cherry-pick just the KNG-6 commits onto `claude/linear-backlog-access-4cr50w`
   (KNG-5 = trunk + one commit):
   - knk-plugin: `8eaf977`, `d86b87b`, `8508f41` (manual-test fixes: lore order; its creative cursor-apply part
-    was removed again by the next commit) and `64f91ae` (right-click chooser only, grade-cap confirmation). These touch
+    was removed again by the next commit), `64f91ae` (right-click chooser only, grade-cap confirmation) and
+    `bc654e3` (chooser lists every compatible item with its status). These touch
     no siege files; the `KnKPlugin.java` hunk should apply
     cleanly because it's next to the grades data-access setup, not the siege block.
   - knk-web-api: `3c0d7aa`, `70554f4`. The migration's `.Designer.cs` and the `KnKDbContextModelSnapshot.cs`
@@ -62,9 +63,11 @@ item (e.g. `Iron Sword` from KitSeed), an Epic (4★) and a Legendary (5★) one
    up to I, and that the book will only give Sharpness I. **Cancel** returns to the chooser and keeps the book.
    **Apply** gives Sharpness I, uses the book, and the action bar says "applied at I, the most this item's
    grade allows".
-3. Right-click a second Sharpness book: the capped sword is no longer listed (with nothing else eligible:
-   "Nothing in your inventory can take Sharpness III.").
-4. Right-click `Enchanted Book (Unbreaking I)`: the Common sword isn't listed (`3 / 5 = 0`).
+3. Right-click a second Sharpness book: the sword is still listed as "✘ Can't apply Sharpness III / Its
+   grade is Common ★. / It allows Sharpness up to I, which it already has.". Clicking it only repeats that in
+   the action bar.
+4. Right-click `Enchanted Book (Unbreaking I)`: the Common sword is listed as "✘ Can't apply … Unbreaking
+   can't go on items of this grade." (`3 / 5 = 0`).
 5. **Epic** (4★) sword + `Sharpness V` book → confirmation, then Sharpness **II**.
 6. **Legendary** (5★) sword + `Sharpness III` book → III. Repeat with a few fresh swords: about 1 in 5 get
    **IV** with "lucky, a bonus level". (Temporarily set `bonus-level-chance: 1.0` to see it every time.)
@@ -85,8 +88,12 @@ Enchant books:
   keys and drags in both screens never move an item. While the confirmation is open, change the sword from
   the console (e.g. `/enchant <you> sharpness 1`): Apply then says "Something changed - nothing was applied".
 - **Off-hand:** right-click with the book in the off-hand; the book is used from the off-hand.
-- **Conflicts:** a Sharpness book with a Smite sword in the inventory: the sword isn't listed.
-- **Custom at or above the book's level:** a Poison I book with a Poison II sword: not listed.
+- **Conflicts:** a Sharpness book with a Smite sword in the inventory: listed as "✘ Can't apply …
+  Conflicts with Smite."
+- **Custom at or above the book's level:** a Poison I book with a Poison II sword: listed as "Already has
+  Poison II; this book is I."
+- **Chooser order and size:** applicable items first, blocked ones after. A pickaxe never shows for a
+  Sharpness book, and bread never shows for Poison.
 - **Persistence:** relog and restart; book-applied vanilla and custom enchantments stay.
 - **Siege sweep** (this branch contains siege): after a siege match, or on rejoin, permanent-book
   enchantments are *not* stripped. Only `siege_enchants`-marked ones are.

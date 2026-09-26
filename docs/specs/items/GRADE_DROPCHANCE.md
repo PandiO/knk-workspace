@@ -202,7 +202,8 @@ Other edge cases, handled:
 - **Item already above its cap** (e.g. from the vanilla anvil or an older unsafe grant): `LEVEL_CAPPED` for
   any book of that enchantment. Nothing is taken away.
 - **Cap 0** (low max level on a low grade): `LEVEL_CAPPED`, so the enchantment can't go on at all. The
-  chooser doesn't list the item.
+  chooser still lists the item, with "✘ Can't apply … can't go on items of this grade." Every blocked item is
+  listed with its reason, so the cap is visible to players.
 - **Grade table not loaded / API down:** seeded defaults are used and a warning is logged per failed refresh.
 - **Grade retuned or deleted in the web app:** the new divisor applies on the next refresh. A star count
   that no longer exists live falls back to the seeded default for that star count. A star count outside

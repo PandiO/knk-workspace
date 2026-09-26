@@ -82,7 +82,22 @@ now calls it. Building a book therefore needs no extra API round trip and stays 
 ### 3.2 Applying a book
 
 There is one way, the **right-click chooser**: right-click with the book in hand. A chest-style chooser lists
-every item in your inventory the book can go on; click one to apply the book.
+every item in your inventory the enchantment could go on **by type** (vanilla: `canEnchantItem`; custom: gear).
+Items it can go on now come first; click one to apply the book.
+
+- **Every compatible item is listed, with its status** (the developer's request after the second manual test,
+  knk-plugin `bc654e3`). Before, items the book couldn't go on right now were left out, and players couldn't
+  tell why. Each listed item now has one of these in its lore:
+  - "Click to apply Sharpness III";
+  - "Grade limit: only up to I / Click to review" (goes to the confirmation below);
+  - "✘ Can't apply Sharpness III" plus the reason. For the grade cap: "Its grade is Common ★. It allows
+    Sharpness up to I, which it already has." For a cap of 0: "Unbreaking can't go on items of this grade."
+    For ungraded items: "It has no grade, so it counts as Common ★." For conflicts: "Conflicts with Smite."
+    If it's already at or above the book's level: "Already has Sharpness IV; this book is III."
+
+  Clicking a blocked item repeats the reason in the action bar and keeps the chooser open. Items the
+  enchantment can't go on by type at all (a pickaxe for Sharpness, bread for Poison) are still left out. The
+  wording is `EnchantBookText.cannotApply` (knk-core, unit-tested).
 
 - **No cursor apply.** Clicking a book from the cursor onto an item (ported from siege at first) was removed
   after the developer's manual test on 2026-09-26: it was too easy to trigger by accident. A book on the cursor
@@ -186,11 +201,12 @@ Implemented on `claude/adoring-dirac-p4pn54`. Full design, v1 verification, work
 2. `/knk itemblueprints search name Enchanted Book` lists the books.
 3. `/knk itemblueprints give <id>` for `Enchanted Book (Sharpness III)`. The book glints and shows
    `Teaches: Sharpness III`.
-4. Right-click it. The chooser lists only swords and axes. Click one: the sword gets Sharpness III and the
-   book is gone.
+4. Right-click it. The chooser lists only swords and axes (no pickaxe), those it can go on first. Click one:
+   the sword gets Sharpness III and the book is gone. Right-click another Sharpness III book: that sword is
+   still listed, as "✘ Can't apply … Already has Sharpness III."; clicking it only shows the reason.
 5. Put a book on the cursor and click it onto a pickaxe (survival and creative): nothing enchants, it's an
    ordinary item swap. Books only apply through the right-click chooser.
-6. Right-click `Enchanted Book (Poison II)`: the chooser lists a diamond sword but not bread. Apply it: the
+6. Right-click `Enchanted Book (Poison II)`: the chooser lists a diamond sword but not bread (not gear). Apply it: the
    sword lore shows `Poison II` and hits apply poison. On a blueprint item with a description, `Poison II` is
    the **first** lore line, right under the vanilla enchantments, and `Grade:`/`Origin:` stay at the bottom.
 7. Hit a mob holding the Poison book itself: no poison effect.
@@ -233,3 +249,4 @@ Both fixes are on `claude/adoring-dirac-p4pn54` (knk-paper uncompiled); re-test 
 | Step 7: hit a mob holding the Poison book | Pass (no poison) | — |
 | Cursor apply | Works, but judged too accident-prone | **Removed** in knk-plugin `64f91ae`: right-click chooser only (§3.2) |
 | Capped apply without warning (Sharpness III → I on a low-grade item) | Unwanted | `64f91ae`: confirmation screen explaining the cap (§3.2) |
+| Items missing from the chooser without explanation | Confusing (players don't know the grade cap) | `bc654e3`: every compatible item listed with its status and reason (§3.2) |
