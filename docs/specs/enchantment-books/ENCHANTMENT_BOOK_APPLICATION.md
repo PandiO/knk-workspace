@@ -2,7 +2,7 @@
 
 **Status:** Implemented on `claude/linear-backlog-access-4cr50w` (knk-plugin `ba74efe`, knk-web-api `638b50e`);
 knk-paper code not compiled in the cloud container (see §6), in-game test open. Tracks Linear **KNG-5**; the level cap is **KNG-6**.
-**Last updated:** 2026-09-26 (KNG-6 grade level cap added: §3.2, §3.4. The initial version was written
+**Last updated:** 2026-09-26 (developer's manual test: two fixes, §5/§6; KNG-6 grade level cap added: §3.2, §3.4. The initial version was written
 alongside the KNG-5 implementation; the earlier local-only draft this path was reserved for was never
 committed.)
 
@@ -105,7 +105,10 @@ On `APPLIED`:
 - the level is `max(existing, book)` lowered to the grade cap, plus one on a bonus roll (§3.4);
 - **vanilla:** `addEnchant(enchantment, level, ignoreLevelRestriction = true)`, the same unsafe policy as the
   v1 seed data and `/knk itemblueprints give`;
-- **custom:** `EnchantmentRepository.applyEnchantment` on the lore (replaces an existing line or appends one);
+- **custom:** `CustomEnchantmentLore.apply` (knk-core): `EnchantmentRepository.applyEnchantment`, then the
+  custom enchantment lines are moved to the top of the lore, directly under the vanilla enchantment list, with
+  the description and the `Grade:`/`Origin:` lines below them in their existing order. This is the same
+  pipeline `/ce add` and the debug commands use; each used to carry its own copy of the reorder step;
 - one book is consumed.
 
 Nothing is written into the siege PDC keys (`siege_book`, `siege_enchants`). The siege stripping sweep only
@@ -180,9 +183,11 @@ Implemented on `claude/adoring-dirac-p4pn54`. Full design, v1 verification, work
 4. Right-click it. The chooser lists only swords and axes. Click one: the sword gets Sharpness III and the
    book is gone.
 5. Put a book on the cursor and click it onto a pickaxe. You should see "That enchantment can't go on this
-   item." and the book stays.
+   item." and the book stays. Try it in **both survival and creative**: the creative inventory reports clicks
+   differently (`InventoryCreativeEvent`) and has its own code path.
 6. `Enchanted Book (Poison II)` onto a diamond sword: the sword lore shows `Poison II` and hits apply poison.
-   Onto bread: refused.
+   Onto bread: refused. On a blueprint item with a description, `Poison II` is the **first** lore line, right
+   under the vanilla enchantments, and `Grade:`/`Origin:` stay at the bottom.
 7. Hit a mob holding the Poison book itself: no poison effect.
 8. Put the book in an anvil with a sword: no result (no stored enchantment).
 9. Apply a lower-level book onto a higher-level item: "already has that enchantment at this level or higher".
@@ -201,3 +206,15 @@ Implemented on `claude/adoring-dirac-p4pn54`. Full design, v1 verification, work
   5 failures are the known pre-existing ones (ClientActivityStore, 2× PathResolution `Town.*`, FieldValidation
   ConditionalRequired, FormSubmissionProgressRepository). Baseline before this change was 501/506.
 - No EF migration is needed; the seed only adds rows.
+
+### 6.1 Manual test, 2026-09-26 (developer)
+
+| Step | Result | Follow-up |
+|---|---|---|
+| 1-4 | Pass (seed rows present, book glints/lore, right-click chooser applies Sharpness III) | — |
+| 5 | **Fail:** clicking a book from the cursor onto an item did nothing | Cause: most likely the creative inventory. It sends `ClickType.CREATIVE` (`InventoryCreativeEvent`, client-side cursor), which `onApply` skipped. Fixed in knk-plugin `8508f41`: `EnchantBookListener.onCreativeApply`. The survival path was unchanged; if the test was in survival, this needs another look |
+| 6 | **Fail:** same as 5; also the custom enchantment line was appended under `Grade:` | The book skipped the "enchantments first" reorder the other custom-enchantment paths run. Fixed in `8508f41`: shared `CustomEnchantmentLore`, now used by the books, `/ce add` and both debug commands |
+| 7 | Not tested | — |
+| 8-9 | Pass | — |
+
+Both fixes are on `claude/adoring-dirac-p4pn54` (knk-paper uncompiled); re-test steps 5-7 there.

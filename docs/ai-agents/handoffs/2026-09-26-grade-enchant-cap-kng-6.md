@@ -3,7 +3,7 @@
 **Status:** Code complete on `claude/adoring-dirac-p4pn54` in knk-web-api (`3c0d7aa`, `70554f4`) and
 knk-plugin (`8eaf977`, `d86b87b`). Needs a local plugin build, the migration on the dev DB, and an in-game
 test.
-**Last updated:** 2026-09-26
+**Last updated:** 2026-09-26 (added `8508f41`, fixes from the KNG-5 manual test; see the enchant-book spec §6.1)
 
 Design, v1 verification, worked examples and edge cases:
 [`docs/specs/items/GRADE_DROPCHANCE.md`](../../specs/items/GRADE_DROPCHANCE.md). Enchant-book spec §3.4 has
@@ -20,7 +20,9 @@ siege work (22 commits in knk-plugin, 16 in knk-web-api) plus KNG-5 plus KNG-6.
 - **Don't merge this branch to trunk as-is** unless siege is going in too.
 - To land KNG-6 on its own, cherry-pick just the KNG-6 commits onto `claude/linear-backlog-access-4cr50w`
   (KNG-5 = trunk + one commit):
-  - knk-plugin: `8eaf977`, `d86b87b`. These touch no siege files; the `KnKPlugin.java` hunk should apply
+  - knk-plugin: `8eaf977`, `d86b87b`, plus `8508f41` (KNG-5 manual-test fixes: creative cursor-apply and
+    custom-enchantment lore order; it belongs to KNG-5 and cherry-picks onto that branch on its own). These touch
+    no siege files; the `KnKPlugin.java` hunk should apply
     cleanly because it's next to the grades data-access setup, not the siege block.
   - knk-web-api: `3c0d7aa`, `70554f4`. The migration's `.Designer.cs` and the `KnKDbContextModelSnapshot.cs`
     hunk were generated on top of the siege schema, so a cherry-pick onto KNG-5 will conflict in the
