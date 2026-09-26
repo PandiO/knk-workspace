@@ -370,6 +370,32 @@ lands on the exact target value even with a stale cache.
 
 ---
 
+### Phase 4 status — done 2026-09-26 (all three repos, `claude/currency-payments`)
+
+Trunk (incl. the **siege merge**) merged first: API `37bab02` — siege rewards now go through the ledger per the Phase 2
+instruction (one `SIEGE_REWARD` posting per match, `TitleProgression.cs` + siege `LockUsersAsync` removed, siege match writes
+`[RequirePluginService]`); plugin `1b1de70`; web-app `d4a1687` (+ cherry-picks `d1bdf7a`/`35d34b5` = `dceb5b3`/`1282595`).
+Phase 4: API `79b53e5` — `api/currency/admin`: `GET ledger` (the KNG-23 **balance event log**: filters currency/player/
+initiator name or component/initiator type/source/reason/kind/transaction/date range, 8 sortable columns, server-side
+paging), `GET transactions/{id}` + `POST …/reverse` (note ≥ 10 chars, `allowPartial`, key `reverse:{id}`; reversal, audit and
+title change commit together), `POST adjustments` (reason category + note ≥ 10 chars; web callers need the coins/gems/xp
+node), transfer-lock GET/PUT/DELETE, policy GET/PUT (AuditAction 19–22), per-staff daily grant cap (422
+`AdminDailyCapExceeded`, bypass `knk.admin.currency.unlimited`). Plugin `b1fe642` — `/knk currency reverse <txId> [--partial]
+<reason> | history <player> | lock | unlock`, clickable tx ids, Player Manager steppers stage a total applied with one
+reason-captured posting. Web-app `83db575` — `/admin/users/balance-log` (`knk.admin.currency.history`),
+`/admin/economy/transactions/:publicId` with Reverse, `/admin/economy/policy`, profile adjustment form (category + note),
+"Balance history" section, transfer-lock toggle, Moderation links.
+Tests: API 1042 pass / 5 baseline / 27 skipped; requires-mysql 27/27 ×3 (racing reversals → one posts; reversal racing a
+spend never below zero; staff cap exact under concurrency; every sort translates to SQL); migrations clean from empty DB;
+plugin CI green https://github.com/PandiO/knk-plugin/actions/runs/36278477999; web-app 16 baseline / 278 passed.
+Deviations: the balance event log doubles as the plan's LedgerExplorerPage (no CSV export); adjustment `reasonCode` is a
+staff category stored in metadata (ledger code stays `ADMIN_*`); plugin staff balance changes keep using `PUT
+Users/{id}/balances` (documented as deprecated); gate overrides still `RequirePluginServiceKey(AllowAdmins)` and siege config
+controllers not yet switched to `RequireServiceOrPermission` (follow-up). Developer to-do: grant `knk.admin.currency.*` to
+staff; smoke test `/knk currency history|reverse|lock|unlock`, Player Manager stepper + reason; web: reverse a grant from the
+balance log, edit the gem policy; remove coins/gems from the User FormWizard config. Known: plugin-called staff routes trust
+the plugin's in-game node check.
+
 ## Phase 5 — Reconciliation, anomaly alerts, observability — size M
 
 **knk-web-api:** `Services/Currency/CurrencyMonitorService.cs` (`BackgroundService`, rules R1–R9 from
