@@ -1,24 +1,65 @@
 # Siege overnight chain — morning report
 
-**Status:** Link 1 continuing on the developer's instruction (Phase 6 done; knk-paper code uncompiled). Each chain session appends its phase section
-and rewrites the Morning summary. Rules: `docs/ai-agents/handoffs/SIEGE_OVERNIGHT_CHAIN.md`.
-**Last updated:** 2026-09-26 (link 1: Phase 7b done, starting 9)
+**Status:** Finished. Link 1 ran every phase itself (6, 6b, 7a, 8b, 7b, 9 non-live) after the developer said to
+continue past the plugin build blocker; Phase 10 not started, no next session launched. knk-paper code from 6b on is
+**uncompiled**. Rules: `docs/ai-agents/handoffs/SIEGE_OVERNIGHT_CHAIN.md`.
+**Last updated:** 2026-09-26 (link 1: final summary, Phase 9 done)
 
 ## Morning summary
 
-_Interim (link 1 is still working; rewritten when it stops)._ The chain first stopped at Phase 6b because the cloud
-container can't build knk-plugin (network policy denies `repo.papermc.io` and `maven.enginehub.org`). The developer
-then said **"just continue anyway, we will test once I am at my PC"**, so link 1 continues the phases itself. The
-**knk-paper code from 6b on is not compiled**; knk-core (non-Bukkit parts) and knk-api-client are compiled and tested
-in a scratch build that uses Maven Central only.
+**Build knk-paper first.** The cloud container can't reach `repo.papermc.io` or `maven.enginehub.org`, so nothing
+under `knk-paper/` written tonight has been compiled (6b, 7a, 8b, 7b: roughly a dozen new classes plus edits to
+`KnKPlugin`, `SiegeService`, `SiegeCommand`, `plugin.yml`). The rest is tested: knk-web-api
+**718/723** (baseline 671/676, the same 5 known failures, +47 new), and knk-core **632** / knk-api-client **53**
+(scratch build against Maven Central, all green). To let future cloud sessions build the plugin, allow those two
+hosts in the environment's Network access settings.
 
-| Phase | State | Branch heads after it | Notes |
+| Phase | State | Branch heads after it | Details |
 |---|---|---|---|
-| 6 — Match persistence and rewards | done (6a tested; 6b knk-paper uncompiled) | web-api `7d4fd44`; plugin `378f8a1` | see Phase 6 section |
-| 7a — Gate integration + area lockdown | done (web-api tested; knk-paper uncompiled) | web-api `07e0a5f`; plugin `16a1436` | see Phase 7a section |
-| 8b — Siege menus | done (web-api + core/api-client tested incl. seed contract test; knk-paper uncompiled) | web-api `78945ca`; plugin `0522e44` | see Phase 8b section |
-| 7b — Non-member gate view | done (knk-paper only, uncompiled, untested) | plugin `d475195` | see Phase 7b section |
-| 9 — Seeds and docs (non-live parts) | in progress | | |
+| 6 — Match persistence and rewards | done (web-api tested) | web-api `7d4fd44` | Phase 6 section |
+| 6b — Plugin match recording | done (core/api-client tested; knk-paper uncompiled) | plugin `378f8a1` | Phase 6b section |
+| 7a — Gate integration + area lockdown | done (web-api + core tested; knk-paper uncompiled) | web-api `07e0a5f`; plugin `16a1436` | Phase 7a section |
+| 8b — Siege menus | done (web-api + core/api-client tested incl. seed contract test; knk-paper uncompiled) | web-api `78945ca`; plugin `0522e44` | Phase 8b section |
+| 7b — Non-member gate view | done (knk-paper only, uncompiled, untested) | plugin `d475195` | Phase 7b section |
+| 9 — Seeds and docs (non-live parts) | done (web-api tested) | web-api `ee29768`; workspace `af3576a` | Phase 9 section |
+
+**Commits.** knk-web-api 7 (`b86d692`, `82b78a4`, `7d4fd44`, `9328c4e`, `07e0a5f`, `78945ca`, `ee29768`); knk-plugin 8
+(`14ca0c8`, `a150719`, `378f8a1`, `b69b786`, `16a1436`, `901c599`, `0522e44`, `d475195`); knk-web-app none; workspace
+docs/status commits on `main`. All on `claude/siege-minigame`; nothing merged, **no migrations** (none were needed),
+nothing deployed.
+
+**Review first (ranked; each is cheap to change):**
+1. **Plugin write endpoints are open by default** (6 ★1): `[RequirePluginServiceKey]` only enforces when
+   `Security:PluginServiceKey` is set; the plugin ships `api.auth.type: none`.
+2. **Gate lockdown starts at the hub (T-15), not at round start** (7a ★1).
+3. **A failed `createMatch` (after retries) runs the round unrecorded**, members told, no rewards (6b ★1).
+4. **Siege XP uses the shared title path** with bracket bonuses and a TitleChanged notification (6 ★2).
+5. **Right-click opens/closes locked gates for the owner alliance; `AnimateDuringSiege` is ignored** (7a ★3, ★2).
+6. **Non-member view re-sends fakes every 5 ticks** (brief flicker while gates animate); pass-through by right-click,
+   refused while the area is locked down (7b ★1-3). Fallback without code: `NonMemberGateView = PassThroughOnly`.
+7. **Siege hub tile unchanged** (8b ★1); objective banners = holder team banner (8b 3).
+8. **Capture defaults on the model are now 10/2/10 (D 6/3/6); `legacyDefaults()` stays 5/2/5** (9 decision 1).
+
+**Smoke-test order (one pass, 2-3 accounts):**
+1. Pull both `claude/siege-minigame` branches. knk-plugin: `./gradlew build -x deployToDevServer`. Fix any compile
+   errors first (the untested trunk merge `d41be49` is underneath too). knk-paper tests: Phase 5 baseline 259.
+2. knk-web-api: `dotnet run` (no migration to apply). Swagger: plan → "Phase 6 status" manual steps 1-5
+   (`api/siege-matches` create/start/complete/history).
+3. `./gradlew :knk-paper:dev`, start the dev server. Menus seeded and valid (8b step 1); the new disabled `example`
+   lobby exists (Phase 9), and the dev DB's capture values are unchanged.
+4. Play one full match on `test-cinix`: `/siege` opens the overview menu, vote/join through it (8b); at the hub
+   the gates and area lock down (7a); owner alliance opens/closes gates, only enemies damage them; the spawn picker
+   menu on respawn (8b); a non-member watches from outside (7b: pre-lockdown gates, collision, pass-through).
+5. Match end: reward lines in chat, the match row + balances/XP in the DB (6b a), gates restored (7a), the
+   non-member sees the real gates within ~5 s (7b).
+6. Failure paths: API down at match end → spool file → replay on the API's return (6b b); kill the server
+   mid-match → on start the spool replays, unfinished matches abort, gates restore (6b c, 7a crash step); `/siege
+   admin stop` → row `Aborted`, no balances (6b d).
+7. `NonMemberGateView = PassThroughOnly` + `/siege admin reload` between matches (7b step 6).
+8. Optional: walk `docs/guides/authoring-a-siege-scenario.md` with a second scenario.
+
+**Next link / blockers.** No next session started: Phase 9 is the charter's last link and Phase 10 is excluded. No
+absolute blocker was hit after the developer's go-ahead; the only open blocker is the plugin build (above).
 
 ## Phase sections
 
@@ -139,3 +180,21 @@ area is locked (so it rarely applies - follow-up); 4 no chunk-load hook (range r
 
 **Risks.** The riskiest phase (charter): per-player block views under animation; if it misbehaves, set
 `NonMemberGateView = PassThroughOnly` - the degrade path needs no code change.
+
+### Phase 9 — seeds and docs, non-live parts (link 1)
+
+**Commits.** knk-web-api: `ee29768` (`SiegeConfiguration` capture defaults A1 10 / IV A2 10; `SiegeLobbySeed`: a
+create-only disabled `example` lobby, wired in `Program.cs`; tests). Workspace: `af3576a` (new
+`docs/guides/authoring-a-siege-scenario.md`, `vision.md` §7 status lines, `specs/README.md`, plan "Phase 9 status").
+
+**Tests.** web-api 718/723 (+2 new, 3 assertions moved 5 → 10; same 5 known failures). No migration: the defaults are
+C# initializers only, so they reach a fresh DB's configuration row, not the dev DB's existing one.
+
+**Flagged decisions** (plan → "Phase 9 status"): 1 only the two differing capture values changed,
+`legacyDefaults()` untouched as the charter says; 2 the example lobby has no rotation (a seed can't know a scenario
+id). Note: the seed is create-only by key, so deleting the `example` row brings it back on the next start. Rename
+its key instead.
+
+**Live checklist.** Dev DB: one new disabled `example` lobby at the next API start, nothing else changes. Playtesting
+and balancing are the developer's.
+
