@@ -1,7 +1,10 @@
 # Siege Minigame — Design
 
-**Status:** Draft — seven decisions made with the developer over two rounds (§0); remaining open questions in §13.
-**Last updated:** 2026-09-26 (§7.2: capture constants tuned in the first live playtest)
+**Status:** Implemented — all MVP phases (1–9) merged into the default branches on 2026-09-26 and smoke-tested live
+by the developer; Phase 10 (Scheduled lobbies) is post-MVP, not started. Seven decisions with the developer (§0; D6
+changed after the smoke test); remaining open questions in §13.
+**Last updated:** 2026-09-26 (synced with the smoke-tested build: area lockdown removed, gates removed for
+non-members, remembered spawn choice, capture feedback, reward multipliers, menus implemented, commands/API)
 
 Ref: `docs/vision/vision.md` §3.2–3.4, §7.1–7.4, §10. Evidence base:
 `docs/reports/2026-09-25-siege-minigame-gap-analysis.md` (capability matrix, newly verified legacy
@@ -20,7 +23,7 @@ model, `TitleBracket`), `docs/specs/gate-structure-animation/` (gate runtime, ov
 | D3 | How do gates behave? | **Admin-selected gates only.** A scenario lists the gates that take part. Selected gates are active, damageable and **opened/closed by their owning team**. A selected gate may be flagged as (part of) an objective: still damageable, and capturing it transfers open/close control to the capturing team, **defaulting to open** on capture. All other gates in the scenario's town/districts are forced **open** for the match and cannot be controlled or damaged. Pre-siege gate states are restored after. Siege players vs. everyone else: see D6 (§8.5). |
 | D4 | Clan scope | **Minimal `Clan` is in this plan** (vision §3.2 fields incl. full multi-layer banner and `DefaultForTown`). Scenario teams either reference a Clan or define an ad-hoc identity. |
 | D5 | Objective recapture (round 2) | **Per-scenario boolean `AllowRecapture`, default `false`** (legacy: captured is final). When on, a captured objective can be taken back (§7.3). |
-| D6 | Scenario-area lockdown (round 2) | **On.** Tied to the siege/non-siege gate separation: **ideally non-members see every affected gate in its pre-lockdown state**; where their view can't match the physical state, **gates that were open before the lockdown get temporary pass-through for non-members** for the match (§8.5). Per-player gate view is now **in scope** (was deferred). |
+| D6 | Scenario-area lockdown (round 2) | ~~**On.** Non-members see every affected gate in its pre-lockdown state, with temporary pass-through where view and physics disagree.~~ **(Updated 2026-09-26, smoke test: area lockdown removed.)** Non-members are never moved out of or kept out of the scenario area; they can't fight members (§6.7), can't capture (only roster members count) and can't use siege gates. For non-members every locked siege gate is **removed** (per-player view) and walking into a really closed door carries them across (§8.5). `LockdownScenarioArea` stays in the model but has no effect. |
 | D7 | Enchant-book drops (round 2) | **Keep them** (v2 mechanic). Enchantments applied during the siege are **removed after the siege**, so every item's pre-siege state is restored exactly (§9.4). |
 
 ## 1. Scope
@@ -28,12 +31,12 @@ model, `TitleBracket`), `docs/specs/gate-structure-animation/` (gate runtime, ov
 **In scope (MVP):** Clan + banner model; Scenario/Team/Spawnpoint/Objective/ScenarioGate model and
 FormWizard authoring; `SiegeLobby` (Continuous); global `SiegeConfiguration`; full match loop in the
 plugin (matchmaking, vote, hub, team split, match, capture, win, rewards, cooldown); N-team/alliance
-support; gate integration per D3; scenario-area lockdown with a per-player gate view for non-members
-(D6); optional objective recapture (D5); own-gear snapshot/restore with crash safety; enchant-book
-drops with post-siege enchantment stripping (D7); combat/death/respawn rules; scoreboard/tab list;
-`/siege` commands; match history + server-side reward payout; menu templates **documented**
-(implementation blocked on InventoryMenu engine extensions, `MENU_TEMPLATES.md` Part B — delegated
-2026-09-25 to its own session, branch `claude/inventorymenus`).
+support; gate integration per D3; a per-player gate view for non-members (D6 — gates removed; the
+area lockdown was dropped after the smoke test); optional objective recapture (D5); own-gear
+snapshot/restore with crash safety; enchant-book drops with post-siege enchantment stripping (D7);
+combat/death/respawn rules; scoreboard/tab list; `/siege` commands; match history + server-side reward
+payout; siege menus (`MENU_TEMPLATES.md` Part C, on the InventoryMenu engine extensions of Part B —
+all implemented and merged 2026-09-26).
 
 **Out of scope / later:** `Scheduled` lobby mode (Phase 10); clancastle ownership / `controlledBy` on
 structures (vision §2.6, §3.3); pre-siege missions; siege vehicles; web-app live match monitor
@@ -135,7 +138,7 @@ public class SiegeScenario
     public int CoinRewardWin { get; set; } = 100;  public int ExpRewardWin { get; set; } = 10;  public int GemRewardWin { get; set; } = 1;
     public int CoinRewardHolding { get; set; } = 50; public int ExpRewardHolding { get; set; } = 5;
     public int CoinRewardCapture { get; set; } = 50; public int ExpRewardCapture { get; set; } = 5;
-    public bool LockdownScenarioArea { get; set; } = true;   // §8.5, D6
+    public bool LockdownScenarioArea { get; set; } = true;   // no effect since 2026-09-26 (D6, §8.5)
     public bool AllowRecapture { get; set; } = false;        // §7.3, D5
     public bool EnchantDropsEnabled { get; set; } = true;    // §9.4, D7
     // Owned children (ownedChildCollection List fields)
@@ -299,13 +302,13 @@ stands on the spot and confirms, exactly as `GateDoor`/`Location` fields work to
 |---|---|
 | `BannerDesign` | General (Name, BaseColor) · Layers (owned list: SortOrder, PatternKey dropdown, Color) |
 | `Clan` | General (Name, IsNpc, ChatColor) · Identity (BannerDesign picker, DefaultForTown picker) |
-| `SiegeScenario` | 1 General (Name, Description, Town, Districts M2M) · 2 Hub & entry (HubLocation world-bound, PlayersMin/Max, MinTitleBracket, LockdownScenarioArea) · 3 Match length · 4 Rewards · 5 Teams (owned list → `SiegeTeam` form) · 6 Gates (M2M `SiegeScenarioGate` with join fields) · 7 Objectives (owned list → `SiegeObjective` form) · 8 Readiness (read-only panel calling the readiness endpoint) |
+| `SiegeScenario` | 1 General (Name, Description, Town) · 2 Districts (M2M) · 3 Hub & entry (HubLocation world-bound, PlayersMin/Max, MinTitleBracket, LockdownScenarioArea — no effect since 2026-09-26) · 4 Match length · 5 Rewards · 6 Teams (owned list → `SiegeTeam` form) · 7 Gates (M2M `SiegeScenarioGate` with join fields) · 8 Objectives (owned list → `SiegeObjective` form) · 9 Readiness (read-only panel calling the readiness endpoint). 9 steps: Districts became its own step after General. |
 | `SiegeTeam` (child) | Identity (Role, AllianceGroup, Clan picker, Name/ChatColor/BannerDesign overrides, StartMessage) · Spawnpoints (owned list → `SiegeSpawnpoint` form: Name, Location world-bound, SafeZoneRadius, SortOrder) |
 | `SiegeObjective` (child) | General (Name, InstantVictory, InitialHolderTeam, SpawnWhenHeld) · Capture point (Gate picker **or** Location world-bound, CapturePoints, CaptureRadius) · Gate behaviour (GateStateOnCapture, shown only with a gate) |
 | `SiegeLobby` | General (Name, Key, IsEnabled, Mode) · Timings · Voting · Rotation (M2M `SiegeLobbyScenario`: scenario + Weight) |
-| `SiegeConfiguration` | Singleton form (like `SalaryConfiguration`) |
+| `SiegeConfiguration` | Dedicated **Siege Settings** page (`/admin/siege-configuration`, staff only), not a FormWizard singleton form |
 
-Ordering constraint: Teams (step 5) must exist before Gates/Objectives can reference them as
+Ordering constraint: Teams (step 6) must exist before Gates/Objectives can reference them as
 owner/holder, so those steps show a hint until at least one team is saved. Two-level owned nesting
 (Scenario → Team → Spawnpoint) has not been exercised in the FormWizard before — an explicit
 verification item (`IMPLEMENTATION_PLAN.md` Phase 3).
@@ -331,8 +334,8 @@ verification item (`IMPLEMENTATION_PLAN.md` Phase 3).
 | `knk-core` | `core/siege/` | **Bukkit-free, unit-tested logic:** `SiegePhase`, `SiegeLobbyStateMachine` (tick-driven timeline), `VoteTally`, `TeamPartitioner`, `AllianceResolver`, `CaptureCalculator`, `ObjectiveState`, `WinResolver`, `MatchDurationCalculator`, `SiegeRuntimeLocks` |
 | `knk-core` | `core/ports/api/` | `SiegeScenariosQueryApi`, `SiegeLobbiesQueryApi`, `SiegeMatchesCommandApi`, `ClansQueryApi` |
 | `knk-api-client` | `dto/`, `mapper/`, `impl/` | DTOs + mappers + HTTP impls (Kits/Items pattern) |
-| `knk-paper` | `paper/siege/` | `SiegeService` (owns lobby runtimes, main-thread ticker), `SiegeWorldPresenter` (banners, particle circles, percent `TextDisplay`s), `SiegeGateController` (§8), `SiegePlayerVault` (§9), `SiegeScoreboardPresenter`, `SiegeMenuBridge` (menu registries, §10) |
-| `knk-paper` | `paper/listeners/` | `SiegeCombatListener`, `SiegeDeathRespawnListener`, `SiegeGateListener`, `SiegeCommandFilterListener`, `SiegeInventoryGuardListener`, `SiegeSessionListener` (quit/join/teleport/region entry) |
+| `knk-paper` | `paper/siege/` | `SiegeService` (owns lobby runtimes, main-thread ticker), `SiegeWorldPresenter` (banners, particle circles, percent `TextDisplay`s), `SiegeGateController` (§8), `SiegePlayerVault` (§9), `SiegeScoreboardPresenter`, `SiegeGateViewService` (§8.5), `SiegeCaptureFeedback` (§7.3), `SiegeEnchantBooks`/`SiegeEnchantMenu` (§9.4), `SiegeMenuFeature`/`SiegeMenuBridge` (menu registries, §10) |
+| `knk-paper` | `paper/listeners/` | `SiegeCombatListener`, `SiegeDeathRespawnListener`, `SiegeGateListener`, `SiegeCommandFilterListener`, `SiegeInventoryGuardListener`, `SiegeSessionListener` (quit/join), `SiegeEnchantBookListener` (§9.4) |
 | `knk-paper` | `paper/commands/` | `SiegeCommand` (player + admin subcommands) |
 
 ### 5.3 Threading
@@ -350,14 +353,14 @@ Replaces v2's five independent booleans (`matchmaking`/`progress`/`inHub`/`coold
 its own TODO asked to replace):
 
 ```
-DISABLED ─enable─► MATCHMAKING ──T-0──► IN_PROGRESS ──win/timeout/elimination──► ENDING ──► COOLDOWN ──T-0──► MATCHMAKING …
-                    │  (voting until T-30, draw at T-25,                                        ▲
-                    │   HUB sub-phase from T-15: teleport + snapshot, team split at T-10)       │
-                    └── not enough players at draw / no ready scenario ─────────────────────────┘
+DISABLED ─enable─► MATCHMAKING ──T-15──► HUB ──T-0──► IN_PROGRESS ──win/timeout/elimination──► ENDING ──► COOLDOWN ──T-0──► MATCHMAKING …
+                    │  (voting until T-30, draw at T-25)   (teleport + snapshot + gate lockdown,              ▲
+                    │                                        team split at T-10)                             │
+                    └── not enough players at draw / no ready scenario ──────────────────────────────────────┘
 ```
 
-`HUB` is modelled as a sub-state of the last 15 s of matchmaking (joining closes at T-15, as v2
-effectively did).
+`HUB` is a real phase (`SiegePhase.HUB`) covering the last 15 s before the match (joining closes at
+T-15, as v2 effectively did). *(Updated 2026-09-26: was described as a sub-state of matchmaking.)*
 
 ### 5.5 Runtime locks
 
@@ -392,7 +395,7 @@ never v2's hardcoded `"TestSiege"`.
   `SiegeMatch` row yet). Otherwise create the `SiegeMatch` (`Created`).
 
 ### 6.4 Hub and team split
-- T-15: snapshot + teleport every member to the hub (§9); joining closes.
+- T-15: snapshot + teleport every member to the hub (§9); joining closes; gate lockdown (§8.2).
 - T-10: split into the scenario's N teams. **Snake draft by title bracket** (highest first, alternating
   direction per round) — v1 sorted by title before dealing, v2 shuffled; this keeps shuffling's fairness
   for equal brackets while spreading veterans. Replaces v2's `Partition.ofSize`, which throws when there
@@ -400,11 +403,12 @@ never v2's hardcoded `"TestSiege"`.
   `partition.get(2)` out of range).
 
 ### 6.5 Match start
-Lock scenario → gate lockdown (§8.2) → activate objectives (banner block, capture circle particles
-visible to members only, floating percentage `TextDisplay`) and spawn safe-zone rings → teleport each
-member to their team's `SortOrder = 0` spawnpoint → per-team scoreboards/tab list → open the spawn
-picker for members whose team has ≥ 2 options → team `StartMessage` on the action bar 2 s later →
-`SiegeMatch` → `InProgress` (with participants and team assignments).
+Activate objectives (banner block, capture circle particles visible to members only, floating
+percentage `TextDisplay`) and spawn safe-zone rings → teleport each member to their team's
+`SortOrder = 0` spawnpoint → per-team scoreboards/tab list → open the spawn picker for members whose
+team has ≥ 2 options → team `StartMessage` on the action bar 2 s later → `SiegeMatch` → `InProgress`
+(with participants and team assignments). *(Updated 2026-09-26: the scenario lock is taken at the draw
+and the gate lockdown runs at the hub, T-15 (§8.2) — no longer at match start.)*
 
 Match length = `clamp(ceil(members × PerPlayerSeconds), MinSeconds, MaxSeconds)` using the member count
 at start (v2 formula, now configurable per scenario).
@@ -417,10 +421,14 @@ at start (v2 formula, now configurable per scenario).
 - Respawn at the member's **current spawn choice** (a team spawnpoint, or a held objective with
   `SpawnWhenHeld`); if that objective has since been lost, fall back to spawnpoint `SortOrder = 0`.
   Respawn restores health/food for both kinds (v2 only did it for spawnpoints).
-- After respawn (delay from `SiegeConfiguration`), open the spawn picker when the team has ≥ 2 options
-  (v1 rule). Picking an option there teleports immediately **and** becomes the new current choice;
-  picking from the Information menu's "Change spawnpoint" only sets the choice. Contested objectives
-  (§7.2) can't be picked; checked at click time.
+- The spawn choice is **remembered**. The picker opens at match start (ignoring it stores the team
+  default) and after a respawn (delay from `SiegeConfiguration`) only while no choice is stored — both
+  only when the team has ≥ 2 options (v1 rule). Picking an option from a picker opened at start/respawn
+  teleports immediately **and** becomes the new current choice; picking from the Information menu's
+  "Change spawnpoint" (`/siege menu`) only sets the choice. Contested objectives (§7.2) can't be picked;
+  checked at click time. When an objective is captured, members who had chosen it get their team's
+  default spawnpoint as their choice and a chat message pointing to `/siege menu` (Information → Change
+  spawnpoint). *(Updated 2026-09-26, smoke test: the picker no longer opens after every respawn.)*
 
 ### 6.7 Combat rules (`SiegeCombatListener`, `EntityDamageByEntityEvent` at `HIGHEST`)
 Resolve the real attacker (projectile shooter). Then:
@@ -459,6 +467,9 @@ and fixes v2's `"cinixians"` literal.
 - Legacy constants as defaults: `A1 = 5`, `A2 = 2` (`5` on instant-victory objectives), `D1 = 6`,
   `D2 = 3` (`6` on instant-victory objectives).
 - `Points = clamp(Points − delta, 0, CapturePoints)`; defenders therefore restore points.
+- "Within `CaptureRadius`" and the capture ring are measured from the **floor under the stored capture
+  point** (`SiegeFloor`: up to 4 blocks down, lifted out of a solid block). *(Updated 2026-09-26, smoke
+  test: was the stored point itself.)*
 - **Contested** = at least one living attacker inside the radius (used by the spawn picker, the menu
   and the sidebar). v2 used "delta > 0", which ran a full player scan per menu render (N7).
 Both legacy versions carry the author's note that this formula is "probably not working correctly";
@@ -474,19 +485,35 @@ victory); `D1 = 6`, `D2 = 3`/`6` unchanged.** (7.5 was considered for `A1`; the 
 500 points undefended: main 50/25/17 s for 1/2/3 attackers, side 50/42/36 s; 300 points: main 30/15/10 s.
 **Accepted trade-off:** defenders no longer stall equal numbers - 1 v 1 progresses (125 s) and on the main
 objective each extra attacker (+10) outweighs each extra defender (+6), so 2 v 2 falls in about a minute.
-Holding the main objective now needs more defenders than attackers. These are the dev DB's `SiegeConfiguration`
-values; the seeded defaults (web-api) and `KnkSiegeConfiguration.legacyDefaults()` still carry the legacy
-5/2/5 · 6/3/6, to be aligned in the Phase 9 seed/balancing pass.
+Holding the main objective now needs more defenders than attackers. *(Updated 2026-09-26, Phase 9: the
+web-api `SiegeConfiguration` model defaults now carry these values — A1 10, A2 2, IV A2 10, D 6/3/6.
+`KnkSiegeConfiguration.legacyDefaults()` in the plugin keeps 5/2/5 · 6/3/6 on purpose as the offline
+fallback.)*
 
 ### 7.3 Capture
 At `Points = 0`: capturer = the closest living attacker in the radius (legacy rule); holder := the
-capturer's team; announcements with sounds to the capturer's alliance ("X captured Y") and to everyone
-else ("Lost objective Y"); objective gate → §8.3; participant `Captures + 1`. Then (D5):
+capturer's team; announcements to the capturer's alliance ("X captured Y") and to everyone else ("Lost
+objective Y") with the level-up / wither-spawn sounds plus a totem burst; objective gate → §8.3;
+participant `Captures + 1`. Then (D5):
 - `AllowRecapture = false` (default, legacy): the objective is final and stops scoring.
 - `AllowRecapture = true`: `Points` resets to `CapturePoints` with the new holder, and §7.2 continues —
   the former holder's alliance now attacks it. Instant-victory objectives are unaffected (their capture
   ends the match). Each capture writes its own `SiegeMatchObjectiveResult` history entry; the final
   holder is what counts at the end.
+
+**Capture feedback** *(added 2026-09-26, smoke test; `SiegeCaptureFeedback`)*:
+- An attack begins: the attackers' alliance hears a goat horn, sees crit particles and gets "<names>
+  began capturing/retaking <objective>!"; the holder's alliance hears the alarm bell, sees
+  angry-villager particles and gets "<objective> is being captured by <team>! (n%)".
+- A defence begins (holders pushing points back up): holders hear a second horn, see happy-villager
+  particles and get a chat line; the other side hears a bass note, sees smoke and gets a chat line.
+- While it lasts, the players doing it hear a chime at most every 5 s (pitch rises with progress) and
+  see particles every second. Re-announce window: 15 s per objective and activity, reset on capture.
+
+**Objective banners:** the holder's full team banner from match start; while being captured, the v2
+8-stage gradient towards the leading attacker's colour; the capturer's full banner on capture. An
+objective captured for good shows the new holder's banner. Banners stand on the same floor as the ring
+(§7.2), and the banner and the block under it can't be broken or blown up during the match.
 
 ### 7.4 Side-capture pressure
 Capturing a non-instant-victory objective reduces the `Points` of every **uncaptured** instant-victory
@@ -515,10 +542,17 @@ result without granting again. For each participant still in the match at the en
   × `CoinRewardHolding`/`ExpRewardHolding` (generalises v2's attackers-only rule to any team).
 - **Capture:** per objective the participant personally captured × `CoinRewardCapture`/`ExpRewardCapture`
   — at most once per participant per objective, so recapture ping-pong can't farm rewards.
-- XP is added to `User.ExperiencePoints` (so title brackets advance through the existing
-  `TitleService`); coins/gems to `User.Coins`/`User.Gems`. Amounts are stored on
-  `SiegeMatchParticipant`. Not written to the admin `AuditLog` (not an admin action); the match rows
-  are the audit trail.
+- **Coins** = base × `PersonalSalaryMultiplier` × rank multiplier (the product of the user's active
+  `PermissionGroup.SalaryMultiplier`s, premium tiers included, via `RankMultipliersDto`). Salary's
+  `GlobalMultiplier` is not applied. XP and gems are not multiplied. The reward DTO carries `baseCoins`,
+  `coinMultiplier` and `coinMultipliers` (the breakdown). *(Updated 2026-09-26, KNG-16 merge.)*
+- XP is added to `User.ExperiencePoints`; title promotions from siege XP go through the shared
+  `TitleProgression`, whose promotion bonuses are scaled by the same personal × rank multipliers
+  (KNG-16). Coins/gems go to `User.Coins`/`User.Gems`. Amounts are stored on `SiegeMatchParticipant`.
+  Not written to the admin `AuditLog` (not an admin action); the match rows are the audit trail.
+- In game the plugin prints the rewards in the shared KNG-16 `RewardMessageFormat`: "Siege reward: 250
+  ×2 Personal ×1.5 Royal = +750 coins", then +XP / +gems lines and a grey "win · 2 objectives gained ·
+  1 capture" line.
 
 ## 8. Gates (D3)
 
@@ -528,19 +562,27 @@ result without granting again. For each participant still in the match at the en
 |---|---|---|---|
 | Selected (`SiegeScenarioGate`), not an objective | Owner team's alliance only (via the existing gate interaction → `GateDoorInteractEvent`) | Enemies of the owner, if `Damageable` | — |
 | Selected **and** referenced by an objective | Owner/holder alliance; ownership moves to the capturer's team | Same as above | Owner := capturer's team; forced to `GateStateOnCapture` (default `OPEN`) — again on every recapture when `AllowRecapture` |
-| Any other gate in the scenario's town/districts | Nobody (forced `OPEN`) | Nobody (invincible) | — |
+| Any other gate in the scenario's districts (the town when it has none) — "area gates" | Nobody (held `OPEN`) | Nobody (invincible) | — |
 
-Pass-through is disabled on all affected gates for the match. `AnimateDuringSiege` is honoured for
-every state change. Destroyed gates stay destroyed until the match ends (`CanRespawnOverride = false`).
+Districts define the siege area for gate selection only: gates there that aren't selected in the
+scenario's Gates step are the area gates. Pass-through is disabled on all affected gates for members;
+non-members get the §8.5 carry-across. Owners open/close a selected gate by right-clicking it.
+~~`AnimateDuringSiege` is honoured for every state change.~~ *(Updated 2026-09-26: `AnimateDuringSiege`
+is **not** honoured — every siege state change animates, because the gate package has no public instant
+placement; open follow-up.)* Destroyed gates stay destroyed until the match ends (`CanRespawnOverride = false`).
 An objective whose gate is destroyed before capture remains capturable at its capture point.
 
-### 8.2 Lockdown at match start
-For every affected gate structure: record a `SiegeMatchGateSnapshot` via the API (structure overrides +
-each door's open state/health/destroyed), **then** set `CurrentSiegeId`, apply the structure-level
-overrides through the existing `PATCH /overrides` path (`IsInvincibleOverride`,
-`AllowPassThroughOverride = false`, `OpenedStateOverride`, `CanRespawnOverride = false`) and drive the
-runtime state through `GateManager.forceGateState`. `HealthDisplayMode.SIEGE_ONLY` /
-`GateInfoDisplayMode.SIEGE_ONLY` light up automatically via `CurrentSiegeId`.
+### 8.2 Lockdown at the hub (T-15)
+*(Updated 2026-09-26: the lockdown runs at the hub, when players gather, not at match start.)* The
+plugin snapshots every affected gate structure from its gate cache and calls
+`POST /api/siege-matches/{id}/gate-lockdown`. Per gate the API writes a `SiegeMatchGateSnapshot`
+(structure overrides + each door's open state/health/destroyed) **first**, then sets `CurrentSiegeId`,
+`IsSiegeObjective` and the overrides (`IsInvincibleOverride` per role, `AllowPassThroughOverride =
+false`, `OpenedStateOverride = OPEN` for area gates, `CanRespawnOverride = false`) in one save. The
+plugin then sets the same overrides locally and moves each door with `GateManager.openGate/closeGate`
+(no `forceGateState`). If the API call fails the match still gets its gates, without crash safety.
+`HealthDisplayMode.SIEGE_ONLY` / `GateInfoDisplayMode.SIEGE_ONLY` light up automatically via
+`CurrentSiegeId`.
 
 ### 8.3 During the match
 `SiegeGateListener` handles `GateDoorInteractEvent` (control permission per §8.1, deny message
@@ -550,62 +592,59 @@ GateStateOnCapture)`.
 
 ### 8.4 Restore and crash safety
 At match end: re-apply each snapshot (respawn destroyed doors, restore open state and health, clear the
-overrides this match set, `CurrentSiegeId = null`) and delete the snapshot rows. On plugin enable, any
-gate whose `CurrentSiegeId` points at a match not `InProgress` in this process is restored from its
-snapshot rows, and that match is marked `Aborted/ServerRestart`. Snapshots are written **before** any
+overrides this match set, `CurrentSiegeId = null`) and delete the snapshot rows — the plugin does it
+in the world and calls `POST /api/siege-matches/{id}/gate-restore`. On plugin enable,
+`POST /api/siege-matches/restore-stale-gates` restores every leftover snapshot (and clears stray
+`CurrentSiegeId`s), then the plugin reloads its gates; unfinished matches are marked
+`Aborted/ServerRestart`. Snapshots are written **before** any
 change, so a crash mid-lockdown is recoverable.
 
 ### 8.5 Scenario-area lockdown and the non-member gate view (D6)
-**Lockdown (`LockdownScenarioArea`, default on):** while a match is in `HUB`/`IN_PROGRESS`, non-members
-can't enter the scenario's districts, and are moved to the nearest exit at lockdown. Implemented with
-the existing region enter/leave infrastructure (`OnRegionEnterEvent`, `Domain.AllowEntry` semantics)
-scoped to the match, not by editing `AllowEntry` on the rows.
+**Lockdown: removed.** *(Updated 2026-09-26, smoke test: "non-siege players should go about their
+business with the least trouble".)* Non-members are never moved out of or kept out of the scenario
+area. They simply can't fight members (§6.7), can't capture (only roster members count, §7.2) and
+can't use siege gates (§8.3). `LockdownScenarioArea` still exists but has no effect (drop it with the
+next siege schema change); the readiness warning `LOCKDOWN_WITHOUT_DISTRICTS` was removed. The original design
+(deny region entry into the districts during `HUB`/`IN_PROGRESS`, move non-members to the nearest exit)
+was built in Phase 7a and taken out after the smoke test.
 
-**Goal (developer, D6):** siege members see and are blocked by the siege gate states. **Everyone else
-sees every affected gate exactly as it was before the lockdown.**
+**Goal (developer, D6, as changed):** siege members see and are blocked by the siege gate states;
+everyone else is bothered as little as possible. ~~Everyone else sees every affected gate exactly as it
+was before the lockdown.~~
 
 **Constraint:** gates are real blocks, and the server validates movement against real blocks for
-everybody. So the *physical* world must hold the siege state, and a non-member's pre-lockdown state
-can only be a **per-player view** plus movement handling wherever the view and the physics disagree.
+everybody. So the *physical* world holds the siege state, and anything a non-member sees differently is
+a **per-player view**, plus movement handling where the view and the physics disagree.
 
 **View mechanism** (`SiegeGateViewService`, Paper API only — no ProtocolLib):
-- Each door's closed and opened block sets already exist (`GateBlockSnapshot` /
-  `GateOpenedBlockSnapshot`, cached on `CachedGateDoor`). The pre-lockdown state comes from the
-  `SiegeMatchGateSnapshot` (§8.2). Transient pre-states collapse to a resting state: `OPENING`→open,
-  `CLOSING`/`JAMMED`→closed.
-- For every affected door whose real state ≠ its pre-lockdown state, send the pre-lockdown block set
-  with `Player.sendBlockChanges(…)` to **non-member** viewers within view distance. Re-send it:
-  - on lockdown;
-  - after every real change of that door, including each `GateAnimationTask` frame (server block
-    updates overwrite client-side fakes);
-  - on Paper's `PlayerChunkLoadEvent` for chunks holding affected doors;
-  - on teleport, respawn and world change;
-  - after a non-member's dig/interact on a faked block;
-  - when membership changes (joiner → send real blocks; a member who leaves mid-match → send view blocks).
-- Members get no fakes. At restore (§8.4) the real state equals the pre-lockdown state again, and real
-  blocks are re-sent to every viewer to clear stale fakes.
-
-**Where view ≠ physics:**
-
-| Pre-lockdown | Real (siege) | Non-member sees | Handling |
-|---|---|---|---|
-| Closed | Open / destroyed (forced open, opened by owners, opened on capture) | Closed gate that the server would let them walk through | **Virtual collision:** cancel/push back non-member movement into the door's closed-state footprint, reusing the gate package's `CollisionPredictor`/`EntityPusher` geometry |
-| **Open** | Closed | Open gateway that the server blocks (rubber-banding) | **Temporary pass-through (developer fallback):** non-members walking into it are carried across with the existing `GatePassThroughService` **`TELEPORT`** mode. It doesn't open the real door, unlike `DEFAULT`/`INSTANT_OPEN`, which would affect siege players and must not be used. The ordinary pass-through conditions are waived for the match, because the grant is "this gate was open before the siege". Lockdown still wins: it never carries a non-member *into* a locked-down district |
-| Same | Same | Real state | Nothing to do |
+- For non-members every locked siege gate is **removed**: every cell of each door's closed and open
+  resting frames (`GateViewCells`) is sent as air with `Player.sendBlockChange` to non-members within
+  96 blocks. *(Updated 2026-09-26: was "send the pre-lockdown block set"; the setting value
+  `PreLockdownView` now means "gates removed".)*
+- **Walking through:** air on the client doesn't make a really solid block passable, so a non-member who
+  walks into a door that is really closed is carried across it with the existing
+  `GatePassThroughService` **`TELEPORT`** mode (at most once per second). `TELEPORT` doesn't open the real
+  door, unlike `DEFAULT`/`INSTANT_OPEN`, which would affect siege players and are never used.
+  Pass-through is never refused because of the area. No virtual collision is needed any more (nothing
+  looks closed that is really open).
+- **Re-send:** every 5 ticks, per (viewer, door) only when the door's real state or frame changed, or
+  the viewer is new in range; teleport, respawn, join and world change force a re-send. Animation frames
+  overwrite the fakes until the next pass — a brief flicker, accepted. No `PlayerChunkLoadEvent` hook:
+  leaving the 96-block range drops the record, so coming back re-sends.
+- Members get no fakes. When a lockdown ends, everyone who got fakes is sent the real blocks again ~5 s
+  later (after the restore animations).
 
 Fake blocks don't affect projectiles, mobs or dropped items. That's accepted: non-members can't damage
 members anyway (§6.7).
 
-**Degrade switch:** `SiegeConfiguration.NonMemberGateView` = `PreLockdownView` (default, everything
-above) | `PassThroughOnly` (no fake rendering: non-members see the siege state, plus the temporary
-`TELEPORT` pass-through on gates that were open before the lockdown). `PassThroughOnly` is the
-developer's stated minimum, for when the view proves unreliable on a live server (e.g. client desync
-during animations).
+**Degrade switch:** `SiegeConfiguration.NonMemberGateView` = `PreLockdownView` (default: gates removed,
+as above) | `PassThroughOnly` (no fakes: non-members see and collide with the real siege gates;
+right-clicking a door that was open before the lockdown still carries them across with `TELEPORT`).
 
 **Relation to the gate spec:** `REQUIREMENTS_GATE_ADVANCED_FEATURES.md` Feature 4 ("objective gates
 open on capture and can be recaptured", 0.5× friendly-fire damage) is superseded for Siege by D3.
-`GateStructure.IsSiegeObjective` becomes runtime-maintained (set at lockdown for objective gates,
-cleared on restore) and is removed from the gate's admin form (`IMPLEMENTATION_PLAN.md` Phase 2).
+`GateStructure.IsSiegeObjective` is runtime-maintained (set at lockdown for objective gates, cleared on
+restore) and was removed from the gate's admin form in Phase 3 (`IMPLEMENTATION_PLAN.md`).
 
 ## 9. Player state: own gear + restore (D2)
 
@@ -613,7 +652,8 @@ cleared on restore) and is removed from the gate's admin form (`IMPLEMENTATION_P
 At the hub teleport (T-15), `SiegePlayerVault` captures: inventory storage, armour, off-hand, XP level
 and progress, health, food, saturation, active potion effects, game mode, location. The player
 **keeps their gear** for the match (nothing is cleared). The snapshot is kept in memory **and** written
-to `plugins/KnK/siege-vault/<uuid>.dat` (Bukkit `ItemStack` serialization) before teleporting.
+to `plugins/KnightsAndKings/siege-vault/<uuid>.yml` (Bukkit YAML `ItemStack` serialization) before
+teleporting. *(Updated 2026-09-26: `.yml` under the plugin's real data folder, not `KnK/…/.dat`.)*
 
 ### 9.2 Restore
 On match end, leave, or elimination: clear inventory → restore snapshot → teleport back → delete the
@@ -632,26 +672,32 @@ match — **with one exception: siege enchantment books dropped by the member's 
 which a higher-priority siege handler un-cancels for members of that match only (v2 `onPickup` rule).
 Non-members can never pick them up.
 
+Players in owner or staff mode are exempt from all of these guards (developer request 2026-09-26,
+accepted risk).
+
 ### 9.4 Enchant-book drops and post-siege stripping (D7)
 **Drops (v2 `SiegeScenario.spawnEnchantments`, kept):** each second, with probability
 `EnchantDropChance` (v2: 30‰), one book drops at a random point inside a random objective's capture
 radius, if `EnchantDropsEnabled` and fewer than `MaxBooksAlive` are on the ground. Enchantment: random
 from `AllowedEnchantmentKeys`, level from `LevelMin`–`LevelMax` (v2: "1 or 2 levels"). The book is
-tagged in its `PersistentDataContainer` with `knk:siege_book = <matchId>` and tracked by the runtime.
+tagged in its `PersistentDataContainer` with `knightsandkings:siege_book = <matchId>` and tracked by the
+runtime.
 Books still on the ground are removed at match end (v2 `resetDroppedItems`). v2's random-offset maths
 cast the radius to `int` (`nextInt((int) 2.5)`), so books landed within 2 blocks of the centre; v3
 samples uniformly in the real radius.
 
-**Applying (no menu needed):** click a siege book held on the cursor onto a target item in your own
-inventory (`InventoryClickEvent`). Validity follows vanilla rules (`Enchantment.canEnchantItem`,
-conflicts, level cap = max(existing, book level)). The book is consumed. v2 used a
-`PlayerEnchantMenu` item picker instead; a menu variant can come later with the other menus.
+**Applying:** right-click a siege book in hand to open `SiegeEnchantMenu` (the v2 `PlayerEnchantMenu`
+item chooser: every item in your inventory the book can go on; click one to apply), or click the book
+held on the cursor onto a target item in your own inventory (`InventoryClickEvent`). Validity follows
+vanilla rules (`Enchantment.canEnchantItem`, conflicts, level cap = max(existing, book level)). The book
+is consumed. *(Updated 2026-09-26: the enchant menu was added on the developer's request; the cursor
+click still works.)*
 
 **Stripping (D7):** the restore (§9.2) already replaces the whole inventory with the pre-siege
 snapshot, which removes every siege-applied enchantment and every book. Because the requirement is
 explicit, there are two extra guards:
-- Every siege application also records itself on the item (`knk:siege_enchants = [{matchId, key,
-  previousLevel}]`).
+- Every siege application also records itself on the item (`knightsandkings:siege_enchants =
+  [{matchId, key, previousLevel}]`).
 - The restore path and a join-time sweep (a crash, or a failed restore) scan the player's inventory,
   ender chest, and cursor for siege markers without an active match. They revert each recorded
   enchantment to its `previousLevel` (removing it if there was none), remove the marker, and delete
@@ -661,20 +707,23 @@ is defence in depth, not the primary mechanism.
 
 ## 10. Menus
 
-Full legacy inventory, engine prerequisites and v3 template drafts: **`MENU_TEMPLATES.md`**. Menus are
-documented only. Implementation is blocked on InventoryMenu engine extensions E1–E9 and sequenced last
-(`IMPLEMENTATION_PLAN.md` Phase 8).
+Full legacy inventory, engine prerequisites and v3 templates: **`MENU_TEMPLATES.md`**. *(Updated
+2026-09-26: implemented.)* The InventoryMenu engine extensions E1–E9 and the siege menus
+(`IMPLEMENTATION_PLAN.md` Phase 8) are built and merged; the templates are seeded create-only by
+knk-web-api `MenuTemplateSeed.Siege.cs`.
 
 ### 10.1 Menu set
-`siege.entry` (button), `siege.overview` (lobbies), `siege.information` (per lobby, per phase),
-`siege.spawnpoint` (respawn picker).
+`siege.entry` (button — in practice the hub's existing Siege tile in the content menu seed),
+`siege.overview` (lobbies), `siege.information` (per lobby, per phase), `siege.spawnpoint` (respawn
+picker).
 
 ### 10.2 Siege-registered menu handlers
 Registered through the same registries as `MenuActionHandlers`/`MenuConditionHandlers`/
 `MenuContentSourceHandlers`, **before** `MenuDefinitionValidationRunner` runs:
 - Actions: `siege.join`, `siege.leave`, `siege.vote`, `siege.vote.random`, `siege.spawn`, `siege.open-own`.
 - Conditions: `siege.phase`, `siege.participating`, `siege.join-eligible`, `siege.vote-open`,
-  `siege.spawn-available`, `siege.lobbies-empty`.
+  `siege.spawn-available`, `siege.lobbies-empty`, `siege.lobby-open` (a lobby in cooldown or disabled
+  doesn't open; added 2026-09-26).
 - Content sources (row sources via `registerRows`): `siege.lobbies`, `siege.vote-candidates`,
   `siege.body` (phase-aware: members before the match, objectives during it), `siege.spawn-options`.
 - Registration happens in a `MenuFeature` added to `KnKPlugin`'s feature list (InventoryMenu Phase 9);
@@ -703,13 +752,14 @@ the main thread and hold no Bukkit mutators.
 
 | Command | Permission | Behaviour |
 |---|---|---|
-| `/siege` | `knk.siege.play` | Opens `siege.overview` (or your own siege's Information), with a chat fallback list until menus ship |
+| `/siege` | `knk.siege.play` | Opens your own siege's Information, else `siege.overview`; a lobby in cooldown or disabled doesn't open. Chat list as fallback when the menus aren't available |
+| `/siege menu`, `/siegemenu` (alias `/sgm`) | `knk.siege.play` | Opens the member's own Information from matchmaking to match end; refused for non-members (`/sm` is `/staffmode`). `/siege` and `/sgm` always pass the in-match command filter (§6.9). *(Added 2026-09-26, smoke test.)* |
 | `/siege join <lobbyKey>` | `knk.siege.play` | `SiegeService.join` (§6.2) — same checks and denial texts as the menu |
 | `/siege leave` | `knk.siege.play` | `SiegeService.leave` |
-| `/siege info [lobbyKey]` | `knk.siege.play` | Status in chat; opens Information once menus ship |
-| `/siege vote <scenario\|random>` | `knk.siege.play` | Chat-voting fallback until menus ship |
+| `/siege info [lobbyKey]` | `knk.siege.play` | Status in chat (still chat-only) |
+| `/siege vote <scenario\|random>` | `knk.siege.play` | Chat voting, alongside the menu |
 | `/siege spawn [option]` | `knk.siege.play` | Opens the spawn picker / sets the spawn choice |
-| `/siege skip <lobbyKey>` | `knk.siege.skip` | Skips cooldown only (v1 donator perk; grantable to a premium group via the permission system) |
+| `/siege skip <lobbyKey>` | `knk.siege.skip` | Skips cooldown, or shortens matchmaking to 1 minute left (v1 donator perk; grantable to a premium group via the permission system) |
 | `/siege admin list` | `knk.siege.admin.list` | All lobbies, phases, members |
 | `/siege admin start\|stop <lobbyKey> [reason]` | `knk.siege.admin.control` | Start matchmaking now / abort (restore, no rewards) — replaces v2's always-throwing `/siege remove` |
 | `/siege admin skip <lobbyKey>` | `knk.siege.admin.control` | v2 `skipStage` semantics, fixed (N9): cooldown → matchmaking; matchmaking → T-31 |
@@ -727,11 +777,16 @@ as owned children), `SiegeLobbies`, `SiegeConfiguration`. Plus:
 - `GET /api/siege-scenarios/{id}/readiness`
 - `GET /api/siege-lobbies/runtime-config` — enabled lobbies with rotations and fully-resolved ready
   scenarios (team identities resolved from Clans) in one payload for the plugin cache.
-- `POST /api/siege-matches` (Created) · `POST /{id}/start` (participants, teams, gate snapshots) ·
-  `POST /{id}/participants/{userId}/left` · `POST /{id}/complete` (stats, objective results → rewards)
-  · `POST /{id}/abort` · `GET /{id}/gate-snapshots` · `GET /api/siege-matches?userId=&lobbyId=` (history).
-- Match write endpoints accept only the plugin's service client (existing plugin-auth/admin-client
-  mechanism); CRUD endpoints require admin auth like every other FormConfig entity.
+- Match endpoints under `api/siege-matches`: `POST /` (create, `Created`) · `POST /{id}/start`
+  (participants, teams) · `POST /{id}/participants/{userId}/left` · `POST /{id}/complete` (stats,
+  objective results → rewards) · `POST /{id}/abort` · `POST /abort-unfinished` · `GET /` (history,
+  `?userId=&lobbyId=`) · `GET /{id}` · `GET /{id}/gate-snapshots` · `POST /{id}/gate-lockdown` ·
+  `POST /{id}/gate-restore` · `POST /restore-stale-gates` (§8.2, §8.4).
+- *(Updated 2026-09-26.)* Plugin write auth is opt-in: match writes carry `[RequirePluginServiceKey]`,
+  which enforces only when `Security:PluginServiceKey` is set (header `X-API-Key`); empty = open. The
+  Siege/Clan/BannerDesign/FormConfig CRUD controllers have **no `[Authorize]` today** — "CRUD requires
+  admin auth" is an **open decision**, not current behaviour. The web app's Siege Settings page is
+  staff-only in the UI.
 
 ## 12. Legacy defect disposition
 
@@ -756,8 +811,9 @@ as owned children), `SiegeLobbies`, `SiegeConfiguration`. Plus:
 ## 13. Open questions
 
 1. ~~Objective recapture~~ — **resolved (D5):** per-scenario `AllowRecapture`, default `false` (§7.3).
-2. ~~Scenario-area lockdown~~ — **resolved (D6):** on, plus the non-member gate view with a
-   temporary-pass-through fallback (§8.5).
+2. ~~Scenario-area lockdown~~ — **resolved (D6):** ~~on, plus the non-member gate view with a
+   temporary-pass-through fallback~~ *(Updated 2026-09-26, smoke test: lockdown removed; non-members see
+   siege gates removed and are carried through closed doors, §8.5.)*
 3. ~~Enchant-book drops~~ — **resolved (D7):** kept; siege-applied enchantments are stripped after the
    siege (§9.4).
 4. **"Skilled match" title ranges** (v1 `titleIDMin/Max`). MVP ports only a minimum bracket per

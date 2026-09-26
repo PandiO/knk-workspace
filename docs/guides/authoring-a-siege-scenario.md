@@ -1,8 +1,8 @@
 # Authoring a siege scenario (admin how-to)
 
 **Status:** Living document — update in place
-**Last updated:** 2026-09-26 (siege Phase 9, overnight chain link 1; written from the code on `claude/siege-minigame`,
-not yet walked through by an admin end to end)
+**Last updated:** 2026-09-26 (siege merged to the default branches after two live smoke-test rounds; area lockdown
+removed, non-member gate view updated)
 
 How an admin builds a playable siege from nothing: a banner and a clan for the defenders, a **scenario** (the map and
 rules), and a **lobby** that rotates scenarios and runs matches. Design background: `docs/specs/siege-minigame/DESIGN.md`
@@ -37,10 +37,12 @@ The scenario form (`/forms/siegescenario`) has 9 steps. You'll save it several t
 a saved scenario, and an objective's gate must already be saved in the scenario's Gates.
 
 1. **General:** Name, Town (Select instance).
-2. **Districts:** one join entry per district of the town that forms the siege area. This area is locked down during a
-   match and your gate picks are checked against it.
+2. **Districts:** one join entry per district of the town that forms the siege area. Your gate picks are checked
+   against it, and gates in these districts that you don't select on the Gates step are held open (and can't be
+   damaged) during a match. Non-members can still walk around the area; they just can't fight members, capture or
+   use siege gates.
 3. **Hub & entry:** Hub location → **Send to Minecraft**, stand on the spot in-game and confirm. The hub is where
-   players gather before the round (T-15) and where the area lockdown starts. Also: min/max players, optional minimum
+   players gather before the round (T-15); the scenario's gates lock down at that moment. Also: min/max players, optional minimum
    title, rules text.
 4. **Match length, Rewards:** the defaults are fine for a first scenario.
 5. **Submit** (first save). Teams, Gates and Objectives say "save first" until now; that's expected.
@@ -73,7 +75,6 @@ a saved scenario, and an objective's gate must already be saved in the scenario'
 | `HUB_OUTSIDE_TOWN`, `SPAWNPOINT_OUTSIDE_TOWN`, `OBJECTIVE_OUTSIDE_TOWN` | re-capture that point inside the town region |
 | `TOWN_HAS_NO_REGION` | give the town a WorldGuard region first |
 | warning `NO_INSTANT_VICTORY_OBJECTIVE` | allowed. The match is then decided on time and holdings |
-| warning `LOCKDOWN_WITHOUT_DISTRICTS` | add districts, or untick the scenario's "Lockdown scenario area" |
 | warning `SPATIAL_CHECKS_UNAVAILABLE` / `_SKIPPED` | the server was down, so the "outside town" checks didn't run. Re-check with it up |
 
 ## 3. The lobby
@@ -107,6 +108,8 @@ tuning: attack A1 10, A2 2 (10 on instant-victory objectives), defence 6/3/6. Sa
   lists only saved gates.
 - Editing a scenario that's on a running lobby's rotation takes effect at the next reload/cooldown. A match in progress
   keeps the version it started with.
-- During a match the scenario's gates are under siege control: the owner team's alliance opens and closes them, and
-  others see the pre-lockdown gates (see Siege Settings → non-member gate view). The gates are restored after the match,
-  and on the next plugin start if the server crashed mid-match.
+- During a match the scenario's gates are under siege control: the owner team's alliance opens and closes them.
+  Non-members see those gates removed and walk straight through them (Siege Settings → non-member gate view;
+  `PassThroughOnly` turns that off). The gates are restored after the match, and on the next plugin start if the
+  server crashed mid-match.
+- The scenario's "Lockdown scenario area" setting no longer does anything (the area stays open to non-members).

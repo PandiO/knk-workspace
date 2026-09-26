@@ -33,8 +33,8 @@ Central home for requirements, specifications, and implementation roadmaps acros
   [siege-minigame/MENU_TEMPLATES.md](siege-minigame/MENU_TEMPLATES.md) (legacy siege menus inventoried
   item-by-item + proposed v3 templates, built in Phase 8b); evidence in
   [../reports/2026-09-25-siege-minigame-gap-analysis.md](../reports/2026-09-25-siege-minigame-gap-analysis.md).
-  **Status (2026-09-26):** MVP phases 1–9 code complete on `claude/siege-minigame` (Phase 9: non-live parts only;
-  plugin code from Phase 6b on not compiled yet), not merged; playtesting open. Admin how-to:
+  **Status (2026-09-26):** MVP phases 1–9 done, smoke-tested live and merged into the default branches; Phase 10
+  (scheduled lobbies) post-MVP. Admin how-to:
   [../guides/authoring-a-siege-scenario.md](../guides/authoring-a-siege-scenario.md)
 - Command catalogs (every Minecraft command across all three codebases — syntax, permissions,
   behavior, feature allocation): [docs/specs/legacy/commands-v1.md](docs/specs/legacy/commands-v1.md),

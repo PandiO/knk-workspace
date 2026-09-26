@@ -1,24 +1,58 @@
 # Siege Minigame — Implementation Plan
 
-**Status:** Draft. Phases 1–7 + 9 = playable MVP (commands/chat UI): **Phases 1, 2, 3, 4 and 5 code complete** on
-`claude/siege-minigame` (Phase 2 migration applied to the dev DB and API verified live with test data;
-Phase 3 FormConfigurations authored in the dev DB and the forms proven against the live API; Phase 4's
-Bukkit-free core tested without a server; Phase 5's Paper runtime (5a loop/commands/vault, 5b listeners/presenters,
-5c enchant books) wired into the plugin and tested without a server, partly verified live - the manual checklist
-in "Phase 5 status" is the developer's sign-off); **Phase 6 code complete**: 6a (web-api match endpoints +
-server-side rewards) tested; 6b (plugin wiring) written on the developer's go-ahead with its knk-paper part
-**not compiled** (the cloud chain can't reach paper-api - see "Phase 6b status"); **Phase 7a (gate integration +
-area lockdown), Phase 8b (siege menus) and Phase 7b (non-member gate view) code complete** the same way (web-api
-tested, knk-paper uncompiled); **Phase 9 non-live parts done** (seed/model defaults, disabled example lobby, docs;
-playtesting/balancing are the developer's). Phase 8a
-(InventoryMenu engine extensions) built and merged into `claude/siege-minigame`, not verified live; Phase 8b code complete (above);
-Phase 10 is post-MVP.
-**Last updated:** 2026-09-26 (overnight chain link 1: "Phase 6", "6b", "7a", "7b", "8b" and "9 status" blocks; knk-paper
-code from 6b on is uncompiled; earlier the same day: Phase 5 playtest fixes and status block)
+**Status:** Done (MVP). Phases 1–9 are implemented and were **merged into the default branches on 2026-09-26**
+(knk-web-api `master` `67f451e`, knk-plugin `main` `716fb3c`, knk-web-app `main` `4fba7d0`) after the developer's two
+live smoke-test rounds passed (`docs/reports/2026-09-26-siege-smoke-test-checklist.md`). Phase 10 (Scheduled lobbies)
+is post-MVP and not started. The per-phase status blocks below are the historical record; where later work changed a
+decision, "Current behaviour" and "Audit" below win.
+**Last updated:** 2026-09-26 (merged to trunk; plan audit; earlier the same day: overnight chain phases 6–9 and two
+smoke-test rounds)
 
 Ref: `DESIGN.md` (decisions — not restated here), `MENU_TEMPLATES.md`,
 `docs/reports/2026-09-25-siege-minigame-gap-analysis.md`. Plan format follows
 `docs/specs/kits/IMPLEMENTATION_PLAN.md` (branch `claude/kits`).
+
+## Current behaviour and audit (2026-09-26, after the merge)
+
+**Current behaviour** — later decisions that supersede text in the status blocks below (details: the "Smoke-test
+follow-ups" and "Second smoke-test round fixes" bullets under the Phase 9 status block):
+- **No scenario-area lockdown.** Non-members are never moved out of or kept out of the area; they can't fight members,
+  capture, or use siege gates. `SiegeAreaLockdown`, its listener and `knk.siege.bypass.lockdown` are gone;
+  `SiegeScenario.LockdownScenarioArea` has no effect (column kept) and the `LOCKDOWN_WITHOUT_DISTRICTS` warning is
+  removed. Supersedes the 7a/7b status text about the lockdown, decision 3 of 7b and 7a's manual step 7.
+- **Non-member gate view:** locked siege gates are removed for non-members; walking into a really closed door carries
+  them across (TELEPORT pass-through). No pre-lockdown frames, no virtual collision. `PassThroughOnly` still turns it
+  off. Supersedes the 7b "Behaviour" paragraph and manual steps 1–3.
+- **Respawn:** the spawn choice is remembered (picker at match start; after a respawn only without a stored choice); a
+  captured objective resets its choosers to the team default. Supersedes Phase 5 decision 11 and 8b manual step 5.
+- **Objectives:** rings, capture distance and banners use the floor under the capture point; banners show the holder's
+  full team banner, the v2 gradient while being captured, and are protected. Supersedes Phase 5 decision 16.
+- **Capture feedback** (horns, bell, chime every 5 s, particles, chat) — `SiegeCaptureFeedback`.
+- **Rewards:** coins × personal salary × rank multipliers; shared `TitleProgression` with scaled bonuses (KNG-16);
+  printed in the shared `RewardMessageFormat`.
+- **Menus:** `siege.overview`/`siege.information` are Dynamic height; a lobby in cooldown isn't opened; `/siege menu`,
+  `/siegemenu`, `/sgm`. Supersedes 8b's fixed heights.
+- **Plugin keys:** siege writes accept `Security:PluginApiKey` when `Security:PluginServiceKey` is empty (one key).
+- **Scoreboards:** hourly salary and rank refreshes no longer replace a siege member's match scoreboard.
+
+**Audit** (every phase's scope against the code on the merged branches): every Phase 1–9 scope item has code behind
+it and every commit the status blocks cite is on the branches. Fixed during the audit: web-api `139fc33`
+(Locations/Towns/Districts deletes return 409 instead of 500; `LocationInsideRegionValidator` binding flags),
+`d0bac59` (one plugin key; lockdown warning removed), plugin `fda4373` (scoreboard guard, stale comments).
+Still open (none blocking):
+- **Decisions for the developer:** admin auth on the siege/FormConfig CRUD controllers (DESIGN §11.2 says admin
+  auth; none has `[Authorize]` today); whether to drop `LockdownScenarioArea` with the next siege schema change.
+- **Not recorded live:** Phase 1's `/knk clans list|banner` check and Phase 3's browser walkthrough with in-game
+  "Send to Minecraft" captures (the smoke tests used scenario `test-cinix`); readiness with spatial checks running.
+- **Follow-ups:** `AnimateDuringSiege` isn't honoured; `/siege info` is chat-only; `minTitleName` isn't in
+  runtime-config; no unique `(SiegeMatchId, UserId)` index on participants; retry policy not configurable; the web-api
+  `.sln` points at `tests\` (folder is `Tests/`); ordinary block placement isn't denied during a match; arrows stay in
+  the world after the restore; `MenuItemBukkitMapper.applyBannerPatterns` duplicates `BannerDesignBukkitMapper`;
+  menu C.1 hub tile without `siege.open-own`/entry hint, C.2 without filler panes, C.3 without gate status; wizard
+  follow-ups from Phase 3 ("save and stay", hidden-step defaults, multi-pick M2M); `Clan.DefaultForTownId`'s unique
+  index isn't filtered (harmless on MySQL); `ProvisionalRewardCalculator`/`LoggingSiegeMatchesCommandApi` unused;
+  leftover `[TEST]` rows in the dev DB (cleanup orders in the Phase 2/3 blocks); optional `SEED_DATA.md`.
+- **Stale outside this folder:** `knk-plugin/CLAUDE.md` still says there is no menus package (left for the developer).
 
 ## 0. Branching and sequencing
 
@@ -64,6 +98,8 @@ Phase 8 Menus = InventoryMenu Phase 9 engine extensions ─► siege menu handle
 **Tests:** service validation (layer cap, unknown pattern, duplicate default-for-town), mapper order.
 **Exit:** an admin can create a banner and a default clan for a town in the web app; the plugin can
 fetch it and build the banner `ItemStack` (verified with a debug `/knk clans banner <id>` if cheap).
+
+> *Since (2026-09-25/26): steps 1–2 of "To finish Phase 1" were done in Phases 2–3; team banners were seen in game in the siege smoke tests; the `/knk clans` check itself isn't recorded.*
 
 **Phase 1 status (2026-09-25): code complete on `claude/siege-minigame` in all three repos, pushed;
 not verified live.** Commits: web-api `3f19c9c`, plugin `11b0f3a`, web-app `ac7ea41`.
@@ -1200,6 +1236,8 @@ stays destroyed; objective capture opens and hands over control; non-selected ga
 unbreakable; everything restored after end **and** after a hard kill of the server mid-match.
 **Exit:** D3 behaviour demonstrated live.
 
+> *Superseded in part (2026-09-26): the scenario-area lockdown described here was removed — see "Current behaviour" at the top.*
+
 **Phase 7a status (2026-09-26, overnight chain link 1, on the developer's "just continue anyway"): code complete on
 `claude/siege-minigame` in knk-web-api (tested) and knk-plugin (knk-core/knk-api-client compiled and tested;
 knk-paper NOT compiled - the cloud container can't reach paper-api), pushed. Not played live.** Commits: knk-web-api
@@ -1278,6 +1316,8 @@ api-client), `16a1436` (paper). No migration (the Phase 2 snapshot table and `Cu
   (`SiegeLobbyRuntime.isMember`) and the `areaLockdownStarted`/`roundReleased` hooks; `SiegeConfiguration.nonMemberGateView`
   is already in the runtime config (`KnkSiegeConfiguration`).
 
+> *Superseded (2026-09-26): non-members now see locked gates removed and walk through them — see "Current behaviour" at the top.*
+
 **Phase 7b status (2026-09-26, overnight chain link 1): code complete on knk-plugin `claude/siege-minigame`
 (`d475195`), knk-paper only, NOT compiled (paper-api unreachable from the cloud) and not tested - there is no pure
 logic to unit-test here; the view needs a live server with a member and a non-member side by side.** No web-api change
@@ -1344,6 +1384,8 @@ fallbacks to menus (fallback commands stay).
 
 **Manual verification:** every row of `MENU_TEMPLATES.md` C.5 against a live match, including the
 N-number fixes.
+
+> *Updated since (2026-09-26): both menus are Dynamic height and a lobby in cooldown isn't opened; the spawn picker no longer opens after every respawn — see "Current behaviour" at the top.*
 
 **Phase 8b status (2026-09-26, overnight chain link 1): code complete on `claude/siege-minigame` - knk-web-api seeds
 tested; knk-plugin knk-core/knk-api-client compiled and tested (including a seed ↔ plugin contract test); knk-paper

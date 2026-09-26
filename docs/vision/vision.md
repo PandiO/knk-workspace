@@ -205,11 +205,10 @@ A "random birth advantage" mechanic (starting conditions randomized at character
 
 ## 7. Combat, Siege & Minigames
 
-> **Status (2026-09-26):** the v3 siege minigame (7.1–7.4) is **code complete through its MVP phases** on the
-> `claude/siege-minigame` branches, not yet merged or playtested end to end: authoring in the web app, the plugin's
-> match loop with chat fallbacks, match history and server-side rewards, gate lockdown and the non-member gate view,
-> and siege menus. The plugin code from match recording on hasn't been compiled yet. What's left is playtesting and
-> balancing, then Phase 10 (scheduled lobbies, post-MVP). Spec and per-phase status:
+> **Status (2026-09-26):** the v3 siege minigame (7.1–7.4) **MVP is done and merged** into the default branches of all
+> three repos after two live smoke-test rounds: authoring in the web app, the plugin's match loop with menus and chat
+> fallbacks, match history and server-side rewards, gate control with a walk-through view for non-members, capture
+> feedback and team banners. What's left is balancing from real play, then Phase 10 (scheduled lobbies, post-MVP). Spec and per-phase status:
 > [`docs/specs/siege-minigame/IMPLEMENTATION_PLAN.md`](../specs/siege-minigame/IMPLEMENTATION_PLAN.md); admin how-to:
 > [`docs/guides/authoring-a-siege-scenario.md`](../guides/authoring-a-siege-scenario.md).
 
