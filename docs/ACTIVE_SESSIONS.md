@@ -35,6 +35,7 @@ Live tracker of in-progress work across all four Knights and Kings repos
 | Feature | Repos / files claimed | Owner (human / session) | Status | Started | Last updated |
 |---|---|---|---|---|---|
 | _(example)_ Siege minigame — capture point sync | web-api: `Services/SiegeService.cs`; plugin: `siege/` package | Claude Code session A | Implementing capture-point event handling | 2026-09-17 | 2026-09-17 |
+| Linear KNG-10 / KNG-9 / KNG-11 — `/knk ib` alias; `/user stats` + `/fly` `/heal` `/feed` `/enderchest` `/inventory`; custom-enchant safezone gate | knk-plugin: `commands/KnkAdminCommand.java`, new player commands in `commands/`, `plugin.yml`, `enchantment/`/`listeners/EnchantmentCombatListener.java`; one branch per ticket off `main` (`pandioldenzeel/kng-{10,9,11}-*`) | Claude Code session (Pandi) | KNG-10 in progress | 2026-09-26 | 2026-09-26 |
 | Legacy inventory-menu screen/item mining + feature allocation | knk-workspace: new `docs/specs/legacy/inventory-menu-screens.md`, `docs/specs/legacy/README.md`; read-only on `knk-v1-archive`/`knk-v2-archive` | Claude Code session (Pandi) | Mining v1/v2 menu screens and items | 2026-09-25 | 2026-09-25 |
 
 ## Recently completed
