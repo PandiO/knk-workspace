@@ -53,6 +53,20 @@ Phases 1 and 4 (config only) ship without 0/2/3: admins can author types while n
 
 ---
 
+### Phase 0 status — plugin part done 2026-09-26 (knk-plugin `claude/lootboxes`)
+
+Commits `9157242` (extract `item/BlueprintItemAssembler`; `/knk itemblueprints give` uses it, behaviour unchanged),
+`fb8f5a8` (kits now grant items with their blueprint default enchantments via `KitGrantPlacer`), `56f73b0` (config.yml
+documents `api.auth.type: apikey`), `24ee2b2` (air check without the Paper registry). CI green:
+https://github.com/PandiO/knk-plugin/actions/runs/36252001060 (11 new tests). The API-side ApiKey scheme from this phase
+was **dropped** (orchestrator decision): service auth is unified by KNG-22 on `Security:PluginApiKey`.
+
+Deviations: vanilla `canEnchantItem`/`conflictsWith` checks are opt-in (`Options.withVanillaRules(true)`, Phase 3 turns
+them on; give command and kits keep the old unchecked behaviour); `Options.metaStamp` hook runs last for Phase 3's
+`knk_item_instance` + grade tags; kits skip enchantments with non-`minecraft:` keys lacking a base key (logged); catalog
+menu previews still unenchanted. Risk: enchanted kit items no longer stack with older unenchanted ones.
+Smoke test: `/knk itemblueprints give <id>` unchanged; book blueprint unenchanted; `/kit` items now enchanted.
+
 ## Phase 1 — ItemInstance, schema, configuration, roll engine (knk-web-api)
 
 **Step 1: minimal `ItemInstance`** (DESIGN §3.2, D16). It goes first in this phase, with its own migration, rather than in a phase

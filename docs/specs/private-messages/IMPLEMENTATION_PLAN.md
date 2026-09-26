@@ -140,6 +140,23 @@ chat no longer shows for A; survives A relogging and a server restart; `/ignore 
 
 ---
 
+### Phase 2 status — done 2026-09-26 (knk-web-api + knk-plugin, `claude/private-messages`)
+
+knk-web-api `bd3f747`: `UserIgnore` / `user_ignores` (unique (UserId, IgnoredUserId), cascade on user delete), migration
+`20260926152824_AddPrivateMessagesIgnoreList` (generated with dotnet-ef), `UserIgnoreService`, `UserIgnoresController`;
+API tests 609 (604 pass, the 5 baseline failures; 16 new). knk-plugin `41f12fc` (core `UserIgnoresApi` port with result
+values, `IgnoreGate`, nodes `knk.msg.bypass.ignore` / `knk.msg.unignorable`; api-client impl), `1328730` (`IgnoreService`
+cache loaded on join, `/ignore [player]` toggle incl. offline players, `/unignore`, ignored PMs silently dropped — sender
+sees the normal echo, spies see `[Spy][ignored]`, logged `BLOCKED_IGNORED`; public chat hidden and mention ping skipped),
+`65cd19d` (test fix). CI green: https://github.com/PandiO/knk-plugin/actions/runs/36252898417.
+Deviations: DTO carries `ignoredUuid`; service returns result values; "list full" message; `/ignore` before the list loads
+asks to wait. Endpoints needing KNG-22 service auth: `GET api/users/{userId}/ignores`, `PUT/DELETE
+api/users/{userId}/ignores/{ignoredUserId}`. Phase 3's `PrivateMessagesViewed` audit action becomes **15** (cross-branch
+allocation). Developer to-do: `dotnet ef database update`; grant `knk.msg.unignorable` + `knk.msg.bypass.ignore` to staff
+and owner groups; smoke test A ignores B (PM dropped, chat hidden, survives relog/restart), `/ignore <staff>` refused,
+`/ignore` lists with dates, `/unignore` restores. Known: an ignore made before the target became staff persists; ops
+without an in-house grant are only protected plugin-side.
+
 ## Phase 3 — Server-side PM log + retention (knk-web-api + knk-plugin)
 
 **Blocked until** the plugin authenticates to the API (CP7 option 1: API-key scheme with a plugin principal —

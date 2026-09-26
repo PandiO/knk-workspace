@@ -127,6 +127,19 @@ the body's `actorUserId` acceptable.
 
 ---
 
+### Phase 2 status — done 2026-09-26 (all three repos, `claude/teleport`)
+
+knk-web-api `3515d2f`: `AuditAction.PlayerTeleported = 12`, `Dtos/TeleportDtos.cs`, `UserService.RecordTeleportAuditAsync`,
+`POST api/users/{id}/teleport-audit` (204/400/404; actor from `X-Acting-User-Id` via KNG-16's `GetActorUserId()`; strict
+server validation: row user must be moved/visited player, known kind, existing users, finite coords within ±30M, length
+limits; usernames resolved server-side). knk-plugin `6612ade`: `core/teleport/TeleportAudit`, `UsersCommandApi.recordTeleportAudit`,
+`teleport/TeleportAuditor` (async, one retry after 5 s, never fails the teleport). knk-web-app `a494af5`: "Teleported by
+staff" in Recent Activity with detail lines; `auditActionLabel` moved to `utils/auditDetails.ts`.
+Tests: API 616 (611 pass, the 5 baseline failures); plugin CI green https://github.com/PandiO/knk-plugin/actions/runs/36252256858;
+web-app 3 new tests, suite 16 failed / 243 passed (16 pre-existing). No migration (actions stored by name).
+Endpoint needing KNG-22 service auth: `POST /api/users/{id}/teleport-audit`. Smoke test: `/tp A B`, `/tphere A` → A's
+profile Recent Activity; `/tp B` → B's profile; `/tp -s …` shows "Silent".
+
 ## Phase 3 — Player requests
 
 **knk-core:** `core/teleport/TeleportRequestBook.java` (expiry, one outgoing per requester, per-target cap, duplicate

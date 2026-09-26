@@ -76,6 +76,27 @@
 
 ---
 
+### Phase 1 status — done 2026-09-26 (knk-web-api `claude/domain-discovery`)
+
+Commits `f335d36` (tables, unique (UserId, DomainId), four seeded type rules incl. the developer's smaller Structure and
+GateStructure rewards, `AuditAction.DiscoveryReset = 17`), `edf58eb` (reward calculator; shared `CurrencyMultipliersDto`
+extracted from KNG-16's title-bonus code, `UserService` behaviour unchanged), `620f0a7` (grant endpoint, known/progress/
+summary reads, reset, stats), `3245abf` (admin rules/overrides + per-title preview), `1110894` (DTOs — `620f0a7`/`3245abf`
+don't build on their own). Tests 699 (694 pass, the 5 baseline failures; 106 new). Migrations CI green:
+https://github.com/PandiO/knk-web-api/actions/runs/36253349661; also verified on local MySQL 8.0 (up/down/up; 10
+concurrent identical grants → one credit, one audit row; admin endpoints 401 without login).
+
+Deviations: multipliers per currency (coins = personal × rank salary, gems = GemBonus pair, XP = ExpBonus pair, mirroring
+KNG-16 title bonuses), so rows store `CoinMultiplier`/`GemMultiplier`/`ExpMultiplier`; grant result returns base, granted
+and per-currency multiplier lists for `RewardMessageFormat`; no `RewardMultiplierService` (uses `CurrencyMultipliersDto.For`);
+reset route requires `knk.admin.discovery` (prevents reward farming); rules/overrides in a separate
+`DiscoveryRewardsController`; hourly cap = config `Discovery:MaxNewPerHour` (default 120, 0 = off); metrics counters are
+inert until OpenTelemetry metrics are wired (TODO in Program.cs).
+Endpoints needing KNG-22 service auth: `POST api/users/{userId}/discoveries`, `GET …/discoveries/known`,
+`POST …/discoveries/progress`, `GET …/discoveries/summary` (+ reset once the plugin calls it).
+Developer to-do: apply `AddDomainDiscovery`; grant `knk.admin.discovery` to staff. Known: `Domain.WgRegionId` isn't
+unique (lowest id wins); snapshot conflicts with other branches' migrations at merge.
+
 ## Phase 2 — Plugin detection, grant, effects, spool (knk-plugin)
 
 **Tasks**

@@ -85,6 +85,41 @@ admin actor appears in `AuditLogEntry.ActorUserId`.
 
 ---
 
+### Phase 0 status (KNG-22) — done 2026-09-26 (all three repos, `claude/currency-payments`)
+
+knk-web-api `7d441be`, knk-plugin `be0cfc3`, knk-web-app `4a3c304`. API tests 674 pass / 5 baseline failures; plugin CI
+green https://github.com/PandiO/knk-plugin/actions/runs/36253374030; web-app build OK, tests 16 failed / 240 passed (= trunk).
+Re-verified on post-KNG-16 trunk: A1, A2, A4, A9, A12 were all still open; KNG-16 had also added the personal multipliers
+to the generic user mapping and trusted `X-Acting-User-Id` whenever the key was unset — both fixed.
+
+- **Service auth** (`Attributes/RequireServiceOrPermissionAttribute.cs`): `[RequireServiceOrPermission(node)]` (X-API-Key =
+  `Security:PluginApiKey` OR JWT user holds node) and `[RequirePluginService]`; `HttpContext.GetKnkCaller()` for actors;
+  fails closed when the key is unset (Development + `Security:AllowUnauthenticatedPluginCalls=true` opt-out; startup
+  warning). Protected: Users `PUT/DELETE {id}` (`knk.admin.user.manage`), `PUT {id}/balances` (+ `knk.admin.user.coins|gems|xp`
+  per changed balance for web callers), new `PUT {id}/multipliers` + `POST {id}/salary/payout` (`knk.admin.user.salary`),
+  merge / change-password / update-email (`knk.admin.user.manage`), freeze/unfreeze (`knk.freeze`/`knk.unfreeze`),
+  plugin-only presence / active-mode / gate-passthrough-method, link-code body userId plugin-only; Kits CRUD
+  (`knk.kit.manage`), give (`knk.kit.give`), plugin-only claim / purchase / grant-first-join; SalaryConfiguration
+  (`knk.admin.currency.policy`), AuditLogRetentionConfiguration (`knk.admin.config`), PermissionGroups/Grants
+  (`knk.admin.user.perm`), UserPermissionGroups (`knk.admin.user.group`).
+- `PUT .../coins` routes + plugin client deleted; generic user PUT ignores balances/XP/multipliers; column-scoped writes;
+  balance, salary payout, kit claim/purchase in one transaction with `SELECT … FOR UPDATE` (ascending ids) and the audit
+  row in the same transaction; checked arithmetic + caps (999,999,999 coins / 999,999 gems, `BalanceCapExceeded`); kit
+  prices ≥ 0; migration `AddBalanceAndKitPriceCheckConstraints` (clamps out-of-range rows first, then CHECKs); `User.cs`
+  says gems are premium. Plugin: `/kit give` sends the key + staff actor (**KNG-15 fixed**), reason required for
+  coins/gems. Web app: profile shows the API's refusal message.
+- Deviations: added `PUT {id}/multipliers` (0–100, audited; no web page calls it yet); also protected grants/membership/
+  password/email/link-code (otherwise self-grant of `*` or account takeover); change tracking instead of
+  `ExecuteUpdateAsync` (InMemory); nodes `knk.admin.config`/`knk.admin.currency.policy` not yet in plugin.yml.
+- **Developer to-do (dev server):** `openssl rand -hex 32` → API `Security:PluginApiKey`; plugin `config.yml`
+  `api.auth.type: apikey` + `api.auth.api-key` (same value — existing configs still say `none`); check the DB for
+  negative/over-cap rows, then `dotnet ef database update`; web admins need the nodes (`*`/`knk.admin.*` covers all);
+  drop coins/gems from the User FormConfiguration (values now ignored).
+- Still anonymous: `POST api/Users` (account creation), `GameSettings` PUT, Regions/WorldTasks/Gates writes. Siege merge:
+  swap `RequirePluginServiceKey` → `[RequirePluginService]`, `Security:PluginServiceKey` → `PluginApiKey`, and point
+  `SiegeMatchRepository.LockUsersAsync` at `IUserRepository.LockUsersAsync`. InMemory can't prove the row lock
+  (MySQL fixture in Phase 1).
+
 ## Phase 1 — Ledger core — size L
 
 **knk-web-api**
