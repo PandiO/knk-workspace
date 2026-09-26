@@ -227,6 +227,38 @@ each view creates a `PrivateMessagesViewed` audit entry shown in "Recent activit
 
 ---
 
+### Phase 4 status — done 2026-09-26 (knk-web-app `claude/private-messages`)
+
+Commits `dceb5b3` (`usePermission(node)` hook generalising `useStaffAccess`, cached per user+node), `035e8f8`
+(`PrivateMessagesPanel` on `PlayerProfilePage` above Recent Activity, visible only with `knk.pmlog.read`: sent/received,
+newest first, 25/page, date range + conversation filter, outcome badges, "(reply)" marker; `PrivateMessagesViewed` label +
+detail lines in Recent Activity), `f31f552` (`DataRetentionCard` on Game Settings editing `retentionDays` and
+`privateMessageRetentionDays`, needs `knk.admin.config`). No API change needed (`otherUserId`, `from`, `to` already
+supported). 35 new/extended tests; suite 16 failed (baseline) / 268 passed; build clean for touched files.
+Deviations: nothing loads until "Show messages" is clicked (every read is audited, so no probe on page load); retention
+card is new (no retention UI existed); conversation filter by clicking a name (no username search).
+Developer to-do: grant `knk.pmlog.read` to the owner group; smoke test the panel (paging, filters, audit rows, absent for
+staff without the node) and the Data Retention card with/without `knk.admin.config`. Known: date filter uses the viewer's
+local midnight; permission changes need a reload; audit detail shows the partner as "user #id".
+
+### Final review — 2026-09-26 (all phases)
+
+Reviewer fixed: (1) **High, privacy** — with `api.debug-logging: true` (shipped default) `BaseApiImpl.postJson` logged every
+PM batch body into `latest.log`; new `postJson(url, json, logBody)` overload, PM client passes false (plugin `6b8c95d`).
+(2) **Medium, auth** — `GET api/private-message-log` accepted the plugin key (anyone with the server key could read all PMs,
+audit actor spoofable via `X-Acting-User-Id`); now `[RequirePermission(StaffPermissions.ReadPrivateMessages)]`, viewer =
+logged-in web user (API `b56cffb`). (3) **Low–Medium** — shipper `close()` lost the queue if a send hung at shutdown; now
+interrupts, re-queues and spools synchronously (plugin `2370c78`). API 737 (732 pass, 5 baseline); plugin CI green
+https://github.com/PandiO/knk-plugin/actions/runs/36260490203; web-app feature suites pass.
+Left as designed/low risk: `/r` wording differs for a partner who vanished vs. logged off (design-specified); read-only
+`isOnline()` lookups from async callbacks; one malformed entry drops its batch; unbounded `pageNumber` can 500; `/tm` and
+`/me` lines still logged by Paper before cancellation. Out of scope, fixed on `claude/currency-payments`: `BaseApiImpl`
+logged the `X-API-Key` header (KNG-22 code).
+
+**Feature status: Phases 1–4 complete on `claude/private-messages`; awaiting developer in-game/live testing and merge.**
+Merge order: KNG-22 (`claude/currency-payments` Phase 0) is already merged into this branch; merge this branch after or
+with it. Phase F (siege command filter resolving aliases) remains on the siege branch.
+
 ## Phase F — Follow-ups outside this feature's branch
 
 - **Siege (`claude/siege-minigame`, knk-plugin):** resolve aliases in `SiegeCommandFilterListener` (Bukkit command map →

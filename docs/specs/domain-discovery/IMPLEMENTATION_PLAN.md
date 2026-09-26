@@ -199,6 +199,24 @@ lookup per block move.
 
 ---
 
+### Phase 3 status — done 2026-09-26 (all three repos, `claude/domain-discovery`)
+
+KNG-22 merged first (api `bdd7bd8` = 7d441be, `UserService.ScaleBonus` now uses `BalanceLimits`; plugin `3f4fa65` = be0cfc3;
+web-app fast-forwarded to 4a3c304). Auth (`98b4240`): grant + `known` `[RequirePluginService]`; `progress` + `summary` new
+`[RequireServiceSelfOrPermission(ManageDiscovery)]` (plugin key, the player themself via JWT, or `knk.admin.discovery`);
+reset `[RequireServiceOrPermission(ManageDiscovery)]` with actor from `GetKnkCaller()`. Menu: `fb94564` seeds
+`discoveries.main` + hub tile slot 20; plugin `b72a6ba` (reset sends actor, `DiscoveryTracker.replaceKnown`), `1c9ae30`
+(`DiscoveriesMenuFeature`, `DiscoveryRow`, `DiscoveriesView`, re-exported `content-seeds.json`), `5b55c4b` (`/discoveries` |
+`/disc`, `/knk discovery list|reset|status`), `54b29ec` (config test fix after KNG-22's apikey default). API 799 tests (794
+pass, the 5 baseline); plugin CI green https://github.com/PandiO/knk-plugin/actions/runs/36260205168.
+Deviations: `/knk discovery` accepts the node via Bukkit or `KnkPermissible`; GateStructure in the Type filter (IRON_BARS);
+grid marked searchable so filters are forwarded; `KnkAdminCommand.registerSubcommand(...)` helper; menu feature always
+registered; staff need `knk.admin.discovery` to view another player's discoveries on the web.
+Developer to-do: seeds are create-only — on an existing DB add the hub slot-20 item via the MenuTemplates API or delete the
+`main` hub row to re-seed (`discoveries.main` seeds itself); API key on both sides (plugin refuses an empty key); grant
+`knk.admin.discovery` to staff; smoke test `/disc` filters, hub slot 20, `/knk discovery list|reset|status` (reset then
+re-enter rediscovers). Known: hub count/header use a summary cached ≤ 30 s; `COMMAND_CATALOG_V3.md` update pending.
+
 ## Phase 4 — Web-app views (knk-web-app)
 
 **Tasks**

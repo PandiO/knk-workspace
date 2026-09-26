@@ -197,6 +197,23 @@ in the handoff, don't do it silently).
 
 ---
 
+### Phase 4 status — done 2026-09-26 (all three repos, `claude/teleport`)
+
+KNG-22 merged (api `92f5558`, plugin `15613d6`, web-app `2ef9bfa`); `390c58a` puts `[RequirePluginService]` on
+`POST api/users/{id}/teleport-audit` (tests: no/wrong key 401, key OK, web user 403, actor header ignored without key).
+Plugin `6e29948` (knk-core `KnkGameSettings`, `KnkSpawnReference`, `GameSettingsQueryApi`, `SpawnPoint`/`SpawnPointResolver`;
+api-client `GameSettingsQueryApiImpl`), `2e32d44` (`/spawn` with `knk.teleport.spawn` through the engine — warmup,
+cooldown, combat tag, safe spot, guards; `/spawn <player> [-s]` for staff, instant + audited, console OK;
+`SpawnDestinationResolver`; `/knk cache refresh` via new `CacheManager.registerRefreshHook`). Destination: GameSettings
+`CustomReference` (Location, or a Town/District/Structure's Location) else main world spawn; cached 5 min.
+API 706 (701 pass, 5 baseline); knk-core 584/584 (21 new), api-client 55/55; plugin CI green
+https://github.com/PandiO/knk-plugin/actions/runs/36260886257; web-app 16 baseline failures only.
+Deviations: no set-spawn command (plan names none; `PUT api/GameSettings` still anonymous — KNG-22 follow-up); fallback
+chain reference → saved coordinates → world spawn, last-resolved spawn if settings can't be read (retry 30 s).
+Developer to-do: grant `knk.teleport.spawn` to Default; smoke test (Town as join spawn → `/knk cache refresh` → `/spawn`
+warmup, move cancels; WorldSpawn mode; `/spawn <player>` instant + Recent Activity; `-s`). Follow-up: point join/respawn
+listeners at `SpawnDestinationResolver`.
+
 ## Phase 5 — Domain teleports (`/warp`)
 
 **knk-web-api:**

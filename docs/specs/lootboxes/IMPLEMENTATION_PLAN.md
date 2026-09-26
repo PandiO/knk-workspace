@@ -212,6 +212,24 @@ minted instance with the same enchantments as the claim result. Metrics are visi
 
 ---
 
+### Phase 2 status — done 2026-09-26 (knk-web-api `claude/lootboxes`)
+
+`a0da5c2` merges KNG-22 `7d441be`; `46b1692` runtime API: runtime-config, active, spawn (caps → type/box-grade roll), admin
+spawn, despawn, claim (rolls via `BuildRollInputAsync`, mints `ItemInstance` in the same transaction), admin-give,
+delivered, pending, claim by id, drop-log search, lazy expiry sweep, in-game area create/delete, `Knk.Lootboxes` metrics.
+Daily cap 10/player/UTC day (global then per type; admin gives excluded). Gates: `[RequirePluginService]` runtime-config,
+spawn, admin spawn, claim, delivered, pending, admin-give, in-game, in-game-delete; `[RequireServiceOrPermission(
+knk.admin.lootbox.manage)]` active, despawn, `LootboxTypes/{id}/odds`; web-only claim by id + search. Audit: area
+create/delete and admin spawns → `LootboxSpawnedByAdmin` (13) with `Details.event` = Spawned|AreaCreated|AreaDeleted;
+`LootboxGranted` (14) = a player received an item. Tests 823 (818 pass, 5 baseline; 44 new). Local MySQL 8: 2–5 concurrent
+claimers → exactly one 200; held-row `[ConcurrencyCheck]` → 409, no rows; unique index 1062; same key ×5 → 1 fresh + 4
+replays; 12 boxes vs cap 10 → ten 200 + two 429; expiry, area create/delete, admin give audit, delivered idempotent.
+Deviations: actor from `X-Acting-User-Id` (never the body); extra 409 codes `Removed`, `Disabled`, `Frozen`, `UserInactive`,
+`EmptyPool`, `IdempotencyKeyReused`, `NoBoxGrade`, `WrongUser`; `in-game-delete` returns `removedSpawnIds`; admin-give takes
+an optional `idempotencyKey`, admin spawn an optional `lifetimeMinutes` (30); stored times truncated to seconds (MySQL
+datetime rounding across midnight). Known: seeded Weapons rolls could put Sharpness on a bow (addressed in Phase 3);
+claims briefly lock the player's `users` row; web-app area delete not audited.
+
 ## Phase 3 — Plugin runtime (knk-plugin)
 
 **knk-core** (`core/lootbox/`, Bukkit-free)
