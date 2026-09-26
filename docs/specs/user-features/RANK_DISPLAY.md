@@ -5,7 +5,8 @@
 `20260926081602_AddPermissionGroupDisplayColors` and `20260926121530_PremiumRanksInheritDefault`.
 knk-paper was never compiled in the cloud session (Paper's Maven repo is blocked there); the developer's
 local build and in-game test are what verified it.
-**Last updated:** 2026-09-26
+**Last updated:** 2026-09-26 (follow-up on trunk: API enforces one rank, live sync for web-app changes and
+expiring ranks - knk-web-api `1c90d0b`, knk-plugin `9a5da8d`)
 
 Restores v1's chat line (title in chat, KNG-8) and per-tier colors in chat and the tab list (KNG-7), and
 makes the Player manager keep each player on exactly one rank. The v1 research (legacy code, the
@@ -90,19 +91,35 @@ it is. The footer lines (title, premium tier) are unchanged.
 - **On login:** `PlayerListener.onValidateLogin` reads with `FetchPolicy.API_THEN_CACHE_REFRESH` (was
   `STALE_OK`, which served any unexpired cache entry without asking the API, so a relog brought back the
   pre-change rank). The cache is still used when the API is down.
+- **Changes made outside the plugin** (web app, API, a temporary rank expiring): every membership change
+  queues a `RankChanged` player notification (`IPlayerNotificationQueue`, no payload).
+  `PlayerNotificationPoller` (every 2s) hands it to `UserAdminService.resyncDisplay`, which re-reads the
+  online player and redraws their tab list; chat reads the refreshed cache. Notifications for offline
+  players wait in the queue (24h) and just cause one extra refresh on join.
+- **Expiry:** `RankExpirySweepService` (knk-web-api, every 30s) puts users whose temporary rank expired
+  back on Default and queues `RankChanged` for everyone whose rank expired since the last sweep. Its first
+  sweep after an API start also restores Default for anyone left without a rank during the downtime.
 
-## 6. One rank per player (Player manager, `users.manager.groups`)
+## 6. One rank per player
 
-`user/PlayerRanks` defines the rank set: Default (by name, like the API) plus every `IsPremiumTier` group.
+**Enforced by the API** (`UserPermissionGroupService`, for every caller - web app, `/knk user`, Player
+manager): the rank set is Default (by name, `UserService.DefaultGroupName`) plus every `IsPremiumTier`
+group. Granting a rank removes the user's other **active** ranks (expired rows stay as history);
+removing a premium rank puts them back on Default (permanent). Other groups (Staff, …) are unaffected.
+Each removal is audit-logged with `replacedBy`. This replaces the temporary-over-permanent stacking: a
+temporary higher rank now replaces the lower one, and on expiry the player goes back to Default, not to
+their previous paid rank.
+
+**In the Player manager** (`users.manager.groups`), the plugin's `user/PlayerRanks` mirrors that set and
+presents it as a confirmed switch:
 
 | Click | Result |
 |---|---|
-| A rank the player doesn't hold | chat prompt "Set Steve's rank to Royal (replaces Default)?", Confirm/Cancel appear; on Confirm `UserAdminService.setRank` adds the new rank, then removes every other active rank (Default included) |
+| A rank the player doesn't hold | chat prompt "Set Steve's rank to Royal (replaces Default)?", Confirm/Cancel appear; on Confirm `UserAdminService.setRank` adds the new rank and the API removes the old one |
 | A premium rank they hold (seed's confirmed remove) | drops them back to Default (same switch) |
 | Default when they hold it | refused: "Default is the base rank - pick another rank to replace it." |
 | Any other group (Staff, …) | plain add / confirmed remove, unchanged |
 
-- `setRank` adds first, then removes, so a failure part-way never leaves a player without a rank.
 - The staff member sees "Set Steve's rank to Royal (was Default)."; the player sees "Your rank is now
   Royal!".
 - Rows: Default is an IRON_BLOCK "Free rank", premium ranks GOLD_BLOCK "Premium rank", each with a
@@ -112,9 +129,8 @@ it is. The footer lines (title, premium tier) are unchanged.
   reaches an existing database after `scripts/reset-content-menus.ps1`.
 - **Confirm/Cancel now appear live.** `menu.confirm.request`/`accept`/`cancel` repaint the open menu
   (they didn't, so the buttons only showed after re-opening). This applies to every menu that uses them.
-- **Not enforced elsewhere:** `/knk user <p> group add` and the web app can still give a player several
-  ranks - deliberately, since that allows a temporary higher tier on top of a permanent one (v1's
-  `DonatorTemp`). The displayed tier is then the highest-weight active one.
+- Deleting Default itself through the API/web app is allowed (it would leave the user rankless until the
+  next rank change); the Player manager refuses it.
 
 ## 7. Admin how-to: editing the colors in the web app
 
@@ -145,7 +161,9 @@ value previews as empty.
 ## 9. Tests
 
 - knk-web-api: `PermissionGroupDisplayColorsTests` (code validation, create/update, tier DTO, resolution
-  and Default fallback). Suite on `master` after the merge: 553/558, the same 5 pre-existing failures.
+  and Default fallback); `UserPermissionGroupServiceTests` one-rank/notification/sweep cases;
+  `UserPermissionGroupRankQueriesTests` (sweep queries, in-memory provider). Suite on `master`: 561/566,
+  the same 5 pre-existing failures.
 - knk-plugin: `ChatLineFormatTest`, `TabListTeamTest`, `LegacyStylesTest`, `UsersMapperDisplayColorsTest`,
   `PermissionGroupsQueryApiImplTest`, and new cases in `UserAdminServiceTest` (refresh + redraw, rank
   switch order, failures) and `UserManagerMenuFeatureTest` (switch prompt, confirm, Default rules, row
@@ -153,9 +171,7 @@ value previews as empty.
 
 ## 10. Follow-ups
 
-- A rank changed from the **web app** while the player is online, or a temporary tier expiring
-  mid-session, only shows after their next login (the API doesn't notify the plugin).
 - The web app's `objectConfigs.tsx` PermissionGroup list columns don't show the colors (optional).
 - The FormWizard preview could render code-only values against sample text.
-- If one rank per player should hold everywhere, `UserPermissionGroupService` (API) would be the place
-  to enforce it - today only the Player manager does.
+- The notification queue is in memory: an API restart drops pending `RankChanged` notifications (the
+  player's next join still reads fresh data). A persisted queue or push channel would close that.

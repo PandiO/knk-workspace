@@ -53,7 +53,15 @@ git push origin --delete claude/new-session-st3t83
 Last commits, in case one needs restoring: `claude/kng-7-8-chat-tier-title` — knk-plugin `5f43d98`,
 knk-web-api `5722ab7`; `claude/new-session-st3t83` (knk-workspace) `c5ec6a6`.
 
+## Follow-up on trunk (same day)
+
+knk-web-api `1c90d0b`, knk-plugin `9a5da8d`, committed straight to trunk at the developer's request:
+- The API enforces one rank per user for every caller; removing a premium rank goes back to Default.
+- Web-app rank changes and expiring temporary ranks show in-game within ~2s (`RankChanged` notification +
+  `RankExpirySweepService`), not on the next join.
+
+No migration. knk-paper needs a local build, as before.
+
 ## Open follow-ups
 
-See spec §10: live refresh for web-app rank changes and mid-session expiry; optional web-app list columns
-and preview; API-side one-rank enforcement if wanted.
+See spec §10: optional web-app list columns and preview; a persisted notification queue.
