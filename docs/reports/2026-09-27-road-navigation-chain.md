@@ -116,4 +116,5 @@
 - **Risks:** the learner is a heuristic the admin reviews; its two known blind spots are decision 5. The StatsJson
   shape is the contract for Phase 2e/3/5 from now on (versioned; other versions are refused, not misread).
 - **Next link:** handoff `docs/ai-agents/handoffs/2026-09-27-road-navigation-phase-2c.md`; started per charter §6
-  option 1 (Claude Code Remote `create_session`, same environment) — see the line appended below once created.
+  option 1 (Claude Code Remote `create_session`, same environment) — link 4 = Claude Code Remote session
+  `session_01Ns8adeiE7FBtoTYbSMYvtb` (created 2026-09-27 20:32 UTC, parent `session_01GHceCT4sjFzuGiq81wtJB7`).
