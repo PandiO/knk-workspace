@@ -1,7 +1,7 @@
 # Road navigation chain — progress report
 
 **Status:** running
-**Last updated:** 2026-09-27 (link 1: Phase 1 done; link 2 started on Phase 2a)
+**Last updated:** 2026-09-27 (link 2: Phase 2a done; link 3 started on Phase 2b)
 **Linear:** [KNG-27](https://linear.app/kngpandi/issue/KNG-27) · **Charter:** `docs/ai-agents/handoffs/ROAD_NAVIGATION_CHAIN.md` · **Plan:** `docs/specs/navigation/IMPLEMENTATION_PLAN.md`
 
 ## Summary for the developer
@@ -9,8 +9,8 @@
 | Phase | State | Branch heads | Details |
 |---|---|---|---|
 | 1 — knk-web-api: data model, services, API | **done** (link 1) | knk-web-api `claude/road-navigation` `77e0a29` (from `master` `ccc8c02`) | [Phase 1](#phase-1--knk-web-api-data-model-services-api-link-1) |
-| 2a — plugin core extractions | in progress (link 2) | knk-plugin `claude/road-navigation` (to be cut from `main` `eb1d68c`) | |
-| 2b — survey maths | not started | — | |
+| 2a — plugin core extractions | **done** (link 2) | knk-plugin `claude/road-navigation` `db962a4` (from `main` `eb1d68c`) | [Phase 2a](#phase-2a--knk-plugin-core-shared-extractions--guard-test-link-2) |
+| 2b — survey maths | in progress (link 3) | knk-plugin `claude/road-navigation` (continues from `db962a4`) | |
 | 2c — builder | not started | — | |
 | 2d — router | not started | — | |
 | 2e — api-client | not started | — | |
@@ -22,7 +22,13 @@
   neighbour's node by id, so a tile download can point at a node of another tile; (2) decision 2 — Detected nodes
   touched by a Recorded edge survive rebuilds; (3) decision 6 — "continue along the road" writes Manual labels on
   every edge it reaches; (4) decision 4 — Inferred labels are recomputed from scratch per build (conflicts →
-  unlabelled + warning). All in the plan's "Phase 1 status" block.
+  unlabelled + warning). All in the plan's "Phase 1 status" block. Phase 2a is a pure refactor; its decisions 1-3
+  (`DomainAccessEvaluator` shape: instance methods, `Denial` carries the domain, the three exit loops collapsed to one)
+  only matter for the KNG-17 merge — see the plan's "Phase 2a status".
+- **Cloud network, please check:** `repo.papermc.io` and `maven.enginehub.org` are still denied by the environment's
+  network policy (proxy 403 on CONNECT) in links 1 and 2, so no link can compile knk-paper or run knk-core through
+  Gradle; knk-core is tested through the plan §0.4 scratch build instead. Adding both hosts to the environment's
+  allowed domains would let later links build the real thing.
 - **Test when you have time:** pull `claude/road-navigation` in each repo; build the plugin (`./gradlew build -x deployToDevServer`, fix compile errors first if any link marked knk-paper "not compiled"); apply the new web-api migration to the dev DB (developer only); run the web-api; `./gradlew :knk-paper:dev`; then each phase's live checklist from the plan in phase order.
 
 ## Phase 1 — knk-web-api: data model, services, API (link 1)
@@ -45,3 +51,33 @@
 - **Risks:** none open for this phase. Contract for later phases is written under "What later phases must wire".
 - **Next link:** handoff `docs/ai-agents/handoffs/2026-09-27-road-navigation-phase-2a.md`; started per charter §6
   option 1 (Claude Code Remote `create_session` in the same environment) — link 2 = Claude Code Remote session `session_01HnoVDWFbstro88fNr2ntKM` (created 2026-09-27 19:46 UTC, same environment).
+
+## Phase 2a — knk-plugin core: shared extractions + guard test (link 2)
+
+- **Commits** (knk-plugin `claude/road-navigation`, cut from `main` `eb1d68c`, one per plan item): `35252c7` R1
+  `util/BlockKey` (`GateSpatialIndex.packCell` delegates) · `4447afa` R2 `util/Polygon2D` (`GateFrameCalculator.
+  pointInPolygon` delegates; new `closestPointOnBoundary`/`distanceToBoundary`) · `f5a8572` R3 `GateManager.
+  closedFootprint(gateId)` · `f5c420d` R4 `GateStateListener` + `GateManager.addStateListener/removeStateListener/
+  fireStateChanged` (fired on open start, close start, completion, forced state, cache) · `1ff918a` 15 characterisation
+  tests for `SimpleRegionTransitionService` (no source change) · `af38414` R6 `regions/DomainAccessEvaluator`
+  (`entry`/`exit` → `Optional<Denial>`; the service delegates, characterisation tests unchanged) · `db962a4`
+  `ArchitectureGuardTest` (fails on any `org.bukkit` in `C/roads`, `C/navigation`, `C/domain/roads`, the two util
+  helpers and the evaluator; proven with a deliberate violation). Workspace `main`: plan header + "Phase 2a status"
+  block, this report, tracker row, handoff `docs/ai-agents/handoffs/2026-09-27-road-navigation-phase-2b.md`.
+- **Tests:** knk-core 1024 → 1085, 0 failures, 0 skipped (61 new). **Not compiled with Gradle** — `paper-api` can't be
+  resolved here (proxy denies `repo.papermc.io`); counts come from the plan §0.4 scratch build (real sources, stub
+  `org.bukkit.util.Vector`, Maven Central only; recipe in the plan status block). knk-paper/knk-api-client not built,
+  not touched. The existing gate tests (`GateSpatialIndexTest`, `GateFrameCalculatorTest`,
+  `GateFrameCalculatorRegionModeTest`, `GateManagerTest`) pass unmodified apart from the R3/R4 additions in
+  `GateManagerTest`.
+- **Flagged decisions:** 7, numbered in the plan status block; 1-3 concern the `DomainAccessEvaluator` shape and only
+  matter for the KNG-17 merge (whose `previewAccess` must delegate to it — noted there for the merger).
+- **Discrepancies:** plan references all resolved on `eb1d68c`. Network: charter §9 says the two Maven hosts were
+  allowed, but this environment still denies them; Maven Central additionally answers 429 to Gradle's parallel
+  downloads through the proxy (fixed with `org.gradle.workers.max=2` + download retries in `~/.gradle/gradle.properties`).
+- **Live checklist:** plan "Phase 2a status → Developer to-do" (local `./gradlew :knk-core:test` + full build, ~3 min of
+  gate open/close and entry/exit-denied checks; nothing new is observable).
+- **Risks:** KNG-17 merge touches `SimpleRegionTransitionService` (one import, one field, the two check methods
+  rewritten here) — small, mechanical. `cacheGate` fires the state listener once per gate at startup (decision 6).
+- **Next link:** handoff `docs/ai-agents/handoffs/2026-09-27-road-navigation-phase-2b.md`; started per charter §6
+  option 1 (Claude Code Remote `create_session`, same environment) — see the line appended below once created.

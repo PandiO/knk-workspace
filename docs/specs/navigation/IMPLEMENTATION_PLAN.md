@@ -1,9 +1,10 @@
 # Road Navigation — Implementation Plan
 
 **Status:** In implementation (chain, `docs/ai-agents/handoffs/ROAD_NAVIGATION_CHAIN.md`). **Phase 1 done**
-(knk-web-api `claude/road-navigation` `77e0a29`, 2026-09-27); Phase 2a next. Every code reference was verified
-against trunk by a separate review pass on 2026-09-27; its corrections are folded in.
-**Last updated:** 2026-09-27 (Phase 1 status)
+(knk-web-api `claude/road-navigation` `77e0a29`, 2026-09-27); **Phase 2a done** (knk-plugin `claude/road-navigation`
+`db962a4`, 2026-09-27); Phase 2b next. Every code reference was verified against trunk by a separate review pass on
+2026-09-27; its corrections are folded in.
+**Last updated:** 2026-09-27 (Phase 2a status)
 **Linear:** [KNG-27](https://linear.app/kngpandi/issue/KNG-27)
 **Design:** [DESIGN.md](DESIGN.md) rev. 4 (decided) — read it first; this plan says *where and how* to build it.
 **Sources:** trunk as of 2026-09-27 — knk-web-api `master` `acaee99`, knk-plugin `main` `ceed2f6`, knk-web-app `main`
@@ -514,6 +515,104 @@ CI; Swagger shows every route; a hand-made two-tile payload round-trips (PUT →
 6. **Guard test** `knk-core/src/test/java/.../core/ArchitectureGuardTest.java`: scans `src/main/java/.../core/{roads,
    navigation,util/BlockKey.java,util/Polygon2D.java,regions/DomainAccessEvaluator.java}` sources and fails on any
    `import org.bukkit`. (No ArchUnit on the classpath; a file scan is enough.)
+
+### Phase 2a status — done 2026-09-27 (knk-plugin `claude/road-navigation` `35252c7`, `4447afa`, `f5a8572`, `f5c420d`, `1ff918a`, `af38414`, `db962a4`; cut from `main` `eb1d68c`)
+
+- **What was built** (all in knk-core, `C/`; one commit per item, public names exactly as §2 spells them):
+  - `util/BlockKey.java` (R1, `35252c7`): `pack(int x, int y, int z)` (the 26/12/26-bit layout `GateSpatialIndex.packCell`
+    always used), `x(long key)`, `y(long key)`, `z(long key)` (sign-extending, so negative x/z and y −64…319 round-trip;
+    y covers −2048…2047), `neighbour(long key, int dx, int dy, int dz)`. `GateSpatialIndex.packCell(int,int,int)`
+    delegates; a test pins the two bit-identical. `GateBlockScanTaskHandler.packCoordinate` untouched.
+  - `util/Polygon2D.java` (R2, `4447afa`): `contains(double u, double v, List<double[]> polygon)` = the moved even-odd
+    test with the inclusive edge (`Polygon2D.EPSILON = 0.001`, public), `closestPointOnBoundary(u, v, polygon)` →
+    `double[]{u, v}` (null for a null/empty polygon; one vertex → that vertex; two → a segment),
+    `distanceToBoundary(u, v, polygon)` → unsigned distance (0 on the edge, `Double.POSITIVE_INFINITY` for null/empty).
+    `GateFrameCalculator.pointInPolygon` delegates (its private `isOnSegment` went with it; `BOUNDS_EPSILON` stays
+    for the other bounds checks).
+  - `gates/GateManager.closedFootprint(int gateId)` → `List<Vector>` (R3, `f5a8572`): frame-0 positions of the door's
+    blocks regardless of current state; empty list for an unknown gate. The private `doorBlockPositions(gate, frame)`
+    stays for `cacheGate`. (Returns Bukkit `Vector` like the rest of `C/gates` — the builder converts to `BlockKey`.)
+  - `gates/GateStateListener` (`void gateStateChanged(int gateId)`) + `GateManager.addStateListener(l)` /
+    `removeStateListener(l)` / `fireStateChanged(int gateId)` (R4, `f5c420d`). `CopyOnWriteArrayList`; a listener added
+    twice is registered once; a listener that throws is logged and skipped. Fired inside `GateManager` after the
+    mutation in `openGate` (OPENING), `closeGate` (CLOSING), `notifyAnimationCompleted` (after the one-shot callback,
+    which is unchanged), `forceGateState`, `cacheGate` (initial load and reload alike). Not fired when open/close is
+    refused or the id is unknown. Fires on the mutating thread (async loader threads for `cacheGate`).
+  - `regions/DomainAccessEvaluator` (R6, `1ff918a` tests first, `af38414` extraction): `Optional<Denial> entry(DomainSnapshot)`,
+    `Optional<Denial> exit(DomainSnapshot)`, `record Denial(RegionTransitionType type, DomainSnapshot domain, String
+    message)`; messages unchanged ("You are not allowed to enter X." / "You are not allowed to leave X."), `null` flag =
+    not restricted. `SimpleRegionTransitionService` holds `accessEvaluator = new DomainAccessEvaluator()` and
+    `checkEntryDenials`/`checkExitDenials` delegate. `previewAccess` (KNG-17 branch) not touched.
+  - `knk-core/src/test/java/.../core/ArchitectureGuardTest.java` (`db962a4`): scans `C/roads/`, `C/navigation/`,
+    `C/domain/roads/` (recursively, skipped while absent) and `util/BlockKey.java`, `util/Polygon2D.java`,
+    `regions/DomainAccessEvaluator.java` (must exist) for `import org.bukkit` and for `org.bukkit.` in non-comment
+    lines. Verified negative: a `roads/Tmp.java` with `import org.bukkit.util.Vector` fails it with the file:line.
+  - Tests added: `BlockKeyTest` (9), `Polygon2DTest` (16), `GateManagerTest` +13 (4 for R3, 9 for R4 incl. "one-shot
+    callback still fires once and is removed"), `SimpleRegionTransitionServiceTest` (15 characterisation tests: every
+    denial, every message wording, Town > District > Structure priority, the entered-domains callback),
+    `DomainAccessEvaluatorTest` (6), `ArchitectureGuardTest` (2). Existing gate tests untouched.
+- **Reuse:** §2 rows R1, R2, R3, R4, R6 applied as written. Nothing else extracted or duplicated.
+- **Tests:** knk-core **1024 → 1085** (0 failures, 0 skipped; baseline recorded on `eb1d68c` before any change).
+  **Not compiled with Gradle:** `./gradlew :knk-core:test` fails at `Could not resolve io.papermc.paper:paper-api`
+  (the proxy answers 403 to CONNECT for `repo.papermc.io`, `maven.enginehub.org` and `hub.spigotmc.org` — same as
+  link 1 saw, despite charter §9). Both counts come from the plan §0.4 scratch build: a throwaway Gradle project in
+  the session scratchpad whose `sourceSets` point at the real `knk-core/src/{main,test}/java` plus a stub
+  `org.bukkit.util.Vector` (only Bukkit type knk-core uses; floor block accessors, fuzzy `equals`, Rodrigues
+  `rotateAroundAxis` copied from Paper's source), Maven Central only, `workingDir = knk-core`. All 9 Bukkit-importing
+  main files compile against the stub, so the whole suite runs, not a subset. knk-paper and knk-api-client: not built
+  (not touched). Note for cloud sessions: Maven Central answers **429** to Gradle's parallel downloads through the
+  proxy — `org.gradle.workers.max=2` plus `systemProp.org.gradle.internal.repository.max.tentatives=12` /
+  `initial.backoff=2000` in `~/.gradle/gradle.properties` fixed it; `services.gradle.org` and `plugins.gradle.org` are fine.
+- **Decisions to review** (each cheap to change):
+  1. `DomainAccessEvaluator.entry/exit` are **instance** methods (the plan doesn't say); a bypass predicate / future
+     entry conditions can then be injected through a constructor without touching callers. The service creates its own
+     instance (no constructor change → nothing for the KNG-17 merge to conflict with in the constructors).
+  2. `Denial` carries the `DomainSnapshot` besides type and message — the router needs the domain for "You may not
+     enter X. Guiding you to its edge."
+  3. `checkExitDenials` had three identical passes over the left domains (commented town/district/structure priority
+     but never filtered by type); they collapsed into one loop. Same result (first denial in set order), fewer changed
+     lines for the KNG-17 merge.
+  4. `Polygon2D.distanceToBoundary` is unsigned; callers combine with `contains` when the side matters.
+  5. `GateStateListener` is fired synchronously on whichever thread mutates (main thread for animation/commands, loader
+     threads for `cacheGate`); listeners must be thread-safe or hop to the main thread (`MenuService.mainThreadExecutor`,
+     R12). `fireStateChanged` catches `RuntimeException` per listener so a bad listener can't stall `GateAnimationTask`.
+  6. `cacheGate` fires for every (re)cache, including the initial startup load — one event per gate to any listener
+     registered before the load. Navigation registers after startup; if that ever matters, gate it on `getGate(id) != null`.
+  7. The guard also covers `C/domain/roads/` (DESIGN §4 puts the road records there) and code-line `org.bukkit.`
+     references, not only imports; comment lines are exempt so Javadoc may say "Bukkit-free".
+- **Discrepancies found:** none in the plan's code references (all five resolved on `eb1d68c`; line numbers drifted by a
+  few lines only). Charter §9 / plan §0.4: the developer allowed the two Maven hosts, but this environment's network
+  policy still denies them (proxy 403 on CONNECT) — the allow-list evidently isn't applied to this environment; the
+  developer can add `repo.papermc.io` and `maven.enginehub.org` under the environment's network settings. The plugin
+  `CLAUDE.md` lines "no menus package" / "no polling" are stale (charter §2.1 already says so; not edited).
+- **Developer to-do:**
+  1. Local: `./gradlew :knk-core:test` (expect 1085 green), then `./gradlew build -x deployToDevServer` — knk-paper
+     compiles against the changed `GateManager`/`GateSpatialIndex`/`GateFrameCalculator`; only public API was added,
+     so no paper changes are expected. If knk-paper's test count differs from your last run, say so in the next link's
+     handoff.
+  2. Live (~3 min, dev server, any gate): `/knk gate open|close|force` a door — animates as before; walk into a
+     region whose domain has `allowEntry=false` — still "You are not allowed to enter X."; `allowExit=false` — still
+     "You are not allowed to leave X.". Nothing else is observable — Phase 2a is a pure refactor.
+  3. **KNG-17 (teleport) merger:** `SimpleRegionTransitionService.previewAccess` must delegate to
+     `accessEvaluator.entry/exit`, and its `knk.region.bypass` predicate becomes the evaluator's bypass input (add a
+     constructor parameter on `DomainAccessEvaluator` then). Expect a small conflict in `SimpleRegionTransitionService`
+     imports/fields (this phase added one import and one field, and rewrote the two private check methods).
+- **What later phases must wire:**
+  - 2c (builder): `BlockKey.pack/x/y/z/neighbour` for every cell map; `GateManager.closedFootprint(gateId)` (via the
+    `SurfaceGrid` port's gate lookup, filled in Phase 3 from `gateManager.getAllGates()`) to tag gate cells (D9).
+  - 2d (router): `Polygon2D.contains/closestPointOnBoundary/distanceToBoundary` in `RegionClosestPoint`;
+    `DomainAccessEvaluator.entry/exit` inside `AccessPolicy` (one evaluator instance passed in, so the paper side can
+    later hand it the bypass); `GateManager.addStateListener(GateStateListener)` for live re-route (D13's 2-second
+    re-check stays).
+  - 3 (task 3.2): call `gateManager.fireStateChanged(gateId)` after `HealthSystem.destroyGate`/`respawnGate`, the jam
+    in `GateAnimationTask`, and `GateCommand`'s destroyed/active toggles. Siege override setters: not edited (D13).
+- **Scratch-build recipe (cloud, knk-core only)** — `build.gradle.kts` in a scratch dir: `plugins { java }`,
+  `repositories { mavenCentral() }`, Java 21 toolchain, `sourceSets.main.java.setSrcDirs(listOf("<repo>/knk-core/src/main/java",
+  "stub"))`, `sourceSets.test.java.setSrcDirs(listOf("<repo>/knk-core/src/test/java"))`, the same jackson 2.15.2 /
+  gson 2.10.1 / junit-bom 5.10.2 dependencies as `knk-core/build.gradle.kts`, `tasks.test { useJUnitPlatform();
+  workingDir = file("<repo>/knk-core") }`; `stub/org/bukkit/util/Vector.java` = a plain copy of Paper's `Vector` minus
+  the Location/World/JOML/serialisation methods; copy the repo's `gradlew` + `gradle/` wrapper; `./gradlew test
+  --offline --max-workers=2` after the first (online) run. Counts from `build/test-results/test/*.xml`.
 
 ### 2b Survey maths — `C/roads/survey/`
 
