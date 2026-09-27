@@ -1,6 +1,7 @@
 # Road Navigation — Design
 
-**Status:** Draft rev. 2 — awaiting developer review (open questions in §9). Not MVP-critical: build after the siege MVP.
+**Status:** Draft rev. 3 — developer feedback incorporated; remaining open questions in §9. Not MVP-critical: build
+after the siege MVP.
 **Last updated:** 2026-09-27
 **Linear:** [KNG-27](https://linear.app/kngpandi/issue/KNG-27/road-navigation-street-road-graph-endpointsintersections-traced-road)
 **Research:** [reports/2026-09-27-road-navigation-research.md](../../reports/2026-09-27-road-navigation-research.md)
@@ -8,12 +9,23 @@
 [reports/2026-09-27-open-world-navigation-research.md](../../reports/2026-09-27-open-world-navigation-research.md)
 (how Rockstar, Ubisoft and other open worlds do it).
 
-**Rev. 2 (same day):** rev. 1 had admins record every street's begin, end and intersection by hand. Open-world games
-don't do that — they author a road's intent and derive the topology (GTA V marks a node a junction by its neighbour
-count; GTA III assembles its network from road pieces; Wildlands' roads branch off each other by construction). Our
-roads are already a raster of blocks, so rev. 2 **detects junctions and endpoints automatically** (road mask →
-centreline → neighbour count), **infers street names** from the Structures that already know their street, builds and
-rebuilds the network **per tile**, and leaves admins only review, naming and exceptions.
+**Revision history**
+
+- **Rev. 1:** admins record every street's begin, end and intersection by hand; a tracer follows the road blocks between
+  them.
+- **Rev. 2:** open-world games derive road topology instead of logging it (GTA V marks a node a junction by its
+  neighbour count; GTA III assembles its network from road pieces). Junctions and endpoints are **detected
+  automatically** (road mask → centreline → neighbour count), street names are **inferred** from Structures, and the
+  network is built **per tile**.
+- **Rev. 3 (developer feedback):**
+  - Roads **overlap vertically** (tunnels, underground roads, bridges, roads over roads) → the builder works on a
+    3D "span grid" instead of a 2D map (§5.2).
+  - Roads are built from **several block combinations** → named **road profiles** (surface, edge, accent and overlay
+    materials) replace the single palette (§5.1).
+  - An admin **survey walk** ("player road walk scan") learns the profiles from the roads themselves, seeds the build,
+    and checks its coverage afterwards (§5.3).
+  - Street names inferred from Structures: **confirmed**. Closed gates close roads: **confirmed and widened** — the
+    router treats gate states and domain entry conditions as live availability (§6.7).
 
 ---
 
@@ -21,19 +33,21 @@ rebuilds the network **per tile**, and leaves admins only review, naming and exc
 
 Give Streets a physical shape so that players (and later NPCs) can be guided **along the real roads** of the world:
 
-- The plugin **finds the road blocks** of the world, reduces them to centrelines, and turns them into a graph: nodes at
-  junctions and dead ends, edges along the road between them (polyline, length, road class, street).
+- An admin **walks a few roads** in survey mode; the plugin learns which block combinations the roads are made of.
+- The plugin **finds all road blocks** from there, reduces them to centrelines — on every level, including tunnels and
+  bridges — and turns them into a graph: nodes at junctions and dead ends, edges along the road between them.
 - Admins **review** the result, name what couldn't be inferred, and patch what the blocks can't express.
 - `/navigate <destination>` routes a player over that graph to a **Location**, a **Domain's default spawn Location**
-  (Town, District, Structure), or the **closest point of a Domain's WorldGuard region**, and shows the way with a
-  particle trail visible only to that player.
+  (Town, District, Structure), or the **closest point of a Domain's WorldGuard region**, **only over roads that player
+  can actually use right now** (open gates, domains they may enter), and shows the way with a particle trail only they
+  see.
 
 This realises vision §2.4 (Streets as *"a navigable address and wayfinding system"* for players and NPCs) and closes the
 gap V1's intro tutorial joked about (*"the developer … still didn't invent Navigation"*).
 
 ### 1.1 Out of scope for the first version (see §8 Phase 6)
 
-- Off-road pathfinding around obstacles (the MVP draws a straight hint between the player and the nearest road).
+- Off-road pathfinding around obstacles (v1 draws a straight hint between the player and the nearest road).
 - NPC routing (V1 Carrier trait, transport quests), travel-time/travel-mode estimates in the web app, route risk
   (ambush) weighting, "follow road" mode without a destination. The data model leaves room for all of them.
 - A 2D map in the web app.
@@ -47,30 +61,31 @@ gap V1's intro tutorial joked about (*"the developer … still didn't invent Nav
 ```
  Street "Keepstreet"            Street "Merchantstreet"
   E1 ●━━━━━━━━━━━━━━━━━━● J1 ━━━━━━━━━━━━━━━━━━● E3        ● node (detected: E = end, J = junction)
-                        ┃                                   ━ edge (centreline polyline over road blocks)
-                        ┃  Merchantstreet                   street labels: inferred from nearby Structures
-                        ● E2
+                        ┃                                   ━ edge (centreline over road blocks)
+          tunnel ┅┅┅┅┅┅┅┃┅┅┅┅┅┅┅┅ (y 48, under J1)         ┅ edge on a lower level: a separate edge,
+                        ● E2                                  no junction with the road above
 ```
 
-- **Road palette** — the block materials roads are made of (gravel, dirt path, cobblestone, stone bricks, their slabs
-  and stairs, …), each mapped to a **road class** (`Main`, `Road`, `Path`) with a cost factor. The builder only walks
-  over palette blocks.
-- **Road cell** — a palette block a player can stand on (two passable blocks above).
+- **Road profile** — a named road style, e.g. *"Kardenna main street"* (stone-brick surface, polished-andesite kerbs,
+  stone-brick slabs and stairs), *"gravel highway"* (gravel + coarse dirt, cobblestone edges), *"forest trail"* (dirt
+  path, coarse dirt, rooted dirt). A profile lists materials by **role** (§5.1), a road class (`Main`, `Road`, `Path`)
+  with a cost factor, and a typical width. Profiles are **learned by survey walks** (§5.3) and editable. The builder only
+  walks over materials of some profile.
+- **Road cell** — a block position a player can stand on whose floor block (or the block under a thin overlay such as
+  snow or a carpet) belongs to a profile. Any number of road cells can share one (x, z) column: a street, the tunnel
+  under it, the bridge over it.
 - **Road mask** — the connected road cells reachable from the seeds.
-- **Seed** — a starting point for finding the mask. Seeded automatically from every Domain `Location` near a road;
-  admins add seeds for road networks no domain touches.
-- **Road node** — a point on the centreline. Kinds:
-  - `Junction` — detected: 3+ centreline branches meet (intersections of any shape).
-  - `Endpoint` — detected: a dead end or the end of a road.
-  - `Boundary` — where a road crosses a tile border; joins the tile graphs (§5.6).
-  - `Anchor` — placed by an admin to force a split or a node the detector missed.
-  - `Virtual` — created in memory at routing time (the player's snap point, the destination's). Never stored.
-  Admins can **name** any node ("Kardenna market cross"); named nodes are `/navigate` destinations.
-- **Road edge** — the centreline between two adjacent nodes: polyline, walked length, road class, street label, flags.
-- **Road tile** — a 512 × 512-block square of one world (32 × 32 chunks, like GTA V's path areas). The unit of building,
-  storage and rebuilding.
-- **Component** — a connected piece of the network. Every node carries its component id, so "no road connects these"
-  is known without searching (GTA SA's flood-fill groups).
+- **Seed** — a starting point for the mask: every Domain `Location` near a road, every survey breadcrumb (§5.3), and
+  admin seeds.
+- **Road node** — a point on the centreline: `Junction` (detected, 3+ branches), `Endpoint` (detected, dead end or road
+  end), `Boundary` (road crossing a tile border), `Anchor` (placed by an admin), `Virtual` (routing-time only, never
+  stored). Admins can **name** any node; named nodes are `/navigate` destinations.
+- **Road edge** — the centreline between two adjacent nodes: polyline (3D), walked length, profile/road class, street
+  label, flags, and the **gate doors and domains it passes through** (for availability, §6.7).
+- **Road tile** — a 512 × 512-block square of one world (all heights), the unit of building, storage and rebuilding.
+- **Component** — a connected piece of the network; every node carries its component id, so "no road connects these"
+  is known without searching.
+- **Survey** — one admin walk in survey mode: samples of the road under and beside the admin, plus the walked path.
 
 ---
 
@@ -78,106 +93,131 @@ gap V1's intro tutorial joked about (*"the developer … still didn't invent Nav
 
 New entities, one migration (`AddRoadNetwork`). Tables in `snake_case` like the rest of the schema.
 
-### 3.1 `RoadTile` (`road_tiles`)
+### 3.1 `RoadProfile` (`road_profiles`)
 
 | Field | Type | Notes |
 |---|---|---|
 | `Id` | int PK | |
-| `World`, `TileX`, `TileZ` | string, int, int | Unique. Tile = `floor(x / 512)`, `floor(z / 512)`. |
+| `Name` | string (100), unique | "Kardenna main street". |
+| `RoadClass` | enum `Main`, `Road`, `Path` | Drives the routing cost factor (config `class-cost`). |
+| `CostMultiplier` | double, default 1.0 | Per-profile tuning on top of the class. |
+| `Materials` | string (JSON) | `[{material, role, ambiguous, centreShare, edgeShare, samples}]`, role ∈ `Surface`, `Edge`, `Accent`, `Overlay`. Shares/samples come from surveys; admins can edit roles and the `ambiguous` flag. |
+| `WidthMin`, `WidthMax` | int | From surveys (5th/95th percentile); used for plaza detection and leak limits. |
+| `SampleCount` | int | Total survey samples merged into this profile. |
+| `Enabled` | bool | Disabled profiles are ignored by builds. |
+| `CreatedAt`, `UpdatedAt` | DateTime | |
+
+A seed migration creates one bootstrap profile (*"Default road"*: gravel, dirt path, coarse dirt, cobblestone, stone
+bricks, their slabs and stairs) so a build works before the first survey.
+
+### 3.2 `RoadSurvey` (`road_surveys`)
+
+`Id`, `World`, `ProfileId` (FK, the profile the samples were merged into), `StartedBy` (user id), `StartedAt`,
+`EndedAt`, `SampleCount`, `Breadcrumb` (JSON polyline of the walked path, RDP-simplified, with per-point `onRoad` flag),
+`Stats` (JSON: material histogram by lateral offset, width histogram). Kept for coverage checks (§5.3) and to re-derive
+a profile if the merge rules change.
+
+### 3.3 `RoadTile` (`road_tiles`)
+
+| Field | Type | Notes |
+|---|---|---|
+| `Id` | int PK | |
+| `World`, `TileX`, `TileZ` | string, int, int | Unique. Tile = `floor(x / 512)`, `floor(z / 512)`; covers all heights. |
 | `BuiltAt` | DateTime? | Last successful build. |
 | `BuilderVersion` | int | A builder change forces rebuilds. |
-| `Dirty` | bool | Set by the plugin when palette blocks change in the tile (§5.7). |
-| `CellCount`, `NodeCount`, `EdgeCount` | int | Build statistics for the admin overview. |
-| `Warnings` | string? (JSON) | Build warnings: cell cap hit, suspected leak into a building, unmatched seeds. |
+| `Dirty` | bool | Set when road blocks change in the tile (§5.9). |
+| `CellCount`, `NodeCount`, `EdgeCount`, `LevelCount` | int | Build statistics; `LevelCount` = max road cells stacked in one column. |
+| `Warnings` | string? (JSON) | Cell cap hit, suspected leak, survey coverage gaps, unmatched seeds. |
 
-### 3.2 `RoadSeed` (`road_seeds`)
+### 3.4 `RoadSeed` (`road_seeds`)
 
-`Id`, `World`, `X`, `Y`, `Z`, `Note`, `CreatedAt`. Admin-added seeds only; domain seeds are derived at build time and
-not stored.
+`Id`, `World`, `X`, `Y`, `Z`, `Source` (`Admin`, `Survey`), `SurveyId?`, `Note`, `CreatedAt`. Domain seeds are derived
+at build time and not stored.
 
-### 3.3 `RoadNode` (`road_nodes`)
+### 3.5 `RoadNode` (`road_nodes`)
 
 | Field | Type | Notes |
 |---|---|---|
-| `Id` | int PK | Stable across rebuilds (§5.5). |
-| `World`, `X`, `Y`, `Z` | string, int | Standing position on the centreline. Unique `(World, X, Y, Z)`. |
+| `Id` | int PK | Stable across rebuilds (§5.7). |
+| `World`, `X`, `Y`, `Z` | string, int | Standing position. Unique `(World, X, Y, Z)`. |
 | `TileId` | int FK → `road_tiles` | |
-| `Kind` | enum `Junction`, `Endpoint`, `Boundary`, `Anchor` | Stored as string. |
-| `Source` | enum `Detected`, `Manual` | `Manual` nodes (anchors) survive rebuilds untouched. |
+| `Kind` | enum `Junction`, `Endpoint`, `Boundary`, `Anchor` | |
+| `Source` | enum `Detected`, `Manual` | `Manual` nodes survive rebuilds untouched. |
 | `Name` | string?, max 100 | Optional; makes the node a destination. |
-| `ComponentId` | int | Recomputed after every build (§5.6). |
-| `Locked` | bool | Set when an admin edits the node (name, merge, move); rebuilds keep it where it is. |
+| `ComponentId` | int | Recomputed after every build. |
+| `Locked` | bool | Set when an admin edits the node; rebuilds keep it in place. |
 
-### 3.4 `RoadEdge` (`road_edges`)
+### 3.6 `RoadEdge` (`road_edges`)
 
 | Field | Type | Notes |
 |---|---|---|
-| `Id` | int PK | Stable across rebuilds where the node pair is unchanged. |
+| `Id` | int PK | Stable where the node pair is unchanged. |
 | `FromNodeId`, `ToNodeId` | int FK → `road_nodes`, cascade | `FromNodeId < ToNodeId`; unique pair. |
-| `TileId` | int FK | Edges never cross a tile border (they end at `Boundary` nodes). |
-| `Geometry` | string (JSON) | RDP-simplified polyline `[[x,y,z],…]` of standing positions, From → To. |
+| `TileId` | int FK | Edges end at `Boundary` nodes on tile borders. |
+| `Geometry` | string (JSON) | RDP-simplified 3D polyline `[[x,y,z],…]` of standing positions, From → To. |
 | `Length` | double | Walked 3D length of the unsimplified centreline. |
-| `MinX`, `MinZ`, `MaxX`, `MaxZ` | int | Bounding box. |
-| `AvgWidth` | double | Mean road width from the distance transform. |
-| `RoadClass` | enum `Main`, `Road`, `Path` | Majority class of the cells along the edge (palette mapping). |
+| `MinX`, `MinY`, `MinZ`, `MaxX`, `MaxY`, `MaxZ` | int | 3D bounding box. |
+| `AvgWidth` | double | From the distance transform. |
+| `ProfileId` | int? FK → `road_profiles`, SetNull | Best-matching profile (§5.6); gives the road class. |
 | `StreetId` | int? FK → `streets`, SetNull | |
-| `StreetSource` | enum `Inferred`, `Manual`, `None` | `Manual` labels are never overwritten by inference. |
-| `CostMultiplier` | double, default 1.0 | Admin tuning on top of the road-class factor; later the hook for terrain and ambush-risk modifiers (iPhone notes 282, 297). |
-| `Flags` | set: `Oneway`, `NoGps`, `Closed` | `NoGps` = never route over it (private paths); `Closed` = admin closure. Gate closures are dynamic (§6.2). |
-| `Source` | enum `Detected`, `Recorded` | `Recorded` = an admin walked it (§5.8); survives rebuilds. |
+| `StreetSource` | enum `Inferred`, `Manual`, `None` | `Manual` is never overwritten. |
+| `CostMultiplier` | double, default 1.0 | Admin tuning; later terrain/ambush-risk hook (iPhone notes 282, 297). |
+| `Flags` | set: `Oneway`, `NoGps`, `Closed` | Static admin flags. Live availability is §6.7. |
+| `GateDoorIds` | string (JSON int[]) | Gate doors whose closed-state blocks sit on this edge (§5.2). |
+| `DomainIds` | string (JSON int[]) | Domains (Town/District/Structure/Gate) whose regions the edge passes through, in order. |
+| `Source` | enum `Detected`, `Recorded` | `Recorded` = walked by an admin (§5.3, §5.10); survives rebuilds. |
 | `Status` | enum `Ok`, `Stale` | `Stale` when its tile is dirty; still routable. |
 
-### 3.5 Street changes
+### 3.7 Street changes
 
-None to the table. `StreetDto` gains read-only `edgeCount`, `totalLength`. The plugin's unused `StreetCache` stays
-unused; navigation reads the network bundle (§3.6).
+None to the table. `StreetDto` gains read-only `edgeCount`, `totalLength`.
 
-### 3.6 Endpoints
+### 3.8 Endpoints
 
 | Route | Auth | Purpose |
 |---|---|---|
-| `GET api/road-network?world={w}` | anonymous read | Whole graph of a world: nodes, edges with geometry, street id → name map, `version` (ETag). The plugin caches it and re-fetches on change. Estimate: 2,000 edges × ~40 points ≈ 1-2 MB, fetched on start and after builds only. |
-| `GET api/road-tiles?world={w}` | anonymous read | Tile overview (built, dirty, counts, warnings) for the admin overlay and web app. |
-| `PUT api/road-tiles/{world}/{tileX}/{tileZ}` | `[RequirePluginServiceKey]` | **Build result for one tile**, one transaction: detected nodes (with `existingId` when matched, §5.5), detected edges, statistics. Deletes the tile's unmatched `Detected` nodes/edges; keeps `Manual`/`Locked` nodes and `Recorded` edges; recomputes component ids for the world. Idempotent. |
-| `POST api/road-tiles/{world}/{tileX}/{tileZ}/dirty` | `[RequirePluginServiceKey]` | Mark dirty (batched by the plugin). |
-| `GET/POST/DELETE api/road-seeds` | writes: plugin key | Admin seeds. |
-| `PUT api/road-nodes/{id}` (name, kind, lock), `POST api/road-nodes` (anchor), `POST api/road-nodes/merge` | plugin key or staff JWT | Review actions. |
-| `POST api/road-edges` (recorded), `PUT api/road-edges/{id}` (street, class, cost, flags), `DELETE` | plugin key or staff JWT | Review actions and recorded edges. |
-| `GET api/streets/{id}/road` | anonymous | Edges and nodes of one street (web-app view). |
+| `GET api/road-network?world={w}` | anonymous read | Whole graph of a world: nodes, edges with geometry, gate/domain ids, profiles, street id → name map, `version` (ETag). Cached by the plugin. |
+| `GET/POST/PUT/DELETE api/road-profiles[/{id}]` | writes: plugin key or staff JWT | Profiles; `POST api/road-profiles/{id}/merge-survey` merges a survey's samples. |
+| `POST api/road-surveys`, `GET api/road-surveys?world=` | plugin key | Store finished surveys. |
+| `GET api/road-tiles?world={w}` | anonymous read | Tile overview. |
+| `PUT api/road-tiles/{world}/{tileX}/{tileZ}` | `[RequirePluginServiceKey]` | Build result for one tile, one transaction: detected nodes (with `existingId` when matched), edges, statistics, warnings. Deletes unmatched `Detected` nodes/edges; keeps `Manual`/`Locked` nodes and `Recorded` edges; recomputes component ids. Idempotent. |
+| `POST api/road-tiles/{world}/{tileX}/{tileZ}/dirty` | plugin key | Mark dirty (batched). |
+| `GET/POST/DELETE api/road-seeds` | writes: plugin key | Seeds. |
+| `PUT api/road-nodes/{id}`, `POST api/road-nodes` (anchor), `POST api/road-nodes/merge` | plugin key or staff JWT | Review actions. |
+| `POST api/road-edges` (recorded), `PUT api/road-edges/{id}`, `DELETE` | plugin key or staff JWT | Review actions and recorded edges. |
+| `GET api/streets/{id}/road` | anonymous | One street's edges and nodes. |
 
 Validation in `RoadNetworkService`: nodes in the tile they claim; no self-loops; geometry starts/ends within 1.5 blocks
-of its nodes; length ≥ straight-line distance; `StreetId` exists.
+of its nodes; length ≥ straight-line distance; referenced profile/street/gate/domain ids exist.
 
 ---
 
 ## 4. Plugin architecture (knk-plugin)
 
-Pure logic in `knk-core` (Bukkit-free, unit-tested), thin Paper adapters in `knk-paper` — the siege/teleport split.
+Pure logic in `knk-core` (Bukkit-free, unit-tested), thin Paper adapters in `knk-paper`.
 
 | Module | Package | Contents |
 |---|---|---|
-| knk-core | `core/domain/roads/` | Records `RoadNode`, `RoadEdge`, `RoadTile`, `RoadNetwork` (immutable snapshot of one world), `BlockPos`. |
+| knk-core | `core/domain/roads/` | Records `RoadProfile`, `RoadNode`, `RoadEdge`, `RoadTile`, `RoadNetwork` (immutable per-world snapshot), `BlockPos`. |
 | knk-core | `ports/api/RoadNetworkQueryApi`, `RoadNetworkCommandApi` | API ports. |
-| knk-core | `core/roads/build/` | `SurfaceGrid` port (`isRoadCell`, `roadClassAt`, `isPassable`), `MaskBuilder`, `DistanceTransform`, `Thinning` (2D, per height layer), `SkeletonGraph` (degree classification, junction clustering, spur pruning), `NodeMatcher` (stable ids), `StreetLabeler`, `Rdp`, `TileBuilder` (orchestrates §5). |
-| knk-core | `core/roads/route/` | `RoadGraph`, `SegmentIndex` (grid buckets), `Snapper`, `AStarRouter`, `Route`, `ManeuverBuilder`, `RegionClosestPoint`. |
+| knk-core | `core/roads/survey/` | `SurveySampler` (cross-section sampling, §5.3), `ProfileLearner` (role classification, widths, merge), `CoverageCheck`. |
+| knk-core | `core/roads/build/` | `SurfaceGrid` port (material, overlay, passability, gate-door lookup at a position), `SpanGrid` (§5.2), `MaskBuilder`, `DistanceTransform`, `Thinning`, `SkeletonGraph` (degree classification, junction clustering, spur/plaza rules), `ProfileMatcher`, `NodeMatcher`, `StreetLabeler`, `Rdp`, `TileBuilder`. |
+| knk-core | `core/roads/route/` | `RoadGraph`, `SegmentIndex` (3D-aware grid buckets), `Snapper`, `AStarRouter`, `AccessPolicy` + `DomainAccessEvaluator` (§6.7), `Route`, `ManeuverBuilder`, `RegionClosestPoint`. |
 | knk-core | `core/navigation/` | `NavigationSession` state machine, `DestinationResolver` (wraps teleport's `WarpTargets`), `EtaEstimator`. |
 | knk-api-client | `impl/RoadNetwork*ApiImpl`, DTOs, mapper | |
-| knk-paper | `roads/` | `ChunkSnapshotSurfaceGrid`, `RoadBuildJob` (tick-budgeted snapshot capture, async build), `RoadNetworkCache` (per world, ETag), `RoadDirtyTracker` (§5.7), `RoadAdminCommand`, `RoadOverlayRenderer`. |
-| knk-paper | `navigation/` | `NavigateCommand`, `NavigationService` (sessions, ticker), `TrailRenderer`, `NavigationHud` (boss bar/action bar), `NavigationListener` (quit, world change, teleport, death, siege join), events (§6.6). |
+| knk-paper | `roads/` | `ChunkSnapshotSurfaceGrid` (+ gate lookup via `GateManager.getSpatialIndex()`), `RoadBuildJob`, `RoadSurveySession` (samples the admin's walk), `RoadNetworkCache`, `RoadDirtyTracker`, `RoadAdminCommand`, `RoadOverlayRenderer`. |
+| knk-paper | `navigation/` | `NavigateCommand`, `NavigationService` (sessions, ticker, availability change listeners), `TrailRenderer`, `NavigationHud`, `NavigationListener`, events (§6.6). |
 
-Config (`config.yml`):
+Config (`config.yml`) — materials live in the API profiles now, not in config:
 
 ```yaml
 navigation:
   enabled: true
-  road-palette:                  # material -> road class; §9 Q1
-    Main: [STONE_BRICKS, MOSSY_STONE_BRICKS, CRACKED_STONE_BRICKS, POLISHED_ANDESITE, "STONE_BRICK_*"]
-    Road: [COBBLESTONE, MOSSY_COBBLESTONE, ANDESITE, GRAVEL, "COBBLESTONE_*"]
-    Path: [DIRT_PATH, COARSE_DIRT, ROOTED_DIRT, PACKED_MUD]
-  palette-exclude: []            # e.g. roof slabs, if they cause leaks
   class-cost: { Main: 0.9, Road: 1.0, Path: 1.15 }
+  overlay-materials: [SNOW, "*_CARPET", "*_PRESSURE_PLATE", RAIL, POWERED_RAIL, LEAF_LITTER, PINK_PETALS]
   seed-from-domains: true        # every Domain Location within 8 blocks of a road cell is a seed
   max-snap-distance: 48
+  snap-vertical-weight: 4        # 1 block of height counts as 4 when snapping (bridge vs road below)
   trail-length: 30
   trail-period-ticks: 10
   trail-particle: DUST
@@ -187,123 +227,216 @@ navigation:
   arrive-distance: 4
   max-session-minutes: 30
   sprint-speed: 5.6              # blocks/s; iPhone notes: "3 min = 1000 blocks"
+  survey:
+    sample-period-ticks: 4
+    cross-section-half-width: 7
+    breadcrumb-seed-spacing: 32
   builder:
     tile-size: 512
-    tile-margin: 32              # extra blocks read around a tile so borders are traced consistently
+    tile-margin: 32
     max-cells-per-tile: 250000
     snapshot-chunks-per-tick: 4
     junction-cluster-radius: 3
     min-spur-length: 4
-    plaza-width: 9               # wider than this = plaza (§5.4)
+    ambiguous-reach: 3           # §5.1: ambiguous material only counts within 3 cells of an unambiguous road cell
 ```
 
 ---
 
 ## 5. Building the road network
 
-Offline, per tile, admin-triggered (`/knk road build …`). All steps after snapshot capture run off the main thread on
-packed-`long` arrays, like `GateBlockScanTaskHandler`'s `FloodFillScanRunnable`.
+### 5.1 Road profiles — handling many block combinations
 
-### 5.1 Road cells and the mask
+Real roads mix materials: a stone-brick surface with andesite kerbs, gravel patched with coarse dirt, slabs and stairs
+on slopes, snow or carpets lying on top. One flat palette can't express that, and some materials (cobblestone, stone
+bricks, planks) are also used for buildings. A profile therefore gives each material a **role**:
 
-A **road cell** is `(x, y, z)` where the block is in the palette and the two blocks above are passable. Neighbours: the 8
-horizontal neighbours at `dy ∈ {−1, 0, +1}`; diagonal steps only when one of the two orthogonal cells is also a road cell
-(roads touching at a corner don't leak). The |Δy| ≤ 1 rule makes stairs and slabs walkable and keeps a bridge separate
-from the road under it.
+| Role | Meaning | Example |
+|---|---|---|
+| `Surface` | The walking surface; dominates the middle of the road. | stone bricks, gravel, dirt path |
+| `Edge` | Borders and kerbs; mostly at the sides. | polished andesite, cobblestone |
+| `Accent` | Occasional variants and slope pieces. | cracked/mossy variants, slabs, stairs |
+| `Overlay` | Thin blocks lying *on* the road; the road cell is the block beneath. | snow layer, carpet, rails |
 
-**Mask:** a BFS over road cells from all seeds in or near the tile (tile + margin): admin seeds, plus every Domain
-`Location` that has a road cell within 8 blocks, plus `Boundary` nodes of already-built neighbouring tiles. Seeding
-instead of scanning every column means a gravel beach or a cobblestone roof nowhere near a road is never picked up.
-Capped at `max-cells-per-tile`; hitting the cap is a warning ("possible leak") listed with its location.
+Each material also has an **`ambiguous`** flag for materials common outside roads. Rules for the mask:
 
-### 5.2 Snapshot capture
+- A cell is a road cell if its floor material (looking through `Overlay`s) is a `Surface`, `Edge` or `Accent`
+  material of **any enabled profile**. Different profiles can meet and mix — a gravel highway entering a stone-brick
+  town is one continuous mask.
+- An **ambiguous** material only counts within `ambiguous-reach` cells of an unambiguous road cell. A cobblestone kerb
+  or a short cobblestone bridge still joins the road; a cobblestone house floor or courtyard behind it does not. A road
+  made *entirely* of an ambiguous material is marked unambiguous in its own profile (the admin's choice, prompted by
+  the survey).
+- After the centreline is built, each edge is matched to the profile whose material mix fits best (§5.6); that gives
+  its road class and cost. Mixed or patched roads simply match the closest profile.
 
-On the main thread, `ChunkSnapshot`s of the chunks the BFS actually reaches, a few per tick. Chunks load with
-`getChunkAtAsync`; nothing is loaded synchronously.
+### 5.2 Vertical overlap — tunnels, bridges, roads under roads
 
-### 5.3 Centreline (thinning)
+The world is not a height map: one (x, z) column can hold a street, a tunnel under it and a bridge over it. The builder
+therefore never projects onto 2D. It works on a **span grid**, the same structure Recast uses for multi-level navmeshes
+(its "compact heightfield"):
 
-1. **Height layers.** Split the mask into layers where one (x, z) column holds more than one road cell (a bridge over a
-   road, a road over a tunnel): cells connected with |Δy| ≤ 1 stay in one layer. Almost the whole world is one layer.
-2. **Distance transform** per layer: each cell's distance to the nearest non-road cell (BFS from the border). Gives
-   width (`2 × dt`) and centre-seeking weights.
-3. **Thinning** per layer: Zhang-Suen on the (x, z) projection, keeping each cell's y. Result: a 1-cell-wide centreline
-   that follows the middle of wide roads and stays exactly on 1-wide paths.
+- **A span** is one road cell `(x, y, z)`: a road-profile floor with two passable blocks above (gate-door blocks count
+  as passable, below). A column can have any number of spans.
+- **Links:** each span links to at most one span in each of the 8 horizontal directions, at `dy ∈ {−1, 0, +1}`.
+  *At most one* is guaranteed by the headroom rule: in the neighbouring column, standable cells at y−1, y and y+1
+  exclude each other pairwise, because each needs a solid floor at its own height and air at the two heights above it
+  (y and y+1: y needs air at y+1 where y+1 needs a floor; y−1 and y: y−1 needs air at y; y−1 and y+1: y−1 needs air at
+  y+1). A step up additionally needs headroom above the lower span, except onto stairs and
+  slabs. Diagonal links need one of the two orthogonal links, so roads touching at a corner don't join.
+- **Consequence:** every span has the same 8-neighbourhood a flat grid cell has. The distance transform, thinning,
+  degree classification and graph extraction below run on spans **unchanged** — and a tunnel under a road, a bridge
+  over it, two stacked city streets, a ramp or a spiral stair are automatically separate or connected exactly as a
+  player could walk them. No layer splitting, no special cases.
+- **Underground roads** are road cells like any other; nothing requires sky access. They are reached through their
+  entrances (a tunnel mouth, a ramp) from any seed. Levels connected only by a ladder, a water lift or an elevator get a
+  **recorded vertical edge** (§5.10) — the builder never climbs ladders.
+- **Snapping** (§6.2) weights height differences ×`snap-vertical-weight`, so a player on a bridge snaps to the bridge,
+  not to the road 10 blocks below; destinations snap the same way.
+- **Overlay** (§7) shows only edges within ±8 blocks of the viewer's Y by default (`/knk road show all` for every level).
+- **Guidance** adds "Go down into the tunnel" / "Cross the bridge" when the next edge's height differs by more than 3
+  blocks from where the player is (§6.5).
 
-### 5.4 From centreline to graph (what replaces manual node logging)
+### 5.3 Survey walk ("player road walk scan")
 
-1. **Classify** every centreline cell by its number of centreline neighbours: **1 = endpoint, 2 = along the road,
-   ≥ 3 = junction candidate** — the same rule GTA V's tooling uses for junctions and the standard GIS rule.
-2. **Cluster junctions.** Wide crossings give a small cloud of junction cells; merge those within
-   `junction-cluster-radius` into one `Junction` node at the cell nearest the cloud's centroid.
-3. **Prune spurs.** A branch that ends in an endpoint and is shorter than `max(min-spur-length, local road width)` is
-   thinning noise from a road's corner or a doorway notch; drop it and reclassify its junction.
-4. **Plazas.** Areas with `dt > plaza-width / 2` (town squares made of road blocks) thin into loops and star shapes.
-   Every centreline branch leaving a plaza is joined to one `Junction` at the plaza's centre, so a square becomes one
-   node where its streets meet.
-5. **Edges** are the centreline chains between nodes. Record `Length` from the raw chain, `AvgWidth` from `dt`,
-   `RoadClass` = majority class of the chain's cells, then RDP (ε = 0.75) for `Geometry`.
-6. **Tile borders.** Chains that leave the tile end at a `Boundary` node on the border (§5.6).
+Instead of guessing which blocks roads are made of, an admin **walks** representative roads in survey mode for a few
+minutes, in various places — a main street, a wilderness road, a trail, a tunnel. The plugin learns from what's under
+and beside them.
 
-Admin `Anchor` nodes are honoured: the chain through an anchor is split there.
+```
+/knk road survey start [profile name]     e.g. "Kardenna main street"; omit to learn a new profile
+/knk road survey stop                     ends the walk and shows the proposed profile
+/knk road survey cancel
+```
 
-### 5.5 Stable ids across rebuilds
+**Sampling** (every `sample-period-ticks`, only while the admin is on the ground and walking — not flying, riding,
+swimming or standing still):
 
-A rebuild must not throw away admin work (names, street labels, flags). `NodeMatcher` matches each new node to an old
-one of the same tile within 3 blocks (greedy nearest match is enough); matched nodes keep their id, name and
-lock. An edge keeps its id and admin fields when its matched node pair is unchanged and its new polyline stays within
-2 blocks of the old one. `Locked` nodes don't move; the builder snaps the chain to them. Unmatched old detected
-nodes/edges are deleted; the build summary lists what disappeared so an admin can check a road wasn't broken by a builder.
+1. The **floor under the feet** (through overlays) and any overlay on it.
+2. A **cross-section** perpendicular to the walking direction: the floor material at lateral offsets −7 … +7, each at
+   the standable height nearest the centre's (|Δy| ≤ 1 per step, stopping at walls).
+3. The **breadcrumb**: the admin's position.
 
-### 5.6 Tiles, borders and components
+The action bar shows live progress (samples, top materials, estimated width).
 
-- Each tile is built from its own area plus a `tile-margin` of context, so the centreline across a border is identical
-  whichever side is built first. A chain crossing the border gets a `Boundary` node at the crossing cell; the
-  neighbouring tile's build matches it by position.
-- After a tile build, the API recomputes **component ids** for the world (a union-find over nodes and edges; thousands
-  of nodes, milliseconds). Routing fails fast when start and goal are in different components, as GTA SA does.
+**Learning** (`ProfileLearner`, on stop) — unsupervised, from how materials are distributed across the cross-section:
 
-### 5.7 Keeping up with the world
+- `centreShare(m)`: how often material m is at offsets −1 … +1; `outerShare(m)`: how often at ±6 … ±7. Road materials
+  are common in the middle and rare outside; terrain (grass, stone, sand, leaves) is the opposite. Road-likeness
+  `r(m) = centreShare / (centreShare + outerShare)`.
+- Per sample, the **road run** = the contiguous stretch around the centre whose materials have `r ≥ 0.6`; its length
+  is that sample's width, and materials peaking at the run's ends are `Edge`s.
+- Roles: high centre share → `Surface`; peaks at the run's ends → `Edge`; road-like but < 5% of samples → `Accent`;
+  seen on top of the floor → `Overlay`. Materials that are road-like here but also appear as walls or floors off the
+  road in the cross-sections are proposed as **ambiguous**. Materials below 1% are dropped as noise.
+- Widths → `WidthMin`/`WidthMax` (5th/95th percentile).
 
-- `RoadDirtyTracker` listens to `BlockPlaceEvent`, `BlockBreakEvent`, explosions and piston moves; if the block is in the
-  palette, or is the air above a road cell, it marks the tile dirty (batched every 30 s). The tile's edges become
-  `Stale` (still routable) and the admin overview lists it.
-- WorldEdit/FAWE edits don't fire Bukkit block events, so a WorldEdit `EditSessionEvent` hook marks the edited
-  region's tiles dirty (Phase 3, when WorldEdit is present).
-- v1: rebuilds are admin-triggered (`/knk road build dirty`). Automatic rebuilds after a quiet period are Phase 6.
+**Review:** on stop, the chat shows the proposed profile — materials with roles and shares, width range, proposed
+ambiguous flags — with clickable **Save / merge into "…" / edit role / discard**. Repeated surveys into the same
+profile accumulate their counts, so walking "for x amount of time in various places" steadily refines it. Profiles are
+also editable in the web app (Phase 5).
 
-### 5.8 Recorded edges (what blocks can't express)
+**What else a survey gives the build:**
 
-`/knk road record start` samples the admin's position every 10 ticks while they walk from one node to another;
-`/knk road record stop [street]` snaps both ends to the nearest nodes (creating `Anchor`s if needed) and stores a
-`Recorded` edge. This covers wooden bridges, tunnels, fords and grass paths without widening the palette. Recorded
+- **Seeds:** a breadcrumb point every `breadcrumb-seed-spacing` blocks becomes a `Survey` seed, so roads no Domain
+  touches — including underground ones — are found.
+- **Coverage check:** after a build, every breadcrumb point marked on-road must lie within 2 blocks of a built edge.
+  Misses are listed with the likely cause: *"You walked here, but OAK_PLANKS isn't in any profile (bridge?) — add as
+  Accent / record this stretch."*
+- **Recorded stretches:** a stretch of breadcrumb over non-road ground (a grass path, a ladder, a ford) can be saved as a
+  `Recorded` edge in one click — this replaces rev. 2's separate `record` commands.
+
+### 5.4 Mask and snapshot capture
+
+Offline, per tile, admin-triggered (`/knk road build …`). A BFS over spans from all seeds in or near the tile (tile +
+`tile-margin`): Domain Locations with a road span within 8 blocks, survey and admin seeds, and `Boundary` nodes of
+already-built neighbours. `ChunkSnapshot`s of the chunks the BFS reaches are taken on the main thread, a few per tick,
+with `getChunkAtAsync`; everything after capture runs off the main thread on packed-`long` span keys (as in
+`GateBlockScanTaskHandler`'s `FloodFillScanRunnable`). Capped at `max-cells-per-tile`; hitting the cap is a warning with
+its location.
+
+**Gates on the road:** a gate door standing on a road would break the mask while closed (no headroom). The
+`SurfaceGrid` asks `GateManager.getSpatialIndex()` (knk-core `gates/GateSpatialIndex`) whether a block belongs to a
+gate door; such blocks count as passable headroom, and the spans under them are tagged with the door id. Every edge
+crossing tagged spans records the door in `GateDoorIds`. The build is therefore the same whether gates are open or
+closed; the gate's *state* only matters at routing time (§6.7).
+
+### 5.5 Centreline
+
+1. **Distance transform** over the span grid: each span's distance to the nearest non-road neighbour. Gives width
+   (`2 × dt`) and centre-seeking.
+2. **Thinning** (Zhang-Suen on the span grid's 8-neighbourhood, §5.2): a 1-span-wide centreline following the middle of
+   wide roads and exactly on 1-wide paths.
+
+### 5.6 From centreline to graph
+
+1. **Classify** centreline spans by their number of centreline neighbours: **1 = endpoint, 2 = along the road, ≥ 3 =
+   junction candidate** (the GTA V / GIS rule).
+2. **Cluster junctions** within `junction-cluster-radius` into one `Junction` at the span nearest the cluster's
+   centroid.
+3. **Prune spurs** shorter than `max(min-spur-length, local width)`.
+4. **Plazas:** where `dt > WidthMax / 2` of the matching profile, a town square made of road blocks becomes one
+   `Junction` at its centre joined to every branch leaving it.
+5. **Edges** = centreline chains between nodes: `Length` from the raw chain, `AvgWidth` from `dt`, `Geometry` via RDP
+   (ε = 0.75, 3D). **Profile match:** the histogram of floor materials within `dt` of the chain, compared with each
+   profile's material shares (cosine similarity); best match → `ProfileId`.
+6. **Domains:** sample the polyline every 4 blocks against the WorldGuard regions (`WorldGuardRegionLookup`) and map
+   region ids to domains (`core/regions/RegionDomainResolver`) → ordered `DomainIds`.
+7. **Tile borders:** chains leaving the tile end at a `Boundary` node matched by position with the neighbour tile.
+
+Admin `Anchor` nodes are honoured (the chain is split there).
+
+### 5.7 Stable ids across rebuilds
+
+New nodes are matched to old ones of the same tile within 3 blocks (3D, greedy nearest); matched nodes keep id, name
+and lock. An edge keeps its id and admin fields (street, flags, cost) when its matched node pair is unchanged and its
+polyline stays within 2 blocks of the old one. `Locked` nodes don't move. Unmatched old detected nodes/edges are
+deleted and listed in the build summary.
+
+### 5.8 Components
+
+After a tile build, the API recomputes component ids (union-find over nodes and edges; milliseconds). Routing fails fast
+across components (GTA SA's flood-fill groups).
+
+### 5.9 Keeping up with the world
+
+`RoadDirtyTracker` marks a tile dirty (batched every 30 s) on `BlockPlaceEvent`, `BlockBreakEvent`, explosions and piston
+moves that touch a profile material or the headroom above a road span, and on WorldEdit `EditSessionEvent`s over the
+tile (when WorldEdit is present). Its edges become `Stale` (still routable) and the tile is listed for rebuild. Gate
+animations do **not** dirty tiles (§5.4). Automatic rebuilds are Phase 6.
+
+### 5.10 Recorded edges (what blocks can't express)
+
+Stretches the builder can't follow — a wooden bridge you don't want in a profile, a grass path, a ford, a **ladder or
+water lift between road levels** — are saved from a survey breadcrumb (§5.3) or with `/knk road record start|stop`:
+both ends snap to the nearest nodes (creating `Anchor`s if needed); vertical recorded edges are allowed. Recorded
 edges survive rebuilds.
 
-### 5.9 Street labels (inferred, then reviewed)
+### 5.11 Street labels (confirmed)
 
-Every V3 Structure already has a `StreetId` and a `Location` by its door. `StreetLabeler`:
+Every Structure has a `StreetId` and a door-side `Location`:
 
-1. **Votes:** each Structure with a Location votes for its street on the nearest edge within 16 blocks (weighted by
-   1 / distance).
-2. **Assign** each edge the street with a clear majority (≥ 60% of the vote weight).
-3. **Continue through junctions:** an unlabelled edge inherits the street of the edge it continues most straightly at a
-   junction (smallest bearing change, < 35°, same road class), repeated until nothing changes — how a street "runs
-   through" a crossing.
-4. Conflicts (two streets with similar weight) and edges with no label are listed in the build summary; unnamed
-   wilderness roads simply stay unlabelled.
+1. **Votes:** each Structure votes for its street on the nearest edge within 16 blocks, same level (|Δy| ≤ 4), weighted
+   by 1 / distance.
+2. **Assign** the street with ≥ 60% of an edge's vote weight.
+3. **Continue through junctions:** an unlabelled edge inherits the street of the edge it continues most straightly
+   (< 35° bearing change, same road class, same level), until nothing changes.
+4. Conflicts and unlabelled edges go into the build summary; unnamed wilderness roads stay unlabelled.
 
-Admins override with `/knk road street <street>` (sets `StreetSource = Manual`, never overwritten).
+`/knk road street <street>` overrides (`StreetSource = Manual`, never overwritten).
 
-### 5.10 Known edge cases
+### 5.12 Known edge cases
 
 | Case | Handling |
 |---|---|
-| Plaza or square of palette blocks | §5.4 step 4: one junction at its centre. |
-| Two parallel roads touching (an avenue with a median) | Corner rule stops corner leaks; if they touch along a side they become one wide road, which is fine for routing. |
-| Bridge over a road | Separate height layers (§5.3); no false junction. |
-| Gaps (doorway, wooden bridge, ford) | No connection → separate components; the summary lists close-by endpoints of different components ("gap of 4 blocks at …") so an admin can add the material or record the edge. |
-| Palette leaks into buildings (cobblestone floors) | Doorways usually break the mask; otherwise the cell cap warns, and `palette-exclude` or a spur/plaza rule contains it. |
-| Detector misses or over-splits a junction | Review: `node merge`, `node anchor`. |
+| Road under a road / tunnel / bridge / stacked streets | Span grid (§5.2): separate unless walkably connected. |
+| Levels joined by ladders, water lifts, elevators | Recorded vertical edge (§5.10). |
+| Plaza of road blocks | One junction at its centre (§5.6 step 4). |
+| Gravel beach, cobblestone roof far from roads | Never reached: the mask grows from seeds only. |
+| Cobblestone floors next to a cobblestone kerb | `ambiguous` + `ambiguous-reach` (§5.1). |
+| Gaps (doorway, non-profile bridge, ford) | Separate components; the summary lists nearby endpoints of different components and survey coverage misses. |
+| Closed gate across the road | Door blocks count as headroom; tagged, handled at routing (§5.4, §6.7). |
+| Detector misses or over-splits a junction | `node merge`, `node anchor`. |
 
 ---
 
@@ -322,70 +455,94 @@ Permission `knk.navigate` (default: every player). Destination forms (case-insen
 | Form | Resolves to |
 |---|---|
 | `location:<name>` / `location:#<id>` | A `Location` by name (exact, then unique prefix) or id. |
-| `town:<name>`, `district:<name>`, `structure:<name>` (or `#<id>`) | The domain's `Location` (default spawn); with `region`, the closest point of its WorldGuard region (§6.3). |
+| `town:<name>`, `district:<name>`, `structure:<name>` (or `#<id>`) | The domain's `Location`; with `region`, the closest point of its WorldGuard region (§6.3). |
 | `street:<name>` | The nearest point on that street's edges. |
 | `node:<name>` | A named road node. |
-| bare `<name>` | Searched across all of the above; one match → go; several → list `type:name` choices (teleport's `WarpTargets` behaviour). |
+| bare `<name>` | Searched across all of the above; one match → go; several → `type:name` choices (teleport's `WarpTargets`). |
 
-A domain without a `Location` falls back to `region` automatically; with neither it is refused with a clear message.
-Resolution reuses teleport's `WarpTargets`/`SpawnPointResolver` (on `claude/teleport`, KNG-17). Unlike `/warp`, a
-destination does **not** need `TeleportEnabled`: navigating is walking. `AllowEntry = false` is allowed with a warning
-(§9 Q4). Structures need a second lookup for their `Location` (`StructureDto` only has `locationId`).
+A domain without a `Location` falls back to `region`; with neither it is refused. Resolution reuses teleport's
+`WarpTargets`/`SpawnPointResolver` (on `claude/teleport`, KNG-17). Unlike `/warp`, destinations don't need
+`TeleportEnabled`. A destination the player may not enter is handled by §6.7. Structures need a second lookup for their
+`Location` (`StructureDto` has only `locationId`).
 
 ### 6.2 Route computation (async)
 
-1. Resolve the destination to a point, or a **set** of goal points (region mode, §6.3).
-2. **Snap** the player and the target to the nearest edge segments within `max-snap-distance` (grid-bucket
-   `SegmentIndex`), project, and split the edges with `Virtual` nodes.
-3. **Direct mode** when nothing is within snap distance, when the snapped points are in **different components**
-   (instant check), or when the straight-line distance is shorter than both snap distances together: a straight trail
-   toward the target, recomputed as the player moves (GTA's "custom route").
-4. **A\*** with cost `Length × classCost × CostMultiplier`, Euclidean heuristic scaled by the cheapest class cost (keeps
-   it admissible). Skipped: `NoGps`, `Closed`, wrong-way `Oneway`, and **edges through a closed gate** — any edge whose
-   polyline passes through the region of a `GateStructure` that is currently closed (read from the gate runtime), the
-   way GTA scripts switch roads off in an area. A siege-locked town is therefore routed around, or reached up to its
-   gate.
-5. Build the `Route`: off-road leg (player → snap point), road legs (polylines, reversed where traversed To → From,
-   trimmed at the virtual nodes), off-road leg to the target; maneuvers (§6.5); ETA `length / sprint-speed`.
+1. Resolve the destination to a point, or a set of goal points (region mode, §6.3).
+2. **Snap** the player and the target to the nearest edge segments within `max-snap-distance`, using 3D distance with
+   height weighted ×`snap-vertical-weight` (§5.2); split the edges with `Virtual` nodes.
+3. **Direct mode** when nothing is within snap distance, when start and goal are in different components, or when the
+   straight line is shorter than both snap distances together: a straight trail toward the target.
+4. **A\*** with cost `Length × classCost × profile.CostMultiplier × edge.CostMultiplier`, Euclidean heuristic scaled by
+   the cheapest class cost. Edges are filtered by the player's **`AccessPolicy`** (§6.7).
+5. Build the `Route`: off-road legs, road legs (trimmed at virtual nodes), maneuvers (§6.5), ETA
+   (`length / sprint-speed`).
 
 Target: < 5 ms for a few thousand nodes; the network snapshot is immutable, so routing runs on any thread.
 
 ### 6.3 Closest point of a region
 
-For `town:Kardenna region`, the goal is where the road reaches the region, not its centre.
-
-- Polygonal region: `ProtectedPolygonalRegion.getPoints()` + min/max Y; cuboid: min/max corners → a Bukkit-free
-  `RegionShape` in knk-core.
-- Goals = every network point **inside** the region (edge segments clipped to the polygon), or, if none, the network
-  point closest to the polygon. A\* runs multi-goal (heuristic = distance to the polygon) and stops at the first goal:
-  the route ends where the road enters the region, which is the natural "arrival" at a town gate.
-- Already inside: "You are already in Kardenna."
+Polygonal region: `ProtectedPolygonalRegion.getPoints()` + min/max Y; cuboid: min/max corners → a Bukkit-free 3D
+`RegionShape`. Goals = network points inside the region, or, if none, the point closest to it. A\* runs multi-goal and
+stops at the first goal: the route ends where the road enters the region. Already inside: "You are already in
+Kardenna."
 
 ### 6.4 Guidance
 
-- **Trail:** every `trail-period-ticks`, project the player onto the route and draw the next `trail-length` blocks with
-  `Player#spawnParticle` (only they see it), one particle every ~1.5 blocks at standing height + 0.2, `DUST` in the
-  configured colour; off-road legs sparser and a different colour.
-- **Boss bar:** `"→ Merchantstreet · 340 m · ~1 min"`, progress = travelled / total; within 20 blocks of a turn the
-  next maneuver replaces it (`"Turn left onto Merchantstreet"`).
-- **Action bar:** an arrow (`⬆ ⬈ ➡ ⬊ ⬇ ⬋ ⬅ ⬉`) from the player's yaw to the trail point ~6 blocks ahead, for players
-  with minimal particles.
-- **Re-route:** more than `reroute-distance` off the route for `reroute-after-ticks` → recompute (max once per 3 s),
-  "Recalculating…".
-- **Arrival:** within `arrive-distance` (or inside the region) → sound + `"You have arrived at Kardenna Market."`.
-- **Ends** on quit, death, world change, teleport (> 16 blocks), joining a siege match, or `max-session-minutes`. One
-  session per player; a new `/navigate` replaces the old.
+- **Trail:** every `trail-period-ticks`, the next `trail-length` blocks from the player's projection onto the route,
+  with `Player#spawnParticle` (only they see it), one particle every ~1.5 blocks at standing height + 0.2; off-road legs
+  sparser and in another colour.
+- **Boss bar:** `"→ Merchantstreet · 340 m · ~1 min"`, progress = travelled / total; the next maneuver within 20
+  blocks of a turn.
+- **Action bar:** direction arrow (`⬆ ⬈ ➡ ⬊ ⬇ ⬋ ⬅ ⬉`) to the trail point ~6 blocks ahead, for players with minimal
+  particles.
+- **Re-route:** more than `reroute-distance` off the route (3D) for `reroute-after-ticks` → recompute (max once per 3 s).
+- **Arrival:** within `arrive-distance`, or inside the region → sound + `"You have arrived at Kardenna Market."`.
+- **Ends** on quit, death, world change, teleport (> 16 blocks), joining a siege match, or `max-session-minutes`.
 
 ### 6.5 Maneuvers
 
-At each route node that is a `Junction`, or where the street label changes: Δ = bearing after − bearing before (from
-~6 blocks of polyline each side). Bands: < 20° straight (announced only on a street change: "Continue onto …"),
-20-60° slight, 60-120° turn, > 120° sharp; sign gives left/right. Unlabelled edges: "Take the path on the left".
+At each `Junction` on the route, or where the street label changes: Δ = bearing after − before (~6 blocks each side).
+< 20° straight (only announced on a street change: "Continue onto …"), 20-60° slight, 60-120° turn, > 120° sharp;
+left/right from the sign. Height changes: when the next edge starts > 3 blocks below/above the current one, "Go down
+into the tunnel" / "Take the stairs up" / "Cross the bridge". Unlabelled edges: "Take the path on the left".
 
 ### 6.6 Events
 
-`NavigationStartEvent` (cancellable), `NavigationRerouteEvent`, `NavigationArriveEvent`, `NavigationEndEvent` (reason).
-Later consumers: transport quests, tutorial steps, discovery, bandit ambushes on long routes.
+`NavigationStartEvent` (cancellable), `NavigationRerouteEvent` (with reason), `NavigationArriveEvent`,
+`NavigationEndEvent` (reason). Later consumers: transport quests, tutorial steps, discovery, bandit ambushes.
+
+### 6.7 Availability — gates, entry conditions, live changes (confirmed)
+
+The router only uses roads this player can actually use **now**. Every edge carries its `GateDoorIds` and `DomainIds`
+(§5.4, §5.6); a per-request `AccessPolicy` decides each once and caches the answer for the whole search:
+
+| Check | Source | Blocked when |
+|---|---|---|
+| Gate doors on the edge | `GateManager.getGate(id)` → `CachedGateDoor.getCurrentState()`, `isDestroyed()`, `isJammed()` | State is `CLOSED`, `CLOSING`, `OPENING` or jammed. `OPEN` or destroyed → passable. A door in an active siege (`getCurrentSiegeId() != null`) is blocked for non-participants regardless. `AllowPassThrough` doors: passable only for players the pass-through rules allow, with a hint "right-click the gate to pass". |
+| Domain entry | the domains in `DomainIds` the route *enters* | `AllowEntry = false`, or any future entry condition (vision §2.2: title, balance, clan, premium rank). |
+| Domain exit | the domains the player is in and the route *leaves* | `AllowExit = false`. |
+| Siege | siege runtime (read-only) | Area lockdown or an active match area, for non-participants. |
+| Static flags | edge `Flags` | `Closed`, `NoGps`; `Oneway` against direction. |
+
+**One source of truth for entry rules.** Today `core/regions/SimpleRegionTransitionService.checkEntryDenials`/
+`checkExitDenials` decide AllowEntry/AllowExit when a player crosses a region border. That logic is extracted into a
+shared `DomainAccessEvaluator` (knk-core) used by both the region tracker and the router, so navigation can never send a
+player somewhere the border check would stop them, and any future entry condition applies to both at once. Staff and
+owner-mode bypasses apply the same way in both.
+
+**When no usable route exists**, the router searches again ignoring availability. If that finds a route, the player is
+told exactly why and guided as far as they can go:
+
+- *"No open route to Cinix Keep — the West Gate is closed. Guiding you to the gate."*
+- *"You may not enter Kardenna Castle. Guiding you to its edge."* (destination domain denied: route ends at the region
+  boundary, §6.3)
+
+**Live changes.** `NavigationService` listens to gate state changes (an observer on `GateManager`'s animation-complete
+notifications), domain cache refreshes and siege state changes:
+
+- An element on an active route becomes blocked → re-route with the reason: *"The West Gate closed — recalculating."*
+- A gate opens or a domain opens that would make the route clearly shorter (> 15%) → re-route (rate-limited to once per
+  10 s): *"The North Gate opened — shorter route found."*
 
 ---
 
@@ -395,61 +552,68 @@ In-game (`knk.admin.roads`), direct commands in the `GateDoorRegionCaptureHandle
 
 | Command | Does |
 |---|---|
-| `/knk road build here` / `build tile <x> <z>` / `build radius <r>` / `build dirty` / `build all` | Builds tiles (§5), progress in the action bar, then a **build summary** in chat: nodes/edges, disappeared nodes, unlabelled/conflicting streets, suspected leaks, component gaps — each with a clickable teleport to the spot. |
-| `/knk road seed add [note]` / `seed remove` / `seed list` | Seeds for roads no domain touches. |
-| `/knk road show [radius]` / `hide` | Overlay: nodes as particle pillars by kind, edges as lines coloured by street, unlabelled grey, stale orange, closed red, tile borders faint; looking at a node or edge shows its id, kind, street, class in the action bar. |
-| `/knk road street <street> [edgeId]` | Label the edge under you (or by id), `Manual`. |
-| `/knk road node name <name>` / `node merge <id> <id>` / `node anchor` / `node lock` | Review fixes. |
-| `/knk road record start` / `stop [street]` / `cancel` | Recorded edges (§5.8). |
-| `/knk road edge set <id> class <c>` / `cost <x>` / `oneway` / `nogps` / `close` / `open` | Tuning. |
-| `/knk road tiles` | Tile overview: built, dirty, warnings. |
+| `/knk road survey start [profile]` / `stop` / `cancel` | Survey walk (§5.3): learn or refine a profile, add seeds, keep the breadcrumb for coverage. |
+| `/knk road profile list` / `show <name>` / `role <name> <material> <role>` / `ambiguous <name> <material> <true\|false>` / `enable\|disable <name>` | Profile review in-game (also in the web app). |
+| `/knk road build here` / `tile <x> <z>` / `radius <r>` / `dirty` / `all` | Builds tiles (§5.4-5.8), then a **build summary**: nodes/edges, levels, disappeared nodes, street conflicts, leaks, component gaps, **survey coverage misses** — each with a clickable teleport. |
+| `/knk road seed add [note]` / `remove` / `list` | Admin seeds. |
+| `/knk road show [radius] [all]` / `hide` | Overlay: nodes by kind, edges coloured by street, unlabelled grey, stale orange, closed red, gate-crossing edges with a gate marker; only the viewer's level unless `all`. |
+| `/knk road street <street> [edgeId]` | Label an edge (`Manual`). |
+| `/knk road node name <name>` / `merge <id> <id>` / `anchor` / `lock` | Review fixes. |
+| `/knk road record start` / `stop [street]` / `cancel` | Recorded edge, including vertical ones (§5.10). |
+| `/knk road edge set <id> cost <x>` / `oneway` / `nogps` / `close` / `open` | Tuning. |
+| `/knk road tiles` | Tile overview. |
+| `/knk road why <destination>` | Debug: route for the admin *as a given player* (`--as <player>`), listing every blocked gate/domain. |
 
-Typical session: `/knk road build radius 1500` around Kardenna, look at the summary, `/knk road show`, fix two street
-labels and one gap, done. No coordinates are typed or logged.
+Typical first session: survey a main street, a wilderness road and a trail (five minutes each) → `/knk road build
+radius 1500` around Kardenna → read the summary → `/knk road show` → fix two street labels and one bridge. No
+coordinates typed.
 
-Web app (admin, Phase 5): tile overview, Street detail with its edges and total length, edge table with class/cost/
-flags/street editing, build warnings. No map in v1.
+Web app (admin, Phase 5): profile editor (materials, roles, ambiguous flags, class, cost), tile overview, Street detail
+with its edges, edge table with class/cost/flags/street editing, build warnings.
 
 ---
 
 ## 8. Implementation phases
 
-Each phase is independently mergeable and testable without a live server except where noted.
-
 | Phase | Repo | Contents | Tests |
 |---|---|---|---|
-| 0 | workspace | Developer answers §9 (every question has a default). | — |
-| 1 | web-api | `RoadTile`, `RoadSeed`, `RoadNode`, `RoadEdge`, enums, migration `AddRoadNetwork`, `RoadNetworkService` (tile replace with id matching, component ids), controllers (§3.6), `StreetDto` counts. | Service/validation unit tests; fresh-DB migration CI. |
-| 2 | plugin core | `core/roads/build/` (mask, distance transform, layered thinning, degree classification, junction clustering, spur/plaza rules, node matching, street labelling, RDP) and `core/roads/route/` (graph, snapping, A\*, components, maneuvers, region closest point). All Bukkit-free. | Golden tests on synthetic `SurfaceGrid`s: meandering 1-wide path, 5-wide road, T, X and 5-way junctions, plaza, stairs up a hill, bridge over a road, gap, cobblestone-floor leak (capped), tile-border continuity, rebuild keeps ids and labels. Router: shortest path, class costs, oneway, closed/NoGps, closed-gate avoidance, components fail fast, region multi-goal. |
-| 3 | plugin paper | `ChunkSnapshotSurfaceGrid`, `RoadBuildJob`, `RoadNetworkCache`, `RoadDirtyTracker` (+ WorldEdit hook), `/knk road …`, overlay. API client + mapper. | Contract test against Phase 1; **live:** build the tiles around one real town and review the result on the dev server. |
-| 4 | plugin paper | `/navigate`, `DestinationResolver` (after KNG-17 merges), `NavigationService`, trail, boss/action bar, gate closures, events, config. | Session state-machine tests in core; **live** checklist: Location, Town spawn, Structure, region edge, street; re-route; arrival; closed gate; auto-end on death/teleport/siege. |
-| 5 | web-app | Tile overview, street road panel, edge table. | Component tests. |
-| 6 (later) | all | Automatic rebuild of dirty tiles after a quiet period; "follow road" mode without a destination (fork choices at junctions, as in KCD/Witcher/RDR2); off-road legs with Pathetic; NPC routing (Carrier/transport quests); ETA per travel mode and terrain/risk modifiers; treasure-map/radar items reusing the trail; discovery-gated destinations; 2D web map. | — |
+| 0 | workspace | Developer answers the remaining §9 questions (all have defaults). | — |
+| 1 | web-api | `RoadProfile` (+ bootstrap seed), `RoadSurvey`, `RoadTile`, `RoadSeed`, `RoadNode`, `RoadEdge`, migration `AddRoadNetwork`, `RoadNetworkService` (tile replace with id matching, component ids, survey merge), controllers (§3.8), `StreetDto` counts. | Service/validation unit tests; fresh-DB migration CI. |
+| 2 | plugin core | `core/roads/survey/` (sampling maths, profile learning), `core/roads/build/` (span grid, mask with ambiguity reach, distance transform, thinning, graph, profile match, node matching, street labels, RDP), `core/roads/route/` (graph, 3D snapping, A\*, components, `AccessPolicy` + extracted `DomainAccessEvaluator`, maneuvers, region closest point). All Bukkit-free. | Golden tests on synthetic grids: meandering 1-wide path, 5-wide road, T/X/5-way junctions, plaza, stairs, **tunnel under a road, bridge over a road, two stacked streets, spiral ramp**, mixed-profile road, cobblestone-floor leak held by ambiguity reach, closed gate on the road, tile borders, rebuild keeps ids/labels. Survey: synthetic cross-sections → expected roles/widths. Router: class costs, oneway, closed gate, denied entry/exit, "why blocked" fallback, component fail-fast, region multi-goal. `SimpleRegionTransitionService` tests stay green after the extraction. |
+| 3 | plugin paper | `ChunkSnapshotSurfaceGrid` (+ gate lookup), `RoadSurveySession`, `RoadBuildJob`, `RoadNetworkCache`, `RoadDirtyTracker` (+ WorldEdit hook), `/knk road …`, overlay. API client + mapper. | Contract test against Phase 1; **live:** survey three road types, build around one real town (incl. a tunnel or bridge if one exists), review. |
+| 4 | plugin paper | `/navigate`, `DestinationResolver` (after KNG-17 merges), `NavigationService` with availability listeners, trail, boss/action bar, events. | Session tests in core; **live:** Location, Town spawn, Structure, region edge, street; through a tunnel; closed gate → reason + guidance to the gate; gate opens mid-route → shorter route; denied domain; re-route; arrival. |
+| 5 | web-app | Profile editor, tile overview, street road panel, edge table. | Component tests. |
+| 6 (later) | all | Automatic rebuild of dirty tiles; "follow road" mode (fork choices at junctions, as in KCD/Witcher/RDR2); off-road legs with Pathetic; NPC routing (Carrier/transport quests) with the same `AccessPolicy` for NPC factions; ETA per travel mode and terrain/risk modifiers; treasure-map/radar items; discovery-gated destinations; 2D web map. | — |
 
-**Dependencies:** Phase 4 depends on KNG-17 (teleport) reaching trunk. Phases 1-3 depend on nothing in flight. Gate
-closure (Phase 4) reads the gate runtime read-only; nothing here changes siege code.
+**Dependencies:** Phase 4 depends on KNG-17 (teleport) reaching trunk. The `DomainAccessEvaluator` extraction (Phase 2)
+touches `core/regions/` on trunk — a small refactor, coordinate via `ACTIVE_SESSIONS.md`. Gate and siege state are read
+only; no siege code changes.
 
-**Rough size:** Phase 1 M, Phase 2 L (the builder is the novel part; rev. 2 moves effort from admins to code), Phase 3
-M, Phase 4 M, Phase 5 S.
+**Rough size:** Phase 1 M, Phase 2 L, Phase 3 M-L (survey + build job), Phase 4 M, Phase 5 S-M.
 
 ---
 
-## 9. Open questions (recommended default in bold)
+## 9. Questions
 
-1. **Road palette and classes.** Which blocks are the V3 world's roads built from, and which count as main road vs
-   path? Legacy only names "gravel, slabs" (iPhone notes 164). **Default: the §4 mapping, tuned after the first build
-   around one town; plugin `config.yml`.**
-2. **Seeding.** Seed automatically from every Domain `Location` near a road? **Yes**, plus admin seeds for roads no
-   domain touches.
-3. **Domain destination default.** **`Location` when set, else region; the `region` keyword forces the region.**
-4. **Restricted or undiscovered destinations.** **Allowed, with a warning for `AllowEntry = false`; no discovery
-   gating in v1** (a per-domain flag later, like `TeleportRequiresDiscovery`).
-5. **Closed gates close roads.** Route around (or up to) a closed gate? **Yes** — it matches the siege theme and costs
-   little.
-6. **Off-road legs.** **Straight-line hint in v1**; Pathetic in Phase 6.
-7. **Trail visibility.** **Only the navigating player.**
-8. **Street labels from Structures.** Infer street names from the Structures along a road, with admin override?
-   **Yes.**
-9. **Priority.** **Post-siege-MVP**; Phases 1-2 can run in parallel with siege work (no shared files).
-10. **Missing source note.** The street begin/end/intersection idea isn't in the transcribed iPhone notes (first
-    research report §3). Rev. 2 no longer needs manual logging, so this only matters for history. **Default: proceed.**
+### 9.1 Resolved (developer, 2026-09-27)
+
+- **Street labels inferred from Structures:** yes (§5.11).
+- **Closed gates close roads:** yes, and more generally the router must treat roads as unavailable because of entry
+  conditions, gate open/closed states etc. (§6.7). This also settles rev. 2's "restricted destinations" question: the
+  route ends at the boundary with the reason, instead of navigating in with a warning.
+- **Vertical overlap and multiple block combinations** raised by the developer → span grid (§5.2) and road profiles
+  (§5.1).
+- **Player road walk scan:** adopted as the survey walk (§5.3); it is now the main way the builder learns road
+  materials.
+
+### 9.2 Open (recommended default in bold)
+
+1. **Seeding.** Seed from every Domain `Location` near a road, plus survey breadcrumbs and admin seeds? **Yes.**
+2. **Domain destination default.** **`Location` when set, else region; the `region` keyword forces the region.**
+3. **Off-road legs.** **Straight-line hint in v1**; Pathetic in Phase 6.
+4. **Trail visibility.** **Only the navigating player.**
+5. **Pass-through gates.** Should an `AllowPassThrough` gate count as open for players allowed to pass (with a
+   "right-click to pass" hint)? **Yes.**
+6. **Ladders and lifts.** Connect road levels only through recorded vertical edges (no automatic ladder detection)?
+   **Yes for v1.**
+7. **Priority.** **Post-siege-MVP**; Phases 1-2 can run in parallel with siege work.
