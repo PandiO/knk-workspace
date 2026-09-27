@@ -467,10 +467,10 @@ action `menu.open {key: discoveries.main}`, Render `menu-available discoveries.m
    Structure and GateStructure `ExpUnits 0.05/0.25`, `CoinSalaryHours 0.05/0.25`, `Gems 0/0`, `IsEnabled true`.
 2. **Structures (Q2):** all discoverable with small rewards — agreed.
 3. **Existing players (Q5):** treated as new — no backfill, nobody starts with discoveries.
-5. **Siege (2026-09-27):** players only queued for a siege keep discovering; exclusion starts at the hub teleport and
-   lasts until the member is restored after the match.
 4. **Q3 (multiplier names) / Q4 (ship before plugin auth):** defaults taken — keep names; the grant endpoint ships behind
    the KNG-22 `RequireServiceOrPermission` attribute (plugin API key), so Q4's exposure concern is resolved by Phase 0.
+5. **Siege (2026-09-27):** players only queued for a siege keep discovering; exclusion starts at the hub teleport and
+   lasts until the member is restored after the match.
 
 Original questions below, kept for the record.
 
