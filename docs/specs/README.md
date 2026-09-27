@@ -10,6 +10,7 @@ Central home for requirements, specifications, and implementation roadmaps acros
 - items/: item catalog (`ItemBlueprint`) design/implementation
 - kits/: Kit (equipment loadout) design, implementation plan, and legacy-DB seed data
 - enchantment-books/: permanent enchantment books outside siege (Linear KNG-5)
+- navigation/: road network (street nodes/intersections + traced road edges) and `/navigate` guidance (Linear KNG-27)
 - user-features/: rank/permission/title/salary architecture
 - user-management/: tailored admin module built on top of user-features
 - legacy/: legacy reference notes kept for historical context
@@ -23,6 +24,7 @@ Central home for requirements, specifications, and implementation roadmaps acros
 - Items domain: [docs/specs/items/IMPLEMENTATION_PLAN.md](docs/specs/items/IMPLEMENTATION_PLAN.md)
 - Item grades (10-tier scale, DropChance, enchant-book level cap; KNG-6): [items/GRADE_DROPCHANCE.md](items/GRADE_DROPCHANCE.md)
 - Enchantment books (KNG-5): [enchantment-books/ENCHANTMENT_BOOK_APPLICATION.md](enchantment-books/ENCHANTMENT_BOOK_APPLICATION.md)
+- Road navigation (KNG-27, draft design, post-siege-MVP): [navigation/DESIGN.md](navigation/DESIGN.md); research in [../reports/2026-09-27-road-navigation-research.md](../reports/2026-09-27-road-navigation-research.md)
 - Kits domain: [docs/specs/kits/DESIGN.md](docs/specs/kits/DESIGN.md), [docs/specs/kits/IMPLEMENTATION_PLAN.md](docs/specs/kits/IMPLEMENTATION_PLAN.md), [docs/specs/kits/SEED_DATA.md](docs/specs/kits/SEED_DATA.md)
 - User features (rank/permissions/title/salary): [docs/specs/user-features/DESIGN.md](docs/specs/user-features/DESIGN.md), [docs/specs/user-features/IMPLEMENTATION_PLAN.md](docs/specs/user-features/IMPLEMENTATION_PLAN.md)
 - User management (admin module): [docs/specs/user-management/DESIGN.md](docs/specs/user-management/DESIGN.md), [docs/specs/user-management/IMPLEMENTATION_PLAN.md](docs/specs/user-management/IMPLEMENTATION_PLAN.md)
