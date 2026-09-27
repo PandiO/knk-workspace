@@ -1,6 +1,7 @@
 # Road Navigation — Implementation Plan
 
-**Status:** Ready for implementation (handoff to a Claude Code agent). No phase started.
+**Status:** Ready for implementation (handoff to a Claude Code agent). No phase started. Every code reference was
+verified against trunk by a separate review pass on 2026-09-27; its corrections are folded in.
 **Last updated:** 2026-09-27
 **Linear:** [KNG-27](https://linear.app/kngpandi/issue/KNG-27)
 **Design:** [DESIGN.md](DESIGN.md) rev. 4 (decided) — read it first; this plan says *where and how* to build it.
@@ -40,8 +41,11 @@ Read this section fully before touching code.
   command metadata, config records). They were read from trunk; don't invent new styles.
 - **Decisions you have to take alone:** take the conservative default, write it down in the phase status block under
   "Decisions to review", and continue. Don't block on the developer mid-week (global instructions).
-- **Never** touch siege code paths beyond the read-only hooks listed in Phase 4 (siege is being playtested in parallel).
-  Files you may not modify except where a task says so: `P/siege/**`, `C/siege/**`, `W/Services/Siege*`, `W/Models/Siege/**`.
+- **Never** change siege behaviour (siege is being playtested in parallel). Files you may not modify:
+  `P/siege/**`, `C/siege/**`, `W/Services/Siege*`, `W/Models/Siege/**` — **except these four mechanical edits**, each in
+  its own commit with siege tests green: `P/siege/SiegeWorldPresenter.java` (R9 delegation), `P/siege/SiegeBukkit.java`
+  (R10 delegation), `P/siege/SiegeGateController.java` (R39 read-only predicate extraction, Phase 4) and the
+  `siegeGates` field + getter in `KnKPlugin` (R24, Phase 4).
 
 ### 0.3 Branches, claims, commits
 
@@ -68,8 +72,8 @@ Read this section fully before touching code.
 WorldGuard or WorldEdit there. If you run in the cloud:
 - knk-core and knk-api-client: compile and test in a Maven-Central-only scratch build (`javac` + JUnit console
   launcher), as done in `docs/specs/siege-minigame/IMPLEMENTATION_PLAN.md` (Phase 6b/7a status blocks) and
-  `specs/items/GRADE_DROPCHANCE.md`. Stub the handful of `org.bukkit.util.Vector` uses you can't avoid (only
-  `C/gates` needs it).
+  `specs/items/GRADE_DROPCHANCE.md`. Stub `org.bukkit.util.Vector` for the files that import it: `C/gates/*`,
+  `C/util/VectorMath`, `C/util/CoordinateParser`, `C/domain/gates/{BlockSnapshot,CachedGateDoor}`.
 - knk-paper: cannot be compiled — check by careful reading, say "**not compiled**" in the status block, and list what
   the developer must build locally. Prefer running Phases 3-4 on the developer's machine if possible.
 - `dotnet` may be missing in the container; install the .NET 8 SDK if the network allows, otherwise say so in the
@@ -94,15 +98,18 @@ WorldGuard or WorldEdit there. If you run in the cloud:
 | # | DESIGN says | Plan does | Why |
 |---|---|---|---|
 | D1 | `[RequirePluginServiceKey]` | `[RequirePluginService]` for plugin-only writes; `[RequireServiceOrPermission(StaffPermissions.RoadManage)]` for writes both the plugin and staff may do; GETs anonymous | The attribute was renamed on trunk (`W/Attributes/RequireServiceOrPermissionAttribute.cs`). |
-| D2 | §6.7: siege areas blocked for non-participants | **Siege areas are not blocked.** A gate locked by a siege (`SiegeGateController.isLocked`) is treated like a **pass-through gate** for non-members (the siege carries them through in TELEPORT mode, `KnKPlugin` L1448-1450); navigation ends when the player joins a siege lobby | Matches trunk behaviour; blocking would contradict what the game actually allows. DESIGN §6.7 updated. |
+| D2 | §6.7: siege areas blocked for non-participants | **Siege areas are not blocked.** A siege-locked gate (`SiegeGateController.isLocked(gateStructureId)`) is passable for a non-member exactly when the siege's own non-member rule would carry them through (R39): with the default view `PreLockdownView` always (TELEPORT carry, `KnKPlugin` L1447-1449); with `PassThroughOnly` only doors that were open before the lockdown, by right-click. Navigation ends when the player joins a siege lobby | Matches trunk behaviour; blocking would contradict what the game allows. DESIGN §6.7 updated. |
 | D3 | §3.8 endpoint list | Final route table in Phase 1 (kebab-case class routes, tile graph under `api/road-tiles/{world}/{x}/{z}/graph`, ETag + 304) | Local conventions + there is no ETag support anywhere yet. |
 | D4 | §3.3 `RoadTile` | Adds `Version` (int, +1 per build) — the ETag | Needed for per-tile download. |
 | D5 | §3.1 profile merge endpoint `merge-survey` | **Dropped.** The plugin's `ProfileLearner` (one implementation, Java) recomputes the profile from stored stats + the new survey and `PUT`s it; `RoadProfile` gains `StatsJson` (accumulated counts) | Avoids implementing the role rules twice (C# + Java). |
 | D6 | §4 `StreetLabeler` in knk-core | **Street labelling runs in knk-web-api** during the tile upsert (`Services/Roads/RoadStreetLabeler.cs`, pure) | Structures, their Street and Location rows are in the DB; doing it in the plugin means N+1 API calls per tile. |
-| D7 | §5.6 step 7 "Boundary node matched by position" | Concrete rule: each tile owns `Boundary` nodes on its own border cells; after a tile upsert the API creates a 1-block **stitch edge** between each of its boundary nodes and an adjacent (Chebyshev ≤ 1 in x/z, \|Δy\| ≤ 1) boundary node of a neighbour tile | Builds are order-independent; no cross-tile writes from the plugin. |
+| D7 | §5.6 step 7 "Boundary node matched by position" | Concrete rule: each tile owns `Boundary` nodes on its own border cells; after a tile upsert the API creates a 1-block **stitch edge** between each of its boundary nodes and an adjacent (Chebyshev ≤ 1 in x/z, \|Δy\| ≤ 1) boundary node of a neighbour tile. Stitch edges are owned by the tile being upserted; the upsert deletes every stitch edge touching its boundary nodes (whoever owned it), recreates them, and bumps `Version` of every other tile that lost an owned stitch edge | Builds are order-independent; no cross-tile writes from the plugin; ETags never serve stale stitches. |
 | D8 | §3.1 `ScopeDomainIds` "(e.g. one kingdom's towns)" | Scope = list of **Town** domain ids (no Kingdom/Province entity exists) | Revisit when a Kingdom entity exists. |
 | D9 | §5.4 gate lookup via `GateSpatialIndex` | Use each door's **closed footprint** (`GateManager` frame 0), not the spatial index | The index only holds the *current* frame; an open gate would be missed. |
 | D10 | Profile editor "material picker" | Text field with suggestions from `minecraftMaterialRefClient.getHybrid` | `HybridMaterialPicker` is a full paged table — too heavy per row. |
+| D11 | §3.6 edges store `DomainIds` | Edges store **`RegionIds`** (WorldGuard region ids, ordered) as well as `DomainIds` | The plugin resolves domains by *region id* only (`RegionDomainResolver`); routing looks up region ids, the web app shows domain ids. |
+| D12 | §5.4 seeds "every Domain Location near a road" | New endpoint `GET api/road-network/seed-locations?world=&minX=&minZ=&maxX=&maxZ=` returns domain Locations in a box | The plugin's data accesses only look up by id/region; listing per tile would be N+1. |
+| D13 | §6.7 "live changes" via gate events | Gate events **plus** a 2-second re-check of the gates on active routes | Gate state is mutated in many places (see R4); a missed event must only delay a re-route, never leave a player routed through a closed gate. |
 
 ---
 
@@ -116,27 +123,28 @@ WorldGuard or WorldEdit there. If you run in the cloud:
 | R1 | `GateSpatialIndex.packCell(int,int,int)` (26/12/26-bit key) | `C/gates/GateSpatialIndex.java:25` | **Extract** to `C/util/BlockKey.java` (`pack`, plus new `x(key)`, `y(key)` with 12-bit sign extension, `z(key)`, `neighbour(key, dx,dy,dz)`); `GateSpatialIndex.packCell` delegates. Don't touch `GateBlockScanTaskHandler.packCoordinate` (different layout, internal). |
 | R2 | `GateFrameCalculator.pointInPolygon(u,v,List<double[]>)` (package-private) | `C/gates/GateFrameCalculator.java:392` | **Extract** to `C/util/Polygon2D.java` (public `contains`, plus new `closestPointOnBoundary`, `distanceToBoundary`); `GateFrameCalculator` delegates. |
 | R3 | `GateManager.doorBlockPositions(gate, frame)` (private static) | `C/gates/GateManager.java:151` | Make **public** as `closedFootprint(int gateId)` (frame 0 = closed, see `GateAnimationTask` L206-211) returning `List<Vector>`; used by the build job to tag gate cells. |
-| R4 | Gate state changes: only a one-shot per-gate callback (`setAnimationCompletionCallback`, L89) | `C/gates/GateManager.java`, `P/gates/HealthSystem.java` (`destroyGate` L131, `respawnGate` L302) | **Add** a multicast `GateStateListener` (`void gateStateChanged(int gateId)`) to `GateManager` (`addStateListener`/`removeStateListener`), fired from `notifyAnimationCompleted`, `forceGateState`, and by `HealthSystem` after destroy/respawn (via a new `GateManager.fireStateChanged(id)`). Don't change the existing one-shot callback. |
+| R4 | Gate state changes: only a one-shot per-gate callback (`setAnimationCompletionCallback`, L89, removed when it fires) | `C/gates/GateManager.java`; mutations elsewhere | **Add** a multicast `GateStateListener` (`void gateStateChanged(int gateId)`) to `GateManager` (`addStateListener`/`removeStateListener`/`fireStateChanged(id)`). Fire it inside `GateManager` on: open start (OPENING, ~L281), close start (CLOSING, ~L317), `notifyAnimationCompleted`, `forceGateState`, `cacheGate` (reload). Call `fireStateChanged` after the mutations outside it: `HealthSystem.destroyGate` (L131) / `respawnGate` (L302), jam in `GateAnimationTask` (~L525/L534), `GateCommand` destroyed/active toggles (~L556/L610). Siege override setters in `SiegeGateController` (~L309/L324) are **not** edited — D13's 2-second re-check covers them. Don't change the existing one-shot callback. |
 | R5 | `CachedGateDoor` effective accessors | `C/domain/gates/CachedGateDoor.java` L383-410 (`isEffectivelyActive/Destroyed/AllowPassThrough`), `getCurrentState()`, `isJammed()` L373, `getCurrentSiegeId()` | Use as is in `GateAvailability` (Phase 2d). Always the *effective* accessors. |
 | R6 | Entry/exit rules: private `checkEntryDenials`/`checkExitDenials` | `C/regions/SimpleRegionTransitionService.java` L144-182 | **Extract** to `C/regions/DomainAccessEvaluator.java` (pure; `Optional<Denial> entry(DomainSnapshot)`, `Optional<Denial> exit(DomainSnapshot)`; messages unchanged). The service delegates. When KNG-17 merges, its `previewAccess` must also delegate to this evaluator, and its `knk.region.bypass` predicate becomes the evaluator's bypass input — note this in the Phase 2 status for the teleport merger. |
 | R7 | `RegionDomainResolver` + `DomainSnapshot` | `C/regions/RegionDomainResolver.java` (`getDomainByRegionIdNoRefresh` L285, `resolveRegionsFromApi` L146, record L600) | Use as is to map WG region ids → domain ids/snapshots (build-time domain tagging, runtime access). Promote the local `regionDomainResolver` in `KnKPlugin` (L689-697) to a field. |
-| R8 | "WG region ids at a location" — **3 copies** | `P/regions/WorldGuardRegionTracker.getRegionNamesAt` L203-217, `P/regions/WorldGuardRegionLookup.at` L7-20, `P/discovery/DomainDiscoveryListener.regionIdsAt` L256-268 | **Extract** one `P/regions/RegionIds.at(Location)` (excludes `__global__`, like the discovery copy); all three delegate. Navigation uses it. |
+| R8 | "WG region ids at a location" — **3 copies** | `P/regions/WorldGuardRegionTracker.getRegionNamesAt` L203-217, `P/regions/WorldGuardRegionLookup.at` L23-37, `P/discovery/DomainDiscoveryListener.regionIdsAt` L256-268 | **Extract** `P/regions/RegionIds` with a cached `RegionQuery`: `applicable(Location)` → `ApplicableRegionSet` and `at(Location)` → ids (excluding `__global__`, like the discovery copy — confirm WG doesn't list it anyway and say so in the status). The tracker and discovery listener delegate to `at`; `WorldGuardRegionLookup` delegates to `applicable` (it needs the set for `queryValue(Flags.PVP)`). Navigation uses `at`. |
 | R9 | `SiegeWorldPresenter.ring(...)` per-viewer particles (private static) | `P/siege/SiegeWorldPresenter.java` L333-346 | **Extract** to `P/utils/ParticleDraw.java` (`ring(...)` unchanged + new `polyline(Player, List<Vector>, spacing, Particle, DustOptions)`, `pillar(...)`); siege delegates. This is the only siege file you edit, and only as this mechanical extraction. |
 | R10 | `SiegeBukkit.toLocation(KnkLocation)`, `floorOf(Location)` | `P/siege/SiegeBukkit.java` | **Extract** the two generic methods to `P/utils/KnkLocations.java`; `SiegeBukkit` delegates. |
-| R11 | TPS lag check — **3 copies** (`Bukkit.getTPS()[0] < 15`) + per-tick block budget | `P/tasks/GateBlockScanTaskHandler.java` L53-55, L547, L713, L845 | **Extract** `P/utils/TickBudget.java` (`isServerLagging()`, `perTick(normal, lagging)`); the three call sites delegate. |
+| R11 | TPS lag check — **3 copies** (`Bukkit.getTPS()[0] < 15`) + per-tick block budget | `P/tasks/GateBlockScanTaskHandler.java` L53-55, ~L549, ~L715, ~L847 (a fourth, different TPS read in `GateAnimationTask` ~L755 stays as is) | **Extract** `P/utils/TickBudget.java` (`isServerLagging()`, `perTick(normal, lagging)`); the three call sites delegate. |
 | R12 | Main-thread executor | `P/menu/MenuService.mainThreadExecutor(Plugin)` L97-105 | Use as is (`whenCompleteAsync(..., mainThread)`); don't write another. |
 | R13 | `/knk` subcommand registry | `P/commands/KnkAdminCommand.registerSubcommand` L417; metadata `CommandMetadata`; tab completion hard-coded in `onTabComplete` L451-480 | Register `road` like `DiscoveryAdminCommand` (lazy suppliers, own node check through Bukkit + `KnkPermissible`); add a `road` branch to `onTabComplete` that delegates to `RoadAdminCommand.complete(...)`. |
 | R14 | Top-level command helpers | `KnKPlugin.registerTabCommand` L1310 (`/pay` template: `P/commands/PayCommand.java`) | `/navigate` uses `registerTabCommand`. |
 | R15 | Permissions | `P/permissions/KnkPermissible.hasPermission(Player,String)` (sync, cache-only, fails closed) | Node checks for `knk.navigate` and `knk.admin.road` exactly like `DiscoveryAdminCommand.hasNode`. |
 | R16 | Typed config | `P/config/KnkConfig.java` (record + section records with `defaults()`/`validate()`), `P/config/ConfigLoader.java` (`loadDiscovery` L112-150), test `ConfigLoaderDiscoveryTest` | Add `NavigationConfig` the same way. |
 | R17 | REST client base | `A/impl/BaseApiImpl.java` (`get`, `putJson`, `execute` → `ApiException` on non-2xx incl. 304) | **Improve**: add `ConditionalResponse getConditional(String url, String etag)` returning `{notModified, body, etag}` (304 is not an error there). New impls extend `BaseApiImpl`; wire in `A/client/KnkApiClient` (constructor L136-188 + getter). |
-| R18 | Data access for streets/locations/districts/structures (all **never constructed** on trunk) | `C/dataaccess/{StreetsDataAccess,LocationsDataAccess}`, `DataAccessFactory.createStreetsDataAccess` L101, `createLocationsDataAccess` L116, `createDistrictsDataAccess`, `createStructuresDataAccess` | Construct them in `KnKPlugin` as fields (if KNG-17 has merged and already created them, reuse those fields). Add `StreetsDataAccess.searchAsync(PagedQuery)` (it has none). |
+| R18 | Data access for streets/locations/districts/structures (all **never constructed** on trunk) | `C/dataaccess/{StreetsDataAccess,LocationsDataAccess}`, `P/dataaccess/DataAccessFactory.createStreetsDataAccess` L101, `createLocationsDataAccess` L116, `createDistrictsDataAccess`, `createStructuresDataAccess` | Construct them in `KnKPlugin` as **fields**. KNG-17 creates some of them inline as arguments to `SpawnDestinationResolver.create` (teleport `KnKPlugin` L1236-1242): after that merge, promote those to the same fields and pass them in — one instance each. Add `searchAsync(PagedQuery)` to `StreetsDataAccess` and `LocationsDataAccess` (neither has one; the query ports `StreetsQueryApi.search`/`LocationsQueryApi.search` exist). |
 | R19 | Domain catalogue | `C/dataaccess/DomainCatalogDataAccess.searchAsync(PagedQuery)` L90 → `KnkDomainSummary(id,name,domainType)` | Destination name search for towns/districts/structures. |
 | R20 | Domain → Location resolution (town/district embed `location`; structure has only `locationId`) | Teleport branch `P/teleport/SpawnDestinationResolver.ownLocation(...)` + lambdas | Phase 4: **extract** into `C/navigation/DomainLocationResolver.java` (Bukkit-free, `LocationLookup` ports); teleport's `SpawnDestinationResolver` delegates. |
 | R21 | Name/`type:name` resolution + completion | Teleport branch `C/teleport/WarpTargets` (bound to `KnkTeleportDestination`) | Phase 4: **generalise** into `C/util/NamedTargets<T>` (accessor functions for name/type/qualifiedName); `WarpTargets` becomes a thin wrapper. |
-| R22 | `BlockProbe` / `SafeLocationFinder` / `BukkitBlockProbe` | Teleport branch `C/teleport/`, `P/teleport/` | Phase 4: move `BlockProbe` to `C/util/BlockProbe` (teleport keeps working via import change) and make `SurfaceGrid` (Phase 2) **extend** it. Until KNG-17 merges, `SurfaceGrid` declares the same method names (`isPassable`, `isSolid`) so the later `extends` is a no-op change. |
+| R22 | `BlockProbe` / `SafeLocationFinder` / `BukkitBlockProbe` | Teleport branch `C/teleport/`, `P/teleport/` (`BlockProbe`: `isPassable`, `isSolid`, `isHazard`, `minY()`, `maxY()` — **maxY exclusive**) | Phase 4: move `BlockProbe` to `C/util/BlockProbe` (teleport keeps working via import change) and make `SurfaceGrid` **extend** it. Until then `SurfaceGrid` declares **all five** methods with the same signatures and semantics (incl. `isHazard` and exclusive `maxY`), so the later `extends` changes no implementation. |
 | R23 | Eligibility pattern | `P/discovery/DiscoveryEligibility` (loading/mode/freeze/gamemode/siege predicates) | `NavigationEligibility` composes the same services (`JoinLoadingGuard`, `ModeService`, `AdminFreezeManager`, `SiegeService`) — reuse predicates, don't copy logic. |
-| R24 | Siege read-only state | `P/siege/SiegeService.lobbyOf(UUID)`, `activeLobbyOf`, `addObserver(SiegeMatchObserver)`; `SiegeGateController.isLocked(int)` L222 (local in `KnKPlugin` L1452) | Phase 4: promote `siegeGates` to a field + getter; read-only use. |
+| R24 | Siege read-only state | `P/siege/SiegeService.lobbyOf(UUID)`, `activeLobbyOf`, `addObserver(SiegeMatchObserver)` (hooks `areaLockdownStarted`, `roundReleased`, `objectiveCaptured`, `matchEnded`); `SiegeGateController.isLocked(int gateStructureId)` L222 — takes the **structure** id: map door → `CachedGateDoor.getGateStructureId()` (instance is a local in `KnKPlugin` L1452) | Phase 4: promote `siegeGates` to a field + getter; read-only use. |
+| R39 | Siege non-member gate rule (inline) | `P/siege/SiegeGateController.tryNonMemberPassThrough` ~L269-278, `P/siege/SiegeGateViewService.carryNonMemberThrough`, view mode `NonMemberGateView` (`PreLockdownView` default / `PassThroughOnly`) | Phase 4: **extract** the condition into a public read-only `SiegeGateController.canCarryNonMember(CachedGateDoor)` (uses the configured view mode and the door's pre-lockdown open state); the two existing callers use it; navigation's `GateAvailability` uses it (D2). Behaviour unchanged; siege tests green. |
 | R25 | Gate pass-through rules | `P/listeners/GatePassThroughConsequenceListener` L31-50 (`isEffectivelyAllowPassThrough` && `knk.gate.passthrough.use`, or `knk.gate.admin`) | **Extract** the predicate to `P/gates/GatePassThroughRules.canPass(Player, CachedGateDoor)`; the listener and navigation both call it. |
 | R26 | Clickable chat | `P/siege/SiegeMessages.command(String)` L47-53 | Copy the pattern into `P/navigation/NavigationMessages` / `P/roads/RoadMessages` (feature-local message classes are the convention; no shared helper exists). |
 | R27 | Ticker lifecycle | `P/discovery/DiscoveryFlushTask` (`start()`/`stop()` with `BukkitTask`) | Same shape for `NavigationTicker`, `RoadBuildQueue`, `RoadDirtyTracker` flush. |
@@ -162,11 +170,11 @@ WorldGuard or WorldEdit there. If you run in the cloud:
 |---|---|---|---|---|---|
 | 1 | web-api | Data model, migration, services (tile upsert, stitching, components, street labels), controllers, Street counts | L | — | Yes (Swagger) |
 | 2a | plugin core | Shared extractions R1, R2, R3, R4, R6 + Bukkit-free guard test | S | — | Yes (pure refactor) |
-| 2b | plugin core | Survey maths: `SurveySampler` model, `ProfileLearner`, `CoverageCheck` | M | 2a | Yes |
+| 2b | plugin core | Survey maths: `SurveySample`/`SurveyStats`, `ProfileLearner` | M | 2a | Yes |
 | 2c | plugin core | Builder: span grid, mask, distance transform, thinning, graph, profile match, node matching | L | 2a | Yes |
-| 2d | plugin core | Router: graph, snapping, A\*, access policy, region closest point, maneuvers, ETA | M | 2a | Yes |
+| 2d | plugin core | Network snapshot, router: snapping, A\*, access policy, region closest point, maneuvers, ETA, `CoverageCheck` | M | 2a | Yes |
 | 2e | api-client | Ports, DTOs, mappers, impls, conditional GET (R17) | S | 1 (contract) | Yes |
-| 3 | plugin paper | Config, wiring, extractions R8-R11/R25, snapshot grid, build job + queue, survey session, dirty tracker, `/knk road`, overlay | L | 1, 2a-2c, 2e | Yes (admin-only) |
+| 3 | plugin paper | Config, wiring, extractions R8-R11/R25, snapshot grid, build job + queue, survey session, dirty tracker, `/knk road`, overlay | L | 1, 2a-2e | Yes (admin-only) |
 | 4 | plugin paper | `/navigate`, sessions, trail/HUD, availability + live re-route, events | M-L | 2d, 3, **KNG-17 on trunk** | Yes |
 | 5 | web-app | `/admin/roads` (profiles, tiles, edges), Street road panel | M | 1 | Yes |
 
@@ -192,7 +200,7 @@ profiles, and anyone can download the network.
   `FormConfigurableEntity` — these are edited through dedicated endpoints, not FormWizard):
   `RoadProfile`, `RoadSurvey`, `RoadTile`, `RoadSeed`, `RoadNode`, `RoadEdge` with the fields of DESIGN §3.1-3.6 plus:
   `RoadProfile.StatsJson` (D5), `RoadProfile.ScopeTownIdsJson` (D8, nullable), `RoadTile.Version` (D4),
-  `RoadEdge.Source = Stitch` for D7, `RoadEdge.World` (denormalised, indexed). JSON columns are `string` properties
+  `RoadEdge.Source = Stitch` for D7, `RoadEdge.World` (denormalised, indexed), `RoadEdge.RegionIdsJson` (D11). JSON columns are `string` properties
   named `*Json`, default `"[]"` where a list is expected. Timestamps `DateTime` set to `DateTime.UtcNow` in services
   (no base class / SaveChanges hook exists).
 
@@ -204,12 +212,13 @@ profiles, and anyone can download the network.
     `HasKey(e => e.Id).HasName("PRIMARY")`.
   - Enums `.HasConversion<string>().HasMaxLength(20)`; JSON `.HasColumnType("longtext")`; timestamps
     `.HasColumnType("datetime")`.
+  - **Every indexed string needs `HasMaxLength`** (Pomelo maps an unbounded `string` to `longtext`, which MySQL can't
+    index): `World` 64 (all tables), `RoadProfile.Name` 100, `RoadNode.Name` 100, `RoadSeed.Note` 200.
   - Indexes: `road_profiles.Name` unique; `road_tiles (World, TileX, TileZ)` unique; `road_nodes (World, X, Y, Z)`
     unique, `(TileId)`, `(World, ComponentId)`; `road_edges (FromNodeId, ToNodeId)` unique, `(TileId)`,
     `(World, MinX, MinZ)`, `(StreetId)`; `road_seeds (World)`; `road_surveys (World, StartedAt)`.
-  - FKs: node → tile **Cascade**; edge → from/to node **Cascade** (MySQL: two cascade paths from nodes to edges are
-    fine; if EF complains about multiple cascade paths, make `ToNode` `Restrict` and delete edges explicitly in the
-    service — note it); edge → tile **Cascade**; edge → street **SetNull**; edge → profile **SetNull**; survey →
+  - FKs: node → tile **Cascade**; edge → from/to node **Cascade** (two cascade paths are fine on MySQL — the
+    "multiple cascade paths" error is SQL Server's); edge → tile **Cascade**; edge → street **SetNull**; edge → profile **SetNull**; survey →
     profile **SetNull**; survey → user `StartedByUserId` **Restrict** (users are soft-deleted).
 - Migration `dotnet ef migrations add AddRoadNetwork` (timestamped `yyyyMMddHHmmss_AddRoadNetwork.cs` + Designer +
   snapshot update). **Bootstrap profile via `migrationBuilder.InsertData`** (discovery-rules precedent), fixed
@@ -229,10 +238,11 @@ profiles, and anyone can download the network.
   levelCount, warnings[]}`, `RoadTileGraphDto {tile, nodes[], edges[]}`, `RoadNodeDto`, `RoadEdgeDto` (geometry as
   `int[][]`, `gateDoorIds`, `domainIds`, `flags` as string array), `RoadTileGraphUpsertDto` (below), `RoadNetworkMetaDto
   {profiles[], streets: [{id,name}], components: [{id, nodeCount}]}`, `RoadSeedDto`, `RoadNodeUpdateDto`,
-  `RoadNodeMergeDto`, `RoadEdgeUpdateDto`, `RoadEdgeRecordDto`, `StreetRoadDto`.
+  `RoadNodeMergeDto`, `RoadEdgeUpdateDto`, `RoadEdgeRecordDto`, `StreetRoadDto`, `RoadSeedLocationDto {domainId,
+  domainType, name, x, y, z}` (D12).
 - `RoadTileGraphUpsertDto`: `builderVersion`, `cellCount`, `levelCount`, `warnings[]`, `nodes[{key, existingId?, x, y,
   z, kind}]`, `edges[{existingId?, fromKey, toKey, geometry, length, avgWidth, profileId?, gateDoorIds[],
-  domainIds[]}]` — `key` is a client-chosen string unique within the payload; `fromKey`/`toKey` may also be
+  domainIds[], regionIds[]}]` — `key` is a client-chosen string unique within the payload; `fromKey`/`toKey` may also be
   `"id:<n>"` to reference an existing node of another tile (never needed by the builder, but allowed for recorded edges).
 - `W/Mapping/RoadMappingProfile.cs` (read side only, like `SiegeMappingProfile`); writes mapped by hand in services.
   JSON columns ↔ DTO lists through `JsonColumn` (R29).
@@ -243,8 +253,9 @@ Explicit DI block in `ServiceCollectionExtensions` after the siege block (R33):
 `// Road navigation (docs/specs/navigation/IMPLEMENTATION_PLAN.md)`.
 
 - `W/Repositories/Interfaces/IRoadNetworkRepository.cs` + `W/Repositories/RoadNetworkRepository.cs`: tile get/create by
-  `(world, x, z)`; tile graph read; nodes/edges by tile; nodes by world; edges by street; structures with location for a
-  bbox (joins `structures` → `locations`, for labelling); `RunInTransactionAsync(work)` (R30 pattern, in-memory
+  `(world, x, z)`; tile graph read; nodes/edges by tile; nodes by world; edges by street; structures with their Location in a bbox (Structure is
+  table-per-type over `domains`; `LocationId` lives on `Domain` — use the EF navigation, for labelling); domain
+  Locations in a bbox (D12); `RunInTransactionAsync(work)` (R30 pattern, in-memory
   fallback).
 - `W/Services/Roads/RoadGeometry.cs` — pure static: point-segment distance (3D), polyline length, bbox, bearing.
   (No geometry helpers exist in the API.)
@@ -258,12 +269,15 @@ Explicit DI block in `ServiceCollectionExtensions` after the siege block (R33):
     1. Load the tile's existing nodes/edges.
     2. Validate (DESIGN §3.8 rules + keys unique, kinds valid, geometry ends within 1.5 blocks of its nodes, length ≥
        straight line, node inside the tile's x/z range, referenced profile/gate/domain ids are ints).
+       **Delete edges explicitly** before deleting nodes — don't rely on FK cascades: the EF InMemory provider used by the
+       tests only cascades to tracked entities, so relying on cascades makes tests and MySQL behave differently.
     3. Upsert nodes: `existingId` present and belongs to this tile → update position/kind (unless `Locked` → keep
        position); otherwise insert. Delete this tile's `Detected` nodes not in the payload (cascades their edges).
        Keep `Manual` nodes.
     4. Upsert edges the same way; keep admin fields (`StreetId` when `StreetSource = Manual`, `Flags`,
        `CostMultiplier`) on matched edges; keep `Recorded` edges.
-    5. Delete + recreate this tile's `Stitch` edges (D7) against neighbour tiles' `Boundary` nodes.
+    5. Stitch edges (D7): delete every stitch edge touching this tile's `Boundary` nodes (whichever tile owns it),
+       recreate them owned by this tile, and `Version++` every other tile that lost an owned stitch edge.
     6. Run `RoadStreetLabeler` for the tile's edges (+ 1-tile ring for continuation); write `StreetId`/`StreetSource`.
     7. `Version++`, `BuiltAt`, `Dirty = false`, counts, warnings (+ labeler conflicts).
     8. Recompute components for the world (`RoadComponents`), update changed `ComponentId`s only.
@@ -276,6 +290,8 @@ Explicit DI block in `ServiceCollectionExtensions` after the siege block (R33):
     nearest node within 3 blocks, else create `Anchor`s), update (street → `Manual`, class override via profile id,
     cost, flags), delete.
   - Meta: profiles + street names + component summary for a world.
+  - Seed locations (D12): domain Locations (Town/District/Structure/Gate with `LocationId`) whose Location is in the
+    box and world.
   - Validation → `ArgumentException`, not found → `KeyNotFoundException`, conflicts → `InvalidOperationException`
     (trunk convention); controllers map them to `BadRequest(new { error = "ValidationFailed", message })` etc.
 
@@ -290,6 +306,7 @@ Namespace `knkwebapi_v2.Controllers`, kebab-case class routes (like `DiscoveryRe
 | `api/road-tiles/{world}/{tileX:int}/{tileZ:int}/graph` | PUT (`RoadTileGraphUpsertDto`) | `[RequirePluginService]` |
 | `api/road-tiles/{world}/{tileX:int}/{tileZ:int}/dirty` | POST | `[RequirePluginService]` |
 | `api/road-network/meta?world=` | GET | anonymous |
+| `api/road-network/seed-locations?world=&minX=&minZ=&maxX=&maxZ=` | GET (D12) | anonymous |
 | `api/road-profiles`, `api/road-profiles/{id:int}` | GET / GET | anonymous |
 | `api/road-profiles`, `/{id:int}` | POST / PUT / DELETE | `[RequireServiceOrPermission(StaffPermissions.RoadManage)]` |
 | `api/road-surveys` | POST | `[RequirePluginService]`; GET `?world=` anonymous |
@@ -306,7 +323,8 @@ Use `HttpContext.GetKnkCaller().ActorUserId` for `RoadSurvey.StartedByUserId` (p
 
 `StreetDto` += `[JsonPropertyName("edgeCount")] int EdgeCount`, `[JsonPropertyName("totalLength")] double
 TotalLength`; mapping `.ForMember(..., o => o.Ignore())`; `StreetService` injects `IRoadNetworkRepository` and fills
-them in `GetByIdAsync`/`GetAllAsync` (one grouped query for all). Existing street tests must stay green.
+them in `GetByIdAsync`/`GetAllAsync` (one grouped query for all). **No street tests exist yet** — create
+`Services/StreetServiceTests.cs` covering the existing behaviour first (create/update/get/search), then the counts.
 
 ### 1.7 Tests (xUnit + EF InMemory, real repositories — `DiscoveryConfigurationServiceTests` style)
 
@@ -319,7 +337,9 @@ them in `GetByIdAsync`/`GetAllAsync` (one grouped query for all). Existing stree
   geometry far from node, node outside tile).
 - `Api/RoadTilesControllerTests`: ETag + 304; auth: web user without node → 403 on PUT graph, plugin key → 200
   (use `Api/ServiceAuthTestHelper`).
-- `Services/StreetServiceTests` (existing) + counts case.
+- `Services/StreetServiceTests` (new, see 1.6) incl. counts.
+- Stitch/ETag: rebuilding tile A bumps B's `Version` when B lost a stitch edge; B's graph never references a deleted
+  node.
 - Migration test (1.2).
 
 **Acceptance:** `dotnet test` = baseline + new tests, no new failures; migration passes the four CI steps locally or in
@@ -333,12 +353,15 @@ CI; Swagger shows every route; a hand-made two-tile payload round-trips (PUT →
 
 1. R1 `C/util/BlockKey` (+ tests: pack/unpack round-trip incl. y −64 and 319, neighbours).
 2. R2 `C/util/Polygon2D` (+ tests: existing `GateFrameCalculator` tests still green; new closest-point tests).
-3. R3 `GateManager.closedFootprint(int)` (+ test with `GateManagerTest.closedGateWithOneBlockAt`).
-4. R4 `GateStateListener` in `C/gates/` + `GateManager.addStateListener/removeStateListener/fireStateChanged`
-   (+ test: listener fired once on `notifyAnimationCompleted`, on `forceGateState`; existing one-shot callback still
-   works).
-5. R6 `C/regions/DomainAccessEvaluator` (+ tests moved/added: entry/exit denial messages identical;
-   `SimpleRegionTransitionService` tests green).
+3. R3 `GateManager.closedFootprint(int)` (+ test inside `GateManagerTest`, whose `closedGateWithOneBlockAt` helper is
+   private).
+4. R4 `GateStateListener` in `C/gates/` + `GateManager.addStateListener/removeStateListener/fireStateChanged`, fired
+   at every GateManager mutation listed in R4 (+ test: fired once on open start, close start, completion,
+   `forceGateState`, `cacheGate`; existing one-shot callback still works). The paper-side `fireStateChanged` calls
+   (HealthSystem, GateAnimationTask jam, GateCommand) are Phase 3 task 3.2.
+5. R6 `C/regions/DomainAccessEvaluator`. **No `SimpleRegionTransitionService` tests exist** — first write
+   characterisation tests for the current entry/exit denials and messages (commit), then extract and delegate (commit)
+   with those tests unchanged and green, then evaluator unit tests.
 6. **Guard test** `knk-core/src/test/java/.../core/ArchitectureGuardTest.java`: scans `src/main/java/.../core/{roads,
    navigation,util/BlockKey.java,util/Polygon2D.java,regions/DomainAccessEvaluator.java}` sources and fails on any
    `import org.bukkit`. (No ArchUnit on the classpath; a file scan is enough.)
@@ -354,8 +377,6 @@ CI; Swagger shows every route; a hand-made two-tile payload round-trips (PUT →
   run ends ≥ 2× its centre share), Accent (road-like, < 5%), Overlay (seen as overlay); ambiguous when also seen in the
   outer bucket in ≥ 10% of samples *outside* runs; drop < 1%; widths = 5th/95th percentile.
   All thresholds are named constants at the top of the class.
-- `CoverageCheck.misses(List<BreadcrumbPoint>, RoadNetworkSnapshot, maxDistance=2)` → list of misses with the floor
-  material seen there.
 - Tests: synthetic cross-sections for (a) stone-brick road with andesite kerbs on grass → Surface/Edge/terrain split;
   (b) gravel path 1-wide in a forest; (c) cobblestone kerb next to cobblestone house floor → ambiguous; (d) merging two
   surveys equals learning on the concatenation.
@@ -365,17 +386,25 @@ CI; Swagger shows every route; a hand-made two-tile payload round-trips (PUT →
 Ports (Bukkit-free):
 
 ```java
-public interface SurfaceGrid {                      // R22: same names as teleport's BlockProbe
-    boolean isPassable(int x, int y, int z);        // air, plants, carpets…; gate-door cells count as passable (see GateCells)
+public interface SurfaceGrid {                      // R22: identical signatures/semantics to teleport's BlockProbe
+    boolean isPassable(int x, int y, int z);        // PassabilityRules; gate-door cells count as passable (see GateCells)
     boolean isSolid(int x, int y, int z);
+    boolean isHazard(int x, int y, int z);          // same hazard set as teleport's SafeLocationFinder
+    int minY();
+    int maxY();                                     // exclusive, like BlockProbe
     String floorMaterial(int x, int y, int z);      // Material name, "looking through" overlays
     boolean isStairOrSlab(int x, int y, int z);
-    int minY(); int maxY();
 }
 public interface GateCells { OptionalInt doorAt(int x, int y, int z); }   // closed footprints (R3), prebuilt map
 ```
 
 Classes (DESIGN §5 section in brackets):
+- `PassabilityRules` — one pure definition of "passable" over material names (non-collidable materials + the overlay
+  set: carpets, snow layer, pressure plates, rails, leaf litter, petals). `ChunkSnapshot` has no `isPassable`, and
+  `Block#isPassable` (used by `SiegeBukkit`/`BukkitBlockProbe`) is not available off-thread, so the build uses this
+  table; unit-test it against a list of materials. The paper side feeds it from `Material` (verify
+  `Material#isCollidable()` exists on 1.21.10; otherwise use a curated set) and notes the difference from
+  `Block#isPassable` in the status block.
 - `ProfileSet` — enabled profiles (+ town scope via a `ScopeLookup` port: `OptionalInt townAt(x, z)`), material →
   (role, ambiguous, profile ids); `isRoadMaterial`, `isAmbiguous`.
 - `SpanGrid` [§5.2] — spans keyed by `BlockKey`; `neighbour(key, dir 0..7)` computed on demand (at most one per
@@ -412,18 +441,24 @@ Classes (DESIGN §5 section in brackets):
 
 ### 2d Router — `C/roads/route/` and `C/navigation/`
 
-- `RoadNetworkSnapshot` (immutable per world): nodes, edges, per-edge decoded polyline, profile classes; built from tile
-  graphs + meta; `SegmentIndex` (32×32 x/z buckets → segment refs).
+- `RoadNetworkSnapshot` (immutable per world): nodes, edges, per-edge decoded polyline, profile classes, the set of
+  all edge region ids; built from tile graphs + meta; `SegmentIndex` (32×32 x/z buckets → segment refs).
+- `CoverageCheck.misses(List<BreadcrumbPoint>, RoadNetworkSnapshot, maxDistance=2)` → misses with the floor material
+  seen there (used by the survey review in Phase 3).
 - `Snapper.snap(x, y, z, maxDistance, verticalWeight)` → `SnapPoint{edgeId, segmentIndex, t, point, distance}`.
 - `AStarRouter.route(RouteRequest{start, goals (1..n SnapPoints), accessPolicy, classCost}) → RouteResult` —
   virtual nodes split edges; heuristic = min Euclidean to any goal × cheapest class cost; oneway; binary heap.
 - `AccessPolicy` interface (`EdgeVerdict check(RoadEdge)` → `OPEN | PASS_THROUGH(hint) | BLOCKED(reason)`) and
   `CompositeAccessPolicy`; implementations take ports:
-  - `GateAvailability` (port `GateState { Optional<GateView> gate(int id); }` → state/jammed/destroyed/allowPassThrough/
-    siegeLocked; `PassRule { boolean canPass(int gateId); }`) — OPEN or destroyed → open; closed + (pass-through
-    allowed or siege-locked-for-non-member, D2) → `PASS_THROUGH`; otherwise blocked; OPENING/CLOSING/jammed → blocked.
-  - `DomainAvailability` (uses `DomainAccessEvaluator` R6 + a `DomainLookup` port by domain id; bypass flag) — entry
-    denied on edges entering a domain, exit denied on edges leaving the player's current domains.
+  - `GateAvailability` (port `GateState { Optional<GateView> gate(int doorId); }` → state/jammed/destroyed/
+    allowPassThrough/siegeLocked/siegeCarries; `PassRule { boolean canPass(int doorId); }`) — OPEN or destroyed → open;
+    siege-locked → `PASS_THROUGH` if `siegeCarries` (R39, D2) else blocked; otherwise closed + pass-through allowed for
+    this player → `PASS_THROUGH`; otherwise blocked; OPENING/CLOSING/jammed → blocked.
+  - `DomainAvailability` (uses `DomainAccessEvaluator` R6 + a `DomainLookup` port **by WorldGuard region id** (D11);
+    bypass flag) — entry denied on edges entering a region's domain, exit denied on edges leaving the player's current
+    domains. The paper adapter resolves via `RegionDomainResolver.getDomainByRegionIdNoRefresh`, falling back to
+    `resolveRegionsFromApi` (routing runs off the main thread, so the blocking call is allowed); `RoadNetworkCache`
+    calls `warmCache(snapshot.regionIds())` after each snapshot swap so lookups are normally cache hits.
   - `StaticFlagsAvailability` — `Closed`, `NoGps`.
   - Decisions cached per request by gate/domain id.
 - `BlockedExplainer` — if no route: rerun with an "all open" policy; return the first blocked element on that route +
@@ -466,6 +501,9 @@ guard test green.
 
 ### 3.2 Extractions first (R8, R9, R10, R11, R25) — separate commits, callers delegate, tests green.
 
+Plus the paper-side R4 fire points: `gateManager.fireStateChanged(id)` after `HealthSystem.destroyGate`/`respawnGate`,
+the jam in `GateAnimationTask`, and the `GateCommand` destroyed/active toggles.
+
 ### 3.3 Wiring in `KnKPlugin`
 
 - Promote to fields: `regionDomainResolver` (L689-697), `regionTracker` (L745). Note the double `CacheManager`
@@ -473,8 +511,9 @@ guard test green.
 - Construct (only if `navigation.enabled`) in a new `initializeRoads()` called after `initializeSiege()` (L822):
   `locationsDataAccess`, `streetsDataAccess`, `districtsDataAccess`, `structuresDataAccess` (R18; reuse if already
   present), `RoadNetworkCache`, `RoadDirtyTracker`, `RoadBuildQueue`, `RoadSurveyService`, `RoadOverlayRenderer`,
-  `RoadAdminCommand`; register `road` on the `/knk` command (keep `knkAdminCommand` as a field, or use a supplier like
-  `DiscoveryAdminCommand`); listeners via the existing `registerEvents` style.
+  `RoadAdminCommand`. **Register `road` inside `registerCommands()` (L709) with lazy suppliers** (`() -> roadAdmin…`),
+  like `DiscoveryAdminCommand` does — `registerCommands()` runs before `initializeRoads()`, so a direct reference would
+  be null. Listeners via the existing `registerEvents` style.
 - `onDisable`: stop survey sessions (discard), stop build queue (persist progress is in the API; nothing to spool),
   stop dirty-tracker flush (flush once synchronously if the API is reachable), before `apiClient.shutdown()` (L912).
 - `plugin.yml`: `knk.admin.road` declared + added to `knk.admin` children; `knk.navigate: default: true` (used in
@@ -491,8 +530,8 @@ guard test green.
   builder never asks about other cells (assert this in a test with a strict fake).
 - `GateCellsIndex` (implements `GateCells`) — from `gateManager.getAllGates()` + `closedFootprint` (R3) per world.
 - `RoadBuildJob` — one tile: resolve seeds (API seeds + survey breadcrumbs + Domain Locations with a road span within 8
-  blocks — domain locations from the town/district/structure data access), capture chunks the BFS reaches via
-  `getChunkAtAsync` + main-thread extraction at `snapshot-chunks-per-tick` (R11 `TickBudget`), run `TileBuilder` on the
+  blocks — from `GET api/road-network/seed-locations`, D12), capture chunks the BFS reaches via
+  `world.getChunkAtAsync(x, z, false)` (**never generate terrain**) + main-thread extraction at `snapshot-chunks-per-tick` (R11 `TickBudget`), run `TileBuilder` on the
   api-client executor, tag `domainIds` on the main thread in budgeted batches (`RegionIds.at` R8 + R7), upload via
   `upsertTileGraph`, invalidate the cache for the tile, report a summary to the requester.
 - `RoadBuildQueue` — ordered tiles (here / tile / radius / dirty / all), one job at a time, resumable (skips tiles whose
@@ -509,9 +548,10 @@ guard test green.
   survey seeds every `breadcrumb-seed-spacing`.
 - `RoadDirtyTracker` — listeners for `BlockPlaceEvent`, `BlockBreakEvent`, `EntityExplodeEvent`/`BlockExplodeEvent`,
   `BlockPistonExtend/RetractEvent` (MONITOR, ignoreCancelled): material in `ProfileSet` or the block is headroom of a
-  road span in the current snapshot → mark tile; flush batched every 30 s via `markDirty`. WorldEdit: if WorldEdit is
-  present, subscribe to `EditSessionEvent` (register through WorldEdit's event bus in a class loaded only when the
-  plugin is present) and mark the tiles of the edit region.
+  road span in the current snapshot → mark tile; flush batched every 30 s via `markDirty`. WorldEdit (always present:
+  `plugin.yml` depends on WorldGuard, which needs WorldEdit): `@Subscribe` to `EditSessionEvent` on WorldEdit's event
+  bus; at `Stage.BEFORE_CHANGE` wrap `event.getExtent()` in an `AbstractDelegateExtent` whose `setBlock` records the
+  tile of each position into a concurrent set (it can run off the main thread under FAWE); the 30 s flush drains it.
 - `RoadOverlayRenderer` — `/knk road show [radius] [all]` per admin, ticker every 20 ticks: nodes as pillars, edges as
   polylines (R9 `ParticleDraw`), colours by street hash/status; only ±8 Y unless `all`; action-bar label of the
   looked-at node/edge.
@@ -553,11 +593,12 @@ trunk into `claude/road-navigation` first.
    the api-client executor, effects applied on the main thread (R12); hard 48-block limit and direct mode
    (DESIGN §6.2); availability via `CompositeAccessPolicy` with paper adapters: `GateState` ← `GateManager` (R5) +
    `SiegeGateController.isLocked` (R24) + `GatePassThroughRules` (R25); `DomainLookup` ← `RegionDomainResolver` (R7).
-8. Live changes: `GateStateListener` (R4) → sessions whose route contains that gate re-plan; `SiegeMatchObserver`
-   (R24) `areaLockdownStarted`/`matchEnded` → re-plan affected sessions; domain cache refresh → re-plan all (rate
-   limited).
-9. **Siege read-only accessors** (coordinate first, §0.5): `KnKPlugin` field + getter for `siegeGates`; nothing else
-   in siege changes. `NavigationEligibility` (R23) ends sessions when the player joins a siege lobby (`lobbyOf`),
+8. Live changes: `GateStateListener` (R4) → sessions whose route contains that door re-plan; `SiegeMatchObserver`
+   (R24) `areaLockdownStarted`, `roundReleased` (gate lockdown released), `objectiveCaptured` (gate state on capture)
+   → re-plan affected sessions; domain cache refresh → re-plan all (rate limited); **D13 safety net:** every 40 ticks
+   re-evaluate the gate verdicts of each active route and re-plan on any change.
+9. **Siege read-only accessors** (coordinate first, §0.5): `KnKPlugin` field + getter for `siegeGates` (R24) and the
+   R39 predicate extraction; nothing else in siege changes. `NavigationEligibility` (R23) ends sessions when the player joins a siege lobby (`lobbyOf`),
    dies, quits, changes world, teleports > 16 blocks (`PlayerTeleportEvent`), or hits `max-session-minutes`.
 10. `P/navigation/TrailRenderer` (R9 `ParticleDraw.polyline`, per player, next `trail-length` blocks, off-road legs
     sparser/other colour, heights via `SiegeFloor` R28) and `NavigationHud` — Adventure `BossBar` (`player.showBossBar`)
@@ -619,7 +660,7 @@ treasure-map items; discovery-gated destinations; web map; coarse graph above ~1
 | Palette leaks (cobblestone towns) | Ambiguity reach + cell cap warnings; scoped profiles; test fixture. |
 | Tile upsert size (dense town tile, ~2-3 k edges) | One transaction; batch inserts (`AddRange`); measure in the status block. |
 | Build job main-thread cost | Compact extraction per chunk only; `TickBudget`; stop when TPS < 15. |
-| KNG-17 merge conflicts | R6/R20-R22 are designed as delegations; do them in Phase 4, after the teleport merge, never before. |
+| KNG-17 merge conflicts | R6 (Phase 2a) is kept minimal — two private methods moved; teleport's `previewAccess` is pointed at it only in Phase 4. R20-R22 happen in Phase 4, after the teleport merge, never before. |
 | knk-paper not compilable in the cloud | Say so; keep paper code simple and read it twice; developer builds locally. |
 
 ## 8. Definition of done (whole feature)
