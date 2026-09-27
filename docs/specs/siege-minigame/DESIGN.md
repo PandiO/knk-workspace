@@ -3,8 +3,9 @@
 **Status:** Implemented — all MVP phases (1–9) merged into the default branches on 2026-09-26 and smoke-tested live
 by the developer; Phase 10 (Scheduled lobbies) is post-MVP, not started. Seven decisions with the developer (§0; D6
 changed after the smoke test); remaining open questions in §13.
-**Last updated:** 2026-09-26 (synced with the smoke-tested build: area lockdown removed, gates removed for
-non-members, remembered spawn choice, capture feedback, reward multipliers, menus implemented, commands/API)
+**Last updated:** 2026-09-27 (§3.9: location checks are admin-configured field-validation rules, not hard-coded);
+2026-09-26 synced with the smoke-tested build (area lockdown removed, gates removed for non-members, remembered
+spawn choice, capture feedback, reward multipliers, menus implemented, commands/API)
 
 Ref: `docs/vision/vision.md` §3.2–3.4, §7.1–7.4, §10. Evidence base:
 `docs/reports/2026-09-25-siege-minigame-gap-analysis.md` (capability matrix, newly verified legacy
@@ -150,7 +151,7 @@ public class SiegeScenario
 
 A scenario is **authored in several saves** (owned children can only be created after the parent has an
 id — gate QoL 5.11 constraint), so it can be incomplete. `GET /api/siege-scenarios/{id}/readiness`
-returns the §3.9 validation result; only **ready** scenarios are eligible for lobby rotation. No
+returns the §3.9 validation result (structural rules plus the admin-configured field-validation rules); only **ready** scenarios are eligible for lobby rotation. No
 `IsPlayable` column — readiness is computed, never stale.
 
 ### 3.4 `SiegeTeam` — owned by a scenario
@@ -271,8 +272,14 @@ Checked on save where possible and in full by the readiness endpoint:
 - ≥ 2 teams; ≥ 2 distinct `AllianceGroup`s; ≥ 1 `Defender`; every team has ≥ 1 spawnpoint; ad-hoc
   teams have name + colour + banner.
 - `PlayersMin` ≥ team count; `PlayersMax` ≥ `PlayersMin`; duration Min ≤ Max.
-- Every district belongs to `TownId`; hub, spawnpoint and objective locations lie inside the town
-  region (reuse `LocationInsideRegionValidator`/`RegionContainmentValidator` rules).
+- Every district belongs to `TownId`.
+- ~~Hub, spawnpoint and objective locations lie inside the town region.~~ *(Updated 2026-09-27: no longer a fixed
+  rule.)* Readiness runs the **field-validation rules configured on the default SiegeScenario, SiegeTeam,
+  SiegeSpawnpoint and SiegeObjective forms** (FormConfigBuilder → Cross-Field Validation) against the saved scenario;
+  a failing blocking rule is an error, a non-blocking one a warning (`FIELD_RULE_FAILED`), and with no rules nothing
+  spatial is checked - e.g. spawnpoints outside the town are allowed unless an admin adds that rule. A child form's
+  rule may depend on a parent form's field (spawnpoint Location → scenario Town). A rule that can't run (plugin
+  unreachable) is the `SPATIAL_CHECKS_UNAVAILABLE` warning.
 - ≥ 1 objective; every objective has a capture location (own or its gate's); an objective's gate is in
   `Gates`; holder/owner team ids belong to this scenario.
 - Selected gates belong to the scenario's town/districts.

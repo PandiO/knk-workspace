@@ -1,7 +1,7 @@
 # Siege Phase 3 — authored FormConfigurations (reference payloads)
 
 **Status:** Reference record, not a seeder — data, not code
-**Last updated:** 2026-09-25
+**Last updated:** 2026-09-27 (added "Location rules": readiness now runs the forms' validation rules)
 
 The siege authoring forms (Phase 3 of `IMPLEMENTATION_PLAN.md`) and the Phase 1 leftovers were authored **live** with `POST /api/FormConfigurations` against the shared dev DB (`knightsandkings_dev_v2`, via the API on port 5099), the Items precedent (`docs/specs/items/PHASE_2_FORMCONFIGS.md`). A FormConfiguration is rows in `FormConfigurations`/`FormSteps`/`FormFields`, so it exists only in that database. This file holds the exact payloads so the forms can be rebuilt in another database.
 
@@ -531,3 +531,25 @@ POST /api/FormConfigurations
 ## GateStructure (id 9) — `IsSiegeObjective` removed from "Siege Behaviour"
 
 DESIGN §8.5: `GateStructure.IsSiegeObjective` is runtime-maintained now (set at lockdown for objective gates, cleared on restore), so admins no longer edit it. `GET /api/FormConfigurations/9`, drop the `IsSiegeObjective` field (form field 92 in the dev DB) from the "Siege Behaviour" step's `fields` and its guid from that step's `fieldOrderJson`, then `PUT /api/FormConfigurations/9` with the whole body. Nothing referenced field 92 (no validation rules, display conditions or field validations); the other field ids were unchanged by the PUT. The step keeps `IsOverridable` and `AnimateDuringSiege`.
+
+## Location rules (optional, 2026-09-27)
+
+Readiness (`GET /api/SiegeScenarios/{id}/readiness`, the scenario form's last step) no longer hard-codes "hub,
+spawnpoints and capture points inside the town". It runs whatever field-validation rules are configured on the
+**default** SiegeScenario, SiegeTeam, SiegeSpawnpoint and SiegeObjective forms, against the saved scenario (DESIGN §3.9;
+web-api `7c771e2`, web-app `87801d0`). With no rules, locations aren't checked at all. The same rules also run in
+the wizard while the field is edited. Add only the ones you want, in **FormConfigBuilder → the form → the field →
+Validation rules → Add**:
+
+| Check | Form → field | Depends On Field | Dependency path |
+|---|---|---|---|
+| Hub inside the town | SiegeScenario - Default → Hub location (`HubLocationId`) | Town (this form) | `Town.WgRegionId` |
+| Spawnpoint inside the town | SiegeSpawnpoint - Default → Location (`LocationId`) | *Parent form: SiegeScenario - Default* → Town | `Town.WgRegionId` |
+| Capture point inside the town | SiegeObjective - Default → Capture location (`LocationId`) | *Parent form: SiegeScenario - Default* → Town | `Town.WgRegionId` |
+
+For each: Validation Type **Location Inside Region**, config `{ "regionPropertyPath": "WgRegionId", "allowBoundary":
+false }`, error message e.g. `Location {coordinates} is outside {parentEntityName}'s boundaries.` Tick **Block step
+progression** to make a failure a readiness *error*; leave it unticked for a *warning* that doesn't block readiness.
+"Parent form" fields are the fields of the forms this form is opened from (owned-child lists, M2M join steps); the
+dropdown groups them per form. An objective captured at its gate (no own location) isn't checked, since its capture
+location field is empty.

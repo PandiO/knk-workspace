@@ -5,8 +5,8 @@
 live smoke-test rounds passed (`docs/reports/2026-09-26-siege-smoke-test-checklist.md`). Phase 10 (Scheduled lobbies)
 is post-MVP and not started. The per-phase status blocks below are the historical record; where later work changed a
 decision, "Current behaviour" and "Audit" below win.
-**Last updated:** 2026-09-26 (merged to trunk; plan audit; earlier the same day: overnight chain phases 6–9 and two
-smoke-test rounds)
+**Last updated:** 2026-09-27 (readiness runs the configured field-validation rules instead of hard-coded location
+checks - merged to trunk, see "Current behaviour"); 2026-09-26 merged to trunk, plan audit
 
 Ref: `DESIGN.md` (decisions — not restated here), `MENU_TEMPLATES.md`,
 `docs/reports/2026-09-25-siege-minigame-gap-analysis.md`. Plan format follows
@@ -34,6 +34,19 @@ follow-ups" and "Second smoke-test round fixes" bullets under the Phase 9 status
   `/siegemenu`, `/sgm`. Supersedes 8b's fixed heights.
 - **Plugin keys:** siege writes accept `Security:PluginApiKey` when `Security:PluginServiceKey` is empty (one key).
 - **Scoreboards:** hourly salary and rank refreshes no longer replace a siege member's match scoreboard.
+- **Readiness location checks are configured rules (2026-09-27, merged to trunk: web-api `master` `7c771e2`,
+  web-app `main` `87801d0`).** Readiness used to hard-code "hub, every spawnpoint and every objective capture point
+  inside the town's region" as blocking errors (`HUB_/SPAWNPOINT_/OBJECTIVE_OUTSIDE_TOWN`), outside the FormWizard's
+  validation-rule system - so an admin couldn't switch it off, make it a warning, or place spawnpoints outside the town.
+  Now `GET …/readiness` runs the field-validation rules configured on the default SiegeScenario, SiegeTeam,
+  SiegeSpawnpoint and SiegeObjective forms against the saved graph (`SavedEntityRuleValidator`); a failed blocking
+  rule is an error, a non-blocking one a warning, both `FIELD_RULE_FAILED`. No rules = nothing spatial is checked
+  (`fieldRuleChecks: 0`, the panel says so). A child form's rule may depend on a field of the form it's opened from
+  (the spawnpoint's Location on the scenario form's Town): the rule builder lists those "parent form" fields, the
+  wizard passes parent values down every nesting level, and readiness does the same with the saved parents. An
+  Object dependency that the form holds only as `{id, name}` (edit mode) is replaced by the saved record server-side,
+  so Location Inside Region works on edits too. How to add the rules: `PHASE_3_FORMCONFIGS.md` "Location rules".
+  Supersedes the spatial half of Phase 2 decision 1 and Phase 3's readiness-panel text about spatial checks.
 
 **Audit** (every phase's scope against the code on the merged branches): every Phase 1–9 scope item has code behind
 it and every commit the status blocks cite is on the branches. Fixed during the audit: web-api `139fc33`
