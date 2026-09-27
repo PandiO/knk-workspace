@@ -1,7 +1,7 @@
 # Lootboxes — Design
 
-**Status:** Decided — implementation in progress (branch `claude/lootboxes`)
-**Last updated:** 2026-09-26
+**Status:** Decided — smoke-test round 1 changes implemented (branch `claude/lootboxes`), awaiting re-test
+**Last updated:** 2026-09-27
 **Linear:** [KNG-19](https://linear.app/kngpandi/issue/KNG-19/lootboxes-per-category-world-lootboxes-with-grade-weighted-rolls-v1)
 **Sources:** `knk-v1-archive` (single commit `4117e7e`): `src/Products/{Product,SpecialItemEvents,Enchantment}.java`,
 `src/Treasure/*`, `src/Main/Main.java`, `src/KillsDeaths/KillDeathStat.java`, `src/Minigames/{BanditAmbushes,OcelotSpawn}.java`,
@@ -558,8 +558,73 @@ Grades 1-5 use v1 treasure's colours (§1.1). Grades 6-10 are new and unused whi
 | Alt accounts | Per-user daily cap only (no IP tracking). Noted. |
 | Direct API calls from a browser | Runtime endpoints require PluginService auth. |
 | v1 rename exploit | Box identity is a server token. No display-name matching anywhere. |
+| Sweeping every world box as tokens (round 1, §3.8) | Pickups count against the daily cap (429 DailyPickupLimit), separately from opens. |
+| Opening a picked-up token twice / a duplicated copy | Unchanged token rules: the redeem flips the token once; other copies get 409 and are removed; the join scan removes copies opened or revoked while offline. |
+| Losing the item during the reel | The result is stored before the reel; close early → handed over now; quit → on rejoin; plugin stop → handed over first. |
 | Spawning in private or protected areas | Area region plus `ExcludedRegionIds`. Admins exclude plots and structure regions. |
 | Grief/PvP around boxes | Out of scope. KNG-12 (no WG flags on town/district regions) affects safezone PvP around boxes. |
+
+### 3.8 World boxes are picked up as token items (smoke test 2026-09-27)
+
+The developer's smoke test showed that a click which opens the box on the spot is closer to v1's *treasure chests* than
+to the lootboxes they remember (v1's sword boxes were inventory items). From round 1 on, **clicking a world box picks it
+up**: the first player to click gets a lootbox token item (§3.4 token items, Phase 5) and opens it later, wherever they
+like. Nothing is rolled at pickup.
+
+- **API** `POST LootboxSpawns/{id}/pickup` `{token, userId}` (PluginService): expiry sweep, the user's row lock, box
+  checks (token, Active, not expired, config enabled, account not frozen), the **daily cap on pickups**, then the box
+  flips to Claimed (`[ConcurrencyCheck]`, a racing picker gets 409 `AlreadyClaimed`) and one `LootboxToken` is issued
+  with the box's type and box grade, `IssuedReason = WorldPickup` and `SourceSpawnId` = the box (unique: one token per
+  box). A repeat by the same player returns their token (`replay`), so a timed-out click can't lose the box. 200
+  `{replay, spawnId, lootboxToken}`; 429 `{code: DailyPickupLimit, scope: Global|Type, limit, resetsAt}`.
+- **Daily cap.** `MaxClaimsPerPlayerPerDay` (global, and per type) applies to pickups as well as to opens. A picked-up
+  box therefore counts once as a pickup and once when it is opened; one player still can't sweep every box in the world
+  in a UTC day (the cap's anti-camping job), and opens of tokens from other sources (staff, tiers, kits) stay capped.
+- **Plugin.** The same checks as before (permission, staff/owner mode, siege, distance, line of sight, account, a free
+  slot for the token, `ClaimGuard`), then the pickup; the token is handed over with `LootboxTokenDelivery.give` (never
+  twice, confirmed) and the player sees "You picked up a {box}! Right-click it to open." A refused pickup at the cap says
+  "You've picked up N lootboxes today — the limit resets at 00:00 UTC."
+- **Looks.** A world box is still made of display entities (D3). By default its model is the token item itself
+  (`display.model: token`, the ender chest), not the category icon (`type`), since that is what you pick up. Whether a
+  real chest *block* should be placed instead is still open (§5, round 1).
+- **Drop log.** A claim from a WorldPickup token still shows as source **World**; the Token items tab shows the reason as
+  "World box" with the box id.
+- `POST LootboxSpawns/{id}/claim` (open on the spot) stays in the API for compatibility; the plugin no longer calls it.
+
+### 3.9 Opening a token: the reel, and staying in sync (smoke test 2026-09-27)
+
+**The reel ("wheel of fortune").** Right-clicking a token redeems it as before (the API rolls, consumes the token and
+mints the instance in one transaction). The plugin then opens a 3-row chest menu titled with the box label:
+- The middle row scrolls a strip of items past a lime marker, fast at first and easing out (1 tick per step up to
+  `opening.slowest-step-ticks`, `opening.reel-steps` steps, ~5 s), and stops on the rolled item. Ticking sounds rise in
+  pitch; the frame colour follows the box grade.
+- The passing items are the box's pool drawn with its **real odds** (the odds preview, cached 5 min; items look like
+  their blueprints). The reel never adds "near misses": the rolled item appears only where it stops. If the odds can't
+  be read within 1.5 s the strip shows only the winner.
+- When it stops, the item goes into the inventory through the normal delivery (confirmation, owner-locked drop on a full
+  inventory), the "You opened a {box} and found {item}!" line and, for an announced drop, the broadcast. The menu closes
+  after `opening.show-result-ticks`. The menu is look-only (clicks and drags cancelled).
+- **Public flair** (`opening.public-effects`): enchant particles and an ender-chest sound at the player when the reel
+  starts; a totem-and-end-rod burst with a firework twinkle for an announced or special drop. Everyone nearby sees it.
+- **Never loses the item.** The result is stored before the reel starts. Closing the menu early hands the item over at
+  once; quitting mid-spin hands it over on rejoin (and the API's pending claims are the backstop after a restart); a
+  plugin stop hands every spinning item over first. A second box opened while a reel is turning is given instantly.
+- `opening.style: instant` gives the item straight away (the pre-round-1 behaviour).
+- `/knk lootbox give` also plays the reel for the recipient, with "{staff} gave you a {box} - opening it now!" and the
+  result line naming them; `/knk lootbox token` names the staff member too.
+
+**Sync with the web app.** A `LootboxWorldChanged` player notification (userId 0, for the game server) carries
+`removedSpawnIds` and `revokedTokens`. The API queues it on a web despawn, a web area delete (its active boxes) and a
+token revoke; the plugin's notification poller (2 s) applies it at once: the boxes' entities are removed, and every copy
+of a revoked token is taken out of online players' inventories and ender chests with "A lootbox you held was revoked by
+staff and has been removed." Offline holders are handled by a **join scan**: `POST LootboxTokens/status` for every token
+the player carries; Revoked copies are removed (same message) and copies of an already-opened token crumble ("A copy of
+a lootbox that was already opened has crumbled away."). An Unknown token is left alone (a misconfigured API must not eat
+items). A copy stored in a chest is still refused and removed when someone tries to open it.
+
+**Permission on a cold cache.** `KnkPermissible`'s check reads the cache only and fails closed when nothing is cached
+yet; the pickup, the token open and `/lootbox odds` now ask the API before refusing, so a first try right after a join
+isn't wrongly denied.
 
 ---
 
@@ -574,7 +639,7 @@ record those answers; D18-D19 follow from them.
 | D2 | Runtime endpoints need a **PluginService API key** | Closes the anonymous-claim hole. Adopt currency-payments/KNG-15 service auth if it lands first. |
 | D3 | Box = **display entities** (`ItemDisplay` + `Interaction` + `TextDisplay`), non-persistent | No terrain edits and no orphans. Swap in a block by replacing `LootboxPresenter`. |
 | D4 | **Two-stage** item roll (grade by `DropChance`, then uniform item) with a grade window of box ★ − 2 … box ★ | Pool size doesn't dilute rare grades. Spread is per type. |
-| D5 | **Box grade = the existing `Grade` table**, weighted by `DropChance`, **★1-5 only** (Q3; `MaxBoxStars` validated ≤5) | No second rarity table. Per-type overrides are available. Allow ★6-10 once KNG-6 names those grades and they have items. |
+| D5 | **Box grade = the existing `Grade` table**, weighted by `DropChance`. *Amended 2026-09-27:* any grade of the table (★1-10, validated against it) may be used; new types still default to ★1-5 (Q3's original answer) | No second rarity table. Per-type overrides are available. Grades 6-10 are named on trunk (Mythic … Divine); a window above the stocked grades widens downward (logged). |
 | D6 | Rolled vanilla levels are **clamped by the item-grade cap**, custom enchants only by definition max | Consistent with KNG-6. v1's Sharpness 6-7 and Knockback 7 are not reproduced. |
 | D7 | Full inventory → **refuse before claiming**; any leftover race drops owner-locked | The Kits "drop, don't lose" rule, plus a pre-check so boxes aren't wasted |
 | D8 | `knk.lootbox.open`/`odds` are granted to the Default group by seed | `KnkPermissible` fails closed (the siege `knk.siege.play` precedent) |
@@ -589,8 +654,30 @@ record those answers; D18-D19 follow from them.
 | D17 | **Spawn areas are `LootboxSpawnArea` rows** referencing a WG region, created in the web app or in game via `/knk lootbox area create <name>` from a WorldEdit selection (region `lootbox_<slug>`, full height) | Developer, Q2. Limits are edited only in the web app. `delete` only removes regions the command created. |
 | D18 | All admin lootbox commands live under **`/knk lootbox`**; `/lootbox` (`/lb`) is player-only | Follows from D17's `/knk lootbox area`: one admin root, like the other `/knk` subcommands. |
 | D19 | **One item per box** (`ItemsPerBox` dropped) | Keeps claim ↔ instance 1:1. Multi-item opens would need a claim-item row per item. |
+| D20 | **A world box is picked up as a token item**, not opened on the spot (§3.8) | Developer, smoke test round 1: v1 lootboxes were items. The token path already had idempotency, single use and the cap. |
+| D21 | The daily cap counts **pickups and opens** separately (same limits) | Keeps the cap's anti-camping job for world boxes; token opens from any source stay capped. Change by dropping `EnforceDailyPickupCapAsync`. |
+| D22 | Opening shows a **chest-menu reel** that stops on the already-rolled item, drawn with the real odds; closing it early never loses the item (§3.9) | Developer asked for a wheel-of-fortune opening "for other players to enjoy too": the reel is personal, the particles/sounds public. `opening.style: instant` switches it off. |
+| D23 | Web-side changes reach the game server through a **`LootboxWorldChanged` server notification** (2 s poll) plus a **join scan** of held tokens | No push channel exists (plugin polls); reuses the notification queue like CurrencyAlert. |
 
-## 5. Questions for the developer (all resolved)
+## 5. Questions for the developer (one open: chest block vs display entities, round 1)
+
+### Smoke test round 1 — 2026-09-27 (developer)
+
+- **Lootboxes are items.** A spawned box, when clicked, should become a lootbox item in the player's inventory; opening
+  the item consumes it and gives the reward. → D20, §3.8.
+- **Opening should be spectacular**: a wheel-of-fortune menu that cycles options before landing on the reward, or a
+  public animation others can enjoy. → D22, §3.9 (the reel in a menu, with public particles/sounds).
+- **The world model** (display entities) is acceptable; the developer is still considering a real chest block instead.
+  → **Open**: `display.model: token` shows the token item for now; a block presenter can replace `LootboxPresenter` (D3).
+- **Grades**: rolls should use the full 10-star Grade table. → D5 amended.
+- **Staff gives** must tell the recipient clearly who gave them what. → §3.9.
+- **Despawn and revoke lag** is unacceptable ("This lootbox has crumbled away" on a box that looked alive; a revoked
+  token staying in the inventory). → D23, §3.9; revoked tokens are removed online and offline, with a message.
+- **Tab completion** for online player names on commands; a full sweep is Linear KNG-30. Lore spacing (blank line above
+  the grade line, and between description and enchantments) is Linear KNG-29.
+- **Default-group permissions didn't apply** to a non-op account. Root cause (trunk, not lootbox-specific): the Default
+  group (SeedDefaultPermissionGroup, 2026-09-25) was never given to accounts created before it; the API migration
+  `BackfillDefaultRankMembership` gives Default to every account without an active rank.
 
 ### Resolved 2026-09-26 (developer) — everything is decided
 

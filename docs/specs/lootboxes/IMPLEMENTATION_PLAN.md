@@ -455,6 +455,61 @@ https://github.com/PandiO/knk-plugin/actions/runs/36331810717; web-app build + `
 baseline failures (same suites as trunk). Known: `npm ci` fails on trunk too (lockfile lacks the optional `yaml@2`
 peer) — use `npm ci --legacy-peer-deps`; `CI=true npm run build` fails on pre-existing lint warnings.
 
+### Smoke test round 1 + rework — 2026-09-27 (all three repos, `claude/lootboxes`)
+
+Developer results: A1-3 ✓ (A4 untested), B1-5 ✓, C ✓ (grades should use the 10-star scale), D ✓ (lore spacing → Linear
+KNG-29), E ✓ (staff give not announced to the recipient), F ✓ (no player-name tab completion → KNG-30 sweep), G ✗ (Default
+group grants ignored for a non-op), H ✓, I1 ✓, I2 despawn and revoke lag, J/K accepted. Main finding: world boxes should
+**be items** (picked up, then opened with a spectacular animation), not open on the spot (DESIGN §5 round 1, D20-D23).
+
+Trunk (domain discovery + gates fix) merged again first: api `06b0fef`, plugin `d2f495e`, app `0eb95fa`; EF snapshot
+rebuilt through an empty throwaway migration, `has-pending-model-changes` clean.
+
+Changes:
+- **G1 root cause (trunk bug, not lootbox code):** accounts created before `SeedDefaultPermissionGroup` (2026-09-25) were
+  never put in Default, so they inherit none of its grants. API `8d67c11` migration `BackfillDefaultRankMembership` gives
+  Default to every account without an active rank (an expired Default row is made permanent again). Checked on a
+  legacy-shaped MySQL: rankless → Default, expired Default → permanent, Noble untouched. The plugin also asks the API
+  before refusing on a cold permission cache (pickup, token open, `/lootbox odds`).
+- **World box = pick up a token** (DESIGN §3.8): API `df70024` `POST LootboxSpawns/{id}/pickup`, token reason
+  `WorldPickup`, `LootboxToken.SourceSpawnId` (migration `AddLootboxWorldPickup`), daily cap on pickups (429
+  `DailyPickupLimit`), drop log still says World. Plugin `40416f2`: click → pickup → token item; boxes look like the token
+  item (`display.model: token|type`).
+- **Opening reel** (DESIGN §3.9): plugin `LootboxOpening` + knk-core `LootboxReel`; real-odds strip, eases out, stops on the
+  rolled item; close early / quit / stop never lose it; public particles and sounds; `opening.*` config.
+  `LootboxDelivery` split into prepare/handOver (`2ca5ce9` keeps placing the built stack).
+- **Staff give/token**: the recipient sees who gave what; give plays the reel. give/token tab-complete online players.
+- **Sync**: `LootboxWorldChanged` server notification on web despawn / web area delete / revoke → boxes removed and revoked
+  tokens taken out of online inventories + ender chests within ~2 s; join scan via `POST LootboxTokens/status` removes
+  revoked/opened copies of offline holders. Web app `30d66fc`: "World box" reason + box id, revoke notice, stars to ★10.
+- **Grades**: box stars validated against the Grade table (★1-10); types still default to ★1-5.
+
+Verified: API 1524 pass / the 5 baseline failures (+10 pickup/sync tests), `requires-mysql` 42/42 on MySQL 8.0 incl. the
+new race test (`ba51dc1`: 5 rounds × 5 simultaneous clicks on one box → exactly one token, others 409 AlreadyClaimed);
+plugin CI green https://github.com/PandiO/knk-plugin/actions/runs/36339315121 (first run failed on one delivery test,
+fixed in `2ca5ce9`); web-app `tsc` clean, lootbox tests 32/32. Linear: KNG-29 (lore spacing), KNG-30 (tab-completion
+sweep). Known: the reel is untested live (menu, sounds, particles); a player dragged into a siege mid-reel would receive
+the item into the siege inventory; picked-up tokens count once as a pickup and once as an open against the cap (D21);
+the chest-block look is still open.
+
+**Developer to-do before re-test:** `dotnet ef database update` (adds `BackfillDefaultRankMembership`,
+`AddLootboxWorldPickup`), redeploy API + plugin, add the `display.model` and `opening:` keys to the server's config.yml
+(defaults apply if missing), then the round-2 checklist below.
+
+**Round-2 checklist** (the round-1 plan's A-L still apply otherwise):
+1. G: a non-op Default account runs `/lootbox odds weapons 5` right after joining → odds shown, no personal grant needed.
+2. Pickup: click a world box → "You picked up a …" and an ender-chest token in the inventory; the box is gone for
+   everyone; a second player clicking at the same time → "Someone else got there first."
+3. Reel: right-click the token → menu spins, slows, stops on the item, item in inventory, menu closes; others nearby see
+   particles. Close the menu mid-spin → item arrives at once. Quit mid-spin → item arrives on rejoin (once).
+4. Rare: set Flaming Samurai to 1,000,000 per million, open a ★5 Weapons token → big burst + broadcast; reset to 500.
+5. Cap: set the daily cap to 2 → the 3rd pickup says "You've picked up 2 lootboxes today"; opening tokens counts separately.
+6. Staff: `/knk lootbox give <p> weapons` → recipient sees "{you} gave you a …", watches the reel; `/knk lootbox token`
+   names you; `/knk lootbox give <Tab>` lists online players.
+7. Sync: despawn a box on `/admin/lootboxes` → it vanishes in game within ~2 s. Revoke a token held online → removed with
+   a message; revoke one held by an offline player → removed with a message when they join.
+8. Grades: set a type's max box stars to 10 in the web app → saves; Odds tab offers ★1-10.
+
 ## Cross-feature dependencies
 
 - **KNG-15** (plugin sends no bearer token → 401 on Kits give): same root cause as Phase 0. Fix once, and share the scheme.

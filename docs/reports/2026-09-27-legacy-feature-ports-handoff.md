@@ -17,7 +17,7 @@ Designs + resolved decisions: `docs/specs/{currency-payments,domain-discovery,te
 | `claude/domain-discovery` — **merged to trunk 2026-09-27** (api `acaee99`, plugin `4ec2f23`, app `46be4e9`) | `a826691` | `a07ad81` | `8a6b3f9` |
 | `claude/teleport` | `d4daef5` | `c954c30` | `c12b39b` |
 | `claude/private-messages` — **merged to trunk 2026-09-27** (api `7daca13`, plugin `316315e`, app `7db6f46`) | `fbf280d` | `0fed5f4` | `354d4f4` |
-| `claude/lootboxes` — trunk (PM + currency) merged in 2026-09-27, **ready for smoke test** (plugin.yml fix `e954187`) | `7c47e88` | `e954187` | `3bb92da` |
+| `claude/lootboxes` — trunk (PM, currency, discovery) merged in 2026-09-27; smoke test round 1 done, **rework in, awaiting round 2** | `ba51dc1` | `2ca5ce9` | `30d66fc` |
 
 All five branches contain trunk **including the siege merge** (api `67f451e`, plugin `716fb3c`, web-app `4fba7d0`). Every
 plugin branch has a GitHub Actions `Build` workflow (`.github/workflows/build.yml`) and was green on its tip; API suites show
@@ -98,6 +98,12 @@ Each plan's "Phase N status" sections list the in-game checks for that phase; th
 - 2026-09-27 — **domain discovery** smoke-tested (A–G; C2 and H untested). Findings fixed on the branch: web reset →
   plugin resync, players who joined while the API was down are now tracked and spooled by UUID, and the Structure → GateStructure
   cascade prompt. Merged to trunk on the developer's sign-off (the three fixes weren't re-tested in-game). Side finding: siege safezone message (KNG-28), under investigation.
+
+- 2026-09-27 — **lootboxes** round 1 (A-I; J/K accepted): world boxes are now picked up as token items and opened on a
+  wheel-of-fortune reel; despawn/revoke sync, staff-give notices, player tab completion, ★1-10 box grades. **G (Default
+  group grants ignored) was a trunk bug**: accounts created before the Default group existed were never put in it — API
+  migration `BackfillDefaultRankMembership` (on `claude/lootboxes`) fixes it for every feature's Default nodes. Details +
+  round-2 checklist: lootboxes `IMPLEMENTATION_PLAN.md` "Smoke test round 1 + rework". Linear KNG-29, KNG-30 filed.
 
 ## 5. Decisions still open for the developer
 
