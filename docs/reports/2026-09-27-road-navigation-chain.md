@@ -44,4 +44,4 @@
 - **Live checklist:** plan "Phase 1 status → Developer to-do" (6 Swagger steps, ~5 min, payloads included).
 - **Risks:** none open for this phase. Contract for later phases is written under "What later phases must wire".
 - **Next link:** handoff `docs/ai-agents/handoffs/2026-09-27-road-navigation-phase-2a.md`; started per charter §6
-  option 1 (Claude Code Remote `create_session` in the same environment) — the session id is appended below once created.
+  option 1 (Claude Code Remote `create_session` in the same environment) — link 2 = Claude Code Remote session `session_01HnoVDWFbstro88fNr2ntKM` (created 2026-09-27 19:46 UTC, same environment).
