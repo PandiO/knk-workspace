@@ -326,6 +326,9 @@ fires after the welcome/balance lines. Tests: API 1340 pass / 5 baseline, requir
 knk-core 851, api-client 111; plugin CI green https://github.com/PandiO/knk-plugin/actions/runs/36326110951; web 353 pass /
 16 baseline.
 
+**Decided 2026-09-27 (developer):** players only queued for a siege keep discovering; the exclusion runs from the hub
+teleport until the member is restored (`SiegePhase.blocksDiscovery`: HUB, IN_PROGRESS, ENDING, COOLDOWN; plugin `8f83b11`).
+
 ## Risks / notes for whoever picks this up
 - `DomainService.SearchDomainRegionDecisionAsync` returns at most one Town/District/Structure and no GateStructures; discovery
   avoids it (server resolves raw region ids). Gate control in `SimpleRegionTransitionService` compares `domainType` to `"gate"`,

@@ -14,7 +14,7 @@ Designs + resolved decisions: `docs/specs/{currency-payments,domain-discovery,te
 | Branch | knk-web-api | knk-plugin | knk-web-app |
 |---|---|---|---|
 | `claude/currency-payments` — **merged to trunk 2026-09-27** (api `5639a50`, plugin `0d01b52`, app `c4ed753`) | `edb77e8` | `7f056b3` | `6eed4a0` |
-| `claude/domain-discovery` — trunk (PM + currency) merged in 2026-09-27, **in smoke test** | `dcec282` | `e186ae8` | `7dcdec1` |
+| `claude/domain-discovery` — trunk (PM + currency) merged in 2026-09-27, **in smoke test** | `dcec282` | `8f83b11` | `7dcdec1` |
 | `claude/teleport` | `d4daef5` | `c954c30` | `c12b39b` |
 | `claude/private-messages` — **merged to trunk 2026-09-27** (api `7daca13`, plugin `316315e`, app `7db6f46`) | `fbf280d` | `0fed5f4` | `354d4f4` |
 | `claude/lootboxes` | `5d13358` | `45d017a` | `4754c24` |
@@ -79,7 +79,7 @@ Each plan's "Phase N status" sections list the in-game checks for that phase; th
   staff `/knk user X coins set …`; web balance log → reverse a grant; SQL-edit a balance → "Run now" → R1 alert switches
   coin transfers off → re-enable in the policy page.
 - **Discovery:** new Town in/out/in; join inside a District; teleport into a Structure; `/disc`; reset + rediscover;
-  none while in a siege lobby.
+  none from the siege hub teleport until restored (queued players still discover).
 - **Teleport:** `/tp` forms + `-s`; `/tpa` accept/deny/expire; `/spawn`; paid `/warp` (move during warmup → no charge);
   warp menu from the hub; `/back` after death (lava → safe ground, void refused); all blocked for siege members.
 - **Private messages:** vanish-safe `/msg`, `/r` from console, `/socialspy`, `/ignore`, PM log panel on a profile, no `/msg`
@@ -104,8 +104,8 @@ Each plan's "Phase N status" sections list the in-game checks for that phase; th
 2. ~~**Currency — account linking forfeits the in-game balance:**~~ **Decided 2026-09-27:** keep the highest balance per currency. linking a Minecraft account to an existing web account
    treats the Minecraft account as the secondary, so its coins/gems are forfeited (pre-existing behaviour, matches Q6).
    Confirm, or make linking keep the higher/combined balance.
-3. **Discovery — matchmaking:** players who are only queued for a siege (still in the normal world) are excluded from
-   discovery. Keep, or exclude only from the hub phase onward?
+3. ~~**Discovery — matchmaking:**~~ **Decided 2026-09-27:** queued players keep discovering; the exclusion starts at the
+   hub teleport and lasts until the member is restored (plugin `8f83b11`, `SiegePhase.blocksDiscovery`).
 
 ## 6. Known follow-ups (not blocking)
 
