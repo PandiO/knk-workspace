@@ -442,6 +442,31 @@ Not built: optional `EconomyOverviewPage`; Phase 5b hashed-IP signal; ledger CSV
 balance changes still on the deprecated `PUT Users/{id}/balances`; anonymous GateStructures/GateDoors CRUD, GameSettings,
 `POST api/Users` (outside currency scope).
 
+### Final review — 2026-09-27 (all phases)
+
+Fixed (knk-web-api, tip `04558d6`): (1) **High** — the reconciler read balances and ledger in separate autocommit queries,
+so any payment between them looked like an R1 mismatch and tripped the server-wide transfer kill switch (anyone paying could
+cause it); now one consistent REPEATABLE READ snapshot (`b5251bb`, requires-mysql test fails before the fix). (2) **High** —
+`DELETE api/Users/{id}` hard-deleted balances outside the ledger, leaving a permanent R1 mismatch (every account has a
+SIGNUP_GRANT); now 409 `UserHasCurrencyHistory` — merge instead (`8a7c7f2`). (3) **High** — partial reversal of a transfer
+with a fee minted the difference (only with fee > 0); refused now (`04558d6`). (4) **Medium** — anonymous `POST api/Users`
+accepted a `uuid`, allowing takeover of an unlinked web account or pre-registering someone's UUID; a `uuid` now requires the
+plugin key (`3589a84`). (5) **Low** — idempotency fingerprint lacked the source (kit/teleport…); now included (`5008ae1`).
+Checked sound: no balance write outside the locked ledger transaction (EF save behaviour Ignore; siege `SIEGE_REWARD` inside
+the match lock), actor header only with a valid key, transfer actor = sender, unguessable pending ids with owner checks,
+ascending lock order, checked arithmetic + caps, gems non-transferable by default, atomic audit/ledger/balance, plugin has no
+client-side arithmetic and keyed retries. API 1100 pass / 5 baseline / 31 skipped; requires-mysql 31/31 ×3.
+Follow-up fixes in progress: optimistic concurrency on the policy PUT (a stale form could undo the kill switch); leaderboard
+page bound.
+**Open for the developer:** (a) XP increases by `knk.admin.user.xp` holders can trigger title bonuses (up to ~4M coins + 600
+gems per player, once per bracket) outside the per-staff daily grant cap — count bonuses against the cap, or require the
+coins/gems nodes for XP increases? (b) Linking a Minecraft account to an existing web account forfeits the in-game balance
+(confirm). Also noted: accounts with no ledger rows aren't reconciled; one participant at the coin cap fails a siege match's
+whole payout; scenario rewards unbounded (per-payment caps + R7 limit damage); generic user edit can clear `IsFrozen`
+without the unfreeze node (pre-existing). Deploy note: plugins without the key can't create accounts with a UUID.
+
+**Feature status: Phases 0–5 complete on `claude/currency-payments`; awaiting developer smoke test + merge (merge first).**
+
 ## Cross-feature notes
 
 - **Lootboxes / domain discovery / teleport:** consume `ICurrencyService` (`SpendAsync` / `GrantAsync`)
