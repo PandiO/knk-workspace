@@ -1,6 +1,6 @@
 # Currency Payments & Ledger (coins/gems) — Design
 
-**Status:** Decided — implementation in progress (branch `claude/currency-payments`; KNG-16 merged to trunk 2026-09-26)
+**Status:** Implemented and merged to trunk 2026-09-27 (KNG-21, KNG-22; KNG-23 folded in)
 **Last updated:** 2026-09-26
 **Linear:** [KNG-21](https://linear.app/kngpandi/issue/KNG-21/currency-ledger-and-secure-player-payments-pay-balance-baltop-for) (Phase 0 split out as [KNG-22](https://linear.app/kngpandi/issue/KNG-22/security-coingem-write-endpoints-are-anonymous-phase-0-currency), urgent)
 **Sources:** `knk-v1-archive` (`src/Currency/*`, `src/Users/User.java`, `src/Main/Main.java`, `src/Listeners/PlayerListener.java`, `src/Menu/{PlayerManagerClick,DuelSetupClick}.java`, `src/Skills/PickpocketSkill.java`, `src/Events/FridayLottery.java`, `plugin.yml`); `knk-v2-archive` (`model/user/{User,KnKUser}.java`, `model/minigame/siege/Siege.java`); knk-web-api `claude/siege-minigame` @ `cd95dd1` (contains `master` up to the KNG-7/8 merge minus the chat-color diff) plus `origin/master` `a102eea` and the KNG-16 branch `claude/practical-clarke-od321q` `1d3f198` where they differ; knk-plugin `claude/siege-minigame` @ `0fa6d06`; knk-web-app `claude/siege-minigame` @ `9a6f347`. Docs: `specs/legacy/{commands-v1,commands-v2,user-system,events-v2,inventory-menu-screens}.md`, `specs/user-features/{DESIGN,COMMAND_CATALOG_V3}.md`, `specs/user-management/DESIGN.md`, `specs/kits/DESIGN.md`, `specs/inventory-menu/CONTENT_PORT_PLAN.md`, `architecture/web-api-architecture.md`, Linear KNG-15/KNG-16.
@@ -343,7 +343,8 @@ siblings add rows here):
 | `ADMIN_GRANT` / `ADMIN_TAKE` / `ADMIN_SET` | AdminAdjust | `SYS_ADMIN` | client key | this spec |
 | `REVERSAL` | Reversal | mirror of original | `reverse:{transactionId}` | this spec |
 | `MIGRATION_OPENING` | Migration | `SYS_MIGRATION` | `migration-opening:{userId}:{currency}` | this spec |
-| `MERGE_FORFEIT` | Merge | `SYS_MERGE` | `merge:{secondaryUserId}` | this spec |
+| `MERGE_FORFEIT` | Merge | `SYS_MERGE` | `merge:{secondaryUserId}` | this spec (zeroes the secondary's coins, gems and XP) |
+| `MERGE_CARRYOVER` | Merge | `SYS_MERGE` | `merge-carry:{secondaryUserId}` | developer decision 2026-09-27: survivor credited with max(0, secondary − primary) per currency, so it ends with the higher value |
 
 Rules for siblings: always pass a deterministic key when the source event has an identity; never catch
 `InsufficientFunds` and retry with a smaller amount; call inside your own transaction when you also
@@ -587,6 +588,15 @@ histogram `knk.currency.lock_wait_ms`.
 
 ## 5. Open questions for the developer
 
+### Smoke-test decisions 2026-09-27 (developer)
+
+- **XP increases** by staff need `knk.admin.user.xp` + `knk.admin.user.coins` + `knk.admin.user.gems` (decreases only
+  xp); coin/gem title bonuses they trigger count against the acting staff member's daily grant cap (422
+  `AdminDailyCapExceeded`, bypass `knk.admin.currency.unlimited`).
+- **Account link/merge keeps the highest balance per currency** (see item 6 below).
+- **Reversed transfers no longer count toward** the sender's daily send cap / hourly count or the recipient's receive cap.
+- A second reversal of the same transaction is refused with 409 `AlreadyReversed` (never a replayed success).
+
 ### Resolved 2026-09-26 (developer)
 
 1. **Gems premium, coins gameplay** — agreed (Q1). `User.cs` comments get corrected in Phase 0.
@@ -594,7 +604,10 @@ histogram `knk.currency.lock_wait_ms`.
 3. **Transfer fee 0%**, setting exists — agreed (Q3).
 4. **In-game transfers only** — agreed (Q4).
 5. **Sender eligibility: account ≥ 48 h old and Peasant title** — agreed (Q5).
-6. **Merge: secondary balance forfeited, recorded in the ledger** — agreed (Q6).
+6. **Merge: secondary balance forfeited, recorded in the ledger** — agreed (Q6). **Revised 2026-09-27 after the smoke
+   test:** the survivor keeps the **highest value per currency** (coins, gems, XP separately): `MERGE_FORFEIT` zeroes the
+   secondary, `MERGE_CARRYOVER` credits the positive difference. Summing was rejected (alt-farming), primary-only was
+   rejected (can wipe a real player's in-game balance). Title bonuses already paid to either account are not paid again.
 7. **No second-admin approval; alerts + per-admin daily cap** — agreed (Q9).
 8. **MySQL version (Q7):** dev server runs **MySQL 9.6.0** (≥ 8.0.16, so CHECK constraints are enforced). Still to confirm:
    the API's DB user holds `TRIGGER` (`SHOW GRANTS FOR CURRENT_USER();`); if not, grant it or drop the trigger step.

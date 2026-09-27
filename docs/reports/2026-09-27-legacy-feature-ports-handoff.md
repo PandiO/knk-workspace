@@ -13,7 +13,7 @@ Designs + resolved decisions: `docs/specs/{currency-payments,domain-discovery,te
 
 | Branch | knk-web-api | knk-plugin | knk-web-app |
 |---|---|---|---|
-| `claude/currency-payments` | `5887413` | `bdbd9bf` | `4cdd5cb` |
+| `claude/currency-payments` — **merged to trunk 2026-09-27** (api `5639a50`, plugin `0d01b52`, app `c4ed753`) | `edb77e8` | `7f056b3` | `6eed4a0` |
 | `claude/domain-discovery` | `9b6f517` | `ae88055` | `b45c269` |
 | `claude/teleport` | `d4daef5` | `c954c30` | `c12b39b` |
 | `claude/private-messages` — **merged to trunk 2026-09-27** (api `7daca13`, plugin `316315e`, app `7db6f46`) | `fbf280d` | `0fed5f4` | `354d4f4` |
@@ -92,13 +92,16 @@ Each plan's "Phase N status" sections list the in-game checks for that phase; th
 
 - 2026-09-27 — **private messages** passed (D3 → KNG-25, G blocked by pre-existing KNG-24, K untested) and was merged
   to trunk. Its KNG-22 commits are now on trunk too, so trunk requires the service key from here on.
+- 2026-09-27 — **currency** smoke-tested (A–K; L siege untested); findings fixed on the branch (see the plan's "Smoke
+  test + fixes" section) and merged to trunk. Decisions: XP increases need coin/gem rights and count against the staff
+  cap; account merge/link keeps the highest balance per currency (`MERGE_CARRYOVER`).
 
 ## 5. Decisions still open for the developer
 
-1. **Currency — XP grants vs. the staff cap:** holders of `knk.admin.user.xp` can raise XP and trigger title bonuses (up to
+1. ~~**Currency — XP grants vs. the staff cap:**~~ **Decided 2026-09-27:** XP increases need coins+gems rights and count against the cap. holders of `knk.admin.user.xp` can raise XP and trigger title bonuses (up to
    ~4M coins + 600 gems per player, once per bracket) outside the per-staff daily grant cap. Count bonuses against the
    cap, or require the coins/gems nodes for XP increases? (Recommended: require the coins/gems nodes for XP *increases*.)
-2. **Currency — account linking forfeits the in-game balance:** linking a Minecraft account to an existing web account
+2. ~~**Currency — account linking forfeits the in-game balance:**~~ **Decided 2026-09-27:** keep the highest balance per currency. linking a Minecraft account to an existing web account
    treats the Minecraft account as the secondary, so its coins/gems are forfeited (pre-existing behaviour, matches Q6).
    Confirm, or make linking keep the higher/combined balance.
 3. **Discovery — matchmaking:** players who are only queued for a siege (still in the normal world) are excluded from

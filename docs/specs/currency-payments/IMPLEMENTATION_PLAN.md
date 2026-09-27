@@ -1,6 +1,6 @@
 # Currency Payments & Ledger — Implementation Plan
 
-**Status:** Draft — awaiting developer review (open questions in DESIGN.md §5)
+**Status:** Done — merged to trunk 2026-09-27 (KNG-21, KNG-22)
 **Last updated:** 2026-09-26
 **Linear:** [KNG-21](https://linear.app/kngpandi/issue/KNG-21/currency-ledger-and-secure-player-payments-pay-balance-baltop-for) (Phase 0 split out as [KNG-22](https://linear.app/kngpandi/issue/KNG-22/security-coingem-write-endpoints-are-anonymous-phase-0-currency), urgent)
 **Sources:** [DESIGN.md](DESIGN.md) (all section references below point there); `docs/ACTIVE_SESSIONS.md`
@@ -483,3 +483,26 @@ without the unfreeze node (pre-existing). Deploy note: plugins without the key c
 
 Update `docs/ACTIVE_SESSIONS.md` (feature "Currency payments & ledger") and this file's status block; record
 commits per repo; list any manual DB steps (FormWizard config edits, keys in appsettings/config.yml).
+
+## Smoke test + fixes — 2026-09-27
+
+Developer smoke test (plan in the conversation, sections A–L): A–K passed or were fixed below; L (siege reward) untested.
+Fixes on `claude/currency-payments`:
+- **knk-plugin** (CI green https://github.com/PandiO/knk-plugin/actions/runs/36322662661, HEAD `7f056b3`): join balance line
+  uses the `/balance` format (`216d8b6`); `&` codes in chat-capture prompts rendered (`d538c9c`); stale [Confirm] says "That
+  payment was already sent." (`abdb3c0`); expiry notice for unconfirmed payments (`3f500d7`); API unreachable →
+  "can't be reached … Nothing was paid" instead of "no permission" via new `PermissionDecision`/`KnkPermissible.checkAsync`
+  (`b343ec1`, `2835de4`); `/knk user … history` through `KnkPermissible`, currency admin nodes `default: op` (`79693bf`);
+  409 `AlreadyReversed` shown properly, replays never printed as fresh reversals (`5a6e4fe`); XP raises need xp+coins+gems
+  nodes, API 4xx sentences shown instead of raw JSON (`7f056b3`).
+- **knk-web-api** (tests: 5 baseline failures only; requires-mysql 34/34): XP increases need coin/gem rights and bonuses
+  count against the staff cap (`de2c52c`); merge keeps the highest balance per currency with `MERGE_CARRYOVER`
+  (`ae5281d`); 409 `AlreadyReversed` with details (`239a01d`, `ba92f2d`); reversed transfers stop counting toward caps
+  (`bf9742a`); merge no longer re-pays a title bonus the secondary (or any account merged into it) already received,
+  also on later re-promotion (`edb77e8`).
+- **knk-web-app** (16 baseline failures only): "Already reversed" state on the transaction page (`05c427c`); always-visible
+  "Adjust balance" card on the player profile (`6eed4a0`).
+Not fixed here (tracked): other `/knk` subcommands still on Bukkit nodes → KNG-24.
+
+**Merged to trunk 2026-09-27:** knk-web-api `5639a50`, knk-plugin `0d01b52`, knk-web-app `c4ed753` (trees identical to the
+branch tips `edb77e8` / `7f056b3` / `6eed4a0`).
