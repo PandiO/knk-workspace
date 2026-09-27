@@ -80,4 +80,6 @@
 - **Risks:** KNG-17 merge touches `SimpleRegionTransitionService` (one import, one field, the two check methods
   rewritten here) — small, mechanical. `cacheGate` fires the state listener once per gate at startup (decision 6).
 - **Next link:** handoff `docs/ai-agents/handoffs/2026-09-27-road-navigation-phase-2b.md`; started per charter §6
-  option 1 (Claude Code Remote `create_session`, same environment) — see the line appended below once created.
+  option 1 (Claude Code Remote `create_session` in the same environment, `source_url` = knk-workspace `main`) — link 3 =
+  Claude Code Remote session `session_01GHceCT4sjFzuGiq81wtJB7` (created 2026-09-27 20:09 UTC, parent this session
+  `session_01HnoVDWFbstro88fNr2ntKM`).
