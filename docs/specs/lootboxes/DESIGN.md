@@ -1,6 +1,6 @@
 # Lootboxes — Design
 
-**Status:** Decided — smoke-test round 1 changes implemented (branch `claude/lootboxes`), awaiting re-test
+**Status:** Decided — merged to trunk 2026-09-27 (round-2 smoke test and follow-ups: IMPLEMENTATION_PLAN "Open TODOs", Linear KNG-31)
 **Last updated:** 2026-09-27
 **Linear:** [KNG-19](https://linear.app/kngpandi/issue/KNG-19/lootboxes-per-category-world-lootboxes-with-grade-weighted-rolls-v1)
 **Sources:** `knk-v1-archive` (single commit `4117e7e`): `src/Products/{Product,SpecialItemEvents,Enchantment}.java`,

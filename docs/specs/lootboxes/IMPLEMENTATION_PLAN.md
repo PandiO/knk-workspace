@@ -1,6 +1,6 @@
 # Lootboxes — Implementation Plan
 
-**Status:** Decided — implementation in progress (branch `claude/lootboxes`)
+**Status:** Merged to trunk 2026-09-27 (api `ccc8c02`, plugin `eb1d68c`, web-app `f56d421`); round-2 smoke test and follow-ups open (Linear KNG-31)
 **Last updated:** 2026-09-27
 **Linear:** [KNG-19](https://linear.app/kngpandi/issue/KNG-19/lootboxes-per-category-world-lootboxes-with-grade-weighted-rolls-v1)
 **Sources:** [DESIGN.md](DESIGN.md); `docs/ACTIVE_SESSIONS.md` (branch convention); `specs/kits/IMPLEMENTATION_PLAN.md`,
@@ -492,7 +492,7 @@ sweep). Known: the reel is untested live (menu, sounds, particles); a player dra
 the item into the siege inventory; picked-up tokens count once as a pickup and once as an open against the cap (D21);
 the chest-block look is still open.
 
-**Developer to-do before re-test:** `dotnet ef database update` (adds `BackfillDefaultRankMembership`,
+**Developer to-do before re-test** (now on trunk, see "Merged to trunk" below): `dotnet ef database update` (adds `BackfillDefaultRankMembership`,
 `AddLootboxWorldPickup`), redeploy API + plugin, add the `display.model` and `opening:` keys to the server's config.yml
 (defaults apply if missing), then the round-2 checklist below.
 
@@ -509,6 +509,45 @@ the chest-block look is still open.
 7. Sync: despawn a box on `/admin/lootboxes` → it vanishes in game within ~2 s. Revoke a token held online → removed with
    a message; revoke one held by an offline player → removed with a message when they join.
 8. Grades: set a type's max box stars to 10 in the web app → saves; Odds tab offers ★1-10.
+
+### Merged to trunk — 2026-09-27
+
+Merged on the developer's sign-off after smoke test round 1 ("no large open subjects"), **without a round-2 re-test**:
+api `master` `ccc8c02`, plugin `main` `eb1d68c`, web-app `main` `f56d421` (no-ff merges of `claude/lootboxes` tips
+`ba51dc1` / `2ca5ce9` / `30d66fc`, each tree identical to the tested tip; branches were level with trunk). Tip checks:
+API 1524 pass / 5 baseline, `requires-mysql` 42/42, migrations CI green; plugin CI green; web-app build + `tsc` clean,
+16 baseline test failures.
+
+## Open TODOs (after the trunk merge)
+
+Tracked in Linear **KNG-31** (lore spacing KNG-29 and the tab-completion sweep KNG-30 are separate).
+
+**Verify on the dev server**
+- Deploy trunk; `dotnet ef database update` adds `BackfillDefaultRankMembership` (every rankless account gets Default -
+  affects **all** features' Default nodes, not just lootboxes) and `AddLootboxWorldPickup`. The lootbox FormConfigurations
+  (PHASE_4_FORMCONFIGS.md) are needed on any DB that doesn't have them yet.
+- Run the round-2 checklist above (Default permissions, pickup, the reel live, pickup cap, staff messages + tab completion,
+  despawn/revoke sync, ★1-10).
+
+**Decisions for the developer**
+- Daily cap counts pickups and opens separately (D21): keep, or count opens only (drop `EnforceDailyPickupCapAsync`)?
+- World box look: display entities showing the token item (now) or a real chest block (DESIGN §5 round 1, D3)?
+
+**Known gaps (small)**
+- A player moved into a siege while their reel spins receives the item into the siege inventory (lost on restore): hold it
+  until `SiegePlayerVault` restores, like held-back tokens.
+- Boxes spawned before a siege stay claimable by non-participants in the arena.
+- A revoked token stored in a chest/shulker is only removed when someone tries to open it.
+- Web-app area delete: not audited; leaves a `lootbox_` WorldGuard region behind.
+- Types tab makes ~14 odds calls on load.
+- `POST LootboxSpawns/{id}/claim` (open on the spot) is unused by the plugin now: remove once no older plugin build runs.
+- `LootboxWorldChanged` is single-consumer (first server to acknowledge wins): fine for one server.
+- Accepted: stackable double delivery after a real crash; a token dropped on a full inventory can come back as a dead copy.
+
+**Tooling found along the way**
+- knk-web-app: `npm ci` fails on trunk (lockfile lacks the optional `yaml@2` peer; `npm ci --legacy-peer-deps` works);
+  `CI=true npm run build` fails on existing lint warnings.
+- knk-web-api: `knkwebapi_v2.sln` points at `tests/` (lowercase), so building the solution fails on Linux (`Tests/`).
 
 ## Cross-feature dependencies
 

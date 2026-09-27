@@ -17,7 +17,7 @@ Designs + resolved decisions: `docs/specs/{currency-payments,domain-discovery,te
 | `claude/domain-discovery` — **merged to trunk 2026-09-27** (api `acaee99`, plugin `4ec2f23`, app `46be4e9`) | `a826691` | `a07ad81` | `8a6b3f9` |
 | `claude/teleport` | `d4daef5` | `c954c30` | `c12b39b` |
 | `claude/private-messages` — **merged to trunk 2026-09-27** (api `7daca13`, plugin `316315e`, app `7db6f46`) | `fbf280d` | `0fed5f4` | `354d4f4` |
-| `claude/lootboxes` — trunk (PM, currency, discovery) merged in 2026-09-27; smoke test round 1 done, **rework in, awaiting round 2** | `ba51dc1` | `2ca5ce9` | `30d66fc` |
+| `claude/lootboxes` — **merged to trunk 2026-09-27** (api `ccc8c02`, plugin `eb1d68c`, app `f56d421`); round-2 re-test open (KNG-31) | `ba51dc1` | `2ca5ce9` | `30d66fc` |
 
 All five branches contain trunk **including the siege merge** (api `67f451e`, plugin `716fb3c`, web-app `4fba7d0`). Every
 plugin branch has a GitHub Actions `Build` workflow (`.github/workflows/build.yml`) and was green on its tip; API suites show
@@ -104,6 +104,10 @@ Each plan's "Phase N status" sections list the in-game checks for that phase; th
   group grants ignored) was a trunk bug**: accounts created before the Default group existed were never put in it — API
   migration `BackfillDefaultRankMembership` (on `claude/lootboxes`) fixes it for every feature's Default nodes. Details +
   round-2 checklist: lootboxes `IMPLEMENTATION_PLAN.md` "Smoke test round 1 + rework". Linear KNG-29, KNG-30 filed.
+  Then **merged to trunk** on the developer's sign-off without the round-2 re-test (api `ccc8c02`, plugin `eb1d68c`, app
+  `f56d421`); remaining checks, two open decisions (cap counting, chest block) and small gaps: lootboxes plan "Open
+  TODOs", Linear KNG-31. Trunk now needs `dotnet ef database update` for `BackfillDefaultRankMembership` +
+  `AddLootboxWorldPickup`.
 
 ## 5. Decisions still open for the developer
 
@@ -128,4 +132,8 @@ Each plan's "Phase N status" sections list the in-game checks for that phase; th
   signal (Phase 5b) not built; plugin staff balance changes still use the deprecated `PUT Users/{id}/balances`.
 - Trunk: `WorldGuardRegionListener` judges PLUGIN-cause teleports, so a siege hub/return spot inside an
   AllowEntry/AllowExit=false domain could block siege's own teleports.
+- Lootboxes (merged): round-2 smoke test, cap-counting and chest-block decisions, siege-mid-reel gap and other small items
+  — lootboxes plan "Open TODOs", Linear KNG-31; lore spacing KNG-29; tab-completion sweep KNG-30.
+- Tooling: web-app `npm ci` needs `--legacy-peer-deps` on trunk (lockfile lacks the optional `yaml@2` peer); web-api
+  `knkwebapi_v2.sln` points at lowercase `tests/`.
 - `COMMAND_CATALOG_V3.md` / `EVENT_CATALOG_V3.md` are stale (don't list any of the new commands/listeners).
