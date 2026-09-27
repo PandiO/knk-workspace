@@ -14,7 +14,7 @@ Designs + resolved decisions: `docs/specs/{currency-payments,domain-discovery,te
 | Branch | knk-web-api | knk-plugin | knk-web-app |
 |---|---|---|---|
 | `claude/currency-payments` — **merged to trunk 2026-09-27** (api `5639a50`, plugin `0d01b52`, app `c4ed753`) | `edb77e8` | `7f056b3` | `6eed4a0` |
-| `claude/domain-discovery` | `9b6f517` | `ae88055` | `b45c269` |
+| `claude/domain-discovery` — trunk (PM + currency) merged in 2026-09-27, **in smoke test** | `dcec282` | `e186ae8` | `7dcdec1` |
 | `claude/teleport` | `d4daef5` | `c954c30` | `c12b39b` |
 | `claude/private-messages` — **merged to trunk 2026-09-27** (api `7daca13`, plugin `316315e`, app `7db6f46`) | `fbf280d` | `0fed5f4` | `354d4f4` |
 | `claude/lootboxes` | `5d13358` | `45d017a` | `4754c24` |

@@ -1,6 +1,6 @@
 # Domain Discovery — Implementation Plan
 
-**Status:** Draft — awaiting developer review (open questions in DESIGN.md §5)
+**Status:** Implemented on `claude/domain-discovery` (trunk merged in 2026-09-27) — in developer smoke test
 **Last updated:** 2026-09-26
 **Linear:** [KNG-20](https://linear.app/kngpandi/issue/KNG-20/domain-discovery-first-entry-rewards-for-townsdistrictsstructures)
 **Sources:** [DESIGN.md](DESIGN.md); `docs/ACTIVE_SESSIONS.md` (branch convention); `specs/inventory-menu/CONTENT_PORT_PLAN.md`
@@ -298,7 +298,7 @@ join (negligible); riders discover only after dismounting; reset audit row outsi
 key read; corrupt spool file skipped. Tests: API 829 pass / 5 baseline / 14 skipped, requires-mysql 14/14; migrations CI
 36263326069 green; plugin CI green https://github.com/PandiO/knk-plugin/actions/runs/36263324190; web-app 282 pass / 16 baseline.
 
-**Feature status: Phases 1–5 complete on `claude/domain-discovery`; awaiting developer smoke test + merge.** Merge order:
+**Feature status: Phases 1–5 complete on `claude/domain-discovery`; trunk merged in 2026-09-27; in developer smoke test.** Merge order:
 currency-payments → domain-discovery → teleport. At merge, switch discovery's `ApplyTitleProgressionAsync` to currency
 Phase 2's identical-signature version (`234f8f3`) so title bonuses are ledger-posted too.
 
@@ -313,6 +313,18 @@ API 1049 pass / 14 skipped; web-app 308 / 16 baseline. **To confirm:** players i
 excluded too — change `isParticipant` to check the phase if discovery should only stop at hub/match. Known: siege rewards on
 this branch still write balances directly (resolved by merging currency first). In-game: in a lobby, entering an undiscovered
 town discovers nothing; no arena discoveries; after leaving, re-entering discovers; `exclude-siege-participants: false` restores.
+
+### Trunk merge (private messages + currency) — done 2026-09-27 (all three repos, `claude/domain-discovery`)
+
+Merged trunk api `5639a50` / plugin `0d01b52` / app `c4ed753` → tips api `dcec282`, plugin `e186ae8`, app `7dcdec1`.
+`ApplyTitleProgressionAsync` now uses currency's `TitleProgressionService`: every crossed bracket is a ledger `TITLE_BONUS`
+posting (`title-bonus:{userId}:{bracketId}`), paid once, including across merged accounts; the discovery-local bonus loop is gone.
+Reward payout unchanged (one `DISCOVERY_REWARD` posting per domain via `ICurrencyService.PostAsync`). `DiscoveryReset = 17`.
+EF snapshot rebuilt from trunk's plus the discovery tables (`has-pending-model-changes` clean; 52-migration script generates;
+on an existing dev DB only `AddDomainDiscovery` is pending). Plugin: trunk's join flow kept, and `UserDataLoadedEvent` now
+fires after the welcome/balance lines. Tests: API 1340 pass / 5 baseline, requires-mysql 39/39 (4 discovery ledger);
+knk-core 851, api-client 111; plugin CI green https://github.com/PandiO/knk-plugin/actions/runs/36326110951; web 353 pass /
+16 baseline.
 
 ## Risks / notes for whoever picks this up
 - `DomainService.SearchDomainRegionDecisionAsync` returns at most one Town/District/Structure and no GateStructures; discovery
