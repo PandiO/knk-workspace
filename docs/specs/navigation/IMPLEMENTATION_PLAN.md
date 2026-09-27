@@ -238,7 +238,7 @@ profiles, and anyone can download the network.
   levelCount, warnings[]}`, `RoadTileGraphDto {tile, nodes[], edges[]}`, `RoadNodeDto`, `RoadEdgeDto` (geometry as
   `int[][]`, `gateDoorIds`, `domainIds`, `flags` as string array), `RoadTileGraphUpsertDto` (below), `RoadNetworkMetaDto
   {profiles[], streets: [{id,name}], components: [{id, nodeCount}]}`, `RoadSeedDto`, `RoadNodeUpdateDto`,
-  `RoadNodeMergeDto`, `RoadEdgeUpdateDto`, `RoadEdgeRecordDto`, `StreetRoadDto`, `RoadSeedLocationDto {domainId,
+  `RoadNodeMergeDto`, `RoadEdgeUpdateDto` (incl. `propagate`), `RoadEdgeRecordDto`, `StreetRoadDto`, `RoadSeedLocationDto {domainId,
   domainType, name, x, y, z}` (D12).
 - `RoadTileGraphUpsertDto`: `builderVersion`, `cellCount`, `levelCount`, `warnings[]`, `nodes[{key, existingId?, x, y,
   z, kind}]`, `edges[{existingId?, fromKey, toKey, geometry, length, avgWidth, profileId?, gateDoorIds[],
@@ -287,7 +287,10 @@ Explicit DI block in `ServiceCollectionExtensions` after the siege block (R33):
   - Tiles: list by world; mark dirty (sets `Dirty`, edges → `Stale`).
   - Seeds CRUD. Nodes: update (name/kind/lock), create anchor, merge (re-point the second node's edges to the first,
     drop self-loops/duplicates, delete the second; recompute components). Edges: create recorded (ends snapped to the
-    nearest node within 3 blocks, else create `Anchor`s), update (street → `Manual`, class override via profile id,
+    nearest node within 3 blocks, else create `Anchor`s), update (street → `Manual`; with `propagate = true` the
+    same label is applied along the road — `RoadStreetLabeler`'s continuation rule (< 35°, same class, same level),
+    stopping at edges that already carry a different `Manual` street — and the response lists every edge changed;
+    class override via profile id,
     cost, flags), delete.
   - Meta: profiles + street names + component summary for a world.
   - Seed locations (D12): domain Locations (Town/District/Structure/Gate with `LocationId`) whose Location is in the
@@ -539,7 +542,9 @@ the jam in `GateAnimationTask`, and the `GateCommand` destroyed/active toggles.
   started it.
 - `RoadNetworkCache` — per world: tile list → conditional tile downloads (R17) → local file cache
   `plugins/KnightsAndKings/roads/<world>/<x>_<z>.json` (+ version) → `RoadNetworkSnapshot` (2d) rebuilt off-thread and
-  swapped atomically; refresh on start, after builds, every 10 min.
+  swapped atomically; tiles refresh on start, after builds and every 10 min; **meta (profiles + street names) every
+  60 s** — it's a few KB, and it's how a street renamed in the web app reaches navigation messages within a minute.
+  `/knk road reload` forces both.
 - `RoadSurveyService` + `RoadSurveySession` — `/knk road survey start|stop|cancel`; samples every
   `sample-period-ticks` only when on ground, walking (speed > 0.1 b/tick), not flying/riding/swimming; builds
   `SurveySample`s (cross-section via world reads on the main thread — at most 15 columns per sample); live action bar;
@@ -555,7 +560,7 @@ the jam in `GateAnimationTask`, and the `GateCommand` destroyed/active toggles.
 - `RoadOverlayRenderer` — `/knk road show [radius] [all]` per admin, ticker every 20 ticks: nodes as pillars, edges as
   polylines (R9 `ParticleDraw`), colours by street hash/status; only ±8 Y unless `all`; action-bar label of the
   looked-at node/edge.
-- `RoadAdminCommand` — all DESIGN §7 subcommands; node check like `DiscoveryAdminCommand.hasNode` (R15); tab
+- `RoadAdminCommand` — all DESIGN §7 subcommands (incl. `street … --continue` → `propagate`, and `reload`); node check like `DiscoveryAdminCommand.hasNode` (R15); tab
   completion method used by `KnkAdminCommand.onTabComplete` (R13). Build summary with clickable teleports
   (`/knk tp`-style existing command or `player.teleportAsync` for staff).
 
@@ -634,7 +639,13 @@ arrival; auto-end on death/teleport/siege join.
   - `RoadTilesCard` — tile table (x, z, version, built, dirty, counts, warnings expandable), filter dirty/warnings.
   - `RoadEdgesCard` — server-paged `POST road-edges/search` with filters (unlabelled, stale, street); inline edit
     (street via `SearchableDropdown` + `streetClient.searchPaged` R37, cost, flags) in the `DiscoveryOverridesCard`
-    pattern (R34), 4xx messages shown.
+    pattern (R34), 4xx messages shown. Street editing (developer requirement: street names stay editable in the web
+    app):
+    - a **"Continue along the road"** checkbox (default on) → `propagate: true`; show how many stretches changed;
+    - **"Create street…"** in the picker → small inline form → existing `streetClient.create` (reuse; don't add a
+      road-specific street endpoint), then assign it;
+    - a **Rename** link next to the street name → the existing Street edit form (`/forms/street/edit/:id`); renaming
+      stays owned by the Street entity, so nothing road-specific stores names.
 - Street road panel: `F/components/roads/StreetRoadPanel.tsx` (like `SiegeReadinessPanel`) registered as
   `streetRoad` in `F/components/FormWizard/displayPanels.tsx` (R36); document in the phase status how to add it to the
   Street FormConfiguration (a field on `Id` with `settingsJson {"displayPanel":"streetRoad"}` — a dev-DB step for the

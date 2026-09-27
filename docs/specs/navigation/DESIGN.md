@@ -572,7 +572,7 @@ In-game (`knk.admin.roads`), direct commands in the `GateDoorRegionCaptureHandle
 | `/knk road build here` / `tile <x> <z>` / `radius <r>` / `dirty` / `all` | Builds tiles (§5.4-5.8), then a **build summary**: nodes/edges, levels, disappeared nodes, street conflicts, leaks, component gaps, **survey coverage misses** — each with a clickable teleport. |
 | `/knk road seed add [note]` / `remove` / `list` | Admin seeds. |
 | `/knk road show [radius] [all]` / `hide` | Overlay: nodes by kind, edges coloured by street, unlabelled grey, stale orange, closed red, gate-crossing edges with a gate marker; only the viewer's level unless `all`. |
-| `/knk road street <street> [edgeId]` | Label an edge (`Manual`). |
+| `/knk road street <street> [edgeId] [--continue]` | Label an edge (`Manual`); `--continue` carries the label along the road through straight junctions (§7.1). |
 | `/knk road node name <name>` / `merge <id> <id>` / `anchor` / `lock` | Review fixes. |
 | `/knk road record start` / `stop [street]` / `cancel` | Recorded edge, including vertical ones (§5.10). |
 | `/knk road edge set <id> cost <x>` / `oneway` / `nogps` / `close` / `open` | Tuning. |
@@ -584,7 +584,54 @@ radius 1500` around Kardenna → read the summary → `/knk road show` → fix t
 coordinates typed.
 
 Web app (admin, Phase 5): profile editor (materials, roles, ambiguous flags, class, cost), tile overview, Street detail
-with its edges, edge table with class/cost/flags/street editing, build warnings.
+with its edges, edge table with class/cost/flags/street editing (incl. "continue along the road" and "create street"),
+build warnings. **Street names stay fully editable in the web app** (developer requirement): a Street's name lives
+only on the `Street` entity — edges reference it by id — so renaming a street in its existing web-app form renames it
+everywhere, navigation messages included (the plugin refreshes street names every 60 s).
+
+### 7.1 Admin workflows
+
+Where each step happens: **in-game** for anything that needs someone standing in the world (survey, build, overlay,
+recording a stretch); **web app** for naming, labelling, profiles, tuning and overviews. Nothing asks for coordinates.
+
+**A. Once per building style — teach the plugin what roads look like** (in-game, ~5 min per road type)
+1. `/knk road survey start "Kardenna main street"`, walk the road for a few minutes, `/knk road survey stop`.
+2. Review the proposed profile in chat (materials, roles, ambiguous flags, width) → Save / Merge / Discard. Fine-tune
+   later in the web app. Repeat for each road type (main street, wilderness road, trail) and each kingdom style.
+
+**B. Scan an existing area** (in-game, then review; ~15-30 min per town the first time)
+1. `/knk road build radius 1500` (or `here` / `tile` / `all`). The build finds the roads from domain spawn Locations,
+   survey paths and seeds, and detects junctions and dead ends by itself.
+2. Read the build summary: disappeared nodes, unlabelled or conflicting streets, suspected leaks, gaps between road
+   pieces, survey coverage misses — each clickable to teleport there.
+3. `/knk road show` to see the result as particles; fix what's wrong:
+   - a gap (wooden bridge, ford, grass path, ladder) → add the material to a profile, or record the stretch by walking
+     it (`/knk road record` or from a survey path);
+   - a junction detected twice or missed → `/knk road node merge` / `node anchor`;
+   - a road that shouldn't be used for routing → `edge … nogps` / `close`.
+4. Streets: most stretches are named automatically from the Structures along them (§5.11). Name the rest, in-game
+   (`/knk road street …`) or in the web app edge table, both with "continue along the road".
+
+**C. A new road is built** (builders place blocks)
+1. Placing or breaking road blocks marks the tile dirty (the tile overview lists it; routing keeps working on the old
+   data).
+2. An admin runs `/knk road build dirty`. Existing names, labels and fixes are kept; the new road is joined to the
+   network where it touches existing roads.
+3. If the new road uses a material no profile knows, the build summary says so (coverage/gap) → survey it or add the
+   material in the web app.
+
+**D. A new street (name)**
+1. Create the Street in the web app (the existing Street form), or from the road page's "create street" in the edge
+   editor.
+2. Structures created on that street (every Structure already has a Street) make the next build/labelling pick the name
+   up automatically; streets without buildings (wilderness roads) are assigned in the edge table or in-game, with
+   "continue along the road".
+
+**E. Rename or re-assign a street** — web app only, no rebuild: rename in the Street form (takes effect in-game within
+a minute), or change the street of a stretch in the edge table. Manual labels are never overwritten by later builds.
+
+**F. Routine upkeep** — glance at the tile overview for dirty tiles and warnings; `/knk road build dirty` now and then
+(automatic rebuilds are a later phase).
 
 ---
 
