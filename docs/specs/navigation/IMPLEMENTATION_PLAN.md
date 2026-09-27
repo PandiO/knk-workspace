@@ -17,6 +17,9 @@ Path shorthands: `C/` = `knk-plugin/knk-core/src/main/java/net/knightsandkings/k
 
 ## 0. Instructions for the implementing agent
 
+**Running as a chain of sessions?** Follow [`docs/ai-agents/handoffs/ROAD_NAVIGATION_CHAIN.md`](../../ai-agents/handoffs/ROAD_NAVIGATION_CHAIN.md)
+(one phase per link, fresh context per phase, never blocked by the developer's live testing); it adds to this section.
+
 Read this section fully before touching code.
 
 ### 0.1 Read order
