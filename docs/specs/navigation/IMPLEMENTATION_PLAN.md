@@ -1,8 +1,9 @@
 # Road Navigation — Implementation Plan
 
-**Status:** Ready for implementation (handoff to a Claude Code agent). No phase started. Every code reference was
-verified against trunk by a separate review pass on 2026-09-27; its corrections are folded in.
-**Last updated:** 2026-09-27
+**Status:** In implementation (chain, `docs/ai-agents/handoffs/ROAD_NAVIGATION_CHAIN.md`). **Phase 1 done**
+(knk-web-api `claude/road-navigation` `77e0a29`, 2026-09-27); Phase 2a next. Every code reference was verified
+against trunk by a separate review pass on 2026-09-27; its corrections are folded in.
+**Last updated:** 2026-09-27 (Phase 1 status)
 **Linear:** [KNG-27](https://linear.app/kngpandi/issue/KNG-27)
 **Design:** [DESIGN.md](DESIGN.md) rev. 4 (decided) — read it first; this plan says *where and how* to build it.
 **Sources:** trunk as of 2026-09-27 — knk-web-api `master` `acaee99`, knk-plugin `main` `ceed2f6`, knk-web-app `main`
@@ -352,6 +353,148 @@ them in `GetByIdAsync`/`GetAllAsync` (one grouped query for all). **No street te
 CI; Swagger shows every route; a hand-made two-tile payload round-trips (PUT → GET graph → 304 on repeat).
 
 ---
+
+### Phase 1 status — done 2026-09-27 (knk-web-api `claude/road-navigation` `55d5aaa`, `8553dec`, `c7df10e`, `77e0a29`; cut from `master` `ccc8c02`)
+
+- **What was built** (all under `W/`):
+  - `Enums/RoadEnums.cs` — `RoadClass`, `RoadMaterialRole`, `RoadNodeKind`, `RoadNodeSource`, `RoadEdgeSource`
+    (`Detected | Recorded | Stitch`), `RoadEdgeStatus`, `RoadStreetSource`, `RoadSeedSource`, `[Flags] RoadEdgeFlags` (int).
+  - `Models/Roads/{RoadProfile,RoadSurvey,RoadTile,RoadSeed,RoadNode,RoadEdge}.cs` — DESIGN §3 + D4 (`RoadTile.Version`),
+    D5 (`RoadProfile.StatsJson`), D8 (`ScopeTownIdsJson`), D11 (`RoadEdge.RegionIdsJson`), `RoadEdge.World`;
+    `RoadTile.Size = 512`, `RoadTile.TileCoordinate(int)`.
+  - `Properties/KnKDbContext.cs` — `// Road navigation` block after the discovery block; tables/indexes/FKs exactly
+    as 1.2 (plus `road_seeds.SurveyId → road_surveys` **SetNull**, decision 10).
+  - Migration `Migrations/20260927190750_AddRoadNetwork.cs` (+ Designer, snapshot) with the `InsertData` bootstrap
+    profile *Default road* (`seededAt` 2026-09-27 UTC). Passed the four fresh-DB steps **locally on MySQL 8.0.46**
+    (update → `has-pending-model-changes` clean → update 0 → update) and the `Migrations (fresh DB)` workflow on
+    every pushed commit that carries the migration (runs 108, 110, 111 green; run 107 = the models-only commit
+    before the migration, red on "pending model changes" as expected).
+  - `Json/JsonColumn.cs` (R29; `GameSettingsJson` delegates), `StaffPermissions.RoadManage = "knk.admin.road"` (R31).
+  - `Dtos/RoadDtos.cs` — every DTO of 1.3, all `[JsonPropertyName("camelCase")]`, plus some not in the plan's list:
+    `RoadTileUpsertResultDto` (the PUT graph response: tile + created/updated/deleted counts, stitch/labelled/
+    unlabelled counts, `conflicts[]`, `deletedNodes[]`, `bumpedTileIds[]`), `RoadEdgeUpdateResultDto {edge,
+    changedEdgeIds[]}`, `RoadNodeAnchorDto`, `RoadSeedCreateDto`, `RoadBreadcrumbPointDto {x,y,z,onRoad}`,
+    `RoadStreetRefDto`, `RoadComponentDto`. Profile/survey `stats` are opaque JSON objects (`JsonElement?`).
+  - `Mapping/RoadMappingProfile.cs` (read side), `Services/Roads/RoadJson.cs` (column ↔ DTO shapes, flag names).
+  - `Repositories/Interfaces/IRoadNetworkRepository.cs` + `Repositories/RoadNetworkRepository.cs` — tracked-entity
+    queries, `RunInTransactionAsync` (R30 pattern, in-memory fallback) + `LockTileAsync` (`SELECT … FOR UPDATE`),
+    edge search with the 1.5 filters, `GetStreetEdgeStatsAsync` (one grouped query), structures/domain Locations
+    in a box via the `Domain.Location` navigation.
+  - `Services/Roads/RoadGeometry.cs`, `RoadComponents.cs` (union-find, id = smallest node id),
+    `RoadStreetLabeler.cs` (votes 16 blocks / |Δy| ≤ 4 / weight 1/max(d, 0.5), ≥ 60 % majority, continuation < 35°
+    same class same level to a fixed point, Manual untouched, ring edges as fixed context; plus `Propagate` for the
+    edge update's "continue along the road").
+  - `Services/Interfaces/IRoadNetworkService.cs` + `Services/RoadNetworkService.cs` — the 1.4 list. Upsert order:
+    validate → nodes (match by `existingId`, else exact position; Locked keep position; Manual keep kind) → delete
+    unmatched Detected nodes **and their edges explicitly** → edges (match by `existingId`, else node pair; admin
+    fields kept) → delete unmatched Detected edges → stitch (D7) → labels (D6) → tile fields/Version/bumped
+    neighbours → components. Everything inside one transaction.
+  - Controllers: `RoadControllerBase` (400 `ValidationFailed` / 404 `NotFound` / 409 `Conflict`, `{error, message}`),
+    `RoadTilesController`, `RoadNetworkController`, `RoadProfilesController`, `RoadSurveysController`,
+    `RoadSeedsController`, `RoadNodesController`, `RoadEdgesController`, `StreetsController.GetStreetRoad`
+    (`GET api/Streets/{id}/road`). Routes and auth exactly as the 1.5 table. Swagger lists all 17 road routes.
+  - Street counts (1.6): `StreetDto.edgeCount/totalLength`, mapping `Ignore()`, `StreetService` takes
+    `IRoadNetworkRepository` (constructor change; DI is convention-scanned, no other caller).
+  - DI: `// Road navigation` block after the siege block in `ServiceCollectionExtensions` (R33).
+- **Reuse:** R29 (extracted), R30 (pattern), R31, R32, R33 applied. Also reused: `ServiceAuthTestHelper` for the
+  gate tests, `DiscoveryConfigurationServiceTests` style for the service tests, `AddDomainDiscoveryTests` style +
+  `InsertData` precedent for the migration, `SiegeMatchRepository.RunLockedAsync` shape.
+- **Tests:** `dotnet test Tests/knkwebapi_v2.Tests/knkwebapi_v2.Tests.csproj` — before **1524 passed / 5 failed /
+  42 skipped (1571)**, after **1627 passed / 5 failed / 42 skipped (1674)** → +103, no new failures. The 5 known
+  failures, by name: `ClientActivityStoreTests.RecordsRequestsIntoRollingBuckets`,
+  `FormSubmissionProgressRepositoryTests.DeleteCompletedOlderThanAsync_DeletesStaleRootAndDescendantsInOrder`,
+  `FieldValidationServiceTests.ValidateConditionalRequiredAsync_WithConditionMet_ValidatesRequired`,
+  `PathResolutionServiceTests.ValidatePathAsync_AllowsValidV1Paths` ×2 (`Town.Name`, `Town.WgRegionId`). New test
+  files: `Services/Roads/{RoadGeometryTests,RoadComponentsTests,RoadStreetLabelerTests}.cs`,
+  `Services/RoadNetworkServiceTests.cs` (28 facts incl. every 1.7 item), `Services/StreetServiceTests.cs`,
+  `Api/RoadControllersTests.cs` (ETag/304, error mapping, wire names, gates), `Migrations/AddRoadNetworkTests.cs`.
+  **Acceptance run** against the API on a local MySQL (Development, `Security:PluginApiKey` set): two hand-made
+  adjacent tile payloads → PUT 200 (second one reports `stitchEdges: 1`), GET graph 200 with `ETag: "1"`, repeat
+  GET with `If-None-Match: "1"` → 304, `POST …/dirty` → edges `Stale` in `POST api/road-edges/search`
+  `{"filters":{"stale":"true"}}`, anonymous PUT → 401, node outside the tile → 400 with the message.
+- **Decisions to review** (defaults taken; all reversible):
+  1. **Stitch edges live in the owning tile's graph** and may reference a node of the neighbour tile by id; the
+     neighbour's `Version` is bumped only when it *loses* an owned stitch (D7 wording), not when the other tile
+     gains one. The plugin must resolve cross-tile node ids from the other tile's download (Phase 2d/3).
+  2. **Detected nodes that a Recorded edge touches are kept** on rebuild (otherwise the recording would vanish with
+     its endpoint); Manual and Locked nodes are kept as the plan says.
+  3. **Fallback matching:** a payload node without `existingId` on the exact position of an existing node of the
+     tile matches it; a payload edge without `existingId` whose node pair already exists as a Detected edge of the
+     tile matches it. Avoids unique-index violations when the builder misses a match; a pair held by a Recorded/
+     Stitch edge or another tile's edge is a 400.
+  4. **Inferred labels are recomputed from scratch** on every upsert (an Inferred label whose structures are gone
+     is dropped); a vote conflict leaves the edge unlabelled and is appended to the tile warnings.
+  5. **Mark dirty bumps `Version`** (the edges' `Stale` status is part of the graph download) and creates the tile
+     row if unknown.
+  6. **`propagate` writes `Manual`** on every edge it reaches (an admin's "continue along the road" must survive the
+     next build); it stops at edges carrying a *different* Manual street and at side streets (> 35°).
+  7. **Node edit locks the node** (`Locked = true`) unless the request says `"locked": false`; anchors and the
+     Anchor ends of recorded edges are `Manual` + `Locked`.
+  8. **Recorded edges belong to the tile of their first point**; ends snap to the nearest node within 3 blocks
+     (any kind), else an Anchor is created there; length defaults to the polyline length.
+  9. **`RoadSurvey.StartedByUserId` is nullable** (the plugin may omit `X-Acting-User-Id`), FK Restrict.
+  10. `road_seeds.SurveyId` FK **SetNull** (the plan lists no rule for it).
+  11. Edge update DTO distinguishes "leave" from "clear" with `clearStreet` / `clearProfile` flags (a nullable
+      `streetId` alone can't).
+  12. Meta `streets` lists only streets some edge of that world is labelled with (not every Street).
+  13. Boundary validation: `Boundary` nodes must sit on the tile's border cells (x or z equal to the tile min/max);
+      other kinds may sit anywhere in the tile. `id:<n>` node references must be in the same world.
+  14. The labeler treats "same road class" as equal `RoadClass` of the edges' profiles (unmatched = null equals
+      null only).
+  15. Deleting a profile nulls `ProfileId` on its edges and surveys explicitly (SetNull parity for the InMemory
+      provider).
+- **Discrepancies found:**
+  - Plan §0.4: `dot.net`, `builds.dotnet.microsoft.com` and `dotnetcli.azureedge.net` are blocked by the cloud
+    proxy, but `apt-get install dotnet-sdk-8.0` (Ubuntu 24.04 archive, 8.0.131) and `apt-get install mysql-server`
+    work — that is how the tests and the four migration steps ran here. `dotnet tool install dotnet-ef 9.0.10`
+    works (api.nuget.org is reachable). Later links: same recipe.
+  - Charter §9 / plan header: knk-web-api trunk had moved from `acaee99` to `ccc8c02` (lootboxes merge) when this
+    link started; the branch is cut from `ccc8c02`. The clone's `origin/master` was stale until re-fetched — always
+    `git fetch origin master` before cutting.
+  - `dotnet run` ignores `ASPNETCORE_URLS` here (launchSettings wins): the API listens on `http://localhost:5294`.
+  - `StreetsController` lives in namespace `KnKWebAPI.Controllers` (not `knkwebapi_v2.Controllers`); left as is.
+- **Developer to-do:**
+  - Dev DB: `dotnet ef database update` on `claude/road-navigation` adds the six `road_*` tables + the *Default road*
+    profile row (id 1 on an empty table).
+  - Set `Security:PluginApiKey` (the plugin's key) — every write route needs it or a JWT with `knk.admin.road`.
+  - **Live checklist (Swagger, ~5 min):** (1) `GET api/road-profiles` shows *Default road*; (2) `PUT
+    api/road-tiles/world/0/0/graph` with the payload below (header `X-API-Key`) → 200, `nodesCreated: 3`;
+    (3) `GET api/road-tiles/world/0/0/graph` → 200 with `ETag: "1"`; repeat with `If-None-Match: "1"` → 304;
+    (4) `PUT api/road-tiles/world/1/0/graph` with the second payload → `stitchEdges: 1`, and `GET
+    api/road-network/meta?world=world` shows one component of 5 nodes; (5) `POST api/road-tiles/world/1/0/dirty` →
+    `dirty: true`, then `POST api/road-edges/search` `{"filters":{"stale":"true"}}` lists that tile's edges;
+    (6) `GET api/Streets/{id}` of any street shows `edgeCount`/`totalLength` (0 until labels exist).
+    Payload 1: `{"builderVersion":1,"cellCount":10,"levelCount":1,"warnings":[],"nodes":[{"key":"b0","x":0,"y":64,
+    "z":100,"kind":"Boundary"},{"key":"j","x":200,"y":64,"z":100,"kind":"Junction"},{"key":"b1","x":511,"y":64,
+    "z":100,"kind":"Boundary"}],"edges":[{"fromKey":"b0","toKey":"j","geometry":[[0,64,100],[200,64,100]],
+    "length":200,"avgWidth":3,"profileId":1,"gateDoorIds":[],"domainIds":[],"regionIds":[]},{"fromKey":"j",
+    "toKey":"b1","geometry":[[200,64,100],[511,64,100]],"length":311,"avgWidth":3,"profileId":1,"gateDoorIds":[],
+    "domainIds":[],"regionIds":[]}]}`. Payload 2: `{"builderVersion":1,"cellCount":5,"levelCount":1,"warnings":[],
+    "nodes":[{"key":"b","x":512,"y":64,"z":100,"kind":"Boundary"},{"key":"e","x":700,"y":64,"z":100,
+    "kind":"Endpoint"}],"edges":[{"fromKey":"b","toKey":"e","geometry":[[512,64,100],[700,64,100]],"length":188,
+    "avgWidth":3,"profileId":1,"gateDoorIds":[],"domainIds":[],"regionIds":[]}]}`.
+- **What later phases must wire** (contract, unchanged from the 1.5 table unless noted):
+  - **Phase 2e (Java DTOs):** mirror `W/Dtos/RoadDtos.cs` one to one; names are the `[JsonPropertyName]`s. Enums
+    are strings by name; `flags` is a string array (`Oneway`, `NoGps`, `Closed`); `geometry` is `int[][]`;
+    `stats` (profile, survey) is an opaque JSON object (Jackson `JsonNode`/`Map`), send `null` to keep it on a
+    profile PUT. `PUT …/graph` returns `RoadTileUpsertResultDto`, `PUT api/road-edges/{id}` returns
+    `RoadEdgeUpdateResultDto`, `POST api/road-nodes/anchor` takes `RoadNodeAnchorDto`, `POST api/road-seeds` takes
+    `RoadSeedCreateDto`. Errors are `{ "error": "ValidationFailed" | "NotFound" | "Conflict", "message" }`.
+    R17 conditional GET: `ETag` is the quoted version (`"3"`); send it back verbatim in `If-None-Match`; weak
+    tags (`W/"3"`) are accepted.
+  - **Phase 3 (builder → PUT graph):** node `key`s are free strings (not starting with `id:`); `existingId` only for
+    nodes of *this* tile (others = 400); `Boundary` nodes on the tile's border cells only; edges may be sent in
+    either node order (the API normalises `FromNodeId < ToNodeId` and reverses geometry); geometry ends within 1.5
+    blocks of their nodes; `length ≥` straight-line distance; the builder must **not** create cross-tile edges — the
+    API stitches boundary nodes within Chebyshev 1 (x/z) and |Δy| ≤ 1 itself; a tile upsert deletes unmatched
+    Detected nodes/edges of that tile only. Surveys: `POST api/road-surveys` with `X-Acting-User-Id`. Dirty:
+    `POST api/road-tiles/{world}/{x}/{z}/dirty` (creates the tile if unknown).
+  - **Phase 2d/3 (download):** a tile graph contains the tile's nodes and the edges it owns, including Stitch edges
+    whose other node belongs to the neighbour tile — resolve node ids across downloaded tiles; edges with `status`
+    `Stale` are still routable.
+  - **Phase 5 (web app):** `POST api/road-edges/search` filters `world`, `tileId`, `streetId`, `unlabelled`,
+    `stale` (strings, `"true"`), `sortBy` `id | length | streetId | tileId`; `PUT api/road-edges/{id}` with
+    `propagate: true` returns every changed edge id; node edits lock the node unless `locked: false`.
 
 ## Phase 2 — knk-plugin core (Bukkit-free) and api-client
 
