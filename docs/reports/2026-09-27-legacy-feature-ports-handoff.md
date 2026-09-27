@@ -15,7 +15,7 @@ Designs + resolved decisions: `docs/specs/{currency-payments,domain-discovery,te
 |---|---|---|---|
 | `claude/currency-payments` — **merged to trunk 2026-09-27** (api `5639a50`, plugin `0d01b52`, app `c4ed753`) | `edb77e8` | `7f056b3` | `6eed4a0` |
 | `claude/domain-discovery` — **merged to trunk 2026-09-27** (api `acaee99`, plugin `4ec2f23`, app `46be4e9`) | `a826691` | `a07ad81` | `8a6b3f9` |
-| `claude/teleport` | `d4daef5` | `c954c30` | `c12b39b` |
+| `claude/teleport` — trunk (incl. currency, discovery, PMs, lootboxes) merged in 2026-09-27 + `/ignore` wiring; awaiting smoke test (teleport plan "Trunk merge") | `e31ffc6` | `60ea800` | `a14b14b` |
 | `claude/private-messages` — **merged to trunk 2026-09-27** (api `7daca13`, plugin `316315e`, app `7db6f46`) | `fbf280d` | `0fed5f4` | `354d4f4` |
 | `claude/lootboxes` — **merged to trunk 2026-09-27** (api `ccc8c02`, plugin `eb1d68c`, app `f56d421`); round-2 re-test open (KNG-31) | `ba51dc1` | `2ca5ce9` | `30d66fc` |
 

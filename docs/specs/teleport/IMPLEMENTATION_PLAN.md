@@ -1,7 +1,7 @@
 # Teleportation Commands — Implementation Plan
 
-**Status:** Draft — awaiting developer review (open questions in [DESIGN.md §5](DESIGN.md#5-open-questions-for-the-developer))
-**Last updated:** 2026-09-26
+**Status:** Phases 1–7 + siege integration done on `claude/teleport`, trunk merged in 2026-09-27; awaiting developer smoke test (not merged to trunk)
+**Last updated:** 2026-09-27
 **Linear:** [KNG-17](https://linear.app/kngpandi/issue/KNG-17/teleportation-staff-tp-tpa-requests-spawn-domain-warps-v1-port)
 **Sources:** [DESIGN.md](DESIGN.md); `docs/ACTIVE_SESSIONS.md` (branch convention); code read at knk-plugin `0fa6d06`
 (`claude/siege-minigame` head), knk-web-api `cd95dd1`, knk-web-app `9a6f347`.
@@ -389,6 +389,38 @@ rewards still bypass the ledger (fixed on `claude/currency-payments` `37bab02`; 
 trunk — `WorldGuardRegionListener` judges PLUGIN-cause teleports, so a siege hub/return spot inside an AllowEntry/AllowExit=false
 domain could block siege's own teleports. In-game: members blocked from `/spawn`/`/warp`/`/tpa`/`/back`/menu warps in hub
 and match; staff `/tphere <member>` refused, `/tp <member>` allowed; match death → no `/back`; siege's own teleports work.
+
+### Trunk merge — done 2026-09-27 (all three repos, `claude/teleport`)
+
+Merged trunk (private messages, currency ledger + payments incl. KNG-22 service key, domain discovery, lootboxes, nav rework)
+into the branch with merge commits: API `d5dc808` (master `ccc8c02`) + `e31ffc6`, plugin `d42decc` (main `eb1d68c`) +
+`60ea800`, web-app `a14b14b` (main `f56d421`). Tips: API `e31ffc6`, plugin `60ea800`, app `a14b14b`.
+Where trunk and the branch carried the same code (ledger core `d5c1418`/`3630436`, discovery `fb94564`/`54b29ec`, KNG-22
+commits), trunk's version is kept — the branch now differs from trunk only in teleport code. API: `UserService` = trunk's
+ledger version + the teleport audit method re-added; `TeleportDestinationService` already posted `TELEPORT_FEE` spends and
+`REVERSAL` refunds through `ICurrencyService` and builds unchanged against trunk's final ledger (nested
+`RunWithUsersLockedAsync` joins the caller's transaction; void-fee keys unchanged); `TeleportRequiresDiscovery` reads
+trunk's `IDiscoveryRepository.GetDiscoveredDomainIdsAsync`. `AuditAction.PlayerTeleported = 12` next to lootboxes 13–14,
+PMs 15, discovery 17, currency 19–22 — no collision. Menu seeds: hub 20 = discoveries, 24 = teleport. EF: throwaway
+`migrations add` produced an empty migration and an unchanged snapshot (deleted); `has-pending-model-changes`: none.
+Plugin: `KnkConfig` carries privateMessages + teleport + discovery; `/knk tp` stays the `/tp` delegate; `/knk currency` and
+`/lootbox` kept; `PlayerCommandSupport.whenAnyAllowed` moved onto trunk's `KnkPermissible.checkAsync` (API down → "can't be
+checked", not "no permission"; new `PlayerCommandSupportTest`). Web app: `auditActionLabel` (in `utils/auditDetails.ts`)
+carries trunk's lootbox/discovery/currency/PM labels too.
+**Post-merge wiring:** `TeleportRequestService.setIgnoreCheck(IgnoreService::ignores)` (`60ea800`) — a `/tpa`/`/tpahere` from
+a player the target `/ignore`s is swallowed (sender sees "Request sent", target sees nothing). Not done (follow-up): unify
+the three vanish-safe lookups (`commands/support/VisiblePlayers`, `currency/VisiblePlayers`, `teleport/VisibleTargetResolver`).
+Verification: API build OK; tests 1660 (1604 pass, 48 skipped) — the 5 baseline failures plus 3 currency tests that only
+fail under this machine's nl-NL number format (`70.000` vs `70,000`; pass with invariant culture, pre-existing on trunk);
+`requires-mysql` tests **not run** (no scratch MySQL: Docker Desktop can't start here — Hyper-V/VM Platform not enabled);
+fresh-DB migrations CI green https://github.com/PandiO/knk-web-api/actions/runs/36343835020. Plugin: full local
+`gradlew build -x deployToDevServer` — knk-core 1142, api-client 144 (2 skipped), knk-paper 966 (14 skipped), 0 failures;
+CI green https://github.com/PandiO/knk-plugin/actions/runs/36343838547. Web app: build OK (trunk warnings), tests 16 failed
+/ 387 passed in the known 10 trunk suites only.
+Pending on the dev DB (checked 2026-09-27): `20260926181358_AddDomainTeleportSettings`, `20260926192445_AddTeleportFeeVoids`
+(teleport) plus trunk's not-yet-applied `20260927173616_BackfillDefaultRankMembership`, `20260927174550_AddLootboxWorldPickup`.
+Known, pre-existing on trunk: `WorldGuardRegionListener` judges PLUGIN-cause teleports (siege hub/return spots inside an
+AllowEntry/AllowExit=false domain); `api/MenuTemplates` writes are anonymous.
 
 ## Cross-cutting
 
