@@ -16,7 +16,7 @@ Designs + resolved decisions: `docs/specs/{currency-payments,domain-discovery,te
 | `claude/currency-payments` | `5887413` | `bdbd9bf` | `4cdd5cb` |
 | `claude/domain-discovery` | `9b6f517` | `ae88055` | `b45c269` |
 | `claude/teleport` | `d4daef5` | `c954c30` | `c12b39b` |
-| `claude/private-messages` | `fbf280d` | `0fed5f4` | `354d4f4` |
+| `claude/private-messages` — **merged to trunk 2026-09-27** (api `7daca13`, plugin `316315e`, app `7db6f46`) | `fbf280d` | `0fed5f4` | `354d4f4` |
 | `claude/lootboxes` | `5d13358` | `45d017a` | `4754c24` |
 
 All five branches contain trunk **including the siege merge** (api `67f451e`, plugin `716fb3c`, web-app `4fba7d0`). Every
@@ -87,6 +87,11 @@ Each plan's "Phase N status" sections list the in-game checks for that phase; th
 - **Lootboxes:** enable one type + create an area (`/knk lootbox area create` from a WorldEdit selection); box spawns,
   click (and a box right next to you still opens — line-of-sight check), daily cap; token items (duplicate copy → second
   open removes all copies; renamed ender chest does nothing); refused while in a siege.
+
+## 4b. Smoke-test log
+
+- 2026-09-27 — **private messages** passed (D3 → KNG-25, G blocked by pre-existing KNG-24, K untested) and was merged
+  to trunk. Its KNG-22 commits are now on trunk too, so trunk requires the service key from here on.
 
 ## 5. Decisions still open for the developer
 

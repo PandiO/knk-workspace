@@ -1,6 +1,6 @@
 # Private Messages & Social Spy — Design
 
-**Status:** Decided — implementation in progress (branch `claude/private-messages`)
+**Status:** Implemented and merged to trunk 2026-09-27 (KNG-18)
 **Last updated:** 2026-09-26
 **Linear:** [KNG-18](https://linear.app/kngpandi/issue/KNG-18/private-messages-harden-msg-and-r-social-spy-toggle-ignore-list)
 **Sources:** `docs/specs/legacy/commands-v1.md` (§ "/message … /reply … socialSpy"), `commands-v2.md`

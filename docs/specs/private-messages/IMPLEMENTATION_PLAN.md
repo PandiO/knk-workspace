@@ -1,6 +1,6 @@
 # Private Messages & Social Spy — Implementation Plan
 
-**Status:** Draft — awaiting developer review (open questions in DESIGN.md §5)
+**Status:** Done — merged to trunk 2026-09-27 (KNG-18); follow-ups KNG-24, KNG-25
 **Last updated:** 2026-09-26
 **Linear:** [KNG-18](https://linear.app/kngpandi/issue/KNG-18/private-messages-harden-msg-and-r-social-spy-toggle-ignore-list)
 **Sources:** [DESIGN.md](DESIGN.md); `knk-plugin` `main` @ `f65ae2e`; `knk-web-api` `master` @ `a102eea`;
@@ -255,7 +255,7 @@ Left as designed/low risk: `/r` wording differs for a partner who vanished vs. l
 `/me` lines still logged by Paper before cancellation. Out of scope, fixed on `claude/currency-payments`: `BaseApiImpl`
 logged the `X-API-Key` header (KNG-22 code).
 
-**Feature status: Phases 1–4 complete on `claude/private-messages`; awaiting developer in-game/live testing and merge.**
+**Feature status: smoke-tested by the developer and merged to trunk 2026-09-27** (knk-web-api `7daca13`, knk-plugin `316315e`, knk-web-app `7db6f46`). Smoke test: all steps passed except D3 (`/minecraft:tell` as op breaks secure chat → KNG-25) and G (`/freeze` unusable by non-op staff, pre-existing → KNG-24; G re-test pending); siege step K untested.
 Merge order: KNG-22 (`claude/currency-payments` Phase 0) is already merged into this branch; merge this branch after or
 with it. Phase F (siege command filter resolving aliases) remains on the siege branch.
 
