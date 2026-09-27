@@ -17,7 +17,7 @@ Designs + resolved decisions: `docs/specs/{currency-payments,domain-discovery,te
 | `claude/domain-discovery` — trunk (PM + currency) merged in 2026-09-27, **in smoke test** | `f370bdd` | `88d5c16` | `f0d59c4` |
 | `claude/teleport` | `d4daef5` | `c954c30` | `c12b39b` |
 | `claude/private-messages` — **merged to trunk 2026-09-27** (api `7daca13`, plugin `316315e`, app `7db6f46`) | `fbf280d` | `0fed5f4` | `354d4f4` |
-| `claude/lootboxes` | `5d13358` | `45d017a` | `4754c24` |
+| `claude/lootboxes` — trunk (PM + currency) merged in 2026-09-27, **ready for smoke test** (plugin.yml fix `e954187`) | `7c47e88` | `e954187` | `3bb92da` |
 
 All five branches contain trunk **including the siege merge** (api `67f451e`, plugin `716fb3c`, web-app `4fba7d0`). Every
 plugin branch has a GitHub Actions `Build` workflow (`.github/workflows/build.yml`) and was green on its tip; API suites show

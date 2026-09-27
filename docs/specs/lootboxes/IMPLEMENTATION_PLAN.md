@@ -1,7 +1,7 @@
 # Lootboxes — Implementation Plan
 
 **Status:** Decided — implementation in progress (branch `claude/lootboxes`)
-**Last updated:** 2026-09-26
+**Last updated:** 2026-09-27
 **Linear:** [KNG-19](https://linear.app/kngpandi/issue/KNG-19/lootboxes-per-category-world-lootboxes-with-grade-weighted-rolls-v1)
 **Sources:** [DESIGN.md](DESIGN.md); `docs/ACTIVE_SESSIONS.md` (branch convention); `specs/kits/IMPLEMENTATION_PLAN.md`,
 `specs/siege-minigame/IMPLEMENTATION_PLAN.md` (phase/test conventions); Linear KNG-15.
@@ -431,6 +431,29 @@ the player is online and not in another siege (next join otherwise). 2 new tests
 the unrelated, apparently flaky `WorldGuardCombatSafezonesTest.anExemptedPairIsNotProtected`)
 https://github.com/PandiO/knk-plugin/actions/runs/36280730111. In-game: give/token to a siege player refused (nothing in the
 drop log); a token issued mid-match lands ~1 s after the match ends without rejoining.
+
+### Trunk merge — 2026-09-27 (all three repos, `claude/lootboxes`)
+
+Trunk (private messages + currency ledger/payments KNG-21/22/23) merged in with merge commits; tips api `7c47e88`,
+plugin `e954187`, web-app `3bb92da`, 0 behind trunk. API `03f3f22`: AuditAction lootbox 13–14 kept beside
+PMs 15 and currency 19–22; `KitService` = trunk's ledger-posted kit cost + the token hook (`ClaimLockedAsync` returns
+null on a replayed cost posting, so no second token issue); `UserService` = trunk's (the branch only carried the
+superseded KNG-22 commit); both meters; all 12 new migrations from both sides kept, snapshot rebuilt via a throwaway
+migration (empty, deleted), `has-pending-model-changes` clean. `7c47e88`: `LootboxTokenMySqlTests` accepts trunk's
+`KNK_TEST_MYSQL` convention (no `Database=`) and is tagged `requires-mysql`. Plugin `8ff331d` (KnkApiClient, notification
+types + poller handlers for LootboxTokensIssued/PaymentReceived/CurrencyAlert, both kept); **`e954187` fixes a real
+bug from Phase 5 (`21a8162`): `plugin.yml` was invalid YAML** (the `knk.lootbox.admin.token` node was spliced into the
+`knk.lootbox.admin.*` children list), so Paper would have refused to load the plugin; new `BundledResourcesTest`
+parses plugin.yml as a `PluginDescriptionFile` and config.yml as YAML. Web-app `7aea023` + `3bb92da` (routes, audit
+labels/details, AuditAction type, EntityName enum, nav icons; all additive).
+Verified: API build; tests 1383 pass / the 5 baseline failures; `requires-mysql` 37/37 on local MySQL 8.0 (triggers
+on); migration chain up on a fresh DB, and on a trunk-first DB (trunk migrations + seeds, then the 3 lootbox
+migrations out of order) the seed created 7 types / 10 specials / Default grants, Weapons ★5 odds 50/31.25/18.75 %,
+Flaming Samurai 0.05 %, runtime-config 401 without the key, spawn → claim → replay → 409 over HTTP. Migrations CI green
+https://github.com/PandiO/knk-web-api/actions/runs/36331329252; plugin CI green (1st attempt)
+https://github.com/PandiO/knk-plugin/actions/runs/36331810717; web-app build + `tsc --noEmit` clean, 337 pass / the 16
+baseline failures (same suites as trunk). Known: `npm ci` fails on trunk too (lockfile lacks the optional `yaml@2`
+peer) — use `npm ci --legacy-peer-deps`; `CI=true npm run build` fails on pre-existing lint warnings.
 
 ## Cross-feature dependencies
 
