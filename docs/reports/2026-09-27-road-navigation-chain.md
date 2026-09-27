@@ -203,4 +203,5 @@
   floor coordinates out; the 2-second re-check feeds `onElementBlocked`; policies are per request and never shared).
 - **Next link:** handoff `docs/ai-agents/handoffs/2026-09-27-road-navigation-phase-2e.md`; started per charter §6
   option 1 (Claude Code Remote `create_session` in the same environment, `source_url` = knk-workspace `main`) — link 6 =
-  Claude Code Remote session (id recorded below once created).
+  Claude Code Remote session `session_01MUaznjnfwJ88nqc1o1Cnkw` (created 2026-09-27 22:10 UTC, parent this session
+  `session_015VRbxcdymMMgk4go3KJYSg`).
