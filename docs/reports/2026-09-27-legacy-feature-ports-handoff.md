@@ -14,7 +14,7 @@ Designs + resolved decisions: `docs/specs/{currency-payments,domain-discovery,te
 | Branch | knk-web-api | knk-plugin | knk-web-app |
 |---|---|---|---|
 | `claude/currency-payments` — **merged to trunk 2026-09-27** (api `5639a50`, plugin `0d01b52`, app `c4ed753`) | `edb77e8` | `7f056b3` | `6eed4a0` |
-| `claude/domain-discovery` — trunk (PM + currency) merged in 2026-09-27, **in smoke test** | `dcec282` | `8f83b11` | `7dcdec1` |
+| `claude/domain-discovery` — trunk (PM + currency) merged in 2026-09-27, **in smoke test** | `f370bdd` | `88d5c16` | `f0d59c4` |
 | `claude/teleport` | `d4daef5` | `c954c30` | `c12b39b` |
 | `claude/private-messages` — **merged to trunk 2026-09-27** (api `7daca13`, plugin `316315e`, app `7db6f46`) | `fbf280d` | `0fed5f4` | `354d4f4` |
 | `claude/lootboxes` | `5d13358` | `45d017a` | `4754c24` |
@@ -95,6 +95,9 @@ Each plan's "Phase N status" sections list the in-game checks for that phase; th
 - 2026-09-27 — **currency** smoke-tested (A–K; L siege untested); findings fixed on the branch (see the plan's "Smoke
   test + fixes" section) and merged to trunk. Decisions: XP increases need coin/gem rights and count against the staff
   cap; account merge/link keeps the highest balance per currency (`MERGE_CARRYOVER`).
+- 2026-09-27 — **domain discovery** smoke-tested (A–G; C2 and H untested). Findings fixed on the branch: web reset →
+  plugin resync, players who joined while the API was down are now tracked and spooled by UUID, and the Structure → GateStructure
+  cascade prompt. Awaiting a re-test of those three, then merge. Side finding: siege safezone message (KNG-28), under investigation.
 
 ## 5. Decisions still open for the developer
 

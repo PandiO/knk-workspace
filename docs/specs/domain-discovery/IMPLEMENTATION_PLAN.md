@@ -329,6 +329,28 @@ knk-core 851, api-client 111; plugin CI green https://github.com/PandiO/knk-plug
 **Decided 2026-09-27 (developer):** players only queued for a siege keep discovering; the exclusion runs from the hub
 teleport until the member is restored (`SiegePhase.blocksDiscovery`: HUB, IN_PROGRESS, ENDING, COOLDOWN; plugin `8f83b11`).
 
+### Smoke test + fixes — 2026-09-27 (developer smoke test on the dev server)
+
+Passed: A1–5, B1–2, C1, C3, D1–4, E1–4, F2 (for players who joined with the API up), F3, G1–2, G4–5. C2 and H were not tested.
+Findings, all fixed on the branch:
+- **Web reset didn't reach the plugin** (and, for the same reason, F.1.1: with the API down, reset places weren't spooled).
+  The plugin's per-session known set was only refreshed by `/knk discovery reset`. The API now queues a `DiscoveryReset`
+  player notification after a reset commits (api `f370bdd`). The plugin's notification poller (~2 s) calls
+  `DomainDiscoveryListener.resync`: re-read `known`, `replaceKnown`, re-check the player's current regions. The player
+  rediscovers without moving. The command path uses the same resync (plugin `dff4c05`).
+- **F.1.3 / F.2 — joined while the API was down → never tracked.** These players now get an unresolved session (user id 0).
+  Candidates are spooled by UUID (spool v2, `"userId": null`; v1 files still read), and the recorder resolves the id via
+  `UsersQueryApi.getByUuid` before posting (404 → dropped). The flush task upgrades the session when the id resolves (on a
+  grant, a replay, or the 60 s lookup of unresolved players), then loads the known set and shows the replay summary
+  (plugin `fed313b`, `88d5c16`). Brand-new players with no account during an outage aren't covered (their account doesn't exist yet).
+- **G.3 — cascade Structure → GateStructure.** Saving a changed Enabled on Structure asks "Also apply to Gate structures?"
+  (`DISCOVERY_CHILD_TYPES`; web `f0d59c4`).
+
+Decision: siege exclusion starts at the hub (see above, plugin `8f83b11`).
+Tests: API 1303 pass / 5 baseline, requires-mysql 39/39; knk-core 864, api-client 111; plugin CI green
+https://github.com/PandiO/knk-plugin/actions/runs/36331625638; web 359 pass / 16 baseline.
+Tips: api `f370bdd`, plugin `88d5c16`, app `f0d59c4`. Re-test the three fixes, then merge.
+
 ## Risks / notes for whoever picks this up
 - `DomainService.SearchDomainRegionDecisionAsync` returns at most one Town/District/Structure and no GateStructures; discovery
   avoids it (server resolves raw region ids). Gate control in `SimpleRegionTransitionService` compares `domainType` to `"gate"`,
