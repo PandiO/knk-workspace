@@ -1,7 +1,7 @@
 # Road Navigation — Design
 
-**Status:** Draft rev. 3 — developer feedback incorporated; remaining open questions in §9. Not MVP-critical: build
-after the siege MVP.
+**Status:** Decided (rev. 4) — all questions answered (§10); ready for implementation, **in parallel with the siege
+work** (developer decision). Phase 4 waits for KNG-17 (teleport) to reach trunk.
 **Last updated:** 2026-09-27
 **Linear:** [KNG-27](https://linear.app/kngpandi/issue/KNG-27/road-navigation-street-road-graph-endpointsintersections-traced-road)
 **Research:** [reports/2026-09-27-road-navigation-research.md](../../reports/2026-09-27-road-navigation-research.md)
@@ -26,6 +26,10 @@ after the siege MVP.
     and checks its coverage afterwards (§5.3).
   - Street names inferred from Structures: **confirmed**. Closed gates close roads: **confirmed and widened** — the
     router treats gate states and domain entry conditions as live availability (§6.7).
+- **Rev. 4 (developer answers + scale check):** the remaining questions are answered (§10). The off-road leg gets a
+  **hard 48-block limit** (§6.2). A scale check against the full vision — 7 kingdoms × 10+ towns × 3+ districts ×
+  dozens of structures — adds per-tile network downloads, compact build memory, scoped profiles and a resumable
+  world build (§9).
 
 ---
 
@@ -105,6 +109,7 @@ New entities, one migration (`AddRoadNetwork`). Tables in `snake_case` like the 
 | `WidthMin`, `WidthMax` | int | From surveys (5th/95th percentile); used for plaza detection and leak limits. |
 | `SampleCount` | int | Total survey samples merged into this profile. |
 | `Enabled` | bool | Disabled profiles are ignored by builds. |
+| `ScopeDomainIds` | string? (JSON int[]) | Optional: the profile only applies inside these domains' regions (e.g. one kingdom's towns), so one kingdom's road block can be another's wall block (§9). Null = everywhere. |
 | `CreatedAt`, `UpdatedAt` | DateTime | |
 
 A seed migration creates one bootstrap profile (*"Default road"*: gravel, dirt path, coarse dirt, cobblestone, stone
@@ -176,7 +181,9 @@ None to the table. `StreetDto` gains read-only `edgeCount`, `totalLength`.
 
 | Route | Auth | Purpose |
 |---|---|---|
-| `GET api/road-network?world={w}` | anonymous read | Whole graph of a world: nodes, edges with geometry, gate/domain ids, profiles, street id → name map, `version` (ETag). Cached by the plugin. |
+| `GET api/road-network/tiles?world={w}` | anonymous read | Tile list with a per-tile `version` (§9): the plugin compares it with its local cache. |
+| `GET api/road-network/tiles/{world}/{tileX}/{tileZ}` | anonymous read | One tile's nodes and edges (geometry, gate/domain ids), ETag = tile version. The plugin downloads only changed tiles and keeps them in a local file cache between restarts. |
+| `GET api/road-network/meta?world={w}` | anonymous read | Profiles and the street id → name map. |
 | `GET/POST/PUT/DELETE api/road-profiles[/{id}]` | writes: plugin key or staff JWT | Profiles; `POST api/road-profiles/{id}/merge-survey` merges a survey's samples. |
 | `POST api/road-surveys`, `GET api/road-surveys?world=` | plugin key | Store finished surveys. |
 | `GET api/road-tiles?world={w}` | anonymous read | Tile overview. |
@@ -216,7 +223,7 @@ navigation:
   class-cost: { Main: 0.9, Road: 1.0, Path: 1.15 }
   overlay-materials: [SNOW, "*_CARPET", "*_PRESSURE_PLATE", RAIL, POWERED_RAIL, LEAF_LITTER, PINK_PETALS]
   seed-from-domains: true        # every Domain Location within 8 blocks of a road cell is a seed
-  max-snap-distance: 48
+  max-snap-distance: 48          # hard limit (developer decision): player and destination must be this close to a road
   snap-vertical-weight: 4        # 1 block of height counts as 4 when snapping (bridge vs road below)
   trail-length: 30
   trail-period-ticks: 10
@@ -470,8 +477,14 @@ A domain without a `Location` falls back to `region`; with neither it is refused
 1. Resolve the destination to a point, or a set of goal points (region mode, §6.3).
 2. **Snap** the player and the target to the nearest edge segments within `max-snap-distance`, using 3D distance with
    height weighted ×`snap-vertical-weight` (§5.2); split the edges with `Virtual` nodes.
-3. **Direct mode** when nothing is within snap distance, when start and goal are in different components, or when the
-   straight line is shorter than both snap distances together: a straight trail toward the target.
+3. **Off-road legs are straight-line hints with a hard limit** (developer decision):
+   - Target within `max-snap-distance` (48) of the player → **direct mode**, a straight trail to the target, no road.
+   - Otherwise **both** the player and the target must be within 48 blocks of a road, or `/navigate` refuses:
+     *"You're too far from a road — get within 48 blocks of one."* / *"Kardenna Mill is too far from any road."*
+   - Start and goal in different components (no road connects them) → refused with *"No road connects you to …"*
+     (known instantly from the component ids, §5.8).
+   - The straight legs (player → road, road → target) are re-drawn as the player moves; real off-road pathfinding is
+     Phase 6.
 4. **A\*** with cost `Length × classCost × profile.CostMultiplier × edge.CostMultiplier`, Euclidean heuristic scaled by
    the cheapest class cost. Edges are filtered by the player's **`AccessPolicy`** (§6.7).
 5. Build the `Route`: off-road legs, road legs (trimmed at virtual nodes), maneuvers (§6.5), ETA
@@ -577,13 +590,16 @@ with its edges, edge table with class/cost/flags/street editing, build warnings.
 
 | Phase | Repo | Contents | Tests |
 |---|---|---|---|
-| 0 | workspace | Developer answers the remaining §9 questions (all have defaults). | — |
+| 0 | workspace | Done: all questions answered (§10). | — |
 | 1 | web-api | `RoadProfile` (+ bootstrap seed), `RoadSurvey`, `RoadTile`, `RoadSeed`, `RoadNode`, `RoadEdge`, migration `AddRoadNetwork`, `RoadNetworkService` (tile replace with id matching, component ids, survey merge), controllers (§3.8), `StreetDto` counts. | Service/validation unit tests; fresh-DB migration CI. |
 | 2 | plugin core | `core/roads/survey/` (sampling maths, profile learning), `core/roads/build/` (span grid, mask with ambiguity reach, distance transform, thinning, graph, profile match, node matching, street labels, RDP), `core/roads/route/` (graph, 3D snapping, A\*, components, `AccessPolicy` + extracted `DomainAccessEvaluator`, maneuvers, region closest point). All Bukkit-free. | Golden tests on synthetic grids: meandering 1-wide path, 5-wide road, T/X/5-way junctions, plaza, stairs, **tunnel under a road, bridge over a road, two stacked streets, spiral ramp**, mixed-profile road, cobblestone-floor leak held by ambiguity reach, closed gate on the road, tile borders, rebuild keeps ids/labels. Survey: synthetic cross-sections → expected roles/widths. Router: class costs, oneway, closed gate, denied entry/exit, "why blocked" fallback, component fail-fast, region multi-goal. `SimpleRegionTransitionService` tests stay green after the extraction. |
-| 3 | plugin paper | `ChunkSnapshotSurfaceGrid` (+ gate lookup), `RoadSurveySession`, `RoadBuildJob`, `RoadNetworkCache`, `RoadDirtyTracker` (+ WorldEdit hook), `/knk road …`, overlay. API client + mapper. | Contract test against Phase 1; **live:** survey three road types, build around one real town (incl. a tunnel or bridge if one exists), review. |
+| 3 | plugin paper | `ChunkSnapshotSurfaceGrid` (+ gate lookup, compact span extraction §9), `RoadSurveySession`, `RoadBuildJob` + resumable world build queue, `RoadNetworkCache` (per-tile download + local file cache), `RoadDirtyTracker` (+ WorldEdit hook), `/knk road …`, overlay. API client + mapper. | Contract test against Phase 1; **live:** survey three road types, build around one real town (incl. a tunnel or bridge if one exists), review. |
 | 4 | plugin paper | `/navigate`, `DestinationResolver` (after KNG-17 merges), `NavigationService` with availability listeners, trail, boss/action bar, events. | Session tests in core; **live:** Location, Town spawn, Structure, region edge, street; through a tunnel; closed gate → reason + guidance to the gate; gate opens mid-route → shorter route; denied domain; re-route; arrival. |
 | 5 | web-app | Profile editor, tile overview, street road panel, edge table. | Component tests. |
 | 6 (later) | all | Automatic rebuild of dirty tiles; "follow road" mode (fork choices at junctions, as in KCD/Witcher/RDR2); off-road legs with Pathetic; NPC routing (Carrier/transport quests) with the same `AccessPolicy` for NPC factions; ETA per travel mode and terrain/risk modifiers; treasure-map/radar items; discovery-gated destinations; 2D web map. | — |
+
+**Scheduling:** runs **in parallel with the siege work** (developer decision, 2026-09-27). Phases 1-3 and 5 share no
+files with siege; Phase 4 only reads gate and siege state.
 
 **Dependencies:** Phase 4 depends on KNG-17 (teleport) reaching trunk. The `DomainAccessEvaluator` extraction (Phase 2)
 touches `core/regions/` on trunk — a small refactor, coordinate via `ACTIVE_SESSIONS.md`. Gate and siege state are read
@@ -593,9 +609,33 @@ only; no siege code changes.
 
 ---
 
-## 9. Questions
+## 9. Scale — the full world (7 kingdoms)
 
-### 9.1 Resolved (developer, 2026-09-27)
+The vision's world: 7 kingdoms, each with at least 10 towns of at least 3 districts and dozens of structures, joined by
+long meandering roads (vision §2, concept v0.2). The design was checked against that size.
+
+**Estimate** (order of magnitude): ~70 towns, ~210 districts, 3,500+ structures on a world ~10-12 km across; ~4 km of
+streets per town (~280 km) plus ~85 km of inter-town roads → **~365 km of road, ~1.3 M road spans, ~10-15 k nodes,
+~15-20 k edges, ~150 k polyline points, ~576 tiles** (most of them wilderness with one road or none).
+
+| Part | Load at that size | Verdict |
+|---|---|---|
+| Routing (A\* over 15 k nodes) | a few ms worst case, off the main thread; 100 players re-routing is negligible | Fine as designed. A coarse graph over junctions (Rockstar's patent, research §2.1) or contraction hierarchies only pay off above ~100 k nodes — upgrade path if the world grows ~10×. |
+| Database | 20 k edges, 15 k nodes, 576 tiles | Fine. Component recompute (union-find) takes milliseconds. |
+| Street labels, access checks | 3,500 structure votes per build; a route touches at most a few hundred domains, each decided once | Fine. |
+| Trails | 100 navigating players ≈ 200 particles/tick, each sent to one player | Fine. |
+| Rebuilds | per tile: a changed street re-traces ~100 chunks in seconds | Fine: dirty tiles only, never the world. |
+| **Network download** | a whole-world JSON bundle would be 3-6 MB | **Changed:** per-tile download with per-tile versions and a local file cache (§3.8); a restart downloads only tiles changed since. In memory the whole graph is still only a few MB. |
+| **Build memory** | full-height chunk snapshots are large; a tile can touch ~1,000 chunks | **Changed:** each snapshot is reduced right away to a compact list of candidate spans (packed position + material id of profile-material floors with headroom) and released; only those lists stay in memory while a tile builds. |
+| **First full-world build** | ~60 k chunks along roads; ~12 min at 4 chunks/tick, faster with an empty server | **Changed:** `/knk road build all` runs as a **resumable background queue** (progress per tile in `road_tiles.BuiltAt`), throttled by TPS, survives restarts; recommended kingdom by kingdom. |
+| **Materials per kingdom** | each kingdom has its own building style (resource packs, concept v0.2), so one kingdom's road block can be another's wall block | **Changed:** optional profile **scope** (`ScopeDomainIds`, §3.1) keeps ambiguous materials local. When a Kingdom/Province entity exists (vision §2.1), scopes can point at it instead of a list of towns. |
+| **Admin review time** | the real cost at this scale is people, not CPU: ~15-30 min per town the first time (labels, bridges, a few junction fixes) + a few survey walks per kingdom style | ≈ 20-35 hours one-off for 70 towns, spread over time; afterwards only dirty-tile rebuilds. Street-label inference (§5.11) is what keeps this low. |
+
+---
+
+## 10. Questions
+
+### 10.1 Resolved (developer, 2026-09-27, first round)
 
 - **Street labels inferred from Structures:** yes (§5.11).
 - **Closed gates close roads:** yes, and more generally the router must treat roads as unavailable because of entry
@@ -606,14 +646,19 @@ only; no siege code changes.
 - **Player road walk scan:** adopted as the survey walk (§5.3); it is now the main way the builder learns road
   materials.
 
-### 9.2 Open (recommended default in bold)
+### 10.2 Resolved (developer, 2026-09-27, second round)
 
-1. **Seeding.** Seed from every Domain `Location` near a road, plus survey breadcrumbs and admin seeds? **Yes.**
-2. **Domain destination default.** **`Location` when set, else region; the `region` keyword forces the region.**
-3. **Off-road legs.** **Straight-line hint in v1**; Pathetic in Phase 6.
-4. **Trail visibility.** **Only the navigating player.**
-5. **Pass-through gates.** Should an `AllowPassThrough` gate count as open for players allowed to pass (with a
-   "right-click to pass" hint)? **Yes.**
-6. **Ladders and lifts.** Connect road levels only through recorded vertical edges (no automatic ladder detection)?
-   **Yes for v1.**
-7. **Priority.** **Post-siege-MVP**; Phases 1-2 can run in parallel with siege work.
+1. **Seeding:** from every Domain `Location` near a road, plus survey breadcrumbs and admin seeds.
+2. **Domain destination:** its spawn `Location` when set, else where the road enters its region; the `region` keyword
+   forces the region.
+3. **Off-road legs:** straight-line hint, **with a hard limit** — player and destination must be within 48 blocks of a
+   road (or within 48 blocks of each other), otherwise `/navigate` refuses (§6.2). Real off-road pathfinding stays
+   Phase 6.
+4. **Trail visibility:** only the navigating player.
+5. **Pass-through gates:** count as open for players the pass-through rules allow, with a "right-click the gate to
+   pass" hint (§6.7).
+6. **Ladders and lifts:** connected only through admin-recorded vertical edges in v1 (§5.10).
+7. **Priority:** start **now, fully in parallel** with the siege work (Phase 4 still waits for KNG-17).
+8. **Off-road hard limit:** 48 blocks (`max-snap-distance`).
+
+No open questions remain.
