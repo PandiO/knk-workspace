@@ -3,9 +3,10 @@
 **Status:** In implementation (chain, `docs/ai-agents/handoffs/ROAD_NAVIGATION_CHAIN.md`). **Phase 1 done**
 (knk-web-api `claude/road-navigation` `77e0a29`, 2026-09-27); **Phase 2a done** (knk-plugin `claude/road-navigation`
 `db962a4`, 2026-09-27); **Phase 2b done** (knk-plugin `claude/road-navigation` `92375e5`, 2026-09-27); **Phase 2c done**
-(knk-plugin `claude/road-navigation` `c2ca1e3`, 2026-09-27); Phase 2d next.
+(knk-plugin `claude/road-navigation` `c2ca1e3`, 2026-09-27); **Phase 2d done** (knk-plugin `claude/road-navigation`
+`a82db3c`, 2026-09-27); Phase 2e next.
 Every code reference was verified against trunk by a separate review pass on 2026-09-27; its corrections are folded in.
-**Last updated:** 2026-09-27 (Phase 2c status)
+**Last updated:** 2026-09-27 (Phase 2d status)
 **Linear:** [KNG-27](https://linear.app/kngpandi/issue/KNG-27)
 **Design:** [DESIGN.md](DESIGN.md) rev. 4 (decided) — read it first; this plan says *where and how* to build it.
 **Sources:** trunk as of 2026-09-27 — knk-web-api `master` `acaee99`, knk-plugin `main` `ceed2f6`, knk-web-app `main`
@@ -1031,6 +1032,189 @@ Classes (DESIGN §5 section in brackets):
   snap prefers the bridge over the road below; region multi-goal; maneuvers (left/right/straight bands, street change,
   tunnel/bridge phrases); session: off-route → reroute after N ticks, rate limit, arrival, gate closes mid-route →
   reroute with reason.
+
+### Phase 2d status — done 2026-09-27 (knk-plugin `claude/road-navigation` `1f569b7`, `5f3f41e`, `c84b556`, `f371323`, `33efa64`, `a82db3c`; on top of 2c's `c2ca1e3`; trunk `main` still `eb1d68c`)
+
+- **What was built** (knk-core, Bukkit-free, pure; no I/O, threads or clocks — the caller passes the tick):
+  - **`C/domain/roads/`** (next to 2c's `RoadNodeKind`): `RoadClass` (`MAIN/ROAD/PATH`, `apiName()`/`fromApiName()`),
+    `RoadEdgeFlag` (`ONEWAY/NO_GPS/CLOSED` ↔ `Oneway/NoGps/Closed`), `RoadEdgeSource` (`DETECTED/RECORDED/STITCH`),
+    `RoadNode(id, x, y, z, kind, name, componentId)` (ids ≥ 0; `isDestination()` = named), `RoadEdge(id, fromNodeId,
+    toNodeId, geometry List<int[]>, length, avgWidth, profileId, streetId, costMultiplier, flags, gateDoorIds,
+    domainIds, regionIds, source, stale)` — the Phase 1 `RoadEdgeDto` fields the router needs (`status` folded into
+    `stale`; the bounding box, `tileId`, `world`, `streetSource` are not carried).
+  - **`C/roads/route/`**: `RoadNetworkSnapshot` (+ `Builder`, nested `Profile(id, name, roadClass, costMultiplier)`,
+    `Street(id, name)`) — nodes, edges, incident-edge indexes, every polyline decoded once (`EdgePolyline`: cumulative
+    distances, `pointAt`, `segmentAt`, `subPolyline`), profiles → road class, street names, `regionIds()` (every
+    region any edge passes), `unresolvedEdgeIds()` (edges whose node is in a tile not downloaded — dropped, listed),
+    `costFactor`/`edgeCost`/`minCostFactor`; `SegmentIndex` (32×32 x/z buckets → packed edge/segment refs; height
+    not bucketed); `RouterParameters` (max-snap-distance 48, snap-vertical-weight 4, class-cost Main 0.9 / Road 1.0 /
+    Path 1.15); `SnapPoint(edgeId, segmentIndex, t, point, distance, along)` + `onEdge`/`atNode` helpers;
+    `Snapper` (`snap(feetX, feetY, feetZ)`, `snapFloor(...)`, static plan signature); `EdgeVerdict` (`OPEN |
+    PASS_THROUGH(hint) | BLOCKED(reason)` + `Cause(GATE|DOMAIN|FLAG, id, name)`); `AccessPolicy` (+ `ALL_OPEN`),
+    `CompositeAccessPolicy`, `StaticFlagsAvailability`, `GateAvailability` (ports `GateState { Optional<GateView>
+    gate(doorId) }`, `GateView(doorId, name, AnimationState, jammed, destroyed, allowPassThrough, siegeLocked,
+    siegeCarries)`, `PassRule { canPass(doorId) }`), `DomainAvailability` (port `DomainLookup { Optional<DomainSnapshot>
+    domainByRegionId(regionId) }`, takes the shared `DomainAccessEvaluator`, the player's current region ids and a
+    bypass flag); `RouteRequest(start, goals, accessPolicy, classCost)`, `Route` (steps with edge/direction/entry-exit
+    along/length/cost/startDistance/verdict, polyline, walked length, cost, start/end, interior `nodeIds()`,
+    `passThroughSteps()`, `project()`, `pointAt()`, `truncated()`, `withVerdicts()`), `RouteResult(FOUND | BLOCKED |
+    DIFFERENT_COMPONENTS | NO_ROUTE)`, `AStarRouter` (`route`, `routeOrExplain`), `BlockedExplainer` (+
+    `Explanation(verdict, blockedEdge, partialRoute, fullRoute)`), `RegionShape` (polygon + y band, or cuboid;
+    `containsFloor`, `distanceFromFloor`, `closestPointFromFloor`), `RegionClosestPoint` (`goals(shape, snapshot)`,
+    `crossings`, `closest`), `Maneuver(kind, position, along, bearingChange, street, text)` + `ManeuverBuilder`,
+    `EtaEstimator`, `CoverageCheck` (`misses(List<SurveySample>, snapshot, maxDistance = 2)` → `Miss(x, y, z, floor,
+    distance)`, `coverage`).
+  - **`C/navigation/`**: `SessionParameters` (reroute-distance 8, reroute-after-ticks 40, re-route min interval 60
+    ticks, improvement interval 200 ticks / threshold 15 %, arrive-distance 4, max-session-minutes 30, sprint-speed
+    5.6, projection look-back 16), `NavigationEffect` (sealed: `ComputeRouteEffect(reason, keepCurrentUnlessShorter)`,
+    `RouteAdoptedEffect(route, maneuvers, reason, explanation)`, `RerouteStartedEffect(reason, verdict)`,
+    `RouteKeptEffect`, `GuidanceEffect(along, offRoute, remainingBlocks, etaSeconds, progress, aheadPoint,
+    nextManeuver, metersToNext)`, `ArrivedEffect`, `EndedEffect(reason)`; enums `RouteReason`, `EndReason`),
+    `NavigationSession` (`PLANNING → GUIDING ⇄ REROUTING → ARRIVED | ENDED`; `start()`, `onRouteResult(result,
+    tick)`, `tick(feetX, feetY, feetZ, tick)`, `onElementBlocked(verdict, tick)`, `onElementOpened(tick)`,
+    `end(reason)`; queries `state`, `route`, `maneuvers`, `explanation`, `along`, `remainingBlocks`).
+  - **Test fixture** `knk-core/src/test/.../roads/route/NetworkFixture.java` (+ public `NetworkFixtureAccess` for
+    other test packages): a 13-node / 14-edge town in the Phase 1 download shape — grid A-B-C-D with Keepstreet
+    (Main) / Merchantstreet (Road) / a diagonal path, a gate edge (door 7), castle edges tagged with region
+    `kardenna_castle` / domain 42, a oneway edge, a tile boundary with a stitch edge, a tunnel dip, a bridge in a
+    second component. Reused by every 2d test.
+- **Reuse:** R2 (`Polygon2D` inside `RegionShape`), R5 (via the `GateView` port: the paper side fills it from
+  `CachedGateDoor`'s effective accessors), R6 (`DomainAccessEvaluator` instance passed into `DomainAvailability`),
+  R7 (the `DomainLookup` port = `RegionDomainResolver.getDomainByRegionIdNoRefresh` → `resolveRegionsFromApi`),
+  R25/R39 (the `PassRule` port and `GateView.siegeCarries`), 2a's `AnimationState` (the `GateView` state — no second
+  gate-state enum), 2b's `SurveySample` as the breadcrumb (no second breadcrumb record), 2c's `RoadNodeKind`, the
+  `SiegeEffect` style for `NavigationEffect`. Nothing in §2 duplicated; no new dependency.
+- **Tests:** knk-core **1280 → 1364** (0 failures, 0 skipped; 84 new): `RoadNetworkSnapshotTest` 8, `SnapperTest` 9,
+  `AccessPolicyTest` 15, `AStarRouterTest` 20, `RegionShapeTest` 4, `RegionClosestPointTest` 5, `ManeuverBuilderTest`
+  9, `EtaEstimatorTest` 2, `CoverageCheckTest` 1, `NavigationSessionTest` 11 — every item of the plan's 2d test list:
+  shortest path vs class costs (and edge multipliers); oneway (node and virtual-node cases, a start on a oneway edge
+  that must go round); closed gate → BLOCKED with the reason, the gate edge and a partial route to the gate's node;
+  pass-through gate → FOUND with the hint on the step; entry denied → route ends at the last node outside the region
+  with "you may not enter Kardenna Castle"; exit denied → route stays inside; different components → refused before
+  any policy call; snap prefers the bridge (feet y 73) over the road 8 below and the road at feet y 65; region
+  multi-goal (crossing points, oneway entry refused, fallback to the closest network point); maneuvers (right /
+  left / slight / sharp bands, "Continue onto", same street silent, Boundary nodes and stitch edges silent,
+  tunnel / bridge / stairs phrases); session (off-route → re-route after N ticks, once, rate-limited; arrival; gate
+  closes mid-route → re-route with the verdict and adoption of the partial route; improvement adopted only when
+  > 15 % shorter; timeout; runtime end reasons). **Not compiled with Gradle:** `./gradlew :knk-core:test` still fails
+  on `paper-api` (proxy 403 on `repo.papermc.io`, `maven.enginehub.org` 000 — same as links 1-4); counts from the
+  §0.4 scratch build (2a's recipe, `Vector` stub rewritten from the Bukkit API surface, `testRuntimeOnly
+  junit-platform-launcher` added for Gradle 8.10). `ArchitectureGuardTest` green with both new packages.
+  knk-paper and knk-api-client: not built, not touched.
+- **Decisions to review** (numbered; defaults taken, all reversible):
+  1. **Snapper coordinates:** `Snapper.snap(x, y, z)` takes the player's **feet** position and compares it with the
+     polyline's floor y + 1 (2c decision 1); `snapFloor` and the static plan signature take floor coordinates.
+     `SnapPoint.point`, every `Route` polyline point and `Maneuver.position` are floor blocks — Phase 4 adds 1
+     (+0.2) for particles. `NavigationSession.tick` likewise takes feet coordinates; `RegionShape.containsFloor` tests
+     feet = floor + 1 against the region's y band.
+  2. **Weighted snap distance:** the 48-block limit is checked on the *weighted* distance (`√(dx² + (w·dy)² + dz²)`),
+     so a road 12 blocks below counts as 48 away. Ties → lower edge index, then lower segment.
+  3. **Snapshot ids:** node ids must be ≥ 0 (the router's virtual nodes are −1 for the start and −2−k for goal k).
+     Edges referencing a node of a tile not yet downloaded are dropped and listed in `unresolvedEdgeIds()` (Phase 1
+     decision 1: stitch edges may point at the neighbour tile); the cache should log them and they resolve once the
+     neighbour tile arrives.
+  4. **Segment index:** 32-block x/z buckets, height not bucketed (a bridge and the road below share a bucket; the
+     weighted metric separates them); a segment spanning several buckets is visited once per bucket (visitors are
+     idempotent minima). Built eagerly with the snapshot.
+  5. **Cost model:** `length × classCost(class) × profile.costMultiplier × edge.costMultiplier`; an edge without a
+     (known) profile has class factor 1.0; a partial edge costs the polyline fraction of that. The heuristic scales
+     Euclidean distance by the **minimum** factor over all edges (multipliers may be < 1), computed per request
+     (O(E), trivial). Costs are consistent because `length ≥ polyline length ≥ chord`.
+  6. **A\* tie-breaks:** equal `f` → larger `g` first, then insertion order; goals in other components are dropped
+     before the search; the search stops when any goal is popped.
+  7. **Blocked start edge:** if the edge the player stands on is BLOCKED (a closed road, a gate edge with the gate
+     shut), no route leaves it — the explainer then reports that edge with an empty partial route. The paper side
+     may prefer to snap to the nearest *usable* edge; not done here.
+  8. **Explainer's partial route** ends at the entry **node** of the first blocked edge of the all-open route (the
+     gate can sit anywhere along that edge; the network has no finer point). "Guiding you to the gate" therefore
+     guides to the junction before the gate edge. The partial route's steps carry the real verdicts (pass-through
+     hints kept). Oneway is still respected in the all-open search, so a goal cut off only by oneway rules is
+     NO_ROUTE, not BLOCKED.
+  9. **Gate rules order:** unknown door → OPEN (stale tag; nothing to check); destroyed → OPEN; OPEN → OPEN;
+     OPENING/CLOSING → BLOCKED ("is opening/closing"); jammed → BLOCKED; siege-locked → PASS_THROUGH when
+     `siegeCarries` else BLOCKED ("is locked for a siege"); closed + `allowPassThrough` + `PassRule.canPass` →
+     PASS_THROUGH ("right-click the West Gate to pass"); else BLOCKED ("the West Gate is closed"). Several doors on
+     one edge → the strictest, first door first. `GateView.name` null → "the gate".
+  10. **Domain exit rule:** an edge "leaves" a domain the player stands in when its `regionIds` do not contain that
+      domain's region id; an edge listing the region counts as staying inside (so the route ends on the last edge
+      inside the domain). Entry is checked for every region on the edge the player is not currently in. Bypass →
+      everything OPEN. Messages: "you may not enter X" / "you may not leave X" (lower-case fragments; the runtime
+      composes the sentence — the evaluator's own "You are not allowed to enter X." is not reused verbatim).
+  11. **Composite order:** first BLOCKED wins, else first PASS_THROUGH; cached per edge id. Recommended order for
+      Phase 4: `StaticFlagsAvailability`, `GateAvailability`, `DomainAvailability`.
+  12. **Region goals:** crossing points are bisected (12 steps) on the polyline segment that changes side, from
+      either direction; a road entirely inside a region contributes its vertices; nothing inside → the single
+      network point closest to the region, sampled every 4 blocks along every edge. Cuboid bounds are inclusive.
+  13. **Maneuvers:** bearings over 6 blocks of the *route polyline* before/after the node; Δ = atan2(cross, dot)
+      with x east / z south → positive = right; bands `< 20` straight, `[20, 60)` slight, `[60, 120]` turn,
+      `> 120` sharp. A turn is announced at Junctions or on a street change; straight + street change → "Continue
+      onto X"; same street → "Turn left to stay on X"; unlabelled next edge → "Take the path/road on the left"
+      (path when the profile class is Path). Level change at any node from the *next step's* stretch: min y
+      `< node y − 3` → DOWN "Go down into the tunnel"; max y `> node y + 3` → BRIDGE "Cross the bridge" when the
+      step's end is back within 3 of the node's y, else UP "Take the stairs up". Boundary nodes and stitch edges
+      never announce; the street comparison looks through stitch edges. `Maneuver.along` is polyline metres (what
+      `Route.project` measures), not walked metres.
+  14. **Route distances:** `Route.length()` is walked metres (sum of step lengths); `polylineLength()` / `along` /
+      `project()` are polyline metres; `remainingBlocks = (1 − along/polylineLength) × length`. `Route.project`
+      considers only segments ending after `along − 16` (look-back), so progress is monotone on self-crossing routes.
+  15. **Session rules:** the "max once per 3 s" re-route limit (60 ticks) applies to OFF_ROUTE and ELEMENT_BLOCKED
+      requests, not to the INITIAL one; an improvement request is limited to once per 200 ticks and adopts only a
+      **full** route shorter than 85 % of what is left (a BLOCKED result or NO_ROUTE keeps the current route); when
+      the current route is a *partial* one, an "element opened" notice retries unconditionally (the blocking gate
+      may have opened). While REROUTING the old route keeps producing guidance and no second request is made. Results
+      arriving after ARRIVED/ENDED are dropped. Arrival = within `arriveDistance` (3D, floor y) of the route's end
+      point — for a partial route that is the last reachable node. "Already inside the region" is the runtime's
+      check before starting (→ `end(ALREADY_THERE)`).
+  16. **`EtaEstimator` formatting** ("~40 s" to 5 s, "~3 min", "340 m", "1.2 km") lives in core for the tests; the
+      runtime may format its own.
+  17. **`CoverageCheck`** takes `SurveySample`s (floor y) and plain 3D distance (weight 1), default 2 blocks; a miss
+      reports `+∞` distance (the snapper only searches within `maxDistance`).
+  18. **`RoadEdge` keeps `geometry` as `List<int[]>`** (defensive copy) rather than a packed array — 150 k points
+      world-wide is a few MB (DESIGN §9), fine.
+- **Discrepancies found:**
+  - Plan 2d names `RegionShape → goal set`; the goal derivation is `RegionClosestPoint` (the DESIGN §4 name), with
+    `RegionShape` as the pure geometry — both exist.
+  - Plan 2d's `AccessPolicy.check(RoadEdge)` has no direction; `Oneway` is therefore the router's (DESIGN §6.7 lists
+    it under static flags — handled, just not by `StaticFlagsAvailability`).
+  - DESIGN §6.5 lists three level phrases without a rule for choosing; decision 13 defines one.
+  - Cloud network unchanged from links 1-4 (`repo.papermc.io` 403, `maven.enginehub.org` 000). KNG-17 still not on
+    `main`.
+- **Developer to-do:**
+  1. Local: `./gradlew :knk-core:test` (expect **1364** green), then `./gradlew build -x deployToDevServer` — only
+     new classes in two new packages; knk-paper does not reference them yet.
+  2. Live: nothing observable — 2d is pure core; `/navigate` (Phase 4) is what exercises it. Worth a skim: decisions
+     1 (feet vs floor), 7-8 (blocked start edge, "to the gate" = to the junction before it), 10 (exit rule), 13
+     (level-change phrases), 15 (re-route rules).
+- **What later phases must wire:**
+  - **2e (api-client):** `RoadEdgeDto` → `RoadEdge(id, fromNodeId, toNodeId, geometry (int[][] → List<int[]>), length,
+    avgWidth, OptionalInt profileId, OptionalInt streetId, costMultiplier, flags (List<String> →
+    `RoadEdgeFlag.fromApiName` into an EnumSet), gateDoorIds, domainIds, regionIds, RoadEdgeSource.fromApiName(source),
+    "Stale".equals(status))`; `RoadNodeDto` → `RoadNode(id, x, y, z, RoadNodeKind.fromApiName(kind), name,
+    componentId)`; meta `profiles[]` → `RoadNetworkSnapshot.Profile(id, name, RoadClass.fromApiName(roadClass),
+    costMultiplier)`, `streets[]` → `RoadNetworkSnapshot.Street(id, name)`. The mapper may live in `A/mapper/RoadMapper`
+    next to the DTO ↔ `TileBuildResult`/`ProfileSet.Profile` mappings 2c asked for.
+  - **3 (paper cache):** `RoadNetworkCache` builds one `RoadNetworkSnapshot` per world from the downloaded tile graphs
+    + meta (`builder(world).addNodes(...).addEdges(...).addProfile(...).addStreet(...).build()`), swaps it atomically,
+    logs `unresolvedEdgeIds()`, calls `warmCache(snapshot.regionIds())` on the `RegionDomainResolver`. `RoadOverlayRenderer`
+    reads `edges()`/`polyline(edge)` (floor y; ±8 of the viewer). Survey review: `CoverageCheck.misses(breadcrumbs,
+    snapshot)`. `NavigationConfig` (R16) fills `RouterParameters` and `SessionParameters`.
+  - **4 (`/navigate`):** per request build `CompositeAccessPolicy.of(new StaticFlagsAvailability(), new GateAvailability(
+    gateState, passRule), new DomainAvailability(evaluator, lookup, regionIdsAt(player), bypass))` with `GateState` from
+    `GateManager.getGate(id)` → `GateView(id, structure name, getCurrentState(), isJammed(), isEffectivelyDestroyed(),
+    isEffectivelyAllowPassThrough(), SiegeGateController.isLocked(getGateStructureId()), canCarryNonMember(door))`,
+    `PassRule` = `GatePassThroughRules.canPass(player, door)`; snap with `new Snapper(snapshot, routerParameters).snap(feet)`
+    (refuse with the DESIGN messages when empty; direct mode when the target is within 48 of the player);
+    destination goals: a point → `Snapper.snapFloor`, a named node → `SnapPoint.atNode`, a region →
+    `RegionClosestPoint.goals(RegionShape.polygon/cuboid(...), snapshot)` (refuse "already in X" when
+    `containsFloor(player)`); `new AStarRouter(snapshot).routeOrExplain(RouteRequest.of(start, goals, policy,
+    routerParameters))` **off the main thread**; `new NavigationSession(sessionParameters, new
+    ManeuverBuilder(snapshot)::build, tick)` → `start()` → apply effects; feed `onRouteResult` on the main thread;
+    `tick(feet, tick)` from the ticker (every tick or every `trail-period-ticks`; `GuidanceEffect.along` is what to draw
+    the next `trail-length` blocks from via `route.pointAt`); D13: every 2 s re-check `route.steps()` with a fresh policy
+    → first BLOCKED step → `onElementBlocked(verdict, tick)`; `GateStateListener` / domain refresh → `onElementOpened(tick)`;
+    the `Explanation` gives the message pieces ("No open route to X — " + `reason()` + ". Guiding you to the gate." /
+    "You may not enter X. Guiding you to its edge." via `isDomainBlock()`); `EtaEstimator.describe(remaining)` for the
+    boss bar; `Maneuver.text` for the HUD. `end(EndReason)` on quit/death/world change/teleport/siege/stop.
 
 ### 2e API client — `A/`
 

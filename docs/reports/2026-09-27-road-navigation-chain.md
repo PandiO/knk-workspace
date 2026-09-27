@@ -1,7 +1,7 @@
 # Road navigation chain — progress report
 
 **Status:** running
-**Last updated:** 2026-09-27 (link 4: Phase 2c done; link 5 started on Phase 2d)
+**Last updated:** 2026-09-27 (link 5: Phase 2d done; link 6 started on Phase 2e)
 **Linear:** [KNG-27](https://linear.app/kngpandi/issue/KNG-27) · **Charter:** `docs/ai-agents/handoffs/ROAD_NAVIGATION_CHAIN.md` · **Plan:** `docs/specs/navigation/IMPLEMENTATION_PLAN.md`
 
 ## Summary for the developer
@@ -12,8 +12,8 @@
 | 2a — plugin core extractions | **done** (link 2) | knk-plugin `claude/road-navigation` `db962a4` (from `main` `eb1d68c`) | [Phase 2a](#phase-2a--knk-plugin-core-shared-extractions--guard-test-link-2) |
 | 2b — survey maths | **done** (link 3) | knk-plugin `claude/road-navigation` `92375e5` (on 2a's `db962a4`; trunk `main` still `eb1d68c`) | [Phase 2b](#phase-2b--knk-plugin-core-survey-maths-link-3) |
 | 2c — builder | **done** (link 4) | knk-plugin `claude/road-navigation` `c2ca1e3` (on 2b's `92375e5`; trunk `main` still `eb1d68c`) | [Phase 2c](#phase-2c--knk-plugin-core-builder-link-4) |
-| 2d — router | in progress (link 5) | knk-plugin `claude/road-navigation` (continues from `c2ca1e3`) | |
-| 2e — api-client | not started | — | |
+| 2d — router + navigation session | **done** (link 5) | knk-plugin `claude/road-navigation` `a82db3c` (on 2c's `c2ca1e3`; trunk `main` still `eb1d68c`) | [Phase 2d](#phase-2d--knk-plugin-core-router-and-navigation-session-link-5) |
+| 2e — api-client | in progress (link 6) | knk-plugin `claude/road-navigation` (continues from `a82db3c`) | |
 | 3 — plugin paper admin side | not started | — | |
 | 5 — web-app admin pages | not started | — | |
 | 4 — `/navigate` | waiting for KNG-17 on trunk | — | |
@@ -37,6 +37,14 @@
   deletions checked on real span links) with visible consequences: L-corners of 1-wide paths become diagonals, a
   1-wide T's centre moves one cell into the stem; (11) decision 15 — a Junction or Anchor exactly on a tile border
   is not stitched to the neighbour tile (rare; an anchor one block in fixes it) — see the plan's "Phase 2c status".
+  Phase 2d (router): (12) decision 1 — the snapper and the session take the player's **feet** position and compare
+  with floor y + 1; every point they return is a floor block; (13) decisions 7-8 — a player standing on a blocked
+  edge gets no route (explained with an empty partial route), and "Guiding you to the gate" guides to the junction
+  *before* the gate edge, not to the gate itself; (14) decision 10 — an edge "leaves" a no-exit domain when its
+  region list lacks the domain's region, so the route ends on the last edge inside; (15) decision 13 — tunnel /
+  bridge / stairs are chosen from the next edge's min/max y relative to the node (> 3 down → tunnel; > 3 up and back
+  down → bridge; else stairs); (16) decision 15 — re-route rate limits (60 ticks for off-route/blocked, 200 ticks
+  and > 15 % shorter for "something opened") — see the plan's "Phase 2d status".
 - **Cloud network, please check:** `repo.papermc.io` and `maven.enginehub.org` are still denied by the environment's
   network policy (proxy 403 on CONNECT) in links 1-4, so no link can compile knk-paper or run knk-core through
   Gradle; knk-core is tested through the plan §0.4 scratch build instead. Adding both hosts to the environment's
@@ -163,3 +171,36 @@
   option 1 (Claude Code Remote `create_session` in the same environment, `source_url` = knk-workspace `main`) — link 5 =
   Claude Code Remote session `session_015VRbxcdymMMgk4go3KJYSg` (created 2026-09-27 21:33 UTC, parent this session
   `session_01Ns8adeiE7FBtoTYbSMYvtb`).
+
+## Phase 2d — knk-plugin core: router and navigation session (link 5)
+
+- **Commits** (knk-plugin `claude/road-navigation`, on top of 2c's `c2ca1e3`; trunk `main` unchanged at `eb1d68c`):
+  `1f569b7` `domain/roads/{RoadClass,RoadEdgeFlag,RoadEdgeSource,RoadNode,RoadEdge}`, `roads/route/{RoadNetworkSnapshot,
+  EdgePolyline,SegmentIndex}` + the shared test fixture `NetworkFixture` · `5f3f41e` `RouterParameters`, `SnapPoint`,
+  `Snapper` · `c84b556` `EdgeVerdict`, `AccessPolicy`, `CompositeAccessPolicy`, `StaticFlagsAvailability`,
+  `GateAvailability`, `DomainAvailability` · `f371323` `Route`, `RouteRequest`, `RouteResult`, `AStarRouter`,
+  `BlockedExplainer` · `33efa64` `RegionShape`, `RegionClosestPoint`, `Maneuver`, `ManeuverBuilder`, `EtaEstimator`,
+  `CoverageCheck` · `a82db3c` `navigation/{SessionParameters,NavigationEffect,NavigationSession}`. Workspace `main`:
+  plan header + "Phase 2d status" block, this report, tracker row, handoff
+  `docs/ai-agents/handoffs/2026-09-27-road-navigation-phase-2e.md`.
+- **Tests:** knk-core 1280 → **1364**, 0 failures, 0 skipped (84 new across 10 classes) — every item of the plan's
+  2d test list (shortest path vs class costs, oneway, closed gate → explained + partial route, pass-through gate →
+  hint, entry denied → route ends at the region edge with the reason, exit denied, different components → refused,
+  snap prefers the bridge over the road below, region multi-goal, maneuver bands and level phrases, session
+  off-route / rate limit / arrival / gate closes mid-route). **Not compiled with Gradle** (paper-api unresolvable,
+  same 403 as links 1-4); counts from the §0.4 scratch build. `ArchitectureGuardTest` green with `roads/route` and
+  `navigation`.
+- **Flagged decisions:** 18, numbered in the plan status block; the five worth a look are in the summary above
+  (feet-vs-floor coordinates, blocked start edge, "to the gate" = to the junction before the gate edge, the domain
+  exit rule, the level-change phrase rule, the re-route rate limits).
+- **Discrepancies:** the plan's `RegionShape → goal set` is split into `RegionShape` (geometry) and
+  `RegionClosestPoint` (DESIGN §4's name); `Oneway` is handled by the router rather than a policy (the plan's
+  `check(RoadEdge)` has no direction); DESIGN §6.5 needed a rule for choosing tunnel / bridge / stairs. Cloud network
+  unchanged. KNG-17 still not on `main`.
+- **Live checklist:** nothing observable (pure core); local `./gradlew :knk-core:test` expects 1364 green — plan
+  "Phase 2d status → Developer to-do".
+- **Risks:** none for 2e/3. Phase 4 must respect the wiring notes in the status block (feet coordinates in,
+  floor coordinates out; the 2-second re-check feeds `onElementBlocked`; policies are per request and never shared).
+- **Next link:** handoff `docs/ai-agents/handoffs/2026-09-27-road-navigation-phase-2e.md`; started per charter §6
+  option 1 (Claude Code Remote `create_session` in the same environment, `source_url` = knk-workspace `main`) — link 6 =
+  Claude Code Remote session (id recorded below once created).
