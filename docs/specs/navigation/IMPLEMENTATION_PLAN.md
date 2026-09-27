@@ -2,9 +2,9 @@
 
 **Status:** In implementation (chain, `docs/ai-agents/handoffs/ROAD_NAVIGATION_CHAIN.md`). **Phase 1 done**
 (knk-web-api `claude/road-navigation` `77e0a29`, 2026-09-27); **Phase 2a done** (knk-plugin `claude/road-navigation`
-`db962a4`, 2026-09-27); Phase 2b next. Every code reference was verified against trunk by a separate review pass on
-2026-09-27; its corrections are folded in.
-**Last updated:** 2026-09-27 (Phase 2a status)
+`db962a4`, 2026-09-27); **Phase 2b done** (knk-plugin `claude/road-navigation` `92375e5`, 2026-09-27); Phase 2c next.
+Every code reference was verified against trunk by a separate review pass on 2026-09-27; its corrections are folded in.
+**Last updated:** 2026-09-27 (Phase 2b status)
 **Linear:** [KNG-27](https://linear.app/kngpandi/issue/KNG-27)
 **Design:** [DESIGN.md](DESIGN.md) rev. 4 (decided) — read it first; this plan says *where and how* to build it.
 **Sources:** trunk as of 2026-09-27 — knk-web-api `master` `acaee99`, knk-plugin `main` `ceed2f6`, knk-web-app `main`
@@ -628,6 +628,128 @@ CI; Swagger shows every route; a hand-made two-tile payload round-trips (PUT →
 - Tests: synthetic cross-sections for (a) stone-brick road with andesite kerbs on grass → Surface/Edge/terrain split;
   (b) gravel path 1-wide in a forest; (c) cobblestone kerb next to cobblestone house floor → ambiguous; (d) merging two
   surveys equals learning on the concatenation.
+
+### Phase 2b status — done 2026-09-27 (knk-plugin `claude/road-navigation` `e7a5cb3`, `92375e5`; on top of 2a's `db962a4`; trunk `main` still `eb1d68c`)
+
+- **What was built** (all in knk-core, Bukkit-free; names exactly as §2b spells them):
+  - `roads/survey/SurveySample.java` (`e7a5cb3`): record `(int x, int y, int z, boolean onGround, String floor, String
+    overlay, List<String> offsets)`; constants `MIN_OFFSET = -7`, `MAX_OFFSET = 7`, `WIDTH = 15`, `CENTRE_INDEX = 7`;
+    `offsets` has exactly 15 entries (index `i` = offset `i - 7`), `null` = no standable cell (wall, drop); `floor`
+    must equal the centre cell (validated); `SurveySample.of(x, y, z, onGround, overlay, offsets)` derives the floor
+    from the centre cell; `materialAt(offset)`, `hasOverlay()`. Materials are plain names (`Material.name()` on the
+    paper side).
+  - `roads/survey/ProposedProfile.java` (`e7a5cb3`): record `(List<Material> materials, int widthMin, int widthMax,
+    int sampleCount)` with nested record `Material(String material, RoadMaterialRole role, boolean ambiguous, double
+    centreShare, double edgeShare, int samples)` — the `RoadProfileDto`/`RoadMaterialDto` names; `material(name)`,
+    `roleOf(name)`, `withRole(role)`. Name, class, cost, scope are not learned and not in it.
+  - `domain/roads/RoadMaterialRole.java` (`e7a5cb3`): `SURFACE`, `EDGE`, `ACCENT`, `OVERLAY`; `apiName()` →
+    `Surface`/`Edge`/`Accent`/`Overlay` (the web-api enum names), `fromApiName(String)`. Shared with 2c
+    (`ProfileSet`) and 2e (DTO mapping); the guard test already covers `domain/roads`.
+  - `roads/survey/SurveyStats.java` (`92375e5`): immutable; `of(Collection<SurveySample>)`, `empty()`,
+    `merge(SurveyStats)` (returns a new instance), `toJson()`/`fromJson(String)`; accessors `samples()`, `runs()`,
+    `centreCells()`/`midCells()`/`outerCells()`, `materials()` (sorted map → `MaterialCounts(centre, mid, outer,
+    runEnd, inRun, outsideRun, overlay)`), `counts(material)`, `widths()` (width → samples), `runEndSlots()`;
+    `Bucket.of(offset)` (centre |o| ≤ 1, mid 2-5, outer 6-7).
+  - `roads/survey/ProfileLearner.java` (`92375e5`): constants at the top — `ROAD_LIKENESS_MIN = 0.6`,
+    `SURFACE_MIN_CENTRE_SHARE = 0.15`, `EDGE_RUN_END_FACTOR = 2.0`, `ACCENT_MAX_PRESENCE = 0.05`,
+    `AMBIGUOUS_MIN_OUTSIDE_SHARE = 0.10`, `DROP_BELOW_PRESENCE = 0.01`, `WIDTH_MIN_PERCENTILE = 5`,
+    `WIDTH_MAX_PERCENTILE = 95`, `MIN_WIDTH = 1`; `learn(SurveyStats) → ProposedProfile`; static
+    `roadLikeness(MaterialCounts)`, `isRoadLike(MaterialCounts)` (also used by `SurveyStats.of` for the runs).
+  - Tests (`knk-core/src/test/.../roads/survey/`): `SurveySampleTest` (7), `ProposedProfileTest` (3),
+    `SurveyStatsTest` (17), `ProfileLearnerTest` (16: plan scenarios a-d, overlays, noise/accent thresholds,
+    percentiles, walls, plaza limit, thresholds pinned), `domain/roads/RoadMaterialRoleTest` (2); helper
+    `CrossSections` builds synthetic walks (road described in absolute lateral positions, walker wandering across it).
+- **`StatsJson` v1** (the shape of `RoadProfile.StatsJson` and `RoadSurvey.StatsJson`, plan D5; flat, string material
+  names, integer counts):
+  `{"version":1,"samples":120,"runs":118,"cells":{"centre":360,"mid":940,"outer":470},"materials":{"STONE_BRICKS":
+  {"centre":300,"mid":400,"outer":0,"runEnd":10,"inRun":118,"outsideRun":0,"overlay":0},…},"widths":{"4":8,"5":110}}`.
+  `{}`, null and blank read as `SurveyStats.empty()` (the bootstrap *Default road* has `{}`); unknown keys are
+  ignored, missing sections are zero; a missing/other `version` or a negative count throws `IllegalArgumentException`.
+  Semantics: `centre/mid/outer` = non-null cross-section cells of that material per |offset| bucket; `runEnd` = times
+  it was the outermost cell of a run (1-wide run: one end); `inRun` = samples whose run contained it; `outsideRun` =
+  samples in which it appeared in the outer bucket outside the run; `overlay` = samples it lay on the floor in;
+  `runs` = samples with a run; `widths` = run length → samples.
+- **Reuse:** nothing in §2 applies to 2b (pure maths). Jackson (already a knk-core dependency) for the JSON; no new
+  dependency. Nothing duplicated.
+- **Tests:** knk-core **1085 → 1130** (0 failures, 0 skipped; 45 new). **Not compiled with Gradle:**
+  `./gradlew :knk-core:test` still fails at `Could not resolve io.papermc.paper:paper-api` (403 from the proxy for
+  `repo.papermc.io`; `maven.enginehub.org` also 000). Both counts from the plan §0.4 scratch build (recipe in the
+  Phase 2a status; the `Vector` stub was rewritten from the Bukkit API, all 10 `org.bukkit`-importing main files
+  compile against it). `ArchitectureGuardTest` passes with the new `roads/survey` and `domain/roads` sources.
+  knk-paper, knk-api-client: not built, not touched.
+- **Decisions to review** (each cheap to change; the admin reviews every proposal anyway — Phase 3 chat, Phase 5 editor):
+  1. **Two-pass statistics.** A run needs road-likeness, which needs the whole survey's bucket counts, so
+     `SurveyStats.of(samples)` counts buckets and overlays first and then classifies runs with *that batch's*
+     road-likeness. `merge` sums everything. `merge(of(A), of(B)) == of(A ++ B)` exactly when both batches classify
+     the materials alike (true for surveys of the same kind of road; scenario d). Phase 3 therefore builds a survey's
+     stats once at stop (`SurveyStats.of(allSamples)`), not incrementally; for the live action bar re-run `of` over
+     the samples so far (15 × N operations — trivial).
+  2. **Mid-only materials are road-like.** `r = centre/(centre+outer)`; when both are 0 (seen only at |offset| 2-5)
+     `r = 1`: a kerb the admin never stepped next to would otherwise be undefined and stop the run before the kerb,
+     so it could never become an Edge. Terrain always shows up in the outer bucket too. Noise from this rule is
+     dropped by the 1 % rule or never joins a run (test: podzol patch in scenario b).
+  3. **Role order** for each road-like material with presence ≥ 1 %: presence &lt; 5 % → Accent; else run-end share
+     ≥ 2 × centre share (and &gt; 0) → Edge; else centre share ≥ 15 % → Surface; else Accent (the residual the plan
+     doesn't name, e.g. a 10 % patch material). Edge is tested before Surface so a kerb the admin often walked next
+     to (centre share 20-30 % on a 3-wide road) is still an Edge, while a 1-wide path's only material (run-end share
+     100 % = centre share 100 %) is a Surface. *Presence* = share of runs containing the material; *centre share* =
+     the material's centre cells over the centre cells of all road-like materials (so terrain at ±1 next to a 1-wide
+     path doesn't dilute it); *edge share* = its run ends over all run ends.
+  4. **Ambiguous** = seen in the outer bucket outside the run in ≥ 10 % of all samples. A same-material courtyard
+     *contiguous* with the kerb is swallowed by the run (it widens the road instead); only one separated by a
+     non-road cell (grass strip, wall) counts as evidence — DESIGN §5.3 says the cross-section stops at walls anyway.
+  5. **Sensitivity of the plan's formula** (not changed, flagged): a kerb material that also floors buildings seen at
+     ±6-7 along more than ~15-20 % of the walk drops below `r ≥ 0.6` and is left out of the proposal (the admin adds
+     it as Edge/ambiguous by hand); a road ≥ ~13 wide or a plaza surveyed *on its own* puts its surface in the outer
+     bucket in every sample (`r = 3/7`) and learns nothing — plazas are learned from the streets leading into them
+     (tests `aSurveyOfOnlyAPlazaLearnsNoMaterials`, `aStreetWideningIntoAPlaza…`). Roads up to ~11 wide are fine.
+  6. **Overlay vs floor name collision:** a name seen both as floor and as overlay keeps the floor role when its run
+     presence ≥ its overlay share, else it is proposed as Overlay. Overlays below 1 % of samples are dropped.
+  7. **Widths:** nearest-rank percentiles of the width histogram; `15` means "at least the whole cross-section"; a
+     survey without any run (or empty stats) proposes `1..1` and no materials (the API's upsert defaults are `1..7`;
+     Phase 3 may prefer those for an empty proposal).
+  8. **`onGround` is carried, not filtered:** `SurveyStats` counts every sample; Phase 3 only samples on the ground
+     (DESIGN §5.3), the flag exists for the breadcrumb/coverage side.
+  9. **`SurveySample` enforces `floor == offsets[7]`** (`IllegalArgumentException` otherwise); `SurveySample.of` avoids
+     the duplication. The list is copied and unmodifiable.
+  10. **`SurveyStats.fromJson` refuses other versions** instead of silently reading an empty profile; Phase 2e/3 should
+      let that surface as an error (a newer plugin wrote the profile) rather than overwrite the stats.
+  11. **`RoadMaterialRole` lives in `C/domain/roads/`** (DESIGN §4's home for road records) rather than in the survey
+      package, so 2c's `ProfileSet` and 2e's DTO mapping share one enum; `ProposedProfile` mirrors the DTO field names
+      but is not the DTO (2e writes those).
+  12. **`SurveyStats.merge` returns a new instance** (both inputs unchanged); `equals`/`hashCode` are value-based so
+      scenario (d) is an `assertEquals`.
+- **Discrepancies found:** none in the plan text for 2b. Cloud network unchanged from links 1-2 (`repo.papermc.io`,
+  `maven.enginehub.org` denied despite charter §9). KNG-17 (`core/teleport/WarpTargets`) is still not on `main`
+  (`eb1d68c`) — Phase 4 still waits.
+- **Developer to-do:**
+  1. Local: `./gradlew :knk-core:test` (expect 1130 green), then `./gradlew build -x deployToDevServer` — only new
+     classes were added, nothing in knk-paper references them yet, so no compile impact is expected.
+  2. Live: nothing observable — 2b is pure maths; the `/knk road survey` command that feeds it is Phase 3. If you
+     have a minute: glance at the `StatsJson` v1 shape above and say whether the flat per-material object suits the
+     web app (Phase 5 treats it as opaque unless told otherwise).
+- **What later phases must wire:**
+  - **2c (builder):** `ProfileSet` maps material → `(RoadMaterialRole, ambiguous, profile ids)` using
+    `C/domain/roads/RoadMaterialRole`; a profile's `widthMax` from the learner is the 95th-percentile run width
+    (`15` = at least the cross-section) — plaza collapse uses `widthMax/2` of the matched profile as the plan says.
+    `ProfileMatcher` compares floor-material histograms with the profile's `centreShare`s (Surface/Edge/Accent
+    only; Overlay materials are not floors).
+  - **2e (api-client):** `RoadMaterialDto.role` ↔ `RoadMaterialRole.apiName()` / `fromApiName()`; the opaque
+    `stats` of profiles and surveys ↔ `SurveyStats.toJson()` / `fromJson()` (for a Jackson `JsonNode`:
+    `mapper.readTree(stats.toJson())`; from the API: `SurveyStats.fromJson(node.toString())`, `{}` → empty).
+    `ProposedProfile` → `RoadProfileUpsertDto`: `materials[*] = {material, role.apiName(), ambiguous, centreShare,
+    edgeShare, samples}`, `widthMin`, `widthMax`, `sampleCount`, `stats` = the merged stats' JSON; `name`,
+    `roadClass`, `costMultiplier`, `enabled`, `scopeTownIds` come from the existing profile or the admin.
+  - **3 (survey session, `/knk road survey`):** build each sample with `SurveySample.of(x, y, z, onGround,
+    overlayNameOrNull, offsets)` — 15 `Material.name()` strings for lateral offsets −7…+7 (perpendicular to the
+    walking direction, floor through overlays at the standable height nearest the centre's, `null` where there is
+    none / a wall stops the scan), overlay = the thin block on the centre floor. On stop:
+    `SurveyStats survey = SurveyStats.of(samples)`; `SurveyStats merged = SurveyStats.fromJson(profile.stats)
+    .merge(survey)`; `ProposedProfile p = new ProfileLearner().learn(merged)`; review; PUT the profile with `stats =
+    merged.toJson()` and `sampleCount = p.sampleCount()`; `POST api/road-surveys` with `stats = survey.toJson()`,
+    `sampleCount = survey.samples()`. "Learn a new profile" = `learn(survey)` with `stats = survey.toJson()`. The
+    action bar's "top materials, estimated width" = `learn(SurveyStats.of(samplesSoFar))` every few seconds.
+  - **5 (web app):** stats stay opaque; if a page ever shows them, the v1 shape above is the contract.
 
 ### 2c Builder — `C/roads/build/`
 

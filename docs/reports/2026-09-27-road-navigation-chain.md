@@ -1,7 +1,7 @@
 # Road navigation chain — progress report
 
 **Status:** running
-**Last updated:** 2026-09-27 (link 2: Phase 2a done; link 3 started on Phase 2b)
+**Last updated:** 2026-09-27 (link 3: Phase 2b done; link 4 started on Phase 2c)
 **Linear:** [KNG-27](https://linear.app/kngpandi/issue/KNG-27) · **Charter:** `docs/ai-agents/handoffs/ROAD_NAVIGATION_CHAIN.md` · **Plan:** `docs/specs/navigation/IMPLEMENTATION_PLAN.md`
 
 ## Summary for the developer
@@ -10,8 +10,8 @@
 |---|---|---|---|
 | 1 — knk-web-api: data model, services, API | **done** (link 1) | knk-web-api `claude/road-navigation` `77e0a29` (from `master` `ccc8c02`) | [Phase 1](#phase-1--knk-web-api-data-model-services-api-link-1) |
 | 2a — plugin core extractions | **done** (link 2) | knk-plugin `claude/road-navigation` `db962a4` (from `main` `eb1d68c`) | [Phase 2a](#phase-2a--knk-plugin-core-shared-extractions--guard-test-link-2) |
-| 2b — survey maths | in progress (link 3) | knk-plugin `claude/road-navigation` (continues from `db962a4`) | |
-| 2c — builder | not started | — | |
+| 2b — survey maths | **done** (link 3) | knk-plugin `claude/road-navigation` `92375e5` (on 2a's `db962a4`; trunk `main` still `eb1d68c`) | [Phase 2b](#phase-2b--knk-plugin-core-survey-maths-link-3) |
+| 2c — builder | in progress (link 4) | knk-plugin `claude/road-navigation` (continues from `92375e5`) | |
 | 2d — router | not started | — | |
 | 2e — api-client | not started | — | |
 | 3 — plugin paper admin side | not started | — | |
@@ -24,7 +24,12 @@
   every edge it reaches; (4) decision 4 — Inferred labels are recomputed from scratch per build (conflicts →
   unlabelled + warning). All in the plan's "Phase 1 status" block. Phase 2a is a pure refactor; its decisions 1-3
   (`DomainAccessEvaluator` shape: instance methods, `Denial` carries the domain, the three exit loops collapsed to one)
-  only matter for the KNG-17 merge — see the plan's "Phase 2a status".
+  only matter for the KNG-17 merge — see the plan's "Phase 2a status". Phase 2b (survey maths): (5) its decision 5 —
+  the plan's centre-vs-outer road-likeness rule cannot learn a plaza or a ≥ 13-wide road surveyed on its own, nor a
+  kerb material that also floors buildings along more than ~15-20 % of the walk (the admin adds those by hand); (6)
+  decision 1 — a survey's run statistics are classified with that survey's own material distribution, then merged
+  by summing, so profiles accumulate exactly across surveys of the same kind of road; (7) the `StatsJson` v1 layout
+  (flat per-material counts) is now fixed by the plugin — see the plan's "Phase 2b status".
 - **Cloud network, please check:** `repo.papermc.io` and `maven.enginehub.org` are still denied by the environment's
   network policy (proxy 403 on CONNECT) in links 1 and 2, so no link can compile knk-paper or run knk-core through
   Gradle; knk-core is tested through the plan §0.4 scratch build instead. Adding both hosts to the environment's
@@ -83,3 +88,32 @@
   option 1 (Claude Code Remote `create_session` in the same environment, `source_url` = knk-workspace `main`) — link 3 =
   Claude Code Remote session `session_01GHceCT4sjFzuGiq81wtJB7` (created 2026-09-27 20:09 UTC, parent this session
   `session_01HnoVDWFbstro88fNr2ntKM`).
+
+## Phase 2b — knk-plugin core: survey maths (link 3)
+
+- **Commits** (knk-plugin `claude/road-navigation`, on top of 2a's `db962a4`; trunk `main` unchanged at `eb1d68c`):
+  `e7a5cb3` value types — `roads/survey/SurveySample` (record: floor, overlay, cross-section −7…+7 with null = no
+  standable cell, x/y/z, onGround), `roads/survey/ProposedProfile` (materials with role/ambiguous/centreShare/
+  edgeShare/samples, widthMin/widthMax, sampleCount — the `RoadProfileDto`/`RoadMaterialDto` names), `domain/roads/
+  RoadMaterialRole` (shared enum, `apiName()`/`fromApiName()`) · `92375e5` `roads/survey/SurveyStats` (immutable
+  counts per material per |offset| bucket 0-1/2-5/6-7, run ends, in-run, outside-run, overlays, width histogram;
+  `of(samples)`, `merge`, `toJson`/`fromJson` = **StatsJson v1**, `{}` → empty) and `roads/survey/ProfileLearner`
+  (`learn(SurveyStats) → ProposedProfile`; thresholds 0.6 / 15 % / 2× / 5 % / 10 % / 1 % / 5th-95th percentile as
+  named constants). Workspace `main`: plan header + "Phase 2b status" block, this report, tracker row, handoff
+  `docs/ai-agents/handoffs/2026-09-27-road-navigation-phase-2c.md`.
+- **Tests:** knk-core 1085 → 1130, 0 failures, 0 skipped (45 new: `SurveySampleTest` 7, `ProposedProfileTest` 3,
+  `SurveyStatsTest` 17, `ProfileLearnerTest` 16, `RoadMaterialRoleTest` 2). The plan's four scenarios pass: (a)
+  stone-brick road with andesite kerbs on grass → Surface + Edge, grass absent, width 7; (b) 1-wide gravel path in a
+  forest → gravel is the Surface (not an Edge), width 1; (c) cobblestone kerb next to a cobblestone courtyard → Edge +
+  ambiguous, not ambiguous without the courtyard; (d) `merge(of(A), of(B)) == of(A ++ B)` and equal proposals.
+  **Not compiled with Gradle** (paper-api unresolvable, same 403 as links 1-2); counts from the §0.4 scratch build.
+  `ArchitectureGuardTest` green with the new packages.
+- **Flagged decisions:** 12, numbered in the plan status block; the ones worth a look are in the summary above
+  (formula sensitivity for plazas / building-shared kerbs, per-survey run classification, the StatsJson layout).
+- **Discrepancies:** none in the plan text. KNG-17 still not on `main`.
+- **Live checklist:** nothing observable (pure maths); local `./gradlew :knk-core:test` expects 1130 green — plan
+  "Phase 2b status → Developer to-do".
+- **Risks:** the learner is a heuristic the admin reviews; its two known blind spots are decision 5. The StatsJson
+  shape is the contract for Phase 2e/3/5 from now on (versioned; other versions are refused, not misread).
+- **Next link:** handoff `docs/ai-agents/handoffs/2026-09-27-road-navigation-phase-2c.md`; started per charter §6
+  option 1 (Claude Code Remote `create_session`, same environment) — see the line appended below once created.
