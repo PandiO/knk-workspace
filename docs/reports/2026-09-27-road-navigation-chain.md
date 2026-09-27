@@ -160,4 +160,6 @@
   1-wide diagonal paths being 4-connected staircases (decision 4); junctions within one block of a tile border may
   not stitch (decision 15). All surface in Phase 3's `/knk road build` summary and overlay, none blocks 2d/2e.
 - **Next link:** handoff `docs/ai-agents/handoffs/2026-09-27-road-navigation-phase-2d.md`; started per charter §6
-  option 1 (Claude Code Remote `create_session`, same environment) — see the line appended below once created.
+  option 1 (Claude Code Remote `create_session` in the same environment, `source_url` = knk-workspace `main`) — link 5 =
+  Claude Code Remote session `session_015VRbxcdymMMgk4go3KJYSg` (created 2026-09-27 21:33 UTC, parent this session
+  `session_01Ns8adeiE7FBtoTYbSMYvtb`).
