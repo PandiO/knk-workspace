@@ -3,6 +3,8 @@
 **Status:** Decided (rev. 4) — all questions answered (§10); ready for implementation, **in parallel with the siege
 work** (developer decision). Phase 4 waits for KNG-17 (teleport) to reach trunk.
 **Last updated:** 2026-09-27
+**Implementation plan:** [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) — its §1 lists ten small deviations (D1-D10) decided
+while mapping the design onto trunk code; where this document and the plan disagree, the plan wins.
 **Linear:** [KNG-27](https://linear.app/kngpandi/issue/KNG-27/road-navigation-street-road-graph-endpointsintersections-traced-road)
 **Research:** [reports/2026-09-27-road-navigation-research.md](../../reports/2026-09-27-road-navigation-research.md)
 (legacy scan, archive notes, V3 building blocks, algorithm sources);
@@ -184,10 +186,10 @@ None to the table. `StreetDto` gains read-only `edgeCount`, `totalLength`.
 | `GET api/road-network/tiles?world={w}` | anonymous read | Tile list with a per-tile `version` (§9): the plugin compares it with its local cache. |
 | `GET api/road-network/tiles/{world}/{tileX}/{tileZ}` | anonymous read | One tile's nodes and edges (geometry, gate/domain ids), ETag = tile version. The plugin downloads only changed tiles and keeps them in a local file cache between restarts. |
 | `GET api/road-network/meta?world={w}` | anonymous read | Profiles and the street id → name map. |
-| `GET/POST/PUT/DELETE api/road-profiles[/{id}]` | writes: plugin key or staff JWT | Profiles; `POST api/road-profiles/{id}/merge-survey` merges a survey's samples. |
+| `GET/POST/PUT/DELETE api/road-profiles[/{id}]` | writes: plugin key or staff JWT | Profiles. (No merge endpoint: the plugin recomputes the profile from its stored stats and saves it — plan D5.) |
 | `POST api/road-surveys`, `GET api/road-surveys?world=` | plugin key | Store finished surveys. |
 | `GET api/road-tiles?world={w}` | anonymous read | Tile overview. |
-| `PUT api/road-tiles/{world}/{tileX}/{tileZ}` | `[RequirePluginServiceKey]` | Build result for one tile, one transaction: detected nodes (with `existingId` when matched), edges, statistics, warnings. Deletes unmatched `Detected` nodes/edges; keeps `Manual`/`Locked` nodes and `Recorded` edges; recomputes component ids. Idempotent. |
+| `PUT api/road-tiles/{world}/{tileX}/{tileZ}/graph` | `[RequirePluginService]` | Build result for one tile, one transaction: detected nodes (with `existingId` when matched), edges, statistics, warnings. Deletes unmatched `Detected` nodes/edges; keeps `Manual`/`Locked` nodes and `Recorded` edges; recomputes component ids. Idempotent. |
 | `POST api/road-tiles/{world}/{tileX}/{tileZ}/dirty` | plugin key | Mark dirty (batched). |
 | `GET/POST/DELETE api/road-seeds` | writes: plugin key | Seeds. |
 | `PUT api/road-nodes/{id}`, `POST api/road-nodes` (anchor), `POST api/road-nodes/merge` | plugin key or staff JWT | Review actions. |
@@ -208,11 +210,11 @@ Pure logic in `knk-core` (Bukkit-free, unit-tested), thin Paper adapters in `knk
 | knk-core | `core/domain/roads/` | Records `RoadProfile`, `RoadNode`, `RoadEdge`, `RoadTile`, `RoadNetwork` (immutable per-world snapshot), `BlockPos`. |
 | knk-core | `ports/api/RoadNetworkQueryApi`, `RoadNetworkCommandApi` | API ports. |
 | knk-core | `core/roads/survey/` | `SurveySampler` (cross-section sampling, §5.3), `ProfileLearner` (role classification, widths, merge), `CoverageCheck`. |
-| knk-core | `core/roads/build/` | `SurfaceGrid` port (material, overlay, passability, gate-door lookup at a position), `SpanGrid` (§5.2), `MaskBuilder`, `DistanceTransform`, `Thinning`, `SkeletonGraph` (degree classification, junction clustering, spur/plaza rules), `ProfileMatcher`, `NodeMatcher`, `StreetLabeler`, `Rdp`, `TileBuilder`. |
+| knk-core | `core/roads/build/` | `SurfaceGrid` port (material, overlay, passability, gate-door lookup at a position), `SpanGrid` (§5.2), `MaskBuilder`, `DistanceTransform`, `Thinning`, `SkeletonGraph` (degree classification, junction clustering, spur/plaza rules), `ProfileMatcher`, `NodeMatcher`, `Rdp`, `TileBuilder`. (Street labelling runs in knk-web-api — plan D6.) |
 | knk-core | `core/roads/route/` | `RoadGraph`, `SegmentIndex` (3D-aware grid buckets), `Snapper`, `AStarRouter`, `AccessPolicy` + `DomainAccessEvaluator` (§6.7), `Route`, `ManeuverBuilder`, `RegionClosestPoint`. |
 | knk-core | `core/navigation/` | `NavigationSession` state machine, `DestinationResolver` (wraps teleport's `WarpTargets`), `EtaEstimator`. |
 | knk-api-client | `impl/RoadNetwork*ApiImpl`, DTOs, mapper | |
-| knk-paper | `roads/` | `ChunkSnapshotSurfaceGrid` (+ gate lookup via `GateManager.getSpatialIndex()`), `RoadBuildJob`, `RoadSurveySession` (samples the admin's walk), `RoadNetworkCache`, `RoadDirtyTracker`, `RoadAdminCommand`, `RoadOverlayRenderer`. |
+| knk-paper | `roads/` | `ChunkSnapshotSurfaceGrid` (+ gate cells from each door's closed footprint — plan D9), `RoadBuildJob`, `RoadSurveySession` (samples the admin's walk), `RoadNetworkCache`, `RoadDirtyTracker`, `RoadAdminCommand`, `RoadOverlayRenderer`. |
 | knk-paper | `navigation/` | `NavigateCommand`, `NavigationService` (sessions, ticker, availability change listeners), `TrailRenderer`, `NavigationHud`, `NavigationListener`, events (§6.6). |
 
 Config (`config.yml`) — materials live in the API profiles now, not in config:
@@ -363,7 +365,7 @@ with `getChunkAtAsync`; everything after capture runs off the main thread on pac
 its location.
 
 **Gates on the road:** a gate door standing on a road would break the mask while closed (no headroom). The
-`SurfaceGrid` asks `GateManager.getSpatialIndex()` (knk-core `gates/GateSpatialIndex`) whether a block belongs to a
+`SurfaceGrid` asks the gates' closed footprints (`GateManager`, frame 0 — plan D9) whether a block belongs to a
 gate door; such blocks count as passable headroom, and the spans under them are tagged with the door id. Every edge
 crossing tagged spans records the door in `GateDoorIds`. The build is therefore the same whether gates are open or
 closed; the gate's *state* only matters at routing time (§6.7).
@@ -534,7 +536,7 @@ The router only uses roads this player can actually use **now**. Every edge carr
 | Gate doors on the edge | `GateManager.getGate(id)` → `CachedGateDoor.getCurrentState()`, `isDestroyed()`, `isJammed()` | State is `CLOSED`, `CLOSING`, `OPENING` or jammed. `OPEN` or destroyed → passable. A door in an active siege (`getCurrentSiegeId() != null`) is blocked for non-participants regardless. `AllowPassThrough` doors: passable only for players the pass-through rules allow, with a hint "right-click the gate to pass". |
 | Domain entry | the domains in `DomainIds` the route *enters* | `AllowEntry = false`, or any future entry condition (vision §2.2: title, balance, clan, premium rank). |
 | Domain exit | the domains the player is in and the route *leaves* | `AllowExit = false`. |
-| Siege | siege runtime (read-only) | Area lockdown or an active match area, for non-participants. |
+| Siege | `SiegeGateController.isLocked` (read-only) | **Not blocked** (plan D2): trunk keeps siege areas open to non-members and carries them through locked gates, so a siege-locked gate counts as a pass-through gate for non-members. Navigation ends when the player joins a siege lobby. |
 | Static flags | edge `Flags` | `Closed`, `NoGps`; `Oneway` against direction. |
 
 **One source of truth for entry rules.** Today `core/regions/SimpleRegionTransitionService.checkEntryDenials`/
