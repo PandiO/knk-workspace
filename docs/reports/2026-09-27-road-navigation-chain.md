@@ -1,7 +1,7 @@
 # Road navigation chain — progress report
 
 **Status:** running
-**Last updated:** 2026-09-27 (link 3: Phase 2b done; link 4 started on Phase 2c)
+**Last updated:** 2026-09-27 (link 4: Phase 2c done; link 5 started on Phase 2d)
 **Linear:** [KNG-27](https://linear.app/kngpandi/issue/KNG-27) · **Charter:** `docs/ai-agents/handoffs/ROAD_NAVIGATION_CHAIN.md` · **Plan:** `docs/specs/navigation/IMPLEMENTATION_PLAN.md`
 
 ## Summary for the developer
@@ -11,8 +11,8 @@
 | 1 — knk-web-api: data model, services, API | **done** (link 1) | knk-web-api `claude/road-navigation` `77e0a29` (from `master` `ccc8c02`) | [Phase 1](#phase-1--knk-web-api-data-model-services-api-link-1) |
 | 2a — plugin core extractions | **done** (link 2) | knk-plugin `claude/road-navigation` `db962a4` (from `main` `eb1d68c`) | [Phase 2a](#phase-2a--knk-plugin-core-shared-extractions--guard-test-link-2) |
 | 2b — survey maths | **done** (link 3) | knk-plugin `claude/road-navigation` `92375e5` (on 2a's `db962a4`; trunk `main` still `eb1d68c`) | [Phase 2b](#phase-2b--knk-plugin-core-survey-maths-link-3) |
-| 2c — builder | in progress (link 4) | knk-plugin `claude/road-navigation` (continues from `92375e5`) | |
-| 2d — router | not started | — | |
+| 2c — builder | **done** (link 4) | knk-plugin `claude/road-navigation` `c2ca1e3` (on 2b's `92375e5`; trunk `main` still `eb1d68c`) | [Phase 2c](#phase-2c--knk-plugin-core-builder-link-4) |
+| 2d — router | in progress (link 5) | knk-plugin `claude/road-navigation` (continues from `c2ca1e3`) | |
 | 2e — api-client | not started | — | |
 | 3 — plugin paper admin side | not started | — | |
 | 5 — web-app admin pages | not started | — | |
@@ -29,9 +29,16 @@
   kerb material that also floors buildings along more than ~15-20 % of the walk (the admin adds those by hand); (6)
   decision 1 — a survey's run statistics are classified with that survey's own material distribution, then merged
   by summing, so profiles accumulate exactly across surveys of the same kind of road; (7) the `StatsJson` v1 layout
-  (flat per-material counts) is now fixed by the plugin — see the plan's "Phase 2b status".
+  (flat per-material counts) is now fixed by the plugin — see the plan's "Phase 2b status". Phase 2c (builder):
+  (8) decision 1 — every node and geometry point is the **floor block** (feet at y + 1); Phases 2d/3 convert;
+  (9) decision 7 — the plaza rule is `2·dt − 1 > widthMax`, so a profile's `widthMax` must be at least the real road
+  width or the road collapses into junctions (the learner's 95th percentile guarantees this for surveyed roads;
+  hand-made profiles should set 15); (10) decision 8 — Zhang-Suen got two robustness additions (staircase ends kept,
+  deletions checked on real span links) with visible consequences: L-corners of 1-wide paths become diagonals, a
+  1-wide T's centre moves one cell into the stem; (11) decision 15 — a Junction or Anchor exactly on a tile border
+  is not stitched to the neighbour tile (rare; an anchor one block in fixes it) — see the plan's "Phase 2c status".
 - **Cloud network, please check:** `repo.papermc.io` and `maven.enginehub.org` are still denied by the environment's
-  network policy (proxy 403 on CONNECT) in links 1 and 2, so no link can compile knk-paper or run knk-core through
+  network policy (proxy 403 on CONNECT) in links 1-4, so no link can compile knk-paper or run knk-core through
   Gradle; knk-core is tested through the plan §0.4 scratch build instead. Adding both hosts to the environment's
   allowed domains would let later links build the real thing.
 - **Test when you have time:** pull `claude/road-navigation` in each repo; build the plugin (`./gradlew build -x deployToDevServer`, fix compile errors first if any link marked knk-paper "not compiled"); apply the new web-api migration to the dev DB (developer only); run the web-api; `./gradlew :knk-paper:dev`; then each phase's live checklist from the plan in phase order.
@@ -119,3 +126,38 @@
   option 1 (Claude Code Remote `create_session` in the same environment, `source_url` = knk-workspace `main`) — link 4 =
   Claude Code Remote session `session_01Ns8adeiE7FBtoTYbSMYvtb` (created 2026-09-27 20:32 UTC, parent this session
   `session_01GHceCT4sjFzuGiq81wtJB7`).
+
+## Phase 2c — knk-plugin core: builder (link 4)
+
+- **Commits** (knk-plugin `claude/road-navigation`, on top of 2b's `92375e5`; trunk `main` unchanged at `eb1d68c`):
+  `2266921` `domain/roads/RoadNodeKind` (the rest of that commit was swallowed by `.gitignore`, see discrepancies) ·
+  `cb8a7fd` `.gitignore` exception `!**/src/**/build/` + ports `SurfaceGrid`/`GateCells`/`ScopeLookup`,
+  `PassabilityRules`, `ProfileSet`, `BuildParameters` · `6f870ff` `SpanGrid` (3D spans, one link per direction,
+  step and diagonal rules) + test `GridFixture` · `96d40d6` `MaskBuilder`, `RoadMask`, `DistanceTransform`,
+  `BuildWarning` · `23f9afa` `Thinning` (Zhang-Suen + Holt), `Rdp`, `ProfileMatcher` · `4808d1b` `SkeletonGraph`,
+  `NodeMatcher`, `TileBuilder`/`TileBuildResult`, thinning corner-end guard · `c2ca1e3` `TileBuilderTest` (the plan's
+  golden list) + cleanups. Workspace `main`: plan header + "Phase 2c status" block, this report, tracker row, handoff
+  `docs/ai-agents/handoffs/2026-09-27-road-navigation-phase-2d.md`.
+- **Tests:** knk-core 1130 → **1280**, 0 failures, 0 skipped (150 new across 14 classes). All 16 golden scenarios of
+  the plan pass with exact or ±1 lengths: meandering 1-wide path; 5-wide road → one centreline of length 29 for 30
+  cells; T, X and 5-way → one junction each; 15×15 plaza with four exits → one junction, four edges of 23; stairs
+  up a hill; tunnel under a road, bridge over a road, two stacked streets → separate edges, no junction; spiral ramp
+  → one edge climbing over itself; gravel into stone → one edge, dominant profile; cobblestone courtyard held by
+  `ambiguousReach`; 2-block gap → two components; closed gate → one edge with `gateDoorIds`; tile-border crossing →
+  Boundary nodes on the border cells (both tiles' views); rebuild with one block changed → every `existingId` kept.
+  **Not compiled with Gradle** (paper-api unresolvable, same 403 as links 1-3); counts from the §0.4 scratch build.
+  `ArchitectureGuardTest` green with the new package.
+- **Flagged decisions:** 20, numbered in the plan status block; the four worth a look are in the summary above
+  (floor-y convention, plaza threshold vs `widthMax`, thinning consequences, border limitation).
+- **Discrepancies:** knk-plugin's `.gitignore` (`**/build/`) hid the plan's package `core/roads/build/` — fixed with a
+  `src/**/build/` exception (a one-line change the developer may prefer to review); `GridFixture` lives in the
+  `roads/build` test package; DESIGN §5.5's "width = 2 × dt" is `2·dt − 1` with border `dt = 1`; "local width" for
+  spurs is the spur's own median width; textbook Zhang-Suen needed two additions for staircases and the non-planar
+  span grid. Cloud network unchanged. KNG-17 still not on `main`.
+- **Live checklist:** nothing observable (pure core); local `./gradlew :knk-core:test` expects 1280 green — plan
+  "Phase 2c status → Developer to-do".
+- **Risks:** the builder's output quality depends on `widthMax` being ≥ the real road width (decision 7) and on
+  1-wide diagonal paths being 4-connected staircases (decision 4); junctions within one block of a tile border may
+  not stitch (decision 15). All surface in Phase 3's `/knk road build` summary and overlay, none blocks 2d/2e.
+- **Next link:** handoff `docs/ai-agents/handoffs/2026-09-27-road-navigation-phase-2d.md`; started per charter §6
+  option 1 (Claude Code Remote `create_session`, same environment) — see the line appended below once created.

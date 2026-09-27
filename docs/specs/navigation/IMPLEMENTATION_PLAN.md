@@ -2,9 +2,10 @@
 
 **Status:** In implementation (chain, `docs/ai-agents/handoffs/ROAD_NAVIGATION_CHAIN.md`). **Phase 1 done**
 (knk-web-api `claude/road-navigation` `77e0a29`, 2026-09-27); **Phase 2a done** (knk-plugin `claude/road-navigation`
-`db962a4`, 2026-09-27); **Phase 2b done** (knk-plugin `claude/road-navigation` `92375e5`, 2026-09-27); Phase 2c next.
+`db962a4`, 2026-09-27); **Phase 2b done** (knk-plugin `claude/road-navigation` `92375e5`, 2026-09-27); **Phase 2c done**
+(knk-plugin `claude/road-navigation` `c2ca1e3`, 2026-09-27); Phase 2d next.
 Every code reference was verified against trunk by a separate review pass on 2026-09-27; its corrections are folded in.
-**Last updated:** 2026-09-27 (Phase 2b status)
+**Last updated:** 2026-09-27 (Phase 2c status)
 **Linear:** [KNG-27](https://linear.app/kngpandi/issue/KNG-27)
 **Design:** [DESIGN.md](DESIGN.md) rev. 4 (decided) — read it first; this plan says *where and how* to build it.
 **Sources:** trunk as of 2026-09-27 — knk-web-api `master` `acaee99`, knk-plugin `main` `ceed2f6`, knk-web-app `main`
@@ -808,6 +809,193 @@ Classes (DESIGN §5 section in brackets):
   (gravel into stone) → one continuous edge, profile per edge; cobblestone floor next to a cobblestone kerb held by
   `ambiguousReach`; gap of 2 air blocks → two components + no edge; closed gate cells on the road → edge with
   `gateDoorIds`; tile border crossing → boundary node; rebuild with one block changed keeps all other `existingId`s.
+
+### Phase 2c status — done 2026-09-27 (knk-plugin `claude/road-navigation` `2266921`, `cb8a7fd`, `6f870ff`, `96d40d6`, `23f9afa`, `4808d1b`, `c2ca1e3`; on top of 2b's `92375e5`; trunk `main` still `eb1d68c`)
+
+- **What was built** (all in knk-core `C/roads/build/` unless noted; Bukkit-free, pure, no I/O or threads):
+  - **Ports** — `SurfaceGrid` (teleport's five `BlockProbe` methods verbatim, `maxY` exclusive, plus
+    `floorMaterial(x,y,z)` looking through overlays and `isStairOrSlab`), `GateCells` (`OptionalInt doorAt(x,y,z)`,
+    `GateCells.NONE`), `ScopeLookup` (`OptionalInt townAt(x,z)`, `ScopeLookup.NONE`) for profile town scopes (D8).
+  - `PassabilityRules` — one table over material names: overlay (DESIGN §4 `overlay-materials` incl. `*_CARPET`
+    patterns, `PassabilityRules.overlayPredicate(patterns)`), passable = non-collidable or overlay, solid = its
+    exact complement, hazard = teleport's `SafeLocationFinder.HAZARD_MATERIALS` verbatim (11 names), static
+    `isStairOrSlab(name)`. `PassabilityRules.of(collidable, overlayPatterns)` takes the paper side's
+    `Material#isCollidable()`; `defaults()` uses a curated non-collidable list (tests, fallback).
+  - `ProfileSet` (+ nested `Profile(id, name, enabled, widthMin, widthMax, scopeTownIds, materials)` reusing
+    `ProposedProfile.Material` and `RoadMaterialRole` from 2b) — material → `isRoadMaterial`/`isAmbiguous`/
+    `info(role, ambiguous, profileIds)`/`maxWidthMax` per column; Overlay materials are never floors; a material
+    is ambiguous only when every listing profile says so; scoped profiles apply only where `townAt` is in scope.
+  - `BuildParameters` record (DESIGN §4 defaults: tile 512, margin 32, cap 250 000, cluster radius 3, min spur 4,
+    ambiguous reach 3, RDP ε 0.75, seed snap radius 8, node match 3.0, edge match 2.0) with `withTile/withMaxCells/
+    withAmbiguousReach/withGraphRules`.
+  - `SpanGrid` [§5.2] — pure view over `SurfaceGrid`+`ProfileSet`+`GateCells`: `isSpan(x,y,z)`, allocation-free
+    `neighbourDy(key, dir)` (−1/0/+1 or `NO_LINK`), `neighbour(key, dir) → OptionalLong`, `gateDoor(key)`,
+    `isAmbiguous(key)`; directions `N..NW` clockwise (`DX`/`DZ`, `opposite`, `isDiagonal`).
+  - `MaskBuilder` [§5.1, §5.4] (+ `Seed`, `Region` with `Region.tile(tx, tz, size)`/`grow(margin)`, `Result`) and
+    `RoadMask` (dense, sorted keys + 8-neighbour table restricted to the mask, gate tags, floors, `levelCount`,
+    `subset(keep)`), `BuildWarning(message, x, y, z)` with `text()`.
+  - `DistanceTransform` [§5.5] — `compute(mask) → int[]` (border spans 1), `width(dt) = 2·dt − 1`, `halfWidth`.
+  - `Thinning` [§5.5] — Zhang-Suen + corner-end guard + real-link connectivity check + Holt's staircase pass;
+    `degree(mask, skeleton, i)`, package-private `linked`, `removeStaircaseCorners`, `neighboursStayConnected`.
+  - `SkeletonGraph` [§5.6, D7] (+ `Anchor`, `Node`, `Chain`, `Result`) — plaza collapse, junction clustering,
+    node-less loop seeding, anchors, chain tracing, endpoint extension, spur pruning with dissolve, loop/parallel
+    splitting, tile-border cut; warnings `WARN_ANCHOR_OFF_ROAD`, `WARN_ANCHOR_DUPLICATE`.
+  - `ProfileMatcher` — `histogram(mask, dt, chain)`, `match(mask, dt, chain) → OptionalInt`, static `cosine`.
+  - `Rdp` — `simplify(points, ε)` (iterative, 3D, keeps the input arrays), `distanceToSegment`, `length`.
+  - `NodeMatcher` [§5.7] (+ `PreviousNode`, `PreviousEdge`, `PreviousGraph` with `EMPTY`, `Candidate`) —
+    `matchNodes → int[]` (`UNMATCHED = -1`), `matchEdge → OptionalInt`, static `polylineDistance`.
+  - `TileBuilder` (`BUILDER_VERSION = 1`, `TileRequest(world, tileX, tileZ, parameters, seeds, profiles, gateCells,
+    anchors, previousGraph)` with `tile()`/`region()`, `build(request, grid) → TileBuildResult`) and
+    `TileBuildResult(builderVersion, cellCount, levelCount, nodes, edges, warnings)` with `Node(key, existingId, x,
+    y, z, kind)`, `Edge(existingId, fromKey, toKey, geometry, length, avgWidth, profileId, gateDoorIds, domainIds,
+    regionIds)` — the `RoadTileGraphUpsertDto`/`RoadTileGraphNodeDto`/`RoadTileGraphEdgeDto` field names read from
+    `W/Dtos/RoadDtos.cs` on `claude/road-navigation`; `warningTexts()`, `node(key)`, `nodes(kind)`, `edgesOf(key)`.
+  - `C/domain/roads/RoadNodeKind` (`JUNCTION/ENDPOINT/BOUNDARY/ANCHOR`, `apiName()`/`fromApiName()`).
+  - **Test fixture** `knk-core/src/test/.../roads/build/GridFixture.java` (in the `build` test package, not
+    `roads/`, for package-private access): ASCII layers (`G S a c / _ # X g L ~ s *`), `block/column/clear`,
+    `gate(doorId, x, floorY, z, height)`, `gateCell`, the two default profiles (`townRoad()` width 3-5 with
+    andesite/cobblestone kerbs, `gravelPath()` width 1-3), `spanGrid()`. Test-only `ThinningTest.render` draws a
+    layer's mask/skeleton, used in every failure message.
+  - `.gitignore`: `!**/src/**/build/` — the repo's `**/build/` (Gradle output) also hid the `core/roads/build`
+    Java package; the first push (`2266921`) therefore carried only `RoadNodeKind`, `cb8a7fd` added the rest.
+- **Reuse:** R1 (`BlockKey` for every key), R22 (`SurfaceGrid` = `BlockProbe` signatures; hazard list copied
+  verbatim), R28 (`SiegeFloor.floorY` for seed → span in `MaskBuilder.snapSeed`), 2b's `RoadMaterialRole` and
+  `ProposedProfile.Material` (no second role/material record), `RoadNodeKind` added next to `RoadMaterialRole` for
+  2e/2d. Nothing in §2 duplicated; no new dependency.
+- **Tests:** knk-core **1130 → 1280** (0 failures, 0 skipped; 150 new): `PassabilityRulesTest` 11, `ProfileSetTest`
+  10, `BuildParametersTest` 3, `RoadNodeKindTest` 2, `SpanGridTest` 17, `RoadMaskTest` 7, `DistanceTransformTest` 6,
+  `MaskBuilderTest` 17, `ThinningTest` 11, `RdpTest` 8, `ProfileMatcherTest` 8, `SkeletonGraphTest` 19,
+  `NodeMatcherTest` 7, `TileBuilderTest` 24 = the plan's golden list, each asserting node kinds/count, edge count,
+  lengths ±1 (mostly exact), no stray spurs, plus the Phase 1 contract (geometry ends on its nodes, length ≥ chord,
+  unique pairs, nodes inside the tile, Boundary nodes on border cells, empty `domainIds`/`regionIds`).
+  **Not compiled with Gradle:** `./gradlew :knk-core:test` cannot resolve `paper-api` here (proxy 403 on
+  `repo.papermc.io`; `maven.enginehub.org` 000 — same as links 1-3); counts from the plan §0.4 scratch build (2a's
+  recipe, `Vector` stub rewritten from the Bukkit API). `ArchitectureGuardTest` green with the new package.
+  knk-paper and knk-api-client: not built, not touched.
+- **Decisions to review** (numbered; defaults taken, all reversible):
+  1. **Coordinates:** a span, a node and every geometry point are the **floor block** `(x, y, z)`; a player standing
+     there has feet at `y + 1`. Phase 3 converts a player's feet block to `y − 1` (seeds tolerate feet or floor y,
+     anchors do not — `/knk road node anchor` must store floor y); Phase 2d's snapper compares node/geometry y with
+     the player's feet y − 1 (or adds 1 to the geometry).
+  2. **Span rule:** floor `isSolid` (collidable and not an overlay) and a road material of an applicable profile,
+     not a hazard, `y ≥ minY`, `y + 2 < maxY`, two passable hazard-free blocks above; a block in a gate door's
+     closed footprint counts as passable inside `SpanGrid` (the `SurfaceGrid` need not fold gates in); a hazard in
+     the floor or the headroom (fire, powder snow, berry bush) excludes the span.
+  3. **Steps:** a link with |Δy| = 1 needs the lower span's third block passable (room to jump) unless the upper
+     span is a stair or slab; links are symmetric, so a one-way drop under a low ceiling is not a link.
+  4. **Diagonals:** a diagonal link needs an L-path through a flanking orthogonal span ending exactly on the target
+     — corner-touching cells never join, so a 1-wide diagonal of corner-touching blocks is not a road (a player
+     cannot walk it); 1-wide diagonal paths must be 4-connected staircases.
+  5. **Ambiguity:** "within `ambiguousReach` of an unambiguous span" = BFS hops over spans; after the filter a
+     re-reach from the seeds drops what became disconnected; a stretch of ambiguous material longer than
+     `2 × reach` cuts the road. A seed on a filtered ambiguous span is dropped silently (it was matched).
+  6. **Seed snapping:** own column first (floor y, feet y, then `SiegeFloor.floorY`), then growing x/z rings up to
+     `seedSnapRadius` with |Δy| ≤ 4, only inside the region; unmatched → `BuildWarning` (not an error). The cell cap
+     stops the BFS; the warning names the span that did not fit.
+  7. **Distance transform convention:** border spans have `dt = 1`, so `width = 2·dt − 1` (exact for odd widths;
+     DESIGN's "2 × dt" would read 2 for a 1-wide path). The plaza rule "dt > widthMax/2" is therefore implemented
+     as `width(dt) > widthMax`: a road exactly `widthMax` wide, and the crossing square of two such roads, is not
+     a plaza; a 7-wide stretch of a profile with `widthMax` 5 is. **`widthMax` must be ≥ the real road width** or
+     the road collapses into junctions — the learner's 95th percentile guarantees that for surveyed roads; hand-made
+     profiles should set it generously (15 = never a plaza under 31 wide).
+  8. **Thinning additions** (each pinned by a test): (a) corner ends (exactly two skeleton neighbours that touch)
+     are never deleted — textbook Zhang-Suen eats a 4-connected staircase (a 1-wide diagonal path) from its ends;
+     (b) a span is deleted only when its skeleton neighbours stay one group over their real links — the textbook
+     ring test assumes a flat grid, and a ramp's upper lane beside its lower cells is not one (the spiral ramp
+     broke in two without this); (c) Holt's staircase templates run afterwards under the same connectivity check.
+     Consequences: an L-corner of a 1-wide path is cut into a diagonal (length −0.59 per corner), a 1-wide T's
+     centre is replaced by the stem's first span, a 2-wide road loses about one cell per end.
+  9. **Endpoint extension:** thinning erodes a road end by about half its width; every Endpoint with one chain is
+     walked back out along the mask in its last direction, at most `dt` steps, so a 5-wide road of 30 cells gives an
+     edge of length 29 (both ends on the last row of road blocks).
+  10. **Spur threshold** = `max(minSpurLength, median width along the chain)` (DESIGN's "local width" read as the
+      spur's own width; the junction span's dt is inflated by the crossing and would prune 5-block arms at a plaza).
+      Shortest spur first; a junction left with two chains dissolves into one chain routed through the straightest
+      mask span between the two chain ends (often the road cell thinning removed, so the geometry has no bump); a
+      junction left with one chain becomes an Endpoint; Endpoint–Endpoint chains shorter than `minSpurLength`
+      (tiny blobs) are dropped; chains to Anchor or Boundary nodes are never spurs.
+  11. **Junction clustering** = candidates within `junctionClusterRadius` **skeleton steps** (path-based, so two
+      stacked streets never merge); node at the candidate nearest the cluster centroid (tie → lowest index); spans
+      on the connecting paths belong to the junction.
+  12. **Plaza** = connected group of spans wider than every listing profile's `widthMax`, one Junction at the group's
+      widest span (tie → nearest the group centroid); every skeleton span inside belongs to it and each exit's edge
+      geometry runs straight from the plaza rim to the centre (the 15×15 plaza's edges are 23 long = centre to exit
+      end). A plaza group without skeleton spans is ignored.
+  13. **Loops and parallel chains:** a skeleton component without any node (ring road) gets a Junction at its
+      lowest-index span; a loop is split into three edges, a second chain on the same node pair into two, by
+      Junction nodes at the split spans (no better kind exists; the API needs unique pairs, `FromNodeId < ToNodeId`).
+  14. **Anchors** snap to the nearest skeleton span within `nodeMatchDistance` (3D); on a tie an existing node span
+      wins (the junction the admin stood next to); the node becomes kind Anchor at the anchor's stored position
+      with `existingId` = anchor id; an anchor beyond reach → `WARN_ANCHOR_OFF_ROAD`, a second anchor on the same
+      span → `WARN_ANCHOR_DUPLICATE` (first wins). Anchors never dissolve or prune.
+  15. **Tile border (D7):** a chain is cut where it leaves the tile; the last inside span becomes a Boundary node
+      (an Endpoint there → Boundary, a Junction/Anchor keeps its kind); everything outside the tile is dropped
+      (nodes with an outside position included — the neighbour tile builds them). Known limitations: a Junction or
+      Anchor sitting exactly on a border cell with the road continuing across is not stitched (the API stitches
+      Boundary nodes only); a junction cluster straddling the border whose centre lies outside yields a Boundary node
+      at its last inside span, which may not be a border cell (the API then answers 400 for that tile — move the
+      junction with an anchor). Both need a junction within one block of a tile border.
+  16. **Stable ids:** greedy nearest within 3 blocks; anchors by id only; a matched **Locked** previous node keeps its
+      old position and the geometry is closed onto it; an edge keeps its id when both nodes matched a previous edge's
+      pair and the polylines stay within 2 blocks (symmetric farthest-point distance).
+  17. **Edge fields:** `length` = walked 3D length of the unsimplified centreline including the closing segments onto
+      the node positions; `avgWidth` = mean `2·dt − 1` over the chain's spans (node spans included); `geometry` = RDP
+      (ε 0.75) of the same polyline, integer floor positions, first/last = the node positions exactly; `gateDoorIds`
+      = distinct door ids of spans whose floor or headroom is in a closed footprint, in chain order.
+  18. **Profile match:** histogram of every mask span within `dt − 1` hops of a chain span (the whole cross-section,
+      each span once) vs each applicable profile's Surface/Edge/Accent `centreShare`s by cosine (uniform weights
+      when a profile has no shares yet); a profile needs one shared material to be a candidate; ties → lower id;
+      nothing shared → `profileId` empty (API `null`). A gravel path turning into stone bricks is **one** edge with the
+      dominant material's profile (no split on profile change).
+  19. `TileRequest.world` is carried for the caller and not used by the builder; `BUILDER_VERSION = 1`.
+  20. Warnings are `BuildWarning(message, x, y, z)`; the API string is `"<message> at (x, y, z)"`
+      (`TileBuildResult.warningTexts()`).
+- **Discrepancies found:**
+  - knk-plugin `.gitignore` `**/build/` swallowed the plan's package name `C/roads/build/` (see "What was built");
+    fixed with a `src/**/build/` exception rather than renaming the package the plan, DESIGN and the guard test use.
+  - Plan "Test fixtures" puts `GridFixture` under `knk-core/src/test/.../roads/`; it lives in `.../roads/build/`
+    (package-private access to `RoadMask` internals used by the tests).
+  - DESIGN §5.5 "width (2 × dt)" → `2·dt − 1` with border `dt = 1` (decision 7); §5.6 step 3 "local width" → the
+    spur's median width (decision 10); plan "histogram within dt of a chain" → `dt − 1` hops (decision 18).
+  - Textbook Zhang-Suen needed the two robustness additions of decision 8 (staircases, non-planar span grid).
+  - Cloud network unchanged from links 1-3; additionally `./gradlew --offline` fails earlier on the shadow plugin
+    (never reached the paper-api step) — irrelevant, noted for completeness. KNG-17 still not on `main`.
+- **Developer to-do:**
+  1. Local: `./gradlew :knk-core:test` (expect **1280** green), then `./gradlew build -x deployToDevServer` — only
+     new classes and a `.gitignore` line; knk-paper does not reference them yet, so no compile impact is expected.
+  2. Live: nothing observable — 2c is pure core; `/knk road build` (Phase 3) is what exercises it. If you have a
+     minute, skim decisions 1 (floor-y convention), 7 (plaza threshold and `widthMax`), 8 (thinning consequences),
+     15 (border limitations) — they shape Phases 2d/3.
+  3. When Phase 3 lands: verify `Material#isCollidable()` exists on 1.21.10 and feed `PassabilityRules.of(name ->
+     Material.valueOf(name).isCollidable(), config overlays)`; the curated default list is only a fallback.
+- **What later phases must wire:**
+  - **2d (router):** node/geometry y is the **floor** y (decision 1) — `Snapper` compares the player's feet y − 1
+    (or adds 1 to the polyline) and `verticalWeight` applies to that difference; `RoadNodeKind` from
+    `C/domain/roads`; edges arrive from the API with the fields `TileBuildResult.Edge` produced (`length`,
+    `geometry` as `int[][]`, `gateDoorIds`, `regionIds`, `profileId`). `Polygon2D` (R2) for `RegionClosestPoint`,
+    `DomainAccessEvaluator` (R6) inside `AccessPolicy`, `BlockKey` for any cell map — unchanged from 2a's notes.
+  - **2e (api-client):** `TileBuildResult` → `RoadTileGraphUpsertDto`: `builderVersion`, `cellCount`, `levelCount`,
+    `warnings = warningTexts()`, nodes `{key, existingId, x, y, z, kind = kind.apiName()}`, edges `{existingId,
+    fromKey, toKey, geometry (List<int[]> → int[][]), length, avgWidth, profileId, gateDoorIds, domainIds,
+    regionIds}` (the last two filled by Phase 3 before the PUT). `RoadProfileDto` → `ProfileSet.Profile(id, name,
+    enabled, widthMin, widthMax, scopeTownIds, materials)` with `ProposedProfile.Material(material,
+    RoadMaterialRole.fromApiName(role), ambiguous, centreShare, edgeShare, samples)`. Tile graph download →
+    `NodeMatcher.PreviousGraph(nodes: PreviousNode(id, x, y, z, RoadNodeKind.fromApiName(kind), locked), edges:
+    PreviousEdge(id, fromNodeId, toNodeId, geometry))` and `SkeletonGraph.Anchor(id, x, y, z)` for its Anchor-kind
+    nodes; Stitch edges may stay in the list (their other node never matches).
+  - **3 (paper build job):** `roads/ChunkSnapshotSurfaceGrid implements SurfaceGrid` over captured snapshots with
+    `PassabilityRules.of(...)` (`floorMaterial` = the block at y, or y − 1 when the block at y is an overlay;
+    `isStairOrSlab` from `Material` names or `Stairs`/`Slab` block data; `minY/maxY` from the `World`); a
+    `GateCells` map prebuilt from `gateManager.getAllGates()` → `closedFootprint(id)` → `BlockKey` → door id (the
+    builder checks the floor and both headroom blocks); `ScopeLookup` from the WorldGuard regions at the column →
+    Town id via `RegionDomainResolver`; seeds = Domain Locations in the tile + margin box (D12 endpoint), survey and
+    admin seeds, neighbour tiles' Boundary nodes; `BuildParameters` from `NavigationConfig.builder`;
+    `new TileBuilder().build(request, grid)` **off the main thread** (pure); then domain/region tagging (sample the
+    geometry every 4 blocks, D11) into `domainIds`/`regionIds`; PUT. Store anchors and seeds in floor-y convention.
+    `ProfileSet` needs the *enabled* profiles only; disabled ones are dropped anyway.
+  - **Scratch build (cloud):** unchanged from the 2a recipe; the `Vector` stub in this link's scratchpad was
+    rewritten from the Bukkit API (constructors, get/set, arithmetic, length/distance, dot/cross, normalize,
+    rotations incl. `rotateAroundNonUnitAxis`, fuzzy `equals`, `clone`, `getMinimum/getMaximum`).
 
 ### 2d Router — `C/roads/route/` and `C/navigation/`
 
