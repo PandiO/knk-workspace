@@ -1,6 +1,6 @@
 # Domain Discovery — Design
 
-**Status:** Decided — implemented on `claude/domain-discovery`, in developer smoke test (2026-09-27)
+**Status:** Done — merged to trunk 2026-09-27
 **Last updated:** 2026-09-26
 **Linear:** [KNG-20](https://linear.app/kngpandi/issue/KNG-20/domain-discovery-first-entry-rewards-for-townsdistrictsstructures)
 **Sources:** `knk-v1-archive` (`src/Towns/TownEvents.java`, `src/Towns/Town.java`, `src/DataManager/Towns.java`,

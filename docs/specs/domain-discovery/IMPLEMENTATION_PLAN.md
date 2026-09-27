@@ -1,6 +1,6 @@
 # Domain Discovery — Implementation Plan
 
-**Status:** Implemented on `claude/domain-discovery` (trunk merged in 2026-09-27) — in developer smoke test
+**Status:** Done — merged to trunk 2026-09-27 (api `acaee99`, plugin `4ec2f23`, app `46be4e9`)
 **Last updated:** 2026-09-26
 **Linear:** [KNG-20](https://linear.app/kngpandi/issue/KNG-20/domain-discovery-first-entry-rewards-for-townsdistrictsstructures)
 **Sources:** [DESIGN.md](DESIGN.md); `docs/ACTIVE_SESSIONS.md` (branch convention); `specs/inventory-menu/CONTENT_PORT_PLAN.md`
@@ -349,7 +349,13 @@ Findings, all fixed on the branch:
 Decision: siege exclusion starts at the hub (see above, plugin `8f83b11`).
 Tests: API 1303 pass / 5 baseline, requires-mysql 39/39; knk-core 864, api-client 111; plugin CI green
 https://github.com/PandiO/knk-plugin/actions/runs/36331625638; web 359 pass / 16 baseline.
-Tips: api `f370bdd`, plugin `88d5c16`, app `f0d59c4`. Re-test the three fixes, then merge.
+Tips: api `f370bdd`, plugin `88d5c16`, app `f0d59c4`.
+
+**Merged to trunk 2026-09-27** on the developer's sign-off, after bringing in the latest trunk (siege readiness rules, QOL nav,
+safezone test flake fix; conflict only in the `Navigation.tsx` icon imports). Checks before the merge: API 1310 pass / 5 baseline, EF no
+pending changes, web 364 pass / 16 baseline, plugin CI green https://github.com/PandiO/knk-plugin/actions/runs/36332644429.
+Trunk merge commits (trees identical to the branch tips a826691 / a07ad81 / 8a6b3f9): api `acaee99`, plugin `4ec2f23`, app `46be4e9`.
+Still untested in-game: C2 (bounce from a no-entry domain), H (hourly cap), and the re-test of the three smoke fixes.
 
 ## Risks / notes for whoever picks this up
 - `DomainService.SearchDomainRegionDecisionAsync` returns at most one Town/District/Structure and no GateStructures; discovery
