@@ -1,83 +1,85 @@
 # Knights and Kings — Global Agent Instructions
 
-Read this before starting any work on Knights and Kings, in any repo.
+Read this before work in any active Knights and Kings repository. This is the
+shared workflow for Claude Code, ChatGPT/Codex, and other coding agents. Each
+repo's `AGENTS.md` is its portable entrypoint; `CLAUDE.md` may add Claude Code
+specific loading syntax and local details.
 
-## What this project is
+## Project and goal
 
-Knights and Kings is a long-running (~10 year), single-developer MMO-style
-Minecraft game project. It has gone through three major revisions:
-- V1: Bukkit plugin, WorldGuard/WorldEdit/Citizens, flat-file storage.
-- V2: added MySQL + Hibernate + caching, user roles/stats, inventory menus,
-  a work-in-progress siege minigame.
-- V3 (current): split into three components sharing one MySQL database —
-  `knk-web-app` (React + TypeScript), `knk-web-api` (ASP.NET Core),
-  `knk-plugin` (Spigot/Paper Minecraft plugin).
+Knights and Kings is a long-running, single-developer Minecraft MMO project.
+V1 was a Bukkit plugin with flat files; V2 added MySQL/Hibernate, roles,
+inventory menus and an early siege game. V3 spans `knk-web-app` (React/TS),
+`knk-web-api` (ASP.NET Core and MySQL), and `knk-plugin` (Paper). The
+`knk-workspace` repo holds canonical project documentation. Most features
+cross component boundaries. The current goal is a playable V3 MVP, including
+siege and the legacy features needed to support it. Check the current issue,
+spec and default branches before interpreting older priority notes.
 
-Most features span all three V3 components, not just one.
+## Authority and freshness
 
-## Current priority
+1. Follow direct developer decisions and the current task scope. Confirm a
+   decision's date and whether it has since been superseded.
+2. For actual behavior, inspect the current default branch and relevant tests
+   in **each** affected repo. A feature branch shows proposed behavior until
+   merged. Check its diff from the current default branch before reusing it.
+3. For intended behavior, use the current feature's design/implementation plan
+   in `knk-workspace/docs/specs/` and its Linear issue, checking their status
+   headers and later decisions. Flag conflicts with live code rather than
+   silently choosing a side.
+4. Apply this shared workflow and the relevant repo's `AGENTS.md` together.
+   Repo instructions add commands and structure; `CLAUDE.md` adds Claude Code
+   syntax or useful repo-specific context, without replacing shared rules.
+5. Treat handoffs, dated reports, old session rows and legacy archives as
+   historical evidence. They are snapshots, not standing instructions. Before
+   resuming one, recheck its branch, commits, issue, tracker row, plan, and
+   current default branch. Reconcile any drift and record what changed.
 
-Reach MVP for V3, with the siege minigame as the headline feature, at a
-level of functionality comparable to what existed in V1/V2. When in doubt
-about what to work on next, prioritize whatever moves toward that MVP over
-polish or scope elsewhere.
+If sources conflict and no developer decision resolves it, surface the
+specific conflict and choose a reversible course where possible. Do not
+represent an unmerged implementation or unverified live test as shipped.
 
-## The human's availability — this matters a lot
+## Parallel sessions and branches
 
-The developer has a full-time job on weekdays. During work hours they can
-only do brief check-ins: approving/steering something already in motion,
-answering a quick question, unblocking a stuck session. They cannot do
-focused design work, deep debugging, or large decisions during the work
-week. Real deep work happens evenings and weekends.
+`knk-workspace/docs/ACTIVE_SESSIONS.md` is the live coordination board for
+Claude Code and Codex alike, regardless of where repos are cloned.
 
-**Practical implications for you as an agent:**
-- Don't design yourself into a corner that requires a big synchronous
-  decision from the human mid-week. If a task needs a significant judgment
-  call, either make a reasonable default choice and clearly flag it for
-  later review, or pause and queue the question rather than blocking.
-- Prefer leaving a session in a clean, resumable state over leaving it
-  half-finished with unclear next steps — the human may not return to it
-  for days.
-- Write status/handoff notes assuming the reader (human or another agent)
-  has no memory of this session and may be picking it up a week later.
+1. Before edits, refresh it from the current workspace default branch and
+   inspect overlapping feature and file claims. Stop and coordinate on an
+   overlap; don't infer that an old timestamp makes a row free.
+2. Claim the feature and specific repos/files with an owner, branch, status,
+   start date and update date. Publish the claim before editing shared work.
+   If the board is inaccessible or the claim cannot be published, avoid
+   conflicting remote edits and disclose the limitation.
+3. Check the existing standing branch per repo for this feature. Continue it
+   when appropriate instead of forking a branch per phase or agent. For a new
+   feature use one descriptive branch per affected repo (for example
+   `codex/kng-32-agent-instructions`), based on that repo's current default
+   branch; don't assume every repo uses `main`. A `claude/` branch is not
+   exclusive to Claude, nor a `codex/` branch to Codex. Preserve another
+   session's uncommitted work and coordinate before modifying its branch.
+4. Keep claims scoped to the feature across repos, not merely to one repo.
+   Update the row when pausing with branch/commit, verification and next
+   steps. On completion move it to Recently completed, link issue/PRs and
+   note unmerged work. Preserve concurrent rows on conflict, then reread
+   before publishing a resolution.
+5. Use PRs for review where appropriate. Do not merge or deploy merely
+   because a patch or test passed; follow the feature's live validation and
+   developer sign-off requirements.
 
-## Multi-session / parallel work conventions
+## Handoff and documentation
 
-Multiple Claude Code sessions are often running or paused simultaneously
-across the three component repos, frequently on the same cross-cutting
-feature. To avoid collisions and lost context:
+The developer has a full-time weekday job and may only have time for brief
+check-ins. Make reversible defaults when reasonable and mark decisions that
+need review; leave clear, resumable state.
 
-1. **Before starting work**, check `knk-workspace/docs/ACTIVE_SESSIONS.md`
-   for what's currently in flight and which files/areas are claimed.
-2. **Claim your scope** by adding an entry there (feature, repos/files
-   touched, session start time) before making changes.
-3. **Prefer feature-level scoping over component-level scoping** — since
-   most features touch all three repos, the unit of ownership is the
-   feature, not "whichever repo I happen to be in."
-4. **Update your entry when you pause or finish**, including a one-line
-   status and pointer to relevant commits/branches — don't just stop.
-5. If you discover another active/claimed session's scope overlaps with
-   what you're about to do, stop and flag it rather than proceeding.
+Docs belong in `knk-workspace/docs/`: `vision/`, `architecture/`, `guides/`,
+`ai-agents/`, `specs/`, `backlog/`, `reports/`, `archive/`. Put dated audits
+under `reports/`; update living architecture and guides in place. Handoffs
+should identify the exact branch/commit, base/default-branch status, what was
+tested and what still needs live verification, open decisions, and the next
+step. Date them and link the current issue/plan. Never rely on a handoff
+without checking freshness as above.
 
-## Documentation conventions
-
-`knk-workspace` is the canonical documentation repo, organized as:
-`vision/`, `architecture/`, `guides/`, `ai-agents/`, `specs/`, `backlog/`,
-`reports/`, `archive/`. Legacy repos are `knk-v1-archive` / `knk-v2-archive`
-(`knk-` prefix, `-archive` suffix convention for retired code).
-
-- Don't create new scattered docs outside this structure.
-- If you write a report, scan, or audit output, it goes in `docs/reports/`
-  with a dated filename; architecture and guide docs are living documents —
-  update them in place rather than creating dated copies.
-- If existing documentation looks stale or contradicts what you find in the
-  code, don't silently trust the doc — flag the discrepancy.
-
-## General working style
-
-- Cite file paths and be specific; avoid vague summaries the human has to
-  re-verify.
-- Don't delete or restructure things speculatively — propose, flag, or ask,
-  especially for anything destructive.
-- Keep an eye out for legacy/dead code left over from V2, given the recent
-  architecture shift — flag it rather than assuming it's still needed.
+Cite concrete paths and results. Flag stale docs and apparent V2 leftovers
+instead of deleting or restructuring speculatively.
