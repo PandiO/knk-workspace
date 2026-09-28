@@ -1,7 +1,7 @@
 # Road navigation chain — progress report
 
 **Status:** running
-**Last updated:** 2026-09-27 (link 5: Phase 2d done; link 6 started on Phase 2e)
+**Last updated:** 2026-09-28 (link 6: Phase 2e done; link 7 started on Phase 3)
 **Linear:** [KNG-27](https://linear.app/kngpandi/issue/KNG-27) · **Charter:** `docs/ai-agents/handoffs/ROAD_NAVIGATION_CHAIN.md` · **Plan:** `docs/specs/navigation/IMPLEMENTATION_PLAN.md`
 
 ## Summary for the developer
@@ -13,8 +13,8 @@
 | 2b — survey maths | **done** (link 3) | knk-plugin `claude/road-navigation` `92375e5` (on 2a's `db962a4`; trunk `main` still `eb1d68c`) | [Phase 2b](#phase-2b--knk-plugin-core-survey-maths-link-3) |
 | 2c — builder | **done** (link 4) | knk-plugin `claude/road-navigation` `c2ca1e3` (on 2b's `92375e5`; trunk `main` still `eb1d68c`) | [Phase 2c](#phase-2c--knk-plugin-core-builder-link-4) |
 | 2d — router + navigation session | **done** (link 5) | knk-plugin `claude/road-navigation` `a82db3c` (on 2c's `c2ca1e3`; trunk `main` still `eb1d68c`) | [Phase 2d](#phase-2d--knk-plugin-core-router-and-navigation-session-link-5) |
-| 2e — api-client | in progress (link 6) | knk-plugin `claude/road-navigation` (continues from `a82db3c`) | |
-| 3 — plugin paper admin side | not started | — | |
+| 2e — api-client | **done** (link 6) | knk-plugin `claude/road-navigation` `4ffdd1a` (on 2d's `a82db3c`; trunk `main` still `eb1d68c`) | [Phase 2e](#phase-2e--knk-plugin-api-client-ports-dtos-mapper-conditional-get-link-6) |
+| 3 — plugin paper admin side | in progress (link 7) | knk-plugin `claude/road-navigation` (continues from `4ffdd1a`) | |
 | 5 — web-app admin pages | not started | — | |
 | 4 — `/navigate` | waiting for KNG-17 on trunk | — | |
 
@@ -44,9 +44,16 @@
   region list lacks the domain's region, so the route ends on the last edge inside; (15) decision 13 — tunnel /
   bridge / stairs are chosen from the next edge's min/max y relative to the node (> 3 down → tunnel; > 3 up and back
   down → bridge; else stairs); (16) decision 15 — re-route rate limits (60 ticks for off-route/blocked, 200 ticks
-  and > 15 % shorter for "something opened") — see the plan's "Phase 2d status".
+  and > 15 % shorter for "something opened") — see the plan's "Phase 2d status". Phase 2e (api-client): (17)
+  decision 1 — the two road ports take and return knk-core records; the API shapes without a core twin are new thin
+  records in `C/domain/roads/`, two of which import feature packages (`ProposedProfile.Material`,
+  `RoadNetworkSnapshot.Street`); (18) decision 3 — profile/survey `stats` travel as JSON text in knk-core and a JSON
+  object on the wire, `null` on a profile PUT keeps the stored stats; (19) decision 5 — a never-built tile makes
+  `tileGraph` fail with a 404 rather than answer empty (Phase 3 lists tiles first); (20) decision 8 — request dates
+  are serialised per field as ISO strings because the client's `ObjectMapper` writes numeric timestamps by
+  default — see the plan's "Phase 2e status".
 - **Cloud network, please check:** `repo.papermc.io` and `maven.enginehub.org` are still denied by the environment's
-  network policy (proxy 403 on CONNECT) in links 1-4, so no link can compile knk-paper or run knk-core through
+  network policy (proxy 403 on CONNECT) in links 1-6, so no link can compile knk-paper or run knk-core through
   Gradle; knk-core is tested through the plan §0.4 scratch build instead. Adding both hosts to the environment's
   allowed domains would let later links build the real thing.
 - **Test when you have time:** pull `claude/road-navigation` in each repo; build the plugin (`./gradlew build -x deployToDevServer`, fix compile errors first if any link marked knk-paper "not compiled"); apply the new web-api migration to the dev DB (developer only); run the web-api; `./gradlew :knk-paper:dev`; then each phase's live checklist from the plan in phase order.
@@ -205,3 +212,43 @@
   option 1 (Claude Code Remote `create_session` in the same environment, `source_url` = knk-workspace `main`) — link 6 =
   Claude Code Remote session `session_01MUaznjnfwJ88nqc1o1Cnkw` (created 2026-09-27 22:10 UTC, parent this session
   `session_015VRbxcdymMMgk4go3KJYSg`).
+
+## Phase 2e — knk-plugin api-client: ports, DTOs, mapper, conditional GET (link 6)
+
+- **Commits** (knk-plugin `claude/road-navigation`, on top of 2d's `a82db3c`; trunk `main` unchanged at `eb1d68c`):
+  `4fdece7` ports `C/ports/api/{RoadNetworkQueryApi,RoadNetworkCommandApi}`, `C/domain/common/Conditional<T>`, the
+  `C/domain/roads/` API records (`RoadTile`, `RoadTileGraph`, `RoadTileUpsertResult`, `RoadProfile`,
+  `RoadProfileUpsert`, `RoadSurvey`, `RoadSurveyCreate`, `RoadBreadcrumbPoint`, `RoadSeed`, `RoadSeedCreate`,
+  `RoadSeedSource`, `RoadSeedLocation`, `RoadNetworkMeta`, `RoadComponent`, `RoadNodeUpdate`, `RoadNodeAnchor`,
+  `RoadEdgeUpdate`, `RoadEdgeRecord`, `RoadEdgeUpdateResult`, `RoadApiError`) and `RoadNode.locked` ·
+  `e45a84c` `A/dto/Road*Dto` (29 records mirroring `RoadDtos.cs`) + `A/mapper/RoadMapper` (both directions, the
+  knk-core adapters `toBuilderProfile`/`toSnapshotProfile`/`toPreviousGraph`/`toAnchors`, `error(ApiException)`) ·
+  `4ed4b22` `BaseApiImpl.getConditional` + `ConditionalResponse` (R17, additive) · `4ffdd1a`
+  `A/impl/{RoadNetworkQueryApiImpl,RoadNetworkCommandApiImpl}` wired in `KnkApiClient`
+  (`getRoadNetworkQueryApi()`/`getRoadNetworkCommandApi()`). Workspace `main`: plan header + "Phase 2e status"
+  block, this report, tracker row, handoff `docs/ai-agents/handoffs/2026-09-28-road-navigation-phase-3.md`.
+- **Tests:** knk-core 1364 → **1374** (0 failures, 0 skipped); knk-api-client **134 → 174** (baseline measured before
+  any change at `a82db3c`: 134, 0 failures, 2 skipped = the two live-only `SiegeQueryApiLiveTest` cases, unchanged
+  after; 40 new: `RoadMapperTest` 13, `BaseApiImplConditionalGetTest` 6, `RoadNetworkQueryApiImplTest` 11,
+  `RoadNetworkCommandApiImplTest` 9). Every item of the plan's 2e test list: mapper round-trips both ways, conditional
+  GET 200/304 (plus weak tag, missing response ETag, 404), routes/verbs/headers/bodies of the 1.5 table, error body
+  mapping. **Not compiled with Gradle** (paper-api unresolvable through knk-core, same 403 as links 1-5); counts from
+  the §0.4 scratch build extended to a two-project build (`core` + `apiclient`, recipe in the plan status block).
+  `ArchitectureGuardTest` green. knk-paper not built, not touched.
+- **Flagged decisions:** 13, numbered in the plan status block; the four worth a look are in the summary above
+  (ports on knk-core types with two domain → feature-package imports, stats as JSON text, 404 semantics, ISO dates
+  per field).
+- **Discrepancies:** the 2e handoff conflated `GET api/road-seeds` with the D12 `seed-locations` box query (both are
+  exposed); the client `ObjectMapper` writes dates as timestamps (no earlier request DTO sent one); Java records
+  refuse static factories named like a component (`unnamed()`/`unlabelled()` instead of `clearName()`/`clearStreet()`).
+  Cloud network unchanged. KNG-17 still not on `main`.
+- **Live checklist:** nothing observable in game (plumbing); local `./gradlew :knk-core:test` expects 1374 and
+  `./gradlew :knk-api-client:test` 174 (2 skipped) — plan "Phase 2e status → Developer to-do" (optional 2-minute
+  ETag/304 check against the running API).
+- **Risks:** none for Phase 3 beyond the wiring notes in the status block (futures complete on the api-client
+  executor; a never-built tile is a 404; unknown `StatsJson` versions throw and must be shown, not overwritten).
+  Phase 3 itself cannot be compiled in the cloud (knk-paper) — the charter says implement by careful reading and
+  mark "not compiled"; the developer's first local build of the branch is the real compile.
+- **Next link:** handoff `docs/ai-agents/handoffs/2026-09-28-road-navigation-phase-3.md`; started per charter §6
+  option 1 (Claude Code Remote `create_session` in the same environment, `source_url` = knk-workspace `main`) — link 7 =
+  Claude Code Remote session **(id recorded below once created)**.

@@ -4,9 +4,9 @@
 (knk-web-api `claude/road-navigation` `77e0a29`, 2026-09-27); **Phase 2a done** (knk-plugin `claude/road-navigation`
 `db962a4`, 2026-09-27); **Phase 2b done** (knk-plugin `claude/road-navigation` `92375e5`, 2026-09-27); **Phase 2c done**
 (knk-plugin `claude/road-navigation` `c2ca1e3`, 2026-09-27); **Phase 2d done** (knk-plugin `claude/road-navigation`
-`a82db3c`, 2026-09-27); Phase 2e next.
+`a82db3c`, 2026-09-27); **Phase 2e done** (knk-plugin `claude/road-navigation` `4ffdd1a`, 2026-09-28); Phase 3 next.
 Every code reference was verified against trunk by a separate review pass on 2026-09-27; its corrections are folded in.
-**Last updated:** 2026-09-27 (Phase 2d status)
+**Last updated:** 2026-09-28 (Phase 2e status)
 **Linear:** [KNG-27](https://linear.app/kngpandi/issue/KNG-27)
 **Design:** [DESIGN.md](DESIGN.md) rev. 4 (decided) — read it first; this plan says *where and how* to build it.
 **Sources:** trunk as of 2026-09-27 — knk-web-api `master` `acaee99`, knk-plugin `main` `ceed2f6`, knk-web-app `main`
@@ -1230,6 +1230,164 @@ Classes (DESIGN §5 section in brackets):
 
 **Phase 2 acceptance:** all new core tests green (scratch build if in the cloud); existing core/api-client tests green;
 guard test green.
+
+### Phase 2e status — done 2026-09-28 (knk-plugin `claude/road-navigation` `4fdece7`, `e45a84c`, `4ed4b22`, `4ffdd1a`; on top of 2d's `a82db3c`; trunk `main` still `eb1d68c`)
+
+- **What was built:**
+  - **Ports, `C/ports/api/`** (Bukkit-free, `CompletableFuture`, on knk-core types — decision 1):
+    `RoadNetworkQueryApi` — `tiles(world)`, `tileGraph(world, tileX, tileZ, etag)` → `Conditional<RoadTileGraph>`,
+    `meta(world)`, `profiles()`, `profile(id)` (404 → null), `surveys(world)`, `seeds(world)` (`GET api/road-seeds`),
+    `seedLocations(world, minX, minZ, maxX, maxZ)` (D12 box query), `searchEdges(PagedQuery)` → `Page<RoadEdge>`;
+    `RoadNetworkCommandApi` — `upsertTileGraph(world, x, z, TileBuildResult)` → `RoadTileUpsertResult`,
+    `markDirty(world, x, z)` → `RoadTile`, `createProfile`/`updateProfile(id, RoadProfileUpsert)`/`deleteProfile(id)`,
+    `createSurvey(RoadSurveyCreate, actingUserId)`, `createSeed(RoadSeedCreate)`/`deleteSeed(id)`, `updateNode(id,
+    RoadNodeUpdate)`, `createAnchor(RoadNodeAnchor)`, `mergeNodes(keep, merge)`, `recordEdge(RoadEdgeRecord)`,
+    `updateEdge(id, RoadEdgeUpdate)` → `RoadEdgeUpdateResult`, `deleteEdge(id)` (deletes: true on 204, false on 404).
+  - **`C/domain/common/Conditional<T>(notModified, body, etag)`** (+ `modified(body, etag)`, `notModified(etag)`,
+    `bodyOptional()`) — the R17 result type.
+  - **`C/domain/roads/`** — thin records for the API shapes with no knk-core twin, mirroring `RoadDtos.cs`: `RoadTile`
+    (`etag()` = `"<version>"`, `isBuilt()`, `SIZE = 512`, `tileCoordinate(block)`), `RoadTileGraph(tile, nodes, edges)`,
+    `RoadTileUpsertResult`, `RoadProfile` (materials = `ProposedProfile.Material`, `statsJson` text, `hasStats()`),
+    `RoadProfileUpsert` (+ `of(existing, learned, statsJson)` / `of(name, class, cost, scope, learned, stats)` — the 2b
+    rule), `RoadBreadcrumbPoint`, `RoadSurvey`, `RoadSurveyCreate`, `RoadSeed`, `RoadSeedCreate` (+ `admin(...)`,
+    `survey(...)`), `RoadSeedSource` (`ADMIN/SURVEY`, `apiName()`/`fromApiName()`), `RoadSeedLocation`, `RoadComponent`,
+    `RoadNetworkMeta(profiles, streets: RoadNetworkSnapshot.Street, components)`, `RoadNodeUpdate` (+ `rename`,
+    `unnamed`, `kind`, `locked`), `RoadNodeAnchor`, `RoadEdgeUpdate` (+ `street(id, propagate)`, `unlabelled`,
+    `profile`, `flags`, `costMultiplier`; contradictions refused), `RoadEdgeRecord`, `RoadEdgeUpdateResult`,
+    `RoadApiError(error, message)`. **`RoadNode` gained `locked`** (8-arg canonical constructor; the 7-arg one stays,
+    `locked = false`) because `NodeMatcher.PreviousNode` needs it.
+  - **`A/dto/`** — one record per class of `W/Dtos/RoadDtos.cs` (29 files: `RoadMaterialDto`, `RoadProfileDto`,
+    `RoadProfileUpsertDto`, `RoadBreadcrumbPointDto`, `RoadSurveyCreateDto`, `RoadSurveyDto`, `RoadTileDto`,
+    `RoadNodeDto`, `RoadEdgeDto`, `RoadTileGraphDto`, `RoadTileGraphNodeDto`, `RoadTileGraphEdgeDto`,
+    `RoadTileGraphUpsertDto`, `RoadTileUpsertResultDto`, `RoadStreetRefDto`, `RoadComponentDto`, `RoadNetworkMetaDto`,
+    `RoadSeedDto`, `RoadSeedCreateDto`, `RoadSeedLocationDto`, `RoadNodeUpdateDto`, `RoadNodeAnchorDto`,
+    `RoadNodeMergeDto`, `RoadEdgeUpdateDto`, `RoadEdgeUpdateResultDto`, `RoadEdgeRecordDto`, `StreetRoadDto`,
+    `RoadErrorDto`): `@JsonProperty` = the `[JsonPropertyName]`s, enums as `String`, `flags` as `List<String>`,
+    `geometry` as `int[][]`, `stats` as `JsonNode`, dates as `OffsetDateTime` with `LenientOffsetDateTimeDeserializer`;
+    request DTOs `@JsonInclude(NON_NULL)` (absent `existingId`/`profileId`/`stats` left out) and their dates
+    `@JsonFormat(shape = STRING)` (decision 8).
+  - **`A/mapper/RoadMapper`** — read side (`mapTile`, `mapNode`, `mapEdge`, `mapTileGraph`, `mapUpsertResult`,
+    `mapMaterial`, `mapProfile(s)`, `mapSurvey`, `mapSeed`, `mapSeedLocation`, `mapStreet`, `mapComponent`, `mapMeta`,
+    `mapEdgeUpdateResult`, `error(ApiException)` → `Optional<RoadApiError>`), write side (`toUpsertDto(TileBuildResult)`,
+    `toNodeDto`/`toEdgeDto`, `toMaterialDto`, `toProfileUpsertDto`, `toSurveyCreateDto`, `toSeedCreateDto`,
+    `toNodeUpdateDto`, `toAnchorDto`, `toEdgeUpdateDto`, `toEdgeRecordDto`) and the knk-core adapters the 2c/2d blocks
+    asked for: `toBuilderProfile(s)` → `ProfileSet.Profile`, `toSnapshotProfile` → `RoadNetworkSnapshot.Profile`,
+    `toPreviousGraph(RoadTileGraph)` → `NodeMatcher.PreviousGraph` (null → `EMPTY`), `toAnchors(RoadTileGraph)` →
+    `SkeletonGraph.Anchor` list (Anchor-kind nodes).
+  - **`A/impl/BaseApiImpl`** (additive, R17): `IF_NONE_MATCH_HEADER`, `record ConditionalResponse(notModified, body,
+    etag)`, `getConditional(url, etag)` — sends `If-None-Match` verbatim (weak tags too; blank = none), 304 →
+    `notModified` with the response's ETag (or the one sent), 2xx → body + ETag, any other non-2xx → `ApiException`
+    exactly like `execute`. `get`/`postJson`/`putJson`/`delete`/`execute` untouched.
+  - **`A/impl/RoadNetworkQueryApiImpl`**, **`RoadNetworkCommandApiImpl`** — `BaseApiImpl` + `supplyAsync(…, executor)`
+    like `DiscoveriesApiImpl`; routes exactly the 1.5 table (world URL-encoded); `X-Acting-User-Id` on
+    `createSurvey`; body-less POST for the dirty mark; a refusal completes exceptionally with the `ApiException` as
+    the cause (`RoadMapper.error` reads its body). **`A/client/KnkApiClient`**: fields, construction,
+    `getRoadNetworkQueryApi()` / `getRoadNetworkCommandApi()`.
+- **Reuse:** R17 applied (improved, not replaced). Reused as is: `BaseApiImpl` request/parse/logging helpers,
+  `UsersCommandApiImpl.ACTING_USER_HEADER`, `PagedQueryDto`/`PagedResultDto` → `Page`, `LenientOffsetDateTimeDeserializer`,
+  the `ClansQueryApiImpl` 404-→-null convention, 2b's `ProposedProfile.Material` and `SurveyStats.toJson/fromJson`
+  (no second material or stats record), 2c's `TileBuildResult`/`NodeMatcher.PreviousGraph`/`SkeletonGraph.Anchor`/
+  `ProfileSet.Profile`, 2d's `RoadNode`/`RoadEdge`/`RoadNetworkSnapshot.Profile`/`Street` and the enums'
+  `apiName()`/`fromApiName()`. No new dependency (`mockwebserver` not added — stubbed OkHttp interceptors).
+- **Tests:** knk-core **1364 → 1374** (`ConditionalTest` 3, `RoadApiRecordsTest` 7; 0 failures, 0 skipped;
+  `ArchitectureGuardTest` green — `domain/roads` and the ports are Bukkit-free). knk-api-client **134 → 174**
+  (baseline measured at `a82db3c` before any change: 134 tests, 0 failures, **2 skipped** =
+  `SiegeQueryApiLiveTest.fetchesRuntimeConfig` / `readinessOfAMissingScenarioIsNull`, live-only; unchanged after):
+  `RoadMapperTest` 13 (fixture `src/test/resources/road/tile-graph.json`), `BaseApiImplConditionalGetTest` 6,
+  `RoadNetworkQueryApiImplTest` 11, `RoadNetworkCommandApiImplTest` 9 — every item of the plan's 2e test list (mapper
+  round-trips both ways where both sides exist; conditional GET 200/304 incl. weak tag, missing response ETag, 404).
+  **Not compiled with Gradle:** `./gradlew :knk-api-client:test` fails on `paper-api` through knk-core (proxy 403 on
+  `repo.papermc.io`, `maven.enginehub.org` 000 — same as links 1-5). Counts from the §0.4 scratch build extended to a
+  two-project build: `core` (2a's recipe, jackson 2.15.2) and `apiclient` (`implementation(project(":core"))`,
+  okhttp 4.12.0, jackson-databind + jsr310 2.17.2 — the same resolution the real build gets — junit-bom 5.10.2,
+  `testRuntimeOnly junit-platform-launcher`, `workingDir = knk-api-client`, test resources mapped). knk-paper: not
+  built, not touched.
+- **Decisions to review** (numbered; defaults taken, all reversible):
+  1. **Ports on knk-core types.** Both ports take/return knk-core records; the API shapes that had no core twin are
+     new records in `C/domain/roads/` (not nested in the ports, not the DTOs), mapped in `RoadMapper`. Two of them
+     import feature packages — `RoadProfile`/`RoadProfileUpsert` use `ProposedProfile.Material` (2b decision 11: one
+     material record) and `RoadNetworkMeta.streets` is `List<RoadNetworkSnapshot.Street>` (2d's target type) — a
+     `domain → roads/*` import direction that `domain/gates/CachedGateDoor` already has.
+  2. **`Conditional<T>` lives in `C/domain/common/`** next to `Page`; shape `(notModified, body, etag)` with
+     factories; the api-client twin `BaseApiImpl.ConditionalResponse` carries the raw body string.
+  3. **`stats` is JSON text in knk-core** (`String statsJson`; `null` = absent, and on a profile PUT = keep) and a
+     `JsonNode` on the wire. `RoadMapper.statsTree` refuses non-JSON text with `IllegalArgumentException` at mapping
+     time. Phase 3 reads `SurveyStats.fromJson(profile.statsJson())` when `hasStats()`, else `SurveyStats.empty()`.
+  4. **`tileGraph` returns one `RoadTileGraph` record per tile** (tile + nodes + edges), not the raw DTO. `RoadNode`
+     carries `locked` now; node `world`/`tileId`/`source` and edge `tileId`/`world`/bbox/`streetSource` are still not
+     carried (they stay on the DTOs; the tile is known per download).
+  5. **404 semantics:** a never-built tile makes `tileGraph` complete exceptionally (`ApiException` 404) — Phase 3
+     lists `tiles(world)` first and uses `PreviousGraph.EMPTY` for tiles not in the list; `profile(id)` completes with
+     `null` on 404 (the existing get-by-id convention); the three deletes complete with `false` on 404.
+  6. **`saveProfile` is two methods**, `createProfile`/`updateProfile`; the survey → upsert rule of the 2b status block
+     is `RoadProfileUpsert.of(existing, learned, mergedStatsJson)` (identity kept from the stored profile) and
+     `of(name, class, cost, scope, learned, stats)` for a new profile (enabled by default).
+  7. **Errors:** futures keep the `DiscoveriesApiImpl` convention (a `RuntimeException` whose cause is the
+     `ApiException`); `RoadMapper.error(apiException)` parses the `{error, message}` body (empty for any other body).
+  8. **Request dates are `@JsonFormat(shape = STRING)` per field.** The client's `ObjectMapper` keeps Jackson's default
+     `WRITE_DATES_AS_TIMESTAMPS`; no request DTO sent a date before, so the survey create is the first — handled on
+     the field rather than changing the mapper for every other DTO.
+  9. **Port methods beyond the plan's list:** `profile(id)`, `surveys(world)`, `seedLocations(...)` (the D12 query,
+     separate from `seeds(world)` = `GET api/road-seeds` — the handoff conflated the two), `searchEdges` (review
+     listings of stale/unlabelled edges). `StreetRoadDto` is mirrored for completeness but has no port method (a
+     web-app route).
+  10. **`markDirty` sends a body-less POST** (`RequestBody.create(new byte[0], null)`, no Content-Type);
+      `RoadTilesController.MarkDirty` takes no body.
+  11. **Flags:** `"None"` is tolerated on read (→ no flag); on write the flags go in enum order (`Oneway`, `NoGps`,
+      `Closed`); an empty set is sent as `[]` (clears every flag), `null` is left out (unchanged).
+  12. **`RoadTile.SIZE`/`tileCoordinate`** duplicate the API's `RoadTile.Size = 512`/`TileCoordinate` for Phase 3's
+      tile maths (one constant, `Math.floorDiv`).
+  13. The route constants (`/road-tiles`, …) and `encode`/`tileGraphUrl` are package-private statics on
+      `RoadNetworkQueryApiImpl`, shared by the command impl through static imports.
+- **Discrepancies found:**
+  - The 2e handoff described `seeds(world)` as "D12 `seed-locations` box query"; the API has both `GET api/road-seeds
+    ?world=` (stored seeds) and `GET api/road-network/seed-locations?…` (domain Locations) — both are exposed
+    (decision 9).
+  - `KnkApiClient`'s `ObjectMapper` writes `OffsetDateTime` as numeric timestamps (decision 8); harmless so far
+    because no earlier request DTO carried a date.
+  - Java records cannot have a static factory named like a component (`clearName()`, `clearStreet()`): the factories
+    are `unnamed()`/`unlabelled()`.
+  - Cloud network unchanged from links 1-5 (`repo.papermc.io` 403, `maven.enginehub.org` 000). KNG-17 still not on
+    `main`. The knk-api-client baseline was unmeasured by links 1-5; now recorded (134 / 2 skipped at `a82db3c`).
+- **Developer to-do:**
+  1. Local: `./gradlew :knk-core:test` (expect **1374** green), `./gradlew :knk-api-client:test` (expect **174**, the
+     two `SiegeQueryApiLiveTest` cases skipped as before), then `./gradlew build -x deployToDevServer` — knk-paper
+     does not reference the new classes yet.
+  2. Live: nothing observable in game — 2e is plumbing; Phase 3's `/knk road` exercises it. Optional 2-minute check
+     against the running API with Phase 1's payload already applied: a `jshell`/test call of
+     `apiClient.getRoadNetworkQueryApi().tileGraph("world", 0, 0, null).join()` returns `etag "1"`, and the same call
+     with `"\"1\""` returns `notModified`. Worth a skim: decisions 1, 3, 5, 8.
+- **What later phases must wire:**
+  - **3 (paper):** `plugin.getApiClient().getRoadNetworkQueryApi()` / `getRoadNetworkCommandApi()`. Every future
+    completes on the api-client executor — `whenCompleteAsync(…, mainThread)` (R12) before touching Bukkit.
+    - *Cache (`RoadNetworkCache`):* `tiles(world)` → for each `isBuilt()` tile `tileGraph(world, tileX, tileZ,
+      cachedEtag)`; on `notModified()` keep the file, else store `body()` + `etag()`; snapshot =
+      `RoadNetworkSnapshot.builder(world).addNodes(graph.nodes()).addEdges(graph.edges())…` over every tile, plus
+      `meta(world)`: `meta.profiles().stream().map(RoadMapper::toSnapshotProfile)` and `meta.streets()` as they are.
+    - *Build job:* `profiles()` → `RoadMapper.toBuilderProfiles(...)` → `new ProfileSet(profiles, scopeLookup)`;
+      previous graph = `RoadMapper.toPreviousGraph(tileGraph(...).body())` for a tile in the `tiles(world)` list, else
+      `NodeMatcher.PreviousGraph.EMPTY`; anchors = `RoadMapper.toAnchors(graph)` (+ neighbour tiles' Boundary nodes from
+      their downloads); seeds = `seeds(world)` + `seedLocations(world, minX − 8, minZ − 8, maxX + 8, maxZ + 8)` +
+      survey breadcrumbs (`surveys(world)`); after tagging, rebuild each `TileBuildResult.Edge` with `domainIds`/
+      `regionIds` filled (records — construct new ones) and `upsertTileGraph(world, x, z, build)`; show
+      `RoadTileUpsertResult` counts, `conflicts`, `deletedNodes` and `bumpedTileIds` (refresh those tiles too).
+    - *Survey session:* stored stats = `profile.hasStats() ? SurveyStats.fromJson(profile.statsJson()) :
+      SurveyStats.empty()` (2b decision 10: an unknown version throws — show the error, never overwrite); on Save:
+      `createSurvey(new RoadSurveyCreate(world, profileId, startedAt, endedAt, sampleCount, breadcrumb,
+      thisWalk.toJson()), actingUserId)` then `updateProfile(id, RoadProfileUpsert.of(existing, learned,
+      merged.toJson()))` or `createProfile(RoadProfileUpsert.of(name, roadClass, cost, scopeTownIds, learned,
+      merged.toJson()))`; seeds every `breadcrumb-seed-spacing` via `createSeed(RoadSeedCreate.survey(world, x, y, z,
+      survey.id()))`.
+    - *Dirty tracker:* `markDirty(world, RoadTile.tileCoordinate(x), RoadTile.tileCoordinate(z))` per tile in the
+      30-second flush.
+    - *Review (`/knk road …`):* `updateNode(id, RoadNodeUpdate.rename(name) | unnamed() | kind(k) | locked(b))`,
+      `createAnchor(new RoadNodeAnchor(world, x, y, z, name))`, `mergeNodes(keep, merge)`, `updateEdge(id,
+      RoadEdgeUpdate.street(streetId, continueFlag) | unlabelled() | profile(id) | flags(set) | costMultiplier(m))`,
+      `recordEdge(new RoadEdgeRecord(...))`, `deleteEdge(id)`, `createSeed(RoadSeedCreate.admin(...))`,
+      `deleteSeed(id)`, `searchEdges(new PagedQuery(1, 50, null, "length", true, Map.of("world", w, "stale",
+      "true")))`. On failure unwrap the `CompletionException` → `RuntimeException` → `ApiException` and show
+      `RoadMapper.error(e).map(RoadApiError::message).orElse(e.getMessage())`.
+  - **5 (web app):** nothing from 2e (it talks to the API directly); the DTO records document the wire shapes.
 
 ---
 
