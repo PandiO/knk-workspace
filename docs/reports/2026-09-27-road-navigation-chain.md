@@ -251,4 +251,5 @@
   mark "not compiled"; the developer's first local build of the branch is the real compile.
 - **Next link:** handoff `docs/ai-agents/handoffs/2026-09-28-road-navigation-phase-3.md`; started per charter §6
   option 1 (Claude Code Remote `create_session` in the same environment, `source_url` = knk-workspace `main`) — link 7 =
-  Claude Code Remote session **(id recorded below once created)**.
+  Claude Code Remote session `session_01NPPpKzLCV3MKUQkAwnYUz4` (created 2026-09-28 05:23 UTC, parent this session
+  `session_01MUaznjnfwJ88nqc1o1Cnkw`).
