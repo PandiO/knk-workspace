@@ -1,7 +1,7 @@
 # Legacy feature ports — merge & deploy handoff
 
-**Status:** Implementation complete on five feature branches; awaiting developer smoke tests and merge
-**Last updated:** 2026-09-27
+**Status:** All five feature branches smoke-tested and merged to trunk (last: teleport, 2026-09-28); follow-ups tracked in Linear
+**Last updated:** 2026-09-28
 **Linear:** KNG-17 (teleport), KNG-18 (private messages), KNG-19 (lootboxes), KNG-20 (domain discovery),
 KNG-21 + KNG-22 (currency ledger & payments; KNG-23 folded in as duplicate)
 
@@ -15,7 +15,7 @@ Designs + resolved decisions: `docs/specs/{currency-payments,domain-discovery,te
 |---|---|---|---|
 | `claude/currency-payments` — **merged to trunk 2026-09-27** (api `5639a50`, plugin `0d01b52`, app `c4ed753`) | `edb77e8` | `7f056b3` | `6eed4a0` |
 | `claude/domain-discovery` — **merged to trunk 2026-09-27** (api `acaee99`, plugin `4ec2f23`, app `46be4e9`) | `a826691` | `a07ad81` | `8a6b3f9` |
-| `claude/teleport` — trunk (incl. currency, discovery, PMs, lootboxes) merged in 2026-09-27 + `/ignore` wiring; smoke test round 1 2026-09-28, fixes pushed, round 2 open (teleport plan "Smoke test round 1") | `e31ffc6` | `51570c7` | `a14b14b` |
+| `claude/teleport` — **merged to trunk 2026-09-28** (api `ae4dccd`, plugin `9bae376`, app `ac2db3b`); follow-ups KNG-41, KNG-42 | `e31ffc6` | `51570c7` | `a14b14b` |
 | `claude/private-messages` — **merged to trunk 2026-09-27** (api `7daca13`, plugin `316315e`, app `7db6f46`) | `fbf280d` | `0fed5f4` | `354d4f4` |
 | `claude/lootboxes` — **merged to trunk 2026-09-27** (api `ccc8c02`, plugin `eb1d68c`, app `f56d421`); round-2 re-test open (KNG-31) | `ba51dc1` | `2ca5ce9` | `30d66fc` |
 
@@ -41,8 +41,8 @@ feature (teleport 12, lootboxes 13–14, PMs 15–16, discovery 17–18, currenc
 hook and `StaffRoute node` prop were cherry-picked identically into several web-app branches — they merge cleanly.
 
 After merging: unify the three vanish-safe lookup helpers (private-messages `commands/support/VisiblePlayers`, teleport
-`VisibleTargetResolver`, currency `currency/VisiblePlayers`) and wire teleport's
-`TeleportRequestService.setIgnoreCheck(IgnoreService::ignores)`.
+`VisibleTargetResolver`, currency `currency/VisiblePlayers`) — **still open** — and wire teleport's
+`TeleportRequestService.setIgnoreCheck(IgnoreService::ignores)` — **done** (plugin `60ea800`, on trunk since the teleport merge).
 
 ## 3. Dev-server setup (once, before smoke tests)
 
@@ -114,6 +114,10 @@ Each plan's "Phase N status" sections list the in-game checks for that phase; th
   clickable [Cancel] on requests, `/tpahere` names a siege match, "can't look up" instead of "No player found" with the API
   down. Two feature requests need design (per-group teleport fees; `/back` variants). Round-2 list + L checklist: teleport
   plan "Smoke test round 1".
+- 2026-09-28 — **teleport** round 2 (B4, E5–E7, K1 pass; I2 assumed) and **merged to trunk** (api `ae4dccd`, plugin
+  `9bae376`, app `ac2db3b`); follow-ups KNG-41 (per-group fees), KNG-42 (`/back` variants); untested checks listed in the
+  teleport plan "Smoke test round 2 + merge". **All five legacy-feature ports are now on trunk.** Trunk needs no new
+  migrations for teleport beyond `AddDomainTeleportSettings` + `AddTeleportFeeVoids` (already applied on the dev DB).
 
 ## 5. Decisions still open for the developer
 

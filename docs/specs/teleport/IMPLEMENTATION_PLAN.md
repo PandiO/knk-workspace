@@ -1,6 +1,6 @@
 # Teleportation Commands — Implementation Plan
 
-**Status:** Phases 1–7 + siege integration done on `claude/teleport`, trunk merged in; smoke test round 1 done 2026-09-28, fixes pushed, round-2 re-test + two feature requests open (not merged to trunk)
+**Status:** **Merged to trunk 2026-09-28** (api `ae4dccd`, plugin `9bae376`, web-app `ac2db3b`) after two smoke-test rounds; follow-ups KNG-41 (per-group fees), KNG-42 (`/back` variants) and the untested checks listed under "Smoke test round 2 + merge"
 **Last updated:** 2026-09-28
 **Linear:** [KNG-17](https://linear.app/kngpandi/issue/KNG-17/teleportation-staff-tp-tpa-requests-spawn-domain-warps-v1-port)
 **Sources:** [DESIGN.md](DESIGN.md); `docs/ACTIVE_SESSIONS.md` (branch convention); code read at knk-plugin `0fa6d06`
@@ -470,6 +470,28 @@ pearl/chorus while frozen blocked; `/tpa` to a player inside an AllowEntry=false
    granted, `/back` returns to the origin of the latest recorded teleport. Open: does "teleport" include `/tpa`, `/tpahere`
    and being moved by staff; is a `/back` itself recorded (ping-pong); is `/back` after a paid warp free; expiry per variant;
    still never after a siege teleport/death.
+
+### Smoke test round 2 + merge — 2026-09-28
+
+Round 2 (developer): B4 [Cancel] works; E5/E6/E7 (warp locks refresh, multi-word names) work; K1 shows the new message;
+I2 assumed working. Feature requests filed: **KNG-41** (per-group teleport fees/cooldowns), **KNG-42** (`/back` variants).
+**Merged to trunk** on the developer's sign-off with `--no-ff` merges of the tested tips (trunk hadn't moved, merged trees
+identical to the tips): api `ae4dccd` (master), plugin `9bae376` (main), web-app `ac2db3b` (main). Trunk CI green: plugin
+https://github.com/PandiO/knk-plugin/actions/runs/36456754182, API migrations
+https://github.com/PandiO/knk-web-api/actions/runs/36456746248. The road-navigation chain (KNG-27, paused before its
+Phase 4) was waiting for this merge.
+
+**Still open after the merge (not blocking):**
+- Untested in game: B9 (paid `/tpa`, `teleport.request.price-coins > 0`), D3 (move during a paid warmup → no charge), D8
+  (refund via an unsafe destination: `TELEPORT_FEE` then `REVERSAL`), F3 (void death → `/back` refused), J2 (premium picker
+  refuses a non-premium group), J4 (ledger rows), I2 (assumed), the re-checks of `/knk cache reload` (C5/A9), and the L
+  anti-exploit list under "Smoke test round 1".
+- `requires-mysql` API tests not run for this merge (no scratch MySQL on the dev PC; the fresh-DB CI passed).
+- Unify the three vanish-safe lookups (`commands/support/VisiblePlayers`, `currency/VisiblePlayers`,
+  `teleport/VisibleTargetResolver`); staff `/warp <d> <p>` audit lacks `domainId`; pre-existing direct `player.teleport`
+  calls in gates/region tracker; join/respawn listeners still ignore Game Settings (plugin side of Game Settings not built).
+- Trunk caveat (handoff §6): `WorldGuardRegionListener` judges PLUGIN-cause teleports (siege hub/return spots in a closed
+  domain).
 
 ## Cross-cutting
 
