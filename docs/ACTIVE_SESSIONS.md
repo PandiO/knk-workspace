@@ -36,6 +36,7 @@ Live tracker of in-progress work across all four Knights and Kings repos
 |---|---|---|---|---|---|
 | _(example)_ Siege minigame — capture point sync | web-api: `Services/SiegeService.cs`; plugin: `siege/` package | Claude Code session A | Implementing capture-point event handling | 2026-09-17 | 2026-09-17 |
 | Legacy inventory-menu screen/item mining + feature allocation | knk-workspace: new `docs/specs/legacy/inventory-menu-screens.md`, `docs/specs/legacy/README.md`; read-only on `knk-v1-archive`/`knk-v2-archive` | Claude Code session (Pandi) | Mining v1/v2 menu screens and items | 2026-09-25 | 2026-09-25 |
+| KNG-32 agent-instruction docs publication (docs only) | all four repos: `CLAUDE.md`/`AGENTS.md` + workspace `docs/ai-agents/GLOBAL_AGENT_INSTRUCTIONS.md`; branch `codex/kng-32-agent-instructions` in each | Claude Code session (Pandi) | Applying prepared patches, opening PRs (not merging) | 2026-09-28 | 2026-09-28 |
 
 ## Recently completed
 
