@@ -15,7 +15,7 @@ Designs + resolved decisions: `docs/specs/{currency-payments,domain-discovery,te
 |---|---|---|---|
 | `claude/currency-payments` — **merged to trunk 2026-09-27** (api `5639a50`, plugin `0d01b52`, app `c4ed753`) | `edb77e8` | `7f056b3` | `6eed4a0` |
 | `claude/domain-discovery` — **merged to trunk 2026-09-27** (api `acaee99`, plugin `4ec2f23`, app `46be4e9`) | `a826691` | `a07ad81` | `8a6b3f9` |
-| `claude/teleport` — trunk (incl. currency, discovery, PMs, lootboxes) merged in 2026-09-27 + `/ignore` wiring; awaiting smoke test (teleport plan "Trunk merge") | `e31ffc6` | `60ea800` | `a14b14b` |
+| `claude/teleport` — trunk (incl. currency, discovery, PMs, lootboxes) merged in 2026-09-27 + `/ignore` wiring; smoke test round 1 2026-09-28, fixes pushed, round 2 open (teleport plan "Smoke test round 1") | `e31ffc6` | `51570c7` | `a14b14b` |
 | `claude/private-messages` — **merged to trunk 2026-09-27** (api `7daca13`, plugin `316315e`, app `7db6f46`) | `fbf280d` | `0fed5f4` | `354d4f4` |
 | `claude/lootboxes` — **merged to trunk 2026-09-27** (api `ccc8c02`, plugin `eb1d68c`, app `f56d421`); round-2 re-test open (KNG-31) | `ba51dc1` | `2ca5ce9` | `30d66fc` |
 
@@ -108,6 +108,12 @@ Each plan's "Phase N status" sections list the in-game checks for that phase; th
   `f56d421`); remaining checks, two open decisions (cap counting, chest block) and small gaps: lootboxes plan "Open
   TODOs", Linear KNG-31. Trunk now needs `dotnet ef database update` for `BackfillDefaultRankMembership` +
   `AddLootboxWorldPickup`.
+- 2026-09-28 — **teleport** round 1 (A–K; L anti-exploit accepted untested): nearly everything passed. Fixed on the branch
+  (plugin `51570c7`): warp locks refreshed on use (new title/tier showed only after the 60 s cache or a relog), multi-word
+  `/warp` names, `/knk cache reload` (did nothing — only `refresh` existed; now both, and refresh drops permissions),
+  clickable [Cancel] on requests, `/tpahere` names a siege match, "can't look up" instead of "No player found" with the API
+  down. Two feature requests need design (per-group teleport fees; `/back` variants). Round-2 list + L checklist: teleport
+  plan "Smoke test round 1".
 
 ## 5. Decisions still open for the developer
 

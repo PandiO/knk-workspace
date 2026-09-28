@@ -1,7 +1,7 @@
 # Teleportation Commands — Implementation Plan
 
-**Status:** Phases 1–7 + siege integration done on `claude/teleport`, trunk merged in 2026-09-27; awaiting developer smoke test (not merged to trunk)
-**Last updated:** 2026-09-27
+**Status:** Phases 1–7 + siege integration done on `claude/teleport`, trunk merged in; smoke test round 1 done 2026-09-28, fixes pushed, round-2 re-test + two feature requests open (not merged to trunk)
+**Last updated:** 2026-09-28
 **Linear:** [KNG-17](https://linear.app/kngpandi/issue/KNG-17/teleportation-staff-tp-tpa-requests-spawn-domain-warps-v1-port)
 **Sources:** [DESIGN.md](DESIGN.md); `docs/ACTIVE_SESSIONS.md` (branch convention); code read at knk-plugin `0fa6d06`
 (`claude/siege-minigame` head), knk-web-api `cd95dd1`, knk-web-app `9a6f347`.
@@ -421,6 +421,55 @@ Pending on the dev DB (checked 2026-09-27): `20260926181358_AddDomainTeleportSet
 (teleport) plus trunk's not-yet-applied `20260927173616_BackfillDefaultRankMembership`, `20260927174550_AddLootboxWorldPickup`.
 Known, pre-existing on trunk: `WorldGuardRegionListener` judges PLUGIN-cause teleports (siege hub/return spots inside an
 AllowEntry/AllowExit=false domain); `api/MenuTemplates` writes are anonymous.
+
+### Smoke test round 1 — 2026-09-28 (developer, dev server)
+
+Setup went cleanly (four migrations applied, all modules start). Passed: A1–A9, B1–B8, C1–C5, D1–D2, E1–E4 (menu), D9
+(staff warp), F1/F2/F4/F5, G1–G4, H1–H4, I1/I3–I6, J1/J3, K2/K3/K5. Accepted without testing: D8 (refund via an unsafe
+destination), F3 (void death), L (anti-exploit — **still to test**, list below). Not run: B9 (paid `/tpa`), D3 (move
+during a paid warmup → no charge), J2 (premium picker refusing a non-premium group — "unsure"), J4 (ledger rows).
+
+Findings and fixes (plugin `a2a319f`, `a8930a5`, `8fff139`, `51570c7`; CI green
+https://github.com/PandiO/knk-plugin/actions/runs/36452143982; knk-core 1146, api-client 144, knk-paper 971, 0 failures):
+- **E5/E6 (bug):** a new title or premium tier didn't unlock a warp until the 60 s per-player destination cache ran out or
+  the player relogged (the API check was always live). `/warp`, `/warps` and the warp menu now take a list at most 5 s old;
+  tab completion keeps the cache time. Also explains D1's first empty `/warps`.
+- **`/knk cache reload` did nothing** — only `refresh` was a subcommand, `reload` just printed stats. The "works after cache
+  reload" notes (A9, E5) and C5 (spawn mode change only after a restart) were cache times running out. `reload` is now
+  `refresh`, and refresh also drops the permission cache (grants applied at once instead of within 30 s).
+- **E7 (bug):** multi-word places (`/warp Residential District`): tab completion skipped them. Now completed word by word,
+  spacing ignored, unknown names get "Did you mean: …?" (no auto-pick — warps can cost gems).
+- **B4 (request):** "Request sent … [Cancel]" — clickable `/tpcancel` (also on the pending-request reminder).
+- **I2 (bug):** `/tpahere` to a siege member now says "X is in a siege match." (other reasons about the target stay hidden).
+- **K1 (bug):** API down → staff `/tp A` said "No player found named 'A'". Shared `UserAdminService.resolveTarget` now says
+  "Can't look up 'A' right now (the KnK service is unreachable)". Staff `/tp` still needs the API for the rank check.
+- Explained, no change: A8 — `/minecraft:tp` is vanilla (vanilla messages, no audit/rank/vanish handling) by design;
+  K4 — `/spawn` with the API down refuses with "permissions can't be checked" when that player's `knk.teleport.spawn`
+  answer isn't cached (fail closed); J1 — the five domain fields are FormConfiguration data, not seeded (the developer added
+  them to Town, District, Structure and GateStructure).
+- Noted, outside teleport: joining players ignore the Game Settings join spawn — the plugin side of Game Settings isn't
+  built yet (developer has a stash of a first version); `/spawn` itself uses it.
+
+**Round-2 re-test:** E5/E6 (promote → `/warps` within a few seconds), E7 (`/warp Residential District`, tab completion,
+"Did you mean"), B4 [Cancel], I2, K1 message, `/knk cache reload` after a Game Settings change (C5) and after removing a
+grant (A9); plus the untested B9, D3, D8, F3, J2, J4.
+
+**Anti-exploit checks still to test (L, DESIGN §3.12):** frozen mid-warmup → refused, no charge; siege queue joined
+mid-warmup → refused, no charge; double [Accept] → second finds nothing; request bait-and-switch (old [Accept] after a
+`/tpahere` replaced the request must not pull the target); 6 requests to one target → only the newest 5 pending;
+pearl/chorus while frozen blocked; `/tpa` to a player inside an AllowEntry=false domain → refused at commit.
+
+**Feature requests (developer, 2026-09-28) — need design before building:**
+1. **Per-permission-group teleport fees** for `/tpa`, `/warp` and `/spawn`: optional per group, with a default; each with
+   a price, a currency (coins, gems, XP or a combination) and a cooldown. Open: configured on PermissionGroup (web app) or
+   in config; does a group fee replace or add to a domain's warp price; which group wins when a player has several
+   (highest weight?); does a group cooldown replace `teleport.cooldown-seconds`.
+2. **`/back` variants by permission:** `knk.teleport.back` (death, today), `knk.teleport.back.warps` (before a `/warp`),
+   `knk.teleport.back.teleport` (before other teleports), `knk.teleport.back.spawn` (before `/spawn`),
+   `knk.teleport.staff.back.others` (staff `/back <player>`), `knk.teleport.back.all` / `*` (every variant). With several
+   granted, `/back` returns to the origin of the latest recorded teleport. Open: does "teleport" include `/tpa`, `/tpahere`
+   and being moved by staff; is a `/back` itself recorded (ping-pong); is `/back` after a paid warp free; expiry per variant;
+   still never after a siege teleport/death.
 
 ## Cross-cutting
 

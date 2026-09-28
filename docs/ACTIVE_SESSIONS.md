@@ -35,7 +35,7 @@ Live tracker of in-progress work across all four Knights and Kings repos
 | Feature | Repos / files claimed | Owner (human / session) | Status | Started | Last updated |
 |---|---|---|---|---|---|
 | _(example)_ Siege minigame — capture point sync | web-api: `Services/SiegeService.cs`; plugin: `siege/` package | Claude Code session A | Implementing capture-point event handling | 2026-09-17 | 2026-09-17 |
-| Teleport (KNG-17) — trunk merge into `claude/teleport` + ignore wiring, smoke-test prep (not merging to trunk) | knk-web-api, knk-plugin, knk-web-app `claude/teleport` (worktrees under `Repository/_worktrees/*-teleport`); knk-workspace teleport `IMPLEMENTATION_PLAN.md`, handoff teleport row | Claude Code session (Pandi) | Trunk merged + pushed (api `e31ffc6`, plugin `60ea800`, app `a14b14b`), CI green; awaiting developer smoke test | 2026-09-27 | 2026-09-27 |
+| Teleport (KNG-17) — trunk merge into `claude/teleport` + ignore wiring, smoke-test prep (not merging to trunk) | knk-web-api, knk-plugin, knk-web-app `claude/teleport` (worktrees under `Repository/_worktrees/*-teleport`); knk-workspace teleport `IMPLEMENTATION_PLAN.md`, handoff teleport row | Claude Code session (Pandi) | Smoke test round 1 done; fixes pushed (plugin `51570c7`, CI green); round-2 re-test + feature-request design open | 2026-09-27 | 2026-09-28 |
 | Legacy inventory-menu screen/item mining + feature allocation | knk-workspace: new `docs/specs/legacy/inventory-menu-screens.md`, `docs/specs/legacy/README.md`; read-only on `knk-v1-archive`/`knk-v2-archive` | Claude Code session (Pandi) | Mining v1/v2 menu screens and items | 2026-09-25 | 2026-09-25 |
 
 ## Recently completed
