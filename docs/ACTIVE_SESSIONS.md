@@ -36,6 +36,7 @@ Live tracker of in-progress work across all four Knights and Kings repos
 |---|---|---|---|---|---|
 | _(example)_ Siege minigame — capture point sync | web-api: `Services/SiegeService.cs`; plugin: `siege/` package | Claude Code session A | Implementing capture-point event handling | 2026-09-17 | 2026-09-17 |
 | Legacy inventory-menu screen/item mining + feature allocation | knk-workspace: new `docs/specs/legacy/inventory-menu-screens.md`, `docs/specs/legacy/README.md`; read-only on `knk-v1-archive`/`knk-v2-archive` | Claude Code session (Pandi) | Mining v1/v2 menu screens and items | 2026-09-25 | 2026-09-25 |
+| v1 PermissionsEx + WorldGuard inventory report (docs only) | knk-workspace: new `docs/reports/2026-09-28-v1-permissions-worldguard-inventory.md`; `docs/ACTIVE_SESSIONS.md` | Claude Code session (Pandi) | Applying prepared patch and pushing to `main` | 2026-09-28 | 2026-09-28 |
 
 ## Recently completed
 
