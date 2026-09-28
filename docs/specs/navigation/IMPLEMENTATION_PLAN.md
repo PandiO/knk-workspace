@@ -6,9 +6,10 @@
 (knk-plugin `claude/road-navigation` `c2ca1e3`, 2026-09-27); **Phase 2d done** (knk-plugin `claude/road-navigation`
 `a82db3c`, 2026-09-27); **Phase 2e done** (knk-plugin `claude/road-navigation` `4ffdd1a`, 2026-09-28); **Phase 3 done,
 not compiled** (knk-plugin `claude/road-navigation` `96f4c62`, 2026-09-28 — knk-paper needs the developer's local
-build); Phase 5 next, Phase 4 waits for KNG-17.
+build); **Phase 5 done** (knk-web-app `claude/road-navigation` `9dbb481`, 2026-09-28); Phase 4 waits for KNG-17 on
+knk-plugin trunk (chain paused there, handoff written).
 Every code reference was verified against trunk by a separate review pass on 2026-09-27; its corrections are folded in.
-**Last updated:** 2026-09-28 (Phase 3 status)
+**Last updated:** 2026-09-28 (Phase 5 status)
 **Linear:** [KNG-27](https://linear.app/kngpandi/issue/KNG-27)
 **Design:** [DESIGN.md](DESIGN.md) rev. 4 (decided) — read it first; this plan says *where and how* to build it.
 **Sources:** trunk as of 2026-09-27 — knk-web-api `master` `acaee99`, knk-plugin `main` `ceed2f6`, knk-web-app `main`
@@ -1758,6 +1759,125 @@ arrival; auto-end on death/teleport/siege join.
 
 **Acceptance:** `npm run test:ci` = baseline + new tests; pages usable against a local API with seeded data; no new
 ESLint warnings in touched files.
+### Phase 5 status — done 2026-09-28 (knk-web-app `claude/road-navigation` `26de19e`, `23c64ef`, `ba79450`, `d60b458`, `baf9c20`, `ff3ad61`, `9dbb481`; cut from `main` `f56d421`)
+
+- **What was built** (all under `F/`; 17 files, +2 784 / −1 lines):
+  - `types/dtos/road/RoadDtos.ts` — `ROAD_ADMIN_NODE = 'knk.admin.road'`, the enum name lists (`ROAD_CLASSES`,
+    `ROAD_MATERIAL_ROLES`, `ROAD_EDGE_FLAGS`), every DTO of `W/Dtos/RoadDtos.cs` the web app reads or writes
+    (profile, profile upsert with `stats: null`, tile, node, edge, tile graph, meta, edge search query/paged result
+    with the API's `pageNumber`, edge update + result, node update, `StreetRoadDto`), `formatRoadFlags`.
+  - `apiClients/roadClient.ts` (R35; singleton `roadClient`): profiles CRUD, `getTiles(world)`, `getTileGraph`,
+    `getMeta(world)`, `searchEdges` (POST `road-edges/search`), `updateEdge`, `deleteEdge`, `updateNode`,
+    `getStreetRoad` (GET `Streets/{id}/road`). `Controllers` enum: `RoadProfiles`, `RoadTiles`, `RoadEdges`,
+    `RoadNetwork`, `RoadNodes` (`utils/enums.ts`); `StreetsOperation.Create = ''` declared (see discrepancies).
+  - `App.tsx` route `/admin/roads` inside `StaffRoute node={ROAD_ADMIN_NODE}`; `components/Navigation.tsx` link
+    "Roads" (lucide `Route`) + `nodeAccess` entry (R34).
+  - `pages/admin/RoadsAdminPage.tsx` — world selector (text field remembered in `localStorage`), loads profiles +
+    meta + tiles in parallel, a summary strip (tiles/dirty, components/nodes, labelled streets, enabled profiles),
+    the three cards; a tile row's "Edges" button limits the edge table to that tile.
+  - `components/admin/roads/RoadProfilesCard.tsx` — table + an editor panel (name, class, cost, width min/max,
+    enabled, scope towns via `SearchableDropdown` over `townClient.searchPaged` + chips, materials table with
+    `MaterialKeyInput.tsx` (text + `minecraftMaterialRefClient.getHybrid` suggestions, R38/D10), role select,
+    ambiguous toggle, read-only centre/edge shares and samples); create / edit / delete (confirm); 4xx messages.
+    `roadProfileForm.ts` (pure): `ProfileDraft`, `emptyProfileDraft`, `profileToDraft`, `parseProfileDraft`
+    (mirrors `RoadNetworkService.ValidateProfile`), `toMaterialKey`, `formatShare`.
+  - `components/admin/roads/RoadTilesCard.tsx` — x, z, version, built, builder version, Dirty/Built/Not built,
+    cells/nodes/edges/levels, warnings expandable per row; "Dirty only" / "With warnings only" filters.
+  - `components/admin/roads/RoadEdgesCard.tsx` — server-paged search (filters unlabelled, stale, street, tile;
+    sort id/length/street/tile; 25/50/100 per page); rows show tile, street name + Rename link
+    (`/forms/street/edit/:id`), label source badge, profile (class), length, width, cost, flags (Closed in red),
+    source/stale/gate; inline edit in the `DiscoveryOverridesCard` pattern: street picker (`SearchableDropdown` +
+    `streetClient.searchPaged`, R37) with **"Create street…"** (inline name form → existing `streetClient.create`,
+    then assigned) and **"Continue along the road"** (default on → `propagate: true`; the notice says how many more
+    stretches followed), profile override select ("None" → `clearProfile`), cost, the three flag checkboxes; the
+    API's 4xx message is shown, the row stays in edit.
+  - `components/roads/StreetRoadPanel.tsx` (R36, `SiegeReadinessPanel` shape) registered as `streetRoad` in
+    `components/FormWizard/displayPanels.tsx`: "save first" notice without an id; counts, total length, junction
+    count, the stretches (world, from/to, length, label source, flags, state), links to the Roads page; 404 →
+    "This street does not exist (any more)."
+  - Tests: `apiClients/__tests__/roadClient.test.ts` (8), `components/admin/roads/__tests__/roadProfileForm.test.ts`
+    (8), `components/roads/__tests__/StreetRoadPanel.test.tsx` (5, through `FieldRenderer` like the siege panel),
+    `pages/admin/__tests__/RoadsAdminPage.test.tsx` (15: load, error state, world switch, server filters + tile
+    filter, propagate notice, cost/flags/profile save + cancel, clear street, 4xx kept in edit, client-side cost
+    check, create street, paging, profile create with material suggestion + scope, edit + 4xx, width check, delete).
+- **Reuse:** R34 (page/card/inline-edit pattern, route, nav), R35 (client + enum), R36 (display panel registry),
+  R37 (`SearchableDropdown` + `streetClient.searchPaged`, also `streetClient.create`), R38 (`getHybrid`), D8 (scope =
+  towns), D10 (text field + suggestions). Also reused: `toApiPagedQuery`, the discovery page test's virtual
+  `react-router-dom` mock, `FeedbackModal`-free `window.confirm` for deletes (as the overrides card does).
+- **Tests:** `npm run test:ci` on the clean `main` `f56d421` — **10 failed suites / 16 failed tests, 381 passed,
+  397 total** (the undocumented trunk baseline, now recorded: `ConfigurationHealthPanel.test.simplified`,
+  `ConfigurationHealthPanel.test`, `FieldRenderer.validation.test`, `FormWizard.m2mJoinPrefill.ui.test`,
+  `ManyToManyRelationshipEditor.test`, `ManyToManyRelationshipEditor.ui.test`, `PathBuilder.test`, `LoginForm.test`,
+  `useEnrichedFormContext.test`, `authService.test` — most fail to *run*: `react-router-dom` / missing-module
+  resolution). After: **10 failed suites / 16 failed tests, 417 passed, 433 total** → +36, the same ten suites.
+  `CI=true npm run build` compiles (TypeScript clean) and fails on the same **36 pre-existing ESLint warnings in 20
+  files** before and after — none in a touched file.
+- **Decisions to review** (defaults taken; all reversible):
+  1. **World selector = a text field** remembered in `localStorage` (`knk.roads.world`), default `world`: there is
+     no world-list endpoint and the tile list itself needs a world.
+  2. **Edge table density:** 25 rows by default (50/100 selectable), sort id/length/street/tile ascending; filters
+     reset to page 1.
+  3. **No geometry in the edge table** — length, width and counts only; the street panel shows first/last point.
+  4. **Warnings expand per tile row** (chevron + count → a full-width row listing them).
+  5. **Profile editor is a panel below the table**, not an inline row (the materials table needs the width); towns
+     are loaded when it opens; one profile edited at a time.
+  6. **Material suggestions** after 2 characters, 250 ms debounce, 8 catalogue matches; a picked or typed key is
+     normalised to Bukkit form (`minecraft:stone_bricks` → `STONE_BRICKS`, spaces/dashes → `_`, upper-case).
+  7. **Hand-made profile defaults:** class Road, cost 1, width 1–15 (Phase 2c decision 7: `widthMax` must reach
+     the real road width), enabled, everywhere, no materials (the card says a build cannot match it yet).
+  8. **Edge PUT sends only changed fields**: clearing the picker → `clearStreet`; profile "None" → `clearProfile`;
+     `propagate` only travels with a `streetId` (default on; the checkbox is disabled until the street changes);
+     nothing changed → the edit just closes.
+  9. **After an edge save the page is searched again** (propagated labels may be on it) and the meta reloaded
+     when the street changed (the filter's street list follows).
+  10. **Street picker** lists up to 1 000 streets by name (like the discovery domain picker); the *filter* offers
+      only the labelled streets of the world (`meta.streets`, Phase 1 decision 12).
+  11. **`StreetRoadPanel` uses plain anchors**, not router `Link`s: `FieldRenderers` is imported by nine test suites
+      without a `react-router-dom` mock, and CRA's Jest resolver can't resolve that package — a `Link` import there
+      breaks all of them (it did, before the fix).
+  12. **`updateNode` is in the client** (the Phase 1 "→ 5" contract) although Phase 5 has no node UI.
+  13. **No edge delete in the UI** — not in the Phase 5 list; a rebuild recreates detected edges anyway.
+  14. A tile's **"Edges" button** sets the API `tileId` filter (chip with an × to clear) and scrolls to the table.
+  15. The Rename link goes to `/forms/street/edit/:id` unchanged — it needs a default Street FormConfiguration.
+- **Discrepancies found (docs vs code / environment):**
+  - **`npm ci` fails on trunk:** `package-lock.json` is out of sync with `package.json` (`Missing: yaml@2.9.1 from
+    lock file`). `npm install` works and rewrites the lockfile (23 +/33 − lines) — that diff was **restored, not
+    committed** (not this phase's change; the developer may want to commit a fresh `npm install` lockfile on trunk).
+    Cypress's postinstall binary download dies with `ECONNRESET` through the cloud proxy: `CYPRESS_INSTALL_BINARY=0
+    npm install` is the working recipe.
+  - Plan §0.4 / charter §1.6 say `npm run test:ci`; the trunk baseline was undocumented — recorded above.
+  - `tsconfig.app.json` is a Vite-style leftover (`moduleResolution: bundler`, `allowImportingTsExtensions`);
+    `tsc -p tsconfig.app.json` errors on the config itself, so `CI=true npm run build` is the type check.
+  - `streetClient.create` referenced `StreetsOperation.Create`, which did not exist in the enum (the build never
+    flagged it; at runtime an undefined operation produced the right URL `api/Streets`). Declared as `''`.
+  - DESIGN §7 names the in-game node `knk.admin.roads`; the API (`StaffPermissions.RoadManage`), the plugin and the
+    web app use `knk.admin.road` (plan R31). The plan wins; DESIGN's line is stale.
+  - The trunk `Street` DTO in the web app (`types/dtos/street/StreetDto.ts`) has no `edgeCount`/`totalLength`
+    (Phase 1 §1.6 added them to the API); not needed here — the street panel reads `GET Streets/{id}/road`.
+- **Developer to-do:**
+  - **Permission:** give the staff group `knk.admin.road` (the nav link, the route and every API write need it).
+  - **Dev-DB step (Street FormConfiguration):** open the Forms page → Street → form builder, add a last step "Road"
+    with one field on `Id`: label "Road", type Integer, read-only, not required, `settingsJson`
+    `{"displayPanel":"streetRoad"}` (exactly like the siege readiness field on `SiegeScenario`). The panel appears in
+    the Street edit form for saved streets.
+  - **Live checklist (~10 min, against the Phase 1 API + its checklist data):** (1) log in with `knk.admin.road` →
+    "Roads" in the nav, `/admin/roads` loads world `world`: profiles list *Default road*, tiles list `0, 0` and `1, 0`
+    (the Phase 1 payloads), the dirty one with its warnings expandable; (2) Stretches: "Unlabelled only", Edit one →
+    pick a street, "Continue along the road" on, Save → green notice "… continued along the road onto N more
+    stretches", the Street filter now offers that street, rows show Manual; (3) Edit another → "Create New Street" →
+    name → Create street → it is selected → Save; "Rename" opens `/forms/street/edit/:id`; (4) Edit → cost 0 → the
+    client refuses; cost 2, Closed on → Save → row shows ×2 and Closed in red; (5) New profile "Trail": type `dirt`
+    in the material field → pick `DIRT_PATH`, add town scope, Create → listed; Edit *Default road* → class Main →
+    Save; rename Trail to "Default road" → the API's 400 message; Delete Trail (confirm); (6) after the dev-DB step,
+    open a labelled street's edit form → the Road panel lists its stretches; an unsaved street shows the "save
+    first" note; (7) switch world to a name without tiles → empty tables, no error; a typo world → same (the API
+    returns empty lists); (8) without the node: the nav link is hidden and `/admin/roads` shows "Staff only".
+  - Optional: commit a fresh `package-lock.json` on trunk so `npm ci` works again.
+- **What later phases must wire:**
+  - **4 (`/navigate`):** nothing from the web app. Street names reach the plugin through `StreetCache` (Phase 3,
+    60 s refresh) — a rename in the Street form or a label change here needs no plugin action.
+  - **Phase 6 / later:** if a node editor is added, `roadClient.updateNode` and `RoadNodeUpdateDto` are ready;
+    node edits lock the node unless `locked: false`.
 
 ---
 

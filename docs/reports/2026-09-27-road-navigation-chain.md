@@ -1,7 +1,7 @@
 # Road navigation chain — progress report
 
-**Status:** running
-**Last updated:** 2026-09-28 (link 7: Phase 3 done, knk-paper not compiled in the cloud; link 8 started on Phase 5)
+**Status:** finished for now — Phases 1, 2a-2e, 3 and 5 done; Phase 4 waiting for KNG-17 (teleport) on knk-plugin trunk
+**Last updated:** 2026-09-28 (link 8: Phase 5 done; chain paused before Phase 4, waiting for KNG-17)
 **Linear:** [KNG-27](https://linear.app/kngpandi/issue/KNG-27) · **Charter:** `docs/ai-agents/handoffs/ROAD_NAVIGATION_CHAIN.md` · **Plan:** `docs/specs/navigation/IMPLEMENTATION_PLAN.md`
 
 ## Summary for the developer
@@ -15,8 +15,8 @@
 | 2d — router + navigation session | **done** (link 5) | knk-plugin `claude/road-navigation` `a82db3c` (on 2c's `c2ca1e3`; trunk `main` still `eb1d68c`) | [Phase 2d](#phase-2d--knk-plugin-core-router-and-navigation-session-link-5) |
 | 2e — api-client | **done** (link 6) | knk-plugin `claude/road-navigation` `4ffdd1a` (on 2d's `a82db3c`; trunk `main` still `eb1d68c`) | [Phase 2e](#phase-2e--knk-plugin-api-client-ports-dtos-mapper-conditional-get-link-6) |
 | 3 — plugin paper admin side | **done, not compiled** (link 7) | knk-plugin `claude/road-navigation` `96f4c62` (on 2e's `4ffdd1a`; trunk `main` still `eb1d68c`) | [Phase 3](#phase-3--knk-plugin-paper-admin-side-survey-build-review-link-7) |
-| 5 — web-app admin pages | in progress (link 8) | knk-web-app `claude/road-navigation` (to be cut from `main`) | |
-| 4 — `/navigate` | waiting for KNG-17 on trunk | — | |
+| 5 — web-app admin pages | **done** (link 8) | knk-web-app `claude/road-navigation` `9dbb481` (from `main` `f56d421`) | [Phase 5](#phase-5--knk-web-app-admin-pages-link-8) |
+| 4 — `/navigate` | **waiting for KNG-17** on knk-plugin trunk (`main` still `eb1d68c` on 2026-09-28) | — | handoff ready: `docs/ai-agents/handoffs/2026-09-28-road-navigation-phase-4.md` |
 
 - **Review first** (ranked): (1) Phase 1 decision 1 — stitch edges are owned by the last-built tile and reference the
   neighbour's node by id, so a tile download can point at a node of another tile; (2) decision 2 — Detected nodes
@@ -61,12 +61,17 @@
   every touched tile; (24) decision 12 — `build all` = API tile rows ∪ seed tiles ∪ domain-Location tiles in the
   world border; (25) decision 16 — a profile learned from a survey is created as class Road ×1.0 without scope (edit
   in the web app); (26) decision 1 — `NavigationConfig` is a top-level record in `P/config` (Bukkit-free, so the
-  scratch build tests it) — see the plan's "Phase 3 status".
+  scratch build tests it) — see the plan's "Phase 3 status". Phase 5 (web app): (27) decision 1 — the world selector
+  is a text field remembered in the browser (no world-list endpoint); (28) decision 8 — an edge PUT sends only the
+  changed fields, "continue along the road" only with a street; (29) decision 11 — the Street form's road panel links
+  with plain anchors (router imports break nine FormWizard test suites); (30) decision 13 — no edge delete in the UI;
+  plus one trunk chore: `npm ci` fails on the current lockfile — see the plan's "Phase 5 status".
 - **Cloud network, please check:** `repo.papermc.io` and `maven.enginehub.org` are still denied by the environment's
   network policy (proxy 403 on CONNECT) in links 1-7, so no link can compile knk-paper or run knk-core through
   Gradle; knk-core is tested through the plan §0.4 scratch build instead. Adding both hosts to the environment's
   allowed domains would let later links build the real thing.
-- **Test when you have time:** pull `claude/road-navigation` in each repo; build the plugin (`./gradlew build -x deployToDevServer`, fix compile errors first if any link marked knk-paper "not compiled"); apply the new web-api migration to the dev DB (developer only); run the web-api; `./gradlew :knk-paper:dev`; then each phase's live checklist from the plan in phase order.
+- **Test when you have time:** pull `claude/road-navigation` in each repo; build the plugin (`./gradlew build -x deployToDevServer`, fix compile errors first if any link marked knk-paper "not compiled"); apply the new web-api migration to the dev DB (developer only); run the web-api; `./gradlew :knk-paper:dev`; `CYPRESS_INSTALL_BINARY=0 npm install && npm start` in knk-web-app (grant `knk.admin.road`, add the `streetRoad` field to the Street form — plan "Phase 5 status"); then each phase's live checklist from the plan in phase order.
+- **To resume the chain (Phase 4):** once KNG-17 (`origin/claude/teleport`) is merged to knk-plugin `main`, start a fresh session with *"Read and execute `docs/ai-agents/handoffs/2026-09-28-road-navigation-phase-4.md` in the knk-workspace repository (branch main). It starts with a pointer to the chain charter."*
 
 ## Phase 1 — knk-web-api: data model, services, API (link 1)
 
@@ -309,3 +314,34 @@
   option 1 (Claude Code Remote `create_session` in the same environment, `source_url` = knk-workspace `main`) — link 8 =
   Claude Code Remote session `session_0137PksZMzCVnVX6YkMD5cSg` (created 2026-09-28 06:15 UTC, parent this session
   `session_01NPPpKzLCV3MKUQkAwnYUz4`).
+
+## Phase 5 — knk-web-app: admin pages (link 8)
+
+- **Commits** (knk-web-app `claude/road-navigation`, cut from `main` `f56d421`): `26de19e` road DTOs + `roadClient` +
+  `Controllers` entries · `23c64ef` `/admin/roads` route, nav link, `RoadsAdminPage` shell (world selector) ·
+  `ba79450` `RoadProfilesCard` + `roadProfileForm.ts` + `MaterialKeyInput` · `d60b458` `RoadTilesCard` · `baf9c20`
+  `RoadEdgesCard` (+ `StreetsOperation.Create`) · `ff3ad61` `StreetRoadPanel` registered as `streetRoad` · `9dbb481`
+  page tests, panel links as anchors. 17 files, +2 784 / −1. Workspace `main`: plan header + "Phase 5 status" block,
+  this report, tracker row, handoff `docs/ai-agents/handoffs/2026-09-28-road-navigation-phase-4.md` (for later).
+- **Tests:** `npm run test:ci` on the clean checkout — **10 failed suites / 16 failed tests, 381 passed, 397 total**
+  (the trunk baseline the plan asked for; the ten suites are named in the plan status, most fail to run on
+  `react-router-dom` / missing-module resolution). After Phase 5: **10 / 16 failed, 417 passed, 433 total** → +36
+  (client 8, form 8, panel 5, page 15), the same ten suites. `CI=true npm run build`: TypeScript clean; the same 36
+  pre-existing ESLint warnings in 20 files before and after, none in a touched file.
+- **Flagged decisions:** 15, numbered in the plan status block; worth a look: (1) the world selector is a remembered
+  text field (no world-list endpoint), (8) an edge PUT sends only the changed fields and `propagate` only with a
+  street, (11) the street panel links with plain anchors because nine FormWizard test suites import `FieldRenderers`
+  without a router mock, (13) no edge delete in the UI.
+- **Discrepancies:** trunk `npm ci` fails (lockfile out of sync: `yaml@2.9.1`) — `CYPRESS_INSTALL_BINARY=0 npm
+  install` is the cloud recipe, the lockfile diff was not committed; `tsconfig.app.json` is a Vite leftover (the CRA
+  build is the type check); `streetClient.create` referenced a non-existent `StreetsOperation.Create` (declared now);
+  DESIGN §7 says `knk.admin.roads`, everything built uses `knk.admin.road`.
+- **Live checklist:** plan "Phase 5 status → Developer to-do" — grant `knk.admin.road`; add the `streetRoad` display
+  panel field to the Street FormConfiguration (dev-DB step, described there); then the 8-step walk-through of the
+  page (profiles, tiles, edge labelling with "continue along the road", create street, rename link, street panel).
+- **Risks:** the page was verified with Jest against mocked clients only — the first run against the real API is the
+  developer's; the request shapes were read from `Dtos/RoadDtos.cs` and the controllers on `claude/road-navigation`
+  `77e0a29`, so a mismatch would be a name typo, not a design gap. `SearchableDropdown` loads the whole street/town
+  list once (1 000 cap) — fine at this project's scale.
+- **Next link:** none started. **KNG-17 is not on knk-plugin trunk** (`origin/main` still `eb1d68c`, no
+  `core/teleport/WarpTargets`), so per charter §4.7 the Phase 4 handoff is written for later and the chain ends here.
