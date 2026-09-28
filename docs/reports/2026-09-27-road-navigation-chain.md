@@ -307,4 +307,5 @@
   and `ParticleDraw.polyline` (all listed in the status block's "→ 4" note).
 - **Next link:** handoff `docs/ai-agents/handoffs/2026-09-28-road-navigation-phase-5.md`; started per charter §6
   option 1 (Claude Code Remote `create_session` in the same environment, `source_url` = knk-workspace `main`) — link 8 =
-  Claude Code Remote session (id recorded below once created).
+  Claude Code Remote session `session_0137PksZMzCVnVX6YkMD5cSg` (created 2026-09-28 06:15 UTC, parent this session
+  `session_01NPPpKzLCV3MKUQkAwnYUz4`).
