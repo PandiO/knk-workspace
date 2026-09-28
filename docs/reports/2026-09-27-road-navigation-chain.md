@@ -1,7 +1,7 @@
 # Road navigation chain — progress report
 
 **Status:** running
-**Last updated:** 2026-09-28 (link 6: Phase 2e done; link 7 started on Phase 3)
+**Last updated:** 2026-09-28 (link 7: Phase 3 done, knk-paper not compiled in the cloud; link 8 started on Phase 5)
 **Linear:** [KNG-27](https://linear.app/kngpandi/issue/KNG-27) · **Charter:** `docs/ai-agents/handoffs/ROAD_NAVIGATION_CHAIN.md` · **Plan:** `docs/specs/navigation/IMPLEMENTATION_PLAN.md`
 
 ## Summary for the developer
@@ -14,8 +14,8 @@
 | 2c — builder | **done** (link 4) | knk-plugin `claude/road-navigation` `c2ca1e3` (on 2b's `92375e5`; trunk `main` still `eb1d68c`) | [Phase 2c](#phase-2c--knk-plugin-core-builder-link-4) |
 | 2d — router + navigation session | **done** (link 5) | knk-plugin `claude/road-navigation` `a82db3c` (on 2c's `c2ca1e3`; trunk `main` still `eb1d68c`) | [Phase 2d](#phase-2d--knk-plugin-core-router-and-navigation-session-link-5) |
 | 2e — api-client | **done** (link 6) | knk-plugin `claude/road-navigation` `4ffdd1a` (on 2d's `a82db3c`; trunk `main` still `eb1d68c`) | [Phase 2e](#phase-2e--knk-plugin-api-client-ports-dtos-mapper-conditional-get-link-6) |
-| 3 — plugin paper admin side | in progress (link 7) | knk-plugin `claude/road-navigation` (continues from `4ffdd1a`) | |
-| 5 — web-app admin pages | not started | — | |
+| 3 — plugin paper admin side | **done, not compiled** (link 7) | knk-plugin `claude/road-navigation` `96f4c62` (on 2e's `4ffdd1a`; trunk `main` still `eb1d68c`) | [Phase 3](#phase-3--knk-plugin-paper-admin-side-survey-build-review-link-7) |
+| 5 — web-app admin pages | in progress (link 8) | knk-web-app `claude/road-navigation` (to be cut from `main`) | |
 | 4 — `/navigate` | waiting for KNG-17 on trunk | — | |
 
 - **Review first** (ranked): (1) Phase 1 decision 1 — stitch edges are owned by the last-built tile and reference the
@@ -51,9 +51,19 @@
   object on the wire, `null` on a profile PUT keeps the stored stats; (19) decision 5 — a never-built tile makes
   `tileGraph` fail with a 404 rather than answer empty (Phase 3 lists tiles first); (20) decision 8 — request dates
   are serialised per field as ISO strings because the client's `ObjectMapper` writes numeric timestamps by
-  default — see the plan's "Phase 2e status".
+  default — see the plan's "Phase 2e status". Phase 3 (paper admin side, **not compiled in the cloud — your first
+  local `./gradlew build -x deployToDevServer` of the branch is its real compile**, expect a handful of one-line
+  import/signature fixes, listed in order of likelihood in the plan's "Phase 3 status → Developer to-do"): (21)
+  decision 3 — the tile builder runs on the build queue's own daemon thread, not the api-client pool; (22) decision
+  4 — chunk capture expands chunk by chunk from the seeds along "frontier" chunks (a superset of the exact BFS,
+  bounded by tile + margin, cap 1 600 chunks); (23) decision 9 — a block change marks a tile dirty when its material
+  is any enabled profile's floor material or it is a road cell / its two headroom blocks, and WorldEdit edits mark
+  every touched tile; (24) decision 12 — `build all` = API tile rows ∪ seed tiles ∪ domain-Location tiles in the
+  world border; (25) decision 16 — a profile learned from a survey is created as class Road ×1.0 without scope (edit
+  in the web app); (26) decision 1 — `NavigationConfig` is a top-level record in `P/config` (Bukkit-free, so the
+  scratch build tests it) — see the plan's "Phase 3 status".
 - **Cloud network, please check:** `repo.papermc.io` and `maven.enginehub.org` are still denied by the environment's
-  network policy (proxy 403 on CONNECT) in links 1-6, so no link can compile knk-paper or run knk-core through
+  network policy (proxy 403 on CONNECT) in links 1-7, so no link can compile knk-paper or run knk-core through
   Gradle; knk-core is tested through the plan §0.4 scratch build instead. Adding both hosts to the environment's
   allowed domains would let later links build the real thing.
 - **Test when you have time:** pull `claude/road-navigation` in each repo; build the plugin (`./gradlew build -x deployToDevServer`, fix compile errors first if any link marked knk-paper "not compiled"); apply the new web-api migration to the dev DB (developer only); run the web-api; `./gradlew :knk-paper:dev`; then each phase's live checklist from the plan in phase order.
@@ -253,3 +263,48 @@
   option 1 (Claude Code Remote `create_session` in the same environment, `source_url` = knk-workspace `main`) — link 7 =
   Claude Code Remote session `session_01NPPpKzLCV3MKUQkAwnYUz4` (created 2026-09-28 05:23 UTC, parent this session
   `session_01MUaznjnfwJ88nqc1o1Cnkw`).
+
+## Phase 3 — knk-plugin paper: admin side (survey, build, review) (link 7)
+
+- **Commits** (knk-plugin `claude/road-navigation`, on top of 2e's `4ffdd1a`; trunk `main` unchanged at `eb1d68c`):
+  `9fe993a` navigation config (`P/config/NavigationConfig`, `ConfigLoader.loadNavigation`, `config.yml`, R16) ·
+  `efc9251` R8 `P/regions/RegionIds` (tracker, lookup, discovery listener delegate) · `f71ec99` R9 `P/utils/ParticleDraw`
+  (`SiegeWorldPresenter.ring` delegates) · `939baa1` R10 `P/utils/KnkLocations` (`SiegeBukkit` delegates) · `0f6a206`
+  R11 `P/utils/TickBudget` (three `GateBlockScanTaskHandler` copies delegate) · `f0385ad` R25
+  `P/gates/GatePassThroughRules` · `4804561` R4 paper fire points (`HealthSystem`, `GateAnimationTask` jam,
+  `GateCommand` toggles) · `138bfc4` `RoadNetworkCache` + `RoadTileCache` + `TileKey` + `RoadMessages` · `b1665ff`
+  `RoadDirtyTracker` + `DirtyTiles` · `3b5c408` `RoadOverlayRenderer` + `OverlayColors` · `8017e55`
+  `ChunkSnapshotSurfaceGrid`/`CompactSurfaceGrid` + `SpanExtractor` + `CompactSpans` + `GateCellsIndex` · `d46d564`
+  `RoadBuildJob` + `RoadBuildQueue` + `BuildQueueState` · `cab864d` `RoadSurveyService`/`RoadSurveySession` +
+  `SurveySamplingGate` + `CrossSectionSampler`, `RoadAdminCommand`, `KnKPlugin.initializeRoads` wiring, `plugin.yml`
+  nodes · `96f4c62` tests (17 files). 59 files, +7 580 / −101. Workspace `main`: plan header + "Phase 3 status" block,
+  this report, tracker row, handoff `docs/ai-agents/handoffs/2026-09-28-road-navigation-phase-5.md`.
+- **Tests:** knk-core **1374 → 1374**, knk-api-client **174 → 174** (2 skipped) — untouched, re-run through the §0.4
+  scratch build. knk-paper **cannot be compiled or tested in the cloud** (paper-api, WorldGuard, WorldEdit
+  unresolvable — same proxy 403 as links 1-6); the scratch build gained a third project that compiles the 14
+  Bukkit-free paper files (config, tile maths, cache codec, dirty rules, overlay colours, span extraction + compact
+  grid, survey gates + cross-section, queue state, survey session) against knk-core, the api-client and Adventure from
+  Maven Central: **34 tests, 0 failures**, including the real `TileBuilder` running on the compact extraction of a
+  fake world with a closed gate across the road (door id on the edge, zero out-of-contract grid queries). Five more
+  test files (17 tests: `ConfigLoaderNavigationTest`, `GatePassThroughRulesTest`, `ParticleDrawTest`,
+  `RoadDirtyTrackerTest`, `RoadAdminCommandTest`) need paper-api + Mockito and are **written, not run**.
+- **Flagged decisions:** 20, numbered in the plan status block; the six worth a look are in the summary above (build
+  thread, frontier capture, dirty rule, `build all` scope, new-profile defaults, top-level config record).
+- **Discrepancies:** `KnkAdminCommand.registerSubcommand` already takes a tab completer (no `onTabComplete` edit);
+  `CacheManager` has no `StreetCache` (constructed in `initializeRoads`); `KnkApiClient` has no executor getter;
+  `RegionIds` is in `P/regions/` per plan §2 (the handoff said `P/utils/`); `SessionParameters` has no
+  `withSprintSpeed`; `MaskBuilder.snapSeed`'s direct floor scan is a no-op on the compact grid (the radius search
+  still snaps seeds). Cloud network unchanged. KNG-17 still not on `main`.
+- **Live checklist:** plan "Phase 3 status → Developer to-do" — (1) local build, fix the import/signature slips it
+  finds (likely spots listed there), (2) `./gradlew :knk-paper:test`, (3) survey three road types → Save; `/knk road
+  build radius 1500`; `/knk road show`; a street label with `--continue`; a broken road block marks the tile dirty
+  within 30 s; `build dirty` keeps names; WorldEdit edit marks dirty; restart mid-`build all` resumes.
+- **Risks:** the whole phase is uncompiled Paper code written against the neighbouring files' signatures — the first
+  local build is the real check; each slip should be a one-liner. The frontier capture and the budgeted tagging were
+  designed for TPS, not measured; `/knk road build status` shows where a slow build spends its time. WorldEdit's
+  `EditSessionEvent` hook runs under FAWE off the main thread — `DirtyTiles` is thread-safe for that reason. Phase 4
+  should build on `plugin.getRoadNetworkCache()`, `getRegionTracker().regionIds()`, `GatePassThroughRules.canPass`
+  and `ParticleDraw.polyline` (all listed in the status block's "→ 4" note).
+- **Next link:** handoff `docs/ai-agents/handoffs/2026-09-28-road-navigation-phase-5.md`; started per charter §6
+  option 1 (Claude Code Remote `create_session` in the same environment, `source_url` = knk-workspace `main`) — link 8 =
+  Claude Code Remote session (id recorded below once created).

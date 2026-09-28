@@ -4,9 +4,11 @@
 (knk-web-api `claude/road-navigation` `77e0a29`, 2026-09-27); **Phase 2a done** (knk-plugin `claude/road-navigation`
 `db962a4`, 2026-09-27); **Phase 2b done** (knk-plugin `claude/road-navigation` `92375e5`, 2026-09-27); **Phase 2c done**
 (knk-plugin `claude/road-navigation` `c2ca1e3`, 2026-09-27); **Phase 2d done** (knk-plugin `claude/road-navigation`
-`a82db3c`, 2026-09-27); **Phase 2e done** (knk-plugin `claude/road-navigation` `4ffdd1a`, 2026-09-28); Phase 3 next.
+`a82db3c`, 2026-09-27); **Phase 2e done** (knk-plugin `claude/road-navigation` `4ffdd1a`, 2026-09-28); **Phase 3 done,
+not compiled** (knk-plugin `claude/road-navigation` `96f4c62`, 2026-09-28 — knk-paper needs the developer's local
+build); Phase 5 next, Phase 4 waits for KNG-17.
 Every code reference was verified against trunk by a separate review pass on 2026-09-27; its corrections are folded in.
-**Last updated:** 2026-09-28 (Phase 2e status)
+**Last updated:** 2026-09-28 (Phase 3 status)
 **Linear:** [KNG-27](https://linear.app/kngpandi/issue/KNG-27)
 **Design:** [DESIGN.md](DESIGN.md) rev. 4 (decided) — read it first; this plan says *where and how* to build it.
 **Sources:** trunk as of 2026-09-27 — knk-web-api `master` `acaee99`, knk-plugin `main` `ceed2f6`, knk-web-app `main`
@@ -1471,6 +1473,210 @@ usage, tab completion); `GatePassThroughRulesTest` (R25, same outcomes as the ol
 **Acceptance (developer, live):** survey three road types (main street, wilderness road, trail) → profiles saved;
 `/knk road build radius 1500` around one real town (including a tunnel or bridge if one exists) → summary; `/knk road
 show` looks right; one street label fix; a block broken on the road marks the tile dirty; rebuild keeps names.
+
+### Phase 3 status — done (not compiled) 2026-09-28 (knk-plugin `claude/road-navigation` `9fe993a`, `efc9251`, `f71ec99`, `939baa1`, `0f6a206`, `f0385ad`, `4804561`, `138bfc4`, `b1665ff`, `3b5c408`, `8017e55`, `d46d564`, `cab864d`, `96f4c62`; on top of 2e's `4ffdd1a`; trunk `main` still `eb1d68c`)
+
+- **What was built** (knk-paper; 59 files, +7 580 / −101 lines; every class in `P/roads/` unless noted):
+  - **Config (§3.1, R16):** `P/config/NavigationConfig` — a *top-level* Bukkit-free record (decision 1) with nested
+    `TrailConfig`, `SurveyConfig`, `BuilderConfig`, `defaults()`/`validate()`, keys exactly DESIGN §4, plus the
+    mappings `routerParameters()`, `sessionParameters()`, `builder().buildParameters()`, `passabilityRules(collidable)`,
+    `isOverlayMaterial(name)`; `KnkConfig.navigation()` (+ a back-compat 6-arg constructor);
+    `ConfigLoader.loadNavigation`; `config.yml` `navigation:` section with the DESIGN defaults;
+    `ConfigLoaderNavigationTest` (bundled config = defaults, overrides, config errors, older constructors).
+  - **Extractions (§3.2), one commit each, callers delegate:** R8 `P/regions/RegionIds` (one lazily created WorldGuard
+    `RegionQuery`; `applicable(Location)`, `at(Location)`, `at(World, x, y, z)`; `WorldGuardRegionTracker.getRegionNamesAt`,
+    `WorldGuardRegionLookup.at` and `DomainDiscoveryListener.regionIdsAt` delegate; the tracker exposes `regionIds()`) ·
+    R9 `P/utils/ParticleDraw` (`ring` moved verbatim, new `polyline(viewer, points, spacing, particle, data)`, `pillar`,
+    `canSee`; `SiegeWorldPresenter.ring` delegates — the only siege edit besides R10) · R10 `P/utils/KnkLocations`
+    (`toLocation`, `floorOf`; `SiegeBukkit` delegates) · R11 `P/utils/TickBudget` (`TickBudget(DoubleSupplier)`,
+    `isLagging()`, `perTick(normal, lagging)`, `server()`, static `isServerLagging()`; the three `isServerLagging()`
+    copies in `GateBlockScanTaskHandler` delegate) · R25 `P/gates/GatePassThroughRules.canPass(Player, CachedGateDoor)`
+    / `isAdmin` (the listener delegates) · R4 paper fire points: `HealthSystem.destroyGate`/`respawnGate`, the jam and
+    un-jam in `GateAnimationTask.handleJamTracking`, `GateCommand` repair (`setIsDestroyed(false)`) and the active toggle
+    call `gateManager.fireStateChanged(id)`.
+  - **Wiring (§3.3):** `KnKPlugin` — `regionDomainResolver` and `regionTracker` promoted to fields (+ getters
+    `getRegionDomainResolver()`, `getRegionTracker()`, `getRoadNetworkCache()`); R18 `locationsDataAccess`,
+    `streetsDataAccess` (with a new `StreetCache` — `CacheManager` has none), `districtsDataAccess`,
+    `structuresDataAccess` as fields, constructed in `initializeRoads()`; `initializeRoads()` runs after
+    `initializeSiege()` and only when `navigation.enabled` (cache → dirty tracker → overlay → build queue → survey
+    service, then `start()` each); `road` registered inside `registerCommands()` with lazy suppliers (a null service =
+    "navigation disabled") and its tab completer through `KnkAdminCommand.registerSubcommand(metadata, executor,
+    tabCompleter)`; `onDisable` stops survey (discard) → build queue → overlay → cache → dirty tracker (one synchronous
+    flush, 5 s cap) before `apiClient.shutdown()`; `plugin.yml` `knk.admin.road` (child of `knk.admin`) and
+    `knk.navigate` (default true). The double `CacheManager` construction (L383/L486) is flagged in a comment, not fixed.
+  - **Classes (§3.4):**
+    - `RoadNetworkCache` — per world `tiles(world)` → conditional `tileGraph` per built tile (no request at all when the
+      listed version equals the cached one; 304 keeps the file); file cache `plugins/KnightsAndKings/roads/<world>/
+      <x>_<z>.json` through `RoadTileCache` (own v1 JSON of the knk-core records via Gson, atomic writes, unreadable
+      files = absent) keyed by `TileKey`; snapshot rebuilt on the api-client thread and swapped atomically; unresolved
+      edge ids logged; `warmCache(regionIds())`; tiles every 10 min, meta every 60 s (rebuild only when the meta
+      changed); `reload(world)`, `refreshTiles`, `refreshMeta`, `invalidateTile(key)`, `invalidateTileId`,
+      `addListener(world)` (main thread); `roadMaterialNames()` for the dirty tracker.
+    - `RoadDirtyTracker` + pure `DirtyTiles` — MONITOR/ignoreCancelled listeners for place, break, entity/block
+      explode, piston extend/retract; a change matters when its material is a floor material of an enabled profile or
+      the block is a road cell / one of its two headroom blocks in the current snapshot (`DirtyTiles.RoadCells`,
+      packed `BlockKey`s of every geometry point and the cells between); WorldEdit `EditSessionEvent` at
+      `BEFORE_CHANGE` wraps the extent in an `AbstractDelegateExtent` whose `setBlock` marks the tile (thread-safe);
+      flush every 30 s with one `markDirty` per tile, failures re-marked.
+    - `RoadOverlayRenderer` + pure `OverlayColors` — `/knk road show [radius] [all]` per admin, every 20 ticks: edges as
+      DUST polylines (street stride colour, unlabelled grey, stale orange, closed red, no-gps purple), gate crossings a
+      yellow pillar, nodes as pillars by kind (named = green, taller), ±8 blocks of the viewer's height unless `all`,
+      action-bar label of the looked-at node/edge (12 blocks along the view ray, `Snapper.snap`).
+    - `ChunkSnapshotSurfaceGrid` (thin Bukkit face: `capture(ChunkSnapshot, cx, cz)`, `bukkitCollidable()`) over the
+      pure `CompactSurfaceGrid` + `SpanExtractor` + `CompactSpans` — per chunk a sorted `long[]` of span keys with an
+      interned `short` material id and a flags byte (stair/slab, third-block-above passable, gate); the grid answers
+      `isSolid` = stored span, `isPassable` from the headroom the extraction required and the third-block flag,
+      `isHazard` false, `floorMaterial` of a non-span throws; `unknownQueries()` counts out-of-contract asks (the test
+      proves 0 for the real `TileBuilder`). `frontierChunks(region)` = uncaptured 8-neighbours of chunks with a span on
+      the matching border.
+    - `GateCellsIndex` — every door's `closedFootprint` of the world → door id (R3, D9).
+    - `RoadBuildJob` — inputs (profiles, previous graph from the cache or a download, this tile's Anchor nodes via
+      `RoadMapper.toAnchors`, seeds = API seeds + survey breadcrumbs every 8 blocks + `seedLocations` box (D12, when
+      `seed-from-domains`) + neighbour tiles' Boundary nodes as seeds) → capture (chunks around every seed, then the
+      frontier, `getChunkAtAsync(x, z, false)`, `world.isChunkGenerated` first, `snapshot-chunks-per-tick` halved under
+      lag, cap 1 600 chunks) → `TileBuilder.build` on the queue's build thread → region ids every 4 blocks of every
+      edge on the main thread in `TickBudget` batches (200/50 per tick) → `warmCache` → domain ids from
+      `getDomainByRegionIdNoRefresh` → edges rebuilt with `domainIds`/`regionIds` → `upsertTileGraph` → cache
+      `invalidateTile` + bumped tiles → coverage misses (`CoverageCheck.misses` on the tile's on-road breadcrumbs) →
+      `Outcome`. Scoped profiles get a `ScopeLookup` precomputed per captured chunk (Town region at the chunk centre).
+    - `RoadBuildQueue` + pure `BuildQueueState` — `enqueue(sender, tiles, label)`, `enqueueDirty`, `enqueueAll`
+      (API tile rows ∪ seed tiles ∪ domain-Location tiles inside the world border), `tilesWithin(world, x, z, r)`
+      (nearest first), `status`, `cancel`, `describe()`; one job at a time, next only while not lagging, own single
+      daemon build thread `knk-road-build`; persisted to `roads/build-queue.json` and resumed on start, skipping
+      tiles whose `builtAt` is newer than the queue start; action-bar progress + per-tile chat summary (counts,
+      disappeared nodes, street conflicts, warnings, coverage misses — each a clickable `/knk road goto x y z`).
+    - `RoadSurveyService` + pure `RoadSurveySession`, `SurveySamplingGate`, `CrossSectionSampler` — tick every
+      `sample-period-ticks`; a sample only when on ground, not flying/gliding/riding/swimming and moving ≥ 0.1
+      blocks/tick, one per new floor block; floor under the feet through overlays, cross-section perpendicular to the
+      walking direction (movement, else yaw) at the standable height nearest the previous column (|Δy| ≤ 1, walls and
+      drops end the side), 15 columns max; live action bar (`ProfileLearner` on the samples so far every 40 ticks
+      after 5 samples); stop → learner on stored stats + walk → review with clickable **Save / Merge into… / Discard**
+      (unknown stats version: shown, never overwritten, save-as-new offered); Save = `updateProfile(RoadProfileUpsert.
+      of(existing, learned, merged))` or `createProfile(of(name, Road, 1.0, [], learned, merged))` → `createSurvey`
+      (breadcrumb, `X-Acting-User-Id` from the user cache) → Survey seeds every `breadcrumb-seed-spacing` → coverage
+      misses against the current snapshot; `record start|stop [street]|cancel` → `recordEdge` (RDP-simplified floor
+      polyline, width 2, region ids along it). Sessions die on quit / world change / shutdown.
+    - `RoadAdminCommand` + `RoadMessages` (R26 pattern) — every DESIGN §7 subcommand: `survey start|stop|cancel|save
+      [name]|merge <profile>|discard`, `profile list|show|role|ambiguous|enable|disable` (PUT with `statsJson = null`
+      keeps the stats), `build here|tile <x> <z> [world]|radius <r>|dirty [world]|all [world]|status|cancel`, `seed
+      add [note]|remove <id>|list [world]`, `show [radius] [all]|hide`, `street <street> [edgeId] [--continue]`
+      (street by id, meta name, or `StreetsQueryApi.search`; "here" = the edge under the admin within 6 blocks),
+      `node name|unname|merge|anchor [name]|lock|unlock [id]`, `record start|stop [street]|cancel`, `edge set <id|here>
+      cost|oneway|nogps|close|open|profile|unlabel`, `edge delete <id>`, `tiles [world] [page]` (dirty first,
+      teleports), `reload`, `status`, `why` (answers "Phase 4"), `goto <x> <y> <z>` (the click target,
+      `teleportAsync`); node check like `DiscoveryAdminCommand.hasNode`; `complete(sender, args)` tab completion.
+- **Reuse:** R3, R4, R7, R8, R9, R10, R11, R12 (`MenuService.mainThreadExecutor` everywhere), R13
+  (`registerSubcommand` with a tab completer — no `onTabComplete` edit was needed, see discrepancies), R15, R16,
+  R17 (through the 2e port), R18, R25, R26, R27 (start/stop `BukkitTask` shape), R28 (`SiegeFloor` via `KnkLocations`),
+  2b-2e as wired in their notes (`SurveySample.of`, `SurveyStats`, `ProfileLearner`, `TileBuilder`, `PassabilityRules`,
+  `ProfileSet`, `NodeMatcher.PreviousGraph`, `RoadNetworkSnapshot.builder`, `Snapper.snap`, `CoverageCheck`,
+  `RoadMapper.*`, `Rdp`). Nothing under `C/**` or `A/**` was changed.
+- **Tests:** knk-core **1374 → 1374**, knk-api-client **174 → 174** (2 skipped), both via the §0.4 scratch build
+  (unchanged: nothing there was touched). knk-paper: **not compiled, not run here** (paper-api / WorldGuard / WorldEdit
+  unresolvable — proxy denies `repo.papermc.io` and `maven.enginehub.org`, same as links 1-6). Instead the scratch
+  build got a third project `paperpure` whose `sourceSets` whitelist the Bukkit-free paper files (`NavigationConfig`,
+  `TickBudget`, `TileKey`, `RoadTileCache`, `RoadMessages`, `DirtyTiles`, `OverlayColors`, `CompactSpans`,
+  `SpanExtractor`, `CompactSurfaceGrid`, `SurveySamplingGate`, `CrossSectionSampler`, `BuildQueueState`,
+  `RoadSurveySession`) with Adventure 4.17 from Maven Central and a stub `org.bukkit.Bukkit.getTPS()` next to the
+  `Vector` stub: **34 tests, 0 failures** (`NavigationConfigTest` 4, `TickBudgetTest` 3, `TileKeyTest` 2,
+  `RoadTileCacheTest` 3, `RoadMessagesTest` 2, `DirtyTilesTest` 3, `OverlayColorsTest` 2, `CompactSurfaceGridTest` 4
+  incl. the real `TileBuilder` on a 3-wide road with a closed gate → door 7 on the edge, 0 unknown queries,
+  `SurveySamplingGateTest` 2, `CrossSectionSamplerTest` 3, `BuildQueueStateTest` 3, `RoadSurveySessionTest` 3).
+  Written but **not run** (need paper-api + Mockito): `ConfigLoaderNavigationTest` 6, `GatePassThroughRulesTest` 3,
+  `ParticleDrawTest` 4, `RoadDirtyTrackerTest` 3, `RoadAdminCommandTest` 6 — 17 test files added in knk-paper in all.
+  The §3.5 list is covered except `RoadSurveySessionTest`'s gates, which are in the runnable set.
+- **Decisions to review** (numbered; each cheap to change):
+  1. `NavigationConfig` is a top-level record in `P/config` rather than `KnkConfig.NavigationConfig`: `KnkConfig`
+     imports `org.bukkit.GameMode`, and a nested record could not be compiled and tested in the cloud's Bukkit-free
+     scratch build. `KnkConfig.navigation()` is the access path either way.
+  2. `RegionIds` lives in `P/regions/` (plan §2 R8) — the handoff and tracker said `P/utils/`; the plan wins. Its
+     `at()` excludes `__global__` for every caller (the tracker never filtered; WorldGuard's `RegionResultSet`
+     doesn't iterate the global region, so no behaviour changes).
+  3. The tile builder runs on the build queue's **own single daemon thread** (`knk-road-build`), not the api-client
+     executor: `KnkApiClient` exposes no executor getter (adding one is an `A/` change) and a multi-second CPU job on
+     the shared pool would stall API callbacks. Uploads/downloads still complete on the api-client executor.
+  4. Chunk capture = the 3×3 chunks around every seed, then repeatedly `CompactSpans.frontierChunks` (uncaptured
+     neighbours of chunks holding a span on the matching border) until nothing is left or 1 600 chunks — a chunk-
+     granular superset of "the chunks the BFS reaches", bounded by the tile + margin.
+  5. Neighbour tiles' Boundary nodes are **seeds** (not anchors): an anchor outside the tile would be flagged
+     "off road" by `SkeletonGraph`; as seeds they make the BFS cross the border (DESIGN §5.4 lists them as seeds).
+  6. Cache file format: own v1 JSON of the knk-core records (`RoadTileCache`) with Gson (bundled by the server, already
+     used by knk-paper) rather than re-serialising the api-client DTOs: the client's Jackson mapper isn't on knk-paper's
+     compile classpath and the DTO→core direction exists but not core→DTO for tile graphs. A file of another version or
+     unparsable = re-download.
+  7. `refreshTiles` skips the conditional request entirely when the API's tile list shows the same `version` as the
+     cached graph (the list is one request; a 304 per tile would be N).
+  8. Snapshot rebuilds happen on the api-client thread that completed the last download (off the main thread, as the
+     plan asks); listeners (dirty tracker's road cells) run on the main thread.
+  9. A block change "matters" (dirty) when its material is a floor material (Surface/Edge/Accent, not Overlay) of an
+     enabled profile **anywhere**, or it is a road cell / one of the two headroom blocks above one in the current
+     snapshot; `BlockPlaceEvent` checks both the placed block and the replaced state. WorldEdit changes mark every
+     changed block's tile regardless of material (bulk edits; conservative).
+  10. Overlay colours: 16-entry palette with `id * 7 mod 16` (adjacent street ids differ); particles float 1.1 above
+      the floor block; node pillars 2 (3 when named); the looked-at label uses the point 12 blocks along the view ray.
+  11. Build queue persistence: `roads/build-queue.json` (pending tiles, start time, requester, label); resume skips
+      tiles the API lists as built after the start (DESIGN §9 "progress per tile in BuiltAt").
+  12. `build all <world>` = API tile rows ∪ tiles of every admin/survey seed ∪ tiles of every domain Location inside
+      the world border (a tile with none of these has no seed and would build nothing).
+  13. Domain Location seeds use `y − 1` (a Location's y is where a player stands; the floor is one below); survey
+      seeds and breadcrumbs are floor blocks already. `MaskBuilder.snapSeed` looks ±4 anyway.
+  14. `ScopeLookup` for scoped profiles = the Town whose region contains the **chunk centre** of each captured chunk
+      (one WorldGuard lookup per chunk on the main thread, before the off-thread build) — not per column.
+  15. Survey sampling: one sample per new floor block (not per period while standing on the same block); every sampled
+      point is an `onRoad` breadcrumb (the admin is told to walk roads); the first tick of a walk never samples
+      (no movement yet). Speed threshold 0.1 blocks/tick from DESIGN §5.3.
+  16. A new profile from a survey is created as class `Road`, cost 1.0, no scope, enabled — class/cost/scope are edited
+      in the web app (Phase 5) or `/knk road profile`. `save [name]` names it; `merge <profile>` re-targets the review.
+  17. Survey/breadcrumb coverage after Save uses the **current** snapshot (the tile may not be rebuilt yet); the build
+      summary repeats it after the rebuild with the tile's breadcrumbs.
+  18. Recorded stretches: RDP ε 0.75, width 2, length = the walked polyline's length, region ids sampled at every
+      geometry point, no profile; street optional.
+  19. Clickable teleports go through a new `/knk road goto <x> <y> <z> [world]` subcommand (`teleportAsync`, admin
+      node) — `/knk tp` only teleports to players.
+  20. `edge set <id> …` for an edge not in any loaded snapshot still works with an empty flag baseline (so `close`
+      on an unknown id sets only `Closed`).
+- **Discrepancies found:**
+  - `KnkAdminCommand.registerSubcommand(metadata, executor, tabCompleter)` already exists (used by lootboxes), so the
+    plan's "add a `road` branch to `onTabComplete`" (R13) was unnecessary — the completer is registered, not branched.
+  - `CacheManager` has no `StreetCache`; `createStreetsDataAccess` needs one, so `initializeRoads()` constructs it.
+  - `KnkApiClient` has no executor getter (decision 3).
+  - The handoff listed `RegionIds` under `P/utils/`; plan §2 says `P/regions/` (decision 2).
+  - `SessionParameters` has no `withSprintSpeed`; `NavigationConfig.sessionParameters()` uses the canonical constructor.
+  - `MaskBuilder.snapSeed`'s direct `SiegeFloor` scan asks `isSolid` of arbitrary cells, which the compact grid
+    answers "false" (only spans are solid) — the radius search that follows finds the span, so seeds still snap.
+  - Cloud network unchanged (papermc/enginehub 403). KNG-17 still not on `main`.
+- **Developer to-do (local; the real compile of this phase):**
+  1. `git pull` knk-plugin `claude/road-navigation`, then `./gradlew build -x deployToDevServer`. Expect import/signature
+     slips in knk-paper — likely spots, in order: `RoadAdminCommand` (Adventure `sendMessage(Component)` overloads,
+     the `switch` blocks), `RoadBuildJob` (`getChunkAtAsync(int, int, boolean)`, `Chunk.getChunkSnapshot(false, false,
+     false)`, `World.isChunkGenerated`), `RoadDirtyTracker` (WorldEdit 7.2.13: `BlockVector3.getBlockX()`,
+     `AbstractDelegateExtent.setBlock` generic signature, `WorldEdit.getInstance().getEventBus()`), `RoadOverlayRenderer`
+     (`Particle.DustOptions`, `Player.getEyeLocation`), `RoadSurveyService` (`Player.isOnGround/isFlying/isGliding/
+     isInsideVehicle/isSwimming/isInWater`), `ChunkSnapshotSurfaceGrid.bukkitCollidable` (`Material.isCollidable`),
+     `KnKPlugin.initializeRoads` (field/getter names). Each is a one-line fix.
+  2. `./gradlew :knk-paper:test` — the 17 new test files; `RoadAdminCommandTest` and `RoadDirtyTrackerTest` mock
+     Adventure/Bukkit types and may need small adjustments.
+  3. Live (dev server, `navigation.enabled: true`, API on `claude/road-navigation` with the Phase 1 migration applied):
+     (a) `/knk road status` → "enabled", tiles 0; (b) `/knk road survey start "Kardenna main street"`, walk 2-3
+     minutes, watch the action bar (samples climb only while walking on the ground), `/knk road survey stop` → proposal
+     with roles/width, click **Save** → profile + survey + seeds messages; repeat for a wilderness road and a trail
+     (`survey start` with no name → `save <name>`); (c) `/knk road profile list|show`; (d) `/knk road build radius
+     1500` (include a tunnel or bridge if one exists) → action-bar progress, per-tile summary with clickable teleports;
+     (e) `/knk road show` → coloured polylines, pillars at junctions, action-bar label when looking at an edge; `/knk
+     road show all` on a bridge; (f) `/knk road street "<street>" --continue` on an edge you stand on → "and N more";
+     (g) break a road block → within 30 s `/knk road tiles` lists the tile DIRTY; `/knk road build dirty` → names kept;
+     (h) WorldEdit `//set` across a road → tile dirty; (i) `/knk road node name Market` + `/knk road seed add` +
+     `/knk road edge set here close` → overlay turns red; (j) `/knk road reload`; (k) restart mid-`build all` → the queue
+     resumes and skips tiles built before the restart.
+- **What later phases must wire:**
+  - **4 (`/navigate`):** `plugin.getRoadNetworkCache().snapshot(world)` (floor-y network, swapped atomically;
+    `addListener` for swaps), `NavigationConfig` via `config.navigation()` (`routerParameters()`, `sessionParameters()`,
+    `trail()`), `plugin.getRegionTracker().regionIds().at(player.getLocation())` for `DomainAvailability`,
+    `plugin.getRegionDomainResolver()`, `GatePassThroughRules.canPass` as the `PassRule`, `gateManager.addStateListener`
+    (fires now on every mutation path), `ParticleDraw.polyline(player, points, spacing, Particle.DUST, dustOptions)` for
+    the trail, `RoadMessages` conventions, `knk.navigate` node (declared, default true), `/knk road why` to implement.
+  - **5 (web app):** nothing from the plugin; profiles created in game are class Road ×1.0 without scope until edited
+    there; `StatsJson` stays opaque.
 
 ---
 
