@@ -13,6 +13,7 @@ Central home for requirements, specifications, and implementation roadmaps acros
 - navigation/: road network (survey-learned road profiles, auto-detected junctions on every level) and `/navigate` guidance with live gate/entry availability (Linear KNG-27)
 - user-features/: rank/permission/title/salary architecture
 - user-management/: tailored admin module built on top of user-features
+- player-statistics/: KNG-34 working design and player-facing statistics decisions (draft)
 - legacy/: legacy reference notes kept for historical context
 - reconcile/: reconciliation guides for aligning legacy data with v2
 
