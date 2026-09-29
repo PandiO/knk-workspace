@@ -30,7 +30,9 @@ V1 had a dedicated AFK mode that the developer wants to reimplement. Its V1/V2 b
 
 ## Time periods
 
-**Agreed:** chosen player-facing statistics should support both lifetime totals and per-day figures, including per-game-context breakdowns where applicable. Daily and lifetime views should derive from the same recorded facts or consistently reconciled aggregates so their definitions cannot drift. A session spanning a day boundary must allocate playtime and AFK duration to the correct days. Define the reporting timezone, late-event correction rules, daily retention and whether a lifetime total includes historical data before this feature was instrumented in the later technical design. V2's `UserStatisticsDaily` is evidence for the requirement, not an implementation to copy without checking its persistence behavior.
+**Agreed:** chosen player-facing counters should have lifetime, daily, weekly and monthly views, including per-game-context breakdowns where applicable. Weekly and monthly views should use clear calendar periods, with exact timezone and week start decided in the technical design. These views should derive from the same recorded facts or consistently reconciled aggregates so their definitions cannot drift. A session spanning period boundaries must allocate playtime and AFK duration correctly. Define late-event correction, aggregation/retention and whether lifetime totals include pre-instrumentation history later. V2's `UserStatisticsDaily` is evidence for the requirement, not an implementation to copy without checking its persistence behavior.
+
+**Potential extension, not yet specified:** weekly/monthly leaderboards could reward activity and give players reasons to return. Decide which metrics are suitable, visibility eligibility, tie rules, period reset, rewards (if any), anti-farming safeguards and whether a player who hides a statistic may appear on its leaderboard. Do not assume every private statistic is rankable or public.
 
 ## Candidate player-facing groups — not yet approved field by field
 
