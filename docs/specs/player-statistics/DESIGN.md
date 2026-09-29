@@ -9,10 +9,14 @@ This living note records decisions from the developer conversation. It does not 
 ## Agreed player-facing direction
 
 1. Design the statistics players can view first. Reuse their underlying data for later debugging, testing, balancing and world analytics where appropriate; staff access and retention may differ from player presentation.
-2. Visibility is decided **per data item**, not through one private/public switch for the entire profile. Username, current title, coins, gems and experience are intended to be public to other players.
+2. Visibility is decided **per data item**, not through one private/public switch for the entire profile. Username, current title, coins, gems, experience, first server join, active playtime and AFK time are public to other players and cannot be hidden through the optional-statistic controls. Other statistics default to **private** and a player may choose **nobody, friends, or everyone** for each configurable item. The friends choice depends on KNG-35's relationship design; until that relationship can be verified, it must not reveal data to anyone.
 3. Display **First joined the server** as the earliest recorded Minecraft server-join timestamp. On account linking or merging, use the oldest first-join timestamp among the involved Minecraft identities. A web account's creation timestamp alone does not count. An account that has never joined has no first-join value. Whether historical records permit a complete backfill needs verification.
 4. Maintain two non-overlapping duration counters, both public: **active playtime** and **AFK time**. Their sum is total online time. AFK duration is not included in active playtime.
 5. **Provisional AFK rule:** after five minutes without meaningful activity, classify the player as AFK. The exact activity signals, whether the initial five idle minutes are assigned retroactively to AFK, behavior on disconnect and crash, and anti-idle abuse rules remain open. Do not treat five minutes as the final contract for an AFK feature.
+
+## Player settings and account identity
+
+The developer wants a player settings page for web-account holders and, if feasible, Minecraft-only players. **Recommendation, pending developer decision:** persist statistics and visibility settings against the canonical player/User identity from the first Minecraft join, independently of whether web login exists. Linking a web account should grant access to the same record, not start counters anew. Define an in-game settings path or another authenticated path for Minecraft-only players; its UX and authorization still need design. Account merges must reconcile source histories and overlapping sessions explicitly rather than blindly summing counters; keep the earliest Minecraft join as decided above. A friends-only setting must fail closed until the social relationship feature can resolve friends reliably.
 
 ## AFK feature dependency
 
