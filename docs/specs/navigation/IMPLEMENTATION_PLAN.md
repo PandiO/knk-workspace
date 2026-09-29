@@ -4,12 +4,14 @@
 (knk-web-api `claude/road-navigation` `77e0a29`, 2026-09-27); **Phase 2a done** (knk-plugin `claude/road-navigation`
 `db962a4`, 2026-09-27); **Phase 2b done** (knk-plugin `claude/road-navigation` `92375e5`, 2026-09-27); **Phase 2c done**
 (knk-plugin `claude/road-navigation` `c2ca1e3`, 2026-09-27); **Phase 2d done** (knk-plugin `claude/road-navigation`
-`a82db3c`, 2026-09-27); **Phase 2e done** (knk-plugin `claude/road-navigation` `4ffdd1a`, 2026-09-28); **Phase 3 done,
-not compiled** (knk-plugin `claude/road-navigation` `96f4c62`, 2026-09-28 — knk-paper needs the developer's local
-build); **Phase 5 done** (knk-web-app `claude/road-navigation` `9dbb481`, 2026-09-28); Phase 4 waits for KNG-17 on
-knk-plugin trunk (chain paused there, handoff written).
+`a82db3c`, 2026-09-27); **Phase 2e done** (knk-plugin `claude/road-navigation` `4ffdd1a`, 2026-09-28); **Phase 3 done**
+(knk-plugin `claude/road-navigation` `96f4c62`, 2026-09-28; compiled by link 9 on 2026-09-29 — the first Gradle build
+was clean, one tab-completion slip fixed in `68fa48c`); **Phase 5 done** (knk-web-app `claude/road-navigation`
+`9dbb481`, 2026-09-28); **Phase 4 done** (knk-plugin `claude/road-navigation` `4e3f8af`, 2026-09-29, after the trunk
+merge `be5df0f` that brought in KNG-17). **All phases done — the chain is complete**; the developer merges phase by
+phase after testing (closing handoff `docs/ai-agents/handoffs/2026-09-29-road-navigation-closeout.md`).
 Every code reference was verified against trunk by a separate review pass on 2026-09-27; its corrections are folded in.
-**Last updated:** 2026-09-28 (Phase 5 status)
+**Last updated:** 2026-09-29 (Phase 4 status; Phase 3 compiled)
 **Linear:** [KNG-27](https://linear.app/kngpandi/issue/KNG-27)
 **Design:** [DESIGN.md](DESIGN.md) rev. 4 (decided) — read it first; this plan says *where and how* to build it.
 **Sources:** trunk as of 2026-09-27 — knk-web-api `master` `acaee99`, knk-plugin `main` `ceed2f6`, knk-web-app `main`
@@ -1475,7 +1477,15 @@ usage, tab completion); `GatePassThroughRulesTest` (R25, same outcomes as the ol
 `/knk road build radius 1500` around one real town (including a tunnel or bridge if one exists) → summary; `/knk road
 show` looks right; one street label fix; a block broken on the road marks the tile dirty; rebuild keeps names.
 
-### Phase 3 status — done (not compiled) 2026-09-28 (knk-plugin `claude/road-navigation` `9fe993a`, `efc9251`, `f71ec99`, `939baa1`, `0f6a206`, `f0385ad`, `4804561`, `138bfc4`, `b1665ff`, `3b5c408`, `8017e55`, `d46d564`, `cab864d`, `96f4c62`; on top of 2e's `4ffdd1a`; trunk `main` still `eb1d68c`)
+### Phase 3 status — done 2026-09-28, compiled by link 9 on 2026-09-29 (knk-plugin `claude/road-navigation` `9fe993a`, `efc9251`, `f71ec99`, `939baa1`, `0f6a206`, `f0385ad`, `4804561`, `138bfc4`, `b1665ff`, `3b5c408`, `8017e55`, `d46d564`, `cab864d`, `96f4c62`; on top of 2e's `4ffdd1a`; trunk `main` still `eb1d68c`)
+
+> **Compiled 2026-09-29 (link 9, `68fa48c`):** the first real Gradle build of the branch (`./gradlew build -x
+> deployToDevServer`, paper-api / WorldGuard / WorldEdit resolvable in the cloud since the developer allowed the two
+> Maven hosts) compiled every Phase 3 file unchanged. Of knk-paper's 821 tests one failed: `RoadAdminCommand.complete`
+> never offered a quoted profile/street name (the prefix match compared the typed word with the opening quote) — fixed;
+> the same test expected an unsorted list. Gradle counts on `68fa48c`: knk-core **1374**, knk-api-client **174** (2
+> skipped), knk-paper **821** (14 skipped), all green — the "developer to-do 1 and 2" below are done; only the live
+> checks (3) remain.
 
 - **What was built** (knk-paper; 59 files, +7 580 / −101 lines; every class in `P/roads/` unless noted):
   - **Config (§3.1, R16):** `P/config/NavigationConfig` — a *top-level* Bukkit-free record (decision 1) with nested
@@ -1724,6 +1734,207 @@ trunk into `claude/road-navigation` first.
 street; through a tunnel; closed gate → reason + guidance to the gate; open it mid-route → shorter route announced;
 pass-through gate hint; denied domain → ends at its edge with the reason; 48-block refusal; re-route when walking off;
 arrival; auto-end on death/teleport/siege join.
+
+### Phase 4 status — done 2026-09-29 (knk-plugin `claude/road-navigation` `68fa48c` (Phase 3 compile fix), `be5df0f` (trunk merge), `7500f44`, `be329f7`, `40ee42e`, `aa71dae`, `57c1605`, `05f5639`, `0fd5f43`, `cdc73d1`, `9717036`, `cfe49f4`, `4e3f8af`; on top of Phase 3's `96f4c62` merged with trunk `main` `27b4236`)
+
+- **Start condition and merge:** KNG-17 was on `origin/main` (`27b4236`, merged 2026-09-28). Phase 3 was compiled
+  first (`68fa48c`, see the Phase 3 note above), then trunk merged in (`be5df0f`, no rebase). Conflicts: `KnkConfig` /
+  `ConfigLoader` (teleport and navigation sections both kept — the record is now 8 fields with a compact constructor
+  defaulting `teleport` and `navigation`; the 4-, 5-, 6- (`privateMessages, discovery`) and 7-arg (`…, teleport,
+  discovery`) constructors all stay) and `SiegeBukkit` imports (R10 delegation kept, teleport's
+  `teleport(Player, Location)` kept). `KnKPlugin`, `SimpleRegionTransitionService` and `WorldGuardRegionTracker`
+  auto-merged: teleport's `previewAccess` reaches `DomainAccessEvaluator` through the private checks Phase 2a
+  rewrote, the tracker keeps R8's `RegionIds` plus trunk's `setDenialBypass`/`bypassesDenials`/`previewAccess`, and
+  teleport's inline `create*DataAccess` calls in `createSpawnCommand` became the Phase 3 fields
+  (`ensureDomainDataAccesses()`, R18: one instance each, shared by `/spawn`, the road code and `/navigate`).
+- **What was built** (52 files, +4 444 / −183 since the merge; one commit per item):
+  - **R22** (`7500f44`): `C/util/BlockProbe` (moved from `C/teleport`, unchanged); `SurfaceGrid extends BlockProbe`
+    (its five duplicate declarations dropped); teleport's `SafeLocationFinder`, `BukkitBlockProbe`, `TeleportService`
+    and seven tests only change an import.
+  - **R21** (`be329f7`): `C/util/NamedTargets<T>` (name/type accessors + optional id accessor: bare name, `type:name`,
+    `type:#id`, `#id`; `suggestions`; one-word-at-a-time `complete`); `WarpTargets` is a static wrapper bound to
+    `KnkTeleportDestination` — `WarpTargetsTest`, `WarpCommandTest` unchanged. `NamedTargetsTest` (7).
+  - **R20** (`40ee42e`): `C/navigation/DomainLocationResolver` (ports `DomainFetch<TownDetail|DistrictDetail|
+    StructureDetail>` + teleport's `LocationLookup`; `townLocation`/`districtLocation`/`structureLocation` = the moved
+    `ownLocation` rule; `town`/`district`/`structure`/`byType` → `DomainPlace(id, name, domainType, wgRegionId,
+    location)`); `SpawnDestinationResolver.create` builds one and hands its three lookups to `SpawnPointResolver` —
+    `SpawnDestinationResolverTest` unchanged. `DomainLocationResolverTest` (5).
+  - **R6 follow-up** (`aa71dae`): `previewAccess` javadoc + a characterisation test (entry/exit messages from the
+    evaluator, `null` when allowed, no entered-domains callback).
+  - **R24** (`57c1605`): `KnKPlugin.siegeGates` field + `getSiegeGates()`. **R39** (`05f5639`):
+    `SiegeGateController.canCarryNonMember(CachedGateDoor)` (public, read-only: applied lockdown + pass-through
+    service wired + (`PreLockdownView` → true | `PassThroughOnly` → the door was open and not destroyed before the
+    lockdown)); `tryNonMemberPassThrough` and `carryNonMemberThrough` use it and keep their own member /
+    current-state checks (behaviour unchanged; siege + gate tests 206 green). The only two siege edits.
+  - **Helpers** (`0fd5f43`): `LocationsDataAccess.searchAsync(PagedQuery)`, `StreetsDataAccess.searchAsync` (R18);
+    `GatePassThroughRules.canPass(boolean admin, boolean useNode, door)` (R25; the `Player` form delegates).
+  - **`P/events/`** (`cdc73d1`): `NavigationStartEvent` (cancellable), `NavigationRerouteEvent(reason, detail)`,
+    `NavigationArriveEvent`, `NavigationEndEvent(reason)` — the `GateDoorInteractEvent` style.
+  - **`P/navigation/`** (`cdc73d1`, `9717036`, `cfe49f4`):
+    - `NavigationMessages` (R26; every DESIGN §6 string; `bossBar()` = "→ Merchantstreet · 340 m · ~1 min").
+    - `NavigationHud` — Adventure `BossBar` per player (label = next maneuver within 20 blocks, else the destination;
+      progress = travelled / total), action-bar arrow (`⬆ ⬈ ➡ ⬊ ⬇ ⬋ ⬅ ⬉` from the relative bearing, pure `arrow()`).
+    - `TrailRenderer` — the next `trail-length` blocks from the projection every `trail-period-ticks`, one particle
+      per 1.5 blocks at floor + 1.2 (`ParticleDraw.polyline`, R9); straight legs player → road and road → target
+      (3-block spacing, other colour, heights via `KnkLocations.floorOf` R10/R28) when the gap is > 2 blocks; half
+      length under lag (`TickBudget` R11); direct-mode trail = one leg.
+    - `NavTarget` (catalogue entry: LOCATION / TOWN / DISTRICT / STRUCTURE / STREET / NODE) and `Destination`
+      (POINT / REGION / STREET / NODE, feet coordinates).
+    - `NavigationDestinations` — Towns/Districts/Structures from `DomainCatalogDataAccess.searchAsync` (R19) and
+      Locations from `LocationsDataAccess.searchAsync` (R18), paged (200, ≤ 25 pages), refreshed in the background
+      every 60 s (the first stale call starts it, never awaited) and by `/knk cache refresh`; the labelled streets and
+      named nodes of the world's snapshot; `resolve` / `complete` / `isComplete` through `NamedTargets`; `locate(target,
+      mode, world)` → a Location's point, a domain's spawn Location through `DomainLocationResolver` or its WorldGuard
+      region (`region`, or no Location), a street, a node — or `OTHER_WORLD` / `NO_LOCATION` / `NOT_FOUND`.
+    - `NavigateCommand` (`TabExecutor`, `registerTabCommand("navigate")`, alias `nav`, node `knk.navigate` checked like
+      `DiscoveryAdminCommand.hasNode`, R15): `/navigate <destination…> [spawn|region]`, `stop`, no-arg status;
+      ambiguity → clickable `type:name` choices; unknown → "Did you mean" with clickable suggestions; completion =
+      `stop` + names one word at a time + `spawn|region` after a complete name.
+    - `NavigationEligibility` (R23: loading / frozen / siege-lobby predicates; `siegeMembers(Supplier<SiegeService>)`).
+    - `RegionShapes` port + `WorldGuardRegionShapes` (polygon points + y band, cuboid corners; main thread).
+    - `NavigationAccess` (`PolicyFactory`): per request `CompositeAccessPolicy.of(StaticFlagsAvailability,
+      GateAvailability, DomainAvailability)`; on the main thread it reads the player's regions (`RegionIds.at`, R8),
+      the two pass-through nodes, and **every door the network mentions once** (`GateManager.getGate` → `GateView`
+      from the effective accessors R5, `SiegeGateController.isLocked` + `canCarryNonMember` R24/R39) so the policy
+      needs no Bukkit or gate-cache access on the routing thread; `DomainLookup` = `getDomainByRegionIdNoRefresh`,
+      falling back to `resolveRegionsFromApi` (3 s cap) off-thread (R7); bypass = `regionTracker::bypassesDenials`
+      (KNG-17's `knk.region.bypass` predicate, R6).
+    - `NavigationService` (`Deps` record so tests fake the server; implements `SiegeMatchObserver`): one core
+      `NavigationSession` per player; goals per destination kind (point → `snapFloor`; node → `SnapPoint.atNode`;
+      region → `RegionClosestPoint.goals`, refused "already in X" via `containsFloor`; street → the nearest point of
+      each of the street's edges, multi-goal); refusals "too far from a road" / "X is too far from any road";
+      **direct mode** within `max-snap-distance` (also for node/street/region targets), and the last off-road leg to
+      the real target runs as direct mode once the routed session reaches the road's end; routing (`AStarRouter.
+      routeOrExplain`) on a single daemon thread `knk-navigation-routing` with a policy built on the main thread,
+      results delivered on the main thread with a per-session generation guard; every `NavigationEffect` applied in
+      an exhaustive `switch`; ticker every tick (`tick()` → guidance, trail every period, HUD every 10 ticks,
+      maneuver chat line once per maneuver within 20 blocks); **live changes** — `onGateChanged(doorId)` (R4
+      listener, hopped to the main thread): sessions whose route or blocking edge holds the door re-check at once,
+      others ask for an improvement; `onAvailabilityChanged()` (siege `areaLockdownStarted` / `objectiveCaptured` /
+      `roundReleased` / `matchEnded`, R24; domain cache refresh hook) re-checks every session; `onNetworkChanged
+      (world)` re-derives the goals and asks for a fresh route (`DESTINATION_LOST` when the target is gone);
+      **D13** every 40 ticks each route's steps are re-judged with a fresh policy (first BLOCKED → `onElementBlocked`;
+      a partial route whose blocking edge opened → `onElementOpened`); ends on `stop`, quit, death, world change,
+      teleport > 16 blocks (`NavigationListener`, MONITOR), siege lobby membership (every 40 ticks and on
+      `lobbyChanged`), timeout; arrival = the session's end point, the real target (direct), or `containsFloor` of
+      the region; the four events; `explain(as, destination, out)` for `/knk road why`.
+    - `NavigationListener` (quit / death / world change / teleport).
+  - **`RoadAdminCommand`**: `why <destination> [--as <player>]` (resolves through the catalogue, then
+    `NavigationService.explain`: "Open route: 340 m, 5 edges" + every non-open verdict, or "No open route — the West
+    Gate is closed. Partial route: 120 m" + every non-open verdict of the all-open route; "Direct mode" / refusals);
+    `setNavigation(...)` (lazy suppliers, no constructor change); tab completion of destinations after `why`.
+  - **`KnKPlugin.initializeNavigation()`** after `initializeRoads()` (needs the cache, tracker, resolver, gate manager
+    and domain catalogue): builds the catalogue (+ `/knk cache refresh` hook), `NavigationAccess`, eligibility, the
+    routing executor, HUD, trail, the service; registers the gate listener, the siege observer, the snapshot listener,
+    the domain-refresh hook and `NavigationListener`; `onDisable` stops the service (every session ends `STOPPED`)
+    and the routing thread before the road cache. `/navigate` registered in `registerCommands()` with lazy
+    suppliers. `plugin.yml`: `navigate` (alias `nav`); `knk.navigate` was declared in Phase 3.
+- **Reuse:** R5, R6, R7, R8, R9, R10, R11, R12 (`MenuService.mainThreadExecutor` for every hop), R14
+  (`registerTabCommand`), R15, R16 (`config.navigation()` → `routerParameters()`, `sessionParameters()`, `trail()`),
+  R18, R19, R20, R21, R22, R23, R24, R25, R26, R27 (start/stop `BukkitTask` shape), R28, R39, 2d's whole router /
+  session / explainer / maneuver / ETA surface as its "→ 4" note prescribes, 3's cache / config / `RegionIds` /
+  `GatePassThroughRules` / `ParticleDraw`. Nothing in §2 duplicated. No new dependency.
+- **Tests (Gradle, real):** baseline on `68fa48c` (Phase 3 compiled) knk-core **1374**, knk-api-client **174** (2
+  skipped), knk-paper **821** (14 skipped); after the trunk merge (`be5df0f`, KNG-17's tests) **1532 / 184 / 1027**;
+  after Phase 4 **1545 / 184 / 1074** — 0 failures everywhere. New: knk-core `NamedTargetsTest` 7,
+  `DomainLocationResolverTest` 5, `SimpleRegionTransitionServiceTest` +1; knk-paper `NavigationServiceTest` 16
+  (start, too-far refusals, direct mode + arrival, cancellable start event, re-route on a gate closing with the reason,
+  the D13 re-check without an event, denied destination domain → partial route to its edge, ends on siege join / long
+  teleport / death / stop, arrival event, region already-inside, region and street goals, network swap),
+  `NavigateCommandTest` 9, `NavigationDestinationsTest` 6, `NavigationMessagesTest` 5, `NavigationHudTest` 4,
+  `TrailRendererTest` 7, on a small in-test network (`NavigationTestNetwork`: knk-paper cannot see knk-core's
+  `NetworkFixture`). Teleport, siege, gate, discovery and Phase 3 tests unchanged and green. `ArchitectureGuardTest`
+  green with `C/navigation/DomainLocationResolver` and `C/util/NamedTargets`/`BlockProbe`.
+- **Decisions to review** (numbered; defaults taken, all reversible):
+  1. **Routing thread:** an own single daemon thread (`knk-navigation-routing`), not the api-client executor
+     (`KnkApiClient` has no executor getter — Phase 3 decision 3); A\* on a town-sized network is well under a
+     millisecond, so one thread serves every player.
+  2. **Policy built on the main thread, gates pre-read:** `NavigationAccess.policyFor` reads every door the network
+     mentions once per request (dozens, cheap) so the routing thread never touches Bukkit, `GateManager` or the siege
+     controller; only the domain lookup may call the API off-thread (3 s cap, then "unknown = allowed").
+  3. **Bypass = the region tracker's predicate** (`bypassesDenials`: `knk.region.bypass` or an in-flight staff
+     teleport) as `DomainAvailability`'s bypass; the evaluator stays pure and stateless (`new
+     DomainAccessEvaluator()` — the class, not the instance, is the single source of truth).
+  4. **Direct mode also for node / street / region targets** within 48 blocks (DESIGN §6.2 names "the target"); and a
+     routed session that reaches the road's end more than `arrive-distance` from the real target continues as direct
+     mode for the last leg — arrival is at the target, not at the snap point.
+  5. **Street goals** = the nearest point of *each* of the street's edges (sampled every 2 blocks), multi-goal A\*:
+     the router picks the cheapest reachable one.
+  6. **Region destinations have no world in the API:** the player's world's WorldGuard manager is asked; an unknown
+     region reads "X has no location and no region to navigate to".
+  7. **Catalogue refresh:** the API part loads at start and refreshes every 60 s in the background (started by the
+     next stale call, never awaited — tab completion stays synchronous) and on `/knk cache refresh`; streets come
+     from the snapshot's meta (only a street with edges can be navigated to — `StreetsDataAccess.searchAsync` exists
+     per R18 but is not used here); page size 200, at most 25 pages (5 000 places).
+  8. **Maneuvers:** one chat line per maneuver when it comes within 20 blocks; the boss bar label switches to the
+     maneuver text within 20 blocks, else shows the destination.
+  9. **D13 cadence:** every 40 ticks per session with a fresh policy; a gate event for a door on the route (or on the
+     blocking edge of a partial route) re-checks immediately, any other door only asks for an improvement (the
+     session's 200-tick rate limit applies); siege observer hooks and the domain refresh re-check every session.
+  10. **Network swap:** goals are re-derived on the new snapshot and an improvement route requested (the current
+      route keeps guiding unless the new one is > 15 % shorter — its polyline stays valid data); a destination that
+      no longer resolves ends the session `DESTINATION_LOST`; a target now within 48 blocks switches to direct mode.
+  11. **`NavigationStartEvent`** fires after the goals are resolved and before the first route, so a cancelling
+      listener costs no routing; the canceller tells the player why.
+  12. **Arrival sound:** Adventure `entity.player.levelup` (0.7 / 1.4) — `org.bukkit.Sound` needs a registry in unit
+      tests.
+  13. **Eligibility:** loading / frozen / siege-lobby members are *refused*; vanished staff may navigate; an active
+      session ends on siege lobby membership (checked every 40 ticks and on `lobbyChanged`).
+  14. **`/knk road why`** prints only the non-open verdicts (pass-through hints and blocks) of the player's route, or
+      of the all-open route when blocked, with the same policy the player would get (`--as`); console must name a
+      player.
+  15. **R39 semantics:** `canCarryNonMember` is true for any applied lockdown in `PreLockdownView` (non-members walk
+      through what they see removed) and only for doors open before the lockdown in `PassThroughOnly` — read from the
+      two carry paths, which keep their own membership / current-state checks. Core's `SIEGE_HINT` wording ("walk up
+      to it to be carried through") fits the default view; in `PassThroughOnly` the player right-clicks instead.
+  16. **Trail heights:** route points are floor blocks → particle at floor + 1.2, x/z + 0.5 (block centre without
+      quantising the 1.5-block spacing); the straight legs sample the real floor under each point.
+  17. **Sessions are replaced, not refused:** `/navigate` while navigating ends the current session silently and
+      starts the new one; `/navigate` alone shows "Navigating to X - 340 m to go [Stop]".
+  18. **KnkConfig constructors:** the canonical record has 8 fields; the 4-, 5-, 6- (`…, privateMessages, discovery`)
+      and 7-arg (`…, teleport, discovery`) forms stay so both trunk's and Phase 3's tests compile unchanged.
+- **Discrepancies found:**
+  - Plan §2 R18 asks for `StreetsDataAccess.searchAsync`; added, but the catalogue takes streets from the snapshot's
+    meta (decision 7).
+  - `previewAccess` already reached the evaluator after the merge (through the private checks Phase 2a rewrote); the
+    "R6 follow-up" is a test + javadoc, no code.
+  - Gradle resolves WorldEdit **7.3.0** through WorldGuard 7.0.10's pom although the build declares 7.2.13:
+    `BlockVector3.getBlockX()` etc. are deprecated-for-removal warnings; used like the existing code
+    (`WgRegionIdTaskHandler`).
+  - Cloud Gradle: Maven Central answers 429 to parallel downloads (link 2's note); with `max.tentatives=12` /
+    `initial.backoff=2000` the first build stalled > 25 min on EngineHub retries — `org.gradle.workers.max=2`,
+    `max.tentatives=6`, `initial.backoff=1500` in `~/.gradle/gradle.properties` finished in ~2 min; every later
+    build ran `--offline`.
+  - Phase 3's `RoadAdminCommandTest` line for `edge set 12 c` expected an unsorted list; the code sorts.
+  - `KnkConfig` on trunk had no 6-arg (`privateMessages, discovery`) form (Phase 3 added it) and Phase 3 had no
+    `teleport` field; both kept (decision 18).
+- **Developer to-do (live, dev server, `navigation.enabled: true`, API on `claude/road-navigation`, a built network
+  — Phase 3's checklist first):**
+  1. `git pull` knk-plugin `claude/road-navigation`; `./gradlew build -x deployToDevServer` (expect knk-core 1545,
+     knk-api-client 184, knk-paper 1074 green); `./gradlew :knk-paper:dev`.
+  2. `/navigate` → usage; `/navigate <tab>` → place names one word at a time, `town:Market` forms for shared names.
+  3. `/navigate <a Location>` → "Navigating to X - 340 m. Follow the trail; [Stop]", gold particle trail ahead, boss
+     bar "→ X · 340 m · ~1 min" with progress, action-bar arrow; walk it → "In 12 m: Turn left onto …" lines, arrival
+     chime + "You have arrived at X".
+  4. `/navigate <a Town>` → its spawn Location; `/navigate <the Town> region` → the route ends where the road enters
+     the town's region; from inside: "You are already in X".
+  5. `/navigate <a Structure>` (Location by `locationId`), `/navigate street:<name>` (ends on the street),
+     `/navigate node:<name>`; a route through a tunnel → "Go down into the tunnel" / "Cross the bridge".
+  6. Close a gate on the route (`/knk gate close`) → "The West Gate is closed - recalculating." within 2 s, detour
+     or "No open route to X - the West Gate is closed. Guiding you to the gate."; open it → "A shorter route opened -
+     following it now."; a pass-through gate → "Hint: right-click the West Gate to pass."
+  7. A destination in a domain with `allowEntry=false` → "You may not enter X. Guiding you to its edge." — the route
+     ends at the last edge outside; with `knk.region.bypass` the route goes in.
+  8. Stand > 48 blocks from any road → "You're too far from a road - get within 48 blocks of one."; a target > 48
+     from any road → "X is too far from any road."; a target within 48 → straight trail (direct mode).
+  9. Leave the road for > 2 s → "You left the road - recalculating."; `/navigate stop`; `/back` or `/tp` > 16 blocks
+     → "Navigation to X ended."; die → ended; `/siege join` → "… ended - you joined a siege."
+  10. `/knk road why <destination> [--as <player>]` → the verdict list; `/knk cache refresh` reloads the catalogue.
+  11. Watch `/tps` with a few players navigating (trail draws every 10 ticks, re-checks every 40).
+- **What later work must wire (Phase 6, DESIGN §8 — out of scope here):** real off-road pathfinding replaces the
+  straight legs (`TrailRenderer.drawLeg`, `NavigationService.startDirect`); `NavigationRerouteEvent` /
+  `NavigationArriveEvent` for transport quests and tutorials; a `PassThroughOnly` hint wording in core's
+  `GateAvailability.SIEGE_HINT` if the degrade switch is ever the default.
 
 ---
 

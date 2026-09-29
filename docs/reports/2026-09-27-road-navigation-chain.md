@@ -1,7 +1,7 @@
 # Road navigation chain — progress report
 
-**Status:** running — Phases 1, 2a-2e, 3 and 5 done; Phase 4 in progress (link 9, started 2026-09-29 once KNG-17 reached knk-plugin trunk and the Maven hosts were allowed)
-**Last updated:** 2026-09-29 (link 8: Phase 5 done; chain resumed — link 9 started on Phase 4)
+**Status:** finished — all phases done (1, 2a-2e, 3, 5 and 4); nothing merged to trunk, the developer merges phase by phase after testing (closing handoff `docs/ai-agents/handoffs/2026-09-29-road-navigation-closeout.md`)
+**Last updated:** 2026-09-29 (link 9: Phase 3 compiled, trunk merged, Phase 4 done — chain complete)
 **Linear:** [KNG-27](https://linear.app/kngpandi/issue/KNG-27) · **Charter:** `docs/ai-agents/handoffs/ROAD_NAVIGATION_CHAIN.md` · **Plan:** `docs/specs/navigation/IMPLEMENTATION_PLAN.md`
 
 ## Summary for the developer
@@ -14,11 +14,19 @@
 | 2c — builder | **done** (link 4) | knk-plugin `claude/road-navigation` `c2ca1e3` (on 2b's `92375e5`; trunk `main` still `eb1d68c`) | [Phase 2c](#phase-2c--knk-plugin-core-builder-link-4) |
 | 2d — router + navigation session | **done** (link 5) | knk-plugin `claude/road-navigation` `a82db3c` (on 2c's `c2ca1e3`; trunk `main` still `eb1d68c`) | [Phase 2d](#phase-2d--knk-plugin-core-router-and-navigation-session-link-5) |
 | 2e — api-client | **done** (link 6) | knk-plugin `claude/road-navigation` `4ffdd1a` (on 2d's `a82db3c`; trunk `main` still `eb1d68c`) | [Phase 2e](#phase-2e--knk-plugin-api-client-ports-dtos-mapper-conditional-get-link-6) |
-| 3 — plugin paper admin side | **done, not compiled** (link 7) | knk-plugin `claude/road-navigation` `96f4c62` (on 2e's `4ffdd1a`; trunk `main` still `eb1d68c`) | [Phase 3](#phase-3--knk-plugin-paper-admin-side-survey-build-review-link-7) |
+| 3 — plugin paper admin side | **done** (link 7; compiled by link 9 on 2026-09-29, one slip fixed in `68fa48c`) | knk-plugin `claude/road-navigation` `96f4c62` → `68fa48c` (on 2e's `4ffdd1a`; trunk merged after it) | [Phase 3](#phase-3--knk-plugin-paper-admin-side-survey-build-review-link-7) |
 | 5 — web-app admin pages | **done** (link 8) | knk-web-app `claude/road-navigation` `9dbb481` (from `main` `f56d421`) | [Phase 5](#phase-5--knk-web-app-admin-pages-link-8) |
-| 4 — `/navigate` | in progress (link 9, from 2026-09-29; KNG-17 on knk-plugin `main` `27b4236`) | knk-plugin `claude/road-navigation` (trunk merge + Phase 3's first real compile first) | handoff: `docs/ai-agents/handoffs/2026-09-28-road-navigation-phase-4.md` |
+| 4 — `/navigate` | **done** (link 9) | knk-plugin `claude/road-navigation` `4e3f8af` (on the trunk merge `be5df0f` = Phase 3's `68fa48c` + `main` `27b4236` with KNG-17) | [Phase 4](#phase-4--knk-plugin-paper-navigate-link-9) |
 
-- **Review first** (ranked): (1) Phase 1 decision 1 — stitch edges are owned by the last-built tile and reference the
+- **Review first — Phase 4** (ranked, plan "Phase 4 status → Decisions to review"): (1) decision 3 — the region
+  tracker's `knk.region.bypass` predicate is also navigation's bypass (staff routes through closed domains);
+  (2) decision 15 — the R39 predicate reads `PreLockdownView` as "carried through any locked door", `PassThroughOnly`
+  as "only doors open before the lockdown" (siege behaviour itself unchanged); (3) decision 4 — direct mode also for
+  node/street/region targets within 48 blocks, and the last off-road leg to the real target after the road ends;
+  (4) decision 7 — the destination catalogue is loaded from the API every 60 s (≤ 5 000 places) and streets come
+  from the snapshot; (5) decision 9/10 — re-check cadence (2 s) and what a network rebuild does to active routes;
+  (6) decision 18 — `KnkConfig` keeps four older constructor forms after the merge.
+- **Review first — earlier phases** (ranked): (1) Phase 1 decision 1 — stitch edges are owned by the last-built tile and reference the
   neighbour's node by id, so a tile download can point at a node of another tile; (2) decision 2 — Detected nodes
   touched by a Recorded edge survive rebuilds; (3) decision 6 — "continue along the road" writes Manual labels on
   every edge it reaches; (4) decision 4 — Inferred labels are recomputed from scratch per build (conflicts →
@@ -70,8 +78,8 @@
   (proxy 403 on CONNECT) in links 1-8, so those links tested knk-core through the plan §0.4 scratch build and never
   compiled knk-paper. **Allowed by the developer on 2026-09-29** (both answer 200 now) — link 9 is the first link
   that builds the plugin with Gradle; its handoff makes Phase 3's real compile the first step.
-- **Test when you have time:** pull `claude/road-navigation` in each repo; build the plugin (`./gradlew build -x deployToDevServer`, fix compile errors first if any link marked knk-paper "not compiled"); apply the new web-api migration to the dev DB (developer only); run the web-api; `./gradlew :knk-paper:dev`; `CYPRESS_INSTALL_BINARY=0 npm install && npm start` in knk-web-app (grant `knk.admin.road`, add the `streetRoad` field to the Street form — plan "Phase 5 status"); then each phase's live checklist from the plan in phase order.
-- **To resume the chain (Phase 4):** once KNG-17 (`origin/claude/teleport`) is merged to knk-plugin `main`, start a fresh session with *"Read and execute `docs/ai-agents/handoffs/2026-09-28-road-navigation-phase-4.md` in the knk-workspace repository (branch main). It starts with a pointer to the chain charter."*
+- **Test when you have time:** pull `claude/road-navigation` in each repo; build the plugin (`./gradlew build -x deployToDevServer` — it compiles and its 2 803 tests are green as of `4e3f8af`, nothing to fix first); apply the new web-api migration to the dev DB (developer only); run the web-api; `./gradlew :knk-paper:dev`; `CYPRESS_INSTALL_BINARY=0 npm install && npm start` in knk-web-app (grant `knk.admin.road`, add the `streetRoad` field to the Street form — plan "Phase 5 status"); then each phase's live checklist from the plan in phase order (3 → 5 → 4: a built network is what `/navigate` needs).
+- **Merging (developer):** phases are mergeable one by one in the order 1 (web-api) → plugin (2a-2e, 3 and 4 are one branch — merge `claude/road-navigation` into `main` once; it already contains `main` `27b4236`) → 5 (web-app); the closing handoff lists the branches to delete afterwards.
 
 ## Phase 1 — knk-web-api: data model, services, API (link 1)
 
@@ -349,3 +357,53 @@
   the handoff (Phase 3 real compile first, then trunk merge, then Phase 4) and started link 9 per charter §6 option 1
   (Claude Code Remote `create_session` in the same environment, `source_url` = knk-workspace `main`) — link 9 =
   Claude Code Remote session `session_01EeBiwHtsk7WJ3LSFG1voJa` (created 2026-09-29 08:10 UTC, parent this session `session_0137PksZMzCVnVX6YkMD5cSg`).
+
+## Phase 4 — knk-plugin paper: `/navigate` (link 9)
+
+- **Setup facts:** Java 21 present; `repo.papermc.io` and `maven.enginehub.org` answered 200 — the first link to build
+  the plugin with Gradle. Maven Central 429s on parallel downloads needed link 2's `~/.gradle/gradle.properties`
+  settings, and a *short* retry backoff (`max.tentatives=6`, `initial.backoff=1500`; with 12 × 2 000 ms the first
+  attempt stalled > 25 min on EngineHub retries). Every later build ran `--offline`.
+- **Order followed (handoff):** (1) Phase 3's first real compile on `96f4c62` → clean; 1 of knk-paper's 821 tests
+  failed (quoted names in tab completion) → `68fa48c`; (2) `git merge origin/main` (`27b4236`, KNG-17 + KNG-32 +
+  managed regions) → `be5df0f`: three conflicts (`KnkConfig`, `ConfigLoader`, `SiegeBukkit` imports) resolved by
+  keeping both sides, `KnKPlugin`/`SimpleRegionTransitionService`/`WorldGuardRegionTracker` auto-merged, teleport's
+  inline data-access construction promoted to the Phase 3 fields (R18); (3) Phase 4.
+- **Commits** (knk-plugin `claude/road-navigation`): `68fa48c` Phase 3 compile fix · `be5df0f` trunk merge ·
+  `7500f44` R22 `C/util/BlockProbe`, `SurfaceGrid extends` · `be329f7` R21 `C/util/NamedTargets<T>`, `WarpTargets`
+  wrapper · `40ee42e` R20 `C/navigation/DomainLocationResolver`, `SpawnDestinationResolver` delegates · `aa71dae` R6
+  follow-up (`previewAccess` pinned to the evaluator) · `57c1605` R24 `siegeGates` field + getter · `05f5639` R39
+  `SiegeGateController.canCarryNonMember` · `0fd5f43` `searchAsync` on Locations/Streets data accesses (R18),
+  `GatePassThroughRules.canPass(admin, useNode, door)` (R25) · `cdc73d1` events, `NavigationMessages`,
+  `NavigationHud`, `TrailRenderer` · `9717036` `NavTarget`, `Destination`, `RegionShapes` + WorldGuard adapter,
+  `NavigationEligibility`, `NavigationDestinations`, `NavigateCommand` · `cfe49f4` `NavigationAccess`,
+  `NavigationService` (live re-routes, D13), `NavigationListener`, `KnKPlugin.initializeNavigation`, `/navigate` in
+  `plugin.yml`, `/knk road why` · `4e3f8af` tests. 52 files, +4 444 / −183 on top of the merge. Workspace `main`:
+  plan header + Phase 3 compile note + "Phase 4 status", this report, tracker row, closing handoff.
+- **Tests (Gradle):** Phase 3 baseline `68fa48c` knk-core **1374**, knk-api-client **174** (2 skipped), knk-paper
+  **821** (14 skipped) → after the merge **1532 / 184 / 1027** → after Phase 4 **1545 / 184 / 1074**, 0 failures.
+  Phase 4 added 13 core tests (`NamedTargetsTest`, `DomainLocationResolverTest`, one `previewAccess`
+  characterisation) and 47 paper tests (`NavigationServiceTest` 16, `NavigateCommandTest` 9,
+  `NavigationDestinationsTest` 6, `NavigationMessagesTest` 5, `NavigationHudTest` 4, `TrailRendererTest` 7). Teleport
+  (`WarpTargetsTest`, `SpawnDestinationResolverTest`, …), siege + gate (206) and Phase 3 tests unchanged and green.
+- **Flagged decisions:** 18, numbered in the plan status block; the six worth a look are in the summary above
+  (bypass predicate, R39 semantics, direct mode's reach, catalogue refresh, re-check cadence / network swaps,
+  `KnkConfig` constructors).
+- **Discrepancies:** `previewAccess` already reached the evaluator after the merge (the R6 follow-up is a test);
+  streets for the catalogue come from the snapshot, not `StreetsDataAccess.searchAsync` (added anyway, R18);
+  WorldEdit resolves as 7.3.0 through WorldGuard 7.0.10 (deprecation warnings on `BlockVector3.getBlockX()`);
+  Phase 3's `RoadAdminCommandTest` expected an unsorted completion list; Gradle's retry backoff (above).
+- **Live checklist:** plan "Phase 4 status → Developer to-do" — build; `/navigate` to a Location, a Town spawn, a
+  Town `region`, a Structure, a street, a node; through a tunnel; close a gate on the route → detour or "Guiding you
+  to the gate", open it → "shorter route"; pass-through hint; `allowEntry=false` domain → "Guiding you to its edge";
+  the two 48-block refusals and direct mode; walk off → re-route; stop / teleport / death / siege join end it;
+  `/knk road why`; `/tps` with a few navigators.
+- **Risks:** the runtime was unit-tested with inline executors and a mocked player, not on a server — the first
+  live session is the check for thread hops (`MenuService.mainThreadExecutor` everywhere), the boss bar and
+  particle rates; `WorldGuardRegionShapes` and the WorldEdit vector accessors compile against 7.3.0 and run against
+  whatever the dev server carries (`getBlockX()` exists in both); the D13 policy rebuild reads every gate of the
+  network per session per 2 s (dozens of `getGate` calls — trivial, but visible if a network ever tags hundreds of
+  doors); a destination catalogue of thousands of places is one paged download per minute.
+- **Next link:** none — Phase 4 was the last phase (charter § top): the chain is complete. Closing handoff
+  `docs/ai-agents/handoffs/2026-09-29-road-navigation-closeout.md` (merge order, branches to delete after the
+  merges, where the live checklists are). No session was started.

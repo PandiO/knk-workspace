@@ -1,3 +1,5 @@
+> **Executed by link 9 on 2026-09-29** — Phase 4 is done (knk-plugin `claude/road-navigation` `4e3f8af`); the chain is complete. See `docs/ai-agents/handoffs/2026-09-29-road-navigation-closeout.md`. Kept as history.
+
 Read docs/ai-agents/handoffs/ROAD_NAVIGATION_CHAIN.md first and follow it; it overrides anything below.
 
 **Start condition (charter §4.7, plan §0.5) — met on 2026-09-29:** KNG-17 (teleport) **is on knk-plugin trunk**:
