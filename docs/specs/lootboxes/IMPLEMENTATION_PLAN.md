@@ -1,7 +1,8 @@
 # Lootboxes — Implementation Plan
 
-**Status:** Merged to trunk 2026-09-27 (api `ccc8c02`, plugin `eb1d68c`, web-app `f56d421`); round-2 smoke test and follow-ups open (Linear KNG-31)
-**Last updated:** 2026-09-27
+**Status:** Merged to trunk 2026-09-27; round-2 smoke test done 2026-09-28, one bug found (pickup denied for default players),
+two follow-up code tasks open (Linear KNG-31)
+**Last updated:** 2026-09-28
 **Linear:** [KNG-19](https://linear.app/kngpandi/issue/KNG-19/lootboxes-per-category-world-lootboxes-with-grade-weighted-rolls-v1)
 **Sources:** [DESIGN.md](DESIGN.md); `docs/ACTIVE_SESSIONS.md` (branch convention); `specs/kits/IMPLEMENTATION_PLAN.md`,
 `specs/siege-minigame/IMPLEMENTATION_PLAN.md` (phase/test conventions); Linear KNG-15.
@@ -15,6 +16,13 @@ are **re-implemented** in `core/lootbox`, not merged in, so this feature doesn't
 - `./gradlew build` runs `deployToDevServer`. Use `-x deployToDevServer` until you mean to deploy.
 - Every new `[FormConfigurableEntity]` needs web-app client + `entityApiMapping.ts` + `objectConfigs.tsx` wiring.
 - Migrations are checked by the fresh-MySQL CI workflow (`.github/workflows/migrations.yml`).
+- The dev server has (or had) a server-side rule denying interaction for every non-op player, independent of lootbox/plugin
+  permission nodes — found in round-2 smoke test when a rankless-but-Default account couldn't pick up a world box even
+  though `knk.lootbox.open` was confirmed granted (checklist item G). Not caused by any lootbox code: no listener in
+  `knk-paper` cancels `PlayerInteractEntityEvent` globally (checked `JoinLoadingRestrictionListener`, `SiegeInventoryGuardListener`
+  — both scope their cancels to loading/siege players, not everyone). Most likely a WorldGuard region flag (e.g. `interact: deny`
+  on a region covering the affected area, with WorldGuard's op-implied bypass masking it in testing). Developer decision: remove
+  that flag. Flagging here so a future global interact/use deny doesn't get reintroduced without checking this feature first.
 
 | Phase | Scope | Repos | Size | Depends on |
 |---|---|---|---|---|
@@ -522,27 +530,70 @@ API 1524 pass / 5 baseline, `requires-mysql` 42/42, migrations CI green; plugin 
 
 Tracked in Linear **KNG-31** (lore spacing KNG-29 and the tab-completion sweep KNG-30 are separate).
 
-**Verify on the dev server**
-- Deploy trunk; `dotnet ef database update` adds `BackfillDefaultRankMembership` (every rankless account gets Default -
-  affects **all** features' Default nodes, not just lootboxes) and `AddLootboxWorldPickup`. The lootbox FormConfigurations
-  (PHASE_4_FORMCONFIGS.md) are needed on any DB that doesn't have them yet.
-- Run the round-2 checklist above (Default permissions, pickup, the reel live, pickup cap, staff messages + tab completion,
-  despawn/revoke sync, ★1-10).
+### Smoke test round 2 — 2026-09-28
 
-**Decisions for the developer**
-- Daily cap counts pickups and opens separately (D21): keep, or count opens only (drop `EnforceDailyPickupCapAsync`)?
-- World box look: display entities showing the token item (now) or a real chest block (DESIGN §5 round 1, D3)?
+Developer results against the round-2 checklist: 1 (G) ✓ no personal grant needed for `/lootbox odds`; 2 (pickup) **✗** — see
+below; 3 (reel) ✓; 4 (rare drop broadcast) ✓; 5 (cap) ✓, pickups and opens counted separately as before; 6 (staff give/token,
+tab completion) ✓; 7 (despawn/revoke sync) ✓; 8 (grades ★1-10) ✓.
 
-**Known gaps (small)**
-- A player moved into a siege while their reel spins receives the item into the siege inventory (lost on restore): hold it
-  until `SiegePlayerVault` restores, like held-back tokens.
-- Boxes spawned before a siege stay claimable by non-participants in the arena.
-- A revoked token stored in a chest/shulker is only removed when someone tries to open it.
-- Web-app area delete: not audited; leaves a `lootbox_` WorldGuard region behind.
-- Types tab makes ~14 odds calls on load.
-- `POST LootboxSpawns/{id}/claim` (open on the spot) is unused by the plugin now: remove once no older plugin build runs.
-- `LootboxWorldChanged` is single-consumer (first server to acknowledge wins): fine for one server.
-- Accepted: stackable double delivery after a real crash; a token dropped on a full inventory can come back as a dead copy.
+**Bug found — item 2:** a non-op, non-staff default player could not pick up a world box, even though item 1 confirmed their
+`knk.lootbox.open` grant was live. Not a lootbox-code regression (see the gotcha above): most likely a server-side sweeping
+interact-deny (a WorldGuard region flag) that happens to spare ops. Decision: remove that flag on the dev server; documented
+above so it isn't reintroduced silently. No plugin/API change needed.
+
+**Decisions made:**
+- Daily cap: **keep** counting pickups and opens separately (D21) — no code change.
+- World box look: **keep** the display-entity/token look; no chest block (DESIGN §5 round 1, D3 closed in favor of the current
+  behavior).
+
+**Known gaps — resolved/updated:**
+1. A player moved into a siege while their reel spins receives the item into the siege inventory (lost on restore).
+   **Action approved:** hold the item until `SiegePlayerVault` restores and notify the player, the same pattern as held-back
+   tokens (`SiegePlayerVault.setAfterRestore`, see the "Follow-up" plugin commit under "Siege integration" above). **Not yet
+   implemented** — needs a session in `knk-plugin` touching `LootboxOpening`/`LootboxDelivery` plus a test; treat as a small
+   follow-up phase before closing KNG-31.
+2. Boxes spawned before a siege stay claimable by non-participants in the arena. **Kept as-is** — developer wants this
+   behavior.
+3. A revoked token stored in a chest/shulker is only removed when someone tries to open it. **Accepted**, no action.
+4. Web-app area delete: not audited; leaves a `lootbox_` WorldGuard region behind. **Kept as a documented gap** — the
+   `lootbox_<slug>` region should eventually be deleted manually (or the delete endpoint extended to remove it) but isn't
+   blocking; no action taken this round.
+5. Types tab makes ~14 odds calls on load. Developer asked for improvement suggestions rather than an immediate fix:
+   - batch it server-side — add `GET LootboxTypes/odds?boxStars=...` returning odds for every enabled type in one call
+     (or `GET LootboxTypes/{id}/odds` already does the per-type roll math; a `LootboxTypesController` batch endpoint reusing
+     the same `LootboxRollEngine` call per type avoids N round trips without duplicating logic);
+   - or lazily fetch odds per type only when its row is expanded/selected in the Types tab, instead of on initial page load;
+   - or cache the odds response client-side keyed by type+boxStars so re-renders (e.g. after a save) don't re-fetch every row.
+   No implementation done yet; pick one when picking this up.
+6. ~~`POST LootboxSpawns/{id}/claim` (open-on-the-spot) is unused by the plugin since the round-1 pickup rework.~~
+   **Done 2026-09-28 — removed** in knk-web-api `claude/lootboxes` `dc03a9f` (not yet merged to `master`): the controller
+   action, `ILootboxRuntimeService.ClaimAsync`, `ClaimAsync`/`ClaimCoreAsync`, `LootboxClaimRequestDto` and
+   `SpawnHasClaimAsync` (repo + interface; its only caller was `ClaimCoreAsync`). `ClaimOutcome` stays (the redeem uses it,
+   moved to `LootboxRuntimeService.Tokens.cs`); the shared helpers (`EnsureCanOpen`, `EnsureClaimable`,
+   `EnforceDailyCapAsync`, `RollAsync`, `MintAsync`, `ReplayAsync`, …) are untouched. Legacy claims with a `LootboxSpawnId`
+   stay in the drop log and still count in `CountClaimsAsync`. Tests moved to the real path rather than deleted: the
+   runtime tests open world boxes via pickup + redeem, `LootboxPickupTests` gained expiry+sweep / concurrency-race /
+   frozen-player, the auth tests cover `/pickup` (and the redeem's 429 `DailyLimit` body), and `LootboxTokenTests` now
+   asserts D21 (a pickup at the open cap is allowed, opening it is refused). API tests 1599 pass / 8 baseline failures
+   (none lootbox; trunk `ae4dccd` has the same 8, not the 5 recorded earlier). **Follow-up:** knk-plugin still has the dead
+   client side — `LootboxesCommandApi.claim(...)` (`knk-core` port), its `LootboxesCommandApiImpl` implementation
+   (`knk-api-client`) and 3 tests in `LootboxesCommandApiImplTest`; no production caller. Remove in a plugin session.
+   This is a different thing from a possible future "grant a lootbox from the
+   web app, opened immediately" admin feature — that would reuse `AdminGiveAsync` (already exists, mints an `ItemInstance`
+   without a spawn) plus a client-side trigger for the reel; it isn't implemented for the web app today (admin give/spawn
+   is plugin-only, see Phase 4 "Known"). Not scheduled; flag as a possible future feature if wanted.
+7. `LootboxWorldChanged` is single-consumer (first server to acknowledge wins). **Accepted**, fine for one server.
+8. Accepted, not open questions: stackable double delivery after a real crash; a token dropped on a full inventory can come
+   back as a dead copy. No action needed — these are documented limitations, not decisions pending.
+
+**Remaining before closing KNG-31**
+- Remove the sweeping interact-deny flag on the dev server (item 2 above).
+- Implement the siege-reel hold-until-restore fix (gap 1 above) — small `knk-plugin` follow-up.
+- Optionally pick one of the Types-tab load improvements (gap 5) — not blocking.
+- Merge knk-web-api `claude/lootboxes` (`dc03a9f`, dead `/claim` endpoint removed, gap 6) to `master`; remove the plugin's
+  dead `LootboxesCommandApi.claim` client in the same or a later plugin session.
+- `dotnet ef database update` / FormConfigurations verification and the rest of the round-2 checklist are done; no further
+  re-test needed unless the two follow-ups above change plugin behavior enough to warrant one.
 
 **Tooling found along the way**
 - knk-web-app: `npm ci` fails on trunk (lockfile lacks the optional `yaml@2` peer; `npm ci --legacy-peer-deps` works);
