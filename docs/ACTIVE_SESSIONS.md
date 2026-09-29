@@ -36,6 +36,7 @@ Live tracker of in-progress work across all four Knights and Kings repos
 |---|---|---|---|---|---|
 | _(example)_ Siege minigame — capture point sync | web-api: `Services/SiegeService.cs`; plugin: `siege/` package | Claude Code session A | Implementing capture-point event handling | 2026-09-17 | 2026-09-17 |
 | Legacy inventory-menu screen/item mining + feature allocation | knk-workspace: new `docs/specs/legacy/inventory-menu-screens.md`, `docs/specs/legacy/README.md`; read-only on `knk-v1-archive`/`knk-v2-archive` | Claude Code session (Pandi) | Mining v1/v2 menu screens and items | 2026-09-25 | 2026-09-25 |
+| Managed WorldGuard regions — v1 hierarchy/priority/flag policy for Town/District/Structure/Gate/Arena regions + idempotent startup repair (subsumes KNG-12 "no WG flags on town/district regions") | knk-plugin: new `knk-core/.../core/regions/managed/`, `knk-paper/.../paper/regions/managed/`, `WgRegionIdTaskHandler.renameRegion`, `RegionHttpServer` rename, `TempRegionRetentionTask`, `config.yml`; knk-web-api: `Services/RegionService.cs`, `Controllers/RegionsController.cs`, `Services/DistrictService.cs`/`DomainService.cs` (rename call only); knk-workspace: new `docs/architecture/managed-worldguard-regions.md` | Claude Code session (Pandi) | Implementing shared policy + reconciler + startup repair; branch `claude/laughing-maxwell-9fm5co` in all four repos (harness-assigned; cut fresh from trunk, no standing feature branch existed) | 2026-09-29 | 2026-09-29 |
 
 ## Recently completed
 
