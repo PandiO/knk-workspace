@@ -1,6 +1,6 @@
 # Managed WorldGuard regions — hierarchy, priority, flags and startup repair
 
-**Status:** Implemented (branch `claude/laughing-maxwell-9fm5co` in `knk-plugin` and `knk-web-api`), **not yet smoke-tested in game** — see §9
+**Status:** Implemented and merged to trunk 2026-09-29 ([knk-plugin#6](https://github.com/PandiO/knk-plugin/pull/6), [knk-web-api#3](https://github.com/PandiO/knk-web-api/pull/3)); CI green, **not yet smoke-tested in game** — Linear KNG-46, §9
 **Last updated:** 2026-09-29
 **Supersedes:** Linear KNG-12 ("no WG flags on town/district regions"), the assumption noted in `CombatSafezone`'s Javadoc
 **Evidence:** [`reports/2026-09-28-v1-permissions-worldguard-inventory.md`](../reports/2026-09-28-v1-permissions-worldguard-inventory.md) (categorized v1 inventory), the v3 domain model (`Town → District → Structure`, `GateStructure : Structure`), `vision.md` §2
@@ -119,10 +119,10 @@ Outcome rules: **checked** = distinct regions considered; **skipped** = domain w
 
 ## 8. Unresolved v1 → v3 differences and observed hazards
 
-1. **No House/Property/Room subtype in the API**, so those kinds are opt-in per region (overrides). A `StructureType` on `Structure` would let the repair apply them automatically — needs a migration and design decision (`vision.md` §2.5 already decides on subclasses).
-2. **`allow-blocks` / wood farm**: needs a v3 listener to restrict block breaking in `RESOURCE_PRODUCTION` regions to logs; until then `block-break` is not opened up.
-3. **Exact v1 priorities** unknown (§2). Supply `regions.yml` to compare, or set overrides.
-4. **Town/Structure creation don't finalize temp region names** (`TownService`/`StructureService` never call rename; only `DistrictService` and `DomainService` do), so those regions stay `tempregion_worldtask_<n>`. The repair handles them regardless of name, but see 5. Follow-up: finalize in those services too.
+1. **No House/Property/Room subtype in the API**, so those kinds are opt-in per region (overrides). A `StructureType` on `Structure` would let the repair apply them automatically — needs a migration and design decision (`vision.md` §2.5 already decides on subclasses). Linear KNG-47.
+2. **`allow-blocks` / wood farm**: needs a v3 listener to restrict block breaking in `RESOURCE_PRODUCTION` regions to logs; until then `block-break` is not opened up. Linear KNG-48.
+3. **Exact v1 priorities** unknown (§2). Supply `regions.yml` to compare, or set overrides. Linear KNG-49 (also the Arena/Battleground entity decision).
+4. **Town/Structure creation don't finalize temp region names** (`TownService`/`StructureService` never call rename; only `DistrictService` and `DomainService` do), so those regions stay `tempregion_worldtask_<n>`. The repair handles them regardless of name, but see 5. Follow-up: finalize in those services too (Linear KNG-43 Gap 1, which also holds the 90-day FormSubmission cleanup).
 5. **`TempRegionRetentionTask` could delete a domain's region** (14 days after creation, prefix match only; it also reads a custom flag WorldGuard may not persist). Mitigated here: it now skips any region a domain uses, and skips everything until the first repair has read the domain data. A proper fix is item 4.
 6. **Entry gating by rank** and **greetings** remain v3-plugin behaviour, not WG flags (§5).
 7. **Arena/battleground regions** have no domain entity; they are managed only through `extra-regions`.
