@@ -1,9 +1,20 @@
 Read docs/ai-agents/handoffs/ROAD_NAVIGATION_CHAIN.md first and follow it; it overrides anything below.
 
-**Start condition (charter §4.7, plan §0.5):** KNG-17 (teleport, `origin/claude/teleport`) must be on knk-plugin
-trunk. Check first: `git -C <knk-plugin> fetch origin main && git -C <knk-plugin> ls-tree -r --name-only origin/main |
-grep core/teleport/WarpTargets`. **Written 2026-09-28 by link 8, when it was NOT on trunk** (`main` still `eb1d68c`):
-if it still isn't, do not start — say so in the progress report and stop. If it is, you are **link 9**.
+**Start condition (charter §4.7, plan §0.5) — met on 2026-09-29:** KNG-17 (teleport) **is on knk-plugin trunk**:
+`origin/main` `27b4236` (merged 2026-09-28: api `ae4dccd`, plugin `9bae376`, app `ac2db3b`; trunk moved on since)
+contains `knk-core/.../core/teleport/*` (`BlockProbe`, `SafeLocationFinder`, `WarpTargets`, …). Re-check anyway:
+`git -C <knk-plugin> fetch origin main && git -C <knk-plugin> ls-tree -r --name-only origin/main | grep
+core/teleport/WarpTargets`. You are **link 9**.
+
+**The cloud network now allows `repo.papermc.io` and `maven.enginehub.org`** (developer enabled them 2026-09-29;
+link 8 verified both answer 200 through the proxy). So this is the **first link that can run Gradle for real**:
+`./gradlew build -x deployToDevServer` on `claude/road-navigation` **before any Phase 4 code** — it is Phase 3's real
+compile (links 1-7 could not build knk-paper). Expect a handful of one-line import/signature slips in Phase 3's
+`P/roads/*` and wiring; the likely spots are listed in the plan's "Phase 3 status → Developer to-do" in order of
+likelihood. Fix them in one commit ("Phase 3: compile fixes"), run `./gradlew test` (knk-core 1374, knk-api-client
+174 expected; knk-paper's 17 Mockito tests of Phase 3 run for the first time), record the real Gradle counts as the
+Phase 4 baseline in the progress report and amend the plan's Phase 3 status header from "done (not compiled)" to
+"done (compiled by link 9)". Only then merge trunk and start Phase 4.
 
 Implement road navigation **Phase 4 — knk-plugin paper: `/navigate`** from docs/specs/navigation/IMPLEMENTATION_PLAN.md
 (the "Phase 4" section: R22/R21/R20 extractions from the teleport code, the R6 follow-up, `NavigationDestinations`,
@@ -22,28 +33,27 @@ Expected conflicts (plan §0.5, Phase 2a status): `KnKPlugin` (teleport's inline
 feed its `knk.region.bypass` predicate into the evaluator's bypass input, R6). Resolve mechanically, keep both sides'
 behaviour, run the scratch build's knk-core tests before adding anything.
 
-**knk-paper compiles only where `repo.papermc.io` and `maven.enginehub.org` are reachable** (charter §1.5). In links
-1-8 both were denied by the cloud network policy; Phase 3's paper code is therefore **not compiled** yet — the
-developer's local `./gradlew build -x deployToDevServer` is its real compile. If you also cannot compile: same rule —
-careful reading, "not compiled" in the status, Bukkit-free pieces (destination name resolution, session bookkeeping,
-HUD text, re-plan rate limits) behind helpers the plan §0.4 scratch build can run (a third scratch project for the
-Bukkit-free paper files exists in link 7's recipe — see the Phase 3 progress-report section). Prefer running this
-phase on the developer's machine if that is an option.
+**If Gradle still cannot resolve paper-api** (charter §1.5: `curl -s -o /dev/null -w "%{http_code}\n"
+https://repo.papermc.io/repository/maven-public/` and `https://maven.enginehub.org/repo/` must both give 200 — they
+did for link 8): fall back to the old rule — careful reading, "not compiled" in the status, Bukkit-free pieces
+(destination name resolution, session bookkeeping, HUD text, re-plan rate limits) behind helpers the plan §0.4
+scratch build can run (link 7's third scratch project for Bukkit-free paper files — see the Phase 3 progress-report
+section). Java 21 is needed for the Gradle wrapper (charter §1.4); check `java -version` first.
 
 State you start from:
 - **Phase 1 is done** (link 1): knk-web-api `claude/road-navigation` `77e0a29` (cut from `master` `ccc8c02`); nothing
   for Phase 4 to change. Read-only clone: `GIT_LFS_SKIP_SMUDGE=1 git clone --depth 1 --branch claude/road-navigation
   https://github.com/PandiO/knk-web-api /home/user/pandio/knk-web-api`.
-- **Phases 2a-2e and 3 are done** (links 2-7): knk-plugin `claude/road-navigation` **`96f4c62`** (as of 2026-09-28;
-  trunk `main` was `eb1d68c` — it will have moved when KNG-17 merged: fetch). knk-core **1374** tests, knk-api-client
-  **174** (2 live-only skips), knk-paper Bukkit-free scratch tests **34** (+17 Mockito tests written, not run) — all
-  via the §0.4 scratch build.
+- **Phases 2a-2e and 3 are done** (links 2-7): knk-plugin `claude/road-navigation` **`96f4c62`** (cut from `main`
+  `eb1d68c`; trunk `main` is now **`27b4236`** with KNG-17 — merge it in, see above). knk-core **1374** tests,
+  knk-api-client **174** (2 live-only skips), knk-paper Bukkit-free scratch tests **34** (+17 Mockito tests written,
+  not run) — all via the §0.4 scratch build; the real Gradle counts are yours to record.
 - **Phase 5 is done** (link 8): knk-web-app `claude/road-navigation` `9dbb481` (cut from `main` `f56d421`); nothing
   for Phase 4 to change; street names reach the plugin through Phase 3's `StreetCache` (60 s refresh).
 - **Workspace `main`** carries the progress report `docs/reports/2026-09-27-road-navigation-chain.md` (status
-  "finished for now"; set it back to "running", append your Phase 4 section, refresh the summary table — the 4 row is
-  "waiting for KNG-17") and the tracker row in `docs/ACTIVE_SESSIONS.md` (in "Recently completed"; add a new "In
-  progress" row for Phase 4 naming the files, or move the row back).
+  "running" again since 2026-09-29; append your Phase 4 section, refresh the summary table — the 4 row is "in
+  progress (link 9)") and the tracker in `docs/ACTIVE_SESSIONS.md` (an "In progress" row for Phase 4 already names
+  the files; the finished-phases row stays in "Recently completed" — update both as you go).
 
 What earlier phases say Phase 4 must wire (read every "→ 4" note in the plan's status blocks):
 - **2d (router/session; "Phase 2d status → What later phases must wire → 4")** — per request build
@@ -91,9 +101,10 @@ at the junction before the gate edge) and 10 (a no-exit domain ends the route on
 
 Known risks:
 - **The trunk merge is the biggest unknown** — KNG-17 conflicts in `KnKPlugin` and `WorldGuardRegionTracker` /
-  `SimpleRegionTransitionService`; keep Phase 3's `initializeRoads()` intact and R18's one-instance-each rule.
-- **Phase 3 is uncompiled Paper code** — if trunk's build runs here for the first time, expect the one-line slips
-  listed in the plan's "Phase 3 status → Developer to-do" before your own code compiles.
+  `SimpleRegionTransitionService`; keep Phase 3's `initializeRoads()` intact and R18's one-instance-each rule. Trunk
+  also moved past KNG-17 (`27b4236` is a later merge) — read `git log eb1d68c..origin/main --oneline` first.
+- **Phase 3 is uncompiled Paper code** — compile it (see the top) before merging trunk, so a compile slip and a merge
+  conflict are never in the same diff.
 - **Siege** is being playtested in parallel: only the two mechanical edits above, each in its own commit.
 - **Main-thread cost:** routing off-thread (api-client executor), effects via R12; `TickBudget` for the trail.
 - **Size:** "M-L" — commit and push after each logical part (merge; extractions R22/R21/R20/R6; destinations +

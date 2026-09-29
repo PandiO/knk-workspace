@@ -1,7 +1,7 @@
 # Road navigation chain — progress report
 
-**Status:** finished for now — Phases 1, 2a-2e, 3 and 5 done; Phase 4 waiting for KNG-17 (teleport) on knk-plugin trunk
-**Last updated:** 2026-09-28 (link 8: Phase 5 done; chain paused before Phase 4, waiting for KNG-17)
+**Status:** running — Phases 1, 2a-2e, 3 and 5 done; Phase 4 in progress (link 9, started 2026-09-29 once KNG-17 reached knk-plugin trunk and the Maven hosts were allowed)
+**Last updated:** 2026-09-29 (link 8: Phase 5 done; chain resumed — link 9 started on Phase 4)
 **Linear:** [KNG-27](https://linear.app/kngpandi/issue/KNG-27) · **Charter:** `docs/ai-agents/handoffs/ROAD_NAVIGATION_CHAIN.md` · **Plan:** `docs/specs/navigation/IMPLEMENTATION_PLAN.md`
 
 ## Summary for the developer
@@ -16,7 +16,7 @@
 | 2e — api-client | **done** (link 6) | knk-plugin `claude/road-navigation` `4ffdd1a` (on 2d's `a82db3c`; trunk `main` still `eb1d68c`) | [Phase 2e](#phase-2e--knk-plugin-api-client-ports-dtos-mapper-conditional-get-link-6) |
 | 3 — plugin paper admin side | **done, not compiled** (link 7) | knk-plugin `claude/road-navigation` `96f4c62` (on 2e's `4ffdd1a`; trunk `main` still `eb1d68c`) | [Phase 3](#phase-3--knk-plugin-paper-admin-side-survey-build-review-link-7) |
 | 5 — web-app admin pages | **done** (link 8) | knk-web-app `claude/road-navigation` `9dbb481` (from `main` `f56d421`) | [Phase 5](#phase-5--knk-web-app-admin-pages-link-8) |
-| 4 — `/navigate` | **waiting for KNG-17** on knk-plugin trunk (`main` still `eb1d68c` on 2026-09-28) | — | handoff ready: `docs/ai-agents/handoffs/2026-09-28-road-navigation-phase-4.md` |
+| 4 — `/navigate` | in progress (link 9, from 2026-09-29; KNG-17 on knk-plugin `main` `27b4236`) | knk-plugin `claude/road-navigation` (trunk merge + Phase 3's first real compile first) | handoff: `docs/ai-agents/handoffs/2026-09-28-road-navigation-phase-4.md` |
 
 - **Review first** (ranked): (1) Phase 1 decision 1 — stitch edges are owned by the last-built tile and reference the
   neighbour's node by id, so a tile download can point at a node of another tile; (2) decision 2 — Detected nodes
@@ -66,10 +66,10 @@
   changed fields, "continue along the road" only with a street; (29) decision 11 — the Street form's road panel links
   with plain anchors (router imports break nine FormWizard test suites); (30) decision 13 — no edge delete in the UI;
   plus one trunk chore: `npm ci` fails on the current lockfile — see the plan's "Phase 5 status".
-- **Cloud network, please check:** `repo.papermc.io` and `maven.enginehub.org` are still denied by the environment's
-  network policy (proxy 403 on CONNECT) in links 1-7, so no link can compile knk-paper or run knk-core through
-  Gradle; knk-core is tested through the plan §0.4 scratch build instead. Adding both hosts to the environment's
-  allowed domains would let later links build the real thing.
+- **Cloud network:** `repo.papermc.io` and `maven.enginehub.org` were denied by the environment's network policy
+  (proxy 403 on CONNECT) in links 1-8, so those links tested knk-core through the plan §0.4 scratch build and never
+  compiled knk-paper. **Allowed by the developer on 2026-09-29** (both answer 200 now) — link 9 is the first link
+  that builds the plugin with Gradle; its handoff makes Phase 3's real compile the first step.
 - **Test when you have time:** pull `claude/road-navigation` in each repo; build the plugin (`./gradlew build -x deployToDevServer`, fix compile errors first if any link marked knk-paper "not compiled"); apply the new web-api migration to the dev DB (developer only); run the web-api; `./gradlew :knk-paper:dev`; `CYPRESS_INSTALL_BINARY=0 npm install && npm start` in knk-web-app (grant `knk.admin.road`, add the `streetRoad` field to the Street form — plan "Phase 5 status"); then each phase's live checklist from the plan in phase order.
 - **To resume the chain (Phase 4):** once KNG-17 (`origin/claude/teleport`) is merged to knk-plugin `main`, start a fresh session with *"Read and execute `docs/ai-agents/handoffs/2026-09-28-road-navigation-phase-4.md` in the knk-workspace repository (branch main). It starts with a pointer to the chain charter."*
 
@@ -343,5 +343,9 @@
   developer's; the request shapes were read from `Dtos/RoadDtos.cs` and the controllers on `claude/road-navigation`
   `77e0a29`, so a mismatch would be a name typo, not a design gap. `SearchableDropdown` loads the whole street/town
   list once (1 000 cap) — fine at this project's scale.
-- **Next link:** none started. **KNG-17 is not on knk-plugin trunk** (`origin/main` still `eb1d68c`, no
-  `core/teleport/WarpTargets`), so per charter §4.7 the Phase 4 handoff is written for later and the chain ends here.
+- **Next link:** on 2026-09-28 none was started — KNG-17 was not on knk-plugin trunk (`origin/main` `eb1d68c`), so per
+  charter §4.7 the Phase 4 handoff was written for later. **Resumed 2026-09-29:** KNG-17 merged to trunk on
+  2026-09-28 (plugin `main` now `27b4236`) and the developer allowed the two Maven hosts, so link 8's session updated
+  the handoff (Phase 3 real compile first, then trunk merge, then Phase 4) and started link 9 per charter §6 option 1
+  (Claude Code Remote `create_session` in the same environment, `source_url` = knk-workspace `main`) — link 9 =
+  Claude Code Remote session `LINK9_SESSION_ID`.
