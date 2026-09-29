@@ -348,4 +348,4 @@
   2026-09-28 (plugin `main` now `27b4236`) and the developer allowed the two Maven hosts, so link 8's session updated
   the handoff (Phase 3 real compile first, then trunk merge, then Phase 4) and started link 9 per charter §6 option 1
   (Claude Code Remote `create_session` in the same environment, `source_url` = knk-workspace `main`) — link 9 =
-  Claude Code Remote session `LINK9_SESSION_ID`.
+  Claude Code Remote session `session_01EeBiwHtsk7WJ3LSFG1voJa` (created 2026-09-29 08:10 UTC, parent this session `session_0137PksZMzCVnVX6YkMD5cSg`).
