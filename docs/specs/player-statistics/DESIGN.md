@@ -34,6 +34,10 @@ V1 had a dedicated AFK mode that the developer wants to reimplement. Its V1/V2 b
 
 **Potential extension, not yet specified:** weekly/monthly leaderboards could reward activity and give players reasons to return. Decide which metrics are suitable, visibility eligibility, tie rules, period reset, rewards (if any), anti-farming safeguards and whether a player who hides a statistic may appear on its leaderboard. Do not assume every private statistic is rankable or public.
 
+## Performance guardrail
+
+**Developer constraint:** statistics and later leaderboards must remain efficient at the intended player scale. Do not issue one database write for every tick or persist four separate event streams for daily/weekly/monthly/lifetime views. Candidate architecture: record durable low-frequency domain facts where needed, batch or aggregate high-frequency counters, and derive calendar views from daily aggregates (with a correction/rebuild path). Index only the leaderboard queries actually selected; refresh rankings asynchronously or on a bounded interval rather than recalculating across all raw history on every menu open. Movement/heatmap telemetry needs separate sampling and retention. Before choosing storage and flush frequency, measure expected concurrent players, events per second, write latency, database size, menu/query latency and catch-up behavior after crashes. These are design constraints, not measured performance claims.
+
 ## Candidate player-facing groups — not yet approved field by field
 
 - Activity: active playtime, AFK time, first server join and possibly active days.
