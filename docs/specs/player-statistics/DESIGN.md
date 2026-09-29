@@ -24,6 +24,10 @@ This living note records decisions from the developer conversation. It does not 
 
 V1 had a dedicated AFK mode that the developer wants to reimplement. Its V1/V2 behavior has **not yet been analyzed** and there is no separate AFK feature plan. Before implementing the classification or counters, inspect the legacy code and decide how explicit AFK mode, automatic inactivity detection and manual return to activity interact. The five-minute rule above is a temporary statistics-design default and may change to follow that feature.
 
+## Combat and activity breakdown
+
+**Agreed:** kills and deaths must be inspectable by game context/minigame, not just as one undifferentiated counter. Siege, future Arena and Dungeons should each have their own breakdown; the model must permit new modes without adding a hard-coded column for every one. A lifetime overall total may be derived from mutually exclusive context buckets, with explicit labels for ordinary world activity. Record the context when an event happens (including match identity where relevant) so an event is counted once even if the player moves or an area overlaps a minigame. Siege match history is an existing source for its own match statistics; reconcile it rather than writing a second independent Siege kill count. Exact PvP/PvE/environmental-death semantics and whether creature kills belong in the same total remain undecided. The default private/friends/everyone setting should apply to each configurable statistic; finer per-mode visibility is still an open UI decision.
+
 ## Candidate player-facing groups — not yet approved field by field
 
 - Activity: active playtime, AFK time, first server join and possibly active days.
