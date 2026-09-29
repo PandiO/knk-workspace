@@ -28,6 +28,10 @@ V1 had a dedicated AFK mode that the developer wants to reimplement. Its V1/V2 b
 
 **Agreed:** kills and deaths must be inspectable by game context/minigame, not just as one undifferentiated counter. Siege, future Arena and Dungeons should each have their own breakdown; the model must permit new modes without adding a hard-coded column for every one. A lifetime overall total may be derived from mutually exclusive context buckets, with explicit labels for ordinary world activity. Record the context when an event happens (including match identity where relevant) so an event is counted once even if the player moves or an area overlaps a minigame. Siege match history is an existing source for its own match statistics; reconcile it rather than writing a second independent Siege kill count. Exact PvP/PvE/environmental-death semantics and whether creature kills belong in the same total remain undecided. The default private/friends/everyone setting should apply to each configurable statistic; finer per-mode visibility is still an open UI decision.
 
+## Time periods
+
+**Agreed:** chosen player-facing statistics should support both lifetime totals and per-day figures, including per-game-context breakdowns where applicable. Daily and lifetime views should derive from the same recorded facts or consistently reconciled aggregates so their definitions cannot drift. A session spanning a day boundary must allocate playtime and AFK duration to the correct days. Define the reporting timezone, late-event correction rules, daily retention and whether a lifetime total includes historical data before this feature was instrumented in the later technical design. V2's `UserStatisticsDaily` is evidence for the requirement, not an implementation to copy without checking its persistence behavior.
+
 ## Candidate player-facing groups — not yet approved field by field
 
 - Activity: active playtime, AFK time, first server join and possibly active days.
