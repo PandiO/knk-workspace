@@ -1543,6 +1543,8 @@ knk-plugin `0fa6d06` (knk-paper uncompiled):
 
 ## Phase 10 — Post-MVP
 
+**Design maturity (2026-09-29):** This is a scope outline, not an implementation-ready design. The lobby model reserves `Mode = Scheduled` and `ScheduleJson`, and match/participant results are already persisted. The schedule format, timezone and missed-slot behavior, heartbeat payload and refresh/failure behavior for the live monitor, history/profile views, and acceptance criteria still need decisions before implementation. `Scheduled` remains rejected by the API until then.
+
 - `Scheduled` lobby mode (`ScheduleJson`, next-start computation, announcements ahead of the slot) —
   vision §3.4 cadence.
 - Web-app live monitor (plugin heartbeat of lobby runtime state → read-only dashboard) and match
