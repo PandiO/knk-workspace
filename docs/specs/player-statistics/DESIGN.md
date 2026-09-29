@@ -88,6 +88,18 @@ A versioned event name and schema; event timestamp in UTC plus stable server ord
 
 **Agreed direction:** keep a baseline set of low-frequency, meaningful events for every player so later bug reports remain diagnosable. Add a configurable enhanced diagnostic mode for named test runs or player cohorts with more detail and potentially bounded movement samples; the baseline remains active independently of that mode. Exact event families and detailed-mode triggers still need approval. Never persist every position/tick by default. Use buffered/asynchronous ingestion with bounds, backpressure and explicit handling of dropped diagnostics so gameplay does not wait on analytics writes. Define a staff-only search/timeline UI by player, time window, session, test run and match; show linked failures and source records, with access auditing. Pick retention separately for detailed events, technical traces and aggregates after measuring volume and considering privacy; no arbitrary retention duration is approved yet. Measure events per player-minute, peak throughput, queue lag, storage growth, search latency and failure behavior in alpha, then adjust production detail and sampling.
 
+### Siege event catalogue: lobby and participation (proposal)
+
+| Event | When emitted | Minimal diagnostic fields | Enhanced closed-alpha fields |
+|---|---|---|---|
+| `siege.lobby_join_attempt` / outcome | A player requests to enter a lobby; include successful and denied outcomes | player/session ID, lobby ID, timestamp, outcome and stable reason code | relevant eligibility/capacity/team-assignment inputs; no raw player inventory |
+| `siege.vote_cast` / outcome | A scenario vote is accepted or rejected | lobby ID, scenario ID, player ID, outcome | previous/replacement choice and applicable vote-state version |
+| `siege.team_assignment` | Team assigned or changed | player ID, lobby/match ID, team ID, assignment cause | candidate team sizes/balancing inputs when troubleshooting |
+| `siege.match_join` / `siege.match_leave` | Player begins or ends participation | match ID, player ID, team ID, timestamp, leave cause | reconnect/teleport/inventory-restore state references |
+| `siege.match_phase` | Match moves from lobby to countdown, active, cooldown/completed/aborted | match ID, old/new phase, cause | relevant timer and scenario configuration version |
+
+These names are provisional and must be reconciled with actual Siege state transitions and the authoritative match model. Use one operation ID to link an attempt to its outcome and associated plugin/API trace, without claiming success before persistence/transition completes. Suppress duplicate records on retries, represent unexpected server shutdown and disconnect distinctly, and store only IDs/versioned configuration references where the authoritative source already exists. High-frequency countdown ticks do not need individual durable events.
+
 ### First vertical slice
 
 Use one Siege test session as an acceptance scenario: tester joins, opens relevant menu, enters lobby, joins a team, acts on objective/gate, receives reward, match ends; deliberately trigger one denied action and one plugin/API failure. Staff must locate the session and see the ordered action/result timeline with match and correlation links, then navigate to technical error details. This is a proposal for design validation, not a claim that this instrumentation or UI is already implemented.
