@@ -37,6 +37,8 @@ Live tracker of in-progress work across all four Knights and Kings repos
 | _(example)_ Siege minigame — capture point sync | web-api: `Services/SiegeService.cs`; plugin: `siege/` package | Claude Code session A | Implementing capture-point event handling | 2026-09-17 | 2026-09-17 |
 | Legacy inventory-menu screen/item mining + feature allocation | knk-workspace: new `docs/specs/legacy/inventory-menu-screens.md`, `docs/specs/legacy/README.md`; read-only on `knk-v1-archive`/`knk-v2-archive` | Claude Code session (Pandi) | Mining v1/v2 menu screens and items | 2026-09-25 | 2026-09-25 |
 
+| Siege survival design (KNG-50) | knk-workspace: `docs/specs/siege-survival/`, `docs/specs/README.md`, Siege design cross-link; code repos read-only | Codex / Pandi | Documenting 2026-09-30 decisions; branch `codex/kng-50-siege-survival-design`; publish to main authorized | 2026-09-30 | 2026-09-30 |
+
 ## Recently completed
 
 | Feature | Repos touched | Finished | Notes / link |
