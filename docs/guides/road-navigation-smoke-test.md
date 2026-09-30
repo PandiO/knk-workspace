@@ -284,6 +284,13 @@ Next: lower `junction-cluster-radius` and raise `min-spur-length` to 10–12. Af
 the network looks good (end of session 2026-09-30); Phase 3's remaining checklist items and Phases 4/5 are still to
 run.
 
+Final `navigation.builder` settings used: `junction-cluster-radius: 5`, `min-spur-length: 12`, `ambiguous-reach: 2`
+(other builder keys at their defaults: `tile-size: 512`, `tile-margin: 32`, `max-cells-per-tile: 250000`,
+`snapshot-chunks-per-tick: 4`). The network was **not rebuilt** after the manual cleanup (duplicate junctions merged,
+gaps between endpoints recorded). Expect on the next rebuild of those tiles: recorded edges and their end nodes stay;
+node merges inside one tile hold only where the builder produces a single junction there again, otherwise the
+duplicates come back and need merging again. Worth checking with one `/knk road build tile` before relying on it.
+
 Manual cleanup lessons:
 - `node merge` does not re-trace the road: every edge of the merged-away node gets its end point replaced by the kept
   node's position (`MergeNodesAsync`), so a merge across a wall or a tile seam draws a straight line through the wall,
