@@ -36,6 +36,7 @@ Live tracker of in-progress work across all four Knights and Kings repos
 |---|---|---|---|---|---|
 | _(example)_ Siege minigame — capture point sync | web-api: `Services/SiegeService.cs`; plugin: `siege/` package | Claude Code session A | Implementing capture-point event handling | 2026-09-17 | 2026-09-17 |
 | Legacy inventory-menu screen/item mining + feature allocation | knk-workspace: new `docs/specs/legacy/inventory-menu-screens.md`, `docs/specs/legacy/README.md`; read-only on `knk-v1-archive`/`knk-v2-archive` | Claude Code session (Pandi) | Mining v1/v2 menu screens and items | 2026-09-25 | 2026-09-25 |
+| Road navigation (KNG-27) — live smoke test on the dev server | knk-workspace `docs/guides/road-navigation-smoke-test.md` (Findings); the three `claude/road-navigation` branches under test, no code changes yet | Pandi + Claude Code session | **Paused.** Phase 1 passed; Phase 3 network usable after profile/builder tuning and manual cleanup; Phases 4, 5 still to run. Open code items: off-border Boundary node (B), plaza junction ring (C), action-bar identification (G) | 2026-09-29 | 2026-09-30 |
 
 
 ## Recently completed
