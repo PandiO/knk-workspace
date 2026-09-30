@@ -1,7 +1,6 @@
 # Documentation maintenance and release notes
 
-**Status:** Active  
-**Last updated:** 2026-09-30
+**Status:** Active · **Last updated:** 2026-09-30
 
 This guide applies to features and fixes in `knk-workspace`, `knk-plugin`, `knk-web-api` and `knk-web-app`. Documentation is part of implementation. Keep user promises in sync with code and verification. See [the feature register](../../FEATURE_REGISTER.md) for current coverage and [the changelog](../../CHANGELOG.md) for shipped changes.
 
