@@ -1,7 +1,7 @@
 # Road navigation — smoke test checklist (KNG-27)
 
-**Status:** Ready to run (written 2026-09-29, after chain link 9)
-**Last updated:** 2026-09-29
+**Status:** In progress — Phase 1 passed; Phase 3 network usable after profile and builder tuning (see Findings); Phases 4, 5 not run yet
+**Last updated:** 2026-09-30
 **Sources:** the "Developer to-do" blocks of Phases 1, 3, 4 and 5 in `docs/specs/navigation/IMPLEMENTATION_PLAN.md`;
 progress report `docs/reports/2026-09-27-road-navigation-chain.md`. If this file and a plan block disagree, the plan wins.
 
@@ -35,30 +35,41 @@ knk-web-app `claude/road-navigation` `9dbb481`. Nothing is merged to trunk yet.
 
 Full payloads are in the plan's "Phase 1 status → Developer to-do". Header `X-API-Key` for writes.
 
-- [ ] `GET api/road-profiles` lists *Default road*.
-- [ ] `PUT api/road-tiles/world/0/0/graph` (payload 1) → 200, `nodesCreated: 3`.
-- [ ] `GET api/road-tiles/world/0/0/graph` → 200 with `ETag: "1"`; again with `If-None-Match: "1"` → 304.
-- [ ] `PUT api/road-tiles/world/1/0/graph` (payload 2) → `stitchEdges: 1`; `GET api/road-network/meta?world=world`
+- [x] `GET api/road-profiles` lists *Default road*.
+- [x] `PUT api/road-tiles/world/0/0/graph` (payload 1) → 200, `nodesCreated: 3`.
+- [x] `GET api/road-tiles/world/0/0/graph` → 200 with `ETag: "1"`; again with `If-None-Match: "1"` → 304.
+- [x] `PUT api/road-tiles/world/1/0/graph` (payload 2) → `stitchEdges: 1`; `GET api/road-network/meta?world=world`
       shows one component of 5 nodes.
-- [ ] `POST api/road-tiles/world/1/0/dirty` → `dirty: true`; `POST api/road-edges/search` with
+- [x] `POST api/road-tiles/world/1/0/dirty` → `dirty: true`; `POST api/road-edges/search` with
       `{"filters":{"stale":"true"}}` lists that tile's edges.
-- [ ] `GET api/Streets/{id}` shows `edgeCount` / `totalLength`.
+- [x] `GET api/Streets/{id}` shows `edgeCount` / `totalLength`.
 - [ ] **Delete these fake tiles before Phase 3** (or use a different world name) so they don't pollute the real network.
+      **Blocked:** no API route exists to delete a road tile/node (only `PUT`/`DELETE api/road-edges/{id}`). Left the
+      `world` x=0,z=0 and x=1,z=0 fake tiles in place; needs a direct dev-DB delete or Phase 3's real world to use a
+      different name.
 
 ## 2. Phase 3 — build the real network (in game, ~45 min)
 
 Run first: `/navigate` needs this network.
 
-- [ ] `/knk road status` → enabled.
-- [ ] **Survey three road types:** `/knk road survey start "Kardenna main street"`, walk 2-3 min (action bar samples
+- [x] `/knk road status` → enabled.
+- [~] **Survey three road types:** `/knk road survey start "Kardenna main street"`, walk 2-3 min (action bar samples
       climb only while walking on the ground), `/knk road survey stop` → proposal in chat → click **Save**. Repeat for a
       wilderness road and a trail (`survey start` without a name → `save <name>`).
-- [ ] `/knk road profile list` / `show <name>`; new profiles are class Road ×1.0 until you edit them (web app or
+      Did 3/4 surveys, works; the town has a lot of square/open plaza-like road areas and the surveyor already looked
+      like it was producing rough proposals there (expected — surveys aren't meant to handle open plazas well).
+- [x] `/knk road profile list` / `show <name>`; new profiles are class Road ×1.0 until you edit them (web app or
       `/knk road profile`).
-- [ ] `/knk road build radius 1500` around the town (include the tunnel/bridge) → action-bar progress, per-tile chat
+- [~] `/knk road build radius 1500` around the town (include the tunnel/bridge) → action-bar progress, per-tile chat
       summary with clickable teleports.
+      Many tiles logged `Tile X,X not built: no seeds: no domain Location, survey or admin seed in or near this tile`.
+      Likely because the town is on an island with sparse roads around it (few/no seeds outside town bounds) —
+      needs triage: is this expected behaviour for sparse-seed tiles, or should radius-build seed from a wider net?
 - [ ] `/knk road show` → coloured polylines, pillars at junctions, action-bar label when looking at an edge;
       `/knk road show all` on a bridge.
+      **Failing:** overlay shows way too many junctions and stale nodes; roads inside the town don't connect properly
+      and some of the most obvious street segments weren't built at all. Not workable to fine-tune by hand as-is —
+      needs a code fix, not just re-surveying/re-building. Root cause not yet triaged.
 - [ ] Name at least the places you will navigate to: `/knk road node name Market` on a junction.
 - [ ] `/knk road street "<street>" --continue` on an edge you stand on → "and N more".
 - [ ] Break a road block → within 30 s `/knk road tiles` lists the tile DIRTY; `/knk road build dirty` keeps names.
@@ -167,7 +178,135 @@ is reversible in the plan's status block.
 
 ## Findings
 
-_(fill in during the test)_
+### Phase 1 — API sanity (2026-09-29): all pass
+
+Ran the full checklist against knk-web-api `claude/road-navigation` `77e0a29` on the dev DB (migration + PluginApiKey
+already applied). All six checks passed exactly as specced: `road-profiles` lists *Default road*; tile `0,0` PUT →
+`nodesCreated: 3`; GET → `ETag: "1"` then `304` on `If-None-Match`; tile `1,0` PUT → `stitchEdges: 1` and
+`road-network/meta` → one component of 5 nodes; `dirty` → `true` and `road-edges/search {"stale":"true"}` lists both
+of that tile's edges; `Streets/{id}` → `edgeCount: 0`, `totalLength: 0` (expected, no labels yet).
+
+**Gap found:** the last prep bullet ("delete these fake tiles before Phase 3") has no way to be done through the
+API — there is no `DELETE` route for a road tile or road node (only `PUT`/`DELETE api/road-edges/{id}`). Left tiles
+`world` `0,0` and `1,0` in place. If Phase 3 builds the real network under the world name `world`, this test data
+will coexist with it; either add a tile/node delete route, or clean up with a direct dev-DB delete before relying on
+`road-network/meta` counts.
+
+### Phase 3 — build the real network (2026-09-29): blocked, not workable
+
+1. `/knk road status` → enabled. Pass.
+2. Surveys: did 3 of the 4 prescribed surveys (main street, wilderness road, trail), all completed and saved fine.
+   The test town has a lot of square/open plaza-style road areas; the surveyor already visibly struggled to produce
+   clean proposals there (rough centreline through an open area rather than a real road) — plausibly expected
+   behaviour for a linear-survey tool on non-linear plazas, not necessarily a bug.
+3. `/knk road profile list` / `show` → pass.
+4. `/knk road build radius 1500`: many tiles logged `Tile X,X not built: no seeds: no domain Location, survey or
+   admin seed in or near this tile`. Likely explanation: the town sits on an island with few roads/seeds around it,
+   so tiles beyond the town have nothing to seed from. Needs triage — is a tile-with-no-seed skip the intended
+   behaviour (D-something in the plan), or should build-radius pull seeds from farther away / from the town centre
+   outward?
+5. `/knk road show`: **failing, not usable as a base to fine-tune.** Way too many junctions and stale nodes; several
+   town roads don't connect where they visibly should; some of the most obviously-a-road segments were not built at
+   all. This isn't something to patch by hand in-game — points at a bug in tile stitching, junction detection, or
+   the road-graph builder itself. Triaged on 2026-09-30, see "Phase 3 — rebuild attempts and triage" below.
+
+**Net effect:** stopped Phase 3 here — the built network is not fine-tunable, so nothing downstream of it (naming
+nodes, `/navigate` in Phase 4, web-app stretches in Phase 5 that depend on real edges) can be meaningfully tested
+until the build quality issue is root-caused and fixed.
+
+### Phase 3 — rebuild attempts and triage (2026-09-30)
+
+Tuned `navigation.builder` and the profiles, then rebuilt around Cinix (`world_KNK-DEV`, tiles 1,-2 / 2,-2 / 2,-1 /
+3,-1). Every tile failed to upload. Findings, in order of impact:
+
+**A. Profiles flooded the road mask (trigger, data problem).** Tile 2,-2 went from 7,111 cells / 132 nodes (last good
+build, 2026-09-29 18:25) to 231,647 cells / over 2,300 nodes, with `Cell cap reached; the mask is incomplete` on every
+tile. A floor block is road when *any* enabled profile lists it as Surface, Edge or Accent, and it is ambiguous only
+when *every* profile listing it says so (`ProfileSet`, DESIGN §5.1). The profiles contained:
+- `GRASS_BLOCK` as a non-ambiguous Edge (profile *Cinix Keepstreet*): all grass terrain counted as road.
+- Roof/building materials with ~0 % share kept as Accent (`OAK_STAIRS` 0.00/0.00, `POLISHED_DIORITE_STAIRS`,
+  `STONE_SLAB`, `RED_TERRACOTTA`, `SPRUCE_LOG`).
+- `STONE_BRICKS`, `COBBLESTONE`, `GRAVEL` marked ambiguous in some profiles but not in *Cinix rural road* / *Stonebrick
+  bridge*, so they stayed non-ambiguous overall. Adding ambiguous flags in one profile has no effect while another
+  profile lists the material as non-ambiguous.
+
+Remedy (developer): remove `GRASS_BLOCK` and the near-zero accents, mark stone brick / cobblestone and their stair and
+slab variants ambiguous in every profile, keep `DIRT` non-ambiguous (it is a road block ~95 % of the time here).
+Roads made only of stone brick (bridge, Keepstreet stair house) then need `/knk road record`. "Cell cap reached" in a
+tile summary is the early warning for a flooded mask.
+
+Design questions raised: should a near-zero-share Accent still count as road? Should one profile's "non-ambiguous"
+override every other profile? Should the survey refuse terrain materials (grass) as Edge?
+
+**B. Bug: a Boundary node placed off the tile border (code, `SkeletonGraph`).** Error:
+`Boundary node 'n2347' at (1025, -530) is not on the tile border` (tile 2,-2 spans x 1024..1535). A plaza or
+junction cluster is one node covering many spans; its position is one centre span. `traceChains` starts a chain at the
+*member* span next to the road, while `cutAtTileBorder` decides inside/outside from the node's *centre*
+(`nodeInside(chain.from)`). When such a node straddles the tile border with its centre outside, the chain's first span
+is already inside, so `boundaryNode()` mints a Boundary node at that member span, which can be anywhere inside the
+plaza/cluster. Larger `junction-cluster-radius` makes clusters wider and hits this more often (it first showed at
+radius 6); the flooded mask (A) produced giant plazas that hit it at any radius. Fix direction: split multi-span nodes
+at the tile border, or place the Boundary node at the chain's real border crossing; add a test with a plaza and a
+cluster straddling a tile border.
+
+Two attempted patches were tried and reverted, both uncommitted: (1) re-mint a Boundary only when a reused Endpoint is
+off the border — wrong path, no effect; (2) snap every Boundary node to the nearest border line — turned the error into
+`Two payload nodes share position (1024, 90, -564)` (several chains leaving one plaza snapped onto the same point) and
+bent edge geometry. Both were based on wrong theories.
+
+**C. Design issue: a plaza produces ~10 junctions plus stray edges.** Plazas are typically ~20 blocks wide here.
+`collapsePlazas` only marks spans whose *own* local width (`2·dt − 1`) exceeds `widthMax`, which is the plaza's core;
+the 3–4 block band along the edges stays ordinary road. The skeleton of an irregular plaza sends a branch toward every
+corner, bump, lamp post, planter or step on its outline, and those branches fork in the edge band, outside the core,
+so each fork becomes its own junction around the plaza. Obstacles inside the plaza (fountain, trees) make skeleton
+loops, and `splitLoopsAndParallels` inserts a junction on each. `junction-cluster-radius` cannot absorb these into the
+plaza: `clusterJunctions` never walks into a plaza node, so a large radius only merges the fake junctions with each
+other (and raises the risk of B).
+- Workaround: `min-spur-length` 10–12 prunes the edge-band branches (real dead ends shorter than that go too);
+  `junction-cluster-radius` back to 4–5; clean leftovers by hand with `node merge` + `node lock`.
+- Fix direction: make the plaza footprint the whole area within reach of its core (every mask span within `dt` of a
+  plaza span) so all skeleton branches inside it belong to the plaza node, and let `clusterJunctions` merge
+  candidates next to a plaza into it.
+
+**D. Upload timeout on a huge tile.** Tile 3,-1 (249,305 cells, 2,521 nodes, 3,858 edges) failed in the plugin with
+`SocketTimeoutException`, but the API finished and committed it (`GET api/road-tiles` shows v1 built 20:03:05). A
+client-side failure can therefore leave a stored graph; this one is junk from the flooded mask and must be rebuilt
+once the profiles are fixed.
+
+**E. Operational notes.** `navigation.builder` values in `config.yml` are read only in `onEnable` — a full restart is
+needed, `/knk road reload` only refreshes the network cache. There is no command or API route to delete a road node
+or a road tile (only `node merge`, `edge delete`; a deleted Detected edge returns on the next rebuild).
+
+**F. Result after fixing the profiles (A).** With `junction-cluster-radius: 10`, `min-spur-length: 6`,
+`ambiguous-reach: 2` and the cleaned profiles: a big improvement. Far fewer junctions and edges, and more real
+roads are mapped. Some stray edges and junctions still need cleaning, and some endpoints remain (understandable ones).
+Next: lower `junction-cluster-radius` and raise `min-spur-length` to 10–12. After further tuning and manual cleanup
+the network looks good (end of session 2026-09-30); Phase 3's remaining checklist items and Phases 4/5 are still to
+run.
+
+Manual cleanup lessons:
+- `node merge` does not re-trace the road: every edge of the merged-away node gets its end point replaced by the kept
+  node's position (`MergeNodesAsync`), so a merge across a wall or a tile seam draws a straight line through the wall,
+  and the kept node is locked. Undo by rebuilding the merged-away node's tile (and its neighbour), then
+  `node unlock`. Use merge only for two nodes of one junction a few blocks apart in open space.
+- Two Boundary nodes that face each other across a seam but are further apart than the API's stitch rule (±1 block in
+  x/z and y) stay unconnected; bridge them with `/knk road record` along the real road.
+- Endpoint pairs < 5 blocks apart matched `ambiguous-reach: 2` (an ambiguous-only stretch longer than 2×reach cuts the
+  road); raising it to 3 or recording the gap fixes them.
+
+**G. `/knk road show` action-bar identification is unreliable (usability bug).** Walking around and looking at
+nodes often shows no id. Cause (`RoadOverlayRenderer.lookedAt` / `describeAt`): it is not a line-of-sight check. Once
+per overlay tick (20 ticks) it takes the single point exactly `LOOK_DISTANCE` = 12 blocks along the view direction
+and labels a node only if one is within 3 blocks (3D) of that point, else an edge within 4 blocks. A node nearer or
+farther than ~12 blocks, or one you look down at from close by (the point then lies underground), is never labelled.
+The `here` commands use yet another rule (nearest node within 6 blocks of the feet), so what the bar shows and what
+`node name` / `node lock` act on can differ. Improve: pick the node closest to the view *ray* (e.g. within ~1.5 blocks
+of it, up to the overlay radius), fall back to the nearest node at the feet, and consider a `/knk road node info`
+(or clickable ids in chat) that lists the nearest nodes/edges with ids. Developer note: once you know the
+12-block rule, aiming at plazas works fine; in tunnels it is impractical. Requested: `/knk road node info here`.
+Side effect seen in test: aiming at a node pillar often shows `Edge #…`. When the 12-block point misses the node by
+more than 3 blocks, the label falls back to the nearest edge within 4 blocks, and every node has edges ending at it.
+The yellow gate-crossing marker is also drawn as a pillar but belongs to an edge, which adds to the confusion.
 
 ---
 
