@@ -35,6 +35,7 @@ Live tracker of in-progress work across all four Knights and Kings repos
 | Feature | Repos / files claimed | Owner (human / session) | Status | Started | Last updated |
 |---|---|---|---|---|---|
 | _(example)_ Siege minigame — capture point sync | web-api: `Services/SiegeService.cs`; plugin: `siege/` package | Claude Code session A | Implementing capture-point event handling | 2026-09-17 | 2026-09-17 |
+| Living feature register, documentation workflow and changelog — [KNG-33](https://linear.app/kngpandi/issue/KNG-33/living-feature-register-documentation-workflow-and-changelog) | knk-workspace: feature-register/docs-map/changelog foundation and related workflow guidance; branch `codex/kng-33-feature-register`; code repos read-only for current-state evidence | Codex session (Pandi) | Recovering and auditing the prior review patch against current `main`; implementation in progress | 2026-09-30 | 2026-09-30 |
 | Legacy inventory-menu screen/item mining + feature allocation | knk-workspace: new `docs/specs/legacy/inventory-menu-screens.md`, `docs/specs/legacy/README.md`; read-only on `knk-v1-archive`/`knk-v2-archive` | Claude Code session (Pandi) | Mining v1/v2 menu screens and items | 2026-09-25 | 2026-09-25 |
 
 
