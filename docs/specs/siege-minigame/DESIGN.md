@@ -1,5 +1,7 @@
 # Siege Minigame — Design
 
+**Related planned mode (2026-09-30):** [Siege Survival / Defend the Castle](../siege-survival/DESIGN.md) ([KNG-50](https://linear.app/kngpandi/issue/KNG-50/siege-survival-endless-npc-waves-gate-repair-and-match-economy), child of KNG-37) extends this foundation with endless NPC waves, cooperative gate repair and both equipment modes. It is design-only and does not change the implemented PvP rules described here.
+
 **Status:** Implemented — all MVP phases (1–9) merged into the default branches on 2026-09-26 and smoke-tested live
 by the developer; Phase 10 (Scheduled lobbies) is post-MVP, not started. Seven decisions with the developer (§0; D6
 changed after the smoke test); remaining open questions in §13.
