@@ -11,7 +11,8 @@ was clean, one tab-completion slip fixed in `68fa48c`); **Phase 5 done** (knk-we
 merge `be5df0f` that brought in KNG-17). **All phases done — the chain is complete**; the developer merges phase by
 phase after testing (closing handoff `docs/ai-agents/handoffs/2026-09-29-road-navigation-closeout.md`).
 Every code reference was verified against trunk by a separate review pass on 2026-09-27; its corrections are folded in.
-**Last updated:** 2026-09-29 (Phase 4 status; Phase 3 compiled)
+**Last updated:** 2026-10-01 (live smoke test findings; see `docs/guides/road-navigation-smoke-test.md` Findings for
+full detail — blocked on direct-mode/last-mile pathfinding and rebuild-persistence bugs, Phase 4 testing paused)
 **Linear:** [KNG-27](https://linear.app/kngpandi/issue/KNG-27)
 **Design:** [DESIGN.md](DESIGN.md) rev. 4 (decided) — read it first; this plan says *where and how* to build it.
 **Sources:** trunk as of 2026-09-27 — knk-web-api `master` `acaee99`, knk-plugin `main` `ceed2f6`, knk-web-app `main`
@@ -1479,6 +1480,11 @@ show` looks right; one street label fix; a block broken on the road marks the ti
 
 ### Phase 3 status — done 2026-09-28, compiled by link 9 on 2026-09-29 (knk-plugin `claude/road-navigation` `9fe993a`, `efc9251`, `f71ec99`, `939baa1`, `0f6a206`, `f0385ad`, `4804561`, `138bfc4`, `b1665ff`, `3b5c408`, `8017e55`, `d46d564`, `cab864d`, `96f4c62`; on top of 2e's `4ffdd1a`; trunk `main` still `eb1d68c`)
 
+**Live smoke test 2026-09-29/30 and 2026-10-01 — usable after builder/profile tuning, one confirmed gap:** manual
+cleanup of duplicate junctions and stale nodes (merge, lock, recorded edges) does not survive a full tile rebuild —
+pruned junctions/endpoints reappear. Needs a code fix (persist/replay cleanup, or better plaza/cluster recognition
+so duplicates aren't produced). Full detail in `docs/guides/road-navigation-smoke-test.md` Findings.
+
 > **Compiled 2026-09-29 (link 9, `68fa48c`):** the first real Gradle build of the branch (`./gradlew build -x
 > deployToDevServer`, paper-api / WorldGuard / WorldEdit resolvable in the cloud since the developer allowed the two
 > Maven hosts) compiled every Phase 3 file unchanged. Of knk-paper's 821 tests one failed: `RoadAdminCommand.complete`
@@ -1737,6 +1743,14 @@ arrival; auto-end on death/teleport/siege join.
 
 ### Phase 4 status — done 2026-09-29 (knk-plugin `claude/road-navigation` `68fa48c` (Phase 3 compile fix), `be5df0f` (trunk merge), `7500f44`, `be329f7`, `40ee42e`, `aa71dae`, `57c1605`, `05f5639`, `0fd5f43`, `cdc73d1`, `9717036`, `cfe49f4`, `4e3f8af`; on top of Phase 3's `96f4c62` merged with trunk `main` `27b4236`)
 
+**Live smoke test 2026-10-01 — paused with findings** (full detail in
+`docs/guides/road-navigation-smoke-test.md` → Findings → "Phase 4/5 — live smoke test (2026-10-01)"):
+basics, tab completion and permission checks pass; destination resolution and guidance mostly work but the §6.2
+off-road/direct-mode leg draws a straight line through terrain instead of a walkable path, doesn't re-evaluate as the
+player moves away from the goal, the §6.3 "already in region" check doesn't fire, and region-destination goal
+selection (District) looks arbitrary rather than closest-to-player. Testing stopped before Availability/Ending/
+Admin/Performance pending a fix.
+
 - **Start condition and merge:** KNG-17 was on `origin/main` (`27b4236`, merged 2026-09-28). Phase 3 was compiled
   first (`68fa48c`, see the Phase 3 note above), then trunk merged in (`be5df0f`, no rebase). Conflicts: `KnkConfig` /
   `ConfigLoader` (teleport and navigation sections both kept — the record is now 8 fields with a compact constructor
@@ -1972,6 +1986,9 @@ arrival; auto-end on death/teleport/siege join.
 ESLint warnings in touched files.
 ### Phase 5 status — done 2026-09-28 (knk-web-app `claude/road-navigation` `26de19e`, `23c64ef`, `ba79450`, `d60b458`, `baf9c20`, `ff3ad61`, `9dbb481`; cut from `main` `f56d421`)
 
+**Live smoke test 2026-10-01 — passed**, one small finding: `RoadProfilesCard.tsx:152` uses the browser's native
+`window.confirm()` for profile delete instead of `FeedbackModal.tsx`. See the smoke test guide Findings.
+
 - **What was built** (all under `F/`; 17 files, +2 784 / −1 lines):
   - `types/dtos/road/RoadDtos.ts` — `ROAD_ADMIN_NODE = 'knk.admin.road'`, the enum name lists (`ROAD_CLASSES`,
     `ROAD_MATERIAL_ROLES`, `ROAD_EDGE_FLAGS`), every DTO of `W/Dtos/RoadDtos.cs` the web app reads or writes
@@ -2089,6 +2106,136 @@ ESLint warnings in touched files.
     60 s refresh) — a rename in the Street form or a label change here needs no plugin action.
   - **Phase 6 / later:** if a node editor is added, `roadClient.updateNode` and `RoadNodeUpdateDto` are ready;
     node edits lock the node unless `locked: false`.
+
+---
+
+## 5.5 Fix plan before resuming the live smoke test (2026-10-01)
+
+Six items, confirmed against actual `claude/road-navigation` source by two Explore agents (not guessed from
+symptoms). Priority order below; each is independently implementable and testable. A seventh, larger item
+(direct-mode/last-mile walkable pathfinding) was split out into its own Linear issue rather than bundled here —
+see the note at the end of this section. Full findings this plan is based on:
+`docs/guides/road-navigation-smoke-test.md` → Findings → "Phase 4/5 — live smoke test (2026-10-01)".
+
+**1. Web-app: destructive road-admin actions use `window.confirm()` instead of `FeedbackModal`** (trivial, isolated)
+- File: `knk-web-app/src/components/admin/roads/RoadProfilesCard.tsx` (~line 152) — confirmed instance.
+- Before fixing, grep every road-admin component/page (`src/components/admin/roads/**`,
+  `src/pages/admin/RoadsAdminPage.tsx`, the Street form's Road panel) for other `window.confirm(` call sites and
+  fix all of them in the same pass, not just this one.
+- Fix: copy the `useState`-driven modal pattern from `knk-web-app/src/components/ObjectDashboard/ObjectDashboard.tsx`
+  (`handleDelete` ~lines 94-148, `<FeedbackModal>` JSX ~lines 168-178) — populate
+  title/message/status/continueLabel/onContinue, `setModalOpen(true)`, let `FeedbackModal` await `onContinue`
+  and stay open on thrown errors to show the failure state.
+- Verify: manual check in the admin UI for every fixed component; grep confirms no `window.confirm(` left under
+  the road-admin tree.
+
+**2. Region-destination goal point cuts through non-road terrain instead of preferring roads (Bug 5)**
+- The navigator must still prefer the road network: the expected behaviour mirrors a plain Location destination
+  (Phase 4 item 19, already passing) — follow the road as far as it goes, and only use a short straight *last
+  leg* for the small uncovered gap. "Closest point" for a region means *closest via the shortest road-based
+  route from the player*, not raw Euclidean closest point, and never a long direct line through "gardens"/
+  off-road terrain.
+- Files: `knk-paper/.../navigation/NavigationService.java` (the goal-resolution/mode-decision path near
+  `resolveGoals`) is the primary place to fix — investigate why a `REGION` goal currently appears to fall into
+  full direct mode (bypassing the road network) instead of going through the same road-route-then-short-last-leg
+  path a Location goal uses. `knk-core/.../roads/route/RegionClosestPoint.java` (`goals`/`crossings`/`closest`)
+  already produces road-network-aware candidate points (where roads cross into the region, or the network's
+  nearest approach) and should keep driving the **routed** A* search for region destinations — don't bypass it.
+  `knk-core/.../roads/route/RegionShape.java` (`closestPointFromFloor`) may still be useful, but only for the
+  short final gap *after* the road-based route ends (the same role the existing last-leg logic plays for
+  Location targets), never as a replacement for road routing.
+- Fix direction: find and correct the branching logic that decides direct-vs-routed for region destinations so
+  it goes through the same "route via roads, then a short straight last leg if needed" path as Location targets,
+  rather than a separate "if within direct-mode range of some precomputed region point, go fully direct" branch.
+  The apparent arbitrariness observed in testing is a symptom of skipping the road route, not of picking the
+  wrong point.
+- Risk: must not regress the case where a region genuinely has no road anywhere near it (going direct may be the
+  only option, per the existing refusal/direct-mode rules in §6.2) — preserve that fallback.
+- Verify: live test approaching an irregular region (with roads nearby) from several angles; the trail should
+  follow the road toward the region and only go off-road for a short final stretch, never a long straight line
+  through terrain. Re-test the no-nearby-road case to confirm the existing fallback still works.
+
+**3. Direct mode never re-evaluates as the player moves; "left the road" message structurally can't fire in
+   direct mode (Bugs 2 & 3, bundled)**
+- Files: `knk-paper/.../navigation/NavigationService.java` (`tick` ~463-503, which currently skips `recheck`
+  entirely when `a.direct`; `tickDirect`; `arrivedAtRouteEnd` ~626-637), `knk-core/.../navigation/NavigationSession.java`
+  (`tick` ~190-223, the existing routed-only off-route/reroute machinery, used as a reference, not reused verbatim
+  since direct mode has no `Route` to project onto), `knk-paper/.../navigation/NavigationMessages.java` (`offRoute()`).
+- Fix: give direct mode its own periodic recheck (same throttle cadence/constants as the routed `recheck`) that
+  re-derives whether direct mode should still apply and whether the player is drifting away from the target.
+  Decisions recorded:
+  - New reason/message for direct mode's drift signal rather than reusing `offRoute()`'s "You left the road"
+    wording (there is no road in direct mode) — e.g. a generic recalculating message.
+  - On drift, recompute a new direct-mode target and re-draw; do not auto-promote to a routed session in this
+    first pass (lower risk) — leaving the §6.2 48-block/road-connectivity check as the only thing that forces a
+    `/navigate` re-run into routed mode, same as today. (This only applies to genuine point/Location direct-mode
+    targets — once item 2 lands, region destinations should rarely reach pure direct mode at all except the
+    short last-leg case, which is naturally short and doesn't need this drift handling the same way.)
+  - Route the `arrivedAtRouteEnd` → direct-mode handoff through this same recheck cadence, not just a one-time
+    Euclidean switch.
+  - Bug 3 ("left the road" missing) is very likely fully explained by direct mode's structural gap — re-verify
+    specifically for a **routed** session as a regression check (it was probably never actually broken there).
+- Risk: message-spam if thresholds are too tight; trail-renderer state must reset cleanly on any mode switch;
+  this is a live, frequently-exercised path — needs explicit regression coverage of the current happy path
+  (arrival, normal walking) alongside the new drift case.
+- Verify: live tests — direct-mode drift triggers the new signal; routed-mode lateral deviation still triggers
+  `offRoute()` as before; `arrivedAtRouteEnd` handoff participates in the new recheck too.
+
+**4. "You are already in X" doesn't fire for a region the player is standing in (Bug 4)**
+- Files: same `NavigationService.navigate`/`resolveGoals`/`Goals.already()` path as item 2 (the ordering between
+  the already-there check and the region goal/mode-decision computation is the leading hypothesis), plus
+  `knk-core/.../roads/route/RegionShape.java` `containsFloor(...)` if investigation finds a genuine Y-bounds bug.
+- Approach: investigate before fixing — reproduce across cuboid/polygon regions and multiple player Y positions
+  (including a multi-level/stacked case) to determine whether `containsFloor` is geometrically wrong, or whether
+  item 2's region-routing path runs before the already-there check short-circuits. Fix whichever it turns out to
+  be; don't guess the exact line now.
+- Sequencing: land **after** item 2, since both touch the same region goal-resolution path; re-test item 2's
+  scenarios afterward for regressions.
+- Verify: the four-case repro matrix (cuboid/polygon × mid-height/boundary/stacked Y) confirming the message
+  fires and no trail is drawn.
+
+**5. Plaza produces ~10 junctions instead of one (Bug 7 — root cause of most of item 6's cleanup)**
+- Files: `knk-core/.../roads/build/SkeletonGraph.java` — `collapsePlazas` (~188-254, currently a strict
+  per-span width test) and `clusterJunctions` (~265-355, currently refuses to walk through any plaza span at
+  all). Test file: `SkeletonGraphTest.java` (existing `GridFixture`/`extract`/`Extraction` golden-test style).
+- Fix: grow the plaza's footprint from its strict-width core via a bounded dilation/BFS (spending each span's
+  remaining distance-transform budget outward from the core) so the 3-4-block edge band joins the plaza instead
+  of forking into separate junctions; then let `clusterJunctions` merge a stray junction *adjacent to* (not
+  through) a plaza into its node. Decision recorded: make the growth budget a new tunable `BuildParameters`
+  field (not a hardcoded constant) so it can be adjusted per profile without a code change; exact default value
+  left to whoever implements this, validated against the synthetic-fixture test.
+- Explicitly do *not* widen `clusterJunctions`' general merge radius as a workaround — that risks worsening the
+  already-filed off-tile-border Boundary node bug (finding B in the smoke-test doc).
+- Risk: extra per-tile dilation pass must stay roughly linear in span count (runs on every rebuild, feeding
+  into item 6); must not change output for ordinary non-plaza junctions — needs full existing-suite regression
+  plus a new synthetic irregular-plaza fixture.
+- Verify: new `SkeletonGraphTest` case (irregular plaza + nearby obstacle) asserting collapse to one junction
+  node; full existing suite still green; live rebuild of a known problem plaza from the smoke-test doc.
+
+**6. Manual node cleanup doesn't survive a rebuild (Bug 6 — narrow residual after item 5)**
+- Files: `knk-core/.../roads/build/NodeMatcher.java` (proximity-only id carry-over), `knk-core/.../roads/build/TileBuilder.java`
+  (`build` ~90-125, where a locked node's *position* is restored but nothing suppresses nearby duplicate
+  candidates).
+- Approach: do this only after item 5 lands and is verified live — most of what currently needs manual cleanup
+  is item 5's plaza fragmentation, which item 5 removes at the source. Re-run the smoke test's duplicate-junction
+  scenarios first and catalogue what residual cases still don't survive a rebuild before writing any code.
+- For genuine residual cases: extend `TileBuilder.build` so a locked node acts as an exclusion zone during
+  candidate generation, not just a position anchor for a matched candidate. Open (not decided): whether the
+  exclusion radius is a new persisted field per node, or inferred from the existing `nodeMatchDistance` constant
+  — leave this to the implementing session, informed by how much residual cleanup item 5 actually leaves behind.
+- Before implementing, confirm with whoever owns `knk-web-api` whether `RoadEdgeRecord`'s rebuild-survival
+  (implemented server-side, outside both repos checked here) already covers part of this, to avoid duplicating it.
+- Verify: prune/merge a node, force a rebuild, confirm it stays pruned; unit test simulating two `TileBuilder.build`
+  calls with the same locked-node state and a varying mask.
+
+**Split out — new Linear issue, not part of this fix plan's execution:** direct-mode trail ignores terrain /
+last-mile walkable pathfinding (originally "Bug 1"). Confirmed: no walkable-path utility, navmesh, or
+Paper/Bukkit entity-pathfinding usage exists anywhere in either repo — this is net-new design work, not a
+bounded bug fix. `NavigationService.startDirect`/`tickDirect` (knk-paper) and `TrailRenderer.drawLeg`/`legPoints`
+draw a pure straight-line interpolation with no collision/walkability check, for both the off-road leg (§6.2,
+within 48 blocks) and the "road ends short of target" last leg (`arrivedAtRouteEnd`). See the linked Linear issue
+for the proposed minimal-viable direction (a bounded block-level search, ~48-64 blocks, respecting the player's
+`AccessPolicy`, with a hard search budget and fallback to today's straight line) and open questions.
 
 ---
 

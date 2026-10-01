@@ -1,7 +1,9 @@
 # Road navigation — smoke test checklist (KNG-27)
 
-**Status:** In progress — Phase 1 passed; Phase 3 network usable after profile and builder tuning (see Findings); Phases 4, 5 not run yet
-**Last updated:** 2026-09-30
+**Status:** In progress — Phase 1, 3, 5 passed (with findings); Phase 4 partially run, then **blocked** — see
+"Phase 4/5 — live smoke test (2026-10-01)" in Findings. Do not continue Phase 4 items 20+ until the direct-mode
+pathfinding bug and the rebuild-persistence gap are fixed.
+**Last updated:** 2026-10-01
 **Sources:** the "Developer to-do" blocks of Phases 1, 3, 4 and 5 in `docs/specs/navigation/IMPLEMENTATION_PLAN.md`;
 progress report `docs/reports/2026-09-27-road-navigation-chain.md`. If this file and a plan block disagree, the plan wins.
 
@@ -53,43 +55,48 @@ Full payloads are in the plan's "Phase 1 status → Developer to-do". Header `X-
 Run first: `/navigate` needs this network.
 
 - [x] `/knk road status` → enabled.
-- [~] **Survey three road types:** `/knk road survey start "Kardenna main street"`, walk 2-3 min (action bar samples
+- [x] **Survey three road types:** `/knk road survey start "Kardenna main street"`, walk 2-3 min (action bar samples
       climb only while walking on the ground), `/knk road survey stop` → proposal in chat → click **Save**. Repeat for a
       wilderness road and a trail (`survey start` without a name → `save <name>`).
       Did 3/4 surveys, works; the town has a lot of square/open plaza-like road areas and the surveyor already looked
       like it was producing rough proposals there (expected — surveys aren't meant to handle open plazas well).
 - [x] `/knk road profile list` / `show <name>`; new profiles are class Road ×1.0 until you edit them (web app or
       `/knk road profile`).
-- [~] `/knk road build radius 1500` around the town (include the tunnel/bridge) → action-bar progress, per-tile chat
+- [x] `/knk road build radius 1500` around the town (include the tunnel/bridge) → action-bar progress, per-tile chat
       summary with clickable teleports.
-      Many tiles logged `Tile X,X not built: no seeds: no domain Location, survey or admin seed in or near this tile`.
-      Likely because the town is on an island with sparse roads around it (few/no seeds outside town bounds) —
-      needs triage: is this expected behaviour for sparse-seed tiles, or should radius-build seed from a wider net?
-- [ ] `/knk road show` → coloured polylines, pillars at junctions, action-bar label when looking at an edge;
+      Works okay after tweaking `navigation.builder` config (junction-cluster-radius, ambiguous-reach, etc. — see
+      Finding F below for the settings used).
+- [x] `/knk road show` → coloured polylines, pillars at junctions, action-bar label when looking at an edge;
       `/knk road show all` on a bridge.
-      **Failing:** overlay shows way too many junctions and stale nodes; roads inside the town don't connect properly
-      and some of the most obvious street segments weren't built at all. Not workable to fine-tune by hand as-is —
-      needs a code fix, not just re-surveying/re-building. Root cause not yet triaged.
-- [ ] Name at least the places you will navigate to: `/knk road node name Market` on a junction.
-- [ ] `/knk road street "<street>" --continue` on an edge you stand on → "and N more".
-- [ ] Break a road block → within 30 s `/knk road tiles` lists the tile DIRTY; `/knk road build dirty` keeps names.
-- [ ] WorldEdit `//set` across a road → tile dirty.
-- [ ] `/knk road edge set here close` → overlay turns red; `open` again.
-- [ ] `/knk road reload`; restart the server mid-`build all` → the queue resumes and skips tiles built before.
+      Works after triage and manual cleanup: pruned duplicate junctions, locked the good ones, recorded stretches
+      the builder missed, labelled roads/junctions. See the 2026-10-01 rebuild-persistence finding below — this
+      cleanup does **not** survive a rebuild.
+- [x] Name at least the places you will navigate to: `/knk road node name Market` on a junction.
+- [x] `/knk road street "<street>" --continue` on an edge you stand on → "and N more".
+- [x] Break a road block → within 30 s `/knk road tiles` lists the tile DIRTY; `/knk road build dirty` keeps names.
+- [x] WorldEdit `//set` across a road → tile dirty.
+- [x] `/knk road edge set here close` → overlay turns red; `open` again.
+- [~] `/knk road reload`; restart the server mid-`build all` → the queue resumes and skips tiles built before.
+      Resume-after-restart works, **but**: every duplicate junction/stale node pruned before the restart is back
+      after the rebuild. No way yet to make manual cleanup (merges, locks, recorded edges) stick across a full
+      rebuild of a tile. See Findings.
 
 ## 3. Phase 5 — web app (~10 min)
 
 Full text in the plan's "Phase 5 status → Developer to-do".
 
-- [ ] "Roads" appears in the nav for `knk.admin.road`; `/admin/roads` loads world `world`: profiles, tiles, edges.
-- [ ] Stretches: "Unlabelled only" → Edit → pick a street → "Continue along the road" → Save → green notice with N more.
-- [ ] Create New Street from an edge; Rename opens the Street form.
-- [ ] Edit cost 0 → refused; cost 2 + Closed → row shows ×2 and Closed in red (and `/knk road show` turns it red
+- [x] "Roads" appears in the nav for `knk.admin.road`; `/admin/roads` loads world `world`: profiles, tiles, edges.
+- [x] Stretches: "Unlabelled only" → Edit → pick a street → "Continue along the road" → Save → green notice with N more.
+- [x] Create New Street from an edge; Rename opens the Street form.
+- [x] Edit cost 0 → refused; cost 2 + Closed → row shows ×2 and Closed in red (and `/knk road show` turns it red
       after the next cache refresh or `/knk road reload`).
-- [ ] New profile with material suggestions (`DIRT_PATH`), town scope; duplicate name → API's 400 message; delete.
-- [ ] Street edit form shows the Road panel; an unsaved street shows the "save first" note.
-- [ ] Unknown world → empty tables, no error. Without the node: nav link hidden, page says "Staff only".
-- [ ] **Rename a street here** and confirm the new name shows up in `/navigate` messages within ~60 s (street names
+- [x] New profile with material suggestions (`DIRT_PATH`), town scope; duplicate name → API's 400 message; delete.
+      **Finding (2026-10-01):** the delete button uses the browser's native `window.confirm()`
+      (`RoadProfilesCard.tsx:152`) instead of the app's `FeedbackModal.tsx` component — inconsistent with the rest of
+      the admin UI, should be swapped.
+- [x] Street edit form shows the Road panel; an unsaved street shows the "save first" note.
+- [x] Unknown world → empty tables, no error. Without the node: nav link hidden, page says "Staff only".
+- [x] **Rename a street here** and confirm the new name shows up in `/navigate` messages within ~60 s (street names
       refresh every minute).
 
 ## 4. Phase 4 — `/navigate` (in game, ~45 min)
@@ -97,35 +104,61 @@ Full text in the plan's "Phase 5 status → Developer to-do".
 Use two accounts where noted. Watch the console for exceptions the whole time, and `/tps` at the end.
 
 **Basics**
-- [ ] `/navigate` alone → "not navigating" plus usage. `/nav` works as an alias.
-- [ ] Tab completion: names one word at a time, `stop`, `type:name` forms for shared names (e.g. `town:Market` vs
+- [x] `/navigate` alone → "not navigating" plus usage. `/nav` works as an alias.
+- [x] Tab completion: names one word at a time, `stop`, `type:name` forms for shared names (e.g. `town:Market` vs
       `district:Market`), `spawn` / `region` after a complete name.
-- [ ] Without `knk.navigate` → permission message. From the console → "only players".
-- [ ] Unknown name → "No place called…" plus clickable "Did you mean" suggestions. Ambiguous name → clickable
+- [x] Without `knk.navigate` → permission message. From the console → "only players".
+- [x] Unknown name → "No place called…" plus clickable "Did you mean" suggestions. Ambiguous name → clickable
       `type:name` choices.
 
 **Destinations** (each: "Navigating to X - N m. Follow the trail; [Stop]", gold trail ahead only *you* see, boss bar
 "→ X · N m · ~T" with progress, action-bar arrow)
-- [ ] A Location by name and by `location:#id`.
-- [ ] A Town → its spawn Location; the same Town with `region` → the route ends where the road enters the region.
-- [ ] From *inside* that region → "You are already in X".
-- [ ] A District and a Structure (Structure needs its Location via `locationId`).
-- [ ] `street:<name>` → ends on the street; `node:<name>` → ends on the node.
-- [ ] A domain with neither Location nor region → "has no location and no region".
-- [ ] A place in another world → "is in another world".
+- [~] A Location by name and by `location:#id`.
+      Works, **but** see "Phase 4/5 — live smoke test (2026-10-01)" in Findings: the direct-mode (< 48 block)
+      straight trail cuts through terrain/obstacles in hilly, alley-dense areas, and doesn't recompute when the
+      player moves away from the target until `/navigate` is re-run.
+- [~] A Town → its spawn Location; the same Town with `region` → the route ends where the road enters the region.
+      Same two bugs as the Location case above.
+- [~] From *inside* that region → "You are already in X".
+      **Does not work** — instead of the "already in" message, it draws a straight line to some point inside the
+      region (the undesired line from the bug above).
+- [~] A District and a Structure (Structure needs its Location via `locationId`).
+      District has the same obstacle-ignoring straight-line bug, and the point it heads for inside the region looks
+      arbitrary — not the domain's default Location and not the closest-to-the-player region point. Structure (via
+      its Location) works much better: the real road is followed to within ~13 m of the destination, where the
+      remaining leg is walkable but not a road (would need climbing a wall that was further away than that 13 m
+      point) — ending the session there isn't acceptable when the target is a specific Location with no direct line
+      of sight or walking line. See Findings for the proposed direction (closest walkable region point / last-mile
+      pathfinding).
+- [x] `street:<name>` → ends on the street; `node:<name>` → ends on the node.
+- [x] A domain with neither Location nor region → "has no location and no region".
+- [x] A place in another world → "is in another world".
 
 **Guidance**
-- [ ] Walk the route: "In 12 m: Turn left onto …" chat lines once each; the boss bar label switches to the maneuver
+- [~] Walk the route: "In 12 m: Turn left onto …" chat lines once each; the boss bar label switches to the maneuver
       within 20 blocks; tunnel → "Go down into the tunnel", bridge → "Cross the bridge".
-- [ ] Arrival: chime + "You have arrived at X"; boss bar and trail disappear.
-- [ ] Leave the road for > 2 s → "You left the road - recalculating."; the trail follows the new route.
-- [ ] `/navigate` while navigating replaces the session; no-arg shows status with a clickable [Stop]; `/navigate stop`.
+      Works well enough; did not encounter a tunnel or bridge during this session, so the maneuver text for those is
+      still untested.
+- [~] Arrival: chime + "You have arrived at X"; boss bar and trail disappear.
+      Works, but tied to the Destinations findings above — arrival at an unintended point isn't really "arrival".
+- [~] Leave the road for > 2 s → "You left the road - recalculating."; the trail follows the new route.
+      The action-bar arrow and boss bar guidance kept working, but the "You left the road - recalculating." chat
+      message did not appear when it should have — needs a check for a dropped/suppressed message path.
+- [x] `/navigate` while navigating replaces the session; no-arg shows status with a clickable [Stop]; `/navigate stop`.
 
 **Refusals and direct mode (DESIGN §6.2)**
-- [ ] Stand > 48 blocks from any road → "You're too far from a road - get within 48 blocks of one."
-- [ ] Target > 48 blocks from any road → "X is too far from any road."
-- [ ] Target within 48 blocks of you → straight trail, no road ("X is N m away"); arrival at the target.
-- [ ] Destination beyond the road's end but within 48 → routed, then a straight last leg (other colour, sparser).
+- [x] Stand > 48 blocks from any road → "You're too far from a road - get within 48 blocks of one."
+- [ ] Target > 48 blocks from any road → "X is too far from any road." — not run this session, accepted as spec'd.
+- [~] Target within 48 blocks of you → straight trail, no road ("X is N m away"); arrival at the target.
+      This is the direct-mode straight-line bug (see Destinations above) — the single highest-priority item to fix
+      before continuing. In towns with height differences and small alleys, a 48-block straight line is not
+      acceptable; it should keep following walkable paths right up to the destination.
+- [x] Destination beyond the road's end but within 48 → routed, then a straight last leg (other colour, sparser).
+
+**Blocked (2026-10-01):** everything from here down (Availability, Ending, Admin and events, Performance) could not
+be meaningfully tested — the direct-mode/last-mile pathfinding bug makes most destinations unreliable to reach, and
+the network can't be iterated on further until pruned junctions/endpoints stop reappearing on rebuild (Phase 3,
+item 11). Fix both before resuming. See Findings.
 
 **Availability and live changes (DESIGN §6.7)**
 - [ ] Close a gate on the route (`/knk gate close`) → within ~2 s "The West Gate is closed - recalculating." and either a
@@ -314,6 +347,76 @@ of it, up to the overlay radius), fall back to the nearest node at the feet, and
 Side effect seen in test: aiming at a node pillar often shows `Edge #…`. When the 12-block point misses the node by
 more than 3 blocks, the label falls back to the nearest edge within 4 blocks, and every node has edges ending at it.
 The yellow gate-crossing marker is also drawn as a pillar but belongs to an edge, which adds to the confusion.
+
+### Phase 4/5 — live smoke test (2026-10-01): blocked on direct-mode pathfinding and rebuild persistence
+
+Ran Phase 5 (web app) in full and Phase 4 (`/navigate`) through the Refusals/direct-mode section, then stopped —
+items 20 onward (Availability, Ending, Admin and events, Performance) are not meaningfully testable until the two
+blockers below are fixed. Also re-ran Phase 3's restart/resume step and confirmed a gap already flagged as a risk in
+Finding F.
+
+**1. Direct-mode straight line ignores terrain (DESIGN §6.2, the "off-road leg" hard 48-block limit).** Whenever the
+player or the destination is within 48 blocks (straight-line, not walking distance), the trail and route go in a
+dead-straight line to the target — through walls, down cliffs, across gaps. This reproduces on: Location destinations,
+Town spawn, Town+`region`, and District/Structure region destinations. It's already called out as a known v1
+limitation in the DESIGN doc and the Linear issue ("Direct straight-line mode only applies within 48 blocks of the
+target... Pathing stays Phase 6"), but in practice, in a town with real height differences and small alleys, it reads
+as broken rather than a minor rough edge — it should keep following a walkable path (not necessarily a road) right up
+to the destination instead of cutting a straight line once within 48 blocks. Candidate direction: a local A* /
+walkable-path fallback for the off-road leg(s), same as the last-mile case in finding 4 below — these two may share
+one fix.
+
+**2. Direct-mode route is never re-evaluated as the player moves.** Per DESIGN §6.2/§6.4 the straight leg is supposed
+to be "re-drawn as the player moves" and the general re-route rule is "more than `reroute-distance` off the route for
+`reroute-after-ticks` → recompute". In testing, once a session starts in or enters direct mode, walking *away* from
+the destination does not trigger a recompute — the player has to run `/navigate` again to get an updated route/ETA.
+Likely cause: the periodic re-route check only fires on lateral deviation from the current route polyline, not on the
+remaining distance to the goal growing. Needs a periodic refresh (e.g. re-derive the direct-mode leg every
+`trail-period-ticks` instead of only recomputing on deviation).
+
+**3. "You are already in X" does not fire.** Navigating to a Town with `region` while already standing inside that
+region should say "You are already in X" (DESIGN §6.3) and stop; instead it computed a straight-line route to some
+point inside the region. Needs a repro with a concrete town/region and a look at the "already inside" check in
+`NavigationService`/region resolution — this may be the same code path as finding 1 if "already inside" falls through
+to direct mode instead of returning early.
+
+**4. District/Structure region destination picks an arbitrary point, not the closest walkable one.** For a District
+(and likely other domains using the region-destination path), the route heads for some fixed point inside the
+WorldGuard region rather than the domain's default Location *or* the point of the region closest to the player. Per
+DESIGN §6.3 the intent is "closest point of a region"; this needs verifying against `RegionShape`/the multi-goal A*
+goal selection — if goals are being generated but biased toward a corner (e.g. `getPoints()[0]` or min corner) rather
+than genuinely nearest-to-player, that's the bug. Preferred fix (developer): default to the closest walkable region
+point relative to the player; consider a per-domain or global setting to prefer "domain default Location" instead
+where that reads better (e.g. a Town's spawn). For a Structure resolved via its own Location (not a region), the road
+is followed correctly to within ~13 m of the destination, where the final leg is walkable but off-road and would
+require climbing — stopping there isn't acceptable for a Location target with no direct sightline/walking line.
+Candidate direction: a last-mile walkable-path search (A* over blocks, not just the road graph) for the final leg,
+respecting the player's `AccessPolicy` (gates/domains) the same way the road router does. Likely shares an
+implementation with finding 1's walkable off-road leg.
+
+**5. "You left the road - recalculating." message missing.** The action-bar arrow and boss bar correctly kept
+updating after leaving the road, but the chat message that should accompany it (DESIGN §6.7 live-changes style,
+"The West Gate closed — recalculating.") never appeared for the road-departure case specifically. Needs a check for
+whether that message path is implemented/wired at all versus just suppressed by a rate limit.
+
+**6. Rebuild does not keep manually pruned/merged junctions pruned.** Phase 3 item 11 (restart mid-build, then a full
+rebuild) confirms the risk already written up in Finding F: duplicate junctions and stale nodes cleaned up by hand
+(`node merge`, `node lock`, recorded edges) reappear after the tile is rebuilt from scratch. There is currently no way
+to make manual cleanup stick across a rebuild. This blocks further Phase 3 iteration and should be fixed alongside
+finding C (plaza junction fragmentation) — the right fix likely prevents the duplicates from being generated in the
+first place (better plaza/cluster recognition) rather than only preserving today's manual edits.
+
+**7. web-app: profile delete uses the browser's native `confirm()`.** `RoadProfilesCard.tsx:152` calls
+`window.confirm(...)` for the delete action instead of the app's existing `FeedbackModal.tsx` component used
+elsewhere for destructive confirmations. Small UI consistency fix.
+
+**Net effect:** stop Phase 4 live testing at "Refusals and direct mode". Fix findings 1/2 (direct-mode pathfinding and
+re-evaluation) and 6 (rebuild persistence) before resuming Availability/Ending/Admin/Performance — most of those
+checks depend on reaching a destination reliably and on a network that doesn't need re-cleaning after every rebuild.
+
+**Fix plan:** see `docs/specs/navigation/IMPLEMENTATION_PLAN.md` §5.5 "Fix plan before resuming the live smoke test
+(2026-10-01)" for the prioritized, scoped plan covering all of the above (the direct-mode/last-mile pathfinding
+item was split into its own Linear issue, related to KNG-27).
 
 ---
 
