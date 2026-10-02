@@ -467,6 +467,20 @@ pillar); every later build leaves the dead end nearest the tombstone (within `lo
 junction left with two arms dissolves. Only endpoints; refused when a recorded edge ends there. `unprune [id]` deletes
 the tombstone and the next build brings the dead end back. No migration.
 
+Merged 2026-10-02: `claude/road-node-prune` into `claude/road-navigation-smoke-test-bugs-fagl4i`, and that into
+`claude/road-navigation` (knk-web-api `c029186`, knk-web-app `6414e18`, knk-plugin `075ae94` after the two fixes
+below). The prune branches and worktrees are removed.
+
+- **Recordings drawn inside the road** (town road, bridge, land): the recorder stored `floor(y − ε) − 1`, one block
+  below the floor block every other part of the network uses. **Fixed** in knk-plugin `8b6d678`: the recorder now uses
+  the survey's floor rule (full block, slab, dirt path, the block under a carpet/snow layer; mid-air on a ladder: the
+  block under the feet). **Recordings made before the fix stay a block too deep** (and so do the Anchor nodes created
+  at their ends) — re-record them, or correct them in the database.
+- **Junction #3615 in a straight road with two edges (#5286, #5287):** steps after spur pruning (loop/parallel split,
+  tile-border cut, an arm merged into a locked node) can leave a two-arm junction. **Fixed** in knk-plugin `075ae94`:
+  the builder joins such a junction's two edges into one, unless it is locked, joining would make a loop or a duplicate
+  pair, or it had three or more edges last build. Rebuild tile 2,-1 and #3615 is gone.
+
 ---
 
 ## Prompt for a fresh Claude Code session
