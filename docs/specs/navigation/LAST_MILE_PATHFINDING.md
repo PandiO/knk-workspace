@@ -1,6 +1,6 @@
 # Road Navigation — Last-mile walkable pathfinding (design)
 
-**Status:** Design proposed — **not implemented**. Ladders, doors and chunk loading were reviewed by the developer on 2026-10-02 (§11); the remaining §11 defaults are still unreviewed.
+**Status:** Design proposed — **not implemented**. Reviewed by the developer on 2026-10-02 (§11): decided items 1-4, 5 (pending live test), 6, 8; item 7 (scope) still open.
 **Last updated:** 2026-10-02 (rev. 2: ladders, interact-gated doors, chunk-loading rationale, §13 KNG-36)
 **Linear:** [KNG-51](https://linear.app/kngpandi/issue/KNG-51/navigation-last-mile-walkable-pathfinding-for-direct-modeoff-road-legs)
 (split out of [KNG-27](https://linear.app/kngpandi/issue/KNG-27/road-navigation-auto-detected-road-graph-junctionsendpoints-from-road))
@@ -85,7 +85,7 @@ it are passable and hazard-free (gate footprints count as passable headroom, as 
 | Level | always | 1 (orthogonal), 1.41 (diagonal) |
 | Step up 1 | lower cell has a 3rd passable block above (room to jump), **or** the upper cell is a stair/slab | +1.0 (+0.0 for stair/slab) |
 | Step down 1 | symmetric to step up | +0.0 |
-| **Drop 2-3** (new, directed) | landing cell is a valid cell, the column above the landing is clear for the fall, ≤ `max-drop` (default 3 = no fall damage) | +2.0 per block |
+| **Drop 2-3** (new, directed) | landing cell is a valid cell, the column above the landing is clear for the fall, ≤ `max-drop` (default 3 = no fall damage) | **+10 per block** — avoided whenever any other route exists (`drop-penalty`, decided 2026-10-02) |
 | Diagonal | needs an L-shaped walk through one flanking orthogonal cell (the existing `cornerPath` rule), so corners of walls are not cut | as above |
 
 New material handling (put in `PassabilityRules`, with tests; none of this exists today because roads are flat
@@ -153,8 +153,8 @@ request on the main thread (like `NavigationAccess.policyFor`) so the search thr
   the plugin has no interact helper today (grep of `knk-core`/`knk-paper` on `claude/road-navigation`, 2026-10-02). The
   recommended implementation is WorldGuard's own answer — `RegionQuery#testState(location, player, Flags.USE)` (and
   `Flags.INTERACT`), because it is what WG enforces when the player actually clicks the door, so the trail never leads
-  through a door the player cannot open. KnK domain permissions can be added as a second condition if the developer
-  wants them. Staff with the region bypass → allowed.
+  through a door the player cannot open. **KnK domain permissions are also required (decided 2026-10-02):** the door must pass the WG check **and** the
+  same domain entry rules as §6's domain bullet. Staff with the region bypass → allowed.
 
 `CellAccess` is a small port: `double extraCost(x,y,z)` — `0` free, finite = allowed at a penalty, `+∞` = blocked —
 plus a deny reason for debugging. Cost-or-blocked (not a boolean) is deliberate: it also expresses "a gate I may breach
@@ -216,7 +216,7 @@ path (they remain for the straight fallback). `drawDirect(viewer, target)` stays
 ## 9. Config (`navigation.walk.*`, in `NavigationConfig`)
 
 `enabled` (true; false = today's straight lines — also the kill switch), `max-expansions` (20000),
-`max-length-factor` (1.75), `max-length` (96), `max-drop` (3), `capture-margin` (16), `chunk-ttl-seconds` (10),
+`max-length-factor` (1.75), `max-length` (96), `max-drop` (3), `drop-penalty` (10), `capture-margin` (16), `chunk-ttl-seconds` (10),
 `recompute-distance` (6), `max-concurrent-searches` (2).
 
 ## 10. Phases (one fresh session each, order matters)
@@ -240,14 +240,14 @@ it reuses everything.
 
 ## 11. Decisions for the developer (reversible defaults chosen; veto any)
 
-1. **Drops:** allow 2-3 block drops (default) vs ±1 only. Alley/roof towns need drops; 3 is the no-damage limit.
-2. **Doors — decided 2026-10-02:** hand-openable doors/gates walkable only where the player may interact (§6); iron doors never.
-3. **Water:** shallow wading allowed at ×3 cost; no swimming. Alternative: water impassable.
+1. **Drops — decided 2026-10-02:** 2-3 block drops are allowed but never preferred: the +10/block penalty makes any other route win, and a drop is used only when it is the sole way (or a far shorter one than ~10 blocks of detour per block dropped).
+2. **Doors — decided 2026-10-02:** hand-openable doors/gates walkable only where the player may interact (§6) — WorldGuard `USE`/`INTERACT` **and** KnK domain rules; iron doors never.
+3. **Water — approved 2026-10-02:** shallow wading allowed at ×3 cost; no swimming.
 4. **Ladders — decided 2026-10-02:** allowed in v1 (§4). Vines/scaffolding later through `climbables`.
-5. **No partial path** when the budget runs out — straight fallback instead.
+5. **No partial path — agreed 2026-10-02**, **to be tested on the live server** (does the straight fallback read acceptably, or is a partial path better?). Record the result here.
 6. **No chunk loading in v1** — rationale in §8; revisit in Phase D. (Explained to the developer 2026-10-02; not yet a veto.)
-7. **Scope** is direct mode + `arrivedAtRouteEnd` in v1; routed start/end legs are Phase D.
-8. **Do not adopt the Pathetic library now.** The research report ([2026-09-27](../../reports/2026-09-27-road-navigation-research.md) §5.3)
+7. **Scope — OPEN:** default is direct mode + `arrivedAtRouteEnd` in v1, routed start/end legs in Phase D. Alternative: include the routed legs in v1 (§10 scope note).
+8. **Do not adopt the Pathetic library now — agreed 2026-10-02.** The research report ([2026-09-27](../../reports/2026-09-27-road-navigation-research.md) §5.3)
    called it the best off-the-shelf option, but: it is a new shaded dependency (cloud sessions have repeatedly had
    `repo.papermc.io`/Maven blocked or rate-limited, `ACTIVE_SESSIONS.md`); the repo already has a tested walkability
    model; and the gate/domain rules would have to be translated into Pathetic's validation processors anyway. The
