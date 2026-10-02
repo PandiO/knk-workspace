@@ -2,8 +2,11 @@
 
 **Status:** In progress — Phase 1, 3, 5 passed (with findings); Phase 4 partially run, then **blocked** — see
 "Phase 4/5 — live smoke test (2026-10-01)" in Findings. Do not continue Phase 4 items 20+ until the direct-mode
-pathfinding bug and the rebuild-persistence gap are fixed.
-**Last updated:** 2026-10-01
+pathfinding bug and the rebuild-persistence gap are fixed. **Update 2026-10-02:** the §5.5 fix plan (items 1-6) is
+on `claude/road-navigation` (knk-plugin `075ae94`, knk-web-app `6414e18`, knk-web-api `c029186`) — each finding below
+names its fix; re-test them, then resume Phase 4 item 20. The direct-mode straight line (finding 1) remains until
+KNG-51 lands.
+**Last updated:** 2026-10-02
 **Sources:** the "Developer to-do" blocks of Phases 1, 3, 4 and 5 in `docs/specs/navigation/IMPLEMENTATION_PLAN.md`;
 progress report `docs/reports/2026-09-27-road-navigation-chain.md`. If this file and a plan block disagree, the plan wins.
 
@@ -271,7 +274,10 @@ tile summary is the early warning for a flooded mask.
 Design questions raised: should a near-zero-share Accent still count as road? Should one profile's "non-ambiguous"
 override every other profile? Should the survey refuse terrain materials (grass) as Edge?
 
-**B. Bug: a Boundary node placed off the tile border (code, `SkeletonGraph`).** Error:
+**B. Bug: a Boundary node placed off the tile border (code, `SkeletonGraph`).** **→ Fixed on `claude/road-navigation`
+2026-10-02:** knk-plugin `9f66fea` (a straddling plaza/cluster chain is extended to the node centre, both tiles cut on
+the shared border; test `aPlazaStraddlingTheTileBorderGetsItsBoundaryNodeOnTheBorder`); a second cause — a Boundary node
+taking a locked inner node's position — fixed by the developer in `6a8caa7`. Needs a live rebuild of tile 2,-2. Error:
 `Boundary node 'n2347' at (1025, -530) is not on the tile border` (tile 2,-2 spans x 1024..1535). A plaza or
 junction cluster is one node covering many spans; its position is one centre span. `traceChains` starts a chain at the
 *member* span next to the road, while `cutAtTileBorder` decides inside/outside from the node's *centre*
@@ -287,7 +293,11 @@ off the border — wrong path, no effect; (2) snap every Boundary node to the ne
 `Two payload nodes share position (1024, 90, -564)` (several chains leaving one plaza snapped onto the same point) and
 bent edge geometry. Both were based on wrong theories.
 
-**C. Design issue: a plaza produces ~10 junctions plus stray edges.** Plazas are typically ~20 blocks wide here.
+**C. Design issue: a plaza produces ~10 junctions plus stray edges.** **→ Fixed on `claude/road-navigation`
+2026-10-02** (fix plan §5.5 item 5): knk-plugin `9f66fea` — plaza footprint grown by each core span's clearance plus
+`navigation.builder.plaza-growth` (default 2); a junction next to a plaza joins it; golden fixture 8 junctions → 1.
+Leftover two-arm junctions are joined into one edge (`075ae94`), leftover spurs can be pruned (`/knk road node prune`,
+`9dccb58` + knk-web-api `c029186`). Needs a live rebuild of a problem plaza. Plazas are typically ~20 blocks wide here.
 `collapsePlazas` only marks spans whose *own* local width (`2·dt − 1`) exceeds `widthMax`, which is the plaza's core;
 the 3–4 block band along the edges stays ordinary road. The skeleton of an irregular plaza sends a branch toward every
 corner, bump, lamp post, planter or step on its outline, and those branches fork in the edge band, outside the core,
@@ -301,7 +311,7 @@ other (and raises the risk of B).
   plaza span) so all skeleton branches inside it belong to the plaza node, and let `clusterJunctions` merge
   candidates next to a plaza into it.
 
-**D. Upload timeout on a huge tile.** Tile 3,-1 (249,305 cells, 2,521 nodes, 3,858 edges) failed in the plugin with
+**D. Upload timeout on a huge tile.** *(Not addressed — not part of the §5.5 fix plan; open as of 2026-10-02.)* Tile 3,-1 (249,305 cells, 2,521 nodes, 3,858 edges) failed in the plugin with
 `SocketTimeoutException`, but the API finished and committed it (`GET api/road-tiles` shows v1 built 20:03:05). A
 client-side failure can therefore leave a stored graph; this one is junk from the flooded mask and must be rebuilt
 once the profiles are fixed.
@@ -309,6 +319,9 @@ once the profiles are fixed.
 **E. Operational notes.** `navigation.builder` values in `config.yml` are read only in `onEnable` — a full restart is
 needed, `/knk road reload` only refreshes the network cache. There is no command or API route to delete a road node
 or a road tile (only `node merge`, `edge delete`; a deleted Detected edge returns on the next rebuild).
+*Update 2026-10-02:* a dead end can now be pruned so it stays out of later builds — `/knk road node prune|unprune`
+(knk-plugin `9dccb58`, knk-web-api `c029186`; deploy both together, an older plugin can't parse the `Pruned` kind).
+There is still no route to delete a node or a tile, and builder settings still need a restart.
 
 **F. Result after fixing the profiles (A).** With `junction-cluster-radius: 10`, `min-spur-length: 6`,
 `ambiguous-reach: 2` and the cleaned profiles: a big improvement. Far fewer junctions and edges, and more real
@@ -334,7 +347,10 @@ Manual cleanup lessons:
 - Endpoint pairs < 5 blocks apart matched `ambiguous-reach: 2` (an ambiguous-only stretch longer than 2×reach cuts the
   road); raising it to 3 or recording the gap fixes them.
 
-**G. `/knk road show` action-bar identification is unreliable (usability bug).** Walking around and looking at
+**G. `/knk road show` action-bar identification is unreliable (usability bug).** **→ Fixed on `claude/road-navigation`
+2026-10-02:** knk-plugin `ae2f1e8` — the node whose pillar is closest to the view ray (≤ 1.5 blocks, up to the overlay
+radius), else the first edge under the ray, else the `here` node marked "(here)". The requested `/knk road node info
+here` was **not** added. Walking around and looking at
 nodes often shows no id. Cause (`RoadOverlayRenderer.lookedAt` / `describeAt`): it is not a line-of-sight check. Once
 per overlay tick (20 ticks) it takes the single point exactly `LOOK_DISTANCE` = 12 blocks along the view direction
 and labels a node only if one is within 3 blocks (3D) of that point, else an edge within 4 blocks. A node nearer or
@@ -355,7 +371,13 @@ items 20 onward (Availability, Ending, Admin and events, Performance) are not me
 blockers below are fixed. Also re-ran Phase 3's restart/resume step and confirmed a gap already flagged as a risk in
 Finding F.
 
-**1. Direct-mode straight line ignores terrain (DESIGN §6.2, the "off-road leg" hard 48-block limit).** Whenever the
+*Cross-references added 2026-10-02 (walkable-path chain, link 1): each finding below names the commit on
+`claude/road-navigation` that addresses it; the full verification is in `IMPLEMENTATION_PLAN.md` "§5.5 status".
+Nothing is merged to trunk; every fix still needs the live re-test noted there.*
+
+**1. Direct-mode straight line ignores terrain (DESIGN §6.2, the "off-road leg" hard 48-block limit).** **→ Not fixed
+yet — split out as KNG-51** (design `docs/specs/navigation/LAST_MILE_PATHFINDING.md`, implemented by the walkable-path
+chain on knk-plugin `claude/navigation-walkable-path`). Whenever the
 player or the destination is within 48 blocks (straight-line, not walking distance), the trail and route go in a
 dead-straight line to the target — through walls, down cliffs, across gaps. This reproduces on: Location destinations,
 Town spawn, Town+`region`, and District/Structure region destinations. It's already called out as a known v1
@@ -366,7 +388,8 @@ to the destination instead of cutting a straight line once within 48 blocks. Can
 walkable-path fallback for the off-road leg(s), same as the last-mile case in finding 4 below — these two may share
 one fix.
 
-**2. Direct-mode route is never re-evaluated as the player moves.** Per DESIGN §6.2/§6.4 the straight leg is supposed
+**2. Direct-mode route is never re-evaluated as the player moves.** **→ Fixed 2026-10-02** (§5.5 item 3): knk-plugin
+`6a73945`, `NavigationService.recheckDirect` — "You're heading away from X - recalculating." Per DESIGN §6.2/§6.4 the straight leg is supposed
 to be "re-drawn as the player moves" and the general re-route rule is "more than `reroute-distance` off the route for
 `reroute-after-ticks` → recompute". In testing, once a session starts in or enters direct mode, walking *away* from
 the destination does not trigger a recompute — the player has to run `/navigate` again to get an updated route/ETA.
@@ -374,13 +397,18 @@ Likely cause: the periodic re-route check only fires on lateral deviation from t
 remaining distance to the goal growing. Needs a periodic refresh (e.g. re-derive the direct-mode leg every
 `trail-period-ticks` instead of only recomputing on deviation).
 
-**3. "You are already in X" does not fire.** Navigating to a Town with `region` while already standing inside that
+**3. "You are already in X" does not fire.** **→ Fixed 2026-10-02** (§5.5 item 4): knk-plugin `6a73945` — checked
+first, with WorldGuard's own block containment (`RegionShapes.containsFeet`). Navigating to a Town with `region` while already standing inside that
 region should say "You are already in X" (DESIGN §6.3) and stop; instead it computed a straight-line route to some
 point inside the region. Needs a repro with a concrete town/region and a look at the "already inside" check in
 `NavigationService`/region resolution — this may be the same code path as finding 1 if "already inside" falls through
 to direct mode instead of returning early.
 
-**4. District/Structure region destination picks an arbitrary point, not the closest walkable one.** For a District
+**4. District/Structure region destination picks an arbitrary point, not the closest walkable one.** **→ Region part
+fixed 2026-10-02** (§5.5 item 2): knk-plugin `6a73945`, `NavigationService.regionGoals` — a region is routed along the
+road to where it enters the region (nearest by road), else to the road's nearest approach plus a short last leg; fully
+direct only within 8 blocks or when no road helps. The walkable last mile for a Location (the ~13 m climb) is **KNG-51**.
+The optional "prefer the domain's default Location" setting was not added. For a District
 (and likely other domains using the region-destination path), the route heads for some fixed point inside the
 WorldGuard region rather than the domain's default Location *or* the point of the region closest to the player. Per
 DESIGN §6.3 the intent is "closest point of a region"; this needs verifying against `RegionShape`/the multi-goal A*
@@ -394,19 +422,26 @@ Candidate direction: a last-mile walkable-path search (A* over blocks, not just 
 respecting the player's `AccessPolicy` (gates/domains) the same way the road router does. Likely shares an
 implementation with finding 1's walkable off-road leg.
 
-**5. "You left the road - recalculating." message missing.** The action-bar arrow and boss bar correctly kept
+**5. "You left the road - recalculating." message missing.** **→ Explained 2026-10-02** (§5.5 item 3): the routed
+message was never broken (regression test `aRoutedSessionStillSaysYouLeftTheRoad`, `6a73945`); direct mode had no
+re-check at all and now has its own message (finding 2). The action-bar arrow and boss bar correctly kept
 updating after leaving the road, but the chat message that should accompany it (DESIGN §6.7 live-changes style,
 "The West Gate closed — recalculating.") never appeared for the road-departure case specifically. Needs a check for
 whether that message path is implemented/wired at all versus just suppressed by a rate limit.
 
-**6. Rebuild does not keep manually pruned/merged junctions pruned.** Phase 3 item 11 (restart mid-build, then a full
+**6. Rebuild does not keep manually pruned/merged junctions pruned.** **→ Fixed in code 2026-10-02, residual cases
+need a live check** (§5.5 items 5 and 6): plaza fragmentation `9f66fea`; locked nodes absorb rebuilt duplicates
+(`ef556e2`, `navigation.builder.locked-node-reach` default 8); a recording locks the detected nodes it snaps to
+(knk-web-api `8523ec8`); developer follow-ups `6a8caa7`, `9dccb58`/`c029186` (prune), `075ae94` (two-arm junctions).
+Phase 3 item 11 (restart mid-build, then a full
 rebuild) confirms the risk already written up in Finding F: duplicate junctions and stale nodes cleaned up by hand
 (`node merge`, `node lock`, recorded edges) reappear after the tile is rebuilt from scratch. There is currently no way
 to make manual cleanup stick across a rebuild. This blocks further Phase 3 iteration and should be fixed alongside
 finding C (plaza junction fragmentation) — the right fix likely prevents the duplicates from being generated in the
 first place (better plaza/cluster recognition) rather than only preserving today's manual edits.
 
-**7. web-app: profile delete uses the browser's native `confirm()`.** `RoadProfilesCard.tsx:152` calls
+**7. web-app: profile delete uses the browser's native `confirm()`.** **→ Fixed 2026-10-02** (§5.5 item 1):
+knk-web-app `6414e18`, `FeedbackModal`; no other `window.confirm(` left in the road-admin tree. `RoadProfilesCard.tsx:152` calls
 `window.confirm(...)` for the delete action instead of the app's existing `FeedbackModal.tsx` component used
 elsewhere for destructive confirmations. Small UI consistency fix.
 
@@ -418,11 +453,25 @@ checks depend on reaching a destination reliably and on a network that doesn't n
 (2026-10-01)" for the prioritized, scoped plan covering all of the above (the direct-mode/last-mile pathfinding
 item was split into its own Linear issue, related to KNG-27).
 
+### Phase 3 — rebuild re-test (2026-10-02, developer; recorded from the commit messages)
+
+Not written up here at the time; reconstructed by the walkable-path chain (link 1) from the developer's commits on
+knk-plugin / knk-web-api `claude/road-navigation`, 17:13-18:00 CEST.
+- Tile 2,-2 failed with `Boundary node 'n70' at (1418, -520) is not on the tile border`: the new locked-node reach let a
+  border node claim locked junction #7 "Brink". **Fixed** `6a8caa7`.
+- Spurs in a small, oddly shaped plaza returned on every rebuild. **Fixed** with `/knk road node prune|unprune`
+  (plugin `9dccb58`, API `c029186`).
+- Recorded stretches (town road, bridge, land) were drawn through the road blocks — the recorder stored the block
+  under the floor. **Fixed** `8b6d678`; **re-record stretches recorded before it**.
+- Junction #3615 sat in a straight road with two edges and could not be pruned. **Fixed** `075ae94` (two-arm junctions
+  are joined into one edge unless locked, a loop split, or the previous build gave it 3+ edges).
+
 ---
 
 ## Prompt for a fresh Claude Code session
 
 Use this if you want a session to prepare the environment and walk you through the test, or to triage what you found.
+*(The branch heads in the prompt are from 2026-09-29; the current ones are in the header above.)*
 
 > Read `docs/guides/road-navigation-smoke-test.md` in the knk-workspace repository (branch main), then the plan's
 > "Phase 1/3/4/5 status → Developer to-do" blocks in `docs/specs/navigation/IMPLEMENTATION_PLAN.md` and the report
