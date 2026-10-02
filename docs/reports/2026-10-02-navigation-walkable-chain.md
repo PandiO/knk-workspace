@@ -330,5 +330,6 @@ L3-1 … L3-10. Phase C's checklist will cover the in-game matrix (§12).
   collidable that a player can walk through (or the reverse) is wrong for both.
 
 ### Next link
-Link 4 — KNG-51 Phase C. Handoff: `docs/ai-agents/handoffs/2026-10-02-navigation-walkable-link-4.md`.
-
+Link 4 — KNG-51 Phase C. Handoff: `docs/ai-agents/handoffs/2026-10-02-navigation-walkable-link-4.md`. Started with
+charter §6 option 1 (new session): Claude Code Remote `create_session`, same environment, model `claude-opus-5-5`,
+source knk-workspace — session `session_01XxVP8zNRBbath1Q6dQki82`, 2026-10-02 20:01 UTC.
