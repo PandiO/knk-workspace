@@ -4,7 +4,7 @@ Implement link 3 — KNG-51 Phase B (knk-paper: `WalkSnapshotService` capture/ca
 cell capture) end to end (code, tests, commits, push to claude/navigation-walkable-path, progress report, handoff) as
 link 3 of the chain.
 
-State you start from (written by link 2, 2026-10-02 ~21:30 UTC — re-check before relying on it):
+State you start from (written by link 2, 2026-10-02 ~19:40 UTC — re-check before relying on it):
 - knk-plugin `claude/navigation-walkable-path` `ad311ae` = link 1's `d8507a3` + four link-2 commits (`ea54013` WalkGrid
   extraction, `6352b4c` PassabilityRules walk helpers, `1fae034` search + types, `ad311ae` timing/LongMap/MemoSurface).
   `origin/claude/road-navigation` `075ae94` and `origin/main` `27b4236` were merged ("already up to date") before the

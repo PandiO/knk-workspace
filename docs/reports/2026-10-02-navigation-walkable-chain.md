@@ -122,7 +122,7 @@ source knk-workspace — session `session_01CcMg85W2QPXEDg1YQgJDaV`, 2026-10-02 
 
 ## Link 2 — KNG-51 Phase A (`knk-core roads/walk/`)
 
-**Session:** Claude Code cloud session `session_01CcMg85W2QPXEDg1YQgJDaV`, 2026-10-02 ~19:15-21:30 UTC. Started from the
+**Session:** Claude Code cloud session `session_01CcMg85W2QPXEDg1YQgJDaV`, 2026-10-02 ~19:15-19:40 UTC. Started from the
 link-2 handoff.
 
 ### Setup
@@ -211,5 +211,6 @@ road graph is identical to before (the extraction's in-game proof; the unit test
 - Worst-case search time (above) under many concurrent players — the design's global cap of 2 concurrent searches matters.
 
 ### Next link
-Link 3 — KNG-51 Phase B. Handoff: `docs/ai-agents/handoffs/2026-10-02-navigation-walkable-link-3.md`. How it was started:
-see the line below (added after the start).
+Link 3 — KNG-51 Phase B. Handoff: `docs/ai-agents/handoffs/2026-10-02-navigation-walkable-link-3.md`. Started with
+charter §6 option 1 (new session): Claude Code Remote `create_session`, same environment, model `claude-opus-5-5`,
+source knk-workspace — session `session_014imn6hbUd6JTy1R3e6Str1`, 2026-10-02 19:39 UTC.
