@@ -1,9 +1,10 @@
 # Road navigation — smoke test checklist (KNG-27)
 
-**Status:** In progress — Phase 1, 3, 5 passed (with findings); Phase 4 partially run, then **blocked** — see
-"Phase 4/5 — live smoke test (2026-10-01)" in Findings. Do not continue Phase 4 items 20+ until the direct-mode
-pathfinding bug and the rebuild-persistence gap are fixed.
-**Last updated:** 2026-10-01
+**Status:** In progress — Phase 1, 3, 5 passed (with findings); Phase 4 partially run, then blocked. **Fixes for the
+2026-10-01 findings are implemented (2026-10-02)** on `claude/road-navigation-smoke-test-bugs-fagl4i` in knk-web-app,
+knk-web-api and knk-plugin — see "Fixes implemented (2026-10-02)" at the end of Findings for what to re-test before
+resuming Phase 4 items 20+. The direct-mode straight line through terrain (finding 1) stays open as KNG-51.
+**Last updated:** 2026-10-02
 **Sources:** the "Developer to-do" blocks of Phases 1, 3, 4 and 5 in `docs/specs/navigation/IMPLEMENTATION_PLAN.md`;
 progress report `docs/reports/2026-09-27-road-navigation-chain.md`. If this file and a plan block disagree, the plan wins.
 
@@ -417,6 +418,27 @@ checks depend on reaching a destination reliably and on a network that doesn't n
 **Fix plan:** see `docs/specs/navigation/IMPLEMENTATION_PLAN.md` §5.5 "Fix plan before resuming the live smoke test
 (2026-10-01)" for the prioritized, scoped plan covering all of the above (the direct-mode/last-mile pathfinding
 item was split into its own Linear issue, related to KNG-27).
+
+### Fixes implemented (2026-10-02) — re-test before resuming Phase 4
+
+Branch `claude/road-navigation-smoke-test-bugs-fagl4i` in knk-web-app, knk-web-api and knk-plugin (merge into
+`claude/road-navigation` first; no migration). Details, decisions and test counts: plan §5.5 "5.5 status".
+
+| Finding | Fix | Re-test |
+|---|---|---|
+| 7 (profile delete `confirm()`) | `FeedbackModal`; it was the only `window.confirm` in the road admin | §3 profile delete |
+| 4 (region goal "arbitrary", straight through terrain) | Region destinations follow the road to where it enters the region; straight only when the region is within 8 blocks or nearer than any road | §4 District / Town `region` from 30-40 blocks with a road nearby; `/knk road why` |
+| 3 ("already in X" missing) | Checked first, with WorldGuard's own containment (same as the region tracker) | §4 "From inside that region", cuboid + polygon, several heights |
+| 2 + 5 (direct mode never re-checks; "left the road" missing) | Direct mode re-checks every 2 s: "You're heading away from X - recalculating."; the routed message was never broken (it was direct mode) | §4 walk away from a < 48-block Location; leave the road on a routed session |
+| C (plaza = ~10 junctions) | Plaza footprint grows over its edge band (`navigation.builder.plaza-growth`, 2); junctions forking at a plaza's edge join it | §2 rebuild the Cinix plaza tiles |
+| B (Boundary node off the tile border) | A plaza straddling the border is cut on the border in both tiles | §2 rebuild tiles 1,-2 / 2,-2 / 2,-1 / 3,-1 |
+| 6 / F (manual cleanup lost on rebuild) | Locked nodes absorb rebuilt duplicates within `locked-node-reach` (8); recording an edge locks the nodes it snaps to | §2 merge + lock, record, rebuild twice |
+| G (`/knk road show` labels) | Names the node pillar along the view ray at any distance, else the edge under it, else the node at your feet "(here)" | §2 `/knk road show` |
+| 1 (direct line through terrain) | **Not fixed** — KNG-51 | — |
+
+Not addressed (not bugs in the fix plan): A (profile data), D (client timeout on a 250 k-cell tile — rebuild it once
+the profiles are clean), E (no tile/node delete route; builder config read only at start-up), the Phase 1 "delete the
+fake tiles" gap, and the requested `/knk road node info here` command.
 
 ---
 
