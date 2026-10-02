@@ -1,6 +1,6 @@
 # Navigation walkable-path chain — charter
 
-**Status:** Ready to start (written 2026-10-02). For Claude Code sessions with no memory of earlier work.
+**Status:** Finished 2026-10-02 (links 1-4 done; outcome, live checklist and merge order in the progress report). Kept as the record of how the chain ran.
 **Last updated:** 2026-10-02
 **Linear:** [KNG-27](https://linear.app/kngpandi/issue/KNG-27) (reconcile/close out), [KNG-51](https://linear.app/kngpandi/issue/KNG-51) (implement)
 

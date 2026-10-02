@@ -1,7 +1,7 @@
 # Navigation walkable-path chain — progress report
 
-**Status:** running (links 1-3 done; link 4 next)
-**Last updated:** 2026-10-02 (link 3)
+**Status:** finished (links 1-4 done 2026-10-02; nothing merged — the developer's live test and merge are next)
+**Last updated:** 2026-10-02 (link 4)
 **Charter:** [`docs/ai-agents/handoffs/NAVIGATION_WALKABLE_CHAIN.md`](../ai-agents/handoffs/NAVIGATION_WALKABLE_CHAIN.md)
 **Linear:** [KNG-27](https://linear.app/kngpandi/issue/KNG-27) (reconcile), [KNG-51](https://linear.app/kngpandi/issue/KNG-51) (implement)
 **Design:** [`docs/specs/navigation/LAST_MILE_PATHFINDING.md`](../specs/navigation/LAST_MILE_PATHFINDING.md)
@@ -15,9 +15,12 @@ This file is append-only: each link adds its own section below; only the summary
 | 1 | KNG-27 reconciliation | **done** 2026-10-02 | knk-plugin `claude/navigation-walkable-path` `d8507a3` (= `claude/road-navigation` `075ae94` + 1 test commit); workspace `main` | [Link 1](#link-1--kng-27-reconciliation) |
 | 2 | KNG-51 Phase A (`knk-core roads/walk/`) | **done** 2026-10-02 | knk-plugin `claude/navigation-walkable-path` `ad311ae` | [Link 2](#link-2--kng-51-phase-a-knk-core-roadswalk) |
 | 3 | KNG-51 Phase B (knk-paper capture, cell access) | **done** 2026-10-02 | knk-plugin `claude/navigation-walkable-path` `aa320e5` | [Link 3](#link-3--kng-51-phase-b-knk-paper-capture-and-cell-access) |
-| 4 | KNG-51 Phase C (`DirectLeg`, walk trail, config) | next | — | — |
+| 4 | KNG-51 Phase C (`DirectLeg`, walk trail, config) | **done** 2026-10-02 | knk-plugin `claude/navigation-walkable-path` `305829b` | [Link 4](#link-4--kng-51-phase-c-directleg-walk-trail-kill-switch) |
 
 **Review first**
+0. **Decision §11-5 (no partial path) is yours to test live** — walk into a spot the search cannot reach (a walled
+   garden, a cliff top) and judge whether the straight fallback reads acceptably. It is the first item of the
+   [combined live checklist](#combined-live-checklist-developer); record the verdict in the design's §11.
 1. `IMPLEMENTATION_PLAN.md` "§5.5 status" — all six fix-plan items are code-complete on `claude/road-navigation`; every
    item's live "Verify" step is still yours. Item 6 skipped the planned "catalogue residual cases after item 5 is
    verified live" step (items 5 and 6 landed together), so your rebuild re-test is the first real check.
@@ -28,12 +31,16 @@ This file is append-only: each link adds its own section below; only the summary
    (a 3-block drop costs 33).
 5. The 96×96 worst case is ~80-90 ms (off the main thread, budget-bounded), more than the design's "milliseconds"
    guess — fine for one search per player, worth watching in Phase B/C live tests.
-6. Link 3's L3-1 (the walk capture is its own per-block flags capture, not `CompactSpans` with a permissive
+6. Link 4's L4-4 ("heading away" is measured along a walking path, not straight — otherwise every detour looks like
+   drift) and L4-6 (recompute triggers are checked at the 2 s re-check; gate events don't recompute at once) — both
+   shape what you will see live.
+7. Link 3's L3-1 (the walk capture is its own per-block flags capture, not `CompactSpans` with a permissive
    `roadFloor`), L3-3 (door rule = WorldGuard `testBuild(INTERACT, USE)` + the domain regions) and L3-5 (domain
    lookups happen on the routing thread) — none is visible in game until Phase C wires them.
 
 **Test when you have time:** pull `claude/navigation-walkable-path` in knk-plugin; `./gradlew build -x deployToDevServer`;
-`./gradlew :knk-paper:dev`; then the live checklist (link 1's is the KNG-27 re-test below; links 2-4 add theirs).
+`./gradlew :knk-paper:dev`; then the [combined live checklist](#combined-live-checklist-developer) at the end of this
+report (it includes link 1's KNG-27 re-test). Merge order and branch clean-up: [Merging](#merging-and-branch-clean-up).
 
 ## Link 1 — KNG-27 reconciliation
 
@@ -333,3 +340,154 @@ L3-1 … L3-10. Phase C's checklist will cover the in-game matrix (§12).
 Link 4 — KNG-51 Phase C. Handoff: `docs/ai-agents/handoffs/2026-10-02-navigation-walkable-link-4.md`. Started with
 charter §6 option 1 (new session): Claude Code Remote `create_session`, same environment, model `claude-opus-5-5`,
 source knk-workspace — session `session_01XxVP8zNRBbath1Q6dQki82`, 2026-10-02 20:01 UTC.
+
+## Link 4 — KNG-51 Phase C (`DirectLeg`, walk trail, kill switch)
+
+**Session:** Claude Code cloud session `session_01XxVP8zNRBbath1Q6dQki82`, 2026-10-02 ~20:05-21:00 UTC (container clock).
+Started from the link-4 handoff (link 3 had created this session).
+
+### Setup
+- Workspace was checked out detached; switched to `main`. knk-plugin was not in the container: attached with `add_repo`
+  and cloned (`claude/navigation-walkable-path` at `aa320e5`). `origin/claude/road-navigation` still `075ae94`,
+  `origin/main` still `27b4236` — both merges "already up to date" at start and again before the final push (no
+  developer commits during the chain). Push checks ✔ (plugin branch, workspace `main`).
+- Network: papermc/enginehub 200; no Maven Central 429s; later builds `--offline`.
+- Baseline on `aa320e5` = link 3's: knk-core **1628**, knk-api-client **184** (2 skipped), knk-paper **1116** (14 skipped).
+
+### Commits (knk-plugin `claude/navigation-walkable-path`, all pushed)
+| Commit | What |
+|---|---|
+| `b0eee28` | **Refactor, behaviour unchanged**: `Active.direct`/`directTotal`/`directBest`/`lastDirectRecalcTick` and the re-derived direct target → `NavigationService.DirectLeg` (design §7), owned by `Active` (null while routed). Navigation tests unchanged and green before anything else changed. |
+| `fc1a98d` | `TrailRenderer.drawPath(viewer, floorPoints)` — the next `trail-length` blocks from the player's projection (half under lag), leg colour, `LEG_SPACING`, no per-point `floorOf`; pure `project`/`pointAt`/`pathWindow`/`polylineLength`. `drawDirect` stays the fallback. 3 tests. |
+| `305829b` | The wiring: `DirectLeg` states PENDING → WALKING / FALLBACK, walk requests through two ports (`NavigationService.WalkPreparer`, `WalkPathfinder`) on their own executor, recompute triggers, generation checks and capture cancellation; `navigation/walk/WalkLegPreparer` (gates, box, capture, access per leg); `KnKPlugin` construction (`WalkSnapshotService` start/stop, `WorldGuardWalkAccess.factory`, one `WalkSearch`, `knk-navigation-walk-N` pool); `config.yml` `navigation.walk:` block; `NavigationConfig.withWalk`; `/knk road status` "walk paths" line. 12 tests. |
+
+Reuse (design §2, binding): the existing `recheckDirect` is the one re-check (extended, not duplicated); `drawPath` reuses
+`drawRoute`'s windowing idea, `ParticleDraw.polyline`, `lifted`, the leg colour; requests follow `computeRoute`/`deliver`
+(main → worker → `deps.mainThread()`, generation check); Phase B's `WalkSnapshotService`, `WalkAccessFactory`,
+`WorldGuardWalkAccess`, `WalkBox`, `GateCellsIndex` and Phase A's `WalkSearch`/`WalkGoal` are used as they are.
+
+### Tests vs baseline (`./gradlew build -x deployToDevServer`, BUILD SUCCESSFUL)
+| Module | Baseline | After link 4 |
+|---|---|---|
+| knk-core | 1628 | 1628 (no core change) |
+| knk-api-client | 184 (2 skipped) | 184 (2 skipped) |
+| knk-paper | 1116 (14 skipped) | **1131** (14 skipped; +3 `TrailRendererTest`, +8 `NavigationServiceTest`, +3 `WalkLegPreparerTest`, +1 bundled config) |
+
+The design's §12 knk-paper list, one test each: PENDING → WALKING (straight line first, then the path; arrival
+unchanged), FALLBACK for NO_PATH / budget / a throwing search / an uncaptured box, stale result dropped and capture
+cancelled, recompute cadence (no recompute while on a young path, off-path > 6 → one request, none while in flight,
+again at 10 s), gate/availability events, `arrivedAtRouteEnd` → direct leg with a region goal, a detour is not
+"heading away", **kill switch** (the same scenario on a service without walk paths and on one with
+`navigation.walk.enabled: false` gives the identical trail/HUD/chat/event transcript), `drawPath` windowing.
+
+### Flagged decisions (reversible defaults; the design left these open)
+- **L4-1** Ports: `NavigationService.Walk(WalkPreparer, WalkPathfinder, Executor)` as an optional last `Deps` component
+  (the old 13-argument `Deps` constructor stays = no walk paths). `WalkPreparer.prepare` (main thread) returns a future of
+  a `Supplier<WalkRequest>` that runs on the walk thread, so domain lookups (L3-5) never block the main thread and tests
+  fake both halves.
+- **L4-2** Walk searches get **their own executor**: a fixed pool of `max-concurrent-searches` (2) daemon threads
+  `knk-navigation-walk-N`, not the road router's single `knk-navigation-routing` thread — a walk search may wait for a
+  domain lookup (up to 3 s) and must not stall road routing; the global cap of §8 is then real. Queue unbounded, but at
+  most one request per player is in flight.
+- **L4-3** Kill switch: `navigation.walk.enabled: false` constructs **none** of the walk services (no capture ticker, no
+  pool) and `NavigationService` also checks the flag; the transcript test pins "= today exactly".
+- **L4-4** "Heading away" (the existing trigger) is measured **along the walk path** while WALKING — path length left from
+  the player's projection plus the gap to the path — instead of the straight distance; otherwise every detour around a
+  wall reads as drift and fires "heading away - recalculating". The HUD's remaining distance and progress use the same
+  number. PENDING/FALLBACK legs keep the straight distance (unchanged).
+- **L4-5** The HUD arrow of a WALKING leg points 4 blocks ahead along the path (the routed trail's "ahead point" idea), not
+  at the target through the wall. Straight legs keep pointing at the target.
+- **L4-6** Recompute triggers are evaluated only at the existing 2 s re-check (`RECHECK_TICKS`): off the path by more than
+  `recompute-distance` (3D), target moved (the requested target ≠ the leg's), a gate or availability event since the last
+  request (the event marks the leg; it does not recompute at once), or the request is `chunk-ttl-seconds` (10 s) old. The
+  age counts from the **request**; a FALLBACK leg is retried at the same age (chunks may have loaded, a gate opened).
+- **L4-7** A recompute keeps the old path on screen until the new result arrives (no flicker). A "heading away"
+  recalculation drops the path (new target): straight line + PENDING, like the start.
+- **L4-8** Region legs: goal = within `arrive-distance` of the region's closest point **or** `RegionShape.containsFloor`
+  (arrival itself is unchanged: Euclidean or WorldGuard containment).
+- **L4-9** No new chat messages: adopting, falling back and recomputing are silent; `startedDirect`/`directRecalculating`
+  are reused unchanged and there is no new visual state (§7). Debugging: `/knk road status` → "walk paths" (requests,
+  found / no path / budget / not captured / failed, legs walking/computing, capture µs per chunk, cache hits/size) and a
+  `FINE` log line per result.
+- **L4-10** NO_PATH, budget FALLBACK, a search exception (L3-8) and an uncaptured box (unloaded chunk, too large) all end in
+  the leg's FALLBACK = the straight line (decision §11-5, L2-1).
+
+### Discrepancies
+- Design §7's `DirectLeg` sketch has one `generation`; the implementation keeps `Active.generation` (session-level, as
+  before) and gives the leg its own request generation — a re-request inside the same session must drop the older result.
+- §7 says the path is recomputed when it is "older than 10 s"; that reads from `chunk-ttl-seconds` (no separate key), and
+  §9 has no key for it either. A `chunk-ttl-seconds: 0` still waits one re-check (2 s).
+- The §8 main-thread numbers (live `ChunkSnapshot` capture time) are **not** measured — only a server can. `/knk road status`
+  shows them; record them in the design's §8/§10 after the live test (definition of done).
+
+### Risks
+- The live `ChunkSnapshot` read per chunk is unmeasured; with many players starting direct legs at once the capture queue
+  (4 chunks/tick) adds a few ticks of PENDING — the straight line is shown meanwhile.
+- WorldGuard's door answer (`testBuild(INTERACT, USE)`) is mock-tested only (L3-3).
+- The collision predicate is the road builder's; a material Bukkit calls collidable that players walk through (or the
+  reverse) gives a wrong path for both.
+- `NavigationService` grew (walk section ≈ 250 lines); if Phase D adds the routed legs, moving the walk part into its own
+  class is the natural next refactor.
+
+### Next link
+None — link 4 is the last. Charter §6.3: the chain stops here.
+
+## Combined live checklist (developer)
+
+Pull `claude/navigation-walkable-path` (knk-plugin), `./gradlew build -x deployToDevServer`, `./gradlew :knk-paper:dev`,
+full restart (new `navigation.walk` keys are read in `onEnable`). Keep `/knk road status` open in a second window for the
+"walk paths" line.
+
+**1. Decision §11-5 — fallback vs partial path (first).** Pick a target the search cannot reach within the budget (a
+walled garden with no gate, the top of a 10 m cliff, an island). `/navigate` there → the straight line stays (status line:
+"no path" or "budget" goes up). Judge: does an honest straight line read acceptably, or would a partial path up to the
+wall be better? Record the verdict in `LAST_MILE_PATHFINDING.md` §11-5.
+
+**2. Kill switch.** `navigation.walk.enabled: false`, restart → direct mode is exactly as before (straight line,
+"heading away" message), `/knk road status` → "walk paths: off". Back to `true`.
+
+**3. The §12 in-game matrix** (direct mode = a target within 48 blocks, or the last leg after a road's end):
+1. Town alley with height differences → the trail follows the alley, steps up/down, no line through walls.
+2. Multi-level plaza → the path stays on the right level; stairs/ramps used.
+3. Structure reached via its Location with a non-road final stretch — **the 2026-10-01 case (~13 m wall)** → the last
+   leg goes around the wall (smoke-test finding 1/4; part of the definition of done).
+4. Wilderness with cliffs → drops of ≤ 3 used only when they are the way; no drop of 4+.
+5. Closed gate on the shortcut → detour or straight line; open the gate → within ~2 s (next re-check) the path takes it.
+6. A domain region you may not enter on the shortcut → the path goes around.
+7. A door in a region where you lack interact → the path avoids it; with interact (or bypass) it goes through.
+8. A ladder shortcut → the path climbs it.
+9. Place/break blocks on the path while navigating → corrected within ~10 s (path age), or at once when you leave the
+   path by more than 6 blocks.
+10. Unloaded edge of the render distance (low view distance) → straight line ("not captured" goes up), no chunk loads.
+11. Lag spike while a path is computed (e.g. `/tick rate 5` or a WorldEdit job) → no server hitch; the straight line
+    shows until the path arrives; the trail is drawn at half length.
+
+**4. Feel.** Walk a detour that first leads away from the target → no "heading away" message (L4-4); walk off it → the
+message. The HUD arrow points along the path (L4-5). Note the capture µs per chunk from `/knk road status` (§8 number).
+
+**5. Link 1's KNG-27 re-test** (still open): the [Link 1 live checklist](#live-checklist-developer--kng-27-re-test)
+above — rebuild/plaza, merge/prune survives rebuild, re-record pre-`8b6d678` stretches, region goals, "already in X",
+direct-mode re-check, web-app FeedbackModal, then Phase 4 item 20 of the smoke test.
+
+## Merging and branch clean-up
+
+Nothing of this chain is merged. Suggested order once the live checklist passes:
+1. **knk-web-api** `claude/road-navigation` → `master` first (merge `master` into it — 19 commits behind — and run the
+   tests): plugin `9dccb58` needs API `c029186` (the `Pruned` node kind); deploy them together.
+2. **knk-plugin**: `claude/navigation-walkable-path` **contains** `claude/road-navigation` (`075ae94`) and trunk `main`
+   (`27b4236`). Either merge `claude/navigation-walkable-path` into `claude/road-navigation` (a fast-forward if you made
+   no commits there since `075ae94`, else a merge — then re-run the build) and PR `claude/road-navigation` → `main`; or PR
+   `claude/navigation-walkable-path` → `main` directly. If you want KNG-27 in trunk **without** KNG-51, PR
+   `claude/road-navigation` → `main` and cherry-pick link 1's test commit `d8507a3` (L1-1); KNG-51 then follows from
+   this branch.
+3. **knk-web-app** `claude/road-navigation` → `main` (the road admin pages; independent of KNG-51).
+4. Per the road-navigation closeout (`docs/ai-agents/handoffs/2026-09-29-road-navigation-closeout.md`), live checklists
+   in plan-phase order 3 → 5 → 4, then this chain's.
+
+**Delete after the merges** (all three repos where they exist): `claude/navigation-walkable-path` (knk-plugin only),
+`claude/road-navigation`, `claude/road-navigation-smoke-test-bugs-fagl4i` (identical to `claude/road-navigation` at chain
+start — check it has no newer commits first). Then move the "Road navigation (KNG-27)" and "Navigation walkable-path
+chain" rows in `ACTIVE_SESSIONS.md` to "Recently completed" with the merge commits, and set KNG-27/KNG-51 in Linear.
+
+**Not in this chain:** KNG-51 Phase D (routed start/end legs with the same search; async load of existing chunks if
+the live test shows unloaded destination ends; vines/scaffolding via `climbables`) — waits for your live verdict.

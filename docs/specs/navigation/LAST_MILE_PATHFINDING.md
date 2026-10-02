@@ -1,7 +1,7 @@
 # Road Navigation — Last-mile walkable pathfinding (design)
 
-**Status:** Design decided — **Phases A-B implemented** (knk-core `roads/walk/`, knk-paper `navigation/walk/`, unmerged, knk-plugin `claude/navigation-walkable-path`, 2026-10-02); Phase C next. Reviewed by the developer on 2026-10-02 (§11): decided items 1-4, 5 (pending live test), 6, 8; item 7 (scope) decided. No open decisions remain except the live test of item 5.
-**Last updated:** 2026-10-02 (rev. 4: §10 "Phase B status"; rev. 3: §10 "Phase A status"; rev. 2: ladders, interact-gated doors, chunk-loading rationale, §13 KNG-36)
+**Status:** Design decided — **Phases A-C implemented** (knk-core `roads/walk/`, knk-paper `navigation/walk/` + direct-mode wiring, unmerged, knk-plugin `claude/navigation-walkable-path` `305829b`, 2026-10-02); live test and Phase D next. Reviewed by the developer on 2026-10-02 (§11): decided items 1-4, 5 (pending live test), 6, 8; item 7 (scope) decided. No open decisions remain except the live test of item 5.
+**Last updated:** 2026-10-02 (rev. 5: §10 "Phase C status"; rev. 4: §10 "Phase B status"; rev. 3: §10 "Phase A status"; rev. 2: ladders, interact-gated doors, chunk-loading rationale, §13 KNG-36)
 **Linear:** [KNG-51](https://linear.app/kngpandi/issue/KNG-51/navigation-last-mile-walkable-pathfinding-for-direct-modeoff-road-legs)
 (split out of [KNG-27](https://linear.app/kngpandi/issue/KNG-27/road-navigation-auto-detected-road-graph-junctionsendpoints-from-road))
 **Parent design:** [DESIGN.md](DESIGN.md) §6.2 ("real off-road pathfinding is Phase 6" — this document is the
@@ -260,6 +260,19 @@ verified — denied regions are copied into `RegionShape`s instead. Measured on 
 0.4-0.7 ms per chunk for a leg's 3-section band (array source; the live `ChunkSnapshot` number is Phase C's to read
 from `WalkSnapshotService.stats()`). Tests: knk-core 1619 → 1628, knk-paper 1089 → 1116. Decisions L3-1 … L3-10 in the
 progress report's "Link 3" section.
+
+**Phase C status (2026-10-02, walkable chain link 4).** Done on knk-plugin `claude/navigation-walkable-path`
+(`b0eee28` `DirectLeg` refactor — behaviour unchanged, navigation tests green; `fc1a98d` `TrailRenderer.drawPath`;
+`305829b` wiring, config, kill switch). A direct leg (nearby target, and the last leg after a road's end) draws the
+straight line at once (PENDING), captures and searches a walk path off the main thread (own `knk-navigation-walk`
+pool of `max-concurrent-searches` threads) and switches to it (WALKING); no path of any kind keeps the straight line
+(FALLBACK, §11-5). The existing `recheckDirect` is the only re-check: it also recomputes off the path (> 6), on a moved
+target, after a gate/availability event and at 10 s, never while a request is in flight; "heading away" is measured
+along a walking path. `config.yml` has the `navigation.walk:` block; `enabled: false` starts none of it and reproduces
+the straight lines exactly (transcript test). `/knk road status` shows a "walk paths" line with the capture's µs per
+chunk — **the live §8 number is still to be recorded** here. Tests: knk-paper 1116 → 1131. Decisions L4-1 … L4-10,
+the combined live checklist (§11-5 first, then the §12 matrix) and the merge order are in the progress report's
+"Link 4" section.
 
 \* Relative effort: A ≈ 40 %, B ≈ 20 %, C ≈ 30 %, docs/status ≈ 10 % of the total. Phase A is a good first, self-contained
 session — it can be fully verified by unit tests with no Minecraft server (the cloud sessions already compile
