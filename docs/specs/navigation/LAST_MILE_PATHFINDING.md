@@ -14,7 +14,10 @@ live smoke test 2026-10-01)
 
 All navigation code lives on the unmerged `claude/road-navigation` branches (`ACTIVE_SESSIONS.md`, 2026-10-01: nothing
 merged to trunk). File and line references below are to that branch. Before Phase A, re-check the branch, whether it
-has been merged, and whether KNG-27 items 2 and 3 (§5.5) have landed — this design depends on item 3 (§8).
+has been merged. **Update 2026-10-02 (evening):** KNG-27 fix-plan items 1-6 have since landed on `claude/road-navigation`
+(knk-plugin `6a73945` items 2-4, `9f66fea` item 5, `ef556e2` item 6; knk-web-app `6414e18` item 1; head `075ae94`, plus the
+developer's own smoke-test fixes), so the direct-mode recheck this design builds on exists as
+`NavigationService.recheckDirect` (§7).
 
 ## 1. Goal and non-goals
 
@@ -162,8 +165,11 @@ at a price" for NPC attackers later (§13). The core search is testable with ASC
 
 ## 7. One mechanism for direct mode (answers open question 3)
 
-KNG-27 item 3 gives direct mode a periodic recheck. Both must be **one** mechanism, so item 3 is implemented first
-with this seam (recommended order in §10):
+KNG-27 item 3 gave direct mode a periodic recheck (**implemented**: `NavigationService.recheckDirect`, fields
+`directBest` / `lastDirectRecalcTick` on `Active`, message `directRecalculating`, trigger "the player is more than
+`reroute-distance` farther from the target than their closest approach", rate-limited by `reroute-min-interval`). The
+walk path must use **that** recheck, not a second one: Phase C first refactors those fields into the `DirectLeg` below
+(behaviour unchanged, existing tests green), then adds the walk path:
 
 ```java
 final class DirectLeg {               // owned by Active; replaces a.target-only direct mode
@@ -179,7 +185,7 @@ final class DirectLeg {               // owned by Active; replaces a.target-only
   and requests a walk path.
 - On adoption the trail switches to the path (WALKING). On `NO_PATH`/budget exhaustion the leg is FALLBACK and keeps
   today's straight line (and today's colour — no new visual state in v1).
-- The item 3 recheck (same `RECHECK_TICKS` cadence) recomputes when the player is more than **6 blocks** from the path
+- The existing recheck (same `RECHECK_TICKS` cadence) keeps its "heading away" trigger and additionally recomputes when the player is more than **6 blocks** from the path
   polyline (3D), the target moved, a gate/availability event fired for an active direct leg, or the path is older than
   **10 s** (player-placed blocks). It never recomputes every tick, and never while a request is in flight.
 - `arrivedAtRouteEnd` hands the real end of the road to the same `DirectLeg`, so routed→direct is not a special case.
@@ -223,10 +229,10 @@ path (they remain for the straight fallback). `drawDirect(viewer, target)` stays
 
 | Phase | Content | Size* | Needs |
 |---|---|---|---|
-| **0** | KNG-27 item 3 (direct-mode recheck) with the `DirectLeg` seam (§7), **no** walk path yet | small | §5.5 item 3; may already be done by the time this starts |
+| **0** | ~~KNG-27 item 3 (direct-mode recheck)~~ — **done 2026-10-02** (`6a73945`); the `DirectLeg` refactor moved into Phase C | — | — |
 | **A** | `knk-core roads/walk/`: extract `WalkGrid` from `SpanGrid` (unchanged behaviour, existing tests green), `WalkSearch`, `CellAccess`, `PassabilityRules` additions, ladder links, `MovementProfile`, ASCII-fixture tests (§12) | **largest**, no Bukkit, no server | — |
 | **B** | knk-paper: `WalkSnapshotService` (capture, `TickBudget`, TTL cache), `CellAccess` adapters (gates, denied regions, door-interact checks), ladder/door cell capture, the `permissive roadFloor` capture check | medium | A |
-| **C** | Wire `DirectLeg` → walk path, `TrailRenderer.drawPath`, config, messages, kill switch; `NavigationServiceTest` with a fake `WalkPathfinder` | medium | 0, A, B |
+| **C** | Refactor the direct-mode fields of `Active` into `DirectLeg` (no behaviour change, existing tests green), then wire it → walk path, `TrailRenderer.drawPath`, config, messages, kill switch; `NavigationServiceTest` with a fake `WalkPathfinder` | medium | A, B |
 | **D** (later) | Routed-mode start leg (player → road) and end leg in `drawRoute` use the same search; region last-leg predicate after KNG-27 item 2; ladders/doors refinements | optional | C + live feedback |
 
 \* Relative effort: A ≈ 40 %, B ≈ 20 %, C ≈ 30 %, docs/status ≈ 10 % of the total. Phase A is a good first, self-contained
