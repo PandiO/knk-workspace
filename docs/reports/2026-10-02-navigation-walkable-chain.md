@@ -1,7 +1,7 @@
 # Navigation walkable-path chain — progress report
 
-**Status:** running (links 1-2 done; link 3 next)
-**Last updated:** 2026-10-02 (link 2)
+**Status:** running (links 1-3 done; link 4 next)
+**Last updated:** 2026-10-02 (link 3)
 **Charter:** [`docs/ai-agents/handoffs/NAVIGATION_WALKABLE_CHAIN.md`](../ai-agents/handoffs/NAVIGATION_WALKABLE_CHAIN.md)
 **Linear:** [KNG-27](https://linear.app/kngpandi/issue/KNG-27) (reconcile), [KNG-51](https://linear.app/kngpandi/issue/KNG-51) (implement)
 **Design:** [`docs/specs/navigation/LAST_MILE_PATHFINDING.md`](../specs/navigation/LAST_MILE_PATHFINDING.md)
@@ -14,8 +14,8 @@ This file is append-only: each link adds its own section below; only the summary
 |---|---|---|---|---|
 | 1 | KNG-27 reconciliation | **done** 2026-10-02 | knk-plugin `claude/navigation-walkable-path` `d8507a3` (= `claude/road-navigation` `075ae94` + 1 test commit); workspace `main` | [Link 1](#link-1--kng-27-reconciliation) |
 | 2 | KNG-51 Phase A (`knk-core roads/walk/`) | **done** 2026-10-02 | knk-plugin `claude/navigation-walkable-path` `ad311ae` | [Link 2](#link-2--kng-51-phase-a-knk-core-roadswalk) |
-| 3 | KNG-51 Phase B (knk-paper capture, cell access) | next | — | — |
-| 4 | KNG-51 Phase C (`DirectLeg`, walk trail, config) | not started | — | — |
+| 3 | KNG-51 Phase B (knk-paper capture, cell access) | **done** 2026-10-02 | knk-plugin `claude/navigation-walkable-path` `aa320e5` | [Link 3](#link-3--kng-51-phase-b-knk-paper-capture-and-cell-access) |
+| 4 | KNG-51 Phase C (`DirectLeg`, walk trail, config) | next | — | — |
 
 **Review first**
 1. `IMPLEMENTATION_PLAN.md` "§5.5 status" — all six fix-plan items are code-complete on `claude/road-navigation`; every
@@ -28,6 +28,9 @@ This file is append-only: each link adds its own section below; only the summary
    (a 3-block drop costs 33).
 5. The 96×96 worst case is ~80-90 ms (off the main thread, budget-bounded), more than the design's "milliseconds"
    guess — fine for one search per player, worth watching in Phase B/C live tests.
+6. Link 3's L3-1 (the walk capture is its own per-block flags capture, not `CompactSpans` with a permissive
+   `roadFloor`), L3-3 (door rule = WorldGuard `testBuild(INTERACT, USE)` + the domain regions) and L3-5 (domain
+   lookups happen on the routing thread) — none is visible in game until Phase C wires them.
 
 **Test when you have time:** pull `claude/navigation-walkable-path` in knk-plugin; `./gradlew build -x deployToDevServer`;
 `./gradlew :knk-paper:dev`; then the live checklist (link 1's is the KNG-27 re-test below; links 2-4 add theirs).
@@ -214,3 +217,118 @@ road graph is identical to before (the extraction's in-game proof; the unit test
 Link 3 — KNG-51 Phase B. Handoff: `docs/ai-agents/handoffs/2026-10-02-navigation-walkable-link-3.md`. Started with
 charter §6 option 1 (new session): Claude Code Remote `create_session`, same environment, model `claude-opus-5-5`,
 source knk-workspace — session `session_014imn6hbUd6JTy1R3e6Str1`, 2026-10-02 19:39 UTC.
+
+## Link 3 — KNG-51 Phase B (knk-paper capture and cell access)
+
+**Session:** Claude Code cloud session `session_014imn6hbUd6JTy1R3e6Str1`, 2026-10-02 ~19:40-20:05 UTC (container clock). Started from
+the link-3 handoff (link 2 had created this session).
+
+### Setup
+- Workspace was checked out detached; switched to `main`. knk-plugin was not in the container: attached with
+  `add_repo` and cloned (`claude/navigation-walkable-path` at `ad311ae`). `origin/claude/road-navigation` still
+  `075ae94`, `origin/main` still `27b4236` — both merges "already up to date" at start and again before the final push
+  (no developer commits during the link). Push checks ✔.
+- Network: papermc/enginehub 200; the first build completed without Maven Central 429s; later builds `--offline`.
+- Baseline on `ad311ae` = link 2's: knk-core **1619**, knk-api-client **184** (2 skipped), knk-paper **1089** (14 skipped).
+
+### Commits (knk-plugin `claude/navigation-walkable-path`, all pushed)
+| Commit | What |
+|---|---|
+| `beec0e1` | knk-core `roads/walk/`: `GateCellAccess` (verdicts from `GateAvailability.decide`, floor..floor+headroom like `WalkGrid.gateDoor`), `DeniedRegionAccess` (`DomainAvailability`'s entry/exit split per feet block over `RegionShape`s; `resolve` keeps the denying domains; bypass → none), `DoorCellAccess` (denied door blocks, feet/head). 9 tests incl. search detours. |
+| `905987b` | knk-paper `navigation/walk/`: `WalkChunk` (one flags byte per block — passable/solid/hazard/stair + door/climbable/water — uniform sections stored as one byte; floor materials for every solid block with a walk-passable block above; door positions), `WalkChunkExtractor` (pure, the builder's `PassabilityRules` and `BlockSource`), `CapturedWalkTerrain` (`SurfaceGrid` + `WalkCells` over a request's chunks). Tests: block-by-block and search-by-search equality with the world it was captured from (curated and paper collision tables: ladders/doors collidable), memory/time measurement. |
+| `12c834a` | `WalkSnapshotService` (main thread: loaded chunks only, 4 chunks/tick and 1 under lag via `TickBudget`, world/chunk-keyed TTL cache shared across requests, LRU 256, union of section bands, dropped when the world's gate footprints change, cancellable futures, `stats()`), `WalkBox` (leg ± `capture-margin`, also vertically), `GateCellsIndex.doorIdsWithin` + content `equals`; `NavigationConfig.WalkConfig` (`navigation.walk.*`, all §9 keys + `climbables`, `profile()`, `budget()`; the old 14-argument constructor keeps the defaults) and its loader. |
+| `d08c341` | **Extraction**: `NavigationAccess.gateAvailability(player, doorIds)` out of `policyFor` (same parts, same order; navigation tests unchanged and green) + public accessors (`domainByRegionId`, `bypasses`, `evaluator`, `regionsAt`). |
+| `aa320e5` | `WalkAccessFactory` (main thread: gate verdicts for the doors in the box, one WorldGuard check per door block, WorldGuard regions overlapping the box as `RegionShape` candidates with "player inside"; `WalkAccess.resolve()` on the routing thread composes gates + doors + denied regions with `CellAccess.all`) and `WorldGuardWalkAccess` (the WorldGuard calls, kept apart so the factory loads without WorldGuard in tests). 6 tests. |
+
+Reuse rows applied (design §2): `BlockProbe`/`SurfaceGrid`, `PassabilityRules` (incl. Bukkit's collision predicate),
+`SpanExtractor.BlockSource`, `GateCells`/`GateCellsIndex`, `TickBudget`, `GateAvailability` (via the extracted
+`NavigationAccess.gateAvailability`), `DomainAvailability`'s messages and `DomainAccessEvaluator`, `RegionShape` +
+`WorldGuardRegionShapes.toShape`, `RegionIds`, `BlockKey`. `CompactSpans`/`CompactSurfaceGrid` were **not** reused —
+see L3-1.
+
+### Tests vs baseline (`./gradlew build -x deployToDevServer`, BUILD SUCCESSFUL, test results cleaned first)
+| Module | Baseline | After link 3 |
+|---|---|---|
+| knk-core | 1619 | **1628** (+9 `WalkCellAccessTest`) |
+| knk-api-client | 184 (2 skipped) | 184 (2 skipped) |
+| knk-paper | 1089 (14 skipped) | **1116** (14 skipped; +7 `WalkCaptureTest`, +1 `WalkCaptureMeasureTest`, +12 `WalkSnapshotServiceTest`, +6 `WalkAccessFactoryTest`, +1 config) |
+
+**Memory and extraction time per chunk (design §2 row 4, §8)** — synthetic overworld chunk (rolling grass 60-72,
+stone with ores, two caves, a pond, a tree, a cottage with a door and a ladder), array-backed block source, 4-core
+container, median of 41: the band a leg captures (3 sections) ≈ **12 KB**, **0.4-0.7 ms**; the whole column
+(-64..320, empty sections skipped) ≈ 17 KB, 2.3-2.7 ms. A real `ChunkSnapshot` read is slower than the array, so the
+live number will be higher; `WalkSnapshotService.stats().meanCaptureMicros()` measures it on the server (Phase C can
+log it). Cache ceiling: 256 chunks ≈ 3-5 MB.
+
+### Flagged decisions (reversible defaults; the design left these open)
+- **L3-1** The capture is its own per-block flags capture (`WalkChunk`), not `CompactSpans` with `roadFloor = any`:
+  `CompactSpans` keeps only spans and their headroom, but the walk search also asks drop columns down to `maxDrop` in the
+  neighbour columns, the block above a ladder and water at the feet, and needs door/climbable/water flags. The
+  "permissive `roadFloor`" is kept in spirit: every material is recorded as a possible floor; the search's
+  `PassabilityRules.isWalkFloor` rejects fence/wall/pane/door/ladder tops. Verified by block-by-block and search
+  equality tests against the uncaptured world.
+- **L3-2** Denied regions are copied into Bukkit-free `RegionShape`s on the main thread (the design's fallback). Whether
+  `ProtectedRegion.contains` is safe off-thread was **not** verified — WorldGuard does not document it and regions can be
+  redefined during a search, so the copy is the safe default. Containment is on the feet block (WorldGuard's block rule);
+  a degenerate polygon becomes its bounding cuboid rather than being dropped.
+- **L3-3** Door rule: WorldGuard `RegionQuery.testBuild(location, player, INTERACT, USE)` (membership, or both flags
+  allowing — at least as strict as WorldGuard's own door check), WorldGuard's region bypass or `knk.region.bypass` →
+  allowed. The KnK domain half of §11-2 is `DeniedRegionAccess`, which blocks door cells in a region the player may not
+  enter like any other cell (composed with `CellAccess.all`; tested). Each door block in the box is checked once per
+  request; door blocks outside the box are not checked (no cell there can be reached).
+- **L3-4** Gate cells: floor, feet and head blocks (floor..floor+headroom, the blocks `WalkGrid.gateDoor` tags); a door the
+  gate cache does not know is open (the router's rule); pass-through and siege-carried gates are walkable (the hint is
+  Phase C's message business).
+- **L3-5** Domain lookups run in `WalkAccess.resolve()` on the **routing thread**, not in the main-thread `prepare`:
+  `NavigationAccess.domainByRegionId` may wait up to 3 s for the API, as the road router's lookups do.
+- **L3-6** Only the box's sections are captured (leg ± `capture-margin` vertically too); a taller box later recaptures the
+  chunk with the union of both bands. The Bukkit port reads every block of the band (no `ChunkSnapshot.isSectionEmpty`
+  skip — its index convention is not pinned by a test here, and a wrong skip would hide blocks).
+- **L3-7** Constants, not config: 4 chunks per tick (1 while lagging), cache ≤ 256 chunks (LRU), ≤ 49 chunks per request
+  (`TOO_LARGE` beyond — a 48-block leg + 16 margin needs at most 6 × 6). A world's cached chunks are dropped when its gate
+  footprints change (the capture records floors under gate blocks).
+- **L3-8** Outside the captured chunks/band a block is neither passable nor solid — the box is the search's boundary.
+  `floorMaterial` of a block the capture did not record throws (like `CompactSurfaceGrid`); a correct capture never hits
+  it, but Phase C must treat any exception from the search as FALLBACK.
+- **L3-9** `NavigationConfig.WalkConfig` carries all §9 keys plus `climbables`; `enabled` and `recompute-distance` are not
+  wired yet and `config.yml` has no `walk:` block yet (Phase C adds it; the bundled-config test pins the defaults).
+- **L3-10** New code lives in the sub-package `knk-paper .../navigation/walk/` (the design wrote `navigation/WalkSnapshotService`).
+
+### Discrepancies
+- Design §2 row 4 expected `CompactSpans`/`CompactSurfaceGrid` with a permissive `roadFloor` to be "probably" reusable — it
+  is not enough for the walk search (L3-1).
+- Design §6 asks to verify `ProtectedRegion.contains` off-thread; not verified, the copy was taken instead (L3-2).
+- The navigation routing executor is a single thread (`knk-navigation-routing`), so `max-concurrent-searches` (default 2)
+  is effectively 1 unless Phase C gives walk searches their own executor.
+
+### Live checklist (developer)
+Nothing changes in game yet — the capture and access classes are not wired into `NavigationService` (Phase C). Review
+L3-1 … L3-10. Phase C's checklist will cover the in-game matrix (§12).
+
+### What link 4 must wire (Phase C)
+- **Construction** (`KnKPlugin`, next to `NavigationAccess`): `new WalkSnapshotService(navigation.passabilityRules(
+  ChunkSnapshotSurfaceGrid.bukkitCollidable()), navigation.walk(), TickBudget.server(), System::currentTimeMillis)`,
+  `.start(this)` (and `.stop()` on disable); `WorldGuardWalkAccess.factory(access)`; one shared `new WalkSearch()`.
+- **Per request, main thread:** `GateCellsIndex gates = GateCellsIndex.of(gateManager, world.getName())`;
+  `WalkBox box = WalkBox.around(world.getName(), feet x/y/z, target floor x/y/z, walk.captureMargin(),
+  world.getMinHeight(), world.getMaxHeight())`; `walkSnapshots.capture(WalkSnapshotService.of(world), gates, box)` → the
+  future completes on the main thread (possibly at once); not `ready()` → FALLBACK (straight line). Then
+  `WalkAccess access = walkAccessFactory.prepare(player, world, gates, capture, walk.profile().headroom())`.
+- **Routing thread:** `CellAccess cells = access.resolve()`; `new WalkRequest(capture.terrain().terrain(), cells,
+  walk.profile(), feet x/y/z, target floor x/y/z, goal, walk.budget())` (goal: `WalkGoal.within(target, arriveDistance)` or
+  `RegionShape::containsFloor`); `walkSearch.find(...)` inside try/catch (exception → FALLBACK, L3-8); deliver with the
+  generation check. Cancel the capture future when the leg is replaced before it completes.
+- `config.yml` `navigation.walk:` block (all keys, defaults) + the bundled-config test; `enabled: false` = today exactly.
+- Optional: a debug line with `WalkSnapshotService.stats()` (captured chunks, mean µs per chunk, cache bytes) for the
+  live §8 measurement.
+
+### Risks
+- The live `ChunkSnapshot` extraction time is unmeasured (array fake only); watch `stats()` in the Phase C live test.
+- WorldGuard's `testBuild(INTERACT, USE)` for doors is untested against a live WorldGuard (mocked port in tests); a wrong
+  answer shows as a trail through a door the player cannot open, or around one they can.
+- The capture assumes the collision predicate and overlay patterns the road builder uses; a material Bukkit calls
+  collidable that a player can walk through (or the reverse) is wrong for both.
+
+### Next link
+Link 4 — KNG-51 Phase C. Handoff: `docs/ai-agents/handoffs/2026-10-02-navigation-walkable-link-4.md`.
+

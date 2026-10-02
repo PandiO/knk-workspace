@@ -1,7 +1,7 @@
 # Road Navigation — Last-mile walkable pathfinding (design)
 
-**Status:** Design decided — **Phase A implemented** (knk-core `roads/walk/`, unmerged, knk-plugin `claude/navigation-walkable-path`, 2026-10-02); Phases B-C next. Reviewed by the developer on 2026-10-02 (§11): decided items 1-4, 5 (pending live test), 6, 8; item 7 (scope) decided. No open decisions remain except the live test of item 5.
-**Last updated:** 2026-10-02 (rev. 3: §10 "Phase A status"; rev. 2: ladders, interact-gated doors, chunk-loading rationale, §13 KNG-36)
+**Status:** Design decided — **Phases A-B implemented** (knk-core `roads/walk/`, knk-paper `navigation/walk/`, unmerged, knk-plugin `claude/navigation-walkable-path`, 2026-10-02); Phase C next. Reviewed by the developer on 2026-10-02 (§11): decided items 1-4, 5 (pending live test), 6, 8; item 7 (scope) decided. No open decisions remain except the live test of item 5.
+**Last updated:** 2026-10-02 (rev. 4: §10 "Phase B status"; rev. 3: §10 "Phase A status"; rev. 2: ladders, interact-gated doors, chunk-loading rationale, §13 KNG-36)
 **Linear:** [KNG-51](https://linear.app/kngpandi/issue/KNG-51/navigation-last-mile-walkable-pathfinding-for-direct-modeoff-road-legs)
 (split out of [KNG-27](https://linear.app/kngpandi/issue/KNG-27/road-navigation-auto-detected-road-graph-junctionsendpoints-from-road))
 **Parent design:** [DESIGN.md](DESIGN.md) §6.2 ("real off-road pathfinding is Phase 6" — this document is the
@@ -247,6 +247,19 @@ expansions); whole field expanded (9 215 cells, unreachable target) ≈ 80-90 ms
 bounded by the budget; typical legs expand a few hundred cells. Where the implementation settled details the design left
 open, see the progress report's "Link 2" section (decisions L2-1 … L2-10); the most visible: unreachable → `NO_PATH`,
 budget/length cap → `FALLBACK` (§12 wording; §5's sentence says both are FALLBACK — Phase C treats them alike).
+
+**Phase B status (2026-10-02, walkable chain link 3).** Done on knk-plugin `claude/navigation-walkable-path`
+(`beec0e1` cell access, `905987b` capture, `12c834a` snapshot service + config, `d08c341` `NavigationAccess.gateAvailability`
+extraction, `aa320e5` access factory). knk-core `roads/walk/`: `GateCellAccess`, `DeniedRegionAccess`, `DoorCellAccess`.
+knk-paper `navigation/walk/`: `WalkChunk`/`WalkChunkExtractor`/`CapturedWalkTerrain` (the capture), `WalkBox`,
+`WalkSnapshotService` (loaded chunks only, `TickBudget`, shared TTL cache), `WalkAccessFactory` + `WorldGuardWalkAccess`;
+`NavigationConfig.WalkConfig` (`navigation.walk.*`). Not wired into navigation yet. Two §2/§6 expectations changed:
+the capture is its own per-block flags capture rather than `CompactSpans` with a permissive `roadFloor` (the walk search
+asks about drop columns, ladders and water, which spans do not store); `ProtectedRegion.contains` off-thread was not
+verified — denied regions are copied into `RegionShape`s instead. Measured on a synthetic chunk: ≈ 12 KB and
+0.4-0.7 ms per chunk for a leg's 3-section band (array source; the live `ChunkSnapshot` number is Phase C's to read
+from `WalkSnapshotService.stats()`). Tests: knk-core 1619 → 1628, knk-paper 1089 → 1116. Decisions L3-1 … L3-10 in the
+progress report's "Link 3" section.
 
 \* Relative effort: A ≈ 40 %, B ≈ 20 %, C ≈ 30 %, docs/status ≈ 10 % of the total. Phase A is a good first, self-contained
 session — it can be fully verified by unit tests with no Minecraft server (the cloud sessions already compile
