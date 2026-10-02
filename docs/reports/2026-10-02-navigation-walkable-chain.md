@@ -111,5 +111,6 @@ Per item (commits, code vs plan, tests, live status): `IMPLEMENTATION_PLAN.md` �
 - The developer may keep committing to `claude/road-navigation`; links 2-4 merge it at start and before their final push.
 
 ### Next link
-Link 2 — KNG-51 Phase A. Handoff: `docs/ai-agents/handoffs/2026-10-02-navigation-walkable-link-2.md`. How it was
-started: see the line below (added after the start).
+Link 2 — KNG-51 Phase A. Handoff: `docs/ai-agents/handoffs/2026-10-02-navigation-walkable-link-2.md`. Started with
+charter §6 option 1 (new session): Claude Code Remote `create_session`, same environment, model `claude-opus-5-5`,
+source knk-workspace — session `session_01CcMg85W2QPXEDg1YQgJDaV`, 2026-10-02 19:16 UTC.
