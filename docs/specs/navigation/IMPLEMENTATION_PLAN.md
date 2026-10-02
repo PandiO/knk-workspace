@@ -2236,6 +2236,9 @@ draw a pure straight-line interpolation with no collision/walkability check, for
 within 48 blocks) and the "road ends short of target" last leg (`arrivedAtRouteEnd`). See the linked Linear issue
 for the proposed minimal-viable direction (a bounded block-level search, ~48-64 blocks, respecting the player's
 `AccessPolicy`, with a hard search budget and fallback to today's straight line) and open questions.
+**Design drafted 2026-10-02:** [LAST_MILE_PATHFINDING.md](LAST_MILE_PATHFINDING.md) answers the open questions (A\*
+on the road builder's span model, new `knk-core roads/walk/` package, one `DirectLeg` mechanism shared with item 3 above)
+and sequences the work after item 3; it is proposed, pending the developer decisions in its §11.
 
 ---
 
