@@ -1,7 +1,7 @@
 # Road Navigation — Last-mile walkable pathfinding (design)
 
-**Status:** Design proposed — **not implemented**. Reviewed by the developer on 2026-10-02 (§11): decided items 1-4, 5 (pending live test), 6, 8; item 7 (scope) decided. No open decisions remain except the live test of item 5.
-**Last updated:** 2026-10-02 (rev. 2: ladders, interact-gated doors, chunk-loading rationale, §13 KNG-36)
+**Status:** Design decided — **Phase A implemented** (knk-core `roads/walk/`, unmerged, knk-plugin `claude/navigation-walkable-path`, 2026-10-02); Phases B-C next. Reviewed by the developer on 2026-10-02 (§11): decided items 1-4, 5 (pending live test), 6, 8; item 7 (scope) decided. No open decisions remain except the live test of item 5.
+**Last updated:** 2026-10-02 (rev. 3: §10 "Phase A status"; rev. 2: ladders, interact-gated doors, chunk-loading rationale, §13 KNG-36)
 **Linear:** [KNG-51](https://linear.app/kngpandi/issue/KNG-51/navigation-last-mile-walkable-pathfinding-for-direct-modeoff-road-legs)
 (split out of [KNG-27](https://linear.app/kngpandi/issue/KNG-27/road-navigation-auto-detected-road-graph-junctionsendpoints-from-road))
 **Parent design:** [DESIGN.md](DESIGN.md) §6.2 ("real off-road pathfinding is Phase 6" — this document is the
@@ -234,6 +234,19 @@ path (they remain for the straight fallback). `drawDirect(viewer, target)` stays
 | **B** | knk-paper: `WalkSnapshotService` (capture, `TickBudget`, TTL cache), `CellAccess` adapters (gates, denied regions, door-interact checks), ladder/door cell capture, the `permissive roadFloor` capture check | medium | A |
 | **C** | Refactor the direct-mode fields of `Active` into `DirectLeg` (no behaviour change, existing tests green), then wire it → walk path, `TrailRenderer.drawPath`, config, messages, kill switch; `NavigationServiceTest` with a fake `WalkPathfinder` | medium | A, B |
 | **D** (later) | Routed-mode start leg (player → road) and end leg in `drawRoute` use the same search; region last-leg predicate after KNG-27 item 2; ladders/doors refinements | optional | C + live feedback |
+
+**Phase A status (2026-10-02, walkable chain link 2).** Done on knk-plugin `claude/navigation-walkable-path`
+(`ea54013` extraction, `6352b4c` rules, `1fae034` search, `ad311ae` timing/maps). knk-core `roads/walk/`: `WalkGrid`
+(extracted from `SpanGrid`, which delegates — road-builder tests unchanged and green), `MovementProfile`, `CellAccess`,
+`WalkCells` (door/climbable/water flag port — the capture must provide it, §4), `WalkTerrain`, `WalkGoal`, `WalkBudget`,
+`WalkRequest`/`WalkResult`/`WalkPath`, `WalkPathfinder` ← `WalkSearch`. `PassabilityRules` gained `isNeverFloor`,
+`isHandOpenableDoor`, `isWalkFloor`, `isWater`. All §12 core fixtures are tests (knk-core 1561 → 1619). **96×96 open
+field** (fixture terrain, 4-core cloud container, median after warm-up): straight across 95 blocks ≈ 3-5 ms (95
+expansions); whole field expanded (9 215 cells, unreachable target) ≈ 80-90 ms; same with the default budget ≈ 75 ms
+(stops at the length cap). That is above §8's "milliseconds-scale" guess for the worst case, but off the main thread and
+bounded by the budget; typical legs expand a few hundred cells. Where the implementation settled details the design left
+open, see the progress report's "Link 2" section (decisions L2-1 … L2-10); the most visible: unreachable → `NO_PATH`,
+budget/length cap → `FALLBACK` (§12 wording; §5's sentence says both are FALLBACK — Phase C treats them alike).
 
 \* Relative effort: A ≈ 40 %, B ≈ 20 %, C ≈ 30 %, docs/status ≈ 10 % of the total. Phase A is a good first, self-contained
 session — it can be fully verified by unit tests with no Minecraft server (the cloud sessions already compile

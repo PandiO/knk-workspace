@@ -1,7 +1,7 @@
 # Navigation walkable-path chain — progress report
 
-**Status:** running (link 1 done; link 2 next)
-**Last updated:** 2026-10-02 (link 1)
+**Status:** running (links 1-2 done; link 3 next)
+**Last updated:** 2026-10-02 (link 2)
 **Charter:** [`docs/ai-agents/handoffs/NAVIGATION_WALKABLE_CHAIN.md`](../ai-agents/handoffs/NAVIGATION_WALKABLE_CHAIN.md)
 **Linear:** [KNG-27](https://linear.app/kngpandi/issue/KNG-27) (reconcile), [KNG-51](https://linear.app/kngpandi/issue/KNG-51) (implement)
 **Design:** [`docs/specs/navigation/LAST_MILE_PATHFINDING.md`](../specs/navigation/LAST_MILE_PATHFINDING.md)
@@ -13,8 +13,8 @@ This file is append-only: each link adds its own section below; only the summary
 | Link | Phase | State | Branch heads | Details |
 |---|---|---|---|---|
 | 1 | KNG-27 reconciliation | **done** 2026-10-02 | knk-plugin `claude/navigation-walkable-path` `d8507a3` (= `claude/road-navigation` `075ae94` + 1 test commit); workspace `main` | [Link 1](#link-1--kng-27-reconciliation) |
-| 2 | KNG-51 Phase A (`knk-core roads/walk/`) | next | — | — |
-| 3 | KNG-51 Phase B (knk-paper capture, cell access) | not started | — | — |
+| 2 | KNG-51 Phase A (`knk-core roads/walk/`) | **done** 2026-10-02 | knk-plugin `claude/navigation-walkable-path` `ad311ae` | [Link 2](#link-2--kng-51-phase-a-knk-core-roadswalk) |
+| 3 | KNG-51 Phase B (knk-paper capture, cell access) | next | — | — |
 | 4 | KNG-51 Phase C (`DirectLeg`, walk trail, config) | not started | — | — |
 
 **Review first**
@@ -23,6 +23,11 @@ This file is append-only: each link adds its own section below; only the summary
    verified live" step (items 5 and 6 landed together), so your rebuild re-test is the first real check.
 2. Stretches recorded with `/knk road record` before `8b6d678` sit one block too deep — re-record them.
 3. Plugin `9dccb58` and API `c029186` must be deployed together (an older plugin can't parse the `Pruned` node kind).
+4. Link 2's decisions L2-1 … L2-10 (walk rules the design left open) — none changes behaviour in game yet; the ones
+   you would notice live are L2-2 (head under water = not walkable), L2-4 (no diagonal through doorways) and L2-5
+   (a 3-block drop costs 33).
+5. The 96×96 worst case is ~80-90 ms (off the main thread, budget-bounded), more than the design's "milliseconds"
+   guess — fine for one search per player, worth watching in Phase B/C live tests.
 
 **Test when you have time:** pull `claude/navigation-walkable-path` in knk-plugin; `./gradlew build -x deployToDevServer`;
 `./gradlew :knk-paper:dev`; then the live checklist (link 1's is the KNG-27 re-test below; links 2-4 add theirs).
@@ -114,3 +119,97 @@ Per item (commits, code vs plan, tests, live status): `IMPLEMENTATION_PLAN.md` �
 Link 2 — KNG-51 Phase A. Handoff: `docs/ai-agents/handoffs/2026-10-02-navigation-walkable-link-2.md`. Started with
 charter §6 option 1 (new session): Claude Code Remote `create_session`, same environment, model `claude-opus-5-5`,
 source knk-workspace — session `session_01CcMg85W2QPXEDg1YQgJDaV`, 2026-10-02 19:16 UTC.
+
+## Link 2 — KNG-51 Phase A (`knk-core roads/walk/`)
+
+**Session:** Claude Code cloud session `session_01CcMg85W2QPXEDg1YQgJDaV`, 2026-10-02 ~19:15-21:30 UTC. Started from the
+link-2 handoff.
+
+### Setup
+- knk-plugin `claude/navigation-walkable-path` checked out at `d8507a3`; `origin/claude/road-navigation` still `075ae94`,
+  `origin/main` still `27b4236` — both merges "already up to date" at start and again before the final push (no
+  developer commits during the link). Push checks ✔ (plugin branch, workspace `main`).
+- Network: papermc/enginehub 200. Maven Central answered **429** on two of the first three builds (shadow plugin and
+  jackson/gson jars); the third attempt completed and later builds ran `--offline`. Gradle tuning re-created per charter
+  §1.4. Not a blocker, but a fresh container may need the same retries.
+- Baseline on `d8507a3` = link 1's: knk-core **1561**, knk-api-client **184** (2 skipped), knk-paper **1089** (14 skipped).
+
+### Commits (knk-plugin `claude/navigation-walkable-path`, all pushed)
+| Commit | What |
+|---|---|
+| `ea54013` | **Extraction**: `roads/walk/WalkGrid` = `SpanGrid`'s span rule, links, step and corner rules, profile-free (floor test + headroom parameters). `SpanGrid` delegates, public API and constants unchanged; existing tests unchanged and green (1561 → 1561). |
+| `6352b4c` | `PassabilityRules`: `isNeverFloor` (fences, walls, fence gates, panes, iron bars/door/trapdoor), `isHandOpenableDoor`, `isWalkFloor`, `isWater` + 4 tests; builder passability unchanged (pinned). |
+| `1fae034` | The search and its types: `WalkPathfinder` ← `WalkSearch`; `WalkRequest`/`WalkResult`/`WalkPath`; `MovementProfile`; `CellAccess`; `WalkTerrain`; `WalkCells`; `WalkGoal`; `WalkBudget`. `WalkGrid` gains a `WalkCells` view (doors/climbables passable in the walk view only; the builder passes `WalkCells.NONE`). 50 tests (`WalkSearchTest` = the §12 list, `WalkTypesTest`). |
+| `ad311ae` | 96×96 timing test; `LongMap` (open addressing, no boxing) + `MemoSurface` (per-search block memo) after a JFR profile showed `Long.hashCode` collisions on packed `BlockKey`s (treeified `HashMap` buckets). |
+
+Reuse rows applied (design §2): span rule/links/step/corner → extracted, not copied; `BlockProbe`/`SurfaceGrid`,
+`GateCells`, `BlockKey`, `PassabilityRules` reused as is; `AStarRouter` as pattern (entry ordering, tie-break).
+
+### Tests vs baseline (`./gradlew build -x deployToDevServer`, BUILD SUCCESSFUL)
+| Module | Baseline | After link 2 |
+|---|---|---|
+| knk-core | 1561 | **1619** (+58: 4 PassabilityRules, 38 WalkSearch, 12 WalkTypes, 3 timing, 1 LongMap) |
+| knk-api-client | 184 (2 skipped) | 184 (2 skipped) |
+| knk-paper | 1089 (14 skipped) | 1089 (14 skipped) — no knk-paper change |
+
+**96×96 open-field timing** (fixture terrain, 4-core container, median after warm-up): across 95 blocks ≈ 3-5 ms (95
+expansions); full field expanded, unreachable target ≈ 80-90 ms (9 215 expansions; was ~130-140 ms before `LongMap`);
+same with the default budget ≈ 75 ms (8 308 expansions, stops at the length cap → FALLBACK). Recorded in the design's §10
+"Phase A status". The remaining cost is memo lookups and the fixture's own material `HashMap`; if Phase C live tests
+show it matters, a per-cell/neighbour memo in `WalkSearch` is the next step.
+
+### Flagged decisions (reversible defaults; the design left these open)
+- **L2-1** Outcomes: no start/goal cell or a fully searched area → `NO_PATH`; expansion budget or a search that hit the
+  length cap → `FALLBACK` (§12's wording; §5 says "exhausted or unreachable → FALLBACK"). Phase C treats both alike.
+- **L2-2** A cell whose feet are in water wades (×3); water in any headroom block above the feet is swimming → not
+  walkable (§11-3 "no swimming"). Waterlogged blocks are not visible by material name.
+- **L2-3** `CellAccess` is asked per **feet block** (`floorY + 1`; a ladder cell's own block). The door penalty (+3) is the
+  profile's and added by the search; an access adapter answers only `0` or `BLOCKED` for doors. `CellAccess.all(...)`
+  composes adapters. NaN/negative answers count as blocked.
+- **L2-4** Diagonals never enter or leave a door cell (doors are passed straight on) and need an accessible, door-free
+  flanking cell on the corner path, so a diagonal can't slip past a denied door/region corner.
+- **L2-5** Drops are orthogonal and directed; the clear fall column runs from the mover's head height down to the
+  landing; a drop of `k` costs `k + 10k` (base `k`, not 1, keeps the heuristic consistent) — a 3-block drop costs 33.
+- **L2-6** Door blocks and climbables are never floors (nobody "stands on" a door or ladder). Ladders: a ladder cell links
+  up/down (2.0/block), to the floor at its foot (same column), to an orthogonal ledge at feet level, to the wall top one
+  higher, and is entered from those cells in reverse (getting on from the top is allowed). Orthogonal only.
+- **L2-7** The start cell ignores `CellAccess` (the mover is already there); start/goal snapping measures from the point
+  to the cell's block column (not its centre), so a player at a block edge mid-jump still snaps.
+- **L2-8** The length cap is on walked length (horizontal 1/√2 per move + every block climbed or dropped), checked per
+  relaxation; geometry fixtures use a loose budget (`WalkFixture.GEOMETRY`), the cap has its own tests.
+- **L2-9** Heuristic `max(horizontal distance, |Δfloor y|)` instead of 3D Euclidean: a step down costs 1 for a √2 chord,
+  so Euclidean would overestimate. Admissible and consistent with the costs above (up to the goal predicate's slack).
+- **L2-10** The search reads climbables from the `WalkCells` port; `MovementProfile.climbables` is what the capture
+  (`WalkCells.ofMaterials` or its own flags) should use. `MovementProfile.PLAYER.withDrops/withClimbables` take config.
+
+### Discrepancies
+- §5 vs §12 on unreachable → see L2-1.
+- §8 expected "milliseconds-scale" for the ~13k-cell worst case; measured ~80-90 ms for 9.2k cells (see above).
+- The design lists ladder links but not getting on a ladder from its top; implemented (L2-6) because a climb down needs it.
+
+### Live checklist (developer)
+Nothing in game yet — Phase A is pure core and changes no knk-paper behaviour. Optional: rebuild a known tile → the
+road graph is identical to before (the extraction's in-game proof; the unit tests already pin it). Review L2-1 … L2-10.
+
+### What link 3 must wire (Phase B)
+- A `WalkTerrain` over captured chunks: `SurfaceGrid` with a permissive floor (`roadFloor = any material`) that also answers
+  `floorMaterial` for every candidate cell (`CompactSurfaceGrid.floorMaterial` throws for non-spans today) and
+  passable/solid/hazard for the blocks the walk asks beyond the builder: drop columns (head height down to `maxDrop`
+  below, in neighbour columns), the block above a ladder cell. Fence/wall/pane/door tops must not become floors — either
+  keep material names for `PassabilityRules.isWalkFloor` or reject them during capture.
+- `WalkCells` flags (door, climbable, water) per block — `CompactSpans` does not store them. On paper `LADDER` and doors
+  are `isCollidable()`; the walk view counts them passable via the flags, so the flags must be right.
+- `CellAccess` adapters, combined with `CellAccess.all`: gates (`GateCells.doorAt` on the feet/head blocks →
+  `GateAvailability` verdict), denied regions (entry/exit via `DomainAccessEvaluator`, bypass → open), doors (WorldGuard
+  `USE`/`INTERACT` **and** domain entry → `0`/`BLOCKED`). Coordinates are the feet block (L2-3).
+- Config → `MovementProfile.PLAYER.withDrops(max-drop, drop-penalty)`, `WalkBudget(max-expansions, max-length-factor,
+  max-length, 2, 3)`. `WalkSearch` is stateless — one shared instance on the routing executor.
+- Region destinations: `WalkGoal` = `RegionShape::containsFloor`. `WalkPath.points()` are floor positions like route points.
+
+### Risks
+- The capture (Phase B) is where most walk bugs will come from: the core assumes the terrain answers every block it asks.
+- Worst-case search time (above) under many concurrent players — the design's global cap of 2 concurrent searches matters.
+
+### Next link
+Link 3 — KNG-51 Phase B. Handoff: `docs/ai-agents/handoffs/2026-10-02-navigation-walkable-link-3.md`. How it was started:
+see the line below (added after the start).
