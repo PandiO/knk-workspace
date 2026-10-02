@@ -1,6 +1,6 @@
 # Road Navigation — Last-mile walkable pathfinding (design)
 
-**Status:** Design proposed — **not implemented**. Reviewed by the developer on 2026-10-02 (§11): decided items 1-4, 5 (pending live test), 6, 8; item 7 (scope) still open.
+**Status:** Design proposed — **not implemented**. Reviewed by the developer on 2026-10-02 (§11): decided items 1-4, 5 (pending live test), 6, 8; item 7 (scope) decided. No open decisions remain except the live test of item 5.
 **Last updated:** 2026-10-02 (rev. 2: ladders, interact-gated doors, chunk-loading rationale, §13 KNG-36)
 **Linear:** [KNG-51](https://linear.app/kngpandi/issue/KNG-51/navigation-last-mile-walkable-pathfinding-for-direct-modeoff-road-legs)
 (split out of [KNG-27](https://linear.app/kngpandi/issue/KNG-27/road-navigation-auto-detected-road-graph-junctionsendpoints-from-road))
@@ -246,7 +246,7 @@ it reuses everything.
 4. **Ladders — decided 2026-10-02:** allowed in v1 (§4). Vines/scaffolding later through `climbables`.
 5. **No partial path — agreed 2026-10-02**, **to be tested on the live server** (does the straight fallback read acceptably, or is a partial path better?). Record the result here.
 6. **No chunk loading in v1** — rationale in §8; revisit in Phase D. (Explained to the developer 2026-10-02; not yet a veto.)
-7. **Scope — OPEN:** default is direct mode + `arrivedAtRouteEnd` in v1, routed start/end legs in Phase D. Alternative: include the routed legs in v1 (§10 scope note).
+7. **Scope — decided 2026-10-02:** direct mode + `arrivedAtRouteEnd` in v1; the routed start/end legs follow in Phase D once the live test is positive.
 8. **Do not adopt the Pathetic library now — agreed 2026-10-02.** The research report ([2026-09-27](../../reports/2026-09-27-road-navigation-research.md) §5.3)
    called it the best off-the-shelf option, but: it is a new shaded dependency (cloud sessions have repeatedly had
    `repo.papermc.io`/Maven blocked or rate-limited, `ACTIVE_SESSIONS.md`); the repo already has a tested walkability
