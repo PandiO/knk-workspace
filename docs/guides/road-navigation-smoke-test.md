@@ -440,6 +440,33 @@ Not addressed (not bugs in the fix plan): A (profile data), D (client timeout on
 the profiles are clean), E (no tile/node delete route; builder config read only at start-up), the Phase 1 "delete the
 fake tiles" gap, and the requested `/knk road node info here` command.
 
+### Re-test of the fixes (2026-10-02)
+
+- **§1 web app:** all three pass.
+- **§2 build all:** tiles 1,-2 / 2,-1 / 3,-1 built with fewer plaza junctions. **Tile 2,-2 failed:** `Boundary node 'n70'
+  at (1418, -520) is not on the tile border`. Root cause: locked junction #7 "Brink" sits 7 blocks inside the south
+  border; the new locked-node reach (8) let the builder's border node take #7's id and position. **Fixed** in knk-plugin
+  `6a8caa7` (a border node never takes a locked inner node). After rebuilding 2,-2, check Brink: if it is left without
+  edges, `node unlock` it and rebuild, and name the new junction instead.
+- **§2 cleanup:** spurs in a small, oddly shaped plaza come back on every rebuild. That plaza is probably narrower than
+  the profiles' `widthMax`, so it is never detected as a plaza, and its spurs are longer than `min-spur-length` (12).
+  Merging them into the junction is the wrong tool. **New:** `/knk road node prune [id]` / `unprune [id]` (below).
+- **§2 merge across tiles:** merging a mid-road junction into one 15 blocks away in another tile left a second edge
+  "spawning" on the road (a merge re-points edge ends without re-tracing). Undo: `node unlock` the kept node and
+  rebuild both tiles; then prune the stub that makes the mid-road point a junction. Merge only two nodes of one
+  junction, a few blocks apart, in open space, in one tile.
+- **§2 recording:** edge #5293 (3589 → 3601) was saved, downloaded and drawn at once, but it lies on top of two
+  earlier recordings of the same stretch (#5236 3582 → 3589, #5240 3589 → 3596) and recorded edges are drawn in
+  their street colour, so nothing new was visible. Clean-up: keep one recording of that stretch
+  (`/knk road edge delete <id>` for the others).
+
+**Node prune** (branch `claude/road-node-prune` in knk-web-api `c029186` and knk-plugin `9dccb58`, on top of the fix
+branch; **deploy both together** — an older plugin can't read the new node kind). `/knk road node prune [id]` (no id:
+the nearest endpoint within 6 blocks) removes the dead end ending there and leaves a *Pruned* tombstone (a dark brown
+pillar); every later build leaves the dead end nearest the tombstone (within `locked-node-reach`, 8) out, and a
+junction left with two arms dissolves. Only endpoints; refused when a recorded edge ends there. `unprune [id]` deletes
+the tombstone and the next build brings the dead end back. No migration.
+
 ---
 
 ## Prompt for a fresh Claude Code session
