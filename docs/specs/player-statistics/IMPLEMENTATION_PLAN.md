@@ -1,7 +1,7 @@
 # Player statistics — Implementation Plan
 
-**Status:** Binding for chain links 6-7 (written by link 1, 2026-10-03). Links 2-5 done (knk-web-api `2dec32b`, knk-plugin `5481327`, knk-web-app `00d978e`); link 6 next. Nothing merged.
-**Last updated:** 2026-10-03 (link 5 status note)
+**Status:** Binding for chain link 7 (written by link 1, 2026-10-03). Links 2-6 done (knk-web-api `8b67e2c`, knk-plugin `aa42247`, knk-web-app `4c6e0ca`); link 7 next. Nothing merged.
+**Last updated:** 2026-10-03 (link 6 status note)
 **Linear:** [KNG-34](https://linear.app/kngpandi/issue/KNG-34) (with [KNG-14](https://linear.app/kngpandi/issue/KNG-14), [KNG-23](https://linear.app/kngpandi/issue/KNG-23), [KNG-9](https://linear.app/kngpandi/issue/KNG-9), [KNG-21](https://linear.app/kngpandi/issue/KNG-21))
 **Sources:** [DESIGN.md](DESIGN.md) (§F = "Finalized design (link 1)"), [source audit](../../reports/2026-10-03-player-statistics-source-audit.md),
 chain charter [`PLAYER_STATISTICS_CHAIN.md`](../../ai-agents/handoffs/PLAYER_STATISTICS_CHAIN.md), progress report
@@ -657,7 +657,7 @@ heatmap canvas per world/date range, menu funnel table, domain interaction table
 | 3 | done 2026-10-03 | knk-plugin `claude/kind-dijkstra-y9d279` `e75d9b7`, knk-web-api `c95572a`; see "Link 3 status" below. |
 | 4 | done 2026-10-03 | knk-plugin `claude/kind-dijkstra-y9d279` `65a0e7d`, knk-web-api `12ae516`; see "Link 4 status" below. |
 | 5 | done 2026-10-03 | knk-web-api `2dec32b`, knk-plugin `5481327`, knk-web-app `00d978e`; see "Link 5 status" below. |
-| 6 | pending | |
+| 6 | done 2026-10-03 | knk-web-api `ce8a966`/`8b67e2c`, knk-plugin `9b6935a`/`aa42247`, knk-web-app `7804752`/`4c6e0ca`; see "Link 6 status" below. |
 | 7 | pending | |
 
 ### Link 2 status (2026-10-03)
@@ -785,3 +785,52 @@ retention, cap end to end), `MySql/LeaderboardMySqlTests`; 2 `PlayersControllerT
   `statistics.main.title-history`, `statistics.leaderboards.boards`, `statistics.leaderboard.entries`; roots `stats`, `lb`;
   actions `statistics.main.period`, `statistics.leaderboard.period`.
 - Web: `PublicPlayerProfileDto` lives in `types/dtos/statistics/StatisticsDtos.ts` (no separate players DTO file).
+
+### Link 6 status (2026-10-03)
+
+Delivered as §1.3, §3.3, §4 (link-6 rows), §5.1 `telemetry:`, §5.2 (link-6 rows), §6 and §8 link 6 describe; migration
+`20261003045617_AddDiagnosticTelemetryAndPrivacy`. knk-web-api: `Models/Telemetry/*`, `Models/Privacy/PrivacyDeletionRequest`,
+`Enums/TelemetryOutcome` (+ `TelemetryLevel`, `TelemetrySource`), `Enums/PrivacyRequestStatus`, `AuditAction` 30-33,
+`Properties/KnKDbContext.Telemetry.cs`, `Services/Telemetry/*`, `Services/Privacy/*`, `Repositories/TelemetryRepository`,
+`Repositories/PrivacyRepository`, `TelemetryController`, `PrivacyController`, `StatisticsController.Rebuild`,
+`Dtos/TelemetryDtos.cs`, `Dtos/PrivacyDtos.cs`, `Configuration/DiagnosticTelemetryOptions`, `PrivacyOptions`,
+`Middleware/ApiFailureTelemetryMiddleware`. knk-plugin: knk-core `telemetry/`, `ports/api/TelemetryApi`; api-client
+`TelemetryApiImpl` (+ DTOs/mapper), `client/CorrelationPropagatingExecutorService`, `BaseApiImpl` header + failure hook;
+knk-paper `telemetry/`, `menu/MenuObserver` + `MenuObservers`, `siege/SiegeTelemetryObserver`, `SiegeMatchObserver`
+default methods, `KnkConfig.TelemetryConfig` + `ConfigLoader.loadTelemetry`, `config.yml` `telemetry:`,
+`KnKPlugin.startTelemetry()`. knk-web-app: `components/OwnerRoute`, `pages/owner/OwnerTelemetryPage`,
+`pages/owner/OwnerPrivacyPage`, `apiClients/telemetryClient`, `privacyClient`, `types/dtos/telemetry`, `types/dtos/privacy`,
+routes, nav, audit labels.
+
+**Acceptance criterion → tests:** 1 `TelemetryEventCatalogTests` (allowlists, no forbidden keys), `TelemetryIngestionServiceTests`
+(envelope codes, forbidden data dropped, free text refused, dedupe, enhanced targets, full queue),
+`TelemetryWriteQueueTests` (bound, drop counter, `telemetry.queue_dropped`, writer dedupe), `ApiFailureTelemetryMiddlewareTests`,
+plugin `TelemetryHooksAndListenerTest` (command arguments never recorded), `TelemetryApiImplTest`; 2 `TelemetryEmitterTest`,
+`TelemetryFlushTaskTest`, `TelemetryHooksAndListenerTest`, `TelemetryCoreRulesTest`, `MenuObserverTest`,
+`ConfigLoaderTelemetryTest` (kill switch: `KnKPlugin.startTelemetry` returns before creating anything — code review, no
+Paper runtime in the cloud); 3 `Api/TelemetryPrivacyControllerTests` (gates per route, wildcard grants 403),
+`TelemetryQueryServiceTests` (every read audited) + live smoke; 4 `PrivacyDeletionServiceTests` (scope per table, merged
+accounts, pseudonymization, ledger/Siege kept, idempotent, cancel, due-date job switch and lead days),
+`MySql/TelemetryPrivacyMySqlTests`; 5 `TelemetryQueryServiceTests.Retention_*`, the first vertical slice is item 4 of
+the link-6 live checklist in the progress report.
+
+**Public shape changes vs. this plan** (progress report L6-n):
+- `GET api/telemetry/events` pages with an opaque `before`/`nextBefore` cursor (`<ticks>_<id>`, newest first by
+  `OccurredAt`) instead of a numeric id (L6-8); `GET api/telemetry/health` adds `enabled`, `queueCapacity`.
+- `POST events/batch` → `{ accepted, duplicates, dropped, rejected: [{ index, eventId, code }] }` (L6-9); the DTO's
+  `level`/`outcome` are case-insensitive strings.
+- `TelemetryClientConfigDto.enhancedTestRunIds` (active runs with an enhanced target, L6-12).
+- Privacy: preview = `POST deletion-requests/{id}/execute?dryRun=true`; extra `GET deletion-requests/{id}`; 409
+  `PendingRequestExists` / `NotPending`; `PrivacyDeletionRequestDto.autoExecuteAt`; result `{ dryRun, userIds, deleted:
+  { table: count }, pseudonymizedUsers }` (L6-7); `AuditAction.PrivacyDeletionCancelled` (L6-1).
+- `POST api/statistics/rebuild { projection, userId? }` → `{ projection, userId, reprojected }`.
+- Catalogue adds API-side `api.request_failed` and `telemetry.queue_dropped`; `currency.posting` listed, not emitted (L6-13).
+- Config adds `DiagnosticTelemetry:WriteIntervalSeconds` (2), `WriteBatchSize` (1000), `LateEventToleranceDays` (7),
+  `FutureToleranceSeconds` (300), `MaxEnhancedTargetHours` (168).
+- Plugin: no `TelemetryConfigPoller` (the poll is in `TelemetryFlushTask`, L6-19); `TelemetrySequence` is an `AtomicLong`
+  inside `TelemetryEmitter`; `MenuObserver` methods `menuOpened(player, key, parentKey)`, `menuBack(player, from, to)`,
+  `menuClosed(playerId, key)`, `slotClicked(player, key, slot, itemKey, clickType)`, `actionExecuted(player, key,
+  actionTypeId, slot, outcome)`; `SiegeMatchObserver` adds `joinAttempted`, `voteCast`, `teamAssigned`, `memberLeft`;
+  the Siege observer lives in `P/siege/SiegeTelemetryObserver` (needs the lobby's package-private match id).
+- Web: owner node constants live in `types/dtos/telemetry/TelemetryDtos.ts`.
+

@@ -1,7 +1,7 @@
 # Player statistics chain — progress report
 
 **Status:** running
-**Last updated:** 2026-10-03 (link 5 done)
+**Last updated:** 2026-10-03 (link 6 done)
 **Charter:** `docs/ai-agents/handoffs/PLAYER_STATISTICS_CHAIN.md` · **Linear:** [KNG-34](https://linear.app/kngpandi/issue/KNG-34)
 
 ## Summary for the developer
@@ -15,7 +15,7 @@ Branch in all four repos: `claude/kind-dijkstra-y9d279` (nothing merged to any t
 | 3 | Plugin foundation | **done** | knk-plugin `e75d9b7`, knk-web-api `c95572a` | Link 3 block: statistics sink/spool, sessions, AFK + `/afk`, distance, falls, privacy menu + seed; 95 new plugin tests, 6 API |
 | 4 | Combat and minigames | **done** | knk-plugin `65a0e7d`, knk-web-api `12ae516` | Link 4 block: kills/deaths/causes, damage, arrows, headshots, open-world killstreak, gate damage incl. fire per igniter, Siege leavers reported; 60 new plugin tests, 4 API |
 | 5 | Read surfaces + leaderboards | **done** | knk-web-api `2dec32b`, knk-plugin `5481327`, knk-web-app `00d978e` | Link 5 block: leaderboard snapshots (18 boards × 3 periods, repeat-victim cap), public profile, `statistics.main` + leaderboard menus, `/leaderboard`, `/stats` lines, web own statistics/settings, public profile, leaderboards, staff panel; 56 API, 29 plugin, 27 web tests |
-| 6 | Diagnostic telemetry + privacy | pending | — | — |
+| 6 | Diagnostic telemetry + privacy | **done** | knk-web-api `8b67e2c`, knk-plugin `aa42247`, knk-web-app `4c6e0ca` | Link 6 block: event store + bounded ingestion, owner search/timeline/test runs/enhanced targets, retention, `api.request_failed`, GDPR deletion (dry run, idempotent execute, due-date job), `POST api/statistics/rebuild`; plugin emitter + menu/Siege/AFK/discovery/API-failure hooks; web `/owner/telemetry`, `/owner/privacy`; 104 API, 50 plugin, 13 web tests |
 | 7 | World analytics + final write-up | pending | — | — |
 
 **Review first:** (ranked; each link appends)
@@ -51,6 +51,17 @@ Branch in all four repos: `claude/kind-dijkstra-y9d279` (nothing merged to any t
     every other board answers "sign in" (consequence of L1-3: "everyone" = signed-in viewers).
 13. **L5-2/L5-3 repeat-victim cap** — applied when kills are ingested (internal metric `pvp_kills.ranked`), so a cap
     change only affects later kills; Siege kills (from the match tables, no victims known) are never capped.
+
+14. **L6-2/L6-3 GDPR erasure scope** — executing a request also erases the accounts **merged into** the player and
+    pseudonymizes all of them (username `deleted-<id>`, email/UUID/password/gender cleared, inactive). Private-message
+    logs, link codes, permission grants/groups and audit rows are **not** touched (outside §F.14) — see the follow-up
+    list in the Link 6 block. Irreversible: the web page asks you to type the player id.
+15. **L6-6 rebuild after erasure** — `POST api/statistics/rebuild` for **everyone** re-projects the kept ledger, so the
+    erased (pseudonymized) account gets economy/XP/title rows again. Rebuild per player, or accept it (no name left).
+16. **L6-14 command correlation window** — a command's correlation id stays current on the main thread until the next
+    tick, so an unrelated API call started later in the same tick could be linked to that command.
+17. **L6-23 every non-2xx plugin call is an `api.call_failed`** — including expected 404 lookups; adjust after the alpha
+    if it is noisy.
 
 **Test when you have time:** (filled in by link 7 — build/deploy steps and the combined live checklist.)
 
@@ -409,3 +420,118 @@ Session `session_01HnVoNfWS1zecanekJBqQnp` (started by link 4 via `create_sessio
 - **How link 6 was started:** new session (charter §6 option 1, `create_session`): `session_01Y76s776YpnJ6PKqYFU23As`,
   source knk-workspace `claude/kind-dijkstra-y9d279`, model `claude-opus-5-5`, tag `kng-34-player-statistics-chain`;
   `create_session` showed it pending in the working bucket.
+
+## Link 6 — Diagnostic telemetry + privacy (2026-10-03)
+
+Session `session_01Y76s776YpnJ6PKqYFU23As` (started by link 5 via `create_session`). knk-web-api, knk-plugin,
+knk-web-app.
+
+- **Commits (pushed to `claude/kind-dijkstra-y9d279`):**
+  - knk-web-api: `ce8a966` migration `20261003045617_AddDiagnosticTelemetryAndPrivacy` (additive: `telemetry_events`,
+    `telemetry_test_runs`, `telemetry_enhanced_targets` with a one-target check constraint, `privacy_deletion_requests`;
+    no FKs), `TelemetryController`, `PrivacyController`, `POST api/statistics/rebuild`, `TelemetryEventCatalog`,
+    `TelemetryIngestionService`, bounded `TelemetryWriteQueue` + `TelemetryWriterService`, `TelemetryQueryService`,
+    `TelemetryRetentionService`, `TelemetryMetrics` (`Knk.Telemetry`), `ApiFailureTelemetryMiddleware`,
+    `PrivacyDeletionService` + `PrivacyDeletionDueService`, `TelemetryRepository`/`PrivacyRepository`,
+    `DiagnosticTelemetry`/`Privacy` config, `AuditAction` 30-33; `8b67e2c` tests.
+  - knk-plugin: `9b6935a` knk-core `telemetry/` (`TelemetryEvent`, `TelemetryBuffer`, `TelemetryClientConfig`,
+    `TelemetryCorrelation`, `ApiRouteTemplates`, `ApiFailureObserver`, `TelemetryEventNames`) + `ports/api/TelemetryApi`;
+    api-client `TelemetryApiImpl`/DTOs/mapper, correlation-propagating worker pool, `X-Correlation-Id` + failure hook in
+    `BaseApiImpl`; knk-paper `telemetry/` (`TelemetryEmitter`, `TelemetryFlushTask`, `TelemetryListener`,
+    `TelemetryHooks`, `EnhancedMovementSampler`), `menu/MenuObserver` + `MenuObservers` (called from `MenuService`
+    open/back/close and `MenuClickListener` click/action), `SiegeMatchObserver` default methods `joinAttempted`,
+    `voteCast`, `teamAssigned`, `memberLeft` (+ `SiegeTelemetryObserver`), small hooks in `StatisticsService` (AFK
+    observer, session key) and `DiscoveryEffects` (grant observer), `telemetry:` config, `KnKPlugin.startTelemetry()`;
+    `aa42247` tests.
+  - knk-web-app: `7804752` `OwnerRoute` + `OwnerOnlyNotice`, `/owner/telemetry`, `/owner/privacy`, `telemetryClient`,
+    `privacyClient`, DTOs, owner nav entries; `4c6e0ca` audit labels for the four new audit actions.
+  - Trunks unchanged at the start and before the final push: knk-web-api `master` `ae0b3ad`, knk-plugin `main`
+    `ee7824c`, knk-web-app `main` `fc66101` (nothing to merge).
+- **Tests vs baseline:**
+  - API: 1,905 → **2,009** total, 1,942 passed, **the same 5 pre-existing failures**, 62 skipped (3 new MySQL-gated).
+    New: `TelemetryEventCatalogTests`, `TelemetryIngestionServiceTests`, `TelemetryWriteQueueTests` (incl. the writer),
+    `TelemetryQueryServiceTests` (incl. retention), `PrivacyDeletionServiceTests` (incl. the due-date job),
+    `Api/TelemetryPrivacyControllerTests`, `Api/ApiFailureTelemetryMiddlewareTests`,
+    `Migrations/AddDiagnosticTelemetryAndPrivacyTests`, `MySql/TelemetryPrivacyMySqlTests`. MySQL-gated run (local MySQL 8):
+    the 3 new tests and all statistics/leaderboard ones green; `TeleportChargeMySqlTests` ×5 fail exactly as on the
+    untouched base (pre-existing, recorded since link 2).
+  - Plugin (`./gradlew build -x deployToDevServer`, all green): knk-core 1,275 → **1,294**; knk-api-client 159 → **163**
+    (2 skipped); knk-paper 1,060 → **1,087** (14 skipped). New: `TelemetryBufferTest`, `TelemetryCoreRulesTest`,
+    `TelemetryApiImplTest`, `TelemetryEmitterTest`, `TelemetryFlushTaskTest`, `TelemetryHooksAndListenerTest`,
+    `MenuObserverTest`, `ConfigLoaderTelemetryTest`.
+  - Web (`npm run test:ci`): 445 → **458**, 453 passed, **the same 5 pre-existing failures**; `npm run build` passes with
+    the pre-existing warnings. New: `telemetryClient.test.ts` (+ privacy client), `OwnerTelemetryPage.test.tsx`,
+    `OwnerPrivacyPage.test.tsx`; `auditDetails.test.ts` +4 assertions.
+- **Live smoke (cloud, local MySQL 8, every migration applied, API on the feature branch):** a plugin batch with a
+  denied `siege.lobby_join_attempt` (payload incl. a `message` key), a `command.result` with an `args` key, an enhanced
+  event for a non-target and an unknown name → 2 accepted, `NotEnhancedTarget` + `UnknownEvent` rejected; stored payloads
+  were `{lobbyId, members}` and `{command: "pay"}` (forbidden keys gone); anonymous batch 401. Owner (exact grants, via
+  plugin + `X-Acting-User-Id`): search, event detail, timeline, health all 200 and each read wrote a `TelemetryViewed`
+  audit row (target = the player); a `knk.*` holder → 403, anonymous → 401. GDPR: request → due +30 d (auto +27 d),
+  second request 409, `knk.*` 403, dry run counted 1 total + 1 kill pair (as victim) + 2 events, execute deleted exactly
+  those and renamed the user `deleted-3` (email/UUID cleared, inactive, reason "GDPR erasure"), re-execute returned the
+  stored result, cancel after execute 409, audit rows `PrivacyDeletionRequested`/`PrivacyDeletionExecuted`.
+  `POST api/statistics/rebuild {siege, userId}` 200. The Paper runtime and the web pages were not run live.
+- **Delivered:** see the plan's "Link 6 status" note (acceptance criterion → test map, public shape changes).
+- **Flagged decisions:**
+
+| # | Decision (reversible default) | Why |
+|---|---|---|
+| L6-1 | `AuditAction` values **30-33** reserved for KNG-34 (`TelemetryViewed`, `PrivacyDeletionRequested`, `PrivacyDeletionExecuted`, `PrivacyDeletionCancelled` — the last one beyond the plan); a search without a player is audited against the reader | Appended only; 19-29 belong to currency |
+| L6-2 | GDPR erasure covers the player **and every account merged into them** (`GetMergedAccountIdsAsync`), all pseudonymized | Merged accounts are the same person |
+| L6-3 | Pseudonymization = username `deleted-<id>`, email/UUID/password hash/gender cleared, `EmailVerified`/`IsOnline` false, `LastSeenAt` null, inactive, `DeletedAt`, reason "GDPR erasure". **Not touched** (outside §F.14, follow-up): private-message logs, link codes, permission grants and group memberships, audit rows (180-day retention), the plugin's own log files | §F.14 scope; the rest needs a developer decision |
+| L6-4 | Leaderboard snapshot entries of the player are deleted directly; current snapshots are rebuilt within `RefreshSeconds`, closed-period snapshots keep a gap in their ranks | No user id survives; no rewrite of history |
+| L6-5 | Enhanced events of **other** players whose payload names the erased user's id (`combat.hit` attacker/victim) are not scrubbed; they expire after 14 days | Payload JSON search is expensive; short retention |
+| L6-6 | Projectors don't skip erased accounts: a rebuild for everyone re-projects the kept ledger under the pseudonymized id | Ledger is authoritative and kept (§F.14) |
+| L6-7 | Preview = `POST …/execute?dryRun=true` (counts only, nothing changed); a second request for a pending player → 409 `PendingRequestExists` with the pending one; cancel is idempotent; `GET deletion-requests/{id}` added | Handoff: "dry-run counts in the result, idempotent execute" |
+| L6-8 | Event search pages newest-first by (`OccurredAt`, `Id`) with an opaque cursor `nextBefore` (`<ticks>_<id>`) instead of a numeric id | Chronological order with stable paging |
+| L6-9 | Batch result adds `dropped` (full API queue) and `rejected[] {index, eventId, code}`; codes `InvalidEnvelope`, `UnknownEvent`, `NotPluginEvent`, `LevelMismatch`, `InvalidOutcome`, `InvalidCode`, `TooOld` (> 7 d), `InFuture` (> 300 s), `NotEnhancedTarget` (the API re-checks enhanced targets) | Per-event rejection like statistics |
+| L6-10 | A replay that arrives before the first copy is written (writer every 2 s) is answered `accepted`; the writer still stores each `eventId` once | Dedupe guaranteed at write; reply is best effort |
+| L6-11 | Free text is refused, not cleaned: `reasonCode`, `action`, `feature`, `objectType`, `objectId`, `correlationId` must match `[A-Za-z0-9_.:@/-]{1,64}` (else `InvalidCode`); payload strings cut to 128 (plugin cuts to 64), ≤ 16 scalar keys allowlisted per name | §F.12 "stable code, never free text" |
+| L6-12 | An enhanced target naming a **test run** turns enhanced events on for everyone online while that run is active; the newest active run's id is stamped on every plugin event; targets last ≤ 168 h (`MaxEnhancedTargetHours`) | Test runs are closed-alpha sessions |
+| L6-13 | `currency.posting` is in the catalogue but not emitted: the timeline joins the player's ledger legs at read time (nothing duplicated). API-side names added: `api.request_failed` (5xx/exceptions, route template + status + exception type) and `telemetry.queue_dropped` | One source of truth (§F.0) |
+| L6-14 | Correlation: one id per menu action binding (scoped) and per command (from its preprocess event until the next tick); sent as `X-Correlation-Id` only while telemetry is on | Commands have no completion hook in Bukkit |
+| L6-15 | `command.result` = label only, outcome `Info`/`dispatched` or `Denied`/`cancelled` — Bukkit doesn't expose the command's real result | Never arguments (§F.12) |
+| L6-16 | `siege.gate_destroyed` is detected on direct hits only (a door burnt down by fire ticks isn't reported); `gate.hit` (enhanced) carries no damage number | The effective loss is computed later in `HealthSystem` |
+| L6-17 | `siege.match_phase` comes from `lobbyChanged` transitions (the first observation of a lobby is not an event); `siege.match_leave` only for members of a running match | No change to `SiegeService`'s phase code |
+| L6-18 | `api.call_failed` route templates keep word segments and replace numbers, UUIDs and the segment after `username`/`uuid`/`by-name`/`code`/… with `{id}`; a letters-only value not after such a marker would be kept (none today) | No ids or names in diagnostics |
+| L6-19 | Plugin flush every 10 s off the main thread, ≤ 2,500 events per flush in batches of 500, one flush in flight; the config poll lives in `TelemetryFlushTask` (no separate `TelemetryConfigPoller`) | Simpler; same behaviour |
+| L6-20 | `POST api/statistics/rebuild` runs inside the request (no job queue) | Owner tool; per-player rebuilds are small |
+| L6-21 | Web: owner nav entries and routes check the node with the normal (wildcard) resolution for display; the pages show "Owner only" when the API answers 403; data deletion needs the player id typed | The API is the boundary (§6) |
+| L6-22 | Timeline window ≤ 31 days (default last 24 h), ≤ 1,000 rows per source by default (max 2,000), `truncated` flag | Bounded reads (§7: p95 ≤ 300 ms for 24 h) |
+| L6-23 | Every non-2xx plugin → API answer is an `api.call_failed` (also expected 404 lookups); calls to `api/telemetry/*` never report themselves | Measure in the alpha, then filter |
+
+- **Discrepancies with the plan/design:** public shape changes listed in the plan's "Link 6 status" note (cursor, batch
+  result fields, preview via `dryRun`, extra `GET deletion-requests/{id}`, `enhancedTestRunIds` in the client config,
+  `PrivacyDeletionCancelled`, no `TelemetryConfigPoller`, Siege observer in the siege package). `currency.posting` not
+  emitted (L6-13). Performance (§7) not measured at scale: the API queue/writer is bounded by construction (10,000 /
+  2 s), the plugin buffer by `max-buffer-events`; measure events per player-minute in the alpha.
+- **Follow-up list (personal data outside §F.14, for a developer decision):** private-message logs
+  (`private_message_logs`), link codes, permission grants/group memberships of the erased account, audit-log rows (kept
+  ≤ 180 days), other players' enhanced events naming the user (≤ 14 days), the plugin's local spool/log files.
+- **Live checklist (link 6):** (1) apply migration `AddDiagnosticTelemetryAndPrivacy` (4 tables) and start the API — log
+  "Diagnostic telemetry writer started: every 2s"; (2) grant yourself `knk.owner.telemetry.view`,
+  `knk.owner.telemetry.manage` and `knk.owner.privacy.manage` **directly on your user** (`POST api/users/{id}/grants`);
+  web nav shows Diagnostics and Data deletion; (3) plugin startup log "Diagnostic telemetry started (flush every 10 s …)";
+  join → `session.join` appears in `/owner/telemetry` within ~10 s; (4) **first vertical slice:** start a test run on
+  the page, add an enhanced target for it; a tester joins, opens the profile and Siege menus, `/siege join` once while
+  not allowed (e.g. lobby full or no permission → `siege.lobby_join_attempt` Denied with the reason), joins, votes, gets a
+  team, captures/hits a gate, the match ends with a reward; trigger one API call the API refuses (any plugin action
+  answered 4xx/5xx → `api.call_failed`, sharing the command's or menu action's correlation id); search the test run → ordered events; the
+  tester's **Player timeline** shows events, the Siege match row and the reward's ledger posting; the event drawer
+  shows correlated events and the ledger link; end the run; (5) a user holding only `knk.*` sees "Owner only" on both
+  pages; (6) `/owner/privacy`: record a request for a throwaway account → due in 30 days, automatic 3 days earlier;
+  Review & delete → counts; type the id → Delete now → the account is `deleted-<id>`, its statistics are gone, its
+  profile's Recent Activity shows "Data deletion requested" / "Data deleted"; (7) switches: plugin
+  `telemetry.enabled: false` → no telemetry log line, no `X-Correlation-Id`; API `DiagnosticTelemetry:Enabled=false` →
+  batches 503 (the plugin drops them silently), `GET api/telemetry/config` says disabled; `Privacy:AutoExecuteEnabled=false`
+  → log "GDPR deletion auto-execution disabled".
+- **Risks:** GDPR execution is irreversible (owner node + preview + typed confirmation); telemetry volume and the
+  enhanced movement rate are unmeasured; the command correlation window (L6-14); `api.call_failed` noise (L6-23); the
+  Paper hooks were unit-tested with mocks but not run on a server.
+- **What link 7 must wire:** menu funnels from `MenuObserver` (`menuOpened`/`menuBack`/`menuClosed`/`actionExecuted`
+  are called on the main thread; register with `MenuService.addObserver` next to `TelemetryHooks`); the owner analytics
+  page behind `OwnerRoute` with `knk.owner.analytics.view` (constant in `OwnerPermissions`; add an `OWNER_ANALYTICS_VIEW_NODE`
+  next to the telemetry nodes in `types/dtos/telemetry/TelemetryDtos.ts` or its own DTO file); world-analytics tables hold
+  no user ids, so GDPR erasure needs no change; the final write-up should carry the follow-up list above.
+
