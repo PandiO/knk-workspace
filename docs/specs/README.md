@@ -14,6 +14,7 @@ Central home for requirements, specifications, and implementation roadmaps acros
 - siege-survival/: cooperative endless NPC-wave defense, gate repair, spawnzone progression and match equipment/economy (Linear KNG-50, child of KNG-37; design only)
 - user-features/: rank/permission/title/salary architecture
 - user-management/: tailored admin module built on top of user-features
+- player-statistics/: KNG-34 working design and player-facing statistics decisions (draft)
 - legacy/: legacy reference notes kept for historical context
 - reconcile/: reconciliation guides for aligning legacy data with v2
 
