@@ -1,7 +1,7 @@
 # Player statistics — Implementation Plan
 
-**Status:** Binding for chain links 5-7 (written by link 1, 2026-10-03). Links 2-4 done (knk-web-api `12ae516`, knk-plugin `65a0e7d`); link 5 next. Nothing merged.
-**Last updated:** 2026-10-03 (link 4 status note)
+**Status:** Binding for chain links 6-7 (written by link 1, 2026-10-03). Links 2-5 done (knk-web-api `2dec32b`, knk-plugin `5481327`, knk-web-app `00d978e`); link 6 next. Nothing merged.
+**Last updated:** 2026-10-03 (link 5 status note)
 **Linear:** [KNG-34](https://linear.app/kngpandi/issue/KNG-34) (with [KNG-14](https://linear.app/kngpandi/issue/KNG-14), [KNG-23](https://linear.app/kngpandi/issue/KNG-23), [KNG-9](https://linear.app/kngpandi/issue/KNG-9), [KNG-21](https://linear.app/kngpandi/issue/KNG-21))
 **Sources:** [DESIGN.md](DESIGN.md) (§F = "Finalized design (link 1)"), [source audit](../../reports/2026-10-03-player-statistics-source-audit.md),
 chain charter [`PLAYER_STATISTICS_CHAIN.md`](../../ai-agents/handoffs/PLAYER_STATISTICS_CHAIN.md), progress report
@@ -656,7 +656,7 @@ heatmap canvas per world/date range, menu funnel table, domain interaction table
 | 2 | done 2026-10-03 | knk-web-api `claude/kind-dijkstra-y9d279` `b13ff0c`; see "Link 2 status" below. |
 | 3 | done 2026-10-03 | knk-plugin `claude/kind-dijkstra-y9d279` `e75d9b7`, knk-web-api `c95572a`; see "Link 3 status" below. |
 | 4 | done 2026-10-03 | knk-plugin `claude/kind-dijkstra-y9d279` `65a0e7d`, knk-web-api `12ae516`; see "Link 4 status" below. |
-| 5 | pending | |
+| 5 | done 2026-10-03 | knk-web-api `2dec32b`, knk-plugin `5481327`, knk-web-app `00d978e`; see "Link 5 status" below. |
 | 6 | pending | |
 | 7 | pending | |
 
@@ -750,3 +750,38 @@ lost left call; clock skew; complete → projection reconciliation incl. leavers
 - `GateDamageSink` methods: `directDamage(gate, causingEntity, loss)`, `tracksFire()`, `igniterOf(entity)`,
   `fireDamage(gate, igniter, loss)` (attacker resolution lives in the statistics sink, not in the gate listener).
 
+### Link 5 status (2026-10-03)
+
+Delivered as §1.2, §3.2, §4 (link-5 row), §5.2 (link-5 rows), §5.3 and §8 link 5 describe; migration
+`20261003040910_AddLeaderboards`. knk-web-api: `Models/Leaderboards/*`, `Enums/LeaderboardPeriod`,
+`Configuration/LeaderboardsOptions`, `Properties/KnKDbContext.Leaderboards.cs`, `Services/Leaderboards/`
+(`LeaderboardCatalog`, `LeaderboardEligibility`, `LeaderboardSnapshotBuilder`, `LeaderboardSnapshotService`,
+`LeaderboardQueryService`), `Repositories/LeaderboardRepository`, `LeaderboardsController`, `PlayersController`,
+`Dtos/LeaderboardDtos.cs`, `Dtos/PlayerProfileDtos.cs`, menu seeds in `MenuTemplateSeed.Statistics.cs` + `profile.main`
+slot 5. knk-plugin: knk-core `domain/statistics/PlayerStatistics`, `TitleChange`, `domain/leaderboards/*`,
+`ports/api/LeaderboardsApi`, `statistics/StatisticsLines`; api-client `LeaderboardsApiImpl` + DTOs/mappers, statistics
+reads; knk-paper `StatisticsMenuFeature`, `LeaderboardsMenuFeature` (+ views/rows), `LeaderboardCommand`, `UserCommand`
+lines. knk-web-app: clients, DTOs, `components/statistics/*`, `MyStatisticsSection`, `PublicPlayerProfilePage`,
+`LeaderboardsPage`, `PlayerStatisticsPanel`, routes and nav.
+
+**Acceptance criterion → tests:** 1 `LeaderboardEligibilityTests` (eligibility per board kind, merges, values, ranks),
+`LeaderboardSnapshotServiceTests` (periods, lifetime, exclusions, inactive/merged, replacement + closed period +
+retention, cap end to end), `MySql/LeaderboardMySqlTests`; 2 `PlayersControllerTests` (+ live smoke); 3
+`StatisticsMenuFeatureTest`, `LeaderboardsMenuFeatureTest`, `UserCommandStatisticsTest`, `LeaderboardCommandTest`,
+`MenuTemplateStatisticsSeedTests`; 4 `MyStatisticsSection.test`, `StatisticsVisibilitySettings.test`,
+`PublicPlayerProfilePage.test`, `LeaderboardsPage.test`, `PlayerStatisticsPanel.test`, client tests,
+`LeaderboardsControllerTests` (anonymous vs signed-in); 5 all three repos build, tests green vs baseline.
+
+**Public shape changes vs. this plan** (progress report L5-n):
+- Internal metric `pvp_kills.ranked` (contextual, `PluginInput.None`, never returned) maintained by ingestion — the
+  repeat-victim cap input for every period (L5-2); `StatisticsIngestionService` takes optional `LeaderboardsOptions`.
+- `LeaderboardBoardDto.alwaysPublic`; `LeaderboardViewDto.label`, `.unit`; `generatedAt` nullable (no snapshot yet);
+  anonymous reads of configurable boards → 401 `SignInRequired` (L5-4). `LeaderboardExclusionRequestDto { reason }`.
+- `IStatisticsQueryService.GetPublicProfileAsync(username)` backs `PlayersController`; `IStatisticsRepository` adds
+  `GetUserByUsernameAsync`, `GetKillPairCountsAsync`.
+- Plugin: no `ProfileView.getStatisticsLines()` — knk-core `StatisticsLines` (L5-13); `StatisticsApi.getUserStatistics(
+  userId, Integer actingUserId, period, LocalDate date)`, `getTitleHistory(userId, Integer actingUserId, page, pageSize)`;
+  menu context keys `ctx.target`/`ctx.name` (`statistics.main`) and `ctx.board` (`statistics.leaderboard`); row sources
+  `statistics.main.title-history`, `statistics.leaderboards.boards`, `statistics.leaderboard.entries`; roots `stats`, `lb`;
+  actions `statistics.main.period`, `statistics.leaderboard.period`.
+- Web: `PublicPlayerProfileDto` lives in `types/dtos/statistics/StatisticsDtos.ts` (no separate players DTO file).

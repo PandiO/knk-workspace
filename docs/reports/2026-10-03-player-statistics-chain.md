@@ -1,7 +1,7 @@
 # Player statistics chain — progress report
 
 **Status:** running
-**Last updated:** 2026-10-03 (link 4 done)
+**Last updated:** 2026-10-03 (link 5 done)
 **Charter:** `docs/ai-agents/handoffs/PLAYER_STATISTICS_CHAIN.md` · **Linear:** [KNG-34](https://linear.app/kngpandi/issue/KNG-34)
 
 ## Summary for the developer
@@ -14,7 +14,7 @@ Branch in all four repos: `claude/kind-dijkstra-y9d279` (nothing merged to any t
 | 2 | API foundation (+ Siege projection, moved from link 4) | **done** | knk-web-api `b13ff0c` | Link 2 block: ingestion, projections, visibility, reads, owner attribute; 179 new tests |
 | 3 | Plugin foundation | **done** | knk-plugin `e75d9b7`, knk-web-api `c95572a` | Link 3 block: statistics sink/spool, sessions, AFK + `/afk`, distance, falls, privacy menu + seed; 95 new plugin tests, 6 API |
 | 4 | Combat and minigames | **done** | knk-plugin `65a0e7d`, knk-web-api `12ae516` | Link 4 block: kills/deaths/causes, damage, arrows, headshots, open-world killstreak, gate damage incl. fire per igniter, Siege leavers reported; 60 new plugin tests, 4 API |
-| 5 | Read surfaces + leaderboards | pending | — | — |
+| 5 | Read surfaces + leaderboards | **done** | knk-web-api `2dec32b`, knk-plugin `5481327`, knk-web-app `00d978e` | Link 5 block: leaderboard snapshots (18 boards × 3 periods, repeat-victim cap), public profile, `statistics.main` + leaderboard menus, `/leaderboard`, `/stats` lines, web own statistics/settings, public profile, leaderboards, staff panel; 56 API, 29 plugin, 27 web tests |
 | 6 | Diagnostic telemetry + privacy | pending | — | — |
 | 7 | World analytics + final write-up | pending | — | — |
 
@@ -46,6 +46,11 @@ Branch in all four repos: `claude/kind-dijkstra-y9d279` (nothing merged to any t
     `statistics.siege.report-departed-members`.
 11. **L4-1 damage received** — stored with the same cap as damage dealt (victim's health+absorption before the hit), so
     one hit is the same number on both sides; the design text said "final damage received".
+
+12. **L5-4 signed-out leaderboards** — a signed-out web visitor can read only the always-public boards (playtime, XP);
+    every other board answers "sign in" (consequence of L1-3: "everyone" = signed-in viewers).
+13. **L5-2/L5-3 repeat-victim cap** — applied when kills are ingested (internal metric `pvp_kills.ranked`), so a cap
+    change only affects later kills; Siege kills (from the match tables, no victims known) are never capped.
 
 **Test when you have time:** (filled in by link 7 — build/deploy steps and the combined live checklist.)
 
@@ -316,3 +321,88 @@ Session `session_01GiwQhoD6EA3m9WvVPmdU3d` (started by link 3 via `create_sessio
   source knk-workspace `claude/kind-dijkstra-y9d279`, model `claude-opus-5-5`, tag `kng-34-player-statistics-chain`;
   `get_session` showed it in the working bucket right after creation.
 
+## Link 5 — Read surfaces + leaderboards (2026-10-03)
+
+Session `session_01HnVoNfWS1zecanekJBqQnp` (started by link 4 via `create_session`). knk-web-api, knk-plugin, knk-web-app.
+
+- **Commits (pushed to `claude/kind-dijkstra-y9d279`):**
+  - knk-web-api: `b49c7f8` migration `20261003040910_AddLeaderboards` (additive: `leaderboard_snapshots`,
+    `leaderboard_snapshot_entries`), `LeaderboardCatalog`/`LeaderboardEligibility`/`LeaderboardSnapshotBuilder`/
+    `LeaderboardSnapshotService`/`LeaderboardQueryService`/`LeaderboardRepository`, `LeaderboardsController`,
+    `PlayersController`, `pvp_kills.ranked` at ingestion, `Leaderboards` config; `2dec32b` menu seeds `statistics.main`,
+    `statistics.leaderboards`, `statistics.leaderboard` + `profile.main` header slot 5.
+  - knk-plugin: `f6bdbba` knk-core domain records, `StatisticsApi` reads, `LeaderboardsApi`, pure `StatisticsLines`;
+    api-client DTOs/mappers/`LeaderboardsApiImpl`; `5481327` knk-paper `StatisticsMenuFeature`, `LeaderboardsMenuFeature`,
+    `LeaderboardCommand` (`/leaderboard`, `/lb`), `/stats` lines, wiring, `plugin.yml`, regenerated `content-seeds.json`.
+  - knk-web-app: `00d978e` (branch **created** from `main` `fc66101`, L5-1) clients, DTOs, components, pages, routes, nav.
+  - Trunks: knk-web-api `master` `ae0b3ad`, knk-plugin `main` `ee7824c`, knk-web-app `main` `fc66101` at the start and
+    before the final push (nothing to merge).
+- **Tests vs baseline:**
+  - API (`dotnet test`): 1,849 → **1,905** total, 1,841 passed, **the same 5 pre-existing failures**, 59 skipped (+2
+    MySQL-gated). New: `LeaderboardEligibilityTests`, `LeaderboardSnapshotServiceTests`, `LeaderboardsControllerTests`,
+    `PlayersControllerTests`, `AddLeaderboardsTests`, `MySql/LeaderboardMySqlTests`; `MenuTemplateStatisticsSeedTests` +3,
+    content-seed theory +3. MySQL-gated statistics + leaderboard suite (local MySQL 8): 11/11 green.
+  - Plugin (`./gradlew build -x deployToDevServer`, all green): knk-core 1,269 → **1,275**; knk-api-client 153 → **159**
+    (2 skipped); knk-paper 1,043 → **1,060** (14 skipped). New: `StatisticsLinesTest`, `LeaderboardsApiImplTest`,
+    `StatisticsApiImplTest` (+3), `StatisticsMenuFeatureTest`, `LeaderboardsMenuFeatureTest`, `UserCommandStatisticsTest`,
+    `LeaderboardCommandTest` (the seeds are validated against the registered features via `ContentSeedFixture`).
+  - Web (`npm run test:ci`): 418 → **445** tests, 440 passed, **the same 5 pre-existing failures** (3 FormWizard suites,
+    `LoginForm`, `useEnrichedFormContext` — `react-router-dom` can't be resolved by CRA's Jest); `npm run build` passes
+    with the same pre-existing warnings. New: `statisticsClient.test.ts` (+ `PlayerClient`), `leaderboardClient.test.ts`,
+    `MyStatisticsSection.test.tsx`, `StatisticsVisibilitySettings.test.tsx`, `PublicPlayerProfilePage.test.tsx`,
+    `LeaderboardsPage.test.tsx`, `PlayerStatisticsPanel.test.tsx`.
+- **Live smoke (cloud, local MySQL 8, every migration applied, API on the feature branch):** a batch with five kills of
+  the same victim → personal `pvp_kills` 5, `pvp_kills.ranked` 3; snapshot job ran every 30 s; anonymous
+  `GET api/leaderboards/active_playtime?period=weekly` ranked both players, anonymous `pvp_kills` → 401, the same as
+  another player → Alice with 3 (after she set `pvp_kills` to Everyone), `distance.foot` (Alice private) → empty;
+  `GET api/players/by-name/aLiCe` → only the listed fields; unknown name → 404; exclusions anonymous 401 / non-owner 403.
+  The Paper runtime (menus, `/leaderboard`) and the web UI were not run live.
+- **Delivered:** see the plan's "Link 5 status" note (acceptance criterion → test map, public shape changes).
+- **Flagged decisions:**
+
+| # | Decision (reversible default) | Why |
+|---|---|---|
+| L5-1 | Created the missing knk-web-app feature branch from `main` `fc66101` | Charter: one branch per repo (like L2-1/L3-1) |
+| L5-2 | Repeat-victim cap applied **at ingestion**: internal contextual metric `pvp_kills.ranked` = kills within `Leaderboards:RepeatVictimDailyCap` (3) per (killer, victim, local day, context), counting the pair's stored kills of earlier batches; boards read it from daily rows/totals. A cap change affects later kills only; two batches with the same pair committing at the same moment may exceed the cap by a little | Kill pairs expire after 62 days, so a lifetime capped board can't be computed from them; one read model for every period |
+| L5-3 | Siege PvP kills (projected from match tables) rank **uncapped** | Match tables store per-player kill counts, not victims |
+| L5-4 | Signed-out visitors may read only always-public boards; others → 401 `SignInRequired`. `GET api/leaderboards` adds `alwaysPublic`; the board view adds `label`, `unit` | L1-3 ("everyone" = signed-in viewers) |
+| L5-5 | Zero values don't rank; order value desc → `reachedAt` asc → user id; competition ranks. `totalRanked` counts all ranked players; stored rows capped at `MaxEntriesPerBoard` (5,000) — a viewer beyond them gets no own row | §F.11; bounded snapshots |
+| L5-6 | Each refresh replaces the period's current snapshot (old one deleted); at a week/month change the last one becomes the closed period's final snapshot (computed up to `RefreshSeconds` before the end) and is kept until `SnapshotRetentionDays` (400) | Plan §4 "keeps the final snapshot of each closed period" |
+| L5-7 | 18 boards: per-context boards for `pvp_kills`, `pve_kills`, `highest_killstreak` in the known contexts (`open_world`, `siege`); `wins`/`objectives_captured` only `@siege` (the only minigame) | §F.11 list; new contexts need a catalogue line |
+| L5-8 | Discoveries board: each domain once per player (earliest across merged identities, as L2-8), period by that first discovery | Consistent with the statistics read |
+| L5-9 | The leaderboard job is switched by `Leaderboards:Enabled` only (not `Statistics:Enabled`); reads always serve the last snapshots | Reads must not break when ingestion is off |
+| L5-10 | `PublicPlayerProfileDto` includes coins and gems (plan §3.2 lists them; balances are public on `/baltop`); username match uses MySQL's case-insensitive collation (InMemory: lower-case compare) | Plan; keeps the unique index usable |
+| L5-11 | Console reads (`/stats <player>`, `/leaderboard <board>`) are anonymous: always-public fields only; configurable boards refused | No acting player = anonymous (L2-11) |
+| L5-12 | Menus: `statistics.main` takes `ctx.target` (user id) + `ctx.name`, default lifetime, cycle lifetime → day → week → month; `statistics.leaderboard` takes `ctx.board`, default weekly, cycle weekly → monthly → lifetime; reads reused 5 s per viewer; leaderboard heads open that player's `statistics.main` | Plan §5.3; like L3-15 |
+| L5-13 | `/stats` appends the lifetime gameplay lines after its profile lines (period browsing is in the menu). No `ProfileView.getStatisticsLines()`: the pure knk-core `StatisticsLines` serves `/stats` and the menu | Testable without Bukkit; recorded as a plan shape change |
+| L5-14 | Web: `npm ci` fails on trunk (`package-lock.json` misses `yaml@2.9.1`); used `npm install` and did **not** commit the lock change. Leaderboards page shows the top 25 | Not this chain's file; flag for the developer |
+| L5-15 | Web nav "Leaderboards" link (the nav renders for logged-in users only); signed-out visitors reach `/leaderboards` and `/players/:name` by URL or links. Landing page unchanged | Smallest change |
+| L5-16 | Staff panel (`knk.admin.statistics.view`): statistics as staff + read-only visibility settings; hidden when the visibility read answers 403 | Plan "hides on 403" |
+
+- **Discrepancies with the plan/design:** additive DTO fields (L5-4); the internal metric `pvp_kills.ranked` (L5-2, added
+  to the API catalogue as Internal, never returned); `ProfileView.getStatisticsLines()` replaced by knk-core
+  `StatisticsLines` (L5-13); a plugin `LeaderboardCommandTest` beyond the plan's list. Performance (§7: full refresh ≤ 10 s
+  for 10k players) was not measured at scale — the refresh reads one aggregate query per period (daily `GROUP BY`) and
+  rewrites up to 54 snapshots per cycle; measure on the dev DB.
+- **Live checklist (link 5):** (1) apply migration `AddLeaderboards` (2 tables) and start the API — log "Leaderboard
+  snapshots started: every 300s"; (2) run the content-menu reset (`scripts/reset-content-menus.ps1`) so
+  `statistics.main`, `statistics.leaderboards`, `statistics.leaderboard` and the profile's slot-5 "Statistics" tile appear;
+  startup log has no validation block for them; (3) Profile → Statistics: groups, period item cycles, title history;
+  `/stats` and `/stats <other>` (another player sees only what you set to Everyone); (4) `/leaderboard` opens the board
+  list → a board → click a head → that player's statistics; `/lb active_playtime monthly` in chat; console `/lb` lists
+  boards; (5) kill the same player 5× in a day → your `pvp_kills` +5, the PvP board +3 (after ≤ 5 min); (6) web `/account`
+  (linked): Statistics section with period tabs and bars, "Who may see my statistics" — change one, group action preview →
+  Confirm; change a setting in-game meanwhile → the page says it changed elsewhere and shows the current values;
+  (7) `/players/<name>` and `/leaderboards` signed out (only playtime/XP; other boards ask to sign in) and signed in;
+  (8) staff profile `/admin/users/<id>` shows the Statistics panel only with `knk.admin.statistics.view`; (9) grant
+  yourself `knk.owner.leaderboard.manage` directly, `PUT api/leaderboards/exclusions/{id}` → the player disappears at the
+  next refresh, `DELETE` brings them back; (10) `Leaderboards:Enabled=false` → log "disabled", boards keep their last
+  snapshot.
+- **Risks:** create-only menu seeds (reset needed); snapshot refresh cost at scale unmeasured; the Paper menus were
+  validated against the seeds but not rendered on a server; the web pages' `react-router-dom` usage is mocked in Jest
+  (as in every existing page test).
+- **What link 6 must wire:** GDPR deletion (§F.14) must also remove the user's `leaderboard_snapshot_entries` rows (or
+  trigger a refresh after deleting their statistics — snapshots hold user ids) and the internal `pvp_kills.ranked`
+  daily/total rows (covered if every statistic row of the user is deleted) and clear the exclusion columns on
+  `player_stat_profiles`; `StatisticsRebuildService` does not touch `pvp_kills.ranked`. Menu funnels (link 7) will see the
+  new menu keys `statistics.main`, `statistics.leaderboards`, `statistics.leaderboard`.
