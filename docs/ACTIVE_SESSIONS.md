@@ -34,7 +34,6 @@ Live tracker of in-progress work across all four Knights and Kings repos
 
 | Feature | Repos / files claimed | Owner (human / session) | Status | Started | Last updated |
 |---|---|---|---|---|---|
-| Player statistics design (KNG-34) | knk-workspace: `docs/specs/player-statistics/`, `docs/specs/README.md`; code repos read-only | ChatGPT Work with Pandi, `codex/kng-34-player-statistics-design` | Recording player-facing decisions; V1/V2 AFK analysis pending | 2026-09-29 | 2026-09-29 |
 | _(example)_ Siege minigame — capture point sync | web-api: `Services/SiegeService.cs`; plugin: `siege/` package | Claude Code session A | Implementing capture-point event handling | 2026-09-17 | 2026-09-17 |
 | Sequential backlog fixes — KNG-26, Siege safezone message, KNG-29, command suggestions, KNG-38 | knk-web-app: form wizard/entity relationship table code; knk-plugin: siege combat, item lore, command registration/completion; knk-web-api: PermissionHolder search API if KNG-38 requires it | Codex cloud session | Item 1/5 KNG-26 pushed: app `fc66101`, API `ae0b3ad`; working item 2/5: Siege safezone feedback | 2026-10-03 | 2026-10-03 |
 | Legacy inventory-menu screen/item mining + feature allocation | knk-workspace: new `docs/specs/legacy/inventory-menu-screens.md`, `docs/specs/legacy/README.md`; read-only on `knk-v1-archive`/`knk-v2-archive` | Claude Code session (Pandi) | Mining v1/v2 menu screens and items | 2026-09-25 | 2026-09-25 |

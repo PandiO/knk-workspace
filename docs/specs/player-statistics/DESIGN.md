@@ -1,10 +1,40 @@
 # Player statistics — working design
 
-**Status:** Draft decisions only; not an implementation plan. KNG-34 remains in Backlog and is sequenced after KNG-33.
-**Last updated:** 2026-09-29
-**Linear:** [KNG-34](https://linear.app/kngpandi/issue/KNG-34/design-player-statistics-provenance-and-world-analytics), [KNG-14](https://linear.app/kngpandi/issue/KNG-14/gameplay-statistics-counters-v2-userstatistics-for-user-statistics)
+**Status:** Decisions recorded; implementation chain started 2026-10-03 (see `docs/ai-agents/handoffs/PLAYER_STATISTICS_CHAIN.md`). Link 1 completes the source-grounded design and writes `IMPLEMENTATION_PLAN.md`.
+**Last updated:** 2026-10-03
+**Linear:** [KNG-34](https://linear.app/kngpandi/issue/KNG-34/design-player-statistics-provenance-and-world-analytics), [KNG-14](https://linear.app/kngpandi/issue/KNG-14/gameplay-statistics-counters-v2-userstatistics-for-user-statistics), [KNG-23](https://linear.app/kngpandi/issue/KNG-23)
 
-This living note records decisions from the developer conversation. It does not assert that all described fields are already stored or displayed in V3. Source-grounded design, V1/V2 comparison, architecture, acceptance criteria and implementation phases are still to come. KNG-33's feature register should be reconciled before the full design.
+This living note records decisions from the developer conversation. It does not assert that all described fields are already stored or displayed in V3. Where a later section still says "open" for something the 2026-10-03 decisions below settle, the decisions below win.
+
+## Developer decisions 2026-10-03 (binding)
+
+Answers given by the developer to the open questions, in the order asked. The developer handed KNG-34 over to a Claude Code implementation chain (one feature branch per repo, `claude/kind-dijkstra-y9d279`) and will test once the whole feature is implemented.
+
+| # | Question | Decision |
+|---|---|---|
+| D1 | Draws, aborted matches, leaving early | **Draws are recorded as draws**, separate from wins and losses. **Leaving a match early counts as a loss.** Aborted matches (server/admin abort, no result): not a win, loss or draw — chain default, flagged for review. |
+| D2 | Killstreak | **Build the killstreak mechanic** needed for "highest killstreak". |
+| D3 | Highest fall | Only falls the player **survives**. |
+| D4 | Logins | Every successful join counts, **reconnects included**. |
+| D5 | Periods | Daily/weekly/monthly use the **server timezone** for now; weeks start on **Monday**. A per-player timezone setting is a future extension — keep the period boundary computation behind one function so it can take a player timezone later. |
+| D6 | Backfill | **No backfill**: lifetime totals start when instrumentation starts. Only facts V3 already stores authoritatively (e.g. the existing ledger, Siege match history, discoveries, first join if stored) are used as-is; nothing is reconstructed. |
+| D7 | Leaderboards | Developer: "whatever you recommend; not too much to include it now". **Included now** — see "Leaderboards (recommendation adopted 2026-10-03)" below. |
+| D8 | Per-game-mode visibility | **Yes**: visibility can be set per game context for statistics broken down by context, in addition to the metric-level setting. |
+| D9 | Title corrections / non-XP title changes | **Every title change is caused by XP, period.** Title history is derived from XP changes; there is no separate administrative title-change path to model. |
+| D10 | Movement heatmaps | Can be a follow-up, but **high priority** — scheduled as the last implementation link of this chain. |
+| D11 | Menu funnels, world/domain interaction analytics | Same as D10 — last link of the chain. |
+| D12 | Diagnostic timeline access and deletion | **Only the owner** can see it. Use **dedicated permission nodes** that are not granted to regular staff. On a player's data-deletion request, **delete within the GDPR-mandated timeframe** (GDPR Art. 12(3): without undue delay and at the latest within one month of the request). |
+| D13 | XP provenance (KNG-23) | **Record XP changes in the existing coin/gem ledger** rather than building a separate XP log. Chain-start scan (2026-10-03): knk-web-api `Enums/Currency.cs` already has `Experience = 2` and every known XP write path posts through `ICurrencyService`; link 1/2 verify full coverage and close any gap. |
+| — | AFK mode | Not answered. Chain default: link 1 analyses V1/V2 AFK behaviour; implement automatic inactivity detection (5 minutes, configurable) plus an explicit AFK toggle only if V1 had one, keeping the rule configurable and flagged for review. |
+
+### Leaderboards (recommendation adopted 2026-10-03)
+
+- **Periods:** weekly, monthly and lifetime (D5 boundaries). No rewards in this scope.
+- **Metrics:** only metrics that are hard to farm and meaningful: active playtime (never AFK time), XP gained, PvP kills, PvE kills, wins per minigame, objectives captured, gate-door damage, distance per mode, discoveries count, highest killstreak. Not ranked: deaths, damage received, logins (farmable by reconnecting), AFK time. Current coin/gem balances are left to `/baltop` (KNG-21), not duplicated.
+- **Eligibility:** an always-public metric always ranks. A configurable metric ranks a player only when that metric (and, for a per-context board, that context — D8) is set to **everyone**. Friends-only and nobody never appear. Changing visibility removes the player at the next refresh.
+- **Ties:** equal values share a rank (1, 1, 3); display order among ties by who reached the value first.
+- **Refresh:** precomputed snapshots on a bounded interval (default 5 minutes, configurable), never computed from raw history on a menu open. Top 10 shown plus the viewer's own position.
+- **Abuse guardrails (reversible defaults, flagged):** repeat PvP kills of the same victim count toward leaderboards at most 3 times per victim per day (still counted in the player's own statistics); the owner can exclude a player from leaderboards.
 
 ## Agreed player-facing direction
 
