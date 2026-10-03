@@ -1,7 +1,7 @@
 # Player statistics chain — progress report
 
 **Status:** running
-**Last updated:** 2026-10-03 (link 1 done)
+**Last updated:** 2026-10-03 (link 2 done)
 **Charter:** `docs/ai-agents/handoffs/PLAYER_STATISTICS_CHAIN.md` · **Linear:** [KNG-34](https://linear.app/kngpandi/issue/KNG-34)
 
 ## Summary for the developer
@@ -11,7 +11,7 @@ Branch in all four repos: `claude/kind-dijkstra-y9d279` (nothing merged to any t
 | Link | Phase | State | Heads | Details |
 |---|---|---|---|---|
 | 1 | Design completion + implementation plan | **done** | knk-workspace (see Link 1 block) | [audit](2026-10-03-player-statistics-source-audit.md), [DESIGN §F](../specs/player-statistics/DESIGN.md), [plan](../specs/player-statistics/IMPLEMENTATION_PLAN.md) |
-| 2 | API foundation (+ Siege projection, moved from link 4) | started | — | — |
+| 2 | API foundation (+ Siege projection, moved from link 4) | **done** | knk-web-api `b13ff0c` | Link 2 block: ingestion, projections, visibility, reads, owner attribute; 179 new tests |
 | 3 | Plugin foundation | pending | — | — |
 | 4 | Combat and minigames | pending | — | — |
 | 5 | Read surfaces + leaderboards | pending | — | — |
@@ -28,6 +28,12 @@ Branch in all four repos: `claude/kind-dijkstra-y9d279` (nothing merged to any t
    neither earned nor spent; `xp_gained` uses earned XP only (§F.5).
 5. **L1-17 owner nodes** — `knk.owner.*` require an exact grant (wildcards never unlock owner data); grant them to
    yourself with `POST api/users/{id}/grants` (§F.13).
+
+6. **L2-12 title history backfill** — on first start the ledger projector projects the **whole existing ledger**
+   (authoritative, D6): economy totals, `xp_gained` and title history appear for past activity, named with today's
+   brackets and genders. Wanted? If not, set the `ledger` cursor before the first run (one SQL row).
+7. **L2-5 hidden totals** — a contextual metric whose total is hidden (one context overridden to Nobody) is returned
+   with `value: null` and only its visible contexts (API shape change vs. the plan, recorded there).
 
 **Test when you have time:** (filled in by link 7 — build/deploy steps and the combined live checklist.)
 
@@ -79,4 +85,76 @@ Session `session_015g7iripYBsgLJUPKZivR5s` (started by the coordinator via `crea
 - **How link 2 was started:** new session (charter §6 option 1, `create_session`): `session_01M59wGLFhAji7UwGaZuoAdR`,
   source knk-workspace `claude/kind-dijkstra-y9d279`, model `claude-opus-5-5`, tag `kng-34-player-statistics-chain`;
   `get_session` showed it connected and working.
+
+## Link 2 — API foundation (2026-10-03)
+
+Session `session_01M59wGLFhAji7UwGaZuoAdR` (started by link 1 via `create_session`). knk-web-api only.
+
+- **Commits (knk-web-api `claude/kind-dijkstra-y9d279`, pushed):** `cb2c7fc` data model + additive migration
+  `20261003023630_AddPlayerStatistics`, `ece2cf7` services/repository/controller/DI/config/meter, `552d4a4` tests,
+  `b13ff0c` cursor row lock + concurrency test. Trunk `master` is still `ae0b3ad` (merged at start and before the final
+  push — nothing new). knk-workspace: this report, plan status, link 3 handoff; tracker on `main`.
+- **Branch:** `claude/kind-dijkstra-y9d279` did **not** exist in knk-web-api (the charter says it did); created it from
+  `master` `ae0b3ad` (L2-1, reversible).
+- **Tests vs baseline** (`dotnet test Tests/knkwebapi_v2.Tests/knkwebapi_v2.Tests.csproj`): baseline 1,660 total /
+  1,607 passed / **5 failed** / 48 skipped → after 1,839 total / 1,777 passed / **the same 5 failed** / 57 skipped
+  (the 9 new MySQL tests skip without `KNK_TEST_MYSQL`). The 5 pre-existing failures (red on trunk, not touched):
+  `FieldValidationServiceTests.ValidateConditionalRequiredAsync_WithConditionMet_ValidatesRequired`,
+  `FormSubmissionProgressRepositoryTests.DeleteCompletedOlderThanAsync_DeletesStaleRootAndDescendantsInOrder`,
+  `PathResolutionServiceTests.ValidatePathAsync_AllowsValidV1Paths` ×2 (`Town.Name`, `Town.WgRegionId`),
+  `ClientActivityStoreTests.RecordsRequestsIntoRollingBuckets`.
+  **MySQL-gated suite** (local MySQL 8.0.46 installed with apt in the cloud container): baseline 48 / 43 passed /
+  5 failed → after 57 / 52 passed / the same 5 failed (`TeleportChargeMySqlTests` ×5 — "You don't have enough gems",
+  pre-existing on trunk, unrelated). All 9 new statistics MySQL tests pass (migration applies; upserts; concurrency).
+- **Delivered (plan §1.1, §2, §3.1, §4 link-2 rows, §6):** 10 tables (`Properties/KnKDbContext.Statistics.cs`);
+  `StatisticsCatalog`, `StatisticsPeriods`, `StatisticsFormatting`, `LedgerStatisticsClassifier`, `StatisticsDeltaSet`,
+  `StatisticsVisibilityRules`; `StatisticsIngestionService` (`POST api/statistics/batches`, multi-row
+  `INSERT … ON DUPLICATE KEY UPDATE` + InMemory fallback); `LedgerStatisticsProjector` (economy, `xp_gained`, title
+  history), `SiegeStatisticsProjector`, `StatisticsProjectionService` (+ session timeout sweep),
+  `StatisticsRetentionService`, `StatisticsRebuildService`, `StatisticsMetrics` (`Knk.Statistics`);
+  `StatisticsVisibilityService`, `StatisticsQueryService`, `StatisticsViewerResolver`; `StatisticsController` (8 routes);
+  `RequireOwnerPermissionAttribute` + `OwnerPermissions`; `StaffPermissions.ViewStatistics`; `Statistics` config
+  section. Acceptance criteria 1-10 of plan §8 link 2 are covered by tests (criterion → test class in the plan status
+  note). The D13 guard: `LedgerStatisticsClassifierTests.EveryCurrencyReasonCode_IsClassifiedExplicitly`.
+- **Live smoke (local MySQL, fresh DB, every migration applied, API started):** catalog; batch without key → 401;
+  batch → applied with `deaths@siege` rejected `NotPluginWritable`; replay → `duplicate: true`; anonymous / self /
+  signed-in reads filtered as designed; visibility PUT by another player → 403, by self → 200, stale → 409; title
+  history as another player → 403; `DateOnly` query parameters bind; `Statistics__Enabled=false` → POST 503 and both
+  jobs log "disabled" with no statistics SQL.
+- **Flagged decisions:**
+
+| # | Decision (reversible default) | Why |
+|---|---|---|
+| L2-1 | Created the missing knk-web-api feature branch from `master` `ae0b3ad` | Charter: one branch per repo |
+| L2-2 | Extra rejection codes `UnknownUser` (user/killer/victim id not in `users`) and `InvalidEntry` (bad session type/end reason, empty key, killer = victim) | The plan's list had no code for these |
+| L2-3 | Entries up to `Statistics:FutureToleranceSeconds` (300) in the future are accepted; counters must be > 0, records ≥ 0; values kept to 4 decimals | Clock skew between servers |
+| L2-4 | Ledger projector waits `Statistics:ProjectionSafetyLagSeconds` (10) and stops at the first younger leg; cursor row locked `FOR UPDATE` | A lower ledger id may commit after a higher one; multiple API instances |
+| L2-5 | `PlayerStatisticMetricDto.value`/`rawValue` are **null** when the total is hidden but some contexts are visible | The total rule (§F.4) without dropping visible contexts |
+| L2-6 | `profile.activePlaytimeSeconds`/`afkSeconds` are lifetime whatever the period (the period values are in `metrics`) | The profile is the always-public base |
+| L2-7 | Catalogue public shape: `PluginInput` + `ProjectionOwnedContexts` instead of `PluginWritableContexts`; `first_joined`, the discovery list and title history are settings/profile fields, not metric rows; `deaths` is reported non-contextual to clients | "All contexts except Siege" isn't expressible as an allow-list; those three have no stored value |
+| L2-8 | Discovery counts: gate structures count as structures; each domain counts once at its earliest discovery across merged identities (period counts use that date) | DTO has towns/districts/structures only |
+| L2-9 | Visibility: `contexts[].isOverride` added; a context change's `expected` is the inherited metric-level value when there is no override; extra 400 codes `TooManyChanges`, `DuplicateChange`, `InvalidVisibility`; an empty change list is a 200 no-op | The menu shows the inherited value; atomic preview semantics |
+| L2-10 | A duration after an API `Timeout` close reopens the session | Timeout is an API inference (API down ≠ player gone) |
+| L2-11 | A plugin read without `X-Acting-User-Id` is anonymous; owner nodes must be granted **directly on the user** (a user-level `*` decides before group grants and is refused) | Fail closed |
+| L2-12 | On first run the ledger projector projects the whole existing ledger (economy, `xp_gained`, title history), with current brackets and genders | Ledger is authoritative (D6); "Review first" item 6 |
+| L2-13 | Several participant rows of one user in one match count once (stats summed, streak max); any early leave → loss | Matches L1-7 |
+| L2-14 | DbContext configuration lives in a new partial `KnKDbContext.Statistics.cs` (implements the existing `OnModelCreatingPartial` hook) instead of editing `KnKDbContext.cs` | Smaller conflict surface on a 2,300-line file |
+| L2-15 | An unparseable `date`/`from`/`to` query value is ignored (defaults apply) instead of a 400 | MVC binding default; harmless |
+
+- **Discrepancies with the design/plan:** none in behaviour beyond L2-5/L2-7/L2-9 (shape additions, recorded in the
+  plan status note). The solution file `knkwebapi_v2.sln` references `tests/…` (lower case), so `dotnet build` at the
+  repo root fails on Linux — build `knkwebapi_v2.csproj` (pre-existing, not changed).
+- **Live checklist (link 2):** (1) apply migration `AddPlayerStatistics` (additive; 10 tables); (2) start the API — log
+  "Statistics projection started"; within a minute `GET api/statistics/users/{yourId}` (logged in) shows `xp_gained`,
+  `economy` and `GET …/title-history` your past promotions; (3) a completed Siege match appears as wins/losses/kills
+  under context `siege` within ~30 s; (4) another account sees only active/AFK time and XP until you set something to
+  Everyone (`PUT …/visibility`); (5) `Statistics:Enabled=false` → `POST api/statistics/batches` 503, no projection.
+- **Risks:** first-run projection of a large ledger takes several cycles (50 × 2,000 legs per 30 s cycle); deadlock on
+  concurrent upserts surfaces as a 5xx the plugin retries (idempotent); the menu seed (`statistics.visibility`) is link 3.
+- **What link 3 must wire:** plugin client for `POST api/statistics/batches` (DTO in `Dtos/StatisticsDtos.cs`; spool on
+  5xx/503/401/403/408/429, final on 400; read `rejected[]` codes), `GET api/statistics/catalog`, `GET/PUT
+  api/statistics/users/{id}/visibility` with `X-Acting-User-Id` (409 body `{ error, message, current }`); never send
+  `pvp_kills`/`deaths`/`highest_killstreak` in context `siege` (rejected); durations must lie inside a known session of
+  the same user, start ≥ session start, ≤ 86,400 s, ≤ 7 days old; plus the API menu seed `MenuTemplateSeed.Statistics.cs`.
+- **How link 3 was started:** see the next line (appended after the attempt).
 

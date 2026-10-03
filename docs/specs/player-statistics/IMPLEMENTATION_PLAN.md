@@ -1,7 +1,7 @@
 # Player statistics — Implementation Plan
 
-**Status:** Binding for chain links 2-7 (written by link 1, 2026-10-03). Link 2 next. Nothing merged.
-**Last updated:** 2026-10-03
+**Status:** Binding for chain links 3-7 (written by link 1, 2026-10-03). Link 2 done (knk-web-api `b13ff0c`); link 3 next. Nothing merged.
+**Last updated:** 2026-10-03 (link 2 status note)
 **Linear:** [KNG-34](https://linear.app/kngpandi/issue/KNG-34) (with [KNG-14](https://linear.app/kngpandi/issue/KNG-14), [KNG-23](https://linear.app/kngpandi/issue/KNG-23), [KNG-9](https://linear.app/kngpandi/issue/KNG-9), [KNG-21](https://linear.app/kngpandi/issue/KNG-21))
 **Sources:** [DESIGN.md](DESIGN.md) (§F = "Finalized design (link 1)"), [source audit](../../reports/2026-10-03-player-statistics-source-audit.md),
 chain charter [`PLAYER_STATISTICS_CHAIN.md`](../../ai-agents/handoffs/PLAYER_STATISTICS_CHAIN.md), progress report
@@ -653,9 +653,35 @@ heatmap canvas per world/date range, menu funnel table, domain interaction table
 | Link | State | Notes |
 |---|---|---|
 | 1 | done 2026-10-03 | This plan, finalized DESIGN §F, source audit. Docs only. |
-| 2 | pending | |
+| 2 | done 2026-10-03 | knk-web-api `claude/kind-dijkstra-y9d279` `b13ff0c`; see "Link 2 status" below. |
 | 3 | pending | |
 | 4 | pending | |
 | 5 | pending | |
 | 6 | pending | |
 | 7 | pending | |
+
+### Link 2 status (2026-10-03)
+
+Delivered as §1.1, §2, §3.1, §4 (link-2 rows) and §6 describe; migration `20261003023630_AddPlayerStatistics`.
+Tests: 179 new (1,839 total; the same 5 pre-existing failures as trunk); 9 of them MySQL-gated and green on MySQL 8.
+
+**Acceptance criterion → tests:** 1 `Migrations/AddPlayerStatisticsTests`, full suite; 2
+`StatisticsIngestionServiceTests`, `MySql/StatisticsUpsertMySqlTests`; 3 `StatisticsPeriodsTests`; 4
+`LedgerStatisticsProjectorTests`; 5 `SiegeStatisticsProjectorTests`; 6 `StatisticsVisibilityServiceTests`; 7
+`StatisticsQueryServiceTests`, `Api/StatisticsControllerAuthTests`; 8 `Api/RequireOwnerPermissionAttributeTests`; 9
+`Api/StatisticsControllerAuthTests` (503) + live smoke (jobs idle); 10 `LedgerStatisticsClassifierTests`
+(`CurrencyWriteGuardTests` unchanged and green).
+
+**Public shape changes vs. this plan** (progress report L2-n):
+- `StatisticMetricDefinition`: `PluginInput` (`None|Counter|Record|Duration|PvpKill` — which batch list may carry the
+  metric) and `ProjectionOwnedContexts` replace `PluginWritableContexts` (L2-7). `first_joined`, the discovery list and
+  title history are not metric rows (profile field / settings `discoveries.list`, `title_history`).
+- Rejection codes add `UnknownUser` and `InvalidEntry` (L2-2).
+- `PlayerStatisticMetricDto.value`/`rawValue` are nullable: null when the total is hidden but some contexts are visible
+  (L2-5). `profile` playtime is lifetime (L2-6). `StatisticsCatalogDto` adds `contexts` (known context keys).
+- `StatisticsVisibilityContextDto.isOverride`; extra 400 codes `TooManyChanges`, `DuplicateChange`,
+  `InvalidVisibility`; the 409 body is `{ error: "VisibilityConflict", message, current: StatisticsVisibilityDto }` (L2-9).
+- Config adds `Statistics:FutureToleranceSeconds` (300) and `Statistics:ProjectionSafetyLagSeconds` (10).
+- `IStatisticsRebuildService.RebuildAsync(projection: "ledger"|"siege"|"all", userId?)` is ready for link 6's
+  `POST api/statistics/rebuild`.
+
