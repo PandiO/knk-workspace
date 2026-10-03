@@ -4,7 +4,7 @@
 2026-10-01 findings are implemented (2026-10-02)** on `claude/road-navigation-smoke-test-bugs-fagl4i` in knk-web-app,
 knk-web-api and knk-plugin — see "Fixes implemented (2026-10-02)" at the end of Findings for what to re-test before
 resuming Phase 4 items 20+. The direct-mode straight line through terrain (finding 1) stays open as KNG-51.
-**Last updated:** 2026-10-02
+**Last updated:** 2026-10-03
 **Sources:** the "Developer to-do" blocks of Phases 1, 3, 4 and 5 in `docs/specs/navigation/IMPLEMENTATION_PLAN.md`;
 progress report `docs/reports/2026-09-27-road-navigation-chain.md`. If this file and a plan block disagree, the plan wins.
 
@@ -480,6 +480,25 @@ below). The prune branches and worktrees are removed.
   tile-border cut, an arm merged into a locked node) can leave a two-arm junction. **Fixed** in knk-plugin `075ae94`:
   the builder joins such a junction's two edges into one, unless it is locked, joining would make a loop or a duplicate
   pair, or it had three or more edges last build. Rebuild tile 2,-1 and #3615 is gone.
+
+### Re-test, part 2 (2026-10-03) — edge and junction prune
+
+Rebuilding tile 2,-2 after unlocking Brink (#7): plaza junctions whose edges had all been deleted with
+`/knk road edge delete` came back on every rebuild (a deleted detected edge is traced again — finding E). Config
+experiment first: `plaza-growth: 4`, `min-spur-length: 15` helped a bit, not enough.
+
+**New (2026-10-03):** knk-plugin `3f13c41` on `claude/navigation-walkable-path` and knk-web-api `6947e2a` on
+`claude/road-navigation`, **deploy both together**, no migration:
+- `/knk road edge prune <id|here>` removes a detected edge for good. It leaves a *PrunedEdge* tombstone (dark brown
+  pillar, "pruned edge") on the middle of the edge, and every later build leaves out the chain passing within 3 blocks
+  of it. Junctions and dead ends left with no edges go with it. A junction left with two arms is joined on the next
+  build.
+- `/knk road node prune <id>` on a junction lists its detected edges and prunes them all after **[Confirm]** (this cuts
+  any road through it). With no id it still picks the nearest dead end first, then a junction. Recorded and stitch
+  edges are never pruned; a named junction is refused.
+- `/knk road node unprune [id]` works for both tombstone kinds; `edge delete` on a detected edge now points to `edge prune`.
+- Re-test: prune a stub, a loop side and a whole fake plaza junction on 2,-2; rebuild the tile twice → they stay out;
+  `unprune` one → it returns on the next build.
 
 ---
 
