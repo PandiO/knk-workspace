@@ -312,4 +312,7 @@ Session `session_01GiwQhoD6EA3m9WvVPmdU3d` (started by link 3 via `create_sessio
   is Paper API (fine on Paper only); mocked damage events can't prove Paper's `getFinalDamage()` semantics (live check 2).
 - **What link 5 must wire:** read surfaces only — every link-4 metric is already sent; `deaths_by_cause.*` stay internal
   (never shown). Siege statistics (wins/losses/draws/objectives, siege kills/deaths/streaks) come from the API projection.
+- **How link 5 was started:** new session (charter §6 option 1, `create_session`): `session_01HnVoNfWS1zecanekJBqQnp`,
+  source knk-workspace `claude/kind-dijkstra-y9d279`, model `claude-opus-5-5`, tag `kng-34-player-statistics-chain`;
+  `get_session` showed it in the working bucket right after creation.
 
