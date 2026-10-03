@@ -1,7 +1,7 @@
 # Player statistics chain — progress report
 
 **Status:** running
-**Last updated:** 2026-10-03 (link 3 done)
+**Last updated:** 2026-10-03 (link 4 done)
 **Charter:** `docs/ai-agents/handoffs/PLAYER_STATISTICS_CHAIN.md` · **Linear:** [KNG-34](https://linear.app/kngpandi/issue/KNG-34)
 
 ## Summary for the developer
@@ -13,7 +13,7 @@ Branch in all four repos: `claude/kind-dijkstra-y9d279` (nothing merged to any t
 | 1 | Design completion + implementation plan | **done** | knk-workspace (see Link 1 block) | [audit](2026-10-03-player-statistics-source-audit.md), [DESIGN §F](../specs/player-statistics/DESIGN.md), [plan](../specs/player-statistics/IMPLEMENTATION_PLAN.md) |
 | 2 | API foundation (+ Siege projection, moved from link 4) | **done** | knk-web-api `b13ff0c` | Link 2 block: ingestion, projections, visibility, reads, owner attribute; 179 new tests |
 | 3 | Plugin foundation | **done** | knk-plugin `e75d9b7`, knk-web-api `c95572a` | Link 3 block: statistics sink/spool, sessions, AFK + `/afk`, distance, falls, privacy menu + seed; 95 new plugin tests, 6 API |
-| 4 | Combat and minigames | pending | — | — |
+| 4 | Combat and minigames | **done** | knk-plugin `65a0e7d`, knk-web-api `12ae516` | Link 4 block: kills/deaths/causes, damage, arrows, headshots, open-world killstreak, gate damage incl. fire per igniter, Siege leavers reported; 60 new plugin tests, 4 API |
 | 5 | Read surfaces + leaderboards | pending | — | — |
 | 6 | Diagnostic telemetry + privacy | pending | — | — |
 | 7 | World analytics + final write-up | pending | — | — |
@@ -39,6 +39,13 @@ Branch in all four repos: `claude/kind-dijkstra-y9d279` (nothing merged to any t
    disabled".
 9. **L3-3 API down at join** — a player whose user id is unknown is tracked in memory and released when the id is found
    (looked up every replay interval); if the server stops before that, that session's statistics are lost (not spooled).
+
+10. **L4-2 leaver payload** — departed Siege members are now sent in the completion with `leftAt` (additive API field);
+    the API keeps the first left marker, so rewards are unchanged; a left call that was lost now leaves the member
+    unrewarded *and* counted as a loss (before: closed at the end time, counted as present). Switch:
+    `statistics.siege.report-departed-members`.
+11. **L4-1 damage received** — stored with the same cap as damage dealt (victim's health+absorption before the hit), so
+    one hit is the same number on both sides; the design text said "final damage received".
 
 **Test when you have time:** (filled in by link 7 — build/deploy steps and the combined live checklist.)
 
@@ -245,3 +252,64 @@ Session `session_013GjXWw1R62Nzv6Tjoodejy` (started by link 2 via `create_sessio
 - **How link 4 was started:** new session (charter §6 option 1, `create_session`): `session_01GiwQhoD6EA3m9WvVPmdU3d`,
   source knk-workspace `claude/kind-dijkstra-y9d279`, model `claude-opus-5-5`, tag `kng-34-player-statistics-chain`;
   `get_session` showed it pending in the working bucket right after creation.
+
+## Link 4 — Combat, gates and Siege reconciliation (2026-10-03)
+
+Session `session_01GiwQhoD6EA3m9WvVPmdU3d` (started by link 3 via `create_session`). knk-plugin + knk-web-api.
+
+- **Commits (pushed to `claude/kind-dijkstra-y9d279`):**
+  - knk-plugin: `3035202` knk-core rules (`KillstreakTracker`, `DeathCauseClassifier`, `CombatStatisticsRules`,
+    `GateFireAttribution`, `SiegeDepartedMembers`) + `ParticipantResult.leftAt` through the result spool and api-client;
+    `65a0e7d` knk-paper `CombatStatisticsListener`, `GateDamageSink`/`GateDamageStatisticsSink`, the `HealthSystem`/
+    `GateFireSystem`/`GateDamageConsequenceListener`/`SiegeService` hooks, config `statistics.combat|gates|siege`,
+    `KnKPlugin` wiring.
+  - knk-web-api: `12ae516` `SiegeMatchParticipantResultDto.leftAt` + `CompleteAsync` handling + tests.
+  - Trunks: knk-plugin `main` still `ee7824c` and knk-web-api `master` still `ae0b3ad` at the start and before the final
+    push (nothing to merge); knk-workspace `main` merged into the feature branch.
+- **Tests vs baseline** (`./gradlew build -x deployToDevServer`, all green): knk-core 1,242 → **1,269**; knk-api-client
+  152 → **153** (2 skipped); knk-paper 1,011 → **1,043** (14 skipped). New: `KillstreakTrackerTest`,
+  `DeathCauseClassifierTest`, `CombatStatisticsRulesTest`, `GateFireAttributionTest`, `SiegeDepartedMembersTest`,
+  `HealthSystemEffectiveLossTest`, `GateFireSystemAttributionTest`, `CombatStatisticsListenerTest`; extended
+  `SiegeResultSpoolTest`, `SiegeMatchesCommandApiImplTest`, `ConfigLoaderStatisticsTest`,
+  `GateDamageConsequenceListenerTest`. API (`dotnet test`): 1,845 → **1,849**, 1,787 passed, **the same 5 pre-existing
+  failures**, 57 skipped.
+- **Delivered:** see the plan's "Link 4 status" note (class list, acceptance criterion → test map, shape changes).
+- **Flagged decisions:**
+
+| # | Decision (reversible default) | Why |
+|---|---|---|
+| L4-1 | `damage_received.*` uses the same capped value as `damage_dealt.*` (victim's health+absorption before the hit) | One hit = one number on both sides; overkill isn't damage received |
+| L4-2 | Departed members are sent with `leftAt`; the API (additive DTO field) keeps the first left marker or sets the reported one (when the `left` call was lost), always strictly before the end (a reported time ≥ end is stored 1 ms before it) | Without it a reported leaver with a lost `left` call would count as present and be rewarded |
+| L4-3 | A member who left and rejoined is one result: earlier stats summed into the present one (max streak), no `leftAt` (the API keeps its marker → loss, as L2-13) | The API takes one row per user (`GroupBy(UserId).Last()`) |
+| L4-4 | Gate-damage context = `siege` while `SiegeGateController.isLocked(gateStructureId)` (from the area lockdown, which can start before the match is in progress), else `open_world` | §F.8 "locked down by a running match"; the only lockdown signal |
+| L4-5 | TNT damage is credited to the source player only if they still have a statistics session when it explodes; a fire igniter's user id is stored at ignition (0 when unknown then → an offline igniter without id is credited to nobody) | Rare; no extra bookkeeping per TNT |
+| L4-6 | A death in an excluded game mode records nothing (not even the killer's kill) but still resets the victim's streak | Excluded modes record no combat facts (§5.1) |
+| L4-7 | The killer's open-world streak grows even when the PvP kill can't be sent (a user id unknown); the record is held like other facts | Streak is gameplay state |
+| L4-8 | A running-match member's death still records `deaths_by_cause.*` in context `siege` (the API accepts it; only kills/deaths/streak are projection-owned) | §F.1: causes are recorded in all contexts |
+| L4-9 | Headshot = projectile hit above the body line on a non-cancelled hit where both players are in one Siege lobby with multiplier > 1 (recomputed at MONITOR, `SiegeCombatListener` untouched) | Plan §9 risk note |
+| L4-10 | Last damage by another player without Bukkit kill credit → cause `player`; a self-kill → `environment` with no kill | §F.7 wording covers neither case |
+| L4-11 | Departed-member reporting needs `statistics.enabled` **and** `statistics.siege.report-departed-members` | `statistics.enabled: false` must reproduce today's behaviour |
+| L4-12 | A player's tamed animal counts as a mob damager (`damage_received.mob`), not as the owner | No owner resolution in §F.7 |
+
+- **Discrepancies with the plan/design:** the API needed a small additive change (L4-2), not tests only; the departed-
+  member logic is a pure knk-core class tested by `SiegeDepartedMembersTest` instead of a `SiegeServiceDepartedMembersTest`
+  (`SiegeService` needs a server to construct); `GateDamageSink` resolves the attacker itself (the plan said the listener
+  passes the attacker). Performance (§7) not measured (no Paper server); the combat listener does hash lookups and
+  arithmetic per event, fire attribution allocates one small list per burning gate per fire tick only when attribution is on.
+- **Live checklist (link 4):** (1) deploy API + plugin, log shows "Player statistics started"; (2) hit another player and a
+  zombie, take damage from both → `damage_dealt.*`/`damage_received.*` appear in `GET api/statistics/users/{id}` within
+  ~60 s; Chaos enchant procs don't double the numbers; (3) kill a player in the open world twice, die, kill again →
+  `pvp_kills` +3, `deaths` +1, `highest_killstreak` 2; quit and rejoin → streak starts at 0; (4) kill a naturally spawned
+  mob (counts) and a spawner/bred mob (doesn't); shoot arrows (count), a trident/firework (don't); (5) in a Siege match:
+  headshots with a lobby headshot multiplier > 1 count, kills/deaths appear only after the match ends (projection), never
+  twice; (6) hit a gate door (click, arrow, TNT) and set it on fire with two players → `gate_damage` matches the HP each
+  took (fire split by burning blocks), gate HP behaves exactly as before; log off while your fire burns → still credited;
+  (7) leave a Siege match early, let it finish → the leaver's row has their kills and `LeftAt`, no reward, `losses` +1;
+  (8) `statistics.combat.enabled`/`gates.enabled`/`siege.report-departed-members: false` → nothing recorded / payload as
+  before.
+- **Risks:** `SiegeService`, `GateFireSystem`, `HealthSystem` and `GateDamageConsequenceListener` were edited (small,
+  isolated) while other sessions may change Siege/gate files on `main` — expect mechanical merges; `getEntitySpawnReason()`
+  is Paper API (fine on Paper only); mocked damage events can't prove Paper's `getFinalDamage()` semantics (live check 2).
+- **What link 5 must wire:** read surfaces only — every link-4 metric is already sent; `deaths_by_cause.*` stay internal
+  (never shown). Siege statistics (wins/losses/draws/objectives, siege kills/deaths/streaks) come from the API projection.
+

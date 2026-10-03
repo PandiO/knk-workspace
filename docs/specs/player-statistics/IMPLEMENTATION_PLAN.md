@@ -1,7 +1,7 @@
 # Player statistics — Implementation Plan
 
-**Status:** Binding for chain links 4-7 (written by link 1, 2026-10-03). Links 2-3 done (knk-web-api `c95572a`, knk-plugin `e75d9b7`); link 4 next. Nothing merged.
-**Last updated:** 2026-10-03 (link 3 status note)
+**Status:** Binding for chain links 5-7 (written by link 1, 2026-10-03). Links 2-4 done (knk-web-api `12ae516`, knk-plugin `65a0e7d`); link 5 next. Nothing merged.
+**Last updated:** 2026-10-03 (link 4 status note)
 **Linear:** [KNG-34](https://linear.app/kngpandi/issue/KNG-34) (with [KNG-14](https://linear.app/kngpandi/issue/KNG-14), [KNG-23](https://linear.app/kngpandi/issue/KNG-23), [KNG-9](https://linear.app/kngpandi/issue/KNG-9), [KNG-21](https://linear.app/kngpandi/issue/KNG-21))
 **Sources:** [DESIGN.md](DESIGN.md) (§F = "Finalized design (link 1)"), [source audit](../../reports/2026-10-03-player-statistics-source-audit.md),
 chain charter [`PLAYER_STATISTICS_CHAIN.md`](../../ai-agents/handoffs/PLAYER_STATISTICS_CHAIN.md), progress report
@@ -655,7 +655,7 @@ heatmap canvas per world/date range, menu funnel table, domain interaction table
 | 1 | done 2026-10-03 | This plan, finalized DESIGN §F, source audit. Docs only. |
 | 2 | done 2026-10-03 | knk-web-api `claude/kind-dijkstra-y9d279` `b13ff0c`; see "Link 2 status" below. |
 | 3 | done 2026-10-03 | knk-plugin `claude/kind-dijkstra-y9d279` `e75d9b7`, knk-web-api `c95572a`; see "Link 3 status" below. |
-| 4 | pending | |
+| 4 | done 2026-10-03 | knk-plugin `claude/kind-dijkstra-y9d279` `65a0e7d`, knk-web-api `12ae516`; see "Link 4 status" below. |
 | 5 | pending | |
 | 6 | pending | |
 | 7 | pending | |
@@ -719,3 +719,34 @@ preview/confirm/apply, 409), API `MenuTemplateStatisticsSeedTests`; 7 Gradle bui
 - `statistics.visibility` actions/condition: `statistics.visibility.select-group|cycle|group|apply-group`,
   `statistics.visibility.pending`; root `statsvis`; Confirm/Cancel at slots 48/50.
 - Config adds nothing beyond §5.1; `statistics.combat|gates|siege` are link 4's to add to `StatisticsConfig`.
+
+### Link 4 status (2026-10-03)
+
+Delivered as §5.1 (`statistics.combat|gates|siege`), §5.2 (link-4 rows and edits) and §8 link 4 describe. knk-plugin:
+knk-core `statistics/KillstreakTracker`, `DeathCauseClassifier`, `CombatStatisticsRules`, `gates/GateFireAttribution`,
+`siege/SiegeDepartedMembers`, `ParticipantResult.leftAt` (+ result spool, api-client DTO/mapper); knk-paper
+`statistics/CombatStatisticsListener`, `statistics/GateDamageStatisticsSink`, `gates/GateDamageSink` (default no-op),
+`StatisticsService.addCounter(UUID, metric, context, value)` + `userIdOf(UUID)`, minimal edits in `HealthSystem`
+(returns the effective loss), `GateFireSystem` (igniter per burning block, `setDamageSink`, 3-arg `igniteBlock`),
+`GateDamageConsequenceListener` (sink constructor), `SiegeService` (`setReportDepartedMembers`, departed members kept per
+match and appended in `completion()`), `KnkConfig`/`ConfigLoader`/`config.yml`, `KnKPlugin` wiring. knk-web-api:
+`SiegeMatchParticipantResultDto.leftAt` + `SiegeMatchService.CompleteAsync` (first left marker wins, kept before the end).
+
+**Acceptance criterion → tests:** 1 `CombatStatisticsRulesTest`, `DeathCauseClassifierTest`, `CombatStatisticsListenerTest`
+(damage split/cap/CUSTOM/excluded modes/contexts, headshots, causes, PvE filter, arrows); 2 `CombatStatisticsListenerTest`
+(running-match members); 3 `KillstreakTrackerTest`, `CombatStatisticsListenerTest` (streak, death, quit); 4
+`GateFireAttributionTest`, `HealthSystemEffectiveLossTest`, `GateFireSystemAttributionTest` (HP sequences identical with the
+sink on and off), `GateDamageConsequenceListenerTest`, `CombatStatisticsListenerTest` (sink: attacker/shooter/TNT source,
+gate context, offline igniter); 5 `SiegeDepartedMembersTest`, `SiegeResultSpoolTest`, `SiegeMatchesCommandApiImplTest`
+(`leftAt` omitted for present members), API `SiegeMatchServiceTests` (reported leaver keeps `LeftAt`, gets stats, no reward;
+lost left call; clock skew; complete → projection reconciliation incl. leavers); 6 Gradle build green, trunks unchanged.
+
+**Public shape changes vs. this plan** (progress report L4-n):
+- API `SiegeMatchParticipantResultDto` gains optional `leftAt` (L4-2) — the plan said "tests only unless a gap appears";
+  without it a departed member whose `left` call was lost would have been rewarded as present.
+- `ParticipantResult` (knk-core) gains `leftAt` with a 6-argument constructor for present members.
+- The departed-member logic is the pure `C/siege/SiegeDepartedMembers` tested by `SiegeDepartedMembersTest`; there is no
+  `SiegeServiceDepartedMembersTest` (SiegeService can't be constructed in a unit test; its edit is 18 lines).
+- `GateDamageSink` methods: `directDamage(gate, causingEntity, loss)`, `tracksFire()`, `igniterOf(entity)`,
+  `fireDamage(gate, igniter, loss)` (attacker resolution lives in the statistics sink, not in the gate listener).
+
