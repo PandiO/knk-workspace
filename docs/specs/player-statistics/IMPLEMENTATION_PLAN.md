@@ -1,7 +1,7 @@
 # Player statistics — Implementation Plan
 
-**Status:** Binding for chain links 3-7 (written by link 1, 2026-10-03). Link 2 done (knk-web-api `b13ff0c`); link 3 next. Nothing merged.
-**Last updated:** 2026-10-03 (link 2 status note)
+**Status:** Binding for chain links 4-7 (written by link 1, 2026-10-03). Links 2-3 done (knk-web-api `c95572a`, knk-plugin `e75d9b7`); link 4 next. Nothing merged.
+**Last updated:** 2026-10-03 (link 3 status note)
 **Linear:** [KNG-34](https://linear.app/kngpandi/issue/KNG-34) (with [KNG-14](https://linear.app/kngpandi/issue/KNG-14), [KNG-23](https://linear.app/kngpandi/issue/KNG-23), [KNG-9](https://linear.app/kngpandi/issue/KNG-9), [KNG-21](https://linear.app/kngpandi/issue/KNG-21))
 **Sources:** [DESIGN.md](DESIGN.md) (§F = "Finalized design (link 1)"), [source audit](../../reports/2026-10-03-player-statistics-source-audit.md),
 chain charter [`PLAYER_STATISTICS_CHAIN.md`](../../ai-agents/handoffs/PLAYER_STATISTICS_CHAIN.md), progress report
@@ -654,7 +654,7 @@ heatmap canvas per world/date range, menu funnel table, domain interaction table
 |---|---|---|
 | 1 | done 2026-10-03 | This plan, finalized DESIGN §F, source audit. Docs only. |
 | 2 | done 2026-10-03 | knk-web-api `claude/kind-dijkstra-y9d279` `b13ff0c`; see "Link 2 status" below. |
-| 3 | pending | |
+| 3 | done 2026-10-03 | knk-plugin `claude/kind-dijkstra-y9d279` `e75d9b7`, knk-web-api `c95572a`; see "Link 3 status" below. |
 | 4 | pending | |
 | 5 | pending | |
 | 6 | pending | |
@@ -685,3 +685,37 @@ Tests: 179 new (1,839 total; the same 5 pre-existing failures as trunk); 9 of th
 - `IStatisticsRebuildService.RebuildAsync(projection: "ledger"|"siege"|"all", userId?)` is ready for link 6's
   `POST api/statistics/rebuild`.
 
+### Link 3 status (2026-10-03)
+
+Delivered as §5.1, §5.2 (link-3 rows) and §5.3 describe. knk-plugin: knk-core `statistics/` (`StatisticsMetric`,
+`StatisticsContext`, `StatisticsBuffer`, `StatisticsSessions`, `AfkTracker`, `MovementClassifier`, `FallRule`,
+`StatisticsSpool`, `StatisticsRecorder`), `domain/statistics/` (`StatisticsBatch`, `StatisticsBatchResult`,
+`StatisticsCatalog`, `StatisticsVisibilitySettings`, `StatisticVisibility`, `StatisticsVisibilityConflictException`),
+`ports/api/StatisticsApi`; knk-api-client `StatisticsApiImpl`, `StatisticsDtos`, `StatisticsMapper`
+(`KnkApiClient.getStatisticsApi()`); knk-paper `statistics/` (`StatisticsService`, `StatisticsContextResolver`,
+`StatisticsSessionListener`, `AfkActivityListener`, `AfkPresentation`, `MovementStatisticsListener`,
+`FallStatisticsListener`, `StatisticsFlushTask`), `commands/AfkCommand`, `menu/content/StatisticsVisibilityMenuFeature`
+(+ `StatisticsVisibilityView`, `StatisticsVisibilityRow`), `UserCommand` `/stats settings`, `KnkConfig.StatisticsConfig`
++ `ConfigLoader.loadStatistics`, `config.yml` `statistics:`, `plugin.yml` `/afk`, `KnKPlugin.startStatistics()`.
+knk-web-api: `Models/Menu/MenuTemplateSeed.Statistics.cs`, `profile.main` header slot 6.
+
+**Acceptance criterion → tests:** 1 `KnKPlugin.startStatistics` returns before any registration (code review; no Paper
+runtime in the cloud) + `ConfigLoaderStatisticsTest`; 2 `StatisticsSessionsTest`, `StatisticsListenersTest` (kick, server
+stop, unresolved ids); 3 `AfkTrackerTest`, `StatisticsListenersTest` (signals, throttle, vehicle/water, pressure plates,
+`/afk`); 4 `MovementAndFallRuleTest`, `StatisticsListenersTest` (modes, max segment, world change, creative, AFK, falls);
+5 `StatisticsBufferTest`, `StatisticsRecorderTest`, `StatisticsSpoolTest` + live smoke against the API (duplicate
+reply, replay); 6 `StatisticsVisibilityMenuFeatureTest` (seed validation via `ContentSeedFixture`, groups, cycle, group
+preview/confirm/apply, 409), API `MenuTemplateStatisticsSeedTests`; 7 Gradle build green, counts in the progress report.
+
+**Public shape changes vs. this plan** (progress report L3-n):
+- `MovementClassifier.classify(inVehicle, gliding, flying, swimming, length, max)` returns a nullable `Mode`
+  (`FOOT`/`SWIM`/`FLYING`/`VEHICLE`) instead of `Optional<MovementMode>`; `FallRule.survivedFall` returns `OptionalDouble`.
+- New pure `C/statistics/StatisticsSessions` holds the per-player session/AFK/movement state under
+  `P/statistics/StatisticsService`.
+- `StatisticsApi` has `postBatch`, `getCatalog`, `getVisibility`, `updateVisibility`; `getUserStatistics` and
+  `getTitleHistory` are added by link 5 (first consumer).
+- `StatisticsService` hooks for link 4: `addCounter(Player, metric, value)`, `addRecord(Player, metric, value)`,
+  `pvpKill(killer, victim)`, `contextOf(Player)`, `buffer()`; `KnKPlugin#getStatisticsService()` (null when disabled).
+- `statistics.visibility` actions/condition: `statistics.visibility.select-group|cycle|group|apply-group`,
+  `statistics.visibility.pending`; root `statsvis`; Confirm/Cancel at slots 48/50.
+- Config adds nothing beyond §5.1; `statistics.combat|gates|siege` are link 4's to add to `StatisticsConfig`.

@@ -1,7 +1,7 @@
 # Player statistics chain — progress report
 
 **Status:** running
-**Last updated:** 2026-10-03 (link 2 done)
+**Last updated:** 2026-10-03 (link 3 done)
 **Charter:** `docs/ai-agents/handoffs/PLAYER_STATISTICS_CHAIN.md` · **Linear:** [KNG-34](https://linear.app/kngpandi/issue/KNG-34)
 
 ## Summary for the developer
@@ -12,7 +12,7 @@ Branch in all four repos: `claude/kind-dijkstra-y9d279` (nothing merged to any t
 |---|---|---|---|---|
 | 1 | Design completion + implementation plan | **done** | knk-workspace (see Link 1 block) | [audit](2026-10-03-player-statistics-source-audit.md), [DESIGN §F](../specs/player-statistics/DESIGN.md), [plan](../specs/player-statistics/IMPLEMENTATION_PLAN.md) |
 | 2 | API foundation (+ Siege projection, moved from link 4) | **done** | knk-web-api `b13ff0c` | Link 2 block: ingestion, projections, visibility, reads, owner attribute; 179 new tests |
-| 3 | Plugin foundation | pending | — | — |
+| 3 | Plugin foundation | **done** | knk-plugin `e75d9b7`, knk-web-api `c95572a` | Link 3 block: statistics sink/spool, sessions, AFK + `/afk`, distance, falls, privacy menu + seed; 95 new plugin tests, 6 API |
 | 4 | Combat and minigames | pending | — | — |
 | 5 | Read surfaces + leaderboards | pending | — | — |
 | 6 | Diagnostic telemetry + privacy | pending | — | — |
@@ -34,6 +34,11 @@ Branch in all four repos: `claude/kind-dijkstra-y9d279` (nothing merged to any t
    brackets and genders. Wanted? If not, set the `ledger` cursor before the first run (one SQL row).
 7. **L2-5 hidden totals** — a contextual metric whose total is hidden (one context overridden to Nobody) is returned
    with `value: null` and only its visible contexts (API shape change vs. the plan, recorded there).
+8. **L3-4 kill switch scope** — `statistics.enabled: false` registers no statistics listener or task, but the privacy
+   menu (`/stats settings`, profile tile) still works and `/afk` stays declared in `plugin.yml`, answering "AFK is
+   disabled".
+9. **L3-3 API down at join** — a player whose user id is unknown is tracked in memory and released when the id is found
+   (looked up every replay interval); if the server stops before that, that session's statistics are lost (not spooled).
 
 **Test when you have time:** (filled in by link 7 — build/deploy steps and the combined live checklist.)
 
@@ -160,3 +165,81 @@ Session `session_01M59wGLFhAji7UwGaZuoAdR` (started by link 1 via `create_sessio
   source knk-workspace `claude/kind-dijkstra-y9d279`, model `claude-opus-5-5`, tag `kng-34-player-statistics-chain`;
   `get_session` showed it pending in the working bucket right after creation.
 
+## Link 3 — Plugin foundation (2026-10-03)
+
+Session `session_013GjXWw1R62Nzv6Tjoodejy` (started by link 2 via `create_session`). knk-plugin + knk-web-api (seed).
+
+- **Commits (pushed to `claude/kind-dijkstra-y9d279`):**
+  - knk-plugin (branch created from `main` `ee7824c`, L3-1): `2064f64` knk-core statistics (buffer, sessions, AFK
+    tracker, spool, recorder), `d6ce7fe` api-client `StatisticsApiImpl`, `a503f2a` knk-paper service/listeners/`/afk`/
+    flush task/config/privacy menu/`/stats settings` + regenerated `content-seeds.json`, `60135f0` pressure plates are
+    not AFK activity, `e75d9b7` record/PvP-kill hooks for link 4.
+  - knk-web-api: `c95572a` `MenuTemplateSeed.Statistics.cs` (`statistics.visibility`) + `profile.main` header slot 6.
+  - Trunks merged at start and before the final push: knk-plugin `main` `ee7824c` (the branch was cut from it; nothing
+    newer), knk-web-api `master` `ae0b3ad` (unchanged), knk-workspace `main` merged into the feature branch.
+- **Tests vs baseline** — first executed plugin baseline of the chain (`./gradlew build -x deployToDevServer`, all
+  green): knk-core 1,189 → **1,242**; knk-api-client 144 (2 skipped) → **152** (2 skipped); knk-paper 977 (14
+  skipped) → **1,011** (14 skipped). New test classes: `AfkTrackerTest`, `MovementAndFallRuleTest`,
+  `StatisticsBufferTest`, `StatisticsSessionsTest`, `StatisticsSpoolTest`, `StatisticsRecorderTest`,
+  `StatisticsApiImplTest`, `ConfigLoaderStatisticsTest`, `StatisticsVisibilityMenuFeatureTest` (validates the exported
+  seed and `profile.main` against the registered features), `StatisticsListenersTest` (World mock in a field);
+  `UserCommandTest` extended. API (`dotnet test`): 1,839 → **1,845** total, 1,783 passed, **the same 5 pre-existing
+  failures**, 57 skipped (`MenuTemplateStatisticsSeedTests` ×5 + the new content-seed theory case).
+- **Live smoke (cloud, local MySQL 8 + the API on the feature branch, every migration applied):** the plugin's own
+  `StatisticsSessions` → `StatisticsBuffer` → `StatisticsRecorder` → `StatisticsApiImpl` pipeline against the real
+  endpoints: a 17-entry batch (two sessions incl. one resolved late, active/AFK slices, swim + vehicle distance split
+  over two entries, a fall record, PvE kills, two PvP kills) → 16 accepted, the Siege-context PvP kill rejected
+  `NotPluginWritable` and logged; resend → `duplicate: true`; a spooled batch replayed and its file deleted;
+  `GET api/statistics/users/5` as self showed active 200 s / AFK 500 s / logins 1 / distances / fall 23.5 exactly as
+  sent; visibility GET, atomic PUT (metric + context override), stale PUT → 409 mapped to the conflict exception with
+  `current`, another player's settings → 403. The Paper runtime itself (listeners, menu rendering) was not run.
+- **Delivered (plan §5.1, §5.2 link-3 rows, §5.3, §8 link 3):** see the plan's "Link 3 status" note for the class list
+  and the acceptance-criterion → test map.
+- **Flagged decisions:**
+
+| # | Decision (reversible default) | Why |
+|---|---|---|
+| L3-1 | Created the missing knk-plugin feature branch from `main` `ee7824c` | Charter: one branch per repo (like L2-1) |
+| L3-2 | Distance is summed per session in primitive fields and timestamped at the flush (≤ 60 s after the movement) | No allocation per move event (§7 budget) |
+| L3-3 | Unknown user id at join: the session, its time, distance and values are held in memory and released with the original join instant once the id is found (UUID lookup every replay interval); ended unresolved sessions kept up to 1,024 (oldest dropped); lost if the server stops first | Matches the discovery pattern without a second spool format; rare (API down at join) |
+| L3-4 | `statistics.enabled: false`: no statistics listener/task; the privacy menu and `/stats settings` stay (they record nothing); `/afk` is declared in `plugin.yml` and answers "AFK is disabled" | Bukkit needs commands declared; the profile tile must not open a blocked menu |
+| L3-5 | AFK: move signals throttled to one per second per player; `/afk` itself is not an activity signal; pressure plates/tripwires (`PHYSICAL` interact) are not activity; `afk.idle-seconds` ≥ 30 | Cheap move path; `/afk` must be able to leave AFK; anti-AFK-pool |
+| L3-6 | The AFK tab marker is restored only if the tab name is still the marked one (the Siege scoreboard redraws names in a match and then wins) | Never clobber another feature's name |
+| L3-7 | Riding: `VehicleMoveEvent` passengers count as vehicle distance; no `EntityMoveEvent` listener (it would fire for every mob) — whether horses/pigs/striders raise `VehicleMoveEvent` is a live check | Cost; flagged |
+| L3-8 | Fall rule uses `getFinalDamage()` (absorption already taken off) against health only | Avoids counting fatal falls as survived |
+| L3-9 | `StatisticsApi` read methods (`getUserStatistics`, `getTitleHistory`) are left to link 5 (first consumer); `getCatalog` is implemented and tested but the menu uses the visibility response's groups/labels | No unused DTO surface; one call per menu render |
+| L3-10 | Shutdown: sessions end `ServerStop`, the last batches get up to 5 s on the main thread, anything unsent is spooled | Bounded like the teleport refund at disable |
+| L3-11 | `/stats settings` (and `/user statistics settings`) open the menu; a player literally named "settings" can then only be looked up from the console | Plan's subcommand name |
+| L3-12 | Batches carry `serverName` = `<server software> <port>` and the plugin version (diagnostics only) | No server-name config exists |
+| L3-13 | Flush sends at most 5 batches (10,000 entries) per interval; a replay run sends at most `replay-interval-seconds` batches (≤ 1/s average) | §7 budgets |
+| L3-14 | Counters are summed and records maxed per (user, metric, context, UTC minute); `occurredAt` = the latest contribution | Fewer entries; period allocation stays exact to the minute |
+| L3-15 | The menu keeps a viewer's settings for 5 s to avoid a GET per repaint; a click's PUT answer (or the 409's `current`) replaces them | Responsive cycling without stale reads |
+
+- **Discrepancies with the plan/design:** `MovementClassifier.classify` returns a nullable enum (`FOOT`/`SWIM`/`FLYING`/
+  `VEHICLE`) instead of `Optional<MovementMode>` (allocation-free); a pure knk-core `StatisticsSessions` was added under
+  `StatisticsService` (testable session logic); `StatisticsMetric` lists only plugin-sent metrics (no `logins`, wins,
+  economy — the API derives/projects them); menu header layout: slots 0-4 group selectors, 5-7 group actions, 8 Back,
+  row 1 an info item, Confirm/Cancel at 48/50 (Confirm's lore is the preview). Performance (§7) was not measured — no
+  Paper server in the cloud; the move listeners do a hash lookup and arithmetic and allocate nothing per event after a
+  player's first move.
+- **Live checklist (link 3):** (1) deploy API + plugin; run the content-menu reset (`scripts/reset-content-menus.ps1`) so
+  `statistics.visibility` and the profile's slot-6 "Statistics privacy" tile appear; startup log shows "Player
+  statistics started" and no validation block for `statistics.visibility`; (2) join, wait a minute: `GET
+  api/statistics/users/{id}` (logged in) shows logins +1 and growing active time; (3) idle 5 min → "You are now AFK" +
+  `[AFK]` in the tab list; look around → back; `/afk` toggles; AFK time grows instead of active; standing on a pressure
+  plate or in a water stream stays AFK; (4) walk, swim, fly with an elytra, ride a boat/minecart **and a horse** → foot/
+  flying/vehicle distance (L3-7: does the horse count?); (5) survive a ~10-block fall → highest fall; (6) stop the API,
+  play a minute, see files in `plugins/KnightsAndKings/statistics-spool/`; start the API → files replayed and deleted;
+  (7) `/stats settings` and Profile → Statistics privacy: switch groups, click a setting (cycles), "Set all listed to
+  Everyone" → preview in chat and on Confirm → Confirm applies; change a setting via `PUT …/visibility` meanwhile → the
+  menu says it changed elsewhere and refreshes; (8) `statistics.enabled: false` → log "Player statistics disabled",
+  `/afk` says disabled, nothing is sent; (9) server stop → the session rows end with `ServerStop`.
+- **Risks:** the menu seed is create-only (reset needed); `PlayerInteractEvent`/`InventoryClickEvent` are listened to
+  at MONITOR for every player (cheap, no I/O); the 5 s shutdown wait runs on the main thread when the API hangs.
+- **What link 4 must wire:** `KnKPlugin#getStatisticsService()` (null when disabled) →
+  `StatisticsService.addCounter(Player, StatisticsMetric, double)` (context via `StatisticsContextResolver`),
+  `addRecord(Player, …)` (`highest_killstreak`), `pvpKill(Player killer, Player victim)` (skip running-match members,
+  §F.6), `contextOf(Player)`; for credit to an offline player (fire igniter who logged off, §F.8) call
+  `service.buffer().addCounter(userId, metric, context, value, at)` directly with the stored user id. Config:
+  `statistics.combat|gates|siege` go into `KnkConfig.StatisticsConfig` (add records + `ConfigLoader.loadStatistics`).
+- **How link 4 was started:** see the line below (written after `create_session`).
