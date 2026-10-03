@@ -11,7 +11,7 @@ Branch in all four repos: `claude/kind-dijkstra-y9d279` (nothing merged to any t
 | Link | Phase | State | Heads | Details |
 |---|---|---|---|---|
 | 1 | Design completion + implementation plan | **done** | knk-workspace (see Link 1 block) | [audit](2026-10-03-player-statistics-source-audit.md), [DESIGN §F](../specs/player-statistics/DESIGN.md), [plan](../specs/player-statistics/IMPLEMENTATION_PLAN.md) |
-| 2 | API foundation (+ Siege projection, moved from link 4) | pending | — | — |
+| 2 | API foundation (+ Siege projection, moved from link 4) | started | — | — |
 | 3 | Plugin foundation | pending | — | — |
 | 4 | Combat and minigames | pending | — | — |
 | 5 | Read surfaces + leaderboards | pending | — | — |
@@ -76,5 +76,7 @@ Session `session_015g7iripYBsgLJUPKZivR5s` (started by the coordinator via `crea
 - **Risks:** see plan §9 (Siege/gate files under concurrent change, create-only menu seed, MySQL-only upserts).
 - **What link 2 must wire:** plan §1.1, §2, §3.1, §4 (link-2 rows), §6 (`RequireOwnerPermission`), §8 Link 2 acceptance
   criteria 1-10.
-- **How link 2 was started:** see the next line (appended after the attempt).
+- **How link 2 was started:** new session (charter §6 option 1, `create_session`): `session_01M59wGLFhAji7UwGaZuoAdR`,
+  source knk-workspace `claude/kind-dijkstra-y9d279`, model `claude-opus-5-5`, tag `kng-34-player-statistics-chain`;
+  `get_session` showed it connected and working.
 
