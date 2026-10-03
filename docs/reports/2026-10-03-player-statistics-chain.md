@@ -534,4 +534,6 @@ knk-web-app.
   page behind `OwnerRoute` with `knk.owner.analytics.view` (constant in `OwnerPermissions`; add an `OWNER_ANALYTICS_VIEW_NODE`
   next to the telemetry nodes in `types/dtos/telemetry/TelemetryDtos.ts` or its own DTO file); world-analytics tables hold
   no user ids, so GDPR erasure needs no change; the final write-up should carry the follow-up list above.
-
+- **How link 7 was started:** new session (charter §6 option 1, `create_session`): `session_01MfBPo3MGvbZQitk2ywFKxV`,
+  source knk-workspace `claude/kind-dijkstra-y9d279`, model `claude-opus-5-5`, tag `kng-34-player-statistics-chain`;
+  `get_session` showed it pending in the working bucket.
