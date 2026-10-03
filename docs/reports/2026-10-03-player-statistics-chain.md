@@ -1,12 +1,15 @@
 # Player statistics chain — progress report
 
-**Status:** running
-**Last updated:** 2026-10-03 (link 6 done)
+**Status:** done — all seven links finished; nothing merged (2026-10-03)
+**Last updated:** 2026-10-03 (link 7: final summary)
 **Charter:** `docs/ai-agents/handoffs/PLAYER_STATISTICS_CHAIN.md` · **Linear:** [KNG-34](https://linear.app/kngpandi/issue/KNG-34)
 
 ## Summary for the developer
 
-Branch in all four repos: `claude/kind-dijkstra-y9d279` (nothing merged to any trunk).
+**The chain is finished: all seven links are done. Nothing is merged** — every change is on `claude/kind-dijkstra-y9d279`
+in the four repos, waiting for your review, live test and merge. Final heads: knk-web-api `45d9925`, knk-plugin
+`66d9292`, knk-web-app `8c27421`, knk-workspace: this branch (see the last commit). Trunks were unchanged throughout
+links 5-7 (knk-web-api `master` `ae0b3ad`, knk-plugin `main` `ee7824c`, knk-web-app `main` `fc66101`).
 
 | Link | Phase | State | Heads | Details |
 |---|---|---|---|---|
@@ -16,54 +19,186 @@ Branch in all four repos: `claude/kind-dijkstra-y9d279` (nothing merged to any t
 | 4 | Combat and minigames | **done** | knk-plugin `65a0e7d`, knk-web-api `12ae516` | Link 4 block: kills/deaths/causes, damage, arrows, headshots, open-world killstreak, gate damage incl. fire per igniter, Siege leavers reported; 60 new plugin tests, 4 API |
 | 5 | Read surfaces + leaderboards | **done** | knk-web-api `2dec32b`, knk-plugin `5481327`, knk-web-app `00d978e` | Link 5 block: leaderboard snapshots (18 boards × 3 periods, repeat-victim cap), public profile, `statistics.main` + leaderboard menus, `/leaderboard`, `/stats` lines, web own statistics/settings, public profile, leaderboards, staff panel; 56 API, 29 plugin, 27 web tests |
 | 6 | Diagnostic telemetry + privacy | **done** | knk-web-api `8b67e2c`, knk-plugin `aa42247`, knk-web-app `4c6e0ca` | Link 6 block: event store + bounded ingestion, owner search/timeline/test runs/enhanced targets, retention, `api.request_failed`, GDPR deletion (dry run, idempotent execute, due-date job), `POST api/statistics/rebuild`; plugin emitter + menu/Siege/AFK/discovery/API-failure hooks; web `/owner/telemetry`, `/owner/privacy`; 104 API, 50 plugin, 13 web tests |
-| 7 | World analytics + final write-up | pending | — | — |
+| 7 | World analytics + final write-up | **done** | knk-web-api `45d9925`, knk-plugin `66d9292`, knk-web-app `8c27421` | Link 7 block: anonymous movement heatmap cells, menu funnels, domain interactions (`AddWorldAnalytics`), plugin sampler/observers/flush, web `/owner/analytics`; this summary; 38 API, 31 plugin, 6 web tests |
 
-**Review first:** (ranked; each link appends)
+### What was built
+
+- **Player statistics (KNG-34/KNG-14):** sessions and logins, active vs. AFK playtime (`/afk` + auto-AFK), distance by
+  mode, highest fall, PvP/PvE kills by context, deaths by cause, damage dealt/received, arrows and headshots, open-world
+  killstreak, gate damage (incl. fire per igniter), Siege wins/losses/draws/objectives (projected from the match tables),
+  economy and XP (projected from the ledger), title history. Daily rows + lifetime totals, day/week/month/lifetime views
+  in `Statistics:TimeZone`. Plugin batches are idempotent and spooled while the API is down.
+- **Privacy:** visibility per metric/context (Nobody/Friends/Everyone; friends-only fails closed until KNG-35) enforced
+  in the API on every read; in-game privacy menu + web settings with group actions.
+- **Read surfaces:** in-game statistics and leaderboard menus, `/stats`, `/leaderboard`; web own statistics, public
+  `/players/:username`, `/leaderboards`, staff panel; leaderboard snapshots with eligibility and a repeat-victim cap.
+- **Diagnostics (owner only, exact `knk.owner.*` grants):** baseline + enhanced diagnostic events, test runs, a player
+  timeline joined with ledger and Siege rows, `api.request_failed`/`api.call_failed`, retention.
+- **GDPR deletion:** request → due date → preview → typed-confirmation execute (or automatic 3 days before due).
+- **World analytics (owner only):** heatmap per world from ≤ 1 sample/player/10 s (AFK/spectators excluded), menu
+  funnels per menu, domain entries/exits/discoveries with daily visitors — anonymous, 180-day retention.
+- Every hook has a kill switch whose `false` restores today's behaviour (`statistics.*`, `telemetry.enabled`,
+  `world-analytics.*` in the plugin; `Statistics`, `Leaderboards`, `DiagnosticTelemetry`, `Privacy`, `WorldAnalytics`
+  sections in the API). All migrations are additive.
+
+### Decisions to review (ranked)
+
+Ranked by how hard they are to undo once live (irreversible/data-shaping first), then by player impact. Each points to
+its link block.
+
 1. **L1-18 GDPR scope** — deletion pseudonymizes the `users` row and auto-executes 3 days before the 30-day due date
    (DESIGN §F.14). Irreversible for the player once executed; ledger and Siege rows are kept.
-2. **L1-1 AFK rule** — `/afk` + auto-AFK after 300 s, retroactive idle window, anti-pool signals, tab marker, no Siege
-   removal (§F.2). **L1-2:** salary still pays AFK players (needs an API contract change if you want otherwise).
-3. **L1-3 "everyone" visibility** — anonymous web visitors see only always-public fields (§F.4).
-4. **L1-5/L1-6 economy buckets** — `/pay` transfers, admin adjustments, signup grant, merges and premium top-ups are
-   neither earned nor spent; `xp_gained` uses earned XP only (§F.5).
-5. **L1-17 owner nodes** — `knk.owner.*` require an exact grant (wildcards never unlock owner data); grant them to
-   yourself with `POST api/users/{id}/grants` (§F.13).
-
-6. **L2-12 title history backfill** — on first start the ledger projector projects the **whole existing ledger**
+2. **L6-2/L6-3 GDPR erasure scope** — executing a request also erases the accounts **merged into** the player and
+   pseudonymizes all of them (username `deleted-<id>`, email/UUID/password/gender cleared, inactive). Private-message
+   logs, link codes, permission grants/groups and audit rows are **not** touched (outside §F.14) — see the follow-up
+   list below. Irreversible: the web page asks you to type the player id.
+3. **L2-12 title history backfill** — on first start the ledger projector projects the **whole existing ledger**
    (authoritative, D6): economy totals, `xp_gained` and title history appear for past activity, named with today's
    brackets and genders. Wanted? If not, set the `ledger` cursor before the first run (one SQL row).
-7. **L2-5 hidden totals** — a contextual metric whose total is hidden (one context overridden to Nobody) is returned
-   with `value: null` and only its visible contexts (API shape change vs. the plan, recorded there).
-8. **L3-4 kill switch scope** — `statistics.enabled: false` registers no statistics listener or task, but the privacy
-   menu (`/stats settings`, profile tile) still works and `/afk` stays declared in `plugin.yml`, answering "AFK is
-   disabled".
-9. **L3-3 API down at join** — a player whose user id is unknown is tracked in memory and released when the id is found
-   (looked up every replay interval); if the server stops before that, that session's statistics are lost (not spooled).
-
-10. **L4-2 leaver payload** — departed Siege members are now sent in the completion with `leftAt` (additive API field);
-    the API keeps the first left marker, so rewards are unchanged; a left call that was lost now leaves the member
-    unrewarded *and* counted as a loss (before: closed at the end time, counted as present). Switch:
-    `statistics.siege.report-departed-members`.
-11. **L4-1 damage received** — stored with the same cap as damage dealt (victim's health+absorption before the hit), so
-    one hit is the same number on both sides; the design text said "final damage received".
-
-12. **L5-4 signed-out leaderboards** — a signed-out web visitor can read only the always-public boards (playtime, XP);
-    every other board answers "sign in" (consequence of L1-3: "everyone" = signed-in viewers).
-13. **L5-2/L5-3 repeat-victim cap** — applied when kills are ingested (internal metric `pvp_kills.ranked`), so a cap
+4. **L6-6 rebuild after erasure** — `POST api/statistics/rebuild` for **everyone** re-projects the kept ledger, so the
+   erased (pseudonymized) account gets economy/XP/title rows again. Rebuild per player, or accept it (no name left).
+5. **L4-2 leaver payload** — departed Siege members are now sent in the completion with `leftAt` (additive API field);
+   the API keeps the first left marker, so rewards are unchanged; a left call that was lost now leaves the member
+   unrewarded *and* counted as a loss (before: closed at the end time, counted as present). Switch:
+   `statistics.siege.report-departed-members`.
+6. **L1-1 AFK rule** — `/afk` + auto-AFK after 300 s, retroactive idle window, anti-pool signals, tab marker, no Siege
+   removal (§F.2). **L1-2:** salary still pays AFK players (needs an API contract change if you want otherwise).
+7. **L1-3 "everyone" visibility** — anonymous web visitors see only always-public fields (§F.4); **L5-4** consequence:
+   signed-out visitors read only the always-public boards (playtime, XP), every other board answers "sign in".
+8. **L1-17 owner nodes** — `knk.owner.*` require an exact grant (wildcards never unlock owner data); grant them to
+   yourself with `POST api/users/{id}/grants` (§F.13). Applies to diagnostics, data deletion, world analytics and
+   leaderboard exclusions.
+9. **L1-5/L1-6 economy buckets** — `/pay` transfers, admin adjustments, signup grant, merges and premium top-ups are
+   neither earned nor spent; `xp_gained` uses earned XP only (§F.5).
+10. **L5-2/L5-3 repeat-victim cap** — applied when kills are ingested (internal metric `pvp_kills.ranked`), so a cap
     change only affects later kills; Siege kills (from the match tables, no victims known) are never capped.
-
-14. **L6-2/L6-3 GDPR erasure scope** — executing a request also erases the accounts **merged into** the player and
-    pseudonymizes all of them (username `deleted-<id>`, email/UUID/password/gender cleared, inactive). Private-message
-    logs, link codes, permission grants/groups and audit rows are **not** touched (outside §F.14) — see the follow-up
-    list in the Link 6 block. Irreversible: the web page asks you to type the player id.
-15. **L6-6 rebuild after erasure** — `POST api/statistics/rebuild` for **everyone** re-projects the kept ledger, so the
-    erased (pseudonymized) account gets economy/XP/title rows again. Rebuild per player, or accept it (no name left).
-16. **L6-14 command correlation window** — a command's correlation id stays current on the main thread until the next
+11. **L2-5 hidden totals** — a contextual metric whose total is hidden (one context overridden to Nobody) is returned
+    with `value: null` and only its visible contexts (API shape change vs. the plan, recorded there).
+12. **L4-1 damage received** — stored with the same cap as damage dealt (victim's health+absorption before the hit), so
+    one hit is the same number on both sides; the design text said "final damage received".
+13. **L7-1 daily unique visitors** — per domain and day the plugin counts distinct players in memory and the API keeps
+    the highest count reported; with several game servers the busiest server wins (undercount), a restart mid-day
+    cannot lower it.
+14. **L7-5 menu funnel "closed"** — counts every inventory close, probably including the close Paper fires when one
+    menu replaces another; verify live and decide whether "closed" should mean "left the menu system".
+15. **L3-4 kill switch scope** — `statistics.enabled: false` registers no statistics listener or task, but the privacy
+    menu (`/stats settings`, profile tile) still works and `/afk` stays declared in `plugin.yml`, answering "AFK is
+    disabled". With statistics off, world analytics cannot tell who is AFK and samples everyone eligible (L7-3).
+16. **L3-3 API down at join** — a player whose user id is unknown is tracked in memory and released when the id is found
+    (looked up every replay interval); if the server stops before that, that session's statistics are lost (not spooled).
+17. **L7-4 analytics not spooled** — windows the API can't take are kept in memory (≤ 12 × 5 min) and retried; a server
+    stop while the API is down loses them.
+18. **L7-2 region → domain** — the API maps the plugin's WorldGuard region ids to domains by `WgRegionId`; regions that
+    are no domain are dropped (counted in the batch answer).
+19. **L6-14 command correlation window** — a command's correlation id stays current on the main thread until the next
     tick, so an unrelated API call started later in the same tick could be linked to that command.
-17. **L6-23 every non-2xx plugin call is an `api.call_failed`** — including expected 404 lookups; adjust after the alpha
+20. **L6-23 every non-2xx plugin call is an `api.call_failed`** — including expected 404 lookups; adjust after the alpha
     if it is noisy.
 
-**Test when you have time:** (filled in by link 7 — build/deploy steps and the combined live checklist.)
+All other numbered decisions (L1-n … L7-n) are in the link blocks below; DESIGN §F.16 lists L1-n.
+
+### How to merge (when you are happy with the review and the live test)
+
+Order: **knk-web-api → knk-plugin → knk-web-app**, then knk-workspace (docs). Merge each repo's
+`claude/kind-dijkstra-y9d279` into its trunk (knk-web-api `master`, knk-plugin `main`, knk-web-app `main`,
+knk-workspace `main`; the earlier draft [PandiO/knk-workspace#4](https://github.com/PandiO/knk-workspace/pull/4) is
+superseded by this branch and can be closed).
+
+1. **knk-web-api first, migrations before the API starts:** from a fresh build, `dotnet ef database update` applies, in
+   order, `20261003023630_AddPlayerStatistics` (10 tables), `20261003040910_AddLeaderboards` (2),
+   `20261003045617_AddDiagnosticTelemetryAndPrivacy` (4), `20261003054307_AddWorldAnalytics` (4). All additive (new
+   tables only); nothing existing is altered. New `appsettings.json` sections: `Statistics`, `Leaderboards`,
+   `DiagnosticTelemetry`, `Privacy`, `WorldAnalytics` (defaults on). Back up the database first anyway — the ledger
+   projector (L2-12) and GDPR execution write a lot on first use.
+2. **knk-plugin second** (it calls the new API endpoints; an older API answers 404 and the plugin spools statistics /
+   drops telemetry and analytics). New `config.yml` blocks `statistics:`, `telemetry:`, `world-analytics:` — an
+   existing server config without them gets the defaults (all on); copy the blocks from the bundled `config.yml` to
+   tune them. `/afk` and `/leaderboard` (`/lb`) are new commands.
+3. **Menu seeds:** the new menus (`statistics.visibility`, `statistics.main`, `statistics.leaderboards`,
+   `statistics.leaderboard`) and the profile tiles (slots 5 and 6) are seeded create-only — run
+   `scripts/reset-content-menus.ps1` (or edit via CRUD) on an existing database.
+4. **knk-web-app last** (new pages call the new API). No new npm dependencies. Note: `npm ci` fails on trunk already
+   (the lock misses `yaml@2.9.1`) — unrelated to this branch.
+5. **Grants:** give yourself `knk.owner.telemetry.view`, `knk.owner.telemetry.manage`, `knk.owner.privacy.manage`,
+   `knk.owner.analytics.view` and `knk.owner.leaderboard.manage` **directly on your user**; staff who should see other
+   players' full statistics need `knk.admin.statistics.view`.
+6. Update `docs/FEATURE_REGISTER.md` (Merge column `branch` → `trunk`) and move the `docs/CHANGELOG.md` entry from
+   "Unreleased" to the merge date.
+
+### Test when you have time — combined live checklist
+
+Each step names the link block with the full detail. Pre-existing test failures (5 API, 5 MySQL-gated
+`TeleportChargeMySqlTests`, 5 web) are red on trunk too and unrelated.
+
+**A. Deploy (test server)**
+1. API: apply the four migrations from a fresh build, start; logs show "Statistics projection started", "Leaderboard
+   snapshots started: every 300s", "Diagnostic telemetry writer started: every 2s", "World analytics retention: removed
+   0 daily rows, 0 batch ids" (links 2, 5, 6, 7).
+2. Plugin: deploy, run the content-menu reset; startup log shows "Player statistics started", "Diagnostic telemetry
+   started", "World analytics started …" and no menu validation block (links 3, 5, 6, 7).
+3. Grant yourself the five owner nodes directly (step 5 above); web nav shows Diagnostics, Data deletion, World
+   analytics; an account with only `knk.*` sees "Owner only" on all three (links 6, 7).
+
+**B. Statistics capture (links 2-4)**
+4. Join, wait a minute → `GET api/statistics/users/{id}` (or web `/account` → Statistics) shows logins +1 and growing
+   active time; within a minute of the first start, past `xp_gained`, economy and title history appear (L2-12).
+5. Idle 5 min → "You are now AFK" + `[AFK]`; `/afk` toggles; AFK time grows instead of active; pressure plates/water
+   streams stay AFK (link 3).
+6. Walk, swim, elytra, boat/minecart/horse → distance per mode; survive a ~10-block fall → highest fall (link 3).
+7. Combat: hit a player and a zombie (damage both ways), kill a player twice, die, kill again → `pvp_kills` +3,
+   `deaths` +1, `highest_killstreak` 2; spawner/bred mobs don't count; arrows count, tridents/fireworks don't (link 4).
+8. Siege: headshots with a multiplier > 1 count; kills/deaths/wins appear after the match ends, never twice; a gate hit
+   and fire by two players → `gate_damage` matches HP lost, gate HP behaves exactly as before; leave a match early →
+   your row has `LeftAt`, no reward, `losses` +1 (links 2, 4).
+9. Stop the API, play a minute → files in `plugins/KnightsAndKings/statistics-spool/`; start it → replayed and deleted
+   (link 3).
+
+**C. Privacy and read surfaces (links 3, 5)**
+10. `/stats settings` and Profile → Statistics privacy: cycle a setting, group action preview → Confirm; change it on the
+    web meanwhile → the menu says it changed elsewhere.
+11. Profile → Statistics, `/stats`, `/stats <other>` (another player sees only what you set to Everyone), title history.
+12. `/leaderboard` → board → head → player; `/lb active_playtime monthly`; kill the same player 5× in a day →
+    `pvp_kills` +5, PvP board +3.
+13. Web `/account` Statistics + "Who may see my statistics"; `/players/<name>` and `/leaderboards` signed out and in;
+    staff panel on `/admin/users/<id>` only with `knk.admin.statistics.view`; leaderboard exclusion via
+    `PUT api/leaderboards/exclusions/{id}`.
+
+**D. Diagnostics and GDPR (link 6)**
+14. Join → `session.join` in `/owner/telemetry` within ~10 s; run the **first vertical slice** (test run + enhanced
+    target, a tester joins, opens menus, a refused `/siege join`, plays a match with a reward, one refused API call) →
+    ordered events, player timeline with the Siege row and the ledger posting, correlated events in the drawer.
+15. `/owner/privacy` on a **throwaway account**: request → due in 30 days (automatic 3 days earlier) → Review & delete
+    → counts → type the id → Delete now → `deleted-<id>`, statistics gone.
+
+**E. World analytics (link 7)**
+16. Walk a few minutes (not AFK) → after ≤ 5 min `/owner/analytics` shows your path (cell sizes 16/64); AFK or spectator
+    → no new samples.
+17. Profile → Statistics → back → close → the funnel rows for `profile.main` and `statistics.main`; check what `closed`
+    counts (L7-5).
+18. Enter and leave a town/district/structure → Entries/Exits; discover a new domain → Discoveries +1.
+19. API down ≥ 5 min while walking, then up → no gap in the heatmap; play across local midnight → two days.
+
+**F. Kill switches (every link)**
+20. Plugin `statistics.enabled: false` → "Player statistics disabled", `/afk` says disabled; `telemetry.enabled: false`
+    → no telemetry line, no `X-Correlation-Id`; `world-analytics.enabled: false` → "World analytics disabled". API
+    `Statistics:Enabled=false` → statistics batches 503 (plugin keeps spooling); `DiagnosticTelemetry:Enabled=false` →
+    telemetry 503; `WorldAnalytics:Enabled=false` → analytics 503 (plugin drops); `Leaderboards:Enabled=false` → boards
+    keep their last snapshot; `Privacy:AutoExecuteEnabled=false` → "GDPR deletion auto-execution disabled".
+
+### Follow-up list (not done in this chain — for a developer decision)
+
+- **Personal data outside the GDPR scope (§F.14)** (from link 6): private-message logs (`private_message_logs`), link
+  codes, permission grants/group memberships of the erased account, audit-log rows (kept ≤ 180 days), other players'
+  enhanced events naming the user (≤ 14 days), the plugin's local spool/log files.
+- **Friends-only visibility** fails closed until the friends system exists (KNG-35).
+- **AFK and salary** (L1-2): salary still pays AFK players.
+- **Performance at scale** (plan §7) is unmeasured: statistics ingestion p95, leaderboard refresh for 10k players,
+  telemetry volume per player-minute, heatmap cells per window. Measure in the alpha and tune L1-19 retention.
+- **Multi-server analytics** (L7-1): daily unique visitors per server if more than one game server reports.
+- **Test gaps:** the Paper hooks of links 3-7 are unit-tested with mocks, never run on a server in the cloud;
+  `DiscoveryEffects.addGrantObserver` is covered by review only.
+- Pre-existing, unrelated: 5 failing API tests, 5 MySQL `TeleportChargeMySqlTests`, 5 failing web tests, `npm ci` lock
+  mismatch on knk-web-app `main`.
 
 ## Chain start — coordinator session (2026-10-03)
 
@@ -537,3 +672,85 @@ knk-web-app.
 - **How link 7 was started:** new session (charter §6 option 1, `create_session`): `session_01MfBPo3MGvbZQitk2ywFKxV`,
   source knk-workspace `claude/kind-dijkstra-y9d279`, model `claude-opus-5-5`, tag `kng-34-player-statistics-chain`;
   `get_session` showed it pending in the working bucket.
+
+## Link 7 — World analytics + final write-up (2026-10-03)
+
+Session `session_01MfBPo3MGvbZQitk2ywFKxV` (started by link 6 via `create_session`). knk-web-api, knk-plugin,
+knk-web-app, knk-workspace. Last link: no handoff, no further session.
+
+- **Commits (pushed to `claude/kind-dijkstra-y9d279`):**
+  - knk-web-api: `a1155a6` migration `20261003054307_AddWorldAnalytics` (additive: `world_movement_cells_daily`,
+    `menu_funnel_daily`, `domain_interactions_daily`, `world_analytics_batches`; no FKs, **no user ids**),
+    `Models/WorldAnalytics/*`, `Properties/KnKDbContext.WorldAnalytics.cs`, `WorldAnalyticsController`
+    (`api/world-analytics`), `WorldAnalyticsIngestionService` (batch-id dedupe, local-day mapping, per-row validation,
+    region id → domain resolution), `WorldAnalyticsQueryService`, `WorldAnalyticsRetentionService` (daily),
+    `WorldAnalyticsRepository` (multi-row upserts; unique players = `GREATEST`), `WorldAnalytics` config; `45d9925` tests.
+  - knk-plugin: `8bc70ab` knk-core `analytics/` (`WorldAnalyticsWindow` — never crosses a local midnight, bounded
+    in-memory retry queue; `MovementCellGrid`, `MenuFunnelCounter`, `DomainInteractionCounter`),
+    `domain/analytics/WorldAnalyticsBatch`, `ports/api/WorldAnalyticsApi`; api-client `WorldAnalyticsApiImpl` + DTOs +
+    mapper (`KnkApiClient.getWorldAnalyticsApi()`); knk-paper `analytics/` (`MovementSampler` — a timer, never a move
+    listener; `MenuFunnelRecorder` — a `MenuObserver`; `DomainInteractionRecorder` — region events + discovery grants;
+    `WorldAnalyticsFlushTask`), `DiscoveryEffects.addGrantObserver` (telemetry and analytics both observe grants),
+    `KnkConfig.WorldAnalyticsConfig` + `ConfigLoader.loadWorldAnalytics`, `config.yml` `world-analytics:`,
+    `KnKPlugin.startWorldAnalytics()`; `66d9292` tests.
+  - knk-web-app: `8c27421` `/owner/analytics` (`OwnerAnalyticsPage`: range, heatmap per world + cell size, menu funnel
+    table with per-step detail, domain table), `components/owner/HeatmapCanvas` (plain `<canvas>`, log colour scale, no
+    new dependency), `worldAnalyticsClient`, `types/dtos/analytics/WorldAnalyticsDtos` (`OWNER_ANALYTICS_VIEW_NODE`),
+    route, nav entry "World analytics", `Controllers.WorldAnalytics`.
+  - Trunks unchanged at the start and before the final push: knk-web-api `master` `ae0b3ad`, knk-plugin `main`
+    `ee7824c`, knk-web-app `main` `fc66101` (nothing to merge).
+- **Tests vs baseline** (baselines re-run on clean worktrees of the link-6 heads):
+  - API (MySQL-gated tests **enabled**, local MySQL 8): 2,009 → **2,047** total; failures **the same 10** before and after
+    = the 5 pre-existing ones (link 2 block) + `TeleportChargeMySqlTests` ×5 (red on trunk too). New:
+    `WorldAnalyticsIngestionServiceTests` (incl. "no analytics shape carries a player identity"),
+    `WorldAnalyticsQueryServiceTests` (incl. retention), `Api/WorldAnalyticsControllerTests`, `MySql/WorldAnalyticsMySqlTests`.
+  - Plugin (`./gradlew build -x deployToDevServer`, all green): knk-core 1,294 → **1,308**; knk-api-client 163 → **165**
+    (2 skipped); knk-paper 1,087 → **1,102** (14 skipped). New: `MovementCellGridTest`, `DomainInteractionCounterTest`
+    (+ menu funnel counter), `WorldAnalyticsWindowTest`, `WorldAnalyticsApiImplTest`, `MenuFunnelRecorderTest` (+ sampler,
+    domain recorder), `WorldAnalyticsFlushTaskTest`, `ConfigLoaderWorldAnalyticsTest`.
+  - Web (`npm run test:ci`): 458 → **464**, **the same 5 pre-existing failures** (FormWizard ×3, `LoginForm`,
+    `useEnrichedFormContext`); `npm run build` compiles with the pre-existing warnings (none in new files). New:
+    `OwnerAnalyticsPage.test.tsx` (incl. canvas layout/colour), `WorldAnalyticsClient` cases in `telemetryClient.test.ts`.
+- **Live smoke (cloud, local MySQL 8, all four migrations applied, API on the feature branch):** a plugin batch with one
+  cell, two menu steps, a domain region (`smoketown`) and `__global__` → 4 accepted, `UnknownRegion` rejected, day
+  `2026-10-03`; replay of the same id → `duplicate: true`, nothing applied; no key → 401. Owner with an exact grant (plugin
+  + `X-Acting-User-Id`): heatmap at cell size 32 (cell 2,-3 → 1,-2), worlds, menu funnels, domains (named "Smoketown",
+  visitor-days 2) all 200; a `knk.*` holder → 403; a 276-day range → 400; retention job ran ("removed 0 daily rows").
+  (The first attempt hit missing tables because `dotnet ef database update --no-build` used a DLL built before the
+  migration existed — a setup slip in this session, not a code issue; applying with a build fixed it. The live
+  checklist says to apply migrations from a fresh build.)
+- **Flagged decisions:**
+
+| # | Decision | Why / reversible how |
+|---|---|---|
+| L7-1 | **Unique players per domain and day** = size of the plugin's in-memory set of the day's players (never sent); the API keeps the **maximum** reported for the day, not the sum. A restart mid-day restarts the set (the stored max holds); with several game servers the busiest server's count wins (undercount) | No player ids may leave the plugin (D12, §1.4); summing per-window counts would overcount every return visit. Multi-server: sum per `serverName` later if needed |
+| L7-2 | Domain interactions: the plugin sends WorldGuard **region ids** for entries/exits (and domain ids for discoveries); the API resolves `regionId` → domain by `WgRegionId` (case-insensitive); regions that are no domain are rejected (`UnknownRegion`, only counted in the answer). Adds `regionId` to the plan's DTO | The plugin's region events carry region ids, not domain ids; the API owns the domain table |
+| L7-3 | Sampling skips AFK players (from player statistics; with `statistics.enabled: false` AFK is unknown and everyone eligible is sampled), spectators always, dead players, and `world-analytics.excluded-game-modes` (default `[CREATIVE, SPECTATOR]`, same as statistics) | Builders in creative would paint build sites; config |
+| L7-4 | **Not spooled:** a window the API could not take stays in memory (≤ `max-pending-batches` 12 = 1 h at 5 min, oldest dropped) and is retried with the same id; 400/404/413/422 and 503 (disabled) are dropped; a server stop while the API is down loses the open windows | Anonymous aggregates are low value per window; the statistics spool stays for player data |
+| L7-5 | Menu funnel steps: `opened` per showing, `action:<id>` per action binding by outcome (ids lower-cased), `back` counted on the menu **left**, `closed` per inventory close event — **including the close Paper fires when one menu replaces another** (to verify live); clicks without an action are not steps | Mirrors the `MenuObserver` contract of link 6; changing the meaning of `closed` is a plugin-only change |
+| L7-6 | Owner reads are **not audited** (anonymous data, unlike telemetry); ranges are inclusive local days, default last 7, ≤ 92 days; heatmap ≤ 20,000 cells (busiest kept, `truncated`); coarser cell sizes = multiples of a stored size | Bounded reads (§7) |
+| L7-7 | Public shape additions vs. the plan: `GET api/world-analytics/heatmap/worlds`; report DTOs (`MenuFunnelReportDto` with opened/back/closed per menu, `DomainInteractionReportDto` with `visitorDays` = sum of daily uniques and `peakDailyVisitors`); batch answer `{ batchId, duplicate, day, accepted, rejected[] }`; config `WorldAnalytics:BatchRetentionDays` (30), `MaxBatchRows` (20,000), `LateBatchToleranceDays` (7), `MaxRangeDays` (92), `MaxHeatmapCells` (20,000); plugin `world-analytics.movement`/`menu-funnels`/`domain-interactions` part switches, `excluded-game-modes`, `max-pending-batches` | Recorded in the plan's "Link 7 status" |
+| L7-8 | Window time zone: the plugin starts with `Europe/Amsterdam` (the API default) and switches to `GET api/statistics/catalog`'s `timeZone` when it answers; the API refuses windows older than 7 days or > 5 min in the future (400, dropped) | Plan §3.4 |
+| L7-9 | A late discovery replay (API was down) counts as a discovery on the day it is delivered | Simplest; anonymous daily counts |
+
+- **Discrepancies with the plan/design:** the public shape additions in L7-7. No movement trail, position or player
+  appears anywhere (DESIGN D10). Performance (§7): sampling is ≤ 1 sample / player / `movement-sample-seconds` (≥ 10,
+  validated) on a main-thread timer (one `getLocation()` per player), one aggregate batch per 5 min; the cell count per
+  window and the API upsert time were not measured at scale.
+- **Live checklist (link 7):** (1) apply migration `AddWorldAnalytics` (4 tables) **from a fresh build** and start the API
+  — log "World analytics retention: removed 0 daily rows, 0 batch ids"; (2) plugin startup log "World analytics started
+  (flush every 300 s, movement every 10 s, menu funnels on, domain interactions on)"; (3) grant yourself
+  `knk.owner.analytics.view` **directly** → web nav "World analytics"; a `knk.*`-only account sees "Owner only";
+  (4) walk around for a few minutes → after ≤ 5 min the heatmap shows your path (try cell sizes 16/64); `/afk` or
+  spectator mode → no new samples there; (5) open Profile → Statistics → back → close → `profile.main` and
+  `statistics.main` show opened / `action:…` / back / closed; check whether moving between menus also counts `closed`
+  (L7-5); (6) walk into a town/district/structure and out again → Entries/Exits +1, visitor-days 1; discover a new
+  domain → Discoveries +1; (7) stop the API ≥ 5 min while walking, start it → the kept windows arrive (no gap);
+  (8) play across local midnight → the rows split over the two days; (9) switches: `world-analytics.enabled: false` →
+  log "World analytics disabled", nothing sent; API `WorldAnalytics:Enabled=false` → batches 503, plugin logs "The API
+  refused a batch; dropped" once.
+- **Risks:** heatmap volume at scale unmeasured; `DiscoveryEffects.addGrantObserver` is covered by review only
+  (constructing `DiscoveryEffects` needs a Bukkit registry); the Paper glue was unit-tested with mocks, not on a server;
+  a WorldGuard region id reused by two domains resolves to the lowest domain id.
+- **What the next link must wire:** nothing — last link. Leftovers are in the summary's follow-up list.
+- **How the next link was started:** not applicable (charter §6.3: stop after link 7).

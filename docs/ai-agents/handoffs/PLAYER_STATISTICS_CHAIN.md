@@ -1,7 +1,7 @@
 # Player statistics chain — charter
 
-**Status:** Running (started 2026-10-03)
-**Last updated:** 2026-10-03 (link 1: §0 re-cut recorded in the table — Siege projection moved to link 2)
+**Status:** Done (2026-10-03) — all seven links finished; nothing merged. See the progress report's summary.
+**Last updated:** 2026-10-03 (link 7: chain finished; link 1's §0 re-cut — Siege projection moved to link 2 — is recorded in the table)
 **Linear:** [KNG-34](https://linear.app/kngpandi/issue/KNG-34) (design + implement), with [KNG-14](https://linear.app/kngpandi/issue/KNG-14), [KNG-23](https://linear.app/kngpandi/issue/KNG-23), [KNG-9](https://linear.app/kngpandi/issue/KNG-9), [KNG-21](https://linear.app/kngpandi/issue/KNG-21)
 
 A chain of **seven** Claude Code sessions ("links"). Each link implements **one phase**, tests it, documents it, pushes

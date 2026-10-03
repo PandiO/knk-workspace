@@ -2,6 +2,10 @@
 
 This is a human-readable record of capabilities merged into the V3 default branches. It is not a complete commit log or a promise that code has been deployed to a public server. See [the feature register](FEATURE_REGISTER.md) for design, branch and live-verification status. Entries before this changelog was established on **2026-09-28** are a selective backfill from merge records and feature plans; linked plans describe the precise live-test coverage.
 
+## Unreleased — on feature branches, not merged
+
+- **Player statistics, leaderboards, owner diagnostics, GDPR deletion and world analytics** ([KNG-34](https://linear.app/kngpandi/issue/KNG-34), with [KNG-14](https://linear.app/kngpandi/issue/KNG-14)): implemented 2026-10-03 on `claude/kind-dijkstra-y9d279` in knk-web-api, knk-plugin, knk-web-app and knk-workspace. **Not merged and not live-tested** — see the [progress report](reports/2026-10-03-player-statistics-chain.md) for the merge order, migrations and the live checklist. Move this entry to its merge date when it lands.
+
 ## 2026-10-02
 
 - Added the maintained V1 → V2 → V3 [feature register](FEATURE_REGISTER.md), documented feature and guide updates at merge, and established this changelog ([KNG-33](https://linear.app/kngpandi/issue/KNG-33), [PR #5](https://github.com/PandiO/knk-workspace/pull/5)).

@@ -1,7 +1,7 @@
 # Player statistics — Implementation Plan
 
-**Status:** Binding for chain link 7 (written by link 1, 2026-10-03). Links 2-6 done (knk-web-api `8b67e2c`, knk-plugin `aa42247`, knk-web-app `4c6e0ca`); link 7 next. Nothing merged.
-**Last updated:** 2026-10-03 (link 6 status note)
+**Status:** Implemented — all links done 2026-10-03 (written by link 1; knk-web-api `45d9925`, knk-plugin `66d9292`, knk-web-app `8c27421` on `claude/kind-dijkstra-y9d279`). Nothing merged; merge order and the live checklist are in the progress report's summary.
+**Last updated:** 2026-10-03 (link 7 status note)
 **Linear:** [KNG-34](https://linear.app/kngpandi/issue/KNG-34) (with [KNG-14](https://linear.app/kngpandi/issue/KNG-14), [KNG-23](https://linear.app/kngpandi/issue/KNG-23), [KNG-9](https://linear.app/kngpandi/issue/KNG-9), [KNG-21](https://linear.app/kngpandi/issue/KNG-21))
 **Sources:** [DESIGN.md](DESIGN.md) (§F = "Finalized design (link 1)"), [source audit](../../reports/2026-10-03-player-statistics-source-audit.md),
 chain charter [`PLAYER_STATISTICS_CHAIN.md`](../../ai-agents/handoffs/PLAYER_STATISTICS_CHAIN.md), progress report
@@ -658,7 +658,7 @@ heatmap canvas per world/date range, menu funnel table, domain interaction table
 | 4 | done 2026-10-03 | knk-plugin `claude/kind-dijkstra-y9d279` `65a0e7d`, knk-web-api `12ae516`; see "Link 4 status" below. |
 | 5 | done 2026-10-03 | knk-web-api `2dec32b`, knk-plugin `5481327`, knk-web-app `00d978e`; see "Link 5 status" below. |
 | 6 | done 2026-10-03 | knk-web-api `ce8a966`/`8b67e2c`, knk-plugin `9b6935a`/`aa42247`, knk-web-app `7804752`/`4c6e0ca`; see "Link 6 status" below. |
-| 7 | pending | |
+| 7 | done 2026-10-03 | knk-web-api `a1155a6`/`45d9925`, knk-plugin `8bc70ab`/`66d9292`, knk-web-app `8c27421`; see "Link 7 status" below. |
 
 ### Link 2 status (2026-10-03)
 
@@ -834,3 +834,38 @@ the link-6 live checklist in the progress report.
   the Siege observer lives in `P/siege/SiegeTelemetryObserver` (needs the lobby's package-private match id).
 - Web: owner node constants live in `types/dtos/telemetry/TelemetryDtos.ts`.
 
+### Link 7 status (2026-10-03)
+
+Delivered as §1.4, §3.4, §4 (link-7 row, `WorldAnalytics` config), §5.1 `world-analytics:`, §5.2 (link-7 rows) and §8 link 7
+describe; migration `20261003054307_AddWorldAnalytics`. knk-web-api: `Models/WorldAnalytics/*`,
+`Properties/KnKDbContext.WorldAnalytics.cs`, `Services/WorldAnalytics/*` (ingestion, query, retention),
+`Repositories/WorldAnalyticsRepository`, `WorldAnalyticsController`, `Dtos/WorldAnalyticsDtos.cs`,
+`Configuration/WorldAnalyticsOptions`. knk-plugin: knk-core `analytics/` (`WorldAnalyticsWindow`, `MovementCellGrid`,
+`MenuFunnelCounter`, `DomainInteractionCounter`), `domain/analytics/WorldAnalyticsBatch`, `ports/api/WorldAnalyticsApi`;
+api-client `WorldAnalyticsApiImpl` (+ DTOs/mapper); knk-paper `analytics/` (`MovementSampler`, `MenuFunnelRecorder`,
+`DomainInteractionRecorder`, `WorldAnalyticsFlushTask`), `DiscoveryEffects.addGrantObserver`,
+`KnkConfig.WorldAnalyticsConfig` + `ConfigLoader.loadWorldAnalytics`, `config.yml` `world-analytics:`,
+`KnKPlugin.startWorldAnalytics()`. knk-web-app: `pages/owner/OwnerAnalyticsPage`, `components/owner/HeatmapCanvas`,
+`apiClients/worldAnalyticsClient`, `types/dtos/analytics/WorldAnalyticsDtos`, route, nav. Workspace: final summary in the
+progress report, `FEATURE_REGISTER.md`, `CHANGELOG.md` ("Unreleased"), tracker.
+
+**Acceptance criterion → tests:** 1 `MenuFunnelRecorderTest` (sampler skips AFK/spectators/excluded modes/dead),
+`MovementCellGridTest`, `WorldAnalyticsWindowTest` (aggregated in memory, never across a local midnight, flushed per
+window), `WorldAnalyticsFlushTaskTest`, `WorldAnalyticsIngestionServiceTests.NoAnalyticsShape_CarriesAPlayerIdentity`,
+`WorldAnalyticsApiImplTest` (no identity in the wire body); 2 `MenuFunnelRecorderTest` (observer → steps),
+`DomainInteractionCounterTest` (unique players per day), `WorldAnalyticsQueryServiceTests`, `Api/WorldAnalyticsControllerTests`
+(exact owner grant on every read), `MySql/WorldAnalyticsMySqlTests`, live smoke (progress report); 3 the progress report's
+summary.
+
+**Public shape changes vs. this plan** (progress report L7-n):
+- `DomainInteractionDto` adds `regionId` (resolved to the domain by `WgRegionId`; `domainId` wins when given) (L7-2).
+- Extra `GET api/world-analytics/heatmap/worlds` → `[{ world, cellSizes[], samples }]`; heatmap adds `from`, `to`,
+  `totalSamples`, `truncated`; `GET menu-funnels` → `{ from, to, menus: [{ menuKey, opened, back, closed, steps: [{ step,
+  outcome, count }] }] }`; `GET domains` → `{ from, to, kind, domains: [{ domainId, name, regionId, enter, leave, discover,
+  visitorDays, peakDailyVisitors }] }`; ranges are local days `yyyy-MM-dd` (L7-6, L7-7).
+- `POST batches` → `{ batchId, duplicate, day, accepted, rejected: [{ section, index, code }] }`; windows older than 7 days
+  or in the future → 400 (L7-8).
+- Config adds `WorldAnalytics:BatchRetentionDays` (30), `MaxBatchRows` (20,000), `LateBatchToleranceDays` (7),
+  `MaxRangeDays` (92), `MaxHeatmapCells` (20,000); plugin `world-analytics.movement`, `menu-funnels`,
+  `domain-interactions`, `excluded-game-modes` (`[CREATIVE, SPECTATOR]`), `max-pending-batches` (12) (L7-3, L7-4).
+- Plugin: the time-window logic lives in knk-core `WorldAnalyticsWindow` (with the three counters); no spool (L7-4).
