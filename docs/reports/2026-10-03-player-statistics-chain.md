@@ -36,3 +36,5 @@ Branch in all four repos: `claude/kind-dijkstra-y9d279` (nothing merged to any t
 - Overlap noted: a Codex session ("Sequential backlog fixes", tracker row on `main` 2026-10-03) is changing knk-plugin
   Siege combat, item lore and command completion and knk-web-app form-wizard code, pushing to trunk. Links merge trunk
   at start and end; link 4 builds its combat hooks around their changes.
+- Link 1 started as a **new session** (`create_session`, option 1): `session_015g7iripYBsgLJUPKZivR5s`, source
+  knk-workspace `claude/kind-dijkstra-y9d279`, tag `kng-34-player-statistics-chain`.
