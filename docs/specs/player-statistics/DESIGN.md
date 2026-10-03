@@ -1,7 +1,7 @@
 # Player statistics — working design
 
 **Status:** Finalized 2026-10-03 by chain link 1 — the "Finalized design (link 1)" section below is binding for implementation together with [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md). Developer decisions D1-D13 and "Agreed" paragraphs are the developer's; link-1 defaults are numbered `L1-n` and flagged for review in the progress report. Evidence: [source audit](../../reports/2026-10-03-player-statistics-source-audit.md).
-**Last updated:** 2026-10-03
+**Last updated:** 2026-10-03 (review follow-up D14-D20)
 **Linear:** [KNG-34](https://linear.app/kngpandi/issue/KNG-34/design-player-statistics-provenance-and-world-analytics), [KNG-14](https://linear.app/kngpandi/issue/KNG-14/gameplay-statistics-counters-v2-userstatistics-for-user-statistics), [KNG-23](https://linear.app/kngpandi/issue/KNG-23)
 
 This living note records decisions from the developer conversation. It does not assert that all described fields are already stored or displayed in V3. Precedence: (1) "Developer decisions 2026-10-03", (2) the "Finalized design (link 1)" section, (3) the older discussion sections further down, which are kept as rationale. Where an older section still says "open" or "to be decided", section (2) settles it.
@@ -26,6 +26,22 @@ Answers given by the developer to the open questions, in the order asked. The de
 | D12 | Diagnostic timeline access and deletion | **Only the owner** can see it. Use **dedicated permission nodes** that are not granted to regular staff. On a player's data-deletion request, **delete within the GDPR-mandated timeframe** (GDPR Art. 12(3): without undue delay and at the latest within one month of the request). |
 | D13 | XP provenance (KNG-23) | **Record XP changes in the existing coin/gem ledger** rather than building a separate XP log. Chain-start scan (2026-10-03): knk-web-api `Enums/Currency.cs` already has `Experience = 2` and every known XP write path posts through `ICurrencyService`; link 1/2 verify full coverage and close any gap. |
 | — | AFK mode | Not answered. Chain default: link 1 analyses V1/V2 AFK behaviour; implement automatic inactivity detection (5 minutes, configurable) plus an explicit AFK toggle only if V1 had one, keeping the rule configurable and flagged for review. |
+
+### Review follow-up decisions 2026-10-03 (binding)
+
+Given by the developer on the chain's "decisions to review" after all seven links were done. Implemented the same day on
+`claude/kind-dijkstra-y9d279` (knk-web-api `00409c2`, `fdf9c13`; knk-web-app `089039f`).
+
+| # | Topic | Decision |
+|---|---|---|
+| D14 | GDPR deletion trigger | Deletion happens **only when the player or staff initiate it** — never automatically for inactive players. **Players request on the web app** and confirm through an **email link**; a **5-day grace period** follows the confirmation, during which the player can cancel; only then does the deletion run. **Staff file the same request for a player without the email confirmation** (grace period still applies). §F.14. |
+| D15 | Scope of "delete" | "If a player decides to delete, that should really mean all is deleted": besides the statistics scope, also delete **private-message logs, link codes, permission grants, group memberships and audit rows about the player**. Ledger and Siege match rows stay on the anonymous account (they are other players' history and accounting records). The UUID is cleared, so a returning player starts a fresh account. |
+| D16 | Rebuild after erasure (L6-6) | **Rebuilds skip erased accounts**: an erased account never gets statistics again. |
+| D17 | Ledger backfill (L2-12) | Agreed: past activity in the existing ledger is projected (economy, XP, title history). |
+| D18 | "Everyone" visibility (L1-3) | "Everyone" means **everyone with a player account** (any signed-in viewer); signed-out visitors keep seeing only the always-public fields. Unchanged from L1-3. |
+| D19 | Staff statistics view (L1-20) | Agreed: `knk.admin.statistics.view` sees all of a player's statistics. |
+| D20 | Economy buckets (L1-5/L1-6) | **Include every way of gaining or losing** coins, gems and XP in earned/spent/xp_gained: transfers, staff adjustments, signup grant, merges and premium top-ups too. §F.5. |
+| — | Others | Time zone `Europe/Amsterdam` is the server zone (confirmed); retention defaults §F.15 agreed; Siege leaver payload (L4-2) and AFK salary (L1-2) accepted for now. |
 
 ### Leaderboards (recommendation adopted 2026-10-03)
 
@@ -160,19 +176,19 @@ V1 had an explicit `/afk` toggle plus auto-AFK after 300 s; V2 had nothing (audi
   context overrides are listed in the preview and left untouched. New metrics default to nobody.
 - The same stored values are used by Minecraft reads, web reads and leaderboard eligibility.
 
-### F.5 Economy and XP from the ledger (L1-5, L1-6)
+### F.5 Economy and XP from the ledger (L1-5, L1-6; revised by D20)
 
-Classification by reason code (`Services/Currency/CurrencyReasons.cs`); the sign of a user leg's amount is authoritative.
+**D20 (2026-10-03): every gain counts as earned and every loss as spent**, whatever the reason code — gameplay rewards
+and costs, `/pay` transfers (received = earned, sent = spent), staff grants/takes/sets, the signup grant, account merges
+(`MERGE_CARRYOVER` earned, `MERGE_FORFEIT` spent) and premium top-ups. The sign of the user leg decides.
 
-| Bucket | Reason codes |
-|---|---|
-| **earned** | `SALARY`, `SIEGE_REWARD`, `TITLE_BONUS`, `DISCOVERY_REWARD`, `LOOTBOX_REWARD`, `EVENT_REWARD` |
-| **spent** | `KIT_CLAIM_COST`, `KIT_PURCHASE`, `LOOTBOX_PURCHASE`, `TELEPORT_FEE`, `TRANSFER_FEE` |
-| **excluded** (neither) | `SIGNUP_GRANT` (starting balance), `PLAYER_TRANSFER` (moving money between players), `ADMIN_GRANT`/`ADMIN_TAKE`/`ADMIN_SET` (staff corrections), `MERGE_FORFEIT`/`MERGE_CARRYOVER` (account consolidation), `PREMIUM_TOPUP` (purchase, not gameplay) |
-| **reversal** | `REVERSAL` negates the bucket of the reversed transaction, on the reversal's date |
-
-`xp_gained` = XP legs in the *earned* bucket (net of reversals). Unknown future reason codes fall into *excluded* until
-classified (safe default). Periods are allocated by the transaction's `CreatedAt`.
+- **Reversals** are corrections, not new gains or losses: a `REVERSAL` stays in the bucket of the original transaction it
+  ultimately undoes (a reversed grant lowers *earned*, a reversed spend lowers *spent*, a reversal of a reversal raises it
+  again), on the reversal's date. The projector follows the reversal chain to know its depth.
+- `xp_gained` = every XP gain (staff XP grants included), net of reversed gains. XP losses are no statistic.
+- Because merged accounts are summed when read (L1-16), a merge shows up as the forfeit (spent) of the secondary plus the
+  carryover (earned) of the primary.
+- Periods are allocated by the transaction's `CreatedAt`.
 
 ### F.6 Match results (D1, L1-7, L1-8)
 
@@ -306,19 +322,34 @@ Because `*` and `knk.*` grants match `knk.owner.*` in the API's wildcard resolve
 grant** of the node (the resolver's matched node must equal the node); wildcards never unlock owner data. Every
 timeline read is recorded in the audit log. Staff node (not owner-only): `knk.admin.statistics.view`.
 
-### F.14 GDPR deletion (D12, L1-18 — flagged for review)
+### F.14 GDPR deletion (D12, D14-D16; L1-18 superseded)
 
-- A deletion request (recorded by the owner) gets `DueAt = RequestedAt + 30 days` (GDPR Art. 12(3)).
-- **Deleted:** all KNG-34 data of the player — sessions, daily rows, lifetime totals, visibility settings, statistics
-  profile, title-change history, PvP kill pairs where the player is killer **or** victim, leaderboard snapshot entries and
-  exclusions, diagnostic events with that user id; plus the player's discovery rows (personal, involve no one else).
-- **Pseudonymized:** the `users` row (username → `deleted-<id>`, email, UUID and password hash cleared, inactive,
-  reason "GDPR erasure"), so ledger and match rows remain referentially intact but no longer identify the person.
-- **Kept unchanged:** ledger rows (accounting records; immutable by trigger), Siege match and participant rows (other
-  players' match history), audit-log rows (purged by the existing 180-day retention), anonymous world-analytics aggregates.
-- Execution: the owner executes the request; a daily job auto-executes requests still pending
-  `Privacy:AutoExecuteBeforeDueDays` (default 3) days before their due date (`Privacy:AutoExecuteEnabled`, default true),
-  so the deadline cannot be missed silently. The request row keeps only counts of what was removed.
+**Who starts it (D14):** only the player or staff — nothing is deleted without a request (no removal of inactive players).
+
+| Route | How | Confirmation |
+|---|---|---|
+| Player, web app account page | `POST api/data-deletion/me` → email with a link to `/account/delete-data/confirm?token=…` (valid `Privacy:ConfirmationHours`, 24) → `POST api/data-deletion/confirm` | Email link (proves the mailbox); the page needs an explicit click so mail scanners can't confirm |
+| Staff (`knk.admin.privacy.request`), player profile | `POST api/data-deletion/users/{id}` (optional note, never shown to the player) | None; the player is emailed when the account has an address |
+| Owner (`knk.owner.privacy.manage`), owner privacy page | `POST api/privacy/deletion-requests` | None |
+
+- A confirmed (or staff/owner-filed) request is **scheduled `Privacy:GraceDays` (5) later**. Until then the player
+  (`POST api/data-deletion/me/cancel`) or staff (`…/users/{id}/cancel`) can cancel it. Statuses: AwaitingConfirmation →
+  Pending (scheduled) → Completed, or Cancelled / Expired (link not used in time). Asking again while unconfirmed sends a
+  fresh link (old link stops working; one email per `ResendCooldownSeconds`).
+- An hourly job expires unused links and executes scheduled requests whose grace period is over
+  (`Privacy:AutoExecuteEnabled`; when false, the owner executes by hand). Execution before `ScheduledAt` is refused
+  (`GracePeriod`). Legal deadline `DueAt` = confirmation + `Privacy:DeletionDueDays` (30; GDPR Art. 12(3)).
+- **Deleted** (player and every account merged into them): all KNG-34 data — sessions, daily rows, lifetime totals,
+  visibility settings, statistics profile incl. leaderboard exclusion, title-change history, PvP kill pairs as killer
+  **or** victim, leaderboard snapshot entries, diagnostic events and enhanced targets — plus discoveries and (D15)
+  **private-message logs** sent or received, **link codes**, **permission grants**, **group memberships** and **audit
+  rows about the player** (rows the player wrote as staff about others stay: they are those players' history).
+- **Pseudonymized:** the `users` row (username → `deleted-<id>`; email, UUID, password hash, gender, chat prefix/suffix
+  cleared; inactive; reason "GDPR erasure"). A returning player gets a fresh account.
+- **Kept:** ledger rows (accounting; immutable by trigger) and Siege match rows (other players' history), on the
+  anonymous account; anonymous world-analytics aggregates. **Erased accounts never get statistics again (D16):** the
+  statistics write path drops them, so neither new ledger legs nor a rebuild re-create rows.
+- The request keeps only counts of what was removed; its note is cleared on execution.
 
 ### F.15 Retention defaults (L1-19)
 
@@ -343,8 +374,8 @@ Volumes are to be measured in the alpha (events per player-minute, rows per day)
 | L1-2 | Salary not gated by AFK | Needs an API contract change; outside statistics scope |
 | L1-3 | Anonymous web visitors see only always-public fields; "everyone" = any signed-in viewer | Most privacy-protective reading of "everyone" |
 | L1-4 | Context override beats metric-level value; totals need all contexts public | Predictable; prevents leaks through totals |
-| L1-5 | Economy buckets §F.5 (transfers, admin, signup, merge, premium excluded) | Earned/spent should reflect gameplay |
-| L1-6 | `xp_gained` = earned-bucket XP only | Admin grants would make the board meaningless |
+| L1-5 | ~~Economy buckets §F.5 (transfers, admin, signup, merge, premium excluded)~~ — superseded by D20 | Earned/spent should reflect gameplay |
+| L1-6 | ~~`xp_gained` = earned-bucket XP only~~ — superseded by D20 (every XP gain) | Admin grants would make the board meaningless |
 | L1-7 | Unreported participants count as present; left-and-rejoined counts as a loss; Siege stats dated on match end | Follows the API's existing markers |
 | L1-8 | Siege outcome/kill/death/streak/capture stats projected from match tables; plugin skips them | One source of truth |
 | L1-9 | Damage dealt capped at victim health; `CUSTOM` damage excluded | Avoid overkill inflation and double counting |
@@ -356,7 +387,7 @@ Volumes are to be measured in the alpha (events per player-minute, rows per day)
 | L1-15 | First join from Minecraft-created accounts' `CreatedAt`, else first session | Uses an existing authoritative fact (D6) |
 | L1-16 | Merged identities are summed (possible simultaneous sessions not de-overlapped) | Rare; sessions table allows a later fix |
 | L1-17 | Owner nodes require an exact grant | Wildcards match `knk.owner.*` |
-| L1-18 | GDPR scope §F.14 incl. user pseudonymization and auto-execution 3 days before due | Deadline guarantee; ledger immutable |
+| L1-18 | ~~GDPR scope §F.14 incl. user pseudonymization and auto-execution 3 days before due~~ — superseded by D14-D16 | Deadline guarantee; ledger immutable |
 | L1-19 | Retention defaults §F.15 | To be tuned after alpha measurement |
 | L1-20 | Staff with `knk.admin.statistics.view` see all of a player's statistics (not diagnostics) | Moderation use; diagnostics stay owner-only |
 | L1-21 | `xp_gained` is always public; `title_history` is configurable | XP is already public; history is private by the agreed rule |

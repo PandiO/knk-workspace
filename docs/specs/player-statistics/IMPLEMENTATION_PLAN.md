@@ -1,7 +1,7 @@
 # Player statistics — Implementation Plan
 
-**Status:** Implemented — all links done 2026-10-03 (written by link 1; knk-web-api `45d9925`, knk-plugin `66d9292`, knk-web-app `8c27421` on `claude/kind-dijkstra-y9d279`). Nothing merged; merge order and the live checklist are in the progress report's summary.
-**Last updated:** 2026-10-03 (link 7 status note)
+**Status:** Implemented — all links done 2026-10-03 (written by link 1; knk-web-api `45d9925`, knk-plugin `66d9292`, knk-web-app `8c27421` on `claude/kind-dijkstra-y9d279`), plus the review follow-up D14-D20 (knk-web-api `fdf9c13`, knk-web-app `089039f`). Nothing merged; merge order and the live checklist are in the progress report's summary.
+**Last updated:** 2026-10-03 (review follow-up note)
 **Linear:** [KNG-34](https://linear.app/kngpandi/issue/KNG-34) (with [KNG-14](https://linear.app/kngpandi/issue/KNG-14), [KNG-23](https://linear.app/kngpandi/issue/KNG-23), [KNG-9](https://linear.app/kngpandi/issue/KNG-9), [KNG-21](https://linear.app/kngpandi/issue/KNG-21))
 **Sources:** [DESIGN.md](DESIGN.md) (§F = "Finalized design (link 1)"), [source audit](../../reports/2026-10-03-player-statistics-source-audit.md),
 chain charter [`PLAYER_STATISTICS_CHAIN.md`](../../ai-agents/handoffs/PLAYER_STATISTICS_CHAIN.md), progress report
@@ -260,6 +260,11 @@ afkSeconds }` (case-insensitive username; 404 for unknown or inactive accounts; 
 must not leak).
 
 ### 3.3 Link 6
+
+> **Superseded in part (2026-10-03, D14-D16):** the GDPR deletion request flow and scope changed — player requests with
+> email confirmation and staff filing via `api/data-deletion`, a 5-day grace period, wider erasure scope, erased
+> accounts skipped by projections. DESIGN.md §F.14 and the progress report's "Review follow-up" block are current;
+> the privacy contract below is the link-6 original.
 
 `Controllers/TelemetryController.cs` (`[Route("api/telemetry")]`):
 

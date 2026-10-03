@@ -1,14 +1,15 @@
 # Player statistics chain — progress report
 
 **Status:** done — all seven links finished; nothing merged (2026-10-03)
-**Last updated:** 2026-10-03 (link 7: final summary)
+**Last updated:** 2026-10-03 (review follow-up: D14-D20 implemented by the coordinator session)
 **Charter:** `docs/ai-agents/handoffs/PLAYER_STATISTICS_CHAIN.md` · **Linear:** [KNG-34](https://linear.app/kngpandi/issue/KNG-34)
 
 ## Summary for the developer
 
 **The chain is finished: all seven links are done. Nothing is merged** — every change is on `claude/kind-dijkstra-y9d279`
-in the four repos, waiting for your review, live test and merge. Final heads: knk-web-api `45d9925`, knk-plugin
-`66d9292`, knk-web-app `8c27421`, knk-workspace: this branch (see the last commit). Trunks were unchanged throughout
+in the four repos, waiting for your review, live test and merge. Final heads: knk-web-api `fdf9c13`, knk-plugin
+`66d9292`, knk-web-app `089039f`, knk-workspace: this branch (see the last commit) — including the review follow-up
+(block "Review follow-up" at the end: your decisions D14-D20). Trunks were unchanged throughout
 links 5-7 (knk-web-api `master` `ae0b3ad`, knk-plugin `main` `ee7824c`, knk-web-app `main` `fc66101`).
 
 | Link | Phase | State | Heads | Details |
@@ -44,18 +45,20 @@ links 5-7 (knk-web-api `master` `ae0b3ad`, knk-plugin `main` `ee7824c`, knk-web-
 ### Decisions to review (ranked)
 
 Ranked by how hard they are to undo once live (irreversible/data-shaping first), then by player impact. Each points to
-its link block.
+its link block. **Reviewed by the developer 2026-10-03:** items 1-4, 5, 6, 7, 9 and the follow-up list's first item are
+decided (DESIGN.md D14-D20) and implemented — see "Review follow-up" at the end. The remaining items need only the live
+test.
 
-1. **L1-18 GDPR scope** — deletion pseudonymizes the `users` row and auto-executes 3 days before the 30-day due date
+1. ~~**L1-18 GDPR scope**~~ → **decided D14**: player request + email confirmation or staff filing, 5-day grace, no automatic removal. Was: deletion pseudonymizes the `users` row and auto-executes 3 days before the 30-day due date
    (DESIGN §F.14). Irreversible for the player once executed; ledger and Siege rows are kept.
-2. **L6-2/L6-3 GDPR erasure scope** — executing a request also erases the accounts **merged into** the player and
+2. ~~**L6-2/L6-3 GDPR erasure scope**~~ → **decided D15**: PM logs, link codes, grants, group memberships and audit rows about the player are deleted too. Was: executing a request also erases the accounts **merged into** the player and
    pseudonymizes all of them (username `deleted-<id>`, email/UUID/password/gender cleared, inactive). Private-message
    logs, link codes, permission grants/groups and audit rows are **not** touched (outside §F.14) — see the follow-up
    list below. Irreversible: the web page asks you to type the player id.
-3. **L2-12 title history backfill** — on first start the ledger projector projects the **whole existing ledger**
+3. ~~**L2-12 title history backfill**~~ → **agreed D17**. On first start the ledger projector projects the **whole existing ledger**
    (authoritative, D6): economy totals, `xp_gained` and title history appear for past activity, named with today's
    brackets and genders. Wanted? If not, set the `ledger` cursor before the first run (one SQL row).
-4. **L6-6 rebuild after erasure** — `POST api/statistics/rebuild` for **everyone** re-projects the kept ledger, so the
+4. ~~**L6-6 rebuild after erasure**~~ → **decided D16**: erased accounts are skipped. Was: `POST api/statistics/rebuild` for **everyone** re-projects the kept ledger, so the
    erased (pseudonymized) account gets economy/XP/title rows again. Rebuild per player, or accept it (no name left).
 5. **L4-2 leaver payload** — departed Siege members are now sent in the completion with `leftAt` (additive API field);
    the API keeps the first left marker, so rewards are unchanged; a left call that was lost now leaves the member
@@ -68,7 +71,7 @@ its link block.
 8. **L1-17 owner nodes** — `knk.owner.*` require an exact grant (wildcards never unlock owner data); grant them to
    yourself with `POST api/users/{id}/grants` (§F.13). Applies to diagnostics, data deletion, world analytics and
    leaderboard exclusions.
-9. **L1-5/L1-6 economy buckets** — `/pay` transfers, admin adjustments, signup grant, merges and premium top-ups are
+9. ~~**L1-5/L1-6 economy buckets**~~ → **decided D20**: every gain/loss counts (transfers, staff, signup, merges, premium). Was: `/pay` transfers, admin adjustments, signup grant, merges and premium top-ups are
    neither earned nor spent; `xp_gained` uses earned XP only (§F.5).
 10. **L5-2/L5-3 repeat-victim cap** — applied when kills are ingested (internal metric `pvp_kills.ranked`), so a cap
     change only affects later kills; Siege kills (from the match tables, no victims known) are never capped.
@@ -106,8 +109,11 @@ superseded by this branch and can be closed).
 
 1. **knk-web-api first, migrations before the API starts:** from a fresh build, `dotnet ef database update` applies, in
    order, `20261003023630_AddPlayerStatistics` (10 tables), `20261003040910_AddLeaderboards` (2),
-   `20261003045617_AddDiagnosticTelemetryAndPrivacy` (4), `20261003054307_AddWorldAnalytics` (4). All additive (new
-   tables only); nothing existing is altered. New `appsettings.json` sections: `Statistics`, `Leaderboards`,
+   `20261003045617_AddDiagnosticTelemetryAndPrivacy` (4), `20261003054307_AddWorldAnalytics` (4),
+   `20261003090142_AddDataDeletionRequestFlow` (columns on `privacy_deletion_requests`). All additive; nothing existing
+   is altered. The `Privacy` section has new keys `GraceDays` (5), `ConfirmationHours` (24), `ResendCooldownSeconds`,
+   `FrontendBaseUrl` (empty = `Security:PasswordResetFrontendBaseUrl`, used for the links in the emails); the
+   confirmation emails use the existing `Email` SMTP settings. New `appsettings.json` sections: `Statistics`, `Leaderboards`,
    `DiagnosticTelemetry`, `Privacy`, `WorldAnalytics` (defaults on). Back up the database first anyway — the ledger
    projector (L2-12) and GDPR execution write a lot on first use.
 2. **knk-plugin second** (it calls the new API endpoints; an older API answers 404 and the plugin spools statistics /
@@ -121,7 +127,8 @@ superseded by this branch and can be closed).
    (the lock misses `yaml@2.9.1`) — unrelated to this branch.
 5. **Grants:** give yourself `knk.owner.telemetry.view`, `knk.owner.telemetry.manage`, `knk.owner.privacy.manage`,
    `knk.owner.analytics.view` and `knk.owner.leaderboard.manage` **directly on your user**; staff who should see other
-   players' full statistics need `knk.admin.statistics.view`.
+   players' full statistics need `knk.admin.statistics.view`; staff who may file data deletion for players need
+   `knk.admin.privacy.request`.
 6. Update `docs/FEATURE_REGISTER.md` (Merge column `branch` → `trunk`) and move the `docs/CHANGELOG.md` entry from
    "Unreleased" to the merge date.
 
@@ -167,8 +174,13 @@ Each step names the link block with the full detail. Pre-existing test failures 
 14. Join → `session.join` in `/owner/telemetry` within ~10 s; run the **first vertical slice** (test run + enhanced
     target, a tester joins, opens menus, a refused `/siege join`, plays a match with a reward, one refused API call) →
     ordered events, player timeline with the Siege row and the ledger posting, correlated events in the drawer.
-15. `/owner/privacy` on a **throwaway account**: request → due in 30 days (automatic 3 days earlier) → Review & delete
-    → counts → type the id → Delete now → `deleted-<id>`, statistics gone.
+15. Data deletion on a **throwaway account with an email address** (D14-D16): `/account` → Delete my data → email link
+    (with `Email:Provider` `Log` the link is in the API log) → `/account/delete-data/confirm` → Yes → "deleted on <+5
+    days>"; Cancel on `/account` works; request again and confirm. Staff with `knk.admin.privacy.request`: player
+    profile → Data deletion → File (no email step). `/owner/privacy` shows source/status; "Delete now" stays disabled
+    during the grace period — to test the erasure without waiting, set `Privacy:GraceDays` to 0. After it runs:
+    `deleted-<id>`, statistics, PMs, link codes, grants, groups and audit rows about the player gone; a statistics
+    rebuild gives the erased account nothing back.
 
 **E. World analytics (link 7)**
 16. Walk a few minutes (not AFK) → after ≤ 5 min `/owner/analytics` shows your path (cell sizes 16/64); AFK or spectator
@@ -187,9 +199,9 @@ Each step names the link block with the full detail. Pre-existing test failures 
 
 ### Follow-up list (not done in this chain — for a developer decision)
 
-- **Personal data outside the GDPR scope (§F.14)** (from link 6): private-message logs (`private_message_logs`), link
-  codes, permission grants/group memberships of the erased account, audit-log rows (kept ≤ 180 days), other players'
-  enhanced events naming the user (≤ 14 days), the plugin's local spool/log files.
+- ~~Personal data outside the GDPR scope~~ → PM logs, link codes, grants, group memberships and audit rows about the
+  player are now deleted (D15). Still outside: other players' enhanced diagnostic events naming the user (≤ 14 days
+  retention) and the plugin's local spool/log files.
 - **Friends-only visibility** fails closed until the friends system exists (KNG-35).
 - **AFK and salary** (L1-2): salary still pays AFK players.
 - **Performance at scale** (plan §7) is unmeasured: statistics ingestion p95, leaderboard refresh for 10k players,
@@ -754,3 +766,36 @@ knk-web-app, knk-workspace. Last link: no handoff, no further session.
   a WorldGuard region id reused by two domains resolves to the lowest domain id.
 - **What the next link must wire:** nothing — last link. Leftovers are in the summary's follow-up list.
 - **How the next link was started:** not applicable (charter §6.3: stop after link 7).
+
+## Review follow-up — coordinator session (2026-10-03)
+
+Session `session_01VPBn2FkTWsZwbyyc3Y5RYY` (the chain's coordinator), after the developer reviewed "Decisions to review".
+Decisions recorded as **D14-D20** in DESIGN.md ("Review follow-up decisions"); §F.5 and §F.14 rewritten.
+
+- **knk-web-api** (`claude/kind-dijkstra-y9d279`, trunk `master` `ae0b3ad` merged, nothing new):
+  - `00409c2` — earned/spent/xp_gained count every gain and loss by the leg's sign (D20); a reversal stays in the bucket
+    of the original it undoes (chain depth). Erased accounts are dropped at the single statistics write path
+    (`StatisticsRepository.ApplyAsync`), so plugin batches, both projectors and rebuilds never give them rows (D16).
+  - `fdf9c13` — data deletion request flow (D14) and wider scope (D15): `DataDeletionController` (`api/data-deletion`:
+    `me`, `me/cancel`, `confirm`, `users/{id}`, `users/{id}/cancel`), new staff node `knk.admin.privacy.request`,
+    `IPrivacyEmailService` (Log/SMTP per `Email:Provider`), statuses AwaitingConfirmation/Expired, `Source`,
+    `ScheduledAt`, hourly job (expire links, execute after grace), owner execute refused during grace, migration
+    `20261003090142_AddDataDeletionRequestFlow` (additive), audit action `PrivacyDeletionConfirmed` (34).
+  - Tests: 1,998 passed / 5 failed / 65 skipped (baseline before the follow-up 1,977 / 5 / 65; the same 5 pre-existing
+    failures). New: `DataDeletionControllerTests`, `AddDataDeletionRequestFlowTests`, the rewritten
+    `PrivacyDeletionServiceTests`, classifier and projector cases (reversal chains, erased accounts).
+- **knk-web-app** `089039f`: `MyDataDeletionSection` on `/account`, `ConfirmDataDeletionPage`
+  (`/account/delete-data/confirm`, explicit click), `StaffDataDeletionCard` on `/admin/users/:id`, owner page statuses
+  and grace handling, `dataDeletionClient`. Tests 473 passed / 5 failed (the same 5 pre-existing form-wizard/login
+  failures); `tsc --noEmit` clean; `npm run build` compiles (only pre-existing warnings). `package-lock.json` not
+  committed (trunk `npm ci` issue, L5-14).
+- **knk-plugin:** unchanged (no plugin surface for these decisions).
+- **Flagged (reversible):**
+  - F-1 A player's request needs an email address on the account (409 `EmailRequired`); players without one ask staff.
+  - F-2 Staff can confirm a player's unconfirmed request on their behalf (it is taken over as a staff request).
+  - F-3 Audit rows the erased player wrote *as staff* about others are kept (they are those players' history, and now
+    name only `deleted-<id>`).
+  - F-4 With D20 the XP leaderboard (`xp_gained`) includes staff XP grants and merge carryovers; a merge shows as
+    spent (secondary) plus earned (primary).
+  - F-5 The confirmation link is valid 24 h; asking again sends a fresh link at most once per minute.
+
