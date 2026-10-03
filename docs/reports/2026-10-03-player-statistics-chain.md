@@ -156,5 +156,7 @@ Session `session_01M59wGLFhAji7UwGaZuoAdR` (started by link 1 via `create_sessio
   api/statistics/users/{id}/visibility` with `X-Acting-User-Id` (409 body `{ error, message, current }`); never send
   `pvp_kills`/`deaths`/`highest_killstreak` in context `siege` (rejected); durations must lie inside a known session of
   the same user, start ≥ session start, ≤ 86,400 s, ≤ 7 days old; plus the API menu seed `MenuTemplateSeed.Statistics.cs`.
-- **How link 3 was started:** see the next line (appended after the attempt).
+- **How link 3 was started:** new session (charter §6 option 1, `create_session`): `session_013GjXWw1R62Nzv6Tjoodejy`,
+  source knk-workspace `claude/kind-dijkstra-y9d279`, model `claude-opus-5-5`, tag `kng-34-player-statistics-chain`;
+  `get_session` showed it pending in the working bucket right after creation.
 
