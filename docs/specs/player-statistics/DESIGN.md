@@ -1,10 +1,10 @@
 # Player statistics — working design
 
-**Status:** Decisions recorded; implementation chain started 2026-10-03 (see `docs/ai-agents/handoffs/PLAYER_STATISTICS_CHAIN.md`). Link 1 completes the source-grounded design and writes `IMPLEMENTATION_PLAN.md`.
+**Status:** Finalized 2026-10-03 by chain link 1 — the "Finalized design (link 1)" section below is binding for implementation together with [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md). Developer decisions D1-D13 and "Agreed" paragraphs are the developer's; link-1 defaults are numbered `L1-n` and flagged for review in the progress report. Evidence: [source audit](../../reports/2026-10-03-player-statistics-source-audit.md).
 **Last updated:** 2026-10-03
 **Linear:** [KNG-34](https://linear.app/kngpandi/issue/KNG-34/design-player-statistics-provenance-and-world-analytics), [KNG-14](https://linear.app/kngpandi/issue/KNG-14/gameplay-statistics-counters-v2-userstatistics-for-user-statistics), [KNG-23](https://linear.app/kngpandi/issue/KNG-23)
 
-This living note records decisions from the developer conversation. It does not assert that all described fields are already stored or displayed in V3. Where a later section still says "open" for something the 2026-10-03 decisions below settle, the decisions below win.
+This living note records decisions from the developer conversation. It does not assert that all described fields are already stored or displayed in V3. Precedence: (1) "Developer decisions 2026-10-03", (2) the "Finalized design (link 1)" section, (3) the older discussion sections further down, which are kept as rationale. Where an older section still says "open" or "to be decided", section (2) settles it.
 
 ## Developer decisions 2026-10-03 (binding)
 
@@ -36,6 +36,333 @@ Answers given by the developer to the open questions, in the order asked. The de
 - **Refresh:** precomputed snapshots on a bounded interval (default 5 minutes, configurable), never computed from raw history on a menu open. Top 10 shown plus the viewer's own position.
 - **Abuse guardrails (reversible defaults, flagged):** repeat PvP kills of the same victim count toward leaderboards at most 3 times per victim per day (still counted in the player's own statistics); the owner can exclude a player from leaderboards.
 
+## Finalized design (link 1, 2026-10-03)
+
+Source-grounded completion of the decisions above. Every item traces to the [source audit](../../reports/2026-10-03-player-statistics-source-audit.md)
+(cited there by file:line). Data shapes, routes, class names and config keys live in [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md);
+this section fixes **what** is recorded and shown. Link-1 defaults are marked **L1-n** (the full list with reasons is §F.16).
+
+### F.0 Principles
+
+1. **One source of truth per fact.** Authoritative stores stay authoritative: the currency ledger (coins, gems, XP; D13),
+   Siege match tables (match outcomes, in-match kills/deaths/streak/captures), discoveries. KNG-34 adds **read models**
+   (daily rows, lifetime totals, title changes) that are *projected* from those stores by idempotent background projectors
+   with a rebuild path, never counted a second time by the plugin.
+2. **New facts** (sessions, AFK, combat outside the match tables, damage, arrows, headshots, gate damage, distance, falls)
+   are recorded by the plugin, buffered in memory, flushed in batches off the main thread, spooled on failure and ingested
+   idempotently (batch id).
+3. **Calendar views derive from daily rows**; lifetime totals are kept alongside for cheap reads and leaderboards.
+4. **Visibility is enforced in the API** for every read (web, plugin, leaderboard). Friends-only fails closed until KNG-35.
+5. Every hook has a kill switch whose `false` reproduces today's behaviour.
+
+### F.1 Metric catalogue
+
+Metric keys are stable identifiers (API catalogue `StatisticsCatalog`, plugin `StatisticsMetric`). **Context** is the
+game context at the moment the fact happened: `open_world` (default), `siege`; future `arena`, `dungeon`,
+`siege_survival` are added as new context keys without schema change. "Contextual" metrics are stored and viewable per
+context plus a total across contexts; non-contextual metrics are stored with an empty context.
+
+Aggregation: **sum** (counters, durations, distances) or **max** (records). Periods (§F.10): day, week, month,
+lifetime for every metric; for max metrics a period shows the highest value reached within that period.
+
+| Metric key(s) | Player-facing name | Definition | Source | Ctx | Visibility | Leaderboard |
+|---|---|---|---|---|---|---|
+| `first_joined` (derived) | First joined the server | Earliest Minecraft join across the player's merged identities (§F.3) | profile + `users.CreatedAt` | — | always public | no |
+| `active_playtime` | Active playtime | Online seconds not classified AFK (§F.2) | plugin sessions | — | always public | **yes** |
+| `afk_time` | AFK time | Online seconds classified AFK | plugin sessions | — | always public | no |
+| `logins` | Logins | Successful joins (`UserDataLoadedEvent` with a user id), reconnects included (D4) | plugin sessions | — | `logins` | no (farmable) |
+| `pvp_kills` | Player kills | Kills of another player (the victim's killer is the player) | plugin; **siege: match tables** | yes | `pvp_kills` | **yes** (per context + total; repeat-victim cap §F.11) |
+| `pve_kills` | Creature kills | Kills of non-player living entities, excluding armour stands and the spawn reasons in §F.7 | plugin | yes | `pve_kills` | **yes** (per context + total) |
+| `deaths` | Deaths | All deaths of the player | plugin; **siege: match tables** | stored per ctx, **shown as total only** | `deaths` | no |
+| `deaths_by_cause.player` / `.mob` / `.environment` | — (internal) | Cause classification of every death, all contexts (§F.7) | plugin | yes | internal (never returned to players) | no |
+| `damage_dealt.player` / `.mob` | Damage dealt to players / to creatures | Effective damage dealt, capped at the victim's remaining health+absorption (L1-9) | plugin | yes | `damage_dealt` | no |
+| `damage_received.player` / `.mob` | Damage received from players / from creatures | Final damage received from an entity (player or projectile shooter / mob) | plugin | yes | `damage_received` | no |
+| `gate_damage` | Gate-door damage | Effective gate HP lost credited to the player, incl. attributed fire (§F.8) | plugin | yes | `gate_damage` | **yes** (total) |
+| `arrows_fired` | Arrows fired | Arrows shot by bow/crossbow (`EntityShootBowEvent`, arrow projectiles; tridents excluded) | plugin | yes | `arrows_fired` | no |
+| `headshots` | Headshots | Projectile hits on a player satisfying `SiegeCombatRules.isHeadshot` where the context applies a headshot multiplier (today: Siege lobbies with multiplier > 1) | plugin | yes | `headshots` | no |
+| `highest_killstreak` (max) | Highest killstreak | Most PvP kills without dying (§F.7) | plugin (open world); **siege: match tables** | yes | `highest_killstreak` | **yes** (per context + overall max) |
+| `wins` / `losses` / `draws` | Wins / losses / draws | Match results per minigame (§F.6) | **match tables** | yes | `wins` / `losses` / `draws` | `wins` **yes** (per minigame) |
+| `objectives_captured` | Objectives captured | Objective captures credited to the player | **match tables** (siege) | yes | `objectives_captured` | **yes** (per context) |
+| `distance.foot` / `.flying` / `.vehicle` | Distance on foot / flying / in a vehicle | Horizontal+vertical Euclidean distance of eligible movement segments (§F.9); swimming counts as foot | plugin | — | `distance.foot` / `distance.flying` / `distance.vehicle` | **yes** (per mode) |
+| `distance.swim` | — (internal) | Subset of foot distance spent swimming, kept for later reclassification | plugin | — | internal | no |
+| `highest_fall` (max) | Highest survived fall | Fall distance (blocks, 1 decimal) of a fall that dealt damage and that the player survived (D3) | plugin | — | `highest_fall` | no |
+| `xp_gained` | XP gained | Positive XP from earning reason codes, net of their reversals (§F.5) | **ledger projection** | — | always public (XP is public) — L1-21 | **yes** |
+| `coins_earned` / `coins_spent` / `gems_earned` / `gems_spent` | Economy: earned / spent | Ledger legs classified per §F.5 | **ledger projection** | — | one setting: `economy` | no (balances stay on `/baltop`) |
+| `discoveries` (derived) | Discoveries | Count of `user_domain_discoveries` (with Town/District/Structure breakdown) | discoveries table | — | `discoveries.counts` | **yes** |
+| discovery list (derived) | Discovered places | Named discoveries with timestamps | discoveries table | — | `discoveries.list` | no |
+| title history (derived) | Title history | Chronological promotions/demotions with from/to title and time; no reason shown | **projected from XP ledger legs** (D9) | — | `title_history` | no |
+
+**Visibility setting keys** (the values players choose; default **nobody**): `logins`, `pvp_kills`, `pve_kills`,
+`deaths`, `damage_dealt`, `damage_received`, `gate_damage`, `arrows_fired`, `headshots`, `highest_killstreak`, `wins`,
+`losses`, `draws`, `objectives_captured`, `distance.foot`, `distance.flying`, `distance.vehicle`, `highest_fall`,
+`economy`, `discoveries.counts`, `discoveries.list`, `title_history`. **Contextual settings** (per-context overrides
+allowed, D8): `pvp_kills`, `pve_kills`, `damage_dealt`, `damage_received`, `gate_damage`, `arrows_fired`, `headshots`,
+`highest_killstreak`, `wins`, `losses`, `draws`, `objectives_captured`.
+
+**Menu groups** (for the group action): *Activity* (`logins`), *Combat* (`pvp_kills`, `pve_kills`, `deaths`,
+`damage_dealt`, `damage_received`, `arrows_fired`, `headshots`, `highest_killstreak`), *Minigames* (`wins`, `losses`,
+`draws`, `objectives_captured`, `gate_damage`), *Exploration* (`distance.*`, `highest_fall`, `discoveries.counts`,
+`discoveries.list`), *Progression* (`title_history`, `economy`).
+
+**Parked** (not recorded): V1 blocks broken, fish caught, bandit kills (dead or broken in V1, audit §3).
+
+### F.2 AFK rule (L1-1)
+
+V1 had an explicit `/afk` toggle plus auto-AFK after 300 s; V2 had nothing (audit §4). V3:
+
+- **Automatic:** a player becomes AFK after `statistics.afk.idle-seconds` (default **300**) without an activity signal.
+- **Explicit:** `/afk` toggles AFK immediately (kill switch `statistics.afk.command-enabled`).
+- **Activity signals** (reset the idle timer and end AFK, also manual AFK): a change of look direction (yaw or pitch ≥ 1°),
+  horizontal movement **while not in a vehicle and not in water/bubble columns**, chat, a command, block break/place,
+  interaction with a block or entity, an inventory click, attacking, toggling sneak/sprint.
+- **Not activity** (anti-AFK-pool): movement while in a vehicle, in water, pushed by pistons or flowing water, taking
+  damage (unlike V1), teleports.
+- **Retroactive classification:** the idle window that leads to AFK is AFK time. Seconds since the last activity are held
+  as *pending* until classified — activity within the threshold turns them into active time, reaching the threshold turns
+  them into AFK time. On quit, pending time counts as active (the player was not yet AFK). Manual `/afk` classifies
+  from the moment of the command.
+- **Effects:** a private message on entering/leaving AFK and a tab-list marker (`statistics.afk.tab-list-marker`, text
+  `statistics.afk.marker-text`, default `&7[AFK]`, appended to the player-list name and restored afterwards). **Not**
+  carried over from V1: Siege removal, Zz armour stands, shopkeeper upsell, kicks.
+- **Statistics while AFK:** distance is not counted; combat and other facts still count (they are real events).
+- **Salary is unchanged (L1-2).** The API pays "hours since last payout", so an AFK rule for salary needs an API contract
+  change; recorded as a follow-up for the developer, not built in this chain.
+- Disconnect/crash: the plugin flushes accrued time every flush interval (default 60 s); a crash loses at most one
+  interval. The API closes sessions with no heartbeat for `Statistics:SessionTimeoutMinutes` (default 5) at their last
+  heartbeat (end reason `Timeout`); server stop ends sessions with reason `ServerStop`.
+
+### F.3 Sessions, logins, first join (L1-15)
+
+- A **session** starts at `UserDataLoadedEvent` with a known user id and ends at quit/server stop; reconnects start a new
+  session and count as a login (D4). Joins whose user id is unknown (API down) are tracked under the UUID and resolved
+  later, as discovery does.
+- Durations are sent as `[from, to)` intervals classified active/AFK; the API splits them across day boundaries with the
+  period function (§F.10), so midnight-spanning sessions are allocated correctly.
+- **First joined** = the earliest of: `users.CreatedAt` for accounts with `AccountCreatedVia = MinecraftServer` (the
+  account is auto-created on the first Minecraft join — an existing authoritative fact, D6), and the first recorded
+  session; computed across the player's merged identities. Web-first accounts get a first-join value from their first
+  session after instrumentation (their link time was never stored — not reconstructed). Never joined → no value.
+
+### F.4 Visibility (L1-3, L1-4)
+
+- Values: **nobody** (default, also when no row exists), **friends** (fails closed — treated as nobody until KNG-35
+  supplies relationships), **everyone**.
+- **Viewer classes:** the player themselves and staff holding `knk.admin.statistics.view` see everything they can read
+  today (staff moderation view; L1-20); a **signed-in viewer** (web JWT, or the plugin acting for an online player via
+  `X-Acting-User-Id`) sees always-public fields plus every metric whose effective visibility is *everyone*; an
+  **anonymous** web visitor sees only the always-public fields (L1-3).
+- **Per-context precedence (D8):** a context-level row, if present, decides that context; otherwise the metric-level row
+  decides; otherwise nobody. A **total across contexts** is visible only when the metric-level value and every
+  context-level override are *everyone* (otherwise a hidden context would leak through the total).
+- **Group action:** a bulk update of the currently listed settings in a group to one value, previewed as
+  `metric: current → proposed`, confirmed, applied as **one atomic update** with optimistic concurrency (each change
+  carries the expected current value; any mismatch rejects the whole update). Metric-level rows only; existing
+  context overrides are listed in the preview and left untouched. New metrics default to nobody.
+- The same stored values are used by Minecraft reads, web reads and leaderboard eligibility.
+
+### F.5 Economy and XP from the ledger (L1-5, L1-6)
+
+Classification by reason code (`Services/Currency/CurrencyReasons.cs`); the sign of a user leg's amount is authoritative.
+
+| Bucket | Reason codes |
+|---|---|
+| **earned** | `SALARY`, `SIEGE_REWARD`, `TITLE_BONUS`, `DISCOVERY_REWARD`, `LOOTBOX_REWARD`, `EVENT_REWARD` |
+| **spent** | `KIT_CLAIM_COST`, `KIT_PURCHASE`, `LOOTBOX_PURCHASE`, `TELEPORT_FEE`, `TRANSFER_FEE` |
+| **excluded** (neither) | `SIGNUP_GRANT` (starting balance), `PLAYER_TRANSFER` (moving money between players), `ADMIN_GRANT`/`ADMIN_TAKE`/`ADMIN_SET` (staff corrections), `MERGE_FORFEIT`/`MERGE_CARRYOVER` (account consolidation), `PREMIUM_TOPUP` (purchase, not gameplay) |
+| **reversal** | `REVERSAL` negates the bucket of the reversed transaction, on the reversal's date |
+
+`xp_gained` = XP legs in the *earned* bucket (net of reversals). Unknown future reason codes fall into *excluded* until
+classified (safe default). Periods are allocated by the transaction's `CreatedAt`.
+
+### F.6 Match results (D1, L1-7, L1-8)
+
+From `siege_matches` / `siege_match_participants` / `siege_teams` (Siege is the only minigame today; the projector is
+written per minigame so Arena/Dungeons add a projector, not columns):
+
+- **Completed, `WinningAllianceGroup` set:** participant present at the end (`LeftAt` null or `LeftAt == EndedAt`) whose
+  team's `AllianceGroup` equals the winner → **win**, otherwise → **loss**.
+- **Completed, `WinningAllianceGroup` null:** present participants → **draw**.
+- **Left early** (`LeftAt < EndedAt`) → **loss** (D1), whatever the outcome.
+- **Aborted:** no win, loss or draw (D1 chain default); in-match kills/deaths/captures of aborted matches are still
+  counted (they happened).
+- Team row deleted (`SiegeTeamId` null): no result for that participant (logged).
+- A player who left and rejoined keeps the left marker (API behaviour) → counted as a loss; flagged.
+- In-match `Kills` → `pvp_kills@siege`, `Deaths` → `deaths@siege`, `HighestKillStreak` → `highest_killstreak@siege`
+  (max), `Captures` → `objectives_captured@siege`. All projected onto the **day the match ended**.
+- The plugin does **not** send `pvp_kills`/`deaths`/`highest_killstreak` for a kill/death where the victim is a member of a
+  running Siege match (the roster counts them); the API rejects plugin entries for these projection-owned
+  (metric, context) pairs as a second guard.
+- **Leaver gap fix (link 4):** the plugin reports departed members' kills/deaths/streak/captures in the completion
+  payload so their stats are not lost; the API keeps their `LeftAt`, so rewards are unchanged (present-at-end only).
+
+### F.7 Combat attribution (D2, L1-9 … L1-11)
+
+- **Kill credit:** `Player#getKiller()` for player victims and `LivingEntity#getKiller()` for creatures (Bukkit's
+  last-player-damager rule). Self-kills give no kill.
+- **Death cause:** killer present → `player`; else last damage by an entity (mob or a mob's projectile) → `mob`; else
+  `environment` (fall, lava, drowning, void, fire, …).
+- **PvE exclusions** (`statistics.combat.pve-excluded-spawn-reasons`, default `SPAWNER`, `SPAWNER_EGG`, `BREEDING`,
+  `EGG`, `DISPENSE_EGG`): farmed creatures are not counted (L1-10).
+- **Damage:** observed at MONITOR with `ignoreCancelled`; dealt damage uses `getFinalDamage()` capped at the victim's
+  health+absorption before the hit; synthetic `CUSTOM` damage events (Chaos enchant procs) are **not** counted by default
+  (`statistics.combat.count-custom-damage: false`) to avoid double counting (L1-9). Precise values are stored; only the
+  displayed total is rounded.
+- **Killstreak mechanic (D2):** open world — consecutive PvP kills without dying, reset on any death and on quit (L1-11),
+  recorded as the running max; Siege — the existing per-match roster streak, projected from the match tables.
+  Streak announcements are unchanged (Siege) / not added (open world).
+
+### F.8 Gate-door damage (L1-12)
+
+- Counted value = **effective HP lost** (`old - max(0, old - amount)`), capped by remaining HP; never raw attack strength.
+- **Direct damage:** credited to the attacking player (a projectile's shooter; a `TNTPrimed`'s source player for
+  explosions; otherwise unattributed).
+- **Fire:** each burning block records its igniter (player UUID + user id at ignition); a fire tick's effective loss is
+  split over the burning blocks and credited per igniter; unattributed blocks' share is credited to nobody. Re-igniting a
+  burning block hands it to the newest igniter; an igniter who logged off is still credited.
+- Context: `siege` when the gate is locked down by a running match, else `open_world`; non-Siege gates count too.
+- Gate HP outcomes are identical to today (the hook only reads the computed loss).
+- Not in scope: gates destroyed count, repair/regeneration attribution.
+
+### F.9 Distance and falls (L1-13)
+
+- A segment is the movement of one `PlayerMoveEvent` (same world, not a teleport, length ≤
+  `statistics.movement.max-segment-blocks`, default 10). Mode at the time of movement: in a vehicle (boat, minecart,
+  mount) → `vehicle`; gliding with elytra or flying → `flying`; otherwise `foot` (swimming also adds to internal
+  `distance.swim`). Spectator/creative and AFK players are excluded.
+- **Highest fall:** fall damage observed at MONITOR; recorded when health after the damage stays above 0 (survived, D3);
+  value = fall distance in blocks rounded to one decimal.
+
+### F.10 Periods and rounding (D5, L1-14)
+
+- One function computes period boundaries from a UTC instant and a time zone: day; week starting **Monday**; calendar
+  month. Default zone `Statistics:TimeZone = "Europe/Amsterdam"` (V1's zone; the server's zone per D5); the function takes
+  an optional player time zone later.
+- Durations crossing a boundary are split proportionally to the boundary; events are allocated by their occurrence time.
+- Late events are accepted up to `Statistics:LateEventToleranceDays` (default 7) old; older entries are rejected (counted
+  in the response) — spool replays stay within this window in normal operation.
+- Display rounding (API presentation contract): damage and gate damage → whole points, half away from zero, applied to the
+  final total only; distance → whole blocks (floor); fall → one decimal; durations → whole seconds (formatted h/m in UIs).
+
+### F.11 Leaderboards (D7 details)
+
+- Boards: `active_playtime`, `xp_gained`, `pvp_kills` (total, per context), `pve_kills` (total, per context),
+  `wins@<minigame>`, `objectives_captured@<context>`, `gate_damage`, `distance.foot`, `distance.flying`,
+  `distance.vehicle`, `discoveries`, `highest_killstreak` (overall, per context). Periods: weekly, monthly, lifetime.
+- **Eligibility:** always-public metrics always rank; configurable metrics rank only when effectively *everyone* (§F.4,
+  per-context for per-context boards; the total-board rule for totals). Owner exclusions and inactive (merged/deleted)
+  accounts never rank; merged secondary identities count toward their primary.
+- **Repeat-victim cap:** `pvp_kills` boards count at most **3 kills per victim per killer per day**; personal statistics
+  count all kills.
+- **Ties:** competition ranking (1, 1, 3); among ties, earlier `reachedAt` first.
+- **Refresh:** snapshots every `Leaderboards:RefreshSeconds` (default 300); top 10 shown plus the viewer's own position.
+
+### F.12 Diagnostic event contract (link 6)
+
+Envelope (versioned, one JSON object per event):
+
+| Field | Rule |
+|---|---|
+| `eventId` | UUID generated at the source; the dedupe key |
+| `name`, `schemaVersion` | e.g. `siege.match_join`, `1`; name = `<family>.<event>`, lower snake case |
+| `occurredAt` | UTC, millisecond precision |
+| `serverName`, `serverSeq` | Source instance + monotonically increasing per-instance sequence (ordering within a source) |
+| `source` | `plugin` or `api` |
+| `pluginVersion` / `apiVersion` | release identifiers |
+| `userId`, `sessionKey`, `testRunId`, `matchId`, `correlationId` | optional links; `correlationId` joins a plugin action to its API calls (`X-Correlation-Id` header) |
+| `feature`, `action`, `outcome`, `reasonCode` | outcome ∈ `succeeded`, `denied`, `failed`, `info`; `reasonCode` is a stable code, never free text |
+| `objectType`, `objectId` | the object acted on (e.g. `siege_lobby`, `12`) |
+| `payload` | **allowlisted** keys per event name; scalar values only, ≤ 16 keys, strings ≤ 128 chars |
+| `level` | `baseline` or `enhanced` |
+
+**Never stored:** chat or private-message text, command arguments, IPs, tokens/keys, raw HTTP bodies, inventories,
+free-form exception messages (only exception type + stable code).
+
+**Baseline families (all players, low frequency):** `session.join`, `session.leave`, `session.afk_changed`;
+`menu.opened`, `menu.action` (action type id + outcome); `command.result` (command label + outcome, no arguments);
+`siege.lobby_join_attempt`, `siege.vote_cast`, `siege.team_assignment`, `siege.match_join`, `siege.match_leave`,
+`siege.match_phase`, `siege.objective_captured`, `siege.gate_destroyed`; `discovery.granted`; `currency.posting`
+(API side: ledger `PublicId`, reason code — no amounts duplicated); `api.call_failed` (plugin: route template, status,
+exception type); `telemetry.dropped` (counts of dropped events).
+**Enhanced families (test runs / named cohorts only):** `movement.sample` (position every 5 s), `menu.click` (slot,
+item key), `combat.hit` (attacker/victim ids, cause, rounded damage), `gate.hit`.
+Ingestion is bounded: the plugin buffers ≤ 5,000 events and drops oldest with a `telemetry.dropped` summary; the API
+writes through a bounded queue and drops with a metric when full. Telemetry is not spooled (diagnostics must never
+back up gameplay; L1-23).
+
+### F.13 Owner-only access (D12, L1-17)
+
+Dedicated nodes under the `knk.owner.` prefix, **not granted by any seed or migration** (the developer grants them to
+themselves with the existing grant endpoint):
+
+| Node | Allows |
+|---|---|
+| `knk.owner.telemetry.view` | Diagnostic timeline search and event details |
+| `knk.owner.telemetry.manage` | Test runs, enhanced-mode targets |
+| `knk.owner.privacy.manage` | GDPR deletion requests and execution |
+| `knk.owner.analytics.view` | World analytics (heatmaps, menu funnels, domain interactions) |
+| `knk.owner.leaderboard.manage` | Leaderboard exclusions |
+
+Because `*` and `knk.*` grants match `knk.owner.*` in the API's wildcard resolver, owner endpoints require an **exact
+grant** of the node (the resolver's matched node must equal the node); wildcards never unlock owner data. Every
+timeline read is recorded in the audit log. Staff node (not owner-only): `knk.admin.statistics.view`.
+
+### F.14 GDPR deletion (D12, L1-18 — flagged for review)
+
+- A deletion request (recorded by the owner) gets `DueAt = RequestedAt + 30 days` (GDPR Art. 12(3)).
+- **Deleted:** all KNG-34 data of the player — sessions, daily rows, lifetime totals, visibility settings, statistics
+  profile, title-change history, PvP kill pairs where the player is killer **or** victim, leaderboard snapshot entries and
+  exclusions, diagnostic events with that user id; plus the player's discovery rows (personal, involve no one else).
+- **Pseudonymized:** the `users` row (username → `deleted-<id>`, email, UUID and password hash cleared, inactive,
+  reason "GDPR erasure"), so ledger and match rows remain referentially intact but no longer identify the person.
+- **Kept unchanged:** ledger rows (accounting records; immutable by trigger), Siege match and participant rows (other
+  players' match history), audit-log rows (purged by the existing 180-day retention), anonymous world-analytics aggregates.
+- Execution: the owner executes the request; a daily job auto-executes requests still pending
+  `Privacy:AutoExecuteBeforeDueDays` (default 3) days before their due date (`Privacy:AutoExecuteEnabled`, default true),
+  so the deadline cannot be missed silently. The request row keeps only counts of what was removed.
+
+### F.15 Retention defaults (L1-19)
+
+| Data | Default | Config |
+|---|---|---|
+| Lifetime totals, title history, statistics profile | Kept until GDPR deletion | — |
+| Daily statistic rows | 730 days (lifetime totals remain) | `Statistics:DailyRetentionDays` |
+| Sessions | 365 days | `Statistics:SessionRetentionDays` |
+| Ingestion batch ids | 30 days | `Statistics:BatchRetentionDays` |
+| PvP kill pairs (leaderboard cap) | 62 days | `Statistics:KillPairRetentionDays` |
+| Leaderboard snapshots | current + 400 days of period-final snapshots | `Leaderboards:SnapshotRetentionDays` |
+| Diagnostic events — baseline / enhanced | 90 / 14 days | `DiagnosticTelemetry:BaselineRetentionDays` / `EnhancedRetentionDays` |
+| World analytics aggregates (anonymous) | 180 days | `WorldAnalytics:RetentionDays` |
+
+Volumes are to be measured in the alpha (events per player-minute, rows per day) and retention adjusted then.
+
+### F.16 Link-1 decisions flagged for review
+
+| # | Decision (reversible default) | Why |
+|---|---|---|
+| L1-1 | AFK = `/afk` toggle + auto after 300 s; signals/anti-pool rules §F.2; idle window retroactively AFK; tab marker; no Siege removal | V1 had both; V1's signals were noisy; retroactive keeps active playtime honest for leaderboards |
+| L1-2 | Salary not gated by AFK | Needs an API contract change; outside statistics scope |
+| L1-3 | Anonymous web visitors see only always-public fields; "everyone" = any signed-in viewer | Most privacy-protective reading of "everyone" |
+| L1-4 | Context override beats metric-level value; totals need all contexts public | Predictable; prevents leaks through totals |
+| L1-5 | Economy buckets §F.5 (transfers, admin, signup, merge, premium excluded) | Earned/spent should reflect gameplay |
+| L1-6 | `xp_gained` = earned-bucket XP only | Admin grants would make the board meaningless |
+| L1-7 | Unreported participants count as present; left-and-rejoined counts as a loss; Siege stats dated on match end | Follows the API's existing markers |
+| L1-8 | Siege outcome/kill/death/streak/capture stats projected from match tables; plugin skips them | One source of truth |
+| L1-9 | Damage dealt capped at victim health; `CUSTOM` damage excluded | Avoid overkill inflation and double counting |
+| L1-10 | PvE kills exclude spawner/egg/breeding creatures | Anti-farming |
+| L1-11 | Open-world streak resets on death and quit | Prevents logout-protected streaks |
+| L1-12 | Fire: newest igniter wins; offline igniter still credited; TNT credited to its source | Deterministic, no double counting |
+| L1-13 | Movement segment ≤ 10 blocks; AFK/creative/spectator excluded | Rejects teleports/corrections and idle pools |
+| L1-14 | Time zone `Europe/Amsterdam` | V1's zone; server zone per D5 |
+| L1-15 | First join from Minecraft-created accounts' `CreatedAt`, else first session | Uses an existing authoritative fact (D6) |
+| L1-16 | Merged identities are summed (possible simultaneous sessions not de-overlapped) | Rare; sessions table allows a later fix |
+| L1-17 | Owner nodes require an exact grant | Wildcards match `knk.owner.*` |
+| L1-18 | GDPR scope §F.14 incl. user pseudonymization and auto-execution 3 days before due | Deadline guarantee; ledger immutable |
+| L1-19 | Retention defaults §F.15 | To be tuned after alpha measurement |
+| L1-20 | Staff with `knk.admin.statistics.view` see all of a player's statistics (not diagnostics) | Moderation use; diagnostics stay owner-only |
+| L1-21 | `xp_gained` is always public; `title_history` is configurable | XP is already public; history is private by the agreed rule |
+| L1-22 | Siege projection moved from link 4 to link 2 (API-only work) | Charter §0 re-cut |
+| L1-23 | Telemetry is buffered and dropped (with counts), never spooled | Diagnostics must not back up gameplay |
+
 ## Agreed player-facing direction
 
 1. Design the statistics players can view first. Reuse their underlying data for later debugging, testing, balancing and world analytics where appropriate; staff access and retention may differ from player presentation.
@@ -55,6 +382,8 @@ Answers given by the developer to the open questions, in the order asked. The de
 **Agreed:** every configurable player-facing statistic has its own visibility value: nobody (default), friends or everyone. The in-game InventoryMenu also offers a group-level convenience action to set all currently listed metrics in that group to any of the three values: nobody, friends or everyone. Treat this as a **bulk update to the currently listed individual settings**, not a permanent override that silently changes future metrics. A player can change any individual setting afterward. Newly introduced metrics stay private by default until explicitly changed. **Mandatory group-change confirmation:** before applying a group action, show the exact affected counters with each current visibility → proposed visibility, then require the player to confirm. Apply the confirmed changes as one atomic update so a partial failure cannot leave an unexpected mixed state. Unchanged counters need not be written, but the preview should make the full scope understandable. Always-public identity/balance/playtime fields are outside these group actions; friends-only stays closed until KNG-35 supplies relationships. The backend stores and enforces the effective per-metric values consistently for Minecraft and web reads.
 
 ## AFK feature dependency
+
+**Resolved by link 1:** see §F.2 (V1/V2 analysis in the source audit §4).
 
 V1 had a dedicated AFK mode that the developer wants to reimplement. Its V1/V2 behavior has **not yet been analyzed** and there is no separate AFK feature plan. Before implementing the classification or counters, inspect the legacy code and decide how explicit AFK mode, automatic inactivity detection and manual return to activity interact. The five-minute rule above is a temporary statistics-design default and may change to follow that feature.
 
@@ -98,6 +427,8 @@ The web app already has a **Discoveries** panel on the player moderation profile
 
 ## Legacy player-facing candidate audit — still to decide
 
+**Resolved by link 1:** field-level audit in the [source audit](../../reports/2026-10-03-player-statistics-source-audit.md) §2-§3; the resulting catalogue is §F.1.
+
 The current conversation does **not** exhaust the V1/V2 field inventory. V2 `UserStatistics` included logins; minigame/Siege wins and losses; objectives captured; arrows fired and headshots; highest killstreak; highest fall; and kill/death splits alongside the combat, gate, distance and economy counters already discussed. V1 additionally had today/lifetime block-breaking and fish-caught counters that V2 dropped. Review each candidate for player value, current V3 source availability, definition, visibility and periodicity; legacy presence does not imply automatic V3 implementation. Reconcile Siege match results rather than duplicating its counters, and determine whether a highest-ever record belongs in daily/weekly/monthly views. V1/V2 inventory remains provisional until source-level field and call-site audit is complete.
 
 ## Diagnostic and balance telemetry — proposed design
@@ -111,6 +442,8 @@ The current conversation does **not** exhaust the V1/V2 field inventory. V2 `Use
 3. **Aggregates for balancing:** derive per-scenario, team, mode, period and cohort measures from reliable match/domain facts: win rate, duration, participation, objective/gate activity, damage and reward distributions. Define denominators, aborted matches, eligibility and version changes so comparisons are interpretable. Use movement samples separately if heatmaps become a priority.
 
 ### Proposed event contract
+
+**Finalized:** §F.12 (envelope and families) and §F.13 (owner-only access).
 
 A versioned event name and schema; event timestamp in UTC plus stable server ordering/sequence where needed; canonical player ID, session ID, optional test-run ID, match ID and operation/correlation ID; plugin/API release version; feature/context and object IDs; attempted action, outcome (succeeded/denied/failed) and stable reason/error code; a minimal allowlisted payload of state changes or references to authoritative records. Store enough to answer “what happened, in which order, to which object, and why did it fail?” Avoid storing full chat text, credentials, tokens, IPs, raw HTTP bodies, complete inventories or freeform exception contents in broadly queryable player timelines. Exact fields and redaction rules must be designed per event family. Preserve causality across asynchronous work rather than assuming wall-clock timestamps alone impose total order.
 
@@ -139,6 +472,8 @@ Use one Siege test session as an acceptance scenario: tester joins, opens releva
 **Developer constraint:** statistics and later leaderboards must remain efficient at the intended player scale. Do not issue one database write for every tick or persist four separate event streams for daily/weekly/monthly/lifetime views. Candidate architecture: record durable low-frequency domain facts where needed, batch or aggregate high-frequency counters, and derive calendar views from daily aggregates (with a correction/rebuild path). Index only the leaderboard queries actually selected; refresh rankings asynchronously or on a bounded interval rather than recalculating across all raw history on every menu open. Movement/heatmap telemetry needs separate sampling and retention. Before choosing storage and flush frequency, measure expected concurrent players, events per second, write latency, database size, menu/query latency and catch-up behavior after crashes. These are design constraints, not measured performance claims.
 
 ## Candidate player-facing groups — not yet approved field by field
+
+**Superseded by §F.1** (catalogue and menu groups); kept as history.
 
 - Activity: active playtime, AFK time, first server join and possibly active days.
 - Progression: current title/XP and promotion history.
