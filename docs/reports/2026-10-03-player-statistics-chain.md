@@ -242,4 +242,6 @@ Session `session_013GjXWw1R62Nzv6Tjoodejy` (started by link 2 via `create_sessio
   §F.6), `contextOf(Player)`; for credit to an offline player (fire igniter who logged off, §F.8) call
   `service.buffer().addCounter(userId, metric, context, value, at)` directly with the stored user id. Config:
   `statistics.combat|gates|siege` go into `KnkConfig.StatisticsConfig` (add records + `ConfigLoader.loadStatistics`).
-- **How link 4 was started:** see the line below (written after `create_session`).
+- **How link 4 was started:** new session (charter §6 option 1, `create_session`): `session_01GiwQhoD6EA3m9WvVPmdU3d`,
+  source knk-workspace `claude/kind-dijkstra-y9d279`, model `claude-opus-5-5`, tag `kng-34-player-statistics-chain`;
+  `get_session` showed it pending in the working bucket right after creation.
