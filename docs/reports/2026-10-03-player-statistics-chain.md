@@ -406,3 +406,6 @@ Session `session_01HnVoNfWS1zecanekJBqQnp` (started by link 4 via `create_sessio
   daily/total rows (covered if every statistic row of the user is deleted) and clear the exclusion columns on
   `player_stat_profiles`; `StatisticsRebuildService` does not touch `pvp_kills.ranked`. Menu funnels (link 7) will see the
   new menu keys `statistics.main`, `statistics.leaderboards`, `statistics.leaderboard`.
+- **How link 6 was started:** new session (charter §6 option 1, `create_session`): `session_01Y76s776YpnJ6PKqYFU23As`,
+  source knk-workspace `claude/kind-dijkstra-y9d279`, model `claude-opus-5-5`, tag `kng-34-player-statistics-chain`;
+  `create_session` showed it pending in the working bucket.
