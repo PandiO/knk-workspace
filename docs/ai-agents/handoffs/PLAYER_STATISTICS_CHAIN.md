@@ -1,7 +1,7 @@
 # Player statistics chain — charter
 
 **Status:** Running (started 2026-10-03)
-**Last updated:** 2026-10-03
+**Last updated:** 2026-10-03 (link 1: §0 re-cut recorded in the table — Siege projection moved to link 2)
 **Linear:** [KNG-34](https://linear.app/kngpandi/issue/KNG-34) (design + implement), with [KNG-14](https://linear.app/kngpandi/issue/KNG-14), [KNG-23](https://linear.app/kngpandi/issue/KNG-23), [KNG-9](https://linear.app/kngpandi/issue/KNG-9), [KNG-21](https://linear.app/kngpandi/issue/KNG-21)
 
 A chain of **seven** Claude Code sessions ("links"). Each link implements **one phase**, tests it, documents it, pushes
@@ -13,9 +13,9 @@ developer can't easily review or undo.
 | Link | Phase | Repo(s) |
 |---|---|---|
 | 1 | **Design completion + implementation plan** — V1/V2/V3 source audit (incl. V1 AFK mode), finalize `DESIGN.md`, write `IMPLEMENTATION_PLAN.md` (data model, API contracts, event contract, permission nodes, per-link file lists, acceptance criteria). May refine links 2-7 within §0. | knk-workspace (code repos and legacy archives read-only) |
-| 2 | **API foundation** — XP into the existing ledger (D13), statistics data model + migrations, batched idempotent ingestion endpoints, period aggregation (D5), visibility settings (per metric, per context, group bulk update) and enforcement on every read, title history from XP, tests | knk-web-api |
+| 2 | **API foundation** — XP into the existing ledger (D13), statistics data model + migrations, batched idempotent ingestion endpoints, period aggregation (D5), visibility settings (per metric, per context, group bulk update) and enforcement on every read, title history from XP, **Siege match projection (moved from link 4 by link 1, §0)**, tests | knk-web-api |
 | 3 | **Plugin foundation** — api-client endpoints + buffered/spooled statistics sink, sessions (first join, logins incl. reconnects, active/AFK playtime, AFK detection), distance (foot/flying/vehicle), highest survived fall, visibility-settings InventoryMenu with group action + confirmation | knk-plugin (+ small knk-web-api fixes) |
-| 4 | **Combat and minigames** — PvP/PvE kills per context, deaths by cause (only total shown), damage dealt/received, arrows/headshots, killstreak mechanic, gate-door damage incl. fire attribution, wins/losses/draws/leave-as-loss, objectives; reconcile Siege match facts | knk-plugin, knk-web-api |
+| 4 | **Combat and minigames** — PvP/PvE kills per context, deaths by cause (only total shown), damage dealt/received, arrows/headshots, killstreak mechanic, gate-door damage incl. fire attribution, wins/losses/draws/leave-as-loss, objectives; reconcile Siege match facts (plugin leaver fix + reconciliation tests; the API projection itself is built in link 2) | knk-plugin, knk-web-api |
 | 5 | **Read surfaces + leaderboards** — leaderboard snapshots (API), in-game statistics/profile menus and `/user statistics`, web-app own statistics + settings, public player profile, leaderboard pages | knk-web-api, knk-plugin, knk-web-app |
 | 6 | **Diagnostic telemetry + privacy** — event contract, bounded async ingestion, plugin emitter (baseline + enhanced mode), owner-only nodes and timeline UI, retention, GDPR deletion workflow | knk-web-api, knk-plugin, knk-web-app |
 | 7 | **World analytics + final write-up** — movement sampling/heatmaps, menu funnels, domain interaction analytics (owner-only views); combined live checklist, merge order, feature register + changelog | all four |

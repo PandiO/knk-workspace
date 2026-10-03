@@ -14,11 +14,12 @@ Central home for requirements, specifications, and implementation roadmaps acros
 - siege-survival/: cooperative endless NPC-wave defense, gate repair, spawnzone progression and match equipment/economy (Linear KNG-50, child of KNG-37; design only)
 - user-features/: rank/permission/title/salary architecture
 - user-management/: tailored admin module built on top of user-features
-- player-statistics/: KNG-34 working design and player-facing statistics decisions (draft)
+- player-statistics/: KNG-34 player statistics, leaderboards, owner-only diagnostics and world analytics — finalized design + implementation plan (implementation chain running on `claude/kind-dijkstra-y9d279`)
 - legacy/: legacy reference notes kept for historical context
 - reconcile/: reconciliation guides for aligning legacy data with v2
 
 ## Key documents
+- Player statistics (KNG-34; design finalized 2026-10-03, implementation chain links 2-7 on `claude/kind-dijkstra-y9d279`, not merged): [player-statistics/DESIGN.md](player-statistics/DESIGN.md) (binding §F "Finalized design"), [player-statistics/IMPLEMENTATION_PLAN.md](player-statistics/IMPLEMENTATION_PLAN.md); evidence [../reports/2026-10-03-player-statistics-source-audit.md](../reports/2026-10-03-player-statistics-source-audit.md). Reconciles KNG-14 (counters) and KNG-23 (provenance = existing ledger).
 - Siege survival / Defend the Castle (KNG-50, design recorded 2026-09-30; not implemented): [siege-survival/DESIGN.md](siege-survival/DESIGN.md), [siege-survival/IMPLEMENTATION_PLAN.md](siege-survival/IMPLEMENTATION_PLAN.md). Both inventory variants and Mystery Box are first-release scope; permanent reward amounts await progression targets.
 - User domain: [docs/specs/users/SPEC_USER.md](docs/specs/users/SPEC_USER.md), [docs/specs/users/SPEC_USER_ACCOUNT_MANAGEMENT.md](docs/specs/users/SPEC_USER_ACCOUNT_MANAGEMENT.md), [docs/specs/users/REQUIREMENTS_USER.md](docs/specs/users/REQUIREMENTS_USER.md), [docs/specs/users/USER_ACCOUNT_MANAGEMENT_IMPLEMENTATION_ROADMAP.md](docs/specs/users/USER_ACCOUNT_MANAGEMENT_IMPLEMENTATION_ROADMAP.md), [docs/specs/users/USER_ACCOUNT_MANAGEMENT_QUICK_REFERENCE.md](docs/specs/users/USER_ACCOUNT_MANAGEMENT_QUICK_REFERENCE.md)
 - Towns domain: [docs/specs/towns/SPEC_TOWNS.md](docs/specs/towns/SPEC_TOWNS.md), [docs/specs/towns/CREATE_FLOW_SPLIT_TOWNS.md](docs/specs/towns/CREATE_FLOW_SPLIT_TOWNS.md), [docs/specs/towns/LOGIC_CANDIDATES_TOWNS.md](docs/specs/towns/LOGIC_CANDIDATES_TOWNS.md), [docs/specs/towns/REQUIREMENTS_HYBRID_CREATE_EDIT_FLOW.md](docs/specs/towns/REQUIREMENTS_HYBRID_CREATE_EDIT_FLOW.md)
