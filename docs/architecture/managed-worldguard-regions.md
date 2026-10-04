@@ -1,7 +1,7 @@
 # Managed WorldGuard regions — hierarchy, priority, flags and startup repair
 
 **Status:** Implemented and merged to trunk 2026-09-29 ([knk-plugin#6](https://github.com/PandiO/knk-plugin/pull/6), [knk-web-api#3](https://github.com/PandiO/knk-web-api/pull/3)); CI green, **not yet smoke-tested in game** — Linear KNG-46, §9
-**Last updated:** 2026-10-04 (KNG-43: rename on submit for every domain type, finalize-temp-names, fresh-lookup cleanup — on branch `claude/quirky-cray-7yqpdy`, not yet merged)
+**Last updated:** 2026-10-04 (KNG-43 merged: rename on submit for every domain type, `finalize-temp-names`, fresh-lookup temp-region cleanup — knk-plugin `3ac34db`, knk-web-api `14b3b8b`; accepted after a live run)
 **Supersedes:** Linear KNG-12 ("no WG flags on town/district regions"), the assumption noted in `CombatSafezone`'s Javadoc
 **Evidence:** [`reports/2026-09-28-v1-permissions-worldguard-inventory.md`](../reports/2026-09-28-v1-permissions-worldguard-inventory.md) (categorized v1 inventory), the v3 domain model (`Town → District → Structure`, `GateStructure : Structure`), `vision.md` §2
 
@@ -129,10 +129,13 @@ Outcome rules: **checked** = distinct regions considered; **skipped** = domain w
 6. **Entry gating by rank** and **greetings** remain v3-plugin behaviour, not WG flags (§5).
 7. **Arena/battleground regions** have no domain entity; they are managed only through `extra-regions`.
 8. `WorldGuardManagementCommand` (`/knk wgm rename`) is not registered anywhere (dead code) — left as is.
+9. **Legacy regions can already hold a `domain_<id>` name.** v2 used the same `domain_<n>` scheme, and imported v2 regions keep their names, so a new domain's final name can collide with an orphaned v2 region. The plugin then refuses the rename (`target region name already exists: domain_<id>` in the server log), the domain keeps its temp-named region, and `finalize-temp-names` lists it under `failed`. Seen live on 2026-10-04 for GateStructure 11 (an orphaned v2 `domain_11`): removing the orphan and calling the endpoint again fixed it. Check `/rg info domain_<id>` before deleting: if it is the domain's own region, only the `WgRegionId` in the database is stale.
 
 ## 9. Verification status and in-game smoke test
 
 Automated: `knk-core` tests for the policy, planner/reconciler (hierarchy, overlap resolution, flags and exceptions, creation-vs-repair equality, idempotence, preservation of unrelated regions/owners/members/greetings, stale/missing/ambiguous/cyclic data, apply and save failures), spec building, paging and the repair service, and config parsing. **The WorldGuard adapter and the Paper wiring (`WorldGuardManagedRegionStore`, `ManagedRegionsBootstrap`, `RegionsAdminCommand`, the rename hook) and the C# API changes could not be compiled or run in the cloud session** (Paper/EngineHub Maven repos and `dotnet` unavailable) — they need a local `./gradlew build` / `dotnet test`.
+
+KNG-43 live run (2026-10-04, dev server): `POST /api/Regions/finalize-temp-names` found 2 temp-named domains; one renamed, GateStructure 11 failed on the v2 name collision in §8 item 9, then renamed after the orphan was removed. Accepted by the developer.
 
 In-game checklist (dev server, back up `plugins/WorldGuard/worlds/*/regions.yml` first):
 
