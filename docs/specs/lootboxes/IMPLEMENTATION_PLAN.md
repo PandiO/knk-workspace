@@ -562,7 +562,7 @@ above so it isn't reintroduced silently. No plugin/API change needed.
 1. A player moved into a siege while their reel spins receives the item into the siege inventory (lost on restore).
    **Action approved:** hold the item until `SiegePlayerVault` restores and notify the player, the same pattern as held-back
    tokens (`SiegePlayerVault.setAfterRestore`, see the "Follow-up" plugin commit under "Siege integration" above).
-   **Done 2026-10-04 (KNG-44)** on knk-plugin `claude/blissful-meitner-thei8p`, not merged: `LootboxOpening.finish` holds the
+   **Done 2026-10-04 (KNG-44)** merged to trunk 2026-10-04 (plugin `5c85a3d`): `LootboxOpening.finish` holds the
    item when the player is in a siege (nothing confirmed to the API, so the claim also stays in its pending claims),
    tells them ("kept safe - you get it as soon as the siege is over") and `deliverWaiting` hands it over after the vault's
    restore (the same `setAfterRestore` hook as the held-back tokens, ~1 s later, skipped when they joined another siege) or on
@@ -580,8 +580,8 @@ above so it isn't reintroduced silently. No plugin/API change needed.
      the same `LootboxRollEngine` call per type avoids N round trips without duplicating logic);
    - or lazily fetch odds per type only when its row is expanded/selected in the Types tab, instead of on initial page load;
    - or cache the odds response client-side keyed by type+boxStars so re-renders (e.g. after a save) don't re-fetch every row.
-   **Done 2026-10-04 (KNG-45): the batch endpoint was chosen** (developer's pick), on knk-web-api / knk-web-app branches
-   `claude/blissful-meitner-thei8p`, not merged. Two differences from the sketch above: (a) the tab needs several box
+   **Done 2026-10-04 (KNG-45): the batch endpoint was chosen** (developer's pick), merged to trunk 2026-10-04 (api `099f936`,
+   app `3953658`). Two differences from the sketch above: (a) the tab needs several box
    grades per type (each type's *covering* grades, see `coveringBoxStars`), so the endpoint is
    `GET api/LootboxTypes/odds?boxStars=5&boxStars=2[&enabledOnly=true]` returning one `LootboxOddsDto` per type and
    requested grade (no `boxStars`: each type's MaxBoxStars); (b) it covers *all* types by default, because the tab lists
@@ -610,8 +610,8 @@ above so it isn't reintroduced silently. No plugin/API change needed.
 
 **Remaining before closing KNG-31**
 - Remove the sweeping interact-deny flag on the dev server (item 2 above).
-- ~~Implement the siege-reel hold-until-restore fix (gap 1 above)~~ — done 2026-10-04 (KNG-44), awaiting merge.
-- ~~Pick one of the Types-tab load improvements (gap 5)~~ — done 2026-10-04 (KNG-45, batch endpoint), awaiting merge.
+- ~~Implement the siege-reel hold-until-restore fix (gap 1 above)~~ — done and merged 2026-10-04 (KNG-44).
+- ~~Pick one of the Types-tab load improvements (gap 5)~~ — done and merged 2026-10-04 (KNG-45, batch endpoint).
 - Merge knk-web-api `claude/lootboxes` (`dc03a9f`, dead `/claim` endpoint removed, gap 6) to `master`; remove the plugin's
   dead `LootboxesCommandApi.claim` client in the same or a later plugin session.
 - `dotnet ef database update` / FormConfigurations verification and the rest of the round-2 checklist are done; no further
