@@ -549,6 +549,12 @@ blocks. (The road tables were reset again at ~10:25, after the rows were saved.)
   exits within that reach. Replayed offline on the real blocks with the current tombstones/anchors/locks: Brink keeps
   its own arms; #10012 becomes the west meeting point. Left as is: the east stairs keep two lanes (Brink → #3588 and
   Brink → the eastern-place junction), because the skeleton forks high on the wide staircase.
+- **K — designed plazas (rev. 5, 2026-10-04): new feature, not yet live-tested.** Instead of tuning `plaza-growth` and
+  pruning fragments, mark the plazas: `/knk road node plaza <radius> [id]` makes a Junction or Anchor the centre of a
+  plaza (locked); the next build makes every road block within the radius one junction exactly on that node, with an
+  edge per exit that follows the road to the centre. `/knk road node move <id>` moves a node to where you stand (same
+  tile); `unplaza [id]` clears a plaza. `navigation.builder.auto-plazas: false` turns the width guess off entirely.
+  Needs the migration `AddRoadNodePlazaRadius` applied, knk-web-api `2edcb1f` and knk-plugin `38886df`. Steps: implementation plan §5.6.
 - **Re-test:** deploy the jar (`./gradlew :knk-paper:dev`; API unchanged, `6947e2a`), rebuild 2,-2 and 1,-2 (and
   2,-1) → the edges at the plaza around (1418, 48, -520) and junction #3777 at (964, 68, -544) follow the stairs/ramps in `/knk road show`; read the summary for
   the new warnings and teleport to any.

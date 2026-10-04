@@ -2353,6 +2353,27 @@ for the proposed minimal-viable direction (a bounded block-level search, ~48-64 
 
 ---
 
+## 5.6 Designed plazas and movable nodes (rev. 5, 2026-10-04)
+
+Developer decision after the 2026-10-04 smoke test: stop guessing plazas and pruning the result; let the admin say where
+a plaza is. DESIGN §3.5 (`PlazaRadius`, moving a node), §5.6 step 4, §7.
+
+**Status: implemented 2026-10-04, not yet live-tested.**
+- knk-web-api `claude/road-navigation` `569699f` + `2edcb1f`: `road_nodes.PlazaRadius` (migration
+  `20261004143846_AddRoadNodePlazaRadius`, **apply with the developer's go-ahead**), `PUT road-nodes/{id}` with
+  `plazaRadius`/`clearPlaza` and `x`/`y`/`z` (same tile, free position, edge ends follow, node locked); edge prune keeps
+  an orphaned plaza centre. Tests: `RoadNodeEditTests` (5).
+- knk-plugin `claude/navigation-walkable-path` `f1270f4` (builder, version 4) + `38886df` (records, client, cache,
+  build job, `auto-plazas` config, `/knk road node move <id>` / `plaza <radius> [id]` / `unplaza [id]`, overlay label).
+  Gradle core 1641 / api-client 185 / paper 1135 green.
+- knk-web-app: no node editing UI exists; `RoadNodeDto` there does not carry `plazaRadius` yet (not needed).
+
+**Developer to-do (live test):** apply the migration; deploy API + plugin; on tile 2,-2: `/knk road node plaza 12 7`
+(Brink) and a radius for the eastern place / Northern Gate Square; rebuild the tile; check `/knk road show` (one
+junction per plaza, labels "plaza r…", arms following the stairs) and the build summary; optionally set
+`navigation.builder.auto-plazas: false` and rebuild to see whether the designed plazas alone are enough; then unprune
+tombstones that only existed to clean up plaza fragments.
+
 ## 6. Out of scope (Phase 6 in DESIGN §8)
 
 Automatic rebuild of dirty tiles; "follow road" mode; Pathetic off-road legs; NPC routing; travel modes and risk costs;
