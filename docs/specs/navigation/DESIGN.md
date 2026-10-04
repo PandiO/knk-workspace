@@ -511,7 +511,9 @@ A domain without a `Location` falls back to `region`; with neither it is refused
    - Start and goal in different components (no road connects them) → refused with *"No road connects you to …"*
      (known instantly from the component ids, §5.8).
    - The straight legs (player → road, road → target) are re-drawn as the player moves; real off-road pathfinding is
-     Phase 6.
+     Phase 6. **Update 2026-10-02:** the first slice of it — a bounded walkable-path search for direct-mode and
+     last-mile legs, with a straight-line fallback — is designed in [LAST_MILE_PATHFINDING.md](LAST_MILE_PATHFINDING.md)
+     (Linear KNG-51; proposed, not implemented).
 4. **A\*** with cost `Length × classCost × profile.CostMultiplier × edge.CostMultiplier`, Euclidean heuristic scaled by
    the cheapest class cost. Edges are filtered by the player's **`AccessPolicy`** (§6.7).
 5. Build the `Route`: off-road legs, road legs (trimmed at virtual nodes), maneuvers (§6.5), ETA

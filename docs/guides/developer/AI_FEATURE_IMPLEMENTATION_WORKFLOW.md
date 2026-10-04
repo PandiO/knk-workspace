@@ -1,5 +1,7 @@
 # AI-Assisted Feature Implementation Workflow
 
+> **Current paths and merge checklist:** use [`DOCUMENTATION_MAINTENANCE.md`](DOCUMENTATION_MAINTENANCE.md), `docs/specs/<feature>/` and the feature's current plan. This older template still contains `docs/features/`, `feature/*` branch and generic CI examples from January 2026; those examples are historical and do not override `docs/ACTIVE_SESSIONS.md`, the standing feature branch, or today's repository setup. Update the [feature register](../../FEATURE_REGISTER.md), player/admin guides and [changelog](../../CHANGELOG.md) during the documented merge process.
+
 ## Overview
 
 This document provides a streamlined, templated process for implementing feature roadmaps efficiently using AI assistance. It reduces prompt engineering effort, maintains consistency, and automates repetitive steps.
@@ -743,7 +745,7 @@ Copy this before starting each phase:
 
 - [Git Commit Conventions](GIT_COMMIT_CONVENTIONS.md)
 - [CODEMAP](CODEMAP.md) (for architecture reference)
-- [Data Access Unification Example](features/data-access-unification/) (reference implementation)
+- [Data Access Unification Example](../../specs/data-access-unification/) (reference implementation)
 
 ---
 

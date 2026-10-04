@@ -502,7 +502,8 @@ Fixes on `claude/currency-payments`:
   also on later re-promotion (`edb77e8`).
 - **knk-web-app** (16 baseline failures only): "Already reversed" state on the transaction page (`05c427c`); always-visible
   "Adjust balance" card on the player profile (`6eed4a0`).
-Not fixed here (tracked): other `/knk` subcommands still on Bukkit nodes → KNG-24.
+Fixed later: KNG-24 moved `/knk` subcommand gates onto Bukkit-or-in-house permission checks and was
+merged to plugin `main` at `1a69ec3` on 2026-10-04.
 
 **Merged to trunk 2026-09-27:** knk-web-api `5639a50`, knk-plugin `0d01b52`, knk-web-app `c4ed753` (trees identical to the
 branch tips `edb77e8` / `7f056b3` / `6eed4a0`).

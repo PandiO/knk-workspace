@@ -11,9 +11,10 @@ was clean, one tab-completion slip fixed in `68fa48c`); **Phase 5 done** (knk-we
 merge `be5df0f` that brought in KNG-17). **All phases done — the chain is complete**; the developer merges phase by
 phase after testing (closing handoff `docs/ai-agents/handoffs/2026-09-29-road-navigation-closeout.md`).
 Every code reference was verified against trunk by a separate review pass on 2026-09-27; its corrections are folded in.
-**Last updated:** 2026-10-02 (§5.5 fix-plan items 1-6 plus findings B and G implemented on
+**Last updated:** 2026-10-04 (§5.6 designed plazas and the finding L follow-up; 2026-10-02: §5.5 fix-plan items 1-6 plus findings B and G implemented on
 `claude/road-navigation-smoke-test-bugs-fagl4i`, awaiting the developer's merge and live re-test — see "5.5 status";
-the walkable last mile stays open as KNG-51)
+the walkable last mile stays open as KNG-51,
+`LAST_MILE_PATHFINDING.md`; 2026-10-04 status: §5.6)
 **Linear:** [KNG-27](https://linear.app/kngpandi/issue/KNG-27)
 **Design:** [DESIGN.md](DESIGN.md) rev. 4 (decided) — read it first; this plan says *where and how* to build it.
 **Sources:** trunk as of 2026-09-27 — knk-web-api `master` `acaee99`, knk-plugin `main` `ceed2f6`, knk-web-app `main`
@@ -2237,6 +2238,39 @@ draw a pure straight-line interpolation with no collision/walkability check, for
 within 48 blocks) and the "road ends short of target" last leg (`arrivedAtRouteEnd`). See the linked Linear issue
 for the proposed minimal-viable direction (a bounded block-level search, ~48-64 blocks, respecting the player's
 `AccessPolicy`, with a hard search budget and fallback to today's straight line) and open questions.
+**Design drafted 2026-10-02:** [LAST_MILE_PATHFINDING.md](LAST_MILE_PATHFINDING.md) answers the open questions (A\*
+on the road builder's span model, new `knk-core roads/walk/` package, one `DirectLeg` mechanism shared with item 3 above)
+and sequences the work after item 3; it is proposed, pending the developer decisions in its §11.
+
+### §5.5 status — items 1-6 code-complete on `claude/road-navigation`, live re-test pending (verified 2026-10-02)
+
+Verified by the walkable-path chain, link 1 (`docs/reports/2026-10-02-navigation-walkable-chain.md`), against
+knk-plugin `claude/road-navigation` `075ae94`, knk-web-app `6414e18`, knk-web-api `c029186`. Nothing of it is merged to
+trunk. "Code-verified" = the code does what the item describes and its unit tests pass; every item's live "Verify"
+step is still the developer's.
+
+| Item | Commits | Code as planned? | Tests (all pass) | Verify step |
+|---|---|---|---|---|
+| 1 `window.confirm` → `FeedbackModal` | web-app `6414e18` | Yes — `RoadProfilesCard` delete only; grep of `components/admin/roads`, `components/roads` (Street road panel), `pages/admin/RoadsAdminPage.tsx` finds no other `confirm(` | `RoadProfilesCard.test.tsx` (new); road-admin suites 16/16 | Grep ✔; admin-UI click-through **needs live** |
+| 2 Region goals follow the road | plugin `6a73945` | Yes — `NavigationService.regionGoals`: goals = `RegionClosestPoint.crossings` (multi-goal A\*), else the road's nearest approach + a last leg ≤ max-snap; fully direct only within `REGION_DIRECT_DISTANCE` (8), when the region is nearer than the road, or when no road gets within max-snap; refusal otherwise (§6.2 fallback kept) | `aRegionWithinDirectRangeStillFollowsTheRoadIntoIt`, `aRegionNearerThanAnyRoadIsWalkedToStraight`, `aRegionNoRoadEntersIsReachedByRoadThenAShortLastLeg` | **Needs live** (irregular region from several angles; no-road case) |
+| 3 Direct-mode re-check, "left the road" | plugin `6a73945`; test `d8507a3` (link 1, on `claude/navigation-walkable-path`) | Yes — `recheckDirect` on `RECHECK_TICKS` (40), trigger `directBest + reroute-distance`, rate-limited by `reroute-min-interval`, new `directRecalculating` message + `NavigationRerouteEvent(OFF_ROUTE, "direct")`; not promoted to routed (plan decision); the `arrivedAtRouteEnd` leg is ordinary direct mode so it shares the re-check | `directModeRecalculatesWhenThePlayerWalksAway`, `directModeToARegionReAimsAtItsClosestPointAfterDrifting`, `aRoutedSessionStillSaysYouLeftTheRoad`; **gap closed by link 1:** `theLastLegAfterTheRoadsEndUsesTheDirectReCheck` (the handoff takes part in the re-check — no test pinned it) | **Needs live** (direct drift; routed lateral deviation; road-end handoff) |
+| 4 "Already in X" | plugin `6a73945` | Yes — the fix covers both suspects: the check could run after goal resolution, **and** the shape test used the raw double position (x = 120.7 was outside a region ending at 120). Now checked first via `RegionShapes.containsFeet` = WorldGuard's block containment (`WorldGuardRegionShapes`), fallback `RegionShape.containsFeet` by feet block; arrival uses the same check | `aPlayerCountsByTheBlockTheirFeetAreIn` (core), `aPlayerInTheRegionsLastBlockColumnIsAlreadyThere`, `theAlreadyThereCheckUsesTheServersRegionContainment` | **Needs live** (cuboid/polygon × mid/boundary/stacked Y) |
+| 5 Plaza = one junction | plugin `9f66fea` (+ finding B in the same commit) | Yes — `SkeletonGraph.plazaFootprint` (core + clearance + `BuildParameters.plazaGrowth`, default 2, `navigation.builder.plaza-growth`), bucket queue, linear; `clusterJunctions` joins a plaza when it reaches one along the skeleton (general radius unchanged) | `anIrregularPlazaWithObstaclesIsOneJunction` (8 → 1), `withoutPlazaGrowthTheIrregularPlazaStillFragments`, `aForkRightAtAPlazasEdgeMergesIntoThePlazaJunction`, `aPlazaStraddlingTheTileBorderGetsItsBoundaryNodeOnTheBorder` | Unit ✔; **live rebuild of a problem plaza needed** |
+| 6 Manual cleanup survives a rebuild | plugin `ef556e2`; web-api `8523ec8`; developer follow-ups plugin `6a8caa7`, `9dccb58` + web-api `c029186`, `075ae94` | Yes, differently from the sketch: no exclusion zone per node — a locked node claims the nearest leftover candidate within `BuildParameters.lockedNodeReach` (default 8, `navigation.builder.locked-node-reach`; the plan's open question answered as one build-wide tunable) and absorbs duplicates joined to it within that reach; a recording now locks the detected nodes it snaps to (API). The developer added: Boundary nodes never take a locked inner node (`6a8caa7`), `/knk road node prune|unprune` with `Pruned` tombstones (`9dccb58`/`c029186`), two-arm junctions joined into one edge (`075ae94`) | `aMergedJunctionStaysMergedAcrossRebuilds` (two builds, varying mask), `aLockedJunctionClaimsTheBuildersJunctionBeyondTheNormalMatchDistance`, `anUnlockedNeighbourAndAFarJunctionAreNotMerged`, `aBoundaryCandidateNeverTakesALockedInnerNode`, `aPrunedDeadEndIsLeftOutAndItsJunctionDissolves`, `aJunctionLeftWithTwoArmsIsJoinedIntoOneEdge`, … ; web-api `RoadNetworkServiceTests` | **Needs live:** the plan wanted the residual cases catalogued after item 5 was verified live — that step was skipped (items 5 and 6 landed together); the developer's 2026-10-02 session is the first live evidence |
+
+Other KNG-27 fixes on the branch (not §5.5 items): finding G — `/knk road show` names the node along the view ray
+(`ae2f1e8`); the recorder records the floor block, not the one under it (`8b6d678`; **recordings made before it sit one
+block too deep** — re-record them). Still open: finding D (upload timeout on a huge tile), finding E (no node/tile
+delete, builder settings need a restart), `/knk road node info here`, a "prefer the domain's Location" setting
+(smoke-test finding 4), and the direct-mode walkable path (KNG-51).
+
+Test counts on `075ae94` (Gradle, `build -x deployToDevServer`, 2026-10-02): knk-core 1561, knk-api-client 184
+(2 skipped), knk-paper 1088 (14 skipped), all green; with link 1's test knk-paper 1089. knk-web-api `c029186`:
+1631 passed / 5 failed / 42 skipped — the 5 failures are the known non-road baseline (`ClientActivityStoreTests`,
+`FormSubmissionProgressRepositoryTests`, `FieldValidationServiceTests`, 2× `PathResolutionServiceTests`). knk-web-app:
+road suites 16/16 (needs `@testing-library/dom` installed; `npm ci` fails on a stale lockfile — `yaml@2.9.1` missing,
+pre-existing). **Deploy note:** plugin `9dccb58` and API `c029186` go together (an older plugin can't parse the
+`Pruned` node kind). knk-web-api `master` has 19 commits `claude/road-navigation` lacks — merge before merging to trunk.
 
 ### 5.5 status — items 1-6 implemented 2026-10-02 (branch `claude/road-navigation-smoke-test-bugs-fagl4i` in each repo, cut from the `claude/road-navigation` heads; KNG-51 not started)
 

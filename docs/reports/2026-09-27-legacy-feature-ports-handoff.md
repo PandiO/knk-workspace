@@ -97,7 +97,7 @@ Each plan's "Phase N status" sections list the in-game checks for that phase; th
   cap; account merge/link keeps the highest balance per currency (`MERGE_CARRYOVER`).
 - 2026-09-27 — **domain discovery** smoke-tested (A–G; C2 and H untested). Findings fixed on the branch: web reset →
   plugin resync, players who joined while the API was down are now tracked and spooled by UUID, and the Structure → GateStructure
-  cascade prompt. Merged to trunk on the developer's sign-off (the three fixes weren't re-tested in-game). Side finding: siege safezone message (KNG-28), under investigation.
+  cascade prompt. Merged to trunk on the developer's sign-off (the three fixes weren't re-tested in-game). Side finding: siege safezone message (KNG-28), later fixed and merged to plugin `main` at `1a69ec3` on 2026-10-04; focused live re-test pending.
 
 - 2026-09-27 — **lootboxes** round 1 (A-I; J/K accepted): world boxes are now picked up as token items and opened on a
   wheel-of-fortune reel; despawn/revoke sync, staff-give notices, player tab completion, ★1-10 box grades. **G (Default
