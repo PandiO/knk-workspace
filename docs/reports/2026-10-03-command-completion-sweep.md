@@ -1,6 +1,6 @@
 # Plugin command completion sweep (KNG-30)
 
-**Status:** Merged to knk-plugin `main` at `52ce855`; live verification pending
+**Status:** Merged to knk-plugin `main` at `52ce855`, retained through backlog merge `1a69ec3`; live verification pending
 **Last updated:** 2026-10-04
 
 This report inventories every command declared in `knk-paper/src/main/resources/plugin.yml` and every

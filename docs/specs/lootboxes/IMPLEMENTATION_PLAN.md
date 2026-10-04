@@ -535,9 +535,8 @@ whose description still exactly matches the old seeded text; administrator-edite
 left alone. The focused API seed suite passes 13/13. Full implementation and live-check notes are in
 [`2026-10-04-kng-29-smoke-follow-up.md`](../../reports/2026-10-04-kng-29-smoke-follow-up.md).
 
-The related online-player completion already exists on the separate plugin branch
-`codex/kng-30-command-completion-sweep` (`52ce855`), which is current with plugin `main`; it remains
-unmerged as part of KNG-30.
+The related online-player completion is on plugin `main` at `52ce855` and remains present after the
+backlog-bug merge `1a69ec3`.
 
 ## Open TODOs (after the trunk merge)
 

@@ -17,14 +17,13 @@ Status: implemented, verified and pushed to the default branches where applicabl
 
 ## Remote evidence
 
-- knk-plugin KNG-30 feature branch: `codex/kng-30-command-completion-sweep` `52ce855` (unchanged,
-  pushed, not merged).
+- knk-plugin KNG-30: `main` `52ce855` (later retained through backlog merge `1a69ec3`).
 - knk-plugin KNG-29 spacing fix: `main` `ee7824c` (already merged).
 - knk-web-api lore-color follow-up: `master` `c0c2b22` (small QOL change pushed directly to the
   default branch).
 
-No additional plugin merge was appropriate: merging the whole KNG-30 sweep would broaden this
-KNG-29 follow-up, while the KNG-29 spacing code is already on `main`.
+At the time of this KNG-29 follow-up no additional plugin merge was appropriate. KNG-30 was merged
+separately later on 2026-10-04 and remains intact through `1a69ec3`.
 
 ## Verification
 
@@ -42,7 +41,6 @@ Only automated tests were run. Live verification remains with the developer as r
    the exact legacy description.
 2. Generate or award Flaming Samurai through the lootbox flow and compare its description lines to
    an ordinary ItemBlueprint description. Both should use the same default dark-gray lore color.
-3. On a plugin build from `codex/kng-30-command-completion-sweep`, enter
+3. On plugin `main` at or after `1a69ec3`, enter
    `/knk itemblueprints give <valid-id> ` and press Tab. Visible online player names should appear;
    vanished players should remain hidden from viewers who cannot see them.
-

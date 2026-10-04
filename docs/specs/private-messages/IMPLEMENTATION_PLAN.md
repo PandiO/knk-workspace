@@ -1,7 +1,7 @@
 # Private Messages & Social Spy — Implementation Plan
 
-**Status:** Done — merged to trunk 2026-09-27 (KNG-18); follow-ups KNG-24, KNG-25
-**Last updated:** 2026-09-26
+**Status:** Done — KNG-18 merged 2026-09-27; KNG-24 and KNG-25 follow-ups merged 2026-10-04
+**Last updated:** 2026-10-04
 **Linear:** [KNG-18](https://linear.app/kngpandi/issue/KNG-18/private-messages-harden-msg-and-r-social-spy-toggle-ignore-list)
 **Sources:** [DESIGN.md](DESIGN.md); `knk-plugin` `main` @ `f65ae2e`; `knk-web-api` `master` @ `a102eea`;
 `docs/specs/inventory-menu/CONTENT_PORT_PLAN.md` §9 (CP7 plugin auth); `docs/ACTIVE_SESSIONS.md` (branch convention).
@@ -255,7 +255,7 @@ Left as designed/low risk: `/r` wording differs for a partner who vanished vs. l
 `/me` lines still logged by Paper before cancellation. Out of scope, fixed on `claude/currency-payments`: `BaseApiImpl`
 logged the `X-API-Key` header (KNG-22 code).
 
-**Feature status: smoke-tested by the developer and merged to trunk 2026-09-27** (knk-web-api `7daca13`, knk-plugin `316315e`, knk-web-app `7db6f46`). Smoke test: all steps passed except D3 (`/minecraft:tell` as op breaks secure chat → KNG-25) and G (`/freeze` unusable by non-op staff, pre-existing → KNG-24; G re-test pending); siege step K untested.
+**Feature status: smoke-tested by the developer and merged to trunk 2026-09-27** (knk-web-api `7daca13`, knk-plugin `316315e`, knk-web-app `7db6f46`). The D3 (`/minecraft:tell` secure-chat) and G (non-op staff `/freeze`) follow-ups were fixed by KNG-25 and KNG-24 and merged to plugin `main` at `1a69ec3` on 2026-10-04; their focused live re-tests remain pending. Siege step K remains untested.
 Merge order: KNG-22 (`claude/currency-payments` Phase 0) is already merged into this branch; merge this branch after or
 with it. Phase F (siege command filter resolving aliases) remains on the siege branch.
 
@@ -264,8 +264,8 @@ with it. Phase F (siege command filter resolving aliases) remains on the siege b
 - **Siege (`claude/siege-minigame`, knk-plugin):** resolve aliases in `SiegeCommandFilterListener` (Bukkit command map →
   primary label) before `SiegeCommandFilter.isAllowed`, so `/tell`, `/w`, `/whisper`, `/reply` behave like `/msg`/`/r`
   during a match (DESIGN §4 D9). S. Coordinate via `ACTIVE_SESSIONS.md` with the siege owner.
-- **Staff chat:** move `StaffChatCommand` onto `KnkPermissible` (`knk.staffchat` via the in-house model) — S, flagged in
-  DESIGN §4 D8.
+- **Staff chat:** completed by KNG-24 and merged to plugin `main` at `1a69ec3`; `StaffChatCommand`
+  now uses the in-house `knk.staffchat` permission model.
 - **Docs:** refresh `docs/specs/user-features/COMMAND_CATALOG_V3.md` (missing `/msg`, `/reply`, `/staffchat`, `/freeze`,
   KNG-9 commands) and the plugin/web-api `CLAUDE.md` auth lines.
 - **Mute:** when the justice system is designed, implement it as one more `PrivateMessageGate` plus a public-chat check.

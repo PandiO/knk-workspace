@@ -1,10 +1,14 @@
 # Knights & Kings feature register
 
-**Status:** Active · **Last updated:** 2026-09-30 · **First reconciled:** 2026-09-28 · [KNG-33](https://linear.app/kngpandi/issue/KNG-33)
+**Status:** Active · **Last updated:** 2026-10-04 · **First reconciled:** 2026-09-28 · [KNG-33](https://linear.app/kngpandi/issue/KNG-33)
 
 This is the index of intended gameplay and shipped surfaces, not a substitute for a feature's design, code, or issue. V1's wider gameplay and V2's stronger data model are both inputs to V3. An absent V2 port is **not** a decision to drop a V1 feature. The [vision](vision/vision.md) decides intent; a [feature spec](specs/README.md) decides detailed behavior; the actual default branches decide whether code has shipped.
 
 **Evidence baseline (checked 2026-09-30):** `knk-workspace/main` `4757fbb`, `knk-plugin/main` `27b4236`, `knk-web-api/master` `29b6c5d`, and `knk-web-app/main` `b9a3c43`. Legacy columns use the dated scans linked below. Later default-branch commits or Linear decisions supersede this snapshot and must update the affected rows.
+
+**Targeted refresh (2026-10-04):** the moderation/private-message rows were rechecked after plugin
+`main` merge `1a69ec3`; KNG-24, KNG-25 and KNG-28 are merged and Done. KNG-26/29/30 are also Done
+on their stated default branches; KNG-38 is Done on pushed API/app feature branches and remains unmerged.
 
 ## Reading and updating the register
 
@@ -41,7 +45,7 @@ For each changed row, include its source, spec or issue and the date of the evid
 | Accounts, web authentication and in-game linking | partial | partial | spec | complete | trunk | mixed | maintain; [users](specs/users/), [player guide](guides/users/PLAYER_GUIDE_ACCOUNT_MANAGEMENT.md) |
 | Permissions, ranks, premium tiers, owner/staff mode | live | partial | spec | complete | trunk | mixed | maintain; [user features](specs/user-features/), [KNG-7](https://linear.app/kngpandi/issue/KNG-7) |
 | Titles, XP, progression rewards and salary | live | partial | spec | complete | trunk | live | maintain; [user features](specs/user-features/), [KNG-16](https://linear.app/kngpandi/issue/KNG-16) |
-| Player management, moderation, freeze, staff chat and audit | partial | partial | spec | partial | mixed | mixed | finish [KNG-24](https://linear.app/kngpandi/issue/KNG-24), [KNG-26](https://linear.app/kngpandi/issue/KNG-26); [user management](specs/user-management/) |
+| Player management, moderation, freeze, staff chat and audit | partial | partial | spec | partial | mixed | mixed | maintain; KNG-24/KNG-26 completed; inventory-menu permission gaps remain; [user management](specs/user-management/) |
 | Personal gameplay statistics, shareable profile and histories | partial | partial | open | partial | mixed | pending | design [KNG-34](https://linear.app/kngpandi/issue/KNG-34) with [KNG-14](https://linear.app/kngpandi/issue/KNG-14); [legacy user system](specs/legacy/user-system.md) |
 | World activity telemetry, traversal heatmaps, interactions | — | partial | open | none | — | pending | design in [KNG-34](https://linear.app/kngpandi/issue/KNG-34); include retention, privacy and performance decisions |
 | Coin/gem payments, balances and persistent transaction ledger | live | partial | spec | complete | trunk | live | maintain; [currency design](specs/currency-payments/DESIGN.md), [KNG-21](https://linear.app/kngpandi/issue/KNG-21) |
@@ -52,7 +56,7 @@ For each changed row, include its source, spec or issue and the date of the evid
 | Lootboxes, rarity and world pickups | live | — | spec | complete | trunk | mixed | retest and decide [KNG-31](https://linear.app/kngpandi/issue/KNG-31); [plan](specs/lootboxes/IMPLEMENTATION_PLAN.md) |
 | Inventory menu engine and initial hub/content | live | partial | spec | complete | trunk | mixed | maintain; [engine](specs/inventory-menu/IMPLEMENTATION_PLAN.md), [content](specs/inventory-menu/CONTENT_PORT_PLAN.md) |
 | Remaining legacy menus: property, shops, friends, quests, skills, support | live | partial | open | none | — | pending | design per owning feature; [screen allocation](specs/legacy/inventory-menu-screens.md) |
-| Private messages, reply, ignore and social spy | live | partial | spec | complete | trunk | mixed | finish [KNG-25](https://linear.app/kngpandi/issue/KNG-25); [design](specs/private-messages/DESIGN.md) |
+| Private messages, reply, ignore and social spy | live | partial | spec | complete | trunk | mixed | maintain; KNG-25 completed; [design](specs/private-messages/DESIGN.md) |
 | Friends, requests, mutual relationships and social visibility | live | — | open | none | — | pending | design [KNG-35](https://linear.app/kngpandi/issue/KNG-35) after statistics; [v1 commands](specs/legacy/commands-v1.md), [legacy menus](specs/legacy/inventory-menu-screens.md) |
 | Skills, skill points, active/passive abilities and professions | partial | partial | vision | partial | mixed | pending | design; distinguish reachable v1 handlers from commented code; [v1 events](specs/legacy/events-v1.md), [vision §4.2](vision/vision.md#42-professions-open--list-not-final) |
 
