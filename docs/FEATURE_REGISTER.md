@@ -8,7 +8,8 @@ This is the index of intended gameplay and shipped surfaces, not a substitute fo
 
 **Targeted refresh (2026-10-04):** the moderation/private-message rows were rechecked after plugin
 `main` merge `1a69ec3`; KNG-24, KNG-25 and KNG-28 are merged and Done. KNG-26/29/30 are also Done
-on their stated default branches; KNG-38 is Done on pushed API/app feature branches and remains unmerged.
+on their stated default branches. KNG-38 is Done with its API half on `master` at merge `300aa4c`;
+the web-app half remains on its pushed feature branch, so the cross-repo merge state is mixed.
 
 ## Reading and updating the register
 

@@ -11,7 +11,7 @@ remain with the developer where noted in the issue-specific reports.
 | KNG-28 | knk-plugin `main` merge `1a69ec3` (`da1f02b`; matrix coverage `db474e4`) | Done |
 | KNG-29 | knk-plugin `main` `ee7824c`; lore-color follow-up on API `master` `c0c2b22` | Done |
 | KNG-30 | knk-plugin `main` `52ce855`, retained through merge `1a69ec3` | Done |
-| KNG-38 | API/app branches `codex/kng-38-permission-holder-search` at `3dd1e26` / `e26b3f6` | Done; branches remain unmerged |
+| KNG-38 | knk-web-api `master` merge `300aa4c` (feature commit `3dd1e26`); knk-web-app branch `codex/kng-38-permission-holder-search` at `e26b3f6` | Done; API merged, app remains unmerged |
 
 ## Backlog-branch merge
 
@@ -27,4 +27,3 @@ The two expected conflicts were resolved by combining both behaviors:
 
 The post-merge `./gradlew build -x deployToDevServer` passed across knk-core, knk-api-client and
 knk-paper. No live/in-game checks were run.
-
