@@ -561,9 +561,13 @@ above so it isn't reintroduced silently. No plugin/API change needed.
 **Known gaps — resolved/updated:**
 1. A player moved into a siege while their reel spins receives the item into the siege inventory (lost on restore).
    **Action approved:** hold the item until `SiegePlayerVault` restores and notify the player, the same pattern as held-back
-   tokens (`SiegePlayerVault.setAfterRestore`, see the "Follow-up" plugin commit under "Siege integration" above). **Not yet
-   implemented** — needs a session in `knk-plugin` touching `LootboxOpening`/`LootboxDelivery` plus a test; treat as a small
-   follow-up phase before closing KNG-31.
+   tokens (`SiegePlayerVault.setAfterRestore`, see the "Follow-up" plugin commit under "Siege integration" above).
+   **Done 2026-10-04 (KNG-44)** on knk-plugin `claude/blissful-meitner-thei8p`, not merged: `LootboxOpening.finish` holds the
+   item when the player is in a siege (nothing confirmed to the API, so the claim also stays in its pending claims),
+   tells them ("kept safe - you get it as soon as the siege is over") and `deliverWaiting` hands it over after the vault's
+   restore (the same `setAfterRestore` hook as the held-back tokens, ~1 s later, skipped when they joined another siege) or on
+   their next join; the message "the lootbox item you won during the siege is here" comes first. Tests:
+   `LootboxOpeningSiegeTest`.
 2. Boxes spawned before a siege stay claimable by non-participants in the arena. **Kept as-is** — developer wants this
    behavior.
 3. A revoked token stored in a chest/shulker is only removed when someone tries to open it. **Accepted**, no action.
@@ -576,7 +580,13 @@ above so it isn't reintroduced silently. No plugin/API change needed.
      the same `LootboxRollEngine` call per type avoids N round trips without duplicating logic);
    - or lazily fetch odds per type only when its row is expanded/selected in the Types tab, instead of on initial page load;
    - or cache the odds response client-side keyed by type+boxStars so re-renders (e.g. after a save) don't re-fetch every row.
-   No implementation done yet; pick one when picking this up.
+   **Done 2026-10-04 (KNG-45): the batch endpoint was chosen** (developer's pick), on knk-web-api / knk-web-app branches
+   `claude/blissful-meitner-thei8p`, not merged. Two differences from the sketch above: (a) the tab needs several box
+   grades per type (each type's *covering* grades, see `coveringBoxStars`), so the endpoint is
+   `GET api/LootboxTypes/odds?boxStars=5&boxStars=2[&enabledOnly=true]` returning one `LootboxOddsDto` per type and
+   requested grade (no `boxStars`: each type's MaxBoxStars); (b) it covers *all* types by default, because the tab lists
+   disabled types too and shows their pools (`enabledOnly=true` filters). Staff-only (`ManageLootboxes`), same
+   `LootboxRollEngine` path as `{id}/odds`, roll input built once per type. The tab makes one request instead of ~14.
 6. ~~`POST LootboxSpawns/{id}/claim` (open-on-the-spot) is unused by the plugin since the round-1 pickup rework.~~
    **Done 2026-09-28 — removed** in knk-web-api `claude/lootboxes` `dc03a9f` (not yet merged to `master`): the controller
    action, `ILootboxRuntimeService.ClaimAsync`, `ClaimAsync`/`ClaimCoreAsync`, `LootboxClaimRequestDto` and
@@ -600,8 +610,8 @@ above so it isn't reintroduced silently. No plugin/API change needed.
 
 **Remaining before closing KNG-31**
 - Remove the sweeping interact-deny flag on the dev server (item 2 above).
-- Implement the siege-reel hold-until-restore fix (gap 1 above) — small `knk-plugin` follow-up.
-- Optionally pick one of the Types-tab load improvements (gap 5) — not blocking.
+- ~~Implement the siege-reel hold-until-restore fix (gap 1 above)~~ — done 2026-10-04 (KNG-44), awaiting merge.
+- ~~Pick one of the Types-tab load improvements (gap 5)~~ — done 2026-10-04 (KNG-45, batch endpoint), awaiting merge.
 - Merge knk-web-api `claude/lootboxes` (`dc03a9f`, dead `/claim` endpoint removed, gap 6) to `master`; remove the plugin's
   dead `LootboxesCommandApi.claim` client in the same or a later plugin session.
 - `dotnet ef database update` / FormConfigurations verification and the rest of the round-2 checklist are done; no further
