@@ -1,7 +1,7 @@
 # Plugin command completion sweep (KNG-30)
 
-**Status:** Implemented on `codex/kng-30-command-completion-sweep`; live verification pending  
-**Last updated:** 2026-10-03
+**Status:** Merged to knk-plugin `main` at `52ce855`; live verification pending
+**Last updated:** 2026-10-04
 
 This report inventories every command declared in `knk-paper/src/main/resources/plugin.yml` and every
 subcommand registered by `KnkAdminCommand`. Suggestions are prefix-filtered. Player suggestions use
@@ -69,4 +69,5 @@ an explicit empty completer, preventing Bukkit's default all-online-player fallb
 
 - `:knk-paper:compileJava` and `:knk-paper:compileTestJava`: pass.
 - All command-package and enchantment-command tests: pass.
-- Full Gradle test suite: pass. Live/smoke verification remains for the developer.
+- Full non-deploy Gradle build and test suite passed again after the 2026-10-04 fast-forward merge.
+  Live/smoke verification remains for the developer.
