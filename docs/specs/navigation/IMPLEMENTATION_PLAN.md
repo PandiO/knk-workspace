@@ -2374,6 +2374,25 @@ junction per plaza, labels "plaza r…", arms following the stairs) and the buil
 `navigation.builder.auto-plazas: false` and rebuild to see whether the designed plazas alone are enough; then unprune
 tombstones that only existed to clean up plaza fragments.
 
+**Follow-up 2026-10-04 evening: finding L, builder version 5** (smoke-test guide "Build v202 analysed"). Build v202
+lost Brink's west junction and #3588's arms. An offline replay of the real builder on the dev world traced it to
+junction clustering: a chain of forks on Brink's wide stairs joined a road fork 20 blocks away into the plaza. Neither
+the tombstones nor the plazas caused it. knk-plugin `claude/navigation-walkable-path` (not pushed):
+- `4bc6946`: plaza junctions stay.
+- `8c9cb7e`: only the forks at a plaza's edge join it.
+- `19bf4b1`: thin loops collapse.
+- `2672558`: one-arm junctions become Endpoints.
+- `8fe661a`: correction report and stale-prune warnings.
+- `5d9a5e9`: builder version 5.
+
+Gradle core 1646 / api-client 185 / paper 1137 green. No API change.
+
+**Developer to-do:** deploy the jar; rebuild 2,-2, 2,-1, 1,-2; unprune the stale prunes the summary lists; move #3693 to
+the middle of Merchants Square (or radius 16); check Brink in `/knk road show`.
+
+The structural follow-ups (find open areas before making the centreline; freeze curated tiles and review rebuilds as
+a list of proposed changes) are proposed in [REV6_PROPOSAL.md](REV6_PROPOSAL.md), not decided.
+
 ## 6. Out of scope (Phase 6 in DESIGN §8)
 
 Automatic rebuild of dirty tiles; "follow road" mode; Pathetic off-road legs; NPC routing; travel modes and risk costs;
