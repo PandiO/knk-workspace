@@ -1,7 +1,7 @@
 # Managed WorldGuard regions — hierarchy, priority, flags and startup repair
 
 **Status:** Implemented and merged to trunk 2026-09-29 ([knk-plugin#6](https://github.com/PandiO/knk-plugin/pull/6), [knk-web-api#3](https://github.com/PandiO/knk-web-api/pull/3)); CI green, **not yet smoke-tested in game** — Linear KNG-46, §9
-**Last updated:** 2026-09-29
+**Last updated:** 2026-10-04 (KNG-43 merged: rename on submit for every domain type, `finalize-temp-names`, fresh-lookup temp-region cleanup — knk-plugin `3ac34db`, knk-web-api `14b3b8b`; accepted after a live run)
 **Supersedes:** Linear KNG-12 ("no WG flags on town/district regions"), the assumption noted in `CombatSafezone`'s Javadoc
 **Evidence:** [`reports/2026-09-28-v1-permissions-worldguard-inventory.md`](../reports/2026-09-28-v1-permissions-worldguard-inventory.md) (categorized v1 inventory), the v3 domain model (`Town → District → Structure`, `GateStructure : Structure`), `vision.md` §2
 
@@ -113,7 +113,9 @@ Outcome rules: **checked** = distinct regions considered; **skipped** = domain w
 
 ## 7. Creation path and config
 
-`POST /Regions/rename` (API → plugin) now accepts optional `domainType` and `parentRegionId`. `DistrictService` (District, parent = its Town's region) and `DomainService` (concrete subtype only; a Structure's parent = its District's region) pass them. The plugin renames the temp region — now **also copying owners and members**, which the old rename dropped — and then runs `reconcileOne` for the new name. Without a type the rename behaves as before and the next repair sets the region up.
+`POST /Regions/rename` (API → plugin) now accepts optional `domainType` and `parentRegionId`. Every domain service — `TownService`, `DistrictService`, `StructureService`, `GateStructureService`, `DomainService` — calls the shared `IDomainRegionNameFinalizer` after create/update (KNG-43): a region still named `tempregion_worldtask_<n>` becomes `domain_<id>`, with the concrete type and the parent's region (District → its Town, Structure/Gate → its District). A failed rename never fails the save; the region keeps its temp name. The plugin renames the temp region — **copying owners and members**, and (KNG-43) keeping the region's own parent and re-linking regions whose parent it was — then runs `reconcileOne` for the new name. Without a type the rename behaves as before and the next repair sets the region up.
+
+**The repair never renames.** `/knk regions repair` only fixes parent, priority and flags. Domains that still have a temp name (created before KNG-43, or renamed while the server was down) are renamed by `POST /api/Regions/finalize-temp-names` (plugin key or `knk.admin.regions`; needs the server running; parents first; returns found/renamed/failed; safe to repeat).
 
 `config.yml`, `regions.managed`: `startup-repair.{enabled,delay-ticks,attempts,retry-delay-seconds,page-size}`, `resource-production-block-break`, `manage-global-region`, `overrides.<regionId>.{kind,priority,parent,flags}`, `extra-regions[].{region,kind,parent}`. Bad entries are logged and ignored, never fatal. The override mechanism is how a House/Property/Room/`property_47` counterpart is identified until `Structure` gets subtypes, and where any exact v1 priority is recorded.
 
@@ -122,15 +124,18 @@ Outcome rules: **checked** = distinct regions considered; **skipped** = domain w
 1. **No House/Property/Room subtype in the API**, so those kinds are opt-in per region (overrides). A `StructureType` on `Structure` would let the repair apply them automatically — needs a migration and design decision (`vision.md` §2.5 already decides on subclasses). Linear KNG-47.
 2. **`allow-blocks` / wood farm**: needs a v3 listener to restrict block breaking in `RESOURCE_PRODUCTION` regions to logs; until then `block-break` is not opened up. Linear KNG-48.
 3. **Exact v1 priorities** unknown (§2). Supply `regions.yml` to compare, or set overrides. Linear KNG-49 (also the Arena/Battleground entity decision).
-4. **Town/Structure creation don't finalize temp region names** (`TownService`/`StructureService` never call rename; only `DistrictService` and `DomainService` do), so those regions stay `tempregion_worldtask_<n>`. The repair handles them regardless of name, but see 5. Follow-up: finalize in those services too (Linear KNG-43 Gap 1, which also holds the 90-day FormSubmission cleanup).
-5. **`TempRegionRetentionTask` could delete a domain's region** (14 days after creation, prefix match only; it also reads a custom flag WorldGuard may not persist). Mitigated here: it now skips any region a domain uses, and skips everything until the first repair has read the domain data. A proper fix is item 4.
+4. ~~Town/Structure creation don't finalize temp region names~~ — fixed by KNG-43 (§7); existing temp-named domains need one `finalize-temp-names` call.
+5. **`TempRegionRetentionTask`** (14 days after creation, `knk-creation-timestamp` flag) deletes a temp-named region only when (a) the last repair didn't see a domain use it (and the repair has run at all), (b) it has a valid timestamp older than the cutoff, and (c) a fresh `GET /Domains/by-region/{id}` right before the delete returns 404. An API error keeps the region. Policy: `knk-core` `TempRegionCleanupPolicy` (KNG-43; before, only (a) existed, so a domain created after the last repair was not protected).
 6. **Entry gating by rank** and **greetings** remain v3-plugin behaviour, not WG flags (§5).
 7. **Arena/battleground regions** have no domain entity; they are managed only through `extra-regions`.
 8. `WorldGuardManagementCommand` (`/knk wgm rename`) is not registered anywhere (dead code) — left as is.
+9. **Legacy regions can already hold a `domain_<id>` name.** v2 used the same `domain_<n>` scheme, and imported v2 regions keep their names, so a new domain's final name can collide with an orphaned v2 region. The plugin then refuses the rename (`target region name already exists: domain_<id>` in the server log), the domain keeps its temp-named region, and `finalize-temp-names` lists it under `failed`. Seen live on 2026-10-04 for GateStructure 11 (an orphaned v2 `domain_11`): removing the orphan and calling the endpoint again fixed it. Check `/rg info domain_<id>` before deleting: if it is the domain's own region, only the `WgRegionId` in the database is stale.
 
 ## 9. Verification status and in-game smoke test
 
 Automated: `knk-core` tests for the policy, planner/reconciler (hierarchy, overlap resolution, flags and exceptions, creation-vs-repair equality, idempotence, preservation of unrelated regions/owners/members/greetings, stale/missing/ambiguous/cyclic data, apply and save failures), spec building, paging and the repair service, and config parsing. **The WorldGuard adapter and the Paper wiring (`WorldGuardManagedRegionStore`, `ManagedRegionsBootstrap`, `RegionsAdminCommand`, the rename hook) and the C# API changes could not be compiled or run in the cloud session** (Paper/EngineHub Maven repos and `dotnet` unavailable) — they need a local `./gradlew build` / `dotnet test`.
+
+KNG-43 live run (2026-10-04, dev server): `POST /api/Regions/finalize-temp-names` found 2 temp-named domains; one renamed, GateStructure 11 failed on the v2 name collision in §8 item 9, then renamed after the orphan was removed. Accepted by the developer.
 
 In-game checklist (dev server, back up `plugins/WorldGuard/worlds/*/regions.yml` first):
 
