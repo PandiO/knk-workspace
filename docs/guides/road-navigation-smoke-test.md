@@ -4,7 +4,9 @@
 2026-10-01 findings are implemented (2026-10-02)** on `claude/road-navigation-smoke-test-bugs-fagl4i` in knk-web-app,
 knk-web-api and knk-plugin — see "Fixes implemented (2026-10-02)" at the end of Findings for what to re-test before
 resuming Phase 4 items 20+. The direct-mode straight line through terrain (finding 1) stays open as KNG-51.
-**Last updated:** 2026-10-03
+**2026-10-04:** after the reset — findings H (rural road with grass holes: record it) and I (edges through the ground
+at plaza junctions: fixed in the builder, rebuild needed).
+**Last updated:** 2026-10-04
 **Sources:** the "Developer to-do" blocks of Phases 1, 3, 4 and 5 in `docs/specs/navigation/IMPLEMENTATION_PLAN.md`;
 progress report `docs/reports/2026-09-27-road-navigation-chain.md`. If this file and a plan block disagree, the plan wins.
 
@@ -499,6 +501,46 @@ experiment first: `plaza-growth: 4`, `min-spur-length: 15` helped a bit, not eno
 - `/knk road node unprune [id]` works for both tombstone kinds; `edge delete` on a detected edge now points to `edge prune`.
 - Re-test: prune a stub, a loop side and a whole fake plaza junction on 2,-2; rebuild the tile twice → they stay out;
   `unprune` one → it returns on the next build.
+
+### After the reset (2026-10-04) — missing rural road, edges through the ground
+
+Data wiped with `road-navigation-reset.sql`, 3 new surveys/profiles ("Cinix rural main" #7 unscoped, "Cinix town main"
+#8 and "Cinix keep stairs" #9 scoped to town 5), tiles 2,-2 / 1,-2 / 2,-1 built 10:00-10:01. Analysed from the DB rows
+and a read-only copy of region files `r.1.-2`/`r.2.-2`, replaying the builder's span/step/corner rules over the real
+blocks. (The road tables were reset again at ~10:25, after the rows were saved.)
+
+**H — "Cinix rural main" mostly missing (endpoints #3760 ↔ #3778): data, not a builder bug.**
+- Not the ambiguous flag: rural main's Surface `GRAVEL` is unambiguous (only STONE_BRICKS, its stairs and
+  CRACKED_STONE_BRICKS are flagged). Not the town scope (#7 has none). Not the seeds (22 Survey seeds, all on a span)
+  or the cell cap.
+- The trail itself is patchy: gravel/andesite/cobble/dirt with grass holes. **179 of 556 breadcrumbs stand on
+  GRASS_BLOCK, in 116 stretches of 1-4 blocks** (the survey stats agree: 599 of 1661 centre cells are grass). A grass
+  block is no road span, so each hole cuts the mask: replayed from the 22 seeds the road falls apart into 21 islands
+  (largest 697 spans) and only seeded islands get built; 66 of 556 breadcrumbs lay within 4 blocks of an edge. The build
+  summary's "survey coverage: N walked point(s) got no road" line is this.
+- A generic gap rule does not fit: bridging 1-block holes still leaves 7 islands; 2-block bridging leaks into the
+  meadow (1.5 k → 155 k spans).
+- **Fix (admin, no code):** walk the trail with `/knk road record start` … `stop` (DESIGN §5.10, a Recorded edge that
+  survives rebuilds; start and stop next to the built ends at #3760 / #3778 so they snap to those nodes), then
+  `/knk road edge prune` the stray island edges along it. Or fill the grass holes in the trail with gravel and rebuild
+  — the cleaner road for the builder, but 100+ spots.
+
+**I — edges through the ground at a plaza junction: builder bug, fixed.**
+- Every edge at plaza junction #3752 (1418, 48, -520) began with one straight segment of 18-24 blocks climbing 3-6
+  (#5641, 5649, 5651, 5655, 5656 and #5642's last segment), through 8-20 solid blocks (the plaza floor, cobblestone
+  stairs, stone bricks); the rest of their geometry was clean. Junction #3777 (964, 68, -544, tile 1,-2) the same: 32-41 blocks, up to
+  9 of climb, up to 24 blocks buried. #5542 was gone before the analysis.
+- Cause: a plaza (and a junction cluster) is one Junction at its core, while its chains start where its footprint ends —
+  `plaza-growth: 4` and `junction-cluster-radius: 5` make that far — and `TileBuilder.polyline` closed the gap with one
+  straight line, diagonally through the plaza's stairs and hill.
+- **Fixed** on knk-plugin `claude/navigation-walkable-path` (not pushed): `89016e4` closes the chain onto its node along
+  the mask (shortest walk over mask links; a node off the mask keeps the straight line); `4eb6aae` adds a build warning
+  *"Edge runs through the ground / floats above the ground from here"* with a teleport for whatever is left; `09eed88`
+  builder version 2 (stored on the tile, nothing compares it yet — rebuild by hand). Tests: TileBuilderTest +2;
+  Gradle core 1636 / api-client 184 / paper 1133 green (was 1634 / 184 / 1133).
+- **Re-test:** deploy the jar (`./gradlew :knk-paper:dev`; API unchanged, `6947e2a`), rebuild 2,-2 and 1,-2 (and
+  2,-1) → the edges at the plaza around (1418, 48, -520) and junction #3777 at (964, 68, -544) follow the stairs/ramps in `/knk road show`; read the summary for
+  the new warnings and teleport to any.
 
 ---
 
