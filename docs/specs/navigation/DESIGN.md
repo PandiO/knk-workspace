@@ -3,8 +3,9 @@
 **Status:** Decided (rev. 4) — all questions answered (§10); ready for implementation, **in parallel with the siege
 work** (developer decision). Phase 4 waits for KNG-17 (teleport) to reach trunk. **Rev. 5 addendum (2026-10-04,
 developer decision after the smoke test):** designed plazas and movable nodes — §3.5 `PlazaRadius`, §5.6 step 4, §7.
-**Builder 5 (2026-10-04, finding L):** §5.6 steps 2, 3, 3b and the §7 corrections line. **Proposed, not decided:**
-[REV6_PROPOSAL.md](REV6_PROPOSAL.md) (open areas before the centreline; curated tiles reviewed as a list of changes).
+**Builder 5 (2026-10-04, finding L):** §5.6 steps 2, 3, 3b and the §7 corrections line. **Rev. 6 (accepted in principle, to do):**
+[REV6_PROPOSAL.md](REV6_PROPOSAL.md) — curated tiles reviewed as a list of changes first (plan §5.7), then open areas before
+the centreline.
 **Last updated:** 2026-10-04
 **Implementation plan:** [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) — its §1 lists ten small deviations (D1-D10) decided
 while mapping the design onto trunk code; where this document and the plan disagree, the plan wins.

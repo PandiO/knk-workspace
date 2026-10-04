@@ -2427,6 +2427,61 @@ the middle of Merchants Square (or radius 16); check Brink in `/knk road show`.
 The structural follow-ups (find open areas before making the centreline; freeze curated tiles and review rebuilds as
 a list of proposed changes) are proposed in [REV6_PROPOSAL.md](REV6_PROPOSAL.md), not decided.
 
+## 5.7 Rev. 6 Part B — curated tiles (to do, starts 2026-10-05)
+
+**Developer decision 2026-10-04:** do the rev. 6 work, starting with the recommended part, **curated tiles**
+([REV6_PROPOSAL.md](REV6_PROPOSAL.md) §3). Part A (open areas first, §2) follows. Nothing is implemented yet. Handoff
+for the implementing session: `docs/ai-agents/handoffs/2026-10-05-road-curated-tiles.md`. The decisions in "Open
+decisions" below are asked at the start of that session, not before.
+
+**Goal.** Once an admin has edited a tile, a rebuild never silently replaces the stored graph. It produces a
+**proposal** (what a fresh detection would add, remove, move or reshape) that the admin reviews in-game and accepts or
+rejects. Tombstones then only filter proposals; a stale one can no longer remove a road from the stored graph.
+
+**Phases** (one branch per repo as usual: knk-web-api `claude/road-navigation`, knk-plugin
+`claude/navigation-walkable-path`; one commit per step, a test with each):
+
+| Step | Repo | Work |
+|---|---|---|
+| B1 | knk-web-api | `road_tiles.State` (`Detected` \| `Curated`) and `CuratedAt` (migration, applied only with a go-ahead). Every admin edit endpoint marks the tile `Curated`: `PUT road-nodes/{id}`, `road-nodes/anchor`, `/merge`, `/{id}/prune`, `PUT road-edges/{id}`, `road-edges/prune`, `DELETE road-edges/{id}`, recorded-edge `POST road-edges`. Tile DTOs (list and graph download) carry `state`. `PUT road-tiles/.../graph` is unchanged: the plugin decides when to call it. Tests. |
+| B2 | knk-plugin core | `core/roads/build/TileDiff` (pure): compare a `TileBuildResult` with the stored tile graph (the previous graph). Node and edge ids are already matched by `NodeMatcher` (`existingId`). Items: node added / removed / moved (beyond `nodeMatchDistance`), edge added / removed / geometry changed (beyond `edgeMatchDistance`). `TileDiff.merge(stored, result, accepted)` builds the graph to upload: the stored graph plus the accepted items, with the dependency rules below. Tests, including a replay-style case. |
+| B3 | knk-plugin paper | `RoadBuildJob`: for a `Curated` tile, keep the diff as a **proposal** (per tile, in the build queue, held in memory) instead of upserting. The build summary lists counts and numbered items with teleports. Overlay: added green, removed red, moved and changed yellow, numbered labels. Commands: `/knk road proposal [tile]` (list), `accept all\|<n…>`, `reject all\|<n…>`, `clear`. Accept uploads the merged graph through the existing upsert. Reject: see decision D4. Accepting all of an untouched proposal equals today's upsert. |
+| B4 | knk-plugin paper | `/knk road build dirty\|all\|radius` makes proposals for curated tiles and builds `Detected` tiles as today. `/knk road tiles` shows the state and "built with vN". Tiles with an older `BUILDER_VERSION` are listed, never rebuilt automatically. Config `navigation.builder.curated-tiles: true` (false = today's behaviour, the kill switch). |
+| B5 | later | Partial rebuild (`/knk road build here radius <r>`, a proposal inside a circle); a web-app tile-state column and proposal review. Not in the first round. |
+
+**Dependency rules for `merge`:** accepting an added edge brings its added end nodes; accepting a removed node removes
+its edges; a moved node takes its edges' end points along (the API already moves edge ends with a node); boundary nodes
+and stitch edges follow the existing upsert rules.
+
+**Tombstones on curated tiles:** prune and unprune keep their API behaviour (the edge or node goes now, and the
+tombstone stays). The builder keeps reading tombstones when it makes a proposal, so pruned junk is not proposed again.
+Because the stored graph is only replaced through a reviewed proposal, a stale tombstone can at worst hide a proposal
+item. The builder-5 correction report still lists stale ones.
+
+**Done when:** the live re-test on tile 2,-2 shows a rebuild after a config change as a proposal; accepting items
+changes only those items; rejecting keeps the stored graph; `curated-tiles: false` restores today's behaviour. Gradle
+and web-api tests are green, except the known failures.
+
+**Open decisions (asked on 2026-10-05; recommendation first):**
+- **D1 — what makes a tile Curated.** Automatically on the first admin edit (recommended), or only through an explicit
+  `/knk road tile curate`.
+- **D2 — existing tiles.** Mark tiles that already hold admin data (tombstones, anchors, plazas, locked nodes, recorded
+  edges; today 2,-2 and 2,-1) `Curated` in the migration (recommended), or start them all `Detected`.
+- **D3 — accept granularity in the first version.** All-or-nothing plus per item with the dependency rules
+  (recommended), or all-or-nothing only.
+- **D4 — rejecting a "removed" item** (a stored edge or node that detection no longer finds). Mark it confirmed so it is
+  never proposed for removal again: lock the node, and add an edge `Confirmed` flag, which needs a column (recommended).
+  Or let it come back in every proposal.
+- **D5 — where proposals live.** In plugin memory until accepted, rejected or the server restarts (recommended for the
+  first version), or stored in the API for web-app review.
+- **D6 — after B.** Part A (open areas first), gated by the offline replay on Cinix plus 2-3 areas outside Cinix that the
+  developer picks (a different town, a village, a rural road network).
+- **D7 — the offline replay harness.** Commit it to knk-plugin as a test that is skipped unless a replay directory is
+  set (recommended), or keep it as reference files under `docs/ai-agents/handoffs/road-replay/` (where it is now).
+
+**Before B1:** the developer deploys builder 5 and runs the finding L re-test (smoke-test guide). Its results may change
+D2.
+
 ## 6. Out of scope (Phase 6 in DESIGN §8)
 
 Automatic rebuild of dirty tiles; "follow road" mode; Pathetic off-road legs; NPC routing; travel modes and risk costs;

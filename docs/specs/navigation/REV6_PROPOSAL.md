@@ -1,6 +1,8 @@
 # Road Navigation — Rev. 6 proposal: open areas first, curated tiles
 
-**Status:** Proposed (2026-10-04), **not decided**. Decisions needed in §4.
+**Status:** Accepted in principle (developer, 2026-10-04): **Part B (curated tiles) first**, Part A after. To do;
+implementation starts 2026-10-05: [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) §5.7 (steps and open decisions D1-D7),
+handoff [2026-10-05-road-curated-tiles.md](../../ai-agents/handoffs/2026-10-05-road-curated-tiles.md).
 **Last updated:** 2026-10-04
 **Builds on:** [DESIGN.md](DESIGN.md) (rev. 5 + builder 5), [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) §5.6,
 smoke-test guide [finding L](../../guides/road-navigation-smoke-test.md) (Build v202 analysed).
