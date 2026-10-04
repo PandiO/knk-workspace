@@ -538,6 +538,17 @@ blocks. (The road tables were reset again at ~10:25, after the rows were saved.)
   *"Edge runs through the ground / floats above the ground from here"* with a teleport for whatever is left; `09eed88`
   builder version 2 (stored on the tile, nothing compares it yet — rebuild by hand). Tests: TileBuilderTest +2;
   Gradle core 1636 / api-client 184 / paper 1133 green (was 1634 / 184 / 1133).
+- **J — duplicates at Brink after the rebuild (later 2026-10-04): builder bug, fixed.** The road data was restored
+  to its pre-reset state from the binlog (`db-backups/2026-10-04_road-network_pre-reset_restore.sql`); an earlier
+  import of the 10-01 phpMyAdmin dump had left `road_nodes`/`road_edges` without keys (API: "Field 'Id' doesn't have a
+  default value"), repaired with `2026-10-04_road-nodes-edges_restore-keys.sql`. The rebuild then drew 7-8 edges
+  overlapping up Brink's east stairs: anchor #3588 at the stair foot lay inside Brink's plaza footprint and
+  `SkeletonGraph.placeAnchors` let it take over the plaza junction 21 blocks away, so every plaza arm started at the
+  anchor (yesterday's straight lines #5462-#5467 were the same bug). Fixed in knk-plugin `f04c004` (builder version
+  3): an anchor takes over a node only within `nodeMatchDistance`, otherwise it gets its own node plus the footprint's
+  exits within that reach. Replayed offline on the real blocks with the current tombstones/anchors/locks: Brink keeps
+  its own arms; #10012 becomes the west meeting point. Left as is: the east stairs keep two lanes (Brink → #3588 and
+  Brink → the eastern-place junction), because the skeleton forks high on the wide staircase.
 - **Re-test:** deploy the jar (`./gradlew :knk-paper:dev`; API unchanged, `6947e2a`), rebuild 2,-2 and 1,-2 (and
   2,-1) → the edges at the plaza around (1418, 48, -520) and junction #3777 at (964, 68, -544) follow the stairs/ramps in `/knk road show`; read the summary for
   the new warnings and teleport to any.
