@@ -1,14 +1,15 @@
 # Game Settings — Design
 
-**Status:** Implemented on branch `claude/kng-52-game-settings` (knk-plugin, knk-web-api); the web-app page and API have been on trunk since 2026-08-21. Not merged, not live-tested. Decisions D1–D3 need the developer's review.
+**Status:** Implemented on branch `claude/kng-52-game-settings` in knk-plugin, knk-web-api and knk-web-app. The first page and API have been on trunk since 2026-08-21. Round 2 (2026-10-05, developer request) added group overrides, synced respawn, the searchable spawn picker and the MOTD. Not merged, not live-tested; the API migration is not applied. Decisions D1–D3 and D13 need the developer's review.
 **Last updated:** 2026-10-05
 **Linear:** [KNG-52](https://linear.app/kngpandi/issue/KNG-52)
 **Sources:** knk-web-api `master` `099f936` (`Controllers/GameSettingsController.cs`, `Services/GameSettingsService.cs`, `Dtos/GameSettingsDtos.cs`, `Models/GameSettings.cs`, commit `285baf3` of 2026-08-19); knk-web-app `main` `3953658` (`src/pages/admin/GameSettingsPage.tsx`, commits `f3206c5`/`21e84c9` of 2026-08-21); knk-plugin `main` `5c85a3d` and the shelved stash `19-08-26: Workable: GameSettings feature` (base `961597e`); [vision §2.7](../../vision/vision.md#27-game-world-settings); [teleport DESIGN §3.6](../teleport/DESIGN.md) (`/spawn`).
 **Plan and status:** [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md). **Admin how-to:** [guides/game-settings.md](../../guides/game-settings.md).
 
 Game Settings are the server-wide rules an admin sets on the web app instead of in config files or code: what the
-server says when someone joins or leaves, where players arrive and respawn, and each world's game mode, time,
-weather and spawn point. This is the vision's §2.7 "game world settings" direction. It replaces hard-coded
+server says when someone joins or leaves, where players arrive and respawn, each world's game mode, time,
+weather and spawn point, the server-list MOTD, and per-permission-group exceptions to the join message,
+spawn and respawn. This is the vision's §2.7 "game world settings" direction. It replaces hard-coded
 defaults such as "teleport every joining player to world 0's spawn" and "respawn everyone in town 4".
 
 ---
@@ -33,10 +34,17 @@ defaults such as "teleport every joining player to world 0's spawn" and "respawn
 | `worldSettings[]` | one block per world: `worldName`, `defaultGameMode`, `lockTime`, `lockedTime`, `weather`, `worldSpawnReference`, `respawnPolicy` | yes |
 | `runtimeWorlds[]`, `runtimeWorldsLastUpdatedAt` | the loaded worlds, as last reported by the plugin | read-only list |
 | `updatedAt` | last change to the settings (since KNG-52 a plugin report alone no longer moves it) | shown |
+| `motd` | server-list MOTD: two lines, `&` codes, `{online}`/`{max}`; null = server.properties (§3.9) | yes |
+| `groupOverrides[]` | per PermissionGroup: `joinAnnouncement`, `joinSpawnReference`, `respawnPolicy` (each optional); read adds `groupName` and `precedence` (§3.8) | yes |
 
 A **LocationReference** is `{sourceType: Location|Town|District|Structure, sourceId, displayLabel, location}`, where
 `location` is a snapshot of the coordinates when the admin picked it. A **respawn policy** is
-`{mode: WorldSpawn|ConfiguredReference|NearestTown, locationReference, maxNearestTownDistance, useWorldSpawnFallback}`.
+`{mode: WorldSpawn|ConfiguredReference|NearestTown|JoinSpawn, locationReference, maxNearestTownDistance, useWorldSpawnFallback}`.
+
+The API stores `motd` and `groupOverrides` in two columns added by migration `AddGameSettingsMotdAndGroupOverrides`
+(round 2). On `PUT`, leaving out `motd` or `groupOverrides` keeps the stored value, so an older client can't wipe them.
+`UserDto`/`UserSummaryDto` carry `permissionGroups`: the user's effective groups (unexpired memberships plus inherited
+parents) in the precedence order of §3.8. The plugin reads the player's groups from it.
 **Weather** is `{mode: Normal|Constant|Blocked|Weighted, forcedWeather, blockedWeatherTypes[], clearWeight, rainWeight, thunderWeight}`.
 
 ---
@@ -72,6 +80,14 @@ Players without `knk.mode.owner` are teleported on join to the **server spawn** 
   snapshot, the main world's spawn is used.
 - `WorldSpawn` → the main world's spawn point. This is the first world. Its spawn point can itself be set per world (§3.6).
 
+A permission group's spawn override (§3.8) replaces this destination for its members, both for the join teleport
+and for `/spawn`.
+
+**Picking a spot (web app):** every spawn and respawn field uses a searchable picker. It lists Locations and
+the default spawn Location of every Town, District and Structure. The list can be filtered by type and searched
+by id (`12` or `#12`), name, or parent domain: a district's town, or a structure's district and town. Every
+word typed must match.
+
 The destination is resolved in the background and cached (5 minutes, dropped on change and by `/knk cache refresh`).
 If a player joins in the first seconds after a restart, before it resolves, they go to the reference's snapshot
 or the main world's spawn instead. Every other reference (world spawns, respawn spots) resolves the same way
@@ -79,12 +95,14 @@ through `SpawnPointResolver.resolveReference`.
 
 ### 3.3 Respawn
 
-On a **death** respawn of a player without `knk.mode.owner`/`knk.mode.staff`, the plugin applies the respawn policy
-of the world they **died in**. That is the world's own block, else `defaultRespawnPolicy`.
+On a **death** respawn of a player without `knk.mode.owner`/`knk.mode.staff`, the plugin applies a respawn policy.
+It is the player's group respawn override if one of their groups has one (§3.8). Otherwise it is the policy of the
+world they **died in**: the world's own block, else `defaultRespawnPolicy`.
 
 | Mode | Where the player respawns |
 |---|---|
 | `WorldSpawn` | Not overridden: the server decides (bed or respawn anchor, else the world's spawn). **D1** |
+| `JoinSpawn` | **Synced with the join spawn:** where this player would join and where `/spawn` takes them (§3.2), including a group spawn override. The other modes keep spawn and respawn separate. |
 | `ConfiguredReference` | The reference's resolved location (§3.2) |
 | `NearestTown` | A town in the death world. If the player died inside a town's WorldGuard region, that town is used, even beyond the maximum distance. Otherwise the town whose spawn is horizontally nearest, within `maxNearestTownDistance` (empty or 0 = any distance). Towns without a spawn Location are skipped. |
 
@@ -143,6 +161,49 @@ starts with that copy when the API is unreachable at boot. The version being rep
 `game-settings-backups/` (newest `backup-history-limit`, default 48). That folder is a local trail of what was
 changed on the page. It is not a backup of the database.
 
+### 3.8 Permission group overrides (round 2)
+
+A permission group can override three settings for its members, each on its own:
+
+- **Join message**, replacing the global one. A blank message means members join silently.
+- **Spawn**, replacing the server spawn for the join teleport and `/spawn`.
+- **Respawn policy**, replacing the world's policy in every world.
+
+The overrides are edited in the **Permission Group Overrides** card on the Game Settings page. They are stored with
+the Game Settings (`GroupOverridesJson`), not on the PermissionGroup and not as permission nodes (developer decision,
+2026-10-05). Nodes can't carry a text or a location, and the PermissionGroup form is DB-configured.
+
+**Which group wins:** a player can be in several groups (rank, premium tier, staff groups, and the groups those
+inherit from). The order is **hierarchy first, weight second** (developer decision 2026-10-05; interpretation
+**D13**):
+1. The group with more parents above it comes first. A child therefore beats the group it inherits from: Noble
+   (child of Default) beats Default, Admin (child of Staff) beats Staff.
+2. Then the higher `Weight` comes first.
+3. Then the lower id.
+
+The API computes this order (`PermissionGroupPrecedence`). It returns the player's groups in that order in the user
+summary and sorts the overrides in it on read. For each setting, the plugin takes the first of the player's groups
+that has an override for that setting. For example, Noble can set the join message while Staff sets the respawn.
+
+**Placeholders:**
+- `{player}` is the player's name.
+- `{group}` is the group whose message is shown. For the global message it is the player's first group in the
+  order above.
+- The same placeholders work in the global leave message.
+
+A player whose summary isn't cached yet (a brand-new account on its very first join) gets the global settings.
+
+### 3.9 Server-list MOTD (round 2)
+
+`motd` replaces the server.properties motd in the Minecraft server list (`ServerListPingEvent`). It has at most two
+lines, takes the same colour codes as announcements, and fills in `{online}` and `{max}`. An empty value or no
+settings read yet leaves the server's own motd. The API rejects more than two lines or more than 512 characters.
+
+### Text formatting (all texts)
+
+`&` colour and style codes, several per line, and hex colours as `&x&r&r&g&g&b&b` (what the plugin's
+`DisplayTextFormatter` parses). The page's previews render the same, including hex.
+
 ---
 
 ## 4. Configuration (`config.yml`)
@@ -165,6 +226,14 @@ The block is optional; an older config.yml gets these defaults. The report needs
 | `PUT /api/GameSettings` | web app (Save Settings) | `RequireServiceOrPermission(knk.admin.config)`: plugin key or a web user holding `knk.admin.config` |
 | `PUT /api/GameSettings/runtime-worlds` | plugin | same |
 
+`PUT /api/GameSettings` validation (round 2):
+- respawn modes must be `WorldSpawn`, `ConfiguredReference`, `NearestTown` or `JoinSpawn`;
+- a group override must name an existing group, at most once;
+- an override with no settings is dropped;
+- the MOTD has at most 2 lines and 512 characters.
+
+Overrides of a deleted group disappear on read.
+
 Before KNG-52 both writes were anonymous. A staff web user without `knk.admin.config` now gets 403 on Save. The
 Data Retention card on the same page already needed that node.
 
@@ -172,7 +241,8 @@ Data Retention card on the same page already needed that node.
 
 | Feature | Interaction |
 |---|---|
-| Teleport `/spawn` (KNG-17) | Same destination and resolver as the join teleport. |
+| Teleport `/spawn` (KNG-17) | Same destination and resolver as the join teleport. A group spawn override applies to `/spawn` too (`SpawnCommand.setPlayerSpawn`); `/spawn <player>` uses the target's group. |
+| Permission groups / ranks (user-features) | Group overrides follow the group hierarchy and `Weight` (§3.8); the user summary now lists the effective groups. |
 | Join-loading hold (`JoinLoadingGuard`) | Hands back the world's default game mode instead of SURVIVAL. |
 | Vanish / staff modes (`ModeListener`) | Vanished joins/quits stay silent; staff/owner skip the join teleport (owner) and the respawn override (both). |
 | Siege | `SiegeDeathRespawnListener` (HIGHEST) overrides the respawn for match members. A rejoining member is restored by `SiegeSessionListener` one tick after the join teleport. |
@@ -181,7 +251,7 @@ Data Retention card on the same page already needed that node.
 
 ---
 
-## 7. Decisions (2026-10-05, Claude Code session — reversible; D1–D3 need review)
+## 7. Decisions (2026-10-05, Claude Code session — reversible; D1–D3 and D13 need review)
 
 | # | Decision | Why |
 |---|---|---|
@@ -197,21 +267,31 @@ Data Retention card on the same page already needed that node.
 | D10 | World reports only on change or every 10 min, and the API no longer bumps `UpdatedAt` for a report. | 2 DB writes a minute for nothing, and a meaningless "last updated" on the page. |
 | D11 | Version history written on change only. The stash's `backup-interval-minutes` is gone. | The stash wrote an identical copy every 5 minutes. |
 | D12 | Both API writes require the plugin key or `knk.admin.config`. | They were anonymous. Same policy as the other config singletons. |
+| D13 **review** | "Hierarchy first, weight second" = more parents above a group first, then higher weight. Unrelated groups at the same depth fall to weight. | The developer's rule, made total. The alternative reading, "only a descendant beats its ancestor; unrelated groups by weight", differs only when an unrelated group is deeper. |
+| D14 | Group overrides are stored in the Game Settings, edited on its page (developer decision 2026-10-05). | One read for the plugin, reuses the page's pickers, no FormWizard/DB form-config change. |
+| D15 | "Synced vs separate" spawn/respawn is a respawn mode, `JoinSpawn`, per world and per group (developer decision 2026-10-05). | Some worlds or groups can be synced and others separate. |
+| D16 | Each overridable setting is resolved separately across the player's groups. | One group can own the join message and another the spawn, without copying settings. |
+| D17 | A group's respawn override applies in every world and beats the world's policy. | A per-group, per-world matrix wasn't asked for. Siege, staff and End exits stay exempt. |
 
 ## 8. Open questions and follow-ups
 
-1. **`defaultRespawnPolicy` is not editable on the page.** Since the API adds a block for every reported world, it
+1. **`defaultRespawnPolicy` is still not editable on the page.** Since the API adds a block for every reported world, it
    is effectively unused. Decide: add a "default" block to the page, or drop the field.
 2. **Game mode on world change** (D3), once siege and staff-mode interactions are mapped.
 3. **Join hub world:** `JoinLoadingGuard`'s comment anticipates a dedicated join-hub world for this feature. The
    current settings can already express it (a `CustomReference` join spawn in a hub world, plus that world's
    game mode/time/weather). A real hub flow (choose a destination) is not designed.
-4. **Placeholders:** only `{player}`. A rank-coloured name (`ChatLineFormat`) would need a second placeholder.
-5. **Page hint:** the page doesn't say that a blank announcement disables it.
+4. **Placeholders:** `{player}` and `{group}`. The group's colours (`ChatPrimaryColor`) aren't a placeholder;
+   type the colour code into the group's message instead.
+5. **Leave message per group:** only the join message can be overridden per group, as asked. A per-group leave
+   message would be the same small change.
 6. **Concurrent edits:** a plugin report rewrites `WorldSettingsJson` (read-modify-write). An admin save that
    lands between its read and write could be lost. This is rare (reports now only on change), but a row
    version would close it.
 7. **Paper 1.21.11+** renames the `doDaylightCycle` game rule. Revisit `applyTime` when the server is upgraded.
+8. **Merge order with navigation:** the API migration (2026-10-05) and the navigation branch's
+   `AddRoadNodePlazaRadius` both touch `KnKDbContextModelSnapshot.cs`. Whichever merges second needs its snapshot
+   re-generated or merged by hand.
 
 ## 9. History — the 2026-08-19 stash
 
