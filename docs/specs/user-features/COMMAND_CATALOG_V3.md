@@ -422,8 +422,10 @@ enchantments`'s admin/debug catalog browsing and item-blueprint application.
   (`RemoveEnchantmentCommand.java:36`) — **no** dynamic per-enchantment check
   here (unlike `add`); removal is gated only by the root node.
 - **Goal/function:** Player-only, held-item required. Strips the named
-  enchantment's lore lines via `EnchantmentRepository.removeEnchantment`
-  (`RemoveEnchantmentCommand.java:40-82`).
+  enchantment's lore lines via `CustomEnchantmentLore.remove`
+  (`EnchantmentRepository.removeEnchantment`, then the shared "enchantments first"
+  re-compose, so the spacer under the enchantment block goes with the last one;
+  fixed 2026-10-05) (`RemoveEnchantmentCommand.java`).
 - **Feature allocation:** `custom-enchantments`
 - **Status:** Finished, player-facing.
 
