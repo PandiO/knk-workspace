@@ -719,6 +719,30 @@ Use the build with `--offline -x deployToDevServer` and copy the jar yourself, o
       rev. 6. Set it back to `true`.
 - [ ] **Restart.** Make a proposal, restart the server, `/knk road proposal`: it is still there (stored in the API).
 
+#### Re-test run 1 (2026-10-05, developer) — steps through 19
+
+- **Parts 1-3:** finding L re-test passed. West junction #10031 at (1395, 45, -514) has edges to Brink (#10087),
+  Northern Gate #3587 (#10089) and Southern Gate #3638 (#10097). #3588 has Merchants (#10093) and the south road
+  (#5385). No parallel lanes. #3693 was moved to the middle of the square, and the tile rebuilt. Stale prunes were
+  unpruned. Backup taken (with `--set-gtid-purged=OFF`). The migration curated 2,-2 and 2,-1; 1,-2 and 3,-1 stayed
+  Detected. Open warnings, not blocking:
+  - 2,-2: "Edge runs through the ground" at (1122, 66, -553), and a new stale prune #10044 at (1384, 43, -579).
+  - 2,-1: "Seed has no road span within reach" at (1418, 42, -174).
+- **Finding M1 — domain noise.** Step 14 (an unchanged rebuild) proposed 4 "domains [5, 8] → [5]" changes. Domain ids
+  are looked up from the WorldGuard regions through a cache that can miss a region at build time.
+  **Fixed in knk-plugin `fa8fcb5`:** a changed edge compares `regionIds` (what the router reads), not `domainIds`.
+- **Finding M2 — no clear undo, confusing numbers.** A rejected removal had no undo under `proposal`; only
+  `/knk road edge unconfirm` existed. "rejected 1 item(s) (9)" printed the item number, but `unreject` wanted the
+  position in the rejected list. **Fixed in `fa8fcb5`:**
+  - Items read "item 3: …". Rejected entries read "R1: …", removals included, and record the nodes their rejection
+    locked.
+  - `/knk road proposal unreject R1` (alias `unconfirm`) undoes any rejection: it unconfirms the edge and unlocks
+    exactly those nodes, or stops hiding the change.
+  - Messages say "rejected item 9 → R1" and "accepted item 6 - applied to the road graph".
+- **Step 19 note.** Item 6 (edge #10089, profile #1 → #3) was **accepted**, not confirmed. An accept has no undo;
+  revert it by hand with `/knk road edge set 10089 profile 1`. A later rebuild proposes #1 → #3 again, which can then
+  be rejected.
+
 ### Phase 3 — rebuild re-test (2026-10-02, developer; recorded from the commit messages)
 
 Not written up here at the time; reconstructed by the walkable-path chain (link 1) from the developer's commits on

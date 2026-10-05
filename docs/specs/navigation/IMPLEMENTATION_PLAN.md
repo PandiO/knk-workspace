@@ -2503,6 +2503,7 @@ Implemented in a cloud session (no dev DB, world or server). All on `claude/road
 | B3+B4 | knk-plugin paper | `9fefe89` | `RoadProposals`, build job and queue, `/knk road proposal …`, `/knk road tile curate\|uncurate`, `/knk road edge confirm\|unconfirm`, overlay, tiles listing, `navigation.builder.curated-tiles`. |
 | D7 | knk-plugin | `867be1c` | `RoadReplayTest` (skipped unless `KNK_REPLAY_DIR`), `tools/road-replay/` (export + README). The workspace copies were removed. |
 | — | knk-plugin | `e5d7562` | The tile file cache keeps `state`, `curatedAt` and `confirmed` (optional fields; older files still load). |
+| fixes | knk-plugin | `fa8fcb5` | Live re-test run 1 (guide, findings M1/M2): changed edges compare WorldGuard regions, not domain ids; every rejection goes on the rejected list as R<n> and `unreject`/`unconfirm R<n>` undoes it (unconfirms the edge, unlocks exactly the nodes it locked); "item n" / "R n" / "#id" numbering. Gradle core 1685 / api-client 191 / paper 1200. |
 
 **Verified here:**
 - **Tests.** Gradle core 1683 / api-client 191 / paper 1198 (16 skipped) green. web-api: road tests 136 green; the full

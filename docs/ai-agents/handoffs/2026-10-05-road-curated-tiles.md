@@ -19,7 +19,7 @@ Part B row is yours, so update it when you start and stop. Then read:
 | Repo | Branch | Head | Base |
 |---|---|---|---|
 | knk-web-api | `claude/road-curated-tiles-nsrorb` | `176b9d3` | `claude/road-navigation` `7f99cbd` |
-| knk-plugin | `claude/road-curated-tiles-nsrorb` | `e5d7562` | `claude/navigation-walkable-path` `75f6a0e` |
+| knk-plugin | `claude/road-curated-tiles-nsrorb` | `fa8fcb5` | `claude/navigation-walkable-path` `75f6a0e` |
 | knk-workspace | `claude/road-curated-tiles-nsrorb` | this handoff's commit | `main` + `claude/road-navigation-smoke-test-bugs-fagl4i` (`ad7615d`) |
 | knk-web-app | — | no change | B5 (later) |
 
