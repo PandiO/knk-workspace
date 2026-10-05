@@ -1,12 +1,13 @@
 # Road navigation — smoke test checklist (KNG-27)
 
-**Status:** In progress — Phase 1, 3, 5 passed (with findings); Phase 4 partially run, then **blocked** — see
-"Phase 4/5 — live smoke test (2026-10-01)" in Findings. Do not continue Phase 4 items 20+ until the direct-mode
-pathfinding bug and the rebuild-persistence gap are fixed. **Update 2026-10-02:** the §5.5 fix plan (items 1-6) is
-on `claude/road-navigation` (knk-plugin `075ae94`, knk-web-app `6414e18`, knk-web-api `c029186`) — each finding below
-names its fix; re-test them, then resume Phase 4 item 20. The direct-mode straight line (finding 1) remains until
-KNG-51 lands.
-**Last updated:** 2026-10-02
+**Status:** In progress — Phase 1, 3, 5 passed (with findings); Phase 4 partially run, then blocked. **Fixes for the
+2026-10-01 findings are implemented (2026-10-02)** on `claude/road-navigation-smoke-test-bugs-fagl4i` in knk-web-app,
+knk-web-api and knk-plugin — see "Fixes implemented (2026-10-02)" at the end of Findings for what to re-test before
+resuming Phase 4 items 20+. The direct-mode straight line through terrain (finding 1) stays open as KNG-51.
+**2026-10-04:** after the reset — findings H (rural road with grass holes: record it) and I (edges through the ground
+at plaza junctions: fixed in the builder, rebuild needed). **Evening:** finding L (Brink's west junction and #3588
+lost to junction clustering; builder 5 with a correction report — re-test list at the end of Findings).
+**Last updated:** 2026-10-04
 **Sources:** the "Developer to-do" blocks of Phases 1, 3, 4 and 5 in `docs/specs/navigation/IMPLEMENTATION_PLAN.md`;
 progress report `docs/reports/2026-09-27-road-navigation-chain.md`. If this file and a plan block disagree, the plan wins.
 
@@ -452,6 +453,231 @@ checks depend on reaching a destination reliably and on a network that doesn't n
 **Fix plan:** see `docs/specs/navigation/IMPLEMENTATION_PLAN.md` §5.5 "Fix plan before resuming the live smoke test
 (2026-10-01)" for the prioritized, scoped plan covering all of the above (the direct-mode/last-mile pathfinding
 item was split into its own Linear issue, related to KNG-27).
+
+### Fixes implemented (2026-10-02) — re-test before resuming Phase 4
+
+Branch `claude/road-navigation-smoke-test-bugs-fagl4i` in knk-web-app, knk-web-api and knk-plugin (merge into
+`claude/road-navigation` first; no migration). Details, decisions and test counts: plan §5.5 "5.5 status".
+
+| Finding | Fix | Re-test |
+|---|---|---|
+| 7 (profile delete `confirm()`) | `FeedbackModal`; it was the only `window.confirm` in the road admin | §3 profile delete |
+| 4 (region goal "arbitrary", straight through terrain) | Region destinations follow the road to where it enters the region; straight only when the region is within 8 blocks or nearer than any road | §4 District / Town `region` from 30-40 blocks with a road nearby; `/knk road why` |
+| 3 ("already in X" missing) | Checked first, with WorldGuard's own containment (same as the region tracker) | §4 "From inside that region", cuboid + polygon, several heights |
+| 2 + 5 (direct mode never re-checks; "left the road" missing) | Direct mode re-checks every 2 s: "You're heading away from X - recalculating."; the routed message was never broken (it was direct mode) | §4 walk away from a < 48-block Location; leave the road on a routed session |
+| C (plaza = ~10 junctions) | Plaza footprint grows over its edge band (`navigation.builder.plaza-growth`, 2); junctions forking at a plaza's edge join it | §2 rebuild the Cinix plaza tiles |
+| B (Boundary node off the tile border) | A plaza straddling the border is cut on the border in both tiles | §2 rebuild tiles 1,-2 / 2,-2 / 2,-1 / 3,-1 |
+| 6 / F (manual cleanup lost on rebuild) | Locked nodes absorb rebuilt duplicates within `locked-node-reach` (8); recording an edge locks the nodes it snaps to | §2 merge + lock, record, rebuild twice |
+| G (`/knk road show` labels) | Names the node pillar along the view ray at any distance, else the edge under it, else the node at your feet "(here)" | §2 `/knk road show` |
+| 1 (direct line through terrain) | **Not fixed** — KNG-51 | — |
+
+Not addressed (not bugs in the fix plan): A (profile data), D (client timeout on a 250 k-cell tile — rebuild it once
+the profiles are clean), E (no tile/node delete route; builder config read only at start-up), the Phase 1 "delete the
+fake tiles" gap, and the requested `/knk road node info here` command.
+
+### Re-test of the fixes (2026-10-02)
+
+- **§1 web app:** all three pass.
+- **§2 build all:** tiles 1,-2 / 2,-1 / 3,-1 built with fewer plaza junctions. **Tile 2,-2 failed:** `Boundary node 'n70'
+  at (1418, -520) is not on the tile border`. Root cause: locked junction #7 "Brink" sits 7 blocks inside the south
+  border; the new locked-node reach (8) let the builder's border node take #7's id and position. **Fixed** in knk-plugin
+  `6a8caa7` (a border node never takes a locked inner node). After rebuilding 2,-2, check Brink: if it is left without
+  edges, `node unlock` it and rebuild, and name the new junction instead.
+- **§2 cleanup:** spurs in a small, oddly shaped plaza come back on every rebuild. That plaza is probably narrower than
+  the profiles' `widthMax`, so it is never detected as a plaza, and its spurs are longer than `min-spur-length` (12).
+  Merging them into the junction is the wrong tool. **New:** `/knk road node prune [id]` / `unprune [id]` (below).
+- **§2 merge across tiles:** merging a mid-road junction into one 15 blocks away in another tile left a second edge
+  "spawning" on the road (a merge re-points edge ends without re-tracing). Undo: `node unlock` the kept node and
+  rebuild both tiles; then prune the stub that makes the mid-road point a junction. Merge only two nodes of one
+  junction, a few blocks apart, in open space, in one tile.
+- **§2 recording:** edge #5293 (3589 → 3601) was saved, downloaded and drawn at once, but it lies on top of two
+  earlier recordings of the same stretch (#5236 3582 → 3589, #5240 3589 → 3596) and recorded edges are drawn in
+  their street colour, so nothing new was visible. Clean-up: keep one recording of that stretch
+  (`/knk road edge delete <id>` for the others).
+
+**Node prune** (branch `claude/road-node-prune` in knk-web-api `c029186` and knk-plugin `9dccb58`, on top of the fix
+branch; **deploy both together** — an older plugin can't read the new node kind). `/knk road node prune [id]` (no id:
+the nearest endpoint within 6 blocks) removes the dead end ending there and leaves a *Pruned* tombstone (a dark brown
+pillar); every later build leaves the dead end nearest the tombstone (within `locked-node-reach`, 8) out, and a
+junction left with two arms dissolves. Only endpoints; refused when a recorded edge ends there. `unprune [id]` deletes
+the tombstone and the next build brings the dead end back. No migration.
+
+Merged 2026-10-02: `claude/road-node-prune` into `claude/road-navigation-smoke-test-bugs-fagl4i`, and that into
+`claude/road-navigation` (knk-web-api `c029186`, knk-web-app `6414e18`, knk-plugin `075ae94` after the two fixes
+below). The prune branches and worktrees are removed.
+
+- **Recordings drawn inside the road** (town road, bridge, land): the recorder stored `floor(y − ε) − 1`, one block
+  below the floor block every other part of the network uses. **Fixed** in knk-plugin `8b6d678`: the recorder now uses
+  the survey's floor rule (full block, slab, dirt path, the block under a carpet/snow layer; mid-air on a ladder: the
+  block under the feet). **Recordings made before the fix stay a block too deep** (and so do the Anchor nodes created
+  at their ends) — re-record them, or correct them in the database.
+- **Junction #3615 in a straight road with two edges (#5286, #5287):** steps after spur pruning (loop/parallel split,
+  tile-border cut, an arm merged into a locked node) can leave a two-arm junction. **Fixed** in knk-plugin `075ae94`:
+  the builder joins such a junction's two edges into one, unless it is locked, joining would make a loop or a duplicate
+  pair, or it had three or more edges last build. Rebuild tile 2,-1 and #3615 is gone.
+
+### Re-test, part 2 (2026-10-03) — edge and junction prune
+
+Rebuilding tile 2,-2 after unlocking Brink (#7): plaza junctions whose edges had all been deleted with
+`/knk road edge delete` came back on every rebuild (a deleted detected edge is traced again — finding E). Config
+experiment first: `plaza-growth: 4`, `min-spur-length: 15` helped a bit, not enough.
+
+**New (2026-10-03):** knk-plugin `3f13c41` on `claude/navigation-walkable-path` and knk-web-api `6947e2a` on
+`claude/road-navigation`, **deploy both together**, no migration:
+- `/knk road edge prune <id|here>` removes a detected edge for good. It leaves a *PrunedEdge* tombstone (dark brown
+  pillar, "pruned edge") on the middle of the edge, and every later build leaves out the chain passing within 3 blocks
+  of it. Junctions and dead ends left with no edges go with it. A junction left with two arms is joined on the next
+  build.
+- `/knk road node prune <id>` on a junction lists its detected edges and prunes them all after **[Confirm]** (this cuts
+  any road through it). With no id it still picks the nearest dead end first, then a junction. Recorded and stitch
+  edges are never pruned; a named junction is refused.
+- `/knk road node unprune [id]` works for both tombstone kinds; `edge delete` on a detected edge now points to `edge prune`.
+- Re-test: prune a stub, a loop side and a whole fake plaza junction on 2,-2; rebuild the tile twice → they stay out;
+  `unprune` one → it returns on the next build.
+
+### After the reset (2026-10-04) — missing rural road, edges through the ground
+
+Data wiped with `road-navigation-reset.sql`, 3 new surveys/profiles ("Cinix rural main" #7 unscoped, "Cinix town main"
+#8 and "Cinix keep stairs" #9 scoped to town 5), tiles 2,-2 / 1,-2 / 2,-1 built 10:00-10:01. Analysed from the DB rows
+and a read-only copy of region files `r.1.-2`/`r.2.-2`, replaying the builder's span/step/corner rules over the real
+blocks. (The road tables were reset again at ~10:25, after the rows were saved.)
+
+**H — "Cinix rural main" mostly missing (endpoints #3760 ↔ #3778): data, not a builder bug.**
+- Not the ambiguous flag: rural main's Surface `GRAVEL` is unambiguous (only STONE_BRICKS, its stairs and
+  CRACKED_STONE_BRICKS are flagged). Not the town scope (#7 has none). Not the seeds (22 Survey seeds, all on a span)
+  or the cell cap.
+- The trail itself is patchy: gravel/andesite/cobble/dirt with grass holes. **179 of 556 breadcrumbs stand on
+  GRASS_BLOCK, in 116 stretches of 1-4 blocks** (the survey stats agree: 599 of 1661 centre cells are grass). A grass
+  block is no road span, so each hole cuts the mask: replayed from the 22 seeds the road falls apart into 21 islands
+  (largest 697 spans) and only seeded islands get built; 66 of 556 breadcrumbs lay within 4 blocks of an edge. The build
+  summary's "survey coverage: N walked point(s) got no road" line is this.
+- A generic gap rule does not fit: bridging 1-block holes still leaves 7 islands; 2-block bridging leaks into the
+  meadow (1.5 k → 155 k spans).
+- **Fix (admin, no code):** walk the trail with `/knk road record start` … `stop` (DESIGN §5.10, a Recorded edge that
+  survives rebuilds; start and stop next to the built ends at #3760 / #3778 so they snap to those nodes), then
+  `/knk road edge prune` the stray island edges along it. Or fill the grass holes in the trail with gravel and rebuild
+  — the cleaner road for the builder, but 100+ spots.
+
+**I — edges through the ground at a plaza junction: builder bug, fixed.**
+- Every edge at plaza junction #3752 (1418, 48, -520) began with one straight segment of 18-24 blocks climbing 3-6
+  (#5641, 5649, 5651, 5655, 5656 and #5642's last segment), through 8-20 solid blocks (the plaza floor, cobblestone
+  stairs, stone bricks); the rest of their geometry was clean. Junction #3777 (964, 68, -544, tile 1,-2) the same: 32-41 blocks, up to
+  9 of climb, up to 24 blocks buried. #5542 was gone before the analysis.
+- Cause: a plaza (and a junction cluster) is one Junction at its core, while its chains start where its footprint ends —
+  `plaza-growth: 4` and `junction-cluster-radius: 5` make that far — and `TileBuilder.polyline` closed the gap with one
+  straight line, diagonally through the plaza's stairs and hill.
+- **Fixed** on knk-plugin `claude/navigation-walkable-path` (not pushed): `89016e4` closes the chain onto its node along
+  the mask (shortest walk over mask links; a node off the mask keeps the straight line); `4eb6aae` adds a build warning
+  *"Edge runs through the ground / floats above the ground from here"* with a teleport for whatever is left; `09eed88`
+  builder version 2 (stored on the tile, nothing compares it yet — rebuild by hand). Tests: TileBuilderTest +2;
+  Gradle core 1636 / api-client 184 / paper 1133 green (was 1634 / 184 / 1133).
+- **J — duplicates at Brink after the rebuild (later 2026-10-04): builder bug, fixed.** The road data was restored
+  to its pre-reset state from the binlog (`db-backups/2026-10-04_road-network_pre-reset_restore.sql`); an earlier
+  import of the 10-01 phpMyAdmin dump had left `road_nodes`/`road_edges` without keys (API: "Field 'Id' doesn't have a
+  default value"), repaired with `2026-10-04_road-nodes-edges_restore-keys.sql`. The rebuild then drew 7-8 edges
+  overlapping up Brink's east stairs: anchor #3588 at the stair foot lay inside Brink's plaza footprint and
+  `SkeletonGraph.placeAnchors` let it take over the plaza junction 21 blocks away, so every plaza arm started at the
+  anchor (yesterday's straight lines #5462-#5467 were the same bug). Fixed in knk-plugin `f04c004` (builder version
+  3): an anchor takes over a node only within `nodeMatchDistance`, otherwise it gets its own node plus the footprint's
+  exits within that reach. Replayed offline on the real blocks with the current tombstones/anchors/locks: Brink keeps
+  its own arms; #10012 becomes the west meeting point. Left as is: the east stairs keep two lanes (Brink → #3588 and
+  Brink → the eastern-place junction), because the skeleton forks high on the wide staircase.
+- **K — designed plazas (rev. 5, 2026-10-04): new feature, not yet live-tested.** Instead of tuning `plaza-growth` and
+  pruning fragments, mark the plazas: `/knk road node plaza <radius> [id]` makes a Junction or Anchor the centre of a
+  plaza (locked); the next build makes every road block within the radius one junction exactly on that node, with an
+  edge per exit that follows the road to the centre. `/knk road node move <id>` moves a node to where you stand (same
+  tile); `unplaza [id]` clears a plaza. `navigation.builder.auto-plazas: false` turns the width guess off entirely.
+  Needs the migration `AddRoadNodePlazaRadius` applied, knk-web-api `2edcb1f` and knk-plugin `38886df`. Steps: implementation plan §5.6.
+- **Re-test:** deploy the jar (`./gradlew :knk-paper:dev`; API unchanged, `6947e2a`), rebuild 2,-2 and 1,-2 (and
+  2,-1) → the edges at the plaza around (1418, 48, -520) and junction #3777 at (964, 68, -544) follow the stairs/ramps in `/knk road show`; read the summary for
+  the new warnings and teleport to any.
+
+### Build v202 analysed (2026-10-04 evening) — finding L
+
+**Developer report.** After the migration and the deploy, tile 2,-2 was rebuilt (v202, builder 4, 15:48 UTC) with
+designed plazas at Northern Gate Square #3587 and Merchants Square #3693 (radius 12):
+- The west junction below Brink is gone. Edges #10069 (Brink → #3587) and #10074 (Brink → #3638 → Southern Gate) run
+  side by side, 1 block apart, and split at about (1404, 45, -515).
+- #3588 joins only Brink and the southern road. Merchants Square runs to Brink directly (#10075, beside #10068).
+- A new junction #10028 has one edge, to #3693.
+- Question: are the last 24 hours of changes and config tuning making things better?
+
+**Method: offline replay.** The real `TileBuilder` ran on copies of region files `r.{0..3}.{-3..0}`, extracted with the
+server's own `CompactSurfaceGrid`/`SpanExtractor`. The builder inputs (profiles, seeds, breadcrumbs, Domain Locations,
+neighbour Boundary nodes, the tile's nodes, edges and tombstones) were exported read-only from the dev DB, with the
+live builder config. The replay reproduced v202 exactly: 28 nodes, 25 edges, the same geometry and warnings. Variants
+then isolated the cause.
+
+**L1 — cause: junction clustering pulled a road fork 20 blocks away into Brink.** Data:
+- With all 27 tombstones left out, the Brink topology is identical. The tombstones only remove 19 nodes and 23 edges of
+  spurs and loops elsewhere, so **they are not the cause**.
+- A raw build (no tombstones, locks, anchors, plazas or previous graph) forks the same way. So does a designed Brink
+  plaza (radius 12) with `auto-plazas: false`.
+- With `junction-cluster-radius: 3` instead of the live 5, the west junction comes back at (1395, 45, -514), and #3588
+  gets Brink, Merchants and the southern road. That is the intended graph.
+- Mechanism: junction candidates cluster by single linkage. On Brink's wide stairs a chain of forks, each within 5 steps
+  of the next, made one cluster over 20+ blocks. A cluster with any member near a plaza joined the plaza as a whole. So
+  the west fork became part of Brink, and its two roads became two Brink edges that the mask closing (`89016e4`) draws
+  side by side. The east stairs did the same.
+- No single radius fixes it. Radius 3 doubles the junctions on tiles 1,-2 (12 → 24) and 2,-1 (5 → 10). Strict
+  (complete-linkage) clustering fixes Brink but gives tile 1,-2 43 junctions.
+- Yesterday's "hub #3588" was bug J: the anchor took over Brink's plaza 21 blocks away. Its arms were straight lines
+  through the ground (#5462-#5467, #5495, and a 42-block leg of #5478). The I/J fixes made the edges follow the road,
+  which made the hidden duplicate arms visible.
+
+**Fixes** on knk-plugin `claude/navigation-walkable-path` (not pushed), builder version 5:
+
+| Commit | Change |
+|---|---|
+| `4bc6946` | A plaza junction is never dissolved or turned into an Endpoint (a plaza with one or two exits is still a place; Brink's other arms are in tile 2,-1). |
+| `8c9cb7e` | Only the members of a junction cluster that fork at a plaza's edge join the plaza. The rest form their own junction(s). |
+| `19bf4b1` | A thin loop around an obstacle (both sides within 3 blocks the whole way) collapses into one lane. This removes the Northern Gate pair #10026/#10027 and a loop beside Brink. Ring roads and blocks of houses are still split. |
+| `2672558` | A non-plaza junction left with one arm is emitted as an Endpoint (a guard). |
+| `8fe661a` | **Correction report.** The build notes, per tombstone, anchor and designed plaza, what it did. A prune that matches nothing becomes the warning "Prune matched nothing (stale; unprune it) (node N)" with a teleport. The summary gets a line "corrections: N prune(s) (U used, S stale), A anchor(s), P designed plaza(s)". |
+| `5d9a5e9` | Builder version 5. |
+
+Gradle: core 1646, api-client 185, paper 1137, all green.
+
+**Replay with builder 5 on today's data:**
+
+| Tile | Builder 4 (live) | Builder 5 |
+|---|---|---|
+| 2,-2 | 28 nodes | 29 nodes, 9 junctions |
+| 1,-2 | 14 nodes | 7 nodes |
+| 2,-1 | 25 nodes | 20 nodes |
+
+In tile 2,-2 at Brink:
+- West junction at (1395, 45, -514): Northern Gate #3587 (78.6 m), Brink (26.4 m), and the Southern Gate road via #3638.
+- Brink → #3588 (24.2 m).
+- #3588: Brink, Merchants #3693 (51.5 m), and the southern road via #3639.
+- The Northern Gate loop is gone.
+
+Side effect at the keep top: the 13-block dead end towards (1400, 82, -506) is now pruned as a spur
+(`min-spur-length: 15`). Its tile 2,-1 half (#3527 → #3543, edge #5154) then ends at a Boundary with no partner.
+
+**L2 — #10028 is the rest of Merchants Square, not a broken junction.**
+- #3693 stands at the square's corner (1441, 42, -563). The square's middle is near (1433, 42, -556).
+- The radius-12 circle misses the far side, and the automatic plaza rule makes that part a separate plaza with one exit.
+- Data fix: stand in the middle and run `/knk road node move 3693`, or run `/knk road node plaza 16 3693`.
+
+**L3 — stale tombstones (builder 5, today's data):**
+- Tile 2,-2: 10 of 27 match nothing (#3567, #3629, #3691, #3697, #3712, #3713, #3718, #3719, #3722, #3728).
+- Tile 2,-1: 3 of 4 match nothing (#3612, #3613, #3614).
+- #3712/#3713 hid the Northern Gate loop that the thin-loop rule now removes on its own.
+- One far match to check: #3726 "left out the dead end 6.8 blocks away".
+
+**Re-test (developer):**
+1. Build and deploy the jar (a plain `./gradlew build --offline` deploys to the dev server), then restart.
+2. Rebuild 2,-2, then 2,-1 and 1,-2.
+3. Read the summary's "corrections:" line. Run `/knk road node unprune <id>` for every stale prune warning (they match
+   nothing, so removing them is safe), then rebuild.
+4. `/knk road show` at Brink: one west junction, #3588 as the meeting point, no parallel lanes on the stairs, no
+   Northern Gate loop.
+5. Move #3693 to the square's middle (or radius 16) and rebuild: #10028 should be gone.
+6. Keep top: if the dead end towards (1400, 82, -506) is a real path, record it (`/knk road record`).
+
+Keep `junction-cluster-radius: 5`; with the new rule it no longer swallows distant forks. A designed plaza on Brink is
+optional now.
 
 ### Phase 3 — rebuild re-test (2026-10-02, developer; recorded from the commit messages)
 
