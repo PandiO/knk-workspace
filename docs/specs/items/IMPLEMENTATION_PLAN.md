@@ -19,6 +19,10 @@ precedent), `docs/specs/world-tasks/API_CONTRACT.md`, `docs/specs/form-configura
 read of `knk-plugin`/`knk-web-api`/`knk-web-app` source (2026-09-22) — see §1 for what that
 read found that the docs above didn't (or got wrong).
 
+> **Update 2026-10-05:** how a blueprint becomes an in-game item (description colour, grade/origin lines, custom
+> enchantment lines, quantity) is now documented as one pipeline — [`architecture/item-render-pipeline.md`](../../architecture/item-render-pipeline.md).
+> Description lines default to dark gray (`&8`); every route goes through `BlueprintItemAssembler`.
+
 ## 0. Revision note — the legacy doc exists, just not where expected; two source reports are stale
 
 This document originally shipped saying `docs/specs/legacy/items.md` didn't exist anywhere in

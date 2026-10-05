@@ -617,9 +617,9 @@ above so it isn't reintroduced silently. No plugin/API change needed.
 - `dotnet ef database update` / FormConfigurations verification and the rest of the round-2 checklist are done; no further
   re-test needed unless the two follow-ups above change plugin behavior enough to warrant one.
 
-### Follow-ups — 2026-10-05 (reel decoy enchantments, blueprint description color)
+### Follow-ups — 2026-10-05 (reel decoy enchantments, blueprint description color, one render path)
 
-Developer asked for two more improvements after the KNG-44/45 merge (no Linear issue; knk-plugin only, no API change):
+Developer asked for improvements after the KNG-44/45 merge (no Linear issue; knk-plugin only, no API change):
 
 1. **Reel decoys carry real enchantments.** The passing items were plain blueprint look-alikes, so the one enchanted item
    on the reel was the winner. Now each slot is built like a real drop: the blueprint's default enchantments plus rolled
@@ -636,6 +636,16 @@ Developer asked for two more improvements after the KNG-44/45 merge (no Linear i
    without one is vanilla's purple. `ItemBlueprintBukkitMapper.buildLore` now prefixes every description line with `&8`;
    a color the description sets itself still wins. This applies to every blueprint description without its own color
    (existing data needs no migration). Test: `ItemBlueprintLoreColorTest`.
+3. **One blueprint → item path (audit 2026-10-05).** Every route that spawns a blueprint item already ended in
+   `ItemBlueprintBukkitMapper.fromBlueprint` + `BlueprintItemAssembler.enchant`, but four call sites repeated the two
+   steps by hand (kits, `/knk itemblueprints give`, lootbox build, reel decoy) and the assembler's `assemble` helpers
+   had no production callers. Now all four call `BlueprintItemAssembler.assemble` / `assembleDefaults` (new two-pass
+   `assemble(blueprint, key, defaults, rolled, rolledOptions, quantity)`, `maxStackSize`, `applyQuantity`), and `/ce add` +
+   the enchantment-definitions debug command use `CustomEnchantmentLore.apply` instead of their inline copies. Found and
+   fixed in the same audit: `/ce remove` left a stray blank lore line (pushed to plugin `main` as a QOL fix,
+   `e55e87f`, `CustomEnchantmentLore.remove`). Documented in [`architecture/item-render-pipeline.md`](../../architecture/item-render-pipeline.md).
+   Behaviour is unchanged except that kits and `give` now share the assembler's quantity cap. Tests: `BlueprintItemAssemblerTest`
+   (two-pass order, vanilla rules only on rolled, stamp, quantity), `LootboxDeliveryTest`, `CustomEnchantmentLoreTest`.
 Live check: open a box with a few pool items; every passing item that can carry enchantments should show some (varying),
 and Flaming Samurai's description should be dark gray like other blueprints'.
 
