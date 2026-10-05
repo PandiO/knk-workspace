@@ -11,9 +11,10 @@ was clean, one tab-completion slip fixed in `68fa48c`); **Phase 5 done** (knk-we
 merge `be5df0f` that brought in KNG-17). **All phases done — the chain is complete**; the developer merges phase by
 phase after testing (closing handoff `docs/ai-agents/handoffs/2026-09-29-road-navigation-closeout.md`).
 Every code reference was verified against trunk by a separate review pass on 2026-09-27; its corrections are folded in.
-**Last updated:** 2026-10-02 (§5.5 fix plan items 1-6 verified code-complete on `claude/road-navigation` — see
-"§5.5 status"; the live re-test is next. Direct-mode walkable pathfinding is KNG-51, `LAST_MILE_PATHFINDING.md`.
-Earlier: 2026-10-01 live smoke test findings, `docs/guides/road-navigation-smoke-test.md` Findings.)
+**Last updated:** 2026-10-04 (§5.6 designed plazas and the finding L follow-up; 2026-10-02: §5.5 fix-plan items 1-6 plus findings B and G implemented on
+`claude/road-navigation-smoke-test-bugs-fagl4i`, awaiting the developer's merge and live re-test — see "5.5 status";
+the walkable last mile stays open as KNG-51,
+`LAST_MILE_PATHFINDING.md`; 2026-10-04 status: §5.6)
 **Linear:** [KNG-27](https://linear.app/kngpandi/issue/KNG-27)
 **Design:** [DESIGN.md](DESIGN.md) rev. 4 (decided) — read it first; this plan says *where and how* to build it.
 **Sources:** trunk as of 2026-09-27 — knk-web-api `master` `acaee99`, knk-plugin `main` `ceed2f6`, knk-web-app `main`
@@ -2271,7 +2272,287 @@ road suites 16/16 (needs `@testing-library/dom` installed; `npm ci` fails on a s
 pre-existing). **Deploy note:** plugin `9dccb58` and API `c029186` go together (an older plugin can't parse the
 `Pruned` node kind). knk-web-api `master` has 19 commits `claude/road-navigation` lacks — merge before merging to trunk.
 
+### 5.5 status — items 1-6 implemented 2026-10-02 (branch `claude/road-navigation-smoke-test-bugs-fagl4i` in each repo, cut from the `claude/road-navigation` heads; KNG-51 not started)
+
+- **What was built** (one commit per item group; all on `claude/road-navigation-smoke-test-bugs-fagl4i`):
+  - **Item 1** — knk-web-app `6414e18`: the only `window.confirm(` in the road-admin tree (`components/admin/roads/**`,
+    `pages/admin/RoadsAdminPage.tsx`, `components/roads/StreetRoadPanel.tsx`) was the profile delete in
+    `RoadProfilesCard.tsx`; it now opens `FeedbackModal` (ObjectDashboard pattern: Delete runs the request, a failure
+    keeps the modal open with the API's message). New `__tests__/RoadProfilesCard.test.tsx` (3 tests).
+  - **Items 2-4** — knk-plugin `6a73945`:
+    - Item 2: `NavigationService.regionGoals`. Root cause confirmed: `resolveGoals` went **fully direct whenever the
+      region's edge was within 48 blocks** (true almost everywhere inside a town), bypassing the road. Now a region
+      routes like a Location: goals are the road/region crossings (`RegionClosestPoint.crossings`, multi-goal A*
+      picks the nearest *by road*); when no road enters the region, the road's nearest approach (only if within
+      max-snap of the region) plus a short straight last leg to the region's closest point. Direct mode only when the
+      road doesn't help: region within 8 blocks (`REGION_DIRECT_DISTANCE`), no farther than the nearest road, or no
+      road reaches within max-snap of it while the region does. Otherwise the existing refusals stand.
+    - Item 4: the "already in X" check runs first and asks the new `RegionShapes.containsFeet`, which
+      `WorldGuardRegionShapes` answers with **WorldGuard's own block containment** (what the region tracker's
+      enter/leave messages use); the fallback `RegionShape.containsFeet` counts the player by the block their feet are
+      in (the old double comparison put x = 120.7 outside a region ending at 120). Arrival-in-region uses the same check.
+      Not reproduced live (cloud session): see decision 3.
+    - Item 3: `NavigationService.recheckDirect` on the routed re-check cadence (`RECHECK_TICKS`, also for the
+      last-leg handoff after `arrivedAtRouteEnd`): walking `reroute-distance` farther than the closest approach says
+      **"You're heading away from X - recalculating."** (new `NavigationMessages.directRecalculating`), re-derives the
+      target (region closest point / street nearest point / Location unchanged), redraws trail and HUD, fires a
+      `NavigationRerouteEvent` (OFF_ROUTE, detail "direct"); rate-limited by `reroute-min-interval`. Not promoted to a
+      routed session (decision recorded above). The routed "You left the road" path was intact — pinned by a regression
+      test.
+    - Tests: `NavigationServiceTest` +8, `RegionShapeTest` +1.
+  - **Item 5** (+ finding B) — knk-plugin `9f66fea`:
+    - `SkeletonGraph.plazaFootprint`: the plaza is its strict-width core grown by each core span's own clearance
+      (`dt − 1`) plus the new tunable **`BuildParameters.plazaGrowth`** (default 2, `navigation.builder.plaza-growth`);
+      bucket queue, linear in spans; the junction position still comes from the core. `clusterJunctions`: a cluster
+      that reaches a plaza node within `junction-cluster-radius` along the skeleton (never through it) joins that
+      plaza's junction; the general cluster radius is unchanged.
+    - Finding B ("Boundary node … is not on the tile border"): `cutAtTileBorder` first extends a chain whose node
+      centre and first/last span are on opposite sides of the border through the node to its centre (straight mask
+      line, BFS fallback within 64 steps, else dropped with warning `WARN_BORDER_NODE_UNREACHABLE`), and a plaza member
+      span at the cut gets its own Boundary node. Both tiles now cut on their shared border and their Boundary nodes
+      stitch (tested from both sides).
+    - Golden fixture: a 21-wide square with chipped corners, an alcove, two bumps, a lamp post and a planter went from
+      **8 junctions to 1** (still fragments with `plazaGrowth` 0). `SkeletonGraphTest` +4, `BuildParametersTest` updated.
+  - **Item 6** — knk-plugin `ef556e2`, knk-web-api `8523ec8`:
+    - `NodeMatcher`: a locked node (not Anchor/Boundary) still unmatched after the normal 3-block pass takes the nearest
+      leftover candidate within **`BuildParameters.lockedNodeReach`** (default 8, `navigation.builder.locked-node-reach`).
+    - `TileBuilder.mergeIntoLockedNodes`: an unmatched Junction/Endpoint joined by a chain ≤ the reach to a node on a
+      locked node (and itself within the reach) merges into it; its chains start at the locked node, the joining chain
+      goes, a duplicate pair keeps the shorter edge. No locked node → output unchanged.
+    - web-api: `CreateRecordedEdgeAsync` now **locks the Detected nodes a recording snaps to** (bumping their tile's
+      version) — the upsert already kept them, but unlocked the builder couldn't tell and minted duplicates next to
+      them. Answers the "confirm with knk-web-api" note above: Recorded edges and recorded-through nodes already
+      survived; their *neighbourhood* did not.
+    - Tests: `TileBuilderTest` +3 (two rebuilds over different masks keep a merged pair merged; a locked junction claims
+      the builder's junction 5 blocks away; unlocked/matched or out-of-reach neighbours stay), `NodeMatcherTest` +1,
+      `RoadNetworkServiceTests` asserts the lock.
+  - **Finding G** (not in the six items, documented smoke-test bug) — knk-plugin `ae2f1e8`:
+    `RoadOverlayRenderer.describeLookedAt` names the node whose pillar is closest to the view ray (≤ 1.5 blocks, up to
+    the overlay radius), else the first edge under the ray, else the node the `here` commands act on, marked
+    "(here)". New `RoadOverlayRendererTest` (4). `/knk road node info here` (requested in G) is **not** built.
+- **Reuse:** `RegionClosestPoint.crossings/closest`, `RegionShape.closestPointFromFloor`, `Snapper`, the existing
+  `Goals`/`startDirect`/`arrivedAtRouteEnd` paths, `FeedbackModal`, `BuildWarning`, `BumpTileAsync`. Nothing duplicated.
+- **Tests:** knk-plugin Gradle (cloud, real Paper deps): knk-core 1545 → **1554**, knk-api-client 184 (2 skipped),
+  knk-paper 1074 → **1086** (14 skipped), all green. knk-web-api `dotnet test`: 1627 passed /
+  **5 failed (the 5 known baseline failures)** / 42 skipped. knk-web-app: `react-scripts test src/components/admin/roads`
+  11/11, `tsc --noEmit` clean.
+- **Decisions to review** (defaults taken; all reversible):
+  1. Item 2: `REGION_DIRECT_DISTANCE = 8` and "region no farther than the nearest road" decide direct vs routed for a
+     region. Comparing real road length with the straight line needs KNG-51's walkable search; until then a region
+     whose edge is 10 blocks away behind a wall, with the road 12 blocks away, still goes direct.
+  2. Item 2: the region's closest-approach fallback is used only when that road point is within max-snap (48) of the
+     region; farther → direct if the player is within 48 of the region, else "too far from any road" (previously the
+     route silently ended at a far road point).
+  3. Item 4 was fixed without a live repro (cloud session): the authoritative WorldGuard check removes every way our
+     geometry copy could disagree with the region tracker (block flooring, polygon algorithm, Y band). If "already in"
+     still fails live, the next suspect is the destination itself: `NavigationDestinations.locateDomain` falls back to the
+     domain's spawn **point** when it has no `wgRegionId`, and a point never says "already in" — check
+     `/knk road why town:<name> region`.
+  4. Item 3: drift = `reroute-distance` (8) past the closest approach; at most once per `reroute-min-interval` (3 s),
+     checked every 2 s. Event reason OFF_ROUTE with detail "direct" (no new `RouteReason` value).
+  5. Item 5: `plaza-growth` default 2 (the fixture needs ≥ 1; 2 also covers 2-deep alcoves). A plaza's footprint can
+     now swallow the first 2 spans of each exit road's skeleton; node position is unchanged.
+  6. Item 6: one build-wide `locked-node-reach` (8) instead of a per-node persisted radius; only *unmatched* candidates
+     merge (a node the admin left alone and the builder still finds stays). A locked node also claims a candidate up to
+     8 blocks away by id, keeping the locked position.
+  7. Item 6 web-api: recording an edge locks both snapped-to ends (same rule as decision 7 of Phase 1, "an admin edit
+     locks the node"). `node unlock` undoes it.
+  8. Finding B: when a straddling node's centre can't be reached within 64 mask steps, the chain part is dropped with a
+     warning rather than failing the tile upload.
+- **Discrepancies found:**
+  - Plan item 3 expected the "left the road" message to be suppressed; it isn't — routed sessions send it (test added).
+    The smoke test saw it missing because those sessions were in direct mode.
+  - Item 5 text said `clusterJunctions` "refuses to walk through any plaza span": correct, and it also never *merged*
+    into one — that was the second half of the bug.
+- **Developer to-do:**
+  - Merge `claude/road-navigation-smoke-test-bugs-fagl4i` into `claude/road-navigation` in knk-web-app, knk-web-api
+    and knk-plugin (no migration; web-api change is service-only). Rebuild the plugin locally
+    (`./gradlew build -x deployToDevServer`) and redeploy; restart the server (builder config is read in `onEnable`).
+  - Optional config: `navigation.builder.plaza-growth: 2`, `locked-node-reach: 8.0` (defaults already apply when the
+    keys are absent).
+  - Live re-test, in this order (smoke-test guide §4 and §2):
+    1. Web app: delete a profile → FeedbackModal, not the browser dialog.
+    2. `/navigate` to a District / Town `region` from ~30-40 blocks away with a road nearby → trail follows the road
+       into the region; from a few blocks away / off-road → straight; a region with no road near it → still direct or
+       refused as before. `/knk road why` shows which.
+    3. Standing inside the Town (cuboid and polygon, mid-height, at the band's edge, a stacked level) → "You are
+       already in X", no trail.
+    4. Direct mode (a Location < 48 blocks): walk away → "You're heading away from X - recalculating." once, trail
+       redrawn; routed: leave the road > 2 s → "You left the road - recalculating."
+    5. `/knk road build tile` on the Cinix plaza tiles → one junction per plaza; no "not on the tile border" error.
+    6. Merge two duplicate junctions + lock, record a gap, rebuild the tile twice → the merge and recording hold.
+    7. `/knk road show`: look at pillars near/far/from above → the bar names them; look at the sky → "(here)".
+  - Then resume Phase 4 Availability/Ending/Admin/Performance (guide §4) — KNG-51 (walkable last mile) is still open,
+    so straight direct-mode lines through walls are expected until it lands.
+
 ---
+
+## 5.6 Designed plazas and movable nodes (rev. 5, 2026-10-04)
+
+Developer decision after the 2026-10-04 smoke test: stop guessing plazas and pruning the result; let the admin say where
+a plaza is. DESIGN §3.5 (`PlazaRadius`, moving a node), §5.6 step 4, §7.
+
+**Status: implemented 2026-10-04, not yet live-tested.**
+- knk-web-api `claude/road-navigation` `569699f` + `2edcb1f`: `road_nodes.PlazaRadius` (migration
+  `20261004143846_AddRoadNodePlazaRadius`, **apply with the developer's go-ahead**), `PUT road-nodes/{id}` with
+  `plazaRadius`/`clearPlaza` and `x`/`y`/`z` (same tile, free position, edge ends follow, node locked); edge prune keeps
+  an orphaned plaza centre. Tests: `RoadNodeEditTests` (5).
+- knk-plugin `claude/navigation-walkable-path` `f1270f4` (builder, version 4) + `38886df` (records, client, cache,
+  build job, `auto-plazas` config, `/knk road node move <id>` / `plaza <radius> [id]` / `unplaza [id]`, overlay label).
+  Gradle core 1641 / api-client 185 / paper 1135 green.
+- knk-web-app: no node editing UI exists; `RoadNodeDto` there does not carry `plazaRadius` yet (not needed).
+
+**Developer to-do (live test):** apply the migration; deploy API + plugin; on tile 2,-2: `/knk road node plaza 12 7`
+(Brink) and a radius for the eastern place / Northern Gate Square; rebuild the tile; check `/knk road show` (one
+junction per plaza, labels "plaza r…", arms following the stairs) and the build summary; optionally set
+`navigation.builder.auto-plazas: false` and rebuild to see whether the designed plazas alone are enough; then unprune
+tombstones that only existed to clean up plaza fragments.
+
+**Follow-up 2026-10-04 evening: finding L, builder version 5** (smoke-test guide "Build v202 analysed"). Build v202
+lost Brink's west junction and #3588's arms. An offline replay of the real builder on the dev world traced it to
+junction clustering: a chain of forks on Brink's wide stairs joined a road fork 20 blocks away into the plaza. Neither
+the tombstones nor the plazas caused it. knk-plugin `claude/navigation-walkable-path` (not pushed):
+- `4bc6946`: plaza junctions stay.
+- `8c9cb7e`: only the forks at a plaza's edge join it.
+- `19bf4b1`: thin loops collapse.
+- `2672558`: one-arm junctions become Endpoints.
+- `8fe661a`: correction report and stale-prune warnings.
+- `5d9a5e9`: builder version 5.
+
+Gradle core 1646 / api-client 185 / paper 1137 green. No API change.
+
+**Developer to-do:** deploy the jar; rebuild 2,-2, 2,-1, 1,-2; unprune the stale prunes the summary lists; move #3693 to
+the middle of Merchants Square (or radius 16); check Brink in `/knk road show`.
+
+The structural follow-ups (find open areas before making the centreline; freeze curated tiles and review rebuilds as
+a list of proposed changes) are proposed in [REV6_PROPOSAL.md](REV6_PROPOSAL.md), not decided.
+
+## 5.7 Rev. 6 Part B — curated tiles (done 2026-10-05: implemented and live-tested)
+
+**Developer decision 2026-10-04:** do the rev. 6 work, starting with the recommended part, **curated tiles**
+([REV6_PROPOSAL.md](REV6_PROPOSAL.md) §3). Part A (open areas first, §2) follows. Handoff:
+`docs/ai-agents/handoffs/2026-10-05-road-curated-tiles.md`. Decisions D1-D7 were answered on 2026-10-05 (below); the
+step table is rewritten to match them.
+
+**Goal.** Once a tile has been built, a rebuild never silently replaces the stored graph. It produces a **proposal**
+(what a fresh detection would add, remove, move or reshape) that the admin reviews in game and accepts or rejects.
+Tombstones then only filter proposals; a stale one can no longer remove a road from the stored graph.
+
+### Decisions (developer, 2026-10-05)
+
+- **D1 — a tile becomes Curated with its first build.** Every successful upsert leaves the tile `Curated` (`CuratedAt`
+  = the first time). Admin edits are allowed on a curated tile and do not change the state. Later builds of a curated,
+  built tile only make proposals. `/knk road tile uncurate [tile]` sets it back to `Detected` **once**: its next build
+  writes directly, and that upsert curates it again. `/knk road tile curate [tile]` sets it without building.
+- **D2 — existing tiles:** the migration marks built tiles that already hold admin data `Curated`: a tombstone, a Manual
+  node (anchor), a locked node (names, moves and merges lock), a designed plaza or a Recorded edge. Today that is 2,-2
+  and 2,-1. Every other tile starts `Detected`: its next build writes directly and curates it.
+- **D3 — the admin chooses the granularity:** `accept|reject all`, one item (`3`), a selection or range (`1 4 7-9`), or
+  every item of one kind (`added`, `removed`, `changed`, `moved`). The dependency rules apply to every selection.
+- **D4 — rejecting a "removed" item confirms it**, so it is never proposed for removal again: a node is locked, an edge
+  gets `Confirmed` (new column; its end nodes are locked too). Backdoor: `/knk road node unlock <id>` (exists) and
+  `/knk road edge unconfirm <id>` (new). Rejected added / changed / moved items go on the tile's **rejected list**,
+  which only filters later proposals; `/knk road proposal rejected` lists it and `unreject <n…|all>` takes entries back.
+- **D5 — proposals live in the API** (one row per tile, with the rejected list), so the web app can review them later
+  (B5). The plugin computes them, stores them through the API and reads them back after a restart.
+- **D6 — Part A's regression gate** (offline replay on Cinix plus 2-3 areas outside it: another town, a village, a
+  rural network) waits until the developer's other world is available, in a few days. Each area needs coordinates,
+  road profiles covering its materials, and a few lines on the expected graph. Not needed for Part B.
+- **D7 — the replay harness is committed to knk-plugin** as a test that is skipped unless `KNK_REPLAY_DIR` is set.
+
+### Steps
+
+One commit per step, a test with each. Branches: `claude/road-curated-tiles-nsrorb` in knk-web-api (from
+`claude/road-navigation` `7f99cbd`) and knk-plugin (from `claude/navigation-walkable-path` `75f6a0e`).
+
+| Step | Repo | Work |
+|---|---|---|
+| B1 | knk-web-api | Migration (apply only with a go-ahead, after a `road_tiles` backup): `road_tiles.State` (`Detected` \| `Curated`, default `Detected`) + `CuratedAt` with the D2 data update; `road_edges.Confirmed`; table `road_tile_proposals` (one row per tile: `ItemsJson`, `RejectedJson`, counts, `BaseVersion`, `BuilderVersion`, `CreatedBy`, `CreatedAt`, `UpdatedAt`). Every upsert sets `Curated` and clears the tile's pending items (the rejected list stays). `PUT road-tiles/{w}/{x}/{z}/state`; `GET\|PUT\|DELETE road-tiles/{w}/{x}/{z}/proposal`; `GET road-tiles/proposals?world=`. `PUT road-edges/{id}` takes `confirmed` (true locks both ends); an unmatched Confirmed edge survives an upsert while both its nodes stay. Tile DTOs carry `state` and `curatedAt`, edge DTOs `confirmed`. Tests. |
+| B2 | knk-plugin core + api-client | `core/roads/build/TileDiff` (pure): compare a `TileBuildResult` with the stored tile graph. Items: edge added / removed / changed (geometry beyond `edgeMatchDistance`, or other gate doors, domains or profile), node moved (matched, unlocked, more than 2 blocks), node removed. Never proposed: Recorded and Stitch edges, Confirmed edges, locked or Manual nodes, tombstones. `TileDiff.merge(current, items, accepted)` builds the upload: the **current** stored graph plus the accepted items; an item that no longer fits the current graph (the edge was deleted or reshaped since) is skipped with a reason. Accepting everything of a fresh proposal uploads the build result as is (= today's upsert). Rejected-list matching. Records + API client calls for state, proposals and `confirmed`. Tests. |
+| B3 | knk-plugin paper | `RoadBuildJob`: a curated, built tile (and `curated-tiles: true`) stores the diff as a proposal instead of upserting; the summary lists counts and the first numbered items with teleports. Overlay: added green, removed red, changed and moved yellow, numbered labels. Commands: `/knk road proposal [list]`, `accept\|reject <all\|n…\|kind>`, `clear`, `rejected`, `unreject`; `/knk road tile curate\|uncurate`; `/knk road edge confirm\|unconfirm <id>`. |
+| B4 | knk-plugin paper | `/knk road build here\|tile\|radius\|dirty\|all` makes proposals for curated tiles and builds `Detected` ones directly. `/knk road tiles` shows the state, "built with vN" (older than the current `BUILDER_VERSION` is flagged, never rebuilt automatically) and pending proposal counts. Config `navigation.builder.curated-tiles: true` (false = today's behaviour, the kill switch). Replay harness (D7). |
+| B5 | later | Partial rebuild (`/knk road build here radius <r>`, a proposal inside a circle); web-app tile-state column and proposal review. |
+
+**Dependency rules for `merge`:** accepting an added edge brings its new end nodes (a new node another accepted item
+already added is reused by position); accepting a removed node removes its edges; a detected, unlocked node left without
+edges goes too; a moved node takes its edges' end points along (every uploaded edge's geometry is re-anchored on its final
+node positions); node kinds follow the build only for nodes an accepted item touches; boundary nodes and stitch edges
+follow the existing upsert rules.
+
+**Tombstones on curated tiles:** prune and unprune keep their API behaviour (the edge or node goes now, and the
+tombstone stays). The builder keeps reading tombstones when it makes a proposal, so pruned junk is not proposed again.
+Because the stored graph is only replaced through a reviewed proposal, a stale tombstone can at worst hide a proposal
+item. The builder-5 correction report still lists stale ones.
+
+**Done when:** the live re-test on tile 2,-2 shows a rebuild after a config change as a proposal; accepting items
+changes only those items; rejecting keeps the stored graph; `curated-tiles: false` restores today's behaviour. Gradle
+and web-api tests are green, except the known failures.
+
+**Order with the finding L re-test:** the developer runs the builder-5 re-test (plan §5.6, guide "Build v202
+analysed") with the `claude/navigation-walkable-path` jar, before deploying this branch or applying the B1 migration.
+The re-test's rebuilds then write directly, and D2 curates the result.
+
+### §5.7 status — B1-B4 and D7 done 2026-10-05, live re-test passed
+
+**Live re-test (developer, 2026-10-05): passed.** It ran in three runs; findings M1-M3 were fixed in knk-plugin
+`fa8fcb5` and `c6a6d14`. See the smoke-test guide, "Curated tiles (rev. 6 Part B)". The work was folded into the
+standing branches by fast-forward: knk-web-api `claude/road-navigation` `7f99cbd` → `176b9d3`, knk-plugin
+`claude/navigation-walkable-path` `75f6a0e` → `c6a6d14`. The `claude/road-curated-tiles-nsrorb` branches can be
+deleted after the trunk merge. **Next:** Phase 4 / §5 of the smoke test and the KNG-51 live checklist, then the trunk
+merge. B5 (web app) and Part A follow.
+
+Implementation record:
+
+Implemented in a cloud session (no dev DB, world or server). All on `claude/road-curated-tiles-nsrorb`, pushed.
+
+| Step | Repo | Commits | Notes |
+|---|---|---|---|
+| B1 | knk-web-api (from `7f99cbd`) | `15f3a96`, `176b9d3` | Migration `20261005084003_AddRoadCuratedTiles`: `road_tiles.State`/`CuratedAt` with the D2 update, `road_edges.Confirmed`, table `road_tile_proposals` (also the build's `CellCount`/`LevelCount`/`WarningsJson`, so the last review step can stamp the tile). Every upsert sets `Curated`, clears the pending items and keeps the rejected list. An unmatched `Confirmed` edge survives an upsert. `176b9d3`: the upsert stores each warning once (a review step re-uploads stored warnings). |
+| B2 | knk-plugin core + api-client (from `75f6a0e`) | `7b857a3` | `TileProposal`, `TileDiff` (compute / withoutRejected / merge / withDependencies), `ProposalSelection`, `BuildWarning.parse`; records, ports, DTOs, mapper. |
+| B3+B4 | knk-plugin paper | `9fefe89` | `RoadProposals`, build job and queue, `/knk road proposal …`, `/knk road tile curate\|uncurate`, `/knk road edge confirm\|unconfirm`, overlay, tiles listing, `navigation.builder.curated-tiles`. |
+| D7 | knk-plugin | `867be1c` | `RoadReplayTest` (skipped unless `KNK_REPLAY_DIR`), `tools/road-replay/` (export + README). The workspace copies were removed. |
+| — | knk-plugin | `e5d7562` | The tile file cache keeps `state`, `curatedAt` and `confirmed` (optional fields; older files still load). |
+| fixes | knk-plugin | `fa8fcb5` | Live re-test run 1 (guide, findings M1/M2): changed edges compare WorldGuard regions, not domain ids; every rejection goes on the rejected list as R<n> and `unreject`/`unconfirm R<n>` undoes it (unconfirms the edge, unlocks exactly the nodes it locked); "item n" / "R n" / "#id" numbering. Gradle core 1685 / api-client 191 / paper 1200. |
+
+**Verified here:**
+- **Tests.** Gradle core 1683 / api-client 191 / paper 1198 (16 skipped) green. web-api: road tests 136 green; the full
+  suite has only the 4 failures that are on the branch base too (ClientActivityStore, PathResolution ×2,
+  FieldValidation), not road-related.
+- **Migration on MySQL.** Applied, rolled back and re-applied on a scratch MySQL 8.0 with seeded tiles. D2 curated
+  exactly the built tiles with a tombstone, a locked node, a recorded edge or a plaza. Plain tiles and an unbuilt
+  tile with an anchor stayed `Detected`.
+- **End to end on a locally running API (scratch MySQL).** Driven through the real api-client:
+  1. The first upload curates the tile.
+  2. A rebuild becomes a stored proposal of 5 items, read back intact.
+  3. Accepting 2 items uploads a merged graph, which the API accepts.
+  4. Rejecting a removed edge confirms it and locks its ends; the later node removal is skipped ("locked since").
+  5. The finishing step stamps builder v6 and the proposal's warnings.
+  6. The same rebuild then proposes nothing; uncurate is one-shot.
+- **Replay harness.** Smoke-run on a synthetic replay folder; the export script ran against the scratch MySQL.
+
+**Implementation choices worth knowing:**
+- **What counts as a change.** A node closer than 2 blocks to its stored position is not proposed as moved (builder
+  jitter). Edge courses are compared with the stored polyline re-anchored on the build's nodes, so a moved node is one
+  item, not one per edge.
+- **Accept works on the current graph.** It downloads the tile's current graph and merges the accepted items into it.
+  An item an admin overrode since (edge gone or reshaped, node locked or moved) is skipped with a reason. Item numbers
+  stay fixed until the next build.
+- **The last review step stamps the tile.** The step that leaves nothing pending uploads with the proposal's builder
+  version, cell count and warnings, so the tile counts as built with vN and is no longer dirty. A curated rebuild that
+  finds nothing does the same at once.
+- **Fresh reads for curated builds.** The build job reads the tile list fresh to decide curated-or-not, because a state
+  change does not bump the tile version. It downloads the stored graph unconditionally.
+- **Not in this round.** The web app shows neither state nor proposals (B5). Accepting "all" of a fresh proposal gives
+  the build's topology but keeps stored positions and courses within the tolerances, so it is not byte-identical to a
+  direct upload.
+
+**Developer to-do (local session; order matters):**
+1. **Finding L re-test first** (§5.6, guide "Build v202 analysed") with the `claude/navigation-walkable-path` jar, before
+   anything from this branch.
+2. **Back up `road_tiles`** (see the handoff). Then, with a go-ahead, apply `AddRoadCuratedTiles`. D2 curates 2,-2 and
+   2,-1 (and any other built tile with admin data at that moment).
+3. **Deploy this branch's API and plugin**, only after step 2: the API reads the new columns and never migrates on
+   start-up. Then run the re-test list in the smoke-test guide, "Curated tiles (rev. 6 Part B) — live re-test".
 
 ## 6. Out of scope (Phase 6 in DESIGN §8)
 
