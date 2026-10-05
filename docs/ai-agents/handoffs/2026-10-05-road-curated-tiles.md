@@ -6,6 +6,13 @@ machine (knk-workspace with the component repos under `Repository/`).
 
 ---
 
+> **Update 2026-10-05 (cloud session):** D1-D7 are answered and recorded in plan §5.7 ("Decisions"), which also
+> rewrites the step table. Implementation runs on `claude/road-curated-tiles-nsrorb` in knk-web-api (from `7f99cbd`)
+> and knk-plugin (from `75f6a0e`); see "§5.7 status" for what is done. The developer runs the builder-5 re-test with
+> the `claude/navigation-walkable-path` jar before deploying this branch or applying the B1 migration. A local session
+> picking this up: skip "First step", read §5.7 status, back up `road_tiles` and apply the migration only with a
+> go-ahead.
+
 Read `AGENTS.md`, `docs/ai-agents/GLOBAL_AGENT_INSTRUCTIONS.md` and `docs/ACTIVE_SESSIONS.md` first; the KNG-27 row is
 yours, so update it when you start and stop. Then read, in this order:
 1. `docs/specs/navigation/IMPLEMENTATION_PLAN.md` **§5.7**: the work (steps B1-B4), the dependency rules and the

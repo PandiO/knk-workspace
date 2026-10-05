@@ -2427,31 +2427,57 @@ the middle of Merchants Square (or radius 16); check Brink in `/knk road show`.
 The structural follow-ups (find open areas before making the centreline; freeze curated tiles and review rebuilds as
 a list of proposed changes) are proposed in [REV6_PROPOSAL.md](REV6_PROPOSAL.md), not decided.
 
-## 5.7 Rev. 6 Part B — curated tiles (to do, starts 2026-10-05)
+## 5.7 Rev. 6 Part B — curated tiles (in progress, started 2026-10-05)
 
 **Developer decision 2026-10-04:** do the rev. 6 work, starting with the recommended part, **curated tiles**
-([REV6_PROPOSAL.md](REV6_PROPOSAL.md) §3). Part A (open areas first, §2) follows. Nothing is implemented yet. Handoff
-for the implementing session: `docs/ai-agents/handoffs/2026-10-05-road-curated-tiles.md`. The decisions in "Open
-decisions" below are asked at the start of that session, not before.
+([REV6_PROPOSAL.md](REV6_PROPOSAL.md) §3). Part A (open areas first, §2) follows. Handoff:
+`docs/ai-agents/handoffs/2026-10-05-road-curated-tiles.md`. Decisions D1-D7 were answered on 2026-10-05 (below); the
+step table is rewritten to match them.
 
-**Goal.** Once an admin has edited a tile, a rebuild never silently replaces the stored graph. It produces a
-**proposal** (what a fresh detection would add, remove, move or reshape) that the admin reviews in-game and accepts or
-rejects. Tombstones then only filter proposals; a stale one can no longer remove a road from the stored graph.
+**Goal.** Once a tile has been built, a rebuild never silently replaces the stored graph. It produces a **proposal**
+(what a fresh detection would add, remove, move or reshape) that the admin reviews in game and accepts or rejects.
+Tombstones then only filter proposals; a stale one can no longer remove a road from the stored graph.
 
-**Phases** (one branch per repo as usual: knk-web-api `claude/road-navigation`, knk-plugin
-`claude/navigation-walkable-path`; one commit per step, a test with each):
+### Decisions (developer, 2026-10-05)
+
+- **D1 — a tile becomes Curated with its first build.** Every successful upsert leaves the tile `Curated` (`CuratedAt`
+  = the first time). Admin edits are allowed on a curated tile and do not change the state. Later builds of a curated,
+  built tile only make proposals. `/knk road tile uncurate [tile]` sets it back to `Detected` **once**: its next build
+  writes directly, and that upsert curates it again. `/knk road tile curate [tile]` sets it without building.
+- **D2 — existing tiles:** the migration marks built tiles that already hold admin data `Curated`: a tombstone, a Manual
+  node (anchor), a locked node (names, moves and merges lock), a designed plaza or a Recorded edge. Today that is 2,-2
+  and 2,-1. Every other tile starts `Detected`: its next build writes directly and curates it.
+- **D3 — the admin chooses the granularity:** `accept|reject all`, one item (`3`), a selection or range (`1 4 7-9`), or
+  every item of one kind (`added`, `removed`, `changed`, `moved`). The dependency rules apply to every selection.
+- **D4 — rejecting a "removed" item confirms it**, so it is never proposed for removal again: a node is locked, an edge
+  gets `Confirmed` (new column; its end nodes are locked too). Backdoor: `/knk road node unlock <id>` (exists) and
+  `/knk road edge unconfirm <id>` (new). Rejected added / changed / moved items go on the tile's **rejected list**,
+  which only filters later proposals; `/knk road proposal rejected` lists it and `unreject <n…|all>` takes entries back.
+- **D5 — proposals live in the API** (one row per tile, with the rejected list), so the web app can review them later
+  (B5). The plugin computes them, stores them through the API and reads them back after a restart.
+- **D6 — Part A's regression gate** (offline replay on Cinix plus 2-3 areas outside it: another town, a village, a
+  rural network) waits until the developer's other world is available, in a few days. Each area needs coordinates,
+  road profiles covering its materials, and a few lines on the expected graph. Not needed for Part B.
+- **D7 — the replay harness is committed to knk-plugin** as a test that is skipped unless `KNK_REPLAY_DIR` is set.
+
+### Steps
+
+One commit per step, a test with each. Branches: `claude/road-curated-tiles-nsrorb` in knk-web-api (from
+`claude/road-navigation` `7f99cbd`) and knk-plugin (from `claude/navigation-walkable-path` `75f6a0e`).
 
 | Step | Repo | Work |
 |---|---|---|
-| B1 | knk-web-api | `road_tiles.State` (`Detected` \| `Curated`) and `CuratedAt` (migration, applied only with a go-ahead). Every admin edit endpoint marks the tile `Curated`: `PUT road-nodes/{id}`, `road-nodes/anchor`, `/merge`, `/{id}/prune`, `PUT road-edges/{id}`, `road-edges/prune`, `DELETE road-edges/{id}`, recorded-edge `POST road-edges`. Tile DTOs (list and graph download) carry `state`. `PUT road-tiles/.../graph` is unchanged: the plugin decides when to call it. Tests. |
-| B2 | knk-plugin core | `core/roads/build/TileDiff` (pure): compare a `TileBuildResult` with the stored tile graph (the previous graph). Node and edge ids are already matched by `NodeMatcher` (`existingId`). Items: node added / removed / moved (beyond `nodeMatchDistance`), edge added / removed / geometry changed (beyond `edgeMatchDistance`). `TileDiff.merge(stored, result, accepted)` builds the graph to upload: the stored graph plus the accepted items, with the dependency rules below. Tests, including a replay-style case. |
-| B3 | knk-plugin paper | `RoadBuildJob`: for a `Curated` tile, keep the diff as a **proposal** (per tile, in the build queue, held in memory) instead of upserting. The build summary lists counts and numbered items with teleports. Overlay: added green, removed red, moved and changed yellow, numbered labels. Commands: `/knk road proposal [tile]` (list), `accept all\|<n…>`, `reject all\|<n…>`, `clear`. Accept uploads the merged graph through the existing upsert. Reject: see decision D4. Accepting all of an untouched proposal equals today's upsert. |
-| B4 | knk-plugin paper | `/knk road build dirty\|all\|radius` makes proposals for curated tiles and builds `Detected` tiles as today. `/knk road tiles` shows the state and "built with vN". Tiles with an older `BUILDER_VERSION` are listed, never rebuilt automatically. Config `navigation.builder.curated-tiles: true` (false = today's behaviour, the kill switch). |
-| B5 | later | Partial rebuild (`/knk road build here radius <r>`, a proposal inside a circle); a web-app tile-state column and proposal review. Not in the first round. |
+| B1 | knk-web-api | Migration (apply only with a go-ahead, after a `road_tiles` backup): `road_tiles.State` (`Detected` \| `Curated`, default `Detected`) + `CuratedAt` with the D2 data update; `road_edges.Confirmed`; table `road_tile_proposals` (one row per tile: `ItemsJson`, `RejectedJson`, counts, `BaseVersion`, `BuilderVersion`, `CreatedBy`, `CreatedAt`, `UpdatedAt`). Every upsert sets `Curated` and clears the tile's pending items (the rejected list stays). `PUT road-tiles/{w}/{x}/{z}/state`; `GET\|PUT\|DELETE road-tiles/{w}/{x}/{z}/proposal`; `GET road-tiles/proposals?world=`. `PUT road-edges/{id}` takes `confirmed` (true locks both ends); an unmatched Confirmed edge survives an upsert while both its nodes stay. Tile DTOs carry `state` and `curatedAt`, edge DTOs `confirmed`. Tests. |
+| B2 | knk-plugin core + api-client | `core/roads/build/TileDiff` (pure): compare a `TileBuildResult` with the stored tile graph. Items: edge added / removed / changed (geometry beyond `edgeMatchDistance`, or other gate doors, domains or profile), node moved (matched, unlocked, more than 2 blocks), node removed. Never proposed: Recorded and Stitch edges, Confirmed edges, locked or Manual nodes, tombstones. `TileDiff.merge(current, items, accepted)` builds the upload: the **current** stored graph plus the accepted items; an item that no longer fits the current graph (the edge was deleted or reshaped since) is skipped with a reason. Accepting everything of a fresh proposal uploads the build result as is (= today's upsert). Rejected-list matching. Records + API client calls for state, proposals and `confirmed`. Tests. |
+| B3 | knk-plugin paper | `RoadBuildJob`: a curated, built tile (and `curated-tiles: true`) stores the diff as a proposal instead of upserting; the summary lists counts and the first numbered items with teleports. Overlay: added green, removed red, changed and moved yellow, numbered labels. Commands: `/knk road proposal [list]`, `accept\|reject <all\|n…\|kind>`, `clear`, `rejected`, `unreject`; `/knk road tile curate\|uncurate`; `/knk road edge confirm\|unconfirm <id>`. |
+| B4 | knk-plugin paper | `/knk road build here\|tile\|radius\|dirty\|all` makes proposals for curated tiles and builds `Detected` ones directly. `/knk road tiles` shows the state, "built with vN" (older than the current `BUILDER_VERSION` is flagged, never rebuilt automatically) and pending proposal counts. Config `navigation.builder.curated-tiles: true` (false = today's behaviour, the kill switch). Replay harness (D7). |
+| B5 | later | Partial rebuild (`/knk road build here radius <r>`, a proposal inside a circle); web-app tile-state column and proposal review. |
 
-**Dependency rules for `merge`:** accepting an added edge brings its added end nodes; accepting a removed node removes
-its edges; a moved node takes its edges' end points along (the API already moves edge ends with a node); boundary nodes
-and stitch edges follow the existing upsert rules.
+**Dependency rules for `merge`:** accepting an added edge brings its new end nodes (a new node another accepted item
+already added is reused by position); accepting a removed node removes its edges; a detected, unlocked node left without
+edges goes too; a moved node takes its edges' end points along (every uploaded edge's geometry is re-anchored on its final
+node positions); node kinds follow the build only for nodes an accepted item touches; boundary nodes and stitch edges
+follow the existing upsert rules.
 
 **Tombstones on curated tiles:** prune and unprune keep their API behaviour (the edge or node goes now, and the
 tombstone stays). The builder keeps reading tombstones when it makes a proposal, so pruned junk is not proposed again.
@@ -2462,25 +2488,14 @@ item. The builder-5 correction report still lists stale ones.
 changes only those items; rejecting keeps the stored graph; `curated-tiles: false` restores today's behaviour. Gradle
 and web-api tests are green, except the known failures.
 
-**Open decisions (asked on 2026-10-05; recommendation first):**
-- **D1 — what makes a tile Curated.** Automatically on the first admin edit (recommended), or only through an explicit
-  `/knk road tile curate`.
-- **D2 — existing tiles.** Mark tiles that already hold admin data (tombstones, anchors, plazas, locked nodes, recorded
-  edges; today 2,-2 and 2,-1) `Curated` in the migration (recommended), or start them all `Detected`.
-- **D3 — accept granularity in the first version.** All-or-nothing plus per item with the dependency rules
-  (recommended), or all-or-nothing only.
-- **D4 — rejecting a "removed" item** (a stored edge or node that detection no longer finds). Mark it confirmed so it is
-  never proposed for removal again: lock the node, and add an edge `Confirmed` flag, which needs a column (recommended).
-  Or let it come back in every proposal.
-- **D5 — where proposals live.** In plugin memory until accepted, rejected or the server restarts (recommended for the
-  first version), or stored in the API for web-app review.
-- **D6 — after B.** Part A (open areas first), gated by the offline replay on Cinix plus 2-3 areas outside Cinix that the
-  developer picks (a different town, a village, a rural road network).
-- **D7 — the offline replay harness.** Commit it to knk-plugin as a test that is skipped unless a replay directory is
-  set (recommended), or keep it as reference files under `docs/ai-agents/handoffs/road-replay/` (where it is now).
+**Order with the finding L re-test:** the developer runs the builder-5 re-test (plan §5.6, guide "Build v202
+analysed") with the `claude/navigation-walkable-path` jar, before deploying this branch or applying the B1 migration.
+The re-test's rebuilds then write directly, and D2 curates the result.
 
-**Before B1:** the developer deploys builder 5 and runs the finding L re-test (smoke-test guide). Its results may change
-D2.
+### §5.7 status
+
+- 2026-10-05: decisions recorded; implementation started in a cloud session (no dev DB or server: migrations are
+  written, not applied; nothing live-tested).
 
 ## 6. Out of scope (Phase 6 in DESIGN §8)
 
