@@ -2502,9 +2502,10 @@ Implemented in a cloud session (no dev DB, world or server). All on `claude/road
 | B2 | knk-plugin core + api-client (from `75f6a0e`) | `7b857a3` | `TileProposal`, `TileDiff` (compute / withoutRejected / merge / withDependencies), `ProposalSelection`, `BuildWarning.parse`; records, ports, DTOs, mapper. |
 | B3+B4 | knk-plugin paper | `9fefe89` | `RoadProposals`, build job and queue, `/knk road proposal …`, `/knk road tile curate\|uncurate`, `/knk road edge confirm\|unconfirm`, overlay, tiles listing, `navigation.builder.curated-tiles`. |
 | D7 | knk-plugin | `867be1c` | `RoadReplayTest` (skipped unless `KNK_REPLAY_DIR`), `tools/road-replay/` (export + README). The workspace copies were removed. |
+| — | knk-plugin | `e5d7562` | The tile file cache keeps `state`, `curatedAt` and `confirmed` (optional fields; older files still load). |
 
 **Verified here:**
-- **Tests.** Gradle core 1683 / api-client 191 / paper 1197 (16 skipped) green. web-api: road tests 136 green; the full
+- **Tests.** Gradle core 1683 / api-client 191 / paper 1198 (16 skipped) green. web-api: road tests 136 green; the full
   suite has only the 4 failures that are on the branch base too (ClientActivityStore, PathResolution ×2,
   FieldValidation), not road-related.
 - **Migration on MySQL.** Applied, rolled back and re-applied on a scratch MySQL 8.0 with seeded tiles. D2 curated
