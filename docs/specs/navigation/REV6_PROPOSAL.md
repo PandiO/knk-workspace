@@ -1,9 +1,11 @@
 # Road Navigation — Rev. 6 proposal: open areas first, curated tiles
 
-**Status:** Accepted in principle (developer, 2026-10-04): **Part B (curated tiles) first**, Part A after. To do;
-implementation starts 2026-10-05: [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) §5.7 (steps and open decisions D1-D7),
-handoff [2026-10-05-road-curated-tiles.md](../../ai-agents/handoffs/2026-10-05-road-curated-tiles.md).
-**Last updated:** 2026-10-04
+**Status:** Accepted (developer, 2026-10-04): **Part B (curated tiles) first**, Part A after. **Part B implemented
+2026-10-05, not live-tested**: [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) §5.7 has the decisions D1-D7 (they refine
+§3 below: a tile is curated by its first build, proposals live in the API) and the status. Handoff
+[2026-10-05-road-curated-tiles.md](../../ai-agents/handoffs/2026-10-05-road-curated-tiles.md). Part A waits for the test
+areas outside Cinix (D6).
+**Last updated:** 2026-10-05
 **Builds on:** [DESIGN.md](DESIGN.md) (rev. 5 + builder 5), [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) §5.6,
 smoke-test guide [finding L](../../guides/road-navigation-smoke-test.md) (Build v202 analysed).
 **Linear:** [KNG-27](https://linear.app/kngpandi/issue/KNG-27)

@@ -7,7 +7,9 @@ resuming Phase 4 items 20+. The direct-mode straight line through terrain (findi
 **2026-10-04:** after the reset — findings H (rural road with grass holes: record it) and I (edges through the ground
 at plaza junctions: fixed in the builder, rebuild needed). **Evening:** finding L (Brink's west junction and #3588
 lost to junction clustering; builder 5 with a correction report — re-test list at the end of Findings).
-**Last updated:** 2026-10-04
+**2026-10-05:** rev. 6 Part B (curated tiles) implemented, not live-tested — re-test list "Curated tiles (rev. 6 Part B)"
+after finding L.
+**Last updated:** 2026-10-05
 **Sources:** the "Developer to-do" blocks of Phases 1, 3, 4 and 5 in `docs/specs/navigation/IMPLEMENTATION_PLAN.md`;
 progress report `docs/reports/2026-09-27-road-navigation-chain.md`. If this file and a plan block disagree, the plan wins.
 
@@ -678,6 +680,44 @@ Side effect at the keep top: the 13-block dead end towards (1400, 82, -506) is n
 
 Keep `junction-cluster-radius: 5`; with the new rule it no longer swallows distant forks. A designed plaza on Brink is
 optional now.
+
+### Curated tiles (rev. 6 Part B) — live re-test (to do; implemented 2026-10-05)
+
+Plan §5.7. **Prerequisites:**
+- The finding L re-test above is done with the builder-5 jar.
+- `road_tiles` is backed up.
+- Migration `AddRoadCuratedTiles` is applied, with a go-ahead.
+- API and plugin from `claude/road-curated-tiles-nsrorb` are deployed.
+
+Use the build with `--offline -x deployToDevServer` and copy the jar yourself, or `./gradlew :knk-paper:dev`.
+
+- [ ] **State after the migration.** `/knk road tiles` shows 2,-2 and 2,-1 as `curated` (they hold admin data) and
+      "with builder 5". A tile without admin data (1,-2 today) is not curated.
+- [ ] **No change, no proposal.** `/knk road build tile 2 -2` without changing anything. The summary says "no changes
+      against the curated graph" (or lists a few items; note which and why). Nothing in the graph changes.
+- [ ] **A config change becomes a proposal.** Change one builder value that changes Brink: for example
+      `junction-cluster-radius: 3`, then restart (the builder config is read at start). Run `/knk road build tile 2 -2`.
+      - The summary says "is curated - rebuilt … as a proposal of N change(s)", with [review] / [accept all] /
+        [reject all] and the first items with teleports.
+      - `/knk road show` draws the items: added green, removed red, changed/moved yellow.
+      - Looking at one shows "Proposal 2,-2 · 3 added edge …" in the action bar.
+      - The graph itself is unchanged: `/navigate` routes as before.
+- [ ] **Accept some.** `/knk road proposal accept <n>` (or a kind: `added`). Only those items change in
+      `/knk road show`; the rest stay pending under the same numbers (`/knk road proposal`).
+- [ ] **Reject some.**
+      - Rejecting a "removed edge" item keeps the edge: it shows as confirmed, its ends are locked.
+      - Rejecting an "added" item puts it on the rejected list (`/knk road proposal rejected`).
+      - Rebuild the tile: neither comes back.
+      - `/knk road proposal unreject 1` and `/knk road edge unconfirm <id>` bring them back on the next rebuild.
+- [ ] **Finish the review.** When the last item is accepted or rejected, the message says "it now counts as built with
+      vN". `/knk road tiles` shows the new builder version and no DIRTY.
+- [ ] **Edit, then accept an old item.** Make a proposal; move or prune something one of its items touches; then accept
+      that item. It is skipped with a reason ("… was changed since"), and your edit stays.
+- [ ] **Uncurate is one-shot.** `/knk road tile uncurate` on 1,-2, rebuild it: the build writes directly (normal
+      summary), and `/knk road tiles` shows it curated again.
+- [ ] **Kill switch.** `navigation.builder.curated-tiles: false`, restart, rebuild 2,-2: a direct upload, as before
+      rev. 6. Set it back to `true`.
+- [ ] **Restart.** Make a proposal, restart the server, `/knk road proposal`: it is still there (stored in the API).
 
 ### Phase 3 — rebuild re-test (2026-10-02, developer; recorded from the commit messages)
 

@@ -2427,7 +2427,7 @@ the middle of Merchants Square (or radius 16); check Brink in `/knk road show`.
 The structural follow-ups (find open areas before making the centreline; freeze curated tiles and review rebuilds as
 a list of proposed changes) are proposed in [REV6_PROPOSAL.md](REV6_PROPOSAL.md), not decided.
 
-## 5.7 Rev. 6 Part B — curated tiles (in progress, started 2026-10-05)
+## 5.7 Rev. 6 Part B — curated tiles (implemented 2026-10-05, not live-tested)
 
 **Developer decision 2026-10-04:** do the rev. 6 work, starting with the recommended part, **curated tiles**
 ([REV6_PROPOSAL.md](REV6_PROPOSAL.md) §3). Part A (open areas first, §2) follows. Handoff:
@@ -2492,10 +2492,56 @@ and web-api tests are green, except the known failures.
 analysed") with the `claude/navigation-walkable-path` jar, before deploying this branch or applying the B1 migration.
 The re-test's rebuilds then write directly, and D2 curates the result.
 
-### §5.7 status
+### §5.7 status — B1-B4 and D7 implemented 2026-10-05, not live-tested
 
-- 2026-10-05: decisions recorded; implementation started in a cloud session (no dev DB or server: migrations are
-  written, not applied; nothing live-tested).
+Implemented in a cloud session (no dev DB, world or server). All on `claude/road-curated-tiles-nsrorb`, pushed.
+
+| Step | Repo | Commits | Notes |
+|---|---|---|---|
+| B1 | knk-web-api (from `7f99cbd`) | `15f3a96`, `176b9d3` | Migration `20261005084003_AddRoadCuratedTiles`: `road_tiles.State`/`CuratedAt` with the D2 update, `road_edges.Confirmed`, table `road_tile_proposals` (also the build's `CellCount`/`LevelCount`/`WarningsJson`, so the last review step can stamp the tile). Every upsert sets `Curated`, clears the pending items and keeps the rejected list. An unmatched `Confirmed` edge survives an upsert. `176b9d3`: the upsert stores each warning once (a review step re-uploads stored warnings). |
+| B2 | knk-plugin core + api-client (from `75f6a0e`) | `7b857a3` | `TileProposal`, `TileDiff` (compute / withoutRejected / merge / withDependencies), `ProposalSelection`, `BuildWarning.parse`; records, ports, DTOs, mapper. |
+| B3+B4 | knk-plugin paper | `9fefe89` | `RoadProposals`, build job and queue, `/knk road proposal …`, `/knk road tile curate\|uncurate`, `/knk road edge confirm\|unconfirm`, overlay, tiles listing, `navigation.builder.curated-tiles`. |
+| D7 | knk-plugin | `867be1c` | `RoadReplayTest` (skipped unless `KNK_REPLAY_DIR`), `tools/road-replay/` (export + README). The workspace copies were removed. |
+
+**Verified here:**
+- **Tests.** Gradle core 1683 / api-client 191 / paper 1197 (16 skipped) green. web-api: road tests 136 green; the full
+  suite has only the 4 failures that are on the branch base too (ClientActivityStore, PathResolution ×2,
+  FieldValidation), not road-related.
+- **Migration on MySQL.** Applied, rolled back and re-applied on a scratch MySQL 8.0 with seeded tiles. D2 curated
+  exactly the built tiles with a tombstone, a locked node, a recorded edge or a plaza. Plain tiles and an unbuilt
+  tile with an anchor stayed `Detected`.
+- **End to end on a locally running API (scratch MySQL).** Driven through the real api-client:
+  1. The first upload curates the tile.
+  2. A rebuild becomes a stored proposal of 5 items, read back intact.
+  3. Accepting 2 items uploads a merged graph, which the API accepts.
+  4. Rejecting a removed edge confirms it and locks its ends; the later node removal is skipped ("locked since").
+  5. The finishing step stamps builder v6 and the proposal's warnings.
+  6. The same rebuild then proposes nothing; uncurate is one-shot.
+- **Replay harness.** Smoke-run on a synthetic replay folder; the export script ran against the scratch MySQL.
+
+**Implementation choices worth knowing:**
+- **What counts as a change.** A node closer than 2 blocks to its stored position is not proposed as moved (builder
+  jitter). Edge courses are compared with the stored polyline re-anchored on the build's nodes, so a moved node is one
+  item, not one per edge.
+- **Accept works on the current graph.** It downloads the tile's current graph and merges the accepted items into it.
+  An item an admin overrode since (edge gone or reshaped, node locked or moved) is skipped with a reason. Item numbers
+  stay fixed until the next build.
+- **The last review step stamps the tile.** The step that leaves nothing pending uploads with the proposal's builder
+  version, cell count and warnings, so the tile counts as built with vN and is no longer dirty. A curated rebuild that
+  finds nothing does the same at once.
+- **Fresh reads for curated builds.** The build job reads the tile list fresh to decide curated-or-not, because a state
+  change does not bump the tile version. It downloads the stored graph unconditionally.
+- **Not in this round.** The web app shows neither state nor proposals (B5). Accepting "all" of a fresh proposal gives
+  the build's topology but keeps stored positions and courses within the tolerances, so it is not byte-identical to a
+  direct upload.
+
+**Developer to-do (local session; order matters):**
+1. **Finding L re-test first** (§5.6, guide "Build v202 analysed") with the `claude/navigation-walkable-path` jar, before
+   anything from this branch.
+2. **Back up `road_tiles`** (see the handoff). Then, with a go-ahead, apply `AddRoadCuratedTiles`. D2 curates 2,-2 and
+   2,-1 (and any other built tile with admin data at that moment).
+3. **Deploy this branch's API and plugin**, only after step 2: the API reads the new columns and never migrates on
+   start-up. Then run the re-test list in the smoke-test guide, "Curated tiles (rev. 6 Part B) — live re-test".
 
 ## 6. Out of scope (Phase 6 in DESIGN §8)
 
