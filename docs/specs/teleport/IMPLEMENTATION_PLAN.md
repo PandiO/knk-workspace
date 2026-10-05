@@ -1,7 +1,7 @@
 # Teleportation Commands — Implementation Plan
 
-**Status:** **Merged to trunk 2026-09-28** (api `ae4dccd`, plugin `9bae376`, web-app `ac2db3b`) after two smoke-test rounds; follow-ups KNG-41 (per-group fees), KNG-42 (`/back` variants) and the untested checks listed under "Smoke test round 2 + merge"
-**Last updated:** 2026-09-28
+**Status:** **Merged to trunk 2026-09-28** (api `ae4dccd`, plugin `9bae376`, web-app `ac2db3b`) after two smoke-test rounds; follow-ups KNG-41 (per-group fees), KNG-42 (`/back` variants: **implemented 2026-10-05 on `claude/kng-42-implementation-vud0q8`, awaiting smoke test + merge**, see "KNG-42") and the untested checks listed under "Smoke test round 2 + merge"
+**Last updated:** 2026-10-05
 **Linear:** [KNG-17](https://linear.app/kngpandi/issue/KNG-17/teleportation-staff-tp-tpa-requests-spawn-domain-warps-v1-port)
 **Sources:** [DESIGN.md](DESIGN.md); `docs/ACTIVE_SESSIONS.md` (branch convention); code read at knk-plugin `0fa6d06`
 (`claude/siege-minigame` head), knk-web-api `cd95dd1`, knk-web-app `9a6f347`.
@@ -492,6 +492,57 @@ Phase 4) was waiting for this merge.
   calls in gates/region tracker; join/respawn listeners still ignore Game Settings (plugin side of Game Settings not built).
 - Trunk caveat (handoff §6): `WorldGuardRegionListener` judges PLUGIN-cause teleports (siege hub/return spots in a closed
   domain).
+
+### KNG-42 — `/back` variants by permission (2026-10-05)
+
+[KNG-42](https://linear.app/kngpandi/issue/KNG-42) (feature request 2 above). Branch `claude/kng-42-implementation-vud0q8`
+in knk-plugin (from `main` `5c85a3d`) and knk-web-api (from `master` `099f936`); knk-web-app untouched.
+
+**Developer decisions (2026-10-05)**, answering the issue's open questions:
+1. **`.teleport`** covers `/tpa` and `/tpahere` (whoever moves gets the origin) and a staff member's **own** `/tp` (to a
+   player or coordinates). Being moved by staff (`/tphere`, `/tp a b`, `/spawn <p>`, `/warp <d> <p>`) records nothing.
+2. **No ping-pong:** a `/back` is never recorded. Arriving uses the entry up; the next `/back` goes to the next-latest
+   unused entry, if any.
+3. **Fee:** a configurable flat fee, `teleport.back.price-coins` (default 0), for a player's own `/back`; staff `/back`
+   is free.
+4. **Expiry:** shared `teleport.back.expire-seconds` (300) with optional `teleport.back.expire-seconds-by-kind.<kind>`
+   overrides (`death`, `warps`, `teleport`, `spawn`).
+5. **Rules / siege:** every kind keeps single use, warmup, BACK cooldown, combat tag, guards and the safe-spot search.
+   Siege teleports and siege deaths are never recorded, **and no longer wipe older entries**: a place from before the
+   siege can be used after leaving it (while it lasts). `/back` during a match stays refused by `SiegeTeleportRestriction`.
+   (This changes Phase 7's "a siege death wipes older deaths".)
+6. **Staff `/back <player> [-s]`** (`knk.teleport.staff.back.others`, must outrank): instant staff teleport, audited,
+   to the player's latest entry of any kind whatever nodes they hold; uses the entry up; still runs the safe-spot search.
+
+**Built.** knk-plugin `a2363b1`: knk-core `BackKind` (DEATH/WARPS/TELEPORT/SPAWN); `BackLocationBook` holds one entry per
+kind per player and claims the latest unexpired one among the allowed kinds (one `/back` per player at a time);
+`TeleportBackSettings` + `expireSecondsByKind`, `priceCoins`. Engine: `TeleportArrivalListener` (called after every
+engine teleport) — `BackService` records the origin by plan kind (WARP→warps incl. menu warps, SPAWN→spawn,
+REQUEST→teleport for the mover, STAFF→teleport only when the staff member moves themselves). `TeleportPlan.backTrip`
+marks both `/back`s (never recorded; a staff one still gets the safe-spot search). Nodes: `knk.teleport.back` (death),
+`.back.warps`, `.back.teleport`, `.back.spawn`, `.back.all` (`knk.teleport.back.*` also works — the API's wildcard
+matching covers every kind), `knk.teleport.staff.back.others`; `knk.teleport.bypass.cost` makes a paid `/back` free.
+Fee: `TeleportCharges.backFee` → knk-web-api `57967a8` **`POST api/teleport-destinations/back-fee`** (`[RequirePluginService]`,
+same idempotency/row-lock/void-key/refund path as `request-fee`; ledger `TELEPORT_FEE`, source type `TeleportBack`, source
+ref = kind). Tests: plugin all modules green (new `BackLocationBookTest`, `BackServiceTest` cases, fee cases in
+`TeleportChargeEngineTest`, siege "place from before the siege" case, config loader, api-client body); API teleport
+tests 54/54, full suite 4 failures that fail identically on `master` (ClientActivityStore, PathResolution ×2,
+FieldValidation). No migration.
+
+**Deviations / notes:** a staff member's `/warp <d> <self>` or `/spawn <self>` counts as `.teleport` (own staff move),
+not `.warps`/`.spawn`; only holders of the death kind get the "Use /back within…" chat hint (warps/teleports stay quiet);
+the expiry clock keeps running during a siege, so with the default 5 minutes a pre-siege place usually has expired by the
+end of a match (raise `expire-seconds-by-kind` if that matters); entries are in memory (lost on restart, kept on relog).
+
+**Developer to-do:** grant nodes (e.g. Dragon Blood `knk.teleport.back` + whichever new kinds; staff
+`knk.teleport.staff.back.others`); set `price-coins` / per-kind expiries if wanted; smoke test:
+- [ ] `/warp` then `/back` (`.back.warps`) → back at the warp origin after the warmup; second `/back` → "nowhere" (no ping-pong).
+- [ ] With `.warps` + death: die, then warp → `/back` goes to the warp origin, the next `/back` to the death spot.
+- [ ] `/tpa` and `/tpahere` → only the player who moved gets a `.teleport` place; staff `/tphere` gives none; staff's own `/tp` gives one.
+- [ ] `/spawn` then `/back` (`.back.spawn`); `.back.all` / `knk.teleport.back.*` allows every kind; no node → permission refusal.
+- [ ] Per-kind expiry override honoured; `price-coins > 0`: charged after the warmup ("You paid … coins"), refused when short, refunded on an unsafe spot, free with `knk.teleport.bypass.cost`.
+- [ ] `/back <player>` and `-s`: instant, audit entry in the web app, player's place used up, lava death → nearest safe ground; refused for a siege member.
+- [ ] Warp, join a siege, die in the match, leave → `/back` returns to the pre-siege warp origin (within its window); `/back` inside the match refused.
 
 ## Cross-cutting
 
