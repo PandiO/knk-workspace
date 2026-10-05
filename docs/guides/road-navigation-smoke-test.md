@@ -743,6 +743,19 @@ Use the build with `--offline -x deployToDevServer` and copy the jar yourself, o
   revert it by hand with `/knk road edge set 10089 profile 1`. A later rebuild proposes #1 → #3 again, which can then
   be rejected.
 
+#### Re-test run 2 (2026-10-05, developer) — steps 14-23
+
+- With knk-plugin `fa8fcb5`: step 14 (radius 5) gave "no changes". Step 15 (radius 3) proposed 7 real changes and no
+  domain noise.
+- A fresh backup that includes `road_tile_proposals` was taken first, so steps 17-21 can be undone by restoring it.
+- Steps 17-22 passed: accept, reject (R1/R2, kept and hidden), unreject R1 (proposed again on rebuild), the later
+  edit winning (skipped item), finishing a review, and surviving a restart. The "(locked)" overlay label in 18.3 was
+  not found in game, but was accepted.
+- **Finding M3 — stale `/knk road tiles`.** Step 23: after uncurate and a direct build, 1,-2 was Curated in the
+  database, but the list still showed it uncurated. The cached tile list was never refreshed after a build.
+  **Fixed in knk-plugin `c6a6d14`:** a build upload refreshes the tile list, and `/knk road tiles` fetches a fresh one
+  before printing.
+
 ### Phase 3 — rebuild re-test (2026-10-02, developer; recorded from the commit messages)
 
 Not written up here at the time; reconstructed by the walkable-path chain (link 1) from the developer's commits on
