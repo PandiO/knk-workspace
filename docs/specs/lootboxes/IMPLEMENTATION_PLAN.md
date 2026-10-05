@@ -617,6 +617,28 @@ above so it isn't reintroduced silently. No plugin/API change needed.
 - `dotnet ef database update` / FormConfigurations verification and the rest of the round-2 checklist are done; no further
   re-test needed unless the two follow-ups above change plugin behavior enough to warrant one.
 
+### Follow-ups — 2026-10-05 (reel decoy enchantments, blueprint description color)
+
+Developer asked for two more improvements after the KNG-44/45 merge (no Linear issue; knk-plugin only, no API change):
+
+1. **Reel decoys carry real enchantments.** The passing items were plain blueprint look-alikes, so the one enchanted item
+   on the reel was the winner. Now each slot is built like a real drop: the blueprint's default enchantments plus rolled
+   ones. `KnkLootboxOdds` gained the box's enchant rolls (`enchantments`: definition, key, hit %, level range per item
+   grade) and per item `quantity` / `rollsEnchantments` — all already in `GET LootboxTypes/{id}/odds`, so the API is
+   unchanged; `knk-core` `LootboxDecoyRolls` rolls them (hit chance, uniform level of the grade's capped range),
+   `LootboxReel.plan(..., perSlot)` builds every slot separately (the same item can pass with different enchantments),
+   `LootboxDelivery.decoy` assembles them with the assembler's vanilla applicability/conflict rules. Books, stackables and
+   specials roll nothing (specials show their blueprint's default enchantments, e.g. Flaming Samurai's). Decoys also show
+   the grade stars the box gives the item. Tests: `LootboxDecoyRollsTest`, `LootboxReelTest`, `LootboxDeliveryTest`,
+   `LootboxOpeningCandidatesTest`, `LootboxMapperTest`.
+2. **Blueprint description lore defaults to dark gray.** Correction to the KNG-29 follow-up report (2026-10-04): removing
+   Flaming Samurai's inline `&7` did not make it "use the normal lore color" — the plugin applied no color, and lore
+   without one is vanilla's purple. `ItemBlueprintBukkitMapper.buildLore` now prefixes every description line with `&8`;
+   a color the description sets itself still wins. This applies to every blueprint description without its own color
+   (existing data needs no migration). Test: `ItemBlueprintLoreColorTest`.
+Live check: open a box with a few pool items; every passing item that can carry enchantments should show some (varying),
+and Flaming Samurai's description should be dark gray like other blueprints'.
+
 **Tooling found along the way**
 - knk-web-app: `npm ci` fails on trunk (lockfile lacks the optional `yaml@2` peer; `npm ci --legacy-peer-deps` works);
   `CI=true npm run build` fails on existing lint warnings.

@@ -600,7 +600,11 @@ mints the instance in one transaction). The plugin then opens a 3-row chest menu
   pitch; the frame colour follows the box grade.
 - The passing items are the box's pool drawn with its **real odds** (the odds preview, cached 5 min; items look like
   their blueprints). The reel never adds "near misses": the rolled item appears only where it stops. If the odds can't
-  be read within 1.5 s the strip shows only the winner.
+  be read within 1.5 s the strip shows only the winner. **Passing items are dressed like real drops** (2026-10-05): each
+  slot gets its blueprint's default enchantments plus freshly rolled ones from the box's own enchant rolls (hit chance,
+  uniform level within the item grade's capped range; applicability/conflicts by the same vanilla rules as a real drop;
+  none for books, stackable items and specials), and shows the grade the box gives it, so the winner isn't the only
+  enchanted item.
 - When it stops, the item goes into the inventory through the normal delivery (confirmation, owner-locked drop on a full
   inventory), the "You opened a {box} and found {item}!" line and, for an announced drop, the broadcast. The menu closes
   after `opening.show-result-ticks`. The menu is look-only (clicks and drags cancelled).
