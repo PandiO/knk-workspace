@@ -1,6 +1,9 @@
 # Handoff: road navigation rev. 6 Part B — curated tiles
 
-**Status:** Implemented 2026-10-05 (cloud session), **not live-tested**. Next: a Claude Code session on the developer's
+**Status:** **Done.** Implemented and live-tested on 2026-10-05. The work is folded into the standing branches
+(knk-web-api `claude/road-navigation` `176b9d3`, knk-plugin `claude/navigation-walkable-path` `c6a6d14`). The steps
+below are history. Next: the Phase 4 + KNG-51 live test (smoke-test guide header), then the trunk merge.
+**Was:** Implemented 2026-10-05 (cloud session), not live-tested. Next: a Claude Code session on the developer's
 machine (knk-workspace with the component repos under `Repository/`), with the dev DB and world available.
 **Linear:** [KNG-27](https://linear.app/kngpandi/issue/KNG-27).
 **Last updated:** 2026-10-05

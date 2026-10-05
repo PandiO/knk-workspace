@@ -7,8 +7,11 @@ resuming Phase 4 items 20+. The direct-mode straight line through terrain (findi
 **2026-10-04:** after the reset — findings H (rural road with grass holes: record it) and I (edges through the ground
 at plaza junctions: fixed in the builder, rebuild needed). **Evening:** finding L (Brink's west junction and #3588
 lost to junction clustering; builder 5 with a correction report — re-test list at the end of Findings).
-**2026-10-05:** rev. 6 Part B (curated tiles) implemented, not live-tested — re-test list "Curated tiles (rev. 6 Part B)"
-after finding L.
+**2026-10-05:** rev. 6 Part B (curated tiles) **live-tested and passed** (runs 1-3 under "Curated tiles (rev. 6 Part
+B)"; findings M1-M3 fixed). Folded into the standing branches: knk-web-api `claude/road-navigation` `176b9d3`, knk-plugin
+`claude/navigation-walkable-path` `c6a6d14`. **Next:** sections 4 (Phase 4 from "Availability" on, plus the `[~]` items)
+and 5, together with the KNG-51 walkable-path checklist (`docs/reports/2026-10-02-navigation-walkable-chain.md`,
+"Combined live checklist"), on that deployment. Then the trunk merge of the whole feature.
 **Last updated:** 2026-10-05
 **Sources:** the "Developer to-do" blocks of Phases 1, 3, 4 and 5 in `docs/specs/navigation/IMPLEMENTATION_PLAN.md`;
 progress report `docs/reports/2026-09-27-road-navigation-chain.md`. If this file and a plan block disagree, the plan wins.
@@ -681,7 +684,7 @@ Side effect at the keep top: the 13-block dead end towards (1400, 82, -506) is n
 Keep `junction-cluster-radius: 5`; with the new rule it no longer swallows distant forks. A designed plaza on Brink is
 optional now.
 
-### Curated tiles (rev. 6 Part B) — live re-test (to do; implemented 2026-10-05)
+### Curated tiles (rev. 6 Part B) — live re-test (passed 2026-10-05)
 
 Plan §5.7. **Prerequisites:**
 - The finding L re-test above is done with the builder-5 jar.
@@ -755,6 +758,14 @@ Use the build with `--offline -x deployToDevServer` and copy the jar yourself, o
   database, but the list still showed it uncurated. The cached tile list was never refreshed after a build.
   **Fixed in knk-plugin `c6a6d14`:** a build upload refreshes the tile list, and `/knk road tiles` fetches a fresh one
   before printing.
+
+#### Re-test run 3 (2026-10-05, developer) — steps 24 and the restore: passed
+
+- Step 24 (kill switch): with `curated-tiles: false`, a direct upload as before rev. 6.
+- Restored the curated backup with `mysql … -e "source …"`. 2,-2 and 2,-1 are Curated again; 1,-2 and 3,-1 are
+  Detected. A rebuild of 2,-2 proposes nothing, and no proposals are pending.
+- **Result:** curated tiles pass the live re-test. Folded into knk-web-api `claude/road-navigation` (`176b9d3`) and
+  knk-plugin `claude/navigation-walkable-path` (`c6a6d14`) by fast-forward.
 
 ### Phase 3 — rebuild re-test (2026-10-02, developer; recorded from the commit messages)
 

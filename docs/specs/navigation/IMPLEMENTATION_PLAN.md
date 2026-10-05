@@ -2427,7 +2427,7 @@ the middle of Merchants Square (or radius 16); check Brink in `/knk road show`.
 The structural follow-ups (find open areas before making the centreline; freeze curated tiles and review rebuilds as
 a list of proposed changes) are proposed in [REV6_PROPOSAL.md](REV6_PROPOSAL.md), not decided.
 
-## 5.7 Rev. 6 Part B — curated tiles (implemented 2026-10-05, not live-tested)
+## 5.7 Rev. 6 Part B — curated tiles (done 2026-10-05: implemented and live-tested)
 
 **Developer decision 2026-10-04:** do the rev. 6 work, starting with the recommended part, **curated tiles**
 ([REV6_PROPOSAL.md](REV6_PROPOSAL.md) §3). Part A (open areas first, §2) follows. Handoff:
@@ -2492,7 +2492,16 @@ and web-api tests are green, except the known failures.
 analysed") with the `claude/navigation-walkable-path` jar, before deploying this branch or applying the B1 migration.
 The re-test's rebuilds then write directly, and D2 curates the result.
 
-### §5.7 status — B1-B4 and D7 implemented 2026-10-05, not live-tested
+### §5.7 status — B1-B4 and D7 done 2026-10-05, live re-test passed
+
+**Live re-test (developer, 2026-10-05): passed.** It ran in three runs; findings M1-M3 were fixed in knk-plugin
+`fa8fcb5` and `c6a6d14`. See the smoke-test guide, "Curated tiles (rev. 6 Part B)". The work was folded into the
+standing branches by fast-forward: knk-web-api `claude/road-navigation` `7f99cbd` → `176b9d3`, knk-plugin
+`claude/navigation-walkable-path` `75f6a0e` → `c6a6d14`. The `claude/road-curated-tiles-nsrorb` branches can be
+deleted after the trunk merge. **Next:** Phase 4 / §5 of the smoke test and the KNG-51 live checklist, then the trunk
+merge. B5 (web app) and Part A follow.
+
+Implementation record:
 
 Implemented in a cloud session (no dev DB, world or server). All on `claude/road-curated-tiles-nsrorb`, pushed.
 
