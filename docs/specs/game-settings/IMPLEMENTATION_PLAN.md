@@ -54,10 +54,11 @@ deploys to the dev server. knk-web-api tests live in `Tests/knkwebapi_v2.Tests/`
 | Suite | Result |
 |---|---|
 | knk-web-api `dotnet test --filter GameSettings` | 6 passed |
+| knk-web-api full suite | 1629 passed, 48 skipped, 8 failed. The same 8 fail on untouched `master` `099f936`: `ClientActivityStoreTests`, `TransferPolicyEvaluatorTests.DailySendCap…`, `FieldValidationServiceTests.ValidateConditionalRequired…`, `CurrencyWriteGuardTests`, 2× `CurrencyAnomalyDetectorTests`, 2× `PathResolutionServiceTests` (the earlier "5 known failures" baseline has grown) |
 | knk-plugin `./gradlew build --offline -x deployToDevServer` | BUILD SUCCESSFUL. knk-core 1223 tests, 0 failures. knk-api-client 149 (2 skipped). knk-paper 1026 (14 skipped). The skip counts match trunk. |
 | New plugin tests | `WeatherRulesTest`, `RespawnPlannerTest`, `GameSettingsModelTest`, 2 new `SpawnPointResolverTest` cases, `GameSettingsCommandApiImplTest` (full read + PUT body/auth/401), `GameSettingsStoreTest` (Gson round trip, history limit, broken file, config clamps), `GameSettingsWorldListenerTest`, 2 new `JoinLoadingGuardTest` cases |
 
-The full knk-web-api suite was **not** run (filtered run only), and nothing was deployed or tried in game. The
+Nothing was deployed or tried in game. The
 Bukkit-side `GameSettingsManager` (world writes, scheduler, WorldGuard containment) has no unit tests. It is
 covered by the live checklist below.
 
