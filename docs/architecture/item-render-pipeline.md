@@ -1,6 +1,6 @@
 # Item render pipeline — one path from blueprint to item
 
-**Status:** Implemented on knk-plugin branch `claude/blissful-meitner-thei8p` (**not yet merged to `main`**; the pipeline itself existed since lootboxes Phase 0, the single `assemble` entry point and the decoy/colour changes are new on that branch)
+**Status:** Implemented and merged to knk-plugin `main` 2026-10-05 (`74607a9`); developer smoke test passed (see the lootboxes plan, "Smoke test results — 2026-10-05"). The pipeline itself existed since lootboxes Phase 0; the single `assemble` entry point and the decoy/colour changes are new in that merge
 **Last updated:** 2026-10-05
 **Why this exists:** developer request 2026-10-05 — all lore colouring, custom-enchantment rendering and grade/origin rendering should be applied in one spot, so a route that spawns an item can't render it differently from the others.
 **See also:** [lootboxes design §3.4/§3.9](../specs/lootboxes/DESIGN.md), [enchantment books](../specs/enchantment-books/ENCHANTMENT_BOOK_APPLICATION.md), [items plan](../specs/items/IMPLEMENTATION_PLAN.md), [kits](../specs/kits/DESIGN.md)

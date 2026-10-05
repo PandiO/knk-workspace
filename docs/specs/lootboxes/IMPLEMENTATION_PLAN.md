@@ -646,8 +646,23 @@ Developer asked for improvements after the KNG-44/45 merge (no Linear issue; knk
    `e55e87f`, `CustomEnchantmentLore.remove`). Documented in [`architecture/item-render-pipeline.md`](../../architecture/item-render-pipeline.md).
    Behaviour is unchanged except that kits and `give` now share the assembler's quantity cap. Tests: `BlueprintItemAssemblerTest`
    (two-pass order, vanilla rules only on rolled, stamp, quantity), `LootboxDeliveryTest`, `CustomEnchantmentLoreTest`.
-Live check: open a box with a few pool items; every passing item that can carry enchantments should show some (varying),
+Live check (see the results below): open a box with a few pool items; every passing item that can carry enchantments should show some (varying),
 and Flaming Samurai's description should be dark gray like other blueprints'.
+
+**Smoke test results — 2026-10-05** (developer, dev server, knk-plugin branch `claude/blissful-meitner-thei8p` before the merge; all
+steps passed):
+
+| Area | Steps | Result |
+|---|---|---|
+| Setup | build + deploy, API `master`, Weapons box enabled with enchant rolls and Flaming Samurai | done |
+| A. Reel decoys | winner not the only enchanted item; the same item passes with differing enchantments; Flaming Samurai passes with its authored enchants; non-enchantable/stackable items and books roll nothing, stack sizes shown; grade line matches the received item; `opening.style: instant` skips the reel; closing early hands the item over with its enchantments; no log errors | 8/8 pass |
+| B. Lootbox delivery (via `assemble`) | enchantments/grade/quantity correct; drop log `delivered`/`Inventory`; stackables stack; instance tag intact; full-inventory behaviour | 5/5 pass |
+| C. Description colour | Flaming Samurai and a plain multi-line blueprint dark gray; a self-coloured description keeps its colour; enchantment lines gray, grade line bold aqua | 4/4 pass |
+| D. Kits and `give` (`assembleDefaults`) | enchanted kit items with quantities, `/knk itemblueprints give` incl. vanilla + custom, no "failed to assemble" warnings | 3/3 pass |
+| E. `/ce` | add, upgrade, remove one, remove last (no stray blank line), debug-command apply and book apply | 5/5 pass |
+| F. KNG-44 siege hold, quit/rejoin, KNG-45 batch odds | **not tested; accepted by the developer without a live check** (unit-tested: `LootboxOpeningSiegeTest`, `LootboxMapperTest`, API `LootboxConfigServicesTests`, web-app `LootboxesPage.test`) | accepted untested |
+
+Merged to knk-plugin `main` 2026-10-05 as `74607a9`. knk-web-api and knk-web-app needed no change for this round.
 
 **Tooling found along the way**
 - knk-web-app: `npm ci` fails on trunk (lockfile lacks the optional `yaml@2` peer; `npm ci --legacy-peer-deps` works);
