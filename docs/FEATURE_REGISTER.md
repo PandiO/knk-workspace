@@ -1,6 +1,6 @@
 # Knights & Kings feature register
 
-**Status:** Active · **Last updated:** 2026-10-04 · **First reconciled:** 2026-09-28 · [KNG-33](https://linear.app/kngpandi/issue/KNG-33)
+**Status:** Active · **Last updated:** 2026-10-05 · **First reconciled:** 2026-09-28 · [KNG-33](https://linear.app/kngpandi/issue/KNG-33)
 
 This is the index of intended gameplay and shipped surfaces, not a substitute for a feature's design, code, or issue. V1's wider gameplay and V2's stronger data model are both inputs to V3. An absent V2 port is **not** a decision to drop a V1 feature. The [vision](vision/vision.md) decides intent; a [feature spec](specs/README.md) decides detailed behavior; the actual default branches decide whether code has shipped.
 
@@ -10,6 +10,10 @@ This is the index of intended gameplay and shipped surfaces, not a substitute fo
 `main` merge `1a69ec3`; KNG-24, KNG-25 and KNG-28 are merged and Done. KNG-26/29/30 are also Done
 on their stated default branches. KNG-38 is Done with its API half on `master` at merge `300aa4c`;
 the web-app half remains on its pushed feature branch, so the cross-repo merge state is mixed.
+
+**Targeted refresh (2026-10-05):** the global world settings row now has a spec
+([game-settings](specs/game-settings/DESIGN.md), KNG-52). The plugin half is code-complete on
+`claude/kng-52-game-settings`, which is not merged or live-tested.
 
 ## Reading and updating the register
 
@@ -31,7 +35,7 @@ For each changed row, include its source, spec or issue and the date of the evid
 | District containment and domain access rules | live | partial | vision | partial | mixed | mixed | finish; [vision §2.2](vision/vision.md#22-districts), [KNG-12](https://linear.app/kngpandi/issue/KNG-12) |
 | Managed WorldGuard region ownership, priorities and category flags | live | partial | spec | complete | trunk | pending | live-test [KNG-46](https://linear.app/kngpandi/issue/KNG-46); [architecture](architecture/managed-worldguard-regions.md) |
 | Gates: animation, damage, control and siege integration | live | partial | spec | complete | trunk | mixed | maintain; [gate specs](specs/gate-structure-animation/) |
-| Global world settings, deliberate join/spawn/weather/time rules | partial | partial | vision | partial | mixed | pending | design; [vision §2.7](vision/vision.md#27-game-world-settings) |
+| Global world settings, deliberate join/spawn/weather/time rules | partial | partial | spec | complete | branch | pending | finish: live test + merge [KNG-52](https://linear.app/kngpandi/issue/KNG-52) (2026-10-05: web page + API on trunk since 2026-08-21; plugin half and API write auth on `claude/kng-52-game-settings`); [design](specs/game-settings/DESIGN.md), [vision §2.7](vision/vision.md#27-game-world-settings) |
 | Teleport, requests, spawn, warps and homes | live | partial | spec | complete | trunk | mixed | maintain [KNG-17](https://linear.app/kngpandi/issue/KNG-17); [design](specs/teleport/DESIGN.md). Housing-linked `/home` is separate. |
 | Street graph and guided road navigation | — | — | spec | complete | branch | pending | merge [KNG-27](https://linear.app/kngpandi/issue/KNG-27); [plan](specs/navigation/IMPLEMENTATION_PLAN.md) |
 | Houses, rooms, property sales, rent, home ownership | live | partial | vision | none | — | pending | design after ownership decision; [legacy menus](specs/legacy/inventory-menu-screens.md), [vision §4](vision/vision.md#4-economy--professions) |

@@ -10,6 +10,7 @@ Central home for requirements, specifications, and implementation roadmaps acros
 - items/: item catalog (`ItemBlueprint`) design/implementation
 - kits/: Kit (equipment loadout) design, implementation plan, and legacy-DB seed data
 - enchantment-books/: permanent enchantment books outside siege (Linear KNG-5)
+- game-settings/: global Game Settings - announcements, join spawn, respawn policy, per-world game mode/time/weather/spawn, applied by the plugin (Linear KNG-52)
 - navigation/: road network (survey-learned road profiles, auto-detected junctions on every level) and `/navigate` guidance with live gate/entry availability (Linear KNG-27)
 - siege-survival/: cooperative endless NPC-wave defense, gate repair, spawnzone progression and match equipment/economy (Linear KNG-50, child of KNG-37; design only)
 - user-features/: rank/permission/title/salary architecture
@@ -18,6 +19,7 @@ Central home for requirements, specifications, and implementation roadmaps acros
 - reconcile/: reconciliation guides for aligning legacy data with v2
 
 ## Key documents
+- Game Settings (KNG-52; plugin half on branch `claude/kng-52-game-settings`, not merged or live-tested as of 2026-10-05): [game-settings/DESIGN.md](game-settings/DESIGN.md), [game-settings/IMPLEMENTATION_PLAN.md](game-settings/IMPLEMENTATION_PLAN.md); admin how-to [../guides/game-settings.md](../guides/game-settings.md)
 - Siege survival / Defend the Castle (KNG-50, design recorded 2026-09-30; not implemented): [siege-survival/DESIGN.md](siege-survival/DESIGN.md), [siege-survival/IMPLEMENTATION_PLAN.md](siege-survival/IMPLEMENTATION_PLAN.md). Both inventory variants and Mystery Box are first-release scope; permanent reward amounts await progression targets.
 - User domain: [docs/specs/users/SPEC_USER.md](docs/specs/users/SPEC_USER.md), [docs/specs/users/SPEC_USER_ACCOUNT_MANAGEMENT.md](docs/specs/users/SPEC_USER_ACCOUNT_MANAGEMENT.md), [docs/specs/users/REQUIREMENTS_USER.md](docs/specs/users/REQUIREMENTS_USER.md), [docs/specs/users/USER_ACCOUNT_MANAGEMENT_IMPLEMENTATION_ROADMAP.md](docs/specs/users/USER_ACCOUNT_MANAGEMENT_IMPLEMENTATION_ROADMAP.md), [docs/specs/users/USER_ACCOUNT_MANAGEMENT_QUICK_REFERENCE.md](docs/specs/users/USER_ACCOUNT_MANAGEMENT_QUICK_REFERENCE.md)
 - Towns domain: [docs/specs/towns/SPEC_TOWNS.md](docs/specs/towns/SPEC_TOWNS.md), [docs/specs/towns/CREATE_FLOW_SPLIT_TOWNS.md](docs/specs/towns/CREATE_FLOW_SPLIT_TOWNS.md), [docs/specs/towns/LOGIC_CANDIDATES_TOWNS.md](docs/specs/towns/LOGIC_CANDIDATES_TOWNS.md), [docs/specs/towns/REQUIREMENTS_HYBRID_CREATE_EDIT_FLOW.md](docs/specs/towns/REQUIREMENTS_HYBRID_CREATE_EDIT_FLOW.md)
