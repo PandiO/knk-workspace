@@ -173,7 +173,7 @@ edits, or deletes a `Kit` row.
   `grantFirstJoinKitsAsync`, mirrors `UsersCommandApi`'s per-action POST/PUT pattern).
 - `KnkKit` domain type (`knk-core/.../domain/item/`) — Bukkit-free DTO mirroring `KnkItemBlueprint`'s
   existing separation pattern.
-- **Item-building reuses `ItemBlueprintBukkitMapper` as-is** — no new mapper. Given a
+- **Item-building reuses `ItemBlueprintBukkitMapper` as-is** — no new mapper. *(Update 2026-10-05: `KitGrantPlacer` builds through `BlueprintItemAssembler.assembleDefaults`, the one blueprint → item entry point — see [item render pipeline](../../architecture/item-render-pipeline.md).)* Given a
   `KitClaimResultDto`, resolve each referenced `ItemBlueprint` via the existing
   `ItemBlueprintsDataAccess`, build each `ItemStack` via the existing mapper (same call
   `ItemBlueprintsDebugCommand` already makes), then run **`DESIGN.md` §4.2's unified placement

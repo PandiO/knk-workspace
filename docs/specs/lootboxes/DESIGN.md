@@ -421,9 +421,9 @@ Components (new unless noted):
 | knk-paper | `lootbox/LootboxPresenter` | Spawns and removes the entities |
 | knk-paper | `listeners/LootboxChunkListener` | `ChunkLoadEvent` renders cached spawns in that chunk; `EntitiesLoadEvent` removes any entity carrying `knk_lootbox` whose token isn't active (belt and braces) |
 | knk-paper | `listeners/LootboxInteractListener` | `PlayerInteractEntityEvent` on the `Interaction`. Checks `knk.lootbox.open`, not in staff/owner/vanish mode (unless configured), distance ≤ `claim-max-distance`, a free slot (else "Your inventory is full — make room to open this lootbox", **no API call**), and `ClaimGuard`. Then claims async and delivers on the main thread. |
-| knk-paper | `item/BlueprintItemAssembler` (**extracted** from `ItemBlueprintsDebugCommand:233-320`) | Blueprint plus an enchant list → ItemStack. Skips enchantments that fail `canEnchantItem` or `conflictsWith` and reports them in `delivered.note`. Also used by `/knk itemblueprints give`, and kits can adopt it. |
+| knk-paper | `item/BlueprintItemAssembler` (**extracted** from `ItemBlueprintsDebugCommand:233-320`) | Blueprint plus an enchant list → ItemStack. Skips enchantments that fail `canEnchantItem` or `conflictsWith` and reports them in `delivered.note`. **The one entry point for blueprint items** (2026-10-05): `assemble(…defaults, rolled, options, quantity)` is used by lootbox drops and the reel's decoys, `assembleDefaults` by kits and `/knk itemblueprints give` — see [item render pipeline](../../architecture/item-render-pipeline.md). |
 | knk-paper | `mapper/ItemInstanceTag` (new, like `ItemGradeTag`) | PDC `knightsandkings:knk_item_instance` (LONG = `ItemInstance.Id`): `stamp(meta, id)` and `read(item)`. The item's identity from now on; lore stays display only (vision §9.1). |
-| knk-paper | `lootbox/LootboxDelivery` | Builds the item with `BlueprintItemAssembler` + `ItemGradeTag`, stamps `ItemInstanceTag` when the claim has an `itemInstanceId` (stackables get no tag, so they stack normally), adds it to the inventory, and if leftovers remain drops them with `Item#setOwner(uuid)` + `setCanMobPickup(false)`, then ACKs `delivered`. |
+| knk-paper | `lootbox/LootboxDelivery` | Builds the item with `BlueprintItemAssembler.assemble` (+ `ItemGradeTag` via the mapper; `decoy(...)` builds the reel's passing items the same way, 2026-10-05), stamps `ItemInstanceTag` when the claim has an `itemInstanceId` (stackables get no tag, so they stack normally), adds it to the inventory, and if leftovers remain drops them with `Item#setOwner(uuid)` + `setCanMobPickup(false)`, then ACKs `delivered`. |
 | knk-paper | `listeners/LootboxJoinListener` | On join, `GET pending` and deliver. Before re-giving an instanced item, it scans the inventory and ender chest for the same instance id, so a crash between give and ACK doesn't dupe. Stackables can't be deduped this way; at worst one low-value stack is re-delivered, and the claim is logged `Redelivered`. |
 | knk-paper | `commands/LootboxCommand` (`/lootbox`, alias `/lb`) | **Player only:** `/lootbox` (help), `/lootbox odds <category>` (read-only preview) |
 | knk-paper | `commands/LootboxAdminCommand` (`/knk lootbox`, registered in `KnkAdminCommand`) | **Admin:** `spawn <category> [stars]`, `despawn [id\|nearest]`, `list [area]`, `tp <id>`, `give <player> <category> [stars]` (roll + deliver without a world box, audited), `reload`, and `area create\|list\|info\|delete` (below). All admin lootbox commands live under `/knk`, next to the other admin subcommands. |
@@ -496,7 +496,7 @@ Grades 1-5 use v1 treasure's colours (§1.1). Grades 6-10 are new and unused whi
   |---|---|
   | `Name` / `DefaultDisplayName` | `Flaming Samurai` / `&cFlaming Samurai` (one colour code and no formatting, like the seeded one-offs; red for fire, a colour no other seeded item uses) |
   | `IconMaterial` | `minecraft:netherite_sword` (in `Data/minecraft_material_catalog.json`; the seed creates the `MinecraftMaterialRef` if missing). No v1 item is netherite (v1 predates it), which sets it apart from the diamond Golemheart. |
-  | `DefaultDisplayDescription` | `&7Forged in the last fire of a fallen dojo.`<br>`&7Its edge never cools.` (newline-separated; `ItemBlueprintBukkitMapper.buildLore` renders one lore line each, above the plugin's grade line) |
+  | `DefaultDisplayDescription` | `Forged in the last fire of a fallen dojo.`<br>`Its edge never cools.` (no inline colour since KNG-29, 2026-10-04; newline-separated; `ItemBlueprintBukkitMapper.buildLore` renders one lore line each, **dark gray `&8` by default since 2026-10-05**, above the plugin's grade line) |
   | `Description` (admin-facing) | "New v3 lootbox special (2026-09-26). Not a v1 port." |
   | Category / Grade | Weapons / ★5 Legendary |
   | `DefaultQuantity` / `MaxStackSize` | 1 / 1 (so every copy is an `ItemInstance`) |
@@ -600,7 +600,11 @@ mints the instance in one transaction). The plugin then opens a 3-row chest menu
   pitch; the frame colour follows the box grade.
 - The passing items are the box's pool drawn with its **real odds** (the odds preview, cached 5 min; items look like
   their blueprints). The reel never adds "near misses": the rolled item appears only where it stops. If the odds can't
-  be read within 1.5 s the strip shows only the winner.
+  be read within 1.5 s the strip shows only the winner. **Passing items are dressed like real drops** (2026-10-05): each
+  slot gets its blueprint's default enchantments plus freshly rolled ones from the box's own enchant rolls (hit chance,
+  uniform level within the item grade's capped range; applicability/conflicts by the same vanilla rules as a real drop;
+  none for books, stackable items and specials), and shows the grade the box gives it, so the winner isn't the only
+  enchanted item.
 - When it stops, the item goes into the inventory through the normal delivery (confirmation, owner-locked drop on a full
   inventory), the "You opened a {box} and found {item}!" line and, for an announced drop, the broadcast. The menu closes
   after `opening.show-result-ticks`. The menu is look-only (clicks and drags cancelled).
