@@ -619,7 +619,7 @@ above so it isn't reintroduced silently. No plugin/API change needed.
 
 ### Follow-ups — 2026-10-05 (reel decoy enchantments, blueprint description color, one render path)
 
-Developer asked for improvements after the KNG-44/45 merge (no Linear issue; knk-plugin only, no API change):
+Developer asked for improvements after the KNG-44/45 merge (tracked afterwards as [KNG-54](https://linear.app/kngpandi/issue/KNG-54), Done; knk-plugin only, no API change):
 
 1. **Reel decoys carry real enchantments.** The passing items were plain blueprint look-alikes, so the one enchanted item
    on the reel was the winner. Now each slot is built like a real drop: the blueprint's default enchantments plus rolled
