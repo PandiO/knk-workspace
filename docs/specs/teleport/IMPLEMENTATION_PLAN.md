@@ -614,7 +614,9 @@ paper 1048 (14 skipped). Web app: `tsc` shows only the same 3 environment errors
   **requester's** group price. With `/tpahere` these are different players.
 - The plugin decides whether a free-by-default `/tpa` or `/spawn` needs a charge from a group-settings copy at most
   5 s old (a just-edited group may give one free teleport); the server always prices the charge itself. With the API
-  down and nothing cached, the default applies (a free `/spawn` still works).
+  down and nothing cached, the default applies — but only once the command's own permission check passed, which
+  fails closed when that node's answer isn't cached (round-1 K4), so in practice `/spawn` and `/warp` are refused with
+  "Your permissions can't be checked right now" when the API is down (smoke test 2026-10-06, step 9).
 - A Multiplier price on `/tpa` multiplies `teleport.request.price-coins`; a Multiplier on `/spawn` is refused (no
   default price). A kind's fields that don't belong to its mode are stored but ignored.
 - `bypassCost` (`knk.teleport.bypass.cost`) ignores group prices on `/warp` and `/spawn`; `/tpa` fees never had a
@@ -640,6 +642,27 @@ paper 1048 (14 skipped). Web app: `tsc` shows only the same 3 environment errors
 - [ ] `/spawn` with a group price: "/spawn costs you …", charged after the warmup; free with `knk.teleport.bypass.cost`.
 - [ ] Group cooldown 5 s on `/warp`: a second warp after 6 s is allowed (default 30 s would refuse); other kinds keep
       30 s.
+
+**Smoke test round 1 — 2026-10-06 (developer, dev server).** Passed: 1 (no settings) 1–5; 2 (warp multiplier) 1–4; 3
+(fixed combo) 1–3, 5; 4 (XP price, demotion) 1–3; 5 (which group wins) 1–4; 6 (`/tpa`) 1, 3, 4; 7 (`/spawn`) 1, 3; 8
+(group cooldown) 1–3. Accepted without further testing: 3.6 (combo refund on an unsafe spot), 4.4/4.5 (XP refund
+re-promotes, too-little XP refused), 7.4. Notes:
+- 3.4: the web-app ledger shows the combo price as one line per currency (one transaction) — fine as is.
+- **6.2 / 7.2 (bug):** no price notice before a paid `/tpa` or `/spawn`. The notices read the cached group settings,
+  which are still empty on a player's first teleport. **Developer request:** tell players what a teleport costs
+  **during the warmup**, for every paid teleport; no warmup → no notice. **Fixed** in knk-plugin `f8a3871`: when a
+  warmup starts, the engine asks the plan's charge for its price (`TeleportCharge.priceNotice`, fresh group settings
+  for `/tpa`/`/spawn`, the player's own list price for `/warp`, the coin fee for a paid `/back`) and tells the payer:
+  "This teleport costs you 100 coins and 1 gem, paid when you arrive." — or with `/tpahere` the requester: "You pay …
+  when Bob arrives." Free, bypassed or warmup-less teleports get nothing. The old up-front messages (on sending a
+  `/tpa`, on `/spawn`, on `/back`) are gone. Merged with the parallel KNG-42 fixes (`d41916d`; amounts now use digit
+  grouping). Gradle build green: core 1216, api-client 157 (2 skipped), paper 1065 (14 skipped).
+- 9.2 / 9.3 (API down): refused with "Your permissions can't be checked right now …" — the existing fail-closed
+  permission check (round-1 K4) runs before any charge; expected, no change. The step expected too much.
+
+**Round-2 re-test:** the warmup notice on `/warp` (paid, free, `knk.teleport.bypass.cost`), `/tpa`, `/tpahere` (the
+requester gets "You pay … when <player> arrives."), group-priced `/spawn`, a paid `/back`; none with
+`knk.teleport.bypass.warmup`; no "It costs you …" when sending a `/tpa` any more.
 
 ## Cross-cutting
 
