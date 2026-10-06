@@ -34,6 +34,7 @@ Live tracker of in-progress work across all four Knights and Kings repos
 
 | Feature | Repos / files claimed | Owner (human / session) | Status | Started | Last updated |
 |---|---|---|---|---|---|
+| KNG-42 `/back` variants — bring default branches into the standing branches | `claude/kng-42-implementation-vud0q8` in knk-web-api, knk-plugin, knk-workspace (merge only, no feature edits) | Claude Code session (Pandi) | Merging | 2026-10-06 | 2026-10-06 |
 | Bedrock console access feasibility documentation | knk-workspace: `docs/reports/2026-10-06-bedrock-console-access.md` | 2026-10-06 | Pushed `1d0cebe` on `codex/bedrock-console-access`; [PR #7](https://github.com/PandiO/knk-workspace/pull/7), unmerged. Smooth UX requirement, friend broadcaster, official distribution, domain/UDP and console pilot documented. Docs only; no live tests. |
 | _(example)_ Siege minigame — capture point sync | web-api: `Services/SiegeService.cs`; plugin: `siege/` package | Claude Code session A | Implementing capture-point event handling | 2026-09-17 | 2026-09-17 |
 | Legacy inventory-menu screen/item mining + feature allocation | knk-workspace: new `docs/specs/legacy/inventory-menu-screens.md`, `docs/specs/legacy/README.md`; read-only on `knk-v1-archive`/`knk-v2-archive` | Claude Code session (Pandi) | Mining v1/v2 menu screens and items | 2026-09-25 | 2026-09-25 |
