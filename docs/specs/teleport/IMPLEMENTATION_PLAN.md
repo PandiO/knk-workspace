@@ -593,7 +593,7 @@ to 0 / up on MySQL 8.0; full suite 1666 pass, 4 failures identical to `master` (
 ClientActivityStore). Plugin: `./gradlew build -x deployToDevServer` green — core 1209, api-client 149 (2 skipped),
 paper 1048 (14 skipped). Web app: `tsc` shows only the same 3 environment errors as without the change.
 
-**Deviations / notes (reversible defaults, please review):**
+**Deviations / notes (all four accepted by the developer 2026-10-06):**
 - A `/tpa` cooldown is the **mover's** group cooldown (the engine keys cooldowns by who moves); the **fee** is the
   **requester's** group price. With `/tpahere` these are different players.
 - The plugin decides whether a free-by-default `/tpa` or `/spawn` needs a charge from a group-settings copy at most
