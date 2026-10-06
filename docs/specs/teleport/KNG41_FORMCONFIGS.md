@@ -162,7 +162,7 @@ same day.
    `"SalaryMultiplier": "1,0"`. The API binds case-insensitively, the later key wins, `"1,0"` is not a decimal, and
    the controller answers a bare 400. For a premium group the duplicate silently overwrote a salary edit made in
    General Information. **Fixes:**
-   - knk-web-app `d79b2e0` on `claude/kng-42-implementation-vud0q8` (not pushed yet): the final submit uses the new
+   - knk-web-app `d79b2e0` on `claude/kng-42-implementation-vud0q8` (pushed; reaches `main` with the KNG-41/42 merge): the final submit uses the new
      `flattenVisibleStepsData` (`utils/forms/formVisibility.ts`). Hidden steps and fields are left out entirely,
      as `reconcileVisibility` already documented. The other flatten callers (placeholders, parent context) still
      see every field. New unit tests are in `formVisibility.test.ts`; the form utils pass 67/67, and `tsc` is clean.
