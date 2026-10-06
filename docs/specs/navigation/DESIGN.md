@@ -1,8 +1,13 @@
 # Road Navigation — Design
 
 **Status:** Decided (rev. 4) — all questions answered (§10); ready for implementation, **in parallel with the siege
-work** (developer decision). Phase 4 waits for KNG-17 (teleport) to reach trunk.
-**Last updated:** 2026-09-27
+work** (developer decision). Phase 4 waits for KNG-17 (teleport) to reach trunk. **Rev. 5 addendum (2026-10-04,
+developer decision after the smoke test):** designed plazas and movable nodes — §3.5 `PlazaRadius`, §5.6 step 4, §7.
+**Builder 5 (2026-10-04, finding L):** §5.6 steps 2, 3, 3b and the §7 corrections line. **Rev. 6:**
+[REV6_PROPOSAL.md](REV6_PROPOSAL.md). **Part B, curated tiles, is implemented (2026-10-05, not live-tested):** §3.3
+`State`/`CuratedAt`, §3.6 `Confirmed`, §3.9 proposals, §7 commands; decisions and status in plan §5.7. Part A (open
+areas before the centreline) follows.
+**Last updated:** 2026-10-05
 **Implementation plan:** [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) — its §1 lists ten small deviations (D1-D10) decided
 while mapping the design onto trunk code; where this document and the plan disagree, the plan wins.
 **Linear:** [KNG-27](https://linear.app/kngpandi/issue/KNG-27/road-navigation-street-road-graph-endpointsintersections-traced-road)
@@ -135,6 +140,8 @@ a profile if the merge rules change.
 | `Dirty` | bool | Set when road blocks change in the tile (§5.9). |
 | `CellCount`, `NodeCount`, `EdgeCount`, `LevelCount` | int | Build statistics; `LevelCount` = max road cells stacked in one column. |
 | `Warnings` | string? (JSON) | Cell cap hit, suspected leak, survey coverage gaps, unmatched seeds. |
+| `State` | enum `Detected \| Curated` | Rev. 6 Part B (plan §5.7 D1). Every upload leaves the tile `Curated`; a build of a curated, built tile only makes a **proposal** (§3.9). An admin sets `Detected` for one direct rebuild (`/knk road tile uncurate`). |
+| `CuratedAt` | DateTime? | When the tile was first curated. |
 
 ### 3.4 `RoadSeed` (`road_seeds`)
 
@@ -153,6 +160,12 @@ at build time and not stored.
 | `Name` | string?, max 100 | Optional; makes the node a destination. |
 | `ComponentId` | int | Recomputed after every build. |
 | `Locked` | bool | Set when an admin edits the node; rebuilds keep it in place. |
+| `PlazaRadius` | int?, 1-32 | Rev. 5: the node is the centre of a **designed plaza** of this radius (§5.6 step 4). Only on `Junction` and `Anchor` nodes; setting it locks the node. |
+
+An admin can **move** a node (`PUT road-nodes/{id}` with `x`, `y`, `z`; rev. 5): within its own tile, onto a free
+position; the node is locked and the ends of its edges follow it. Rebuilds keep a locked node in place; the builder's
+own junction is merged into it only within `locked-node-reach`, so moving suits corrections of a few blocks and
+plaza centres (a plaza's junction is always placed on its centre).
 
 ### 3.6 `RoadEdge` (`road_edges`)
 
@@ -174,6 +187,7 @@ at build time and not stored.
 | `DomainIds` | string (JSON int[]) | Domains (Town/District/Structure/Gate) whose regions the edge passes through, in order. |
 | `Source` | enum `Detected`, `Recorded` | `Recorded` = walked by an admin (§5.3, §5.10); survives rebuilds. |
 | `Status` | enum `Ok`, `Stale` | `Stale` when its tile is dirty; still routable. |
+| `Confirmed` | bool | Rev. 6 Part B (plan §5.7 D4): an admin kept this detected edge when a proposal wanted to remove it. Never proposed for removal again; an upload keeps it while both its nodes stay (they are locked). |
 
 ### 3.7 Street changes
 
@@ -198,6 +212,16 @@ None to the table. `StreetDto` gains read-only `edgeCount`, `totalLength`.
 
 Validation in `RoadNetworkService`: nodes in the tile they claim; no self-loops; geometry starts/ends within 1.5 blocks
 of its nodes; length ≥ straight-line distance; referenced profile/street/gate/domain ids exist.
+
+### 3.9 `RoadTileProposal` (`road_tile_proposals`, rev. 6 Part B)
+
+One row per tile (plan §5.7 D5): the pending **items** of the last rebuild of a curated tile and its **rejected list**,
+as JSON in the plugin's item format (knk-core `TileProposal`), plus counts, the build's builder version, cell/level
+counts and warnings, `BaseVersion`, `CreatedBy`, `CreatedAt`/`UpdatedAt`. Item kinds: edge added / removed / changed
+(course beyond `edgeMatchDistance`, or other gate doors, domains or profile), node moved (more than 2 blocks) / removed.
+Never proposed: Recorded and Stitch edges, `Confirmed` edges, locked nodes. An upsert clears the pending items and keeps
+the rejected list. Routes: `GET|PUT|DELETE api/road-tiles/{world}/{x}/{z}/proposal`, `GET api/road-tiles/proposals?world=`,
+`PUT api/road-tiles/{world}/{x}/{z}/state`.
 
 ---
 
@@ -382,10 +406,26 @@ closed; the gate's *state* only matters at routing time (§6.7).
 1. **Classify** centreline spans by their number of centreline neighbours: **1 = endpoint, 2 = along the road, ≥ 3 =
    junction candidate** (the GTA V / GIS rule).
 2. **Cluster junctions** within `junction-cluster-radius` into one `Junction` at the span nearest the cluster's
-   centroid.
-3. **Prune spurs** shorter than `max(min-spur-length, local width)`.
-4. **Plazas:** where `dt > WidthMax / 2` of the matching profile, a town square made of road blocks becomes one
-   `Junction` at its centre joined to every branch leaving it.
+   centroid. Builder 5 (finding L, 2026-10-04): of a cluster, only the members that fork within the radius of a
+   plaza's footprint join that plaza; the members left over form their own junction(s), clustered among themselves
+   (a chain of forks across Brink's wide stairs had pulled a road fork 20 blocks away into the plaza).
+3. **Prune spurs** shorter than `max(min-spur-length, local width)`. A plaza's junction (designed or automatic) is never
+   dissolved or turned into an Endpoint by this or the prune steps, and a non-plaza junction left with one arm is
+   emitted as an Endpoint (builder 5).
+3b. **Thin loops** (builder 5): a loop back to one node, or two chains between the same two nodes, whose sides stay
+   within 3 blocks of each other the whole way is one lane around an obstacle (lamp post, planter, stall): the loop
+   is dropped, of two parallel chains the longer goes. Wider loops (a ring road, a block of houses between two
+   streets) get a junction inserted so every edge keeps a distinct node pair.
+4. **Plazas.** *Designed* (rev. 5, run first): every node of the tile with a `PlazaRadius` is a plaza centre. The
+   road span nearest the node (within 3 blocks; otherwise the warning *"Plaza centre is not on the road"*) starts a
+   flood over the road spans linked to it that lie within `PlazaRadius` (3D) of the centre — the **footprint**. Every
+   centreline span in it belongs to one `Junction` placed exactly on the node, so the node keeps its id, name and lock
+   (an `Anchor` centre takes the junction over as usual). Every branch leaving the footprint becomes an edge to it;
+   the edge closes onto the centre along the road, not in a straight line. Junction clusters touching the footprint
+   join it, and the automatic rule below ignores spans inside it. *Automatic* (`navigation.builder.auto-plazas`,
+   default on): road spans wider than the `WidthMax` of every profile listing their floor are a plaza core; its
+   footprint is the core's clearance plus `plaza-growth`; each footprint becomes one `Junction` at its widest span.
+   With `auto-plazas: false` only designed plazas exist and wide areas are thinned like roads.
 5. **Edges** = centreline chains between nodes: `Length` from the raw chain, `AvgWidth` from `dt`, `Geometry` via RDP
    (ε = 0.75, 3D). **Profile match:** the histogram of floor materials within `dt` of the chain, compared with each
    profile's material shares (cosine similarity); best match → `ProfileId`.
@@ -571,14 +611,18 @@ In-game (`knk.admin.roads`), direct commands in the `GateDoorRegionCaptureHandle
 |---|---|
 | `/knk road survey start [profile]` / `stop` / `cancel` | Survey walk (§5.3): learn or refine a profile, add seeds, keep the breadcrumb for coverage. |
 | `/knk road profile list` / `show <name>` / `role <name> <material> <role>` / `ambiguous <name> <material> <true\|false>` / `enable\|disable <name>` | Profile review in-game (also in the web app). |
-| `/knk road build here` / `tile <x> <z>` / `radius <r>` / `dirty` / `all` | Builds tiles (§5.4-5.8), then a **build summary**: nodes/edges, levels, disappeared nodes, street conflicts, leaks, component gaps, **survey coverage misses** — each with a clickable teleport. |
+| `/knk road build here` / `tile <x> <z>` / `radius <r>` / `dirty` / `all` | Builds tiles (§5.4-5.8), then a **build summary**: nodes/edges, levels, disappeared nodes, street conflicts, leaks, component gaps, **survey coverage misses** — each with a clickable teleport. Builder 5: a **corrections** line (prune tombstones used / stale, anchors, designed plazas); each stale prune is a warning "Prune matched nothing (stale; unprune it)" with a teleport. |
 | `/knk road seed add [note]` / `remove` / `list` | Admin seeds. |
-| `/knk road show [radius] [all]` / `hide` | Overlay: nodes by kind, edges coloured by street, unlabelled grey, stale orange, closed red, gate-crossing edges with a gate marker; only the viewer's level unless `all`. |
+| `/knk road show [radius] [all]` / `hide` | Overlay: nodes by kind, edges coloured by street, unlabelled grey, stale orange, closed red, gate-crossing edges with a gate marker; only the viewer's level unless `all`. Rev. 6: pending proposal items too (added green, removed red, changed or moved yellow); the action bar names the item looked at, with its number. |
 | `/knk road street <street> [edgeId] [--continue]` | Label an edge (`Manual`); `--continue` carries the label along the road through straight junctions (§7.1). |
 | `/knk road node name <name>` / `merge <id> <id>` / `anchor` / `lock` | Review fixes. |
+| `/knk road node move <id>` / `plaza <radius> [id]` / `unplaza [id]` | Rev. 5: move a node to the block you stand on; make a `Junction` or `Anchor` (by id, or the nearest one) the centre of a designed plaza, or clear it (§5.6 step 4). |
 | `/knk road record start` / `stop [street]` / `cancel` | Recorded edge, including vertical ones (§5.10). |
 | `/knk road edge set <id> cost <x>` / `oneway` / `nogps` / `close` / `open` | Tuning. |
-| `/knk road tiles` | Tile overview. |
+| `/knk road tiles` | Tile overview: state (curated), builder version (an older one is flagged, never rebuilt automatically), items to review. |
+| `/knk road proposal [page]` / `list` / `accept <all\|n…\|kind>` / `reject <all\|n…\|kind>` / `clear` / `rejected` / `unreject <n…\|all>` | Rev. 6 Part B: review the proposal of a curated tile (the tile you stand in, or `@x,z`). Accept merges the items into the current graph and uploads it (an item an admin overrode since is skipped with a reason); reject confirms a removed edge or locks a removed node, and puts any other item on the rejected list, which hides that change from later proposals. The step that leaves nothing pending uploads with the proposal's builder version. Kinds: `added`, `removed`, `changed`, `moved`. |
+| `/knk road tile curate` / `uncurate` | Rev. 6 Part B: `uncurate` lets the tile's next build write directly (one-shot: that upload curates it again). |
+| `/knk road edge confirm\|unconfirm <id\|here>` | Rev. 6 Part B: keep a detected edge a build lost (its ends are locked), or take that back. |
 | `/knk road why <destination>` | Debug: route for the admin *as a given player* (`--as <player>`), listing every blocked gate/domain. |
 
 Typical first session: survey a main street, a wilderness road and a trail (five minutes each) → `/knk road build

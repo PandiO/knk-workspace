@@ -617,6 +617,53 @@ above so it isn't reintroduced silently. No plugin/API change needed.
 - `dotnet ef database update` / FormConfigurations verification and the rest of the round-2 checklist are done; no further
   re-test needed unless the two follow-ups above change plugin behavior enough to warrant one.
 
+### Follow-ups — 2026-10-05 (reel decoy enchantments, blueprint description color, one render path)
+
+Developer asked for improvements after the KNG-44/45 merge (tracked afterwards as [KNG-54](https://linear.app/kngpandi/issue/KNG-54), Done; knk-plugin only, no API change):
+
+1. **Reel decoys carry real enchantments.** The passing items were plain blueprint look-alikes, so the one enchanted item
+   on the reel was the winner. Now each slot is built like a real drop: the blueprint's default enchantments plus rolled
+   ones. `KnkLootboxOdds` gained the box's enchant rolls (`enchantments`: definition, key, hit %, level range per item
+   grade) and per item `quantity` / `rollsEnchantments` — all already in `GET LootboxTypes/{id}/odds`, so the API is
+   unchanged; `knk-core` `LootboxDecoyRolls` rolls them (hit chance, uniform level of the grade's capped range),
+   `LootboxReel.plan(..., perSlot)` builds every slot separately (the same item can pass with different enchantments),
+   `LootboxDelivery.decoy` assembles them with the assembler's vanilla applicability/conflict rules. Books, stackables and
+   specials roll nothing (specials show their blueprint's default enchantments, e.g. Flaming Samurai's). Decoys also show
+   the grade stars the box gives the item. Tests: `LootboxDecoyRollsTest`, `LootboxReelTest`, `LootboxDeliveryTest`,
+   `LootboxOpeningCandidatesTest`, `LootboxMapperTest`.
+2. **Blueprint description lore defaults to dark gray.** Correction to the KNG-29 follow-up report (2026-10-04): removing
+   Flaming Samurai's inline `&7` did not make it "use the normal lore color" — the plugin applied no color, and lore
+   without one is vanilla's purple. `ItemBlueprintBukkitMapper.buildLore` now prefixes every description line with `&8`;
+   a color the description sets itself still wins. This applies to every blueprint description without its own color
+   (existing data needs no migration). Test: `ItemBlueprintLoreColorTest`.
+3. **One blueprint → item path (audit 2026-10-05).** Every route that spawns a blueprint item already ended in
+   `ItemBlueprintBukkitMapper.fromBlueprint` + `BlueprintItemAssembler.enchant`, but four call sites repeated the two
+   steps by hand (kits, `/knk itemblueprints give`, lootbox build, reel decoy) and the assembler's `assemble` helpers
+   had no production callers. Now all four call `BlueprintItemAssembler.assemble` / `assembleDefaults` (new two-pass
+   `assemble(blueprint, key, defaults, rolled, rolledOptions, quantity)`, `maxStackSize`, `applyQuantity`), and `/ce add` +
+   the enchantment-definitions debug command use `CustomEnchantmentLore.apply` instead of their inline copies. Found and
+   fixed in the same audit: `/ce remove` left a stray blank lore line (pushed to plugin `main` as a QOL fix,
+   `e55e87f`, `CustomEnchantmentLore.remove`). Documented in [`architecture/item-render-pipeline.md`](../../architecture/item-render-pipeline.md).
+   Behaviour is unchanged except that kits and `give` now share the assembler's quantity cap. Tests: `BlueprintItemAssemblerTest`
+   (two-pass order, vanilla rules only on rolled, stamp, quantity), `LootboxDeliveryTest`, `CustomEnchantmentLoreTest`.
+Live check (see the results below): open a box with a few pool items; every passing item that can carry enchantments should show some (varying),
+and Flaming Samurai's description should be dark gray like other blueprints'.
+
+**Smoke test results — 2026-10-05** (developer, dev server, knk-plugin branch `claude/blissful-meitner-thei8p` before the merge; all
+steps passed):
+
+| Area | Steps | Result |
+|---|---|---|
+| Setup | build + deploy, API `master`, Weapons box enabled with enchant rolls and Flaming Samurai | done |
+| A. Reel decoys | winner not the only enchanted item; the same item passes with differing enchantments; Flaming Samurai passes with its authored enchants; non-enchantable/stackable items and books roll nothing, stack sizes shown; grade line matches the received item; `opening.style: instant` skips the reel; closing early hands the item over with its enchantments; no log errors | 8/8 pass |
+| B. Lootbox delivery (via `assemble`) | enchantments/grade/quantity correct; drop log `delivered`/`Inventory`; stackables stack; instance tag intact; full-inventory behaviour | 5/5 pass |
+| C. Description colour | Flaming Samurai and a plain multi-line blueprint dark gray; a self-coloured description keeps its colour; enchantment lines gray, grade line bold aqua | 4/4 pass |
+| D. Kits and `give` (`assembleDefaults`) | enchanted kit items with quantities, `/knk itemblueprints give` incl. vanilla + custom, no "failed to assemble" warnings | 3/3 pass |
+| E. `/ce` | add, upgrade, remove one, remove last (no stray blank line), debug-command apply and book apply | 5/5 pass |
+| F. KNG-44 siege hold, quit/rejoin, KNG-45 batch odds | **not tested; accepted by the developer without a live check** (unit-tested: `LootboxOpeningSiegeTest`, `LootboxMapperTest`, API `LootboxConfigServicesTests`, web-app `LootboxesPage.test`) | accepted untested |
+
+Merged to knk-plugin `main` 2026-10-05 as `74607a9`. knk-web-api and knk-web-app needed no change for this round.
+
 **Tooling found along the way**
 - knk-web-app: `npm ci` fails on trunk (lockfile lacks the optional `yaml@2` peer; `npm ci --legacy-peer-deps` works);
   `CI=true npm run build` fails on existing lint warnings.
