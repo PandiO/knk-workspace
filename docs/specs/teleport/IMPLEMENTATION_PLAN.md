@@ -1,7 +1,7 @@
 # Teleportation Commands — Implementation Plan
 
-**Status:** **Merged to trunk 2026-09-28** (api `ae4dccd`, plugin `9bae376`, web-app `ac2db3b`) after two smoke-test rounds; follow-ups KNG-41 (per-group fees), KNG-42 (`/back` variants) and the untested checks listed under "Smoke test round 2 + merge"
-**Last updated:** 2026-09-28
+**Status:** **Merged to trunk 2026-09-28** (api `ae4dccd`, plugin `9bae376`, web-app `ac2db3b`) after two smoke-test rounds; follow-ups **KNG-41** (per-group fees/cooldowns) and **KNG-42** (`/back` variants) **merged to trunk 2026-10-06** (api `55473ee`, plugin `c7d5a1e`, web-app `3480ed1`) after their smoke tests, see "KNG-41" and "KNG-42"; still open: the untested checks under "Smoke test round 2 + merge"
+**Last updated:** 2026-10-06
 **Linear:** [KNG-17](https://linear.app/kngpandi/issue/KNG-17/teleportation-staff-tp-tpa-requests-spawn-domain-warps-v1-port)
 **Sources:** [DESIGN.md](DESIGN.md); `docs/ACTIVE_SESSIONS.md` (branch convention); code read at knk-plugin `0fa6d06`
 (`claude/siege-minigame` head), knk-web-api `cd95dd1`, knk-web-app `9a6f347`.
@@ -492,6 +492,190 @@ Phase 4) was waiting for this merge.
   calls in gates/region tracker; join/respawn listeners still ignore Game Settings (plugin side of Game Settings not built).
 - Trunk caveat (handoff §6): `WorldGuardRegionListener` judges PLUGIN-cause teleports (siege hub/return spots in a closed
   domain).
+
+### KNG-42 — `/back` variants by permission (2026-10-05)
+
+[KNG-42](https://linear.app/kngpandi/issue/KNG-42) (feature request 2 above). Branch `claude/kng-42-implementation-vud0q8`
+in knk-plugin (from `main` `5c85a3d`) and knk-web-api (from `master` `099f936`); knk-web-app untouched.
+
+**Developer decisions (2026-10-05)**, answering the issue's open questions:
+1. **`.teleport`** covers `/tpa` and `/tpahere` (whoever moves gets the origin) and a staff member's **own** `/tp` (to a
+   player or coordinates). Being moved by staff (`/tphere`, `/tp a b`, `/spawn <p>`, `/warp <d> <p>`) records nothing.
+2. **No ping-pong:** a `/back` is never recorded. Arriving uses the entry up; the next `/back` goes to the next-latest
+   unused entry, if any.
+3. **Fee:** a configurable flat fee, `teleport.back.price-coins` (default 0), for a player's own `/back`; staff `/back`
+   is free.
+4. **Expiry:** shared `teleport.back.expire-seconds` (300) with optional `teleport.back.expire-seconds-by-kind.<kind>`
+   overrides (`death`, `warps`, `teleport`, `spawn`).
+5. **Rules / siege:** every kind keeps single use, warmup, BACK cooldown, combat tag, guards and the safe-spot search.
+   Siege teleports and siege deaths are never recorded, **and no longer wipe older entries**: a place from before the
+   siege can be used after leaving it (while it lasts). `/back` during a match stays refused by `SiegeTeleportRestriction`.
+   (This changes Phase 7's "a siege death wipes older deaths".)
+6. **Staff `/back <player> [-s]`** (`knk.teleport.staff.back.others`, must outrank): instant staff teleport, audited,
+   to the player's latest entry of any kind whatever nodes they hold; uses the entry up; still runs the safe-spot search.
+
+**Built.** knk-plugin `a2363b1`: knk-core `BackKind` (DEATH/WARPS/TELEPORT/SPAWN); `BackLocationBook` holds one entry per
+kind per player and claims the latest unexpired one among the allowed kinds (one `/back` per player at a time);
+`TeleportBackSettings` + `expireSecondsByKind`, `priceCoins`. Engine: `TeleportArrivalListener` (called after every
+engine teleport) — `BackService` records the origin by plan kind (WARP→warps incl. menu warps, SPAWN→spawn,
+REQUEST→teleport for the mover, STAFF→teleport only when the staff member moves themselves). `TeleportPlan.backTrip`
+marks both `/back`s (never recorded; a staff one still gets the safe-spot search). Nodes: `knk.teleport.back` (death),
+`.back.warps`, `.back.teleport`, `.back.spawn`, `.back.all` (`knk.teleport.back.*` also works — the API's wildcard
+matching covers every kind), `knk.teleport.staff.back.others`; `knk.teleport.bypass.cost` makes a paid `/back` free.
+Fee: `TeleportCharges.backFee` → knk-web-api `57967a8` **`POST api/teleport-destinations/back-fee`** (`[RequirePluginService]`,
+same idempotency/row-lock/void-key/refund path as `request-fee`; ledger `TELEPORT_FEE`, source type `TeleportBack`, source
+ref = kind). Tests: plugin all modules green (new `BackLocationBookTest`, `BackServiceTest` cases, fee cases in
+`TeleportChargeEngineTest`, siege "place from before the siege" case, config loader, api-client body); API teleport
+tests 54/54, full suite 4 failures that fail identically on `master` (ClientActivityStore, PathResolution ×2,
+FieldValidation). No migration.
+
+**Deviations / notes:** a staff member's `/warp <d> <self>` or `/spawn <self>` counts as `.teleport` (own staff move),
+not `.warps`/`.spawn`; only holders of the death kind get the "Use /back within…" chat hint (warps/teleports stay quiet);
+the expiry clock keeps running during a siege, so with the default 5 minutes a pre-siege place usually has expired by the
+end of a match (raise `expire-seconds-by-kind` if that matters); entries are in memory (lost on restart, kept on relog).
+
+**Developer to-do:** grant nodes (e.g. Dragon Blood `knk.teleport.back` + whichever new kinds; staff
+`knk.teleport.staff.back.others`); set `price-coins` / per-kind expiries if wanted; smoke test:
+- [x] `/warp` then `/back` (`.back.warps`) → back at the warp origin after the warmup; second `/back` → "nowhere" (no ping-pong).
+- [x] With `.warps` + death: die, then warp → `/back` goes to the warp origin, the next `/back` to the death spot.
+- [x] `/tpa` and `/tpahere` → only the player who moved gets a `.teleport` place; staff `/tphere` gives none; staff's own `/tp` gives one.
+- [x] `/spawn` then `/back` (`.back.spawn`); `.back.all` / `knk.teleport.back.*` allows every kind; no node → permission refusal.
+- [x] Per-kind expiry override honoured; `price-coins > 0`: charged after the warmup ("You paid … coins"), refused when short, refunded on an unsafe spot, free with `knk.teleport.bypass.cost`.
+- [x] `/back <player>` and `-s`: instant, audit entry in the web app, player's place used up, lava death → nearest safe ground; refused for a siege member.
+- [x] Warp, join a siege, die in the match, leave → `/back` returns to the pre-siege warp origin (within its window); `/back` inside the match refused.
+
+**Smoke test round 1 — 2026-10-06 (developer, dev server):** every step passed (the checklist above; 5.3, 6.4,
+7.1, 7.2, 7.6 accepted). Findings, fixed on the branch (plugin `b6c7686`, web-app `ac312ca`; both stacked on the KNG-41
+commits that share this branch):
+1. **Paid-teleport message** ("You paid … and your new balance is …", `/tpa`/`/warp`/`/back`) printed raw numbers —
+   now `CurrencyFormat` digit grouping (`1,234,567`) in `TeleportPayment.amount` (KNG-41's message type) and the
+   single-currency balance.
+2. **"You teleported to Merchant's District" + "." on its own chat line** — the domain's stored name ends in a line
+   break; the plugin now cleans destination names (`TeleportDestinationsMapper.displayName`: control characters →
+   space, whitespace collapsed, trimmed). **Data:** fix that District's name in the web app as well.
+3. **Recent Activity "Silent"** is now a red pill (same style as Effective Permissions' "Denied"); "From the console"
+   a gray pill (`auditTags`, `utils/auditDetails.ts`).
+4. **Staff `/back <member>` with nothing recorded** said "has nowhere to go back to" — it now asks the guards first,
+   so a siege member gets "… is in a siege match; use /siege admin kick first." (With a place recorded the siege
+   refusal already came first.)
+Re-check in game: the paid message, the warp arrival line, the Recent Activity pills, 8.5.
+
+**Merged to trunk 2026-10-06** together with KNG-41 (same branch) on the developer's sign-off; the re-check was accepted
+without a separate run. Commits and validation: "KNG-41" below.
+
+### KNG-41 — teleport fees and cooldowns per permission group (2026-10-05)
+
+[KNG-41](https://linear.app/kngpandi/issue/KNG-41) (feature request 1 above). Built on the KNG-42 branch
+`claude/kng-42-implementation-vud0q8` (same engine and charge path) in all three code repos; the web-app branch is new
+(from `main` `3953658`).
+
+**Developer decisions (2026-10-05)**, answering the issue's open questions:
+1. **Configured in the web app, per PermissionGroup.** The API prices every teleport server-side.
+2. **`/warp`: the group chooses** a **multiplier** of the domain's `TeleportPriceGems` (0.5 = half, 0 = free) **or a
+   fixed price** that replaces it, in coins and/or gems and/or XP.
+3. **Several groups: highest Weight, hierarchy first** — the player's groups from the highest Weight down, each
+   followed by its parent chain before the next group (the permission-resolution order); the first group that sets a
+   value wins. Price and cooldown are resolved separately (a premium tier can set only a cooldown and keep the rank's
+   price).
+4. **A group cooldown replaces** `teleport.cooldown-seconds` for that kind.
+5. **XP may demote**: an XP price runs the normal title path (no clawback); a refund re-promotes (bonuses still once
+   per bracket, ever).
+6. **Combination prices are all-or-nothing**, one `TELEPORT_FEE` ledger transaction, one reversal on refund.
+7. **Default when no group sets anything = today's behaviour**: `teleport.request.price-coins` for `/tpa`, the domain's
+   price for `/warp`, free `/spawn`, `teleport.cooldown-seconds`.
+
+**Built.**
+- knk-web-api `29fcfe1`: `PermissionGroup` gets per kind (`Request` = `/tpa` + `/tpahere`, `Warp`, `Spawn`)
+  `Teleport{Kind}PriceMode` (`None`/`Fixed`/`Multiplier`), `…PriceMultiplier` (not for Spawn), `…PriceCoins`,
+  `…PriceGems`, `…PriceExperience`, `…CooldownSeconds`; migration `20261005121006_AddPermissionGroupTeleportSettings`
+  (columns only). A kind's **PriceMode is its switch** on update: a DTO/form without it leaves that kind's fields alone
+  (like the domain `TeleportEnabled` gate). `TeleportGroupPolicy` resolves the chain; `TeleportDestinationService`
+  prices the warp list and charge, `request-fee` (`amountCoins` is now the default and may be 0 = free) and the new
+  **`POST api/teleport-destinations/spawn-fee`**; the new **`GET api/teleport-destinations/policy?userId=`** returns
+  the resolved settings. Charge/refund answers carry a `payments` list (the old single-currency fields stay). Refusals:
+  `InsufficientCoins`/`InsufficientGems`/new `InsufficientExperience`. Rounding of a multiplier: half away from zero,
+  capped at the balance cap. The `/back` fee (KNG-42) is not group-priced.
+- knk-plugin `b337a70`: `KnkTeleportPolicy` + `TeleportPolicyDataAccess` (cached per player like the warp list,
+  `teleport.destinations.cache-seconds`, at most 5 s old for commands, dropped by `/knk cache refresh`, defaults when
+  it can't be loaded); engine `TeleportService.CooldownPolicy` (group cooldown for `/tpa`, `/warp`, `/spawn`); `/tpa`
+  and `/spawn` charges ask the server only when the payer's group settings or the default make them cost something;
+  `/spawn` now has a charge (`knk.teleport.bypass.cost` = free) and a heads-up "/spawn costs you …"; "You paid …"
+  lists every currency of a combined price (one currency keeps the v1 wording); `/warps` and the warp menu show the
+  player's own price ("100 coins and 1 gem").
+- knk-web-app `aad502a`: the fields on `PermissionGroupDto` (types only — the form is FormConfiguration data).
+
+**Tests.** API: new `TeleportGroupPricingTests` (chain order, multiplier rounding, combo transaction + refund, XP
+title progression/notification, `/tpa` and `/spawn` pricing, policy, form gate and validation); teleport + permission
+group tests 176/176 incl. the 7 real-MySQL ones (`KNK_TEST_MYSQL`; their balance seeding was broken since balances
+became ledger-only and is fixed here, plus a parallel combo-price case); fresh-DB migration up / pending-check / down
+to 0 / up on MySQL 8.0; full suite 1666 pass, 4 failures identical to `master` (PathResolution ×2, FieldValidation,
+ClientActivityStore). Plugin: `./gradlew build -x deployToDevServer` green — core 1209, api-client 149 (2 skipped),
+paper 1048 (14 skipped). Web app: `tsc` shows only the same 3 environment errors as without the change.
+
+**Deviations / notes (all four accepted by the developer 2026-10-06):**
+- A `/tpa` cooldown is the **mover's** group cooldown (the engine keys cooldowns by who moves); the **fee** is the
+  **requester's** group price. With `/tpahere` these are different players.
+- The plugin decides whether a free-by-default `/tpa` or `/spawn` needs a charge from a group-settings copy at most
+  5 s old (a just-edited group may give one free teleport); the server always prices the charge itself. With the API
+  down and nothing cached, the default applies — but only once the command's own permission check passed, which
+  fails closed when that node's answer isn't cached (round-1 K4), so in practice `/spawn` and `/warp` are refused with
+  "Your permissions can't be checked right now" when the API is down (smoke test 2026-10-06, step 9).
+- A Multiplier price on `/tpa` multiplies `teleport.request.price-coins`; a Multiplier on `/spawn` is refused (no
+  default price). A kind's fields that don't belong to its mode are stored but ignored.
+- `bypassCost` (`knk.teleport.bypass.cost`) ignores group prices on `/warp` and `/spawn`; `/tpa` fees never had a
+  bypass and still don't.
+- Shared files with the parked KNG-52 (game settings) branches: `KnKPlugin.java`, `config.yml` — different sections,
+  expect a trivial merge.
+
+**Developer to-do:**
+1. Apply migration `20261005121006_AddPermissionGroupTeleportSettings`.
+2. Add the fields to the **PermissionGroup FormConfiguration** (e.g. a "Teleport" step): for each of Request, Warp,
+   Spawn the `…PriceMode` field (**always include it — it is the switch**; without it the kind's other fields are not
+   saved), `…PriceMultiplier` (Request/Warp), `…PriceCoins`, `…PriceGems`, `…PriceExperience`, `…CooldownSeconds`.
+   **Done 2026-10-06 in the dev DB** (FormConfiguration 22, step 106): [KNG41_FORMCONFIGS.md](KNG41_FORMCONFIGS.md).
+3. Smoke test (plugin + API from the branch; `/knk cache refresh` after editing a group):
+- [ ] No group settings: `/tpa`, `/warp`, `/spawn` cost and cool down exactly as before.
+- [ ] Warp multiplier 0.5 on a group: `/warps` and the menu show half the gems; the warp charges half; 0 = free.
+- [ ] Warp fixed 100 coins + 1 gem: list shows "100 coins and 1 gem"; paid in one go ("You paid 100 coins and 1 gem;
+      your new balance is …"); short of gems → refused, no coins taken; unsafe destination → both refunded.
+- [ ] XP price that crosses a title bracket: title drops (in-game title message); refund (unsafe spot) brings it back.
+- [ ] Two groups (premium tier above rank): the higher-Weight group's price wins; a parent's setting beats a
+      lower-Weight group's; a premium tier with only a cooldown keeps the rank's price.
+- [ ] `/tpa` with a group price while `price-coins: 0`: heads-up "It costs you …", charged after the warmup.
+- [ ] `/spawn` with a group price: "/spawn costs you …", charged after the warmup; free with `knk.teleport.bypass.cost`.
+- [ ] Group cooldown 5 s on `/warp`: a second warp after 6 s is allowed (default 30 s would refuse); other kinds keep
+      30 s.
+
+**Smoke test round 1 — 2026-10-06 (developer, dev server).** Passed: 1 (no settings) 1–5; 2 (warp multiplier) 1–4; 3
+(fixed combo) 1–3, 5; 4 (XP price, demotion) 1–3; 5 (which group wins) 1–4; 6 (`/tpa`) 1, 3, 4; 7 (`/spawn`) 1, 3; 8
+(group cooldown) 1–3. Accepted without further testing: 3.6 (combo refund on an unsafe spot), 4.4/4.5 (XP refund
+re-promotes, too-little XP refused), 7.4. Notes:
+- 3.4: the web-app ledger shows the combo price as one line per currency (one transaction) — fine as is.
+- **6.2 / 7.2 (bug):** no price notice before a paid `/tpa` or `/spawn`. The notices read the cached group settings,
+  which are still empty on a player's first teleport. **Developer request:** tell players what a teleport costs
+  **during the warmup**, for every paid teleport; no warmup → no notice. **Fixed** in knk-plugin `f8a3871`: when a
+  warmup starts, the engine asks the plan's charge for its price (`TeleportCharge.priceNotice`, fresh group settings
+  for `/tpa`/`/spawn`, the player's own list price for `/warp`, the coin fee for a paid `/back`) and tells the payer:
+  "This teleport costs you 100 coins and 1 gem, paid when you arrive." — or with `/tpahere` the requester: "You pay …
+  when Bob arrives." Free, bypassed or warmup-less teleports get nothing. The old up-front messages (on sending a
+  `/tpa`, on `/spawn`, on `/back`) are gone. Merged with the parallel KNG-42 fixes (`d41916d`; amounts now use digit
+  grouping). Gradle build green: core 1216, api-client 157 (2 skipped), paper 1065 (14 skipped).
+- 9.2 / 9.3 (API down): refused with "Your permissions can't be checked right now …" — the existing fail-closed
+  permission check (round-1 K4) runs before any charge; expected, no change. The step expected too much.
+
+**Merged to trunk 2026-10-06** on the developer's sign-off (round-2 re-checks accepted without a separate run), together
+with KNG-42 (same branch): `--no-ff` merges of the validated tips, merged trees identical to the tips — knk-web-api
+`master` `55473ee` (tip `df57b47`), knk-plugin `main` `c7d5a1e` (tip `d41916d`), knk-web-app `main` `3480ed1` (tip
+`d79b2e0`). Validation on those tips: API full suite 1675 pass / the 4 known `master` failures, teleport MySQL tests
+125/125, fresh-DB migrations + no pending model changes; plugin Gradle build green; web-app `test:ci` 423 pass, the same 5
+failures as `main` (FormWizard M2M ×3, LoginForm, useEnrichedFormContext). Deploy: apply
+`20261005121006_AddPermissionGroupTeleportSettings`; FormConfiguration 22's Teleport step exists only in the dev DB
+(re-create elsewhere from [KNG41_FORMCONFIGS.md](KNG41_FORMCONFIGS.md)). Note: web-app `package-lock.json` is out of sync
+with `package.json` on `main` (`npm ci` fails: missing `yaml@2.9.1`) — pre-existing, not touched here.
+
+**Round-2 checks (accepted, not run separately):** the warmup notice on `/warp` (paid, free, `knk.teleport.bypass.cost`), `/tpa`, `/tpahere` (the
+requester gets "You pay … when <player> arrives."), group-priced `/spawn`, a paid `/back`; none with
+`knk.teleport.bypass.warmup`; no "It costs you …" when sending a `/tpa` any more.
 
 ## Cross-cutting
 
