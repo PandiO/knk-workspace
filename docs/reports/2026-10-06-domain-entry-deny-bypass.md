@@ -1,7 +1,7 @@
 # Domain AllowEntry/AllowExit bypassed by holding W — root cause and fix
 
 **Status:** fixed and unit-tested on branch, not merged; live re-test pending (see "Verification")
-**Last updated:** 2026-10-06
+**Last updated:** 2026-10-06 (later the same day: rider and `DomainAccessEvaluator` statements corrected; the follow-up analysis is [`2026-10-06-domain-access-enforcement-options.md`](2026-10-06-domain-access-enforcement-options.md), KNG-56)
 **Linear:** [KNG-55](https://linear.app/kngpandi/issue/KNG-55)
 **Branch:** knk-plugin `claude/worldguard-entry-deny-bypass-sj1j7g` at `9ab1f5d` (one commit on `main` `74607a9`); knk-workspace same branch (this report, tracker row, cross-link in `architecture/managed-worldguard-regions.md` §5)
 
@@ -38,7 +38,7 @@ Reading the path for the fix turned up more ways past a denial. All are fixed on
 | 2 | **Second player during a lookup.** A crossing whose region was already being fetched by another player's move was allowed with no re-validation scheduled. | Anyone crossing behind the first player stayed in. |
 | 3 | **In-flight bookkeeping.** For a lookup of several regions, `inFlightLookups.put(lookupKey, …)` stored a combined key (`"a,b"`) that was never removed. A later lookup of the same set returned early: no fetch, no re-validation. A single-region lookup that finished before the `put` ran could also leave its id marked "in flight" forever. | After one API hiccup, a border involving those regions could be waved through for good. |
 | 4 | **WorldGuard regions that no domain uses** were never cached. `RegionDomainResolver.resolveRegionsFromApi` also swallows API errors, so the failed-lookup cooldown never applied. | Every crossing that touched such a region took the "allowed while loading" path, never the immediate check. |
-| 5 | **Riding.** A player on a horse, boat, minecart or similar gets no `PlayerMoveEvent`, and the plugin had no `VehicleMoveEvent` handler. | A rider crossed any AllowEntry/AllowExit border unchecked. The tracked set then went stale, so after dismounting the player could be denied every step *inside* the district. |
+| 5 | **Riding.** The plugin had no `VehicleMoveEvent` handler, and a rider's movement is driven by the vehicle (`VehicleMoveEvent`). Whether Paper also fires a `PlayerMoveEvent` for a passenger is unverified: WorldGuard handles `RIDE` from both events, see [`2026-10-06-domain-access-enforcement-options.md`](2026-10-06-domain-access-enforcement-options.md) §1. | A rider crossed any AllowEntry/AllowExit border unchecked. The tracked set then went stale, so after dismounting the player could be denied every step *inside* the district. |
 | 6 | **Corrective teleports were judged themselves.** The join-time "denied, go to spawn" teleport and the re-validation teleport went through `handleMove`. | A teleport out of a domain with AllowExit = false was cancelled by the very rule it was enforcing. |
 
 ## Fix (knk-plugin)
@@ -62,7 +62,7 @@ Reading the path for the fix turned up more ways past a denial. All are fixed on
 - **`onVehicleMove`** judges every player riding the vehicle. A vehicle move can't be cancelled, so a refused rider is taken off. The rider is put back at the vehicle's `from`, and so is the vehicle once it is empty. `onPlayerMove` skips riders: their moves belong to `onVehicleMove`.
 - The join-time "go to spawn" now uses `enforcementTeleport`.
 
-The AllowEntry/AllowExit rules themselves (`DomainAccessEvaluator`, `SimpleRegionTransitionService`) were correct and are unchanged.
+The AllowEntry/AllowExit rules themselves (`SimpleRegionTransitionService.checkEntryDenials`/`checkExitDenials` on `main`; extracted into `DomainAccessEvaluator` only on the unmerged road-navigation branch) were correct and are unchanged.
 
 ### Behaviour changes to review (reversible defaults)
 
@@ -96,7 +96,7 @@ New `knk-paper/src/test/java/.../paper/regions/WorldGuardRegionTrackerTest.java`
 
 - **Build/tests (2026-10-06, knk-plugin `9ab1f5d`):** `./gradlew test -x deployToDevServer` is green: knk-core 1201, knk-api-client 150 (2 skipped), knk-paper 1041 (14 skipped), 0 failures. That includes the 12 new `WorldGuardRegionTrackerTest` cases.
 - **The tests catch the bug.** With the old order temporarily restored (commit regions before deciding, judge from the tracked set), 5 of the 12 fail: both held-forward cases, the listener's held-W case, the ride case and the unseen-move case. The restore was then reverted.
-- **Not verified here:** anything in game. The claim that riders get no `PlayerMoveEvent` comes from the Paper/CraftBukkit server code path (move events fire only for non-passengers), and needs the live check below.
+- **Not verified here:** anything in game. Riders are judged only on `VehicleMoveEvent` (`onPlayerMove` skips them), which is safe whether or not Paper also fires `PlayerMoveEvent` for passengers. Riding an entity that is not a Bukkit `Vehicle` is not covered. Needs the live check below.
 - **Live (developer):** with a non-bypass account on the dev server:
   1. hold W into an AllowEntry=false district: every step is blocked;
   2. hold W out of an AllowExit=false district: every step is blocked;
