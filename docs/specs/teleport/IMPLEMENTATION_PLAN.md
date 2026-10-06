@@ -666,7 +666,8 @@ re-promotes, too-little XP refused), 7.4. Notes:
 **Merged to trunk 2026-10-06** on the developer's sign-off (round-2 re-checks accepted without a separate run), together
 with KNG-42 (same branch): `--no-ff` merges of the validated tips, merged trees identical to the tips — knk-web-api
 `master` `55473ee` (tip `df57b47`), knk-plugin `main` `c7d5a1e` (tip `d41916d`), knk-web-app `main` `3480ed1` (tip
-`d79b2e0`). Validation on those tips: API full suite 1675 pass / the 4 known `master` failures, teleport MySQL tests
+`d79b2e0`). Trunk CI green: plugin Build https://github.com/PandiO/knk-plugin/actions/runs/37518759731, API migrations
+https://github.com/PandiO/knk-web-api/actions/runs/37518750041. Validation on those tips: API full suite 1675 pass / the 4 known `master` failures, teleport MySQL tests
 125/125, fresh-DB migrations + no pending model changes; plugin Gradle build green; web-app `test:ci` 423 pass, the same 5
 failures as `main` (FormWizard M2M ×3, LoginForm, useEnrichedFormContext). Deploy: apply
 `20261005121006_AddPermissionGroupTeleportSettings`; FormConfiguration 22's Teleport step exists only in the dev DB
