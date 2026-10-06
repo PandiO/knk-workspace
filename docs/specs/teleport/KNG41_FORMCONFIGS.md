@@ -14,10 +14,10 @@ API (`knk-web-api` from `claude/kng-42-implementation-vud0q8` at `df57b47`), the
 
 | What | Id | Notes |
 |---|---|---|
-| Configuration `PermissionGroup - Default` (default for `PermissionGroup`) | 22 | existed; only `stepOrderJson` changed |
-| Step `General Information` | 54 | unchanged (fields 213–219) |
-| Step `Game multipliers` | 88 | unchanged (fields 320–322); its display group was re-created as id 299 (was 298), same content — see Decisions |
-| **Step `Teleport`** (new, last) | **106** | fields **390–406**, field display groups 300–310 |
+| Configuration `PermissionGroup - Default` (default for `PermissionGroup`) | 22 | existed; first PUT changed only `stepOrderJson` |
+| Step `General Information` | 54 | fields 213–219 unchanged; color fields **407–409** added by the fix PUT (see "Form-22 problems fixed") |
+| Step `Game multipliers` | 88 | first PUT: unchanged. Fix PUT: duplicate field 320 (`SalaryMultiplier`) removed, 321–322 defaults `1`. Its display group is re-created on every save, same content — see Decisions |
+| **Step `Teleport`** (new, last) | **106** | fields **390–406**; field display groups 300–310, re-created as 312–322 by the fix PUT |
 
 Any other database needs the step re-created — see "Re-creating it in another database".
 
@@ -145,21 +145,51 @@ PermissionGroup or membership row was changed. These belong in the developer smo
 4. Spawn → Multiplier: the wizard shows the 400 "/spawn has no default price to multiply; use a fixed price."
 5. Reset the group to `None`/empty. Check the dashboard PermissionGroup list and the player-profile group picker.
 
-## Pre-existing form-22 problems found on the way (not KNG-41, not changed)
+## Form-22 problems found on the way — fixed 2026-10-06
 
-The simulation above also shows what the wizard sends for a Name-only edit. Both points come from reading the code
-and from that simulated payload; neither was sent to the API.
+The simulation above also showed what the wizard sends for a Name-only edit. Two problems predated KNG-41 (by
+reading the code and the simulated payload; never sent to the API). The developer asked for both to be fixed the
+same day.
 
-1. **A wizard edit clears the group's chat colors.** `ChatPrimaryColor`, `ChatSecondaryColor` and `NameColor` are not
-   on form 22, and the wizard sends only form fields. `PermissionGroupService.UpdateAsync` assigns all three from
-   the DTO, so they become `null`. Noble has `&e`/`&6`/`&e`. Fix: add the three fields to step 54, or make the
-   service keep omitted colors as it does for the bonus multipliers.
-2. **A wizard edit of a non-premium group probably fails.** Step 88 is hidden unless Premium Tier is set. For hidden
-   steps the wizard's flattening still fills each field with its `defaultValue`, and step 88's are the string
-   `"1,0"`. The payload then has `"salaryMultiplier": 1` *and* `"SalaryMultiplier": "1,0"` (plus the two bonus
-   multipliers as `"1,0"`). The API binds case-insensitively, the later key wins, and `"1,0"` is not a decimal, so
-   the DTO binds to `null` and `PUT` returns a bare 400. Fix: set those defaults to `1` (or empty), or stop
-   flattening hidden fields' defaults in the wizard.
+1. **A wizard edit cleared the group's chat colors.** `ChatPrimaryColor`, `ChatSecondaryColor` and `NameColor` were
+   not on form 22, and the wizard sends only form fields. `PermissionGroupService.UpdateAsync` assigns all three
+   from the DTO, so they became `null` (Noble has `&e`/`&6`/`&e`). **Fix (form data):** the three fields were added to
+   step 54 (ids 407–409, `String`, optional, with the wizard's `minecraft-text-color` preview). The API was not
+   changed to keep omitted colors, so clearing a color in the form still works.
+2. **A wizard edit of a non-premium group failed.** Step 88 is shown only for Premium Tier, but the wizard's final
+   submit flattened *every* field and gave hidden ones their `defaultValue`. Step 88's defaults were `"1,0"`, and
+   it repeated `SalaryMultiplier` from step 54. The payload carried `"salaryMultiplier": 1` *and*
+   `"SalaryMultiplier": "1,0"`. The API binds case-insensitively, the later key wins, `"1,0"` is not a decimal, and
+   the controller answers a bare 400. For a premium group the duplicate silently overwrote a salary edit made in
+   General Information. **Fixes:**
+   - knk-web-app `d79b2e0` on `claude/kng-42-implementation-vud0q8` (not pushed yet): the final submit uses the new
+     `flattenVisibleStepsData` (`utils/forms/formVisibility.ts`). Hidden steps and fields are left out entirely,
+     as `reconcileVisibility` already documented. The other flatten callers (placeholders, parent context) still
+     see every field. New unit tests are in `formVisibility.test.ts`; the form utils pass 67/67, and `tsc` is clean.
+     Of the FormWizard suites, 9 pass. The 3 that fail (m2mJoinPrefill, siegeGatesJoin, ManyToMany editor UI)
+     fail the same way without the change; see the build/test-repair row in `ACTIVE_SESSIONS.md`.
+   - Form data, with the developer's go-ahead: field 320 (step 88 `SalaryMultiplier`) removed, because salary stays
+     editable for every group in step 54. Fields 321/322 `defaultValue` `"1,0"` → `"1"`. Step 88 `fieldOrderJson`
+     `[null,null,null]` → the two remaining GUIDs.
+   - Omitted bonus multipliers are kept on update and default to 1.0 on create (existing API behaviour), so a
+     non-premium group's stored bonuses are no longer touched.
 
-Both affect the smoke test. Until they are fixed, use a premium group whose colors you can restore, or a throwaway
-group without colors.
+**Fix payload:** `PUT /api/FormConfigurations/22`, body = the full `GET` taken just before (backup
+`db-backups6-10-06_kng41_form22_before_fixes.json`) with these edits. In step 54, the three fields below were
+appended and `fieldOrderJson` became
+`[\"7e05d442-3725-43e8-a062-3a70d538fa46\", \"bbf20aea-fab7-43e7-8126-40aa42eb035f\", \"6a9b3447-a15b-4b33-8ef9-7ea7ed490ecb\", \"16f3a0df-4642-4ee4-ae27-79526af74100\", \"d40d90aa-88c5-40fa-a06d-bf7e70107b3c\", \"cf716108-e350-457c-bbfc-8737eb3713a5\", \"21a27ec6-9f01-4b7e-ada3-b9aa1d36d854\", \"08731952-464d-45a2-8b8c-687e133b6ca5\", \"2ae379e9-2ff2-46aa-a8a8-21231b39c6b4\", \"6caee713-e6b8-4745-9107-74a6a7d200e8\"]`.
+In step 88, field 320 was dropped, 321/322 got `"defaultValue": "1"`, and `fieldOrderJson` became
+`[\"129b529f-b36c-4a6a-9841-522c18356f5e\", \"4f2d409b-c137-4794-9ac6-33f454f8c13f\"]`.
+
+```json
+[
+    {"fieldGuid": "08731952-464d-45a2-8b8c-687e133b6ca5", "fieldName": "chatPrimaryColor", "label": "Chat primary color", "description": "Main color of this group's chat messages: & codes only, e.g. &e. Empty = none.", "fieldType": "String", "isRequired": false, "isReadOnly": false, "order": 0, "settingsJson": "{\"minecraft-text-color\": {\"enabled\": true}}", "displayConditionGroups": []},
+    {"fieldGuid": "2ae379e9-2ff2-46aa-a8a8-21231b39c6b4", "fieldName": "chatSecondaryColor", "label": "Chat secondary color", "description": "Second chat color (accents): & codes only, e.g. &6. Empty = none.", "fieldType": "String", "isRequired": false, "isReadOnly": false, "order": 0, "settingsJson": "{\"minecraft-text-color\": {\"enabled\": true}}", "displayConditionGroups": []},
+    {"fieldGuid": "6caee713-e6b8-4745-9107-74a6a7d200e8", "fieldName": "nameColor", "label": "Name color", "description": "Color of the player's name in chat and the tab list: & codes only, e.g. &e. Empty = none.", "fieldType": "String", "isRequired": false, "isReadOnly": false, "order": 0, "settingsJson": "{\"minecraft-text-color\": {\"enabled\": true}}", "displayConditionGroups": []}
+]
+```
+
+Checked afterwards: the rows match the intent; Teleport's 17 fields and conditions are intact. The wizard simulation
+on the fixed form gives these payloads. A Name-only edit of Default (non-premium) sends no step-88 keys and its colors
+`&a`/`&2`/`&7`. Noble sends its colors, one `salaryMultiplier` (1.1) and the two bonuses as numbers. Entity round
+trips through the API are still part of the smoke test above.
