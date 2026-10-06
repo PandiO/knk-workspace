@@ -1,6 +1,6 @@
 # Domain AllowEntry/AllowExit enforcement — in-house vs WorldGuard, offline safety
 
-**Status:** advice, awaiting the developer's decision (no code changed for this report)
+**Status:** decided 2026-10-06: option C, implemented on branch (see "Decisions and outcome" at the end); the living description is [`architecture/domain-access-enforcement.md`](../architecture/domain-access-enforcement.md)
 **Last updated:** 2026-10-06
 **Linear:** [KNG-56](https://linear.app/kngpandi/issue/KNG-56) (offline-safe enforcement), follow-up to [KNG-55](https://linear.app/kngpandi/issue/KNG-55)
 **Code inspected:** knk-plugin `claude/worldguard-entry-deny-bypass-sj1j7g` @ `9ab1f5d` (= `main` `74607a9` + the KNG-55 fix); WorldGuard 7.0.10 bytecode (`worldguard-core`/`worldguard-bukkit`, the versions knk-paper compiles against); knk-web-api seed migrations
@@ -186,3 +186,18 @@ Since KNG-55, holding W gains nothing: every step is refused. Punishment is ther
    - every move type from §1;
    - a bypass holder;
    - a rule change in the web app taking effect without a restart.
+
+## Decisions and outcome (developer, 2026-10-06, later the same day)
+
+1. **Option C.** It is implemented on branch `claude/worldguard-entry-deny-bypass-sj1j7g`:
+   - knk-plugin `dfffcb7`: custom flags `knk-allow-entry`/`knk-allow-exit`/`knk-domain-name`, `DomainAccessHandler` (WorldGuard session handler), `DomainAccessListener`, `DomainAccessFlagSync`, `RefusalGuard`;
+   - knk-web-api `32fca08`: `GET /api/Domains/access-rules`, because `search-region-decisions` returns at most three domains and can't list them.
+   
+   The region tracker no longer enforces. Not merged, not live-tested.
+2. **Owners and residents are exempt.** No domain owner/resident data exists in the API yet, so WorldGuard region owners and members (including parents') are exempt. Syncing them from domain ownership is a follow-up once that model exists.
+3. **Change propagation: a two-way channel (SignalR).** This is [KNG-57](https://linear.app/kngpandi/issue/KNG-57). Until then: a re-sync every 5 min, `/knk regions repair`, and a sync when a new region is finalized.
+4. **Kick or spawn-teleport only under significant load.** Implemented as a refusal *rate* threshold: more than 20/s for 3 s gives a spawn teleport, and a repeat within 60 s gives a kick. A player pushing a border by hand never reaches it.
+5. **Mounting.** Mounting out of a domain the player may not leave, or onto an entity inside one they may not enter, is refused. This uses WorldGuard's embark check for vehicles and `EntityMountEvent` for every entity.
+6. **Respawning.** Respawning into a domain the player may not enter, or out of one they may not leave (judged from the death spot), is corrected.
+7. **Deny messages are throttled** to one per 2 s, as WorldGuard does.
+8. **Other sensitive data needing a disk-backed, refreshable cache:** analysed in [`2026-10-06-offline-critical-data-inventory.md`](2026-10-06-offline-critical-data-inventory.md). The work is [KNG-58](https://linear.app/kngpandi/issue/KNG-58). The P0 items are permissions, uuid → userId, freeze and active mode.
