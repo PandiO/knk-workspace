@@ -536,13 +536,29 @@ end of a match (raise `expire-seconds-by-kind` if that matters); entries are in 
 
 **Developer to-do:** grant nodes (e.g. Dragon Blood `knk.teleport.back` + whichever new kinds; staff
 `knk.teleport.staff.back.others`); set `price-coins` / per-kind expiries if wanted; smoke test:
-- [ ] `/warp` then `/back` (`.back.warps`) → back at the warp origin after the warmup; second `/back` → "nowhere" (no ping-pong).
-- [ ] With `.warps` + death: die, then warp → `/back` goes to the warp origin, the next `/back` to the death spot.
-- [ ] `/tpa` and `/tpahere` → only the player who moved gets a `.teleport` place; staff `/tphere` gives none; staff's own `/tp` gives one.
-- [ ] `/spawn` then `/back` (`.back.spawn`); `.back.all` / `knk.teleport.back.*` allows every kind; no node → permission refusal.
-- [ ] Per-kind expiry override honoured; `price-coins > 0`: charged after the warmup ("You paid … coins"), refused when short, refunded on an unsafe spot, free with `knk.teleport.bypass.cost`.
-- [ ] `/back <player>` and `-s`: instant, audit entry in the web app, player's place used up, lava death → nearest safe ground; refused for a siege member.
-- [ ] Warp, join a siege, die in the match, leave → `/back` returns to the pre-siege warp origin (within its window); `/back` inside the match refused.
+- [x] `/warp` then `/back` (`.back.warps`) → back at the warp origin after the warmup; second `/back` → "nowhere" (no ping-pong).
+- [x] With `.warps` + death: die, then warp → `/back` goes to the warp origin, the next `/back` to the death spot.
+- [x] `/tpa` and `/tpahere` → only the player who moved gets a `.teleport` place; staff `/tphere` gives none; staff's own `/tp` gives one.
+- [x] `/spawn` then `/back` (`.back.spawn`); `.back.all` / `knk.teleport.back.*` allows every kind; no node → permission refusal.
+- [x] Per-kind expiry override honoured; `price-coins > 0`: charged after the warmup ("You paid … coins"), refused when short, refunded on an unsafe spot, free with `knk.teleport.bypass.cost`.
+- [x] `/back <player>` and `-s`: instant, audit entry in the web app, player's place used up, lava death → nearest safe ground; refused for a siege member.
+- [x] Warp, join a siege, die in the match, leave → `/back` returns to the pre-siege warp origin (within its window); `/back` inside the match refused.
+
+**Smoke test round 1 — 2026-10-06 (developer, dev server):** every step passed (the checklist above; 5.3, 6.4,
+7.1, 7.2, 7.6 accepted). Findings, fixed on the branch (plugin `b6c7686`, web-app `ac312ca`; both stacked on the KNG-41
+commits that share this branch):
+1. **Paid-teleport message** ("You paid … and your new balance is …", `/tpa`/`/warp`/`/back`) printed raw numbers —
+   now `CurrencyFormat` digit grouping (`1,234,567`) in `TeleportPayment.amount` (KNG-41's message type) and the
+   single-currency balance.
+2. **"You teleported to Merchant's District" + "." on its own chat line** — the domain's stored name ends in a line
+   break; the plugin now cleans destination names (`TeleportDestinationsMapper.displayName`: control characters →
+   space, whitespace collapsed, trimmed). **Data:** fix that District's name in the web app as well.
+3. **Recent Activity "Silent"** is now a red pill (same style as Effective Permissions' "Denied"); "From the console"
+   a gray pill (`auditTags`, `utils/auditDetails.ts`).
+4. **Staff `/back <member>` with nothing recorded** said "has nowhere to go back to" — it now asks the guards first,
+   so a siege member gets "… is in a siege match; use /siege admin kick first." (With a place recorded the siege
+   refusal already came first.)
+Re-check in game: the paid message, the warp arrival line, the Recent Activity pills, 8.5.
 
 ### KNG-41 — teleport fees and cooldowns per permission group (2026-10-05)
 
