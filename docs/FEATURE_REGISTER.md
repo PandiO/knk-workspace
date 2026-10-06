@@ -1,6 +1,6 @@
 # Knights & Kings feature register
 
-**Status:** Active · **Last updated:** 2026-10-05 · **First reconciled:** 2026-09-28 · [KNG-33](https://linear.app/kngpandi/issue/KNG-33)
+**Status:** Active · **Last updated:** 2026-10-06 · **First reconciled:** 2026-09-28 · [KNG-33](https://linear.app/kngpandi/issue/KNG-33)
 
 This is the index of intended gameplay and shipped surfaces, not a substitute for a feature's design, code, or issue. V1's wider gameplay and V2's stronger data model are both inputs to V3. An absent V2 port is **not** a decision to drop a V1 feature. The [vision](vision/vision.md) decides intent; a [feature spec](specs/README.md) decides detailed behavior; the actual default branches decide whether code has shipped.
 
@@ -9,7 +9,7 @@ This is the index of intended gameplay and shipped surfaces, not a substitute fo
 **Targeted refresh (2026-10-04):** the moderation/private-message rows were rechecked after plugin
 `main` merge `1a69ec3`; KNG-24, KNG-25 and KNG-28 are merged and Done. KNG-26/29/30 are also Done
 on their stated default branches. KNG-38 is Done with its API half on `master` at merge `300aa4c`;
-the web-app half remains on its pushed feature branch, so the cross-repo merge state is mixed.
+its web-app half followed on `main` at merge `24b60ac` (2026-10-06), so KNG-38 is fully merged.
 
 ## Reading and updating the register
 
