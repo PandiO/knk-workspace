@@ -1,6 +1,6 @@
 # Teleportation Commands — Implementation Plan
 
-**Status:** **Merged to trunk 2026-09-28** (api `ae4dccd`, plugin `9bae376`, web-app `ac2db3b`) after two smoke-test rounds; follow-ups KNG-41 (per-group fees/cooldowns) and KNG-42 (`/back` variants): **both implemented 2026-10-05 on `claude/kng-42-implementation-vud0q8`, awaiting smoke test + merge**, see "KNG-41" and "KNG-42" and the untested checks listed under "Smoke test round 2 + merge"
+**Status:** **Merged to trunk 2026-09-28** (api `ae4dccd`, plugin `9bae376`, web-app `ac2db3b`) after two smoke-test rounds; follow-ups **KNG-41** (per-group fees/cooldowns) and **KNG-42** (`/back` variants) **merged to trunk 2026-10-06** (api `55473ee`, plugin `c7d5a1e`, web-app `3480ed1`) after their smoke tests, see "KNG-41" and "KNG-42"; still open: the untested checks under "Smoke test round 2 + merge"
 **Last updated:** 2026-10-06
 **Linear:** [KNG-17](https://linear.app/kngpandi/issue/KNG-17/teleportation-staff-tp-tpa-requests-spawn-domain-warps-v1-port)
 **Sources:** [DESIGN.md](DESIGN.md); `docs/ACTIVE_SESSIONS.md` (branch convention); code read at knk-plugin `0fa6d06`
@@ -560,6 +560,9 @@ commits that share this branch):
    refusal already came first.)
 Re-check in game: the paid message, the warp arrival line, the Recent Activity pills, 8.5.
 
+**Merged to trunk 2026-10-06** together with KNG-41 (same branch) on the developer's sign-off; the re-check was accepted
+without a separate run. Commits and validation: "KNG-41" below.
+
 ### KNG-41 — teleport fees and cooldowns per permission group (2026-10-05)
 
 [KNG-41](https://linear.app/kngpandi/issue/KNG-41) (feature request 1 above). Built on the KNG-42 branch
@@ -660,7 +663,17 @@ re-promotes, too-little XP refused), 7.4. Notes:
 - 9.2 / 9.3 (API down): refused with "Your permissions can't be checked right now …" — the existing fail-closed
   permission check (round-1 K4) runs before any charge; expected, no change. The step expected too much.
 
-**Round-2 re-test:** the warmup notice on `/warp` (paid, free, `knk.teleport.bypass.cost`), `/tpa`, `/tpahere` (the
+**Merged to trunk 2026-10-06** on the developer's sign-off (round-2 re-checks accepted without a separate run), together
+with KNG-42 (same branch): `--no-ff` merges of the validated tips, merged trees identical to the tips — knk-web-api
+`master` `55473ee` (tip `df57b47`), knk-plugin `main` `c7d5a1e` (tip `d41916d`), knk-web-app `main` `3480ed1` (tip
+`d79b2e0`). Validation on those tips: API full suite 1675 pass / the 4 known `master` failures, teleport MySQL tests
+125/125, fresh-DB migrations + no pending model changes; plugin Gradle build green; web-app `test:ci` 423 pass, the same 5
+failures as `main` (FormWizard M2M ×3, LoginForm, useEnrichedFormContext). Deploy: apply
+`20261005121006_AddPermissionGroupTeleportSettings`; FormConfiguration 22's Teleport step exists only in the dev DB
+(re-create elsewhere from [KNG41_FORMCONFIGS.md](KNG41_FORMCONFIGS.md)). Note: web-app `package-lock.json` is out of sync
+with `package.json` on `main` (`npm ci` fails: missing `yaml@2.9.1`) — pre-existing, not touched here.
+
+**Round-2 checks (accepted, not run separately):** the warmup notice on `/warp` (paid, free, `knk.teleport.bypass.cost`), `/tpa`, `/tpahere` (the
 requester gets "You pay … when <player> arrives."), group-priced `/spawn`, a paid `/back`; none with
 `knk.teleport.bypass.warmup`; no "It costs you …" when sending a `/tpa` any more.
 
