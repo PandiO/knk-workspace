@@ -1,7 +1,7 @@
 # Teleportation Commands — Implementation Plan
 
 **Status:** **Merged to trunk 2026-09-28** (api `ae4dccd`, plugin `9bae376`, web-app `ac2db3b`) after two smoke-test rounds; follow-ups KNG-41 (per-group fees/cooldowns) and KNG-42 (`/back` variants): **both implemented 2026-10-05 on `claude/kng-42-implementation-vud0q8`, awaiting smoke test + merge**, see "KNG-41" and "KNG-42" and the untested checks listed under "Smoke test round 2 + merge"
-**Last updated:** 2026-10-05
+**Last updated:** 2026-10-06
 **Linear:** [KNG-17](https://linear.app/kngpandi/issue/KNG-17/teleportation-staff-tp-tpa-requests-spawn-domain-warps-v1-port)
 **Sources:** [DESIGN.md](DESIGN.md); `docs/ACTIVE_SESSIONS.md` (branch convention); code read at knk-plugin `0fa6d06`
 (`claude/siege-minigame` head), knk-web-api `cd95dd1`, knk-web-app `9a6f347`.
@@ -627,6 +627,7 @@ paper 1048 (14 skipped). Web app: `tsc` shows only the same 3 environment errors
 2. Add the fields to the **PermissionGroup FormConfiguration** (e.g. a "Teleport" step): for each of Request, Warp,
    Spawn the `…PriceMode` field (**always include it — it is the switch**; without it the kind's other fields are not
    saved), `…PriceMultiplier` (Request/Warp), `…PriceCoins`, `…PriceGems`, `…PriceExperience`, `…CooldownSeconds`.
+   **Done 2026-10-06 in the dev DB** (FormConfiguration 22, step 106): [KNG41_FORMCONFIGS.md](KNG41_FORMCONFIGS.md).
 3. Smoke test (plugin + API from the branch; `/knk cache refresh` after editing a group):
 - [ ] No group settings: `/tpa`, `/warp`, `/spawn` cost and cool down exactly as before.
 - [ ] Warp multiplier 0.5 on a group: `/warps` and the menu show half the gems; the warp charges half; 0 = free.
