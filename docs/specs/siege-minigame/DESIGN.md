@@ -5,7 +5,7 @@
 **Status:** Implemented — all MVP phases (1–9) merged into the default branches on 2026-09-26 and smoke-tested live
 by the developer; Phase 10 (Scheduled lobbies) is post-MVP, not started. Seven decisions with the developer (§0; D6
 changed after the smoke test); remaining open questions in §13.
-**Last updated:** 2026-09-27 (§3.9: location checks are admin-configured field-validation rules, not hard-coded);
+**Last updated:** 2026-10-06 (§9.3: v3's blanket non-OP item-pickup cancel is gone); 2026-09-27 (§3.9: location checks are admin-configured field-validation rules, not hard-coded);
 2026-09-26 synced with the smoke-tested build (area lockdown removed, gates removed for non-members, remembered
 spawn choice, capture feedback, reward multipliers, menus implemented, commands/API)
 
@@ -675,11 +675,12 @@ While in `HUB`/`IN_PROGRESS`, `SiegeInventoryGuardListener` denies: dropping ite
 any non-player inventory (chests, barrels, shulkers, hoppers, ender chest, item frames, armour stands,
 allays); placing shulker boxes or other storage blocks; and trading/crafting outputs that consume
 snapshot items into persistent containers. Any of these would let own gear leave the player before the
-restore gives it back. Item pickup is already blanket-cancelled for non-OPs in v3
-(`PlayerListener.onItemPickup`); Siege additionally cancels it for all members, OPs included, during a
+restore gives it back. Siege cancels item pickup for all members, OPs included, during a
 match — **with one exception: siege enchantment books dropped by the member's own match** (§9.4),
 which a higher-priority siege handler un-cancels for members of that match only (v2 `onPickup` rule).
-Non-members can never pick them up.
+Non-members can never pick them up. (Until 2026-10-06 v3 also blanket-cancelled pickup for every
+non-OP via `PlayerListener.onItemPickup`, a placeholder for WorldGuard flags; it was removed in
+knk-plugin `eab9838`, so outside a match pickup is vanilla again.)
 
 Players in owner or staff mode are exempt from all of these guards (developer request 2026-09-26,
 accepted risk).
