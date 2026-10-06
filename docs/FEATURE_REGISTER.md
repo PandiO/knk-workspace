@@ -1,6 +1,6 @@
 # Knights & Kings feature register
 
-**Status:** Active · **Last updated:** 2026-10-05 · **First reconciled:** 2026-09-28 · [KNG-33](https://linear.app/kngpandi/issue/KNG-33)
+**Status:** Active · **Last updated:** 2026-10-06 · **First reconciled:** 2026-09-28 · [KNG-33](https://linear.app/kngpandi/issue/KNG-33)
 
 This is the index of intended gameplay and shipped surfaces, not a substitute for a feature's design, code, or issue. V1's wider gameplay and V2's stronger data model are both inputs to V3. An absent V2 port is **not** a decision to drop a V1 feature. The [vision](vision/vision.md) decides intent; a [feature spec](specs/README.md) decides detailed behavior; the actual default branches decide whether code has shipped.
 
@@ -69,7 +69,7 @@ For each changed row, include its source, spec or issue and the date of the evid
 | Siege survival: NPC waves, gate repair and match economy | — | — | spec | none | — | pending | implement [KNG-50](https://linear.app/kngpandi/issue/KNG-50); [design](specs/siege-survival/DESIGN.md), [plan](specs/siege-survival/IMPLEMENTATION_PLAN.md) |
 | Minimal clan and town team identity | — | partial | spec | complete | trunk | mixed | maintain; [vision §3.2](vision/vision.md#32-minimal-clan--default-team-identity-mvp), [siege design](specs/siege-minigame/DESIGN.md) |
 | Clan conquest, clancastles, diplomacy and seasons | partial | partial | vision | partial | mixed | pending | design later; [vision §3](vision/vision.md#3-clan-conquest--seasons-long-term-with-mvp-relevant-subset) |
-| Programmable NPCs, traits and entity behavior | live (Citizens integration) | partial | vision | none | — | pending | design shared NPC platform [KNG-36](https://linear.app/kngpandi/issue/KNG-36), inventory legacy integrations first; [vision §6–7](vision/vision.md#6-law-crime--safety) |
+| Programmable NPCs, traits and entity behavior | live (Citizens integration) | partial | spec | none | — | pending | continue [working design](specs/npc-platform/DESIGN.md), [KNG-36](https://linear.app/kngpandi/issue/KNG-36); tutorial decisions consolidated 2026-10-06, platform/legacy audit still open; implementation status not re-audited |
 | NPC pathfinding over roads, structures and dynamic gates | partial | partial | open | none | — | pending | design in [KNG-36](https://linear.app/kngpandi/issue/KNG-36) after road graph and NPC requirements; [navigation](specs/navigation/DESIGN.md) covers **player guidance**, not NPC movement |
 | Vendors, guards, bandits, bosses, companions and pets | partial | partial | vision | none | — | pending | design capabilities on shared NPC platform; [vision §6](vision/vision.md#6-law-crime--safety), [§9](vision/vision.md#9-equipment--magic) |
 | Dungeons and configurable wave survival | — | — | vision | none | — | pending | design [KNG-37](https://linear.app/kngpandi/issue/KNG-37) after NPC platform; [vision §7.5](vision/vision.md#75-other-combat-systems-long-term) |
