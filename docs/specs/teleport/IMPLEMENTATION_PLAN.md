@@ -671,8 +671,9 @@ https://github.com/PandiO/knk-web-api/actions/runs/37518750041. Validation on th
 125/125, fresh-DB migrations + no pending model changes; plugin Gradle build green; web-app `test:ci` 423 pass, the same 5
 failures as `main` (FormWizard M2M ×3, LoginForm, useEnrichedFormContext). Deploy: apply
 `20261005121006_AddPermissionGroupTeleportSettings`; FormConfiguration 22's Teleport step exists only in the dev DB
-(re-create elsewhere from [KNG41_FORMCONFIGS.md](KNG41_FORMCONFIGS.md)). Note: web-app `package-lock.json` is out of sync
-with `package.json` on `main` (`npm ci` fails: missing `yaml@2.9.1`) — pre-existing, not touched here.
+(re-create elsewhere from [KNG41_FORMCONFIGS.md](KNG41_FORMCONFIGS.md)). Note: web-app `npm ci` works with npm 11 (developer's
+npm 11.6.2, 2026-10-06); only npm 10 (e.g. 10.9.4 in a cloud container) refuses it, wanting tailwind's optional
+`yaml@2.9.1` in the lock. Use npm 11+; the lock file needs no change.
 
 **Round-2 checks (accepted, not run separately):** the warmup notice on `/warp` (paid, free, `knk.teleport.bypass.cost`), `/tpa`, `/tpahere` (the
 requester gets "You pay … when <player> arrives."), group-priced `/spawn`, a paid `/back`; none with
