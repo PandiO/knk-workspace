@@ -1,7 +1,7 @@
 # Road Navigation — Last-mile walkable pathfinding (design)
 
 **Status:** Design decided — **Phases A-C implemented** (knk-core `roads/walk/`, knk-paper `navigation/walk/` + direct-mode wiring, unmerged, knk-plugin `claude/navigation-walkable-path` `305829b`, 2026-10-02); live test and Phase D next. Reviewed by the developer on 2026-10-02 (§11): decided items 1-4, 5 (pending live test), 6, 8; item 7 (scope) decided. No open decisions remain except the live test of item 5.
-**Last updated:** 2026-10-02 (rev. 5: §10 "Phase C status"; rev. 4: §10 "Phase B status"; rev. 3: §10 "Phase A status"; rev. 2: ladders, interact-gated doors, chunk-loading rationale, §13 KNG-36)
+**Last updated:** 2026-10-07 (rev. 6: §5/§9 detour allowance, live-test finding N2; rev. 5: §10 "Phase C status"; rev. 4: §10 "Phase B status"; rev. 3: §10 "Phase A status"; rev. 2: ladders, interact-gated doors, chunk-loading rationale, §13 KNG-36)
 **Linear:** [KNG-51](https://linear.app/kngpandi/issue/KNG-51/navigation-last-mile-walkable-pathfinding-for-direct-modeoff-road-legs)
 (split out of [KNG-27](https://linear.app/kngpandi/issue/KNG-27/road-navigation-auto-detected-road-graph-junctionsendpoints-from-road))
 **Parent design:** [DESIGN.md](DESIGN.md) §6.2 ("real off-road pathfinding is Phase 6" — this document is the
@@ -127,8 +127,12 @@ typical searches expand a small fraction of that. BFS would expand the same wors
   target floor point snapped to the nearest walk cell within 3 blocks; the search ends when a cell is within
   `arriveDistance` of the target, or — for regions — when a `RegionShape.containsFloor` cell is reached (the goal is a
   predicate, so KNG-27 item 2's region last-leg can use it unchanged). No start/goal cell → `NO_PATH`.
-- **Budget:** `max-expansions` (default 20 000) and a path-length cap (default 1.75 × straight distance, at most
-  96 cells). Exhausted or unreachable → `FALLBACK` (§7). No partial paths in v1: a path that stops short at a wall
+- **Budget:** `max-expansions` (default 20 000) and a path-length cap: 1.75 × the straight distance or the straight
+  distance + `detour-allowance` (48), whichever is longer, at most 96 cells. Exhausted or unreachable → `FALLBACK` (§7).
+  *Rev. 6, 2026-10-07 (developer decision, live-test finding N2):* the factor alone was too tight for short legs.
+  `/navigate Merchant Square` from 27.5 blocks away hit the cap of 48 while the only walkable way round the
+  building was 67.7 blocks. The allowance gives every leg room to go round a block of houses; long legs are still
+  bounded by the factor and by 96. No partial paths in v1: a path that stops short at a wall
   is worse than an honest straight line.
 - **Threading:** capture on the main thread, search on the existing routing executor, result delivered through
   `deps.mainThread()` and dropped when `Active.generation` moved on — exactly `computeRoute`/`deliver`.
@@ -222,7 +226,7 @@ path (they remain for the straight fallback). `drawDirect(viewer, target)` stays
 ## 9. Config (`navigation.walk.*`, in `NavigationConfig`)
 
 `enabled` (true; false = today's straight lines — also the kill switch), `max-expansions` (20000),
-`max-length-factor` (1.75), `max-length` (96), `max-drop` (3), `drop-penalty` (10), `capture-margin` (16), `chunk-ttl-seconds` (10),
+`max-length-factor` (1.75), `max-length` (96), `detour-allowance` (48, rev. 6), `max-drop` (3), `drop-penalty` (10), `capture-margin` (16), `chunk-ttl-seconds` (10),
 `recompute-distance` (6), `max-concurrent-searches` (2).
 
 ## 10. Phases (one fresh session each, order matters)

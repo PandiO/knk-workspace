@@ -12,7 +12,9 @@ B)"; findings M1-M3 fixed). Folded into the standing branches: knk-web-api `clau
 `claude/navigation-walkable-path` `c6a6d14`. **Next:** sections 4 (Phase 4 from "Availability" on, plus the `[~]` items)
 and 5, together with the KNG-51 walkable-path checklist (`docs/reports/2026-10-02-navigation-walkable-chain.md`,
 "Combined live checklist"), on that deployment. Then the trunk merge of the whole feature.
-**Last updated:** 2026-10-05
+**2026-10-07:** Phase 4 + KNG-51 live test started — see "Phase 4 / KNG-51 live test (2026-10-07)": findings N1 (no
+gates among the destinations) and N2 (walk paths cut off by the length cap) fixed in knk-plugin `b793b48` / `0a0f4a1`.
+**Last updated:** 2026-10-07
 **Sources:** the "Developer to-do" blocks of Phases 1, 3, 4 and 5 in `docs/specs/navigation/IMPLEMENTATION_PLAN.md`;
 progress report `docs/reports/2026-09-27-road-navigation-chain.md`. If this file and a plan block disagree, the plan wins.
 
@@ -766,6 +768,41 @@ Use the build with `--offline -x deployToDevServer` and copy the jar yourself, o
   Detected. A rebuild of 2,-2 proposes nothing, and no proposals are pending.
 - **Result:** curated tiles pass the live re-test. Folded into knk-web-api `claude/road-navigation` (`176b9d3`) and
   knk-plugin `claude/navigation-walkable-path` (`c6a6d14`) by fast-forward.
+
+### Phase 4 / KNG-51 live test (2026-10-07)
+
+Deployment under test: knk-web-api `claude/road-navigation` `176b9d3`, knk-plugin `claude/navigation-walkable-path`
+`c6a6d14` (then the fixes below). Checklist: handoff `docs/ai-agents/handoffs/2026-10-07-navigation-live-test-debug.md`
+("Remaining checklist": A = KNG-51 walk paths, B = KNG-27 fix leftovers, C = Phase 4, D = regressions).
+
+**Before the debug session (developer):** prep done (`navigation.walk` in the server config); A1 skipped (no
+unreachable destination available); A2 (kill switch) accepted; A3 `/nav Northern Gate Square` from The Keep followed
+the roads (routed mode, so no walk-path test); A4 reported working, but only meaningful in direct mode. A5 and the
+walk-path check were blocked by N1 and N2.
+
+- **Finding N1 — no Structures among the `/navigate` destinations.** All four Structures in the dev DB are gates
+  (`gate_structures` rows 11-14, Keep Stair House included). `POST /api/Domains/search` reports them as
+  `domainType: "GateStructure"`, and `NavTarget.Type.ofDomainType` only knew town/district/structure, so the catalogue
+  dropped them. Separately, `structure:` + Tab completed nothing: the `type:name` form was offered only for names two
+  items share.
+  **Fixed in knk-plugin `b793b48`** (developer decision: gates are Structures, and also answer to their own word and a
+  nickname): a gate is `structure:Keep Gate`, `gatestructure:Keep Gate` or `gate:Keep Gate`. `type:` + Tab lists every
+  item of that type or alias (`structure:` → `structure:Keep`, then `Gate`); teleport's completion shares this.
+  Gates are located through `/api/Structures/{id}`, which returns gates (checked live). A shared, possibly
+  configurable nickname table for `/warp` as well is backlog item 10 (`docs/backlog/QOL_BUGFIX_BACKLOG.md`).
+- **Finding N2 — direct mode kept the straight line.** `/nav Merchant Square` (Location 8, (1430, 43, -553)) from
+  (1425.5, 49, -526.6), 27 m away: "walk paths" went from `requested 0 … budget 0` to `requested 1, budget 1`
+  (15 chunks captured, 1814 µs each). So capture worked and the search gave up. An offline replay of the server's
+  capture and search on a copy of the region files (`WalkReplayTest`, knk-plugin `tools/road-replay/README.md`,
+  "Walk path replay") gave `FALLBACK (length cap, 1701 expansions)`. The cap was min(96, 1.75 × 27.5) = 48, and the
+  only walkable way round the building is 67.7 blocks (east out of the courtyard, down x = 1440, west into the
+  square), found in 863 expansions without the cap.
+  **Fixed in knk-plugin `0a0f4a1`** (developer decision): the cap is now min(`max-length`, max(1.75 × d,
+  d + `detour-allowance`)), with `navigation.walk.detour-allowance: 48` (0 = the old rule). The replay finds the
+  67.7-block path with the new defaults. The server config needs no change (a missing key means 48).
+
+**Deploy for the rest of the checklist:** knk-plugin `claude/navigation-walkable-path` `831ac4a` (includes both fixes;
+`./gradlew :knk-paper:dev`). The API is unchanged.
 
 ### Phase 3 — rebuild re-test (2026-10-02, developer; recorded from the commit messages)
 
