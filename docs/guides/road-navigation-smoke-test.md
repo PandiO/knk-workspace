@@ -13,7 +13,8 @@ B)"; findings M1-M3 fixed). Folded into the standing branches: knk-web-api `clau
 and 5, together with the KNG-51 walkable-path checklist (`docs/reports/2026-10-02-navigation-walkable-chain.md`,
 "Combined live checklist"), on that deployment. Then the trunk merge of the whole feature.
 **2026-10-07:** Phase 4 + KNG-51 live test started — see "Phase 4 / KNG-51 live test (2026-10-07)": findings N1 (no
-gates among the destinations) and N2 (walk paths cut off by the length cap) fixed in knk-plugin `b793b48` / `0a0f4a1`.
+gates among the destinations) and N2 (walk paths cut off by the length cap) fixed in knk-plugin `b793b48` / `0a0f4a1`
+and verified live; A5 (the 13 m wall case, Northern Gate) passed. Next: A1, A3, A4, A6-A14, B, C, D.
 **Last updated:** 2026-10-07
 **Sources:** the "Developer to-do" blocks of Phases 1, 3, 4 and 5 in `docs/specs/navigation/IMPLEMENTATION_PLAN.md`;
 progress report `docs/reports/2026-09-27-road-navigation-chain.md`. If this file and a plan block disagree, the plan wins.
@@ -803,6 +804,16 @@ walk-path check were blocked by N1 and N2.
 
 **Deploy for the rest of the checklist:** knk-plugin `claude/navigation-walkable-path` `831ac4a` (includes both fixes;
 `./gradlew :knk-paper:dev`). The API is unchanged.
+
+**After the fixes (developer, knk-plugin `831ac4a`):**
+- N1 verified: `/nav structure:` + Tab lists the Structures; `/nav gate:Keep Gate` works.
+- N2 verified: `/nav Merchant Square` from the same spot follows the way round the building; "found" goes up.
+- **A5 passed:** the 2026-10-01 "13 m wall" case was the Northern Gate. The last stretch after the road's end takes
+  exactly the path the developer expected.
+- **A1 (decision §11-5):** the developer **prefers a partial path** over the straight line, but had no unreachable
+  destination to test with. Partial paths are not implemented (v1 returns no partial path), so this reopens §11-5;
+  see the spec. Tip for the test: `/navigate <x> <y> <z>` to a spot inside a sealed room or on an unreachable roof.
+- Next: A3/A4 in direct mode, A6-A14, B, C, D.
 
 ### Phase 3 — rebuild re-test (2026-10-02, developer; recorded from the commit messages)
 

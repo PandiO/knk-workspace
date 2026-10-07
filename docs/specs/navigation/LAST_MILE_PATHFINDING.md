@@ -293,7 +293,7 @@ it reuses everything.
 2. **Doors — decided 2026-10-02:** hand-openable doors/gates walkable only where the player may interact (§6) — WorldGuard `USE`/`INTERACT` **and** KnK domain rules; iron doors never.
 3. **Water — approved 2026-10-02:** shallow wading allowed at ×3 cost; no swimming.
 4. **Ladders — decided 2026-10-02:** allowed in v1 (§4). Vines/scaffolding later through `climbables`.
-5. **No partial path — agreed 2026-10-02**, **to be tested on the live server** (does the straight fallback read acceptably, or is a partial path better?). Record the result here.
+5. **No partial path — agreed 2026-10-02**, **to be tested on the live server** (does the straight fallback read acceptably, or is a partial path better?). Record the result here. **2026-10-07, developer:** prefers a **partial path**, untested (no unreachable destination on the dev world). Reopened: v1 still returns none. Open design points before implementing: which reached cell ends the partial path (closest to the target horizontally, or by the heuristic); what is drawn from there to the target (a straight segment, or nothing); whether "budget" results (expansions or length cap) also get one, or only `NO_PATH`; and when it is recomputed.
 6. **No chunk loading in v1** — rationale in §8; revisit in Phase D. (Explained to the developer 2026-10-02; not yet a veto.)
 7. **Scope — decided 2026-10-02:** direct mode + `arrivedAtRouteEnd` in v1; the routed start/end legs follow in Phase D once the live test is positive.
 8. **Do not adopt the Pathetic library now — agreed 2026-10-02.** The research report ([2026-09-27](../../reports/2026-09-27-road-navigation-research.md) §5.3)
