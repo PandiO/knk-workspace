@@ -1,7 +1,11 @@
 # Closed alpha hardening — implementation plan
 
-**Status:** In progress. The plan is written, and implementation has started on `claude/ui-ux-assessment-discussion-66vc2l` in
-knk-web-api, knk-web-app and knk-plugin. Nothing is merged yet.
+**Status:** **Implemented and verified locally, awaiting developer review and live test.** PRs: knk-web-api
+[#4](https://github.com/PandiO/knk-web-api/pull/4), knk-web-app [#2](https://github.com/PandiO/knk-web-app/pull/2),
+knk-plugin [#7](https://github.com/PandiO/knk-plugin/pull/7) (branch `claude/ui-ux-assessment-discussion-66vc2l`;
+nothing merged). Verification: [2026-10-08 report](../../reports/2026-10-08-alpha-hardening-verification.md). The
+deviations agreed during implementation are listed in the PR descriptions (for example `RequireServiceOrPermissionForWrites`,
+the 30 s refresh grace window, web-first registration living in `Auth/register`, the CORS defaults in the Development file).
 **Last updated:** 2026-10-08
 **Linear:** [KNG-64](https://linear.app/kngpandi/issue/KNG-64) (parent), KNG-65 to KNG-70 (work packages, § 11)
 **Sources:**
