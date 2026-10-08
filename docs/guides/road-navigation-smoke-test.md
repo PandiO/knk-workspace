@@ -21,6 +21,8 @@ Run 3 (same day): A1, A7, A8 confirmed live; findings N5 (false "arrived" at a p
 start edge could not be left) and N7 (walk trail hugging corners) fixed in knk-plugin `3561034`/`b6257a9`/`ff5edf09`.
 Run 4 (same day): the rest of A-D run; N8-N12 fixed in knk-plugin `62cbc36`..`d24f6c1`; follow-ups KNG-73, KNG-74,
 KNG-75; still open: C6 (siege), and re-checks of the run 4 fixes.
+**Merged to the default branches 2026-10-08** (knk-plugin `main` `f9026cb`, knk-web-api `master` `4c570fa`, knk-web-app
+`main` `b51eba0`) on the developer's go-ahead after run 5; work continues on the standing branches (C3, A8/A9 below).
 **Last updated:** 2026-10-08
 **Sources:** the "Developer to-do" blocks of Phases 1, 3, 4 and 5 in `docs/specs/navigation/IMPLEMENTATION_PLAN.md`;
 progress report `docs/reports/2026-09-27-road-navigation-chain.md`. If this file and a plan block disagree, the plan wins.
@@ -924,6 +926,20 @@ non-members, joining a lobby ends navigation, `/navigate` is refused in a lobby.
   **KNG-75**.
 
 **Deploy for run 5:** knk-plugin `claude/navigation-walkable-path` `d24f6c1` (API unchanged, `fa234f7`).
+
+**Run 5 (2026-10-08, developer, knk-plugin `d24f6c1`):** B2 (N9), C4 (N11) and N12 confirmed; C6 later.
+- **C3 still fails (N10 follow-up).** "It still seems to use the original nav's starting point to check the gate's
+  state." Cause: the re-check judged a step by its whole edge unless the player had already moved along it. A route
+  that starts in the middle of edge 10139 on the town side of the South Gate only walks from the player to the town
+  node, but the step's edge carries the gate door (door 13: x 1426-1428, z -454..-452, y 45-48; the edge runs
+  (1418,-463) → (1451,-429) through it), so a closing gate blocked it. To fix on the standing branch: judge every
+  step by the part it walks.
+- **A8/A9 - a road route exists.** The test target was within 48 blocks, so direct mode searched only a walk path
+  (bounded by the detour allowance and 96 blocks) and never the road network, although walking back and round by road
+  reaches it. To do on the standing branch: when the walk search finds no way, try the road route before "No
+  conventional path".
+- **Road trail on the Brink stairs to #3588** hugs the road's border; wanted: centred road trails, wider corners,
+  stairs/slabs preferred on inclines - **KNG-76**.
 
 **Deploy for run 3:** knk-plugin `claude/navigation-walkable-path` `a4892db` and knk-web-api `claude/road-navigation`
 `fa234f7` (the merged plugin needs KNG-56's `GET /api/Domains/access-rules`). The dev DB lacks trunk's KNG-59
