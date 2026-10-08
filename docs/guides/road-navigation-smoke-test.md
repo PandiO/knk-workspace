@@ -14,8 +14,10 @@ and 5, together with the KNG-51 walkable-path checklist (`docs/reports/2026-10-0
 "Combined live checklist"), on that deployment. Then the trunk merge of the whole feature.
 **2026-10-07:** Phase 4 + KNG-51 live test started — see "Phase 4 / KNG-51 live test (2026-10-07)": findings N1 (no
 gates among the destinations) and N2 (walk paths cut off by the length cap) fixed in knk-plugin `b793b48` / `0a0f4a1`
-and verified live; A5 (the 13 m wall case, Northern Gate) passed. Next: A1, A3, A4, A6-A14, B, C, D.
-**Last updated:** 2026-10-07
+and verified live; A5 (the 13 m wall case, Northern Gate) passed. **2026-10-08:** A3, A4, A6 passed; findings N3
+(recorded road through the South Gate had no gate), N4 (a district made after the build was not avoided) and the
+partial-path decision (A1) fixed in knk-plugin `d369ad4`/`f2baf4e`/`a4892db`, on top of a merge of every trunk.
+**Last updated:** 2026-10-08
 **Sources:** the "Developer to-do" blocks of Phases 1, 3, 4 and 5 in `docs/specs/navigation/IMPLEMENTATION_PLAN.md`;
 progress report `docs/reports/2026-09-27-road-navigation-chain.md`. If this file and a plan block disagree, the plan wins.
 
@@ -814,6 +816,42 @@ walk-path check were blocked by N1 and N2.
   destination to test with. Partial paths are not implemented (v1 returns no partial path), so this reopens §11-5;
   see the spec. Tip for the test: `/navigate <x> <y> <z>` to a spot inside a sealed room or on an unreachable roof.
 - Next: A3/A4 in direct mode, A6-A14, B, C, D.
+
+**Run 2 (2026-10-08, developer, knk-plugin `831ac4a`):**
+- **A1:** `/nav 1420 104 -503` → "No place called …". `/navigate` has no coordinate form, by design (DESIGN §6.1:
+  nothing asks for coordinates); the tip in this guide was wrong. Decision: **implement partial paths**
+  (LAST_MILE_PATHFINDING §11-5) — **done in knk-plugin `d369ad4`**. Still to test with an unreachable destination,
+  for example a Location (web app) on a roof or in a closed room.
+- **A3, A4:** pass. **A6:** passes as far as could be judged.
+- **Finding N3 — a closed gate is ignored (A7).** From (1437, 45, -444), `/nav Merchant Square` with the South Gate
+  closed followed the road through the gate, with no message. The road through the gate is **edge 10139, a recorded
+  stretch**: it carries the gate's region (`gate_2000131`) but `GateDoorIdsJson = []`. `/knk road record stop`
+  uploaded recordings with no gate doors (only the build tags them), so `GateAvailability` never saw door 13. Only
+  10139 crosses a gate among the three recorded edges.
+  **Fixed:** knk-plugin `a4892db` (a recording stores the gate doors its walked points pass) and `f2baf4e` (live tags,
+  below, also cover the existing edge without a database write).
+- **Finding N4 — a closed district is routed through (A8).** District 16 "Navigation Test" (`domain_16`,
+  AllowEntry/AllowExit false) was created at 16:32 and is on **no** edge: routes know a domain only from the region
+  ids stored on each edge at build or record time. (Walk paths in direct mode ask WorldGuard live and would respect
+  it.) The other half of the report — being let into a region and then told a rule blocks the way out — is the
+  KNG-55/56 bypass, now merged into the standing branches with trunk.
+  **Fixed in knk-plugin `f2baf4e`** (developer decision: live tags): the plugin re-tags every edge from the world
+  (WorldGuard regions every 2 blocks at feet level, gate-door cells every half block) when a world's network changes
+  and every minute, within 200 lookups per tick, and the router uses the stored tags plus these. A change re-checks
+  the active routes. `/knk road status` has a "live tags" line (edges with extra tags, regions and gate doors added).
+
+**Branches updated from trunk (2026-10-08):** knk-plugin `a823934` (conflicts in `WorldGuardRegionTracker`,
+`SimpleRegionTransitionService`, `plugin.yml`, two teleport tests; navigation now uses the same `knk.region.bypass`
+predicate as KNG-56's `DomainAccessService`), knk-web-api `fa234f7` (no conflicts; snapshot consistent), knk-web-app
+`48120ed` (no conflicts), knk-workspace `02628b2`. Tests after the merge: Gradle core 1739 / api-client 206 / paper
+1289 green. web-api 9 failures, all already failing on master (8, time-dependent currency/activity tests and
+FormWizard path tests) or on the branch before the merge (`RoadNetworkServiceTests.Validation_GeometryFarFromItsNode`).
+web-app 6 failing suites, all already failing on main (5) or on the branch before the merge
+(`RoadsAdminPage › deletes a profile after confirmation`).
+
+**Deploy for run 3:** knk-plugin `claude/navigation-walkable-path` `a4892db` and knk-web-api `claude/road-navigation`
+`fa234f7` (the merged plugin needs KNG-56's `GET /api/Domains/access-rules`). The dev DB lacks trunk's KNG-59
+migration `UniquePermissionGrantHolderNode` (it deletes duplicate permission grants); navigation does not need it.
 
 ### Phase 3 — rebuild re-test (2026-10-02, developer; recorded from the commit messages)
 

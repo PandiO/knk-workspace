@@ -431,6 +431,11 @@ closed; the gate's *state* only matters at routing time (§6.7).
    profile's material shares (cosine similarity); best match → `ProfileId`.
 6. **Domains:** sample the polyline every 4 blocks against the WorldGuard regions (`WorldGuardRegionLookup`) and map
    region ids to domains (`core/regions/RegionDomainResolver`) → ordered `DomainIds`.
+   *Live tags (2026-10-08, smoke-test findings N3/N4):* stored tags are a snapshot of build or record time. The
+   plugin also re-tags every edge from the world (`LiveEdgeTags`: regions every 2 blocks, gate doors every half
+   block, `core/roads/build/EdgeTagging`) when the network changes and every minute, and the router uses the stored
+   tags plus these. A domain region made after the build, or a gate a recording missed, counts without a rebuild.
+   Recorded stretches also store the gate doors they pass.
 7. **Tile borders:** chains leaving the tile end at a `Boundary` node matched by position with the neighbour tile.
 
 Admin `Anchor` nodes are honoured (the chain is split there).
