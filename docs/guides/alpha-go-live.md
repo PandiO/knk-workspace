@@ -239,6 +239,20 @@ Lock the secret files down: `chmod 600 $ALPHA/*.env`.
    `import-seed.sh` (production guide § 7). Do this **before the API's first start**. Choose a world, A or B (guide § 7.4):
    for an alpha on the dev map, B (`--with-world`) plus a copy of the world folders.
 
+   Export on your PC (production guide § 7.2). The DB has no published port, so run the import in a throwaway MySQL
+   client container on the compose network, where the database is `host=db`:
+   ```bash
+   # on the NAS, from $ALPHA: copy knk-workspace's scripts/seed/ to ./scripts/seed and the export to ./seed/<date>
+   install -m 600 /dev/null seed-import.cnf
+   printf '[client]\nhost=db\nuser=knk_migrator\npassword=%s\n' '<KNK_DB_MIGRATOR_PASSWORD>' > seed-import.cnf
+   docker run --rm --network knk-alpha_knk --entrypoint bash \
+     -v "$PWD/scripts/seed:/scripts:ro" -v "$PWD/seed:/seed:ro" -v "$PWD/seed-import.cnf:/import.cnf:ro" \
+     mysql:8.4 /scripts/import-seed.sh --defaults-file /import.cnf --database knk_alpha --seed /seed/<date>
+   # → Seed …Z imported into knk_alpha (schema …). Start the API next.
+   rm seed-import.cnf
+   ```
+   The `mysql:8.4` image has the client, `bash` and `sha256sum` the script needs. Nothing stays published.
+
 ### 5.2 API image
 
 The Dockerfile is in production guide § 6.1. Until CI publishes images (guide § 10), build on your PC at the merged

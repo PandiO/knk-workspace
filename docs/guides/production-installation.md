@@ -691,20 +691,22 @@ admin's account (§ 6.5).
 > `LootboxSeed` says "Admin nodes are never seeded" on purpose. The one key that can grant the first admin node is
 > the plugin API key, because `PermissionGrantsController` accepts `X-API-Key` in place of an admin login.
 
-1. Register your own account in the web app (once § 8 is up), or call the API directly:
+1. Register your own account in the web app (once § 8 is up), or call the API directly. **[KNG-64]** `POST /api/Users`
+   needs the plugin key (or `knk.admin.user.manage`, which nobody holds yet), so run it on the server:
 
    ```bash
-   curl -s -X POST http://127.0.0.1:5000/api/Users -H 'Content-Type: application/json' \
+   KEY=$(sudo grep '^Security__PluginApiKey=' /etc/knk/api.env | cut -d= -f2-)
+   curl -s -X POST http://127.0.0.1:5000/api/Users \
+     -H "X-API-Key: $KEY" -H 'Content-Type: application/json' \
      -d '{"Username":"<your MC name>","Email":"<you@…>","Password":"<strong>","PasswordConfirmation":"<strong>"}'
    ```
 
    Note the returned `"id"`. Users and groups share one id space, so after a seed import your id is higher than
    the highest group id (`7` in the rehearsal).
 
-2. Grant yourself `*` with the plugin key, from the server so the key never leaves it:
+2. Grant yourself `*` with the plugin key, from the server so the key never leaves it (same shell, so `$KEY` is set):
 
    ```bash
-   KEY=$(sudo grep '^Security__PluginApiKey=' /etc/knk/api.env | cut -d= -f2-)
    curl -s -X PUT http://127.0.0.1:5000/api/PermissionGrants/by-node \
      -H "X-API-Key: $KEY" -H 'Content-Type: application/json' \
      -d '{"holderId":<your id>,"node":"*","value":true}'
@@ -841,7 +843,8 @@ sudo ~/knk-workspace/scripts/seed/import-seed.sh \
 What the import does, in one transaction: it clears the content tables (removing the reference rows the migrations
 inserted, which the dev DB has too, with the same ids), loads the dump, and clears the two user-reference columns
 (`currency_policies.UpdatedByUserId`, `lootbox_spawn_areas.CreatedByUserId`, which point at dev users). It then
-compares the row counts with the manifest.
+compares the row counts with the manifest **before committing**: a mismatch prints the table and rolls the whole
+import back.
 
 On the API's first start after the import, every create-only startup seed finds its rows and creates nothing. In the
 rehearsal this read `Kit seed complete. Created: nothing`. The first real account then gets the `Default` group and

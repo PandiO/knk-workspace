@@ -55,15 +55,20 @@ tables="$CONTENT_TABLES"
   for t in $tables $GROUP_FILTERED_TABLES; do echo "DELETE FROM \`$t\`;"; done
   cat "$seed/seed.sql"
   for c in $USER_REFERENCE_COLUMNS; do echo "UPDATE \`${c%%.*}\` SET \`${c#*.}\` = NULL;"; done
+  # 4. Row counts match the manifest, checked before COMMIT: a mismatch prints the table and
+  # then fails on purpose (a scalar subquery with two rows), so mysql stops and the
+  # transaction rolls back.
+  for t in $tables $GROUP_FILTERED_TABLES; do
+    want="$(manifest "$t")"
+    [[ "$want" =~ ^[0-9]+$ ]] || { echo "manifest has no row count for $t" >&2; exit 1; }
+    echo "SET @n := (SELECT COUNT(*) FROM \`$t\`);"
+    echo "SELECT CONCAT('row count mismatch in $t: manifest $want, database ', @n) FROM DUAL WHERE @n <> $want;"
+    echo "DO IF(@n = $want, 0, (SELECT 1 UNION ALL SELECT 2));"
+  done
   echo "COMMIT;"
   echo "SET FOREIGN_KEY_CHECKS = 1;"
-} | mysql --defaults-extra-file="$defaults" "$db"
-
-# 4. Row counts match the manifest.
-bad=0
-for t in $tables $GROUP_FILTERED_TABLES; do
-  want="$(manifest "$t")"; got="$(mysql_q "SELECT COUNT(*) FROM \`$t\`")"
-  if [[ "$want" != "$got" ]]; then echo "row count mismatch in $t: manifest $want, database $got" >&2; bad=1; fi
-done
-[[ $bad -eq 0 ]] || exit 1
+} | mysql --defaults-extra-file="$defaults" -N -B "$db" >&2 || {
+  echo "import rolled back: nothing changed in $db." >&2
+  exit 1
+}
 echo "Seed $(manifest exported_utc) imported into $db (schema $target). Start the API next."

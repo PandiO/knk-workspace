@@ -44,7 +44,7 @@ lootbox_spawn_area_types lootbox_spawn_areas
 # Player and runtime data. Never part of a seed.
 RUNTIME_TABLES="
 __EFMigrationsHistory
-users user_permission_groups linkcodes
+users user_permission_groups linkcodes refresh_tokens
 currency_transactions currency_entries currency_pending_transfers currency_alerts teleport_fee_voids
 item_instances item_instance_enchantments kit_claims kit_purchases
 lootbox_spawns lootbox_claims lootbox_tokens lootbox_token_grants
