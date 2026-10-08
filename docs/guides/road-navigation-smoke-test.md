@@ -949,6 +949,29 @@ These two fixes are not on trunk yet.
 `fa234f7` (the merged plugin needs KNG-56's `GET /api/Domains/access-rules`). The dev DB lacks trunk's KNG-59
 migration `UniquePermissionGrantHolderNode` (it deletes duplicate permission grants); navigation does not need it.
 
+### KNG-73 — configurable default destination (implemented 2026-10-08, to test)
+
+Branch `claude/kng-73-road-navigation-n92vlm` in knk-web-api (`a04d614`, on trunk `4c570fa`), knk-plugin (`290b122`, on
+`claude/navigation-walkable-path` `758dbc5` + trunk) and knk-web-app (`a7ddc65`, on trunk `b51eba0`). Not merged.
+Tests: web-api 1846 pass (the 4 failures fail on `master` too), Gradle core 1744 / api-client 208 / paper 1302 green,
+web-app tsc clean, road/admin tests green except `RoadsAdminPage › deletes a profile after confirmation` (fails on
+`main` too: it still expects `window.confirm`).
+
+Deploy: API with migration `AddDomainNavigationDefaults` (adds `domains.NavigationDefaultOverride` and
+`domain_navigation_defaults`, every type seeded `Spawn` - nothing changes until a default is changed), the plugin jar,
+the web app.
+- [ ] **K1** `/admin/roads` → "Navigation defaults": four rows (Towns, Districts, Structures, Gates), all `Spawn`,
+  0 overrides. Set Districts to `Region`.
+- [ ] **K2** Run `/knk cache refresh` (otherwise the first `/nav` a minute later still uses the old catalogue and
+  only starts its refresh). From outside a district:
+  `/nav <district>` guides to the nearest edge of its region (as `/nav <district> region` did);
+  `/nav <district> spawn` still goes to its spawn Location.
+- [ ] **K3** Standing inside the district: `/nav <district>` says "You are already in …" (both defaults).
+- [ ] **K4** Form Builder: add the field "Navigation Default Override" to the Town form (and the others as wanted).
+  Set one town to `Region` while Towns stay `Spawn`: that town goes to its region, other towns to their spawn;
+  the Towns row counts 1 override. Clearing the field (empty choice) makes the town follow its type again.
+- [ ] **K5** Edit a gate or town with a form *without* the field: its override stays as it was.
+
 ### Phase 3 — rebuild re-test (2026-10-02, developer; recorded from the commit messages)
 
 Not written up here at the time; reconstructed by the walkable-path chain (link 1) from the developer's commits on
