@@ -1,7 +1,7 @@
 # Road Navigation — Last-mile walkable pathfinding (design)
 
 **Status:** Design decided — **Phases A-C implemented** (knk-core `roads/walk/`, knk-paper `navigation/walk/` + direct-mode wiring, unmerged, knk-plugin `claude/navigation-walkable-path` `305829b`, 2026-10-02); live test and Phase D next. Reviewed by the developer on 2026-10-02 (§11): decided items 1-4, 5 (pending live test), 6, 8; item 7 (scope) decided. No open decisions remain except the live test of item 5.
-**Last updated:** 2026-10-02 (rev. 5: §10 "Phase C status"; rev. 4: §10 "Phase B status"; rev. 3: §10 "Phase A status"; rev. 2: ladders, interact-gated doors, chunk-loading rationale, §13 KNG-36)
+**Last updated:** 2026-10-08 (rev. 9: §11-5 no straight line after a failed search, finding N8; rev. 8: §4/§9 wall cost, finding N7; rev. 7: §11-5 partial paths implemented; rev. 6: §5/§9 detour allowance, live-test finding N2; rev. 5: §10 "Phase C status"; rev. 4: §10 "Phase B status"; rev. 3: §10 "Phase A status"; rev. 2: ladders, interact-gated doors, chunk-loading rationale, §13 KNG-36)
 **Linear:** [KNG-51](https://linear.app/kngpandi/issue/KNG-51/navigation-last-mile-walkable-pathfinding-for-direct-modeoff-road-legs)
 (split out of [KNG-27](https://linear.app/kngpandi/issue/KNG-27/road-navigation-auto-detected-road-graph-junctionsendpoints-from-road))
 **Parent design:** [DESIGN.md](DESIGN.md) §6.2 ("real off-road pathfinding is Phase 6" — this document is the
@@ -127,8 +127,12 @@ typical searches expand a small fraction of that. BFS would expand the same wors
   target floor point snapped to the nearest walk cell within 3 blocks; the search ends when a cell is within
   `arriveDistance` of the target, or — for regions — when a `RegionShape.containsFloor` cell is reached (the goal is a
   predicate, so KNG-27 item 2's region last-leg can use it unchanged). No start/goal cell → `NO_PATH`.
-- **Budget:** `max-expansions` (default 20 000) and a path-length cap (default 1.75 × straight distance, at most
-  96 cells). Exhausted or unreachable → `FALLBACK` (§7). No partial paths in v1: a path that stops short at a wall
+- **Budget:** `max-expansions` (default 20 000) and a path-length cap: 1.75 × the straight distance or the straight
+  distance + `detour-allowance` (48), whichever is longer, at most 96 cells. Exhausted or unreachable → `FALLBACK` (§7).
+  *Rev. 6, 2026-10-07 (developer decision, live-test finding N2):* the factor alone was too tight for short legs.
+  `/navigate Merchant Square` from 27.5 blocks away hit the cap of 48 while the only walkable way round the
+  building was 67.7 blocks. The allowance gives every leg room to go round a block of houses; long legs are still
+  bounded by the factor and by 96. No partial paths in v1: a path that stops short at a wall
   is worse than an honest straight line.
 - **Threading:** capture on the main thread, search on the existing routing executor, result delivered through
   `deps.mainThread()` and dropped when `Active.generation` moved on — exactly `computeRoute`/`deliver`.
@@ -222,8 +226,10 @@ path (they remain for the straight fallback). `drawDirect(viewer, target)` stays
 ## 9. Config (`navigation.walk.*`, in `NavigationConfig`)
 
 `enabled` (true; false = today's straight lines — also the kill switch), `max-expansions` (20000),
-`max-length-factor` (1.75), `max-length` (96), `max-drop` (3), `drop-penalty` (10), `capture-margin` (16), `chunk-ttl-seconds` (10),
-`recompute-distance` (6), `max-concurrent-searches` (2).
+`max-length-factor` (1.75), `max-length` (96), `detour-allowance` (48, rev. 6), `max-drop` (3), `drop-penalty` (10), `capture-margin` (16), `chunk-ttl-seconds` (10),
+`recompute-distance` (6), `max-concurrent-searches` (2), `wall-cost` (1.0, rev. 8: a step onto a cell with a wall
+among its 8 neighbours costs this much extra, so paths keep a block from walls and round corners wider - live-test
+finding N7, the trail seemed to stop behind tight corners).
 
 ## 10. Phases (one fresh session each, order matters)
 
@@ -289,7 +295,7 @@ it reuses everything.
 2. **Doors — decided 2026-10-02:** hand-openable doors/gates walkable only where the player may interact (§6) — WorldGuard `USE`/`INTERACT` **and** KnK domain rules; iron doors never.
 3. **Water — approved 2026-10-02:** shallow wading allowed at ×3 cost; no swimming.
 4. **Ladders — decided 2026-10-02:** allowed in v1 (§4). Vines/scaffolding later through `climbables`.
-5. **No partial path — agreed 2026-10-02**, **to be tested on the live server** (does the straight fallback read acceptably, or is a partial path better?). Record the result here.
+5. **No partial path — agreed 2026-10-02**, **to be tested on the live server** (does the straight fallback read acceptably, or is a partial path better?). Record the result here. **2026-10-07, developer:** prefers a **partial path**, untested (no unreachable destination on the dev world). **Decided and implemented 2026-10-08** (knk-plugin `d369ad4`): a NO_PATH or FALLBACK result carries `partialPath()`, the way to the expanded cell closest to the target (3D distance, ties to the cheaper), when that cell is at least 2 blocks closer than the start; `path()` stays empty. Direct mode follows it and draws the rest as a straight line to the target; it is recomputed like any walk path, and `/knk road status` counts it ("partial N"). A target with no walkable cell within 3 blocks still gets the straight line. Live test passed (run 3). **Rev. 9 (2026-10-08, finding N8, developer):** after a search that ran and found no way (NO_PATH or out of budget) there is **no straight line** at all: "No conventional path to X found." once per leg ("conventional" on purpose - secret passages), the partial path without a straight continuation, or no trail. Only a search that could not run keeps the straight line.
 6. **No chunk loading in v1** — rationale in §8; revisit in Phase D. (Explained to the developer 2026-10-02; not yet a veto.)
 7. **Scope — decided 2026-10-02:** direct mode + `arrivedAtRouteEnd` in v1; the routed start/end legs follow in Phase D once the live test is positive.
 8. **Do not adopt the Pathetic library now — agreed 2026-10-02.** The research report ([2026-09-27](../../reports/2026-09-27-road-navigation-research.md) §5.3)

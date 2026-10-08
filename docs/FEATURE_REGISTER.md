@@ -1,6 +1,6 @@
 # Knights & Kings feature register
 
-**Status:** Active · **Last updated:** 2026-10-06 · **First reconciled:** 2026-09-28 · [KNG-33](https://linear.app/kngpandi/issue/KNG-33)
+**Status:** Active · **Last updated:** 2026-10-08 · **First reconciled:** 2026-09-28 · [KNG-33](https://linear.app/kngpandi/issue/KNG-33)
 
 This is the index of intended gameplay and shipped surfaces, not a substitute for a feature's design, code, or issue. V1's wider gameplay and V2's stronger data model are both inputs to V3. An absent V2 port is **not** a decision to drop a V1 feature. The [vision](vision/vision.md) decides intent; a [feature spec](specs/README.md) decides detailed behavior; the actual default branches decide whether code has shipped.
 
@@ -33,7 +33,7 @@ For each changed row, include its source, spec or issue and the date of the evid
 | Gates: animation, damage, control and siege integration | live | partial | spec | complete | trunk | mixed | maintain; [gate specs](specs/gate-structure-animation/) |
 | Global world settings, deliberate join/spawn/weather/time rules | partial | partial | vision | partial | mixed | pending | design; [vision §2.7](vision/vision.md#27-game-world-settings) |
 | Teleport, requests, spawn, warps and homes | live | partial | spec | complete | trunk | mixed | maintain [KNG-17](https://linear.app/kngpandi/issue/KNG-17); [design](specs/teleport/DESIGN.md). Housing-linked `/home` is separate. |
-| Street graph and guided road navigation | — | — | spec | complete | branch | pending | merge [KNG-27](https://linear.app/kngpandi/issue/KNG-27); [plan](specs/navigation/IMPLEMENTATION_PLAN.md) |
+| Street graph and guided road navigation (incl. walkable last-mile paths) | — | — | spec | complete | trunk | mixed | finish: siege check C6, [KNG-73](https://linear.app/kngpandi/issue/KNG-73), [KNG-74](https://linear.app/kngpandi/issue/KNG-74), [KNG-75](https://linear.app/kngpandi/issue/KNG-75), [KNG-76](https://linear.app/kngpandi/issue/KNG-76); merged 2026-10-08 ([KNG-27](https://linear.app/kngpandi/issue/KNG-27), [KNG-51](https://linear.app/kngpandi/issue/KNG-51)); [plan](specs/navigation/IMPLEMENTATION_PLAN.md), [smoke test](guides/road-navigation-smoke-test.md) |
 | Houses, rooms, property sales, rent, home ownership | live | partial | vision | none | — | pending | design after ownership decision; [legacy menus](specs/legacy/inventory-menu-screens.md), [vision §4](vision/vision.md#4-economy--professions) |
 | Shops, shopkeepers, coupons, gem shop and player buying/selling | live | partial | vision | partial | mixed | pending | design with property economy; [legacy menus](specs/legacy/inventory-menu-screens.md), [items](specs/items/IMPLEMENTATION_PLAN.md) |
 | Resource gathering, production structures and town economy | live | partial | vision | partial | mixed | pending | design integrated economy; [v1 events](specs/legacy/events-v1.md), [gap audit](reports/LEGACY_VS_V2_GAP_ANALYSIS.md) |

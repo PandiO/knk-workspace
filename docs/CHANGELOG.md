@@ -2,6 +2,22 @@
 
 This is a human-readable record of capabilities merged into the V3 default branches. It is not a complete commit log or a promise that code has been deployed to a public server. See [the feature register](FEATURE_REGISTER.md) for design, branch and live-verification status. Entries before this changelog was established on **2026-09-28** are a selective backfill from merge records and feature plans; linked plans describe the precise live-test coverage.
 
+## 2026-10-08
+
+- Road navigation is merged ([KNG-27](https://linear.app/kngpandi/issue/KNG-27); knk-plugin `main` `f9026cb`,
+  knk-web-api `master` `4c570fa`, knk-web-app `main` `b51eba0`). The road graph is built per tile from the world's
+  road materials, with curated tiles that only propose changes after their first build, admin tools (`/knk road …`) and
+  a web-app road admin page. `/navigate` (`/nav`) guides players along the roads with a particle trail and a HUD to a
+  Location, Town, District, Structure (gates included, also as `gate:`), street or named road node. It respects gate
+  state, pass-through rights, domain entry/exit rules and sieges, and re-routes on live changes. Design:
+  [navigation](specs/navigation/DESIGN.md).
+- Walkable last-mile paths ([KNG-51](https://linear.app/kngpandi/issue/KNG-51)): near a target, and after the road
+  ends, the trail follows a path a player can walk (stairs, ladders, doors they may open, no regions they may not
+  enter) instead of a straight line. Without one it says "No conventional path to X found."
+  ([last-mile design](specs/navigation/LAST_MILE_PATHFINDING.md)).
+- Live-tested on the dev server 2026-10-07/08 ([smoke-test guide](guides/road-navigation-smoke-test.md), findings
+  N1-N12). Still open: the siege check (C6). Follow-ups: KNG-73, KNG-74, KNG-75, KNG-76.
+
 ## 2026-10-06
 
 - PermissionGrant forms can now search for and pick a holder (a user or a permission group) in the web app: the web-app half of the PermissionHolder lookup is merged ([KNG-38](https://linear.app/kngpandi/issue/KNG-38), knk-web-app `main` `24b60ac`), completing the API half from 2026-10-04.
