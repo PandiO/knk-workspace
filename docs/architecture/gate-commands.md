@@ -1,6 +1,6 @@
 # Gate commands — `/gate` (structure) and `/gatedoor` (door), `here` and look-at targets
 
-**Status:** Implemented on a branch, **not merged, not live-tested**. knk-plugin `claude/kng-77-gate-commands` (`b9e9d58`, from `main` @ `f9026cb`); knk-web-api `claude/kng-78-reserved-gate-names` (`983f1cd`, `9ea328d`, from `master` @ `4c570fa`). Linear [KNG-77](https://linear.app/kngpandi/issue/KNG-77), [KNG-78](https://linear.app/kngpandi/issue/KNG-78), [KNG-79](https://linear.app/kngpandi/issue/KNG-79)
+**Status:** Implemented on a branch, **not merged, not live-tested**. knk-plugin `claude/kng-77-gate-commands` (`b9e9d58` + review fixes `0bf6f15`, from `main` @ `f9026cb`); knk-web-api `claude/kng-78-reserved-gate-names` (`983f1cd`, `9ea328d`, from `master` @ `4c570fa`). Linear [KNG-77](https://linear.app/kngpandi/issue/KNG-77), [KNG-78](https://linear.app/kngpandi/issue/KNG-78), [KNG-79](https://linear.app/kngpandi/issue/KNG-79)
 **Last updated:** 2026-10-08
 **Related:** [gate specs](../specs/gate-structure-animation/) (GateStructure/GateDoor model, decisions 5.0-B/5.0-D); the dated [command catalog](../specs/user-features/COMMAND_CATALOG_V3.md) §2 describes the tree before KNG-77
 
@@ -59,8 +59,8 @@ The issue recommended sibling roots over a nested `/knk gate door ...` literal, 
 
 - **Structure layer:** `knk.gate.open.<structureId>` / `knk.gate.open.*`, `knk.gate.close.<structureId>` / `knk.gate.close.*`, and `knk.gate.admin` (default op).
 - **Door layer:** `knk.gatedoor.open.<doorId>` / `knk.gatedoor.open.*`, `knk.gatedoor.close.<doorId>` / `knk.gatedoor.close.*`, and `knk.gatedoor.admin` (default op; a `plugin.yml` child of `knk.gate.admin`).
-- **A structure grant covers that structure's doors.** The code checks this explicitly (`GateCommandSupport.mayControlDoor`, `isDoorAdmin`), so it also holds for in-house grants, which don't see `plugin.yml` children.
-- **Breaking:** before KNG-77, `knk.gate.open.<id>` meant a **door** id. No permission catalog or seed data uses per-id gate nodes (checked 2026-10-08), so this needed no migration.
+- **A structure grant covers that structure's doors, and the admin nodes cover open/close/toggle.** `knk.gate.admin` covers every gate and door; `knk.gatedoor.admin` covers every door but not whole gates. The code checks this explicitly (`GateCommandSupport.mayControlDoor`/`mayControlStructure`, `isDoorAdmin`), so it also holds for in-house grants, which don't see `plugin.yml` children.
+- **Breaking:** before KNG-77, `knk.gate.open.<id>` / `knk.gate.close.<id>` meant a **door** id; now the id is a **structure** id. No code, permission catalog or seed data uses per-id gate nodes (checked 2026-10-08). **To do before merging (developer):** check the live LuckPerms/Bukkit permissions and the in-house `PermissionGrants` table for `knk.gate.open.<n>` / `knk.gate.close.<n>`, and rename any you find to `knk.gatedoor.open.<n>` / `knk.gatedoor.close.<n>`. Otherwise such a holder loses door n and gains structure n. `/gate open <n>`, where n is also a door of another gate, prints a note pointing to `/gatedoor`.
 - Per-id nodes are warmed (`CommandPermissions.warm`) after the target is resolved, so a fresh in-house grant isn't refused on a cold cache.
 
 ## 4. Implicit targets: `here` (KNG-78) and look-at (KNG-79)
@@ -75,10 +75,12 @@ The issue recommended sibling roots over a nested `/knk gate door ...` literal, 
 
 **Look-at.** When `open`, `close`, `toggle`, `info` or `repair` are given no target, at either layer and for players only:
 1. One block ray trace (`World.rayTraceBlocks`, up to `gates.lookat.max-distance`, default **12**, fluids and passable blocks ignored) finds what blocks the view.
-2. A ray–box test against the door regions picks the region entered first. A door behind the hit block is hidden; a closed door's own block lies inside its region; an open gate's opening is entered with no block hit.
+2. A ray–box test against the door regions picks the region entered first. A door behind the hit block is hidden; a closed door's own block lies inside its region; an open gate's opening is entered with no block hit. A region the eye is already **inside** (standing in an open opening, or on a lowered drawbridge) counts only when the looked-at block lies in it. Otherwise standing in one gate would pick that gate whichever way you face.
 3. If nothing is in sight, the `here` logic runs; if that finds nothing, the usage message is shown.
 
 The setting-changing commands (`health`, `active`, `invincible`, `capture`, `redefine`, `override`) and `tp` never infer a target. They need an explicit id/name or `here`. Every reply names the resolved door and gate (for example "Using the door you're looking at: door 'Left' (#16) of gate 'North Gate'"), so a wrong guess shows straight away. `gates.lookat.enabled: false` turns look-at off.
+
+**Worlds.** A door saved with a blank world counts as being in the server's primary world (the world the animation falls back to). It is never matched in other worlds at the same coordinates.
 
 **Cost.** Both run only when a command runs: one ray trace plus one box per loaded door in the player's world. Never per tick, never in a listener, never on tab completion (`GateCommandTargetsTest.tabCompletionNeverRayTraces`). The geometry is Bukkit-free in `knk-core` `core/gates/target/` (`GateBox`, `GateTargetMath`, `GateToggle`).
 
@@ -103,8 +105,8 @@ gates:
 3. `/gate` and `/gatedoor` behave exactly like `/knk gate` and `/knk gatedoor`, and Tab completes subcommands, `here`, and structure or door ids/names.
 4. Stand within 15 blocks of one gate: `/gate toggle here` works, and `/gatedoor repair here` asks you to pick when two doors are in range. Clicking a line runs the command for that door.
 5. Far from any gate, `here` says "No gate door within 15 blocks".
-6. Look at a **closed** door and run `/gatedoor toggle` with no target: that door opens. Look through the now **open** opening and run `/gatedoor toggle` again: it closes. With a wall in between, the command falls back to `here`.
+6. Look at a **closed** door and run `/gatedoor toggle` with no target: that door opens. Look through the now **open** opening and run `/gatedoor toggle` again: it closes. With a wall in between, the command falls back to `here`. Stand inside an open opening and look at another gate: the other gate is picked.
 7. `/gate repair` while looking at a gate repairs all its doors.
-8. A player with only `knk.gate.open.<structureId>` can open that gate and each of its doors, but not other gates. A player with only `knk.gatedoor.open.<doorId>` can open just that door.
+8. A player with only `knk.gate.open.<structureId>` can open that gate and each of its doors, but not other gates. A player with only `knk.gatedoor.open.<doorId>` can open just that door. A non-op staff member with an in-house `knk.gatedoor.admin` grant can open, repair and tp any door, but can't run `/gate open` on a whole gate.
 9. The deprecated `/knk gate admin repair <door>` still works and prints the replacement command.
 10. In the web app, renaming a gate or door to "here" fails with a 400 message.
