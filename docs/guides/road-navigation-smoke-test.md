@@ -17,6 +17,8 @@ gates among the destinations) and N2 (walk paths cut off by the length cap) fixe
 and verified live; A5 (the 13 m wall case, Northern Gate) passed. **2026-10-08:** A3, A4, A6 passed; findings N3
 (recorded road through the South Gate had no gate), N4 (a district made after the build was not avoided) and the
 partial-path decision (A1) fixed in knk-plugin `d369ad4`/`f2baf4e`/`a4892db`, on top of a merge of every trunk.
+Run 3 (same day): A1, A7, A8 confirmed live; findings N5 (false "arrived" at a partial route's end), N6 (a blocked
+start edge could not be left) and N7 (walk trail hugging corners) fixed in knk-plugin `3561034`/`b6257a9`/`ff5edf09`.
 **Last updated:** 2026-10-08
 **Sources:** the "Developer to-do" blocks of Phases 1, 3, 4 and 5 in `docs/specs/navigation/IMPLEMENTATION_PLAN.md`;
 progress report `docs/reports/2026-09-27-road-navigation-chain.md`. If this file and a plan block disagree, the plan wins.
@@ -848,6 +850,40 @@ predicate as KNG-56's `DomainAccessService`), knk-web-api `fa234f7` (no conflict
 FormWizard path tests) or on the branch before the merge (`RoadNetworkServiceTests.Validation_GeometryFarFromItsNode`).
 web-app 6 failing suites, all already failing on main (5) or on the branch before the merge
 (`RoadsAdminPage › deletes a profile after confirmation`).
+
+**Run 3 (2026-10-08, developer, knk-plugin `a4892db`, API `fa234f7`):**
+- **A1 works** (partial path to the closest reachable spot, then a straight line). Remark: the walk trail rounds corners
+  so tightly that it sometimes seems to stop → **finding N7**.
+- **A7 works** (the closed South Gate is seen: "No open route to Merchant Square - the South Gate is closed. Guiding
+  you to the gate."), but the messages are wrong → **finding N5**:
+  - Standing ~6 blocks from the closed gate: start message, "No open route", then at once "You have arrived at Merchant
+    Square".
+  - From ~30 blocks away on the bridge: the trail led to the gate; ~15 blocks on, "A shorter route opened" with a trail
+    off the bridge onto the ice, then at once "You have arrived at Merchant Square" while still on the bridge. (The only
+    other way is a drop onto the frozen lake and the harbour docks, not a road.)
+- **A8:** standing in front of district 16, `/nav` said "You have arrived" at once, although a ~200-block road detour
+  exists (the way through the district is ~30) → **findings N5 and N6**.
+- **Finding N5 — a partial route's end counted as arrival.** `NavigationSession` gave `ArrivedEffect` within
+  arrive-distance of *any* route's end, partial ones included, so the runtime said "You have arrived at <destination>"
+  (or started the last off-road leg towards the target). Also, while a route was partial every improvement re-check
+  adopted whatever came back, so the same partial route returned as "A shorter route opened" (the live tags' re-check
+  every minute triggers this); and the trail drew a straight leg from the gate on to the target (across the ice).
+  **Fixed in knk-plugin `3561034`:** the end of a partial route says once "End of the open route to X: <reason>. The
+  route continues when it opens - /navigate stop to end." and keeps guiding; only a full route replaces a partial one
+  ("The way to X is open again - following it now."); no straight leg after a partial route.
+- **Finding N6 — standing on a blocked edge.** In both cases the player stood on the blocked edge itself (edge 10139
+  through the South Gate; the road into district 16). The router never left a blocked start edge (Phase 2d decision),
+  so the partial route was empty - hence the instant "arrived" - and the detour back along the road was never found.
+  **Fixed in knk-plugin `b6257a9`:** each part of the start edge, from the player to a node, is tagged from the world
+  (regions, gate doors) and checked on its own; the router walks the open side (`RouteRequest.StartSides`), the
+  explainer and the re-check honour it. In A8 the route now goes back and takes the detour; in front of the South Gate
+  the result is "End of the open route ...: the South Gate is closed".
+- **Finding N7 — the walk trail hugs corners.** The search minimised length only, so paths ran along walls and cut
+  diagonally past corner blocks; the trail then vanished behind the corner. **Fixed in knk-plugin `ff5edf09`:**
+  `navigation.walk.wall-cost: 1.0` - a step beside a wall (8 neighbours, feet or head height) costs one block extra.
+  Replay of the Merchant Square leg: one block off the walls, 72.7 blocks (was 67.7), within the cap.
+
+**Deploy for run 4:** knk-plugin `claude/navigation-walkable-path` `ff5edf09` (API unchanged, `fa234f7`).
 
 **Deploy for run 3:** knk-plugin `claude/navigation-walkable-path` `a4892db` and knk-web-api `claude/road-navigation`
 `fa234f7` (the merged plugin needs KNG-56's `GET /api/Domains/access-rules`). The dev DB lacks trunk's KNG-59

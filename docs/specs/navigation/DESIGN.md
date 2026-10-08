@@ -599,6 +599,13 @@ told exactly why and guided as far as they can go:
 - *"You may not enter Kardenna Castle. Guiding you to its edge."* (destination domain denied: route ends at the region
   boundary, §6.3)
 
+*Live test 2026-10-08 (findings N5, N6):* the end of such a partial route is **not an arrival**. The player is told
+once ("End of the open route to X: the South Gate is closed. The route continues when it opens"), the session keeps
+guiding, and only a *full* route replaces it when the element opens ("The way to X is open again"). The trail of a
+partial route has no straight leg on to the target. A player standing **on** a blocked edge may walk its open side:
+each part of the start edge, from the player to a node, is tagged from the world and checked on its own
+(`RouteRequest.StartSides`), so the way back to another road is open (before, a blocked start edge could not be left).
+
 **Live changes.** `NavigationService` listens to gate state changes (an observer on `GateManager`'s animation-complete
 notifications), domain cache refreshes and siege state changes:
 

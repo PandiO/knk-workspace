@@ -1,7 +1,7 @@
 # Road Navigation — Last-mile walkable pathfinding (design)
 
 **Status:** Design decided — **Phases A-C implemented** (knk-core `roads/walk/`, knk-paper `navigation/walk/` + direct-mode wiring, unmerged, knk-plugin `claude/navigation-walkable-path` `305829b`, 2026-10-02); live test and Phase D next. Reviewed by the developer on 2026-10-02 (§11): decided items 1-4, 5 (pending live test), 6, 8; item 7 (scope) decided. No open decisions remain except the live test of item 5.
-**Last updated:** 2026-10-08 (rev. 7: §11-5 partial paths implemented; rev. 6: §5/§9 detour allowance, live-test finding N2; rev. 5: §10 "Phase C status"; rev. 4: §10 "Phase B status"; rev. 3: §10 "Phase A status"; rev. 2: ladders, interact-gated doors, chunk-loading rationale, §13 KNG-36)
+**Last updated:** 2026-10-08 (rev. 8: §4/§9 wall cost, finding N7; rev. 7: §11-5 partial paths implemented; rev. 6: §5/§9 detour allowance, live-test finding N2; rev. 5: §10 "Phase C status"; rev. 4: §10 "Phase B status"; rev. 3: §10 "Phase A status"; rev. 2: ladders, interact-gated doors, chunk-loading rationale, §13 KNG-36)
 **Linear:** [KNG-51](https://linear.app/kngpandi/issue/KNG-51/navigation-last-mile-walkable-pathfinding-for-direct-modeoff-road-legs)
 (split out of [KNG-27](https://linear.app/kngpandi/issue/KNG-27/road-navigation-auto-detected-road-graph-junctionsendpoints-from-road))
 **Parent design:** [DESIGN.md](DESIGN.md) §6.2 ("real off-road pathfinding is Phase 6" — this document is the
@@ -227,7 +227,9 @@ path (they remain for the straight fallback). `drawDirect(viewer, target)` stays
 
 `enabled` (true; false = today's straight lines — also the kill switch), `max-expansions` (20000),
 `max-length-factor` (1.75), `max-length` (96), `detour-allowance` (48, rev. 6), `max-drop` (3), `drop-penalty` (10), `capture-margin` (16), `chunk-ttl-seconds` (10),
-`recompute-distance` (6), `max-concurrent-searches` (2).
+`recompute-distance` (6), `max-concurrent-searches` (2), `wall-cost` (1.0, rev. 8: a step onto a cell with a wall
+among its 8 neighbours costs this much extra, so paths keep a block from walls and round corners wider - live-test
+finding N7, the trail seemed to stop behind tight corners).
 
 ## 10. Phases (one fresh session each, order matters)
 
