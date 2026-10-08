@@ -1,6 +1,6 @@
 # Knights & Kings feature register
 
-**Status:** Active · **Last updated:** 2026-10-04 · **First reconciled:** 2026-09-28 · [KNG-33](https://linear.app/kngpandi/issue/KNG-33)
+**Status:** Active · **Last updated:** 2026-10-06 · **First reconciled:** 2026-09-28 · [KNG-33](https://linear.app/kngpandi/issue/KNG-33)
 
 This is the index of intended gameplay and shipped surfaces, not a substitute for a feature's design, code, or issue. V1's wider gameplay and V2's stronger data model are both inputs to V3. An absent V2 port is **not** a decision to drop a V1 feature. The [vision](vision/vision.md) decides intent; a [feature spec](specs/README.md) decides detailed behavior; the actual default branches decide whether code has shipped.
 
@@ -9,7 +9,7 @@ This is the index of intended gameplay and shipped surfaces, not a substitute fo
 **Targeted refresh (2026-10-04):** the moderation/private-message rows were rechecked after plugin
 `main` merge `1a69ec3`; KNG-24, KNG-25 and KNG-28 are merged and Done. KNG-26/29/30 are also Done
 on their stated default branches. KNG-38 is Done with its API half on `master` at merge `300aa4c`;
-the web-app half remains on its pushed feature branch, so the cross-repo merge state is mixed.
+its web-app half followed on `main` at merge `24b60ac` (2026-10-06), so KNG-38 is fully merged.
 
 ## Reading and updating the register
 
@@ -51,10 +51,10 @@ For each changed row, include its source, spec or issue and the date of the evid
 | World activity telemetry, traversal heatmaps, interactions | — | partial | open | none | — | pending | design in [KNG-34](https://linear.app/kngpandi/issue/KNG-34); include retention, privacy and performance decisions |
 | Coin/gem payments, balances and persistent transaction ledger | live | partial | spec | complete | trunk | live | maintain; [currency design](specs/currency-payments/DESIGN.md), [KNG-21](https://linear.app/kngpandi/issue/KNG-21) |
 | XP and other numeric-property provenance and auditing | partial | partial | open | partial | mixed | pending | design [KNG-34](https://linear.app/kngpandi/issue/KNG-34) as extension of ledger/audit; [KNG-23](https://linear.app/kngpandi/issue/KNG-23) is marked duplicate, not proof of complete XP coverage |
-| Item blueprints, grades, tags, origins, custom enchantments | live | partial | spec | complete | trunk | mixed | maintain; [items](specs/items/), [KNG-5](https://linear.app/kngpandi/issue/KNG-5) |
+| Item blueprints, grades, tags, origins, custom enchantments | live | partial | spec | complete | trunk | mixed | maintain; [items](specs/items/), [render pipeline](architecture/item-render-pipeline.md) (single assembler path + dark-gray descriptions merged and live-tested 2026-10-05), [KNG-5](https://linear.app/kngpandi/issue/KNG-5) |
 | Item instances, ownership transfer, soulbound/ghosted, age bonuses | live | partial | spec | partial | mixed | mixed | finish instance lifecycle; [vision §9.1](vision/vision.md#91-items), [instance model](https://github.com/PandiO/knk-web-api/blob/master/Models/Item/ItemInstance.cs) |
 | Kits, claims, first-join and premium purchases | partial | partial | spec | complete | trunk | mixed | finish first-join live check; [kit plan](specs/kits/IMPLEMENTATION_PLAN.md) |
-| Lootboxes, rarity and world pickups | live | — | spec | complete | trunk | mixed | retest and decide [KNG-31](https://linear.app/kngpandi/issue/KNG-31); [plan](specs/lootboxes/IMPLEMENTATION_PLAN.md) |
+| Lootboxes, rarity and world pickups | live | — | spec | complete | trunk | mixed | retest and decide [KNG-31](https://linear.app/kngpandi/issue/KNG-31) (follow-ups KNG-44 siege reel item hold and KNG-45 batch odds merged 2026-10-04, accepted without a live check; reel decoy enchantments live-tested and merged 2026-10-05); [plan](specs/lootboxes/IMPLEMENTATION_PLAN.md) |
 | Inventory menu engine and initial hub/content | live | partial | spec | complete | trunk | mixed | maintain; [engine](specs/inventory-menu/IMPLEMENTATION_PLAN.md), [content](specs/inventory-menu/CONTENT_PORT_PLAN.md) |
 | Remaining legacy menus: property, shops, friends, quests, skills, support | live | partial | open | none | — | pending | design per owning feature; [screen allocation](specs/legacy/inventory-menu-screens.md) |
 | Private messages, reply, ignore and social spy | live | partial | spec | complete | trunk | mixed | maintain; KNG-25 completed; [design](specs/private-messages/DESIGN.md) |
