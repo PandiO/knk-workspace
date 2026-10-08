@@ -605,6 +605,11 @@ guiding, and only a *full* route replaces it when the element opens ("The way to
 partial route has no straight leg on to the target. A player standing **on** a blocked edge may walk its open side:
 each part of the start edge, from the player to a node, is tagged from the world and checked on its own
 (`RouteRequest.StartSides`), so the way back to another road is open (before, a blocked start edge could not be left).
+The live re-check only judges the route **ahead** of the player: a gate closing behind them is no block (N10). A
+pass-through gate follows the right-click rule exactly: a gate admin passes any door, anyone else a door with
+AllowPassThrough and the use node, with Bukkit's or KnK's permissions (N11). The start snaps to a road that connects
+to the goal when the nearest one is a stretch on its own (N12). A domain asked for without `spawn`/`region` is
+reached by standing in its region (N9); making the default configurable is KNG-73.
 
 **Live changes.** `NavigationService` listens to gate state changes (an observer on `GateManager`'s animation-complete
 notifications), domain cache refreshes and siege state changes:

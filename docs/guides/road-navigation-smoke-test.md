@@ -19,6 +19,8 @@ and verified live; A5 (the 13 m wall case, Northern Gate) passed. **2026-10-08:*
 partial-path decision (A1) fixed in knk-plugin `d369ad4`/`f2baf4e`/`a4892db`, on top of a merge of every trunk.
 Run 3 (same day): A1, A7, A8 confirmed live; findings N5 (false "arrived" at a partial route's end), N6 (a blocked
 start edge could not be left) and N7 (walk trail hugging corners) fixed in knk-plugin `3561034`/`b6257a9`/`ff5edf09`.
+Run 4 (same day): the rest of A-D run; N8-N12 fixed in knk-plugin `62cbc36`..`d24f6c1`; follow-ups KNG-73, KNG-74,
+KNG-75; still open: C6 (siege), and re-checks of the run 4 fixes.
 **Last updated:** 2026-10-08
 **Sources:** the "Developer to-do" blocks of Phases 1, 3, 4 and 5 in `docs/specs/navigation/IMPLEMENTATION_PLAN.md`;
 progress report `docs/reports/2026-09-27-road-navigation-chain.md`. If this file and a plan block disagree, the plan wins.
@@ -884,6 +886,44 @@ web-app 6 failing suites, all already failing on main (5) or on the branch befor
   Replay of the Merchant Square leg: one block off the walls, 72.7 blocks (was 67.7), within the cap.
 
 **Deploy for run 4:** knk-plugin `claude/navigation-walkable-path` `ff5edf09` (API unchanged, `fa234f7`).
+
+**Run 4 (2026-10-08, developer, knk-plugin `ff5edf09`):** N5, N6, N7 confirmed. A9 with interact rights, A10, A11,
+A14 pass; A12, A13 accepted. B3 passes; B4 accepted. C1.1, C1.5, C2, C8, C9, C10, C11 pass; C5, C7 accepted;
+C3 passes apart from N10. D1, D3, D4 pass. **C6 (siege) not run yet** - to do later: a locked gate is passable for
+non-members, joining a lobby ends navigation, `/navigate` is refused in a lobby.
+- **Finding N8 — a blocked walk path fell back to the straight line (A8, A9).** When regions, closed doors or gates
+  leave no walkable way, direct mode drew the straight line through them. The developer wants it said instead,
+  "conventional" on purpose (secret passages). **Fixed in knk-plugin `f1d0ad2`:** a search that ran and found no way
+  says "No conventional path to X found." once per leg and draws no straight line - the partial path when there is
+  one, else no trail. A search that could not run (chunks not loaded, an error) keeps the straight line.
+- **B1, B2, C1.2-C1.4 - spawn vs region.** The "weird corner" of B1 and the district spawn of B2 are the default
+  mode: a domain without `spawn`/`region` goes to its spawn Location; `region` goes to the closest point of the region
+  along the cheapest road route (works, C1.4). The developer wants the default configurable per domain type with
+  per-domain overrides, in the web app: **KNG-73**. **Finding N9 — "already in" only in region mode (B2).** Standing in
+  Merchant's District, `/nav Merchant's District` guided to its spawn. **Fixed in knk-plugin `e3f34ea`:** without
+  `spawn`, being in the domain's region is "You are already in X"; with `spawn` the spawn point stays the target.
+- **Finding N10 — a gate behind the player blocked the route (C3).** Through the gate, still near it on the
+  destination's side, the gate closing (or `/knk gate open` animating it - OPENING counts as blocked) gave "blocked
+  by the closed gate". The re-check judged every step, also the ones already walked. **Fixed in knk-plugin `eed5d03`:**
+  steps behind the player are skipped; on the current step only the stretch ahead counts.
+- **Finding N11 — no pass-through for the developer (C4).** No hint, and the route stopped at the gate.
+  `GateAvailability` required the door's AllowPassThrough on top of the right-click rule, but `knk.gate.admin` passes
+  any door (it "bypasses AllowPassThrough"). And the gate rules read only Bukkit permissions, not KnK's model (ops,
+  API grants with wildcards). **Fixed in knk-plugin `62cbc36` (+ test `91abc1b`):** the route follows the right-click
+  rule; nodes are checked with Bukkit's or KnK's permissions. Who passes: a gate admin (`knk.gate.admin`, ops by
+  default) any door; anyone else a door with AllowPassThrough and `knk.gate.passthrough.use`.
+- **Finding N12 — "No road connects you to X" 15 blocks from a road.** The snapper took the nearest edge; the dev
+  network has short stretches the build left on their own (components of 2-5 nodes near town, e.g. component 2601 at
+  x 1530-1552, z -434..-412), so the start was in no goal's component. **Fixed in knk-plugin `d24f6c1`:** the start is
+  re-snapped to a road that connects to a goal within the snap distance (or a point target to the start's network).
+- **D2:** works; the refusal message should also go to chat, it fights the navigation arrow in the action bar:
+  **KNG-74**.
+- **Off-road destinations further than 48 blocks** ("X is too far from any road", also when standing on a road): the
+  destination must be within `max-snap-distance` (48) of a road, and a target within 48 blocks of the player is
+  direct mode only. Combining road + walk legs (a walk leg from the player to the road too) is feasible in steps:
+  **KNG-75**.
+
+**Deploy for run 5:** knk-plugin `claude/navigation-walkable-path` `d24f6c1` (API unchanged, `fa234f7`).
 
 **Deploy for run 3:** knk-plugin `claude/navigation-walkable-path` `a4892db` and knk-web-api `claude/road-navigation`
 `fa234f7` (the merged plugin needs KNG-56's `GET /api/Domains/access-rules`). The dev DB lacks trunk's KNG-59
