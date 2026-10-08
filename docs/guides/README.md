@@ -7,6 +7,8 @@ Use [documentation maintenance](developer/DOCUMENTATION_MAINTENANCE.md) when a f
 | Guide | Use | Coverage note |
 |---|---|---|
 | [Documentation maintenance](developer/DOCUMENTATION_MAINTENANCE.md) | What to update at implementation, merge and live test | Current project-wide process |
+| [Production installation](production-installation.md) | Set up a production host: MySQL, API, web app, Paper server, secrets, seed data, CI/CD plan, first-run checklist | **Draft v1 (2026-10-07), KNG-64 security update 2026-10-08**; DB/API/seed/nginx steps rehearsed in a scratch environment, Paper and CI/CD untested. Re-check its § 2 gaps and the seed table manifest after each trunk merge |
+| [Closed alpha go-live](alpha-go-live.md) | Host the closed alpha on the NAS behind Cloudflare Tunnel + Access: compose, nginx, tunnel, allow-list, plugin, first admin, go-live checklist, tester invite | **Draft v1 (2026-10-08)**; requires the KNG-64 hardening merged; not yet followed on the real NAS |
 | [Code map](developer/CODEMAP.md) | Find component code | Verify paths against each current default branch |
 | [Commit conventions](developer/GIT_COMMIT_CONVENTIONS.md) | Commit format | Current convention; branch rules live in `ACTIVE_SESSIONS.md` |
 | [API reading](web-api-reading-guide.md) / [web app reading](web-app-reading-guide.md) | Orient a contributor | Refresh when architecture changes |
