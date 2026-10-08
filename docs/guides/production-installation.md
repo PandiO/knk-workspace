@@ -3,7 +3,7 @@
 **Status:** Draft v1 — written for review. Not yet followed on a real production host. The database, API, seed and
 web-server steps were rehearsed in a scratch environment on 2026-10-07 (see [Appendix A](#appendix-a--what-was-verified-and-how)).
 The Paper server steps and the CI/CD workflows are untested drafts.
-**Last updated:** 2026-10-07
+**Last updated:** 2026-10-08 (security and alpha-hosting update for KNG-64)
 **Applies to:** trunk only. knk-web-api `master` `1805cf9`, knk-web-app `main`, knk-plugin `main` `c7d5a1e`; 61 EF
 migrations, the latest being `20261006193103_UniquePermissionGrantHolderNode`. Feature branches that haven't been
 merged, such as road navigation, are not covered. Re-check § 2 and the seed table manifest after each trunk merge.
@@ -14,6 +14,14 @@ This guide does two jobs. It is a **runbook**: commands in order, ending in a [f
 It is also a **primer**: each step says *why* it is done that way, because the goal is to learn how production
 environments are set up in general. Boxes marked **Concept** explain the general idea. Boxes marked **KnK** explain
 what is specific to this project.
+
+> **Update 2026-10-08 — KNG-64 (closed alpha hardening).** The [KNG-63 assessment](../reports/2026-10-08-web-app-ux-assessment.md)
+> found the API mostly unauthenticated (anonymous writes, public user list with emails, self-escalation, unrevocable
+> sessions). The fixes are on branch `claude/ui-ux-assessment-discussion-66vc2l` in all three code repos and follow the
+> [alpha hardening plan](../specs/alpha-hardening/IMPLEMENTATION_PLAN.md). Steps marked **[KNG-64]** describe behaviour
+> **after that merge**; don't expose an API built from an older commit. For the **closed alpha on the NAS behind
+> Cloudflare Tunnel**, follow [alpha-go-live.md](alpha-go-live.md). This guide stays the reference for a public VPS
+> (open beta and later).
 
 ---
 
@@ -67,7 +75,7 @@ what is specific to this project.
 | Browser → web app | HTTPS, static files | none | nginx |
 | Browser → API | HTTPS `/api/...` (same origin) | JWT bearer + httpOnly refresh cookie | web app `src/config/appConfig.ts:11`; API `Security:Jwt:*` |
 | Plugin → API | HTTP on loopback | `X-API-Key` = `Security:PluginApiKey` | plugin `api.*` in `config.yml`; API env |
-| API → plugin | HTTP `127.0.0.1:8081` (`RegionHttpServer`) | **none** (see § 2) | API `MinecraftPlugin:BaseUrl`; plugin `region-http.port` |
+| API → plugin | HTTP `127.0.0.1:8081` (`RegionHttpServer`) | **none** today (G6); `X-API-Key` and a loopback bind **[KNG-64]** | API `MinecraftPlugin:BaseUrl`; plugin `region-http.port` |
 | API → MySQL | TCP loopback | DB user `knk_app` | `ConnectionStrings:MySqlDbConnection` |
 | Players → Paper | TCP 25565 | Mojang (`online-mode=true`) | `server.properties` |
 
@@ -130,6 +138,15 @@ private network or VPN and add TLS.
 > other two), are green in CI, and are tagged (§ 10.2). The developer's standing feature branches, such as
 > `claude/road-navigation`, are pre-release.
 
+### 1.5 Alternative for the closed alpha: NAS + Cloudflare Tunnel
+
+For a small invite-only alpha, you can run the same containers on a home NAS and publish only the web origin through a
+**Cloudflare Tunnel** (outbound-only, no open HTTP ports), with **Cloudflare Access** as an allow-list in front of it.
+Cloudflare terminates TLS. nginx and certbot are replaced by a small web container plus `cloudflared`, and the
+Minecraft port is forwarded on the router as before. The reasoning is in the
+[alpha hardening plan § 3](../specs/alpha-hardening/IMPLEMENTATION_PLAN.md#3-alpha-hosting-recommendation), and the
+runbook is in [alpha-go-live.md](alpha-go-live.md). Move to the VPS topology above before an open beta.
+
 ---
 
 ## 2. Code changes to make before go-live
@@ -141,20 +158,34 @@ where it's used.
 
 | # | Severity | Repo | Gap | Workaround in this guide | Proper fix |
 |---|---|---|---|---|---|
-| G1 | **Blocker** | web-app | API base URL hard-coded to `http://localhost:5294/api` (`src/config/appConfig.ts:11`). Nothing reads env vars. | Build with `baseUrl: '/api'` (same origin), § 8.1 | Read `process.env.REACT_APP_API_BASE_URL` with `/api` as default |
+| G1 | **Blocker** | web-app | API base URL hard-coded to `http://localhost:5294/api` (`src/config/appConfig.ts:11`). Nothing reads env vars. | Build with `baseUrl: '/api'` (same origin), § 8.1 | Read `process.env.REACT_APP_API_BASE_URL` with `/api` as default **— [KNG-64] fixed on branch, pending merge** |
 | G2 | **Blocker** | web-app | `npm ci` fails: `package-lock.json` is out of sync (`Missing: yaml@2.9.1 from lock file`). CI needs reproducible installs. | `npm install` (not reproducible) | Run `npm install`, commit the updated lock file, then use `npm ci` everywhere |
 | G3 | Should-fix | web-app | `CI=true npm run build` fails on ~20 existing ESLint warnings (CRA treats warnings as errors under CI) | Build with `CI=false` | Fix the warnings, then build with `CI=true` |
-| G4 | Should-fix | web-api | CORS origins hard-coded to localhost (`Program.cs:131-147`) | Same origin (§ 1.1) makes CORS irrelevant | Read the allowed origins from config (`Cors:AllowedOrigins`) |
-| G5 | Should-fix | web-api | No forwarded-headers support: behind nginx every request seems to come from 127.0.0.1, so the password-reset cooldown "per email/IP" is per email only, and logs show no client IPs | Accept for beta | `app.UseForwardedHeaders()` with `KnownProxies = 127.0.0.1`, `X-Forwarded-For`/`-Proto` |
-| G6 | Should-fix | plugin | `RegionHttpServer` listens on **all interfaces, port 8081, without authentication** (`http/RegionHttpServer.java:45`) | Firewall blocks 8081 from outside (§ 3.4) | Bind to `127.0.0.1` by default and require the API key |
+| G4 | Should-fix | web-api | CORS origins hard-coded to localhost (`Program.cs:131-147`) | Same origin (§ 1.1) makes CORS irrelevant | Read the allowed origins from config (`Cors:AllowedOrigins`) **— [KNG-64] fixed on branch, pending merge** |
+| G5 | Should-fix | web-api | No forwarded-headers support: behind nginx every request seems to come from 127.0.0.1, so the password-reset cooldown "per email/IP" is per email only, and logs show no client IPs | Accept for beta | `app.UseForwardedHeaders()` with `KnownProxies = 127.0.0.1`, `X-Forwarded-For`/`-Proto` **— [KNG-64] fixed on branch, pending merge** |
+| G6 | Should-fix | plugin | `RegionHttpServer` listens on **all interfaces, port 8081, without authentication** (`http/RegionHttpServer.java:45`) | Firewall blocks 8081 from outside (§ 3.4) | Bind to `127.0.0.1` by default and require the API key **— [KNG-64] fixed on branch, pending merge** |
 | G7 | Should-fix | web-api | `dotnet ef migrations bundle` and `migrations script --idempotent` both fail: (a) the design-time host runs the startup seeds in `Program.cs` before migrating, so an empty DB crashes; (b) the idempotent script wraps triggers in procedures (`ERROR 1303`) | "Migrator" image runs `dotnet ef database update` (§ 5.3) | Add an `IDesignTimeDbContextFactory` and a fixed `ServerVersion`, and skip seeds when EF tooling runs |
-| G8 | Should-fix | plugin | Bundled `config.yml` has `allow-untrusted-ssl: true` and an empty `api-key`, so the plugin **disables itself** on first start | Set both in § 9.5 | Default `allow-untrusted-ssl: false` |
+| G8 | Should-fix | plugin | Bundled `config.yml` has `allow-untrusted-ssl: true` and an empty `api-key`, so the plugin **disables itself** on first start | Set both in § 9.5 | Default `allow-untrusted-ssl: false` **— [KNG-64] fixed on branch, pending merge** |
 | G9 | Info | web-api | `ServerVersion.AutoDetect(...)` (`Program.cs:51`) connects to MySQL at startup and while building EF tooling, so the API can't start (or build a bundle) without a reachable DB | `depends_on: service_healthy` in Compose | `new MySqlServerVersion(new Version(8, 4))` |
 | G10 | Info | web-api | `/metrics` is **not** exposed (no Prometheus exporter package); `CLAUDE.md` says otherwise. Telemetry exports OTLP to `localhost:4317` by default | `Telemetry__Enabled=false` until a collector exists | Add the exporter, or run an OTel collector (§ 12.3) |
 | G11 | Info | web-api | `/health/ready` only runs a "self" check, not a DB check | Smoke test hits a DB-backed endpoint (§ 6.4) | `AddDbContextCheck<KnKDbContext>()` |
-| G12 | Info | web-api | `[Authorize(Policy="RequireAdmin")]` (`AdminClientsController`) can never pass: no token carries an `Admin` role claim | none needed | Switch it to `[RequirePermission(...)]` |
+| G12 | Info | web-api | `[Authorize(Policy="RequireAdmin")]` (`AdminClientsController`) can never pass: no token carries an `Admin` role claim | none needed | Switch it to `[RequirePermission(...)]` **— [KNG-64] fixed on branch, pending merge** |
 | G13 | Info | plugin | Jar is always `knk-paper-0.1.0-SNAPSHOT.jar`, `plugin.yml` says `0.1.0`; the task-claim server id is hard-coded `"localhost"` (`KnKPlugin.java:1207`) | Rename the jar on release (§ 10.4) | Take the version from the git tag in Gradle and `processResources` |
 | G14 | Info | all | Each FormConfiguration (and other content authored in the web app) exists **only in the dev DB** (the `docs/specs/*/…_FORMCONFIGS.md` files say so) | The seed data set (§ 7) | The seed manifest stays the single list of shippable tables |
+
+**Security blockers found 2026-10-08 (KNG-63 assessment, confirmed live), fixed by KNG-64.** Don't expose an API
+without these, not even for a closed beta:
+
+| # | Gap (before KNG-64) | Fix ([alpha hardening plan](../specs/alpha-hardening/IMPLEMENTATION_PLAN.md)) |
+|---|---|---|
+| S1 | About 160 of 290 write endpoints have no auth attribute and there's no fallback policy. Anonymous `PUT /api/GameSettings` and anonymous create and delete of content work. | WP1: default-deny filter + a rule on every write + a reflection test (KNG-65) |
+| S2 | `GET /api/Users` returns every email to anyone; permission grants are public | WP2: staff, self or plugin only; no emails in public summaries (KNG-65) |
+| S3 | A moderator can grant themselves `*` | WP3: escalation guard (KNG-65) |
+| S4 | A refresh token works as a bearer token; logout and password reset revoke nothing | WP4: opaque rotated refresh tokens + `TokenVersion` (KNG-66) |
+| S5 | Anyone can pre-register a Minecraft name, and the real player gets attached on first join | WP5: registration needs a code from `/account link` (KNG-67) |
+| S6 | No rate limiting or lockout; enumeration through `check-duplicate` and the login messages | WP6 (KNG-67) |
+| S7 | Passwords and tokens logged to the browser console | WP8 (KNG-69) |
+| S8 | A DB password and JWT secrets committed in `appsettings*.json` | WP7: values removed, fail-fast on placeholders (KNG-68). **Rotate the dev DB password.** |
 
 ---
 
@@ -318,6 +349,17 @@ Security__AllowUnauthenticatedPluginCalls=false
 Security__PasswordResetFrontendBaseUrl=https://play.example.com
 Security__PasswordResetExposeTokenInDevelopment=false
 
+# --- [KNG-64] sessions, signup, abuse protection (defaults shown; omit to keep them) ---
+Security__RefreshCookie__SameSite=Lax            # same origin, so Lax; the cookie path is /api/Auth
+Security__Registration__AllowWebFirst=false      # sign-up needs a code from /account link
+Security__Lockout__MaxFailures=5
+RateLimiting__Auth__PermitPerMinute=10
+RateLimiting__Lookup__PermitPerMinute=20
+
+# --- [KNG-64] nginx on the same host is the only proxy: trust it for the client IP ---
+ForwardedHeaders__Enabled=true
+ForwardedHeaders__KnownProxies=127.0.0.1
+
 # --- mail (password reset links: https://play.example.com/auth/reset-password?token=...) ---
 Email__Provider=Smtp
 Email__SmtpHost=smtp.gmail.com
@@ -340,7 +382,9 @@ Logging__LogLevel__Microsoft.AspNetCore=Warning
 Notes:
 
 - `ASPNETCORE_ENVIRONMENT=Production` matters for more than logging. In Production, Swagger is off, the
-  `AllowUnauthenticatedPluginCalls` bypass is ignored, and the refresh cookie is sent `Secure; SameSite=None`.
+  `AllowUnauthenticatedPluginCalls` bypass is ignored, and the refresh cookie is sent `Secure; SameSite=None`
+  (**[KNG-64]:** `Secure; SameSite=Lax; Path=/api/Auth`, and the API refuses to start when `Security__Jwt__Secret` is
+  empty, shorter than 32 characters, or a value that was ever committed to git).
   That cookie needs HTTPS, so login "works" over plain HTTP, but staying signed in does not.
 - Leave the rest at the `appsettings.json` defaults: `Security:BcryptRounds` 10, the link-code, cooldown and
   token lifetimes, `Discovery:MaxNewPerHour`, the `CurrencyMonitor:*` thresholds, and `ClientActivity`. Override one
@@ -629,6 +673,17 @@ admin's account (§ 6.5).
 
 ### 6.5 Bootstrap the first admin
 
+> **[KNG-64] changed.** `POST /api/Users` now needs the plugin key or staff rights, and web registration needs a
+> code from the game. After the merge, the owner's bootstrap is:
+> 1. Join the Minecraft server (`online-mode=true`). The plugin creates your account with your real UUID.
+> 2. Run `/account link` in game and note the 8-character code.
+> 3. Register at `https://play.example.com/auth/register` with the code, your email and a password. You're logged in.
+> 4. Grant yourself `*` with the plugin key (step 2 below). To find your id, call
+>    `curl -s -H "X-API-Key: $KEY" http://127.0.0.1:5000/api/Users/uuid/<your-uuid>`.
+>
+> The curl registration in step 1 below still works if you add `-H "X-API-Key: $KEY"`, but then the account has no
+> Minecraft link. Prefer the flow above.
+
 > **KnK — how admin rights work.** Permissions are nodes (`knk.admin.user.perm`, `knk.siege.admin.manage`, …),
 > granted to a *permission holder*, which is a user or a group (`PermissionGrant`, resolved by
 > `PermissionResolutionService`). A grant of `*` matches every node. The migrations seed the groups `Default`,
@@ -816,6 +871,8 @@ CYPRESS_INSTALL_BINARY=0 npm install          # npm ci once G2 is fixed; skip th
 sed -i "s#baseUrl: 'http://localhost:5294/api'#baseUrl: '/api'#" src/config/appConfig.ts
 grep -n "baseUrl" src/config/appConfig.ts      # must show: baseUrl: '/api',
 CI=false npm run build                         # G3: CI=true fails on existing lint warnings
+# [KNG-64] after the merge: no sed needed, the URL comes from the environment:
+#   REACT_APP_API_BASE_URL=/api REACT_APP_MC_SERVER_ADDRESS=mc.example.com CI=false npm run build
 tar -C build -czf knk-web-app-1.0.0.tar.gz .
 ```
 
@@ -897,7 +954,8 @@ certbot edits the server block: it adds `listen 443 ssl`, the certificate paths 
 Once HTTPS works, add HSTS to the 443 server block: `add_header Strict-Transport-Security "max-age=31536000" always;`.
 
 > **Concept — why HTTPS isn't optional.** Without it, passwords and tokens cross the network in plain text, and
-> this API's refresh cookie (`Secure; SameSite=None` in Production) is never sent, so "remember me" silently fails.
+> this API's refresh cookie (`Secure; SameSite=None` in Production; `Secure; SameSite=Lax` with **[KNG-64]**) is never
+> sent, so "remember me" silently fails.
 
 > **Third-party assets:** the app loads the Inter font from Google Fonts (`src/index.css:5`) and the logo from a
 > Dropbox link (`src/components/Navigation.tsx:218`). Moving the logo into `public/` before launch is cheap
@@ -1011,6 +1069,10 @@ mcrcon -H 127.0.0.1 -P 25575 -p '<rcon password>' "list"   # console commands ov
        api-key: "<Security__PluginApiKey from /etc/knk/api.env>"
        api-key-header: "X-API-Key"
      timeouts: { connect: 10, read: 10, write: 10 }
+   region-http:
+     bind-address: "127.0.0.1"                 # [KNG-64] loopback only; requires X-API-Key once api-key is set
+   web:
+     public-url: "https://play.example.com"    # [KNG-64] shown in the /account link message
    # region-http.port is not in the file; the default 8081 matches MinecraftPlugin__BaseUrl.
    ```
 
@@ -1278,6 +1340,8 @@ Tick these in order; write problems and fixes into a dated note under `docs/repo
       seed import, and no `PluginApiKey is not set` warning.
 - [ ] `curl 127.0.0.1:5000/health/ready` → `healthy`, and `curl 127.0.0.1:5000/api/health` → `ok`.
 - [ ] `curl -H 'Host: evil.example.org' 127.0.0.1:5000/api/health` → **400** (the AllowedHosts filter works).
+- [ ] **[KNG-64]** `scripts/security/alpha-probe.sh http://127.0.0.1:5000 --player '<test login>:<password>'` (a non-staff
+      throwaway account) prints `ALL CHECKS PASSED`.
 
 **E. Web app and TLS**
 
@@ -1288,7 +1352,9 @@ Tick these in order; write problems and fixes into a dated note under `docs/repo
 - [ ] The browser dev tools Network tab shows API calls going to `https://play.example.com/api/...`, **not**
       `localhost:5294` (G1).
 - [ ] Register your account, log in with "remember me", close the browser, reopen it, and you're still logged in
-      (refresh cookie over HTTPS).
+      (refresh cookie over HTTPS). **[KNG-64]:** registration needs the `/account link` code (§ 6.5). Without
+      "remember me" you're logged out when the browser closes.
+- [ ] **[KNG-64]** Run the probe script against `https://play.example.com` too.
 - [ ] Forgot-password sends a real email whose link opens `/auth/reset-password?token=…` on the production domain,
       and the reset works.
 - [ ] First admin bootstrapped (§ 6.5). The admin pages load. Forms → the entity types show their seeded
