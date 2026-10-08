@@ -932,12 +932,16 @@ non-members, joining a lobby ends navigation, `/navigate` is refused in a lobby.
   state." Cause: the re-check judged a step by its whole edge unless the player had already moved along it. A route
   that starts in the middle of edge 10139 on the town side of the South Gate only walks from the player to the town
   node, but the step's edge carries the gate door (door 13: x 1426-1428, z -454..-452, y 45-48; the edge runs
-  (1418,-463) → (1451,-429) through it), so a closing gate blocked it. To fix on the standing branch: judge every
-  step by the part it walks.
+  (1418,-463) → (1451,-429) through it), so a closing gate blocked it. **Fixed on the standing branch, knk-plugin
+  `a8ec1ec`:** every blocked step is checked on the part it walks (from the player or its entry to its exit).
 - **A8/A9 - a road route exists.** The test target was within 48 blocks, so direct mode searched only a walk path
   (bounded by the detour allowance and 96 blocks) and never the road network, although walking back and round by road
-  reaches it. To do on the standing branch: when the walk search finds no way, try the road route before "No
-  conventional path".
+  reaches it (**finding N13**). **Fixed on the standing branch, knk-plugin `758dbc5`:** when the walk search finds no
+  way, the router is asked once; a road route turns it into a routed navigation ("No walkable way straight to X -
+  following the roads instead.") with a walk path for the last leg; without one, "No conventional path".
+
+**Deploy for run 6 (re-check C3, A8/A9):** knk-plugin `claude/navigation-walkable-path` `758dbc5` (API unchanged).
+These two fixes are not on trunk yet.
 - **Road trail on the Brink stairs to #3588** hugs the road's border; wanted: centred road trails, wider corners,
   stairs/slabs preferred on inclines - **KNG-76**.
 
