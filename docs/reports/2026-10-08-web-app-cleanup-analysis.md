@@ -1,7 +1,7 @@
 # Web app dead-code and cleanup analysis — 2026-10-08
 
-Status: analysis complete. Tier 1 and the Fluent UI removal are being executed on knk-web-app
-`claude/ui-ux-assessment-discussion-66vc2l`, after the alpha hardening commits (see § 9). Tiers 2 and 3 are proposals.
+Status: analysis complete. **Tier 1 and the Fluent UI removal are executed** on knk-web-app
+`claude/ui-ux-assessment-discussion-66vc2l` (unmerged; see § 9). Tiers 2 and 3 are proposals.
 Last updated: 2026-10-08
 Linear: [KNG-71](https://linear.app/kngpandi/issue/KNG-71) (related: [KNG-63](https://linear.app/kngpandi/issue/KNG-63), [KNG-64](https://linear.app/kngpandi/issue/KNG-64))
 Evidence base: knk-web-app `main` @ `84943ff`.
@@ -197,4 +197,12 @@ weight. Tier 3 is a further −1k to −2k lines, net of the new shared componen
 
 ## 9. Execution log
 
-Filled in when the commits land (branch `claude/ui-ux-assessment-discussion-66vc2l`, after the KNG-69 commits).
+Executed on knk-web-app `claude/ui-ux-assessment-discussion-66vc2l`, on top of the KNG-69 alpha commits:
+
+| Commit | What | Verification |
+|---|---|---|
+| `682e06d` chore(app): remove dead code and repo clutter | all Tier 1 files in § 2, `reportWebVitals`, the `.badge*` classes, the unused `components/auth/index.ts` barrel. KNG-69 had already removed `LinkCodeDisplay`, `RegisterSuccessPage` and `ImageUploadModal`. 64 files, −8,387 lines | `tsc --noEmit` clean |
+| `f9f36ec` chore(deps): drop fluent ui and unused packages | `FluentProvider` removed; uninstalled `@fluentui/react-components`, `cra-template-typescript`, `scheduler`, `web-vitals`, `eslint-plugin-react-refresh`; `@testing-library/react` moved to dev (same locked 16.3.1). Lock edited with `npm@11 --package-lock-only`; `npm@11 ci --dry-run` passes | `test:ci`: 4 failed suites / 5 failed tests, the same pre-existing FormWizard + `useEnrichedFormContext` failures as `main`; 452 passing. `CI=false npm run build` OK, main bundle 280.6 → 266.5 kB gzip |
+
+Not executed (needs product decisions, see § 3): `objectConfigs` shrink, the duplicate `useEnrichedFormContext`, the M2M
+create path, Cypress, unused client methods, the logging refactor (rxjs and events), and Tier 3.
