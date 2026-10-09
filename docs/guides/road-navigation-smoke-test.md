@@ -989,6 +989,9 @@ to `Ignored`. [REV7_PROPOSAL.md](../specs/navigation/REV7_PROPOSAL.md) §4.
   refuses entry (KNG-56). Its row counts 1 override when done per domain; clearing the field follows the type again.
 - [ ] **R4** Set it back to `Applies` (or clear the override) and refresh: the route avoids the road again.
 
+Run 1 (2026-10-09): K1-K3 pass, K4/K5 and R1 accepted; R2/R3 blocked by P2 (gate regions unresolvable, fixed API
+`1ff8dba`), R4 no other route. Details and the other findings (P1, P3) in the guide on `main`, after V6.
+
 ### Phase 3 — rebuild re-test (2026-10-02, developer; recorded from the commit messages)
 
 Not written up here at the time; reconstructed by the walkable-path chain (link 1) from the developer's commits on
