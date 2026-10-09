@@ -979,6 +979,15 @@ as for a destination behind a closed gate.
 16 to the gate's spawn) and the closest-point guidance. The temporary diagnostics are removed (`10b9a16`). The
 follow-up fixes since the first trunk merge (C3: `a8ec1ec`, `b6cb699`; A8/A9: `758dbc5`, `9391780`) are merged to
 knk-plugin `main` (see the header). Still open: C6 (siege).
+
+**Finding N15 (2026-10-09, developer) — "too far from any road" for a target above a road.** From (1419, 82, -550),
+`/nav Keep Tower Roof` (Location 79 at (1410, 113, -506)) said "Keep Tower Roof is too far from any road." The player
+stands on road edge 5487 (0.3 away); the straight distance is 54.6, so not direct mode. The target is **29.7** blocks
+(3D) from the nearest road (edge 10088 at (1410, 84, -516), 28 blocks below the roof), but the snapper weights height ×4
+(`snap-vertical-weight`), which measures **112** > 48. Not yet fixed. Plan (handoff
+`docs/ai-agents/handoffs/2026-10-09-navigation-offroad-destinations.md`): snap destinations without the ×4 height weight
+(the last leg is a walk path, which handles height), then KNG-75 (walk legs at both ends, destinations further than 48
+blocks off-road).
 - **Road trail on the Brink stairs to #3588** hugs the road's border; wanted: centred road trails, wider corners,
   stairs/slabs preferred on inclines - **KNG-76**.
 
