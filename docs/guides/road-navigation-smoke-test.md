@@ -1052,6 +1052,28 @@ time: test this and KNG-104 one after the other (or ask for a combined test buil
 - [x] **S7** `/knk road status`: the walk-path line counts the walk to the road as well ("walking", "computing").
 - [x] **S8** Regression: standing on the road, `/nav` as before (no walk leg); a nearby target (direct mode) as before.
 
+### KNG-76 — centred road trails, wider corners, stairs on slopes (implemented 2026-10-09, to test)
+
+knk-plugin `claude/kng-76-centred-trails` `fc670d1a` (on `main` `c4141f90`; the API and the web app are unchanged; no
+rebuild needed). Gradle core 1793 / api-client 212 / paper 1392 green. The route trail is drawn through
+`TrailCentring`: each point looks across the road (up to 3 blocks each side) and moves to the middle of the road cells
+there (a profile floor material with room above, at the trail's height or one off); on a slope to the middle of the
+stair and slab cells. Only the drawn trail changes - not the graph or the route.
+
+**Why (analysis 2026-10-09):** the stairs from Brink down to #3588 are two blocks wide (rows z -517 and -516, between a
+ledge and a wall); edge #10068 lies on the northern row, so the trail ran half a block off-centre, along the edge.
+Whole-block geometry cannot hold the middle of an even-width road. Offline on the dev world the centred trail runs at
+about z -516.0 there (it was -516.5).
+
+Deploy: `./gradlew :knk-paper:dev` from that branch, restart.
+- [ ] **T1** From Brink, `/nav Merchant's Square` (down the stairs to #3588): on the stairs the trail runs down their
+  middle, not along the northern edge.
+- [ ] **T2** A straight three-block road: the trail stays in the middle, without wobbling.
+- [ ] **T3** A bend in a narrow road: the trail keeps off the inner edge (a wider corner).
+- [ ] **T4** A wide road or a plaza: the trail is where it was.
+- [ ] **T5** A slope with stairs or slabs on one side and full blocks on the other: the trail is on the stairs.
+- [ ] **T6** Navigating for a while: no lag (the trail reads a few hundred blocks per draw per player).
+
 ### Rev. 7 follow-up — "Ignored" regions cut no roads (live-tested and merged 2026-10-09)
 
 knk-plugin `claude/kng-92-ignored-regions-no-cuts` (on `main` `1159ae5d`; the API and the web app are unchanged): `71fcbba6`
