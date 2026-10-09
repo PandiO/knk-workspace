@@ -4,6 +4,12 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## 2026-10-09
 
+- The web app's entity navigator (left sidebar on the Dashboard and Forms pages) can be searched (display name or
+  internal name) and sorted A–Z/Z–A ([KNG-61](https://linear.app/kngpandi/issue/KNG-61); knk-web-app `main`
+  `ce47817`). On the Dashboard, types with a published default display configuration are listed under "Entities".
+  The rest are in a collapsed "Without display configuration" group, and the Dashboard opens on the first
+  "Entities" type. The sort direction and the group's open/closed state are remembered per page. Narrow-screen
+  layout: [KNG-94](https://linear.app/kngpandi/issue/KNG-94).
 - A navigation destination high above a road is no longer "too far from any road"
   ([KNG-75](https://linear.app/kngpandi/issue/KNG-75), finding N15; knk-plugin `main` `9f466a9f`). Destinations
   are measured to the nearest road in plain 3D; the player's own position still counts height ×4, so a player on

@@ -1,7 +1,7 @@
 # knk-web-app — Architecture
 
 **Status:** Living document — reflects actual code, updated in place on each rescan
-**Last updated:** 2026-09-18 (scan basis: `knk-web-app` @ `4ff5dc6`, branch `claude/web-app-codebase-scan-4yqibi`)
+**Last updated:** 2026-09-18 (scan basis: `knk-web-app` @ `4ff5dc6`, branch `claude/web-app-codebase-scan-4yqibi`); spot edit 2026-10-09 (ObjectTypeExplorer, KNG-61)
 **Source scan:** `docs/reports/web-app-scan-2026-09-18.md`
 
 ## Stack
@@ -68,7 +68,7 @@ src/
     DisplayWizard/          — generic read-only detail-view engine
     DisplayConfigBuilder/   — admin UI to author DisplayConfigurationDto records
     ObjectDashboard/        — legacy static-config-driven list/CRUD dashboard
-    ObjectTypeExplorer/     — left-nav entity type picker used by ObjectDashboard
+    ObjectTypeExplorer/     — left-nav entity type picker (ObjectDashboard, FormWizardPage): search, A–Z/Z–A sort, optional groups, settings in localStorage (KNG-61)
     PagedEntityTable/       — generic server-paged table, used by both dashboard and forms
     PathBuilder/            — path/reference picker for cross-entity field bindings
     Workflow/               — WorldTask/job polling UI (siege/world-mutation background tasks)
