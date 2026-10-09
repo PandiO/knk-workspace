@@ -1,6 +1,9 @@
 {
   "folders": [{ "path": "." }],
   "settings": {
+    "terminal.integrated.enablePersistentSessions": true,
+    "terminal.integrated.persistentSessionReviveProcess": "onExitAndWindowClose",
+    
     "github.copilot.chat.codeGeneration.useInstructionFiles": true,
 
     "chat.instructionsFilesLocations": {
