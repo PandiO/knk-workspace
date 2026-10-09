@@ -552,7 +552,10 @@ one without a region to its `Location`; with neither it is refused. Resolution r
      (Linear KNG-51; proposed, not implemented). **Update 2026-10-09 (KNG-75 step 1, merged, plugin `main` `c4141f90`):** with walk
      paths the player → road leg is a walk path too, and the player may start `max-start-distance` (96) from a road in
      plain 3D (the height weight only picks the road); without them the 48-block weighted limit stays. Destinations
-     further off-road follow in step 2 (LAST_MILE_PATHFINDING.md §10, Phase D).
+     further off-road follow in step 2 (LAST_MILE_PATHFINDING.md §10, Phase D). **Step 2 (2026-10-10, to test):** with
+     walk paths a destination may be 256 from a road (`max-destination-distance`, plain 3D); within 96 of the road's
+     end (`destination-walk-range`) the last leg is a walk path, further the HUD arrow alone ("No conventional path to
+     X found.") until the player is within 96.
 4. **A\*** with cost `Length × classCost × profile.CostMultiplier × edge.CostMultiplier`, Euclidean heuristic scaled by
    the cheapest class cost. Edges are filtered by the player's **`AccessPolicy`** (§6.7).
 5. Build the `Route`: off-road legs, road legs (trimmed at virtual nodes), maneuvers (§6.5), ETA
