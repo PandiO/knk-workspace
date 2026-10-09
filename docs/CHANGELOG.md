@@ -4,6 +4,15 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## 2026-10-09
 
+- A navigating player off the road gets a walk path to it ([KNG-75](https://linear.app/kngpandi/issue/KNG-75) step 1;
+  knk-plugin `main` `c4141f90`). The trail shows the way to where the route starts (stairs, ladders, doors the
+  player may open) instead of a straight line, and the road guidance starts once the player reaches the road; no
+  "You left the road" on the way there. The player may now start up to 96 blocks from a road (was 48), measured in
+  plain 3D, so a tower roof above a road works; height still decides which road (a bridge over a road). Shut in:
+  "No conventional path to the road found."; a way too long to work out (a tall spiral stair): "Having trouble
+  determining the route - guiding you to the nearest road." with the part of the path found. Setting:
+  `navigation.max-start-distance`. With walk paths off, nothing changes. Follow-up for tall buildings:
+  [KNG-108](https://linear.app/kngpandi/issue/KNG-108).
 - Location retention is merged ([KNG-80](https://linear.app/kngpandi/issue/KNG-80); knk-web-api `master` `c397585`,
   knk-web-app `main` `d10e3dd`, knk-plugin `main` `68a5310`). A weekly check (Sunday 04:00 server time, configurable,
   plus "Run check now") flags Locations that still have the default name and that nothing uses, read from the database

@@ -549,7 +549,7 @@ one without a region to its `Location`; with neither it is refused. Resolution r
    - The straight legs (player → road, road → target) are re-drawn as the player moves; real off-road pathfinding is
      Phase 6. **Update 2026-10-02:** the first slice of it — a bounded walkable-path search for direct-mode and
      last-mile legs, with a straight-line fallback — is designed in [LAST_MILE_PATHFINDING.md](LAST_MILE_PATHFINDING.md)
-     (Linear KNG-51; proposed, not implemented). **Update 2026-10-09 (KNG-75 step 1, implemented, to test):** with walk
+     (Linear KNG-51; proposed, not implemented). **Update 2026-10-09 (KNG-75 step 1, merged, plugin `main` `c4141f90`):** with walk
      paths the player → road leg is a walk path too, and the player may start `max-start-distance` (96) from a road in
      plain 3D (the height weight only picks the road); without them the 48-block weighted limit stays. Destinations
      further off-road follow in step 2 (LAST_MILE_PATHFINDING.md §10, Phase D).
