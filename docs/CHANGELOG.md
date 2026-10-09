@@ -4,6 +4,16 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## 2026-10-09
 
+- Gate commands get two layers ([KNG-77](https://linear.app/kngpandi/issue/KNG-77),
+  [KNG-78](https://linear.app/kngpandi/issue/KNG-78), [KNG-79](https://linear.app/kngpandi/issue/KNG-79);
+  knk-plugin `main` `5b1cc8b`, knk-web-api `master` `6192af0`):
+  - `/gate` (`/knk gate`) acts on a whole gate and all its doors; `/gatedoor` (`/knk gatedoor`) acts on one door.
+  - Both have open, close and **toggle**.
+  - `here` picks the gate or door within 15 blocks, with a clickable choice when several are in range.
+  - With no target, open, close, toggle, info and repair use the gate you are looking at, including an open one.
+  - Per-id permissions now mean structure ids (`knk.gate.*`); door nodes are `knk.gatedoor.*`.
+  - "here" is a reserved gate and door name.
+  - See [architecture/gate-commands.md](architecture/gate-commands.md).
 - The web app's entity navigator (left sidebar on the Dashboard and Forms pages) can be searched (display name or
   internal name) and sorted A–Z/Z–A ([KNG-61](https://linear.app/kngpandi/issue/KNG-61); knk-web-app `main`
   `ce47817`). On the Dashboard, types with a published default display configuration are listed under "Entities".

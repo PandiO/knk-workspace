@@ -270,7 +270,7 @@ READ-ONLY in its own class javadoc where present.
 
 ### `/knk gate ...` — full subtree
 
-> **2026-10-08 — superseded on a branch by KNG-77/78/79** (knk-plugin `claude/kng-77-gate-commands`, not merged):
+> **Superseded by KNG-77/78/79, merged 2026-10-09** (knk-plugin `main` `5b1cc8b`):
 > `/knk gate` (alias `/gate`) now acts on a gate **structure** and all its doors, and a sibling root
 > `/knk gatedoor` (alias `/gatedoor`) acts on one door. `toggle`, `here` and look-at targets were added, and
 > the `admin`/`door` sub-literals are deprecated. The table below is the pre-KNG-77 snapshot; the current tree is in

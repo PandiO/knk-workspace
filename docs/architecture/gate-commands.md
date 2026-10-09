@@ -1,7 +1,7 @@
 # Gate commands — `/gate` (structure) and `/gatedoor` (door), `here` and look-at targets
 
-**Status:** Implemented on a branch, **not merged, not live-tested**. knk-plugin `claude/kng-77-gate-commands` (`b9e9d58` + review fixes `0bf6f15`, from `main` @ `f9026cb`); knk-web-api `claude/kng-78-reserved-gate-names` (`983f1cd`, `9ea328d`, from `master` @ `4c570fa`). Linear [KNG-77](https://linear.app/kngpandi/issue/KNG-77), [KNG-78](https://linear.app/kngpandi/issue/KNG-78), [KNG-79](https://linear.app/kngpandi/issue/KNG-79)
-**Last updated:** 2026-10-08
+**Status:** Implemented, **live-tested by the developer and merged to trunk 2026-10-09**: knk-plugin `main` merge `5b1cc8b` (feature `b9e9d58` + review fixes `0bf6f15`), knk-web-api `master` merge `6192af0` (`983f1cd`, `9ea328d`). Linear [KNG-77](https://linear.app/kngpandi/issue/KNG-77), [KNG-78](https://linear.app/kngpandi/issue/KNG-78), [KNG-79](https://linear.app/kngpandi/issue/KNG-79)
+**Last updated:** 2026-10-09 (live test passed, merged; follow-ups KNG-105, KNG-106)
 **Related:** [gate specs](../specs/gate-structure-animation/) (GateStructure/GateDoor model, decisions 5.0-B/5.0-D); the dated [command catalog](../specs/user-features/COMMAND_CATALOG_V3.md) §2 describes the tree before KNG-77
 
 ## 1. Layout decision: two sibling roots
@@ -33,7 +33,7 @@ The issue recommended sibling roots over a nested `/knk gate door ...` literal, 
 | `info [structure]` | none | Shows the structure id, siege objective, the overrides that are set, and each door's state and HP. |
 | `list` | none | Lists structures with their door count, open/closed counts and distance. |
 | `repair [structure]` | `knk.gate.admin` | Every door to full health, not destroyed. Warns if the override `destroyed=true` still applies. |
-| `tp <structure>` | `knk.gate.admin` | Teleports to the structure's first door (lowest id). |
+| `tp <structure>` | `knk.gate.admin` | Teleports to the structure's first door (lowest id). Follow-up [KNG-105](https://linear.app/kngpandi/issue/KNG-105): the structure's spawn point (`Domain.Location`) first, else a safe spot by a door. |
 | `override <structure> <field> <value\|clear>` | `knk.gate.admin` | Unchanged from before (fields `active`, `destroyed`, `invincible`, `canrespawn`, `openedstate`). |
 | `reload [district <id>]` | `knk.gate.admin` | Unchanged (was `admin reload`). |
 | `passthrough <default\|instant\|teleport>` | none (player) | Unchanged: the player's own pass-through method. |
@@ -46,7 +46,7 @@ The issue recommended sibling roots over a nested `/knk gate door ...` literal, 
 | `info [door]` | none | Door details. |
 | `list [structure]` | none | Every door, or one structure's doors. |
 | `repair [door]` | `knk.gatedoor.admin` or `knk.gate.admin` | One door. |
-| `tp <door>` | same | |
+| `tp <door>` | same | Teleports to the door's anchor, which is inside the blocks of a closed door. Follow-up [KNG-105](https://linear.app/kngpandi/issue/KNG-105): teleport to the closest safe spot. |
 | `health <door> <amount>` | same | |
 | `active <door>`, `invincible <door>` | same | Toggles the door flag. |
 | `capture\|redefine <door> [closed\|opened]` | same | WorldEdit region capture (was `/knk gate door capture\|redefine`). |
@@ -60,7 +60,7 @@ The issue recommended sibling roots over a nested `/knk gate door ...` literal, 
 - **Structure layer:** `knk.gate.open.<structureId>` / `knk.gate.open.*`, `knk.gate.close.<structureId>` / `knk.gate.close.*`, and `knk.gate.admin` (default op).
 - **Door layer:** `knk.gatedoor.open.<doorId>` / `knk.gatedoor.open.*`, `knk.gatedoor.close.<doorId>` / `knk.gatedoor.close.*`, and `knk.gatedoor.admin` (default op; a `plugin.yml` child of `knk.gate.admin`).
 - **A structure grant covers that structure's doors, and the admin nodes cover open/close/toggle.** `knk.gate.admin` covers every gate and door; `knk.gatedoor.admin` covers every door but not whole gates. The code checks this explicitly (`GateCommandSupport.mayControlDoor`/`mayControlStructure`, `isDoorAdmin`), so it also holds for in-house grants, which don't see `plugin.yml` children.
-- **Breaking:** before KNG-77, `knk.gate.open.<id>` / `knk.gate.close.<id>` meant a **door** id; now the id is a **structure** id. No code, permission catalog or seed data uses per-id gate nodes (checked 2026-10-08). **To do before merging (developer):** check the live LuckPerms/Bukkit permissions and the in-house `PermissionGrants` table for `knk.gate.open.<n>` / `knk.gate.close.<n>`, and rename any you find to `knk.gatedoor.open.<n>` / `knk.gatedoor.close.<n>`. Otherwise such a holder loses door n and gains structure n. `/gate open <n>`, where n is also a door of another gate, prints a note pointing to `/gatedoor`.
+- **Breaking:** before KNG-77, `knk.gate.open.<id>` / `knk.gate.close.<id>` meant a **door** id; now the id is a **structure** id. No code, permission catalog or seed data uses per-id gate nodes (checked 2026-10-08). **To do (developer, outstanding at merge):** check the live LuckPerms/Bukkit permissions and the in-house `PermissionGrants` table for `knk.gate.open.<n>` / `knk.gate.close.<n>`, and rename any you find to `knk.gatedoor.open.<n>` / `knk.gatedoor.close.<n>`. Otherwise such a holder loses door n and gains structure n. `/gate open <n>`, where n is also a door of another gate, prints a note pointing to `/gatedoor`.
 - Per-id nodes are warmed (`CommandPermissions.warm`) after the target is resolved, so a fresh in-house grant isn't refused on a cold cache.
 
 ## 4. Implicit targets: `here` (KNG-78) and look-at (KNG-79)
@@ -98,7 +98,7 @@ gates:
     max-distance: 12    # capped at 64
 ```
 
-## 6. Live checklist (developer) — not yet run
+## 6. Live checklist (developer) — passed 2026-10-09
 
 1. `/gate list`, `/gatedoor list`, `/gatedoor list <structure>`: the ids shown match the web app.
 2. A gate with two doors: `/gate open <structure>` opens both. `/gatedoor close <door>` closes one. `/gate toggle` with one door open closes both; run it again and both open.
@@ -110,3 +110,14 @@ gates:
 8. A player with only `knk.gate.open.<structureId>` can open that gate and each of its doors, but not other gates. A player with only `knk.gatedoor.open.<doorId>` can open just that door. A non-op staff member with an in-house `knk.gatedoor.admin` grant can open, repair and tp any door, but can't run `/gate open` on a whole gate.
 9. The deprecated `/knk gate admin repair <door>` still works and prints the replacement command.
 10. In the web app, renaming a gate or door to "here" fails with a 400 message.
+
+**Live test, 2026-10-09 (developer): all steps passed.** Tested on the branches before merging:
+- **KNG-77:** command layers, toggle (including mixed state), info, list, repair, tp, aliases, tab completion, wrong-layer hints, deprecated forms and per-layer permissions.
+- **KNG-78:** `here` with one, several or no candidates; one gate with several doors; nearest mode; standing inside the opening; a trailing argument; the console; the reserved name in the web app.
+- **KNG-79:** look-at on closed and open doors; the wall fallback to `here`; standing in one gate and looking at another; nothing in sight; commands that need a target; maximum distance; look-at switched off.
+- **Regression:** pass-through, damage and animation are unaffected.
+
+Findings, both filed as follow-ups rather than blocking the merge:
+- `tp` can put the player inside a closed door's blocks, and `/gate tp` should prefer the structure's spawn point: [KNG-105](https://linear.app/kngpandi/issue/KNG-105).
+- In survival, players take damage from solid or moving gate door blocks (closing on them, or after a teleport into them). Review the push-to-safety and collision code (`CollisionPredictor`, `EntityPusher`, `EntityEvacuator`): [KNG-106](https://linear.app/kngpandi/issue/KNG-106).
+- **Permissions:** the developer wants the gate nodes seeded into the admin group. Neither the dev seed (`knk-dev-db-seed`: groups Noble, Royal, Dragon Blood, Default, Staff) nor the migrations has a group named Admin, and no group holds gate nodes yet; `knk.*` is on the owner's user account. Open question: which group, and as a data migration in the style of `SeedCurrencyPlayerNodes`.
