@@ -1,10 +1,10 @@
 # Road Navigation — Rev. 7 proposal: a routing view, entrances, and which access rules apply to roads
 
-**Status:** Accepted (2026-10-09): D1-D5 decided (§7.1); order C, A, B (§5). **Part C implemented 2026-10-09** on
-`claude/kng-73-road-navigation-n92vlm` (API `79e2b63`, plugin `ccb04891`, web app `1368115`; not merged, not live-tested;
-test steps R1-R4 in that branch's smoke-test guide). **Part A step 1 implemented 2026-10-09** on knk-plugin
-`claude/navigation-walkable-path` `893e33da` (not live-tested; steps V1-V6 in the smoke-test guide); the patches (§2.4)
-stay until it passes. Part B ([KNG-93](https://linear.app/kngpandi/issue/KNG-93)) not started.
+**Status:** Accepted (2026-10-09): D1-D5 decided (§7.1); order C, A, B (§5). **Part C and Part A step 1 live-tested
+(smoke-test runs 1-3) and merged to trunk 2026-10-09:** knk-web-api `master` `6d160aa`, knk-web-app `main` `e2ba784`,
+knk-plugin `main` `54878783`. Part A step 2 (removing the patches, §2.4) implemented on knk-plugin
+`claude/navigation-walkable-path` `9fa14394`, not live-tested (smoke-test W1-W8). Part B ([KNG-93](https://linear.app/kngpandi/issue/KNG-93)) not started. Follow-ups
+from the live test: KNG-103, KNG-104, P4 (a region over part of a road's width, §7.2).
 **Last updated:** 2026-10-09
 **Builds on:** [DESIGN.md](DESIGN.md) §5.6 step 6 and §6.7 (live tags, start/goal sides),
 [LAST_MILE_PATHFINDING.md](LAST_MILE_PATHFINDING.md) (walk paths), the live test of 2026-10-07 to 10-09

@@ -4,6 +4,11 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## 2026-10-09
 
+- A navigation destination high above a road is no longer "too far from any road"
+  ([KNG-75](https://linear.app/kngpandi/issue/KNG-75), finding N15; knk-plugin `main` `9f466a9f`). Destinations
+  are measured to the nearest road in plain 3D; the player's own position still counts height ×4, so a player on
+  a bridge keeps snapping to the bridge. A tower roof 28 blocks above a road is reached by road, then a walk path up.
+  Setting: `navigation.destination-snap-vertical-weight` (default 1).
 - Resetting a player's discovery on their moderation profile now asks in the app's own dialog instead of the
   browser's `confirm` ([KNG-40](https://linear.app/kngpandi/issue/KNG-40); knk-web-app `main` `6d23238`). After
   the reset the row leaves the list at once and a green line confirms it. The other `window.confirm` prompts are
