@@ -1011,9 +1011,10 @@ Next: KNG-75 proper (walk legs at both ends, destinations further than 48 blocks
 `fa234f7` (the merged plugin needs KNG-56's `GET /api/Domains/access-rules`). The dev DB lacks trunk's KNG-59
 migration `UniquePermissionGrantHolderNode` (it deletes duplicate permission grants); navigation does not need it.
 
-### KNG-75 step 2 — destinations up to 256 blocks off-road (live-tested 2026-10-10: B1-B6 pass)
+### KNG-75 step 2 — destinations up to 256 blocks off-road (live-tested 2026-10-10: B1-B6 pass; merged)
 
-knk-plugin `claude/kng-75-offroad-destinations` `6c036eaf` (on `main` `c4141f90`: `fec8e4b2` replay batch mode,
+**Merged to knk-plugin `main` `8f2b7c30`** (merged-tree Gradle core 1786 / api-client 212 / paper 1395 green). KNG-75
+is done. Branch `claude/kng-75-offroad-destinations` `6c036eaf` (on `main` `c4141f90`: `fec8e4b2` replay batch mode,
 `7b8a11cc` walk length cap 144 and 64-chunk capture, `6c036eaf` destinations). Gradle core 1786 / api-client 212 / paper
 1395 green; each new test fails without its fix. Measurement and decisions:
 [report 2026-10-10](../reports/2026-10-10-kng75-walk-leg-measurement.md), KNG-75 comments. With walk paths on, a
