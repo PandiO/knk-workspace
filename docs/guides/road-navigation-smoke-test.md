@@ -1009,6 +1009,32 @@ Next: KNG-75 proper (walk legs at both ends, destinations further than 48 blocks
 `fa234f7` (the merged plugin needs KNG-56's `GET /api/Domains/access-rules`). The dev DB lacks trunk's KNG-59
 migration `UniquePermissionGrantHolderNode` (it deletes duplicate permission grants); navigation does not need it.
 
+### KNG-75 step 1 — a walk path from the player to the road (implemented 2026-10-09, to test)
+
+knk-plugin `claude/kng-75-offroad-destinations` `be0267bf` (on `main` `5b1cc8b8`; merges cleanly with KNG-104; the
+API and the web app are unchanged). Gradle core 1780 / api-client 209 / paper 1369 green. With walk paths on, a player
+off the road gets a walk path to where the route starts instead of a straight line, and may start up to
+`navigation.max-start-distance` (96) blocks from a road in plain 3D (was 48, with height ×4). The height weight still
+picks the road (bridge case). The session waits while the player walks to the road. Decisions: KNG-75 comment of
+2026-10-09. The server's `config.yml` needs no change (the default 96 applies).
+
+Deploy: `./gradlew :knk-paper:dev` from the worktree `Repository/_worktrees/knk-plugin-kng75`, restart. One jar at a
+time: test this and KNG-104 one after the other (or ask for a combined test build).
+- [ ] **S1** Stand 20-40 blocks off a road in open ground, `/nav` somewhere far: the trail is a walk path (leg colour)
+  to the road, then the route from the road on. No "You left the road" while walking to it; on the road the usual
+  guidance (maneuvers, HUD progress) starts.
+- [ ] **S2** Stand 50-90 blocks from the nearest road (before: "get within 48 blocks"): `/nav` works. A long diagonal
+  leg may be too large to capture (49 chunks) and keep the straight line - note the distance if so (input for step 2a).
+- [ ] **S3** High above a road, e.g. the Keep Tower Roof (1410, 113, -506): `/nav` somewhere far is not refused; the walk
+  path goes down (stairs/ladders) to the keep road.
+- [ ] **S4** Shut in with no way out (a closed room, or fenced in): "No conventional path to the road found." once,
+  the route from the road on, no straight line; walking out once a door opens, the navigation carries on.
+- [ ] **S5** While walking to the road, walk off the other way: the walk leg goes, about 2 s later "You left the road -
+  recalculating" and a new walk path to the road now nearest.
+- [ ] **S6** More than 96 blocks from any road: "You're too far from a road - get within 96 blocks of one."
+- [ ] **S7** `/knk road status`: the walk-path line counts the walk to the road as well ("walking", "computing").
+- [ ] **S8** Regression: standing on the road, `/nav` as before (no walk leg); a nearby target (direct mode) as before.
+
 ### KNG-104 — the navigator's domain cache refreshes (implemented 2026-10-09, to test)
 
 knk-plugin `claude/kng-104-domain-cache-refresh` `132ce69a` (on `main` `5b1cc8b8`; the API and the web app are
