@@ -948,6 +948,17 @@ to 13:16 ran on the jar from before the deploy (jar written 13:18, restart 13:19
 short C3 run (MrBedue `/nav South Gate`, `/nav Merchant's Square`, gate open 13:20:57 / close 13:21:13, positions not
 logged), and no A8/A9 run. Temporary INFO diagnostics added in knk-plugin `1fae2af` ("[Navigation] Re-check",
 "Walk path", "Roads instead") for the re-test; to be removed afterwards.
+
+**Run 7 (2026-10-09, developer, knk-plugin `1fae2af`):** C3 by the developer's procedure - MrBedue runs `/nav
+Merchant's Square` in front of the South Gate on the bridge, the gate opens, MrBedue walks through and stops about
+2 blocks past the gate region on the town side, the gate closes - still "blocked by the South Gate". Diagnostic:
+`step 0/7 edge #10139 backward along 39.9..0.0, step starts at 0.0 of the route, walked 34.8, blocked: the South Gate
+is closing -> BLOCKS the route`. The stretch still ahead (along 5.1 → 0, about (1421,-459) → (1418,-463)) is past
+the door (along ≈ 14) and outside `gate_2000131`, so the part check should have said open. **Cause:**
+`CompositeAccessPolicy` caches verdicts per edge id; the part (an edge object with edge 10139's id and its own tags)
+got the whole edge's cached verdict. The open-side check of a blocked start edge (N6) had the same flaw. **Fixed in
+knk-plugin `b6cb699`** (`AccessPolicy.checkPart`, evaluated without the per-id cache); the service tests now run the
+production part path, including this procedure. A8/A9 was not re-tested in run 7.
 - **Road trail on the Brink stairs to #3588** hugs the road's border; wanted: centred road trails, wider corners,
   stairs/slabs preferred on inclines - **KNG-76**.
 
