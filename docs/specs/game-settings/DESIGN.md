@@ -102,6 +102,7 @@ world they **died in**: the world's own block, else `defaultRespawnPolicy`.
 | Mode | Where the player respawns |
 |---|---|
 | `WorldSpawn` | Always the death world's spawn point; beds and respawn anchors are ignored (**D1**, decided 2026-10-09: a player's own house/room spawn will replace the bed later). A death in the nether or the End uses the main world's spawn, as vanilla never respawns anyone there. |
+| `ServerDefault` | (round 4) Not redirected: the server decides - bed or respawn anchor, else the world's spawn. What staff and owners get; lets a group keep beds after D1. |
 | `JoinSpawn` | **Synced with the join spawn:** where this player would join and where `/spawn` takes them (§3.2), including a group spawn override. The other modes keep spawn and respawn separate. |
 | `ConfiguredReference` | The reference's resolved location (§3.2) |
 | `NearestTown` | A town in the death world. If the player died inside a town's WorldGuard region, that town is used, even beyond the maximum distance. Otherwise the town whose spawn is horizontally nearest, within `maxNearestTownDistance` (empty or 0 = any distance). Towns without a spawn Location are skipped. |
@@ -174,7 +175,10 @@ A permission group can override four settings for its members, each on its own:
 
 - **Join message**, replacing the global one. A blank message means members join silently.
 - **Leave message** (round 3), the same for the quit broadcast.
-- **Spawn**, replacing the server spawn for the join teleport and `/spawn`.
+- **Spawn**, replacing the server spawn for the join teleport and `/spawn`. Or, since round 4, **where they logged
+  out** (`joinAtLastLocation`): no join teleport, like owners, in the game mode of the world they are in; `/spawn`
+  and a synced (`JoinSpawn`) respawn then use the server spawn. A chosen spot and "where they logged out" are one
+  setting: the first group with either wins.
 - **Respawn policy**, replacing the world's policy in every world.
 
 The overrides are edited in the **Permission Group Overrides** card on the Game Settings page. They are stored with
@@ -268,13 +272,13 @@ Data Retention card on the same page already needed that node.
 
 ---
 
-## 7. Decisions (2026-10-05, Claude Code session — reversible; reviewed by the developer 2026-10-09: D1 and D13 changed, D17 accepted, D2 and D3 still open)
+## 7. Decisions (2026-10-05, Claude Code session — reversible; reviewed by the developer 2026-10-09: D1 and D13 changed, D17 accepted; 2026-10-10: D3 kept for now; D2 still open; D18-D19 added for round 4)
 
 | # | Decision | Why |
 |---|---|---|
 | D1 **decided 2026-10-09** | `WorldSpawn` respawn mode **forces** the world spawn; beds and anchors are ignored (round 2 had "the server decides"). A nether/End death uses the main world's spawn. | Developer: "Force world spawn. The bed spawn will eventually be replaced by the house/room spawn of a player's own house/room entity." |
 | D2 **open** (explained again 2026-10-09) | The hard-coded town-4 respawn is removed; the same behavior is a setting (`ConfiguredReference` → Town #4). | The settings feature exists to replace such defaults (vision §2.7). Until configured, regular players respawn like staff do. |
-| D3 **open** (developer: "see my notes on the smoke test" - step 4 failed; world change still to be decided) | Default game mode on join (and after the loading hold) only, not on world change. | A world-change rule would fight siege (SURVIVAL on entry) and staff modes. Easy to add once those are mapped. |
+| D3 **kept for now** (developer 2026-10-10: "Yes, for now it does" - read as: join-only is fine for now; flagged for confirmation) | Default game mode on join (and after the loading hold) only, not on world change. | A world-change rule would fight siege (SURVIVAL on entry) and staff modes. Easy to add once those are mapped. |
 | D4 | Weather rules steer only natural and sleep changes; `Constant`/`Blocked` re-apply at refresh. | Staff can still use `/weather` to test. Avoids fighting other plugins' changes. |
 | D5 | `Weighted` re-rolls at each natural rain change, on the next tick. | The stash called `setStorm` inside `WeatherChangeEvent` (re-entrant, and overridden by the event). |
 | D6 | Time lock ownership is stored in the world's persistent data. | The stash set `doDaylightCycle=true` on every unlocked world every 30 s, overriding manual gamerules. |
@@ -289,6 +293,8 @@ Data Retention card on the same page already needed that node.
 | D15 | "Synced vs separate" spawn/respawn is a respawn mode, `JoinSpawn`, per world and per group (developer decision 2026-10-05). | Some worlds or groups can be synced and others separate. |
 | D16 | Each overridable setting is resolved separately across the player's groups. | One group can own the join message and another the spawn, without copying settings. |
 | D17 (accepted 2026-10-09) | A group's respawn override applies in every world and beats the world's policy. | A per-group, per-world matrix wasn't asked for. Siege, staff and End exits stay exempt. |
+| D18 (round 4, 2026-10-10) | "Join where they logged out" is a group override (`joinAtLastLocation`) on the Game Settings page, not a permission node. Owners get it from `knk.mode.owner`, which grants much more. | The developer asked to let groups "respawn in the place they left at, which is what ops have"; overrides live on the page (D14). It is the group's spawn setting, so it competes with a chosen spot (first group wins). |
+| D19 (round 4, 2026-10-10) | New respawn mode `ServerDefault` (bed/anchor, else world spawn) for worlds and groups: what staff and owners get. | Since D1 forces the world spawn, a group that should keep op-like respawns needs its own mode. Read from the same request as D18; flagged for confirmation. |
 
 ## 8. Open questions and follow-ups
 

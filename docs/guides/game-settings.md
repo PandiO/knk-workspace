@@ -26,7 +26,7 @@ weather and spawn point, and the server-list MOTD. It also sets exceptions per p
 | **Lock Time / Locked Time** (per world) | Stops day and night at the given tick: 0 = sunrise, 6000 = noon, 12000 = sunset, 18000 = midnight. `/time set` is undone within 30 s. Unticking it starts the cycle again. |
 | **Weather Behavior** (per world) | *Normal* = vanilla. *Constant* = always the forced weather; sleeping won't clear it. *Blocked* = the ticked kinds never start by themselves. *Weighted* = whenever the weather would change by itself, clear/rain/thunder is picked by the weights. A staff `/weather` first asks for confirmation (it names the rule and says whether it will be undone); click **[Change anyway]** or type it again within 15 s. *Constant* and *Blocked* restore the rule within 30 s. |
 | **World Spawn Reference** (per world) | Moves the world's own spawn point. That spot is used by new players, compasses and the default respawn. |
-| **Respawn** (per world, for deaths in that world) | *Same as the join spawn (synced)* = where the player would join and where `/spawn` takes them. *World spawn (beds and anchors ignored)* = always the world spawn (the main world's for a nether or End death). *A chosen spot (separate)* = always that spot. *Nearest town* = the town the player died in, else the nearest town in that world. *Max nearest-town distance* limits how far the town may be (empty = any). **If no spot is found**: use the world spawn (ticked) or let the server decide (unticked). A group can replace this per group (below). Staff, owner-mode players and siege matches are not affected. |
+| **Respawn** (per world, for deaths in that world) | *Same as the join spawn (synced)* = where the player would join and where `/spawn` takes them. *World spawn (beds and anchors ignored)* = always the world spawn (the main world's for a nether or End death). *Server decides (bed / anchor, else world spawn)* = not redirected, like staff and owners. *A chosen spot (separate)* = always that spot. *Nearest town* = the town the player died in, else the nearest town in that world. *Max nearest-town distance* limits how far the town may be (empty = any). **If no spot is found**: use the world spawn (ticked) or let the server decide (unticked). A group can replace this per group (below). Staff, owner-mode players and siege matches are not affected. |
 
 ## Picking a spawn point
 
@@ -47,7 +47,7 @@ the bottom opens the Form Wizard. If a chosen spot was deleted, the card warns t
 
 The **Permission Group Overrides** card gives a group its own:
 - **join message** and **leave message** (`{group}` shows the group's name, `{title}` the player's title; empty = its members join or leave silently);
-- **spawn**, which also changes where `/spawn` takes them;
+- **spawn**: a chosen spot, which also changes where `/spawn` takes them, or **where they logged out** (no join teleport, like owners; `/spawn` still goes to the server spawn);
 - **respawn**, in every world, replacing the world's setting.
 
 Add a group, then tick only what it should change; everything else stays as set above.

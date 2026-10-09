@@ -1,6 +1,6 @@
 # Game Settings — Implementation Plan
 
-**Status:** **Smoke test run 1 done (2026-10-09), round 3 code-complete on `claude/kng-52-round3`, not live-tested; nothing merged to trunk.** Run 1: steps 1-3, 6, 8, 11-14 pass, 10 and 15 accepted, **step 4 failed** (game mode), step 5 found the picker bug, 7.3 and 9 still to test (§4.2). Round 3 (§1): knk-web-api `claude/kng-52-round3` `9f11768`, knk-plugin `67eb6a5d`, knk-web-app `89f4fdd`, each on top of the KNG-52 branch (web-app: on `main`). Next: the developer brings round 3 into the test checkouts and runs §4.3.
+**Status:** **Smoke test run 1 done (2026-10-09); round 3 web part checked (2026-10-10); round 4 code-complete on `claude/kng-52-round4` (contains round 3), in-game round 3/4 checks open; nothing merged to trunk.** Round 4: API `99a5726`, plugin `a96ef742`, web app `f831125` (§1). Next: merge `claude/kng-52-round4` into all three test checkouts and run §4.3 + §4.4. Run 1: steps 1-3, 6, 8, 11-14 pass, 10 and 15 accepted, **step 4 failed** (game mode), step 5 found the picker bug, 7.3 and 9 still to test (§4.2). Round 3 (§1): knk-web-api `claude/kng-52-round3` `9f11768`, knk-plugin `67eb6a5d`, knk-web-app `89f4fdd`, each on top of the KNG-52 branch (web-app: on `main`). Next: the developer brings round 3 into the test checkouts and runs §4.3.
 **Last updated:** 2026-10-10
 **Linear:** [KNG-52](https://linear.app/kngpandi/issue/KNG-52)
 **Sources:** [DESIGN.md](DESIGN.md) (behavior, decisions D1–D17, open questions); stash `19-08-26: Workable: GameSettings feature` in knk-plugin.
@@ -145,10 +145,35 @@ fast-forward `origin/claude/kng-52-round3` into the test checkouts.
 - D1 label: *World spawn (beds and anchors ignored)*.
 - "Own leave message" on the group card, `{title}` hints and previews.
 
+### Round 4 (2026-10-10): after the round-3 web-app check
+
+Branch `claude/kng-52-round4` in each repo, pushed, on top of `claude/kng-52-round3`. During the round-3 check only the
+web app had round 3: the API and plugin checkouts were still on `claude/kng-52-game-settings`, and the deployed jar
+had no round-3 classes. So the in-game round-3 checks (§4.3: 17, 18, 20, 21) are still open.
+
+- **knk-web-app `f831125`:**
+  - **Search box layout bug** (developer: "a little bugged on the group override section"). This project has no
+    `@tailwindcss/forms`, so the panel's search input got no border, no padding, a 20 px height and the browser's
+    black focus outline, and the icon's fixed offset hung below the text. It showed in every card. The picker now
+    styles its own input (border, `h-9`, `pl-9`, a blue focus ring) and centres the icon.
+  - Group *Own spawn* choice: *A chosen spot* / *Where they logged out (no join teleport)*.
+  - Respawn mode *Server decides (bed / anchor, else world spawn)*.
+- **knk-web-api `99a5726`:** `joinAtLastLocation` on group overrides (it clears the chosen spot) and the
+  `ServerDefault` respawn mode.
+- **knk-plugin `a96ef742`:**
+  - A group with `joinAtLastLocation` gets no join teleport and the game mode of the world its members are in.
+  - A chosen spot and "last location" are one setting (the first group with either wins).
+  - `/spawn` and a synced respawn use the server spawn.
+  - `SERVER_DEFAULT` respawn leaves the respawn to the server.
+  - The join game mode no longer falls back to SURVIVAL when there is no teleport target.
+
 ## 2. Tests run
 
 | Suite | Result |
 |---|---|
+| **2026-10-10, round 4:** knk-plugin `build -x deployToDevServer` | BUILD SUCCESSFUL. core 1830, api-client 219, paper 1394, no failures (new: last-location resolution, `SERVER_DEFAULT`). |
+| **2026-10-10, round 4:** knk-web-api `--filter GameSettings\|LocationRetention` | 71 passed, 2 skipped (MySQL). New: `GroupOverrides_JoinAtLastLocation_…`, `ServerDefault_IsAValidRespawnMode`. |
+| **2026-10-10, round 4:** knk-web-app | `tsc` clean; game settings + location client 25/25; full run 544/550, the same 6 pre-existing failures as on `89f4fdd`. The layout was checked in headless Chrome against the compiled Tailwind CSS, not in the running app. |
 | **2026-10-10, round 3:** knk-plugin `build -x deployToDevServer` | BUILD SUCCESSFUL. core 1828, api-client 219 (2 skipped), paper 1394 (17 skipped), no failures. New: `WeatherCommandNoticeTest` (5), `GameSettingsWeatherCommandListenerTest` (3; it caught `/weather` vs `/minecraft:weather` not confirming each other, fixed), `GroupOverridesTest` leave message + `{title}`, `RespawnPlannerTest` forced world spawn. |
 | **2026-10-10, round 3:** knk-web-api full `dotnet test` | 2025 tests: 1962 passed, 54 skipped, 9 failed, the same 9 as untouched `master` (list below). New: `GroupOverrides_KeepALeaveMessage`, `Precedence_IsTheTeleportFeeOrder`, `Precedence_SurvivesCyclesAndMissingParents`. |
 | **2026-10-10, round 3:** knk-web-app | `tsc --noEmit` clean. Game settings + location client tests 22/22 (15 new). Full run 541/547; the 6 failures (LoginForm, useEnrichedFormContext, 3 FormWizard suites, RoadsAdminPage) fail the same way on `d10e3dd`. Not looked at in a browser yet. |
@@ -333,20 +358,36 @@ No new migration.
     hold in …` and any `…game mode changed from … within 2 s…` warning, plus the `data get entity MrBedue
     playerGameType` result.
 
+### 4.4 Round 4 checks
+
+**First bring round 4 into all three test checkouts:** `git fetch` and then `git merge origin/claude/kng-52-round4` in
+`Repository/knk-web-api`, `Repository/knk-plugin` and `Repository/knk-web-app`. Restart the API, deploy the plugin
+(`./gradlew :knk-paper:dev`) and reload the web app. No new migration. Then run §4.3 checks 17, 18, 20 and 21 too.
+
+22. **Search box:** in every picker (world cards and group card), the magnifier sits inside the box, left of the
+    placeholder. Focus shows a light blue ring, not a black outline.
+23. **Join where they logged out:**
+    - Tick a group's *Own spawn*, choose *Where they logged out (no join teleport)* and save. A member who logs out
+      somewhere and rejoins is still there, in that world's default game mode.
+    - `/spawn` takes them to the server spawn.
+    - A higher group with a chosen spot wins over it, and the reverse.
+24. **Server decides respawn:** a group with *Own respawn* → *Server decides*: its members respawn at their bed (or
+    anchor), others at the world spawn (D1).
+
 Record results under a "Smoke test" heading here and in KNG-52.
 
 ## 5. Merge
 
 After the smoke test, merge in this order:
-1. knk-web-api `master`: `claude/kng-52-round3` (it contains `claude/kng-52-game-settings`), with the migration applied wherever that API runs. The plugin needs its new fields and auth.
-2. knk-plugin `main`: `claude/kng-52-round3`.
-3. knk-web-app `main`: `claude/kng-52-round3` (round 3 only; round 2 is already on `main`). It works against an older API too (the extra `leaveAnnouncement` is ignored).
+1. knk-web-api `master`: `claude/kng-52-round4` (it contains round 3 and `claude/kng-52-game-settings`), with the migration applied wherever that API runs. The plugin needs its new fields and auth.
+2. knk-plugin `main`: `claude/kng-52-round4`.
+3. knk-web-app `main`: `claude/kng-52-round4` (rounds 3 and 4; round 2 is already on `main`). It works against an older API too (the extra `leaveAnnouncement` is ignored).
 
 Round 2 of the web app is already on `main` (`055ac28`). If trunk moves again before the merge, merge it into the branches
 first. Both branches already carry trunk as of 2026-10-09, and the API snapshot is consistent. Then:
 - update the [feature register](../../FEATURE_REGISTER.md) row (Merge `trunk`, Verification) and add a
   [CHANGELOG](../../CHANGELOG.md) entry, including the town-4 respawn note;
 - drop the knk-plugin stash `19-08-26: Workable: GameSettings feature`;
-- remove the worktrees `Repository/_worktrees/knk-workspace-kng52` and `knk-{web-api,plugin,web-app}-kng52r3` (the web-app one has a real `node_modules` folder, no junction);
+- remove the worktrees `Repository/_worktrees/knk-workspace-kng52` and `knk-{web-api,plugin}-kng52r3` (now on round 4) and `knk-web-app-kng52r4` (the web-app one has a real `node_modules` folder, no junction);
 - move the ACTIVE_SESSIONS row to Recently completed;
 - close KNG-52 or file the DESIGN §8 follow-ups.
