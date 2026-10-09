@@ -644,7 +644,9 @@ cut where its access tags change - at each gate door and region border the live 
 piece and a district clipping a road blocks only the stretch inside it ([REV7_PROPOSAL.md](REV7_PROPOSAL.md) §2,
 `RoutingView`). Pieces map back to their stored edge for admins (`/knk road why`: `edge #10139 blocks 31-34`). This
 makes the per-part patches above (start sides, goal sides, the part re-check) unnecessary; Part A step 2 removed them
-(knk-plugin `main` `723d21f4`, 2026-10-09). A start at a node whose snapped edge is blocked leaves from that node. A region counts on a road where it covers the road's centreline (finding P4: one that covers only part of the
+(knk-plugin `main` `723d21f4`, 2026-10-09). A start at a node whose snapped edge is blocked leaves from that node. A region whose domain's entry rule is
+"Ignored" for roads (rev. 7 Part C: houses, shops along a street) cuts nothing (knk-plugin `eea80099`): the `/navigate`
+catalogue knows those regions by id, and a change recuts the roads at once. A region counts on a road where it covers the road's centreline (finding P4: one that covers only part of the
 width still blocks the stretch when it covers the centre).
 
 **Live changes.** `NavigationService` listens to gate state changes (an observer on `GateManager`'s animation-complete

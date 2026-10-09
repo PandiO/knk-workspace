@@ -1037,7 +1037,7 @@ time: test this and KNG-104 one after the other (or ask for a combined test buil
 - [ ] **S7** `/knk road status`: the walk-path line counts the walk to the road as well ("walking", "computing").
 - [ ] **S8** Regression: standing on the road, `/nav` as before (no walk leg); a nearby target (direct mode) as before.
 
-### Rev. 7 follow-up — "Ignored" regions cut no roads (implemented 2026-10-09, re-test)
+### Rev. 7 follow-up — "Ignored" regions cut no roads (live-tested and merged 2026-10-09)
 
 knk-plugin `claude/kng-92-ignored-regions-no-cuts` (on `main` `1159ae5d`; the API and the web app are unchanged): `71fcbba6`
 (the filter) and `aff6ec74` (run-1 fix). Gradle core 1784 / api-client 209 / paper 1367 green. A region whose domain's
@@ -1062,6 +1062,12 @@ Deploy: `./gradlew :knk-paper:dev` from that branch, restart, wait for "… cut 
 - [ ] **I3** `/nav South Gate` from Brink (run it twice if the first was within a second of the refresh): the east
   road through Navigation Test; walking in, the border still refuses entry.
 - [ ] **I4** Back to `Applies`, `/knk cache refresh`, a few seconds: I1's numbers again, and the route goes west.
+
+**Run 2 (2026-10-09, developer, `aff6ec74`): I1-I4 pass.** I2: "15 edge(s) with extra tags (+7 region, +3 gate door),
+13 cut into 45 pieces" became "14 … (+6 region …), 12 cut into 42 pieces" - Wearway (#5385, three pieces) is no longer cut
+(the guide's "two pieces fewer" was off by one: the count is of the pieces of cut edges). I3 east through Navigation
+Test, I4 back to the first numbers and west. **Merged to knk-plugin `main` `eea80099`** (with `main`'s KNG-80 merged in
+first; Gradle core 1784 / api-client 212 / paper 1382 green).
 
 ### KNG-104 — the navigator's domain cache refreshes (live-tested and merged 2026-10-09)
 

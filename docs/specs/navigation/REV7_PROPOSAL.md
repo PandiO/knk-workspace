@@ -249,5 +249,5 @@ entrance that was reached); the fallback order.
 - **Part A:** split nodes and pieces get ids from 2 000 000 000 (the router's virtual nodes are negative). Cuts fall
   on sample positions widened by one sample each side, so a door's piece starts just before the door and a region's
   just outside its border. Adjacent stretches with the same tags are one piece, so an edge inside a district is not
-  cut. Regions whose domain is "Ignored" for roads (Part C) cut nothing: implemented 2026-10-09 on knk-plugin
-  `claude/kng-92-ignored-regions-no-cuts` `71fcbba6` (smoke-test I1-I4).
+  cut. Regions whose domain is "Ignored" for roads (Part C) cut nothing: live-tested and merged 2026-10-09
+  (knk-plugin `main` `eea80099`; the `/navigate` catalogue carries each domain's region id, a change recuts at once).
