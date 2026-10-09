@@ -959,6 +959,19 @@ the door (along ≈ 14) and outside `gate_2000131`, so the part check should hav
 got the whole edge's cached verdict. The open-side check of a blocked start edge (N6) had the same flaw. **Fixed in
 knk-plugin `b6cb699`** (`AccessPolicy.checkPart`, evaluated without the per-id cache); the service tests now run the
 production part path, including this procedure. A8/A9 was not re-tested in run 7.
+
+**Run 8 (2026-10-09, developer, knk-plugin `b6cb699`):** **C3 passes.** A8/A9 (MrBedue in front of district 16,
+`/nav South Gate`): with the gate open it works (the open side of the blocked start road is used); with the gate
+**closed** the navigation ended at once (13:49:08, no re-check lines). The developer: the default destination is the
+gate's spawn Location, which is reachable with the gate closed; and even without a way, guide as close as possible,
+as for a destination behind a closed gate.
+- **Finding N14.** South Gate's spawn (1421.4, 49, -450.3) is just on the town side of the door line and snaps onto
+  edge 10139 at along ≈ 12 (door ≈ 14). The router treats a blocked edge as a whole, so the goal on it was
+  unreachable; the explainer then took the all-open route - straight through district 16 - and its first block was
+  the start road itself. **Fixed in knk-plugin `9391780`:** goal sides (the open stretch from a node to a goal on a
+  blocked edge is used, tagged from the world like the start sides); and with no open route the explainer prefers the
+  route the player's real policy allows to the reachable point nearest the goal, when it ends at least 8 blocks closer
+  than the all-open route's first block - its reason is the first block on the way on from there.
 - **Road trail on the Brink stairs to #3588** hugs the road's border; wanted: centred road trails, wider corners,
   stairs/slabs preferred on inclines - **KNG-76**.
 
