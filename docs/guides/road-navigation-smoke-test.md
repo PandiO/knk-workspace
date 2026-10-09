@@ -23,6 +23,8 @@ Run 4 (same day): the rest of A-D run; N8-N12 fixed in knk-plugin `62cbc36`..`d2
 KNG-75; still open: C6 (siege), and re-checks of the run 4 fixes.
 **Merged to the default branches 2026-10-08** (knk-plugin `main` `f9026cb`, knk-web-api `master` `4c570fa`, knk-web-app
 `main` `b51eba0`) on the developer's go-ahead after run 5; work continues on the standing branches (C3, A8/A9 below).
+**2026-10-09:** the follow-up fixes N10-N14 (runs 6-9: C3 and A8/A9) passed and are merged to knk-plugin `main` too
+(the API and the web app did not change). Only C6 (siege) remains of the checklist.
 **Last updated:** 2026-10-08
 **Sources:** the "Developer to-do" blocks of Phases 1, 3, 4 and 5 in `docs/specs/navigation/IMPLEMENTATION_PLAN.md`;
 progress report `docs/reports/2026-09-27-road-navigation-chain.md`. If this file and a plan block disagree, the plan wins.
@@ -972,6 +974,11 @@ as for a destination behind a closed gate.
   blocked edge is used, tagged from the world like the start sides); and with no open route the explainer prefers the
   route the player's real policy allows to the reachable point nearest the goal, when it ends at least 8 blocks closer
   than the all-open route's first block - its reason is the first block on the way on from there.
+
+**Run 9 (2026-10-09, developer, knk-plugin `9391780`): all pass** - A8/A9 with the South Gate closed (around district
+16 to the gate's spawn) and the closest-point guidance. The temporary diagnostics are removed (`10b9a16`). The
+follow-up fixes since the first trunk merge (C3: `a8ec1ec`, `b6cb699`; A8/A9: `758dbc5`, `9391780`) are merged to
+knk-plugin `main` (see the header). Still open: C6 (siege).
 - **Road trail on the Brink stairs to #3588** hugs the road's border; wanted: centred road trails, wider corners,
   stairs/slabs preferred on inclines - **KNG-76**.
 
