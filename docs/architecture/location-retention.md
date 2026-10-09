@@ -1,7 +1,7 @@
 # Location retention — orphan detection, review panel, digest and teleport-to
 
-**Status:** Implemented on feature branches `claude/kng-80-location-retention` in knk-web-api, knk-web-app and knk-plugin (2026-10-09), **not merged, not live-tested** — Linear [KNG-80](https://linear.app/kngpandi/issue/KNG-80)
-**Last updated:** 2026-10-09 (first version, with the developer's decisions of 2026-10-09)
+**Status:** Implemented, **live-tested by the developer and merged to trunk 2026-10-09** (knk-web-api `master` `c397585`, knk-web-app `main` `d10e3dd`, knk-plugin `main` `68a5310`) — Linear [KNG-80](https://linear.app/kngpandi/issue/KNG-80); [smoke test](../guides/location-retention-smoke-test.md)
+**Last updated:** 2026-10-09 (merged; smoke-test findings F1-F3: startup log, KNK `/tp` coordinate command, `/knk location` listing)
 **Related:** [KNG-21](https://linear.app/kngpandi/issue/KNG-21) currency alerts (the pattern reused here), [KNG-17](https://linear.app/kngpandi/issue/KNG-17) teleport engine, [KNG-43](https://linear.app/kngpandi/issue/KNG-43) unfinished FormSubmission cleanup, [KNG-62](https://linear.app/kngpandi/issue/KNG-62) group nodes in the web app
 
 ## 1. What this is
@@ -49,6 +49,9 @@ the web app, which creates the row. The grace period assumption holds.
 - **Run check now** in the web panel (knk.admin.location.orphans.run). One run at a time.
 - Every run is logged in `location_retention_runs`: trigger, who, start/end, candidates scanned, orphans found,
   new / already known / re-flagged / resolved, duration, error, digest time.
+- The API log shows `Location retention scheduler started: <schedule>, next run …, last run …` once at startup, and
+  `running the scheduled check for slot …` plus the run summary whenever a scheduled run happens. A restart with no
+  slot due logs only the startup line (each slot runs once).
 
 ## 4. Review items and states
 
@@ -93,12 +96,16 @@ holder who joins (lost on a plugin restart or after the API queue's 24 h; the it
 
 **knk-web-app** Staff → Player moderation → **Orphaned Locations** (`/admin/locations/orphans`): status filter,
 server-side paging, snapshot, earlier Keep decision, Keep/Delete with a note confirmed through `FeedbackModal`, teleport
-commands with click-to-copy (`/knk location tp <id>`, and `/execute in <dimension> run tp @s x y z yaw pitch` as a
-fallback) and a select-to-copy field when the Clipboard API is unavailable, the last run, the schedule and Run check now.
+commands with click-to-copy (`/knk location tp <id>`, and the KNK staff `/tp <x> <y> <z> <world> <yaw> <pitch>`, which is
+world-aware and needs no API lookup) and a select-to-copy field when the Clipboard API is unavailable, the last run, the
+schedule and Run check now. A vanilla `/execute in <dimension>` was dropped (smoke test F2): Paper calls the main world
+`minecraft:overworld` whatever its folder is named, and the web app can't tell which world that is.
 
 **knk-plugin** `/knk location here | tp <id> | orphans [page]`, each action checking its own node in game first.
 `tp` is a STAFF teleport through the KNG-17 `TeleportService` (freeze/region/siege guards, audit-logged, silent while
-vanished).
+vanished). `/knk location` has no top-level node, so `/knk help` and tab completion list it only to holders of one of its
+nodes, and complete only the actions they hold (`CommandRegistry.setVisibility`, smoke test F3); the same for the other
+`/knk` subcommands is [KNG-107](https://linear.app/kngpandi/issue/KNG-107).
 
 ## 7. Permission nodes
 
@@ -133,6 +140,7 @@ third alert-like feature appears.
 ## 9. Open items
 
 1. Members for the new Moderator/Admin groups are assigned by hand (the migration adds no one).
-2. Live test in game and in the web app (smoke-test steps in the knk-web-api PR).
-3. Unmerged branches add their own migrations (e.g. KNG-66); the model snapshot of whichever merges second needs a
-   rebase.
+2. Unmerged branches with their own migrations (e.g. KNG-66) need their model snapshot rebased on `master` now that
+   `AddLocationRetention` and `SeedLocationRetentionStaffGroups` are merged.
+3. Hide nodeless `/knk` subcommands from players without their nodes everywhere: [KNG-107](https://linear.app/kngpandi/issue/KNG-107).
+4. Mirror deletes into the user audit log once it supports non-player targets (§4).

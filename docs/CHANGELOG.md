@@ -4,6 +4,15 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## 2026-10-09
 
+- Location retention is merged ([KNG-80](https://linear.app/kngpandi/issue/KNG-80); knk-web-api `master` `c397585`,
+  knk-web-app `main` `d10e3dd`, knk-plugin `main` `68a5310`). A weekly check (Sunday 04:00 server time, configurable,
+  plus "Run check now") flags Locations that still have the default name and that nothing uses, read from the database
+  model rather than a hand-kept list, after a 7-day grace period. Staff review them under Player moderation → Orphaned
+  Locations and keep or delete each one; nothing is deleted automatically, and a delete re-checks first. Kept Locations
+  come back after 6 months or when they change. Online staff get one digest per run with something new;
+  `/knk location orphans` and `/knk location tp <id>` work in game. New Moderator and Admin permission groups carry the
+  new `knk.admin.location.*` nodes. Live-tested 2026-10-09
+  ([smoke test](guides/location-retention-smoke-test.md), findings F1-F3 fixed). Follow-up: KNG-107.
 - Gate commands get two layers ([KNG-77](https://linear.app/kngpandi/issue/KNG-77),
   [KNG-78](https://linear.app/kngpandi/issue/KNG-78), [KNG-79](https://linear.app/kngpandi/issue/KNG-79);
   knk-plugin `main` `5b1cc8b`, knk-web-api `master` `6192af0`):
