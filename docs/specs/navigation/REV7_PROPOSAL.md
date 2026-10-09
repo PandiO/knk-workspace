@@ -2,7 +2,9 @@
 
 **Status:** Accepted (2026-10-09): D1-D5 decided (§7.1); order C, A, B (§5). **Part C implemented 2026-10-09** on
 `claude/kng-73-road-navigation-n92vlm` (API `79e2b63`, plugin `ccb04891`, web app `1368115`; not merged, not live-tested;
-test steps R1-R4 in that branch's smoke-test guide). Parts A and B not started.
+test steps R1-R4 in that branch's smoke-test guide). **Part A step 1 implemented 2026-10-09** on knk-plugin
+`claude/navigation-walkable-path` `893e33da` (not live-tested; steps V1-V6 in the smoke-test guide); the patches (§2.4)
+stay until it passes. Part B ([KNG-93](https://linear.app/kngpandi/issue/KNG-93)) not started.
 **Last updated:** 2026-10-09
 **Builds on:** [DESIGN.md](DESIGN.md) §5.6 step 6 and §6.7 (live tags, start/goal sides),
 [LAST_MILE_PATHFINDING.md](LAST_MILE_PATHFINDING.md) (walk paths), the live test of 2026-10-07 to 10-09
@@ -238,3 +240,15 @@ entrance that was reached); the fallback order.
   before KNG-73 merges, so `AddDomainNavigationDefaults` stays one migration (noted on KNG-73).
 - **D5 — decided:** 2 blocks, as the live tags. Refine near borders only if a live test shows the need.
 - **Issues:** Part B split out to KNG-93; KNG-92 keeps Parts A and C. KNG-51 moved to Done.
+
+### 7.2 Implementation notes (2026-10-09)
+
+- **Part C** lives next to KNG-73's setting as planned, but the plugin reads it from the domain search the
+  `/navigate` catalogue already loads (`roadAccess`, the effective value), not from the region-summary DTO: the
+  region→domain snapshots also come from the town/district/structure caches, which do not carry it. Unknown keeps
+  the rule (Applies).
+- **Part A:** split nodes and pieces get ids from 2 000 000 000 (the router's virtual nodes are negative). Cuts fall
+  on sample positions widened by one sample each side, so a door's piece starts just before the door and a region's
+  just outside its border. Adjacent stretches with the same tags are one piece, so an edge inside a district is not
+  cut. Every tagged region cuts for now; skipping regions whose domain is "Ignored" for roads (Part C) follows once
+  both branches are merged.

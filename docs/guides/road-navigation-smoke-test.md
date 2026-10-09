@@ -25,7 +25,9 @@ KNG-75; still open: C6 (siege), and re-checks of the run 4 fixes.
 `main` `b51eba0`) on the developer's go-ahead after run 5; work continues on the standing branches (C3, A8/A9 below).
 **2026-10-09:** the follow-up fixes N10-N14 (runs 6-9: C3 and A8/A9) passed and are merged to knk-plugin `main` too
 (the API and the web app did not change). Only C6 (siege) remains of the checklist.
-**Last updated:** 2026-10-08
+**2026-10-09 (later):** rev. 7 Part A (the routing view) implemented on knk-plugin `claude/navigation-walkable-path`
+`893e33da`, not live-tested - "Rev. 7 Part A — routing view" at the end of Findings (V1-V6).
+**Last updated:** 2026-10-09
 **Sources:** the "Developer to-do" blocks of Phases 1, 3, 4 and 5 in `docs/specs/navigation/IMPLEMENTATION_PLAN.md`;
 progress report `docs/reports/2026-09-27-road-navigation-chain.md`. If this file and a plan block disagree, the plan wins.
 
@@ -994,6 +996,33 @@ blocks off-road).
 **Deploy for run 3:** knk-plugin `claude/navigation-walkable-path` `a4892db` and knk-web-api `claude/road-navigation`
 `fa234f7` (the merged plugin needs KNG-56's `GET /api/Domains/access-rules`). The dev DB lacks trunk's KNG-59
 migration `UniquePermissionGrantHolderNode` (it deletes duplicate permission grants); navigation does not need it.
+
+### Rev. 7 Part A — routing view (implemented 2026-10-09, to test)
+
+knk-plugin `claude/navigation-walkable-path` `893e33da` (= `main` `fd869aa` + Part A; the API and the web app are
+unchanged). Gradle core 1762 / api-client 206 / paper 1306 green. [REV7_PROPOSAL.md](../specs/navigation/REV7_PROPOSAL.md)
+§2, KNG-92. Navigation now routes on a view of the network cut at every gate door and region border the live tags
+find; the admin side (overlay, `/knk road …` except `why`) still shows the stored edges. The N6/N10/N14 patches are
+still in; they go in a second step once this passes.
+
+Deploy: `./gradlew :knk-paper:dev` from that branch. Give the live tags a minute after the restart (or a network
+change) before testing.
+- [ ] **V1** `/knk road status` → "live tags": `… N cut into M pieces` - expect a few edges (4 gates plus district
+  borders on Cinix).
+- [ ] **V2 (the gap Part A closes)** Close the South Gate and `/nav` to a place behind it from the bridge side:
+  "Guiding you to the gate" now ends **at the gate** (within a block or two), not at the bridge-side node about 34
+  blocks before it (edge 10139).
+- [ ] **V3** A road that clips a district you may not enter (N4's district 16 if it touches a road, or make a
+  region over one end of a road with `AllowEntry` off): the stretch outside the district stays usable; a destination
+  on it is reached without a detour. Into the district: "Guiding you to its edge" ends just outside it.
+- [ ] **V4** Re-run C3 (a gate closes on the route; opening it gives the shorter route back), C4 (pass-through hint
+  and route through the gate), C5 (`allowEntry=false` → to the edge; bypass → in; `allowExit=false` → routes stay
+  inside), A7 (closed gate on the shortcut → detour; opening → back within ~2 s) and A8 (a region you may not enter
+  → around it).
+- [ ] **V5** N6, N10, N14 cases: standing on the road of a closed gate (either side), a gate closing behind you, a
+  destination on the open side of a closed gate - same results as runs 7-9.
+- [ ] **V6** `/knk road why <player>` on a route through a gate: blocked lines read `edge #10139 blocks 31-34` (the
+  stored edge and the stretch), not a large synthetic id. No extra "Continue"/"Take the stairs" lines mid-road.
 
 ### Phase 3 — rebuild re-test (2026-10-02, developer; recorded from the commit messages)
 
