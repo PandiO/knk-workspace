@@ -1,7 +1,7 @@
 # Game Settings — Implementation Plan
 
-**Status:** **Code-complete, merged with trunk on the branches, pushed; not merged to trunk, not live-tested** (2026-10-09). knk-plugin `claude/kng-52-game-settings` `734eaf50`; knk-web-api `claude/kng-52-game-settings` `8ef1282` (migration **not applied**); knk-web-app: round 2 `055ac28` is already on `main`. Next: the developer applies the migration and runs the live smoke test (§3, §4), then merges API → plugin.
-**Last updated:** 2026-10-09
+**Status:** **Smoke test run 1 done (2026-10-09), round 3 code-complete on `claude/kng-52-round3`, not live-tested; nothing merged to trunk.** Run 1: steps 1-3, 6, 8, 11-14 pass, 10 and 15 accepted, **step 4 failed** (game mode), step 5 found the picker bug, 7.3 and 9 still to test (§4.2). Round 3 (§1): knk-web-api `claude/kng-52-round3` `9f11768`, knk-plugin `67eb6a5d`, knk-web-app `89f4fdd`, each on top of the KNG-52 branch (web-app: on `main`). Next: the developer brings round 3 into the test checkouts and runs §4.3.
+**Last updated:** 2026-10-10
 **Linear:** [KNG-52](https://linear.app/kngpandi/issue/KNG-52)
 **Sources:** [DESIGN.md](DESIGN.md) (behavior, decisions D1–D17, open questions); stash `19-08-26: Workable: GameSettings feature` in knk-plugin.
 
@@ -107,10 +107,51 @@ join spawn, default respawn and per-world settings, but not KNG-52's `GroupOverr
 a group's spawn or respawn would have been reported as orphaned. The fix adds the column, with the test
 `Run_SkipsLocationsNamedInGroupOverrides`.
 
+### Round 3 (2026-10-10): after smoke test run 1
+
+Branch `claude/kng-52-round3` in each repo, pushed. knk-plugin and knk-web-api start from `claude/kng-52-game-settings`
+(the developer has that branch checked out for testing); knk-web-app starts from `main` `d10e3dd`. To test, merge or
+fast-forward `origin/claude/kng-52-round3` into the test checkouts.
+
+**knk-web-api `9e9b397`, `9f11768`:**
+- D13 (decided): `PermissionGroupPrecedence` is now the teleport fee order (`TeleportGroupPolicy.Chain`), with a
+  parity test.
+- `PermissionGroupGameSettingsDto.leaveAnnouncement` (null = not overridden, blank = silent). No migration needed:
+  it's stored in `GroupOverridesJson`.
+
+**knk-plugin `67eb6a5d`:**
+- D1 (decided): `WorldSpawn` respawn forces the world spawn and ignores beds and anchors. A nether/End death uses the
+  main world's spawn, and so does the "use the world spawn" fallback.
+- Group leave message, and `{title}`/`{titlename}` in every join/leave message (`Announcements`).
+- `/weather` confirmation in worlds with a weather rule (`GameSettingsWeatherCommandListener`, core
+  `WeatherCommandNotice`).
+- Step 4 diagnostics: when the loading hold ends it logs `[KnK GameSettings] <player> left the loading hold in <MODE>
+  (world …)`. If the mode changes within 2 s, it warns `…'s game mode changed from X to Y within 2 s after the
+  loading hold`.
+
+**knk-web-app `89f4fdd`:**
+- **Picker bug (run 1, step 5):** `locationClient.getAll()` called `GET api/Locations/GetAll`, which doesn't exist
+  (404, caught as an empty list). The picker therefore had no Locations, and every Structure was dropped, because
+  Structures only carry a `locationId`. Towns and Districts still showed since their location comes inline. Fixed to
+  `GET api/Locations`, with a regression test.
+- **Picker redesign** (`LocationReferencePicker`), used in all 5 places:
+  - selected-spot card (type badge, parent path, coordinates; Change, ×);
+  - the panel opens with the full grouped list and the search focused;
+  - type chips, highlighted matches, keyboard navigation (arrows, Enter, Escape);
+  - "+ New Location…" at the bottom of the panel;
+  - a warning when a saved spot no longer exists;
+  - labels trimmed (the "Residential District\n" name);
+  - ticking a group's *Own spawn* no longer silently picks the first option.
+- D1 label: *World spawn (beds and anchors ignored)*.
+- "Own leave message" on the group card, `{title}` hints and previews.
+
 ## 2. Tests run
 
 | Suite | Result |
 |---|---|
+| **2026-10-10, round 3:** knk-plugin `build -x deployToDevServer` | BUILD SUCCESSFUL. core 1828, api-client 219 (2 skipped), paper 1394 (17 skipped), no failures. New: `WeatherCommandNoticeTest` (5), `GameSettingsWeatherCommandListenerTest` (3; it caught `/weather` vs `/minecraft:weather` not confirming each other, fixed), `GroupOverridesTest` leave message + `{title}`, `RespawnPlannerTest` forced world spawn. |
+| **2026-10-10, round 3:** knk-web-api full `dotnet test` | 2025 tests: 1962 passed, 54 skipped, 9 failed, the same 9 as untouched `master` (list below). New: `GroupOverrides_KeepALeaveMessage`, `Precedence_IsTheTeleportFeeOrder`, `Precedence_SurvivesCyclesAndMissingParents`. |
+| **2026-10-10, round 3:** knk-web-app | `tsc --noEmit` clean. Game settings + location client tests 22/22 (15 new). Full run 541/547; the 6 failures (LoginForm, useEnrichedFormContext, 3 FormWizard suites, RoadsAdminPage) fail the same way on `d10e3dd`. Not looked at in a browser yet. |
 | **2026-10-09, after the trunk merge:** knk-plugin `./gradlew build -x deployToDevServer` | BUILD SUCCESSFUL. core 1821, api-client 219 (2 skipped), paper 1391 (17 skipped), no failures. |
 | **2026-10-09:** knk-web-api `dotnet build` + full `dotnet test` | Build 0 errors. 2023 tests: 1960 passed, 54 skipped, **9 failed**. Untouched `master` `c397585` gives the **same 9** (2008 tests): `CurrencyWriteGuardTests.NoCodeOutsideTheLedgerAssignsABalance`, `ClientActivityStoreTests.RecordsRequestsIntoRollingBuckets`, 2× `CurrencyAnomalyDetectorTests` (MintRate, Velocity), `FieldValidationServiceTests.ValidateConditionalRequiredAsync_WithConditionMet_ValidatesRequired`, 2× `PathResolutionServiceTests.ValidatePathAsync_AllowsValidV1Paths` (`Town.Name`, `Town.WgRegionId`), `RoadNetworkServiceTests.Validation_GeometryFarFromItsNode`, `TransferPolicyEvaluatorTests.DailySendCap_CountsTheLast24Hours_AndReportsWhatIsLeft`. |
 | Round 1: knk-web-api `dotnet test --filter GameSettings` | 6 passed |
@@ -181,7 +222,7 @@ plugin when the player rejoins.
    - *Nearest town*: die inside another town, you respawn in it.
    - Set **Max nearest-town distance** below the nearest town's distance and untick *Use the world spawn (unticked:
      the server decides)*: you respawn at your bed or the world spawn.
-   - *Server decides (bed / anchor, else world spawn)*: your bed is respected.
+   - *World spawn (beds and anchors ignored)* (round 3, D1; run 1 had "Server decides", where the bed was respected): you respawn at the world spawn even with a bed.
    - A staff account is never redirected, and leaving the End is not redirected.
    - In a siege match, the siege spawn still wins.
    - *Trunk (KNG-56):* if the chosen spot is inside a domain whose **AllowEntry** refuses the player, they respawn at
@@ -238,19 +279,74 @@ plugin when the player rejoins.
 - `/knk cache refresh` still lists all hooks, without errors.
 - Vanilla item pickup: trunk removed the old "non-ops can't pick up items" handler. That is a trunk change, not KNG-52.
 
+### 4.2 Smoke test run 1 (2026-10-09, developer)
+
+| Step | Result |
+|---|---|
+| 1-3 | Pass |
+| 4 Game mode | **Fail.** The main world was set to ADVENTURE, saved, `/knk cache refresh` run, then rejoined as MrBedue (Dragon Blood): still SURVIVAL. Session analysis: the API and the plugin log show ADVENTURE active for `world_KNK-DEV` from 22:55:58, before every one of MrBedue's joins. Every KnK join path sets the world mode; no other plugin on the server sets game modes, and there are no WorldGuard game-mode flags. Each of MrBedue's 8 joins logged "Clearing invulnerability left over from an interrupted join hold", so the hold's end isn't clean, and that is where the mode is handed back. Cause not found yet; round 3 adds diagnostics (§1), and the developer was asked to check with `data get entity MrBedue playerGameType` (0 = survival, 2 = adventure). |
+| 5 Respawn | Pass, except the picker: a Structure couldn't be chosen (fixed in round 3, §1), and the developer asked for a more intuitive picker everywhere (done in round 3). |
+| 6 | Pass |
+| 7 Weather | 7.1 pass, but the developer asked for a confirmation prompt on `/weather` while a rule is active, for every non-Normal mode (round 3). 7.2 pass. 7.3 still being tested. |
+| 8 | Pass |
+| 9 API down | Still being tested |
+| 10, 15 | Accepted |
+| 11-14 | Pass |
+
+Decisions from the same review: D1 force the world spawn, D13 use the teleport fee order, D17 accepted, add a per-group
+leave message plus a title placeholder (all done in round 3). D2 and D3 are still open (DESIGN §7).
+
+### 4.3 Round 3 checks
+
+Bring `claude/kng-52-round3` into the test checkouts (API, plugin, web app), restart the API and deploy the plugin.
+No new migration.
+
+16. **Picker** (any spawn/respawn field):
+    - Nothing chosen: a dashed **Choose a spawn point** button. Clicking it opens the panel with the search focused and
+      the full list visible, grouped Towns / Districts / Structures / Locations.
+    - **Structures are listed and can be picked.** Picking one shows a card: type badge, name, parent path (e.g.
+      *Cinix › Residential District*, no stray line break) and coordinates.
+    - The chips filter by type. Search by id, name or parent highlights the matches. Arrow keys plus Enter pick a
+      row, and Escape closes the panel. An outside click closes it too.
+    - **+ New Location…** opens the Form Wizard as before. × clears the field.
+    - A group's *Own spawn* tick shows the picker and doesn't pick a spot by itself.
+17. **Forced world spawn (D1):**
+    - Respawn mode *World spawn (beds and anchors ignored)*: sleep in a bed, die, and you respawn at the world spawn,
+      not the bed.
+    - Die in the nether: you respawn at the main world's spawn.
+18. **Group leave message and `{title}`:**
+    - Global join text `- {group} {title} {player} joined the server.` → e.g. "- Dragon Blood Knight MrBedue joined
+      the server."
+    - A player without a title shows no double space.
+    - Tick **Own leave message** for a group with `&7{group} {title} {player} left`: its members' quit uses it, and an
+      empty one makes them leave silently.
+19. **Group order (D13):** the card's #1, #2… order now follows Weight, each group followed by its parents. A player's
+    group spawn and their `/spawn` price come from the same group.
+20. **`/weather` confirmation:**
+    - With *Constant* RAIN, `/weather clear` doesn't run. You're told "Game Settings: weather in world_KNK-DEV is
+      Constant (rain). clear will be switched back to rain within 30 s." with **[Change anyway]**. Clicking it, or
+      typing the command again within 15 s, runs it.
+    - *Blocked* THUNDER, `/weather rain`: "rain is allowed by the rule", still confirmed.
+    - *Weighted*: "thunder lasts until the next natural change…".
+    - *Normal*, the console, or a player without `minecraft.command.weather`: no prompt.
+21. **Step 4 again** (game mode): repeat step 4 and send the log lines `[KnK GameSettings] MrBedue left the loading
+    hold in …` and any `…game mode changed from … within 2 s…` warning, plus the `data get entity MrBedue
+    playerGameType` result.
+
 Record results under a "Smoke test" heading here and in KNG-52.
 
 ## 5. Merge
 
-After the smoke test, merge `claude/kng-52-game-settings` in this order:
-1. knk-web-api `master`, with the migration applied wherever that API runs. The plugin needs its new fields and auth.
-2. knk-plugin `main`.
+After the smoke test, merge in this order:
+1. knk-web-api `master`: `claude/kng-52-round3` (it contains `claude/kng-52-game-settings`), with the migration applied wherever that API runs. The plugin needs its new fields and auth.
+2. knk-plugin `main`: `claude/kng-52-round3`.
+3. knk-web-app `main`: `claude/kng-52-round3` (round 3 only; round 2 is already on `main`). It works against an older API too (the extra `leaveAnnouncement` is ignored).
 
-knk-web-app is already on `main` (`055ac28`). If trunk moves again before the merge, merge it into the branches
+Round 2 of the web app is already on `main` (`055ac28`). If trunk moves again before the merge, merge it into the branches
 first. Both branches already carry trunk as of 2026-10-09, and the API snapshot is consistent. Then:
 - update the [feature register](../../FEATURE_REGISTER.md) row (Merge `trunk`, Verification) and add a
   [CHANGELOG](../../CHANGELOG.md) entry, including the town-4 respawn note;
 - drop the knk-plugin stash `19-08-26: Workable: GameSettings feature`;
-- remove the worktrees `Repository/_worktrees/knk-{web-api,plugin,workspace}-kng52`;
+- remove the worktrees `Repository/_worktrees/knk-workspace-kng52` and `knk-{web-api,plugin,web-app}-kng52r3` (the web-app one has a real `node_modules` folder, no junction);
 - move the ACTIVE_SESSIONS row to Recently completed;
 - close KNG-52 or file the DESIGN §8 follow-ups.
