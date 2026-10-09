@@ -6,8 +6,9 @@ developer decision after the smoke test):** designed plazas and movable nodes �
 **Builder 5 (2026-10-04, finding L):** §5.6 steps 2, 3, 3b and the §7 corrections line. **Rev. 6:**
 [REV6_PROPOSAL.md](REV6_PROPOSAL.md). **Part B, curated tiles, is implemented (2026-10-05, not live-tested):** §3.3
 `State`/`CuratedAt`, §3.6 `Confirmed`, §3.9 proposals, §7 commands; decisions and status in plan §5.7. Part A (open
-areas before the centreline) follows.
-**Last updated:** 2026-10-05
+areas before the centreline) follows. **2026-10-09 (finding N15, merged):** destinations snap with their own height
+weight, `destination-snap-vertical-weight` (default 1) - §4, §5.2, §6.2 step 2.
+**Last updated:** 2026-10-09
 **Implementation plan:** [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) — its §1 lists ten small deviations (D1-D10) decided
 while mapping the design onto trunk code; where this document and the plan disagree, the plan wins.
 **Linear:** [KNG-27](https://linear.app/kngpandi/issue/KNG-27/road-navigation-street-road-graph-endpointsintersections-traced-road)
@@ -250,7 +251,8 @@ navigation:
   overlay-materials: [SNOW, "*_CARPET", "*_PRESSURE_PLATE", RAIL, POWERED_RAIL, LEAF_LITTER, PINK_PETALS]
   seed-from-domains: true        # every Domain Location within 8 blocks of a road cell is a seed
   max-snap-distance: 48          # hard limit (developer decision): player and destination must be this close to a road
-  snap-vertical-weight: 4        # 1 block of height counts as 4 when snapping (bridge vs road below)
+  snap-vertical-weight: 4        # 1 block of height counts as 4 when snapping the player (bridge vs road below)
+  destination-snap-vertical-weight: 1 # the same for a destination: plain 3D, its last leg is a walk path (N15)
   trail-length: 30
   trail-period-ticks: 10
   trail-particle: DUST
@@ -325,7 +327,9 @@ therefore never projects onto 2D. It works on a **span grid**, the same structur
   entrances (a tunnel mouth, a ramp) from any seed. Levels connected only by a ladder, a water lift or an elevator get a
   **recorded vertical edge** (§5.10) — the builder never climbs ladders.
 - **Snapping** (§6.2) weights height differences ×`snap-vertical-weight`, so a player on a bridge snaps to the bridge,
-  not to the road 10 blocks below; destinations snap the same way.
+  not to the road 10 blocks below. Destinations snap with `destination-snap-vertical-weight` (default 1, plain 3D;
+  finding N15, 2026-10-09): their last leg is a walk path, which climbs stairs and ladders, so a roof 28 blocks above
+  the road below it is 28 blocks off-road, not 112.
 - **Overlay** (§7) shows only edges within ±8 blocks of the viewer's Y by default (`/knk road show all` for every level).
 - **Guidance** adds "Go down into the tunnel" / "Cross the bridge" when the next edge's height differs by more than 3
   blocks from where the player is (§6.5).
@@ -523,7 +527,8 @@ A domain without a `Location` falls back to `region`; with neither it is refused
 
 1. Resolve the destination to a point, or a set of goal points (region mode, §6.3).
 2. **Snap** the player and the target to the nearest edge segments within `max-snap-distance`, using 3D distance with
-   height weighted ×`snap-vertical-weight` (§5.2); split the edges with `Virtual` nodes.
+   height weighted ×`snap-vertical-weight` for the player and ×`destination-snap-vertical-weight` (1) for the target
+   (§5.2, N15); split the edges with `Virtual` nodes.
 3. **Off-road legs are straight-line hints with a hard limit** (developer decision):
    - Target within `max-snap-distance` (48) of the player → **direct mode**, a straight trail to the target, no road.
    - Otherwise **both** the player and the target must be within 48 blocks of a road, or `/navigate` refuses:

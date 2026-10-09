@@ -986,12 +986,13 @@ knk-plugin `main` (see the header). Still open: C6 (siege).
 `/nav Keep Tower Roof` (Location 79 at (1410, 113, -506)) said "Keep Tower Roof is too far from any road." The player
 stands on road edge 5487 (0.3 away); the straight distance is 54.6, so not direct mode. The target is **29.7** blocks
 (3D) from the nearest road (edge 10088 at (1410, 84, -516), 28 blocks below the roof), but the snapper weights height ×4
-(`snap-vertical-weight`), which measures **112** > 48. **Fixed 2026-10-09, to re-test:** knk-plugin
-`claude/kng-75-offroad-destinations` `5d674a20` (from `main` `fd869aa`; merges cleanly with rev. 7 Part A). A destination
+(`snap-vertical-weight`), which measures **112** > 48. **Fixed 2026-10-09, live-tested by the developer (passes)
+and merged to knk-plugin `main` `9f466a9f`:** `claude/kng-75-offroad-destinations` `5d674a20` (merges cleanly with
+rev. 7 Part A). A destination
 snaps with its own `navigation.destination-snap-vertical-weight` (default 1, plain 3D): its goal, its re-snap into the
 start's network (also `/knk road why`) and the N13 roads-instead retry. The player's start keeps ×4 (bridge case); the
 48-block limit stays. Gradle core 1753 / api-client 206 / paper 1310 green.
-- [ ] **N15 re-test:** deploy that branch (`./gradlew :knk-paper:dev`). From (1419, 82, -550), `/nav Keep Tower Roof`
+- [x] **N15 re-test (passed 2026-10-09):** deploy that branch (`./gradlew :knk-paper:dev`). From (1419, 82, -550), `/nav Keep Tower Roof`
   → a road route to below the keep, then a walk path up; or "No conventional path" if there is no walkable way up
   within the walk budget (intended, not a refusal). `/knk road why Keep Tower Roof` should show the route too.
 
