@@ -942,6 +942,12 @@ non-members, joining a lobby ends navigation, `/navigate` is refused in a lobby.
 
 **Deploy for run 6 (re-check C3, A8/A9):** knk-plugin `claude/navigation-walkable-path` `758dbc5` (API unchanged).
 These two fixes are not on trunk yet.
+
+**Run 6 (2026-10-09, developer):** "C3 and A8/A9 show no improvement". The server log shows that the tests from 13:07
+to 13:16 ran on the jar from before the deploy (jar written 13:18, restart 13:19). After the restart there is one
+short C3 run (MrBedue `/nav South Gate`, `/nav Merchant's Square`, gate open 13:20:57 / close 13:21:13, positions not
+logged), and no A8/A9 run. Temporary INFO diagnostics added in knk-plugin `1fae2af` ("[Navigation] Re-check",
+"Walk path", "Roads instead") for the re-test; to be removed afterwards.
 - **Road trail on the Brink stairs to #3588** hugs the road's border; wanted: centred road trails, wider corners,
   stairs/slabs preferred on inclines - **KNG-76**.
 
