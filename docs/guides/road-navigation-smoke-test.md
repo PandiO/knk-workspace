@@ -1037,22 +1037,31 @@ time: test this and KNG-104 one after the other (or ask for a combined test buil
 - [ ] **S7** `/knk road status`: the walk-path line counts the walk to the road as well ("walking", "computing").
 - [ ] **S8** Regression: standing on the road, `/nav` as before (no walk leg); a nearby target (direct mode) as before.
 
-### Rev. 7 follow-up — "Ignored" regions cut no roads (implemented 2026-10-09, to test)
+### Rev. 7 follow-up — "Ignored" regions cut no roads (implemented 2026-10-09, re-test)
 
-knk-plugin `claude/kng-92-ignored-regions-no-cuts` `71fcbba6` (on `main` `1159ae5d`; the API and the web app are
-unchanged). Gradle core 1784 / api-client 209 / paper 1366 green. A region whose domain's "Entry rule on roads" is
-`Ignored` (houses, shops along a street) no longer cuts the road in the routing view; the router already ignored its
-rule. A region of a domain not known yet still cuts until the next live-tag pass.
+knk-plugin `claude/kng-92-ignored-regions-no-cuts` (on `main` `1159ae5d`; the API and the web app are unchanged): `71fcbba6`
+(the filter) and `aff6ec74` (run-1 fix). Gradle core 1784 / api-client 209 / paper 1367 green. A region whose domain's
+"Entry rule on roads" is `Ignored` (houses, shops along a street) no longer cuts the road in the routing view; the router
+already ignored its rule.
+
+**Run 1 (2026-10-09, `71fcbba6`):** I1 done; I2 only the "+region" count dropped (9 → 7), the cut count stayed at
+"13 cut into 45 pieces"; I3 routed east (the log shows it before the restart too: MrBedue at Navigation Test's border at
+22:15:46; a `/nav` right after a change can still use the old catalogue, which loads in the background); I4 route west
+again, numbers unchanged. **Cause:** the filter looked the region's domain up in the region → domain cache, which
+`/knk cache refresh` empties since KNG-104 - right after a refresh the region was unknown and kept cutting - and a change
+waited for the next live-tag pass (a minute). An offline replay of the cut on the dev data (regions only) confirms that
+without `domain_16` edge #5385 (Wearway) is not cut: one edge and two pieces fewer. **Fixed in `aff6ec74`:** the
+`/navigate` catalogue now keeps each domain's region id and answers "is this region Ignored" itself, and a catalogue
+load that changes the set recuts the roads at once.
 
 Deploy: `./gradlew :knk-paper:dev` from that branch, restart, wait for "… cut into N pieces" in `/knk road status`.
-- [ ] **I1** Note the live-tags line of `/knk road status` (edges cut, pieces) with every rule on `Applies`.
-- [ ] **I2** Set "Navigation Test" to `Ignored` (its "Road Access Override", or the District type), `/knk cache refresh`,
-  wait a minute (the next live-tag pass): fewer edges cut / pieces than in I1. `/knk road why` on a route along
-  Wearway shows the Wearway edge without a `blocks …` stretch at the district.
-- [ ] **I3** `/nav South Gate` from Brink takes the east road through Navigation Test; walking in, the border still
-  refuses entry.
-- [ ] **I4** Back to `Applies`, `/knk cache refresh`, wait a minute: the cut is back (I1's numbers) and the route goes
-  west again.
+- [ ] **I1** Every rule on `Applies`: note the live-tags line of `/knk road status` (edges cut, pieces).
+- [ ] **I2** Set "Navigation Test" to `Ignored` (its "Road Access Override"), `/knk cache refresh`, wait a few seconds:
+  `/knk road status` shows one edge and two pieces fewer than in I1 (Wearway, #5385, no longer cut). `/knk road why`
+  on a route along Wearway shows that edge without a `blocks …` stretch.
+- [ ] **I3** `/nav South Gate` from Brink (run it twice if the first was within a second of the refresh): the east
+  road through Navigation Test; walking in, the border still refuses entry.
+- [ ] **I4** Back to `Applies`, `/knk cache refresh`, a few seconds: I1's numbers again, and the route goes west.
 
 ### KNG-104 — the navigator's domain cache refreshes (live-tested and merged 2026-10-09)
 
