@@ -1,6 +1,8 @@
 # Road Navigation — Rev. 7 proposal: a routing view, entrances, and which access rules apply to roads
 
-**Status:** Accepted (2026-10-09): D1-D5 decided (§7.1). Nothing implemented; order C, A, B (§5).
+**Status:** Accepted (2026-10-09): D1-D5 decided (§7.1); order C, A, B (§5). **Part C implemented 2026-10-09** on
+`claude/kng-73-road-navigation-n92vlm` (API `79e2b63`, plugin `ccb04891`, web app `1368115`; not merged, not live-tested;
+test steps R1-R4 in that branch's smoke-test guide). Parts A and B not started.
 **Last updated:** 2026-10-09
 **Builds on:** [DESIGN.md](DESIGN.md) §5.6 step 6 and §6.7 (live tags, start/goal sides),
 [LAST_MILE_PATHFINDING.md](LAST_MILE_PATHFINDING.md) (walk paths), the live test of 2026-10-07 to 10-09
