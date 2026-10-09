@@ -1009,6 +1009,25 @@ Next: KNG-75 proper (walk legs at both ends, destinations further than 48 blocks
 `fa234f7` (the merged plugin needs KNG-56's `GET /api/Domains/access-rules`). The dev DB lacks trunk's KNG-59
 migration `UniquePermissionGrantHolderNode` (it deletes duplicate permission grants); navigation does not need it.
 
+### KNG-104 — the navigator's domain cache refreshes (implemented 2026-10-09, to test)
+
+knk-plugin `claude/kng-104-domain-cache-refresh` `132ce69a` (on `main` `5b1cc8b8`; the API and the web app are
+unchanged). Gradle core 1784 / api-client 209 / paper 1365 green. A region whose cached domain is older than the cache
+TTL (1 minute) is re-asked in the background when navigation looks it up; a region the API no longer knows is
+forgotten; `/knk cache refresh` clears the map. Before, a change to AllowEntry/AllowExit reached navigation only after
+a restart ([KNG-104](https://linear.app/kngpandi/issue/KNG-104), run 1 finding P1).
+
+Deploy: `./gradlew :knk-paper:dev` from that branch, restart. A test account without `knk.region.bypass`.
+- [ ] **D1** "Navigation Test" denies entry: from Brink, `/nav South Gate` takes the west road (Kardenna end).
+- [ ] **D2** In the web app, allow entry on "Navigation Test". **No restart, no cache refresh.** Wait a minute, then
+  `/nav South Gate` again (twice if the first still goes west: the first lookup only starts the refresh): it now
+  takes the shorter east road through the district.
+- [ ] **D3** Deny entry again while navigating along the east road: within about a minute and a re-check (every 2 s)
+  the route changes ("… may not enter Navigation Test - recalculating", or the west road).
+- [ ] **D4** Allow entry once more, then `/knk cache refresh` at once: the next `/nav South Gate` goes east straight away.
+- [ ] **D5** The server log shows no `resolveRegionsFromApi` burst per route for regions that do have a domain (one
+  refresh per region per minute at most).
+
 ### Rev. 7 Part A step 2 — the patches removed (implemented 2026-10-09, to test)
 
 knk-plugin `claude/navigation-walkable-path` `9fa14394` (= `main` `54878783` + step 2; the API and the web app are

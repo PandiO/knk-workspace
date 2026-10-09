@@ -631,6 +631,11 @@ goal on a blocked edge is reached over the open stretch from a node (goal sides,
 is guided as close to the goal as the open roads go when that beats stopping at the first block of the shortest
 all-open route (N14).
 
+**Fresh domain rules (KNG-104, 2026-10-09).** The router and the walk path look domains up by region through
+`RegionDomainResolver`; an entry older than the cache TTL (1 minute) is answered as it is and re-asked from the API in
+the background, a region the API no longer knows is forgotten, and `/knk cache refresh` clears the map. So a changed
+AllowEntry/AllowExit reaches the next route or re-check within about a minute, without a restart.
+
 **Routing view (rev. 7 Part A, merged 2026-10-09).** Navigation routes on a view of the network in which every edge is
 cut where its access tags change - at each gate door and region border the live tags find - so a gate is its own short
 piece and a district clipping a road blocks only the stretch inside it ([REV7_PROPOSAL.md](REV7_PROPOSAL.md) §2,
