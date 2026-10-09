@@ -4,6 +4,10 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## 2026-10-09
 
+- Resetting a player's discovery on their moderation profile now asks in the app's own dialog instead of the
+  browser's `confirm` ([KNG-40](https://linear.app/kngpandi/issue/KNG-40); knk-web-app `main` `6d23238`). After
+  the reset the row leaves the list at once and a green line confirms it. The other `window.confirm` prompts are
+  [KNG-82](https://linear.app/kngpandi/issue/KNG-82).
 - Domain access refusals are also said in chat ([KNG-74](https://linear.app/kngpandi/issue/KNG-74); knk-plugin
   `main` `fd869aa`). The first "You are not allowed to enter/leave X." of a refusal episode goes to chat as well as
   the action bar. An episode is the first refusal after 10 s without one, or a different refusal. The `/navigate`
