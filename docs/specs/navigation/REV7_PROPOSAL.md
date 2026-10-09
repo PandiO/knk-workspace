@@ -2,8 +2,7 @@
 
 **Status:** Accepted (2026-10-09): D1-D5 decided (§7.1); order C, A, B (§5). **Part C and Part A step 1 live-tested
 (smoke-test runs 1-3) and merged to trunk 2026-10-09:** knk-web-api `master` `6d160aa`, knk-web-app `main` `e2ba784`,
-knk-plugin `main` `54878783`. Part A step 2 (removing the patches, §2.4) live-tested (W1-W4, W7, W8; W5/W6 not
-run) and merged to knk-plugin `main` `723d21f4`. **Parts A and C are done.** Part B ([KNG-93](https://linear.app/kngpandi/issue/KNG-93)) not started. Follow-ups
+knk-plugin `main` `54878783`. Part A step 2 (removing the patches, §2.4) live-tested (W1-W8) and merged to knk-plugin `main` `723d21f4`. **Parts A and C are done.** Part B ([KNG-93](https://linear.app/kngpandi/issue/KNG-93)) not started. Follow-ups
 from the live test: KNG-103, KNG-104, P4 (a region over part of a road's width, §7.2).
 **Last updated:** 2026-10-09
 **Builds on:** [DESIGN.md](DESIGN.md) §5.6 step 6 and §6.7 (live tags, start/goal sides),

@@ -29,8 +29,8 @@ KNG-75; still open: C6 (siege), and re-checks of the run 4 fixes.
 `893e33da`, not live-tested - "Rev. 7 Part A — routing view" at the end of Findings (V1-V6).
 **2026-10-09 (evening):** KNG-73, rev. 7 Part C and Part A step 1 live-tested (runs 1-3 under "Rev. 7 Part A —
 routing view") and **merged to trunk** (API `6d160aa`, web app `e2ba784`, plugin `54878783`).
-**2026-10-09 (late):** rev. 7 Part A step 2 (the N6/N10/N14 patches removed) live-tested (W1-W4, W7, W8; W5/W6 not
-run) and merged to knk-plugin `main` `723d21f4`.
+**2026-10-09 (late):** rev. 7 Part A step 2 (the N6/N10/N14 patches removed) live-tested (W1-W8) and merged to knk-plugin
+`main` `723d21f4`.
 **Last updated:** 2026-10-09
 **Sources:** the "Developer to-do" blocks of Phases 1, 3, 4 and 5 in `docs/specs/navigation/IMPLEMENTATION_PLAN.md`;
 progress report `docs/reports/2026-09-27-road-navigation-chain.md`. If this file and a plan block disagree, the plan wins.
@@ -1040,7 +1040,8 @@ the gate road then counts as closed along its whole length.
 **W3**, **W4**, **W7**, **W8** pass. **W5** (a gate closing behind the player, N10/C3) and **W6** (A7) were not run;
 the unit tests cover both on the routing view (`NavigationServiceTest.throughTheOpenGateThenItClosesBehindThePlayer`,
 `aRouteStartingPastTheGateOnItsEdgeIsNotBlockedByIt`, `aClosedGateOnTheRouteTriggersARerouteWithTheReason`), and V4
-(C3, A7) passed with step 1. No findings. **Merged to knk-plugin `main` `723d21f4`.** Still to run live: W5, W6.
+(C3, A7) passed with step 1. No findings. **Merged to knk-plugin `main` `723d21f4`.** **W5 and W6 pass** (developer,
+2026-10-09, on trunk): every W step has passed.
 
 ### KNG-73 — configurable default destination (implemented 2026-10-08, to test)
 
