@@ -1,7 +1,7 @@
 # Game Settings — admin guide
 
-**Status:** Draft. It describes branch `claude/kng-52-game-settings` (two rounds, 2026-10-05), which is not merged or live-tested (see the [plan](../specs/game-settings/IMPLEMENTATION_PLAN.md)).
-**Last updated:** 2026-10-05
+**Status:** Draft. It describes branch `claude/kng-52-game-settings` (two rounds, 2026-10-05; merged with trunk and pushed 2026-10-09). The page is on the web app's `main`; the API and plugin halves are not merged or live-tested (see the [plan](../specs/game-settings/IMPLEMENTATION_PLAN.md)).
+**Last updated:** 2026-10-09
 
 The Game Settings page sets server-wide rules for joining, respawning, each world's game mode, time,
 weather and spawn point, and the server-list MOTD. It also sets exceptions per permission group. The plugin picks up a saved change within about 30 seconds. To apply it at once, run
@@ -21,7 +21,7 @@ weather and spawn point, and the server-list MOTD. It also sets exceptions per p
 |---|---|
 | **Join / Leave Announcement** | The line everyone sees when a player joins or leaves. `{player}` is replaced by the name and `{group}` by the player's group. `&` colour codes work, several per line, for example `&6{player} &7has arrived`. Hex colours are written `&x&f&f&a&a&0&0`. Leave it **empty** for no message. Staff who are vanished never trigger it. |
 | **Server List MOTD** | The two lines under the server's name in the Minecraft server list. Same colour codes; `{online}` and `{max}` show the player counts. Empty = the server's own motd. |
-| **Join Spawn** | Where regular players arrive on join, also the `/spawn` destination. *World Spawn* = the main world's spawn point. *Custom Reference* = a Location, or a Town/District/Structure's own spawn Location. If that thing is moved later, the new spot is used. |
+| **Join Spawn** | Where regular players arrive on join, also the `/spawn` destination. *The main world's spawn* = that world's spawn point. *A chosen spot (Location, Town, District or Structure)* = a Location, or a Town/District/Structure's own spawn Location. If that thing is moved later, the new spot is used. |
 | **Default GameMode** (per world) | The mode a regular player has after joining into this world. Players with owner mode keep their own. |
 | **Lock Time / Locked Time** (per world) | Stops day and night at the given tick: 0 = sunrise, 6000 = noon, 12000 = sunset, 18000 = midnight. `/time set` is undone within 30 s. Unticking it starts the cycle again. |
 | **Weather Behavior** (per world) | *Normal* = vanilla. *Constant* = always the forced weather; sleeping won't clear it. *Blocked* = the ticked kinds never start by themselves. *Weighted* = whenever the weather would change by itself, clear/rain/thunder is picked by the weights. A staff `/weather` still works for testing; *Constant* and *Blocked* restore the rule within 30 s. |

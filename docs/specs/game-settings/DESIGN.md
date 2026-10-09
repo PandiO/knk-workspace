@@ -1,7 +1,7 @@
 # Game Settings — Design
 
-**Status:** Implemented on branch `claude/kng-52-game-settings` in knk-plugin, knk-web-api and knk-web-app. The first page and API have been on trunk since 2026-08-21. Round 2 (2026-10-05, developer request) added group overrides, synced respawn, the searchable spawn picker and the MOTD. Not merged, not live-tested; the API migration is not applied. Decisions D1–D3 and D13 need the developer's review.
-**Last updated:** 2026-10-05
+**Status:** Implemented on branch `claude/kng-52-game-settings` in knk-plugin, knk-web-api and knk-web-app. The first page and API have been on trunk since 2026-08-21. Round 2 (2026-10-05, developer request) added group overrides, synced respawn, the searchable spawn picker and the MOTD. The round-2 page is on knk-web-app `main`. The plugin and API branches have trunk merged in and are pushed (2026-10-09), but not merged to trunk and not live-tested; the API migration is not applied. Decisions D1–D3 and D13 need the developer's review.
+**Last updated:** 2026-10-09
 **Linear:** [KNG-52](https://linear.app/kngpandi/issue/KNG-52)
 **Sources:** knk-web-api `master` `099f936` (`Controllers/GameSettingsController.cs`, `Services/GameSettingsService.cs`, `Dtos/GameSettingsDtos.cs`, `Models/GameSettings.cs`, commit `285baf3` of 2026-08-19); knk-web-app `main` `3953658` (`src/pages/admin/GameSettingsPage.tsx`, commits `f3206c5`/`21e84c9` of 2026-08-21); knk-plugin `main` `5c85a3d` and the shelved stash `19-08-26: Workable: GameSettings feature` (base `961597e`); [vision §2.7](../../vision/vision.md#27-game-world-settings); [teleport DESIGN §3.6](../teleport/DESIGN.md) (`/spawn`).
 **Plan and status:** [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md). **Admin how-to:** [guides/game-settings.md](../../guides/game-settings.md).
@@ -242,6 +242,9 @@ Data Retention card on the same page already needed that node.
 | Feature | Interaction |
 |---|---|
 | Teleport `/spawn` (KNG-17) | Same destination and resolver as the join teleport. A group spawn override applies to `/spawn` too (`SpawnCommand.setPlayerSpawn`); `/spawn <player>` uses the target's group. |
+| Teleport fees, cooldowns, `/back` (KNG-41/42) | A group spawn changes only where `/spawn` goes. The group's `/spawn` price and cooldown still apply, and `/back` (`knk.teleport.back.spawn`) returns to the place before it. The join teleport is not a `/spawn` and leaves no `/back` place. KNG-41 picks a player's group by weight first, then parents; §3.8 uses hierarchy first (see D13). |
+| Domain access (KNG-56) | `DomainAccessListener` (HIGHEST) runs after the settings' respawn. A respawn spot inside a domain that refuses the player is replaced by the world spawn. |
+| Location retention (KNG-80) | The orphan check reads every Location reference in the settings, the group overrides included (knk-web-api `8ef1282`). |
 | Permission groups / ranks (user-features) | Group overrides follow the group hierarchy and `Weight` (§3.8); the user summary now lists the effective groups. |
 | Join-loading hold (`JoinLoadingGuard`) | Hands back the world's default game mode instead of SURVIVAL. |
 | Vanish / staff modes (`ModeListener`) | Vanished joins/quits stay silent; staff/owner skip the join teleport (owner) and the respawn override (both). |
@@ -289,9 +292,8 @@ Data Retention card on the same page already needed that node.
    lands between its read and write could be lost. This is rare (reports now only on change), but a row
    version would close it.
 7. **Paper 1.21.11+** renames the `doDaylightCycle` game rule. Revisit `applyTime` when the server is upgraded.
-8. **Merge order with navigation:** the API migration (2026-10-05) and the navigation branch's
-   `AddRoadNodePlazaRadius` both touch `KnKDbContextModelSnapshot.cs`. Whichever merges second needs its snapshot
-   re-generated or merged by hand.
+8. **Merge order with navigation:** resolved on 2026-10-09. The API branch now carries `master` (navigation included),
+   and its merged snapshot has no pending model changes.
 
 ## 9. History — the 2026-08-19 stash
 
