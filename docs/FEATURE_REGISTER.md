@@ -1,6 +1,6 @@
 # Knights & Kings feature register
 
-**Status:** Active · **Last updated:** 2026-10-08 · **First reconciled:** 2026-09-28 · [KNG-33](https://linear.app/kngpandi/issue/KNG-33)
+**Status:** Active · **Last updated:** 2026-10-09 · **First reconciled:** 2026-09-28 · [KNG-33](https://linear.app/kngpandi/issue/KNG-33)
 
 This is the index of intended gameplay and shipped surfaces, not a substitute for a feature's design, code, or issue. V1's wider gameplay and V2's stronger data model are both inputs to V3. An absent V2 port is **not** a decision to drop a V1 feature. The [vision](vision/vision.md) decides intent; a [feature spec](specs/README.md) decides detailed behavior; the actual default branches decide whether code has shipped.
 
@@ -29,6 +29,7 @@ For each changed row, include its source, spec or issue and the date of the evid
 | Towns, districts, structures, streets, locations; CRUD/regions | live | modeled | spec | complete | trunk | mixed | maintain; [towns](specs/towns/), [world tasks](specs/world-tasks/) |
 | Kingdom/province hierarchy and wilderness Territory | partial | partial | vision | partial | mixed | pending | design; [vision §2](vision/vision.md#2-world-structure) |
 | District containment and domain access rules | live | partial | vision | partial | mixed | mixed | finish; [vision §2.2](vision/vision.md#22-districts), [KNG-12](https://linear.app/kngpandi/issue/KNG-12) |
+| Location retention: weekly orphan check, staff review (keep/delete), digest, `/knk location tp` | — | — | spec | complete | branch | pending | live-test and merge [KNG-80](https://linear.app/kngpandi/issue/KNG-80) (branches `claude/kng-80-location-retention`, 2026-10-09); [architecture](architecture/location-retention.md) |
 | Managed WorldGuard region ownership, priorities and category flags | live | partial | spec | complete | trunk | pending | live-test [KNG-46](https://linear.app/kngpandi/issue/KNG-46); [architecture](architecture/managed-worldguard-regions.md) |
 | Gates: animation, damage, control and siege integration | live | partial | spec | complete | trunk | mixed | maintain; [gate specs](specs/gate-structure-animation/) |
 | Global world settings, deliberate join/spawn/weather/time rules | partial | partial | vision | partial | mixed | pending | design; [vision §2.7](vision/vision.md#27-game-world-settings) |
