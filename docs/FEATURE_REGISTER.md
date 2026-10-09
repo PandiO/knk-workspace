@@ -1,6 +1,6 @@
 # Knights & Kings feature register
 
-**Status:** Active · **Last updated:** 2026-10-08 · **First reconciled:** 2026-09-28 · [KNG-33](https://linear.app/kngpandi/issue/KNG-33)
+**Status:** Active · **Last updated:** 2026-10-09 · **First reconciled:** 2026-09-28 · [KNG-33](https://linear.app/kngpandi/issue/KNG-33)
 
 This is the index of intended gameplay and shipped surfaces, not a substitute for a feature's design, code, or issue. V1's wider gameplay and V2's stronger data model are both inputs to V3. An absent V2 port is **not** a decision to drop a V1 feature. The [vision](vision/vision.md) decides intent; a [feature spec](specs/README.md) decides detailed behavior; the actual default branches decide whether code has shipped.
 
@@ -36,8 +36,8 @@ For each changed row, include its source, spec or issue and the date of the evid
 | Street graph and guided road navigation (incl. walkable last-mile paths) | — | — | spec | complete | trunk | mixed | finish: siege check C6, [KNG-73](https://linear.app/kngpandi/issue/KNG-73), [KNG-74](https://linear.app/kngpandi/issue/KNG-74), [KNG-75](https://linear.app/kngpandi/issue/KNG-75), [KNG-76](https://linear.app/kngpandi/issue/KNG-76); merged 2026-10-08 ([KNG-27](https://linear.app/kngpandi/issue/KNG-27), [KNG-51](https://linear.app/kngpandi/issue/KNG-51)); [plan](specs/navigation/IMPLEMENTATION_PLAN.md), [smoke test](guides/road-navigation-smoke-test.md) |
 | Houses, rooms, property sales, rent, home ownership | live | partial | vision | none | — | pending | design after ownership decision; [legacy menus](specs/legacy/inventory-menu-screens.md), [vision §4](vision/vision.md#4-economy--professions) |
 | Shops, shopkeepers, coupons, gem shop and player buying/selling | live | partial | vision | partial | mixed | pending | design with property economy; [legacy menus](specs/legacy/inventory-menu-screens.md), [items](specs/items/IMPLEMENTATION_PLAN.md) |
-| Resource gathering, production structures and town economy | live | partial | vision | partial | mixed | pending | design integrated economy; [v1 events](specs/legacy/events-v1.md), [gap audit](reports/LEGACY_VS_V2_GAP_ANALYSIS.md) |
-| Warehouses, storage and transport orders | partial | partial | vision | none | — | pending | design after production and ownership; [gap audit](reports/LEGACY_VS_V2_GAP_ANALYSIS.md) |
+| Resource gathering, production structures and town economy | live | partial | spec | partial | mixed | pending | decide D1-D13, then build P1-P3 of the [production/storage/transport plan](specs/production-storage-transport/IMPLEMENTATION_PLAN.md) (draft 2026-10-09; production structures only, gathering is [KNG-48](https://linear.app/kngpandi/issue/KNG-48), town economy stays vision); [V2 scan](reports/2026-10-09-v2-production-storage-transport-scan.md), [v1 events](specs/legacy/events-v1.md) |
+| Warehouses, storage and transport orders | partial | partial | spec | none | — | pending | decide, then build P1-P7 ([design](specs/production-storage-transport/DESIGN.md) draft 2026-10-09; ownership deferred, MVP is staff/town-run); V2 code lives on archive branches `2023/09/ProductionStructures`…`2025/01/Hibernate-update`, not `main` ([V2 scan](reports/2026-10-09-v2-production-storage-transport-scan.md)) |
 
 ### Players, items and social systems
 

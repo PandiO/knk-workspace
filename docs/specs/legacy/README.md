@@ -26,6 +26,10 @@ Document actual code patterns, entities, and migrations from legacy to avoid spe
     half of the behavior surface commands don't cover): event type, trigger condition, actual
     behavior, feature-domain allocation, known bugs — and which handlers are confirmed dead code
   - [events-v2.md](events-v2.md) — same, for v2's listener classes
+  - [V2 production, storage and transport scan](../../reports/2026-10-09-v2-production-storage-transport-scan.md)
+    (dated report) — `Storage`, `ProductionStructure`, `Generation`/`Production`, `TransportOrder` and their
+    schedulers, commands, events and menus. Most of it lives on archive branches
+    `2023/09/ProductionStructures` → `2025/01/Hibernate-update`, not on `main`; the other docs here read `main` only
 
 All five sibling docs (`user-system.md`, `inventory-menus.md`, `towns-districts-gates.md`,
 `kits.md`, `siege-minigame.md`) originated on the `legacy-spec-mining` branch and have now
