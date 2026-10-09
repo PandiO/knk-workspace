@@ -4,6 +4,11 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## 2026-10-09
 
+- Domain access refusals are also said in chat ([KNG-74](https://linear.app/kngpandi/issue/KNG-74); knk-plugin
+  `main` `fd869aa`). The first "You are not allowed to enter/leave X." of a refusal episode goes to chat as well as
+  the action bar. An episode is the first refusal after 10 s without one, or a different refusal. The `/navigate`
+  arrow keeps off the action bar for about 3 s after a refusal, so the message can be read. Settings:
+  `regions.access.chat-quiet-period-ms` and `action-bar-hold-ms`.
 - Road navigation fixes from the live test, merged to knk-plugin `main`
   ([KNG-27](https://linear.app/kngpandi/issue/KNG-27), [KNG-51](https://linear.app/kngpandi/issue/KNG-51)):
   - a gate closing behind the player no longer blocks the route; the route is judged by the part of each road still

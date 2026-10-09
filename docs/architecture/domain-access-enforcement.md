@@ -1,7 +1,7 @@
 # Domain access (AllowEntry / AllowExit) — enforcement on the game server
 
-**Status:** Implemented, **live-tested by the developer and merged to trunk 2026-10-08** (knk-plugin `main` `790c662`, knk-web-api `master` `be7b70e`; feature commits `dfffcb7` / `32fca08`). Linear [KNG-56](https://linear.app/kngpandi/issue/KNG-56) (follows [KNG-55](https://linear.app/kngpandi/issue/KNG-55))
-**Last updated:** 2026-10-08 (merged; live checklist §6 passed; KNG-74 chat/action-bar follow-up on a branch, §3 and §6 item marked KNG-74)
+**Status:** Implemented, **live-tested by the developer and merged to trunk 2026-10-08** (knk-plugin `main` `790c662`, knk-web-api `master` `be7b70e`; feature commits `dfffcb7` / `32fca08`). Refusal-in-chat follow-up [KNG-74](https://linear.app/kngpandi/issue/KNG-74) live-tested and merged 2026-10-09 (knk-plugin `main` `fd869aa`, feature commit `a608aa7`). Linear [KNG-56](https://linear.app/kngpandi/issue/KNG-56) (follows [KNG-55](https://linear.app/kngpandi/issue/KNG-55))
+**Last updated:** 2026-10-09 (KNG-74 merged; live checklist §6 item 9 passed)
 **Decision record:** [`reports/2026-10-06-domain-access-enforcement-options.md`](../reports/2026-10-06-domain-access-enforcement-options.md) (option C chosen by the developer on 2026-10-06)
 **Related:** [`managed-worldguard-regions.md`](managed-worldguard-regions.md) (parent/priority/category flags on the same regions); KNG-57 (SignalR push), KNG-58 (offline cache for other data)
 
@@ -55,7 +55,7 @@ Each domain's region carries three custom WorldGuard flags:
 | Join | `DomainAccessListener.onUserDataLoaded`: a player standing inside a domain they may not enter is sent to the world spawn once their account has loaded (bypass is known then). It works without the API because the flags are local. |
 | Teleport engine's up-front refusal (`/tp`, `/warp`, `/tpa`, ...) | `RegionTeleportRestriction` → `DomainAccessService.preview`: same rules, same flags. |
 
-**Messages.** "You are not allowed to enter/leave X." is shown in the action bar at most once per `regions.access.message-interval-ms` (2 s, like WorldGuard). Because the action bar is shared with other HUDs (the `/navigate` arrow), the first shown message of a refusal *episode* also goes to chat ([KNG-74](https://linear.app/kngpandi/issue/KNG-74), branch `claude/kng-74-access-denied-chat`, not merged yet). An episode starts with a refusal after `regions.access.chat-quiet-period-ms` (default 10 s; 0 = every shown message) without any refusal, or with a message other than the one last sent to chat (another domain, entry vs exit). Chat follows the same throttle, so holding W into a border gives one chat line and an action-bar repeat every 2 s. The logic lives in `RefusalGuard` (knk-core).
+**Messages.** "You are not allowed to enter/leave X." is shown in the action bar at most once per `regions.access.message-interval-ms` (2 s, like WorldGuard). Because the action bar is shared with other HUDs (the `/navigate` arrow), the first shown message of a refusal *episode* also goes to chat ([KNG-74](https://linear.app/kngpandi/issue/KNG-74), merged 2026-10-09). An episode starts with a refusal after `regions.access.chat-quiet-period-ms` (default 10 s; 0 = every shown message) without any refusal, or with a message other than the one last sent to chat (another domain, entry vs exit). Chat follows the same throttle, so holding W into a border gives one chat line and an action-bar repeat every 2 s. The logic lives in `RefusalGuard` (knk-core).
 
 **Sharing the action bar** (KNG-74). For `regions.access.action-bar-hold-ms` (default 3 s, about how long vanilla shows an action-bar message) after a refusal is shown, `RefusalGuard.holdsActionBar` is true. `NavigationHud` gets that check through `yieldActionBarWhile(...)` (wired in `KnKPlugin`): while it holds, the navigation arrow is not sent and ending navigation does not clear the action bar. The arrow resumes on the next HUD tick (every 0.5 s) after the hold; the boss bar is not affected. A load-guard teleport/kick message also starts a hold.
 
@@ -81,7 +81,7 @@ Each domain's region carries three custom WorldGuard flags:
 - **Road navigation** (unmerged branch) still asks `DomainAccessEvaluator` over the API cache. When it merges, point it at the flags (`DomainAccessService.preview` / `RegionAccessRules`), so routing and enforcement agree.
 - **Mounting** is judged from the player's position to the mount's position. A mount that is moved *into* a closed domain while ridden is WorldGuard's `RIDE` case.
 
-## 6. Live checklist (developer) — passed 2026-10-08
+## 6. Live checklist (developer) — passed 2026-10-08 (items 1-8), 2026-10-09 (item 9, KNG-74)
 
 With a non-bypass account:
 1. Hold W into an AllowEntry=false district, and out of an AllowExit=false one. Every step is refused, with one message per 2 s.
@@ -92,4 +92,14 @@ With a non-bypass account:
 6. Change AllowEntry in the web app: it is enforced within 5 min, or at once after `/knk regions repair`.
 7. Add yourself as a region member (`/rg addmember`): you pass. A `knk.region.bypass` holder passes.
 8. `/rg info` on a domain region shows `knk-allow-entry`, `knk-allow-exit` and `knk-domain-name`.
-9. *(KNG-74, not yet run)* Walk into a refused border, without navigation: one chat line plus the action bar. Keep pushing: no new chat line until 10 s pass without a refusal, or a different domain refuses you. During `/navigate`: the refusal stays readable in the action bar for about 3 s before the arrow returns, and ending navigation within those 3 s does not clear it.
+9. *(KNG-74, passed 2026-10-09)* Walk into a refused border, without navigation: one chat line plus the action bar. Keep pushing: no new chat line until 10 s pass without a refusal, or a different domain refuses you. During `/navigate`: the refusal stays readable in the action bar for about 3 s before the arrow returns, and ending navigation within those 3 s does not clear it.
+
+**KNG-74 live test, 2026-10-09 (developer): all steps passed.** Tested on the plugin branch (`a608aa7`) with the default `chat-quiet-period-ms: 10000` and `action-bar-hold-ms: 3000`:
+- The first refusal appears in chat and in the action bar.
+- Holding W into the border repeats the action bar every 2 s with no new chat lines.
+- After 10 s without a refusal, a new chat line appears.
+- A different refusal (entry, then exit) goes to chat straight away.
+- During `/navigate`, the refusal stays readable for about 3 s before the arrow returns, while the boss bar keeps updating.
+- Ending navigation within the hold leaves the refusal in the action bar.
+
+No findings. Merged to knk-plugin `main` as `fd869aa` (merged with the KNG-27/51 follow-ups already on `main`; Gradle core 1753 / api-client 206 / paper 1305 green on the merge).
