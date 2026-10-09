@@ -1007,6 +1007,33 @@ Next: KNG-75 proper (walk legs at both ends, destinations further than 48 blocks
 `fa234f7` (the merged plugin needs KNG-56's `GET /api/Domains/access-rules`). The dev DB lacks trunk's KNG-59
 migration `UniquePermissionGrantHolderNode` (it deletes duplicate permission grants); navigation does not need it.
 
+### Rev. 7 Part A step 2 — the patches removed (implemented 2026-10-09, to test)
+
+knk-plugin `claude/navigation-walkable-path` `9fa14394` (= `main` `54878783` + step 2; the API and the web app are
+unchanged). Gradle core 1761 / api-client 209 / paper 1316 green. The workarounds for whole-edge verdicts are gone:
+start sides (N6), goal sides (N14), the part re-check and its cache bypass (N10). The routing view now carries those
+cases on its own. New: a player standing at a node whose snapped edge is blocked (a junction, or the block right
+before a door) leaves from that node.
+
+Deploy: `./gradlew :knk-paper:dev` from that branch, restart. **Wait until `/knk road status` shows "… cut into N
+pieces"** (a few seconds on Cinix): until the first live-tag pass the stored network is used, and without the patches
+the gate road then counts as closed along its whole length.
+- [ ] **W1 (N6, bridge side)** Close the South Gate. Stand on its road on the bridge side, a few blocks from the door.
+  `/nav` to a place back over the bridge: a normal route, no "No open route", no "arrived". `/nav` to a place behind
+  the gate: "Guiding you to the gate", ending at the door.
+- [ ] **W2 (N6, town side)** The same on the town side of the closed gate, `/nav` into town: a normal route.
+- [ ] **W3 (at the node)** Gate closed. Stand on the block right in front of the door (where the trail of W1 ended),
+  `/nav` back into town or over the bridge: a route at once, no "No open route".
+- [ ] **W4 (N14)** Gate closed, from town: `/nav South Gate` (its spawn lies on the town side of the door) reaches it
+  with a full route, no partial-route message.
+- [ ] **W5 (N10/C3)** Gate open, `/nav` from the bridge to a place in town. Walk through, stop a few blocks past the
+  door, close the gate: no message, guidance goes on. Then from in front of the gate with the route through it, close
+  it: "… closed - recalculating" and a detour or guidance to the gate.
+- [ ] **W6 (A7)** A closed gate on a shortcut: detour; open it: the shorter route comes back within about 2 s.
+- [ ] **W7 (C5)** A district with `allowEntry=false`: guided to its edge; with bypass the route goes in. One with
+  `allowExit=false`, from inside: routes stay inside.
+- [ ] **W8** `/knk road why <player>` on a route through the gate: lines as in V6 (`edge #10139 blocks …`).
+
 ### KNG-73 — configurable default destination (implemented 2026-10-08, to test)
 
 Branch `claude/kng-73-road-navigation-n92vlm` in knk-web-api (`a04d614`, on trunk `4c570fa`), knk-plugin (`290b122`, on
@@ -1122,7 +1149,7 @@ Follow-up issues: KNG-103 (region step re-run leaves the old region), KNG-104 (n
 **Run 3 (2026-10-09, developer): R2, R3, V5, V6 pass.** With R1/R4, K1-K5, V1-V4 from runs 1-2 every check of KNG-73,
 Part C and Part A step 1 has passed (C6, siege, is still open from the KNG-27 checklist). **Merged to trunk 2026-10-09:**
 knk-web-api `master` `6d160aa`, knk-web-app `main` `e2ba784`, knk-plugin `main` `54878783`. Next: Part A step 2, the patch
-removal ("Rev. 7 Part A step 2" below once written).
+removal: implemented, steps W1-W8 under "Rev. 7 Part A step 2" above.
 
 ### Phase 3 — rebuild re-test (2026-10-02, developer; recorded from the commit messages)
 
