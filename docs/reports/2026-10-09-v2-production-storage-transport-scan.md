@@ -413,6 +413,10 @@ no main-thread I/O.
 (deferred, not ported), Calendar unit constants, client-side ids, and the generic undo machinery as a persistence
 strategy. Database transactions replace it.
 
+**Developer review (2026-10-09, same day):** chest-based storage is not dropped as a requirement. In-game containers
+must optionally sync with storages, with a better approach than V2's region scan. Transport is meant to become
+physical (NPCs and players, robbable). Design rev. 2 records these and the other notes (DESIGN.md revision history).
+
 The V3 design, decisions and phases are in
 [specs/production-storage-transport/DESIGN.md](../specs/production-storage-transport/DESIGN.md) and
 [IMPLEMENTATION_PLAN.md](../specs/production-storage-transport/IMPLEMENTATION_PLAN.md).

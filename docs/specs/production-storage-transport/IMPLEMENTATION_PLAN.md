@@ -1,212 +1,231 @@
 # Production, storage and transport — Implementation plan
 
-**Status:** Draft. No phase has started. The design decisions D1-D13 ([DESIGN.md §12](DESIGN.md#12-decisions)) have
-recommended defaults. Phases 1-2 can start on those defaults; D1 must be confirmed before Phase 2's migration.
+**Status:** Draft, **rev. 2** (after the developer's notes of 2026-10-09). No phase has started. The open decisions
+are in [DESIGN §14](DESIGN.md#14-decisions), [PRODUCTION_KINDS §9](PRODUCTION_KINDS.md#9-decisions) and
+[TOWN_LOGISTICS §8](TOWN_LOGISTICS.md#8-decisions). Each has a recommendation; phases can start on those.
 **Last updated:** 2026-10-09
-**Design:** [DESIGN.md](DESIGN.md) · **Evidence:** [V2 scan](../../reports/2026-10-09-v2-production-storage-transport-scan.md)
-**Linear:** parent [KNG-83](https://linear.app/kngpandi/issue/KNG-83); phases listed per section.
+**Design:** [DESIGN.md](DESIGN.md), [PRODUCTION_KINDS.md](PRODUCTION_KINDS.md), [TOWN_LOGISTICS.md](TOWN_LOGISTICS.md).
+**Evidence:** [V2 scan](../../reports/2026-10-09-v2-production-storage-transport-scan.md).
+**Linear:** parent [KNG-83](https://linear.app/kngpandi/issue/KNG-83). Prerequisite
+[KNG-95](https://linear.app/kngpandi/issue/KNG-95) (every item is a blueprint item).
 **Branches (when work starts):** one standing branch per repo, `claude/production-storage-transport`, cut from
 each repo's current default branch (`master` for knk-web-api, `main` for the others). Follow the board rules in
 [ACTIVE_SESSIONS.md](../../ACTIVE_SESSIONS.md).
 
+## Rules for every phase
+
+- **Web app first** (developer note 10). A phase that adds entities also ships:
+  - their FormConfig CRUD;
+  - a detail view with the insight data it produces: ledger, cycle trace, event log, plan explanation.
+  - In-game menus and commands follow in P6, or within the phase when they are needed to test.
+- **Checks per phase:**
+  - `dotnet test` (API, including `requires-mysql` concurrency tests for stock);
+  - `npm run test:ci` + `npm run build` (web app);
+  - `./gradlew build -x deployToDevServer` (plugin);
+  - a smoke list for the developer;
+  - updated status lines here, feature register rows, and `CHANGELOG.md` on merge.
+- **The reconciler stays green.** Any phase that moves stock adds its paths to the reconciliation tests.
+
 ## Order and dependencies
 
 ```
-P1 Storage core (API) ──► P2 Structure subtypes (API, D1) ──► P3 Production lines (API)
-        │                          │                                   │
-        │                          └──────────────► P4 Transport orders + lanes (API, plugin lane measure)
-        │                                                              │
-        └──► P7 Deposit/withdraw (API + plugin, D13)    P5 Plugin views/commands ◄─┘   P6 Web-app admin ◄─ P2..P4
+KNG-95 Item identity ───────────────────────────────┬──────────────┬──────────────┐
+                                                    │              │              │
+P1 Stock core (84) ──► P2 World (85) ──► P3 Production engine (86) ──► P4 Areas & surveys (96) ──► P8 Harvest & regen (97)
+        │                    │                 │
+        │                    └────────► P5 Transport core (87) ──► P9 Town logistics (98) ──► later: trade (100)
+        │                                      │                                               later: physical transport (99)
+        └──► P7 Delivery, inbox, deposit (90) ◄┘  P6 Plugin terminals/menus (88)        web-app insight (89) grows with each phase
 ```
 
-P5 and P6 can start as soon as the API endpoints they read exist; they don't need all of P4. Later phases (L1-L3)
-get their own designs.
+---
 
-Each phase ends with: `dotnet test` (API), `npm run test:ci` + build (web app), `./gradlew build -x deployToDevServer`
-(plugin), a short smoke list for the developer, and doc updates (this plan's status lines, the feature register
-rows, `CHANGELOG.md` on merge).
+## P1 — Stock core · [KNG-84](https://linear.app/kngpandi/issue/KNG-84)
+
+**API**
+
+- `Storage` (kind, holder FKs or `SystemKey`, purpose, capacity value object, stored totals, `RowVersion`, lock
+  fields).
+- `StockLine`, `StockUnit`, `StockTransaction`, `StockMove`. Enums in `Enums/`.
+- Migration `AddStockCore`, which seeds the virtual storages `SYS_PRODUCTION`, `SYS_CONSUMPTION`, `SYS_LOSS`,
+  `SYS_ADJUSTMENT` and `SYS_WORLD`.
+- `Services/Stock/StockService.cs` (`Move`, `MoveMany`; row locks in id order; AllOrNothing or Partial; result
+  values).
+- `StockReconciler`.
+- `StoragesController`, `StockTransactionsController` (ledger, paged).
+- Permission `knk.economy.admin`.
+
+**Web app:** storage CRUD, a storage detail view (lines and units), a manual move/adjust dialog, the ledger explorer.
+
+**Tests:**
+
+- capacity (both weightings);
+- partial vs all-or-nothing;
+- idempotency replay;
+- concurrent moves (MySQL);
+- the reconciler after every path;
+- Restrict FKs;
+- locks.
+
+## P2 — World: Territory, Warehouse, ProductionStructure · [KNG-85](https://linear.app/kngpandi/issue/KNG-85)
+
+**Needs:** DESIGN D1 and D5.
+
+**API**
+
+- `Territory : Domain`.
+- `Structure.TerritoryId` with the District-xor-Territory rule; an effective-town resolver.
+- `Warehouse : Structure`.
+- `ProductionStructure : Structure` (fields per DESIGN §3.3; `ProductionKindId` nullable until P3 seeds kinds).
+- Default storages on create.
+- Audit and fix every `Structure.District` dereference; list the call sites in the PR.
+
+**Web app:** FormConfigs with WorldTask capture.
+
+**Plugin:** managed-region kinds for Territory, ProductionStructure and Warehouse; tests in
+`ManagedRegionPolicyTest`.
+
+## P3 — Production engine · [KNG-86](https://linear.app/kngpandi/issue/KNG-86)
+
+**API**
+
+- `ProductionKind` + seeds (PRODUCTION_KINDS §2.1).
+- `ProductionKindLevel` (10 levels) and an upgrade action.
+- `ProductionLine` (Configured rates in this phase, decimal accrual, inputs, status, `NextSettleAt` index).
+- `ProductionCycleRecord`.
+- `ProductionService.Settle*`.
+- `ProductionSweepService` (pattern: `RankExpirySweepService`, with an injectable clock).
+- Notifications to the outbox (blocked and resumed).
+
+**Web app:** kind, level and line editors; structure detail with the cycle trace and a "why not producing" view.
+
+**Tests:** drift-free accrual over simulated clocks; catch-up cap; stall-when-full (D4); inputs; level multipliers
+and unlocks; upgrade costs (stock + currency in one transaction).
+
+## P4 — Yield areas and surveys · [KNG-96](https://linear.app/kngpandi/issue/KNG-96)
+
+**API:**
+
+- `ProductionArea` (models, shapes, exclusivity checks);
+- `AreaSurvey` history;
+- survey profiles and yield tables;
+- Derived/Hybrid rate materialization into lines;
+- shared-area split.
+
+**Plugin:**
+
+- an async survey runner on `ChunkSnapshot`s: blocks, trees, water and biome, crops and flowers, pasture entities;
+- a tick budget;
+- `/knk production survey|area show`;
+- a `CaptureRadius` WorldTask handler.
+
+**Web app:** area capture, survey viewer (composition table, 2D plot, trend), Hybrid override editor.
+
+**Tests:** tree detection fixtures; overlap split; Derived vs Hybrid materialization; survey idempotence (same world
+→ same hash).
+
+## P5 — Transport core (simulated) · [KNG-87](https://linear.app/kngpandi/issue/KNG-87)
+
+**API**
+
+- `TransportOrder`, `TransportStop`, `TransportOrderLine`, a Transit storage per order, `TransportAssignment`
+  (Simulated), `TransportEvent`, `TransportLane`.
+- Triggers, sizing and destination choice (DESIGN §7.4, §7.6).
+- `TransportSweepService`; manual orders, dry run, cancel.
+
+**Plugin:** lane measurer (`AStarRouter`), `RoadConnection` updates, `/knk logistics lanes measure`, a headless
+periodic job.
+
+**Web app:** order list and detail (timeline, cargo, route), manual order form, dry run.
+
+**Tests:** every lifecycle path, including AwaitingSpace → re-route → Returning and ReturnBlocked; cancel in each
+state; restarts mid-transit; one open automatic order per source; ledger reconciliation.
+
+## P6 — Plugin: terminals, displays, menus, commands · [KNG-88](https://linear.app/kngpandi/issue/KNG-88)
+
+**API:** `StorageContainer` CRUD (Terminal and Display modes).
+
+**Plugin:**
+
+- terminal inventory view (paged; take and put as `SYS_WORLD` moves with idempotency keys);
+- display renderer;
+- logistics menus;
+- `/knk storage|production|transport|logistics`;
+- notifications and Bukkit events.
+
+**Needs:** KNG-95 for put/take resolution.
+
+**Tests:** canonical container keys (double chests); terminal take/put under lag and retry; display refresh
+throttling.
+
+## P7 — Item delivery, reward inbox, deposit/withdraw · [KNG-90](https://linear.app/kngpandi/issue/KNG-90)
+
+**API:** `IItemDeliveryService`, player Inbox and Stash storages, claim and expiry, deposit/withdraw endpoints.
+
+**Plugin:** `/inbox` and an inbox menu; migrate `KitGrantPlacer` and `LootboxDelivery` from dropping at the
+player's feet to the delivery service.
+
+**Tests:** offline, full-inventory and in-minigame deliveries land in the inbox; claim with partial space;
+`StockUnit` rewards keep their enchantments; retries don't duplicate.
+
+## P8 — Player harvesting and block regeneration · [KNG-97](https://linear.app/kngpandi/issue/KNG-97)
+
+**API:** `HarvestRule` per kind; `ResourcePool` per area; a harvest report endpoint (idempotent, batched); the pool
+multiplier in settle.
+
+**Plugin:**
+
+- the harvest listener in `RESOURCE_PRODUCTION` regions (replaces the KNG-48 config switch);
+- `IRequirementEvaluator` (permission and title now);
+- blueprint drops through KNG-95;
+- a disk-persisted regeneration queue with placeholders and tree snapshots.
+
+**Tests:** allowed vs denied breaks; pool math; regeneration across restart and chunk unload; surveys counting
+pending regenerations.
+
+## P9 — Town logistics · [KNG-98](https://linear.app/kngpandi/issue/KNG-98)
+
+**Needs:** the developer's review of TOWN_LOGISTICS §4.
+
+**API:**
+
+- service areas;
+- consumer replenishment settings;
+- `LogisticsPolicy`/`LogisticsRule` (versioned);
+- `LogisticsPlanner` (interval plus dry run) creating Distribution and Rebalance orders with explanations;
+- default policy templates.
+
+**Web app:** policy and rule editor, planner dry-run view, town supply view.
+
+**Tests:** reserves never breached; priority under scarcity; quotas; rebalance; emergency modes; explanation
+content.
+
+## Web-app insight · [KNG-89](https://linear.app/kngpandi/issue/KNG-89)
+
+The logistics dashboard, simulator, health view and order map. These grow alongside P3-P9.
 
 ---
 
-## P1 — Storage core (knk-web-api) · [KNG-84](https://linear.app/kngpandi/issue/KNG-84)
+## Later (own designs)
 
-**Builds:** `Storage`, `StorageItem`, `StorageMovement`; `Structure.DeliveryStorageId` and the `Storages` navigation;
-`IStorageService` (§5); admin endpoints for storages, items, adjust and movements; a reconciler.
+- [KNG-99](https://linear.app/kngpandi/issue/KNG-99): physical transport (NPC caravans, couriers, robbery, escort,
+  risk, quests). After KNG-36.
+- [KNG-100](https://linear.app/kngpandi/issue/KNG-100): inter-town trade and town treasury accounts.
+- [KNG-101](https://linear.app/kngpandi/issue/KNG-101): pricing. **Needs the developer's pricing documents first.**
+- [KNG-102](https://linear.app/kngpandi/issue/KNG-102): Backed container sync for housing.
+- [KNG-91](https://linear.app/kngpandi/issue/KNG-91): processing chains, shops with levels, ownership and payouts.
 
-- Models: `Models/Storage.cs`, `Models/StorageItem.cs`, `Models/StorageMovement.cs`, enums
-  `StoragePurpose` and `StorageMovementReason` in `Enums/`. `KnKDbContext` configuration:
-  - the check constraint "exactly one of StructureId/UserId";
-  - `Amount > 0`;
-  - `ItemBlueprint` FK **Restrict**;
-  - unique `IdempotencyKey`;
-  - index `(StorageId, CreatedAt)`.
-- Migration `AddStorageCore`.
-- `Services/Economy/StorageService.cs`: conditional updates under a `SELECT … FOR UPDATE` row lock on `storages`,
-  `TryAdd`/`TryRemove`/`Transfer` with partial mode, and movement rows in the same transaction. It runs inside a
-  caller's transaction when one is open, as the currency service does ([currency DESIGN](../currency-payments/DESIGN.md), "call `ICurrencyService` inside your own transaction").
-- `Services/Economy/StorageReconciler.cs`: Σ movements = amounts; `TotalAmount`/`DistinctItems` = row aggregates.
-- `Controllers/StoragesController.cs`: CRUD (FormConfigurable), `GET {id}/items`, `POST {id}/adjust`,
-  `GET {id}/movements` (paged). Admin permission `knk.economy.admin` (new node, added to the permission seed).
-- **Tests** (`Tests/knkwebapi_v2.Tests/Services/Economy/`):
-  - caps: distinct, total, an over-cap storage after lowering a cap;
-  - partial vs all-or-nothing;
-  - removal of more than stock;
-  - idempotency-key replay;
-  - concurrent adds: two tasks, MySQL `requires-mysql` category, asserting no lost update;
-  - reconciler;
-  - FK restrict on blueprint delete.
-- **Acceptance:** an admin can create a storage on any Structure, adjust stock, see the ledger, and cannot exceed
-  caps. Concurrent adjustments never lose an update.
+## Smoke test outline (after P5 + P6)
 
-## P2 — Warehouse and ProductionStructure subtypes (knk-web-api, small plugin change) · [KNG-85](https://linear.app/kngpandi/issue/KNG-85)
-
-**Needs:** D1 confirmed (nullable `DistrictId` + `RulingTownId`), D11, D12.
-
-- Models: `Models/Warehouse.cs`, `Models/ProductionStructure.cs` (TPT, like `GateStructure`), with the
-  `IProductionSite` interface; `Structure.RulingTownId`; `DistrictId` nullable with the validator "District or
-  RulingTown". The migration keeps all existing rows valid (all have a District today).
-- Services and controllers `WarehousesController`, `ProductionStructuresController`. Create creates the default
-  storage and sets `DeliveryStorageId` (Warehouse) or the Output storage (ProductionStructure).
-  `ProductionSettings` defaults (240/1, 2,600/12) in `appsettings`.
-- Check every place that dereferences `Structure.District` (navigation destinations, discovery, managed regions,
-  domain access) and handle `null` → `RulingTown`. List the call sites in the PR.
-- FormConfigurations for both subtypes, reusing the Structure create flow with WorldTask location and region
-  capture.
-- knk-plugin: `ManagedRegionKind.fromDomainType` maps `ProductionStructure` → `RESOURCE_PRODUCTION`
-  and `Warehouse` → `STRUCTURE`. Add a test in `ManagedRegionPolicyTest`. Coordinate with
-  [KNG-47](https://linear.app/kngpandi/issue/KNG-47).
-- **Tests:** create flows; the district-or-town validator; effective-town resolution; the managed-region kind
-  mapping.
-- **Acceptance:** an admin creates a warehouse and a production structure (also one in the wilderness with a
-  ruling town) from the web app. Each gets its default storage. The region gets the right managed kind on startup
-  repair.
-
-## P3 — Production lines (knk-web-api) · [KNG-86](https://linear.app/kngpandi/issue/KNG-86)
-
-- Models: `ProductionLine`, `ProductionLineInput`, `ProductionLineStatus`. Index `(Enabled, NextCycleAt)`.
-  Migration `AddProductionLines`.
-- `Services/Economy/ProductionService.cs`: `SettleLineAsync`, `SettleStructureAsync` (DESIGN §6.1: anchor
-  cycles, whole cycles only, inputs, catch-up cap D5, full behavior D4).
-- `Services/Economy/ProductionSweepService.cs`, a `BackgroundService` modelled on `RankExpirySweepService`:
-  interval from `Economy:Production:SweepInterval`, batched due query.
-- Lazy settle in `GET` endpoints for structures, storages and lines. `POST api/ProductionLines/{id}/run-now`.
-- Notifications: `ProductionBlocked`/`ProductionResumed` to the player-notification queue for users who watch
-  logistics (a watcher list in the API, toggled by `/knk logistics watch`; see P5).
-- **Tests:** drift-free anchors over simulated clocks (inject a clock); catch-up cap; full storage per D4; inputs
-  partially available; disabled structure; concurrency with a P1 adjust on the same storage; a 10k-line sweep
-  query plan uses the index.
-- **Acceptance:** seeded "Coal Mine" (coal 8 per hour, storage 240/1) and "Stone Quarry" (stone 12/h + iron 2/h,
-  680/4), the V2 seeds, produce on time across an API restart. They show `BlockedFull` when full and resume when
-  space frees.
-
-## P4 — Transport orders and lanes (knk-web-api + knk-plugin) · [KNG-87](https://linear.app/kngpandi/issue/KNG-87)
-
-- Models: `TransportOrder`, `TransportOrderStop`, `TransportOrderItem`, `TransportLane`, status enums. A filtered
-  unique index keeps one open automatic order per source. Migration `AddTransportOrders`.
-- `Services/Economy/TransportService.cs`:
-  - the trigger (§6.2) called from production settle;
-  - sizing (stock-based allocation of `TransportCapacity`);
-  - destination choice (§6.4);
-  - lifecycle steps Load / Deliver / Return (§6.3), each one transaction;
-  - manual orders with a dry run;
-  - cancel.
-- `Services/Economy/TransportSweepService.cs` (`BackgroundService`): advances orders whose `ExecuteAfter`,
-  `ArrivesAt` or retry time is due.
-- `Controllers/TransportOrdersController.cs`, `Controllers/TransportLanesController.cs` (plugin key for
-  lanes). The API marks lanes unmeasured when a structure's Location changes, or when a warehouse or production
-  structure is created or deleted (pairs within the same effective town).
-- knk-plugin: `knk-api-client` lane DTOs and port. A lane measurer uses `AStarRouter` over the current
-  `RoadNetworkSnapshot` between Locations and posts the road length. It runs as `/knk logistics lanes measure` and as
-  a periodic low-priority headless job (pattern `HeadlessWorldTaskPoller`). Without a route it posts `Straight`.
-- **Tests (API):**
-  - threshold by occupancy;
-  - blocked trigger;
-  - distinct-cap trigger;
-  - no destination warns;
-  - preferred falls back to nearest;
-  - sizing with mixed stock;
-  - load partial stock;
-  - in-transit invisibility in both storages;
-  - deliver overflow → AwaitingSpace → re-route → Returning → Returned;
-  - ReturnBlocked;
-  - cancel in each state;
-  - one-open-order index;
-  - the ledger reconciles after every path, including chaos tests that kill the transaction mid-way.
-- **Tests (plugin):** lane measurer on a fixture road snapshot.
-- **Acceptance:** with the two seeds and a Docks Warehouse (2,600/12), automatic orders are created at 25%
-  occupancy. They show ETA from road distance, arrive, and never lose or duplicate items in any overflow scenario.
-
-## P5 — Plugin views, commands and notifications (knk-plugin) · [KNG-88](https://linear.app/kngpandi/issue/KNG-88)
-
-- `knk-api-client`: DTOs and ports for storages, lines, orders and the logistics summary. Cache-first reads with a
-  short TTL. Mutations go direct and run async.
-- Commands (DESIGN §8.3) under `/knk storage|production|transport|logistics`, with permission-filtered completion
-  (KNG-30 conventions) and documentation in the command catalog.
-- Menu features in `paper/menu/content/`:
-  - `LogisticsMenuFeature` (structure logistics, storage contents with paging, transport orders);
-  - menu templates seeded in the API like the other menu definitions;
-  - stepper adjust and deposit wait for menu-engine gaps G3 and G2.
-- `/knk logistics watch on|off` toggles the API watcher list. Notifications arrive through `PlayerNotificationPoller`.
-- Bukkit events `ProductionCycleEvent`, `TransportOrderStatusEvent` (fired from notification handling; no I/O in
-  listeners).
-- **Tests:** command parsing and completion; menu row mapping; notification formatting.
-- **Acceptance:** staff can inspect any structure's production, stock and orders in game, run a dry run, cancel an
-  order, and receive watch notifications.
-
-## P6 — Web-app admin (knk-web-app) · [KNG-89](https://linear.app/kngpandi/issue/KNG-89)
-
-- API clients in `src/apiClients/` (`storageClient.ts`, `productionClient.ts`, `transportClient.ts`,
-  `logisticsClient.ts`) on `objectManager.ts`; types in `src/types/dtos/`.
-- FormConfigurations (seeded by the API) for Warehouse, ProductionStructure (+ first line), Storage,
-  ProductionLine (+ inputs).
-- Pages in `src/pages/admin/`:
-  - **Logistics dashboard:** per town, warehouses with fill bars, producers with line states, an open-orders
-    timeline with ETA, and warnings;
-  - **Storage detail:** contents, adjust dialog, movement ledger with filters.
-- **Tests:** client tests; dashboard rendering with fixture data.
-- **Acceptance:** an admin can set up the whole chain from the web app and follow it on the dashboard.
-
-## P7 — Admin deposit and withdraw (knk-web-api + knk-plugin) · [KNG-90](https://linear.app/kngpandi/issue/KNG-90)
-
-**Needs:** D10, D13.
-
-- API: `POST api/Storages/{id}/deposit` and `/withdraw` (plugin key + acting user + permission, idempotency
-  keys). `ItemBlueprint.VanillaMaterialMatch` (unique nullable Material ref) with migration and a seed for the
-  "Resources" category (Coal, Cobblestone, Oak/Spruce log, Wheat, …; see the items V1 seed).
-- Plugin:
-  - `BlueprintItemAssembler` stamps `knightsandkings:knk_blueprint` on stackables;
-  - a resolver: instance tag → blueprint tag → vanilla match;
-  - `/knk storage deposit <storage>` (hand or hotbar) and `/knk storage withdraw …`;
-  - withdraw builds items through `BlueprintItemAssembler`, minting non-stackables through the API's instance
-    service;
-  - returns overflow to storage (D10).
-- **Tests:**
-  - resolver order;
-  - an assembler stamp that does not break stacking with older un-tagged stacks: decide a one-time "retag on
-    deposit/withdraw" rule and test it;
-  - idempotent retries;
-  - partial acceptance returns the rest to the player.
-- **Acceptance:** staff can move real items between their inventory and any storage without duplication on a lag
-  spike or retry.
-
----
-
-## Later (own designs, not scheduled) · [KNG-91](https://linear.app/kngpandi/issue/KNG-91)
-
-- **L1 Consumption chains and supply orders:** input lines at workshops; warehouse → input-storage orders on a
-  refill threshold (DESIGN §10.1).
-- **L2 Shops on warehouse supply:** with the shops/property design, currency reasons and town accounts (§10.2-10.3).
-- **L3 Physical transport and risk:** NPC carrier or cart on the road route for in-transit orders, escort and raid
-  gameplay, a courier-quest port of V1 `Minigames/Transport.java`. Depends on KNG-36 (§10.4).
-
-## Smoke test outline (for the developer, after P4/P5)
-
-1. Create the Docks Warehouse in Cinix, a Coal Mine (in a district) and a wilderness Stone Quarry with ruling
-   town Cinix.
-2. `/knk logistics lanes measure`. Check road vs straight distances in `/knk transport dryrun <quarry>`.
-3. Set coal to 1 cycle per 60 s (`CycleSeconds` = 60) and watch with `/knk logistics watch on`.
-4. At 25% occupancy, an order is planned with `ExecuteAfter` +5 min. It departs, and its ETA matches distance /
-   speed. Stock leaves the mine at departure and appears in the warehouse at arrival.
-5. Lower the warehouse cap below the incoming cargo: the order goes `AwaitingSpace`, then `Returning`, then
-   `Returned`. Coal totals across both storages plus the ledger match.
-6. Restart the API mid-transit. The order resumes and arrives at the original ETA (or immediately if overdue).
+1. In the web app:
+   - create Territory "Cinix North" claimed by Cinix;
+   - create the Docks Warehouse (district) with a terminal chest and a display chest;
+   - create a Coal Mine (district) and a Logger in the territory, with a radius over a forest.
+2. Survey the logger (`/knk production survey`). Check the composition and the derived rates in the web app.
+3. `/knk logistics lanes measure`. The logger shows `Connected`, or `Unconnected` with a held transport warning.
+4. Set the mine's rate high and watch the cycle trace. At 25% occupancy, an automatic order is planned. It departs;
+   stock leaves the mine at departure, sits in transit, and arrives at the ETA. The display chest fills.
+5. Lower the warehouse cap: AwaitingSpace → Returning → Returned. The ledger reconciles.
+6. Restart the API mid-transit: the order resumes.
+7. Take coal from the terminal chest. Your inventory gets blueprint-tagged coal, and the ledger shows a `SYS_WORLD`
+   move.

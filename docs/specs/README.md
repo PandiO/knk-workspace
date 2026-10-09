@@ -11,7 +11,7 @@ Central home for requirements, specifications, and implementation roadmaps acros
 - kits/: Kit (equipment loadout) design, implementation plan, and legacy-DB seed data
 - enchantment-books/: permanent enchantment books outside siege (Linear KNG-5)
 - navigation/: road network (survey-learned road profiles, auto-detected junctions on every level) and `/navigate` guidance with live gate/entry availability (Linear KNG-27)
-- production-storage-transport/: resource production structures, storages, warehouses and automatic transport orders (V2 port with fixes; design draft 2026-10-09)
+- production-storage-transport/: the resource-economy backbone: storages (domain/player/clan), production kinds with yield areas, transport orders (simulated, then NPC/courier), town logistics (V2 port, design draft rev. 2, 2026-10-09)
 - siege-survival/: cooperative endless NPC-wave defense, gate repair, spawnzone progression and match equipment/economy (Linear KNG-50, child of KNG-37; design only)
 - user-features/: rank/permission/title/salary architecture
 - user-management/: tailored admin module built on top of user-features
@@ -19,7 +19,7 @@ Central home for requirements, specifications, and implementation roadmaps acros
 - reconcile/: reconciliation guides for aligning legacy data with v2
 
 ## Key documents
-- Production, storage and transport (draft 2026-10-09, not implemented; V2 `ProductionStructure`/`Storage`/`TransportOrder` port): [production-storage-transport/DESIGN.md](production-storage-transport/DESIGN.md), [production-storage-transport/IMPLEMENTATION_PLAN.md](production-storage-transport/IMPLEMENTATION_PLAN.md); evidence in [../reports/2026-10-09-v2-production-storage-transport-scan.md](../reports/2026-10-09-v2-production-storage-transport-scan.md).
+- Production, storage, transport and distribution (draft rev. 2 2026-10-09, not implemented; Linear KNG-83): [production-storage-transport/DESIGN.md](production-storage-transport/DESIGN.md), [PRODUCTION_KINDS.md](production-storage-transport/PRODUCTION_KINDS.md), [TOWN_LOGISTICS.md](production-storage-transport/TOWN_LOGISTICS.md), [IMPLEMENTATION_PLAN.md](production-storage-transport/IMPLEMENTATION_PLAN.md); evidence in [../reports/2026-10-09-v2-production-storage-transport-scan.md](../reports/2026-10-09-v2-production-storage-transport-scan.md).
 - Siege survival / Defend the Castle (KNG-50, design recorded 2026-09-30; not implemented): [siege-survival/DESIGN.md](siege-survival/DESIGN.md), [siege-survival/IMPLEMENTATION_PLAN.md](siege-survival/IMPLEMENTATION_PLAN.md). Both inventory variants and Mystery Box are first-release scope; permanent reward amounts await progression targets.
 - User domain: [docs/specs/users/SPEC_USER.md](docs/specs/users/SPEC_USER.md), [docs/specs/users/SPEC_USER_ACCOUNT_MANAGEMENT.md](docs/specs/users/SPEC_USER_ACCOUNT_MANAGEMENT.md), [docs/specs/users/REQUIREMENTS_USER.md](docs/specs/users/REQUIREMENTS_USER.md), [docs/specs/users/USER_ACCOUNT_MANAGEMENT_IMPLEMENTATION_ROADMAP.md](docs/specs/users/USER_ACCOUNT_MANAGEMENT_IMPLEMENTATION_ROADMAP.md), [docs/specs/users/USER_ACCOUNT_MANAGEMENT_QUICK_REFERENCE.md](docs/specs/users/USER_ACCOUNT_MANAGEMENT_QUICK_REFERENCE.md)
 - Towns domain: [docs/specs/towns/SPEC_TOWNS.md](docs/specs/towns/SPEC_TOWNS.md), [docs/specs/towns/CREATE_FLOW_SPLIT_TOWNS.md](docs/specs/towns/CREATE_FLOW_SPLIT_TOWNS.md), [docs/specs/towns/LOGIC_CANDIDATES_TOWNS.md](docs/specs/towns/LOGIC_CANDIDATES_TOWNS.md), [docs/specs/towns/REQUIREMENTS_HYBRID_CREATE_EDIT_FLOW.md](docs/specs/towns/REQUIREMENTS_HYBRID_CREATE_EDIT_FLOW.md)
