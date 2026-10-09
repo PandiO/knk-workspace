@@ -1,7 +1,7 @@
 # Road Navigation — Last-mile walkable pathfinding (design)
 
 **Status:** Design decided — **Phases A-C implemented** (knk-core `roads/walk/`, knk-paper `navigation/walk/` + direct-mode wiring, unmerged, knk-plugin `claude/navigation-walkable-path` `305829b`, 2026-10-02); live test and Phase D next. Reviewed by the developer on 2026-10-02 (§11): decided items 1-4, 5 (pending live test), 6, 8; item 7 (scope) decided. No open decisions remain except the live test of item 5.
-**Last updated:** 2026-10-08 (rev. 9: §11-5 no straight line after a failed search, finding N8; rev. 8: §4/§9 wall cost, finding N7; rev. 7: §11-5 partial paths implemented; rev. 6: §5/§9 detour allowance, live-test finding N2; rev. 5: §10 "Phase C status"; rev. 4: §10 "Phase B status"; rev. 3: §10 "Phase A status"; rev. 2: ladders, interact-gated doors, chunk-loading rationale, §13 KNG-36)
+**Last updated:** 2026-10-09 (rev. 10: §10 Phase D step 1, the walk to the road, KNG-75; rev. 9: §11-5 no straight line after a failed search, finding N8; rev. 8: §4/§9 wall cost, finding N7; rev. 7: §11-5 partial paths implemented; rev. 6: §5/§9 detour allowance, live-test finding N2; rev. 5: §10 "Phase C status"; rev. 4: §10 "Phase B status"; rev. 3: §10 "Phase A status"; rev. 2: ladders, interact-gated doors, chunk-loading rationale, §13 KNG-36)
 **Linear:** [KNG-51](https://linear.app/kngpandi/issue/KNG-51/navigation-last-mile-walkable-pathfinding-for-direct-modeoff-road-legs)
 (split out of [KNG-27](https://linear.app/kngpandi/issue/KNG-27/road-navigation-auto-detected-road-graph-junctionsendpoints-from-road))
 **Parent design:** [DESIGN.md](DESIGN.md) §6.2 ("real off-road pathfinding is Phase 6" — this document is the
@@ -289,15 +289,29 @@ session — it can be fully verified by unit tests with no Minecraft server (the
 `arrivedAtRouteEnd` handoff (which *is* direct mode) — the case observed live. Phase D covers the rest, cheaply, since
 it reuses everything.
 
+**Phase D ([KNG-75](https://linear.app/kngpandi/issue/KNG-75)), decided 2026-10-09 (developer).** Step 1, the walk to
+the road: with walk paths, a player off the road walks to where the route starts along a walk path - a second
+`DirectLeg`, `Active.startLeg`, aimed whenever a route is adopted and the player is more than `reroute-distance` from
+it. The route is drawn from the road on (`drawRoute(…, fromPlayer=false)`); the straight line only while the search
+runs or without a result. No way: "No conventional path to the road found." once, no straight line, the navigation
+carries on. The core session waits until the player is within `reroute-distance` of the route; heading away drops the
+leg and lets the session re-route from the road now nearest. The player may start `max-start-distance` (96) from a
+road in plain 3D (`Snapper.snapRanked`: `snap-vertical-weight` only picks the road). Without walk paths nothing
+changes (weighted 48, straight lines). **Implemented 2026-10-09** (knk-plugin `claude/kng-75-offroad-destinations`
+`be0267bf`), live test: smoke-test guide "KNG-75 step 1". Step 2: measure a 96-block leg's capture and search cost
+(the capture limit is 49 chunks), then destinations up to the walk range by road plus a walk path, up to 256 by road
+plus "No conventional path to X found." with the HUD arrow, beyond 256 refused. Step 3 (chained legs, KNG-36) only on
+request.
+
 ## 11. Decisions for the developer (reversible defaults chosen; veto any)
 
 1. **Drops — decided 2026-10-02:** 2-3 block drops are allowed but never preferred: the +10/block penalty makes any other route win, and a drop is used only when it is the sole way (or a far shorter one than ~10 blocks of detour per block dropped).
 2. **Doors — decided 2026-10-02:** hand-openable doors/gates walkable only where the player may interact (§6) — WorldGuard `USE`/`INTERACT` **and** KnK domain rules; iron doors never.
 3. **Water — approved 2026-10-02:** shallow wading allowed at ×3 cost; no swimming.
 4. **Ladders — decided 2026-10-02:** allowed in v1 (§4). Vines/scaffolding later through `climbables`.
-5. **No partial path — agreed 2026-10-02**, **to be tested on the live server** (does the straight fallback read acceptably, or is a partial path better?). Record the result here. **2026-10-07, developer:** prefers a **partial path**, untested (no unreachable destination on the dev world). **Decided and implemented 2026-10-08** (knk-plugin `d369ad4`): a NO_PATH or FALLBACK result carries `partialPath()`, the way to the expanded cell closest to the target (3D distance, ties to the cheaper), when that cell is at least 2 blocks closer than the start; `path()` stays empty. Direct mode follows it and draws the rest as a straight line to the target; it is recomputed like any walk path, and `/knk road status` counts it ("partial N"). A target with no walkable cell within 3 blocks still gets the straight line. Live test passed (run 3). **Rev. 9 (2026-10-08, finding N8, developer):** after a search that ran and found no way (NO_PATH or out of budget) there is **no straight line** at all: "No conventional path to X found." once per leg ("conventional" on purpose - secret passages), the partial path without a straight continuation, or no trail. Only a search that could not run keeps the straight line.
+5. **No partial path — agreed 2026-10-02**, **to be tested on the live server** (does the straight fallback read acceptably, or is a partial path better?). Record the result here. **2026-10-07, developer:** prefers a **partial path**, untested (no unreachable destination on the dev world). **Decided and implemented 2026-10-08** (knk-plugin `d369ad4`): a NO_PATH or FALLBACK result carries `partialPath()`, the way to the expanded cell closest to the target (3D distance, ties to the cheaper), when that cell is at least 2 blocks closer than the start; `path()` stays empty. Direct mode follows it and draws the rest as a straight line to the target; it is recomputed like any walk path, and `/knk road status` counts it ("partial N"). A target with no walkable cell within 3 blocks still gets the straight line. Live test passed (run 3). **Rev. 9 (2026-10-08, finding N8, developer):** after a search that ran and found no way (NO_PATH or out of budget) there is **no straight line** at all: "No conventional path to X found." once per leg ("conventional" on purpose - secret passages), the partial path without a straight continuation, or no trail. Only a search that could not run keeps the straight line. *(N13, same day:)* before that, a nearby target the walk search cannot reach is tried once by road (back and round); a road route turns the navigation into a routed one whose last leg is again a walk path.
 6. **No chunk loading in v1** — rationale in §8; revisit in Phase D. (Explained to the developer 2026-10-02; not yet a veto.)
-7. **Scope — decided 2026-10-02:** direct mode + `arrivedAtRouteEnd` in v1; the routed start/end legs follow in Phase D once the live test is positive.
+7. **Scope — decided 2026-10-02:** direct mode + `arrivedAtRouteEnd` in v1; the routed start/end legs follow in Phase D once the live test is positive. **2026-10-09:** Phase D is KNG-75 (§10, after the scope note); step 1 implemented.
 8. **Do not adopt the Pathetic library now — agreed 2026-10-02.** The research report ([2026-09-27](../../reports/2026-09-27-road-navigation-research.md) §5.3)
    called it the best off-the-shelf option, but: it is a new shaded dependency (cloud sessions have repeatedly had
    `repo.papermc.io`/Maven blocked or rate-limited, `ACTIVE_SESSIONS.md`); the repo already has a tested walkability

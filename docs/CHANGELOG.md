@@ -2,6 +2,46 @@
 
 This is a human-readable record of capabilities merged into the V3 default branches. It is not a complete commit log or a promise that code has been deployed to a public server. See [the feature register](FEATURE_REGISTER.md) for design, branch and live-verification status. Entries before this changelog was established on **2026-09-28** are a selective backfill from merge records and feature plans; linked plans describe the precise live-test coverage.
 
+## 2026-10-09
+
+- Gate commands get two layers ([KNG-77](https://linear.app/kngpandi/issue/KNG-77),
+  [KNG-78](https://linear.app/kngpandi/issue/KNG-78), [KNG-79](https://linear.app/kngpandi/issue/KNG-79);
+  knk-plugin `main` `5b1cc8b`, knk-web-api `master` `6192af0`):
+  - `/gate` (`/knk gate`) acts on a whole gate and all its doors; `/gatedoor` (`/knk gatedoor`) acts on one door.
+  - Both have open, close and **toggle**.
+  - `here` picks the gate or door within 15 blocks, with a clickable choice when several are in range.
+  - With no target, open, close, toggle, info and repair use the gate you are looking at, including an open one.
+  - Per-id permissions now mean structure ids (`knk.gate.*`); door nodes are `knk.gatedoor.*`.
+  - "here" is a reserved gate and door name.
+  - See [architecture/gate-commands.md](architecture/gate-commands.md).
+- The web app's entity navigator (left sidebar on the Dashboard and Forms pages) can be searched (display name or
+  internal name) and sorted A–Z/Z–A ([KNG-61](https://linear.app/kngpandi/issue/KNG-61); knk-web-app `main`
+  `ce47817`). On the Dashboard, types with a published default display configuration are listed under "Entities".
+  The rest are in a collapsed "Without display configuration" group, and the Dashboard opens on the first
+  "Entities" type. The sort direction and the group's open/closed state are remembered per page. Narrow-screen
+  layout: [KNG-94](https://linear.app/kngpandi/issue/KNG-94).
+- A navigation destination high above a road is no longer "too far from any road"
+  ([KNG-75](https://linear.app/kngpandi/issue/KNG-75), finding N15; knk-plugin `main` `9f466a9f`). Destinations
+  are measured to the nearest road in plain 3D; the player's own position still counts height ×4, so a player on
+  a bridge keeps snapping to the bridge. A tower roof 28 blocks above a road is reached by road, then a walk path up.
+  Setting: `navigation.destination-snap-vertical-weight` (default 1).
+- Resetting a player's discovery on their moderation profile now asks in the app's own dialog instead of the
+  browser's `confirm` ([KNG-40](https://linear.app/kngpandi/issue/KNG-40); knk-web-app `main` `6d23238`). After
+  the reset the row leaves the list at once and a green line confirms it. The other `window.confirm` prompts are
+  [KNG-82](https://linear.app/kngpandi/issue/KNG-82).
+- Domain access refusals are also said in chat ([KNG-74](https://linear.app/kngpandi/issue/KNG-74); knk-plugin
+  `main` `fd869aa`). The first "You are not allowed to enter/leave X." of a refusal episode goes to chat as well as
+  the action bar. An episode is the first refusal after 10 s without one, or a different refusal. The `/navigate`
+  arrow keeps off the action bar for about 3 s after a refusal, so the message can be read. Settings:
+  `regions.access.chat-quiet-period-ms` and `action-bar-hold-ms`.
+- Road navigation fixes from the live test, merged to knk-plugin `main`
+  ([KNG-27](https://linear.app/kngpandi/issue/KNG-27), [KNG-51](https://linear.app/kngpandi/issue/KNG-51)):
+  - a gate closing behind the player no longer blocks the route; the route is judged by the part of each road still
+    ahead;
+  - a nearby destination the walk path cannot reach is tried by road ("following the roads instead");
+  - a destination on the open side of a closed gate is reached;
+  - with no open route, the player is guided as close to the destination as the open roads go.
+
 ## 2026-10-08
 
 - Road navigation is merged ([KNG-27](https://linear.app/kngpandi/issue/KNG-27); knk-plugin `main` `f9026cb`,
