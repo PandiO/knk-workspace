@@ -1011,10 +1011,12 @@ Next: KNG-75 proper (walk legs at both ends, destinations further than 48 blocks
 `fa234f7` (the merged plugin needs KNG-56's `GET /api/Domains/access-rules`). The dev DB lacks trunk's KNG-59
 migration `UniquePermissionGrantHolderNode` (it deletes duplicate permission grants); navigation does not need it.
 
-### KNG-75 step 1 — a walk path from the player to the road (implemented 2026-10-09, to test)
+### KNG-75 step 1 — a walk path from the player to the road (live-tested, merged 2026-10-09)
 
-knk-plugin `claude/kng-75-offroad-destinations` `be0267bf` (on `main` `5b1cc8b8`; merges cleanly with KNG-104; the
-API and the web app are unchanged). Gradle core 1780 / api-client 209 / paper 1369 green. With walk paths on, a player
+**All pass (run 2, 2026-10-09) and merged to knk-plugin `main` `c4141f90`** (merged-tree Gradle core 1786 / api-client
+212 / paper 1389 green). Branch `claude/kng-75-offroad-destinations`: `be0267bf` (step 1), `c923aa3d` (N16),
+`2273ffaa` (N17). The API and the web app are unchanged. First pushed as `be0267bf` (core 1780 / api-client 209 /
+paper 1369 green). With walk paths on, a player
 off the road gets a walk path to where the route starts instead of a straight line, and may start up to
 `navigation.max-start-distance` (96) blocks from a road in plain 3D (was 48, with height ×4). The height weight still
 picks the road (bridge case). The session waits while the player walks to the road. Decisions: KNG-75 comment of
@@ -1027,7 +1029,7 @@ time: test this and KNG-104 one after the other (or ask for a combined test buil
   guidance (maneuvers, HUD progress) starts.
 - [x] **S2** Stand 50-90 blocks from the nearest road (before: "get within 48 blocks"): `/nav` works. A long diagonal
   leg may be too large to capture (49 chunks) and keep the straight line - note the distance if so (input for step 2a).
-- [~] **S3** High above a road, e.g. the Keep Tower Roof (1410, 113, -506): `/nav` somewhere far is not refused; the walk
+- [x] **S3** (run 2 passes) High above a road, e.g. the Keep Tower Roof (1410, 113, -506): `/nav` somewhere far is not refused; the walk
   path goes down (stairs/ladders) to the keep road.
   **Run 1 (2026-10-09): routed, the right road and trail, but two findings:** **N16** "You left the road -
   recalculating" while following the walk trail down - past the end of a budget-cut partial path the start leg
@@ -1039,7 +1041,7 @@ time: test this and KNG-104 one after the other (or ask for a combined test buil
   out of budget on the way to the road says "Having trouble determining the route - guiding you to the nearest road."
   and keeps the partial path (`2273ffaa`); the height allowance is later QOL,
   [KNG-108](https://linear.app/kngpandi/issue/KNG-108). Re-test S3 on `2273ffaa`: that message, no "You left the road".
-- [ ] **S4** (run 1: fails - a 1x1 box of spruce logs, 2 high, corners open; the developer suspected diagonal
+- [x] **S4** (run 2 passes; run 1: fails - a 1x1 box of spruce logs, 2 high, corners open; the developer suspected diagonal
   corner-cutting. The real `WalkSearch` on that box returns NO_PATH after 1 expansion, so the corner rule holds; what
   was shown is being asked: a box within 8 blocks of the route gets no walk leg at all, only today's straight line)
   Shut in with no way out (a closed room, or fenced in): "No conventional path to the road found." once,

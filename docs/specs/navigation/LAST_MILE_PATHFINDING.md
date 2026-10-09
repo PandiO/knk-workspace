@@ -297,8 +297,11 @@ runs or without a result. No way: "No conventional path to the road found." once
 carries on. The core session waits until the player is within `reroute-distance` of the route; heading away drops the
 leg and lets the session re-route from the road now nearest. The player may start `max-start-distance` (96) from a
 road in plain 3D (`Snapper.snapRanked`: `snap-vertical-weight` only picks the road). Without walk paths nothing
-changes (weighted 48, straight lines). **Implemented 2026-10-09** (knk-plugin `claude/kng-75-offroad-destinations`
-`be0267bf`), live test: smoke-test guide "KNG-75 step 1". Step 2: measure a 96-block leg's capture and search cost
+changes (weighted 48, straight lines). **Implemented, live-tested and merged 2026-10-09** (knk-plugin `main`
+`c4141f90`; smoke-test guide "KNG-75 step 1"). Live-test follow-ups: heading away needs both measures - farther
+along the leg and farther from the route (N16, `c923aa3d`); a search out of budget on the way to the road says
+"Having trouble determining the route - guiding you to the nearest road." instead of "No conventional path" (N17,
+`2273ffaa`; a height allowance in the length cap for tall buildings is later, KNG-108). Step 2: measure a 96-block leg's capture and search cost
 (the capture limit is 49 chunks), then destinations up to the walk range by road plus a walk path, up to 256 by road
 plus "No conventional path to X found." with the HUD arrow, beyond 256 refused. Step 3 (chained legs, KNG-36) only on
 request.
