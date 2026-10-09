@@ -23,7 +23,11 @@ Run 4 (same day): the rest of A-D run; N8-N12 fixed in knk-plugin `62cbc36`..`d2
 KNG-75; still open: C6 (siege), and re-checks of the run 4 fixes.
 **Merged to the default branches 2026-10-08** (knk-plugin `main` `f9026cb`, knk-web-api `master` `4c570fa`, knk-web-app
 `main` `b51eba0`) on the developer's go-ahead after run 5; work continues on the standing branches (C3, A8/A9 below).
-**Last updated:** 2026-10-08
+**2026-10-09:** the follow-up fixes N10-N14 (runs 6-9: C3 and A8/A9) passed and are merged to knk-plugin `main` too
+(the API and the web app did not change). Only C6 (siege) remains of the checklist.
+**2026-10-09 (later):** rev. 7 Part A (the routing view) implemented on knk-plugin `claude/navigation-walkable-path`
+`893e33da`, not live-tested - "Rev. 7 Part A — routing view" at the end of Findings (V1-V6).
+**Last updated:** 2026-10-09
 **Sources:** the "Developer to-do" blocks of Phases 1, 3, 4 and 5 in `docs/specs/navigation/IMPLEMENTATION_PLAN.md`;
 progress report `docs/reports/2026-09-27-road-navigation-chain.md`. If this file and a plan block disagree, the plan wins.
 
@@ -932,18 +936,129 @@ non-members, joining a lobby ends navigation, `/navigate` is refused in a lobby.
   state." Cause: the re-check judged a step by its whole edge unless the player had already moved along it. A route
   that starts in the middle of edge 10139 on the town side of the South Gate only walks from the player to the town
   node, but the step's edge carries the gate door (door 13: x 1426-1428, z -454..-452, y 45-48; the edge runs
-  (1418,-463) → (1451,-429) through it), so a closing gate blocked it. To fix on the standing branch: judge every
-  step by the part it walks.
+  (1418,-463) → (1451,-429) through it), so a closing gate blocked it. **Fixed on the standing branch, knk-plugin
+  `a8ec1ec`:** every blocked step is checked on the part it walks (from the player or its entry to its exit).
 - **A8/A9 - a road route exists.** The test target was within 48 blocks, so direct mode searched only a walk path
   (bounded by the detour allowance and 96 blocks) and never the road network, although walking back and round by road
-  reaches it. To do on the standing branch: when the walk search finds no way, try the road route before "No
-  conventional path".
+  reaches it (**finding N13**). **Fixed on the standing branch, knk-plugin `758dbc5`:** when the walk search finds no
+  way, the router is asked once; a road route turns it into a routed navigation ("No walkable way straight to X -
+  following the roads instead.") with a walk path for the last leg; without one, "No conventional path".
+
+**Deploy for run 6 (re-check C3, A8/A9):** knk-plugin `claude/navigation-walkable-path` `758dbc5` (API unchanged).
+These two fixes are not on trunk yet.
+
+**Run 6 (2026-10-09, developer):** "C3 and A8/A9 show no improvement". The server log shows that the tests from 13:07
+to 13:16 ran on the jar from before the deploy (jar written 13:18, restart 13:19). After the restart there is one
+short C3 run (MrBedue `/nav South Gate`, `/nav Merchant's Square`, gate open 13:20:57 / close 13:21:13, positions not
+logged), and no A8/A9 run. Temporary INFO diagnostics added in knk-plugin `1fae2af` ("[Navigation] Re-check",
+"Walk path", "Roads instead") for the re-test; to be removed afterwards.
+
+**Run 7 (2026-10-09, developer, knk-plugin `1fae2af`):** C3 by the developer's procedure - MrBedue runs `/nav
+Merchant's Square` in front of the South Gate on the bridge, the gate opens, MrBedue walks through and stops about
+2 blocks past the gate region on the town side, the gate closes - still "blocked by the South Gate". Diagnostic:
+`step 0/7 edge #10139 backward along 39.9..0.0, step starts at 0.0 of the route, walked 34.8, blocked: the South Gate
+is closing -> BLOCKS the route`. The stretch still ahead (along 5.1 → 0, about (1421,-459) → (1418,-463)) is past
+the door (along ≈ 14) and outside `gate_2000131`, so the part check should have said open. **Cause:**
+`CompositeAccessPolicy` caches verdicts per edge id; the part (an edge object with edge 10139's id and its own tags)
+got the whole edge's cached verdict. The open-side check of a blocked start edge (N6) had the same flaw. **Fixed in
+knk-plugin `b6cb699`** (`AccessPolicy.checkPart`, evaluated without the per-id cache); the service tests now run the
+production part path, including this procedure. A8/A9 was not re-tested in run 7.
+
+**Run 8 (2026-10-09, developer, knk-plugin `b6cb699`):** **C3 passes.** A8/A9 (MrBedue in front of district 16,
+`/nav South Gate`): with the gate open it works (the open side of the blocked start road is used); with the gate
+**closed** the navigation ended at once (13:49:08, no re-check lines). The developer: the default destination is the
+gate's spawn Location, which is reachable with the gate closed; and even without a way, guide as close as possible,
+as for a destination behind a closed gate.
+- **Finding N14.** South Gate's spawn (1421.4, 49, -450.3) is just on the town side of the door line and snaps onto
+  edge 10139 at along ≈ 12 (door ≈ 14). The router treats a blocked edge as a whole, so the goal on it was
+  unreachable; the explainer then took the all-open route - straight through district 16 - and its first block was
+  the start road itself. **Fixed in knk-plugin `9391780`:** goal sides (the open stretch from a node to a goal on a
+  blocked edge is used, tagged from the world like the start sides); and with no open route the explainer prefers the
+  route the player's real policy allows to the reachable point nearest the goal, when it ends at least 8 blocks closer
+  than the all-open route's first block - its reason is the first block on the way on from there.
+
+**Run 9 (2026-10-09, developer, knk-plugin `9391780`): all pass** - A8/A9 with the South Gate closed (around district
+16 to the gate's spawn) and the closest-point guidance. The temporary diagnostics are removed (`10b9a16`). The
+follow-up fixes since the first trunk merge (C3: `a8ec1ec`, `b6cb699`; A8/A9: `758dbc5`, `9391780`) are merged to
+knk-plugin `main` (see the header). Still open: C6 (siege).
+
+**Finding N15 (2026-10-09, developer) — "too far from any road" for a target above a road.** From (1419, 82, -550),
+`/nav Keep Tower Roof` (Location 79 at (1410, 113, -506)) said "Keep Tower Roof is too far from any road." The player
+stands on road edge 5487 (0.3 away); the straight distance is 54.6, so not direct mode. The target is **29.7** blocks
+(3D) from the nearest road (edge 10088 at (1410, 84, -516), 28 blocks below the roof), but the snapper weights height ×4
+(`snap-vertical-weight`), which measures **112** > 48. **Fixed 2026-10-09, to re-test:** knk-plugin
+`claude/kng-75-offroad-destinations` `5d674a20` (from `main` `fd869aa`; merges cleanly with rev. 7 Part A). A destination
+snaps with its own `navigation.destination-snap-vertical-weight` (default 1, plain 3D): its goal, its re-snap into the
+start's network (also `/knk road why`) and the N13 roads-instead retry. The player's start keeps ×4 (bridge case); the
+48-block limit stays. Gradle core 1753 / api-client 206 / paper 1310 green.
+- [ ] **N15 re-test:** deploy that branch (`./gradlew :knk-paper:dev`). From (1419, 82, -550), `/nav Keep Tower Roof`
+  → a road route to below the keep, then a walk path up; or "No conventional path" if there is no walkable way up
+  within the walk budget (intended, not a refusal). `/knk road why Keep Tower Roof` should show the route too.
+
+Next: KNG-75 proper (walk legs at both ends, destinations further than 48 blocks off-road), handoff
+`docs/ai-agents/handoffs/2026-10-09-navigation-offroad-destinations.md`.
 - **Road trail on the Brink stairs to #3588** hugs the road's border; wanted: centred road trails, wider corners,
   stairs/slabs preferred on inclines - **KNG-76**.
 
 **Deploy for run 3:** knk-plugin `claude/navigation-walkable-path` `a4892db` and knk-web-api `claude/road-navigation`
 `fa234f7` (the merged plugin needs KNG-56's `GET /api/Domains/access-rules`). The dev DB lacks trunk's KNG-59
 migration `UniquePermissionGrantHolderNode` (it deletes duplicate permission grants); navigation does not need it.
+
+### Rev. 7 Part A — routing view (implemented 2026-10-09, to test)
+
+knk-plugin `claude/navigation-walkable-path` `893e33da` (= `main` `fd869aa` + Part A; the API and the web app are
+unchanged). Gradle core 1762 / api-client 206 / paper 1306 green. [REV7_PROPOSAL.md](../specs/navigation/REV7_PROPOSAL.md)
+§2, KNG-92. Navigation now routes on a view of the network cut at every gate door and region border the live tags
+find; the admin side (overlay, `/knk road …` except `why`) still shows the stored edges. The N6/N10/N14 patches are
+still in; they go in a second step once this passes.
+
+Deploy: `./gradlew :knk-paper:dev` from that branch. Give the live tags a minute after the restart (or a network
+change) before testing.
+- [ ] **V1** `/knk road status` → "live tags": `… N cut into M pieces` - expect a few edges (4 gates plus district
+  borders on Cinix).
+- [ ] **V2 (the gap Part A closes)** Close the South Gate and `/nav` to a place behind it from the bridge side:
+  "Guiding you to the gate" now ends **at the gate** (within a block or two), not at the bridge-side node about 34
+  blocks before it (edge 10139).
+- [ ] **V3** A road that clips a district you may not enter (N4's district 16 if it touches a road, or make a
+  region over one end of a road with `AllowEntry` off): the stretch outside the district stays usable; a destination
+  on it is reached without a detour. Into the district: "Guiding you to its edge" ends just outside it.
+- [ ] **V4** Re-run C3 (a gate closes on the route; opening it gives the shorter route back), C4 (pass-through hint
+  and route through the gate), C5 (`allowEntry=false` → to the edge; bypass → in; `allowExit=false` → routes stay
+  inside), A7 (closed gate on the shortcut → detour; opening → back within ~2 s) and A8 (a region you may not enter
+  → around it).
+- [ ] **V5** N6, N10, N14 cases: standing on the road of a closed gate (either side), a gate closing behind you, a
+  destination on the open side of a closed gate - same results as runs 7-9.
+- [ ] **V6** `/knk road why <player>` on a route through a gate: blocked lines read `edge #10139 blocks 31-34` (the
+  stored edge and the stretch), not a large synthetic id. No extra "Continue"/"Take the stairs" lines mid-road.
+
+**Run 1 (2026-10-09, developer; one deployment of `claude/kng-73-road-navigation-n92vlm` in all three repos, plugin
+`eb30322e` = KNG-73 + Part C + Part A):** K1-K3 pass, K4/K5 accepted (one town only); R1 accepted; V1, V2 pass; V4
+C3/C4/C5 pass, A7 accepted. Not passed: R2/R3 (P2), V3, V4 A8 and V5 (P1). Analysis from the server log and the dev DB
+(read-only):
+- **P1 — the west road round the island was blocked by an orphaned region (V3, A8, V5).** From Brink to the South Gate
+  there are two ways to node 3589: east over #5385 (Wearway, through "Navigation Test", `domain_16`, entry and exit
+  denied) and west over #5228 (Kardenna end). The west one crosses `domain_17`. "Road clipping district" (17) was
+  created on `domain_17` with entry denied; at 16:18:57 the navigator cached that. Re-running its region step at
+  16:19:50 made `tempregion_worldtask_227`, whose rename to `domain_17` failed ("target region name already exists"),
+  so the DB now points at `tempregion_worldtask_227` and `domain_17` is an orphan on the road. The navigator's
+  region → domain cache (`RegionDomainResolver`, `getDomainByRegionIdNoRefresh`) is never cleared, and a lookup that
+  finds no domain does not evict, so `domain_17` kept "entry denied" until a restart - also after allowing entry on
+  the district. Both ways blocked → the explainer guided along the shorter all-open way, east, to Navigation Test's
+  edge (the west alternative was not 8 blocks closer). Not a Part A/C fault. Follow-ups: the region-step re-run
+  should replace the old region; the resolver should evict a region the API no longer knows and refresh stale
+  entries for the navigator.
+- **P2 — gates and Keep Gate were never seen by the navigator (R2/R3).** `POST api/Domains/search-region-decisions`
+  picked Town/District/Structure by exact type name, so GateStructure regions (the gates; Keep Gate and Keep Stair
+  House are GateStructures on the dev DB) answered `{}`: routing and walk paths treated Keep Gate as open, only the
+  border refused. **Fixed in knk-web-api `1ff8dba`** (a GateStructure takes the Structure place). The region tracker
+  now also sees gates (enter/leave messages for gate regions).
+- **P3 — crash after a reload: `unknown road edge 5385` in `ManeuverBuilder` (16:28:37).** Until the first live-tag
+  pass the stored network serves, then the routing view, whose edge ids differ; the session kept its old route and
+  ManeuverBuilder. **Fixed in knk-plugin `d24f9649`**: a network change drops in-flight results and takes the route
+  computed on the new network as it is (silent unless it blocks or opens the way).
+- **Web app:** "(i)" tooltips on both Overrides columns, knk-web-app `06ba989` (developer request).
+- **Re-test after deploying `d24f9649` / `1ff8dba` / `06ba989`:** remove the orphan `domain_17` (`/rg remove domain_17`)
+  and restart the server (clears the navigator's domain cache), then R2/R3 with Keep Gate, V3, A8, V5.
 
 ### Phase 3 — rebuild re-test (2026-10-02, developer; recorded from the commit messages)
 

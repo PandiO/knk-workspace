@@ -609,7 +609,11 @@ The live re-check only judges the route **ahead** of the player: a gate closing 
 pass-through gate follows the right-click rule exactly: a gate admin passes any door, anyone else a door with
 AllowPassThrough and the use node, with Bukkit's or KnK's permissions (N11). The start snaps to a road that connects
 to the goal when the nearest one is a stretch on its own (N12). A domain asked for without `spawn`/`region` is
-reached by standing in its region (N9); making the default configurable is KNG-73.
+reached by standing in its region (N9); making the default configurable is KNG-73. A goal on a blocked edge is reached
+over the open stretch from a node (goal sides, N14), and with no open route the player is guided as close to the goal
+as the open roads go when that beats stopping at the first block of the shortest all-open route (N14). These per-part
+patches work around whole-edge verdicts; [REV7_PROPOSAL.md](REV7_PROPOSAL.md) proposes a routing view cut at gates and
+access borders instead (plus entrances and a per-type "applies to roads" setting).
 
 **Live changes.** `NavigationService` listens to gate state changes (an observer on `GateManager`'s animation-complete
 notifications), domain cache refreshes and siege state changes:

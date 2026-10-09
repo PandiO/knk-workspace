@@ -2,6 +2,25 @@
 
 This is a human-readable record of capabilities merged into the V3 default branches. It is not a complete commit log or a promise that code has been deployed to a public server. See [the feature register](FEATURE_REGISTER.md) for design, branch and live-verification status. Entries before this changelog was established on **2026-09-28** are a selective backfill from merge records and feature plans; linked plans describe the precise live-test coverage.
 
+## 2026-10-09
+
+- Resetting a player's discovery on their moderation profile now asks in the app's own dialog instead of the
+  browser's `confirm` ([KNG-40](https://linear.app/kngpandi/issue/KNG-40); knk-web-app `main` `6d23238`). After
+  the reset the row leaves the list at once and a green line confirms it. The other `window.confirm` prompts are
+  [KNG-82](https://linear.app/kngpandi/issue/KNG-82).
+- Domain access refusals are also said in chat ([KNG-74](https://linear.app/kngpandi/issue/KNG-74); knk-plugin
+  `main` `fd869aa`). The first "You are not allowed to enter/leave X." of a refusal episode goes to chat as well as
+  the action bar. An episode is the first refusal after 10 s without one, or a different refusal. The `/navigate`
+  arrow keeps off the action bar for about 3 s after a refusal, so the message can be read. Settings:
+  `regions.access.chat-quiet-period-ms` and `action-bar-hold-ms`.
+- Road navigation fixes from the live test, merged to knk-plugin `main`
+  ([KNG-27](https://linear.app/kngpandi/issue/KNG-27), [KNG-51](https://linear.app/kngpandi/issue/KNG-51)):
+  - a gate closing behind the player no longer blocks the route; the route is judged by the part of each road still
+    ahead;
+  - a nearby destination the walk path cannot reach is tried by road ("following the roads instead");
+  - a destination on the open side of a closed gate is reached;
+  - with no open route, the player is guided as close to the destination as the open roads go.
+
 ## 2026-10-08
 
 - Road navigation is merged ([KNG-27](https://linear.app/kngpandi/issue/KNG-27); knk-plugin `main` `f9026cb`,
