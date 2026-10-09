@@ -1,6 +1,6 @@
 # Road Navigation — Rev. 7 proposal: a routing view, entrances, and which access rules apply to roads
 
-**Status:** Decisions in progress (2026-10-09): D1, D4, D5 decided; D2, D3 open (§7). Nothing implemented.
+**Status:** Accepted (2026-10-09): D1-D5 decided (§7.1). Nothing implemented; order C, A, B (§5).
 **Last updated:** 2026-10-09
 **Builds on:** [DESIGN.md](DESIGN.md) §5.6 step 6 and §6.7 (live tags, start/goal sides),
 [LAST_MILE_PATHFINDING.md](LAST_MILE_PATHFINDING.md) (walk paths), the live test of 2026-10-07 to 10-09
@@ -135,12 +135,15 @@ nodes that split their edges, for one route (DESIGN §6.2). That is how a Locati
 After the road, the walk path (KNG-51) covers the last metres.
 
 What is missing is **data: where the front door is.**
-- **API:** an optional `EntranceLocationId` on domains, or on structures only (§7, D2), next to `LocationId` (the
-  spawn). The web app gets a field on the domain form; in game, `/knk domain entrance set` at the door.
+- **API:** **any number of entrances on every domain type** (§7.1, D2): a `DomainEntrance` table (`DomainId`,
+  `LocationId`, an optional name such as "North Gate"), next to `LocationId` (the spawn). Towns and districts
+  usually have several. The web app gets an entrance list on the domain form; in game, `/knk domain entrance
+  add|remove|list` at the door.
 - **Navigation:** a third destination mode next to `spawn` and `region`, `entrance`:
-  - The router snaps the entrance to the road in front of it.
-  - The walk path leads from there to the door. A player without access gets "No conventional path" for the last
-    metres, not a blocked street (§4).
+  - Every entrance becomes a goal; the router already searches to several goals at once and takes the cheapest
+    (`AStarRouter`, as region mode does with `RegionClosestPoint.goals`). Each snaps to the road in front of it.
+  - The walk path leads from the reached goal to *its* entrance. A player without access gets "No conventional path"
+    for the last metres, not a blocked street (§4).
   - Without an entrance, it falls back to the spawn, then the region.
 - **Default mode:** `entrance` would be the natural default for houses, shops, taverns and production structures.
   KNG-73 makes the default configurable per type, with per-domain overrides, so it only needs the new mode.
@@ -184,8 +187,9 @@ It would be one more column, and one more field in the domain DTO the plugin rea
    - live re-test of A7, A8, C3-C5 and the gate/region cases of the 2026-10-07/09 run;
    - then remove the patches (§2.4) in a separate commit.
    This is a medium change in knk-core plus `LiveEdgeTags`. No API or web-app change.
-3. **Part B** when the first house/shop/tavern types exist: `EntranceLocationId` (API, migration with the developer's
-   go-ahead), the web-app field, `/knk domain entrance set`, the `entrance` mode, and KNG-73's default per type.
+3. **Part B** ([KNG-93](https://linear.app/kngpandi/issue/KNG-93)) when the first house/shop/tavern types exist, or a
+   domain needs it earlier (the dwarven kingdom): `DomainEntrance` (API, migration with the developer's go-ahead), the
+   web-app entrance list, `/knk domain entrance add|remove|list`, the `entrance` mode, and KNG-73's default per type.
 
 ## 6. Tests
 
@@ -206,7 +210,8 @@ It would be one more column, and one more field in the domain DTO the plugin rea
 **Part C:** a house region over the street does not block it for the router, and the walk path still refuses the
 door.
 
-**Part B:** the `entrance` mode with and without an entrance; the fallback order.
+**Part B:** the `entrance` mode with no, one and several entrances (the cheapest wins, the walk path ends at the
+entrance that was reached); the fallback order.
 
 ## 7. Decisions for the developer
 
@@ -220,12 +225,13 @@ door.
 ### 7.1 Decisions (2026-10-09)
 
 - **D1 — decided:** Part A, then remove the patches (§2.4) in a separate step after its live test.
-- **D2 — open.** The developer raised a case for all domain types: a mostly underground dwarven kingdom (a Town with
-  Districts). Its region or spawn sits inside a mountain, so `region` or `spawn` guidance can end on the slope above
-  it; an entrance at the gate in the mountainside would fix that. Similar cases may follow. Part B is now
+- **D2 — decided: every domain type, several entrances per domain from the start** (§3). The developer's case: a
+  mostly underground dwarven kingdom (a Town with Districts) whose region or spawn sits inside a mountain, so
+  `region` or `spawn` guidance can end on the slope above it; an entrance at the gate in the mountainside fixes that.
+  Towns and districts usually have more than one entrance, so a single field would be redone later. Part B is
   [KNG-93](https://linear.app/kngpandi/issue/KNG-93).
-- **D3 — open,** re-asked in plain terms: should a plain Structure's "no entry" keep the navigator off roads inside
-  its region by default (today's behaviour for every type), or be ignored like a house's?
+- **D3 — decided:** the §4 table as proposed. A plain Structure defaults to "applies" (today's behaviour), so Part C
+  changes nothing for existing types; houses, shops, taverns and production structures default to "no".
 - **D4 — decided:** with KNG-73's per-type settings. The column is added on `claude/kng-73-road-navigation-n92vlm`
   before KNG-73 merges, so `AddDomainNavigationDefaults` stays one migration (noted on KNG-73).
 - **D5 — decided:** 2 blocks, as the live tags. Refine near borders only if a live test shows the need.
