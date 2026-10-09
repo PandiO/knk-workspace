@@ -583,6 +583,14 @@ Kardenna."
 - **Arrival:** within `arrive-distance`, or inside the region → sound + `"You have arrived at Kardenna Market."`.
 - **Ends** on quit, death, world change, teleport (> 16 blocks), joining a siege match, or `max-session-minutes`.
 
+**Centred trail (KNG-76, merged 2026-10-10, knk-plugin `d0167a6d`).** Edge geometry is whole floor blocks, so on a road an
+even number of blocks wide the line lies on one of the two middle rows, and straight lines cut the inside of bends.
+The route trail is drawn through `TrailCentring`: each trail point looks across the road (up to 3 blocks each side,
+road cells = the profiles' floor materials with room above, at the trail's height or one off) and moves to their
+middle; on a slope to the middle of the stair and slab cells. The points sit on fixed spots of the route (every
+1.5 blocks) and are centred with a margin, so a redraw puts each particle where it was. Only the drawn trail
+changes - not the graph, the route or its length.
+
 ### 6.5 Maneuvers
 
 At each `Junction` on the route, or where the street label changes: Δ = bearing after − before (~6 blocks each side).

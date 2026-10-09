@@ -1080,7 +1080,7 @@ time: test this and KNG-104 one after the other (or ask for a combined test buil
 - [x] **S7** `/knk road status`: the walk-path line counts the walk to the road as well ("walking", "computing").
 - [x] **S8** Regression: standing on the road, `/nav` as before (no walk leg); a nearby target (direct mode) as before.
 
-### KNG-76 — centred road trails, wider corners, stairs on slopes (implemented 2026-10-09, re-test T6b/T1b)
+### KNG-76 — centred road trails, wider corners, stairs on slopes (live-tested and merged 2026-10-10)
 
 knk-plugin `claude/kng-76-centred-trails` `fc670d1a` (on `main` `c4141f90`; the API and the web app are unchanged; no
 rebuild needed). Gradle core 1793 / api-client 212 / paper 1392 green. The route trail is drawn through
@@ -1114,6 +1114,10 @@ Deploy: `./gradlew :knk-paper:dev` from that branch, restart.
 - [ ] **T6b** Walk along a road while navigating: the particles stay in place as the trail moves on with you; no
   sideways jumps in front of you.
 - [ ] **T1b** A road route down the Brink stairs (destination more than 48 blocks away): the trail runs down their middle.
+
+**Run 2 (2026-10-10, developer, `3cc403d2`): T6b and T1b pass.** With run 1's T1-T5 every check has passed. **Merged to
+knk-plugin `main` `d0167a6d`** (with `main`'s KNG-75 step 2 merged in first; Gradle core 1793 / api-client 212 / paper 1400
+green).
 
 ### Rev. 7 follow-up — "Ignored" regions cut no roads (live-tested and merged 2026-10-09)
 
