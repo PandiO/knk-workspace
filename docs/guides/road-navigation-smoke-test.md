@@ -1035,8 +1035,14 @@ time: test this and KNG-104 one after the other (or ask for a combined test buil
   **N17** "No conventional path to the road found." with a correct trail: the walk replay (`WalkReplayTest`, roof
   (1410.5, 113, -506.5) to the snap point (1410.5, 84, -516) on edge 10088) shows the only way down is the spiral
   stair, **168 blocks for 29 of height**; the length cap is 77.6 (1.75 × 29.6, or + 48, at most 96) → out of budget,
-  partial path. Without the cap it is found in 1642 expansions. Proposal: a height allowance in the length cap.
-- [ ] **S4** (run 1: fails, details asked) Shut in with no way out (a closed room, or fenced in): "No conventional path to the road found." once,
+  partial path. Without the cap it is found in 1642 expansions. **Developer decision 2026-10-09:** no larger budget now;
+  out of budget on the way to the road says "Having trouble determining the route - guiding you to the nearest road."
+  and keeps the partial path (`2273ffaa`); the height allowance is later QOL,
+  [KNG-108](https://linear.app/kngpandi/issue/KNG-108). Re-test S3 on `2273ffaa`: that message, no "You left the road".
+- [ ] **S4** (run 1: fails - a 1x1 box of spruce logs, 2 high, corners open; the developer suspected diagonal
+  corner-cutting. The real `WalkSearch` on that box returns NO_PATH after 1 expansion, so the corner rule holds; what
+  was shown is being asked: a box within 8 blocks of the route gets no walk leg at all, only today's straight line)
+  Shut in with no way out (a closed room, or fenced in): "No conventional path to the road found." once,
   the route from the road on, no straight line; walking out once a door opens, the navigation carries on.
 - [x] **S5** While walking to the road, walk off the other way: the walk leg goes, about 2 s later "You left the road -
   recalculating" and a new walk path to the road now nearest.
