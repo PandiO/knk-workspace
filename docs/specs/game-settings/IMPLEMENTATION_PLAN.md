@@ -1,6 +1,6 @@
 # Game Settings — Implementation Plan
 
-**Status:** **Smoke test run 1 done (2026-10-09); round 3 web part checked (2026-10-10); round 4 code-complete on `claude/kng-52-round4` (contains round 3), in-game round 3/4 checks open; nothing merged to trunk.** Round 4: API `99a5726`, plugin `a96ef742`, web app `f831125` (§1). Next: merge `claude/kng-52-round4` into all three test checkouts and run §4.3 + §4.4. Run 1: steps 1-3, 6, 8, 11-14 pass, 10 and 15 accepted, **step 4 failed** (game mode), step 5 found the picker bug, 7.3 and 9 still to test (§4.2). Round 3 (§1): knk-web-api `claude/kng-52-round3` `9f11768`, knk-plugin `67eb6a5d`, knk-web-app `89f4fdd`, each on top of the KNG-52 branch (web-app: on `main`). Next: the developer brings round 3 into the test checkouts and runs §4.3.
+**Status:** **Live-tested, ready to merge (2026-10-10).** Smoke test run 1 (2026-10-09) and run 2 (2026-10-10, §4.5) passed or were accepted. Merge `claude/kng-52-round4` (contains rounds 2-4) in the order of §5: API `master`, plugin `main`, web app `main`. All decisions settled (DESIGN §7). Not merged to trunk yet.
 **Last updated:** 2026-10-10
 **Linear:** [KNG-52](https://linear.app/kngpandi/issue/KNG-52)
 **Sources:** [DESIGN.md](DESIGN.md) (behavior, decisions D1–D17, open questions); stash `19-08-26: Workable: GameSettings feature` in knk-plugin.
@@ -373,6 +373,29 @@ No new migration.
     - A higher group with a chosen spot wins over it, and the reverse.
 24. **Server decides respawn:** a group with *Own respawn* → *Server decides*: its members respawn at their bed (or
     anchor), others at the world spawn (D1).
+
+### 4.5 Smoke test run 2 (2026-10-10, developer): passed
+
+Round 4 deployed (all three test checkouts contain `claude/kng-52-round4`).
+
+| Step | Result |
+|---|---|
+| 4 / 21 Game mode | **Works.** The log shows `MrBedue left the loading hold in CREATIVE (world world_KNK-DEV)` (the world's setting at the time) and no change warning. The run-1 failure didn't come back; its cause was never pinned down. The diagnostics stay in place. |
+| 7.3 Weighted weather | Works |
+| 9 API down | Accepted |
+| 16 Picker | Works (run 1 of round 3) |
+| 17 Forced world spawn | Accepted |
+| 18 Leave message, `{title}` | Works |
+| 19 Group order | Accepted |
+| 20 `/weather` confirmation | Works |
+| 22 Search box | Works |
+| 23 Join where they logged out | Works |
+| 24 Server decides respawn | Accepted |
+| Regressions (`/spawn` warmup/cooldown/price with a group spawn, `/back` after `/spawn`) | Pass |
+
+Decisions: D2 and D3 accepted (2026-10-10). **Ready to merge.** Plugin `main` `d0167a6d` was merged into
+`claude/kng-52-round4` before the merge (`3f803613`): BUILD SUCCESSFUL, core 1839, api-client 219, paper 1414, no
+failures. The API and web-app trunks haven't moved since round 4; `git merge-tree` showed no conflict in any repo.
 
 Record results under a "Smoke test" heading here and in KNG-52.
 

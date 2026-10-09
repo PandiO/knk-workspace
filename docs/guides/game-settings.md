@@ -1,6 +1,6 @@
 # Game Settings — admin guide
 
-**Status:** Draft. It describes branch `claude/kng-52-game-settings` (two rounds, 2026-10-05; merged with trunk and pushed 2026-10-09). The page is on the web app's `main`; the API and plugin halves are not merged or live-tested (see the [plan](../specs/game-settings/IMPLEMENTATION_PLAN.md)).
+**Status:** Live-tested on branch `claude/kng-52-round4` (2026-10-10), not merged yet - see the [plan](../specs/game-settings/IMPLEMENTATION_PLAN.md). Once merged, this guide describes trunk.
 **Last updated:** 2026-10-10
 
 The Game Settings page sets server-wide rules for joining, respawning, each world's game mode, time,
