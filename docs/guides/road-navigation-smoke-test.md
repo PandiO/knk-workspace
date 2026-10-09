@@ -1031,6 +1031,35 @@ change) before testing.
 - [ ] **V6** `/knk road why <player>` on a route through a gate: blocked lines read `edge #10139 blocks 31-34` (the
   stored edge and the stretch), not a large synthetic id. No extra "Continue"/"Take the stairs" lines mid-road.
 
+**Run 1 (2026-10-09, developer; one deployment of `claude/kng-73-road-navigation-n92vlm` in all three repos, plugin
+`eb30322e` = KNG-73 + Part C + Part A):** K1-K3 pass, K4/K5 accepted (one town only); R1 accepted; V1, V2 pass; V4
+C3/C4/C5 pass, A7 accepted. Not passed: R2/R3 (P2), V3, V4 A8 and V5 (P1). Analysis from the server log and the dev DB
+(read-only):
+- **P1 — the west road round the island was blocked by an orphaned region (V3, A8, V5).** From Brink to the South Gate
+  there are two ways to node 3589: east over #5385 (Wearway, through "Navigation Test", `domain_16`, entry and exit
+  denied) and west over #5228 (Kardenna end). The west one crosses `domain_17`. "Road clipping district" (17) was
+  created on `domain_17` with entry denied; at 16:18:57 the navigator cached that. Re-running its region step at
+  16:19:50 made `tempregion_worldtask_227`, whose rename to `domain_17` failed ("target region name already exists"),
+  so the DB now points at `tempregion_worldtask_227` and `domain_17` is an orphan on the road. The navigator's
+  region → domain cache (`RegionDomainResolver`, `getDomainByRegionIdNoRefresh`) is never cleared, and a lookup that
+  finds no domain does not evict, so `domain_17` kept "entry denied" until a restart - also after allowing entry on
+  the district. Both ways blocked → the explainer guided along the shorter all-open way, east, to Navigation Test's
+  edge (the west alternative was not 8 blocks closer). Not a Part A/C fault. Follow-ups: the region-step re-run
+  should replace the old region; the resolver should evict a region the API no longer knows and refresh stale
+  entries for the navigator.
+- **P2 — gates and Keep Gate were never seen by the navigator (R2/R3).** `POST api/Domains/search-region-decisions`
+  picked Town/District/Structure by exact type name, so GateStructure regions (the gates; Keep Gate and Keep Stair
+  House are GateStructures on the dev DB) answered `{}`: routing and walk paths treated Keep Gate as open, only the
+  border refused. **Fixed in knk-web-api `1ff8dba`** (a GateStructure takes the Structure place). The region tracker
+  now also sees gates (enter/leave messages for gate regions).
+- **P3 — crash after a reload: `unknown road edge 5385` in `ManeuverBuilder` (16:28:37).** Until the first live-tag
+  pass the stored network serves, then the routing view, whose edge ids differ; the session kept its old route and
+  ManeuverBuilder. **Fixed in knk-plugin `d24f9649`**: a network change drops in-flight results and takes the route
+  computed on the new network as it is (silent unless it blocks or opens the way).
+- **Web app:** "(i)" tooltips on both Overrides columns, knk-web-app `06ba989` (developer request).
+- **Re-test after deploying `d24f9649` / `1ff8dba` / `06ba989`:** remove the orphan `domain_17` (`/rg remove domain_17`)
+  and restart the server (clears the navigator's domain cache), then R2/R3 with Keep Gate, V3, A8, V5.
+
 ### Phase 3 — rebuild re-test (2026-10-02, developer; recorded from the commit messages)
 
 Not written up here at the time; reconstructed by the walkable-path chain (link 1) from the developer's commits on
