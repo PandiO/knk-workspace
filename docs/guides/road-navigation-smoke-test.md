@@ -1052,7 +1052,7 @@ time: test this and KNG-104 one after the other (or ask for a combined test buil
 - [x] **S7** `/knk road status`: the walk-path line counts the walk to the road as well ("walking", "computing").
 - [x] **S8** Regression: standing on the road, `/nav` as before (no walk leg); a nearby target (direct mode) as before.
 
-### KNG-76 — centred road trails, wider corners, stairs on slopes (implemented 2026-10-09, to test)
+### KNG-76 — centred road trails, wider corners, stairs on slopes (implemented 2026-10-09, re-test T6b/T1b)
 
 knk-plugin `claude/kng-76-centred-trails` `fc670d1a` (on `main` `c4141f90`; the API and the web app are unchanged; no
 rebuild needed). Gradle core 1793 / api-client 212 / paper 1392 green. The route trail is drawn through
@@ -1073,6 +1073,19 @@ Deploy: `./gradlew :knk-paper:dev` from that branch, restart.
 - [ ] **T4** A wide road or a plaza: the trail is where it was.
 - [ ] **T5** A slope with stairs or slabs on one side and full blocks on the other: the trail is on the stairs.
 - [ ] **T6** Navigating for a while: no lag (the trail reads a few hundred blocks per draw per player).
+
+**Run 1 (2026-10-09, `fc670d1a`): T1-T5 pass, T6 no lag.** Findings:
+- **T1 used a walk path, not the road trail:** by design. A destination within `max-snap-distance` (48 blocks) of the
+  player is direct mode - a walk path only (Merchant's Square is about 35 blocks from Brink; the same `/nav` was direct
+  mode on 2026-10-07, finding N2). Not a KNG-76 change. To see the road trail on the stairs, navigate to a place more
+  than 48 blocks away whose route runs down them (`/knk road why <player>` lists edge #10068 when it does).
+- **T6: the centred trail twitched right in front of the player.** Each redraw sampled the route from the player's
+  position, so the points slid along the road and got other sideways shifts, and the first points were smoothed with
+  fewer neighbours. **Fixed in `3cc403d2`:** the trail points sit on fixed spots of the route (every 1.5 blocks from its
+  start) and are centred with a margin of spots either side, so a redraw puts every particle where it was.
+- [ ] **T6b** Walk along a road while navigating: the particles stay in place as the trail moves on with you; no
+  sideways jumps in front of you.
+- [ ] **T1b** A road route down the Brink stairs (destination more than 48 blocks away): the trail runs down their middle.
 
 ### Rev. 7 follow-up — "Ignored" regions cut no roads (live-tested and merged 2026-10-09)
 
