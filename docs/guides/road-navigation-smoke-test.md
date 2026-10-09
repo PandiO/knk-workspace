@@ -972,6 +972,23 @@ the web app.
   the Towns row counts 1 override. Clearing the field (empty choice) makes the town follow its type again.
 - [ ] **K5** Edit a gate or town with a form *without* the field: its override stays as it was.
 
+#### Rev. 7 Part C — entry rule on roads (KNG-92, implemented 2026-10-09, to test with KNG-73)
+
+On the same branches: knk-web-api `79e2b63` (one more column and override in the same `AddDomainNavigationDefaults`
+migration - `domain_navigation_defaults.RoadAccess`, `domains.RoadAccessOverride`, every type seeded `Applies`), knk-plugin
+`ccb04891` (on a merge of `main` `fd869aa`), knk-web-app `1368115`. Tests: web-api 1855 pass, 9 fail as on `master` (incl.
+`Validation_GeometryFarFromItsNode`); Gradle core 1754 / api-client 209 / paper 1310 green; web-app tsc clean, road/admin
+tests green except the known `RoadsAdminPage › deletes a profile after confirmation`. Nothing changes until a rule is set
+to `Ignored`. [REV7_PROPOSAL.md](../specs/navigation/REV7_PROPOSAL.md) §4.
+- [ ] **R1** `/admin/roads` → "Navigation defaults": an "Entry rule on roads" column, all `Applies`, 0 overrides. Changing
+  it leaves the default destination as it was (and the other way round).
+- [ ] **R2** Pick a structure (or district) whose region a road passes through, with `AllowEntry` off, and a test account
+  without `knk.region.bypass`. `/nav` to a place beyond it: the route avoids that road (or "You may not enter X", as today).
+- [ ] **R3** Set that type (or, via the Form Builder field "Road Access Override", only that domain) to `Ignored`, then
+  `/knk cache refresh`. The same `/nav` now routes along the road through the region; walking in, the border still
+  refuses entry (KNG-56). Its row counts 1 override when done per domain; clearing the field follows the type again.
+- [ ] **R4** Set it back to `Applies` (or clear the override) and refresh: the route avoids the road again.
+
 ### Phase 3 — rebuild re-test (2026-10-02, developer; recorded from the commit messages)
 
 Not written up here at the time; reconstructed by the walkable-path chain (link 1) from the developer's commits on
