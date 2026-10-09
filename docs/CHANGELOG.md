@@ -2,6 +2,18 @@
 
 This is a human-readable record of capabilities merged into the V3 default branches. It is not a complete commit log or a promise that code has been deployed to a public server. See [the feature register](FEATURE_REGISTER.md) for design, branch and live-verification status. Entries before this changelog was established on **2026-09-28** are a selective backfill from merge records and feature plans; linked plans describe the precise live-test coverage.
 
+## 2026-10-10
+
+- Navigation reaches destinations further off-road ([KNG-75](https://linear.app/kngpandi/issue/KNG-75) step 2;
+  knk-plugin `main` `8f2b7c30`). A destination may now be up to 256 blocks from a road (was 48). Within 96 blocks of
+  where the road ends, the last stretch is a walk path; further out, the player is told "No conventional path to X
+  found." and the HUD arrow and distance point the way until they are within 96 blocks, when a walk path takes over.
+  Walk paths may now be up to 144 blocks long (was 96), and walks of up to 96 blocks, also to the road at the start,
+  no longer fall back to a straight line for lack of captured terrain. Settings: `navigation.max-destination-distance`,
+  `navigation.destination-walk-range`, `navigation.walk.max-length` (a server `config.yml` that spells out
+  `max-length: 96` keeps the old cap - change it to 144). With walk paths off, nothing changes. KNG-75 is complete;
+  follow-ups [KNG-108](https://linear.app/kngpandi/issue/KNG-108) (tall buildings) and KNG-36 (longer walks).
+
 ## 2026-10-09
 
 - A navigating player off the road gets a walk path to it ([KNG-75](https://linear.app/kngpandi/issue/KNG-75) step 1;

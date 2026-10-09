@@ -1011,6 +1011,34 @@ Next: KNG-75 proper (walk legs at both ends, destinations further than 48 blocks
 `fa234f7` (the merged plugin needs KNG-56's `GET /api/Domains/access-rules`). The dev DB lacks trunk's KNG-59
 migration `UniquePermissionGrantHolderNode` (it deletes duplicate permission grants); navigation does not need it.
 
+### KNG-75 step 2 — destinations up to 256 blocks off-road (live-tested 2026-10-10: B1-B6 pass; merged)
+
+**Merged to knk-plugin `main` `8f2b7c30`** (merged-tree Gradle core 1786 / api-client 212 / paper 1395 green). KNG-75
+is done. Branch `claude/kng-75-offroad-destinations` `6c036eaf` (on `main` `c4141f90`: `fec8e4b2` replay batch mode,
+`7b8a11cc` walk length cap 144 and 64-chunk capture, `6c036eaf` destinations). Gradle core 1786 / api-client 212 / paper
+1395 green; each new test fails without its fix. Measurement and decisions:
+[report 2026-10-10](../reports/2026-10-10-kng75-walk-leg-measurement.md), KNG-75 comments. With walk paths on, a
+destination may be `max-destination-distance` (256) from a road; within `destination-walk-range` (96) of the road's end
+the last leg is a walk path; further, "No conventional path to X found." and the HUD arrow alone, until the player is
+within 96 - then a walk path.
+
+**Before deploying:** the server's `plugins/KnightsAndKings/config.yml` has `walk: max-length: 96` written out - change
+it to **144** (or delete the line), else the old cap stays. The new keys need no entry. Deploy: `./gradlew :knk-paper:dev`
+from `Repository/_worktrees/knk-plugin-kng75`, restart.
+- [x] **B1** 48-96 off-road, reachable: Location 72 at (1500, 54, -636) is 83.6 from the road (1447, 42, -572); give it a
+  name in the web app (it is "Location"), then `/nav <name>` from afar: by road, then a walk path (the replay found 96
+  blocks). Before: "too far from any road".
+- [x] **B2** 48-96 off-road, unreachable: `/nav East Gate Square` (Location 7, 75.8 off-road; its spot is inside solid
+  andesite): by road, then "No conventional path to East Gate Square found.", no straight line. Afterwards fix its y.
+- [x] **B3** 96-256 off-road: a new Location 100-250 blocks from any road (in the wild). `/nav` it: no straight line
+  from the road's end on (also not while on the road); at the road's end "No conventional path to X found." once, no
+  trail, the HUD arrow and distance point at it. Walk towards it: within 96 blocks a walk path appears (no second
+  message); reaching it is the arrival.
+- [x] **B4** More than 256 from any road (e.g. "Orphan test" at (1, 2, 3)): "… is too far from any road."
+- [x] **B5** Step 1 with the bigger capture: stand 85-95 blocks diagonally off a road, `/nav` somewhere far: a walk path
+  to the road, not a straight line; `/knk road status` "not captured" does not go up.
+- [x] **B6** Regression: Keep Tower Roof (N15) and a nearby target (direct mode) as before.
+
 ### KNG-75 step 1 — a walk path from the player to the road (live-tested, merged 2026-10-09)
 
 **All pass (run 2, 2026-10-09) and merged to knk-plugin `main` `c4141f90`** (merged-tree Gradle core 1786 / api-client
