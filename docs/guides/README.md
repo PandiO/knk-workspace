@@ -22,5 +22,6 @@ Use [documentation maintenance](developer/DOCUMENTATION_MAINTENANCE.md) when a f
 | [User manual](users/handleiding.md) | General player orientation | **Needs a V3 content review** before publication |
 | [Account management](users/PLAYER_GUIDE_ACCOUNT_MANAGEMENT.md) | Player account/linking flow | Compare with current auth implementation before publication |
 | [Siege scenario authoring](authoring-a-siege-scenario.md) | Admin setup | Feature-specific guide exists; add deployment/config changes at merge |
+| [Game Settings](game-settings.md) | Join/leave messages, join spawn, respawn, per-world game mode/time/weather/spawn, per-group overrides, MOTD, weather confirmation ([KNG-52](https://linear.app/kngpandi/issue/KNG-52)) | Current 2026-10-10: describes trunk (merged, live-tested) |
 
 The player and admin guides do **not yet cover all V3 features**. In particular, current guides need dedicated or refreshed instructions for currency, discoveries, lootboxes, kits, menus, ranks and staff moderation. Feature owners should add or update those guides with their next relevant merge, using the minimums in [documentation maintenance](developer/DOCUMENTATION_MAINTENANCE.md). Future statistics, friends and NPC modes need guides as part of their implementations, not before behavior is decided.

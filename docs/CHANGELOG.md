@@ -4,6 +4,28 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## 2026-10-10
 
+- Game Settings are applied in game ([KNG-52](https://linear.app/kngpandi/issue/KNG-52); knk-web-api `master`
+  `8cce48d` with migration `AddGameSettingsMotdAndGroupOverrides`, knk-plugin `main` `973aa68b`, knk-web-app `main`
+  `12c1d60`).
+  - **What the page controls:**
+    - the join and leave messages (`{player}`, `{group}`, `{title}`);
+    - where regular players arrive on join (also the `/spawn` destination);
+    - the server-list MOTD;
+    - per world: the default game mode on join, a time lock, the weather rule (Normal, Constant, Blocked,
+      Weighted) and the spawn point.
+  - **Respawn per world:** synced with the join spawn, the world spawn (beds and anchors ignored), the server's
+    choice (beds count), a chosen spot or the nearest town.
+  - **Permission groups** can override the join and leave message, the spawn (a chosen spot, or "where they
+    logged out" like owners) and the respawn. A player's groups count in the teleport-fee order (highest Weight
+    first, each followed by its parents).
+  - **Behaviour changes:**
+    - **The hard-coded "respawn in town 4" is gone.** Respawn follows the page; choose Town 4 there to keep it.
+    - Saving the page now needs `knk.admin.config`.
+    - A staff `/weather` in a world with a weather rule asks for confirmation first.
+    - The plugin keeps working from `plugins/KnightsAndKings/game-settings-cache.json` while the API is down.
+  - **Spawn picker:** redesigned (a card for the chosen spot, a grouped searchable list with type chips). It now
+    lists Structures, which were missing because the web app called a Locations route that doesn't exist.
+
 - Navigation reaches destinations further off-road ([KNG-75](https://linear.app/kngpandi/issue/KNG-75) step 2;
   knk-plugin `main` `8f2b7c30`). A destination may now be up to 256 blocks from a road (was 48). Within 96 blocks of
   where the road ends, the last stretch is a walk path; further out, the player is told "No conventional path to X

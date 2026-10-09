@@ -1,6 +1,6 @@
 # Knights & Kings feature register
 
-**Status:** Active · **Last updated:** 2026-10-09 · **First reconciled:** 2026-09-28 · [KNG-33](https://linear.app/kngpandi/issue/KNG-33)
+**Status:** Active · **Last updated:** 2026-10-10 · **First reconciled:** 2026-09-28 · [KNG-33](https://linear.app/kngpandi/issue/KNG-33)
 
 This is the index of intended gameplay and shipped surfaces, not a substitute for a feature's design, code, or issue. V1's wider gameplay and V2's stronger data model are both inputs to V3. An absent V2 port is **not** a decision to drop a V1 feature. The [vision](vision/vision.md) decides intent; a [feature spec](specs/README.md) decides detailed behavior; the actual default branches decide whether code has shipped.
 
@@ -10,6 +10,9 @@ This is the index of intended gameplay and shipped surfaces, not a substitute fo
 `main` merge `1a69ec3`; KNG-24, KNG-25 and KNG-28 are merged and Done. KNG-26/29/30 are also Done
 on their stated default branches. KNG-38 is Done with its API half on `master` at merge `300aa4c`;
 its web-app half followed on `main` at merge `24b60ac` (2026-10-06), so KNG-38 is fully merged.
+
+**Targeted refresh (2026-10-10):** the global world settings row is merged and live (KNG-52: knk-web-api
+`master` `8cce48d`, knk-plugin `main` `973aa68b`, knk-web-app `main` `12c1d60`).
 
 ## Reading and updating the register
 
@@ -32,7 +35,7 @@ For each changed row, include its source, spec or issue and the date of the evid
 | Location retention: weekly orphan check, staff review (keep/delete), digest, `/knk location tp` | — | — | spec | complete | trunk | live | maintain; merged 2026-10-09 ([KNG-80](https://linear.app/kngpandi/issue/KNG-80)); follow-up [KNG-107](https://linear.app/kngpandi/issue/KNG-107); [architecture](architecture/location-retention.md), [smoke test](guides/location-retention-smoke-test.md) |
 | Managed WorldGuard region ownership, priorities and category flags | live | partial | spec | complete | trunk | pending | live-test [KNG-46](https://linear.app/kngpandi/issue/KNG-46); [architecture](architecture/managed-worldguard-regions.md) |
 | Gates: animation, damage, control and siege integration | live | partial | spec | complete | trunk | mixed | maintain; [gate specs](specs/gate-structure-animation/). 2026-10-09: [command layers `/gate`/`/gatedoor`, toggle, `here`, look-at](architecture/gate-commands.md) (KNG-77/78/79) merged and live-tested; follow-ups KNG-105 (safe tp), KNG-106 (door collision damage) |
-| Global world settings, deliberate join/spawn/weather/time rules | partial | partial | vision | partial | mixed | pending | design; [vision §2.7](vision/vision.md#27-game-world-settings) |
+| Global world settings, deliberate join/spawn/weather/time rules | partial | partial | spec | complete | trunk | live | maintain; merged 2026-10-10 ([KNG-52](https://linear.app/kngpandi/issue/KNG-52); [design](specs/game-settings/DESIGN.md), [admin guide](guides/game-settings.md)): join/leave messages, join spawn, respawn policies, per-world game mode/time/weather/spawn, per-group overrides, MOTD. Open follow-ups in DESIGN §8. |
 | Teleport, requests, spawn, warps and homes | live | partial | spec | complete | trunk | mixed | maintain [KNG-17](https://linear.app/kngpandi/issue/KNG-17); [design](specs/teleport/DESIGN.md). Housing-linked `/home` is separate. |
 | Street graph and guided road navigation (incl. walkable last-mile paths) | — | — | spec | complete | trunk | mixed | finish: siege check C6, [KNG-73](https://linear.app/kngpandi/issue/KNG-73), [KNG-74](https://linear.app/kngpandi/issue/KNG-74), [KNG-75](https://linear.app/kngpandi/issue/KNG-75) (done 2026-10-10: walk paths at both ends, destinations up to 256 off-road; merged and live-tested), [KNG-108](https://linear.app/kngpandi/issue/KNG-108), [KNG-76](https://linear.app/kngpandi/issue/KNG-76); merged 2026-10-08 ([KNG-27](https://linear.app/kngpandi/issue/KNG-27), [KNG-51](https://linear.app/kngpandi/issue/KNG-51)); [plan](specs/navigation/IMPLEMENTATION_PLAN.md), [smoke test](guides/road-navigation-smoke-test.md) |
 | Houses, rooms, property sales, rent, home ownership | live | partial | vision | none | — | pending | design after ownership decision; [legacy menus](specs/legacy/inventory-menu-screens.md), [vision §4](vision/vision.md#4-economy--professions) |
