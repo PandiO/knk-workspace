@@ -7,7 +7,9 @@ developer decision after the smoke test):** designed plazas and movable nodes �
 [REV6_PROPOSAL.md](REV6_PROPOSAL.md). **Part B, curated tiles, is implemented (2026-10-05, not live-tested):** §3.3
 `State`/`CuratedAt`, §3.6 `Confirmed`, §3.9 proposals, §7 commands; decisions and status in plan §5.7. Part A (open
 areas before the centreline) follows. **2026-10-09 (finding N15, merged):** destinations snap with their own height
-weight, `destination-snap-vertical-weight` (default 1) - §4, §5.2, §6.2 step 2.
+weight, `destination-snap-vertical-weight` (default 1) - §4, §5.2, §6.2 step 2. **2026-10-09 (merged to trunk):**
+KNG-73 (configurable default destination, §6.1) and rev. 7 Parts A and C ([REV7_PROPOSAL.md](REV7_PROPOSAL.md):
+routing view, entry rule on roads, §6.7).
 **Last updated:** 2026-10-09
 **Implementation plan:** [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) — its §1 lists ten small deviations (D1-D10) decided
 while mapping the design onto trunk code; where this document and the plan disagree, the plan wins.
@@ -210,6 +212,7 @@ None to the table. `StreetDto` gains read-only `edgeCount`, `totalLength`.
 | `PUT api/road-nodes/{id}`, `POST api/road-nodes` (anchor), `POST api/road-nodes/merge` | plugin key or staff JWT | Review actions. |
 | `POST api/road-edges` (recorded), `PUT api/road-edges/{id}`, `DELETE` | plugin key or staff JWT | Review actions and recorded edges. |
 | `GET api/streets/{id}/road` | anonymous | One street's edges and nodes. |
+| `GET api/navigation-settings/domain-defaults`, `PUT …/domain-defaults/{domainType}` | writes: plugin key or staff JWT (`knk.admin.road`) | Where `/navigate <domain>` leads without `spawn`/`region`, per domain type (KNG-73, §6.1). |
 
 Validation in `RoadNetworkService`: nodes in the tile they claim; no self-loops; geometry starts/ends within 1.5 blocks
 of its nodes; length ≥ straight-line distance; referenced profile/street/gate/domain ids exist.
@@ -513,12 +516,20 @@ Permission `knk.navigate` (default: every player). Destination forms (case-insen
 | Form | Resolves to |
 |---|---|
 | `location:<name>` / `location:#<id>` | A `Location` by name (exact, then unique prefix) or id. |
-| `town:<name>`, `district:<name>`, `structure:<name>` (or `#<id>`) | The domain's `Location`; with `region`, the closest point of its WorldGuard region (§6.3). |
+| `town:<name>`, `district:<name>`, `structure:<name>` (or `#<id>`) | The domain's default destination (below); with `spawn` its `Location`, with `region` the closest point of its WorldGuard region (§6.3). |
 | `street:<name>` | The nearest point on that street's edges. |
 | `node:<name>` | A named road node. |
 | bare `<name>` | Searched across all of the above; one match → go; several → `type:name` choices (teleport's `WarpTargets`). |
 
-A domain without a `Location` falls back to `region`; with neither it is refused. Resolution reuses teleport's
+**Default destination (KNG-73, 2026-10-08, on `claude/kng-73-road-navigation-n92vlm`, not on trunk).** Without a mode
+word a domain leads to its *default*: `Spawn` (its `Location`) or `Region`. The default is set per domain type (Town,
+District, Structure, GateStructure; table `domain_navigation_defaults`, seeded `Spawn`) on the web app's road admin page,
+and a single domain overrides it (`domains.NavigationDefaultOverride`, null = follow the type; "Navigation Default
+Override" on its form, added with the Form Builder). `POST api/Domains/search` returns the effective value as
+`navigationDefault`, which the plugin's catalogue keeps on each `NavTarget` (refreshed in the background once a
+minute old, or by `/knk cache refresh`). Being inside the
+domain's region is "already there" with either default (N9). A domain without a `Location` falls back to `region` and
+one without a region to its `Location`; with neither it is refused. Resolution reuses teleport's
 `WarpTargets`/`SpawnPointResolver` (on `claude/teleport`, KNG-17). Unlike `/warp`, destinations don't need
 `TeleportEnabled`. A destination the player may not enter is handled by §6.7. Structures need a second lookup for their
 `Location` (`StructureDto` has only `locationId`).
@@ -588,6 +599,7 @@ The router only uses roads this player can actually use **now**. Every edge carr
 | Gate doors on the edge | `GateManager.getGate(id)` → `CachedGateDoor.getCurrentState()`, `isDestroyed()`, `isJammed()` | State is `CLOSED`, `CLOSING`, `OPENING` or jammed. `OPEN` or destroyed → passable. A door in an active siege (`getCurrentSiegeId() != null`) is blocked for non-participants regardless. `AllowPassThrough` doors: passable only for players the pass-through rules allow, with a hint "right-click the gate to pass". |
 | Domain entry | the domains in `DomainIds` the route *enters* | `AllowEntry = false`, or any future entry condition (vision §2.2: title, balance, clan, premium rank). |
 | Domain exit | the domains the player is in and the route *leaves* | `AllowExit = false`. |
+| Road access (rev. 7 Part C) | the domain's effective `roadAccess` on `POST api/Domains/search` | Domain entry and exit above are **skipped** for a domain whose rule is `Ignored` for roads (per type on the road admin page, per domain "Road Access Override"). For domains along a public street (houses, shops): routes pass them, the rule still holds at the border and on the walk path. Every current type defaults to `Applies`. [REV7_PROPOSAL.md](REV7_PROPOSAL.md) §4, KNG-92. |
 | Siege | `SiegeGateController.isLocked` (read-only) | **Not blocked** (plan D2): trunk keeps siege areas open to non-members and carries them through locked gates, so a siege-locked gate counts as a pass-through gate for non-members. Navigation ends when the player joins a siege lobby. |
 | Static flags | edge `Flags` | `Closed`, `NoGps`; `Oneway` against direction. |
 
@@ -614,11 +626,18 @@ The live re-check only judges the route **ahead** of the player: a gate closing 
 pass-through gate follows the right-click rule exactly: a gate admin passes any door, anyone else a door with
 AllowPassThrough and the use node, with Bukkit's or KnK's permissions (N11). The start snaps to a road that connects
 to the goal when the nearest one is a stretch on its own (N12). A domain asked for without `spawn`/`region` is
-reached by standing in its region (N9); making the default configurable is KNG-73. A goal on a blocked edge is reached
-over the open stretch from a node (goal sides, N14), and with no open route the player is guided as close to the goal
-as the open roads go when that beats stopping at the first block of the shortest all-open route (N14). These per-part
-patches work around whole-edge verdicts; [REV7_PROPOSAL.md](REV7_PROPOSAL.md) proposes a routing view cut at gates and
-access borders instead (plus entrances and a per-type "applies to roads" setting).
+reached by standing in its region (N9); the default itself (spawn or region) is configurable since KNG-73 (§6.1). A
+goal on a blocked edge is reached over the open stretch from a node (goal sides, N14), and with no open route the player
+is guided as close to the goal as the open roads go when that beats stopping at the first block of the shortest
+all-open route (N14).
+
+**Routing view (rev. 7 Part A, merged 2026-10-09).** Navigation routes on a view of the network in which every edge is
+cut where its access tags change - at each gate door and region border the live tags find - so a gate is its own short
+piece and a district clipping a road blocks only the stretch inside it ([REV7_PROPOSAL.md](REV7_PROPOSAL.md) §2,
+`RoutingView`). Pieces map back to their stored edge for admins (`/knk road why`: `edge #10139 blocks 31-34`). This
+makes the per-part patches above (start sides, goal sides, the part re-check) unnecessary; they are removed in Part A
+step 2. A region counts on a road where it covers the road's centreline (finding P4: one that covers only part of the
+width still blocks the stretch when it covers the centre).
 
 **Live changes.** `NavigationService` listens to gate state changes (an observer on `GateManager`'s animation-complete
 notifications), domain cache refreshes and siege state changes:

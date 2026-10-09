@@ -27,6 +27,8 @@ KNG-75; still open: C6 (siege), and re-checks of the run 4 fixes.
 (the API and the web app did not change). Only C6 (siege) remains of the checklist.
 **2026-10-09 (later):** rev. 7 Part A (the routing view) implemented on knk-plugin `claude/navigation-walkable-path`
 `893e33da`, not live-tested - "Rev. 7 Part A — routing view" at the end of Findings (V1-V6).
+**2026-10-09 (evening):** KNG-73, rev. 7 Part C and Part A step 1 live-tested (runs 1-3 under "Rev. 7 Part A —
+routing view") and **merged to trunk** (API `6d160aa`, web app `e2ba784`, plugin `54878783`).
 **Last updated:** 2026-10-09
 **Sources:** the "Developer to-do" blocks of Phases 1, 3, 4 and 5 in `docs/specs/navigation/IMPLEMENTATION_PLAN.md`;
 progress report `docs/reports/2026-09-27-road-navigation-chain.md`. If this file and a plan block disagree, the plan wins.
@@ -1005,6 +1007,49 @@ Next: KNG-75 proper (walk legs at both ends, destinations further than 48 blocks
 `fa234f7` (the merged plugin needs KNG-56's `GET /api/Domains/access-rules`). The dev DB lacks trunk's KNG-59
 migration `UniquePermissionGrantHolderNode` (it deletes duplicate permission grants); navigation does not need it.
 
+### KNG-73 — configurable default destination (implemented 2026-10-08, to test)
+
+Branch `claude/kng-73-road-navigation-n92vlm` in knk-web-api (`a04d614`, on trunk `4c570fa`), knk-plugin (`290b122`, on
+`claude/navigation-walkable-path` `758dbc5` + trunk) and knk-web-app (`a7ddc65`, on trunk `b51eba0`). Not merged.
+Tests: web-api 1846 pass (the 4 failures fail on `master` too), Gradle core 1744 / api-client 208 / paper 1302 green,
+web-app tsc clean, road/admin tests green except `RoadsAdminPage › deletes a profile after confirmation` (fails on
+`main` too: it still expects `window.confirm`).
+
+Deploy: API with migration `AddDomainNavigationDefaults` (adds `domains.NavigationDefaultOverride` and
+`domain_navigation_defaults`, every type seeded `Spawn` - nothing changes until a default is changed), the plugin jar,
+the web app.
+- [ ] **K1** `/admin/roads` → "Navigation defaults": four rows (Towns, Districts, Structures, Gates), all `Spawn`,
+  0 overrides. Set Districts to `Region`.
+- [ ] **K2** Run `/knk cache refresh` (otherwise the first `/nav` a minute later still uses the old catalogue and
+  only starts its refresh). From outside a district:
+  `/nav <district>` guides to the nearest edge of its region (as `/nav <district> region` did);
+  `/nav <district> spawn` still goes to its spawn Location.
+- [ ] **K3** Standing inside the district: `/nav <district>` says "You are already in …" (both defaults).
+- [ ] **K4** Form Builder: add the field "Navigation Default Override" to the Town form (and the others as wanted).
+  Set one town to `Region` while Towns stay `Spawn`: that town goes to its region, other towns to their spawn;
+  the Towns row counts 1 override. Clearing the field (empty choice) makes the town follow its type again.
+- [ ] **K5** Edit a gate or town with a form *without* the field: its override stays as it was.
+
+#### Rev. 7 Part C — entry rule on roads (KNG-92, implemented 2026-10-09, to test with KNG-73)
+
+On the same branches: knk-web-api `79e2b63` (one more column and override in the same `AddDomainNavigationDefaults`
+migration - `domain_navigation_defaults.RoadAccess`, `domains.RoadAccessOverride`, every type seeded `Applies`), knk-plugin
+`ccb04891` (on a merge of `main` `fd869aa`), knk-web-app `1368115`. Tests: web-api 1855 pass, 9 fail as on `master` (incl.
+`Validation_GeometryFarFromItsNode`); Gradle core 1754 / api-client 209 / paper 1310 green; web-app tsc clean, road/admin
+tests green except the known `RoadsAdminPage › deletes a profile after confirmation`. Nothing changes until a rule is set
+to `Ignored`. [REV7_PROPOSAL.md](../specs/navigation/REV7_PROPOSAL.md) §4.
+- [ ] **R1** `/admin/roads` → "Navigation defaults": an "Entry rule on roads" column, all `Applies`, 0 overrides. Changing
+  it leaves the default destination as it was (and the other way round).
+- [ ] **R2** Pick a structure (or district) whose region a road passes through, with `AllowEntry` off, and a test account
+  without `knk.region.bypass`. `/nav` to a place beyond it: the route avoids that road (or "You may not enter X", as today).
+- [ ] **R3** Set that type (or, via the Form Builder field "Road Access Override", only that domain) to `Ignored`, then
+  `/knk cache refresh`. The same `/nav` now routes along the road through the region; walking in, the border still
+  refuses entry (KNG-56). Its row counts 1 override when done per domain; clearing the field follows the type again.
+- [ ] **R4** Set it back to `Applies` (or clear the override) and refresh: the route avoids the road again.
+
+Run 1 (2026-10-09): K1-K3 pass, K4/K5 and R1 accepted; R2/R3 blocked by P2 (gate regions unresolvable, fixed API
+`1ff8dba`), R4 no other route. Details and the other findings (P1, P3) in the guide on `main`, after V6.
+
 ### Rev. 7 Part A — routing view (implemented 2026-10-09, to test)
 
 knk-plugin `claude/navigation-walkable-path` `893e33da` (= `main` `fd869aa` + Part A; the API and the web app are
@@ -1073,6 +1118,11 @@ Follow-up issues: KNG-103 (region step re-run leaves the old region), KNG-104 (n
 - **First leg a straight line** (from the South Gate's spawn to the road): by design today; the walk path for the
   first leg is KNG-75 step 1 (another session, `claude/kng-75-offroad-destinations`). The earlier walk path was the
   last leg, navigating *to* the gate.
+
+**Run 3 (2026-10-09, developer): R2, R3, V5, V6 pass.** With R1/R4, K1-K5, V1-V4 from runs 1-2 every check of KNG-73,
+Part C and Part A step 1 has passed (C6, siege, is still open from the KNG-27 checklist). **Merged to trunk 2026-10-09:**
+knk-web-api `master` `6d160aa`, knk-web-app `main` `e2ba784`, knk-plugin `main` `54878783`. Next: Part A step 2, the patch
+removal ("Rev. 7 Part A step 2" below once written).
 
 ### Phase 3 — rebuild re-test (2026-10-02, developer; recorded from the commit messages)
 
