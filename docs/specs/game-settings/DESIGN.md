@@ -1,6 +1,6 @@
 # Game Settings — Design
 
-**Status:** Implemented on branch `claude/kng-52-game-settings` in knk-plugin, knk-web-api and knk-web-app. The first page and API have been on trunk since 2026-08-21. Round 2 (2026-10-05, developer request) added group overrides, synced respawn, the searchable spawn picker and the MOTD. The round-2 page is on knk-web-app `main`. The plugin and API branches have trunk merged in and are pushed (2026-10-09), but not merged to trunk and not live-tested; the API migration is not applied. Smoke test run 1 on 2026-10-09; round 3 (forced world-spawn respawn, teleport-fee group order, per-group leave message, `{title}`, `/weather` confirmation, picker redesign) is on `claude/kng-52-round3`. D2 and D3 are still open.
+**Status:** Implemented on branch `claude/kng-52-game-settings` in knk-plugin, knk-web-api and knk-web-app. The first page and API have been on trunk since 2026-08-21. Round 2 (2026-10-05, developer request) added group overrides, synced respawn, the searchable spawn picker and the MOTD. The round-2 page is on knk-web-app `main`. The plugin and API branches have trunk merged in and are pushed (2026-10-09), but not merged to trunk and not live-tested; the API migration is not applied. Smoke test run 1 on 2026-10-09; round 3 (forced world-spawn respawn, teleport-fee group order, per-group leave message, `{title}`, `/weather` confirmation, picker redesign) is on `claude/kng-52-round3`. All decisions D1-D17 are settled.
 **Last updated:** 2026-10-09
 **Linear:** [KNG-52](https://linear.app/kngpandi/issue/KNG-52)
 **Sources:** knk-web-api `master` `099f936` (`Controllers/GameSettingsController.cs`, `Services/GameSettingsService.cs`, `Dtos/GameSettingsDtos.cs`, `Models/GameSettings.cs`, commit `285baf3` of 2026-08-19); knk-web-app `main` `3953658` (`src/pages/admin/GameSettingsPage.tsx`, commits `f3206c5`/`21e84c9` of 2026-08-21); knk-plugin `main` `5c85a3d` and the shelved stash `19-08-26: Workable: GameSettings feature` (base `961597e`); [vision §2.7](../../vision/vision.md#27-game-world-settings); [teleport DESIGN §3.6](../teleport/DESIGN.md) (`/spawn`).
@@ -272,13 +272,13 @@ Data Retention card on the same page already needed that node.
 
 ---
 
-## 7. Decisions (2026-10-05, Claude Code session — reversible; reviewed by the developer 2026-10-09: D1 and D13 changed, D17 accepted; 2026-10-10: D3 kept for now; D2 still open; D18-D19 added for round 4)
+## 7. Decisions (2026-10-05, Claude Code session — reversible; reviewed by the developer 2026-10-09: D1 and D13 changed, D17 accepted; 2026-10-10: D2 and D3 accepted; D18-D19 added for round 4)
 
 | # | Decision | Why |
 |---|---|---|
 | D1 **decided 2026-10-09** | `WorldSpawn` respawn mode **forces** the world spawn; beds and anchors are ignored (round 2 had "the server decides"). A nether/End death uses the main world's spawn. | Developer: "Force world spawn. The bed spawn will eventually be replaced by the house/room spawn of a player's own house/room entity." |
-| D2 **open** (explained again 2026-10-09) | The hard-coded town-4 respawn is removed; the same behavior is a setting (`ConfiguredReference` → Town #4). | The settings feature exists to replace such defaults (vision §2.7). Until configured, regular players respawn like staff do. |
-| D3 **kept for now** (developer 2026-10-10: "Yes, for now it does" - read as: join-only is fine for now; flagged for confirmation) | Default game mode on join (and after the loading hold) only, not on world change. | A world-change rule would fight siege (SURVIVAL on entry) and staff modes. Easy to add once those are mapped. |
+| D2 **accepted 2026-10-10** | The hard-coded town-4 respawn is removed; the same behavior is a setting (`ConfiguredReference` → Town #4). | The settings feature exists to replace such defaults (vision §2.7). Until configured, regular players respawn like staff do. |
+| D3 **accepted 2026-10-10** (join-only for now) | Default game mode on join (and after the loading hold) only, not on world change. | A world-change rule would fight siege (SURVIVAL on entry) and staff modes. Easy to add once those are mapped. |
 | D4 | Weather rules steer only natural and sleep changes; `Constant`/`Blocked` re-apply at refresh. | Staff can still use `/weather` to test. Avoids fighting other plugins' changes. |
 | D5 | `Weighted` re-rolls at each natural rain change, on the next tick. | The stash called `setStorm` inside `WeatherChangeEvent` (re-entrant, and overridden by the event). |
 | D6 | Time lock ownership is stored in the world's persistent data. | The stash set `doDaylightCycle=true` on every unlocked world every 30 s, overriding manual gamerules. |

@@ -319,7 +319,7 @@ plugin when the player rejoins.
 | 11-14 | Pass |
 
 Decisions from the same review: D1 force the world spawn, D13 use the teleport fee order, D17 accepted, add a per-group
-leave message plus a title placeholder (all done in round 3). D2 and D3 are still open (DESIGN §7).
+leave message plus a title placeholder (all done in round 3). D2 and D3 were accepted on 2026-10-10 (DESIGN §7).
 
 ### 4.3 Round 3 checks
 
