@@ -31,6 +31,8 @@ KNG-75; still open: C6 (siege), and re-checks of the run 4 fixes.
 routing view") and **merged to trunk** (API `6d160aa`, web app `e2ba784`, plugin `54878783`).
 **2026-10-09 (late):** rev. 7 Part A step 2 (the N6/N10/N14 patches removed) live-tested (W1-W8) and merged to knk-plugin
 `main` `723d21f4`.
+**2026-10-09 (night):** KNG-104 (the navigator's domain cache refreshes) live-tested and merged to knk-plugin `main`
+`1159ae5d`.
 **Last updated:** 2026-10-09
 **Sources:** the "Developer to-do" blocks of Phases 1, 3, 4 and 5 in `docs/specs/navigation/IMPLEMENTATION_PLAN.md`;
 progress report `docs/reports/2026-09-27-road-navigation-chain.md`. If this file and a plan block disagree, the plan wins.
@@ -1035,7 +1037,7 @@ time: test this and KNG-104 one after the other (or ask for a combined test buil
 - [ ] **S7** `/knk road status`: the walk-path line counts the walk to the road as well ("walking", "computing").
 - [ ] **S8** Regression: standing on the road, `/nav` as before (no walk leg); a nearby target (direct mode) as before.
 
-### KNG-104 — the navigator's domain cache refreshes (implemented 2026-10-09, to test)
+### KNG-104 — the navigator's domain cache refreshes (live-tested and merged 2026-10-09)
 
 knk-plugin `claude/kng-104-domain-cache-refresh` `132ce69a` (on `main` `5b1cc8b8`; the API and the web app are
 unchanged). Gradle core 1784 / api-client 209 / paper 1365 green. A region whose cached domain is older than the cache
@@ -1053,6 +1055,8 @@ Deploy: `./gradlew :knk-paper:dev` from that branch, restart. A test account wit
 - [ ] **D4** Allow entry once more, then `/knk cache refresh` at once: the next `/nav South Gate` goes east straight away.
 - [ ] **D5** The server log shows no `resolveRegionsFromApi` burst per route for regions that do have a domain (one
   refresh per region per minute at most).
+
+**Run 1 (2026-10-09, developer): D1-D4 pass, D5 accepted.** No findings. **Merged to knk-plugin `main` `1159ae5d`.**
 
 ### Rev. 7 Part A step 2 — the patches removed (implemented 2026-10-09, to test)
 

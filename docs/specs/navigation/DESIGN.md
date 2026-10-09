@@ -634,7 +634,7 @@ goal on a blocked edge is reached over the open stretch from a node (goal sides,
 is guided as close to the goal as the open roads go when that beats stopping at the first block of the shortest
 all-open route (N14).
 
-**Fresh domain rules (KNG-104, 2026-10-09).** The router and the walk path look domains up by region through
+**Fresh domain rules (KNG-104, merged 2026-10-09, plugin `1159ae5d`).** The router and the walk path look domains up by region through
 `RegionDomainResolver`; an entry older than the cache TTL (1 minute) is answered as it is and re-asked from the API in
 the background, a region the API no longer knows is forgotten, and `/knk cache refresh` clears the map. So a changed
 AllowEntry/AllowExit reaches the next route or re-check within about a minute, without a restart.
