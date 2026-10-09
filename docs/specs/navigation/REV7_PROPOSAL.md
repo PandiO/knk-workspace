@@ -1,6 +1,6 @@
 # Road Navigation — Rev. 7 proposal: a routing view, entrances, and which access rules apply to roads
 
-**Status:** Proposed (2026-10-09), awaiting the developer's decisions (§7). Nothing implemented.
+**Status:** Decisions in progress (2026-10-09): D1, D4, D5 decided; D2, D3 open (§7). Nothing implemented.
 **Last updated:** 2026-10-09
 **Builds on:** [DESIGN.md](DESIGN.md) §5.6 step 6 and §6.7 (live tags, start/goal sides),
 [LAST_MILE_PATHFINDING.md](LAST_MILE_PATHFINDING.md) (walk paths), the live test of 2026-10-07 to 10-09
@@ -8,7 +8,8 @@
 **Linear:** [KNG-27](https://linear.app/kngpandi/issue/KNG-27), [KNG-51](https://linear.app/kngpandi/issue/KNG-51);
 related [KNG-73](https://linear.app/kngpandi/issue/KNG-73) (default destination per type),
 [KNG-75](https://linear.app/kngpandi/issue/KNG-75) (walk legs at both ends), [KNG-36](https://linear.app/kngpandi/issue/KNG-36)
-(NPC pathfinding). A Linear issue for this proposal is still to be made.
+(NPC pathfinding). This proposal: [KNG-92](https://linear.app/kngpandi/issue/KNG-92) (Parts A and C);
+Part B split out to [KNG-93](https://linear.app/kngpandi/issue/KNG-93).
 
 This proposal has three parts:
 - **Part A:** a routing view that cuts edges where access changes.
@@ -215,3 +216,17 @@ door.
 - **D3 — Part C defaults:** the table in §4. Should a plain Structure (keep, tower) default to "applies"?
 - **D4 — where Part C's setting lives:** with KNG-73's per-type settings (recommended) or as a separate table.
 - **D5 — region sampling step for cuts:** 2 blocks (as the live tags), or refine to 1 block near a border.
+
+### 7.1 Decisions (2026-10-09)
+
+- **D1 — decided:** Part A, then remove the patches (§2.4) in a separate step after its live test.
+- **D2 — open.** The developer raised a case for all domain types: a mostly underground dwarven kingdom (a Town with
+  Districts). Its region or spawn sits inside a mountain, so `region` or `spawn` guidance can end on the slope above
+  it; an entrance at the gate in the mountainside would fix that. Similar cases may follow. Part B is now
+  [KNG-93](https://linear.app/kngpandi/issue/KNG-93).
+- **D3 — open,** re-asked in plain terms: should a plain Structure's "no entry" keep the navigator off roads inside
+  its region by default (today's behaviour for every type), or be ignored like a house's?
+- **D4 — decided:** with KNG-73's per-type settings. The column is added on `claude/kng-73-road-navigation-n92vlm`
+  before KNG-73 merges, so `AddDomainNavigationDefaults` stays one migration (noted on KNG-73).
+- **D5 — decided:** 2 blocks, as the live tags. Refine near borders only if a live test shows the need.
+- **Issues:** Part B split out to KNG-93; KNG-92 keeps Parts A and C. KNG-51 moved to Done.
