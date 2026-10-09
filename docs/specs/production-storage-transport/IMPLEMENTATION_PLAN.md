@@ -4,7 +4,7 @@
 recommended defaults. Phases 1-2 can start on those defaults; D1 must be confirmed before Phase 2's migration.
 **Last updated:** 2026-10-09
 **Design:** [DESIGN.md](DESIGN.md) · **Evidence:** [V2 scan](../../reports/2026-10-09-v2-production-storage-transport-scan.md)
-**Linear:** parent __PARENT__; phases listed per section.
+**Linear:** parent [KNG-83](https://linear.app/kngpandi/issue/KNG-83); phases listed per section.
 **Branches (when work starts):** one standing branch per repo, `claude/production-storage-transport`, cut from
 each repo's current default branch (`master` for knk-web-api, `main` for the others). Follow the board rules in
 [ACTIVE_SESSIONS.md](../../ACTIVE_SESSIONS.md).
@@ -28,7 +28,7 @@ rows, `CHANGELOG.md` on merge).
 
 ---
 
-## P1 — Storage core (knk-web-api) · __P1__
+## P1 — Storage core (knk-web-api) · [KNG-84](https://linear.app/kngpandi/issue/KNG-84)
 
 **Builds:** `Storage`, `StorageItem`, `StorageMovement`; `Structure.DeliveryStorageId` and the `Storages` navigation;
 `IStorageService` (§5); admin endpoints for storages, items, adjust and movements; a reconciler.
@@ -58,7 +58,7 @@ rows, `CHANGELOG.md` on merge).
 - **Acceptance:** an admin can create a storage on any Structure, adjust stock, see the ledger, and cannot exceed
   caps. Concurrent adjustments never lose an update.
 
-## P2 — Warehouse and ProductionStructure subtypes (knk-web-api, small plugin change) · __P2__
+## P2 — Warehouse and ProductionStructure subtypes (knk-web-api, small plugin change) · [KNG-85](https://linear.app/kngpandi/issue/KNG-85)
 
 **Needs:** D1 confirmed (nullable `DistrictId` + `RulingTownId`), D11, D12.
 
@@ -81,7 +81,7 @@ rows, `CHANGELOG.md` on merge).
   ruling town) from the web app. Each gets its default storage. The region gets the right managed kind on startup
   repair.
 
-## P3 — Production lines (knk-web-api) · __P3__
+## P3 — Production lines (knk-web-api) · [KNG-86](https://linear.app/kngpandi/issue/KNG-86)
 
 - Models: `ProductionLine`, `ProductionLineInput`, `ProductionLineStatus`. Index `(Enabled, NextCycleAt)`.
   Migration `AddProductionLines`.
@@ -99,7 +99,7 @@ rows, `CHANGELOG.md` on merge).
   680/4), the V2 seeds, produce on time across an API restart. They show `BlockedFull` when full and resume when
   space frees.
 
-## P4 — Transport orders and lanes (knk-web-api + knk-plugin) · __P4__
+## P4 — Transport orders and lanes (knk-web-api + knk-plugin) · [KNG-87](https://linear.app/kngpandi/issue/KNG-87)
 
 - Models: `TransportOrder`, `TransportOrderStop`, `TransportOrderItem`, `TransportLane`, status enums. A filtered
   unique index keeps one open automatic order per source. Migration `AddTransportOrders`.
@@ -136,7 +136,7 @@ rows, `CHANGELOG.md` on merge).
 - **Acceptance:** with the two seeds and a Docks Warehouse (2,600/12), automatic orders are created at 25%
   occupancy. They show ETA from road distance, arrive, and never lose or duplicate items in any overflow scenario.
 
-## P5 — Plugin views, commands and notifications (knk-plugin) · __P5__
+## P5 — Plugin views, commands and notifications (knk-plugin) · [KNG-88](https://linear.app/kngpandi/issue/KNG-88)
 
 - `knk-api-client`: DTOs and ports for storages, lines, orders and the logistics summary. Cache-first reads with a
   short TTL. Mutations go direct and run async.
@@ -153,7 +153,7 @@ rows, `CHANGELOG.md` on merge).
 - **Acceptance:** staff can inspect any structure's production, stock and orders in game, run a dry run, cancel an
   order, and receive watch notifications.
 
-## P6 — Web-app admin (knk-web-app) · __P6__
+## P6 — Web-app admin (knk-web-app) · [KNG-89](https://linear.app/kngpandi/issue/KNG-89)
 
 - API clients in `src/apiClients/` (`storageClient.ts`, `productionClient.ts`, `transportClient.ts`,
   `logisticsClient.ts`) on `objectManager.ts`; types in `src/types/dtos/`.
@@ -166,7 +166,7 @@ rows, `CHANGELOG.md` on merge).
 - **Tests:** client tests; dashboard rendering with fixture data.
 - **Acceptance:** an admin can set up the whole chain from the web app and follow it on the dashboard.
 
-## P7 — Admin deposit and withdraw (knk-web-api + knk-plugin) · __P7__
+## P7 — Admin deposit and withdraw (knk-web-api + knk-plugin) · [KNG-90](https://linear.app/kngpandi/issue/KNG-90)
 
 **Needs:** D10, D13.
 
@@ -191,7 +191,7 @@ rows, `CHANGELOG.md` on merge).
 
 ---
 
-## Later (own designs, not scheduled) · __LATER__
+## Later (own designs, not scheduled) · [KNG-91](https://linear.app/kngpandi/issue/KNG-91)
 
 - **L1 Consumption chains and supply orders:** input lines at workshops; warehouse → input-storage orders on a
   refill threshold (DESIGN §10.1).

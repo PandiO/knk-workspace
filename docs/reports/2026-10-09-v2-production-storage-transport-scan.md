@@ -3,6 +3,7 @@
 **Status:** analysis (read-only). The V3 design that follows from it is
 [specs/production-storage-transport/DESIGN.md](../specs/production-storage-transport/DESIGN.md).
 **Last updated:** 2026-10-09
+**Linear:** [KNG-83](https://linear.app/kngpandi/issue/KNG-83) (follow-up work)
 **Feature register rows:** "Resource gathering, production structures and town economy" and "Warehouses, storage and
 transport orders" ([FEATURE_REGISTER.md](../FEATURE_REGISTER.md), World, travel and settlement).
 **Code inspected:** `knk-v2-archive`, all remote branches (fetched 2026-10-09). Line numbers are from

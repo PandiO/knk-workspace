@@ -6,7 +6,7 @@
 **Implementation plan:** [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md)
 **Evidence:** [reports/2026-10-09-v2-production-storage-transport-scan.md](../../reports/2026-10-09-v2-production-storage-transport-scan.md)
 (V2 code on all branches, vision, V1). Section numbers below that start with "scan" refer to that report.
-**Linear:** parent issue and phase issues are listed in the implementation plan header.
+**Linear:** [KNG-83](https://linear.app/kngpandi/issue/KNG-83) (parent); phases P1-P7 [KNG-84](https://linear.app/kngpandi/issue/KNG-84), [KNG-85](https://linear.app/kngpandi/issue/KNG-85), [KNG-86](https://linear.app/kngpandi/issue/KNG-86), [KNG-87](https://linear.app/kngpandi/issue/KNG-87), [KNG-88](https://linear.app/kngpandi/issue/KNG-88), [KNG-89](https://linear.app/kngpandi/issue/KNG-89), [KNG-90](https://linear.app/kngpandi/issue/KNG-90); later designs [KNG-91](https://linear.app/kngpandi/issue/KNG-91).
 **Related:** [KNG-47](https://linear.app/kngpandi/issue/KNG-47) (Structure subtypes),
 [KNG-48](https://linear.app/kngpandi/issue/KNG-48) (resource-production block-break rule),
 [KNG-36](https://linear.app/kngpandi/issue/KNG-36) (NPC platform: physical caravans later),
