@@ -1060,6 +1060,19 @@ C3/C4/C5 pass, A7 accepted. Not passed: R2/R3 (P2), V3, V4 A8 and V5 (P1). Analy
 - **Re-test after deploying `d24f9649` / `1ff8dba` / `06ba989`:** remove the orphan `domain_17` (`/rg remove domain_17`)
   and restart the server (clears the navigator's domain cache), then R2/R3 with Keep Gate, V3, A8, V5.
 
+**Run 2 (2026-10-09, after the restart with `d24f9649`/`1ff8dba`/`06ba989`):** V4 passes. With "Road clipping district"
+denying entry on `tempregion_worldtask_227` (1/3 of the road's width), `/nav South Gate` takes the west road past it.
+Follow-up issues: KNG-103 (region step re-run leaves the old region), KNG-104 (navigator domain cache never refreshes).
+- **P4 — a region over part of the road's width blocks it when it covers the centreline.** Moved to `domain_17` (2/3
+  of the width), the west road counts as blocked again and the route goes east. The router judges a road by its
+  centreline (#5228 runs along z = -477 there): `domain_17` (z -479..-477) covers it, `tempregion_worldtask_227`
+  (z -479..-478) does not. Not a wall cost: the road router has none (that is the walk path's). Proposed fix: tag a
+  region on a stretch only where it covers the whole road width, and shift that piece's line to the free side
+  where it covers part - decision pending.
+- **First leg a straight line** (from the South Gate's spawn to the road): by design today; the walk path for the
+  first leg is KNG-75 step 1 (another session, `claude/kng-75-offroad-destinations`). The earlier walk path was the
+  last leg, navigating *to* the gate.
+
 ### Phase 3 — rebuild re-test (2026-10-02, developer; recorded from the commit messages)
 
 Not written up here at the time; reconstructed by the walkable-path chain (link 1) from the developer's commits on
