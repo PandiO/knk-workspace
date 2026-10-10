@@ -1,6 +1,6 @@
 # Handoff: road navigation P4 — a region over part of a road's width
 
-**Status:** Implemented 2026-10-10 on knk-plugin `claude/navigation-p4-partial-width-regions` `a87a6a2c`, offline-checked, live run 1 passed but for G2 (fixed in `ec358f39`); **waiting for re-test G2b, then merge** (see "State" at the end). Originally a prompt for a Claude Code session **on the developer's machine** (knk-workspace with the
+**Status:** **Done 2026-10-10:** live-tested (G1-G7, G2b) and merged to knk-plugin `main` `4b9ddca4`; KNG-110 closed (see "State" at the end). Originally a prompt for a Claude Code session **on the developer's machine** (knk-workspace with the
 component repos under `Repository/`, dev DB read-only, dev server), **with Linear access**.
 **Linear:** [KNG-110](https://linear.app/kngpandi/issue/KNG-110) (created 2026-10-10). Related: [KNG-92](https://linear.app/kngpandi/issue/KNG-92) (rev. 7:
 routing view, entry rule on roads), [KNG-76](https://linear.app/kngpandi/issue/KNG-76) (centred trails),
@@ -153,3 +153,9 @@ batch warm-up answers one district per request), and the live tags only looked a
 restrict. **Fixed in `ec358f39`** (an unknown region is looked across too), pushed; `main` merged in (no new commits);
 Gradle 3504 tests green. The snow there (one layer) was not the cause. **Next:** G2b in the guide, then merge into
 knk-plugin `main` and close out as listed above.
+
+**Closed 2026-10-10:** G2b passed (run 2). Merged to knk-plugin `main` `4b9ddca4` (`main` had not moved; Gradle core
+1857 / api-client 219 / paper 1425 green); the offline harness was deleted, not committed. CHANGELOG, FEATURE_REGISTER,
+the guide, DESIGN and the tracker (Recently completed) updated; KNG-110 Done; worktree `Repository/_worktrees/knk-plugin-p4`
+removed. Still open, outside P4: walk paths do not have the no-way-out rule, and the resolver's batch warm-up caches one
+district per request (the live tags no longer depend on it).

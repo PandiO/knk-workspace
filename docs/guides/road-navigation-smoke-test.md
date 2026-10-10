@@ -35,7 +35,7 @@ routing view") and **merged to trunk** (API `6d160aa`, web app `e2ba784`, plugin
 `1159ae5d`.
 **2026-10-10:** KNG-110 (finding P4: a region over part of a road's width; and "no way out") implemented on knk-plugin
 `claude/navigation-p4-partial-width-regions`, checked offline on the Kardenna end; run 1: G1, G3-G7 pass, G2 failed on a
-domain-cache gap (fixed in `ec358f39`), re-test G2b under "KNG-110" in Findings.
+domain-cache gap, fixed in `ec358f39`; G2b passes. **Merged to knk-plugin `main` `4b9ddca4`.**
 **Last updated:** 2026-10-10
 **Sources:** the "Developer to-do" blocks of Phases 1, 3, 4 and 5 in `docs/specs/navigation/IMPLEMENTATION_PLAN.md`;
 progress report `docs/reports/2026-09-27-road-navigation-chain.md`. If this file and a plan block disagree, the plan wins.
@@ -1014,7 +1014,7 @@ Next: KNG-75 proper (walk legs at both ends, destinations further than 48 blocks
 `fa234f7` (the merged plugin needs KNG-56's `GET /api/Domains/access-rules`). The dev DB lacks trunk's KNG-59
 migration `UniquePermissionGrantHolderNode` (it deletes duplicate permission grants); navigation does not need it.
 
-### KNG-110 — a region over part of a road's width (finding P4; run 1 2026-10-10: all but G2 pass, G2 fixed in `ec358f39`, G2b to test)
+### KNG-110 — a region over part of a road's width (finding P4; live-tested and merged 2026-10-10)
 
 knk-plugin `claude/navigation-p4-partial-width-regions` `a87a6a2c` (on `main` `973aa68b`; the API and the web app are
 unchanged), worktree `Repository/_worktrees/knk-plugin-p4`. Gradle core / api-client / paper: 3502 tests, 0 failures
@@ -1051,19 +1051,19 @@ Deploy: `./gradlew :knk-paper:dev` from that worktree, restart, and wait for "�
 `/knk road status`. A test account without `knk.region.bypass`. Make fresh test regions (KNG-103: the run-2 regions
 came from a badly edited district): a district that denies entry, over the rows named below at x 1393-1398. Navigation
 Test (east road) denies entry, so `/nav South Gate` from Brink goes west over #5228 only while it is open.
-- [ ] **G1** The district over one outer row (z -479..-478): `/nav South Gate` from Brink takes the west road; the trail
+- [x] **G1** The district over one outer row (z -479..-478): `/nav South Gate` from Brink takes the west road; the trail
   passes the region, about half a block towards the free side.
-- [ ] **G2** Over two of the three rows, the centre included (z -479..-477): still the west road. `/knk road status`
+- [x] **G2** Over two of the three rows, the centre included (z -479..-477): still the west road. `/knk road status`
   shows "… 1 with lanes"; `/knk road why <player>` lists #5228 without a `blocks …` stretch. The trail runs on the
   free row (z -476) past the region, and walking it the border does not push you back.
-- [ ] **G3** Over the whole width (z -480..-474): blocked as before. With Navigation Test also blocking, "You may not
+- [x] **G3** Over the whole width (z -480..-474): blocked as before. With Navigation Test also blocking, "You may not
   enter … Guiding you to its edge", ending just before the region.
-- [ ] **G4** G2's region with `knk.region.bypass` (or a player inside the district): the trail stays in the middle.
-- [ ] **G5 (no way out)** The district with entry allowed and exit denied, over the whole width: `/nav South Gate` from
+- [x] **G4** G2's region with `knk.region.bypass` (or a player inside the district): the trail stays in the middle.
+- [x] **G5 (no way out)** The district with entry allowed and exit denied, over the whole width: `/nav South Gate` from
   Brink avoids it (before KNG-110 the route went through it). A destination inside it (`/nav` to the district) still
   routes in. Over two of three rows instead: the west road is open, the trail on the free row.
-- [ ] **G6** `/knk road status`: "… N with lanes (M cross-sections known)"; navigating along the Kardenna end: no lag.
-- [ ] **G7** After a restart, without going near the Kardenna end: within a minute or two of "… cut into N pieces"
+- [x] **G6** `/knk road status`: "… N with lanes (M cross-sections known)"; navigating along the Kardenna end: no lag.
+- [x] **G7** After a restart, without going near the Kardenna end: within a minute or two of "… cut into N pieces"
   (the next live-tag pass after its chunks loaded in the background), G2's route goes west.
 
 **Run 1 (2026-10-10, developer, `a87a6a2c`; "Road clipping district" on `domain_17`): G1, G3, G4, G5 pass; G6, G7
@@ -1080,9 +1080,13 @@ west, but it was not clear that the snow was the reason.
   only a region known to be open both ways is skipped. After a cache refresh one pass does a few more lookups.
   Gradle 3504 tests, 0 failures. The batch warm-up's "one district per answer" is the resolver's (KNG-104 notes it
   for single-region refreshes); the live tags no longer depend on it.
-- [ ] **G2b** With `ec358f39` deployed: the district on `domain_17` (z -479..-477), entry denied. `/knk cache refresh`,
+- [x] **G2b** With `ec358f39` deployed: the district on `domain_17` (z -479..-477), entry denied. `/knk cache refresh`,
   then `/knk road reload`, wait for "… cut into N pieces", then `/nav South Gate` from Brink **without any other
   `/nav` first**: the west road.
+
+**Run 2 (2026-10-10, developer, `ec358f39`): G2b passes** (west road straight after a cache refresh and a reload). With
+run 1 every check has passed. **Merged to knk-plugin `main` `4b9ddca4`** (`main` had not moved; Gradle core 1857 /
+api-client 219 / paper 1425 green).
 
 ### KNG-75 step 2 — destinations up to 256 blocks off-road (live-tested 2026-10-10: B1-B6 pass; merged)
 
