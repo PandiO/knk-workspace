@@ -34,7 +34,7 @@ Live tracker of in-progress work across all four Knights and Kings repos
 
 | Feature | Repos / files claimed | Owner (human / session) | Status | Started | Last updated |
 |---|---|---|---|---|---|
-| Hub safety and portals draft | knk-workspace: `docs/specs/hub/DESIGN.md`; coordination tracker | Codex voice session | Drafting on `codex/hub-design`; documentation only | 2026-10-10 | 2026-10-10 |
+| Hub and outage design ([KNG-109](https://linear.app/kngpandi/issue/KNG-109)) | knk-workspace: `docs/specs/hub/DESIGN.md` on `codex/hub-design` | 2026-10-10 | Draft pushed `502dd9b`, [PR #11](https://github.com/PandiO/knk-workspace/pull/11) unmerged. Four outage actions, hub rules, Multiverse investigation and KNG-58/KNG-52 offline restart requirements. KNG-58 updated. Docs verified by readback; no runtime changes/tests. Open decisions in design. |
 | Bedrock console access feasibility documentation | knk-workspace: `docs/reports/2026-10-06-bedrock-console-access.md` | 2026-10-06 | Pushed `1d0cebe` on `codex/bedrock-console-access`; [PR #7](https://github.com/PandiO/knk-workspace/pull/7), unmerged. Smooth UX requirement, friend broadcaster, official distribution, domain/UDP and console pilot documented. Docs only; no live tests. |
 | _(example)_ Siege minigame — capture point sync | web-api: `Services/SiegeService.cs`; plugin: `siege/` package | Claude Code session A | Implementing capture-point event handling | 2026-09-17 | 2026-09-17 |
 | Legacy inventory-menu screen/item mining + feature allocation | knk-workspace: new `docs/specs/legacy/inventory-menu-screens.md`, `docs/specs/legacy/README.md`; read-only on `knk-v1-archive`/`knk-v2-archive` | Claude Code session (Pandi) | Mining v1/v2 menu screens and items | 2026-09-25 | 2026-09-25 |
