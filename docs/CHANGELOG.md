@@ -4,6 +4,12 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## 2026-10-10
 
+- The game server now knows the domain of every region it preloads ([KNG-122](https://linear.app/kngpandi/issue/KNG-122);
+  knk-plugin `main` `68022ce3`). The API answers a region lookup with at most one town, district and structure, so
+  preloading several districts at once (when the road network loads, after `/knk cache refresh`, or for the regions at
+  a spot) kept only one of them. The others were looked up later, one at a time, blocking routes for up to 3 seconds,
+  and an overlapping second district could go unnoticed. The server now asks about each region on its own, a few at a
+  time. The API and the web app are unchanged.
 - A required yes/no (Boolean) field left unticked no longer blocks **Next** in FormWizard forms
   ([KNG-53](https://linear.app/kngpandi/issue/KNG-53); knk-web-app `main` `955fa20`). The KNG-26 fix only covered a
   brand-new form; resumed drafts saved before it and edit forms whose record had no value still held an empty value

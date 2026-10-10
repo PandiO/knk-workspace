@@ -658,7 +658,7 @@ all-open route (N14).
 `RegionDomainResolver`; an entry older than the cache TTL (1 minute) is answered as it is and re-asked from the API in
 the background, a region the API no longer knows is forgotten, and `/knk cache refresh` clears the map. So a changed
 AllowEntry/AllowExit reaches the next route or re-check within about a minute, without a restart. **KNG-122
-(implemented 2026-10-10, not live-tested):** the API answers a region query with at most one Town, District and
+(merged 2026-10-10, knk-plugin `68022ce3`):** the API answers a region query with at most one Town, District and
 Structure, so the resolver asks about one region per request (at most 4 at a time) when it warms the cache (a network
 load, a build, regions the live tags find) or resolves the regions at a spot; before, a batch of several districts
 cached one of them.
