@@ -5,7 +5,7 @@
 live smoke-test rounds passed (`docs/reports/2026-09-26-siege-smoke-test-checklist.md`). Phase 10 (Scheduled lobbies)
 is post-MVP and not started. The per-phase status blocks below are the historical record; where later work changed a
 decision, "Current behaviour" and "Audit" below win.
-**Last updated:** 2026-09-27 (readiness runs the configured field-validation rules instead of hard-coded location
+**Last updated:** 2026-10-06 (`PlayerListener.onItemPickup` removed - see "Current behaviour"); 2026-09-27 (readiness runs the configured field-validation rules instead of hard-coded location
 checks - merged to trunk, see "Current behaviour"); 2026-09-26 merged to trunk, plan audit
 
 Ref: `DESIGN.md` (decisions — not restated here), `MENU_TEMPLATES.md`,
@@ -34,6 +34,10 @@ follow-ups" and "Second smoke-test round fixes" bullets under the Phase 9 status
   `/siegemenu`, `/sgm`. Supersedes 8b's fixed heights.
 - **Plugin keys:** siege writes accept `Security:PluginApiKey` when `Security:PluginServiceKey` is empty (one key).
 - **Scoreboards:** hourly salary and rank refreshes no longer replace a siege member's match scoreboard.
+- **Item pickup (2026-10-06, knk-plugin `main` `eab9838`):** v3's blanket non-OP pickup cancel
+  (`PlayerListener.onItemPickup`, a placeholder until WorldGuard flags existed) is removed. Match members are still
+  blocked by `SiegeInventoryGuardListener` and their own match's books are still un-cancelled at `HIGHEST`; outside a
+  match pickup is vanilla. Supersedes the mentions of `PlayerListener.onItemPickup` in the 5c text below.
 - **Readiness location checks are configured rules (2026-09-27, merged to trunk: web-api `master` `7c771e2`,
   web-app `main` `87801d0`).** Readiness used to hard-code "hub, every spawnpoint and every objective capture point
   inside the town's region" as blocking errors (`HUB_/SPAWNPOINT_/OBJECTIVE_OUTSIDE_TOWN`), outside the FormWizard's

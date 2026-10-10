@@ -1,7 +1,7 @@
 # knk-web-app — Architecture
 
 **Status:** Living document — reflects actual code, updated in place on each rescan
-**Last updated:** 2026-09-18 (scan basis: `knk-web-app` @ `4ff5dc6`, branch `claude/web-app-codebase-scan-4yqibi`)
+**Last updated:** 2026-09-18 (scan basis: `knk-web-app` @ `4ff5dc6`, branch `claude/web-app-codebase-scan-4yqibi`); spot edits 2026-10-09 (ObjectTypeExplorer, KNG-61), 2026-10-10 (FormWizard Boolean fields, KNG-53)
 **Source scan:** `docs/reports/web-app-scan-2026-09-18.md`
 
 ## Stack
@@ -33,6 +33,11 @@ entity. Two parallel generic engines carry most of the CRUD surface:
    for any backend entity from a `FormConfigurationDto` fetched from the API
    (`formConfigClient`), rather than a hardcoded form-per-entity. `FormConfigBuilder`
    is the admin UI for authoring those configurations.
+   **Boolean fields** (KNG-26, KNG-53): a checkbox can't show "no value", so every path that seeds
+   step data (new form, resumed draft, edit form, child/join prefill, a field shown by a condition)
+   holds a real boolean - the authored default, else `false` - via `seededFormFieldValue`
+   (`utils/forms/formFieldDefaultValue.ts`). Required means "value is present", so an unchecked box
+   (`false`) passes; "must be ticked" would be a separate validation rule.
 2. **Display engine** (`DisplayWizard/`, `DisplayConfigBuilder/`) — same pattern for
    read-only entity detail views, driven by `DisplayConfigurationDto`
    (`displayConfigClient`).
@@ -68,7 +73,7 @@ src/
     DisplayWizard/          — generic read-only detail-view engine
     DisplayConfigBuilder/   — admin UI to author DisplayConfigurationDto records
     ObjectDashboard/        — legacy static-config-driven list/CRUD dashboard
-    ObjectTypeExplorer/     — left-nav entity type picker used by ObjectDashboard
+    ObjectTypeExplorer/     — left-nav entity type picker (ObjectDashboard, FormWizardPage): search, A–Z/Z–A sort, optional groups, settings in localStorage (KNG-61)
     PagedEntityTable/       — generic server-paged table, used by both dashboard and forms
     PathBuilder/            — path/reference picker for cross-entity field bindings
     Workflow/               — WorldTask/job polling UI (siege/world-mutation background tasks)

@@ -388,7 +388,7 @@ web app are just two different, equally legitimate ways to reach the same
 `KitsCommandApi.giveAsync(targetUserId, kitId)` (thin wrappers over `POST api/Kits/{id}/claim`/
 `POST api/Kits/{id}/give`) depending on which action triggered the grant, then use the response's
 `ItemBlueprintId`s to build each `ItemStack`
-via the **already-existing** `ItemBlueprintBukkitMapper`/`ItemBlueprintsDataAccess` pipeline
+via the **already-existing** `ItemBlueprintBukkitMapper`/`ItemBlueprintsDataAccess` pipeline (now through `BlueprintItemAssembler.assembleDefaults`, 2026-10-05 — [item render pipeline](../../architecture/item-render-pipeline.md))
 (`ItemBlueprintsDebugCommand` already does exactly this for a single item) — no new
 item-construction logic. Every nullable slot (§2.1) is checked before acting (directly fixes
 legacy bug #5): a Kit with `HelmetId == null` simply doesn't touch the helmet slot, rather than

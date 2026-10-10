@@ -35,6 +35,8 @@ relative to `knk-paper/src/main/java/net/knightsandkings/knk/paper/` unless pref
   FormWizard + `tasks/LocationTaskHandler.java` "type save" world task). No `/spawnpoint` CRUD port.
 - Join / respawn location policy (`GameSettings.DefaultRespawnPolicyJson`, the hard-coded respawn town `4`) — a
   separate world-settings concern; only the `/spawn` destination reuses `GameSettings.JoinSpawnReference`.
+  *(2026-10-05: now designed and built in [game-settings](../game-settings/DESIGN.md), KNG-52. The join teleport
+  uses the same destination and resolver as `/spawn`, and respawn follows a per-world policy.)*
 - Arena/duel/tutorial/AFK/treasure/ocelot spawnpoints (v1 minigames not in v3).
 - Siege-internal teleports (hub, spawn picker, vault restore) — owned by `specs/siege-minigame`; this design only adds
   guards so ordinary teleports cannot interfere with a match.

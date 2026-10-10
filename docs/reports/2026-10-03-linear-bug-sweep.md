@@ -1,9 +1,9 @@
 # Linear bug sweep — open `Bug` issues
 
-**Status:** done on a branch: code and unit tests pass, nothing merged. Live checks and merge are the developer's.
-**Last updated:** 2026-10-03
+**Status:** merged to knk-plugin `main` at `1a69ec3`; live checks remain with the developer.
+**Last updated:** 2026-10-04
 **Linear:** [KNG-24](https://linear.app/kngpandi/issue/KNG-24), [KNG-25](https://linear.app/kngpandi/issue/KNG-25), [KNG-26](https://linear.app/kngpandi/issue/KNG-26), [KNG-28](https://linear.app/kngpandi/issue/KNG-28)
-**Branch:** knk-plugin `claude/backlog-bugs`, head `9fcdd7f`, cut from `main` `ee7824c`. No other repo changed.
+**Branch:** knk-plugin `claude/backlog-bugs`, head `9fcdd7f`, merged into KNG-30-aware `main` by `1a69ec3`. No other code repo changed.
 
 Every Linear issue labelled `Bug` that wasn't Done on 2026-10-03, fixed one phase at a time with at least one commit per bug. Done issues (KNG-15, KNG-16, KNG-22) were left alone.
 
@@ -12,11 +12,11 @@ Every Linear issue labelled `Bug` that wasn't Done on 2026-10-03, fixed one phas
 | Bug | State | Commits (knk-plugin `claude/backlog-bugs`) | Needs live |
 |---|---|---|---|
 | KNG-26 PermissionGroup form sends `null` isPremiumTier | **Already on trunk** before this sweep (Codex session): web-api `master` `ae0b3ad`, web-app `main` `fc66101` | none | Create a group with the checkbox untouched |
-| KNG-28 no "spawn area" message when a defender hits an attacker | **Likely cause fixed** | `da1f02b` | Re-run the issue's steps with the same accounts |
-| KNG-24 non-op staff can't use /freeze, /unfreeze, /staffchat, `/knk …` | **Fixed** | `ed6a92f`, `89a0b3b`, `0211f80` | Acceptance list below |
-| KNG-25 `/minecraft:tell`, `/minecraft:w` break secure chat | **Fixed (needs a real client to confirm)** | `9fcdd7f` | Two-account matrix below |
+| KNG-28 no "spawn area" message when a defender hits an attacker | **Merged; Done** | `da1f02b`, merge `1a69ec3` | Re-run the issue's steps with the same accounts |
+| KNG-24 non-op staff can't use /freeze, /unfreeze, /staffchat, `/knk …` | **Merged; Done** | `ed6a92f`, `89a0b3b`, `0211f80`, merge `1a69ec3` | Acceptance list below |
+| KNG-25 `/minecraft:tell`, `/minecraft:w` break secure chat | **Merged; Done (needs a real client to confirm)** | `9fcdd7f`, merge `1a69ec3` | Two-account matrix below |
 
-Gradle `build -x deployToDevServer` on `9fcdd7f`: knk-core 1189, knk-api-client 144 (2 skipped), knk-paper 1009 (14 skipped). All green.
+Gradle `build -x deployToDevServer` passed on branch head `9fcdd7f` and again after the final merge at `1a69ec3`.
 
 ## KNG-28 — siege spawn-area message (`da1f02b`)
 
@@ -84,16 +84,16 @@ New `ShadowedVanillaCommandListener` (always registered):
 - `@a` should still work for ops.
 - Expected side effect: the client shows `/minecraft:tell` and `/minecraft:w` as unknown (red) while typing, but sending them works.
 
-## Overlap with unmerged `codex/kng-30-command-completion-sweep` (`52ce855`)
+## Resolved overlap with KNG-30 (`52ce855`)
 
-A trial merge into `claude/backlog-bugs` has two textual conflicts. Both resolve cleanly, and knk-paper tests pass on the result (1011 tests, 14 skipped). The trial wasn't kept.
+A final merge into KNG-30-aware `main` had the two predicted textual conflicts. Both resolutions are in `1a69ec3`, and the full non-deploy Gradle build passes.
 - `KnKPlugin.java` freeze/staffchat registration: keep `registerGatedCommand(...)` and pass KNG-30's `visiblePlayers` into the `FreezeCommand(userAdminService, true|false, visiblePlayers)` constructors.
 - `KnkAdminCommand.onTabComplete`: keep KNG-30's alias resolution and add the permission check:
   - `enteredRoot` → `registry.get(enteredRoot)`;
   - empty list if it's missing or `!commandPermissions.has(...)`;
   - `root` = the metadata name.
-- Behaviour note: `/staffchat` has no completer. `PermissionGatedCommand` returns `null` for holders (Bukkit's default player names), while KNG-30 suppresses that default for completer-less commands. If KNG-30 merges first, consider returning `List.of()` there.
+- `/staffchat` has no completer. `PermissionGatedCommand` now returns `List.of()` for holders, preserving KNG-30's suppression of Bukkit's default player-name fallback.
 
-## Merging
+## Merge closeout — 2026-10-04
 
-The branch only touches knk-plugin. Merge it to `main` after the live checks (order relative to KNG-30 doesn't matter; see the resolution above). Then move KNG-24, KNG-25 and KNG-28 to Done, and KNG-26 once its live check passes.
+The branch only touched knk-plugin and is now on `main` through `1a69ec3`. KNG-24, KNG-25, KNG-26 and KNG-28 are Done in Linear. The live checks above were not run during the merge session.

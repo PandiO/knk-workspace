@@ -7,6 +7,8 @@
 **Status:** Draft — fresh, source-grounded read of `knk-plugin` `main` at the absolute path
 `C:\Users\Pandi\Documents\Werk\KnightsAndKings\Repository\knk-plugin` (the worktree's own `Repository/knk-plugin` is
 empty/untracked, per task instructions).
+**Updated:** 2026-10-06 — `PlayerListener.onItemPickup` was removed from knk-plugin `main` (`eab9838`); its entry
+in §1.10 is kept as a record. The rest of the catalog is still the 2026-09-25 read.
 
 **Method:** Every file under `knk-paper/src/main/java/net/knightsandkings/knk/paper/listeners/` (15 files) and four
 named files under `knk-paper/src/main/java/net/knightsandkings/knk/paper/menu/` (`AnvilCaptureManager.java`,
@@ -377,7 +379,7 @@ into that service's calls and propagating cancellation back.
 ### 1.10 `PlayerListener.java`
 
 **Feature allocation:** mixed — `users`/`account` (login/join/salary/presence), `misc`/`other` (chat formatting,
-death/respawn, item pickup, command blocking). Class javadoc explicitly marks this "Legacy" (`PlayerListener.java:47-52`).
+death/respawn, command blocking; item pickup until 2026-10-06). Class javadoc explicitly marks this "Legacy" (`PlayerListener.java:47-52`).
 
 **Status:** Finished, wired (`KnKPlugin.java:682`) — but see per-handler notes for stub/incomplete pieces.
 
@@ -470,7 +472,11 @@ death/respawn, item pickup, command blocking). Class javadoc explicitly marks th
 - **Status:** **Stub.** This handler is a confirmed no-op for its stated purpose — it performs a real async API
   call but the entire consequence is an unimplemented TODO.
 
-#### `onItemPickup` — `PlayerPickupItemEvent` (`PlayerListener.java:322-328`)
+#### `onItemPickup` — `PlayerPickupItemEvent` (`PlayerListener.java:322-328`) — **removed 2026-10-06**
+> *Removed in knk-plugin `eab9838` (2026-10-06). The developer confirmed it was a placeholder until proper
+> WorldGuard flags were implemented; non-OP players pick up items normally again. Siege match members are still
+> blocked by `SiegeInventoryGuardListener`. The original 2026-09-25 entry follows.*
+
 - **Goal/function:** Cancels item pickup for every player except those with `isOp()` (lines 324-327) —
   unconditional, no exceptions for e.g. containers, drops from the player's own inventory, or any other
   distinction.
@@ -754,6 +760,7 @@ without bound").
   consumption, legacy-vs-modern chat event split, missing quit-cleanup in `AnvilCaptureManager`, blocking
   `.join()` calls in enchantment listeners) plus **per-listener bugs/edge cases** noted throughout §1–§2, most
   notably: `PlayerListener.onPlayerRespawn` is a confirmed **stub** (fetches town data, never uses it —
-  `PlayerListener.java:300-320`), `PlayerListener.onItemPickup` is an unconditional, unscoped disable of item
-  pickup for all non-OP players (`PlayerListener.java:322-328`), and `PlayerListener.onLeave` has a harmless
+  `PlayerListener.java:300-320`), `PlayerListener.onItemPickup` was an unconditional, unscoped disable of item
+  pickup for all non-OP players (`PlayerListener.java:322-328`; removed 2026-10-06 as a WorldGuard-flag
+  placeholder), and `PlayerListener.onLeave` has a harmless
   duplicate `quitMessage(...)` call (`PlayerListener.java:199-200`).

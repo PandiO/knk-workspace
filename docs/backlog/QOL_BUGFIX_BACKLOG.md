@@ -479,4 +479,40 @@ Every entity's cache TTL, once changed in `config.yml`, actually takes effect wi
 
 ---
 
+## 10. Player nicknames for domain type words, shared by `/navigate`, `/warp` and the web app
+
+- **Status**: Open — a first step exists (the `gate:` nickname in `/navigate`); the shared version needs a decision
+- **Area**: knk-plugin (`NamedTargets`, `/navigate`, teleport `/warp`), possibly knk-web-api / knk-web-app labels
+- **Reported**: 2026-10-07 (developer, road navigation live test, finding N1)
+
+### Symptom
+Type words are entity names: a gate is a `GateStructure`. That is precise for developers, but players say "gate".
+Before 2026-10-07 `/navigate` dropped gates entirely (finding N1 in `docs/guides/road-navigation-smoke-test.md`).
+
+### What exists now
+knk-plugin `b793b48` (branch `claude/navigation-walkable-path`): `NamedTargets` takes optional type aliases. In
+`/navigate`, a gate is a `structure:` and also answers to `gatestructure:` and the nickname `gate:`. The nickname table is
+a constant, `NavTarget.NICKNAMES` (`gatestructure` → `gate`). `type:` + Tab lists every item of that type or alias.
+
+### What is still missing
+- `/warp` and `/spawn` (`core/teleport/WarpTargets`) use the API's `domainType` as the type word, so `gatestructure:`
+  works there but `gate:` and `structure:` (for a gate) do not.
+- No nicknames for other types (for example `loc:` for `location:`), and the table is not configurable.
+- The web app shows entity names ("GateStructure") in some pickers.
+
+### Proposed solution
+Move the nickname table to one shared place: a knk-core constant, or a `naming.type-nicknames` config section. Bind it
+in both `NavigationDestinations` and `WarpTargets` through the `NamedTargets` alias function. Optionally, serve
+display names from the API so the web app and plugin use the same words.
+
+### Open questions
+1. Constant or config? A config section lets server owners add words without a release.
+2. Should the chat show the nickname (`gate:Keep Gate`) instead of the canonical word (`structure:Keep Gate`) in
+   "did you mean" choices?
+
+### Acceptance criteria
+`/warp gate:<name>` and `/nav gate:<name>` both work and complete, and one table defines the nicknames for both.
+
+---
+
 <!-- Add new items below using the same structure: Status / Area / Reported date / Symptom / Repro steps / Evidence / Affected files / Root cause / Proposed solution / Open questions / Acceptance criteria -->

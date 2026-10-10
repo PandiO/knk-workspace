@@ -130,7 +130,9 @@ On `APPLIED`:
 - **custom:** `CustomEnchantmentLore.apply` (knk-core): `EnchantmentRepository.applyEnchantment`, then the
   custom enchantment lines are moved to the top of the lore, directly under the vanilla enchantment list, with
   the description and the `Grade:`/`Origin:` lines below them in their existing order. This is the same
-  pipeline `/ce add` and the debug commands use; each used to carry its own copy of the reorder step;
+  pipeline `/ce add` and the debug commands use; each used to carry its own copy of the reorder step. Taking one
+  off goes through `CustomEnchantmentLore.remove` (`/ce remove`, 2026-10-05): the same re-compose, so removing the last
+  custom enchantment leaves no blank spacer line at the top;
 - one book is consumed.
 
 Nothing is written into the siege PDC keys (`siege_book`, `siege_enchants`). The siege stripping sweep only

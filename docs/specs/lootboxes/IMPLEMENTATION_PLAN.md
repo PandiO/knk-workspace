@@ -526,6 +526,18 @@ api `master` `ccc8c02`, plugin `main` `eb1d68c`, web-app `main` `f56d421` (no-ff
 API 1524 pass / 5 baseline, `requires-mysql` 42/42, migrations CI green; plugin CI green; web-app build + `tsc` clean,
 16 baseline test failures.
 
+### KNG-29 smoke-test follow-up — 2026-10-04
+
+The spacing fix is on plugin `main` at `ee7824c`. A later live check found that Flaming Samurai's
+lootbox-seeded description still embedded `&7`, unlike ordinary ItemBlueprint descriptions. API
+`master` `c0c2b22` removes that inline override for new rows and narrowly normalizes existing rows
+whose description still exactly matches the old seeded text; administrator-edited descriptions are
+left alone. The focused API seed suite passes 13/13. Full implementation and live-check notes are in
+[`2026-10-04-kng-29-smoke-follow-up.md`](../../reports/2026-10-04-kng-29-smoke-follow-up.md).
+
+The related online-player completion is on plugin `main` at `52ce855` and remains present after the
+backlog-bug merge `1a69ec3`.
+
 ## Open TODOs (after the trunk merge)
 
 Tracked in Linear **KNG-31** (lore spacing KNG-29 and the tab-completion sweep KNG-30 are separate).
@@ -549,9 +561,13 @@ above so it isn't reintroduced silently. No plugin/API change needed.
 **Known gaps — resolved/updated:**
 1. A player moved into a siege while their reel spins receives the item into the siege inventory (lost on restore).
    **Action approved:** hold the item until `SiegePlayerVault` restores and notify the player, the same pattern as held-back
-   tokens (`SiegePlayerVault.setAfterRestore`, see the "Follow-up" plugin commit under "Siege integration" above). **Not yet
-   implemented** — needs a session in `knk-plugin` touching `LootboxOpening`/`LootboxDelivery` plus a test; treat as a small
-   follow-up phase before closing KNG-31.
+   tokens (`SiegePlayerVault.setAfterRestore`, see the "Follow-up" plugin commit under "Siege integration" above).
+   **Done 2026-10-04 (KNG-44)** merged to trunk 2026-10-04 (plugin `5c85a3d`): `LootboxOpening.finish` holds the
+   item when the player is in a siege (nothing confirmed to the API, so the claim also stays in its pending claims),
+   tells them ("kept safe - you get it as soon as the siege is over") and `deliverWaiting` hands it over after the vault's
+   restore (the same `setAfterRestore` hook as the held-back tokens, ~1 s later, skipped when they joined another siege) or on
+   their next join; the message "the lootbox item you won during the siege is here" comes first. Tests:
+   `LootboxOpeningSiegeTest`.
 2. Boxes spawned before a siege stay claimable by non-participants in the arena. **Kept as-is** — developer wants this
    behavior.
 3. A revoked token stored in a chest/shulker is only removed when someone tries to open it. **Accepted**, no action.
@@ -564,7 +580,13 @@ above so it isn't reintroduced silently. No plugin/API change needed.
      the same `LootboxRollEngine` call per type avoids N round trips without duplicating logic);
    - or lazily fetch odds per type only when its row is expanded/selected in the Types tab, instead of on initial page load;
    - or cache the odds response client-side keyed by type+boxStars so re-renders (e.g. after a save) don't re-fetch every row.
-   No implementation done yet; pick one when picking this up.
+   **Done 2026-10-04 (KNG-45): the batch endpoint was chosen** (developer's pick), merged to trunk 2026-10-04 (api `099f936`,
+   app `3953658`). Two differences from the sketch above: (a) the tab needs several box
+   grades per type (each type's *covering* grades, see `coveringBoxStars`), so the endpoint is
+   `GET api/LootboxTypes/odds?boxStars=5&boxStars=2[&enabledOnly=true]` returning one `LootboxOddsDto` per type and
+   requested grade (no `boxStars`: each type's MaxBoxStars); (b) it covers *all* types by default, because the tab lists
+   disabled types too and shows their pools (`enabledOnly=true` filters). Staff-only (`ManageLootboxes`), same
+   `LootboxRollEngine` path as `{id}/odds`, roll input built once per type. The tab makes one request instead of ~14.
 6. ~~`POST LootboxSpawns/{id}/claim` (open-on-the-spot) is unused by the plugin since the round-1 pickup rework.~~
    **Done 2026-09-28 — removed** in knk-web-api `claude/lootboxes` `dc03a9f` (not yet merged to `master`): the controller
    action, `ILootboxRuntimeService.ClaimAsync`, `ClaimAsync`/`ClaimCoreAsync`, `LootboxClaimRequestDto` and
@@ -588,12 +610,59 @@ above so it isn't reintroduced silently. No plugin/API change needed.
 
 **Remaining before closing KNG-31**
 - Remove the sweeping interact-deny flag on the dev server (item 2 above).
-- Implement the siege-reel hold-until-restore fix (gap 1 above) — small `knk-plugin` follow-up.
-- Optionally pick one of the Types-tab load improvements (gap 5) — not blocking.
+- ~~Implement the siege-reel hold-until-restore fix (gap 1 above)~~ — done and merged 2026-10-04 (KNG-44).
+- ~~Pick one of the Types-tab load improvements (gap 5)~~ — done and merged 2026-10-04 (KNG-45, batch endpoint).
 - Merge knk-web-api `claude/lootboxes` (`dc03a9f`, dead `/claim` endpoint removed, gap 6) to `master`; remove the plugin's
   dead `LootboxesCommandApi.claim` client in the same or a later plugin session.
 - `dotnet ef database update` / FormConfigurations verification and the rest of the round-2 checklist are done; no further
   re-test needed unless the two follow-ups above change plugin behavior enough to warrant one.
+
+### Follow-ups — 2026-10-05 (reel decoy enchantments, blueprint description color, one render path)
+
+Developer asked for improvements after the KNG-44/45 merge (tracked afterwards as [KNG-54](https://linear.app/kngpandi/issue/KNG-54), Done; knk-plugin only, no API change):
+
+1. **Reel decoys carry real enchantments.** The passing items were plain blueprint look-alikes, so the one enchanted item
+   on the reel was the winner. Now each slot is built like a real drop: the blueprint's default enchantments plus rolled
+   ones. `KnkLootboxOdds` gained the box's enchant rolls (`enchantments`: definition, key, hit %, level range per item
+   grade) and per item `quantity` / `rollsEnchantments` — all already in `GET LootboxTypes/{id}/odds`, so the API is
+   unchanged; `knk-core` `LootboxDecoyRolls` rolls them (hit chance, uniform level of the grade's capped range),
+   `LootboxReel.plan(..., perSlot)` builds every slot separately (the same item can pass with different enchantments),
+   `LootboxDelivery.decoy` assembles them with the assembler's vanilla applicability/conflict rules. Books, stackables and
+   specials roll nothing (specials show their blueprint's default enchantments, e.g. Flaming Samurai's). Decoys also show
+   the grade stars the box gives the item. Tests: `LootboxDecoyRollsTest`, `LootboxReelTest`, `LootboxDeliveryTest`,
+   `LootboxOpeningCandidatesTest`, `LootboxMapperTest`.
+2. **Blueprint description lore defaults to dark gray.** Correction to the KNG-29 follow-up report (2026-10-04): removing
+   Flaming Samurai's inline `&7` did not make it "use the normal lore color" — the plugin applied no color, and lore
+   without one is vanilla's purple. `ItemBlueprintBukkitMapper.buildLore` now prefixes every description line with `&8`;
+   a color the description sets itself still wins. This applies to every blueprint description without its own color
+   (existing data needs no migration). Test: `ItemBlueprintLoreColorTest`.
+3. **One blueprint → item path (audit 2026-10-05).** Every route that spawns a blueprint item already ended in
+   `ItemBlueprintBukkitMapper.fromBlueprint` + `BlueprintItemAssembler.enchant`, but four call sites repeated the two
+   steps by hand (kits, `/knk itemblueprints give`, lootbox build, reel decoy) and the assembler's `assemble` helpers
+   had no production callers. Now all four call `BlueprintItemAssembler.assemble` / `assembleDefaults` (new two-pass
+   `assemble(blueprint, key, defaults, rolled, rolledOptions, quantity)`, `maxStackSize`, `applyQuantity`), and `/ce add` +
+   the enchantment-definitions debug command use `CustomEnchantmentLore.apply` instead of their inline copies. Found and
+   fixed in the same audit: `/ce remove` left a stray blank lore line (pushed to plugin `main` as a QOL fix,
+   `e55e87f`, `CustomEnchantmentLore.remove`). Documented in [`architecture/item-render-pipeline.md`](../../architecture/item-render-pipeline.md).
+   Behaviour is unchanged except that kits and `give` now share the assembler's quantity cap. Tests: `BlueprintItemAssemblerTest`
+   (two-pass order, vanilla rules only on rolled, stamp, quantity), `LootboxDeliveryTest`, `CustomEnchantmentLoreTest`.
+Live check (see the results below): open a box with a few pool items; every passing item that can carry enchantments should show some (varying),
+and Flaming Samurai's description should be dark gray like other blueprints'.
+
+**Smoke test results — 2026-10-05** (developer, dev server, knk-plugin branch `claude/blissful-meitner-thei8p` before the merge; all
+steps passed):
+
+| Area | Steps | Result |
+|---|---|---|
+| Setup | build + deploy, API `master`, Weapons box enabled with enchant rolls and Flaming Samurai | done |
+| A. Reel decoys | winner not the only enchanted item; the same item passes with differing enchantments; Flaming Samurai passes with its authored enchants; non-enchantable/stackable items and books roll nothing, stack sizes shown; grade line matches the received item; `opening.style: instant` skips the reel; closing early hands the item over with its enchantments; no log errors | 8/8 pass |
+| B. Lootbox delivery (via `assemble`) | enchantments/grade/quantity correct; drop log `delivered`/`Inventory`; stackables stack; instance tag intact; full-inventory behaviour | 5/5 pass |
+| C. Description colour | Flaming Samurai and a plain multi-line blueprint dark gray; a self-coloured description keeps its colour; enchantment lines gray, grade line bold aqua | 4/4 pass |
+| D. Kits and `give` (`assembleDefaults`) | enchanted kit items with quantities, `/knk itemblueprints give` incl. vanilla + custom, no "failed to assemble" warnings | 3/3 pass |
+| E. `/ce` | add, upgrade, remove one, remove last (no stray blank line), debug-command apply and book apply | 5/5 pass |
+| F. KNG-44 siege hold, quit/rejoin, KNG-45 batch odds | **not tested; accepted by the developer without a live check** (unit-tested: `LootboxOpeningSiegeTest`, `LootboxMapperTest`, API `LootboxConfigServicesTests`, web-app `LootboxesPage.test`) | accepted untested |
+
+Merged to knk-plugin `main` 2026-10-05 as `74607a9`. knk-web-api and knk-web-app needed no change for this round.
 
 **Tooling found along the way**
 - knk-web-app: `npm ci` fails on trunk (lockfile lacks the optional `yaml@2` peer; `npm ci --legacy-peer-deps` works);
