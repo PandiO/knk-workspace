@@ -36,6 +36,8 @@ routing view") and **merged to trunk** (API `6d160aa`, web app `e2ba784`, plugin
 **2026-10-10:** KNG-110 (finding P4: a region over part of a road's width; and "no way out") implemented on knk-plugin
 `claude/navigation-p4-partial-width-regions`, checked offline on the Kardenna end; run 1: G1, G3-G7 pass, G2 failed on a
 domain-cache gap, fixed in `ec358f39`; G2b passes. **Merged to knk-plugin `main` `4b9ddca4`.**
+**2026-10-10 (later):** KNG-122 (the region → domain cache asks per region) implemented on knk-plugin
+`claude/kng-122-batch-domain-lookups` `50418089`, not live-tested - steps K1-K4 under "KNG-122" in Findings.
 **Last updated:** 2026-10-10
 **Sources:** the "Developer to-do" blocks of Phases 1, 3, 4 and 5 in `docs/specs/navigation/IMPLEMENTATION_PLAN.md`;
 progress report `docs/reports/2026-09-27-road-navigation-chain.md`. If this file and a plan block disagree, the plan wins.
@@ -1013,6 +1015,25 @@ Next: KNG-75 proper (walk legs at both ends, destinations further than 48 blocks
 **Deploy for run 3:** knk-plugin `claude/navigation-walkable-path` `a4892db` and knk-web-api `claude/road-navigation`
 `fa234f7` (the merged plugin needs KNG-56's `GET /api/Domains/access-rules`). The dev DB lacks trunk's KNG-59
 migration `UniquePermissionGrantHolderNode` (it deletes duplicate permission grants); navigation does not need it.
+
+### KNG-122 — the region → domain cache asks per region (implemented 2026-10-10, to test)
+
+knk-plugin `claude/kng-122-batch-domain-lookups` `50418089` (on `main` `4b9ddca4`; the API and the web app are
+unchanged), worktree `Repository/_worktrees/knk-plugin-kng122`. Gradle 3506 tests, 0 failures.
+[KNG-122](https://linear.app/kngpandi/issue/KNG-122). Found in KNG-110's G2: `POST api/Domains/search-region-decisions`
+answers a query with at most one Town, one District and one Structure (`DomainService.SearchDomainRegionDecisionAsync`),
+so `warmCache` and `resolveRegionsFromApi`, which sent all missing regions in one query, cached one district of several
+("preloading 4 regions … cached 1 domains"). Both now ask per region (as the KNG-104 refresh already did), at most 4
+requests at a time; a failed request does not stop the others.
+
+Deploy: `./gradlew :knk-paper:dev` from that worktree, restart.
+- [ ] **K1** `/knk cache refresh`, then `/knk road reload`: the server log shows `warmCache: preloading N regions: […]`
+  followed by `warmCache: completed, cached N of N regions` (before: "cached 1 domains" for 4).
+- [ ] **K2** Right after K1, `/nav South Gate` from Brink: the log shows no `resolveRegionsFromApi called for:
+  [domain_17]` (or `domain_16`) from `knk-navigation-routing` - the router finds them cached.
+- [ ] **K3** Stand where two districts overlap (or inside a district inside another, e.g. "Road clipping district"
+  inside Residential District) right after `/knk cache refresh`: entering shows the enter message of each.
+- [ ] **K4** No lag and no burst of API errors in the log after K1 (a network load now sends one request per region).
 
 ### KNG-110 — a region over part of a road's width (finding P4; live-tested and merged 2026-10-10)
 

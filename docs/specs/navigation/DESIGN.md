@@ -657,7 +657,11 @@ all-open route (N14).
 **Fresh domain rules (KNG-104, merged 2026-10-09, plugin `1159ae5d`).** The router and the walk path look domains up by region through
 `RegionDomainResolver`; an entry older than the cache TTL (1 minute) is answered as it is and re-asked from the API in
 the background, a region the API no longer knows is forgotten, and `/knk cache refresh` clears the map. So a changed
-AllowEntry/AllowExit reaches the next route or re-check within about a minute, without a restart.
+AllowEntry/AllowExit reaches the next route or re-check within about a minute, without a restart. **KNG-122
+(implemented 2026-10-10, not live-tested):** the API answers a region query with at most one Town, District and
+Structure, so the resolver asks about one region per request (at most 4 at a time) when it warms the cache (a network
+load, a build, regions the live tags find) or resolves the regions at a spot; before, a batch of several districts
+cached one of them.
 
 **Routing view (rev. 7 Part A, merged 2026-10-09).** Navigation routes on a view of the network in which every edge is
 cut where its access tags change - at each gate door and region border the live tags find - so a gate is its own short
