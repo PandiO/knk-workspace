@@ -10,7 +10,7 @@
 
 - All joining players first enter a designated hub, including joins while the API is unavailable.
 - Players may walk around and use explicitly allowed hub activities, but cannot fight.
-- The hub is an enclosed safe area with its own gameplay rules, in a **separate Minecraft world**. A region in the existing gameplay world does not meet the requirement.
+- The hub is an enclosed Domain/region with its own rules. Same-world hubs are supported; the first deployment requires a separate concurrently loaded hub world.
 - The hub and gameplay worlds run **simultaneously on the same Minecraft server**, with both loaded and players potentially active in each. This is not switching a single active world or a multi-server routing feature.
 - The hub world must support ordinary KnK domain content, including GateStructures and potentially Districts. Verify the same entity and gameplay infrastructure can operate independently in both worlds.
 - Prefer representing the hub as a KnK Domain with a linked WorldGuard region to enforce entry and exit; exact Domain representation remains to be designed.
@@ -127,24 +127,13 @@ Concurrent multi-Minecraft-world support is a **game-wide platform requirement i
 - Missing configuration/world/region follows the approved safe fallback.
 - Outage handling during Siege and pending respawn preserves player state without duplication.
 
-## 9. Open decisions
+## 9. Remaining decisions and checks
 
-1. Whether outage policy has group/staff overrides. Default action is decided: immediate SEND_TO_HUB.
-2. Exact outage thresholds and which dependencies count as unavailable.
-3. Which world's spawn SEND_TO_WORLD_SPAWN uses; fallback if it is unavailable.
-4. Concrete Domain type/hierarchy for the hub and world identity consistency rules. Separate, simultaneously loaded hub/gameplay worlds are already decided.
-5. Detailed semantics of any last-logout-location policy and other world transfers. Hub portal use of Game Settings default/group entry destinations and separate respawn is decided (§11).
-6. Full hub activity/protection catalogue and staff bypass rules.
-7. Missing-hub/invalid-return fallback, return-record lifecycle and minigame/respawn precedence. Click-to-confirm recovery return is decided (§12).
-8. Multiverse versus KnK implementation, after investigation.
+See §13 for confirmed policies and remaining engineering checks.
 
+## 10. Configurable outage delay
 
-## 10. Future requirement: configurable outage grace period
-
-Developer decision, 2026-10-10: add a configurable delay before applying the outage action in a future iteration. For now the delay is zero: send players directly to the hub on detected outage and retain them there until connectivity is restored. Future deployments may permit continued play using KNG-58 cached essential data during a temporary outage, then relocate players after a sustained outage because stale state and synchronization risk increase over time. Thirty minutes and one hour were examples, **not selected defaults or validated safe durations**.
-
-Future design must define when the timer starts, what constitutes stable recovery/reset, repeated outage handling, restart persistence, and earlier containment when critical cached data expires or becomes unusable. A grace period does not authorize API-dependent writes or bypass other safety rules. Current new-join behavior remains hub admission. This is recorded future scope, not required timer implementation for the initial alpha.
-
+Action and delay are required in the initial version. Delay **Uit** means immediate execution; SEND_TO_HUB is the default action. See §13.
 
 ## 11. Confirmed: extend existing Game Settings for hub-to-world entry
 
@@ -164,3 +153,22 @@ The return record must identify the player and original world, XYZ and orientati
 Implementation safeguards proposed: persist before transfer, track successful evacuation and return, recheck connectivity/readiness and destination safety/access on click, bind the action to the player and current return record, prevent repeated/stale clicks, and consume the record only after a successful return. Determine safe handling of persistence/teleport failures. A missing world, unsafe destination or newly denied access must not result in an unchecked teleport. Exact fallback destination and retention/expiry policy remain open. Offline-at-recovery players need the offer when they next join and become ready. Define interaction with normal portal use and ended minigames explicitly.
 
 Acceptance: evacuate from a non-hub world, restart with API unavailable, restore connectivity, receive the offer, and confirm return to the correct persisted world/location. Also verify no-click stays in hub, repeated evacuation preserves the original location, double-click cannot repeat a completed return, and a renewed outage or invalid destination blocks unsafe return.
+
+
+## 13. Confirmed follow-up decisions (2026-10-10)
+
+Supersedes conflicting proposals/open questions above.
+
+- Hub functionality supports a Domain/region in the same world or a separate world. First deployment requires a separate concurrently loaded hub world; game-wide multiworld verification remains mandatory.
+- Outside active staff/owner mode: global outage defaults or applicable PermissionGroup override. Two per-group exemption checkboxes (default off): active staff mode and active owner mode. Exemption covers outage action and gameplay entry during outage. Rank alone gives no exemption. Show each only when its corresponding effective permissionnode is granted, including inheritance and permission-node children; validate server-side. Verify knk.mode.staff/knk.mode.owner and actual group inheritance direction; the conversational word "children" must not reverse existing inheritance.
+- Reuse Game Settings precedence: descending Weight, ties lower id, group then parent chain, deduplicated; first applicable override per field. Verify current PermissionGroupPrecedence/TeleportGroupPolicy.
+- Inspect and reuse existing API connectivity/readiness detection. No competing health detector.
+- Action and intentional delay separately configurable in the initial version. Default SEND_TO_HUB; delay UI "Uit" means immediate action, not disabled action. Enabled duration configurable; 15 minutes is only a future experiment, no proven safety limit. Supersedes future-only timer scope in §10.
+- Gameplay entry requires API and player data ready, subject to configured active-mode exceptions. Guard portals, commands, other teleports and respawns; recheck at execution.
+- Saved pre-outage location survives logout/restart. Next login notifies that it remains; clickable return after readiness, never automatic. Unavailable/unsafe/no-longer-authorized location is invalidated with a message, not silently redirected. Clear after successful return or successful voluntary gameplay entry. Repeated evacuation does not overwrite original with hub location.
+- Missing usable hub/cache/world/region/spawn: refuse admission or kick with a clear locally available message.
+- Every hub rule configurable: damage-players, damage-entities, take-damage; heal-amount/frequency and feed-amount/frequency; building/breaking, drop/pickup and interaction rules. Initial combat/damage off; build/break off; drop/pickup allowed; doors, NPCs and personal inventory allowed; chests/equivalent storage including shulkers/barrels blocked, and itemframe/painting interactions blocked. Preserve inventory; separate inventories not requested. Minigame transitions must not duplicate/lose inventory.
+- Default healing/feeding preset matches vanilla Java Peaceful for deployed version. Verify exact amounts/frequencies against versioned source before encoding numeric defaults. Scope to hub region (same-world support); avoid doubling native and custom regeneration. Peaceful is not invulnerability.
+- Remaining details: Domain representation, WORLD_SPAWN target, minigame/respawn precedence, mode transitions during outage, timer reset/restart semantics and actual connectivity detector.
+
+Acceptance additions: direct/inherited/denied mode-node checkbox visibility; staff outside modes follows normal group policy; saved-location login notice across restart; invalidation message; voluntary entry clears return; alternate exits guarded; same-world rules do not affect surrounding gameplay; verify Peaceful preset without stacked healing/feeding.
