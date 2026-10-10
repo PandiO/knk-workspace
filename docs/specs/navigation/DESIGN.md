@@ -669,8 +669,8 @@ makes the per-part patches above (start sides, goal sides, the part re-check) un
 catalogue knows those regions by id, and a change recuts the roads at once. A region counts on a road where it covers the road's centreline (finding P4: one that covers only part of the
 width still blocks the stretch when it covers the centre).
 
-**A region over part of the road's width (KNG-110, finding P4; implemented 2026-10-10, not live-tested).** Where the
-centre line meets a region whose domain keeps someone off the road (AllowEntry or AllowExit false, by the domain cache),
+**A region over part of the road's width (KNG-110, finding P4; implemented 2026-10-10, live run 1 passed but for G2, fixed).** Where the
+centre line meets a region whose domain keeps someone off the road (AllowEntry or AllowExit false by the domain cache, or a region the cache does not know - live test G2),
 the live tags also look across the road: the trail's road cells (`TrailCentring.across`, up to 3 blocks each side) and
 the regions at each. The piece then carries its **lanes**, the region sets of those cells (`RoadEdge.lanes`; the
 cells with the fewest regions only). Entry is open when the player may enter every region of one lane: a free gap one

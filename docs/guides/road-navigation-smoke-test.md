@@ -34,8 +34,8 @@ routing view") and **merged to trunk** (API `6d160aa`, web app `e2ba784`, plugin
 **2026-10-09 (night):** KNG-104 (the navigator's domain cache refreshes) live-tested and merged to knk-plugin `main`
 `1159ae5d`.
 **2026-10-10:** KNG-110 (finding P4: a region over part of a road's width; and "no way out") implemented on knk-plugin
-`claude/navigation-p4-partial-width-regions` `a87a6a2c`, checked offline on the Kardenna end, not live-tested - steps
-G1-G7 under "KNG-110" in Findings.
+`claude/navigation-p4-partial-width-regions`, checked offline on the Kardenna end; run 1: G1, G3-G7 pass, G2 failed on a
+domain-cache gap (fixed in `ec358f39`), re-test G2b under "KNG-110" in Findings.
 **Last updated:** 2026-10-10
 **Sources:** the "Developer to-do" blocks of Phases 1, 3, 4 and 5 in `docs/specs/navigation/IMPLEMENTATION_PLAN.md`;
 progress report `docs/reports/2026-09-27-road-navigation-chain.md`. If this file and a plan block disagree, the plan wins.
@@ -1014,7 +1014,7 @@ Next: KNG-75 proper (walk legs at both ends, destinations further than 48 blocks
 `fa234f7` (the merged plugin needs KNG-56's `GET /api/Domains/access-rules`). The dev DB lacks trunk's KNG-59
 migration `UniquePermissionGrantHolderNode` (it deletes duplicate permission grants); navigation does not need it.
 
-### KNG-110 — a region over part of a road's width (finding P4; implemented 2026-10-10, to test)
+### KNG-110 — a region over part of a road's width (finding P4; run 1 2026-10-10: all but G2 pass, G2 fixed in `ec358f39`, G2b to test)
 
 knk-plugin `claude/navigation-p4-partial-width-regions` `a87a6a2c` (on `main` `973aa68b`; the API and the web app are
 unchanged), worktree `Repository/_worktrees/knk-plugin-p4`. Gradle core / api-client / paper: 3502 tests, 0 failures
@@ -1042,9 +1042,10 @@ three rows wide (z -478..-476) at x 1393-1397, the centre line on z -477. The re
   enter (before: blocked). The trail runs on row z -476 past it. The first run of the check put one trail point, at the
   region's edge, back on z -477: fixed in `a87a6a2c`.
 - Over the whole width (a test box z -480..-474): still blocked, the trail stays in the middle.
-- **Snow:** rows z -477 and -476 there have snow on the road. Offline the curated block list counts snow as solid, so
-  those cells were no road and the centre line decided (still blocked). Live, the trail's road cells use Bukkit's
-  `isPassable()`: one layer of snow is passable, more is not. If G2 below still blocks, look at the snow there first.
+- **Snow:** rows z -477 and -476 there have snow on the road, one layer (`layers=1` in the region file). Offline the
+  curated block list counts snow as solid, so those cells were no road and the centre line decided (still blocked);
+  the results above treat it as passable. Live, the trail's road cells use Bukkit's `isPassable()`: one layer of snow
+  is passable, more is not. (Run 1 showed that the snow was not why G2 failed; see below.)
 
 Deploy: `./gradlew :knk-paper:dev` from that worktree, restart, and wait for "… cut into N pieces" in
 `/knk road status`. A test account without `knk.region.bypass`. Make fresh test regions (KNG-103: the run-2 regions
@@ -1064,6 +1065,24 @@ Test (east road) denies entry, so `/nav South Gate` from Brink goes west over #5
 - [ ] **G6** `/knk road status`: "… N with lanes (M cross-sections known)"; navigating along the Kardenna end: no lag.
 - [ ] **G7** After a restart, without going near the Kardenna end: within a minute or two of "… cut into N pieces"
   (the next live-tag pass after its chunks loaded in the background), G2's route goes west.
+
+**Run 1 (2026-10-10, developer, `a87a6a2c`; "Road clipping district" on `domain_17`): G1, G3, G4, G5 pass; G6, G7
+accepted. G2 failed at first:** `/nav South Gate` went east into Navigation Test. After the snow was removed it went
+west, but it was not clear that the snow was the reason.
+- **Cause (server log, 13:22-13:25):** not the snow (one layer, passable). Each G2 attempt followed `/knk cache refresh`
+  and `/knk road reload`. The refresh empties the region → domain cache; the reload's warm-up asks for several regions
+  in one request, and that answer holds one district only ("preloading 4 regions … cached 1 domains"), so the cache did
+  not know `domain_17`. The live tags looked across the road only at a region the cache **knew** to restrict entry
+  or exit, so the pass after the reload judged `domain_17` on the centre line, and the road stayed shut. The `/nav`
+  itself then looked `domain_17` up, and the pass after it, within a minute, opened the road. That is why G2 worked by
+  the time the snow was gone.
+- **Fixed in `ec358f39`:** a region the cache does not know is looked across too (`LiveEdgeTags.restrictsByDomain`);
+  only a region known to be open both ways is skipped. After a cache refresh one pass does a few more lookups.
+  Gradle 3504 tests, 0 failures. The batch warm-up's "one district per answer" is the resolver's (KNG-104 notes it
+  for single-region refreshes); the live tags no longer depend on it.
+- [ ] **G2b** With `ec358f39` deployed: the district on `domain_17` (z -479..-477), entry denied. `/knk cache refresh`,
+  then `/knk road reload`, wait for "… cut into N pieces", then `/nav South Gate` from Brink **without any other
+  `/nav` first**: the west road.
 
 ### KNG-75 step 2 — destinations up to 256 blocks off-road (live-tested 2026-10-10: B1-B6 pass; merged)
 
