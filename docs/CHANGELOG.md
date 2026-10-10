@@ -4,6 +4,12 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## 2026-10-10
 
+- A required yes/no (Boolean) field left unticked no longer blocks **Next** in FormWizard forms
+  ([KNG-53](https://linear.app/kngpandi/issue/KNG-53); knk-web-app `main` `955fa20`). The KNG-26 fix only covered a
+  brand-new form; resumed drafts saved before it and edit forms whose record had no value still held an empty value
+  behind the unticked box. Every way a form is filled in now treats an unticked box as `false`. Also fixed: a saved
+  `false` in a child/join form (e.g. a siege gate's Damageable) showed ticked when the field's default is on.
+  Live-tested 2026-10-10.
 - Domain forms accept an empty nullable field again ([KNG-119](https://linear.app/kngpandi/issue/KNG-119); knk-web-api
   `master` `a9e68f0` with migration `ClearPlaceholderFormFieldDefaults`). Editing a Town, District, Structure or
   GateStructure with **Road Access Override** (or Navigation Default Override, or another optional number, yes/no
