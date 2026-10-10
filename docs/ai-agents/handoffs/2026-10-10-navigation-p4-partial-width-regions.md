@@ -157,5 +157,5 @@ knk-plugin `main` and close out as listed above.
 **Closed 2026-10-10:** G2b passed (run 2). Merged to knk-plugin `main` `4b9ddca4` (`main` had not moved; Gradle core
 1857 / api-client 219 / paper 1425 green); the offline harness was deleted, not committed. CHANGELOG, FEATURE_REGISTER,
 the guide, DESIGN and the tracker (Recently completed) updated; KNG-110 Done; worktree `Repository/_worktrees/knk-plugin-p4`
-removed. Still open, outside P4: walk paths do not have the no-way-out rule, and the resolver's batch warm-up caches one
-district per request (the live tags no longer depend on it).
+removed. Still open, outside P4: walk paths do not have the no-way-out rule ([KNG-121](https://linear.app/kngpandi/issue/KNG-121)), and the resolver's batch warm-up caches one
+district per request ([KNG-122](https://linear.app/kngpandi/issue/KNG-122); the live tags no longer depend on it).
