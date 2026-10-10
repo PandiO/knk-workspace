@@ -95,6 +95,12 @@ Required live scenario: keep both worlds running with one player in each, use ma
 
 This audit is now a required work item; it has **not** been performed as part of this documentation update.
 
+
+
+### General KnK capability — confirmed 2026-10-10
+
+Concurrent multi-Minecraft-world support is a **game-wide platform requirement independent of the hub feature**. The hub is its first immediate consumer, not the limit of the audit. Assess all current Domain/Location consumers and world-dependent systems across the game. Report every discovered single-world assumption and unsupported path, even when it does not block hub delivery. Prioritize hub-blocking fixes for the alpha, and track other gaps explicitly as follow-up work; deferral must not be reported as verified general multi-world support. The audit must yield a reusable capability/gap matrix for KnK as a whole, with evidence and a distinction between implemented, tested and unverified behavior.
+
 ## 7. Implementation sequence
 
 1. Resolve the decisions below and inspect current default-branch code.
