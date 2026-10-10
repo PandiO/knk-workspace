@@ -4,6 +4,21 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## 2026-10-10
 
+- Domain forms accept an empty nullable field again ([KNG-119](https://linear.app/kngpandi/issue/KNG-119); knk-web-api
+  `master` `a9e68f0` with migration `ClearPlaceholderFormFieldDefaults`). Editing a Town, District, Structure or
+  GateStructure with **Road Access Override** (or Navigation Default Override, or another optional number, yes/no
+  or choice field) left empty failed: entity metadata gave such fields the made-up default value "default", the
+  Form Builder saved it on the field, and the form submitted it for the empty value. Metadata now reports no default
+  for them, and the migration removes the saved "default" from existing form fields (text fields are left alone).
+  An empty override follows the domain type again. The web app is unchanged.
+- Navigation takes a road that a no-entry region covers only in part ([KNG-110](https://linear.app/kngpandi/issue/KNG-110),
+  finding P4; knk-plugin `main` `4b9ddca4`). A region now blocks a road only where it covers the road's whole width:
+  one free block beside it is enough, and the trail moves onto the free part, so the region's border does not push
+  the player back. A region over the whole width blocks as before; for a player who may not leave a region, a stretch
+  whose middle is in it still counts as inside. New: a region a player may enter but not leave blocks the way to a
+  destination outside it ("You could not leave X again"), so navigation no longer leads players into it on the way
+  somewhere else; a destination inside it is still reached. `/knk road status` counts the road pieces with such gaps.
+  No new settings; the API and the web app are unchanged.
 - Game Settings are applied in game ([KNG-52](https://linear.app/kngpandi/issue/KNG-52); knk-web-api `master`
   `8cce48d` with migration `AddGameSettingsMotdAndGroupOverrides`, knk-plugin `main` `973aa68b`, knk-web-app `main`
   `12c1d60`).

@@ -9,7 +9,7 @@ developer decision after the smoke test):** designed plazas and movable nodes �
 areas before the centreline) follows. **2026-10-09 (finding N15, merged):** destinations snap with their own height
 weight, `destination-snap-vertical-weight` (default 1) - §4, §5.2, §6.2 step 2. **2026-10-09 (merged to trunk):**
 KNG-73 (configurable default destination, §6.1) and rev. 7 Parts A and C ([REV7_PROPOSAL.md](REV7_PROPOSAL.md):
-routing view, entry rule on roads, §6.7). **2026-10-10 (KNG-110, implemented, not live-tested):** a region over part
+routing view, entry rule on roads, §6.7). **2026-10-10 (KNG-110, live-tested and merged, plugin `4b9ddca4`):** a region over part
 of a road's width blocks it only where it covers the whole width, the trail goes through the free gap, and a region the
 player could not leave again blocks the way to a destination outside it (§6.4, §6.7).
 **Last updated:** 2026-10-10
@@ -593,7 +593,7 @@ middle; on a slope to the middle of the stair and slab cells. The points sit on 
 1.5 blocks) and are centred with a margin, so a redraw puts each particle where it was. Only the drawn trail
 changes - not the graph, the route or its length.
 
-**Through the free gap (KNG-110, implemented 2026-10-10, not live-tested).** Road cells inside a region the player may
+**Through the free gap (KNG-110, merged 2026-10-10, knk-plugin `4b9ddca4`).** Road cells inside a region the player may
 not enter (the router's rule per region, `DomainAvailability.mayEnter`, including the "no way out" rule of §6.7) count
 as blocked: the trail keeps to the middle of the free part of the road, or, when its own cell is blocked, to the
 nearest free part (the wider one on a tie). Smoothing never pulls a point back onto a blocked cell. A player with
@@ -669,8 +669,8 @@ makes the per-part patches above (start sides, goal sides, the part re-check) un
 catalogue knows those regions by id, and a change recuts the roads at once. A region counts on a road where it covers the road's centreline (finding P4: one that covers only part of the
 width still blocks the stretch when it covers the centre).
 
-**A region over part of the road's width (KNG-110, finding P4; implemented 2026-10-10, not live-tested).** Where the
-centre line meets a region whose domain keeps someone off the road (AllowEntry or AllowExit false, by the domain cache),
+**A region over part of the road's width (KNG-110, finding P4; live-tested and merged 2026-10-10, knk-plugin `4b9ddca4`).** Where the
+centre line meets a region whose domain keeps someone off the road (AllowEntry or AllowExit false by the domain cache, or a region the cache does not know - live test G2),
 the live tags also look across the road: the trail's road cells (`TrailCentring.across`, up to 3 blocks each side) and
 the regions at each. The piece then carries its **lanes**, the region sets of those cells (`RoadEdge.lanes`; the
 cells with the fewest regions only). Entry is open when the player may enter every region of one lane: a free gap one
