@@ -4,6 +4,40 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## 2026-10-10
 
+- Walk paths get through tall buildings ([KNG-108](https://linear.app/kngpandi/issue/KNG-108); knk-plugin `main`
+  `a388c70`). A walk path may now be 5 blocks longer for every block of height between the player and where they are
+  going, so the way down a tower's spiral stair (the Keep Tower Roof: 168 blocks for 29 of height) is found. From
+  such a roof the player gets the full path to the road instead of "Having trouble determining the route - guiding
+  you to the nearest road.", and a destination on a roof gets a full path up. Setting:
+  `navigation.walk.climb-allowance` (5; 0 = as before). A server `config.yml` needs no change. Known gap, not new: a
+  player shut in within 8 blocks of a road is not told so ([KNG-124](https://linear.app/kngpandi/issue/KNG-124)).
+- The game server now knows the domain of every region it preloads ([KNG-122](https://linear.app/kngpandi/issue/KNG-122);
+  knk-plugin `main` `68022ce3`). The API answers a region lookup with at most one town, district and structure, so
+  preloading several districts at once (when the road network loads, after `/knk cache refresh`, or for the regions at
+  a spot) kept only one of them. The others were looked up later, one at a time, blocking routes for up to 3 seconds,
+  and an overlapping second district could go unnoticed. The server now asks about each region on its own, a few at a
+  time. The API and the web app are unchanged.
+- A required yes/no (Boolean) field left unticked no longer blocks **Next** in FormWizard forms
+  ([KNG-53](https://linear.app/kngpandi/issue/KNG-53); knk-web-app `main` `955fa20`). The KNG-26 fix only covered a
+  brand-new form; resumed drafts saved before it and edit forms whose record had no value still held an empty value
+  behind the unticked box. Every way a form is filled in now treats an unticked box as `false`. Also fixed: a saved
+  `false` in a child/join form (e.g. a siege gate's Damageable) showed ticked when the field's default is on.
+  Live-tested 2026-10-10.
+- Domain forms accept an empty nullable field again ([KNG-119](https://linear.app/kngpandi/issue/KNG-119); knk-web-api
+  `master` `a9e68f0` with migration `ClearPlaceholderFormFieldDefaults`). Editing a Town, District, Structure or
+  GateStructure with **Road Access Override** (or Navigation Default Override, or another optional number, yes/no
+  or choice field) left empty failed: entity metadata gave such fields the made-up default value "default", the
+  Form Builder saved it on the field, and the form submitted it for the empty value. Metadata now reports no default
+  for them, and the migration removes the saved "default" from existing form fields (text fields are left alone).
+  An empty override follows the domain type again. The web app is unchanged.
+- Navigation takes a road that a no-entry region covers only in part ([KNG-110](https://linear.app/kngpandi/issue/KNG-110),
+  finding P4; knk-plugin `main` `4b9ddca4`). A region now blocks a road only where it covers the road's whole width:
+  one free block beside it is enough, and the trail moves onto the free part, so the region's border does not push
+  the player back. A region over the whole width blocks as before; for a player who may not leave a region, a stretch
+  whose middle is in it still counts as inside. New: a region a player may enter but not leave blocks the way to a
+  destination outside it ("You could not leave X again"), so navigation no longer leads players into it on the way
+  somewhere else; a destination inside it is still reached. `/knk road status` counts the road pieces with such gaps.
+  No new settings; the API and the web app are unchanged.
 - Game Settings are applied in game ([KNG-52](https://linear.app/kngpandi/issue/KNG-52); knk-web-api `master`
   `8cce48d` with migration `AddGameSettingsMotdAndGroupOverrides`, knk-plugin `main` `973aa68b`, knk-web-app `main`
   `12c1d60`).

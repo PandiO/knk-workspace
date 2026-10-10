@@ -315,8 +315,8 @@ thread, and 15 % of 96-block legs need 50-64 chunks (limit 49). Recommended for 
 `destination-walk-range` 96, the far leg - `DirectLeg.beyondWalkRange`, "No conventional path to X found." and the HUD
 arrow, a walk leg once within 96; the route's trail draws no straight line on to such a target). Live test: guide
 "KNG-75 step 2" B1-B6 - **all pass; merged to knk-plugin `main` `8f2b7c30` (2026-10-10). Phase D (KNG-75) is done**;
-step 3 (chained legs) is KNG-36's, a height allowance for tall buildings KNG-108 (**implemented 2026-10-10**, knk-plugin
-`claude/dazzling-dijkstra-94leyd` `8e0a83d`, not merged or live-tested; §5 rev. 11). Step 2: measure a 96-block leg's capture and search cost
+step 3 (chained legs) is KNG-36's, a height allowance for tall buildings KNG-108 (**done 2026-10-10**: live-tested and merged
+to knk-plugin `main` `a388c70`; §5 rev. 11). Step 2: measure a 96-block leg's capture and search cost
 (the capture limit is 49 chunks), then destinations up to the walk range by road plus a walk path, up to 256 by road
 plus "No conventional path to X found." with the HUD arrow, beyond 256 refused. Step 3 (chained legs, KNG-36) only on
 request.

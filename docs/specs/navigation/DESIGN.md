@@ -9,8 +9,10 @@ developer decision after the smoke test):** designed plazas and movable nodes �
 areas before the centreline) follows. **2026-10-09 (finding N15, merged):** destinations snap with their own height
 weight, `destination-snap-vertical-weight` (default 1) - §4, §5.2, §6.2 step 2. **2026-10-09 (merged to trunk):**
 KNG-73 (configurable default destination, §6.1) and rev. 7 Parts A and C ([REV7_PROPOSAL.md](REV7_PROPOSAL.md):
-routing view, entry rule on roads, §6.7).
-**Last updated:** 2026-10-09
+routing view, entry rule on roads, §6.7). **2026-10-10 (KNG-110, live-tested and merged, plugin `4b9ddca4`):** a region over part
+of a road's width blocks it only where it covers the whole width, the trail goes through the free gap, and a region the
+player could not leave again blocks the way to a destination outside it (§6.4, §6.7).
+**Last updated:** 2026-10-10
 **Implementation plan:** [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) — its §1 lists ten small deviations (D1-D10) decided
 while mapping the design onto trunk code; where this document and the plan disagree, the plan wins.
 **Linear:** [KNG-27](https://linear.app/kngpandi/issue/KNG-27/road-navigation-street-road-graph-endpointsintersections-traced-road)
@@ -591,6 +593,12 @@ middle; on a slope to the middle of the stair and slab cells. The points sit on 
 1.5 blocks) and are centred with a margin, so a redraw puts each particle where it was. Only the drawn trail
 changes - not the graph, the route or its length.
 
+**Through the free gap (KNG-110, merged 2026-10-10, knk-plugin `4b9ddca4`).** Road cells inside a region the player may
+not enter (the router's rule per region, `DomainAvailability.mayEnter`, including the "no way out" rule of §6.7) count
+as blocked: the trail keeps to the middle of the free part of the road, or, when its own cell is blocked, to the
+nearest free part (the wider one on a tie). Smoothing never pulls a point back onto a blocked cell. A player with
+`knk.region.bypass`, or one already inside the region, keeps the middle.
+
 ### 6.5 Maneuvers
 
 At each `Junction` on the route, or where the street label changes: Δ = bearing after − before (~6 blocks each side).
@@ -613,6 +621,7 @@ The router only uses roads this player can actually use **now**. Every edge carr
 | Gate doors on the edge | `GateManager.getGate(id)` → `CachedGateDoor.getCurrentState()`, `isDestroyed()`, `isJammed()` | State is `CLOSED`, `CLOSING`, `OPENING` or jammed. `OPEN` or destroyed → passable. A door in an active siege (`getCurrentSiegeId() != null`) is blocked for non-participants regardless. `AllowPassThrough` doors: passable only for players the pass-through rules allow, with a hint "right-click the gate to pass". |
 | Domain entry | the domains in `DomainIds` the route *enters* | `AllowEntry = false`, or any future entry condition (vision §2.2: title, balance, clan, premium rank). |
 | Domain exit | the domains the player is in and the route *leaves* | `AllowExit = false`. |
+| No way out (KNG-110, decided 2026-10-10) | the domains the route *enters* that the destination is not in | `AllowEntry` open but `AllowExit = false`: the player could not leave again, so it counts as an entry block ("you could not leave X again"). Not when the destination lies inside the region. |
 | Road access (rev. 7 Part C) | the domain's effective `roadAccess` on `POST api/Domains/search` | Domain entry and exit above are **skipped** for a domain whose rule is `Ignored` for roads (per type on the road admin page, per domain "Road Access Override"). For domains along a public street (houses, shops): routes pass them, the rule still holds at the border and on the walk path. Every current type defaults to `Applies`. [REV7_PROPOSAL.md](REV7_PROPOSAL.md) §4, KNG-92. |
 | Siege | `SiegeGateController.isLocked` (read-only) | **Not blocked** (plan D2): trunk keeps siege areas open to non-members and carries them through locked gates, so a siege-locked gate counts as a pass-through gate for non-members. Navigation ends when the player joins a siege lobby. |
 | Static flags | edge `Flags` | `Closed`, `NoGps`; `Oneway` against direction. |
@@ -648,7 +657,11 @@ all-open route (N14).
 **Fresh domain rules (KNG-104, merged 2026-10-09, plugin `1159ae5d`).** The router and the walk path look domains up by region through
 `RegionDomainResolver`; an entry older than the cache TTL (1 minute) is answered as it is and re-asked from the API in
 the background, a region the API no longer knows is forgotten, and `/knk cache refresh` clears the map. So a changed
-AllowEntry/AllowExit reaches the next route or re-check within about a minute, without a restart.
+AllowEntry/AllowExit reaches the next route or re-check within about a minute, without a restart. **KNG-122
+(merged 2026-10-10, knk-plugin `68022ce3`):** the API answers a region query with at most one Town, District and
+Structure, so the resolver asks about one region per request (at most 4 at a time) when it warms the cache (a network
+load, a build, regions the live tags find) or resolves the regions at a spot; before, a batch of several districts
+cached one of them.
 
 **Routing view (rev. 7 Part A, merged 2026-10-09).** Navigation routes on a view of the network in which every edge is
 cut where its access tags change - at each gate door and region border the live tags find - so a gate is its own short
@@ -659,6 +672,17 @@ makes the per-part patches above (start sides, goal sides, the part re-check) un
 "Ignored" for roads (rev. 7 Part C: houses, shops along a street) cuts nothing (knk-plugin `eea80099`): the `/navigate`
 catalogue knows those regions by id, and a change recuts the roads at once. A region counts on a road where it covers the road's centreline (finding P4: one that covers only part of the
 width still blocks the stretch when it covers the centre).
+
+**A region over part of the road's width (KNG-110, finding P4; live-tested and merged 2026-10-10, knk-plugin `4b9ddca4`).** Where the
+centre line meets a region whose domain keeps someone off the road (AllowEntry or AllowExit false by the domain cache, or a region the cache does not know - live test G2),
+the live tags also look across the road: the trail's road cells (`TrailCentring.across`, up to 3 blocks each side) and
+the regions at each. The piece then carries its **lanes**, the region sets of those cells (`RoadEdge.lanes`; the
+cells with the fewest regions only). Entry is open when the player may enter every region of one lane: a free gap one
+block wide is enough (decided 2026-10-10). A region that covers the whole width leaves no such lane and blocks as
+before. Exit stays on the centre line (decided 2026-10-10): for a player who may not leave a region, a stretch whose
+middle is in it still counts as inside. Gate doors stay on the centre line too (decided 2026-10-10). A cross-section in
+unloaded chunks loads them in the background and is remembered, so the tags do not change as chunks load and unload.
+Snow on a road counts as the trail's rule counts it: one layer is passable, more is not.
 
 **Live changes.** `NavigationService` listens to gate state changes (an observer on `GateManager`'s animation-complete
 notifications), domain cache refreshes and siege state changes:
