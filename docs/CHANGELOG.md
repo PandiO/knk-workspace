@@ -8,6 +8,15 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## 2026-10-10
 
+- Gate teleports land somewhere safe, and gate doors no longer hurt players ([KNG-105](https://linear.app/kngpandi/issue/KNG-105),
+  [KNG-106](https://linear.app/kngpandi/issue/KNG-106); knk-plugin `main` `8457657`). `/gatedoor tp` puts you on the
+  ground next to the door, in front of or behind it, never inside its blocks or its opening, and refuses when there is
+  no safe spot within 4 blocks. `/gate tp` uses the gate's spawn point (its Location) when set, else a safe spot by its
+  first door, and says which. A closing or opening door (including a drawbridge's swing) now moves players, mobs,
+  dropped items and vehicles with their riders out of its way before its blocks land, to solid ground on their own
+  side when there is room; before, the collision check looked the wrong way while a door closed, and the push sent
+  people behind a door through it. Anyone found inside door blocks (after a teleport, on join) is moved out, and door
+  blocks cause no suffocation damage (`gates.safety.door-suffocation-damage: false`). Live-tested 2026-10-10.
 - The first-join kit grant now runs once per player ([KNG-81](https://linear.app/kngpandi/issue/KNG-81), API half;
   knk-web-api `master` `d5293fd`, migration `AddUserFirstJoinKitsGrantedAt`). A repeated or simultaneous
   grant-first-join call (a quick relog) no longer adds a second kit claim or second lootbox tokens; players already
