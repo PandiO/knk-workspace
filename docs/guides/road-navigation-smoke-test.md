@@ -33,7 +33,9 @@ routing view") and **merged to trunk** (API `6d160aa`, web app `e2ba784`, plugin
 `main` `723d21f4`.
 **2026-10-09 (night):** KNG-104 (the navigator's domain cache refreshes) live-tested and merged to knk-plugin `main`
 `1159ae5d`.
-**Last updated:** 2026-10-09
+**2026-10-10:** KNG-108 (a height allowance in the walk length cap, tall buildings) implemented on knk-plugin
+`claude/dazzling-dijkstra-94leyd` `8e0a83d`, not live-tested - "KNG-108" in Findings (H1-H5).
+**Last updated:** 2026-10-10
 **Sources:** the "Developer to-do" blocks of Phases 1, 3, 4 and 5 in `docs/specs/navigation/IMPLEMENTATION_PLAN.md`;
 progress report `docs/reports/2026-09-27-road-navigation-chain.md`. If this file and a plan block disagree, the plan wins.
 
@@ -1010,6 +1012,31 @@ Next: KNG-75 proper (walk legs at both ends, destinations further than 48 blocks
 **Deploy for run 3:** knk-plugin `claude/navigation-walkable-path` `a4892db` and knk-web-api `claude/road-navigation`
 `fa234f7` (the merged plugin needs KNG-56's `GET /api/Domains/access-rules`). The dev DB lacks trunk's KNG-59
 migration `UniquePermissionGrantHolderNode` (it deletes duplicate permission grants); navigation does not need it.
+
+### KNG-108 — walk paths through tall buildings (implemented 2026-10-10, to test)
+
+knk-plugin `claude/dazzling-dijkstra-94leyd` `8e0a83d` (on `main` `973aa68b`). Gradle core 1841 / api-client 219 /
+paper 1414 green; the new search test fails without the change. The API and the web app are unchanged. A walk path
+may now be `navigation.walk.climb-allowance` (5) blocks longer per block of height between start and target, above
+`max-length` too. The Keep Tower Roof leg (finding N17: a spiral stair, 168 blocks for 29 of height, cap 77.6) gets a
+cap of 217.6. The replay found that path inside today's capture box in 1642 expansions, so the box and the expansion
+budget stay as they are.
+
+Deploy: `./gradlew :knk-paper:dev` from that branch, restart. The server's `config.yml` needs no change (the new key
+defaults to 5); a written-out `climb-allowance: 0` turns it off.
+- [ ] **H1** On the Keep Tower Roof (1410, 113, -506), `/nav` somewhere far: a full walk path down the spiral stair
+  to the keep road (edge 10088), **no** "Having trouble determining the route - guiding you to the nearest road."
+  and no partial path. Walk it down: the road guidance starts at the road, no "You left the road".
+- [ ] **H2** The other way: a destination on the roof (make a Location there if there is none) from the keep road or
+  further: the last leg is a full walk path up the stair, **no** "No conventional path to X found.".
+- [ ] **H3** `/knk road status` after H1/H2: the walk-path "budget" count does not go up for these legs.
+- [ ] **H4** Regression: a level target behind a building (Merchant Square from ~27 blocks, N2) and a shut-in box
+  (step 1 S4: "No conventional path to the road found.") as before.
+- [ ] **H5** Optional: `climb-allowance: 0` in the server's `config.yml`, restart, H1 again: the "Having trouble"
+  message is back (the old cap). Set it back afterwards.
+
+If H1 still runs out of budget: replay the leg (`tools/road-replay/README.md`, "Walk path replay"; `walk.txt` with
+`start=1410.5,113,-506.5`, `target=1410.5,84,-516`, `max-length=144`): the report now prints the height and the cap.
 
 ### KNG-75 step 2 — destinations up to 256 blocks off-road (live-tested 2026-10-10: B1-B6 pass; merged)
 
