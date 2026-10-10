@@ -58,7 +58,7 @@ Define staff/operator bypass separately from normal region membership: ordinary 
 
 ## 5. Integration points
 
-- KNG-52: separate the initial hub admission point from the destination used when entering gameplay. Decide whether the portal resolves global/group join spawn, last logout location, or a portal-specific destination.
+- KNG-52: initial server admission goes to the hub; hub-to-gameplay entry resolves the default spawn and permission-group overrides through the existing Game Settings, extended internally for this flow. Preserve separate respawn settings and the existing administrator-facing configuration model (confirmed; see §11).
 - KNG-17: integrate with the existing teleport pipeline and access checks.
 - KNG-56: reuse locally persisted domain access rules and inspect exemptions/first-sync behavior.
 - KNG-58: explicit offline-cache integration requirement for hub configuration and KNG-52 Game Settings. As checked on 2026-10-10 the issue is In Review; this does not establish that Game Settings are covered or that its changes are merged. Verify the current implementation and extend its shared mechanism instead of creating a second cache. KNG-57: align refresh/invalidation and readiness detection.
@@ -133,7 +133,7 @@ Concurrent multi-Minecraft-world support is a **game-wide platform requirement i
 2. Exact outage thresholds and which dependencies count as unavailable.
 3. Which world's spawn SEND_TO_WORLD_SPAWN uses; fallback if it is unavailable.
 4. Concrete Domain type/hierarchy for the hub and world identity consistency rules. Separate, simultaneously loaded hub/gameplay worlds are already decided.
-5. Portal destination and interaction with KNG-52 overrides/last logout location.
+5. Detailed semantics of any last-logout-location policy and other world transfers. Hub portal use of Game Settings default/group entry destinations and separate respawn is decided (§11).
 6. Full hub activity/protection catalogue and staff bypass rules.
 7. Missing-hub fallback, recovery behavior and minigame/respawn precedence.
 8. Multiverse versus KnK implementation, after investigation.
@@ -144,3 +144,12 @@ Concurrent multi-Minecraft-world support is a **game-wide platform requirement i
 Developer decision, 2026-10-10: add a configurable delay before applying the outage action in a future iteration. For now the delay is zero: send players directly to the hub on detected outage and retain them there until connectivity is restored. Future deployments may permit continued play using KNG-58 cached essential data during a temporary outage, then relocate players after a sustained outage because stale state and synchronization risk increase over time. Thirty minutes and one hour were examples, **not selected defaults or validated safe durations**.
 
 Future design must define when the timer starts, what constitutes stable recovery/reset, repeated outage handling, restart persistence, and earlier containment when critical cached data expires or becomes unusable. A grace period does not authorize API-dependent writes or bypass other safety rules. Current new-join behavior remains hub admission. This is recorded future scope, not required timer implementation for the initial alpha.
+
+
+## 11. Confirmed: extend existing Game Settings for hub-to-world entry
+
+Developer decision, 2026-10-10: extend KNG-52 Game Settings using the same administrator-facing model and workflow. Internally distinguish server admission into the hub from entry into a gameplay world. The hub portal must resolve the destination through Game Settings: a default world-entry spawn with per-permission-group destination overrides. Preserve a separately configurable respawn location/policy and existing group override behavior. Reuse existing group precedence rather than adding a competing portal-specific configuration system. Preserve current administrator-facing semantics; adapt the underlying world-aware resolution and lifecycle integration.
+
+This resolves the choice between a fixed portal destination and existing settings: **existing Game Settings, extended for hub teleportation**. Inspect current per-world settings (including Nether/End), world-change application rules and DTOs before implementation; do not assume that world-change behavior is already correct. Explicitly distinguish server join, hub-to-gameplay entry, other world transfers and death/respawn. Verify destinations in the correct world, group precedence, default fallback, separate respawn behavior and KNG-58 persistence through an offline restart.
+
+The handling of an optional last-logout-location policy, ordinary Nether/End portal destination semantics, and returning after an outage must be made consistent with these settings without inventing developer decisions. Recovery automation remains open.
