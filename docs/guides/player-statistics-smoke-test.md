@@ -1,7 +1,7 @@
 # Player statistics (KNG-34) — smoke test
 
-**Status:** Run 1 in progress 2026-10-10 — setup and steps 5-9 pass (findings 1 and 3 fixed, D24); finding 3 live re-check, then step 10 ([KNG-34](https://linear.app/kngpandi/issue/KNG-34))
-**Last updated:** 2026-10-10 (run 1: setup, steps 5-9, findings 1-3)
+**Status:** Run 1 in progress 2026-10-10 — setup and steps 5-9 pass, step 10 in progress (findings 1, 3, 4 fixed, D24) ([KNG-34](https://linear.app/kngpandi/issue/KNG-34))
+**Last updated:** 2026-10-10 (run 1: setup, steps 5-10, findings 1-4)
 **Design:** [specs/player-statistics/DESIGN.md](../specs/player-statistics/DESIGN.md) (decisions D1-D24, §F) ·
 **Background:** [progress report](../reports/2026-10-03-player-statistics-chain.md) (per-link details, flagged decisions)
 
@@ -130,4 +130,6 @@ Run 1, 2026-10-10 (local session; worktrees `Repository/_worktrees/<repo>-kng34`
 | — | 8 | pass | Alt MrBedue (id 3). `/pay` 20: your coins spent 10 → 30, his earned +20; salary on his join +6558 earned; staff grant `ADMIN_GRANT` +75000 earned (25,289,866 → 25,371,444, exact); teleport fee −1 gem → gems spent 145 → 146; reversal #175 of the fee → back to 145, earned unchanged (D20). |
 | — | 9 | pass | Idle 5 min → "You are now AFK" and `[AFK]`; moving and `/afk` toggle; water stream and pressure plate keep you AFK. Session: active 433 s + AFK 819 s = the session length exactly (19:23:23-19:44:14; AFK also covers the idle minutes during step 8). |
 | 3 | 9 | fail → fixed | With `[AFK]` in the tab list, and after leaving AFK, the name was plain white instead of the group color: the client skips scoreboard-team formatting (KNG-7 colors) for a custom tab-list name, and leaving AFK put back Paper's plain name as a custom name. knk-plugin `83227095`: the marked name carries the team prefix/color/suffix; leaving clears the custom name. Live re-check pending. |
+| — | 10 | partly | Finding 3 re-checked live after the restart: group color kept with `[AFK]` and after leaving (pass). Survival only — creative and spectator are excluded by design (the dev world defaults to CREATIVE; the first swim/horse attempts were in creative and rightly not counted). `__pandi__` walk + swim: foot 76.1 → 187.4, `distance.swim` 65.6; MrBedue elytra: flying 129.2, foot 87.4. Boat, minecart and the fall skipped for now; teleport checks (part B) to do. |
+| 4 | 10 | fail → fixed | Riding a horse in survival added no distance: the listener skipped every rider `PlayerMoveEvent` and waited for a `VehicleMoveEvent`, but Paper 1.21.10 fires that only from boat and minecart ticks (checked in the server jar: `ServerGamePacketListenerImpl.handleMoveVehicle` fires only the rider's `PlayerMoveEvent`). knk-plugin `3c6903a5`: a mount's distance comes from the rider's move; `VehicleMoveEvent` counts only boats and minecarts (no double count). Live re-check pending. |
 | 2 | 8 | trunk follow-up | Not KNG-34 (page unchanged from trunk `main`): on `/admin/economy/transactions/<id>` the **Reverse** button stays disabled until the reason has ≥ 10 characters, with no visible cue — clicking does nothing and sends no request. The developer asked for it to be updated: show that the button is disabled and why (e.g. a live "n/10 characters" hint, a message on click). |
