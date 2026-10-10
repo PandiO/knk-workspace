@@ -1,7 +1,7 @@
 # Player statistics — working design
 
 **Status:** Finalized 2026-10-03 by chain link 1 — the "Finalized design (link 1)" section below is binding for implementation together with [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md). Developer decisions D1-D13 and "Agreed" paragraphs are the developer's; link-1 defaults are numbered `L1-n` and flagged for review in the progress report. Evidence: [source audit](../../reports/2026-10-03-player-statistics-source-audit.md).
-**Last updated:** 2026-10-03 (review follow-up D14-D20)
+**Last updated:** 2026-10-10 (trunk alignment D21-D23)
 **Linear:** [KNG-34](https://linear.app/kngpandi/issue/KNG-34/design-player-statistics-provenance-and-world-analytics), [KNG-14](https://linear.app/kngpandi/issue/KNG-14/gameplay-statistics-counters-v2-userstatistics-for-user-statistics), [KNG-23](https://linear.app/kngpandi/issue/KNG-23)
 
 This living note records decisions from the developer conversation. It does not assert that all described fields are already stored or displayed in V3. Precedence: (1) "Developer decisions 2026-10-03", (2) the "Finalized design (link 1)" section, (3) the older discussion sections further down, which are kept as rationale. Where an older section still says "open" or "to be decided", section (2) settles it.
@@ -42,6 +42,21 @@ Given by the developer on the chain's "decisions to review" after all seven link
 | D19 | Staff statistics view (L1-20) | Agreed: `knk.admin.statistics.view` sees all of a player's statistics. |
 | D20 | Economy buckets (L1-5/L1-6) | **Include every way of gaining or losing** coins, gems and XP in earned/spent/xp_gained: transfers, staff adjustments, signup grant, merges and premium top-ups too. §F.5. |
 | — | Others | Time zone `Europe/Amsterdam` is the server zone (confirmed); retention defaults §F.15 agreed; Siege leaver payload (L4-2) and AFK salary (L1-2) accepted for now. |
+
+### Trunk alignment decisions 2026-10-10 (binding)
+
+After merging the trunks into the feature branches (progress report, "Trunk merge 2026-10-10"), the developer chose
+three of the suggested alignment changes. Implemented on knk-web-api `claude/kind-dijkstra-y9d279` (`9c3a11a`,
+`dc352d4`, `66c01cb`).
+
+| # | Topic | Decision |
+|---|---|---|
+| D21 | Discovery counts | Count only domains whose discovery type is enabled (after per-domain overrides), like the player's `/discoveries` total since trunk `e2d16d1`: discovery counts, the named-discoveries list and the discoveries leaderboard (shared helper `DiscoveryEnabledDomains`). Deleted domains don't count; Total = Towns + Districts + Structures. |
+| D22 | Staff groups | Seed `knk.admin.statistics.view` into **Moderator** and **Admin**, and `knk.admin.privacy.request` into **Admin** (migration `SeedStatisticsStaffNodes`, after KNG-80's group seed). Owner nodes stay unseeded. |
+| D23 | Road-builder names | Data deletion clears the player's name from `road_tile_proposals.CreatedBy` (KNG-27); the proposals stay. Reported as `road_tile_proposals.created_by`. |
+
+Deferred until after the smoke test and merge: the other suggestions (road-tile read failures in diagnostics,
+navigation/domain-access telemetry, renamed world-task regions in world analytics, async command correlation).
 
 ### Leaderboards (recommendation adopted 2026-10-03)
 
@@ -343,7 +358,8 @@ timeline read is recorded in the audit log. Staff node (not owner-only): `knk.ad
   visibility settings, statistics profile incl. leaderboard exclusion, title-change history, PvP kill pairs as killer
   **or** victim, leaderboard snapshot entries, diagnostic events and enhanced targets — plus discoveries and (D15)
   **private-message logs** sent or received, **link codes**, **permission grants**, **group memberships** and **audit
-  rows about the player** (rows the player wrote as staff about others stay: they are those players' history).
+  rows about the player** (rows the player wrote as staff about others stay: they are those players' history). (D23)
+  The player's name is cleared from road-builder proposals (`road_tile_proposals.CreatedBy`).
 - **Pseudonymized:** the `users` row (username → `deleted-<id>`; email, UUID, password hash, gender, chat prefix/suffix
   cleared; inactive; reason "GDPR erasure"). A returning player gets a fresh account.
 - **Kept:** ledger rows (accounting; immutable by trigger) and Siege match rows (other players' history), on the

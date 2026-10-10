@@ -7,9 +7,10 @@
 ## Summary for the developer
 
 **The chain is finished: all seven links are done. Nothing is merged** — every change is on `claude/kind-dijkstra-y9d279`
-in the four repos, waiting for your review, live test and merge. Heads after the 2026-10-10 trunk merge: knk-web-api
-`bbc6d92`, knk-plugin `84a8464e`, knk-web-app `8c367a2`, knk-workspace: this branch (see the last commit) — including
-the review follow-up (D14-D20) and the trunk merge (block "Trunk merge 2026-10-10" at the end). Trunks were unchanged throughout
+in the four repos, waiting for the smoke test and merge. Heads 2026-10-10: knk-web-api `66c01cb`, knk-plugin
+`598b5bd3`, knk-web-app `8c367a2`, knk-workspace: this branch — including the review follow-up (D14-D20), the trunk
+merge and the trunk alignment D21-D23 (blocks at the end). **Smoke test:** `docs/guides/player-statistics-smoke-test.md`,
+started from the handoff `docs/ai-agents/handoffs/2026-10-10-player-statistics-smoke-test.md`. Trunks were unchanged throughout
 links 5-7 (knk-web-api `master` `ae0b3ad`, knk-plugin `main` `ee7824c`, knk-web-app `main` `fc66101`).
 
 | Link | Phase | State | Heads | Details |
@@ -835,4 +836,22 @@ stores nothing new (Minecraft's own player data).
 5. Optional telemetry/analytics for navigation (start/arrive/end/reroute events) and domain access refusals (KNG-56).
 6. Optional: world analytics drops batches for a region renamed from `tempregion_worldtask_*` to `domain_<id>`
    (KNG-43) until the plugin's cache refreshes; command correlation ids don't cross async permission checks.
+
+## Trunk alignment D21-D23 — coordinator session (2026-10-10)
+
+The developer chose suggestions 1-3 of the trunk-merge block (DESIGN.md "Trunk alignment decisions 2026-10-10");
+4-6 wait until after the smoke test and merge.
+
+- knk-web-api `9c3a11a` (D21): `DiscoveryEnabledDomains` — one rule for "enabled discovery domains", used by
+  `DiscoveryService`, the KNG-34 discovery counts and list (`StatisticsQueryService`) and the discoveries board
+  (`LeaderboardRepository`). Tests: fixture with a disabled type; `LeaderboardDiscoveriesTests` (type off, override on,
+  deleted domain).
+- knk-web-api `dc352d4` (D22): migration `20261010170000_SeedStatisticsStaffNodes` (data only, after KNG-80's group seed).
+- knk-web-api `66c01cb` (D23): erasure clears `road_tile_proposals.CreatedBy` for the player's names (before
+  pseudonymization); counted as `road_tile_proposals.created_by`.
+- API tests: 2364 passed / 4 failed (pre-existing) / 71 skipped. No model change (seed and data update only).
+- knk-plugin `598b5bd3`: trunk merged again (KNG-58 offline security cache, KNG-122); conflict in `KnKPlugin.onDisable`
+  (both sides' shutdown steps kept). Not compiled in the cloud.
+- Smoke-test guide `docs/guides/player-statistics-smoke-test.md` and local-session handoff
+  `docs/ai-agents/handoffs/2026-10-10-player-statistics-smoke-test.md` written.
 
