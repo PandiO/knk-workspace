@@ -1,7 +1,7 @@
 # Player statistics — Implementation Plan
 
-**Status:** Implemented — all links done 2026-10-03 (written by link 1; knk-web-api `45d9925`, knk-plugin `66d9292`, knk-web-app `8c27421` on `claude/kind-dijkstra-y9d279`), plus the review follow-up D14-D20 (knk-web-api `fdf9c13`, knk-web-app `089039f`). Nothing merged; merge order and the live checklist are in the progress report's summary.
-**Last updated:** 2026-10-03 (review follow-up note)
+**Status:** Implemented — all links done 2026-10-03 (written by link 1; knk-web-api `45d9925`, knk-plugin `66d9292`, knk-web-app `8c27421` on `claude/kind-dijkstra-y9d279`), plus the review follow-up D14-D20 (knk-web-api `fdf9c13`, knk-web-app `089039f`). **Merged 2026-10-11** after the live smoke test ([guide](../../guides/player-statistics-smoke-test.md), findings 1-12, D24): knk-web-api `master` `34b8f9b`, knk-plugin `main` `aa5df70a`, knk-web-app `main` `5f40f93`.
+**Last updated:** 2026-10-11 (merged after the smoke test)
 **Linear:** [KNG-34](https://linear.app/kngpandi/issue/KNG-34) (with [KNG-14](https://linear.app/kngpandi/issue/KNG-14), [KNG-23](https://linear.app/kngpandi/issue/KNG-23), [KNG-9](https://linear.app/kngpandi/issue/KNG-9), [KNG-21](https://linear.app/kngpandi/issue/KNG-21))
 **Sources:** [DESIGN.md](DESIGN.md) (§F = "Finalized design (link 1)"), [source audit](../../reports/2026-10-03-player-statistics-source-audit.md),
 chain charter [`PLAYER_STATISTICS_CHAIN.md`](../../ai-agents/handoffs/PLAYER_STATISTICS_CHAIN.md), progress report

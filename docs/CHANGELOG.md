@@ -4,7 +4,31 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
-- **Player statistics, leaderboards, owner diagnostics, GDPR deletion and world analytics** ([KNG-34](https://linear.app/kngpandi/issue/KNG-34), with [KNG-14](https://linear.app/kngpandi/issue/KNG-14)): implemented 2026-10-03 on `claude/kind-dijkstra-y9d279` in knk-web-api, knk-plugin, knk-web-app and knk-workspace. **Not merged and not live-tested** — see the [progress report](reports/2026-10-03-player-statistics-chain.md) for the merge order, migrations and the live checklist. Move this entry to its merge date when it lands.
+- Nothing pending here at the moment.
+
+## 2026-10-11
+
+- **Player statistics, leaderboards, owner diagnostics, GDPR deletion and world analytics** ([KNG-34](https://linear.app/kngpandi/issue/KNG-34),
+  with [KNG-14](https://linear.app/kngpandi/issue/KNG-14)): merged after a live smoke test of all 27 steps
+  ([guide and findings](guides/player-statistics-smoke-test.md)). knk-web-api `master` `34b8f9b`, knk-plugin `main`
+  `aa5df70a`, knk-web-app `main` `5f40f93`. Six migrations (`AddPlayerStatistics` … `SeedStatisticsStaffNodes`).
+  - **Statistics:** logins, active and AFK time (`/afk`, auto-AFK with an `[AFK]` tab marker in the group color), distance
+    on foot, flying and in vehicles (mounts included), highest fall, PvP/PvE kills, deaths, damage, killstreaks, Siege
+    results, coins/gems/XP earned and spent from the ledger (all past activity imported), title history, discoveries.
+    Spooled to disk while the API is down.
+  - **Privacy:** every statistic has its own visibility (Nobody by default, Friends, Everyone), set in game
+    (`/stats settings`, a clearer group menu) or on `/account`, with a preview before group changes and a check for
+    changes made elsewhere meanwhile.
+  - **Read surfaces:** Profile → Statistics, `/stats [player]`, `/leaderboard` (`/lb <board> [period]` opens the board
+    menu), web `/account`, `/players/<name>`, `/leaderboards` and a staff panel. Boards rank only statistics shown to
+    everyone, cap repeat kills of the same victim at 3 a day, and support owner exclusions.
+  - **Owner tools:** `/owner/telemetry` (diagnostic events, test runs, enhanced mode, player timeline), `/owner/privacy`
+    (GDPR deletion: player requests with an email link, staff requests, 5-day grace period, erasure),
+    `/owner/analytics` (movement heatmaps, menu funnels including Escape closes, domain entries/exits). Owner nodes
+    `knk.owner.*`; wildcards unlock only analytics and leaderboard exclusions (D24). Moderators and Admins get
+    `knk.admin.statistics.view`, Admins also `knk.admin.privacy.request`.
+  - Kill switches in the plugin and API config. Follow-ups: [KNG-125](https://linear.app/kngpandi/issue/KNG-125)
+    (menu item blinker), [KNG-126](https://linear.app/kngpandi/issue/KNG-126) (Reverse button feedback, trunk).
 
 ## 2026-10-10
 

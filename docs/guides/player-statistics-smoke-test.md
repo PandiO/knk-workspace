@@ -1,7 +1,7 @@
 # Player statistics (KNG-34) — smoke test
 
-**Status:** Run 1 complete 2026-10-11 — all 27 steps pass after fixes (findings 1, 3-5, 8-12 fixed and live-checked, decision D24; 2, 6, 7 trunk follow-ups; blinker follow-up KNG-125); the developer gave the go to merge (2026-10-11) ([KNG-34](https://linear.app/kngpandi/issue/KNG-34))
-**Last updated:** 2026-10-11 (run 1 complete: steps 1-27, findings 1-12)
+**Status:** Passed and merged 2026-10-11 — run 1: all 27 steps pass after fixes (findings 1, 3-5, 8-12 fixed and live-checked, decision D24; trunk follow-ups 2 → KNG-126, 6-7 on `claude/reset-on-death`; blinker KNG-125). Merged: knk-web-api `master` `34b8f9b`, knk-plugin `main` `aa5df70a`, knk-web-app `main` `5f40f93` ([KNG-34](https://linear.app/kngpandi/issue/KNG-34))
+**Last updated:** 2026-10-11 (merged)
 **Design:** [specs/player-statistics/DESIGN.md](../specs/player-statistics/DESIGN.md) (decisions D1-D24, §F) ·
 **Background:** [progress report](../reports/2026-10-03-player-statistics-chain.md) (per-link details, flagged decisions)
 
