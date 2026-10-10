@@ -33,7 +33,10 @@ routing view") and **merged to trunk** (API `6d160aa`, web app `e2ba784`, plugin
 `main` `723d21f4`.
 **2026-10-09 (night):** KNG-104 (the navigator's domain cache refreshes) live-tested and merged to knk-plugin `main`
 `1159ae5d`.
-**Last updated:** 2026-10-09
+**2026-10-10:** KNG-110 (finding P4: a region over part of a road's width; and "no way out") implemented on knk-plugin
+`claude/navigation-p4-partial-width-regions` `a87a6a2c`, checked offline on the Kardenna end, not live-tested - steps
+G1-G7 under "KNG-110" in Findings.
+**Last updated:** 2026-10-10
 **Sources:** the "Developer to-do" blocks of Phases 1, 3, 4 and 5 in `docs/specs/navigation/IMPLEMENTATION_PLAN.md`;
 progress report `docs/reports/2026-09-27-road-navigation-chain.md`. If this file and a plan block disagree, the plan wins.
 
@@ -1011,6 +1014,57 @@ Next: KNG-75 proper (walk legs at both ends, destinations further than 48 blocks
 `fa234f7` (the merged plugin needs KNG-56's `GET /api/Domains/access-rules`). The dev DB lacks trunk's KNG-59
 migration `UniquePermissionGrantHolderNode` (it deletes duplicate permission grants); navigation does not need it.
 
+### KNG-110 — a region over part of a road's width (finding P4; implemented 2026-10-10, to test)
+
+knk-plugin `claude/navigation-p4-partial-width-regions` `a87a6a2c` (on `main` `973aa68b`; the API and the web app are
+unchanged), worktree `Repository/_worktrees/knk-plugin-p4`. Gradle core / api-client / paper: 3502 tests, 0 failures
+(22 skipped, as on `main` plus the uncommitted offline harness). [KNG-110](https://linear.app/kngpandi/issue/KNG-110),
+DESIGN §6.4 and §6.7. Decided 2026-10-10: a free gap of **one block** is enough; **exit** stays on the centre line;
+**gate doors** stay on the centre line; and a new rule, **no way out**: a region the player may enter but not leave
+blocks the way to a destination outside it.
+
+What changed:
+- **Routing** (`1ff0446a`): where the centre line meets a region that keeps someone off the road, the live tags look
+  across the road (the trail's road cells, up to 3 blocks each side) and give the piece its **lanes**, the region sets
+  of those cells. Entry is open when the player may enter every region of one lane. A region over the whole width
+  blocks as before. Chunks the tags need that are not loaded are loaded in the background, and their cross-sections
+  are remembered, so the answer does not depend on where players are.
+- **Trail** (`6044b1f1`, `a87a6a2c`): road cells in a region the player may not enter count as blocked; the trail keeps
+  to the free part, and smoothing never pulls it back onto a blocked cell.
+- **No way out** (`8e1ce36b`): AllowEntry open, AllowExit denied, destination outside: blocked like a no-entry region
+  ("You could not leave X again. Guiding you to its edge." when nothing else is open).
+
+**Offline check (2026-10-10, copy of `r.2.-1.mca`, tile (2,-1) exported read-only).** #5228 at the Kardenna end is
+three rows wide (z -478..-476) at x 1393-1397, the centre line on z -477. The regions there now:
+`tempregion_worldtask_227` (x 1393-1398, z -479..-478) and `domain_17` (x 1393-1398, z -479..-477).
+- `tempregion_worldtask_227`: not on the centre line, no cut; the trail moves about half a block away from it.
+- `domain_17`: one piece (along 37.5-44.8) with the region and the lane `[town_1]`: **open** for a player who may not
+  enter (before: blocked). The trail runs on row z -476 past it. The first run of the check put one trail point, at the
+  region's edge, back on z -477: fixed in `a87a6a2c`.
+- Over the whole width (a test box z -480..-474): still blocked, the trail stays in the middle.
+- **Snow:** rows z -477 and -476 there have snow on the road. Offline the curated block list counts snow as solid, so
+  those cells were no road and the centre line decided (still blocked). Live, the trail's road cells use Bukkit's
+  `isPassable()`: one layer of snow is passable, more is not. If G2 below still blocks, look at the snow there first.
+
+Deploy: `./gradlew :knk-paper:dev` from that worktree, restart, and wait for "… cut into N pieces" in
+`/knk road status`. A test account without `knk.region.bypass`. Make fresh test regions (KNG-103: the run-2 regions
+came from a badly edited district): a district that denies entry, over the rows named below at x 1393-1398. Navigation
+Test (east road) denies entry, so `/nav South Gate` from Brink goes west over #5228 only while it is open.
+- [ ] **G1** The district over one outer row (z -479..-478): `/nav South Gate` from Brink takes the west road; the trail
+  passes the region, about half a block towards the free side.
+- [ ] **G2** Over two of the three rows, the centre included (z -479..-477): still the west road. `/knk road status`
+  shows "… 1 with lanes"; `/knk road why <player>` lists #5228 without a `blocks …` stretch. The trail runs on the
+  free row (z -476) past the region, and walking it the border does not push you back.
+- [ ] **G3** Over the whole width (z -480..-474): blocked as before. With Navigation Test also blocking, "You may not
+  enter … Guiding you to its edge", ending just before the region.
+- [ ] **G4** G2's region with `knk.region.bypass` (or a player inside the district): the trail stays in the middle.
+- [ ] **G5 (no way out)** The district with entry allowed and exit denied, over the whole width: `/nav South Gate` from
+  Brink avoids it (before KNG-110 the route went through it). A destination inside it (`/nav` to the district) still
+  routes in. Over two of three rows instead: the west road is open, the trail on the free row.
+- [ ] **G6** `/knk road status`: "… N with lanes (M cross-sections known)"; navigating along the Kardenna end: no lag.
+- [ ] **G7** After a restart, without going near the Kardenna end: within a minute or two of "… cut into N pieces"
+  (the next live-tag pass after its chunks loaded in the background), G2's route goes west.
+
 ### KNG-75 step 2 — destinations up to 256 blocks off-road (live-tested 2026-10-10: B1-B6 pass; merged)
 
 **Merged to knk-plugin `main` `8f2b7c30`** (merged-tree Gradle core 1786 / api-client 212 / paper 1395 green). KNG-75
@@ -1313,7 +1367,8 @@ Follow-up issues: KNG-103 (region step re-run leaves the old region), KNG-104 (n
   centreline (#5228 runs along z = -477 there): `domain_17` (z -479..-477) covers it, `tempregion_worldtask_227`
   (z -479..-478) does not. Not a wall cost: the road router has none (that is the walk path's). Proposed fix: tag a
   region on a stretch only where it covers the whole road width, and shift that piece's line to the free side
-  where it covers part - decision pending.
+  where it covers part - decision pending. **→ KNG-110** (2026-10-10, implemented, to test): see "KNG-110 — a region
+  over part of a road's width" above.
 - **First leg a straight line** (from the South Gate's spawn to the road): by design today; the walk path for the
   first leg is KNG-75 step 1 (another session, `claude/kng-75-offroad-destinations`). The earlier walk path was the
   last leg, navigating *to* the gate.
