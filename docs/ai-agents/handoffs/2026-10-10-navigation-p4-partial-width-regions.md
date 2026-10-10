@@ -2,7 +2,7 @@
 
 **Status:** Ready, 2026-10-10. Prompt for a Claude Code session **on the developer's machine** (knk-workspace with the
 component repos under `Repository/`, dev DB read-only, dev server), **with Linear access**.
-**Linear:** none yet. Create one first (below). Related: [KNG-92](https://linear.app/kngpandi/issue/KNG-92) (rev. 7:
+**Linear:** [KNG-110](https://linear.app/kngpandi/issue/KNG-110) (created 2026-10-10). Related: [KNG-92](https://linear.app/kngpandi/issue/KNG-92) (rev. 7:
 routing view, entry rule on roads), [KNG-76](https://linear.app/kngpandi/issue/KNG-76) (centred trails),
 [KNG-104](https://linear.app/kngpandi/issue/KNG-104) (domain cache).
 **Last updated:** 2026-10-10
