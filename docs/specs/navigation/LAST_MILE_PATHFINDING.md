@@ -1,7 +1,7 @@
 # Road Navigation — Last-mile walkable pathfinding (design)
 
 **Status:** Design decided — **Phases A-C implemented** (knk-core `roads/walk/`, knk-paper `navigation/walk/` + direct-mode wiring, unmerged, knk-plugin `claude/navigation-walkable-path` `305829b`, 2026-10-02); live test and Phase D next. Reviewed by the developer on 2026-10-02 (§11): decided items 1-4, 5 (pending live test), 6, 8; item 7 (scope) decided. No open decisions remain except the live test of item 5.
-**Last updated:** 2026-10-09 (rev. 10: §10 Phase D step 1, the walk to the road, KNG-75; rev. 9: §11-5 no straight line after a failed search, finding N8; rev. 8: §4/§9 wall cost, finding N7; rev. 7: §11-5 partial paths implemented; rev. 6: §5/§9 detour allowance, live-test finding N2; rev. 5: §10 "Phase C status"; rev. 4: §10 "Phase B status"; rev. 3: §10 "Phase A status"; rev. 2: ladders, interact-gated doors, chunk-loading rationale, §13 KNG-36)
+**Last updated:** 2026-10-10 (rev. 11: §5/§9 climb allowance for tall buildings, KNG-108; rev. 10: §10 Phase D step 1, the walk to the road, KNG-75; rev. 9: §11-5 no straight line after a failed search, finding N8; rev. 8: §4/§9 wall cost, finding N7; rev. 7: §11-5 partial paths implemented; rev. 6: §5/§9 detour allowance, live-test finding N2; rev. 5: §10 "Phase C status"; rev. 4: §10 "Phase B status"; rev. 3: §10 "Phase A status"; rev. 2: ladders, interact-gated doors, chunk-loading rationale, §13 KNG-36)
 **Linear:** [KNG-51](https://linear.app/kngpandi/issue/KNG-51/navigation-last-mile-walkable-pathfinding-for-direct-modeoff-road-legs)
 (split out of [KNG-27](https://linear.app/kngpandi/issue/KNG-27/road-navigation-auto-detected-road-graph-junctionsendpoints-from-road))
 **Parent design:** [DESIGN.md](DESIGN.md) §6.2 ("real off-road pathfinding is Phase 6" — this document is the
@@ -132,7 +132,11 @@ typical searches expand a small fraction of that. BFS would expand the same wors
   *Rev. 6, 2026-10-07 (developer decision, live-test finding N2):* the factor alone was too tight for short legs.
   `/navigate Merchant Square` from 27.5 blocks away hit the cap of 48 while the only walkable way round the
   building was 67.7 blocks. The allowance gives every leg room to go round a block of houses; long legs are still
-  bounded by the factor and by 96. No partial paths in v1: a path that stops short at a wall
+  bounded by the factor and by 96. *Rev. 11, 2026-10-10 ([KNG-108](https://linear.app/kngpandi/issue/KNG-108),
+  live-test finding N17):* plus `climb-allowance` (5) blocks per block of height between start and target, above
+  `max-length` too. The Keep Tower Roof's only way down is a spiral stair, 168 blocks for 29 of height, against a cap of
+  77.6; the allowance makes it 217.6 (77.6 + 5 × 28, height from the start's floor). The replay found that path inside
+  the shipped capture box (margin 16) in 1642 expansions, so neither the box nor the expansion budget changes. No partial paths in v1: a path that stops short at a wall
   is worse than an honest straight line.
 - **Threading:** capture on the main thread, search on the existing routing executor, result delivered through
   `deps.mainThread()` and dropped when `Active.generation` moved on — exactly `computeRoute`/`deliver`.
@@ -226,7 +230,8 @@ path (they remain for the straight fallback). `drawDirect(viewer, target)` stays
 ## 9. Config (`navigation.walk.*`, in `NavigationConfig`)
 
 `enabled` (true; false = today's straight lines — also the kill switch), `max-expansions` (20000),
-`max-length-factor` (1.75), `max-length` (96), `detour-allowance` (48, rev. 6), `max-drop` (3), `drop-penalty` (10), `capture-margin` (16), `chunk-ttl-seconds` (10),
+`max-length-factor` (1.75), `max-length` (144 since KNG-75 step 2b; was 96), `detour-allowance` (48, rev. 6),
+`climb-allowance` (5, rev. 11: blocks per block of height, also above `max-length`; KNG-108), `max-drop` (3), `drop-penalty` (10), `capture-margin` (16), `chunk-ttl-seconds` (10),
 `recompute-distance` (6), `max-concurrent-searches` (2), `wall-cost` (1.0, rev. 8: a step onto a cell with a wall
 among its 8 neighbours costs this much extra, so paths keep a block from walls and round corners wider - live-test
 finding N7, the trail seemed to stop behind tight corners).
@@ -310,7 +315,8 @@ thread, and 15 % of 96-block legs need 50-64 chunks (limit 49). Recommended for 
 `destination-walk-range` 96, the far leg - `DirectLeg.beyondWalkRange`, "No conventional path to X found." and the HUD
 arrow, a walk leg once within 96; the route's trail draws no straight line on to such a target). Live test: guide
 "KNG-75 step 2" B1-B6 - **all pass; merged to knk-plugin `main` `8f2b7c30` (2026-10-10). Phase D (KNG-75) is done**;
-step 3 (chained legs) is KNG-36's, a height allowance for tall buildings KNG-108. Step 2: measure a 96-block leg's capture and search cost
+step 3 (chained legs) is KNG-36's, a height allowance for tall buildings KNG-108 (**done 2026-10-10**: live-tested and merged
+to knk-plugin `main` `a388c70`; §5 rev. 11). Step 2: measure a 96-block leg's capture and search cost
 (the capture limit is 49 chunks), then destinations up to the walk range by road plus a walk path, up to 256 by road
 plus "No conventional path to X found." with the HUD arrow, beyond 256 refused. Step 3 (chained legs, KNG-36) only on
 request.

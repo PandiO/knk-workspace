@@ -8,6 +8,18 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## 2026-10-10
 
+- The first-join kit grant now runs once per player ([KNG-81](https://linear.app/kngpandi/issue/KNG-81), API half;
+  knk-web-api `master` `d5293fd`, migration `AddUserFirstJoinKitsGrantedAt`). A repeated or simultaneous
+  grant-first-join call (a quick relog) no longer adds a second kit claim or second lootbox tokens; players already
+  holding a first-join kit are marked as granted. Live-tested against the API 2026-10-10. The game server does not
+  trigger the grant yet: the plugin half (one `CacheManager` in `KnKPlugin`) is still open.
+- Walk paths get through tall buildings ([KNG-108](https://linear.app/kngpandi/issue/KNG-108); knk-plugin `main`
+  `a388c70`). A walk path may now be 5 blocks longer for every block of height between the player and where they are
+  going, so the way down a tower's spiral stair (the Keep Tower Roof: 168 blocks for 29 of height) is found. From
+  such a roof the player gets the full path to the road instead of "Having trouble determining the route - guiding
+  you to the nearest road.", and a destination on a roof gets a full path up. Setting:
+  `navigation.walk.climb-allowance` (5; 0 = as before). A server `config.yml` needs no change. Known gap, not new: a
+  player shut in within 8 blocks of a road is not told so ([KNG-124](https://linear.app/kngpandi/issue/KNG-124)).
 - The game server now knows the domain of every region it preloads ([KNG-122](https://linear.app/kngpandi/issue/KNG-122);
   knk-plugin `main` `68022ce3`). The API answers a region lookup with at most one town, district and structure, so
   preloading several districts at once (when the road network loads, after `/knk cache refresh`, or for the regions at
