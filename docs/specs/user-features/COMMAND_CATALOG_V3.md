@@ -596,6 +596,10 @@ enchantments`'s admin/debug catalog browsing and item-blueprint application.
   unhealthy status + version, or a detailed error breakdown (HTTP status,
   URL, response body, or connection-exception class name) on failure
   (`HealthCommand.java:26-95`). Pure read/diagnostic.
+  KNG-115 (branch `claude/kng-115-api-health`, unmerged): first prints the
+  service-wide `ApiConnectivity` state (UP/DOWN/UNKNOWN, how long, last
+  probe), then probes `GET /health/ready` at the API root directly (never
+  cached); `degraded` shows as up. See `docs/architecture/api-connectivity.md`.
 - **Feature allocation:** `world-admin`/`health`
 - **Status:** Finished, admin-facing.
 
