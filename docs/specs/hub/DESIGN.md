@@ -27,7 +27,7 @@ Names below are illustrative, not approved API contracts.
 |---|---|
 | Hub destination | Domain reference plus explicit world-qualified safe spawn (coordinates and orientation) |
 | API-loss action | NONE, SEND_TO_HUB, KICK, SEND_TO_WORLD_SPAWN |
-| World-spawn target | Explicitly configured world; do not assume the player's current world |
+| World-spawn target | Player's current world at action execution |
 | Outage detection | Defined health/readiness checks, timeout and retry threshold |
 | Recovery | Revalidate service readiness and player data before enabling portal travel |
 | Hub activities/rules | Explicit allowlist, with combat prohibited |
@@ -115,7 +115,7 @@ Concurrent multi-Minecraft-world support is a **game-wide platform requirement i
 - NONE: online players are not moved or kicked, while normal protections continue.
 - SEND_TO_HUB: online players move once to the configured hub.
 - KICK: affected online players are disconnected with a clear reason; rejoining follows hub admission.
-- SEND_TO_WORLD_SPAWN: online players move to the explicitly selected world's spawn.
+- SEND_TO_WORLD_SPAWN: online players move to their current world's spawn.
 - Hub combat is blocked; allowed movement/activities continue.
 - Unauthorized exit paths fail, including alternative teleport methods.
 - Healthy portal travel works with intended permissions and destination selection.
@@ -165,7 +165,7 @@ Supersedes conflicting proposals/open questions above.
 - Missing usable hub/cache/world/region/spawn: refuse admission or kick with a clear locally available message.
 - Every hub rule configurable: damage-players, damage-entities, take-damage; heal-amount/frequency and feed-amount/frequency; building/breaking, drop/pickup and interaction rules. Initial combat/damage off; build/break off; drop/pickup allowed; doors, NPCs and personal inventory allowed; chests/equivalent storage including shulkers/barrels blocked, and itemframe/painting interactions blocked. Preserve inventory; separate inventories not requested. Minigame transitions must not duplicate/lose inventory.
 - Default healing/feeding preset matches vanilla Java Peaceful for deployed version. Verify exact amounts/frequencies against versioned source before encoding numeric defaults. Scope to hub region (same-world support); avoid doubling native and custom regeneration. Peaceful is not invulnerability.
-- Remaining details: Domain representation, WORLD_SPAWN target, minigame/respawn precedence, mode transitions during outage, timer reset/restart semantics and actual connectivity detector.
+- Remaining details: Domain representation, minigame/respawn precedence, mode transitions during outage, timer reset/restart semantics and actual connectivity detector.
 
 Acceptance additions: direct/inherited/denied mode-node checkbox visibility; staff outside modes follows normal group policy; saved-location login notice across restart; invalidation message; voluntary entry clears return; alternate exits guarded; same-world rules do not affect surrounding gameplay; verify Peaceful preset without stacked healing/feeding.
 
@@ -173,3 +173,11 @@ Acceptance additions: direct/inherited/denied mode-node checkbox visibility; sta
 ## 14. Multiverse research recommendation
 
 See [2026-10-10 research](../../reports/2026-10-10-hub-multiverse-research.md). Recommended: Multiverse Core 5.8.1 candidate for world lifecycle, KnK-owned portal/readiness/destination logic. Dependency choice is not yet approved or live-tested. Full multiworld audit remains pending.
+
+## 15. Follow-up clarification (2026-10-10)
+
+- SEND_TO_WORLD_SPAWN uses the world the player is in at execution time. No separately configured target world. Snapshot that world before teleporting and use its world spawn; if unavailable follow safe failure behavior without selecting an arbitrary different world.
+- Developer proposes a flag on base Domain (illustrative IsHub) so every Domain subtype can be a hub. Recommended design direction, pending concrete schema/UI validation. Hub destination still explicitly references an eligible Domain and its world-qualified spawn; a flag alone must not pick an arbitrary hub when multiple exist. No new Hub-only subtype is needed. Multiple flagged domains and the global default hub selection remain to be specified in implementation proposal.
+- Minigame integration refers to API-outage evacuation of a current match participant, not routine hub transfers during healthy matches. Inspect active Siege death/respawn/inventory listeners and ensure they cannot teleport the player back out of containment or corrupt match/inventory state. Whether an outage pauses, aborts or leaves a match running remains an explicit decision if existing behavior does not settle it.
+- Multiverse Core recommendation is about reducing generic lifecycle maintenance, not a technical necessity for two worlds. Re-evaluate against a minimal load-existing-worlds implementation; do not compare against recreating all Multiverse features. No provider approved yet.
+- Audit handoff: [multiworld implementation-readiness prompt](../../ai-agents/handoffs/2026-10-10-hub-multiworld-audit.md).
