@@ -44,17 +44,13 @@ The hub destination and essential protections must be available without a live A
 
 Existing architecture documentation reports KNG-56 persists KnK access flags on WorldGuard regions. It also documents first-sync and bypass limitations; do not assume those flags alone implement the complete hub safety requirement. Inspect current code before implementation.
 
-If the hub world, region or safe spawn cannot be loaded, never silently admit a joining player into unprotected gameplay. Proposed fallback is to refuse admission with an explanatory message; developer must confirm.
+If the hub world, region or safe spawn cannot be loaded, never silently admit a joining player into unprotected gameplay. Confirmed fallback: refuse admission or kick with an explanatory locally available message.
 
 Ordinary hub exits, command teleports, portals, pearls, chorus fruit, mounts, respawns and plugin-driven teleports require a consistent policy. A permitted hub portal transfer needs an explicit, scoped exit authorization so that a hub exit restriction does not block the intended route. Do not use a broad permanent bypass.
 
 ## 4. Hub gameplay rules
 
-Confirmed: no fighting and no unauthorized exit into the gameplay world.
-
-Proposed rules requiring review: deny block breaking/placing, item dropping/pickup, container access, hostile mob damage, environmental damage and hunger unless individually enabled. Define whether no fighting covers PvP, PvE and projectiles/explosives (recommended: all combat). Do not present this proposed catalogue as already approved.
-
-Define staff/operator bypass separately from normal region membership: ordinary members must not accidentally escape outage containment. Decide which offline staff privileges are trusted.
+Confirmed configurable catalogue and initial values are in §13: building/breaking and damage disabled; dropping/pickup, doors, NPCs and personal inventory allowed; storage and itemframe/painting interactions blocked. Healing/feeding use a version-verified Peaceful preset. Active-mode outage exemptions are separately configurable; they do not imply a blanket activity-rule bypass.
 
 ## 5. Integration points
 
@@ -150,7 +146,7 @@ Developer decision, 2026-10-10: when an outage sends a player to the hub, persis
 
 The return record must identify the player and original world, XYZ and orientation, and survive a server restart without the API. Keep this record distinct from ordinary logout location and Game Settings entry spawn. Repeated outage handling or movement/relogging inside the hub must not overwrite it with a hub location. Players without an outage-return record continue through normal hub portal/Game Settings flow.
 
-Implementation safeguards proposed: persist before transfer, track successful evacuation and return, recheck connectivity/readiness and destination safety/access on click, bind the action to the player and current return record, prevent repeated/stale clicks, and consume the record only after a successful return. Determine safe handling of persistence/teleport failures. A missing world, unsafe destination or newly denied access must not result in an unchecked teleport. Exact fallback destination and retention/expiry policy remain open. Offline-at-recovery players need the offer when they next join and become ready. Define interaction with normal portal use and ended minigames explicitly.
+Implementation safeguards proposed: persist before transfer, track successful evacuation and return, recheck connectivity/readiness and destination safety/access on click, bind the action to the player and current return record, prevent repeated/stale clicks, and consume the record only after a successful return. Determine safe handling of persistence/teleport failures. A missing world, unsafe destination or newly denied access must not result in an unchecked teleport. Confirmed: invalid destinations invalidate the record with a player notification; relog/restart preserves valid records and reminds the player. Successful voluntary gameplay entry clears the record (§13). Offline-at-recovery players need the offer when they next join and become ready. Define interaction with normal portal use and ended minigames explicitly.
 
 Acceptance: evacuate from a non-hub world, restart with API unavailable, restore connectivity, receive the offer, and confirm return to the correct persisted world/location. Also verify no-click stays in hub, repeated evacuation preserves the original location, double-click cannot repeat a completed return, and a renewed outage or invalid destination blocks unsafe return.
 
@@ -172,3 +168,8 @@ Supersedes conflicting proposals/open questions above.
 - Remaining details: Domain representation, WORLD_SPAWN target, minigame/respawn precedence, mode transitions during outage, timer reset/restart semantics and actual connectivity detector.
 
 Acceptance additions: direct/inherited/denied mode-node checkbox visibility; staff outside modes follows normal group policy; saved-location login notice across restart; invalidation message; voluntary entry clears return; alternate exits guarded; same-world rules do not affect surrounding gameplay; verify Peaceful preset without stacked healing/feeding.
+
+
+## 14. Multiverse research recommendation
+
+See [2026-10-10 research](../../reports/2026-10-10-hub-multiverse-research.md). Recommended: Multiverse Core 5.8.1 candidate for world lifecycle, KnK-owned portal/readiness/destination logic. Dependency choice is not yet approved or live-tested. Full multiworld audit remains pending.
