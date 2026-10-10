@@ -1,7 +1,7 @@
 # Gate commands — `/gate` (structure) and `/gatedoor` (door), `here` and look-at targets
 
 **Status:** Implemented, **live-tested by the developer and merged to trunk 2026-10-09**: knk-plugin `main` merge `5b1cc8b` (feature `b9e9d58` + review fixes `0bf6f15`), knk-web-api `master` merge `6192af0` (`983f1cd`, `9ea328d`). Linear [KNG-77](https://linear.app/kngpandi/issue/KNG-77), [KNG-78](https://linear.app/kngpandi/issue/KNG-78), [KNG-79](https://linear.app/kngpandi/issue/KNG-79)
-**Last updated:** 2026-10-09 (live test passed, merged; follow-ups KNG-105, KNG-106)
+**Last updated:** 2026-10-10 (KNG-105/106 live-tested and merged, knk-plugin `main` `8457657`: safe `tp` targets, door collision safety; checklist in [gate-smoke-test.md](../guides/gate-smoke-test.md) §2)
 **Related:** [gate specs](../specs/gate-structure-animation/) (GateStructure/GateDoor model, decisions 5.0-B/5.0-D); the dated [command catalog](../specs/user-features/COMMAND_CATALOG_V3.md) §2 describes the tree before KNG-77
 
 ## 1. Layout decision: two sibling roots
@@ -33,7 +33,7 @@ The issue recommended sibling roots over a nested `/knk gate door ...` literal, 
 | `info [structure]` | none | Shows the structure id, siege objective, the overrides that are set, and each door's state and HP. |
 | `list` | none | Lists structures with their door count, open/closed counts and distance. |
 | `repair [structure]` | `knk.gate.admin` | Every door to full health, not destroyed. Warns if the override `destroyed=true` still applies. |
-| `tp <structure>` | `knk.gate.admin` | Teleports to the structure's first door (lowest id). Follow-up [KNG-105](https://linear.app/kngpandi/issue/KNG-105): the structure's spawn point (`Domain.Location`) first, else a safe spot by a door. |
+| `tp <structure>` | `knk.gate.admin` | [KNG-105](https://linear.app/kngpandi/issue/KNG-105) (merged 2026-10-10): the structure's spawn point (its `Domain.Location`, the point `/warp` and `/navigate … spawn` use, looked up through `GET /api/Structures/{id}` + its Location) when set; otherwise a safe spot next to its first door (lowest id), as `/gatedoor tp`. The reply says which and why. Before: the first door's anchor. |
 | `override <structure> <field> <value\|clear>` | `knk.gate.admin` | Unchanged from before (fields `active`, `destroyed`, `invincible`, `canrespawn`, `openedstate`). |
 | `reload [district <id>]` | `knk.gate.admin` | Unchanged (was `admin reload`). |
 | `passthrough <default\|instant\|teleport>` | none (player) | Unchanged: the player's own pass-through method. |
@@ -46,7 +46,7 @@ The issue recommended sibling roots over a nested `/knk gate door ...` literal, 
 | `info [door]` | none | Door details. |
 | `list [structure]` | none | Every door, or one structure's doors. |
 | `repair [door]` | `knk.gatedoor.admin` or `knk.gate.admin` | One door. |
-| `tp <door>` | same | Teleports to the door's anchor, which is inside the blocks of a closed door. Follow-up [KNG-105](https://linear.app/kngpandi/issue/KNG-105): teleport to the closest safe spot. |
+| `tp <door>` | same | [KNG-105](https://linear.app/kngpandi/issue/KNG-105) (merged 2026-10-10): the nearest standable spot within 4 blocks of the door's region (§4: closed footprint plus captured regions, so never in an open door's opening either), preferring its front and back faces, facing the door; no safe spot = refused with a message. Before: the door's anchor, inside a closed door's blocks. Search: `core/gates/safety/GateSafeSpotFinder` (shared with KNG-106), paper `gates/GateSafeSpots`. |
 | `health <door> <amount>` | same | |
 | `active <door>`, `invincible <door>` | same | Toggles the door flag. |
 | `capture\|redefine <door> [closed\|opened]` | same | WorldEdit region capture (was `/knk gate door capture\|redefine`). |
@@ -96,7 +96,20 @@ gates:
   lookat:
     enabled: true
     max-distance: 12    # capped at 64
+  safety:
+    door-suffocation-damage: false   # KNG-106: true keeps vanilla suffocation damage from door blocks
 ```
+
+**Door safety (KNG-106, merged 2026-10-10, knk-plugin `main` `8457657`).** While a door animates,
+`GateAnimationTask` asks `CollisionPredictor` for the cells the door fills from the previous update through the next two
+(`core/gates/safety/GateSweep`: every frame in between, the box between consecutive positions so a drawbridge's arc is
+covered, plus the resting frame's cells when the window reaches it; closing counts frames down). Every entity overlapping
+them (players, mobs, items, vehicles with their riders; not spectators, displays or hanging entities) is moved by
+`EntityEvacuator` to the nearest standable spot within 6 blocks, on its own side of the door when there is room, outside
+the rest of the sweep, every current gate block and other nearby doors' regions; with no spot it gets the old velocity
+push, now away from the door on its own side. `GateSuffocationGuard` moves anyone found inside gate blocks (suffocation
+tick, join, teleport) out and, by default, cancels that suffocation damage (decision accepted with the live test). Live checklist (passed 2026-10-10):
+[gate-smoke-test.md](../guides/gate-smoke-test.md) §2.
 
 ## 6. Live checklist (developer) — passed 2026-10-09
 
