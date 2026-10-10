@@ -10,7 +10,9 @@
 
 - All joining players first enter a designated hub, including joins while the API is unavailable.
 - Players may walk around and use explicitly allowed hub activities, but cannot fight.
-- The hub is an enclosed safe area with its own gameplay rules.
+- The hub is an enclosed safe area with its own gameplay rules, in a **separate Minecraft world**. A region in the existing gameplay world does not meet the requirement.
+- The hub and gameplay worlds run **simultaneously on the same Minecraft server**, with both loaded and players potentially active in each. This is not switching a single active world or a multi-server routing feature.
+- The hub world must support ordinary KnK domain content, including GateStructures and potentially Districts. Verify the same entity and gameplay infrastructure can operate independently in both worlds.
 - Prefer representing the hub as a KnK Domain with a linked WorldGuard region to enforce entry and exit; exact Domain representation remains to be designed.
 - A portal provides access from the hub to the gameplay world when required services and player data are ready.
 - Investigate using Multiverse Core and relevant extensions versus implementing the required world management and portal functionality in KnK. No dependency choice has been approved.
@@ -64,7 +66,9 @@ Define staff/operator bypass separately from normal region membership: ordinary 
 
 Evidence reviewed: Linear KNG-52 is Done; workspace active-session tracker reports its merge and live validation. Domain access architecture reviewed. Runtime code has not been audited for this draft.
 
-## 6. Required Multiverse investigation
+## 6. Prerequisite: world management decision and multi-world audit
+
+The separate, concurrently loaded hub world is mandatory. Research and choose Multiverse versus in-house world management **before implementing the hub**; this is an essential prerequisite, not an optional follow-up. No provider is preselected.
 
 Compare:
 1. Multiverse Core plus whichever maintained extension supplies the required portal behavior.
@@ -75,10 +79,26 @@ Verify current Paper/Minecraft compatibility, support and licensing, world persi
 
 Deliver a short decision record with verified official sources, recommended option, dependency versions and integration boundaries. This research is explicitly pending; the draft makes no claim about current Multiverse compatibility.
 
+### Required end-to-end multi-world verification
+
+Audit current default branches of knk-web-api, knk-web-app and knk-plugin plus the real database schema/migrations. A world-name field alone is not proof of support. Record evidence per subsystem: supported, gap, or unverified, with exact paths, required migrations/fixes and live test outcomes.
+
+- **Database and entities:** Domain hierarchy (Town, District, Structure and GateStructure), Location relations, domain spawn/default locations, world identity representation and null/default behavior. Determine whether world identity is explicit or derived and check consistency, foreign keys and uniqueness constraints. Define whether parent/child domains must share a world and reject invalid cross-world associations.
+- **API and UI:** DTOs, create/update/search/select flows and world selectors preserve the correct world; coordinates and region names must not resolve ambiguously across worlds.
+- **WorldGuard:** use the correct world's region manager, parent/priority configuration, flag sync and region-to-domain mapping. Test identical region names and overlapping coordinates in different worlds without collisions.
+- **Runtime and caches:** world-qualified lookup/cache keys, persistence and reload, invalidation, region enter/leave events, domain access and discovery, spawn/respawn and teleport destinations. No first-loaded/default-world assumptions or cross-world coordinate-only distance/proximity checks.
+- **Gates and districts in the hub:** create/load a valid domain hierarchy including a District and GateStructure; verify door blocks/animations, interactions, access rules and any pass-through behavior are applied only in their own world. Repeat in the gameplay world concurrently, including overlapping coordinates.
+- **Other world-sensitive features:** inventory current consumers of Domains/Locations (including navigation, NPCs and minigames) and identify single-world assumptions. Classify hub blockers versus explicitly deferred unrelated work; do not silently claim complete system support.
+- **Lifecycle:** both worlds loaded at startup, API-down cold restart using KNG-58 snapshots, unload/reload or missing/renamed world, and portal transfers while players in the other world continue playing.
+
+Required live scenario: keep both worlds running with one player in each, use matching XYZ coordinates and region names, configure different rules, and operate a gate in each. Verify no cross-world rule, cache, event, block or teleport leakage. Repeat after restart with the API down. Evidence must distinguish code review, automated checks and live tests.
+
+This audit is now a required work item; it has **not** been performed as part of this documentation update.
+
 ## 7. Implementation sequence
 
 1. Resolve the decisions below and inspect current default-branch code.
-2. Complete the focused Multiverse investigation and select an approach.
+2. Complete the prerequisite Multiverse/in-house decision and end-to-end multi-world audit; identify and fix hub-blocking gaps before building the hub flow.
 3. Add configuration and administrator controls (API/web app plus plugin persistence).
 4. Implement hub admission, local protections and guarded portal travel.
 5. Implement the four outage actions and recovery behavior.
@@ -86,6 +106,7 @@ Deliver a short decision record with verified official sources, recommended opti
 
 ## 8. Acceptance and smoke checklist
 
+- Separate hub and gameplay worlds run concurrently; players, Districts and GateStructures function in both without world identity leakage, including identical coordinates/region names.
 - Healthy join: player first appears in the hub, including groups with alternate join spawns.
 - API-down join and cold restart: player enters the protected hub without briefly appearing in gameplay.
 - Cache integration: configure global/group Game Settings and hub/outage rules, successfully persist them, stop the API, restart the server, and verify the same applicable rules and destinations. Include unknown users, expired grants, corrupt/missing snapshots and recovery refresh.
@@ -105,7 +126,7 @@ Deliver a short decision record with verified official sources, recommended opti
 1. Default outage action and whether it is global or has group/staff overrides.
 2. Exact outage thresholds and which dependencies count as unavailable.
 3. Which world's spawn SEND_TO_WORLD_SPAWN uses; fallback if it is unavailable.
-4. Separate hub world versus region inside an existing world; concrete Domain type.
+4. Concrete Domain type/hierarchy for the hub and world identity consistency rules. Separate, simultaneously loaded hub/gameplay worlds are already decided.
 5. Portal destination and interaction with KNG-52 overrides/last logout location.
 6. Full hub activity/protection catalogue and staff bypass rules.
 7. Missing-hub fallback, recovery behavior and minigame/respawn precedence.
