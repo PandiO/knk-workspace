@@ -1,15 +1,15 @@
 # Player statistics chain — progress report
 
 **Status:** done — all seven links finished; nothing merged (2026-10-03)
-**Last updated:** 2026-10-03 (review follow-up: D14-D20 implemented by the coordinator session)
+**Last updated:** 2026-10-10 (trunks merged into the feature branches for the live test)
 **Charter:** `docs/ai-agents/handoffs/PLAYER_STATISTICS_CHAIN.md` · **Linear:** [KNG-34](https://linear.app/kngpandi/issue/KNG-34)
 
 ## Summary for the developer
 
 **The chain is finished: all seven links are done. Nothing is merged** — every change is on `claude/kind-dijkstra-y9d279`
-in the four repos, waiting for your review, live test and merge. Final heads: knk-web-api `fdf9c13`, knk-plugin
-`66d9292`, knk-web-app `089039f`, knk-workspace: this branch (see the last commit) — including the review follow-up
-(block "Review follow-up" at the end: your decisions D14-D20). Trunks were unchanged throughout
+in the four repos, waiting for your review, live test and merge. Heads after the 2026-10-10 trunk merge: knk-web-api
+`bbc6d92`, knk-plugin `84a8464e`, knk-web-app `8c367a2`, knk-workspace: this branch (see the last commit) — including
+the review follow-up (D14-D20) and the trunk merge (block "Trunk merge 2026-10-10" at the end). Trunks were unchanged throughout
 links 5-7 (knk-web-api `master` `ae0b3ad`, knk-plugin `main` `ee7824c`, knk-web-app `main` `fc66101`).
 
 | Link | Phase | State | Heads | Details |
@@ -798,4 +798,41 @@ Decisions recorded as **D14-D20** in DESIGN.md ("Review follow-up decisions"); �
   - F-4 With D20 the XP leaderboard (`xp_gained`) includes staff XP grants and merge carryovers; a merge shows as
     spent (secondary) plus earned (primary).
   - F-5 The confirmation link is valid 24 h; asking again sends a fresh link at most once per minute.
+
+## Trunk merge for the live test — coordinator session (2026-10-10)
+
+The developer asked to bring the branches up to date with trunk for the smoke test, without cloud builds of the plugin
+(they build it themselves). Trunks merged into `claude/kind-dijkstra-y9d279` (merge commits, nothing pushed to trunk):
+
+| Repo | Trunk merged | New head | Conflicts and how they were resolved | Verified here |
+|---|---|---|---|---|
+| knk-web-api | `master` (54 commits: roads, KNG-41/42/52/56/59/73/78/80/92/119…) | `bbc6d92` | `RequirePermissionAttribute`, `ServiceCollectionExtensions`: both sides' additions kept. `KnKDbContextModelSnapshot` regenerated from the merged model (only the KNG-34 tables differed from master's) | build; tests 2361 passed / 4 failed (pre-existing) / 71 skipped; `ef migrations has-pending-model-changes`: none |
+| knk-plugin | `main` (202 commits: navigation, KNG-52, KNG-55/56, KNG-77-80, KNG-104/110/122…) | `84a8464e` | `KnkConfig` (record now holds navigation + statistics/telemetry/worldAnalytics; all shorter constructors kept), `ConfigLoader`, `config.yml`, `KnkApiClient`, `UserCommand` (main's `VisiblePlayers` + the `settings` suggestion); `UserCommandStatisticsTest` adjusted | **not compiled** (Maven Central 429s; developer builds for the smoke test) |
+| knk-web-app | `main` (50 commits: KNG-52 game settings, KNG-61, KNG-80, roads…) | `8c367a2` | `App.tsx`, `Navigation.tsx`: both sides kept. Also fixed: the World analytics nav link never showed (missing permission check) | `tsc` clean; tests 619 passed / 5 failed (all red on `main` too) |
+| knk-workspace | `main` | this branch | `specs/README.md`, `CHANGELOG.md` (both kept), `FEATURE_REGISTER.md` (main's rows, KNG-34's rows) | — |
+
+**Migration order note.** The five KNG-34 migrations (`20261003…`) sort before trunk's `20261004…`-`20261010…`. On a
+database that already has trunk's migrations, `dotnet ef database update` applies the pending KNG-34 ones anyway (they
+only create KNG-34 tables / alter `privacy_deletion_requests`).
+
+**Trunk changes reviewed for interaction with KNG-34 — no action needed:** AuditAction values (trunk added none, 30-34
+stay free); currency (no new reason codes; KNG-41/42 fees post `TELEPORT_FEE`, refunds `REVERSAL` — the sign rule
+covers them); KNG-59 grants (unique per holder/node; `POST api/users/{id}/grants` now upserts — granting the owner
+nodes works the same); seeded Moderator/Admin groups get only exact `knk.admin.location.*` nodes (no wildcard reaches
+`knk.owner.*`); KNG-52 join/respawn teleports (not counted as distance: teleports are not move events); KNG-55/56
+access denial (no cancelled moves, at most a sub-block bounce); gates (trunk's HealthSystem change is independent of
+the fire attribution); Siege (`SiegeMatchObserver` defaults keep new implementers compiling); menus (engine and seeds
+unchanged on trunk); region enter/leave events unchanged; plugin.yml merged cleanly; "join where they logged out"
+stores nothing new (Minecraft's own player data).
+
+**Suggested alignment changes (not made — waiting for the developer):**
+1. Discovery counts: trunk's `/discoveries` total now counts only enabled discovery types (`e2d16d1`); KNG-34's
+   statistics, public profile and discoveries leaderboard count every discovery row, so the numbers can differ.
+2. Seed the new staff groups: `knk.admin.statistics.view` (Moderator + Admin?) and `knk.admin.privacy.request`
+   (Admin?) in a seed migration, like KNG-80 did for its nodes.
+3. GDPR: `road_tile_proposals.CreatedBy` (KNG-27) is a free-text player name that erasure leaves behind.
+4. Telemetry: road tile ETag reads (`BaseApiImpl.getConditional`) bypass the `api.call_failed` reporting.
+5. Optional telemetry/analytics for navigation (start/arrive/end/reroute events) and domain access refusals (KNG-56).
+6. Optional: world analytics drops batches for a region renamed from `tempregion_worldtask_*` to `domain_<id>`
+   (KNG-43) until the plugin's cache refreshes; command correlation ids don't cross async permission checks.
 
