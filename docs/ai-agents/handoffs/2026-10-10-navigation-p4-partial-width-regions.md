@@ -1,6 +1,6 @@
 # Handoff: road navigation P4 — a region over part of a road's width
 
-**Status:** Ready, 2026-10-10. Prompt for a Claude Code session **on the developer's machine** (knk-workspace with the
+**Status:** Implemented 2026-10-10 on knk-plugin `claude/navigation-p4-partial-width-regions` `a87a6a2c`, offline-checked, live run 1 passed but for G2 (fixed in `ec358f39`); **waiting for re-test G2b, then merge** (see "State" at the end). Originally a prompt for a Claude Code session **on the developer's machine** (knk-workspace with the
 component repos under `Repository/`, dev DB read-only, dev server), **with Linear access**.
 **Linear:** [KNG-110](https://linear.app/kngpandi/issue/KNG-110) (created 2026-10-10). Related: [KNG-92](https://linear.app/kngpandi/issue/KNG-92) (rev. 7:
 routing view, entry rule on roads), [KNG-76](https://linear.app/kngpandi/issue/KNG-76) (centred trails),
@@ -116,3 +116,40 @@ structure that does apply to roads overlaps part of a road.
   - core: `roads/route/{RoutingView,TrailCentring,DomainAvailability}`, `roads/build/EdgeTagging`;
   - paper: `roads/LiveEdgeTags`, `navigation/{TrailRenderer,RoadSurfaceGround,NavigationAccess}`, and the
     `LiveEdgeTags` / `TrailRenderer` wiring in `KnKPlugin`.
+
+## State (2026-10-10, end of the implementing session)
+
+**Decisions (developer, 2026-10-10; also on KNG-110):** minimum gap 1 block; exit stays on the centre line (a piece
+keeps the region tag and adds its *lanes*, which only the entry check reads); gate doors unchanged; and a new rule,
+**no way out**: a region the player may enter but not leave blocks the way to a destination outside it (its own commit).
+
+**knk-plugin `claude/navigation-p4-partial-width-regions`** (pushed, on `main` `973aa68b`, not merged), worktree
+`Repository/_worktrees/knk-plugin-p4`:
+- `1ff0446a` routing: `RoadEdge.lanes`, `RoutingView` (lanes cut like tags, `minimalLanes`), `DomainAvailability` (entry
+  per lane), `TrailCentring.across`, `LiveEdgeTags` (looks across where the centre has a restricting region;
+  `CrossSections` loads unloaded chunks in the background and remembers cross-sections), `KnKPlugin` wiring
+  (`Probe.ground/loaded/load`, `restricts` from the domain cache), `/knk road status` "N with lanes".
+- `6044b1f1` trail: `Ground.blocked`, `TrailCentring.freeRun`, `TrailRenderer` per-viewer surface (5 s region cache),
+  `DomainAvailability.mayEnter`, `NavigationAccess.mayEnter`, `NavigationService.trailRule`.
+- `8e1ce36b` no way out: `DomainAvailability` destination regions, `TRAP_MESSAGE`; `PolicyFactory` overloads;
+  `NavigationService.destinationRegions` at every policy and for the trail.
+- `a87a6a2c` smoothing guard (found offline).
+
+Gradle: 3502 tests, 0 failures, 22 skipped. Every new test was checked to fail without its fix (each part broken in
+turn); the rest are guards. Offline check on the Kardenna end: results in the smoke-test guide, section "KNG-110".
+Snow on the road there matters (see the guide).
+
+**Not covered:** walk paths (`DeniedRegionAccess`, KNG-51) do not have the no-way-out rule; they keep the border rules
+as before.
+
+**Next:** the developer's live test, steps G1-G7 in the guide. Then record the results, update KNG-110, merge `main` into
+the branch, re-run the tests, merge into knk-plugin `main`, push, move the tracker row to Recently completed, update
+CHANGELOG/FEATURE_REGISTER, and remove the worktree (check that no process runs from it). The uncommitted offline
+harness `knk-paper/src/test/.../roads/P4ReplayScratchTest.java` in the worktree goes with it.
+
+**Live run 1 (2026-10-10, developer):** G1, G3, G4, G5 pass; G6, G7 accepted. G2 failed at first. The cause, from the
+server log: after `/knk cache refresh` + `/knk road reload` the domain cache did not know `domain_17` (the reload's
+batch warm-up answers one district per request), and the live tags only looked across regions the cache knew to
+restrict. **Fixed in `ec358f39`** (an unknown region is looked across too), pushed; `main` merged in (no new commits);
+Gradle 3504 tests green. The snow there (one layer) was not the cause. **Next:** G2b in the guide, then merge into
+knk-plugin `main` and close out as listed above.

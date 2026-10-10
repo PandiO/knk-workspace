@@ -229,6 +229,8 @@ Gaps that do not block the hub are tracked in [KNG-118](https://linear.app/kngpa
 | 4 | **Hub configuration.** `IsHub` on base Domain; a Game Settings hub block (`hub.domainId`, `hub.spawnReference`, outage action and delay, per-group exemption flags); the group eligibility endpoint and the UI. | KNG-116, KNG-109 | Server-side validation tests |
 | 5 | **Hub runtime.** Admission via `AsyncPlayerSpawnLocationEvent`; hub rules, including the Peaceful preset (§16.5); a guarded portal with a scoped exit authorization; the four outage actions; return records; Siege containment. | KNG-114, KNG-117 | Checklist items 6–13, 15 |
 
+**Phase 1 progress (2026-10-10):** implemented on branches `claude/blissful-fermat-b7ihrz` (API `bccd5f9`, web app `de1fa96`, plugin `08326d6`), not merged or live-tested; managed-region repair, discovery and roads/navigation still pending. See the [implementation handoff](../../ai-agents/handoffs/2026-10-10-kng-111-112-multiworld-implementation.md).
+
 **Deadline risk:** Phase 1 alone touches all three repos plus a rebase-sensitive migration, which is substantial work for the 17–18 October alpha. The developer chose the full fix first (§16.4, decision 2).
 
 ### 16.4 Developer decisions (confirmed 2026-10-10)
