@@ -36,7 +36,7 @@ The outage action applies to players already online when the server transitions 
 
 Avoid repeated kicks/teleports for every failed request. Define service-wide versus per-player loading failures and use recovery hysteresis to prevent flapping. Pending teleport requests must recheck readiness at execution time.
 
-Proposed recovery behavior: players remain in the hub and choose the portal after recovery, rather than being automatically sent back. Needs developer confirmation.
+Confirmed recovery behavior: persist the pre-evacuation location on disk and offer a clickable return confirmation after recovery. Players remain in the hub unless they choose to return or use a permitted portal. See §12.
 
 ## 3. Offline safety and local startup
 
@@ -135,7 +135,7 @@ Concurrent multi-Minecraft-world support is a **game-wide platform requirement i
 4. Concrete Domain type/hierarchy for the hub and world identity consistency rules. Separate, simultaneously loaded hub/gameplay worlds are already decided.
 5. Detailed semantics of any last-logout-location policy and other world transfers. Hub portal use of Game Settings default/group entry destinations and separate respawn is decided (§11).
 6. Full hub activity/protection catalogue and staff bypass rules.
-7. Missing-hub fallback, recovery behavior and minigame/respawn precedence.
+7. Missing-hub/invalid-return fallback, return-record lifecycle and minigame/respawn precedence. Click-to-confirm recovery return is decided (§12).
 8. Multiverse versus KnK implementation, after investigation.
 
 
@@ -152,4 +152,15 @@ Developer decision, 2026-10-10: extend KNG-52 Game Settings using the same admin
 
 This resolves the choice between a fixed portal destination and existing settings: **existing Game Settings, extended for hub teleportation**. Inspect current per-world settings (including Nether/End), world-change application rules and DTOs before implementation; do not assume that world-change behavior is already correct. Explicitly distinguish server join, hub-to-gameplay entry, other world transfers and death/respawn. Verify destinations in the correct world, group precedence, default fallback, separate respawn behavior and KNG-58 persistence through an offline restart.
 
-The handling of an optional last-logout-location policy, ordinary Nether/End portal destination semantics, and returning after an outage must be made consistent with these settings without inventing developer decisions. Recovery automation remains open.
+The handling of an optional last-logout-location policy, ordinary Nether/End portal destination semantics, and returning after an outage must be made consistent with these settings without inventing developer decisions. Recovery is now explicitly opt-in through a clickable return offer (§12).
+
+
+## 12. Confirmed: persisted pre-hub location and opt-in recovery return
+
+Developer decision, 2026-10-10: when an outage sends a player to the hub, persist their location immediately before relocation in the KNG-58 disk-backed mechanism. Once connectivity returns and required player/service data is ready, send a message with a clickable confirmation offering to return to that saved location. Teleport only after the player accepts; no automatic return.
+
+The return record must identify the player and original world, XYZ and orientation, and survive a server restart without the API. Keep this record distinct from ordinary logout location and Game Settings entry spawn. Repeated outage handling or movement/relogging inside the hub must not overwrite it with a hub location. Players without an outage-return record continue through normal hub portal/Game Settings flow.
+
+Implementation safeguards proposed: persist before transfer, track successful evacuation and return, recheck connectivity/readiness and destination safety/access on click, bind the action to the player and current return record, prevent repeated/stale clicks, and consume the record only after a successful return. Determine safe handling of persistence/teleport failures. A missing world, unsafe destination or newly denied access must not result in an unchecked teleport. Exact fallback destination and retention/expiry policy remain open. Offline-at-recovery players need the offer when they next join and become ready. Define interaction with normal portal use and ended minigames explicitly.
+
+Acceptance: evacuate from a non-hub world, restart with API unavailable, restore connectivity, receive the offer, and confirm return to the correct persisted world/location. Also verify no-click stays in hub, repeated evacuation preserves the original location, double-click cannot repeat a completed return, and a renewed outage or invalid destination blocks unsafe return.
