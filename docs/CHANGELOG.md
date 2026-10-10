@@ -4,6 +4,11 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## 2026-10-10
 
+- The first-join kit grant now runs once per player ([KNG-81](https://linear.app/kngpandi/issue/KNG-81), API half;
+  knk-web-api `master` `d5293fd`, migration `AddUserFirstJoinKitsGrantedAt`). A repeated or simultaneous
+  grant-first-join call (a quick relog) no longer adds a second kit claim or second lootbox tokens; players already
+  holding a first-join kit are marked as granted. Live-tested against the API 2026-10-10. The game server does not
+  trigger the grant yet: the plugin half (one `CacheManager` in `KnKPlugin`) is still open.
 - Walk paths get through tall buildings ([KNG-108](https://linear.app/kngpandi/issue/KNG-108); knk-plugin `main`
   `a388c70`). A walk path may now be 5 blocks longer for every block of height between the player and where they are
   going, so the way down a tower's spiral stair (the Keep Tower Roof: 168 blocks for 29 of height) is found. From
