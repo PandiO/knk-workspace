@@ -174,7 +174,7 @@ Acceptance additions: direct/inherited/denied mode-node checkbox visibility; sta
 
 ## 14. Multiverse research recommendation
 
-See [2026-10-10 research](../../reports/2026-10-10-hub-multiverse-research.md). Recommended: Multiverse Core 5.8.1 candidate for world lifecycle, KnK-owned portal/readiness/destination logic. Dependency choice is not yet approved or live-tested. *Updated 2026-10-10:* the multiworld audit's required-scope comparison now recommends a minimal KnK loader (option B) unless in-game world administration is wanted; still the developer's decision (§16.4).
+See [2026-10-10 research](../../reports/2026-10-10-hub-multiverse-research.md). Recommended: Multiverse Core 5.8.1 candidate for world lifecycle, KnK-owned portal/readiness/destination logic. Dependency choice is not yet approved or live-tested. *Updated 2026-10-10:* the multiworld audit's required-scope comparison recommended a minimal KnK loader (option B); **the developer chose it on 2026-10-10** (§16.4).
 
 ## 15. Follow-up clarification (2026-10-10)
 
@@ -222,29 +222,35 @@ Gaps that do not block the hub are tracked in [KNG-118](https://linear.app/kngpa
 
 | Phase | Scope | Issues | Gate to next phase |
 |---|---|---|---|
-| 0 | **Decisions and pinning.** Decisions 1–7 (§16.4); pin Paper/WorldGuard/KnK (and Multiverse if option A). | — | Decisions recorded |
+| 0 | **Pinning.** Decisions are confirmed (§16.4); pin the Paper/WorldGuard/KnK versions. | — | Decisions recorded |
 | 1 | **World identity.** API `Domain.WorldName` with backfill and a unique (world, region) index; same-world rules; world-qualified DTOs and lookups. Web app persists the captured world and shows the world in pickers. Plugin uses `world:regionId` keys and treats a world change as leave-all/enter-all. | KNG-111, KNG-112 | Unit tests; live checklist items 2, 3, 5 |
-| 2 | **Gates and lifecycle.** Reject blank-world doors; start/stop gate tasks per world; a world provider (A or B) with readiness and an unload guard; no first-world fallbacks on admission paths. | KNG-113, KNG-114 (lifecycle) | Checklist items 1, 4, 14 |
+| 2 | **Gates and lifecycle.** Reject blank-world doors; start/stop gate tasks per world; the minimal KnK world loader with readiness and an unload guard; no first-world fallbacks on admission paths. | KNG-113, KNG-114 (lifecycle) | Checklist items 1, 4, 14 |
 | 3 | **Connectivity and offline state.** Fix the probe and `ready`; an `ApiConnectivity` state machine; merge KNG-58 P0 and extend it with hub config, outage action/delay and return records. | KNG-115, KNG-58 | Checklist item 7 (API-down restart) |
 | 4 | **Hub configuration.** `IsHub` on base Domain; a Game Settings hub block (`hub.domainId`, `hub.spawnReference`, outage action and delay, per-group exemption flags); the group eligibility endpoint and the UI. | KNG-116, KNG-109 | Server-side validation tests |
 | 5 | **Hub runtime.** Admission via `AsyncPlayerSpawnLocationEvent`; hub rules, including the Peaceful preset (§16.5); a guarded portal with a scoped exit authorization; the four outage actions; return records; Siege containment. | KNG-114, KNG-117 | Checklist items 6–13, 15 |
 
-**Deadline risk:** Phase 1 alone touches all three repos plus a rebase-sensitive migration, which is substantial work for the 17–18 October alpha. Decision 2 asks whether to accept an interim constraint instead.
+**Deadline risk:** Phase 1 alone touches all three repos plus a rebase-sensitive migration, which is substantial work for the 17–18 October alpha. The developer chose the full fix first (§16.4, decision 2).
 
-### 16.4 Developer decisions still open
+### 16.4 Developer decisions (confirmed 2026-10-10)
 
-These cannot be derived from code or from earlier decisions. Report §11 has the details.
+These supersede the open questions in the audit report §11.
 
-1. **World provider.** Option A: Multiverse-Core 5.8.1 (BSD-3, lists 1.21.10). Option B: a minimal KnK loader. The audit recommends B unless in-game world administration is wanted. If A is chosen, Core needs a reviewed configuration profile:
-   - `world.enforce-gamemode`, `world.enforce-flight`, `spawn.default-respawn-within-same-world`, `spawn.default-respawn-in-overworld` and `teleport.teleport-intercept` set to `false`;
-   - join and first-spawn overrides left at their default `false`;
-   - per-world `auto-heal` and `hunger` left `true`.
-2. **Alpha scope.** Full world qualification before the alpha, or an interim rule (globally unique region ids, no blank-world gates) that does not pass the identical-names test.
-3. **Primary world.** Confirm that the gameplay world stays the `level-name` world and the hub is the extra world.
-4. **IsHub semantics.** What `IsHub` means on a flagged domain that isn't the selected hub, and on nested flagged domains. Admission uses only `hub.domainId`; the flag alone never selects a hub.
-5. **Exemption checkboxes.** Does an unchecked box on a higher-precedence group block a checked box on a lower one? Recommended: only a checked box counts.
-6. **Siege on outage.** Abort the whole match, or treat each evacuated participant as an individual leave?
-7. **Game Settings offline copy.** Fold `game-settings-cache.json` into the KNG-58 store, or keep it and add freshness and corruption handling only?
+1. **World provider: a minimal KnK loader** (option B). KnK loads the world folders listed in `config.yml` at startup. It refuses joins when the hub world is missing and cancels unloading of required worlds. Multiverse is not used. The portal is built by KnK.
+2. **Alpha scope: the full fix comes first.** Every Domain gets an explicit world before the hub is built (Phase 1).
+   - The world is **extracted automatically** from a required world-task field of the domain entity, for example its region world task (`WgRegionIdTaskHandler` already reports `worldName`) or its Location world task.
+   - Only when no such field gives a world does the web form **ask for it**.
+   - The interim unique-region-name rule is **not** adopted.
+3. **Main world: the gameplay world stays the `level-name` world.** The hub is the additional world.
+4. **IsHub means eligible only.** Several domains may carry the flag, and the flag only makes a domain selectable. Hub rules apply only to the hub selected in Game Settings (`hub.domainId`). **Nested flagged domains are not allowed** for now and are rejected on save.
+5. **Exemption checkboxes: only a ticked box counts.** An unticked box means "not set", so any of the player's applicable groups that ticks it exempts them. The exemption applies only while the player's **active** mode is staff or owner.
+6. **Siege on outage: abort the match.** When an outage action evacuates any participant, the whole match is aborted: no rewards, and the abort is recorded through the existing spool. Every participant gets their inventory back exactly once. Their return point is their pre-match location, never the arena.
+7. **Game Settings offline copy: fold it into the KNG-58 store** once KNG-58 P0 is merged. Until then, `game-settings-cache.json` stays the fallback.
+
+**Smaller defaults, accepted:**
+- **World identity:** domain worlds are keyed by world name. The world UUID from the runtime-worlds report is recorded so a renamed world is detected.
+- **Same world:** a child domain, its gate Locations and its spawn Locations must be in the parent's world.
+- **Peaceful preset:** it runs only while `naturalRegeneration` is on, and is skipped for players whose world is already Peaceful.
+- **Group permission check:** a new API check tells whether a group effectively has `knk.mode.staff` / `knk.mode.owner` (KNG-116).
 
 ### 16.5 Peaceful preset (verified, not guessed)
 

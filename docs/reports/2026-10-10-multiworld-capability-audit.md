@@ -403,7 +403,7 @@ if (level().getDifficulty() == Difficulty.PEACEFUL
 
 If the dedicated hub world is set to Peaceful difficulty, native behaviour matches exactly. But that is world-wide (it also removes hostile mobs) and does not cover a same-world hub, so the region preset is still needed.
 
-## 11. Remaining developer decisions
+## 11. Remaining developer decisions (answered 2026-10-10, see end of section)
 
 Only behaviour that cannot be derived from code or existing decisions:
 
@@ -421,6 +421,20 @@ Only behaviour that cannot be derived from code or existing decisions:
 - Inheritance child→parent.
 - Default action SEND_TO_HUB, delay "Uit" = immediate.
 - Return-record lifecycle (DESIGN §12–13).
+
+**Developer answers (2026-10-10, same day):**
+
+| # | Decision |
+|---|---|
+| 1 | Minimal KnK loader (B). |
+| 2 | Full fix first. A domain's world is extracted from its required region or Location world task, and asked in the web form only when no task provides it. No interim rule. |
+| 3 | The gameplay world stays primary. |
+| 4 | `IsHub` means eligible only, and nested hubs are not allowed. |
+| 5 | Only a ticked box counts. |
+| 6 | Abort the match. |
+| 7 | Fold the Game Settings copy into KNG-58 after P0 merges. |
+
+All smaller defaults in §4, §6 and §10 are accepted. See hub DESIGN §16.4.
 
 ## 12. Linear gap issues created (none implemented)
 
