@@ -1,8 +1,8 @@
 # Player statistics (KNG-34) — smoke test
 
-**Status:** Not run yet — branches ready 2026-10-10 ([KNG-34](https://linear.app/kngpandi/issue/KNG-34))
-**Last updated:** 2026-10-10 (written for the first run)
-**Design:** [specs/player-statistics/DESIGN.md](../specs/player-statistics/DESIGN.md) (decisions D1-D23, §F) ·
+**Status:** Run 1 in progress 2026-10-10 — setup and steps 5-6 done; finding 1 fixed (D24), step 6a to re-run ([KNG-34](https://linear.app/kngpandi/issue/KNG-34))
+**Last updated:** 2026-10-10 (run 1: setup, steps 5-6, finding 1)
+**Design:** [specs/player-statistics/DESIGN.md](../specs/player-statistics/DESIGN.md) (decisions D1-D24, §F) ·
 **Background:** [progress report](../reports/2026-10-03-player-statistics-chain.md) (per-link details, flagged decisions)
 
 Run on the dev server with the branch `claude/kind-dijkstra-y9d279` checked out in knk-web-api, knk-plugin and
@@ -20,18 +20,21 @@ every in-game check. Record each step's result in **Findings** at the end (pass 
    API. Expected log lines: "Statistics projection started", "Leaderboard snapshots started: every 300s", "Diagnostic
    telemetry writer started: every 2s", "World analytics retention: removed 0 daily rows, 0 batch ids".
 3. **Plugin:** `./gradlew build -x deployToDevServer` (records the test counts — baseline in the progress report), then
-   `./gradlew :knk-paper:dev`; run `scripts/reset-content-menus.ps1` (new menus `statistics.visibility`,
+   `./gradlew :knk-paper:dev`; with the API running, run knk-web-api's `scripts/reset-content-menus.ps1` and restart
+   the API (it deletes the seeded content menus, `profile.main` among them, so the API re-seeds them; new menus `statistics.visibility`,
    `statistics.main`, `statistics.leaderboards`, `statistics.leaderboard` and profile tiles 5 and 6 are seeded
    create-only); restart. Expected: "Player statistics started", "Diagnostic telemetry started", "World analytics
    started …", no menu validation errors. `config.yml` blocks `statistics:`, `telemetry:`, `world-analytics:` default to on.
 4. **Web app:** `npm install`, `npm start` (or build). No new dependencies.
 5. **Grants.** Give **your own user** these nodes **directly** (player profile → Effective Permissions → grant, or
    `POST api/users/{id}/grants`): `knk.owner.telemetry.view`, `knk.owner.telemetry.manage`, `knk.owner.privacy.manage`,
-   `knk.owner.analytics.view`, `knk.owner.leaderboard.manage`. Wildcards (`*`, `knk.*`) deliberately don't unlock them.
+   `knk.owner.analytics.view`, `knk.owner.leaderboard.manage`. Wildcards (`*`, `knk.*`) deliberately don't unlock the
+   telemetry and privacy nodes; they do unlock analytics and leaderboard (D24).
    Check the seed (D22): group **Moderator** has `knk.admin.statistics.view`; **Admin** has it plus
    `knk.admin.privacy.request`.
-6. Web nav (as you): Diagnostics, Data deletion and World analytics appear. As an account with only `knk.*`: none of
-   the three, and opening `/owner/telemetry` says "Owner only".
+6. Web nav (as you): Diagnostics, Data deletion and World analytics appear. As an account with only `knk.*` (D24):
+   World analytics appears and opens, Diagnostics and Data deletion don't appear, and opening `/owner/telemetry` or
+   `/owner/privacy` says "Owner only".
 
 ## 1. Statistics capture
 
@@ -111,6 +114,15 @@ FEATURE_REGISTER rows to `trunk`/live-tested, update this guide's status, the tr
 
 ## Findings
 
+Run 1, 2026-10-10 (local session; worktrees `Repository/_worktrees/<repo>-kng34`). Trunks merged in first: knk-web-api
+`09de0d0` (KNG-81), knk-plugin `557ad232` (KNG-108), knk-workspace `5483da7`; knk-web-app already current. DB backup
+`db-backups/knightsandkings_dev_v2_2026-10-10_pre-KNG34-smoke.sql`.
+
 | # | Step | Result | Notes / fix |
 |---|---|---|---|
-| | | | |
+| — | 1 | pass | Backup taken before the migrations and the first API start. |
+| — | 2 | pass | `has-pending-model-changes`: none. Exactly the six KNG-34 migrations were pending; the developer applied them. All four log lines; ledger projector cursor at 481 after the first start (D17). knk-web-api tests: 2375 passed / 9 failed / 73 skipped — the 4 known (`ClientActivityStore`, `FieldValidation`, `PathResolution` ×2), `CurrencyWriteGuard` (test build in a scratch artifacts path, which it can't find the csproj above), and 4 trunk tests that fail on this machine's comma-decimal number format (`TransferPolicyEvaluator` daily cap, `CurrencyAnomalyDetector` ×2, `RoadNetworkService` geometry) — not KNG-34's. KNG-34's own `StatisticsFormattingTests` failed the same way (test-only parsing); fixed in `7194412`. |
+| — | 3 | pass | First compile after the trunk merges succeeded: knk-core 1994, knk-api-client 240 (2 skipped), knk-paper 1562 (18 skipped), 0 failures. The reset script is knk-web-api's (step text corrected); it removed 9 menus, the API re-seeded them plus the four statistics menus. Server log: the three "started" lines, "checked 27 menu(s), 0 blocked", no KnK warnings. |
+| — | 4 | pass | Web app run from the worktree (`npm ci`). |
+| — | 5 | pass | D22 seed confirmed in `permission_grants` (Moderator: statistics.view; Admin: statistics.view + privacy.request). Owner grants added on the web; the pages worked straight away (no new login needed). |
+| 1 | 6 | fail → fixed | As `__pandi__` with only `knk.*`/`knk.admin.*`: the nav showed Diagnostics, Data deletion and World analytics, but each page said "Owner only" (nav counted wildcards, the API wanted an exact grant). The developer wanted `knk.*` to work, then chose a split: **D24** — wildcards unlock `knk.owner.analytics.view` and `knk.owner.leaderboard.manage`; telemetry and privacy keep the exact grant. knk-web-api `22c64e9` (`OwnerPermissions.ExactGrantOnly`), knk-web-app `edee8f6` (nav and owner routes use `matchedNode` for the exact-grant nodes). With all five grants: all three pages open (pass). Re-run of the `knk.*`-only half pending. |

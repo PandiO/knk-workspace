@@ -1,7 +1,7 @@
 # Player statistics — working design
 
 **Status:** Finalized 2026-10-03 by chain link 1 — the "Finalized design (link 1)" section below is binding for implementation together with [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md). Developer decisions D1-D13 and "Agreed" paragraphs are the developer's; link-1 defaults are numbered `L1-n` and flagged for review in the progress report. Evidence: [source audit](../../reports/2026-10-03-player-statistics-source-audit.md).
-**Last updated:** 2026-10-10 (trunk alignment D21-D23)
+**Last updated:** 2026-10-10 (trunk alignment D21-D23; smoke-test decision D24)
 **Linear:** [KNG-34](https://linear.app/kngpandi/issue/KNG-34/design-player-statistics-provenance-and-world-analytics), [KNG-14](https://linear.app/kngpandi/issue/KNG-14/gameplay-statistics-counters-v2-userstatistics-for-user-statistics), [KNG-23](https://linear.app/kngpandi/issue/KNG-23)
 
 This living note records decisions from the developer conversation. It does not assert that all described fields are already stored or displayed in V3. Precedence: (1) "Developer decisions 2026-10-03", (2) the "Finalized design (link 1)" section, (3) the older discussion sections further down, which are kept as rationale. Where an older section still says "open" or "to be decided", section (2) settles it.
@@ -54,6 +54,14 @@ three of the suggested alignment changes. Implemented on knk-web-api `claude/kin
 | D21 | Discovery counts | Count only domains whose discovery type is enabled (after per-domain overrides), like the player's `/discoveries` total since trunk `e2d16d1`: discovery counts, the named-discoveries list and the discoveries leaderboard (shared helper `DiscoveryEnabledDomains`). Deleted domains don't count; Total = Towns + Districts + Structures. |
 | D22 | Staff groups | Seed `knk.admin.statistics.view` into **Moderator** and **Admin**, and `knk.admin.privacy.request` into **Admin** (migration `SeedStatisticsStaffNodes`, after KNG-80's group seed). Owner nodes stay unseeded. |
 | D23 | Road-builder names | Data deletion clears the player's name from `road_tile_proposals.CreatedBy` (KNG-27); the proposals stay. Reported as `road_tile_proposals.created_by`. |
+
+### Smoke-test decisions 2026-10-10 (binding)
+
+Taken during the live smoke test ([guide](../../guides/player-statistics-smoke-test.md), Findings).
+
+| # | Topic | Decision |
+|---|---|---|
+| D24 | Wildcards and owner nodes (amends L1-17) | `knk.owner.analytics.view` (anonymous world analytics) and `knk.owner.leaderboard.manage` resolve like any node: `*`, `knk.*` and `knk.owner.*` unlock them. `knk.owner.telemetry.view`, `knk.owner.telemetry.manage` (per-player diagnostic data) and `knk.owner.privacy.manage` (GDPR deletion) keep the exact-grant rule (API `OwnerPermissions.ExactGrantOnly`, web `EXACT_GRANT_OWNER_NODES`). The web nav and owner routes apply the same rule. The developer first asked for `knk.*` to unlock all owner pages, then chose this split for the personal-data and GDPR risk. §F.13. |
 
 Deferred until after the smoke test and merge: the other suggestions (road-tile read failures in diagnostics,
 navigation/domain-access telemetry, renamed world-task regions in world analytics, async command correlation).
@@ -333,9 +341,10 @@ themselves with the existing grant endpoint):
 | `knk.owner.analytics.view` | World analytics (heatmaps, menu funnels, domain interactions) |
 | `knk.owner.leaderboard.manage` | Leaderboard exclusions |
 
-Because `*` and `knk.*` grants match `knk.owner.*` in the API's wildcard resolver, owner endpoints require an **exact
-grant** of the node (the resolver's matched node must equal the node); wildcards never unlock owner data. Every
-timeline read is recorded in the audit log. Staff node (not owner-only): `knk.admin.statistics.view`.
+Because `*` and `knk.*` grants match `knk.owner.*` in the API's wildcard resolver, the telemetry and privacy owner
+endpoints require an **exact grant** of the node (the resolver's matched node must equal the node); wildcards never
+unlock personal diagnostic data or GDPR deletion. World analytics and leaderboard exclusions accept wildcards (D24,
+2026-10-10, amends L1-17). Every timeline read is recorded in the audit log. Staff node (not owner-only): `knk.admin.statistics.view`.
 
 ### F.14 GDPR deletion (D12, D14-D16; L1-18 superseded)
 
@@ -402,7 +411,7 @@ Volumes are to be measured in the alpha (events per player-minute, rows per day)
 | L1-14 | Time zone `Europe/Amsterdam` | V1's zone; server zone per D5 |
 | L1-15 | First join from Minecraft-created accounts' `CreatedAt`, else first session | Uses an existing authoritative fact (D6) |
 | L1-16 | Merged identities are summed (possible simultaneous sessions not de-overlapped) | Rare; sessions table allows a later fix |
-| L1-17 | Owner nodes require an exact grant | Wildcards match `knk.owner.*` |
+| L1-17 | Owner nodes require an exact grant — amended by D24: only telemetry and privacy; analytics and leaderboard accept wildcards | Wildcards match `knk.owner.*` |
 | L1-18 | ~~GDPR scope §F.14 incl. user pseudonymization and auto-execution 3 days before due~~ — superseded by D14-D16 | Deadline guarantee; ledger immutable |
 | L1-19 | Retention defaults §F.15 | To be tuned after alpha measurement |
 | L1-20 | Staff with `knk.admin.statistics.view` see all of a player's statistics (not diagnostics) | Moderation use; diagnostics stay owner-only |
