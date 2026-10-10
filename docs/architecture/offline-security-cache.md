@@ -1,7 +1,7 @@
 # Offline security cache — permissions, freeze and modes without the API
 
-**Status:** P0 implemented on branch `claude/worldguard-entry-deny-bypass-sj1j7g` (knk-plugin `239ea49`), **not merged, not live-tested**. Linear [KNG-58](https://linear.app/kngpandi/issue/KNG-58)
-**Last updated:** 2026-10-08
+**Status:** P0 implemented on branch `claude/worldguard-entry-deny-bypass-sj1j7g` (knk-plugin `239ea49`, brought up to `main` in `7e9e8cf`), **live smoke test passed 2026-10-10, not merged yet**. Linear [KNG-58](https://linear.app/kngpandi/issue/KNG-58)
+**Last updated:** 2026-10-10 (live smoke test passed)
 **Related:** [`domain-access-enforcement.md`](domain-access-enforcement.md) (KNG-56: domain rules already survive outages as WorldGuard flags); [`reports/2026-10-06-offline-critical-data-inventory.md`](../reports/2026-10-06-offline-critical-data-inventory.md) (why these items are P0); KNG-57 (SignalR push, incl. erasure); KNG-34 D14-D16 (data deletion); KNG-81 (duplicate `CacheManager`)
 
 ## 1. Problem
@@ -82,7 +82,7 @@ Unit tests:
 - `KnkPermissibleOfflineTest` (7): restart with the API down, unknown node, too old, denial stays, first check after the TTL, 404 forgets, unknown player.
 - `OfflineFreezeAndModeTest` (5): frozen relog, local freeze kept, unfrozen stays free, vanish kept, mode change kept.
 
-Live (developer, on the dev server):
+Live (developer, on the dev server) — **passed 2026-10-10**: phases 1-3 all pass; the never-joined player having no staff rights during an outage and the optional checks (cleanup pass, max age, corrupt file) were accepted by the developer. Steps:
 1. As a non-op staff member with the API up: join, use `/staffmode` and a staff command, and walk through a closed domain with `knk.region.bypass`. Freeze a test player.
 2. Stop knk-web-api and restart the server.
 3. Join as the staff member: still staff (no SURVIVAL/spawn teleport for an owner), staff commands work, bypass works, still vanished if they were.
