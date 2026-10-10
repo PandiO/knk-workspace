@@ -32,7 +32,7 @@ Names below are illustrative, not approved API contracts.
 | Recovery | Revalidate service readiness and player data before enabling portal travel |
 | Hub activities/rules | Explicit allowlist, with combat prohibited |
 
-The outage action applies to players already online when the server transitions into an outage. NONE means no automatic relocation or kick; it does not disable existing protections. New joins still enter the hub. No default outage action has been chosen.
+The outage action applies to players already online when the server transitions into an outage. NONE means no automatic relocation or kick; it does not disable existing protections. New joins still enter the hub. **Confirmed default (2026-10-10): SEND_TO_HUB immediately when API outage is detected, with no intentional grace period. Keep players in the hub while the API remains unavailable, even if cached data could support continued play.** The other three actions remain configurable alternatives. Detection thresholds are distinct from an intentional delay.
 
 Avoid repeated kicks/teleports for every failed request. Define service-wide versus per-player loading failures and use recovery hysteresis to prevent flapping. Pending teleport requests must recheck readiness at execution time.
 
@@ -129,7 +129,7 @@ Concurrent multi-Minecraft-world support is a **game-wide platform requirement i
 
 ## 9. Open decisions
 
-1. Default outage action and whether it is global or has group/staff overrides.
+1. Whether outage policy has group/staff overrides. Default action is decided: immediate SEND_TO_HUB.
 2. Exact outage thresholds and which dependencies count as unavailable.
 3. Which world's spawn SEND_TO_WORLD_SPAWN uses; fallback if it is unavailable.
 4. Concrete Domain type/hierarchy for the hub and world identity consistency rules. Separate, simultaneously loaded hub/gameplay worlds are already decided.
@@ -137,3 +137,10 @@ Concurrent multi-Minecraft-world support is a **game-wide platform requirement i
 6. Full hub activity/protection catalogue and staff bypass rules.
 7. Missing-hub fallback, recovery behavior and minigame/respawn precedence.
 8. Multiverse versus KnK implementation, after investigation.
+
+
+## 10. Future requirement: configurable outage grace period
+
+Developer decision, 2026-10-10: add a configurable delay before applying the outage action in a future iteration. For now the delay is zero: send players directly to the hub on detected outage and retain them there until connectivity is restored. Future deployments may permit continued play using KNG-58 cached essential data during a temporary outage, then relocate players after a sustained outage because stale state and synchronization risk increase over time. Thirty minutes and one hour were examples, **not selected defaults or validated safe durations**.
+
+Future design must define when the timer starts, what constitutes stable recovery/reset, repeated outage handling, restart persistence, and earlier containment when critical cached data expires or becomes unusable. A grace period does not authorize API-dependent writes or bypass other safety rules. Current new-join behavior remains hub admission. This is recorded future scope, not required timer implementation for the initial alpha.
