@@ -615,6 +615,13 @@ enchantments`'s admin/debug catalog browsing and item-blueprint application.
   but the command list it prints is itself permission-filtered per viewer
   via `CommandRegistry.listAvailable` (`HelpSubcommand.java:28`,
   `CommandRegistry.java:46-50`).
+- **KNG-107 (branch `claude/kng-107-command-visibility`, not merged as of
+  2026-10-10):** listing, `/knk help <command>` and tab completion use
+  `CommandRegistry.isListed` (metadata node + visibility predicate); nodeless
+  subcommands are listed only to holders of one of their action nodes, an
+  unlisted one reads as "Unknown command", and `help` itself is listed only
+  when something else is. See
+  [the handoff](../../ai-agents/handoffs/2026-10-10-kng-107-command-visibility.md).
 - **Goal/function:** Lists all subcommands the sender can see, or full
   detail (description/usage/permission/examples) for one named subcommand
   (`HelpSubcommand.java:18-98`). See the dead-code note in §3 above re: its
