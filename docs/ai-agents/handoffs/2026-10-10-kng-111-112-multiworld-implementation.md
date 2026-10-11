@@ -1,7 +1,7 @@
 # Handoff: KNG-111 / KNG-112 — domains know their world
 
 **Date:** 2026-10-10 (updated 2026-10-11)
-**Status:** Implemented on branches, not merged or deployed. First live round (items 1-6 below) passed or accepted by the developer on 2026-10-11; the roads, navigation and repair changes from 2026-10-11 are not live-tested.
+**Status:** Merged 2026-10-11 on the developer's request: knk-web-api `master` `177dc9a` (#7), knk-web-app `main` `a80c90a` (#5), knk-plugin `main` `0396c7b4` (#10). Before that: implemented on branches. First live round (items 1-6 below) passed or accepted by the developer on 2026-10-11; the roads, navigation and repair changes from 2026-10-11 are not live-tested.
 **Issues:** [KNG-111](https://linear.app/kngpandi/issue/KNG-111) (API + web app), [KNG-112](https://linear.app/kngpandi/issue/KNG-112) (plugin). Parent: [KNG-109](https://linear.app/kngpandi/issue/KNG-109).
 **Design / audit:** hub [DESIGN §16](../../specs/hub/DESIGN.md), [multiworld audit](../../reports/2026-10-10-multiworld-capability-audit.md). Decisions confirmed 2026-10-10: full fix first; the world comes from the region/Location world task, and the form asks only when neither gives one.
 
