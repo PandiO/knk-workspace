@@ -80,10 +80,24 @@ An independent review of the overnight diffs found 8 issues. All 8 are fixed and
 - the hub spawn was not re-resolved;
 - the old cache file was deleted before the store write was confirmed.
 
+Codex then reviewed the three PRs. All 9 findings are fixed, replied to and resolved:
+- **API:**
+  - the location-retention job could delete the hub spawn Location;
+  - a domain without a world could be selected;
+  - a nested flagged domain could be selected.
+- **Plugin:**
+  - a join into a hub whose AllowEntry is denied was moved out again by the domain-access join check;
+  - `knk.hub.bypass` lifted the entity-damage rule;
+  - a spawn outside the hub region still counted as usable.
+- **Web app:**
+  - domains without a spawn Location could not be flagged;
+  - a failed load of the flagged domains read as "none flagged";
+  - the save error used the lootbox 403 text.
+
 ## Verified (no live server for the hub part)
-- **Plugin:** core 2046, api-client 258, paper 1636, all green.
-- **API:** 2557 passed. The 4 failures also fail on `master` (`PathResolutionServiceTests` ×2, `FieldValidationServiceTests`, `ClientActivityStoreTests`). New: `HubSettingsServiceTests` (5), plus a `GameSettingsServiceTests` hub round trip.
-- **Web app:** `tsc` clean, `npm run build` passes, Game Settings component tests 28/28 (new `hubSettings.test.tsx`).
+- **Plugin:** core 2046, api-client 258, paper 1639, all green.
+- **API:** 2559 passed. The 4 failures also fail on `master` (`PathResolutionServiceTests` ×2, `FieldValidationServiceTests`, `ClientActivityStoreTests`). New: `HubSettingsServiceTests` (7), a `GameSettingsServiceTests` hub round trip and a retention test.
+- **Web app:** `tsc` clean, `npm run build` passes, Game Settings component tests 31/31 (new `hubSettings.test.tsx`).
 
 ## Test checklist, in priority order
 1. **Migration:** deploy the API, apply `AddHubSettings` and open the Game Settings page. Nothing else should have changed.
@@ -99,7 +113,7 @@ An independent review of the overnight diffs found 8 issues. All 8 are fixed and
    - outside the hub region nothing changed;
    - with `knk.hub.bypass` (op) you can build.
 6. **Peaceful preset:** on Normal difficulty, hurt yourself outside the hub and walk in. You should heal about 1 health per second and gain food. In a Peaceful world, nothing extra should happen.
-7. **Fail closed:** temporarily remove the hub region (or select a domain whose region is missing). A non-op join is refused with the hub message, and an operator can still join. Restore it afterwards.
+7. **Fail closed:** temporarily remove the hub region (or select a domain whose region is missing). A non-op join is refused with the hub message, and an operator can still join. Restore it afterwards. The same happens when the hub spawn is moved outside the hub region.
 8. **API down + restart:**
    - stop the API and restart the server;
    - the log should show "Using the cached settings";
