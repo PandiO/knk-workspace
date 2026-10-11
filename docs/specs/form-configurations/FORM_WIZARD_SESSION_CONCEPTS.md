@@ -1,12 +1,13 @@
 # Form wizard — entities created in a form session, and editing them again
 
-**Status:** Analysis and proposed design, not implemented (2026-10-11). Decision D1 (§4) needs the developer's review
-before implementation starts.
+**Status:** Design decided (2026-10-11): D1 = A (developer), D2 default chosen (reversible, developer may override).
+Being implemented by the [form wizard chain](../../ai-agents/handoffs/FORM_WIZARD_CHAIN.md).
 **Last updated:** 2026-10-11
 **Linear:** [KNG-133](https://linear.app/kngpandi/issue/KNG-133) (List "Create New" never saved),
 [KNG-136](https://linear.app/kngpandi/issue/KNG-136) (pickers show entities made in this session),
 [KNG-134](https://linear.app/kngpandi/issue/KNG-134) (Edit instance opens without its values),
-[KNG-135](https://linear.app/kngpandi/issue/KNG-135) (List relationships load empty in edit mode)
+[KNG-135](https://linear.app/kngpandi/issue/KNG-135) (List relationships load empty in edit mode),
+[KNG-162](https://linear.app/kngpandi/issue/KNG-162) (cancelled main form: offer to delete what its child forms saved)
 **Sources:** knk-web-app `main` `38854ba`, knk-web-api `master` `917537a`, knk-plugin `main` `1b3e06c2`. Paths
 below are relative to `knk-web-app/src` unless prefixed `api/` or `plugin/`.
 **Related:** [KNG-120](https://linear.app/kngpandi/issue/KNG-120) (same-property fields in sync, in progress in
@@ -117,14 +118,14 @@ binds to a same-named field or to the **first** field (:2793-2805), so a capture
 
 ## 3. Proposed design
 
-### 3.1 Decision D1 — when is a child entity saved? (needs review)
+### 3.1 Decision D1 — when is a child entity saved? (decided 2026-10-11: A)
 
 | Option | What it means | Cost / risk |
 |---|---|---|
 | **A. Save on child completion, everywhere (proposed default)** | A List "Create New" child is saved when its form completes, exactly like Object fields and owned collections already are. Only embedded value objects (Location) stay unsaved until the parent saves. | Small change, matches existing behaviour and the GateDoor/world-sync design. Rows made during a cancelled root form remain (already the case today). |
 | B. True concepts until the root submits | Every child stays a client-side concept with a temporary id; the root submit creates the graph deepest-first and swaps temp ids for real ones. | Large: dependency ordering, temp-id remapping across forms, partial-failure rollback with no cross-entity transaction, resuming a concept graph from drafts, and world-task side effects (regions, captures) that happen in Minecraft before any DB row exists. Reverses current Object-field behaviour. |
 
-Recommendation: **A**. It fixes the data loss immediately, and with A the District from the scenario is a real row
+**Developer decision 2026-10-11: A** ("save the children asap"). It fixes the data loss immediately, and with A the District from the scenario is a real row
 that the GateStructure's District picker already finds. Option B can be revisited if abandoned rows become a real
 problem; the session registry below is the first step towards it either way.
 
@@ -199,9 +200,9 @@ offered for selection elsewhere (a Location belongs to one owner; see `architect
 
 | # | Question | Proposed default |
 |---|---|---|
-| D1 | Save List "Create New" children on completion (A) or build true concepts (B)? | **A** (§3.1) |
-| D2 | Offer to delete entities created by a cancelled root form? | Follow-up after KNG-136; the registry makes it possible |
-| D3 | Persist the session registry in drafts so a resumed draft still pins its new rows? | No in v1; under D1-A the rows are in the DB anyway |
+| D1 | Save List "Create New" children on completion (A) or build true concepts (B)? | **A — decided by the developer 2026-10-11** |
+| D2 | What happens to child-saved entities when the main form is abandoned? | **Default chosen 2026-10-11 (KNG-162), reversible:** they are complete records and are never deleted automatically. On an explicit cancel of the main form, or when its draft is deleted from Saved Progress, the admin sees what the form created and picks **Keep** (default) or **Delete** (deepest-first through the normal delete endpoints; anything referenced elsewhere is skipped and reported). Silent abandonment deletes nothing; the KNG-43 90-day cleanup keeps removing only draft rows. The root progress records what was created under it (`CreatedEntitiesJson`, additive). |
+| D3 | Persist the session registry in drafts so a resumed draft still pins its new rows? | Comes with KNG-162's `CreatedEntitiesJson`; not in KNG-136 |
 
 ## 5. Order of work and tests
 
@@ -215,6 +216,8 @@ offered for selection elsewhere (a Location belongs to one owner; see `architect
 4. **KNG-136** (improvement): registry + pinned picker rows. `PagedEntityTable` has no tests of its own today; add
    them (pinned rows, de-duplication, stable keys), plus a two-level nesting UI test modelled on
    `FormWizard.siegeNesting.ui.test.tsx`.
+5. **KNG-162** (improvement): cancel / delete-draft prompt and provenance (D2). After KNG-136.
 
-All four touch `FormWizard.tsx`; coordinate with KNG-120 (in progress there). Live test in the web app: the exact
+All of them touch `FormWizard.tsx`; KNG-120 (`claude/admiring-mendel-ne39j1`) and KNG-132
+(`claude/loving-johnson-dlshrc`) change it too and are unmerged. Live test in the web app: the exact
 GateStructure → Street → District scenario from §1, and the world-task Location edit.

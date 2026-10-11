@@ -1,7 +1,7 @@
 # Default FormConfigurations — agent-authored seeds
 
-**Status:** Proposal, not implemented (2026-10-11). Decision S1 (§3) changes an earlier developer decision and needs
-the developer's sign-off.
+**Status:** Design decided (2026-10-11: S1 = A, developer). Being implemented by the
+[form wizard chain](../../ai-agents/handoffs/FORM_WIZARD_CHAIN.md).
 **Last updated:** 2026-10-11
 **Linear:** [KNG-138](https://linear.app/kngpandi/issue/KNG-138) (export/import),
 [KNG-139](https://linear.app/kngpandi/issue/KNG-139) (author the default forms),
@@ -75,7 +75,7 @@ descriptions).
 
 ## 3. Proposed mechanism
 
-### 3.1 Decision S1 — seeds as files, imported on request (needs sign-off)
+### 3.1 Decision S1 — seeds as files, imported on request (decided 2026-10-11: A)
 
 | Option | Pros | Cons |
 |---|---|---|
@@ -83,7 +83,7 @@ descriptions).
 | B. Create-only startup seeder (like `MenuTemplateSeed`) | Fresh DBs get forms automatically | Conflicts with the "data, not code" decision and the dev-DB-is-golden production flow; never updates an existing DB, so it doesn't improve the dev DB's configs 9/12 |
 | C. SQL scripts | No code | Hard-coded ids, bypasses `FormTemplateValidationService`, rules keyed by int ids |
 
-Proposed: **A**. Seed files live in knk-web-api `Data/FormConfigurationSeeds/{EntityTypeName}.json` (shipped with
+**Developer decision 2026-10-11: A.** Seed files live in knk-web-api `Data/FormConfigurationSeeds/{EntityTypeName}.json` (shipped with
 the API, like the other `Data/` catalogs). B can be added later on top of the same files if a fresh-DB bootstrap is
 wanted. This narrows the items §7.2 decision rather than reversing it: forms remain data, edited live in the builder;
 seed files are a reviewed starting point.
