@@ -1,6 +1,6 @@
 # Closed alpha hardening (KNG-64) — smoke test
 
-**Status:** Ready to run — branches merged with trunk 2026-10-11, not yet live-tested by the developer
+**Status:** Run 1 (2026-10-11): all steps pass or are accepted after fixes; re-check 14, 25, 27 (assign a premium rank), 29-30 (phone) and the clash repair
 **Last updated:** 2026-10-11
 **Plan:** [specs/alpha-hardening/IMPLEMENTATION_PLAN.md](../specs/alpha-hardening/IMPLEMENTATION_PLAN.md) ·
 **Automated run:** [reports/2026-10-08-alpha-hardening-verification.md](../reports/2026-10-08-alpha-hardening-verification.md) ·
@@ -106,6 +106,25 @@ Use a non-op alt for every in-game step: ops pass every in-game check. Record ea
 
 ## Findings
 
+Run 1 (developer, 2026-10-11):
+
 | Step | Result | Notes |
 |---|---|---|
-| | | |
+| 7 | Pass (29/29) | First run failed in Git Bash: the probe needed python3. Fixed in knk-workspace `f9665ea` |
+| 8, 9, 11, 12 | Pass | |
+| 10 | Pass, known issue | Rename of District 15's region: "target region name already exists" = KNG-103 (backlog) |
+| 13 | **Fail → fixed** | No register URL (the existing config.yml keeps its own `link-code-generated` without `{url}`), no copy. Fixed in knk-plugin `fb81f3e3`: register line appended, code click-to-copy, URL clickable. Re-check |
+| 14-18 | Pass / accepted | "This code belongs to" not looked at; no username field; account shows the alt's name |
+| 19-23 | Pass / accepted | |
+| 24 | Pass | |
+| 25 | **Fail → fixed** | Content staff saw no GateStructure/Domain/District/Location lists: list views POST to `…/search`, which the writes-only rule treated as a write. Fixed in knk-web-api `09691df`. Re-check |
+| 26, 28 | Pass | |
+| 27 | **Fail → fixed** | (a) Assigning a group to the web-only `admin` account: 500 InvalidCastException. Cause: user `admin` and the Staff group share holder id 29 in the dev DB (also in the UI/UX seed), so Staff's grants applied to `admin` too. Repair: `scripts/maintenance/repair-holder-id-clash.sql`; the seed export now refuses such a clash (`bd63e0e`). (b) Admins couldn't hand out premium ranks without holding their perks: new node `knk.admin.user.group.premium` (knk-web-api `32c98cb`). Re-check both |
+| 29, 31 | Pass | "Readable headings" = the landing headings are white on the photo (they were dark navy before) |
+| 29-30 phone | Not run | Login from the phone fails: the web app called `http://localhost:5294` (the phone itself). Needs the LAN setup below |
+| 32-33 | Skipped | Run 32 once after the clash repair |
+
+**Phone test setup (dev):** start the API on the LAN (`dotnet run --urls "http://0.0.0.0:5294"`), add the phone's page
+origin to CORS (`dotnet user-secrets set "Cors:AllowedOrigins:4" "http://<PC-LAN-IP>:3000"`), start the web app with
+`REACT_APP_API_BASE_URL=http://<PC-LAN-IP>:5294/api`, allow ports 3000 and 5294 in the Windows firewall, and open
+`http://<PC-LAN-IP>:3000` on the phone (use the same address on the PC, or its refresh cookie won't be sent).
