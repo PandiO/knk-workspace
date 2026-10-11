@@ -20,6 +20,8 @@ Central home for requirements, specifications, and implementation roadmaps acros
 - reconcile/: reconciliation guides for aligning legacy data with v2
 
 ## Key documents
+- Form wizard (2026-10-11, analysis + proposed design, not implemented): [form-configurations/FORM_WIZARD_SESSION_CONCEPTS.md](form-configurations/FORM_WIZARD_SESSION_CONCEPTS.md) (List "Create New" children never saved, pickers showing entities made in this form session, Edit instance seeding; KNG-133..136) and [form-configurations/DEFAULT_FORM_SEEDS.md](form-configurations/DEFAULT_FORM_SEEDS.md) (FormConfiguration export/import, agent-authored default forms and their authoring guide; KNG-137..139). Decisions D1 and S1 await the developer.
+
 - Player statistics (KNG-34; design finalized 2026-10-03, implemented by chain links 2-7 on `claude/kind-dijkstra-y9d279`, done 2026-10-03, not merged): [player-statistics/DESIGN.md](player-statistics/DESIGN.md) (binding §F "Finalized design"), [player-statistics/IMPLEMENTATION_PLAN.md](player-statistics/IMPLEMENTATION_PLAN.md); evidence [../reports/2026-10-03-player-statistics-source-audit.md](../reports/2026-10-03-player-statistics-source-audit.md). Reconciles KNG-14 (counters) and KNG-23 (provenance = existing ledger).
 
 - Game Settings (KNG-52; merged and live-tested 2026-10-10): [game-settings/DESIGN.md](game-settings/DESIGN.md), [game-settings/IMPLEMENTATION_PLAN.md](game-settings/IMPLEMENTATION_PLAN.md); admin how-to [../guides/game-settings.md](../guides/game-settings.md)
