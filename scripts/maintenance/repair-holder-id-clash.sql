@@ -32,10 +32,11 @@ SET @clash := (SELECT MIN(u.Id) FROM users u JOIN permission_groups g ON g.Id = 
 START TRANSACTION;
 SET FOREIGN_KEY_CHECKS = 0;
 
--- A new holder for the group (only when there is a clash: @clash IS NOT NULL).
-INSERT INTO permission_holders (ChatPrefix, ChatSuffix)
-SELECT ChatPrefix, ChatSuffix FROM permission_holders WHERE Id = @clash AND @clash IS NOT NULL;
-SET @new := IF(@clash IS NULL OR ROW_COUNT() = 0, NULL, LAST_INSERT_ID());
+-- A new holder id for the group, chosen up front and inserted explicitly. No ROW_COUNT() or
+-- LAST_INSERT_ID(): phpMyAdmin runs its own queries between statements, which resets them.
+SET @new := IF(@clash IS NULL, NULL, (SELECT MAX(Id) + 1 FROM permission_holders));
+INSERT INTO permission_holders (Id, ChatPrefix, ChatSuffix)
+SELECT @new, ChatPrefix, ChatSuffix FROM permission_holders WHERE Id = @clash AND @new IS NOT NULL;
 
 UPDATE permission_groups      SET Id = @new                        WHERE Id = @clash AND @new IS NOT NULL;
 UPDATE permission_groups      SET ParentGroupId = @new             WHERE ParentGroupId = @clash AND @new IS NOT NULL;
@@ -60,6 +61,12 @@ SET GroupOverridesJson =
 WHERE @new IS NOT NULL;
 -- The grants on the shared id were the group's.
 UPDATE permission_grants      SET HolderId = @new                  WHERE HolderId = @clash AND @new IS NOT NULL;
+
+-- Holder rows that belong to no user and no group and carry no grants (left by an interrupted run).
+DELETE ph FROM permission_holders ph
+WHERE NOT EXISTS (SELECT 1 FROM users u WHERE u.Id = ph.Id)
+  AND NOT EXISTS (SELECT 1 FROM permission_groups g WHERE g.Id = ph.Id)
+  AND NOT EXISTS (SELECT 1 FROM permission_grants pg WHERE pg.HolderId = ph.Id);
 
 SET FOREIGN_KEY_CHECKS = 1;
 COMMIT;
