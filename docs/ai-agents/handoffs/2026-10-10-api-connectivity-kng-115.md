@@ -1,7 +1,7 @@
 # Handoff: API connectivity — health probe, DB readiness, ApiConnectivity state (KNG-115)
 
 **Date:** 2026-10-10
-**Status:** Implemented and unit-tested; **awaiting live test**. Not merged, no PR, not deployed.
+**Status:** **Live test passed 2026-10-11** (developer). Not merged, no PR, not deployed; next step is PRs/merge.
 **Issue:** [KNG-115](https://linear.app/kngpandi/issue/KNG-115) (leave In Progress until the live test)
 **Source:** `docs/reports/2026-10-10-multiworld-capability-audit.md` rows C1-C5, §5 (workspace branch `claude/blissful-fermat-b7ihrz`)
 **Living doc:** `docs/architecture/api-connectivity.md` (design, defaults, how to subscribe)
