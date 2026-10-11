@@ -1,14 +1,14 @@
 # Form wizard chain — progress report
 
-**Status:** Running — link 1 (KNG-133) started 2026-10-11.
-**Last updated:** 2026-10-11 (link 0: chain set up by the coordinator session)
+**Status:** Stopped — link 1 (KNG-133) hit absolute blocker §4.1 (no push access to knk-web-app) on 2026-10-11.
+**Last updated:** 2026-10-11 (link 1: blocked before any code change)
 **Charter:** [FORM_WIZARD_CHAIN.md](../ai-agents/handoffs/FORM_WIZARD_CHAIN.md). Append-only below the Summary.
 
 ## Summary
 
 | Link | Issue(s) | Status | Heads (web-app / web-api / workspace) |
 |---|---|---|---|
-| 1 | KNG-133 | Started | — |
+| 1 | KNG-133 | **Blocked** (§4.1, no push access to knk-web-app) | unchanged `38854ba` / `917537a` / report only |
 | 2 | KNG-134 | Not started | — |
 | 3 | KNG-135 + KNG-137 | Not started | — |
 | 4 | KNG-136 | Not started | — |
@@ -27,3 +27,17 @@
 - Known overlap: KNG-120 (`claude/admiring-mendel-ne39j1`) and KNG-132 (`claude/loving-johnson-dlshrc`) change
   `FormWizard.tsx`, unmerged. Links keep their own `FormWizard.tsx` edits thin (charter §1.2).
 - Link 1 started as a new Claude Code Remote session (charter §6, option 1).
+
+## Link 1 — KNG-133: List "Create New" child never saved — BLOCKED (charter §4.1)
+
+- **Blocker:** the link-1 session was started with only `PandiO/knk-workspace` in its repository sources.
+  `add_repo` for `knk-web-app` and `knk-web-api` (access `push`) was refused by the session's permission policy.
+  A read-only clone of `knk-web-app` worked (branch at `38854ba`), but
+  `git push --dry-run origin claude/jolly-archimedes-urhio9` returned 403 from the git proxy ("not in this
+  session's authorized repository set"). Charter §1.3 / §4.1: can't push a repo the link must change = stop.
+- **Done:** nothing in code. No baselines measured, no commits in knk-web-app/knk-web-api/knk-plugin, Linear
+  KNG-133 left as is. Tracker row on `main` set to "Blocked".
+- **Next link:** not started (charter §4: start no further link at a blocker).
+- **To resume:** start a new Claude Code session whose sources include knk-workspace, knk-web-app and knk-web-api
+  (or allow `add_repo` in this environment's permissions), then run
+  `docs/ai-agents/handoffs/2026-10-11-form-wizard-link-1.md` again unchanged — its starting state is still valid.
