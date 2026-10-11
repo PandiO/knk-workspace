@@ -1,7 +1,7 @@
 # Teleportation Commands — Design
 
 **Status:** Decided — implementation in progress (branch `claude/teleport`)
-**Last updated:** 2026-09-26
+**Last updated:** 2026-10-11 (§3.4.3: death clears the combat tag)
 **Linear:** [KNG-17](https://linear.app/kngpandi/issue/KNG-17/teleportation-staff-tp-tpa-requests-spawn-domain-warps-v1-port)
 **Sources:** `knk-v1-archive` (`src/UsefulCommands/PlayerTeleportCommand.java`, `src/UsefulCommands/SpawnCommand.java`,
 `src/SpawnPoints/SpawnPoint.java`, `src/SpawnPoints/SpawnPointCommands.java`, `src/Teleport/*`, `src/Houses/HomeCommands.java`,
@@ -35,6 +35,8 @@ relative to `knk-paper/src/main/java/net/knightsandkings/knk/paper/` unless pref
   FormWizard + `tasks/LocationTaskHandler.java` "type save" world task). No `/spawnpoint` CRUD port.
 - Join / respawn location policy (`GameSettings.DefaultRespawnPolicyJson`, the hard-coded respawn town `4`) — a
   separate world-settings concern; only the `/spawn` destination reuses `GameSettings.JoinSpawnReference`.
+  *(2026-10-05: now designed and built in [game-settings](../game-settings/DESIGN.md), KNG-52. The join teleport
+  uses the same destination and resolver as `/spawn`, and respawn follows a per-world policy.)*
 - Arena/duel/tutorial/AFK/treasure/ocelot spawnpoints (v1 minigames not in v3).
 - Siege-internal teleports (hub, spawn picker, vault restore) — owned by `specs/siege-minigame`; this design only adds
   guards so ordinary teleports cannot interfere with a match.
@@ -342,7 +344,8 @@ spot, as staff intend). Player-to-player teleports check the target's spot too (
 #### 3.4.3 Combat tag
 New `CombatTagListener`: player-vs-player damage (direct or projectile) tags both for `teleport.combat-tag-seconds`
 (default **10**, v1 `Main.combat`). Only teleports check it here; the siege has its own combat rules and members are
-already blocked.
+already blocked. **Dying clears the dead player's tag** (the killer stays tagged): added 2026-10-11 (knk-plugin `main`
+`c0ad2a9b`, KNG-34 smoke-test finding 6).
 
 #### 3.4.4 Vanish
 - Name resolution for non-staff treats vanished players as offline (same message, same tab-complete exclusion) —

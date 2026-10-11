@@ -269,6 +269,12 @@ READ-ONLY in its own class javadoc where present.
 - **Status:** Finished debug/admin tool.
 
 ### `/knk gate ...` — full subtree
+
+> **Superseded by KNG-77/78/79, merged 2026-10-09** (knk-plugin `main` `5b1cc8b`):
+> `/knk gate` (alias `/gate`) now acts on a gate **structure** and all its doors, and a sibling root
+> `/knk gatedoor` (alias `/gatedoor`) acts on one door. `toggle`, `here` and look-at targets were added, and
+> the `admin`/`door` sub-literals are deprecated. The table below is the pre-KNG-77 snapshot; the current tree is in
+> [architecture/gate-commands.md](../../architecture/gate-commands.md).
 - **File:** `GateCommand.java`, registered once as `gate` with **no
   metadata-level permission** (`null` in `KnkAdminCommand.java:319-324`) —
   every subaction below gates itself individually inside `GateCommand`, which
@@ -590,6 +596,10 @@ enchantments`'s admin/debug catalog browsing and item-blueprint application.
   unhealthy status + version, or a detailed error breakdown (HTTP status,
   URL, response body, or connection-exception class name) on failure
   (`HealthCommand.java:26-95`). Pure read/diagnostic.
+  KNG-115 (merged 2026-10-11): first prints the
+  service-wide `ApiConnectivity` state (UP/DOWN/UNKNOWN, how long, last
+  probe), then probes `GET /health/ready` at the API root directly (never
+  cached); `degraded` shows as up. See `docs/architecture/api-connectivity.md`.
 - **Feature allocation:** `world-admin`/`health`
 - **Status:** Finished, admin-facing.
 

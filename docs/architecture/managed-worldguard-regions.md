@@ -1,7 +1,7 @@
 # Managed WorldGuard regions — hierarchy, priority, flags and startup repair
 
 **Status:** Implemented, merged to trunk (2026-09-29, [knk-plugin#6](https://github.com/PandiO/knk-plugin/pull/6), [knk-web-api#3](https://github.com/PandiO/knk-web-api/pull/3); KNG-43 follow-up 2026-10-04) and **smoke-tested in game and accepted 2026-10-05** — Linear KNG-46, §9
-**Last updated:** 2026-10-05 (KNG-46 in-game smoke test passed; parent-inheritance decision accepted; vanilla spawn-protection note, §8 item 10)
+**Last updated:** 2026-10-06 (§5 "Rank-dependent access" links the domain entry/exit enforcement, KNG-55/KNG-56); 2026-10-05 (KNG-46 in-game smoke test passed; parent-inheritance decision accepted; vanilla spawn-protection note, §8 item 10)
 **Supersedes:** Linear KNG-12 ("no WG flags on town/district regions"), the assumption noted in `CombatSafezone`'s Javadoc
 **Evidence:** [`reports/2026-09-28-v1-permissions-worldguard-inventory.md`](../reports/2026-09-28-v1-permissions-worldguard-inventory.md) (categorized v1 inventory), the v3 domain model (`Town → District → Structure`, `GateStructure : Structure`), `vision.md` §2
 
@@ -94,7 +94,7 @@ Setting a **parent** also makes the child inherit the parent's *owners and membe
 - **Battleground PvP.** `pvp allow` + `entry deny` are enforced and the priority floor (50) sits above every other category, so it beats the Town's `pvp deny`.
 - **Wood farm (`property_47`).** v1 set `block-break allow` *and* the custom `allow-blocks: LOG;` (only logs breakable). WorldGuard has no `allow-blocks`, so `block-break allow` alone would let anyone break every block in the plot. Decision: `RESOURCE_PRODUCTION` does **not** get `block-break` unless the config opts in, and `allow-blocks` is never set (an override that names it is skipped with a warning, because WorldGuard doesn't know the flag). Enforcing "logs only" needs a v3 block-break listener — **unresolved**, §8. `property_45`/`_46` also had `block-break allow` with no `allow-blocks`; if they matter, add the flag through `overrides` after deciding it's intended.
 - **Greeting/farewell text.** Not managed. v3 sends its own transition messages from domain data (`SimpleRegionTransitionService`); a WG greeting flag would duplicate it, and the per-town v1 texts aren't category data.
-- **Rank-dependent access.** Not managed. The v1 `entry-deny-message` wording mentions ranks, but the flag alone doesn't prove WG enforced a rank check (the inventory says so). v3 gates entry through `Domain.AllowEntry`/`AllowExit` and title/premium checks in the plugin. `entry` on Towns is left unset (four v1 towns set `allow`, one none — equivalent to unset for non-members).
+- **Rank-dependent access.** Not managed. The v1 `entry-deny-message` wording mentions ranks, but the flag alone doesn't prove WG enforced a rank check (the inventory says so). v3 gates entry through `Domain.AllowEntry`/`AllowExit` and title/premium checks in the plugin (since KNG-56 as the custom WorldGuard flags `knk-allow-entry`/`knk-allow-exit`, synced from the API and enforced by a WorldGuard session handler: [`domain-access-enforcement.md`](domain-access-enforcement.md)). `entry` on Towns is left unset (four v1 towns set `allow`, one none — equivalent to unset for non-members).
 - **`deny-message ""`.** Applied to Towns only (shared there). For Properties (22 of 36), Rooms (17 of 22) and `house_9` it's per-instance, not category data, so it's not applied; use an override if wanted.
 - **`__global__`** stays untouched unless explicitly enabled.
 

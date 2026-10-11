@@ -1,7 +1,7 @@
 # Domain Discovery — Design
 
 **Status:** Done — merged to trunk 2026-09-27
-**Last updated:** 2026-09-26
+**Last updated:** 2026-10-06 (§3.6 note: `OnRegionEnterEvent` no longer fires for denied moves, KNG-55); 2026-09-26
 **Linear:** [KNG-20](https://linear.app/kngpandi/issue/KNG-20/domain-discovery-first-entry-rewards-for-townsdistrictsstructures)
 **Sources:** `knk-v1-archive` (`src/Towns/TownEvents.java`, `src/Towns/Town.java`, `src/DataManager/Towns.java`,
 `src/Users/User.java`, `src/Titles/Title.java`, `src/Main/Main.java`, `src/Menu/Menu.java`, `src/DataManager/Worldguard.java`);
@@ -308,7 +308,7 @@ unique `(UserId, DomainId)` bounds abuse to one reward per domain per account.
 **Detection** — new `paper:discovery/DomainDiscoveryListener`:
 - `OnRegionEnterEvent` (MONITOR): if eligible (below) and the region id isn't in the player's known-discovered or
   known-non-domain set, schedule a **next-tick confirmation**: the region is still in the WG applicable set at the player's
-  current location. This drops entries whose move was cancelled (the event fires before `AllowEntry` is enforced) while still
+  current location. This drops entries whose move was cancelled (the event fired before `AllowEntry` was enforced; since KNG-55, 2026-10-06, it fires only for allowed or bypassed moves — see `reports/2026-10-06-domain-entry-deny-bypass.md`) while still
   counting a player who runs through a small structure. Confirmed ids go into the player's pending batch.
 - Join: new Bukkit event `paper:events/UserDataLoadedEvent` fired by `UserAccountListener` right after `joinLoadingGuard.release`
   (`paper:listeners/UserAccountListener.java:104`). On it: load the known set (`GET …/known`), then add every WG region at the
