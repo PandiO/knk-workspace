@@ -16,7 +16,9 @@
 --   Run the whole file. The first SELECT lists the clashes; each run repairs the lowest one, and a run
 --   with none changes nothing. Run it again until clashes_left is 0.
 --   mysql --defaults-extra-file=~/.knk-dev.cnf knightsandkings_dev_v2 < scripts/maintenance/repair-holder-id-clash.sql
---   or paste the whole file into phpMyAdmin's SQL tab (it runs as one batch, which the variables need).
+--   or paste the whole file into phpMyAdmin's SQL tab (it runs as one batch, which the variables need)
+--   with "Enable foreign key checks" UNTICKED below the query box: phpMyAdmin otherwise re-enables them
+--   per statement and the group's id update fails with #1451. A failed run commits nothing.
 --   Works on MySQL 8 and MariaDB 10.3+.
 --
 -- References to permission_groups.Id as of migration 20261010170000 (re-check after new migrations):

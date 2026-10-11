@@ -113,13 +113,13 @@ Run 1 (developer, 2026-10-11):
 | 7 | Pass (29/29) | First run failed in Git Bash: the probe needed python3. Fixed in knk-workspace `f9665ea` |
 | 8, 9, 11, 12 | Pass | |
 | 10 | Pass, known issue | Rename of District 15's region: "target region name already exists" = KNG-103 (backlog) |
-| 13 | **Fail → fixed** | No register URL (the existing config.yml keeps its own `link-code-generated` without `{url}`), no copy. Fixed in knk-plugin `fb81f3e3`: register line appended, code click-to-copy, URL clickable. Re-check |
+| 13 | **Fail → fixed, re-checked** | No register URL (the existing config.yml keeps its own `link-code-generated` without `{url}`), no copy. Fixed in knk-plugin `fb81f3e3`: register line appended, code click-to-copy, URL clickable. Re-check |
 | 14-18 | Pass / accepted | "This code belongs to" not looked at; no username field; account shows the alt's name |
 | 19-23 | Pass / accepted | |
 | 24 | Pass | |
 | 25 | **Fail → fixed** | Content staff saw no GateStructure/Domain/District/Location lists: list views POST to `…/search`, which the writes-only rule treated as a write. Fixed in knk-web-api `09691df`. Re-check |
 | 26, 28 | Pass | |
-| 27 | **Fail → fixed** | (a) Assigning a group to the web-only `admin` account: 500 InvalidCastException. Cause: user `admin` and the Staff group share holder id 29 in the dev DB (also in the UI/UX seed), so Staff's grants applied to `admin` too. Repair: `scripts/maintenance/repair-holder-id-clash.sql`; the seed export now refuses such a clash (`bd63e0e`). (b) Admins couldn't hand out premium ranks without holding their perks: new node `knk.admin.user.group.premium` (knk-web-api `32c98cb`). Dev DB repaired 2026-10-11 (Staff moved to a new id; group assign to `admin` now works). Grants removed from `admin` before the repair had come off Staff: restored from the UI/UX seed. Re-check (b) |
+| 27 | **Fail → fixed** | (a) Assigning a group to the web-only `admin` account: 500 InvalidCastException. Cause: user `admin` and the Staff group share holder id 29 in the dev DB (also in the UI/UX seed), so Staff's grants applied to `admin` too. Repair: `scripts/maintenance/repair-holder-id-clash.sql`; the seed export now refuses such a clash (`bd63e0e`). (b) Admins couldn't hand out premium ranks without holding their perks: new node `knk.admin.user.group.premium` (knk-web-api `32c98cb`). Dev DB repaired 2026-10-11 (Staff 29 → 43, 55 grants; Moderator's parent followed). The first phpMyAdmin runs did not stick (collation error, then `ROW_COUNT()` reset by phpMyAdmin, then its foreign-key checkbox): fixed in the script. Grants removed from `admin` before the repair had come off Staff: restored from the UI/UX seed. Re-check (b) |
 | 29, 31 | Pass | "Readable headings" = the landing headings are white on the photo (they were dark navy before) |
 | 29-30 phone | Not run | Login from the phone fails: the web app called `http://localhost:5294` (the phone itself). Needs the LAN setup below |
 | 32-33 | Skipped | Run 32 once after the clash repair |
