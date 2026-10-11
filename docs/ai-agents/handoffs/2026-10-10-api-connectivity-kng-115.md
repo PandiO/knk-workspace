@@ -10,7 +10,7 @@
 
 | Repo | Branch | Commit | Base |
 |---|---|---|---|
-| knk-web-api | `claude/kng-115-api-health` | `cc96c85` (was `860c2e9`, `fdae959`) | `master` `8cce48d0` |
+| knk-web-api | `claude/kng-115-api-health` | `83fa80b` (was `860c2e9`, `fdae959`, `cc96c85`) | `master` `8cce48d0` |
 | knk-plugin | `claude/kng-115-api-health` | `e064f44` (was `f88d686`) | `main` `973aa68b` |
 | knk-workspace | `claude/kng-115-api-health` | this commit | `claude/compassionate-darwin-86zbpy` `38f22c0` (carries the claim) |
 
@@ -55,6 +55,13 @@ Verified live: `/health/ready` 200 `healthy` → 503 `unhealthy` (`database: unh
   stack every 30 s) and `CurrencyMonitorService` (each cycle). These existed before KNG-115 and
   recover on their own; queued as a separate task. Visual Studio's "Exception thrown: ..."
   lines are the debugger's first-chance notices for caught exceptions.
+
+- **API `83fa80b`, debugger stop on every request:** `ServerVersion.AutoDetect` ran inside the
+  `AddDbContext` options lambda (`Program.cs`), so while MySQL was down, building any DbContext
+  threw from user code into DI; VS Code's Just My Code broke there on every `/health/ready` and
+  background tick. The version is now detected once at startup. Startup seeding already needs
+  MySQL, so booting without it fails as before. **Touches the `Program.cs` DbContext line**
+  (KNG-64 edits the auth part of `Program.cs`).
 
 Tests: plugin 3502/0 failed; API the same 4 pre-existing failures, 1980 passed.
 
