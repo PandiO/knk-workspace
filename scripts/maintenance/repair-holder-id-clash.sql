@@ -16,6 +16,8 @@
 --   Run the whole file. The first SELECT lists the clashes; each run repairs the lowest one, and a run
 --   with none changes nothing. Run it again until clashes_left is 0.
 --   mysql --defaults-extra-file=~/.knk-dev.cnf knightsandkings_dev_v2 < scripts/maintenance/repair-holder-id-clash.sql
+--   or paste the whole file into phpMyAdmin's SQL tab (it runs as one batch, which the variables need).
+--   Works on MySQL 8 and MariaDB 10.3+.
 --
 -- References to permission_groups.Id as of migration 20261010170000 (re-check after new migrations):
 -- permission_groups.ParentGroupId, user_permission_groups.PermissionGroupId,
@@ -41,10 +43,20 @@ UPDATE user_permission_groups SET PermissionGroupId = @new         WHERE Permiss
 UPDATE lootbox_token_grants   SET PermissionGroupId = @new         WHERE PermissionGroupId = @clash AND @new IS NOT NULL;
 UPDATE kits                   SET RequiredPermissionGroupId = @new WHERE RequiredPermissionGroupId = @clash AND @new IS NOT NULL;
 UPDATE domains                SET TeleportMinPremiumGroupId = @new WHERE TeleportMinPremiumGroupId = @clash AND @new IS NOT NULL;
+-- Plain REPLACE with one explicit collation on every side: works on MySQL 8 and MariaDB, and in clients
+-- whose connection collation differs from the table's (phpMyAdmin: utf8mb4_unicode_ci vs general_ci).
+SET @c := CAST(@clash AS CHAR), @n := CAST(@new AS CHAR);
 UPDATE game_settings
-SET GroupOverridesJson = REGEXP_REPLACE(GroupOverridesJson,
-    CONCAT('"permissionGroupId"[[:space:]]*:[[:space:]]*', @clash, '([^0-9])'),
-    CONCAT('"permissionGroupId":', @new, '$1'))
+SET GroupOverridesJson =
+    REPLACE(REPLACE(REPLACE(REPLACE(CONVERT(GroupOverridesJson USING utf8mb4) COLLATE utf8mb4_general_ci,
+        CONVERT(CONCAT('"permissionGroupId":', @c, ',') USING utf8mb4) COLLATE utf8mb4_general_ci,
+        CONVERT(CONCAT('"permissionGroupId":', @n, ',') USING utf8mb4) COLLATE utf8mb4_general_ci),
+        CONVERT(CONCAT('"permissionGroupId":', @c, '}') USING utf8mb4) COLLATE utf8mb4_general_ci,
+        CONVERT(CONCAT('"permissionGroupId":', @n, '}') USING utf8mb4) COLLATE utf8mb4_general_ci),
+        CONVERT(CONCAT('"permissionGroupId": ', @c, ',') USING utf8mb4) COLLATE utf8mb4_general_ci,
+        CONVERT(CONCAT('"permissionGroupId": ', @n, ',') USING utf8mb4) COLLATE utf8mb4_general_ci),
+        CONVERT(CONCAT('"permissionGroupId": ', @c, '}') USING utf8mb4) COLLATE utf8mb4_general_ci,
+        CONVERT(CONCAT('"permissionGroupId": ', @n, '}') USING utf8mb4) COLLATE utf8mb4_general_ci)
 WHERE @new IS NOT NULL;
 -- The grants on the shared id were the group's.
 UPDATE permission_grants      SET HolderId = @new                  WHERE HolderId = @clash AND @new IS NOT NULL;
