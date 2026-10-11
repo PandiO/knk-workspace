@@ -1,7 +1,7 @@
 # Teleportation Commands — Design
 
 **Status:** Decided — implementation in progress (branch `claude/teleport`)
-**Last updated:** 2026-09-26
+**Last updated:** 2026-10-11 (§3.4.3: death clears the combat tag)
 **Linear:** [KNG-17](https://linear.app/kngpandi/issue/KNG-17/teleportation-staff-tp-tpa-requests-spawn-domain-warps-v1-port)
 **Sources:** `knk-v1-archive` (`src/UsefulCommands/PlayerTeleportCommand.java`, `src/UsefulCommands/SpawnCommand.java`,
 `src/SpawnPoints/SpawnPoint.java`, `src/SpawnPoints/SpawnPointCommands.java`, `src/Teleport/*`, `src/Houses/HomeCommands.java`,
@@ -344,7 +344,8 @@ spot, as staff intend). Player-to-player teleports check the target's spot too (
 #### 3.4.3 Combat tag
 New `CombatTagListener`: player-vs-player damage (direct or projectile) tags both for `teleport.combat-tag-seconds`
 (default **10**, v1 `Main.combat`). Only teleports check it here; the siege has its own combat rules and members are
-already blocked.
+already blocked. **Dying clears the dead player's tag** (the killer stays tagged): added 2026-10-11 (knk-plugin `main`
+`c0ad2a9b`, KNG-34 smoke-test finding 6).
 
 #### 3.4.4 Vanish
 - Name resolution for non-staff treats vanished players as offline (same message, same tab-complete exclusion) —

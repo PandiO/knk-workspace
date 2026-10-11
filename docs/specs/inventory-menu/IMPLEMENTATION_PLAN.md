@@ -591,3 +591,26 @@ Findings about the engine recorded there (not changed): one pending confirmation
 survives navigation (features scope their Confirm buttons with their own `*.pending` conditions);
 engine permission checks are Bukkit-only (`Player.hasPermission`), not `KnkPermissible`.
 
+
+## Follow-up: item blinker (KNG-125, open, 2026-10-10)
+
+Requested by the developer during the KNG-34 smoke test (guide finding 9) and postponed: bring back
+the v1/v2 **item blinker** (FR-2.6.1 in REQUIREMENTS_INVENTORY_MENU.md). It can be switched on for
+sections, e.g. the open group selector in `statistics.visibility`. The selected item alternates
+with a **yellow glass pane** that carries the original's name and lore, then switches back. The
+**original item's click actions keep working**. V3 today has only `DisplayMode` HIGHLIGHT, a static
+glint (`MenuItemBukkitMapper`), chosen in place of v2's blink (see `SiegeVoteOptionView`).
+
+- **Legacy:** v1 `src/Menu/MenuItemBlink.java` and `Menu.setMenuItemBlink` (B30: the stop never worked).
+  v2 `menu/MenuItemBlink.java`, switched on per item with `MenuItem.enableMenuItemBlink` (e.g.
+  `SelectObjectSection`). Both toggle every 10 ticks on an async timer. Both route clicks by slot,
+  so the actions survive. Neither stopped the blinker on close. Details:
+  `docs/specs/legacy/inventory-menus.md`.
+- **V3 plan:**
+  - Add a `BLINK` display mode, or a section flag for its selected item. Collect the blinking slots
+    in `MenuRenderResult`.
+  - Toggle them from `MenuAutoRefreshTask`, which runs every tick on the main thread. Swap only the
+    inventory `ItemStack`, as `MenuControlHintListener` does, with no re-render. Clicks resolve
+    through `OpenMenuContext.itemsBySlot()`, so the actions stay.
+  - Stop on close (`MenuService.onMenuInventoryClosed`) and when the slot's item changes. Interval
+    about 10 ticks, configurable.

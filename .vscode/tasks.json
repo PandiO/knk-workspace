@@ -150,6 +150,70 @@
 				"-File",
 				"scripts/count-custom-loc.ps1"
 			]
-		}
+		},
+		{
+      "label": "Open workspace terminals",
+      "dependsOn": [
+        "Plugin Terminal",
+        "API Terminal",
+        "Web App Terminal"
+      ],
+      "dependsOrder": "parallel",
+      "runOptions": {
+        "runOn": "folderOpen"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Plugin Terminal",
+      "type": "shell",
+      "command": "powershell.exe",
+      "options": {
+        "cwd": "${workspaceFolder}/Repository/knk-plugin"
+      },
+      "isBackground": true,
+      "problemMatcher": [],
+      "presentation": {
+		"group": "knk-terminals",
+        "panel": "dedicated",
+        "reveal": "always",
+        "focus": false,
+        "echo": false
+      }
+    },
+    {
+      "label": "API Terminal",
+      "type": "shell",
+      "command": "powershell.exe",
+      "options": {
+        "cwd": "${workspaceFolder}/Repository/knk-web-api"
+      },
+      "isBackground": true,
+      "problemMatcher": [],
+      "presentation": {
+		"group": "knk-terminals",
+        "panel": "dedicated",
+        "reveal": "always",
+        "focus": false,
+        "echo": false
+      }
+    },
+    {
+      "label": "Web App Terminal",
+      "type": "shell",
+      "command": "powershell.exe",
+      "options": {
+        "cwd": "${workspaceFolder}/Repository/knk-web-app"
+      },
+      "isBackground": true,
+      "problemMatcher": [],
+      "presentation": {
+		"group": "knk-terminals",
+        "panel": "dedicated",
+        "reveal": "always",
+        "focus": false,
+        "echo": false
+      }
+    }
 	]
 }
