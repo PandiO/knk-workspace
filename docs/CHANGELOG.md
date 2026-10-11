@@ -11,6 +11,14 @@ This is a human-readable record of capabilities merged into the V3 default branc
   text, which the API could not read; the check never reached the region. Not caused by the multiworld work
   (KNG-111). The API now reads a text id, the web app keeps the id a number, and a Location value the check cannot
   read now says so instead of "outside the boundaries". Unit-tested; not yet checked live.
+- **Recapturing a point of an existing gate door checks the gate's region again**
+  ([KNG-131](https://linear.app/kngpandi/issue/KNG-131); knk-web-app `ff6568a`, knk-plugin `02042756`, branch
+  `claude/loving-johnson-dlshrc`). Capturing a Location in game for an existing GateDoor (e.g. its reference point)
+  failed with "Location {coordinates} is outside {parentEntityName}'s boundaries" even inside the gate's region: the
+  plugin got the gate's id instead of the gate, and looked for a region named "21". The web app now sends the saved
+  gate. When the plugin can't find a region it now says so and follows the rule's blocking setting, and the
+  coordinates and parent name are always filled in. Not caused by the multiworld work. Unit-tested; not yet checked
+  in game.
 
 ## 2026-10-11
 
