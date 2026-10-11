@@ -10,7 +10,7 @@
 
 | Repo | Branch | Commit | Base |
 |---|---|---|---|
-| knk-web-api | `claude/kng-115-api-health` | `860c2e9` | `master` `8cce48d0` |
+| knk-web-api | `claude/kng-115-api-health` | `fdae959` (was `860c2e9`) | `master` `8cce48d0` |
 | knk-plugin | `claude/kng-115-api-health` | `f88d686` | `main` `973aa68b` |
 | knk-workspace | `claude/kng-115-api-health` | this commit | `claude/compassionate-darwin-86zbpy` `38f22c0` (carries the claim) |
 
@@ -28,6 +28,18 @@ reads `healthy`/`degraded`/`unhealthy`; new `ApiConnectivity` (core) + `ApiConne
 `api.connectivity.*`; health data-access `default-policy: API_ONLY` and a Javadoc warning on
 `HealthDataAccess`; `/knk health` shows the live state. `KnKPlugin`: settings line, two builder
 lines, monitor start, stop in `onDisable`, getter. `KnkAdminCommand` untouched.
+
+## Live test 2026-10-11: fix
+
+With MySQL stopped, `/health/ready` returned a **500** instead of 503. Cause: building
+`KnKDbContext` runs `ServerVersion.AutoDetect(connectionString)` (`Program.cs:51`, inside the
+`AddDbContext` options lambda, so it runs per scope), which opens a connection and throws.
+`DatabaseHealthCheck` got the DbContext by constructor injection, and `HealthCheckService` builds
+checks outside its exception handling. Fixed in `fdae959`: the check resolves the DbContext inside
+its try block, and the controller maps any exception to 503 `unhealthy`. Two regression tests; the
+first fails on `860c2e9`. API suite: the same 4 pre-existing failures, 1978 passed. The
+`CurrencyMonitorService` / `RankExpirySweepService` errors logged while MySQL is down are those
+background jobs' own caught failures, which existed before this change and are expected.
 
 ## Correction to the issue text
 
