@@ -8,6 +8,16 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## 2026-10-11
 
+- **API connectivity: one up/down view of the API** ([KNG-115](https://linear.app/kngpandi/issue/KNG-115)): live-tested
+  by the developer and merged. knk-web-api `master` `17ee730`, knk-plugin `main` `b5eee6e`.
+  - The API's `GET /health/ready` now checks MySQL: 503 `unhealthy` when the database is down (never a 500), 200
+    otherwise. A database outage is logged once when it starts and once when it ends.
+  - The plugin probes `/health/ready` at the API root every 10 s (5 s timeout, never cached). It keeps one state:
+    DOWN after 3 failed probes, UP after 2 passing ones. Each change fires `ApiConnectivityChangedEvent` on the main
+    thread and is logged. `/knk health` shows the state, how long it has held and the last probe. Settings:
+    `config.yml` → `api.connectivity`.
+  - Nothing reacts to the event yet; offline security (KNG-58), hub outage actions (KNG-109/114) and Siege
+    containment (KNG-117) will subscribe. See [architecture](architecture/api-connectivity.md).
 - Players in owner mode or staff mode no longer show in the multiplayer server list ([KNG-127](https://linear.app/kngpandi/issue/KNG-127);
   knk-plugin `main` `ac2855a`). They were already hidden in game and in the tab list; the server list still counted them
   and showed their names when hovering over the player count. Now they are left out of both, and the Game Settings MOTD's

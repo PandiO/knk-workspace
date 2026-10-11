@@ -11,6 +11,11 @@ This is the index of intended gameplay and shipped surfaces, not a substitute fo
 on their stated default branches. KNG-38 is Done with its API half on `master` at merge `300aa4c`;
 its web-app half followed on `main` at merge `24b60ac` (2026-10-06), so KNG-38 is fully merged.
 
+**Targeted refresh (2026-10-11):** service-wide API connectivity (KNG-115, infrastructure, no feature row) is merged
+and live-tested: knk-web-api `master` `17ee730`, knk-plugin `main` `b5eee6e`; see
+[architecture/api-connectivity.md](architecture/api-connectivity.md). Features that must react to an API outage
+(offline security KNG-58, hub KNG-109/114, Siege KNG-117) subscribe to its event.
+
 **Targeted refresh (2026-10-10):** the global world settings row is merged and live (KNG-52: knk-web-api
 `master` `8cce48d`, knk-plugin `main` `973aa68b`, knk-web-app `main` `12c1d60`).
 
