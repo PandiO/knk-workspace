@@ -1,6 +1,6 @@
 # Closed-alpha deployment runbook
 
-**Status:** In progress — phases 0–2 complete; phase 3 (API image) is next
+**Status:** In progress — phases 0–3 complete; phase 4 (Minecraft preparation) is next
 **Last updated:** 2026-10-11
 **Progress report:** [2026-10-11 closed-alpha infrastructure progress](../reports/2026-10-11-closed-alpha-infrastructure-progress.md)
 **Handoff:** [2026-10-11 closed-alpha infrastructure](../ai-agents/handoffs/2026-10-11-closed-alpha-infrastructure.md)
@@ -48,7 +48,7 @@ intact. Completed and operator-confirmed.
 Acceptance: healthy container, 136 tables, 4 triggers, 76 migrations, exactly
 two active accounts, app account can connect, clean dump verifies. Complete.
 
-## Phase 3 — build and privately start the API (next)
+## Phase 3 — build and privately start the API (complete)
 
 ### 3.1 Build the pinned image
 
@@ -79,8 +79,23 @@ The runtime image must expose port 5000 and check
 - source-archive SHA-256 label;
 - SDK and ASP.NET base-image digests.
 
-Do not claim this phase complete until the image exists and inspection output
-has been saved.
+Accepted build evidence (2026-10-11):
+
+- source archive SHA-256:
+  `0a7a04ef8ce92f34ab8027d9cf2322b2005bb60d8e8c54f03d7e6d2820bc6ac7`;
+- final image ID:
+  `sha256:61c7e1f6bd451748e3bf6c1cc65f9a49fe5e1b12bdce2bf273c91f8bbea46251`;
+- size: 259,134,752 bytes;
+- runtime user: `1000:1000`;
+- SDK digest:
+  `sha256:ec9c0a0dc5f60adc2065762050638dd5ed5facfc53716d4580a42d86027c8e80`;
+- ASP.NET digest:
+  `sha256:a3cd573ac05cf88ca496e3309cb7f7c44aa16664352d1ee41eda93154f50cdbf`.
+
+The .NET 8 runtime base defines `APP_UID=1654`; that name overrode the first
+Dockerfile's same-named build argument. The corrected Dockerfile uses
+`KNK_RUNTIME_UID`/`KNK_RUNTIME_GID`. The rejected image is retained under
+`knk-web-api:alpha-17ee730a-uid1654-failed` for audit only.
 
 ### 3.2 Add API to `knk-alpha`
 
@@ -131,7 +146,24 @@ From inside the Docker network, verify:
 
 Create a fresh database dump after any startup seed changes.
 
-## Phase 4 — prepare the Minecraft service
+Acceptance completed 2026-10-11:
+
+- API container healthy on private `knk-alpha_backend`, with
+  `.HostConfig.PortBindings={}`;
+- `/health/live` and `/health/ready` both returned 200, with database healthy;
+- MySQL container was not recreated;
+- 136 tables, 4 triggers, and 76 migrations remained unchanged;
+- two active users remained `admin` and `__pandi__`;
+- all recorded transient/activity tables stayed empty;
+- all canonical seed counts stayed unchanged on first start and restart;
+- no secret values and no error/critical/exception entries appeared in logs;
+- controlled restart returned healthy in about 10 seconds.
+
+No fresh database dump was required because every canonical seeder reported
+zero creates, updates, and normalizations. Expected derived background jobs
+did run. The original clean baseline dump remains the rollback source.
+
+## Phase 4 — prepare the Minecraft service (next)
 
 Do not start from the staging directories. Create a separate live data path,
 then copy the verified sources into it while preserving staging as rollback.

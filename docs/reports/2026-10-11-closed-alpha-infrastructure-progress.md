@@ -1,6 +1,6 @@
 # Closed-alpha infrastructure progress — 2026-10-11
 
-**Status:** In progress; database baseline complete, API image build prepared but not yet run
+**Status:** In progress; database and private API accepted, Minecraft preparation next
 **Last updated:** 2026-10-11
 **Related issues:** [KNG-109](https://linear.app/kngpandi/issue/KNG-109),
 [KNG-114](https://linear.app/kngpandi/issue/KNG-114),
@@ -273,7 +273,7 @@ Metadata SHA-256:
 Metadata records MySQL 9.6.0, 136 tables, 4 triggers, 76 EF migrations, and
 the two active usernames.
 
-## 5. API deployment preparation
+## 5. API deployment and private acceptance
 
 The normal Windows checkout is:
 
@@ -297,9 +297,11 @@ uploaded/verified at:
 knk-web-api-17ee730a.tar.gz
 ```
 
-The source archive is approximately 2.1 MiB and has a companion `.sha256`
-file. Resolve its actual hash from that file; it is not copied into this
-report.
+The source archive is approximately 2.1 MiB. Its verified SHA-256 is:
+
+```text
+0a7a04ef8ce92f34ab8027d9cf2322b2005bb60d8e8c54f03d7e6d2820bc6ac7
+```
 
 Pulled build/runtime base images:
 
@@ -311,12 +313,117 @@ mcr.microsoft.com/dotnet/aspnet:8.0-bookworm-slim
   sha256:a3cd573ac05cf88ca496e3309cb7f7c44aa16664352d1ee41eda93154f50cdbf
 ```
 
-Important current boundary: the API image has **not** been built. The first
-build attempt used the obsolete expected path `83fa80b3`; extraction failed,
-the Dockerfile writes failed because the directory did not exist, and Docker
-reported that the build context did not exist. Only the base-image pulls
-succeeded. An empty `/srv/docker/build/knk-web-api/83fa80b3` directory may
-remain. Resume with the actual `17ee730a` archive.
+The verified archive was extracted under:
+
+```text
+/srv/docker/build/knk-web-api/17ee730a/
+```
+
+The deployment-only build context contains a multi-stage .NET 8 Dockerfile,
+`.dockerignore`, and a secret-file entrypoint. The accepted Dockerfile
+SHA-256 is:
+
+```text
+61dc271a1f14b190a80157e1c99fbddbc290ea4b95d134670d06fd5c09cb467c
+```
+
+The first successful image build exposed a UID collision: Microsoft's .NET 8
+runtime base defines `APP_UID=1654`, which took precedence over the
+Dockerfile's same-named build argument. That image could not read the NAS
+mode-600 secrets owned by UID 1000 and exited before .NET or MySQL access.
+No secret leaked and the database was untouched. The rejected image is
+retained for audit under:
+
+```text
+knk-web-api:alpha-17ee730a-uid1654-failed
+sha256:54bd0d9602a3811d73ef17babe4cdb3f21758e9d5b4c7e0daf956cb1d0778240
+```
+
+The Dockerfile now uses collision-free arguments
+`KNK_RUNTIME_UID`/`KNK_RUNTIME_GID`. The corrected image is:
+
+```text
+tag:     knk-web-api:alpha-17ee730a
+ID:      sha256:61c7e1f6bd451748e3bf6c1cc65f9a49fe5e1b12bdce2bf273c91f8bbea46251
+size:    259134752 bytes
+user:    1000:1000
+created: 2026-10-11T14:38:20.830757388Z
+```
+
+Its OCI labels record revision `17ee730a`, the source-archive hash above, and
+both pinned .NET base digests. The final build log is:
+
+```text
+/srv/docker/build/knk-web-api/17ee730a/
+build-20261011T143814Z-runtime-uid-fix.log
+```
+
+The source build reported the pinned revision's existing package advisories:
+AutoMapper 12.0.1 (high, GHSA-rvv3-g6hj-g44x) and
+OpenTelemetry.Instrumentation.AspNetCore 1.7.0 (moderate,
+GHSA-vh2m-22xx-q94f). They were recorded rather than silently changing the
+pinned source during infrastructure deployment.
+
+### Private stack deployment
+
+Portainer stack `knk-alpha` now contains `mysql` and `api`. The API:
+
+- uses the corrected local image with no `build:` section;
+- reads the MySQL app password, plugin API key, and JWT secret from protected
+  read-only bind mounts without placing their values in Compose;
+- uses MySQL 9.6.0 and service DNS name `mysql`;
+- runs only on internal network `knk-alpha_backend`;
+- has no host port binding (`.HostConfig.PortBindings={}`);
+- disables unauthenticated plugin calls and unused OTLP telemetry;
+- drops all Linux capabilities and enables `no-new-privileges`;
+- uses bounded JSON-file logging.
+
+The Portainer definition and promoted host Compose canonicalize identically.
+The current host file and prior MySQL-only backup are:
+
+```text
+/srv/docker/stacks/knk-alpha/compose.yaml
+  sha256:b4c501eedee03404f6829390dc9eb1d3b3eeb0dd0886136081cce5276a4e298c
+
+/srv/docker/stacks/knk-alpha/
+compose.mysql-only.pre-api.20261011T151034Z.yaml
+  sha256:99e07903c175e66b8a7d7d8c1f17b3187667bf5d0e03dd6679d0295a37d67bea
+```
+
+### Acceptance evidence
+
+The accepted API container used the corrected image, ran as `1000:1000`, and
+became healthy. MySQL retained container ID
+`01a611461c12ed00b4f7047d8880bd32f3b139528036c4534d68337b0a3ff5fb`
+through both Portainer updates.
+
+Observed private acceptance:
+
+- `/health/live`: HTTP 200, process running;
+- `/health/ready`: HTTP 200, self and database healthy;
+- controlled API restart: same container, healthy again in about 10 seconds;
+- no secret values in first-start or restart logs;
+- zero error, critical, or exception log lines;
+- four understood first-start warnings: ephemeral Data Protection key
+  storage, no XML encryptor for that ephemeral key, one unordered EF query,
+  and the expected `ASPNETCORE_URLS` override of the base image's port value.
+
+Pre-start, first-start, and post-restart checks remained consistent:
+
+- 136 base tables, 0 views, 4 triggers, 76 EF migrations;
+- 9 total users, 2 active: `admin`, `__pandi__`;
+- canonical counts: 12 abilities, 26 enchantments, 154 item blueprints,
+  2 kits, 9 lootbox types, 27 menu templates, 3 siege lobbies;
+- world tasks, step progress, workflow sessions, form-submission progress,
+  link codes, private-message logs, player-stat sessions, audit logs, and
+  user ignores all remained at zero;
+- every canonical seeder reported zero creates, updates, and normalizations
+  on first start and restart.
+
+Expected background projection, leaderboard, currency, and retention jobs did
+run and produced verbose informational EF SQL logs. Docker log rotation is
+bounded. No fresh database dump was required because canonical seed data did
+not change; the original clean dump remains the rollback baseline.
 
 ## 6. Decisions and boundaries
 
@@ -340,7 +447,9 @@ remain. Resume with the actual `17ee730a` archive.
 
 Continue with the phased runbook in
 [`docs/guides/closed-alpha-deployment-runbook.md`](../guides/closed-alpha-deployment-runbook.md).
-The immediate next action is to extract the verified `17ee730a` source archive,
-create the deployment-only Docker build files in that extracted snapshot,
-build/tag the API image, and record the resulting image ID and labels. Do not
-start Minecraft or expose public ingress in the same step.
+Phase 3 is complete. The immediate next action is Phase 4: refresh and inspect
+the current KNG-114/multiworld work, verify whether the KnK-owned existing-
+world loader is present on current `knk-plugin` `main`, and implement/package
+it if it is not. Then create a separate live Minecraft data path from the
+verified staging archives. Do not boot directly from staging, start Minecraft
+before loader/data-path acceptance, or expose public ingress in the same step.

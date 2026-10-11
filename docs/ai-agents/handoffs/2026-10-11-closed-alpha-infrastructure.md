@@ -1,7 +1,7 @@
 # Handoff: NAS closed-alpha infrastructure
 
 **Date:** 2026-10-11
-**Status:** Paused for the night; database complete, API image build is the next command sequence
+**Status:** API built, privately deployed, and accepted; Minecraft preparation is next
 **Branch:** `codex/closed-alpha-infrastructure-handoff`
 **Related issues:** KNG-109, KNG-114, KNG-115
 **Progress report:** [`2026-10-11-closed-alpha-infrastructure-progress.md`](../../reports/2026-10-11-closed-alpha-infrastructure-progress.md)
@@ -9,23 +9,20 @@
 
 ## Resume point
 
-The `knk-alpha` MySQL container is healthy and its cleaned database baseline
-is backed up. Only `__pandi__` and `admin` remain usable. Main and hub world
-archives are verified and staged. The API source archive for merged
-`knk-web-api` commit `17ee730a` is uploaded and verified.
+The `knk-alpha` MySQL and API containers are healthy on the private internal
+Compose network. Neither has a published host port. The cleaned database
+baseline remains backed up, only `__pandi__` and `admin` are active, and API
+startup plus a controlled restart left all recorded schema, activity, and
+canonical-seed counts unchanged.
 
-The API image is **not built yet**. An earlier command used obsolete commit
-path `83fa80b3`; source extraction and Dockerfile creation failed, and Docker
-correctly refused the missing build context. The .NET SDK/runtime base images
-were pulled successfully. Resume using:
-
-```text
-/home/ubuntunas/docker-backups/deployment-sources/knk-web-api/17ee730a/
-knk-web-api-17ee730a.tar.gz
-```
-
-Do not repeat the failed `83fa80b3` path. An empty build directory for it may
-exist and is harmless.
+The pinned API source archive for `knk-web-api` commit `17ee730a` was verified,
+extracted, built, and deployed. The accepted image is
+`knk-web-api:alpha-17ee730a`, image ID
+`sha256:61c7e1f6bd451748e3bf6c1cc65f9a49fe5e1b12bdce2bf273c91f8bbea46251`,
+running as `1000:1000`. `/health/live` and `/health/ready` both return 200;
+readiness reports the database healthy. The next phase is the KnK-owned
+multiworld loader and private Minecraft service preparation. Do not expose
+the API or start Minecraft until that phase's own prerequisites pass.
 
 ## Verified current state
 
@@ -39,6 +36,9 @@ exist and is harmless.
 - Alpha stack path: `/srv/docker/stacks/knk-alpha`.
 - Alpha MySQL: `knk-alpha-mysql`, no host port, healthy, database
   `knightsandkings_alpha`, app user `knk_alpha_app`.
+- Alpha API: `knk-alpha-api`, private `knk-alpha_backend` network only, no
+  host port, healthy, image `knk-web-api:alpha-17ee730a` at
+  `sha256:61c7e1f6bd451748e3bf6c1cc65f9a49fe5e1b12bdce2bf273c91f8bbea46251`.
 - Secrets exist as protected files under
   `/srv/docker/stacks/knk-alpha/secrets/`; never display them.
 - Clean alpha dump SHA-256:
@@ -50,25 +50,37 @@ exist and is harmless.
 - API source archive directory uses short commit `17ee730a`; the operator
   verified its companion checksum and confirmed the commit is on
   `origin/master`.
-- Pulled .NET base digests are in the progress report.
-- No API, Minecraft, playit, or web-app alpha service has been started.
+- API source archive SHA-256:
+  `0a7a04ef8ce92f34ab8027d9cf2322b2005bb60d8e8c54f03d7e6d2820bc6ac7`.
+- Pulled .NET base digests and final build evidence are in the progress
+  report. The incorrect UID-1654 build is retained under diagnostic tag
+  `knk-web-api:alpha-17ee730a-uid1654-failed`; do not deploy it.
+- Host Compose SHA-256 after API promotion:
+  `b4c501eedee03404f6829390dc9eb1d3b3eeb0dd0886136081cce5276a4e298c`.
+  It canonically matches Portainer stack 42. The prior MySQL-only file is
+  backed up as
+  `/srv/docker/stacks/knk-alpha/compose.mysql-only.pre-api.20261011T151034Z.yaml`.
+- No Minecraft, playit, or web-app alpha service has been started.
 
 ## Immediate continuation checklist
 
-1. Re-read the report and runbook; inspect current Docker/Portainer state.
-2. Read the actual `.sha256` file for the API archive and verify it again.
-3. Extract it into `/srv/docker/build/knk-web-api/17ee730a/`; confirm
-   `source/knkwebapi_v2.csproj` exists before writing build files.
-4. Create the multi-stage .NET 8 Dockerfile and `.dockerignore` in that
-   extracted build snapshot.
-5. Build and tag `knk-web-api:alpha-17ee730a`; record image inspection output.
-6. Stop and report if the build fails. Do not silently switch source commits
-   or deploy an unlabelled image.
-7. Add only the API service to `knk-alpha`, with private networking and file
-   secrets. Do not publish it yet.
-8. Verify `/health/live`, `/health/ready`, logs, restart, and DB counts.
-9. Back up the database again if API startup seeds change it.
-10. Only then proceed to the KnK-owned multiworld loader and Minecraft service.
+1. Re-read the report and runbook; refresh all repositories and inspect live
+   Docker/Portainer state rather than trusting this snapshot.
+2. Reconfirm both `knk-alpha` containers are healthy, their image IDs are
+   unchanged, and `.HostConfig.PortBindings` remains empty.
+3. Read the current multiworld audit/design work and inspect current
+   `knk-plugin` `main`; do not assume KNG-114's existing-world loader exists.
+4. Implement or verify the minimal KnK-owned loader: load `knk_hub` on the
+   main thread, fail closed, keep primary-world assumptions explicit, and
+   add deterministic hub/gameplay transitions. Do not add Multiverse Core.
+5. Build and package the exact plugin revision that contains the accepted
+   loader, then record its revision and artifact checksum.
+6. Create a separate live Minecraft data path from the verified staging
+   sources; never boot directly from staging.
+7. Add Minecraft privately with Paper 1.21.10, Java 21, 1--4 GiB heap, and an
+   approximately 5 GiB container limit. Do not add playit or public DNS yet.
+8. Validate both worlds, plugin/API connectivity, clean shutdown/restart,
+   database effects, and backups before adding another service.
 
 ## Decisions to preserve
 
@@ -95,20 +107,19 @@ Copy the following prompt into a new session:
 > `docs/guides/closed-alpha-deployment-runbook.md`, the repository `AGENTS.md`,
 > `docs/ai-agents/GLOBAL_AGENT_INSTRUCTIONS.md`, and the current
 > `docs/ACTIVE_SESSIONS.md` before acting. Refresh all repositories and verify
-> live state instead of trusting old branch names. The immediate next task is
-> to build the API image from the already uploaded and verified source archive
-> at `/home/ubuntunas/docker-backups/deployment-sources/knk-web-api/17ee730a/knk-web-api-17ee730a.tar.gz`.
-> The previous `83fa80b3` extraction/build did not happen; only the .NET base
-> images were pulled. Verify the archive checksum, extract it to
-> `/srv/docker/build/knk-web-api/17ee730a/`, confirm the project file exists,
-> create the deployment-only multi-stage Dockerfile, build/tag
-> `knk-web-api:alpha-17ee730a`, and record the final image ID/labels/digests.
-> Then add the API privately to the existing `knk-alpha` stack using the
-> protected MySQL app password, plugin API key, and JWT secret files without
-> printing their values. Do not expose the API, start Minecraft, alter the
-> clean database baseline, delete backups, or remove retired Portainer state
-> until the relevant validation step passes. Give NAS commands as commands for
-> an already-open persistent SSH session and clearly label any Windows
-> PowerShell commands. Preserve these decisions: no Multiverse Core; Paper
-> 1.21.10/Java 21 first; one server with main+hub; playit only for Minecraft at
-> `play.knightsandkings.net`; Cloudflare/nginx only for web/API; MySQL private.
+> live state instead of trusting old branch names. The API milestone is
+> complete: accepted image
+> `sha256:61c7e1f6bd451748e3bf6c1cc65f9a49fe5e1b12bdce2bf273c91f8bbea46251`
+> runs privately as `knk-alpha-api`, both health endpoints return 200,
+> restart/seeding is idempotent, and no secret leaked. Reconfirm that state,
+> then continue at Phase 4: inspect the current KNG-114/multiworld work,
+> implement or verify the KnK-owned `knk_hub` loader, package the exact plugin
+> revision, and prepare a separate live Minecraft data path from verified
+> staging. Do not expose the API, start Minecraft before loader/data-path
+> validation, add playit, alter the clean database baseline, delete backups,
+> or remove retired Portainer state before the relevant validation passes.
+> Give NAS commands for an already-open persistent SSH session and label any
+> Windows PowerShell commands. Preserve these decisions: no Multiverse Core;
+> Paper 1.21.10/Java 21 first; one server with main+hub; playit only for
+> Minecraft at `play.knightsandkings.net`; Cloudflare/nginx only for web/API;
+> MySQL private.
