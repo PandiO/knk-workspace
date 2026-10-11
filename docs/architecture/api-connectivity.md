@@ -40,6 +40,27 @@ on-demand probe. Config: `config.yml` → `api.connectivity.*`.
 Worst-case detection with defaults: DOWN about 20–35 s after the API or MySQL goes away
 (3 probes, 10 s apart, each up to 5 s); UP about 10–15 s after it returns.
 
+## API background services during a database outage
+
+While MySQL is down, the API's own background loops fail on every iteration. They log that
+once instead of a stack trace each time (knk-web-api `master` `f409271`).
+`Services/ConnectivityAwareFailureLogger.cs` is the same once-per-change idea as the readiness
+logging above:
+
+- **Connectivity failure** (a `MySqlException` anywhere in the inner-exception chain with an
+  unreachable, shutdown or too-many-connections code such as `UnableToConnectToHost`, or a
+  socket/IO cause): one Warning without a stack trace when it starts (`<operation>: database
+  unreachable (...); retrying quietly until it is back`), nothing while it continues, one
+  Information line (`<operation>: database reachable again`) on the next successful iteration.
+- **Any other failure**, including other MySQL errors such as a duplicate key or an unknown
+  column, still logs `LogError(ex, ...)` on every iteration, also during an outage.
+
+Used by `RankExpirySweepService` (every 30 s), `CurrencyMonitorService` (one state per step,
+because the signals step only touches the database when it has signals to store) and
+`LocationRetentionScheduler` (every 5 min). `RetentionPolicyService` runs daily and still logs
+each failure. A new background loop that retries on a timer should use the helper: one instance
+per loop, `Succeeded()` after each good iteration, `Failed(ex, message, args)` in the catch.
+
 ## Subscribing (how later features should use it)
 
 ```java

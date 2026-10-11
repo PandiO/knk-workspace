@@ -8,6 +8,12 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## 2026-10-11
 
+- **API background services log a database outage once** (KNG-115 live-test follow-up; knk-web-api `master`
+  `f409271`). With MySQL stopped, the rank expiry sweep, the currency monitor and the location retention scheduler
+  printed a full `MySqlException` stack trace on every iteration. They now log one short warning when the database
+  becomes unreachable and one line when it is back. Other errors are still logged in full every time. See
+  [architecture](architecture/api-connectivity.md#api-background-services-during-a-database-outage). Unit-tested;
+  not yet checked against a stopped MySQL.
 - **Dying resets combat and freezes** (knk-plugin `main` `c0ad2a9b`; trunk follow-up found in the
   [KNG-34 smoke test](guides/player-statistics-smoke-test.md), findings 6 and 7). After dying, a player can teleport
   again straight away: death clears their teleport combat tag (the killer stays tagged). A player frozen by the
