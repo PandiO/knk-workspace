@@ -1,6 +1,6 @@
 # Closed alpha hardening (KNG-64) — smoke test
 
-**Status:** Run 1 (2026-10-11): all steps pass or are accepted after fixes; re-check 14, 25, 27 (assign a premium rank), 29-30 (phone) and the clash repair
+**Status:** Passed 2026-10-11 (run 1, developer): all steps pass or are accepted after the fixes in the findings below; phone login (29-30) and the seed import (33) not run
 **Last updated:** 2026-10-11
 **Plan:** [specs/alpha-hardening/IMPLEMENTATION_PLAN.md](../specs/alpha-hardening/IMPLEMENTATION_PLAN.md) ·
 **Automated run:** [reports/2026-10-08-alpha-hardening-verification.md](../reports/2026-10-08-alpha-hardening-verification.md) ·
