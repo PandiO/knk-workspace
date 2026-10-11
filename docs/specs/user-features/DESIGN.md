@@ -4,7 +4,7 @@
 implementation-detail ones originally left in `IMPLEMENTATION_PLAN.md` §7. See
 `IMPLEMENTATION_PLAN.md` for the phased build-out, and `docs/specs/user-management/` for the
 separate tailored-admin-UI feature this design's data model now underpins.
-**Last updated:** 2026-09-26 (§5: salary pays the title's `Salary` per hour, with log decay over 30 days for gaps; §3: promotion bonuses scaled by per-currency personal/rank multipliers — KNG-16). Earlier: 2026-09-23 (second revision same day: `User`/`PermissionGroup` are now
+**Last updated:** 2026-10-11 (§6.1: modes also hidden from the multiplayer server list - KNG-127). Earlier: 2026-09-26 (§5: salary pays the title's `Salary` per hour, with log decay over 30 days for gaps; §3: promotion bonuses scaled by per-currency personal/rank multipliers — KNG-16). Earlier: 2026-09-23 (second revision same day: `User`/`PermissionGroup` are now
 TPT subtypes of a shared `PermissionHolder` base table rather than `PermissionGrant.HolderId`
 being an unconstrained polymorphic pointer; vanish/owner/staff-mode state now persists across
 a restart instead of matching v1's in-memory-only behavior; title thresholds confirmed as
@@ -258,6 +258,12 @@ check against a dead namespace.
 Unlike v1's in-memory-only state, vanish/mode state **persists across a server restart**
 (confirmed, see §1) — a new `IsVanished`/`ActiveMode`-style field on `User`, restored on
 login rather than defaulting off after every restart.
+
+A player in a mode is hidden from other players in game, in the tab list and, since
+[KNG-127](https://linear.app/kngpandi/issue/KNG-127) (2026-10-11), in the multiplayer server list:
+`VanishServerListListener` leaves them out of the hover names and the online count of every
+server-list ping (and so out of the MOTD's `{online}`). A ping has no viewer, so the server list
+hides them from staff too, unlike in game.
 
 `/knk`'s per-subcommand breakdown (§2.3) lands in the same phase as this, since both are
 "replace an ad hoc admin/owner check with a real permission node" work — see

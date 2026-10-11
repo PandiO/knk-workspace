@@ -35,7 +35,12 @@ routing view") and **merged to trunk** (API `6d160aa`, web app `e2ba784`, plugin
 `1159ae5d`.
 **2026-10-10:** KNG-110 (finding P4: a region over part of a road's width; and "no way out") implemented on knk-plugin
 `claude/navigation-p4-partial-width-regions`, checked offline on the Kardenna end; run 1: G1, G3-G7 pass, G2 failed on a
-domain-cache gap (fixed in `ec358f39`), re-test G2b under "KNG-110" in Findings.
+domain-cache gap, fixed in `ec358f39`; G2b passes. **Merged to knk-plugin `main` `4b9ddca4`.**
+**2026-10-10 (later):** KNG-122 (the region → domain cache asks per region): K1-K4 pass, **merged to knk-plugin
+`main` `68022ce3`** - section "KNG-122" in Findings.
+**2026-10-10 (evening):** KNG-108 (a height allowance in the walk length cap, tall buildings): H1-H3 pass, H5
+accepted, **merged to knk-plugin `main` `a388c70`**; H4's shut-in box very close to a road fails (N18, the KNG-75 step 1
+start-leg rule, not KNG-108; follow-up [KNG-124](https://linear.app/kngpandi/issue/KNG-124)) - "KNG-108" in Findings.
 **Last updated:** 2026-10-10
 **Sources:** the "Developer to-do" blocks of Phases 1, 3, 4 and 5 in `docs/specs/navigation/IMPLEMENTATION_PLAN.md`;
 progress report `docs/reports/2026-09-27-road-navigation-chain.md`. If this file and a plan block disagree, the plan wins.
@@ -1014,7 +1019,63 @@ Next: KNG-75 proper (walk legs at both ends, destinations further than 48 blocks
 `fa234f7` (the merged plugin needs KNG-56's `GET /api/Domains/access-rules`). The dev DB lacks trunk's KNG-59
 migration `UniquePermissionGrantHolderNode` (it deletes duplicate permission grants); navigation does not need it.
 
-### KNG-110 — a region over part of a road's width (finding P4; run 1 2026-10-10: all but G2 pass, G2 fixed in `ec358f39`, G2b to test)
+### KNG-108 — walk paths through tall buildings (live-tested and merged 2026-10-10)
+
+**Merged to knk-plugin `main` `a388c70`** (with `main`'s KNG-122/KNG-58 merged in first; Gradle core 1875 / api-client
+219 / paper 1437 green). Branch `claude/dazzling-dijkstra-94leyd` `8e0a83d` (on `main` `973aa68b`). Gradle core 1841 / api-client 219 /
+paper 1414 green; the new search test fails without the change. The API and the web app are unchanged. A walk path
+may now be `navigation.walk.climb-allowance` (5) blocks longer per block of height between start and target, above
+`max-length` too. The Keep Tower Roof leg (finding N17: a spiral stair, 168 blocks for 29 of height, cap 77.6) gets a
+cap of 217.6. The replay found that path inside today's capture box in 1642 expansions, so the box and the expansion
+budget stay as they are.
+
+Deploy: `./gradlew :knk-paper:dev` from that branch, restart. The server's `config.yml` needs no change (the new key
+defaults to 5); a written-out `climb-allowance: 0` turns it off.
+- [x] **H1** On the Keep Tower Roof (1410, 113, -506), `/nav` somewhere far: a full walk path down the spiral stair
+  to the keep road (edge 10088), **no** "Having trouble determining the route - guiding you to the nearest road."
+  and no partial path. Walk it down: the road guidance starts at the road, no "You left the road".
+- [x] **H2** The other way: a destination on the roof (make a Location there if there is none) from the keep road or
+  further: the last leg is a full walk path up the stair, **no** "No conventional path to X found.".
+- [x] **H3** `/knk road status` after H1/H2: the walk-path "budget" count does not go up for these legs.
+- [~] **H4** Regression: a level target behind a building (Merchant Square from ~27 blocks, N2) and a shut-in box
+  (step 1 S4: "No conventional path to the road found.") as before. **Run 1:** the building passes; the shut-in box
+  passes a little away from the road but **not very close to it** - finding **N18** below. Not a KNG-108 regression.
+- [x] **H5** (accepted without running) Optional: `climb-allowance: 0` in the server's `config.yml`, restart, H1 again: the "Having trouble"
+  message is back (the old cap). Set it back afterwards.
+
+**N18** (run 1, 2026-10-10; known since step 1 S4 run 1): boxed in **very close to a road**, nothing says "No
+conventional path to the road found."; a little further away it does. Cause: within `reroute-distance` (8) of the route
+`NavigationService.aimStartLeg` aims no walk leg to the road at all (KNG-75 step 1 design: on the route, today's straight
+line), so no search runs that could find the player shut in. KNG-108 only changes the cap of a search that runs, and a
+shut-in box exhausts its area whatever the cap. A player stuck next to a road gets the road guidance with no warning.
+Follow-up [KNG-124](https://linear.app/kngpandi/issue/KNG-124), not part of KNG-108.
+
+If H1 still runs out of budget: replay the leg (`tools/road-replay/README.md`, "Walk path replay"; `walk.txt` with
+`start=1410.5,113,-506.5`, `target=1410.5,84,-516`, `max-length=144`): the report now prints the height and the cap.
+
+### KNG-122 — the region → domain cache asks per region (live-tested and merged 2026-10-10)
+
+knk-plugin `claude/kng-122-batch-domain-lookups` `50418089` (on `main` `4b9ddca4`; the API and the web app are
+unchanged), worktree `Repository/_worktrees/knk-plugin-kng122`. Gradle 3506 tests, 0 failures.
+[KNG-122](https://linear.app/kngpandi/issue/KNG-122). Found in KNG-110's G2: `POST api/Domains/search-region-decisions`
+answers a query with at most one Town, one District and one Structure (`DomainService.SearchDomainRegionDecisionAsync`),
+so `warmCache` and `resolveRegionsFromApi`, which sent all missing regions in one query, cached one district of several
+("preloading 4 regions … cached 1 domains"). Both now ask per region (as the KNG-104 refresh already did), at most 4
+requests at a time; a failed request does not stop the others.
+
+Deploy: `./gradlew :knk-paper:dev` from that worktree, restart.
+- [x] **K1** `/knk cache refresh`, then `/knk road reload`: the server log shows `warmCache: preloading N regions: […]`
+  followed by `warmCache: completed, cached N of N regions` (before: "cached 1 domains" for 4).
+- [x] **K2** Right after K1, `/nav South Gate` from Brink: the log shows no `resolveRegionsFromApi called for:
+  [domain_17]` (or `domain_16`) from `knk-navigation-routing` - the router finds them cached.
+- [x] **K3** Stand where two districts overlap (or inside a district inside another, e.g. "Road clipping district"
+  inside Residential District) right after `/knk cache refresh`: entering shows the enter message of each.
+- [x] **K4** No lag and no burst of API errors in the log after K1 (a network load now sends one request per region).
+
+**Run 1 (2026-10-10, developer, `50418089`): K1-K4 pass.** **Merged to knk-plugin `main` `68022ce3`** (with `main`'s
+KNG-58 merged in first; Gradle core 1873 / api-client 219 / paper 1437 green).
+
+### KNG-110 — a region over part of a road's width (finding P4; live-tested and merged 2026-10-10)
 
 knk-plugin `claude/navigation-p4-partial-width-regions` `a87a6a2c` (on `main` `973aa68b`; the API and the web app are
 unchanged), worktree `Repository/_worktrees/knk-plugin-p4`. Gradle core / api-client / paper: 3502 tests, 0 failures
@@ -1051,19 +1112,19 @@ Deploy: `./gradlew :knk-paper:dev` from that worktree, restart, and wait for "�
 `/knk road status`. A test account without `knk.region.bypass`. Make fresh test regions (KNG-103: the run-2 regions
 came from a badly edited district): a district that denies entry, over the rows named below at x 1393-1398. Navigation
 Test (east road) denies entry, so `/nav South Gate` from Brink goes west over #5228 only while it is open.
-- [ ] **G1** The district over one outer row (z -479..-478): `/nav South Gate` from Brink takes the west road; the trail
+- [x] **G1** The district over one outer row (z -479..-478): `/nav South Gate` from Brink takes the west road; the trail
   passes the region, about half a block towards the free side.
-- [ ] **G2** Over two of the three rows, the centre included (z -479..-477): still the west road. `/knk road status`
+- [x] **G2** Over two of the three rows, the centre included (z -479..-477): still the west road. `/knk road status`
   shows "… 1 with lanes"; `/knk road why <player>` lists #5228 without a `blocks …` stretch. The trail runs on the
   free row (z -476) past the region, and walking it the border does not push you back.
-- [ ] **G3** Over the whole width (z -480..-474): blocked as before. With Navigation Test also blocking, "You may not
+- [x] **G3** Over the whole width (z -480..-474): blocked as before. With Navigation Test also blocking, "You may not
   enter … Guiding you to its edge", ending just before the region.
-- [ ] **G4** G2's region with `knk.region.bypass` (or a player inside the district): the trail stays in the middle.
-- [ ] **G5 (no way out)** The district with entry allowed and exit denied, over the whole width: `/nav South Gate` from
+- [x] **G4** G2's region with `knk.region.bypass` (or a player inside the district): the trail stays in the middle.
+- [x] **G5 (no way out)** The district with entry allowed and exit denied, over the whole width: `/nav South Gate` from
   Brink avoids it (before KNG-110 the route went through it). A destination inside it (`/nav` to the district) still
   routes in. Over two of three rows instead: the west road is open, the trail on the free row.
-- [ ] **G6** `/knk road status`: "… N with lanes (M cross-sections known)"; navigating along the Kardenna end: no lag.
-- [ ] **G7** After a restart, without going near the Kardenna end: within a minute or two of "… cut into N pieces"
+- [x] **G6** `/knk road status`: "… N with lanes (M cross-sections known)"; navigating along the Kardenna end: no lag.
+- [x] **G7** After a restart, without going near the Kardenna end: within a minute or two of "… cut into N pieces"
   (the next live-tag pass after its chunks loaded in the background), G2's route goes west.
 
 **Run 1 (2026-10-10, developer, `a87a6a2c`; "Road clipping district" on `domain_17`): G1, G3, G4, G5 pass; G6, G7
@@ -1080,9 +1141,13 @@ west, but it was not clear that the snow was the reason.
   only a region known to be open both ways is skipped. After a cache refresh one pass does a few more lookups.
   Gradle 3504 tests, 0 failures. The batch warm-up's "one district per answer" is the resolver's (KNG-104 notes it
   for single-region refreshes); the live tags no longer depend on it.
-- [ ] **G2b** With `ec358f39` deployed: the district on `domain_17` (z -479..-477), entry denied. `/knk cache refresh`,
+- [x] **G2b** With `ec358f39` deployed: the district on `domain_17` (z -479..-477), entry denied. `/knk cache refresh`,
   then `/knk road reload`, wait for "… cut into N pieces", then `/nav South Gate` from Brink **without any other
   `/nav` first**: the west road.
+
+**Run 2 (2026-10-10, developer, `ec358f39`): G2b passes** (west road straight after a cache refresh and a reload). With
+run 1 every check has passed. **Merged to knk-plugin `main` `4b9ddca4`** (`main` had not moved; Gradle core 1857 /
+api-client 219 / paper 1425 green).
 
 ### KNG-75 step 2 — destinations up to 256 blocks off-road (live-tested 2026-10-10: B1-B6 pass; merged)
 
