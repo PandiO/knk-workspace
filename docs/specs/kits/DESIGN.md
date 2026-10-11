@@ -473,7 +473,7 @@ logged failure, not blocking the join event). Server-side, `GrantFirstJoinKitsAs
   for claims that call created). The flag is set even when no kit passes gating, so a kit flagged
   `GrantOnFirstJoin` later is not handed out retroactively. Migration
   `AddUserFirstJoinKitsGrantedAt` marked players who already held a first-join kit claim.
-  Plugin side (KNG-81, merged 2026-10-11, knk-plugin `main` `@PLUGIN@`): the account pre-login
+  Plugin side (KNG-81, merged 2026-10-11, knk-plugin `main` `0ee516aa`): the account pre-login
   creates (`UsersDataAccess.getOrCreateAsync`, `AsyncPlayerPreLoginEvent`) is cached with
   `isNewUser = true` in the one `CacheManager` (`KnKPlugin` built it twice before), and
   `PlayerListener.onJoin` reads that entry to call `POST /api/Kits/grant-first-join`. Any account
