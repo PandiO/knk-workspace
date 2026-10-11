@@ -4,7 +4,13 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
-- Nothing pending here at the moment.
+- **Editing a domain's Location in its child form no longer blocks the domain form**
+  ([KNG-130](https://linear.app/kngpandi/issue/KNG-130); knk-web-api `1709553`, knk-web-app `bcc7d5f`, branch
+  `claude/loving-johnson-dlshrc`). Renaming a Town's Location from the Town form made the Location boundary check fail
+  ("outside the boundaries") and the Town form could not be submitted. The child form returned the Location's id as
+  text, which the API could not read; the check never reached the region. Not caused by the multiworld work
+  (KNG-111). The API now reads a text id, the web app keeps the id a number, and a Location value the check cannot
+  read now says so instead of "outside the boundaries". Unit-tested; not yet checked live.
 
 ## 2026-10-11
 
