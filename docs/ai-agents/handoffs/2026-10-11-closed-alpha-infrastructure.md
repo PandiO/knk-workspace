@@ -24,6 +24,27 @@ readiness reports the database healthy. The next phase is the KnK-owned
 multiworld loader and private Minecraft service preparation. Do not expose
 the API or start Minecraft until that phase's own prerequisites pass.
 
+## Addendum (Claude Code, 2026-10-11, after the KNG-64 merge)
+
+Read this before Phase 4.
+
+- **The deployed API predates KNG-64.** `17ee730a` is before the KNG-64 merge (knk-web-api `30c5dc5`).
+  It is private, so nothing is exposed. Do the new runbook **Phase 3b** before the plugin connects: back up,
+  run the holder-id clash check (the dev dump predates the `admin`/Staff id-29 repair), build from `master`
+  ≥ `30c5dc5` with a migrator image, apply the two migrations (`AddRefreshTokensAndTokenVersion`,
+  `AddDomainWorldName`), configure, accept, and take a new baseline. Details:
+  [alpha-go-live § 3–4](../../guides/alpha-go-live.md#3-upgrade-the-alpha-api-to-kng-64-runbook-phase-3b).
+- **Plugin/API wiring inside Docker:**
+  - plugin `api.base-url: http://api:5000/api`, `api.auth.type: apikey`;
+  - `region-http.bind-address: "0.0.0.0"` (never publish 8081), `web.public-url: https://<web-host>`;
+  - API `MinecraftPlugin__BaseUrl=http://minecraft:8081`;
+  - the Minecraft container needs an egress network next to the internal `backend`.
+
+  See [alpha-go-live § 5](../../guides/alpha-go-live.md#5-minecraft-and-plugin-runbook-phases-45).
+- **The web hostname is open:** `app.knightsandkings.net` (KNG-64 plan) or the earlier `knk.oldenzeelit.nl`. It is
+  used by `web.public-url`, `Security__PasswordResetFrontendBaseUrl`, `AllowedHosts` and the Access application.
+- **Email:** the `backend` network has no egress, so use `Email__Provider=Log` for the alpha unless the API gets one.
+
 ## Verified current state
 
 - NAS SSH commands should be written as commands for the already-open,

@@ -1,9 +1,11 @@
 # Closed-alpha deployment runbook
 
-**Status:** In progress — phases 0–3 complete; phase 4 (Minecraft preparation) is next
+**Status:** In progress — phases 0–3 complete; phase 3b (API upgrade to the KNG-64 build) and phase 4 (Minecraft preparation) are next
 **Last updated:** 2026-10-11
 **Progress report:** [2026-10-11 closed-alpha infrastructure progress](../reports/2026-10-11-closed-alpha-infrastructure-progress.md)
 **Handoff:** [2026-10-11 closed-alpha infrastructure](../ai-agents/handoffs/2026-10-11-closed-alpha-infrastructure.md)
+**Security layer:** [closed alpha go-live (KNG-64)](alpha-go-live.md) — required builds, API/plugin configuration,
+first admin, security probe and the go-live checklist on top of these phases
 
 This is the ordered rollout plan for the first NAS-hosted closed alpha. Keep
 each phase independently reversible and record the observed result before
@@ -163,7 +165,26 @@ No fresh database dump was required because every canonical seeder reported
 zero creates, updates, and normalizations. Expected derived background jobs
 did run. The original clean baseline dump remains the rollback source.
 
-## Phase 4 — prepare the Minecraft service (next)
+## Phase 3b — upgrade the API to the KNG-64 build (next)
+
+The accepted `17ee730a` image predates the KNG-64 merge (knk-web-api `30c5dc5`): no default-deny
+API, refresh sessions, code-based signup, rate limits or permission-escalation guard. It is private, so
+nothing is exposed, but it must not stay the alpha API. Before the plugin connects in Phase 4:
+
+1. Dump `knightsandkings_alpha` (new dated file; keep the clean baseline).
+2. Run the holder-id clash check. The dev dump predates the dev DB's `admin`/Staff (id 29) repair; repair
+   with `scripts/maintenance/repair-holder-id-clash.sql` if it returns a row.
+3. Build `knk-web-api:alpha-<sha>` from `master` ≥ `30c5dc5` with the same Dockerfile, plus a migrator
+   image (`dotnet ef database update`) from the same source.
+4. Stop the API, run the migrator once with a schema-rights account. It applies
+   `AddRefreshTokensAndTokenVersion` and `AddDomainWorldName`, whose timestamps are older than the DB's
+   newest migration, so use `database update`, not `migrations script <from>`. Expect 78 migrations.
+5. Add the KNG-64 configuration, switch the image, start, and repeat the Phase 3.3 acceptance.
+6. Take a new clean baseline dump.
+
+Exact commands and configuration: [alpha go-live § 3–4](alpha-go-live.md#3-upgrade-the-alpha-api-to-kng-64-runbook-phase-3b).
+
+## Phase 4 — prepare the Minecraft service
 
 Do not start from the staging directories. Create a separate live data path,
 then copy the verified sources into it while preserving staging as rollback.
@@ -202,6 +223,15 @@ The same plugin API key must be provided to the API and plugin without
 printing it. Disable development-only unauthenticated calls and debug/trust
 bypasses for the alpha.
 
+KNG-64 plugin settings (a copied dev `config.yml` keeps its old values):
+`api.auth.type: apikey`, `api.allow-untrusted-ssl: false`,
+`region-http.bind-address: "0.0.0.0"` (inside the container; never publish
+8081), `web.public-url: "https://<web-host>"`. The API reaches the plugin
+with `MinecraftPlugin__BaseUrl=http://minecraft:8081` (the service name).
+The Minecraft container also needs an internet-capable network for Mojang
+session servers, since `backend` is internal. Use `online-mode=true` and the
+whitelist. See [alpha go-live § 5](alpha-go-live.md#5-minecraft-and-plugin-runbook-phases-45).
+
 Private acceptance before ingress:
 
 - server reaches a stable tick rate with both worlds loaded;
@@ -236,8 +266,12 @@ internet cannot reach NAS MySQL/RCON/Portainer.
 - Route the web application through Cloudflare Tunnel/nginx at the selected
   public hostname (the earlier working name was `knk.oldenzeelit.nl`; confirm
   the final production name before publishing).
-- Apply Cloudflare Access to admin-only surfaces where practical, but do not
-  use it as a substitute for application authorization.
+- Apply Cloudflare Access to the **whole** web host during the closed alpha
+  (KNG-64 plan decision D10: invited emails only), but do not use it as a
+  substitute for application authorization. The plugin calls the API over
+  Docker DNS, so Access never stands in its way.
+- nginx must share a network with `api`; set the API's `ForwardedHeaders`
+  to trust only that network ([alpha go-live § 4, § 6](alpha-go-live.md#6-web-app-and-ingress-runbook-phase-6)).
 - Rate-limit login, password reset, and account-link endpoints.
 
 Acceptance: external alpha users can load the web app and authenticate; the
