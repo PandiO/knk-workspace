@@ -4,7 +4,13 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
-- Nothing pending here at the moment.
+- **Gate doors refuse a Reference point 2 that isn't straight above the anchor**
+  ([KNG-132](https://linear.app/kngpandi/issue/KNG-132); knk-web-app `f6c7c37`, knk-plugin `974ce335`, knk-web-api
+  `f40ce73`, branch `claude/loving-johnson-dlshrc`). Both reference points are measured from the anchor: point 1 along
+  the bottom edge (width), point 2 straight up (height). A point 2 above point 1 gave a slanted height of 2, the block
+  scan stored the wrong blocks and the door jammed. The GateDoor form now refuses such a point and says where it
+  should be, the plugin's block scan refuses it too, loading such a door logs a warning, and the anchor, reference
+  point, geometry and motion distance fields have descriptions. Unit-tested; not yet checked in game.
 
 ## 2026-10-11
 
