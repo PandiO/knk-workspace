@@ -4,10 +4,31 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
-- Nothing pending here at the moment.
+- **Gate doors refuse a Reference point 2 that isn't straight above the anchor**
+  ([KNG-132](https://linear.app/kngpandi/issue/KNG-132); knk-web-app `f6c7c37`, knk-plugin `974ce335`, knk-web-api
+  `f40ce73`, branch `claude/loving-johnson-dlshrc`). Both reference points are measured from the anchor: point 1 along
+  the bottom edge (width), point 2 straight up (height). A point 2 above point 1 gave a slanted height of 2, the block
+  scan stored the wrong blocks and the door jammed. The GateDoor form now refuses such a point and says where it
+  should be, the plugin's block scan refuses it too, loading such a door logs a warning, and the anchor, reference
+  point, geometry and motion distance fields have descriptions. Unit-tested; not yet checked in game.
 
 ## 2026-10-11
 
+- **Editing a domain's Location in its child form no longer blocks the domain form**
+  ([KNG-130](https://linear.app/kngpandi/issue/KNG-130); knk-web-api `master` `917537a`,
+  knk-web-app `main` `38854ba`). Renaming a Town's Location from the Town form made the Location boundary check fail
+  ("outside the boundaries") and the Town form could not be submitted. The child form returned the Location's id as
+  text, which the API could not read; the check never reached the region. Not caused by the multiworld work
+  (KNG-111). The API now reads a text id, the web app keeps the id a number, and a Location value the check cannot
+  read now says so instead of "outside the boundaries". Unit-tested; accepted and merged by the developer.
+- **Recapturing a point of an existing gate door checks the gate's region again**
+  ([KNG-131](https://linear.app/kngpandi/issue/KNG-131); knk-web-app `main` `38854ba`,
+  knk-plugin `main` `1b3e06c2`). Capturing a Location in game for an existing GateDoor (e.g. its reference point)
+  failed with "Location {coordinates} is outside {parentEntityName}'s boundaries" even inside the gate's region: the
+  plugin got the gate's id instead of the gate, and looked for a region named "21". The web app now sends the saved
+  gate. When the plugin can't find a region it now says so and follows the rule's blocking setting, and the
+  coordinates and parent name are always filled in. Not caused by the multiworld work. Unit-tested; accepted and
+  merged by the developer.
 - **API background services log a database outage once** (KNG-115 live-test follow-up; knk-web-api `master`
   `f409271`). With MySQL stopped, the rank expiry sweep, the currency monitor and the location retention scheduler
   printed a full `MySqlException` stack trace on every iteration. They now log one short warning when the database
