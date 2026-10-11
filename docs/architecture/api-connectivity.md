@@ -1,17 +1,24 @@
 # API connectivity (plugin ↔ knk-web-api)
 
-**Status:** implemented on unmerged branches `claude/kng-115-api-health` (knk-plugin `f88d686`,
-knk-web-api `860c2e9`), awaiting live test — [KNG-115](https://linear.app/kngpandi/issue/KNG-115).
-Until merged, `main`/`master` still probe `GET /api/Health` (always `"ok"`, no DB check).
+**Status:** Live · **Last updated:** 2026-10-11 — merged after a developer live test
+([KNG-115](https://linear.app/kngpandi/issue/KNG-115)): knk-web-api `master` `17ee730`, knk-plugin
+`main` `b5eee6e`. All decisions below were accepted by the developer on 2026-10-11.
 
 ## What decides "the API is up"
 
 1. **API readiness** — `GET /health/ready` (`Controllers/HealthCheckController.cs`) runs every
    registered health check: `self` (always healthy) and `database`
-   (`Services/DatabaseHealthCheck.cs`, EF Core `CanConnectAsync` on `KnKDbContext`, tag `ready`,
-   3 s timeout). 200 for `healthy`/`degraded`, 503 for `unhealthy`. `GET /health/live` runs no
-   checks (process only). `GET /api/Health` (`HealthController`) still exists, process only;
+   (`Services/DatabaseHealthCheck.cs`, EF Core `CanConnectAsync` on `KnKDbContext`, resolved
+   inside the check so a DbContext that can't be built reads as unhealthy; tag `ready`, 3 s
+   timeout). 200 for `healthy`/`degraded`, 503 for `unhealthy` (also when the check service
+   throws). The body is PascalCase (`"Status"`, `"Checks"`, `"Version"`). `GET /health/live` runs
+   no checks (process only). `GET /api/Health` (`HealthController`) still exists, process only;
    nothing in the plugin uses it any more.
+   Logging: the controller logs once when readiness changes (warning on unhealthy, info on
+   recovery); `appsettings.json` sets `DefaultHealthCheckService` to `Critical` so the framework
+   doesn't log every failed probe. The MySQL server version is resolved once per process
+   (`Configuration/MySqlServerVersionResolver.cs`, optional `Database:MySqlServerVersion`), so
+   building a DbContext never connects just to learn it.
 2. **Plugin probe** — `HealthApiImpl` (knk-api-client) calls `<health root>/health/ready`.
    Health root = `api.connectivity.health-root-url`, or `api.base-url` without its trailing
    `/api`. Own call timeout (`probe-timeout-seconds`, default 5 s). HTTP status first: 2xx reads

@@ -1,7 +1,7 @@
 # knk-web-api — Reading Guide
 
 **Status:** Living document — update in place
-**Last updated:** 2026-09-18 (companion to `docs/architecture/web-api-architecture.md` and `docs/reports/web-api-scan-2026-09-18.md`)
+**Last updated:** 2026-10-10 (MetadataService default values, KNG-119; companion to `docs/architecture/web-api-architecture.md` and `docs/reports/web-api-scan-2026-09-18.md`)
 
 Practical onboarding for a new session (human or agent) picking up work in `knk-web-api`. Read the architecture doc first for the big picture; this doc is about how to actually move around and change the code safely.
 
@@ -18,14 +18,14 @@ Almost everything follows: `Controller` → `Service` (business logic + AutoMapp
 
 If the feature touches validation, the extra hop is: `FieldValidationRulesController` → `ValidationService` → one of the 4 `Services/ValidationMethods/*` classes (`ConditionalRequiredValidator`, `ConditionalValueMatchValidator`, `LocationInsideRegionValidator`, `RegionContainmentValidator`), with `PlaceholderResolutionService`/`PathResolutionService` resolving `{Placeholder}` tokens and dependency-path expressions along the way. Don't confuse this with `Services/FieldValidationService.cs` — that's a second, apparently-dead implementation of overlapping functionality that no controller actually calls (see the scan report §2.1); the live path is `ValidationService`.
 
-If the feature touches the dynamic form builder or entity display templates, `MetadataService` (reflection over `[FormConfigurableEntity]`-annotated models in `Attributes/FormConfigurationAttributes.cs`) is the thing that makes new entities "form-configurable" without per-entity boilerplate — check there before writing a new controller/service pair for a form-builder-adjacent feature.
+If the feature touches the dynamic form builder or entity display templates, `MetadataService` (reflection over `[FormConfigurableEntity]`-annotated models in `Attributes/FormConfigurationAttributes.cs`) is the thing that makes new entities "form-configurable" without per-entity boilerplate — check there before writing a new controller/service pair for a form-builder-adjacent feature. Its `hasDefaultValue`/`defaultValue` come from instantiating the model: an initializer or a non-nullable value type counts as a default, a nullable value type (`int?`, `bool?`, an `enum?`) does not (KNG-119; the Form Builder copies a reported default onto the field, and the wizard submits it in place of an empty value).
 
 ## Where things actually live (vs. where you might guess)
 
 - The `DbContext` is `Properties/KnKDbContext.cs` — not under `Data/` or `Models/`.
 - `Data/` holds static JSON reference catalogs (Minecraft material/enchantment data), not the data-access layer. The catalog services (`MinecraftMaterialCatalogService`, `MinecraftEnchantmentCatalogService`, both singletons) load from there; the DB-backed `MinecraftMaterialRef`/`MinecraftEnchantmentRef`/`MinecraftBlockRef` tables are curated subsets validated against those catalogs, not the same data.
 - `Prompts/` holds design-doc drafts, not prompt templates for an LLM feature — `REQUIREMENTS_DISPLAYCONFIG_VERSION2.md` is the current authoritative DisplayConfig spec; ignore the shorter `REQUIREMENTS_DISPLAYCONFIG.md` (superseded draft) and the 0-byte typo'd `REQUIREMENTS_DISPLPAYCONFIG_VERSION2.md` (stray duplicate, flagged for deletion in the scan report).
-- There are **two health controllers** — `HealthController` (`api/Health`, always `"ok"`, no dependency checks; what the plugin called before KNG-115) and `HealthCheckController` (`health/live` process-only, `health/ready` runs the registered checks). Only from KNG-115 (branch `claude/kng-115-api-health`, unmerged) does `ready` include a database check (`Services/DatabaseHealthCheck.cs`) and does the plugin probe it; see `docs/architecture/api-connectivity.md`. If you're adding a new consumer that needs to know "is the API actually healthy," use `health/ready`, not `api/Health`.
+- There are **two health controllers** — `HealthController` (`api/Health`, always `"ok"`, no dependency checks; what the plugin called before KNG-115) and `HealthCheckController` (`health/live` process-only, `health/ready` runs the registered checks). Since KNG-115 (merged 2026-10-11) `ready` includes a database check (`Services/DatabaseHealthCheck.cs`) and the plugin probes it; see `docs/architecture/api-connectivity.md`. If you're adding a new consumer that needs to know "is the API actually healthy," use `health/ready`, not `api/Health`.
 
 ## Conventions to follow when adding a new feature
 

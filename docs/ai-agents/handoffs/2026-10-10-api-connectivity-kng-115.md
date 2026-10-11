@@ -1,7 +1,7 @@
 # Handoff: API connectivity — health probe, DB readiness, ApiConnectivity state (KNG-115)
 
 **Date:** 2026-10-10
-**Status:** **Live test passed 2026-10-11** (developer). Not merged, no PR, not deployed; next step is PRs/merge.
+**Status:** **Done — live-tested by the developer and merged 2026-10-11**; all decisions for review accepted. knk-web-api `master` `17ee730`, knk-plugin `main` `b5eee6e`.
 **Issue:** [KNG-115](https://linear.app/kngpandi/issue/KNG-115) (leave In Progress until the live test)
 **Source:** `docs/reports/2026-10-10-multiworld-capability-audit.md` rows C1-C5, §5 (workspace branch `claude/blissful-fermat-b7ihrz`)
 **Living doc:** `docs/architecture/api-connectivity.md` (design, defaults, how to subscribe)
@@ -87,7 +87,7 @@ review whether to remove it later).
   two `PathResolutionServiceTests.ValidatePathAsync_AllowsValidV1Paths` cases). +7 new
   `HealthCheckControllerTests`, all passing (incl. a real Pomelo context on a refused port → unhealthy).
 
-## Decisions for review
+## Decisions (all accepted by the developer, 2026-10-11)
 
 1. **`degraded` counts as UP** (plugin) and answers **200** (API). No check reports degraded today.
 2. **Health root derived** from `api.base-url` by stripping a trailing `/api`; override with
@@ -124,10 +124,20 @@ apply; add `api.connectivity` from the jar's `config.yml` to tune.
 10. Watch the API log: no Info line per probe (moved to Debug); a warning per unhealthy probe
     while MySQL is down is expected.
 
+## Merge (2026-10-11)
+
+Each branch merged its default branch in first, then merged `--no-ff` into it:
+- knk-web-api `master` `17ee730`. Conflict in `Program.cs`: `master` already had
+  `MySqlServerVersionResolver` (`claude/busy-euler-ilyy7o`, `c109d47`), the same fix as this
+  branch's `83fa80b` plus a config override, so master's lines were kept and this branch's
+  health-check registration re-applied. Suite: 2399 passed, the same 4 pre-existing failures.
+- knk-plugin `main` `b5eee6e`, clean merge. `./gradlew test build -x deployToDevServer`: 3884
+  tests, 0 failures.
+- Note for KNG-64: this adds one `Logging:LogLevel` line to `appsettings.json`, which KNG-64
+  rewrites.
+
 ## Next steps
 
-- Developer live test; then PRs (API first or together — the plugin with the old API would get
-  `/health/ready` without a DB check, which still works).
 - Subscribers in their own issues (see the table in `docs/architecture/api-connectivity.md`):
   KNG-58 refresh on `isRecovery()`, KNG-109/114 hub outage actions on `isOutage()`, KNG-117 Siege
   containment, optional immediate replay for spools / notification poller / PM shipper.
