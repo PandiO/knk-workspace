@@ -50,6 +50,10 @@ expect_code() { # expect_code <description> <expected codes regex> <method> <pat
   [[ "$CODE" =~ ^($want)$ ]]; check "$d" $? "got $CODE: ${BODY:0:120}"
 }
 JSON=(-H 'Content-Type: application/json')
+# json_str <field> / json_num <field>: the first string or number value of that field in stdin. grep/sed only, so
+# the script also runs in Git Bash on Windows, where python3 is often missing or the Store placeholder.
+json_str() { grep -o "\"$1\" *: *\"[^\"]*\"" | head -1 | sed 's/^[^:]*: *"//; s/"$//'; }
+json_num() { grep -o "\"$1\" *: *[0-9][0-9]*" | head -1 | sed 's/^[^:]*: *//'; }
 
 req GET /api/health
 if [ "$CODE" = 000 ]; then echo "FAIL  API unreachable at $BASE"; exit 99; fi
@@ -77,7 +81,7 @@ if [ -n "$PLAYER" ]; then
   LOGIN="${PLAYER%%:*}"; PASS="${PLAYER#*:}"
   login() {
     req POST /api/Auth/login "${JSON[@]}" -c "$TMP/jar" -d "{\"login\":\"$LOGIN\",\"password\":\"$PASS\",\"rememberMe\":false}"
-    AT=$(python3 -c 'import sys,json;print(json.loads(sys.argv[1]).get("accessToken",""))' "$BODY" 2>/dev/null)
+    AT=$(json_str accessToken <<<"$BODY")
     RT=$(awk '$6=="refreshToken"{print $7}' "$TMP/jar" 2>/dev/null | tail -1)
   }
   login
@@ -85,11 +89,11 @@ if [ -n "$PLAYER" ]; then
   if [ -z "$AT" ]; then echo "SKIP  remaining player checks (login failed)"; PLAYER=""; fi
 fi
 if [ -n "$PLAYER" ]; then
-  python3 -c 'import sys,json;d=json.loads(sys.argv[1]);sys.exit(0 if not d.get("refreshToken") else 1)' "$BODY" 2>/dev/null
+  [ -z "$(json_str refreshToken <<<"$BODY")" ]
   check "refresh token not in the response body" $? "body has refreshToken"
   [ -n "$RT" ]; check "refresh token set as HttpOnly cookie" $? "no refreshToken cookie (behind a proxy? check Path=/api/Auth)"
   AUTH=(-H "Authorization: Bearer $AT")
-  UID_=0; UID_=$(curl -sS "${CF[@]}" "${AUTH[@]}" "$BASE/api/Auth/me" | python3 -c 'import sys,json;print(json.load(sys.stdin).get("id",""))' 2>/dev/null)
+  UID_=$(curl -sS "${CF[@]}" "${AUTH[@]}" "$BASE/api/Auth/me" 2>/dev/null | json_num id)
   expect_code "player reads own profile"                     "200"     GET    "/api/Users/$UID_" "${AUTH[@]}"
   expect_code "player can't list users"                      "403"     GET    /api/Users "${AUTH[@]}"
   expect_code "player can't read another user"               "403"     GET    "/api/Users/$((UID_ == 1 ? 2 : 1))" "${AUTH[@]}"
