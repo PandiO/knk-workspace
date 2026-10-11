@@ -10,8 +10,8 @@
 
 | Repo | Branch | Commit | Base |
 |---|---|---|---|
-| knk-web-api | `claude/kng-115-api-health` | `fdae959` (was `860c2e9`) | `master` `8cce48d0` |
-| knk-plugin | `claude/kng-115-api-health` | `f88d686` | `main` `973aa68b` |
+| knk-web-api | `claude/kng-115-api-health` | `cc96c85` (was `860c2e9`, `fdae959`) | `master` `8cce48d0` |
+| knk-plugin | `claude/kng-115-api-health` | `e064f44` (was `f88d686`) | `main` `973aa68b` |
 | knk-workspace | `claude/kng-115-api-health` | this commit | `claude/compassionate-darwin-86zbpy` `38f22c0` (carries the claim) |
 
 ## What changed
@@ -40,6 +40,23 @@ its try block, and the controller maps any exception to 503 `unhealthy`. Two reg
 first fails on `860c2e9`. API suite: the same 4 pre-existing failures, 1978 passed. The
 `CurrencyMonitorService` / `RankExpirySweepService` errors logged while MySQL is down are those
 background jobs' own caught failures, which existed before this change and are expected.
+
+### Second round (same day)
+
+Verified live: `/health/ready` 200 `healthy` → 503 `unhealthy` (`database: unhealthy`) with MySQL stopped.
+- **API `cc96c85`, log noise:** every probe logged a full MySqlException stack (the exception
+  was attached to the check result, and `DefaultHealthCheckService` logs that as Error) plus a
+  controller warning. Now: no exception on the result, the controller logs only on change
+  (warning when it goes unhealthy, info on recovery), and `appsettings.json` sets
+  `DefaultHealthCheckService` to Critical. **Decision for review:** that log-level line.
+- **Plugin `e064f44`:** the body is PascalCase (`"Status"`), so the DTO read null and fell back to
+  the HTTP code: UP/DOWN was right, but `degraded` and the version were lost. Added `@JsonAlias`.
+- **Still noisy while MySQL is down, and not from this branch:** `RankExpirySweepService` (full
+  stack every 30 s) and `CurrencyMonitorService` (each cycle). These existed before KNG-115 and
+  recover on their own; queued as a separate task. Visual Studio's "Exception thrown: ..."
+  lines are the debugger's first-chance notices for caught exceptions.
+
+Tests: plugin 3502/0 failed; API the same 4 pre-existing failures, 1980 passed.
 
 ## Correction to the issue text
 
