@@ -8,6 +8,11 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## 2026-10-11
 
+- **Dying resets combat and freezes** (knk-plugin `main` `c0ad2a9b`; trunk follow-up found in the
+  [KNG-34 smoke test](guides/player-statistics-smoke-test.md), findings 6 and 7). After dying, a player can teleport
+  again straight away: death clears their teleport combat tag (the killer stays tagged). A player frozen by the
+  Freeze enchantment can move again after respawning, and HealthBoost's heal-over-time stops when the player dies.
+  The other enchantment effects are potion effects, which death already clears. Unit-tested; not yet checked in game.
 - **New players get the first-join kits** ([KNG-81](https://linear.app/kngpandi/issue/KNG-81), plugin half; knk-plugin
   `main` `0ee516aa`). A player the server has never seen now receives every kit marked "Grant on first join" a moment
   after joining, exactly once. A relog grants nothing more, and an existing account never gets them. Three causes,
