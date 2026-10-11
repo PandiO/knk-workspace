@@ -1,7 +1,7 @@
 # Kits — Design
 
 **Status:** Draft, all open questions resolved with the developer — ready for implementation.
-**Last updated:** 2026-10-10 (§4.4: first-join grant idempotent per player, KNG-81); 2026-09-25 (§0c: removed `/kit manage`'s in-game CRUD logic entirely — it's now
+**Last updated:** 2026-10-11 (§4.4: first-join grant runs in game, KNG-81 plugin half); 2026-10-10 (§4.4: first-join grant idempotent per player, KNG-81); 2026-09-25 (§0c: removed `/kit manage`'s in-game CRUD logic entirely — it's now
 a pure pointer to the FormWizard, kept only as recognized subcommands so `/kit manage <anything>`
 redirects rather than erroring; `Kit` CRUD is FormWizard-only). Previously updated 2026-09-25
 (added §0b/§4.0/§4.5/§4.6: explicit FormWizard-primary/in-game-fallback CRUD hierarchy, and a
@@ -473,8 +473,13 @@ logged failure, not blocking the join event). Server-side, `GrantFirstJoinKitsAs
   for claims that call created). The flag is set even when no kit passes gating, so a kit flagged
   `GrantOnFirstJoin` later is not handed out retroactively. Migration
   `AddUserFirstJoinKitsGrantedAt` marked players who already held a first-join kit claim.
-  Plugin side (still open on KNG-81): `KnKPlugin` builds `CacheManager` twice, so the new-user
-  summary lands in a cache `PlayerListener` never reads and the grant does not run yet.
+  Plugin side (KNG-81, merged 2026-10-11, knk-plugin `main` `@PLUGIN@`): the account pre-login
+  creates (`UsersDataAccess.getOrCreateAsync`, `AsyncPlayerPreLoginEvent`) is cached with
+  `isNewUser = true` in the one `CacheManager` (`KnKPlugin` built it twice before), and
+  `PlayerListener.onJoin` reads that entry to call `POST /api/Kits/grant-first-join`. Any account
+  the API already knows (fetched by UUID or username) is never new. `POST /api/Users` answers
+  `{user, linkCode}`, and the client reads the user inside it. Live-tested 2026-10-11: a new
+  account gets the first-join kits once, and a relog grants nothing.
 
 This satisfies vision §9.2's "unify starter kit into the general Kit system" directly: there is
 no separate starter-kit code path at all, just a `Kit` row with `GrantOnFirstJoin = true` — and

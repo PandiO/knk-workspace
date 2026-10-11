@@ -71,7 +71,7 @@ offline-cache:
 
 ## 7. Not in this change
 
-- **Duplicate `CacheManager`** (KNG-81). Fixing it switches on a non-idempotent first-join kit grant. The store listens to API answers, so it doesn't depend on which cache instance is used.
+- **Duplicate `CacheManager`** (KNG-81). Fixed 2026-10-11 (knk-plugin `main` `@PLUGIN@`), after the first-join kit grant was made idempotent in the API. The store listens to API answers, so it never depended on which cache instance was used.
 - **P1 items of KNG-58:** gates snapshot, respawn town without the main-thread `.join()`, siege runtime config, ignore lists, and a generic stale-on-error layer in `DataAccessExecutor`.
 - **First join during an outage:** a player whose account the server has never seen (or not within 30 days) has no last-known state. They get no non-op permissions until the API is back, as before.
 

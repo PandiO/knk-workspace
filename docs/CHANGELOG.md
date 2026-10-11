@@ -8,6 +8,7 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## 2026-10-11
 
+<<<<<<< Updated upstream
 - **API connectivity: one up/down view of the API** ([KNG-115](https://linear.app/kngpandi/issue/KNG-115)): live-tested
   by the developer and merged. knk-web-api `master` `17ee730`, knk-plugin `main` `b5eee6e`.
   - The API's `GET /health/ready` now checks MySQL: 503 `unhealthy` when the database is down (never a 500), 200
@@ -23,6 +24,15 @@ This is a human-readable record of capabilities merged into the V3 default branc
   and showed their names when hovering over the player count. Now they are left out of both, and the Game Settings MOTD's
   `{online}` shows the same lowered count. The list has no viewer, so they are hidden there from staff too. Not yet
   checked in game.
+=======
+- **New players get the first-join kits** ([KNG-81](https://linear.app/kngpandi/issue/KNG-81), plugin half; knk-plugin
+  `main` `@PLUGIN@`). A player the server has never seen now receives every kit marked "Grant on first join" a moment
+  after joining, exactly once. A relog grants nothing more, and an existing account never gets them. Three causes,
+  all fixed: `KnKPlugin` built two caches, and the join listener read the one that never held the new account; the
+  account created at pre-login was not marked as new; and the plugin misread the API's create response
+  (`{user, linkCode}`), so creating the account failed before it was cached. That last one was already broken
+  before. Live-tested 2026-10-11.
+>>>>>>> Stashed changes
 - **Player statistics, leaderboards, owner diagnostics, GDPR deletion and world analytics** ([KNG-34](https://linear.app/kngpandi/issue/KNG-34),
   with [KNG-14](https://linear.app/kngpandi/issue/KNG-14)): merged after a live smoke test of all 27 steps
   ([guide and findings](guides/player-statistics-smoke-test.md)). knk-web-api `master` `34b8f9b`, knk-plugin `main`
