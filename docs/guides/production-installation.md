@@ -778,7 +778,9 @@ adds a table.**
 
 Rows in `WORLD_TABLES` hold coordinates and WorldGuard region ids, and only make sense with the matching world files:
 domains, towns, districts, structures, streets, locations, gates with their block snapshots, siege scenarios, lobbies,
-clans/banners, lootbox spawn areas.
+clans/banners, lootbox spawn areas, and the road navigation graph (`road_tiles`, `road_nodes`, `road_edges`, tile
+proposals, and the surveys and seeds it was built from). The learned road styles (`road_profiles`) are not tied to
+coordinates and ship with every seed.
 
 | Choice | Do this |
 |---|---|
@@ -842,7 +844,8 @@ sudo ~/knk-workspace/scripts/seed/import-seed.sh \
 
 What the import does, in one transaction: it clears the content tables (removing the reference rows the migrations
 inserted, which the dev DB has too, with the same ids), loads the dump, and clears the two user-reference columns
-(`currency_policies.UpdatedByUserId`, `lootbox_spawn_areas.CreatedByUserId`, which point at dev users). It then
+(`currency_policies.UpdatedByUserId`, `lootbox_spawn_areas.CreatedByUserId`, `road_surveys.StartedByUserId`, which
+point at dev users). It then
 compares the row counts with the manifest **before committing**: a mismatch prints the table and rolls the whole
 import back.
 

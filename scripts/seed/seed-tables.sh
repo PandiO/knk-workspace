@@ -21,6 +21,7 @@ lootbox_types lootbox_type_grade_weights lootbox_pool_entries lootbox_enchant_ro
 lootbox_special_entries lootbox_configurations
 title_brackets permission_groups salary_configurations discovery_reward_rules currency_policies
 game_settings audit_log_retention_configurations siege_configurations
+road_profiles
 "
 
 # Permission tables shared by users and groups (TPT: users and groups share the
@@ -39,6 +40,7 @@ banner_designs banner_layers clans
 siege_scenarios siege_scenario_districts siege_teams siege_spawnpoints siege_objectives
 siege_scenario_gates siege_lobbies siege_lobby_scenarios
 lootbox_spawn_area_types lootbox_spawn_areas
+road_tiles road_nodes road_edges road_tile_proposals road_surveys road_seeds
 "
 
 # Player and runtime data. Never part of a seed.
@@ -55,4 +57,4 @@ siege_matches siege_match_participants siege_match_objective_results siege_match
 
 # Content columns that point at a user. The seed ships without users, so the
 # import clears them.
-USER_REFERENCE_COLUMNS="currency_policies.UpdatedByUserId lootbox_spawn_areas.CreatedByUserId"
+USER_REFERENCE_COLUMNS="currency_policies.UpdatedByUserId lootbox_spawn_areas.CreatedByUserId road_surveys.StartedByUserId"
