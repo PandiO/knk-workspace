@@ -10,9 +10,9 @@ The developer asked for designed, decision-free work only while they slept. Open
 
 | Repo | Base | What is on it | PR |
 |---|---|---|---|
-| knk-plugin | `main` `0396c7b4` (KNG-111/112 merged) | world loader (KNG-114), gates in several worlds (KNG-113), hub settings, Game Settings in the KNG-58 store, hub admission + rules, KNG-118 items | opened at wrap-up |
-| knk-web-api | `master` `917537a` | hub configuration, KNG-116 group check, migration `AddHubSettings` | opened at wrap-up |
-| knk-web-app | `main` `38854ba` | Game Settings page: hub card, exemption boxes, world-filtered spawn pickers | opened at wrap-up |
+| knk-plugin | `main` `0396c7b4` (KNG-111/112 merged) | world loader (KNG-114), gates in several worlds (KNG-113), hub settings, Game Settings in the KNG-58 store, hub admission + rules, KNG-118 items | [#11](https://github.com/PandiO/knk-plugin/pull/11) |
+| knk-web-api | `master` `917537a` | hub configuration, KNG-116 group check, migration `AddHubSettings` | [#8](https://github.com/PandiO/knk-web-api/pull/8) |
+| knk-web-app | `main` `38854ba` | Game Settings page: hub card, exemption boxes, world-filtered spawn pickers | [#6](https://github.com/PandiO/knk-web-app/pull/6) |
 
 Merge order: **API first** (migration + endpoints), then the web app, then the plugin. The plugin works against an API without the hub block: no hub means nothing changes.
 
@@ -69,10 +69,21 @@ Merge order: **API first** (migration + endpoints), then the web app, then the p
   - "Exempt while in staff/owner mode" boxes, shown only when the group effectively has the node. The source group is named.
 - **Pickers:** a world's own spawn picker, and the hub spawn picker, list only places in that world (KNG-118 U5).
 
+## Review
+An independent review of the overnight diffs found 8 issues. All 8 are fixed and covered by tests where testable:
+- barrels counted as doors;
+- the void rescue never triggered below the region;
+- a deleted hub domain locked out non-ops;
+- a stale exemption box blocked every save;
+- owners lost their game mode on join;
+- web inputs the API rejects;
+- the hub spawn was not re-resolved;
+- the old cache file was deleted before the store write was confirmed.
+
 ## Verified (no live server for the hub part)
-- **Plugin:** core 2046, api-client 258, paper 1635, all green.
-- **API:** 2556 passed. The 4 failures also fail on `master` (`PathResolutionServiceTests` ×2, `FieldValidationServiceTests`, `ClientActivityStoreTests`). New: `HubSettingsServiceTests` (5), plus a `GameSettingsServiceTests` hub round trip.
-- **Web app:** `tsc` clean, `npm run build` passes, Game Settings component tests 27/27 (new `hubSettings.test.tsx`).
+- **Plugin:** core 2046, api-client 258, paper 1636, all green.
+- **API:** 2557 passed. The 4 failures also fail on `master` (`PathResolutionServiceTests` ×2, `FieldValidationServiceTests`, `ClientActivityStoreTests`). New: `HubSettingsServiceTests` (5), plus a `GameSettingsServiceTests` hub round trip.
+- **Web app:** `tsc` clean, `npm run build` passes, Game Settings component tests 28/28 (new `hubSettings.test.tsx`).
 
 ## Test checklist, in priority order
 1. **Migration:** deploy the API, apply `AddHubSettings` and open the Game Settings page. Nothing else should have changed.
