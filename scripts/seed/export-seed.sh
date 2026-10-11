@@ -50,6 +50,15 @@ if [[ -n "$unclassified" ]]; then
   exit 1
 fi
 
+# 2. No user and group may share a permission_holders id: the group's grants would land on whichever
+# account takes that id in production. Repair first with scripts/maintenance/repair-holder-id-clash.sql.
+clashes="$(mysql_q "SELECT GROUP_CONCAT(CONCAT(g.Name, ' = user ', u.Username, ' (id ', u.Id, ')') SEPARATOR ', ') FROM users u JOIN permission_groups g ON g.Id = u.Id")"
+if [[ -n "$clashes" && "$clashes" != "NULL" ]]; then
+  echo "A user and a group share an id: $clashes" >&2
+  echo "Run scripts/maintenance/repair-holder-id-clash.sql on $db first." >&2
+  exit 1
+fi
+
 tables="$CONTENT_TABLES"
 [[ $with_world -eq 1 ]] && tables="$tables $WORLD_TABLES"
 tables="$(echo $tables)"
