@@ -231,6 +231,15 @@ Gaps that do not block the hub are tracked in [KNG-118](https://linear.app/kngpa
 
 **Phase 1 progress (2026-10-11):** implemented on branches `claude/blissful-fermat-b7ihrz` (API `a72e496`, web app `c2d8828`, plugin `dc61fd4d`), not merged. The first live round passed or was accepted. Managed-region repair, roads/navigation and the containment validators are now world-aware too. Discovery ([KNG-118](https://linear.app/kngpandi/issue/KNG-118)) is still pending. See the [implementation handoff](../../ai-agents/handoffs/2026-10-10-kng-111-112-multiworld-implementation.md).
 
+**Phases 2, 4 and 5 progress (2026-10-12):** on branches `claude/blissful-fermat-b7ihrz`, not merged:
+- the world loader (KNG-114 lifecycle) and gates in several worlds (KNG-113), live-checked 2026-10-11;
+- the hub configuration (`IsHub`, the Game Settings hub block, the KNG-116 group check and exemption boxes);
+- the Game Settings snapshot moved into the KNG-58 store (decision 7);
+- hub admission through `AsyncPlayerSpawnLocationEvent`, with fail-closed joins;
+- the hub rules and the Peaceful preset.
+
+Not built yet, because they wait on decisions: the outage actions (configured but not executed), return records, the Siege abort and the portal. See the [overnight handoff](../../ai-agents/handoffs/2026-10-12-hub-overnight-session.md).
+
 **Deadline risk:** Phase 1 alone touches all three repos plus a rebase-sensitive migration, which is substantial work for the 17–18 October alpha. The developer chose the full fix first (§16.4, decision 2).
 
 ### 16.4 Developer decisions (confirmed 2026-10-10)
