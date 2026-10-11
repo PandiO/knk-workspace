@@ -8,6 +8,11 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## 2026-10-11
 
+- Players in owner mode or staff mode no longer show in the multiplayer server list ([KNG-127](https://linear.app/kngpandi/issue/KNG-127);
+  knk-plugin `main` `ac2855a`). They were already hidden in game and in the tab list; the server list still counted them
+  and showed their names when hovering over the player count. Now they are left out of both, and the Game Settings MOTD's
+  `{online}` shows the same lowered count. The list has no viewer, so they are hidden there from staff too. Not yet
+  checked in game.
 - **Player statistics, leaderboards, owner diagnostics, GDPR deletion and world analytics** ([KNG-34](https://linear.app/kngpandi/issue/KNG-34),
   with [KNG-14](https://linear.app/kngpandi/issue/KNG-14)): merged after a live smoke test of all 27 steps
   ([guide and findings](guides/player-statistics-smoke-test.md)). knk-web-api `master` `34b8f9b`, knk-plugin `main`
