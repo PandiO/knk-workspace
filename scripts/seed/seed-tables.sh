@@ -22,6 +22,7 @@ lootbox_special_entries lootbox_configurations
 title_brackets permission_groups salary_configurations discovery_reward_rules currency_policies
 game_settings audit_log_retention_configurations siege_configurations
 road_profiles
+location_retention_settings domain_navigation_defaults
 "
 
 # Permission tables shared by users and groups (TPT: users and groups share the
@@ -53,8 +54,15 @@ lootbox_spawns lootbox_claims lootbox_tokens lootbox_token_grants
 audit_log_entries user_domain_discoveries user_ignores private_message_log_entries
 FormSubmissionProgresses workflow_sessions step_progress world_tasks
 siege_matches siege_match_participants siege_match_objective_results siege_match_gate_snapshots
+player_stat_profiles player_stat_sessions player_stat_daily player_stat_totals player_stat_visibility
+player_stat_batches player_title_changes player_pvp_kill_pairs_daily
+statistics_projected_sources statistics_projection_cursors leaderboard_snapshots leaderboard_snapshot_entries
+telemetry_events telemetry_test_runs telemetry_enhanced_targets privacy_deletion_requests
+world_analytics_batches world_movement_cells_daily domain_interactions_daily menu_funnel_daily
+location_orphans location_retention_runs
 "
 
 # Content columns that point at a user. The seed ships without users, so the
 # import clears them.
-USER_REFERENCE_COLUMNS="currency_policies.UpdatedByUserId lootbox_spawn_areas.CreatedByUserId road_surveys.StartedByUserId"
+USER_REFERENCE_COLUMNS="currency_policies.UpdatedByUserId lootbox_spawn_areas.CreatedByUserId road_surveys.StartedByUserId
+location_retention_settings.UpdatedByUserId"
