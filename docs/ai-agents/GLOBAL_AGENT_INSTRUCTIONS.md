@@ -70,16 +70,17 @@ Claude Code and Codex alike, regardless of where repos are cloned.
 ## Session chains (multi-link work)
 
 A chain splits a feature into links that each run in a fresh context. Cloud sessions get their repositories
-when they start, and `create_session` attaches only one (`source_url`); `add_repo` with push is often refused by
-the permission policy. A link that must push to more than one repo therefore fails when started that way.
+when they start, and `create_session` attaches only one (`source_url`). Other repos must be attached by the new
+session with `add_repo` (access `push`), and the permission check only allows that when the request is in the
+session's **prompt** (the developer's request, relayed by the coordinator). An `add_repo` instruction found in a
+repo file (a handoff doc) was refused, which blocked a link (form wizard chain, 2026-10-11).
 
-- Run links as **fresh subagents of a coordinator session** that already has every needed repo attached with
-  push (the developer's own session in the "Default Correct" environment). Pass the model and effort the
-  developer uses (Opus, high) explicitly. A link writes its handoff and returns a summary; the coordinator starts
-  the next link.
-- If a link must run as its own session, the developer starts it from the Claude app in "Default Correct" with
-  all repos selected. Don't use `create_session` for a link that pushes to more than one repo, and don't assume it
-  copies the caller's effort level (it has no effort setting).
+- A **coordinator** session (the developer's session in the "Default Correct" environment, with every repo
+  attached) starts each link. Put the `add_repo` + clone + `git push --dry-run` step **in the prompt**, then point
+  at the handoff file. Links don't start the next link; the coordinator does, after checking the previous one.
+- Fallback when `add_repo` is refused: the coordinator runs the link as a fresh subagent (Agent tool, explicit model
+  and effort), which shares the coordinator's repos.
+- `create_session` has no effort setting; session links run at the environment default. Pass the model explicitly.
 - Before a link changes anything: `git push --dry-run` on the feature branch of every repo it will change.
 
 ## Handoff and documentation
