@@ -99,19 +99,21 @@ Codex then reviewed the three PRs. All 9 findings are fixed, replied to and reso
 - **API:** 2559 passed. The 4 failures also fail on `master` (`PathResolutionServiceTests` ×2, `FieldValidationServiceTests`, `ClientActivityStoreTests`). New: `HubSettingsServiceTests` (7), a `GameSettingsServiceTests` hub round trip and a retention test.
 - **Web app:** `tsc` clean, `npm run build` passes, Game Settings component tests 31/31 (new `hubSettings.test.tsx`).
 
-## Day session 2026-10-12 (decisions 8-13)
+## Day session 2026-10-12 (decisions 8-14)
 
 The developer answered the open decisions ([DESIGN §16.7](../../specs/hub/DESIGN.md)). Built on the same branches:
 
 | Repo | Commits | What |
 |---|---|---|
-| knk-plugin | `fed45a3c`, `a2533bb7`, `4d8c307a` | joins (decision 8), outage actions + timer + return records + Siege abort (9, 10, 6), portal (11) |
-| knk-web-api | `bc7b06e`, `cc9ced1`, `644acce` | Location delete keeps its domain (12, migration `LocationDeleteKeepsDomain`), Siege end reason `ApiOutage`, `hub.portalRegionIds` |
-| knk-web-app | `ef57c7a` | "Portal regions" field in the Hub card |
+| knk-plugin | `fed45a3c`, `a2533bb7`, `4d8c307a`, `6125ad43` | joins (decision 8), outage actions + timer + return records + Siege abort (9, 10, 6), portal (11), staff/owner mode joins in place (14), review fixes |
+| knk-web-api | `bc7b06e`, `cc9ced1`, `644acce`, `8e34954`, `7ec345f` | Location delete keeps its domain (12, migration `LocationDeleteKeepsDomain`), Siege end reason `ApiOutage`, `hub.portalRegionIds`, group precedence option (i) (13) |
+| knk-web-app | `ef57c7a`, `5625dd6`, `a17cb46` | "Portal regions" field, override order option (i) (13), review fix |
 
-- **Plugin tests:** core 2057, api-client 258, paper 1652, all green.
-- **API tests:** 2562 passed; the same 4 failures as on `master`. The migration was checked on a local MySQL 8: apply, no pending changes, roll back one step, re-apply.
-- **Web app:** `tsc` clean, the build passes, Game Settings tests 32/32.
+An independent review of the day session found 12 issues; all are fixed (DESIGN §16.7 "small choices"). The most important: Siege lobbies stopped by an outage now restart when the API is back; the return offer ends when the player leaves the hub, is refused while frozen, and keeps an unsafe spot instead of deleting it; evacuations use the plugin transfer.
+
+- **Plugin tests:** core 2058, api-client 258, paper 1656, all green.
+- **API tests:** 2565 passed; the same 4 failures as on `master`. The migration was checked on a local MySQL 8: apply, no pending changes, roll back one step, re-apply.
+- **Web app:** `tsc` clean, the build passes, Game Settings tests 33/33.
 
 ### Extra test steps for the day session
 11. **Joins with a hub (decision 8):**
@@ -134,6 +136,9 @@ The developer answered the open decisions ([DESIGN §16.7](../../specs/hub/DESIG
 16. **Kick:** a group with action Kick is kicked with the outage message. Rejoining during the outage puts them in the hub, with the return offer after recovery.
 17. **Siege:** during a match, trigger an outage. The match is aborted (no winner), everyone gets their things back once at their pre-match spot, and then the action applies.
 18. **Location delete:** deleting a Location that a town uses is refused with "This location is the location of Town '…'". Nothing is deleted.
+19. **Staff/owner mode join:** log out in staff mode somewhere in gameplay and rejoin: you are where you logged out, also with a hub and during an outage.
+20. **Group precedence (option (i)):** give a test account a child group with a lower weight than its parent, both held. The child's Game Settings override (e.g. join message) and a deny on the child win over the parent's. The Game Settings page lists the child above its parent.
+21. **Leaving the hub ends the offer:** after an outage, walk out of the hub (or `/spawn`) instead of clicking the return; the offer ends with a message.
 
 ## Test checklist, in priority order
 1. **Migration:** deploy the API, apply `AddHubSettings` and open the Game Settings page. Nothing else should have changed.
@@ -161,10 +166,6 @@ The developer answered the open decisions ([DESIGN §16.7](../../specs/hub/DESIG
     - from the main world it should refuse with "Go to its world first".
 
 ## Open decisions (need the developer)
-Decisions 1-5 of the overnight list were answered on 2026-10-12 (DESIGN §16.7). Still open:
-1. **Group precedence, the circular case (decision 13).** Take a player in Knight (weight 10) and Merchant (weight 30), where Knight inherits from Squire (weight 50). Two orders are possible:
-   - **(i), recommended:** Merchant → Knight → Squire. A chain is ranked by the group the player holds.
-   - **(ii):** Knight → Squire → Merchant. A group never ranks below its parent's weight.
-
-   The orders differ only when a child group has a lower weight than its parent. The change touches the API's `PermissionGroupPrecedence` (permission grants, teleport fees, Game Settings), the plugin, and the web app's override order. It is not built yet.
-2. **Discovery per world (KNG-118 R14/A5):** not decided, just not done. It changes the discovery spool and cache format.
+None from this session: decisions 1-5 of the overnight list and the precedence follow-up were answered on 2026-10-12 (DESIGN §16.7). Not done, but not waiting on a decision:
+- **Discovery per world (KNG-118 R14/A5):** it changes the discovery spool and cache format.
+- **KNG-118 D8/D9/U2/U4:** they wait for KNG-133, which has claimed the files.

@@ -1,6 +1,6 @@
 # Hub, outage policy and world portals — draft design
 
-**Status:** Implemented on branches `claude/blissful-fermat-b7ihrz`, not merged, not live-tested (§16). Readiness audit 2026-10-10 ([report](../../reports/2026-10-10-multiworld-capability-audit.md)). Open: group precedence (§16.7, decision 13).
+**Status:** Implemented on branches `claude/blissful-fermat-b7ihrz`, not merged, not live-tested (§16). Readiness audit 2026-10-10 ([report](../../reports/2026-10-10-multiworld-capability-audit.md)). All decisions so far are settled (§16.4, §16.7).
 **Last updated:** 2026-10-12
 **Target:** Prefer implementation this weekend (10–11 October), before the closed alpha planned for 17–18 October 2026.
 **Linear:** [KNG-109](https://linear.app/kngpandi/issue/KNG-109)
@@ -271,12 +271,13 @@ These supersede the open questions in the audit report §11.
 
 ### 16.7 Developer decisions (confirmed 2026-10-12)
 
-8. **Joins: the hub replaces only the server's default join spawn.** Owners and a group's "join where they logged out" keep the last location, and a group's own join spawn still wins, exactly as without a hub. While the API is down every join goes to the hub (§13), unless the player is exempt; a join sent there by the outage gets a return record for where they logged out. `/spawn` and respawns are unchanged.
+8. **Joins: the hub replaces only the server's default join spawn.** Players in staff or owner mode, owners and a group's "join where they logged out" keep the last location, and a group's own join spawn still wins, exactly as without a hub. Staff and owner mode join where they logged out also during an outage and without a hub (decision 14). While the API is down every join goes to the hub (§13), unless the player is exempt; a join sent there by the outage gets a return record for where they logged out. `/spawn` and respawns are unchanged.
 9. **Outage timer: it resets only after a full recovery.** The timer starts at the first drop. It resets once the API is back and the server has synced its backlog: the statistics, discovery and Siege result spools are empty. A safety cap also resets it after 5 minutes of the API being up, so a stuck spool can't block it. A drop before that continues the same timer. The start is kept in `hub-outage.json`, so a restart doesn't reset it either. Actions run only while the API is down.
 10. **Mode switches during an outage:** a player in staff or owner mode is exempt (with a ticked box for one of their groups, decision 5). Leaving the mode while the outage lasts makes their action apply within a second.
 11. **Portal: a WorldGuard region.** `hub.portalRegionIds` lists WorldGuard regions in the hub's world. Walking into one takes the player into the game through the join chain without the hub: their group join spawn, else the default join spawn. This works like Multiverse-Portals, which also uses a selected cuboid, a movement trigger and a cooldown. The portal needs the API (or an exempt player) and a loaded account. It refuses a destination the player may not enter, carries a one-off exit pass and ends the outage return offer.
 12. **Deleting a Location never deletes its domain** (KNG-118 D3). The `domains.LocationId` key is now Restrict, and the API answers 409 naming the domain.
-13. **Group precedence: hierarchy first, then weight.** A group ranks above the groups it inherits from. Weight settles groups in unrelated trees or split branches. **Open:** in one case the rule goes in a circle, and the choice between the two orders is pending (handoff, open decision 1).
+13. **Group precedence: hierarchy first, then weight (option (i)).** A group ranks above the groups it inherits from. Weight settles groups in unrelated trees or split branches. A chain is ranked by the group the player actually holds: a held group that another held group inherits from is reached through that group's chain, after it. Example: Knight (weight 10) inherits from Squire (50), and Merchant (30) is unrelated; the order is Merchant, Knight, Squire. This one order is used for Game Settings overrides, teleport fees and cooldowns, and permission grants: a held child's deny beats its held parent's grant. It supersedes the weight-first D13 rule of 2026-10-09 and §13's "descending Weight, group then parent chain".
+14. **Staff and owner mode join where they logged out** (2026-10-12), with or without a hub and also during an outage. The outage action itself still follows the exemption boxes (decision 5).
 
 **Small choices made in the implementation:**
 - A player inside the hub region is never acted on.
@@ -286,6 +287,10 @@ These supersede the open questions in the audit report §11.
 - A Siege lobby stopped by an outage restarts at the next configuration refresh, like one with no ready scenario.
 - The return offer is a clickable `/hub return <token>`. The token is the record's save time, so an old click does nothing. The spot must be in a loaded world, safe (`SafeLocationFinder`) and allowed by domain AllowEntry, otherwise the record is removed with a message.
 - Teleports from inside the hub to outside are refused while the API is down, except for staff teleports and exempt players.
+- After the outage, leaving the hub any other way (walking out, `/spawn`, `/warp`) ends the return offer, like the portal. A new outage replaces an offer that was never used. A spot inside the hub is never saved.
+- `/hub return` is refused while frozen or in a siege. It uses the saved spot or a safe one within a block (slabs, paths, a saved jump). A spot with nothing safe nearby keeps the offer for later.
+- Siege lobbies stopped by an outage start again when the API is back.
+- Operators are not kicked by the "no usable hub" fallback, so they can fix it.
 
 ### 16.5 Peaceful preset (verified, not guessed)
 
