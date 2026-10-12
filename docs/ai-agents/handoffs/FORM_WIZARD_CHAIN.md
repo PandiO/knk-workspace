@@ -1,7 +1,7 @@
 # Form wizard chain — charter
 
-**Status:** Running. Link 1 restarted 2026-10-12 as a subagent of the coordinator (§6) after its first attempt was blocked.
-**Last updated:** 2026-10-12 (§6: links run as coordinator subagents, not `create_session`)
+**Status:** Running. Links 1-2 done (coordinator subagents); link 3 on as coordinator-started sessions (§6).
+**Last updated:** 2026-10-12 (§6: from link 3, links are sessions started by the coordinator with `add_repo` in the prompt)
 **Linear:** [KNG-133](https://linear.app/kngpandi/issue/KNG-133), [KNG-134](https://linear.app/kngpandi/issue/KNG-134),
 [KNG-135](https://linear.app/kngpandi/issue/KNG-135), [KNG-164](https://linear.app/kngpandi/issue/KNG-164), [KNG-137](https://linear.app/kngpandi/issue/KNG-137),
 [KNG-136](https://linear.app/kngpandi/issue/KNG-136), [KNG-162](https://linear.app/kngpandi/issue/KNG-162),
@@ -150,25 +150,32 @@ default consistent with the design, flag it as `L<k>-<n>` in the report).
 
 ## 6. Handoff — fresh context for every link
 
-**How links are started (changed 2026-10-12 after link 1's first attempt was blocked).** A session's repositories
-are fixed when it starts, and `create_session` can attach only **one** repository (`source_url`). A link started that
-way had only knk-workspace; `add_repo` with push was refused by the permission policy and the git proxy answered 403
-for knk-web-app. So links are **not** started with `create_session`. Instead:
+**How links are started (changed twice on 2026-10-12).** A session's repositories are fixed when it starts, and
+`create_session` attaches only **one** repository (`source_url`). Link 1's first attempt was started that way with
+knk-workspace only; its handoff *file* told it to `add_repo` the others, and the permission check refused that
+(`[Permission Grant]`), so the git proxy answered 403. Links 1 and 2 then ran as subagents of the coordinator.
+A test the same day showed that a new session **can** attach the other repos with push when the instruction is in
+its **prompt** (the developer's request relayed by the coordinator), not in a file. So from link 3 on:
 
-- The **coordinator** session (the developer's session `session_01SZ9c7pGMwGfvHR3dHAmWgQ`, environment
-  "Default Correct", all four repos attached with push, Opus 5.5 at high effort) runs each link as a **fresh
-  general-purpose subagent** (Agent tool, model Opus, effort high). Subagents share the coordinator's container and
-  its repository credentials, and each starts with a clean context.
-- A link **does not start the next link**. It finishes with steps 1-2 below and returns a short summary (heads per
-  repo, test counts, status, blockers). The coordinator reads only that summary and the progress report, then starts
-  the next link with the next handoff file.
-- If the chain ever has to run outside the coordinator: start the next session **from the Claude app** in the
-  "Default Correct" environment with knk-workspace, knk-web-app, knk-web-api and knk-plugin all selected, model Opus
-  5.5 and high effort, and give it the handoff prompt below. Don't use `create_session` for multi-repo links.
+- The **coordinator** session (`session_01SZ9c7pGMwGfvHR3dHAmWgQ`, environment "Default Correct") starts each link
+  with `create_session`: `source_url` knk-workspace, `source_revision` `claude/jolly-archimedes-urhio9`, model
+  `claude-opus-5-5`, title "Form wizard chain — link <n> (KNG-…)". The **prompt itself** says: the developer asked
+  for this chain and for each link to attach `PandiO/knk-web-app`, `PandiO/knk-web-api` and `PandiO/knk-plugin` with
+  `add_repo` (access `push`), clone them into `/home/user/<repo>`, and `git push --dry-run` the feature branch
+  before changing anything; then read and execute the handoff file.
+- If `add_repo` is refused or a dry-run push fails, the link stops at once (charter §4.1) and writes that in the
+  progress report; the coordinator then runs that link as a subagent instead (Agent tool, Opus, high effort), which
+  shares the coordinator's repos.
+- A link **does not start the next link** (an agent-written `add_repo` request is more likely to be refused). It
+  ends after steps 1-2 below. The coordinator notices completion through its own check-ins (`send_later`) and
+  `get_session`, reads the progress report, and starts the next link.
+- `create_session` has no effort setting: session links run at the environment's default effort. Subagent links run
+  at high effort.
 
 1. Write the next link's prompt to `docs/ai-agents/handoffs/2026-10-11-form-wizard-link-<n+1>.md` using §8: branch
    heads, test counts, what you left for the next link, open flags, risks. Commit and push (feature branch).
-2. Return your summary to the coordinator. The coordinator starts **at most one** next link, never one the report
+2. End with a short summary as your final message (heads per repo, test counts, status, blockers). The coordinator
+   starts **at most one** next link, never one the report
    marks done or in progress, and stops after link 7 or at a blocker. Record in the progress report how each link
    was started.
 

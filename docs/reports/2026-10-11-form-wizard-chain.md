@@ -216,3 +216,9 @@ Tracker claim pushed to workspace `main` (`183b61b`).
   held values. KNG-164 touches `FormWizard.validateField` (required List `[]`) — keep the logic in a new module.
 - **How the next link is started:** by the coordinator as a fresh subagent with
   `docs/ai-agents/handoffs/2026-10-11-form-wizard-link-3.md` (charter §6).
+
+## Coordinator — 2026-10-12: after link 2
+
+- Verified link 2's pushes (web-app `602db8e`, workspace `26e815f`).
+- Access test session `session_01JqTqe6mbu3Yazp8WwLc4Ex`: started with knk-workspace only, its prompt asked it to `add_repo` knk-web-app and knk-web-api with push; both were attached and `git push --dry-run` succeeded on both. Charter §6 changed: from link 3, each link is a session started by the coordinator with the `add_repo` step in its prompt; subagent fallback if refused.
+- Link 3 started as session (see next block).

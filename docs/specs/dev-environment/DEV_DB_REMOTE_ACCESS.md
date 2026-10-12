@@ -1,6 +1,6 @@
 # Dev database for cloud sessions — remote access, backups and versioned environments
 
-**Status:** Proposal (2026-10-12), not implemented. Decisions E1-E4 (§7) need the developer.
+**Status:** Design decided (2026-10-12, E1-E4 by the developer, §7), not implemented.
 **Last updated:** 2026-10-12
 **Linear:** [KNG-163](https://linear.app/kngpandi/issue/KNG-163)
 **Sources:** `docs/guides/production-installation.md` §1.2 (environments), §1.5 (NAS + Cloudflare Tunnel), §5.2-5.5
@@ -33,7 +33,7 @@ is backed up on a schedule, and its schema version is known and moved forward by
 ```
 cloud session (Default Correct)                         NAS (Docker)
  knk-web-api / dotnet test                               ┌──────────────────────────────┐
-   │ Server=127.0.0.1;Port=13306                          │ mysql-dev (own container)     │
+   │ Server=127.0.0.1;Port=13306                          │ dev MySQL (existing container)│
    ▼                                                      │   schema knk_dev_cloud        │
  cloudflared access tcp ──HTTPS/WebSocket── Cloudflare ──► cloudflared (tunnel) ──► :3306 │
    (service token from env)     via agent proxy   Access  │ Docker network "devdb" only   │
@@ -41,14 +41,20 @@ cloud session (Default Correct)                         NAS (Docker)
                                                  auth)
 ```
 
-1. **A separate MySQL container `mysql-dev`** on the NAS, holding one schema, `knk_dev_cloud`. Not the developer's
-   `knightsandkings_dev_v2` and not the alpha database. A separate container (rather than another schema on the same
-   server) means a runaway query, a bad migration or a leaked password can't touch the other databases.
+1. **The existing dev MySQL container** on the NAS (E1, developer 2026-10-12) gets a new schema, `knk_dev_cloud`. Not
+   the developer's `knightsandkings_dev_v2` and not the alpha database. Accepted trade-off: a heavy query or a
+   connection storm from a cloud session slows the developer's own dev DB, and server settings and upgrades are
+   shared. Moving `knk_dev_cloud` to its own container later is a dump + restore.
 2. **A least-privilege user** `knk_cloud` with `ALL PRIVILEGES ON knk_dev_cloud.*` (migrations need DDL) and nothing
-   global, `MAX_USER_CONNECTIONS 20`. Its password is a long random value stored only in the environment secrets and
-   the developer's password manager.
+   global (no `FILE`, `PROCESS`, `SUPER`, `CREATE USER`, `GRANT OPTION`), `MAX_USER_CONNECTIONS 20` and a
+   `MAX_QUERIES_PER_HOUR` brake. `SHOW DATABASES` then lists only that schema. Its password is a long random value
+   stored only in the environment secrets and the developer's password manager. Optionally split it like production
+   (§5.2 of the production guide): `knk_cloud_migrator` (ALL) and `knk_cloud_app` (rows only).
+   **Check first:** migration `AddCurrencyLedgerImmutabilityTriggers` creates triggers, which a non-`SUPER` user can
+   only do with `log_bin_trust_function_creators=1`; set it on the dev MySQL if it isn't already.
 3. **Cloudflare Tunnel** (the `cloudflared` container already planned for the alpha, or a second one on its own
-   Docker network) publishes `db-dev.knightsandkings.net` as a **TCP** public hostname to `tcp://mysql-dev:3306`.
+   Docker network) publishes `db-dev.knightsandkings.net` as a **TCP** public hostname to the dev MySQL container's port 3306; the
+   tunnel container joins only MySQL's Docker network, not the NAS host network.
    No router ports open; the home IP stays hidden.
 4. **Cloudflare Access** application on that hostname with a **Service Auth** policy only: a service token
    (Client ID + Secret), no email login, no other rule. Revoking the token cuts every session off at once. Rotate it
@@ -64,7 +70,7 @@ cloud session (Default Correct)                         NAS (Docker)
 6. **Spike first** (phase 1): confirm `cloudflared access tcp` works through the agent proxy (it must honour
    `HTTPS_PROXY` and trust the proxy CA, e.g. `SSL_CERT_FILE=/root/.ccr/ca-bundle.crt`). Fallbacks if it doesn't:
    - **Tailscale** in userspace mode (`tailscaled --tun=userspace-networking`, ephemeral tagged auth key, an ACL that
-     allows only `mysql-dev:3306`), if its relay traffic passes the proxy.
+     allows only the dev MySQL port), if its relay traffic passes the proxy.
    - **Per-session local MySQL** restored from the latest `knk_dev_cloud` snapshot downloaded over HTTPS (an
      Access-protected bucket). No shared state, but fully isolated; useful anyway for destructive tests.
 
@@ -100,7 +106,7 @@ Reuse the production guide's backup design (§5.5) on the NAS for **every** data
 | Environment | Database | Who changes the schema | Data |
 |---|---|---|---|
 | dev-local | `knightsandkings_dev_v2` (developer's PC/NAS) | the developer, `dotnet ef database update` | test data + golden authored content |
-| **dev-cloud** (new) | `knk_dev_cloud` on `mysql-dev` | the pipeline, on every merge to `master` | scrubbed copy of dev-local content |
+| **dev-cloud** (new) | `knk_dev_cloud` on the existing dev MySQL | the pipeline, on every merge to `master` | scrubbed copy of dev-local content |
 | alpha | NAS alpha DB (D10) | the release pipeline, approved | alpha testers |
 | production | later (VPS) | the release pipeline, approved | players |
 
@@ -131,7 +137,7 @@ Reuse the production guide's backup design (§5.5) on the NAS for **every** data
 
 ## 6. Phases
 
-1. **Spike** (½ day): `mysql-dev` container + tunnel + Access service token; prove a cloud session connects through
+1. **Spike** (½ day): `knk_dev_cloud` schema and user + tunnel + Access service token; prove a cloud session connects through
    the proxy; pick the fallback if not.
 2. **dev-cloud live:** least-privilege user, environment secrets, setup script, scrubbed content load; the API's
    tests and a local API run against it; a short guide in `docs/guides/`.
@@ -141,11 +147,11 @@ Reuse the production guide's backup design (§5.5) on the NAS for **every** data
    endpoint.
 5. **Later:** per-branch schemas for parallel sessions; content snapshot job.
 
-## 7. Decisions for the developer
+## 7. Decisions (all made by the developer 2026-10-12)
 
 | # | Question | Proposed default |
 |---|---|---|
-| E1 | Separate MySQL container for dev-cloud, or a new schema on the existing dev MySQL? | Separate container |
-| E2 | Hostname | `db-dev.knightsandkings.net` behind Cloudflare Access (service token only) |
-| E3 | What data goes into dev-cloud? | Authored content + test data; no real accounts (scrubbed) |
-| E4 | A self-hosted GitHub runner on the NAS is acceptable? | Yes, in its own container, private repos only, outbound only |
+| E1 | Separate MySQL container for dev-cloud, or a new schema on the existing dev MySQL? | **Decided 2026-10-12: the existing dev MySQL container**, dedicated user limited to `knk_dev_cloud` |
+| E2 | Hostname | **Decided:** `db-dev.knightsandkings.net` behind Cloudflare Access (service token only) |
+| E3 | What data goes into dev-cloud? | **Decided:** authored content + test data; no real accounts (scrubbed) |
+| E4 | A self-hosted GitHub runner on the NAS is acceptable? | **Decided:** yes, in its own container, private repos only, outbound only |
