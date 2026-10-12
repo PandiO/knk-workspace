@@ -105,15 +105,17 @@ The developer answered the open decisions ([DESIGN §16.7](../../specs/hub/DESIG
 
 | Repo | Commits | What |
 |---|---|---|
-| knk-plugin | `fed45a3c`, `a2533bb7`, `4d8c307a`, `6125ad43` | joins (decision 8), outage actions + timer + return records + Siege abort (9, 10, 6), portal (11), staff/owner mode joins in place (14), review fixes |
-| knk-web-api | `bc7b06e`, `cc9ced1`, `644acce`, `8e34954`, `7ec345f` | Location delete keeps its domain (12, migration `LocationDeleteKeepsDomain`), Siege end reason `ApiOutage`, `hub.portalRegionIds`, group precedence option (i) (13) |
-| knk-web-app | `ef57c7a`, `5625dd6`, `a17cb46` | "Portal regions" field, override order option (i) (13), review fix |
+| knk-plugin | `fed45a3c`, `a2533bb7`, `4d8c307a`, `6125ad43`, `e321ac57`, `73024c7f` | joins (decision 8), outage actions + timer + return records + Siege abort (9, 10, 6), portal (11), staff/owner mode joins in place (14), review fixes |
+| knk-web-api | `bc7b06e`, `cc9ced1`, `644acce`, `8e34954`, `7ec345f`, `f090cbc` | Location delete keeps its domain (12, migration `LocationDeleteKeepsDomain`), Siege end reason `ApiOutage`, `hub.portalRegionIds`, group precedence option (i) (13) |
+| knk-web-app | `ef57c7a`, `5625dd6`, `a17cb46`, `3b587fe` | "Portal regions" field, override order option (i) (13), review fix |
 
 An independent review of the day session found 12 issues; all are fixed (DESIGN §16.7 "small choices"). The most important: Siege lobbies stopped by an outage now restart when the API is back; the return offer ends when the player leaves the hub, is refused while frozen, and keeps an unsafe spot instead of deleting it; evacuations use the plugin transfer.
 
 - **Plugin tests:** core 2058, api-client 258, paper 1656, all green.
 - **API tests:** 2565 passed; the same 4 failures as on `master`. The migration was checked on a local MySQL 8: apply, no pending changes, roll back one step, re-apply.
-- **Web app:** `tsc` clean, the build passes, Game Settings tests 33/33.
+- **Web app:** `tsc` clean, the build passes, Game Settings tests 32/32.
+
+Later on 2026-10-12: staff and owner mode exempt by themselves, and the exemption boxes were removed everywhere (`e321ac57`, `73024c7f`, `f090cbc`, `3b587fe`).
 
 ### Extra test steps for the day session
 11. **Joins with a hub (decision 8):**
@@ -160,7 +162,7 @@ An independent review of the day session found 12 issues; all are fixed (DESIGN 
    - the log should show "Using the cached settings";
    - joins still go to the hub;
    - `offline-security.json` should contain `gameSettings`.
-9. **Exemption boxes:** a group without `knk.mode.staff` shows no box. Grant the node and the box appears, naming the group that grants it. Note: `knk.mode.*` nodes may not be seeded in the live DB (KNG-116 P4).
+9. **Exemption boxes: removed** (decision 2026-10-12). The group override cards show only the own outage action and delay.
 10. **Gate door in the hub:**
     - capture its regions while standing in the hub;
     - from the main world it should refuse with "Go to its world first".
