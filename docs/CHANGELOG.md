@@ -4,6 +4,13 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Relationship pickers list what you just created in the same form**
+  ([KNG-136](https://linear.app/kngpandi/issue/KNG-136); knk-web-app `d0d805d`, `89b4476`, `8ae5a66`, branch
+  `claude/jolly-archimedes-urhio9`, form wizard chain link 4). A District created inside a Street form opened from a
+  GateStructure form now shows at the top of the GateStructure's own District picker, under "Created in this form"
+  with a **New** badge, without reopening anything. The pinned rows follow the picker's search box and filters and
+  are never listed twice. Unit- and UI-tested; not yet checked live.
+
 - **Required List fields refuse an empty list; minimum and maximum selections are kept and enforced**
   ([KNG-164](https://linear.app/kngpandi/issue/KNG-164); knk-web-app `a1c5896`, knk-web-api `29f65b3`, branch
   `claude/jolly-archimedes-urhio9`, form wizard chain link 3). "A Street needs at least one District" let an empty

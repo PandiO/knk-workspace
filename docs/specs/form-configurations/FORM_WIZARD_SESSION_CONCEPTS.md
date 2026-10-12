@@ -2,7 +2,7 @@
 
 **Status:** Design decided (2026-10-11): D1 = A (developer), D2 default chosen (reversible, developer may override).
 Being implemented by the [form wizard chain](../../ai-agents/handoffs/FORM_WIZARD_CHAIN.md).
-**Last updated:** 2026-10-12 (§5 items 1-3 status, KNG-133, KNG-134, KNG-135)
+**Last updated:** 2026-10-12 (§5 items 1-4 status, KNG-133, KNG-134, KNG-135, KNG-136)
 **Linear:** [KNG-133](https://linear.app/kngpandi/issue/KNG-133) (List "Create New" never saved),
 [KNG-136](https://linear.app/kngpandi/issue/KNG-136) (pickers show entities made in this session),
 [KNG-134](https://linear.app/kngpandi/issue/KNG-134) (Edit instance opens without its values),
@@ -230,6 +230,13 @@ offered for selection elsewhere (a Location belongs to one owner; see `architect
 4. **KNG-136** (improvement): registry + pinned picker rows. `PagedEntityTable` has no tests of its own today; add
    them (pinned rows, de-duplication, stable keys), plus a two-level nesting UI test modelled on
    `FormWizard.siegeNesting.ui.test.tsx`.
+   **Status 2026-10-12: implemented on `claude/jolly-archimedes-urhio9` (knk-web-app `d0d805d`, `89b4476`,
+   `8ae5a66`), not merged, live test pending.** No search endpoint filters by a list of ids, so pinned rows are
+   filtered on the client (search term on the label fields; `pickerFilters` against the row's `x`/`xId`/`x.id`;
+   `prefer…` filters ignored, `excludeIds` applied, a filter the row can't answer hides it unless the page holds the
+   row). Pinned: entities the session *created* (not ones it only edited), never embedded values and never
+   Locations (L4-2). The registry is created by the first `FormWizard` without a session above it (a wrapper around
+   `FormWizard`), not by `FormWizardPage` itself.
 5. **KNG-162** (improvement): cancel / delete-draft prompt and provenance (D2). After KNG-136.
 
 All of them touch `FormWizard.tsx`; KNG-120 (`claude/admiring-mendel-ne39j1`) and KNG-132

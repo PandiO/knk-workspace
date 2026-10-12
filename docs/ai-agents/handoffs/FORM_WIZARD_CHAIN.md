@@ -1,7 +1,7 @@
 # Form wizard chain — charter
 
-**Status:** Running. Links 1-2 done (coordinator subagents), link 3 done (coordinator-started session, §6); link 4 next.
-**Last updated:** 2026-10-12 (§6: from link 3, links are sessions started by the coordinator with `add_repo` in the prompt)
+**Status:** Running. Links 1-2 done (coordinator subagents), links 3-4 done (coordinator-started sessions, §6); link 5 next.
+**Last updated:** 2026-10-12 (link 4 done; §6: from link 3, links are sessions started by the coordinator with `add_repo` in the prompt)
 **Linear:** [KNG-133](https://linear.app/kngpandi/issue/KNG-133), [KNG-134](https://linear.app/kngpandi/issue/KNG-134),
 [KNG-135](https://linear.app/kngpandi/issue/KNG-135), [KNG-164](https://linear.app/kngpandi/issue/KNG-164), [KNG-137](https://linear.app/kngpandi/issue/KNG-137),
 [KNG-136](https://linear.app/kngpandi/issue/KNG-136), [KNG-162](https://linear.app/kngpandi/issue/KNG-162),

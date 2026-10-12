@@ -1,7 +1,7 @@
 # knk-web-app — Architecture
 
 **Status:** Living document — reflects actual code, updated in place on each rescan
-**Last updated:** 2026-09-18 (scan basis: `knk-web-app` @ `4ff5dc6`, branch `claude/web-app-codebase-scan-4yqibi`); spot edits 2026-10-09 (ObjectTypeExplorer, KNG-61), 2026-10-10 (FormWizard Boolean fields, KNG-53), 2026-10-12 (FormWizard child forms, KNG-133, KNG-134; List edit load, step header, List validation, KNG-135, KNG-137, KNG-164)
+**Last updated:** 2026-09-18 (scan basis: `knk-web-app` @ `4ff5dc6`, branch `claude/web-app-codebase-scan-4yqibi`); spot edits 2026-10-09 (ObjectTypeExplorer, KNG-61), 2026-10-10 (FormWizard Boolean fields, KNG-53), 2026-10-12 (FormWizard child forms, KNG-133, KNG-134; List edit load, step header, List validation, KNG-135, KNG-137, KNG-164; form session registry, KNG-136)
 **Source scan:** `docs/reports/web-app-scan-2026-09-18.md`
 
 ## Stack
@@ -67,6 +67,19 @@ entity. Two parallel generic engines carry most of the CRUD surface:
    parent is saved. **Step header** (KNG-137, same branch): `FormWizard/WizardStepHeader.tsx` shows
    step names in the progress bar (truncated, hidden on narrow screens) and keeps the step name as the
    title in edit mode under a small "Edit {entity}" heading; Boolean fields render their description.
+   **Form session registry** (KNG-136, same branch): the exported `FormWizard` wraps its body in a
+   `FormSessionScope` (`contexts/FormSessionContext.tsx`). The first wizard with no session above it
+   (normally `FormWizardPage`'s) owns the registry for its lifetime; wizards nested in
+   `ChildFormModal`/`JoinEntityFormModal` join it and add their entity name to the form path.
+   `handleChildFormComplete` and `ManyToManyRelationshipEditor.handleCreateRelatedEntity` register
+   what a child saved (`useFormSession().register`: type, id or a concept key for an embedded value,
+   display DTO, origin form path + field, `created`/`updated`, order). `ObjectField`/`ListField` get
+   the created, non-embedded entries of their `objectType` as `pinnedRows` plus a `refreshKey`
+   (`hooks/useSessionPinnedRows.ts`; Locations are never pinned). `PagedEntityTable` shows them in a
+   "Created in this form" section with a New badge, filtered by the search term and the query's
+   filters on the client and de-duplicated against the page (`utils/forms/sessionPinnedRows.ts`);
+   rows are keyed and selected by id (`isSameSelection`), not by array index. The registry is not
+   kept in drafts; `createdEntities()` is the hook for KNG-162.
 2. **Display engine** (`DisplayWizard/`, `DisplayConfigBuilder/`) — same pattern for
    read-only entity detail views, driven by `DisplayConfigurationDto`
    (`displayConfigClient`).

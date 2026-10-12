@@ -1,7 +1,7 @@
 # Form wizard chain — progress report
 
-**Status:** Running — links 1-3 done (2026-10-12); link 4 (KNG-136) next.
-**Last updated:** 2026-10-12 (link 3 done)
+**Status:** Running — links 1-4 done (2026-10-12); link 5 (KNG-162) next.
+**Last updated:** 2026-10-12 (link 4 done)
 **Charter:** [FORM_WIZARD_CHAIN.md](../ai-agents/handoffs/FORM_WIZARD_CHAIN.md). Append-only below the Summary.
 
 ## Summary
@@ -11,7 +11,7 @@
 | 1 | KNG-133 | **Done** (In Review, live test pending); first attempt blocked (§4.1), restarted 2026-10-12 | `ff12c8f` / unchanged `917537a` / docs + handoff |
 | 2 | KNG-134 | **Done** (In Review, live test pending) | `602db8e` / unchanged `917537a` / docs + handoff |
 | 3 | KNG-135 + KNG-137 + KNG-164 | **Done** (In Review, live test pending; dev DB needs the migration) | `a1c5896` / `29f65b3` / docs + handoff |
-| 4 | KNG-136 | Not started | — |
+| 4 | KNG-136 | **Done** (In Review, live test pending) | `8ae5a66` / unchanged `29f65b3` / docs + handoff |
 | 5 | KNG-162 | Not started | — |
 | 6 | KNG-138 | Not started | — |
 | 7 | KNG-139 + write-up | Not started | — |
@@ -335,3 +335,109 @@ workspace `main` (`8ca64fb`); Linear KNG-135/137/164 set In Progress.
   the picker's id-based selection matches.
 - **How the next link is started:** by the coordinator (charter §6), from
   `docs/ai-agents/handoffs/2026-10-11-form-wizard-link-4.md`.
+
+## Link 4 — KNG-136: Form session registry; pickers pin entities created in this form session (2026-10-12)
+
+Started by the coordinator as a new session (charter §6) with `add_repo` for knk-web-app, knk-web-api and knk-plugin
+in its prompt: all three attached with push, cloned, feature branch checked out, `git push --dry-run` passed in all
+three and in knk-workspace. Trunks had not moved (web-app `main` `38854ba`, web-api `master` `917537a`), so the trunk
+merges at start and end were no-ops. Tracker claim pushed to workspace `main` (`fe9f104`); Linear KNG-136 set In
+Progress.
+
+- **Commits (knk-web-app, branch `claude/jolly-archimedes-urhio9`):** `d0d805d` registry + pinned-row rules;
+  `89b4476` PagedEntityTable pinned rows, stable keys, id-based selection, first tests; `8ae5a66` wiring (FormWizard
+  wrapper + registration, ManyToManyRelationshipEditor registration, ObjectField/ListField pinned rows) (head
+  `8ae5a66`). knk-web-api unchanged (`29f65b3`), knk-plugin unchanged (`1b3e06c2`).
+- **What changed (all knk-web-app):**
+  - `src/contexts/FormSessionContext.tsx` (new): `FormSessionScope` + `useFormSession()`. The first scope with no
+    registry above it creates one (`RootRegistry`); nested scopes share it and append their form name to
+    `formPath`. `SessionEntity` = `key` (`<type lower-case>:<id>`, or `concept:<n>` for an embedded value without
+    id), `entityTypeName`, `id`, `display` (the DTO the child returned), `origin { formPath, fieldName }`, `status`
+    (`created`/`updated`; an entity created then edited stays `created`), `embedded`, `sequence` (registration
+    order), `revision`. `register()` upserts by key; `entitiesOfType()`; `createdEntities()` = created, not
+    embedded, oldest first (**for link 5**). Pure `upsertSessionEntity` exported for tests.
+  - `src/hooks/useSessionPinnedRows.ts` (new): created, non-embedded entries of one `objectType` as `PinnedRow`s
+    (newest first, `{ ...display, id }`) plus a `refreshKey` (`key@revision` list) that changes on every
+    registration or edit of that type. Never Locations (L4-2).
+  - `src/utils/forms/sessionPinnedRows.ts` (new): `matchesSearchTerm`, `matchesPickerFilters`, `tableRowKey`,
+    `isSameSelection`, `buildPinnedSection` (L4-1).
+  - `PagedEntityTable`: `pinnedRows` prop → "Created in this form" section with a **New** badge (the hybrid
+    New/Existing pill extracted into `RowBadge`, same styling) and a "Search results" divider; a pinned row the
+    page also holds is shown once, pinned, with the **page's** data (database wins over the registry's `display`,
+    flag L2-1). Rows keyed `id:<id>` / `ns:<namespaceKey>` / `pinned:<key>` (was the array index). Row selection,
+    deselection and the selectedItems sync use `isSameSelection` (enchantment refs by namespaceKey, others by id,
+    id-less only by identity) — the sync effect no longer treats all id-less items as equal (left by link 2).
+  - `FormWizard.tsx` (thin, for the KNG-120/KNG-132 merges): the component body is renamed `FormWizardBody`; the
+    exported `FormWizard` is a 5-line wrapper `<FormSessionScope formName={entityName}>`; one
+    `useFormSession()` call; one `formSession?.register(...)` in `handleChildFormComplete` after the child's
+    entity is saved/updated (or, for an embedded Location, with `embedded: true`).
+  - `ManyToManyRelationshipEditor.tsx`: `handleCreateRelatedEntity` registers an entity it created (L4-4).
+  - `FieldRenderers.tsx`: `ObjectField` and `ListField` call `useSessionPinnedRows(field.objectType)` and pass
+    `pinnedRows` + `refreshKey` to their `PagedEntityTable`. Many-to-many steps pick related entities through the
+    join-entry form's `ObjectField` (a nested wizard in the same session), so they are covered too.
+- **Tests:** web app **764 passed / 5 failed** (baseline re-measured before changes: 729 / 5; +35 new: 16
+  `sessionPinnedRows`, 8 `FormSessionContext` (incl. `useSessionPinnedRows`), 9 `PagedEntityTable` (its first
+  tests: pinned section + badge, de-duplication with page data, search box and `pickerFilters` on pinned rows,
+  pinned selection by id, id-less selection sync, stable keys, `refreshKey` refetch, empty state), 1
+  `ManyToManyRelationshipEditor.sessionRegistry`, 1 `FormWizard.sessionPinnedRows.ui` (GateStructure → Street →
+  District through the real ChildFormModal at both depths and the real PagedEntityTable with a mocked search
+  client: the District is pinned and New in the GateStructure District picker without reopening, the search box
+  hides/shows it, it is selectable, the GateStructure submits `DistrictIds: [501]`, `StreetId: 77`)). The UI test
+  fails against the unchanged components ("Created in this form" never appears). The 5 failures are the same 4
+  known-red suites (`FormWizard.m2mJoinPrefill.ui`, `ManyToManyRelationshipEditor.ui`, `useEnrichedFormContext`,
+  `RoadsAdminPage`). `npm run build` compiles with no new warnings (the
+  `PagedEntityTable` effects keep their pre-existing exhaustive-deps warnings; the selection-sync effect's deps now
+  include `entityTypeName`). API not rerun (unchanged).
+- **Flagged decisions:**
+  - **L4-1** No paged search endpoint filters by a list of ids (the only id-ish filters are entity-specific:
+    `Id`/`id` on two repositories, `excludeIds` on Category), so pinned rows are filtered **on the client**: the
+    search term against `name`/`displayName`/`title`/`label`/`key`/`resolvedName` (substring) or the exact id; each
+    `pickerFilters` entry against the row's `x`, `xId` or `x.id` (case-insensitive); `prefer…` filters are ignored
+    (they only order results); `excludeIds` is applied; a filter the row can't answer **hides** the pinned row (the
+    server might have excluded it) unless the current page holds the row (then the server accepted it). Reversible:
+    an `ids` filter on the search endpoints would let the table re-query instead.
+  - **L4-2** Pinned are only entities the session **created**, never embedded values and **never Locations** (a
+    Location belongs to one owner, `architecture/location-retention.md`; a List of Locations is saved per L1-1 but
+    is still not offered elsewhere). Entities only edited in the session are already in the search results.
+  - **L4-3** The registry is created by the exported `FormWizard` itself (the first one without a session above it),
+    not by `FormWizardPage`, so every root wizard gets one with no page change. It lives as long as that root
+    `FormWizard` is mounted: navigating away or the page remounting the wizard starts a new, empty registry (D3:
+    not kept in drafts). `formPath` uses each wizard's `entityName` prop, which can be the lower-case route segment
+    (`gatestructure`); use `entityTypeName` on the entries, not `formPath`, for API calls.
+  - **L4-4** `ManyToManyRelationshipEditor`'s own "create related" `ChildFormModal` is never opened today (nothing
+    calls `setShowCreateRelatedModal(true)`); the registration there follows the spec and is tested by completing
+    the stubbed modal directly. Many-to-many steps create related entities through the join-entry form's Object
+    field, which registers through `handleChildFormComplete`.
+  - **L4-5** Pinned rows sit outside the pagination (not counted in "Showing x of y"), and "select all" still acts
+    on the page rows only.
+- **Discrepancies with the design:** none in substance. The spec suggested re-running the search with the session ids
+  as a filter where possible; no endpoint supports it, so all filtering is client-side (L4-1). The provider is the
+  `FormWizard` wrapper rather than `FormWizardPage` (spec allowed either; L4-3).
+- **Live checklist (developer):** (the dev DB needs link 3's migration first — link 3 checklist item 0)
+  1. GateStructure create → Street **Create New** → in the Street form, Districts **Create New** → District
+     "Oostwijk", Submit. Without closing anything, the Street form's own Districts picker and (behind the modal) the
+     GateStructure's District picker show "Created in this form" with **Oostwijk** and a **New** badge.
+  2. Submit the Street. In the GateStructure form, the District picker still pins Oostwijk; type part of its name in
+     the picker's search box: it stays; type something else: it disappears; clear: it's back. Select it: it shows
+     under "Selected" with its id. Submit: the GateStructure is saved with that District.
+  3. If a District with the same id is also on the first page of results, it is shown once (pinned).
+  4. Open the GateStructure's Street "Select instance": the new Street is pinned there too.
+  5. A Location made in a child form is never pinned in another picker.
+  6. Reload the page / reopen the form: nothing is pinned any more (the registry isn't kept in drafts yet; KNG-162).
+- **Follow-ups (not fixed, scope):** an `ids` filter on the paged search endpoints (would replace L4-1's client-side
+  filtering); the dead "create related" modal in `ManyToManyRelationshipEditor` (L4-4) — remove or wire a button.
+- **Risks:** `FormWizard.tsx` edits are thin (an import, the component renamed to `FormWizardBody`, one hook call, one
+  `register` call, a wrapper at the end of the file). A KNG-120/KNG-132 merge that touches the
+  `export const FormWizard: React.FC<FormWizardProps> = ({` line conflicts mechanically: keep their body changes and
+  the rename. Tests that `jest.mock('../FormWizard')` are unaffected; code that relied on `FormWizard` being the body
+  component itself (none found) would now get the wrapper.
+- **Next link must know:** link 5 = KNG-162. `useFormSession()?.createdEntities()` lists what this root form's
+  child forms saved, oldest first, with `entityTypeName`, `id`, `origin`, `sequence`; delete in **reverse
+  `sequence`** (a later entity can reference an earlier one: the Street references the District it was created
+  with). The registry is only reachable inside the root `FormWizard` (its wrapper is the provider); a cancel prompt
+  rendered by `FormWizardPage` outside the wizard needs the scope lifted: wrap that part of the page in
+  `<FormSessionScope formName=…>` — the inner `FormWizard` then joins it instead of creating its own. Persisting it
+  (`CreatedEntitiesJson`) and re-seeding the registry from a resumed draft (D3) needs a way to seed entries
+  (`upsertSessionEntity` is the pure core; a `seed(entries)` on the root registry is the natural addition).
+- **How the next link is started:** by the coordinator (charter §6), from
+  `docs/ai-agents/handoffs/2026-10-11-form-wizard-link-5.md`.
