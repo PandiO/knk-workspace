@@ -4,6 +4,14 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Ten ready-made forms for gates and sieges, importable from the form configuration list**
+  ([KNG-139](https://linear.app/kngpandi/issue/KNG-139); knk-web-api `b04b429`, branch
+  `claude/jolly-archimedes-urhio9`, form wizard chain link 7). **Import / Seeds** now offers GateStructure,
+  GateDoor and the siege set (scenario, team, spawnpoint, objective, lobby and their three join entries), with step
+  names, a description for every field and step, and the location rules (door points inside the gate's region,
+  siege points inside the town). They import next to the current forms, not over them; walk through them, then make
+  them the default. The gate forms were written from the docs and code, so compare them with the current ones first.
+
 - **Form configurations can be exported and imported as JSON files, and bundled seed forms imported on request**
   ([KNG-138](https://linear.app/kngpandi/issue/KNG-138); knk-web-api `b62cdce`, knk-web-app `1c3e835`,
   branch `claude/jolly-archimedes-urhio9`, form wizard chain link 6). The form configuration list has

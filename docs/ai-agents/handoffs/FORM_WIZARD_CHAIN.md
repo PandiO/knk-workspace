@@ -1,7 +1,8 @@
 # Form wizard chain — charter
 
-**Status:** Running. Links 1-2 done (coordinator subagents), links 3-6 done (coordinator-started sessions, §6); link 7 next.
-**Last updated:** 2026-10-12 (link 6 done; §6: from link 3, links are sessions started by the coordinator with `add_repo` in the prompt)
+**Status:** Done. Links 1-2 ran as coordinator subagents, links 3-7 as coordinator-started sessions (§6); nothing merged.
+Final summary (merge order, combined live checklist, decisions to review): end of the progress report.
+**Last updated:** 2026-10-12 (link 7 done, chain complete)
 **Linear:** [KNG-133](https://linear.app/kngpandi/issue/KNG-133), [KNG-134](https://linear.app/kngpandi/issue/KNG-134),
 [KNG-135](https://linear.app/kngpandi/issue/KNG-135), [KNG-164](https://linear.app/kngpandi/issue/KNG-164), [KNG-137](https://linear.app/kngpandi/issue/KNG-137),
 [KNG-136](https://linear.app/kngpandi/issue/KNG-136), [KNG-162](https://linear.app/kngpandi/issue/KNG-162),
@@ -21,7 +22,7 @@ the live checklist and go on. Do nothing the developer can't easily review or un
 | 4 | KNG-136 | Form session registry; pickers pin entities created in this form session ("New") | knk-web-app |
 | 5 | KNG-162 | Cancel / delete-draft prompt: keep or delete what child forms saved; provenance `CreatedEntitiesJson` | knk-web-app, knk-web-api |
 | 6 | KNG-138 | FormConfiguration export/import (portable JSON), bundled seeds endpoints, web-app buttons | knk-web-api, knk-web-app |
-| 7 | KNG-139 + final write-up | Seed files for GateStructure/GateDoor and the siege set (then the domain family if time allows); chain summary, merge order, live checklist | knk-web-api (`Data/FormConfigurationSeeds/`), knk-workspace |
+| 7 | KNG-139 + final write-up | Seed files for GateStructure/GateDoor and the siege set (domain family moved to the follow-up list: needs an export first); chain summary, merge order, live checklist | knk-web-api (`Data/FormConfigurationSeeds/`), knk-workspace |
 
 **Not in this chain:** merging into any trunk, opening PRs (the developer hasn't asked for them), deploying, touching
 the developer's servers or databases, Linear issues other than the ones above (comments only on related ones).

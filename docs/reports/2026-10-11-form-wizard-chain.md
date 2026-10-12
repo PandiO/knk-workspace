@@ -1,7 +1,8 @@
 # Form wizard chain — progress report
 
-**Status:** Running — links 1-6 done (2026-10-12); link 7 (KNG-139 + write-up) next.
-**Last updated:** 2026-10-12 (link 6 done)
+**Status:** Done — links 1-7 done (2026-10-12); nothing merged, no PRs. Final summary (merge order, combined live
+checklist, decisions to review, follow-ups) at the end of this file.
+**Last updated:** 2026-10-12 (link 7 done, final summary)
 **Charter:** [FORM_WIZARD_CHAIN.md](../ai-agents/handoffs/FORM_WIZARD_CHAIN.md). Append-only below the Summary.
 
 ## Summary
@@ -14,7 +15,7 @@
 | 4 | KNG-136 | **Done** (In Review, live test pending) | `8ae5a66` / unchanged `29f65b3` / docs + handoff |
 | 5 | KNG-162 | **Done** (In Review, live test pending; dev DB needs links 3 and 5 migrations) | `22cb588` / `959bc11` / docs + handoff |
 | 6 | KNG-138 | **Done** (In Review, live test pending; no migration) | `1c3e835` / `b62cdce` / docs + handoff |
-| 7 | KNG-139 + write-up | Not started | — |
+| 7 | KNG-139 + write-up | **Done** (In Review, live test pending; no migration; seeds import as non-default) | unchanged `1c3e835` / `b04b429` / report + final summary |
 
 ## Link 0 — chain setup (coordinator)
 
@@ -673,3 +674,318 @@ workspace `main` (`762ef75`); Linear KNG-138 set In Progress. No other "In progr
   Run `dotnet test Tests/knkwebapi_v2.Tests/knkwebapi_v2.Tests.csproj --filter FullyQualifiedName~FormConfigurationSeed`.
 - **How the next link is started:** by the coordinator (charter §6), from
   `docs/ai-agents/handoffs/2026-10-11-form-wizard-link-7.md`.
+
+## Link 7 — KNG-139: Default FormConfigurations as seed files (2026-10-12)
+
+Started by the coordinator as a new session (charter §6) with `add_repo` for knk-web-api, knk-web-app and knk-plugin
+in its prompt: all three attached with push, cloned, feature branch checked out, `git push --dry-run` passed in all
+three and in knk-workspace. Trunks had not moved (web-app `main` `38854ba`, web-api `master` `917537a`, plugin `main`
+`1b3e06c2`), so the code trunk merges at start and end were no-ops; workspace `main` had only tracker commits
+(merged). Tracker claim pushed to workspace `main` (`94b7769`); Linear KNG-139 set In Progress. No other "In
+progress" row claims `Data/FormConfigurationSeeds/`.
+
+- **Commits (knk-web-api, branch `claude/jolly-archimedes-urhio9`):** `2922039` GateStructure + GateDoor seeds;
+  `9f0c86f` siege seeds + stronger seed tests; `324095f` seed README (list + import order); `b04b429` GateDoor
+  point/size descriptions match the web app's derived width/height (head `b04b429`). knk-web-app unchanged
+  (`1c3e835`), knk-plugin unchanged (`1b3e06c2`). **No code or schema change; no migration.** The web app needed
+  nothing (its tests not re-run: 813 passed / 5 known-red after link 6).
+- **Sources.** **No dev-DB export of GateStructure (9) or GateDoor (12) was available** in this cloud session, so
+  the gate seeds are derived from `GATESTRUCTURE_QOL_IMPLEMENTATION_PLAN.md` §5.0, §5.10-5.11 and §6.1-6.2, the
+  stale `GATE_FORMCONFIG.md` field matrix, the models, `gate-commands.md`, `gate-smoke-test.md`, the web app's
+  `gateGeometry.ts` (width/height derived from the points) and the plugin code (which fields it actually reads,
+  checked on knk-plugin `main` `1b3e06c2`). The siege seeds convert `siege-minigame/PHASE_3_FORMCONFIGS.md`
+  (configs 26-33) with `DESIGN.md` and `guides/authoring-a-siege-scenario.md`. BannerLayer/BannerDesign/Clan (23-25)
+  are in the same record but not in the KNG-139 siege group; left for a follow-up.
+- **Seeds** (`Data/FormConfigurationSeeds/`, file name = seed name; every seed, step and field has a fixed GUID;
+  names end in "(seed v1)" so they don't collide with the dev DB's configurations):
+
+  | Seed | Steps (fields; * required, (c) conditional) | Rules |
+  |---|---|---|
+  | `GateStructure` | General information (Name*, Description*, Icon) · Address (District*, Street*, House number*) · Region and access (Region* via world task, Allow entry, Allow exit) · Spawn point (Location via Send to Minecraft) · Siege behaviour (Animate during a siege, Siege may take over) · Gate doors (owned list) | Region inside the district's region (warning) |
+  | `GateDoor` | Door (Gate*, Name*, Door type*, Shape from*, Facing*, Active) · Shape: three points (c: plane grid/region; anchor, point 1, point 2, width, height, depth) · Shape: flood fill (c: flood fill; Seed blocks*, max blocks, max radius, stay in one plane) · Motion (Motion*, travel distance (c), hide outside box, duration, update every) · Rotation (c: motion = Rotation; hinge, angle, left/right wing (c: double doors)) · Block scan (chests/signs policy*, closed scan, open anchor, open scan (c)) · Health and respawn (7, three (c)) · Pass-through (2, one (c)) · Info display (7, two (c)) | Anchor, point 1, point 2 and hinge inside the gate's region (blocking) |
+  | `SiegeScenarioDistrict.join` | District (District*) | — |
+  | `SiegeScenarioGate.join` | Gate (Gate*, Owner team, State at start*, Damageable) | — |
+  | `SiegeLobbyScenario.join` | Scenario (Scenario*, Weight*) | — |
+  | `SiegeScenario` | General · Districts (M2M → district join seed) · Hub and entry · Match length · Rewards · Teams (owned) · Gates (M2M → gate join seed) · Objectives (owned) · Readiness (panel) | Hub inside the town (blocking) |
+  | `SiegeTeam` | Role and alliance · Identity · Spawnpoints (owned) | — |
+  | `SiegeSpawnpoint` | Spawnpoint · Location | Location inside the scenario's town (parent form, blocking) |
+  | `SiegeObjective` | General · Capture point · Gate behaviour (c: a gate is picked) | Capture location inside the scenario's town (parent form, blocking) |
+  | `SiegeLobby` | General · Timings · Voting · Rotation (M2M → lobby join seed) | — |
+
+- **What changed per step** (against the forms as the sources describe them):
+
+  | Form | Change |
+  |---|---|
+  | GateStructure (vs 9: General Information, Region and Rules, Locations, Siege Behaviour, Gate Doors) | Address split out of General (District, Street, House number); "Locations" became **Spawn point** (the gate's Location only, with what `/gate tp`, `/warp`, `/navigate … spawn` do with it); guard fields left off (below); Region via world task, with a non-blocking "inside the district" rule; every field has a description; step names sentence case. |
+  | GateDoor (vs 12: General Information, Geometry: Plane Grid, Geometry: Flood Fill, Motion: Sliding, Motion: Rotation, Animation and Blocks, Health and Combat, Pass-Through and Display) | **Door** = identity + type + shape mode + facing + active. Plane-grid step also shown for **Region** shapes (they keep the anchor/point basis, plan §6.1). One **Motion** step (motion type always visible, with which type fits which door; travel distance only for vertical/lateral) replaces "Motion: Sliding" + the animation half of "Animation and Blocks". **Rotation** keyed on motion = Rotation instead of door type. New **Block scan** step (tile-entity policy, closed scan, open anchor, open scan) — the scans are world tasks that need the saved door. "Pass-Through and Display" split into **Pass-through** and **Info display**. Descriptions for anchor/points/size/travel written here (KNG-132 overlap, below). |
+  | SiegeScenarioDistrict / Gate / LobbyScenario joins | Text only: step descriptions, Weight and InitialState described. |
+  | SiegeScenario | "Hub & entry" → "Hub and entry"; **Lock down the scenario area** left off (the authoring guide: it no longer does anything); Districts step text updated (non-members aren't locked out any more); every reward has a description from DESIGN §9 (holding = per objective held at the end and not at the start; capture = per objective captured personally, once); hub description says players are teleported there 15 s before the start and gates lock then. |
+  | SiegeTeam | The 9-field "Identity" step split into **Role and alliance** (scenario, role, alliance, order) and **Identity** (clan, name, colour, banner, start message). |
+  | SiegeSpawnpoint, SiegeObjective, SiegeLobby | Text only (descriptions for every field, units in labels); objective/spawn location rules added (below). |
+
+- **Left off on purpose** (named per the acceptance list; the builder can add any of them back):
+  - *Runtime-only / set elsewhere:* GateStructure `CurrentSiegeId`, `IsSiegeObjective` (siege runtime), the 14
+    `*Override` fields (`/gate override`, dedicated endpoint), `CreatedAt`, `WorldName` (resolved by
+    `DomainWorldResolver` from the region task/location); GateDoor `HealthCurrent` (a new door starts at `HealthMax`,
+    `GateDoorMappingProfile`), `IsDestroyed`, `OpenedState`, `ClosedRegionData`/`OpenedRegionData`
+    (`/gatedoor capture|redefine`); the join entries' parent ids (set by the M2M step); SiegeLobby `ScheduleJson`
+    (scheduled lobbies are a later phase).
+  - *Not read by the plugin* (searched knk-plugin `main` `1b3e06c2`): GateDoor `MirrorRotation`,
+    `FallbackMaterialRefId`, `PassThroughConditionsJson`.
+  - *Would have to be required:* GateDoor `ScanMaterialWhitelist`/`ScanMaterialBlacklist` (non-nullable strings whose
+    `= string.Empty` default the metadata doesn't see, so the template validation demands "required"; empty is the
+    normal value and the mapping already turns a missing value into `""`).
+  - *Future feature / other forms:* GateStructure `GuardSpawnLocations`, `GuardCount`, `GuardNpcTemplateId` (guard
+    system not built), the Domain travel fields (`Teleport*`, `NavigationDefaultOverride`, `RoadAccessOverride`;
+    domain-family follow-up); SiegeScenario `LockdownScenarioArea` (does nothing).
+- **Tests:** API **2616 passed / 4 failed** (baseline re-measured before changes: 2613 / 4; +3 new in
+  `FormConfigurationSeedFilesTests`: every seed imports **without warnings**; every foreign key and every other
+  property the entity needs on create is on the form or listed with a reason (`NotOnFormByDesign`); the M2M steps
+  point at the imported join entries and every rule's `dependsOn` is the right field — the siege location rules at the
+  seed SiegeScenario's Town field, GateDoor's at its own Gate field — and on an empty DB each seed became the
+  default). The existing dry-run/import test covers all 10 files in dependency order. Mutation check: removing
+  `StreetId` from the GateStructure seed fails the new coverage test (removing `HouseNumber` doesn't: the metadata
+  counts every value type as having a default, 0, so the check treats foreign keys specially and plain numbers as
+  optional). The 4 failures are the known-red `ClientActivityStoreTests`, 2x `PathResolutionServiceTests`,
+  `FieldValidationServiceTests`. `dotnet build knkwebapi_v2.csproj`: 0 errors, no new warnings (no C# in the API
+  project changed). `EndpointAccessRulesTests` green (no endpoints).
+- **Flagged decisions:**
+  - **L7-1** The gate seeds are a reconstruction from the docs and code, not a rewrite of an export: anything tuned
+    live in configurations 9/12 since 2026-09-13 (display conditions, extra fields, rule messages) isn't in them.
+    Compare in the builder before making them default (checklist).
+  - **L7-2** Fields the plugin doesn't read, and the two material filters, are left off GateDoor (list above).
+  - **L7-3** GateDoor's Rotation step follows **motion = Rotation**, not door type, and the motion type is always
+    visible with "drawbridges and double doors: Rotation" in its description. Hiding it per door type (the old
+    matrix) left drawbridges on the default `VERTICAL`, since nothing derives it server-side. No
+    `ConditionalValueMatch` rule authored (its config isn't documented).
+  - **L7-4** The three-point step also shows for **Region** shapes (plan §6.1 keeps the anchor/point basis for them);
+    the region itself is captured with `/gatedoor capture` after saving, as the "Shape from" description says.
+  - **L7-5** `WgRegionId`'s world task type is `ReagionCreate` (the builder's spelling and the import's known list);
+    the plugin routes this task by the field name `WgRegionId` anyway.
+  - **L7-6** Rules: GateStructure "region inside the district" is a **warning** (a town gate may straddle a district
+    edge); GateDoor point rules are **blocking** with `allowBoundary: true` (the plan's 5.10 rules, boundary allowed
+    so a hinge on the region edge passes); the siege location rules (PHASE_3 "Location rules (optional)") are
+    **blocking**, which recreates the old hard-coded readiness errors `HUB_/SPAWNPOINT_/OBJECTIVE_OUTSIDE_TOWN`.
+    Readiness only runs the rules of the **default** forms, and the spawnpoint/objective rules point at the **seed**
+    SiegeScenario's Town field: make the siege seeds default together.
+  - **L7-7** SiegeScenario loses "Lock down the scenario area" (no effect any more); SiegeTeam's identity step is
+    split in two.
+  - **L7-8** Seed naming: files follow the README (`{Entity}.json`, joins `{Entity}.join.json`), configuration names
+    "`<Entity> - Default (seed v1)`" / "`- Join Entry (seed v1)`". GUIDs are name-based UUIDs (v5) from a fixed
+    namespace per file/step/field path, so a changed seed under a **new file name** gets all-new GUIDs (L6-1).
+    The small generator used to write them is not in the repo; the JSON files are the source.
+  - **L7-9** The **domain family** (Town, District, Street with the navigation "Road" step, Structure, Location) is
+    not authored in this link: those forms carry live-authored settings (value projections, `worldTaskHint`
+    bindings, the Road step) that only an export captures, and no export is available. Follow-up with an outline
+    (below).
+- **Discrepancies with the design:** spec §3.3 step 2 says "opens a PR per group"; the chain opens no PRs, so the
+  "what changed per step" tables are here. Spec §4.1's GateStructure outline put Guard spawn locations/count and the
+  World on the form; left off (see "Left off on purpose": guard system not built, world resolved automatically).
+- **KNG-132 interplay:** its migration `f40ce73` (`DescribeGateDoorGeometryFields`) fills only **empty** descriptions
+  of GateDoor `AnchorPointId`, `ReferencePoint1Id`/`2Id`, `GeometryWidth`/`Height`/`Depth`, `MotionDistanceBlocks`.
+  The GateDoor seed writes its own text for all eight (not KNG-132's), so that migration leaves them alone and its
+  Down can't clear them. KNG-132's web-app check (point 2 at right angles to anchor → point 1) matches the seed's
+  point 2 description.
+- **Live checklist (developer):** see the combined checklist in the final summary below, part F.
+- **Follow-ups:** in the final summary below.
+- **Risks:** the gate seeds may miss live tuning of 9/12 (L7-1). Making the siege seeds default changes readiness
+  (location rules, L7-6). `claude/api-vulnerable-packages`: a textual trial merge with this branch is clean
+  (only the two `.csproj` files); the chain's tests construct `new MapperConfiguration(...)` and may need its new form
+  after that merge.
+- **How this link was started:** by the coordinator as a session (charter §6). Last link: no next link.
+
+## Final summary — form wizard chain (link 7, 2026-10-12)
+
+All seven links done; nothing merged, no PRs (the developer hasn't asked for them). Every issue is **In Review** in
+Linear with its live checklist. Branch `claude/jolly-archimedes-urhio9` in every repo:
+
+| Repo | Trunk (unchanged during the chain) | Feature head | Contents |
+|---|---|---|---|
+| knk-web-api | `master` `917537a` | ``b04b429`` | links 3, 5, 6, 7 — **two additive migrations** (links 3 and 5) |
+| knk-web-app | `main` `38854ba` | `1c3e835` | links 1-6 |
+| knk-plugin | `main` `1b3e06c2` | `1b3e06c2` (= `main`) | none: read-only for the whole chain |
+| knk-workspace | `main` | branch head after link 7 (docs only) | charter, specs (§ status lines), handoffs, this report, CHANGELOG |
+
+Tests at the end: web app **813 passed / 5 failed** (start of the chain 654 / 5; the 5 are the 4 suites red on
+`main`: `FormWizard.m2mJoinPrefill.ui`, `ManyToManyRelationshipEditor.ui`, `useEnrichedFormContext`,
+`RoadsAdminPage`); API **2616 passed / 4 failed** (start 2550 / 4; the 4 red on `master`:
+`ClientActivityStoreTests`, 2x `PathResolutionServiceTests`, `FieldValidationServiceTests`).
+
+### What was built, per issue
+
+| Issue | Link | What the admin gets | Where |
+|---|---|---|---|
+| [KNG-133](https://linear.app/kngpandi/issue/KNG-133) | 1 | A "Create New" child in a **List** field (e.g. the Districts of a new Street) is saved when its form completes; an unsaved entity can no longer be dropped silently — the submit is refused with a message naming the field. | web app `childPersistence.ts`, `normalizeFormSubmission` |
+| [KNG-134](https://linear.app/kngpandi/issue/KNG-134) | 2 | **Edit instance** opens the child with the values the parent holds (captured Location, in-session edits, unsaved list items); Replace via Minecraft keeps the Location id; a capture inside a Location child form fills X/Y/Z instead of writing an object into Name. | web app `childEditSeed.ts`, `listItemKeys.ts`, `worldTaskFieldValue.ts` |
+| [KNG-135](https://linear.app/kngpandi/issue/KNG-135) | 3 | List relationships load in edit mode (`XIds`/`Xs`); the API returns `DistrictIds` for Streets and Towns. | web app `objectFieldEditValue.ts`; API mapping profiles |
+| [KNG-137](https://linear.app/kngpandi/issue/KNG-137) | 3 | Step names under the progress-bar numbers and as the title in edit mode; Boolean fields show their description. | web app `WizardStepHeader.tsx`, `BooleanField` |
+| [KNG-164](https://linear.app/kngpandi/issue/KNG-164) | 3 | A required List rejects an empty list; `minSelection`/`maxSelection` are enforced at Next/Submit; `MinSelection`, `MaxSelection`, `CanCreate`, `IncrementValue` are real `FormField` columns. | web app `listFieldValidation.ts`; API migration `AddFormFieldSelectionLimits` |
+| [KNG-136](https://linear.app/kngpandi/issue/KNG-136) | 4 | Entities created anywhere in the current form session are pinned as **New** in every picker of that type ("Created in this form"), searchable and selectable without reopening anything. | web app `FormSessionContext.tsx`, `useSessionPinnedRows`, `PagedEntityTable` |
+| [KNG-162](https://linear.app/kngpandi/issue/KNG-162) | 5 | **Cancel form** and deleting a draft ask whether to keep (default) or delete what child forms saved; delete skips anything in use; drafts remember what they created (`CreatedEntitiesJson`) and pin it again on resume. A DELETE that hits a database constraint answers 409 instead of 500, everywhere. | web app `CreatedEntitiesPrompt`, `FormCancelAction`; API migration `AddFormSubmissionProgressCreatedEntities`, `EntityReferenceService`, `DeleteConstraintExceptionFilter` |
+| [KNG-138](https://linear.app/kngpandi/issue/KNG-138) | 6 | **Export JSON** per form configuration and **Import / Seeds** (dry run first, never overwrites, default only when asked or none exists); bundled seed files in the API. | API `FormConfigurationPortabilityService` + 4 endpoints; web app `FormConfigurationImportPanel` |
+| [KNG-139](https://linear.app/kngpandi/issue/KNG-139) | 7 | Ten seed forms: GateStructure, GateDoor and the siege set (3 join entries, scenario, team, spawnpoint, objective, lobby) with step names, descriptions and rules per the authoring guide. Domain family: follow-up. | API `Data/FormConfigurationSeeds/` |
+
+### Decisions to review (ranked: widest effect / hardest to undo first)
+
+1. **L5-4** Global DELETE filter: any DELETE whose constraint error escaped now answers **409** `{code: "DbConstraint"}`
+   instead of 500, for all 34 such controllers. No web-app caller relied on the 500.
+2. **D1-A consequences, L1-1 / L1-4** Child forms save their entity on completion — for *every* List child
+   (including a List of Locations), and Edit instance on a saved item of a non-owned List saves through the update API
+   at once.
+3. **L7-6** Siege location rules are **blocking**: once the siege seeds are the defaults, readiness errors for a hub,
+   spawnpoint or capture point outside the town (as the old hard-coded check did); GateDoor point rules blocking
+   (boundary allowed); GateStructure region-in-district only a warning.
+4. **L7-1 / L7-2 / L7-3** Gate seeds reconstructed (no export): fields left off GateDoor (`MirrorRotation`,
+   `FallbackMaterialRefId`, `PassThroughConditionsJson`, the material filters), guard fields off GateStructure, the
+   Rotation step keyed on motion type.
+5. **L5-3** "In use" is conservative: any reference (cascade FKs and M2M links included) keeps the entity.
+6. **L5-1** Cancel form never deletes the draft; a Delete on cancel leaves the draft listing entities that are gone.
+7. **L3-2** Owned child collections (GateDoors) are exempt from required/min while the parent is unsaved.
+8. **L6-1 / L7-8** Import never overwrites (same GUID = already imported); a changed seed needs a new file name and
+   name ("seed v2").
+9. **L5-2** Delete order newest first (the issue said "deepest first"; the deepest form is saved first).
+10. **L4-1 / L4-2** Pinned rows filtered on the client (no `ids` search filter); Locations and embedded values are
+    never pinned.
+11. **L2-1** A child saved through its own API reloads from the database on Edit instance (held values only overlay
+    embedded Locations).
+12. **L1-2 / L2-3** An id-less single Location without coordinates is still left out without an error.
+13. **L7-7** SiegeScenario loses "Lock down the scenario area" (no effect); SiegeTeam identity step split.
+14. **L6-5** Export and the seed list are readable by any logged-in user; every import (dry run too) needs
+    `knk.admin.content`.
+15. The rest are small and listed per link: L1-3, L1-5, L2-2, L2-4, L2-5, L3-1, L3-3..L3-6, L4-3..L4-5, L5-5..L5-8,
+    L6-2..L6-4, L6-6..L6-9, L7-4, L7-5, L7-9.
+
+### Combined live checklist (developer)
+
+Run on a dev setup with **both branches checked out** (API `claude/jolly-archimedes-urhio9` and web app
+`claude/jolly-archimedes-urhio9`), logged in as an admin with `knk.admin.content`. Numbers in brackets point at the
+original per-link item.
+
+**0. Setup**
+1. In knk-web-api on the branch: `dotnet ef database update` — applies `AddFormFieldSelectionLimits` (link 3) and
+   `AddFormSubmissionProgressCreatedEntities` (link 5); both additive. Without them every FormField query fails
+   (unknown columns). Restart the API. [L3 0, L5 0]
+
+**A. Child forms save and edit (links 1-2)**
+1. GateStructure → Street **Create New** → Districts **Create New** → submit the District: it exists. Submit the
+   Street: it has the District. Top-level Street form with a new District: same. Note whether the dev Street form
+   uses a List field or an M2M step for Districts. [L1 1-4]
+2. A draft holding an id-less District (if any): Submit shows the "never saved" message and the draft stays; with
+   two such Districts, removing one removes only that one, and Edit instance → complete saves the other. [L1 5, L2 5]
+3. Location **Send to Minecraft** → **Edit instance**: "Edit Location" with the captured values; edits survive a
+   second Edit instance and are saved with the parent. Edit an existing Town's Location the same way: same id
+   updated. **Replace via Minecraft** on an existing Town: no new `locations` row. [L2 1-3]
+4. From a world-task Location field, open the Location child form and use its Send to Minecraft: X/Y/Z/World
+   filled, Name not "[object Object]". [L2 4]
+5. Regression: the GateStructure's own Location still saves with it; GateDoors still save on completion; Edit
+   instance on a saved Street/District loads the record and saves updates. [L1 6, L2 6]
+
+**B. Lists, step names, required lists (link 3)**
+1. Edit a Street with Districts: shown selected; submit unchanged keeps them. GateStructure → Street → Edit
+   instance shows its Districts. [L3 1-2]
+2. Required Districts, none picked: Next/Submit says "Districts is required: select at least 1 District". Builder:
+   Min selection 2, reload: still 2; wizard with one: "needs at least 2 Districts (1 selected)". [L3 3-4]
+3. GateStructure create with a required GateDoors field: not blocked by the empty list. [L3 5]
+4. Desktop and narrow: step names under the numbers (numbers only when narrow); edit mode keeps the step name as
+   the title; a Boolean's description shows under it. [L3 6-7]
+
+**C. Session entities in pickers (link 4)**
+1. GateStructure → Street Create New → District Create New "Oostwijk": the Street's and the GateStructure's District
+   pickers show it under "Created in this form" with **New**; search keeps/hides it; select and submit: saved with
+   it. The new Street is pinned in the Street picker. Shown once if also on the first results page. [L4 1-4]
+2. A Location made in a child form is never pinned; after a reload nothing is pinned (until a draft is resumed). [L4 5-6]
+
+**D. Cancel / delete draft (link 5)**
+1. Same Street/District flow → **Cancel form**: prompt lists both, Keep focused; Keep keeps both; repeat with
+   **Delete**: "Deleted 2 of 2", Street first. With Oostwijk used elsewhere: District "skipped: in use". [L5 1-3]
+2. Save Draft → Cancel → Keep; Saved Progress trash: the prompt lists both; "Delete draft, keep them" removes only
+   the draft; "Delete draft and them" removes all. A resumed such draft pins Oostwijk as New. [L5 4-5]
+3. A draft that created nothing: plain confirm; Cancel with nothing created: "Leave this form?"; closing the tab
+   deletes nothing. [L5 6-7]
+
+**E. Export / import (link 6)**
+1. GateStructure → ⋮ on 9 → **Export JSON**: `GateStructure-<name>.json` with `"format": "knk-formconfig/1"`, its
+   `configurationGuid`, no ids. Same for GateDoor 12. **Commit both exports** (they are the input for any seed v2,
+   L7-1). [L6 1]
+2. Import the GateStructure export: "Already imported as configuration 9". A copy with a new `configurationGuid` and
+   name: dry run passes → Import → non-default row identical to 9 in the wizard; delete it. "Make … the default"
+   names the replaced default. A broken copy (`NoSuchField`, unknown sub-configuration GUID) lists both problems and
+   writes nothing. As a user without `knk.admin.content`: Export works, Check/Import show Forbidden. [L6 2-5, 8]
+
+**F. Seed forms (link 7)** — import order: the three `.join` seeds, `SiegeScenario`, `SiegeTeam`,
+`SiegeSpawnpoint`, `SiegeObjective`, `SiegeLobby`, then `GateStructure`, `GateDoor` (any order for those two). All
+import as **non-default** (the dev DB has defaults for these entities).
+1. **Import / Seeds** → Available seeds → each: **Check** (dry run passes, no warnings) → **Import**. A wrong order
+   says which seed to import first. [L6 6]
+2. GateStructure seed (**Use** it): six steps; descriptions read well; Region's Send to Minecraft starts the region
+   task; Spawn point captures; a region outside the district gives a **warning**, not a block. Compare with 9 in the
+   builder: anything 9 has that the seed lacks (live tuning since 2026-09-13) → note it for seed v2. [L7-1]
+3. GateDoor seed, opened from a gate's Gate doors step: the gate is filled in. Sliding door: three-point step,
+   width/height fill in from the points, point 2 not at right angles refused (KNG-132, if merged); Motion step; no
+   Rotation step. Drawbridge: set motion Rotation → Rotation step appears (no wing fields); double doors show the
+   wing fields. Flood fill: its own step with Seed blocks required. Region: three-point step shown. Block scan after
+   Submit + Edit: "Scan in Minecraft" runs; open scan appears only with an open anchor. A point outside the gate's
+   region blocks Next. Health/pass-through/display conditions toggle their fields. [L7-2..L7-4, L7-6]
+4. Siege seeds: SiegeScenario uses the seed join entries on Districts/Gates (Create New Join Entry opens the "(seed
+   v1)" join form); Teams/Objectives Create New open the seed team/objective forms only once those are **default**
+   (owned children use the default form) — so either make the siege seeds default together for this test, or test
+   the team/spawnpoint/objective seeds directly with **Use**. Hub outside the town blocks Next.
+5. Make the siege seeds default **together** (builder), then a scenario's Readiness: a spawnpoint or capture point
+   outside the town is an error; inside: ready as before. Set 26-33 back as default to undo. [L7-6]
+6. When happy: make the gate seeds default too, or tune them in the builder and **Export** the tuned version as seed
+   v2 (new file name and name).
+
+### Merge order
+
+1. **knk-web-api** `claude/jolly-archimedes-urhio9` → `master` first: it carries the migrations
+   `20261012075746_AddFormFieldSelectionLimits` and `20261012085922_AddFormSubmissionProgressCreatedEntities`, the
+   import/export endpoints and the seeds. **Apply the migrations to each database before the new web app runs
+   against it** (the API doesn't migrate on startup). The web app's `FormField` reads and draft saves need them.
+2. **knk-web-app** `claude/jolly-archimedes-urhio9` → `main`.
+3. **knk-workspace** `claude/jolly-archimedes-urhio9` → `main` (docs only; `ACTIVE_SESSIONS.md` is already on `main`).
+4. knk-plugin: nothing to merge.
+
+**Interplay with the other unmerged branches** (trial merges done locally on 2026-10-12, nothing pushed):
+
+- **KNG-120** (`claude/admiring-mendel-ne39j1`, web app) merges **cleanly** into the chain's web-app branch.
+- **KNG-132** (`claude/loving-johnson-dlshrc`) merges **cleanly** into the chain's web-app branch and into the chain's
+  API branch. Its API migration `20261011193000_DescribeGateDoorGeometryFields` (`f40ce73`) is a data migration,
+  earlier-dated than the chain's two, touching no columns: apply order doesn't matter. It fills only empty GateDoor
+  field descriptions; the GateDoor seed has its own text, so the seed is unaffected either way.
+- **KNG-120 + KNG-132 together** conflict in `FormWizard.tsx` — **with each other**, on one import line, on plain
+  `main` as well (not caused by the chain): keep both imports (`gateGeometryFieldError` from KNG-132 and
+  `fillEmptySharedFieldValues`/`syncSharedFieldValues` from KNG-120).
+- **`claude/api-vulnerable-packages`** (API, PR #9): textually clean with the chain's API branch (only the two
+  `.csproj` files). Whichever merges second should run the tests: the chain's tests use `new MapperConfiguration(...)`
+  (links 3, 5, 6) and may need the upgraded AutoMapper's constructor.
+- Recommended overall: chain API → chain web app → KNG-132 → KNG-120 (resolve the one import line), or KNG-132/120
+  first; the chain's own merges are mechanical in either order.
+
+### Follow-ups (not done; Linear comments on the closest issue)
+
+- **Domain-family seeds** (KNG-139 group 2): export Town, District, Street, Structure, Location from the dev DB first
+  (Import / Seeds → Export JSON), then rewrite per spec §4: Town/District/Structure = Domain identity → region (world
+  task) → location → travel (`Teleport*`, `NavigationDefaultOverride`, `RoadAccessOverride`) → children; Street with
+  the navigation "Road" step (`navigation/IMPLEMENTATION_PLAN.md`); keep their value projections and world-task
+  bindings. Group 3 (items, kits, lootboxes, enchantments, teleport, permission groups) and BannerLayer/BannerDesign/
+  Clan after that.
+- GateDoor `ScanMaterialWhitelist`/`ScanMaterialBlacklist`: a `[DefaultValue("")]` on the model would let them be
+  optional form fields (like `ClosedRegionData`).
+- A `ConditionalValueMatch` rule (drawbridge/double doors ⇒ motion Rotation) once its config is documented, or
+  derive `MotionType` server-side.
+- "Import all seeds in dependency order" button (L6-6); circular rule check on import (L6-8).
+- Required List / `canCreate` builder toggle (L3); `StreetRepository.GetAllAsync` without Districts; `TownDto.DistrictIds`
+  ignored on write (L3-5).
+- An `ids` filter on paged search endpoints (L4-1); remove or wire the dead "create related" modal in
+  `ManyToManyRelationshipEditor` (L4-4).
+- Clear the draft's `CreatedEntitiesJson` after a Delete on cancel (L5-1); write provenance right after a child saves
+  (L5-5); `tsc --noEmit` errors in `sessionPinnedRows.test.ts`.
+- L2-3: an id-less Location without coordinates is dropped silently; value projections skipped by the
+  inherited-capture spread (L2).
+- `knkwebapi_v2.sln` references `tests\…` in lower case, so the solution doesn't build on Linux.
+
+### How the links ran
+
+Links 1 (after a blocked first attempt, §4.1) and 2 ran as subagents of the coordinator; links 3-7 as sessions the
+coordinator started with `add_repo` in the prompt (charter §6). No link hit an absolute blocker after link 1's first
+attempt.

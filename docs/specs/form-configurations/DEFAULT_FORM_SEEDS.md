@@ -1,8 +1,8 @@
 # Default FormConfigurations — agent-authored seeds
 
-**Status:** Design decided (2026-10-11: S1 = A, developer). Being implemented by the
-[form wizard chain](../../ai-agents/handoffs/FORM_WIZARD_CHAIN.md).
-**Last updated:** 2026-10-12 (§2.1, §2.3: KNG-164 columns and KNG-137 renderer gaps fixed on the chain branch; §3: KNG-138 implemented on the chain branch, §3.4 records where it differs)
+**Status:** Design decided (2026-10-11: S1 = A, developer). Implemented by the
+[form wizard chain](../../ai-agents/handoffs/FORM_WIZARD_CHAIN.md) (KNG-137, KNG-138, KNG-139 priority-1 groups; not merged).
+**Last updated:** 2026-10-12 (§2.1, §2.3: KNG-164 columns and KNG-137 renderer gaps fixed on the chain branch; §3: KNG-138 implemented on the chain branch, §3.4 records where it differs; §5.1: KNG-139 priority-1 seeds delivered)
 **Linear:** [KNG-138](https://linear.app/kngpandi/issue/KNG-138) (export/import),
 [KNG-139](https://linear.app/kngpandi/issue/KNG-139) (author the default forms),
 [KNG-137](https://linear.app/kngpandi/issue/KNG-137) (wizard shows step names and all descriptions)
@@ -233,6 +233,17 @@ Based on the current layout (§5.10-5.11 of the GateStructure QOL plan) and `api
 | 3 | Items, kits, lootboxes, enchantments, teleport, permission groups | the `…_FORMCONFIGS.md` records above, `user-features/` |
 
 There is no `Minigame` model; the siege configuration is the `Models/Siege/` set above.
+
+### 5.1 Status (KNG-139, 2026-10-12)
+
+**Priority 1 delivered** on `claude/jolly-archimedes-urhio9` (form wizard chain link 7; knk-web-api `b04b429`, not
+merged, live review pending): ten seeds in `Data/FormConfigurationSeeds/` — `GateStructure`, `GateDoor`,
+`SiegeScenarioDistrict.join`, `SiegeScenarioGate.join`, `SiegeLobbyScenario.join`, `SiegeScenario`, `SiegeTeam`,
+`SiegeSpawnpoint`, `SiegeObjective`, `SiegeLobby` (import order in that folder's README). No dev-DB export of 9/12
+was available, so the gate seeds are derived from the sources above and the code; the siege seeds convert
+`PHASE_3_FORMCONFIGS.md`. The per-step changes, the properties left off and the flagged decisions (L7-1..L7-9) are in
+`reports/2026-10-11-form-wizard-chain.md`, link 7. **Priority 2 and 3 not started:** they need an export of the
+current forms first (value projections, world-task bindings, the Street "Road" step).
 
 ## 6. Order of work
 
