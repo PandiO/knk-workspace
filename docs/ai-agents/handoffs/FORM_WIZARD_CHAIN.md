@@ -1,15 +1,15 @@
 # Form wizard chain — charter
 
-**Status:** Running (started 2026-10-11 by the coordinator session; link 1 next).
-**Last updated:** 2026-10-11 (charter written)
+**Status:** Running. Link 1 restarted 2026-10-12 as a subagent of the coordinator (§6) after its first attempt was blocked.
+**Last updated:** 2026-10-12 (§6: links run as coordinator subagents, not `create_session`)
 **Linear:** [KNG-133](https://linear.app/kngpandi/issue/KNG-133), [KNG-134](https://linear.app/kngpandi/issue/KNG-134),
 [KNG-135](https://linear.app/kngpandi/issue/KNG-135), [KNG-137](https://linear.app/kngpandi/issue/KNG-137),
 [KNG-136](https://linear.app/kngpandi/issue/KNG-136), [KNG-162](https://linear.app/kngpandi/issue/KNG-162),
 [KNG-138](https://linear.app/kngpandi/issue/KNG-138), [KNG-139](https://linear.app/kngpandi/issue/KNG-139)
 
 A chain of **seven** Claude Code sessions ("links"). Each link picks up **one Linear issue** (link 3 two small ones),
-implements it, tests it, documents it, pushes it, writes the handoff for the next link and starts the next link in a
-**fresh context**. Developer's instruction (2026-10-11): "form a chain of sessions, each session picks up a Linear
+implements it, tests it, documents it, pushes it and writes the handoff for the next link; the coordinator then starts
+the next link in a **fresh context** (§6). Developer's instruction (2026-10-11): "form a chain of sessions, each session picks up a Linear
 issue, completes, documents and pushes and hands off to a new session." Don't wait for the developer to test: write
 the live checklist and go on. Do nothing the developer can't easily review or undo.
 
@@ -150,22 +150,27 @@ default consistent with the design, flag it as `L<k>-<n>` in the report).
 
 ## 6. Handoff — fresh context for every link
 
+**How links are started (changed 2026-10-12 after link 1's first attempt was blocked).** A session's repositories
+are fixed when it starts, and `create_session` can attach only **one** repository (`source_url`). A link started that
+way had only knk-workspace; `add_repo` with push was refused by the permission policy and the git proxy answered 403
+for knk-web-app. So links are **not** started with `create_session`. Instead:
+
+- The **coordinator** session (the developer's session `session_01SZ9c7pGMwGfvHR3dHAmWgQ`, environment
+  "Default Correct", all four repos attached with push, Opus 5.5 at high effort) runs each link as a **fresh
+  general-purpose subagent** (Agent tool, model Opus, effort high). Subagents share the coordinator's container and
+  its repository credentials, and each starts with a clean context.
+- A link **does not start the next link**. It finishes with steps 1-2 below and returns a short summary (heads per
+  repo, test counts, status, blockers). The coordinator reads only that summary and the progress report, then starts
+  the next link with the next handoff file.
+- If the chain ever has to run outside the coordinator: start the next session **from the Claude app** in the
+  "Default Correct" environment with knk-workspace, knk-web-app, knk-web-api and knk-plugin all selected, model Opus
+  5.5 and high effort, and give it the handoff prompt below. Don't use `create_session` for multi-repo links.
+
 1. Write the next link's prompt to `docs/ai-agents/handoffs/2026-10-11-form-wizard-link-<n+1>.md` using §8: branch
    heads, test counts, what you left for the next link, open flags, risks. Commit and push (feature branch).
-2. **Start the next link in a fresh context**, first option that works:
-   1. **New session** — Claude Code Remote `create_session`, same environment (omit `environment_id`), same model as
-      yours, `source_url` `https://github.com/PandiO/knk-workspace`, `source_revision`
-      `claude/jolly-archimedes-urhio9`, `title` "Form wizard chain — link <n+1> (KNG-…)", prompt: *"Read and execute
-      `docs/ai-agents/handoffs/2026-10-11-form-wizard-link-<n+1>.md` in the knk-workspace repository (branch
-      claude/jolly-archimedes-urhio9). It starts with a pointer to the chain charter. Work autonomously; the developer
-      is not available until the whole chain is done."* Then check with `get_session` that it is running.
-   2. **Fresh subagent** — otherwise: one general-purpose subagent (Agent tool, foreground) with exactly that sentence;
-      read only its summary and the progress report afterwards, then repeat for the next link. You are then a
-      coordinator.
-   3. **Same session** — if neither exists: re-read this charter and the handoff, then continue.
-   Record in the progress report which option you used.
-3. Start **at most one** next link, never one the report marks done or in progress. After link 7 (or at a blocker)
-   stop.
+2. Return your summary to the coordinator. The coordinator starts **at most one** next link, never one the report
+   marks done or in progress, and stops after link 7 or at a blocker. Record in the progress report how each link
+   was started.
 
 ## 7. Progress report
 

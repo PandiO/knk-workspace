@@ -67,6 +67,21 @@ Claude Code and Codex alike, regardless of where repos are cloned.
    because a patch or test passed; follow the feature's live validation and
    developer sign-off requirements.
 
+## Session chains (multi-link work)
+
+A chain splits a feature into links that each run in a fresh context. Cloud sessions get their repositories
+when they start, and `create_session` attaches only one (`source_url`); `add_repo` with push is often refused by
+the permission policy. A link that must push to more than one repo therefore fails when started that way.
+
+- Run links as **fresh subagents of a coordinator session** that already has every needed repo attached with
+  push (the developer's own session in the "Default Correct" environment). Pass the model and effort the
+  developer uses (Opus, high) explicitly. A link writes its handoff and returns a summary; the coordinator starts
+  the next link.
+- If a link must run as its own session, the developer starts it from the Claude app in "Default Correct" with
+  all repos selected. Don't use `create_session` for a link that pushes to more than one repo, and don't assume it
+  copies the caller's effort level (it has no effort setting).
+- Before a link changes anything: `git push --dry-run` on the feature branch of every repo it will change.
+
 ## Handoff and documentation
 
 The developer has a full-time weekday job and may only have time for brief

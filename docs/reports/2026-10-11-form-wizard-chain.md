@@ -41,3 +41,12 @@
 - **To resume:** start a new Claude Code session whose sources include knk-workspace, knk-web-app and knk-web-api
   (or allow `add_repo` in this environment's permissions), then run
   `docs/ai-agents/handoffs/2026-10-11-form-wizard-link-1.md` again unchanged — its starting state is still valid.
+
+## Coordinator — 2026-10-12: link 1 restart
+
+- Cause confirmed from the link-1 session record (`session_01ApK9K3q2Sgm9dW3pwvzvwY`): it ran in the "Default
+  Correct" environment (the account's only environment) on Opus 5.5, but `create_session` attaches only one
+  repository, so it had knk-workspace alone; `add_repo` (push) was denied by the auto-mode permission check and the git
+  proxy refused knk-web-app (403). The tool also has no effort setting, so the session ran at the default effort.
+- Fix: charter §6 changed. Links now run as fresh subagents of the coordinator session, which has all four repos
+  attached with push, Opus 5.5 at high effort. The link-1 handoff is unchanged and still valid.
