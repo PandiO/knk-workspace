@@ -1,7 +1,7 @@
 # Hub, outage policy and world portals — draft design
 
-**Status:** Draft for developer review; not implemented. Code/schema-source readiness audit done 2026-10-10 ([report](../../reports/2026-10-10-multiworld-capability-audit.md), §16); no live or DB validation yet.
-**Last updated:** 2026-10-10
+**Status:** Implemented on branches `claude/blissful-fermat-b7ihrz`, not merged, not live-tested (§16). Readiness audit 2026-10-10 ([report](../../reports/2026-10-10-multiworld-capability-audit.md)). Open: group precedence (§16.7, decision 13).
+**Last updated:** 2026-10-12
 **Target:** Prefer implementation this weekend (10–11 October), before the closed alpha planned for 17–18 October 2026.
 **Linear:** [KNG-109](https://linear.app/kngpandi/issue/KNG-109)
 **Scope:** Requirements and investigation plan. No runtime changes or deployment.
@@ -238,7 +238,13 @@ Gaps that do not block the hub are tracked in [KNG-118](https://linear.app/kngpa
 - hub admission through `AsyncPlayerSpawnLocationEvent`, with fail-closed joins;
 - the hub rules and the Peaceful preset.
 
-Not built yet, because they wait on decisions: the outage actions (configured but not executed), return records, the Siege abort and the portal. See the [overnight handoff](../../ai-agents/handoffs/2026-10-12-hub-overnight-session.md).
+**Day session progress (2026-10-12),** after the decisions in §16.7:
+- admission now replaces only the server's default join spawn (decision 8);
+- the four outage actions with the outage timer, return records and the `/hub return` offer, and the Siege abort (decisions 6, 9, 10);
+- the portal, as WorldGuard regions (decision 11);
+- deleting a Location no longer deletes its domain (decision 12).
+
+See the [handoff](../../ai-agents/handoffs/2026-10-12-hub-overnight-session.md).
 
 **Deadline risk:** Phase 1 alone touches all three repos plus a rebase-sensitive migration, which is substantial work for the 17–18 October alpha. The developer chose the full fix first (§16.4, decision 2).
 
@@ -262,6 +268,24 @@ These supersede the open questions in the audit report §11.
 - **Same world:** a child domain, its gate Locations and its spawn Locations must be in the parent's world.
 - **Peaceful preset:** it runs only while `naturalRegeneration` is on, and is skipped for players whose world is already Peaceful.
 - **Group permission check:** a new API check tells whether a group effectively has `knk.mode.staff` / `knk.mode.owner` (KNG-116).
+
+### 16.7 Developer decisions (confirmed 2026-10-12)
+
+8. **Joins: the hub replaces only the server's default join spawn.** Owners and a group's "join where they logged out" keep the last location, and a group's own join spawn still wins, exactly as without a hub. While the API is down every join goes to the hub (§13), unless the player is exempt; a join sent there by the outage gets a return record for where they logged out. `/spawn` and respawns are unchanged.
+9. **Outage timer: it resets only after a full recovery.** The timer starts at the first drop. It resets once the API is back and the server has synced its backlog: the statistics, discovery and Siege result spools are empty. A safety cap also resets it after 5 minutes of the API being up, so a stuck spool can't block it. A drop before that continues the same timer. The start is kept in `hub-outage.json`, so a restart doesn't reset it either. Actions run only while the API is down.
+10. **Mode switches during an outage:** a player in staff or owner mode is exempt (with a ticked box for one of their groups, decision 5). Leaving the mode while the outage lasts makes their action apply within a second.
+11. **Portal: a WorldGuard region.** `hub.portalRegionIds` lists WorldGuard regions in the hub's world. Walking into one takes the player into the game through the join chain without the hub: their group join spawn, else the default join spawn. This works like Multiverse-Portals, which also uses a selected cuboid, a movement trigger and a cooldown. The portal needs the API (or an exempt player) and a loaded account. It refuses a destination the player may not enter, carries a one-off exit pass and ends the outage return offer.
+12. **Deleting a Location never deletes its domain** (KNG-118 D3). The `domains.LocationId` key is now Restrict, and the API answers 409 naming the domain.
+13. **Group precedence: hierarchy first, then weight.** A group ranks above the groups it inherits from. Weight settles groups in unrelated trees or split branches. **Open:** in one case the rule goes in a circle, and the choice between the two orders is pending (handoff, open decision 1).
+
+**Small choices made in the implementation:**
+- A player inside the hub region is never acted on.
+- With no usable hub, Send to hub falls back to a kick with the hub message (§13).
+- Send to world spawn runs once per player per outage. Send to hub keeps a player in the hub for the whole outage.
+- A Siege member is released first: a round in matchmaking, at the siege hub or in progress is aborted (`ApiOutage`). A member of a round that is ending is retried each second until restored.
+- A Siege lobby stopped by an outage restarts at the next configuration refresh, like one with no ready scenario.
+- The return offer is a clickable `/hub return <token>`. The token is the record's save time, so an old click does nothing. The spot must be in a loaded world, safe (`SafeLocationFinder`) and allowed by domain AllowEntry, otherwise the record is removed with a message.
+- Teleports from inside the hub to outside are refused while the API is down, except for staff teleports and exempt players.
 
 ### 16.5 Peaceful preset (verified, not guessed)
 

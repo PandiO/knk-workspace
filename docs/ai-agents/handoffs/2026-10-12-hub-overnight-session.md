@@ -1,7 +1,7 @@
 # Handoff: hub overnight session (KNG-113, KNG-114, KNG-116, KNG-118, hub Phases 4–5)
 
 **Date:** 2026-10-12 (overnight from 2026-10-11)
-**Status:** Implemented on branches, not merged, not live-tested. All on `claude/blissful-fermat-b7ihrz`.
+**Status:** Implemented on branches, not merged, not live-tested. All on `claude/blissful-fermat-b7ihrz`. Continued in the day session of 2026-10-12 (decisions 8-13, below).
 **Design:** hub [DESIGN §16](../../specs/hub/DESIGN.md). Earlier work: [KNG-111/112 handoff](2026-10-10-kng-111-112-multiworld-implementation.md).
 
 The developer asked for designed, decision-free work only while they slept. Open decisions are listed at the end.
@@ -99,6 +99,42 @@ Codex then reviewed the three PRs. All 9 findings are fixed, replied to and reso
 - **API:** 2559 passed. The 4 failures also fail on `master` (`PathResolutionServiceTests` ×2, `FieldValidationServiceTests`, `ClientActivityStoreTests`). New: `HubSettingsServiceTests` (7), a `GameSettingsServiceTests` hub round trip and a retention test.
 - **Web app:** `tsc` clean, `npm run build` passes, Game Settings component tests 31/31 (new `hubSettings.test.tsx`).
 
+## Day session 2026-10-12 (decisions 8-13)
+
+The developer answered the open decisions ([DESIGN §16.7](../../specs/hub/DESIGN.md)). Built on the same branches:
+
+| Repo | Commits | What |
+|---|---|---|
+| knk-plugin | `fed45a3c`, `a2533bb7`, `4d8c307a` | joins (decision 8), outage actions + timer + return records + Siege abort (9, 10, 6), portal (11) |
+| knk-web-api | `bc7b06e`, `cc9ced1`, `644acce` | Location delete keeps its domain (12, migration `LocationDeleteKeepsDomain`), Siege end reason `ApiOutage`, `hub.portalRegionIds` |
+| knk-web-app | `ef57c7a` | "Portal regions" field in the Hub card |
+
+- **Plugin tests:** core 2057, api-client 258, paper 1652, all green.
+- **API tests:** 2562 passed; the same 4 failures as on `master`. The migration was checked on a local MySQL 8: apply, no pending changes, roll back one step, re-apply.
+- **Web app:** `tsc` clean, the build passes, Game Settings tests 32/32.
+
+### Extra test steps for the day session
+11. **Joins with a hub (decision 8):**
+    - a player with no group spawn arrives at the hub;
+    - a group with its own join spawn arrives there;
+    - a "join where they logged out" group and an owner stay where they logged out.
+12. **Portal:**
+    - put a small WorldGuard region in the hub, add its id under "Portal regions" and save;
+    - walk in: you go to your group's join spawn, else the default join spawn;
+    - with the API stopped, a non-exempt player is told the game world can't be entered.
+13. **Outage actions:**
+    - set the hub's outage action to "Send to the hub" with a 30 s delay, stand in gameplay as a non-op, and stop the API;
+    - after about 30 s plus detection you are moved to the hub with a message;
+    - `/spawn` out of the hub is refused;
+    - start the API: a clickable "[Return to where you were]" appears, and clicking it returns you once (a second click does nothing).
+14. **Outage timer:**
+    - stop the API, start it, and stop it again within a few seconds: the delay keeps counting from the first stop;
+    - restarting the server during an outage keeps it too (`hub-outage.json`).
+15. **Exemption:** tick "Exempt while in staff mode" for your group and enter staff mode; an outage leaves you alone. Leave staff mode during the outage and the action applies within a second.
+16. **Kick:** a group with action Kick is kicked with the outage message. Rejoining during the outage puts them in the hub, with the return offer after recovery.
+17. **Siege:** during a match, trigger an outage. The match is aborted (no winner), everyone gets their things back once at their pre-match spot, and then the action applies.
+18. **Location delete:** deleting a Location that a town uses is refused with "This location is the location of Town '…'". Nothing is deleted.
+
 ## Test checklist, in priority order
 1. **Migration:** deploy the API, apply `AddHubSettings` and open the Game Settings page. Nothing else should have changed.
 2. **No hub selected:** joins, `/spawn`, respawn and gates behave exactly as before. This is the default after the merge.
@@ -125,13 +161,10 @@ Codex then reviewed the three PRs. All 9 findings are fixed, replied to and reso
     - from the main world it should refuse with "Go to its world first".
 
 ## Open decisions (need the developer)
-1. **Outage actions and the delay timer (§13 "remaining details"):**
-   - what a staff/owner mode switch during an outage does;
-   - how the delay timer behaves when the API recovers and drops again, or across a restart.
-   - The actions themselves (None/SendToHub/Kick/SendToWorldSpawn) are configured but **not executed yet**.
-2. **Return records and the Siege abort (§12, decision 6):** both are triggered by the outage actions, so they wait for decision 1.
-3. **Hub → gameplay portal (§11):** the trigger (a WorldGuard region, a block, an NPC?), its readiness check, and how it clears return records. Until it exists, players leave the hub with `/spawn` or `/warp`, which nothing guards yet.
-4. **Admission for active owners:** right now *every* join goes to the hub, owners too, per §1 "All joining players first enter a designated hub". Should active owner mode keep "join where I logged out"?
-5. **Discovery per world (KNG-118 R14/A5):** discovery is still keyed by region id. The API already accepts domain ids. The fix changes the plugin's discovery spool and known-discoveries cache format, so it was not done overnight.
-6. **Location deletes its Domain (KNG-118 D3):** the FK cascade is unchanged. Changing it changes behaviour.
-7. **Group precedence drift (KNG-118 U6):** the web app orders overrides depth-first ("decision 2026-10-05"), while the API and plugin use weight-first (D13). One of them needs to change. Which is intended?
+Decisions 1-5 of the overnight list were answered on 2026-10-12 (DESIGN §16.7). Still open:
+1. **Group precedence, the circular case (decision 13).** Take a player in Knight (weight 10) and Merchant (weight 30), where Knight inherits from Squire (weight 50). Two orders are possible:
+   - **(i), recommended:** Merchant → Knight → Squire. A chain is ranked by the group the player holds.
+   - **(ii):** Knight → Squire → Merchant. A group never ranks below its parent's weight.
+
+   The orders differ only when a child group has a lower weight than its parent. The change touches the API's `PermissionGroupPrecedence` (permission grants, teleport fees, Game Settings), the plugin, and the web app's override order. It is not built yet.
+2. **Discovery per world (KNG-118 R14/A5):** not decided, just not done. It changes the discovery spool and cache format.
