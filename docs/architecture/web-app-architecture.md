@@ -1,7 +1,7 @@
 # knk-web-app — Architecture
 
 **Status:** Living document — reflects actual code, updated in place on each rescan
-**Last updated:** 2026-09-18 (scan basis: `knk-web-app` @ `4ff5dc6`, branch `claude/web-app-codebase-scan-4yqibi`); spot edits 2026-10-09 (ObjectTypeExplorer, KNG-61), 2026-10-10 (FormWizard Boolean fields, KNG-53)
+**Last updated:** 2026-09-18 (scan basis: `knk-web-app` @ `4ff5dc6`, branch `claude/web-app-codebase-scan-4yqibi`); spot edits 2026-10-09 (ObjectTypeExplorer, KNG-61), 2026-10-10 (FormWizard Boolean fields, KNG-53), 2026-10-12 (FormWizard child forms, KNG-133)
 **Source scan:** `docs/reports/web-app-scan-2026-09-18.md`
 
 ## Stack
@@ -38,6 +38,16 @@ entity. Two parallel generic engines carry most of the CRUD surface:
    holds a real boolean - the authored default, else `false` - via `seededFormFieldValue`
    (`utils/forms/formFieldDefaultValue.ts`). Required means "value is present", so an unchecked box
    (`false`) passes; "must be ticked" would be a separate validation rule.
+   **Child forms** (KNG-133, decision D1 = A; feature branch `claude/jolly-archimedes-urhio9`, not
+   merged): "Create New" / "Edit instance" on a relationship field opens `ChildFormModal` with a nested
+   `FormWizard`. When the child completes, its entity is saved at once through its own create/update
+   API for every **List** field (owned collection or not) and every **Object** field except a single
+   **Location**, which stays an embedded value saved with its parent
+   (`utils/forms/childPersistence.ts` → `shouldPersistChildOnComplete`). Many-to-many steps save
+   created entities themselves (`ManyToManyRelationshipEditor.handleCreateRelatedEntity`).
+   `normalizeFormSubmission` sends relationships as ids and throws `UnsavedRelationshipValueError`
+   (naming the field) for an id-less entity in an Object (not Location) or List field, so nothing is
+   dropped silently; the wizard shows the message and doesn't mark the progress Completed.
 2. **Display engine** (`DisplayWizard/`, `DisplayConfigBuilder/`) — same pattern for
    read-only entity detail views, driven by `DisplayConfigurationDto`
    (`displayConfigClient`).

@@ -2,7 +2,7 @@
 
 **Status:** Design decided (2026-10-11): D1 = A (developer), D2 default chosen (reversible, developer may override).
 Being implemented by the [form wizard chain](../../ai-agents/handoffs/FORM_WIZARD_CHAIN.md).
-**Last updated:** 2026-10-11
+**Last updated:** 2026-10-12 (§5 item 1 status, KNG-133)
 **Linear:** [KNG-133](https://linear.app/kngpandi/issue/KNG-133) (List "Create New" never saved),
 [KNG-136](https://linear.app/kngpandi/issue/KNG-136) (pickers show entities made in this session),
 [KNG-134](https://linear.app/kngpandi/issue/KNG-134) (Edit instance opens without its values),
@@ -208,6 +208,9 @@ offered for selection elsewhere (a Location belongs to one owner; see `architect
 
 1. **KNG-133** (bug, first): save List "Create New" children; fail loudly on id-less drops. Test: Street form with a
    new District saves `districtIds=[newId]`; normalize throws for id-less non-embedded objects.
+   **Status 2026-10-12: implemented on `claude/jolly-archimedes-urhio9` (knk-web-app `8e44800`, `ff12c8f`), not
+   merged, live test pending.** Every List child is saved on completion, a List of Locations included (the API takes
+   List relationships as ids only, e.g. `GuardSpawnLocationIds`); a single Object Location stays embedded.
 2. **KNG-134** (bug): edit seeding. Tests next to `FormWizard.locationChildEdit.ui.test.tsx`: edit a world-task
    Location (no id) shows the captured x/y/z; edit an edited Location twice keeps the first edit; replace via
    Minecraft keeps the id; two id-less list items edit/remove independently.

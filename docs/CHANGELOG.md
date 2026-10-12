@@ -4,6 +4,14 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **An entity made with "Create New" on a List field is saved**
+  ([KNG-133](https://linear.app/kngpandi/issue/KNG-133); knk-web-app `8e44800`, `ff12c8f`, branch
+  `claude/jolly-archimedes-urhio9`, form wizard chain link 1). A District created inside a Street form was never
+  written to the database and the Street was saved with no Districts, without a word. Child forms opened from a List
+  field now save their entity when they complete (like Object fields already did; a single Location stays embedded),
+  and the form refuses to submit an entity that was never saved, naming the field, instead of dropping it.
+  Unit- and UI-tested; not yet checked live.
+
 - **Gate doors refuse a Reference point 2 that isn't straight above the anchor**
   ([KNG-132](https://linear.app/kngpandi/issue/KNG-132); knk-web-app `f6c7c37`, knk-plugin `974ce335`, knk-web-api
   `f40ce73`, branch `claude/loving-johnson-dlshrc`). Both reference points are measured from the anchor: point 1 along
