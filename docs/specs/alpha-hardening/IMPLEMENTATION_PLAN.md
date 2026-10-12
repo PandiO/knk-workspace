@@ -1,12 +1,12 @@
 # Closed alpha hardening — implementation plan
 
-**Status:** **Implemented and verified locally, awaiting developer review and live test.** PRs: knk-web-api
+**Status:** **Merged 2026-10-11** (knk-web-api `30c5dc5`, knk-web-app `98c0a76`, knk-plugin `34c9261`) after the developer's [smoke test](../../guides/alpha-hardening-smoke-test.md). Originally: PRs: knk-web-api
 [#4](https://github.com/PandiO/knk-web-api/pull/4), knk-web-app [#2](https://github.com/PandiO/knk-web-app/pull/2),
 knk-plugin [#7](https://github.com/PandiO/knk-plugin/pull/7) (branch `claude/ui-ux-assessment-discussion-66vc2l`;
 nothing merged). Verification: [2026-10-08 report](../../reports/2026-10-08-alpha-hardening-verification.md). The
 deviations agreed during implementation are listed in the PR descriptions (for example `RequireServiceOrPermissionForWrites`,
 the 30 s refresh grace window, web-first registration living in `Auth/register`, the CORS defaults in the Development file).
-**Last updated:** 2026-10-08
+**Last updated:** 2026-10-11
 **Linear:** [KNG-64](https://linear.app/kngpandi/issue/KNG-64) (parent), KNG-65 to KNG-70 (work packages, § 11)
 **Sources:**
 - [UI/UX assessment](../../reports/2026-10-08-web-app-ux-assessment.md) §§ 3, 12: the findings this plan fixes.
@@ -109,6 +109,14 @@ Minecraft clients ──TCP 25565──► router port-forward ──► Paper  
 beta.
 
 The step-by-step setup is in [guides/alpha-go-live.md](../../guides/alpha-go-live.md).
+
+> **Update 2026-10-11 — how the NAS rollout refines this.** The [closed-alpha deployment runbook](../../guides/closed-alpha-deployment-runbook.md)
+> keeps D10 for the web (Cloudflare Tunnel, one origin, Access allow-list), with these changes:
+> - Minecraft goes through a **playit.gg** tunnel, not a router port-forward.
+> - Paper runs in the same Docker stack, so the plugin reaches the API over Docker DNS rather than the LAN.
+> - The alpha database is a sanitized copy of the dev DB.
+> - The web hostname is still to be confirmed.
+> [alpha-go-live.md § 1.1](../../guides/alpha-go-live.md#11-what-changed-since-draft-v1-2026-10-08) lists the differences.
 
 ---
 
