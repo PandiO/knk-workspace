@@ -1,7 +1,7 @@
 # Handoff: NAS closed-alpha infrastructure
 
 **Date:** 2026-10-11
-**Status:** API built, privately deployed, and accepted; Minecraft preparation is next
+**Status:** Pre-KNG-64 API accepted privately; Phase 3b is blocked on API PR #9 review/merge and live-state re-verification
 **Branch:** `codex/closed-alpha-infrastructure-handoff`
 **Related issues:** KNG-109, KNG-114, KNG-115
 **Progress report:** [`2026-10-11-closed-alpha-infrastructure-progress.md`](../../reports/2026-10-11-closed-alpha-infrastructure-progress.md)
@@ -54,6 +54,26 @@ Read this before Phase 4.
 - **Email:** the `backend` network has no egress, so use `Email__Provider=Log` for the alpha unless the API gets one.
 
 ## Verified current state
+
+Repository refresh on 2026-10-12 (live NAS state still requires a fresh
+operator-side check):
+
+- Default branches were unchanged from the tracker snapshot: knk-workspace
+  `main` `a38286c`, knk-web-api `master` `917537a`, knk-web-app `main`
+  `38854ba`, and knk-plugin `main` `1b3e06c2`.
+- [knk-web-api PR #9](https://github.com/PandiO/knk-web-api/pull/9) remained
+  open and unreviewed at `25b4776`, cleanly mergeable onto `917537a`. Both
+  reported `fresh-database` check runs passed. Do not build Phase 3b until it
+  is reviewed, merged, and the exact new `master` merge commit is refreshed.
+- The coordinated hub/multiworld work is now pushed but remains unmerged:
+  [knk-web-api PR #8](https://github.com/PandiO/knk-web-api/pull/8) at
+  `7ec345f`, [knk-web-app PR #6](https://github.com/PandiO/knk-web-app/pull/6)
+  at `a17cb46`, and [knk-plugin PR #11](https://github.com/PandiO/knk-plugin/pull/11)
+  at `6125ad43`. All three were open and cleanly mergeable. The branch handoff
+  records dev smoke tests and green automated suites, but not the full
+  restart/missing-hub/fail-closed acceptance required before alpha deployment.
+  Preserve its API -> web -> plugin merge order and do not deploy the branch
+  heads directly.
 
 - NAS SSH commands should be written as commands for the already-open,
   persistent NAS session. Label Windows PowerShell commands explicitly.
