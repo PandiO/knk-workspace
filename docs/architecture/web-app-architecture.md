@@ -1,7 +1,7 @@
 # knk-web-app — Architecture
 
 **Status:** Living document — reflects actual code, updated in place on each rescan
-**Last updated:** 2026-09-18 (scan basis: `knk-web-app` @ `4ff5dc6`, branch `claude/web-app-codebase-scan-4yqibi`); spot edits 2026-10-09 (ObjectTypeExplorer, KNG-61), 2026-10-10 (FormWizard Boolean fields, KNG-53), 2026-10-12 (FormWizard child forms, KNG-133)
+**Last updated:** 2026-09-18 (scan basis: `knk-web-app` @ `4ff5dc6`, branch `claude/web-app-codebase-scan-4yqibi`); spot edits 2026-10-09 (ObjectTypeExplorer, KNG-61), 2026-10-10 (FormWizard Boolean fields, KNG-53), 2026-10-12 (FormWizard child forms, KNG-133, KNG-134)
 **Source scan:** `docs/reports/web-app-scan-2026-09-18.md`
 
 ## Stack
@@ -48,6 +48,15 @@ entity. Two parallel generic engines carry most of the CRUD surface:
    `normalizeFormSubmission` sends relationships as ids and throws `UnsavedRelationshipValueError`
    (naming the field) for an id-less entity in an Object (not Location) or List field, so nothing is
    dropped silently; the wizard shows the message and doesn't mark the progress Completed.
+   **Edit instance** (KNG-134, same branch): `handleOpenChildForm` hands the child the instance the
+   parent holds (`initialValues`) and whether its edits live only in the parent (`editingInMemory`:
+   a child not saved on completion, i.e. an embedded Location). Without an id the child form is
+   seeded from it (title "Edit …"); with an id and `editingInMemory` the nested `FormWizard` loads
+   from the database and lays the held values over it (`overlayFieldValues`); otherwise the database
+   is the source (`utils/forms/childEditSeed.ts`). "Replace via Minecraft" keeps an existing Location
+   id, and a world task a child inherits onto its first field spreads an object result over the
+   child's fields of the same name (`utils/forms/worldTaskFieldValue.ts`). `ListField` keys, removes
+   and edits items by position/client key, not by id (`utils/forms/listItemKeys.ts`).
 2. **Display engine** (`DisplayWizard/`, `DisplayConfigBuilder/`) — same pattern for
    read-only entity detail views, driven by `DisplayConfigurationDto`
    (`displayConfigClient`).

@@ -4,6 +4,15 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Edit instance opens a child form with the values the form holds**
+  ([KNG-134](https://linear.app/kngpandi/issue/KNG-134); knk-web-app `b75ce07`, `7b7199f`, `602db8e`, branch
+  `claude/jolly-archimedes-urhio9`, form wizard chain link 2). A Location captured in Minecraft opened as an empty
+  "Create New" form, and a saved Location edited twice in one session showed the database values instead of the
+  first edit. Edit instance now seeds the child form from what the parent holds (or lays it over the saved record
+  for an embedded Location); "Replace via Minecraft" keeps the Location's id, so saving updates it instead of
+  creating a second one; a capture made inside a child Location form fills its X/Y/Z fields instead of its Name; and
+  two unsaved items in a list can be edited and removed one at a time. Unit- and UI-tested; not yet checked live.
+
 - **An entity made with "Create New" on a List field is saved**
   ([KNG-133](https://linear.app/kngpandi/issue/KNG-133); knk-web-app `8e44800`, `ff12c8f`, branch
   `claude/jolly-archimedes-urhio9`, form wizard chain link 1). A District created inside a Street form was never

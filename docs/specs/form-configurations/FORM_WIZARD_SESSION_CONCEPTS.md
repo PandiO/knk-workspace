@@ -2,7 +2,7 @@
 
 **Status:** Design decided (2026-10-11): D1 = A (developer), D2 default chosen (reversible, developer may override).
 Being implemented by the [form wizard chain](../../ai-agents/handoffs/FORM_WIZARD_CHAIN.md).
-**Last updated:** 2026-10-12 (§5 item 1 status, KNG-133)
+**Last updated:** 2026-10-12 (§5 items 1-2 status, KNG-133, KNG-134)
 **Linear:** [KNG-133](https://linear.app/kngpandi/issue/KNG-133) (List "Create New" never saved),
 [KNG-136](https://linear.app/kngpandi/issue/KNG-136) (pickers show entities made in this session),
 [KNG-134](https://linear.app/kngpandi/issue/KNG-134) (Edit instance opens without its values),
@@ -214,6 +214,11 @@ offered for selection elsewhere (a Location belongs to one owner; see `architect
 2. **KNG-134** (bug): edit seeding. Tests next to `FormWizard.locationChildEdit.ui.test.tsx`: edit a world-task
    Location (no id) shows the captured x/y/z; edit an edited Location twice keeps the first edit; replace via
    Minecraft keeps the id; two id-less list items edit/remove independently.
+   **Status 2026-10-12: implemented on `claude/jolly-archimedes-urhio9` (knk-web-app `b75ce07`, `7b7199f`,
+   `602db8e`), not merged, live test pending.** The in-memory overlay applies only to children that are not saved on
+   completion (an embedded Location); children saved through their own API (L1-4) keep loading from the database.
+   The §2.3 "first field" binding was confirmed and fixed by spreading an object result over the child's fields.
+   `PagedEntityTable`'s id-only selection is left for KNG-136 (§3.3 stable keys).
 3. **KNG-135** (bug): List edit load. Test `objectFieldEditValue` for `XIds`/`Xs` pairs; API test that a Street read
    returns `districtIds`.
 4. **KNG-136** (improvement): registry + pinned picker rows. `PagedEntityTable` has no tests of its own today; add

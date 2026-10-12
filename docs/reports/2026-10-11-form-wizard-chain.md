@@ -1,7 +1,7 @@
 # Form wizard chain — progress report
 
-**Status:** Running — link 1 (KNG-133) done 2026-10-12 (restarted as a coordinator subagent); link 2 next.
-**Last updated:** 2026-10-12 (link 1 done)
+**Status:** Running — links 1 (KNG-133) and 2 (KNG-134) done 2026-10-12; link 3 next.
+**Last updated:** 2026-10-12 (link 2 done)
 **Charter:** [FORM_WIZARD_CHAIN.md](../ai-agents/handoffs/FORM_WIZARD_CHAIN.md). Append-only below the Summary.
 
 ## Summary
@@ -9,7 +9,7 @@
 | Link | Issue(s) | Status | Heads (web-app / web-api / workspace) |
 |---|---|---|---|
 | 1 | KNG-133 | **Done** (In Review, live test pending); first attempt blocked (§4.1), restarted 2026-10-12 | `ff12c8f` / unchanged `917537a` / docs + handoff |
-| 2 | KNG-134 | Not started | — |
+| 2 | KNG-134 | **Done** (In Review, live test pending) | `602db8e` / unchanged `917537a` / docs + handoff |
 | 3 | KNG-135 + KNG-137 + KNG-164 | Not started | — |
 | 4 | KNG-136 | Not started | — |
 | 5 | KNG-162 | Not started | — |
@@ -133,3 +133,86 @@ Started by the coordinator as a fresh subagent (charter §6). Trunks had not mov
 ## Coordinator — 2026-10-12: after link 1
 
 - Verified link 1's pushes (web-app `ff12c8f`, workspace `ccff609`). Filed its follow-up as [KNG-164](https://linear.app/kngpandi/issue/KNG-164) (required List accepts empty; `minSelection`/`canCreate` have no column) and added it to link 3. Link 2 started as a coordinator subagent (Opus, high effort).
+
+## Link 2 — KNG-134: Edit instance opens a blank or stale child form (2026-10-12)
+
+Started by the coordinator as a fresh subagent (charter §6). Trunks had not moved (web-app `main` `38854ba`, web-api
+`master` `917537a`); trunk merges at start and end were no-ops. Push dry-run passed (knk-web-app, knk-workspace).
+Tracker claim pushed to workspace `main` (`183b61b`).
+
+- **Commits (knk-web-app, branch `claude/jolly-archimedes-urhio9`):** `b75ce07` List items without an id get their own
+  key, remove and edit; `7b7199f` Edit instance seeds the child form from the value the parent holds; `602db8e`
+  Replace via Minecraft keeps the Location id, inherited capture fills the form (head `602db8e`). knk-web-api and
+  knk-plugin unchanged (`917537a`, `1b3e06c2`).
+- **What changed:**
+  - New `src/utils/forms/childEditSeed.ts`: `buildChildEditSeedValues(cfg, instance)` (field values by
+    case-insensitive name through `resolveObjectFieldValueForEdit`; many-to-many steps skipped) and
+    `overlayChildEditValues(cfg, stepsData, seed)`.
+  - `FormWizard`: `ChildFormState` gains `initialValues` (the held instance) and `editingInMemory`
+    (`!shouldPersistChildOnComplete(field)`, i.e. an embedded Location); new prop `overlayFieldValues`, laid over the
+    database load in `loadExistingEntityData`. `ChildFormModal`: new props `initialValues`, `overlayInitialValues`;
+    without an id it seeds the form (merged over the parent-link prefill) and titles it "Edit …" ("… (not saved
+    yet)"); with an id it passes the overlay only for `editingInMemory`.
+  - `handleChildFormComplete` unchanged: it already replaced in place at `listItemIndex` and kept the id
+    (KNG-130 branch / persisted update). The wrong index came from `ListField`'s `findIndex(c => c.id === item.id)`.
+  - `ListField`: keys from new `src/utils/forms/listItemKeys.ts` (id, else a client key per item object, unique per
+    list); remove and Edit instance use the item's position; an id-less item shows "Not saved yet".
+  - `WorldBoundFieldRenderer`: a Location capture replacing a value with an id keeps that id
+    (`keepLocationIdOnReplace`, new `src/utils/forms/worldTaskFieldValue.ts`).
+  - **Spec §2.3 verified and confirmed:** a child opened from a world-task field inherits `worldTaskHint`; with no
+    world-task field and no field named like the parent field (Location form: Name/X/Y/Z/World vs "Location"), the
+    panel binds to the first visible field, and a Location capture was written as one object into `Name`. Fixed: for
+    that inherited first-field binding an object result is spread over the current step's fields of the same name
+    (`spreadTaskValueOntoFields` → `applyMultipleFieldChanges`); a scalar result or no matching key writes the bound
+    field as before.
+- **Tests:** web app 698 passed / 5 failed (baseline 669 / 5; +29 new: 11 `childEditSeed`, 6 `worldTaskFieldValue`,
+  4 `listItemKeys`, 3 ListField, 3 FormWizard UI, 2 WorldBoundFieldRenderer — the UI ones were run against the
+  unfixed code and all failed there); the 5 failures are the same 4 known-red suites as `main`. New UI tests
+  `FormWizard.childEditSeed.ui.test.tsx` (captured Location edit twice, saved Location edited twice, inherited capture
+  fills X/Y/Z), `FieldRenderers.listIdlessItems.test.tsx`, `Workflow/__tests__/WorldBoundFieldRenderer.replaceKeepsId.test.tsx`
+  (real 2 s poll, ~2 s each). `npm run build` compiles with the same single `FormWizard.tsx` warning as before. API
+  not rerun (unchanged; baseline 2550 / 4).
+- **Flagged decisions:**
+  - **L2-1** The in-memory overlay is used only for children that aren't saved on completion (a single Location). A
+    child saved through its own API (L1-4) loads from the database only: its edit is already saved, and a held value
+    can be a picker row with fewer columns than the record, which must not overwrite it.
+  - **L2-2** Edit instance on an id-less item of a field whose children are saved on completion (an old draft's
+    District) seeds the form, and completing it **creates** the entity and puts it in place of the id-less item. That
+    is the way out of KNG-133's "never saved" refusal for such items.
+  - **L2-3** L1-2 stays: an id-less single Location without x/y/z keys is still left out without error. Seeding
+    doesn't change it: a world-task capture always has coordinates and the Location form's X/Y/Z fields always
+    produce the keys. Making it an error risks blocking forms whose Location field holds an odd default; follow-up.
+  - **L2-4** §2.3 fixed by spreading the result (keeps the "capture inside the child" feature) rather than switching
+    inheritance off. Only fields of the current step are filled.
+  - **L2-5** Replace keeps the id only for Location task types (`isLocationTask`) and only when the held value has a
+    real id (not `-1`/`0`) and the capture none.
+- **Discrepancies with the design:** none in substance. `handleChildFormComplete` needed no change (§3.4's "replace in
+  place, keep id" already held; the bug was ListField's index). `PagedEntityTable` still matches selection by id only
+  (§2.3 last bullet) — left for KNG-136 (link 4, §3.3 stable keys) as the handoff said.
+- **Live checklist (developer):**
+  1. Town or GateStructure form, Location **Send to Minecraft**, capture → **Edit instance**: title "Edit Location",
+     captured name/x/y/z/world shown. Change the name, submit, Edit instance again: the new name. Submit the parent:
+     the Location is saved with that name.
+  2. Edit an existing Town: Edit instance on its Location, change name/X, submit; Edit instance again shows the
+     change (not the database value). Submit the Town: the same Location id is updated.
+  3. Existing Town with a Location: **Replace via Minecraft**, then submit the Town: no new row in `locations`; the
+     Town's LocationId is unchanged and has the new coordinates.
+  4. If the dev-DB Location form has no world-task field of its own: from a world-task Location field open the child
+     Location form and use its Send to Minecraft: X/Y/Z/World filled, Name is not "[object Object]".
+  5. A draft holding two unsaved Districts (if any exists): remove one → only that one goes; Edit instance on the
+     second opens the second; completing it saves it (it gets an id).
+  6. Regression: Edit instance on a saved Street (Object) or District (List item) still loads the saved record and
+     saving updates it; GateDoors (owned collection) unchanged.
+- **Follow-ups (not fixed, scope):** L2-3 (id-less Location without coordinates dropped silently);
+  `PagedEntityTable` selection sync (`selectedItems.some(item => !internalSelection.some(sel => sel.id === item.id))`)
+  treats all id-less items as equal (KNG-136); the spread via `applyMultipleFieldChanges` skips value projections and
+  display-condition reconcile that `handleFieldChange` does (same as ItemScan today).
+- **Risks:** `FormWizard.tsx` edits are thin (2 imports, 1 prop, 2 state fields, overlay line in
+  `loadExistingEntityData`, the world-task `onChange` and one boolean) for the KNG-120/KNG-132 merges. Held values
+  in form-field shape (PascalCase, from a completed child) and DTO shape (camelCase, from an edit load) both seed by
+  case-insensitive name.
+- **Next link must know:** link 3 = KNG-135 + KNG-137 + KNG-164. For KNG-135, `buildChildEditSeedValues` goes through
+  `resolveObjectFieldValueForEdit`, so extending that function to List `XIds`/`Xs` pairs also fixes seeding from
+  held values. KNG-164 touches `FormWizard.validateField` (required List `[]`) — keep the logic in a new module.
+- **How the next link is started:** by the coordinator as a fresh subagent with
+  `docs/ai-agents/handoffs/2026-10-11-form-wizard-link-3.md` (charter §6).
