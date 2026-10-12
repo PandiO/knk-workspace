@@ -1,7 +1,7 @@
 # Handoff: NAS closed-alpha infrastructure
 
 **Date:** 2026-10-11
-**Status:** Pre-KNG-64 API accepted privately; Phase 3b is blocked on API PR #9 review/merge and live-state re-verification
+**Status:** Private infrastructure re-verified; build the KNG-64 API artifacts, but do not treat or migrate the current placeholder DB as final alpha data
 **Branch:** `codex/closed-alpha-infrastructure-handoff`
 **Related issues:** KNG-109, KNG-114, KNG-115
 **Progress report:** [`2026-10-11-closed-alpha-infrastructure-progress.md`](../../reports/2026-10-11-closed-alpha-infrastructure-progress.md)
@@ -9,35 +9,49 @@
 
 ## Resume point
 
+> **Developer correction, 2026-10-12 — supersedes the database rollout path
+> below and in the older runbook text.** The authored seed/content set is not
+> ready. The database currently named `knightsandkings_alpha` is a disposable
+> infrastructure placeholder copied from development, not the intended alpha
+> dataset or a baseline that must be carried forward. Preserve its backups for
+> diagnostics, but do not spend further deployment work migrating, accepting,
+> or polishing its data. The final alpha database must be initialized from the
+> developer-approved schema and seed/content set when that set is ready. Until
+> then it is useful only for private infrastructure smoke tests explicitly
+> chosen by the developer.
+
 The `knk-alpha` MySQL and API containers are healthy on the private internal
-Compose network. Neither has a published host port. The cleaned database
-baseline remains backed up, only `__pandi__` and `admin` are active, and API
-startup plus a controlled restart left all recorded schema, activity, and
-canonical-seed counts unchanged.
+Compose network. Neither has a published host port. The placeholder database
+and its diagnostic backups remain isolated; its users, schema, and content
+counts are not acceptance criteria for the eventual alpha dataset.
 
 The pinned API source archive for `knk-web-api` commit `17ee730a` was verified,
 extracted, built, and deployed. The accepted image is
 `knk-web-api:alpha-17ee730a`, image ID
 `sha256:61c7e1f6bd451748e3bf6c1cc65f9a49fe5e1b12bdce2bf273c91f8bbea46251`,
 running as `1000:1000`. `/health/live` and `/health/ready` both return 200;
-readiness reports the database healthy. The immediate next phase is the
-KNG-64/package-fixed API replacement in runbook Phase 3b. Only after that
-passes should the deployment continue to the coordinated KnK-owned multiworld
-loader and private Minecraft service preparation. Do not expose the API or
-start Minecraft before the relevant prerequisites pass.
+readiness reports the placeholder database healthy. The safe independent next
+step is to build and record the KNG-64/package-fixed runtime and migrator
+artifacts without deploying either. Actual API replacement and database
+acceptance wait for the approved seed/content set (unless the developer
+explicitly requests a disposable infrastructure rehearsal). Do not expose the
+API or start Minecraft before the relevant prerequisites pass.
 
-## Addendum (Claude Code, 2026-10-11, after the KNG-64 merge)
+## Addendum (Claude Code, 2026-10-11, updated after the KNG-64 merge)
 
 Read this before Phase 4.
 
-- **The deployed API predates KNG-64.** `17ee730a` is before the KNG-64 merge (knk-web-api `30c5dc5`).
-  It is private, so nothing is exposed. Do the new runbook **Phase 3b** before the plugin connects: back up,
-  run the holder-id clash check (the dev dump predates the `admin`/Staff id-29 repair), build from `master`
-  ≥ `30c5dc5` with a migrator image, apply the two migrations (`AddRefreshTokensAndTokenVersion`,
-  `AddDomainWorldName`), configure, accept, and take a new baseline. Details:
+- **The deployed API predates KNG-64.** `17ee730a` is before the KNG-64 merge
+  (knk-web-api `30c5dc5`). It remains private, so nothing is exposed. The old
+  Phase 3b carry-forward procedure is obsolete for the placeholder database.
+  Build the runtime and migrator artifacts, but wait for the approved seed to
+  initialize and accept a fresh final alpha database. Details of the eventual
+  deployment remain in
   [alpha-go-live § 3–4](../../guides/alpha-go-live.md#3-upgrade-the-alpha-api-to-kng-64-runbook-phase-3b).
-- **Build Phase 3b from the package-fix merge (added 2026-10-12).** Build from knk-web-api `master` at or after the merge
-  commit of [PR #9](https://github.com/PandiO/knk-web-api/pull/9) (unmerged as of 2026-10-12; it's ahead of `30c5dc5`). It
+- **Build Phase 3b from the package-fix merge (updated 2026-10-12).** Build
+  from exact knk-web-api `master` merge commit
+  `07fda99e6f8243e71cc45491990b1dd1d02ca686` from
+  [PR #9](https://github.com/PandiO/knk-web-api/pull/9). It
   upgrades OpenTelemetry to 1.19 (fixes GHSA-vh2m-22xx-q94f and GHSA-g94r-2vxg-569j). AutoMapper 12.0.1
   (GHSA-rvv3-g6hj-g44x) is an accepted alpha risk, [KNG-165](https://linear.app/kngpandi/issue/KNG-165), and is
   suppressed via `NuGetAuditSuppress`. The `sdk:8.0` build should therefore print no NU190x advisory; record any that
@@ -55,16 +69,16 @@ Read this before Phase 4.
 
 ## Verified current state
 
-Repository refresh on 2026-10-12 (live NAS state still requires a fresh
-operator-side check):
+Repository and live NAS refresh on 2026-10-12:
 
-- Default branches were unchanged from the tracker snapshot: knk-workspace
-  `main` `a38286c`, knk-web-api `master` `917537a`, knk-web-app `main`
+- Refreshed default branches were knk-workspace `main` `a38286c`, knk-web-api
+  `master` `07fda99e6f8243e71cc45491990b1dd1d02ca686`, knk-web-app `main`
   `38854ba`, and knk-plugin `main` `1b3e06c2`.
-- [knk-web-api PR #9](https://github.com/PandiO/knk-web-api/pull/9) remained
-  open and unreviewed at `25b4776`, cleanly mergeable onto `917537a`. Both
-  reported `fresh-database` check runs passed. Do not build Phase 3b until it
-  is reviewed, merged, and the exact new `master` merge commit is refreshed.
+- [knk-web-api PR #9](https://github.com/PandiO/knk-web-api/pull/9) merged on
+  2026-10-12. The exact refreshed `master` merge commit is
+  `07fda99e6f8243e71cc45491990b1dd1d02ca686`; it contains package-fix commit
+  `25b4776`, and both reported `fresh-database` check runs passed. Build the
+  runtime and migrator artifacts from this merge commit, not the feature head.
 - The coordinated hub/multiworld work is now pushed but remains unmerged:
   [knk-web-api PR #8](https://github.com/PandiO/knk-web-api/pull/8) at
   `7ec345f`, [knk-web-app PR #6](https://github.com/PandiO/knk-web-app/pull/6)
@@ -113,6 +127,20 @@ operator-side check):
 - The user copied the accepted hub archive to the development server and
   reported that it works there. Treat that as a useful smoke test, not as the
   full loader/restart/fail-closed acceptance required before deployment.
+- Operator-side re-verification on 2026-10-12 matched the recorded private
+  infrastructure: host Compose raw SHA-256 `b4c501ee...e298c`, canonical
+  Portainer/host definitions equal, both containers healthy with no published
+  ports, backend network internal, both API health endpoints 200, zero
+  error-like retained API log lines, and all four secret-value scans clean.
+- Before the developer correction was restated, the obsolete carry-forward
+  path produced a protected pre-change dump at
+  `alpha-db-pre-kng64/20261012-183351/` (SHA-256
+  `58dbdbf1388fcde35ea0a895e7a4ea84fba8ce3fc5ad2a24acb89c5b37fe2293`)
+  and repaired the known `admin`/Staff holder collision: the Staff group moved
+  from holder 29 to 39 with all 54 grants; `admin` stayed at 29 with Admin and
+  Default memberships; clashes and orphan holders are zero. This was valid and
+  reversible, but it is maintenance on a disposable placeholder, not a reason
+  to preserve or promote that dataset.
 
 ## Immediate continuation checklist
 
@@ -120,27 +148,32 @@ operator-side check):
    Docker/Portainer state rather than trusting this snapshot.
 2. Reconfirm both `knk-alpha` containers are healthy, their image IDs are
    unchanged, and `.HostConfig.PortBindings` remains empty.
-3. Complete runbook Phase 3b before the plugin connects. Wait for
-   knk-web-api PR #9 to merge, then build only from its exact `master` merge
-   result; take the pre-upgrade dump, repair any holder-ID clash, run the two
-   KNG-64 migrations through the one-off migrator, configure and accept the
-   private replacement API, run the security probe, and take a new baseline.
-4. Confirm the web hostname with the user before finalizing API/web/plugin
+3. Build the KNG-64 runtime and one-off migrator artifacts from exact API
+   `master` commit `07fda99e6f8243e71cc45491990b1dd1d02ca686`, recording all
+   source, Dockerfile, base-image and final-image evidence. Do not deploy the
+   migrator or replacement API against the current placeholder database unless
+   the developer explicitly chooses a disposable infrastructure rehearsal.
+4. When the authored seed/content set is ready, initialize a fresh final alpha
+   database in the documented migrations -> seed import -> first API start
+   order. Derive the expected migration count from the then-accepted trunk; do
+   not preserve the placeholder's current rows or call either existing dump a
+   final alpha baseline.
+5. Confirm the web hostname with the user before finalizing API/web/plugin
    settings. The open choices are `app.knightsandkings.net` and the older
    `knk.oldenzeelit.nl`; do not guess.
-5. Coordinate with the active `claude/blissful-fermat-b7ihrz` session before
+6. Coordinate with the active `claude/blissful-fermat-b7ihrz` session before
    touching the multiworld loader. Inspect the exact pushed/merged plugin
    revision and do not duplicate its work.
-6. Verify the minimal KnK-owned loader: load `knk_hub` on the main thread,
+7. Verify the minimal KnK-owned loader: load `knk_hub` on the main thread,
    fail closed, keep the main world primary, provide deterministic transitions,
    and pass full restart and missing-hub tests. Do not add Multiverse Core.
-7. Build and package the exact accepted plugin revision, then record its
+8. Build and package the exact accepted plugin revision, then record its
    revision and artifact checksum.
-8. Create a separate live Minecraft data path from the verified staging
+9. Create a separate live Minecraft data path from the verified staging
    sources; never boot directly from staging.
-9. Add Minecraft privately with Paper 1.21.10, Java 21, 1--4 GiB heap, and an
+10. Add Minecraft privately with Paper 1.21.10, Java 21, 1--4 GiB heap, and an
    approximately 5 GiB container limit. Do not add playit or public DNS yet.
-10. Validate both worlds, plugin/API connectivity, clean shutdown/restart,
+11. Validate both worlds, plugin/API connectivity, clean shutdown/restart,
     database effects, and backups before adding another service.
 
 ## Decisions to preserve

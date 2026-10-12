@@ -47,14 +47,25 @@ key, JWT secret, or any derived connection string/token containing them.
 Current accepted live state to VERIFY, not assume
 -------------------------------------------------
 
+**Developer correction (2026-10-12; newer than the older runbook/report):**
+the authored seed/content set is not ready, and the current NAS
+`knightsandkings_alpha` database is a disposable infrastructure placeholder,
+not relevant final alpha data. Preserve its diagnostic backups, but do not
+carry its rows forward, migrate it as if it were authoritative, or call a dump
+of it the final alpha baseline. Build deployable artifacts independently. When
+the approved seed is ready, initialize a fresh final database in the then-
+current migrations -> seed import -> first API start order. Any use of the
+placeholder for a migration/deployment rehearsal requires an explicit user
+choice.
+
 - Portainer's authoritative knk-alpha stack is stack 42. The host Compose is
   /srv/docker/stacks/knk-alpha/compose.yaml. At the last acceptance, its raw
   SHA-256 was
   b4c501eedee03404f6829390dc9eb1d3b3eeb0dd0886136081cce5276a4e298c
   and it canonically matched Portainer.
 - knk-alpha-mysql is healthy and private on knk-alpha_backend, has no host
-  port, runs MySQL 9.6.0, and contains knightsandkings_alpha. Its last accepted
-  container ID began 01a611461c12. Do not expect an empty database.
+  port, runs MySQL 9.6.0, and contains the disposable placeholder database
+  knightsandkings_alpha. Its last accepted container ID began 01a611461c12.
 - knk-alpha-api is healthy and private on knk-alpha_backend with no host-port
   binding. It currently uses the accepted but pre-KNG-64 image
   knk-web-api:alpha-17ee730a, image ID
@@ -68,9 +79,11 @@ Current accepted live state to VERIFY, not assume
   transient/activity tables were empty. Canonical seed counts were:
   AbilityDefinitions 12, EnchantmentDefinitions 26, item_blueprints 154,
   kits 2, lootbox_types 9, menu_templates 27, siege_lobbies 3.
-- Protected files are under /srv/docker/stacks/knk-alpha/secrets/. Use the
-  existing MySQL app-password, root/schema credential for the one-off
-  migration, plugin API-key, and JWT-secret files without displaying them.
+- Protected files are under /srv/docker/stacks/knk-alpha/secrets/. Preserve
+  the existing MySQL app-password, root/schema credential, plugin API-key, and
+  JWT-secret files without displaying them. Use the schema credential for a
+  migration only when initializing the final database or during an explicitly
+  approved disposable rehearsal.
 - The original clean alpha dump remains the rollback source; its SHA-256 is
   dd877d5587982d2a31e5b0ec003cec92d47960cfed969f57bdf600b979ed975f.
 - The old MySQL-only Compose is preserved at
@@ -80,50 +93,56 @@ Current accepted live state to VERIFY, not assume
 - No Minecraft, playit, nginx, web-app, or Cloudflare alpha service has been
   accepted or exposed yet.
 
-Immediate next milestone: Phase 3b API replacement
---------------------------------------------------
+Immediate next milestone: Phase 3b artifact build
+-------------------------------------------------
 
 The deployed 17ee730a API predates KNG-64. It is safe only because it remains
 private. Do not expose it and do not connect the Minecraft plugin to it.
 
-As of the last refresh on 2026-10-12, knk-web-api master was 917537a and the
-vulnerable-package fix was still open as PR #9 at 25b4776. First verify the
-current repository and PR state. Wait for PR #9 to be reviewed and merged;
-then build from the exact master merge commit at or after that merge. Never
-deploy directly from the feature branch. Record the full source revision,
+PR #9 merged on 2026-10-12. The exact accepted knk-web-api `master` merge is
+`07fda99e6f8243e71cc45491990b1dd1d02ca686` and contains package-fix commit
+`25b4776`. Refresh before building and stop if `master` has changed unexpectedly.
+Never deploy directly from the feature branch. Record the full source revision,
 source-archive hash, Dockerfile hash, image ID, labels, and base-image digests.
 The SDK build should emit no NU190x warning; record and stop on any advisory.
 
-Use runbook Phase 3b and alpha-go-live sections 3-4 as the authority:
+Use runbook Phase 3b and alpha-go-live sections 3-4 for artifact construction.
+Their older carry-forward database instructions are superseded here:
 
-1. Verify the live containers, private networking, host-port bindings,
-   Compose/Portainer equivalence, protected secret metadata, and current DB
-   counts. Do not display secret contents.
-2. Take a new dated pre-upgrade dump of knightsandkings_alpha and checksum it.
-   Keep the original clean baseline and every existing backup.
-3. Run the holder-ID clash query:
+1. The live containers, private networking, host-port bindings,
+   Compose/Portainer equivalence, protected secret metadata, health, logs and
+   placeholder DB counts were re-verified on 2026-10-12. Do not display secret
+   contents when rechecking them.
+2. A protected pre-change placeholder dump was created at
+   `alpha-db-pre-kng64/20261012-183351/`, SHA-256
+   `58dbdbf1388fcde35ea0a895e7a4ea84fba8ce3fc5ad2a24acb89c5b37fe2293`.
+   Preserve it and all earlier backups as diagnostics, not final seed data.
+3. The placeholder's holder-ID clash was repaired before the developer
+   correction was restated: Staff moved from 29 to 39 with all 54 grants,
+   `admin` stayed at 29, and clashes/orphans are zero. Do not spend more work
+   preparing this placeholder for production.
+
+For historical context only, the obsolete carry-forward procedure checked:
 
    SELECT u.Id, u.Username, g.Name
    FROM users u
    JOIN permission_groups g ON g.Id = u.Id;
 
-   If it returns rows, use
-   scripts/maintenance/repair-holder-id-clash.sql carefully, one clash at a
-   time, until clashes_left=0. Back up first and verify memberships/grants.
+   Do not repeat this cleanup on the disposable placeholder.
 4. Produce and verify a source archive from the exact accepted master commit.
    Build knk-web-api:alpha-<sha> with the proven deployment-only multi-stage
    Dockerfile. Preserve the KNK_RUNTIME_UID/KNK_RUNTIME_GID fix; do not use
    APP_UID/APP_GID because the .NET base image defines APP_UID=1654.
 5. From the same source revision, build the one-off migrator target/image.
-   Stop the API and run `dotnet ef database update` once on
-   knk-alpha_backend using a schema-capable/root secret through a file-based
-   wrapper, never in command arguments or output. Do not grant schema rights
-   permanently to knk_alpha_app.
-6. The migration must add
+   Do not run it against the current placeholder unless the user explicitly
+   chooses a disposable rehearsal. Never grant schema rights permanently to
+   knk_alpha_app.
+6. At this pinned revision, the migrator contains
    20261008083025_AddRefreshTokensAndTokenVersion and
-   20261010121436_AddDomainWorldName. Their timestamps precede the database's
-   newest migration, so do not use a from/to migration script. Expect 78 rows
-   in __EFMigrationsHistory after `database update`.
+   20261010121436_AddDomainWorldName. Do not apply them to the placeholder by
+   default. When the approved seed is ready, refresh trunk again and derive
+   the final expected migration history from that accepted revision rather
+   than assuming the historical count of 78.
 7. Configure the replacement API with the existing secret-file wrapper and:
    - AllowedHosts=<web-host>;api;localhost
    - Security__PasswordResetFrontendBaseUrl=https://<web-host>
@@ -140,7 +159,8 @@ Use runbook Phase 3b and alpha-go-live sections 3-4 as the authority:
    app.knightsandkings.net or the older knk.oldenzeelit.nl. Do not guess. Ask
    before finalizing AllowedHosts, password-reset URL, plugin web.public-url,
    web build, Cloudflare hostname, or Access policy.
-9. Switch the private stack to the new API only after the migration succeeds.
+9. Switch the private stack to the new API only after the final database is
+   initialized, or as part of an explicitly approved disposable rehearsal.
    Re-run Phase 3 acceptance: live/ready health, image/user/network/port
    identity, logs, controlled restart, migration/schema/user/activity/seed
    counts, secret-leak checks, and MySQL continuity. Run the private security
