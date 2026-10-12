@@ -85,7 +85,7 @@ Unit tests:
 - `KnkPermissibleOfflineTest` (7): restart with the API down, unknown node, too old, denial stays, first check after the TTL, 404 forgets, unknown player.
 - `OfflineFreezeAndModeTest` (5): frozen relog, local freeze kept, unfrozen stays free, vanish kept, mode change kept.
 - `OfflineIgnoreListsTest` (12, KNG-123): restart round trip, older file without lists, max age and pruning, local change keeps the age, erasure of the owner and of an ignored player, replacement.
-- `IgnoreServiceOfflineTest` (12, KNG-123): API down after a restart, no user id, API back replaces the list, fail open without a list, max age, erased owner, accepted/refused changes, rollback during the outage, quit.
+- `IgnoreServiceOfflineTest` (14, KNG-123): API down after a restart, no user id, API back replaces the list, fail open without a list, max age, erased owner, accepted/refused changes (only the confirmed change is stored, also when two overlap), rollback during the outage, quit, a load for a replaced account discarded.
 
 Live (developer, on the dev server) — **passed 2026-10-10**: phases 1-3 all pass; the never-joined player having no staff rights during an outage and the optional checks (cleanup pass, max age, corrupt file) were accepted by the developer. Steps:
 1. As a non-op staff member with the API up: join, use `/staffmode` and a staff command, and walk through a closed domain with `knk.region.bypass`. Freeze a test player.
