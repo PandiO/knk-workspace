@@ -20,9 +20,11 @@ extracted, built, and deployed. The accepted image is
 `knk-web-api:alpha-17ee730a`, image ID
 `sha256:61c7e1f6bd451748e3bf6c1cc65f9a49fe5e1b12bdce2bf273c91f8bbea46251`,
 running as `1000:1000`. `/health/live` and `/health/ready` both return 200;
-readiness reports the database healthy. The next phase is the KnK-owned
-multiworld loader and private Minecraft service preparation. Do not expose
-the API or start Minecraft until that phase's own prerequisites pass.
+readiness reports the database healthy. The immediate next phase is the
+KNG-64/package-fixed API replacement in runbook Phase 3b. Only after that
+passes should the deployment continue to the coordinated KnK-owned multiworld
+loader and private Minecraft service preparation. Do not expose the API or
+start Minecraft before the relevant prerequisites pass.
 
 ## Addendum (Claude Code, 2026-10-11, after the KNG-64 merge)
 
@@ -88,6 +90,9 @@ Read this before Phase 4.
   backed up as
   `/srv/docker/stacks/knk-alpha/compose.mysql-only.pre-api.20261011T151034Z.yaml`.
 - No Minecraft, playit, or web-app alpha service has been started.
+- The user copied the accepted hub archive to the development server and
+  reported that it works there. Treat that as a useful smoke test, not as the
+  full loader/restart/fail-closed acceptance required before deployment.
 
 ## Immediate continuation checklist
 
@@ -95,19 +100,28 @@ Read this before Phase 4.
    Docker/Portainer state rather than trusting this snapshot.
 2. Reconfirm both `knk-alpha` containers are healthy, their image IDs are
    unchanged, and `.HostConfig.PortBindings` remains empty.
-3. Read the current multiworld audit/design work and inspect current
-   `knk-plugin` `main`; do not assume KNG-114's existing-world loader exists.
-4. Implement or verify the minimal KnK-owned loader: load `knk_hub` on the
-   main thread, fail closed, keep primary-world assumptions explicit, and
-   add deterministic hub/gameplay transitions. Do not add Multiverse Core.
-5. Build and package the exact plugin revision that contains the accepted
-   loader, then record its revision and artifact checksum.
-6. Create a separate live Minecraft data path from the verified staging
+3. Complete runbook Phase 3b before the plugin connects. Wait for
+   knk-web-api PR #9 to merge, then build only from its exact `master` merge
+   result; take the pre-upgrade dump, repair any holder-ID clash, run the two
+   KNG-64 migrations through the one-off migrator, configure and accept the
+   private replacement API, run the security probe, and take a new baseline.
+4. Confirm the web hostname with the user before finalizing API/web/plugin
+   settings. The open choices are `app.knightsandkings.net` and the older
+   `knk.oldenzeelit.nl`; do not guess.
+5. Coordinate with the active `claude/blissful-fermat-b7ihrz` session before
+   touching the multiworld loader. Inspect the exact pushed/merged plugin
+   revision and do not duplicate its work.
+6. Verify the minimal KnK-owned loader: load `knk_hub` on the main thread,
+   fail closed, keep the main world primary, provide deterministic transitions,
+   and pass full restart and missing-hub tests. Do not add Multiverse Core.
+7. Build and package the exact accepted plugin revision, then record its
+   revision and artifact checksum.
+8. Create a separate live Minecraft data path from the verified staging
    sources; never boot directly from staging.
-7. Add Minecraft privately with Paper 1.21.10, Java 21, 1--4 GiB heap, and an
+9. Add Minecraft privately with Paper 1.21.10, Java 21, 1--4 GiB heap, and an
    approximately 5 GiB container limit. Do not add playit or public DNS yet.
-8. Validate both worlds, plugin/API connectivity, clean shutdown/restart,
-   database effects, and backups before adding another service.
+10. Validate both worlds, plugin/API connectivity, clean shutdown/restart,
+    database effects, and backups before adding another service.
 
 ## Decisions to preserve
 
@@ -126,27 +140,10 @@ Read this before Phase 4.
 
 ## Prompt for a new session
 
-Copy the following prompt into a new session:
-
-> Continue the Knights & Kings NAS closed-alpha deployment from the durable
-> handoff in `knk-workspace/docs/ai-agents/handoffs/2026-10-11-closed-alpha-infrastructure.md`.
-> Also read `docs/reports/2026-10-11-closed-alpha-infrastructure-progress.md`,
-> `docs/guides/closed-alpha-deployment-runbook.md`, the repository `AGENTS.md`,
-> `docs/ai-agents/GLOBAL_AGENT_INSTRUCTIONS.md`, and the current
-> `docs/ACTIVE_SESSIONS.md` before acting. Refresh all repositories and verify
-> live state instead of trusting old branch names. The API milestone is
-> complete: accepted image
-> `sha256:61c7e1f6bd451748e3bf6c1cc65f9a49fe5e1b12bdce2bf273c91f8bbea46251`
-> runs privately as `knk-alpha-api`, both health endpoints return 200,
-> restart/seeding is idempotent, and no secret leaked. Reconfirm that state,
-> then continue at Phase 4: inspect the current KNG-114/multiworld work,
-> implement or verify the KnK-owned `knk_hub` loader, package the exact plugin
-> revision, and prepare a separate live Minecraft data path from verified
-> staging. Do not expose the API, start Minecraft before loader/data-path
-> validation, add playit, alter the clean database baseline, delete backups,
-> or remove retired Portainer state before the relevant validation passes.
-> Give NAS commands for an already-open persistent SSH session and label any
-> Windows PowerShell commands. Preserve these decisions: no Multiverse Core;
-> Paper 1.21.10/Java 21 first; one server with main+hub; playit only for
-> Minecraft at `play.knightsandkings.net`; Cloudflare/nginx only for web/API;
-> MySQL private.
+Use the fully rewritten, copy-ready prompt in
+[2026-10-11-closed-alpha-continuation-prompt.md](2026-10-11-closed-alpha-continuation-prompt.md).
+It includes the Phase 3b gate added after the KNG-64 merge, the package-fix PR
+gate, current private API/MySQL evidence, the active multiworld-session
+coordination boundary, verified world archives, and the unresolved web-hostname
+decision. Older copies that say to build `17ee730a`, start Phase 4 immediately,
+or create a disposable preflight stack are obsolete.
