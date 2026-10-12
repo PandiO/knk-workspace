@@ -4,6 +4,25 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Required List fields refuse an empty list; minimum and maximum selections are kept and enforced**
+  ([KNG-164](https://linear.app/kngpandi/issue/KNG-164); knk-web-app `a1c5896`, knk-web-api `29f65b3`, branch
+  `claude/jolly-archimedes-urhio9`, form wizard chain link 3). "A Street needs at least one District" let an empty
+  list through, and a minimum or maximum set in the form builder was lost on save. The wizard now blocks Next/Submit
+  with a message naming the field, and form fields store the minimum, maximum, "can create" and number-step settings
+  (new nullable columns; existing forms keep "no limit"). Unit- and UI-tested; not yet checked live.
+
+- **Form wizard shows step names, keeps them when editing, and shows Boolean descriptions**
+  ([KNG-137](https://linear.app/kngpandi/issue/KNG-137); knk-web-app `18f3d7c`, branch
+  `claude/jolly-archimedes-urhio9`, form wizard chain link 3). The progress bar shows each step's name (numbers only
+  on narrow screens), edit mode keeps the step name as the title with "Edit …" above it, and checkbox fields show
+  their description. Renderer-tested; not yet checked live.
+
+- **Editing an entity loads its List relationships**
+  ([KNG-135](https://linear.app/kngpandi/issue/KNG-135); knk-web-app `ee214a4`, knk-web-api `7b01458`, branch
+  `claude/jolly-archimedes-urhio9`, form wizard chain link 3). Editing a Street showed no Districts when the form's
+  field was named `DistrictIds`. The API now returns `districtIds` for Streets and Towns, and the form loads a List
+  field from whichever side of the pair the record carries. Unit-tested; not yet checked live.
+
 - **Edit instance opens a child form with the values the form holds**
   ([KNG-134](https://linear.app/kngpandi/issue/KNG-134); knk-web-app `b75ce07`, `7b7199f`, `602db8e`, branch
   `claude/jolly-archimedes-urhio9`, form wizard chain link 2). A Location captured in Minecraft opened as an empty

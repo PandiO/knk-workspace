@@ -2,7 +2,7 @@
 
 **Status:** Design decided (2026-10-11): D1 = A (developer), D2 default chosen (reversible, developer may override).
 Being implemented by the [form wizard chain](../../ai-agents/handoffs/FORM_WIZARD_CHAIN.md).
-**Last updated:** 2026-10-12 (§5 items 1-2 status, KNG-133, KNG-134)
+**Last updated:** 2026-10-12 (§5 items 1-3 status, KNG-133, KNG-134, KNG-135)
 **Linear:** [KNG-133](https://linear.app/kngpandi/issue/KNG-133) (List "Create New" never saved),
 [KNG-136](https://linear.app/kngpandi/issue/KNG-136) (pickers show entities made in this session),
 [KNG-134](https://linear.app/kngpandi/issue/KNG-134) (Edit instance opens without its values),
@@ -221,6 +221,12 @@ offered for selection elsewhere (a Location belongs to one owner; see `architect
    `PagedEntityTable`'s id-only selection is left for KNG-136 (§3.3 stable keys).
 3. **KNG-135** (bug): List edit load. Test `objectFieldEditValue` for `XIds`/`Xs` pairs; API test that a Street read
    returns `districtIds`.
+   **Status 2026-10-12: implemented on `claude/jolly-archimedes-urhio9` (knk-web-app `ee214a4`, knk-web-api
+   `7b01458`), not merged, live test pending.** `resolveObjectFieldValueForEdit` pairs List fields across `XIds`/`Xs`
+   (also `-y`/`-ies`); the API fills `StreetDto.DistrictIds` and `TownDto.DistrictIds` on read. Audited DTOs with
+   `*Ids` lists: `DistrictDto.StreetIds`, `TownDto.StreetIds`, `GateStructureDto.GuardSpawnLocationIds`,
+   `RoadProfileDto.ScopeTownIds` were already filled; the others are request/result DTOs (list in the chain report).
+   KNG-164 (same link): a required List rejects `[]`, `minSelection`/`maxSelection` are enforced and stored.
 4. **KNG-136** (improvement): registry + pinned picker rows. `PagedEntityTable` has no tests of its own today; add
    them (pinned rows, de-duplication, stable keys), plus a two-level nesting UI test modelled on
    `FormWizard.siegeNesting.ui.test.tsx`.

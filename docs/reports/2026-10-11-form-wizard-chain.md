@@ -1,7 +1,7 @@
 # Form wizard chain — progress report
 
-**Status:** Running — links 1 (KNG-133) and 2 (KNG-134) done 2026-10-12; link 3 next.
-**Last updated:** 2026-10-12 (link 2 done)
+**Status:** Running — links 1-3 done (2026-10-12); link 4 (KNG-136) next.
+**Last updated:** 2026-10-12 (link 3 done)
 **Charter:** [FORM_WIZARD_CHAIN.md](../ai-agents/handoffs/FORM_WIZARD_CHAIN.md). Append-only below the Summary.
 
 ## Summary
@@ -10,7 +10,7 @@
 |---|---|---|---|
 | 1 | KNG-133 | **Done** (In Review, live test pending); first attempt blocked (§4.1), restarted 2026-10-12 | `ff12c8f` / unchanged `917537a` / docs + handoff |
 | 2 | KNG-134 | **Done** (In Review, live test pending) | `602db8e` / unchanged `917537a` / docs + handoff |
-| 3 | KNG-135 + KNG-137 + KNG-164 | Not started | — |
+| 3 | KNG-135 + KNG-137 + KNG-164 | **Done** (In Review, live test pending; dev DB needs the migration) | `a1c5896` / `29f65b3` / docs + handoff |
 | 4 | KNG-136 | Not started | — |
 | 5 | KNG-162 | Not started | — |
 | 6 | KNG-138 | Not started | — |
@@ -222,3 +222,112 @@ Tracker claim pushed to workspace `main` (`183b61b`).
 - Verified link 2's pushes (web-app `602db8e`, workspace `26e815f`).
 - Access test session `session_01JqTqe6mbu3Yazp8WwLc4Ex`: started with knk-workspace only, its prompt asked it to `add_repo` knk-web-app and knk-web-api with push; both were attached and `git push --dry-run` succeeded on both. Charter §6 changed: from link 3, each link is a session started by the coordinator with the `add_repo` step in its prompt; subagent fallback if refused.
 - Link 3 started as session (see next block).
+
+## Link 3 — KNG-135 + KNG-137 + KNG-164: List edit load, step names, required/min List (2026-10-12)
+
+Started by the coordinator as a **session** (`session_01SZ9c7pGMwGfvHR3dHAmWgQ` relayed the developer's request in the
+prompt, charter §6). `add_repo` (push) for knk-web-app, knk-web-api and knk-plugin was accepted; `git push --dry-run`
+on `claude/jolly-archimedes-urhio9` passed in all three and in knk-workspace. Trunks had not moved (web-app `main`
+`38854ba`, web-api `master` `917537a`), so the trunk merges at start and end were no-ops. Tracker claim pushed to
+workspace `main` (`8ca64fb`); Linear KNG-135/137/164 set In Progress.
+
+- **Commits (branch `claude/jolly-archimedes-urhio9`):**
+  - knk-web-app: `ee214a4` KNG-135 List XIds/Xs edit load; `18f3d7c` KNG-137 step header + Boolean description;
+    `a1c5896` KNG-164 required/min/max List validation (head `a1c5896`).
+  - knk-web-api (first change in this chain): `7b01458` KNG-135 `DistrictIds` on read; `29f65b3` KNG-164 FormField
+    columns + additive migration (head `29f65b3`).
+  - knk-plugin unchanged (`1b3e06c2`).
+- **What changed:**
+  - **KNG-135** web-app: `resolveObjectFieldValueForEdit` (`utils/forms/objectFieldEditValue.ts`) now also handles
+    List fields with an `objectType`: an `XIds`-authored field takes the DTO's `Xs` objects (they carry names), else
+    turns bare ids into `{ id }`; an `Xs`-authored field with no (or an empty) `Xs` array falls back to `{ id }`s from
+    `XIds`. `-y`/`-ies` pairs (`CategoryIds`/`Categories`) are matched. Held objects (seeding a child from the parent)
+    pass through unchanged. Both the edit load (`loadExistingEntityData`) and `buildChildEditSeedValues` use it, so
+    no `FormWizard.tsx` change was needed.
+  - **KNG-135** API: `StreetMappingProfile` and `TownMappingProfile` fill `DistrictIds` on read.
+    **DTO audit** (every `List<int> *Ids` in `Dtos/`): already filled on read: `DistrictDto.StreetIds`,
+    `TownDto.StreetIds`, `GateStructureDto.GuardSpawnLocationIds`, `RoadProfileDto.ScopeTownIds`; fixed:
+    `StreetDto.DistrictIds`, `TownDto.DistrictIds`; not form entities (request/result/runtime DTOs, left alone):
+    `DiscoveryGrantRequestDto.DomainIds`, `SiegeRuntimeDto.AreaGateStructureIds`, `RoadEdgeDto`/`RoadTileGraphEdgeDto`/
+    `RoadEdgeRecordDto` `GateDoorIds`+`DomainIds`, `RoadTileUpsertResultDto.BumpedTileIds`,
+    `RoadEdgeUpdateResultDto.ChangedEdgeIds`/`EdgeIds`, `RoadEdgePruneResultDto.DeletedNodeIds`,
+    `LootboxRuntimeAreaDto.AllowedTypeIds`, `LootboxInGameAreaDeleteResultDto.RemovedSpawnIds`,
+    `LootboxWorldChangedNotificationDto.RemovedSpawnIds`, `PrivacyDeletionResultDto.UserIds`,
+    `TelemetryClientConfigDto.*Ids`, `SiegeMatchAbortUnfinishedResultDto.AbortedMatchIds`,
+    `SiegeGateRestoreResultDto.ClearedGateStructureIds`.
+  - **KNG-137**: new `src/components/FormWizard/WizardStepHeader.tsx` (`WizardStepProgress`, `WizardStepTitle`).
+    Progress bar: step name under each number (`max-w-[7rem] truncate`, full name in `title`, `hidden md:block`, so
+    numbers only on narrow screens), `aria-current="step"`, `aria-label="Step n: name"`. Title: the step name stays
+    the `h2` in edit mode, "Edit {entity}" becomes a small heading above it (falls back to the `h2` for a step without
+    a name). `FormWizard.tsx` only swaps its inline header markup for the two components. `BooleanField` renders
+    `field.description` under the label, linked with `aria-describedby`.
+  - **KNG-164** web-app: new `src/utils/forms/listFieldValidation.ts` (`validateListFieldCount`); `validateField`
+    sends List fields there (one call; the old generic "is required" check no longer applies to Lists). A required
+    List needs ≥ 1 item (`minSelection` raises it); `minSelection` on an optional list applies once it has items;
+    `maxSelection` caps it; null/0/negative = no limit; null/''/undefined entries don't count. Messages name the field,
+    e.g. `Districts is required: select at least 1 District`, `Districts needs at least 2 Districts (1 selected)`.
+    `handleNext` validates before Next and before Submit, so both are blocked.
+  - **KNG-164** API: `FormField` gets nullable `MinSelection`, `MaxSelection`, `CanCreate`, `IncrementValue`;
+    `FormMappingProfile` maps them both ways; `FormConfigurationRepository.UpdateAsync` (both step levels, create and
+    update branches) and `FormTemplateReusableService` (copy + link) copy them. Migration
+    `20261012075746_AddFormFieldSelectionLimits` (generated with `dotnet ef migrations add`; four `AddColumn`s on
+    `FormFields`, nullable, nothing else; snapshot updated). **The API does not migrate on startup: the dev DB needs
+    `dotnet ef database update` before running this branch** (see risks).
+- **Tests:** web app **729 passed / 5 failed** (baseline re-measured before changes: 698 / 5; +31 new: 8
+  `objectFieldEditValue`, 1 `childEditSeed`, 7 `WizardStepHeader`, 2 Boolean renderer, 8 `listFieldValidation`, 5
+  `FormWizard.requiredList.ui`); the 5 failures are the same 4 known-red suites (`FormWizard.m2mJoinPrefill.ui`,
+  `ManyToManyRelationshipEditor.ui`, `useEnrichedFormContext`, `RoadsAdminPage`). The new UI test run against the
+  unfixed `FormWizard.tsx`: 4 of 5 fail there (the fifth is the KNG-135 edit-load pass case). API **2556 passed / 4 failed** (baseline re-measured: 2550 / 4; +6 new: 1
+  `StreetServiceTests` (GetById returns `districtIds`, serialized as `districtIds`), 1 `TownMappingProfileTests`, 4
+  `FormFieldSelectionLimitsTests` (mapping both ways, null stays null, repository create + update merge, migration is
+  four nullable AddColumns only)); the 4 failures are the known-red ones; `EndpointAccessRulesTests` green (no new
+  endpoints). `dotnet build knkwebapi_v2.csproj` succeeds. `npm run build` compiles with the same single
+  `FormWizard.tsx` warning as before (line 302, pre-existing).
+- **Flagged decisions:**
+  - **L3-1** `IncrementValue` added in the same migration: it is DTO-only like the other three, and the builder
+    (`FieldEditor`) and wizard (Integer step) use it, so it was dropped on save the same way.
+  - **L3-2** Owned child collections (`ownedChildCollection`, e.g. GateDoors) are exempt from the required/min check
+    while the parent isn't saved: their items can only be added after it ("Save this record first"), so the check
+    would block creating the parent. In edit mode they are checked. Before this link a required owned collection with
+    a `null` value was already blocked by the generic check; now it isn't in create mode.
+  - **L3-3** An optional List with `minSelection` may stay empty; the minimum applies once it has items. `0` = no limit
+    (the builder writes `0` when unset).
+  - **L3-4** An `XIds`-authored field prefers the DTO's navigation objects over bare ids when both are present (names
+    for display); the ids are the same, `normalizeFormSubmission` sends ids either way.
+  - **L3-5** `TownDto.DistrictIds` is filled on read but `TownService` ignores it on write (a District belongs to a
+    Town through `District.TownId`). Pre-existing; a Town form field on it would show Districts but changing it does
+    nothing. Follow-up, not fixed.
+  - **L3-6** Step names are hidden below the `md` breakpoint (numbers only), per the issue; screen readers get the name
+    from `aria-label`.
+- **Discrepancies with the design:** none in substance. KNG-135 needed no `FormWizard.tsx` change (both paths already
+  go through `resolveObjectFieldValueForEdit`).
+- **Live checklist (developer):**
+  0. **First apply the migration** to the dev DB (`dotnet ef database update` in knk-web-api on this branch). Without
+     it every FormField query fails (unknown columns `CanCreate`/`IncrementValue`/`MaxSelection`/`MinSelection`).
+  1. Edit a Street that has Districts: the Districts are shown selected, whichever name the field uses (`DistrictIds`
+     or `Districts`). Submit unchanged: the Street keeps its Districts.
+  2. GateStructure → Street → **Edit instance**: the Street's Districts are shown (L2-1: loads from the DB).
+  3. Street form with a required Districts field and none picked: Next (or Submit) shows "Districts is required:
+     select at least 1 District" and stays.
+  4. Form builder: set Min selection 2 on the Street's Districts field, save, reload the builder: 2 is still there.
+     In the wizard with one District picked: "Districts needs at least 2 Districts (1 selected)".
+  5. GateStructure create with its GateDoors field (if marked required): not blocked by the empty GateDoors list.
+  6. GateStructure and SiegeScenario forms, desktop and narrow width: step names under the progress-bar numbers
+     (truncated, full name on hover), numbers only when narrow. Edit an existing GateStructure: the step name is the
+     title, "EDIT GATESTRUCTURE" small above it.
+  7. A Boolean field with a description (e.g. a GateStructure checkbox): the description shows under the label.
+- **Follow-ups (not fixed, scope):** `canCreate` has no control in `FieldEditor` (settable only through the API/seed
+  files until a builder toggle is added); `StreetRepository.GetAllAsync` doesn't include Districts, so the Street list
+  read returns empty `districts`/`districtIds` (unchanged); L3-5; `knkwebapi_v2.sln` references
+  `tests\knkwebapi_v2.Tests\…` (lowercase), so `dotnet build` on the solution fails on Linux; build the project file.
+- **Risks:** the migration must be applied before the branch runs (checklist 0); merge order API (migration) before
+  the web app. `FormWizard.tsx` edits are thin (2 imports, header markup → 2 components, one `if` in
+  `validateField`) for the KNG-120/KNG-132 merges. KNG-132's GateDoor-description data migration
+  (`f40ce73`, unmerged) is earlier-dated than `AddFormFieldSelectionLimits` and touches no columns, so either order
+  works; a later trunk merge only needs the snapshot to stay consistent (regenerate nothing by hand).
+- **Next link must know:** link 4 = KNG-136 (form session registry, pinned "New" rows in pickers, `PagedEntityTable`
+  stable keys and first tests). `PagedEntityTable` still enforces `min` only on deselect; the wizard now enforces the
+  count at Next/Submit. List values are objects with `id` (edit load now yields `{ id }` for bare ids), which is what
+  the picker's id-based selection matches.
+- **How the next link is started:** by the coordinator (charter §6), from
+  `docs/ai-agents/handoffs/2026-10-11-form-wizard-link-4.md`.

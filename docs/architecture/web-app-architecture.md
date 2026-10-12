@@ -1,7 +1,7 @@
 # knk-web-app — Architecture
 
 **Status:** Living document — reflects actual code, updated in place on each rescan
-**Last updated:** 2026-09-18 (scan basis: `knk-web-app` @ `4ff5dc6`, branch `claude/web-app-codebase-scan-4yqibi`); spot edits 2026-10-09 (ObjectTypeExplorer, KNG-61), 2026-10-10 (FormWizard Boolean fields, KNG-53), 2026-10-12 (FormWizard child forms, KNG-133, KNG-134)
+**Last updated:** 2026-09-18 (scan basis: `knk-web-app` @ `4ff5dc6`, branch `claude/web-app-codebase-scan-4yqibi`); spot edits 2026-10-09 (ObjectTypeExplorer, KNG-61), 2026-10-10 (FormWizard Boolean fields, KNG-53), 2026-10-12 (FormWizard child forms, KNG-133, KNG-134; List edit load, step header, List validation, KNG-135, KNG-137, KNG-164)
 **Source scan:** `docs/reports/web-app-scan-2026-09-18.md`
 
 ## Stack
@@ -57,6 +57,16 @@ entity. Two parallel generic engines carry most of the CRUD surface:
    id, and a world task a child inherits onto its first field spreads an object result over the
    child's fields of the same name (`utils/forms/worldTaskFieldValue.ts`). `ListField` keys, removes
    and edits items by position/client key, not by id (`utils/forms/listItemKeys.ts`).
+   **List fields in edit mode** (KNG-135, same branch): `resolveObjectFieldValueForEdit`
+   (`utils/forms/objectFieldEditValue.ts`) also pairs List relationship fields across `XIds` / `Xs`:
+   an `XIds`-authored field takes the DTO's `Xs` objects (bare ids become `{ id }`), an `Xs`-authored
+   field falls back to `{ id }`s from `XIds`. The edit load and Edit-instance seeding both use it.
+   **List validation** (KNG-164, same branch): `validateField` sends List fields to
+   `utils/forms/listFieldValidation.ts`: a required List needs at least one item, `minSelection` /
+   `maxSelection` are enforced (null or 0 = no limit), an owned child collection is skipped until its
+   parent is saved. **Step header** (KNG-137, same branch): `FormWizard/WizardStepHeader.tsx` shows
+   step names in the progress bar (truncated, hidden on narrow screens) and keeps the step name as the
+   title in edit mode under a small "Edit {entity}" heading; Boolean fields render their description.
 2. **Display engine** (`DisplayWizard/`, `DisplayConfigBuilder/`) — same pattern for
    read-only entity detail views, driven by `DisplayConfigurationDto`
    (`displayConfigClient`).

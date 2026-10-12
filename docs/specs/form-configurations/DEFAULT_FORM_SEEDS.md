@@ -2,7 +2,7 @@
 
 **Status:** Design decided (2026-10-11: S1 = A, developer). Being implemented by the
 [form wizard chain](../../ai-agents/handoffs/FORM_WIZARD_CHAIN.md).
-**Last updated:** 2026-10-11
+**Last updated:** 2026-10-12 (§2.1, §2.3: KNG-164 columns and KNG-137 renderer gaps fixed on the chain branch)
 **Linear:** [KNG-138](https://linear.app/kngpandi/issue/KNG-138) (export/import),
 [KNG-139](https://linear.app/kngpandi/issue/KNG-139) (author the default forms),
 [KNG-137](https://linear.app/kngpandi/issue/KNG-137) (wizard shows step names and all descriptions)
@@ -39,6 +39,9 @@ should be fixed so the descriptions actually show.
   source by `SourceFormFieldGuid`.
 - `FormConfigurationDto` has no `ConfigurationGuid`. `CanCreate`, `MinSelection` and `IncrementValue` are DTO-only
   and silently dropped (no column).
+  **2026-10-12 (KNG-164, branch `claude/jolly-archimedes-urhio9`, knk-web-api `29f65b3`, not merged):** `MinSelection`,
+  `MaxSelection`, `CanCreate` and `IncrementValue` are nullable `FormFields` columns now (null = no limit /
+  creatable / step 1), so seed files can carry them.
 - `FormConfigurationService.CreateAsync` runs `FormTemplateValidationService` (field exists on the entity, types
   match metadata, non-nullable fields required, display-condition sources come earlier). Default uniqueness per
   entity is enforced only by `FormConfigBuilder.handleSave` in the web app, not by the API.
@@ -72,6 +75,9 @@ options (`siege-minigame/PHASE_3_FORMCONFIGS.md:46`).
 
 KNG-137 fixes the three gaps (step names in the progress bar, step name kept in edit mode as a subtitle, Boolean
 descriptions).
+**2026-10-12:** fixed on `claude/jolly-archimedes-urhio9` (knk-web-app `18f3d7c`, not merged): step names under the
+progress-bar numbers (hidden on narrow screens), the step name stays the title in edit mode under a small
+"Edit {entity}" heading, Boolean descriptions render under the checkbox label.
 
 ## 3. Proposed mechanism
 
