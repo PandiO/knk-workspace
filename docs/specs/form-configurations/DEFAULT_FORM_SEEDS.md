@@ -2,7 +2,7 @@
 
 **Status:** Design decided (2026-10-11: S1 = A, developer). Being implemented by the
 [form wizard chain](../../ai-agents/handoffs/FORM_WIZARD_CHAIN.md).
-**Last updated:** 2026-10-12 (§2.1, §2.3: KNG-164 columns and KNG-137 renderer gaps fixed on the chain branch)
+**Last updated:** 2026-10-12 (§2.1, §2.3: KNG-164 columns and KNG-137 renderer gaps fixed on the chain branch; §3: KNG-138 implemented on the chain branch, §3.4 records where it differs)
 **Linear:** [KNG-138](https://linear.app/kngpandi/issue/KNG-138) (export/import),
 [KNG-139](https://linear.app/kngpandi/issue/KNG-139) (author the default forms),
 [KNG-137](https://linear.app/kngpandi/issue/KNG-137) (wizard shows step names and all descriptions)
@@ -159,6 +159,27 @@ bundled seeds are imported, with a dry-run result before importing.
    with the seed files and a short "what changed per step" table.
 3. Developer imports the seed as a **non-default** config, walks through it in the wizard, edits in the builder if
    needed, then makes it the default (or re-exports the tuned version into the PR).
+
+### 3.4 Status (KNG-138, 2026-10-12)
+
+**Implemented** on `claude/jolly-archimedes-urhio9` (form wizard chain link 6; knk-web-api `b62cdce`, knk-web-app
+`1c3e835`; not merged, live test pending). Differences from §3.2, all small:
+
+- `subConfigurationRef` is an object `{ configurationGuid, entityTypeName, name }`; only the GUID is used to resolve
+  it (entity/name are for readers; an entity name alone resolves to that entity's default, with a warning).
+- Validation rules depending on a field of **another** configuration (the siege "parent form" rules) write
+  `dependsOn: { fieldGuid, configurationGuid }`; that configuration must be imported first.
+- Rule 6 is moot: since KNG-164 `canCreate`, `minSelection`, `maxSelection` and `incrementValue` are columns and are
+  carried, so there is nothing to warn about.
+- Also carried: step conditions (`conditions`), simple field validations (`validations`), `dependencyConditionJson`,
+  inline `childFormSteps` (without display conditions). Not carried (export `notes` say so): reusable-step links
+  (exported as copies), the legacy `FormField.DependsOnFieldId`.
+- Statuses: dry run passed → 200, imported → 201, already imported → 409, invalid → 400; the body is always the
+  result (`errors`, `warnings`, default handling). An unknown world-task type is a warning, not an error
+  (settings stay verbatim).
+- Seed files: any `*.json` name in `Data/FormConfigurationSeeds/` (the `{name}` in `seeds/{name}/import` is the file
+  name without `.json`). The API's `FormConfigurationSeedFilesTests` dry-runs and imports every file there, in
+  dependency order.
 
 ## 4. Authoring guide (for agents and the developer)
 

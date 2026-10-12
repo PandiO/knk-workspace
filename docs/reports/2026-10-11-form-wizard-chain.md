@@ -1,7 +1,7 @@
 # Form wizard chain — progress report
 
-**Status:** Running — links 1-5 done (2026-10-12); link 6 (KNG-138) next.
-**Last updated:** 2026-10-12 (link 5 done)
+**Status:** Running — links 1-6 done (2026-10-12); link 7 (KNG-139 + write-up) next.
+**Last updated:** 2026-10-12 (link 6 done)
 **Charter:** [FORM_WIZARD_CHAIN.md](../ai-agents/handoffs/FORM_WIZARD_CHAIN.md). Append-only below the Summary.
 
 ## Summary
@@ -13,7 +13,7 @@
 | 3 | KNG-135 + KNG-137 + KNG-164 | **Done** (In Review, live test pending; dev DB needs the migration) | `a1c5896` / `29f65b3` / docs + handoff |
 | 4 | KNG-136 | **Done** (In Review, live test pending) | `8ae5a66` / unchanged `29f65b3` / docs + handoff |
 | 5 | KNG-162 | **Done** (In Review, live test pending; dev DB needs links 3 and 5 migrations) | `22cb588` / `959bc11` / docs + handoff |
-| 6 | KNG-138 | Not started | — |
+| 6 | KNG-138 | **Done** (In Review, live test pending; no migration) | `1c3e835` / `b62cdce` / docs + handoff |
 | 7 | KNG-139 + write-up | Not started | — |
 
 ## Link 0 — chain setup (coordinator)
@@ -551,3 +551,125 @@ pushed to workspace `main` (`613e498`); Linear KNG-162 set In Progress.
   under explicit access rules (`knk.admin.content` for form configuration endpoints).
 - **How the next link is started:** by the coordinator (charter §6), from
   `docs/ai-agents/handoffs/2026-10-11-form-wizard-link-6.md`.
+
+## Link 6 — KNG-138: FormConfiguration export/import, bundled seeds, web-app buttons (2026-10-12)
+
+Started by the coordinator as a new session (charter §6) with `add_repo` for knk-web-app, knk-web-api and knk-plugin
+in its prompt: all three attached with push, cloned, feature branch checked out, `git push --dry-run` passed in all
+three and in knk-workspace. Trunks had not moved (web-app `main` `38854ba`, web-api `master` `917537a`), so the code
+trunk merges at start and end were no-ops; workspace `main` had only tracker commits (merged). Tracker claim pushed to
+workspace `main` (`762ef75`); Linear KNG-138 set In Progress. No other "In progress" row claims these files.
+
+- **Commits:** knk-web-api `b62cdce` export/import service, endpoints, seed folder, tests (head `b62cdce`).
+  knk-web-app `1c3e835` Export JSON + Import / Seeds dialog, client, tests (head `1c3e835`). knk-plugin unchanged
+  (`1b3e06c2`). **No schema change, no migration.**
+- **What changed:**
+  - **API** `Dtos/FormConfigurationPortableDtos.cs` (format `knk-formconfig/1`, import result, seed list entry) and
+    `Services/FormConfigurationPortabilityService.cs` (+ interface, registered with a `FormConfigurationSeedOptions`
+    pointing at `<content root>/Data/FormConfigurationSeeds`). Export: `configurationGuid` (KNG-138's missing DTO
+    field, now in the file), steps/fields in their `StepOrderJson`/`FieldOrderJson` order, every `FormField` column
+    incl. the KNG-164 four, `settingsJson` verbatim, display conditions by `sourceFieldGuid`, step conditions, simple
+    field validations, inline child steps, `subConfigurationRef {configurationGuid, entityTypeName, name}`, and
+    `validationRules` with `dependsOn {fieldGuid}` (same file) or `{fieldGuid, configurationGuid}` (a field of another
+    configuration — the siege "parent form" rules). `notes` lists what isn't carried (reusable links → copies, legacy
+    `DependsOnFieldId`).
+  - Import (`ImportAsync`/`ImportJsonAsync`): structure checks → **never overwrite** (existing `configurationGuid` →
+    `AlreadyImported`, nothing written) → build the model keeping the file's step/field GUIDs → resolve every
+    reference (sub configurations by GUID, display-condition sources, rule fields and `dependsOn`) → world-task type
+    check, `settingsJson` must be a JSON object → `FormTemplateValidationService` (runs even when references failed,
+    so a dry run lists drift and unresolved references together) → default handling → write. The write is one
+    transaction on MySQL: unset the old default (only with `makeDefault`), `FormConfigurationRepository.AddAsync`
+    (the API's own create path: display-condition source ids), then the `FieldValidationRules` with the new field ids.
+    An unresolved reference to a configuration that a bundled seed provides says "It is the bundled seed 'X'".
+  - **Endpoints** on `FormConfigurationsController`: `GET {id}/export` (JSON), `POST import?dryRun=&makeDefault=`
+    (body = the file), `GET seeds`, `POST seeds/{name}/import?dryRun=&makeDefault=`. Results: dry run passed 200,
+    imported 201, already imported 409, invalid 400 (body = result with `errors`/`warnings` always); concurrent
+    duplicate (unique index) 409. Writes (incl. dry runs, which are POSTs) are behind `knk.admin.content` via the
+    controller's existing `RequireServiceOrPermissionForWrites` rule; `EndpointAccessRulesTests` green.
+  - **API** `Data/FormConfigurationSeeds/README.md` (folder for link 7; `*.json` there are content files, copied to
+    the build/publish output like the other `Data/` catalogs).
+  - **Web app** `FormConfigurationTable`: **Export JSON** in the row menu, **Import / Seeds** in the header (both
+    optional props). New `FormConfigurationImportPanel` (dialog): "make default" checkbox; **Import a file** (reads
+    the file, header check, automatic dry run, result banner with problems/warnings/counts, Import only after a
+    passing dry run with the current checkbox state); **Available seeds** (the selected entity's seeds, "Show all";
+    Imported (#id) badge, Unreadable + error, Check → Import). `formConfigClient`: `exportConfiguration`, `getSeeds`,
+    `importConfiguration`, `importSeed`; a 400/409 with a result body resolves (no global error toast), other
+    failures reject. `utils/forms/formConfigPortability.ts`: file name, download, header check, result texts.
+    `FormWizardPage`: one state, one export handler, the two props and the dialog (reloads the list after an import).
+- **Tests:** web app **813 passed / 5 failed** (baseline re-measured: 792 / 5; +21: 5 client, 3 helpers, 3 table,
+  10 panel UI); the 5 failures are the same 4 known-red suites (`FormWizard.m2mJoinPrefill.ui`,
+  `ManyToManyRelationshipEditor.ui`, `useEnrichedFormContext`, `RoadsAdminPage`). API **2613 passed / 4 failed**
+  (baseline re-measured: 2574 / 4; +39: 27 `FormConfigurationPortabilityServiceTests`, 9
+  `FormConfigurationsPortabilityControllerTests`, 3 `FormConfigurationSeedFilesTests`); the 4 failures are the
+  known-red ones. The round-trip test authors a PHASE_3-shaped set (SiegeScenarioDistrict join entry, SiegeScenario
+  with an M2M step on it, owned-child list, readiness panel, KNG-164 limits, a step condition and a field validation;
+  SiegeObjective with a step and a field display condition on `GateStructureId`, world tasks, an enum subset; a same-form
+  rule and a parent-form rule) through `FormConfigurationService.CreateAsync` (the POST path), exports, imports into
+  an empty in-memory DB in dependency order and checks the re-export is byte-identical and the wizard DTO matches
+  (steps, order, fields, settings, the M2M step pointing at the new join id). Mutation check: dropping
+  `RequiresDependencyFilled` from the import made 2 tests fail. `dotnet build knkwebapi_v2.csproj` clean (no new
+  warnings); `npm run build` compiles with the same pre-existing warnings (`FormWizardPage.tsx` 2 hook-deps warnings
+  exist on the base too).
+- **Flagged decisions:**
+  - **L6-1** Same `configurationGuid` = always "already imported", nothing written; there is no replace or
+    "import as copy" option (most reversible; spec §3.2 rule 1). To ship a changed seed: new GUID and name.
+  - **L6-2** Import keeps the file's step and field GUIDs (references need them). Field GUIDs aren't unique in the
+    DB, so a copy imported under a new `configurationGuid` reuses them; cross-configuration `dependsOn` is scoped by
+    `configurationGuid`, so nothing becomes ambiguous.
+  - **L6-3** A missing step/field GUID in a file is generated with a warning (nothing can refer to it); an invalid
+    one is an error. An unknown world-task type is a warning (settings verbatim); `settingsJson` that isn't a JSON
+    object is an error.
+  - **L6-4** A `subConfigurationRef` with only an entity name resolves to that entity's default (warning).
+  - **L6-5** Export and the seed list are reads (any logged-in user, like the rest of the controller's GETs); every
+    import, including a dry run, is a POST behind `knk.admin.content`.
+  - **L6-6** No "import all seeds": dependency order is the admin's (the error names the seed to import first).
+  - **L6-7** Display conditions inside inline child steps are refused by the import (the create path only resolves
+    top-level ones). No such configuration is known.
+  - **L6-8** Validation rules from a file are not checked for circular dependencies (the rule service checks one rule
+    at a time against the DB; a file with A→B and B→A would import). Follow-up.
+  - **L6-9** The import is one transaction on relational providers only (MySQL); the in-memory test DB has none.
+- **Discrepancies with the design (spec §3.4 records them):** `subConfigurationRef` is an object; parent-form rules
+  carry `dependsOn.configurationGuid`; rule 6 (warn on DTO-only properties) is moot since KNG-164 made them columns;
+  statuses 200/201/409/400. The acceptance item "export 9 and 12 from the dev DB, import into an empty DB" can only be
+  done live (no dev DB here); the automated round trip uses the siege shape instead (charter).
+- **KNG-132 interplay** (unmerged `claude/loving-johnson-dlshrc`, migration `f40ce73`
+  `DescribeGateDoorGeometryFields`): it fills only **empty** descriptions of the GateDoor form's anchor/reference/
+  geometry/motion fields, on every configuration whose `EntityTypeName = 'GateDoor'`, and keeps any text already
+  there; its Down clears only fields whose text equals its own. So a GateDoor seed imported before that migration
+  runs gets those descriptions filled when they are empty and keeps its own otherwise; a seed that reuses the exact
+  KNG-132 text would lose it on that migration's Down. No conflict; link 7 should write those descriptions itself.
+- **Live checklist (developer):**
+  0. Links 3 and 5 migrations applied (this link has none). Log in as an admin with `knk.admin.content`.
+  1. Form wizard page → GateStructure → ⋮ on configuration 9 → **Export JSON**: a file
+     `GateStructure-<name>.json` downloads; it starts with `"format": "knk-formconfig/1"` and the configuration's
+     `configurationGuid`, has no `"id"`s, steps in wizard order, world-task `settingsJson`, validation rules with
+     `dependsOn`. Same for GateDoor 12.
+  2. **Import / Seeds** → choose the GateStructure file: "Already imported as configuration 9. Nothing was changed."
+  3. In a copy of the file change `configurationGuid` (any new UUID) and `name` ("Gate Structure (copy)"), choose it:
+     "Dry run passed. Importing will add it as a non-default configuration." → **Import**: a new, non-default row.
+     **Use** it: same steps, order, descriptions, conditions, world tasks and rules as 9. Delete the copy after.
+  4. Tick **Make … the default**: the dry run now says "replacing 'Gate Structure …'" (import only if you then set 9
+     back as default).
+  5. In the copy change one `fieldName` to `NoSuchField` and a `subConfigurationRef.configurationGuid` (if any) to a
+     new UUID: the dry run lists both problems; nothing is written.
+  6. **Available seeds**: "No bundled seeds for GateStructure." until link 7's files exist; then each lists with
+     **Check** / **Import**.
+  7. (Acceptance) On a scratch DB with the branch's migrations, import the exported GateStructure, then GateDoor
+     (parent-form rules need GateStructure first; the dry run says so otherwise) and compare the wizards with dev.
+  8. As a user without `knk.admin.content`: Export works, any Check/Import shows "Forbidden"/403 in the dialog.
+- **Follow-ups (not fixed, scope):** L6-8 (circular rules in a file); a builder toggle for `canCreate` (from link 3);
+  an "import all seeds in dependency order" button if link 7's set proves tedious (L6-6); `tsc --noEmit` errors in
+  link 4's `sessionPinnedRows.test.ts` (from link 5's list, unchanged).
+- **Risks:** `FormWizardPage.tsx` gets ~25 added lines (import, state, handler, two props, dialog), `FormWizard.tsx`
+  untouched — nothing for KNG-120/KNG-132 to collide with. A new `FormField` column must now also be added to
+  `FormConfigurationPortabilityService` (noted in `web-api-architecture.md`). `claude/api-vulnerable-packages`
+  (AutoMapper upgrade): the new service tests use `new MapperConfiguration(...)` like links 3 and 5.
+- **Next link must know:** link 7 = KNG-139 + final write-up. Seed files go in knk-web-api
+  `Data/FormConfigurationSeeds/*.json` (format: spec §3.2 + §3.4; the easiest model is an export — see
+  `FormConfigurationPortabilityServiceTests.AuthorSiegeSetAsync` for the shapes, `"fieldType": "Object"` etc. as
+  strings, `settingsJson` as a JSON *string*). `FormConfigurationSeedFilesTests` picks up every file automatically:
+  readable, unique GUIDs, dry run passes and imports on an empty DB in dependency order. Give every seed, step and
+  field a fixed GUID; join entries need their own seed and a `subConfigurationRef.configurationGuid` in the parent.
+  Run `dotnet test Tests/knkwebapi_v2.Tests/knkwebapi_v2.Tests.csproj --filter FullyQualifiedName~FormConfigurationSeed`.
+- **How the next link is started:** by the coordinator (charter §6), from
+  `docs/ai-agents/handoffs/2026-10-11-form-wizard-link-7.md`.

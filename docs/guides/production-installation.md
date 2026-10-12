@@ -3,7 +3,7 @@
 **Status:** Draft v1 — written for review. Not yet followed on a real production host. The database, API, seed and
 web-server steps were rehearsed in a scratch environment on 2026-10-07 (see [Appendix A](#appendix-a--what-was-verified-and-how)).
 The Paper server steps and the CI/CD workflows are untested drafts.
-**Last updated:** 2026-10-08 (security and alpha-hosting update for KNG-64)
+**Last updated:** 2026-10-12 (§7.7: FormConfiguration export/import, KNG-138, on a feature branch); 2026-10-08 (security and alpha-hosting update for KNG-64)
 **Applies to:** trunk only. knk-web-api `master` `1805cf9`, knk-web-app `main`, knk-plugin `main` `c7d5a1e`; 61 EF
 migrations, the latest being `20261006193103_UniquePermissionGrantHolderNode`. Feature branches that haven't been
 merged, such as road navigation, are not covered. Re-check § 2 and the seed table manifest after each trunk merge.
@@ -864,6 +864,10 @@ import refuses to run anyway once users exist. Content changes after launch reac
   FormConfigBuilder, or replayed with the payloads recorded in that feature's `…_FORMCONFIGS.md`. That record is
   why those files exist. If this becomes frequent, the next step up is an export/import feature for single
   FormConfigurations in the API: ask for it as a feature, don't hand-edit production SQL.
+  **2026-10-12:** that feature exists on branch `claude/jolly-archimedes-urhio9` (KNG-138, not merged): Export JSON
+  on the dev web app's form configuration list, then **Import / Seeds** on production (dry run first; it never
+  overwrites a configuration with the same `configurationGuid`). Default forms shipped with the API
+  (`Data/FormConfigurationSeeds/`) are imported the same way, on request.
 
 ---
 

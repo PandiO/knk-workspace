@@ -4,6 +4,16 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Form configurations can be exported and imported as JSON files, and bundled seed forms imported on request**
+  ([KNG-138](https://linear.app/kngpandi/issue/KNG-138); knk-web-api `b62cdce`, knk-web-app `1c3e835`,
+  branch `claude/jolly-archimedes-urhio9`, form wizard chain link 6). The form configuration list has
+  **Export JSON** per configuration and an **Import / Seeds** dialog: choose an exported file or one of the API's
+  bundled seeds (`Data/FormConfigurationSeeds/`, filled by KNG-139), check it (a dry run that reports missing
+  properties, unresolved references and what happens to the entity's default, without writing anything), then
+  import it. An import never changes an existing configuration: a file imported before is reported as "already
+  imported". It becomes the entity's default only when there is none, or when "make default" is ticked (the old
+  default is unset). No startup seeder.
+
 - **Cancelling a form asks whether to keep or delete what its child forms already saved**
   ([KNG-162](https://linear.app/kngpandi/issue/KNG-162); knk-web-app `94e3a6e`, `22cb588`, knk-web-api `af7ed5d`,
   `959bc11`, branch `claude/jolly-archimedes-urhio9`, form wizard chain link 5). A new **Cancel form** button next

@@ -1,7 +1,7 @@
 # knk-web-app — Architecture
 
 **Status:** Living document — reflects actual code, updated in place on each rescan
-**Last updated:** 2026-09-18 (scan basis: `knk-web-app` @ `4ff5dc6`, branch `claude/web-app-codebase-scan-4yqibi`); spot edits 2026-10-09 (ObjectTypeExplorer, KNG-61), 2026-10-10 (FormWizard Boolean fields, KNG-53), 2026-10-12 (FormWizard child forms, KNG-133, KNG-134; List edit load, step header, List validation, KNG-135, KNG-137, KNG-164; form session registry, KNG-136; cancel / delete-draft prompt, KNG-162)
+**Last updated:** 2026-09-18 (scan basis: `knk-web-app` @ `4ff5dc6`, branch `claude/web-app-codebase-scan-4yqibi`); spot edits 2026-10-09 (ObjectTypeExplorer, KNG-61), 2026-10-10 (FormWizard Boolean fields, KNG-53), 2026-10-12 (FormWizard child forms, KNG-133, KNG-134; List edit load, step header, List validation, KNG-135, KNG-137, KNG-164; form session registry, KNG-136; cancel / delete-draft prompt, KNG-162; form configuration export/import, KNG-138)
 **Source scan:** `docs/reports/web-app-scan-2026-09-18.md`
 
 ## Stack
@@ -90,6 +90,14 @@ entity. Two parallel generic engines carry most of the CRUD surface:
    `entity-references` check (entities still pending in the run ignored), then the entity's normal
    delete (`getDeleteFunctionForEntity`); in use / 409 = skipped and reported. Cancel never deletes
    the draft; nothing is deleted automatically.
+   **Export / import** (KNG-138): the form configuration list (`FormWizard/FormConfigurationTable.tsx`)
+   has **Export JSON** per row (downloads the API's portable `knk-formconfig/1` file,
+   `utils/forms/formConfigPortability.ts`) and **Import / Seeds**, which opens
+   `FormWizard/FormConfigurationImportPanel.tsx`: choose a file or a bundled seed, the API dry-runs it,
+   the result (problems, warnings, default handling) is shown, and Import is offered only after a
+   passing dry run with the current "make default" choice. `formConfigClient.importConfiguration` /
+   `importSeed` resolve with the result body on a 400/409 refusal instead of raising the global error
+   toast.
 2. **Display engine** (`DisplayWizard/`, `DisplayConfigBuilder/`) — same pattern for
    read-only entity detail views, driven by `DisplayConfigurationDto`
    (`displayConfigClient`).
