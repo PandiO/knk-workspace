@@ -19,8 +19,8 @@ what is specific to this project.
 > found the API mostly unauthenticated (anonymous writes, public user list with emails, self-escalation, unrevocable
 > sessions). The fixes are on branch `claude/ui-ux-assessment-discussion-66vc2l` in all three code repos and follow the
 > [alpha hardening plan](../specs/alpha-hardening/IMPLEMENTATION_PLAN.md). Steps marked **[KNG-64]** describe behaviour
-> **after that merge**; don't expose an API built from an older commit. For the **closed alpha on the NAS behind
-> Cloudflare Tunnel**, follow [alpha-go-live.md](alpha-go-live.md). This guide stays the reference for a public VPS
+> **after that merge**; don't expose an API built from an older commit. For the **closed alpha on the NAS**, follow the
+> [closed-alpha deployment runbook](closed-alpha-deployment-runbook.md) and its KNG-64 layer [alpha-go-live.md](alpha-go-live.md). This guide stays the reference for a public VPS
 > (open beta and later).
 
 ---
@@ -142,10 +142,11 @@ private network or VPN and add TLS.
 
 For a small invite-only alpha, you can run the same containers on a home NAS and publish only the web origin through a
 **Cloudflare Tunnel** (outbound-only, no open HTTP ports), with **Cloudflare Access** as an allow-list in front of it.
-Cloudflare terminates TLS. nginx and certbot are replaced by a small web container plus `cloudflared`, and the
-Minecraft port is forwarded on the router as before. The reasoning is in the
+Cloudflare terminates TLS, so nginx needs no certbot. Minecraft goes through a playit.gg tunnel, so the router
+forwards no ports. The reasoning is in the
 [alpha hardening plan § 3](../specs/alpha-hardening/IMPLEMENTATION_PLAN.md#3-alpha-hosting-recommendation), and the
-runbook is in [alpha-go-live.md](alpha-go-live.md). Move to the VPS topology above before an open beta.
+runbook is the [closed-alpha deployment runbook](closed-alpha-deployment-runbook.md), with the KNG-64 requirements in
+[alpha-go-live.md](alpha-go-live.md). Move to the VPS topology above before an open beta.
 
 ---
 
