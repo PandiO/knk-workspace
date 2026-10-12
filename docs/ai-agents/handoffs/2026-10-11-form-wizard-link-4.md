@@ -57,5 +57,9 @@ with the session ids as a filter needs an API filter that may not exist for ever
 filtering (spec §3.3) and record which. The dev DB needs link 3's migration applied before the branch runs
 (report, link 3 checklist item 0) — not your task, but mention it if you write a live checklist.
 
+Also on the tracker: `claude/api-vulnerable-packages` (knk-web-api AutoMapper/OpenTelemetry upgrades, unmerged) may
+change `new MapperConfiguration(...)` call sites; if it reaches `master`, the trunk merge may need link 3's two new
+API test files adjusted (report, link 3 risks).
+
 Next after you: link 5 (KNG-162, cancel / delete-draft prompt: keep or delete what child forms saved; provenance
 `CreatedEntitiesJson`).

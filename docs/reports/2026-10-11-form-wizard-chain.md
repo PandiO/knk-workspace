@@ -325,6 +325,10 @@ workspace `main` (`8ca64fb`); Linear KNG-135/137/164 set In Progress.
   `validateField`) for the KNG-120/KNG-132 merges. KNG-132's GateDoor-description data migration
   (`f40ce73`, unmerged) is earlier-dated than `AddFormFieldSelectionLimits` and touches no columns, so either order
   works; a later trunk merge only needs the snapshot to stay consistent (regenerate nothing by hand).
+  New tracker claim (2026-10-11, `claude/api-vulnerable-packages`, knk-web-api): an AutoMapper upgrade that may change
+  `new MapperConfiguration(...)` call sites; this link adds two test files using that constructor
+  (`Mapping/TownMappingProfileTests.cs`, `Repositories/FormFieldSelectionLimitsTests.cs`), so whichever merges second
+  adjusts them.
 - **Next link must know:** link 4 = KNG-136 (form session registry, pinned "New" rows in pickers, `PagedEntityTable`
   stable keys and first tests). `PagedEntityTable` still enforces `min` only on deselect; the wizard now enforces the
   count at Next/Submit. List values are objects with `id` (edit load now yields `{ id }` for bare ids), which is what
