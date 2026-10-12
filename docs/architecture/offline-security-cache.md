@@ -1,7 +1,7 @@
 # Offline security cache — permissions, freeze and modes without the API
 
 **Status:** P0 implemented on branch `claude/worldguard-entry-deny-bypass-sj1j7g` (knk-plugin `239ea49`, brought up to `main` in `7e9e8cf`), **live smoke test passed and merged to knk-plugin `main` 2026-10-10** (merge `2649911`). Linear [KNG-58](https://linear.app/kngpandi/issue/KNG-58)
-**Last updated:** 2026-10-12 (KNG-123: ignore lists added, knk-plugin branch `claude/kng-123-outage-main-thread-ignore`, unmerged)
+**Last updated:** 2026-10-12 (KNG-123: ignore lists added; live check passed and merged to knk-plugin `main`, PR #13)
 **Related:** [`domain-access-enforcement.md`](domain-access-enforcement.md) (KNG-56: domain rules already survive outages as WorldGuard flags); [`reports/2026-10-06-offline-critical-data-inventory.md`](../reports/2026-10-06-offline-critical-data-inventory.md) (why these items are P0); KNG-57 (SignalR push, incl. erasure); KNG-34 D14-D16 (data deletion); KNG-81 (duplicate `CacheManager`)
 
 ## 1. Problem
@@ -87,11 +87,13 @@ Unit tests:
 - `OfflineIgnoreListsTest` (12, KNG-123): restart round trip, older file without lists, max age and pruning, local change keeps the age, erasure of the owner and of an ignored player, replacement.
 - `IgnoreServiceOfflineTest` (14, KNG-123): API down after a restart, no user id, API back replaces the list, fail open without a list, max age, erased owner, accepted/refused changes (only the confirmed change is stored, also when two overlap), rollback during the outage, quit, a load for a replaced account discarded.
 
-Live (developer, on the dev server) — **passed 2026-10-10**: phases 1-3 all pass; the never-joined player having no staff rights during an outage and the optional checks (cleanup pass, max age, corrupt file) were accepted by the developer. Steps:
+Live, KNG-58 part (developer, on the dev server) — **passed 2026-10-10**, before ignore lists existed: phases 1-3 all pass; the never-joined player having no staff rights during an outage and the optional checks (cleanup pass, max age, corrupt file) were accepted by the developer. Steps:
 1. As a non-op staff member with the API up: join, use `/staffmode` and a staff command, and walk through a closed domain with `knk.region.bypass`. Freeze a test player.
 2. Stop knk-web-api and restart the server.
 3. Join as the staff member: still staff (no SURVIVAL/spawn teleport for an owner), staff commands work, bypass works, still vanished if they were.
 4. The frozen test player joins: still frozen.
 5. A player who never joined before: joins normally, no staff rights.
 6. Start the API again and check that changes made in the web app apply.
-7. `plugins/KnightsAndKings/offline-security.json` contains only the fields in §2.
+7. `plugins/KnightsAndKings/offline-security.json` contains only the fields in §2 (as of 2026-10-10: accounts and permission answers).
+
+Live, KNG-123 ignore lists (developer, on the dev server) — **passed 2026-10-12**, with the API stopped while players were online: an ignored player's chat, /msg and /tpa stayed filtered; /ignore of someone new failed and wasn't kept; after a server restart with the API still down the last list still filtered; with the API back /unignore worked and the list matched the web app; the file's `ignores` section held only the §2 fields. Found during that test and filed separately: KNG-170 (rank changes in the web app don't reach the server until rejoin), KNG-171 (commands wait about 1 s during an outage).
