@@ -1,7 +1,7 @@
 # knk-web-app — Architecture
 
 **Status:** Living document — reflects actual code, updated in place on each rescan
-**Last updated:** 2026-09-18 (scan basis: `knk-web-app` @ `4ff5dc6`, branch `claude/web-app-codebase-scan-4yqibi`); spot edits 2026-10-09 (ObjectTypeExplorer, KNG-61), 2026-10-10 (FormWizard Boolean fields, KNG-53), 2026-10-12 (FormWizard child forms, KNG-133, KNG-134; List edit load, step header, List validation, KNG-135, KNG-137, KNG-164; form session registry, KNG-136)
+**Last updated:** 2026-09-18 (scan basis: `knk-web-app` @ `4ff5dc6`, branch `claude/web-app-codebase-scan-4yqibi`); spot edits 2026-10-09 (ObjectTypeExplorer, KNG-61), 2026-10-10 (FormWizard Boolean fields, KNG-53), 2026-10-12 (FormWizard child forms, KNG-133, KNG-134; List edit load, step header, List validation, KNG-135, KNG-137, KNG-164; form session registry, KNG-136; cancel / delete-draft prompt, KNG-162)
 **Source scan:** `docs/reports/web-app-scan-2026-09-18.md`
 
 ## Stack
@@ -78,8 +78,18 @@ entity. Two parallel generic engines carry most of the CRUD surface:
    (`hooks/useSessionPinnedRows.ts`; Locations are never pinned). `PagedEntityTable` shows them in a
    "Created in this form" section with a New badge, filtered by the search term and the query's
    filters on the client and de-duplicated against the page (`utils/forms/sessionPinnedRows.ts`);
-   rows are keyed and selected by id (`isSameSelection`), not by array index. The registry is not
-   kept in drafts; `createdEntities()` is the hook for KNG-162.
+   rows are keyed and selected by id (`isSameSelection`), not by array index.
+   **What a form created, and cancelling it** (KNG-162, same branch): the root wizard of a session
+   (`formPath.length === 1`, no `parentProgressId`; `hooks/useCreatedEntitiesProvenance.ts`) sends
+   `createdEntitiesJson` with every progress save (`utils/forms/createdEntities.ts`: type, id, label
+   fields, origin, creation order); resuming that draft seeds the registry (`seed()`), so pickers pin
+   the entities again. `FormWizardPage` wraps the wizard in `FormSessionRoot` (a registry without a
+   form-path entry) next to `FormWizard/FormCancelAction.tsx` ("Cancel form"); deleting a draft from
+   Saved Progress reads the summary's `createdEntitiesJson`. Both show `CreatedEntitiesPrompt` (Keep =
+   default, Delete); Delete runs `utils/forms/deleteCreatedEntities.ts`: newest first, the API's
+   `entity-references` check (entities still pending in the run ignored), then the entity's normal
+   delete (`getDeleteFunctionForEntity`); in use / 409 = skipped and reported. Cancel never deletes
+   the draft; nothing is deleted automatically.
 2. **Display engine** (`DisplayWizard/`, `DisplayConfigBuilder/`) — same pattern for
    read-only entity detail views, driven by `DisplayConfigurationDto`
    (`displayConfigClient`).

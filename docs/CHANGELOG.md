@@ -4,6 +4,16 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Cancelling a form asks whether to keep or delete what its child forms already saved**
+  ([KNG-162](https://linear.app/kngpandi/issue/KNG-162); knk-web-app `94e3a6e`, `22cb588`, knk-web-api `af7ed5d`,
+  `959bc11`, branch `claude/jolly-archimedes-urhio9`, form wizard chain link 5). A new **Cancel form** button next
+  to the form wizard, and deleting a draft from Saved Progress, list the entities the form's child forms created
+  ("Street 'Gatestraat', District 'Oostwijk'") with **Keep them** (default) or **Delete them**. Delete removes them
+  newest first through their normal delete and skips anything still in use, saying why. A draft remembers what it
+  created, so a resumed draft pins those entities in its pickers again. Nothing is deleted automatically.
+  Needs the new additive migration `AddFormSubmissionProgressCreatedEntities`. Unit- and UI-tested; not yet checked
+  live.
+
 - **Relationship pickers list what you just created in the same form**
   ([KNG-136](https://linear.app/kngpandi/issue/KNG-136); knk-web-app `d0d805d`, `89b4476`, `8ae5a66`, branch
   `claude/jolly-archimedes-urhio9`, form wizard chain link 4). A District created inside a Street form opened from a

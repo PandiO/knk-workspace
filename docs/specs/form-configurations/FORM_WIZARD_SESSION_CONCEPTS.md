@@ -2,7 +2,7 @@
 
 **Status:** Design decided (2026-10-11): D1 = A (developer), D2 default chosen (reversible, developer may override).
 Being implemented by the [form wizard chain](../../ai-agents/handoffs/FORM_WIZARD_CHAIN.md).
-**Last updated:** 2026-10-12 (§5 items 1-4 status, KNG-133, KNG-134, KNG-135, KNG-136)
+**Last updated:** 2026-10-12 (§5 items 1-5 status, KNG-133, KNG-134, KNG-135, KNG-136, KNG-162)
 **Linear:** [KNG-133](https://linear.app/kngpandi/issue/KNG-133) (List "Create New" never saved),
 [KNG-136](https://linear.app/kngpandi/issue/KNG-136) (pickers show entities made in this session),
 [KNG-134](https://linear.app/kngpandi/issue/KNG-134) (Edit instance opens without its values),
@@ -238,6 +238,14 @@ offered for selection elsewhere (a Location belongs to one owner; see `architect
    Locations (L4-2). The registry is created by the first `FormWizard` without a session above it (a wrapper around
    `FormWizard`), not by `FormWizardPage` itself.
 5. **KNG-162** (improvement): cancel / delete-draft prompt and provenance (D2). After KNG-136.
+   **Status 2026-10-12: implemented on `claude/jolly-archimedes-urhio9` (knk-web-app `94e3a6e`, `22cb588`, knk-web-api
+   `af7ed5d`, `959bc11`), not merged, live test pending.** "Explicit cancel" is a new **Cancel form** button next to
+   the root wizard on `FormWizardPage` (there was none); it leaves the form and keeps the draft (L5-1). The root
+   progress records the created entities in `CreatedEntitiesJson` (additive migration) on every save and a resumed
+   draft seeds the registry from it (D3). Delete goes in reverse creation order — the Street before the District it
+   references; the issue's "deepest-first" would put the District first, which the Street still references (L5-2).
+   The "in use" check is a generic API reference count (`entity-references`, every FK and join row; entities still
+   pending in the same run ignored), and a DELETE refused by a constraint now answers 409 everywhere (L5-3, L5-4).
 
 All of them touch `FormWizard.tsx`; KNG-120 (`claude/admiring-mendel-ne39j1`) and KNG-132
 (`claude/loving-johnson-dlshrc`) change it too and are unmerged. Live test in the web app: the exact

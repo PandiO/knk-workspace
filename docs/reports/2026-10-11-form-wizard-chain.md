@@ -1,7 +1,7 @@
 # Form wizard chain — progress report
 
-**Status:** Running — links 1-4 done (2026-10-12); link 5 (KNG-162) next.
-**Last updated:** 2026-10-12 (link 4 done)
+**Status:** Running — links 1-5 done (2026-10-12); link 6 (KNG-138) next.
+**Last updated:** 2026-10-12 (link 5 done)
 **Charter:** [FORM_WIZARD_CHAIN.md](../ai-agents/handoffs/FORM_WIZARD_CHAIN.md). Append-only below the Summary.
 
 ## Summary
@@ -12,7 +12,7 @@
 | 2 | KNG-134 | **Done** (In Review, live test pending) | `602db8e` / unchanged `917537a` / docs + handoff |
 | 3 | KNG-135 + KNG-137 + KNG-164 | **Done** (In Review, live test pending; dev DB needs the migration) | `a1c5896` / `29f65b3` / docs + handoff |
 | 4 | KNG-136 | **Done** (In Review, live test pending) | `8ae5a66` / unchanged `29f65b3` / docs + handoff |
-| 5 | KNG-162 | Not started | — |
+| 5 | KNG-162 | **Done** (In Review, live test pending; dev DB needs links 3 and 5 migrations) | `22cb588` / `959bc11` / docs + handoff |
 | 6 | KNG-138 | Not started | — |
 | 7 | KNG-139 + write-up | Not started | — |
 
@@ -441,3 +441,113 @@ Progress.
   (`upsertSessionEntity` is the pure core; a `seed(entries)` on the root registry is the natural addition).
 - **How the next link is started:** by the coordinator (charter §6), from
   `docs/ai-agents/handoffs/2026-10-11-form-wizard-link-5.md`.
+
+## Link 5 — KNG-162: Cancel / delete-draft prompt; provenance `CreatedEntitiesJson` (2026-10-12)
+
+Started by the coordinator as a new session (charter §6) with `add_repo` for knk-web-app, knk-web-api and knk-plugin
+in its prompt: all three attached with push, cloned, feature branch checked out, `git push --dry-run` passed in all
+three and in knk-workspace. Trunks had not moved (web-app `main` `38854ba`, web-api `master` `917537a`), so the code
+trunk merges at start and end were no-ops; workspace `main` had only the tracker commits (merged). Tracker claim
+pushed to workspace `main` (`613e498`); Linear KNG-162 set In Progress.
+
+- **Commits:** knk-web-api `af7ed5d` `FormSubmissionProgress.CreatedEntitiesJson` (model, DTOs, mapping, service,
+  migration); `959bc11` entity reference check + DELETE constraint filter (head `959bc11`). knk-web-app `94e3a6e`
+  provenance + registry seed + resume; `22cb588` cancel / delete-draft prompt (head `22cb588`). knk-plugin unchanged
+  (`1b3e06c2`).
+- **What changed:**
+  - **API** `Models/FormSubmissionProgress.cs`: nullable `CreatedEntitiesJson` (longtext). Migration
+    `20261012085922_AddFormSubmissionProgressCreatedEntities` (generated with `dotnet ef migrations add`, one
+    `AddColumn`, nothing else; snapshot updated; design-time run with `Database__MySqlServerVersion=8.0.36` and a dummy
+    connection string, no DB touched). On `FormSubmissionProgressDto` **and** `FormSubmissionProgressSummaryDto`
+    (Saved Progress uses summaries). `UpdateProgressAsync` overwrites it only when sent (null = keep, `"[]"` clears).
+  - **API** `Services/EntityReferenceService.cs` (new) + `GET api/FormSubmissionProgress/entity-references/{type}/{id}
+    ?ignore=Type:id` (controller-level `knk.admin.content`, read-only): for every FK in the EF model targeting the
+    type (base types included, owned types excluded), counts referencing rows; join rows are labelled
+    "Street (link)", plain FKs "Structure.DistrictId". A row that is, or links to, an entity in `ignore` doesn't count.
+    Unknown type / unparsable id → 404.
+  - **API** `Attributes/DeleteConstraintExceptionFilter.cs` (new, registered globally in `Program.cs`): a
+    `DbUpdateException` (also wrapped) thrown from any DELETE action answers 409 `{code: "DbConstraint"}`. 34
+    controllers with DELETE actions didn't catch it (e.g. `StreetsController`), so a referenced Street gave a 500.
+  - **Web** `utils/forms/createdEntities.ts` (records, label fields only, tolerant parse, newest-first order),
+    `utils/forms/deleteCreatedEntities.ts` (the delete run + result text), `utils/forms/createdEntityDeleteDeps.ts`
+    (real API calls), `hooks/useCreatedEntitiesProvenance.ts`, `components/FormWizard/CreatedEntitiesPrompt.tsx`,
+    `components/FormWizard/FormCancelAction.tsx`; `FormSessionContext.tsx` gains `seed()`, `seedSessionEntities`
+    (pure) and `FormSessionRoot`; `formSubmissionClient.getEntityReferences`; `SavedProgressList` delete button gets
+    an aria-label.
+  - **Web** `FormWizard.tsx` (thin): an import, one hook call, `seedFromProgress(progress)` after loading an existing
+    progress, `createdEntitiesJson` in `getProgressData`. Only the root wizard of a session sends it.
+  - **Web** `FormWizardPage.tsx`: the wizard is wrapped in `FormSessionRoot` with "Cancel form" above it;
+    `handleLeaveForm` closes the wizard and reloads configs + drafts (or returns to the parent display page when
+    opened with a parent context); `handleDeleteProgress` shows the prompt when the draft's summary has a record,
+    else the old `window.confirm`.
+- **Tests:** web app **792 passed / 5 failed** (baseline re-measured before changes: 764 / 5; +28 new: 6
+  `createdEntities`, 6 `deleteCreatedEntities`, 6 `FormSessionContext.seed` (seed, `FormSessionRoot`, provenance
+  hook), 6 `FormWizard.cancelCreatedEntities.ui` (GateStructure → Street → District through the real wizard and
+  ChildFormModals: Cancel lists both, Keep deletes nothing, Delete = Street then District with the right ignore lists
+  and a report, in-use skip message, nothing-created confirm, Save Draft records both, a resumed draft pins and
+  lists them), 4 `FormWizardPage.deleteDraft` (prompt from Saved Progress, Keep = draft only, close = nothing,
+  plain confirm without a record)). The two provenance UI tests fail with the `FormWizard.tsx` call sites removed.
+  The 5 failures are the same 4 known-red suites. `npm run build` compiles with no new warnings (the two
+  `FormWizardPage` exhaustive-deps warnings are the existing init/auto-open effects, shifted lines). API **2574
+  passed / 4 failed** (baseline re-measured: 2556 / 4; +18 new: 8 `EntityReferenceService` on the in-memory provider,
+  5 `DeleteConstraintExceptionFilter`, 5 `FormSubmissionProgressCreatedEntities`; `EndpointAccessRulesTests` green);
+  the 4 failures are the known-red `ClientActivityStoreTests`, 2x `PathResolutionServiceTests`,
+  `FieldValidationServiceTests`.
+- **Flagged decisions:**
+  - **L5-1 "Explicit cancel".** There was no Cancel on the wizard. Added **Cancel form** above the root wizard on
+    `FormWizardPage` (outside `FormWizard.tsx`). It leaves the form and **never deletes the draft** (most reversible);
+    with nothing created it only asks "Leave this form?". Child forms (`ChildFormModal`) keep their own close
+    behaviour; the prompt is for the root form only. After **Delete** on cancel, a draft left in Saved Progress still
+    lists those entities (and its field values may point at them); deleting that draft later reports them
+    "already deleted".
+  - **L5-2 Delete order.** Newest first (reverse registration order). The issue says "deepest-first", but the
+    District (deepest form) is saved before the Street that references it, so it must go second.
+  - **L5-3 "In use".** Any referencing row counts, including cascade FKs (a cascade would silently delete the
+    referencing row) and many-to-many links. Conservative: a new Street linked to an **existing** District is
+    "in use (District (link))" and is kept; the admin deletes it by hand if wanted. Links to entities still pending in
+    the same run are ignored (`ignore`), ones already handled are not (a skipped Street keeps its District). False
+    "in use" keeps data, which is the reversible side.
+  - **L5-4 409 everywhere.** The global DELETE filter changes a 500 into a 409 for every delete action that let a
+    constraint error escape; delete actions that already caught it are unchanged.
+  - **L5-5 When provenance is written.** With the root form's next save (Next, Save Draft, Submit). An entity a child
+    saves after the last save is known in memory (Cancel sees it) but not by the draft until the next save; closing
+    the tab then leaves it unrecorded (silent abandonment deletes nothing anyway).
+  - **L5-6 Endpoint placement.** The reference check is on `FormSubmissionProgressController` (same
+    `knk.admin.content` rule as drafts) rather than a new controller, and is generic over the EF model.
+  - **L5-7 Delete-draft with Delete** deletes the draft even when some entities were skipped or failed (they are
+    complete records; the report lists them). The prompt's names come from the label fields recorded at creation and
+    may be stale (L2-1); the delete itself uses type + id.
+  - **L5-8 Types without a web delete.** `getDeleteFunctionForEntity` covers about 20 types; an entity of another type
+    is reported "not deleted (the web app has no delete for X)" and kept.
+- **Discrepancies with the design:** "deepest-first" read as reverse creation order (L5-2). Otherwise as D2/D3.
+- **Live checklist (developer):**
+  0. **Apply both migrations** to the dev DB before running the branch: link 3's `AddFormFieldSelectionLimits` and
+     this link's `AddFormSubmissionProgressCreatedEntities` (`dotnet ef database update` in knk-web-api on this
+     branch). Both additive.
+  1. GateStructure create → Street **Create New** "Gatestraat" → inside it Districts **Create New** "Oostwijk",
+     Submit both. Click **Cancel form**: the prompt lists `District 'Oostwijk'` and `Street 'Gatestraat'`, **Keep
+     them** focused. Keep → back to the configuration list; both rows exist.
+  2. Repeat, **Delete them** → "Deleted 2 of 2", Street and District gone (Street deleted first).
+  3. Repeat, but before cancelling pick Oostwijk in another, existing Street or Structure (other tab) → Delete → the
+     District is "skipped: in use (used by …)", the Street is deleted.
+  4. Repeat steps 1, **Save Draft**, Cancel → Keep. In Saved Progress click the trash icon: the prompt lists both;
+     **Delete draft, keep them** removes only the draft. On another such draft, **Delete draft and them** removes the
+     entities (report) and the draft.
+  5. Resume such a draft: the GateStructure's District picker pins Oostwijk as **New**; Cancel lists it.
+  6. A draft that created nothing: trash shows the old browser confirm. Cancel with nothing created: "Leave this
+     form?"; Close stays in the form.
+  7. Close the tab without cancelling: nothing is deleted; the retention cleanup is untouched.
+- **Follow-ups (not fixed, scope):** update or clear the draft's `CreatedEntitiesJson` after a Delete on cancel
+  (L5-1); write provenance right after a child saves instead of with the next save (L5-5); `tsc --noEmit` reports
+  type errors in link 4's `utils/forms/__tests__/sessionPinnedRows.test.ts` (Jest doesn't type-check; build is
+  unaffected); a cancel for the ChildFormModal level is not part of D2.
+- **Risks:** `FormWizard.tsx` edits are 4 lines (import, hook call, two call sites) — mechanical against KNG-120 /
+  KNG-132. The API migration is dated after link 3's and after KNG-132's `f40ce73`; all additive. The DELETE filter
+  is global: a client that relied on a 500 for a constraint failure now gets 409 (none found in the web app; it
+  reports any error). `claude/api-vulnerable-packages` (AutoMapper/OpenTelemetry) is unaffected by these files; the
+  new mapping test uses `new MapperConfiguration(...)` like link 3's.
+- **Next link must know:** link 6 = KNG-138 (FormConfiguration export/import, seeds endpoints, web-app buttons).
+  Nothing in link 5 touches form configurations. New API pieces it may reuse: none needed; keep new write endpoints
+  under explicit access rules (`knk.admin.content` for form configuration endpoints).
+- **How the next link is started:** by the coordinator (charter §6), from
+  `docs/ai-agents/handoffs/2026-10-11-form-wizard-link-6.md`.
