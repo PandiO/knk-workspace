@@ -132,7 +132,7 @@ An independent review of the day session found 12 issues; all are fixed (DESIGN 
 14. **Outage timer:**
     - stop the API, start it, and stop it again within a few seconds: the delay keeps counting from the first stop;
     - restarting the server during an outage keeps it too (`hub-outage.json`).
-15. **Exemption:** tick "Exempt while in staff mode" for your group and enter staff mode; an outage leaves you alone. Leave staff mode during the outage and the action applies within a second.
+15. **Exemption:** enter staff mode (no box needed); an outage leaves you alone. Leave staff mode during the outage and the action applies within a second.
 16. **Kick:** a group with action Kick is kicked with the outage message. Rejoining during the outage puts them in the hub, with the return offer after recovery.
 17. **Siege:** during a match, trigger an outage. The match is aborted (no winner), everyone gets their things back once at their pre-match spot, and then the action applies.
 18. **Location delete:** deleting a Location that a town uses is refused with "This location is the location of Town '…'". Nothing is deleted.
