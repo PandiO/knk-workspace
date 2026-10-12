@@ -34,6 +34,12 @@ Read this before Phase 4.
   ≥ `30c5dc5` with a migrator image, apply the two migrations (`AddRefreshTokensAndTokenVersion`,
   `AddDomainWorldName`), configure, accept, and take a new baseline. Details:
   [alpha-go-live § 3–4](../../guides/alpha-go-live.md#3-upgrade-the-alpha-api-to-kng-64-runbook-phase-3b).
+- **Build Phase 3b from the package-fix merge (added 2026-10-12).** Build from knk-web-api `master` at or after the merge
+  commit of [PR #9](https://github.com/PandiO/knk-web-api/pull/9) (unmerged as of 2026-10-12; it's ahead of `30c5dc5`). It
+  upgrades OpenTelemetry to 1.19 (fixes GHSA-vh2m-22xx-q94f and GHSA-g94r-2vxg-569j). AutoMapper 12.0.1
+  (GHSA-rvv3-g6hj-g44x) is an accepted alpha risk, [KNG-165](https://linear.app/kngpandi/issue/KNG-165), and is
+  suppressed via `NuGetAuditSuppress`. The `sdk:8.0` build should therefore print no NU190x advisory; record any that
+  does appear.
 - **Plugin/API wiring inside Docker:**
   - plugin `api.base-url: http://api:5000/api`, `api.auth.type: apikey`;
   - `region-http.bind-address: "0.0.0.0"` (never publish 8081), `web.public-url: https://<web-host>`;
