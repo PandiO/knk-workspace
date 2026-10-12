@@ -3,7 +3,7 @@
 **Status:** Running. Link 1 restarted 2026-10-12 as a subagent of the coordinator (§6) after its first attempt was blocked.
 **Last updated:** 2026-10-12 (§6: links run as coordinator subagents, not `create_session`)
 **Linear:** [KNG-133](https://linear.app/kngpandi/issue/KNG-133), [KNG-134](https://linear.app/kngpandi/issue/KNG-134),
-[KNG-135](https://linear.app/kngpandi/issue/KNG-135), [KNG-137](https://linear.app/kngpandi/issue/KNG-137),
+[KNG-135](https://linear.app/kngpandi/issue/KNG-135), [KNG-164](https://linear.app/kngpandi/issue/KNG-164), [KNG-137](https://linear.app/kngpandi/issue/KNG-137),
 [KNG-136](https://linear.app/kngpandi/issue/KNG-136), [KNG-162](https://linear.app/kngpandi/issue/KNG-162),
 [KNG-138](https://linear.app/kngpandi/issue/KNG-138), [KNG-139](https://linear.app/kngpandi/issue/KNG-139)
 
@@ -17,7 +17,7 @@ the live checklist and go on. Do nothing the developer can't easily review or un
 |---|---|---|---|
 | 1 | KNG-133 (bug, High) | Save a List "Create New" child when its form completes; `normalizeFormSubmission` fails loudly instead of dropping id-less objects | knk-web-app |
 | 2 | KNG-134 (bug, High) | Edit instance seeds the child form from the values the parent holds (world-task Location, in-session edits, id-less list items, keep ids on Replace via Minecraft) | knk-web-app |
-| 3 | KNG-135 + KNG-137 | List relationships load in edit mode (`XIds`/`Xs`, `StreetDto.DistrictIds` on read); wizard shows step names, keeps them in edit mode, renders Boolean descriptions | knk-web-app, knk-web-api |
+| 3 | KNG-135 + KNG-137 + KNG-164 | List relationships load in edit mode (`XIds`/`Xs`, `StreetDto.DistrictIds` on read); wizard shows step names, keeps them in edit mode, renders Boolean descriptions; required List fields reject an empty list and `minSelection`/`canCreate` get real columns (added by the coordinator 2026-10-12, found by link 1) | knk-web-app, knk-web-api |
 | 4 | KNG-136 | Form session registry; pickers pin entities created in this form session ("New") | knk-web-app |
 | 5 | KNG-162 | Cancel / delete-draft prompt: keep or delete what child forms saved; provenance `CreatedEntitiesJson` | knk-web-app, knk-web-api |
 | 6 | KNG-138 | FormConfiguration export/import (portable JSON), bundled seeds endpoints, web-app buttons | knk-web-api, knk-web-app |
@@ -133,7 +133,7 @@ default consistent with the design, flag it as `L<k>-<n>` in the report).
   path already saves. Check how the Street's Districts minimum is validated so a dropped item can't pass it.
 - **Link 2 (KNG-134):** spec §3.4. Also verify the inherited `worldTaskHint` "first field" binding (spec §2.3) and fix
   it if confirmed.
-- **Link 3 (KNG-135 + KNG-137):** spec §3.5 and seeds spec §2.3. API: list every DTO whose `*Ids` is not filled on read
+- **Link 3 (KNG-135 + KNG-137 + KNG-164):** spec §3.5 and seeds spec §2.3; KNG-164's Linear text (additive `FormField` columns, step validation for required/min List). API: list every DTO whose `*Ids` is not filled on read
   and fix those used by List fields; record the list in the report.
 - **Link 4 (KNG-136):** spec §3.2-3.3. New `src/contexts/FormSessionContext.tsx` (+ hook). `PagedEntityTable` gets its
   first tests.

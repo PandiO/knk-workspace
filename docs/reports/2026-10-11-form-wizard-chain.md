@@ -10,7 +10,7 @@
 |---|---|---|---|
 | 1 | KNG-133 | **Done** (In Review, live test pending); first attempt blocked (§4.1), restarted 2026-10-12 | `ff12c8f` / unchanged `917537a` / docs + handoff |
 | 2 | KNG-134 | Not started | — |
-| 3 | KNG-135 + KNG-137 | Not started | — |
+| 3 | KNG-135 + KNG-137 + KNG-164 | Not started | — |
 | 4 | KNG-136 | Not started | — |
 | 5 | KNG-162 | Not started | — |
 | 6 | KNG-138 | Not started | — |
@@ -129,3 +129,7 @@ Started by the coordinator as a fresh subagent (charter §6). Trunks had not mov
   tests with the real `ChildFormModal`.
 - **How the next link is started:** by the coordinator as a fresh subagent with
   `docs/ai-agents/handoffs/2026-10-11-form-wizard-link-2.md` (charter §6).
+
+## Coordinator — 2026-10-12: after link 1
+
+- Verified link 1's pushes (web-app `ff12c8f`, workspace `ccff609`). Filed its follow-up as [KNG-164](https://linear.app/kngpandi/issue/KNG-164) (required List accepts empty; `minSelection`/`canCreate` have no column) and added it to link 3. Link 2 started as a coordinator subagent (Opus, high effort).
