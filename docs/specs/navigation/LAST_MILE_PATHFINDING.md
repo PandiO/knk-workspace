@@ -1,7 +1,7 @@
 # Road Navigation — Last-mile walkable pathfinding (design)
 
 **Status:** Design decided — **Phases A-C implemented** (knk-core `roads/walk/`, knk-paper `navigation/walk/` + direct-mode wiring, unmerged, knk-plugin `claude/navigation-walkable-path` `305829b`, 2026-10-02); live test and Phase D next. Reviewed by the developer on 2026-10-02 (§11): decided items 1-4, 5 (pending live test), 6, 8; item 7 (scope) decided. No open decisions remain except the live test of item 5.
-**Last updated:** 2026-10-10 (rev. 11: §5/§9 climb allowance for tall buildings, KNG-108; rev. 10: §10 Phase D step 1, the walk to the road, KNG-75; rev. 9: §11-5 no straight line after a failed search, finding N8; rev. 8: §4/§9 wall cost, finding N7; rev. 7: §11-5 partial paths implemented; rev. 6: §5/§9 detour allowance, live-test finding N2; rev. 5: §10 "Phase C status"; rev. 4: §10 "Phase B status"; rev. 3: §10 "Phase A status"; rev. 2: ladders, interact-gated doors, chunk-loading rationale, §13 KNG-36)
+**Last updated:** 2026-10-15 (rev. 13: §10 Phase D step 1, a player shut in close to the road, KNG-124; rev. 12: §6 "no way out" on walk paths, KNG-121; rev. 11: §5/§9 climb allowance for tall buildings, KNG-108; rev. 10: §10 Phase D step 1, the walk to the road, KNG-75; rev. 9: §11-5 no straight line after a failed search, finding N8; rev. 8: §4/§9 wall cost, finding N7; rev. 7: §11-5 partial paths implemented; rev. 6: §5/§9 detour allowance, live-test finding N2; rev. 5: §10 "Phase C status"; rev. 4: §10 "Phase B status"; rev. 3: §10 "Phase A status"; rev. 2: ladders, interact-gated doors, chunk-loading rationale, §13 KNG-36)
 **Linear:** [KNG-51](https://linear.app/kngpandi/issue/KNG-51/navigation-last-mile-walkable-pathfinding-for-direct-modeoff-road-legs)
 (split out of [KNG-27](https://linear.app/kngpandi/issue/KNG-27/road-navigation-auto-detected-road-graph-junctionsendpoints-from-road))
 **Parent design:** [DESIGN.md](DESIGN.md) §6.2 ("real off-road pathfinding is Phase 6" — this document is the
@@ -155,6 +155,14 @@ request on the main thread (like `NavigationAccess.policyFor`) so the search thr
   Bypass permission (`knk.region.bypass`, staff) → everything open. This reproduces `DomainAvailability`'s entry/exit
   semantics. **Verify in Phase B** that `contains` is safe off the main thread; if not, copy the denied regions into
   Bukkit-free `RegionShape`s (the type already exists for destinations).
+  **No way out (KNG-121, 2026-10-15; the walk-path half of KNG-110's rule, DESIGN §6.7):** a region the player is not
+  in whose domain allows entry but denies leaving is blocked like an entry ("you could not leave X again",
+  `DomainAvailability.TRAP_MESSAGE`) when the navigation's destination lies outside it - the player would be stuck at
+  its far border. `DeniedRegionAccess.resolve` takes the destination's regions (null = unknown, no such rule); the
+  paper side (`WalkLegPreparer` → `WalkAccessFactory.prepare`) passes `NavigationService.destinationRegions`, the set
+  the road router gets - for the walk to the road the final destination's, not the road start's. A destination inside
+  the region is still reached. Unlike the router, walk paths apply the border rules on every domain, also the ones
+  whose rule is `Ignored` for roads (rev. 7 Part C).
 - **Siege:** a player in a siege has no navigation (`NavigationEligibility`); siege lockdown gates are covered by the
   gate rule above.
 
@@ -320,6 +328,23 @@ to knk-plugin `main` `a388c70`; §5 rev. 11). Step 2: measure a 96-block leg's c
 (the capture limit is 49 chunks), then destinations up to the walk range by road plus a walk path, up to 256 by road
 plus "No conventional path to X found." with the HUD arrow, beyond 256 refused. Step 3 (chained legs, KNG-36) only on
 request.
+
+**Step 1 near the road ([KNG-124](https://linear.app/kngpandi/issue/KNG-124), finding N18; implemented 2026-10-15 on
+knk-plugin `wt/kng-121-124`, unmerged, not live-tested).** Within `reroute-distance` (8) of the route step 1 aimed no
+walk leg (the straight line), so a player shut in close to a road heard nothing. Now `aimStartLeg` aims a **check-only**
+start leg (`DirectLeg.nearRoute`) when the player is within `reroute-distance` of the route but not on it: more than
+`ON_ROUTE_HORIZONTAL` (1.5) blocks from the route's nearest point horizontally, or more than `ON_ROUTE_VERTICAL` (1.5)
+in height (a balcony above the road). The search goes to that nearest point and must reach within 1.5 of it (not
+`arrive-distance` 4: a small box could lie inside that). The core session guides meanwhile, as before. NO_PATH:
+"No conventional path to the road found." once, and the route's trail without the straight line from the player
+(as further out); the leg is searched again at the path's age (10 s) and a found path ends it, re-arming the message.
+A found path, a search out of budget or no search at all: nothing is said, the check ends, the trail keeps today's
+straight line. Reaching the road ends the check too. Direct mode has no such gap: its walk search runs whenever the
+player is further than `arrive-distance` from the target, closer is the arrival.
+*Decisions for developer review (reversible defaults):* (1) detection only - a found path within 8 blocks is not
+drawn; (2) the "on the route" threshold is 1.5 blocks horizontally and 1.5 in height, constants in `NavigationService`
+(not config); (3) out of budget near the road says nothing (further out it says "Having trouble determining the
+route…"); (4) a partial path on NO_PATH is not drawn either - the message and no straight line.
 
 ## 11. Decisions for the developer (reversible defaults chosen; veto any)
 

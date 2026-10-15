@@ -41,7 +41,9 @@ domain-cache gap, fixed in `ec358f39`; G2b passes. **Merged to knk-plugin `main`
 **2026-10-10 (evening):** KNG-108 (a height allowance in the walk length cap, tall buildings): H1-H3 pass, H5
 accepted, **merged to knk-plugin `main` `a388c70`**; H4's shut-in box very close to a road fails (N18, the KNG-75 step 1
 start-leg rule, not KNG-108; follow-up [KNG-124](https://linear.app/kngpandi/issue/KNG-124)) - "KNG-108" in Findings.
-**Last updated:** 2026-10-10
+**2026-10-15:** KNG-121 (walk paths keep KNG-110's "no way out" rule) and KNG-124 (finding N18: shut in close to a
+road) implemented on knk-plugin `wt/kng-121-124`, not live-tested - "KNG-121" (T1-T4) and "KNG-124" (U1-U5) in Findings.
+**Last updated:** 2026-10-15
 **Sources:** the "Developer to-do" blocks of Phases 1, 3, 4 and 5 in `docs/specs/navigation/IMPLEMENTATION_PLAN.md`;
 progress report `docs/reports/2026-09-27-road-navigation-chain.md`. If this file and a plan block disagree, the plan wins.
 
@@ -1019,6 +1021,44 @@ Next: KNG-75 proper (walk legs at both ends, destinations further than 48 blocks
 `fa234f7` (the merged plugin needs KNG-56's `GET /api/Domains/access-rules`). The dev DB lacks trunk's KNG-59
 migration `UniquePermissionGrantHolderNode` (it deletes duplicate permission grants); navigation does not need it.
 
+### KNG-121 — walk paths and "no way out" (implemented 2026-10-15, to test)
+
+[KNG-121](https://linear.app/kngpandi/issue/KNG-121), knk-plugin branch `wt/kng-121-124` (on `main` `29bb6ff9`; the API
+and the web app are unchanged). KNG-110 gave the road router and the trail the "no way out" rule (a region whose domain
+allows entry but denies leaving blocks the way to a destination outside it). Walk paths now keep it too: direct mode,
+the walk to the road and the last leg after the road's end. A destination inside the region is still reached. Walk
+paths apply it on every domain, also the ones whose rule is "Ignored" for roads (DESIGN §6.7, LAST_MILE §6).
+
+Setup: a district (or structure) with **AllowEntry on, AllowExit off** that lies between a spot and a nearby
+destination (within 48 blocks, so direct mode), with open ground around it. Deploy: `./gradlew :knk-paper:dev` from the
+branch, restart, `/knk cache refresh`.
+- [ ] **T1** Stand on one side of the district, `/nav` to a Location on the other side (direct mode): the walk trail
+  goes **around** the district, not through it. Before KNG-121 it led in, and the player was stuck at the far border.
+- [ ] **T2** `/nav` to a Location **inside** that district: the walk path goes in.
+- [ ] **T3** Walk to the road from a spot where the straight way to the road crosses the district, `/nav` somewhere far
+  outside it: the walk to the road goes around it. A destination inside the district (far, by road): the walk to the
+  road may cross it.
+- [ ] **T4** Regression: a district with AllowEntry off is still avoided, and one you stand in with AllowExit off still
+  keeps the walk path inside (no path out: "No conventional path to X found.").
+
+### KNG-124 — shut in close to a road (finding N18; implemented 2026-10-15, to test)
+
+[KNG-124](https://linear.app/kngpandi/issue/KNG-124), same branch as KNG-121. Within `reroute-distance` (8) of the
+route but not on it (more than 1.5 blocks from its nearest point sideways or in height) a short walk search to that
+point now checks the player is not shut in. Detection only: when a way exists the trail is today's straight line;
+shut in, "No conventional path to the road found." once and no straight line. Out of budget near the road says nothing.
+Decisions to review: LAST_MILE_PATHFINDING.md §10, "Step 1 near the road".
+- [ ] **U1** (the step 1 **S4** re-check, H4's failing half) Box yourself in (the 1x1 spruce-log box, 2 high, or a
+  closed room) **1-7 blocks** from a road, e.g. at 2, 4 and 7 blocks; `/nav` somewhere far each time: "No conventional
+  path to the road found." once, the route from the road on, **no** straight line from you to the road.
+- [ ] **U2** Stay in the box ~20 s: the message does not repeat. Open the box (break a log): within about 10 s the
+  straight line to the road is back; walk onto the road: the usual guidance.
+- [ ] **U3** Regression (S8): standing on the road, `/nav` as before - no message, no walk leg; standing at the
+  road's edge or a few blocks off it in open ground: as before (straight line, no message).
+- [ ] **U4** On a closed balcony right above a road (no way down): the message. With a stair down: no message, the
+  straight line.
+- [ ] **U5** `/knk road status`: the walk-path line counts the short searches ("requested", "no path").
+
 ### KNG-108 — walk paths through tall buildings (live-tested and merged 2026-10-10)
 
 **Merged to knk-plugin `main` `a388c70`** (with `main`'s KNG-122/KNG-58 merged in first; Gradle core 1875 / api-client
@@ -1048,7 +1088,8 @@ conventional path to the road found."; a little further away it does. Cause: wit
 `NavigationService.aimStartLeg` aims no walk leg to the road at all (KNG-75 step 1 design: on the route, today's straight
 line), so no search runs that could find the player shut in. KNG-108 only changes the cap of a search that runs, and a
 shut-in box exhausts its area whatever the cap. A player stuck next to a road gets the road guidance with no warning.
-Follow-up [KNG-124](https://linear.app/kngpandi/issue/KNG-124), not part of KNG-108.
+Follow-up [KNG-124](https://linear.app/kngpandi/issue/KNG-124), not part of KNG-108 (implemented 2026-10-15; re-check
+in "KNG-124" U1).
 
 If H1 still runs out of budget: replay the leg (`tools/road-replay/README.md`, "Walk path replay"; `walk.txt` with
 `start=1410.5,113,-506.5`, `target=1410.5,84,-516`, `max-length=144`): the report now prints the height and the cap.
