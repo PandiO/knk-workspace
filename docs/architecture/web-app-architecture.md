@@ -10,8 +10,8 @@
   not Vite, not Next.js.
 - Routing: `react-router-dom` v7 (`BrowserRouter`/`Routes`/`Route`), all defined in
   `src/App.tsx`.
-- Styling: Tailwind CSS utility classes + `@fluentui/react-components` (Fluent UI) —
-  both are actually used, not one superseding the other.
+- Styling: Tailwind CSS utility classes only. Fluent UI (`@fluentui/react-components`)
+  was removed 2026-10-08 (KNG-71): only its provider was used.
 - Drag-and-drop: `@dnd-kit/*` (used in `FormWizard`, `FormConfigBuilder`,
   `DisplayConfigBuilder` for reorderable steps/sections/fields).
 - Icons: `lucide-react`.
