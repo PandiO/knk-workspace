@@ -4,6 +4,35 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+Batch of 2026-10-15 on branch `claude/linear-issues-delegation-k1trkm` (knk-plugin, knk-web-api, knk-web-app,
+knk-workspace). Unit-tested, none of it checked in game or in a browser yet.
+
+- **Commands answer at once during an API outage** ([KNG-171](https://linear.app/kngpandi/issue/KNG-171); knk-plugin
+  `77235931`). While `/knk health` shows DOWN, reads skip the API instead of trying three times: `/msg`, `/tpa` and
+  `/knk help` no longer wait about a second. Permission checks answer from memory or the offline store with the same
+  rules (a last-known deny stays a deny, an expired answer counts as denied). Writes still go to the API. Switch:
+  `api.connectivity.skip-api-while-down` (on). See [architecture](architecture/api-connectivity.md) and the
+  [outage smoke test](guides/api-outage-smoke-test.md).
+- **Walk paths keep out of a region the player could not leave again** ([KNG-121](https://linear.app/kngpandi/issue/KNG-121);
+  knk-plugin `8f28d65f`). The "no way out" rule of the road router now applies to walk legs too (direct mode, the
+  walk to the road, the last leg): a region that allows entry but not exit is avoided unless the destination is in it.
+- **Shut in close to a road: "No conventional path to the road found."** ([KNG-124](https://linear.app/kngpandi/issue/KNG-124);
+  knk-plugin `e2955728`). A player within 8 blocks of the route but not on it gets a short check search; if they are
+  boxed in, they get the message once. A player on the road sees no change.
+- **Inventory menus: item blinker** ([KNG-125](https://linear.app/kngpandi/issue/KNG-125); knk-plugin `aaeb8e48`).
+  New `BLINK` display mode: the item alternates with a yellow glass pane (same name and lore) every 10 ticks, its
+  clicks keep working, and it stops on close. First user: the open group selector in the statistics visibility menu.
+- **Staff note forms say why Reverse / Apply can't run yet** ([KNG-126](https://linear.app/kngpandi/issue/KNG-126);
+  knk-web-app `7f5b9a8`). The transaction Reverse form and the Adjust balance card show a live "n / 10 characters"
+  counter, and submitting with a short reason explains what is missing instead of doing nothing. Disabled buttons
+  now look disabled.
+- **Multiworld follow-ups** ([KNG-118](https://linear.app/kngpandi/issue/KNG-118), the items not already on the hub
+  branch; knk-plugin `8ca2f1c9` `e9cc237b`, knk-web-api `d91a141` `3e666da` `faf9885`, knk-web-app `6c3d4bf`).
+  Discoveries are kept per world (same region id in two worlds = two discoveries; spool file version 3, old files
+  still read). The loaded-worlds report is kept per server (`game-settings.server-id`). A District's new inline
+  Location, a world-task Location and a web capture without a world are refused instead of landing in a world named
+  "world". Status of every row: [multiworld follow-ups](architecture/multiworld-follow-ups.md).
+
 - **Gate doors refuse a Reference point 2 that isn't straight above the anchor**
   ([KNG-132](https://linear.app/kngpandi/issue/KNG-132); knk-web-app `f6c7c37`, knk-plugin `974ce335`, knk-web-api
   `f40ce73`, branch `claude/loving-johnson-dlshrc`). Both reference points are measured from the anchor: point 1 along
