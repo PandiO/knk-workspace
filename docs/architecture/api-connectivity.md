@@ -3,6 +3,9 @@
 **Status:** Live · **Last updated:** 2026-10-11 — merged after a developer live test
 ([KNG-115](https://linear.app/kngpandi/issue/KNG-115)): knk-web-api `master` `17ee730`, knk-plugin
 `main` `b5eee6e`. All decisions below were accepted by the developer on 2026-10-11.
+2026-10-15: first consumer of the state, [KNG-171](https://linear.app/kngpandi/issue/KNG-171) — reads
+skip the API while it is DOWN (§ "Reads skip the API while DOWN"). Implemented on knk-plugin branch
+`wt/kng-171`, **not merged, not live-tested**.
 
 ## What decides "the API is up"
 
@@ -39,6 +42,59 @@ on-demand probe. Config: `config.yml` → `api.connectivity.*`.
 
 Worst-case detection with defaults: DOWN about 20–35 s after the API or MySQL goes away
 (3 probes, 10 s apart, each up to 5 s); UP about 10–15 s after it returns.
+
+## Reads skip the API while DOWN (KNG-171)
+
+Before KNG-171 every cache miss during an outage still called the API: three attempts (100 ms then
+200 ms backoff) plus each connection attempt, and only then the fallback. `/knk help`, `/msg` and
+`/tpa` answered about 1 s late (KNG-123 live test, 2026-10-12). Now:
+
+- **Port.** `knk-core/.../core/connectivity/ApiOutageSignal` (`isApiDown()`), implemented by
+  `ApiConnectivity` (true only in DOWN; UNKNOWN is not down). Core never sees Bukkit.
+- **Wiring.** `KnKPlugin#isApiSkippedWhileDown()` = `api.connectivity.skip-api-while-down` (default
+  `true`) and the current monitor's state is DOWN. `DataAccessFactory` puts it into every gateway's
+  `DataAccessSettings.apiOutage()`, except `HealthDataAccess` (a health read is how an operator
+  checks whether the API is back). The probe itself never goes through a gateway, so it keeps
+  probing.
+- **Gate.** `DataAccessExecutor` reads the signal before the first attempt and again before every
+  retry. While DOWN no call is made: the read ends at once the way a failed call would, with an
+  `ApiDownException` (an `ApiException`, no stack trace) in place of the connection error. A fresh
+  cache hit is answered as always; `CACHE_FIRST`/`API_ONLY` give `ERROR` on a miss; `STALE_OK`
+  serves a stale entry; `API_THEN_CACHE_REFRESH` serves a fresh cached entry. Sync
+  (`fetchBlocking`) and async reads alike.
+- **Permissions.** A miss reads as UNAVAILABLE at once, and `KnkPermissible` answers it from the
+  offline store ([offline-security-cache.md](offline-security-cache.md) § 3). The rules are
+  unchanged: a last-known deny stays a deny, an answer past its max age counts as unknown (no).
+  A skipped check is logged at FINE, not as a warning per check.
+- **Writes** (`*CommandApi`, currency, ignore changes, ...) don't go through the executor and
+  still call the API; they fail during an outage as before.
+- **Back UP.** The next read calls the API as before; nothing was cached from skipped reads, so
+  the first misses refill the caches. Nothing listens for the event for this.
+- **Flapping.** The hysteresis smooths it: reads keep calling the API until the state is DOWN
+  (about 20-35 s into an outage with defaults), and keep skipping it until the state is UP again
+  (about 10-15 s after the API returns). A retry that was already scheduled when the state turned
+  DOWN is not sent.
+- `/knk health` adds a line while DOWN: "reads skip the API until UP". With
+  `skip-api-while-down: false` the plugin calls (and retries) the API during an outage as before,
+  and `/knk health` says so.
+
+Decisions for developer review (KNG-171, 2026-10-15):
+
+1. The gate is generic (every `DataAccessExecutor` read), not only permission checks: a skipped
+   read ends exactly as a failed call would, so each caller's existing fallback applies unchanged.
+2. Only DOWN skips the API. UNKNOWN (startup, or `api.connectivity.enabled: false`) calls it as
+   before, so a disabled or misbehaving probe can't silence the API before its first verdict.
+3. Kill switch `api.connectivity.skip-api-while-down`, default `true`, in case the probe reports
+   DOWN while the API is usable (e.g. a wrong `health-root-url`).
+4. `HealthDataAccess` is never gated.
+5. Permissions use only a fresh in-memory answer while DOWN; an expired one goes to the offline
+   store, which applies `permission-max-age-hours`. Stale-on-error for `CACHE_FIRST` reads in
+   general stays KNG-123's open item.
+
+Not covered (no `DataAccessExecutor`, one attempt, no retries): `TeleportPolicyDataAccess`,
+`TeleportDestinationsDataAccess`, `TitleBracketsDataAccess`, `PermissionGroupsDataAccess`, the
+ignore-list load and other direct API calls. A refused connection fails fast there; an API that
+hangs still costs a read timeout.
 
 ## API background services during a database outage
 
@@ -78,11 +134,17 @@ public void onApi(ApiConnectivityChangedEvent e) {
 - The event is advisory: a single request can still fail while the state is UP. Keep per-call
   error handling.
 
+Subscribers of the state:
+
+| Consumer | Use | Status |
+|---|---|---|
+| `DataAccessExecutor` gateway reads, incl. permission checks (KNG-171) | synchronous `ApiOutageSignal`, not the event: while DOWN no call, answer from the caches and the offline store | branch `wt/kng-171`, not merged |
+
 Not subscribed yet (by design, KNG-115 scope):
 
 | Consumer | Intended use |
 |---|---|
-| KNG-58 offline security / `ModeService` refresh | on `isRecovery()`, re-fetch permissions/users instead of its own ad-hoc retry |
+| KNG-58 offline security / `ModeService` refresh | on `isRecovery()`, re-fetch permissions/users instead of its own ad-hoc retry (KNG-171 already stops the calls while DOWN) |
 | Hub outage actions and portals (KNG-109/114) | on `isOutage()`, gate portals / move players to the hub; on recovery, reopen |
 | Siege containment (KNG-117) | on `isOutage()` during a match, apply the pause/abort decision |
 | Spools (siege results etc.), `PlayerNotificationPoller`, PM log shipper | keep their own retry; optionally trigger an immediate replay on `isRecovery()` |
