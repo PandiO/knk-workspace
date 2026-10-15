@@ -12,7 +12,8 @@ KNG-73 (configurable default destination, §6.1) and rev. 7 Parts A and C ([REV7
 routing view, entry rule on roads, §6.7). **2026-10-10 (KNG-110, live-tested and merged, plugin `4b9ddca4`):** a region over part
 of a road's width blocks it only where it covers the whole width, the trail goes through the free gap, and a region the
 player could not leave again blocks the way to a destination outside it (§6.4, §6.7). **2026-10-15 (KNG-121,
-unmerged, not live-tested):** walk paths keep that "no way out" rule too (§6.7).
+unmerged, not live-tested):** walk paths keep that "no way out" rule too (§6.7); KNG-124: a player shut in close to
+the road (within `reroute-distance` but not on it) is told "No conventional path to the road found." too (§6.2 step 3).
 **Last updated:** 2026-10-15
 **Implementation plan:** [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) — its §1 lists ten small deviations (D1-D10) decided
 while mapping the design onto trunk code; where this document and the plan disagree, the plan wins.
@@ -558,7 +559,11 @@ one without a region to its `Location`; with neither it is refused. Resolution r
      further off-road follow in step 2 (LAST_MILE_PATHFINDING.md §10, Phase D). **Step 2 (2026-10-10, merged, plugin `main` `8f2b7c30`):** with
      walk paths a destination may be 256 from a road (`max-destination-distance`, plain 3D); within 96 of the road's
      end (`destination-walk-range`) the last leg is a walk path, further the HUD arrow alone ("No conventional path to
-     X found.") until the player is within 96.
+     X found.") until the player is within 96. **KNG-124 (2026-10-15, unmerged, not live-tested):** within
+     `reroute-distance` (8) of the route but not on it (more than 1.5 blocks from its nearest point horizontally or in
+     height) a short walk search to that point checks the player is not shut in: on NO_PATH "No conventional path to
+     the road found." once and no straight line to the road; otherwise the trail is the straight line as before
+     (detection only; LAST_MILE_PATHFINDING.md §10, Phase D).
 4. **A\*** with cost `Length × classCost × profile.CostMultiplier × edge.CostMultiplier`, Euclidean heuristic scaled by
    the cheapest class cost. Edges are filtered by the player's **`AccessPolicy`** (§6.7).
 5. Build the `Route`: off-road legs, road legs (trimmed at virtual nodes), maneuvers (§6.5), ETA
