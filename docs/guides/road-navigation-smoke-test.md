@@ -1055,8 +1055,8 @@ Decisions to review: LAST_MILE_PATHFINDING.md §10, "Step 1 near the road".
   straight line to the road is back; walk onto the road: the usual guidance.
 - [ ] **U3** Regression (S8): standing on the road, `/nav` as before - no message, no walk leg; standing at the
   road's edge or a few blocks off it in open ground: as before (straight line, no message).
-- [ ] **U4** On a balcony or roof edge right above a road with no way down within the walk budget's reach: the message
-  (or nothing if a way down is found). With a stair down: no message, the straight line.
+- [ ] **U4** On a closed balcony right above a road (no way down): the message. With a stair down: no message, the
+  straight line.
 - [ ] **U5** `/knk road status`: the walk-path line counts the short searches ("requested", "no path").
 
 ### KNG-108 — walk paths through tall buildings (live-tested and merged 2026-10-10)
