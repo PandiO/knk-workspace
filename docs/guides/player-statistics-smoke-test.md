@@ -1,7 +1,7 @@
 # Player statistics (KNG-34) — smoke test
 
 **Status:** Passed and merged 2026-10-11 — run 1: all 27 steps pass after fixes (findings 1, 3-5, 8-12 fixed and live-checked, decision D24; trunk follow-ups 2 → KNG-126, 6-7 on `claude/reset-on-death`; blinker KNG-125). Merged: knk-web-api `master` `34b8f9b`, knk-plugin `main` `aa5df70a`, knk-web-app `main` `5f40f93` ([KNG-34](https://linear.app/kngpandi/issue/KNG-34))
-**Last updated:** 2026-10-11 (merged)
+**Last updated:** 2026-10-15 (step 28 added: KNG-125 item blinker, to run)
 **Design:** [specs/player-statistics/DESIGN.md](../specs/player-statistics/DESIGN.md) (decisions D1-D24, §F) ·
 **Background:** [progress report](../reports/2026-10-03-player-statistics-chain.md) (per-link details, flagged decisions)
 
@@ -111,6 +111,22 @@ Order **knk-web-api → knk-plugin → knk-web-app → knk-workspace**: merge `o
 `claude/kind-dijkstra-y9d279` once more, rebuild/retest, then merge the branch into the trunk (knk-web-api `master`,
 others `main`). Afterwards: move the CHANGELOG "Unreleased" KNG-34 entry to the merge date, set the three KNG-34
 FEATURE_REGISTER rows to `trunk`/live-tested, update this guide's status, the tracker and Linear KNG-34.
+
+## 7. Follow-up live checks (after the merge)
+
+28. **Item blinker (KNG-125, finding 9).** Plugin only: knk-plugin branch `wt/kng-125` (or `main` once merged),
+    `./gradlew :knk-paper:dev`, restart. No API change and no re-seed: the template already binds the selectors'
+    `DisplayMode` to `$statsvis.get<Group>Mode$`.
+    - `/stats settings`: the open group's selector ("▶ Activity ◀") alternates about twice a second between its
+      own item (with glint) and a **yellow glass pane** with the same name and lore (hover both: same tooltip).
+      The other selectors and the rows don't blink.
+    - Click another group (also while its or the blinking one's pane shows): that group opens and its selector
+      blinks; the previous one shows its own item, not stuck on the pane. Clicking the blinking selector itself in
+      the pane phase runs its own action (no error).
+    - Start a group action ("Set all listed to …" → preview → Cancel) and cycle a row: the selector keeps blinking
+      through the repaints.
+    - Escape while the pane shows, then `/stats settings` again: the menu opens with the item, then blinks; no
+      pane left behind, no `MenuItemBlinker`/menu warnings in the server log.
 
 ## Findings
 
