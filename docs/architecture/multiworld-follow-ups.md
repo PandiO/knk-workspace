@@ -21,7 +21,7 @@ are unique **per world** only. This page tracks the smaller, non-hub-blocking mu
 | A5 | Discovery granted by raw region id | **Done here** | [discovery DESIGN §3.11](../specs/domain-discovery/DESIGN.md) |
 | A9 | Runtime-worlds report replaced the whole list (one server) | **Done here** | §2 |
 | U2 | Location capture without a world became `'world'` | **Done here** | §3; app `WorldBoundFieldRenderer` |
-| U4 | Pickers don't show or filter by world | Partly on trunk (world column, KNG-111); rest planned, §6 | after the form-wizard chain merges |
+| U4 | Pickers don't show or filter by world | Partly on trunk (world column, KNG-111); rest planned, §6 | after the form-wizard chain merges: [KNG-179](https://linear.app/kngpandi/issue/KNG-179) |
 | U5 | Game Settings spawn pickers list every world | Done on the hub branch | app `378cf0a` |
 | U6 | Override precedence drift | Done on the hub branch (decision 2026-10-12: hierarchy first, then weight; supersedes D13) | api `8e34954`, app `5625dd6`, workspace `ab1d705` |
 | R14 | Discovery keys and spool by region id only | **Done here** | [discovery DESIGN §3.11](../specs/domain-discovery/DESIGN.md) |
@@ -32,7 +32,7 @@ are unique **per world** only. This page tracks the smaller, non-hub-blocking mu
 | G6 | Gate redefine ignored the stored world; display cleanup ignored world | Done on the hub branch | plugin `9ac8f338`, `cd418a23` |
 | S3 | Siege banner log dropped entries for unloaded worlds | Done on the hub branch | plugin `3ecfcf85` |
 | P4 | `knk.mode.*` grants unverified in the live database | Check for the developer, §5 | — |
-| D7, G5, R15 | Other G rows of the audit, not listed in KNG-118's text | Not done | D7 needs nothing while snapshots are read by door; G5 (gate name lookup, first match in any world) and R15 (navigation inherits R1, fixed by KNG-112) are untouched |
+| D7, G5, R15 | Other G rows of the audit, not listed in KNG-118's text | Not done | D7 needs nothing while snapshots are read by door; G5 (gate name lookup, first match in any world; [KNG-180](https://linear.app/kngpandi/issue/KNG-180)) and R15 (navigation inherits R1, fixed by KNG-112) are untouched |
 
 ## 2. Runtime worlds per game server (A9)
 
@@ -114,6 +114,8 @@ gets either through a wildcard.
 
 ## 6. Plan for U4 (pickers by world), after the form-wizard chain merges
 
+Tracked in [KNG-179](https://linear.app/kngpandi/issue/KNG-179) (blocked by KNG-166).
+
 On trunk, KNG-111 already shows a World column in the Town, District, Domain, Structure and GateStructure pickers
 (`objectConfigs.tsx` `worldColumn`). The chain branch (`claude/wonderful-darwin-u39k1o`, KNG-166) reworks those columns
 through `utils/forms/pickerRowValues.ts` (`pickerWorldName`) and the picker list DTOs. Doing U4 against trunk now would
@@ -139,4 +141,4 @@ conflict, so it waits. Once the chain is merged:
 - **A9:** server id from a new `game-settings.server-id` key, default `"default"`, rather than reusing
   `lootboxes.server-id`. Other servers' entries go stale after 30 minutes.
 - **D8:** a new inline Location without a world is refused (400), not given the District's resolved world.
-- **D9:** the unused `ExtractLocationDataFromTaskOutput` was fixed rather than removed.
+- **D9:** the unused `ExtractLocationDataFromTaskOutput` was fixed rather than removed (removal or wiring: [KNG-181](https://linear.app/kngpandi/issue/KNG-181)).
