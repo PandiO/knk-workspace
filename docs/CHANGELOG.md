@@ -4,6 +4,11 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **The items catalogue shows each item with its default enchantments**
+  ([KNG-175](https://linear.app/kngpandi/issue/KNG-175); knk-plugin branch `claude/updates-priorities-review-tjiqc2`).
+  The `/menu` item catalogue built its icons from the blueprint alone, so the vanilla enchantments and custom
+  enchantment lines a kit or `/knk itemblueprints give` adds were missing. It now builds them the same way
+  (`assembleDefaults`), from the enchantments the blueprint already carries. Unit-tested; not yet checked in game.
 - **Gate doors refuse a Reference point 2 that isn't straight above the anchor**
   ([KNG-132](https://linear.app/kngpandi/issue/KNG-132); knk-web-app `f6c7c37`, knk-plugin `974ce335`, knk-web-api
   `f40ce73`, branch `claude/loving-johnson-dlshrc`). Both reference points are measured from the anchor: point 1 along

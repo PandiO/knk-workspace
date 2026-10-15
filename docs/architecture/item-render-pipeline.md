@@ -1,7 +1,7 @@
 # Item render pipeline — one path from blueprint to item
 
 **Status:** Implemented and merged to knk-plugin `main` 2026-10-05 (`74607a9`); developer smoke test passed (see the lootboxes plan, "Smoke test results — 2026-10-05"). The pipeline itself existed since lootboxes Phase 0; the single `assemble` entry point and the decoy/colour changes are new in that merge
-**Last updated:** 2026-10-05
+**Last updated:** 2026-10-15 (items catalogue goes through `assembleDefaults`, [KNG-175](https://linear.app/kngpandi/issue/KNG-175))
 **Linear:** [KNG-54](https://linear.app/kngpandi/issue/KNG-54) (Done)
 **Why this exists:** developer request 2026-10-05 — all lore colouring, custom-enchantment rendering and grade/origin rendering should be applied in one spot, so a route that spawns an item can't render it differently from the others.
 **See also:** [lootboxes design §3.4/§3.9](../specs/lootboxes/DESIGN.md), [enchantment books](../specs/enchantment-books/ENCHANTMENT_BOOK_APPLICATION.md), [items plan](../specs/items/IMPLEMENTATION_PLAN.md), [kits](../specs/kits/DESIGN.md)
@@ -45,8 +45,9 @@ Enchantment detection ignores colours (it matches the plain display name + level
 | Lootbox opening reel — the passing items | `LootboxDelivery.decoy` | `assemble` (blueprint defaults + freshly rolled enchantments, vanilla rules, no stamp) — see lootboxes design §3.9 |
 | Kit grants | `KitGrantPlacer.buildResolvedItem` | `assembleDefaults` (slot quantity for content slots); on an unexpected exception it falls back to the plain built item |
 | `/knk itemblueprints give <id> <player>` | `ItemBlueprintsDebugCommand.executeGive` | `assembleDefaults` (fetched definitions from the payload) |
+| Items catalogue menu (`items.catalog`), display only | `CatalogItemRow.menuItemStack` | `assembleDefaults` (the full blueprint's own default-enchantment rows, no extra fetch; no quantity), so the preview is the item a player gets ([KNG-175](https://linear.app/kngpandi/issue/KNG-175); until 2026-10-15 it used `fromBlueprint` only and showed no enchantments) |
 
-Display-only, step 1 only: the **items catalogue** menu (`CatalogItemRow` → `fromBlueprint` directly; icons, no enchantments). **Menu icons** built from blueprints elsewhere use the menu engine's own lore rendering (`ItemBlueprintMenuMapper` → bindings), which is not an item a player can obtain.
+**Menu icons** built from blueprints elsewhere use the menu engine's own lore rendering (`ItemBlueprintMenuMapper` → bindings), which is not an item a player can obtain.
 
 ## 4. Editing an existing item's lore (same custom-enchantment pipeline)
 

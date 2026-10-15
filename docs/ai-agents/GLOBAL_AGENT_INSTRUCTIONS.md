@@ -39,6 +39,37 @@ If sources conflict and no developer decision resolves it, surface the
 specific conflict and choose a reversible course where possible. Do not
 represent an unmerged implementation or unverified live test as shipped.
 
+## Linear is the work list
+
+Linear (team KNG) is the one list of work to implement (developer decision
+2026-10-15).
+
+1. Implement only what a Linear issue covers. Specs, handoffs, reports,
+   `docs/backlog/`, code comments and chat are input, not a work list:
+   anything found there that should be built gets an issue first. Scope a
+   session, chain link, branch and tracker row by issue id.
+2. The one exception: a really small bugfix or QOL tweak that is picked up
+   and fixed straight away, typically during the developer's test run of a
+   branch (a few lines, no schema or API contract change, no open decision).
+   Fix it on the branch under test and note it in that issue or test report.
+   If it isn't fixed in that sitting, it gets an issue.
+3. When the developer mentions a bug, idea or request, in any session and on
+   any topic, search Linear for it (open, done and canceled). If no issue
+   covers it, create one in that session (what was said, repro, where in the
+   code, date) and give the developer its id. Never leave it only in chat, a
+   handoff or a report.
+4. Do the same for what you find yourself and leave out of scope: a bug
+   found in passing, a follow-up, a known gap. File it or comment on the
+   issue that covers it; a "found in passing" list in a report is not enough.
+   Never describe a known gap in code or docs as intended behaviour without
+   the issue id next to it.
+5. Keep the issue's status true: In Progress when work starts, In Review
+   while it waits for the developer's test, Done once merged (or as the
+   developer decides). Link the branch or PR.
+
+Without Linear access, list the items under "To file in Linear" in your
+tracker row or handoff and tell the developer.
+
 ## Parallel sessions and branches
 
 `knk-workspace/docs/ACTIVE_SESSIONS.md` is the live coordination board for
