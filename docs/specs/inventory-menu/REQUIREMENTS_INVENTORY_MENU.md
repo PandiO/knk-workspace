@@ -229,6 +229,14 @@ Menu (root container)
   - `animationStages`: List of ItemStack variants
 - Updates lore values that are VariableStrings with time-based result
 
+> **V3 (KNG-125, 2026-10-15, knk-plugin branch `wt/kng-125`, not yet merged or live-verified):** the
+> blink part is back as the `BLINK` display mode: the item alternates with a yellow glass pane carrying
+> its name and lore, every 10 ticks or its `BlinkTicks` binding, toggled on the main thread from
+> `MenuAutoRefreshTask`; clicks keep the item's actions; it stops on close and when a re-render puts a
+> non-blinking item in the slot. No `duration` (it blinks while the menu is open) and no general
+> multi-stage animation (`animationStages`). Time-based lore is covered by TTL bindings and
+> `AutoRefreshTicks`. Details: IMPLEMENTATION_PLAN.md "Follow-up: item blinker".
+
 #### FR-2.6.2: Time-aware Variables
 - VariableString can resolve time-based values
 - Example: Remaining time, elapsed time, percentage complete
@@ -492,7 +500,7 @@ IClickable {
 
 ### Phase 4: Advanced Features (Priority: Medium)
 - [ ] Overflow handling (scroll, wrap)
-- [ ] Blinking/animation support
+- [ ] Blinking/animation support (blinking: V3 `BLINK` display mode, KNG-125; multi-stage animation not planned)
 - [ ] Display modes and priorities
 - [ ] Preset templates
 

@@ -38,7 +38,7 @@ in `FORMCONFIG_INTEGRATION.md`.
 ### `MenuItemTemplate`
 FK to parent `MenuSectionTemplate`. Slot/position, display properties (icon/
 material, name and lore as variable-bound strings), display-mode rules
-(NORMAL/DISABLED/HIGHLIGHT/HIDDEN). Explicit integer `sortOrder` as above.
+(NORMAL/DISABLED/HIGHLIGHT/HIDDEN; the plugin adds BLINK, KNG-125). Explicit integer `sortOrder` as above.
 Carries `visibilityPermission` and `actionPermission` (separate — see Phase 4).
 
 ### `VariableBinding`
@@ -592,25 +592,64 @@ survives navigation (features scope their Confirm buttons with their own `*.pend
 engine permission checks are Bukkit-only (`Player.hasPermission`), not `KnkPermissible`.
 
 
-## Follow-up: item blinker (KNG-125, open, 2026-10-10)
+## Follow-up: item blinker (KNG-125, implemented 2026-10-15, not merged, not verified live)
 
-Requested by the developer during the KNG-34 smoke test (guide finding 9) and postponed: bring back
-the v1/v2 **item blinker** (FR-2.6.1 in REQUIREMENTS_INVENTORY_MENU.md). It can be switched on for
-sections, e.g. the open group selector in `statistics.visibility`. The selected item alternates
-with a **yellow glass pane** that carries the original's name and lore, then switches back. The
-**original item's click actions keep working**. V3 today has only `DisplayMode` HIGHLIGHT, a static
-glint (`MenuItemBukkitMapper`), chosen in place of v2's blink (see `SiegeVoteOptionView`).
+**Status:** Implemented on knk-plugin branch `wt/kng-125` (plugin-only). Builds and unit tests green;
+**not verified live**: see [player-statistics-smoke-test.md](../../guides/player-statistics-smoke-test.md)
+step 28. **Last updated:** 2026-10-15
+
+Requested by the developer during the KNG-34 smoke test (guide finding 9): bring back the v1/v2
+**item blinker** (FR-2.6.1 in REQUIREMENTS_INVENTORY_MENU.md). The selected item alternates with a
+**yellow glass pane** that carries the original's name and lore, then switches back. The **original
+item's click actions keep working**. Before this, V3 had only `DisplayMode` HIGHLIGHT, a static glint
+(`MenuItemBukkitMapper`), chosen in place of v2's blink (see `SiegeVoteOptionView`).
 
 - **Legacy:** v1 `src/Menu/MenuItemBlink.java` and `Menu.setMenuItemBlink` (B30: the stop never worked).
   v2 `menu/MenuItemBlink.java`, switched on per item with `MenuItem.enableMenuItemBlink` (e.g.
   `SelectObjectSection`). Both toggle every 10 ticks on an async timer. Both route clicks by slot,
   so the actions survive. Neither stopped the blinker on close. Details:
   `docs/specs/legacy/inventory-menus.md`.
-- **V3 plan:**
-  - Add a `BLINK` display mode, or a section flag for its selected item. Collect the blinking slots
-    in `MenuRenderResult`.
-  - Toggle them from `MenuAutoRefreshTask`, which runs every tick on the main thread. Swap only the
-    inventory `ItemStack`, as `MenuControlHintListener` does, with no re-render. Clicks resolve
-    through `OpenMenuContext.itemsBySlot()`, so the actions stay.
-  - Stop on close (`MenuService.onMenuInventoryClosed`) and when the slot's item changes. Interval
-    about 10 ticks, configurable.
+- **What V3 does now (knk-plugin):**
+  - **Switch:** a new display mode **`BLINK`** (`MenuDisplayMode`, knk-core). It renders like HIGHLIGHT
+    (glint) and is clickable like NORMAL. A template selects it the way it selects any display mode: the
+    `DisplayMode` column or a **`DisplayMode` variable binding**. A section's *selected* item blinks
+    when its binding answers `BLINK` for that item (e.g. `$statsvis.getCombatMode$`); a fixed item
+    blinks with a literal `BLINK` binding. Row templates work the same (`$row.getDisplayMode$`).
+  - **Interval:** 10 ticks by default (v1/v2's value). An optional **`BlinkTicks`** binding on the item
+    sets another interval, clamped to 2-1200 ticks (`MenuBlink`, `MenuItemPresentation.blinkTicks`);
+    an unparsable value is warned once and the default is used.
+  - **Collect:** `MenuRenderer.compose` records each BLINK slot and its interval in
+    `MenuRenderResult.blinkTicksBySlot` (remapped with the DYNAMIC row compaction like the other slot
+    maps).
+  - **Toggle:** `MenuAutoRefreshTask` (every tick, main thread) calls `MenuService.processBlinks` after
+    `processDueRefreshes`. `MenuItemBlinker` swaps only the `ItemStack` in the live Inventory, the way
+    `MenuControlHintListener` does: no re-render, and `OpenMenuContext.itemsBySlot()` is untouched, so a
+    click on the pane runs the item's own actions. The phase is computed from the tick the Inventory
+    opened (`MenuBlink.flashShown`), so there are no per-item timers. The pane is
+    `YELLOW_STAINED_GLASS_PANE` with the item's name (its own name when it has none set), lore and
+    amount. Putting the item back uses the last render's stack, with control hints when the player is
+    sneaking. A slot whose item something else replaced is left alone (v2's guard).
+  - **Stop:** on close the `OpenMenuContext` is dropped (`MenuLifecycleListener` →
+    `MenuService.onMenuInventoryClosed`), so the menu is no longer visited; nothing to restore because
+    a reopen builds a new Inventory. A re-render writes every slot's own item back
+    (`applyToInventory`) and replaces the blinking set: a slot that now holds a non-blinking item stops;
+    one that still blinks gets its pane back in the same tick, so the rhythm survives auto-refreshes.
+  - **First user:** the open group selector of `statistics.visibility`: `StatisticsVisibilityView`
+    answers `BLINK` instead of `HIGHLIGHT` for it. The seeded template already binds
+    `DisplayMode` to `$statsvis.get<Group>Mode$`, so **no API change or re-seed** is needed.
+  - Tests: `MenuBlinkTest` (knk-core: phases, clamping, BLINK binding keeps actions, `BlinkTicks`),
+    `MenuItemBlinkerTest` (knk-paper: swap, untouched click snapshot, replaced slot, stop on re-render,
+    rhythm kept, per-slot interval).
+- **Decisions for developer review (2026-10-15):**
+  - A `BLINK` display mode instead of a section flag: selection is already expressed per item through
+    `DisplayMode` bindings, so one mechanism covers "an item" and "a section's selected item".
+  - BLINK keeps the HIGHLIGHT glint on the item's own phase.
+  - No duration/timeout (v2's `flashDuration`): an item blinks for as long as the menu is open and its
+    binding says BLINK.
+  - The interval is per item (`BlinkTicks` binding), not a plugin `config.yml` key.
+  - `SiegeVoteOptionView` (the viewer's vote) still uses HIGHLIGHT; switching it to BLINK is a one-line
+    change if wanted.
+- **Not done (API/web, to file):** knk-web-api's `MenuDisplayMode` enum has no `Blink` value, so the
+  `DisplayMode` *column* cannot be set to it through the CRUD API or the web editor yet; until then use a
+  `DisplayMode` binding. The plugin already parses a `Blink` column value. `BlinkTicks` is a free-text
+  target property and needs no API change.
