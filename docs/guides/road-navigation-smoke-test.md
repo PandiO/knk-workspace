@@ -41,7 +41,9 @@ domain-cache gap, fixed in `ec358f39`; G2b passes. **Merged to knk-plugin `main`
 **2026-10-10 (evening):** KNG-108 (a height allowance in the walk length cap, tall buildings): H1-H3 pass, H5
 accepted, **merged to knk-plugin `main` `a388c70`**; H4's shut-in box very close to a road fails (N18, the KNG-75 step 1
 start-leg rule, not KNG-108; follow-up [KNG-124](https://linear.app/kngpandi/issue/KNG-124)) - "KNG-108" in Findings.
-**Last updated:** 2026-10-10
+**2026-10-15:** KNG-121 (walk paths keep KNG-110's "no way out" rule) implemented, not live-tested - "KNG-121" in
+Findings (T1-T4).
+**Last updated:** 2026-10-15
 **Sources:** the "Developer to-do" blocks of Phases 1, 3, 4 and 5 in `docs/specs/navigation/IMPLEMENTATION_PLAN.md`;
 progress report `docs/reports/2026-09-27-road-navigation-chain.md`. If this file and a plan block disagree, the plan wins.
 
@@ -1018,6 +1020,26 @@ Next: KNG-75 proper (walk legs at both ends, destinations further than 48 blocks
 **Deploy for run 3:** knk-plugin `claude/navigation-walkable-path` `a4892db` and knk-web-api `claude/road-navigation`
 `fa234f7` (the merged plugin needs KNG-56's `GET /api/Domains/access-rules`). The dev DB lacks trunk's KNG-59
 migration `UniquePermissionGrantHolderNode` (it deletes duplicate permission grants); navigation does not need it.
+
+### KNG-121 — walk paths and "no way out" (implemented 2026-10-15, to test)
+
+[KNG-121](https://linear.app/kngpandi/issue/KNG-121), knk-plugin branch `wt/kng-121-124` (on `main` `29bb6ff9`; the API
+and the web app are unchanged). KNG-110 gave the road router and the trail the "no way out" rule (a region whose domain
+allows entry but denies leaving blocks the way to a destination outside it). Walk paths now keep it too: direct mode,
+the walk to the road and the last leg after the road's end. A destination inside the region is still reached. Walk
+paths apply it on every domain, also the ones whose rule is "Ignored" for roads (DESIGN §6.7, LAST_MILE §6).
+
+Setup: a district (or structure) with **AllowEntry on, AllowExit off** that lies between a spot and a nearby
+destination (within 48 blocks, so direct mode), with open ground around it. Deploy: `./gradlew :knk-paper:dev` from the
+branch, restart, `/knk cache refresh`.
+- [ ] **T1** Stand on one side of the district, `/nav` to a Location on the other side (direct mode): the walk trail
+  goes **around** the district, not through it. Before KNG-121 it led in, and the player was stuck at the far border.
+- [ ] **T2** `/nav` to a Location **inside** that district: the walk path goes in.
+- [ ] **T3** Walk to the road from a spot where the straight way to the road crosses the district, `/nav` somewhere far
+  outside it: the walk to the road goes around it. A destination inside the district (far, by road): the walk to the
+  road may cross it.
+- [ ] **T4** Regression: a district with AllowEntry off is still avoided, and one you stand in with AllowExit off still
+  keeps the walk path inside (no path out: "No conventional path to X found.").
 
 ### KNG-108 — walk paths through tall buildings (live-tested and merged 2026-10-10)
 

@@ -11,8 +11,9 @@ weight, `destination-snap-vertical-weight` (default 1) - §4, §5.2, §6.2 step 
 KNG-73 (configurable default destination, §6.1) and rev. 7 Parts A and C ([REV7_PROPOSAL.md](REV7_PROPOSAL.md):
 routing view, entry rule on roads, §6.7). **2026-10-10 (KNG-110, live-tested and merged, plugin `4b9ddca4`):** a region over part
 of a road's width blocks it only where it covers the whole width, the trail goes through the free gap, and a region the
-player could not leave again blocks the way to a destination outside it (§6.4, §6.7).
-**Last updated:** 2026-10-10
+player could not leave again blocks the way to a destination outside it (§6.4, §6.7). **2026-10-15 (KNG-121,
+unmerged, not live-tested):** walk paths keep that "no way out" rule too (§6.7).
+**Last updated:** 2026-10-15
 **Implementation plan:** [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) — its §1 lists ten small deviations (D1-D10) decided
 while mapping the design onto trunk code; where this document and the plan disagree, the plan wins.
 **Linear:** [KNG-27](https://linear.app/kngpandi/issue/KNG-27/road-navigation-street-road-graph-endpointsintersections-traced-road)
@@ -621,7 +622,7 @@ The router only uses roads this player can actually use **now**. Every edge carr
 | Gate doors on the edge | `GateManager.getGate(id)` → `CachedGateDoor.getCurrentState()`, `isDestroyed()`, `isJammed()` | State is `CLOSED`, `CLOSING`, `OPENING` or jammed. `OPEN` or destroyed → passable. A door in an active siege (`getCurrentSiegeId() != null`) is blocked for non-participants regardless. `AllowPassThrough` doors: passable only for players the pass-through rules allow, with a hint "right-click the gate to pass". |
 | Domain entry | the domains in `DomainIds` the route *enters* | `AllowEntry = false`, or any future entry condition (vision §2.2: title, balance, clan, premium rank). |
 | Domain exit | the domains the player is in and the route *leaves* | `AllowExit = false`. |
-| No way out (KNG-110, decided 2026-10-10) | the domains the route *enters* that the destination is not in | `AllowEntry` open but `AllowExit = false`: the player could not leave again, so it counts as an entry block ("you could not leave X again"). Not when the destination lies inside the region. |
+| No way out (KNG-110, decided 2026-10-10) | the domains the route *enters* that the destination is not in | `AllowEntry` open but `AllowExit = false`: the player could not leave again, so it counts as an entry block ("you could not leave X again"). Not when the destination lies inside the region. **Walk paths too** (KNG-121, 2026-10-15): direct mode, the walk to the road and the last leg get the destination's regions (the router's set; for the walk to the road the final destination's, not the road start's) and keep out of such a region at cell level (`DeniedRegionAccess`), on every domain including the ones `Ignored` for roads. |
 | Road access (rev. 7 Part C) | the domain's effective `roadAccess` on `POST api/Domains/search` | Domain entry and exit above are **skipped** for a domain whose rule is `Ignored` for roads (per type on the road admin page, per domain "Road Access Override"). For domains along a public street (houses, shops): routes pass them, the rule still holds at the border and on the walk path. Every current type defaults to `Applies`. [REV7_PROPOSAL.md](REV7_PROPOSAL.md) §4, KNG-92. |
 | Siege | `SiegeGateController.isLocked` (read-only) | **Not blocked** (plan D2): trunk keeps siege areas open to non-members and carries them through locked gates, so a siege-locked gate counts as a pass-through gate for non-members. Navigation ends when the player joins a siege lobby. |
 | Static flags | edge `Flags` | `Closed`, `NoGps`; `Oneway` against direction. |
