@@ -79,6 +79,9 @@ src/
     Workflow/               — WorldTask/job polling UI (siege/world-mutation background tasks)
     minecraft/              — hybrid pickers for Minecraft material/enchantment refs
     auth/                   — multi-step registration form, login form, password strength meter
+    currency/               — ledger table, Adjust balance card, and StaffNoteField: the reason field of every staff form
+                              that needs MIN_STAFF_NOTE_LENGTH characters (live "n / 10 characters" counter, message after
+                              a submit with a short note; the form keeps its button enabled and checks isStaffNoteValid, KNG-126)
     shared/, DynamicForm.tsx, ObjectView.tsx, ... — see scan report for orphan status
   contexts/AuthContext.tsx  — the only Context; owns user/isLoggedIn/login/register/logout/refresh
   hooks/                    — useAuth (re-export of AuthContext), useEntityMetadata (cache),
