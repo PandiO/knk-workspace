@@ -21,6 +21,11 @@ confirmed live: 4 full open/close cycles against entity 14
 as rigid. The mid-swing jam this doc's Decisions 7/8/8.1/8.2 chased across
 five live-test rounds is now resolved and confirmed; Phase F's live pilot
 for the `ROTATION`-gate case is complete.
+**Proposal (2026-10-15, not decided):**
+[DRAWBRIDGE_KEYFRAME_ANIMATION.md](DRAWBRIDGE_KEYFRAME_ANIMATION.md) analyses why the swing still looks like a
+"moving blob". It proposes replacing the mid-swing part of Mechanisms 1 and 2 (Decisions 3, 7 and 8.x) for `ROTATION`
+gates with precomputed whole-door keyframes, including support for non-rectangular doors. Read it before tuning the
+residual taper or the snap radius again.
 **Author:** Claude (plan requested by Pandi), 2026-09-09
 **Related:** [SPEC.md](SPEC.md), [REQUIREMENTS.md](REQUIREMENTS.md), [IMPLEMENTATION_ROADMAP.md](IMPLEMENTATION_ROADMAP.md), [DECISIONS.md](DECISIONS.md), [DUAL_SCAN_ANIMATION_DESIGN.md](DUAL_SCAN_ANIMATION_DESIGN.md) (Open Question 3 — this plan resolves it: dual-scan extends to `ROTATION` gates; that doc is now superseded by this one for `VERTICAL`/`LATERAL` too, per Decision 6), [GATE_WORLD_SYNC_DESIGN.md](GATE_WORLD_SYNC_DESIGN.md) (a related but separate gap found while implementing this plan's Phase C)
 
