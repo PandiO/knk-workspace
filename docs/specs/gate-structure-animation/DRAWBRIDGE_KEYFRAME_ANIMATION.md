@@ -1,7 +1,7 @@
 # Drawbridge Animation: Analysis and Keyframed-Plank Proposal
 
-**Status:** Decided (2026-10-16). The developer answered D1–D8 (§8). Nothing is implemented yet. Next: the step-0 data
-check (§9), then implementation under its own tracker claim.
+**Status:** Decided (2026-10-16). The developer answered D1–D8 (§8). The step-0 data check passed on 2026-10-16 (§4.2,
+§9). Nothing is implemented yet. Next: implementation under its own tracker claim.
 **Rev. 2 (2026-10-15, developer request):** the method must support door shapes that are not rectangular, such as an
 arched top. Added §5.11. The door's shape is now the set of scanned blocks, and the width rule, materials, sizes,
 decisions D7–D8 and the plan were updated to match.
@@ -53,8 +53,9 @@ hinge) that is extruded along the hinge.
   of blocks the closed scan found. Each keyframe samples that shape along the plank, the way a texture is sampled. The
   closed keyframe equals the scan exactly, and the plank is never wider than the door at that height.
 
-For entity 14 (4 wide × 8 tall, 45°) this gives **21 keyframes**: 32 blocks closed, **49 blocks open** (exactly the
-stored open scan's count), and every in-between frame a clean plank. A display-entity swing (§7) was considered and
+For entity 14 (4 wide × 8 tall, 45°) this gives **21 keyframes**: 32 blocks closed and **49 blocks open**. Both end
+frames match the stored scans cell for cell (checked against the dev DB seed, §4.2), and every in-between frame is a
+clean plank. A display-entity swing (§7) was considered and
 dropped (D5): the block keyframes are the final look.
 
 ---
@@ -198,10 +199,16 @@ Entity 14 shows it in the data:
 - Its outermost strip is 3 wide and centred, which matches the "extra row, ~2–3 blocks wide, centred … at the farthest
   point from the hinge".
 
-The 49-block match is strong evidence but not proof. One detail does not fit a simple centred deck: along the hinge, the
-open anchor sits at 3.5 u-steps, half a block past the door's own width (0..3). So the deck may be offset or skewed
-sideways, or the anchor may be a selection corner rather than a deck block. The reach (9.19 against 7.0) does not depend
-on that. One query of door 14's open snapshots settles it (§9, step 0).
+**Confirmed from the stored data (2026-10-16).** Source: the dev DB seed `PandiO/knk-dev-db-seed` `d68b458` (dump of
+2026-10-07), restored locally. Door 14 is "Outer Gate" in structure 14.
+- Its 49 open snapshots are exactly strips k = 0..13 at y = 44, alternating 4 blocks (along-hinge positions 0,1,2,3) and
+  3 blocks (0.5,1.5,2.5).
+  - Every block lies inside the door's width, and every block is a spruce log.
+  - The furthest strip is 9.19 blocks from the hinge line.
+- The "extra row, ~2–3 blocks wide" is simply the last odd strip. There are no protrusions.
+- The open anchor (1368,44,-591) is not a deck block; it is a reference point half a block past the deck's corner.
+- The proposed keyframes reproduce both scans **cell for cell**: keyframe 0 is the 32 closed blocks and keyframe 20 is
+  the 49 open blocks (Appendix A).
 
 So the built open deck is **not a rigid image** of the closed door; it is about √2 longer along the swing. A rigid fit
 (Decision 7) therefore leaves large residuals at the far end, up to 5.7 blocks as recorded in Decision 8.
@@ -316,6 +323,12 @@ kf 0 (0°)        kf 3 (~11°)      kf 6 (~22°)      kf 9 (~35°)      kf 12 (~
   - with an open scan, the scan verbatim (unchanged item 6.9 behaviour);
   - otherwise the rasterized deck.
 - **Keyframe 0** is the closed scan verbatim.
+- **Cells that never move keep their scanned blockdata in every keyframe.** This applies to the hinge row (k = 0,
+  y = 0) in particular.
+  - Door 14's open scan keeps its hinge-row logs upright (`axis=y`), like the closed state.
+  - Re-orienting them by the swing angle would flip them to `axis=x` mid-swing and back on the last keyframe.
+- **The rest of the deck** snaps to one axis per keyframe and takes the open scan's own mixed x/z log axes on the last
+  keyframe. That is a one-step texture change, not a shape change.
 
 ### 5.6 What the open scan does now
 
@@ -542,9 +555,13 @@ The block keyframes would have been needed either way: they supply the resting f
 
 ## 9. Implementation plan
 
-0. **Data check (5 min):** list door 14's open snapshots and compute each block's k (strip) and along-hinge position.
-   This confirms K = 13 and the 4/3 strip pattern from §4.2. If it does not match, the deck is not a simple diagonal
-   strip deck, and §5.6's protrusion rule needs a second look before building.
+0. **Data check: done (2026-10-16).** Door 14's open snapshots are a plain diagonal strip deck: K = 13, strips of 4/3,
+   no protrusions. Both end keyframes match the scans exactly (§4.2).
+   - In the 2026-10-07 dev seed, door 14 is the only ROTATION door and it has an open scan. So D1 (deck counted in
+     blocks) changes the length of no existing door there.
+   - Recheck against the live dev database before the live test, because it may have changed since the dump.
+   - The seed stores door 14 as `GeometryDefinitionMode = PLANE_GRID`, with `ClosedRegionData` and `OpenedRegionData`
+     still filled in. The swing does not read the mode (Decision 7), so this does not matter for the animation.
 1. **knk-core `DrawbridgeKeyframes`**, pure functions, with unit tests:
    - keyframe 0 equals the closed scan cells;
    - the last keyframe follows the §5.9 count formula;
@@ -617,8 +634,14 @@ Inputs: entity 14's values from the QOL plan §6.7.
 - W = 4, H = 8;
 - 90 frames, 90°.
 
-It does not model the open-scan blend, because the stored open-scan coordinates were not available offline. That is why
-step 0 of §9 checks them.
+It does not model the open-scan blend. Instead, the stored snapshots were checked directly (2026-10-16):
+1. Restore `knk_uiux_seed.sql.gz` from `PandiO/knk-dev-db-seed` into a local MySQL 8.0.
+2. Export `gate_block_snapshots` and `gate_opened_block_snapshots` for `GateDoorId = 14`.
+3. Express each block's world position in the §5.2 basis: `i = dz`, `k = −dx − dz` from the anchor; along-hinge
+   position `i + k/2`.
+4. Compare the sets with keyframes 0 and 20 for K = 13.
+
+The open scan's `openAnchor + Relative*` equals its `World*` columns for all 49 rows.
 
 Rev. 2 added mask sampling (§5.11) on two arched doors:
 - cardinal, 7 wide, column heights 7,8,9,9,9,8,7;
