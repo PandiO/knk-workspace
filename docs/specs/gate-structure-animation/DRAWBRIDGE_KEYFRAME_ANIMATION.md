@@ -1,10 +1,11 @@
 # Drawbridge Animation: Analysis and Keyframed-Plank Proposal
 
-**Status:** Proposal (2026-10-15). Nothing is implemented. Eight developer decisions are open (§8).
+**Status:** Decided (2026-10-16). The developer answered D1–D8 (§8). Nothing is implemented yet. Next: the step-0 data
+check (§9), then implementation under its own tracker claim.
 **Rev. 2 (2026-10-15, developer request):** the method must support door shapes that are not rectangular, such as an
 arched top. Added §5.11. The door's shape is now the set of scanned blocks, and the width rule, materials, sizes,
 decisions D7–D8 and the plan were updated to match.
-**Last updated:** 2026-10-15
+**Last updated:** 2026-10-16 (developer decisions D1–D8 recorded)
 **Author:** Claude (requested by Pandi)
 **Related:**
 - [ROTATION_GAP_FILL_DESIGN.md](ROTATION_GAP_FILL_DESIGN.md). This proposal revisits its Decision 3 and replaces the mid-swing part of Decisions 7, 8, 8.1 and 8.2 for `ROTATION` gates.
@@ -53,8 +54,8 @@ hinge) that is extruded along the hinge.
   closed keyframe equals the scan exactly, and the plank is never wider than the door at that height.
 
 For entity 14 (4 wide × 8 tall, 45°) this gives **21 keyframes**: 32 blocks closed, **49 blocks open** (exactly the
-stored open scan's count), and every in-between frame a clean plank. An optional phase 2 (§7) can add a display-entity
-swing for motion that is smooth on screen.
+stored open scan's count), and every in-between frame a clean plank. A display-entity swing (§7) was considered and
+dropped (D5): the block keyframes are the final look.
 
 ---
 
@@ -336,7 +337,7 @@ ROTATION_GAP_FILL Decision 1 already accepted, limited to decorations.
 | `GateRestingFramePlacer.restingFrameCells` | ROTATION: keyframe 0 / last keyframe (open scan verbatim stays) |
 | `GateSweep.cells`, `GateManager` lookup, `HealthSystem`, `CollisionPredictor` | ROTATION: union of the keyframe cell sets between the two frames. Exact, and cheaper than walking every block's path |
 | `GateFrameCalculator.isWithinGeometryBounds` (`ClipToGeometryBounds`, REGION footprint polygon) | Not used for ROTATION; the shape mask (§5.11) bounds the plank. Unchanged for VERTICAL/LATERAL |
-| `GateBlockScanTaskHandler` PLANE_GRID scan keeps every non-air block in the box | Honours `ScanMaterialWhitelist`/`Blacklist` like the FLOOD_FILL and REGION scans (D8), so an arched door can be scanned as its bounding box |
+| `GateBlockScanTaskHandler` PLANE_GRID scan keeps every non-air block in the box | Unchanged (D8). PLANE_GRID stays for rectangular doors; non-rectangular doors use the REGION scan with a material whitelist (§5.11) |
 | Kill switch `gates.rotationGapFill.rasterization-enabled` | New switch `gates.rotation.keyframes-enabled` (default true; false = today's path) for the pilot |
 | `TRACE_LOGGING_ENABLED = true` | false (or removed) |
 
@@ -449,14 +450,17 @@ cardinal arch, closed (front)     45° arch, open deck seen from above (hinge = 
 - `ScanMaterialWhitelist`/`ScanMaterialBlacklist` are only applied by the FLOOD_FILL and REGION scans
   (`GateBlockScanTaskHandler`), not by PLANE_GRID.
 
-Two ways to capture it:
-- **Proposed, a small phase-1 change:** apply the same whitelist/blacklist in the PLANE_GRID scan, with a filtered cell
-  counting as empty (D8).
-  - Admin flow: anchor, Ref 1 and Ref 2 for the bounding box, plus the door's materials (e.g. `spruce_planks`,
-    `spruce_log`, `iron_bars`).
-  - The GateDoor form must show the material list for PLANE_GRID doors too. Coordinate with the KNG-139 form work.
-- **Works today, with no code change:** REGION mode, `//sel convex` around the door, plus a material whitelist.
-  - A convex outline alone can catch a wall block in a stair-step of the arch. The whitelist is what makes it exact.
+**Decided (D8, 2026-10-16): non-rectangular doors use REGION mode.** The PLANE_GRID scan is not changed and stays for
+rectangular doors.
+- Admin flow for an arched door:
+  1. Set `GeometryDefinitionMode = REGION`.
+  2. Make a `//sel convex` selection around the door and run `/gatedoor capture <door> closed`.
+  3. Set `ScanMaterialWhitelist` to the door's materials (e.g. `spruce_planks`, `spruce_log`, `iron_bars`).
+- A convex outline alone can catch a wall block in a stair-step of the arch. The whitelist is what makes it exact.
+- The static `GateDoorConfig` in knk-web-app (`src/config/objectConfigs.tsx`) has no field for `ScanMaterialWhitelist`.
+  The GateDoor form must expose it for REGION doors. Coordinate with the KNG-139 FormConfiguration work.
+- A non-rectangular door scanned in PLANE_GRID mode still captures the wall blocks inside its box. The GateDoor
+  `GeometryDefinitionMode` description should say "PLANE_GRID = rectangular doors only".
 
 The open scan (optional) is unchanged. It is placed verbatim at the open frame, and only K is taken from it.
 
@@ -475,7 +479,8 @@ The open scan (optional) is unchanged. It is placed verbatim at the open frame, 
   2. Run the closed scan.
      - For a non-rectangular door (e.g. an arched top), Ref 2 still marks the top of the bounding box straight above the
        anchor.
-     - List the door's materials so the wall around the arch is not captured (§5.11).
+     - Use REGION mode: a `//sel convex` capture plus `ScanMaterialWhitelist` with the door's materials, so the wall
+       around the arch is not captured (§5.11, D8).
   3. Optionally build the open deck and capture it with `//sel convex` + `/gatedoor capture <door> opened`. This is only
      needed for other materials or protrusions. Its far edge sets the length.
 - **Optional form preview:** "closed 32 blocks → open 49 blocks, 21 steps, reaches 9.2 blocks". This lets the admin see
@@ -487,9 +492,13 @@ The open scan (optional) is unchanged. It is placed verbatim at the open frame, 
 
 ---
 
-## 7. Optional phase 2: display-entity swing (decide after phase 1)
+## 7. Phase 2, display-entity swing: dropped (D5, 2026-10-16)
 
-If the 4–5 Hz steps are not smooth enough, render the swing with `BlockDisplay` entities instead of blocks.
+The developer dropped this option; the block keyframes are the final look. The analysis stays here so the idea is not
+rediscovered and re-proposed without these trade-offs.
+
+The idea was to render the swing with `BlockDisplay` entities instead of blocks if the 4–5 Hz steps were not smooth
+enough.
 - The plugin already uses display entities: `ItemDisplay` with interpolation in `LootboxPresenter`, and `TextDisplay` in
   `GateDisplayManager`.
 - Every 2–3 ticks it sends one transform per display, and the client interpolates at its own frame rate. The result is a
@@ -512,26 +521,26 @@ Costs and open points:
 - **Siege:** non-members must not see the displays during a lockdown. `SiegeGateViewService` would need
   `Player#hideEntity`.
 
-Phase 1 is needed either way: it supplies the resting frames, the safety sweep and the fallback.
+The block keyframes would have been needed either way: they supply the resting frames, the safety sweep and the fallback.
 
 ---
 
-## 8. Decisions for the developer
+## 8. Decisions (answered by the developer, 2026-10-16)
 
-| # | Question | Recommendation |
-|---|---|---|
-| D1 | Default deck length for a diagonal door without an open scan: counted in blocks (8 tall → 8 diagonal blocks), or true length (8 tall → ~5–6 diagonal blocks, today's Mechanism 1)? | **Blocks.** It is what builders expect, and it matches how entity 14 was built. Check that each existing diagonal ROTATION door's landing area is clear, because the deck gets longer |
-| D2 | Where the length lives: reuse `MotionDistanceBlocks` for ROTATION, or a new field? | **Reuse.** No migration |
-| D3 | Plank style mid-swing: thin (8-connected, edge contacts) or solid (4-connected staircase, about 1.4× the blocks at 45°)? | **Thin.** Closest to the real door thickness. Change it if it looks see-through |
-| D4 | Timing: linear in angle, or eased (slow start, faster fall, "thud")? | **Linear** for v1; easing is a one-line follow-up |
-| D5 | Phase 2 display-entity swing? | **Decide after the phase-1 live check** |
-| D6 | Delete the retired ROTATION machinery (blend, fit, residual, snap, Mechanism 1) right away, or keep it behind the switch for one round? | **Keep behind the switch** until the live check passes, then delete |
-| D7 | Mask row rule while the plank is compressed (§5.11): nearest row, or any row in the cell's range? | **Nearest row.** Simplest and exact at both ends. Switch only if thin details blink in testing |
-| D8 | Let the PLANE_GRID scan honour `ScanMaterialWhitelist`/`Blacklist`, so an arched door is captured as its bounding box plus its materials? | **Yes.** It is a small change, and without it every arched PLANE_GRID door also captures the wall corners |
+| # | Question | Recommendation | **Decision** |
+|---|---|---|---|
+| D1 | Default deck length for a diagonal door without an open scan: counted in blocks (8 tall → 8 diagonal blocks), or true length (8 tall → ~5–6 diagonal blocks, today's Mechanism 1)? | Blocks. It is what builders expect, and it matches how entity 14 was built | **Count in blocks.** The deck gets longer than today, so the live check includes each existing diagonal ROTATION door's landing area (§9) |
+| D2 | Where the length lives: reuse `MotionDistanceBlocks` for ROTATION, or a new field? | Reuse. No migration | **Reuse `MotionDistanceBlocks`** (0 = from the open scan, else `GeometryHeight`) |
+| D3 | Plank style mid-swing: thin (8-connected, edge contacts) or solid (4-connected staircase, about 1.4× the blocks at 45°)? | Thin | **Thin** |
+| D4 | Timing: linear in angle, or eased (slow start, faster fall, "thud")? | Linear for v1 | **Linear in angle** |
+| D5 | Phase 2 display-entity swing? | Decide after the phase-1 live check | **Dropped.** Blocks only; §7 is kept for the record |
+| D6 | Delete the retired ROTATION machinery (blend, fit, residual, snap, Mechanism 1) right away, or keep it behind the switch for one round? | Keep behind the switch, then delete | **Keep behind the switch** until the live check passes, then delete |
+| D7 | Mask row rule while the plank is compressed (§5.11): nearest row, or any row in the cell's range? | Nearest row | **Nearest row** |
+| D8 | Let the PLANE_GRID scan honour `ScanMaterialWhitelist`/`Blacklist`, so an arched door is captured as its bounding box plus its materials? | Yes | **No.** Non-rectangular doors use REGION (`//sel convex` + whitelist); PLANE_GRID stays rectangle-only (§5.11) |
 
 ---
 
-## 9. Implementation plan (phase 1)
+## 9. Implementation plan
 
 0. **Data check (5 min):** list door 14's open snapshots and compute each block's k (strip) and along-hinge position.
    This confirms K = 13 and the 4/3 strip pattern from §4.2. If it does not match, the deck is not a simple diagonal
@@ -554,16 +563,14 @@ Phase 1 is needed either way: it supplies the resting frames, the safety sweep a
 3. **Play:** `GateAnimationTask` applies the keyframe difference atomically, plus the optional per-keyframe sound;
    `GateRestingFramePlacer`, `GateSweep`, `GateManager` and `HealthSystem` read the keyframes for ROTATION; add the
    config switch; turn trace logging off.
-4. **Scan filter (D8):** apply `ScanMaterialWhitelist`/`Blacklist` in the PLANE_GRID scan
-   (`GateBlockScanTaskHandler.ChunkedScanRunnable.processCell`), treating a filtered cell like air. Unit test: a box scan
-   of an arch in a stone wall keeps only the door materials.
-5. **Web app/API (small):**
-   - the `MotionDistanceBlocks` description for ROTATION;
-   - the material list shown for PLANE_GRID doors;
+4. **Web app/API (small):**
+   - the `MotionDistanceBlocks` description for ROTATION (D2);
+   - `ScanMaterialWhitelist` in the GateDoor form for REGION doors (missing from the static `GateDoorConfig`);
+   - the `GeometryDefinitionMode` description "PLANE_GRID = rectangular doors only" (D8);
    - optionally, the preview line.
 
    This overlaps the KNG-132 / KNG-139 form work, so coordinate with those rows in ACTIVE_SESSIONS.
-6. **Live check (developer):**
+5. **Live check (developer):**
    - Entity 14, 4 open/close cycles:
      - every step is a straight 4-wide plank;
      - the deck lands exactly on the 49 scanned blocks;
@@ -571,10 +578,13 @@ Phase 1 is needed either way: it supplies the resting frames, the safety sweep a
      - no orphaned blocks;
      - a player in the landing area gets moved.
    - Build one **cardinal** 4×6 drawbridge (never tested before) and run the same check.
-   - Build one **arched** drawbridge (e.g. 7 wide × 9 tall, in an arched opening) and run the same check. Also confirm
-     the wall corners above the arch stay put.
-   - Toggle the switch off and on to compare with the old path.
-7. **Docs:**
+   - Build one **arched** drawbridge (e.g. 7 wide × 9 tall, in an arched opening) and run the same check.
+     - Capture it with REGION, `//sel convex` and a material whitelist (D8).
+     - Confirm the wall corners above the arch stay put.
+   - Check the landing area of every existing diagonal ROTATION door without an open scan. Its deck is now counted in
+     blocks (D1), so it reaches further than before.
+   - Toggle the switch off and on to compare with the old path (D6). Delete the old path once this check passes.
+6. **Docs:**
    - Mark ROTATION_GAP_FILL Mechanisms 1–2 (ROTATION mid-swing) as superseded by this document.
    - Update SPEC.md's gap-fill section.
    - Add a short "Drawbridges" section to `guides/gate-smoke-test.md`.

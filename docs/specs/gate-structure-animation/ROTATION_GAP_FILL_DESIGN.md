@@ -21,7 +21,7 @@ confirmed live: 4 full open/close cycles against entity 14
 as rigid. The mid-swing jam this doc's Decisions 7/8/8.1/8.2 chased across
 five live-test rounds is now resolved and confirmed; Phase F's live pilot
 for the `ROTATION`-gate case is complete.
-**Proposal (2026-10-15, not decided):**
+**Follow-up design (2026-10-15; developer decisions recorded 2026-10-16, not implemented yet):**
 [DRAWBRIDGE_KEYFRAME_ANIMATION.md](DRAWBRIDGE_KEYFRAME_ANIMATION.md) analyses why the swing still looks like a
 "moving blob". It proposes replacing the mid-swing part of Mechanisms 1 and 2 (Decisions 3, 7 and 8.x) for `ROTATION`
 gates with precomputed whole-door keyframes, including support for non-rectangular doors. Read it before tuning the
