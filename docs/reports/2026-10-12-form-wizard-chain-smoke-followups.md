@@ -1,7 +1,7 @@
 # Form wizard chain — smoke-test follow-ups
 
-**Status:** Implemented, unit-tested, not yet live-tested; nothing merged, no PRs.
-**Last updated:** 2026-10-12
+**Status:** Implemented, unit-tested, live test in progress (see "Live test" at the end); nothing merged, no PRs.
+**Last updated:** 2026-10-16
 **Belongs to:** the chain smoke test in [2026-10-11-form-wizard-chain.md](2026-10-11-form-wizard-chain.md) (sections A–F).
 This file holds the fixes for what that test found, and the steps to check them.
 
@@ -167,3 +167,24 @@ fill in.
    still used by 1 structure. …".
 2. In the form builder, change the default configuration and delete a validation rule. Expect a modal, not a
    browser box.
+
+## Live test
+
+### 2026-10-16, run 1
+
+Plugin, API and web app from this branch. The chain's sections 0, A–D, E1–E5, F1 and F2.1–F2.3 had passed on
+2026-10-12 (their findings are the issues above).
+
+- **Setup:** done; GateDoor default set back to 12 (the E4 copy had been imported as default).
+- **G1.1:** the GateStructure copies deleted. The GateDoor copy (configuration 45) **failed**: EF refused with
+  "association between FormField and DisplayCondition has been severed". GateDoor's toggles and Rotation step have
+  display conditions that read other fields of the same configuration (`SourceFormFieldId`, required, Restrict),
+  and KNG-172 only cleared the validation rules. **Fixed** in knk-web-api `f33fd10`: the delete also removes the
+  display conditions of the configuration's steps and fields. `FormConfigurationDeleteTests` now has a field
+  condition and a step condition and failed with the same error before the fix. API: 2643 passed, 8 failed (the
+  4 known plus the 4 date-dependent ones noted on 2026-10-12). Retest G1.1–G1.3.
+- **E6:** accepted without running.
+- **F2.5:** configuration 9 has nothing the seed lacks. The seed's House number field isn't needed for a gate:
+  removed from `GateStructure.json` in knk-web-api `251ea5c` (in place, since the seed hasn't been merged; a gate
+  saved through it keeps 0, which the pickers hide). The dev DB's imported v1 copy still has the field; delete
+  it in the builder or re-import after deleting the copy.

@@ -217,7 +217,7 @@ Based on the current layout (§5.10-5.11 of the GateStructure QOL plan) and `api
 | # | Step | Description (draft) | Fields |
 |---|---|---|---|
 | 1 | General information | Name the gate. The name is shown in game and used by `/gate` commands. | Name, Description, Icon material |
-| 2 | Address | Where the gate stands. Create the street or district here if it doesn't exist yet. | District, Street, House number |
+| 2 | Address | Where the gate stands. Create the street or district here if it doesn't exist yet. | District, Street (House number left off 2026-10-16: a gate doesn't need one) |
 | 3 | Region and rules | The WorldGuard region of the whole gate, and who may pass. Create the region in game first, or with Send to Minecraft. | Region, World, Allow entry, Allow exit |
 | 4 | Locations | The gate's own Location (capture it in game), and where guards spawn. | Location, Guard spawn locations, Guard count |
 | 5 | Siege behaviour | How the gate behaves during a siege. | Animate during siege, Can be overridden |
