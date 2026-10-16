@@ -5,7 +5,8 @@
 **Canonical design:** [DRAWBRIDGE_KEYFRAME_ANIMATION.md](../../specs/gate-structure-animation/DRAWBRIDGE_KEYFRAME_ANIMATION.md)
 (knk-workspace branch `claude/drawbridge-keyframe-animation`, unmerged; decided 2026-10-16)
 **State at writing:** knk-plugin `main` `29bb6ff`, knk-web-app `main` `38854ba`, knk-web-api `master` `07fda99`,
-knk-workspace `main` `b0b6637`. Design and reference script are on the workspace branch.
+knk-workspace `main` `b0b6637`. Design and reference script are on the workspace branch. Checked 2026-10-16: neither
+KNG-132 nor KNG-139 was on any default branch, so the prompt makes the web/API part conditional on that.
 
 ```text
 Implement the drawbridge "keyframed plank" animation for Knights and Kings
@@ -86,8 +87,9 @@ WHAT TO BUILD (knk-plugin)
      - an angle outside (0, 90];
      - a missing basis.
 2. knk-paper:
-   - GateLoaderAdapter builds the keyframes. Keep this edit additive: KNG-132's
-     unmerged branch also touches this class (its basis check).
+   - GateLoaderAdapter builds the keyframes. Keep this edit additive, because
+     KNG-132 also touches this class (its basis check). If KNG-132 is on main
+     by then, build on it: a door it refuses never reaches the keyframes.
    - GateAnimationTask, for ROTATION with keyframes:
      - map frame -> current angle -> the last keyframe whose start angle is at
        most that angle;
@@ -141,19 +143,35 @@ BUILD
 - Report pass/fail counts per module (core, api-client, paper). If Maven
   Central rate-limits (429), say which modules were not rerun.
 
-NOT IN THIS SESSION (overlaps unmerged work)
-- The web app/API part of §9 step 4:
-  - the MotionDistanceBlocks description for ROTATION;
-  - a ScanMaterialWhitelist field for REGION doors (missing from the static
-    GateDoorConfig);
-  - the "PLANE_GRID = rectangular doors only" description.
-- These depend on KNG-132 (branch claude/loving-johnson-dlshrc, unmerged) and on
-  KNG-139's default GateDoor FormConfiguration (form wizard chain, unmerged).
-  Check their status. If they are still unmerged, leave those files alone and
-  list the follow-up in the tracker row.
+WEB APP / API PART (§9 step 4): ONLY IF KNG-132 AND KNG-139 ARE MERGED
+- First check whether both are on the default branches. When this prompt was
+  written (2026-10-16), neither was:
+  - KNG-132 was only on claude/loving-johnson-dlshrc in all three repos. For
+    example, knk-plugin main had no gates/GateReferencePoints.java, and
+    knk-web-api master had no DescribeGateDoorGeometryFields migration.
+  - KNG-139's Data/FormConfigurationSeeds/GateDoor.json was only on
+    claude/jolly-archimedes-urhio9 and claude/wonderful-darwin-u39k1o in
+    knk-web-api.
+  - Both Linear issues were "In Review".
+- If both are merged, do this part too, on claude/drawbridge-keyframe-animation
+  in knk-web-api (and in knk-web-app if the static GateDoorConfig needs it):
+  - the MotionDistanceBlocks description for ROTATION (deck-length rule, D2);
+  - ScanMaterialWhitelist in the GateDoor form for REGION doors (D8);
+  - the GeometryDefinitionMode description "PLANE_GRID = rectangular doors
+    only" (D8).
+  Follow KNG-139's seed authoring guide
+  (knk-workspace docs/specs/form-configurations/DEFAULT_FORM_SEEDS.md) and
+  KNG-132's description-migration pattern. For existing databases, a data
+  migration may change only descriptions that are empty or still hold their
+  seeded text; never overwrite one the developer edited.
+- If either is not merged, leave those files alone, do not build on the
+  unmerged branches, and record the follow-up in the tracker row.
 
 DONE MEANS
 - knk-plugin branch pushed, with a green build.
+- If the web/API part applied: those branches pushed, and their tests run (API:
+  dotnet test Tests/knkwebapi_v2.Tests/knkwebapi_v2.Tests.csproj; web app:
+  npm run test:ci), with counts reported against the known-red baseline.
 - Workspace docs updated on the workspace branch (§9 step 6):
   - mark the ROTATION mid-swing part of ROTATION_GAP_FILL Mechanisms 1–2 as
     superseded when the switch is on;
