@@ -367,21 +367,21 @@ ROTATION_GAP_FILL Decision 1 already accepted, limited to decorations.
 
 ### 5.9 Sizes: blocks closed, open and in between
 
-From the simulation. The deck length counts blocks (L = H). "Rigid" is the true-length alternative.
+From [`scripts/gate-animation/drawbridge_keyframes_sim.py`](../../../scripts/gate-animation/drawbridge_keyframes_sim.py), which rounds half-up like Java's `Math.round`. The deck length counts blocks (L = H). "Rigid" is the true-length alternative. "Cells changed" counts removals plus placements, so it can exceed the block count.
 
 | Facing | W × H | Closed | Open (L = H) | Open (rigid) | Keyframes | Cells changed per keyframe |
 |---|---|---|---|---|---|---|
 | cardinal | 3 × 4 | 12 | 12 | 12 | 7 | 9–12 |
-| cardinal | 4 × 6 | 24 | 24 | 24 | 11 | 12–24 |
-| cardinal | 4 × 8 | 32 | 32 | 32 | 15 | 12–32 |
-| cardinal | 7 × 10 | 70 | 70 | 70 | 19 | 35–70 |
-| 45° | 3 × 4 | 12 | 18 | 13 | 10 | 6–16 |
+| cardinal | 4 × 6 | 24 | 24 | 24 | 11 | 16–24 |
+| cardinal | 4 × 8 | 32 | 32 | 32 | 15 | 16–32 |
+| cardinal | 7 × 10 | 70 | 70 | 70 | 19 | 35–84 |
+| 45° | 3 × 4 | 12 | 18 | 13 | 10 | 3–20 |
 | 45° | 4 × 6 | 24 | 39 | 28 | 16 | 10–42 |
-| 45° | 4 × 8 | 32 | 53 | 39 | 22 | 11–56 |
-| 45° | 4 × 8, K = 13 (entity 14 as built) | 32 | **49** | — | 21 | 9–50 |
+| 45° | 4 × 8 | 32 | 53 | 39 | 22 | 4–56 |
+| 45° | 4 × 8, K = 13 (entity 14 as built) | 32 | **49** | — | 21 | 4–54 |
 | 45° | 7 × 10 | 70 | 124 | 91 | 28 | 19–130 |
 | cardinal | arch, 7 wide × 9 tall (column heights 7,8,9,9,9,8,7) | 57 | 57 | — | 17 | 17–58 |
-| 45° | arch, 5 wide × 7 tall (column heights 6,7,7,7,6) | 33 | 55 | — | 19 | 11–56 |
+| 45° | arch, 5 wide × 7 tall (column heights 6,7,7,7,6) | 33 | 55 | — | 19 | 3–56 |
 
 Formulas (rectangular doors; an arch has fewer blocks, because its missing corners stay missing in every keyframe):
 - Cardinal open = W·L.
@@ -483,7 +483,9 @@ The open scan (optional) is unchanged. It is placed verbatim at the open frame, 
 
 - **Deck length for ROTATION.** Reuse `MotionDistanceBlocks`; it is unused for ROTATION today. Meaning: "how many blocks
   the open deck reaches from the hinge, counted along the door's direction".
-  - 0 means: take it from the open scan if one exists, else use `GeometryHeight`.
+  - Precedence (as in §5.3): an open scan always sets the length, because its far edge is the last keyframe. The
+    field is only used without an open scan, and 0 means `GeometryHeight`. A non-zero value that disagrees with an
+    open scan logs a warning at load.
   - The web form gives the field a description for ROTATION (KNG-132 already adds geometry descriptions).
   - No migration needed. Alternative: a new field (D2).
 - **Admin flow for a drawbridge:**
@@ -543,7 +545,7 @@ The block keyframes would have been needed either way: they supply the resting f
 | # | Question | Recommendation | **Decision** |
 |---|---|---|---|
 | D1 | Default deck length for a diagonal door without an open scan: counted in blocks (8 tall → 8 diagonal blocks), or true length (8 tall → ~5–6 diagonal blocks, today's Mechanism 1)? | Blocks. It is what builders expect, and it matches how entity 14 was built | **Count in blocks.** The deck gets longer than today, so the live check includes each existing diagonal ROTATION door's landing area (§9) |
-| D2 | Where the length lives: reuse `MotionDistanceBlocks` for ROTATION, or a new field? | Reuse. No migration | **Reuse `MotionDistanceBlocks`** (0 = from the open scan, else `GeometryHeight`) |
+| D2 | Where the length lives: reuse `MotionDistanceBlocks` for ROTATION, or a new field? | Reuse. No migration | **Reuse `MotionDistanceBlocks`**. An open scan, when present, always sets the length; otherwise the field does, with 0 = `GeometryHeight` |
 | D3 | Plank style mid-swing: thin (8-connected, edge contacts) or solid (4-connected staircase, about 1.4× the blocks at 45°)? | Thin | **Thin** |
 | D4 | Timing: linear in angle, or eased (slow start, faster fall, "thud")? | Linear for v1 | **Linear in angle** |
 | D5 | Phase 2 display-entity swing? | Decide after the phase-1 live check | **Dropped.** Blocks only; §7 is kept for the record |
@@ -624,7 +626,7 @@ The block keyframes would have been needed either way: they supply the resting f
 
 ## Appendix A: simulation
 
-The numbers in §4 and §5.9 come from a short dependency-free Python script written for this analysis. It:
+The numbers in §4 and §5.9 come from [`scripts/gate-animation/drawbridge_keyframes_sim.py`](../../../scripts/gate-animation/drawbridge_keyframes_sim.py), a dependency-free Python 3 reference for the Java port. It rounds half-up like `Math.round`. It:
 - reimplements `GateFrameCalculator.calculateRotationPosition` (Rodrigues rotation about the anchor, `floor` to a
   cell) for a door without an open scan;
 - implements §5.2–5.4 (strip basis, naive digital line, tip path sampled finely, one keyframe per tip-cell change).
