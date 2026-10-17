@@ -343,4 +343,4 @@ The live checklist is in report §13. It covers:
 - a missing hub world (`create: false`);
 - a hub in the same world as the game.
 
-**Still open:** Siege respawn containment ([KNG-117](https://linear.app/kngpandi/issue/KNG-117)). The Siege outage abort was accepted without a live match.
+**Siege:** the outage abort and respawn containment ([KNG-117](https://linear.app/kngpandi/issue/KNG-117)) were accepted by the developer without a live match on 2026-10-17. A live match test is planned for later.
