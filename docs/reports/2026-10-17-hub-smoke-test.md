@@ -44,3 +44,24 @@ The steps follow the checklist in the [hub overnight handoff](../ai-agents/hando
 - **Plugin:** core 2059, api-client 258, paper 1658, 0 failures. New tests cover the allowed-use rules, the backdated outage start and the first-failure transition.
 - **Web app:** `tsc` clean; Game Settings tests 32/32.
 - **Live retest needed:** D12 (doors as a non-op, chests still closed), G24.1/G25 timing, B6 message, G22 hover.
+
+## Retest (run 2, same day)
+On the hub branch fast-forwarded to `2d963e65` / `732e5cc`.
+
+| Step | Result |
+|---|---|
+| R1 doors in the hub | Pass |
+| R2 return offer hover | Pass, but two new findings, below |
+| R3 unflag message | Pass |
+| R4 30 s delay timing | Accepted |
+| R5 0 s group delay | Accepted (seconds-level accuracy not needed) |
+| E portal while the API is down | Covered by the developer's run, no finding |
+| G24.2 timer across a restart | Pass |
+| G21 `/spawn` from the hub | Decision: **portal only**. Hub-specific refusal text requested. |
+
+**Findings and fixes** (knk-plugin `4a9bc44f` on `claude/fervent-ride-b536j6`; hub branch not moved yet):
+- **An earlier outage's offer came back.** It reached players who were in the hub when the API went out, together with its "you left the hub" expiry message. They had stayed in the hub without using the offer of an earlier outage, and the record was kept for them. A new outage now ends the earlier offer of every online player in the hub. Offline players keep theirs, because they may not have seen it.
+- **An unsafe spot blocked the return.** The return now looks for the nearest safe place within 5 blocks (it used to look within 1). If there is none, it uses the spawn of the structure, district or town the spot is in, innermost first. Without either, the offer is kept as before.
+- **Hub exit wording.** A refusal to leave while standing in the hub now says "You can only leave the hub through its portal." This covers `/spawn`, `/warp`, and walking out of an exit-denied hub or its parent town. Without portals it says "You can't leave the hub this way."
+
+Plugin tests: core 2059, api-client 258, paper 1661, 0 failures. Live retest pending.
