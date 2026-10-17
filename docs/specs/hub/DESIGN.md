@@ -1,7 +1,7 @@
 # Hub, outage policy and world portals — draft design
 
-**Status:** Implemented on branches `claude/blissful-fermat-b7ihrz`, not merged, not live-tested (§16). Readiness audit 2026-10-10 ([report](../../reports/2026-10-10-multiworld-capability-audit.md)). All decisions so far are settled (§16.4, §16.7).
-**Last updated:** 2026-10-12
+**Status:** Implemented and merged 2026-10-17 (knk-web-api `547d2b2`, knk-web-app `e86af25`, knk-plugin `9f31db6`) after the developer's live smoke test ([report](../../reports/2026-10-17-hub-smoke-test.md)). Readiness audit 2026-10-10 ([report](../../reports/2026-10-10-multiworld-capability-audit.md)). All decisions so far are settled (§16.4, §16.7); §16.6 lists the live checks not yet run.
+**Last updated:** 2026-10-17
 **Target:** Prefer implementation this weekend (10–11 October), before the closed alpha planned for 17–18 October 2026.
 **Linear:** [KNG-109](https://linear.app/kngpandi/issue/KNG-109)
 **Scope:** Requirements and investigation plan. No runtime changes or deployment.
