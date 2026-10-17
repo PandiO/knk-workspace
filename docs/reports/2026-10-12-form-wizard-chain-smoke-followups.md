@@ -272,3 +272,17 @@ Plugin, API and web app from this branch. The chain's sections 0, A–D, E1–E5
   step conditions or field validations exist on the dev DB yet).
 - Web app: 869 passed, the same 4 known-red.
 - **Left:** G2 (needs the hub world). Everything else on the branch is tested.
+
+### 2026-10-17, trunks merged in
+
+`claude/wonderful-darwin-u39k1o` brought up to date with each trunk before G2 (hub, KNG-118, KNG-171 and others):
+
+| Repo | Merge | Conflicts | Tests after |
+|---|---|---|---|
+| knk-web-api | `2dfca17` (master) | `LocationsController.Delete`: kept master's `LocationInUseException` 409, other refused deletes left to `DeleteConstraintExceptionFilter` | 2684 passed, the same 8 failures; model snapshot consistent; the dev DB already has all four migrations of 11-12 Oct |
+| knk-web-app | `0b3b43c` (main) | main's KNG-82 and this branch's KNG-169 both replaced `window.confirm`; kept `useConfirm` and the branch's prompts, removed main's duplicate `useConfirmModal`; tables keep handing a delete to the page (asks once); GameSettingsPage keeps main's `gameSettingsErrorMessage` | 888 passed, the same 4 known-red |
+| knk-plugin | `aa623291` (main) | none | knk-paper 1752/0, api-client 264/0, knk-core 2097 with 1 failure that is main's own (knk-core identical to main): `DataAccessExecutorOutageTest.whileDown_staleOkServesTheStaleEntry_...` expects a `Duration.ZERO` entry to be stale in the same clock tick |
+| knk-workspace | this merge | `ACTIVE_SESSIONS.md` taken from main | - |
+
+Also: the API test changes of `f33fd10`, `65435bd`, `768c197` and `acd7336` had been staged as `tests/...`, which git on
+Windows didn't match against the tracked `Tests/` folder; they are committed in `1f3da48`.
