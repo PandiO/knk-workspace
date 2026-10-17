@@ -188,3 +188,19 @@ Plugin, API and web app from this branch. The chain's sections 0, A–D, E1–E5
   removed from `GateStructure.json` in knk-web-api `251ea5c` (in place, since the seed hasn't been merged; a gate
   saved through it keeps 0, which the pickers hide). The dev DB's imported v1 copy still has the field; delete
   it in the builder or re-import after deleting the copy.
+
+### 2026-10-17, run 2
+
+- **F3.1 failed:** creating a new GateStructure's region (rule failing: region outside the district) answered
+  500, "A possible object cycle was detected … `$.Metadata.DependencyValue.TeleportMinPremiumGroup.ParentGroup.
+  ChildGroups…`". `ValidationService` replaces an id-only dependency by the saved record (since 459ea5f, also on
+  `master`) and returned that tracked entity in `Metadata.DependencyValue`; its navigations were fixed up with
+  permission groups loaded earlier in the request, which point at each other. Only a failed rule's result carries
+  the metadata. **Fixed** in knk-web-api `65435bd`: the metadata echoes the value the form sent, the validator still
+  gets the record. New test in `ValidationServiceDependencyRecordTests`. API: 2644 passed, the same 8 failures.
+  Retest F3 from step 1.
+- **F4:** passed. F4.2 works for Districts and Gates; the developer wants M2M steps whose join entry has nothing to
+  fill to pick the related entities directly: [KNG-183](https://linear.app/kngpandi/issue/KNG-183) (backlog).
+- **F5:** siege seeds made default (F5.1). F5.2 not run yet (Readiness is the last step of the SiegeScenario form,
+  edit mode only). F5.3 (undo) dropped: see F6.
+- **F6:** the developer keeps the seeds as the defaults.
