@@ -1,6 +1,6 @@
 # Form wizard chain — smoke-test follow-ups
 
-**Status:** Implemented, unit-tested, live test in progress (see "Live test" at the end); nothing merged, no PRs.
+**Status:** Implemented, unit-tested, live-tested (complete 2026-10-17, see "Live test" at the end); not merged yet.
 **Last updated:** 2026-10-16
 **Belongs to:** the chain smoke test in [2026-10-11-form-wizard-chain.md](2026-10-11-form-wizard-chain.md) (sections A–F).
 This file holds the fixes for what that test found, and the steps to check them.
@@ -286,3 +286,20 @@ Plugin, API and web app from this branch. The chain's sections 0, A–D, E1–E5
 
 Also: the API test changes of `f33fd10`, `65435bd`, `768c197` and `acd7336` had been staged as `tests/...`, which git on
 Windows didn't match against the tracked `Tests/` folder; they are committed in `1f3da48`.
+
+### 2026-10-17, run 6 (G2, on the merged branch)
+
+Run from the worktrees on the merged heads (API `2dfca17`, web app `0b3b43c`, plugin `aa623291`), in
+`world_KNK-DEV` with District "The Keep" (8, `district_1000006`).
+
+- **G2.1:** passed: the warning, the "Must be inside District "The Keep" (region district_1000006)." line and the
+  corners in chat; the region saved; the same sentence in the web app.
+- **G2.2:** District 15's region exists, so the normal check ran; passed.
+- **G2.3:** passed in Minecraft (the world-mismatch sentence). The web app only says "outside": the plugin's
+  contains endpoints answer a bare true/false. Filed as [KNG-187](https://linear.app/kngpandi/issue/KNG-187).
+  Requested along the way: a `/hub` command for every player to the Game Settings hub spawn through
+  `TeleportService`, [KNG-188](https://linear.app/kngpandi/issue/KNG-188).
+- **G2.4, G2.5:** accepted.
+
+**The live test is complete:** every section (chain 0, A-F; follow-ups G1-G7) passed or was accepted. The branch
+is ready to merge: knk-web-api -> `master`, knk-web-app -> `main`, knk-plugin -> `main`, knk-workspace -> `main`.
