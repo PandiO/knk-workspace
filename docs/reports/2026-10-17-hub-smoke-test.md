@@ -79,3 +79,18 @@ On the hub branch at knk-plugin `14930e9d` (the run 2 fixes plus the merge of `m
 | 6. `/spawn` and `/warp` from the hub: "You can only leave the hub through its portal." | Pass |
 
 All findings from runs 1-3 are fixed and confirmed live. The hub PRs are ready for review, in merge order: knk-web-api #8, knk-web-app #6, knk-plugin #11 (hub branch at `14930e9d`; web app at `732e5cc`).
+
+## Remaining live checks: accepted without a run
+After the merge, the developer was given steps for the audit's live checks that had not been run. Siege was left out. The developer **accepted all of them without running them** (2026-10-17). They are recorded as accepted, not as tested.
+
+| Section | Check |
+|---|---|
+| A | The same region ids at the same XYZ in both worlds: per-world AllowEntry, teleports between the copies, `/rg info -w`, `/knk regions repair`, a restart |
+| B | Gates in both worlds: only the addressed gate animates, `/gate info here` picks the local gate, both at once, a restart |
+| C | The portal during an outage: inside the 20-30 s detection window, after confirmation, a flapping API, recovery |
+| D | The Do nothing and Send to world spawn outage actions (runs 1-3 tested only Send to hub and Kick) |
+| E | A return offer refused because the spot's district now denies entry |
+| F | A missing hub world with `create: false`: non-ops refused, ops allowed. The unload guard is covered by unit tests only. |
+| Optional | A hub in the same world as the game |
+
+Still open: a Siege match during an outage ([KNG-117](https://linear.app/kngpandi/issue/KNG-117), In Review).

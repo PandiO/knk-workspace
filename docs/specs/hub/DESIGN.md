@@ -328,14 +328,19 @@ The live checklist is in report §13. It covers:
 - admission and joins;
 - the hub rules and the Peaceful preset;
 - fail-closed;
-- every outage action, the timer and an API-down restart;
+- the Send to hub and Kick outage actions, the timer and an API-down restart;
 - the return offer;
 - staff/owner mode transitions;
 - the portal (API up and down);
 - Location delete;
 - a gate door in the hub.
 
-Not run:
-- identical region names and XYZ in both worlds (with Districts and gates);
-- an outage during a portal transfer;
-- Siege respawn containment. The Siege outage abort was accepted without a live match.
+**Accepted by the developer without a live run (2026-10-17).** The steps are in the [smoke-test report](../../reports/2026-10-17-hub-smoke-test.md), "Remaining live checks":
+- identical region ids and XYZ in both worlds, with Districts and gates, including managed-region repair;
+- an outage during portal use, and a flapping API;
+- the Do nothing and Send to world spawn outage actions;
+- a return refused by AllowEntry;
+- a missing hub world (`create: false`);
+- a hub in the same world as the game.
+
+**Still open:** Siege respawn containment ([KNG-117](https://linear.app/kngpandi/issue/KNG-117)). The Siege outage abort was accepted without a live match.
