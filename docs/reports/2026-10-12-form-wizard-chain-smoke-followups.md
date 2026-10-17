@@ -257,3 +257,18 @@ Plugin, API and web app from this branch. The chain's sections 0, A–D, E1–E5
   either (mapping `Ignore()`), and `FormWizard.tsx` skips a validation with `!validation.isActive` and runs only
   completion conditions with `condition.isActive`, so those legacy per-field validations and step completion
   conditions may never run. Check before relying on them.
+
+### 2026-10-17, run 5
+
+- **G4:** passed after a quirk: "Use built-in columns" on District, Town and GateStructure didn't take effect at
+  first; after reselecting and clearing again it did. Two causes fixed in knk-web-app `2b6b83c`: every
+  `useEntityMetadata` instance kept its own copy of the metadata and saving refreshed only the Forms page's copy
+  (an already-mounted picker kept the old columns until it remounted; a refresh now notifies every instance, new
+  hook test); and a failed column save (`createConfiguration`/`updateConfiguration` return null) was still
+  reported as "Columns saved". After clearing, the editor shows the built-in keys (townName, ...) as selected;
+  that is the built-in set, not saved columns.
+- **G6.2:** passed. **G3:** accepted without testing.
+- The `isActive` finding from run 4 is filed as [KNG-186](https://linear.app/kngpandi/issue/KNG-186) (Low; no
+  step conditions or field validations exist on the dev DB yet).
+- Web app: 869 passed, the same 4 known-red.
+- **Left:** G2 (needs the hub world). Everything else on the branch is tested.
