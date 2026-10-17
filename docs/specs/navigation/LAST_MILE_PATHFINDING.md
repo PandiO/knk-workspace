@@ -330,7 +330,7 @@ plus "No conventional path to X found." with the HUD arrow, beyond 256 refused. 
 request.
 
 **Step 1 near the road ([KNG-124](https://linear.app/kngpandi/issue/KNG-124), finding N18; implemented 2026-10-15 on
-knk-plugin `wt/kng-121-124`, unmerged, not live-tested).** Within `reroute-distance` (8) of the route step 1 aimed no
+knk-plugin `wt/kng-121-124`, merged 2026-10-17, accepted without a live run).** Within `reroute-distance` (8) of the route step 1 aimed no
 walk leg (the straight line), so a player shut in close to a road heard nothing. Now `aimStartLeg` aims a **check-only**
 start leg (`DirectLeg.nearRoute`) when the player is within `reroute-distance` of the route but not on it: more than
 `ON_ROUTE_HORIZONTAL` (1.5) blocks from the route's nearest point horizontally, or more than `ON_ROUTE_VERTICAL` (1.5)

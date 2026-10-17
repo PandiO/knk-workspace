@@ -42,7 +42,8 @@ domain-cache gap, fixed in `ec358f39`; G2b passes. **Merged to knk-plugin `main`
 accepted, **merged to knk-plugin `main` `a388c70`**; H4's shut-in box very close to a road fails (N18, the KNG-75 step 1
 start-leg rule, not KNG-108; follow-up [KNG-124](https://linear.app/kngpandi/issue/KNG-124)) - "KNG-108" in Findings.
 **2026-10-15:** KNG-121 (walk paths keep KNG-110's "no way out" rule) and KNG-124 (finding N18: shut in close to a
-road) implemented on knk-plugin `wt/kng-121-124`, not live-tested - "KNG-121" (T1-T4) and "KNG-124" (U1-U5) in Findings.
+road) implemented on knk-plugin `wt/kng-121-124` - "KNG-121" (T1-T4) and "KNG-124" (U1-U5) in Findings. **2026-10-17:**
+T1-T3 passed (developer); T4 and U1-U5 accepted without a run; merged ([knk-plugin #14](https://github.com/PandiO/knk-plugin/pull/14)).
 **Last updated:** 2026-10-15
 **Sources:** the "Developer to-do" blocks of Phases 1, 3, 4 and 5 in `docs/specs/navigation/IMPLEMENTATION_PLAN.md`;
 progress report `docs/reports/2026-09-27-road-navigation-chain.md`. If this file and a plan block disagree, the plan wins.
@@ -1021,7 +1022,7 @@ Next: KNG-75 proper (walk legs at both ends, destinations further than 48 blocks
 `fa234f7` (the merged plugin needs KNG-56's `GET /api/Domains/access-rules`). The dev DB lacks trunk's KNG-59
 migration `UniquePermissionGrantHolderNode` (it deletes duplicate permission grants); navigation does not need it.
 
-### KNG-121 — walk paths and "no way out" (implemented 2026-10-15, to test)
+### KNG-121 — walk paths and "no way out" (implemented 2026-10-15; T1-T3 passed, T4 accepted, merged 2026-10-17)
 
 [KNG-121](https://linear.app/kngpandi/issue/KNG-121), knk-plugin branch `wt/kng-121-124` (on `main` `29bb6ff9`; the API
 and the web app are unchanged). KNG-110 gave the road router and the trail the "no way out" rule (a region whose domain
@@ -1041,7 +1042,7 @@ branch, restart, `/knk cache refresh`.
 - [ ] **T4** Regression: a district with AllowEntry off is still avoided, and one you stand in with AllowExit off still
   keeps the walk path inside (no path out: "No conventional path to X found.").
 
-### KNG-124 — shut in close to a road (finding N18; implemented 2026-10-15, to test)
+### KNG-124 — shut in close to a road (finding N18; implemented 2026-10-15; U1-U5 accepted without a run, merged 2026-10-17)
 
 [KNG-124](https://linear.app/kngpandi/issue/KNG-124), same branch as KNG-121. Within `reroute-distance` (8) of the
 route but not on it (more than 1.5 blocks from its nearest point sideways or in height) a short walk search to that

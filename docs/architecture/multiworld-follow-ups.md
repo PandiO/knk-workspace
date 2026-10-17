@@ -1,9 +1,10 @@
 # Multiworld — general follow-ups (KNG-118)
 
-**Status:** Partly implemented. This branch (`wt/kng-118`, not merged, not live-tested): R14/A5, A9, D8/D9, U2. Several
-other rows are done on the unmerged hub branch `claude/blissful-fermat-b7ihrz`. U4 is planned for after the form-wizard
-chain merges. Linear [KNG-118](https://linear.app/kngpandi/issue/KNG-118).
-**Last updated:** 2026-10-15
+**Status:** Merged 2026-10-17. R14/A5, A9, D8/D9 and U2 are merged ([knk-web-api #11](https://github.com/PandiO/knk-web-api/pull/11),
+[knk-web-app #7](https://github.com/PandiO/knk-web-app/pull/7), [knk-plugin #14](https://github.com/PandiO/knk-plugin/pull/14)), and the
+hub rows came with the hub merge the same day. Their live checks were accepted by the developer without a run. U4 waits for the form-wizard
+chain ([KNG-179](https://linear.app/kngpandi/issue/KNG-179)); P4 is a check for the developer (§5). Linear [KNG-118](https://linear.app/kngpandi/issue/KNG-118).
+**Last updated:** 2026-10-17
 **Source:** the G rows of the dated [2026-10-10 multiworld capability audit](../reports/2026-10-10-multiworld-capability-audit.md)
 §2 (on the hub branch; the report is a snapshot and is not edited). Hub-blocking rows are KNG-111 to KNG-117 and the
 [hub design](../specs/hub/DESIGN.md) §16.

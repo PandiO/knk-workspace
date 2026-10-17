@@ -1,7 +1,7 @@
 # Game Settings — Design
 
 **Status:** Implemented, live-tested and merged (2026-10-10): knk-web-api `master` `8cce48d`, knk-plugin `main` `973aa68b`, knk-web-app `main` `12c1d60`. All decisions are settled (§7); open follow-ups in §8.
-**Last updated:** 2026-10-10
+**Last updated:** 2026-10-12
 **Linear:** [KNG-52](https://linear.app/kngpandi/issue/KNG-52)
 **Sources:** knk-web-api `master` `099f936` (`Controllers/GameSettingsController.cs`, `Services/GameSettingsService.cs`, `Dtos/GameSettingsDtos.cs`, `Models/GameSettings.cs`, commit `285baf3` of 2026-08-19); knk-web-app `main` `3953658` (`src/pages/admin/GameSettingsPage.tsx`, commits `f3206c5`/`21e84c9` of 2026-08-21); knk-plugin `main` `5c85a3d` and the shelved stash `19-08-26: Workable: GameSettings feature` (base `961597e`); [vision §2.7](../../vision/vision.md#27-game-world-settings); [teleport DESIGN §3.6](../teleport/DESIGN.md) (`/spawn`).
 **Plan and status:** [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md). **Admin how-to:** [guides/game-settings.md](../../guides/game-settings.md).
@@ -186,15 +186,18 @@ the Game Settings (`GroupOverridesJson`), not on the PermissionGroup and not as 
 2026-10-05). Nodes can't carry a text or a location, and the PermissionGroup form is DB-configured.
 
 **Which group wins:** a player can be in several groups (rank, premium tier, staff groups, and the groups those
-inherit from). Since 2026-10-09 (**D13**) the order is the one teleport fees and cooldowns use (KNG-41,
-`TeleportGroupPolicy.Chain`) and permission grants resolve in:
-1. The player's groups from the highest `Weight` down (ties: lower id).
-2. Each group is followed by its parent chain before the next group; a group reached twice keeps its first place.
+inherit from). Since 2026-10-12 (hub DESIGN §16.7, decision 13, option (i); supersedes **D13**) the order is
+**hierarchy first, then weight**. It is the one order for Game Settings overrides, teleport fees and cooldowns (KNG-41,
+`TeleportGroupPolicy.Chain`) and permission grants (`PermissionGroupPrecedence.Chain`):
+1. A group the player holds that another of their held groups inherits from is not a starting point: it comes later,
+   through that group's chain.
+2. The other groups start from the highest `Weight` down (ties: lower id).
+3. Each group is followed by its parent chain before the next group; a group reached twice keeps its first place.
 
-So weight decides: a child group beats its parent only when its `Weight` is higher, because the inherited parents
-are among the player's groups too. With Staff at weight 100 and its child Admin at 5, Staff comes first; give
-Admin a higher weight than Staff if Admin's overrides should win. Round 2's rule was "hierarchy first, weight second"; the developer chose the teleport order instead so a
-player's spawn and their `/spawn` fee come from the same group.
+So a child group always beats its parent, whatever their weights, and weight settles groups in unrelated trees. A chain
+is ranked by the group the player actually holds. Example: Knight (weight 10) inherits from Squire (50), and Merchant
+(30) is unrelated; a player holding all three gets Merchant, Knight, Squire. With Staff at weight 100 and its child
+Admin at 5, Admin comes before Staff. (Until 2026-10-12 the order was weight first, D13.)
 
 The API computes this order (`PermissionGroupPrecedence`, kept equal to `TeleportGroupPolicy.Chain` by a test). It returns the player's groups in that order in the user
 summary and sorts the overrides in it on read. For each setting, the plugin takes the first of the player's groups
@@ -288,7 +291,7 @@ Data Retention card on the same page already needed that node.
 | D10 | World reports only on change or every 10 min, and the API no longer bumps `UpdatedAt` for a report. | 2 DB writes a minute for nothing, and a meaningless "last updated" on the page. |
 | D11 | Version history written on change only. The stash's `backup-interval-minutes` is gone. | The stash wrote an identical copy every 5 minutes. |
 | D12 | Both API writes require the plugin key or `knk.admin.config`. | They were anonymous. Same policy as the other config singletons. |
-| D13 **decided 2026-10-09** | The group order is the teleport fee order (KNG-41): highest Weight first, each group followed by its parent chain (§3.8). Round 2 had "hierarchy first, weight second". | Developer: "Yes, enforce teleport fee mechanic" - one order for spawn, messages and `/spawn` fees. |
+| D13 **decided 2026-10-09, superseded 2026-10-12** | The group order is the teleport fee order (KNG-41): highest Weight first, each group followed by its parent chain (§3.8). Round 2 had "hierarchy first, weight second". **Superseded** by hub DESIGN §16.7 decision 13: hierarchy first, then weight, still one order for all. | Developer: "Yes, enforce teleport fee mechanic" - one order for spawn, messages and `/spawn` fees. |
 | D14 | Group overrides are stored in the Game Settings, edited on its page (developer decision 2026-10-05). | One read for the plugin, reuses the page's pickers, no FormWizard/DB form-config change. |
 | D15 | "Synced vs separate" spawn/respawn is a respawn mode, `JoinSpawn`, per world and per group (developer decision 2026-10-05). | Some worlds or groups can be synced and others separate. |
 | D16 | Each overridable setting is resolved separately across the player's groups. | One group can own the join message and another the spawn, without copying settings. |

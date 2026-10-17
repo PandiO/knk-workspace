@@ -5,7 +5,7 @@
 `main` `b5eee6e`. All decisions below were accepted by the developer on 2026-10-11.
 2026-10-15: first consumer of the state, [KNG-171](https://linear.app/kngpandi/issue/KNG-171) — reads
 skip the API while it is DOWN (§ "Reads skip the API while DOWN"). Implemented on knk-plugin branch
-`wt/kng-171`, **not merged, not live-tested**.
+`wt/kng-171`; live-tested by the developer and merged 2026-10-17 ([knk-plugin #14](https://github.com/PandiO/knk-plugin/pull/14)).
 
 ## What decides "the API is up"
 

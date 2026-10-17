@@ -592,7 +592,7 @@ survives navigation (features scope their Confirm buttons with their own `*.pend
 engine permission checks are Bukkit-only (`Player.hasPermission`), not `KnkPermissible`.
 
 
-## Follow-up: item blinker (KNG-125, implemented 2026-10-15, not merged, not verified live)
+## Follow-up: item blinker (KNG-125, implemented 2026-10-15, live-tested and merged 2026-10-17)
 
 **Status:** Implemented on knk-plugin branch `wt/kng-125` (plugin-only). Builds and unit tests green;
 **not verified live**: see [player-statistics-smoke-test.md](../../guides/player-statistics-smoke-test.md)

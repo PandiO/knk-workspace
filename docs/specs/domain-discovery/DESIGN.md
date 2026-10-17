@@ -1,7 +1,7 @@
 # Domain Discovery — Design
 
 **Status:** Done — merged to trunk 2026-09-27
-**Last updated:** 2026-10-15 (§3.11 multiworld: discovery per (world, region id), KNG-118 R14/A5 — branch `wt/kng-118`, not merged); 2026-10-06 (§3.6 note: `OnRegionEnterEvent` no longer fires for denied moves, KNG-55); 2026-09-26
+**Last updated:** 2026-10-15 (§3.11 multiworld: discovery per (world, region id), KNG-118 R14/A5 — merged 2026-10-17); 2026-10-06 (§3.6 note: `OnRegionEnterEvent` no longer fires for denied moves, KNG-55); 2026-09-26
 **Linear:** [KNG-20](https://linear.app/kngpandi/issue/KNG-20/domain-discovery-first-entry-rewards-for-townsdistrictsstructures)
 **Sources:** `knk-v1-archive` (`src/Towns/TownEvents.java`, `src/Towns/Town.java`, `src/DataManager/Towns.java`,
 `src/Users/User.java`, `src/Titles/Title.java`, `src/Main/Main.java`, `src/Menu/Menu.java`, `src/DataManager/Worldguard.java`);
@@ -439,7 +439,7 @@ action `menu.open {key: discoveries.main}`, Render `menu-available discoveries.m
 
 ### 3.11 Multiworld: discovery per (world, region id) (KNG-118 R14/A5, 2026-10-15)
 
-**Status:** implemented on branch `wt/kng-118` (knk-web-api, knk-plugin), **not merged, not live-tested**.
+**Status:** merged 2026-10-17 (knk-web-api [#11](https://github.com/PandiO/knk-web-api/pull/11), knk-plugin [#14](https://github.com/PandiO/knk-plugin/pull/14)); the live check below was accepted by the developer without a run.
 Region ids are unique per world only (KNG-111/KNG-112, multiworld audit rows R14 and A5), so discovery now carries the world:
 
 - **API (A5).** The grant body takes an optional `worldName`. With it, a region id matches that world's domain, else a domain

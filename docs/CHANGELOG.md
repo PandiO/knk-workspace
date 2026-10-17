@@ -4,8 +4,36 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
-Batch of 2026-10-15 on branch `claude/linear-issues-delegation-k1trkm` (knk-plugin, knk-web-api, knk-web-app,
-knk-workspace). Unit-tested, none of it checked in game or in a browser yet.
+- **Gate doors refuse a Reference point 2 that isn't straight above the anchor**
+  ([KNG-132](https://linear.app/kngpandi/issue/KNG-132); knk-web-app `f6c7c37`, knk-plugin `974ce335`, knk-web-api
+  `f40ce73`, branch `claude/loving-johnson-dlshrc`). Both reference points are measured from the anchor: point 1 along
+  the bottom edge (width), point 2 straight up (height). A point 2 above point 1 gave a slanted height of 2, the block
+  scan stored the wrong blocks and the door jammed. The GateDoor form now refuses such a point and says where it
+  should be, the plugin's block scan refuses it too, loading such a door logs a warning, and the anchor, reference
+  point, geometry and motion distance fields have descriptions. Unit-tested; not yet checked in game.
+
+## 2026-10-17
+
+- **The hub: a protected arrival world, API-outage actions and portals** ([KNG-109](https://linear.app/kngpandi/issue/KNG-109),
+  KNG-113, KNG-114, KNG-116, KNG-117; knk-web-api `547d2b2` [#8](https://github.com/PandiO/knk-web-api/pull/8), knk-web-app
+  `e86af25` [#6](https://github.com/PandiO/knk-web-app/pull/6), knk-plugin `9f31db6` [#11](https://github.com/PandiO/knk-plugin/pull/11)).
+  - **Worlds:** KnK loads the worlds listed in `worlds.load` (e.g. a void `hub`). Gates animate only in their own world.
+  - **Admission:** a Town, District or Structure can be selected as the hub on the Game Settings page. Joining players
+    then arrive at its spot before they appear, also while the API is down. A missing hub refuses non-ops.
+  - **Hub rules:** no combat or building, storage and item frames closed, doors and NPCs open (past WorldGuard), and the
+    Peaceful heal/feed preset.
+  - **API outage:** per hub or per group, Do nothing, Send to the hub, Kick or Send to world spawn, after a delay counted
+    from the first failed health check. A Siege match is aborted.
+  - **After the outage:** players get a clickable return to their spot, with fallbacks for an unsafe spot.
+  - **Portals:** WorldGuard regions that take players into the game. Leaving otherwise says "use the portal".
+  - **Also changed:** group overrides rank by hierarchy, then weight. Deleting a Location never deletes its domain.
+  - **Live:** smoke-tested by the developer in three runs ([report](reports/2026-10-17-hub-smoke-test.md)). The remaining
+    checks and Siege were accepted without a run.
+
+Delegated batch of 2026-10-15 (`claude/linear-issues-delegation-k1trkm`), merged with trunk: knk-web-api `181bf3f`
+([#11](https://github.com/PandiO/knk-web-api/pull/11)), knk-web-app `2fcbeae` ([#7](https://github.com/PandiO/knk-web-app/pull/7)),
+knk-plugin [#14](https://github.com/PandiO/knk-plugin/pull/14). Developer live check 2026-10-17: KNG-171, KNG-121 (T1-T3),
+KNG-125 and KNG-126 passed; KNG-121 T4, KNG-124 and KNG-118 accepted without a run.
 
 - **Commands answer at once during an API outage** ([KNG-171](https://linear.app/kngpandi/issue/KNG-171); knk-plugin
   `77235931`). While `/knk health` shows DOWN, reads skip the API instead of trying three times: `/msg`, `/tpa` and
@@ -32,14 +60,6 @@ knk-workspace). Unit-tested, none of it checked in game or in a browser yet.
   still read). The loaded-worlds report is kept per server (`game-settings.server-id`). A District's new inline
   Location, a world-task Location and a web capture without a world are refused instead of landing in a world named
   "world". Status of every row: [multiworld follow-ups](architecture/multiworld-follow-ups.md).
-
-- **Gate doors refuse a Reference point 2 that isn't straight above the anchor**
-  ([KNG-132](https://linear.app/kngpandi/issue/KNG-132); knk-web-app `f6c7c37`, knk-plugin `974ce335`, knk-web-api
-  `f40ce73`, branch `claude/loving-johnson-dlshrc`). Both reference points are measured from the anchor: point 1 along
-  the bottom edge (width), point 2 straight up (height). A point 2 above point 1 gave a slanted height of 2, the block
-  scan stored the wrong blocks and the door jammed. The GateDoor form now refuses such a point and says where it
-  should be, the plugin's block scan refuses it too, loading such a door logs a warning, and the anchor, reference
-  point, geometry and motion distance fields have descriptions. Unit-tested; not yet checked in game.
 
 ## 2026-10-11
 

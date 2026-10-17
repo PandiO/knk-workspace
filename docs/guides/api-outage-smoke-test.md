@@ -1,6 +1,6 @@
 # API outage — smoke test
 
-**Status:** To test (KNG-171 section written 2026-10-15; not run yet)
+**Status:** KNG-171 passed (developer, 2026-10-17), merged 2026-10-17 ([knk-plugin #14](https://github.com/PandiO/knk-plugin/pull/14))
 **Last updated:** 2026-10-15
 **Architecture:** [api-connectivity.md](../architecture/api-connectivity.md) (KNG-115 state and its subscribers) ·
 [offline-security-cache.md](../architecture/offline-security-cache.md) (KNG-58/KNG-123 fallback; its § 8 has the
@@ -43,4 +43,4 @@ non-op permissions during an outage; that is KNG-58's rule, not a failure here.
 
 ## Findings
 
-_None yet._
+- **2026-10-17, developer:** KNG-171 steps 1-5 pass. No findings.
