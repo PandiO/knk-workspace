@@ -1,7 +1,7 @@
 # knk-web-app — Architecture
 
 **Status:** Living document — reflects actual code, updated in place on each rescan
-**Last updated:** 2026-09-18 (scan basis: `knk-web-app` @ `4ff5dc6`, branch `claude/web-app-codebase-scan-4yqibi`); spot edits 2026-10-09 (ObjectTypeExplorer, KNG-61), 2026-10-10 (FormWizard Boolean fields, KNG-53)
+**Last updated:** 2026-09-18 (scan basis: `knk-web-app` @ `4ff5dc6`, branch `claude/web-app-codebase-scan-4yqibi`); spot edits 2026-10-09 (ObjectTypeExplorer, KNG-61), 2026-10-10 (FormWizard Boolean fields, KNG-53), 2026-10-12 (FormWizard child forms, KNG-133, KNG-134; List edit load, step header, List validation, KNG-135, KNG-137, KNG-164; form session registry, KNG-136; cancel / delete-draft prompt, KNG-162; form configuration export/import, KNG-138); 2026-10-17 (form wizard chain merged to `main`; smoke-test follow-ups KNG-166..169, KNG-172, KNG-173: step strip, confirmations and refusals, rule builder parent forms, picker columns, metadata refresh)
 **Source scan:** `docs/reports/web-app-scan-2026-09-18.md`
 
 ## Stack
@@ -38,6 +38,87 @@ entity. Two parallel generic engines carry most of the CRUD surface:
    holds a real boolean - the authored default, else `false` - via `seededFormFieldValue`
    (`utils/forms/formFieldDefaultValue.ts`). Required means "value is present", so an unchecked box
    (`false`) passes; "must be ticked" would be a separate validation rule.
+   **Child forms** (KNG-133, decision D1 = A; merged to `main` 2026-10-17 with the form wizard chain,
+   branch `claude/wonderful-darwin-u39k1o`): "Create New" / "Edit instance" on a relationship field opens `ChildFormModal` with a nested
+   `FormWizard`. When the child completes, its entity is saved at once through its own create/update
+   API for every **List** field (owned collection or not) and every **Object** field except a single
+   **Location**, which stays an embedded value saved with its parent
+   (`utils/forms/childPersistence.ts` → `shouldPersistChildOnComplete`). Many-to-many steps save
+   created entities themselves (`ManyToManyRelationshipEditor.handleCreateRelatedEntity`).
+   `normalizeFormSubmission` sends relationships as ids and throws `UnsavedRelationshipValueError`
+   (naming the field) for an id-less entity in an Object (not Location) or List field, so nothing is
+   dropped silently; the wizard shows the message and doesn't mark the progress Completed.
+   **Edit instance** (KNG-134): `handleOpenChildForm` hands the child the instance the
+   parent holds (`initialValues`) and whether its edits live only in the parent (`editingInMemory`:
+   a child not saved on completion, i.e. an embedded Location). Without an id the child form is
+   seeded from it (title "Edit …"); with an id and `editingInMemory` the nested `FormWizard` loads
+   from the database and lays the held values over it (`overlayFieldValues`); otherwise the database
+   is the source (`utils/forms/childEditSeed.ts`). "Replace via Minecraft" keeps an existing Location
+   id, and a world task a child inherits onto its first field spreads an object result over the
+   child's fields of the same name (`utils/forms/worldTaskFieldValue.ts`). `ListField` keys, removes
+   and edits items by position/client key, not by id (`utils/forms/listItemKeys.ts`).
+   **List fields in edit mode** (KNG-135): `resolveObjectFieldValueForEdit`
+   (`utils/forms/objectFieldEditValue.ts`) also pairs List relationship fields across `XIds` / `Xs`:
+   an `XIds`-authored field takes the DTO's `Xs` objects (bare ids become `{ id }`), an `Xs`-authored
+   field falls back to `{ id }`s from `XIds`. The edit load and Edit-instance seeding both use it.
+   **List validation** (KNG-164): `validateField` sends List fields to
+   `utils/forms/listFieldValidation.ts`: a required List needs at least one item, `minSelection` /
+   `maxSelection` are enforced (null or 0 = no limit), an owned child collection is skipped until its
+   parent is saved. **Step header** (KNG-137, KNG-168): `FormWizard/WizardStepHeader.tsx` shows
+   step names in the progress bar (truncated, hidden below `md`) and keeps the step name as the
+   title in edit mode under a small "Edit {entity}" heading; Boolean fields render their description.
+   A strip with more steps than fit scrolls sideways (current step kept in view, ‹ › only on a side
+   that hides steps, `stepStripOverflow`). Below `sm` a compact "Step 3 of 9 · Name" label and bar
+   replace the circles; the label is a disclosure button listing every step (done / current / to do),
+   closed again on a step change. Steps are not clickable yet (KNG-184).
+   **World-task values** (KNG-167): a capture spread over a child's fields keeps a Name the admin
+   typed (`utils/forms/worldTaskFieldValue.ts`); rule placeholders built from an Object field use
+   the entity's name, not the object (`utils/placeholderExtraction.ts`, KNG-173).
+   **Form session registry** (KNG-136): the exported `FormWizard` wraps its body in a
+   `FormSessionScope` (`contexts/FormSessionContext.tsx`). The first wizard with no session above it
+   (normally `FormWizardPage`'s) owns the registry for its lifetime; wizards nested in
+   `ChildFormModal`/`JoinEntityFormModal` join it and add their entity name to the form path.
+   `handleChildFormComplete` and `ManyToManyRelationshipEditor.handleCreateRelatedEntity` register
+   what a child saved (`useFormSession().register`: type, id or a concept key for an embedded value,
+   display DTO, origin form path + field, `created`/`updated`, order). `ObjectField`/`ListField` get
+   the created, non-embedded entries of their `objectType` as `pinnedRows` plus a `refreshKey`
+   (`hooks/useSessionPinnedRows.ts`; Locations are never pinned). `PagedEntityTable` shows them in a
+   "Created in this form" section with a New badge, filtered by the search term and the query's
+   filters on the client and de-duplicated against the page (`utils/forms/sessionPinnedRows.ts`);
+   rows are keyed and selected by id (`isSameSelection`), not by array index.
+   **What a form created, and cancelling it** (KNG-162): the root wizard of a session
+   (`formPath.length === 1`, no `parentProgressId`; `hooks/useCreatedEntitiesProvenance.ts`) sends
+   `createdEntitiesJson` with every progress save (`utils/forms/createdEntities.ts`: type, id, label
+   fields, origin, creation order); resuming that draft seeds the registry (`seed()`), so pickers pin
+   the entities again. `FormWizardPage` wraps the wizard in `FormSessionRoot` (a registry without a
+   form-path entry) next to `FormWizard/FormCancelAction.tsx` ("Cancel form"); deleting a draft from
+   Saved Progress reads the summary's `createdEntitiesJson`. Both show `CreatedEntitiesPrompt` (Keep =
+   default, Delete); Delete runs `utils/forms/deleteCreatedEntities.ts`: newest first, the API's
+   `entity-references` check (entities still pending in the run ignored), then the entity's normal
+   delete (`getDeleteFunctionForEntity`); in use / 409 = skipped and reported. Cancel never deletes
+   the draft; nothing is deleted automatically.
+   **Export / import** (KNG-138): the form configuration list (`FormWizard/FormConfigurationTable.tsx`)
+   has **Export JSON** per row (downloads the API's portable `knk-formconfig/1` file,
+   `utils/forms/formConfigPortability.ts`) and **Import / Seeds**, which opens
+   `FormWizard/FormConfigurationImportPanel.tsx`: choose a file or a bundled seed, the API dry-runs it,
+   the result (problems, warnings, default handling) is shown, and Import is offered only after a
+   passing dry run with the current "make default" choice. `formConfigClient.importConfiguration` /
+   `importSeed` resolve with the result body on a 400/409 refusal instead of raising the global error
+   toast. Deleting a form configuration (KNG-172) warns how many saved drafts go with it
+   (`utils/forms/formConfigDeleteConfirm.ts`, from the API's `entity-references`); the API detaches its
+   form sessions and removes its drafts, so only real uses (another form opening it as a sub-form)
+   refuse the delete.
+   **Confirmations and refusals** (KNG-169, KNG-82): no `window.confirm`/`alert` is left. Questions
+   go through `hooks/useConfirm.tsx` (`const [confirm, confirmModal] = useConfirm()`, a
+   `FeedbackModal` with confirm/cancel labels and a red `danger` button); the configuration tables
+   hand a delete to the page, which asks once. A refused operation shows the API's reason
+   (`utils/apiRefusalReason.ts`; the API's 409 names what still uses the item), never "please try
+   again". A `FeedbackModal` without `onContinue` shows a single Close button.
+   **Rule builder** (`FormConfigBuilder/ValidationRuleBuilder.tsx`): "Depends On Field" also lists
+   the fields of the forms this one is opened from (`utils/forms/parentFormFields.ts`: default
+   configurations with an owned-child List or M2M step of this entity, up to 3 levels); a dependency
+   path then starts at that parent's entity. The filter does not use `isActive`, which the API never
+   sets (KNG-186).
 2. **Display engine** (`DisplayWizard/`, `DisplayConfigBuilder/`) — same pattern for
    read-only entity detail views, driven by `DisplayConfigurationDto`
    (`displayConfigClient`).
@@ -57,7 +138,18 @@ Entity metadata itself (which fields exist on which backend entity, display conf
 validation rules) is fetched once per session and cached at module scope by
 `hooks/useEntityMetadata.ts`, then merged with `EntityTypeConfigurationDto` (per-entity
 icon/color/sort overrides, authored via the — currently unrouted —
-`EntityTypeConfigurationPage`).
+`EntityTypeConfigurationPage`). Each hook instance holds its own copy; a `refresh()` (e.g. after
+saving default table columns) notifies every mounted instance, so an open picker picks the change up
+without remounting.
+
+**Picker columns** (KNG-166): `PagedEntityTable` shows the entity's saved default table columns
+(Forms page → Default Table Columns) or else the built-in columns of
+`config/objectConfigs.tsx` (District: Town, World; Street: Districts, Towns; Structure and
+GateStructure: street + number, District, Town). Built-in columns read the list DTO's flat field and
+fall back to the full DTO's nested shape (`utils/forms/pickerRowValues.ts`), so pinned and searched
+rows match. A saved key (a metadata field name such as "Town") is matched to the built-in column with
+the same key, key + "Name", or the same label (`utils/forms/savedColumns.ts`). Saving no columns clears
+them ("Use built-in columns"; the API stores an empty list as none).
 
 ## Directory map
 

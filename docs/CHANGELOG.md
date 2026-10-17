@@ -14,6 +14,44 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## 2026-10-17
 
+- **Form wizard: child forms save what they create, sessions remember it, and ready-made gate and siege forms**
+  ([KNG-133](https://linear.app/kngpandi/issue/KNG-133)…[KNG-139](https://linear.app/kngpandi/issue/KNG-139),
+  [KNG-162](https://linear.app/kngpandi/issue/KNG-162), [KNG-164](https://linear.app/kngpandi/issue/KNG-164) and the
+  smoke-test follow-ups KNG-166…169, KNG-172…174; branch `claude/wonderful-darwin-u39k1o`, which replaced
+  `claude/jolly-archimedes-urhio9`: knk-web-api `master` `2929972`, knk-web-app `main` `bbd0dae`, knk-plugin `main` `5643ae6a`; merged
+  directly, no PRs). **Needs two additive migrations** before the new web app runs against a database:
+  `AddFormFieldSelectionLimits`, `AddFormSubmissionProgressCreatedEntities` (the dev DB has them).
+  - **Child forms:** a "Create New" entity on a List field is saved when its form completes, and a form refuses to
+    submit an entity that was never saved. **Edit instance** opens with the values the form holds. Editing loads
+    List relationships (`districtIds`).
+  - **Required lists and limits:** a required List refuses an empty list; minimum/maximum selections are stored and
+    enforced.
+  - **Step names** in the progress bar and as the title in edit mode, Boolean descriptions. Many steps scroll
+    sideways; on a phone "Step 3 of 9 · Name" opens a list of all steps (KNG-168).
+  - **Session entities:** what a form created is pinned in every picker of that type ("Created in this form", New),
+    also after resuming a draft. **Cancel form** and deleting a draft ask whether to keep (default) or delete what
+    child forms saved; in-use entities are skipped with the reason.
+  - **Export / import:** Export JSON per form configuration, Import / Seeds with a dry run; never overwrites. Ten
+    bundled seed forms: GateStructure (no house number), GateDoor and the siege set. On the dev DB the seeds are the
+    defaults.
+  - **Pickers** show the columns that tell rows apart (District: Town; Street: Districts, Towns; gates and structures:
+    street + number, District, Town); saved columns map to them, and "Use built-in columns" clears saved ones
+    (KNG-166).
+  - **Refusals explain themselves:** a refused delete names what still uses the item ("This street can't be
+    deleted: it is still used by 1 structure."), confirmations are in-app modals, no browser boxes (KNG-169).
+    A form configuration that was opened can be deleted; its drafts go with it (KNG-172).
+  - **Minecraft validation:** warning is warning and block is block; failures name what the region or location must
+    be inside, a missing parent region or a wrong world get their own sentence (KNG-173). One open world task at a
+    time, readable task header (KNG-174). A typed Location name survives a capture (KNG-167).
+  - **Fixed along the way (live test):** a failed region rule no longer answers 500 (object cycle); a form rule's
+    changed dependency path is saved; the rule builder finds a parent form's fields again (it showed "Property
+    'Town' not found on entity 'SiegeObjective'").
+  - **Live:** smoke-tested by the developer 2026-10-12 and 2026-10-16/17, all sections passed or accepted
+    ([chain report](reports/2026-10-11-form-wizard-chain.md),
+    [follow-ups and live test](reports/2026-10-12-form-wizard-chain-smoke-followups.md)). Follow-ups in Linear:
+    KNG-183 (M2M direct pick), KNG-184 (clickable steps), KNG-185 (refusal details), KNG-186 (`isActive` never
+    set), KNG-187 (web app: wrong world / missing region), KNG-188 (`/hub`).
+
 - **The hub: a protected arrival world, API-outage actions and portals** ([KNG-109](https://linear.app/kngpandi/issue/KNG-109),
   KNG-113, KNG-114, KNG-116, KNG-117; knk-web-api `547d2b2` [#8](https://github.com/PandiO/knk-web-api/pull/8), knk-web-app
   `e86af25` [#6](https://github.com/PandiO/knk-web-app/pull/6), knk-plugin `9f31db6` [#11](https://github.com/PandiO/knk-plugin/pull/11)).
