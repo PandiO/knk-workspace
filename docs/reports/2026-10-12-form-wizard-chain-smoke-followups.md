@@ -204,3 +204,21 @@ Plugin, API and web app from this branch. The chain's sections 0, A–D, E1–E5
 - **F5:** siege seeds made default (F5.1). F5.2 not run yet (Readiness is the last step of the SiegeScenario form,
   edit mode only). F5.3 (undo) dropped: see F6.
 - **F6:** the developer keeps the seeds as the defaults.
+
+### 2026-10-17, run 3
+
+- **G1:** passed (G1.1-G1.3, run 2).
+- **F3.1:** after `65435bd` the region step went through; Submit then answered **400**: `"$.HouseNumber": The JSON value
+  could not be converted to System.Int32` (the form was a draft started before the seed lost House number, so it
+  still sent `"HouseNumber": null`). **Fixed** in knk-web-api `768c197`: `GateStructureDto.HouseNumber` is `int?`
+  (NullableIntConverter); null = not on the form, so a new gate keeps 0 and an update keeps the gate's number.
+  Two mapping tests. API: 2646 passed, the same 8 failures. Retest: submit the same draft.
+- **F3, doors on an unsaved gate:** Create New on Gate doors stays disabled until the gate is saved ("Save this
+  record first before adding items", web app since `0fdd69d`, 2026-09-13): a door is saved when its form completes
+  and needs the gate's id, and its point and scan checks read the saved gate. Flow: Submit the gate, Edit it, add
+  doors.
+- **F5.2:** can't be reached as written: the capture point/spawnpoint Location rules are blocking in the forms, so a
+  point outside the town can't be saved. Readiness reads each rule's `IsBlocking` at check time
+  (`SiegeScenarioService.AddFieldRuleChecksAsync`), so the test is: make the rule non-blocking in the builder, save a
+  point outside, Readiness shows a **warning**; make the rule blocking again, Re-check, it is an **error**; move the
+  point back inside, Re-check, ready.
