@@ -1,5 +1,5 @@
 # Hub smoke test and fixes
-**Status:** Developer smoke test of the hub branches, run 1. Fixes pushed, not merged, not yet retested live.
+**Status:** Complete. Three runs; every finding fixed and confirmed live. Hub PRs not merged yet.
 **Date:** 2026-10-17
 **Issue:** [KNG-109](https://linear.app/kngpandi/issue/KNG-109) (KNG-113/114/116/118); hub [DESIGN §16](../specs/hub/DESIGN.md) on `claude/blissful-fermat-b7ihrz`
 **Tested:** `claude/blissful-fermat-b7ihrz` in knk-plugin (`73024c7f`), knk-web-api (`f090cbc`), knk-web-app (`3b587fe`)
@@ -74,6 +74,8 @@ On the hub branch at knk-plugin `14930e9d` (the run 2 fixes plus the merge of `m
 | 1. An earlier offer ends at a new outage (player stayed in the hub) | Pass |
 | 2. An offline player keeps the offer and gets it on rejoin | Pass |
 | 3. An unsafe spot: return to a safe place within 5 blocks | Pass |
-| 4. An unsafe spot in a town/district: return to its spawn | Not reported yet |
-| 5. An unsafe spot outside any domain: the offer is kept | Not reported yet |
-| 6. `/spawn` and `/warp` from the hub: "You can only leave the hub through its portal." | Not reported yet |
+| 4. An unsafe spot in a town/district: return to its spawn | Pass |
+| 5. An unsafe spot outside any domain: the offer is kept | Pass |
+| 6. `/spawn` and `/warp` from the hub: "You can only leave the hub through its portal." | Pass |
+
+All findings from runs 1-3 are fixed and confirmed live. The hub PRs are ready for review, in merge order: knk-web-api #8, knk-web-app #6, knk-plugin #11 (hub branch at `14930e9d`; web app at `732e5cc`).
