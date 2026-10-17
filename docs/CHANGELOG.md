@@ -10,7 +10,7 @@ This is a human-readable record of capabilities merged into the V3 default branc
   the bottom edge (width), point 2 straight up (height). A point 2 above point 1 gave a slanted height of 2, the block
   scan stored the wrong blocks and the door jammed. The GateDoor form now refuses such a point and says where it
   should be, the plugin's block scan refuses it too, and loading such a door logs a warning. The field descriptions
-  come from the GateDoor form seed (KNG-139). Unit-tested; not yet checked in game.
+  come from the GateDoor form seed (KNG-139). Unit-tested and smoke-tested in game (2026-10-17).
 
 ## 2026-10-17
 
