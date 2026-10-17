@@ -1,6 +1,6 @@
 # Codex handoff: hub implementation-readiness and general multiworld audit
 **Date:** 2026-10-10
-**Status:** Ready to execute; audit not yet performed
+**Status:** Executed 2026-10-10 (code/schema-source audit; no live/DB validation) — see [report](../../reports/2026-10-10-multiworld-capability-audit.md) and hub DESIGN §16. PR #11 was already merged, so the docs went to a follow-up workspace PR.
 **Issue:** KNG-109
 **Workspace branch:** codex/hub-design, draft PR #11 (unmerged)
 **Scope:** Investigation and documentation; do not implement, merge or deploy the hub yet.

@@ -1,7 +1,7 @@
 # Hub, outage policy and world portals — draft design
 
-**Status:** Draft for developer review; not implemented.
-**Last updated:** 2026-10-10
+**Status:** Implemented and merged 2026-10-17 (knk-web-api `547d2b2`, knk-web-app `e86af25`, knk-plugin `9f31db6`) after the developer's live smoke test ([report](../../reports/2026-10-17-hub-smoke-test.md)). Readiness audit 2026-10-10 ([report](../../reports/2026-10-10-multiworld-capability-audit.md)). All decisions so far are settled (§16.4, §16.7); §16.6 lists the live checks not yet run.
+**Last updated:** 2026-10-17
 **Target:** Prefer implementation this weekend (10–11 October), before the closed alpha planned for 17–18 October 2026.
 **Linear:** [KNG-109](https://linear.app/kngpandi/issue/KNG-109)
 **Scope:** Requirements and investigation plan. No runtime changes or deployment.
@@ -60,7 +60,7 @@ Confirmed configurable catalogue and initial values are in §13: building/breaki
 - KNG-58: explicit offline-cache integration requirement for hub configuration and KNG-52 Game Settings. As checked on 2026-10-10 the issue is In Review; this does not establish that Game Settings are covered or that its changes are merged. Verify the current implementation and extend its shared mechanism instead of creating a second cache. KNG-57: align refresh/invalidation and readiness detection.
 - Join loading guard, game modes, inventories and Siege respawn: define precedence explicitly. An outage relocation during a minigame must not lose or duplicate inventory, rewards or match state.
 
-Evidence reviewed: Linear KNG-52 is Done; workspace active-session tracker reports its merge and live validation. Domain access architecture reviewed. Runtime code has not been audited for this draft.
+Evidence reviewed: Linear KNG-52 is Done; workspace active-session tracker reports its merge and live validation. Domain access architecture reviewed. Runtime code has not been audited for this draft. *Superseded 2026-10-10:* the default-branch code audit is in §16 and the [multiworld audit](../../reports/2026-10-10-multiworld-capability-audit.md).
 
 ## 6. Prerequisite: world management decision and multi-world audit
 
@@ -98,6 +98,8 @@ This audit is now a required work item; it has **not** been performed as part of
 Concurrent multi-Minecraft-world support is a **game-wide platform requirement independent of the hub feature**. The hub is its first immediate consumer, not the limit of the audit. Assess all current Domain/Location consumers and world-dependent systems across the game. Report every discovered single-world assumption and unsupported path, even when it does not block hub delivery. Prioritize hub-blocking fixes for the alpha, and track other gaps explicitly as follow-up work; deferral must not be reported as verified general multi-world support. The audit must yield a reusable capability/gap matrix for KnK as a whole, with evidence and a distinction between implemented, tested and unverified behavior.
 
 ## 7. Implementation sequence
+
+*2026-10-10: the concrete minimal phased plan is §16.3; the steps below remain the outline.*
 
 1. Resolve the decisions below and inspect current default-branch code.
 2. Complete the prerequisite Multiverse/in-house decision and end-to-end multi-world audit; identify and fix hub-blocking gaps before building the hub flow.
@@ -172,7 +174,7 @@ Acceptance additions: direct/inherited/denied mode-node checkbox visibility; sta
 
 ## 14. Multiverse research recommendation
 
-See [2026-10-10 research](../../reports/2026-10-10-hub-multiverse-research.md). Recommended: Multiverse Core 5.8.1 candidate for world lifecycle, KnK-owned portal/readiness/destination logic. Dependency choice is not yet approved or live-tested. Full multiworld audit remains pending.
+See [2026-10-10 research](../../reports/2026-10-10-hub-multiverse-research.md). Recommended: Multiverse Core 5.8.1 candidate for world lifecycle, KnK-owned portal/readiness/destination logic. Dependency choice is not yet approved or live-tested. *Updated 2026-10-10:* the multiworld audit's required-scope comparison recommended a minimal KnK loader (option B); **the developer chose it on 2026-10-10** (§16.4).
 
 ## 15. Follow-up clarification (2026-10-10)
 
@@ -181,3 +183,164 @@ See [2026-10-10 research](../../reports/2026-10-10-hub-multiverse-research.md). 
 - Minigame integration refers to API-outage evacuation of a current match participant, not routine hub transfers during healthy matches. Inspect active Siege death/respawn/inventory listeners and ensure they cannot teleport the player back out of containment or corrupt match/inventory state. Whether an outage pauses, aborts or leaves a match running remains an explicit decision if existing behavior does not settle it.
 - Multiverse Core recommendation is about reducing generic lifecycle maintenance, not a technical necessity for two worlds. Re-evaluate against a minimal load-existing-worlds implementation; do not compare against recreating all Multiverse features. No provider approved yet.
 - Audit handoff: [multiworld implementation-readiness prompt](../../ai-agents/handoffs/2026-10-10-hub-multiworld-audit.md).
+
+## 16. Implementation readiness (audit 2026-10-10)
+
+Source: [multiworld capability audit](../../reports/2026-10-10-multiworld-capability-audit.md) of plugin `main` `973aa68b`, API `master` `8cce48d0` and web app `main` `12c1d600`. It is a code and migration-snapshot audit only: **no live server, no database and no implementation**. Row IDs below refer to the report's matrix.
+
+### 16.1 What already works
+
+- **Location and teleport targets keep their world.** Location → Bukkit conversion never invents a world (L1), and the KNG-17 teleport engine uses the target's world (L4).
+- **KNG-52 settings are world-aware.** Settings are per world, respawn uses the world the player died in (A7, L5), and a disk copy `game-settings-cache.json` already exists (§5 of the report).
+- **Several systems already carry a world:** the gate block index (with a blank-world caveat), gate block operations, roads, navigation, lootboxes and Siege locations (G3, G4, S1).
+- **Group precedence matches §13.** `PermissionGroupPrecedence` and `TeleportGroupPolicy` both order by Weight descending, ties by lower id, each group followed by its parent chain, with duplicates removed (P1). Inheritance runs child → parent (P2).
+- **A Siege match runs locally once started**, and its results are spooled (SG5).
+
+### 16.2 Hub blockers found
+
+1. **No Domain stores its world** (D1–D6, A1–A4, U1). The region id is the only link from region to domain, in the API, the plugin caches, the region tracker, the access preview, the KNG-56 flags and managed-region repair (R1–R13). Identical region names in two worlds collide, and moving between them causes no enter/leave. Tracked as [KNG-111](https://linear.app/kngpandi/issue/KNG-111) and [KNG-112](https://linear.app/kngpandi/issue/KNG-112).
+2. **Gates** ([KNG-113](https://linear.app/kngpandi/issue/KNG-113)):
+   - A door with a blank world animates in every world (G1).
+   - Gate tasks start only for worlds loaded during `onEnable` (G2).
+3. **Admission and lifecycle** ([KNG-114](https://linear.app/kngpandi/issue/KNG-114)):
+   - The join spawn is a teleport after `PlayerJoinEvent`, so the player can briefly appear in gameplay (H1). Paper 1.21.10's `AsyncPlayerSpawnLocationEvent` can place them before they appear.
+   - Several paths fall back to `Bukkit.getWorlds().get(0)` (L2).
+   - There is no world-readiness check or unload guard (LC1, LC2).
+4. **Connectivity** ([KNG-115](https://linear.app/kngpandi/issue/KNG-115)):
+   - The plugin's health probe calls a path the API doesn't serve and parses the wrong status values (C1, C2).
+   - `/health/ready` ignores the database (C3).
+   - There is no service-wide outage state (C5). The reusable piece is the HTTP client, not the detector.
+5. **Offline state.** The KNG-58 P0 store is **not merged** (LC3, P5). On `main`, a rejoin during an outage reveals vanished staff and clears their mode.
+6. **Mode-exemption checkboxes** ([KNG-116](https://linear.app/kngpandi/issue/KNG-116)) need an API that computes a group's effective permissions (P3).
+7. **Siege containment** ([KNG-117](https://linear.app/kngpandi/issue/KNG-117)):
+   - Siege's HIGHEST respawn handler would put an evacuated participant back in the arena (SG2).
+   - The vault restore and the rejoin restore both teleport to the pre-siege location (SG4).
+
+Gaps that do not block the hub are tracked in [KNG-118](https://linear.app/kngpandi/issue/KNG-118).
+
+### 16.3 Minimal phased plan (proposal, not authorized)
+
+| Phase | Scope | Issues | Gate to next phase |
+|---|---|---|---|
+| 0 | **Pinning.** Decisions are confirmed (§16.4); pin the Paper/WorldGuard/KnK versions. | — | Decisions recorded |
+| 1 | **World identity.** API `Domain.WorldName` with backfill and a unique (world, region) index; same-world rules; world-qualified DTOs and lookups. Web app persists the captured world and shows the world in pickers. Plugin uses `world:regionId` keys and treats a world change as leave-all/enter-all. | KNG-111, KNG-112 | Unit tests; live checklist items 2, 3, 5 |
+| 2 | **Gates and lifecycle.** Reject blank-world doors; start/stop gate tasks per world; the minimal KnK world loader with readiness and an unload guard; no first-world fallbacks on admission paths. | KNG-113, KNG-114 (lifecycle) | Checklist items 1, 4, 14 |
+| 3 | **Connectivity and offline state.** Fix the probe and `ready`; an `ApiConnectivity` state machine; merge KNG-58 P0 and extend it with hub config, outage action/delay and return records. | KNG-115, KNG-58 | Checklist item 7 (API-down restart) |
+| 4 | **Hub configuration.** `IsHub` on base Domain; a Game Settings hub block (`hub.domainId`, `hub.spawnReference`, outage action and delay, per-group exemption flags); the group eligibility endpoint and the UI. | KNG-116, KNG-109 | Server-side validation tests |
+| 5 | **Hub runtime.** Admission via `AsyncPlayerSpawnLocationEvent`; hub rules, including the Peaceful preset (§16.5); a guarded portal with a scoped exit authorization; the four outage actions; return records; Siege containment. | KNG-114, KNG-117 | Checklist items 6–13, 15 |
+
+**Phase 1 progress (2026-10-11):** implemented on branches `claude/blissful-fermat-b7ihrz` (API `a72e496`, web app `c2d8828`, plugin `dc61fd4d`), not merged. The first live round passed or was accepted. Managed-region repair, roads/navigation and the containment validators are now world-aware too. Discovery ([KNG-118](https://linear.app/kngpandi/issue/KNG-118)) is still pending. See the [implementation handoff](../../ai-agents/handoffs/2026-10-10-kng-111-112-multiworld-implementation.md).
+
+**Phases 2, 4 and 5 progress (2026-10-12):** on branches `claude/blissful-fermat-b7ihrz`, not merged:
+- the world loader (KNG-114 lifecycle) and gates in several worlds (KNG-113), live-checked 2026-10-11;
+- the hub configuration (`IsHub`, the Game Settings hub block, the KNG-116 group check and exemption boxes);
+- the Game Settings snapshot moved into the KNG-58 store (decision 7);
+- hub admission through `AsyncPlayerSpawnLocationEvent`, with fail-closed joins;
+- the hub rules and the Peaceful preset.
+
+**Day session progress (2026-10-12),** after the decisions in §16.7:
+- admission now replaces only the server's default join spawn (decision 8);
+- the four outage actions with the outage timer, return records and the `/hub return` offer, and the Siege abort (decisions 6, 9, 10);
+- the portal, as WorldGuard regions (decision 11);
+- deleting a Location no longer deletes its domain (decision 12).
+
+See the [handoff](../../ai-agents/handoffs/2026-10-12-hub-overnight-session.md).
+
+**Deadline risk:** Phase 1 alone touches all three repos plus a rebase-sensitive migration, which is substantial work for the 17–18 October alpha. The developer chose the full fix first (§16.4, decision 2).
+
+### 16.4 Developer decisions (confirmed 2026-10-10)
+
+These supersede the open questions in the audit report §11.
+
+1. **World provider: a minimal KnK loader** (option B). KnK loads the world folders listed in `config.yml` at startup. It refuses joins when the hub world is missing and cancels unloading of required worlds. Multiverse is not used. The portal is built by KnK.
+2. **Alpha scope: the full fix comes first.** Every Domain gets an explicit world before the hub is built (Phase 1).
+   - The world is **extracted automatically** from a required world-task field of the domain entity, for example its region world task (`WgRegionIdTaskHandler` already reports `worldName`) or its Location world task.
+   - Only when no such field gives a world does the web form **ask for it**.
+   - The interim unique-region-name rule is **not** adopted.
+3. **Main world: the gameplay world stays the `level-name` world.** The hub is the additional world.
+4. **IsHub means eligible only.** Several domains may carry the flag, and the flag only makes a domain selectable. Hub rules apply only to the hub selected in Game Settings (`hub.domainId`). **Nested flagged domains are not allowed** for now and are rejected on save.
+5. **Exemption checkboxes: only a ticked box counts.** An unticked box means "not set", so any of the player's applicable groups that ticks it exempts them. The exemption applies only while the player's **active** mode is staff or owner.
+6. **Siege on outage: abort the match.** When an outage action evacuates any participant, the whole match is aborted: no rewards, and the abort is recorded through the existing spool. Every participant gets their inventory back exactly once. Their return point is their pre-match location, never the arena.
+7. **Game Settings offline copy: fold it into the KNG-58 store** once KNG-58 P0 is merged. Until then, `game-settings-cache.json` stays the fallback.
+
+**Smaller defaults, accepted:**
+- **World identity:** domain worlds are keyed by world name. The world UUID from the runtime-worlds report is recorded so a renamed world is detected.
+- **Same world:** a child domain, its gate Locations and its spawn Locations must be in the parent's world.
+- **Peaceful preset:** it runs only while `naturalRegeneration` is on, and is skipped for players whose world is already Peaceful.
+- **Group permission check:** a new API check tells whether a group effectively has `knk.mode.staff` / `knk.mode.owner` (KNG-116).
+
+### 16.7 Developer decisions (confirmed 2026-10-12)
+
+8. **Joins: the hub replaces only the server's default join spawn.** Players in staff or owner mode, owners and a group's "join where they logged out" keep the last location, and a group's own join spawn still wins, exactly as without a hub. Staff and owner mode join where they logged out also during an outage and without a hub (decision 14). While the API is down every join goes to the hub (§13), unless the player is exempt; a join sent there by the outage gets a return record for where they logged out. `/spawn` and respawns are unchanged.
+9. **Outage timer: it resets only after a full recovery.** The timer starts at the first drop. It resets once the API is back and the server has synced its backlog: the statistics, discovery and Siege result spools are empty. A safety cap also resets it after 5 minutes of the API being up, so a stuck spool can't block it. A drop before that continues the same timer. The start is kept in `hub-outage.json`, so a restart doesn't reset it either. Actions run only while the API is down.
+10. **Mode switches during an outage:** a player in staff or owner mode is exempt by being in the mode (confirmed 2026-10-12). This replaces decision 5: the per-group exemption boxes were removed from the API, the web app and the plugin. The KNG-116 group permission check stays as a general endpoint. Leaving the mode while the outage lasts makes their action apply within a second.
+11. **Portal: a WorldGuard region.** `hub.portalRegionIds` lists WorldGuard regions in the hub's world. Walking into one takes the player into the game through the join chain without the hub: their group join spawn, else the default join spawn. This works like Multiverse-Portals, which also uses a selected cuboid, a movement trigger and a cooldown. The portal needs the API (or an exempt player) and a loaded account. It refuses a destination the player may not enter, carries a one-off exit pass and ends the outage return offer.
+12. **Deleting a Location never deletes its domain** (KNG-118 D3). The `domains.LocationId` key is now Restrict, and the API answers 409 naming the domain.
+13. **Group precedence: hierarchy first, then weight (option (i)).** A group ranks above the groups it inherits from. Weight settles groups in unrelated trees or split branches. A chain is ranked by the group the player actually holds: a held group that another held group inherits from is reached through that group's chain, after it. Example: Knight (weight 10) inherits from Squire (50), and Merchant (30) is unrelated; the order is Merchant, Knight, Squire. This one order is used for Game Settings overrides, teleport fees and cooldowns, and permission grants: a held child's deny beats its held parent's grant. It supersedes the weight-first D13 rule of 2026-10-09 and §13's "descending Weight, group then parent chain".
+14. **Staff and owner mode join where they logged out** (2026-10-12), with or without a hub and also during an outage, and are exempt from the outage actions (decision 10).
+15. **Siege after an outage** (2026-10-12): the match being played is aborted for good (no winner, everyone restored once). Only the continuous lobby, the matchmaking cycle, starts again when the API is back.
+
+**Small choices made in the implementation:**
+- A player inside the hub region is never acted on.
+- With no usable hub, Send to hub falls back to a kick with the hub message (§13).
+- Send to world spawn runs once per player per outage. Send to hub keeps a player in the hub for the whole outage.
+- A Siege member is released first: a round in matchmaking, at the siege hub or in progress is aborted (`ApiOutage`). A member of a round that is ending is retried each second until restored.
+- A Siege lobby stopped by an outage restarts at the next configuration refresh, like one with no ready scenario.
+- The return offer is a clickable `/hub return <token>`. The token is the record's save time, so an old click does nothing. The spot must be in a loaded world, safe (`SafeLocationFinder`) and allowed by domain AllowEntry, otherwise the record is removed with a message.
+- Teleports from inside the hub to outside are refused while the API is down, except for staff teleports and exempt players.
+- After the outage, leaving the hub any other way (walking out, `/spawn`, `/warp`) ends the return offer, like the portal. A new outage replaces an offer that was never used. A spot inside the hub is never saved.
+- A new outage also ends the earlier offer of every online player who is in the hub at that moment: they stayed rather than return. Offline players keep theirs until they have seen it (smoke test 2026-10-17).
+- `/hub return` is refused while frozen or in a siege. It uses the saved spot or the nearest safe place within 5 blocks. If there is none, it uses the spawn of the structure, district or town the spot is in, innermost first, still subject to AllowEntry. Only with neither does the offer stay for later (smoke test 2026-10-17; it used to look within 1 block and then stop).
+- The outage delay counts from the first failed health probe of the run that confirmed the outage (KNG-115: 3 failures 10 s apart), not from the confirmation. Nothing acts before the confirmation, so even delay 0 acts 20-30 s after the API is lost with the default probe settings (smoke test 2026-10-17).
+- The hub rules are authoritative over WorldGuard for the uses they allow. A hub inside a Town region left doors refused to non-members, because WorldGuard falls back to membership for `use`/`chest-access`. `HubWorldGuardListener` marks such a WorldGuard use event allowed before WorldGuard's region check. Uses the hub refuses, and other plugins' refusals, are untouched (smoke test 2026-10-17).
+- Leaving while standing in the hub, when the hub or a parent domain denies exit, says "You can only leave the hub through its portal." (or "You can't leave the hub this way." without portals) instead of "You are not allowed to leave <town>." This covers `/spawn`, `/warp` and walking. The developer chose portal-only exits for the first deployment (2026-10-17).
+- Siege lobbies stopped by an outage start again when the API is back.
+- Operators are not kicked by the "no usable hub" fallback, so they can fix it.
+
+### 16.5 Peaceful preset (verified, not guessed)
+
+Checked against vanilla 1.21.10 `ServerPlayer.tickRegeneration` in the official server jar and mappings, and Paper `ver/1.21.10` @ `8043efd4`. This only applies while the world's difficulty is PEACEFUL and `naturalRegeneration` is on:
+
+- **Healing:** +1.0 HP every 20 ticks.
+- **Saturation:** +1.0 every 20 ticks, up to 20.
+- **Food level:** +1 every 10 ticks while below 20.
+
+Paper only tags the heal with `RegainReason.REGEN`.
+
+**To avoid stacking with vanilla:**
+- Run the hub preset only inside the hub region.
+- Skip it when the player's world is already PEACEFUL.
+- Leave the native `FoodData` SATIATED regeneration alone.
+
+Report §10 has the full source.
+
+### 16.6 Live validation
+
+The live checklist is in report §13. It covers:
+- two players, with identical region names and XYZ, Districts and gates in both worlds;
+- an API-down restart;
+- an outage during a portal transfer;
+- Siege respawn containment;
+- mode transitions;
+- the Peaceful measurement.
+
+**Partly run (2026-10-17).** The developer's smoke test ([report](../../reports/2026-10-17-hub-smoke-test.md), three runs) covered:
+- admission and joins;
+- the hub rules and the Peaceful preset;
+- fail-closed;
+- the Send to hub and Kick outage actions, the timer and an API-down restart;
+- the return offer;
+- staff/owner mode transitions;
+- the portal (API up and down);
+- Location delete;
+- a gate door in the hub.
+
+**Accepted by the developer without a live run (2026-10-17).** The steps are in the [smoke-test report](../../reports/2026-10-17-hub-smoke-test.md), "Remaining live checks":
+- identical region ids and XYZ in both worlds, with Districts and gates, including managed-region repair;
+- an outage during portal use, and a flapping API;
+- the Do nothing and Send to world spawn outage actions;
+- a return refused by AllowEntry;
+- a missing hub world (`create: false`);
+- a hub in the same world as the game.
+
+**Siege:** the outage abort and respawn containment ([KNG-117](https://linear.app/kngpandi/issue/KNG-117)) were accepted by the developer without a live match on 2026-10-17. A live match test is planned for later.

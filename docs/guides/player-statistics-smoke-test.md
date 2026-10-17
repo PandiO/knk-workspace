@@ -1,7 +1,7 @@
 # Player statistics (KNG-34) — smoke test
 
-**Status:** Passed and merged 2026-10-11 — run 1: all 27 steps pass after fixes (findings 1, 3-5, 8-12 fixed and live-checked, decision D24; trunk follow-ups 2 → KNG-126, 6-7 on `claude/reset-on-death`; blinker KNG-125). Merged: knk-web-api `master` `34b8f9b`, knk-plugin `main` `aa5df70a`, knk-web-app `main` `5f40f93` ([KNG-34](https://linear.app/kngpandi/issue/KNG-34))
-**Last updated:** 2026-10-11 (merged)
+**Status:** Passed and merged 2026-10-11 — run 1: all 27 steps pass after fixes (findings 1, 3-5, 8-12 fixed and live-checked, decision D24; trunk follow-ups 2 → KNG-126 (fixed, live re-check passed and merged 2026-10-17), 6-7 on `claude/reset-on-death`; blinker KNG-125). Merged: knk-web-api `master` `34b8f9b`, knk-plugin `main` `aa5df70a`, knk-web-app `main` `5f40f93` ([KNG-34](https://linear.app/kngpandi/issue/KNG-34))
+**Last updated:** 2026-10-17 (step 28, KNG-125 item blinker: passed; finding 2, KNG-126: re-check passed; both merged)
 **Design:** [specs/player-statistics/DESIGN.md](../specs/player-statistics/DESIGN.md) (decisions D1-D24, §F) ·
 **Background:** [progress report](../reports/2026-10-03-player-statistics-chain.md) (per-link details, flagged decisions)
 
@@ -112,6 +112,22 @@ Order **knk-web-api → knk-plugin → knk-web-app → knk-workspace**: merge `o
 others `main`). Afterwards: move the CHANGELOG "Unreleased" KNG-34 entry to the merge date, set the three KNG-34
 FEATURE_REGISTER rows to `trunk`/live-tested, update this guide's status, the tracker and Linear KNG-34.
 
+## 7. Follow-up live checks (after the merge)
+
+28. **Item blinker (KNG-125, finding 9).** Plugin only: knk-plugin branch `wt/kng-125` (or `main` once merged),
+    `./gradlew :knk-paper:dev`, restart. No API change and no re-seed: the template already binds the selectors'
+    `DisplayMode` to `$statsvis.get<Group>Mode$`.
+    - `/stats settings`: the open group's selector ("▶ Activity ◀") alternates about twice a second between its
+      own item (with glint) and a **yellow glass pane** with the same name and lore (hover both: same tooltip).
+      The other selectors and the rows don't blink.
+    - Click another group (also while its or the blinking one's pane shows): that group opens and its selector
+      blinks; the previous one shows its own item, not stuck on the pane. Clicking the blinking selector itself in
+      the pane phase runs its own action (no error).
+    - Start a group action ("Set all listed to …" → preview → Cancel) and cycle a row: the selector keeps blinking
+      through the repaints.
+    - Escape while the pane shows, then `/stats settings` again: the menu opens with the item, then blinks; no
+      pane left behind, no `MenuItemBlinker`/menu warnings in the server log.
+
 ## Findings
 
 Run 1, 2026-10-10 (local session; worktrees `Repository/_worktrees/<repo>-kng34`). Trunks merged in first: knk-web-api
@@ -156,4 +172,4 @@ Run 1, 2026-10-10 (local session; worktrees `Repository/_worktrees/<repo>-kng34`
 | 12 | 25 | fail → fixed | Menus closed with Escape (≥ 5 times) never showed as "closed" in the funnels: `MenuLifecycleListener` removed the open-menu context before `MenuService.onMenuInventoryClosed`, which reads the closed menu's key from it, so every close reached the observers (funnels and telemetry) without a key. knk-plugin `526c3777`: observers first, then the context; a test drives the real listener. Re-checked live: after the fix the first batch brought "closed" rows (`main` 3×, `profile.main`, `statistics.visibility`, … 1× each) (pass). |
 | — | 27 | pass | Round A (plugin `config.yml` `statistics`/`telemetry`/`world-analytics` `enabled: false`, temporary block, then restored byte-for-byte): log "Player statistics disabled", "Diagnostic telemetry disabled", "World analytics disabled"; `/afk` says disabled; no batch of any kind after the restart. Round B (API env `Statistics__Enabled=false`, `Leaderboards__Enabled=false`, `Privacy__AutoExecuteEnabled=false`): log "Statistics projection disabled", "Leaderboard snapshots disabled", "GDPR deletion auto-execution disabled … only expiring confirmation links"; statistics batches answered 503 `StatisticsDisabled` and the plugin spooled 3; telemetry kept arriving; boards kept serving their last snapshot (23:01:22 UTC). All switches restored: the 3 spooled batches replayed once each within seconds. A due deletion waiting for the owner wasn't observed live (none was due). |
 | 7 | 12 | trunk follow-up, fixed separately | Not KNG-34 (KNG-11 enchantments): a Freeze enchantment freeze survived death — after respawning the player still couldn't move until it ran out. Audit of all effects: the potion-based ones (blindness, nausea, slowness, poison, wither, resistance, strength, invisibility) are cleared by death in vanilla; Chaos/FlashChaos only knock back; HealthBoost's heal-over-time could still set the health of a dead player. knk-plugin `claude/reset-on-death` `4cc0e03a`: `FreezeMovementListener` unfreezes on any `EntityDeathEvent`, `HealthBoostEffect` stops when the player is dead, plus finding 6's combat tag. Merged 2026-10-11: knk-plugin `main` `c0ad2a9b` (unit-tested, not checked in game). |
-| 2 | 8 | trunk follow-up | Not KNG-34 (page unchanged from trunk `main`): on `/admin/economy/transactions/<id>` the **Reverse** button stays disabled until the reason has ≥ 10 characters, with no visible cue — clicking does nothing and sends no request. The developer asked for it to be updated: show that the button is disabled and why (e.g. a live "n/10 characters" hint, a message on click). Linear [KNG-126](https://linear.app/kngpandi/issue/KNG-126). |
+| 2 | 8 | trunk follow-up | Not KNG-34 (page unchanged from trunk `main`): on `/admin/economy/transactions/<id>` the **Reverse** button stays disabled until the reason has ≥ 10 characters, with no visible cue — clicking does nothing and sends no request. The developer asked for it to be updated: show that the button is disabled and why (e.g. a live "n/10 characters" hint, a message on click). Linear [KNG-126](https://linear.app/kngpandi/issue/KNG-126). **Fixed on the KNG-126 branch** (knk-web-app `wt/kng-126` `7f5b9a8`, 2026-10-15; unit-tested, not yet re-checked live): Reverse stays clickable (disabled only while sending); the reason field counts "n / 10 characters" as you type (spaces at the ends don't count), and Reverse with a shorter reason sends nothing and says "Write a reason of at least 10 characters (k more)." under the field. The Adjust balance card on `/admin/users/<id>` works the same way and also names a missing amount or category. Disabled `.btn-primary`/`.btn-secondary` buttons are now faded with a not-allowed cursor. **Re-check:** open a reversible transaction, type `test` → counter "4 / 10 characters"; click Reverse → the message appears, no request in the Network tab; type a reason of 10+ characters → counter turns green, the message goes away, Reverse posts the reversal as before. On a player profile, click Apply adjustment with empty fields → "To apply this, enter an amount of 0 or more and pick a category." plus the reason message. |
