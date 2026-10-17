@@ -93,4 +93,4 @@ After the merge, the developer was given steps for the audit's live checks that 
 | F | A missing hub world with `create: false`: non-ops refused, ops allowed. The unload guard is covered by unit tests only. |
 | Optional | A hub in the same world as the game |
 
-Still open: a Siege match during an outage ([KNG-117](https://linear.app/kngpandi/issue/KNG-117), In Review).
+Siege (a match during an outage, [KNG-117](https://linear.app/kngpandi/issue/KNG-117)) was also accepted without a run on 2026-10-17. The developer will test it live later.
