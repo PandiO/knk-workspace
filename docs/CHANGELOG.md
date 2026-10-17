@@ -32,7 +32,7 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 Delegated batch of 2026-10-15 (`claude/linear-issues-delegation-k1trkm`), merged with trunk: knk-web-api `181bf3f`
 ([#11](https://github.com/PandiO/knk-web-api/pull/11)), knk-web-app `2fcbeae` ([#7](https://github.com/PandiO/knk-web-app/pull/7)),
-knk-plugin [#14](https://github.com/PandiO/knk-plugin/pull/14). Developer live check 2026-10-17: KNG-171, KNG-121 (T1-T3),
+knk-plugin `ad3bc48` ([#14](https://github.com/PandiO/knk-plugin/pull/14)). Developer live check 2026-10-17: KNG-171, KNG-121 (T1-T3),
 KNG-125 and KNG-126 passed; KNG-121 T4, KNG-124 and KNG-118 accepted without a run.
 
 - **Commands answer at once during an API outage** ([KNG-171](https://linear.app/kngpandi/issue/KNG-171); knk-plugin
