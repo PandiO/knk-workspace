@@ -1,6 +1,6 @@
 # Form wizard chain — smoke-test follow-ups
 
-**Status:** Implemented, unit-tested, live-tested (complete 2026-10-17, see "Live test" at the end); not merged yet.
+**Status:** Implemented, live-tested and merged 2026-10-17 (see "Merged" at the end).
 **Last updated:** 2026-10-16
 **Belongs to:** the chain smoke test in [2026-10-11-form-wizard-chain.md](2026-10-11-form-wizard-chain.md) (sections A–F).
 This file holds the fixes for what that test found, and the steps to check them.
@@ -303,3 +303,20 @@ Run from the worktrees on the merged heads (API `2dfca17`, web app `0b3b43c`, pl
 
 **The live test is complete:** every section (chain 0, A-F; follow-ups G1-G7) passed or was accepted. The branch
 is ready to merge: knk-web-api -> `master`, knk-web-app -> `main`, knk-plugin -> `main`, knk-workspace -> `main`.
+
+## Merged (2026-10-17)
+
+`claude/wonderful-darwin-u39k1o` merged with the developer's go-ahead, directly (no PRs; the GitHub CLI isn't
+installed here), each merge commit's tree identical to the branch head:
+
+| Repo | Trunk | Merge commit |
+|---|---|---|
+| knk-web-api | `master` | `2929972` |
+| knk-web-app | `main` | `bbd0dae` |
+| knk-plugin | `main` | `5643ae6a` |
+| knk-workspace | `main` | this branch (docs) |
+
+Databases other than the dev DB need `AddFormFieldSelectionLimits` and `AddFormSubmissionProgressCreatedEntities`
+before the new web app runs against them. Linear: the chain issues and KNG-166..169, KNG-172..174 Done; follow-ups
+KNG-183..188 in the backlog. Known red on trunk, not from this branch: knk-core `DataAccessExecutorOutageTest`
+(KNG-171), the API's 4 known + 4 date-dependent tests, the web app's 4 known suites.

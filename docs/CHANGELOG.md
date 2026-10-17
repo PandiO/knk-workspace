@@ -18,7 +18,7 @@ This is a human-readable record of capabilities merged into the V3 default branc
   ([KNG-133](https://linear.app/kngpandi/issue/KNG-133)…[KNG-139](https://linear.app/kngpandi/issue/KNG-139),
   [KNG-162](https://linear.app/kngpandi/issue/KNG-162), [KNG-164](https://linear.app/kngpandi/issue/KNG-164) and the
   smoke-test follow-ups KNG-166…169, KNG-172…174; branch `claude/wonderful-darwin-u39k1o`, which replaced
-  `claude/jolly-archimedes-urhio9`: knk-web-api `@@API@@`, knk-web-app `@@APP@@`, knk-plugin `@@PLUGIN@@`; merged
+  `claude/jolly-archimedes-urhio9`: knk-web-api `master` `2929972`, knk-web-app `main` `bbd0dae`, knk-plugin `main` `5643ae6a`; merged
   directly, no PRs). **Needs two additive migrations** before the new web app runs against a database:
   `AddFormFieldSelectionLimits`, `AddFormSubmissionProgressCreatedEntities` (the dev DB has them).
   - **Child forms:** a "Create New" entity on a List field is saved when its form completes, and a form refuses to
