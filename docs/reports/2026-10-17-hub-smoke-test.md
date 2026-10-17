@@ -65,3 +65,15 @@ On the hub branch fast-forwarded to `2d963e65` / `732e5cc`.
 - **Hub exit wording.** A refusal to leave while standing in the hub now says "You can only leave the hub through its portal." This covers `/spawn`, `/warp`, and walking out of an exit-denied hub or its parent town. Without portals it says "You can't leave the hub this way."
 
 Plugin tests: core 2059, api-client 258, paper 1661, 0 failures. Live retest pending.
+
+## Retest (run 3, same day)
+On the hub branch at knk-plugin `14930e9d` (the run 2 fixes plus the merge of `main`).
+
+| Step | Result |
+|---|---|
+| 1. An earlier offer ends at a new outage (player stayed in the hub) | Pass |
+| 2. An offline player keeps the offer and gets it on rejoin | Pass |
+| 3. An unsafe spot: return to a safe place within 5 blocks | Pass |
+| 4. An unsafe spot in a town/district: return to its spawn | Not reported yet |
+| 5. An unsafe spot outside any domain: the offer is kept | Not reported yet |
+| 6. `/spawn` and `/warp` from the hub: "You can only leave the hub through its portal." | Not reported yet |
