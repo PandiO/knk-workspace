@@ -1,7 +1,7 @@
 # Domain Discovery — Design
 
 **Status:** Done — merged to trunk 2026-09-27
-**Last updated:** 2026-10-06 (§3.6 note: `OnRegionEnterEvent` no longer fires for denied moves, KNG-55); 2026-09-26
+**Last updated:** 2026-10-15 (§3.11 multiworld: discovery per (world, region id), KNG-118 R14/A5 — merged 2026-10-17); 2026-10-06 (§3.6 note: `OnRegionEnterEvent` no longer fires for denied moves, KNG-55); 2026-09-26
 **Linear:** [KNG-20](https://linear.app/kngpandi/issue/KNG-20/domain-discovery-first-entry-rewards-for-townsdistrictsstructures)
 **Sources:** `knk-v1-archive` (`src/Towns/TownEvents.java`, `src/Towns/Town.java`, `src/DataManager/Towns.java`,
 `src/Users/User.java`, `src/Titles/Title.java`, `src/Main/Main.java`, `src/Menu/Menu.java`, `src/DataManager/Worldguard.java`);
@@ -285,8 +285,8 @@ Idempotent by construction: any retry/replay of the same request grants nothing 
 ### 3.5 API (knk-web-api) — `Controllers/DiscoveriesController.cs`, DTOs in `Dtos/DiscoveryDtos.cs`
 | Method & route | Caller | Purpose |
 |---|---|---|
-| `POST api/users/{userId}/discoveries` | plugin | Grant. Body `{ wgRegionIds?: string[], domainIds?: int[], source: "RegionEnter"\|"JoinInside"\|"Replay" }`. 200 → `{ granted: [{domainId, name, domainType, parentName, coins, gems, exp}], alreadyDiscovered: int[], skipped: [{key, reason}], totalCoins, totalGems, totalExp, newCoins, newGems, newExperiencePoints, titleChange? }`. 400 (empty/over 50), 404 user. |
-| `GET api/users/{userId}/discoveries/known` | plugin | `[{domainId, wgRegionId}]` for the plugin cache. |
+| `POST api/users/{userId}/discoveries` | plugin | Grant. Body `{ wgRegionIds?: string[], domainIds?: int[], worldName?: string, source: "RegionEnter"\|"JoinInside"\|"Replay" }` (`worldName` since KNG-118, §3.11). 200 → `{ granted: [{domainId, name, domainType, parentName, coins, gems, exp}], alreadyDiscovered: int[], skipped: [{key, reason}], totalCoins, totalGems, totalExp, newCoins, newGems, newExperiencePoints, titleChange? }`. 400 (empty/over 50), 404 user. |
+| `GET api/users/{userId}/discoveries/known` | plugin | `[{domainId, wgRegionId, worldName}]` for the plugin cache (`worldName` since KNG-118, §3.11). |
 | `POST api/users/{userId}/discoveries/progress` | plugin menu, web | `PagedQueryDto` (filters `domainType`, `status` = discovered/undiscovered, search) → rows `{domainId, name, domainType, parentName, discovered, discoveredAt, coins, gems, exp}` over all enabled domains. |
 | `GET api/users/{userId}/discoveries/summary` | plugin menu, web | per type `{discovered, total}`, latest discovery, lifetime totals. |
 | `DELETE api/users/{userId}/discoveries/{domainId}` | web admin, `/knk discovery reset` | Reset one discovery (no claw-back; audited as `DiscoveryReset`). |
@@ -436,6 +436,34 @@ action `menu.open {key: discoveries.main}`, Render `menu-available discoveries.m
   (`api:Program.cs:186` TODO) despite `knk-web-api/CLAUDE.md` saying so — metrics reach OTLP only.
 - Plugin: FINE logs per candidate/flush, WARNING on spool writes, `/knk discovery status`.
 - Audit: `BalanceAdjusted` (reason `domain-discovery`, metadata domain ids) and `DiscoveryReset`.
+
+### 3.11 Multiworld: discovery per (world, region id) (KNG-118 R14/A5, 2026-10-15)
+
+**Status:** merged 2026-10-17 (knk-web-api [#11](https://github.com/PandiO/knk-web-api/pull/11), knk-plugin [#14](https://github.com/PandiO/knk-plugin/pull/14)); the live check below was accepted by the developer without a run.
+Region ids are unique per world only (KNG-111/KNG-112, multiworld audit rows R14 and A5), so discovery now carries the world:
+
+- **API (A5).** The grant body takes an optional `worldName`. With it, a region id matches that world's domain, else a domain
+  without a world yet (not backfilled after KNG-111); a same-named region of another world is `NotADomain`. This is the same rule
+  as `DomainRepository.GetByWgRegionNameAsync`. Without `worldName` the lookup stays world-blind (lowest domain id), so an older
+  plugin works unchanged. Grants (`granted[].worldName`) and `GET …/known` return each domain's `worldName`.
+- **Why not grant by domain id.** The API already accepts `domainIds`, but the plugin would then have to resolve
+  (world, region) to a domain itself (resolver cache, and again at quit/spool time) and would lose the server's `NotADomain`
+  answer per region. Sending the world keeps the server authoritative and is the smaller change.
+- **Plugin (R14).** `DomainDiscoveryListener` records the world of every region it sees, and the next-tick confirmation
+  needs the player still in that region *of that world*. `DiscoveryTracker` keys known, pending, in-flight, suppressed and
+  not-a-domain state by `world:regionId` (lower case; `PendingDiscovery.key`). A batch holds one world (and one source); the
+  recorder sends that world. A known domain without a world is stored under the world-less key only, so it never hides a
+  same-named region of a real world: the first visit per session is sent and answered as already discovered.
+- **Spool (file version 3).** Each entry gains `"world"`. Version 1/2 files still read: their entries have no world and are
+  replayed world-blind, exactly as before. A replay sends one request per world (old world-less entries in their own request).
+- **Mixed versions.** New plugin + old API: the old API ignores `worldName` (world-blind, as before) and returns no world in
+  `known`, so the plugin sends a region once per session that it would otherwise have filtered (the server dedups). Old plugin
+  + new API: unchanged behaviour.
+
+**Live check** (two worlds with the same region id `t_test`, each a Town domain with its own `WorldName`): a player who
+discovered `t_test` in world A walks into `t_test` in world B and gets B's discovery and reward; walking back into A gives
+nothing new. With the API stopped, enter B's `t_test`, check `plugins/KnightsAndKings/discovery-spool/<uuid>.json` has
+`"version" : 3` and `"world" : "<B>"`, restart the API: the replay grants B's town, not A's.
 
 ---
 

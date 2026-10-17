@@ -3,7 +3,7 @@
 **Status:** Draft v1 — written for review. Not yet followed on a real production host. The database, API, seed and
 web-server steps were rehearsed in a scratch environment on 2026-10-07 (see [Appendix A](#appendix-a--what-was-verified-and-how)).
 The Paper server steps and the CI/CD workflows are untested drafts.
-**Last updated:** 2026-10-08 (security and alpha-hosting update for KNG-64)
+**Last updated:** 2026-10-17 (§7.7: FormConfiguration export/import and bundled seeds merged, KNG-138/139; two new migrations, see the note in §7.7); 2026-10-12 (§7.7: KNG-138 on a feature branch); 2026-10-08 (security and alpha-hosting update for KNG-64)
 **Applies to:** trunk only. knk-web-api `master` `1805cf9`, knk-web-app `main`, knk-plugin `main` `c7d5a1e`; 61 EF
 migrations, the latest being `20261006193103_UniquePermissionGrantHolderNode`. Feature branches that haven't been
 merged, such as road navigation, are not covered. Re-check § 2 and the seed table manifest after each trunk merge.
@@ -19,8 +19,8 @@ what is specific to this project.
 > found the API mostly unauthenticated (anonymous writes, public user list with emails, self-escalation, unrevocable
 > sessions). The fixes are on branch `claude/ui-ux-assessment-discussion-66vc2l` in all three code repos and follow the
 > [alpha hardening plan](../specs/alpha-hardening/IMPLEMENTATION_PLAN.md). Steps marked **[KNG-64]** describe behaviour
-> **after that merge**; don't expose an API built from an older commit. For the **closed alpha on the NAS behind
-> Cloudflare Tunnel**, follow [alpha-go-live.md](alpha-go-live.md). This guide stays the reference for a public VPS
+> **after that merge**; don't expose an API built from an older commit. For the **closed alpha on the NAS**, follow the
+> [closed-alpha deployment runbook](closed-alpha-deployment-runbook.md) and its KNG-64 layer [alpha-go-live.md](alpha-go-live.md). This guide stays the reference for a public VPS
 > (open beta and later).
 
 ---
@@ -142,10 +142,11 @@ private network or VPN and add TLS.
 
 For a small invite-only alpha, you can run the same containers on a home NAS and publish only the web origin through a
 **Cloudflare Tunnel** (outbound-only, no open HTTP ports), with **Cloudflare Access** as an allow-list in front of it.
-Cloudflare terminates TLS. nginx and certbot are replaced by a small web container plus `cloudflared`, and the
-Minecraft port is forwarded on the router as before. The reasoning is in the
+Cloudflare terminates TLS, so nginx needs no certbot. Minecraft goes through a playit.gg tunnel, so the router
+forwards no ports. The reasoning is in the
 [alpha hardening plan § 3](../specs/alpha-hardening/IMPLEMENTATION_PLAN.md#3-alpha-hosting-recommendation), and the
-runbook is in [alpha-go-live.md](alpha-go-live.md). Move to the VPS topology above before an open beta.
+runbook is the [closed-alpha deployment runbook](closed-alpha-deployment-runbook.md), with the KNG-64 requirements in
+[alpha-go-live.md](alpha-go-live.md). Move to the VPS topology above before an open beta.
 
 ---
 
@@ -863,6 +864,14 @@ import refuses to run anyway once users exist. Content changes after launch reac
   FormConfigBuilder, or replayed with the payloads recorded in that feature's `…_FORMCONFIGS.md`. That record is
   why those files exist. If this becomes frequent, the next step up is an export/import feature for single
   FormConfigurations in the API: ask for it as a feature, don't hand-edit production SQL.
+  **2026-10-17:** that feature is on trunk (KNG-138, merged with the form wizard chain): Export JSON
+  on the dev web app's form configuration list, then **Import / Seeds** on production (dry run first; it never
+  overwrites a configuration with the same `configurationGuid`). Default forms shipped with the API
+  (`Data/FormConfigurationSeeds/`: GateStructure, GateDoor and the siege set, KNG-139) are imported the same way, on
+  request; they become the default only when the entity has none or "make default" is ticked. The chain added two
+  additive migrations, `20261012075746_AddFormFieldSelectionLimits` and
+  `20261012085922_AddFormSubmissionProgressCreatedEntities`: apply them (`dotnet ef database update`) before the new
+  web app runs against a database, since its FormField reads and draft saves need the new columns.
 
 ---
 

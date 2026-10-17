@@ -2,7 +2,25 @@
 
 **Feature:** Real-time validation during WorldTask execution in Minecraft  
 **Created:** February 3, 2026  
-**Status:** In Implementation  
+**Status:** Implemented; decision 1 superseded 2026-10-17 (see the update below)  
+**Last updated:** 2026-10-17 (KNG-173, KNG-174, merged to knk-plugin `main` with the form wizard chain follow-ups)
+
+> **Update 2026-10-17 (KNG-173, KNG-174) - current behaviour, this replaces decision 1:**
+> - **Warning is warning, block is block.** Region and Location tasks follow each rule's `isBlocking` for every
+>   failure: a blocking rule shows `✗ Validation failed:` and nothing is saved; a non-blocking rule shows
+>   `⚠ Validation warning:` and the value is saved anyway ("Warning only - saving the region/location anyway.").
+>   All rules are checked and a block beats a warning; `select <region>` runs the rules too.
+> - **Failures name the parent** (`tasks/validation/ParentRegionFeedback.java`): `Must be inside District "The Keep"
+>   (region district_1000006).` plus the corners outside it. A parent region that doesn't exist ("…so the check
+>   couldn't run") and a selection or location in another world ("is in world X, but District … is in world Y")
+>   get their own sentence. The parent region is looked up in the dependency's own world. The web app shows only
+>   the "Must be inside" sentence so far (API `RegionRuleMessages`); the other two are
+>   [KNG-187](https://linear.app/kngpandi/issue/KNG-187).
+> - **One open task at a time** (KNG-174): a claim while another task is open is refused before any API call ("You
+>   still have task #N (WgRegionId) open. Finish it, or type 'cancel' to stop it, then claim again."). The task
+>   header reads `Task: GateStructure › LocationId` (`taskLabel(entityType, fieldName)`).
+> - Live-tested 2026-10-17 (form wizard follow-ups smoke test G2/G3,
+>   [report](../../reports/2026-10-12-form-wizard-chain-smoke-followups.md)).
 
 ---
 
@@ -56,9 +74,9 @@ When creating a District, the admin must define a Location and WorldGuard region
 
 ## Key Design Decisions
 
-### 1. Validation Failure Behavior: **BLOCKING**
+### 1. Validation Failure Behavior: **BLOCKING** *(superseded 2026-10-17: the rule's `isBlocking` decides, see the update at the top)*
 
-**Decision:** Validation failures **block** task completion. Users cannot proceed with invalid data.
+**Decision (original):** Validation failures **block** task completion. Users cannot proceed with invalid data.
 
 **Rationale:**  
 - Prevents erroneous data from entering the production database
