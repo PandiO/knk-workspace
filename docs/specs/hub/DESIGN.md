@@ -289,7 +289,11 @@ These supersede the open questions in the audit report §11.
 - The return offer is a clickable `/hub return <token>`. The token is the record's save time, so an old click does nothing. The spot must be in a loaded world, safe (`SafeLocationFinder`) and allowed by domain AllowEntry, otherwise the record is removed with a message.
 - Teleports from inside the hub to outside are refused while the API is down, except for staff teleports and exempt players.
 - After the outage, leaving the hub any other way (walking out, `/spawn`, `/warp`) ends the return offer, like the portal. A new outage replaces an offer that was never used. A spot inside the hub is never saved.
-- `/hub return` is refused while frozen or in a siege. It uses the saved spot or a safe one within a block (slabs, paths, a saved jump). A spot with nothing safe nearby keeps the offer for later.
+- A new outage also ends the earlier offer of every online player who is in the hub at that moment: they stayed rather than return. Offline players keep theirs until they have seen it (smoke test 2026-10-17).
+- `/hub return` is refused while frozen or in a siege. It uses the saved spot or the nearest safe place within 5 blocks. If there is none, it uses the spawn of the structure, district or town the spot is in, innermost first, still subject to AllowEntry. Only with neither does the offer stay for later (smoke test 2026-10-17; it used to look within 1 block and then stop).
+- The outage delay counts from the first failed health probe of the run that confirmed the outage (KNG-115: 3 failures 10 s apart), not from the confirmation. Nothing acts before the confirmation, so even delay 0 acts 20-30 s after the API is lost with the default probe settings (smoke test 2026-10-17).
+- The hub rules are authoritative over WorldGuard for the uses they allow. A hub inside a Town region left doors refused to non-members, because WorldGuard falls back to membership for `use`/`chest-access`. `HubWorldGuardListener` marks such a WorldGuard use event allowed before WorldGuard's region check. Uses the hub refuses, and other plugins' refusals, are untouched (smoke test 2026-10-17).
+- Leaving while standing in the hub, when the hub or a parent domain denies exit, says "You can only leave the hub through its portal." (or "You can't leave the hub this way." without portals) instead of "You are not allowed to leave <town>." This covers `/spawn`, `/warp` and walking. The developer chose portal-only exits for the first deployment (2026-10-17).
 - Siege lobbies stopped by an outage start again when the API is back.
 - Operators are not kicked by the "no usable hub" fallback, so they can fix it.
 
@@ -320,4 +324,18 @@ The live checklist is in report §13. It covers:
 - mode transitions;
 - the Peaceful measurement.
 
-**None of it has been run.**
+**Partly run (2026-10-17).** The developer's smoke test ([report](../../reports/2026-10-17-hub-smoke-test.md), three runs) covered:
+- admission and joins;
+- the hub rules and the Peaceful preset;
+- fail-closed;
+- every outage action, the timer and an API-down restart;
+- the return offer;
+- staff/owner mode transitions;
+- the portal (API up and down);
+- Location delete;
+- a gate door in the hub.
+
+Not run:
+- identical region names and XYZ in both worlds (with Districts and gates);
+- an outage during a portal transfer;
+- Siege respawn containment. The Siege outage abort was accepted without a live match.
