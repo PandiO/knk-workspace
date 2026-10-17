@@ -1,7 +1,7 @@
 # Offline security cache — permissions, freeze and modes without the API
 
 **Status:** P0 implemented on branch `claude/worldguard-entry-deny-bypass-sj1j7g` (knk-plugin `239ea49`, brought up to `main` in `7e9e8cf`), **live smoke test passed and merged to knk-plugin `main` 2026-10-10** (merge `2649911`). Linear [KNG-58](https://linear.app/kngpandi/issue/KNG-58)
-**Last updated:** 2026-10-12 (KNG-123: ignore lists added; live check passed and merged to knk-plugin `main`, PR #13)
+**Last updated:** 2026-10-15 (KNG-171: no API call while connectivity is DOWN, § 3a; knk-plugin branch `wt/kng-171`, not merged, not live-tested). Before: 2026-10-12 (KNG-123: ignore lists added; live check passed and merged to knk-plugin `main`, PR #13)
 **Related:** [`domain-access-enforcement.md`](domain-access-enforcement.md) (KNG-56: domain rules already survive outages as WorldGuard flags); [`reports/2026-10-06-offline-critical-data-inventory.md`](../reports/2026-10-06-offline-critical-data-inventory.md) (why these items are P0); KNG-57 (SignalR push, incl. erasure); KNG-34 D14-D16 (data deletion); KNG-81 (duplicate `CacheManager`)
 
 ## 1. Problem
@@ -45,6 +45,18 @@ A live API answer always wins, and every API answer overwrites the store.
 | Ignore list (`IgnoreService.load`, KNG-123) | If the API fails, or the player's user id isn't known (restart during an outage), the list the API last returned is used, so chat, /msg and /tpa stay filtered. The next load (join, the second join refresh, /ignore while unloaded) asks the API again, and its list replaces the stored one. No stored list: the player ignores nobody until the API answers (fail open, as before). An /ignore during the outage is rolled back as before. |
 | Active mode at join (`ModeService`, `ModeListener`) | The persisted mode comes from the store when the account isn't loaded. If the mode permission can't be checked (API down and no last answer), the player stays hidden and the mode is kept; before, the mode was revealed and cleared. A real "no" still clears it. |
 
+## 3a. While the API is DOWN: no call at all (KNG-171)
+
+Before KNG-171, "the API can't answer" meant a failed call: three attempts with 100 ms and 200 ms backoff plus the connection attempts, so each permission check during an outage took about a second before the store answered (`/knk help`, `/msg`, `/tpa` replied late). Now, while the service-wide connectivity state ([api-connectivity.md](api-connectivity.md), KNG-115) is DOWN:
+
+- a check answered by a fresh in-memory entry is answered as always;
+- any other check makes no API call and no retry: it reads as UNAVAILABLE at once and the store's last answer is used, as in § 3. A last-known deny stays a deny; an answer past `permission-max-age-hours` counts as unknown, so no;
+- the sync path's background refresh doesn't call the API either;
+- every other `DataAccessExecutor` read (users, catalogs, towns, ...) also ends at once as a failed call would, so the existing fallbacks (user cache, this store, stale entries) apply without the wait;
+- writes still go to the API and fail as before; nothing is written to the store from a skipped check.
+
+The state only counts once it is DOWN (3 failed probes, about 20-35 s with the defaults); before that, checks call the API as before. When the state is UP again (2 passing probes), the next check asks the API and its answer replaces the stored one, so a change made in the web app applies again. Switch: `api.connectivity.skip-api-while-down` (default `true`).
+
 ## 4. Erasure and correctness (KNG-34 D14-D16)
 
 - **Not found.** A UUID the API reports no user for (404, e.g. erased: its UUID is cleared) deletes that player's account, permission answers and ignore list, and takes them off every other player's stored ignore list. So does a permission check for a user id the API no longer knows.
@@ -82,7 +94,8 @@ offline-cache:
 
 Unit tests:
 - `OfflineSecurityStoreTest` (11): restart round trip, minimal file contents, max ages and pruning, forget, replacement, local freeze/mode, corrupt file, verifier cases.
-- `KnkPermissibleOfflineTest` (7): restart with the API down, unknown node, too old, denial stays, first check after the TTL, 404 forgets, unknown player.
+- `KnkPermissibleOfflineTest` (12): restart with the API down, unknown node, too old, denial stays, first check after the TTL, 404 forgets, unknown player; KNG-171 with the state DOWN: no API call (also not from the background refresh) and no wait, a fresh memory answer used, denial stays, too old, back UP a web-app change applies.
+- `DataAccessExecutorOutageTest` (8, KNG-171) and `PermissionsDataAccessDecisionTest` (DOWN case): no call and no wait while DOWN for every policy, a retry scheduled before DOWN not sent, retries as before while UP, calls resume after UP.
 - `OfflineFreezeAndModeTest` (5): frozen relog, local freeze kept, unfrozen stays free, vanish kept, mode change kept.
 - `OfflineIgnoreListsTest` (12, KNG-123): restart round trip, older file without lists, max age and pruning, local change keeps the age, erasure of the owner and of an ignored player, replacement.
 - `IgnoreServiceOfflineTest` (14, KNG-123): API down after a restart, no user id, API back replaces the list, fail open without a list, max age, erased owner, accepted/refused changes (only the confirmed change is stored, also when two overlap), rollback during the outage, quit, a load for a replaced account discarded.
@@ -96,4 +109,4 @@ Live, KNG-58 part (developer, on the dev server) — **passed 2026-10-10**, befo
 6. Start the API again and check that changes made in the web app apply.
 7. `plugins/KnightsAndKings/offline-security.json` contains only the fields in §2 (as of 2026-10-10: accounts and permission answers).
 
-Live, KNG-123 ignore lists (developer, on the dev server) — **passed 2026-10-12**, with the API stopped while players were online: an ignored player's chat, /msg and /tpa stayed filtered; /ignore of someone new failed and wasn't kept; after a server restart with the API still down the last list still filtered; with the API back /unignore worked and the list matched the web app; the file's `ignores` section held only the §2 fields. Found during that test and filed separately: KNG-170 (rank changes in the web app don't reach the server until rejoin), KNG-171 (commands wait about 1 s during an outage).
+Live, KNG-123 ignore lists (developer, on the dev server) — **passed 2026-10-12**, with the API stopped while players were online: an ignored player's chat, /msg and /tpa stayed filtered; /ignore of someone new failed and wasn't kept; after a server restart with the API still down the last list still filtered; with the API back /unignore worked and the list matched the web app; the file's `ignores` section held only the §2 fields. Found during that test and filed separately: KNG-170 (rank changes in the web app don't reach the server until rejoin), KNG-171 (commands wait about 1 s during an outage; fixed on `wt/kng-171`, live check in [guides/api-outage-smoke-test.md](../guides/api-outage-smoke-test.md)).

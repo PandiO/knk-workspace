@@ -1,7 +1,7 @@
 # Game Settings — admin guide
 
 **Status:** Current. Describes trunk since the KNG-52 merge of 2026-10-10 (see the [plan](../specs/game-settings/IMPLEMENTATION_PLAN.md)).
-**Last updated:** 2026-10-10
+**Last updated:** 2026-10-15 (`game-settings.server-id`, KNG-118, branch `wt/kng-118`, not merged)
 
 The Game Settings page sets server-wide rules for joining, respawning, each world's game mode, time,
 weather and spawn point, and the server-list MOTD. It also sets exceptions per permission group. The plugin picks up a saved change within about 30 seconds. To apply it at once, run
@@ -77,3 +77,8 @@ respawn to *A chosen spot* → Town 4. *Nearest town* is the more legacy-like al
 `game-settings.refresh-interval-seconds` (default 30), `runtime-sync-interval-seconds` (30) and
 `backup-history-limit` (48). These only tune how the plugin follows the page; the rules themselves are set on
 the web app.
+
+`game-settings.server-id` (default `default`, KNG-118) names this game server in its loaded-worlds report. Each server's
+report replaces only its own worlds, so give every game server that shares one API its own id. A server that stops
+reporting drops off the list 30 minutes after its last report. See
+[multiworld follow-ups §2](../architecture/multiworld-follow-ups.md#2-runtime-worlds-per-game-server-a9).
