@@ -1,8 +1,8 @@
 # Form wizard — entities created in a form session, and editing them again
 
 **Status:** Design decided (2026-10-11): D1 = A (developer), D2 default chosen (reversible, developer may override).
-Being implemented by the [form wizard chain](../../ai-agents/handoffs/FORM_WIZARD_CHAIN.md).
-**Last updated:** 2026-10-12 (§5 items 1-5 status, KNG-133, KNG-134, KNG-135, KNG-136, KNG-162)
+Implemented by the [form wizard chain](../../ai-agents/handoffs/FORM_WIZARD_CHAIN.md), merged 2026-10-17 to knk-web-api `master`, knk-web-app `main` and knk-plugin `main` via branch `claude/wonderful-darwin-u39k1o`, live-tested by the developer ([chain report](../../reports/2026-10-11-form-wizard-chain.md), [follow-ups and live test](../../reports/2026-10-12-form-wizard-chain-smoke-followups.md)). The "not merged, live test pending" notes dated 2026-10-12 in §5 are historical. Follow-ups: [KNG-183](https://linear.app/kngpandi/issue/KNG-183) (M2M steps without join fields pick directly), [KNG-184](https://linear.app/kngpandi/issue/KNG-184) (clickable steps).
+**Last updated:** 2026-10-17 (merged and live-tested); 2026-10-12 (§5 items 1-5 status, KNG-133, KNG-134, KNG-135, KNG-136, KNG-162)
 **Linear:** [KNG-133](https://linear.app/kngpandi/issue/KNG-133) (List "Create New" never saved),
 [KNG-136](https://linear.app/kngpandi/issue/KNG-136) (pickers show entities made in this session),
 [KNG-134](https://linear.app/kngpandi/issue/KNG-134) (Edit instance opens without its values),

@@ -1,8 +1,8 @@
 # Form wizard chain — progress report
 
-**Status:** Done — links 1-7 done (2026-10-12); nothing merged, no PRs. Final summary (merge order, combined live
+**Status:** Done — links 1-7 done (2026-10-12). Live-tested and merged 2026-10-17 through `claude/wonderful-darwin-u39k1o` (it replaced `claude/jolly-archimedes-urhio9`), see [the follow-ups report](2026-10-12-form-wizard-chain-smoke-followups.md). Final summary (merge order, combined live
 checklist, decisions to review, follow-ups) at the end of this file.
-**Last updated:** 2026-10-12 (link 7 done, final summary)
+**Last updated:** 2026-10-17 (status: merged); 2026-10-12 (link 7 done, final summary)
 **Charter:** [FORM_WIZARD_CHAIN.md](../ai-agents/handoffs/FORM_WIZARD_CHAIN.md). Append-only below the Summary.
 
 ## Summary

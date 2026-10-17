@@ -2,8 +2,8 @@
 
 **Status:** Merged 2026-10-17. R14/A5, A9, D8/D9 and U2 are merged ([knk-web-api #11](https://github.com/PandiO/knk-web-api/pull/11),
 [knk-web-app #7](https://github.com/PandiO/knk-web-app/pull/7), [knk-plugin #14](https://github.com/PandiO/knk-plugin/pull/14)), and the
-hub rows came with the hub merge the same day. Their live checks were accepted by the developer without a run. U4 waits for the form-wizard
-chain ([KNG-179](https://linear.app/kngpandi/issue/KNG-179)); P4 is a check for the developer (§5). Linear [KNG-118](https://linear.app/kngpandi/issue/KNG-118).
+hub rows came with the hub merge the same day. Their live checks were accepted by the developer without a run. U4 was waiting for the form-wizard
+chain, merged 2026-10-17, so it can start now ([KNG-179](https://linear.app/kngpandi/issue/KNG-179)); P4 is a check for the developer (§5). Linear [KNG-118](https://linear.app/kngpandi/issue/KNG-118).
 **Last updated:** 2026-10-17
 **Source:** the G rows of the dated [2026-10-10 multiworld capability audit](../reports/2026-10-10-multiworld-capability-audit.md)
 §2 (on the hub branch; the report is a snapshot and is not edited). Hub-blocking rows are KNG-111 to KNG-117 and the
@@ -113,14 +113,14 @@ refusal means the node is missing; grant it with `/knk user <player> perm grant 
 the web app. Expected: the owner's group holds `knk.mode.owner`, the staff group `knk.mode.staff`, and no player group
 gets either through a wildcard.
 
-## 6. Plan for U4 (pickers by world), after the form-wizard chain merges
+## 6. Plan for U4 (pickers by world), now that the form-wizard chain has merged
 
-Tracked in [KNG-179](https://linear.app/kngpandi/issue/KNG-179) (blocked by KNG-166).
+Tracked in [KNG-179](https://linear.app/kngpandi/issue/KNG-179). Its blocker KNG-166 merged on 2026-10-17 (picker columns and `pickerRowValues` are on trunk now).
 
 On trunk, KNG-111 already shows a World column in the Town, District, Domain, Structure and GateStructure pickers
-(`objectConfigs.tsx` `worldColumn`). The chain branch (`claude/wonderful-darwin-u39k1o`, KNG-166) reworks those columns
+(`objectConfigs.tsx` `worldColumn`). The form-wizard chain (KNG-166, merged 2026-10-17) reworked those columns
 through `utils/forms/pickerRowValues.ts` (`pickerWorldName`) and the picker list DTOs. Doing U4 against trunk now would
-conflict, so it waits. Once the chain is merged:
+conflict, so it waited. Now that the chain is merged:
 
 1. **Location picker shows the world.** Add a `location` entry to `columnDefinitionsRegistry` with World and X/Y/Z
    columns, read through `pickerRowValues` so pinned and searched rows agree (`world` on Location, `worldName` on

@@ -1,8 +1,8 @@
 # Default FormConfigurations — agent-authored seeds
 
 **Status:** Design decided (2026-10-11: S1 = A, developer). Implemented by the
-[form wizard chain](../../ai-agents/handoffs/FORM_WIZARD_CHAIN.md) (KNG-137, KNG-138, KNG-139 priority-1 groups; not merged).
-**Last updated:** 2026-10-12 (§2.1, §2.3: KNG-164 columns and KNG-137 renderer gaps fixed on the chain branch; §3: KNG-138 implemented on the chain branch, §3.4 records where it differs; §5.1: KNG-139 priority-1 seeds delivered)
+[form wizard chain](../../ai-agents/handoffs/FORM_WIZARD_CHAIN.md) (KNG-137, KNG-138, KNG-139 priority-1 groups), merged 2026-10-17 to knk-web-api `master`, knk-web-app `main` and knk-plugin `main` via branch `claude/wonderful-darwin-u39k1o`, live-tested by the developer ([chain report](../../reports/2026-10-11-form-wizard-chain.md), [follow-ups and live test](../../reports/2026-10-12-form-wizard-chain-smoke-followups.md)). The "not merged / live test pending" notes dated 2026-10-12 below are historical. The GateStructure seed has no House number field (removed 2026-10-17, smoke test F2.5).
+**Last updated:** 2026-10-17 (merged and live-tested; GateStructure seed without House number, §5.1 table row); 2026-10-12 (§2.1, §2.3: KNG-164 columns and KNG-137 renderer gaps fixed on the chain branch; §3: KNG-138 implemented on the chain branch, §3.4 records where it differs; §5.1: KNG-139 priority-1 seeds delivered)
 **Linear:** [KNG-138](https://linear.app/kngpandi/issue/KNG-138) (export/import),
 [KNG-139](https://linear.app/kngpandi/issue/KNG-139) (author the default forms),
 [KNG-137](https://linear.app/kngpandi/issue/KNG-137) (wizard shows step names and all descriptions)

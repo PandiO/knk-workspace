@@ -1,8 +1,8 @@
 # Form wizard chain — charter
 
-**Status:** Done. Links 1-2 ran as coordinator subagents, links 3-7 as coordinator-started sessions (§6); nothing merged.
+**Status:** Done. Links 1-2 ran as coordinator subagents, links 3-7 as coordinator-started sessions (§6). Live-tested by the developer and merged 2026-10-17 together with the smoke-test follow-ups (branch `claude/wonderful-darwin-u39k1o`, which replaced `claude/jolly-archimedes-urhio9`; [follow-ups report](../../reports/2026-10-12-form-wizard-chain-smoke-followups.md)).
 Final summary (merge order, combined live checklist, decisions to review): end of the progress report.
-**Last updated:** 2026-10-12 (link 7 done, chain complete)
+**Last updated:** 2026-10-17 (merged); 2026-10-12 (link 7 done, chain complete)
 **Linear:** [KNG-133](https://linear.app/kngpandi/issue/KNG-133), [KNG-134](https://linear.app/kngpandi/issue/KNG-134),
 [KNG-135](https://linear.app/kngpandi/issue/KNG-135), [KNG-164](https://linear.app/kngpandi/issue/KNG-164), [KNG-137](https://linear.app/kngpandi/issue/KNG-137),
 [KNG-136](https://linear.app/kngpandi/issue/KNG-136), [KNG-162](https://linear.app/kngpandi/issue/KNG-162),
