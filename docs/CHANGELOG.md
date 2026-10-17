@@ -4,16 +4,17 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
-- **Gate doors refuse a Reference point 2 that isn't straight above the anchor**
-  ([KNG-132](https://linear.app/kngpandi/issue/KNG-132); knk-web-app `f6c7c37`, knk-plugin `974ce335`, branch
-  `claude/loving-johnson-dlshrc`). Both reference points are measured from the anchor: point 1 along
-  the bottom edge (width), point 2 straight up (height). A point 2 above point 1 gave a slanted height of 2, the block
-  scan stored the wrong blocks and the door jammed. The GateDoor form now refuses such a point and says where it
-  should be, the plugin's block scan refuses it too, and loading such a door logs a warning. The field descriptions
-  come from the GateDoor form seed (KNG-139). Unit-tested and smoke-tested in game (2026-10-17).
+- Nothing pending here at the moment.
 
 ## 2026-10-17
 
+- **Gate doors refuse a Reference point 2 that isn't straight above the anchor**
+  ([KNG-132](https://linear.app/kngpandi/issue/KNG-132); knk-web-app `main` `7c00508`, knk-plugin `main`
+  `82455cf`). Both reference points are measured from the anchor: point 1 along the bottom edge (width), point 2
+  straight up (height). A point 2 above point 1 gave a slanted height of 2, the block
+  scan stored the wrong blocks and the door jammed. The GateDoor form now refuses such a point and says where it
+  should be, the plugin's block scan refuses it too, and loading such a door logs a warning. The field descriptions
+  come from the GateDoor form seed (KNG-139). Unit-tested; smoke-tested in game and merged by the developer.
 - **Form wizard: child forms save what they create, sessions remember it, and ready-made gate and siege forms**
   ([KNG-133](https://linear.app/kngpandi/issue/KNG-133)…[KNG-139](https://linear.app/kngpandi/issue/KNG-139),
   [KNG-162](https://linear.app/kngpandi/issue/KNG-162), [KNG-164](https://linear.app/kngpandi/issue/KNG-164) and the
