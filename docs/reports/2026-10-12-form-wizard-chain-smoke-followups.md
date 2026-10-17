@@ -222,3 +222,38 @@ Plugin, API and web app from this branch. The chain's sections 0, A–D, E1–E5
   (`SiegeScenarioService.AddFieldRuleChecksAsync`), so the test is: make the rule non-blocking in the builder, save a
   point outside, Readiness shows a **warning**; make the rule blocking again, Re-check, it is an **error**; move the
   point back inside, Re-check, ready.
+
+### 2026-10-17, run 4
+
+- **F3:** passed (after `768c197`).
+- **F5.2:** passed, with the rule made non-blocking and back (Readiness showed the warning, then the error). Two
+  bugs found on the way, both older than the chain (also on `master`/`main`):
+  - The rule builder said "Property 'Town' not found on entity 'SiegeObjective'" for the capture point rule
+    (depends on SiegeScenario.TownId, path `Town.WgRegionId`). `findParentFormFields` kept only configurations with
+    `isActive !== false`, but the API never sets `FormConfigurationDto.IsActive` (no column, the mapping ignores it),
+    so no parent form was ever found (since bd9eaea) and the path was checked against the child entity. **Fixed**
+    in knk-web-app `a4ddc26`.
+  - A changed dependency path wasn't saved while other changes were: `UpdateFieldValidationRuleDto` had no
+    `DependencyPath`. **Fixed** in knk-web-api `acd7336` (mapping test). The developer's workaround path
+    (`SiegeScenario.Town`) was therefore never stored: rule 28 on the dev DB still reads `Town.WgRegionId`, blocking.
+- **G1:** passed (run 2). **G2:** skipped (the hub world can't be reached easily yet). **G3:** not reported.
+- **G4.1 failed:** the Street form's District picker showed `TOWN ID` and an empty `TOWN` column: District has
+  saved table columns, and a saved key ("Town") matched no built-in column (keyed `townName`), so it read
+  `row.Town`. **Fixed** in knk-web-app `77f3756`: a saved key matches the built-in column with the same key, key +
+  "Name", or the same label.
+- **G4.2:** the GateDoor Gate picker and the SiegeObjective Gate picker showed ID + Name only: GateStructure has
+  saved columns (G4.3).
+- **G4.3 failed:** saved columns couldn't be cleared (Save refused an empty selection). **Fixed** in `7ceeef1`:
+  with nothing selected the button reads "Use built-in columns", asks in a modal and saves an empty list (the
+  API stores it as none).
+- **G5:** passed.
+- **G6.1:** passed. Clickable steps requested: [KNG-184](https://linear.app/kngpandi/issue/KNG-184).
+- **G6.2:** the narrow header showed only "Step 4 of 6 · Spawn point". **Changed** in `5f1ba93`: the label is a
+  disclosure button that lists every step (done, current, to do) under the bar; closes on a step change.
+- **G7.1:** passed. "Show details" for refusals requested: [KNG-185](https://linear.app/kngpandi/issue/KNG-185).
+  **G7.2:** accepted.
+- Tests: API 2647 passed, the same 8 failures; web app 868 passed, the same 4 known-red.
+- **Found in passing, not fixed:** the API never sets `IsActive` on `FieldValidationDto` and `StepConditionDto`
+  either (mapping `Ignore()`), and `FormWizard.tsx` skips a validation with `!validation.isActive` and runs only
+  completion conditions with `condition.isActive`, so those legacy per-field validations and step completion
+  conditions may never run. Check before relying on them.
