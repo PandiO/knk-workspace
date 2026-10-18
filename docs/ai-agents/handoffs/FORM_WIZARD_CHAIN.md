@@ -159,7 +159,7 @@ A test the same day showed that a new session **can** attach the other repos wit
 its **prompt** (the developer's request relayed by the coordinator), not in a file. So from link 3 on:
 
 - The **coordinator** session (`session_01SZ9c7pGMwGfvHR3dHAmWgQ`, environment "Default Correct") starts each link
-  with `create_session`: `source_url` knk-workspace, `source_revision` `claude/jolly-archimedes-urhio9`, model
+  with `create_session`: `source_url` knk-workspace, `source_revision` `claude/jolly-archimedes-urhio9` (merged and deleted since; a new chain uses `main` or a fresh branch), model
   `claude-opus-5-5`, title "Form wizard chain — link <n> (KNG-…)". The **prompt itself** says: the developer asked
   for this chain and for each link to attach `PandiO/knk-web-app`, `PandiO/knk-web-api` and `PandiO/knk-plugin` with
   `add_repo` (access `push`), clone them into `/home/user/<repo>`, and `git push --dry-run` the feature branch

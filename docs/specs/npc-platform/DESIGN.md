@@ -3,7 +3,7 @@
 **Status:** Working design; agreed tutorial requirements recorded, platform architecture and implementation investigations still open. No NPC implementation delivered by this document.
 **Last updated:** 2026-10-06
 **Linear:** [KNG-36](https://linear.app/kngpandi/issue/KNG-36/design-shared-npc-traits-and-pathfinding-platform)
-**Standing workspace branch:** `codex/kng-36-npc-platform-design`
+**Standing workspace branch:** none; `codex/kng-36-npc-platform-design` was merged into `main` and deleted on 2026-10-18
 **Authority:** Developer discussion through 2026-10-06 and KNG-36 description/comments read on that date. Confirmed decisions below preserve that discussion; proposed interfaces and unresolved questions are explicitly labeled. This is the consolidated design reference for continued discussion, not a completed platform design or implementation plan.
 
 ## 1. Purpose and scope
@@ -138,7 +138,7 @@ For KNG-36, describe only the boundary: read the active step, present requested 
 
 [Road navigation](../navigation/DESIGN.md), [KNG-27](https://linear.app/kngpandi/issue/KNG-27) and [KNG-51](https://linear.app/kngpandi/issue/KNG-51) may supply reusable pathfinding components, but player guidance is not NPC locomotion.
 
-The KNG-36 comment dated 2026-10-02 points to [LAST_MILE_PATHFINDING.md §13 on its design branch](https://github.com/PandiO/knk-workspace/blob/claude/kng-51-last-mile-pathfinding-design/docs/specs/navigation/LAST_MILE_PATHFINDING.md): walkable grid, chunk capture/cache, bounded A* search, movement profiles and per-cell access are candidates. The comment described that branch as unmerged at the time; current merge/implementation status was not revalidated here. Recheck current branches before reuse. NPC path following, crowds, factions and interaction remain KNG-36 responsibilities.
+The KNG-36 comment dated 2026-10-02 points to [LAST_MILE_PATHFINDING.md §13](../navigation/LAST_MILE_PATHFINDING.md) (then on its design branch, now on `main`): walkable grid, chunk capture/cache, bounded A* search, movement profiles and per-cell access are candidates. The comment described that branch as unmerged at the time; the document is on `main` now (link updated 2026-10-18). Recheck implementation status before reuse. NPC path following, crowds, factions and interaction remain KNG-36 responsibilities.
 
 Audit V1/V2/V3 and compare a Citizens navigator with reusable KnK pathfinding on the castle test map. Cover off-road/vertical travel, closed gates, changed permissions, unloaded chunks, concurrent actors and cancelled tasks. Set measurable path-computation, tick-time, entity-count, asynchronous-work and degradation budgets after collecting evidence; none are approved yet.
 

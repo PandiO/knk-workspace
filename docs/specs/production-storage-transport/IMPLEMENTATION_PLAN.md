@@ -9,7 +9,8 @@ are in [DESIGN §14](DESIGN.md#14-decisions), [PRODUCTION_KINDS §9](PRODUCTION_
 **Linear:** parent [KNG-83](https://linear.app/kngpandi/issue/KNG-83). Prerequisite
 [KNG-95](https://linear.app/kngpandi/issue/KNG-95) (every item is a blueprint item).
 **Branches (when work starts):** one standing branch per repo, `claude/production-storage-transport`, cut from
-each repo's current default branch (`master` for knk-web-api, `main` for the others). Follow the board rules in
+each repo's current default branch (`master` for knk-web-api, `main` for the others). The earlier docs-only
+knk-workspace branch of that name was merged into `main` and deleted on 2026-10-18. Follow the board rules in
 [ACTIVE_SESSIONS.md](../../ACTIVE_SESSIONS.md).
 
 ## Rules for every phase

@@ -3,9 +3,9 @@
 **Date:** 2026-10-16
 **Status:** Ready to copy into a fresh session
 **Canonical design:** [DRAWBRIDGE_KEYFRAME_ANIMATION.md](../../specs/gate-structure-animation/DRAWBRIDGE_KEYFRAME_ANIMATION.md)
-(knk-workspace branch `claude/drawbridge-keyframe-animation`, unmerged; decided 2026-10-16)
+(on knk-workspace `main` since 2026-10-18, when the docs branch was merged and deleted; decided 2026-10-16)
 **State at writing:** knk-plugin `main` `29bb6ff`, knk-web-app `main` `38854ba`, knk-web-api `master` `07fda99`,
-knk-workspace `main` `b0b6637`. Design and reference script are on the workspace branch. Checked 2026-10-16: neither
+knk-workspace `main` `b0b6637`. Design and reference script were on the workspace branch then; both are on workspace `main` since 2026-10-18. Checked 2026-10-16: neither
 KNG-132 nor KNG-139 was on any default branch, so the prompt makes the web/API part conditional on that.
 
 ```text
@@ -18,7 +18,8 @@ READ FIRST
 - knk-workspace main: AGENTS.md, docs/ai-agents/GLOBAL_AGENT_INSTRUCTIONS.md,
   docs/ACTIVE_SESSIONS.md (the "Drawbridge animation redesign" row is this
   feature).
-- knk-workspace branch claude/drawbridge-keyframe-animation (unmerged):
+- knk-workspace main (merged 2026-10-18 from the deleted branch
+  claude/drawbridge-keyframe-animation):
   - docs/specs/gate-structure-animation/DRAWBRIDGE_KEYFRAME_ANIMATION.md:
     §5 method, §5.11 door shape mask, §8 decisions, §9 plan.
   - scripts/gate-animation/drawbridge_keyframes_sim.py: the Python reference
@@ -30,8 +31,9 @@ READ FIRST
 BRANCHES AND TRACKING
 - knk-plugin: create claude/drawbridge-keyframe-animation from a freshly
   fetched main (main was 29bb6ff on 2026-10-16).
-- knk-workspace: continue the existing branch claude/drawbridge-keyframe-animation
-  for doc changes.
+- knk-workspace: the old docs branch claude/drawbridge-keyframe-animation was
+  merged and deleted on 2026-10-18; cut a new branch of that name from a freshly
+  fetched main for doc changes.
 - Tracker rows go to knk-workspace main as single commits (the repo's
   convention). Before editing, update the existing row to claim the knk-plugin
   files below.

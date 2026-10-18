@@ -2,7 +2,7 @@
 
 **Date:** 2026-10-11
 **Status:** Private infrastructure re-verified; build the KNG-64 API artifacts, but do not treat or migrate the current placeholder DB as final alpha data
-**Branch:** `codex/closed-alpha-infrastructure-handoff`
+**Branch:** `codex/closed-alpha-infrastructure-handoff`, merged into knk-workspace `main` and deleted on 2026-10-18
 **Related issues:** KNG-109, KNG-114, KNG-115
 **Progress report:** [`2026-10-11-closed-alpha-infrastructure-progress.md`](../../reports/2026-10-11-closed-alpha-infrastructure-progress.md)
 **Runbook:** [`closed-alpha-deployment-runbook.md`](../../guides/closed-alpha-deployment-runbook.md)
