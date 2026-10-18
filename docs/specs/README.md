@@ -3,6 +3,7 @@
 Central home for requirements, specifications, and implementation roadmaps across KNK services (web API, web app, and Minecraft plugin). Keep new cross-cutting docs here so they are discoverable by all teams and AI assistants.
 
 ## Structure
+- npc-platform/: shared NPC traits, behavior and tutorial guide; agreed requirements and open investigations (KNG-36)
 - project-overview/: portfolio-level summaries and source pointers (CHANGES, implementation roadmap, source map)
 - users/: user/account management specs and requirements (including linking, merge, password rules)
 - towns/: towns/world feature specs and hybrid create/edit flow notes
@@ -27,6 +28,7 @@ Central home for requirements, specifications, and implementation roadmaps acros
 - Player statistics (KNG-34; design finalized 2026-10-03, implemented by chain links 2-7 on `claude/kind-dijkstra-y9d279`, done 2026-10-03, not merged): [player-statistics/DESIGN.md](player-statistics/DESIGN.md) (binding §F "Finalized design"), [player-statistics/IMPLEMENTATION_PLAN.md](player-statistics/IMPLEMENTATION_PLAN.md); evidence [../reports/2026-10-03-player-statistics-source-audit.md](../reports/2026-10-03-player-statistics-source-audit.md). Reconciles KNG-14 (counters) and KNG-23 (provenance = existing ledger).
 
 - Game Settings (KNG-52; merged and live-tested 2026-10-10): [game-settings/DESIGN.md](game-settings/DESIGN.md), [game-settings/IMPLEMENTATION_PLAN.md](game-settings/IMPLEMENTATION_PLAN.md); admin how-to [../guides/game-settings.md](../guides/game-settings.md)
+- Shared NPC platform (KNG-36, working design; not implemented): [npc-platform/DESIGN.md](npc-platform/DESIGN.md). Tutorial lifecycle, movement profile, access and gate pass-through investigations.
 - Siege survival / Defend the Castle (KNG-50, design recorded 2026-09-30; not implemented): [siege-survival/DESIGN.md](siege-survival/DESIGN.md), [siege-survival/IMPLEMENTATION_PLAN.md](siege-survival/IMPLEMENTATION_PLAN.md). Both inventory variants and Mystery Box are first-release scope; permanent reward amounts await progression targets.
 - User domain: [docs/specs/users/SPEC_USER.md](docs/specs/users/SPEC_USER.md), [docs/specs/users/SPEC_USER_ACCOUNT_MANAGEMENT.md](docs/specs/users/SPEC_USER_ACCOUNT_MANAGEMENT.md), [docs/specs/users/REQUIREMENTS_USER.md](docs/specs/users/REQUIREMENTS_USER.md), [docs/specs/users/USER_ACCOUNT_MANAGEMENT_IMPLEMENTATION_ROADMAP.md](docs/specs/users/USER_ACCOUNT_MANAGEMENT_IMPLEMENTATION_ROADMAP.md), [docs/specs/users/USER_ACCOUNT_MANAGEMENT_QUICK_REFERENCE.md](docs/specs/users/USER_ACCOUNT_MANAGEMENT_QUICK_REFERENCE.md)
 - Towns domain: [docs/specs/towns/SPEC_TOWNS.md](docs/specs/towns/SPEC_TOWNS.md), [docs/specs/towns/CREATE_FLOW_SPLIT_TOWNS.md](docs/specs/towns/CREATE_FLOW_SPLIT_TOWNS.md), [docs/specs/towns/LOGIC_CANDIDATES_TOWNS.md](docs/specs/towns/LOGIC_CANDIDATES_TOWNS.md), [docs/specs/towns/REQUIREMENTS_HYBRID_CREATE_EDIT_FLOW.md](docs/specs/towns/REQUIREMENTS_HYBRID_CREATE_EDIT_FLOW.md)
