@@ -1,7 +1,7 @@
 # Item render pipeline — one path from blueprint to item
 
 **Status:** Implemented and merged to knk-plugin `main` 2026-10-05 (`74607a9`); developer smoke test passed (see the lootboxes plan, "Smoke test results — 2026-10-05"). The pipeline itself existed since lootboxes Phase 0; the single `assemble` entry point and the decoy/colour changes are new in that merge
-**Last updated:** 2026-10-15 (items catalogue goes through `assembleDefaults`, [KNG-175](https://linear.app/kngpandi/issue/KNG-175); knk-plugin `fe2535c6` on branch `claude/updates-priorities-review-tjiqc2`, not merged as of 2026-10-18)
+**Last updated:** 2026-10-18 (KNG-175 merged to knk-plugin `main` `147806d8`); 2026-10-15 (items catalogue goes through `assembleDefaults`, [KNG-175](https://linear.app/kngpandi/issue/KNG-175))
 **Linear:** [KNG-54](https://linear.app/kngpandi/issue/KNG-54) (Done)
 **Why this exists:** developer request 2026-10-05 — all lore colouring, custom-enchantment rendering and grade/origin rendering should be applied in one spot, so a route that spawns an item can't render it differently from the others.
 **See also:** [lootboxes design §3.4/§3.9](../specs/lootboxes/DESIGN.md), [enchantment books](../specs/enchantment-books/ENCHANTMENT_BOOK_APPLICATION.md), [items plan](../specs/items/IMPLEMENTATION_PLAN.md), [kits](../specs/kits/DESIGN.md)

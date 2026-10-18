@@ -4,13 +4,16 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
-- **The items catalogue shows each item with its default enchantments**
-  ([KNG-175](https://linear.app/kngpandi/issue/KNG-175); knk-plugin `fe2535c6`, branch `claude/updates-priorities-review-tjiqc2`).
-  The `/menu` item catalogue built its icons from the blueprint alone, so the vanilla enchantments and custom
-  enchantment lines a kit or `/knk itemblueprints give` adds were missing. It now builds them the same way
-  (`assembleDefaults`), from the enchantments the blueprint already carries. Unit-tested; not yet checked in game.
+_Nothing at the moment._
 
 ## 2026-10-18
+
+- **The items catalogue shows each item with its default enchantments**
+  ([KNG-175](https://linear.app/kngpandi/issue/KNG-175); knk-plugin `main` `147806d8`, merged directly, no PR).
+  The `/menu` item catalogue built its icons from the blueprint alone, so the vanilla enchantments and custom
+  enchantment lines a kit or `/knk itemblueprints give` adds were missing. It now builds them the same way
+  (`assembleDefaults`), from the enchantments the blueprint already carries. Unit-tested; merged at the
+  developer's request, no in-game result recorded.
 
 - **Re-running a domain's region step replaces its region instead of leaving an orphan**
   ([KNG-103](https://linear.app/kngpandi/issue/KNG-103); knk-plugin `main` `e574f45` ([#12](https://github.com/PandiO/knk-plugin/pull/12)),
