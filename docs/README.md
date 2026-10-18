@@ -9,7 +9,7 @@ This is the documentation for the Knights & Kings project, covering game design/
 | What is intended, built, on a branch, or tested? | [Living V1 → V2 → V3 feature register](FEATURE_REGISTER.md) |
 | What shipped and when? | [Project changelog](CHANGELOG.md) |
 | How to keep specs, technical docs, player/admin guides and the changelog current? | [Documentation maintenance guide](guides/developer/DOCUMENTATION_MAINTENANCE.md) |
-| How does the system fit together? | [System overview](architecture/system-overview.md), [API architecture](architecture/web-api-architecture.md), [web-app architecture](architecture/web-app-architecture.md) |
+| How does the system fit together? | [System overview](architecture/system-overview.md), [API architecture](architecture/web-api-architecture.md), [web-app architecture](architecture/web-app-architecture.md), [plugin permission checks and command visibility](architecture/plugin-permission-checks.md) |
 | How to implement and document a feature? | [Feature specs](specs/README.md), [developer code map](guides/developer/CODEMAP.md), [active sessions](ACTIVE_SESSIONS.md) |
 | How to play or administer a feature? | [Guides and coverage map](guides/README.md), [commands](guides/users/commands.md), [Siege authoring](guides/authoring-a-siege-scenario.md) |
 

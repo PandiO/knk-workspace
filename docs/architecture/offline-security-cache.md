@@ -1,7 +1,7 @@
 # Offline security cache — permissions, freeze and modes without the API
 
 **Status:** P0 implemented on branch `claude/worldguard-entry-deny-bypass-sj1j7g` (knk-plugin `239ea49`, brought up to `main` in `7e9e8cf`), **live smoke test passed and merged to knk-plugin `main` 2026-10-10** (merge `2649911`). Linear [KNG-58](https://linear.app/kngpandi/issue/KNG-58)
-**Last updated:** 2026-10-15 (KNG-171: no API call while connectivity is DOWN, § 3a; knk-plugin branch `wt/kng-171`, not merged, not live-tested). Before: 2026-10-12 (KNG-123: ignore lists added; live check passed and merged to knk-plugin `main`, PR #13)
+**Last updated:** 2026-10-18 (KNG-107: checks resolve from the player's effective set, see [plugin-permission-checks.md](plugin-permission-checks.md); the store's role is unchanged). Before: 2026-10-15 (KNG-171: no API call while connectivity is DOWN, § 3a; knk-plugin branch `wt/kng-171`, not merged, not live-tested). Before: 2026-10-12 (KNG-123: ignore lists added; live check passed and merged to knk-plugin `main`, PR #13)
 **Related:** [`domain-access-enforcement.md`](domain-access-enforcement.md) (KNG-56: domain rules already survive outages as WorldGuard flags); [`reports/2026-10-06-offline-critical-data-inventory.md`](../reports/2026-10-06-offline-critical-data-inventory.md) (why these items are P0); KNG-57 (SignalR push, incl. erasure); KNG-34 D14-D16 (data deletion); KNG-81 (duplicate `CacheManager`)
 
 ## 1. Problem
@@ -27,7 +27,9 @@ No email, balances, titles or other profile data.
 
 Entries come only from API answers:
 - `UsersDataAccess` reports every user the API returns, and every UUID it knows no user for.
-- `PermissionsDataAccess` reports every check answer.
+- `PermissionsDataAccess` reports every check answer. Since KNG-107 checks resolve from the player's effective set
+  ([plugin-permission-checks.md](plugin-permission-checks.md)): each node answered from a newly loaded set is
+  reported once per load, answers from an expired set are not, and a set load that finds no user is an erasure.
 - `IgnoreService` reports every ignore list the API returns (KNG-123).
 
 Local edits update their own fields without counting as a confirmation: a freeze or mode change made on this server is kept for the next join, but doesn't extend the max age. The same holds for an /ignore or /unignore the API accepted. The file is written every `flush-seconds` (10) off the main thread, and on disable (temp file plus atomic move; a corrupt file is moved aside as `.corrupt`).
@@ -38,7 +40,7 @@ A live API answer always wins, and every API answer overwrites the store.
 
 | Case | Behaviour |
 |---|---|
-| Permission check, sync (`KnkPermissible.hasPermission`) | A fresh in-memory answer is used first. Otherwise the store's last answer is used (and a refresh starts in the background). Otherwise no. |
+| Permission check, sync (`KnkPermissible.hasPermission`) | A fresh in-memory answer is used first; since KNG-107 also the player's last permission set while it reloads (while the API is DOWN only for `effective-set-stale-seconds`). Otherwise the store's last answer is used (and a refresh starts in the background). Otherwise no. |
 | Permission check, async (`checkAsync`) | If the API can't answer, the store's last answer is used; otherwise UNAVAILABLE. A last-known **deny stays a deny**. An answer older than the max age counts as unknown, so no. |
 | Account for a UUID | Taken from the user cache, else from the store. This is what makes permissions work after a restart. |
 | Freeze at join (`AdminFreezeManager.restoreOnJoin`) | If the API lookup fails, the last known freeze is applied (it used to fail open). |
