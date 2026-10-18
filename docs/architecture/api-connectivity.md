@@ -65,7 +65,9 @@ Before KNG-171 every cache miss during an outage still called the API: three att
 - **Permissions.** A miss reads as UNAVAILABLE at once, and `KnkPermissible` answers it from the
   offline store ([offline-security-cache.md](offline-security-cache.md) § 3). The rules are
   unchanged: a last-known deny stays a deny, an answer past its max age counts as unknown (no).
-  A skipped check is logged at FINE, not as a warning per check.
+  A skipped check is logged at FINE, not as a warning per check. Since KNG-107 the plugin loads one
+  permission set per player instead of one check per node; while DOWN a loaded set still answers
+  listings for `effective-set-stale-seconds` ([plugin-permission-checks.md](plugin-permission-checks.md)).
 - **Writes** (`*CommandApi`, currency, ignore changes, ...) don't go through the executor and
   still call the API; they fail during an outage as before.
 - **Back UP.** The next read calls the API as before; nothing was cached from skipped reads, so
