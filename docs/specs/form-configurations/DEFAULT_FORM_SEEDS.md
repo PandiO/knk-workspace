@@ -2,7 +2,7 @@
 
 **Status:** Design decided (2026-10-11: S1 = A, developer). Implemented by the
 [form wizard chain](../../ai-agents/handoffs/FORM_WIZARD_CHAIN.md) (KNG-137, KNG-138, KNG-139 priority-1 groups), merged 2026-10-17 to knk-web-api `master`, knk-web-app `main` and knk-plugin `main` via branch `claude/wonderful-darwin-u39k1o`, live-tested by the developer ([chain report](../../reports/2026-10-11-form-wizard-chain.md), [follow-ups and live test](../../reports/2026-10-12-form-wizard-chain-smoke-followups.md)). The "not merged / live test pending" notes dated 2026-10-12 below are historical. The GateStructure seed has no House number field (removed 2026-10-17, smoke test F2.5).
-**Last updated:** 2026-10-17 (merged and live-tested; GateStructure seed without House number, §5.1 table row); 2026-10-12 (§2.1, §2.3: KNG-164 columns and KNG-137 renderer gaps fixed on the chain branch; §3: KNG-138 implemented on the chain branch, §3.4 records where it differs; §5.1: KNG-139 priority-1 seeds delivered)
+**Last updated:** 2026-10-18 (§4: a property asked in more than one step shares one value, KNG-120); 2026-10-17 (merged and live-tested; GateStructure seed without House number, §5.1 table row); 2026-10-12 (§2.1, §2.3: KNG-164 columns and KNG-137 renderer gaps fixed on the chain branch; §3: KNG-138 implemented on the chain branch, §3.4 records where it differs; §5.1: KNG-139 priority-1 seeds delivered)
 **Linear:** [KNG-138](https://linear.app/kngpandi/issue/KNG-138) (export/import),
 [KNG-139](https://linear.app/kngpandi/issue/KNG-139) (author the default forms),
 [KNG-137](https://linear.app/kngpandi/issue/KNG-137) (wizard shows step names and all descriptions)
@@ -203,6 +203,10 @@ bundled seeds are imported, with a dry-run result before importing.
 - Placeholder only for examples of format; never on String fields with `enumValues`.
 - Relationship fields say whether "Create New" is expected here, and what the child form will ask.
 - Booleans get a description too (shown once KNG-137 lands).
+- A property may be asked in more than one step (e.g. a District's Location). The copies share one value: changing
+  one updates the others, an empty copy never overwrites a filled one on submit, and a resumed draft fills empty
+  copies (KNG-120; same `fieldName`, case-insensitive; many-to-many steps excluded). Prefer one field per property
+  anyway, and repeat it only when a later step needs it in view.
 - Runtime-only properties (`CurrentSiegeId`, `IsSiegeObjective`, override fields set by dedicated endpoints) are not
   put on default forms; say so in the PR.
 
