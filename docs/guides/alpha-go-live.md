@@ -2,7 +2,7 @@
 
 **Status:** v2, aligned 2026-10-11 with the [closed-alpha deployment runbook](closed-alpha-deployment-runbook.md)
 (the Codex NAS rollout). Not yet followed end to end.
-**Last updated:** 2026-10-11
+**Last updated:** 2026-10-18
 **Applies to:** builds that **include KNG-64**: knk-web-api `master` ≥ `30c5dc5`, knk-web-app `main` ≥ `98c0a76`,
 knk-plugin `main` ≥ `34c9261`. **Never expose an older API.**
 **Linear:** [KNG-64](https://linear.app/kngpandi/issue/KNG-64) (parent), [KNG-68](https://linear.app/kngpandi/issue/KNG-68) (this guide)
@@ -63,7 +63,7 @@ Minecraft client ──► play.knightsandkings.net ──► playit.gg tunnel �
 |---|---|---|---|
 | knk-web-api | `master` ≥ `30c5dc5` (KNG-64 merge) | `knk-web-api:alpha-17ee730a`: **before KNG-64.** It's private, so nothing is exposed yet | Upgrade first (§ 3) |
 | knk-web-app | `main` ≥ `98c0a76` | not built | Build in runbook Phase 6 (§ 6) |
-| knk-plugin | `main` ≥ `34c9261`, plus the KNG-114 hub loader | not built | Build in runbook Phase 4 (§ 5). Take KNG-128/129 (new-player onboarding) if they're merged by then |
+| knk-plugin | `main` ≥ `34c9261`, plus the KNG-114 hub loader | not built | Build in runbook Phase 4 (§ 5). KNG-128/129 (new-player onboarding) are on `main` since `4726fe4` (2026-10-18); its `onboarding:` block in `config.yml` falls back to defaults when missing |
 
 Build from the **current** trunk head at the moment you package, and record the exact commit, as the runbook does for
 `17ee730a`.

@@ -1,7 +1,7 @@
 # Knights & Kings - Player Account Management Guide
 
 **Version**: 1.0  
-**Last Updated**: January 30, 2026  
+**Last Updated**: October 18, 2026  
 **Plugin**: knk-plugin
 
 ---
@@ -28,6 +28,11 @@ If you're joining for the first time:
 2. Type `/account create` to add email and password
 3. Follow the prompts to set up your account
 4. You can now log in to the web app!
+
+On your first join you get a welcome message with a **[Link it now]** button. Clicking it runs `/account link`, which
+gives you a code and the web address to create your web account with. For your first 10 minutes, the places you
+discover are announced together in one summary afterwards (you still get the rewards straight away; `/discoveries`
+lists them). Until you have a web account, every later join shows a one-line reminder with the same button.
 
 ### Existing Web App Users
 
