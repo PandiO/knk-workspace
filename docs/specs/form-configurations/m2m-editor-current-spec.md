@@ -1,68 +1,90 @@
 # Many-to-Many Relationship Editor (Current) — Requirements & Specs
 
-## Overview
-Defines current behavior for many-to-many relationship editing inside the form wizard based on the existing implementation.
+**Status:** Current — describes `knk-web-app` as of branch `claude/bold-goodall-7eg00l` (2026-10-06; unmerged at
+time of writing). Rewritten from the February 2026 version, which still described the related-entity picker table
+that `c3b77a6` removed.
+**Last updated:** 2026-10-06
 
-## Scope
-- Applies to the Many-to-Many Relationship Editor used by the form wizard.
-- Uses join-entity metadata to resolve the related entity type.
-- Uses child steps to render join-entity extra fields.
+## Overview
+How a many-to-many (M2M) step behaves in the form wizard: `FormWizard` renders `ManyToManyRelationshipEditor` for
+the step, holds the relationship rows in the step data, and opens the join-entry form for adding or editing a row.
+Configuring such steps is covered by
+[m2m-join-creation-developer-guide.md](m2m-join-creation-developer-guide.md).
 
 ## User Story
-As an admin, I can configure a form step to represent a many-to-many relationship so end users can select related entities and set join-entity fields (e.g., `Level`).
-
-## Functional Requirements
-1. A form step can be marked as many-to-many via `isManyToManyRelationship = true`.
-2. The step must specify `joinEntityType` and `relatedEntityPropertyName`.
-3. The UI must resolve the related entity type by loading join entity metadata and selecting the related entity that is not the parent entity.
-4. Users can select related entities from a paged table.
-5. Upon selection, a join entity instance is added to the form state with:
-   - `relatedEntityId` set to the selected entity ID.
-   - `relatedEntity` object stored for display.
-   - Default join fields applied from child step defaults.
-6. Users can remove a selected relationship.
-7. Users can edit join-entity fields defined in `childFormSteps` (e.g., `Level`) in-place.
-
-## Non-Goals
-- Creating new related entities from the many-to-many editor.
-- Creating new join entities without selecting a related entity first.
-- Persisting join-entity values outside of the standard form submission pipeline.
+As an admin filling out a form (e.g. an ItemBlueprint), I can add, edit, reorder and remove the entity's
+many-to-many relationships (e.g. its default enchantments), filling the join entity's own fields (e.g. `Level`)
+for each, and have them saved with the entity.
 
 ## Configuration Contract
-### FormConfiguration
-- `steps[].isManyToManyRelationship`: true
-- `steps[].relatedEntityPropertyName`: name of collection property on parent entity (e.g., `DefaultEnchantments`)
-- `steps[].joinEntityType`: join entity type name (e.g., `ItemBlueprintDefaultEnchantment`)
-- `steps[].childFormSteps`: list of child steps for join entity fields
+- `steps[].isManyToManyRelationship`: `true`.
+- `steps[].relatedEntityPropertyName`: the collection property on the parent entity (e.g. `DefaultEnchantments`).
+  The step's relationship rows live in the step data under this key (`relationships` if unset).
+- `steps[].joinEntityType`: the join entity type (e.g. `ItemBlueprintDefaultEnchantment`). Required.
+- Join fields come from one of:
+  - `steps[].subConfigurationId` — a linked join-entity FormConfiguration (the preferred mode); or
+  - `steps[].childFormSteps` — inline child steps whose fields are edited directly on each card.
+- A List field named after `relatedEntityPropertyName` (`objectType` = the join entity type). Authored configs carry
+  it (see the `PHASE_*_FORMCONFIGS.md` payloads under `docs/specs/`). It is optional: when a step lacks it,
+  `FormWizard` adds it on load (`withManyToManyCarrierFields`, `src/utils/forms/manyToManyCarrierField.ts`), since
+  the wizard keeps, flattens and submits step data per declared field. Before that fix, a step without the field
+  silently dropped every relationship change.
 
-### Child Steps
-- `childFormSteps[].fields` define join-entity fields, such as:
-  - `Level` (Integer)
+`FormConfigBuilder` refuses to save an M2M step without `joinEntityType` or without a join-field source
+(`getManyToManyStepIssues`, `src/utils/forms/manyToManyStepValidation.ts`).
 
-## UI Behavior
-- When the step is marked as many-to-many:
-  - The wizard renders a selection table for the related entity.
-  - Selected entities render as cards with editable join-entity fields.
-- If `joinEntityType` or resolved related entity type is missing, the UI shows a configuration warning.
+## Functional Requirements
+1. The editor loads the join entity's metadata and resolves the related entity type and its FK field as the related
+   field that is not the parent's side. If that fails, it shows a configuration warning.
+2. Each relationship row renders as a card showing the related entity (or a "Missing Entity" warning when it can't be
+   resolved; pending rows are exempt until their join entry completes).
+   - With a linked join configuration, the card summarises the join entity's scalar values and offers
+     **Edit Join Entry**.
+   - With inline child steps, the card renders the child-step fields for in-place editing, with per-field validation.
+3. **Create New Join Entry** (linked join configuration only) appends a pending row seeded with the child-step
+   defaults and opens the join-entry form for it. That form picks the related entity — its picker offers inline
+   **Create New** for a related entity that doesn't exist yet — and fills the join fields. On completion the wizard
+   writes the related entity, its FK and the join values back onto the row.
+4. **Edit Join Entry** opens the join-entry form seeded from the row's saved values (edit mode hydrates saved join
+   rows from the read DTO via `hydrateJoinRowsForEdit` / `joinFieldSeedValues`,
+   `src/utils/forms/manyToManyEditLoad.ts`).
+5. Opening a join entry first saves a draft of the parent form. Unfinished join-entry drafts for this parent are
+   listed under the cards and can be resumed.
+6. Rows can be removed.
+7. When the join entity has a `SequenceNumber` field, rows can be reordered by drag and drop, and the editor keeps
+   `SequenceNumber` equal to each row's position (0 = first).
+8. On submit, each row is normalised to a join DTO: the related FK is set from the row, the parent-side fields and the
+   UI-only keys (`relatedEntity`, `relatedEntityId`, `__childProgressId`) are dropped, and the join fields are kept
+   (`normalizeManyToManyRelationshipField`, `src/utils/forms/normalizeFormSubmission.ts`).
 
-## Data Flow (Current)
-1. Wizard renders `ManyToManyRelationshipEditor` for the step.
-2. Editor loads join entity metadata and resolves related entity type.
-3. Selection table loads related entities via `PagedEntityTable`.
-4. On selection, editor creates join entities in local state.
-5. On submit, form data is normalized by the existing form submission normalization.
+## Non-Goals
+- Creating a related entity directly from the editor (it happens inside the join-entry form's picker instead). The
+  editor's never-reachable code for that was removed on 2026-10-06.
+- Selecting related entities from a table inside the editor (removed in `c3b77a6`).
 
 ## Known Limitations
-- The normalization step currently collapses list relationships into ID arrays, which may drop join-entity fields for many-to-many payloads.
-- The editor relies on join-entity metadata to resolve related entity type; missing metadata causes an empty table.
+- With **inline child steps** (no linked join configuration) there is no way to add a row: **Create New Join Entry**
+  needs a linked join configuration, and the picker table that used to add rows in this mode is gone. Existing rows
+  can still be edited, reordered and removed. Either link a join configuration or restore an add path for this mode.
+- Related-type resolution depends on join-entity metadata; with metadata missing, the editor can only show its
+  warning.
 
 ## Acceptance Criteria
-- Selecting related entities displays them as cards with join-entity fields.
-- Editing join fields updates local form state.
-- Removing a relationship removes its card.
-- The editor shows a warning when the related entity type cannot be resolved.
+- Create New Join Entry adds a pending row and opens the join-entry form for it; completing that form fills the row.
+- Edit Join Entry opens the join-entry form with the row's saved values.
+- Removing and reordering rows is kept in the wizard's step data and in the saved draft, with or without an authored
+  List field for the step.
+- The editor warns when the related entity type cannot be resolved.
 
-## References
-- Many-to-many editor implementation: [Repository/knk-web-app/src/components/FormWizard/ManyToManyRelationshipEditor.tsx](Repository/knk-web-app/src/components/FormWizard/ManyToManyRelationshipEditor.tsx)
-- Form wizard integration: [Repository/knk-web-app/src/components/FormWizard/FormWizard.tsx](Repository/knk-web-app/src/components/FormWizard/FormWizard.tsx)
-- Form builder child-step support: [Repository/knk-web-app/src/components/FormConfigBuilder/StepEditor.tsx](Repository/knk-web-app/src/components/FormConfigBuilder/StepEditor.tsx)
+## History
+- 2026-02-23 `c3b77a6` — replaced the related-entity picker table with the Create New Join Entry flow.
+- 2026-10-06 — fieldless M2M steps keep their relationships; unreachable create-related-entity code removed; this
+  spec rewritten.
+
+## References (knk-web-app)
+- Editor: `src/components/FormWizard/ManyToManyRelationshipEditor.tsx`
+- Wizard integration (`handleOpenJoinEntry`, `handleJoinEntryComplete`): `src/components/FormWizard/FormWizard.tsx`
+- Builder step settings: `src/components/FormConfigBuilder/StepEditor.tsx`
+- Tests: `src/components/FormWizard/__tests__/ManyToManyRelationshipEditor*.test.tsx`,
+  `FormWizard.m2mJoinPrefill.ui.test.tsx`, `FormWizard.siegeGatesJoin.ui.test.tsx`,
+  `src/utils/forms/__tests__/manyToManyCarrierField.test.ts`
