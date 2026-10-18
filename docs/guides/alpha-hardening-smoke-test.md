@@ -1,7 +1,7 @@
 # Closed alpha hardening (KNG-64) — smoke test
 
 **Status:** Passed 2026-10-11 (run 1, developer): all steps pass or are accepted after the fixes in the findings below; phone login (29-30) and the seed import (33) not run
-**Last updated:** 2026-10-11
+**Last updated:** 2026-10-18 (step 10's known issue fixed by KNG-103); 2026-10-11
 **Plan:** [specs/alpha-hardening/IMPLEMENTATION_PLAN.md](../specs/alpha-hardening/IMPLEMENTATION_PLAN.md) ·
 **Automated run:** [reports/2026-10-08-alpha-hardening-verification.md](../reports/2026-10-08-alpha-hardening-verification.md) ·
 **Linear:** [KNG-64](https://linear.app/kngpandi/issue/KNG-64) (KNG-65..71)
@@ -112,7 +112,7 @@ Run 1 (developer, 2026-10-11):
 |---|---|---|
 | 7 | Pass (29/29) | First run failed in Git Bash: the probe needed python3. Fixed in knk-workspace `f9665ea` |
 | 8, 9, 11, 12 | Pass | |
-| 10 | Pass, known issue | Rename of District 15's region: "target region name already exists" = KNG-103 (backlog) |
+| 10 | Pass, known issue | Rename of District 15's region: "target region name already exists" = KNG-103. Fixed by KNG-103 (merged 2026-10-18); District 15's orphaned `domain_15` removed by hand, see [managed-worldguard-regions.md](../architecture/managed-worldguard-regions.md) §7 |
 | 13 | **Fail → fixed, re-checked** | No register URL (the existing config.yml keeps its own `link-code-generated` without `{url}`), no copy. Fixed in knk-plugin `fb81f3e3`: register line appended, code click-to-copy, URL clickable. Re-check |
 | 14-18 | Pass / accepted | "This code belongs to" not looked at; no username field; account shows the alt's name |
 | 19-23 | Pass / accepted | |
