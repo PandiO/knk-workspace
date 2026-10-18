@@ -8,6 +8,15 @@ _Nothing at the moment._
 
 ## 2026-10-18
 
+- **Many-to-many form steps without a carrier field keep their relationships**
+  ([KNG-190](https://linear.app/kngpandi/issue/KNG-190); knk-web-app `main` `e30c815`, merged directly, no PR).
+  The wizard only kept a many-to-many step's relationships when its FormConfiguration also had a List field named
+  after the step's related property, which the builder neither adds nor requires, so every add, remove and re-order
+  on such a step was dropped. The wizard now adds that field when it loads a form. The seeded forms already had it.
+  Also: the three web-app test suites that failed on `main` pass again (`test:ci` 154/154), and a duplicate, unused
+  `useEnrichedFormContext` is gone. Ported from the stale `claude/bold-goodall-7eg00l` branch; live-tested by the
+  developer (2026-10-18).
+
 - **Fields asked in more than one form step share one value**
   ([KNG-120](https://linear.app/kngpandi/issue/KNG-120); knk-web-app `main` `0027677`, merged directly, no PR).
   A FormConfiguration can ask for the same property in two steps (the default District form asks for the Location

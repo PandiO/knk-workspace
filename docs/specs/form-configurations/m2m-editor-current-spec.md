@@ -1,9 +1,10 @@
 # Many-to-Many Relationship Editor (Current) — Requirements & Specs
 
-**Status:** Current — describes `knk-web-app` as of branch `claude/bold-goodall-7eg00l` (2026-10-06; unmerged at
-time of writing). Rewritten from the February 2026 version, which still described the related-entity picker table
+**Status:** Current — describes `knk-web-app` `main` as of `e30c815` (2026-10-18, KNG-190 merged). Written 2026-10-06
+against branch `claude/bold-goodall-7eg00l`; the carrier-field fix reached `main` through KNG-190, the dead-code removal
+did not (below). Rewritten from the February 2026 version, which still described the related-entity picker table
 that `c3b77a6` removed.
-**Last updated:** 2026-10-06
+**Last updated:** 2026-10-18 (KNG-190 merged; the create-related-entity path is still in the editor, KNG-183); 2026-10-06
 
 ## Overview
 How a many-to-many (M2M) step behaves in the form wizard: `FormWizard` renders `ManyToManyRelationshipEditor` for
@@ -78,8 +79,12 @@ for each, and have them saved with the entity.
 
 ## History
 - 2026-02-23 `c3b77a6` — replaced the related-entity picker table with the Create New Join Entry flow.
-- 2026-10-06 — fieldless M2M steps keep their relationships; unreachable create-related-entity code removed; this
-  spec rewritten.
+- 2026-10-06 — this spec rewritten on branch `claude/bold-goodall-7eg00l`.
+- 2026-10-18 [KNG-190](https://linear.app/kngpandi/issue/KNG-190) (`main` `e30c815`) — fieldless M2M steps keep their
+  relationships (carrier field added on load). The unreachable create-related-entity code (`handleCreateRelatedEntity`,
+  its `ChildFormModal`, the `userId`/`parentProgressId` props) is **still in** `ManyToManyRelationshipEditor`: KNG-136
+  extended and tested it after the branch, so removing or wiring it is left for
+  [KNG-183](https://linear.app/kngpandi/issue/KNG-183).
 
 ## References (knk-web-app)
 - Editor: `src/components/FormWizard/ManyToManyRelationshipEditor.tsx`
