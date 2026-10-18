@@ -1,7 +1,7 @@
 # Closed-alpha deployment runbook
 
 **Status:** In progress — phases 0–3 complete; phase 3b (API upgrade to the KNG-64 build) and phase 4 (Minecraft preparation) are next
-**Last updated:** 2026-10-11
+**Last updated:** 2026-10-18
 **Progress report:** [2026-10-11 closed-alpha infrastructure progress](../reports/2026-10-11-closed-alpha-infrastructure-progress.md)
 **Handoff:** [2026-10-11 closed-alpha infrastructure](../ai-agents/handoffs/2026-10-11-closed-alpha-infrastructure.md)
 **Security layer:** [closed alpha go-live (KNG-64)](alpha-go-live.md) — required builds, API/plugin configuration,
@@ -10,6 +10,21 @@ first admin, security probe and the go-live checklist on top of these phases
 This is the ordered rollout plan for the first NAS-hosted closed alpha. Keep
 each phase independently reversible and record the observed result before
 continuing.
+
+## Operations access and host state (2026-10-18)
+
+- **Read-only checks for agents:** from the developer PC on the LAN, `ssh knk-nas-ops <op>`
+  returns sanitized JSON for containers, network, secret files, API health, Compose hashes,
+  database counts, a secret-in-logs scan and log error counts. Use these instead of ad-hoc
+  `docker inspect`/`docker logs`. See [NAS operations access](nas-ops-access.md); its Stage B
+  (deploy operations) is designed but not installed.
+- **Ingress:** the NAS has no router port forwards. Public HTTP(S) reaches it only through the
+  Cloudflare Tunnel, which Phase 6 relies on. Docker commands on the host need `sudo`.
+- **Re-check and open findings:** the 2026-10-18 state and alpha findings A1–A6 (runtime UID and
+  secret ownership, stack-directory ownership, `root@%`, leftover pending Compose file, API log
+  volume, Portainer vs host Compose authority) are in the
+  [2026-10-18 report](../reports/2026-10-18-nas-ops-access-and-alpha-check.md). Resolve them
+  with Phase 3b.
 
 ## Phase 0 — protect existing infrastructure (complete)
 
@@ -181,6 +196,8 @@ nothing is exposed, but it must not stay the alpha API. Before the plugin connec
    newest migration, so use `database update`, not `migrations script <from>`. Expect 78 migrations.
 5. Add the KNG-64 configuration, switch the image, start, and repeat the Phase 3.3 acceptance.
 6. Take a new clean baseline dump.
+7. Resolve findings A1–A6 of the [2026-10-18 report](../reports/2026-10-18-nas-ops-access-and-alpha-check.md)
+   in the same build/configuration change, and re-run the `knk-ops` checks afterwards.
 
 Exact commands and configuration: [alpha go-live § 3–4](alpha-go-live.md#3-upgrade-the-alpha-api-to-kng-64-runbook-phase-3b).
 
@@ -288,6 +305,8 @@ no internal management service is exposed.
 - Copy backups off the NAS and keep one offline/versioned copy.
 - Test restoring MySQL and the Minecraft data into disposable containers.
 - Record RPO/RTO and the last successful restore rehearsal.
+- Accept a restored copy with the read-only `knk-ops` checks (`db-summary`, `secret-scan`,
+  `log-errors`) as well as in-game checks.
 
 ## Phase 8 — later version upgrade
 

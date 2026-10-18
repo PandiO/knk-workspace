@@ -141,13 +141,26 @@ Repository and live NAS refresh on 2026-10-12:
   Default memberships; clashes and orphan holders are zero. This was valid and
   reversible, but it is maintenance on a disposable placeholder, not a reason
   to preserve or promote that dataset.
+- Re-check on 2026-10-18 (Claude Code session) through the new read-only
+  `knk-ops` operations ([guide](../../guides/nas-ops-access.md),
+  [report](../../reports/2026-10-18-nas-ops-access-and-alpha-check.md)): host
+  Compose hash unchanged and canonically equal to stack 42; both containers
+  healthy with no port bindings; `/health/live` and `/health/ready` 200; the
+  placeholder DB has 136 tables, 4 triggers, 76 migrations, 9 users / 2
+  active and 0 holder-ID clashes; secret scan clean; no error lines. Agent
+  access to the NAS is now LAN-only from the developer PC; Codex cloud access
+  was dropped and Tailscale removed. The hub/multiworld work (KNG-109/113/114)
+  merged on 2026-10-17, so checklist items 6–7 now refer to trunk. Open alpha
+  findings A1–A6 are in that report.
 
 ## Immediate continuation checklist
 
 1. Re-read the report and runbook; refresh all repositories and inspect live
    Docker/Portainer state rather than trusting this snapshot.
 2. Reconfirm both `knk-alpha` containers are healthy, their image IDs are
-   unchanged, and `.HostConfig.PortBindings` remains empty.
+   unchanged, and `.HostConfig.PortBindings` remains empty. From the developer
+   PC the read-only `knk-ops` operations cover this
+   ([guide](../../guides/nas-ops-access.md)).
 3. Build the KNG-64 runtime and one-off migrator artifacts from exact API
    `master` commit `07fda99e6f8243e71cc45491990b1dd1d02ca686`, recording all
    source, Dockerfile, base-image and final-image evidence. Do not deploy the
