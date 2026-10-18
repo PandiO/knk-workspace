@@ -8,6 +8,14 @@ _Nothing at the moment._
 
 ## 2026-10-18
 
+- **Fields asked in more than one form step share one value**
+  ([KNG-120](https://linear.app/kngpandi/issue/KNG-120); knk-web-app `main` `0027677`, merged directly, no PR).
+  A FormConfiguration can ask for the same property in two steps (the default District form asks for the Location
+  twice). Filling the first copy left the second empty, and on submit the empty copy overwrote the value with null.
+  Now changing either copy updates the other, in both directions and for every way a value changes (typing, value
+  projections, child-form results, ItemScan); a resumed draft fills empty copies; an empty copy never overwrites a
+  filled one on submit. Live-tested by the developer on the District form (2026-10-18).
+
 - **The items catalogue shows each item with its default enchantments**
   ([KNG-175](https://linear.app/kngpandi/issue/KNG-175); knk-plugin `main` `147806d8`, merged directly, no PR).
   The `/menu` item catalogue built its icons from the blueprint alone, so the vanilla enchantments and custom
