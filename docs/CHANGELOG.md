@@ -12,6 +12,20 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## 2026-10-18
 
+- **Re-running a domain's region step replaces its region instead of leaving an orphan**
+  ([KNG-103](https://linear.app/kngpandi/issue/KNG-103); knk-plugin `main` `e574f45` ([#12](https://github.com/PandiO/knk-plugin/pull/12)),
+  knk-web-api `master` `73c70d5` ([#10](https://github.com/PandiO/knk-web-api/pull/10))). [Architecture](architecture/managed-worldguard-regions.md) §7.
+  - Drawing a new region for an existing Town, District, Structure or Gate and saving it now gives the new region the
+    domain's `domain_<id>` name. The old `domain_<id>` is redefined in place, keeping its parent, priority, owners,
+    members and flags, and child regions stay linked. Before, the rename was refused, so the domain stayed on
+    `tempregion_worldtask_<n>` and the old region stayed behind.
+  - The API names the domain's previous region; the plugin only removes the domain's own `domain_<id>` or a temp
+    region, and puts everything back if a step fails.
+  - **`/knk regions temp`** reports leftover temp regions and `domain_<id>` regions no domain uses;
+    **`/knk regions temp purge [hours]`** deletes unused temp regions older than `hours` (default 24).
+  - Domains the old bug already left on a temp name are fixed once by hand (§7).
+  - Live-tested by the developer (2026-10-18).
+
 - **Commands show only what a player can use, and permission checks no longer flood the API**
   ([KNG-107](https://linear.app/kngpandi/issue/KNG-107); knk-plugin `main` `3ca5b3f`, knk-web-api `master`
   `ac3c869`; merged directly, no PR). [Architecture](architecture/plugin-permission-checks.md).
