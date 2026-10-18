@@ -28,7 +28,7 @@ Tester's browser ──HTTPS──► Cloudflare edge ── Access: "is this an
                             └─ /api/* → api:5000
 NAS, stack knk-alpha (Portainer)
   api  (knk-web-api, private network only) ──► mysql (MySQL 9.6, private, never published)
-  minecraft (Paper 1.21.10, main + hub world) ──► http://api:5000/api   (X-API-Key)
+  minecraft (Paper 26.2, main + hub world)    ──► http://api:5000/api   (X-API-Key)
   api ──► http://minecraft:8081   (region callbacks, X-API-Key; never published)
   playit agent ──► minecraft:25565
 
@@ -323,7 +323,7 @@ Both must end with `ALL CHECKS PASSED`. The last check trips the login rate limi
 ## 10. Tester invite (template)
 
 > Welcome to the **Knights & Kings closed alpha**!
-> 1. Join the Minecraft server **play.knightsandkings.net** (Java Edition 1.21.10). Your name is on the whitelist.
+> 1. Join the Minecraft server **play.knightsandkings.net** (Java Edition 26.2). Your name is on the whitelist.
 > 2. In game, type `/account link`. You get an 8-character code (click it to copy).
 > 3. Open **https://<web-host>**, enter this email address to get a one-time PIN, then choose **Create account** and
 >    enter the code, your email and a password.

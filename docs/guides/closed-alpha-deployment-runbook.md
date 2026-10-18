@@ -203,13 +203,25 @@ Exact commands and configuration: [alpha go-live § 3–4](alpha-go-live.md#3-up
 
 ## Phase 4 — prepare the Minecraft service
 
+> **Decision 2026-10-18 (developer, [KNG-182](https://linear.app/kngpandi/issue/KNG-182)):** the alpha starts on
+> **Paper 26.2 / Java 25**, not 1.21.10; the former Phase 8 upgrade is folded into this phase. Consequences:
+> - the plugin jar comes from knk-plugin `main` after KNG-182 (`claude/mc-26.2-upgrade`) merges; earlier `main`
+>   builds target 1.21.10 only, and later ones run only on 26.2;
+> - the staging sources stay 1.21.10 and are the rollback. Paper converts the **live copy** on its first start
+>   (after a 30 s "World storage migration is required" warning), and converted worlds cannot be downgraded;
+> - after conversion there is one `level.dat` (`<level>/level.dat`). Nether, end and the hub live under
+>   `<level>/dimensions/minecraft/<name>/` (e.g. `knk_hub`): Paper imports and deletes the old `knk_hub/` folder
+>   when the plugin first loads it, so check worlds in the new layout, not as separate folders;
+> - every plugin jar needs a 26.2 build (the dev server moves to FastAsyncWorldEdit 2.16.1 and WorldGuard 7.0.19);
+> - players need a Java Edition 26.2 client.
+
 Do not start from the staging directories. Create a separate live data path,
 then copy the verified sources into it while preserving staging as rollback.
 
 Initial runtime:
 
-- `itzg/minecraft-server` Java 21 digest recorded in the progress report;
-- Paper 1.21.10;
+- `itzg/minecraft-server` image with Java 25 (pin it and record its digest in the progress report);
+- Paper 26.2;
 - `MEMORY=4G`, container memory limit approximately 5 GiB;
 - main gameplay world as the primary level;
 - nether and end beside it;
@@ -308,9 +320,10 @@ no internal management service is exposed.
 - Accept a restored copy with the read-only `knk-ops` checks (`db-summary`, `secret-scan`,
   `log-errors`) as well as in-game checks.
 
-## Phase 8 — later version upgrade
+## Phase 8 — later version upgrade (folded into Phase 4)
 
-After the 1.21.10 alpha stack is stable, clone it and evaluate Paper 26.2 with
-the required Java 25 runtime. Do not upgrade the only alpha copy in place.
-Compile and test all plugins, inspect Paper conversion output, and validate
-both worlds before scheduling a cutover.
+Superseded on 2026-10-18: the alpha starts on Paper 26.2 (see the decision in
+Phase 4). The original rule still applies to any later Minecraft upgrade:
+clone the stack, never upgrade the only alpha copy in place, compile and test
+all plugins, inspect Paper's conversion output, and validate both worlds
+before scheduling a cutover.
