@@ -10,6 +10,25 @@ This is a human-readable record of capabilities merged into the V3 default branc
   enchantment lines a kit or `/knk itemblueprints give` adds were missing. It now builds them the same way
   (`assembleDefaults`), from the enchantments the blueprint already carries. Unit-tested; not yet checked in game.
 
+## 2026-10-18
+
+- **Commands show only what a player can use, and permission checks no longer flood the API**
+  ([KNG-107](https://linear.app/kngpandi/issue/KNG-107); knk-plugin `main` `3ca5b3f`, knk-web-api `master`
+  `ac3c869`; merged directly, no PR). [Architecture](architecture/plugin-permission-checks.md).
+  - **`/knk help`** lists the `/knk` subcommands and the plugin's other commands the player may use, 8 lines a page
+    with clickable page links (`/knk help <page>`); a command they can't use reads as unknown.
+  - **Tab completion** offers only usable subcommands, actions, flags and player names; gate commands only the
+    gates the player controls.
+  - **"No permission" instead of the usage** for `/knk` subcommands and standalone commands the player holds no
+    node for; usage lines name only the action typed or the held ones.
+  - **The "/" list** leaves out commands the player can't run, every `plugin:command` form, and other plugins'
+    commands they can't use (config `command-visibility.*`, `always-show` for exceptions). Ops see everything.
+  - **One permission load per player:** checks resolve from the player's effective set, loaded at login and
+    refreshed every 30 s, instead of one API request per node (a join sent 116 and `/knk help` 244, about 10 s).
+    The API's effective set now carries `sourceRank`; the plugin also works with an API without it. A change made
+    with `/knk user` applies at once.
+  - Live-tested by the developer (smoke test and two retests, 2026-10-18).
+
 ## 2026-10-17
 
 - **Gate doors refuse a Reference point 2 that isn't straight above the anchor**

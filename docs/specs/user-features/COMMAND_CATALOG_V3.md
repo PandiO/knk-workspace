@@ -634,6 +634,10 @@ enchantments`'s admin/debug catalog browsing and item-blueprint application.
   (`HelpSubcommand.java:74-97`).
 - **Feature allocation:** `world-admin` (meta/UX)
 - **Status:** Finished, admin-facing, with one confirmed dead branch.
+- **Update 2026-10-18 (KNG-107):** also lists the plugin's other commands the
+  sender may use, 8 lines a page (`/knk help <page>`, clickable footer); a
+  command the sender isn't offered reads as unknown. See
+  [`architecture/plugin-permission-checks.md`](../../architecture/plugin-permission-checks.md).
 
 ### `/knk wgm rename <oldRegionId> <newRegionId>` — unreachable
 - Covered in §0 above. `WorldGuardManagementCommand.java` implements

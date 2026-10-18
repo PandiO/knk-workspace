@@ -92,6 +92,10 @@ document is sequencing and per-repo scope only. If something below conflicts wit
   its source holder, and whether it's a grant/deny), not just a single-node check. Confirmed
   needed (§7 item 5) as a direct requirement of the separate user-management admin module's
   composite player-profile view — build it here rather than bolting it on later.
+  **Update 2026-10-18 (KNG-107):** knk-plugin now resolves its checks from this set (one request per
+  player per 30 s) instead of calling `permissions/check` per node; each entry carries `sourceRank`
+  (chain position) so the plugin can apply the same rules. See
+  [`architecture/plugin-permission-checks.md`](../../architecture/plugin-permission-checks.md).
 
 **knk-plugin:**
 - `knk-core`: `PermissionHolder`/`PermissionCheckResult` domain types (Bukkit-free, mirroring
