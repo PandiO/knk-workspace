@@ -1,0 +1,27 @@
+#!/bin/bash
+# knk-ops op: api-health. HTTP status codes of the API health endpoints, requested from inside
+# the API container (no host port, response bodies discarded). Runs as root via an exact
+# no-argument sudo rule.
+set -u -o pipefail
+PATH=/usr/sbin:/usr/bin:/sbin:/bin
+export PATH
+umask 077
+
+OP=api-health
+C=knk-alpha-api
+
+code() {
+  local c
+  c="$(timeout 10 docker exec "$C" curl -s -o /dev/null -w '%{http_code}' --max-time 5 "http://127.0.0.1:5000$1" 2>/dev/null)"
+  [[ "$c" =~ ^[0-9]{3}$ ]] || c=000
+  printf '%s' "$c"
+}
+
+live="$(code /health/live)"
+ready="$(code /health/ready)"
+health="$(timeout 10 docker inspect --type container --format '{{if .State.Health}}{{.State.Health.Status}}{{end}}' "$C" 2>/dev/null)" || health=""
+
+jq -cn --arg op "$OP" --arg live "$live" --arg ready "$ready" --arg health "$health" '
+  {ok: true, op: $op, live: $live, ready: $ready,
+   container_health: (if $health == "" then null else $health end),
+   healthy: ($live == "200" and $ready == "200")}'

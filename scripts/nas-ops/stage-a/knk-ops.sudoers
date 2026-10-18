@@ -1,0 +1,12 @@
+# knk-ops Stage A: exact read-only operations for the forced-command account knk-ops.
+# No arguments are allowed (""). Keep in sync with the dispatcher allowlist; edit with visudo -f.
+Defaults:knk-ops env_reset, !setenv, !lecture, secure_path="/usr/sbin:/usr/bin:/sbin:/bin"
+Cmnd_Alias KNK_OPS_STAGE_A = /usr/local/libexec/knk-ops/ops/compose "", \
+                             /usr/local/libexec/knk-ops/ops/containers "", \
+                             /usr/local/libexec/knk-ops/ops/network "", \
+                             /usr/local/libexec/knk-ops/ops/secret-files "", \
+                             /usr/local/libexec/knk-ops/ops/api-health "", \
+                             /usr/local/libexec/knk-ops/ops/db-summary "", \
+                             /usr/local/libexec/knk-ops/ops/secret-scan "", \
+                             /usr/local/libexec/knk-ops/ops/log-errors ""
+knk-ops ALL=(root) NOPASSWD: KNK_OPS_STAGE_A

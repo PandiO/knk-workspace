@@ -1,0 +1,39 @@
+#!/bin/bash
+# knk-ops op: compose. sha256 of the host Compose file and of Portainer stack 42's copy, plus a
+# hash of each one's normalised form (docker compose config, no variable interpolation).
+# Returns hashes only. Runs as root via an exact no-argument sudo rule.
+set -u -o pipefail
+PATH=/usr/sbin:/usr/bin:/sbin:/bin
+export PATH
+umask 077
+
+OP=compose
+STACK=/srv/docker/stacks/knk-alpha
+HOST_FILE=$STACK/compose.yaml
+PORTAINER_FILE=/var/lib/docker/volumes/portainer_data/_data/compose/42/docker-compose.yml
+RECORDED_SHA=b4c501eedee03404f6829390dc9eb1d3b3eeb0dd0886136081cce5276a4e298c
+
+file_sha() {
+  [ -f "$1" ] || return 1
+  sha256sum -- "$1" | cut -d' ' -f1
+}
+
+canonical_sha() {
+  [ -f "$1" ] || return 1
+  timeout 30 docker compose -p knk-alpha --project-directory "$STACK" -f "$1" config --no-interpolate --format json 2>/dev/null |
+    sha256sum | cut -d' ' -f1
+}
+
+h="$(file_sha "$HOST_FILE")" || h=""
+hc="$(canonical_sha "$HOST_FILE")" || hc=""
+p="$(file_sha "$PORTAINER_FILE")" || p=""
+pc="$(canonical_sha "$PORTAINER_FILE")" || pc=""
+
+jq -cn --arg op "$OP" --arg hp "$HOST_FILE" --arg h "$h" --arg hc "$hc" \
+  --arg pp "$PORTAINER_FILE" --arg p "$p" --arg pc "$pc" --arg rec "$RECORDED_SHA" '
+  def n: if . == "" then null else . end;
+  {ok: true, op: $op,
+   host: {path: $hp, sha256: ($h | n), canonical_sha256: ($hc | n), matches_recorded: ($h == $rec)},
+   portainer_stack_42: {path: $pp, sha256: ($p | n), canonical_sha256: ($pc | n)},
+   files_identical: ($h != "" and $h == $p),
+   canonical_equal: ($hc != "" and $hc == $pc)}'

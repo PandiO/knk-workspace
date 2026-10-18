@@ -1,0 +1,16 @@
+#!/bin/bash
+# knk-ops op: network. Properties of knk-alpha_backend and the names of attached containers.
+# Runs as root via an exact no-argument sudo rule.
+set -u -o pipefail
+PATH=/usr/sbin:/usr/bin:/sbin:/bin
+export PATH
+umask 077
+
+OP=network
+NET=knk-alpha_backend
+TPL='{"name":{{json .Name}},"driver":{{json .Driver}},"scope":{{json .Scope}},"internal":{{.Internal}},"attachable":{{.Attachable}},"ipv6":{{.EnableIPv6}},"ipam":{{json .IPAM.Config}},"containers":{{json .Containers}}}'
+
+fail() { jq -cn --arg op "$OP" --arg e "$1" '{ok: false, op: $op, error: $e}'; exit 1; }
+
+j="$(timeout 15 docker network inspect --format "$TPL" "$NET" 2>/dev/null)" || fail network-not-found
+jq -c --arg op "$OP" '{ok: true, op: $op} + (.containers = ([(.containers // {})[] | .Name] | sort))' <<<"$j" || fail parse-failed

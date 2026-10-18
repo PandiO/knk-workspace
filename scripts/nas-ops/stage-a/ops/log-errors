@@ -1,0 +1,36 @@
+#!/bin/bash
+# knk-ops op: log-errors. Per container, counts of error/critical/exception/warning lines in
+# the last 24 hours (at most 200000 lines). Counts only, never log text. The logs are kept in a
+# root-only tmpfs directory that is removed on exit. Runs as root via an exact no-argument
+# sudo rule.
+set -u -o pipefail
+PATH=/usr/sbin:/usr/bin:/sbin:/bin
+export PATH
+umask 077
+
+OP=log-errors
+CONTAINERS=(knk-alpha-api knk-alpha-mysql)
+SINCE=24h
+TAIL=200000
+
+fail() { jq -cn --arg op "$OP" --arg e "$1" '{ok: false, op: $op, error: $e}'; exit 1; }
+
+tmp="$(mktemp -d /run/knk-ops.XXXXXX)" || fail tmpdir-failed
+trap 'rm -rf -- "$tmp"' EXIT
+
+items=()
+for c in "${CONTAINERS[@]}"; do
+  f="$tmp/$c.log"
+  timeout 60 docker logs --since "$SINCE" --tail "$TAIL" "$c" >"$f" 2>&1 || fail "logs-unavailable:$c"
+  items+=("$(jq -cn --arg c "$c" \
+    --arg lines "$(wc -l <"$f")" \
+    --arg error "$(grep -ciE 'error|fail:' "$f")" \
+    --arg critical "$(grep -ciE 'crit:|critical|fatal' "$f")" \
+    --arg exception "$(grep -ci 'exception' "$f")" \
+    --arg warning "$(grep -ciE 'warn:|\[warning\]' "$f")" '
+    {container: $c, lines: ($lines | tonumber), error: ($error | tonumber), critical: ($critical | tonumber),
+     exception: ($exception | tonumber), warning: ($warning | tonumber)}')")
+done
+
+printf '%s\n' "${items[@]}" | jq -cs --arg op "$OP" --arg since "$SINCE" --arg tail "$TAIL" \
+  '{ok: true, op: $op, since: $since, max_lines: ($tail | tonumber), containers: .}'

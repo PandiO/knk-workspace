@@ -1,0 +1,24 @@
+#!/bin/bash
+# knk-ops op: containers. State, health, image, user, networks and port bindings of the
+# two knk-alpha containers, from a fixed inspect template (no env, args or mounts).
+# Runs as root via an exact no-argument sudo rule.
+set -u -o pipefail
+PATH=/usr/sbin:/usr/bin:/sbin:/bin
+export PATH
+umask 077
+
+OP=containers
+CONTAINERS=(knk-alpha-api knk-alpha-mysql)
+TPL='{"name":{{json .Name}},"status":{{json .State.Status}},"health":{{if .State.Health}}{{json .State.Health.Status}}{{else}}null{{end}},"started_at":{{json .State.StartedAt}},"restart_count":{{.RestartCount}},"image":{{json .Config.Image}},"image_id":{{json .Image}},"user":{{json .Config.User}},"restart_policy":{{json .HostConfig.RestartPolicy.Name}},"port_bindings":{{json .HostConfig.PortBindings}},"networks":{{json .NetworkSettings.Networks}},"privileged":{{.HostConfig.Privileged}},"readonly_rootfs":{{.HostConfig.ReadonlyRootfs}},"cap_drop":{{json .HostConfig.CapDrop}},"cap_add":{{json .HostConfig.CapAdd}},"security_opt":{{json .HostConfig.SecurityOpt}},"log_driver":{{json .HostConfig.LogConfig.Type}}}'
+
+items=()
+for c in "${CONTAINERS[@]}"; do
+  if j="$(timeout 15 docker inspect --type container --format "$TPL" "$c" 2>/dev/null)" &&
+     item="$(jq -c '.name |= ltrimstr("/") | .networks = ((.networks // {}) | keys) | .port_bindings = (.port_bindings // {}) | .present = true' <<<"$j" 2>/dev/null)"; then
+    items+=("$item")
+  else
+    items+=("$(jq -cn --arg n "$c" '{name: $n, present: false}')")
+  fi
+done
+
+printf '%s\n' "${items[@]}" | jq -cs --arg op "$OP" '{ok: true, op: $op, containers: .}'

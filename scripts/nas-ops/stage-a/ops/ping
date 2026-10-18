@@ -1,0 +1,3 @@
+#!/bin/bash
+# knk-ops op: ping. Connectivity check; no privileges, no host data beyond name and time.
+printf '{"ok":true,"op":"ping","host":"%s","time":"%s"}\n' "$(hostname -s)" "$(date -u +%FT%TZ)"

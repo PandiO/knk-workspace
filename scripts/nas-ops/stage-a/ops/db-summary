@@ -1,0 +1,48 @@
+#!/bin/bash
+# knk-ops op: db-summary. Schema object, migration, user and per-table row counts of
+# knightsandkings_alpha plus the holder-ID clash count, from fixed read-only SQL run inside
+# knk-alpha-mysql. The root password is read from the secret file inside the container and
+# never appears in arguments or output. Runs as root via an exact no-argument sudo rule.
+set -u -o pipefail
+PATH=/usr/sbin:/usr/bin:/sbin:/bin
+export PATH
+umask 077
+
+OP=db-summary
+C=knk-alpha-mysql
+DB=knightsandkings_alpha
+
+fail() { jq -cn --arg op "$OP" --arg e "$1" '{ok: false, op: $op, error: $e}'; exit 1; }
+
+# The single-quoted command expands inside the container, where the secret file lives.
+# shellcheck disable=SC2016
+out="$(timeout 90 docker exec -i "$C" sh -c 'MYSQL_PWD="$(cat /run/secrets/mysql_root_password)" exec mysql --user=root --host=127.0.0.1 --batch --skip-column-names --force --database=knightsandkings_alpha' 2>/dev/null <<'SQL'
+SET SESSION TRANSACTION READ ONLY;
+SET SESSION max_execution_time = 20000;
+SET SESSION group_concat_max_len = 1048576;
+SELECT 'base_tables', COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_TYPE = 'BASE TABLE';
+SELECT 'views', COUNT(*) FROM information_schema.VIEWS WHERE TABLE_SCHEMA = DATABASE();
+SELECT 'triggers', COUNT(*) FROM information_schema.TRIGGERS WHERE TRIGGER_SCHEMA = DATABASE();
+SELECT 'routines', COUNT(*) FROM information_schema.ROUTINES WHERE ROUTINE_SCHEMA = DATABASE();
+SELECT 'events', COUNT(*) FROM information_schema.EVENTS WHERE EVENT_SCHEMA = DATABASE();
+SELECT 'migrations', COUNT(*) FROM `__EFMigrationsHistory`;
+SELECT 'latest_migration', COALESCE(MAX(MigrationId), '') FROM `__EFMigrationsHistory`;
+SELECT 'users_total', COUNT(*) FROM users;
+SELECT 'users_active', COUNT(*) FROM users WHERE IsActive = 1;
+SELECT 'holder_id_clashes', COUNT(*) FROM users u JOIN permission_groups g ON g.Id = u.Id;
+SELECT 'account', CONCAT(User, '@', Host) FROM mysql.user WHERE User NOT IN ('mysql.sys', 'mysql.session', 'mysql.infoschema') ORDER BY User, Host;
+SELECT GROUP_CONCAT(CONCAT('SELECT ''rows'', ''', TABLE_NAME, ''', COUNT(*) FROM `', TABLE_NAME, '`') ORDER BY TABLE_NAME SEPARATOR ' UNION ALL ') INTO @knk_q FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_TYPE = 'BASE TABLE';
+PREPARE knk_rows FROM @knk_q;
+EXECUTE knk_rows;
+DEALLOCATE PREPARE knk_rows;
+SQL
+)"
+rc=$?
+[ -n "$out" ] || fail query-failed
+
+jq -R -s -c --arg op "$OP" --arg db "$DB" --argjson errors "$([ "$rc" -eq 0 ] && echo false || echo true)" '
+  [split("\n")[] | select(length > 0) | split("\t")] as $r
+  | ([$r[] | select(.[0] == "rows" and length == 3) | {key: .[1], value: (.[2] | tonumber)}] | from_entries) as $rows
+  | ([$r[] | select(.[0] == "account" and length == 2) | .[1]]) as $accounts
+  | ([$r[] | select(.[0] != "rows" and .[0] != "account" and length == 2) | {key: .[0], value: (.[1] | tonumber? // .)}] | from_entries) as $kv
+  | {ok: true, op: $op, database: $db, sql_errors: $errors} + $kv + {mysql_accounts: $accounts, row_counts: $rows}' <<<"$out" || fail parse-failed

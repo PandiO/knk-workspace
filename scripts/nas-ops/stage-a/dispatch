@@ -1,0 +1,46 @@
+#!/bin/bash
+# knk-ops forced-command dispatcher (root-owned, run by sshd for user knk-ops).
+# Accepts exactly one allowlisted operation name and no arguments.
+set -u
+PATH=/usr/sbin:/usr/bin:/sbin:/bin
+export PATH
+umask 077
+
+OPS_DIR=/usr/local/libexec/knk-ops/ops
+req="${SSH_ORIGINAL_COMMAND-}"
+client="${SSH_CONNECTION-}"
+client="${client%% *}"
+client="${client:-local}"
+
+log() { logger -t knk-ops -p auth.notice -- "$*"; }
+
+deny() {
+  # Never log the raw request: only its length and a short hash.
+  local h
+  h="$(printf '%s' "$req" | sha256sum | cut -c1-12)"
+  log "op=- result=denied reason=$1 client=$client len=${#req} sha=$h"
+  printf '{"ok":false,"error":"denied"}\n'
+  exit 64
+}
+
+[ -n "$req" ] || deny empty
+
+# Allowlist: unpriv ops run as knk-ops; priv ops run via sudo -n with no arguments.
+case "$req" in
+  ping) mode=unpriv ;;
+  compose|containers|network|secret-files|api-health|db-summary|secret-scan|log-errors) mode=priv ;;
+  *)    deny not-allowlisted ;;
+esac
+
+# One operation at a time.
+exec 9<"$0"
+flock -n 9 || deny busy
+
+case "$mode" in
+  unpriv) timeout 60 "$OPS_DIR/$req"; rc=$? ;;
+  priv)   timeout 120 sudo -n -- "$OPS_DIR/$req"; rc=$? ;;
+esac
+
+if [ "$rc" -eq 0 ]; then result=ok; else result=fail; fi
+log "op=$req result=$result rc=$rc client=$client"
+exit "$rc"
