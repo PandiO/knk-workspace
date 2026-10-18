@@ -3,7 +3,7 @@
 **Status:** Working design; agreed tutorial requirements recorded, platform architecture and implementation investigations still open. No NPC implementation delivered by this document.
 **Last updated:** 2026-10-06
 **Linear:** [KNG-36](https://linear.app/kngpandi/issue/KNG-36/design-shared-npc-traits-and-pathfinding-platform)
-**Standing workspace branch:** none; `codex/kng-36-npc-platform-design` was merged into `main` and deleted on 2026-10-18
+**Standing workspace branch:** none; `codex/kng-36-npc-platform-design` was merged into `main` on 2026-10-18 and deleted
 **Authority:** Developer discussion through 2026-10-06 and KNG-36 description/comments read on that date. Confirmed decisions below preserve that discussion; proposed interfaces and unresolved questions are explicitly labeled. This is the consolidated design reference for continued discussion, not a completed platform design or implementation plan.
 
 ## 1. Purpose and scope
