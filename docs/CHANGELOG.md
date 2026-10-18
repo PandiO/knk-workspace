@@ -4,7 +4,11 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
-- Nothing pending here at the moment.
+- **The items catalogue shows each item with its default enchantments**
+  ([KNG-175](https://linear.app/kngpandi/issue/KNG-175); knk-plugin `fe2535c6`, branch `claude/updates-priorities-review-tjiqc2`).
+  The `/menu` item catalogue built its icons from the blueprint alone, so the vanilla enchantments and custom
+  enchantment lines a kit or `/knk itemblueprints give` adds were missing. It now builds them the same way
+  (`assembleDefaults`), from the enchantments the blueprint already carries. Unit-tested; not yet checked in game.
 
 ## 2026-10-17
 

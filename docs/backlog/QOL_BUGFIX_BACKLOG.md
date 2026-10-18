@@ -2,6 +2,10 @@
 
 Running list of small bugs and quality-of-life improvements found while using the web app, web API, and plugin. Each item is written with enough context (repro steps, affected files, root cause, evidence) that it can be picked up and implemented by an agent or developer at any time without needing to re-investigate from scratch.
 
+> **Not a work list (2026-10-15).** Linear is the one list of work to implement
+> ([global agent instructions](../ai-agents/GLOBAL_AGENT_INSTRUCTIONS.md#linear-is-the-work-list)).
+> Before implementing an item from this file, find or create its Linear issue and work from that.
+
 Status legend: `Open` (needs decision or implementation) · `Ready` (solution agreed, ready to implement) · `In Progress` · `Done`
 
 **Items 4–7** (all GateStructure-related) have a combined implementation plan with ordering rationale and phase breakdowns: [GATESTRUCTURE_QOL_IMPLEMENTATION_PLAN.md](../specs/gate-structure-animation/GATESTRUCTURE_QOL_IMPLEMENTATION_PLAN.md).
