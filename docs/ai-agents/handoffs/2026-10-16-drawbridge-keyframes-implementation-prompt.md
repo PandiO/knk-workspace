@@ -16,7 +16,8 @@ knk-workspace `main` `a624b7d`.
 ```text
 Implement the drawbridge "keyframed plank" animation for Knights and Kings
 (ROTATION gate doors with a horizontal hinge). The design is decided; your job
-is the knk-plugin implementation, tests and doc updates. Do not redesign it,
+is the knk-plugin implementation, the GateDoor form-seed change, tests and
+doc updates. Do not redesign it,
 and do not re-tune the old blend (residual taper, snap radius, rigid fit).
 
 READ FIRST
