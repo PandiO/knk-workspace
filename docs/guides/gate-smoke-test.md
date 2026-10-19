@@ -1,7 +1,7 @@
 # Gates — smoke test checklist
 
 **Status:** Living checklist. Section 2 (gate safety, [KNG-105](https://linear.app/kngpandi/issue/KNG-105) / [KNG-106](https://linear.app/kngpandi/issue/KNG-106)) **passed 2026-10-10** (developer live test, all steps 1-20 accepted) and is **merged**: knk-plugin `main` merge `8457657` (`b95b1c6` KNG-105, `f157372` KNG-106; [handoff](../ai-agents/handoffs/2026-10-10-gate-safety-kng-105-106.md)).
-**Last updated:** 2026-10-19 (section 3, drawbridges, [KNG-193](https://linear.app/kngpandi/issue/KNG-193): not run yet)
+**Last updated:** 2026-10-19 (section 3, drawbridges, [KNG-193](https://linear.app/kngpandi/issue/KNG-193): passed on gate door 14; merged)
 **Related:** [gate commands](../architecture/gate-commands.md) (its §6 is the KNG-77/78/79 command checklist, passed 2026-10-09), [gate specs](../specs/gate-structure-animation/)
 
 Run these on the dev server after deploying the plugin (`./gradlew :knk-paper:dev`). Use a test gate with at least
@@ -51,10 +51,15 @@ The command checklist (layers, `here`, look-at, permissions) is [gate-commands.m
 **Decision (accepted with the live test, 2026-10-10):** gate door blocks never cause suffocation damage by default
 (`gates.safety.door-suffocation-damage: false`); the entity is moved out in the same tick anyway.
 
-## 3. Drawbridges — keyframed plank (KNG-193) — not run yet
+## 3. Drawbridges — keyframed plank (KNG-193) — passed 2026-10-19 on gate door 14
+
+**Live test, 2026-10-19 (developer):** gate door 14 (entity 14, Outer Gate) only, steps 1-5: "works perfectly". The
+cardinal 4×6 drawbridge, the arched drawbridge, the switch toggle and the fall-backs (steps 6-11) were **accepted without
+a run**; run them when such a door is first built. Merged the same day: knk-plugin `main` `79be4882`, knk-web-api
+`master` `2d71155` (seed v2). Next: [KNG-194](https://linear.app/kngpandi/issue/KNG-194) deletes the old path (D6).
 
 Design: [DRAWBRIDGE_KEYFRAME_ANIMATION.md](../specs/gate-structure-animation/DRAWBRIDGE_KEYFRAME_ANIMATION.md) §9
-step 5. Branch knk-plugin `claude/drawbridge-keyframe-animation`; the switch is `gates.rotation.keyframes-enabled`
+step 5. On knk-plugin `main` since `79be4882`; the switch is `gates.rotation.keyframes-enabled`
 (`config.yml`, default `true`, read at startup). The old path is deleted only after this section passes (D6).
 
 Before the run: check the live dev database against the 2026-10-07 seed (door 14 is the only `ROTATION` door there

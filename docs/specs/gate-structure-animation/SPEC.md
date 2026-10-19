@@ -604,7 +604,8 @@ For each block in snapshot:
 
 #### Rotation Gap-Fill (Mechanisms 1 & 2)
 
-**Current for `ROTATION` doors (KNG-193, 2026-10-19; live check pending): the keyframed plank.** Full design in
+**Current for `ROTATION` doors (KNG-193, merged 2026-10-19, knk-plugin `main` `79be4882`; live-tested on gate door 14,
+the other checks accepted without a run): the keyframed plank.** Full design in
 [DRAWBRIDGE_KEYFRAME_ANIMATION.md](DRAWBRIDGE_KEYFRAME_ANIMATION.md). A `ROTATION` door with a horizontal hinge
 (drawbridges; hatches set to `ROTATION`) is no longer rotated block by block. At load,
 `knk-core/.../gates/DrawbridgeKeyframes` precomputes one whole-door shape per step of the swing:

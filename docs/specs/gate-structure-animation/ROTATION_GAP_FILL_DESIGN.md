@@ -22,7 +22,7 @@ as rigid. The mid-swing jam this doc's Decisions 7/8/8.1/8.2 chased across
 five live-test rounds is now resolved and confirmed; Phase F's live pilot
 for the `ROTATION`-gate case is complete.
 **Superseded for `ROTATION` gates (2026-10-19, [KNG-193](https://linear.app/kngpandi/issue/KNG-193), implemented on
-knk-plugin branch `claude/drawbridge-keyframe-animation`, live check pending):**
+merged to knk-plugin `main` `79be4882`; live check passed on gate door 14, the other doors accepted without a run):**
 [DRAWBRIDGE_KEYFRAME_ANIMATION.md](DRAWBRIDGE_KEYFRAME_ANIMATION.md) analyses why the swing still looked like a
 "moving blob" and replaces the mid-swing part of Mechanisms 1 and 2 (Decisions 3, 7 and 8.x) for `ROTATION` gates
 with precomputed whole-door keyframes (`knk-core/.../gates/DrawbridgeKeyframes`), including non-rectangular doors.

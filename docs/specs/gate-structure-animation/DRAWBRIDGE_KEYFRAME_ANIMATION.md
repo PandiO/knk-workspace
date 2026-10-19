@@ -1,16 +1,17 @@
 # Drawbridge Animation: Analysis and Keyframed-Plank Proposal
 
-**Status:** Implemented, live check pending (2026-10-19, [KNG-193](https://linear.app/kngpandi/issue/KNG-193)):
-knk-plugin branch `claude/drawbridge-keyframe-animation` (§9 steps 1-3: `knk-core/.../gates/DrawbridgeKeyframes`,
-load, playback, resting frames, sweep, switch `gates.rotation.keyframes-enabled`), knk-web-api branch of the same name
-(§9 step 4: GateDoor seed v2), the docs of §9 step 6. The Java keyframes match the reference script cell for cell on
-every fixture of §5.9. Next: the developer's live check (§9 step 5, checklist in
-[guides/gate-smoke-test.md §3](../../guides/gate-smoke-test.md)); then the old path is deleted (D6). Decided
-2026-10-16 (D1–D8, §8); the step-0 data check passed on 2026-10-16 (§4.2, §9).
+**Status:** Implemented and merged (2026-10-19, [KNG-193](https://linear.app/kngpandi/issue/KNG-193)): knk-plugin
+`main` `79be4882` (§9 steps 1-3: `knk-core/.../gates/DrawbridgeKeyframes`, load, playback, resting frames, sweep, switch
+`gates.rotation.keyframes-enabled`), knk-web-api `master` `2d71155` (§9 step 4: GateDoor seed v2), the docs of §9 step 6.
+The Java keyframes match the reference script cell for cell on every fixture of §5.9. **Live check (§9 step 5): passed
+2026-10-19 on gate door 14 only** ("works perfectly"); the cardinal, arched, switch and fall-back checks were accepted by
+the developer without a run ([guides/gate-smoke-test.md §3](../../guides/gate-smoke-test.md)). Next: delete the old
+path, [KNG-194](https://linear.app/kngpandi/issue/KNG-194) (D6). Decided 2026-10-16 (D1–D8, §8); the step-0 data
+check passed on 2026-10-16 (§4.2, §9).
 **Rev. 2 (2026-10-15, developer request):** the method must support door shapes that are not rectangular, such as an
 arched top. Added §5.11. The door's shape is now the set of scanned blocks, and the width rule, materials, sizes,
 decisions D7–D8 and the plan were updated to match.
-**Last updated:** 2026-10-19 (implemented under KNG-193; §9 statuses)
+**Last updated:** 2026-10-19 (merged; live check on gate door 14 passed, the rest accepted without a run)
 **Author:** Claude (requested by Pandi)
 **Related:**
 - [ROTATION_GAP_FILL_DESIGN.md](ROTATION_GAP_FILL_DESIGN.md). This proposal revisits its Decision 3 and replaces the mid-swing part of Decisions 7, 8, 8.1 and 8.2 for `ROTATION` gates.
@@ -597,7 +598,8 @@ The block keyframes would have been needed either way: they supply the resting f
    - optionally, the preview line.
 
    This overlaps the KNG-132 / KNG-139 form work, so coordinate with those rows in ACTIVE_SESSIONS.
-5. **Live check (developer)** — **open**; the checklist is [guides/gate-smoke-test.md §3](../../guides/gate-smoke-test.md):
+5. **Live check (developer)** — **passed 2026-10-19 on gate door 14 only**; the other items were accepted without a run
+   (checklist: [guides/gate-smoke-test.md §3](../../guides/gate-smoke-test.md)):
    - Entity 14, 4 open/close cycles:
      - every step is a straight 4-wide plank;
      - the deck lands exactly on the 49 scanned blocks;
