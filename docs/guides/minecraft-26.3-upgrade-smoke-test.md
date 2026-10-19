@@ -53,7 +53,7 @@ Pre-flight on the 1.21.10 folder before the copy, checked read-only on 2026-10-1
    unconverted.
 4. Log scan from start to "Done": KnK, FAWE and WorldGuard enable without `SEVERE` lines or exceptions. Search for
    `NoSuchMethodError`, `NoClassDefFoundError`, `Invalid`, `Unknown`, `Could not`. `version` shows 26.3, and
-   `plugins` lists FastAsyncWorldEdit, WorldGuard and KnightsAndKings in green.
+   `plugins` lists FastAsyncWorldEdit, WorldGuard, WorldEditSelectionVisualizer and KnightsAndKings in green.
 5. The managed-region repair at startup reports its counts with no failures, and `/knk health` shows the API as
    reachable.
 
@@ -158,6 +158,8 @@ Gate door snapshots are block-data strings saved under 1.21.x. Paper doesn't upg
   `Data/minecraft_material_catalog.json`). It lacks 279 materials 26.3 has (copper tools, shelves, cinnabar …), and
   its `minecraft:chain` no longer exists (renamed `iron_chain` in 1.21.9). An item template using `minecraft:chain`
   doesn't resolve; that was already the case on 1.21.10.
+- The gate 14/15 animation warnings "fell outside GeometryWidth/Height/Depth bounds" at startup. The 1.21.10 server
+  logs them too.
 
 ## Findings
 
