@@ -2,7 +2,7 @@
 
 **Status**: Ready for Implementation  
 **Created**: January 30, 2026  
-**Last Updated**: January 31, 2026  
+**Last Updated**: 2026-10-19 (Rotation Gap-Fill section: the keyframed plank, KNG-193)  
 **Consolidated From**: `docs/ai/gate-animation/GATE_ANIMATION_QUICK_START.md`
 
 ---
@@ -604,8 +604,31 @@ For each block in snapshot:
 
 #### Rotation Gap-Fill (Mechanisms 1 & 2)
 
-Full design in [ROTATION_GAP_FILL_DESIGN.md](ROTATION_GAP_FILL_DESIGN.md). Summary of the two
-mechanisms, both implemented (2026-09-10):
+**Current for `ROTATION` doors (KNG-193, 2026-10-19; live check pending): the keyframed plank.** Full design in
+[DRAWBRIDGE_KEYFRAME_ANIMATION.md](DRAWBRIDGE_KEYFRAME_ANIMATION.md). A `ROTATION` door with a horizontal hinge
+(drawbridges; hatches set to `ROTATION`) is no longer rotated block by block. At load,
+`knk-core/.../gates/DrawbridgeKeyframes` precomputes one whole-door shape per step of the swing:
+- every world cell is written as `anchor + i·uStep + k·e + y·(0,1,0)`, with `e` a unit world axis that is unimodular
+  with the hinge step and points to the side the door opens toward, so a 45° door behaves like a cardinal one;
+- the door's shape is the set of closed-scan blocks (a shape mask), so arched and other non-rectangular doors work
+  (scan them in `REGION` mode with `//sel convex` and `ScanMaterialWhitelist`; `PLANE_GRID` is for rectangles only);
+- each keyframe is a naive 8-connected digital line from the hinge to the tip `(K·sin θ, (H−1)·cos θ)`, extruded along
+  the hinge and sampled from the mask with the nearest-row rule; there is one keyframe per change of the rounded tip
+  cell, shown at the tick the swing angle reaches it (linear in angle);
+- keyframe 0 is the closed scan verbatim; the last keyframe is the open scan verbatim when one exists (its far edge
+  sets the reach `K`), otherwise a deck `MotionDistanceBlocks` long, counted in blocks (0 = the door's height);
+- `GateAnimationTask` applies the difference between two keyframes atomically in one tick (cells that leave are removed,
+  cells that enter or change blockdata are placed), keeps the jam handling and skips to the last keyframe under lag;
+  `GateRestingFramePlacer`, `GateSweep`, `CollisionPredictor`, `GateManager` and `HealthSystem` read keyframe cells.
+
+A door the builder refuses (a hinge slope without a unit-axis `e`, closed blocks off the hinge plane, `DOUBLE_DOORS`,
+an angle outside (0, 90], a missing or sheared basis) keeps the per-block path below, with one warning at load. The
+switch `gates.rotation.keyframes-enabled` (`config.yml`, default `true`) turns the keyframes off server-wide; the old
+path is deleted once the developer's live check passes (decision D6).
+
+**Previous path, still used with the switch off and for refused doors.** Full design in
+[ROTATION_GAP_FILL_DESIGN.md](ROTATION_GAP_FILL_DESIGN.md). Summary of the two mechanisms, both implemented
+(2026-09-10); for `VERTICAL`/`LATERAL` doors Mechanism 2 is unchanged by KNG-193:
 
 **Mechanism 1 — automatic rasterization (diagonal-hinge `ROTATION` gates only).**
 A diagonal-facing `ROTATION` gate's naive rotated-block placement reaches only a sublattice of

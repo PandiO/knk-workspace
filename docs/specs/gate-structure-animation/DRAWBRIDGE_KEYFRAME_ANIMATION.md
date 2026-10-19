@@ -1,11 +1,16 @@
 # Drawbridge Animation: Analysis and Keyframed-Plank Proposal
 
-**Status:** Decided (2026-10-16). The developer answered D1–D8 (§8). The step-0 data check passed on 2026-10-16 (§4.2,
-§9). Nothing is implemented yet. Next: implementation under its own tracker claim.
+**Status:** Implemented, live check pending (2026-10-19, [KNG-193](https://linear.app/kngpandi/issue/KNG-193)):
+knk-plugin branch `claude/drawbridge-keyframe-animation` (§9 steps 1-3: `knk-core/.../gates/DrawbridgeKeyframes`,
+load, playback, resting frames, sweep, switch `gates.rotation.keyframes-enabled`), knk-web-api branch of the same name
+(§9 step 4: GateDoor seed v2), the docs of §9 step 6. The Java keyframes match the reference script cell for cell on
+every fixture of §5.9. Next: the developer's live check (§9 step 5, checklist in
+[guides/gate-smoke-test.md §3](../../guides/gate-smoke-test.md)); then the old path is deleted (D6). Decided
+2026-10-16 (D1–D8, §8); the step-0 data check passed on 2026-10-16 (§4.2, §9).
 **Rev. 2 (2026-10-15, developer request):** the method must support door shapes that are not rectangular, such as an
 arched top. Added §5.11. The door's shape is now the set of scanned blocks, and the width rule, materials, sizes,
 decisions D7–D8 and the plan were updated to match.
-**Last updated:** 2026-10-16 (developer decisions D1–D8 recorded)
+**Last updated:** 2026-10-19 (implemented under KNG-193; §9 statuses)
 **Author:** Claude (requested by Pandi)
 **Related:**
 - [ROTATION_GAP_FILL_DESIGN.md](ROTATION_GAP_FILL_DESIGN.md). This proposal revisits its Decision 3 and replaces the mid-swing part of Decisions 7, 8, 8.1 and 8.2 for `ROTATION` gates.
@@ -564,7 +569,8 @@ The block keyframes would have been needed either way: they supply the resting f
    - Recheck against the live dev database before the live test, because it may have changed since the dump.
    - The seed stores door 14 as `GeometryDefinitionMode = PLANE_GRID`, with `ClosedRegionData` and `OpenedRegionData`
      still filled in. The swing does not read the mode (Decision 7), so this does not matter for the animation.
-1. **knk-core `DrawbridgeKeyframes`**, pure functions, with unit tests:
+1. **knk-core `DrawbridgeKeyframes`** — **done 2026-10-19** (`DrawbridgeKeyframesTest`; the Java keyframes equal the
+   reference script's, cell for cell, for every fixture of §5.9). Pure functions, with unit tests:
    - keyframe 0 equals the closed scan cells;
    - the last keyframe follows the §5.9 count formula;
    - the tip moves exactly one cell per keyframe;
@@ -577,19 +583,21 @@ The block keyframes would have been needed either way: they supply the resting f
      - the apex row appears in every keyframe;
      - no keyframe cell lies outside the mask's outline at its row (both-neighbours rule on half steps);
      - a mask with a one-row hole keeps the hole at both resting frames.
-2. **Load:** `GateLoaderAdapter` builds and caches the keyframes on `CachedGateDoor`, with K taken from the open scan or
-   from the length.
-3. **Play:** `GateAnimationTask` applies the keyframe difference atomically, plus the optional per-keyframe sound;
+2. **Load** — **done 2026-10-19.** `GateLoaderAdapter` builds and caches the keyframes on `CachedGateDoor`, with K taken from the open scan or
+   from the length, after KNG-132's basis check (a refused door keeps the per-block path, one warning).
+3. **Play** — **done 2026-10-19** (without the optional sound). `GateAnimationTask` applies the keyframe difference atomically, plus the optional per-keyframe sound;
    `GateRestingFramePlacer`, `GateSweep`, `GateManager` and `HealthSystem` read the keyframes for ROTATION; add the
    config switch; turn trace logging off.
-4. **Web app/API (small):**
+4. **Web app/API (small)** — **done 2026-10-19** as GateDoor seed v2 (knk-web-api `Data/FormConfigurationSeeds/GateDoor.json`,
+   new GUID and name; the developer imports it). The preview line was not done. knk-web-app untouched: the wizard uses
+   the seeded form, so the static `GateDoorConfig` needs no whitelist field.
    - the `MotionDistanceBlocks` description for ROTATION (D2);
    - `ScanMaterialWhitelist` in the GateDoor form for REGION doors (missing from the static `GateDoorConfig`);
    - the `GeometryDefinitionMode` description "PLANE_GRID = rectangular doors only" (D8);
    - optionally, the preview line.
 
    This overlaps the KNG-132 / KNG-139 form work, so coordinate with those rows in ACTIVE_SESSIONS.
-5. **Live check (developer):**
+5. **Live check (developer)** — **open**; the checklist is [guides/gate-smoke-test.md §3](../../guides/gate-smoke-test.md):
    - Entity 14, 4 open/close cycles:
      - every step is a straight 4-wide plank;
      - the deck lands exactly on the 49 scanned blocks;
@@ -603,7 +611,7 @@ The block keyframes would have been needed either way: they supply the resting f
    - Check the landing area of every existing diagonal ROTATION door without an open scan. Its deck is now counted in
      blocks (D1), so it reaches further than before.
    - Toggle the switch off and on to compare with the old path (D6). Delete the old path once this check passes.
-6. **Docs:**
+6. **Docs** — **done 2026-10-19:**
    - Mark ROTATION_GAP_FILL Mechanisms 1–2 (ROTATION mid-swing) as superseded by this document.
    - Update SPEC.md's gap-fill section.
    - Add a short "Drawbridges" section to `guides/gate-smoke-test.md`.

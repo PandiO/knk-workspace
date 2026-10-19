@@ -21,11 +21,17 @@ confirmed live: 4 full open/close cycles against entity 14
 as rigid. The mid-swing jam this doc's Decisions 7/8/8.1/8.2 chased across
 five live-test rounds is now resolved and confirmed; Phase F's live pilot
 for the `ROTATION`-gate case is complete.
-**Follow-up design (2026-10-15; developer decisions recorded 2026-10-16, not implemented yet):**
-[DRAWBRIDGE_KEYFRAME_ANIMATION.md](DRAWBRIDGE_KEYFRAME_ANIMATION.md) analyses why the swing still looks like a
-"moving blob". It proposes replacing the mid-swing part of Mechanisms 1 and 2 (Decisions 3, 7 and 8.x) for `ROTATION`
-gates with precomputed whole-door keyframes, including support for non-rectangular doors. Read it before tuning the
-residual taper or the snap radius again.
+**Superseded for `ROTATION` gates (2026-10-19, [KNG-193](https://linear.app/kngpandi/issue/KNG-193), implemented on
+knk-plugin branch `claude/drawbridge-keyframe-animation`, live check pending):**
+[DRAWBRIDGE_KEYFRAME_ANIMATION.md](DRAWBRIDGE_KEYFRAME_ANIMATION.md) analyses why the swing still looked like a
+"moving blob" and replaces the mid-swing part of Mechanisms 1 and 2 (Decisions 3, 7 and 8.x) for `ROTATION` gates
+with precomputed whole-door keyframes (`knk-core/.../gates/DrawbridgeKeyframes`), including non-rectangular doors.
+While `gates.rotation.keyframes-enabled` is on (the default): Mechanism 1 is not used at all (the last keyframe *is*
+the filled deck, at every frame of the swing, not only at the endpoints); of Mechanism 2 only the open scan's role as
+the verbatim open resting frame remains - it also sets the deck's reach - and the pairing, rigid fit, residual taper
+and snap are not used. With the switch off, everything below applies unchanged (decision D6: the old path is deleted
+after the live check). `VERTICAL`/`LATERAL` doors are not affected either way. Do not tune the residual taper or the
+snap radius again; the sections below are kept as the record of the retired path.
 **Author:** Claude (plan requested by Pandi), 2026-09-09
 **Related:** [SPEC.md](SPEC.md), [REQUIREMENTS.md](REQUIREMENTS.md), [IMPLEMENTATION_ROADMAP.md](IMPLEMENTATION_ROADMAP.md), [DECISIONS.md](DECISIONS.md), [DUAL_SCAN_ANIMATION_DESIGN.md](DUAL_SCAN_ANIMATION_DESIGN.md) (Open Question 3 — this plan resolves it: dual-scan extends to `ROTATION` gates; that doc is now superseded by this one for `VERTICAL`/`LATERAL` too, per Decision 6), [GATE_WORLD_SYNC_DESIGN.md](GATE_WORLD_SYNC_DESIGN.md) (a related but separate gap found while implementing this plan's Phase C)
 
@@ -166,6 +172,10 @@ does this gate have any OPEN-state snapshot rows?
 
 ### Mechanism 1 (automatic default) — Corner-rasterized fill
 
+> **Superseded for `ROTATION` gates while `gates.rotation.keyframes-enabled` is on (KNG-193, 2026-10-19):** the
+> keyframed plank draws a filled shape at every keyframe, so this endpoint-only fill is never called for a keyframed
+> door. It still runs for a door the keyframe builder refuses (one warning at load) and when the switch is off.
+
 At the resting closed and open frames, instead of placing only the `W×H`
 individually-rotated scanned points, compute the shape's actual footprint and
 fill every real cell inside it:
@@ -202,6 +212,11 @@ concern for this mechanism at all (unlike a naive version of Mechanism 2 —
 see below for how that's avoided too).
 
 ### Mechanism 2 (manual override, every motion/gate type) — Scanned open state
+
+> **`ROTATION` mid-swing part superseded while `gates.rotation.keyframes-enabled` is on (KNG-193, 2026-10-19):** for a
+> keyframed door the open scan is placed verbatim as the last keyframe and sets the deck's reach, nothing else. The
+> nearest-neighbour pairing, the rigid fit (Decision 7) and the residual/snap (Decisions 8-8.2) are not used for it.
+> `VERTICAL`/`LATERAL` doors keep this mechanism unchanged.
 
 **Trigger**: implicit. If a gate has any rows in its `OpenedBlockSnapshots`
 collection (backed by the separate `GateOpenedBlockSnapshot` entity — see
@@ -297,6 +312,8 @@ scrambled test open scan (Phase F) before deciding whether that risk is real
 enough in practice to warrant a smarter algorithm later.
 
 **3. Mechanism 1 mid-swing extension — Decided: no, endpoints only for v1.**
+*(Revisited by KNG-193: every keyframe of the keyframed plank is a filled shape, precomputed at load; see the
+header note.)*
 Matches every tick's placement/removal cost of the *current* sparse-lattice
 sweep. Mechanism 2 doesn't have this limitation at all — its blend is
 already continuous every frame by construction. Revisit full-sweep
