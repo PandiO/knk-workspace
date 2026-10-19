@@ -10,7 +10,7 @@ decisions D7–D8 and the plan were updated to match.
 **Related:**
 - [ROTATION_GAP_FILL_DESIGN.md](ROTATION_GAP_FILL_DESIGN.md). This proposal revisits its Decision 3 and replaces the mid-swing part of Decisions 7, 8, 8.1 and 8.2 for `ROTATION` gates.
 - [GATESTRUCTURE_QOL_IMPLEMENTATION_PLAN.md](GATESTRUCTURE_QOL_IMPLEMENTATION_PLAN.md), item 6.
-- [KNG-132](https://linear.app/kngpandi/issue/KNG-132) (Ref 2 must be straight above the anchor; unmerged).
+- [KNG-132](https://linear.app/kngpandi/issue/KNG-132) (Ref 2 must be straight above the anchor; merged by 2026-10-19).
 - [KNG-106](https://linear.app/kngpandi/issue/KNG-106) (entity safety, `GateSweep`).
 
 Scope: `ROTATION` gates with a horizontal hinge (`DRAWBRIDGE`, and `TRAP`/`SLIDING` set to `ROTATION`), cardinal and

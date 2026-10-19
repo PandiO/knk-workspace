@@ -4,9 +4,14 @@
 **Status:** Ready to copy into a fresh session
 **Canonical design:** [DRAWBRIDGE_KEYFRAME_ANIMATION.md](../../specs/gate-structure-animation/DRAWBRIDGE_KEYFRAME_ANIMATION.md)
 (on knk-workspace `main` since 2026-10-18, when the docs branch was merged and deleted; decided 2026-10-16)
-**State at writing:** knk-plugin `main` `29bb6ff`, knk-web-app `main` `38854ba`, knk-web-api `master` `07fda99`,
-knk-workspace `main` `b0b6637`. Design and reference script were on the workspace branch then; both are on workspace `main` since 2026-10-18. Checked 2026-10-16: neither
-KNG-132 nor KNG-139 was on any default branch, so the prompt makes the web/API part conditional on that.
+**Last updated:** 2026-10-19. Rechecked: KNG-132 and KNG-139 are merged, so the web/API part is in scope.
+**State (2026-10-19):** knk-plugin `main` `147806d8`, knk-web-app `main` `e30c815`, knk-web-api `master` `73c70d5`,
+knk-workspace `main` `a624b7d`.
+- KNG-132 is merged in knk-plugin (`82455cf5`, `GateReferencePoints`) and knk-web-app (`7c00508`). Its API description
+  migration was not merged; the GateDoor field descriptions come from KNG-139's seed instead (`b04b429`).
+- KNG-139 is merged in knk-web-api (`2929972`, `Data/FormConfigurationSeeds/GateDoor.json`).
+- KNG-182 (Paper 26.3, Java 25) is open on knk-plugin `claude/mc-26.2-upgrade`; it changes only build files, no gate
+  code.
 
 ```text
 Implement the drawbridge "keyframed plank" animation for Knights and Kings
@@ -30,7 +35,12 @@ READ FIRST
 
 BRANCHES AND TRACKING
 - knk-plugin: create claude/drawbridge-keyframe-animation from a freshly
-  fetched main (main was 29bb6ff on 2026-10-16).
+  fetched main (main was 147806d8 on 2026-10-19).
+  - KNG-182 (Paper 26.3, Java 25, branch claude/mc-26.2-upgrade) may merge
+    while you work. It touches only build files. If it lands, merge main into
+    your branch and rebuild on Java 25; don't wait for it.
+- knk-web-api (and knk-web-app only if needed): a branch of the same name from
+  a freshly fetched master/main, for the form part below.
 - knk-workspace: the old docs branch claude/drawbridge-keyframe-animation was
   merged and deleted on 2026-10-18; cut a new branch of that name from a freshly
   fetched main for doc changes.
@@ -89,9 +99,9 @@ WHAT TO BUILD (knk-plugin)
      - an angle outside (0, 90];
      - a missing basis.
 2. knk-paper:
-   - GateLoaderAdapter builds the keyframes. Keep this edit additive, because
-     KNG-132 also touches this class (its basis check). If KNG-132 is on main
-     by then, build on it: a door it refuses never reaches the keyframes.
+   - GateLoaderAdapter builds the keyframes. Build on KNG-132's basis check,
+     which is on main (GateReferencePoints): a door it refuses never reaches the
+     keyframes.
    - GateAnimationTask, for ROTATION with keyframes:
      - map frame -> current angle -> the last keyframe whose start angle is at
        most that angle;
@@ -145,33 +155,30 @@ BUILD
 - Report pass/fail counts per module (core, api-client, paper). If Maven
   Central rate-limits (429), say which modules were not rerun.
 
-WEB APP / API PART (§9 step 4): ONLY IF KNG-132 AND KNG-139 ARE MERGED
-- First check whether both are on the default branches. When this prompt was
-  written (2026-10-16), neither was:
-  - KNG-132 was only on claude/loving-johnson-dlshrc in all three repos. For
-    example, knk-plugin main had no gates/GateReferencePoints.java, and
-    knk-web-api master had no DescribeGateDoorGeometryFields migration.
-  - KNG-139's Data/FormConfigurationSeeds/GateDoor.json was only on
-    claude/jolly-archimedes-urhio9 and claude/wonderful-darwin-u39k1o in
-    knk-web-api.
-  - Both Linear issues were "In Review".
-- If both are merged, do this part too, on claude/drawbridge-keyframe-animation
-  in knk-web-api (and in knk-web-app if the static GateDoorConfig needs it):
+WEB APP / API PART (§9 step 4; KNG-132 and KNG-139 are merged)
+- The GateDoor default form is the seed file knk-web-api
+  Data/FormConfigurationSeeds/GateDoor.json (KNG-139). It also holds the
+  geometry field descriptions (b04b429); KNG-132's own API description
+  migration was never merged, so don't recreate it.
+- Change the seed:
   - the MotionDistanceBlocks description for ROTATION (deck-length rule, D2);
-  - ScanMaterialWhitelist in the GateDoor form for REGION doors (D8);
+  - a ScanMaterialWhitelist field for REGION doors (D8);
   - the GeometryDefinitionMode description "PLANE_GRID = rectangular doors
     only" (D8).
-  Follow KNG-139's seed authoring guide
-  (knk-workspace docs/specs/form-configurations/DEFAULT_FORM_SEEDS.md) and
-  KNG-132's description-migration pattern. For existing databases, a data
-  migration may change only descriptions that are empty or still hold their
-  seeded text; never overwrite one the developer edited.
-- If either is not merged, leave those files alone, do not build on the
-  unmerged branches, and record the follow-up in the tracker row.
+- Follow the seed authoring guide, knk-workspace
+  docs/specs/form-configurations/DEFAULT_FORM_SEEDS.md. In particular, imports
+  never overwrite: follow its rule for a changed seed (new name/guid) instead of
+  editing an imported configuration in place. No data migration. The developer
+  imports the new seed.
+- FormConfigurationSeedFilesTests must stay green; it dry-runs and imports
+  every seed.
+- knk-web-app: touch the static GateDoorConfig (src/config/objectConfigs.tsx)
+  only if the seeded form doesn't cover REGION doors' whitelist. Check before
+  editing.
 
 DONE MEANS
 - knk-plugin branch pushed, with a green build.
-- If the web/API part applied: those branches pushed, and their tests run (API:
+- The web/API branches pushed, and their tests run (API:
   dotnet test Tests/knkwebapi_v2.Tests/knkwebapi_v2.Tests.csproj; web app:
   npm run test:ci), with counts reported against the known-red baseline.
 - Workspace docs updated on the workspace branch (§9 step 6):
