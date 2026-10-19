@@ -6,6 +6,21 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 _Nothing at the moment._
 
+## 2026-10-19
+
+- **Drawbridges swing as one straight plank, including arched doors**
+  ([KNG-193](https://linear.app/kngpandi/issue/KNG-193); knk-plugin `main` `79be4882`, knk-web-api `master` `2d71155`,
+  merged directly, no PR). A `ROTATION` door with a horizontal hinge was drawn mid-swing as a cloud of individually
+  rotated blocks with a rigid fit, a residual and a snap on top, so its parts moved at different speeds. It is now
+  played back as whole-door keyframes precomputed at load (`DrawbridgeKeyframes`): a digital-line plank from the hinge
+  to the tip, one keyframe per tip-cell change, the closed scan verbatim at one end and the open scan verbatim (or a
+  deck `MotionDistanceBlocks` long, counted in blocks) at the other; the door's own shape is the mask, so an arched
+  door scanned in REGION mode with a material whitelist keeps its arch. The old path stays behind
+  `gates.rotation.keyframes-enabled` until [KNG-194](https://linear.app/kngpandi/issue/KNG-194) removes it. The GateDoor
+  form seed v2 adds the deck length for rotating doors and a "Door materials" field for region and flood-fill scans.
+  Live-tested by the developer on gate door 14 (2026-10-19); the cardinal, arched, switch and fall-back checks of
+  [guides/gate-smoke-test.md §3](guides/gate-smoke-test.md) were accepted without a run.
+
 ## 2026-10-18
 
 - **Many-to-many form steps without a carrier field keep their relationships**
