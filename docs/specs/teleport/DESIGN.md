@@ -1,7 +1,7 @@
 # Teleportation Commands — Design
 
 **Status:** Decided — implementation in progress (branch `claude/teleport`)
-**Last updated:** 2026-10-11 (§3.4.3: death clears the combat tag)
+**Last updated:** 2026-10-19 (§3.6: `/hub` to the hub spawn, KNG-188)
 **Linear:** [KNG-17](https://linear.app/kngpandi/issue/KNG-17/teleportation-staff-tp-tpa-requests-spawn-domain-warps-v1-port)
 **Sources:** `knk-v1-archive` (`src/UsefulCommands/PlayerTeleportCommand.java`, `src/UsefulCommands/SpawnCommand.java`,
 `src/SpawnPoints/SpawnPoint.java`, `src/SpawnPoints/SpawnPointCommands.java`, `src/Teleport/*`, `src/Houses/HomeCommands.java`,
@@ -261,6 +261,8 @@ the sender; console may run the "others" forms.
 | `/tpcancel` | — | (none) | Withdraw your outgoing request, or cancel your own running warmup. |
 | `/spawn` | — | `knk.teleport.spawn` | To server spawn (§3.6). |
 | `/spawn <player>` | — | `knk.teleport.staff.others` | Send a player to spawn, instant. Console allowed. |
+| `/hub` | — | (none — any player) | To the hub spawn of the Game Settings (§3.6, KNG-188). |
+| `/hub <player>` | — | `knk.teleport.staff.others` | Send a player to the hub, instant. Console allowed. |
 | `/warp` / `/warp list` | `/point` (v1) | `knk.teleport.warp` | Open the teleport menu (§3.8); chat list fallback when the menu is unavailable. |
 | `/warp <domain>` | `/point <domain>` | `knk.teleport.warp` | Domain spawn teleport (§3.7). Name match is case-insensitive; ambiguous names list `Type:Name` choices; `town:Kardenna` form accepted. |
 | `/warp <domain> <player>` | — | `knk.teleport.staff.others` | Send a player, instant, free. Console allowed. |
@@ -378,6 +380,10 @@ Destination = `GameSettings.JoinSpawnReference` when `JoinSpawnMode = CustomRefe
 read-only `GameSettingsQueryApi` in knk-api-client on the existing `GET /api/GameSettings`, cached (TTL 5 min,
 refreshed on `/knk cache`). Player `/spawn` is free, uses warmup/cooldown/guards; `/spawn <player>` is staff, instant.
 The v1 "spawn" spawnpoint also had a price/title requirement — not ported (spawn is the universal escape hatch).
+
+`/hub` (KNG-188) works like `/spawn`, but its destination is the hub spawn of the Game Settings (hub DESIGN §16.8).
+It is a `HUB` teleport with its own cooldown, priced and cooled down by the groups' spawn settings. It counts as a
+`/spawn` for `/back`. Without a usable hub it refuses and never falls back to another world.
 
 ### 3.7 Domain teleports (`/warp`)
 
