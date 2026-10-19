@@ -87,9 +87,10 @@ Then set `MotionDistanceBlocks` to 9, reload the gates and open it: the deck is 
 
 **Switch and fall-backs**
 
-9. Set `gates.rotation.keyframes-enabled: false`, restart: entity 14 swings as before (the per-block path, Mechanism 1
-   and the open-scan blend). Set it back to `true`, restart: the plank is back. Startup sync leaves no stray blocks
-   either way.
+9. With every drawbridge **closed** (the closed frame is the scanned door on both paths; an open deck without an
+   open scan differs between them, so switching while open can leave stray deck blocks), set
+   `gates.rotation.keyframes-enabled: false` and restart: entity 14 swings as before (the per-block path, Mechanism 1
+   and the open-scan blend). Close it, set the switch back to `true`, restart: the plank is back.
 10. A `DOUBLE_DOORS` door, or a `ROTATION` door whose Ref 2 KNG-132 refuses, logs "keeps the per-block rotation path"
     once at load and behaves as before.
 
