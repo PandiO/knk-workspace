@@ -1,9 +1,10 @@
 # Minecraft 26.3 upgrade — smoke test
 
-**Status:** Not run yet. For the dev server live test of [KNG-182](https://linear.app/kngpandi/issue/KNG-182) before
-it merges.
+**Status:** In progress. Steps 1–4 passed (server logs of 2026-10-18, see **Findings**). For the dev server live test
+of [KNG-182](https://linear.app/kngpandi/issue/KNG-182) before it merges.
 **Last updated:** 2026-10-19
-**Branch:** knk-plugin `claude/mc-26.2-upgrade` (`6ccafaa6` or later; it targets 26.3 despite the name)
+**Branch:** knk-plugin `claude/mc-26.2-upgrade` (it targets 26.3 despite the name). Test a build that includes
+KNG-193 (`bddb907c` or later), so the drawbridge keyframes are covered on 26.3 too.
 **Related:** [gate smoke test](gate-smoke-test.md) · [road navigation smoke test](road-navigation-smoke-test.md) ·
 [hub smoke test 2026-10-17](../reports/2026-10-17-hub-smoke-test.md) ·
 [siege checklist](../reports/2026-09-26-siege-smoke-test-checklist.md) ·
@@ -21,20 +22,19 @@ so (ops pass every permission check). Note each failure under **Findings** with 
 
 ## 0. Before you start
 
-- **Back up the whole server folder** (worlds, `plugins/` including `WorldGuard/` and `KnightsAndKings/`). The
-  conversion is one-way, and Paper **deletes** the old `world_KNK-DEV_nether`, `world_KNK-DEV_the_end` and `knk_hub`
-  folders once it has imported them. The backup is the only way back to 1.21.10.
-- Stop every Paper process that uses this folder before swapping jars (two Paper 1.21.10 processes were running on
-  2026-10-18).
-- Server: Paper **26.3** (build 205 or a newer stable) on **Java 25**. `start-server.ps1` runs `java` from `PATH`,
-  which is Java 21 on this machine, so point it at a Java 25 `java.exe`.
-- Plugins: FastAsyncWorldEdit **2.16.1**, WorldGuard **7.0.20**. WorldEditSelectionVisualizer 2.1.10 and the dev-only
-  AutoPluginLoader were not checked for 26.3: see that they load, and remove them if they don't.
-- Plugin jar: `./gradlew :knk-paper:dev` from the branch (needs a JDK 25 toolchain, see the plugin `CLAUDE.md`), or
-  copy the ~10.9 MB shadow jar `knk-paper/build/libs/knk-paper-0.1.0-SNAPSHOT.jar`.
-- Client: Java Edition **26.3**.
+The setup as of 2026-10-19:
 
-Pre-flight checked read-only on 2026-10-19:
+- **Server:** the 26.3 test server is a copy, `MinecraftServer/Servers/DEV_SERVER_26.3`, on Paper 26.3 build 205. Its
+  `start-server.ps1` picks the installed Temurin 25. `DEV_SERVER_1.21.10` stays unconverted and is the way back to
+  1.21.10. The conversion is one-way, and Paper **deletes** each old world folder once it has imported it.
+- **Plugins:** FastAsyncWorldEdit **2.16.1**, WorldGuard **7.0.20**, and WorldEditSelectionVisualizer 2.1.10, which
+  is untested on 26.3: see that it loads. AutoPluginLoader is not on the copy.
+- **Plugin jar:** build from the branch with `devServerDirectory` pointing at `DEV_SERVER_26.3` (a local
+  `gradle.properties` change). Run Gradle 8.14 on JDK 21 (`JAVA_HOME="C:/Program Files/Java/jdk-21"`); it compiles
+  with the Temurin 25 toolchain. Then run `./gradlew :knk-paper:dev`, or copy the ~10.9 MB shadow jar.
+- **Client:** Java Edition **26.3**.
+
+Pre-flight on the 1.21.10 folder before the copy, checked read-only on 2026-10-19:
 
 - `world_KNK-DEV` has no `DIM-1`/`DIM1` folder of its own, so Paper's "Refusing to overwrite existing migrated file"
   failure ([Paper #13750](https://github.com/PaperMC/Paper/issues/13750)) should not occur.
@@ -111,7 +111,8 @@ Paper keeps the world names and UUIDs. These steps prove that nothing keyed by t
 Gate door snapshots are block-data strings saved under 1.21.x. Paper doesn't upgrade them, so watch the log here.
 
 24. Every gate: `/gate open`, `close` and `toggle`. Doors render fully in both states, and the log has no invalid
-    block data warnings.
+    block data warnings. For the drawbridge (door 14), repeat the main lower/raise steps of
+    [gate smoke test](gate-smoke-test.md) §3. KNG-193's keyframed plank passed there on 1.21.10 on 2026-10-19.
 25. Run [gate smoke test](gate-smoke-test.md) §2 steps 8–12 (player, mob, item, and a horse with rider in the opening
     while it closes). The rider stays on the vehicle; this uses a teleport flag that 26.x deprecated.
 26. Damage a door until it breaks and let it respawn: health, fire effects and sound work.
@@ -162,4 +163,8 @@ Gate door snapshots are block-data strings saved under 1.21.x. Paper doesn't upg
 
 | Run | Step | Result | Follow-up |
 |---|---|---|---|
-| | | | |
+| 2026-10-18 (server logs, read 2026-10-19) | 1 | **Pass.** First boot was on Paper 26.2 build 134 at 19:52. `Completed Vanilla import` for `world_KNK-DEV`, and `Completed legacy CraftBukkit import` for the nether and the end. No `Refusing to overwrite`. | — |
+| 2026-10-18 | 2 | **Pass.** On 26.3 with KnK at 21:07: `Completed legacy CraftBukkit import for world 'knk_hub' (minecraft:knk_hub)`, then `[KnK Worlds] knk_hub: loaded (normal)`. | Plugin jar from `6ccafaa6` (`api-version: "26.3"`). |
+| 2026-10-18 | 3 | **Pass.** `world_KNK-DEV/dimensions/minecraft/` holds `overworld`, `the_nether`, `the_end`, `knk_hub`; the old root folders are gone, and `hub` is untouched. | — |
+| 2026-10-18 | 4 | **Pass (log part).** The 21:07 run has 0 SEVERE/ERROR lines. Its 12 warnings are known: gate data (gate 29 has no doors, door 12 has sheared reference points), the gate 14/15 animation "fell outside GeometryWidth/Height/Depth bounds" lines that the 1.21.10 server also logs, a disabled siege lobby, and the dev SSL notice. | `plugins` / `version` not checked yet. |
+| | 6 | **To do.** No second KnK start after the `knk_hub` import yet: this is the step that checks the KNG-182 loader fix. | — |
