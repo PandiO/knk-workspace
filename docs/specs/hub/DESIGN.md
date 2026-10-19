@@ -1,7 +1,7 @@
 # Hub, outage policy and world portals — draft design
 
 **Status:** Implemented and merged 2026-10-17 (knk-web-api `547d2b2`, knk-web-app `e86af25`, knk-plugin `9f31db6`) after the developer's live smoke test ([report](../../reports/2026-10-17-hub-smoke-test.md)). Readiness audit 2026-10-10 ([report](../../reports/2026-10-10-multiworld-capability-audit.md)). All decisions so far are settled (§16.4, §16.7); §16.6 lists the live checks not yet run.
-**Last updated:** 2026-10-17
+**Last updated:** 2026-10-19 (§16.8: `/hub` teleports any player to the hub, KNG-188)
 **Target:** Prefer implementation this weekend (10–11 October), before the closed alpha planned for 17–18 October 2026.
 **Linear:** [KNG-109](https://linear.app/kngpandi/issue/KNG-109)
 **Scope:** Requirements and investigation plan. No runtime changes or deployment.
@@ -152,6 +152,8 @@ Implementation safeguards proposed: persist before transfer, track successful ev
 
 Acceptance: evacuate from a non-hub world, restart with API unavailable, restore connectivity, receive the offer, and confirm return to the correct persisted world/location. Also verify no-click stays in hub, repeated evacuation preserves the original location, double-click cannot repeat a completed return, and a renewed outage or invalid destination blocks unsafe return.
 
+Commands: `/hub return <token>` is the offer's button (§16.7). `/hub` on its own takes any player to the hub spawn, and `/hub <player> [-s]` lets staff send someone there (§16.8, KNG-188).
+
 
 ## 13. Confirmed follow-up decisions (2026-10-10)
 
@@ -296,6 +298,18 @@ These supersede the open questions in the audit report §11.
 - Leaving while standing in the hub, when the hub or a parent domain denies exit, says "You can only leave the hub through its portal." (or "You can't leave the hub this way." without portals) instead of "You are not allowed to leave <town>." This covers `/spawn`, `/warp` and walking. The developer chose portal-only exits for the first deployment (2026-10-17).
 - Siege lobbies stopped by an outage start again when the API is back.
 - Operators are not kicked by the "no usable hub" fallback, so they can fix it.
+
+### 16.8 `/hub`: teleport to the hub (KNG-188, 2026-10-19)
+
+Requested in the form wizard smoke test (2026-10-17): reaching `knk_hub` took an admin `/tp`. knk-plugin branch `claude/kng-188-hub-teleport`, from `claude/mc-26.2-upgrade` (KNG-182).
+
+- **`/hub`**: any player, no permission node. The destination is the hub spawn that admission uses (`HubService.admissionSpawn()`: the hub selected on the Game Settings page, its spawn as resolved now, else its snapshot). It goes through the teleport engine (`TeleportService`) as a new teleport kind, `HUB`, so warmup, movement and combat cancel, the safe-spot check and every engine guard apply: freeze, siege, the outage rule and domain AllowEntry, the same checks as `/spawn`.
+- **Cooldown and price:** `HUB` has its own cooldown, so a `/hub` doesn't hold back a `/spawn` or the other way round. The permission groups' **spawn** settings set its cooldown and price (KNG-41): the API has no hub column. A priced `/hub` is charged through the spawn-fee route, so the ledger calls it "Teleport to spawn". `knk.teleport.bypass.cost` makes it free.
+- **`/back`:** a `/hub` counts as a `/spawn` (`BackKind.SPAWN`, node `knk.teleport.back.spawn`).
+- **No usable hub** (none selected, its world not loaded, or its spawn unresolved or outside the hub region, per `HubService.unusable()`): "The hub isn't available right now." Nobody is moved, and there is never a fallback to another world (KNG-114). The spawn is read again when the warmup ends, so a hub that stops taking players in the meantime fails the teleport.
+- **`/hub <player> [-s]`**: staff, like `/spawn <player>`. It needs `knk.teleport.staff.others` and the rank check, and `-s` needs `knk.teleport.staff.silent` (always silent while vanished). The teleport is instant and audited, and console is allowed. Staff also see why the hub isn't available.
+- **Game mode:** a player who arrives from another world gets the hub world's game mode, as with the portal and the outage transfers (owners keep theirs).
+- **`/hub return [token]`** is unchanged. Tab completion offers `return`, and offers player names and `-s` to staff.
 
 ### 16.5 Peaceful preset (verified, not guessed)
 

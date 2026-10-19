@@ -4,7 +4,12 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
-_Nothing at the moment._
+- **`/hub` takes any player to the hub** ([KNG-188](https://linear.app/kngpandi/issue/KNG-188); knk-plugin branch
+  `claude/kng-188-hub-teleport`, from `claude/mc-26.2-upgrade`). `/hub` goes to the hub spawn selected on the Game
+  Settings page through the regular teleport engine: warmup, movement and combat cancel, the safe-spot check, and the
+  siege, freeze and outage guards. It has its own cooldown, and the groups' spawn settings set its cooldown and price.
+  Without a usable hub it says "The hub isn't available right now." and moves nobody. Staff can send a player with
+  `/hub <player> [-s]`. `/hub return` is unchanged ([hub DESIGN §16.8](specs/hub/DESIGN.md)).
 
 ## 2026-10-19
 
