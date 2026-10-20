@@ -1,7 +1,7 @@
 # Siege Survival — Defend the Castle
 
 **Status:** Gameplay design recorded from developer decisions; not implemented. Integration details marked proposed or to verify are not approved balance values.
-**Last updated:** 2026-09-30
+**Last updated:** 2026-10-20 (repair-stop rule confirmed; NPC behavior/pathfinding/combat recorded as the main open area)
 **Linear:** [KNG-50](https://linear.app/kngpandi/issue/KNG-50/siege-survival-endless-npc-waves-gate-repair-and-match-economy), child of [KNG-37](https://linear.app/kngpandi/issue/KNG-37/design-dungeon-waves-and-siege-pve-defense-mode)
 **Dependencies:** [KNG-36 NPC platform](https://linear.app/kngpandi/issue/KNG-36/design-shared-npc-traits-and-pathfinding-platform); existing Siege, gate runtime, inventory menus, item blueprints, lootboxes and currency ledger.
 **Authority:** The developer's 2026-09-30 conversation and corrections define this mode. Existing PvP Siege rules remain unchanged. This document is the canonical survival specification, not a claim that the proposed entities, endpoints or gameplay already exist.
@@ -27,7 +27,7 @@ Keep the existing lobby, scenario, team identity, gate/objective references, spa
 | S05 | Objective recapture is configurable, default off. Main-objective capture always ends the match. |
 | S06 | Gates are closed defensive barriers while intact and defender-owned; NPCs capture reachable zones, otherwise damage the blocking door. Door destruction is separate from objective capture. Target preference may vary with difficulty. |
 | S07 | Destroyed doors can be repaired while their objective remains defender-owned, including during waves and objective pressure. |
-| S08 | Repair requires staying nearby and performing a channelled interaction. No material/currency cost. Taking damage does not stop a player's contribution; fighting back requires stopping repair. |
+| S08 | Repair requires staying nearby and performing a channelled interaction. No material/currency cost. Taking damage does not stop a player's contribution; fighting back requires stopping repair. Only capture of the door's objective stops the repair itself (confirmed 2026-10-20). |
 | S09 | Repair work persists when interrupted; each active player adds configurable health-equivalent work per second. Difficulty sets the rate. Health is restored in one step only at completion, followed by the normal closing animation. No additional cooldown. |
 | S10 | NPC spawnzone progression depends ONLY on objective capture, never merely on an open or destroyed door. |
 | S11 | Both own-inventory Siege behavior and a Zombies-style isolated match inventory are available per scenario from the first release. |
@@ -90,7 +90,7 @@ Actual door health remains destroyed throughout the channel. At P=H, recheck own
 
 Each player contributes only while alive, a member of this match, within the interaction range and actively repairing that door. Taking damage alone does NOT cancel. Leaving range, releasing/cancelling the action, switching to combat, dying or leaving the match stops that player's contribution; other repairers continue and P is retained. Objective capture stops all associated repairs and invalidates remaining work. NPC pressure in the capturezone alone does not stop repairs.
 
-The final voice phrase 'objective wordt geraakt' conflicts with the earlier explicit permission to repair under capturezone attack. Working interpretation: stop on ownership loss, not on capture pressure. This is recorded as an implementation clarification to confirm, rather than silently converting it into an attack-cancels rule.
+**Confirmed 2026-10-20 (developer):** repair of a gate stops only when its objective has been captured. Capture pressure, NPCs in the capturezone and damage to the repairers do not stop it. This settles the earlier voice phrase 'objective wordt geraakt', which had conflicted with the permission to repair under capturezone attack.
 
 No extra cooldown after completion. A subsequent destruction starts a new repair cycle at zero work. Scope work per door, not across unrelated doors. Partial-health maintenance of intact doors was not specified; proposed v1 is destroyed-door repair only. If added later, define required work from missing health separately.
 
@@ -186,16 +186,19 @@ Read-only checks used current workspace main `98372da0a54de6384334290208d7081628
 - `knk-web-api/Services/SiegeMatchService.cs` grants rewards server-side exactly once with the currency ledger (`SIEGE_REWARD`, key `siege-match:{id}`) and currently delegates to the PvP `SiegeRewardCalculator`. Add survival reward inputs/logic while preserving settlement idempotency and title progression.
 - `Services/Lootbox/LootboxRollEngine.cs` supplies pure roll and odds logic. It currently supports the Grade table's full scale; older lootbox design sections still say 1–5 only. Do not copy stale grade limits or world-claim ownership/quota rules into the match adapter.
 - KNG-27 navigation was recorded as unmerged on its feature branches; KNG-36 shared NPC platform and KNG-37 consumers are still backlog. Do not describe either as a shipped physical NPC navigation dependency.
+- *Update 2026-10-20:* Linear now shows KNG-36 as Done (2026-10-18, when its design doc merged), but that doc still leaves the combat/platform design and the minimal NPC vertical slice open, and no NPC runtime exists in the plugin. The KNG-51 walk pathfinder is on plugin `main`. Recheck all of this before coding.
 
 ## 13. Open implementation clarifications (not missing core gameplay decisions)
 
-1. Confirm repair interruption is objective ownership loss, consistent with repairing under zone pressure; resolve the isolated 'objective hit' wording before implementing a different condition.
+1. ~~Confirm repair interruption is objective ownership loss.~~ **Resolved 2026-10-20:** only capture of the door's objective stops the repair (§5).
 2. Verify destroyed-door reconstruction uses collision handling, including large NPCs; choose the repair interaction input after Paper testing.
 3. Confirm destroyed-only repair and per-door health/work semantics for multi-door structures; define animation-time damage/jam transitions.
 4. Confirm old-zone weighting and recapture zone deactivation; default recapture remains disabled meanwhile.
 5. Validate physical waypoint pathfinding, reachability including breach edges, chase leash and NPC capture weights with the castle map.
 6. Confirm special-schedule collisions, purchase/spectator-transfer access, late-join/disconnect/abort policies and whether side-capture reduction is disabled.
 7. Supply progression targets and review resulting reward curves. Configure gameplay values with previews, not fixed invented defaults.
+
+**Main open area (developer, 2026-10-20): NPC behavior, pathfinding and combat.** Apart from the clarifications above, the largest undecided part of this mode is how the NPC attackers think, move and fight. Nothing in §4–§7 picks an AI model, a path executor or combat stats. Neither does the shared NPC platform yet: [npc-platform/DESIGN.md](../npc-platform/DESIGN.md) (KNG-36) records tutorial-guide decisions and leaves combat, stats, factions, behavior arbitration and performance budgets open (its O08, O11, O12). Still to design for survival: target selection and arbitration between objective, gate and player (§4); aggro, leash and return (§4); breach behavior at a gate; NPC capture weight; archetype stats, attacks and scaling (§7); lane following with crowds in narrow lanes; stuck-enemy recovery and its wave accounting (§3); live-NPC and path-work budgets. Pathfinding candidates on plugin `main` (`79be488`): the KNG-51 walk search in `knk-core/.../core/roads/walk/` and `knk-paper/.../paper/navigation/walk/` (player guidance today; reuse for NPCs per [LAST_MILE_PATHFINDING.md §13](../navigation/LAST_MILE_PATHFINDING.md)). The V3 plugin has no Citizens dependency.
 
 ## 14. Acceptance checklist
 
