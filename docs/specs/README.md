@@ -3,6 +3,7 @@
 Central home for requirements, specifications, and implementation roadmaps across KNK services (web API, web app, and Minecraft plugin). Keep new cross-cutting docs here so they are discoverable by all teams and AI assistants.
 
 ## Structure
+- arena-duels/: player-vs-player arena duels — invite with stake offers, escrow, lobby warmup, spectator menu, battleground PvP (Linear KNG-197; draft design 2026-10-20, not implemented)
 - npc-platform/: shared NPC traits, behavior and tutorial guide; agreed requirements and open investigations (KNG-36)
 - project-overview/: portfolio-level summaries and source pointers (CHANGES, implementation roadmap, source map)
 - users/: user/account management specs and requirements (including linking, merge, password rules)
@@ -22,6 +23,8 @@ Central home for requirements, specifications, and implementation roadmaps acros
 - reconcile/: reconciliation guides for aligning legacy data with v2
 
 ## Key documents
+- Arena duels (KNG-197; draft design + plan 2026-10-20, not implemented; open questions in DESIGN §13): [arena-duels/DESIGN.md](arena-duels/DESIGN.md), [arena-duels/IMPLEMENTATION_PLAN.md](arena-duels/IMPLEMENTATION_PLAN.md)
+
 - Dev environment (KNG-163, proposal 2026-10-12): [dev-environment/DEV_DB_REMOTE_ACCESS.md](dev-environment/DEV_DB_REMOTE_ACCESS.md) — NAS dev database for cloud sessions over Cloudflare Tunnel + Access, scheduled backups, versioned DB environments and the deploy pipeline. Decisions E1-E4 made 2026-10-12.
 
 - Form wizard (2026-10-11, analysis + proposed design, not implemented): [form-configurations/FORM_WIZARD_SESSION_CONCEPTS.md](form-configurations/FORM_WIZARD_SESSION_CONCEPTS.md) (List "Create New" children never saved, pickers showing entities made in this form session, Edit instance seeding; KNG-133..136, KNG-162) and [form-configurations/DEFAULT_FORM_SEEDS.md](form-configurations/DEFAULT_FORM_SEEDS.md) (FormConfiguration export/import, agent-authored default forms and their authoring guide; KNG-137..139). Decided 2026-10-11 (D1 = A, S1 = A); D2 default in KNG-162. Implemented by the [form wizard chain](../ai-agents/handoffs/FORM_WIZARD_CHAIN.md).
