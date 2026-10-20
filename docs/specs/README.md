@@ -23,7 +23,7 @@ Central home for requirements, specifications, and implementation roadmaps acros
 - reconcile/: reconciliation guides for aligning legacy data with v2
 
 ## Key documents
-- Arena duels (KNG-197; draft design + plan 2026-10-20, not implemented; open questions in DESIGN §13): [arena-duels/DESIGN.md](arena-duels/DESIGN.md), [arena-duels/IMPLEMENTATION_PLAN.md](arena-duels/IMPLEMENTATION_PLAN.md)
+- Arena duels (KNG-197; draft design + plan rev. 2 2026-10-20, developer answers folded in, not implemented): [arena-duels/DESIGN.md](arena-duels/DESIGN.md), [arena-duels/IMPLEMENTATION_PLAN.md](arena-duels/IMPLEMENTATION_PLAN.md)
 
 - Dev environment (KNG-163, proposal 2026-10-12): [dev-environment/DEV_DB_REMOTE_ACCESS.md](dev-environment/DEV_DB_REMOTE_ACCESS.md) — NAS dev database for cloud sessions over Cloudflare Tunnel + Access, scheduled backups, versioned DB environments and the deploy pipeline. Decisions E1-E4 made 2026-10-12.
 
