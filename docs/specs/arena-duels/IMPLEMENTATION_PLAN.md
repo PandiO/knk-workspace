@@ -1,7 +1,7 @@
 # Arena duels — Implementation Plan
 
 **Status:** Draft rev. 3. Not started. All design questions are answered (developer, 2026-10-20; [DESIGN §13](DESIGN.md#13-decisions-log-and-open-points)). Ready for the phase issues.
-**Last updated:** 2026-10-20 (rev. 3: review tiers, `DuelPolicy`, KNG-199 link)
+**Last updated:** 2026-10-20 (rev. 4: kit vault before the lobby teleport, held deliveries, revert/confiscate; rev. 3: review tiers, `DuelPolicy`, KNG-199 link)
 **Linear:** [KNG-197](https://linear.app/kngpandi/issue/KNG-197) (design). Phase issues: to be filed, one per phase below.
 **Sources:** [DESIGN.md](DESIGN.md) (behaviour, decisions D1–D19, follow-up answers O1–O6).
 
@@ -137,6 +137,7 @@ Phases 0, 1 and 3 can run in parallel. Phases 5–7 can run in parallel after 4 
   | `CompleteAsync(id, winner, reason, telemetry)` | `RunLockedAsync`. Derives signals S1–S6 and the tier (`DuelReviewRules`, pure, thresholds from `DuelPolicy`; DESIGN §10.3). Tier 2 holds; tier 0/1 pays (`duel-payout:<id>`) and takes the fee; tier 1/2 raise a `DUEL_FLAG` / `DUEL_HOLD` `CurrencyAlert`. Returns `paid` / `held` |
   | `CancelAsync(id, reason)` | reverse once; cancel, abort or draw status by reason |
   | `ReleaseAsync(id, staff)` / `VoidAsync(id, staff)` | held → paid / refunded; audited |
+  | `RevertAsync(id, staff, reason, confiscate)` | paid → reversed (DESIGN §10.3); returns what was recovered and what is still missing; the plugin is told to return or destroy undelivered items |
   | `AbortUnfinishedAsync()` | |
   | `GetByTokenAsync` | |
 
@@ -145,7 +146,7 @@ Phases 0, 1 and 3 can run in parallel. Phases 5–7 can run in parallel after 4 
   - review actions `[RequirePermission(StaffPermissions.…)]` (new node `knk.admin.duel.review`, matched by `knk.admin.*`)
   - GETs for logged-in users
   - `EndpointAccessRulesTests` updated
-- **`DuelPolicy`** singleton (web-app editable, like `CurrencyPolicy`): signal thresholds, `EscalationFlagCount`, `EscalationWindowDays`, the funnel rule, `ImmediateHold` + `ImmediateHoldMinPotCoins`. Escalation counts exclude flags whose alert was acknowledged as a false positive. While a hold is open, value-moving invites for that pair or beneficiary are refused (checked in `CreateAsync`). Staff blocks on a player or pair, time-limited.
+- **`DuelPolicy`** singleton (web-app editable, like `CurrencyPolicy`): signal thresholds, `EscalationFlagCount`, `EscalationWindowDays`, the funnel rule. A first flag never holds (developer). Escalation counts exclude flags whose alert was acknowledged as a false positive. While a hold is open, value-moving invites for that pair or beneficiary are refused (checked in `CreateAsync`). Staff blocks on a player or pair, time-limited.
 - **Alerts**: tier 1 and tier 2 go through `ICurrencyAlertService` with new rule codes, so the web alerts page, the acknowledge flow and the in-game `CurrencyAlertNotifier` show them unchanged.
 - **Anomaly detector**:
   - R3 and R4 take `DUEL_PAYOUT` as a flow from loser to winner
@@ -156,7 +157,8 @@ Phases 0, 1 and 3 can run in parallel. Phases 5–7 can run in parallel after 4 
   - gem refusal
   - each eligibility and limit refusal
   - the ratio rule
-  - each signal; tier 0/1/2; acknowledged flags don't count; escalation by pair and by beneficiary; immediate hold on/off; invites refused while a hold is open
+  - each signal; tier 0/1/2; a first flag never holds; acknowledged flags don't count; escalation by pair and by beneficiary; invites refused while a hold is open
+  - revert and confiscate on a paid result: partial reversal when coins were spent, the loser refunded first, the fee reversed (revert only), `Review=Voided`, audited
   - idempotent create/complete/cancel/release/void
   - 409 paths
   - fee rounding
@@ -205,7 +207,9 @@ Phases 0, 1 and 3 can run in parallel. Phases 5–7 can run in parallel after 4 
   - the countdown freeze
 - **Gear modes** (DESIGN §8.4–8.5):
   - snapshot and restore of health, food and effects
-  - kit loan through `MinigamePlayerVault` + `KitGrantPlacer` with the `knk_duel_loan` PDC tag; the loan sweep on join and at end
+  - kit loan: the vault is written in the lobby teleport's commit step (a pre-commit hook on `TeleportPlan`) and restored at once if the move fails. The kit is granted on arrival (`KIT_CHOICE`: placeholder, swapped on pick, locked at the countdown) through `KitGrantPlacer` with the `knk_duel_loan` PDC tag. Restore on ENDING, cancel/abort, quit, outage and join after a crash; the loan sweep on join and at end
+  - kit consumables blocked in WARMUP
+  - pending deliveries: `holdsLootDrops` from LOCKING until the restore. A spinning lootbox reel's item and other item deliveries are held and handed over after the restore; opening a lootbox during a match is refused
   - drop-mode spoils captured in the death event; forfeit spoils at quit (O2)
   - kit grants skip the kit's own access check (O4)
 - **Death, respawn and quit**: `DuelDeathRespawnListener` and `DuelSessionListener` (quit = cancel or forfeit by phase; join = restore and deliver what's owed).
@@ -221,7 +225,8 @@ Phases 0, 1 and 3 can run in parallel. Phases 5–7 can run in parallel after 4 
     - ESCROWED + Aborted → back
     - Completed → winner
     - HELD → kept, then release/void
-  - kit loan: the inventory comes back identical after a fight, a quit and a crash; no loaned item survives
+  - kit loan: the inventory comes back identical after a fight, a failed lobby teleport, a quit, an API outage and a crash; no loaned item survives
+  - a lootbox reel finishing mid-match: its item is delivered after the restore, never into the kit or the spoils
   - drop spoils written to the spool before the drops are cleared
   - **test hygiene**: keep a mocked `World` in a field (CLAUDE.md rule)
 
@@ -273,7 +278,7 @@ Phases 0, 1 and 3 can run in parallel. Phases 5–7 can run in parallel after 4 
 - **Statistics (plugin)**: `StatisticsContextResolver` returns `duel` through the registry.
 - **Web app**:
   - "Duels" admin page: history with filters (arena, player, status, review), match detail (stakes, spoils, telemetry, flags)
-  - Release / Void on held matches, clear escalation, time-limited blocks (`knk.admin.duel.review`)
+  - Release / Void on held matches, Revert / Confiscate on paid ones, clear escalation, duel restrictions if P1 is accepted (`knk.admin.duel.review`)
   - `DuelPolicy` settings page
   - duel alerts appear on the existing currency alerts page (new rule codes only)
 - **Tests**: the projector; plugin-posted `wins@duel` refused; web-app page tests (`npm run test:ci`).

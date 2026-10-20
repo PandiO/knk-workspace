@@ -1,7 +1,7 @@
 # Arena duels — draft design
 
-**Status:** Draft rev. 3. Nothing implemented. Every design question is answered (developer, 2026-10-20: §13). Ready for the phase issues.
-**Last updated:** 2026-10-20 (rev. 3: open points O1–O6 decided; escalating review tiers for suspicious results, §10.3; siege kit mode split out as KNG-199. Rev. 2: developer answers; arenas as domains; per-arena settings in the web app; gear modes with kits and inventory drop; queue cap; spectator area as a warp domain; abuse prevention §10)
+**Status:** Draft rev. 4. Nothing implemented. Every design question is answered (developer, 2026-10-20: §13.1–13.2); one proposal waits for the developer (§13.3 P1, duel restrictions). Ready for the phase issues.
+**Last updated:** 2026-10-20 (rev. 4: kit modes vault before the lobby teleport and hold pending deliveries such as lootbox rolls, §8.4; never hold on a first flag, staff can revert a paid result at any time, §10.3. Rev. 3: open points O1–O6 decided; escalating review tiers for suspicious results, §10.3; siege kit mode split out as KNG-199. Rev. 2: developer answers; arenas as domains; per-arena settings in the web app; gear modes with kits and inventory drop; queue cap; spectator area as a warp domain; abuse prevention §10)
 **Linear:** [KNG-197](https://linear.app/kngpandi/issue/KNG-197) (this design); related [KNG-49](https://linear.app/kngpandi/issue/KNG-49) (Arena/Battleground entities), [KNG-21](https://linear.app/kngpandi/issue/KNG-21) (currency ledger), [KNG-34](https://linear.app/kngpandi/issue/KNG-34) (statistics), [KNG-36](https://linear.app/kngpandi/issue/KNG-36) (NPC platform, for the later Arena NPC)
 **Sources:** developer request and answers 2026-10-20; `knk-v1-archive` (`src/Arenas/{Duel,DuelInvite,DuelCommands,DuelEvents,Arena,ArenaCommands,ArenaMenuClick}.java`, `src/Menu/{Menu,DuelSetupClick}.java`, `src/Listeners/PlayerListener.java`, `src/Main/Main.java`); knk-plugin `main` `79be488`; knk-web-api `master` `2d71155`; specs [teleport](../teleport/DESIGN.md), [siege-minigame](../siege-minigame/DESIGN.md), [currency-payments](../currency-payments/DESIGN.md), [player-statistics](../player-statistics/DESIGN.md), [kits](../kits/DESIGN.md), [lootboxes](../lootboxes/DESIGN.md), [managed WorldGuard regions](../../architecture/managed-worldguard-regions.md), [domain access enforcement](../../architecture/domain-access-enforcement.md), [legacy inventory-menu screens](../legacy/inventory-menu-screens.md) §3.15.
 **Plan:** [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md)
@@ -270,14 +270,14 @@ DuelMatch (duel_matches)
                          ┌─────────▼─────────┐  quit / API outage / restart / staff
                          │      WARMUP       │──────────────────────────────► CANCELLED/ABORTED + refund
                          │ lobby, spectators,│
-                         │ kit choice;       │
+                         │ kit (§8.4);       │
                          │ waits for a free  │
                          │ battleground      │
                          └─────────┬─────────┘
                                    │ warmup over and battleground allocated
                          ┌─────────▼─────────┐  system teleport failed → ABORTED + refund
                          │ BATTLE_COUNTDOWN  │  quit → forfeit (opponent wins)
-                         │ kit loaned, frozen│
+                         │ frozen,           │
                          │ damage locked     │
                          └─────────┬─────────┘
                                    │ "FIGHT!"
@@ -296,7 +296,7 @@ DuelMatch (duel_matches)
 | NEGOTIATING | anything; chat; open the offer view | be in another negotiation, match or siege | `OfferSeconds` per turn |
 | LOCKING | — (a few hundred ms) | teleport, drop items, open containers | API timeout 10 s → refused |
 | TRAVELLING | move (moving cancels their own warmup, which cancels the match) | other teleports | engine warmup (5 s / 3 s) |
-| WARMUP | walk in the lobby, chat, open the match menu, choose a kit (`KIT_CHOICE`) | hit or be hit (§8), teleport out, join a siege, drop or store items | `WarmupSeconds`, then wait for a battleground up to `MaxWaitSeconds` |
+| WARMUP | walk in the lobby, chat, open the match menu, choose or swap a kit (`KIT_CHOICE`) | hit or be hit (§8), teleport out, join a siege, drop or store items; in kit modes, use kit consumables (eat, drink, throw) | `WarmupSeconds`, then wait for a battleground up to `MaxWaitSeconds` |
 | BATTLE_COUNTDOWN | look around, manage inventory | move off their spawn block, deal or take damage, throw projectiles or pearls | `CountdownSeconds` |
 | FIGHT | fight each other; offer an agreed draw | hit or be hit by anyone else, leave the battleground, teleport, drop items | `FightTimeLimitSeconds` (0 = none) |
 | ENDING | winner lingers | fight | `WinnerLingerSeconds`, then exit |
@@ -465,7 +465,7 @@ At plugin startup:
    - `Held` → kept
    - otherwise (or 404 for `LOCKING`) → each player is owed their own items
    - delivery happens on join
-3. Kit vault snapshots and restore snapshots are applied on join (§8.4). Loaned kit items found on a player are removed.
+3. Kit vault snapshots and restore snapshots are applied on join (§8.4): loaned kit items are removed first, then the vault is restored, then held deliveries (lootbox rolls and other rewards) are handed over.
 
 ### 7.4 Settlement (win)
 
@@ -561,15 +561,41 @@ Each action is idempotent and recorded with the reviewer.
 
 ### 8.4 Gear modes at runtime (D9)
 
-| Mode | At countdown start (after the battleground teleport) | On death | At ENDING / abort / quit |
+**Own-gear modes** keep the player's inventory in place, and only a small restore snapshot is taken:
+
+| Mode | When the duelist arrives in the lobby | On death | At ENDING / abort / quit |
 |---|---|---|---|
 | `OWN_GEAR_KEEP` | snapshot health, food, saturation, effects | keepInventory, keepLevel, no drops | restore health, food, effects |
 | `OWN_GEAR_DROP` | same snapshot | **loser**: inventory, armour and off-hand become *spoils* for the winner (§8.5); keepLevel | restore health, food, effects (the loser keeps only what wasn't taken) |
-| `FIXED_KIT` / `KIT_CHOICE` | **vault**: save the full inventory, armour, off-hand, XP, health, food and effects to disk, clear, then grant the kit through `KitGrantPlacer`, with no cost, cooldown or access check. The arena's eligible list is the only gate (developer, O4). Every granted stack gets PDC `knk_duel_loan=<matchToken>` | keepInventory (the kit), no drops | remove every `knk_duel_loan` item and clear, then restore the vault |
 
-- **Choosing a kit (`KIT_CHOICE`)**: each duelist picks a kit in WARMUP, from the match menu or with a clickable chat prompt. Both see each other's pick. A player who hasn't picked by the end of warmup gets the arena's first eligible kit (developer, O3).
-- **Kits skip their own requirements in the arena** (developer, O4). A kit that normally needs, say, title 10 is granted to anyone duelling in an arena whose admin selected it. This doubles as a way to try out kits. The same rule applies to the siege kit mode ([KNG-199](https://linear.app/kngpandi/issue/KNG-199)).
-- **The vault**: generalised from `SiegePlayerVault` into a shared `MinigamePlayerVault` (plan Phase 0). The file is written before the inventory is cleared. Quit restores at once (`restoreOnQuit`). A crash restores on join.
+**Kit modes** (`FIXED_KIT`, `KIT_CHOICE`) swap the player's own gear for a loaned kit, and give it back afterwards (developer, 2026-10-20). This is the same model as the siege kit mode in [KNG-199](https://linear.app/kngpandi/issue/KNG-199):
+
+1. **Before the lobby teleport** (in the engine's commit step, after the teleport warmup succeeded and just before the move), the **vault** scans and stores the full inventory, armour, off-hand, XP, health, food, saturation and effects to disk. The stake items were already taken at lock-in, so they aren't part of it. The inventory is then cleared. If the teleport itself then fails, the vault is restored on the spot and the match is cancelled as usual (D6).
+2. **On arrival in the lobby**, the kit is granted through `KitGrantPlacer`, with no cost, cooldown or access check. The arena's eligible list is the only gate (developer, O4).
+   - `FIXED_KIT`: the kit from the proposal.
+   - `KIT_CHOICE`: the arena's first eligible kit as a placeholder. Picking another kit in WARMUP swaps it: the loaned items are removed and the new kit granted. The pick is locked at the countdown. If the player never picks, the placeholder stays (developer, O3).
+   - Every granted stack gets PDC `knk_duel_loan=<matchToken>`.
+3. **On death**: keepInventory (the kit), no drops.
+4. **Restore**, on every way out:
+
+   | Way out | Restore |
+   |---|---|
+   | ENDING (win, draw) | at the exit teleport |
+   | cancel or abort in any phase | at once |
+   | quit | inside `PlayerQuitEvent` (`restoreOnQuit`) |
+   | API outage | when `HubOutageService` releases the player |
+   | server crash | on the next join |
+
+   Each time: remove every `knk_duel_loan` item, clear, restore the vault, delete the file.
+
+- **Pending deliveries** (all gear modes): from LOCKING until the restore, the minigame registry's `holdsLootDrops` is true for both duelists.
+  - **Lootbox rolls**: a lootbox reel that was already spinning when the duel started finishes as normal, but its item is held and delivered after the restore. This is the KNG-44 / `deliverLootboxItemsAfterSiege` pattern.
+  - **Other item deliveries** (kit claims, rewards) are held the same way.
+  - **Opening a new lootbox** during a match is refused.
+  - In kit modes this keeps rewards out of the loaned inventory, where the restore would wipe them. In drop mode it keeps them out of the spoils.
+- **Kits skip their own requirements in the arena** (developer, O4). A kit that normally needs, say, title 10 is granted to anyone duelling in an arena whose admin selected it. This doubles as a way to try out kits. The same rule applies to the siege kit mode.
+- **No kit consumables in warmup**: kit consumables can't be used in WARMUP (eat, drink, throw), so the kit is intact when the fight starts.
+- **The vault**: generalised from `SiegePlayerVault` into a shared `MinigamePlayerVault` (plan Phase 0). The file is always written before the inventory is cleared.
 - **Loan safety**: a join sweep and the inventory guard remove any stray `knk_duel_loan` item. Loaned items can't be staked, dropped, stored or traded.
 
 ### 8.5 Spoils in drop mode
@@ -593,10 +619,10 @@ Each action is idempotent and recorded with the reviewer.
 | System | Rule |
 |---|---|
 | Siege | `joinDenial` refuses players in a negotiation or match; siege members can't send or accept invites |
-| Hub / API outage | `HubOutageService.releaseFromMinigame` becomes a composite (§11). An outage aborts the duel and refunds it; kit vaults are restored |
+| Hub / API outage | `HubOutageService.releaseFromMinigame` becomes a composite (§11). An outage aborts the duel and refunds it (coins once the API is back); kit vaults are restored at once, then held deliveries |
 | Combat tag | sending and accepting are refused while tagged; the lobby teleport respects it; ENDING clears both tags |
 | Statistics | `StatisticsContextResolver` returns `duel` for match participants |
-| Discovery, navigation, lootbox drops | same exemptions as siege |
+| Discovery, navigation, lootboxes | same exemptions as siege. Lootbox rolls and other item deliveries are held from LOCKING until the restore, and opening a lootbox during a match is refused (§8.4) |
 | Scoreboard | duel sidebar for duelists and spectators; `ScoreboardUtil.setKeepOwnScoreboard` takes a composite predicate |
 | Freeze / staff | a frozen duelist forfeits only if frozen in FIGHT; staff `/knk duel cancel` at any phase (refund) |
 
@@ -700,13 +726,24 @@ Each action is idempotent and recorded with the reviewer.
   - the same pair, in either direction
   - the same beneficiary (winner) across different opponents, which catches several alts feeding one main
 - **Acknowledging** a tier-1 alert as a false positive removes that flag from the escalation count. Leaving it open, or voiding a held result, keeps it counting.
-- **An immediate hold** for a single blatant result is optional (proposed, off by default): `DuelPolicy.ImmediateHold` holds at once when S1 + S4 both fire and the pot is ≥ `ImmediateHoldMinPotCoins` (5,000), without waiting for a second flag.
+- **Never a hold on a first flag** (developer, 2026-10-20). However blatant it looks or however large the pot, a single flagged duel is paid and flagged at most.
+
+**Reverting a paid result** (developer: staff can review and revert payouts at any time). On a paid result, from its alert or the duel history page, staff can:
+
+| Action | Coins | Items | Fee |
+|---|---|---|---|
+| **Revert** (undo the result) | the payout is reversed with the ledger's staff reversal (`ReverseAsync`, `AllowPartial`). A reversal never takes a balance below zero; if the winner already spent coins, what is left is reversed and the shortfall recorded. The recovered coins go back to the **loser first**, up to their stake, then to the winner up to their own stake | stake items and spoils still undelivered (`CLAIM_PENDING`) go back to their original owners. Delivered items can't be pulled back automatically; staff can take them out with `/inventory` / `/enderchest` (KNG-13). The revert lists what is still missing | reversed |
+| **Confiscate** (both accounts were in on it) | as Revert, but the recovered coins go to a sink instead of back to the players | undelivered items are destroyed and recorded | kept |
+
+- Either action marks the match `Review=Voided` (DuelStatisticsProjector then stops counting it), counts as a confirmed flag for escalation, and is audited with the staff member and a required reason.
+- For coins that can't be recovered, staff still have the existing currency tools: transfer lock, freeze, admin adjust.
 
 **Staff tools.** The web app gets:
 - a duel history page: matches, stakes, spoils, telemetry, signals and tiers
 - Release / Void on held results
+- Revert / Confiscate on paid results
 - "clear escalation" for a pair or beneficiary
-- a time-limited block on value-moving duels for a player or a pair
+- a duel restriction on a player or a pair (proposed, §13.3)
 
 In game, `/knk duel review` lists the same. Alerts use the existing acknowledge flow. All staff actions are audited.
 
@@ -714,8 +751,6 @@ In game, `/knk duel review` lists the same. Alerts use the existing acknowledge 
 - R3 (funnel) and R4 (ping-pong) treat `DUEL_PAYOUT` as a flow from the loser to the winner
 - a new per-pair duel rule
 - `DUEL_PAYOUT` is excluded from the R7 mint-rate rule, because it is funded by stakes, not minted
-
-**Staff tools.** The web app gets a duel history and review page: matches, stakes, spoils, telemetry, flags, and Release / Void. All staff actions are audited.
 
 ### 10.4 Other measures
 
@@ -805,8 +840,16 @@ Gameplay settings live on the Arena (§4.2) and are edited in the web app.
 | O2 | Forfeit in drop mode | The quitter's inventory goes to the opponent | §8.5 |
 | O3 | `KIT_CHOICE` without a pick | The arena's first eligible kit | §8.4 |
 | O4 | A kit's own requirements in the arena | Skipped: the admin's selection is the gate, and it doubles as a kit try-out. The developer also asked for a siege kit mode per lobby, switchable until the hub teleport, with joined players notified: [KNG-199](https://linear.app/kngpandi/issue/KNG-199) | §8.4 |
-| O5 | Suspicious results | Escalation tiers: flag and alert first; hold once the same players keep getting flagged | §10.3 |
+| O5 | Suspicious results | Escalation tiers: flag and alert first; hold once the same players keep getting flagged. Never hold on a first flag; staff can revert or confiscate a paid result at any time | §10.3 |
 | O6 | Spectator areas per arena | 0..n, normally one | §4.1 |
+| — | Kit-mode inventory handling (developer note) | Vault before the lobby teleport, kit on arrival, restore on every way out (API outage and quit included); pending lootbox rolls and other deliveries held until the restore | §8.4 |
+
+### 13.3 Proposed, waiting for the developer
+
+| # | Point | Proposal |
+|---|---|---|
+| P1 | **Duel restrictions** | Staff can bar a player, or a specific pair, from duels for a set time or until lifted. **Value-moving** scope blocks coin/item stakes and drop mode, so friendly duels still work. **All** scope blocks every duel. The restriction is checked at invite, accept and lock-in; the player sees the reason and the end date. Stored as `DuelRestriction` rows (user, optional second user, scope, expires at, reason, staff member); audited and shown on the player's staff profile. The existing currency transfer lock already blocks staking, but it also blocks `/pay`. This is the narrower, duel-only tool |
+
 
 ## 14. Alternative considered: stakes in warmup
 
