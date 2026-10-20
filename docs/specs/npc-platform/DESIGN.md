@@ -1,7 +1,7 @@
 # Shared NPC platform — traits, behavior and tutorial guide
 
 **Status:** Working design; agreed tutorial requirements recorded, platform architecture and implementation investigations still open. No NPC implementation delivered by this document.
-**Last updated:** 2026-10-06
+**Last updated:** 2026-10-20 (KNG-196 pointer in §10)
 **Linear:** [KNG-36](https://linear.app/kngpandi/issue/KNG-36/design-shared-npc-traits-and-pathfinding-platform)
 **Standing workspace branch:** none; `codex/kng-36-npc-platform-design` was merged into `main` on 2026-10-18 and deleted
 **Authority:** Developer discussion through 2026-10-06 and KNG-36 description/comments read on that date. Confirmed decisions below preserve that discussion; proposed interfaces and unresolved questions are explicitly labeled. This is the consolidated design reference for continued discussion, not a completed platform design or implementation plan.
@@ -158,6 +158,8 @@ Audit V1/V2/V3 and compare a Citizens navigator with reusable KnK pathfinding on
 | O10 | V2 Progressable/Creation and Siege comparison; progression boundary only in KNG-36 |
 | O11 | City guard profile: patrol, aggro/defense, dialogue interruptions and return to patrol |
 | O12 | Wider platform: combat, HP/damage/stats, equipment, factions, scripting, persistence, admin tools, debugging/security and numerical performance budgets |
+
+Siege survival needs much of O08 and O12 first: behavior arbitration, combat, stats, factions, crowds and budgets. That design is tracked in [KNG-196](https://linear.app/kngpandi/issue/KNG-196) (2026-10-20). It is to be designed generically, as building blocks other NPCs reuse, with the siege-specific rules layered on top; its generic parts belong in this document.
 
 Suggested sequence: finish movement/gate investigations → dialogue/proximity/lifecycle decisions → city guard reuse check → platform design and phased implementation plan → minimal NPC vertical slice. Do not silently convert unresolved options into implementation defaults.
 
