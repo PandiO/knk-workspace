@@ -1,9 +1,9 @@
 # Arena duels — Implementation Plan
 
-**Status:** Draft rev. 2. Not started. The developer's answers of 2026-10-20 are folded in ([DESIGN §13.1](DESIGN.md#131-developer-answers-2026-10-20)). The open points (DESIGN §13.2) only change defaults, so the phase issues can be filed.
-**Last updated:** 2026-10-20 (rev. 2)
+**Status:** Draft rev. 3. Not started. All design questions are answered (developer, 2026-10-20; [DESIGN §13](DESIGN.md#13-decisions-log-and-open-points)). Ready for the phase issues.
+**Last updated:** 2026-10-20 (rev. 3: review tiers, `DuelPolicy`, KNG-199 link)
 **Linear:** [KNG-197](https://linear.app/kngpandi/issue/KNG-197) (design). Phase issues: to be filed, one per phase below.
-**Sources:** [DESIGN.md](DESIGN.md) (behaviour, decisions D1–D19, open points O1–O6).
+**Sources:** [DESIGN.md](DESIGN.md) (behaviour, decisions D1–D19, follow-up answers O1–O6).
 
 **Branches:** one standing branch per repo once implementation starts:
 
@@ -30,7 +30,7 @@
 |---|---|---|---|---|
 | 0 | plugin | Shared hooks: `MinigameRegistry`, `MinigamePlayerVault` (from `SiegePlayerVault`), `DomainAccessExemptions`; siege migrated, no behaviour change | KNG-182 merged | M |
 | 1 | api, app | Arena domain types (`Arena : Structure`, `ArenaBattleground`, `ArenaSpectatorArea`, `ArenaKit`), duel settings, validation, form configurations, region-kind mapping, `arena_2` seed | — | M–L |
-| 2 | api | `DuelMatch`, service and endpoints; currency reasons; eligibility and abuse limits; review hold; abort-unfinished; anomaly rules | Phase 1 | L |
+| 2 | api | `DuelMatch`, service and endpoints; currency reasons; eligibility and abuse limits; `DuelPolicy`, signals and escalation tiers through the currency alert pipeline; abort-unfinished; anomaly rules | Phase 1 | L |
 | 3 | core | Pure rules: offer book, contract validation, state machine, combat rules, battleground allocator and queue, escrow states, review-agnostic settlement effects | — (parallel with 1–2) | M |
 | 4 | plugin | Duel runtime: ticker, teleport kinds, restrictions, combat/death/quit listeners, battleground exemption and confinement, escrow spool and recovery, gear modes (kit loan, drop spoils) | 0, 2, 3 | L |
 | 5 | plugin | Proposal editor, offer view, chat offers, `/duel` and `/arena` commands, kit picker | 4 | M |
@@ -134,7 +134,7 @@ Phases 0, 1 and 3 can run in parallel. Phases 5–7 can run in parallel after 4 
   |---|---|
   | `CreateAsync` | eligibility + limits; insert + two-leg `DUEL_STAKE` posting, key `duel-lock:<token>`; idempotent on token |
   | `StartFightAsync(id, battlegroundId)` | idempotent |
-  | `CompleteAsync(id, winner, reason, telemetry)` | `RunLockedAsync`. Evaluates the review rules (`DuelReviewRules`, pure, thresholds in configuration). Then either holds, or pays (`duel-payout:<id>`) and takes the fee. Returns `paid` / `held` |
+  | `CompleteAsync(id, winner, reason, telemetry)` | `RunLockedAsync`. Derives signals S1–S6 and the tier (`DuelReviewRules`, pure, thresholds from `DuelPolicy`; DESIGN §10.3). Tier 2 holds; tier 0/1 pays (`duel-payout:<id>`) and takes the fee; tier 1/2 raise a `DUEL_FLAG` / `DUEL_HOLD` `CurrencyAlert`. Returns `paid` / `held` |
   | `CancelAsync(id, reason)` | reverse once; cancel, abort or draw status by reason |
   | `ReleaseAsync(id, staff)` / `VoidAsync(id, staff)` | held → paid / refunded; audited |
   | `AbortUnfinishedAsync()` | |
@@ -145,6 +145,8 @@ Phases 0, 1 and 3 can run in parallel. Phases 5–7 can run in parallel after 4 
   - review actions `[RequirePermission(StaffPermissions.…)]` (new node `knk.admin.duel.review`, matched by `knk.admin.*`)
   - GETs for logged-in users
   - `EndpointAccessRulesTests` updated
+- **`DuelPolicy`** singleton (web-app editable, like `CurrencyPolicy`): signal thresholds, `EscalationFlagCount`, `EscalationWindowDays`, the funnel rule, `ImmediateHold` + `ImmediateHoldMinPotCoins`. Escalation counts exclude flags whose alert was acknowledged as a false positive. While a hold is open, value-moving invites for that pair or beneficiary are refused (checked in `CreateAsync`). Staff blocks on a player or pair, time-limited.
+- **Alerts**: tier 1 and tier 2 go through `ICurrencyAlertService` with new rule codes, so the web alerts page, the acknowledge flow and the in-game `CurrencyAlertNotifier` show them unchanged.
 - **Anomaly detector**:
   - R3 and R4 take `DUEL_PAYOUT` as a flow from loser to winner
   - a per-pair duel rule
@@ -154,6 +156,7 @@ Phases 0, 1 and 3 can run in parallel. Phases 5–7 can run in parallel after 4 
   - gem refusal
   - each eligibility and limit refusal
   - the ratio rule
+  - each signal; tier 0/1/2; acknowledged flags don't count; escalation by pair and by beneficiary; immediate hold on/off; invites refused while a hold is open
   - idempotent create/complete/cancel/release/void
   - 409 paths
   - fee rounding
@@ -204,6 +207,7 @@ Phases 0, 1 and 3 can run in parallel. Phases 5–7 can run in parallel after 4 
   - snapshot and restore of health, food and effects
   - kit loan through `MinigamePlayerVault` + `KitGrantPlacer` with the `knk_duel_loan` PDC tag; the loan sweep on join and at end
   - drop-mode spoils captured in the death event; forfeit spoils at quit (O2)
+  - kit grants skip the kit's own access check (O4)
 - **Death, respawn and quit**: `DuelDeathRespawnListener` and `DuelSessionListener` (quit = cancel or forfeit by phase; join = restore and deliver what's owed).
 - **Escrow**:
   - `DuelEscrowSpool`: per-match YAML, atomic writes, the delivery chain inventory → ender chest → `CLAIM_PENDING`, and the `HELD` state
@@ -269,7 +273,9 @@ Phases 0, 1 and 3 can run in parallel. Phases 5–7 can run in parallel after 4 
 - **Statistics (plugin)**: `StatisticsContextResolver` returns `duel` through the registry.
 - **Web app**:
   - "Duels" admin page: history with filters (arena, player, status, review), match detail (stakes, spoils, telemetry, flags)
-  - Release / Void on held matches (`knk.admin.duel.review`)
+  - Release / Void on held matches, clear escalation, time-limited blocks (`knk.admin.duel.review`)
+  - `DuelPolicy` settings page
+  - duel alerts appear on the existing currency alerts page (new rule codes only)
 - **Tests**: the projector; plugin-posted `wins@duel` refused; web-app page tests (`npm run test:ci`).
 
 ## Phase 8 — Smoke test, docs, merge
@@ -310,7 +316,11 @@ Phases 0, 1 and 3 can run in parallel. Phases 5–7 can run in parallel after 4 
     - agreed draw
     - time limit 30 s → draw and full refund
     - time limit 0 → no limit
-13. **Review**: a thrown fight above the threshold → held; release in the web app → paid; void on another → refunded.
+13. **Review**:
+    - one thrown fight → paid, flagged; the alert shows in the web app and in game for staff
+    - a second flagged result between the same players → held; a new staked invite between them is refused
+    - release in the web app → paid; void on another → refunded
+    - acknowledging a flag as a false positive stops it from counting
 14. **Recovery**:
     - crash: `kill -9` mid-fight → restart refunds; items and vault restored on join
     - outage: API stopped mid-warmup → items back at once, coins refunded when the API returns

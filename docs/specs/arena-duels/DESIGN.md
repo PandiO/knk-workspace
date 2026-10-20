@@ -1,7 +1,7 @@
 # Arena duels — draft design
 
-**Status:** Draft rev. 2 for developer review. Nothing implemented. The developer answered rev. 1's questions on 2026-10-20 (§13.1). The few points still open are in §13.2; they only change defaults, so phase issues can be filed.
-**Last updated:** 2026-10-20 (rev. 2: developer answers; arenas as domains; per-arena settings in the web app; gear modes with kits and inventory drop; queue cap; spectator area as a warp domain; abuse prevention §10)
+**Status:** Draft rev. 3. Nothing implemented. Every design question is answered (developer, 2026-10-20: §13). Ready for the phase issues.
+**Last updated:** 2026-10-20 (rev. 3: open points O1–O6 decided; escalating review tiers for suspicious results, §10.3; siege kit mode split out as KNG-199. Rev. 2: developer answers; arenas as domains; per-arena settings in the web app; gear modes with kits and inventory drop; queue cap; spectator area as a warp domain; abuse prevention §10)
 **Linear:** [KNG-197](https://linear.app/kngpandi/issue/KNG-197) (this design); related [KNG-49](https://linear.app/kngpandi/issue/KNG-49) (Arena/Battleground entities), [KNG-21](https://linear.app/kngpandi/issue/KNG-21) (currency ledger), [KNG-34](https://linear.app/kngpandi/issue/KNG-34) (statistics), [KNG-36](https://linear.app/kngpandi/issue/KNG-36) (NPC platform, for the later Arena NPC)
 **Sources:** developer request and answers 2026-10-20; `knk-v1-archive` (`src/Arenas/{Duel,DuelInvite,DuelCommands,DuelEvents,Arena,ArenaCommands,ArenaMenuClick}.java`, `src/Menu/{Menu,DuelSetupClick}.java`, `src/Listeners/PlayerListener.java`, `src/Main/Main.java`); knk-plugin `main` `79be488`; knk-web-api `master` `2d71155`; specs [teleport](../teleport/DESIGN.md), [siege-minigame](../siege-minigame/DESIGN.md), [currency-payments](../currency-payments/DESIGN.md), [player-statistics](../player-statistics/DESIGN.md), [kits](../kits/DESIGN.md), [lootboxes](../lootboxes/DESIGN.md), [managed WorldGuard regions](../../architecture/managed-worldguard-regions.md), [domain access enforcement](../../architecture/domain-access-enforcement.md), [legacy inventory-menu screens](../legacy/inventory-menu-screens.md) §3.15.
 **Plan:** [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md)
@@ -120,7 +120,7 @@ Worth borrowing from v1:
 | **D15** | **Arena fee: 5% of the coin pot on decisive results**, configurable 0–20%. None on draws, cancels or friendly duels. The fee is posted to a sink, not paid to anyone. | proposed (developer asked for a recommendation, Q7) | It is a coin sink for the economy, and it makes laundering coins through thrown duels cost money every time. Honest players only pay when there is a winner. |
 | **D16** | **Battleground entry uses the domain-access handler with a duel exemption**, not WG membership (§8.2). The `BATTLEGROUND` managed policy drops `entry deny` and keeps `pvp allow`. | proposed (developer asked for a recommendation, Q8) | WG membership gives build rights in the region and stays in WG's region files after a crash. The domain-access handler already enforces entry and exit on walk, vehicle and teleport. |
 | **D17** | **Duel W/L/D are visible to everyone by default.** Each player can change it through the normal statistics visibility setting. | developer (Q9) | A public competitive record, with the player in control. |
-| **D18** | **Accept rules**: the invitee may accept from anywhere, except while in a minigame (siege, another duel or negotiation lock), combat-tagged, frozen or dead. An arena option `InviteeMustBeInArena` (default off) tightens this. | developer (Q10), interpreted in §13.2 | The lobby teleport brings the invitee anyway. The option covers the stricter reading. |
+| **D18** | **Accept rules**: the invitee may accept from anywhere, except while in a minigame (siege, another duel or negotiation lock), combat-tagged, frozen or dead. | developer (Q10, confirmed O1) | The lobby teleport brings the invitee. |
 | **D19** | **Spectating is physical and passive.** Spectators stand in the arena's spectator area (normal gamemode) and use a read-only menu. Spectator betting is out of scope. | proposed | Simple and safe. Betting is gambling with its own abuse model. |
 
 ## 4. Data model
@@ -172,7 +172,6 @@ ArenaKit (arena_kits): ArenaId (FK cascade), KitId (FK Restrict), SortOrder; uni
 |---|---|---|---|
 | General | `IsDuelEnabled` | true | |
 | | `MaxQueuedMatches` | 3 | matches that are accepted but not yet in a battleground (TRAVELLING + WARMUP + waiting) |
-| | `InviteeMustBeInArena` | false | D18 |
 | Negotiation | `MaxOffers` | 3 | 1–6; D2 |
 | | `OfferSeconds` | 60 | per turn |
 | Stakes | `AllowCoinStakes`, `AllowItemStakes` | true, true | |
@@ -185,7 +184,6 @@ ArenaKit (arena_kits): ArenaId (FK cascade), KitId (FK Restrict), SortOrder; uni
 | Abuse limits | `MaxStakedDuelsPerPairPerDay` | 3 | §10 |
 | | `PairCooldownMinutes` | 10 | between staked duels of the same two players |
 | | `DailyCoinWinCap` | 25,000 | per player per day; 0 = off |
-| | `ReviewThresholdCoins` | 5,000 | a suspicious result at or above this pot (or with item or drop stakes) is held for review; §10 |
 | Gear | `AllowOwnGearKeep` | true | |
 | | `AllowOwnGearDrop` | false | |
 | | `AllowFixedKit`, `AllowKitChoice` | false, false | need ≥ 1 `EligibleKits` |
@@ -200,7 +198,8 @@ ArenaKit (arena_kits): ArenaId (FK cascade), KitId (FK Restrict), SortOrder; uni
 | | `AnnounceFriendly` | true | duels without stakes |
 
 - The API validates the settings. At least one gear mode must be allowed. A kit mode needs at least one eligible kit. `DefaultGearMode` must be allowed. `MinStakeRatioPercent` is 0–100.
-- The plugin reads them through a cache-first gateway and refreshes on change.
+- The detection thresholds and escalation rules of §10.3 are cross-arena (they follow players, not arenas). They live in one global `DuelPolicy` record, edited in the web app like `CurrencyPolicy`.
+- The plugin reads the settings through a cache-first gateway and refreshes on change.
 - Technical knobs stay in plugin `config.yml` (§12).
 
 ### 4.3 Match record (API, append-only history; not form-configurable)
@@ -219,7 +218,7 @@ DuelMatch (duel_matches)
   ChallengerCoins, OpponentCoins, FeeCoins     (long, ≥ 0)
   StakeItemsJson, SpoilsItemsJson      (audit summaries: owner, material, amount, name, grade, instance id)
   StakeTransactionId?, SettlementTransactionId?
-  Review    : None | Flagged | Held | Released | Voided     + ReviewReasons, ReviewedByUserId?, ReviewedAt?
+  Review    : None | Flagged | Held | Released | Voided     + ReviewTier, ReviewSignals, AlertId?, ReviewedByUserId?, ReviewedAt?
   FightTelemetryJson                   (duration, damage dealt/taken per side, hits, loser's attack attempts; §10)
   OfferCount
   CreatedAt, LockedAt, FightStartedAt?, EndedAt?
@@ -342,7 +341,7 @@ DuelMatch (duel_matches)
   - is online and visible
   - isn't ignoring the inviter and hasn't turned invites off
   - has at most 3 incoming negotiations
-- **Accept rules** (D18), checked at accept: not in a minigame, combat-tagged, frozen or dead; inside the arena if `InviteeMustBeInArena`.
+- **Accept rules** (D18), checked at accept: not in a minigame, combat-tagged, frozen or dead.
 - **Pair and arena**: pair limits and the arena queue cap (§10, §5.2).
 - **Teleport pre-check**: both players are checked with `TeleportService.check(ARENA plan)` at invite and at accept. The engine refuses combat-tagged players itself.
 - A send cooldown applies, and there are no self-duels.
@@ -478,8 +477,8 @@ At plugin startup:
    - `Completed` → the stored result
    - `Cancelled/Aborted` → 409
    - otherwise evaluate the review rules (§10)
-     - **suspicious and over the threshold**: `Status=Completed`, `Review=Held`; no payout yet, the coins stay in `SYS_DUEL`
-     - **clean, or flagged below the threshold**: in one transaction, `GrantAsync(winner, pot − fee, DUEL_PAYOUT, key duel-payout:<id>)` + the `DUEL_FEE` leg
+     - **tier 2 (held, §10.3)**: `Status=Completed`, `Review=Held`; no payout yet, the coins stay in `SYS_DUEL`
+     - **tier 0 (clean) or tier 1 (flagged)**: in one transaction, `GrantAsync(winner, pot − fee, DUEL_PAYOUT, key duel-payout:<id>)` + the `DUEL_FEE` leg. A tier-1 result also raises its alert
    - the result says `paid` or `held`
 3. **Plugin**:
    - `paid` → give the winner both sides' staked items, plus any drop-mode spoils (inventory → ender chest → `CLAIM_PENDING`)
@@ -566,9 +565,10 @@ Each action is idempotent and recorded with the reviewer.
 |---|---|---|---|
 | `OWN_GEAR_KEEP` | snapshot health, food, saturation, effects | keepInventory, keepLevel, no drops | restore health, food, effects |
 | `OWN_GEAR_DROP` | same snapshot | **loser**: inventory, armour and off-hand become *spoils* for the winner (§8.5); keepLevel | restore health, food, effects (the loser keeps only what wasn't taken) |
-| `FIXED_KIT` / `KIT_CHOICE` | **vault**: save the full inventory, armour, off-hand, XP, health, food and effects to disk, clear, then grant the kit through `KitGrantPlacer` (no cost, cooldown or access gate: the arena's eligible list is the gate). Every granted stack gets PDC `knk_duel_loan=<matchToken>` | keepInventory (the kit), no drops | remove every `knk_duel_loan` item and clear, then restore the vault |
+| `FIXED_KIT` / `KIT_CHOICE` | **vault**: save the full inventory, armour, off-hand, XP, health, food and effects to disk, clear, then grant the kit through `KitGrantPlacer`, with no cost, cooldown or access check. The arena's eligible list is the only gate (developer, O4). Every granted stack gets PDC `knk_duel_loan=<matchToken>` | keepInventory (the kit), no drops | remove every `knk_duel_loan` item and clear, then restore the vault |
 
-- **Choosing a kit (`KIT_CHOICE`)**: each duelist picks a kit in WARMUP, from the match menu or with a clickable chat prompt. Both see each other's pick. A player who hasn't picked by the end of warmup gets the arena's first eligible kit.
+- **Choosing a kit (`KIT_CHOICE`)**: each duelist picks a kit in WARMUP, from the match menu or with a clickable chat prompt. Both see each other's pick. A player who hasn't picked by the end of warmup gets the arena's first eligible kit (developer, O3).
+- **Kits skip their own requirements in the arena** (developer, O4). A kit that normally needs, say, title 10 is granted to anyone duelling in an arena whose admin selected it. This doubles as a way to try out kits. The same rule applies to the siege kit mode ([KNG-199](https://linear.app/kngpandi/issue/KNG-199)).
 - **The vault**: generalised from `SiegePlayerVault` into a shared `MinigamePlayerVault` (plan Phase 0). The file is written before the inventory is cleared. Quit restores at once (`restoreOnQuit`). A crash restores on join.
 - **Loan safety**: a join sweep and the inventory guard remove any stray `knk_duel_loan` item. Loaned items can't be staked, dropped, stored or traded.
 
@@ -576,7 +576,7 @@ Each action is idempotent and recorded with the reviewer.
 
 - On the loser's `PlayerDeathEvent` (HIGHEST), the event's drops are captured into the spool as *spoils owed to the winner*, and `event.getDrops()` is cleared. This happens in the same tick and the spool is written first.
 - Spoils go to the winner by the same delivery chain as stakes, not as ground items. Ground drops could be lost in lava or the void, despawn, or be picked up by staff, and the spool makes them crash-safe.
-- **A forfeit in drop mode** (quitting in COUNTDOWN or FIGHT): the quitter's inventory is taken as spoils at quit (proposed, §13.2). Otherwise quitting would save a losing player's inventory.
+- **A forfeit in drop mode** (quitting in COUNTDOWN or FIGHT): the quitter's inventory is taken as spoils at quit (developer, O2). Otherwise quitting would save a losing player's inventory.
 - **Draws** in drop mode (time limit, agreed, simultaneous death): nobody loses anything.
 - If the result is **held for review**, the spoils stay in the spool until release (to the winner) or void (back to the loser).
 
@@ -677,15 +677,38 @@ Each action is idempotent and recorded with the reviewer.
 
 ### 10.3 Detection and review
 
-**Thrown-fight detection.** The plugin sends fight telemetry with the result: duration, damage dealt per side, hits, the loser's attack attempts, and in own-gear modes the loser's armour points and main-hand item at fight start. The API flags a result when, for example:
-- the loser dealt less than 10% of the winner's damage
-- the fight lasted under 10 s
-- the loser had no weapon and no armour in an own-gear mode
-- the pair already shows repeated one-way results
+**Signals.** The plugin sends fight telemetry with every result: duration, damage dealt per side, hits, the loser's attack attempts, and in own-gear modes the loser's armour points and main-hand item at fight start. The API derives **signals** from it, plus the pair's and the winner's history:
 
-The thresholds are API configuration.
+| Signal | Meaning (thresholds in `DuelPolicy`) |
+|---|---|
+| S1 one-sided damage | the loser dealt < 10% of the winner's damage |
+| S2 short fight | the fight lasted < 10 s |
+| S3 unarmed loser | own-gear mode, the loser had no weapon and no armour |
+| S4 passive loser | the loser made no attack attempts |
+| S5 one-way pair | the same player won every one of the pair's last 3 value-moving duels |
+| S6 funnel | the winner received value from ≥ 3 different opponents with young accounts (< 7 days) within 7 days |
 
-**Hold for review.** A flagged result with a coin pot ≥ `ReviewThresholdCoins`, any item stake, or drop-mode spoils is **held**: no payout until staff release or void it (§7.4). Smaller flagged results are paid and only listed.
+**Escalation tiers** (developer, 2026-10-20). Only *value-moving* results are scored: those with coin or item stakes, or drop-mode spoils. Friendly duels never are.
+
+| Tier | When | What happens |
+|---|---|---|
+| 0 clean | no signal | paid |
+| 1 flagged ("semi-suspicious") | any signal | **paid**, `Review=Flagged`, and a `DUEL_FLAG` alert (severity Warning) in the currency alert pipeline: it shows on the web-app alerts page and as an in-game notice to online staff with the alerts node, the same as suspicious currency alerts |
+| 2 held | the **same players** reach `EscalationFlagCount` (2) flags within `EscalationWindowDays` (7) | **held**: no payout until staff release or void it (§7.4); a `DUEL_HOLD` alert (severity High). While the hold is open, new value-moving invites between that pair (or to that beneficiary) are refused; friendly duels stay allowed |
+
+- **"The same players"** counts two ways:
+  - the same pair, in either direction
+  - the same beneficiary (winner) across different opponents, which catches several alts feeding one main
+- **Acknowledging** a tier-1 alert as a false positive removes that flag from the escalation count. Leaving it open, or voiding a held result, keeps it counting.
+- **An immediate hold** for a single blatant result is optional (proposed, off by default): `DuelPolicy.ImmediateHold` holds at once when S1 + S4 both fire and the pot is ≥ `ImmediateHoldMinPotCoins` (5,000), without waiting for a second flag.
+
+**Staff tools.** The web app gets:
+- a duel history page: matches, stakes, spoils, telemetry, signals and tiers
+- Release / Void on held results
+- "clear escalation" for a pair or beneficiary
+- a time-limited block on value-moving duels for a player or a pair
+
+In game, `/knk duel review` lists the same. Alerts use the existing acknowledge flow. All staff actions are audited.
 
 **Anomaly detector.** These rules in `CurrencyAnomalyDetector` are extended:
 - R3 (funnel) and R4 (ping-pong) treat `DUEL_PAYOUT` as a flow from the loser to the winner
@@ -774,16 +797,16 @@ Gameplay settings live on the Arena (§4.2) and are edited in the web app.
 | — | Kit mode | Added: `FIXED_KIT` / `KIT_CHOICE`, eligible kits per arena | D9, §8.4 |
 | — | Spectator area | Added: optional domain; on foot, warp, arena menu | §9.3 |
 
-### 13.2 Still open (defaults are in place; none blocks filing the phase issues)
+### 13.2 Follow-up answers (2026-10-20)
 
-| # | Point | Default in this design |
-|---|---|---|
-| O1 | Q10 reading: "not anywhere" taken as "anywhere except in a minigame or in combat". If it meant "only inside the arena", flip `InviteeMustBeInArena` on by default | off |
-| O2 | Forfeit in drop mode: quitting during COUNTDOWN/FIGHT gives the quitter's inventory to the opponent | yes |
-| O3 | `KIT_CHOICE` with no pick by the end of warmup | first eligible kit |
-| O4 | Do a kit's own access rules (title, permission) still apply inside the arena, or is the arena's eligible list the only gate? | arena list only |
-| O5 | Suspicious results: hold for review above the threshold, or only flag? | hold ≥ 5,000 coins, any item stake or spoils |
-| O6 | Spectator area: should only one be allowed per arena? | 0..n allowed, normally one |
+| # | Point | Decision | Where |
+|---|---|---|---|
+| O1 | Where the invitee accepts | Anywhere, except while in a minigame or in combat (no arena-only option) | D18 |
+| O2 | Forfeit in drop mode | The quitter's inventory goes to the opponent | §8.5 |
+| O3 | `KIT_CHOICE` without a pick | The arena's first eligible kit | §8.4 |
+| O4 | A kit's own requirements in the arena | Skipped: the admin's selection is the gate, and it doubles as a kit try-out. The developer also asked for a siege kit mode per lobby, switchable until the hub teleport, with joined players notified: [KNG-199](https://linear.app/kngpandi/issue/KNG-199) | §8.4 |
+| O5 | Suspicious results | Escalation tiers: flag and alert first; hold once the same players keep getting flagged | §10.3 |
+| O6 | Spectator areas per arena | 0..n, normally one | §4.1 |
 
 ## 14. Alternative considered: stakes in warmup
 
