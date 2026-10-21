@@ -388,9 +388,9 @@ told apart even if the names match.
 2. **Backfill (code, idempotent, logged).**
    - Materials:
      - Normalise keys where the normalised key is free.
-     - Fill `DisplayName` from the static file.
-     - Set a best guess of `IsItem`/`IsBlock` from the file category. It stays `Unverified`, and
-       the first scan overwrites the flags.
+     - Fill `DisplayName` from the static file, else derive it from the key.
+     - Leave `IsItem`/`IsBlock` null. The file's category is too unreliable for a guess
+       (`minecraft:stone` is ITEM there), so the first scan sets the flags.
    - Blocks:
      - Canonicalise `BlockStateString`.
      - Compute `StateKey`.
@@ -408,8 +408,12 @@ told apart even if the names match.
    "merge A into B" action repoints the seven material FKs in one transaction and only then
    deletes A.
    - Block refs have no referrers, so a duplicate can simply be deleted after the audit.
-   - Before that, check JSON blobs that might hold material ids, e.g. form drafts
-     (`FormSubmissionProgress`) and WorldTask output; the same applies before any rename.
+   - Known limit: JSON blobs (form drafts in `FormSubmissionProgress`, WorldTask output) are not
+     rewritten. A draft that still holds a merged or deleted id fails validation on submit with
+     "MinecraftMaterialRef with id N not found"; the admin picks the material again.
+   - When both materials have block refs with the same state, the merge leaves two rows with one
+     `StateKey`; the audit lists them. Once phase 4 makes `StateKey` unique, the merge must drop
+     the duplicate instead.
 5. **Migration `MinecraftCatalogConstraints`** (phase 4), after the audit is clean:
    - a unique index on `StateKey`;
    - `MaterialRefId` required;
@@ -475,6 +479,13 @@ phase. Live testing happens once, after phase 4 (D12).
 - Phase 3's plugin part is written against `main` and compiled on the KNG-182 branch as well.
   The first real scan should be on 26.3, because a 1.21.10 scan would immediately be outdated.
 - Phase 2 can start in parallel with phase 1.
+
+## 10a. Implementation status
+
+| Phase | Status | Where |
+|---|---|---|
+| 2 Schema + audit | Code-complete 2026-10-21, not merged | knk-web-api `claude/relaxed-davinci-hsdspe`: migration `MinecraftCatalogEntryFields`; `Services/MinecraftCatalog/` (`MinecraftNamespaceKey`, `MinecraftBlockState`, `MinecraftMaterialReferences`, `MinecraftCatalogMaintenanceService`); `MinecraftCatalogController` (`GET audit`, `POST backfill`, `POST materials/{sourceId}/merge-into/{targetId}`, all `knk.admin.content`); the backfill also runs at startup before the item seeds; read-only catalogue fields on the material/block DTOs |
+| 1, 3-5 | Not started (phase 1 waits for KNG-195) | |
 
 ## 11. Decisions (developer, 2026-10-21)
 
