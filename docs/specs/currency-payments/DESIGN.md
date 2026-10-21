@@ -1,7 +1,7 @@
 # Currency Payments & Ledger (coins/gems) — Design
 
 **Status:** Implemented and merged to trunk 2026-09-27 (KNG-21, KNG-22; KNG-23 folded in)
-**Last updated:** 2026-09-26
+**Last updated:** 2026-10-21 (arena duels KNG-213: the `DUEL_*` reasons, `SYS_DUEL`, system-to-system moves, R10 and the duel alert codes; R3/R4 read `DUEL_PAYOUT` as a flow from the loser to the winner). 2026-09-26
 **Linear:** [KNG-21](https://linear.app/kngpandi/issue/KNG-21/currency-ledger-and-secure-player-payments-pay-balance-baltop-for) (Phase 0 split out as [KNG-22](https://linear.app/kngpandi/issue/KNG-22/security-coingem-write-endpoints-are-anonymous-phase-0-currency), urgent)
 **Sources:** `knk-v1-archive` (`src/Currency/*`, `src/Users/User.java`, `src/Main/Main.java`, `src/Listeners/PlayerListener.java`, `src/Menu/{PlayerManagerClick,DuelSetupClick}.java`, `src/Skills/PickpocketSkill.java`, `src/Events/FridayLottery.java`, `plugin.yml`); `knk-v2-archive` (`model/user/{User,KnKUser}.java`, `model/minigame/siege/Siege.java`); knk-web-api `claude/siege-minigame` @ `cd95dd1` (contains `master` up to the KNG-7/8 merge minus the chat-color diff) plus `origin/master` `a102eea` and the KNG-16 branch `claude/practical-clarke-od321q` `1d3f198` where they differ; knk-plugin `claude/siege-minigame` @ `0fa6d06`; knk-web-app `claude/siege-minigame` @ `9a6f347`. Docs: `specs/legacy/{commands-v1,commands-v2,user-system,events-v2,inventory-menu-screens}.md`, `specs/user-features/{DESIGN,COMMAND_CATALOG_V3}.md`, `specs/user-management/DESIGN.md`, `specs/kits/DESIGN.md`, `specs/inventory-menu/CONTENT_PORT_PLAN.md`, `architecture/web-api-architecture.md`, Linear KNG-15/KNG-16.
 
@@ -345,6 +345,11 @@ siblings add rows here):
 | `MIGRATION_OPENING` | Migration | `SYS_MIGRATION` | `migration-opening:{userId}:{currency}` | this spec |
 | `MERGE_FORFEIT` | Merge | `SYS_MERGE` | `merge:{secondaryUserId}` | this spec (zeroes the secondary's coins, gems and XP) |
 | `MERGE_CARRYOVER` | Merge | `SYS_MERGE` | `merge-carry:{secondaryUserId}` | developer decision 2026-09-27: survivor credited with max(0, secondary − primary) per currency, so it ends with the higher value |
+| `DUEL_STAKE` | Spend (two legs) | `SYS_DUEL` | `duel-lock:{matchToken}` | arena duels (KNG-213): both coin stakes escrowed at lock-in |
+| `DUEL_PAYOUT` | Grant | `SYS_DUEL` | `duel-payout:{matchId}` | arena duels: pot − fee to the winner; funded by the stakes, so left out of R7 |
+| `DUEL_FEE` | Spend, **system to system** | `SYS_DUEL` → `SYS_FEES` | `duel-fee:{matchId}` | arena duels: the fee, no user leg, in the payout's transaction (`MoveBetweenSystemAccountsAsync`) |
+| `DUEL_REFUND` | Grant | `SYS_DUEL` | `duel-revert:{matchId}` | arena duels: a staff revert pays the recovered coins back, loser first |
+| `DUEL_CONFISCATION` | Spend, **system to system** | `SYS_DUEL` → `SYS_FEES` | `duel-confiscate:{matchId}` | arena duels: a staff confiscation sends the recovered coins to the sink |
 
 Rules for siblings: always pass a deterministic key when the source event has an identity; never catch
 `InsufficientFunds` and retry with a smaller amount; call inside your own transaction when you also
@@ -502,6 +507,8 @@ plugin (`KnkPermissible`) and in the API (`RequireKnkPermission`).
 | R7 Mint rate | a reason's daily mint > 3× its trailing 7-day mean | Medium |
 | R8 Cap hit | a posting rejected by `BalanceCapExceeded` | Medium |
 | R9 Probing | > 20 denied transfer attempts per sender per hour (counted in-memory at the controller) | Low |
+| R10 Duel pair | one player won ≥ 3 paid duels against the same opponent (who won none back), or ≥ 20,000 coins moved one way through duel payouts, within 24 h (arena duels, KNG-213) | Medium |
+| `DUEL_FLAG` / `DUEL_HOLD` | raised by `DuelMatchService` for a flagged (tier 1, paid) or held (tier 2) duel result, arena duels DESIGN §10.3 | Medium / High |
 
 Alerts go to `currency_alerts`, `ILogger.LogWarning`, the web alerts page, and an in-game staff
 notification (`CurrencyAlert` type) to online holders of `knk.admin.currency.alerts`. OpenTelemetry

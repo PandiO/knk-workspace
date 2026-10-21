@@ -291,3 +291,135 @@ One siege round on the dev server:
 7. Battleground form: set spawn A/B, enable; a spawn in another world is refused. Spectator-area form: create one with a temp region (Send to Minecraft) → renamed `domain_<id>` under `arena_2`, priority 50, no flags; set its warp (`TeleportEnabled`, a title or price) and see it in `/warp`.
 8. `/navigate` lists the arena and the spectator area, not the battlegrounds; walking into the arena gives the "arena" discovery message, a battleground gives none.
 9. Plugin: `GET api/Arenas` is read once and cached (`[Arenas]` in the log only on a miss); with the API stopped, `ArenasDataAccess.cachedArenas()` still serves the last copy (P4 exercises this).
+
+---
+
+## P2 — match record, stake ledger, review tiers, restrictions ([KNG-213](https://linear.app/kngpandi/issue/KNG-213))
+
+**Session:** Claude Code cloud session, 2026-10-21. **Status:** pushed, KNG-213 In Review. Not deployed, not live-tested. Started after P1 had pushed (knk-web-api `6507641`; P1's later `a8a26c3` merged in).
+
+### Commits
+
+| Repo | Branch | Commit | What |
+|---|---|---|---|
+| knk-web-api | `claude/arena-duels` | `53f42cf` | models, migration `AddDuelMatches`, ledger additions, `DuelMatchService`, `DuelMatchesController`, anomaly rules, tests |
+| knk-web-api | `claude/arena-duels` | `d208a74` | merge of P1's `a8a26c3` (legacy-seed endpoint dropped); `master` had nothing new |
+| knk-web-api | `claude/arena-duels` | `a0da408` | the stake ratio values items at their blueprint base price (developer decision, below) |
+| knk-plugin | `claude/arena-duels` (on P1 `02bca4e0`; P3 `36195de3` merged in as `1e17f985`) | `2be401b5` | `DuelMatchesApi` port, `KnkDuelRecords`, `DuelRefusedException`, api-client implementation, test |
+| knk-workspace | `main` | `d79b32e` | tracker row |
+| knk-workspace | `claude/arena-duels` | this commit | this section; `specs/currency-payments/DESIGN.md` reason and alert tables |
+
+### Tests
+
+- **knk-web-api** (`dotnet test`, .NET 8 SDK; build `knkwebapi_v2.csproj`): baseline at P1 `6507641`: 2748 passed, 4 failed, 73 skipped. After P2 (`a0da408`): **2829 passed, 4 failed, 73 skipped** — the same 4 known reds (`PathResolutionServiceTests` ×2, `ClientActivityStoreTests.RecordsRequestsIntoRollingBuckets`, `FieldValidationServiceTests.ValidateConditionalRequiredAsync_WithConditionMet_ValidatesRequired`). `dotnet ef migrations has-pending-model-changes`: none.
+- **knk-plugin** (`./gradlew build -x deployToDevServer`, Gradle on JDK 21 with the Temurin 25.0.4 toolchain via `-Porg.gradle.java.installations.paths`): BUILD SUCCESSFUL; knk-core 2312, knk-api-client 275 (2 skipped), knk-paper 1887 (18 skipped), 0 failures (P1 reported 2308 / 267 / 1887; +8 api-client tests are `DuelMatchesApiImplTest`, core grew with P3's `36195de3`). Maven Central answered 429 for one test-runtime jar in this container; a session-local Gradle init script pointed at Google's Maven Central mirror (nothing committed).
+
+| Plan test | Test (knk-web-api unless noted) |
+|---|---|
+| all-or-nothing stake | `DuelMatchServiceTests.Create_IsAllOrNothing_WhenOneSideCantPay`, `Create_DebitsBothStakesInOnePosting_AndTheOpenMatchHoldsThePot` |
+| gem refusal | `Gems_AreRefused` |
+| each eligibility and limit refusal | `Eligibility_AccountAgeTitleLocksAndKillSwitch_AreRefused`, `DropMode_NeedsBothPlayersEligible_EvenWithoutStakes`, `ArenaGearKitAndItemRules_AreRefused`, `PairCooldown_AndPerDayLimit_AreRefused_UntilTheyPass`, `CancelledMatches_DontCountForThePairLimits`, `DailyCoinWinCap_CountsWhatAPlayerCouldWin`, `Check_ListsEveryRefusal_AndWritesNothing` |
+| the ratio rule | `StakeRules_AreRefused` (theory), `StakeRatio_AtExactlyTheMinimum_Passes_AndZeroSwitchesItOff`, `StakeRatio_ValuesItemsAtTheirBlueprintsBasePrice` |
+| each signal, tiers 0/1/2 | `DuelReviewRulesTests` (each of S1–S6 alone, boundaries, disabled signals, escalation), `OneFlaggedResult_IsPaidAndFlagged_WithADuelFlagAlert`, `OneWayPair_S5_…`, `Funnel_S6_…`, `Policy_ThresholdsDriveTheSignals`, `FriendlyDuels_AreNeverScored` |
+| a first flag never holds | `AFirstFlagNeverHolds_HoweverLargeThePot`, `DuelReviewRulesTests.AFirstFlagNeverHolds_EvenIfThePolicySaysOne` |
+| acknowledged flags don't count | `AnAcknowledgedFlag_IsAFalsePositive_AndDoesntCount`, `ClearEscalation_AcknowledgesThePairsOpenFlags` |
+| escalation by pair and by beneficiary | `SecondFlagForThePair_IsHeld_…`, `Escalation_CountsByBeneficiary_AcrossDifferentOpponents`, `FlagsOutsideTheWindow_DontCount_…`, `ARevertedResult_CountsAsAConfirmedFlag_…` |
+| invites refused while a hold is open | `SecondFlagForThePair_IsHeld_NothingIsPaid_AndNewStakedInvitesAreRefused` (pair, beneficiary, friendly allowed) |
+| revert / confiscate | `Revert_WithSpentCoins_RecoversWhatIsLeft_RefundsTheLoserFirst_AndReversesTheFee`, `Revert_WithEverythingStillThere_…`, `Confiscate_SendsTheRecoveredCoinsToTheSink_AndKeepsTheFee`, `Revert_RefusesHeldAndUnpaidMatches_AndNeedsAReason` (Voided, audited, partial-reversal shortfall in the metadata) |
+| idempotent create/complete/cancel/release/void | `Create_SameToken_…`, `Complete_IsIdempotent_…`, `Cancel_RefundsBothStakesOnce_WithNoFee` (theory over all 9 non-decisive reasons), `Release_PaysTheHeldResult_Once`, `Void_RefundsBothStakes_…`, `StartFight_IsIdempotent_…` |
+| 409 paths | the same tests (WrongState, TokenReused, PolicyChanged), `DuelMatchesControllerTests.Refusals_MapToStatuses` |
+| fee rounding | `Complete_PaysPotMinusFee_…` (1,999 → 99), `Check_…` (2,999 → 149) |
+| Σ SYS_DUEL = 0 after every end path | asserted in the complete, cancel (×9), release, void, revert, confiscate and abort tests; `CurrencyReconciler` finds no mismatch after each |
+| held → release/void | `Release_…`, `Void_…` |
+| abort-unfinished leaves held matches alone | `AbortUnfinished_RefundsOpenMatches_AndLeavesHeldAndFinishedOnesAlone` |
+| restrictions (player, pair, expiry) | `PlayerRestriction_…`, `PairRestriction_…`, `Restrictions_ValidateTheirInput` |
+| ledger primitive | `CurrencyServiceTests.MoveBetweenSystemAccounts_…`, `SystemToSystemReasons_…`, `DuelReasons_FollowTheReasonTable` |
+| anomaly detector | `CurrencyAnomalyDetectorDuelTests` (R3 and R4 with duel flows, R7 leaves `DUEL_PAYOUT` out, R10) |
+| access rules | `EndpointAccessRulesTests.DuelMatchWrites_AreForTheGameServer_AndStaffActionsNeedTheReviewNode` (+ the reflection test over every write) |
+| plugin client | knk-plugin `DuelMatchesApiImplTest` (paths, Idempotency-Key and X-Acting-User-Id headers, bodies, result and refusal mapping) |
+
+These run on EF InMemory with the real ledger and alert service. The match-row lock (`SELECT … FOR UPDATE` in `DuelMatchService.RunLockedAsync`) and the users lock around lock-in only exist on MySQL; they are the siege/ledger pattern, but nothing here exercises them against a real database (live check 9).
+
+### Fee choice (DESIGN §7.1)
+
+**The fee leaves `SYS_DUEL` as a system-to-system move to `SYS_FEES`, in the payout's database transaction.** A paid result is two postings under the match lock: `DUEL_PAYOUT` (pot − fee, `SYS_DUEL` → winner) and `DUEL_FEE` (fee, `SYS_DUEL` → `SYS_FEES`, no user leg). The ledger got one primitive for this, `ICurrencyService.MoveBetweenSystemAccountsAsync(currency, amount, ctx)`, for reasons with the new direction `SystemToSystem` (`CurrencyReasonInfo.FromSystemAccount` names the source); `PostAsync`/`GrantAsync`/`SpendAsync` refuse those reasons, and `ReverseAsync` now mirrors a transaction without user legs leg by leg. Why not the alternatives:
+- a fee leg inside the payout posting would give the payout two system accounts, and `ReverseAsync` refuses a partial reversal of such a posting, so a revert after the winner spent coins would fail;
+- paying the whole pot and then debiting the fee from the winner works with the existing API, but shows the winner a fee they "paid" and can fail at the balance cap for the gross amount.
+
+Per closed match: stake +pot, payout −(pot − fee), fee −fee → Σ `SYS_DUEL` = 0. A revert reverses the payout (`AllowPartial`) and the fee, then pays the pool back with `DUEL_REFUND` (loser first); a confiscation reverses the payout and moves what came back to `SYS_FEES` with `DUEL_CONFISCATION` (the fee stays). Both keep the invariant.
+
+### Stake ratio with items (developer decision 2026-10-21, KNG-197)
+
+`MinStakeRatioPercent` compares each side's **coins + item value**. An item is worth its `ItemInstance`'s `ItemBlueprint.BasePriceMin` × amount, rounded down (the reversible default; `BasePriceMax` is unused). An item without `instanceId`, or whose instance or blueprint is gone, is worth 0. **Contract:** the plugin sends `instanceId` on each stake item (the field already existed); the API prices it, so P3's `StakeContractValidator` and the API apply the same rule, and the API's check at lock-in is binding. The refusal's `details` carry `challengerValue` / `opponentValue`.
+
+### Endpoint contract (P4 and P7 build on it)
+
+`api/DuelMatches` (also `api/duel-matches`). JSON is camelCase, enums are strings (`"OWN_GEAR_DROP"`, `"AgreedDraw"`, `"InProgress"`), times are UTC ISO-8601. Refusals answer `{ code, message, details }`: **404** `MatchNotFound`/`ArenaNotFound`/`UserNotFound`/`RestrictionNotFound`, **409** `WrongState`/`TokenReused`/`PolicyChanged`, **400** `InvalidRequest`, **422** every rule (`DuelsDisabled`, `SelfDuel`, `GearModeNotAllowed`, `KitNotEligible`, `CoinStakesNotAllowed`, `ItemStakesNotAllowed`, `CoinStakeOutOfRange`, `TooManyItemStacks`, `StakeRatioTooLow`, `GemsNotStakeable`, `TransfersDisabled`, `NewAccountRestricted`, `AccountLocked`, `PairDailyLimit`, `PairCooldown`, `DailyWinCap`, `DuelRestricted`, `ReviewHoldOpen`, `InsufficientFunds`). Messages are written for players and name the player concerned; `DuelRestricted` carries the reason and end date.
+
+| Call | Rule | Body → answer | Idempotency |
+|---|---|---|---|
+| `POST check` | plugin | the create body → `{ allowed, valueMoving, feeCoins, feePercent, refusals[{code,message,details}] }` (also checks balances) | read-only |
+| `POST` (lock-in) | plugin | `{ publicToken (uuid), arenaId, challengerUserId, opponentUserId, gearMode, fixedKitId?, challengerCoins, opponentCoins, challengerGems/opponentGems (must be 0), stakeItems[{ownerUserId, material, amount, name?, grade?, instanceId?}], offerCount 1–6, lockedAt? }` → **201** match, or **200** the stored match for a repeated token | header `Idempotency-Key: duel-lock:<token>` (optional; any other value is 400); same token + different body → 409 `TokenReused` |
+| `GET by-token/{token}` | caller | → match or 404 | — |
+| `GET {id}`, `GET ?userId&arenaId&status&review&limit` | caller | → match / matches, newest first (≤ 200) | — |
+| `POST {id}/start-fight` | plugin | `{ battlegroundId, challengerKitId?, opponentKitId?, startedAt? }` (kits only for `KIT_CHOICE`, must be eligible) → match `InProgress` | a repeat returns the match |
+| `POST {id}/complete` | plugin | `{ winnerUserId, endReason: Win|Forfeit, telemetry?, spoilsItems?, endedAt? }` → result `{ match, settlement: Paid|Held, alreadyDone }` | same winner again → stored result; other winner, cancelled/aborted → 409 |
+| `POST {id}/cancel` | plugin | `{ endReason, telemetry?, endedAt? }`: `TeleportFailed|PlayerLeftLobby|NoBattleground|AdminCancelled` → Cancelled, `ServerRestart|ApiOutage` → Aborted, `TimeLimit|AgreedDraw|SimultaneousDeath` → Completed without winner → `{ settlement: Refunded }` | any repeat → stored; a won match → 409 |
+| `POST abort-unfinished` | plugin | `{ endReason: ServerRestart|ApiOutage }` → `{ abortedMatchIds }` (held results untouched) | — |
+| `POST {id}/release` | `knk.admin.duel.review` or plugin | `{ reason? }` → `{ settlement: Paid }` | repeat → stored |
+| `POST {id}/void` | same | `{ reason }` (required) → `{ settlement: Refunded }`, `undeliveredItems: ReturnToOwners` | repeat → stored |
+| `POST {id}/revert`, `POST {id}/confiscate` | same | `{ reason }` (required) → result with `revert: { confiscated, payoutCoins, recoveredCoins, feeReversedCoins, returnedToLoserCoins, returnedToWinnerCoins, confiscatedCoins, missingCoins, undeliveredItems, transactionIds }` | repeat of the same action → stored; the other one → 409 |
+| `POST escalation/clear` | same | `{ userId, otherUserId?, reason? }` (pair, or beneficiary) → `{ acknowledgedAlertIds }`; needs a staff member (web login or `X-Acting-User-Id`) | — |
+| `GET policy` / `PUT policy` | caller / same | `DuelPolicyDto` (S1–S6 switches and thresholds, `escalationFlagCount` 2–20, `escalationWindowDays`, `updatedAt` = version) | PUT with an old `updatedAt` → 409 `PolicyChanged` |
+| `GET restrictions?userId&activeOnly=true` | same | → restrictions (player as either side) | — |
+| `POST restrictions` | same | `{ userId, otherUserId?, reason, expiresAt? }` → 201 | — |
+| `POST restrictions/{id}/lift` | same | `{ reason? }` → restriction | lifting twice is a no-op |
+
+The match (`DuelMatchDto`) carries: ids and usernames, `arenaKey`, `battlegroundKey`, `gearMode`, kit ids, `status`, `endReason`, `winnerUserId`, both coin stakes, `feePercent` (snapshotted at lock-in), `feeCoins`, `valueMoving`, `stakeItems`, `spoilsItems`, the four transaction ids, `review` (`None|Flagged|Held|Released|Voided`), `reviewTier`, `reviewSignals` (`["S1","S4"]`), `reviewDetails` (the numbers and escalation counts), `alertId`, `reviewedByUserId/At`, `reviewReason`, `revertResult`, **`undeliveredItems`** (`None|ReturnToOwners|Destroy`: what P4's spool does with `CLAIM_PENDING`/`HELD` stacks after a staff action), `telemetry`, `offerCount` and the timestamps.
+
+**For P4** (the plugin's settlement rules, DESIGN §7.3–7.5): `Paid` → pay out items and spoils; `Held` → spool state `HELD`, tell both players; `Refunded` → each side gets its own items. On startup call `abort-unfinished`, then ask `by-token` for each spool file; a match with `review` `Voided` and `undeliveredItems` `ReturnToOwners`/`Destroy` settles the remaining stacks that way. The telemetry the review needs: `durationSeconds` (0 for a forfeit before the fight), per side `damageDealt`, `damageTaken`, `hits`, `attackAttempts`, and in own-gear modes `armorPoints` + `hadWeapon` (+ `mainHand`) at fight start (S3 needs both). The in-game `/knk duel review <match> release|void` sends `X-Acting-User-Id`.
+
+**knk-plugin port** (`knk-core`): `core/ports/api/DuelMatchesApi` — `check`, `lock`, `findByToken`, `startFight`, `complete`, `cancel(matchId, token, DuelEndReason, Telemetry)`, `abortUnfinished`, `release`, `voidHeld`; records in `core/domain/duels/KnkDuelRecords` (`LockRequest`, `ItemSummary`, `Telemetry`/`SideTelemetry`, `Completion`, `FightStart`, `MatchRecord`, `Result`, `RevertSummary`, `CheckResult`, `Refusal`, enums `Status`, `Review`, `Settlement`, `UndeliveredItems`), using P3's `core.duel.GearMode` and `DuelEndReason.apiName()`. Refusals are `core/domain/duels/DuelRefusedException` (`code()`, `playerMessage()`, `find(throwable)`); network errors and 5xx stay `ApiException` (status −1/5xx) for P4's retry. Client: `knk-api-client` `DuelMatchesApiImpl`, `KnkApiClient.getDuelMatchesApi()`; keys `duel-lock:<token>`, `duel-start:<token>`, `duel-complete:<token>`, `duel-cancel:<token>`, `duel-release:<id>`, `duel-void:<id>`. Not wired into `KnKPlugin` (no runtime yet).
+
+**For P7** (stats and web pages): history `GET api/DuelMatches?...`, the staff actions above, `GET/PUT policy`, restrictions. `review = Voided` means the result no longer counts (the projector skips it). Duel alerts are rule codes `DUEL_FLAG` (Medium) and `DUEL_HOLD` (High) plus the monitor's `R10` (Medium), on the existing alerts page; `details.matchId` links the match.
+
+### Deviations and interpretations (reversible; also a comment on KNG-197)
+
+1. **Fee mechanics**: a system-to-system `DUEL_FEE` and a new ledger primitive (above).
+2. **Two more reasons** than the three named: `DUEL_REFUND` (a revert's pay-back from `SYS_DUEL`) and `DUEL_CONFISCATION` (`SYS_DUEL` → `SYS_FEES`). The confiscation sink is `SYS_FEES`, the same coin sink as the fee.
+3. **`FeePercent` is stored on the match at lock-in**, so a later arena edit doesn't change the fee of a match the duelists already agreed to (D15).
+4. **Locks apply to both duelists** of any value-moving duel (frozen, transfer-locked, deactivated), not only to stakers; the age/title rule applies to stakers and to both in drop mode (D14). The coin kill switch (`CurrencyPolicy.TransfersEnabled = false`, R1) refuses coin stakes; item-only stakes still work.
+5. **Counting flags** (escalation): a `Voided` result always counts (confirmed); a `Flagged`, `Held` or `Released` one counts while its alert is not acknowledged; the window runs on `EndedAt`. Acknowledging = "false positive", since the alert flow has only acknowledge. `escalation/clear` acknowledges the open `DUEL_FLAG` alerts of the pair or beneficiary (no new table).
+6. **An open hold blocks** value-moving duels of the held pair, and of the held result's winner with anyone, whichever count triggered it.
+7. **Pair limits** count value-moving matches except Cancelled/Aborted; the cooldown runs from the previous match's end (an unfinished one blocks the pair until abort-unfinished). The **daily win cap** compares the last 24 h of won coins (the opponents' stakes, held results included, voided ones not) plus this duel's possible win.
+8. **`GET restrictions` needs the review node** (or the plugin): it carries staff reasons. The other GETs are open to any logged-in user as the prompt says, which includes `reviewSignals`/`reviewDetails`; see the open questions.
+9. **Staff actions accept the plugin too** (`RequireServiceOrPermission`), for `/knk duel review` (DESIGN §6.1), with `X-Acting-User-Id` as the auditor.
+10. **`POST check`** is an extra read-only endpoint for the invite/accept pre-checks (DESIGN §6.1, §10.3 "checked at invite, accept and lock-in").
+11. **`DUEL_FLAG` is severity Medium**: the design's "Warning" isn't a `CurrencyAlertSeverity`; Medium is between the Low notices and the High hold.
+12. **Arenas, users and kits a match names can't be deleted while the match exists** (FK Restrict on arena and users, SetNull on kits and the battleground); deleting such an arena answers the generic delete-constraint 409.
+13. The node `knk.admin.duel.review` is not seeded into any group (matched by `knk.admin.*`/`*`); its in-game `plugin.yml` entry belongs to P5's commands.
+
+### Open questions for the developer
+
+- Should players (any logged-in user) see a match's `reviewSignals` and `reviewDetails`, or should those be staff-only in the read? Today they follow "GETs for logged-in users".
+- Confiscated coins go to `SYS_FEES`. A separate `SYS_CONFISCATED` account would keep the fee sink's total clean for reporting; say if you want it.
+
+### Found in passing / left out
+
+- The web app's alert filter dropdown (`knk-web-app src/types/dtos/currency/CurrencyDtos.ts` `CURRENCY_ALERT_RULES`) lists R1–R9 only; the new codes show on the page but can't be filtered. Comment on KNG-221 (P7 owns the web pages).
+- A staff ledger reversal of a duel's stake or payout on the currency admin page (outside the duel flow) makes the duel's later cancel or revert answer 409 `AlreadyReversed`. Comment on KNG-213.
+
+### Live checks for P8
+
+1. Apply migration `AddDuelMatches`: tables `duel_matches`, `duel_policies` (one row, defaults), `duel_restrictions`.
+2. Lock-in a staked duel (P4 runtime, or `POST api/DuelMatches` with `X-API-Key`): one `DUEL_STAKE` transaction with two legs on the staff ledger page; `SYS_DUEL` holds the pot.
+3. Complete it: `DUEL_PAYOUT` (pot − fee) and `DUEL_FEE` (`SYS_DUEL` → `SYS_FEES`, no player line); "Run reconciliation" on the currency monitor page finds nothing.
+4. A thrown fight (loser never swings, < 10 s): paid, `DUEL_FLAG` on the alerts page and in game for staff with the alerts node. A second one between the same two (either direction, or the same winner against someone else): `DUEL_HOLD`, nothing paid; a new staked lock-in between them is refused with `ReviewHoldOpen`; a friendly duel still works.
+5. Acknowledge the first flag, play another thrown fight: flagged, not held.
+6. Release a held result (paid) and void another (both stakes back, no fee); both are in the audit log with the staff member and reason.
+7. Revert a paid result after the winner spent part of it: the winner ends at 0, the loser gets back what was recovered first, `missingCoins` is shown; confiscate another: the coins land in `SYS_FEES`, the fee stays.
+8. Restrictions: a player restriction with an end date refuses staked duels (message shows reason and date), allows friendly ones, ends at the date; a pair restriction refuses only that pair; lifting works; audit entries for both players of a pair.
+9. Concurrency on MySQL: two simultaneous `complete` calls (same winner) for one match → one payout; two lock-ins of the same token → one match.
+10. A web staff member without `knk.admin.duel.review` gets 403 on release/void/revert/restrictions; one with `knk.admin.*` passes.
+11. Three paid one-way duels between the same pair within 24 h → an `R10` alert on the next monitor cycle; `R7` doesn't fire for `DUEL_PAYOUT`.
+12. Plugin startup: `abort-unfinished` refunds open matches and leaves held results.
