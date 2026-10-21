@@ -4,6 +4,17 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Invitations chain, link 7: rollout preparation (I3) — the chain is complete**
+  ([KNG-218](https://linear.app/kngpandi/issue/KNG-218), parent [KNG-205](https://linear.app/kngpandi/issue/KNG-205);
+  branch `claude/player-signup-invitation-flow-f4v7ul`: knk-web-api `8f489b9`). A data migration seeds the **Alpha
+  Tester** group (weight 1, under Default, no extra permissions) that invitations grant by default; it leaves an
+  existing group of that name alone. New: the [invitations smoke test](guides/invitations-smoke-test.md) (every check
+  of the email engine, invitations, the admission gate, the Access sync, the kill switches and the alpha switch-over)
+  and the living [account identity and admission](architecture/account-identity-and-admission.md) architecture doc.
+  The alpha go-live guide, the closed-alpha runbook, the production installation guide and the player account guide
+  describe the invite-only state after the switch-over, with the five switch-over steps and the kill switches
+  ([alpha go-live § 11.1](guides/alpha-go-live.md)). Nothing is merged or switched on; the switch-over waits for the
+  merges (plan § 9, the plugin after KNG-182) and the smoke test on dev.
 - **Invitations chain, link 6: Cloudflare Access sync and the sign-up bypass (A1)**
   ([KNG-216](https://linear.app/kngpandi/issue/KNG-216); branch `claude/player-signup-invitation-flow-f4v7ul`:
   knk-web-api `641f9c1`, knk-web-app `eeea86f`). With `CloudflareAccess__SyncEnabled=true`, the API keeps the

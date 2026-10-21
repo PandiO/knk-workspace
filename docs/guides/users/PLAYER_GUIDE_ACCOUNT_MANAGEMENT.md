@@ -1,8 +1,10 @@
 # Knights & Kings - Player Account Management Guide
 
-**Version**: 1.1  
-**Last Updated**: October 21, 2026 (KNG-208: `/account create` and web → game linking removed; the invitations
-feature, [KNG-205](https://linear.app/kngpandi/issue/KNG-205), replaces the sign-up section when it ships)  
+**Version**: 1.2  
+**Last Updated**: October 21, 2026 (KNG-218: "Getting an account" rewritten for invite-only sign-up. **It describes the
+invitations feature ([KNG-205](https://linear.app/kngpandi/issue/KNG-205)) on its feature branch, not merged and not
+yet switched on for the alpha**; until the switch-over, new players follow "Existing players" below.) Before:
+KNG-208, `/account create` and web → game linking removed.  
 **Plugin**: knk-plugin
 
 ---
@@ -11,7 +13,10 @@ feature, [KNG-205](https://linear.app/kngpandi/issue/KNG-205), replaces the sign
 
 The Knights & Kings Minecraft plugin now supports account management, allowing you to:
 
-- **Create your web login** from the game: `/account link` gives you a code to register with on the website
+- **Get an account with an invitation**: sign up on the website, then join the server and link your Minecraft
+  account with the code it shows you
+- **Create your web login** from the game (players from before the invitations): `/account link` gives you a code to
+  register with on the website
 - **Link your in-game account** with an existing web app account (enter the same code on your Account page)
 - **Sync your progress** between Minecraft and the web app (coins, gems, experience)
 - **View your account status** at any time
@@ -21,11 +26,30 @@ The Knights & Kings Minecraft plugin now supports account management, allowing y
 
 ## Quick Start
 
-### New Players
+### Getting an account (new players, invite-only)
 
-If you're joining for the first time:
+Knights & Kings is invite-only. You need an **invitation** from staff: either a personal invitation **email**, or a
+**shared code** (`KNK-XXXXX-XXXXX`) posted for your group.
 
-1. Join the Minecraft server (an account is automatically created with your username)
+1. **Sign up.** Open the link in your invitation email (your address is filled in), or go to **/join** and enter the
+   shared code with your email. Choose a password and accept the alpha rules.
+2. **Open the site.** The site is protected by Cloudflare: it emails you a one-time PIN. Use the **same address** you
+   signed up with. You then land on **Link your Minecraft account**.
+3. **Join the server** (`play.knightsandkings.net`, Java Edition 26.3). You're stopped with a screen like:
+   *"Knights & Kings is invite-only. Go to …/link and enter `K7QH-M2XA` (valid 15 minutes)."*
+4. **Enter that code** on the website. Your Minecraft name now shows on your account.
+5. **Join again.** You're in, with the first-join welcome and starter kits. The chat confirms which web account
+   (e.g. `st***@gmail.com`) is linked — if that isn't you, tell staff right away.
+
+**Joined the server before you had an invitation?** That's fine: note the code from the screen, go to **/link**, and
+the site keeps it for 15 minutes while you sign up with your invitation; your Minecraft account is linked in the same
+step. Codes expire after 15 minutes; join again for a new one. **Never give the code to anyone; staff never ask for it.**
+
+### Existing players (played before the invitations)
+
+Your account was carried over: you keep joining as before, without a code. If you don't have a web login yet:
+
+1. Join the Minecraft server
 2. Type `/account link` to get an 8-character code and the website address
 3. On the website, open **Register**, enter the code, your email and a password
 4. You can now log in to the web app! Codes only go from the game to the website, never the other way.
@@ -384,7 +408,9 @@ No. One email = one account. If you have multiple Minecraft accounts, you'll nee
 
 ### Do I need to link my account to play?
 
-No! You can play without linking. However, linking gives you:
+**New players: yes.** Once the server is invite-only, you play by linking the Minecraft account to the account you
+made with your invitation (see "Getting an account"). **Players from before the invitations: no.** You can play without
+a web login. However, a web login gives you:
 - Access to the web app (view stats, manage resources)
 - Web-based inventory management
 - Future features (leaderboards, events, etc.)
@@ -433,6 +459,11 @@ Need help? Contact the server administrators:
 ---
 
 ## Changelog
+
+### Version 1.2 (October 21, 2026)
+- "Getting an account" for invite-only sign-up: invitation → account → Cloudflare PIN → join → code → link (KNG-205;
+  feature branch, not yet live)
+- Existing players keep `/account link`
 
 ### Version 1.1 (January 30, 2026)
 - Added web app Account Management page

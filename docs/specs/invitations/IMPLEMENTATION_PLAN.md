@@ -1,7 +1,7 @@
 # Invite-only sign-up, email engine and web-first Minecraft linking — Implementation plan
 
-**Status:** In implementation through the [invitations chain](../../ai-agents/handoffs/INVITATIONS_CHAIN.md) (7 links, charter 2026-10-21). **Link 1 done on the feature branch (2026-10-21):** E0's API half (§ 2, knk-web-api `110451f`, cherry-pickable) and L0 (§ 4; api `bb4b9ee`, web-app `2bf70ab`, plugin `30b10e6e`), not merged, not live-tested; deviations flagged L1-1…L1-5 in the [progress report](../../reports/2026-10-21-invitations-chain.md). **Link 2 done (2026-10-21):** E1 (§ 3; api `0d7ec4a` + `a8b42ca`, web-app `aecd811`, [email guide](../../guides/email.md)), not merged, not live-tested; flags L2-1…L2-12. **Link 3 done (2026-10-21):** I1 (§ 5; api `77042fd` + `8ca8507`, web-app `dfa5cdd` + `18f3c9f`), not merged, not live-tested; flags L3-1…L3-12, as-built note at the end of § 5. **Link 4 done (2026-10-21):** I2 server side (§ 6.1, § 6.3; api `4d1fe00` + `44c5f63`, web-app `a3f00fd` + `60ec323`), not merged, not live-tested; flags L4-1…L4-16, as-built note § 6.3a. **Link 5 done (2026-10-21):** I2 plugin (§ 6.2; plugin `90b01850`), not merged, not live-tested; flags L5-1…L5-9, as-built note § 6.2a. KNG-214 complete. **Link 6 done (2026-10-21):** A1 (§ 7; api `641f9c1`, web-app `eeea86f`; Cloudflare mechanism verified: a Zero Trust email list, DESIGN § 5.8; ops steps in [alpha go-live § 6.1](../../guides/alpha-go-live.md)), not merged, not live-tested; flags L6-1…L6-11, as-built note § 7.5. Next: link 7 (I3 prep + final write-up, § 8). The decisions are in [DESIGN.md](DESIGN.md) § 8 (2026-10-21).
-**Last updated:** 2026-10-21 (link 6)
+**Status:** In implementation through the [invitations chain](../../ai-agents/handoffs/INVITATIONS_CHAIN.md) (7 links, charter 2026-10-21). **Link 1 done on the feature branch (2026-10-21):** E0's API half (§ 2, knk-web-api `110451f`, cherry-pickable) and L0 (§ 4; api `bb4b9ee`, web-app `2bf70ab`, plugin `30b10e6e`), not merged, not live-tested; deviations flagged L1-1…L1-5 in the [progress report](../../reports/2026-10-21-invitations-chain.md). **Link 2 done (2026-10-21):** E1 (§ 3; api `0d7ec4a` + `a8b42ca`, web-app `aecd811`, [email guide](../../guides/email.md)), not merged, not live-tested; flags L2-1…L2-12. **Link 3 done (2026-10-21):** I1 (§ 5; api `77042fd` + `8ca8507`, web-app `dfa5cdd` + `18f3c9f`), not merged, not live-tested; flags L3-1…L3-12, as-built note at the end of § 5. **Link 4 done (2026-10-21):** I2 server side (§ 6.1, § 6.3; api `4d1fe00` + `44c5f63`, web-app `a3f00fd` + `60ec323`), not merged, not live-tested; flags L4-1…L4-16, as-built note § 6.3a. **Link 5 done (2026-10-21):** I2 plugin (§ 6.2; plugin `90b01850`), not merged, not live-tested; flags L5-1…L5-9, as-built note § 6.2a. KNG-214 complete. **Link 6 done (2026-10-21):** A1 (§ 7; api `641f9c1`, web-app `eeea86f`; Cloudflare mechanism verified: a Zero Trust email list, DESIGN § 5.8; ops steps in [alpha go-live § 6.1](../../guides/alpha-go-live.md)), not merged, not live-tested; flags L6-1…L6-11, as-built note § 7.5. **Link 7 done (2026-10-21):** I3 preparation (§ 8; api `8f489b9` `SeedAlphaTesterGroup`; [smoke test](../../guides/invitations-smoke-test.md), [architecture doc](../../architecture/account-identity-and-admission.md), living docs for the state after the switch-over), as-built note § 8.1; the chain is finished. **The switch-over itself is not done:** it waits for the merges (§ 9) and the developer's smoke test on dev (KNG-218 stays open). The decisions are in [DESIGN.md](DESIGN.md) § 8 (2026-10-21).
+**Last updated:** 2026-10-21 (link 7)
 **Linear:** [KNG-205](https://linear.app/kngpandi/issue/KNG-205) (parent). Each work package's issue is listed in § 1.
 **Sources:** [DESIGN.md](DESIGN.md), plus code read on 2026-10-21 at knk-web-api `master` `2d71155`, knk-web-app `main` `e30c815`, and knk-plugin `claude/mc-26.2-upgrade` `88497649` (Paper 26.3, Java 25).
 
@@ -684,6 +684,22 @@ details (flags in the [progress report](../../reports/2026-10-21-invitations-cha
 - [FEATURE_REGISTER](../../FEATURE_REGISTER.md) "Accounts" row, CHANGELOG entry at merge, specs README, this plan's status, tracker row → Recently completed.
 
 **Done when:** the alpha runs invite-only with the whitelist off, the smoke test has passed, and KNG-205 and its children are closed.
+
+### 8.1 As built (link 7, 2026-10-21)
+
+**Status: prepared on the feature branch**, not merged; the switch-over hasn't started. Flags L7-1…L7-6 in the
+[progress report](../../reports/2026-10-21-invitations-chain.md) "Link 7", which also holds the chain's final summary
+(merge order, combined live checklist, NAS and Cloudflare to-dos).
+- **`SeedAlphaTesterGroup`** (knk-web-api `8f489b9`, `dotnet ef`, data only, snapshot unchanged): `Alpha Tester`,
+  weight 1, parent `Default`, not premium, no nodes; skipped when the name exists; Down only removes an unused group
+  (no members, grants or invitations). `Invitations:InvitableGroups` already defaulted to it (link 3).
+- **Smoke test:** [invitations-smoke-test.md](../../guides/invitations-smoke-test.md): § 0 builds/DB/MySQL tests, § 1–7
+  per package (E1, L0, I1, I2, outage, kill switches, A1) with the § 8 extra checks, § 8 the end-to-end of § 6.4,
+  § 9 the alpha switch-over checks.
+- **Switch-over steps and kill switches** in [alpha go-live § 11.1](../../guides/alpha-go-live.md) (plus § 4.1 settings,
+  § 5.1 the gate, § 9 F2, § 10 invite texts) and runbook Phase 9. Step 4 needs a server **restart**: the plugin reads
+  `admission:` at start-up only, so `/knk reload` (named above) doesn't switch it (L7-2).
+- Not done here (outside the chain): the merges, the NAS containers, the Cloudflare dashboard, the switch-over itself.
 
 ---
 

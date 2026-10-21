@@ -2,7 +2,7 @@
 
 **Status:** v2, aligned 2026-10-11 with the [closed-alpha deployment runbook](closed-alpha-deployment-runbook.md)
 (the Codex NAS rollout). Not yet followed end to end.
-**Last updated:** 2026-10-21 (§ 6.1: Cloudflare Access sync, `cfproxy`, the sign-up bypass — KNG-216, feature branch; § 4: `Email__AllowLogTransport` for API builds with the KNG-206 email engine; notes pointing to the KNG-205 invitations plan); 2026-10-18
+**Last updated:** 2026-10-21 (KNG-218, invitations chain link 7, **feature branch, not merged**: § 4.1 settings after the invite-only switch-over, § 5.1 admission gate instead of the whitelist, § 9 F2, § 10 invite mail, § 11 kill switches and **§ 11.1 the switch-over steps**, § 12); 2026-10-21 (§ 6.1: Cloudflare Access sync, `cfproxy`, the sign-up bypass — KNG-216, feature branch; § 4: `Email__AllowLogTransport` for API builds with the KNG-206 email engine; notes pointing to the KNG-205 invitations plan); 2026-10-18
 **Applies to:** builds that **include KNG-64**: knk-web-api `master` ≥ `30c5dc5`, knk-web-app `main` ≥ `98c0a76`,
 knk-plugin `main` ≥ `34c9261`. **Never expose an older API.**
 **Linear:** [KNG-64](https://linear.app/kngpandi/issue/KNG-64) (parent), [KNG-68](https://linear.app/kngpandi/issue/KNG-68) (this guide)
@@ -158,12 +158,52 @@ App__PublicBaseUrl=https://<web-host>
 Then remove `Email__AllowLogTransport`. The [email guide](email.md) has every setting, the smoke steps and
 troubleshooting.
 
+### 4.1 After the invite-only switch-over (KNG-205)
+
+*Describes the API built from the invitations feature branch `claude/player-signup-invitation-flow-f4v7ul` (not merged
+as of 2026-10-21). Until the switch-over (§ 11.1) every value below except the mail block stays at its default, which
+keeps the alpha exactly as above.* Design: [invitations DESIGN](../specs/invitations/DESIGN.md); how it fits together:
+[account identity and admission](../architecture/account-identity-and-admission.md).
+
+```ini
+# Sign-up: invitations instead of /account link codes (§ 11.1 step 3). LinkCode is the default and the kill switch.
+Security__Registration__Mode=Invite
+# Security__Registration__AllowWebFirst no longer matters once Mode is set; leave it false.
+
+# Invitations (defaults shown; omit to keep them). The group must exist: migration SeedAlphaTesterGroup makes it.
+# Invitations__DefaultExpiryDays=7  Invitations__MaxExpiryDays=30  Invitations__SharedDefaultMaxUses=5
+# Invitations__SharedMaxUsesCap=50  Invitations__ResendPerDay=3   Invitations__InvitableGroups__0=Alpha Tester
+# Admission (defaults): claim codes live 15 min; invited accounts unlinked after 2 days get one reminder mail (0 = off).
+# Admission__ClaimCodeMinutes=15  Admission__FinishLinkingReminderDays=2
+
+# Cloudflare Access sync (§ 6.1): on from § 11.1 step 2. ApiToken lives only in /etc/knk/api.env (mode 600).
+CloudflareAccess__SyncEnabled=true
+CloudflareAccess__AccountId=<account id>
+CloudflareAccess__ListId=<id of knk-api-testers>
+CloudflareAccess__ProxyUrl=http://cfproxy:8888
+# CloudflareAccess__ApiToken=…   (env file only)
+
+# Mail through the relay (KNG-211); invites, welcome, linked and reminder mails use it, links use App__PublicBaseUrl.
+Email__Transport=Smtp
+Email__SmtpHost=mailrelay
+Email__SmtpPort=587
+Email__UseStartTls=false
+Email__SmtpUsername=
+Email__FromAddress=knightsandkingsmc@gmail.com
+App__PublicBaseUrl=https://<web-host>
+# No Email__AllowLogTransport once the relay works.
+```
+
+The stack then has two small helper containers besides the API: **`mailrelay`** (the SMTP relay of KNG-211,
+[email guide § 3](email.md)) and **`cfproxy`** (§ 6.1 step 1). Neither publishes a port.
+
 ---
 
 ## 5. Minecraft and plugin (runbook Phases 4–5)
 
 **`server.properties`:** `online-mode=true`, `white-list=true`, `enforce-whitelist=true`. Add the testers with
-`whitelist add <name>`. playit makes the server reachable from anywhere, so the whitelist is the gate.
+`whitelist add <name>`. playit makes the server reachable from anywhere, so the whitelist is the gate **until the
+invite-only switch-over** (§ 5.1, § 11.1).
 
 **Plugin `plugins/KnightsAndKings/config.yml`:** a config.yml copied from the dev server keeps its old values. Set
 these by hand:
@@ -194,6 +234,29 @@ Checks:
   (Mojang session servers).
 - The playit agent needs internet access and must reach `minecraft:25565`.
 - Publish no ports on the NAS for any of these.
+
+### 5.1 After the switch-over: the admission gate instead of the whitelist (KNG-214)
+
+*Feature branch, not merged; needs a plugin build with KNG-214 (on the KNG-182 Paper 26.3 base).* The plugin asks the
+API about every connecting player right after Mojang sign-in. Admitted accounts (every account that existed when the
+`AddInvitations` migration ran, and every invited account that linked its Minecraft account) and operators get in. A
+new player is turned away with a claim code and `https://<web-host>/link` on the disconnect screen. Nobody adds names
+to the whitelist any more.
+
+A `config.yml` copied from an older build has no `admission:` section, which means `whitelist` (off). Add it:
+
+```yaml
+admission:
+  mode: invite            # whitelist (default, gate off) | open | invite
+  api-timeout-ms: 3000    # then the offline store decides: known players in, strangers "try again"
+  link-url: ""            # empty: {web.public-url}/link
+```
+
+Then `white-list=false` in `server.properties` (or `/whitelist off`). The section is read **at start-up only**:
+`/knk reload` doesn't switch it, restart the server. Keep `online-mode=true`: the gate trusts the UUID only because
+Mojang checked it. Checks: the start-up log shows `[KnK Admission] admission.mode=invite` and no warning about a missing
+link URL; a stranger sees the five-line screen with a code; the server log says "Refused <name> (<uuid>):
+admission.kick" without the code.
 
 **playit.gg:**
 - Follow runbook Phase 5.
@@ -250,7 +313,9 @@ server {
 **Cloudflare Tunnel:** add a public hostname `<web-host>` → `http://<nginx>:80` on the existing tunnel.
 
 **Cloudflare Access:** add a Self-hosted application for the **whole** `<web-host>`. The policy *Allow testers*
-includes each tester's email, with One-time PIN login and a 24-hour session. This is plan decision D10: for a closed
+includes each tester's email, with One-time PIN login and a 24-hour session. *(After the switch-over, § 6.1: the
+testers come from the API-owned list `knk-api-testers`, staff stay in a hand-made Emails include, the session is 30
+days, and a bypass application opens only the sign-up pages.)* This is plan decision D10: for a closed
 alpha the allow-list covers the whole site, not only the admin pages. The plugin talks to `api` inside Docker, so
 Access never stands in its way. For the probe from outside, add a service token (Access → Service Auth) and a
 *Service Auth* policy.
@@ -435,12 +500,22 @@ Both must end with `ALL CHECKS PASSED`. The last check trips the login rate limi
 **E. Security probe**
 - [ ] Private and Cloudflare runs: `ALL CHECKS PASSED` (§ 8).
 
-**F. Player flow (a tester or a second account)**
+**F. Player flow (a tester or a second account)** — before the invite-only switch-over
 - [ ] A whitelisted player joins, and `/account link` shows the code (click to copy) and `https://<web-host>/auth/register`.
       They register with the code and land on the account page, logged in.
 - [ ] Log in with the Minecraft name and log out on a phone.
 - [ ] A Moderator can't grant `*` or reach the content tools, while an Admin can assign Staff and Moderator.
 - [ ] A password change in browser B logs out browser A.
+
+**F2. Invite flow** — after the switch-over (§ 11.1; feature branch, not merged). Details:
+[invitations smoke test](invitations-smoke-test.md) § 9.
+- [ ] Every active account was admitted by the migration (smoke test § 0.2), and `Alpha Tester` exists.
+- [ ] `/admin/invitations` shows "Access sync: last OK …" in green.
+- [ ] A personal invite mail arrives; the link opens without an Access login; sign-up → the PIN step → `/account/link`.
+- [ ] Joining with the new Minecraft account shows a claim code; entering it links the account; the rejoin gets the
+      first-join welcome and kits once, and the chat names the linked web account.
+- [ ] A shared code (`/join`) works for its use cap and no further.
+- [ ] A grandfathered tester joins without a code; an operator joins; `/whitelist` is off.
 
 **G. Communication**
 - [ ] The tester invite is sent (§ 10), together with how to report bugs.
@@ -449,6 +524,19 @@ Both must end with `ALL CHECKS PASSED`. The last check trips the login rate limi
 ---
 
 ## 10. Tester invite (template)
+
+**After the invite-only switch-over** (§ 11.1; feature branch, not merged) the invite **is** the system mail: create a
+personal invite on `/admin/invitations` and the API sends it (expires in 7 days; *Resend* gives a fresh link). The
+mail links `/invite/<token>`; the tester signs up, gets the Cloudflare PIN, then joins the server and enters the code
+shown on the disconnect screen on `/account/link`. For a **shared code** (Discord, a friend group) post this short text
+with the code from the result panel:
+
+> Knights & Kings closed alpha: sign up at **https://<web-host>/join** with code `KNK-XXXXX-XXXXX` (valid until
+> <date>, <n> places). Then join **play.knightsandkings.net** (Java Edition 26.3): you'll get a code on screen; enter
+> it on the website to link your Minecraft account. Never give that code to anyone; staff never ask for it.
+> Bugs or questions: <channel>.
+
+**Before the switch-over** (today's alpha), the hand-sent text:
 
 > Welcome to the **Knights & Kings closed alpha**!
 > 1. Join the Minecraft server **play.knightsandkings.net** (Java Edition 26.3). Your name is on the whitelist.
@@ -467,11 +555,43 @@ Both must end with `ALL CHECKS PASSED`. The last check trips the login rate limi
   migrator, then the API, then the web app, then the plugin (production guide § 10.6 order).
 - **Logs:** for the API, failed logins and lockouts carry the client IP from Cloudflare (via `ForwardedHeaders`).
 - **Kill switches:** stop `cloudflared` or edit the Access policy for the web; stop the playit agent for Minecraft.
+  After the switch-over also: `admission.mode: whitelist` + restart + `white-list=true` (gate off, whitelist back);
+  `Security__Registration__Mode=LinkCode` (no new sign-ups by invite); `CloudflareAccess__SyncEnabled=false` (list by
+  hand again); delete the bypass application (sign-up pages behind Access again). Each one alone is safe.
+
+### 11.1 Switch-over to invite-only (KNG-218)
+
+*Prepared on the feature branch `claude/player-signup-invitation-flow-f4v7ul` (not merged as of 2026-10-21).
+Preconditions (plan § 8): E0's relay live (KNG-211), the feature merged per [plan § 9](../specs/invitations/IMPLEMENTATION_PLAN.md#9-merge-and-deploy-order)
+(the plugin after KNG-182), and the [invitations smoke test](invitations-smoke-test.md) § 0–8 passed on dev.* Every
+deploy follows the runbook order: **back up → migrator → API → web app → plugin**. Run the matching smoke-test § 9
+checks after each step before going on.
+
+1. **Deploy behaviour-neutral.** API with `Security__Registration__Mode` unset (`LinkCode`) and
+   `CloudflareAccess__SyncEnabled=false`; plugin with `admission.mode: whitelist` (or no `admission:` section);
+   `white-list=true`. The migrator applies `LinkCodePurpose`, `AddEmailOutbox`, `AddInvitations` (every active account
+   admitted), `SeedInvitationStaffNode`, `SeedAlphaTesterGroup`. Nothing changes for testers. Check the § 4 mail block
+   and `/admin/email` → *Send test mail to me*.
+2. **Access sync and bypass.** § 6.1 steps 1–7: `cfproxy`, the list, the policy (30-day session), the token, the
+   bypass application, the settings. Testers **without** an account get a personal invite first; then
+   `CloudflareAccess__SyncEnabled=true`. The list fills with the current testers; the admin line turns green.
+3. **Sign-up by invitation.** `Security__Registration__Mode=Invite`, recreate the API. The developer invites a test
+   address and signs up with it (the web half of the web-first flow).
+4. **The gate.** Add the `admission:` section with `mode: invite` (§ 5.1), restart the server, then `/whitelist off`
+   (`white-list=false`). The developer joins with the second Minecraft account, gets the code, links on
+   `/account/link` and rejoins.
+5. **Alpha checks.** Run the smoke-test sections marked "alpha" (§ 9 step 5). Then swap the tester invite (§ 10), and
+   update `ACTIVE_SESSIONS.md`, KNG-218 and a dated go-live note.
+
+**Rolling back:** the kill switches above, in reverse order (gate first: `admission.mode: whitelist` + whitelist on).
+No migration needs to be undone; the new columns and tables are unused while the switches are off.
 
 ## 12. Moving on from the alpha
 
 Before an **open beta**:
 - Move to a VPS (production guide § 1.3 onwards), with the seed export/import instead of a dump copy.
-- Drop the Access allow-list, or keep it for `/admin` only. *(Superseded for the alpha 2026-10-21: Access stays, and the API keeps its list in sync once [KNG-216](https://linear.app/kngpandi/issue/KNG-216) ships; see [invitations DESIGN § 5.8](../specs/invitations/DESIGN.md).)*
-- Add email verification (plan § 12) and CI-built images (guide § 10).
+- Drop the Access allow-list, or keep it for `/admin` only. *(Superseded for the alpha 2026-10-21: Access stays, and the API keeps its list in sync once [KNG-216](https://linear.app/kngpandi/issue/KNG-216) ships; see [invitations DESIGN § 5.8](../specs/invitations/DESIGN.md).)* Mind the free Zero Trust plan's **50 seats** (staff included): past that, the beta needs either a paid plan or Access dropped for the player pages.
+- Decide whether invite-only stays (decision I3: at least the alpha test sessions, maybe the beta). `Security__Registration__Mode=Open` is reserved for that and behaves like `Invite` today.
+- Add email verification (plan § 12; [KNG-159](https://linear.app/kngpandi/issue/KNG-159): invite mails already verify the address, shared-code sign-ups don't) and CI-built images (guide § 10).
+- Move mail from Gmail to a provider on `knightsandkings.net` with SPF/DKIM/DMARC (decision E1; [email guide](email.md)).
 - Decide on a public static site at `knightsandkings.net`.
