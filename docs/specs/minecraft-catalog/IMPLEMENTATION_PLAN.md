@@ -568,7 +568,13 @@ phase. Live testing happens once, after phase 4 (D12).
 | Phase | Status | Where |
 |---|---|---|
 | 2 Schema + audit | Code-complete 2026-10-21, not merged | knk-web-api `claude/relaxed-davinci-hsdspe`: migration `MinecraftCatalogEntryFields`; `Services/MinecraftCatalog/` (`MinecraftNamespaceKey`, `MinecraftBlockState`, `MinecraftMaterialReferences`, `MinecraftCatalogMaintenanceService`); `MinecraftCatalogController` (`GET audit`, `POST backfill`, `POST materials/{sourceId}/merge-into/{targetId}`, all `knk.admin.content`); the backfill also runs at startup before the item seeds; read-only catalogue fields on the material/block DTOs |
-| 1, 3-5 | Not started (phase 1 waits for KNG-195) | |
+| 3 Scan + ingest + icons | Code-complete 2026-10-21, not merged, not live-tested (D12) | knk-web-api `d33213b`: `MinecraftCatalogScanService` (request/list/get/cancel/ingest, icon override), `MinecraftIconResolver` (config `MinecraftCatalog:Icons`, defaults in code), snapshot/scan DTOs, scan status as concurrency token (snapshot only, no schema change). knk-plugin `a513cc71`, `b5b5450b`, `21eb8751`: knk-core `catalog/CatalogSnapshot` (hash), knk-api-client `MinecraftCatalogApi` (PUT with a 2-minute read timeout), knk-paper `catalog/BukkitMaterialCatalogSource` + `tasks/MinecraftCatalogScanTaskHandler` registered in `KnKPlugin`. knk-web-app `91cc7ae`, `938d86b`, `634708d`: `/admin/minecraft-catalog` (scan, polling, cancel, history; needs-attention with merge; missing icons with overrides), `minecraftCatalogClient`, `MinecraftIcon` |
+| 1, 4, 5 | Not started (phase 1 waits for KNG-195) | |
+
+Open points from phase 3:
+- Live checks for the end-of-chain test (D12): that `GlobalTranslator` gives English names on Paper (D4), the real entry count, payload size and ingest time, and icon coverage on 26.3 (Prismarine stops at 26.1; the rest comes from Inventivetalent guesses).
+- The plugin code uses only `Material` API that the Paper 26.3 jar still has (checked with `javap`). It has not been compiled on the KNG-182 branch, because this environment has no JDK 25.
+- The admin page can't clear an override on a material that has one, because the audit lists only materials without an icon and without an override. Phase 4 adds the icon to the material edit form.
 
 ## 11. Decisions (developer, 2026-10-21)
 
