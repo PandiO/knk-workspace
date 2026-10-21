@@ -1,6 +1,6 @@
 # Minecraft catalogue (materials and blocks): implementation plan
 
-**Status:** Draft, decisions D1-D6 taken by the developer (2026-10-21, §11). Nothing is implemented yet.
+**Status:** Draft, decisions D1-D9 taken by the developer (2026-10-21, §11). Nothing is implemented yet.
 **Last updated:** 2026-10-21
 **Issue:** [KNG-200](https://linear.app/kngpandi/issue/KNG-200). Related: [KNG-195](https://linear.app/kngpandi/issue/KNG-195) (hybrid submit fixes, In Review), [KNG-182](https://linear.app/kngpandi/issue/KNG-182) (Minecraft 26.3).
 
@@ -10,6 +10,12 @@ and `HybridEnchantmentPicker`) is deferred by the developer. It shares the hybri
 below, so §9 notes where it has to keep working.
 
 ## 0. Goal (developer, 2026-10-19)
+
+> **Scope update 2026-10-21 (developer, D7-D9 in §11).** The material picker only matters for
+> item blueprints (`ItemBlueprint.IconMaterialRefId`), and icons are not important for now. The
+> existing database rows may be merged into or deleted by the scan; no new or empty database is
+> involved. So: the first deliverable is a clean item picker fed by a scan that cleans up the
+> current rows (§6 step 4). Icons and the block-state picker move to a later, optional phase 6.
 
 - An admin starts a scan from the web app. The running Minecraft server reads every item and
   block of its version and the API stores them in the database.
@@ -312,9 +318,19 @@ told apart even if the names match.
    - Update the facts on existing rows: flags, name, default state, `LastSeen*`,
      `CatalogStatus=Active`, and `IconUrl`/`IconSource`/`IconStatus` unless `IconUrlOverride` is
      set.
-   - **Never delete.** Rows not in the snapshot become `Missing`.
-   - `Id`, `NamespaceKey` of existing rows, `Category`, `LegacyName` and `IconUrlOverride` are
-     never changed by a scan.
+   - **Clean-up of the existing rows (decision D7).** Rows are matched by normalised key, so an
+     existing row keeps its `Id` and every reference to it stays valid. Then, in the same
+     transaction:
+     - Rows whose key only differs by notation (case, spaces, missing `minecraft:`) from a scanned
+       key are **merged** into the scanned row: the seven FKs are repointed, then the duplicate
+       is deleted.
+     - Rows not in the snapshot that nothing references (none of the seven FKs, and no id in
+       form drafts) are **deleted**.
+     - Rows not in the snapshot that are still referenced become `Missing` (D3). The scan result
+       lists them with their referrers, and the admin page offers "merge into …" for each one.
+     - The scan result counts merged, deleted and missing rows, and logs every deleted key.
+   - `Id` of kept rows, `Category`, `LegacyName` and `IconUrlOverride` are never changed by a
+     scan.
    - `SaveChanges` runs in batches. On commit the scan becomes `Completed` with its counters. On
      any error it rolls back and the scan becomes `Failed` with the error text.
 5. **Concurrency.**
@@ -326,6 +342,11 @@ told apart even if the names match.
      won. That ends the "two quick picks" race.
 
 ## 7. Image assets: selection and fallback
+
+> **Deferred to phase 6 (decision D8, 2026-10-21).** Icons are not important for now. Until
+> phase 6 the scan leaves `IconUrl` as it is (existing rows keep their old URL, new rows have
+> none) and no provider or `MinecraftIcon` component is built. The design below stays as the
+> plan for phase 6.
 
 - Use `IMinecraftIconProvider` with an ordered list of providers in config
   (`MinecraftCatalog:Icons:Providers`). Each provider declares the versions it has.
@@ -356,7 +377,7 @@ told apart even if the names match.
   - Icons are Mojang textures hot-linked from GitHub raw. That is fine for the admin web app.
     Caching or proxying can come later.
 
-## 8. Migration of existing data (non-destructive)
+## 8. Migration of existing data
 
 1. **Migration `MinecraftCatalogEntryFields`** (phase 2), additive only.
    - New nullable columns on `minecraftmaterialrefs`.
@@ -382,8 +403,10 @@ told apart even if the names match.
    - Unverified rows.
    - Materials missing from the latest scan that are still referenced, with their referrers per
      FK.
-4. **Resolution, by the developer, never automatic.** An admin "merge A into B" action repoints
-   the seven material FKs in one transaction and only then deletes A.
+4. **Resolution.** Notation duplicates and unreferenced rows are cleaned up by the scan itself
+   (§6 step 4, decision D7). For what remains (referenced rows the scan doesn't know), an admin
+   "merge A into B" action repoints the seven material FKs in one transaction and only then
+   deletes A.
    - Block refs have no referrers, so a duplicate can simply be deleted after the audit.
    - Before that, check JSON blobs that might hold material ids, e.g. form drafts
      (`FormSubmissionProgress`) and WorldTask output; the same applies before any rename.
@@ -391,8 +414,9 @@ told apart even if the names match.
    - a unique index on `StateKey`;
    - `MaterialRefId` required;
    - `StateKey` required.
-6. **Not done:** no row is deleted, no id changes, no FK is redirected without the merge action,
-   and nothing is renamed.
+6. **Not done:** the schema migrations themselves delete nothing; deletion and merging only
+   happen in the scan's clean-up (§6 step 4) and the merge action. Kept rows keep their id, and
+   nothing is renamed.
 
 ## 9. Retiring the hybrid picker and the static JSON
 
@@ -410,7 +434,8 @@ The order matters, because some callers still depend on the hybrid routes.
      and icon, and it sorts and pages in the database.
    - Old settings are mapped: `categoryFilter` `ICON` / `ITEM` → `kind=item`, `BLOCK` →
      `kind=block`, `BANNER` → key contains `_banner`.
-   - Block refs get a picker that chooses a material with `IsBlock`, then optionally a state.
+   - Later (phase 6): block refs get a picker that chooses a material with `IsBlock`, then
+     optionally a state.
 4. **Before deleting anything,** move the other callers:
    - ItemScan/KitScan move from `getHybrid` + `persistFromCatalog` to `search` + get-or-create.
    - Roads `MaterialKeyInput` moves to `search`.
@@ -436,11 +461,12 @@ checked before the next starts.
 
 | Phase | Content | Repos | Tests |
 |---|---|---|---|
-| **1 Stabilise** (after KNG-195 merges) | API: hybrid filters DB-only rows by search/category, de-duplicates by normalised key, applies `SortBy`, returns `Id = null` for unsaved rows and the requested `PageSize`; block hybrid groups instead of `ToDictionary`. Normaliser + single resolver; create → 409 on an existing key; `POST MinecraftBlockRefs/get-or-create`. Web: auto-create via get-or-create (materials and blocks); unsaved rows keyed and compared by normalised key; id 0/null never counts as an id; stale-response guard; "select all" skips or creates unsaved rows; `MinecraftIcon` with fallback. The 823 broken icon URLs are **not** fixed in the JSON (decision D6); the placeholder covers them until the phase 3 provider resolves icons at the first scan | web-api, web-app | API: hybrid search (filter, dedupe, sort, paging, two states of one block), normaliser table tests, get-or-create race (unique index), create 409. Web: `tableRowKey`/`isSameSelection` with id 0/null, PagedEntityTable hybrid (auto-create calls get-or-create, two unsaved rows stay distinct, stale response ignored), `MinecraftIcon` onError |
+| **1 Stabilise** (after KNG-195 merges) | API: hybrid filters DB-only rows by search/category, de-duplicates by normalised key, applies `SortBy`, returns `Id = null` for unsaved rows and the requested `PageSize`; block hybrid groups instead of `ToDictionary`. Normaliser + single resolver; create → 409 on an existing key; `POST MinecraftBlockRefs/get-or-create`. Web: auto-create via get-or-create (materials and blocks); unsaved rows keyed and compared by normalised key; id 0/null never counts as an id; stale-response guard; "select all" skips or creates unsaved rows. No icon work (D6, D8) | web-api, web-app | API: hybrid search (filter, dedupe, sort, paging, two states of one block), normaliser table tests, get-or-create race (unique index), create 409. Web: `tableRowKey`/`isSameSelection` with id 0/null, PagedEntityTable hybrid (auto-create calls get-or-create, two unsaved rows stay distinct, stale response ignored) |
 | **2 Schema + audit** | Migration `MinecraftCatalogEntryFields`, backfill, audit endpoint, merge action, DTO fields (additive, old fields unchanged) | web-api | Migration up/down on a copy of the dev DB, backfill idempotent (run twice), audit finds seeded collisions, merge repoints all seven FKs and rolls back on error |
-| **3 Scan + ingest + icons** | `MinecraftCatalog` controller (scans, snapshot, audit), ingest (§6), icon providers (§7). Plugin: `CatalogSource`, `MinecraftCatalogScanTaskHandler`, api-client `MinecraftCatalogApi` (+ startup version report). Web: admin page "Minecraft catalogue" (scan button, status, counters, missing icons, overrides, audit) | web-api, plugin, web-app | API: ingest insert/update/unchanged/missing, never deletes, override survives, duplicate key → 400 with nothing written, same hash → no-op, other hash → 409, rollback → `Failed`, one active scan. Icon provider mapping table tests (block/blocks, items, block-only keys, version fallback). Plugin: snapshot builder (legacy/air excluded, sorted, hash stable), handler completes/fails the WorldTask, api-client request body (interceptor like `WorldAnalyticsApiImplTest`). Live: scan on the dev server (1.21.10, then 26.3) |
-| **4 DB-only picker** | `PickerSource` switch, kind filter, settings mapping, block state picker, callers moved off `hybrid`, seeds on the resolver; migration `MinecraftCatalogConstraints` after a clean audit | web-api, web-app | Picker search/sort/paging against the DB, settings mapping, ItemScan/KitScan/Roads on the new calls, seeds on an empty DB without any scan (Unverified rows, no icons) and after a scan (enriched, not duplicated) |
+| **3 Scan + ingest** | `MinecraftCatalog` controller (scans, snapshot, audit), ingest with clean-up (§6). Plugin: `CatalogSource`, `MinecraftCatalogScanTaskHandler`, api-client `MinecraftCatalogApi` (+ startup version report). Web: admin page "Minecraft catalogue" (scan button, status, counters, missing-but-referenced rows with "merge into", audit) | web-api, plugin, web-app | API: ingest insert/update/unchanged; notation duplicates merged with FKs repointed; unreferenced rows not in the scan deleted; referenced ones kept as `Missing`; rollback leaves every row untouched; override survives; duplicate key → 400 with nothing written, same hash → no-op, other hash → 409, rollback → `Failed`, one active scan. Plugin: snapshot builder (legacy/air excluded, sorted, hash stable), handler completes/fails the WorldTask, api-client request body (interceptor like `WorldAnalyticsApiImplTest`). Live: scan on the dev server (1.21.10, then 26.3) |
+| **4 DB-only picker** | `PickerSource` switch, item picker for `ItemBlueprint.IconMaterialRefId` first (kind=item), settings mapping, callers moved off `hybrid`, seeds on the resolver; migration `MinecraftCatalogConstraints` after a clean audit | web-api, web-app | Picker search/sort/paging against the DB, settings mapping, ItemScan/KitScan/Roads on the new calls, seeds on an empty DB without any scan (Unverified rows, no icons) and after a scan (enriched, not duplicated) |
 | **5 Retire** | Remove hybrid routes/code and the catalogue service (§9.5) | web-api, web-app | Full suites; grep for `SearchHybrid`/`getHybrid`/`MinecraftMaterialCatalogService` returns only enchantment code |
+| **6 Later, optional** (D8) | Icon providers and `MinecraftIcon` (§7); block-state picker (§9.3) | web-api, web-app | Icon provider mapping table tests (block/blocks, items, block-only keys, version fallback), `MinecraftIcon` onError; block-state picker |
 
 **Order with other work:**
 
@@ -452,7 +478,8 @@ checked before the next starts.
 
 ## 11. Decisions (developer, 2026-10-21)
 
-All six were put to the developer as questions in the Claude app on 2026-10-21.
+D1-D6 were put to the developer as questions in the Claude app on 2026-10-21; D7-D9 and the
+clarification of D5 followed in chat the same day.
 
 | # | Question | Decision |
 |---|---|---|
@@ -460,5 +487,8 @@ All six were put to the developer as questions in the Claude app on 2026-10-21.
 | D2 | Partial block states | Allowed as their own identity, flagged `IsPartial` |
 | D3 | Entries gone in a newer version | Kept as `Missing`, hidden in pickers, listed in the audit |
 | D4 | Display names | English from the server's translations, else derived from the key (verify live) |
-| D5 | Old static JSON for an empty database | **No bootstrap import.** Start empty until the first scan; the JSON is deleted in phase 5 |
-| D6 | Fix the 823 broken icon URLs in phase 1 | **No.** Wait for the phase 3 icon provider; the `MinecraftIcon` placeholder covers them meanwhile |
+| D5 | Old static JSON for an empty database | **No bootstrap import.** Only a brand-new install starts empty until its first scan. The existing database stays and the scan updates its rows (D7). The JSON is deleted in phase 5 |
+| D6 | Fix the 823 broken icon URLs in phase 1 | **No** (see D8) |
+| D7 | Existing material rows | The scan may merge and delete them: notation duplicates merged into the scanned row, unreferenced rows not in the scan deleted, referenced ones kept as `Missing` for a manual merge (§6 step 4) |
+| D8 | Icons | Not important now: no icon work until optional phase 6 |
+| D9 | Focus | The material picker only matters for item blueprints; that picker comes first in phase 4 |
