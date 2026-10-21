@@ -1,6 +1,6 @@
 # Closed-alpha deployment runbook
 
-**Status:** In progress — phases 0–3 complete; phase 3b (API upgrade to the KNG-64 build) and phase 4 (Minecraft container, [KNG-225](https://linear.app/kngpandi/issue/KNG-225)) are next. Web hostname decided 2026-10-21: `app.knightsandkings.net`
+**Status:** In progress — phases 0–3 complete; phase 4 Stage 1 (Minecraft container without the KnK plugin, [KNG-225](https://linear.app/kngpandi/issue/KNG-225)) running since 2026-10-21 ([report](../reports/2026-10-21-minecraft-container.md)); phase 3b (API upgrade to the KNG-64 build) is next, then phase 4 Stage 2. Web hostname decided 2026-10-21: `app.knightsandkings.net`
 **Last updated:** 2026-10-21
 **Progress report:** [2026-10-11 closed-alpha infrastructure progress](../reports/2026-10-11-closed-alpha-infrastructure-progress.md)
 **Handoff:** [2026-10-11 closed-alpha infrastructure](../ai-agents/handoffs/2026-10-11-closed-alpha-infrastructure.md)
@@ -223,6 +223,14 @@ Exact commands and configuration: [alpha go-live § 3–4](alpha-go-live.md#3-up
 > Until Phase 3b has run, the API is the pre-KNG-64 `17ee730a` build on the placeholder database: a run against
 > it is a **disposable rehearsal**, and the world copy is replaced when the approved seed is exported (worlds and
 > world-coupled rows must come from the same moment, production guide § 7.4).
+
+> **Status 2026-10-21 (paused after Stage 1):** `knk-alpha-minecraft` runs Paper 26.3 build 205 on the image pinned
+> above, as UID 2001, with FAWE 2.16.1 and WorldGuard 7.0.20 and no KnK jar yet. Its worlds were copied from the
+> converted dev server `DEV_SERVER_26.3`, not from staging, and the staging tree stays the rollback. Other choices:
+> `mem_limit` 6 GiB, no ports, and the RCON console works. A `systemctl restart docker` saved the worlds and brought the
+> stack back on its own. The host `compose.yaml` is authoritative and is copied to Portainer stack 42 (A6). Stage 2 (KnK
+> plugin, update swap, private acceptance) waits for Phase 3b. Details:
+> [2026-10-21 report](../reports/2026-10-21-minecraft-container.md).
 
 ### 4.1 Service definition
 
