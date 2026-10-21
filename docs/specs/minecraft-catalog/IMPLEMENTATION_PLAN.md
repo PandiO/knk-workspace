@@ -569,7 +569,7 @@ phase. Live testing happens once, after phase 4 (D12).
 |---|---|---|
 | 2 Schema + audit | Code-complete 2026-10-21, not merged | knk-web-api `claude/relaxed-davinci-hsdspe`: migration `MinecraftCatalogEntryFields`; `Services/MinecraftCatalog/` (`MinecraftNamespaceKey`, `MinecraftBlockState`, `MinecraftMaterialReferences`, `MinecraftCatalogMaintenanceService`); `MinecraftCatalogController` (`GET audit`, `POST backfill`, `POST materials/{sourceId}/merge-into/{targetId}`, all `knk.admin.content`); the backfill also runs at startup before the item seeds; read-only catalogue fields on the material/block DTOs |
 | 3 Scan + ingest + icons | Code-complete 2026-10-21, not merged, not live-tested (D12) | knk-web-api `d33213b`: `MinecraftCatalogScanService` (request/list/get/cancel/ingest, icon override), `MinecraftIconResolver` (config `MinecraftCatalog:Icons`, defaults in code), snapshot/scan DTOs, scan status as concurrency token (snapshot only, no schema change). knk-plugin `a513cc71`, `b5b5450b`, `21eb8751`: knk-core `catalog/CatalogSnapshot` (hash), knk-api-client `MinecraftCatalogApi` (PUT with a 2-minute read timeout), knk-paper `catalog/BukkitMaterialCatalogSource` + `tasks/MinecraftCatalogScanTaskHandler` registered in `KnKPlugin`. knk-web-app `91cc7ae`, `938d86b`, `634708d`: `/admin/minecraft-catalog` (scan, polling, cancel, history; needs-attention with merge; missing icons with overrides), `minecraftCatalogClient`, `MinecraftIcon` |
-| 4 DB-only picker | In progress 2026-10-21 | See "Phase 4 as built" below |
+| 4 DB-only picker | Code-complete 2026-10-21, not merged, not live-tested (D12) | knk-web-api `e9d581e`; knk-web-app `b6ba680`..`de23957` (picker `kind` filter, "New" badge only for unsaved rows, `MinecraftIcon` in material/block columns, DisplayField/DisplaySection and a new item blueprint Icon column, icon-override list on the admin page). See "Phase 4 as built" below |
 | 1, 5 | Not started (phase 1 waits for KNG-195) | |
 
 **Phase 4 as built (refines §9.3-9.4):**
@@ -594,6 +594,14 @@ phase. Live testing happens once, after phase 4 (D12).
   name).
 - **Icons.** `ItemBlueprintListDto.iconUrl` feeds the blueprint overview. The audit has
   `iconOverrides`, so an override can be cleared on the admin page.
+- **Column lookup in the web app.** The object dashboard and the form pickers looked up the column
+  registry by the API's entity name ("ItemBlueprint"), but the registry keys are lower case, so
+  they never found it. The FormWizard column settings already looked it up in lower case.
+  `getColumnDefinitions` now ignores case. As a result, dashboards and pickers for every entity
+  with a registry entry (town, district, gates, lootboxes, ...) show the registry's columns and
+  formatters when no saved column configuration says otherwise. Check this in the live test.
+- **Material table columns.** ID, Name (display name), Icon, Namespace Key, Kind and Status.
+  Category and Legacy Name were dropped from the default columns.
 - **Deferred to phase 5.** The migration `MinecraftCatalogConstraints` (unique `StateKey`, required
   `MaterialRefId`) needs a clean audit on the real database, which is only known at the live test
   (D12).
