@@ -1,6 +1,6 @@
 # Invitations chain — progress report
 
-**Status:** Links 1–6 done (2026-10-21), nothing merged. Link 7 is ready ([handoff](../ai-agents/handoffs/2026-10-21-invitations-link-7.md)).
+**Status:** Links 1–6 done (2026-10-21), nothing merged. Link 7 is ready ([handoff](../ai-agents/handoffs/2026-10-21-invitations-link-7.md)); **paused by the developer after link 6**, link 7 starts on their go.
 **Last updated:** 2026-10-21 (link 6)
 **Linear:** [KNG-205](https://linear.app/kngpandi/issue/KNG-205) and its children (see the [charter](../ai-agents/handoffs/INVITATIONS_CHAIN.md))
 **Branch:** `claude/player-signup-invitation-flow-f4v7ul` in every repo. knk-plugin's is based on `claude/mc-26.2-upgrade` (KNG-182).
@@ -15,7 +15,7 @@
 | 4 | KNG-214 (API + web app) | **done** (not merged, not live-tested) | api `44c5f63` / app `60ec323` / plugin unchanged (`30b10e6e`) / workspace: see git log | API 2904 passed, 4 known-red, 81 skipped (baseline 2864 / 4 / 80); app 165 suites / 997 (baseline 160 / 970) | `create_session session_01BU3iVACs3iW58qiapCJC9s` by the coordinator with the § 8 prompt; `add_repo` and the dry-run pushes succeeded |
 | 5 | KNG-214 (plugin) | **done** (not merged, not live-tested) | api unchanged (`44c5f63`) / app unchanged (`60ec323`) / plugin `90b01850` / workspace: see git log | plugin core 2178 / api-client 271 / paper 1889, 0 failures (baseline 2168 / 264 / 1870) | `create_session session_01YQKHE1Pg4ctrL2vadh3qng` by the coordinator with the § 8 prompt; `add_repo` and the dry-run pushes succeeded (KNG-182 still unmerged, so the plugin base stays `claude/mc-26.2-upgrade`) |
 | 6 | KNG-216 | **done** (not merged, not live-tested) | api `641f9c1` / app `eeea86f` / plugin unchanged (`90b01850`) / workspace: see git log | API 2925 passed, 4 known-red, 81 skipped (baseline 2904 / 4 / 81); app 165 suites / 1003 (baseline 165 / 997) | `create_session session_01HuAM9YQbNweZHr8WPuUSLq` by the coordinator with the § 8 prompt; `add_repo` and the dry-run pushes succeeded |
-| 7 | KNG-218 (prep) + final write-up | waiting | — | — | — |
+| 7 | KNG-218 (prep) + final write-up | ready — **chain paused by the developer after link 6** (2026-10-21); the coordinator starts link 7 on their go | — | — | — |
 
 **Follow-ups found during the chain:**
 - `PrivacyDeletionService` doesn't wake the Cloudflare Access sync; an erased account's address leaves the list on the
