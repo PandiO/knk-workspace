@@ -16,7 +16,7 @@ This is plan Phase 8's steps 1–15, with every live check the phase sections of
 
 | Repo | Branch | Head to deploy |
 |---|---|---|
-| knk-web-api | `claude/arena-duels` | `7872831` (from `master` `2d71155`) |
+| knk-web-api | `claude/arena-duels` | `57f26a2` (from `master` `2d71155`) |
 | knk-web-app | `claude/arena-duels` | `6afaa8b` (from `main` `e30c815`) |
 | knk-plugin | `claude/arena-duels` | `0f6dd1ca` (on the KNG-182 branch `claude/mc-26.2-upgrade` `88497649`; P8 changed only `CLAUDE.md`, so a `d8897a79` build is the same code) |
 

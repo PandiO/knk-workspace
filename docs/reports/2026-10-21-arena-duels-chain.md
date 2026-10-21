@@ -824,7 +824,7 @@ knk-web-api and knk-web-app: no P8 commits (no trunk change to merge).
 | Repo | Head | Command | Result |
 |---|---|---|---|
 | knk-plugin | `d8897a79` (code; `0f6dd1ca` adds only `CLAUDE.md`) | `./gradlew build -x deployToDevServer`, Temurin JDK 25.0.4 toolchain, Gradle 8.14.3 on JDK 21 | **BUILD SUCCESSFUL: knk-core 2338, knk-api-client 275 (2 skipped), knk-paper 2013 (18 skipped), 0 failures.** Same as P6. The first run failed on Maven Central HTTP 429 (dependency download, not a test); the re-run used a session-local init script pointing at Google's Maven Central mirror (nothing committed) |
-| knk-web-api | `7872831` | `dotnet build knkwebapi_v2.csproj`, `dotnet test Tests/knkwebapi_v2.Tests/knkwebapi_v2.Tests.csproj` | **2873 passed, 4 failed, 73 skipped.** The 4 are the known reds: `PathResolutionServiceTests` ×2, `ClientActivityStoreTests.RecordsRequestsIntoRollingBuckets`, `FieldValidationServiceTests.ValidateConditionalRequiredAsync_WithConditionMet_ValidatesRequired`. Same as P6 |
+| knk-web-api | `57f26a2` (re-run by the coordinator after the P2 follow-up; P8's first run at `7872831` gave 2873 / 4 / 73) | `dotnet build knkwebapi_v2.csproj`, `dotnet test Tests/knkwebapi_v2.Tests/knkwebapi_v2.Tests.csproj` | **2875 passed, 4 failed, 73 skipped.** The 4 are the known reds: `PathResolutionServiceTests` ×2, `ClientActivityStoreTests.RecordsRequestsIntoRollingBuckets`, `FieldValidationServiceTests.ValidateConditionalRequiredAsync_WithConditionMet_ValidatesRequired` |
 | knk-web-app | `6afaa8b` | `npx -y npm@11 ci`, `npm run test:ci` | **160 suites / 965 tests, all green.** Same as P7 |
 
 ### Docs
@@ -852,7 +852,7 @@ Before each merge: fetch, check the trunk tip, merge the trunk into the branch a
 
 | Repo | From base | Commits |
 |---|---|---|
-| knk-web-api | `master` `2d71155` | `1f65a12`, `05a9049`, `6507641`, `a8a26c3` (P1); `53f42cf`, `d208a74` (merge), `a0da408` (P2); `dc704f3` (P7); `7872831` (P6) |
+| knk-web-api | `master` `2d71155` | `1f65a12`, `05a9049`, `6507641`, `a8a26c3` (P1); `53f42cf`, `d208a74` (merge), `a0da408` (P2); `dc704f3` (P7); `7872831` (P6); `57f26a2` (P2 follow-up: staff-only review data, `SYS_CONFISCATED`) |
 | knk-web-app | `main` `e30c815` | `7fa594b` (P1); `6afaa8b` (P7) |
 | knk-plugin | `claude/mc-26.2-upgrade` `88497649` (KNG-182) | `1f5ebdfa`, `36195de3` (P3); `e3814cef`, `d00826c5` (P0 + merge); `02bca4e0` (P1); `1e17f985`, `2be401b5` (P2); `d0332108` (P7); `01b5d6a0`, `0c175f03`, `6fe453b1`, `bccd338d`, `089bd357` (P4); `4cb1aa80`, `ea7ecb4e`, `d1016f42` (P5); `0d62c543`, `a6fdd17c`, `d8897a79` (P6); `0f6dd1ca` (P8 docs) |
 | knk-workspace | `main` | the P0–P8 report sections, `managed-worldguard-regions.md`, the siege, currency and player-statistics DESIGN edits, and the P8 docs (see each section) |
@@ -901,7 +901,7 @@ The whole [smoke-test checklist](../guides/arena-duels-smoke-test.md). P8 adds n
 
 | Repo | Base | Head | Phases |
 |---|---|---|---|
-| knk-web-api | `master` `2d71155` | `7872831` | P1, P2, P7, P6 (9 commits, one of them a merge) |
+| knk-web-api | `master` `2d71155` | `57f26a2` | P1, P2, P7, P6, P2 follow-up (10 commits, one of them a merge) |
 | knk-web-app | `main` `e30c815` | `6afaa8b` | P1, P7 (2 commits) |
 | knk-plugin | `claude/mc-26.2-upgrade` `88497649` (KNG-182) | `0f6dd1ca` | P3, P0, P1, P2, P7, P4, P5, P6, P8 (20 commits, four of them merges) |
 | knk-workspace | `main` | this commit | report sections, living docs, guide, checklist |
@@ -910,7 +910,7 @@ Per-commit detail: the merge plan's table above and each phase's section.
 
 ### Tests at the P8 heads
 
-knk-plugin: core 2338, api-client 275 (2 skipped), paper 2013 (18 skipped), 0 failures. knk-web-api: 2873 passed, the 4 known reds, 73 skipped. knk-web-app: 160 suites / 965 tests green.
+knk-plugin: core 2338, api-client 275 (2 skipped), paper 2013 (18 skipped), 0 failures. knk-web-api (`57f26a2`): 2875 passed, the 4 known reds, 73 skipped. knk-web-app: 160 suites / 965 tests green.
 
 ### Merge order
 
@@ -930,11 +930,11 @@ Taken during the chain, all recorded as comments on [KNG-197](https://linear.app
 | 2026-10-21 | **Battlegrounds keep `entry allow` + `pvp allow`**; `knk-allow-entry deny` through the domain-access handler is the only entry guard | P1 `02bca4e0`; managed-regions §5 |
 | 2026-10-21 | **No `arena_2` migration or seed**; staff create arenas in the forms | P1 `a8a26c3` (endpoint removed); checklist §0.2 |
 | 2026-10-21 | **Deaths and quits by phase as built**: a death before the countdown cancels, a death in the countdown forfeits, both quitting on one tick cancels, a death plus the other's quit on one tick is decided by the death | P3 |
-| 2026-10-21 | **Match review data is staff-only**: `reviewSignals`, `reviewDetails`, `reviewTier` only for `knk.admin.duel.review` or the plugin key; others see the plain review state and result. Announcements stay public with the arena toggles | **being applied by the P2 session on knk-web-api `claude/arena-duels`; not on the branch when P8 pushed** (P8 checked `origin/claude/arena-duels`: still `7872831`). Guide §3.1, checklist P2·10 |
-| 2026-10-21 | **Confiscated coins go to a new `SYS_CONFISCATED` account**, not `SYS_FEES` | **same P2 follow-up, not on the branch yet.** Guide §3.2, checklist P2·7 / P7·8 |
+| 2026-10-21 | **Match review data is staff-only**: `reviewSignals`, `reviewDetails`, `reviewTier` only for `knk.admin.duel.review` or the plugin key; others see the plain review state and result. Announcements stay public with the arena toggles | P2 follow-up `57f26a2` (`DuelMatchesController` strips the three fields for other callers; `DuelMatchesControllerTests`). Guide §3.1, checklist P2·10 |
+| 2026-10-21 | **Confiscated coins go to a new `SYS_CONFISCATED` account**, not `SYS_FEES` | P2 follow-up `57f26a2` (`CurrencyReasons`: `DUEL_CONFISCATION` moves `SYS_DUEL` → `SYS_CONFISCATED`; the fee stays in `SYS_FEES`). Guide §3.2, checklist P2·7 / P7·8 |
 | 2026-10-21 | **Duel W/L/D visibility as built**: a metric-level "Wins: Nobody" also hides duel wins; the player can re-show them per context | P7, no change |
 
-The two P2 follow-ups change the API and its tests after P8's test run. **Before the merge, fetch knk-web-api `origin/claude/arena-duels` again and re-run the build and tests on the new head**, and use that head in the checklist's §0.1 table and the merge plan's commit list. If the commit hasn't landed when the merge step comes, say so; the coordinator handles it.
+The P2 follow-up `57f26a2` landed after P8's first test run; the coordinator re-ran the knk-web-api build and tests on it (P8 tests table above) and updated the checklist's §0.1 table and the merge plan's commit list. The chain was paused by the developer 15:05Z–17:35Z (subscription budget) between P8's first push and this re-test; nothing changed on the branches in between.
 
 ### Open questions for the developer
 
