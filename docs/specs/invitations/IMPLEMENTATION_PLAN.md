@@ -1,7 +1,7 @@
 # Invite-only sign-up, email engine and web-first Minecraft linking — Implementation plan
 
-**Status:** In implementation through the [invitations chain](../../ai-agents/handoffs/INVITATIONS_CHAIN.md) (7 links, charter 2026-10-21). **Link 1 done on the feature branch (2026-10-21):** E0's API half (§ 2, knk-web-api `110451f`, cherry-pickable) and L0 (§ 4; api `bb4b9ee`, web-app `2bf70ab`, plugin `30b10e6e`), not merged, not live-tested; deviations flagged L1-1…L1-5 in the [progress report](../../reports/2026-10-21-invitations-chain.md). **Link 2 done (2026-10-21):** E1 (§ 3; api `0d7ec4a` + `a8b42ca`, web-app `aecd811`, [email guide](../../guides/email.md)), not merged, not live-tested; flags L2-1…L2-12. **Link 3 done (2026-10-21):** I1 (§ 5; api `77042fd` + `8ca8507`, web-app `dfa5cdd` + `18f3c9f`), not merged, not live-tested; flags L3-1…L3-12, as-built note at the end of § 5. **Link 4 done (2026-10-21):** I2 server side (§ 6.1, § 6.3; api `4d1fe00` + `44c5f63`, web-app `a3f00fd` + `60ec323`), not merged, not live-tested; flags L4-1…L4-16, as-built note § 6.3a. Next: link 5 (I2 plugin, § 6.2). The decisions are in [DESIGN.md](DESIGN.md) § 8 (2026-10-21).
-**Last updated:** 2026-10-21 (link 4)
+**Status:** In implementation through the [invitations chain](../../ai-agents/handoffs/INVITATIONS_CHAIN.md) (7 links, charter 2026-10-21). **Link 1 done on the feature branch (2026-10-21):** E0's API half (§ 2, knk-web-api `110451f`, cherry-pickable) and L0 (§ 4; api `bb4b9ee`, web-app `2bf70ab`, plugin `30b10e6e`), not merged, not live-tested; deviations flagged L1-1…L1-5 in the [progress report](../../reports/2026-10-21-invitations-chain.md). **Link 2 done (2026-10-21):** E1 (§ 3; api `0d7ec4a` + `a8b42ca`, web-app `aecd811`, [email guide](../../guides/email.md)), not merged, not live-tested; flags L2-1…L2-12. **Link 3 done (2026-10-21):** I1 (§ 5; api `77042fd` + `8ca8507`, web-app `dfa5cdd` + `18f3c9f`), not merged, not live-tested; flags L3-1…L3-12, as-built note at the end of § 5. **Link 4 done (2026-10-21):** I2 server side (§ 6.1, § 6.3; api `4d1fe00` + `44c5f63`, web-app `a3f00fd` + `60ec323`), not merged, not live-tested; flags L4-1…L4-16, as-built note § 6.3a. **Link 5 done (2026-10-21):** I2 plugin (§ 6.2; plugin `90b01850`), not merged, not live-tested; flags L5-1…L5-9, as-built note § 6.2a. KNG-214 complete. Next: link 6 (A1, § 7). The decisions are in [DESIGN.md](DESIGN.md) § 8 (2026-10-21).
+**Last updated:** 2026-10-21 (link 5)
 **Linear:** [KNG-205](https://linear.app/kngpandi/issue/KNG-205) (parent). Each work package's issue is listed in § 1.
 **Sources:** [DESIGN.md](DESIGN.md), plus code read on 2026-10-21 at knk-web-api `master` `2d71155`, knk-web-app `main` `e30c815`, and knk-plugin `claude/mc-26.2-upgrade` `88497649` (Paper 26.3, Java 25).
 
@@ -483,7 +483,22 @@ Built as above, with these differences (flags in the [progress report](../../rep
 
   If Paper has moved the authoritative check to `PlayerConnectionValidateLoginEvent`, gate there instead. The policy stays the same.
 
-### 6.3 knk-web-app
+### 6.2a As built (link 5, 2026-10-21)
+
+Built as § 6.2 describes, on Paper 26.3 / JDK 25 (plugin `90b01850`; flags in the
+[progress report](../../reports/2026-10-21-invitations-chain.md) "Link 5"):
+- `AdmissionPolicy.decide(mode, operator, result, knownOffline, now)` → `Allow` / `Deny(messageKey, placeholders)`;
+  `{minutes}` comes from `expiresAt`, rounded up. An unknown `admission.mode` means `whitelist` (L5-2); a not-admitted
+  answer without a code counts as "API unavailable" (L5-3).
+- `AdmissionListener` at `LOWEST`, operators checked before any API call, `KICK_WHITELIST` with a multi-line component;
+  "known offline" = an identity in the offline security store within its max age (L5-5). The claim code is never
+  logged; the API client also keeps `Admission/` bodies out of the log.
+- Config: `admission.mode`, `api-timeout-ms`, `link-url`, `kick`, `unavailable`, `deactivated`, and
+  `account-linked` for the in-game notice (L5-1). `KnKPlugin.initializeAdmission()` is the only wiring.
+- Paper 26.3 (from the `paper-api` build 205 sources): `AsyncPlayerPreLoginEvent` fires after Mojang authentication;
+  the whitelist/ban verdict now reaches plugins through `PlayerConnectionValidateLoginEvent`, later in the login, so the
+  gate stays at pre-login. The live order and rendering checks are in the report's checklist.
+
 
 **`src/pages/auth/LinkPage.tsx`, `/link`** (works logged out):
 1. Enter the claim code → `claim/check` → "Minecraft account **Steve** verified".
@@ -656,6 +671,6 @@ With sync enabled on the alpha:
 ## 10. Open items to verify while implementing (not decisions)
 
 - Cloudflare: email-list selector or Access group; token permission names; list size limit (§ 7).
-- Paper 26.3: pre-login event order and the disconnect message rendering (§ 6.2).
+- Paper 26.3: pre-login event order and the disconnect message rendering (§ 6.2). Checked from the API sources in link 5 (§ 6.2a); the live checks are in the report's link 5 checklist.
 - `boky/postfix` env names at the pinned tag (§ 2).
 - MailKit version and TLS mode against the relay (§ 3).

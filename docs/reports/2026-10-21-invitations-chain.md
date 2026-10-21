@@ -1,7 +1,7 @@
 # Invitations chain — progress report
 
-**Status:** Links 1–4 done (2026-10-21), nothing merged. Link 5 is ready ([handoff](../ai-agents/handoffs/2026-10-21-invitations-link-5.md)).
-**Last updated:** 2026-10-21 (link 4)
+**Status:** Links 1–5 done (2026-10-21), nothing merged. Link 6 is ready ([handoff](../ai-agents/handoffs/2026-10-21-invitations-link-6.md)).
+**Last updated:** 2026-10-21 (link 5)
 **Linear:** [KNG-205](https://linear.app/kngpandi/issue/KNG-205) and its children (see the [charter](../ai-agents/handoffs/INVITATIONS_CHAIN.md))
 **Branch:** `claude/player-signup-invitation-flow-f4v7ul` in every repo. knk-plugin's is based on `claude/mc-26.2-upgrade` (KNG-182).
 
@@ -13,7 +13,7 @@
 | 2 | KNG-206 | **done** (not merged, not live-tested) | api `a8b42ca` / app `aecd811` / plugin unchanged (`30b10e6e`) / workspace: see git log | API 2787 passed, 4 known-red, 77 skipped (baseline 2754 / 4 / 75; +41 new, 8 removed with the old mail code, 2 new `[MySqlFact]` skipped); app 156 suites / 950 (baseline 154 / 940) | `create_session session_019NV1SRUVvMbtLXs5QtkCq4` by the coordinator with the § 8 prompt; `add_repo` and the dry-run pushes succeeded |
 | 3 | KNG-212 | **done** (not merged, not live-tested) | api `8ca8507` / app `18f3c9f` / plugin unchanged (`30b10e6e`) / workspace: see git log | API 2864 passed, 4 known-red, 80 skipped (baseline 2787 / 4 / 77); app 160 suites / 970 (baseline 156 / 950) | `create_session session_01LbSWhTfxJd2rZ25bV5iRcY` by the coordinator with the § 8 prompt; `add_repo` and the dry-run pushes succeeded |
 | 4 | KNG-214 (API + web app) | **done** (not merged, not live-tested) | api `44c5f63` / app `60ec323` / plugin unchanged (`30b10e6e`) / workspace: see git log | API 2904 passed, 4 known-red, 81 skipped (baseline 2864 / 4 / 80); app 165 suites / 997 (baseline 160 / 970) | `create_session session_01BU3iVACs3iW58qiapCJC9s` by the coordinator with the § 8 prompt; `add_repo` and the dry-run pushes succeeded |
-| 5 | KNG-214 (plugin) | in progress (started 2026-10-21) | — | — | `create_session session_01YQKHE1Pg4ctrL2vadh3qng` by the coordinator with the § 8 prompt (KNG-182 still unmerged, so the plugin base stays `claude/mc-26.2-upgrade`) |
+| 5 | KNG-214 (plugin) | **done** (not merged, not live-tested) | api unchanged (`44c5f63`) / app unchanged (`60ec323`) / plugin `90b01850` / workspace: see git log | plugin core 2178 / api-client 271 / paper 1889, 0 failures (baseline 2168 / 264 / 1870) | `create_session session_01YQKHE1Pg4ctrL2vadh3qng` by the coordinator with the § 8 prompt; `add_repo` and the dry-run pushes succeeded (KNG-182 still unmerged, so the plugin base stays `claude/mc-26.2-upgrade`) |
 | 6 | KNG-216 | waiting | — | — | — |
 | 7 | KNG-218 (prep) + final write-up | waiting | — | — | — |
 
@@ -704,3 +704,168 @@ The plugin gate arrives in link 5; until then call the API as the plugin does
 See the [link 5 handoff](../ai-agents/handoffs/2026-10-21-invitations-link-5.md): the Admission API contract, the exact
 `AccountLinked` type string and payload, the operator create refusal (L4-5), and the web routes the kick message
 points to (`/link`).
+
+---
+
+## Link 5 — KNG-214 (plugin): I2 plugin — admission gate, AccountLinked notice
+
+**Started:** 2026-10-21 by the coordinator with the § 8 prompt (`create_session session_01YQKHE1Pg4ctrL2vadh3qng`);
+`add_repo` (push) for knk-web-api, knk-web-app and knk-plugin, clones under `/home/user/<repo>`, branch checked out in
+all four repos, `git push --dry-run` succeeded in knk-plugin and knk-workspace (the repos this link changes). Base:
+the plugin branch already contains `origin/claude/mc-26.2-upgrade` `88497649` (unchanged; KNG-182 still unmerged, `main`
+`79be4882` is an ancestor of it), so there was nothing to merge, at the start or before the final push. Tracker row on
+`main` `0524d21`.
+**Toolchains:** OpenJDK 25.0.4 from apt (`openjdk-25-jdk-headless`, passed with
+`-Porg.gradle.java.installations.paths=/usr/lib/jvm/java-25-openjdk-amd64`), Gradle 8.14.3 on Java 21. API and web app
+not touched.
+
+### Commits per repo (heads)
+
+| Repo | Commits | Head |
+|---|---|---|
+| knk-plugin | `90b01850` admission gate (core policy, API client, listener, config, `PlayerListener` guard), `AccountLinked` notice, tests | `90b01850` |
+| knk-workspace | this block, plan status + § 6.2a, DESIGN § 5.2 as-built, CHANGELOG, link 6 handoff; tracker row on `main` | see git log |
+| knk-web-api | — | not changed (`44c5f63`) |
+| knk-web-app | — | not changed (`60ec323`) |
+
+### What was built
+
+**knk-core.**
+- `ports/api/AdmissionApi` (`CompletableFuture<AdmissionResult> check(UUID, String)`).
+- `domain/admission/AdmissionResult` (`admitted`, `reason`, `code`, `expiresAt`; `REASON_NOT_ADMITTED`,
+  `REASON_DEACTIVATED`; `toString` hides the code).
+- **`admission/AdmissionPolicy`** (Bukkit-free): `Mode` `WHITELIST`/`OPEN`/`INVITE`; `needsCheck(mode, operator)`;
+  `decide(mode, operator, result-or-null, knownOffline, now)` → `Allow` or `Deny(messageKey, placeholders)` with the
+  plan's rules; `minutes` from `expiresAt`, rounded up, at least 1 (15 when the API sent no time).
+- `PlayerNotification.TYPE_ACCOUNT_LINKED = "AccountLinked"` and a new last component `accountLinked`
+  (`AccountLinkedNotice(maskedEmail)`); the older constructors stay.
+
+**knk-api-client.** `impl/AdmissionApiImpl` (`GET Admission/{uuid}?name=`, name URL-encoded), `dto/AdmissionDtos`
+(`AdmissionCheckDto`, `AccountLinkedNotificationDto`), `KnkApiClient.getAdmissionApi()`, `PlayerNotificationDto.accountLinked`
+mapped in `UsersMapper`. `BaseApiImpl` treats `/Admission/` calls like link-code calls: bodies (and parse errors) are
+not logged, even with `api.debug-logging`.
+
+**knk-paper.**
+- **`admission/AdmissionListener`**: `AsyncPlayerPreLoginEvent` at `LOWEST`; skips a login that is no longer `ALLOWED`;
+  in invite mode checks operators first (`Bukkit.getOfflinePlayer(uuid).isOp()`, no API call), then blocks on the API
+  for at most `admission.api-timeout-ms`; on a timeout or error asks the offline store; on Deny
+  `event.disallow(KICK_WHITELIST, screen)` with the lines joined by `Component.newline()`. Logs "Refused <name>
+  (<uuid>): admission.kick" — never the code.
+- `admission/AdmissionSettings` (reads `admission:`; empty `link-url` → `{web.public-url}/link`),
+  `admission/AdmissionMessages` (`&` codes, `\n`, placeholders; `{url}` without any URL reads "the website"),
+  `admission/AccountLinkedNotifier`.
+- `tasks/PlayerNotificationPoller.setAccountLinkedHandler` + the `AccountLinked` branch (an offline player's notice stays
+  queued for their next join, as every player notification).
+- `listeners/PlayerListener.onValidateLogin` returns early when the login is no longer `ALLOWED`; a comment on the
+  create-failure branch for the L4-5 refusal.
+- `config.yml`: the `admission:` section (`mode: whitelist`, `api-timeout-ms: 3000`, `link-url: ""`, `kick`,
+  `unavailable`, `deactivated`, `account-linked`).
+- `KnKPlugin`: `initializeAdmission()` (23 lines) after `initializeHub()`: registers the listener, sets the poller
+  handler, logs the mode, warns in invite mode without a link URL. No build files touched.
+
+`HubAdmissionListener` (HIGH) and `KnkWorldsListener` already return when the login isn't `ALLOWED` (checked; no change).
+
+### Paper 26.3 check (from the `paper-api` 26.3 build 205 sources jar; the live part stays in the checklist)
+
+- `AsyncPlayerPreLoginEvent` javadoc: "fired after the server has successfully completed Mojang authentication. The
+  event is still fired if the server is in offline mode." It is not deprecated; `disallow(Result, Component)` and
+  `Result.KICK_WHITELIST` exist. The UUID is therefore genuine only with `online-mode=true` (DESIGN § 5.1).
+- The vanilla whitelist, ban and full-server checks are no longer part of `PlayerLoginEvent` on 26.x: the server hands
+  their verdict to `io.papermc.paper.event.connection.PlayerConnectionValidateLoginEvent` as its initial
+  `kickMessage` ("Validates whether a player connection is able to log in. Called when a player is attempting to log in
+  for the first time, or is finishing up being configured"). That event runs later in the login, so the gate at
+  pre-login runs **before** the whitelist, and the whitelist still works as the kill switch. Nothing in the API says
+  the authoritative check moved to that event, so the gate stays at pre-login (plan § 6.2's fallback not needed).
+  Note: a plugin calling `PlayerConnectionValidateLoginEvent.allow()` would skip the vanilla checks; ours doesn't.
+- The order of the two events and the rendering of a multi-line disconnect message are server behaviour, not API:
+  live checks 2 and 3 below.
+
+### Tests vs baseline
+
+| Module | Baseline (before any change) | After link 5 |
+|---|---|---|
+| knk-core | 2168, 0 failures | **2178**, 0 failures (`AdmissionPolicyTest` ×10: whitelist/open, operator, admitted, code + minutes, deactivated, API down known/unknown, no-code answer, minutes rounding, mode parsing, code redaction) |
+| knk-api-client | 264, 0 failures, 2 skipped | **271**, 0 failures, 2 skipped (`AdmissionApiImplTest` ×7: request shape and key, admitted, claim code without logging it, deactivated, error → failed future, notification payload mapping, redaction pattern) |
+| knk-paper | 1870, 0 failures, 18 skipped | **1889**, 0 failures, 18 skipped (`AdmissionListenerTest` ×11: disallow with the screen text, code not logged, admitted, operator without API call, whitelist mode untouched, timeout known/unknown, API error, deactivated, already-disallowed login, no link URL; `AdmissionSettingsTest` ×4 incl. the shipped `config.yml` keeping the gate off; `AccountLinkedNotifierTest` ×2; `PlayerListenerPreLoginTest` ×2: a disallowed login touches no data access) |
+
+`./gradlew build -x deployToDevServer` green on JDK 25; only the pre-existing deprecation warnings.
+
+### Flagged decisions (reversible defaults; review)
+
+- **L5-1** Config keys are `admission.kick`, `admission.unavailable`, `admission.deactivated` (as the plan names them)
+  plus **`admission.account-linked`** for the in-game notice (the plan had the text only). Default texts as the plan;
+  the kick screen adds "staff never ask for it", as the `/account link` message does. Changing them needs a restart.
+- **L5-2** An unknown `admission.mode` value falls back to `whitelist` with a startup warning (fail-open towards today's
+  behaviour, the charter's behaviour-neutral rule). A missing `admission:` section also means `whitelist`.
+- **L5-3** A not-admitted answer **without** a code and without `Deactivated` (the API doesn't send one today) is
+  handled like an unreachable API: known player in, stranger "unavailable".
+- **L5-4** The gate runs at `LOWEST`, before the vanilla ban check (now in `PlayerConnectionValidateLoginEvent`): a
+  banned stranger sees a claim code rather than the ban screen; an admitted banned player passes the gate and then
+  gets the ban screen. Bans are not weakened; only the stranger's screen differs.
+- **L5-5** The offline fallback is "the offline security store holds an identity for the UUID within
+  `offline-cache.identity-max-age-days` (30)". With `offline-cache.enabled: false` every non-operator is refused while
+  the API is down in invite mode.
+- **L5-6** The gate doesn't consult the KNG-171 connectivity state: when the API is known to be down, each connection
+  still waits up to `api-timeout-ms` (3 s) before the offline path. Simple and safe; a shortcut is possible later.
+- **L5-7** An operator without an account (L4-5): `PlayerListener`'s create gets the 403 `NotAdmitted`, which lands in
+  the existing "Failed to create user" warning (or the outer catch); the join goes on without an account, as today
+  when the API refuses a create. No code path change beyond the early return; a comment marks it.
+- **L5-8** `{url}` = `admission.link-url`, else `{web.public-url}/link`; with neither, the screen says "Go to the website
+  and enter …" and the plugin warns at startup in invite mode.
+- **L5-9** The poller acknowledges an `AccountLinked` notice once shown (or once its handler throws), like the other
+  types; the API keeps unshown ones 24 h (L4-16).
+
+### Discrepancies with the plan / design
+
+- None in behaviour. Plan § 6.2 placed the AccountLinked text in code; it is configurable (L5-1).
+- DESIGN § 5.2 says the whitelist "is checked after pre-login": true on Paper 26.3, but through
+  `PlayerConnectionValidateLoginEvent`, not the old `PlayerLoginEvent` (recorded in DESIGN § 5.2).
+
+### Live checklist (dev server + dev API; not run)
+
+Prerequisites: link 4's API and web app on dev, this plugin build, `online-mode=true`, `web.public-url` set.
+1. Default (`admission.mode: whitelist`, API `Mode=LinkCode`): joins behave as before; the log shows
+   `[KnK Admission] admission.mode=whitelist`; no `Admission` request in the API log.
+2. `admission.mode: invite` + API `Security__Registration__Mode=Invite`, **vanilla whitelist off**: join with an account
+   that has never joined → disconnect screen shows the five lines as written (title, "Go to <url>/link and enter", the
+   code bold, "(valid 15 minutes)", the warning), with line breaks. No `users` row is created (check `/admin` or the
+   DB). The server log says "Refused <name> (<uuid>): admission.kick" and does not contain the code.
+3. Event order: with the vanilla whitelist **on** and the stranger not on it, the gate's screen (not "You are not
+   whitelisted") appears; an admitted player who is not on the whitelist gets the vanilla whitelist screen. This
+   confirms the pre-login gate runs before the whitelist on 26.3.
+4. Rejoin within 15 min → the same code; the minutes count down.
+5. Web-first and game-first flows of plan § 6.4 end to end: link on `/account/link` or `/link`, rejoin → admitted →
+   first-join welcome and kits once; the chat shows "Your Minecraft account is now linked to the web account
+   st***@…" (on that join if the notice was queued while offline, within ~2 s if online).
+6. A grandfathered player joins normally. An operator without an account joins (one "Failed to create user … 403"
+   warning, no crash).
+7. Deactivate an account on the web → its player gets "This account is deactivated".
+8. Stop the API: a player who joined before (offline cache) gets in after ~3 s; a new UUID gets "Can't check your
+   access right now". Restart the API: both work again.
+9. Kill switch: set `admission.mode: whitelist` and restart → no gate.
+
+### Deploy notes (a deploy of this plugin state)
+
+- **Plugin order:** this branch is on KNG-182 (Paper 26.3, Java 25); it merges into `main` only after KNG-182 (plan § 9).
+- **Behaviour-neutral:** `admission.mode` defaults to `whitelist`. An existing `config.yml` on the server has no
+  `admission:` section, which also means `whitelist`; add the section from the shipped `config.yml` before the switch.
+- **The switch-over (I3, link 7 writes it up):** deploy the API (link 4 state or later) and this plugin first; then, together:
+  API `Security__Registration__Mode=Invite`, plugin `admission.mode: invite` (restart), vanilla whitelist **off**
+  (`/whitelist off`), and set `web.public-url` (or `admission.link-url`). Never `Mode=Invite` with a plugin older than
+  this one (link 4 deploy notes).
+- The plugin key needs access to `GET api/Admission/{uuid}` (`RequirePluginService`; the existing key works).
+
+### Risks
+
+- Pre-login blocks the connection thread up to 3 s per connection while the API is slow; many simultaneous strangers
+  during an outage each wait 3 s (L5-6).
+- The order and rendering checks (live 2, 3) are only verified from the API sources; if Paper ever moves the
+  whitelist before pre-login, the kill switch still works but the stranger sees the vanilla screen.
+- If the plugin fails to start before `initializeAdmission()` the gate isn't registered (fail-open); the same holds for
+  every listener registered there.
+
+### What the next link must know
+
+- KNG-214 is complete across links 4 and 5 (§ 6.1–6.3); set to *In Review*.
+- Link 6 is A1 (KNG-216, plan § 7): API + web app + workspace, no plugin. See the
+  [link 6 handoff](../ai-agents/handoffs/2026-10-21-invitations-link-6.md).

@@ -1,7 +1,7 @@
 # Invite-only sign-up, email engine and web-first Minecraft linking — Design
 
-**Status:** Decided 2026-10-21 (§ 8, all recommendations taken, except I8: Cloudflare Access stays, and the API keeps its allow-list in sync, § 5.8). In implementation on the feature branch through the invitations chain: L0 (§ 5.4), the email engine (§ 4.2), invitations (§ 3) and the server side of the admission gate and linking (§ 5.2–5.5) are built, not merged; see the as-built notes.
-**Last updated:** 2026-10-21 (link 4: § 5.5 as-built; link 3: § 3.3 as-built; link 2: § 4.2 as-built; decisions recorded; § 5.8 Access sync added; § 6 and § 7 aligned with the implementation plan)
+**Status:** Decided 2026-10-21 (§ 8, all recommendations taken, except I8: Cloudflare Access stays, and the API keeps its allow-list in sync, § 5.8). In implementation on the feature branch through the invitations chain: L0 (§ 5.4), the email engine (§ 4.2), invitations (§ 3) and the admission gate and linking, server and plugin (§ 5.2–5.5), are built, not merged; see the as-built notes.
+**Last updated:** 2026-10-21 (link 5: § 5.2 as-built and the Paper 26.3 check; link 4: § 5.5 as-built; link 3: § 3.3 as-built; link 2: § 4.2 as-built; decisions recorded; § 5.8 Access sync added; § 6 and § 7 aligned with the implementation plan)
 **Implementation plan:** [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) (2026-10-21; work packages E0, E1, L0, I1, I2, A1, I3)
 **Linear:** [KNG-205](https://linear.app/kngpandi/issue/KNG-205) (this design, parent), [KNG-206](https://linear.app/kngpandi/issue/KNG-206) (email engine, high priority), work packages [KNG-211](https://linear.app/kngpandi/issue/KNG-211) (E0), [KNG-212](https://linear.app/kngpandi/issue/KNG-212) (I1), [KNG-214](https://linear.app/kngpandi/issue/KNG-214) (I2), [KNG-216](https://linear.app/kngpandi/issue/KNG-216) (A1), [KNG-218](https://linear.app/kngpandi/issue/KNG-218) (I3), found while writing it: [KNG-207](https://linear.app/kngpandi/issue/KNG-207) (link merge bug), [KNG-208](https://linear.app/kngpandi/issue/KNG-208) (link-code hygiene); related [KNG-159](https://linear.app/kngpandi/issue/KNG-159) (email verification), [KNG-67](https://linear.app/kngpandi/issue/KNG-67) (code-based signup)
 **Sources:**
@@ -314,6 +314,15 @@ Player connects ──► Mojang auth (online-mode) ──► AsyncPlayerPreLogi
 - **API down:** admitted UUIDs from the plugin's disk-backed cache (the KNG-58 pattern) still get in. Unknown UUIDs get "Can't check your access right now, try again in a minute." That is fail-closed for strangers, where today the plugin lets everyone in.
 - **Kill switch:** `admission.mode: whitelist` (the vanilla whitelist again) or `open`. Turning the vanilla whitelist back on also works as an emergency gate, because it is checked after pre-login.
 - To verify while implementing: on Paper 26.3, `AsyncPlayerPreLoginEvent` fires before the whitelist check, and a custom message with a disallow result shows on the client as written.
+
+**As built (link 5, 2026-10-21, KNG-214 plugin):** the gate is `AdmissionListener` at `LOWEST` on
+`AsyncPlayerPreLoginEvent`, configured under `admission:` in the plugin's `config.yml` (`mode: whitelist` by default).
+Checked against the Paper 26.3 API sources: the event fires after Mojang authentication (also in offline mode, hence
+`online-mode=true`), and the vanilla whitelist, ban and full-server verdict now reaches plugins through
+`PlayerConnectionValidateLoginEvent`, later in the login, so the whitelist is still checked after the gate and stays
+the kill switch. A banned stranger therefore sees the claim code, not the ban screen (L5-4). "Known" during an outage
+means an identity in the offline security store within its max age (30 days). The live checks of the order and of the
+multi-line screen are in the [progress report](../../reports/2026-10-21-invitations-chain.md) "Link 5".
 
 ### 5.3 Flows
 

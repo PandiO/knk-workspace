@@ -4,6 +4,16 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Invitations chain, link 5: admission gate on the game server (I2, plugin)**
+  ([KNG-214](https://linear.app/kngpandi/issue/KNG-214); branch `claude/player-signup-invitation-flow-f4v7ul`:
+  knk-plugin `90b01850`, on the KNG-182 branch). With `admission.mode: invite` in the plugin's `config.yml`, the game
+  server asks the API about every connecting player right after Mojang sign-in: admitted accounts and operators get in,
+  a new player is turned away with the claim code and the `/link` address on the disconnect screen, a deactivated
+  account is refused. If the API doesn't answer within 3 seconds, players the server already knows still get in and
+  strangers are asked to try again. A refused player no longer gets an account created. After a link the player sees
+  "Your Minecraft account is now linked to the web account st\*\*\*@example.com. Not you? Tell staff right away." in
+  game. The default stays `admission.mode: whitelist`, so deploying the plugin changes nothing until the switch-over.
+  Not live-tested.
 - **Invitations chain, link 4: admission gate (server side), claim codes and Minecraft linking (I2)**
   ([KNG-214](https://linear.app/kngpandi/issue/KNG-214); branch `claude/player-signup-invitation-flow-f4v7ul`:
   knk-web-api `4d1fe00` + `44c5f63`, knk-web-app `a3f00fd` + `60ec323`). The API answers the game server's new
