@@ -1,7 +1,8 @@
 # Minecraft 26.3 upgrade — smoke test
 
-**Status:** Done. The developer's run on 2026-10-20 passed every step but 17 (KNG-201, not a 26.3 problem) and 18
-(blocked by 17); see **Findings**. KNG-182 merged into knk-plugin `main` as `857d4b1e` on 2026-10-21.
+**Status:** Done. The developer's runs on 2026-10-20 and 2026-10-21 passed every step; step 17 first failed because
+the server had started while the API was down (KNG-201) and passed after a restart. See **Findings**. KNG-182 merged
+into knk-plugin `main` as `857d4b1e` on 2026-10-21.
 **Last updated:** 2026-10-21
 **Branch:** knk-plugin `claude/mc-26.2-upgrade` (it targets 26.3 despite the name), merged. It also carries KNG-193
 (drawbridge keyframes) and KNG-188 (`/hub`).
@@ -181,3 +182,6 @@ Gate door snapshots are block-data strings saved under 1.21.x. Paper doesn't upg
 | 2026-10-20 | 25 | Accepted without a run. | — |
 | 2026-10-20 | 26–34 | **Pass.** | — |
 | 2026-10-20 | 35–38 | Accepted without a run. | — |
+| 2026-10-21 (developer, after a restart with the API up) | 4 | **Pass.** `version` and `plugins` checked. | — |
+| 2026-10-21 | 17 | **Pass.** The hub shows its tiles. | — |
+| 2026-10-21 | 18 | **Pass, with two catalogue paging bugs** (the code involved has nothing 26.3-specific): the pager arrows keep saying "Page 1/5", and a page change takes about 5 s with no loading feedback. | [KNG-230](https://linear.app/kngpandi/issue/KNG-230), [KNG-231](https://linear.app/kngpandi/issue/KNG-231) |
