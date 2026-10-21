@@ -1,6 +1,6 @@
 # Arena duels chain — progress report
 
-**Status:** In progress (P0–P7 pushed; P8 next).
+**Status:** P0–P7 pushed and In Review; P8 prepared the live test (guide, checklist, merge plan) and waits for the developer. Chain summary at the end.
 **Last updated:** 2026-10-21
 **Linear:** [KNG-197](https://linear.app/kngpandi/issue/KNG-197) (design) and its phase issues.
 **Charter:** [ARENA_DUELS_CHAIN.md](../ai-agents/handoffs/ARENA_DUELS_CHAIN.md). **Design:** [DESIGN.md](../specs/arena-duels/DESIGN.md), [IMPLEMENTATION_PLAN.md](../specs/arena-duels/IMPLEMENTATION_PLAN.md).
@@ -790,3 +790,146 @@ Setup: P1's `arena_2` with a lobby, an exit, enabled battlegrounds and a spectat
 8. **Spectating with conditions**: [Spectate] (chat, arena menu or the detail's "Go to the spectator area") runs the warp: a 5 s warmup, the gem price charged after it, the title/premium/discovery lock refused with its reason and nothing charged. The stands are also reachable on foot and by `/warp`.
 9. **`/duels`**: two heads per live duel, refreshed every second, with "No duels right now" when empty. A head opens the detail: both cards (title, XP, playtime, duel W/L/D; PvP kills only if the player shows them, so hide them in the statistics settings and check), kits, coins, and the real stake items with their names and enchantments.
 10. **`/arena`**: info, rules (gear modes, offers, stake limits, fee, ratio, pair limit, daily cap, timings), queue, live duels here, Spectate (disabled without a warp), Challenge a player (disabled outside the arena; a click from outside says "Stand inside the arena…"), My claims (highlighted when something waits; a click collects it). The challenge picker lists online players, those in a duel greyed out; a pick opens P5's proposal editor.
+
+---
+
+## P8 — guide, smoke-test checklist, merge plan ([KNG-222](https://linear.app/kngpandi/issue/KNG-222))
+
+**Session:** Claude Code cloud session, 2026-10-21. **Status:** prepared; KNG-222 In Review, waiting for the developer's live test. Nothing merged, deployed or live-tested.
+
+### Checks before starting
+
+- KNG-209, 210, 213, 215, 217, 219, 220 and 221 are all **In Review** with commits on `claude/arena-duels` (checked in Linear and with `git log`). None missing.
+- `git push --dry-run` on `claude/arena-duels` in all four repos: up to date, push allowed.
+- **Trunks:** knk-web-api `master` is still `2d71155`, knk-web-app `main` still `e30c815`: already in the branches, nothing to merge. knk-workspace `main` had moved (tracker commits): merged into `claude/arena-duels` (`Merge origin/main into claude/arena-duels (arena duels P8)`). **knk-plugin: KNG-182 has not landed** (`main` is still `79be4882`; `claude/mc-26.2-upgrade` `88497649` is not in it), so `claude/mc-26.2-upgrade` stays the plugin base; it has no new commits either.
+
+### Commits
+
+| Repo | Branch | Commit | What |
+|---|---|---|---|
+| knk-plugin | `claude/arena-duels` | `0f6dd1ca` | `CLAUDE.md` "Structure" names `core/minigame/`, `minigame/`, `DomainAccessExemptions` and the duel packages (P0's docs leftover, comment on KNG-222). No code |
+| knk-workspace | `main` | `a05f1b7` | tracker row |
+| knk-workspace | `claude/arena-duels` | merge of `main`, then this commit | new [`guides/arena-duels.md`](../guides/arena-duels.md) and [`guides/arena-duels-smoke-test.md`](../guides/arena-duels-smoke-test.md); `FEATURE_REGISTER.md` row, `specs/README.md`, `guides/README.md`, `architecture/managed-worldguard-regions.md` (§5, §9), `architecture/domain-access-enforcement.md` (§3.1 exemptions, respawn row), teleport `DESIGN.md` (§3.4.5 `ARENA` / `ARENA_SYSTEM`, `beforeMove`); this section and the chain summary |
+
+knk-web-api and knk-web-app: no P8 commits (no trunk change to merge).
+
+### Tests (full build on every branch head)
+
+| Repo | Head | Command | Result |
+|---|---|---|---|
+| knk-plugin | `d8897a79` (code; `0f6dd1ca` adds only `CLAUDE.md`) | `./gradlew build -x deployToDevServer`, Temurin JDK 25.0.4 toolchain, Gradle 8.14.3 on JDK 21 | **BUILD SUCCESSFUL: knk-core 2338, knk-api-client 275 (2 skipped), knk-paper 2013 (18 skipped), 0 failures.** Same as P6. The first run failed on Maven Central HTTP 429 (dependency download, not a test); the re-run used a session-local init script pointing at Google's Maven Central mirror (nothing committed) |
+| knk-web-api | `7872831` | `dotnet build knkwebapi_v2.csproj`, `dotnet test Tests/knkwebapi_v2.Tests/knkwebapi_v2.Tests.csproj` | **2873 passed, 4 failed, 73 skipped.** The 4 are the known reds: `PathResolutionServiceTests` ×2, `ClientActivityStoreTests.RecordsRequestsIntoRollingBuckets`, `FieldValidationServiceTests.ValidateConditionalRequiredAsync_WithConditionMet_ValidatesRequired`. Same as P6 |
+| knk-web-app | `6afaa8b` | `npx -y npm@11 ci`, `npm run test:ci` | **160 suites / 965 tests, all green.** Same as P7 |
+
+### Docs
+
+- **Guide** [`guides/arena-duels.md`](../guides/arena-duels.md): admin setup (permissions, deploy and seeds, the arena form step by step, battlegrounds, the spectator area and its warp, turning it on, the hub-tile gap), reviews (signals, tiers, release/void/revert/confiscate, clear escalation), duel restrictions, the review policy, staff commands and files, a player how-to (challenge, answer, what happens at accept, results, watching, statistics), troubleshooting.
+- **Smoke test** [`guides/arena-duels-smoke-test.md`](../guides/arena-duels-smoke-test.md): put next to the other smoke tests in `guides/` rather than in `reports/` (they are filled in during the test). Setup (deploy heads, migrations, seeds, grants, creating `arena_2` and its battlegrounds and spectator area in the forms, locations, region check), plan steps 1–15 with every phase live check sorted into its step and tagged (`P4·6` = P4's check 6), §S the P0 siege regression, §X the three checks that fit no step, and a findings table. All 6 + 5 + 9 + 12 + 13 + 15 + 15 + 10 phase checks (P3, P0, P1, P2, P7, P4, P5, P6) are in it.
+- **Living docs** updated as listed in the commits table. The register row is `complete` / `branch` / `pending`.
+- **CHANGELOG** entry prepared below; it is added at the merge, not now (only shipped work goes into a dated entry).
+
+### Merge plan (after the developer's sign-off)
+
+**Dependency:** the plugin branch is built on KNG-182 (`claude/mc-26.2-upgrade`, Minecraft 26.3 / Java 25). It can't merge into knk-plugin `main` before KNG-182 does: merging it would bring all of KNG-182 with it.
+
+**Order:**
+1. **knk-web-api** `claude/arena-duels` → `master` (merge commit, no squash; "merged directly, no PR" as for KNG-193, or a PR if the developer prefers). It is additive: two migrations (`AddArenas`, `AddDuelMatches`), new endpoints, create-only menu seeds. The current plugin on `main` doesn't call any of it, so it is safe on its own.
+2. **knk-web-app** `claude/arena-duels` → `main`. Additive (arena forms' API clients, staff duel pages, alert rule codes). Needs the API from step 1.
+3. **knk-plugin**: first **KNG-182** (`claude/mc-26.2-upgrade`) → `main`, by its own sign-off. Then merge the new `origin/main` into `claude/arena-duels`, re-run `./gradlew build -x deployToDevServer`, and merge `claude/arena-duels` → `main`. If KNG-182 has already landed by the sign-off, only the second part remains.
+4. **knk-workspace** `claude/arena-duels` → `main`, after the last code merge: the docs, with the "on `claude/arena-duels`, not merged" notes in the guide, register, specs README, teleport DESIGN, managed-regions and domain-access docs changed to the trunk commits, the register row set to `trunk` and its verification to `live` (or `mixed` for unchecked steps), and the CHANGELOG entry added.
+
+If KNG-182 is still waiting at sign-off: steps 1, 2 and 4 can go ahead; then the CHANGELOG entry waits for step 3 (players can't duel before the plugin ships), and the register says `mixed`.
+
+Before each merge: fetch, check the trunk tip, merge the trunk into the branch again if it moved, re-run that repo's build and tests.
+
+**Commits that merge** (all on `claude/arena-duels`; trunk-merge commits not listed):
+
+| Repo | From base | Commits |
+|---|---|---|
+| knk-web-api | `master` `2d71155` | `1f65a12`, `05a9049`, `6507641`, `a8a26c3` (P1); `53f42cf`, `d208a74` (merge), `a0da408` (P2); `dc704f3` (P7); `7872831` (P6) |
+| knk-web-app | `main` `e30c815` | `7fa594b` (P1); `6afaa8b` (P7) |
+| knk-plugin | `claude/mc-26.2-upgrade` `88497649` (KNG-182) | `1f5ebdfa`, `36195de3` (P3); `e3814cef`, `d00826c5` (P0 + merge); `02bca4e0` (P1); `1e17f985`, `2be401b5` (P2); `d0332108` (P7); `01b5d6a0`, `0c175f03`, `6fe453b1`, `bccd338d`, `089bd357` (P4); `4cb1aa80`, `ea7ecb4e`, `d1016f42` (P5); `0d62c543`, `a6fdd17c`, `d8897a79` (P6); `0f6dd1ca` (P8 docs) |
+| knk-workspace | `main` | the P0–P8 report sections, `managed-worldguard-regions.md`, the siege, currency and player-statistics DESIGN edits, and the P8 docs (see each section) |
+
+**After the merge:** add the CHANGELOG entry; set KNG-209, 210, 213, 215, 217, 219, 220, 221 and 222 to Done; move the P0–P8 tracker rows to "Recently completed" with the trunk commits.
+
+### CHANGELOG entry (draft, for the merge date)
+
+```markdown
+- **Arena duels: challenge a player, agree on stakes, fight on a battleground**
+  ([KNG-197](https://linear.app/kngpandi/issue/KNG-197), phases KNG-209–KNG-222; knk-web-api `master` `<merge>`,
+  knk-web-app `main` `<merge>`, knk-plugin `main` `<merge>`, merged directly, no PR).
+  Inside an arena, `/duel <player>` opens an offer: gear mode (own gear and keep it, own gear where the loser's
+  inventory goes to the winner, a fixed kit, or each player's choice of kit), and coins and items for each side.
+  Players counter up to the arena's offer limit, then accept. Both stakes are taken at once and held until the
+  result; the winner gets the pot less a 5% fee, and a draw or cancel gives everyone their own back. Both players
+  teleport to the arena lobby for a warmup, then fight on a free battleground after a 10 s countdown: PvP works
+  there even in a no-PvP town, nobody else can join in, and nobody can leave or teleport until the end. Every
+  duel is announced with [Spectate] and [Details]; `/duels` lists live duels, `/arena` shows the arena, its queue
+  and rules, and the stands are a normal warp. Duel wins, losses and draws are public by default.
+  Staff set up arenas, battlegrounds, spectator areas, eligible kits and every duel setting in the web app; results
+  that look thrown are flagged, and repeated ones held for review on the new Duels pages (release, void, revert,
+  confiscate, stakes-only restrictions, review policy). Admin: migrations `AddArenas` and `AddDuelMatches`; create
+  `arena_2` in the Arena form ([guide](guides/arena-duels.md)). Requires Minecraft 26.3 (KNG-182).
+  Live-tested by the developer (<date>, [smoke test](guides/arena-duels-smoke-test.md)); <known limits>.
+```
+
+Known limits to name in it, unless fixed first: the stake ratio values items only in the API (KNG-224); no duel leaderboards yet; no hub tile.
+
+### Open questions and leftovers (also in the chain summary)
+
+- P6 asked P8 whether the guide should ask for a **hub tile**: the guide says there is none and how to add one (§2.6). It is a developer choice; no issue filed.
+- P0's request that `domain-access-enforcement.md` mention the exemptions port, and that the plugin `CLAUDE.md` name the new packages: done.
+
+### Live checks
+
+The whole [smoke-test checklist](../guides/arena-duels-smoke-test.md). P8 adds none of its own.
+
+---
+
+## Chain summary (P0–P8)
+
+**State on 2026-10-21:** every phase is pushed and In Review; P8 prepared the live test. Nothing is merged, deployed or live-tested. The developer runs the [smoke test](../guides/arena-duels-smoke-test.md) on the dev server (Minecraft 26.3, from the KNG-182 branch) and signs off; then P8 merges per the plan above.
+
+### Commits per repo (branch `claude/arena-duels`)
+
+| Repo | Base | Head | Phases |
+|---|---|---|---|
+| knk-web-api | `master` `2d71155` | `7872831` | P1, P2, P7, P6 (9 commits, one of them a merge) |
+| knk-web-app | `main` `e30c815` | `6afaa8b` | P1, P7 (2 commits) |
+| knk-plugin | `claude/mc-26.2-upgrade` `88497649` (KNG-182) | `0f6dd1ca` | P3, P0, P1, P2, P7, P4, P5, P6, P8 (20 commits, four of them merges) |
+| knk-workspace | `main` | this commit | report sections, living docs, guide, checklist |
+
+Per-commit detail: the merge plan's table above and each phase's section.
+
+### Tests at the P8 heads
+
+knk-plugin: core 2338, api-client 275 (2 skipped), paper 2013 (18 skipped), 0 failures. knk-web-api: 2873 passed, the 4 known reds, 73 skipped. knk-web-app: 160 suites / 965 tests green.
+
+### Merge order
+
+knk-web-api → knk-web-app → (KNG-182 into knk-plugin `main`, then `main` into the duel branch) knk-plugin → knk-workspace docs + CHANGELOG. Details in the P8 merge plan.
+
+### Combined live checklist
+
+[`guides/arena-duels-smoke-test.md`](../guides/arena-duels-smoke-test.md): setup, plan steps 1–15 with every phase's live checks, the siege regression (P0), and the extras.
+
+### Open questions for the developer
+
+1. **Review details in match reads** (P2): `reviewSignals` and `reviewDetails` are visible to any logged-in user through `GET api/DuelMatches`. Keep, or staff-only?
+2. **Confiscated coins** (P2) go to `SYS_FEES`, the same sink as the fee. Keep, or a separate `SYS_CONFISCATED` account for cleaner reporting?
+3. **"Wins: Nobody" set before duels existed** (P7) also hides duel wins today. Keep, or keep duel W/L/D public until the player changes the duel context itself?
+4. **Hub tile** (P6) for `/duels` or `/arena`: wanted? A small seed change.
+
+Decisions already taken during the chain are on KNG-197 (stake ratio by blueprint base price; battleground `entry allow`; no `arena_2` seed; deaths and quits by phase). Every phase's reversible interpretations are in its section and on KNG-197.
+
+### Follow-ups filed or recorded
+
+- [KNG-199](https://linear.app/kngpandi/issue/KNG-199): siege kit mode (reuses P0's vault and P4's kit loan; `KitGrantPlacer` overflow note there).
+- [KNG-223](https://linear.app/kngpandi/issue/KNG-223): `dotnet build` at the knk-web-api root fails on Linux (lower-case `tests\` in the `.sln`).
+- [KNG-224](https://linear.app/kngpandi/issue/KNG-224): the plugin can't value staked items for the stake ratio (the API's check at lock-in is binding).
+- Comment on KNG-217: `DuelService.notify` catches only `RuntimeException`, so an `Error` from an observer stops the step that notified it (P6). Worth fixing before or soon after the merge.
+- Comment on KNG-213: a staff ledger reversal of a duel's stake or payout outside the duel flow makes the duel's later cancel or revert answer 409 `AlreadyReversed`.
+- Comment on KNG-221: the match detail shows ledger transaction ids as numbers (the transaction page is keyed by `publicId`).
+- Comment on KNG-222: the hub tile (open question 4).
+

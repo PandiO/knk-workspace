@@ -1,7 +1,7 @@
 # Domain access (AllowEntry / AllowExit) — enforcement on the game server
 
 **Status:** Implemented, **live-tested by the developer and merged to trunk 2026-10-08** (knk-plugin `main` `790c662`, knk-web-api `master` `be7b70e`; feature commits `dfffcb7` / `32fca08`). Refusal-in-chat follow-up [KNG-74](https://linear.app/kngpandi/issue/KNG-74) live-tested and merged 2026-10-09 (knk-plugin `main` `fd869aa`, feature commit `a608aa7`). Linear [KNG-56](https://linear.app/kngpandi/issue/KNG-56) (follows [KNG-55](https://linear.app/kngpandi/issue/KNG-55))
-**Last updated:** 2026-10-09 (KNG-74 merged; live checklist §6 item 9 passed)
+**Last updated:** 2026-10-21 (§3.1 the `DomainAccessExemptions` port and the duel battleground exemption, arena duels KNG-209/KNG-217, on `claude/arena-duels`, not merged; respawn row names the minigame registry); 2026-10-09 (KNG-74 merged; live checklist §6 item 9 passed)
 **Decision record:** [`reports/2026-10-06-domain-access-enforcement-options.md`](../reports/2026-10-06-domain-access-enforcement-options.md) (option C chosen by the developer on 2026-10-06)
 **Related:** [`managed-worldguard-regions.md`](managed-worldguard-regions.md) (parent/priority/category flags on the same regions); KNG-57 (SignalR push), KNG-58 (offline cache for other data)
 
@@ -51,7 +51,7 @@ Each domain's region carries three custom WorldGuard flags:
 |---|---|
 | Walk, sprint, jump, glide, swim, ride a vehicle, mount a vehicle (WorldGuard "embark"), teleport (commands, ender pearl, chorus fruit) | `DomainAccessHandler`, a **WorldGuard session handler**. WorldGuard calls `onCrossBoundary` with the regions entered and left since the player's last allowed position. A refusal makes WorldGuard put the player back there (vehicles are stopped and sent back). WorldGuard only advances that position on an allowed move, so holding W into a border is refused on every step. |
 | Mount any entity (not only vehicles) | `DomainAccessListener.onMount` (`EntityMountEvent`). Judged as a move from the player to the mount: no mounting out of a domain you may not leave, nor into one you may not enter. |
-| Respawn | WorldGuard can't cancel a respawn. `DomainAccessListener.onRespawn` (HIGHEST) replaces a respawn point the player may not reach *from where they died*: a bed inside a closed domain, or a point outside a domain they may not leave. The replacement is the first allowed of: world spawn, the top of the death spot, the death spot. WorldGuard's session is then re-synced one tick later. Siege participants keep the match respawn. |
+| Respawn | WorldGuard can't cancel a respawn. `DomainAccessListener.onRespawn` (HIGHEST) replaces a respawn point the player may not reach *from where they died*: a bed inside a closed domain, or a point outside a domain they may not leave. The replacement is the first allowed of: world spawn, the top of the death spot, the death spot. WorldGuard's session is then re-synced one tick later. Players the minigame registry counts as away (siege members; on `claude/arena-duels` also duelists) keep the match respawn. |
 | Join | `DomainAccessListener.onUserDataLoaded`: a player standing inside a domain they may not enter is sent to the world spawn once their account has loaded (bypass is known then). It works without the API because the flags are local. |
 | Teleport engine's up-front refusal (`/tp`, `/warp`, `/tpa`, ...) | `RegionTeleportRestriction` → `DomainAccessService.preview`: same rules, same flags. |
 
@@ -63,6 +63,31 @@ Each domain's region carries three custom WorldGuard flags:
 - First breach: teleport to the world spawn.
 - A repeat within 60 s: a kick.
 - Configurable under `regions.access.load-guard`, or off.
+
+### 3.1 Exemptions (`DomainAccessExemptions`, arena duels)
+
+On the `claude/arena-duels` branches, not merged. A small port in knk-core `core/regions/access/` lets a runtime let a
+specific player through a closed domain, or keep them inside one, without changing the domain's flags (arena duels
+[DESIGN](../specs/arena-duels/DESIGN.md) §8.2, D16):
+
+- `exemptFromEntry(playerId, regionId)`: this player may enter that region although its `knk-allow-entry` is `deny`.
+- `confinement(playerId, regionId)` → a message, or none: this player may not leave that region (even when its
+  `AllowExit` is true), and the message says why.
+- `DomainAccessExemptions.Registry` composes the providers (`register` / `unregister`); `KnKPlugin.getDomainAccessExemptions()`.
+  Empty by default, which changes nothing (KNG-209, a no-behaviour-change refactor).
+
+`DomainAccessService` asks the registry through `RegionAccessRules.evaluate(playerId, entered, exited, exemptions)`,
+so every path in the table above sees the same answer: WorldGuard crossings (walk, glide, ride, pearl, chorus fruit,
+teleport), the teleport engine's up-front refusal, and the join/respawn check. The existing `exemptWhile` (skip judging
+a runtime's own move) is unchanged.
+
+**The duel provider** (`DuelBattlegroundAccess`, KNG-217): battlegrounds are domains with `AllowEntry = false`, so
+nobody may enter them. For a match on a battleground it grants entry to the two duelists from the countdown teleport,
+confines them there in the countdown and the fight (walking, pearls, chorus fruit, elytra and boats are refused), gives
+a one-shot exit pass right before the runtime's own `ARENA_SYSTEM` exit teleport, and revokes everything on every end
+path. It lives in memory only, so a crash leaves nothing behind (unlike v1's WorldGuard memberships). Staff with
+`knk.region.bypass` still pass as before. See [managed regions](managed-worldguard-regions.md) §5 for the
+battleground's flags.
 
 ## 4. What the region tracker still does
 

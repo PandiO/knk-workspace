@@ -3,7 +3,7 @@
 Central home for requirements, specifications, and implementation roadmaps across KNK services (web API, web app, and Minecraft plugin). Keep new cross-cutting docs here so they are discoverable by all teams and AI assistants.
 
 ## Structure
-- arena-duels/: player-vs-player arena duels — invite with stake offers, escrow, lobby warmup, spectator menu, battleground PvP, kit and drop modes (Linear KNG-197; design accepted 2026-10-21, phases KNG-209–KNG-222, not implemented)
+- arena-duels/: player-vs-player arena duels — invite with stake offers, escrow, lobby warmup, spectator menu, battleground PvP, kit and drop modes (Linear KNG-197; design accepted 2026-10-21, phases KNG-209–KNG-222; P0–P7 code-complete on `claude/arena-duels` branches, not merged or live-tested; [admin/player guide](../guides/arena-duels.md))
 - npc-platform/: shared NPC traits, behavior and tutorial guide; agreed requirements and open investigations (KNG-36)
 - project-overview/: portfolio-level summaries and source pointers (CHANGES, implementation roadmap, source map)
 - users/: user/account management specs and requirements (including linking, merge, password rules)
@@ -23,7 +23,7 @@ Central home for requirements, specifications, and implementation roadmaps acros
 - reconcile/: reconciliation guides for aligning legacy data with v2
 
 ## Key documents
-- Arena duels (KNG-197; design + plan accepted 2026-10-21, not implemented; phase issues KNG-209–KNG-222; siege kit mode KNG-199): [arena-duels/DESIGN.md](arena-duels/DESIGN.md), [arena-duels/IMPLEMENTATION_PLAN.md](arena-duels/IMPLEMENTATION_PLAN.md)
+- Arena duels (KNG-197; design + plan accepted 2026-10-21; phases KNG-209–KNG-221 code-complete on `claude/arena-duels`, not merged; live test and merge KNG-222; siege kit mode KNG-199): [arena-duels/DESIGN.md](arena-duels/DESIGN.md), [arena-duels/IMPLEMENTATION_PLAN.md](arena-duels/IMPLEMENTATION_PLAN.md), [guide](../guides/arena-duels.md), [smoke test](../guides/arena-duels-smoke-test.md), [chain report](../reports/2026-10-21-arena-duels-chain.md)
 
 - Dev environment (KNG-163, proposal 2026-10-12): [dev-environment/DEV_DB_REMOTE_ACCESS.md](dev-environment/DEV_DB_REMOTE_ACCESS.md) — NAS dev database for cloud sessions over Cloudflare Tunnel + Access, scheduled backups, versioned DB environments and the deploy pipeline. Decisions E1-E4 made 2026-10-12.
 

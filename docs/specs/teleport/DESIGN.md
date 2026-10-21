@@ -1,7 +1,7 @@
 # Teleportation Commands — Design
 
 **Status:** Decided — implementation in progress (branch `claude/teleport`)
-**Last updated:** 2026-10-19 (§3.6: `/hub` to the hub spawn, KNG-188)
+**Last updated:** 2026-10-21 (§3.4.5: the arena kinds `ARENA` / `ARENA_SYSTEM` and `TeleportPlan.beforeMove`, arena duels KNG-217, on `claude/arena-duels`, not merged); 2026-10-19 (§3.6: `/hub` to the hub spawn, KNG-188)
 **Linear:** [KNG-17](https://linear.app/kngpandi/issue/KNG-17/teleportation-staff-tp-tpa-requests-spawn-domain-warps-v1-port)
 **Sources:** `knk-v1-archive` (`src/UsefulCommands/PlayerTeleportCommand.java`, `src/UsefulCommands/SpawnCommand.java`,
 `src/SpawnPoints/SpawnPoint.java`, `src/SpawnPoints/SpawnPointCommands.java`, `src/Teleport/*`, `src/Houses/HomeCommands.java`,
@@ -299,8 +299,9 @@ is not a bypass by itself (v1 used owner mode as the gate); the nodes are.
 
 ### 3.4 Engine (knk-paper `teleport/`, pure logic in knk-core `core/teleport/`)
 
-`TeleportPlan { subject, destinationSupplier, kind (STAFF|REQUEST|SPAWN|WARP|BACK), actor, warmupSeconds,
-chargeSpec?, silent, auditSpec? }`. `TeleportService.start(plan)`:
+`TeleportPlan { subject, destinationSupplier, kind (STAFF|REQUEST|SPAWN|HUB|WARP|BACK|ARENA|ARENA_SYSTEM), actor,
+warmupSeconds, chargeSpec?, silent, auditSpec?, beforeMove? }`. `HUB` is §3.6; `ARENA`, `ARENA_SYSTEM` and `beforeMove` are
+§3.4.5. `TeleportService.start(plan)`:
 
 1. **Guards** (`TeleportGuards`, each returns an optional denial message; bypass nodes as listed):
    - subject frozen (`AdminFreezeManager.isFrozen`) → "You can't teleport while frozen." Staff kinds move frozen players
@@ -355,6 +356,29 @@ already blocked. **Dying clears the dead player's tag** (the killer stays tagged
 - A vanished actor's staff teleports are silent to the target automatically. Staff teleporting to a vanished,
   higher-ranked player is refused by the existing rank check.
 - Requests can't be sent **by** a vanished player to a non-staff player (would reveal them) — refused with a hint.
+
+#### 3.4.5 Arena kinds (arena duels, KNG-217)
+
+Only the duel runtime starts these ([arena duels DESIGN](../arena-duels/DESIGN.md) D6, D7). On the
+`claude/arena-duels` branches, not merged.
+
+| Kind | Warmup | Cooldown | Combat tag | Charge | Safe spot | Audit | Used for |
+|---|---|---|---|---|---|---|---|
+| `ARENA` | player warmup (5 s / 3 s), cancelled by moving or damage | none (neither set nor checked) | refused while tagged | none | yes | no | both duelists' lobby teleport, started together; either failing cancels the match and refunds it |
+| `ARENA_SYSTEM` | none (instant) | none | not checked | none | yes | no (not a staff teleport) | the runtime's own moves to the battleground spawns and the arena exit |
+
+- **Guards still apply** to both kinds (freeze, domain access, the minigame registry's teleport restriction). The
+  duel guard `DuelTeleportRestriction` refuses every *other* kind for a duelist from the lock-in until the exit (so
+  `/spawn`, `/hub`, `/warp`, `/home`, `/tpa`, `/back` and menu teleports), with a staff bypass `knk.admin.duel`.
+  Entering the battleground passes domain access through the duel's `DomainAccessExemptions` entry, and the exit
+  teleport through its one-shot exit pass ([domain access](../../architecture/domain-access-enforcement.md) §3).
+- **`TeleportPlan.beforeMove`** (`BeforeMove`, `withBeforeMove`): a hook run in the commit step after the warmup
+  succeeded and the guards passed again, just before the move. It may refuse the teleport. The kit duel modes use it
+  to vault the inventory right before the lobby move, and restore it at once if the move then fails. It is skipped
+  when the warmup was cancelled. General enough for the siege kit mode (KNG-199).
+- Constructors: `TeleportPlan.arena(subject, destination, label, beforeMove)` and
+  `TeleportPlan.arenaSystem(subject, location, label)`. `TeleportKind.isSystem()` and `usesCooldown()` carry the table's
+  rules.
 
 ### 3.5 Requests (`/tpa`, `/tpahere`)
 
