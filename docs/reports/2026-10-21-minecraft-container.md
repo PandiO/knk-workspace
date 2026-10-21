@@ -85,3 +85,20 @@ commit that is finally built.
 - `knk-ops` doesn't know the Minecraft service yet: the `compose` recorded hash is stale (`matches_recorded: false`),
   `secret-files` lists `rcon_password` as unexpected, and `containers` doesn't cover `knk-alpha-minecraft` (Linear issue
   [KNG-228](https://linear.app/kngpandi/issue/KNG-228)).
+
+## 7. Incident: stack started from Portainer with relative mount paths (2026-10-21 ~20:34–21:14 local)
+
+- The developer stopped and started the `knk-alpha` stack from Portainer by accident. Portainer runs Compose in its
+  own working folder `/data/compose/42`, and the Docker daemon resolved the Minecraft service's **relative** mounts
+  (`./minecraft-data`, `./secrets/rcon_password`) against that path **on the host**. Docker created empty,
+  root-owned folders there, so the server (UID 2001) couldn't write `/data` (`[init] [ERROR] Unable to write eula`;
+  the "uid=1000" in that message is the image's default text). It restarted in a loop and became `unhealthy`.
+- No data was touched: the live `minecraft-data` was last written at 18:19 UTC, before the incident. API and MySQL
+  came back healthy (their mounts are absolute or a named volume).
+- Fix: both mounts are now absolute (`/srv/docker/stacks/knk-alpha/minecraft-data:/data`,
+  `/srv/docker/stacks/knk-alpha/secrets/rcon_password:/run/secrets/rcon_password:ro`). The fixed file was copied to
+  Portainer stack 42, and Minecraft was recreated from the host file: `Done (9.343s)`, `healthy`, `user=2001:2001`.
+  New Compose hash on host = stack 42: `46a8ab7b68c8db81f893a68d20712782fa23590e3ad5d4aa4029828fd23d69e7`. The empty
+  folders under `/data/compose/42` were removed (`/data/compose/1–6` are older Portainer leftovers and were left alone).
+- Rule: every host path in `compose.yaml` must be absolute, because Portainer can start the stack from its own folder.
+  Starting/stopping the stack in Portainer is then harmless; "Update the stack" stays off-limits (A6).
