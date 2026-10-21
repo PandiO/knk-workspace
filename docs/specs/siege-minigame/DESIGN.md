@@ -343,7 +343,7 @@ verification item (`IMPLEMENTATION_PLAN.md` Phase 3).
 | `knk-core` | `core/siege/` | **Bukkit-free, unit-tested logic:** `SiegePhase`, `SiegeLobbyStateMachine` (tick-driven timeline), `VoteTally`, `TeamPartitioner`, `AllianceResolver`, `CaptureCalculator`, `ObjectiveState`, `WinResolver`, `MatchDurationCalculator`, `SiegeRuntimeLocks` |
 | `knk-core` | `core/ports/api/` | `SiegeScenariosQueryApi`, `SiegeLobbiesQueryApi`, `SiegeMatchesCommandApi`, `ClansQueryApi` |
 | `knk-api-client` | `dto/`, `mapper/`, `impl/` | DTOs + mappers + HTTP impls (Kits/Items pattern) |
-| `knk-paper` | `paper/siege/` | `SiegeService` (owns lobby runtimes, main-thread ticker), `SiegeWorldPresenter` (banners, particle circles, percent `TextDisplay`s), `SiegeGateController` (§8), `SiegePlayerVault` (§9), `SiegeScoreboardPresenter`, `SiegeGateViewService` (§8.5), `SiegeCaptureFeedback` (§7.3), `SiegeEnchantBooks`/`SiegeEnchantMenu` (§9.4), `SiegeMenuFeature`/`SiegeMenuBridge` (menu registries, §10) |
+| `knk-paper` | `paper/siege/` | `SiegeService` (owns lobby runtimes, main-thread ticker), `SiegeWorldPresenter` (banners, particle circles, percent `TextDisplay`s), `SiegeGateController` (§8), `SiegeParticipation` (the minigame registry adapter, arena duels DESIGN §11), the shared `paper/minigame/MinigamePlayerVault` (§9; was `SiegePlayerVault` until KNG-209), `SiegeScoreboardPresenter`, `SiegeGateViewService` (§8.5), `SiegeCaptureFeedback` (§7.3), `SiegeEnchantBooks`/`SiegeEnchantMenu` (§9.4), `SiegeMenuFeature`/`SiegeMenuBridge` (menu registries, §10) |
 | `knk-paper` | `paper/listeners/` | `SiegeCombatListener`, `SiegeDeathRespawnListener`, `SiegeGateListener`, `SiegeCommandFilterListener`, `SiegeInventoryGuardListener`, `SiegeSessionListener` (quit/join), `SiegeEnchantBookListener` (§9.4) |
 | `knk-paper` | `paper/commands/` | `SiegeCommand` (player + admin subcommands) |
 
@@ -658,7 +658,7 @@ restore) and was removed from the gate's admin form in Phase 3 (`IMPLEMENTATION_
 ## 9. Player state: own gear + restore (D2)
 
 ### 9.1 Snapshot
-At the hub teleport (T-15), `SiegePlayerVault` captures: inventory storage, armour, off-hand, XP level
+At the hub teleport (T-15), the siege's `MinigamePlayerVault` (`SiegePlayerVault` until KNG-209; same files and format) captures: inventory storage, armour, off-hand, XP level
 and progress, health, food, saturation, active potion effects, game mode, location. The player
 **keeps their gear** for the match (nothing is cleared). The snapshot is kept in memory **and** written
 to `plugins/KnightsAndKings/siege-vault/<uuid>.yml` (Bukkit YAML `ItemStack` serialization) before

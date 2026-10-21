@@ -136,3 +136,71 @@ None of P3 is visible on its own; these behaviours come through P4/P5 and are wo
 ### Open questions
 
 - Deviation 1 (ratio with item collateral) should be confirmed by the developer and mirrored in P2's API check.
+
+---
+
+## P0 — shared minigame hooks ([KNG-209](https://linear.app/kngpandi/issue/KNG-209))
+
+**Session:** Claude Code cloud session, 2026-10-21. **Status:** pushed, KNG-209 In Review. A refactor with no behaviour change for siege.
+
+### Commits
+
+| Repo | Branch | Commit | What |
+|---|---|---|---|
+| knk-plugin | `claude/arena-duels` | `e3814cef` | the P0 change (registry, siege adapter, vault, exemptions, tests) |
+| knk-plugin | `claude/arena-duels` | `d00826c5` | merge of P3's `1f5ebdfa` (no conflicts; tests re-run green after it) |
+| knk-workspace | `main` | `140825b` | tracker row |
+| knk-workspace | `claude/arena-duels` | this commit | this section; siege `DESIGN.md` §9.1 and the class table name the shared vault |
+
+KNG-182 has not merged into knk-plugin `main` yet (`main` is still `79be4882`), so `claude/mc-26.2-upgrade` (`88497649`) stays the base.
+
+### Tests
+
+- Toolchain: Temurin JDK 25.0.4 as the Gradle toolchain (Gradle 8.14.3 itself runs on JDK 21), Paper API 26.3.
+- Baseline on `88497649` (clean worktree): knk-core 2168, knk-api-client 264 (2 skipped), knk-paper 1870 (18 skipped), 0 failures.
+- After P0 (before merging P3): knk-core 2180, knk-api-client 264, knk-paper 1887, 0 failures. After the P3 merge: knk-core 2294, knk-api-client 264, knk-paper 1887, 0 failures; `./gradlew build -x deployToDevServer` BUILD SUCCESSFUL. No known reds.
+- Every existing siege test is unchanged and green (`SiegeTeleportRestrictionTest`, `SiegeSafeZoneTest`, `SiegeMatchPreparationTest`, the lootbox/statistics/discovery siege cases, …). Three existing tests changed only their fixtures for new signatures: `HubOutageServiceTest` and `HubPortalListenerTest` pass a registry; `DiscoveryEligibilityTest` replaced its siege-service hook test with the same assertions through the registry and `SiegeParticipation`.
+
+| Plan test | Test |
+|---|---|
+| registry composition | `MinigameRegistryTest` (empty registry = the old null checks; stage-driven questions; per-minigame answers; outage release asks all; resume isolates failures; unique ids; port defaults), `SiegeParticipationTest` (stages equal `isMatchActive` / `blocksDiscovery` / `runningMatchOf` for every phase; combat, headshots, outage), `MinigameTeleportRestrictionTest` (the registry guard in a real `TeleportService` refuses what the siege guard did; `/back` exclusion; bypass node) |
+| vault round-trip, including old siege files | `MinigamePlayerVaultTest` (snapshot → restore, restore from file after a restart, a hand-written `SiegePlayerVault` version-1 file restores, quit then join, dead at the end, unwritable directory, one directory per minigame) |
+| handler with and without exemptions | `DomainAccessExemptionsTest` (core rule) and `DomainAccessServiceTest` (`anEmptyExemptionRegistryChangesNothing`, `anEntryExemptionLetsThatPlayerInOnFootAndByTeleportAndConfinementKeepsThemIn`) |
+
+### What later phases build on (P1, P3, P4, KNG-199)
+
+**`knk-core` `net.knightsandkings.knk.core.minigame`** (Bukkit-free, in `ArchitectureGuardTest`):
+- `MinigameParticipation` (port): `id()` (lower case; also the statistics context and the noun in "You are in a duel."), `participationOf(UUID)`, and defaults P4 overrides as needed: `allowsCombat(attacker, victim)` (UUIDs), `headshotMultiplier`, `releaseForOutage(UUID)` (default true), `resumeAfterOutage()`, `holdsLootDrops(UUID)`, `keepsOwnScoreboard(UUID)`, `excludesBackOnDeath(UUID)` (these three default to "stage is away"), `teleportRefusal(MinigameTeleportAttempt)`, `teleportBypassNodes()`.
+- `Participation(playerId, minigame, matchToken, stage)`, `Stage` = `QUEUED` (still in the open world; only navigation excludes) / `STAGING` (taken away, gear held, not fighting) / `PLAYING` (statistics go to the minigame's context) / `FINISHING` (waiting to be restored). `isAway()` = STAGING|PLAYING; `hasLeftOpenWorld()` = not QUEUED. **Suggested duel mapping for P4:** LOCKING and TRAVELLING/WARMUP/BATTLE_COUNTDOWN → STAGING, FIGHT → PLAYING, ENDING → FINISHING; override `holdsLootDrops` (DESIGN §8.4: LOCKING until the restore) where the default differs.
+- `MinigameTeleportAttempt(subject, subjectName, kind, movesSelf, visited, visitedName, authority)`.
+- `MinigameRegistry`: `register` / `unregister` / `find(id)`; `participationOf`, `isMember`, `hasLeftOpenWorld`, `isAway`, `statisticsContextOf`, `hubRefusal`, and the composed hooks. **P4 registers `DuelService` (or an adapter) with `KnKPlugin.getMinigames().register(...)`.**
+
+**`knk-paper`:**
+- `paper/minigame/MinigameTeleportRestriction` — registered once (after `initializeSiege`), so a minigame registered later is guarded automatically; `backDeathExclusion()`. `attemptOf(TeleportCheck)`.
+- `paper/minigame/MinigamePlayerVault(minigame, directory, teleporter, logger)`: `snapshot(player, matchToken, instanceId)` → false when the file can't be written, `has`/`hasFile`, `peek`, `matchTokenOf`, `restore`, `restoreOnQuit`, `restoreOnJoin`, `takePendingRespawn`, `returnLocation`, `setAfterRestore`. One instance per minigame and directory (P4: e.g. `duel-vault/`; KNG-199: siege's own `siege-vault/`). The teleporter must bypass the teleport engine (siege uses `SiegeBukkit::teleport`).
+- `paper/siege/SiegeParticipation` (id `siege`).
+- `ScoreboardUtil.setMinigames(registry)`; `HubOutageService` takes the registry (release on outage actions, `resumeAfterOutage` on recovery).
+- **`DomainAccessExemptions`** (`knk-core` `core/regions/access/`): `exemptFromEntry(UUID, regionId)`, `confinement(UUID, regionId)` → message; `DomainAccessExemptions.Registry` (`register`/`unregister`). `RegionAccessRules.evaluate(playerId, entered, exited, exemptions)`; `DomainAccessService.setExemptions(...)`. **P4 registers its provider with `KnKPlugin.getDomainAccessExemptions().register(...)`**; it applies to WorldGuard crossings (walk, glide, ride, pearl, teleport), the teleport engine's preview and the join/respawn check. `exemptWhile` (existing) still skips judging the runtime's own moves; P4's "one-shot pass" for the exit teleport can use it or clear the confinement first.
+
+### Deviations and interpretations (reversible; also a comment on KNG-197)
+
+1. **The port has more than DESIGN §11's six methods**: the headshot multiplier, the outage resume and the `/back` exclusion were separate siege lambdas too, so they became port methods with neutral defaults. `teleportRefusal` takes a `MinigameTeleportAttempt` instead of `(UUID, kind)`, because the siege guard's messages depend on who asks (self, staff, a `/tpa` to a member) and on the bypass node.
+2. **Membership is one shared stage** instead of each hook asking its own siege method. `SiegeParticipationTest` proves the stages equal the old predicates for every siege phase.
+3. **Exemptions are asked by `DomainAccessService` (through `RegionAccessRules`)**, which `DomainAccessHandler` calls for every crossing; that way the teleport preview and the join/respawn check see them too.
+4. **`/hub`'s message comes from the minigame id**: "You are in a siege." is unchanged; a duelist will get "You are in a duel.".
+5. **A failing `resumeAfterOutage` is now logged per minigame** instead of escaping the connectivity callback (failure path only).
+6. **`MinigamePlayerVault` writes two extra keys** (`minigame`, `instanceId`); an old file's `lobbyId` is read as the instance id. The version stays 1, so a rollback still reads new files.
+
+### Left for later phases (filed as Linear comments)
+
+- Navigation's and discovery's exclusion is still called `SIEGE`, and navigation tells the player "you joined a siege"; with duelists in the registry that wording is wrong → comment on KNG-217 (P4). The config key `discovery.exclude-siege-participants` now covers every registered minigame.
+- knk-plugin `CLAUDE.md` "Structure" could name `core/minigame/` and `paper/minigame/`; left for P8's docs pass (KNG-222 comment).
+
+### Live checks for P8 (siege regression)
+
+One siege round on the dev server:
+1. **Outage release**: with a siege at the hub or in progress, take the API down until the outage action fires → the round is aborted ("…lost its connection…"), members get their things back and are moved; when the API returns, the lobby restarts matchmaking.
+2. **`/hub` refusal**: a member at the siege hub, in the match and during ENDING/COOLDOWN gets "You are in a siege."; a member still in matchmaking may use `/hub`.
+3. **Safezone enchant effects**: in a siege fought inside a town (PvP-safe region), custom enchantments (e.g. a lifesteal or fire effect) still trigger on enemy hits; a hit inside a team's own spawn area is still refused.
+4. **Vault restore after a quit**: quit mid-match → inventory, XP and effects are back at once; rejoin → teleported to the pre-match spot; `plugins/KnightsAndKings/siege-vault/<uuid>.yml` is gone afterwards. Also: a vault file left from before this branch (if one exists on the dev server) restores on join.
+5. Quick extras: `/spawn` as a member is refused with the siege message; a match death gives no `/back`; the match scoreboard survives an hourly salary/rank refresh; lootbox tokens earned during the siege arrive after the restore.
