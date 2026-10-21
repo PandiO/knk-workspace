@@ -205,7 +205,7 @@ Exact commands and configuration: [alpha go-live § 3–4](alpha-go-live.md#3-up
 
 > **Decision 2026-10-18 (developer, [KNG-182](https://linear.app/kngpandi/issue/KNG-182)):** the alpha starts on
 > **Paper 26.3 / Java 25** (first 26.2; moved to 26.3 stable the same day), not 1.21.10; the former Phase 8 upgrade is folded into this phase. Consequences:
-> - the plugin jar comes from knk-plugin `main` after KNG-182 (`claude/mc-26.2-upgrade`) merges; earlier `main`
+> - the plugin jar comes from knk-plugin `main` at or after `857d4b1e` (KNG-182, merged 2026-10-21); earlier `main`
 >   builds target 1.21.10 only, and later ones run only on 26.3;
 > - the staging sources stay 1.21.10 and are the rollback. Paper converts the **live copy** on its first start
 >   (after a 30 s "World storage migration is required" warning), and converted worlds cannot be downgraded;
