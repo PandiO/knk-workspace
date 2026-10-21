@@ -1,6 +1,6 @@
 # Arena duels chain — progress report
 
-**Status:** In progress (wave 1).
+**Status:** In progress (P0, P1, P2, P3 and P7 pushed).
 **Last updated:** 2026-10-21
 **Linear:** [KNG-197](https://linear.app/kngpandi/issue/KNG-197) (design) and its phase issues.
 **Charter:** [ARENA_DUELS_CHAIN.md](../ai-agents/handoffs/ARENA_DUELS_CHAIN.md). **Design:** [DESIGN.md](../specs/arena-duels/DESIGN.md), [IMPLEMENTATION_PLAN.md](../specs/arena-duels/IMPLEMENTATION_PLAN.md).
@@ -423,3 +423,69 @@ The match (`DuelMatchDto`) carries: ids and usernames, `arenaKey`, `battleground
 10. A web staff member without `knk.admin.duel.review` gets 403 on release/void/revert/restrictions; one with `knk.admin.*` passes.
 11. Three paid one-way duels between the same pair within 24 h → an `R10` alert on the next monitor cycle; `R7` doesn't fire for `DUEL_PAYOUT`.
 12. Plugin startup: `abort-unfinished` refunds open matches and leaves held results.
+
+---
+
+## P7 — statistics and web-app pages ([KNG-221](https://linear.app/kngpandi/issue/KNG-221))
+
+**Session:** Claude Code cloud session, 2026-10-21. **Status:** pushed, KNG-221 In Review. Not deployed, not live-tested. Started after P2 had pushed (knk-web-api `a0da408`, knk-plugin `1e17f985`). P4 (KNG-217) had **not** pushed, so the plugin part is the resolver hook only (below). Trunks had nothing new: `master` / `main` and the KNG-182 head `88497649` were already in every branch, and no other session pushed to `claude/arena-duels` meanwhile.
+
+### Commits
+
+| Repo | Branch | Commit | What |
+|---|---|---|---|
+| knk-web-api | `claude/arena-duels` | `dc704f3` | `DuelStatisticsProjector`, `duel` context and projection-owned guard, public-by-default duel W/L/D, rebuild `duel`, tests |
+| knk-web-app | `claude/arena-duels` | `6afaa8b` | `/admin/duels` (history), `/admin/duels/:id` (match detail and staff actions), `/admin/duels/restrictions` + profile card, `/admin/duels/policy`, alert rule codes, tests |
+| knk-plugin | `claude/arena-duels` | `d0332108` | `StatisticsContext.DUEL`, resolver test over the minigame registry |
+| knk-workspace | `main` | `0276c48` | tracker row |
+| knk-workspace | `claude/arena-duels` | this commit | this section; `specs/player-statistics/DESIGN.md` §F.1, §F.4, §F.6 (the `duel` context) |
+
+### Tests
+
+- **knk-web-api** (`dotnet build knkwebapi_v2.csproj`, then `dotnet test`; a plain `dotnet build` at the root fails on the `.sln`'s lower-case `tests\` path, filed as [KNG-223](https://linear.app/kngpandi/issue/KNG-223)): baseline at `a0da408` 2829 passed / 4 failed / 73 skipped; after P7 **2861 passed / 4 failed / 73 skipped**, the same 4 known reds as P2. No model change, no migration.
+- **knk-plugin** (`./gradlew build -x deployToDevServer`, Temurin 25.0.4 toolchain, session-local Gradle init script pointing at Google's Maven Central mirror because Maven Central answered 429; nothing committed): BUILD SUCCESSFUL, knk-core 2312, knk-api-client 275 (2 skipped), knk-paper 1889 (18 skipped), 0 failures (P2: 2312 / 275 / 1887).
+- **knk-web-app** (`CYPRESS_INSTALL_BINARY=0 npx npm@11 ci`, the Cypress binary download was cut off in this container; `npm run test:ci`): baseline 156 suites / 944 tests; after **160 suites / 965 tests**, all green. `npm run build` compiles; `tsc --noEmit` shows only the 3 known errors in `sessionPinnedRows.test.ts`.
+
+| Plan test | Test |
+|---|---|
+| the projector | `DuelStatisticsProjectorTests`: win/loss, forfeit = loss, the three draw reasons, cancelled and aborted (all six reasons) count nothing, a decisive reason without a winner counts nothing, review states (`Counts`), `ProjectNext_CountsEachDecidedMatchOnce`, `AHeldResult_CountsOnceReleased_AndAVoidedHoldNever`, `ARevertedOrConfiscatedResult_IsTakenBackOutOnce`, `Rebuild_ReprojectsWhatCountsNow`, `RebuildService_AcceptsDuel`, `ProjectionCycle_RunsTheDuelProjector` |
+| plugin-posted `wins@duel` refused | `PluginPostedDuelResults_AreRefused_ButDuelKillsAndDeathsAreAccepted` (wins/losses/draws → `NotPluginWritable`; `deaths@duel` and a `pvp_kills@duel` kill accepted); `StatisticsCatalogTests.IsPluginWritable` rows for `duel` |
+| visibility default everyone | `Rules_DuelResultsArePublicByDefault_AndThePlayersChoiceWins`, `OtherPlayers_SeeDuelResults_UntilThePlayerHidesThem` (query as a signed-in viewer, the settings DTO, then an update through the normal settings) |
+| no duel leaderboards | `Leaderboards_HaveNoDuelBoardsYet` |
+| plugin context | knk-plugin `StatisticsContextResolverTest` (duel PLAYING → `duel`, STAGING → `open_world`, siege unchanged, no runtime → `open_world`) |
+| web-app pages | `DuelHistoryPage.test` (4), `DuelMatchDetailPage.test` (7: detail, release, void needs a reason, revert shows recovered/missing, confiscate refusal, clear escalation pair/winner, friendly draw), `DuelPolicyPage.test` (3, incl. 409), `DuelRestrictionsPanel.test` (6, incl. pair + expiry, unknown name, lift, profile card, hidden without the node), `CurrencyAlertsPage.test` (+1: duel rule codes and the match link) |
+
+### What later phases rely on
+
+- **API**: `Services/Statistics/DuelStatisticsProjector` (registered in DI, `StatisticsProjectionService` step `duel`, `StatisticsRebuildService` projection `duel`; `POST api/statistics/rebuild {"projection":"duel"}`). `StatisticsCatalog.Duel = "duel"` is in `KnownContexts`; wins/losses/draws are projection-owned in `siege` and `duel`. Projected-source types `duel_match` and `duel_match_retracted`. `StatisticsCatalog.DefaultVisibility(setting, context)`; `LeaderboardCatalog.RankedContexts` (open world, siege) feeds the per-context kill and killstreak boards.
+- **Plugin (for P4)**: nothing to wire. `StatisticsContextResolver.of(minigames)` already reads `MinigameRegistry.statisticsContextOf`, which returns the minigame's id for a `PLAYING` member. P4's duel `MinigameParticipation` must use **id `"duel"`** and report **`PLAYING` for COUNTDOWN and FIGHT** (lobby warmup = `STAGING`, so those stats stay `open_world`). `StatisticsContext.DUEL` is the constant.
+- **Web app (for P8's guide)**: routes `/admin/duels`, `/admin/duels/:id`, `/admin/duels/restrictions`, `/admin/duels/policy`, all `StaffRoute node="knk.admin.duel.review"`; a "Duels" button on Player moderation; a "Duel restrictions" card on `/admin/users/:id`; `src/apiClients/duelMatchClient.ts`, `src/types/dtos/duels/DuelDtos.ts`.
+
+### Deviations and interpretations (reversible; also a comment on KNG-197)
+
+1. **Public by default = a per-context default.** Precedence: the player's `duel` override → their metric-level value (if they ever set one) → **everyone** for `wins`/`losses`/`draws@duel` → nobody. So a player who set "Wins" to Nobody hides duel wins too, and the cross-context total stays private unless the player makes it public. No rows are written for existing players.
+2. **A voided result is taken back out.** The plan says voided matches count nothing; a paid result can be reverted days after it was counted, so the projector retracts it once (−1 on the day it was counted) instead of only skipping it. A held result is never counted until released.
+3. **No duel leaderboards**: `duel` is a known context (labels, ordering), but the per-context kill/killstreak boards stay on open world and siege, and the wins boards on siege, until duel leaderboards get per-opponent caps (DESIGN §10.4, §15).
+4. **Player lookup** on the staff pages uses the public `api/players/by-name`; a numeric id always works (inactive or merged accounts may not resolve by name).
+5. **Alerts page**: besides the three rule codes in the filter, an alert whose `details.matchId` is set gets a "Duel #id" link. No other alert UI.
+6. The match detail shows the ledger **transaction ids** as numbers: the transaction page is keyed by `publicId`, which `DuelMatchDto` doesn't carry (leftover, comment on KNG-221).
+
+### Open questions for the developer
+
+- Should an explicit metric-level "Wins: Nobody" (set before duels existed, or by the group action) also hide duel wins, as now, or should duel W/L/D stay public until the player changes the duel context itself?
+
+### Live checks for P8
+
+1. A paid staked duel (P4 runtime) → within one projection cycle (30 s) the winner has `wins@duel` +1 and the loser `losses@duel` +1 (web profile statistics or in-game statistics menu, "Duel" context). A forfeit counts the quitter's loss; a time-limit or agreed draw a draw for both; a cancel or a server-restart abort nothing.
+2. A held result shows no W/L; after **Release** it counts; a voided hold never does.
+3. **Revert** a paid result on `/admin/duels/:id` → the next cycle takes the win and the loss back out (lifetime and that day).
+4. Another signed-in player sees the duel W/L/D on the public profile without any setting; after the player sets Wins → Duel to Nobody (web statistics settings or the in-game menu) the duel wins disappear; the wins total stays hidden throughout.
+5. Kills and deaths during the fight are stored as `pvp_kills@duel` / `deaths@duel` (staff statistics panel), warmup kills as open world (needs P4's participation).
+6. `/leaderboards` shows no duel board.
+7. `POST api/statistics/rebuild {"projection":"duel"}` reproduces the same numbers.
+8. `/admin/duels`: filters by arena, player name, status and review; a held match → Release (paid) and Void (reason required); a paid match → Revert after the winner spent part of it shows the recovered amount and "Still missing"; Confiscate shows coins to the sink; both are in the audit log with the reason.
+9. Clear escalation (pair, then winner) → the pair's open `DUEL_FLAG` alerts show as acknowledged on the currency alerts page.
+10. `/admin/duels/restrictions`: add a player restriction with an end date and a pair restriction by name; both show on each player's staff profile; lift one.
+11. `/admin/duels/policy`: change a threshold and save; save again from a second tab opened before → the reload message.
+12. Currency alerts page: the rule filter offers R10, Duel flagged, Duel held; a duel alert links its match.
+13. A staff member without `knk.admin.duel.review` sees no Duels button, gets the no-access page on `/admin/duels`, and no restrictions card on profiles.

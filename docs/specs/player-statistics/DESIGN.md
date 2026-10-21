@@ -1,7 +1,7 @@
 # Player statistics — working design
 
 **Status:** Finalized 2026-10-03 by chain link 1 — the "Finalized design (link 1)" section below is binding for implementation together with [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md). Developer decisions D1-D13 and "Agreed" paragraphs are the developer's; link-1 defaults are numbered `L1-n` and flagged for review in the progress report. Evidence: [source audit](../../reports/2026-10-03-player-statistics-source-audit.md). **Implemented and merged 2026-10-11** after the live smoke test (see IMPLEMENTATION_PLAN.md).
-**Last updated:** 2026-10-11 (merged; trunk alignment D21-D23 and smoke-test decision D24 on 2026-10-10)
+**Last updated:** 2026-10-21 (arena duels P7, [KNG-221](https://linear.app/kngpandi/issue/KNG-221): the `duel` context, §F.1, §F.4, §F.6; on the `claude/arena-duels` branches, not merged). Before that 2026-10-11 (merged; trunk alignment D21-D23 and smoke-test decision D24 on 2026-10-10)
 **Linear:** [KNG-34](https://linear.app/kngpandi/issue/KNG-34/design-player-statistics-provenance-and-world-analytics), [KNG-14](https://linear.app/kngpandi/issue/KNG-14/gameplay-statistics-counters-v2-userstatistics-for-user-statistics), [KNG-23](https://linear.app/kngpandi/issue/KNG-23)
 
 This living note records decisions from the developer conversation. It does not assert that all described fields are already stored or displayed in V3. Precedence: (1) "Developer decisions 2026-10-03", (2) the "Finalized design (link 1)" section, (3) the older discussion sections further down, which are kept as rationale. Where an older section still says "open" or "to be decided", section (2) settles it.
@@ -97,7 +97,8 @@ this section fixes **what** is recorded and shown. Link-1 defaults are marked **
 ### F.1 Metric catalogue
 
 Metric keys are stable identifiers (API catalogue `StatisticsCatalog`, plugin `StatisticsMetric`). **Context** is the
-game context at the moment the fact happened: `open_world` (default), `siege`; future `arena`, `dungeon`,
+game context at the moment the fact happened: `open_world` (default), `siege`, `duel` (an arena duel's fight, KNG-221;
+the plugin's context is the minigame registry id of a PLAYING member); future `dungeon`,
 `siege_survival` are added as new context keys without schema change. "Contextual" metrics are stored and viewable per
 context plus a total across contexts; non-contextual metrics are stored with an empty context.
 
@@ -120,7 +121,7 @@ lifetime for every metric; for max metrics a period shows the highest value reac
 | `arrows_fired` | Arrows fired | Arrows shot by bow/crossbow (`EntityShootBowEvent`, arrow projectiles; tridents excluded) | plugin | yes | `arrows_fired` | no |
 | `headshots` | Headshots | Projectile hits on a player satisfying `SiegeCombatRules.isHeadshot` where the context applies a headshot multiplier (today: Siege lobbies with multiplier > 1) | plugin | yes | `headshots` | no |
 | `highest_killstreak` (max) | Highest killstreak | Most PvP kills without dying (§F.7) | plugin (open world); **siege: match tables** | yes | `highest_killstreak` | **yes** (per context + overall max) |
-| `wins` / `losses` / `draws` | Wins / losses / draws | Match results per minigame (§F.6) | **match tables** | yes | `wins` / `losses` / `draws` | `wins` **yes** (per minigame) |
+| `wins` / `losses` / `draws` | Wins / losses / draws | Match results per minigame (§F.6): `siege` and `duel` | **match tables** (`siege_matches`, `duel_matches`) | yes | `wins` / `losses` / `draws` | `wins` **yes** (per minigame; not `duel` yet, arena duels DESIGN §10.4/§15) |
 | `objectives_captured` | Objectives captured | Objective captures credited to the player | **match tables** (siege) | yes | `objectives_captured` | **yes** (per context) |
 | `distance.foot` / `.flying` / `.vehicle` | Distance on foot / flying / in a vehicle | Horizontal+vertical Euclidean distance of eligible movement segments (§F.9); swimming counts as foot | plugin | — | `distance.foot` / `distance.flying` / `distance.vehicle` | **yes** (per mode) |
 | `distance.swim` | — (internal) | Subset of foot distance spent swimming, kept for later reclassification | plugin | — | internal | no |
@@ -191,7 +192,9 @@ V1 had an explicit `/afk` toggle plus auto-AFK after 300 s; V2 had nothing (audi
   `X-Acting-User-Id`) sees always-public fields plus every metric whose effective visibility is *everyone*; an
   **anonymous** web visitor sees only the always-public fields (L1-3).
 - **Per-context precedence (D8):** a context-level row, if present, decides that context; otherwise the metric-level row
-  decides; otherwise nobody. A **total across contexts** is visible only when the metric-level value and every
+  decides; otherwise the context's default: **everyone** for `wins`/`losses`/`draws` in `duel` (arena duels D17,
+  KNG-221), nobody for everything else. The player changes it in the normal settings (a `duel` override, or a
+  metric-level value, which then also applies to `duel`). A **total across contexts** is visible only when the metric-level value and every
   context-level override are *everyone* (otherwise a hidden context would leak through the total).
 - **Group action:** a bulk update of the currently listed settings in a group to one value, previewed as
   `metric: current → proposed`, confirmed, applied as **one atomic update** with optimistic concurrency (each change
@@ -231,6 +234,14 @@ written per minigame so Arena/Dungeons add a projector, not columns):
 - The plugin does **not** send `pvp_kills`/`deaths`/`highest_killstreak` for a kill/death where the victim is a member of a
   running Siege match (the roster counts them); the API rejects plugin entries for these projection-owned
   (metric, context) pairs as a second guard.
+- **Arena duels (KNG-221, arena duels DESIGN §10.3, D10, D17):** `DuelStatisticsProjector` reads `duel_matches`
+  into `wins`/`losses`/`draws@duel` on the day the match ended. Completed with a winner (`Win` or `Forfeit`) → a win
+  for the winner and a loss for the other (a forfeit is a loss for the quitter); completed without a winner
+  (`TimeLimit`, `AgreedDraw`, `SimultaneousDeath`) → a draw for both; `Cancelled` and `Aborted` → nothing. A **held**
+  result counts once staff release it; a **voided** one never. A result voided after it was counted (a staff revert
+  or confiscation) is taken back out once (−1 on its day; marker `duel_match_retracted` beside `duel_match` in
+  `statistics_projected_sources`). Kills, deaths and damage in a duel are plugin facts in context `duel`, as in the
+  open world; only the results are projection-owned. Rebuild: `POST api/statistics/rebuild` with projection `duel`.
 - **Leaver gap fix (link 4):** the plugin reports departed members' kills/deaths/streak/captures in the completion
   payload so their stats are not lost; the API keeps their `LeftAt`, so rewards are unchanged (present-at-end only).
 
