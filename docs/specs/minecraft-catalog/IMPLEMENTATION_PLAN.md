@@ -1,7 +1,7 @@
 # Minecraft catalogue (materials and blocks): implementation plan
 
-**Status:** Draft. Open decisions in §11 await the developer. Nothing is implemented yet.
-**Last updated:** 2026-10-20
+**Status:** Draft, decisions D1-D6 taken by the developer (2026-10-21, §11). Nothing is implemented yet.
+**Last updated:** 2026-10-21
 **Issue:** [KNG-200](https://linear.app/kngpandi/issue/KNG-200). Related: [KNG-195](https://linear.app/kngpandi/issue/KNG-195) (hybrid submit fixes, In Review), [KNG-182](https://linear.app/kngpandi/issue/KNG-182) (Minecraft 26.3).
 
 Scope: the catalogue of Minecraft materials (`MinecraftMaterialRef`) and block states
@@ -217,9 +217,9 @@ material (§5.2).
   `Bukkit.createBlockData(s).getAsString()`, which fills in every property, and then sorts.
   The API applies the same textual canonicalisation (parse, sort, re-join), so a state typed in
   the web app and one captured in the game produce the same `StateKey`.
-- Full versus partial states (`minecraft:oak_stairs[facing=north]`) is open decision D2. The
-  recommendation is to store what was given, canonicalised, and flag `IsPartial` when it has
-  fewer properties than the block's schema. A partial state is then a different identity from
+- Full versus partial states (`minecraft:oak_stairs[facing=north]`), decision D2: store what was
+  given, canonicalised, and flag `IsPartial` when it has fewer properties than the block's
+  schema. A partial state is then a different identity from
   the full one, on purpose: it means "any oak stairs facing north".
 - Each state is a row, not a column on the material, and the material holds no state. This
   fixes the hybrid collision for good: two states of `oak_stairs` are two block refs with one
@@ -284,8 +284,8 @@ from 1.21.10, the server runs 26.3: scan now?".
 ### 5.3 Display names
 
 The server has translation keys, not English names. The plugin renders the key with
-`GlobalTranslator` to `en_US` if the server jar carries `en_us`. Verify that live: it is open
-decision D4. Otherwise the API derives a title-case name from the key (`oak_stairs` →
+`GlobalTranslator` to `en_US` if the server jar carries `en_us` (decision D4; verify live).
+Otherwise the API derives a title-case name from the key (`oak_stairs` →
 "Oak Stairs"). Pickers always show the key under the name, so "Torch" and "Wall Torch" can be
 told apart even if the names match.
 
@@ -399,12 +399,11 @@ told apart even if the names match.
 The order matters, because some callers still depend on the hybrid routes.
 
 1. **Phase 1:** the hybrid picker is stabilised (§10) and stays the default.
-2. **Phase 3:** the static file becomes a **bootstrap source**. "Import bootstrap catalogue" runs
-   the file through the same ingest (§6), with entries `Unverified` and icons re-resolved by the
-   provider, not the stored URLs. A fresh database then has a usable list before the server ever
-   ran.
+2. **No bootstrap import (decision D5).** The static file is not imported. A fresh database
+   starts empty until the first server scan; until then seeds and forms create `Unverified`
+   rows (no icon, `Category` from the resolver default) and the hybrid picker stays available.
 3. **Phase 4:** `MinecraftCatalog:PickerSource` = `Hybrid | Database`, default `Database` as soon
-   as one scan or bootstrap import has completed.
+   as one scan has completed (on a database without a completed scan it stays `Hybrid`).
    - `PagedEntityTable` stops adding `SearchHybrid` for materials and blocks. The hybrid code
      stays reachable through the setting as a rollback.
    - The picker filters on `kind` (item/block) and `CatalogStatus != Missing`. It shows name, key
@@ -420,8 +419,8 @@ The order matters, because some callers still depend on the hybrid routes.
 5. **Phase 5,** after live sign-off:
    - Delete `GET .../hybrid`, the `SearchHybrid` branches, `GetHybridAsync`/`SearchHybridAsync`,
      the hybrid DTOs, the `isPersisted` badges and auto-create.
-   - Delete `MinecraftMaterialCatalogService` and its JSON. The JSON may stay in the repo as the
-     bootstrap file if D5 says so.
+   - Delete `MinecraftMaterialCatalogService` and its JSON (decision D5: no bootstrap copy is
+     kept). After that, a fresh database has an empty catalogue until its first scan.
    - Rename the component to `MinecraftMaterialPicker`.
    - **Keep the enum name** `HybridMinecraftMaterialRefPicker`, because stored FormConfigurations
      hold it as a string. Rename it only together with a data migration of `formfields.FieldType`
@@ -437,10 +436,10 @@ checked before the next starts.
 
 | Phase | Content | Repos | Tests |
 |---|---|---|---|
-| **1 Stabilise** (after KNG-195 merges) | API: hybrid filters DB-only rows by search/category, de-duplicates by normalised key, applies `SortBy`, returns `Id = null` for unsaved rows and the requested `PageSize`; block hybrid groups instead of `ToDictionary`. Normaliser + single resolver; create → 409 on an existing key; `POST MinecraftBlockRefs/get-or-create`. Web: auto-create via get-or-create (materials and blocks); unsaved rows keyed and compared by normalised key; id 0/null never counts as an id; stale-response guard; "select all" skips or creates unsaved rows; `MinecraftIcon` with fallback. Fix the 823 icon URLs by re-generating them from Prismarine's mapping (data fix in the JSON, not schema) | web-api, web-app | API: hybrid search (filter, dedupe, sort, paging, two states of one block), normaliser table tests, get-or-create race (unique index), create 409. Web: `tableRowKey`/`isSameSelection` with id 0/null, PagedEntityTable hybrid (auto-create calls get-or-create, two unsaved rows stay distinct, stale response ignored), `MinecraftIcon` onError |
+| **1 Stabilise** (after KNG-195 merges) | API: hybrid filters DB-only rows by search/category, de-duplicates by normalised key, applies `SortBy`, returns `Id = null` for unsaved rows and the requested `PageSize`; block hybrid groups instead of `ToDictionary`. Normaliser + single resolver; create → 409 on an existing key; `POST MinecraftBlockRefs/get-or-create`. Web: auto-create via get-or-create (materials and blocks); unsaved rows keyed and compared by normalised key; id 0/null never counts as an id; stale-response guard; "select all" skips or creates unsaved rows; `MinecraftIcon` with fallback. The 823 broken icon URLs are **not** fixed in the JSON (decision D6); the placeholder covers them until the phase 3 provider resolves icons at the first scan | web-api, web-app | API: hybrid search (filter, dedupe, sort, paging, two states of one block), normaliser table tests, get-or-create race (unique index), create 409. Web: `tableRowKey`/`isSameSelection` with id 0/null, PagedEntityTable hybrid (auto-create calls get-or-create, two unsaved rows stay distinct, stale response ignored), `MinecraftIcon` onError |
 | **2 Schema + audit** | Migration `MinecraftCatalogEntryFields`, backfill, audit endpoint, merge action, DTO fields (additive, old fields unchanged) | web-api | Migration up/down on a copy of the dev DB, backfill idempotent (run twice), audit finds seeded collisions, merge repoints all seven FKs and rolls back on error |
-| **3 Scan + ingest + icons** | `MinecraftCatalog` controller (scans, snapshot, audit), ingest (§6), icon providers (§7), bootstrap import. Plugin: `CatalogSource`, `MinecraftCatalogScanTaskHandler`, api-client `MinecraftCatalogApi` (+ startup version report). Web: admin page "Minecraft catalogue" (scan button, status, counters, missing icons, overrides, audit) | web-api, plugin, web-app | API: ingest insert/update/unchanged/missing, never deletes, override survives, duplicate key → 400 with nothing written, same hash → no-op, other hash → 409, rollback → `Failed`, one active scan. Icon provider mapping table tests (block/blocks, items, block-only keys, version fallback). Plugin: snapshot builder (legacy/air excluded, sorted, hash stable), handler completes/fails the WorldTask, api-client request body (interceptor like `WorldAnalyticsApiImplTest`). Live: scan on the dev server (1.21.10, then 26.3) |
-| **4 DB-only picker** | `PickerSource` switch, kind filter, settings mapping, block state picker, callers moved off `hybrid`, seeds on the resolver; migration `MinecraftCatalogConstraints` after a clean audit | web-api, web-app | Picker search/sort/paging against the DB, settings mapping, ItemScan/KitScan/Roads on the new calls, seeds on an empty DB (Unverified rows) and after a scan (enriched, not duplicated) |
+| **3 Scan + ingest + icons** | `MinecraftCatalog` controller (scans, snapshot, audit), ingest (§6), icon providers (§7). Plugin: `CatalogSource`, `MinecraftCatalogScanTaskHandler`, api-client `MinecraftCatalogApi` (+ startup version report). Web: admin page "Minecraft catalogue" (scan button, status, counters, missing icons, overrides, audit) | web-api, plugin, web-app | API: ingest insert/update/unchanged/missing, never deletes, override survives, duplicate key → 400 with nothing written, same hash → no-op, other hash → 409, rollback → `Failed`, one active scan. Icon provider mapping table tests (block/blocks, items, block-only keys, version fallback). Plugin: snapshot builder (legacy/air excluded, sorted, hash stable), handler completes/fails the WorldTask, api-client request body (interceptor like `WorldAnalyticsApiImplTest`). Live: scan on the dev server (1.21.10, then 26.3) |
+| **4 DB-only picker** | `PickerSource` switch, kind filter, settings mapping, block state picker, callers moved off `hybrid`, seeds on the resolver; migration `MinecraftCatalogConstraints` after a clean audit | web-api, web-app | Picker search/sort/paging against the DB, settings mapping, ItemScan/KitScan/Roads on the new calls, seeds on an empty DB without any scan (Unverified rows, no icons) and after a scan (enriched, not duplicated) |
 | **5 Retire** | Remove hybrid routes/code and the catalogue service (§9.5) | web-api, web-app | Full suites; grep for `SearchHybrid`/`getHybrid`/`MinecraftMaterialCatalogService` returns only enchantment code |
 
 **Order with other work:**
@@ -451,17 +450,15 @@ checked before the next starts.
   The first real scan should be on 26.3, because a 1.21.10 scan would immediately be outdated.
 - Phase 2 can start in parallel with phase 1.
 
-## 11. Open decisions for the developer
+## 11. Decisions (developer, 2026-10-21)
 
-- **D1 Entity name.** Keep `MinecraftMaterialRef` as the registry entry (recommended, because
-  stored form configs, FKs and plugin DTOs use it) or introduce a new name with a migration.
-- **D2 Block states.** Allow partial states as their own identity (recommended), or full states
-  only.
-- **D3 Entries gone in a newer version.** Keep them as `Missing` and hide them in pickers
-  (recommended), or block the scan until they are merged away.
-- **D4 Display names.** English from the server's `en_us` translations if available, else title
-  case from the key (recommended), or always title case.
-- **D5 Bootstrap.** Keep the old JSON as a one-off bootstrap import for a fresh database
-  (recommended), or start empty until the first scan.
-- **D6 Icon fix in phase 1.** Correct the 823 URLs in the static file now (recommended, a small
-  data fix), or wait for phase 3.
+All six were put to the developer as questions in the Claude app on 2026-10-21.
+
+| # | Question | Decision |
+|---|---|---|
+| D1 | Name of the canonical entry | Keep `MinecraftMaterialRef` (same table, ids and name; new columns only) |
+| D2 | Partial block states | Allowed as their own identity, flagged `IsPartial` |
+| D3 | Entries gone in a newer version | Kept as `Missing`, hidden in pickers, listed in the audit |
+| D4 | Display names | English from the server's translations, else derived from the key (verify live) |
+| D5 | Old static JSON for an empty database | **No bootstrap import.** Start empty until the first scan; the JSON is deleted in phase 5 |
+| D6 | Fix the 823 broken icon URLs in phase 1 | **No.** Wait for the phase 3 icon provider; the `MinecraftIcon` placeholder covers them meanwhile |
