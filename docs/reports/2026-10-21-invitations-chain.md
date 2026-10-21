@@ -12,7 +12,7 @@
 | 1 | KNG-211 (API), KNG-207, KNG-208 | **done** (not merged, not live-tested) | api `110451f` (E0) + `bb4b9ee` (L0) / app `2bf70ab` / plugin `30b10e6e` / workspace: see git log | API 2754 passed, 4 known-red, 75 skipped (baseline 2697 / 4 / 73; +59 tests, 2 new `[MySqlFact]` skipped); app 940 (baseline 938); plugin core 2168 / api-client 264 / paper 1870, 0 failures (unchanged) | `create_session` by the coordinator with the § 8 prompt; `add_repo` and the dry-run pushes succeeded |
 | 2 | KNG-206 | **done** (not merged, not live-tested) | api `a8b42ca` / app `aecd811` / plugin unchanged (`30b10e6e`) / workspace: see git log | API 2787 passed, 4 known-red, 77 skipped (baseline 2754 / 4 / 75; +41 new, 8 removed with the old mail code, 2 new `[MySqlFact]` skipped); app 156 suites / 950 (baseline 154 / 940) | `create_session session_019NV1SRUVvMbtLXs5QtkCq4` by the coordinator with the § 8 prompt; `add_repo` and the dry-run pushes succeeded |
 | 3 | KNG-212 | **done** (not merged, not live-tested) | api `8ca8507` / app `18f3c9f` / plugin unchanged (`30b10e6e`) / workspace: see git log | API 2864 passed, 4 known-red, 80 skipped (baseline 2787 / 4 / 77); app 160 suites / 970 (baseline 156 / 950) | `create_session session_01LbSWhTfxJd2rZ25bV5iRcY` by the coordinator with the § 8 prompt; `add_repo` and the dry-run pushes succeeded |
-| 4 | KNG-214 (API + web app) | waiting | — | — | — |
+| 4 | KNG-214 (API + web app) | in progress (started 2026-10-21) | — | — | `create_session session_01BU3iVACs3iW58qiapCJC9s` by the coordinator with the § 8 prompt |
 | 5 | KNG-214 (plugin) | waiting | — | — | — |
 | 6 | KNG-216 | waiting | — | — | — |
 | 7 | KNG-218 (prep) + final write-up | waiting | — | — | — |
