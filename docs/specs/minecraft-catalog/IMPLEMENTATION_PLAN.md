@@ -12,10 +12,11 @@ below, so §9 notes where it has to keep working.
 ## 0. Goal (developer, 2026-10-19)
 
 > **Scope update 2026-10-21 (developer, D7-D9 in §11).** The material picker only matters for
-> item blueprints (`ItemBlueprint.IconMaterialRefId`), and icons are not important for now. The
-> existing database rows may be merged into or deleted by the scan; no new or empty database is
-> involved. So: the first deliverable is a clean item picker fed by a scan that cleans up the
-> current rows (§6 step 4). Icons and the block-state picker move to a later, optional phase 6.
+> item blueprints (`ItemBlueprint.IconMaterialRefId`). The existing database rows may be merged
+> into or deleted by the scan; no new or empty database is involved. Icons **are a requirement of
+> this improvement**, only not urgent in the current state: the old static URLs are not repaired
+> (D6), and the scan resolves icons from phase 3 on. The block-state picker moves to a later,
+> optional phase 6.
 
 - An admin starts a scan from the web app. The running Minecraft server reads every item and
   block of its version and the API stores them in the database.
@@ -343,10 +344,9 @@ told apart even if the names match.
 
 ## 7. Image assets: selection and fallback
 
-> **Deferred to phase 6 (decision D8, 2026-10-21).** Icons are not important for now. Until
-> phase 6 the scan leaves `IconUrl` as it is (existing rows keep their old URL, new rows have
-> none) and no provider or `MinecraftIcon` component is built. The design below stays as the
-> plan for phase 6.
+> **Part of this improvement (decision D8, revised 2026-10-21).** Icons are required for KNG-200:
+> the providers are built in phase 3 and every scan resolves icons; `MinecraftIcon` comes with the
+> DB-only picker in phase 4. Only the old static URLs are left as they are (D6).
 
 - Use `IMinecraftIconProvider` with an ordered list of providers in config
   (`MinecraftCatalog:Icons:Providers`). Each provider declares the versions it has.
@@ -461,12 +461,12 @@ checked before the next starts.
 
 | Phase | Content | Repos | Tests |
 |---|---|---|---|
-| **1 Stabilise** (after KNG-195 merges) | API: hybrid filters DB-only rows by search/category, de-duplicates by normalised key, applies `SortBy`, returns `Id = null` for unsaved rows and the requested `PageSize`; block hybrid groups instead of `ToDictionary`. Normaliser + single resolver; create → 409 on an existing key; `POST MinecraftBlockRefs/get-or-create`. Web: auto-create via get-or-create (materials and blocks); unsaved rows keyed and compared by normalised key; id 0/null never counts as an id; stale-response guard; "select all" skips or creates unsaved rows. No icon work (D6, D8) | web-api, web-app | API: hybrid search (filter, dedupe, sort, paging, two states of one block), normaliser table tests, get-or-create race (unique index), create 409. Web: `tableRowKey`/`isSameSelection` with id 0/null, PagedEntityTable hybrid (auto-create calls get-or-create, two unsaved rows stay distinct, stale response ignored) |
+| **1 Stabilise** (after KNG-195 merges) | API: hybrid filters DB-only rows by search/category, de-duplicates by normalised key, applies `SortBy`, returns `Id = null` for unsaved rows and the requested `PageSize`; block hybrid groups instead of `ToDictionary`. Normaliser + single resolver; create → 409 on an existing key; `POST MinecraftBlockRefs/get-or-create`. Web: auto-create via get-or-create (materials and blocks); unsaved rows keyed and compared by normalised key; id 0/null never counts as an id; stale-response guard; "select all" skips or creates unsaved rows. No icon work yet (D6): icons come in phases 3-4 | web-api, web-app | API: hybrid search (filter, dedupe, sort, paging, two states of one block), normaliser table tests, get-or-create race (unique index), create 409. Web: `tableRowKey`/`isSameSelection` with id 0/null, PagedEntityTable hybrid (auto-create calls get-or-create, two unsaved rows stay distinct, stale response ignored) |
 | **2 Schema + audit** | Migration `MinecraftCatalogEntryFields`, backfill, audit endpoint, merge action, DTO fields (additive, old fields unchanged) | web-api | Migration up/down on a copy of the dev DB, backfill idempotent (run twice), audit finds seeded collisions, merge repoints all seven FKs and rolls back on error |
-| **3 Scan + ingest** | `MinecraftCatalog` controller (scans, snapshot, audit), ingest with clean-up (§6). Plugin: `CatalogSource`, `MinecraftCatalogScanTaskHandler`, api-client `MinecraftCatalogApi` (+ startup version report). Web: admin page "Minecraft catalogue" (scan button, status, counters, missing-but-referenced rows with "merge into", audit) | web-api, plugin, web-app | API: ingest insert/update/unchanged; notation duplicates merged with FKs repointed; unreferenced rows not in the scan deleted; referenced ones kept as `Missing`; rollback leaves every row untouched; override survives; duplicate key → 400 with nothing written, same hash → no-op, other hash → 409, rollback → `Failed`, one active scan. Plugin: snapshot builder (legacy/air excluded, sorted, hash stable), handler completes/fails the WorldTask, api-client request body (interceptor like `WorldAnalyticsApiImplTest`). Live: scan on the dev server (1.21.10, then 26.3) |
-| **4 DB-only picker** | `PickerSource` switch, item picker for `ItemBlueprint.IconMaterialRefId` first (kind=item), settings mapping, callers moved off `hybrid`, seeds on the resolver; migration `MinecraftCatalogConstraints` after a clean audit | web-api, web-app | Picker search/sort/paging against the DB, settings mapping, ItemScan/KitScan/Roads on the new calls, seeds on an empty DB without any scan (Unverified rows, no icons) and after a scan (enriched, not duplicated) |
+| **3 Scan + ingest + icons** | `MinecraftCatalog` controller (scans, snapshot, audit), ingest with clean-up (§6), icon providers (§7). Plugin: `CatalogSource`, `MinecraftCatalogScanTaskHandler`, api-client `MinecraftCatalogApi` (+ startup version report). Web: admin page "Minecraft catalogue" (scan button, status, counters, missing-but-referenced rows with "merge into", missing icons and overrides, audit) | web-api, plugin, web-app | API: ingest insert/update/unchanged; notation duplicates merged with FKs repointed; unreferenced rows not in the scan deleted; referenced ones kept as `Missing`; rollback leaves every row untouched; override survives; icons resolved before the transaction; duplicate key → 400 with nothing written, same hash → no-op, other hash → 409, rollback → `Failed`, one active scan. Icon provider mapping table tests (block/blocks, items, block-only keys, version fallback). Plugin: snapshot builder (legacy/air excluded, sorted, hash stable), handler completes/fails the WorldTask, api-client request body (interceptor like `WorldAnalyticsApiImplTest`). Live: scan on the dev server (1.21.10, then 26.3) |
+| **4 DB-only picker** | `PickerSource` switch, item picker for `ItemBlueprint.IconMaterialRefId` first (kind=item) with `MinecraftIcon` (§7) in the picker and blueprint displays, settings mapping, callers moved off `hybrid`, seeds on the resolver; migration `MinecraftCatalogConstraints` after a clean audit | web-api, web-app | Picker search/sort/paging against the DB, `MinecraftIcon` onError placeholder, settings mapping, ItemScan/KitScan/Roads on the new calls, seeds on an empty DB without any scan (Unverified rows, no icons) and after a scan (enriched, not duplicated) |
 | **5 Retire** | Remove hybrid routes/code and the catalogue service (§9.5) | web-api, web-app | Full suites; grep for `SearchHybrid`/`getHybrid`/`MinecraftMaterialCatalogService` returns only enchantment code |
-| **6 Later, optional** (D8) | Icon providers and `MinecraftIcon` (§7); block-state picker (§9.3) | web-api, web-app | Icon provider mapping table tests (block/blocks, items, block-only keys, version fallback), `MinecraftIcon` onError; block-state picker |
+| **6 Later, optional** | Block-state picker (§9.3) | web-api, web-app | Block-state picker search and canonical state on save |
 
 **Order with other work:**
 
@@ -488,7 +488,7 @@ clarification of D5 followed in chat the same day.
 | D3 | Entries gone in a newer version | Kept as `Missing`, hidden in pickers, listed in the audit |
 | D4 | Display names | English from the server's translations, else derived from the key (verify live) |
 | D5 | Old static JSON for an empty database | **No bootstrap import.** Only a brand-new install starts empty until its first scan. The existing database stays and the scan updates its rows (D7). The JSON is deleted in phase 5 |
-| D6 | Fix the 823 broken icon URLs in phase 1 | **No** (see D8) |
+| D6 | Fix the 823 broken icon URLs in phase 1 | **No.** The old static URLs stay as they are; the scan resolves icons from phase 3 on |
 | D7 | Existing material rows | The scan may merge and delete them: notation duplicates merged into the scanned row, unreferenced rows not in the scan deleted, referenced ones kept as `Missing` for a manual merge (§6 step 4) |
-| D8 | Icons | Not important now: no icon work until optional phase 6 |
+| D8 | Icons | **Required for this improvement**, not urgent in the current state: providers in phase 3, `MinecraftIcon` in phase 4 (revised the same day; an earlier note deferred them) |
 | D9 | Focus | The material picker only matters for item blueprints; that picker comes first in phase 4 |
