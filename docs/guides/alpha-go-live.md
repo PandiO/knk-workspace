@@ -2,7 +2,7 @@
 
 **Status:** v2, aligned 2026-10-11 with the [closed-alpha deployment runbook](closed-alpha-deployment-runbook.md)
 (the Codex NAS rollout). Not yet followed end to end.
-**Last updated:** 2026-10-18
+**Last updated:** 2026-10-21 (§ 4 and § 12 notes pointing to the KNG-205 invitations plan); 2026-10-18
 **Applies to:** builds that **include KNG-64**: knk-web-api `master` ≥ `30c5dc5`, knk-web-app `main` ≥ `98c0a76`,
 knk-plugin `main` ≥ `34c9261`. **Never expose an older API.**
 **Linear:** [KNG-64](https://linear.app/kngpandi/issue/KNG-64) (parent), [KNG-68](https://linear.app/kngpandi/issue/KNG-68) (this guide)
@@ -129,6 +129,7 @@ ForwardedHeaders__KnownNetworks=<subnet nginx shares with api, e.g. 172.30.0.0/2
 # Region callbacks to the plugin's RegionHttpServer, over service DNS (the plugin binds 0.0.0.0 inside its container).
 MinecraftPlugin__BaseUrl=http://minecraft:8081
 
+# Planned 2026-10-21 (KNG-211): an SMTP relay container gives mail a way out; see invitations IMPLEMENTATION_PLAN § 2.
 # The backend network has no internet access, so SMTP can't work there. Use Log: reset links go to the API log,
 # and you relay them. To send real mail, give the API an egress network and Email__SmtpPassword from a secret file.
 Email__Provider=Log
@@ -344,6 +345,6 @@ Both must end with `ALL CHECKS PASSED`. The last check trips the login rate limi
 
 Before an **open beta**:
 - Move to a VPS (production guide § 1.3 onwards), with the seed export/import instead of a dump copy.
-- Drop the Access allow-list, or keep it for `/admin` only.
+- Drop the Access allow-list, or keep it for `/admin` only. *(Superseded for the alpha 2026-10-21: Access stays, and the API keeps its list in sync once [KNG-216](https://linear.app/kngpandi/issue/KNG-216) ships; see [invitations DESIGN § 5.8](../specs/invitations/DESIGN.md).)*
 - Add email verification (plan § 12) and CI-built images (guide § 10).
 - Decide on a public static site at `knightsandkings.net`.

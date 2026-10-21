@@ -1,8 +1,9 @@
 # Invite-only sign-up, email engine and web-first Minecraft linking — Design
 
 **Status:** Decided 2026-10-21 (§ 8, all recommendations taken, except I8: Cloudflare Access stays, and the API keeps its allow-list in sync, § 5.8). Nothing is implemented.
-**Last updated:** 2026-10-21 (decisions recorded; § 5.8 Access sync added)
-**Linear:** [KNG-205](https://linear.app/kngpandi/issue/KNG-205) (this design), [KNG-206](https://linear.app/kngpandi/issue/KNG-206) (email engine, high priority), found while writing it: [KNG-207](https://linear.app/kngpandi/issue/KNG-207) (link merge bug), [KNG-208](https://linear.app/kngpandi/issue/KNG-208) (link-code hygiene); related [KNG-159](https://linear.app/kngpandi/issue/KNG-159) (email verification), [KNG-67](https://linear.app/kngpandi/issue/KNG-67) (code-based signup)
+**Last updated:** 2026-10-21 (decisions recorded; § 5.8 Access sync added; § 6 and § 7 aligned with the implementation plan)
+**Implementation plan:** [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) (2026-10-21; work packages E0, E1, L0, I1, I2, A1, I3)
+**Linear:** [KNG-205](https://linear.app/kngpandi/issue/KNG-205) (this design, parent), [KNG-206](https://linear.app/kngpandi/issue/KNG-206) (email engine, high priority), work packages [KNG-211](https://linear.app/kngpandi/issue/KNG-211) (E0), [KNG-212](https://linear.app/kngpandi/issue/KNG-212) (I1), [KNG-214](https://linear.app/kngpandi/issue/KNG-214) (I2), [KNG-216](https://linear.app/kngpandi/issue/KNG-216) (A1), [KNG-218](https://linear.app/kngpandi/issue/KNG-218) (I3), found while writing it: [KNG-207](https://linear.app/kngpandi/issue/KNG-207) (link merge bug), [KNG-208](https://linear.app/kngpandi/issue/KNG-208) (link-code hygiene); related [KNG-159](https://linear.app/kngpandi/issue/KNG-159) (email verification), [KNG-67](https://linear.app/kngpandi/issue/KNG-67) (code-based signup)
 **Sources:**
 - Code read on 2026-10-21 at knk-web-api `master` `2d71155`, knk-web-app `main` `e30c815`, knk-plugin `main` `79be488`.
 - [Closed alpha hardening plan](../alpha-hardening/IMPLEMENTATION_PLAN.md) decisions D1 (code-based signup), D2 (web-first off), D8 (verification deferred) and D10 (Cloudflare Access).
@@ -195,7 +196,7 @@ AuthService / InvitationService / PrivacyService …
 
 **Protection and admin tools**
 - **Throttle:** at most 3 mails per hour per recipient and kind, and 6 in total per recipient per hour. Anything over that is marked `Suppressed` and logged. A daily global cap (`Email:DailyCap`, e.g. 300) protects the provider quota and raises a currency-alert-style staff notice when it is hit.
-- **Admin:** `POST /api/Admin/email/test` sends a test mail to the caller (`knk.admin.config`). `/admin/email` shows the log (status, kind, masked recipient, error) with a Retry action, and never shows bodies.
+- **Admin:** `POST /api/EmailOutbox/test` sends a test mail to the caller (`knk.admin.config`). `/admin/email` shows the log (status, kind, masked recipient, error) with a Retry action, and never shows bodies.
 - **Headers:** `From: Knights & Kings <no-reply@knightsandkings.net>`, a `Reply-To` support address, `Auto-Submitted: auto-generated`, and a `Message-ID` on our own domain.
 
 ### 4.3 Provider and domain
@@ -431,7 +432,7 @@ To verify while implementing: whether the email-list selector exists for Access 
 
 **Changed tables**
 - `users`: `InvitedViaInvitationId?`, `InvitedByUserId?`, `AdmittedAt?`, and `EmailVerifiedAt?` (KNG-159; it replaces the bool, or sits next to it).
-- `linkcodes`: `Purpose` (Link / PasswordReset / Claim), `MinecraftUuid?`, `MinecraftName?` and `FailedAttempts`.
+- `linkcodes`: `Purpose` (Link / PasswordReset / Claim), `MinecraftUuid?` and `MinecraftName?`. Failed codes are counted per account in memory by an `ILinkAttemptLimiter`, the same way as the login lockout, so there is no column (plan § 4.1).
 
 **Audit:** claim a new `AuditAction` range for the following (36 is unused, so start at 37):
 - InvitationCreated, InvitationRevoked, InvitationRedeemed;
@@ -450,8 +451,9 @@ To verify while implementing: whether the email-list selector exists for Access 
 | `POST /api/Users/link-minecraft-account` `{code}` (link or claim code) | exists (`Authorize`); new rules from § 5.4 |
 | `POST /api/Admission/claim/check` `{code}` → `{valid, minecraftName}` (for `/link` before login) | `AllowAnonymous`, `lookup` rate limit |
 | `GET /api/Admission/{uuid}?name=` | `RequirePluginService` |
-| `POST /api/Users/{id}/admit`, `/{id}/unlink-minecraft` | `RequirePermission(ManageUsers)` |
-| `POST /api/Admin/email/test`, `GET /api/Admin/email` | `RequirePermission(ServerConfig)` |
+| `POST /api/Users/{id}/admit`, `/{id}/detach-web-login` (clears the web login; the Minecraft account and its data stay) | `RequirePermission(ManageUsers)` |
+| `GET /api/EmailOutbox`, `POST /api/EmailOutbox/test`, `/{id}/retry` | `RequirePermission(ServerConfig)` |
+| `GET /api/Invitations/access-sync` | `RequirePermission(knk.admin.invites)` |
 
 **Config**
 - `Invitations`:
@@ -475,15 +477,18 @@ To verify while implementing: whether the email-list selector exists for Access 
 
 ## 7. Work packages and order
 
+Steps, files, tests and merge order are in [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md).
+
+
 | # | Package | Repos | Depends on | Issue |
 |---|---|---|---|---|
-| E0 | **Real mail on the alpha now:** provider choice, relay or egress, `Email__Provider=Smtp`, reset tested, go-live and runbook updated | workspace (ops docs), NAS compose; maybe a one-line API change for relay without auth | E1/E2 decisions | KNG-206 (first step) |
+| E0 | **Real mail on the alpha now:** relay container + Gmail, `Email__Provider=Smtp`, optional SMTP auth in the API, reset tested, go-live and runbook updated | api (small), NAS compose, workspace | — | KNG-211 |
 | E1 | **Email engine:** outbox and dispatcher, MailKit transport, templates and layout, throttle and daily cap, test endpoint and mail log, migrate reset/notice/privacy mails, staff email change notifies the old address | api, web-app | E0 | KNG-206 |
 | L0 | **Link hygiene:** `Purpose` column, unbiased generator, cleanup job, KNG-207 merge direction | api, plugin | — | KNG-207, KNG-208 |
-| I1 | **Invitations:** tables, admin API and page, check/redeem, register with an invite, web-first shell accounts, invite mails, audit | api, web-app | E1 (for mail; copy-link works without it), L0 | new |
-| I2 | **Admission gate and claim codes:** `Admission` API, plugin pre-login listener and cache, `/link` pages, link rules (§ 5.4), linked notices (new `PlayerNotification` type `AccountLinked`) | api, plugin, web-app | L0, I1 | new |
-| A1 | **Cloudflare Access sync:** API-owned list, reconcile service, inline add on registration, forward-proxy container, bypass application for the sign-up paths, sync status on the admin page | api, NAS, Cloudflare dashboard | I1 | new |
-| I3 | **Rollout:** migration that admits existing accounts and seeds the *Alpha Tester* group and `knk.admin.invites` for Admin; smoke-test guide; go-live § 5/§ 10 and the runbook; Access session 30 days; whitelist off | workspace, api migration, NAS | I1, I2, A1 | new |
+| I1 | **Invitations:** tables, admin API and page, check/redeem, register with an invite, web-first shell accounts, invite mails, audit | api, web-app | E1 (for mail; copy-link works without it), L0 | KNG-212 |
+| I2 | **Admission gate and claim codes:** `Admission` API, plugin pre-login listener and cache, `/link` pages, link rules (§ 5.4), linked notices (new `PlayerNotification` type `AccountLinked`) | api, plugin (branch from the KNG-182 Paper 26.3 branch), web-app | L0, I1 | KNG-214 |
+| A1 | **Cloudflare Access sync:** API-owned list, reconcile service, inline add on registration, forward-proxy container, bypass application for the sign-up paths, sync status on the admin page | api, NAS, Cloudflare dashboard | I1 | KNG-216 |
+| I3 | **Rollout:** migration that admits existing accounts and seeds the *Alpha Tester* group and `knk.admin.invites` for Admin; smoke-test guide; go-live § 5/§ 10 and the runbook; Access session 30 days; whitelist off | workspace, api migration, NAS | I1, I2, A1 | KNG-218 |
 | later | Email verification (KNG-159), player referral quotas and rewards, Turnstile, provider bounce webhooks, Microsoft sign-in, Bedrock | — | — | KNG-159, new |
 
 I1 and I2 should reach the alpha **together**. On its own, I1 creates web accounts that still need someone to whitelist a typed name.
