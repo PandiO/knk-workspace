@@ -58,7 +58,7 @@ checked results with the read-only `knk-ops` operations. No secret values were p
 |---|---|
 | First start | Paper downloaded, `Done (8.523s)`; no migration (worlds already 26.3); FAWE and WorldGuard enabled, no ERROR/SEVERE |
 | Container | `healthy`, user `2001:2001`, `PortBindings={}`, networks backend + egress |
-| Console | `docker exec knk-alpha-minecraft rcon-cli plugins` answered (command in, answer out). Portainer console not yet tried |
+| Console | `docker exec knk-alpha-minecraft rcon-cli plugins` answered (command in, answer out). Portainer → Console → `rcon-cli`: `list` answered "There are 0 of a max of 20 players online" (developer, 2026-10-21) |
 | API / MySQL untouched | `knk-ops containers`: same start times, 0 restarts; `log-errors` all 0 |
 | Resources (idle) | Minecraft 4.58 GiB (before the 6 GiB limit), Frigate 1.7 GiB / ~315 % CPU |
 | Restart test (`sudo systemctl restart docker`) | Paper stopped through RCON and saved players and all three dimensions; all three `knk-alpha` containers came back on their own (0 restarts); API `/health/live` + `/ready` 200 |
@@ -78,7 +78,7 @@ commit that is finally built.
 ## 6. Open
 
 - **Phase 3b** (KNG-64 API on the NAS) runs in its own session; Stage 2 waits for it.
-- Try `rcon-cli` from Portainer's console.
+- (done) `rcon-cli` from Portainer's console works.
 - **Stage 2:** build the KnK jar (KNG-182 branch, or `main` if merged), `releases/plugin/<commit>/`, install as
   `plugins/KnightsAndKings.jar`, checks per runbook § 4.4 and go-live § 5, then the `plugins/update/` swap and the
   Phase 4 acceptance list. Whitelist `__pandi__` with `rcon-cli whitelist add`.
