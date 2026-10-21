@@ -615,6 +615,7 @@ Setup: P1's `arena_2` with a lobby, an exit, one or more enabled battlegrounds w
 |---|---|---|---|
 | knk-plugin | `claude/arena-duels` | `4cb1aa80` | `paper/duel/ui/` (editor, offer view, kit picker, chat, controller, toggles, kit previews), `/duel`, `/arena`, `/knk duel`, `DuelMenuListener`, plugin.yml + `CommandNodes`, `KnKPlugin` wiring, tests |
 | knk-plugin | `claude/arena-duels` | `ea7ecb4e` | KNG-224 reference in the ratio workaround |
+| knk-plugin | `claude/arena-duels` | `d1016f42` | `/duels` and `DuelMenuPort` (agreed with the P6 session) |
 | knk-workspace | `main` | `1410ccf` | tracker row |
 | knk-workspace | `claude/arena-duels` | this commit | this section |
 
@@ -622,7 +623,7 @@ Setup: P1's `arena_2` with a lobby, an exit, one or more enabled battlegrounds w
 
 - Toolchain: Temurin JDK 25.0.4 via `-Porg.gradle.java.installations.paths`, Gradle 8.14.3 on JDK 21, Paper 26.3. Maven Central answered 429 on the first runs (dependency downloads); plain re-runs got through. No mirror or init script.
 - Baseline (P4 head `089bd357`, clean): knk-core 2314, knk-api-client 275 (2 skipped), knk-paper 1955 (18 skipped), 0 failures.
-- After P5: `./gradlew build -x deployToDevServer` BUILD SUCCESSFUL. **knk-core 2314, knk-api-client 275 (2 skipped), knk-paper 1986 (18 skipped)**, 0 failures, no known reds. New: 31 knk-paper tests (`DuelNegotiationUiTest` 20, `DuelCommandsTest` 2, `ProposalDraftTest` 6, `DuelChatTest` 3). knk-core unchanged.
+- After P5: `./gradlew build -x deployToDevServer` BUILD SUCCESSFUL. **knk-core 2314, knk-api-client 275 (2 skipped), knk-paper 1987 (18 skipped)**, 0 failures, no known reds (re-run at `d1016f42`). New: 32 knk-paper tests (`DuelNegotiationUiTest` 20, `DuelCommandsTest` 3, `ProposalDraftTest` 6, `DuelChatTest` 3). knk-core unchanged.
 - The UI tests run P5 on P4's real runtime (`DuelHarness`) through `DuelUiHarness`: a fake `DuelGui` whose inventories are maps, tracked open inventories, a typed anvil answer, and chat/button capture. Mocked `World`s stay in fields (P4's harness).
 
 | Plan test | Test |
@@ -657,10 +658,12 @@ All in knk-paper. Package `net.knightsandkings.knk.paper.duel.ui` unless noted.
 - **`DuelInviteToggles`**: `/duel toggle`, persisted in `plugins/KnightsAndKings/duel-toggles.yml` and set on the offer book at startup and on join.
 - **Commands** (`paper/commands/`):
   - `DuelCommand`: the `/duel` tree. Subcommand names win over player names.
-  - `ArenaCommand`: `/arena [name]`. **P6: call `KnKPlugin.getArenaCommand().setMenu((player, arena) -> …)` to open `arena_main`**; until then it answers in chat (queue, live duels, `[Challenge a player]`, `[My claims]`).
+  - `ArenaCommand`: `/arena [name]`. It opens P6's `arena_main` through the `DuelMenuPort` first; with no port, or when the open returns false, it answers in chat (queue, live duels, `[Challenge a player]`, `[My claims]`).
+  - `DuelsCommand`: `/duels` (P6's `duel_matches`), `/duels view <token>` (`duel_match_detail`) and `/duels spectate <arenaId>` (the spectator warp). These are the forms P6's announcement buttons run. Without a port it lists the live duels in chat.
+  - **`DuelMenuPort`** (`duel/ui/`): `openMatches`, `openMatch`, `openArena`, `spectate`. **P6: `DuelMenus implements DuelMenuPort`, then `KnKPlugin.setDuelMenuPort(duelMenus)` in `initializeDuelPresentation()`** (agreed with the P6 session by message, 2026-10-21).
   - `DuelAdminCommand`: `/knk duel list | cancel <match> | refund <match> | review <match> release|void [reason]`. `<match>` is the API id or the token's first 8 characters.
 - **Nodes** (plugin.yml):
-  - `knk.duel`, default true, for `/duel` and `/arena` through `CommandNodes`
+  - `knk.duel`, default true, for `/duel`, `/duels` and `/arena` through `CommandNodes`
   - `knk.admin.duel`, for `/knk duel` and P4's staff teleport and command bypass
   - `knk.admin.duel.review`, for `review`
   - both admin nodes are children of `knk.admin`
@@ -704,6 +707,6 @@ Setup: P4's setup (P1's `arena_2` with a lobby, an exit, battlegrounds with spaw
 10. **API refusal**: a pair on cooldown (P2) → the accept is refused with the API's message, and both players' items come back at once.
 11. **KIT_CHOICE**: the kit prompt in the warmup (clickable kits, `[Menu]`). `/duel kit Archer` → "You will fight with Archer", and the opponent sees "A picked Archer". The picker shows the opponent's pick. At the countdown the picker closes: "The kits are locked".
 12. **`/duel draw`** outside the fight → "You can offer a draw only during the fight". `/duel claim` with a full inventory after a win (P4 check 11).
-13. **`/arena`** in the arena → the chat summary (queue, live duels, buttons) until P6's menu is plugged in. `/arena arena_2` from elsewhere. Tab completion lists arenas.
+13. **`/arena`** in the arena → P6's arena menu (or, without it, the chat summary: queue, live duels, buttons). `/arena arena_2` from elsewhere. Tab completion lists arenas. `/duels` → the live-matches menu; an announcement's [Details] (`/duels view <token>`) and [Spectate] (`/duels spectate <id>`) open the detail and start the spectator warp.
 14. **Staff**: `/knk duel list` shows running matches (token, #id, phase, coins) and held or unclaimed escrow. `/knk duel cancel <token>` refunds a running duel. `/knk duel review <id> release` without `knk.admin.duel.review` is refused; with it, the winner gets the items at once.
 15. **Permissions**: a group without `knk.duel` gets "no permission" for `/duel` and `/arena`, and neither command is in its tab list.
