@@ -1,7 +1,7 @@
 # Invitations chain — progress report
 
-**Status:** Links 1–6 done (2026-10-21), nothing merged. Link 7 is ready ([handoff](../ai-agents/handoffs/2026-10-21-invitations-link-7.md)); link 7 in progress (resumed 2026-10-21).
-**Last updated:** 2026-10-21 (link 6)
+**Status:** **Chain complete** — links 1–7 done (2026-10-21), nothing merged, nothing live-tested, nothing switched on. The [final summary](#final-summary-chain-complete) at the end has the merge and deploy order, the decisions to review, the combined live checklist and the NAS/Cloudflare to-dos.
+**Last updated:** 2026-10-21 (link 7, final summary)
 **Linear:** [KNG-205](https://linear.app/kngpandi/issue/KNG-205) and its children (see the [charter](../ai-agents/handoffs/INVITATIONS_CHAIN.md))
 **Branch:** `claude/player-signup-invitation-flow-f4v7ul` in every repo. knk-plugin's is based on `claude/mc-26.2-upgrade` (KNG-182).
 
@@ -15,7 +15,7 @@
 | 4 | KNG-214 (API + web app) | **done** (not merged, not live-tested) | api `44c5f63` / app `60ec323` / plugin unchanged (`30b10e6e`) / workspace: see git log | API 2904 passed, 4 known-red, 81 skipped (baseline 2864 / 4 / 80); app 165 suites / 997 (baseline 160 / 970) | `create_session session_01BU3iVACs3iW58qiapCJC9s` by the coordinator with the § 8 prompt; `add_repo` and the dry-run pushes succeeded |
 | 5 | KNG-214 (plugin) | **done** (not merged, not live-tested) | api unchanged (`44c5f63`) / app unchanged (`60ec323`) / plugin `90b01850` / workspace: see git log | plugin core 2178 / api-client 271 / paper 1889, 0 failures (baseline 2168 / 264 / 1870) | `create_session session_01YQKHE1Pg4ctrL2vadh3qng` by the coordinator with the § 8 prompt; `add_repo` and the dry-run pushes succeeded (KNG-182 still unmerged, so the plugin base stays `claude/mc-26.2-upgrade`) |
 | 6 | KNG-216 | **done** (not merged, not live-tested) | api `641f9c1` / app `eeea86f` / plugin unchanged (`90b01850`) / workspace: see git log | API 2925 passed, 4 known-red, 81 skipped (baseline 2904 / 4 / 81); app 165 suites / 1003 (baseline 165 / 997) | `create_session session_01HuAM9YQbNweZHr8WPuUSLq` by the coordinator with the § 8 prompt; `add_repo` and the dry-run pushes succeeded |
-| 7 | KNG-218 (prep) + final write-up | in progress (started 2026-10-21, after the developer resumed the chain) | — | — | `create_session session_013x5ST9VkgN83iYWC4hmbxT` by the coordinator with the § 8 prompt |
+| 7 | KNG-218 (prep) + final write-up | **done** (not merged; the switch-over itself waits for the merges and the dev smoke test) | api `8f489b9` / app unchanged (`eeea86f`) / plugin unchanged (`90b01850`) / workspace: see git log | API 2930 passed, 4 known-red, 82 skipped (baseline 2925 / 4 / 81: +5 tests, +1 `[MySqlFact]` skipped) | `create_session session_013x5ST9VkgN83iYWC4hmbxT` by the coordinator with the § 8 prompt (after the developer resumed the chain); `add_repo` and the dry-run pushes succeeded |
 
 **Follow-ups found during the chain:**
 - `PrivacyDeletionService` doesn't wake the Cloudflare Access sync; an erased account's address leaves the list on the
@@ -34,6 +34,8 @@
   `knk.admin.user.manage` actions such as email change): a moderator can detach an admin's web login. Noted in a
   KNG-214 comment (link 4).
 - The daily-cap "currency-alert-style" in-game staff notice needs a new `PlayerNotificationTypes` value and a plugin handler; link 2 logs an error once a day and shows the count on `/admin/email` instead (L2-2). Noted in a KNG-206 comment.
+- None of the chain's `[MySqlFact]` tests (9, links 1–4 and 7) has run on MySQL; smoke test § 0.2 step 4 runs them
+  before the merge (link 7; KNG-205 comment).
 
 ---
 
@@ -1025,3 +1027,211 @@ token permissions):
 
 **How this link was started:** `create_session session_01HuAM9YQbNweZHr8WPuUSLq` by the coordinator with the § 8
 prompt; `add_repo` and the dry-run pushes succeeded.
+
+---
+
+## Link 7 — KNG-218 (code + docs part) and the final write-up: I3 rollout preparation
+
+**Started:** 2026-10-21 by the coordinator with the § 8 prompt (`create_session session_013x5ST9VkgN83iYWC4hmbxT`)
+after the developer resumed the chain (paused after link 6). `add_repo` (push) for knk-web-api, knk-web-app and
+knk-plugin succeeded; clones under `/home/user/<repo>`; branch checked out in all four repos; `git push --dry-run`
+succeeded in knk-web-api and knk-workspace (the repos this link changes). The first workspace dry-run was refused as
+non-fast-forward because the coordinator had just pushed "resumed, link 7 started" (`619947e`); after a fast-forward it
+passed. Base merges: knk-web-api `master` `2d71155` already in (no-op); workspace merged `main` (tracker). Tracker row
+on `main` `86ff0c0`; KNG-218 → In Progress.
+**Toolchains:** .NET 8.0.132, `dotnet-ef` from `~/.dotnet/tools` (`Database__MySqlServerVersion=9.6.0` so the
+design-time context doesn't look for a server). No MySQL (the new `[MySqlFact]` is skipped). Web app and plugin untouched.
+
+### Commits per repo (heads)
+
+| Repo | Commits | Head |
+|---|---|---|
+| knk-web-api | `8f489b9` `SeedAlphaTesterGroup` migration (+ Designer; snapshot unchanged), `SeedAlphaTesterGroupTests` (5), `SeedAlphaTesterGroupMySqlTests` (1, skipped) | `8f489b9` |
+| knk-workspace | `29e58fc` smoke test + architecture doc + guides index; `8bf9418` living docs (go-live, runbook, production-installation, player guide, register, specs README, plan § 8.1, DESIGN, CHANGELOG); this block and the final summary; tracker on `main` | see git log |
+| knk-web-app | — | not changed (`eeea86f`) |
+| knk-plugin | — | not changed (`90b01850`) |
+
+### What was built
+
+- **`20261021174225_SeedAlphaTesterGroup`** (generated with `dotnet ef migrations add`, then the SQL written in the
+  `SeedLocationRetentionStaffGroups` shape): a `permission_holders` row, then `permission_groups` (`Alpha Tester`, weight
+  1, `IsPremiumTier` 0, `SalaryMultiplier` 1.0, parent = the non-premium `Default` group by name), both inserts guarded by
+  `NOT EXISTS (… Name = 'Alpha Tester')`. The other non-null columns have database defaults. Down deletes the group only
+  when no membership, grant or invitation (`GrantGroupId`, Restrict FK) references it.
+- **[invitations-smoke-test.md](../guides/invitations-smoke-test.md)**: § 0 builds, DB checks after the migrations, the
+  MySQL test run; § 1 E1; § 2 L0; § 3 I1 + guess flood, mail bomb, revoked link; § 4 I2 + claim guesses, expired claim
+  code; § 5 outage incl. an operator; § 6 kill switches; § 7 A1; § 8 the plan § 6.4 end-to-end; § 9 the alpha
+  switch-over checks per step; a Findings table. It merges the live checklists of links 1–6 and alpha go-live § 6.1.
+- **[account-identity-and-admission.md](../architecture/account-identity-and-admission.md)** (new living doc): the four
+  gates and their switches, the identity anchor and web shells, the code kinds (`LinkCodePurpose`, invitations), the
+  registration modes, the linking cases (A, B fold, refusals), admission (plugin + API, outage, Paper 26.3 order,
+  grandfathering), the Access sync, the mail flow, failure modes; links to DESIGN.
+- **Living docs, written for the state after the switch-over and marked "feature branch, not merged":** alpha go-live
+  § 4.1 (all new env keys, `mailrelay` + `cfproxy`), § 5 / § 5.1 (admission instead of the whitelist), § 6 (Access
+  after the switch), § 9 F2 (invite flow checklist), § 10 (the invite is the system mail; a short shared-code text; the
+  old template kept for before), § 11 kill switches and **§ 11.1 the five switch-over steps + rollback**, § 12 (50 seats,
+  invite-only for the beta, provider mail); runbook Phase 9; production-installation § 4.3 / § 9.3 / § 9.5 / § 11; player
+  guide v1.2 "Getting an account"; FEATURE_REGISTER "Accounts"; specs README; plan status + § 8.1; DESIGN status;
+  CHANGELOG.
+
+### Tests vs baseline
+
+| Repo | Baseline (re-taken) | After link 7 |
+|---|---|---|
+| knk-web-api | 2925 passed, 4 failed, 81 skipped (3010) | **2930 passed, 4 failed, 82 skipped (3016)**: the same 4 known-red (`PathResolutionServiceTests` ×2, `FieldValidationServiceTests.ValidateConditionalRequiredAsync_WithConditionMet_ValidatesRequired`, `ClientActivityStoreTests.RecordsRequestsIntoRollingBuckets`); +5 `SeedAlphaTesterGroupTests`, +1 skipped `[MySqlFact]` |
+
+### Flagged decisions (reversible defaults; review)
+
+- **L7-1** `Alpha Tester` weight **1** (the plan says "low"; link 3's test fixture used 1): above Default (0), below the
+  premium tiers (10–30) and staff. Parent found by name (`Default`, non-premium); NULL if no Default exists.
+- **L7-2** Plan § 8 step 4 says "`/knk reload` or a restart"; the plugin reads `admission:` only in
+  `initializeAdmission()` at start-up, so the guides say **restart**. Plan § 8.1 records it.
+- **L7-3** Down removes the group only while unused (no member, grant or invitation), like the KNG-80 staff groups; a
+  used group survives a rollback.
+- **L7-4** The living docs **add** "after the switch-over" sections next to today's text (go-live § 4.1, § 5.1, F2, two
+  § 10 texts, § 11.1, runbook Phase 9) instead of replacing it, so nothing reads as live before the switch. Once the
+  switch-over is done, the "before" text can be folded away.
+- **L7-5** Switch-over step 2 sends personal invites to testers **without** an account **before** the sync is turned on
+  (L6-2: the first run removes every list entry that isn't an invite or an account).
+- **L7-6** Merge recommendation: one merge per repo for everything (E1 + L0 + I1 + I2 + A1 + I3) rather than E1 first
+  (plan § 9 step 2). The branch interleaves the packages, every new behaviour is off by default, and an E1-only merge
+  would mean splitting commits. E0's `110451f` can still go to `master` alone first.
+
+### Discrepancies with the plan / design
+
+- `/knk reload` (L7-2). Otherwise none: the migration, guide and docs follow § 8.
+- The plan's I3 preconditions (E0 live, KNG-182 merged, green on dev) are not met; that is expected for the
+  preparation part and is why KNG-218 stays open.
+
+### Live checklist
+
+The combined checklist is the [smoke test](../guides/invitations-smoke-test.md). This link's own items: § 0.2 (the
+group after the migrator, the re-run with an existing group, the MySQL tests incl. `SeedAlphaTesterGroupMySqlTests`),
+§ 3 step 3 (the group select offers *Alpha Tester*).
+
+### Deploy notes (this API state)
+
+- One more migration, `SeedAlphaTesterGroup` (data only). No new setting.
+- Everything from links 1–6 still holds (summary below).
+
+### Risks
+
+- The seed SQL ran only as text in unit tests here; MySQL accepted the same `INSERT … SELECT … WHERE NOT EXISTS`
+  self-reference in `SeedLocationRetentionStaffGroups` on the alpha, and the new `[MySqlFact]` covers it once run.
+- The living docs are long and describe unmerged code; the "feature branch, not merged" notes must be removed at the
+  switch-over, or they mislead later readers (the switch-over's step 5 says to update the docs).
+
+**How this link was started:** `create_session session_013x5ST9VkgN83iYWC4hmbxT` by the coordinator with the § 8
+prompt; `add_repo` and the dry-run pushes succeeded.
+
+---
+
+## Final summary (chain complete)
+
+**State on 2026-10-21:** every package of KNG-205 is built on `claude/player-signup-invitation-flow-f4v7ul`, tested by
+unit and UI tests, documented, and **off by default**. Nothing is merged, deployed, live-tested or switched on.
+
+### Branch heads
+
+| Repo | Head | Base | Tests at the end |
+|---|---|---|---|
+| knk-web-api | `8f489b9` | `master` `2d71155` (merged in, unchanged since the start) | 2930 passed, the 4 known-red of `master`, 82 skipped (the chain's 9 `[MySqlFact]`s among them, never run) — chain start 2697 / 4 / 73 |
+| knk-web-app | `eeea86f` | `main` `e30c815` | 165 suites / 1003 tests — chain start 154 / 938 |
+| knk-plugin | `90b01850` | KNG-182 `claude/mc-26.2-upgrade` `88497649` (unmerged) | core 2178 / api-client 271 / paper 1889, 0 failures — chain start 2168 / 264 / 1870 |
+| knk-workspace | see git log (this commit) | `main` | — |
+
+### What was built, per issue
+
+| Issue | Package | Built | Where (heads) |
+|---|---|---|---|
+| [KNG-211](https://linear.app/kngpandi/issue/KNG-211) | E0 | API half: optional SMTP auth, **cherry-pickable** `110451f` (its code later moved into the MailKit transport by E1). The NAS relay is the developer's. | api `110451f` |
+| [KNG-207](https://linear.app/kngpandi/issue/KNG-207), [KNG-208](https://linear.app/kngpandi/issue/KNG-208) | L0 | `LinkCodePurpose`, unbiased codes, hourly cleanup, per-account attempt limiter, the fold into the Minecraft account (KNG-207) with a session for the survivor, plugin usage text and warning line, player guide | api `bb4b9ee`, app `2bf70ab`, plugin `30b10e6e` |
+| [KNG-206](https://linear.app/kngpandi/issue/KNG-206) | E1 | `email_outbox`, composer, templates, throttle, dispatcher with retries, MailKit / Log / Pickup transports, start-up guard, `/admin/email`, email guide | api `0d7ec4a` + `a8b42ca`, app `aecd811` |
+| [KNG-212](https://linear.app/kngpandi/issue/KNG-212) | I1 | invitations (personal + shared), grandfathering backfill, `InvitationService`, invite registration behind `Registration:Mode`, `/invite`, `/join`, `/admin/invitations` | api `77042fd` + `8ca8507`, app `dfa5cdd` + `18f3c9f` |
+| [KNG-214](https://linear.app/kngpandi/issue/KNG-214) | I2 | `AdmissionService` + `api/Admission`, claim codes, claim linking (case A), register with `claimCode`, staff Admit / Detach, `AccountLinked`; `/link`, `/account/link`, banner; the plugin gate (`admission.mode`), offline fallback, in-game notice | api `4d1fe00` + `44c5f63`, app `a3f00fd` + `60ec323`, plugin `90b01850` |
+| [KNG-216](https://linear.app/kngpandi/issue/KNG-216) | A1 | Cloudflare mechanism verified (Zero Trust email list), sync service, inline add, `accessGate`, status endpoint + line, PIN step; NAS/dashboard steps | api `641f9c1`, app `eeea86f` |
+| [KNG-218](https://linear.app/kngpandi/issue/KNG-218) | I3 (prep) | `SeedAlphaTesterGroup`, smoke test, architecture doc, living docs, switch-over steps and kill switches. **Open:** the merges, the switch-over, the smoke run | api `8f489b9` |
+
+### Decisions to review, ranked (most consequential first)
+
+1. **L3-9 + the backfill** — only active, non-deleted accounts are admitted by `AddInvitations`. It decides whether
+   today's testers can still join once the gate is on, and it has **not run on MySQL**. Run smoke test § 0.2 on a copy
+   of the alpha DB first; a deactivated tester reactivated later needs staff *Admit*.
+2. **L6-2 / L6-3 / L7-5** — the whole `knk-api-testers` list belongs to the API; anything not an invite or an account is
+   removed (≤ 25 per run, more are held back). Invite account-less testers before turning the sync on.
+3. **L6-11** — the token permission (Account → Zero Trust → Edit) for Gateway lists is inferred from the docs; the admin
+   line shows a 403 if it's wrong. Check at switch-over step 2.
+4. **L4-5 / L5-7** — under `Mode=Invite` the plugin's `POST api/Users` is refused for any UUID without an admitted
+   account, **operators included**: an operator without an account plays without one (warning in the log).
+5. **L1-1 / L1-3 (fold)** — the fold is one-way (shell soft-deleted, login moved, `PasswordHash` cleared on the shell);
+   the code is spent before the fold. Only undone by hand.
+6. **L2-3 / L2-12** — outside Development the Log transport needs `Email__AllowLogTransport=true` or the API refuses to
+   start; with it, reset links appear in the log. **Deploy precondition** while the alpha has no relay.
+7. **L5-4** — the gate runs before the vanilla ban check: a banned stranger sees a claim code, not the ban screen
+   (bans still hold).
+8. **L4-1 / L4-6** — claim codes only link to **admitted** web accounts and register-with-claim needs an invite, in
+   every mode.
+9. **L3-3** — the invite check returns the personal invite's full address to the token holder (to lock it on the form).
+10. **L6-5 / L6-9** — `accessGate: true` whenever the sync is on, even when the inline add failed; the PIN panel needs a
+    click to continue.
+11. **L4-11** — the landing page already shows the invitation steps while the alpha is still on `LinkCode`. Hold the
+    web-app deploy, or accept the copy.
+12. **L7-6** — one merge per repo for all packages instead of E1 first.
+13. **L3-1** — `Registration:Mode=Open` behaves like `Invite`.
+14. **L6-7** — appending an address already in the list is unverified (logged as a warning if refused).
+15. Lower: L2-1 (Failed rows keep bodies for Retry), L4-3 (name follows Mojang only when free), L4-12 / L4-13 (code
+    fields), L4-16 / L5-9 (`AccountLinked` notice lost on an API restart; the mail stays), L5-6 (no connectivity
+    shortcut, 3 s wait per stranger during an outage), L6-6 (2 s debounce), L7-1…L7-4.
+
+### Combined live checklist
+
+[invitations-smoke-test.md](../guides/invitations-smoke-test.md) is the one list; it contains every link's live
+checklist (links 1–6 above, alpha go-live § 6.1) and plan § 8's extra checks. In order:
+1. § 0 — builds, migrations on a copy of the alpha DB (backfill, *Alpha Tester*, reset tokens), **all 9 of the chain's `[MySqlFact]`s
+   on MySQL**.
+2. § 1–7 on dev — E1, L0, I1, I2, outage, kill switches, A1 (A1 with a Cloudflare test account if you have one; else
+   on the alpha at switch-over step 2).
+3. § 8 — the end-to-end run of plan § 6.4.
+4. Merge (below), then § 9 on the alpha at each switch-over step.
+
+### Merge and deploy order (plan § 9, with L7-6)
+
+1. **E0 first, independently:** cherry-pick knk-web-api `110451f` to `master` if the relay goes live before the
+   merge (it only matters for the current `System.Net.Mail` code). Then the NAS relay (KNG-211).
+2. **KNG-182:** merge `claude/mc-26.2-upgrade` into knk-plugin `main` after its own live test; then merge plugin `main`
+   into `claude/player-signup-invitation-flow-f4v7ul` (merge, not rebase) and rebuild (core / api-client / paper green on
+   JDK 25).
+3. **Dev smoke test** § 0–8 (above).
+4. **Merge the feature branch, one PR per repo:** knk-web-api → `master`, knk-web-app → `main`, knk-plugin → `main`,
+   knk-workspace → `main` (docs; take `docs/ACTIVE_SESSIONS.md` from `main`). Re-run each repo's tests after merging
+   trunk in.
+5. **Deploy to the alpha behaviour-neutral** (runbook order: back up → migrator → API → web app → plugin). The API needs
+   `Email__AllowLogTransport=true` until the relay works (L2-3). Five migrations: `LinkCodePurpose`, `AddEmailOutbox`,
+   `AddInvitations`, `SeedInvitationStaffNode`, `SeedAlphaTesterGroup`.
+6. **Switch-over** steps 2–5: [alpha go-live § 11.1](../guides/alpha-go-live.md). Never `Registration:Mode=Invite`
+   with a plugin older than `90b01850` (links 4/5).
+
+### What the developer does outside the repos
+
+**On the NAS (`knk-alpha` stack):**
+- `mailrelay` (`boky/postfix`, pinned tag) on `backend` + an egress network, Gmail app password in its secret; API
+  `Email__Transport=Smtp`, `Email__SmtpHost=mailrelay`, `Email__UseStartTls=false`, `Email__SmtpUsername=` (empty),
+  `App__PublicBaseUrl`; then drop `AllowLogTransport` (KNG-211; [email guide § 3](../guides/email.md), plan § 2).
+- `cfproxy` (tinyproxy, pinned) on `backend` + egress, filter `^api\.cloudflare\.com$` (go-live § 6.1 step 1).
+- `/etc/knk/api.env`: `CloudflareAccess__ApiToken` (mode 600), `__AccountId`, `__ListId`, `__ProxyUrl`, later
+  `__SyncEnabled=true` and `Security__Registration__Mode=Invite`.
+- Plugin `config.yml`: the `admission:` section; `white-list=false` at step 4.
+
+**In Cloudflare (go-live § 6.1 steps 2–5):**
+- Zero Trust list **`knk-api-testers`** (User email addresses), seeded with one staff address.
+- Policy *Allow testers*: include the list; keep the staff *Emails* include; session **30 days**.
+- API token: Account → **Zero Trust → Edit**, this account only.
+- **Bypass application** for `/invite*`, `/join*`, `/link*`, the SPA's static files, `/api/Invitations/check`,
+  `/api/Admission/claim/check`, `/api/Auth/register` (Bypass, Everyone).
+- **The free plan has 50 seats** (testers + staff): the alpha's hard ceiling.
+
+### Follow-ups (not fixed; Linear comments)
+
+The list under "Follow-ups found during the chain" at the top, plus: run the `[MySqlFact]`s; remove the "feature
+branch, not merged" notes from the living docs once switched over (L7-4); the plan's `/knk reload` wording (fixed in
+the docs, L7-2). All are on KNG-205 (comment, 2026-10-21) or the issue each was found in.
