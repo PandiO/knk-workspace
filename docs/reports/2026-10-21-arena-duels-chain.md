@@ -18,6 +18,7 @@ Every phase session appends one section (charter §1.9). Sections are in the ord
 | Repo | Branch | Commit | What |
 |---|---|---|---|
 | knk-plugin | `claude/arena-duels` (created by this session from `origin/claude/mc-26.2-upgrade` `88497649`) | `1f5ebdfa` | `core/duel/` (21 main files, 8 test files); files added only |
+| knk-plugin | `claude/arena-duels` | `36195de3` | follow-up: stake ratio by item value (developer decision, see interpretation 1); only `core/duel` files changed |
 | knk-workspace | `main` | `0f87b4c` | tracker row |
 | knk-workspace | `claude/arena-duels` (created by this session from `main`) | this report | this section |
 
@@ -27,6 +28,7 @@ Every phase session appends one section (charter §1.9). Sections are in the ord
 - Baseline before the change: knk-core 2168 tests, 0 failures.
 - New: 114 tests in `core/duel`, all green (offer book 22, validator 12, state machine 48, combat rules 15, queue/allocator 9, escrow 7, Bukkit-free guard 1).
 - Full `./gradlew build -x deployToDevServer`: BUILD SUCCESSFUL — knk-core 2282 (2168 + 114), knk-api-client 264 (2 skipped), knk-paper 1870 (18 skipped), 0 failures, no known reds. (A first run failed only on a transient Maven Central HTTP 429 while downloading gson; the re-run was green.)
+- Follow-up `36195de3` (stake ratio by item value), after merging P0 and P1: 118 tests in `core/duel` (the collateral test replaced by four value tests, plus one offer-book test). Full build green: knk-core 2312, knk-api-client 267 (2 skipped), knk-paper 1887 (18 skipped), 0 failures. (Two runs failed first on Maven Central HTTP 429 downloads, not on tests.)
 
 The plan's Phase 3 test list, and where it is covered:
 
@@ -58,19 +60,20 @@ Package `net.knightsandkings.knk.core.duel` in `knk-core`. Bukkit-free (guarded 
 | `StakeItem` | `(refId, material, amount)`: a reference; P4 keeps the real `ItemStack` copy under `refId` (unique per owner per negotiation) and matches it at lock-in |
 | `Stake` | `(coins, List<StakeItem>)`; `NONE`, `coins(c)`, `isEmpty()` |
 | `StakeContract` | `(gearMode, fixedKitId, challenger, opponent)`; `quick(settings)`, `stakeOf(side)`, `hasStakes()`, `isValueMoving()`, `isFriendly()`, `potCoins()` |
-| `StakeViolation` | `(code, side, detail)`; codes `GEAR_MODE_NOT_ALLOWED`, `FIXED_KIT_MISSING`, `FIXED_KIT_NOT_ELIGIBLE`, `KIT_NOT_EXPECTED`, `NO_ELIGIBLE_KITS`, `COINS_NOT_ALLOWED`, `ITEMS_NOT_ALLOWED`, `NEGATIVE_COINS`, `COINS_OVER_MAX`, `STAKE_RATIO` (detail = minimum), `TOO_MANY_STACKS`, `ITEM_BLOCKED` (detail = material), `DUPLICATE_ITEM`, `ITEM_ADDED_BY_OTHER_SIDE` |
+| `StakeViolation` | `(code, side, detail)`; codes `GEAR_MODE_NOT_ALLOWED`, `FIXED_KIT_MISSING`, `FIXED_KIT_NOT_ELIGIBLE`, `KIT_NOT_EXPECTED`, `NO_ELIGIBLE_KITS`, `COINS_NOT_ALLOWED`, `ITEMS_NOT_ALLOWED`, `NEGATIVE_COINS`, `COINS_OVER_MAX`, `STAKE_RATIO` (detail = the minimum stake value, coins + item value), `TOO_MANY_STACKS`, `ITEM_BLOCKED` (detail = material), `DUPLICATE_ITEM`, `ITEM_ADDED_BY_OTHER_SIDE` |
 | `DuelEndReason` | `WIN`, `FORFEIT`, `TIME_LIMIT`, `AGREED_DRAW`, `SIMULTANEOUS_DEATH`, `TELEPORT_FAILED`, `PLAYER_LEFT_LOBBY`, `NO_BATTLEGROUND`, `ADMIN_CANCELLED`, `SERVER_RESTART`, `API_OUTAGE`, `LOCK_REFUSED`; `status()` (COMPLETED / CANCELLED / ABORTED / NOT_CREATED), `isDecisive()`, `isDraw()`, `apiName()` (PascalCase for P2's API, null for `LOCK_REFUSED`) |
 | `DuelResult` | `(reason, winner)`; `win(side, reason)`, `noWinner(reason)`, `loser()`, `isDecisive()` |
 | `DuelPhase` | `LOCKING`, `TRAVELLING`, `WARMUP`, `BATTLE_COUNTDOWN`, `FIGHT`, `ENDING`, `CLOSED`; `isParticipating()` (LOCKING..ENDING: combat rule, teleport restriction, guards, held deliveries), `quitForfeits()`, `onBattleground()`, `countsAsQueued()` |
 
 **`StakeContractValidator`** (static)
-- `validate(contract, settings, blockedPredicate)` → `List<StakeViolation>`
-- `validateItemOwnership(previous, next, author)`; `validateOffer(previous, next, author, settings, blocked)` = both
-- `minimumMatchingStake(larger, ratioPercent)` (for the editor's hint)
+- `validate(contract, settings, blocked, ToLongFunction<StakeItem> itemValue)` → `List<StakeViolation>`; the 3-argument `validate(contract, settings, blocked)` values items at 0 (`NO_ITEM_VALUE`)
+- `itemValue` returns a whole stack's coin value. **P4 supplies the base price of the item instance's `ItemBlueprint`: `BasePriceMin` × amount, and 0 for an item without an instance or blueprint** (developer, 2026-10-21)
+- `validateItemOwnership(previous, next, author)`; `validateOffer(previous, next, author, settings, blocked, itemValue)` = both
+- `stakeValue(stake, itemValue)` (coins + item value; for the editor's display), `minimumMatchingStake(larger, ratioPercent)` (for the editor's hint)
 - Not here (P4 / the API): item presence (`isSimilar` + amount), eligibility (D14), pair/daily limits, holds and restrictions.
 
 **`DuelOfferBook`** (one per server)
-- `new DuelOfferBook(maxIncoming, sendCooldownSeconds, Predicate<StakeItem> blocked)`; constants `DEFAULT_MAX_INCOMING = 3`, `DEFAULT_SEND_COOLDOWN_SECONDS = 10`
+- `new DuelOfferBook(maxIncoming, sendCooldownSeconds, Predicate<StakeItem> blocked, ToLongFunction<StakeItem> itemValue)` (the 3-argument form values items at 0); constants `DEFAULT_MAX_INCOMING = 3`, `DEFAULT_SEND_COOLDOWN_SECONDS = 10`
 - `invite(inviter, invitee, settings, contract, now)`, `counter(author, offerId, contract, now)`, `accept(player, offerId, now)`, `decline(player, offerId, now)`, `cancel(player, negotiationId)` → `Outcome(status, negotiation, offer, violations, cooldownSeconds)`
 - `Status`: `OK`, `SELF_INVITE`, `INVITES_DISABLED`, `ALREADY_INVITING`, `PAIR_ALREADY_NEGOTIATING`, `TOO_MANY_INCOMING`, `ON_COOLDOWN`, `PLAYER_BUSY`, `UNKNOWN_NEGOTIATION`, `STALE_OFFER`, `NOT_YOUR_TURN`, `OFFER_EXPIRED`, `NO_COUNTERS_LEFT`, `INVALID_CONTRACT`, `NOT_AWAITING_RESPONSE`
 - `accept` moves the negotiation to `LOCKING`; P4 then calls `lockSucceeded(negotiationId)` → `List<Closed>` (the players' other negotiations, `SUPERSEDED`) or `lockFailed(negotiationId)` → `Closed`
@@ -107,7 +110,7 @@ Package `net.knightsandkings.knk.core.duel` in `knk-core`. Bukkit-free (guarded 
 
 ### Deviations and interpretations (all reversible; also a comment on KNG-197)
 
-1. **Stake ratio with items.** DESIGN §10.2 says "I stake 10,000, you stake 0" is impossible, while §6.2's example "I stake my diamond sword, you stake 500 coins" must be expressible. The validator refuses a coin stake below `MinStakeRatioPercent` of the other side's **unless the side with fewer coins stakes items** (its collateral). P2's API applies its own ratio check at lock-in; it should use the same rule or the plugin's advisory check and the API will disagree.
+1. **Stake ratio with items — decided by the developer (2026-10-21, KNG-197), follow-up commit `36195de3`.** DESIGN §10.2 says "I stake 10,000, you stake 0" is impossible, while §6.2's example "I stake my diamond sword, you stake 500 coins" must be expressible. The first version waived the ratio when the smaller side staked items ("collateral"); the developer replaced that. **Now** each side's stake value is its coins plus the coin value of its items, and the smaller value must be at least `MinStakeRatioPercent` of the larger. An item's value is the base price of its item instance's `ItemBlueprint`, "for lack of better options currently". The reversible default is `BasePriceMin` × amount, and an item that is not an `ItemInstance` with a blueprint is worth 0. The caller supplies the valuation (`ToLongFunction<StakeItem>`); P2 applies the same rule in the API at lock-in.
 2. **Same-tick losses.** Plan: "death + quit on the same tick → one result". Chosen: the same player dying and quitting → one loss (WIN for the other); one dies and the other quits on the same tick → the death decides it (the quitter is paid on join); both die → `SIMULTANEOUS_DEATH` draw; both quit on the same tick → cancelled as `PLAYER_LEFT_LOBBY` (refund), since neither can claim the win.
 3. **Deaths outside FIGHT.** DESIGN only says "any death in FIGHT loses". Chosen: a death before the countdown cancels like a quit (`PLAYER_LEFT_LOBBY`, refund); a death during the countdown (damage is locked, so only `/kill`, void or similar) is a `FORFEIT`, the same as quitting then (D10).
 4. **Failed battleground teleport** ends as `Cancelled / TeleportFailed`. The lifecycle diagram (§5) says "ABORTED + refund", but §4.3 lists `TeleportFailed` under Cancelled and `Aborted` only for ServerRestart/ApiOutage. Either way it refunds.
@@ -135,7 +138,7 @@ None of P3 is visible on its own; these behaviours come through P4/P5 and are wo
 
 ### Open questions
 
-- Deviation 1 (ratio with item collateral) should be confirmed by the developer and mirrored in P2's API check.
+- None. Deviation 1 was decided by the developer on 2026-10-21 (item value from the blueprint's base price), and the developer kept interpretations 2–3 as built.
 
 ---
 
