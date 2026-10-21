@@ -301,7 +301,7 @@ These supersede the open questions in the audit report §11.
 
 ### 16.8 `/hub`: teleport to the hub (KNG-188, 2026-10-19)
 
-Requested in the form wizard smoke test (2026-10-17): reaching `knk_hub` took an admin `/tp`. knk-plugin branch `claude/kng-188-hub-teleport`, merged into the KNG-182 branch `claude/mc-26.2-upgrade` at `88497649` (2026-10-19); it reaches `main` with KNG-182. Not live-tested yet.
+Requested in the form wizard smoke test (2026-10-17): reaching `knk_hub` took an admin `/tp`. knk-plugin branch `claude/kng-188-hub-teleport`, merged into the KNG-182 branch `claude/mc-26.2-upgrade` at `88497649` (2026-10-19) and reached `main` with KNG-182 at `857d4b1e` (2026-10-21). Not live-tested yet.
 
 - **`/hub`**: any player, no permission node. The destination is the hub spawn that admission uses (`HubService.admissionSpawn()`: the hub selected on the Game Settings page, its spawn as resolved now, else its snapshot). It goes through the teleport engine (`TeleportService`) as a new teleport kind, `HUB`, so warmup, movement and combat cancel, the safe-spot check and every engine guard apply: freeze, siege, the outage rule and domain AllowEntry, the same checks as `/spawn`.
 - **Cooldown and price:** `HUB` has its own cooldown, so a `/hub` doesn't hold back a `/spawn` or the other way round. The permission groups' **spawn** settings set its cooldown and price (KNG-41): the API has no hub column. A priced `/hub` is charged through the spawn-fee route, so the ledger calls it "Teleport to spawn". `knk.teleport.bypass.cost` makes it free.
