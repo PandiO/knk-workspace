@@ -1,7 +1,7 @@
-# Arena duels — draft design
+# Arena duels — design
 
-**Status:** Draft rev. 4. Nothing implemented. Every design question is answered (developer, 2026-10-20: §13.1–13.2); one proposal waits for the developer (§13.3 P1, duel restrictions). Ready for the phase issues.
-**Last updated:** 2026-10-20 (rev. 4: kit modes vault before the lobby teleport and hold pending deliveries such as lootbox rolls, §8.4; never hold on a first flag, staff can revert a paid result at any time, §10.3. Rev. 3: open points O1–O6 decided; escalating review tiers for suspicious results, §10.3; siege kit mode split out as KNG-199. Rev. 2: developer answers; arenas as domains; per-arena settings in the web app; gear modes with kits and inventory drop; queue cap; spectator area as a warp domain; abuse prevention §10)
+**Status:** Design accepted by the developer (2026-10-21, rev. 5). Nothing implemented. Every question is decided (§13). Implementation is split into phase issues [KNG-209](https://linear.app/kngpandi/issue/KNG-209), [KNG-210](https://linear.app/kngpandi/issue/KNG-210), [KNG-213](https://linear.app/kngpandi/issue/KNG-213), [KNG-215](https://linear.app/kngpandi/issue/KNG-215), [KNG-217](https://linear.app/kngpandi/issue/KNG-217), [KNG-219](https://linear.app/kngpandi/issue/KNG-219), [KNG-220](https://linear.app/kngpandi/issue/KNG-220), [KNG-221](https://linear.app/kngpandi/issue/KNG-221), [KNG-222](https://linear.app/kngpandi/issue/KNG-222) ([plan](IMPLEMENTATION_PLAN.md)).
+**Last updated:** 2026-10-21 (rev. 5: duel restrictions decided, §10.3 / §13.3; phase issues filed). 2026-10-20 (rev. 4: kit modes vault before the lobby teleport and hold pending deliveries such as lootbox rolls, §8.4; never hold on a first flag, staff can revert a paid result at any time, §10.3. Rev. 3: open points O1–O6 decided; escalating review tiers for suspicious results, §10.3; siege kit mode split out as KNG-199. Rev. 2: developer answers; arenas as domains; per-arena settings in the web app; gear modes with kits and inventory drop; queue cap; spectator area as a warp domain; abuse prevention §10)
 **Linear:** [KNG-197](https://linear.app/kngpandi/issue/KNG-197) (this design); related [KNG-49](https://linear.app/kngpandi/issue/KNG-49) (Arena/Battleground entities), [KNG-21](https://linear.app/kngpandi/issue/KNG-21) (currency ledger), [KNG-34](https://linear.app/kngpandi/issue/KNG-34) (statistics), [KNG-36](https://linear.app/kngpandi/issue/KNG-36) (NPC platform, for the later Arena NPC)
 **Sources:** developer request and answers 2026-10-20; `knk-v1-archive` (`src/Arenas/{Duel,DuelInvite,DuelCommands,DuelEvents,Arena,ArenaCommands,ArenaMenuClick}.java`, `src/Menu/{Menu,DuelSetupClick}.java`, `src/Listeners/PlayerListener.java`, `src/Main/Main.java`); knk-plugin `main` `79be488`; knk-web-api `master` `2d71155`; specs [teleport](../teleport/DESIGN.md), [siege-minigame](../siege-minigame/DESIGN.md), [currency-payments](../currency-payments/DESIGN.md), [player-statistics](../player-statistics/DESIGN.md), [kits](../kits/DESIGN.md), [lootboxes](../lootboxes/DESIGN.md), [managed WorldGuard regions](../../architecture/managed-worldguard-regions.md), [domain access enforcement](../../architecture/domain-access-enforcement.md), [legacy inventory-menu screens](../legacy/inventory-menu-screens.md) §3.15.
 **Plan:** [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md)
@@ -743,7 +743,7 @@ Each action is idempotent and recorded with the reviewer.
 - Release / Void on held results
 - Revert / Confiscate on paid results
 - "clear escalation" for a pair or beneficiary
-- a duel restriction on a player or a pair (proposed, §13.3)
+- **duel restrictions** (developer, 2026-10-21): bar a player, or one specific pair, from *value-moving* duels (coin or item stakes, drop mode) until an optional end date. Friendly duels stay allowed. Checked at invite, accept and lock-in (the API refuses `CreateAsync`), with the same refusal path as an open tier-2 hold. The player sees the reason and the end date. Stored as `DuelRestriction` (user, optional second user for a pair, expires at, reason, staff member); audited and shown on the player's staff profile. There is no all-duels scope: harassment and spam are covered by the ignore list, `/duel toggle` and freeze
 
 In game, `/knk duel review` lists the same. Alerts use the existing acknowledge flow. All staff actions are audited.
 
@@ -844,12 +844,19 @@ Gameplay settings live on the Arena (§4.2) and are edited in the web app.
 | O6 | Spectator areas per arena | 0..n, normally one | §4.1 |
 | — | Kit-mode inventory handling (developer note) | Vault before the lobby teleport, kit on arrival, restore on every way out (API outage and quit included); pending lootbox rolls and other deliveries held until the restore | §8.4 |
 
-### 13.3 Proposed, waiting for the developer
+### 13.3 Staff tools (developer, 2026-10-21)
 
-| # | Point | Proposal |
-|---|---|---|
-| P1 | **Duel restrictions** | Staff can bar a player, or a specific pair, from duels for a set time or until lifted. **Value-moving** scope blocks coin/item stakes and drop mode, so friendly duels still work. **All** scope blocks every duel. The restriction is checked at invite, accept and lock-in; the player sees the reason and the end date. Stored as `DuelRestriction` rows (user, optional second user, scope, expires at, reason, staff member); audited and shown on the player's staff profile. The existing currency transfer lock already blocks staking, but it also blocks `/pay`. This is the narrower, duel-only tool |
+| # | Point | Decision | Where |
+|---|---|---|---|
+| P1 | Duel restrictions vs the currency transfer lock | Build a small duel restriction: **stakes only** (value-moving duels), for a player or a pair, with an optional end date. No all-duels scope. The transfer lock stays the tool for abuse across the economy (it already blocks staking as well as `/pay`); freeze is for serious cases | §10.3 |
 
+**When to use which:**
+
+| Situation | Tool |
+|---|---|
+| A suspected alt pair, or a player farming value through duels | duel restriction (stakes only), with an expiry |
+| Abuse across the economy (duels plus `/pay` and trading) | the existing currency transfer lock |
+| Serious or confirmed cheating | freeze |
 
 ## 14. Alternative considered: stakes in warmup
 

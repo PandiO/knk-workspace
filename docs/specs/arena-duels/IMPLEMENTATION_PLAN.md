@@ -1,8 +1,8 @@
 # Arena duels — Implementation Plan
 
-**Status:** Draft rev. 3. Not started. All design questions are answered (developer, 2026-10-20; [DESIGN §13](DESIGN.md#13-decisions-log-and-open-points)). Ready for the phase issues.
-**Last updated:** 2026-10-20 (rev. 4: kit vault before the lobby teleport, held deliveries, revert/confiscate; rev. 3: review tiers, `DuelPolicy`, KNG-199 link)
-**Linear:** [KNG-197](https://linear.app/kngpandi/issue/KNG-197) (design). Phase issues: to be filed, one per phase below.
+**Status:** Accepted (developer, 2026-10-21). Not started. All design questions are decided ([DESIGN §13](DESIGN.md#13-decisions-log-and-open-points)); every phase has a Linear issue (table below).
+**Last updated:** 2026-10-21 (rev. 5: duel restrictions in Phase 2/7; phase issues filed). 2026-10-20 (rev. 4: kit vault before the lobby teleport, held deliveries, revert/confiscate; rev. 3: review tiers, `DuelPolicy`, KNG-199 link)
+**Linear:** [KNG-197](https://linear.app/kngpandi/issue/KNG-197) (design, parent). Phase issues P0 [KNG-209](https://linear.app/kngpandi/issue/KNG-209), P1 [KNG-210](https://linear.app/kngpandi/issue/KNG-210), P2 [KNG-213](https://linear.app/kngpandi/issue/KNG-213), P3 [KNG-215](https://linear.app/kngpandi/issue/KNG-215), P4 [KNG-217](https://linear.app/kngpandi/issue/KNG-217), P5 [KNG-219](https://linear.app/kngpandi/issue/KNG-219), P6 [KNG-220](https://linear.app/kngpandi/issue/KNG-220), P7 [KNG-221](https://linear.app/kngpandi/issue/KNG-221), P8 [KNG-222](https://linear.app/kngpandi/issue/KNG-222). Related: [KNG-199](https://linear.app/kngpandi/issue/KNG-199) (siege kit mode, reuses the Phase 0 vault and the Phase 4 kit loan), [KNG-182](https://linear.app/kngpandi/issue/KNG-182) (blocks the plugin phases).
 **Sources:** [DESIGN.md](DESIGN.md) (behaviour, decisions D1–D19, follow-up answers O1–O6).
 
 **Branches:** one standing branch per repo once implementation starts:
@@ -26,23 +26,25 @@
 
 ## Phase overview
 
-| Phase | Repo(s) | What | Depends on | Size |
-|---|---|---|---|---|
-| 0 | plugin | Shared hooks: `MinigameRegistry`, `MinigamePlayerVault` (from `SiegePlayerVault`), `DomainAccessExemptions`; siege migrated, no behaviour change | KNG-182 merged | M |
-| 1 | api, app | Arena domain types (`Arena : Structure`, `ArenaBattleground`, `ArenaSpectatorArea`, `ArenaKit`), duel settings, validation, form configurations, region-kind mapping, `arena_2` seed | — | M–L |
-| 2 | api | `DuelMatch`, service and endpoints; currency reasons; eligibility and abuse limits; `DuelPolicy`, signals and escalation tiers through the currency alert pipeline; abort-unfinished; anomaly rules | Phase 1 | L |
-| 3 | core | Pure rules: offer book, contract validation, state machine, combat rules, battleground allocator and queue, escrow states, review-agnostic settlement effects | — (parallel with 1–2) | M |
-| 4 | plugin | Duel runtime: ticker, teleport kinds, restrictions, combat/death/quit listeners, battleground exemption and confinement, escrow spool and recovery, gear modes (kit loan, drop spoils) | 0, 2, 3 | L |
-| 5 | plugin | Proposal editor, offer view, chat offers, `/duel` and `/arena` commands, kit picker | 4 | M |
-| 6 | api (seed) + plugin | Announcements, sidebar and boss bar, `/duels` and `/arena` menus, spectator-area hooks | 4 | M |
-| 7 | api, app | Statistics (`duel` context, projector, visibility default); web-app duel history and review page | 2 | M |
-| 8 | all | Dev-server smoke test, docs, merge | 1–7 | M |
+| Phase | Linear | Repo(s) | What | Depends on | Size |
+|---|---|---|---|---|---|
+| 0 | [KNG-209](https://linear.app/kngpandi/issue/KNG-209) | plugin | Shared hooks: `MinigameRegistry`, `MinigamePlayerVault` (from `SiegePlayerVault`), `DomainAccessExemptions`; siege migrated, no behaviour change | KNG-182 merged | M |
+| 1 | [KNG-210](https://linear.app/kngpandi/issue/KNG-210) | api, app | Arena domain types (`Arena : Structure`, `ArenaBattleground`, `ArenaSpectatorArea`, `ArenaKit`), duel settings, validation, form configurations, region-kind mapping, `arena_2` seed | — | M–L |
+| 2 | [KNG-213](https://linear.app/kngpandi/issue/KNG-213) | api | `DuelMatch`, service and endpoints; currency reasons; eligibility and abuse limits; `DuelPolicy`, signals and escalation tiers through the currency alert pipeline; abort-unfinished; anomaly rules | Phase 1 | L |
+| 3 | [KNG-215](https://linear.app/kngpandi/issue/KNG-215) | core | Pure rules: offer book, contract validation, state machine, combat rules, battleground allocator and queue, escrow states, review-agnostic settlement effects | — (parallel with 1–2) | M |
+| 4 | [KNG-217](https://linear.app/kngpandi/issue/KNG-217) | plugin | Duel runtime: ticker, teleport kinds, restrictions, combat/death/quit listeners, battleground exemption and confinement, escrow spool and recovery, gear modes (kit loan, drop spoils) | 0, 2, 3 | L |
+| 5 | [KNG-219](https://linear.app/kngpandi/issue/KNG-219) | plugin | Proposal editor, offer view, chat offers, `/duel` and `/arena` commands, kit picker | 4 | M |
+| 6 | [KNG-220](https://linear.app/kngpandi/issue/KNG-220) | api (seed) + plugin | Announcements, sidebar and boss bar, `/duels` and `/arena` menus, spectator-area hooks | 4 | M |
+| 7 | [KNG-221](https://linear.app/kngpandi/issue/KNG-221) | api, app | Statistics (`duel` context, projector, visibility default); web-app duel history and review page | 2 | M |
+| 8 | [KNG-222](https://linear.app/kngpandi/issue/KNG-222) | all | Dev-server smoke test, docs, merge | 1–7 | M |
 
 Phases 0, 1 and 3 can run in parallel. Phases 5–7 can run in parallel after 4 (7 after 2).
 
 ---
 
 ## Phase 0 — Shared hooks (plugin, no behaviour change)
+
+**Linear:** [KNG-209](https://linear.app/kngpandi/issue/KNG-209)
 
 - **Minigame registry**:
   - `knk-core/.../core/minigame/MinigameParticipation` port (DESIGN §11) + `MinigameRegistry` composite
@@ -76,6 +78,8 @@ Phases 0, 1 and 3 can run in parallel. Phases 5–7 can run in parallel after 4 
 - **Live check**: one siege round (outage release, `/hub` refusal, safezone enchant effects, vault restore after a quit).
 
 ## Phase 1 — Arena domain types and settings (API + web app)
+
+**Linear:** [KNG-210](https://linear.app/kngpandi/issue/KNG-210)
 
 - **Models (TPT, like `GateStructure`)**:
   - `Models/Arena/Arena.cs : Structure` (table `arenas`) with lobby/exit locations and the duel settings (DESIGN §4.2)
@@ -115,6 +119,8 @@ Phases 0, 1 and 3 can run in parallel. Phases 5–7 can run in parallel after 4 
 
 ## Phase 2 — Match record, stake ledger, abuse limits (API)
 
+**Linear:** [KNG-213](https://linear.app/kngpandi/issue/KNG-213)
+
 - **Model and enums**:
   - `Models/Duel/DuelMatch.cs` (DESIGN §4.3)
   - `Enums/DuelEnums.cs` (`DuelMatchStatus`, `DuelEndReason`, `DuelGearMode`, `DuelReviewState`, strings)
@@ -146,7 +152,7 @@ Phases 0, 1 and 3 can run in parallel. Phases 5–7 can run in parallel after 4 
   - review actions `[RequirePermission(StaffPermissions.…)]` (new node `knk.admin.duel.review`, matched by `knk.admin.*`)
   - GETs for logged-in users
   - `EndpointAccessRulesTests` updated
-- **`DuelPolicy`** singleton (web-app editable, like `CurrencyPolicy`): signal thresholds, `EscalationFlagCount`, `EscalationWindowDays`, the funnel rule. A first flag never holds (developer). Escalation counts exclude flags whose alert was acknowledged as a false positive. While a hold is open, value-moving invites for that pair or beneficiary are refused (checked in `CreateAsync`). Staff blocks on a player or pair, time-limited.
+- **`DuelPolicy`** singleton (web-app editable, like `CurrencyPolicy`): signal thresholds, `EscalationFlagCount`, `EscalationWindowDays`, the funnel rule. A first flag never holds (developer). Escalation counts exclude flags whose alert was acknowledged as a false positive. While a hold is open, value-moving invites for that pair or beneficiary are refused (checked in `CreateAsync`). **`DuelRestriction`** (DESIGN §10.3, P1): stakes-only scope, for a player or a pair, optional `ExpiresAt`, reason and staff member. `CreateAsync` refuses a value-moving duel when either player (or the pair) has an active restriction, through the same path as an open hold. Staff create/lift endpoints `[RequirePermission(knk.admin.duel.review)]`; audited.
 - **Alerts**: tier 1 and tier 2 go through `ICurrencyAlertService` with new rule codes, so the web alerts page, the acknowledge flow and the in-game `CurrencyAlertNotifier` show them unchanged.
 - **Anomaly detector**:
   - R3 and R4 take `DUEL_PAYOUT` as a flow from loser to winner
@@ -168,6 +174,8 @@ Phases 0, 1 and 3 can run in parallel. Phases 5–7 can run in parallel after 4 
 - **Plugin side**: `DuelMatchesApi` port + api-client implementation with `Idempotency-Key` headers.
 
 ## Phase 3 — Core rules (knk-core, Bukkit-free)
+
+**Linear:** [KNG-215](https://linear.app/kngpandi/issue/KNG-215)
 
 - **`core/duel/` classes**:
 
@@ -191,6 +199,8 @@ Phases 0, 1 and 3 can run in parallel. Phases 5–7 can run in parallel after 4 
   - kit default at the deadline
 
 ## Phase 4 — Duel runtime (plugin)
+
+**Linear:** [KNG-217](https://linear.app/kngpandi/issue/KNG-217)
 
 - **Service and teleports**:
   - `DuelService`: 1 s ticker that applies effects and reports to the API asynchronously; it never blocks on HTTP
@@ -232,6 +242,8 @@ Phases 0, 1 and 3 can run in parallel. Phases 5–7 can run in parallel after 4 
 
 ## Phase 5 — Negotiation UI and commands (plugin)
 
+**Linear:** [KNG-219](https://linear.app/kngpandi/issue/KNG-219)
+
 - **Commands**:
   - `/duel` tree and `/arena` (DESIGN §6.1)
   - registered in `plugin.yml` and `CommandNodes`
@@ -255,6 +267,8 @@ Phases 0, 1 and 3 can run in parallel. Phases 5–7 can run in parallel after 4 
 
 ## Phase 6 — Announcements, menus, spectating (API seed + plugin)
 
+**Linear:** [KNG-220](https://linear.app/kngpandi/issue/KNG-220)
+
 - **`DuelAnnouncer`**: templates, cooldown, `[Spectate] [Details]`; held results say "pending review".
 - **Duel sidebar and boss bar**: for duelists and for players inside the arena's spectator area.
 - **Menu templates**, seeded in knk-web-api (`MenuTemplateSeed`):
@@ -270,6 +284,8 @@ Phases 0, 1 and 3 can run in parallel. Phases 5–7 can run in parallel after 4 
 
 ## Phase 7 — Statistics and web-app pages (API + app)
 
+**Linear:** [KNG-221](https://linear.app/kngpandi/issue/KNG-221)
+
 - **Statistics (API)**:
   - `DuelStatisticsProjector`: wins, losses and draws from `duel_matches`; a forfeit is a loss; cancelled and aborted count nothing; held matches count once decided
   - registered in `StatisticsProjectionService`
@@ -278,12 +294,14 @@ Phases 0, 1 and 3 can run in parallel. Phases 5–7 can run in parallel after 4 
 - **Statistics (plugin)**: `StatisticsContextResolver` returns `duel` through the registry.
 - **Web app**:
   - "Duels" admin page: history with filters (arena, player, status, review), match detail (stakes, spoils, telemetry, flags)
-  - Release / Void on held matches, Revert / Confiscate on paid ones, clear escalation, duel restrictions if P1 is accepted (`knk.admin.duel.review`)
+  - Release / Void on held matches, Revert / Confiscate on paid ones, clear escalation, duel restrictions per player or pair (`knk.admin.duel.review`)
   - `DuelPolicy` settings page
   - duel alerts appear on the existing currency alerts page (new rule codes only)
 - **Tests**: the projector; plugin-posted `wins@duel` refused; web-app page tests (`npm run test:ci`).
 
 ## Phase 8 — Smoke test, docs, merge
+
+**Linear:** [KNG-222](https://linear.app/kngpandi/issue/KNG-222)
 
 **Dev-server smoke test.** Two accounts plus a spectator. The arena is in a town with `pvp deny`.
 
