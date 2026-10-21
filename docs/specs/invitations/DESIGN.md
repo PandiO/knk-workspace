@@ -1,7 +1,7 @@
 # Invite-only sign-up, email engine and web-first Minecraft linking — Design
 
-**Status:** Decided 2026-10-21 (§ 8, all recommendations taken, except I8: Cloudflare Access stays, and the API keeps its allow-list in sync, § 5.8). In implementation on the feature branch through the invitations chain: L0 (§ 5.4), the email engine (§ 4.2) and invitations (§ 3) are built, not merged; see the as-built notes.
-**Last updated:** 2026-10-21 (link 3: § 3.3 as-built; link 2: § 4.2 as-built; decisions recorded; § 5.8 Access sync added; § 6 and § 7 aligned with the implementation plan)
+**Status:** Decided 2026-10-21 (§ 8, all recommendations taken, except I8: Cloudflare Access stays, and the API keeps its allow-list in sync, § 5.8). In implementation on the feature branch through the invitations chain: L0 (§ 5.4), the email engine (§ 4.2), invitations (§ 3) and the server side of the admission gate and linking (§ 5.2–5.5) are built, not merged; see the as-built notes.
+**Last updated:** 2026-10-21 (link 4: § 5.5 as-built; link 3: § 3.3 as-built; link 2: § 4.2 as-built; decisions recorded; § 5.8 Access sync added; § 6 and § 7 aligned with the implementation plan)
 **Implementation plan:** [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) (2026-10-21; work packages E0, E1, L0, I1, I2, A1, I3)
 **Linear:** [KNG-205](https://linear.app/kngpandi/issue/KNG-205) (this design, parent), [KNG-206](https://linear.app/kngpandi/issue/KNG-206) (email engine, high priority), work packages [KNG-211](https://linear.app/kngpandi/issue/KNG-211) (E0), [KNG-212](https://linear.app/kngpandi/issue/KNG-212) (I1), [KNG-214](https://linear.app/kngpandi/issue/KNG-214) (I2), [KNG-216](https://linear.app/kngpandi/issue/KNG-216) (A1), [KNG-218](https://linear.app/kngpandi/issue/KNG-218) (I3), found while writing it: [KNG-207](https://linear.app/kngpandi/issue/KNG-207) (link merge bug), [KNG-208](https://linear.app/kngpandi/issue/KNG-208) (link-code hygiene); related [KNG-159](https://linear.app/kngpandi/issue/KNG-159) (email verification), [KNG-67](https://linear.app/kngpandi/issue/KNG-67) (code-based signup)
 **Sources:**
@@ -367,6 +367,13 @@ Player connects ──► Mojang auth (online-mode) ──► AsyncPlayerPreLogi
 | Mail-bombing through resend or forgot-password | The § 4.2 throttle and the resend limit. |
 | Spoofed UUID | `online-mode=true`, and modern forwarding if a proxy is added (§ 5.1). |
 | Stolen Mojang account | Out of our control. Staff unlink plus the existing session revocation. |
+
+**As built (link 4, 2026-10-21, KNG-214 API + web app):** after every new link (claim or `/account link` code, case A
+or B) the account gets the `MinecraftLinked` mail and an `AccountLinked` in-game notice with the address masked as
+`st***@example.com` (the existing `EmailMask`, not `j***@`). The notice sits in the API's in-memory queue for 24 hours,
+as every player notification does. Staff "Detach web login" and "Admit" are on the player profile; admitting through a
+claim code read out to staff isn't built, because a game-first stranger has no account to open (follow-up). A claim
+code only links to an admitted web account.
 
 ### 5.6 Alternatives considered
 

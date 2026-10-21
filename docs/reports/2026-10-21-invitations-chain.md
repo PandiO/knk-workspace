@@ -1,7 +1,7 @@
 # Invitations chain — progress report
 
-**Status:** Links 1–3 done (2026-10-21), nothing merged. Link 4 is ready ([handoff](../ai-agents/handoffs/2026-10-21-invitations-link-4.md)).
-**Last updated:** 2026-10-21 (link 3)
+**Status:** Links 1–4 done (2026-10-21), nothing merged. Link 5 is ready ([handoff](../ai-agents/handoffs/2026-10-21-invitations-link-5.md)).
+**Last updated:** 2026-10-21 (link 4)
 **Linear:** [KNG-205](https://linear.app/kngpandi/issue/KNG-205) and its children (see the [charter](../ai-agents/handoffs/INVITATIONS_CHAIN.md))
 **Branch:** `claude/player-signup-invitation-flow-f4v7ul` in every repo. knk-plugin's is based on `claude/mc-26.2-upgrade` (KNG-182).
 
@@ -12,7 +12,7 @@
 | 1 | KNG-211 (API), KNG-207, KNG-208 | **done** (not merged, not live-tested) | api `110451f` (E0) + `bb4b9ee` (L0) / app `2bf70ab` / plugin `30b10e6e` / workspace: see git log | API 2754 passed, 4 known-red, 75 skipped (baseline 2697 / 4 / 73; +59 tests, 2 new `[MySqlFact]` skipped); app 940 (baseline 938); plugin core 2168 / api-client 264 / paper 1870, 0 failures (unchanged) | `create_session` by the coordinator with the § 8 prompt; `add_repo` and the dry-run pushes succeeded |
 | 2 | KNG-206 | **done** (not merged, not live-tested) | api `a8b42ca` / app `aecd811` / plugin unchanged (`30b10e6e`) / workspace: see git log | API 2787 passed, 4 known-red, 77 skipped (baseline 2754 / 4 / 75; +41 new, 8 removed with the old mail code, 2 new `[MySqlFact]` skipped); app 156 suites / 950 (baseline 154 / 940) | `create_session session_019NV1SRUVvMbtLXs5QtkCq4` by the coordinator with the § 8 prompt; `add_repo` and the dry-run pushes succeeded |
 | 3 | KNG-212 | **done** (not merged, not live-tested) | api `8ca8507` / app `18f3c9f` / plugin unchanged (`30b10e6e`) / workspace: see git log | API 2864 passed, 4 known-red, 80 skipped (baseline 2787 / 4 / 77); app 160 suites / 970 (baseline 156 / 950) | `create_session session_01LbSWhTfxJd2rZ25bV5iRcY` by the coordinator with the § 8 prompt; `add_repo` and the dry-run pushes succeeded |
-| 4 | KNG-214 (API + web app) | in progress (started 2026-10-21) | — | — | `create_session session_01BU3iVACs3iW58qiapCJC9s` by the coordinator with the § 8 prompt |
+| 4 | KNG-214 (API + web app) | **done** (not merged, not live-tested) | api `44c5f63` / app `60ec323` / plugin unchanged (`30b10e6e`) / workspace: see git log | API 2904 passed, 4 known-red, 81 skipped (baseline 2864 / 4 / 80); app 165 suites / 997 (baseline 160 / 970) | `create_session session_01BU3iVACs3iW58qiapCJC9s` by the coordinator with the § 8 prompt; `add_repo` and the dry-run pushes succeeded |
 | 5 | KNG-214 (plugin) | waiting | — | — | — |
 | 6 | KNG-216 | waiting | — | — | — |
 | 7 | KNG-218 (prep) + final write-up | waiting | — | — | — |
@@ -26,6 +26,11 @@
   pages); link 3's `useNoReferrer` hook covers `/invite` and `/join`. Noted in a KNG-212 comment (link 3).
 - The web app's audit label list doesn't know `UsernameReleased` (35); it shows the raw name. Noted in the KNG-212
   comment (link 3).
+- Staff "Admit" through a claim code a player reads out (DESIGN § 5.3) isn't built: a game-first stranger has no account
+  to open on the profile page. Noted in a KNG-214 comment (link 4).
+- `PermissionEscalationGuard` isn't applied to staff Admit / Detach web login (nor to the other
+  `knk.admin.user.manage` actions such as email change): a moderator can detach an admin's web login. Noted in a
+  KNG-214 comment (link 4).
 - The daily-cap "currency-alert-style" in-game staff notice needs a new `PlayerNotificationTypes` value and a plugin handler; link 2 logs an error once a day and shows the count on `/admin/email` instead (L2-2). Noted in a KNG-206 comment.
 
 ---
@@ -539,3 +544,163 @@ verified" badge. Audit labels for 37–39.
 - `/auth/reset-password` (and link 4's `/link` pages) don't send `Referrer-Policy: no-referrer`; `useNoReferrer` can
   be reused. Noted in the KNG-212 comment.
 - The web app's audit label list doesn't know `UsernameReleased` (35, from the alpha hardening); it shows the raw name.
+
+---
+
+## Link 4 — KNG-214 (API + web app): I2 server side — admission, claim codes, claim linking
+
+**Started:** 2026-10-21 by the coordinator with the § 8 prompt (`create_session session_01BU3iVACs3iW58qiapCJC9s`);
+`add_repo` (push) for knk-web-api, knk-web-app and knk-plugin, clones under `/home/user/<repo>`, branch checked out in
+all four repos, `git push --dry-run` succeeded in knk-web-api, knk-web-app and knk-workspace (the repos this link
+changes). Base merges: `master` `2d71155` and `main` `e30c815` were already in (no change); workspace merged `main`
+(tracker commits). Tracker row on `main` `211f9e4`.
+**Toolchains:** .NET 8.0.132, Node 22.22 (`npx npm@11 ci`). No MySQL: the new `[MySqlFact]` was written and skipped.
+No plugin change, no migration.
+
+### Commits per repo (heads)
+
+| Repo | Commits | Head |
+|---|---|---|
+| knk-web-api | `4d1fe00` admission service and controller, claim linking, register with `claimCode`, staff Admit / Detach, `AccountLinked`, plugin-create refusal, FinishLinking sweep, tests; `44c5f63` `UserDto.admitted` | `44c5f63` |
+| knk-web-app | `a3f00fd` staff Access card on the player profile, audit labels 40–42; `60ec323` `/link`, `/account/link`, banner, claim code through the invite sign-up, account-page pointer, landing steps | `60ec323` |
+| knk-workspace | this block, plan status + § 6.3a, DESIGN § 5.5 as-built, CHANGELOG, link 5 handoff; tracker row on `main` | see git log |
+| knk-plugin | — | not changed (`30b10e6e`) |
+
+### What was built
+
+**knk-web-api.**
+- **`Services/AdmissionService.cs`** (`IAdmissionService`, scoped) and **`Configuration/AdmissionSettings.cs`**
+  (`Admission:ClaimCodeMinutes` = 15, `FinishLinkingReminderDays` = 2, in `appsettings.json`). `CheckAsync(uuid, name)`:
+  UUID normalized to lower-case `D` form, name `^[A-Za-z0-9_]{1,16}$` (else `ArgumentException` → 400); mode ≠ `Invite`
+  → admitted; deactivated/deleted account → `Deactivated`, no code; admitted account → admitted (name follows the Mojang
+  name when free, L4-3); anyone else → `LinkCodeService.CreateClaimCodeAsync` → `NotAdmitted` + `XXXX-XXXX` + `expiresAt`.
+  `CheckClaimAsync` for `/link`. `QueueFinishLinkingRemindersAsync` (L4-9), called from `LinkCodeCleanupService`.
+- **`Controllers/AdmissionController.cs`**: `GET api/Admission/{uuid}?name=` `[RequirePluginService]`;
+  `POST api/Admission/claim/check` `[AllowAnonymous]` + `lookup` rate limit → `{valid, minecraftName, expiresAt}`.
+- **`LinkCodeService.ValidateLinkCodeAsync`** also finds a claim code typed with Crockford look-alikes or spaces
+  (only `Purpose=Claim` rows match in the folded form).
+- **`UserService.LinkMinecraftAccountAsync`:** a claim code on a web account without `AdmittedAt` → `LinkForbiddenException`
+  (403 `InviteRequired`) before anything is spent. Case A in one `RunWithUsersLockedAsync`: release the name, set `Uuid`,
+  `Username`, `AdmittedAt ??= now`, SIGNUP_GRANT (`signup:{id}`), audit `MinecraftLinked`, `MinecraftLinked` mail
+  (`minecraft-linked:{id}:{uuid}`). Case B (fold) unchanged plus the audit and mail. After either, an `AccountLinked`
+  notification. New `IsUuidAdmittedAsync`, `AdmitAsync`, `DetachWebLoginAsync`. Optional `IEmailComposer` parameter.
+- **`AuthService.RegisterAsync`:** `claimCode` + `linkCode` → 400 `InvalidRequest`; under `LinkCode` → 403
+  `InvitesDisabled`; without an invite → 403 `InviteRequired`; with an invite: the claim is validated (valid, `Claim`,
+  holder not inactive and without a login) **before** the invite's use is taken, then `RedeemAsync` + `LinkMinecraftAccountAsync`
+  run in one `UserRepository.RunInTransactionAsync` that commits only on success; the session is for the surviving
+  account; `AuthLoginResponseDto` gains `linked` and `minecraftName` (omitted when null). Optional `IUserService` parameter.
+- **`UsersController`:** `POST {id}/admit` → `{user, changed}`; `POST {id}/detach-web-login` → user / 409; both
+  `[RequirePermission(knk.admin.user.manage)]`. `Create` refuses a plugin UUID without an admitted account under
+  `Mode=Invite` (403 `NotAdmitted`). `link-minecraft-account` maps `LinkForbiddenException` to 403.
+- **Notifications:** `PlayerNotificationTypes.AccountLinked = "AccountLinked"`, payload `accountLinked: { maskedEmail }`
+  (`AccountLinkedNotificationDto`), `IPlayerNotificationQueue.EnqueueAccountLinked`.
+- `UserDto.admitted` (bool, mapped from `AdmittedAt`; the name keeps the generic edit from writing it).
+
+**knk-web-app.** `src/apiClients/admissionClient.ts`, `Controllers.Admission`, `ClaimCheckResponseDto`;
+`src/utils/claimCode.ts` (normalize/format, `sessionStorage` key `knk.pendingClaim` with expiry);
+`src/pages/auth/LinkPage.tsx` (`/link`, `useNoReferrer`); `src/pages/account/AccountLinkPage.tsx` (`/account/link`,
+`ProtectedRoute`, replaces the redirect); `src/components/UnlinkedBanner.tsx` (in `App.tsx` above the routes);
+`InviteSignupForm` sends a kept claim code; `AccountManagementPage` pointer; `LandingPage` steps;
+`src/components/admin/PlayerAccessCard.tsx` on `PlayerProfilePage`; `userManagementClient.admit` / `detachWebLogin`;
+audit labels 40–42.
+
+### Tests vs baseline
+
+| Repo | Baseline (before any change) | After link 4 |
+|---|---|---|
+| knk-web-api | 2864 passed, 4 failed, 80 skipped (2948) | **2904 passed, 4 failed, 81 skipped (2989)**. The 4 failures are the known-red of `master`. New: `AdmissionServiceTests` (every gate branch incl. modes, name follow, deactivated/deleted, code shape/binding/TTL, reuse per UUID and replacement after expiry, bad input, claim check incl. look-alikes and invalid kinds, FinishLinking once and off), `ClaimLinkingTests` (17: case A identity + SIGNUP_GRANT once + mail + notification, non-admitted refused, linked meanwhile → 409, case B via claim, register with invite + claim (one step, JSON), wrong/expired claim takes no use, holder with login → 409, Minecraft-only holder → fold, claim without invite / with link code / under `LinkCode`, Admit, Detach incl. sessions and masked audit, 409s, plugin create refused in `Invite` and untouched in `LinkCode`), `UserAdmittedMappingTests`, a DI test, access-rule lists (`AdmissionController.CheckClaim` anonymous; `Admission.Check`, `Users.Admit`, `Users.DetachWebLogin` protected). 1 new `[MySqlFact]` skipped (`ClaimRegistrationMySqlTests`: a link failing after the shell exists rolls back shell, redemption and use). **Changed tests:** `InviteRegistrationTests.ClaimCode_IsNotSupportedYet` removed (the behaviour it pinned is replaced); four case-A/claim tests (`UserServiceLinkMinecraftAccountTests` ×3, `LinkMinecraftAccountTests` ×1) now seed an admitted web account (L4-1). `RegistrationAndLoginTests` and the other `Mode=LinkCode` auth suites unchanged and green. |
+| knk-web-app | 160 suites, 970 tests | **165 suites, 997 tests** (`LinkPage` ×7, `AccountLinkPage` ×5 incl. the token switch through the real `authService`, `UnlinkedBanner`, `claimCode`, `PlayerAccessCard`, `JoinPage` +2 for the kept claim code, audit labels; `LandingPage` now expects 4 steps); `npm run build` compiles with `main`'s pre-existing warnings, none in the new files; `tsc` shows only the 3 errors `main` has |
+| knk-plugin | — | not touched |
+
+### Flagged decisions (reversible defaults; review)
+
+- **L4-1** A claim code only links to an admitted web account, in every mode (plan: "the web account must have
+  `AdmittedAt`"). Link 1's case-A unit tests seeded non-admitted shells and were updated.
+- **L4-2** Every **new** link (case A or B; claim or `/account link` code) audits `MinecraftLinked`, mails
+  `MinecraftLinked` and queues `AccountLinked`; the plan listed them for case A. DESIGN § 5.5 asks the owner to hear of
+  every link. A code for the caller's own account (no change) sends nothing.
+- **L4-3** On an admitted join the account's name follows the Mojang name only if no other account holds it (else a
+  warning log and no change). Today's plugin join path still does its own name handling.
+- **L4-4** `GET api/Admission/{uuid}` answers `code` formatted `XXXX-XXXX` (display form) and `expiresAt` (UTC); a bad
+  UUID or name is 400 `InvalidRequest`. `Mode=Open` admits everyone (plan: "`Mode != Invite` → admitted").
+- **L4-5** `POST api/Users` under `Mode=Invite` refuses every UUID without an admitted account, **operators included**:
+  the gate lets an operator through, but if they have no account the plugin's create is refused. Link 5 must handle
+  a 403 `NotAdmitted` from create without breaking the join.
+- **L4-6** Register with `claimCode` needs an invite (403 `InviteRequired`, or `InvitesDisabled` under `LinkCode`); 400
+  `InvalidClaimCode`; 409 `AlreadyRegistered`/`AlreadyLinked`; a Minecraft-only holder (created before the switch) is
+  folded and the new session is for it.
+- **L4-7** Detach web login refuses a web-only account (409 `NotLinked`: it would leave an empty row) and one without a
+  login (409 `NoWebLogin`); no escalation guard (as the other `knk.admin.user.manage` actions; follow-up above). Audit
+  details hold the masked address only.
+- **L4-8** Admit is idempotent (`changed: false`, no audit entry), 404 for a deleted account, allowed on a deactivated
+  one (the gate still answers `Deactivated` until reactivation). Admit through a claim code read out to staff isn't
+  built (follow-up above).
+- **L4-9** The `FinishLinking` reminder runs in the hourly `LinkCodeCleanupService` pass, for invited, active accounts
+  without a UUID created 2–9 days ago, once per account (`finish-linking:{id}`). `Admission:FinishLinkingReminderDays`
+  = 0 turns it off. The mail greets "there", as the Welcome mail does (L3-8).
+- **L4-10** `UserDto.admitted` (read-only bool) added so the staff card knows whether to offer Admit.
+- **L4-11** The landing page now shows the invitation steps, with "Already playing? Type `/account link` …" under
+  them, although the alpha stays on `LinkCode` until the switch. It's copy only; if you'd rather show it only after the
+  switch-over, deploy the web app with it.
+- **L4-12** `/account/link` has one field for both kinds of code and doesn't fold look-alikes or add a hyphen there
+  (`/account link` codes contain O, I and L); the API tells the kinds apart. `/link` (claim codes only) formats and folds.
+- **L4-13** `/link` keeps a verified claim code in `sessionStorage` (`knk.pendingClaim`, with its expiry); the invite
+  sign-up form (both `/invite` and `/join`) sends it as `claimCode` and says "Steve will be linked". If the API refuses
+  the claim, the form drops it and the next submit signs up without it.
+- **L4-14** The account page's own link form is gone; it points to `/account/link`.
+- **L4-15** The `MinecraftLinked` mail's dedupe key is `minecraft-linked:{id}:{uuid}`: detaching and re-linking the
+  same account to the same UUID sends no second mail.
+- **L4-16** `AccountLinked` lives in the API's in-memory notification queue (24 h, lost on restart), like every
+  player notification. A player who doesn't join within 24 h still gets the mail.
+
+### Discrepancies with the plan / design
+
+- DESIGN § 5.5 shows the masked address as `j***@gmail.com`; the code uses the existing `EmailMask` (`jo***@gmail.com`).
+- DESIGN § 5.3 "Staff … through a claim code the player reads out to staff": not in plan § 6.1, not built (L4-8).
+- Plan § 6.1 says the Admission check updates the name "as on join today": done only when the name is free (L4-3).
+
+### Live checklist (dev API + web app; not run)
+
+The plugin gate arrives in link 5; until then call the API as the plugin does
+(`curl -H "X-API-Key: $KEY" "$API/api/Admission/<uuid>?name=<name>"`).
+1. Default `Mode=LinkCode`: the Admission call answers `{"admitted":true}` for any UUID and no `linkcodes` row appears;
+   `/account link` registration works as before; the landing page shows 4 steps and the "Already playing?" note.
+2. `Security__Registration__Mode=Invite`: unknown UUID → `NotAdmitted` with `code` `XXXX-XXXX` and `expiresAt` 15 min
+   ahead; the same call again → the same code; a grandfathered player → admitted; a deactivated one → `Deactivated`.
+3. Web-first: invite → sign up → `/account/link` (steps, banner hidden there; banner shown on other pages) → enter the
+   code from 2 → `/account`: linked, username = the Minecraft name, banner gone; `/admin/email` shows Welcome and
+   MinecraftLinked; the profile's activity shows "Minecraft account linked"; the balance log shows the SIGNUP_GRANT once.
+4. Game-first: new UUID → code → `/link` logged out → "Verified: <name>" → invitation code → `/join` shows "<name> will
+   be linked" → sign up → linked at once (`/account`), invite used once.
+5. `/link` logged out → Log in → back on `/link` with the code kept → "Link <name> to my account" → linked.
+6. A claim code on a web account that was never admitted → "You need an invitation …" (403).
+7. Staff (Admin) → player profile → **Access**: Admit on a not-admitted account (confirm; activity "Admitted by staff");
+   Detach web login on a linked account → its sessions end, it can't log in, the Minecraft account stays; `/account link`
+   registration works for it again.
+8. `curl -X POST -H "X-API-Key: $KEY" "$API/api/Users" -d '{"username":"Stranger","uuid":"<new uuid>"}'` under
+   `Mode=Invite` → 403 `NotAdmitted`.
+9. An invited account left unlinked for 2+ days → one FinishLinking mail within the hour (dedupe on later sweeps).
+10. With MySQL: `KNK_TEST_MYSQL=… dotnet test --filter Category=requires-mysql` (incl. `ClaimRegistrationMySqlTests`
+    and link 3's backfill test).
+
+### Deploy notes (a deploy of this API + web-app state)
+
+- **No migration** in link 4. New optional settings `Admission__ClaimCodeMinutes`, `Admission__FinishLinkingReminderDays`.
+- Behaviour-neutral while `Security:Registration:Mode` stays `LinkCode` (the default), apart from the landing-page copy
+  (L4-11) and the FinishLinking sweep (it only finds invited accounts, which `LinkCode` can't create).
+- **Do not set `Mode=Invite` before link 5's plugin is deployed:** with today's plugin a new player joins without the
+  gate, the plugin's `POST api/Users` is refused (L4-5) and the player plays without an account.
+- The link 2 precondition still holds: `Email__AllowLogTransport=true` while the alpha runs `Email__Provider=Log`.
+
+### Risks
+
+- The register-with-claim transaction (shell + claim link) has only InMemory coverage here; its rollback test is a
+  skipped `[MySqlFact]` (checklist 10).
+- Under `Mode=Invite`, every plugin-created account is refused; the gate (link 5) must be in front before the switch.
+- The `AccountLinked` notice is lost on an API restart (in-memory queue); the mail is the durable signal.
+
+### What the next link must know
+
+See the [link 5 handoff](../ai-agents/handoffs/2026-10-21-invitations-link-5.md): the Admission API contract, the exact
+`AccountLinked` type string and payload, the operator create refusal (L4-5), and the web routes the kick message
+points to (`/link`).

@@ -4,6 +4,19 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Invitations chain, link 4: admission gate (server side), claim codes and Minecraft linking (I2)**
+  ([KNG-214](https://linear.app/kngpandi/issue/KNG-214); branch `claude/player-signup-invitation-flow-f4v7ul`:
+  knk-web-api `4d1fe00` + `44c5f63`, knk-web-app `a3f00fd` + `60ec323`). The API answers the game server's new
+  pre-login question `GET api/Admission/{uuid}` (plugin key): with `Security:Registration:Mode=Invite` a player without
+  an admitted account gets a claim code `XXXX-XXXX` for the disconnect screen (15 minutes, one per player), a
+  deactivated one is refused; in every other mode everyone is admitted, so nothing changes until the switch. `/link`
+  (open without an account) checks that code; a logged-in player links straight away, a new player signs up with an
+  invitation and is linked in the same step. `/account/link` is the new onboarding page after an invitation sign-up
+  and takes both claim codes and `/account link` codes; a banner reminds unlinked players. Linking a web account to
+  Minecraft gives the starting balance, a "linked" mail and an in-game notice with the masked address. Staff get
+  **Admit** and **Detach web login** on the player profile. An unlinked invited account gets one reminder mail after
+  two days. The landing page shows the new join steps. The game server's side follows in link 5. Not live-tested.
+
 - **Invitations chain, link 3: invitations and invite-based registration (I1)**
   ([KNG-212](https://linear.app/kngpandi/issue/KNG-212); branch `claude/player-signup-invitation-flow-f4v7ul`:
   knk-web-api `77042fd` + `8ca8507`, knk-web-app `dfa5cdd` + `18f3c9f`). Staff with the new node `knk.admin.invites`

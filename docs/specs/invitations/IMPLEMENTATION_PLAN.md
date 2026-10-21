@@ -1,7 +1,7 @@
 # Invite-only sign-up, email engine and web-first Minecraft linking — Implementation plan
 
-**Status:** In implementation through the [invitations chain](../../ai-agents/handoffs/INVITATIONS_CHAIN.md) (7 links, charter 2026-10-21). **Link 1 done on the feature branch (2026-10-21):** E0's API half (§ 2, knk-web-api `110451f`, cherry-pickable) and L0 (§ 4; api `bb4b9ee`, web-app `2bf70ab`, plugin `30b10e6e`), not merged, not live-tested; deviations flagged L1-1…L1-5 in the [progress report](../../reports/2026-10-21-invitations-chain.md). **Link 2 done (2026-10-21):** E1 (§ 3; api `0d7ec4a` + `a8b42ca`, web-app `aecd811`, [email guide](../../guides/email.md)), not merged, not live-tested; flags L2-1…L2-12. **Link 3 done (2026-10-21):** I1 (§ 5; api `77042fd` + `8ca8507`, web-app `dfa5cdd` + `18f3c9f`), not merged, not live-tested; flags L3-1…L3-12, as-built note at the end of § 5. Next: link 4 (I2 server side, § 6.1 and § 6.3). The decisions are in [DESIGN.md](DESIGN.md) § 8 (2026-10-21).
-**Last updated:** 2026-10-21 (link 3)
+**Status:** In implementation through the [invitations chain](../../ai-agents/handoffs/INVITATIONS_CHAIN.md) (7 links, charter 2026-10-21). **Link 1 done on the feature branch (2026-10-21):** E0's API half (§ 2, knk-web-api `110451f`, cherry-pickable) and L0 (§ 4; api `bb4b9ee`, web-app `2bf70ab`, plugin `30b10e6e`), not merged, not live-tested; deviations flagged L1-1…L1-5 in the [progress report](../../reports/2026-10-21-invitations-chain.md). **Link 2 done (2026-10-21):** E1 (§ 3; api `0d7ec4a` + `a8b42ca`, web-app `aecd811`, [email guide](../../guides/email.md)), not merged, not live-tested; flags L2-1…L2-12. **Link 3 done (2026-10-21):** I1 (§ 5; api `77042fd` + `8ca8507`, web-app `dfa5cdd` + `18f3c9f`), not merged, not live-tested; flags L3-1…L3-12, as-built note at the end of § 5. **Link 4 done (2026-10-21):** I2 server side (§ 6.1, § 6.3; api `4d1fe00` + `44c5f63`, web-app `a3f00fd` + `60ec323`), not merged, not live-tested; flags L4-1…L4-16, as-built note § 6.3a. Next: link 5 (I2 plugin, § 6.2). The decisions are in [DESIGN.md](DESIGN.md) § 8 (2026-10-21).
+**Last updated:** 2026-10-21 (link 4)
 **Linear:** [KNG-205](https://linear.app/kngpandi/issue/KNG-205) (parent). Each work package's issue is listed in § 1.
 **Sources:** [DESIGN.md](DESIGN.md), plus code read on 2026-10-21 at knk-web-api `master` `2d71155`, knk-web-app `main` `e30c815`, and knk-plugin `claude/mc-26.2-upgrade` `88497649` (Paper 26.3, Java 25).
 
@@ -499,6 +499,26 @@ Built as above, with these differences (flags in the [progress report](../../rep
 - **`PlayerProfilePage`** (admin): "Admit" and "Detach web login" buttons (`knk.admin.user.manage`) with confirms.
 - **`LandingPage`:** `JOIN_STEPS` → "Get an invitation → Create your account → Join the server → Enter the code".
 - **Tests:** the LinkPage flows (logged in/out, invalid code, kept code), the AccountLinkPage token switch, the banner.
+
+### 6.3a As built (link 4, 2026-10-21)
+
+Built as § 6.1 and § 6.3 describe, with these differences (flags in the [progress report](../../reports/2026-10-21-invitations-chain.md) "Link 4"):
+- A claim code links only to an admitted web account, in every mode (403 `InviteRequired`) (L4-1). Every new link,
+  case A or B, claim or `/account link` code, writes the `MinecraftLinked` audit entry, queues the `MinecraftLinked`
+  mail and the `AccountLinked` notification (L4-2); payload `accountLinked: { maskedEmail }`, masked as `st***@example.com`.
+- `GET api/Admission/{uuid}?name=` answers `code` as `XXXX-XXXX` and `expiresAt`; a bad UUID or name is 400; the
+  name follows the Mojang name only when no other account holds it (L4-3, L4-4).
+- `POST api/Users` from the plugin under `Mode=Invite` refuses any UUID without an admitted account (403 `NotAdmitted`),
+  operators included (L4-5).
+- Register with `claimCode` needs an invite too (403 `InviteRequired`; `InvitesDisabled` under `LinkCode`); 400
+  `InvalidClaimCode`, 409 `AlreadyRegistered`; a Minecraft-only holder is folded (case B) and the session is for it (L4-6).
+- Detach refuses web-only accounts (409 `NotLinked`) and accounts without a login (409 `NoWebLogin`) (L4-7). Admit
+  is idempotent; admitting by a claim code read out to staff is not built (L4-8).
+- The `FinishLinking` reminder runs in the hourly link-code sweep for accounts 2–9 days old
+  (`Admission:FinishLinkingReminderDays`, 0 = off) (L4-9). `UserDto.admitted` (read-only) feeds the staff card (L4-10).
+- Web app: the landing page shows the invite steps with an "Already playing? `/account link`" note (L4-11);
+  `/account/link` takes either code unformatted (L4-12); `/link` keeps a verified code in `sessionStorage` and the
+  invite sign-up form sends it along (L4-13); the account page's link form became a pointer (L4-14).
 
 ### 6.4 Done
 On dev, with `Registration:Mode=Invite` and `admission.mode: invite`:
