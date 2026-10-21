@@ -159,8 +159,8 @@ Thrown fight = the loser never swings, under 10 s, value-moving.
 - [ ] **Void** another (reason required) → both stakes back, no fee; each side gets their own items back; a voided hold never counts for W/L. Both actions are in the audit log with S and the reason. (Plan 13, P2·6, P4·13, P7·2)
 - [ ] **Acknowledge** the first flag as a false positive, play another thrown fight → flagged, **not** held. (Plan 13, P2·5)
 - [ ] **Revert** a paid result after the winner spent part of it: the winner ends at 0, the loser gets back what was recovered first, "Still missing" shown; the next projection cycle takes the W and L back out. (P2·7, P7·3, P7·8)
-- [ ] **Confiscate** another: coins to `SYS_FEES`, the fee stays. (P2·7, P7·8)
-- [ ] **`/admin/duels`** filters by arena, player name, status and review. (P7·8)
+- [ ] **Confiscate** another: the recovered coins land in **`SYS_CONFISCATED`** (not `SYS_FEES`; developer decision 2026-10-21), the fee stays in `SYS_FEES`; reconciliation finds nothing. (P2·7, P7·8)
+- [ ] **`/admin/duels`** filters by arena, player name, status and review; S sees each match's signals, numbers and tier. (P7·8)
 - [ ] **Clear escalation** (pair, then winner) → the pair's open `DUEL_FLAG` alerts show acknowledged. (P7·9)
 - [ ] **Restrictions** (`/admin/duels/restrictions`): a player restriction with an end date refuses staked duels (message shows reason and date), allows friendly ones, ends at the date; a pair restriction (by name) refuses only that pair; both show on each player's staff profile; lift one; audit entries for both players of a pair. (P2·8, P7·10)
 - [ ] **Policy** (`/admin/duels/policy`): change a threshold and save; save again from a second tab opened before → the reload message. (P7·11)
@@ -168,6 +168,7 @@ Thrown fight = the loser never swings, under 10 s, value-moving.
 - [ ] **R10**: three paid one-way duels between the same pair within 24 h → an `R10` alert on the next monitor cycle; `R7` doesn't fire for `DUEL_PAYOUT`. (P2·11)
 - [ ] **In game**: `/knk duel review <id> release` as S2 (no `knk.admin.duel.review`) is refused; as S, the winner gets the items at once. (P5·14)
 - [ ] **Web permissions**: S2 sees no Duels button, gets the no-access page on `/admin/duels`, no restrictions card on profiles, and 403 on release/void/revert/restrictions through the API; S passes. (P2·10, P7·13)
+- [ ] **Review data is staff-only** (developer decision 2026-10-21): `GET api/DuelMatches/{id}` as A (a plain logged-in player) shows the review state (`flagged`, `held`, …) and the result, but **no** `reviewSignals`, `reviewDetails` or `reviewTier`; as S2 (no `knk.admin.duel.review`) also none; as S and with the plugin key, all three. The warmup and result broadcasts still reach everyone. (P2·10)
 
 ## 14. Recovery
 

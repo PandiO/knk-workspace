@@ -123,6 +123,8 @@ Duels can be thrown to move coins or items between accounts. The rules make that
 
 ### 3.1 Flags and holds
 
+**Who sees the verdict** (developer, 2026-10-21): the signals, their numbers and the tier are shown only to staff with `knk.admin.duel.review` (and the game server). Players see a match's plain review state (none, flagged, held, released, voided) and its result. Duel announcements stay public, subject to the arena's toggles.
+
 Only value-moving results are scored: coin or item stakes, or drop mode. Friendly duels never are. The API looks at the fight's telemetry and the players' history:
 
 | Signal | Means |
@@ -149,7 +151,7 @@ Open the match from the history (filters: arena, player, status, review) or from
 | Held | **Release** | paid as normal (pot less fee to the winner; items and spoils delivered) |
 | Held | **Void** (reason required) | each side gets its own stake back, no fee; spoils go back to the loser |
 | Paid | **Revert** (reason required) | the payout is taken back from the winner as far as their balance allows; the loser is refunded first; the fee is reversed. Undelivered items go back to their owners. The page shows what was recovered and what is **still missing** |
-| Paid | **Confiscate** (reason required) | as Revert, but the recovered coins go to the server's fee sink and undelivered items are destroyed; the fee stays |
+| Paid | **Confiscate** (reason required) | as Revert, but the recovered coins go to the system account `SYS_CONFISCATED` (kept apart from fee income in `SYS_FEES`) and undelivered items are destroyed; the fee stays |
 | Any | **Clear escalation** (pair or winner) | acknowledges the open flags, so they stop counting |
 
 A voided, reverted or confiscated result no longer counts for duel statistics, and counts as a confirmed flag. Items already delivered can't be pulled back automatically; take them out with `/inventory` or `/enderchest`. Every action is in the audit log with the staff member and reason. In game, `/knk duel review <match> release|void [reason]` does the same for held results and delivers to online players at once.

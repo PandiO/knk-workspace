@@ -914,20 +914,31 @@ knk-web-api → knk-web-app → (KNG-182 into knk-plugin `main`, then `main` int
 
 [`guides/arena-duels-smoke-test.md`](../guides/arena-duels-smoke-test.md): setup, plan steps 1–15 with every phase's live checks, the siege regression (P0), and the extras.
 
+### Developer decisions (KNG-197)
+
+Taken during the chain, all recorded as comments on [KNG-197](https://linear.app/kngpandi/issue/KNG-197):
+
+| Date | Decision | Where it lives |
+|---|---|---|
+| 2026-10-21 | **Item value in the stake ratio** = the item instance's `ItemBlueprint` base price (`BasePriceMin` × amount; no instance or blueprint = 0); the ratio compares coins + item value per side | P3 `36195de3`, P2 `a0da408`; the plugin can't value items yet, so the API's check at lock-in is binding ([KNG-224](https://linear.app/kngpandi/issue/KNG-224)) |
+| 2026-10-21 | **Battlegrounds keep `entry allow` + `pvp allow`**; `knk-allow-entry deny` through the domain-access handler is the only entry guard | P1 `02bca4e0`; managed-regions §5 |
+| 2026-10-21 | **No `arena_2` migration or seed**; staff create arenas in the forms | P1 `a8a26c3` (endpoint removed); checklist §0.2 |
+| 2026-10-21 | **Deaths and quits by phase as built**: a death before the countdown cancels, a death in the countdown forfeits, both quitting on one tick cancels, a death plus the other's quit on one tick is decided by the death | P3 |
+| 2026-10-21 | **Match review data is staff-only**: `reviewSignals`, `reviewDetails`, `reviewTier` only for `knk.admin.duel.review` or the plugin key; others see the plain review state and result. Announcements stay public with the arena toggles | **being applied by the P2 session on knk-web-api `claude/arena-duels`; not on the branch when P8 pushed** (P8 checked `origin/claude/arena-duels`: still `7872831`). Guide §3.1, checklist P2·10 |
+| 2026-10-21 | **Confiscated coins go to a new `SYS_CONFISCATED` account**, not `SYS_FEES` | **same P2 follow-up, not on the branch yet.** Guide §3.2, checklist P2·7 / P7·8 |
+| 2026-10-21 | **Duel W/L/D visibility as built**: a metric-level "Wins: Nobody" also hides duel wins; the player can re-show them per context | P7, no change |
+
+The two P2 follow-ups change the API and its tests after P8's test run. **Before the merge, fetch knk-web-api `origin/claude/arena-duels` again and re-run the build and tests on the new head**, and use that head in the checklist's §0.1 table and the merge plan's commit list. If the commit hasn't landed when the merge step comes, say so; the coordinator handles it.
+
 ### Open questions for the developer
 
-1. **Review details in match reads** (P2): `reviewSignals` and `reviewDetails` are visible to any logged-in user through `GET api/DuelMatches`. Keep, or staff-only?
-2. **Confiscated coins** (P2) go to `SYS_FEES`, the same sink as the fee. Keep, or a separate `SYS_CONFISCATED` account for cleaner reporting?
-3. **"Wins: Nobody" set before duels existed** (P7) also hides duel wins today. Keep, or keep duel W/L/D public until the player changes the duel context itself?
-4. **Hub tile** (P6) for `/duels` or `/arena`: wanted? A small seed change.
-
-Decisions already taken during the chain are on KNG-197 (stake ratio by blueprint base price; battleground `entry allow`; no `arena_2` seed; deaths and quits by phase). Every phase's reversible interpretations are in its section and on KNG-197.
+1. **Hub tile** (P6) for `/duels` or `/arena`: wanted? A small seed change. (P2's two questions and P7's are answered above.)
 
 ### Follow-ups filed or recorded
 
 - [KNG-199](https://linear.app/kngpandi/issue/KNG-199): siege kit mode (reuses P0's vault and P4's kit loan; `KitGrantPlacer` overflow note there).
-- [KNG-223](https://linear.app/kngpandi/issue/KNG-223): `dotnet build` at the knk-web-api root fails on Linux (lower-case `tests\` in the `.sln`).
-- [KNG-224](https://linear.app/kngpandi/issue/KNG-224): the plugin can't value staked items for the stake ratio (the API's check at lock-in is binding).
+- [KNG-223](https://linear.app/kngpandi/issue/KNG-223): `dotnet build` at the knk-web-api root fails on Linux (lower-case `tests\` in the `.sln`). Filed by P7.
+- [KNG-224](https://linear.app/kngpandi/issue/KNG-224): the plugin can't value staked items for the stake ratio (the API's check at lock-in is binding). Filed by P5.
 - Comment on KNG-217: `DuelService.notify` catches only `RuntimeException`, so an `Error` from an observer stops the step that notified it (P6). Worth fixing before or soon after the merge.
 - Comment on KNG-213: a staff ledger reversal of a duel's stake or payout outside the duel flow makes the duel's later cancel or revert answer 409 `AlreadyReversed`.
 - Comment on KNG-221: the match detail shows ledger transaction ids as numbers (the transaction page is keyed by `publicId`).
