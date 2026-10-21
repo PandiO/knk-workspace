@@ -14,7 +14,7 @@
 | 3 | KNG-212 | **done** (not merged, not live-tested) | api `8ca8507` / app `18f3c9f` / plugin unchanged (`30b10e6e`) / workspace: see git log | API 2864 passed, 4 known-red, 80 skipped (baseline 2787 / 4 / 77); app 160 suites / 970 (baseline 156 / 950) | `create_session session_01LbSWhTfxJd2rZ25bV5iRcY` by the coordinator with the § 8 prompt; `add_repo` and the dry-run pushes succeeded |
 | 4 | KNG-214 (API + web app) | **done** (not merged, not live-tested) | api `44c5f63` / app `60ec323` / plugin unchanged (`30b10e6e`) / workspace: see git log | API 2904 passed, 4 known-red, 81 skipped (baseline 2864 / 4 / 80); app 165 suites / 997 (baseline 160 / 970) | `create_session session_01BU3iVACs3iW58qiapCJC9s` by the coordinator with the § 8 prompt; `add_repo` and the dry-run pushes succeeded |
 | 5 | KNG-214 (plugin) | **done** (not merged, not live-tested) | api unchanged (`44c5f63`) / app unchanged (`60ec323`) / plugin `90b01850` / workspace: see git log | plugin core 2178 / api-client 271 / paper 1889, 0 failures (baseline 2168 / 264 / 1870) | `create_session session_01YQKHE1Pg4ctrL2vadh3qng` by the coordinator with the § 8 prompt; `add_repo` and the dry-run pushes succeeded (KNG-182 still unmerged, so the plugin base stays `claude/mc-26.2-upgrade`) |
-| 6 | KNG-216 | waiting | — | — | — |
+| 6 | KNG-216 | in progress (started 2026-10-21) | — | — | `create_session session_01HuAM9YQbNweZHr8WPuUSLq` by the coordinator with the § 8 prompt |
 | 7 | KNG-218 (prep) + final write-up | waiting | — | — | — |
 
 **Follow-ups found during the chain:**
