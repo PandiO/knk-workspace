@@ -10,7 +10,7 @@
 | Link | Issues | Status | Heads (api / app / plugin / workspace) | Tests vs baseline | Started how |
 |---|---|---|---|---|---|
 | 1 | KNG-211 (API), KNG-207, KNG-208 | **done** (not merged, not live-tested) | api `110451f` (E0) + `bb4b9ee` (L0) / app `2bf70ab` / plugin `30b10e6e` / workspace: see git log | API 2754 passed, 4 known-red, 75 skipped (baseline 2697 / 4 / 73; +59 tests, 2 new `[MySqlFact]` skipped); app 940 (baseline 938); plugin core 2168 / api-client 264 / paper 1870, 0 failures (unchanged) | `create_session` by the coordinator with the § 8 prompt; `add_repo` and the dry-run pushes succeeded |
-| 2 | KNG-206 | ready | — | — | — |
+| 2 | KNG-206 | in progress (started 2026-10-21) | — | — | `create_session session_019NV1SRUVvMbtLXs5QtkCq4` by the coordinator with the § 8 prompt |
 | 3 | KNG-212 | waiting | — | — | — |
 | 4 | KNG-214 (API + web app) | waiting | — | — | — |
 | 5 | KNG-214 (plugin) | waiting | — | — | — |
