@@ -1,6 +1,6 @@
 # Minecraft catalogue (materials and blocks): implementation plan
 
-**Status:** Draft, decisions D1-D9 taken by the developer (2026-10-21, §11). Nothing is implemented yet.
+**Status:** Phase 2 in progress; decisions D1-D12 taken by the developer (2026-10-21, §11). Nothing is implemented yet.
 **Last updated:** 2026-10-21
 **Issue:** [KNG-200](https://linear.app/kngpandi/issue/KNG-200). Related: [KNG-195](https://linear.app/kngpandi/issue/KNG-195) (hybrid submit fixes, In Review), [KNG-182](https://linear.app/kngpandi/issue/KNG-182) (Minecraft 26.3).
 
@@ -456,8 +456,8 @@ The order matters, because some callers still depend on the hybrid routes.
 
 ## 10. Phases, tests and order
 
-Each phase is its own commit series on one feature branch per repo. Each is tested and live
-checked before the next starts.
+Each phase is its own commit series on one feature branch per repo, with automated tests per
+phase. Live testing happens once, after phase 4 (D12).
 
 | Phase | Content | Repos | Tests |
 |---|---|---|---|
@@ -492,3 +492,6 @@ clarification of D5 followed in chat the same day.
 | D7 | Existing material rows | The scan may merge and delete them: notation duplicates merged into the scanned row, unreferenced rows not in the scan deleted, referenced ones kept as `Missing` for a manual merge (§6 step 4) |
 | D8 | Icons | **Required for this improvement**, not urgent in the current state: providers in phase 3, `MinecraftIcon` in phase 4 (revised the same day; an earlier note deferred them) |
 | D9 | Focus | The material picker only matters for item blueprints; that picker comes first in phase 4 |
+| D10 | Start while KNG-195 is unmerged | Start phase 2 now (API only, hardly overlaps KNG-195); phase 1 follows once KNG-195 is merged |
+| D11 | Phase 1 size | The full phase 1 as planned, although phase 4 replaces the hybrid picker |
+| D12 | Live tests | Only at the end: phases 1-4 are built with automated tests, the developer tests everything in one live run |
