@@ -602,3 +602,108 @@ Setup: P1's `arena_2` with a lobby, an exit, one or more enabled battlegrounds w
 13. **Held result** (P2 live check 4's second thrown fight): both are told "pending staff review", the items stay in `HELD`; after a release (web app) the winner gets them within `held-refresh-seconds` or on rejoin; after a void each side gets their own back.
 14. **Lootbox**: a reel finishing mid-match says "kept safe" and arrives after the restore, not in the kit; opening a lootbox during a duel is refused.
 15. **Siege**: a duelist or negotiator can't join a siege ("You are in a duel." / "You are negotiating a duel…").
+
+---
+
+## P5 — negotiation UI and commands ([KNG-219](https://linear.app/kngpandi/issue/KNG-219))
+
+**Session:** Claude Code cloud session, 2026-10-21. **Status:** pushed, KNG-219 In Review. Not deployed, not live-tested. Started after P4 (`089bd357`, KNG-217 In Review). KNG-182 has not merged into knk-plugin `main` (still `79be4882`), so `claude/mc-26.2-upgrade` stays the base. No P6 commits were on the branch when this phase pushed.
+
+### Commits
+
+| Repo | Branch | Commit | What |
+|---|---|---|---|
+| knk-plugin | `claude/arena-duels` | `4cb1aa80` | `paper/duel/ui/` (editor, offer view, kit picker, chat, controller, toggles, kit previews), `/duel`, `/arena`, `/knk duel`, `DuelMenuListener`, plugin.yml + `CommandNodes`, `KnKPlugin` wiring, tests |
+| knk-plugin | `claude/arena-duels` | `ea7ecb4e` | KNG-224 reference in the ratio workaround |
+| knk-workspace | `main` | `1410ccf` | tracker row |
+| knk-workspace | `claude/arena-duels` | this commit | this section |
+
+### Tests
+
+- Toolchain: Temurin JDK 25.0.4 via `-Porg.gradle.java.installations.paths`, Gradle 8.14.3 on JDK 21, Paper 26.3. Maven Central answered 429 on the first runs (dependency downloads); plain re-runs got through. No mirror or init script.
+- Baseline (P4 head `089bd357`, clean): knk-core 2314, knk-api-client 275 (2 skipped), knk-paper 1955 (18 skipped), 0 failures.
+- After P5: `./gradlew build -x deployToDevServer` BUILD SUCCESSFUL. **knk-core 2314, knk-api-client 275 (2 skipped), knk-paper 1986 (18 skipped)**, 0 failures, no known reds. New: 31 knk-paper tests (`DuelNegotiationUiTest` 20, `DuelCommandsTest` 2, `ProposalDraftTest` 6, `DuelChatTest` 3). knk-core unchanged.
+- The UI tests run P5 on P4's real runtime (`DuelHarness`) through `DuelUiHarness`: a fake `DuelGui` whose inventories are maps, tracked open inventories, a typed anvil answer, and chat/button capture. Mocked `World`s stay in fields (P4's harness).
+
+| Plan test | Test |
+|---|---|
+| editor click handling | `DuelNegotiationUiTest`: `aClickOnYourOwnInventoryStakesAReferenceAndNothingMoves` (no `setItem` on the player inventory, same stack twice refused, icon click removes), `everyClickAndDragInADuelMenuIsCancelled` (every `ClickType`, top and bottom, and a drag, through `DuelMenuListener`), `theCoinButtonsAndTheAnvilSetBothSidesWithinTheArenasMaximum`, `theKitButtonOpensThePickerForAFixedKitDuel`, `theFeeAndTheApisEligibilityWarningsAreShown`, `aLoanedOrBlockedItemIsRefusedWhenClicked` |
+| lock-in with a moved item → refused, nothing taken | `anItemMovedAwayBeforeLockInIsRefusedAndNothingIsTaken` (no escrow file, the other side untouched, negotiation closed, told once); `anItemMovedToAnotherSlotIsStillTakenAtLockIn` |
+| API refused → items returned | `anApiRefusalHandsTheItemsBack` (both sides' items back in the inventories, the API's message once) |
+| a gear mode the arena doesn't allow can't be selected | `theGearModeButtonCyclesOnlyThroughTheModesTheArenaAllows`, `anArenaWithOneGearModeShowsAFixedLabel`, `theOfferBookRefusesAGearModeTheArenaDoesntAllow`, `ProposalDraftTest.theGearModeIsAlwaysOneTheArenaAllows` |
+| others | id-stamped buttons and the design's chat line, drop mode in capitals, no Counter on the last offer (chat and view), a stale button, the 10 s expiry warning once, the offer view's Accept, the invite rules (self, toggle persisted, offline, outside an arena), KIT_CHOICE prompt/pick/opponent's pick/lock at the countdown, `/duel` routing, `/knk duel list|cancel` and the review node |
+
+### What was built (for P6 and P8)
+
+All in knk-paper. Package `net.knightsandkings.knk.paper.duel.ui` unless noted.
+
+- **`DuelNegotiationUi`** (a `DuelObserver`): the invite rules the runtime leaves to the UI, then the editor or a quick invite; `counter`, `accept` (→ `DuelService.accept`, P4's lock-in), `decline`, `cancel`, `view`, `kit`, `draw`, `toggle`, `claim`; the 1 s `tick()` for the expiry warning; chat on expiry, quit and superseded negotiations; the KIT_CHOICE prompt on `warmupStarted`, the opponent's pick on `kitChosen`, closing the picker when the countdown starts. Invite rules:
+  - inviter inside an enabled arena's region (`arenaAt`: the cached arenas' `WgRegionId` among WorldGuard's regions at the player, same world)
+  - P4's `inviteRefusal`
+  - invitee online and visible, not ignoring the inviter (`IgnoreService`), invites on; "is in a duel" when matched
+  - the offer book's rules up front (outgoing invite, pair, cooldown, max incoming)
+  - the advisory queue cap ("The arena is full (3/3 waiting)…")
+  - the arena refreshed (`ArenasDataAccess.refreshAsync`, P1's advice), then `TeleportService.check` for both lobby teleports (the `ARENA` plan, through `DuelTeleporter.checkLobby`)
+- **`ProposalDraft`**: the editor's contract. It holds only the arena's allowed gear modes, and the `FIXED_KIT` kit is one of the eligible kits (the first by default). Items are own-inventory references (`DuelStakeItems.register`, with the slot as a hint). The author may remove the other side's items. Coins stay within 0..`MaxCoinStake` per side. It also holds the fee and the advisory violations.
+- **`DuelProposalEditor`**: the 54-slot editor with its own holder (layout in the class javadoc). The API's advisory `POST check` runs on open and after every change, one call in flight per editor, and shows eligibility, limits, balance and ratio refusals plus the API's fee.
+- **`DuelOfferView`**: read-only, with Accept / Counter / Decline for the receiver. There is no Counter on the last offer, and the author sees no buttons.
+- **`DuelKitPicker`**: the `FIXED_KIT` pick for a draft, and the warmup pick (`/duel kit`) showing the opponent's pick. **`DuelKitPreviews`** resolves a kit's items once, the way the kit loan does (`KitGrantPlacer.resolveAsync`, no claim).
+- **`DuelChat`**:
+  - the offer line in DESIGN §6.4's format, with `[View] [Accept] [Counter] [Decline]` running `/duel <action> <offerId>`
+  - drop mode in red capitals ("OWN GEAR, THE LOSER'S INVENTORY DROPS TO THE WINNER")
+  - the expiry warning at 10 s (`EXPIRY_WARNING_SECONDS`)
+  - the kit prompt
+- **`DuelGui`**: the Paper inventories and icons behind an interface (`DuelGui.paper()`).
+- **`DuelInviteToggles`**: `/duel toggle`, persisted in `plugins/KnightsAndKings/duel-toggles.yml` and set on the offer book at startup and on join.
+- **Commands** (`paper/commands/`):
+  - `DuelCommand`: the `/duel` tree. Subcommand names win over player names.
+  - `ArenaCommand`: `/arena [name]`. **P6: call `KnKPlugin.getArenaCommand().setMenu((player, arena) -> …)` to open `arena_main`**; until then it answers in chat (queue, live duels, `[Challenge a player]`, `[My claims]`).
+  - `DuelAdminCommand`: `/knk duel list | cancel <match> | refund <match> | review <match> release|void [reason]`. `<match>` is the API id or the token's first 8 characters.
+- **Nodes** (plugin.yml):
+  - `knk.duel`, default true, for `/duel` and `/arena` through `CommandNodes`
+  - `knk.admin.duel`, for `/knk duel` and P4's staff teleport and command bypass
+  - `knk.admin.duel.review`, for `review`
+  - both admin nodes are children of `knk.admin`
+- **`DuelMenuListener`** (`paper/listeners/`): cancels every click and drag in the three menus, at LOWEST and again at HIGHEST. It also handles close, join and quit.
+- **Changes to P4 files**:
+  - `DuelService.escrowEntries()` (staff list and review)
+  - a lock-in refused before the match record (full queue, no kit) now tells both players "Duel not started: …", like the other refusals. `lockRefused` now always means "both were told", and the UI relies on that.
+- **Wiring**: `KnKPlugin.initializeDuelUi()` right after `initializeDuels()`. The `/knk duel` registration is in `registerCommands()`, and `closeAll()` runs on disable. `/duel` and `/arena` are registered even when duels are off, and then they say so.
+
+### Deviations and interpretations (reversible; also a comment on KNG-197)
+
+1. **Stake ratio with items is left to the API ([KNG-224](https://linear.app/kngpandi/issue/KNG-224)).** The plugin can't value staked items: `KnkItemBlueprint` has no base price, and there is no instance → blueprint lookup. P3's offer book would value items at 0 and refuse DESIGN §6.2's own example "my sword, your 500 coins" at send time.
+   - The offer book gets the arena settings with the ratio set to 0 (`DuelNegotiationUi.bookSettings`).
+   - The editor still warns locally when only coins are staked, and shows the API's check, which values items.
+   - Lock-in (API) is binding.
+   - Side effect: `DuelNegotiation.settings()` and `DuelMatch.settings()` report ratio 0.
+2. **Editor layout.** DESIGN §6.4's sketch doesn't fit 9 columns with both sides' coin buttons. The editor shows 12 stake slots per side (rows 1–3, a divider column). Each side gets `−100 −10 +10 +100` in row 4. The amounts with the anvil, and Cancel/Send, are in row 5. Fee and warnings are in row 0. A side with more than 12 stacks (`MaxItemStacks` > 12) shows only the first 12.
+3. **Every API refusal is advisory in the editor.** The check result is shown, but sending isn't blocked. The offer book's own rules do block. This follows §6.3: advisory at send, binding at lock-in.
+4. **`/duel cancel [id]`**: without an id it withdraws your own outgoing invite, or your only negotiation. Both players are told.
+5. **`/knk duel refund <match>`** works on running matches, the same as `cancel`. It goes through P4's `cancel(token)` → the API's cancel endpoint with `AdminCancelled`. A finished, paid result is reverted in the web app (P7), and a held one is reviewed with `review`.
+6. **`/knk duel review`** works in game only, because it needs the staff member's user id for `X-Acting-User-Id`. After the API answers it calls `DuelService.refreshEscrow`, so online players get their items at once.
+7. **Kit previews** list the kit's resolved items by name, at most 12 lines. They load on first use, and when a KIT_CHOICE match starts travelling.
+
+### Open questions
+
+- None for the developer. KNG-224 needs a small API/DTO decision when it is picked up.
+
+### Live checks for P8
+
+Setup: P4's setup (P1's `arena_2` with a lobby, an exit, battlegrounds with spawns, duels on, two eligible kits; P2's migration). Two players A and B inside `arena_2`'s region.
+
+1. **`/duel B` outside the arena** → "Stand inside an arena to challenge a player."; inside → the editor opens. `/duel B` while B has `/duel toggle` on, or ignores A → "That player doesn't accept duel invites." (the toggle survives a restart).
+2. **Editor clicks**: shift-click, number keys, double-click and drag in the editor or on your own inventory never move an item. A click on your sword adds it to your half with "Staked in this offer", and the sword stays in your inventory. Clicking the icon removes it. B's items can't be added by A.
+3. **Coins**: the −/+ buttons for both sides, the anvil for an exact amount (capped at `MaxCoinStake`), and your balance shown as a hint.
+4. **Gear mode**: the button cycles only through the arena's allowed modes (set two of them in the web app). With one mode, the label is fixed. `FIXED_KIT` shows the kit button and the picker with item previews.
+5. **Warnings**: a coin stake 10,000 vs 0 at ratio 50 → a local warning. A pair on cooldown, a new account or too few coins → the API's message in the warnings icon. The fee shows 5% of the pot.
+6. **Send** → B gets the chat line with the arena, "offer 1/3, 60 s", both stakes and `[View] [Accept] [Counter] [Decline]`. Drop mode reads in red capitals. A gets "Duel offer 1/3 sent".
+7. **Counter** from chat → B's editor, pre-filled. Send → A gets offer 2/3. A's counter → offer 3/3 without `[Counter]` (chat and view). Clicking an old `[Accept]` → "That offer is no longer current."
+8. **Expiry**: leave an offer unanswered. At 10 s the receiver gets "… expires in 10 s" with the buttons once, then both get the expiry lines.
+9. **Accept with a moved item**: A stakes a sword and B waits. A drops the sword, then B accepts → "Duel not started: A no longer has every staked item." Nothing is taken from B, and there is no `duel-escrow/` file.
+10. **API refusal**: a pair on cooldown (P2) → the accept is refused with the API's message, and both players' items come back at once.
+11. **KIT_CHOICE**: the kit prompt in the warmup (clickable kits, `[Menu]`). `/duel kit Archer` → "You will fight with Archer", and the opponent sees "A picked Archer". The picker shows the opponent's pick. At the countdown the picker closes: "The kits are locked".
+12. **`/duel draw`** outside the fight → "You can offer a draw only during the fight". `/duel claim` with a full inventory after a win (P4 check 11).
+13. **`/arena`** in the arena → the chat summary (queue, live duels, buttons) until P6's menu is plugged in. `/arena arena_2` from elsewhere. Tab completion lists arenas.
+14. **Staff**: `/knk duel list` shows running matches (token, #id, phase, coins) and held or unclaimed escrow. `/knk duel cancel <token>` refunds a running duel. `/knk duel review <id> release` without `knk.admin.duel.review` is refused; with it, the winner gets the items at once.
+15. **Permissions**: a group without `knk.duel` gets "no permission" for `/duel` and `/arena`, and neither command is in its tab list.
