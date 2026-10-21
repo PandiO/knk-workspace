@@ -569,7 +569,34 @@ phase. Live testing happens once, after phase 4 (D12).
 |---|---|---|
 | 2 Schema + audit | Code-complete 2026-10-21, not merged | knk-web-api `claude/relaxed-davinci-hsdspe`: migration `MinecraftCatalogEntryFields`; `Services/MinecraftCatalog/` (`MinecraftNamespaceKey`, `MinecraftBlockState`, `MinecraftMaterialReferences`, `MinecraftCatalogMaintenanceService`); `MinecraftCatalogController` (`GET audit`, `POST backfill`, `POST materials/{sourceId}/merge-into/{targetId}`, all `knk.admin.content`); the backfill also runs at startup before the item seeds; read-only catalogue fields on the material/block DTOs |
 | 3 Scan + ingest + icons | Code-complete 2026-10-21, not merged, not live-tested (D12) | knk-web-api `d33213b`: `MinecraftCatalogScanService` (request/list/get/cancel/ingest, icon override), `MinecraftIconResolver` (config `MinecraftCatalog:Icons`, defaults in code), snapshot/scan DTOs, scan status as concurrency token (snapshot only, no schema change). knk-plugin `a513cc71`, `b5b5450b`, `21eb8751`: knk-core `catalog/CatalogSnapshot` (hash), knk-api-client `MinecraftCatalogApi` (PUT with a 2-minute read timeout), knk-paper `catalog/BukkitMaterialCatalogSource` + `tasks/MinecraftCatalogScanTaskHandler` registered in `KnKPlugin`. knk-web-app `91cc7ae`, `938d86b`, `634708d`: `/admin/minecraft-catalog` (scan, polling, cancel, history; needs-attention with merge; missing icons with overrides), `minecraftCatalogClient`, `MinecraftIcon` |
-| 1, 4, 5 | Not started (phase 1 waits for KNG-195) | |
+| 4 DB-only picker | In progress 2026-10-21 | See "Phase 4 as built" below |
+| 1, 5 | Not started (phase 1 waits for KNG-195) | |
+
+**Phase 4 as built (refines §9.3-9.4):**
+- **The switch is server-side.** `MinecraftCatalog:PickerSource` is `Auto` (default), `Hybrid` or
+  `Database`. `Auto` uses the database once a scan has `Completed`. In database mode:
+  - the existing hybrid routes (`SearchHybrid=true` on `POST MinecraftMaterialRefs/search` and
+    `MinecraftBlockRefs/search`, and `GET MinecraftMaterialRefs/hybrid`) answer from the database
+    only;
+  - every row has `isPersisted: true`, a display name and the effective icon;
+  - sorting and paging happen in SQL, and Missing rows are hidden.
+
+  Setting `Hybrid` is the rollback. Callers on `getHybrid` (FormWizard ItemScan/KitScan, Roads
+  `MaterialKeyInput`) therefore keep working unchanged. They move off `hybrid` in phase 5, together
+  with the deletion.
+- **Picker filters (`MinecraftPickerFilters`).** `kind=item|block`. A legacy `categoryFilter`
+  overrides it: ITEM/ICON → item, BLOCK → block, BANNER → keys with `_banner`, ANY → all.
+  `HybridMaterialPicker` sends `kind=item` unless its settings say BLOCK or ANY (D9: item
+  blueprints, menus and icons are items). Rows no scan has seen yet use their legacy category for
+  the kind.
+- **Single creation path.** Seeds and the inline creation in ItemBlueprint/Category/get-or-create
+  normalise the key and create through `MinecraftMaterialRefFactory` (Unverified, with a display
+  name).
+- **Icons.** `ItemBlueprintListDto.iconUrl` feeds the blueprint overview. The audit has
+  `iconOverrides`, so an override can be cleared on the admin page.
+- **Deferred to phase 5.** The migration `MinecraftCatalogConstraints` (unique `StateKey`, required
+  `MaterialRefId`) needs a clean audit on the real database, which is only known at the live test
+  (D12).
 
 Open points from phase 3:
 - Live checks for the end-of-chain test (D12): that `GlobalTranslator` gives English names on Paper (D4), the real entry count, payload size and ingest time, and icon coverage on 26.3 (Prismarine stops at 26.1; the rest comes from Inventivetalent guesses).
