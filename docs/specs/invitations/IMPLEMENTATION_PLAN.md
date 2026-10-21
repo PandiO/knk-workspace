@@ -1,7 +1,7 @@
 # Invite-only sign-up, email engine and web-first Minecraft linking — Implementation plan
 
-**Status:** Ready to implement through the [invitations chain](../../ai-agents/handoffs/INVITATIONS_CHAIN.md) (7 links, charter 2026-10-21). Nothing is built yet. The decisions are in [DESIGN.md](DESIGN.md) § 8 (2026-10-21).
-**Last updated:** 2026-10-21
+**Status:** In implementation through the [invitations chain](../../ai-agents/handoffs/INVITATIONS_CHAIN.md) (7 links, charter 2026-10-21). **Link 1 done on the feature branch (2026-10-21):** E0's API half (§ 2, knk-web-api `110451f`, cherry-pickable) and L0 (§ 4; api `bb4b9ee`, web-app `2bf70ab`, plugin `30b10e6e`), not merged, not live-tested; deviations flagged L1-1…L1-5 in the [progress report](../../reports/2026-10-21-invitations-chain.md). Next: link 2 (E1, § 3). The decisions are in [DESIGN.md](DESIGN.md) § 8 (2026-10-21).
+**Last updated:** 2026-10-21 (link 1)
 **Linear:** [KNG-205](https://linear.app/kngpandi/issue/KNG-205) (parent). Each work package's issue is listed in § 1.
 **Sources:** [DESIGN.md](DESIGN.md), plus code read on 2026-10-21 at knk-web-api `master` `2d71155`, knk-web-app `main` `e30c815`, and knk-plugin `claude/mc-26.2-upgrade` `88497649` (Paper 26.3, Java 25).
 
@@ -179,6 +179,14 @@ Each link runs `git push --dry-run` on the branches it will change before it cha
 ---
 
 ## 4. L0 — Link hygiene and the linking rules (KNG-207, KNG-208)
+
+**Status (link 1, 2026-10-21): built on the feature branch** (api `bb4b9ee`, web-app `2bf70ab`, plugin `30b10e6e`). As built, with the deviations:
+- The fold also clears the shell's `PasswordHash` (not only `Email`), so no two rows ever hold the same login (L1-1).
+- The `InvitedVia*` fields and the invite group don't exist until I1; the fold copies `Email`, `PasswordHash`, `LastPasswordChangeAt`, `LastEmailChangeAt` and `EmailVerified`. **I1 must extend `UserService.FoldWebAccountIntoMinecraftAccountAsync`** with the invite fields and group membership (L1-2).
+- The code is consumed **before** the fold (the conditional `TryMarkUsedAsync`), not after, so two requests with one code can't both fold (L1-3).
+- The response is `{user, merged, accessToken, expiresIn, message}` after a fold and `{user, message}` otherwise; the web app stores `accessToken` with the current remember-me choice (L1-4).
+- Case A also takes the verified name through `ReleaseUsernameFromWebOnlyAccountAsync` when a web-only account squats it (L1-5).
+- Deleting finished codes is a new `ILinkCodeService.DeleteFinishedCodesAsync`, next to the existing `CleanupExpiredCodesAsync`, which only marks codes `Expired`.
 
 ### 4.1 knk-web-api
 

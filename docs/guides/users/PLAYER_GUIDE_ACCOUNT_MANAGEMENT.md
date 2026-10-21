@@ -1,7 +1,8 @@
 # Knights & Kings - Player Account Management Guide
 
-**Version**: 1.0  
-**Last Updated**: October 18, 2026  
+**Version**: 1.1  
+**Last Updated**: October 21, 2026 (KNG-208: `/account create` and web → game linking removed; the invitations
+feature, [KNG-205](https://linear.app/kngpandi/issue/KNG-205), replaces the sign-up section when it ships)  
 **Plugin**: knk-plugin
 
 ---
@@ -10,8 +11,8 @@
 
 The Knights & Kings Minecraft plugin now supports account management, allowing you to:
 
-- **Create an account** with email and password to access the web app
-- **Link your in-game account** with an existing web app account
+- **Create your web login** from the game: `/account link` gives you a code to register with on the website
+- **Link your in-game account** with an existing web app account (enter the same code on your Account page)
 - **Sync your progress** between Minecraft and the web app (coins, gems, experience)
 - **View your account status** at any time
 - **Resolve duplicate accounts** if you accidentally created multiple accounts
@@ -25,9 +26,9 @@ The Knights & Kings Minecraft plugin now supports account management, allowing y
 If you're joining for the first time:
 
 1. Join the Minecraft server (an account is automatically created with your username)
-2. Type `/account create` to add email and password
-3. Follow the prompts to set up your account
-4. You can now log in to the web app!
+2. Type `/account link` to get an 8-character code and the website address
+3. On the website, open **Register**, enter the code, your email and a password
+4. You can now log in to the web app! Codes only go from the game to the website, never the other way.
 
 On your first join you get a welcome message with a **[Link it now]** button. Clicking it runs `/account link`, which
 gives you a code and the web address to create your web account with. For your first 10 minutes, the places you
@@ -36,16 +37,15 @@ lists them). Until you have a web account, every later join shows a one-line rem
 
 ### Existing Web App Users
 
-If you already have an account on the web app:
+If you already have an account on the web app (email and password, no Minecraft account yet):
 
-1. Join the Minecraft server
+1. Join the Minecraft server and type `/account link` to get a code
 2. Log in to the web app
 3. Click the **Account icon** (user profile icon) in the top-right navigation
 4. Select **"Account Settings"** from the dropdown menu
-5. Scroll to the **"Link Minecraft Account"** section
-6. Copy the link code shown
-7. In Minecraft, type `/account link <code>`
-8. Your accounts are now linked!
+5. Scroll to the **"Link Minecraft Account"** section and enter the code
+6. Your accounts are now linked! If your Minecraft account already existed on the server, your web login moves
+   onto it and the Minecraft account keeps its stats, groups and balances (you stay logged in as that account).
 
 ---
 
@@ -90,10 +90,10 @@ If you created your account on the web app and haven't linked your Minecraft acc
 1. Scroll to the **"Link Minecraft Account"** section
 2. You'll see an input field for the link code
 3. In Minecraft, type `/account link` to generate a code
-4. Copy the code from Minecraft
-5. Paste it into the web app (format: XXXX-XXXX-XXXX)
+4. Copy the code from Minecraft (click the chat line to copy it)
+5. Paste it into the web app (8 characters, shown as XXX-XXXXX)
 6. Click **"Link Account"**
-7. Your Minecraft and web accounts are now connected!
+7. Your Minecraft and web accounts are now connected! Never give this code to anyone; staff never ask for it.
 
 **Note**: This section only appears if you don't have a linked Minecraft account yet.
 
@@ -139,62 +139,14 @@ The account dropdown menu provides quick access to:
 
 ---
 
-### `/account create`
-
-**Description**: Create an account with email and password (interactive flow)
-
-**Usage**: `/account create`
-
-**What happens**:
-1. You'll be prompted to enter your email address
-2. Then enter a password (minimum 8 characters)
-3. Confirm your password
-4. Your account is created and ready to use on the web app
-
-**Example Flow**:
-```
-Player: /account create
-
-Server: Step 1/3: Enter your email address
-Server: (Type 'cancel' to abort)
-
-Player: steve@example.com
-
-Server: Email saved!
-Server: Step 2/3: Enter your password (min 8 characters)
-
-Player: MySecurePass123
-
-Server: Password saved!
-Server: Step 3/3: Confirm your password
-
-Player: MySecurePass123
-
-Server: Account created successfully! You can now log in on the web app.
-```
-
-**Important Notes**:
-- ⚠️ Your chat messages will NOT be broadcast while entering email/password
-- ⚠️ Type exactly what you want - no one else can see it
-- ⚠️ You have 2 minutes to complete the flow (auto-cancels after timeout)
-- ⚠️ Type `cancel` at any time to abort
-
-**Common Errors**:
-- `Invalid email format` - Make sure your email looks like: name@domain.com
-- `Password must be at least 8 characters` - Use a longer password
-- `Passwords don't match` - Flow restarts at password step, try again
-
-**Permissions**: `knk.account.create` (default: all players)
-
----
-
 ### `/account link`
 
-**Description**: Generate or use a link code to connect your Minecraft and web app accounts
+**Description**: Generate a link code to connect your Minecraft account with the website
 
 **Usage**: 
 - `/account link` - Generate a new link code
-- `/account link <code>` - Use a link code from the web app
+- `/account link <code>` - Not supported: codes are entered on the website, not in game. The command only
+  tells you where the code goes.
 
 #### Scenario 1: Generate Link Code (Minecraft → Web App)
 
@@ -220,29 +172,11 @@ Server: Use this code in the web app to link your account
 Server: Expires in 20 minutes
 ```
 
-#### Scenario 2: Use Link Code (Web App → Minecraft)
-
-**Use Case**: You created an account on the web app and want to link it to Minecraft
-
-**Steps**:
-1. Log in to the web app
-2. Go to Profile → Link Minecraft Account
-3. Click "Generate Link Code"
-4. Copy the code
-5. In Minecraft, type `/account link <code>`
-6. Accounts are now linked!
-
-**Example**:
-```
-Player: /account link XYZ-789
-
-Server: Your accounts have been linked!
-```
-
 **Link Code Rules**:
 - ⏱️ Codes expire after 20 minutes
 - 🔒 Codes are single-use (one successful link invalidates the code)
 - 🔄 You can generate a new code at any time
+- 🤫 Never give the code to anyone: whoever has it can register your web login. Staff never ask for it.
 - ❌ Invalid/expired codes show: "This code is invalid or has expired. Use /account link to get a new one."
 
 **Permissions**: `knk.account.link` (default: all players)
@@ -334,16 +268,6 @@ Server: Merge complete! Your account now has 1,500 coins, 30 gems, and 3,700 XP.
 
 ---
 
-### Chat Input Timeout
-
-**Cause**: You didn't complete the `/account create` flow within 2 minutes
-
-**Solution**:
-1. Start over with `/account create`
-2. Type faster or prepare your email/password in advance (copy-paste works!)
-
----
-
 ### "Invalid email format"
 
 **Cause**: Your email doesn't match the required format
@@ -412,7 +336,7 @@ Server: Merge complete! Your account now has 1,500 coins, 30 gems, and 3,700 XP.
 Yes! Here's how we protect your information:
 
 - 🔒 **Passwords are hashed** - We never store your actual password
-- 🔐 **Chat is hidden** - Your email and password are NOT broadcast to other players during `/account create`
+- 🔐 **Nothing sensitive in chat** - Your email and password are only ever typed on the website, never in game
 - 🌐 **HTTPS encryption** - All data sent to the API is encrypted
 - ⏱️ **Link codes expire** - Unused codes expire after 20 minutes
 - 🔄 **Automatic logout** - Sessions expire for security
@@ -487,7 +411,6 @@ If you choose to merge accounts, the **sum** of both accounts' resources is tran
 - Use a strong, unique password
 - Use a real email address (for password recovery)
 - Link your account as soon as possible
-- Type carefully during `/account create` (no undo!)
 - Keep your link code private
 
 ### ❌ DON'T:

@@ -1,7 +1,7 @@
 # SPEC: User Account Management and Authentication Flows
 
 **Status:** Requirements Definition  
-**Last Updated:** January 7, 2026
+**Last Updated:** October 21, 2026 (Part F: password reset marked built, KNG-208)
 
 ## Overview
 
@@ -934,7 +934,10 @@ All messages should:
 
 ### Future Enhancement Decisions (Out of MVP Scope)
 
-- **Password Reset**: Email-based password reset (future)
+- **Password Reset**: Email-based password reset — **built** ([KNG-64](https://linear.app/kngpandi/issue/KNG-64)):
+  `POST api/Auth/forgot-password` / `reset-password`, tokens stored as SHA-256 hashes in `linkcodes` with
+  `Purpose=PasswordReset` (KNG-208), mail delivery per the
+  [invitations feature](../invitations/DESIGN.md) § 4 (KNG-211 relay now, KNG-206 engine next)
 - **Email Verification**: Optional email verification flow (future)
 - **Session Invalidation**: Invalidate sessions on password change (future, auth system dependent)
 - **Account Deactivation**: User-initiated account deactivation (future)

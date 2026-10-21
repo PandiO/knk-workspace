@@ -4,6 +4,20 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Invitations chain, link 1: optional SMTP auth (E0 API half), link-code hygiene and the linking rules (L0)**
+  ([KNG-211](https://linear.app/kngpandi/issue/KNG-211), [KNG-207](https://linear.app/kngpandi/issue/KNG-207),
+  [KNG-208](https://linear.app/kngpandi/issue/KNG-208); branch `claude/player-signup-invitation-flow-f4v7ul`:
+  knk-web-api `110451f` + `bb4b9ee`, knk-web-app `2bf70ab`, knk-plugin `30b10e6e` on the KNG-182 branch). With
+  `Email:SmtpUsername` empty the reset and privacy mails go out without SMTP credentials, for the alpha's mail relay
+  (`110451f` is self-contained for a cherry-pick to `master`). `linkcodes` rows carry a `Purpose` (link, password
+  reset, admission claim) instead of being told apart by length; link codes are drawn without modulo bias; an hourly
+  job expires and, after 7 days, deletes finished codes; five wrong codes block an account for 15 minutes (429
+  `TooManyAttempts`). Linking a web-only account to an existing Minecraft account now folds the web login **into
+  the Minecraft account** (decision I7): it keeps its id, stats, groups and balances (the higher of each), the shell
+  is soft-deleted and signed out, and the web app is logged into the merged account. 409 `AlreadyRegistered` /
+  `AlreadyLinked` refusals. The plugin's `/account` usage no longer lists `create`, the dead merge flow is gone and the
+  link-code message ends with "Never give this code to anyone; staff never ask for it." Not live-tested.
+
 - **`/hub` takes any player to the hub** ([KNG-188](https://linear.app/kngpandi/issue/KNG-188); merged into the
   knk-plugin KNG-182 branch `claude/mc-26.2-upgrade` at `88497649`, reaches `main` with it). `/hub` goes to the hub spawn selected on the Game
   Settings page through the regular teleport engine: warmup, movement and combat cancel, the safe-spot check, and the

@@ -334,6 +334,8 @@ Player connects ──► Mojang auth (online-mode) ──► AsyncPlayerPreLogi
 | UUID already linked to an account with credentials | Refuse ("This Minecraft account already has a web account. Log in with it, or use Forgot password."). Never a silent merge. |
 | Web account already has a different UUID | Refuse. Changing a linked Minecraft account is a staff action (unlink in the player profile, audited). |
 
+**As built (link 1, 2026-10-21, KNG-207):** `UserService.LinkMinecraftAccountAsync` implements this table. The fold runs in one locked transaction: ledger merge, the shell saved with `Email` **and** `PasswordHash` cleared (unique index; no two rows hold a login), then the Minecraft account receives `Email`, `PasswordHash`, `LastPasswordChangeAt`, `LastEmailChangeAt` and `EmailVerified`. The invite fields follow in I1, where they are created. The code is spent before the fold. The endpoint answers with a session for the survivor (`accessToken` + refresh cookie). A code for the caller's own account is spent and changes nothing; a reset-token hash is not a link code.
+
 **Name changes:** `Username` follows the Mojang name on join, as today. A web account can never pick a name, so squatting isn't possible: until linked, the UI shows the email, and the `Username` column holds an internal `web-<id>` placeholder that can't be typed as a Minecraft name, because `-` isn't allowed in Minecraft names.
 
 ### 5.5 Abuse cases
