@@ -4,8 +4,24 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
-- **`/hub` takes any player to the hub** ([KNG-188](https://linear.app/kngpandi/issue/KNG-188); merged into the
-  knk-plugin KNG-182 branch `claude/mc-26.2-upgrade` at `88497649`, reaches `main` with it). `/hub` goes to the hub spawn selected on the Game
+_Nothing at the moment._
+
+## 2026-10-21
+
+- **The plugin runs on Minecraft 26.3** ([KNG-182](https://linear.app/kngpandi/issue/KNG-182); knk-plugin `main`
+  `857d4b1e`, merged directly, no PR). Paper 26.3 build 205 on Java 25 (Gradle 8.14 itself still runs on Java 21),
+  `api-version` 26.3, WorldEdit 7.4.6 and WorldGuard 7.0.20 (the dev server runs FastAsyncWorldEdit 2.16.1). The world
+  loader also finds worlds in Paper 26.x's `<level>/dimensions/minecraft/<name>/`, where Paper moves the hub and the
+  other worlds on their first load, so the second start no longer reports the hub missing. Offline `/inventory` and
+  `/enderchest` read `<world>/players/data`. Paper converts the world storage on the first 26.3 start; it can't be
+  undone. Live-tested by the developer on `DEV_SERVER_26.3` on 2026-10-18 and 2026-10-20
+  ([smoke test](guides/minecraft-26.3-upgrade-smoke-test.md)): every step passed or was accepted except the hub
+  tiles of `/menu`, which were hidden because the server had started while the API was down
+  ([KNG-201](https://linear.app/kngpandi/issue/KNG-201), not a 26.3 problem). The same startup-only shape was found
+  in siege, gates and regions ([KNG-202](https://linear.app/kngpandi/issue/KNG-202),
+  [KNG-203](https://linear.app/kngpandi/issue/KNG-203), [KNG-204](https://linear.app/kngpandi/issue/KNG-204)).
+- **`/hub` takes any player to the hub** ([KNG-188](https://linear.app/kngpandi/issue/KNG-188); reached knk-plugin
+  `main` with KNG-182 at `857d4b1e`, through the KNG-182 branch). Its three live checks are still to run. `/hub` goes to the hub spawn selected on the Game
   Settings page through the regular teleport engine: warmup, movement and combat cancel, the safe-spot check, and the
   siege, freeze and outage guards. It has its own cooldown, and the groups' spawn settings set its cooldown and price.
   Without a usable hub it says "The hub isn't available right now." and moves nobody. Staff can send a player with

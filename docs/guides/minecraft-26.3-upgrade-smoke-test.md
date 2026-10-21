@@ -1,9 +1,9 @@
 # Minecraft 26.3 upgrade — smoke test
 
 **Status:** Done. The developer's run on 2026-10-20 passed every step but 17 (KNG-201, not a 26.3 problem) and 18
-(blocked by 17); see **Findings**. KNG-182 merge into knk-plugin `main` pending (developer go-ahead 2026-10-20).
-**Last updated:** 2026-10-20
-**Branch:** knk-plugin `claude/mc-26.2-upgrade` (it targets 26.3 despite the name). It also carries KNG-193
+(blocked by 17); see **Findings**. KNG-182 merged into knk-plugin `main` as `857d4b1e` on 2026-10-21.
+**Last updated:** 2026-10-21
+**Branch:** knk-plugin `claude/mc-26.2-upgrade` (it targets 26.3 despite the name), merged. It also carries KNG-193
 (drawbridge keyframes) and KNG-188 (`/hub`).
 **Related:** [gate smoke test](gate-smoke-test.md) · [road navigation smoke test](road-navigation-smoke-test.md) ·
 [hub smoke test 2026-10-17](../reports/2026-10-17-hub-smoke-test.md) ·
