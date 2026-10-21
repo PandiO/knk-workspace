@@ -1,7 +1,7 @@
 # Invite-only sign-up, email engine and web-first Minecraft linking — Design
 
-**Status:** Decided 2026-10-21 (§ 8, all recommendations taken, except I8: Cloudflare Access stays, and the API keeps its allow-list in sync, § 5.8). Nothing is implemented.
-**Last updated:** 2026-10-21 (decisions recorded; § 5.8 Access sync added; § 6 and § 7 aligned with the implementation plan)
+**Status:** Decided 2026-10-21 (§ 8, all recommendations taken, except I8: Cloudflare Access stays, and the API keeps its allow-list in sync, § 5.8). In implementation on the feature branch through the invitations chain: L0 (§ 5.4) and the email engine (§ 4.2) are built, not merged; see the as-built notes.
+**Last updated:** 2026-10-21 (link 2: § 4.2 as-built; decisions recorded; § 5.8 Access sync added; § 6 and § 7 aligned with the implementation plan)
 **Implementation plan:** [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) (2026-10-21; work packages E0, E1, L0, I1, I2, A1, I3)
 **Linear:** [KNG-205](https://linear.app/kngpandi/issue/KNG-205) (this design, parent), [KNG-206](https://linear.app/kngpandi/issue/KNG-206) (email engine, high priority), work packages [KNG-211](https://linear.app/kngpandi/issue/KNG-211) (E0), [KNG-212](https://linear.app/kngpandi/issue/KNG-212) (I1), [KNG-214](https://linear.app/kngpandi/issue/KNG-214) (I2), [KNG-216](https://linear.app/kngpandi/issue/KNG-216) (A1), [KNG-218](https://linear.app/kngpandi/issue/KNG-218) (I3), found while writing it: [KNG-207](https://linear.app/kngpandi/issue/KNG-207) (link merge bug), [KNG-208](https://linear.app/kngpandi/issue/KNG-208) (link-code hygiene); related [KNG-159](https://linear.app/kngpandi/issue/KNG-159) (email verification), [KNG-67](https://linear.app/kngpandi/issue/KNG-67) (code-based signup)
 **Sources:**
@@ -198,6 +198,17 @@ AuthService / InvitationService / PrivacyService …
 - **Throttle:** at most 3 mails per hour per recipient and kind, and 6 in total per recipient per hour. Anything over that is marked `Suppressed` and logged. A daily global cap (`Email:DailyCap`, e.g. 300) protects the provider quota and raises a currency-alert-style staff notice when it is hit.
 - **Admin:** `POST /api/EmailOutbox/test` sends a test mail to the caller (`knk.admin.config`). `/admin/email` shows the log (status, kind, masked recipient, error) with a Retry action, and never shows bodies.
 - **Headers:** `From: Knights & Kings <no-reply@knightsandkings.net>`, a `Reply-To` support address, `Auto-Submitted: auto-generated`, and a `Message-ID` on our own domain.
+
+**As built (KNG-206, invitations chain link 2, 2026-10-21; feature branch, not merged).** As above, except:
+- A **Failed** row keeps its bodies when it carries no token (no `ExpiresAt`), so staff can Retry it; token-carrying
+  rows lose them on Failed as well (reason: Retry would otherwise never work).
+- The **daily cap** logs an error once a day and shows on `/admin/email`; the in-game staff notice needs a new player
+  notification and plugin handler and is a follow-up.
+- The **Log** transport logs links in Development or with `Email:AllowLogTransport=true`; outside Development the API
+  refuses to start with Log unless that is set (the alpha's setting until its relay works).
+- The composer's signature is `QueueAsync(kind, to, model, dedupeKey, expiresAt?, userId?)`; it saves the caller's
+  `DbContext`, so the row commits with an open transaction.
+- An extra `Test` kind serves the admin test mail. Admin guide: [email.md](../../guides/email.md).
 
 ### 4.3 Provider and domain
 

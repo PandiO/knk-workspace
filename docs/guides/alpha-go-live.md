@@ -2,7 +2,7 @@
 
 **Status:** v2, aligned 2026-10-11 with the [closed-alpha deployment runbook](closed-alpha-deployment-runbook.md)
 (the Codex NAS rollout). Not yet followed end to end.
-**Last updated:** 2026-10-21 (§ 4 and § 12 notes pointing to the KNG-205 invitations plan); 2026-10-18
+**Last updated:** 2026-10-21 (§ 4: `Email__AllowLogTransport` for API builds with the KNG-206 email engine; notes pointing to the KNG-205 invitations plan); 2026-10-18
 **Applies to:** builds that **include KNG-64**: knk-web-api `master` ≥ `30c5dc5`, knk-web-app `main` ≥ `98c0a76`,
 knk-plugin `main` ≥ `34c9261`. **Never expose an older API.**
 **Linear:** [KNG-64](https://linear.app/kngpandi/issue/KNG-64) (parent), [KNG-68](https://linear.app/kngpandi/issue/KNG-68) (this guide)
@@ -133,10 +133,30 @@ MinecraftPlugin__BaseUrl=http://minecraft:8081
 # The backend network has no internet access, so SMTP can't work there. Use Log: reset links go to the API log,
 # and you relay them. To send real mail, give the API an egress network and Email__SmtpPassword from a secret file.
 Email__Provider=Log
+# REQUIRED from the API build with the email engine (KNG-206) on: outside Development the API refuses to start with
+# the Log transport unless this is true. Keep it only while there is no relay; once E0's relay works, switch to
+# Email__Transport=Smtp (docs/guides/email.md) and remove this line. Afterwards set it only in an emergency.
+Email__AllowLogTransport=true
 Telemetry__Enabled=false                            # already set
 ```
 
 `Cors__AllowedOrigins` stays empty: the browser only talks to its own origin.
+
+**Mail from the KNG-206 email engine on.** Mail goes through a persistent outbox with retries, an hourly throttle and
+the `/admin/email` page (staff with `knk.admin.config`). With the relay of KNG-211, the mail block becomes:
+
+```ini
+Email__Transport=Smtp
+Email__SmtpHost=mailrelay
+Email__SmtpPort=587
+Email__UseStartTls=false          # internal hop to the relay
+Email__SmtpUsername=              # empty: no SMTP authentication, the relay holds the Gmail credentials
+Email__FromAddress=knightsandkingsmc@gmail.com
+App__PublicBaseUrl=https://<web-host>
+```
+
+Then remove `Email__AllowLogTransport`. The [email guide](email.md) has every setting, the smoke steps and
+troubleshooting.
 
 ---
 

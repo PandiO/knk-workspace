@@ -4,6 +4,18 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Invitations chain, link 2: the email engine (E1)** ([KNG-206](https://linear.app/kngpandi/issue/KNG-206); branch
+  `claude/player-signup-invitation-flow-f4v7ul`: knk-web-api `0d7ec4a` + `a8b42ca`, knk-web-app `aecd811`). Every mail
+  now goes through a persistent `email_outbox` table, written in the same transaction as the change that causes it, and
+  a background dispatcher that retries (1 min … 4 h, Failed after 6 attempts), drops reset mails whose link expired, and
+  deletes the content once sent. MailKit replaces `System.Net.Mail`; HTML and text templates share one layout; a
+  throttle caps mails per recipient (3 per kind, 6 in total per hour) and per day (300). Password reset, the
+  email-change notice and the data-deletion mails use it, and a staff email change now notifies the old address too.
+  Staff with `knk.admin.config` get **Mail** (`/admin/email`): the mail log with masked addresses, Retry and "Send test
+  mail to me". New settings `Email:Transport`, `Email:AllowLogTransport`, `App:PublicBaseUrl` and others; outside
+  Development the API refuses to start with the Log transport unless `Email:AllowLogTransport=true` (the alpha needs it
+  until its relay works). [Email guide](guides/email.md). Not live-tested.
+
 - **Invitations chain, link 1: optional SMTP auth (E0 API half), link-code hygiene and the linking rules (L0)**
   ([KNG-211](https://linear.app/kngpandi/issue/KNG-211), [KNG-207](https://linear.app/kngpandi/issue/KNG-207),
   [KNG-208](https://linear.app/kngpandi/issue/KNG-208); branch `claude/player-signup-invitation-flow-f4v7ul`:

@@ -3,7 +3,7 @@
 **Status:** Draft v1 — written for review. Not yet followed on a real production host. The database, API, seed and
 web-server steps were rehearsed in a scratch environment on 2026-10-07 (see [Appendix A](#appendix-a--what-was-verified-and-how)).
 The Paper server steps and the CI/CD workflows are untested drafts.
-**Last updated:** 2026-10-17 (§7.7: FormConfiguration export/import and bundled seeds merged, KNG-138/139; two new migrations, see the note in §7.7); 2026-10-12 (§7.7: KNG-138 on a feature branch); 2026-10-08 (security and alpha-hosting update for KNG-64)
+**Last updated:** 2026-10-21 (§4.3 mail: the KNG-206 email engine on the invitations feature branch — `Email__Transport`, relay option, `App__PublicBaseUrl`, Log guard); 2026-10-17 (§7.7: FormConfiguration export/import and bundled seeds merged, KNG-138/139; two new migrations, see the note in §7.7); 2026-10-12 (§7.7: KNG-138 on a feature branch); 2026-10-08 (security and alpha-hosting update for KNG-64)
 **Applies to:** trunk only. knk-web-api `master` `1805cf9`, knk-web-app `main`, knk-plugin `main` `c7d5a1e`; 61 EF
 migrations, the latest being `20261006193103_UniquePermissionGrantHolderNode`. Feature branches that haven't been
 merged, such as road navigation, are not covered. Re-check § 2 and the seed table manifest after each trunk merge.
@@ -370,6 +370,12 @@ Email__SmtpUsername=knightsandkingsmc@gmail.com
 Email__SmtpPassword=<gmail app password>
 Email__FromAddress=knightsandkingsmc@gmail.com
 Email__FromName=Knights & Kings
+# [KNG-206, feature branch until merged] the email engine reads Email__Transport (Smtp | Log | Pickup) first and
+# falls back to Email__Provider; links in mails use App__PublicBaseUrl. Optional: Email__ReplyToAddress, Email__DailyCap.
+# Email__Transport=Smtp
+# App__PublicBaseUrl=https://play.example.com
+# Relay option instead of direct Gmail (the API host then needs no SMTP password, the relay holds it):
+# Email__SmtpHost=<relay host>  Email__UseStartTls=false  Email__SmtpUsername=  (and no Email__SmtpPassword)
 
 # --- game server link: API → plugin region checks (RegionHttpServer) ---
 MinecraftPlugin__BaseUrl=http://127.0.0.1:8081
@@ -391,6 +397,9 @@ Notes:
   token lifetimes, `Discovery:MaxNewPerHour`, the `CurrencyMonitor:*` thresholds, and `ClientActivity`. Override one
   the same way if you need to.
 - For a mail test without SMTP, `Email__Provider=Log` writes the reset link to the API log instead.
+  **[KNG-206]:** from the email engine on, the API refuses to start in Production with the Log transport unless
+  `Email__AllowLogTransport=true` (links in the log). Use `/admin/email` → *Send test mail to me* to check delivery,
+  and see the [email guide](email.md) for transports, the relay, provider DNS and troubleshooting.
 
 ### 4.4 Migrator configuration — `/etc/knk/migrator.env`
 

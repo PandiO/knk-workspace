@@ -1,7 +1,7 @@
 # Invite-only sign-up, email engine and web-first Minecraft linking — Implementation plan
 
-**Status:** In implementation through the [invitations chain](../../ai-agents/handoffs/INVITATIONS_CHAIN.md) (7 links, charter 2026-10-21). **Link 1 done on the feature branch (2026-10-21):** E0's API half (§ 2, knk-web-api `110451f`, cherry-pickable) and L0 (§ 4; api `bb4b9ee`, web-app `2bf70ab`, plugin `30b10e6e`), not merged, not live-tested; deviations flagged L1-1…L1-5 in the [progress report](../../reports/2026-10-21-invitations-chain.md). Next: link 2 (E1, § 3). The decisions are in [DESIGN.md](DESIGN.md) § 8 (2026-10-21).
-**Last updated:** 2026-10-21 (link 1)
+**Status:** In implementation through the [invitations chain](../../ai-agents/handoffs/INVITATIONS_CHAIN.md) (7 links, charter 2026-10-21). **Link 1 done on the feature branch (2026-10-21):** E0's API half (§ 2, knk-web-api `110451f`, cherry-pickable) and L0 (§ 4; api `bb4b9ee`, web-app `2bf70ab`, plugin `30b10e6e`), not merged, not live-tested; deviations flagged L1-1…L1-5 in the [progress report](../../reports/2026-10-21-invitations-chain.md). **Link 2 done (2026-10-21):** E1 (§ 3; api `0d7ec4a` + `a8b42ca`, web-app `aecd811`, [email guide](../../guides/email.md)), not merged, not live-tested; flags L2-1…L2-12. Next: link 3 (I1, § 5). The decisions are in [DESIGN.md](DESIGN.md) § 8 (2026-10-21).
+**Last updated:** 2026-10-21 (link 2)
 **Linear:** [KNG-205](https://linear.app/kngpandi/issue/KNG-205) (parent). Each work package's issue is listed in § 1.
 **Sources:** [DESIGN.md](DESIGN.md), plus code read on 2026-10-21 at knk-web-api `master` `2d71155`, knk-web-app `main` `e30c815`, and knk-plugin `claude/mc-26.2-upgrade` `88497649` (Paper 26.3, Java 25).
 
@@ -169,6 +169,16 @@ Each link runs `git push --dry-run` on the branches it will change before it cha
   - DESIGN § 4 if anything deviates.
 - **Smoke steps** (in the new guide): reset mail; email-change notice; privacy confirm; relay stopped → retries → relay started → sent; throttle (4 resets in an hour → the 4th is Suppressed); test mail from `/admin/email`.
 - **Done when:** the tests pass, the developer has run the smoke steps on dev, the branch is merged, and the alpha is updated.
+
+**As built (link 2, 2026-10-21; knk-web-api `0d7ec4a` + `a8b42ca`, knk-web-app `aecd811`):** as above, with these
+deviations (details in the [report](../../reports/2026-10-21-invitations-chain.md), "Link 2"):
+- Failed rows keep their bodies when they carry no token (no `ExpiresAt`), so Retry works (L2-1).
+- The daily cap logs an error once a day and shows on `/admin/email`; no in-game staff notice yet (L2-2, follow-up).
+- The Log guard applies outside Development, not only in Production (L2-3); the Log transport logs links in Development
+  or with `AllowLogTransport=true`, which keeps the alpha's manual reset-link relay working (L2-12).
+- `EmailKind.Test` for the admin test mail (L2-4); `QueueAsync` saves the caller's `DbContext` (L2-5).
+- **Deploy precondition:** the alpha (`Email__Provider=Log`) needs `Email__AllowLogTransport=true` for this API build
+  ([go-live § 4](../../guides/alpha-go-live.md)).
 
 **Provider switch (E1 tail, optional before the beta):**
 1. Open a Resend or Postmark account.
