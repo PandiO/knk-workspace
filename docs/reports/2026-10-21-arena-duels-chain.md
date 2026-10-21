@@ -489,3 +489,116 @@ The match (`DuelMatchDto`) carries: ids and usernames, `arenaKey`, `battleground
 11. `/admin/duels/policy`: change a threshold and save; save again from a second tab opened before → the reload message.
 12. Currency alerts page: the rule filter offers R10, Duel flagged, Duel held; a duel alert links its match.
 13. A staff member without `knk.admin.duel.review` sees no Duels button, gets the no-access page on `/admin/duels`, and no restrictions card on profiles.
+
+---
+
+## P4 — duel runtime ([KNG-217](https://linear.app/kngpandi/issue/KNG-217))
+
+**Session:** Claude Code cloud session, 2026-10-21. **Status:** pushed, KNG-217 In Review. Not deployed, not live-tested. Started after P0 (`e3814cef`), P2 (`2be401b5`) and P3 (`36195de3`) had pushed; P7's `d0332108` was merged in on the way. KNG-182 has not merged into knk-plugin `main` (still `79be4882`), so `claude/mc-26.2-upgrade` stays the base.
+
+### Commits
+
+| Repo | Branch | Commit | What |
+|---|---|---|---|
+| knk-plugin | `claude/arena-duels` | `01b5d6a0` | teleport kinds `ARENA` / `ARENA_SYSTEM`, `TeleportPlan.beforeMove`, `DuelEscrowSpool`, `DuelPendingResults`, `DuelRecovery`, siege join refusal hook, tests |
+| knk-plugin | `claude/arena-duels` | `0c175f03` | `DuelService` and the rest of `paper/duel/`, the duel listeners, `KnKPlugin` wiring, `config.yml` `duels:`, navigation wording, tests |
+| knk-plugin | `claude/arena-duels` | `6fe453b1` | merge of P7's `d0332108` (no conflicts; build re-run green) |
+| knk-plugin | `claude/arena-duels` | `bccd338d` | lootbox hold/refusal messages name duels |
+| knk-plugin | `claude/arena-duels` | `089bd357` | BATTLE_COUNTDOWN reports `PLAYING` (P7's request, below) |
+| knk-workspace | `main` | `8c3c95b` | tracker row |
+| knk-workspace | `claude/arena-duels` | this commit | this section |
+
+### Tests
+
+- Toolchain: Temurin JDK 25.0.4 via `-Porg.gradle.java.installations.paths`, Gradle 8.14.3 on JDK 21, Paper 26.3. Maven Central answered 429 on the first run (a log4j jar); a plain re-run downloaded it. No mirror or init script was used.
+- Baseline (P0–P3 head `1e17f985`, clean worktree): knk-core 2312, knk-api-client 275 (2 skipped), knk-paper 1887 (18 skipped), 0 failures.
+- After P4 (`089bd357`, P7 merged): `./gradlew build -x deployToDevServer` BUILD SUCCESSFUL. **knk-core 2314, knk-api-client 275 (2 skipped), knk-paper 1955 (18 skipped), 0 failures.** No known reds. New: 2 core (teleport kinds), 66 paper (59 under `paper/duel/`, 7 teleport-engine).
+- Mocked `World`s are fields everywhere (`DuelHarness.world`, CLAUDE.md rule). The duel tests run a real `DuelService` with a real vault, spool, pending results and recovery around fakes (`DuelHarness`).
+
+| Plan test | Test |
+|---|---|
+| combat listener matrix | `DuelListenersTest`: fighting pair un-cancelled (also by arrow), same match outside FIGHT cancelled (warmup, countdown), duelist ↔ outsider cancelled both ways, no duelist untouched, an admin-frozen duelist never un-cancelled, the registry's safezone exemption, WorldGuard's PvP block lifted for the pair only, telemetry |
+| escrow: crash in LOCKING → items back | `DuelEscrowSpoolTest.aCrashInLockingGivesEachPlayerTheirOwnItems`, `DuelRecoveryTest.startupReplays…` (no record → refund) |
+| escrow: ESCROWED + Aborted → back | `escrowedThenAbortedGivesTheItemsBack`, `DuelRecoveryTest.startupReplays…` |
+| escrow: Completed → winner | `aCompletedMatchPaysTheWinnerBothStakesAndTheSpoils`, `DuelServiceTest.aWinIsPaidToTheWinnerOnlyAfterTheMatchReleasedThem` |
+| escrow: HELD → kept, then release/void | `aHeldResultKeepsEverythingUntilReleased`, `aVoidedHeldResultRefundsAndGivesTheSpoilsBackToTheLoser`, `DuelRecoveryTest.aHeldFileIsSettledOnceStaffReleasedOrVoidedIt` (release, and void with `Destroy`), `DuelServiceTest.aHeldResultKeepsTheStakes…` |
+| kit loan: identical after fight / failed lobby teleport / quit / outage / crash; no loan survives | `DuelKitLoanTest` (one test each, slot-for-slot identity of the very same stacks, no tagged item anywhere), plus the KIT_CHOICE swap and countdown lock, consumables in warmup |
+| lootbox reel finishing mid-match | `DuelLootboxHoldTest` (the real `LootboxOpening` on the registry: held mid-fight, not handed over while the winner lingers, once after the restore, never into the kit) |
+| drop spoils written before the drops are cleared | `DuelEscrowSpoolTest.spoilsAreOnDiskBeforeTheCallerClearsTheDrops`, `DuelServiceTest.dropModeTakesTheLosersDrops…`, `aForfeitInDropModeTakesTheQuittersInventory` |
+| lobby teleports together; either fails → cancel + refund | `DuelServiceTest.ifEitherLobbyTeleportFailsTheMatchIsCancelledAndBothAreRefunded` (the other warmup is stopped; `cancel(TeleportFailed)`) |
+| teleport kinds | `TeleportServiceTest` (arena warmup without cooldown, combat-tag guard, system move instant + safe spot + not audited + guards still asked, `beforeMove` after the warmup / refusing / skipped on a cancelled warmup), `WarmupPolicyTest` |
+| others | quit before the countdown cancels / in the fight forfeits, outage aborts and spools the refund, refused and incomplete lock-ins take nothing, the siege refusal, the teleport restriction, battleground entry/confinement/exit pass, the countdown freeze, the command filter, the drop guard, a keep-mode death, an agreed draw, the registry stages |
+
+### What P5 and P6 build on (service API)
+
+Everything is in knk-paper `net.knightsandkings.knk.paper.duel`. `KnKPlugin.getDuelService()` returns the runtime (null when `duels.enabled: false` or it couldn't start). Main thread only; futures complete on the main thread.
+
+**Negotiation (P5)**
+- `offers()`: P3's `DuelOfferBook` (invite, counter, decline, cancel, `setInvitesDisabled`, queries). P5 calls it directly for everything **except accept**.
+- `stakeItems()`: `DuelStakeItems`. The editor registers each offered stack with `register(owner, stack, slot, value)` and puts the returned `StakeItem` (a `refId`) into the contract. `value` is the stack's coin value for the ratio rule: the blueprint's `BasePriceMin` × amount, 0 when unknown. P5 has to look it up (the item instance → blueprint); the offer book's `itemValue` reads it from here. `forget(owner)` happens on quit.
+- `inviteRefusal(Player)`: the D18 rules (already in a duel or locking, another minigame, combat tag, frozen, dead, duels off), for invite and accept. **Not checked here:** "inviter inside an enabled arena" and the ignore list (P5).
+- `accept(Player, offerId)` → `CompletableFuture<LockOutcome(ok, message, match)>`. It runs the whole DESIGN §6.5 lock-in: accept rules, the binding queue cap (`ArenaQueue.admit`), the engine check for both lobby teleports, item presence (`isSimilar` + amount, the registered slot first) and `DuelItems.stakeRefusal`, the spool written before anything is taken, then `POST api/DuelMatches` (timeout `duels.api-timeout-seconds`; on a timeout it reads `by-token` and cancels a create that landed). On success the lobby teleports start for both players. A refusal closes the negotiation (`DuelObserver.lockRefused`), and the message is the API's player message where there is one.
+- Arenas: `accept` reads the arena from `ArenasDataAccess.cachedById`. P5 should `refreshAsync()` when an invite is made (P1's advice) and pass that arena's `DuelArenas.settingsOf(arena)` to `offers().invite(...)`.
+
+**In a match (P5/P6)**
+- `chooseKit(Player, kitId)` → `KitChoice` (`/duel kit`, the KIT_CHOICE picker); `offerDraw(Player)` → `DrawOffer` (`/duel draw`); `cancel(token)` (staff `/knk duel cancel`: any phase but LOCKING, refund); `refreshEscrow(token)` (after `/knk duel review <match> release|void` or a web-app review: settles the held spool file from the API and delivers); `claim(Player)` → `Delivery` (`/duel claim`); `pendingClaims(uuid)`.
+- Queries: `matchOf(uuid)`, `match(token)`, `matches()`, `phaseOf(uuid)`, `queueOf(arenaId)` (P3's `ArenaQueue`: `queuedCount`, `allocator().busyCount()/totalCount()` for "2/3 waiting, 5/8 busy"), `queuePosition(match)` ("#2 in line"), `now()` (the tick to pass to `match.secondsRemaining(now)` for the boss bar), `isParticipating(uuid)`, `isOnBattleground(uuid)`.
+- `DuelMatch` (read-only): `token`, `matchId`, `arena`, `settings`, `contract` (stakes for the announcement and the detail menu), `phase`, `gearMode`, `playerOf/nameOf/userIdOf(side)`, `sideOf(uuid)`, `kitOf(side)`, `hasPickedKit(side)`, `battleground`, `secondsRemaining(now)`, `isWaitingForBattleground`, `result`, `settlement`, `drawOfferExpiresAt(side, now)`.
+- **`addObserver(DuelObserver)`**, all on the main thread: `negotiationsClosed(List<Closed>)` (decline, expiry, quit, superseded, lock refused), `lockRefused(negotiation, message)`, `phaseChanged`, `warmupStarted(match, seconds)` (P6's warmup broadcast), `kitChosen`, `fightStarted`, `drawOffered(match, side, expiresAtTick)`, `matchEnded(match, result)`, `settled(match, PAID|HELD|REFUNDED, or null while the API is unreachable)` (P6's result / "pending review" announcement), `released(match)`.
+- P4 sends only plain chat lines to the two duelists (warmup, get ready, FIGHT title, result, draw offer, held, payout follows, claims). P5/P6 can replace them; they live in `DuelService` and `DuelTexts`.
+
+**Plumbing**
+- `DuelParticipation` (registry id `duel`): LOCKING/TRAVELLING/WARMUP = `STAGING`, BATTLE_COUNTDOWN/FIGHT = `PLAYING` (the `duel` statistics context), ENDING = `FINISHING`. `holdsLootDrops` runs from LOCKING until that player's gear is back. Combat (enchant safezone), outage release and resume, `teleportRefusal` (`DuelTeleportRestriction`: everything but `ARENA`/`ARENA_SYSTEM`, staff passes with **`knk.admin.duel`**, a node P5 registers). `keepsOwnScoreboard` keeps the default (STAGING/PLAYING); P6 can override it.
+- `DuelBattlegroundAccess`, registered in `DomainAccessExemptions`: entry for the allocated pair from the countdown teleport, confinement in COUNTDOWN/FIGHT, `passExit` before the exit teleport, `revoke` on every end path.
+- Teleports: `TeleportKind.ARENA` / `ARENA_SYSTEM`, `TeleportPlan.arena(subject, destination, label, beforeMove)` / `arenaSystem(subject, location, label)`, `TeleportPlan.BeforeMove` and `withBeforeMove` (also for KNG-199).
+- Kit loans (`DuelKitLoans.Paper`) read the kit with `KitsQueryApi.getById` and place it with `KitGrantPlacer`. There is no claim (no cost, cooldown or access check), and every stack is tagged `knightsandkings:knk_duel_loan=<token>` (`DuelItems.LOAN_KEY`). This is general enough for the siege kit mode (KNG-199).
+- Files: `duel-escrow/<token>.yml`, `duel-escrow/pending-results/<token>.yml`, `duel-vault/<uuid>.yml`.
+- Config `duels:` (DESIGN §12, plus `result-retry-seconds` 30 and `held-refresh-seconds` 300).
+- `SiegeService.setOtherMinigameRefusal(fn)` is used by both `join` and `joinDenial`. A duelist gets "You are in a duel.", a negotiator "You are negotiating a duel…".
+
+### DisallowedPVPEvent check
+
+`com.sk89q.worldguard.bukkit.protection.events.DisallowedPVPEvent` is present in `worldguard-bukkit-7.0.20`, the build the KNG-182 branch compiles against (checked with `javap`: `getAttacker()`, `getDefender()`, `getCause()`, `Cancellable`). `DuelWorldGuardPvpListener` handles it at HIGHEST and cancels it (lets the hit through) for the fighting pair only. The WorldGuard Bukkit jar isn't on the test classpath, so the decision lives in `DuelService.liftsWorldGuardPvpBlock` and is tested there.
+
+### Deviations and interpretations (reversible; also a comment on KNG-197)
+
+1. **Pending results are `pending-results/<token>.yml`**, not `.json` (DESIGN §7.4), to match the escrow and vault files (Bukkit YAML). The content is the same.
+2. **A non-decisive end refunds the items at once** (draws, cancels, aborts), without waiting for the API's answer: nothing can move between the players, and §7.5 already says so for an outage. Decisive results wait for the API (it may hold them).
+3. **A lock-in that timed out but did land** is cancelled with `ApiOutage` (→ Aborted), because no end reason names "lock-in lost". Its refund is spooled like any result.
+4. **BATTLE_COUNTDOWN reports `PLAYING`** (P7's report asks for it; P0 suggested `STAGING`). Damage is locked in the countdown, so only a countdown forfeit-by-death lands in the `duel` context.
+5. **A death in the countdown, in drop mode, gives spoils.** It is a forfeit (P3 interpretation 3), so it is treated like a forfeiting quit (O2).
+6. **Staff teleports of a duelist pass with `knk.admin.duel`.** §8.3 says every engine teleport is refused; the siege guard has the same staff bypass. Remove the node to make it absolute.
+7. **The command filter reuses the siege matcher**, so `/siege`, `/siegemenu` and `/sgm` stay allowed for duelists. The siege refuses them anyway. Owner/staff-mode players and holders of `knk.admin.duel` skip the filter; owner/staff mode also skips the inventory guards (siege precedent, the same dupe caveat).
+8. **After a crash or a quit, the join restore sends the duelist back to where they stood before the lobby teleport** (the vault's location, outside the engine like the siege vault). The normal end paths send them to the arena exit.
+9. **An outage or a shutdown restores in place** with no exit teleport: the outage action (or the restart) moves the player anyway.
+10. **"Kit consumables" means every consumable in WARMUP in kit modes.** The inventory holds only the kit then (projectiles too). In the countdown, projectiles and pearls are blocked in every mode (§5.1).
+11. **A loser of a finished match gets their gear back right after the respawn** (at the exit). The winner gets theirs at the end of the linger. §8.4 says "at the exit teleport" for both; the loser is already at the exit.
+12. **Navigation and lootbox messages now say "siege or a duel"** (P0's open point). The enum names (`Exclusion.SIEGE`, `IN_SIEGE`) are unchanged.
+13. **`MinigamePlayerVault`'s test constructor is public**, so the duel tests run on the real vault. This is the only edit to a P0 file.
+
+### Left for later phases / found in passing
+
+- P5: the item valuation for `DuelStakeItems.register(…, value)` (instance → blueprint → `BasePriceMin`), the arena-membership and ignore-list invite rules, the `/duel` commands (claim, toggle persistence, kit, draw), `knk.duel`/`knk.admin.duel` in plugin.yml, `/knk duel cancel|review`.
+- P6: the death message "to the arena and spectators" (P4 sends no vanilla death message), announcements, the scoreboard override, and the menus reading `matches()` / `queueOf`.
+- `KitGrantPlacer.place` still drops overflow on the ground. That can't happen after the kit-mode clear, but the loan sweep wouldn't see a dropped stack. Comment on KNG-199.
+- `deliverLootboxItemsAfterSiege` (KnKPlugin) is now also the duel's after-restore hook; only the name is siege-specific.
+
+### Live checks for P8
+
+Setup: P1's `arena_2` with a lobby, an exit, one or more enabled battlegrounds with spawns, duels on, and two eligible kits. P2's migration applied. P5's commands, or a temporary call of `getDuelService().offers().invite(…)` + `accept(…)`.
+
+1. **Staked own-gear (keep) duel**: both lobby teleports start together (5 s warmup, no cooldown afterwards, `/spawn` still free). The stakes leave the inventories at accept and `duel-escrow/<token>.yml` shows `ESCROWED`. Warmup → "Waiting for a battleground" → both at their spawns, frozen (looking around works), the command allow-list applies → FIGHT. The winner gets both stakes after the linger at the exit, the loser respawns at the exit, and the file is gone.
+2. **Moving during the lobby warmup** cancels both teleports: `TeleportFailed`, everything back, coins refunded on the staff ledger.
+3. **PvP**: a fight inside a `pvp deny` town or district battleground works for the pair (including splash potions: the `DisallowedPVPEvent` path); a third player can't hit either duelist and vice versa; custom enchantments trigger in the fight.
+4. **Entry/exit**: an outsider can't walk, pearl or ride into the battleground; a duelist can't leave it in the countdown or the fight (walk, pearl, chorus fruit, elytra, boat); the exit teleport at the end works.
+5. **Teleports and commands**: `/spawn`, `/warp`, `/home`, `/tpa` to a duelist, `/back` and `/hub` are refused for duelists from the accept on; staff `/tp` with `knk.admin.duel` passes.
+6. **FIXED_KIT**: the own inventory is cleared and stored as you arrive (`duel-vault/<uuid>.yml`), the kit is granted with no cost/cooldown even if its title requirement isn't met, food can't be eaten in the warmup, kit items can't be dropped or stored. After the fight the inventory is identical and no kit item is left anywhere (inventory, armour, off-hand, ender chest).
+7. **KIT_CHOICE**: the placeholder is the first eligible kit; a pick swaps it; a pick in the countdown is refused; no pick → the placeholder fights.
+8. **Kit mode, quit mid-fight**: your own inventory is back at once (the opponent wins by forfeit); rejoin → you are back where you were before the duel, and the vault file is gone.
+9. **Kit mode, crash** (`kill -9` during the warmup): on rejoin the kit is swept, your inventory is back, and you are at your pre-duel spot. Startup log: `abort-unfinished` refunded the coins.
+10. **OWN_GEAR_DROP**: the loser's inventory isn't dropped on the ground; the winner receives it with the stakes after the linger; a draw (`/duel draw` both, or the time limit) takes nothing; a forfeiting quit hands the quitter's inventory to the winner.
+11. **Full inventory**: the payout goes to the ender chest, then waits for `/duel claim`.
+12. **API outage mid-fight**: the outage action aborts the duel; gear and items come back at once; the coin refund arrives when the API is back (`pending-results/` empties).
+13. **Held result** (P2 live check 4's second thrown fight): both are told "pending staff review", the items stay in `HELD`; after a release (web app) the winner gets them within `held-refresh-seconds` or on rejoin; after a void each side gets their own back.
+14. **Lootbox**: a reel finishing mid-match says "kept safe" and arrives after the restore, not in the kit; opening a lootbox during a duel is refused.
+15. **Siege**: a duelist or negotiator can't join a siege ("You are in a duel." / "You are negotiating a duel…").
