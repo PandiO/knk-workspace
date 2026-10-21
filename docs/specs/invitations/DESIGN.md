@@ -1,7 +1,7 @@
 # Invite-only sign-up, email engine and web-first Minecraft linking — Design
 
-**Status:** Proposal, waiting on the developer's decisions in § 8. Nothing is implemented.
-**Last updated:** 2026-10-21
+**Status:** Decided 2026-10-21 (§ 8, all recommendations taken, except I8: Cloudflare Access stays, and the API keeps its allow-list in sync, § 5.8). Nothing is implemented.
+**Last updated:** 2026-10-21 (decisions recorded; § 5.8 Access sync added)
 **Linear:** [KNG-205](https://linear.app/kngpandi/issue/KNG-205) (this design), [KNG-206](https://linear.app/kngpandi/issue/KNG-206) (email engine, high priority), found while writing it: [KNG-207](https://linear.app/kngpandi/issue/KNG-207) (link merge bug), [KNG-208](https://linear.app/kngpandi/issue/KNG-208) (link-code hygiene); related [KNG-159](https://linear.app/kngpandi/issue/KNG-159) (email verification), [KNG-67](https://linear.app/kngpandi/issue/KNG-67) (code-based signup)
 **Sources:**
 - Code read on 2026-10-21 at knk-web-api `master` `2d71155`, knk-web-app `main` `e30c815`, knk-plugin `main` `79be488`.
@@ -40,7 +40,7 @@ The recommendations, in short:
    - That code is bound to the UUID that Mojang has just authenticated.
    - Entering it on the web, while logged into an invited account, links the two. The player rejoins and plays.
 
-   This works the same way web-first or game-first. It also removes the manual whitelist and the Cloudflare Access allow-list. DiscordSRV's "require a linked account to play" uses the same pattern.
+   This works the same way web-first or game-first, and it removes the manual whitelist. Cloudflare Access stays: the API adds invitees to its allow-list and removes them again (§ 5.8, decision I8). DiscordSRV's "require a linked account to play" uses the same pattern.
 4. **Linking never moves gameplay data onto the web account.**
    - If no Minecraft account exists yet, which is the normal web-first case, linking just sets the UUID and name on the web account.
    - If one exists, the web credentials are folded into the Minecraft account, which stays the primary. Today's code does the reverse and looks broken ([KNG-207](https://linear.app/kngpandi/issue/KNG-207)).
@@ -49,7 +49,7 @@ Suggested order:
 1. Real mail on the alpha (§ 4.6).
 2. The email engine.
 3. Invites, the admission gate and linking, shipped together.
-4. Rollout: grandfather the current testers, turn off the whitelist and the Access allow-list, and swap the tester invite template.
+4. Rollout: grandfather the current testers, turn on the Access sync and the public sign-up paths, turn off the whitelist, and swap the tester invite template.
 
 ---
 
@@ -363,12 +363,57 @@ Player connects ──► Mojang auth (online-mode) ──► AsyncPlayerPreLogi
 ### 5.7 The outside gates
 
 - **Minecraft whitelist:** off once `admission.mode: invite` is live and smoke-tested, and kept as the kill switch.
-- **Cloudflare Access allow-list (D10):** an invitee can't open the invite link while the whole site needs an allow-listed email. Options:
-  - drop the allow-list when invites go live, since the API's default-deny is already the real boundary (runbook) and go-live § 12 already plans this;
-  - or have the API add each invitee to the Access policy through the Cloudflare API, which is coupled and doesn't work for shared codes.
+- **Cloudflare Access (D10):** stays in front of the site. The API keeps its allow-list in sync, and a narrow bypass opens only the sign-up pages (decision I8, next section).
+- **The tester invite template** (go-live § 10) becomes the system's invitation mail. It explains the Cloudflare one-time PIN step.
 
-  *(Decision I8. Default: drop it, keep the WAF rate rule.)*
-- **The tester invite template** (go-live § 10) becomes the system's invitation mail.
+### 5.8 Cloudflare Access sync (decision I8)
+
+The developer chose to keep Access (decided 2026-10-21) and asked for smooth onboarding. A whole-site allow-list conflicts with invites in two ways:
+- an invitee can't open their invite link before their email is allowed;
+- a shared-code or game-first sign-up has no email on record until the account is created.
+
+Two pieces solve this.
+
+**1. A public bypass, limited to the sign-up paths.**
+- A second Access application on the same hostname covers only these paths, with a *Bypass* policy. Access applies the most specific path, so everything else stays behind the tester policy.
+  - Pages: `/invite/*`, `/join*`, `/link*`.
+  - The SPA's static files: `/static/*`, `/favicon.ico`, `/manifest.json`, `/logo*.png`. These are public build output anyway.
+  - The anonymous API calls those pages make: `/api/Invitations/check`, `/api/Admission/claim/check`, `/api/Auth/register`.
+- These endpoints are already anonymous and rate-limited in the API. The WAF rule on `/api/Auth/` stays.
+
+**2. The API keeps the tester list in sync.**
+- The Access policy *Allow testers* includes:
+  - a list the API owns: a Zero Trust email list used through the policy's email-list selector, or, if that selector isn't available on the plan, an Access group that the API rewrites;
+  - the existing hand-made emails for staff, which the API never touches.
+- **When the API adds an email:**
+  - a personal invite is created → its email is added right away, so the invitee can enter straight after signing up;
+  - a shared code is redeemed, or a game-first player signs up → the new email is added during registration;
+  - a user changes their email → the new address is added.
+- **When the API removes an email** (removal decided 2026-10-21):
+  - a personal invite is revoked, or expires unused;
+  - the account is deactivated or deleted, including a merge, which soft-deletes the merged-away account;
+  - the user's old address after an email change.
+
+  Freezing a player is a temporary in-game sanction, so it doesn't remove their web access. Deactivation is the "ban".
+- **Reconcile, don't only push events.** A `CloudflareAccessSyncService` (`BackgroundService`, every 5 minutes, plus an immediate run after a change):
+  1. computes the desired set from the database: active personal invites, plus active, non-deleted accounts with an email that were invited or grandfathered;
+  2. compares it with the list;
+  3. adds what is missing and removes what is extra, but only in the API-owned list.
+
+  Failures retry on the next run, and the admin invitations page shows "Access sync: last OK 12:04, 0 pending".
+- **During registration** the API tries the add inline, with a 5 s timeout, so the invitee is usually allowed before the "Done" page. If that fails, the next reconcile run catches it.
+- **What the invitee sees:**
+  1. invite mail → sign-up page (no PIN);
+  2. "Done" page: "Next, Cloudflare sends you a one-time PIN to open the site";
+  3. PIN → `/account/link`.
+
+  The Access session for the tester policy is set to 30 days (today 24 h), so the PIN step is rare after that.
+- **Credentials and egress:**
+  - A Cloudflare API token limited to the account's Zero Trust/Access edit permission, in the env file as `CloudflareAccess__ApiToken`.
+  - The API has no internet on purpose (§ 4.4), and the mail relay only carries SMTP. Calls to `api.cloudflare.com` therefore go through a small forward-proxy container (Squid or tinyproxy) that allows only `api.cloudflare.com:443`. Only the API's named `cloudflare` HttpClient uses it.
+- **Kill switch:** `CloudflareAccess:SyncEnabled=false` goes back to manual list editing. Deleting the bypass application closes sign-up again without touching the app.
+
+To verify while implementing: whether the email-list selector exists for Access policies on the free plan, the exact token permission names, and the list size limit (the alpha has at most a few dozen entries).
 
 ---
 
@@ -416,6 +461,7 @@ Player connects ──► Mojang auth (online-mode) ──► AsyncPlayerPreLogi
 - `Security:Registration:Mode` = `LinkCode` (today) | `Invite` | `Open`. It replaces `AllowWebFirst`, which stays read as a fallback.
 - `Email`: `Transport`, `DailyCap`, `AllowLogTransport`, plus the existing SMTP keys.
 - `App:PublicBaseUrl`.
+- `CloudflareAccess`: `SyncEnabled`, `AccountId`, `ListId` (or `GroupId`), `ApiToken` (secret), `ProxyUrl`, `ReconcileMinutes` = 5.
 
 **Plugin config:** `admission.mode`, the `admission.kick-message` template (`{code}`, `{url}`, `{minutes}`) and `admission.fail-message`.
 
@@ -436,31 +482,34 @@ Player connects ──► Mojang auth (online-mode) ──► AsyncPlayerPreLogi
 | L0 | **Link hygiene:** `Purpose` column, unbiased generator, cleanup job, KNG-207 merge direction | api, plugin | — | KNG-207, KNG-208 |
 | I1 | **Invitations:** tables, admin API and page, check/redeem, register with an invite, web-first shell accounts, invite mails, audit | api, web-app | E1 (for mail; copy-link works without it), L0 | new |
 | I2 | **Admission gate and claim codes:** `Admission` API, plugin pre-login listener and cache, `/link` pages, link rules (§ 5.4), linked notices (new `PlayerNotification` type `AccountLinked`) | api, plugin, web-app | L0, I1 | new |
-| I3 | **Rollout:** migration that admits existing accounts and seeds the *Alpha Tester* group and `knk.admin.invites` for Admin; smoke-test guide; go-live § 5/§ 10 and the runbook; remove the Access allow-list; whitelist off | workspace, api migration, NAS | I1, I2 | new |
+| A1 | **Cloudflare Access sync:** API-owned list, reconcile service, inline add on registration, forward-proxy container, bypass application for the sign-up paths, sync status on the admin page | api, NAS, Cloudflare dashboard | I1 | new |
+| I3 | **Rollout:** migration that admits existing accounts and seeds the *Alpha Tester* group and `knk.admin.invites` for Admin; smoke-test guide; go-live § 5/§ 10 and the runbook; Access session 30 days; whitelist off | workspace, api migration, NAS | I1, I2, A1 | new |
 | later | Email verification (KNG-159), player referral quotas and rewards, Turnstile, provider bounce webhooks, Microsoft sign-in, Bedrock | — | — | KNG-159, new |
 
 I1 and I2 should reach the alpha **together**. On its own, I1 creates web accounts that still need someone to whitelist a typed name.
 
-The packages fit the session-chain model: E0 is ops with the developer, and E1, L0+I1 and I2+I3 can each be one chain link.
+I1, I2 and A1 reach the alpha together. The packages fit the session-chain model: E0 is ops with the developer, and E1, L0+I1, I2+A1 and I3 can each be one chain link.
 
 ---
 
-## 8. Decisions needed
+## 8. Decisions (made 2026-10-21)
 
-| # | Question | Recommendation |
+The developer answered every question in the Claude app on 2026-10-21. All recommendations were taken except I8, which keeps Cloudflare Access.
+
+| # | Question | Decision |
 |---|---|---|
 | I1 | Both personal invites and shared codes in the alpha, or personal only? | **Both.** Shared codes default to 5 uses and 7 days, with a hard cap of 50. |
 | I2 | Default and maximum expiry | **7 days default, 30 days max**, for both kinds. No "never". |
-| I3 | Does every new account need an invite, including game-first players? | **Yes.** Existing accounts are grandfathered as admitted. |
-| I4 | Group granted on redemption | An *Alpha Tester* group, invitable only. Staff groups never. |
+| I3 | Does every new account need an invite, including game-first players? | **Yes.** Existing accounts are grandfathered as admitted. The developer expects this to hold for at least the alpha test sessions, and maybe the beta. |
+| I4 | Group granted on redemption | An optional *Alpha Tester* group, from an invitable allow-list. Staff groups never. |
 | I5 | Codes shown once (hash only), or viewable again? | **Show once**, with rotate. |
 | I6 | Replace the vanilla whitelist with the plugin admission gate and disconnect-screen claim code? | **Yes.** The whitelist stays as the kill switch. |
 | I7 | Merge direction when a web shell links to an existing Minecraft account | **The Minecraft account stays primary** (fold the credentials in; KNG-207). |
-| I8 | Cloudflare Access allow-list once invites are live | **Drop it.** Keep the WAF rate rule. |
+| I8 | Cloudflare Access allow-list once invites are live | **Keep Access, and the API keeps the list in sync**: an API-owned list, a public bypass for the sign-up paths only, and automatic removal on revoke, unused expiry, deactivation or deletion (§ 5.8). *(Recommended was: drop it.)* |
 | I9 | Player referrals in the alpha? | **No.** Design hook only, quota 0. |
 | E1 | Mail provider | **Gmail now (E0)**, then Resend or Postmark with `knightsandkings.net` SPF/DKIM/DMARC in E1. |
-| E2 | How mail leaves the NAS | **Relay container (§ 4.4 a).** |
-| E3 | Sender address | `no-reply@knightsandkings.net`, with a monitored `Reply-To` (e.g. `support@`). |
+| E2 | How mail leaves the NAS | **SMTP relay container (§ 4.4 a).** |
+| E3 | Sender address | **`no-reply@knightsandkings.net`**, with `Reply-To: support@knightsandkings.net` (monitored). |
 
 ## 9. Not in scope
 
