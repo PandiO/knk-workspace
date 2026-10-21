@@ -1,6 +1,6 @@
 # Invite-only sign-up, email engine and web-first Minecraft linking — Implementation plan
 
-**Status:** Ready to implement. Nothing is built yet. The decisions are in [DESIGN.md](DESIGN.md) § 8 (2026-10-21).
+**Status:** Ready to implement through the [invitations chain](../../ai-agents/handoffs/INVITATIONS_CHAIN.md) (7 links, charter 2026-10-21). Nothing is built yet. The decisions are in [DESIGN.md](DESIGN.md) § 8 (2026-10-21).
 **Last updated:** 2026-10-21
 **Linear:** [KNG-205](https://linear.app/kngpandi/issue/KNG-205) (parent). Each work package's issue is listed in § 1.
 **Sources:** [DESIGN.md](DESIGN.md), plus code read on 2026-10-21 at knk-web-api `master` `2d71155`, knk-web-app `main` `e30c815`, and knk-plugin `claude/mc-26.2-upgrade` `88497649` (Paper 26.3, Java 25).
