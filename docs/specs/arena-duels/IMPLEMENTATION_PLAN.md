@@ -1,8 +1,8 @@
 # Arena duels — Implementation Plan
 
 **Status:** Accepted (developer, 2026-10-21). Not started. All design questions are decided ([DESIGN §13](DESIGN.md#13-decisions-log-and-open-points)); every phase has a Linear issue (table below).
-**Last updated:** 2026-10-21 (rev. 5: duel restrictions in Phase 2/7; phase issues filed). 2026-10-20 (rev. 4: kit vault before the lobby teleport, held deliveries, revert/confiscate; rev. 3: review tiers, `DuelPolicy`, KNG-199 link)
-**Linear:** [KNG-197](https://linear.app/kngpandi/issue/KNG-197) (design, parent). Phase issues P0 [KNG-209](https://linear.app/kngpandi/issue/KNG-209), P1 [KNG-210](https://linear.app/kngpandi/issue/KNG-210), P2 [KNG-213](https://linear.app/kngpandi/issue/KNG-213), P3 [KNG-215](https://linear.app/kngpandi/issue/KNG-215), P4 [KNG-217](https://linear.app/kngpandi/issue/KNG-217), P5 [KNG-219](https://linear.app/kngpandi/issue/KNG-219), P6 [KNG-220](https://linear.app/kngpandi/issue/KNG-220), P7 [KNG-221](https://linear.app/kngpandi/issue/KNG-221), P8 [KNG-222](https://linear.app/kngpandi/issue/KNG-222). Related: [KNG-199](https://linear.app/kngpandi/issue/KNG-199) (siege kit mode, reuses the Phase 0 vault and the Phase 4 kit loan), [KNG-182](https://linear.app/kngpandi/issue/KNG-182) (blocks the plugin phases).
+**Last updated:** 2026-10-21 (the knk-plugin branch forks from the KNG-182 branch). 2026-10-21 (rev. 5: duel restrictions in Phase 2/7; phase issues filed). 2026-10-20 (rev. 4: kit vault before the lobby teleport, held deliveries, revert/confiscate; rev. 3: review tiers, `DuelPolicy`, KNG-199 link)
+**Linear:** [KNG-197](https://linear.app/kngpandi/issue/KNG-197) (design, parent). Phase issues P0 [KNG-209](https://linear.app/kngpandi/issue/KNG-209), P1 [KNG-210](https://linear.app/kngpandi/issue/KNG-210), P2 [KNG-213](https://linear.app/kngpandi/issue/KNG-213), P3 [KNG-215](https://linear.app/kngpandi/issue/KNG-215), P4 [KNG-217](https://linear.app/kngpandi/issue/KNG-217), P5 [KNG-219](https://linear.app/kngpandi/issue/KNG-219), P6 [KNG-220](https://linear.app/kngpandi/issue/KNG-220), P7 [KNG-221](https://linear.app/kngpandi/issue/KNG-221), P8 [KNG-222](https://linear.app/kngpandi/issue/KNG-222). Related: [KNG-199](https://linear.app/kngpandi/issue/KNG-199) (siege kit mode, reuses the Phase 0 vault and the Phase 4 kit loan), [KNG-182](https://linear.app/kngpandi/issue/KNG-182) (the plugin phases fork from its branch).
 **Sources:** [DESIGN.md](DESIGN.md) (behaviour, decisions D1–D19, follow-up answers O1–O6).
 
 **Branches:** one standing branch per repo once implementation starts:
@@ -12,10 +12,11 @@
 | knk-workspace | `claude/kng-197-arena-duels` (exists; docs) | — |
 | knk-web-api | `claude/arena-duels` | `master` |
 | knk-web-app | `claude/arena-duels` | `main` |
-| knk-plugin | `claude/arena-duels` | `main` |
+| knk-plugin | `claude/arena-duels` | `claude/mc-26.2-upgrade` (KNG-182), until it merges |
 
-- The **knk-plugin branch starts after the KNG-182 (Minecraft 26.3) branch `claude/mc-26.2-upgrade` merges**. That branch changes `TeleportKind` (adds `HUB`) and the WorldGuard version; Phases 0 and 4 touch both.
-- If duels start first, base on `claude/mc-26.2-upgrade` and merge `main` once it lands.
+- **The knk-plugin branch forks from the KNG-182 (Minecraft 26.3) branch `claude/mc-26.2-upgrade`** (head `88497649` on 2026-10-21). The developer says the upgrade went smoothly and is only waiting to be merged (2026-10-21). That branch changes `TeleportKind` (adds `HUB`) and the WorldGuard version, which Phases 0 and 4 build on.
+- **Once KNG-182 merges into `main`**, merge `main` into `claude/arena-duels`; never rebase. From then on `main` is the base.
+- **Build and test** with the KNG-182 toolchain (Java 25, Paper 26.3).
 
 **Build notes:**
 - knk-plugin: `./gradlew build -x deployToDevServer`
@@ -28,7 +29,7 @@
 
 | Phase | Linear | Repo(s) | What | Depends on | Size |
 |---|---|---|---|---|---|
-| 0 | [KNG-209](https://linear.app/kngpandi/issue/KNG-209) | plugin | Shared hooks: `MinigameRegistry`, `MinigamePlayerVault` (from `SiegePlayerVault`), `DomainAccessExemptions`; siege migrated, no behaviour change | KNG-182 merged | M |
+| 0 | [KNG-209](https://linear.app/kngpandi/issue/KNG-209) | plugin | Shared hooks: `MinigameRegistry`, `MinigamePlayerVault` (from `SiegePlayerVault`), `DomainAccessExemptions`; siege migrated, no behaviour change | fork from the KNG-182 branch | M |
 | 1 | [KNG-210](https://linear.app/kngpandi/issue/KNG-210) | api, app | Arena domain types (`Arena : Structure`, `ArenaBattleground`, `ArenaSpectatorArea`, `ArenaKit`), duel settings, validation, form configurations, region-kind mapping, `arena_2` seed | — | M–L |
 | 2 | [KNG-213](https://linear.app/kngpandi/issue/KNG-213) | api | `DuelMatch`, service and endpoints; currency reasons; eligibility and abuse limits; `DuelPolicy`, signals and escalation tiers through the currency alert pipeline; abort-unfinished; anomaly rules | Phase 1 | L |
 | 3 | [KNG-215](https://linear.app/kngpandi/issue/KNG-215) | core | Pure rules: offer book, contract validation, state machine, combat rules, battleground allocator and queue, escrow states, review-agnostic settlement effects | — (parallel with 1–2) | M |
@@ -371,4 +372,4 @@ Phases 0, 1 and 3 can run in parallel. Phases 5–7 can run in parallel after 4 
 | Item duplication or loss through escrow, spoils or the kit vault | items never move during negotiation; the spool is written before every change; idempotent delivery tracked per stack; loaned items tagged and swept |
 | Siege regressions from Phase 0 | a no-behaviour-change PR with the existing siege tests + a short siege live check |
 | A large Arena form | form steps per settings group; sensible defaults so a new arena works untouched |
-| Plugin branch collides with the KNG-182 upgrade | start the plugin phases after it merges |
+| Plugin branch drifts from the KNG-182 upgrade | fork from `claude/mc-26.2-upgrade`; merge `main` once KNG-182 lands |
