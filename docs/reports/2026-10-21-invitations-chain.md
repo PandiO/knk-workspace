@@ -1,7 +1,7 @@
 # Invitations chain — progress report
 
-**Status:** Links 1–5 done (2026-10-21), nothing merged. Link 6 is ready ([handoff](../ai-agents/handoffs/2026-10-21-invitations-link-6.md)).
-**Last updated:** 2026-10-21 (link 5)
+**Status:** Links 1–6 done (2026-10-21), nothing merged. Link 7 is ready ([handoff](../ai-agents/handoffs/2026-10-21-invitations-link-7.md)).
+**Last updated:** 2026-10-21 (link 6)
 **Linear:** [KNG-205](https://linear.app/kngpandi/issue/KNG-205) and its children (see the [charter](../ai-agents/handoffs/INVITATIONS_CHAIN.md))
 **Branch:** `claude/player-signup-invitation-flow-f4v7ul` in every repo. knk-plugin's is based on `claude/mc-26.2-upgrade` (KNG-182).
 
@@ -14,10 +14,12 @@
 | 3 | KNG-212 | **done** (not merged, not live-tested) | api `8ca8507` / app `18f3c9f` / plugin unchanged (`30b10e6e`) / workspace: see git log | API 2864 passed, 4 known-red, 80 skipped (baseline 2787 / 4 / 77); app 160 suites / 970 (baseline 156 / 950) | `create_session session_01LbSWhTfxJd2rZ25bV5iRcY` by the coordinator with the § 8 prompt; `add_repo` and the dry-run pushes succeeded |
 | 4 | KNG-214 (API + web app) | **done** (not merged, not live-tested) | api `44c5f63` / app `60ec323` / plugin unchanged (`30b10e6e`) / workspace: see git log | API 2904 passed, 4 known-red, 81 skipped (baseline 2864 / 4 / 80); app 165 suites / 997 (baseline 160 / 970) | `create_session session_01BU3iVACs3iW58qiapCJC9s` by the coordinator with the § 8 prompt; `add_repo` and the dry-run pushes succeeded |
 | 5 | KNG-214 (plugin) | **done** (not merged, not live-tested) | api unchanged (`44c5f63`) / app unchanged (`60ec323`) / plugin `90b01850` / workspace: see git log | plugin core 2178 / api-client 271 / paper 1889, 0 failures (baseline 2168 / 264 / 1870) | `create_session session_01YQKHE1Pg4ctrL2vadh3qng` by the coordinator with the § 8 prompt; `add_repo` and the dry-run pushes succeeded (KNG-182 still unmerged, so the plugin base stays `claude/mc-26.2-upgrade`) |
-| 6 | KNG-216 | in progress (started 2026-10-21) | — | — | `create_session session_01HuAM9YQbNweZHr8WPuUSLq` by the coordinator with the § 8 prompt |
+| 6 | KNG-216 | **done** (not merged, not live-tested) | api `641f9c1` / app `eeea86f` / plugin unchanged (`90b01850`) / workspace: see git log | API 2925 passed, 4 known-red, 81 skipped (baseline 2904 / 4 / 81); app 165 suites / 1003 (baseline 165 / 997) | `create_session session_01HuAM9YQbNweZHr8WPuUSLq` by the coordinator with the § 8 prompt; `add_repo` and the dry-run pushes succeeded |
 | 7 | KNG-218 (prep) + final write-up | waiting | — | — | — |
 
 **Follow-ups found during the chain:**
+- `PrivacyDeletionService` doesn't wake the Cloudflare Access sync; an erased account's address leaves the list on the
+  next 5-minute run (link 6, L6-4). Fine as is; noted in the KNG-216 comment.
 - knk-web-api `knkwebapi_v2.sln` points at `tests/knkwebapi_v2.Tests/…` (lower case), so `dotnet build` of the solution fails on Linux; `dotnet build knkwebapi_v2.csproj` works. Noted in a KNG-208 comment (link 1); not fixed (out of scope).
 - knk-web-app: `npm ci` with the bundled npm 10 rejects the lock file (`Missing: yaml@2.9.1`); `npx npm@11 ci` works, as `CLAUDE.md` says. Noted in the KNG-208 comment.
 - knk-plugin `plugin.yml` still declares the `knk.account.create` permission node (no command uses it). Left in place (link 1); a one-line removal for whoever next touches `plugin.yml`.
@@ -869,3 +871,157 @@ Prerequisites: link 4's API and web app on dev, this plugin build, `online-mode=
 - KNG-214 is complete across links 4 and 5 (§ 6.1–6.3); set to *In Review*.
 - Link 6 is A1 (KNG-216, plan § 7): API + web app + workspace, no plugin. See the
   [link 6 handoff](../ai-agents/handoffs/2026-10-21-invitations-link-6.md).
+
+---
+
+## Link 6 — KNG-216: A1 — Cloudflare Access sync and the sign-up bypass
+
+**Started:** 2026-10-21 by the coordinator with the § 8 prompt (`create_session session_01HuAM9YQbNweZHr8WPuUSLq`;
+`add_repo` for the three component repos and `git push --dry-run` on `claude/player-signup-invitation-flow-f4v7ul` in
+knk-workspace, knk-web-api and knk-web-app all succeeded). Bases merged: `master` `2d71155` and `main` `e30c815`
+unchanged (no-op); workspace `main` merged (tracker only).
+**Toolchains:** .NET 8.0.132, Node 22.22 (npm 11 via `npx`). No MySQL (no `[MySqlFact]` added). Plugin untouched.
+
+### Cloudflare verification (before coding; written into DESIGN § 5.8)
+
+From Cloudflare's current docs (Access policies, the Access policy create API, Zero Trust lists, account limits, API
+token permissions):
+- **An Access policy can include a Zero Trust list of type "User email addresses"**: the policy API has an
+  `EmailListRule` `{"email_list": {"id": …}}`, and the lists page says lists work in Gateway and Access policies. No
+  plan restriction is documented. → **Zero Trust email list** implemented; the Access-group fallback was not built.
+- **API:** `GET accounts/{account}/gateway/lists/{list}/items?page&per_page` (≤ 1,000/page, `result_info.total_pages`)
+  and `PATCH accounts/{account}/gateway/lists/{list}` with `append: [{value, description}]` / `remove: [value]`.
+- **Token:** Account → **Zero Trust → Edit** ("Zero Trust Write"). The docs don't spell out that it covers Gateway
+  lists (L6-11, live check). The API never edits the policy, so no *Access: Apps and Policies* permission.
+- **Limits:** 1,000 entries per list (Standard; 5,000 Enterprise), 100 lists, 1,000 emails per rule. **The free Zero
+  Trust plan's 50 seats** are the real ceiling for the alpha (everyone who logs in through Access, staff included).
+
+### Commits per repo (heads)
+
+| Repo | Commits | Head |
+|---|---|---|
+| knk-web-api | `641f9c1` KNG-216: `Configuration/CloudflareAccessSettings.cs`, `Services/CloudflareAccess/` (`ZeroTrustEmailList`, `CloudflareAccessDesiredSet`, `CloudflareAccessSync`, `CloudflareAccessSyncService`), `Dtos/CloudflareAccessDtos.cs`, `Dtos/AuthDtos.cs` (`accessGate`), `Services/AuthService.cs` (inline add, wake on email change), `Services/UserService.cs` + `Services/Invitations/InvitationService.cs` (wake-ups), `Controllers/InvitationsController.cs` (`access-sync`), DI (`AddCloudflareAccessSync`), `appsettings.json` (no token), tests | `641f9c1` |
+| knk-web-app | `eeea86f` KNG-216: `InvitationsPage` access-sync line, `InviteSignupForm` PIN step + `onRegistered`, `InvitePage`/`JoinPage`, `authService`/`AuthContext` register result, `invitationClient.accessSync`, DTOs, tests | `eeea86f` |
+| knk-plugin | unchanged | `90b01850` |
+| knk-workspace | DESIGN § 5.8 (verification + as-built), plan status + § 7.5, alpha go-live § 6.1, CHANGELOG, this block, link 7 handoff; tracker row on `main` | see git log |
+
+### What was built
+
+- **Settings** `CloudflareAccess`: `SyncEnabled` (**false**), `AccountId`, `ListId`, `ApiToken` (env only), `ProxyUrl`,
+  `ReconcileMinutes` 5, `InlineAddTimeoutSeconds` 5, `MaxRemovalsPerRun` 25, `RequestTimeoutSeconds` 10, `BaseUrl`.
+  `ConfigurationProblem()` names a missing id/token or a bad proxy URL; an enabled-but-unconfigured sync logs one error,
+  makes no calls and shows the problem on the admin line.
+- **Named HttpClient `cloudflare`**: base `https://api.cloudflare.com/client/v4/`, bearer token, 10 s timeout,
+  `HttpClientHandler { Proxy = WebProxy(ProxyUrl), UseProxy = true }` when `ProxyUrl` is set. Only this client uses
+  the proxy.
+- **`ZeroTrustEmailList : ICloudflareAccessList`**: pages through the items, appends/removes in batches of 200, maps
+  Cloudflare's error envelope to `CloudflareApiException("Cloudflare refused to … HTTP 403 (10000: …)")`, never with
+  the token.
+- **Desired set**: lower-cased emails of personal invites not revoked, not used up, `ExpiresAt > now`; plus active,
+  non-deleted users with an email and (`AdmittedAt` or `InvitedViaInvitationId`). Frozen players stay in.
+- **`CloudflareAccessSync`** (singleton): reconcile = desired set → list → diff (case-insensitive; removals use the
+  stored value) → add → remove; status (`LastSuccessAt`, `LastAttemptAt`, `LastError`, pending, list size). One
+  semaphore for reconcile and inline add. **`CloudflareAccessSyncService`**: runs at start, every 5 min, and 2 s after
+  a wake-up; `ConnectivityAwareFailureLogger` for failures.
+- **Inline add**: `AuthService.RegisterAsync` now wraps the old body; after a successful registration and while the
+  sync is on, `TryAddNowAsync(email, 5 s)` (never throws, falls back to a wake-up) and `accessGate: true`.
+- **`GET api/Invitations/access-sync`** (`knk.admin.invites`), added to `ProtectedRoutes`.
+- **Web app**: "Access sync: last OK 12:04 · 0 pending · 12 on the list" (green), "Access sync: failing · … · <error>"
+  (red, `role=alert`), "Access sync: off. Add new players to the Cloudflare Access list by hand." (muted). The sign-up
+  form shows "Your account is ready — Next, Cloudflare emails you a one-time PIN to open the site. Use the same
+  address: <email>." with *Continue* to `/account/link` when `accessGate` is true; otherwise it goes on as before.
+- **Ops**: [alpha go-live § 6.1](../guides/alpha-go-live.md): `cfproxy` (tinyproxy, filter `^api\.cloudflare\.com$`),
+  list `knk-api-testers`, policy include + 30-day session, token, bypass application paths, settings, switch-on,
+  kill switches, private-window checks.
+
+### Tests vs baseline
+
+| Repo | Baseline (re-taken) | After |
+|---|---|---|
+| knk-web-api | 2904 passed, 4 failed, 81 skipped | **2925 passed, 4 failed (the same known-red: `PathResolutionServiceTests` ×2, `FieldValidationServiceTests.ValidateConditionalRequiredAsync_WithConditionMet_ValidatesRequired`, `ClientActivityStoreTests.RecordsRequestsIntoRollingBuckets`), 81 skipped** (+21) |
+| knk-web-app | 165 suites / 997 | **165 suites / 1003** (+6); `npm run build` compiles with `main`'s pre-existing warnings only |
+
+### Flagged decisions (reversible defaults; review)
+
+- **L6-1** Zero Trust email list only; no `GroupId` setting or Access-group code (the list selector is documented).
+- **L6-2** The whole list belongs to the API: anything in it that isn't desired is removed. Staff stay in the
+  policy's separate *Emails* include. The guide says to seed the list with one staff address so it's never empty; that
+  address is then removed by the first run unless it belongs to an admitted account (it usually does).
+- **L6-3** `MaxRemovalsPerRun` (25, not in the plan): more removals in one run → none are made, the admin line turns
+  red. Protects against an empty or wrong desired set. Adds still go through.
+- **L6-4** Wake-ups via `UserService.RevokeSessionsAsync` (every email change, deactivation, delete, merge, detach — and
+  a password change, which costs one extra list read). Privacy erasure (`PrivacyDeletionService`) and unused invite
+  expiry aren't signalled: the 5-minute run handles them.
+- **L6-5** The inline add runs for every successful registration path, including the legacy link-code one, and
+  `accessGate` is true whenever the sync is on, even if the add failed (the reconcile adds it within minutes; the PIN
+  page then says the address isn't allowed yet — the player retries).
+- **L6-6** 2-second debounce after a wake-up, so a batch of invites is one run.
+- **L6-7** A personal invitee's address is usually already on the list when they register, so the inline add appends
+  a duplicate. Whether Cloudflare accepts that is unverified; if it refuses, the add is logged as a warning and nothing
+  else happens (live check).
+- **L6-8** `authService.register` / `AuthContext.register` return `{ user, accessGate }` instead of the user (only
+  `RegisterForm` and `InviteSignupForm` call it).
+- **L6-9** The PIN step is a done panel with a *Continue* button, not an automatic redirect, so the player reads it.
+  `InviteSignupForm.onRegistered` stops `/invite` and `/join` from redirecting the fresh login to `/account`.
+- **L6-10** The status line is always shown to staff, muted while the sync is off.
+- **L6-11** Token permission "Zero Trust Edit" for Gateway lists is inferred, not stated in the docs; the guide's
+  switch-on step shows a 403 on the admin line if it's wrong.
+
+### Discrepancies with the plan / design
+
+- Plan § 7.1 lists `ListId` *or* `GroupId`; only `ListId` exists (L6-1).
+- Plan § 7.1's "status singleton" and "`TryAddNowAsync`" live on one class, `CloudflareAccessSync`, with the
+  background service a thin loop around it.
+- Plan § 7.3 step 4 "the Zero Trust/Access edit permission found in step verify" → **Account → Zero Trust → Edit**.
+- None with DESIGN § 8.
+
+### Live checklist (dev API + web app + a Cloudflare test account; not run)
+
+1. Default (`SyncEnabled` unset): no `cloudflare` requests in the API log; `/admin/invitations` shows "Access sync:
+   off"; sign-up goes straight to `/account/link` (no PIN panel); register response has no `accessGate`.
+2. `SyncEnabled=true` without a token → one startup error naming `CloudflareAccess:ApiToken`, red line with the same
+   text, no calls.
+3. Configured (list, token, proxy): within a minute the line is green with the list size; the API log shows one
+   "Cloudflare Access sync: n added …" line, and no email addresses.
+4. Create a personal invite → its address appears in the list within ~5 s; revoke → gone within ~5 s; resend an
+   expired one → back.
+5. Shared-code sign-up → the new address is in the list before the PIN panel shows; the panel names the address.
+6. Personal-invite sign-up (address already listed) → registration succeeds; note whether the API logs an "inline add
+   failed" warning (L6-7).
+7. Deactivate an account → removed within ~5 s; reactivate → back. Staff email change → old address out, new in.
+   Merge → the merged-away address out.
+8. Stop `cfproxy` → registration still works (≤ 5 s slower), the line turns red ("HttpRequestException …"); start it
+   → green on the next run, the missed add is made.
+9. Remove 30 desired addresses at once (or point `ListId` at a list with 30 strangers) → "30 removals held back"; set
+   `MaxRemovalsPerRun=50`, restart → removed.
+10. The staff *Emails* include in the policy is unchanged throughout.
+11. Alpha go-live § 6.1's private-window checks (bypass paths, `/account` and `/api/Users/1` behind Access).
+
+### Deploy notes (a deploy of this API + web-app state)
+
+- Nothing changes until `CloudflareAccess__SyncEnabled=true`. Before that: `cfproxy` running, the list created and in
+  the policy, `CloudflareAccess__AccountId`, `__ListId`, `__ProxyUrl`, and `__ApiToken` in `/etc/knk/api.env`.
+- The bypass application only matters once `Security__Registration__Mode=Invite`; it can be created earlier (the pages
+  only show "sign-up isn't open yet" under `LinkCode`).
+- Earlier deploy notes still hold (link 2: `Email__AllowLogTransport=true` while on the Log transport; links 4/5: the
+  switch-over is API `Mode=Invite` + plugin `admission.mode: invite` + vanilla whitelist off, together).
+
+### Risks
+
+- If the token can't touch Gateway lists (L6-11), the sync stays red until the token is fixed; sign-ups still work and
+  the invitee is stuck at the PIN page until staff add them by hand.
+- Cloudflare's free plan seat cap (50) is reached sooner than the list limit.
+- A misconfigured `ListId` pointing at a hand-made list would empty it, held back only above 25 removals.
+
+### What the next link must know
+
+- KNG-216 is complete in code; set *In Review* (done by this link). The live checks above and alpha go-live § 6.1
+  belong in link 7's combined checklist and smoke-test guide.
+- Link 7's living-doc updates must describe Access **after** the switch-over: the hand-made tester list becomes the
+  API-owned `knk-api-testers` list plus a staff *Emails* include; the tester invite template (go-live § 10) changes
+  (invite mail → sign-up → PIN → link). The kill switch is `CloudflareAccess__SyncEnabled=false`.
+- Merge order: no new constraint (API before web app; the web app only reads `accessGate` and the status endpoint,
+  both optional).
+
+**How this link was started:** `create_session session_01HuAM9YQbNweZHr8WPuUSLq` by the coordinator with the § 8
+prompt; `add_repo` and the dry-run pushes succeeded.

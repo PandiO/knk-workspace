@@ -2,7 +2,7 @@
 
 **Status:** v2, aligned 2026-10-11 with the [closed-alpha deployment runbook](closed-alpha-deployment-runbook.md)
 (the Codex NAS rollout). Not yet followed end to end.
-**Last updated:** 2026-10-21 (§ 4: `Email__AllowLogTransport` for API builds with the KNG-206 email engine; notes pointing to the KNG-205 invitations plan); 2026-10-18
+**Last updated:** 2026-10-21 (§ 6.1: Cloudflare Access sync, `cfproxy`, the sign-up bypass — KNG-216, feature branch; § 4: `Email__AllowLogTransport` for API builds with the KNG-206 email engine; notes pointing to the KNG-205 invitations plan); 2026-10-18
 **Applies to:** builds that **include KNG-64**: knk-web-api `master` ≥ `30c5dc5`, knk-web-app `main` ≥ `98c0a76`,
 knk-plugin `main` ≥ `34c9261`. **Never expose an older API.**
 **Linear:** [KNG-64](https://linear.app/kngpandi/issue/KNG-64) (parent), [KNG-68](https://linear.app/kngpandi/issue/KNG-68) (this guide)
@@ -260,6 +260,113 @@ Access never stands in its way. For the probe from outside, add a service token 
 - HSTS after the first successful visit.
 - One WAF rate-limiting rule: path starts with `/api/Auth/`, more than 30 requests per 10 s per IP → block for 10 s.
 - Bot Fight Mode **off** for this host.
+
+### 6.1 Cloudflare Access sync and the sign-up bypass (KNG-216)
+
+*Applies once an API build with [KNG-216](https://linear.app/kngpandi/issue/KNG-216) is deployed (feature branch
+`claude/player-signup-invitation-flow-f4v7ul`, not merged as of 2026-10-21). Until then, and whenever
+`CloudflareAccess__SyncEnabled` is false, the tester list stays hand-made as described above.* Design:
+[invitations DESIGN § 5.8](../specs/invitations/DESIGN.md) (decision I8).
+
+The API keeps a Zero Trust **email list** in sync: personal invites that can still be used, plus every active account
+that was invited or grandfathered. A second Access application opens only the sign-up pages, so an invitee can sign up
+before their address is on the list. Do the steps in this order; nothing changes for testers until step 7.
+
+**1. Forward proxy (`cfproxy`).** The API has no internet on purpose, so its Cloudflare calls go through a small
+proxy that allows only `api.cloudflare.com:443`. Add to the `knk-alpha` stack:
+
+```yaml
+  cfproxy:
+    image: vimagick/tinyproxy:1.11.2        # pin the tag you test; no :latest
+    restart: unless-stopped
+    networks: [backend, mail-egress]        # backend: the API reaches it; mail-egress: the network with internet
+    volumes:
+      - /etc/knk/cfproxy/tinyproxy.conf:/etc/tinyproxy/tinyproxy.conf:ro
+      - /etc/knk/cfproxy/filter:/etc/tinyproxy/filter:ro
+```
+
+`/etc/knk/cfproxy/tinyproxy.conf`:
+
+```
+Port 8888
+Listen 0.0.0.0
+Timeout 30
+MaxClients 10
+LogLevel Info
+Allow <backend subnet, e.g. 172.20.0.0/16>
+ConnectPort 443
+FilterDefaultDeny Yes
+FilterExtended Yes
+Filter "/etc/tinyproxy/filter"
+```
+
+`/etc/knk/cfproxy/filter` (one line):
+
+```
+^api\.cloudflare\.com$
+```
+
+Check from the API container: `curl -sS -x http://cfproxy:8888 https://api.cloudflare.com/client/v4/ -o /dev/null -w '%{http_code}\n'`
+answers (any HTTP code, e.g. 400/404, means the proxy let it through), and `curl -x http://cfproxy:8888 https://example.com`
+is refused (403 from tinyproxy).
+
+**2. The list.** Zero Trust → *My Team* → *Lists* (or *Reusable components → Lists*) → *Create list*: name
+**`knk-api-testers`**, type **User email addresses**. Add **one staff address** so the list is never empty. Note the
+list's id (in the URL or `GET accounts/{account}/gateway/lists`). **Nobody edits this list by hand after step 7:** the
+API removes anything in it that isn't an invite or an account.
+
+**3. The policy.** Access → *Applications* → the `<web-host>` app → policy *Allow testers*: add an **Include → Email
+list → `knk-api-testers`** rule. Keep the existing hand-made *Emails* include for staff: the API never touches it.
+Set the application's **session duration to 30 days** (it was 24 h), so the PIN is rare.
+
+**4. The API token.** *My Profile → API Tokens → Create custom token*: permission **Account → Zero Trust → Edit**,
+account resources **only this account**, no zone permissions. Put it in `/etc/knk/api.env` (mode 600) as
+`CloudflareAccess__ApiToken=…`. Never in compose files, appsettings or a ticket.
+
+**5. The bypass application.** Access → *Add an application → Self-hosted*, same hostname `<web-host>`, name
+"KnK sign-up (bypass)", with these paths (Access uses the most specific path, so everything else stays behind *Allow
+testers*):
+
+| Kind | Paths |
+|---|---|
+| Pages | `/invite/*`, `/invite`, `/join*`, `/link*` |
+| Static files of the SPA | `/static/*`, `/favicon.ico`, `/manifest.json`, `/logo*.png` |
+| Anonymous API calls of those pages | `/api/Invitations/check`, `/api/Admission/claim/check`, `/api/Auth/register` |
+
+One policy: **Action Bypass, Include Everyone**. The WAF rule on `/api/Auth/` stays.
+
+**6. The API settings** (in `/etc/knk/api.env` next to the token):
+
+```bash
+CloudflareAccess__AccountId=<account id>
+CloudflareAccess__ListId=<id of knk-api-testers>
+CloudflareAccess__ProxyUrl=http://cfproxy:8888
+# CloudflareAccess__ReconcileMinutes=5, __InlineAddTimeoutSeconds=5, __MaxRemovalsPerRun=25 are the defaults.
+CloudflareAccess__SyncEnabled=false        # step 7 turns it on
+```
+
+**7. Turn it on.** Testers with an account are added by the sync. A current tester who has **no account yet** gets
+a personal invite from `/admin/invitations` instead (the sync adds invite addresses, and removes anything else it
+finds in the list). Then set `CloudflareAccess__SyncEnabled=true` and recreate the API. Within a minute,
+`/admin/invitations` shows **"Access sync: last OK hh:mm · 0 pending · n on the list"**. If it's red, the line names
+the error (token permission, list id, proxy).
+
+**Kill switches.** `CloudflareAccess__SyncEnabled=false` → back to editing the list by hand (the API stops all calls).
+Deleting the bypass application closes sign-up again without touching the app. If the line says removals were "held
+back", more than `MaxRemovalsPerRun` addresses would have been removed in one run: check the list and the database
+before raising the limit for one run.
+
+**Check from a private window** (after step 7):
+- [ ] `/invite/x` and `/join` load without an Access login (and show "invalid invitation" for a made-up link);
+- [ ] `/account` and `/api/Users/1` show the Access login;
+- [ ] a new personal invite's address appears in `knk-api-testers` within seconds; revoking it removes it;
+- [ ] a shared-code sign-up's address is added during registration, and the sign-up's done page says Cloudflare
+      will email a PIN; the PIN mail arrives and `/account/link` opens;
+- [ ] deactivating a test account removes its address on the next run; the staff *Emails* include is unchanged;
+- [ ] `/admin/invitations` shows the green line.
+
+**Limits.** The free Zero Trust plan has **50 seats**: everyone who logs in through Access, staff included, uses one.
+A list holds 1,000 entries.
 
 ---
 

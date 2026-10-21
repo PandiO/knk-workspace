@@ -1,7 +1,7 @@
 # Invite-only sign-up, email engine and web-first Minecraft linking — Implementation plan
 
-**Status:** In implementation through the [invitations chain](../../ai-agents/handoffs/INVITATIONS_CHAIN.md) (7 links, charter 2026-10-21). **Link 1 done on the feature branch (2026-10-21):** E0's API half (§ 2, knk-web-api `110451f`, cherry-pickable) and L0 (§ 4; api `bb4b9ee`, web-app `2bf70ab`, plugin `30b10e6e`), not merged, not live-tested; deviations flagged L1-1…L1-5 in the [progress report](../../reports/2026-10-21-invitations-chain.md). **Link 2 done (2026-10-21):** E1 (§ 3; api `0d7ec4a` + `a8b42ca`, web-app `aecd811`, [email guide](../../guides/email.md)), not merged, not live-tested; flags L2-1…L2-12. **Link 3 done (2026-10-21):** I1 (§ 5; api `77042fd` + `8ca8507`, web-app `dfa5cdd` + `18f3c9f`), not merged, not live-tested; flags L3-1…L3-12, as-built note at the end of § 5. **Link 4 done (2026-10-21):** I2 server side (§ 6.1, § 6.3; api `4d1fe00` + `44c5f63`, web-app `a3f00fd` + `60ec323`), not merged, not live-tested; flags L4-1…L4-16, as-built note § 6.3a. **Link 5 done (2026-10-21):** I2 plugin (§ 6.2; plugin `90b01850`), not merged, not live-tested; flags L5-1…L5-9, as-built note § 6.2a. KNG-214 complete. Next: link 6 (A1, § 7). The decisions are in [DESIGN.md](DESIGN.md) § 8 (2026-10-21).
-**Last updated:** 2026-10-21 (link 5)
+**Status:** In implementation through the [invitations chain](../../ai-agents/handoffs/INVITATIONS_CHAIN.md) (7 links, charter 2026-10-21). **Link 1 done on the feature branch (2026-10-21):** E0's API half (§ 2, knk-web-api `110451f`, cherry-pickable) and L0 (§ 4; api `bb4b9ee`, web-app `2bf70ab`, plugin `30b10e6e`), not merged, not live-tested; deviations flagged L1-1…L1-5 in the [progress report](../../reports/2026-10-21-invitations-chain.md). **Link 2 done (2026-10-21):** E1 (§ 3; api `0d7ec4a` + `a8b42ca`, web-app `aecd811`, [email guide](../../guides/email.md)), not merged, not live-tested; flags L2-1…L2-12. **Link 3 done (2026-10-21):** I1 (§ 5; api `77042fd` + `8ca8507`, web-app `dfa5cdd` + `18f3c9f`), not merged, not live-tested; flags L3-1…L3-12, as-built note at the end of § 5. **Link 4 done (2026-10-21):** I2 server side (§ 6.1, § 6.3; api `4d1fe00` + `44c5f63`, web-app `a3f00fd` + `60ec323`), not merged, not live-tested; flags L4-1…L4-16, as-built note § 6.3a. **Link 5 done (2026-10-21):** I2 plugin (§ 6.2; plugin `90b01850`), not merged, not live-tested; flags L5-1…L5-9, as-built note § 6.2a. KNG-214 complete. **Link 6 done (2026-10-21):** A1 (§ 7; api `641f9c1`, web-app `eeea86f`; Cloudflare mechanism verified: a Zero Trust email list, DESIGN § 5.8; ops steps in [alpha go-live § 6.1](../../guides/alpha-go-live.md)), not merged, not live-tested; flags L6-1…L6-11, as-built note § 7.5. Next: link 7 (I3 prep + final write-up, § 8). The decisions are in [DESIGN.md](DESIGN.md) § 8 (2026-10-21).
+**Last updated:** 2026-10-21 (link 6)
 **Linear:** [KNG-205](https://linear.app/kngpandi/issue/KNG-205) (parent). Each work package's issue is listed in § 1.
 **Sources:** [DESIGN.md](DESIGN.md), plus code read on 2026-10-21 at knk-web-api `master` `2d71155`, knk-web-app `main` `e30c815`, and knk-plugin `claude/mc-26.2-upgrade` `88497649` (Paper 26.3, Java 25).
 
@@ -608,6 +608,33 @@ With sync enabled on the alpha:
 - deactivating an account removes it;
 - staff entries are untouched;
 - the status line is green.
+
+### 7.5 As built (link 6, 2026-10-21)
+
+**Status: built on the feature branch** (api `641f9c1`, web-app `eeea86f`), not merged, not live-tested. Deviations and
+details (flags in the [progress report](../../reports/2026-10-21-invitations-chain.md) "Link 6"):
+- **Mechanism verified first** (DESIGN § 5.8): a Zero Trust email list included in the policy with an `email_list`
+  rule. Only `ZeroTrustEmailList` exists; there is no `GroupId` setting and no Access-group code (L6-1).
+- **Settings** as planned plus `MaxRemovalsPerRun` (25): a run with more removals holds them all back and shows the
+  error on the admin line (L6-3), `RequestTimeoutSeconds` (10) and `BaseUrl` (for tests). `SyncEnabled` defaults to
+  false; `ApiToken` is env-only.
+- **`CloudflareAccessSync`** (singleton) holds the status and a semaphore that serialises the reconcile and the inline
+  add; **`CloudflareAccessSyncService`** runs it every `ReconcileMinutes` and 2 s after a wake-up (debounce, L6-6).
+  The whole list is the API's: it removes every value not in the desired set (L6-2).
+- **Wake-ups:** personal invite create, resend and revoke (`InvitationService`); email change by the player
+  (`AuthService`) or staff, deactivation, delete, merge, detached web login (all through `UserService.RevokeSessionsAsync`,
+  which a password change also calls), reactivation and staff Admit (L6-4). Privacy erasure isn't signalled; the
+  5-minute run catches it.
+- **Inline add** wraps `AuthService.RegisterAsync`, so all three paths (invite, invite + claim, legacy link code) get it,
+  and sets `accessGate: true` whenever the sync is on, even when the add failed (L6-5).
+- **Endpoint** `GET api/Invitations/access-sync` (`knk.admin.invites`, on `ProtectedRoutes`): `enabled`, `configured`,
+  `lastSuccessAt`, `lastAttemptAt`, `lastError`, `pendingAdds`, `pendingRemoves`, `listSize`, `reconcileMinutes`.
+- **Web app:** the line on `/admin/invitations` (muted "off" while the sync is off); the PIN step is a done panel in
+  `InviteSignupForm` with a *Continue* button to `/account/link` (L6-9). `authService.register` / `AuthContext.register`
+  now return `{ user, accessGate }` (L6-8).
+- **Tests:** API +21 (fake Cloudflare handler through the real client registration: paging, bearer token, PATCH
+  shapes, errors without the token; diff; desired set; reconcile incl. the safety valve; inline add timeout; sync off =
+  no calls; register `accessGate`; DI). Web app +6.
 
 ---
 

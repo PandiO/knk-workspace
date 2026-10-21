@@ -4,6 +4,16 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Invitations chain, link 6: Cloudflare Access sync and the sign-up bypass (A1)**
+  ([KNG-216](https://linear.app/kngpandi/issue/KNG-216); branch `claude/player-signup-invitation-flow-f4v7ul`:
+  knk-web-api `641f9c1`, knk-web-app `eeea86f`). With `CloudflareAccess__SyncEnabled=true`, the API keeps the
+  Cloudflare Zero Trust email list `knk-api-testers` in sync: a new personal invite's address is added within seconds,
+  a revoke, an unused expiry, a deactivation, a deletion or a merge removes it, and a sign-up with a shared code adds
+  the new address during registration. Calls go through a `cfproxy` forward proxy that only allows
+  `api.cloudflare.com`. `/admin/invitations` shows "Access sync: last OK 12:04 · 0 pending", red with the error, and
+  the sign-up page tells new players that Cloudflare emails them a one-time PIN next. The NAS and dashboard steps
+  (proxy, list, policy, token, bypass application for the sign-up pages, 30-day session) are in alpha go-live § 6.1.
+  Off by default, so deploying changes nothing. Not live-tested.
 - **Invitations chain, link 5: admission gate on the game server (I2, plugin)**
   ([KNG-214](https://linear.app/kngpandi/issue/KNG-214); branch `claude/player-signup-invitation-flow-f4v7ul`:
   knk-plugin `90b01850`, on the KNG-182 branch). With `admission.mode: invite` in the plugin's `config.yml`, the game
