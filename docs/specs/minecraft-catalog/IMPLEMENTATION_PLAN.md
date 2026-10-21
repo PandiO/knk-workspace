@@ -288,6 +288,89 @@ from 1.21.10, the server runs 26.3: scan now?".
 - Size: about 1.5k entries is roughly 0.5 MB of JSON. One request is enough. Above 10,000
   entries the API answers 413.
 
+### 5.2a Contract v1 as implemented (2026-10-21)
+
+This section is binding for the three repos; it refines §5.1/§5.2.
+
+**Requesting a scan (web app → API).** `POST api/MinecraftCatalog/scans` (`knk.admin.content`,
+no body). The API:
+- marks active scans older than 15 minutes `Failed` ("timed out", their WorldTask `Cancelled`);
+- answers 409 when a scan is still `Requested` or `Ingesting`;
+- creates a `WorkflowSession` (requesting user, `EntityTypeName="MinecraftCatalogScan"`,
+  `EntityId=<scanId>`), a WorldTask with `TaskType="MinecraftCatalogScan"`,
+  `Status="Pending"`, `InputJson={"scanId":N}`, and the scan;
+- answers 201 with the scan DTO below.
+
+Other endpoints (all `knk.admin.content`): `GET scans?take=20` (newest first), `GET scans/{id}`,
+`POST scans/{id}/cancel`, `GET audit`, `POST backfill`,
+`POST materials/{sourceId}/merge-into/{targetId}`, `PUT materials/{id}/icon-override`
+(body `{"iconUrlOverride": "<url>" | null}`). Reading a scan whose WorldTask has `Failed` marks
+the scan `Failed` with the task's error.
+
+**Scan DTO** (camelCase): `id`, `status` (`Requested|Running|Ingesting|Completed|Failed`),
+`requestedByUserId`, `worldTaskId`, `minecraftVersion`, `serverVersion`, `entryCount`, `inserted`,
+`updated`, `unchanged`, `merged`, `deleted`, `markedMissing`, `iconsMissing`, `error`,
+`createdAt`, `completedAt`.
+
+**Plugin.** A headless handler (`IHeadlessWorldTaskHandler`) for `MinecraftCatalogScan`:
+1. reads `scanId` from `inputJson`;
+2. on the main thread, builds the entries from `Material.values()`, skipping `isLegacy()` and
+   `isAir()`;
+3. off the main thread, sends `PUT {api}/MinecraftCatalog/scans/{scanId}/snapshot` with
+   `X-API-Key`;
+4. on 2xx calls `POST WorldTasks/{id}/complete` with
+   `outputJson={"scanId":N,"entryCount":M}`; on any error calls `POST WorldTasks/{id}/fail`
+   with the message;
+5. calls `onFinished` in every case.
+
+**Snapshot body:**
+
+```json
+{
+  "schemaVersion": 1,
+  "minecraftVersion": "1.21.10",
+  "serverVersion": "<Bukkit.getVersion()>",
+  "contentHash": "<64 lower-case hex>",
+  "entries": [
+    { "key": "minecraft:oak_stairs", "isItem": true, "isBlock": true, "maxStackSize": 64,
+      "translationKey": "block.minecraft.oak_stairs", "displayName": "Oak Stairs",
+      "defaultBlockState": "minecraft:oak_stairs[facing=north,half=bottom,shape=straight,waterlogged=false]" }
+  ]
+}
+```
+
+- `minecraftVersion` is `Bukkit.getMinecraftVersion()`.
+- `key` is `Material.getKey().toString()`.
+- `translationKey` is the Paper translation key (item key for items, block key for block-only
+  entries), or null.
+- `displayName` is the key rendered to `en_US` through `GlobalTranslator`, or null when that
+  rendering just returns the key.
+- `defaultBlockState` is `createBlockData().getAsString()` for blocks, else null.
+
+**`contentHash`:**
+1. Sort the entries by `key` (ordinal).
+2. Make one line per entry:
+   `key|isItem|isBlock|maxStackSize|translationKey|displayName|defaultBlockState`. Booleans are
+   `true`/`false`, a null field is an empty string, and `maxStackSize` is a decimal integer.
+3. Join the lines with `\n` (no trailing newline).
+4. Take the SHA-256 of the UTF-8 bytes, as lower-case hex.
+
+Test vector: the two entries
+`{key:"minecraft:stone",isItem:true,isBlock:true,maxStackSize:64,translationKey:"block.minecraft.stone",displayName:"Stone",defaultBlockState:"minecraft:stone"}`
+and
+`{key:"minecraft:apple",isItem:true,isBlock:false,maxStackSize:64,translationKey:"item.minecraft.apple",displayName:null,defaultBlockState:null}`
+give the text
+`minecraft:apple|true|false|64|item.minecraft.apple||\nminecraft:stone|true|true|64|block.minecraft.stone|Stone|minecraft:stone`.
+Both sides pin its hash in a unit test.
+
+**Snapshot responses:**
+- 200 with the scan DTO.
+- 400 on an unknown `schemaVersion`, no entries, more than 10,000 entries, an invalid or
+  duplicate key, or a hash mismatch. Nothing is written.
+- 404 for an unknown scan.
+- 409 when the scan is not `Requested`/`Running`. An exception: a `Completed` scan with the same
+  hash answers 200 with the stored result.
+
 ### 5.3 Display names
 
 The server has translation keys, not English names. The plugin renders the key with
