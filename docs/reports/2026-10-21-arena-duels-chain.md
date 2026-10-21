@@ -221,6 +221,7 @@ One siege round on the dev server:
 | knk-web-api | `claude/arena-duels` (from `master` `2d71155`) | `1f65a12` | entities, migration `AddArenas`, validation, `ArenasController`, finalizer/discovery/navigation plumbing, form seeds, tests |
 | knk-web-api | `claude/arena-duels` | `05a9049` | the arena read also carries its own `location` (the plugin's exit fallback) |
 | knk-web-api | `claude/arena-duels` | `6507641` | `KitService` refuses to delete a kit an arena offers (names the arena) instead of failing on the FK |
+| knk-web-api | `claude/arena-duels` | `a8a26c3` | follow-up after the developer's decision (KNG-197, 2026-10-21): `POST api/Arenas/legacy-seed` and its service, DTO and test code removed |
 | knk-web-app | `claude/arena-duels` (from `main` `e30c815`) | `7fa594b` | arena API clients and entity mapping, dashboard configs, tests |
 | knk-plugin | `claude/arena-duels` (on `d00826c5`) | `02bca4e0` | `ArenasApi` + client, `ArenasDataAccess`, managed-region kinds and policy, navigation/discovery labels, tests |
 | knk-workspace | `main` | `9408888` | tracker row |
@@ -228,7 +229,7 @@ One siege round on the dev server:
 
 ### Tests
 
-- **knk-web-api** (`dotnet test`, .NET 8 SDK): baseline on `master` `2d71155`: 2697 passed, 4 failed, 73 skipped. After P1 (`6507641`): 2748 passed, 4 failed, 73 skipped — the **same 4 known reds** (`PathResolutionServiceTests` ×2, `ClientActivityStoreTests.RecordsRequestsIntoRollingBuckets`, `FieldValidationServiceTests.ValidateConditionalRequiredAsync_WithConditionMet_ValidatesRequired`). Note: `dotnet build` at the repo root fails on Linux because `knkwebapi_v2.sln` names `tests\…` (lower case); build `knkwebapi_v2.csproj` instead.
+- **knk-web-api** (`dotnet test`, .NET 8 SDK): baseline on `master` `2d71155`: 2697 passed, 4 failed, 73 skipped. After P1 (`6507641`): 2748 passed, 4 failed, 73 skipped — the **same 4 known reds**; after the seed removal (`a8a26c3`): 2746 passed, the same 4 failed, 73 skipped (`PathResolutionServiceTests` ×2, `ClientActivityStoreTests.RecordsRequestsIntoRollingBuckets`, `FieldValidationServiceTests.ValidateConditionalRequiredAsync_WithConditionMet_ValidatesRequired`). Note: `dotnet build` at the repo root fails on Linux because `knkwebapi_v2.sln` names `tests\…` (lower case); build `knkwebapi_v2.csproj` instead.
 - **knk-web-app** (`npx -y npm@11 ci`, `npm run test:ci`): 156/156 suites, 944 tests (baseline 154 / 938); `tsc --noEmit` only the 3 errors `main` already has (`sessionPinnedRows.test.ts`).
 - **knk-plugin** (`./gradlew build -x deployToDevServer`, Temurin JDK 25.0.4 toolchain via `-Porg.gradle.java.installations.paths`, Paper 26.3): BUILD SUCCESSFUL; knk-core 2308, knk-api-client 267 (2 skipped), knk-paper 1887 (18 skipped), 0 failures.
 
@@ -250,7 +251,7 @@ One siege round on the dev server:
 - `IArenaService` / `ArenaService` (`ValidateSettings` is public static for reuse), `IArenaRepository`.
 - Endpoints (`ArenasController`, `api/Arenas`):
   - reads (plugin key or any login): `GET` (all arenas, full: settings, `location`/`lobbyLocation`/`exitLocation`, `eligibleKits` in order with `kitName`, `battlegrounds` in `sortOrder` with `spawnALocation`/`spawnBLocation`, `spectatorAreas` with `location`), `GET {id}`, `GET by-key/{key}`, `GET {arenaId}/battlegrounds`, `GET battlegrounds?arenaId=`, `GET battlegrounds/{id}`, `GET {arenaId}/spectator-areas`, `GET spectator-areas?arenaId=`, `GET spectator-areas/{id}`, `POST search`, `POST battlegrounds/search`, `POST spectator-areas/search`
-  - writes (`knk.admin.world` or the plugin): `POST`, `PUT {id}`, `DELETE {id}`, the same under `battlegrounds/` and `spectator-areas/`, and `POST legacy-seed`
+  - writes (`knk.admin.world` or the plugin): `POST`, `PUT {id}`, `DELETE {id}`, the same under `battlegrounds/` and `spectator-areas/`
   - **P2**: the eligibility overrides are `StakeMinAccountAgeHours` / `StakeMinTitleBracketId` (null = the `/pay` rule); the abuse limits are `MaxStakedDuelsPerPairPerDay`, `PairCooldownMinutes`, `DailyCoinWinCap`, `MinStakeRatioPercent`, `FeePercent`, `MaxCoinStake`, `MaxItemStacks`.
 - Discovery rule types `Arena`, `ArenaSpectatorArea` (on, Structure values) and `ArenaBattleground` (off), seeded by `AddArenas`; navigation types `Arena`, `ArenaSpectatorArea`.
 
@@ -264,12 +265,12 @@ One siege round on the dev server:
 
 ### Deviations and interpretations (reversible; also a comment on KNG-197)
 
-1. **Lobby and spawns are nullable.** DESIGN §4.1 draws them as required FKs, but the seed can't know them ("set by staff"). Instead: an arena with `IsDuelEnabled` needs a lobby, an enabled battleground needs both spawns; the seed creates the arena with duels off and the battlegrounds disabled.
+1. **Lobby and spawns are nullable.** DESIGN §4.1 draws them as required FKs, so an arena or battleground can be saved before staff capture them ("set by staff"). Instead: an arena with `IsDuelEnabled` needs a lobby, an enabled battleground needs both spawns; until then staff save the arena with duels off and the battlegrounds disabled.
 2. **`ArenaKit.SortOrder` is named `SequenceNumber`**, the name the FormWizard's many-to-many editor already keeps equal to the row order and offers drag-to-reorder for. The API uses the list order.
 3. **The Arena form has eight steps**: the six of the plan, plus "Eligible kits" (a step is either many-to-many or plain fields) and "Battlegrounds and spectator areas" (owned child lists, added after the arena is saved, like a gate's doors). General also holds the place, region and locations.
-4. **The `arena_2` seed is an endpoint, not a migration**: an Arena is a Structure and needs a District and Street the staff choose, and the inventory report counts the 8 flagged battlegrounds but doesn't list their ids (v1 named them `arena_2,<part>-battleground`). `POST api/Arenas/legacy-seed` `{districtId, streetId, worldName?, battlegroundRegionIds:[…]}` creates `arena_2` (duels off) and one disabled battleground per region, and completes an existing one without duplicating.
+4. **No `arena_2` seed** (developer decision on KNG-197, 2026-10-21: "no migration or seed is necessary"). P1 first shipped a `POST api/Arenas/legacy-seed` endpoint (the inventory report counts the 8 flagged battlegrounds but doesn't list their ids, and an Arena needs a District and Street the staff choose); it was removed in `a8a26c3`. Staff create `arena_2` and its battlegrounds in the forms, picking the existing regions (v1 named them `arena_2,<part>-battleground`). The battleground `entry allow` policy (interpretation 5) was kept by the same decision.
 5. **`BATTLEGROUND` enforces `entry allow`** instead of only dropping `entry deny`: WorldGuard's own `entry deny` would keep the exempted duelists out, and dropping the rule would leave v1's explicit `entry deny` on the 8 regions. `knk-allow-entry` (AllowEntry=false) is the guard now.
-6. **Discovery and navigation are off for battlegrounds by type**, not by a per-domain override in the seed: `ArenaBattleground` gets a disabled discovery rule and is not a navigable type (the plugin's `/navigate` ignores it), so every battleground is covered, not only seeded ones. Arena and spectator areas have their own discovery rules (Structure values) and are navigable as structures.
+6. **Discovery and navigation are off for battlegrounds by type**, not by per-domain overrides: `ArenaBattleground` gets a disabled discovery rule and is not a navigable type (the plugin's `/navigate` ignores it), so every battleground is covered. Arena and spectator areas have their own discovery rules (Structure values) and are navigable as structures.
 7. **A new managed kind `SPECTATOR_AREA`** (floor 40, no flags) for "plain child".
 8. **`POST …/search` needs only a caller** (the plugin or a login), like the GETs; `StructuresController` puts search under the write rule.
 9. **A null eligibility override on update clears it** (null = the `/pay` rule, the default); every other null setting keeps its value.
@@ -277,13 +278,13 @@ One siege round on the dev server:
 ### Found in passing / left out
 
 - `KitService.DeleteAsync` failed on the new `arena_kits` FK with a database error; fixed in P1 (refuses with the arena's name).
-- An `extra-regions` battleground with no domain row now gets `entry allow` without a `knk-allow-entry deny`: seed first (documented in `managed-worldguard-regions.md` §5). The config default is `extra-regions: []`.
+- An `extra-regions` battleground with no domain row now gets `entry allow` without a `knk-allow-entry deny`: create the battleground domains first (documented in `managed-worldguard-regions.md` §5). The config default is `extra-regions: []`.
 
 ### Live checks for P8
 
 1. Apply migration `AddArenas`; `discovery_reward_rules` has `Arena`, `ArenaSpectatorArea` (on) and `ArenaBattleground` (off).
 2. Import the seeds in order `ArenaKit.join`, `Arena`, `ArenaBattleground`, `ArenaSpectatorArea` (web app "Import / seeds").
-3. `/rg list` in the arena world: note `arena_2`'s 8 `-battleground` children; `POST api/Arenas/legacy-seed` with the district, street and those ids → `arena_2` + 8 disabled battlegrounds; a second call creates nothing.
+3. `/rg list` in the arena world: note `arena_2`'s 8 `-battleground` children. Create `arena_2` and its battlegrounds in the forms with the existing regions (type the region names; arena: its district and street, duels off until the lobby is set; battlegrounds: disabled until both spawns are set).
 4. Restart (or `/knk regions repair`): `arena_2` priority 40 under its district, the 8 battlegrounds priority 50 under `arena_2` with `pvp allow` and `entry allow`; `/rg info` shows `knk-allow-entry deny` on each battleground after the access sync.
 5. As a normal player: walking, pearling or riding into a battleground is refused (domain-access message); staff with `knk.region.bypass` can enter.
 6. Web app: open `arena_2` in the Arena form; set lobby/exit (Send to Minecraft), turn duels on, change `MaxOffers` to 2 and save; refused saves: no gear mode, a kit mode without kits, `MaxOffers` 7, fee 21. Add two eligible kits and drag their order; it sticks after reload. Deleting one of those kits in the kit list is refused with the arena's name.
