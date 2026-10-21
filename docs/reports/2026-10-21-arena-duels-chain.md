@@ -217,7 +217,7 @@ One siege round on the dev server:
 |---|---|---|---|
 | knk-web-api | `claude/arena-duels` (from `master` `2d71155`) | `1f65a12` | entities, migration `AddArenas`, validation, `ArenasController`, finalizer/discovery/navigation plumbing, form seeds, tests |
 | knk-web-api | `claude/arena-duels` | `05a9049` | the arena read also carries its own `location` (the plugin's exit fallback) |
-| knk-web-api | `claude/arena-duels` | see KNG-210 comment | `KitService` refuses to delete a kit an arena offers (names the arena) instead of failing on the FK |
+| knk-web-api | `claude/arena-duels` | `6507641` | `KitService` refuses to delete a kit an arena offers (names the arena) instead of failing on the FK |
 | knk-web-app | `claude/arena-duels` (from `main` `e30c815`) | `7fa594b` | arena API clients and entity mapping, dashboard configs, tests |
 | knk-plugin | `claude/arena-duels` (on `d00826c5`) | `02bca4e0` | `ArenasApi` + client, `ArenasDataAccess`, managed-region kinds and policy, navigation/discovery labels, tests |
 | knk-workspace | `main` | `9408888` | tracker row |
@@ -225,7 +225,7 @@ One siege round on the dev server:
 
 ### Tests
 
-- **knk-web-api** (`dotnet test`, .NET 8 SDK): baseline on `master` `2d71155`: 2697 passed, 4 failed, 73 skipped. After P1: 2744+ passed (see the KNG-210 comment for the final count), the **same 4 known reds** (`PathResolutionServiceTests` ×2, `ClientActivityStoreTests.RecordsRequestsIntoRollingBuckets`, `FieldValidationServiceTests.ValidateConditionalRequiredAsync_WithConditionMet_ValidatesRequired`). Note: `dotnet build` at the repo root fails on Linux because `knkwebapi_v2.sln` names `tests\…` (lower case); build `knkwebapi_v2.csproj` instead.
+- **knk-web-api** (`dotnet test`, .NET 8 SDK): baseline on `master` `2d71155`: 2697 passed, 4 failed, 73 skipped. After P1 (`6507641`): 2748 passed, 4 failed, 73 skipped — the **same 4 known reds** (`PathResolutionServiceTests` ×2, `ClientActivityStoreTests.RecordsRequestsIntoRollingBuckets`, `FieldValidationServiceTests.ValidateConditionalRequiredAsync_WithConditionMet_ValidatesRequired`). Note: `dotnet build` at the repo root fails on Linux because `knkwebapi_v2.sln` names `tests\…` (lower case); build `knkwebapi_v2.csproj` instead.
 - **knk-web-app** (`npx -y npm@11 ci`, `npm run test:ci`): 156/156 suites, 944 tests (baseline 154 / 938); `tsc --noEmit` only the 3 errors `main` already has (`sessionPinnedRows.test.ts`).
 - **knk-plugin** (`./gradlew build -x deployToDevServer`, Temurin JDK 25.0.4 toolchain via `-Porg.gradle.java.installations.paths`, Paper 26.3): BUILD SUCCESSFUL; knk-core 2308, knk-api-client 267 (2 skipped), knk-paper 1887 (18 skipped), 0 failures.
 
