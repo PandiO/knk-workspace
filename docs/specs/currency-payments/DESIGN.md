@@ -349,7 +349,7 @@ siblings add rows here):
 | `DUEL_PAYOUT` | Grant | `SYS_DUEL` | `duel-payout:{matchId}` | arena duels: pot − fee to the winner; funded by the stakes, so left out of R7 |
 | `DUEL_FEE` | Spend, **system to system** | `SYS_DUEL` → `SYS_FEES` | `duel-fee:{matchId}` | arena duels: the fee, no user leg, in the payout's transaction (`MoveBetweenSystemAccountsAsync`) |
 | `DUEL_REFUND` | Grant | `SYS_DUEL` | `duel-revert:{matchId}` | arena duels: a staff revert pays the recovered coins back, loser first |
-| `DUEL_CONFISCATION` | Spend, **system to system** | `SYS_DUEL` → `SYS_FEES` | `duel-confiscate:{matchId}` | arena duels: a staff confiscation sends the recovered coins to the sink |
+| `DUEL_CONFISCATION` | Spend, **system to system** | `SYS_DUEL` → `SYS_CONFISCATED` | `duel-confiscate:{matchId}` | arena duels: a staff confiscation sends the recovered coins to their own account, apart from fee income (developer, 2026-10-21) |
 
 Rules for siblings: always pass a deterministic key when the source event has an identity; never catch
 `InsufficientFunds` and retry with a smaller amount; call inside your own transaction when you also

@@ -305,6 +305,7 @@ One siege round on the dev server:
 | knk-web-api | `claude/arena-duels` | `53f42cf` | models, migration `AddDuelMatches`, ledger additions, `DuelMatchService`, `DuelMatchesController`, anomaly rules, tests |
 | knk-web-api | `claude/arena-duels` | `d208a74` | merge of P1's `a8a26c3` (legacy-seed endpoint dropped); `master` had nothing new |
 | knk-web-api | `claude/arena-duels` | `a0da408` | the stake ratio values items at their blueprint base price (developer decision, below) |
+| knk-web-api | `claude/arena-duels` (on P6 `7872831`) | `57f26a2` | review data staff-only; confiscations to `SYS_CONFISCATED` (developer decisions, below); 2875 passed / the 4 known reds / 73 skipped |
 | knk-plugin | `claude/arena-duels` (on P1 `02bca4e0`; P3 `36195de3` merged in as `1e17f985`) | `2be401b5` | `DuelMatchesApi` port, `KnkDuelRecords`, `DuelRefusedException`, api-client implementation, test |
 | knk-workspace | `main` | `d79b32e` | tracker row |
 | knk-workspace | `claude/arena-duels` | this commit | this section; `specs/currency-payments/DESIGN.md` reason and alert tables |
@@ -346,7 +347,12 @@ These run on EF InMemory with the real ledger and alert service. The match-row l
 - a fee leg inside the payout posting would give the payout two system accounts, and `ReverseAsync` refuses a partial reversal of such a posting, so a revert after the winner spent coins would fail;
 - paying the whole pot and then debiting the fee from the winner works with the existing API, but shows the winner a fee they "paid" and can fail at the balance cap for the gross amount.
 
-Per closed match: stake +pot, payout −(pot − fee), fee −fee → Σ `SYS_DUEL` = 0. A revert reverses the payout (`AllowPartial`) and the fee, then pays the pool back with `DUEL_REFUND` (loser first); a confiscation reverses the payout and moves what came back to `SYS_FEES` with `DUEL_CONFISCATION` (the fee stays). Both keep the invariant.
+Per closed match: stake +pot, payout −(pot − fee), fee −fee → Σ `SYS_DUEL` = 0. A revert reverses the payout (`AllowPartial`) and the fee, then pays the pool back with `DUEL_REFUND` (loser first); a confiscation reverses the payout and moves what came back to `SYS_CONFISCATED` with `DUEL_CONFISCATION` (the fee stays in `SYS_FEES`). Both keep the invariant.
+
+### Follow-up decisions (developer 2026-10-21, KNG-197; `57f26a2`)
+
+- **Review data is staff-only.** Every match the API returns (GET list, `{id}`, `by-token`, and the match inside every POST result) carries `reviewTier`, `reviewSignals` and `reviewDetails` only for the plugin service key and holders of `knk.admin.duel.review` (`knk.admin.*`); everyone else gets `null` / `[]` / `null` and still sees `review` (the state) and the result. Done in `DuelMatchesController` (`DuelMatchesControllerTests`). This answers the first open question below.
+- **Confiscated coins go to the new system account `SYS_CONFISCATED`**: `DUEL_CONFISCATION` is `SYS_DUEL` → `SYS_CONFISCATED`; the fee stays in `SYS_FEES`. This answers the second open question below; Σ `SYS_DUEL` = 0 is unchanged.
 
 ### Stake ratio with items (developer decision 2026-10-21, KNG-197)
 
@@ -386,7 +392,7 @@ The match (`DuelMatchDto`) carries: ids and usernames, `arenaKey`, `battleground
 ### Deviations and interpretations (reversible; also a comment on KNG-197)
 
 1. **Fee mechanics**: a system-to-system `DUEL_FEE` and a new ledger primitive (above).
-2. **Two more reasons** than the three named: `DUEL_REFUND` (a revert's pay-back from `SYS_DUEL`) and `DUEL_CONFISCATION` (`SYS_DUEL` → `SYS_FEES`). The confiscation sink is `SYS_FEES`, the same coin sink as the fee.
+2. **Two more reasons** than the three named: `DUEL_REFUND` (a revert's pay-back from `SYS_DUEL`) and `DUEL_CONFISCATION` (`SYS_DUEL` → `SYS_CONFISCATED`, developer decision; first built as `SYS_FEES`).
 3. **`FeePercent` is stored on the match at lock-in**, so a later arena edit doesn't change the fee of a match the duelists already agreed to (D15).
 4. **Locks apply to both duelists** of any value-moving duel (frozen, transfer-locked, deactivated), not only to stakers; the age/title rule applies to stakers and to both in drop mode (D14). The coin kill switch (`CurrencyPolicy.TransfersEnabled = false`, R1) refuses coin stakes; item-only stakes still work.
 5. **Counting flags** (escalation): a `Voided` result always counts (confirmed); a `Flagged`, `Held` or `Released` one counts while its alert is not acknowledged; the window runs on `EndedAt`. Acknowledging = "false positive", since the alert flow has only acknowledge. `escalation/clear` acknowledges the open `DUEL_FLAG` alerts of the pair or beneficiary (no new table).
@@ -401,8 +407,8 @@ The match (`DuelMatchDto`) carries: ids and usernames, `arenaKey`, `battleground
 
 ### Open questions for the developer
 
-- Should players (any logged-in user) see a match's `reviewSignals` and `reviewDetails`, or should those be staff-only in the read? Today they follow "GETs for logged-in users".
-- Confiscated coins go to `SYS_FEES`. A separate `SYS_CONFISCATED` account would keep the fee sink's total clean for reporting; say if you want it.
+- ~~Should players see a match's review data?~~ Decided: staff-only (above).
+- ~~Confiscation sink?~~ Decided: `SYS_CONFISCATED` (above).
 
 ### Found in passing / left out
 
@@ -417,10 +423,10 @@ The match (`DuelMatchDto`) carries: ids and usernames, `arenaKey`, `battleground
 4. A thrown fight (loser never swings, < 10 s): paid, `DUEL_FLAG` on the alerts page and in game for staff with the alerts node. A second one between the same two (either direction, or the same winner against someone else): `DUEL_HOLD`, nothing paid; a new staked lock-in between them is refused with `ReviewHoldOpen`; a friendly duel still works.
 5. Acknowledge the first flag, play another thrown fight: flagged, not held.
 6. Release a held result (paid) and void another (both stakes back, no fee); both are in the audit log with the staff member and reason.
-7. Revert a paid result after the winner spent part of it: the winner ends at 0, the loser gets back what was recovered first, `missingCoins` is shown; confiscate another: the coins land in `SYS_FEES`, the fee stays.
+7. Revert a paid result after the winner spent part of it: the winner ends at 0, the loser gets back what was recovered first, `missingCoins` is shown; confiscate another: the coins land in `SYS_CONFISCATED`, the fee stays in `SYS_FEES`.
 8. Restrictions: a player restriction with an end date refuses staked duels (message shows reason and date), allows friendly ones, ends at the date; a pair restriction refuses only that pair; lifting works; audit entries for both players of a pair.
 9. Concurrency on MySQL: two simultaneous `complete` calls (same winner) for one match → one payout; two lock-ins of the same token → one match.
-10. A web staff member without `knk.admin.duel.review` gets 403 on release/void/revert/restrictions; one with `knk.admin.*` passes.
+10. A web staff member without `knk.admin.duel.review` gets 403 on release/void/revert/restrictions; one with `knk.admin.*` passes. A logged-in player reading `GET api/DuelMatches/{id}` of a flagged match sees `review: Flagged` but no `reviewTier`/`reviewSignals`/`reviewDetails`; staff and the plugin see them.
 11. Three paid one-way duels between the same pair within 24 h → an `R10` alert on the next monitor cycle; `R7` doesn't fire for `DUEL_PAYOUT`.
 12. Plugin startup: `abort-unfinished` refunds open matches and leaves held results.
 
