@@ -1,7 +1,7 @@
 # NAS operations access for agents (`knk-ops`)
 
 **Status:** Stage A (read-only checks) installed on the NAS and verified 2026-10-18 · Stage B (deploy) designed, **not installed**
-**Last updated:** 2026-10-18
+**Last updated:** 2026-10-21
 **Sources:** wrapper sources and checksums in [`scripts/nas-ops/stage-a/`](../../scripts/nas-ops/stage-a/) ·
 session report [2026-10-18 NAS ops access and alpha check](../reports/2026-10-18-nas-ops-access-and-alpha-check.md) ·
 [closed-alpha deployment runbook](closed-alpha-deployment-runbook.md)
@@ -169,6 +169,12 @@ step, still without a shell or any caller-chosen input.
   | `health` | `api-health` + `log-errors` + `secret-scan` in one report |
   | `restart-api` | restart only `knk-alpha-api` |
   | `rollback` | switch back to the previous approved Compose/image (database restore stays a manual, human step) |
+  | `mc-stage-plugin` | copy the approved plugin jar (path + SHA-256 in the approval file) to `plugins/update/KnightsAndKings.jar` after checking its hash ([KNG-225](https://linear.app/kngpandi/issue/KNG-225), runbook § 4.3) |
+  | `mc-restart` | `rcon-cli save-all flush`, then restart only `knk-alpha-minecraft` |
+  | `mc-health` | container state and health, restart count, the KnK plugin version line and `/knk health` result from the startup log |
+
+  The Minecraft operations were added to the design on 2026-10-21. Until Stage B exists, the developer does the
+  same steps by hand (runbook § 4.3). A read-only `mc-health` could also join Stage A first.
 
 - Every run is logged like Stage A plus an append-only deployment log. On the
   PC these operations go in Claude Code's **ask** list, never allow.
