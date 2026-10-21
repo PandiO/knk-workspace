@@ -1,6 +1,6 @@
 # Arena duels chain — progress report
 
-**Status:** In progress (P0, P1, P2, P3 and P7 pushed).
+**Status:** In progress (P0–P7 pushed; P8 next).
 **Last updated:** 2026-10-21
 **Linear:** [KNG-197](https://linear.app/kngpandi/issue/KNG-197) (design) and its phase issues.
 **Charter:** [ARENA_DUELS_CHAIN.md](../ai-agents/handoffs/ARENA_DUELS_CHAIN.md). **Design:** [DESIGN.md](../specs/arena-duels/DESIGN.md), [IMPLEMENTATION_PLAN.md](../specs/arena-duels/IMPLEMENTATION_PLAN.md).
@@ -710,3 +710,83 @@ Setup: P4's setup (P1's `arena_2` with a lobby, an exit, battlegrounds with spaw
 13. **`/arena`** in the arena → P6's arena menu (or, without it, the chat summary: queue, live duels, buttons). `/arena arena_2` from elsewhere. Tab completion lists arenas. `/duels` → the live-matches menu; an announcement's [Details] (`/duels view <token>`) and [Spectate] (`/duels spectate <id>`) open the detail and start the spectator warp.
 14. **Staff**: `/knk duel list` shows running matches (token, #id, phase, coins) and held or unclaimed escrow. `/knk duel cancel <token>` refunds a running duel. `/knk duel review <id> release` without `knk.admin.duel.review` is refused; with it, the winner gets the items at once.
 15. **Permissions**: a group without `knk.duel` gets "no permission" for `/duel` and `/arena`, and neither command is in its tab list.
+
+---
+
+## P6 — announcements, menus and spectating ([KNG-220](https://linear.app/kngpandi/issue/KNG-220))
+
+**Session:** Claude Code cloud session, 2026-10-21. **Status:** pushed, KNG-220 In Review. Not deployed, not live-tested. Started after P4 (`089bd357`, KNG-217 In Review), next to P5. P5's `4cb1aa80`, `ea7ecb4e` and `d1016f42` were merged on the way; the `KnKPlugin` conflict was only adjacent additions (both kept). KNG-182 has not merged into knk-plugin `main` (still `79be4882`), and knk-web-api `master` is still `2d71155`, so there was no trunk to merge.
+
+### Commits
+
+| Repo | Branch | Commit | What |
+|---|---|---|---|
+| knk-web-api | `claude/arena-duels` | `7872831` | `MenuTemplateSeed.Duel.cs` (`duel_matches`, `duel_match_detail`, `arena_main`, `duel_challenge`), registered in the canonical list and the content-seed export, `MenuTemplateDuelSeedTests` |
+| knk-plugin | `claude/arena-duels` | `0d62c543` | `knk-core` `core/duel/view/`, `DuelAnnouncer`, `DuelHud`, `DuelSnapshots`, `DuelSpectators`, `DuelMenuData`, `DuelMenuFeature`, `DuelMenus`, `KnKPlugin` wiring, `config.yml` `duels.announce.templates`, `content-seeds.json`, tests |
+| knk-plugin | `claude/arena-duels` | `a6fdd17c` | merge of P5 (`d1016f42`); `DuelMenus implements DuelMenuPort`, `setDuelMenuPort(duelMenus)` |
+| knk-plugin | `claude/arena-duels` | `d8897a79` | bounded statistics cache in `DuelMenuFeature` |
+| knk-workspace | `main` | `0ba77b4` | tracker row |
+| knk-workspace | `claude/arena-duels` | this commit | this section |
+
+### Tests
+
+- **knk-plugin** (`./gradlew build -x deployToDevServer`, Temurin JDK 25.0.4 via `-Porg.gradle.java.installations.paths`, Paper 26.3). Maven Central answered 429 on the first runs; a re-run with fewer workers downloaded everything. No mirror was used.
+  - Baseline (P4 head `089bd357`, clean worktree): knk-core 2314, knk-api-client 275 (2 skipped), knk-paper 1955 (18 skipped), 0 failures.
+  - After P6 with P5 merged (`d8897a79`): BUILD SUCCESSFUL. **knk-core 2338, knk-api-client 275 (2 skipped), knk-paper 2013 (18 skipped), 0 failures.** No known reds. New: 24 core (`core/duel/view`), 26 paper (`DuelMenuFeatureTest` 14, `DuelPresentationTest` 12); the rest of the paper growth is P5's.
+  - Mocked `World`s are fields (CLAUDE.md rule). The presentation tests run the real P4 `DuelService` through `DuelHarness`.
+- **knk-web-api** (`dotnet test Tests/knkwebapi_v2.Tests/knkwebapi_v2.Tests.csproj`, .NET 8 SDK). P7 measured 2861 passed / the 4 known reds on the same head (`dc704f3`). After P6 (`7872831`): **2873 passed, 4 failed, 73 skipped.** The 4 are the known reds: `PathResolutionServiceTests` ×2, `ClientActivityStoreTests.RecordsRequestsIntoRollingBuckets`, `FieldValidationServiceTests.ValidateConditionalRequiredAsync_WithConditionMet_ValidatesRequired`. New: 12 (`MenuTemplateDuelSeedTests` 8, the content-seed theory +4).
+- `content-seeds.json` was regenerated with `KNK_MENU_CONTENT_SEED_EXPORT=… dotnet test --filter MenuTemplate`. Only the four duel templates were added; the existing entries are unchanged.
+
+| Plan test | Test |
+|---|---|
+| the pure views | knk-core `DuelViewsTest` (two heads per listed match, the waiting line, the detail tile and the "over" state, side cards with only the stats the API returned, stake tiles, the arena menu's rules/queue/claims/spectate/challenge states, challenge rows, the sidebar with the viewer's own duel first and the 15-line cap, the boss bar per phase, which match a spectator follows) |
+| the announcer cooldown | knk-core `DuelAnnouncementsTest.oneWarmupBroadcastPerPlayerPerCooldown` / `aZeroCooldownNeverLimits`; knk-paper `DuelPresentationTest.theSpamCooldownAllowsOneWarmupBroadcastPerPlayer` (real runtime) |
+| spectating through the menu enforces the warp conditions | knk-paper `DuelMenuFeatureTest` with the real `WarpCommand` and teleport engine: `spectatingStartsTheSpectatorAreasWarp_WarmupThenChargeThenTeleport` (warmup, then the 10-gem charge, then the teleport), `theWarpsConditionsApply_ALockedSpectatorAreaIsRefused` (TitleTooLow: refused, nothing charged), `withoutTheWarpNodeNothingHappens`, `theDetailsSpectateButtonFindsTheArenaByTheMatchToken`, `anAreaWithoutAWarpIsReachedOnFoot_AndAnArenaWithoutOneSaysSo` |
+| others | the seeded menus validate against the registered feature (contract test over `content-seeds.json`); real stake stacks; side cards read as the viewer, cached 10 s; `/duel <name>` only inside the arena, invalid names refused; the openers and the repaint of open duel menus only; the announcer around the real P4 runtime (buttons, toggles, paid and held results, draws, cancels and the death line only to the arena); the sidebar/boss bar for duelists and a spectator, the registry keeping their board, the old board back on leaving |
+
+### What later phases (and P8) build on
+
+**knk-web-api**: `MenuTemplateSeed.DuelMatchesMenuKey` / `DuelMatchDetailMenuKey` / `ArenaMainMenuKey` / `DuelChallengeMenuKey`. Create-only like every menu seed; staff edit them through the menu CRUD API.
+
+**knk-core `core/duel/view/`** (Bukkit-free): `DuelMatchSnapshot` (a read-only copy of a running match), `DuelViewText`, `DuelAnnouncements` (templates, `arenaAnnounces`, `Cooldown`), `DuelHudView` (`sidebar`, `bossBar`, `followed`, `QueueInfo`), the menu views `DuelMatchRowView`, `DuelMatchDetailView`, `DuelSideCardView`, `DuelStakeRowView`, `ArenaMenuView`, `DuelChallengeRowView`, `DuelServerView`, and the shared ids in `DuelMenuIds`.
+
+**knk-paper**
+- `duel/DuelAnnouncer` (a `DuelObserver`): the warmup broadcast with `[Spectate]` (`/duels spectate <arenaId>`, only when the arena has a spectator area with a warp) and `[Details]` (`/duels view <token>`), both served by P5's `/duels`; the result after the API's answer; draws; cancels, aborts and the death line only to the duelists and the players in the spectator area. Templates: `config.yml` `duels.announce.templates` (commented out; the defaults are in `DuelAnnouncements`).
+- `duel/DuelHud`: per-viewer sidebar and boss bar, refreshed every second and on every phase change. `DuelService.setDuelBoardViewers` / `showsDuelBoard`, asked by `DuelParticipation.keepsOwnScoreboard`, so `ScoreboardUtil`'s registry predicate keeps the board of spectators too.
+- `duel/DuelSpectators`: who stands in an arena's spectator area or its own region (WorldGuard ids at the player's position).
+- `menu/content/DuelMenuFeature`: roots `duelMatch` (`ctx.token`), `arena` (`ctx.arena`: the id; empty = the arena the player stands in or watches from, else the first), `duels`; row sources `duel.matches` (`arenaId` narrows), `duel.match-side`, `duel.stakes`, `duel.challenge-candidates`; actions `duel.spectate` (`arenaId` or `token`), `duel.challenge` (`name`), `duel.claim`; conditions `duel.matches-empty`, `duel.in-arena`. `DuelMenuFeature.spectate(player, arenaId)` is the one spectate path: the arena's first spectator area with `TeleportEnabled`, through `WarpCommand.warpTo`.
+- `menu/content/DuelMenus implements DuelMenuPort` (P5's interface), registered with `KnKPlugin.setDuelMenuPort` in `initializeDuelPresentation()`; it repaints open duel menus on phase changes, settlements and releases.
+- Small edits to P4 files: `DuelMatch.stakeStacksOf(side)` and `fightStartTick()`, the two `DuelService` methods above, `DuelParticipation.keepsOwnScoreboard`.
+
+### Deviations and interpretations (reversible; also a comment on KNG-197)
+
+1. **A fourth template, `duel_challenge`**: the picker of online players behind `[Challenge a player]` (DESIGN §9.3). A pick runs `/duel <name>`, so P5's invite rules and proposal editor apply.
+2. **"Both heads"** in `duel_matches` are two rows per match (challenger, then opponent) in a grid eight wide, so a pair never splits across lines; either head opens the detail.
+3. **`AnnounceMatches` is the arena's switch; `AnnounceFriendly` also covers duels without stakes.** Results and draws use the same toggles and no cooldown. The spam cooldown limits only the warmup broadcast (§9.1). When the arena doesn't announce, results and draws go to the duelists and the spectator area instead.
+4. **The result of a value-moving duel is announced after the API's answer**, so a held result says "pending review" (tier 2). A friendly duel is announced at once. While the API can't be reached the line says "(payout follows)". A refunded decisive result names no winnings.
+5. **The death line goes to the arena** (duelists and spectator area, DESIGN §8.6), which P4 left to P6. The duelists also keep P4's own chat lines, so they see their result twice (theirs and the broadcast).
+6. **Spectators see the sidebar only while their arena has a live match** (WARMUP → ENDING); duelists from the lock-in to the release. Each viewer gets their own board, so like the siege board the shared tab-list team colours and the health-below-name objective aren't shown while viewing; the old board comes back when they stop.
+7. **A spectator's boss bar follows the newest match on a battleground, else the newest live one** ("the most recent match").
+8. **Spectating uses the arena's first spectator area with `TeleportEnabled`.** One without a warp gets "walk to …", and an arena without an area says so. The spectate button is disabled then.
+9. **`[My claims]` calls `DuelService.claim` directly**, with its own message (stacks to inventory / ender chest / still owed), refused during a match.
+10. **Observer failures are contained**: `DuelHud` and `DuelAnnouncer` catch their own `RuntimeException`s and `LinkageError`s. P4's `DuelService.notify` catches only `RuntimeException`, so an `Error` from an observer (found here: `Criteria.DUMMY` without a server, in a test) breaks the lock-in it was called from. Noted on KNG-217.
+
+### Found in passing / left out
+
+- `DuelService.notify` (P4) catches only `RuntimeException`: a `LinkageError` in any observer stops the step that notified it (a lock-in stays incomplete). Comment on KNG-217.
+- No hub tile for `/duels` or `/arena`: the hub menu isn't in P6's scope. Comment on KNG-222 (P8 decides whether the guide asks for one).
+
+### Live checks for P8
+
+Setup: P1's `arena_2` with a lobby, an exit, enabled battlegrounds and a spectator area with `TeleportEnabled` (and, for check 8, a title requirement or gem price on that warp); P5's commands; two duelists and a third player.
+
+1. **Seeds**: after the API restarts, `GET api/MenuTemplates/by-key/duel_matches` (and `duel_match_detail`, `arena_main`, `duel_challenge`) exist; the plugin's startup menu validation doesn't block them.
+2. **Warmup broadcast**: when both duelists reach the lobby, everyone gets "⚔ Duel at arena_2: A vs B - own gear - stakes: …  [Spectate] [Details]". Hovering shows what each does. [Details] opens the match detail; [Spectate] starts the stands' warp.
+3. **Spam cooldown**: the same duelists start another duel within 120 s → no second broadcast. After `duels.announce.cooldown-seconds` it is broadcast again.
+4. **Toggles**: with `AnnounceFriendly` off, a duel without stakes isn't broadcast but a staked one is. With `AnnounceMatches` off nothing is broadcast; results go only to the duelists and the stands.
+5. **Result**: "A defeated B in 1:42 and won 665 coins + 2 items." after the payout (the pot less the fee). A held result (P2's tier 2) says "(pending review)". A forfeit says "won by forfeit". A draw ("drew at arena_2 (agreed draw)") is broadcast. A staff `/knk duel cancel` reaches only the duelists and the stands. "B was defeated by A." reaches only the duelists and the stands.
+6. **Sidebar and boss bar (duelists)**: from the accept on, a sidebar shows "Your duel: vs B", the stage and timer, gear and stakes, then the arena's other live duels and "Queue: 1/3 waiting", "Battlegrounds: 1/8 busy". The boss bar shows the warmup countdown, "Waiting for a free battleground (#2 in line)" when the arena is full, "Get ready: 7", the fight timer (or "no time limit"), then "A won!". Both go away at the exit and the normal board is back.
+7. **Spectators**: in the stands during a live duel you get the arena's sidebar and the boss bar of the newest fight. Walking out removes both. A rank or premium change (which resets everyone's scoreboard) leaves the duel board alone.
+8. **Spectating with conditions**: [Spectate] (chat, arena menu or the detail's "Go to the spectator area") runs the warp: a 5 s warmup, the gem price charged after it, the title/premium/discovery lock refused with its reason and nothing charged. The stands are also reachable on foot and by `/warp`.
+9. **`/duels`**: two heads per live duel, refreshed every second, with "No duels right now" when empty. A head opens the detail: both cards (title, XP, playtime, duel W/L/D; PvP kills only if the player shows them, so hide them in the statistics settings and check), kits, coins, and the real stake items with their names and enchantments.
+10. **`/arena`**: info, rules (gear modes, offers, stake limits, fee, ratio, pair limit, daily cap, timings), queue, live duels here, Spectate (disabled without a warp), Challenge a player (disabled outside the arena; a click from outside says "Stand inside the arena…"), My claims (highlighted when something waits; a click collects it). The challenge picker lists online players, those in a duel greyed out; a pick opens P5's proposal editor.
