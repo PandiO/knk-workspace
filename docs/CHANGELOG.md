@@ -4,6 +4,20 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Invitations chain, link 3: invitations and invite-based registration (I1)**
+  ([KNG-212](https://linear.app/kngpandi/issue/KNG-212); branch `claude/player-signup-invitation-flow-f4v7ul`:
+  knk-web-api `77042fd` + `8ca8507`, knk-web-app `dfa5cdd` + `18f3c9f`). Staff with the new node `knk.admin.invites`
+  (granted to Admin by a seed migration) get **Invitations** (`/admin/invitations`): personal invites by email, in
+  bulk, emailed or as copy-links (single use, 7 days by default, at most 30), and shared codes `KNK-XXXXX-XXXXX` with
+  a label and a use cap (5 by default, at most 50); links and codes are shown once and only their SHA-256 is stored;
+  resend (rotates the link, 3 a day), rotate, pause/resume, revoke, and a redemptions drawer. `/invite/:token` (the
+  address shown locked and verified, the token removed from the address bar) and `/join?code=` sign up with an
+  invitation once `Security:Registration:Mode=Invite` is set, creating a web account (`web-…` name, no starting
+  balance until Minecraft is linked) and taking the use in one conditional UPDATE. The default stays `LinkCode`:
+  today's `/account link` registration is unchanged and invite fields are refused. Migration `AddInvitations`
+  grandfathers every active account as admitted; accounts the plugin creates are admitted until the mode is
+  `Invite`. Account page: "Email verified" badge. Not live-tested.
+
 - **Invitations chain, link 2: the email engine (E1)** ([KNG-206](https://linear.app/kngpandi/issue/KNG-206); branch
   `claude/player-signup-invitation-flow-f4v7ul`: knk-web-api `0d7ec4a` + `a8b42ca`, knk-web-app `aecd811`). Every mail
   now goes through a persistent `email_outbox` table, written in the same transaction as the change that causes it, and

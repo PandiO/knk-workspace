@@ -1,7 +1,7 @@
 # Invite-only sign-up, email engine and web-first Minecraft linking — Implementation plan
 
-**Status:** In implementation through the [invitations chain](../../ai-agents/handoffs/INVITATIONS_CHAIN.md) (7 links, charter 2026-10-21). **Link 1 done on the feature branch (2026-10-21):** E0's API half (§ 2, knk-web-api `110451f`, cherry-pickable) and L0 (§ 4; api `bb4b9ee`, web-app `2bf70ab`, plugin `30b10e6e`), not merged, not live-tested; deviations flagged L1-1…L1-5 in the [progress report](../../reports/2026-10-21-invitations-chain.md). **Link 2 done (2026-10-21):** E1 (§ 3; api `0d7ec4a` + `a8b42ca`, web-app `aecd811`, [email guide](../../guides/email.md)), not merged, not live-tested; flags L2-1…L2-12. Next: link 3 (I1, § 5). The decisions are in [DESIGN.md](DESIGN.md) § 8 (2026-10-21).
-**Last updated:** 2026-10-21 (link 2)
+**Status:** In implementation through the [invitations chain](../../ai-agents/handoffs/INVITATIONS_CHAIN.md) (7 links, charter 2026-10-21). **Link 1 done on the feature branch (2026-10-21):** E0's API half (§ 2, knk-web-api `110451f`, cherry-pickable) and L0 (§ 4; api `bb4b9ee`, web-app `2bf70ab`, plugin `30b10e6e`), not merged, not live-tested; deviations flagged L1-1…L1-5 in the [progress report](../../reports/2026-10-21-invitations-chain.md). **Link 2 done (2026-10-21):** E1 (§ 3; api `0d7ec4a` + `a8b42ca`, web-app `aecd811`, [email guide](../../guides/email.md)), not merged, not live-tested; flags L2-1…L2-12. **Link 3 done (2026-10-21):** I1 (§ 5; api `77042fd` + `8ca8507`, web-app `dfa5cdd` + `18f3c9f`), not merged, not live-tested; flags L3-1…L3-12, as-built note at the end of § 5. Next: link 4 (I2 server side, § 6.1 and § 6.3). The decisions are in [DESIGN.md](DESIGN.md) § 8 (2026-10-21).
+**Last updated:** 2026-10-21 (link 3)
 **Linear:** [KNG-205](https://linear.app/kngpandi/issue/KNG-205) (parent). Each work package's issue is listed in § 1.
 **Sources:** [DESIGN.md](DESIGN.md), plus code read on 2026-10-21 at knk-web-api `master` `2d71155`, knk-web-app `main` `e30c815`, and knk-plugin `claude/mc-26.2-upgrade` `88497649` (Paper 26.3, Java 25).
 
@@ -360,6 +360,27 @@ deviations (details in the [report](../../reports/2026-10-21-invitations-chain.m
 - `RegisterPage` / `RegisterForm`: map `InviteRequired` to "You need an invitation to create an account" with a link to `/join`.
 - `AccountManagementPage`: an "Email verified" badge.
 - **Tests:** InvitePage (locked email, token removed from the URL, error states), JoinPage, InvitationsPage (create → copy panel, revoke confirm), the client.
+
+### 5.2a As built (link 3, 2026-10-21)
+
+Built as above, with these differences (flags in the [progress report](../../reports/2026-10-21-invitations-chain.md) "Link 3"):
+- `Security:Registration:Mode` is an enum defaulting to `LinkCode` whatever `AllowWebFirst` says; `AllowWebFirst` only
+  words the refusal. `Open` is accepted but behaves like `Invite` (web-first sign-up without an invite isn't built) (L3-1).
+- Under `Mode=LinkCode` an invite answers 403 `InvitesDisabled`; under `Invite` no invite and no code answers 403
+  `InviteRequired`; an invite together with a `linkCode` is 400 `InvalidRequest` (L3-2).
+- `POST api/Invitations/check` always answers 200; a personal invite's answer carries the full `email` as well as
+  `emailHint`, so `/invite` can show the address locked (L3-3).
+- Extra staff route `GET api/Invitations/options` (invitable groups, defaults, caps, the registration mode) (L3-4).
+- Two extra `invitations` columns, `ResendWindowStartedAt` and `ResendsInWindow`, count resends in a rolling 24 hours
+  (L3-5). Resend restarts the expiry with `DefaultExpiryDays`, and may resend an expired (not used, not revoked) invite (L3-6).
+- Pause/resume are for shared codes only, as in DESIGN § 3.4 (409 `WrongKind` for personal invites) (L3-7).
+- The Welcome mail greets "there" (the `web-…` name means nothing to the player) and links `/account/link`, which the
+  web app redirects to `/account` until KNG-214 builds the page (L3-8).
+- The fold (`FoldWebAccountIntoMinecraftAccountAsync`) now carries `EmailVerifiedAt`, `InvitedVia*`, the shell's
+  `AdmittedAt` (when the Minecraft account has none) and the invite's group (L1-2 closed).
+- The grandfathering backfill admits active, non-deleted accounts only (as planned): a deactivated account that is
+  reactivated later needs staff Admit (KNG-214) (L3-9).
+- Invite pages add `<meta name="referrer" content="no-referrer">` while open (`useNoReferrer`) (L3-10).
 
 ### 5.3 Done
 - **Done when:**

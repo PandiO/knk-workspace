@@ -1,7 +1,7 @@
 # Invitations chain — progress report
 
-**Status:** Links 1–2 done (2026-10-21), nothing merged. Link 3 is ready ([handoff](../ai-agents/handoffs/2026-10-21-invitations-link-3.md)).
-**Last updated:** 2026-10-21 (link 2)
+**Status:** Links 1–3 done (2026-10-21), nothing merged. Link 4 is ready ([handoff](../ai-agents/handoffs/2026-10-21-invitations-link-4.md)).
+**Last updated:** 2026-10-21 (link 3)
 **Linear:** [KNG-205](https://linear.app/kngpandi/issue/KNG-205) and its children (see the [charter](../ai-agents/handoffs/INVITATIONS_CHAIN.md))
 **Branch:** `claude/player-signup-invitation-flow-f4v7ul` in every repo. knk-plugin's is based on `claude/mc-26.2-upgrade` (KNG-182).
 
@@ -11,7 +11,7 @@
 |---|---|---|---|---|---|
 | 1 | KNG-211 (API), KNG-207, KNG-208 | **done** (not merged, not live-tested) | api `110451f` (E0) + `bb4b9ee` (L0) / app `2bf70ab` / plugin `30b10e6e` / workspace: see git log | API 2754 passed, 4 known-red, 75 skipped (baseline 2697 / 4 / 73; +59 tests, 2 new `[MySqlFact]` skipped); app 940 (baseline 938); plugin core 2168 / api-client 264 / paper 1870, 0 failures (unchanged) | `create_session` by the coordinator with the § 8 prompt; `add_repo` and the dry-run pushes succeeded |
 | 2 | KNG-206 | **done** (not merged, not live-tested) | api `a8b42ca` / app `aecd811` / plugin unchanged (`30b10e6e`) / workspace: see git log | API 2787 passed, 4 known-red, 77 skipped (baseline 2754 / 4 / 75; +41 new, 8 removed with the old mail code, 2 new `[MySqlFact]` skipped); app 156 suites / 950 (baseline 154 / 940) | `create_session session_019NV1SRUVvMbtLXs5QtkCq4` by the coordinator with the § 8 prompt; `add_repo` and the dry-run pushes succeeded |
-| 3 | KNG-212 | in progress (started 2026-10-21) | — | — | `create_session session_01LbSWhTfxJd2rZ25bV5iRcY` by the coordinator with the § 8 prompt |
+| 3 | KNG-212 | **done** (not merged, not live-tested) | api `8ca8507` / app `18f3c9f` / plugin unchanged (`30b10e6e`) / workspace: see git log | API 2864 passed, 4 known-red, 80 skipped (baseline 2787 / 4 / 77); app 160 suites / 970 (baseline 156 / 950) | `create_session session_01LbSWhTfxJd2rZ25bV5iRcY` by the coordinator with the § 8 prompt; `add_repo` and the dry-run pushes succeeded |
 | 4 | KNG-214 (API + web app) | waiting | — | — | — |
 | 5 | KNG-214 (plugin) | waiting | — | — | — |
 | 6 | KNG-216 | waiting | — | — | — |
@@ -22,6 +22,10 @@
 - knk-web-app: `npm ci` with the bundled npm 10 rejects the lock file (`Missing: yaml@2.9.1`); `npx npm@11 ci` works, as `CLAUDE.md` says. Noted in the KNG-208 comment.
 - knk-plugin `plugin.yml` still declares the `knk.account.create` permission node (no command uses it). Left in place (link 1); a one-line removal for whoever next touches `plugin.yml`.
 - Privacy erasure (`PrivacyDeletionService`) doesn't touch `email_outbox`: a deleted player's address stays in the mail log's metadata until the 90-day retention removes it (link 2, L2-10). Noted in a KNG-206 comment; a small follow-up for the privacy flow.
+- `/auth/reset-password` doesn't send `Referrer-Policy: no-referrer` (DESIGN § 3.3 asks it of invite, reset and link
+  pages); link 3's `useNoReferrer` hook covers `/invite` and `/join`. Noted in a KNG-212 comment (link 3).
+- The web app's audit label list doesn't know `UsernameReleased` (35); it shows the raw name. Noted in the KNG-212
+  comment (link 3).
 - The daily-cap "currency-alert-style" in-game staff notice needs a new `PlayerNotificationTypes` value and a plugin handler; link 2 logs an error once a day and shows the count on `/admin/email` instead (L2-2). Noted in a KNG-206 comment.
 
 ---
@@ -353,3 +357,185 @@ The smoke steps are in [email.md § 6](../guides/email.md). In short, on a dev A
   outbox with the real composer, throttle and dispatcher; `CapturingEmailComposer` for service tests.
 - Links in mails: `AppSettings.ResolveBaseUrl(app.PublicBaseUrl, …fallbacks)`.
 - Staff-only routes with `[RequirePermission]` can now go in `ProtectedRoutes`.
+
+---
+
+## Link 3 — KNG-212: I1 invitations and invite-based registration
+
+**Started:** 2026-10-21 by the coordinator with the § 8 prompt (`create_session session_01LbSWhTfxJd2rZ25bV5iRcY`);
+`add_repo` (push) for knk-web-api, knk-web-app and knk-plugin, clones under `/home/user/<repo>`, branch checked out in
+all four repos, `git push --dry-run` succeeded in knk-web-api, knk-web-app and knk-workspace (the repos this link
+changes). Base merges: `master` `2d71155` and `main` `e30c815` were already in (no change); workspace merged `main`
+(the tracker commits). The session's worker restarted once mid-link; the clones and state survived.
+**Toolchains:** .NET 8.0.132 with `dotnet-ef` from `~/.dotnet/tools`, Node 22.22 (`npx npm@11 ci`). No MySQL: the new
+`[MySqlFact]`s were written and skipped. No plugin change, so no JDK 25.
+
+### Commits per repo (heads)
+
+| Repo | Commits | Head |
+|---|---|---|
+| knk-web-api | `77042fd` model + migrations (`AddInvitations` with the backfill, `SeedInvitationStaffNode`), node, audit range; `8ca8507` service, controller, registration, `UserService` admission and fold, DI, settings, tests | `8ca8507` |
+| knk-web-app | `dfa5cdd` pages, client, DTOs, routes, nav, register form, Account badge, tests; `18f3c9f` audit labels | `18f3c9f` |
+| knk-workspace | this block, plan status + § 5.2a, DESIGN § 3.3 note, CHANGELOG, link 4 handoff; tracker row on `main` | see git log |
+| knk-plugin | — | not changed (`30b10e6e`) |
+
+### What was built
+
+**knk-web-api.**
+- **Model:** `Models/Invitation.cs` (`Invitation`, `InvitationRedemption`, `InvitationKind`, derived `InvitationStatus`
+  with `StatusAt(now)`: Revoked > Exhausted > Expired > Paused > Active); tables `invitations` (the plan's columns plus
+  `ResendWindowStartedAt`, `ResendsInWindow`, L3-5; `CodeHash char(64)` unique, `CodeHint char(4)`, indexes
+  `(Kind, ExpiresAt)` and `Email`, FK `GrantGroupId` → `permission_groups` Restrict) and `invitation_redemptions`
+  (index `InvitationId`). `users` gains `InvitedViaInvitationId`, `InvitedByUserId`, `AdmittedAt`, `EmailVerifiedAt`.
+- **Migrations:** `20261021120136_AddInvitations` (generated; snapshot diff additive only) with
+  `UPDATE users SET AdmittedAt = CreatedAt WHERE IsActive = 1 AND DeletedAt IS NULL AND AdmittedAt IS NULL` **after**
+  the column is added; `EmailVerifiedAt` starts NULL. `20261021120500_SeedInvitationStaffNode` grants
+  `knk.admin.invites` to Admin (idempotent, the `SeedStatisticsStaffNodes` pattern).
+- **Permissions, audit, settings:** `StaffPermissions.ManageInvites`; `AuditAction` 37–42 with a range comment;
+  `Configuration/InvitationSettings.cs` (`Invitations`: 7 / 30 / 5 / 50 / ["Alpha Tester"] / 3, plus
+  `MaxEmailsPerRequest` = 100); `Security:Registration:Mode` (`LinkCode` default, `Invite`, `Open`), both in
+  `appsettings.json`.
+- **`Services/Invitations/`:** `InvitationCodes` (43-char base64url tokens, `KNK-XXXXX-XXXXX` Crockford codes read
+  case-insensitively with `-`/spaces and O→0, I/L→1, SHA-256 hex, `web-` + 10 Crockford shell names);
+  `InvitationService` (create personal/shared, resend, rotate, pause/resume, revoke, list, redemptions, options, check,
+  `FindUsableAsync`, `RedeemAsync`) and `Repositories/InvitationRepository.cs` (`TryTakeUseAsync`: one
+  `ExecuteUpdate … SET UseCount = UseCount + 1 WHERE … UseCount < MaxUses AND RevokedAt IS NULL AND PausedAt IS NULL
+  AND ExpiresAt > @now`; `RunInTransactionAsync`). Mails through `IEmailComposer` inside the transaction:
+  `Invitation` (`invite:{id}:{sendCount}`, expires with the invite, the returned row's status reported, so a throttled
+  mail shows as `Suppressed`) and `Welcome` (`welcome:{userId}`). Create/revoke audit the actor, redemption the new
+  account; Details never hold a code. No log line holds a code or link.
+- **Registration (`AuthService.RegisterAsync`):** `claimCode` → 400 `NotSupportedYet` (every mode). `Mode=LinkCode`:
+  invite fields → 403 `InvitesDisabled`, everything else exactly as before. `Mode=Invite`: invite token/code → check →
+  personal email must match (400 `InviteEmailMismatch`, then verified) / shared email validated → password → duplicate
+  (409) → `RedeemAsync` in one transaction (take the use, create the admitted `web-…` shell with Default + the invite's
+  group, redemption row, audit, Welcome mail; **no SIGNUP_GRANT**) → session. A failed take is 400 `InvalidInvite`. A
+  link code alone works only for an admitted account (else 403 `InviteRequired`); no invite and no code → 403
+  `InviteRequired`. `AuthController` maps the new codes. `IInvitationService` is an optional last constructor parameter.
+- **`UserService`:** `CreateAsync` (the plugin's `POST api/Users`) sets `AdmittedAt = CreatedAt` unless the mode is
+  `Invite`; the fold copies `EmailVerifiedAt`, `InvitedVia*`, `AdmittedAt` (if the Minecraft account has none) and the
+  invite's group (L1-2). Both new dependencies are optional constructor parameters (L1-7 style).
+- **`Controllers/InvitationsController.cs`** (`api/Invitations`): `GET`, `GET options`, `POST personal`, `POST shared`,
+  `POST {id}/resend|rotate|pause|resume|revoke`, `GET {id}/redemptions`, each `[RequirePermission(knk.admin.invites)]`
+  (in `ProtectedRoutes`); `POST check` `[AllowAnonymous]` + `auth` rate limit (on the `EndpointAccessRulesTests`
+  allow-list). 404 / 403 (escalation) / 409 (wrong kind, not active) / 429 (resend limit) / 400.
+- **DTOs:** `Dtos/InvitationDtos.cs`; `UserDto` gains `minecraftLinked`, and `emailVerified` is true for
+  `EmailVerified` **or** `EmailVerifiedAt` (there is no separate `AuthUserDto`; login returns `UserDto`).
+
+**knk-web-app.** `Controllers.Invitations`, `src/apiClients/invitationClient.ts`,
+`src/types/dtos/invitations/InvitationDtos.ts` (`INVITATION_NODES`), `RegisterRequestDto` with the invite fields,
+`UserDto.minecraftLinked`. `src/components/auth/InviteSignupForm.tsx` (email locked or typed, password + strength meter,
+alpha-rules checkbox, error mapping); `src/pages/auth/InvitePage.tsx` (`/invite/:token`: reads the token once,
+`history.replaceState` to `/invite`, then checks; one "invalid or has expired" message) and `JoinPage.tsx`
+(`/join?code=` or typed); success → `/account/link`, which redirects to `/account` until KNG-214 (L3-8);
+`src/hooks/useNoReferrer.ts` (L3-10). `src/pages/admin/InvitationsPage.tsx` (`/admin/invitations`, `StaffRoute
+node=knk.admin.invites`): Personal/Shared tabs, create cards (bulk textarea, expiry, group from `options`, note,
+send-email toggle / label, max uses, expiry, group), the once-only result panel with Copy buttons and mail status,
+the list with status pills, row actions with `FeedbackModal` confirms, a redemptions drawer, and a warning while the
+server's mode isn't `Invite`. Nav entry **Invitations**; link in the `UserModerationPage` header. `RegisterForm` maps
+`InviteRequired` to "You need an invitation to create an account" with a link to `/join`. Account page "Email
+verified" badge. Audit labels for 37–39.
+
+### Tests vs baseline
+
+| Repo | Baseline (before any change) | After link 3 |
+|---|---|---|
+| knk-web-api | 2787 passed, 4 failed, 77 skipped (2868) | **2864 passed, 4 failed, 80 skipped (2948)**. The 4 failures are the same known-red as `master`. New: `InvitationServiceTests` (31 incl. theories: clamps, caps, label, group allow-list, escalation guard, duplicate personal invite, throttle → Suppressed, resend rotation and limit, rotate, pause/resume/revoke, hash-only storage, uniform check, list filters, options, redemption), `InvitationCodesTests`, `InviteRegistrationTests` (12: personal incl. mismatch and single use, shared, exhausted/expired/paused/revoked, duplicate email, weak password, link code with and without `AdmittedAt`, invite + link code, claim code, `Mode=LinkCode` refuses invites), `AddInvitationsMigrationTests` (4), `UserServiceTests` admission (4), fold tests (2), a DI test; 3 new `[MySqlFact]`s skipped (concurrent last use ×10 rounds, paused/revoked/expired give no use, the backfill on real-shaped rows after migrating down to `AddEmailOutbox`). **No existing test changed behaviour**; `AuthTestHarness.CreateAuthService` got an optional parameter and the fold test class a memberships field. |
+| knk-web-app | 156 suites, 950 tests | **160 suites, 970 tests** (`invitationClient`, `InvitePage`, `JoinPage`, `InvitationsPage`, a `RegisterForm` case, audit labels); `npm run build` compiles with `main`'s pre-existing warnings, none in the new files; `tsc` shows only the 3 errors `main` has (`sessionPinnedRows.test.ts`) |
+| knk-plugin | — | not touched |
+
+### Flagged decisions (reversible defaults; review)
+
+- **L3-1** `Registration.Mode` defaults to `LinkCode` regardless of `AllowWebFirst` (the plan: "defaults to LinkCode
+  when AllowWebFirst is false"); `AllowWebFirst=true` alone changes nothing but the refusal's wording, as today. `Open`
+  is accepted and behaves like `Invite`: web-first sign-up without an invite isn't specified anywhere.
+- **L3-2** Refusal codes: `InvitesDisabled` (403, invite under `LinkCode`), `InviteRequired` (403), `InvalidInvite`,
+  `InviteEmailMismatch`, `NotSupportedYet` (400), `InvalidRequest` for an invite **and** a link code together.
+- **L3-3** The check returns the personal invite's full address (plus `emailHint`) to the token holder, so `/invite` can
+  show it locked as § 5.2 asks; DESIGN § 6 only named `emailHint`. The token is a 256-bit secret mailed to that address.
+- **L3-4** `GET api/Invitations/options` added (invitable groups that exist, defaults, caps, mode) for the create
+  forms' "group select limited to the API's invitable list".
+- **L3-5** Resends per day are counted in two new `invitations` columns (rolling 24 h window) rather than derived.
+- **L3-6** Resend restarts the expiry with `DefaultExpiryDays` (the original lifetime isn't stored) and works on an
+  expired invite; it refuses used or revoked ones and addresses that meanwhile have an account. `sendEmail: false`
+  rotates without mailing (copy-link only) and counts as a resend.
+- **L3-7** Pause/resume only for shared codes (DESIGN § 3.4); the plan listed them generically.
+- **L3-8** The Welcome mail says "Hi there" and links `{base}/account/link`; the web app redirects `/account/link` to
+  `/account` until link 4 builds the page.
+- **L3-9** The backfill admits only active, non-deleted accounts (as planned). A deactivated account reactivated later
+  is not admitted; staff Admit (KNG-214) covers it. Worth a look before the switch-over.
+- **L3-10** `useNoReferrer` adds `<meta name="referrer" content="no-referrer">` on `/invite` and `/join` (DESIGN § 3.3;
+  the reset and link pages don't have it yet; follow-up below).
+- **L3-11** A personal create runs one transaction per address (the old invite revoked, the new one and its mail
+  together), so a failure part-way keeps the addresses before it. Bulk results report each address.
+- **L3-12** Group memberships of a new shell are written directly (`InvitationRepository.AddMembershipAsync`), not
+  through `UserPermissionGroupService`, because the escalation guard already ran when the invite was created; the
+  fold uses `UserPermissionGroupService.UpsertAsync`.
+
+### Discrepancies with the plan / design
+
+- Plan § 5.1 "`UserDto` and `AuthUserDto` gain …": there is no `AuthUserDto` (login returns `UserDto`); `emailVerified`
+  already existed and now also reads `EmailVerifiedAt`.
+- DESIGN § 3.4's single statement omits `PausedAt IS NULL`; the plan's (and the code's) includes it.
+- Plan § 5.1 link format `{base}/invite?code=…` in the link 3 handoff vs DESIGN `/invite/<token>`: the code follows DESIGN.
+
+### Live checklist (dev API + web app; not run)
+
+1. `dotnet ef database update` on a copy of the alpha DB: every active account has `AdmittedAt = CreatedAt`; deleted
+   and inactive ones have NULL; Admin holds `knk.admin.invites` (`permission_grants`). Run
+   `KNK_TEST_MYSQL=… dotnet test --filter Category=requires-mysql` (incl. the 3 new invitation tests).
+2. With the default `Mode=LinkCode`: `/account link` → `/auth/register` works exactly as before; `POST
+   api/Auth/register` with an `inviteCode` answers 403 `InvitesDisabled`; `/admin/invitations` shows the mode warning.
+3. Admin → **Invitations** (nav and Moderation header): create a personal invite for your own address (send email on)
+   → result panel with Copy link and "Mail pending"; `/admin/email` shows the Invitation row; the mail (pickup folder,
+   relay or API log with `AllowLogTransport`) has the link.
+4. Set `Security__Registration__Mode=Invite`, restart. Open the link: the address bar shows `/invite`, the email is
+   locked; sign up → logged in, `/account` shows "Email verified"; the user is `web-…`, `AdmittedAt` and
+   `InvitedVia*` set, Default (+ group) membership, **no** SIGNUP_GRANT ledger entry; a Welcome mail is queued.
+   Open the same link again → "invalid or has expired".
+5. Shared code with 2 uses → `/join?code=…` twice with two addresses → both work; the third → invalid; the drawer
+   lists both as "Not linked yet" with masked emails.
+6. Pause → sign-up refused; resume → works; rotate → the old code refused, the new one works, uses kept; revoke →
+   refused. Expired (create with 1 day, wait or edit `ExpiresAt`) → refused with the same message.
+7. Resend a personal invite four times in a day → the 4th answers 429; the old link stops working after each resend.
+8. Under `Mode=Invite`: `/account link` code of a grandfathered player → registration works; of an account created
+   after the switch (plugin, `AdmittedAt` NULL) → "You need an invitation" with the `/join` link.
+9. A non-admin staff member without the node gets the "staff only" screen on `/admin/invitations` and no nav entry.
+
+### Deploy notes (a deploy of this API state)
+
+- Migrations `AddInvitations` (additive, with the backfill) and `SeedInvitationStaffNode` (data) run on start-up.
+- **No setting needed**: `Security:Registration:Mode` defaults to `LinkCode`, so a deploy is behaviour-neutral for the
+  alpha. Do **not** set `Mode=Invite` before I2 (KNG-214) is deployed too: invited web accounts can't link Minecraft yet.
+- The link 2 precondition still holds: `Email__AllowLogTransport=true` while the alpha runs `Email__Provider=Log`.
+- Optional: `Invitations__*` overrides; the "Alpha Tester" group is seeded in link 7 (until then the group select is
+  empty unless the group exists).
+
+### Risks
+
+- The backfill is the step that decides whether existing players can join once the admission gate is on. It was not
+  run against MySQL here; checklist item 1 must pass on a copy of the alpha DB before the switch-over.
+- EF InMemory runs `TryTakeUseAsync` without `ExecuteUpdate`; the race is covered only by the skipped MySQL test.
+- Under `Mode=Invite` the plugin's new accounts are not admitted. Until I2's gate exists that changes nothing in game,
+  but `/account link` registration for them is refused — another reason not to switch before I2.
+- A shell account can log in and see its account page, but has no Minecraft identity until KNG-214's linking.
+
+### What the next link must know
+
+- `IInvitationService.FindUsableAsync(token, code)` and `RedeemAsync(new InviteSignup(invitation, email, hash,
+  verified))` are the building blocks for register-with-`claimCode` (case A at sign-up): RedeemAsync creates the shell
+  and returns the `User`; link 4 then sets `Uuid`/`Username` from the claim code (or folds) in the same flow and posts
+  SIGNUP_GRANT then. `AuthService.RegisterAsync` refuses `claimCode` first thing (`NotSupportedYet`): replace that.
+- `User.AdmittedAt` is the admission flag the plugin gate reads (via the Admission API). Set it in staff Admit and in
+  claim linking; `UserService.CreateAsync` leaves it NULL under `Mode=Invite`.
+- `AuditAction.MinecraftLinked` (40), `MinecraftUnlinked` (41) and `PlayerAdmitted` (42) exist; labels in the web app
+  (`src/utils/auditDetails.ts`) cover only 37–39.
+- `/account/link` is a `<Navigate to="/account">` in `src/App.tsx`: replace it with the onboarding page. The Welcome
+  mail already links there.
+- Test fixtures: `Tests/…/Services/Invitations/InvitationTestDb` (InMemory + real composer + `ManualClock`; pass an
+  existing `KnKDbContext` to share it with `AuthTestHarness`, as `InviteRegistrationTests` does).
+
+### Follow-ups found (not fixed)
+
+- `/auth/reset-password` (and link 4's `/link` pages) don't send `Referrer-Policy: no-referrer`; `useNoReferrer` can
+  be reused. Noted in the KNG-212 comment.
+- The web app's audit label list doesn't know `UsernameReleased` (35, from the alpha hardening); it shows the raw name.

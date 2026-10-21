@@ -1,7 +1,7 @@
 # Invite-only sign-up, email engine and web-first Minecraft linking — Design
 
-**Status:** Decided 2026-10-21 (§ 8, all recommendations taken, except I8: Cloudflare Access stays, and the API keeps its allow-list in sync, § 5.8). In implementation on the feature branch through the invitations chain: L0 (§ 5.4) and the email engine (§ 4.2) are built, not merged; see the as-built notes.
-**Last updated:** 2026-10-21 (link 2: § 4.2 as-built; decisions recorded; § 5.8 Access sync added; § 6 and § 7 aligned with the implementation plan)
+**Status:** Decided 2026-10-21 (§ 8, all recommendations taken, except I8: Cloudflare Access stays, and the API keeps its allow-list in sync, § 5.8). In implementation on the feature branch through the invitations chain: L0 (§ 5.4), the email engine (§ 4.2) and invitations (§ 3) are built, not merged; see the as-built notes.
+**Last updated:** 2026-10-21 (link 3: § 3.3 as-built; link 2: § 4.2 as-built; decisions recorded; § 5.8 Access sync added; § 6 and § 7 aligned with the implementation plan)
 **Implementation plan:** [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) (2026-10-21; work packages E0, E1, L0, I1, I2, A1, I3)
 **Linear:** [KNG-205](https://linear.app/kngpandi/issue/KNG-205) (this design, parent), [KNG-206](https://linear.app/kngpandi/issue/KNG-206) (email engine, high priority), work packages [KNG-211](https://linear.app/kngpandi/issue/KNG-211) (E0), [KNG-212](https://linear.app/kngpandi/issue/KNG-212) (I1), [KNG-214](https://linear.app/kngpandi/issue/KNG-214) (I2), [KNG-216](https://linear.app/kngpandi/issue/KNG-216) (A1), [KNG-218](https://linear.app/kngpandi/issue/KNG-218) (I3), found while writing it: [KNG-207](https://linear.app/kngpandi/issue/KNG-207) (link merge bug), [KNG-208](https://linear.app/kngpandi/issue/KNG-208) (link-code hygiene); related [KNG-159](https://linear.app/kngpandi/issue/KNG-159) (email verification), [KNG-67](https://linear.app/kngpandi/issue/KNG-67) (code-based signup)
 **Sources:**
@@ -113,6 +113,10 @@ Industry practice is short, email-bound, single-use invites for named people, an
 - **Personal link token:** 32 random bytes, base64url, 43 characters. Only `SHA-256(token)` is stored, the same way reset tokens and refresh tokens are. The web page reads it from `/invite/:token`, then removes it from the address bar (`history.replaceState`). Invite, reset and link pages send `Referrer-Policy: no-referrer`.
 - **Shared code:** `KNK-` plus 10 characters from Crockford base32 (no I, L, O, U; 0/O and 1/I/L are read the same), shown as `KNK-XXXXX-XXXXX`. That is 50 bits, so about 10^15 possible codes; at 10 guesses a minute per IP, guessing is not a realistic attack. Only the hash is stored.
 - **Show once.** The admin sees and copies the code or link at creation, and again after "rotate". This is the same model as API keys. Storing the codes reversibly so they can be shown again is possible, but it isn't needed: rotating a shared code costs one click. *(Decision I5.)*
+
+**As built (link 3, 2026-10-21, KNG-212):** codes as above; the check also returns the bound address of a personal
+invite to the holder of its token, so `/invite` can show it locked (the token was sent to that address). Pages with a
+code in the URL add a `no-referrer` meta tag while open. See plan § 5.2a.
 
 ### 3.4 Lifecycle and counting
 
