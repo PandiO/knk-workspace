@@ -1,7 +1,7 @@
 # Navigation destination engine — which places a player may navigate to
 
 **Status:** Proposed — design for the developer's review. **No code.** Decisions of 2026-10-22 are recorded in §1.
-**Last updated:** 2026-10-22
+**Last updated:** 2026-10-22 (E9: frozen above the bypass)
 **Linear:** not filed yet (the Linear connector was unavailable in the session that wrote this) — see "To file in Linear" at the end.
 **Builds on:** [navigation/DESIGN.md](../navigation/DESIGN.md) (`/navigate`, §6), [navigation-compass/DESIGN.md](../navigation-compass/DESIGN.md)
 (§11: match scope, which this design generalises), [user-features/DESIGN.md](../user-features/DESIGN.md) §6.1 (owner/staff mode),
@@ -29,6 +29,7 @@ in-memory model that is **persisted to disk**, so it behaves the same with the w
 | E6 | **Owner mode and staff mode are exempt from these rules and conditions** as well (on top of E5). |
 | E7 | **Code-defined policies first**; tuning values come from existing settings. Web-app-editable policies are a later step. |
 | E8 | **Design document first, no code.** Implementation is a separate issue and branch (§10). |
+| E9 | **Frozen sits above the bypass.** Freeze also applies to owner/staff mode and `knk.navigate.any` holders (only higher ranks can freeze, so the rank order gates it). |
 
 ## 2. What exists today (from the code, 2026-10-22)
 
@@ -101,9 +102,9 @@ can be cached per `(scope, world, modelVersion)` for tab completion.
 
 | Priority | Scope | Applies when | Yields |
 |---|---|---|---|
+| 110 | Account loading | account still loading (the mode is not known yet, so nothing can be exempt) | `Empty("Your account is still loading - try again in a moment.")` |
+| 110 | **Frozen** | player frozen — **applies to owner/staff mode too** (E9) | `Empty("You can't navigate while frozen.")` |
 | 100 | **Bypass** | `ActiveMode` is `OWNER` or `STAFF` (E6), or the player has `knk.navigate.any` (E5) | the full catalogue (all providers' union for the world), no further policy checked |
-| 90 | Account loading | account still loading | `Empty("Your account is still loading - try again in a moment.")` |
-| 90 | Frozen | player frozen | `Empty("You can't navigate while frozen.")` |
 | 80 | No permission | lacks `knk.navigate` | `Empty("You don't have permission to use /navigate.")` |
 | 60 | Siege match | member of a *running* siege match, compass enabled for sieges | `SiegeMatchProvider` (objectives by relevance, then the team spawn) |
 | 55 | Siege match, compass off | member of a running match, compass off for sieges | `Empty("Navigation is switched off in this siege.")` |
@@ -113,8 +114,8 @@ can be cached per `(scope, world, modelVersion)` for tab completion.
 Notes: the existing messages stay as the scope's reason, so players see the same texts. "Cycle list" of the compass
 is the *same* list with the compass's own presentation (cursor, chat line); outside a siege the compass's configured
 targets are a **filter/ordering of the World scope** (`CompassTargetsProvider`) rather than a second catalogue.
-Owner/staff mode is deliberately above freeze: those accounts are staff, a freeze targets players; if you want a frozen
-staff account blocked, lower the Bypass priority below Frozen (one constant) — **assumption to confirm**.
+Freeze sits **above** the bypass (E9, developer, 2026-10-22): a freeze can only be placed by someone of higher rank, so it is
+the one rule that also holds for owner/staff mode and `knk.navigate.any`.
 
 ### 4.2 What stays a hard block (not a destination question)
 
@@ -228,7 +229,6 @@ Estimated: phases 1–2 are the bulk (a pure core plus the snapshot); 3–4 are 
   the main thread; refresh and snapshot writes run off it.
 - **Domain places that move:** the snapshot can hold a place that was just edited; the next refresh corrects it, and
   region-based goals are unaffected by a moved spawn.
-- **Bypass priority vs. freeze** (§4.1) — assumption to confirm.
 - **Worlds:** places carry their world; the World scope filters by the player's world as today (other-world places are
   listed with a note or hidden — keep today's "not in this world" message by hiding them from completion but resolving
   them to the existing message).
