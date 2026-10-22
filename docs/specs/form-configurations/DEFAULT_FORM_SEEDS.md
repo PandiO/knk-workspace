@@ -2,7 +2,7 @@
 
 **Status:** Design decided (2026-10-11: S1 = A, developer). Implemented by the
 [form wizard chain](../../ai-agents/handoffs/FORM_WIZARD_CHAIN.md) (KNG-137, KNG-138, KNG-139 priority-1 groups), merged 2026-10-17 to knk-web-api `master`, knk-web-app `main` and knk-plugin `main` via branch `claude/wonderful-darwin-u39k1o`, live-tested by the developer ([chain report](../../reports/2026-10-11-form-wizard-chain.md), [follow-ups and live test](../../reports/2026-10-12-form-wizard-chain-smoke-followups.md)). The "not merged / live test pending" notes dated 2026-10-12 below are historical. The GateStructure seed has no House number field (removed 2026-10-17, smoke test F2.5).
-**Last updated:** 2026-10-18 (§4: a property asked in more than one step shares one value, KNG-120); 2026-10-17 (merged and live-tested; GateStructure seed without House number, §5.1 table row); 2026-10-12 (§2.1, §2.3: KNG-164 columns and KNG-137 renderer gaps fixed on the chain branch; §3: KNG-138 implemented on the chain branch, §3.4 records where it differs; §5.1: KNG-139 priority-1 seeds delivered)
+**Last updated:** 2026-10-22 (§5.1: priority 2 and 3 seeds and the display seeds merged after the developer's smoke test; GateStructure seed v2, KNG-229); 2026-10-18 (§4: a property asked in more than one step shares one value, KNG-120); 2026-10-17 (merged and live-tested; GateStructure seed without House number, §5.1 table row); 2026-10-12 (§2.1, §2.3: KNG-164 columns and KNG-137 renderer gaps fixed on the chain branch; §3: KNG-138 implemented on the chain branch, §3.4 records where it differs; §5.1: KNG-139 priority-1 seeds delivered)
 **Linear:** [KNG-138](https://linear.app/kngpandi/issue/KNG-138) (export/import),
 [KNG-139](https://linear.app/kngpandi/issue/KNG-139) (author the default forms),
 [KNG-137](https://linear.app/kngpandi/issue/KNG-137) (wizard shows step names and all descriptions)
@@ -248,6 +248,13 @@ was available, so the gate seeds are derived from the sources above and the code
 `PHASE_3_FORMCONFIGS.md`. The per-step changes, the properties left off and the flagged decisions (L7-1..L7-9) are in
 `reports/2026-10-11-form-wizard-chain.md`, link 7. **Priority 2 and 3 not started:** they need an export of the
 current forms first (value projections, world-task bindings, the Street "Road" step).
+
+**2026-10-22:** priority 2 and 3 are delivered and merged (knk-web-api `master` `3eac5ec`): 30 seeds converted from the
+dev DB's `knk_uiux_seed` dump of 2026-10-07, plus 7 display seeds and the DisplayConfiguration export/import, smoke-tested
+by the developer with the KNG-195 submit fixes. The GateStructure seed is at v2 (warp, /navigate and road-access
+fields, KNG-229). Per-step changes, properties left off and the developer's decisions:
+[seed review notes](../../reports/2026-10-19-kng-139-seed-review-notes.md). Follow-ups: KNG-243, KNG-244, KNG-246,
+KNG-247, KNG-248.
 
 ## 6. Order of work
 
