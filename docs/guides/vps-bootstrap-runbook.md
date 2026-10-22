@@ -1,6 +1,8 @@
 # VPS bootstrap runbook — closed alpha on a rented server
 
-**Status:** Draft v1 (2026-10-22) — written for review, **not yet followed**. No server has been ordered.
+**Status:** **Shelved (2026-10-22)** — the developer's NAS performance tests (another session) show the NAS is enough for the
+current test round, so no server is being ordered. The plan below stays ready for a later move; re-read the decisions and
+re-check prices, regions and the invitations-branch state first. Originally: Draft v1 (2026-10-22), not yet followed.
 **Last updated:** 2026-10-22
 **Linear:** [KNG-241](https://linear.app/kngpandi/issue/KNG-241) (cloud VM plan and NAS-to-VPS drill)
 **Companion docs:** [pre-flight checklist](vps-preflight-checklist.md) (what you provide before the agent starts) ·
@@ -14,7 +16,10 @@ backups) on one rented server, set up by Claude Code running **on that server**,
 runbook and an older document disagree, this one wins for the VPS; § 18 lists the older documents that need a
 "superseded" note.
 
-## 1. Decisions (developer, 2026-10-22)
+## 1. Decisions (developer, 2026-10-22; shelved the same day)
+
+These were the choices for a VPS move. They apply only if the move happens. **They do not change the NAS alpha**, which
+keeps the existing plan (Cloudflare Tunnel, Access, playit.gg) in [alpha go-live](alpha-go-live.md) unless the developer decides otherwise.
 
 | # | Decision | Notes |
 |---|---|---|

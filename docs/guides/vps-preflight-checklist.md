@@ -1,6 +1,6 @@
 # VPS pre-flight checklist — what you provide before the agent starts
 
-**Status:** Draft v1 (2026-10-22) — written for review, not yet used
+**Status:** **Shelved (2026-10-22)** — the NAS is enough for the current test round (see the [runbook](vps-bootstrap-runbook.md) status). Not used. Originally Draft v1.
 **Last updated:** 2026-10-22
 **Linear:** [KNG-241](https://linear.app/kngpandi/issue/KNG-241)
 **Plan:** [VPS bootstrap runbook](vps-bootstrap-runbook.md) · **Prompt:** [kickoff prompt](../ai-agents/handoffs/2026-10-22-vps-bootstrap-kickoff-prompt.md)

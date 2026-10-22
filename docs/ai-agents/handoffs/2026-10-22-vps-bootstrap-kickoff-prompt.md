@@ -1,7 +1,7 @@
 # Kickoff prompt: set up the closed-alpha stack on the VPS
 
 **Created:** 2026-10-22
-**Status:** Draft v1 — ready to copy once the [pre-flight checklist](../../guides/vps-preflight-checklist.md) is done
+**Status:** **Shelved (2026-10-22)** — do not run; the NAS stays the alpha host for the current test round. Kept for a later move: re-verify the facts and build refs it names first. Originally Draft v1.
 **Linear:** [KNG-241](https://linear.app/kngpandi/issue/KNG-241)
 **Plan:** [VPS bootstrap runbook](../../guides/vps-bootstrap-runbook.md)
 **Where it runs:** Claude Code on the VPS, as the user `knk-agent`, inside `tmux`, started in the cloned
