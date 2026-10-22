@@ -14,6 +14,7 @@ Central home for requirements, specifications, and implementation roadmaps acros
 - enchantment-books/: permanent enchantment books outside siege (Linear KNG-5)
 - game-settings/: global Game Settings - announcements, join spawn, respawn policy, per-world game mode/time/weather/spawn, applied by the plugin (Linear KNG-52)
 - navigation/: road network (survey-learned road profiles, auto-detected junctions on every level) and `/navigate` guidance with live gate/entry availability (Linear KNG-27)
+- navigation-compass/: the navigation compass item for sieges — right-click cycles team-relevant objectives, shift-click stops, bound by material + display name and configured on the web app's navigation page (Linear KNG-234)
 - production-storage-transport/: the resource-economy backbone: storages (domain/player/clan), production kinds with yield areas, transport orders (simulated, then NPC/courier), town logistics (V2 port, design draft rev. 2, 2026-10-09)
 - siege-survival/: cooperative endless NPC-wave defense, gate repair, spawnzone progression and match equipment/economy (Linear KNG-50, child of KNG-37; design only)
 - user-features/: rank/permission/title/salary architecture
