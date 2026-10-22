@@ -14,6 +14,17 @@ This is a human-readable record of capabilities merged into the V3 default branc
   [performance metrics and capacity guide](guides/performance-metrics-and-capacity.md) for the collection stack, load
   steps, acceptance thresholds and the NAS-vs-cloud decision.
 
+## 2026-10-22
+
+- **Gates can be warp destinations, and the gate form has the /navigate and road settings**
+  ([KNG-229](https://linear.app/kngpandi/issue/KNG-229); knk-web-api `master` `be9f4e1`, merged directly, no PR). The
+  bundled form seed "GateStructure - Default (seed v2)" adds "Entry rule on roads" and "Navigate to", plus a "Warp
+  destination" step (on/off, price in gems, minimum title, minimum premium tier, discovered gates only), as on the
+  Structure form. The API now stores a gate's warp settings; before, `GateStructureService` ignored them, although
+  `/warp` already listed gates. A save without the warp step (the plugin, the v1 form) keeps them. Import the seed from
+  Import / Seeds and make it the default; it imports next to v1. Smoke-tested by the developer on 2026-10-22: every step
+  passed or was accepted.
+
 ## 2026-10-21
 
 - **The plugin runs on Minecraft 26.3** ([KNG-182](https://linear.app/kngpandi/issue/KNG-182); knk-plugin `main`
