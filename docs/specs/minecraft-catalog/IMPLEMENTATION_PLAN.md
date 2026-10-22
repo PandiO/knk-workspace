@@ -1,6 +1,6 @@
 # Minecraft catalogue (materials and blocks): implementation plan
 
-**Status:** Phase 2 in progress; decisions D1-D12 taken by the developer (2026-10-21, §11). Nothing is implemented yet.
+**Status:** Phases 1-5 code-complete (live test of 1-4 passed 2026-10-22); decisions D1-D12 taken by the developer (2026-10-21, §11).
 **Last updated:** 2026-10-21
 **Issue:** [KNG-200](https://linear.app/kngpandi/issue/KNG-200). Related: [KNG-195](https://linear.app/kngpandi/issue/KNG-195) (hybrid submit fixes, In Review), [KNG-182](https://linear.app/kngpandi/issue/KNG-182) (Minecraft 26.3).
 
@@ -571,7 +571,42 @@ phase. Live testing happens once, after phase 4 (D12).
 | 3 Scan + ingest + icons | Code-complete 2026-10-21, not merged, not live-tested (D12) | knk-web-api `d33213b`: `MinecraftCatalogScanService` (request/list/get/cancel/ingest, icon override), `MinecraftIconResolver` (config `MinecraftCatalog:Icons`, defaults in code), snapshot/scan DTOs, scan status as concurrency token (snapshot only, no schema change). knk-plugin `a513cc71`, `b5b5450b`, `21eb8751`: knk-core `catalog/CatalogSnapshot` (hash), knk-api-client `MinecraftCatalogApi` (PUT with a 2-minute read timeout), knk-paper `catalog/BukkitMaterialCatalogSource` + `tasks/MinecraftCatalogScanTaskHandler` registered in `KnKPlugin`. knk-web-app `91cc7ae`, `938d86b`, `634708d`: `/admin/minecraft-catalog` (scan, polling, cancel, history; needs-attention with merge; missing icons with overrides), `minecraftCatalogClient`, `MinecraftIcon` |
 | 4 DB-only picker | Code-complete 2026-10-21, not merged, not live-tested (D12) | knk-web-api `e9d581e`; knk-web-app `b6ba680`..`de23957` (picker `kind` filter, "New" badge only for unsaved rows, `MinecraftIcon` in material/block columns, DisplayField/DisplaySection and a new item blueprint Icon column, icon-override list on the admin page). See "Phase 4 as built" below |
 | 1 Stabilise | Code-complete 2026-10-21, not merged, not live-tested (D12) | Started before KNG-195 merged, because the overlap that D10 assumed doesn't exist: KNG-195 changes `normalizeFormSubmission` and DTOs/services phase 1 doesn't touch, and both repos' branches merge cleanly with `claude/kng-195-form-submit-fixes` (checked with `git merge-tree`). knk-web-api `c5da4b1`: hybrid merge by normalised key, saved-only rows filtered, `id: null` for unsaved rows, sorting and page size, one row per block state, 409 with the existing id on create/update, parallel get-or-create returns the winner, new `POST MinecraftBlockRefs/get-or-create`. knk-web-app `841488b`, `f8d0e72`, `a5af37f`: id 0/"0"/null is no id; unsaved material rows keyed and compared by the normalised key (blocks: key + state); auto-create through get-or-create (materials `persistFromCatalog`, blocks the new `getOrCreate`); stale search responses ignored. There is no select-all control in the app (the handler was never rendered), so none was added |
-| 5 | Not started (after the live test) | |
+| Live test of phases 1-4 | Passed (developer, 2026-10-22) | Scan #1 on Minecraft 26.3: 1812 entries (1752 inserted, 60 updated, 0 merged/deleted/missing, 98 without an icon); no duplicate rows, search works, item blueprint picker OK, dashboard and picker tables OK, audit clean |
+| 5 Retire | Code-complete 2026-10-22, not merged | See "Phase 5 as built" below |
+
+**Phase 5 as built:**
+- **Migration `MinecraftCatalogConstraints`.** It makes `minecraftblockrefs.StateKey` unique and
+  `MaterialRefId` required.
+  - It first runs a check (a short-lived stored procedure with `SIGNAL`). While block refs are
+    unlinked, unkeyed or duplicated, the migration stops with "KNG-200: block refs not clean…"
+    before any change. It never deletes rows.
+  - The backfill and the audit read block refs with `COALESCE(MaterialRefId, 0)`, so a database
+    between the two migrations can still be backfilled.
+  - Upgrade path for an environment that gets every KNG-200 migration at once:
+    1. Run `dotnet ef database update`. The phase 2 migration applies, and the constraints
+       migration refuses if the table isn't clean.
+    2. Start the API once; the backfill runs at startup.
+    3. Check `GET api/MinecraftCatalog/audit` and merge what it lists.
+    4. Run `dotnet ef database update` again.
+
+    The dev database (audit clean) applies it directly.
+- **Removed from the API:**
+  - `GET MinecraftMaterialRefs/hybrid` and the hybrid merges for materials and block refs;
+  - `MinecraftCatalog:PickerSource`, `MinecraftMaterialCatalogService` with
+    `Data/minecraft_material_catalog.json`, and the hybrid option DTOs.
+
+  Seeds and inline creation make Unverified rows named from the key (D5: a new database starts
+  empty until its first scan).
+- **Picker searches.** They send `Picker=true`; the pre-KNG-200 name `SearchHybrid=true` is still
+  accepted. A search without the flag is the admin search: all rows, Missing included.
+- **Web app.**
+  - Hybrid mode is left only for enchantments, which are deferred.
+  - `HybridMaterialPicker` is renamed `MinecraftMaterialPicker`. The enum
+    `HybridMinecraftMaterialRefPicker` is kept for stored FormConfigurations.
+  - ItemScan/KitScan resolve materials with get-or-create.
+  - Roads suggestions come from the picker search.
+  - `getHybrid` is removed from the material client.
+- **Untouched.** The enchantment catalogue (static JSON, hybrid routes and picker) and the plugin.
 
 **Phase 4 as built (refines §9.3-9.4):**
 - **The switch is server-side.** `MinecraftCatalog:PickerSource` is `Auto` (default), `Hybrid` or
