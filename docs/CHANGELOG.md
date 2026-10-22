@@ -4,8 +4,61 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
-- **`/hub` takes any player to the hub** ([KNG-188](https://linear.app/kngpandi/issue/KNG-188); merged into the
-  knk-plugin KNG-182 branch `claude/mc-26.2-upgrade` at `88497649`, reaches `main` with it). `/hub` goes to the hub spawn selected on the Game
+- **Performance metrics for the closed alpha** ([KNG-232](https://linear.app/kngpandi/issue/KNG-232); knk-plugin
+  `claude/kng-232-perf-metrics` `1fa9e15`, knk-web-api `claude/kng-232-perf-metrics` `a52aaed`; unit-tested, not live-tested,
+  not merged). The plugin can serve a Prometheus `/metrics` (`metrics.enabled`, off by default, bearer token) with TPS, tick
+  time, players, chunks and entities per world, JVM heap/off-heap/GC, process CPU/RSS, the container's memory working set
+  against its limit, API-call latency and the cost of 16 recurring tasks. The API's `/metrics` is now real
+  (`Telemetry__Prometheus__Enabled` + a bearer token; the earlier note that it existed was wrong) and adds .NET runtime,
+  HTTP client, process/cgroup and database-command metrics. Read the
+  [performance metrics and capacity guide](guides/performance-metrics-and-capacity.md) for the collection stack, load
+  steps, acceptance thresholds and the NAS-vs-cloud decision.
+
+## 2026-10-22
+
+- **Default forms and display pages for the rest of the game content** ([KNG-139](https://linear.app/kngpandi/issue/KNG-139);
+  knk-web-api `master` `3eac5ec`, knk-web-app `main` `0736ef3`, merged directly, no PR). 30 more bundled form seeds
+  (Town, District, Street, Structure, Location; User, permission groups and grants, banners, Clan; grades, tags,
+  categories, enchantments, item blueprints; kits and lootboxes), reworked from the dev forms with a description on
+  every step and field and their known bugs fixed, and 7 display seeds (Structure, GateStructure with a warp and
+  navigation section, User, ItemBlueprint, EnchantmentDefinition, MinecraftMaterialRef, ItemBlueprintDefaultEnchantment).
+  Display configurations get **Export JSON** and **Import / Seeds** like form configurations (`knk-displayconfig/1`).
+  Import both from the configuration lists and make them the default. Smoke-tested by the developer on 2026-10-22:
+  every step passed or was accepted. Follow-ups: [KNG-243](https://linear.app/kngpandi/issue/KNG-243),
+  [KNG-244](https://linear.app/kngpandi/issue/KNG-244), [KNG-246](https://linear.app/kngpandi/issue/KNG-246),
+  [KNG-247](https://linear.app/kngpandi/issue/KNG-247), [KNG-248](https://linear.app/kngpandi/issue/KNG-248);
+  details in the [seed review notes](reports/2026-10-19-kng-139-seed-review-notes.md).
+- **Form saves keep what they should** ([KNG-195](https://linear.app/kngpandi/issue/KNG-195); same merges). A
+  Structure's spawn point captured in game is saved; editing a player no longer unfreezes them or resets their email
+  verification, account origin, gender, active state or gate pass-through; picking the empty option of an optional
+  list no longer makes the save fail; a material or vanilla enchantment that isn't in the database yet is saved from
+  the picker; saving a custom enchantment keeps its ability.
+
+- **Gates can be warp destinations, and the gate form has the /navigate and road settings**
+  ([KNG-229](https://linear.app/kngpandi/issue/KNG-229); knk-web-api `master` `be9f4e1`, merged directly, no PR). The
+  bundled form seed "GateStructure - Default (seed v2)" adds "Entry rule on roads" and "Navigate to", plus a "Warp
+  destination" step (on/off, price in gems, minimum title, minimum premium tier, discovered gates only), as on the
+  Structure form. The API now stores a gate's warp settings; before, `GateStructureService` ignored them, although
+  `/warp` already listed gates. A save without the warp step (the plugin, the v1 form) keeps them. Import the seed from
+  Import / Seeds and make it the default; it imports next to v1. Smoke-tested by the developer on 2026-10-22: every step
+  passed or was accepted.
+
+## 2026-10-21
+
+- **The plugin runs on Minecraft 26.3** ([KNG-182](https://linear.app/kngpandi/issue/KNG-182); knk-plugin `main`
+  `857d4b1e`, merged directly, no PR). Paper 26.3 build 205 on Java 25 (Gradle 8.14 itself still runs on Java 21),
+  `api-version` 26.3, WorldEdit 7.4.6 and WorldGuard 7.0.20 (the dev server runs FastAsyncWorldEdit 2.16.1). The world
+  loader also finds worlds in Paper 26.x's `<level>/dimensions/minecraft/<name>/`, where Paper moves the hub and the
+  other worlds on their first load, so the second start no longer reports the hub missing. Offline `/inventory` and
+  `/enderchest` read `<world>/players/data`. Paper converts the world storage on the first 26.3 start; it can't be
+  undone. Live-tested by the developer on `DEV_SERVER_26.3` on 2026-10-18 and 2026-10-20
+  ([smoke test](guides/minecraft-26.3-upgrade-smoke-test.md)): every step passed or was accepted except the hub
+  tiles of `/menu`, which were hidden because the server had started while the API was down
+  ([KNG-201](https://linear.app/kngpandi/issue/KNG-201), not a 26.3 problem). The same startup-only shape was found
+  in siege, gates and regions ([KNG-202](https://linear.app/kngpandi/issue/KNG-202),
+  [KNG-203](https://linear.app/kngpandi/issue/KNG-203), [KNG-204](https://linear.app/kngpandi/issue/KNG-204)).
+- **`/hub` takes any player to the hub** ([KNG-188](https://linear.app/kngpandi/issue/KNG-188); reached knk-plugin
+  `main` with KNG-182 at `857d4b1e`, through the KNG-182 branch). Its three live checks are still to run. `/hub` goes to the hub spawn selected on the Game
   Settings page through the regular teleport engine: warmup, movement and combat cancel, the safe-spot check, and the
   siege, freeze and outage guards. It has its own cooldown, and the groups' spawn settings set its cooldown and price.
   Without a usable hub it says "The hub isn't available right now." and moves nobody. Staff can send a player with

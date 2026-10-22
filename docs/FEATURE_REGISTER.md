@@ -16,6 +16,8 @@ KNG-133..139, KNG-162, KNG-164, KNG-166..169, KNG-172..174) are merged and live-
 entities, cancel/delete-draft, FormConfiguration export/import and the bundled GateStructure/GateDoor/siege seed forms
 (used by the Gates and Siege rows), picker columns, refusal reasons, and world-task warning vs block. See
 [CHANGELOG](CHANGELOG.md) and [the follow-ups report](reports/2026-10-12-form-wizard-chain-smoke-followups.md).
+**2026-10-22:** default seed forms now cover the domain family, people, items, kits and lootboxes too, with 7 display
+seeds and DisplayConfiguration export/import (KNG-139, KNG-195; [seed review notes](reports/2026-10-19-kng-139-seed-review-notes.md)).
 
 **Targeted refresh (2026-10-11):** service-wide API connectivity (KNG-115, infrastructure, no feature row) is merged
 and live-tested: knk-web-api `master` `17ee730`, knk-plugin `main` `b5eee6e`; see
@@ -88,7 +90,8 @@ For each changed row, include its source, spec or issue and the date of the evid
 | NPC pathfinding over roads, structures and dynamic gates | partial | partial | open | none | — | pending | design in [KNG-36](https://linear.app/kngpandi/issue/KNG-36) after road graph and NPC requirements; [navigation](specs/navigation/DESIGN.md) covers **player guidance**, not NPC movement |
 | Vendors, guards, bandits, bosses, companions and pets | partial | partial | vision | none | — | pending | design capabilities on shared NPC platform; [vision §6](vision/vision.md#6-law-crime--safety), [§9](vision/vision.md#9-equipment--magic) |
 | Dungeons and configurable wave survival | — | — | vision | none | — | pending | design [KNG-37](https://linear.app/kngpandi/issue/KNG-37) after NPC platform; [vision §7.5](vision/vision.md#75-other-combat-systems-long-term) |
-| Arena, duels, Hide and Seek, fishing, treasure and lottery | partial | partial | vision | none | — | pending | decide each activity's scope; [v1 commands](specs/legacy/commands-v1.md), [v1 events](specs/legacy/events-v1.md) |
+| Arena duels: invite with stake offers, escrow, lobby warmup, spectators, battleground PvP, kit and drop modes | partial | — | spec | none | — | pending | finish (implementation not started): [design](specs/arena-duels/DESIGN.md) and [plan](specs/arena-duels/IMPLEMENTATION_PLAN.md) accepted 2026-10-21 ([KNG-197](https://linear.app/kngpandi/issue/KNG-197)); phases [KNG-209](https://linear.app/kngpandi/issue/KNG-209)–[KNG-222](https://linear.app/kngpandi/issue/KNG-222); v1 precedent in [v1 commands](specs/legacy/commands-v1.md), [v1 events](specs/legacy/events-v1.md) |
+| Hide and Seek, fishing, treasure and lottery | partial | partial | vision | none | — | pending | decide each activity's scope; [v1 commands](specs/legacy/commands-v1.md), [v1 events](specs/legacy/events-v1.md) |
 | Domain discovery and one-time entry rewards | live | partial | spec | complete | trunk | mixed | maintain [KNG-20](https://linear.app/kngpandi/issue/KNG-20); [plan](specs/domain-discovery/IMPLEMENTATION_PLAN.md) |
 | Voting, currency/skill-point pickups and other ambient rewards | live | — | open | none | — | pending | decide sources and anti-abuse controls; [v1 economy events](specs/legacy/events-v1.md) |
 | Quests, assignments, tutorials and narrative | partial | partial | vision | none | — | pending | design after higher-priority systems; [vision §8](vision/vision.md#8-narrative--quests-deprioritized), [legacy menus](specs/legacy/inventory-menu-screens.md) |
