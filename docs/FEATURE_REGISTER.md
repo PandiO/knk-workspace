@@ -16,6 +16,8 @@ KNG-133..139, KNG-162, KNG-164, KNG-166..169, KNG-172..174) are merged and live-
 entities, cancel/delete-draft, FormConfiguration export/import and the bundled GateStructure/GateDoor/siege seed forms
 (used by the Gates and Siege rows), picker columns, refusal reasons, and world-task warning vs block. See
 [CHANGELOG](CHANGELOG.md) and [the follow-ups report](reports/2026-10-12-form-wizard-chain-smoke-followups.md).
+**2026-10-22:** default seed forms now cover the domain family, people, items, kits and lootboxes too, with 7 display
+seeds and DisplayConfiguration export/import (KNG-139, KNG-195; [seed review notes](reports/2026-10-19-kng-139-seed-review-notes.md)).
 
 **Targeted refresh (2026-10-11):** service-wide API connectivity (KNG-115, infrastructure, no feature row) is merged
 and live-tested: knk-web-api `master` `17ee730`, knk-plugin `main` `b5eee6e`; see

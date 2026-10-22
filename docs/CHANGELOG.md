@@ -16,6 +16,24 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## 2026-10-22
 
+- **Default forms and display pages for the rest of the game content** ([KNG-139](https://linear.app/kngpandi/issue/KNG-139);
+  knk-web-api `master` `3eac5ec`, knk-web-app `main` `0736ef3`, merged directly, no PR). 30 more bundled form seeds
+  (Town, District, Street, Structure, Location; User, permission groups and grants, banners, Clan; grades, tags,
+  categories, enchantments, item blueprints; kits and lootboxes), reworked from the dev forms with a description on
+  every step and field and their known bugs fixed, and 7 display seeds (Structure, GateStructure with a warp and
+  navigation section, User, ItemBlueprint, EnchantmentDefinition, MinecraftMaterialRef, ItemBlueprintDefaultEnchantment).
+  Display configurations get **Export JSON** and **Import / Seeds** like form configurations (`knk-displayconfig/1`).
+  Import both from the configuration lists and make them the default. Smoke-tested by the developer on 2026-10-22:
+  every step passed or was accepted. Follow-ups: [KNG-243](https://linear.app/kngpandi/issue/KNG-243),
+  [KNG-244](https://linear.app/kngpandi/issue/KNG-244), [KNG-246](https://linear.app/kngpandi/issue/KNG-246),
+  [KNG-247](https://linear.app/kngpandi/issue/KNG-247), [KNG-248](https://linear.app/kngpandi/issue/KNG-248);
+  details in the [seed review notes](reports/2026-10-19-kng-139-seed-review-notes.md).
+- **Form saves keep what they should** ([KNG-195](https://linear.app/kngpandi/issue/KNG-195); same merges). A
+  Structure's spawn point captured in game is saved; editing a player no longer unfreezes them or resets their email
+  verification, account origin, gender, active state or gate pass-through; picking the empty option of an optional
+  list no longer makes the save fail; a material or vanilla enchantment that isn't in the database yet is saved from
+  the picker; saving a custom enchantment keeps its ability.
+
 - **Gates can be warp destinations, and the gate form has the /navigate and road settings**
   ([KNG-229](https://linear.app/kngpandi/issue/KNG-229); knk-web-api `master` `be9f4e1`, merged directly, no PR). The
   bundled form seed "GateStructure - Default (seed v2)" adds "Entry rule on roads" and "Navigate to", plus a "Warp

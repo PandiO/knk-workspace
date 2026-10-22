@@ -3,7 +3,7 @@
 **Status:** Draft v1 — written for review. Not yet followed on a real production host. The database, API, seed and
 web-server steps were rehearsed in a scratch environment on 2026-10-07 (see [Appendix A](#appendix-a--what-was-verified-and-how)).
 The Paper server steps and the CI/CD workflows are untested drafts.
-**Last updated:** 2026-10-17 (§7.7: FormConfiguration export/import and bundled seeds merged, KNG-138/139; two new migrations, see the note in §7.7); 2026-10-12 (§7.7: KNG-138 on a feature branch); 2026-10-08 (security and alpha-hosting update for KNG-64)
+**Last updated:** 2026-10-22 (§7.7: DisplayConfiguration export/import and the priority 2/3 form seeds and display seeds merged, KNG-139); 2026-10-17 (§7.7: FormConfiguration export/import and bundled seeds merged, KNG-138/139; two new migrations, see the note in §7.7); 2026-10-12 (§7.7: KNG-138 on a feature branch); 2026-10-08 (security and alpha-hosting update for KNG-64)
 **Applies to:** trunk only. knk-web-api `master` `1805cf9`, knk-web-app `main`, knk-plugin `main` `c7d5a1e`; 61 EF
 migrations, the latest being `20261006193103_UniquePermissionGrantHolderNode`. Feature branches that haven't been
 merged, such as road navigation, are not covered. Re-check § 2 and the seed table manifest after each trunk merge.
@@ -872,6 +872,12 @@ import refuses to run anyway once users exist. Content changes after launch reac
   additive migrations, `20261012075746_AddFormFieldSelectionLimits` and
   `20261012085922_AddFormSubmissionProgressCreatedEntities`: apply them (`dotnet ef database update`) before the new
   web app runs against a database, since its FormField reads and draft saves need the new columns.
+  **2026-10-22:** display configurations work the same way (Export JSON and **Import / Seeds** on the display
+  configuration list, `knk-displayconfig/1`; published unless imported as a draft). The API now ships 30 more form
+  seeds (domain family, people, items, kits and lootboxes) and 7 display seeds (`Data/DisplayConfigurationSeeds/`).
+  On a fresh production database import them with "make default"; where the entity already has a default, import
+  first, review, then make it default. Join (`.join`) seeds go before the forms that use them (the dry run names a
+  missing one). No migration.
 
 ---
 

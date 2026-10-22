@@ -1,7 +1,7 @@
 # knk-web-app — Architecture
 
 **Status:** Living document — reflects actual code, updated in place on each rescan
-**Last updated:** 2026-09-18 (scan basis: `knk-web-app` @ `4ff5dc6`, branch `claude/web-app-codebase-scan-4yqibi`); spot edits 2026-10-09 (ObjectTypeExplorer, KNG-61), 2026-10-10 (FormWizard Boolean fields, KNG-53), 2026-10-12 (FormWizard child forms, KNG-133, KNG-134; List edit load, step header, List validation, KNG-135, KNG-137, KNG-164; form session registry, KNG-136; cancel / delete-draft prompt, KNG-162; form configuration export/import, KNG-138); 2026-10-17 (form wizard chain merged to `main`; smoke-test follow-ups KNG-166..169, KNG-172, KNG-173: step strip, confirmations and refusals, rule builder parent forms, picker columns, metadata refresh)
+**Last updated:** 2026-09-18 (scan basis: `knk-web-app` @ `4ff5dc6`, branch `claude/web-app-codebase-scan-4yqibi`); spot edits 2026-10-09 (ObjectTypeExplorer, KNG-61), 2026-10-10 (FormWizard Boolean fields, KNG-53), 2026-10-12 (FormWizard child forms, KNG-133, KNG-134; List edit load, step header, List validation, KNG-135, KNG-137, KNG-164; form session registry, KNG-136; cancel / delete-draft prompt, KNG-162; form configuration export/import, KNG-138); 2026-10-17 (form wizard chain merged to `main`; smoke-test follow-ups KNG-166..169, KNG-172, KNG-173: step strip, confirmations and refusals, rule builder parent forms, picker columns, metadata refresh); 2026-10-22 (display configuration export/import; KNG-195 hybrid picker submit)
 **Source scan:** `docs/reports/web-app-scan-2026-09-18.md`
 
 ## Stack
@@ -108,6 +108,16 @@ entity. Two parallel generic engines carry most of the CRUD surface:
    (`utils/forms/formConfigDeleteConfirm.ts`, from the API's `entity-references`); the API detaches its
    form sessions and removes its drafts, so only real uses (another form opening it as a sub-form)
    refuse the delete.
+   **Display configurations** (merged 2026-10-22): `FormWizard/DisplayConfigurationTable.tsx` has the
+   same **Export JSON** per row (`knk-displayconfig/1`, `utils/displayConfigPortability.ts`) and
+   **Import / Seeds** (`FormWizard/DisplayConfigurationImportPanel.tsx`). Both import panels are thin
+   wrappers around the shared `FormWizard/ConfigurationImportPanel.tsx` (dry run first, result shown,
+   Import only after a passing dry run); the display one adds the draft option.
+   `displayConfigClient.exportConfiguration` / `getSeeds` / `importConfiguration` / `importSeed`.
+   **Catalog pickers on submit (KNG-195):** `normalizeFormSubmission` sends a
+   `HybridMinecraftEnchantmentRefPicker`, and an Object picker on MinecraftMaterialRef/BlockRef/EnchantmentRef
+   (which runs the hybrid search), as `{field}Id` + `{field}NamespaceKey`; a catalog row that isn't saved yet
+   (id 0) goes by namespace key only, and the API creates the ref.
    **Confirmations and refusals** (KNG-169, KNG-82): no `window.confirm`/`alert` is left. Questions
    go through `hooks/useConfirm.tsx` (`const [confirm, confirmModal] = useConfirm()`, a
    `FeedbackModal` with confirm/cancel labels and a red `danger` button); the configuration tables
