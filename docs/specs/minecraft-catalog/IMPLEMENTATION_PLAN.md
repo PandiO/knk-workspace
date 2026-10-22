@@ -1,7 +1,7 @@
 # Minecraft catalogue (materials and blocks): implementation plan
 
-**Status:** Phases 1-5 code-complete (live test of 1-4 passed 2026-10-22); decisions D1-D12 taken by the developer (2026-10-21, §11).
-**Last updated:** 2026-10-21
+**Status:** Implemented and merged 2026-10-22 (knk-web-api `master` `4f34f58`, knk-web-app `main` `0622a87`, knk-plugin `main` `69c93885`); live-tested by the developer. Follow-ups: KNG-250 (enchantments), KNG-251 (block-state picker, the optional phase 6). Decisions D1-D12 in §11.
+**Last updated:** 2026-10-22
 **Issue:** [KNG-200](https://linear.app/kngpandi/issue/KNG-200). Related: [KNG-195](https://linear.app/kngpandi/issue/KNG-195) (hybrid submit fixes, In Review), [KNG-182](https://linear.app/kngpandi/issue/KNG-182) (Minecraft 26.3).
 
 Scope: the catalogue of Minecraft materials (`MinecraftMaterialRef`) and block states
@@ -572,7 +572,7 @@ phase. Live testing happens once, after phase 4 (D12).
 | 4 DB-only picker | Code-complete 2026-10-21, not merged, not live-tested (D12) | knk-web-api `e9d581e`; knk-web-app `b6ba680`..`de23957` (picker `kind` filter, "New" badge only for unsaved rows, `MinecraftIcon` in material/block columns, DisplayField/DisplaySection and a new item blueprint Icon column, icon-override list on the admin page). See "Phase 4 as built" below |
 | 1 Stabilise | Code-complete 2026-10-21, not merged, not live-tested (D12) | Started before KNG-195 merged, because the overlap that D10 assumed doesn't exist: KNG-195 changes `normalizeFormSubmission` and DTOs/services phase 1 doesn't touch, and both repos' branches merge cleanly with `claude/kng-195-form-submit-fixes` (checked with `git merge-tree`). knk-web-api `c5da4b1`: hybrid merge by normalised key, saved-only rows filtered, `id: null` for unsaved rows, sorting and page size, one row per block state, 409 with the existing id on create/update, parallel get-or-create returns the winner, new `POST MinecraftBlockRefs/get-or-create`. knk-web-app `841488b`, `f8d0e72`, `a5af37f`: id 0/"0"/null is no id; unsaved material rows keyed and compared by the normalised key (blocks: key + state); auto-create through get-or-create (materials `persistFromCatalog`, blocks the new `getOrCreate`); stale search responses ignored. There is no select-all control in the app (the handler was never rendered), so none was added |
 | Live test of phases 1-4 | Passed (developer, 2026-10-22) | Scan #1 on Minecraft 26.3: 1812 entries (1752 inserted, 60 updated, 0 merged/deleted/missing, 98 without an icon); no duplicate rows, search works, item blueprint picker OK, dashboard and picker tables OK, audit clean |
-| 5 Retire | Code-complete 2026-10-22, not merged | See "Phase 5 as built" below |
+| 5 Retire | Merged 2026-10-22 after the developer's re-test | See "Phase 5 as built" below |
 
 **Phase 5 as built:**
 - **Migration `MinecraftCatalogConstraints`.** It makes `minecraftblockrefs.StateKey` unique and

@@ -1,8 +1,10 @@
 # Knights and Kings — closed alpha go-live (KNG-64 layer on the NAS runbook)
 
 **Status:** v2, aligned 2026-10-11 with the [closed-alpha deployment runbook](closed-alpha-deployment-runbook.md)
-(the Codex NAS rollout). Not yet followed end to end.
-**Last updated:** 2026-10-18
+(the Codex NAS rollout). Not yet followed end to end. 2026-10-21: web hostname decided (`app.knightsandkings.net`),
+DNS in Cloudflare, Minecraft console/autostart/plugin updates ([KNG-225](https://linear.app/kngpandi/issue/KNG-225)).
+2026-10-22: § 3 (API upgrade) done on the NAS ([KNG-227](https://linear.app/kngpandi/issue/KNG-227)); § 3–4 corrected from that run.
+**Last updated:** 2026-10-22
 **Applies to:** builds that **include KNG-64**: knk-web-api `master` ≥ `30c5dc5`, knk-web-app `main` ≥ `98c0a76`,
 knk-plugin `main` ≥ `34c9261`. **Never expose an older API.**
 **Linear:** [KNG-64](https://linear.app/kngpandi/issue/KNG-64) (parent), [KNG-68](https://linear.app/kngpandi/issue/KNG-68) (this guide)
@@ -48,12 +50,12 @@ Minecraft client ──► play.knightsandkings.net ──► playit.gg tunnel �
 
 | Topic | Draft v1 | Now (runbook decisions, 2026-10-11) |
 |---|---|---|
-| Minecraft ingress | Router port-forward 25565, grey-cloud A record | **playit.gg** agent as a Compose service, GoDaddy `play.knightsandkings.net` → the playit hostname (runbook Phase 5) |
+| Minecraft ingress | Router port-forward 25565, grey-cloud A record | **playit.gg** agent as a Compose service; `play.knightsandkings.net` → the playit address as a DNS-only record in **Cloudflare DNS** (runbook Phase 5) |
 | Alpha data | Fresh DB + seed export/import | **Sanitized copy of the dev DB** (`knightsandkings_alpha`, only `__pandi__` and `admin` active; runbook Phase 2). The seed scripts stay the path for the VPS. |
 | Paper host | PC or NAS, API on a LAN port | **Paper in the `knk-alpha` stack**: the plugin and API talk over service DNS, and no API port exists on the LAN |
 | MySQL | 8.4 | 9.6.0 (pinned digest, runbook Phase 2) |
 | Worlds | Dev map only | Main gameplay world + the converted hub (`knk_hub`), with a KnK-owned loader and no Multiverse (KNG-114) |
-| Web hostname | `app.knightsandkings.net` | **Undecided.** The runbook mentions the earlier `knk.oldenzeelit.nl`. Pick one before building the web app (§ 6), because it goes into four settings. Below it's called `<web-host>`. |
+| Web hostname | `app.knightsandkings.net` | **`app.knightsandkings.net`** (developer decision 2026-10-21). `knightsandkings.net` is already an active Cloudflare zone, so it gets the same free edge certificate as `oldenzeelit.nl`; `oldenzeelit.nl` stays personal (its Microsoft 365 mail is not used for KnK). |
 
 ---
 
@@ -61,7 +63,7 @@ Minecraft client ──► play.knightsandkings.net ──► playit.gg tunnel �
 
 | Repo | Minimum | On the NAS today | Action |
 |---|---|---|---|
-| knk-web-api | `master` ≥ `30c5dc5` (KNG-64 merge) | `knk-web-api:alpha-17ee730a`: **before KNG-64.** It's private, so nothing is exposed yet | Upgrade first (§ 3) |
+| knk-web-api | `master` ≥ `30c5dc5` (KNG-64 merge) | `knk-web-api:alpha-be9f4e1a` since 2026-10-22 (KNG-64 included, private) | Done (§ 3, [report](../reports/2026-10-22-alpha-api-kng64-upgrade.md)) |
 | knk-web-app | `main` ≥ `98c0a76` | not built | Build in runbook Phase 6 (§ 6) |
 | knk-plugin | `main` ≥ `34c9261`, plus the KNG-114 hub loader | not built | Build in runbook Phase 4 (§ 5). KNG-128/129 (new-player onboarding) are on `main` since `4726fe4` (2026-10-18); its `onboarding:` block in `config.yml` falls back to defaults when missing |
 
@@ -86,10 +88,11 @@ rate limits or the permission-escalation guard. Do this before the plugin connec
    per row until `clashes_left` is 0. Afterwards the user keeps its id and memberships, the group moves to a new
    id with its grants, and the user has no direct grants. Without the repair, assigning a group to `admin` fails
    with a 500 error (`InvalidCastException`), and Staff's grants also apply to `admin`.
-3. **Build** from a source archive of `master` ≥ `30c5dc5`. Use the same deployment Dockerfile, keeping the
-   `KNK_RUNTIME_UID`/`KNK_RUNTIME_GID` fix, and tag it `knk-web-api:alpha-<sha>`. From the same source, also build a
-   **migrator** image: the SDK stage plus `dotnet-ef`, with entrypoint `dotnet ef database update`
-   ([production guide § 6.1](production-installation.md#61-the-container-image), target `migrator`).
+3. **Build** from a source archive of `master` ≥ `30c5dc5`. Use the deployment build files in
+   [`scripts/alpha-api/`](../../scripts/alpha-api/): the Phase 3.1 Dockerfile with the `KNK_RUNTIME_UID`/`KNK_RUNTIME_GID`
+   fix (now UID/GID 2002, no host account) and a `migrator` target (the SDK stage plus `dotnet-ef` 9.0.10, entrypoint
+   `dotnet ef database update`, [production guide § 6.1](production-installation.md#61-the-container-image)). Tag them
+   `knk-web-api:alpha-<sha>` and `knk-web-api-migrator:alpha-<sha>`.
 4. **Migrate.** Stop the API. Run the migrator once on `knk-alpha_backend`, with a connection string for an account
    that has schema rights. That's root for this one run, unless the stack has a migrator user; `knk_alpha_app`
    should stay rows-only. Feed the secret through the same wrapper as the API and never on the command line. It applies:
@@ -99,10 +102,14 @@ rate limits or the permission-escalation guard. Do this before the plugin connec
 
    Both have **older timestamps** than the database's newest migration (`20261010170000_SeedStatisticsStaffNodes`).
    `database update` applies them anyway, but `dotnet ef migrations script <from>` would **skip** them, so don't use
-   that. Expect **78** rows in `__EFMigrationsHistory` afterwards.
+   that. `master` after `07fda99e` also adds `AddHubSettings`, `AddFormFieldSelectionLimits`,
+   `AddFormSubmissionProgressCreatedEntities` and `LocationDeleteKeepsDomain`. Count the expected rows from the built
+   source: **82** for `be9f4e1a` (the 2026-10-22 run). 78 was right only up to `07fda99e`.
 5. **Configure** the additions in § 4, switch the image tag in the stack and start the API. Accept it as in
    Phase 3.3: both health endpoints return 200, startup and restart are idempotent, and no secrets appear in the
    log. The log must also have no `PluginApiKey is not set` warning and no `Security:Jwt:Secret` error.
+   On the NAS, the host `compose.yaml` is authoritative (A6): back it up, edit it, copy it over Portainer stack 42's
+   file and recreate only `api` (`docker compose up -d --no-deps api`). Never press "Update the stack".
 6. **Take a new clean baseline dump**, because the schema changed. Record its SHA-256 in a new dated progress report.
 
 ---
@@ -114,9 +121,10 @@ The runbook's Phase 3.2 keys stay (`ConnectionStrings__MySqlDbConnection`, `Secu
 KNG-64 adds:
 
 ```ini
-AllowedHosts=<web-host>;api;localhost               # public name + the service name the plugin uses
+AllowedHosts=app.knightsandkings.net;api;localhost;127.0.0.1     # public name, the service name the plugin uses, and
+                                                    # 127.0.0.1: the Host of the image health check and knk-ops (else 400)
 Security__AllowUnauthenticatedPluginCalls=false     # already set
-Security__PasswordResetFrontendBaseUrl=https://<web-host>
+Security__PasswordResetFrontendBaseUrl=https://app.knightsandkings.net
 Security__PasswordResetExposeTokenInDevelopment=false
 Security__Registration__AllowWebFirst=false         # players sign up with an in-game code only
 Security__RefreshCookie__SameSite=Lax
@@ -131,11 +139,20 @@ MinecraftPlugin__BaseUrl=http://minecraft:8081
 
 # The backend network has no internet access, so SMTP can't work there. Use Log: reset links go to the API log,
 # and you relay them. To send real mail, give the API an egress network and Email__SmtpPassword from a secret file.
-Email__Provider=Log
+# No paid mailbox is needed for the alpha: E0 (KNG-211) relays through the free knightsandkingsmc@gmail.com account.
+# Receiving support@knightsandkings.net can use Cloudflare Email Routing (free) to forward to that Gmail.
+Email__Provider=Log                                 # must be set: appsettings.json defaults to Smtp
 Telemetry__Enabled=false                            # already set
 ```
 
-`Cors__AllowedOrigins` stays empty: the browser only talks to its own origin.
+`Cors__AllowedOrigins` stays empty: the browser only talks to its own origin. `ForwardedHeaders__*` stays off until
+nginx exists (§ 6).
+
+**Log levels:** setting `Logging__LogLevel__Microsoft.EntityFrameworkCore=Warning` as an environment variable has no
+effect on the NAS image, because its `/bin/sh` entrypoint drops variable names that contain dots. Mount
+[`scripts/alpha-api/appsettings.Production.json`](../../scripts/alpha-api/appsettings.Production.json) read-only at
+`/app/appsettings.Production.json` instead. It sets EF Core and HttpClient to Warning; finding A5 measured about
+186,000 API lines a day without it.
 
 ---
 
@@ -159,7 +176,7 @@ region-http:
   bind-address: "0.0.0.0"                # inside the container only: never publish 8081
   port: 8081
 web:
-  public-url: "https://<web-host>"       # /account link shows <web-host>/auth/register
+  public-url: "https://app.knightsandkings.net"       # /account link shows app.knightsandkings.net/auth/register
 ```
 
 Checks:
@@ -167,6 +184,15 @@ Checks:
   `web.public-url`.
 - `/knk health` shows the API as UP.
 - The API log has no 401 or 403 for plugin calls.
+
+**Console, autostart and plugin updates** ([KNG-225](https://linear.app/kngpandi/issue/KNG-225), runbook Phase 4):
+- Console: RCON on 25575 **inside** the container only, password from a secret file (`RCON_PASSWORD_FILE`). Use
+  `rcon-cli` through Portainer's container console or `sudo docker exec -it knk-alpha-minecraft rcon-cli` over SSH.
+  Never publish 25575.
+- Autostart: `restart: unless-stopped` and a stop grace period that lets Paper save the worlds on a NAS shutdown.
+- Plugin updates: the KnK jar is installed as `plugins/KnightsAndKings.jar`. A new build goes into `plugins/update/`
+  under the same filename; Paper swaps it in on the next start. Then a controlled restart (`save-all`, stop, start).
+  Never `/reload`.
 
 **Networks:**
 - The Minecraft container needs `knk-alpha_backend` (to reach the API) and also a network with internet access
@@ -193,14 +219,14 @@ Checks:
 REACT_APP_API_BASE_URL=/api REACT_APP_MC_SERVER_ADDRESS=play.knightsandkings.net CI=false npm run build
 ```
 
-**nginx:** the server block for `<web-host>`. nginx has to share a network with `api`: attach the existing
+**nginx:** the server block for `app.knightsandkings.net`. nginx has to share a network with `api`: attach the existing
 `core`-stack nginx to an alpha network, or add a small nginx container to the `knk-alpha` stack that `cloudflared`
 reaches.
 
 ```nginx
 server {
     listen 80;
-    server_name <web-host>;
+    server_name app.knightsandkings.net;
     root /usr/share/nginx/html;          # the build/ output
     index index.html;
 
@@ -226,15 +252,21 @@ server {
 }
 ```
 
-**Cloudflare Tunnel:** add a public hostname `<web-host>` → `http://<nginx>:80` on the existing tunnel.
+**Cloudflare Tunnel:** add a public hostname `app.knightsandkings.net` → `http://<nginx>:80` on the existing tunnel.
 
-**Cloudflare Access:** add a Self-hosted application for the **whole** `<web-host>`. The policy *Allow testers*
+**Cloudflare Access:** add a Self-hosted application for the **whole** `app.knightsandkings.net`. The policy *Allow testers*
 includes each tester's email, with One-time PIN login and a 24-hour session. This is plan decision D10: for a closed
 alpha the allow-list covers the whole site, not only the admin pages. The plugin talks to `api` inside Docker, so
 Access never stands in its way. For the probe from outside, add a service token (Access → Service Auth) and a
 *Service Auth* policy.
 
-**Zone settings (free plan):**
+**DNS zone:** `knightsandkings.net` is an active Cloudflare zone (public NS `barbara`/`michael.ns.cloudflare.com`,
+the same pair as `oldenzeelit.nl`, checked 2026-10-21); GoDaddy is only the registrar. Confirm in the dashboard that the
+zone shows *Active* and sits in the same account as the tunnel. The free Universal SSL certificate covers the apex
+and one subdomain level, so keep names one level deep. The apex already serves something through Cloudflare: check what
+before adding zone-wide rules.
+
+**Zone settings (free plan; set them on `knightsandkings.net`, they are per zone):**
 - SSL/TLS **Full**, *Always Use HTTPS*.
 - HSTS after the first successful visit.
 - One WAF rate-limiting rule: path starts with `/api/Auth/`, more than 30 requests per 10 s per IP → block for 10 s.
@@ -247,7 +279,7 @@ Access never stands in its way. For the probe from outside, add a service token 
 The alpha DB already has the two accounts the runbook kept: `__pandi__` (Admin, Noble) and `admin` (Admin, Default).
 No bootstrap is needed.
 
-1. Log in on `https://<web-host>` with your existing credentials. The KNG-64 migration ended old sessions, so expect
+1. Log in on `https://app.knightsandkings.net` with your existing credentials. The KNG-64 migration ended old sessions, so expect
    one fresh login.
 2. Check the groups in `/admin/users`:
    - **Admin** holds `knk.admin.*`, or `*` for owners only.
@@ -273,7 +305,7 @@ Run [`scripts/security/alpha-probe.sh`](../../scripts/security/alpha-probe.sh). 
     mcr.microsoft.com/dotnet/sdk:8.0-bookworm-slim /s/alpha-probe.sh http://api:5000 --player '<test>:<password>'
   ```
 - **Through Cloudflare, after ingress** (from your PC):
-  `scripts/security/alpha-probe.sh https://<web-host> --player '<test>:<password>' --cf-id <id> --cf-secret <secret>`.
+  `scripts/security/alpha-probe.sh https://app.knightsandkings.net --player '<test>:<password>' --cf-id <id> --cf-secret <secret>`.
 
 Both must end with `ALL CHECKS PASSED`. The last check trips the login rate limiter for about a minute.
 
@@ -298,7 +330,7 @@ Both must end with `ALL CHECKS PASSED`. The last check trips the login rate limi
 
 **D. Services**
 - [ ] mysql, api and minecraft are healthy. No ports are published except through cloudflared and playit.
-- [ ] `https://<web-host>` shows the Access login, then the landing page after the PIN. A deep link (`/auth/login`)
+- [ ] `https://app.knightsandkings.net` shows the Access login, then the landing page after the PIN. A deep link (`/auth/login`)
       loads.
 - [ ] An outside client joins via `play.knightsandkings.net` with no router port-forward.
 - [ ] From outside (a phone hotspot), `nmap -p 80,443,3306,5000,8081,25565,25575 <home-ip>` shows everything closed
@@ -308,7 +340,7 @@ Both must end with `ALL CHECKS PASSED`. The last check trips the login rate limi
 - [ ] Private and Cloudflare runs: `ALL CHECKS PASSED` (§ 8).
 
 **F. Player flow (a tester or a second account)**
-- [ ] A whitelisted player joins, and `/account link` shows the code (click to copy) and `https://<web-host>/auth/register`.
+- [ ] A whitelisted player joins, and `/account link` shows the code (click to copy) and `https://app.knightsandkings.net/auth/register`.
       They register with the code and land on the account page, logged in.
 - [ ] Log in with the Minecraft name and log out on a phone.
 - [ ] A Moderator can't grant `*` or reach the content tools, while an Admin can assign Staff and Moderator.
@@ -325,7 +357,7 @@ Both must end with `ALL CHECKS PASSED`. The last check trips the login rate limi
 > Welcome to the **Knights & Kings closed alpha**!
 > 1. Join the Minecraft server **play.knightsandkings.net** (Java Edition 26.3). Your name is on the whitelist.
 > 2. In game, type `/account link`. You get an 8-character code (click it to copy).
-> 3. Open **https://<web-host>**, enter this email address to get a one-time PIN, then choose **Create account** and
+> 3. Open **https://app.knightsandkings.net**, enter this email address to get a one-time PIN, then choose **Create account** and
 >    enter the code, your email and a password.
 > 4. From then on, you can log in with your Minecraft name or your email.
 >
@@ -338,6 +370,11 @@ Both must end with `ALL CHECKS PASSED`. The last check trips the login rate limi
 - **Backups, restore rehearsal, upgrades:** runbook Phases 7–8. For an API release with a migration: back up, run the
   migrator, then the API, then the web app, then the plugin (production guide § 10.6 order).
 - **Logs:** for the API, failed logins and lockouts carry the client IP from Cloudflare (via `ForwardedHeaders`).
+- **Plugin-only releases:** stage the jar in `plugins/update/` as `KnightsAndKings.jar`, compare `config.yml` with the
+  new jar's defaults, then restart Minecraft at a quiet moment (runbook Phase 4). Releases with an API migration keep the
+  order above.
+- **Hand deploys for now:** API and web app images are built and switched by hand per the runbook. CI-built images
+  and an approved pull path are [KNG-226](https://linear.app/kngpandi/issue/KNG-226), after the first alpha weekend.
 - **Kill switches:** stop `cloudflared` or edit the Access policy for the web; stop the playit agent for Minecraft.
 
 ## 12. Moving on from the alpha

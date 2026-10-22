@@ -1,7 +1,7 @@
 # Gate Structures — Admin Guide
 
 **Status:** Living document — update in place as the code changes
-**Last updated:** 2026-09-21 (based on a full read-only code scan of `knk-plugin` `main`@`e6e428b` and `knk-web-app` `main`@`4ff5dc6`)
+**Last updated:** 2026-10-22 (`gates.damage-cracks`; rest based on a full read-only code scan of `knk-plugin` `main`@`e6e428b` and `knk-web-app` `main`@`4ff5dc6`)
 **Companion docs:** `docs/architecture/gate-structures-design.md` (mechanics), `docs/guides/developer/gate-structures-developer-guide.md` (implementation)
 
 Everything a server admin needs to configure, author, and operate gate structures — in-game commands, permissions, `config.yml` tuning, and how to author a new gate through the web app.
@@ -64,6 +64,12 @@ gates:
   fire-duration-seconds: 8                # how long an ignited block keeps burning
   fire-damage-per-tick: 2.0               # health damage per still-burning block, per tick
   fire-tick-interval-seconds: 1           # how often the fire system ticks
+  damage-cracks:
+    enabled: true                         # damaged gates show vanilla's 10 block-breaking crack stages over their HP (visual only)
+  melee-damage:
+    from-held-item: true                  # a click on a gate does what the held item does to a player (attack damage + Sharpness); false = flat 10
+    multiplier: 1.0                       # scales the item damage for balance
+  area-enchantment-radius-blocks: 5.0     # chaos / flash_chaos reach gates this far (entities: 3)
   passthrough-instant-open-radius-blocks: 1     # Instant Open: sideways search radius around the player
   passthrough-instant-open-timeout-seconds: 5   # Instant Open: safety-net auto-restore timeout
   rotationGapFill:
