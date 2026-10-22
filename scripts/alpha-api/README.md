@@ -7,6 +7,7 @@ Deployment-only files for the NAS `knk-alpha` API. They are copied into
 |---|---|
 | `Dockerfile` | Targets `runtime` (default, runs as `KNK_RUNTIME_UID`/`GID`, default 2002) and `migrator` (SDK + `dotnet-ef` 9.0.10, one-off `dotnet ef database update`). Base images pinned by digest, as in Phase 3.1 |
 | `migrator-entrypoint.sh` | Reads `mysql_root_password` and `jwt_secret` from `/run/secrets/` and runs the migration. The app's startup checks need a JWT secret even at design time. Root until KNG-242 adds a migrator account |
+| `compose.api-service.yaml` | The `api` service block of the stack's `compose.yaml` for this build (it replaces the old block between `  api:` and `  minecraft:`) |
 | `appsettings.Production.json` | Mounted read-only at `/app/appsettings.Production.json`. It sets log levels (finding A5). Environment variables can't do this: the `/bin/sh` entrypoint drops variable names that contain dots, such as `Logging__LogLevel__Microsoft.EntityFrameworkCore` |
 
 The runtime entrypoint (`docker-entrypoint.sh`, secret files → configuration) is the one accepted in Phase 3.1. It is
