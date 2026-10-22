@@ -297,7 +297,9 @@ Decision procedure (about one evening of data):
    world size for the hot part); CPU: prefer **few fast cores** (high single-thread clock, dedicated rather than
    burstable vCPUs) over many slow ones; keep MySQL and the API either on the VM with their own limits or remote
    (then include the network hop in the plugin→API latency). Compare current provider prices for 4–8 GiB / 2–4
-   fast vCPU instances against the NAS's value — this guide deliberately gives no prices; they change.
+   fast vCPU instances against the NAS's value — this guide deliberately gives no prices; they change. A dated
+   snapshot of options and costs is in the
+   [2026-10-22 fallback hosting report](../reports/2026-10-22-nas-vs-vps-fallback-hosting-costs.md) ([KNG-241](https://linear.app/kngpandi/issue/KNG-241)).
 5. Re-run the ladder on the VM before cutting over and compare rows from § 6.3 side by side.
 
 ## 8. Open items
