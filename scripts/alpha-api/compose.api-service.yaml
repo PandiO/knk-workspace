@@ -1,0 +1,49 @@
+  api:
+    image: knk-web-api:alpha-be9f4e1a
+    container_name: knk-alpha-api
+    restart: unless-stopped
+    init: true
+    stop_grace_period: 30s
+    user: "2002:2002"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_URLS: http://+:5000
+      ASPNETCORE_ENVIRONMENT: Production
+      Database__MySqlServerVersion: "9.6.0"
+      KNK_DB_HOST: mysql
+      KNK_DB_PORT: "3306"
+      KNK_DB_NAME: knightsandkings_alpha
+      KNK_DB_USER: knk_alpha_app
+      Security__AllowUnauthenticatedPluginCalls: "false"
+      Security__Jwt__Issuer: knk-api
+      Security__Jwt__Audience: knk-app
+      Telemetry__Enabled: "false"
+      TZ: UTC
+      # KNG-64 settings (alpha go-live § 4), KNG-227. 127.0.0.1 is the Host of the image health check and knk-ops.
+      AllowedHosts: "app.knightsandkings.net;api;localhost;127.0.0.1"
+      Security__PasswordResetFrontendBaseUrl: https://app.knightsandkings.net
+      Security__PasswordResetExposeTokenInDevelopment: "false"
+      Security__Registration__AllowWebFirst: "false"
+      Security__RefreshCookie__SameSite: Lax
+      MinecraftPlugin__BaseUrl: http://minecraft:8081
+      Email__Provider: Log
+    volumes:
+      - /srv/docker/stacks/knk-alpha/secrets/mysql_app_password:/run/secrets/mysql_app_password:ro
+      - /srv/docker/stacks/knk-alpha/secrets/plugin_api_key:/run/secrets/plugin_api_key:ro
+      - /srv/docker/stacks/knk-alpha/secrets/jwt_secret:/run/secrets/jwt_secret:ro
+      # Log levels (finding A5); environment variables with dots don't survive the sh entrypoint.
+      - /srv/docker/stacks/knk-alpha/config/api/appsettings.Production.json:/app/appsettings.Production.json:ro
+    networks:
+      - backend
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
