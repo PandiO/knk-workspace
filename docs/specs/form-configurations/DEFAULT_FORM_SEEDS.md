@@ -254,7 +254,8 @@ dev DB's `knk_uiux_seed` dump of 2026-10-07, plus 7 display seeds and the Displa
 by the developer with the KNG-195 submit fixes. The GateStructure seed is at v2 (warp, /navigate and road-access
 fields, KNG-229). Per-step changes, properties left off and the developer's decisions:
 [seed review notes](../../reports/2026-10-19-kng-139-seed-review-notes.md). Follow-ups: KNG-243, KNG-244, KNG-246,
-KNG-247, KNG-248.
+KNG-247, KNG-248, KNG-249 (the Location seed has no world task on purpose; in-game capture on the standalone
+Location form needs a web-app change first).
 
 ## 6. Order of work
 
