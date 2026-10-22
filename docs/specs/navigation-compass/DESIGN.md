@@ -1,7 +1,7 @@
 # Navigation compass — a guide item for sieges (and beyond)
 
 **Status:** Implemented on `claude/siege-navigation-compass-pl2trj` in knk-plugin, knk-web-api and knk-web-app; **unit-tested, not yet live-tested** (see §8). Not merged.
-**Last updated:** 2026-10-22 (§10 added: the siege gives the item)
+**Last updated:** 2026-10-22 (§10: the siege gives the item; §11: match scope and real gate states — C2 and C3 reversed)
 **Linear:** [KNG-234](https://linear.app/kngpandi/issue/KNG-234)
 **Builds on:** [navigation/DESIGN.md](../navigation/DESIGN.md) §6 (`/navigate`), [siege-minigame](../siege-minigame/) (objectives, teams), the item blueprints.
 
@@ -81,8 +81,8 @@ a player's own home) can be added behind the same `Entry` list in `NavigationCom
 | # | Decision | Why / how to undo |
 |---|---|---|
 | C1 | **Navigation is now allowed for members of a *running* match.** Plan D2 ("navigation ends when the player joins a siege") still holds for the lobby, the hub and the wait after a match. `NavigationEligibility.siegeMembersOutsideMatch` is wired in `KnKPlugin`; `NavigationService.lobbyChanged` no longer ends sessions while the lobby is `IN_PROGRESS`. | The compass needs it. Undo: wire `siegeMembers` again. |
-| C2 | **A match member's route goes through the lockdown's gates as if they were open** (`NavigationAccess.gateAvailability`, `SiegeGateController.isLockdownMember`). | A closed siege gate is the fight; routing would otherwise fail ("locked for a siege") at exactly the objective behind it. Non-members keep the old rule. |
-| C3 | `/navigate` typed in a match is still subject to `SiegeConfiguration.AllowedCommands`; the compass is the supported way. | No new command-filter exception. |
+| C2 | ~~A match member's route goes through the lockdown's gates as if open.~~ **Reversed 2026-10-22 (developer decision, §11):** routes follow the gates' real state. | An attacker bound for an objective behind a closed gate objective must not be routed as if it were open. |
+| C3 | ~~`/navigate` typed in a match is subject to `AllowedCommands`.~~ **Reversed 2026-10-22 (§11):** `/navigate` and `/nav` are always allowed in a match, and there accept and offer only the match's destinations. | Developer decision: during a match only match-relevant destinations are allowed and presented. |
 | C4 | Shift-**right**-click only (no left-click gesture). | Left-click in the air with a compass is easy to do by accident. |
 | C5 | The compass honours `knk.navigate` (default true). | Same node as `/navigate`. |
 | C6 | A click on an interactable block (door, chest, button) is left to the block unless the player sneaks; a handled click denies the item's own use (an ender pearl does not fly). | Does not break gate/door interaction in a siege. |
@@ -175,4 +175,48 @@ global switch is a checkbox on the Siege configuration page and needs no form wo
 and the restore; (b) scenario `DoNotGive` with global on → none; (c) lobby `Give` with scenario `DoNotGive` → given;
 (d) a full inventory → message, nothing dropped, nothing lost at restore; (e) a player already carrying a matching
 compass gets no second one; (f) leave mid-match → compass gone with the restore.
+
+## 11. Match scope and real gate states (developer decisions, 2026-10-22)
+
+**D-A. During a match only match-relevant destinations are allowed and presented.** `MatchNavigationScope` is the seam:
+for a player in a running match it lists the only destinations that may be navigated to. The siege provides its
+objectives and the team spawn (`NavigationCompassService#destinationsOf`, the compass's order). It is enforced at three
+levels, so no entry point leaks:
+
+- `NavigationService#navigate` refuses any destination that is not in the player's match scope ("X is not part of this
+  match. You can navigate to: …"), whoever asks (command, compass, a menu);
+- `/navigate <name>` resolves only against the match's destinations (exact name, or the start of exactly one), not the
+  world catalogue; `/navigate stop` and `/navigate` (status) work as before;
+- tab completion offers only those destinations (and `stop`).
+
+`/navigate` and `/nav` are now always allowed by the siege command filter (`SiegeCommandFilter.ALWAYS_ALLOWED_LABELS`),
+because in a match they are limited to the above. Before the match runs (lobby, hub, wait after the match) navigation is
+still refused. If the compass is switched off for sieges (settings), a match member has an empty scope: nothing may be
+navigated to. Another minigame (arena duels, KNG-197) plugs in by providing its own `MatchNavigationScope`; it is not
+wired for it here (that branch is not merged into this one).
+
+**D-B. Routes keep the gates' current state in mind.** The earlier shortcut (a member's route passes locked gates as if
+open, C2) is gone. For a gate under a siege lockdown (`SiegeGateStance`, tested):
+
+| Gate is | For a match member whose alliance owns it | For any other member | For a non-member |
+|---|---|---|---|
+| open / destroyed (state) | passes | passes | passes |
+| closed, locked | passes with "right-click to pass" (they can open it) | **blocked** — "locked for a siege" | as before (carried through per the siege's non-member rule) |
+
+So an attacker's route to the main objective behind a closed gate objective stops at that gate (the usual partial route
+with the reason) and is planned again by itself when the gate changes: captured (the objective transfer opens it per
+`gateStateOnCapture`), destroyed, or opened by its owners. A defender's route passes their own closed gate. This also
+fixes a latent flaw: members used to be treated like non-members for the carry rule ("walk up to it to be carried
+through"), which is not what happens to members.
+
+**Verification added:** unit tests for the stance table, the scope in the service, the command (names, prefixes,
+ambiguity, stop, status, empty scope, outside a match), tab completion, the compass scope and the command filter. **Not
+live-tested:** the glue in `NavigationAccess` (needs a running server) and the whole flow:
+
+1. Attacker, compass → main objective behind a closed gate objective: guided to the gate, told it is locked; capture the
+   gate → the route continues through it by itself.
+2. Defender, same objective: routed through their own closed gate ("right-click … to pass").
+3. In a match `/navigate Kardenna` (a real town) is refused with the list of match destinations; `/navigate keep` works; tab
+   completion lists only match destinations; `/nav stop` works.
+4. A non-member standing in the town is unaffected (still carried through per the non-member rule).
 
