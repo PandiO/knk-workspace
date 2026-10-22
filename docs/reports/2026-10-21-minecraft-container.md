@@ -110,5 +110,6 @@ commit that is finally built.
   load average 2.4–3.1 on 16 threads.
 - Flying through new terrain: TPS 20.0 / 20.0 / 20.0; MSPT averages 3.2–6.5 ms, worst tick 24.7 ms (one-minute peak).
   The 50 ms budget was never approached.
-- Conclusion: capacity is ample for the first round (~8 clustered players). The developer chose the NAS over a VPS for
-  the first weekend; the remaining risk is finishing Phases 3b/4 Stage 2/5/6 in time, not hardware.
+- Conclusion: capacity is ample for the first round (~8 clustered players). Hosting choice for the first round: the
+  developer leans towards a VPS, decided in another session (KNG-241, `docs/guides/vps-bootstrap-runbook.md` on branch
+  `claude/festive-maxwell-nqhvwe`, not merged yet). These numbers are a reference point for that choice, not a decision.
