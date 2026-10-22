@@ -58,7 +58,7 @@ checked results with the read-only `knk-ops` operations. No secret values were p
 |---|---|
 | First start | Paper downloaded, `Done (8.523s)`; no migration (worlds already 26.3); FAWE and WorldGuard enabled, no ERROR/SEVERE |
 | Container | `healthy`, user `2001:2001`, `PortBindings={}`, networks backend + egress |
-| Console | `docker exec knk-alpha-minecraft rcon-cli plugins` answered (command in, answer out). Portainer console not yet tried |
+| Console | `docker exec knk-alpha-minecraft rcon-cli plugins` answered (command in, answer out). Portainer → Console → `rcon-cli`: `list` answered "There are 0 of a max of 20 players online" (developer, 2026-10-21) |
 | API / MySQL untouched | `knk-ops containers`: same start times, 0 restarts; `log-errors` all 0 |
 | Resources (idle) | Minecraft 4.58 GiB (before the 6 GiB limit), Frigate 1.7 GiB / ~315 % CPU |
 | Restart test (`sudo systemctl restart docker`) | Paper stopped through RCON and saved players and all three dimensions; all three `knk-alpha` containers came back on their own (0 restarts); API `/health/live` + `/ready` 200 |
@@ -78,10 +78,38 @@ commit that is finally built.
 ## 6. Open
 
 - **Phase 3b** (KNG-64 API on the NAS) runs in its own session; Stage 2 waits for it.
-- Try `rcon-cli` from Portainer's console.
+- (done) `rcon-cli` from Portainer's console works.
 - **Stage 2:** build the KnK jar (KNG-182 branch, or `main` if merged), `releases/plugin/<commit>/`, install as
   `plugins/KnightsAndKings.jar`, checks per runbook § 4.4 and go-live § 5, then the `plugins/update/` swap and the
   Phase 4 acceptance list. Whitelist `__pandi__` with `rcon-cli whitelist add`.
 - `knk-ops` doesn't know the Minecraft service yet: the `compose` recorded hash is stale (`matches_recorded: false`),
   `secret-files` lists `rcon_password` as unexpected, and `containers` doesn't cover `knk-alpha-minecraft` (Linear issue
   [KNG-228](https://linear.app/kngpandi/issue/KNG-228)).
+
+## 7. Incident: stack started from Portainer with relative mount paths (2026-10-21 ~20:34–21:14 local)
+
+- The developer stopped and started the `knk-alpha` stack from Portainer by accident. Portainer runs Compose in its
+  own working folder `/data/compose/42`, and the Docker daemon resolved the Minecraft service's **relative** mounts
+  (`./minecraft-data`, `./secrets/rcon_password`) against that path **on the host**. Docker created empty,
+  root-owned folders there, so the server (UID 2001) couldn't write `/data` (`[init] [ERROR] Unable to write eula`;
+  the "uid=1000" in that message is the image's default text). It restarted in a loop and became `unhealthy`.
+- No data was touched: the live `minecraft-data` was last written at 18:19 UTC, before the incident. API and MySQL
+  came back healthy (their mounts are absolute or a named volume).
+- Fix: both mounts are now absolute (`/srv/docker/stacks/knk-alpha/minecraft-data:/data`,
+  `/srv/docker/stacks/knk-alpha/secrets/rcon_password:/run/secrets/rcon_password:ro`). The fixed file was copied to
+  Portainer stack 42, and Minecraft was recreated from the host file: `Done (9.343s)`, `healthy`, `user=2001:2001`.
+  New Compose hash on host = stack 42: `46a8ab7b68c8db81f893a68d20712782fa23590e3ad5d4aa4029828fd23d69e7`. The empty
+  folders under `/data/compose/42` were removed (`/data/compose/1–6` are older Portainer leftovers and were left alone).
+- Rule: every host path in `compose.yaml` must be absolute, because Portainer can start the stack from its own folder.
+  Starting/stopping the stack in Portainer is then harmless; "Update the stack" stays off-limits (A6).
+
+## 8. Load check (2026-10-22, developer, LAN join through a temporary relay)
+
+- `docker stats` idle → 3 players: Minecraft CPU 4 % → 12–19 % (of one core), memory flat at 4.87 / 6 GiB (the heap is
+  reserved in full at start). API ~0.5 GiB, MySQL ~0.5 GiB, both near 0 % CPU. Host: 6.1 GiB available, swap 34 MiB,
+  load average 2.4–3.1 on 16 threads.
+- Flying through new terrain: TPS 20.0 / 20.0 / 20.0; MSPT averages 3.2–6.5 ms, worst tick 24.7 ms (one-minute peak).
+  The 50 ms budget was never approached.
+- Conclusion: capacity is ample for the first round (~8 clustered players). Hosting choice for the first round: the
+  developer leans towards a VPS, decided in another session (KNG-241, `docs/guides/vps-bootstrap-runbook.md` on branch
+  `claude/festive-maxwell-nqhvwe`, not merged yet). These numbers are a reference point for that choice, not a decision.
