@@ -249,4 +249,4 @@ now-dropped destination ends.
 
 ## Linear
 
-Filed 2026-10-22: KNG-235 (the engine) and one child per phase of §10: KNG-236 (P1), KNG-237 (P2), KNG-238 (P3), KNG-239 (P4), KNG-240 (P5). Start prompt for P1: `docs/ai-agents/handoffs/2026-10-22-destination-engine-p1-start.md`.
+Filed 2026-10-22: KNG-235 (the engine) and one child per phase of §10: KNG-236 (P1), KNG-237 (P2), KNG-238 (P3), KNG-239 (P4), KNG-240 (P5). Start prompt for P1 alone: `docs/ai-agents/handoffs/2026-10-22-destination-engine-p1-start.md`; coordinator prompt that delegates all phases: `docs/ai-agents/handoffs/2026-10-22-destination-engine-coordinator.md`.
