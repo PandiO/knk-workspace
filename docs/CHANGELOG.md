@@ -4,7 +4,15 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
-_Nothing at the moment._
+- **Performance metrics for the closed alpha** ([KNG-232](https://linear.app/kngpandi/issue/KNG-232); knk-plugin
+  `claude/kng-232-perf-metrics` `1fa9e15`, knk-web-api `claude/kng-232-perf-metrics` `a52aaed`; unit-tested, not live-tested,
+  not merged). The plugin can serve a Prometheus `/metrics` (`metrics.enabled`, off by default, bearer token) with TPS, tick
+  time, players, chunks and entities per world, JVM heap/off-heap/GC, process CPU/RSS, the container's memory working set
+  against its limit, API-call latency and the cost of 16 recurring tasks. The API's `/metrics` is now real
+  (`Telemetry__Prometheus__Enabled` + a bearer token; the earlier note that it existed was wrong) and adds .NET runtime,
+  HTTP client, process/cgroup and database-command metrics. Read the
+  [performance metrics and capacity guide](guides/performance-metrics-and-capacity.md) for the collection stack, load
+  steps, acceptance thresholds and the NAS-vs-cloud decision.
 
 ## 2026-10-21
 
