@@ -1,7 +1,7 @@
 # Navigation compass — a guide item for sieges (and beyond)
 
 **Status:** Implemented on `claude/siege-navigation-compass-pl2trj` in knk-plugin, knk-web-api and knk-web-app; **unit-tested, not yet live-tested** (see §8). Not merged.
-**Last updated:** 2026-10-22
+**Last updated:** 2026-10-22 (§10 added: the siege gives the item)
 **Linear:** [KNG-234](https://linear.app/kngpandi/issue/KNG-234)
 **Builds on:** [navigation/DESIGN.md](../navigation/DESIGN.md) §6 (`/navigate`), [siege-minigame](../siege-minigame/) (objectives, teams), the item blueprints.
 
@@ -123,3 +123,56 @@ web-app `NavigationCompassCard.test.tsx` and the updated `RoadsAdminPage.test.ts
 - Smarter outside-siege providers (§5).
 - A siege `AllowedCommands` entry so `/navigate stop` works in a match (C3).
 - Localised/configurable compass messages.
+
+## 10. The siege gives the compass at the hub (added 2026-10-22)
+
+Developer request: three levels of siege configuration decide whether players get the compass at the start of the
+match, so new players have it without an admin handing it out.
+
+**Levels and precedence (decision C9, reversible):** most specific wins — **lobby → scenario → global**.
+
+| Level | Where | Values | Default |
+|---|---|---|---|
+| Global | `SiegeConfiguration.GiveNavigationItem` (Siege configuration page, "Navigation compass") | on / off | **off** (deploying changes nothing until switched on) |
+| Scenario | `SiegeScenario.NavigationItem` | `Inherit` / `Give` / `DoNotGive` | `Inherit` |
+| Lobby | `SiegeLobby.NavigationItem` | `Inherit` / `Give` / `DoNotGive` | `Inherit` |
+
+A level that says `Inherit` defers to the next one up; the global level always decides. The API passes each level's
+**raw** value in `GET api/siege-lobbies/runtime-config`; the plugin resolves them per match
+(`SiegeNavigationItem.resolve(lobby, scenario, global)`, tested), because the lobby × scenario pair is only known when
+a scenario is drawn. (Global as a kill switch that beats lobby and scenario was the other reading; say so if that is
+wanted — it is a one-line change in `SiegeNavigationItem`.)
+
+**When it is given (C10):** at the **hub** (the warm-up, `onSendToHub`), right after the vault snapshot and
+`prepareForMatch`, via the new observer hook `SiegeMatchObserver.memberReadiedAtHub`. It is added to the **live**
+inventory only, never the saved one.
+
+**When it is taken away (C11):** nothing extra is coded. The vault restore (`SiegePlayerVault.applyInventory`: clear the
+inventory, then set the saved contents) runs at match end, on leave/kick, on quit and on rejoin after a crash, and it
+removes the compass with everything else the match put there. The siege inventory guards already stop members dropping
+or storing items, and a death keeps the inventory (`SiegeDeathRespawnListener`), so the compass stays for the match.
+
+**What is given (C12):** an item built from the compass settings (§4): the rule's material, the rule's display name
+(`&` colour codes allowed; "Navigation Compass" if the name is blank), a two-line how-to lore. It is checked against the
+rule before it is handed out, so a player never holds a dead item. Nothing is given when: the compass or its siege use
+is switched off in the settings, the rule's material is not a real item, or the player already carries an item the rule
+accepts. A full inventory gets a message and nothing is dropped. Granting an item from an item blueprint (instead of the
+rule's own look) is not built.
+
+**At the hub the compass does not navigate yet** (navigation is refused in the lobby/hub, §6 C1); clicking it says it
+works once the match has started.
+
+**Forms (needs a manual step, C13):** scenarios and lobbies are edited through the dynamic form wizard, whose bundled
+seeds (`SiegeScenario.json`, `SiegeLobby.json`) are import-once and are referenced by GUID from other seeds
+(`SiegeObjective`, `SiegeSpawnpoint`), so I did not ship a "v2" seed. Add one **Enum** field to each form in the form
+designer: field name `NavigationItem`, label "Navigation compass", values `Inherit`, `Give`, `DoNotGive`, default
+`Inherit` (SiegeScenario: e.g. on the step with "Allow recapture"; SiegeLobby: on the "General"/"Timings" step). The
+global switch is a checkbox on the Siege configuration page and needs no form work.
+
+**Migration:** `AddSiegeNavigationItem` (existing rows get `Inherit` / off).
+
+**Live test additions:** (a) global on, lobby/scenario Inherit → compass in the inventory at the hub, gone after the match
+and the restore; (b) scenario `DoNotGive` with global on → none; (c) lobby `Give` with scenario `DoNotGive` → given;
+(d) a full inventory → message, nothing dropped, nothing lost at restore; (e) a player already carrying a matching
+compass gets no second one; (f) leave mid-match → compass gone with the restore.
+
