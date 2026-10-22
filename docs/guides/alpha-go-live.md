@@ -3,7 +3,8 @@
 **Status:** v2, aligned 2026-10-11 with the [closed-alpha deployment runbook](closed-alpha-deployment-runbook.md)
 (the Codex NAS rollout). Not yet followed end to end. 2026-10-21: web hostname decided (`app.knightsandkings.net`),
 DNS in Cloudflare, Minecraft console/autostart/plugin updates ([KNG-225](https://linear.app/kngpandi/issue/KNG-225)).
-**Last updated:** 2026-10-21
+2026-10-22: § 3 (API upgrade) done on the NAS ([KNG-227](https://linear.app/kngpandi/issue/KNG-227)); § 3–4 corrected from that run.
+**Last updated:** 2026-10-22
 **Applies to:** builds that **include KNG-64**: knk-web-api `master` ≥ `30c5dc5`, knk-web-app `main` ≥ `98c0a76`,
 knk-plugin `main` ≥ `34c9261`. **Never expose an older API.**
 **Linear:** [KNG-64](https://linear.app/kngpandi/issue/KNG-64) (parent), [KNG-68](https://linear.app/kngpandi/issue/KNG-68) (this guide)
@@ -62,7 +63,7 @@ Minecraft client ──► play.knightsandkings.net ──► playit.gg tunnel �
 
 | Repo | Minimum | On the NAS today | Action |
 |---|---|---|---|
-| knk-web-api | `master` ≥ `30c5dc5` (KNG-64 merge) | `knk-web-api:alpha-17ee730a`: **before KNG-64.** It's private, so nothing is exposed yet | Upgrade first (§ 3) |
+| knk-web-api | `master` ≥ `30c5dc5` (KNG-64 merge) | `knk-web-api:alpha-be9f4e1a` since 2026-10-22 (KNG-64 included, private) | Done (§ 3, [report](../reports/2026-10-22-alpha-api-kng64-upgrade.md)) |
 | knk-web-app | `main` ≥ `98c0a76` | not built | Build in runbook Phase 6 (§ 6) |
 | knk-plugin | `main` ≥ `34c9261`, plus the KNG-114 hub loader | not built | Build in runbook Phase 4 (§ 5). KNG-128/129 (new-player onboarding) are on `main` since `4726fe4` (2026-10-18); its `onboarding:` block in `config.yml` falls back to defaults when missing |
 
@@ -87,10 +88,11 @@ rate limits or the permission-escalation guard. Do this before the plugin connec
    per row until `clashes_left` is 0. Afterwards the user keeps its id and memberships, the group moves to a new
    id with its grants, and the user has no direct grants. Without the repair, assigning a group to `admin` fails
    with a 500 error (`InvalidCastException`), and Staff's grants also apply to `admin`.
-3. **Build** from a source archive of `master` ≥ `30c5dc5`. Use the same deployment Dockerfile, keeping the
-   `KNK_RUNTIME_UID`/`KNK_RUNTIME_GID` fix, and tag it `knk-web-api:alpha-<sha>`. From the same source, also build a
-   **migrator** image: the SDK stage plus `dotnet-ef`, with entrypoint `dotnet ef database update`
-   ([production guide § 6.1](production-installation.md#61-the-container-image), target `migrator`).
+3. **Build** from a source archive of `master` ≥ `30c5dc5`. Use the deployment build files in
+   [`scripts/alpha-api/`](../../scripts/alpha-api/): the Phase 3.1 Dockerfile with the `KNK_RUNTIME_UID`/`KNK_RUNTIME_GID`
+   fix (now UID/GID 2002, no host account) and a `migrator` target (the SDK stage plus `dotnet-ef` 9.0.10, entrypoint
+   `dotnet ef database update`, [production guide § 6.1](production-installation.md#61-the-container-image)). Tag them
+   `knk-web-api:alpha-<sha>` and `knk-web-api-migrator:alpha-<sha>`.
 4. **Migrate.** Stop the API. Run the migrator once on `knk-alpha_backend`, with a connection string for an account
    that has schema rights. That's root for this one run, unless the stack has a migrator user; `knk_alpha_app`
    should stay rows-only. Feed the secret through the same wrapper as the API and never on the command line. It applies:
@@ -100,10 +102,14 @@ rate limits or the permission-escalation guard. Do this before the plugin connec
 
    Both have **older timestamps** than the database's newest migration (`20261010170000_SeedStatisticsStaffNodes`).
    `database update` applies them anyway, but `dotnet ef migrations script <from>` would **skip** them, so don't use
-   that. Expect **78** rows in `__EFMigrationsHistory` afterwards.
+   that. `master` after `07fda99e` also adds `AddHubSettings`, `AddFormFieldSelectionLimits`,
+   `AddFormSubmissionProgressCreatedEntities` and `LocationDeleteKeepsDomain`. Count the expected rows from the built
+   source: **82** for `be9f4e1a` (the 2026-10-22 run). 78 was right only up to `07fda99e`.
 5. **Configure** the additions in § 4, switch the image tag in the stack and start the API. Accept it as in
    Phase 3.3: both health endpoints return 200, startup and restart are idempotent, and no secrets appear in the
    log. The log must also have no `PluginApiKey is not set` warning and no `Security:Jwt:Secret` error.
+   On the NAS, the host `compose.yaml` is authoritative (A6): back it up, edit it, copy it over Portainer stack 42's
+   file and recreate only `api` (`docker compose up -d --no-deps api`). Never press "Update the stack".
 6. **Take a new clean baseline dump**, because the schema changed. Record its SHA-256 in a new dated progress report.
 
 ---
@@ -115,7 +121,8 @@ The runbook's Phase 3.2 keys stay (`ConnectionStrings__MySqlDbConnection`, `Secu
 KNG-64 adds:
 
 ```ini
-AllowedHosts=app.knightsandkings.net;api;localhost               # public name + the service name the plugin uses
+AllowedHosts=app.knightsandkings.net;api;localhost;127.0.0.1     # public name, the service name the plugin uses, and
+                                                    # 127.0.0.1: the Host of the image health check and knk-ops (else 400)
 Security__AllowUnauthenticatedPluginCalls=false     # already set
 Security__PasswordResetFrontendBaseUrl=https://app.knightsandkings.net
 Security__PasswordResetExposeTokenInDevelopment=false
@@ -134,11 +141,18 @@ MinecraftPlugin__BaseUrl=http://minecraft:8081
 # and you relay them. To send real mail, give the API an egress network and Email__SmtpPassword from a secret file.
 # No paid mailbox is needed for the alpha: E0 (KNG-211) relays through the free knightsandkingsmc@gmail.com account.
 # Receiving support@knightsandkings.net can use Cloudflare Email Routing (free) to forward to that Gmail.
-Email__Provider=Log
+Email__Provider=Log                                 # must be set: appsettings.json defaults to Smtp
 Telemetry__Enabled=false                            # already set
 ```
 
-`Cors__AllowedOrigins` stays empty: the browser only talks to its own origin.
+`Cors__AllowedOrigins` stays empty: the browser only talks to its own origin. `ForwardedHeaders__*` stays off until
+nginx exists (§ 6).
+
+**Log levels:** setting `Logging__LogLevel__Microsoft.EntityFrameworkCore=Warning` as an environment variable has no
+effect on the NAS image, because its `/bin/sh` entrypoint drops variable names that contain dots. Mount
+[`scripts/alpha-api/appsettings.Production.json`](../../scripts/alpha-api/appsettings.Production.json) read-only at
+`/app/appsettings.Production.json` instead. It sets EF Core and HttpClient to Warning; finding A5 measured about
+186,000 API lines a day without it.
 
 ---
 

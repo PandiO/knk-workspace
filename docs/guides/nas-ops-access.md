@@ -1,7 +1,7 @@
 # NAS operations access for agents (`knk-ops`)
 
 **Status:** Stage A (read-only checks) installed on the NAS and verified 2026-10-18 · Stage B (deploy) designed, **not installed**
-**Last updated:** 2026-10-21
+**Last updated:** 2026-10-22
 **Sources:** wrapper sources and checksums in [`scripts/nas-ops/stage-a/`](../../scripts/nas-ops/stage-a/) ·
 session report [2026-10-18 NAS ops access and alpha check](../reports/2026-10-18-nas-ops-access-and-alpha-check.md) ·
 [closed-alpha deployment runbook](closed-alpha-deployment-runbook.md)
@@ -39,15 +39,15 @@ Claude Code on the developer PC (LAN)
 
 ## 2. Operations
 
-| Operation | Returns | Healthy alpha (2026-10-18) |
+| Operation | Returns | Healthy alpha (2026-10-18; 2026-10-22 changes in **bold**) |
 |---|---|---|
 | `ping` | host name, time (runs without sudo) | `ok: true` |
-| `containers` | for `knk-alpha-api` and `knk-alpha-mysql`: present, status, health, start time, restart count, image and ID, runtime user, restart policy, port bindings, networks, privileged, read-only root fs, dropped/added capabilities, security options, log driver | both running + healthy, `port_bindings: {}`, network `knk-alpha_backend` only, API user `1000:1000` |
+| `containers` | for `knk-alpha-api` and `knk-alpha-mysql`: present, status, health, start time, restart count, image and ID, runtime user, restart policy, port bindings, networks, privileged, read-only root fs, dropped/added capabilities, security options, log driver | both running + healthy, `port_bindings: {}`, network `knk-alpha_backend` only, API user **`2002:2002`** (image **`alpha-be9f4e1a`**) |
 | `network` | `knk-alpha_backend`: driver, scope, internal, attachable, IPv6, IPAM, attached container names | internal, two containers |
-| `secret-files` | the stack's `secrets/` directory and files: name, type, owner, uid/gid, mode, non-empty; `missing`, `unexpected`, `all_private` | four files, mode 600, `all_private: true` |
+| `secret-files` | the stack's `secrets/` directory and files: name, type, owner, uid/gid, mode, non-empty; `missing`, `unexpected`, `all_private` | dir **`root:root 700`**; **five** files (incl. `rcon_password`, KNG-225), mode 600; API secrets **2002**, `mysql_root_password` **root**, `rcon_password` **2001**; `all_private: true` |
 | `api-health` | HTTP codes of `/health/live` and `/health/ready` (requested inside the API container), container health, `healthy` | `200` / `200`, `healthy: true` |
-| `compose` | sha256 of the host `compose.yaml` and of Portainer stack 42's copy, hashes of their normalised form (`docker compose config --no-interpolate`), `matches_recorded`, `files_identical`, `canonical_equal` | `matches_recorded: true`, `canonical_equal: true` (the files differ by one byte) |
-| `db-summary` | schema object counts, EF migration count and latest migration, users total/active, holder-ID clash count, MySQL account names, row count per table (fixed, read-only SQL) | 136 tables, 4 triggers, 76 migrations, 9 users / 2 active, 0 clashes |
+| `compose` | sha256 of the host `compose.yaml` and of Portainer stack 42's copy, hashes of their normalised form (`docker compose config --no-interpolate`), `matches_recorded`, `files_identical`, `canonical_equal` | `matches_recorded: true` (recorded **`2af121b6…`**, update `RECORDED_SHA` after every Compose change), **`files_identical: true`** |
+| `db-summary` | schema object counts, EF migration count and latest migration, users total/active, holder-ID clash count, MySQL account names, row count per table (fixed, read-only SQL) | **137** tables, 4 triggers, **82** migrations, 9 users / 2 active, 0 clashes |
 | `secret-scan` | for each secret **name** `clean`/`HIT` over the last 200,000 log lines of both containers, plus password-style and JWT-style text indicators, and `verdict` | `verdict: clean` |
 | `log-errors` | per container: lines scanned and counts of error/critical/exception/warning lines in the last 24 h (at most 200,000 lines) | all zero |
 
@@ -182,12 +182,12 @@ step, still without a shell or any caller-chosen input.
 **Prerequisites before Stage B is enabled** (details in the
 [2026-10-18 report](../reports/2026-10-18-nas-ops-access-and-alpha-check.md) § 4):
 
-1. A dedicated runtime UID for the API (not the admin account's UID 1000), with the secret files owned by it.
-2. A root-owned `knk-alpha` stack directory.
-3. A read-only MySQL account for checks; limit `root@%`.
-4. Decide whether Portainer stack 42 or the host Compose file is authoritative (a host-side switch leaves Portainer's copy stale).
-5. Archive the leftover `compose.api.pending.yaml`.
-6. Lower the API's log volume (~186,000 lines/day).
+1. ~~A dedicated runtime UID for the API, with the secret files owned by it.~~ Done 2026-10-22 (UID 2002, KNG-227).
+2. ~~A root-owned `knk-alpha` stack directory.~~ Done 2026-10-22.
+3. A read-only MySQL account for checks; limit `root@%`. Open: [KNG-242](https://linear.app/kngpandi/issue/KNG-242).
+4. ~~Decide whether Portainer stack 42 or the host Compose file is authoritative.~~ Decided 2026-10-21: the host file; stack 42 is a copy.
+5. ~~Archive the leftover `compose.api.pending.yaml`.~~ Done 2026-10-22 (`backups/20261011-archive/`).
+6. ~~Lower the API's log volume (~186,000 lines/day).~~ Done 2026-10-22 (mounted `appsettings.Production.json`).
 7. The real alpha database created from the approved seed set, and a passed restore rehearsal.
 
 ## 8. Limitations
