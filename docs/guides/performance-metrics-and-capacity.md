@@ -1,9 +1,10 @@
 # Performance metrics, capacity and the NAS-vs-cloud decision
 
 **Status:** Draft v1 (2026-10-22) — written for review, **not yet followed on the NAS**. The plugin and API metric
-endpoints it relies on are built under [KNG-232](https://linear.app/kngpandi/issue/KNG-232) on branches
-`claude/kng-232-perf-metrics` in knk-plugin (`1fa9e15`) and knk-web-api (`a52aaed`): unit-tested, **not merged, not run
-against a live Paper server, MySQL or the NAS**. § 5 says how to use the guide before they are deployed.
+endpoints it relies on ([KNG-232](https://linear.app/kngpandi/issue/KNG-232)) are **merged** (2026-10-22) into
+knk-plugin `main` `390d88a4` and knk-web-api `master` `3658cf2`, unit-tested but **not yet run against a live Paper server,
+MySQL or the NAS**; both default off, so they need a new build and the config in § 5 to take effect. § 5 says how to use
+the guide before they are deployed.
 **Last updated:** 2026-10-22 (§ 4.2/§ 5 aligned with the implemented metric names)
 **Applies to:** the closed-alpha NAS stack ([runbook](closed-alpha-deployment-runbook.md)): Paper 26.3 in a Docker
 container, knk-web-api, MySQL, all on one shared host (Ryzen 7 5700G, ~15 GiB RAM, Frigate also running; see the
@@ -177,7 +178,7 @@ The target hosts/ports above are placeholders: use the networks and ports of you
 
 ## 5. What KNG-232 adds (and how to use the guide before it is deployed)
 
-Both branches are **unmerged** and unverified live; build them from the branches to try them, and read the numbers
+Both are merged but unverified live; build current plugin `main` / API `master` to try them, and read the numbers
 critically on the first run (compare `knk_mc_tps` with `/tps`, `knk_cgroup_memory_*` with `docker stats`).
 
 ### 5.1 knk-plugin — `metrics:` section (default **off**)
@@ -303,8 +304,8 @@ Decision procedure (about one evening of data):
 ## 8. Open items
 
 - [KNG-232](https://linear.app/kngpandi/issue/KNG-232): the plugin and API endpoints (this guide's § 5) are on
-  `claude/kng-232-perf-metrics` in knk-plugin and knk-web-api, unit-tested (plugin core/api-client/paper and the new API
-  tests green; the API suite has the same 4 known reds as `master`), unmerged. Live checks still to do: scrape the plugin on the
+  merged into knk-plugin `main` and knk-web-api `master` on 2026-10-22, unit-tested (plugin core/api-client/paper and the new API
+  tests green; the API suite has the same 4 known reds as before). Live checks still to do: scrape the plugin on the
   dev server and compare with `/tps` and `docker stats`; scrape the API against MySQL (the DB-command histogram has only
   been tested through its meter, not against a real query); both on the NAS.
 - Load-test mode for bots (§ 6.2): not designed, not filed.
