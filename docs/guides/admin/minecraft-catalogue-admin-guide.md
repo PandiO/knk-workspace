@@ -1,7 +1,7 @@
 # Minecraft Catalogue — Admin Guide
 
 **Status:** Living document — update in place as the code changes
-**Last updated:** 2026-10-22 (KNG-200 merged: knk-web-api `master` `4f34f58`, knk-web-app `main` `0622a87`, knk-plugin `main` `69c93885`)
+**Last updated:** 2026-10-22 (KNG-200 merged; KNG-250 enchantments on the feature branch, see "Enchantments")
 **Companion docs:** `docs/specs/minecraft-catalog/IMPLEMENTATION_PLAN.md` (design, decisions D1-D12, contract)
 
 The Minecraft catalogue is the list of materials (items and blocks) the web app offers in its pickers, for
@@ -76,6 +76,38 @@ Configuration (optional, defaults in code): section `MinecraftCatalog:Icons` in 
 A merge points every reference at the target and then deletes the source. **Run backfill** repeats the
 startup backfill (normalising keys, filling names, linking block refs); it is safe to run twice.
 
+## Enchantments
+
+Since KNG-250 the same scan also reads the enchantments:
+
+- **Vanilla** (and data-pack) enchantments come from the server's registry.
+- **Custom** knk-plugin enchantments come from its EnchantmentRegistry, under the key `knk:<id>` (for
+  example `knk:flash_chaos`).
+
+The clean-up rules are the same as for materials:
+
+- Old rows in another notation are merged. A custom key saved without namespace, such as `chaos`, goes
+  into `knk:chaos`.
+- Unknown rows nothing uses are deleted.
+- Rows an enchantment definition still uses become **Missing**. They show under "Missing enchantments
+  still used".
+
+The scan also makes sure every enchantment has an **enchantment definition**, so the pickers of item
+blueprints and lootbox enchant rolls offer every vanilla and custom enchantment. It links an existing
+definition where one matches and creates one otherwise. It never deletes or renames a definition. One
+exception: a vanilla definition that still has the level of its catalogue entry (as the seeds leave it)
+takes the server's maximum level.
+
+The enchantment picker in forms (field type `HybridMinecraftEnchantmentRefPicker`) shows vanilla and
+custom together:
+
+- Custom ones carry a badge.
+- **All / Vanilla / Custom** narrows the list.
+- `"originFilter": "custom"` (or `"vanilla"`) in the field's settings JSON sets the starting filter.
+- Picking never creates anything any more.
+
+Enchantments show the enchanted book icon. An icon URL set by hand on an enchantment is kept.
+
 ## Upgrading another environment
 
 The two KNG-200 migrations are `MinecraftCatalogEntryFields` and `MinecraftCatalogConstraints`. The second
@@ -87,9 +119,11 @@ one only applies on clean data, and stops with "KNG-200: block refs not clean…
 4. Run `dotnet ef database update` again.
 5. Scan the server.
 
+KNG-250 adds the migration `MinecraftEnchantmentCatalogFields` (columns only; existing enchantments
+become Unverified until the first scan). Deploy the API and the plugin together and scan. An older
+plugin's scan is still accepted but leaves enchantments alone.
+
 ## Not covered yet
 
-- Enchantments still come from the built-in list with the old hybrid picker:
-  [KNG-250](https://linear.app/kngpandi/issue/KNG-250).
 - Block refs (specific block states) have no picker of their own:
   [KNG-251](https://linear.app/kngpandi/issue/KNG-251).
