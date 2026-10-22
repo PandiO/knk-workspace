@@ -102,3 +102,13 @@ commit that is finally built.
   folders under `/data/compose/42` were removed (`/data/compose/1–6` are older Portainer leftovers and were left alone).
 - Rule: every host path in `compose.yaml` must be absolute, because Portainer can start the stack from its own folder.
   Starting/stopping the stack in Portainer is then harmless; "Update the stack" stays off-limits (A6).
+
+## 8. Load check (2026-10-22, developer, LAN join through a temporary relay)
+
+- `docker stats` idle → 3 players: Minecraft CPU 4 % → 12–19 % (of one core), memory flat at 4.87 / 6 GiB (the heap is
+  reserved in full at start). API ~0.5 GiB, MySQL ~0.5 GiB, both near 0 % CPU. Host: 6.1 GiB available, swap 34 MiB,
+  load average 2.4–3.1 on 16 threads.
+- Flying through new terrain: TPS 20.0 / 20.0 / 20.0; MSPT averages 3.2–6.5 ms, worst tick 24.7 ms (one-minute peak).
+  The 50 ms budget was never approached.
+- Conclusion: capacity is ample for the first round (~8 clustered players). The developer chose the NAS over a VPS for
+  the first weekend; the remaining risk is finishing Phases 3b/4 Stage 2/5/6 in time, not hardware.
