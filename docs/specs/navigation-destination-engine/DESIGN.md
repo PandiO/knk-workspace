@@ -2,7 +2,7 @@
 
 **Status:** Proposed — design for the developer's review. **No code.** Decisions of 2026-10-22 are recorded in §1.
 **Last updated:** 2026-10-22 (E9–E13 recorded)
-**Linear:** not filed yet (the Linear connector was unavailable in the session that wrote this) — see "To file in Linear" at the end.
+**Linear:** [KNG-235](https://linear.app/kngpandi/issue/KNG-235) with phases [KNG-236](https://linear.app/kngpandi/issue/KNG-236) (P1), [KNG-237](https://linear.app/kngpandi/issue/KNG-237) (P2), [KNG-238](https://linear.app/kngpandi/issue/KNG-238) (P3), [KNG-239](https://linear.app/kngpandi/issue/KNG-239) (P4), [KNG-240](https://linear.app/kngpandi/issue/KNG-240) (P5).
 **Builds on:** [navigation/DESIGN.md](../navigation/DESIGN.md) (`/navigate`, §6), [navigation-compass/DESIGN.md](../navigation-compass/DESIGN.md)
 (§11: match scope, which this design generalises), [user-features/DESIGN.md](../user-features/DESIGN.md) §6.1 (owner/staff mode),
 KNG-58 / KNG-123 (offline security store, no main-thread API waits).
@@ -247,8 +247,6 @@ restart the server, `/navigate` a town and a street, run the compass in a match)
 list emptied and a running session ends with the reason; objective captured → compass updates and a session to a
 now-dropped destination ends.
 
-## To file in Linear
+## Linear
 
-Open one issue "Navigation destination engine (providers, exclusive scopes, handle, offline snapshot)" as a feature,
-related to KNG-27 / KNG-123 / KNG-234, linking this document; child issues per phase in §10. Filing was not possible in
-the session that wrote this (Linear connector offline).
+Filed 2026-10-22: KNG-235 (the engine) and one child per phase of §10: KNG-236 (P1), KNG-237 (P2), KNG-238 (P3), KNG-239 (P4), KNG-240 (P5). Start prompt for P1: `docs/ai-agents/handoffs/2026-10-22-destination-engine-p1-start.md`.
