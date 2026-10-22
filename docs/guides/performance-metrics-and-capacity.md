@@ -1,9 +1,10 @@
 # Performance metrics, capacity and the NAS-vs-cloud decision
 
-**Status:** Draft v1 (2026-10-22) — written for review, **not yet followed on the NAS**. The in-game/API metric
-endpoints it relies on are being built under [KNG-232](https://linear.app/kngpandi/issue/KNG-232) and are **not on
-trunk**; § 5 says how to use the guide before they land.
-**Last updated:** 2026-10-22
+**Status:** Draft v1 (2026-10-22) — written for review, **not yet followed on the NAS**. The plugin and API metric
+endpoints it relies on are built under [KNG-232](https://linear.app/kngpandi/issue/KNG-232) on branches
+`claude/kng-232-perf-metrics` in knk-plugin (`1fa9e15`) and knk-web-api (`a52aaed`): unit-tested, **not merged, not run
+against a live Paper server, MySQL or the NAS**. § 5 says how to use the guide before they are deployed.
+**Last updated:** 2026-10-22 (§ 4.2/§ 5 aligned with the implemented metric names)
 **Applies to:** the closed-alpha NAS stack ([runbook](closed-alpha-deployment-runbook.md)): Paper 26.3 in a Docker
 container, knk-web-api, MySQL, all on one shared host (Ryzen 7 5700G, ~15 GiB RAM, Frigate also running; see the
 [infrastructure report](../reports/2026-10-11-closed-alpha-infrastructure-progress.md) § 2).
@@ -164,33 +165,71 @@ The target hosts/ports above are placeholders: use the networks and ports of you
 | Players online | `knk_mc_players_online` | the x-axis of every curve |
 | TPS | `knk_mc_tps{window="1m"}` | acceptance: ≥ 19.5 |
 | Tick time p95 / max | `knk_mc_tick_duration_seconds{stat=~"p95\|max"}` | the real headroom (50 ms budget) |
-| Heap after GC | `knk_jvm_memory_bytes{area="heap",type="used"}` (look at the troughs) | live set → sizing `Xmx` |
-| Off-heap | `knk_jvm_buffer_pool_bytes{pool="direct",type="used"}` + non-heap | the part `Xmx` does not cap |
-| Container working set | `container_memory_working_set_bytes{name="<mc-container>"}` | what the limit really sees |
-| Cores used by Minecraft | `rate(container_cpu_usage_seconds_total{name="<mc-container>"}[1m])` | CPU cost; also see the main-thread line below |
+| Heap after GC | `knk_jvm_memory_pool_after_gc_bytes{pool="G1 Old Gen"}` (the live set; or the troughs of `knk_jvm_memory_bytes{area="heap",kind="used"}`) | live set → sizing `Xmx` |
+| Off-heap | `knk_jvm_buffer_pool_bytes{pool="direct",kind="used"}` + `knk_jvm_memory_bytes{area="nonheap",kind="used"}`; the sum with heap vs `knk_process_resident_memory_bytes` | the part `Xmx` does not cap |
+| Container working set | `container_memory_working_set_bytes{name="<mc-container>"}` (cAdvisor) or `knk_cgroup_memory_working_set_bytes` with `knk_cgroup_memory_limit_bytes` (from inside the container) | what the limit really sees |
+| Cores used by Minecraft | `rate(container_cpu_usage_seconds_total{name="<mc-container>"}[1m])` or `rate(knk_process_cpu_seconds_total[1m])`; `rate(knk_cgroup_cpu_throttled_seconds_total[1m])` > 0 means a CPU limit is biting | CPU cost; the main-thread share is the `knk_task_duration_seconds` line below plus spark |
 | Host contention | `1 - avg(rate(node_cpu_seconds_total{mode="idle"}[1m]))` and Frigate's container CPU | proves/disproves "the NAS is the problem" |
 | API latency p95 | `histogram_quantile(0.95, sum by (le)(rate(http_server_request_duration_seconds_bucket[5m])))` | API health vs load |
 | Plugin → API latency | `histogram_quantile(0.95, sum by (le,route)(rate(knk_api_call_duration_seconds_bucket[5m])))` | slow endpoints that stall features |
 | Plugin task cost | `rate(knk_task_duration_seconds_sum[1m])` per `task` | seconds of work per second = share of one tick thread |
 | GC pause share | `rate(knk_jvm_gc_seconds_total[1m])` | GC stalls show up as tick spikes |
 
-## 5. What KNG-232 adds (and how to use the guide before it lands)
+## 5. What KNG-232 adds (and how to use the guide before it is deployed)
+
+Both branches are **unmerged** and unverified live; build them from the branches to try them, and read the numbers
+critically on the first run (compare `knk_mc_tps` with `/tps`, `knk_cgroup_memory_*` with `docker stats`).
 
 ### 5.1 knk-plugin — `metrics:` section (default **off**)
 A Prometheus text endpoint on its own port (not the region-callback server, which is for the API and uses the
-plugin API key). Config, as built — see the plugin's `config.yml`:
-`metrics.enabled`, `metrics.bind-address` (default `127.0.0.1`; use the Docker host/bridge IP for a scraper in
-another container, never `0.0.0.0` on a public server), `metrics.port` (default `9225`), `metrics.token` (bearer
-token; required whenever the address is not loopback), `metrics.sample-seconds`.
-Collected: TPS (1/5/15 min), tick duration avg/p95/max, players, loaded chunks and entities per world, JVM
-heap/non-heap/pools/direct buffers/GC/threads, process and system CPU, load average, **process RSS and cgroup
-memory (usage, working set, limit, CPU throttling)**, API-call duration histograms by method + route template
-and outcome, and duration histograms for the plugin's own recurring tasks.
+plugin API key). In `config.yml`:
+
+```yaml
+metrics:
+  enabled: true
+  bind-address: "172.17.0.1"   # 127.0.0.1 = scraper on the same host; the Docker host/bridge IP for Prometheus in a
+                               # container; never 0.0.0.0 on a public server
+  port: 9225
+  token: "<openssl rand -hex 32>"   # required unless bind-address is loopback; the plugin config refuses otherwise
+  sample-seconds: 5
+```
+The scraper sends `Authorization: Bearer <token>` (§ 4.1 `authorization:`). If the endpoint cannot start (port in use) the
+plugin logs SEVERE and the game server still starts.
+
+| Metric | Meaning |
+|---|---|
+| `knk_mc_tps{window="1m\|5m\|15m"}`, `knk_mc_tick_duration_seconds{stat="avg\|p95\|max"}` | TPS and the last 100 ticks' duration |
+| `knk_mc_players_online`, `knk_mc_chunks_loaded`, `knk_mc_entities`, `knk_mc_tile_entities`, `knk_mc_world_players` (per `world`) | the load drivers |
+| `knk_mc_sample_age_seconds`, `knk_mc_sample_interval_seconds` | grow when the main thread is stuck or the scheduler late (a freeze shows up as a rising age) |
+| `knk_jvm_memory_bytes{area,kind}`, `knk_jvm_memory_pool_bytes`, `knk_jvm_memory_pool_after_gc_bytes{pool}`, `knk_jvm_buffer_pool_bytes{pool,kind}` | heap, non-heap, per-pool, live set after GC, direct/mapped buffers |
+| `knk_jvm_gc_collections_total`, `knk_jvm_gc_seconds_total` (per `gc`), `knk_jvm_threads`, `knk_jvm_classes_loaded`, `knk_jvm_available_processors` | GC and threads |
+| `knk_process_cpu_seconds_total`, `knk_process_cpu_ratio`, `knk_system_cpu_ratio`, `knk_system_load1`, `knk_process_resident_memory_bytes` | process and system CPU, RSS (heap + all native memory) |
+| `knk_cgroup_memory_{usage,working_set,limit}_bytes`, `knk_cgroup_cpu_seconds_total`, `knk_cgroup_cpu_throttled_{seconds,periods}_total` | the container (cgroup v2; v1 for memory and CPU time); absent outside a container |
+| `knk_api_call_duration_seconds{method,route,outcome}` (histogram) | every REST call to the API incl. the body, route as a template (`/Users/{id}`), outcome `2xx`…`error` |
+| `knk_task_duration_seconds{task}` (histogram) | the plugin's own recurring tasks: `navigation.tick`, `navigation.walk_snapshot`, `siege.tick`, `roads.build_queue`, `roads.overlay`, `roads.survey`, `lootbox.tick`, `lootbox.spawn`, `salary.check`, `statistics.flush`, `statistics.idle_check`, `discovery.flush`, `hub.outage_tick`, `nametags.tick`, `telemetry.movement_sample`, `analytics.movement_sample` |
+
+**What it does not cover:** event handlers, gate animations, menu auto-refresh and other BukkitRunnable tasks are not
+timed — use spark (§ 3.1) for those. The tick-time numbers describe the *whole* server; the task histograms
+only say which of *our* tasks is expensive. `Bukkit.getTickTimes()` covers the last 100 ticks (5 s), so a scrape every
+15 s sees a 5-second window: a short spike between windows shows only in `max` if it falls in the window. Use spark or
+the JFR recording for spikes.
 
 ### 5.2 knk-web-api — real `/metrics`
-`Telemetry:Prometheus:Enabled` now actually maps a scrape endpoint (default off; requires a bearer token outside
-Development) and the meters gain .NET runtime (GC, heap, thread pool), process CPU/memory + cgroup limit,
-outbound HttpClient, and DB command duration. See `knk-web-api/OBSERVABILITY.md`.
+Environment variables (not in git) on the API container:
+
+```text
+Telemetry__Enabled=true
+Telemetry__Prometheus__Enabled=true
+Telemetry__Prometheus__BearerToken=<openssl rand -hex 32>
+```
+Outside Development the API refuses to start with the endpoint on and no token. Never route `/metrics` through
+nginx/Cloudflare. Metrics (Prometheus names): ASP.NET Core `http_server_request_duration_seconds_*`, .NET runtime
+(GC, heap, allocations, thread pool, lock contention), outbound `http_client_*`, `knk_process_cpu_time_seconds_total`,
+`knk_process_memory_working_set_bytes`, `knk_cgroup_memory_{usage,working_set,limit}_bytes`,
+`knk_cgroup_cpu_*`, `knk_db_command_duration_seconds_*{kind,outcome}` (reader time ends when the reader is
+returned), plus the existing `Knk.Currency/Lootbox/Statistics/Telemetry` meters. The OTLP exporter still points at
+`localhost:4317`; set `Telemetry__Otlp__EnableMetrics=false` (or run a collector) to stop it logging export errors.
+See `knk-web-api/OBSERVABILITY.md` on the branch.
 
 ### 5.3 Before those branches are deployed
 Use § 3 plus cAdvisor/node-exporter from § 4 (they need no KnK code) and record players online by hand. That is
@@ -263,8 +302,11 @@ Decision procedure (about one evening of data):
 
 ## 8. Open items
 
-- [KNG-232](https://linear.app/kngpandi/issue/KNG-232): build the plugin and API endpoints (this guide's § 5). Both
-  branches are unmerged and need a live check on the dev server and the NAS.
+- [KNG-232](https://linear.app/kngpandi/issue/KNG-232): the plugin and API endpoints (this guide's § 5) are on
+  `claude/kng-232-perf-metrics` in knk-plugin and knk-web-api, unit-tested (plugin core/api-client/paper and the new API
+  tests green; the API suite has the same 4 known reds as `master`), unmerged. Live checks still to do: scrape the plugin on the
+  dev server and compare with `/tps` and `docker stats`; scrape the API against MySQL (the DB-command histogram has only
+  been tested through its meter, not against a real query); both on the NAS.
 - Load-test mode for bots (§ 6.2): not designed, not filed.
 - Dashboards-as-code and alert rules (disk, working set > 90%, TPS < 18 for 5 min): out of scope for KNG-232.
 - The `knk-web-api/CLAUDE.md` `/metrics` claim and `production-installation.md` G10/§ 12.3 are corrected once the
