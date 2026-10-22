@@ -66,6 +66,10 @@ gates:
   fire-tick-interval-seconds: 1           # how often the fire system ticks
   damage-cracks:
     enabled: true                         # damaged gates show vanilla's 10 block-breaking crack stages over their HP (visual only)
+  melee-damage:
+    from-held-item: true                  # a click on a gate does what the held item does to a player (attack damage + Sharpness); false = flat 10
+    multiplier: 1.0                       # scales the item damage for balance
+  area-enchantment-radius-blocks: 5.0     # chaos / flash_chaos reach gates this far (entities: 3)
   passthrough-instant-open-radius-blocks: 1     # Instant Open: sideways search radius around the player
   passthrough-instant-open-timeout-seconds: 5   # Instant Open: safety-net auto-restore timeout
   rotationGapFill:
