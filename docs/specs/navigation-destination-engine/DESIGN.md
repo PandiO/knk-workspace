@@ -1,7 +1,7 @@
 # Navigation destination engine — which places a player may navigate to
 
 **Status:** Proposed — design for the developer's review. **No code.** Decisions of 2026-10-22 are recorded in §1.
-**Last updated:** 2026-10-22 (E9: frozen above the bypass)
+**Last updated:** 2026-10-22 (E9–E13 recorded)
 **Linear:** not filed yet (the Linear connector was unavailable in the session that wrote this) — see "To file in Linear" at the end.
 **Builds on:** [navigation/DESIGN.md](../navigation/DESIGN.md) (`/navigate`, §6), [navigation-compass/DESIGN.md](../navigation-compass/DESIGN.md)
 (§11: match scope, which this design generalises), [user-features/DESIGN.md](../user-features/DESIGN.md) §6.1 (owner/staff mode),
@@ -30,6 +30,10 @@ in-memory model that is **persisted to disk**, so it behaves the same with the w
 | E7 | **Code-defined policies first**; tuning values come from existing settings. Web-app-editable policies are a later step. |
 | E8 | **Design document first, no code.** Implementation is a separate issue and branch (§10). |
 | E9 | **Frozen sits above the bypass.** Freeze also applies to owner/staff mode and `knk.navigate.any` holders (only higher ranks can freeze, so the rank order gates it). |
+| E10 | **Lobby/hub/after-match: empty with a reason by default** (today's behaviour). The hub scope may offer a small list when a hub provider has destinations that can actually be navigated to; today the hub world has **no road network**, so nothing is offered. No hub provider is built now; the scope keeps the extension point (§4.1). |
+| E11 | **Other-world places** are hidden from tab completion but still resolve to today's "X is in another world" message. |
+| E12 | **Defaults:** the bypass node is `knk.navigate.any` (not granted by default); a snapshot older than 14 days adds a "may be out of date" note (`navigation.destinations.stale-after-days`); **the domain search API is extended** with each domain's Location (§7.2). |
+| E13 | **Implementation starts after the developer's review of this document**, on a new branch with its own Linear issue. |
 
 ## 2. What exists today (from the code, 2026-10-22)
 
@@ -108,7 +112,7 @@ can be cached per `(scope, world, modelVersion)` for tab completion.
 | 80 | No permission | lacks `knk.navigate` | `Empty("You don't have permission to use /navigate.")` |
 | 60 | Siege match | member of a *running* siege match, compass enabled for sieges | `SiegeMatchProvider` (objectives by relevance, then the team spawn) |
 | 55 | Siege match, compass off | member of a running match, compass off for sieges | `Empty("Navigation is switched off in this siege.")` |
-| 50 | Siege lobby/hub/after-match | member of a siege lobby, no running match | `Empty("You can't navigate while you are in a siege.")` today; room to offer a hub list later (tunable) |
+| 50 | Siege lobby/hub/after-match | member of a siege lobby, no running match | `Empty("You can't navigate while you are in a siege.")`; **if a hub provider has navigable destinations** (E10) a small hub list instead — none today (no road network in the hub world) |
 | 10 | World (default) | always | `CatalogueProvider` for the player's world |
 
 Notes: the existing messages stay as the scope's reason, so players see the same texts. "Cycle list" of the compass
@@ -154,8 +158,8 @@ making compass/command resolution synchronous and consistent with KNG-123 (no ma
 
 - **Domain places** — per domain: id, name, type, navigation default, road-access flag, WorldGuard region id, world,
   and the resolved spawn Location (x, y, z, yaw, pitch, world). Today's domain search does not carry the Location, so
-  the place is resolved by `DomainLocationResolver` (N lookups). **Recommendation:** extend the API's domain search DTO
-  (`DomainListDto`) with the domain's Location, so one paged search fills the snapshot (no N+1); until the API change
+  the place is resolved by `DomainLocationResolver` (N lookups). **Decided (E12):** the API's domain search DTO
+  (`DomainListDto`) is extended with the domain's Location, so one paged search fills the snapshot (no N+1); until the API change
   is live, a paced background resolver fills in places (a few per second) and the snapshot is saved when complete.
 - **Locations** — id, name, coordinates, world (the `/navigate location:` targets).
 - **Compass settings** — the item rule, switches and general targets (small).
@@ -216,7 +220,7 @@ later by letting a `Scope` read admin-defined rows.
 | 2 | Model + snapshot: `NavigationModel`, snapshot reader/writer, background refresh, bulk domain places (API DTO extension + paced fallback), `degraded` | tests: restart with API down serves the same list; corrupt/newer snapshot ignored; refresh replaces deleted entries |
 | 3 | Adapters and switch-over: `NavigateCommand`, compass, `NavigationService` on the handle; delete the duplicate paths (§5); architecture test | `/navigate`, tab completion and compass behave as today outside a match and as KNG-234 §11 in a match |
 | 4 | Hard blocks into scopes; live re-validation; remove `NavigationEligibility`/`EndReason.SIEGE` | frozen/loading/lobby messages unchanged; sessions end with the scope's reason |
-| 5 | Arena duels provider+scope (when that branch lands); optional hub list | arena match restricts navigation without touching the engine |
+| 5 | Arena duels provider+scope (when that branch lands; timing not confirmed by the developer); optional hub list (E10) | arena match restricts navigation without touching the engine |
 
 Estimated: phases 1–2 are the bulk (a pure core plus the snapshot); 3–4 are mostly deletion and wiring.
 
