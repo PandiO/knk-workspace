@@ -1,6 +1,6 @@
 # Siege navigation compass — smoke test (KNG-234)
 
-**Status:** To test (written 2026-10-22). **Last updated:** 2026-10-22
+**Status:** To test (written 2026-10-22). **Last updated:** 2026-10-23 (run 1 findings: sky click, hub grant visibility)
 **Branch under test:** `claude/siege-navigation-compass-pl2trj` in knk-plugin, knk-web-api, knk-web-app (knk-workspace for docs). Not merged; unit-tested only.
 **Design:** [navigation-compass/DESIGN.md](../specs/navigation-compass/DESIGN.md) (§6 decisions, §8, §10, §11)
 **Report back:** PASS / FAIL per step ID, plus for each FAIL the exact chat lines and what you did.
@@ -9,7 +9,7 @@
 
 1. **API:** run the branch and apply both migrations: `AddNavigationCompassSettings` and `AddSiegeNavigationItem` (`dotnet ef database update`). Existing siege rows become `Inherit` / off.
 2. **Web app:** run the branch. **Plugin:** build `./gradlew build -x deployToDevServer` (JDK 25) or `:knk-paper:dev`; start the Paper 26.3 dev server.
-3. **Form designer (needed for P-scenario/lobby overrides, steps D6-D8):** add an *Enum* field `NavigationItem` (values `Inherit`, `Give`, `DoNotGive`, default `Inherit`, label "Navigation compass") to the SiegeScenario form and the SiegeLobby form. Not needed for anything else.
+3. **Form designer (needed for the scenario/lobby overrides, steps D6-D8):** a fresh import of the SiegeScenario and SiegeLobby seeds already has the Enum field `NavigationItem` ("Navigation compass"; `Inherit`, `Give`, `DoNotGive`; default `Inherit`). A database that imported the seeds earlier needs the same field added by hand in the form designer (seed import never overwrites).
 4. **World:** a road network in the siege scenario's world and the player-start area (`/knk road ...`), so `/navigate` works there at all. A siege scenario with at least: a defender and an attacker team (each with a spawnpoint), an **instant-victory objective ("Keep") behind a gate**, and a **gate objective ("Gate")** that is closed at the start and owned by the defenders. Objectives need a location. Min players per scenario: use two accounts (A = defender, B = attacker) or alts; a third account C as a bystander for G3.
 5. **Permissions:** `knk.navigate` is default true. Staff/admin account for the admin steps. Have `/siege admin start <lobby>` available (`knk.siege.admin.control`).
 6. Start with the siege global switch **off** and the compass settings at their defaults.
@@ -39,7 +39,7 @@
 
 | ID | Do | Expect |
 |---|---|---|
-| C1 | With the A4 targets saved: right-click | Chat `Compass 1/2: <first target>`, navigation starts (trail/HUD) |
+| C1 | With the A4 targets saved: right-click **at the sky** (no block or entity in reach), and also on a block | Chat `Compass 1/2: <first target>`, navigation starts (trail/HUD) |
 | C2 | Right-click again; and again | `2/2: …`, then back to `1/2` (wraps). Clicking twice within ~¼ s counts once |
 | C3 | Shift-right-click while navigating | "Navigation stopped." |
 | C4 | Shift-right-click again | Navigation resumes to the last target |
@@ -49,7 +49,9 @@
 
 ## D. The siege gives the compass at the hub (warm-up)
 
-Hub = the last `hubSecondsBeforeStart` seconds before the match (default 15). Players are teleported there and their inventory is saved.
+Hub = the last `hubSecondsBeforeStart` seconds before the match (default 15). Players are teleported there and their inventory is saved. No ItemBlueprint is needed: the siege builds the item from the compass rule of the web settings (material + display name).
+
+**The plugin holds the siege configuration of a round (frozen).** A change of the global switch, a scenario or a lobby in the web app reaches the plugin only at the lobby's next cooldown or after `/siege admin reload`, and a lobby already in matchmaking/hub/match applies it afterwards ("new configuration applies at its next cooldown" in the console). So: change the setting, run `/siege admin reload`, let the current round finish (or `/siege admin skip <lobby>` / `stop` + `start`), then test the **next** round. At the hub the console prints one line per round: `[Navigation] Siege lobby '<key>', scenario '<name>': navigation compass at the hub = GIVE|no (lobby=…, scenario=…, global=… as loaded for this round)`. No such line at all = the plugin build lacks the hub grant (rebuild from the branch head); `global=false` = the round started before the setting reached the plugin.
 
 | ID | Do | Expect |
 |---|---|---|

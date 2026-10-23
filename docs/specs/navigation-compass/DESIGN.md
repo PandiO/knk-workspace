@@ -220,3 +220,15 @@ live-tested:** the glue in `NavigationAccess` (needs a running server) and the w
    completion lists only match destinations; `/nav stop` works.
 4. A non-member standing in the town is unaffected (still carried through per the non-member rule).
 
+## 12. Findings of smoke test run 1 (2026-10-23)
+
+- **Sky click did nothing (fixed).** Bukkit reports a click in the air as *cancelled* (no block to interact with), and
+  `NavigationCompassListener` ignored cancelled events, so only clicks on blocks reached it. The handler no longer uses
+  `ignoreCancelled`; it skips only clicks whose **item use** another handler denied (`useItemInHand() == DENY`). Guarded by
+  `NavigationCompassListenerTest`, which also asserts the annotation.
+- **Hub grant not seen (open, diagnosed to the config timing).** The siege configuration is frozen per round (§10: lobby
+  and scenario values and the global switch are read from the runtime config the plugin loaded); a web-app change applies
+  at the next cooldown or `/siege admin reload`. A console line per round now states the three values and the decision.
+  No ItemBlueprint is involved. If a round that started after a reload still gives nothing, the console line says why.
+- **Seeds:** `NavigationItem` is in the SiegeScenario and SiegeLobby seeds (see the seeds README).
+
