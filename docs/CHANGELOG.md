@@ -8,6 +8,21 @@ _Nothing at the moment._
 
 ## 2026-10-23
 
+- **Gate doors: open-door scans that work as expected** ([KNG-268](https://linear.app/kngpandi/issue/KNG-268),
+  [KNG-270](https://linear.app/kngpandi/issue/KNG-270), [KNG-271](https://linear.app/kngpandi/issue/KNG-271); knk-plugin
+  `main` `6ad683f8`, knk-web-api `master` `a853d37`, knk-web-app `main` `1d79af0`, merged directly, no PR; live-tested
+  by the developer).
+  - **Pairing along the slide.** A sliding door with an open-door scan moves each block to the open block straight
+    along its slide; blocks no longer change columns (that jammed door 17).
+  - **Empty open-door anchor = the anchor.** For a door that opens inside its own box, leave the open-door anchor
+    empty: the scan starts at the anchor. An open scan made from another point than the one it is read from (anchor
+    moved, cleared or edited) is ignored with a console warning until you scan again.
+  - **Scans that can't work are refused** with the reason: a region door without its captured region (the message
+    names `/gatedoor capture <id> opened|closed`), an open scan on a flood-fill door, a door without an anchor. A failed
+    scan shows its reason once, and scan lists show "N blocks scanned." instead of a card per block and a broken picker.
+  - **Deploy.** Import **GateDoor seed v3** and make it the default: it explains the open-door anchor and when an
+    open-door scan is needed ([admin guide](guides/admin/gate-structures-admin-guide.md)).
+
 - **Gate doors: no more jamming on their own decoration, and a GateDoor dashboard** ([KNG-272](https://linear.app/kngpandi/issue/KNG-272),
   [KNG-273](https://linear.app/kngpandi/issue/KNG-273); knk-plugin `main` `c09e9483`, knk-web-api `master` `85c0a26`,
   knk-web-app `main` `0ed300c`, merged directly, no PR; live-tested by the developer).
@@ -19,9 +34,8 @@ _Nothing at the moment._
     name, through the new `POST api/GateDoors/search` (search on door or gate name, filters gate, type, state, active).
   - **Configuring a door like this.** A door that rises and loses its chains needs no open-state scan: motion distance
     plus *Clip to geometry bounds* removes the chains as they leave the door box
-    ([admin guide](guides/admin/gate-structures-admin-guide.md)). Open-scan pitfalls are filed as
-    [KNG-268](https://linear.app/kngpandi/issue/KNG-268), [KNG-270](https://linear.app/kngpandi/issue/KNG-270) and
-    [KNG-271](https://linear.app/kngpandi/issue/KNG-271).
+    ([admin guide](guides/admin/gate-structures-admin-guide.md)). The open-scan pitfalls found on the way are fixed in
+    the entry above.
 
 - **Domain sub-regions: one domain, several WorldGuard regions** ([KNG-253](https://linear.app/kngpandi/issue/KNG-253),
   phases KNG-254–KNG-259; knk-web-api `master` `779629e`, knk-plugin `main` `9dfd7aae`, knk-web-app `main` `bf0d142`, merged directly, no PR; smoke-tested by the developer). A town, district,
