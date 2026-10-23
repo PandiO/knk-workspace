@@ -1,7 +1,7 @@
 # Domain sub-regions (expansion regions) — design
 
-**Status:** Design rev. 2: every open decision answered by the developer (2026-10-23, §12). Nothing implemented. Waiting for the developer's acceptance of the design before the phase issues (§11) are filed.
-**Last updated:** 2026-10-23 (rev. 2: the 7 decisions in §12 taken, all as recommended; §6 select renames. Rev. 1: investigation of v1/v2 and the current API, plugin and web app; first design)
+**Status:** Design accepted by the developer (2026-10-23, rev. 2). Every decision taken (§12). Implementation started: P1 [KNG-254](https://linear.app/kngpandi/issue/KNG-254) in progress; P2–P6 [KNG-255](https://linear.app/kngpandi/issue/KNG-255)–[KNG-259](https://linear.app/kngpandi/issue/KNG-259) filed (§11).
+**Last updated:** 2026-10-23 (accepted; phase issues KNG-254–KNG-259 filed. Rev. 2: the 7 decisions in §12 taken, all as recommended; §6 select renames. Rev. 1: investigation of v1/v2 and the current API, plugin and web app; first design)
 **Linear:** [KNG-253](https://linear.app/kngpandi/issue/KNG-253). Related: [KNG-103](https://linear.app/kngpandi/issue/KNG-103) (region step re-run, replace in place), [KNG-56](https://linear.app/kngpandi/issue/KNG-56) (access flags), [KNG-46](https://linear.app/kngpandi/issue/KNG-46) / [KNG-43](https://linear.app/kngpandi/issue/KNG-43) (managed regions, rename on save), [KNG-111](https://linear.app/kngpandi/issue/KNG-111) (domain world)
 **Sources:** developer request 2026-10-23; `knk-v1-archive` (`src/DataManager/{Towns,Districts,Worldguard,Creations}.java`, `src/Models/creations/{Town,District,Structure}Creation.java`, `src/Towns/{Town,TownCommands,TownEvents}.java`); `knk-v2-archive` (`model/dominion/Dominion.java`, `util/WorldguardUtil.java`); knk-web-api `master` `4f34f58`; knk-plugin `main` `69c9388`; knk-web-app default branch; [managed WorldGuard regions](../../architecture/managed-worldguard-regions.md); [domain access enforcement](../../architecture/domain-access-enforcement.md); [legacy towns/districts/gates](../legacy/towns-districts-gates.md)
 
@@ -308,16 +308,16 @@ Validation rules today name one region (`District.WgRegionId`, `GateStructure.Wg
   - an old plugin ignores the new fields.
   Deploy both before adding the first sub-region.
 
-## 11. Phases (proposed Linear issues after the design is accepted)
+## 11. Phases (Linear KNG-254 – KNG-259)
 
 | Phase | Repo | Content |
 |---|---|---|
-| P1 | knk-web-api | `DomainSubRegion` entity and migration, CRUD with access rules, uniqueness across both tables, finalizer for sub-regions and `finalize-temp-names`, DTO fields (`subRegions`, `subRegionIds`, `matchedSubRegionId`), lookups, form and display seeds, domain-aware `validationContext.regionIds`. Tests. |
-| P2 | knk-plugin | `RegionRenamePlan` name pattern and `subRegionOf`, sub-region specs in `DomainRegionSpecs`, `SubRegionMirror`, access sync over all regions plus `knk-domain-id`, `RegionAccessRules` per domain, `/knk regions sync`. Tests (core). |
-| P3 | knk-plugin | Resolver and snapshot identity by domain, `OnDomainEnter/LeaveEvent`, transition dedupe, listener audit (analytics, gate control, discovery, navigation). |
-| P4 | knk-plugin | Cylinder, ellipsoid and convex → polygon in `createRegionFromSelection`, domain-aware containment checks. |
-| P5 | knk-plugin | Orphan detection (`knk-orphaned-since`), retention task and `/knk regions temp` for sub-regions, configurable cutoff. |
-| P6 | knk-web-app + docs | Verify the owned-collection flow for `SubRegions` (likely seed-only), display; update `managed-worldguard-regions.md`, `domain-access-enforcement.md`, the admin guide; in-game checklist (garrison: house main region, cylindrical tower sub-region, gate door inside the tower, AllowExit=false domain walk-through). |
+| P1 [KNG-254](https://linear.app/kngpandi/issue/KNG-254) | knk-web-api | `DomainSubRegion` entity and migration, CRUD with access rules, uniqueness across both tables, finalizer for sub-regions and `finalize-temp-names`, DTO fields (`subRegions`, `subRegionIds`, `matchedSubRegionId`), lookups, form and display seeds, domain-aware `validationContext.regionIds`. Tests. |
+| P2 [KNG-255](https://linear.app/kngpandi/issue/KNG-255) | knk-plugin | `RegionRenamePlan` name pattern and `subRegionOf`, sub-region specs in `DomainRegionSpecs`, `SubRegionMirror`, access sync over all regions plus `knk-domain-id`, `RegionAccessRules` per domain, `/knk regions sync`. Tests (core). |
+| P3 [KNG-256](https://linear.app/kngpandi/issue/KNG-256) | knk-plugin | Resolver and snapshot identity by domain, `OnDomainEnter/LeaveEvent`, transition dedupe, listener audit (analytics, gate control, discovery, navigation). |
+| P4 [KNG-257](https://linear.app/kngpandi/issue/KNG-257) | knk-plugin | Cylinder, ellipsoid and convex → polygon in `createRegionFromSelection`, domain-aware containment checks. |
+| P5 [KNG-258](https://linear.app/kngpandi/issue/KNG-258) | knk-plugin | Orphan detection (`knk-orphaned-since`), retention task and `/knk regions temp` for sub-regions, configurable cutoff. |
+| P6 [KNG-259](https://linear.app/kngpandi/issue/KNG-259) | knk-web-app + docs | Verify the owned-collection flow for `SubRegions` (likely seed-only), display; update `managed-worldguard-regions.md`, `domain-access-enforcement.md`, the admin guide; in-game checklist (garrison: house main region, cylindrical tower sub-region, gate door inside the tower, AllowExit=false domain walk-through). |
 
 ## 12. Decisions
 
