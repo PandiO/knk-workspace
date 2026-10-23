@@ -1,7 +1,7 @@
 # Minecraft Catalogue — Admin Guide
 
 **Status:** Living document — update in place as the code changes
-**Last updated:** 2026-10-23 (KNG-250 merged: knk-web-api `master` `a1f8838`, knk-web-app `main` `f9ee73c`, knk-plugin `main` `@@PLUGIN@@`; KNG-200 merged 2026-10-22)
+**Last updated:** 2026-10-23 (KNG-250 merged: knk-web-api `master` `a1f8838`, knk-web-app `main` `f9ee73c`, knk-plugin `main` `c7806b87`; KNG-200 merged 2026-10-22)
 **Companion docs:** `docs/specs/minecraft-catalog/IMPLEMENTATION_PLAN.md` (design, decisions D1-D12, contract)
 
 The Minecraft catalogue is the list of materials (items and blocks) and enchantments the web app offers in its pickers, for

@@ -1,6 +1,6 @@
 # Minecraft catalogue (materials and blocks): implementation plan
 
-**Status:** Implemented and merged 2026-10-22 (knk-web-api `master` `4f34f58`, knk-web-app `main` `0622a87`, knk-plugin `main` `69c93885`); live-tested by the developer. KNG-250 (enchantments, §12) merged 2026-10-23 (knk-web-api `master` `a1f8838`, knk-web-app `main` `f9ee73c`, knk-plugin `main` `@@PLUGIN@@`) after the developer's live test. Follow-up: KNG-251 (block-state picker, the optional phase 6). Decisions D1-D12 in §11.
+**Status:** Implemented and merged 2026-10-22 (knk-web-api `master` `4f34f58`, knk-web-app `main` `0622a87`, knk-plugin `main` `69c93885`); live-tested by the developer. KNG-250 (enchantments, §12) merged 2026-10-23 (knk-web-api `master` `a1f8838`, knk-web-app `main` `f9ee73c`, knk-plugin `main` `c7806b87`) after the developer's live test. Follow-up: KNG-251 (block-state picker, the optional phase 6). Decisions D1-D12 in §11.
 **Last updated:** 2026-10-23
 **Issue:** [KNG-200](https://linear.app/kngpandi/issue/KNG-200). Related: [KNG-195](https://linear.app/kngpandi/issue/KNG-195) (hybrid submit fixes, In Review), [KNG-182](https://linear.app/kngpandi/issue/KNG-182) (Minecraft 26.3).
 
@@ -843,7 +843,7 @@ Definitions match the same way. A custom definition is keyed by the ability key,
 
 Live-tested by the developer on 2026-10-23 ("all work") and merged `--no-ff` without PR: knk-web-api `master`
 `a1f8838`, knk-web-app `main` `f9ee73c` (after merging KNG-263's category filter into the branch), knk-plugin `main`
-`@@PLUGIN@@`. Feature-branch commits:
+`c7806b87`. Feature-branch commits:
 
 | Repo | Commit | What |
 |---|---|---|
@@ -853,8 +853,8 @@ Live-tested by the developer on 2026-10-23 ("all work") and merged `--no-ff` wit
 
 Tests:
 - API: 2,991 tests with MySQL; 4 fail identically on `master` (unrelated, [KNG-252](https://linear.app/kngpandi/issue/KNG-252)).
-- Web: 168 suites and 1,048 tests.
-- Plugin: knk-core 2,211, knk-api-client 268, knk-paper 1,982.
+- Web: 168 suites and 1,048 tests (170 and 1,060 after merging main with KNG-263).
+- Plugin: knk-core 2,211, knk-api-client 268, knk-paper 1,982 (2,215, 268 and 1,994 after merging main).
 
 The live test covered the scan with enchantments, the custom `knk:<id>` rows, the merge of old rows and the
 pickers.

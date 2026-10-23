@@ -12,7 +12,7 @@ This is a human-readable record of capabilities merged into the V3 default branc
 ## 2026-10-23
 
 - **Enchantments from the server scan, vanilla and custom in one picker** ([KNG-250](https://linear.app/kngpandi/issue/KNG-250);
-  knk-web-api `master` `a1f8838`, knk-web-app `main` `f9ee73c`, knk-plugin `main` `@@PLUGIN@@`, merged directly, no PR;
+  knk-web-api `master` `a1f8838`, knk-web-app `main` `f9ee73c`, knk-plugin `main` `c7806b87`, merged directly, no PR;
   live-tested by the developer). The **Scan server** of the Minecraft catalogue now reads the server's enchantments too,
   plus knk-plugin's 12 custom enchantments as `knk:<id>`. Old rows in another notation (a custom `chaos` saved without
   namespace) merge into the scanned row; unknown rows nothing uses are deleted and used ones become Missing. Every
