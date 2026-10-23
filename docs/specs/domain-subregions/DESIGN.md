@@ -1,7 +1,7 @@
 # Domain sub-regions (expansion regions) — design
 
-**Status:** Design accepted by the developer (2026-10-23, rev. 2). Every decision taken (§12). Implementation started: P1 [KNG-254](https://linear.app/kngpandi/issue/KNG-254) in progress; P2–P6 [KNG-255](https://linear.app/kngpandi/issue/KNG-255)–[KNG-259](https://linear.app/kngpandi/issue/KNG-259) filed (§11).
-**Last updated:** 2026-10-23 (accepted; phase issues KNG-254–KNG-259 filed. Rev. 2: the 7 decisions in §12 taken, all as recommended; §6 select renames. Rev. 1: investigation of v1/v2 and the current API, plugin and web app; first design)
+**Status:** Design accepted by the developer (2026-10-23, rev. 2). **Implemented on unmerged feature branches, not live-tested** (§13): every phase KNG-254–KNG-259 is In Review. Follow-ups: [KNG-260](https://linear.app/kngpandi/issue/KNG-260) (navigation), [KNG-261](https://linear.app/kngpandi/issue/KNG-261) (placement checks).
+**Last updated:** 2026-10-23 (§13 implementation status and the changes against this design; phase issues KNG-254–KNG-259 filed. Rev. 2: the 7 decisions in §12 taken, all as recommended; §6 select renames. Rev. 1: investigation of v1/v2 and the current API, plugin and web app; first design)
 **Linear:** [KNG-253](https://linear.app/kngpandi/issue/KNG-253). Related: [KNG-103](https://linear.app/kngpandi/issue/KNG-103) (region step re-run, replace in place), [KNG-56](https://linear.app/kngpandi/issue/KNG-56) (access flags), [KNG-46](https://linear.app/kngpandi/issue/KNG-46) / [KNG-43](https://linear.app/kngpandi/issue/KNG-43) (managed regions, rename on save), [KNG-111](https://linear.app/kngpandi/issue/KNG-111) (domain world)
 **Sources:** developer request 2026-10-23; `knk-v1-archive` (`src/DataManager/{Towns,Districts,Worldguard,Creations}.java`, `src/Models/creations/{Town,District,Structure}Creation.java`, `src/Towns/{Town,TownCommands,TownEvents}.java`); `knk-v2-archive` (`model/dominion/Dominion.java`, `util/WorldguardUtil.java`); knk-web-api `master` `4f34f58`; knk-plugin `main` `69c9388`; knk-web-app default branch; [managed WorldGuard regions](../../architecture/managed-worldguard-regions.md); [domain access enforcement](../../architecture/domain-access-enforcement.md); [legacy towns/districts/gates](../legacy/towns-districts-gates.md)
 
@@ -337,3 +337,35 @@ Open notes, not blocking:
 - **N1.** A maximum number of sub-regions per domain: none proposed.
 - **N2.** Lootbox spawn areas and arena battlegrounds have their own region models and are out of scope.
 - **N3.** A bulk import of v1 `town_<id>,<n>` parts: not planned, adopt by hand with `select`.
+
+## 13. Implementation status (2026-10-23)
+
+Branch `claude/domain-expansion-regions-s46gvf` in each repo; nothing merged, nothing live-tested. Check with the [smoke test](../../guides/domain-subregions-smoke-test.md); [admin guide](../../guides/admin/domain-subregions-admin-guide.md).
+
+| Phase | Commit(s) | Tests |
+|---|---|---|
+| P1 API ([KNG-254](https://linear.app/kngpandi/issue/KNG-254)) | knk-web-api `7632c2f` | `dotnet test` 2905 passed, 4 failed: the known reds (`ClientActivityStore`, `PathResolution` ×2, `FieldValidation`) |
+| P2 mirror, access ([KNG-255](https://linear.app/kngpandi/issue/KNG-255)) | knk-plugin `0ec8b8e` | Gradle core / api-client / paper all green (final: 2230 / 268 / 1983) |
+| P3 resolution, events ([KNG-256](https://linear.app/kngpandi/issue/KNG-256)) | knk-plugin `f93758d`, knk-web-api `43e95dc` (discovery, analytics) | as above |
+| P4 shapes, containment ([KNG-257](https://linear.app/kngpandi/issue/KNG-257)) | knk-plugin `5e4aa67` | as above |
+| P5 orphans ([KNG-258](https://linear.app/kngpandi/issue/KNG-258)) | knk-plugin `808acc4` | as above |
+| P6 web app, docs ([KNG-259](https://linear.app/kngpandi/issue/KNG-259)) | knk-web-app `4b88565`, knk-web-api `6d438bf` (display seeds), this repo | web app: `tsc` clean outside 3 errors already in `sessionPinnedRows.test.ts`; util tests 316 passed |
+
+**Changes against this design:**
+
+- **§5.3 One mirror sets everything.** `SubRegionMirror` sets priority, parent, flags, owners and members; `DomainRegionSpecs` emits no sub-region specs. It runs after every access sync, so `/knk regions repair` covers sub-regions through the access sync it already runs. Right after a sub-region rename the plugin mirrors at once, and runs the access sync 5 s later: the API stores the final name only after the plugin answers.
+- **§8 Orphans need two syncs.** A sub-region is marked only when two access syncs in a row don't list it, so a just-renamed one is never taken for an orphan.
+- **§9.2 Containment without the API.** The domain's regions are found by the `knk-domain-id` flag (`DomainRegionUnion`), not by `validationContext.regionIds`. No web-app or API change was needed.
+- **§9.2 Placement checks are not built.** "Inside the parent domain" and the touch warning moved to [KNG-261](https://linear.app/kngpandi/issue/KNG-261). One `DomainSubRegion` form serves every domain type, and there is no "touches" validation type yet.
+- **§7.1 Snapshot identity.** `DomainSnapshot` is equal by domain id (no `regionIds` component was added). Analytics records domain enter/leave events by the main region id.
+- **§7.1 Discovery and analytics.** The API resolves a sub-region id to its domain in discovery and in world-analytics ingestion.
+- **Web app.** `findParentLinkField` links a child of any domain type through a field typed `Domain`. Before, it needed the exact parent type, so the sub-region form's `DomainId` would not have been filled in.
+- **Display seeds.** Structure and GateStructure seed v2 list the sub-regions. Town and District have no display seed.
+- **Navigation.** It still knows only the main region: [KNG-260](https://linear.app/kngpandi/issue/KNG-260).
+
+**Before merging:**
+- run the smoke test;
+- apply the `DomainSubRegions` migration;
+- import the seeds;
+- deploy the API and the plugin together.
+
