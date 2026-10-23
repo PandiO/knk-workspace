@@ -63,9 +63,27 @@ must contain KNG-182 (`claude/mc-26.2-upgrade` `88497649` or plugin `main` once 
    ```
    A pending reset token from before the migration still works (its `Purpose` is 1).
 3. Run the migrations a second time on a copy that already has an `Alpha Tester` group: no second group, no error.
-4. `KNK_TEST_MYSQL=<connection string> dotnet test Tests/knkwebapi_v2.Tests/knkwebapi_v2.Tests.csproj --filter Category=requires-mysql`
-   → all pass (link-code fold, outbox rollback + unique key, invitation concurrency and backfill, claim registration
-   rollback).
+4. The chain's nine `[MySqlFact]`s (link-code fold, outbox rollback + unique key, invitation concurrency and backfill,
+   claim registration rollback, `Alpha Tester` seed) → all pass. Lessons from the first run (2026-10-23):
+   - `KNK_TEST_MYSQL` is a **server** connection without `Database=` (the tests create and drop `knk_test_*`
+     databases). Take the API's own string from `dotnet user-secrets list` and drop the `Database=…;` part; typing the
+     password by hand cost an hour of "Access denied".
+   - The MySQL user needs `GRANT ALL PRIVILEGES ON \`knk\_test\_%\`.* TO '<user>'@'<your pc ip>'`. An account exists
+     per user **and** host: `GRANT` answering "not allowed to create a user" means no row for your address.
+   - Run the classes **sequentially**: in parallel, each class opens its own pool and a NAS MySQL hits "Too many
+     connections" within minutes (59 of 124 failed that way; the invitations classes alone take ~3.5 min).
+   - `KNK_SKIP_LEDGER_TRIGGERS=true` when the user has no SUPER (the ledger trigger tests are not this chain's).
+
+   PowerShell:
+   ```powershell
+   $cs = (dotnet user-secrets list | Select-String '^ConnectionStrings:MySqlDbConnection = ').Line -replace '^ConnectionStrings:MySqlDbConnection = ', ''
+   $env:KNK_TEST_MYSQL = $cs -replace 'Database=[^;]*;?', ''
+   $env:KNK_SKIP_LEDGER_TRIGGERS = 'true'
+   dotnet test Tests/knkwebapi_v2.Tests/knkwebapi_v2.Tests.csproj --filter "Category=requires-mysql&(FullyQualifiedName~LinkMinecraftAccountMySqlTests|FullyQualifiedName~EmailOutboxMySqlTests|FullyQualifiedName~InvitationUseMySqlTests|FullyQualifiedName~AddInvitationsBackfillMySqlTests|FullyQualifiedName~ClaimRegistrationMySqlTests|FullyQualifiedName~SeedAlphaTesterGroupMySqlTests)" -- xUnit.ParallelizeTestCollections=false
+   ```
+   bash: `KNK_TEST_MYSQL="Server=…;User=…;Password=…" KNK_SKIP_LEDGER_TRIGGERS=true dotnet test … -- xUnit.ParallelizeTestCollections=false`.
+   The whole `requires-mysql` set (currency, statistics, lootbox, …) is optional for this feature; run it with the same
+   `-- xUnit.ParallelizeTestCollections=false` suffix or raise the server's `max_connections`.
 
 ---
 
@@ -268,4 +286,4 @@ children are closed.
 
 | Date | Who | Heads (api / app / plugin) | Sections run | Result / issues |
 |---|---|---|---|---|
-| | | | | |
+| 2026-10-23 | Pandi (dev DB on the NAS) | api `8f489b9` / app `eeea86f` / plugin `90b01850` | § 0 | **Passed.** Migrations applied, § 0.2 data checks OK, the chain's 9 `[MySqlFact]`s 9/9 green (sequential run, 206 s). Setup bumps folded into § 0.2. Full `requires-mysql` set in parallel exhausted the NAS's connections (59/124 failed on "Too many connections"), not re-run; not needed for this feature. |
