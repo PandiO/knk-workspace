@@ -4,7 +4,10 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
-_Nothing at the moment._
+- **Non-op players can pick up a world lootbox inside a protected region** ([KNG-266](https://linear.app/kngpandi/issue/KNG-266);
+  knk-plugin `claude/kng-266-lootbox-worldguard` `e07a346b`, not merged, not live-tested). WorldGuard refused the click on
+  a box in a spawn area inside a domain region to anyone who isn't a member, so only ops could pick boxes up there. The
+  plugin now tells WorldGuard to allow clicks on lootbox entities only; every other entity in the region stays protected.
 
 ## 2026-10-23
 
