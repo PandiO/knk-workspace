@@ -8,6 +8,21 @@ _Nothing at the moment._
 
 ## 2026-10-23
 
+- **Gate doors: no more jamming on their own decoration, and a GateDoor dashboard** ([KNG-272](https://linear.app/kngpandi/issue/KNG-272),
+  [KNG-273](https://linear.app/kngpandi/issue/KNG-273); knk-plugin `main` `c09e9483`, knk-web-api `master` `85c0a26`,
+  knk-web-app `main` `0ed300c`, merged directly, no PR; live-tested by the developer).
+  - **Decorated doors move.** A door whose blocks of different materials follow each other in the direction it moves
+    (chains above a portcullis, a decorated top row) jammed on its own blocks: a fence rising into the cell a chain had
+    just left found the chain there and called it an obstruction. The door now clears such a cell first. A block a
+    player puts in the way still jams it.
+  - **GateDoor dashboard.** The web app's dashboard and GateDoor pickers list doors across all gates, with the gate's
+    name, through the new `POST api/GateDoors/search` (search on door or gate name, filters gate, type, state, active).
+  - **Configuring a door like this.** A door that rises and loses its chains needs no open-state scan: motion distance
+    plus *Clip to geometry bounds* removes the chains as they leave the door box
+    ([admin guide](guides/admin/gate-structures-admin-guide.md)). Open-scan pitfalls are filed as
+    [KNG-268](https://linear.app/kngpandi/issue/KNG-268), [KNG-270](https://linear.app/kngpandi/issue/KNG-270) and
+    [KNG-271](https://linear.app/kngpandi/issue/KNG-271).
+
 - **Domain sub-regions: one domain, several WorldGuard regions** ([KNG-253](https://linear.app/kngpandi/issue/KNG-253),
   phases KNG-254–KNG-259; knk-web-api `master` `779629e`, knk-plugin `main` `9dfd7aae`, knk-web-app `main` `bf0d142`, merged directly, no PR; smoke-tested by the developer). A town, district,
   structure or gate can have extra regions besides its main one, added in a new "Sub-regions" step of its form. Example:
