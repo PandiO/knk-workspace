@@ -1,10 +1,10 @@
 # Minecraft Catalogue — Admin Guide
 
 **Status:** Living document — update in place as the code changes
-**Last updated:** 2026-10-22 (KNG-200 merged; KNG-250 enchantments on the feature branch, see "Enchantments")
+**Last updated:** 2026-10-23 (KNG-250 merged: knk-web-api `master` `a1f8838`, knk-web-app `main` `f9ee73c`, knk-plugin `main` `@@PLUGIN@@`; KNG-200 merged 2026-10-22)
 **Companion docs:** `docs/specs/minecraft-catalog/IMPLEMENTATION_PLAN.md` (design, decisions D1-D12, contract)
 
-The Minecraft catalogue is the list of materials (items and blocks) the web app offers in its pickers, for
+The Minecraft catalogue is the list of materials (items and blocks) and enchantments the web app offers in its pickers, for
 example the icon of an item blueprint, a category, a gate or a lootbox type. Since KNG-200 the running
 Minecraft server is the source: a scan reads its registry, and the database holds the result. There is no
 built-in list any more, so a new database stays empty until its first scan.
@@ -78,7 +78,7 @@ startup backfill (normalising keys, filling names, linking block refs); it is sa
 
 ## Enchantments
 
-Since KNG-250 the same scan also reads the enchantments:
+The same scan also reads the enchantments (KNG-250):
 
 - **Vanilla** (and data-pack) enchantments come from the server's registry.
 - **Custom** knk-plugin enchantments come from its EnchantmentRegistry, under the key `knk:<id>` (for

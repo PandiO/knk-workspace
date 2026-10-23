@@ -1,7 +1,7 @@
 # Minecraft catalogue (materials and blocks): implementation plan
 
-**Status:** Implemented and merged 2026-10-22 (knk-web-api `master` `4f34f58`, knk-web-app `main` `0622a87`, knk-plugin `main` `69c93885`); live-tested by the developer. KNG-250 (enchantments, §12) built on `claude/relaxed-davinci-hsdspe` (API `f265e16`, web `13c31bd`, plugin `ca189a88`), waiting for the live test. Follow-up: KNG-251 (block-state picker, the optional phase 6). Decisions D1-D12 in §11.
-**Last updated:** 2026-10-22
+**Status:** Implemented and merged 2026-10-22 (knk-web-api `master` `4f34f58`, knk-web-app `main` `0622a87`, knk-plugin `main` `69c93885`); live-tested by the developer. KNG-250 (enchantments, §12) merged 2026-10-23 (knk-web-api `master` `a1f8838`, knk-web-app `main` `f9ee73c`, knk-plugin `main` `@@PLUGIN@@`) after the developer's live test. Follow-up: KNG-251 (block-state picker, the optional phase 6). Decisions D1-D12 in §11.
+**Last updated:** 2026-10-23
 **Issue:** [KNG-200](https://linear.app/kngpandi/issue/KNG-200). Related: [KNG-195](https://linear.app/kngpandi/issue/KNG-195) (hybrid submit fixes, In Review), [KNG-182](https://linear.app/kngpandi/issue/KNG-182) (Minecraft 26.3).
 
 Scope: the catalogue of Minecraft materials (`MinecraftMaterialRef`) and block states
@@ -839,7 +839,11 @@ Definitions match the same way. A custom definition is keyed by the ability key,
    which is accepted and leaves enchantments alone.
 3. After the scan, check "Needs attention" for Missing enchantments that definitions still use.
 
-### 12.9 Implementation status (2026-10-22)
+### 12.9 Implementation status (merged 2026-10-23)
+
+Live-tested by the developer on 2026-10-23 ("all work") and merged `--no-ff` without PR: knk-web-api `master`
+`a1f8838`, knk-web-app `main` `f9ee73c` (after merging KNG-263's category filter into the branch), knk-plugin `main`
+`@@PLUGIN@@`. Feature-branch commits:
 
 | Repo | Commit | What |
 |---|---|---|
@@ -852,9 +856,5 @@ Tests:
 - Web: 168 suites and 1,048 tests.
 - Plugin: knk-core 2,211, knk-api-client 268, knk-paper 1,982.
 
-Still open for the live test (one run, as in D12):
-- Paper's English enchantment names.
-- The real enchantment count.
-- That the 12 custom ones arrive as `knk:<id>`.
-- That old custom refs merge.
-- That blueprint and lootbox pickers offer every enchantment.
+The live test covered the scan with enchantments, the custom `knk:<id>` rows, the merge of old rows and the
+pickers.

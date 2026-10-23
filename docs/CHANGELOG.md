@@ -11,6 +11,19 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## 2026-10-23
 
+- **Enchantments from the server scan, vanilla and custom in one picker** ([KNG-250](https://linear.app/kngpandi/issue/KNG-250);
+  knk-web-api `master` `a1f8838`, knk-web-app `main` `f9ee73c`, knk-plugin `main` `@@PLUGIN@@`, merged directly, no PR;
+  live-tested by the developer). The **Scan server** of the Minecraft catalogue now reads the server's enchantments too,
+  plus knk-plugin's 12 custom enchantments as `knk:<id>`. Old rows in another notation (a custom `chaos` saved without
+  namespace) merge into the scanned row; unknown rows nothing uses are deleted and used ones become Missing. Every
+  enchantment gets an enchantment definition (existing ones are linked, never deleted), so the item blueprint and lootbox
+  pickers offer every vanilla and custom enchantment. The enchantment picker in forms searches the database, shows
+  vanilla and custom together with a Custom badge and an All / Vanilla / Custom filter, and never creates anything on a
+  pick any more (fixes [KNG-243](https://linear.app/kngpandi/issue/KNG-243)). The catalogue page shows the enchantment
+  counters and "Missing enchantments still used". The built-in enchantment list and the hybrid picker are gone. Run the
+  migration `MinecraftEnchantmentCatalogFields`, deploy plugin and API together and scan
+  ([admin guide](guides/admin/minecraft-catalogue-admin-guide.md), [plan §12](specs/minecraft-catalog/IMPLEMENTATION_PLAN.md)).
+
 - **Item blueprint Category filter in the web app, child categories included** ([KNG-263](https://linear.app/kngpandi/issue/KNG-263);
   knk-web-app `main` `b83e376`, merged directly, no PR; checked by the developer). The
   item blueprint list and every item blueprint picker get a Category filter that lists the category tree; choosing
