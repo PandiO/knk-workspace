@@ -116,7 +116,8 @@ Full steps and troubleshooting: [email guide § 6–7](email.md). Mails go to th
 ## 2. Link hygiene and linking rules (L0, KNG-207/208) — default settings
 
 1. **Plugin text.** `/account` with a wrong subcommand shows `/account [link|status]`; `/account link` ends with the
-   red "Never give this code to anyone; staff never ask for it." line; `/user statistics` on a Minecraft-only account
+   red "Never give this code to anyone; staff never ask for it." line (an existing server keeps its old
+   `messages.link-code-generated` in `config.yml`: delete the key or append the line, then restart); `/user statistics` on a Minecraft-only account
    shows the `/account link` hint.
 2. **Registration unchanged.** `/account link` → `/auth/register` with the code works exactly as before.
 3. **Fold (case B).** A web-only account (made before KNG-67) enters a code from a Minecraft-only account on
@@ -293,5 +294,6 @@ children are closed.
 
 | Date | Who | Heads (api / app / plugin) | Sections run | Result / issues |
 |---|---|---|---|---|
+| 2026-10-23 | Pandi (dev API, web app and Paper 26.3 dev server on the PC) | api `8f489b9` → `d78dc75` / app `eeea86f` / plugin `90b01850` | § 2, § 3, § 4 steps 1–5 | § 2 **passed** (the red warning line needs `messages.link-code-generated` updated in an existing server `config.yml`; the default has it). § 3 **passed** (3.0 only as `InvalidInvite`, run after the switch; 3.5 with an existing row). § 4: **defect found** — the second join of a stranger got "Can't check your access right now": a reused claim code read from MySQL serialized `expiresAt` without `Z`, the plugin's `Instant` parser threw, the gate fell to the offline store (which knew the dev-server regular and let it in). Fixed in api `d78dc75` (expiry stamped UTC + regression test); § 4 to be re-run from step 2. Also seen: `TelemetryListener.onUserDataLoaded` NPE when a player has no user row (follow-up, pre-existing). |
 | 2026-10-23 | Pandi (dev API + web app on the PC, Pickup transport) | api `8f489b9` / app `eeea86f` / plugin `90b01850` | § 1 | **Passed**, all 8 steps. Three guide fixes folded in: the guard needs `--no-launch-profile`; the staff email change goes through the user form; the reset cooldown hides the throttle unless lowered. |
 | 2026-10-23 | Pandi (dev DB on the NAS) | api `8f489b9` / app `eeea86f` / plugin `90b01850` | § 0 | **Passed.** Migrations applied, § 0.2 data checks OK, the chain's 9 `[MySqlFact]`s 9/9 green (sequential run, 206 s). Setup bumps folded into § 0.2. Full `requires-mysql` set in parallel exhausted the NAS's connections (59/124 failed on "Too many connections"), not re-run; not needed for this feature. |
