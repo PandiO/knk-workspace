@@ -1,7 +1,7 @@
 # Domain sub-regions (expansion regions) — design
 
-**Status:** Draft rev. 1, for developer review. Nothing implemented. The open decisions are in §12; the recommended default is marked on each.
-**Last updated:** 2026-10-23 (rev. 1: investigation of v1/v2 and the current API, plugin and web app; first design)
+**Status:** Design rev. 2: every open decision answered by the developer (2026-10-23, §12). Nothing implemented. Waiting for the developer's acceptance of the design before the phase issues (§11) are filed.
+**Last updated:** 2026-10-23 (rev. 2: the 7 decisions in §12 taken, all as recommended; §6 select renames. Rev. 1: investigation of v1/v2 and the current API, plugin and web app; first design)
 **Linear:** [KNG-253](https://linear.app/kngpandi/issue/KNG-253). Related: [KNG-103](https://linear.app/kngpandi/issue/KNG-103) (region step re-run, replace in place), [KNG-56](https://linear.app/kngpandi/issue/KNG-56) (access flags), [KNG-46](https://linear.app/kngpandi/issue/KNG-46) / [KNG-43](https://linear.app/kngpandi/issue/KNG-43) (managed regions, rename on save), [KNG-111](https://linear.app/kngpandi/issue/KNG-111) (domain world)
 **Sources:** developer request 2026-10-23; `knk-v1-archive` (`src/DataManager/{Towns,Districts,Worldguard,Creations}.java`, `src/Models/creations/{Town,District,Structure}Creation.java`, `src/Towns/{Town,TownCommands,TownEvents}.java`); `knk-v2-archive` (`model/dominion/Dominion.java`, `util/WorldguardUtil.java`); knk-web-api `master` `4f34f58`; knk-plugin `main` `69c9388`; knk-web-app default branch; [managed WorldGuard regions](../../architecture/managed-worldguard-regions.md); [domain access enforcement](../../architecture/domain-access-enforcement.md); [legacy towns/districts/gates](../legacy/towns-districts-gates.md)
 
@@ -212,7 +212,10 @@ Child domains (a Structure inside a District's expansion) keep the **main** regi
   - How a plugin from before this change handles a `_sub_` target name is not verified; it doesn't know the mirror path in any case. So don't add sub-regions until the plugin is updated (§10). A rename that fails leaves the temp name, and `finalize-temp-names` retries it after the plugin update.
 - **Re-running a sub-region's world task** ("Replace via Minecraft" in the child modal) works exactly like KNG-103: the new shape replaces `domain_<d>_sub_<s>` in place.
 - **Re-running the main region** doesn't touch sub-regions. The renamer's existing re-link sets their parent to the new main region, because the name `domain_<id>` stays the same.
-- **Select.** The world task's `select {region}` adopts an existing region as a sub-region. An example is a v1 `town_5,2` part (§10). That region is renamed only if it is a temp name; the KNG-103 rule "a selected v1 region is kept under its name" applies. §12 Q-select.
+- **Select.** The world task's `select {region}` adopts an existing region as a sub-region. An example is a v1 `town_5,2` part (§10). On save it is **renamed** to `domain_<d>_sub_<s>`, so it falls under the orphan rules (decision Q-select). This differs from a selected main region, which KNG-103 keeps under its own name.
+  - The finalizer runs for any sub-region whose `WgRegionId` isn't its final name yet, not only for temp names.
+  - The previous name is not removed: the region is rebuilt under the new name, as a plain rename.
+  - A region used as another domain's main region or sub-region can't be selected (uniqueness, §4.1).
 
 ## 7. Domain-level behaviour (R6, R9)
 
@@ -316,17 +319,19 @@ Validation rules today name one region (`District.WgRegionId`, `GateStructure.Wg
 | P5 | knk-plugin | Orphan detection (`knk-orphaned-since`), retention task and `/knk regions temp` for sub-regions, configurable cutoff. |
 | P6 | knk-web-app + docs | Verify the owned-collection flow for `SubRegions` (likely seed-only), display; update `managed-worldguard-regions.md`, `domain-access-enforcement.md`, the admin guide; in-game checklist (garrison: house main region, cylindrical tower sub-region, gate door inside the tower, AllowExit=false domain walk-through). |
 
-## 12. Open decisions
+## 12. Decisions
 
-Recommended defaults are marked ★. They are asked through AskUserQuestion on 2026-10-23; the answers are recorded here.
+All seven were asked through AskUserQuestion and decided by the developer on 2026-10-23. Each was decided as recommended.
 
-- **Q-sync. Sync mechanism.** ★ Copy from the main region (priority, flags, owners/members) plus parent = main region as a safety net (§5.2). Alternative: v1-style inheritance only (parent = main region, no copies). That needs `RegionAccessRules` and the managed policy to read inherited flags.
-- **Q-orphan. Start of the grace period.** ★ From orphaning (`knk-orphaned-since`, §8). Alternatives: from `knk-creation-timestamp`, exactly the temp rule; or delete at once when removed in the web app.
-- **Q-placement. Must a sub-region touch the domain's other regions?** ★ Warning only. Alternatives: refuse disconnected parts; no check.
-- **Q-shapes. Cylinders.** ★ Convert a cylinder selection to a polygon (main regions too). Alternative: staff draw the circle with `//sel poly` by hand.
-- **Q-scope. Domain types.** ★ Every domain type (base `Domain`). Alternative: Structures and Gates only.
-- **Q-naming. Final name.** ★ `domain_<domainId>_sub_<subRegionId>`. Alternative: `domain_<domainId>_<n>` (an index per domain, v1-like).
-- **Q-select. Adopting existing regions** with `select` as a sub-region. ★ Allowed, and renamed to the final name. Alternative: allowed and kept under its own name, as KNG-103 does for main regions.
+| # | Question | Decision | Alternatives not taken |
+|---|---|---|---|
+| Q-sync | How a sub-region stays in sync | **Copy from the main region** (priority, all flags, owners/members) **plus parent = the main region** as a safety net (§5) | v1-style inheritance only |
+| Q-orphan | Start of the 14-day grace period | **From orphaning**: `knk-orphaned-since`, access flags cleared at once, adoptable again until it is deleted (§8) | from `knk-creation-timestamp`; delete immediately |
+| Q-placement | Must a sub-region touch the domain? | **Warning only.** It must still be inside the parent domain (§9.2) | refuse disconnected parts; no check |
+| Q-shapes | Cylinder selections | **Auto-convert** cylinder/ellipsoid/convex to a polygon, for main regions too (§9.1) | manual `//sel poly` |
+| Q-scope | Domain types | **All domain types** (base `Domain`, §4.1) | Structures and Gates only |
+| Q-naming | Final name | **`domain_<domainId>_sub_<subRegionId>`** (§6) | `domain_<id>_<n>` |
+| Q-select | Adopting an existing region with `select` | **Renamed to the final name** (§6) | kept under its own name |
 
 Open notes, not blocking:
 - **N1.** A maximum number of sub-regions per domain: none proposed.
