@@ -1,6 +1,6 @@
 # Siege navigation compass — smoke test (KNG-234)
 
-**Status:** To test (written 2026-10-22). **Last updated:** 2026-10-23 (run 1 findings: sky click, hub grant visibility)
+**Status:** To test (written 2026-10-22). **Last updated:** 2026-10-23 (run 1: A-D done; E1-E2 order changed to front line first; F and G accepted without running)
 **Branch under test:** `claude/siege-navigation-compass-pl2trj` in knk-plugin, knk-web-api, knk-web-app (knk-workspace for docs). Not merged; unit-tested only.
 **Design:** [navigation-compass/DESIGN.md](../specs/navigation-compass/DESIGN.md) (§6 decisions, §8, §10, §11)
 **Report back:** PASS / FAIL per step ID, plus for each FAIL the exact chat lines and what you did.
@@ -70,8 +70,8 @@ Hub = the last `hubSecondsBeforeStart` seconds before the match (default 15). Pl
 
 | ID | Do | Expect |
 |---|---|---|
-| E1 | A (defender) right-click | `Compass 1/N: <objective> (defend…)`, navigation starts. Keep going: own objectives first, **team spawn last**, wraps |
-| E2 | B (attacker) right-click | Objectives to capture first (`capture…`), then others, team spawn last |
+| E1 | A (defender) right-click | `Compass 1/N: <objective> (defend…)`, navigation starts. Keep going: own objectives first with the **front line first** (nearest to the attackers' spawn) and the **main objective after the regular ones**, **team spawn last**, wraps |
+| E2 | B (attacker) right-click | Objectives to capture first (`capture…`), front line first and the main objective after the regular ones, then the others, team spawn last. Needs a scenario with an objective between the attackers and the keep to see it |
 | E3 | B stands on an objective (capture progress starts) | On the next click by A **and** B that objective is first with `under attack` and the `% held` / `% to go` figure; a click after it moved does not skip or repeat entries |
 | E4 | Shift-right-click while navigating, again | Stops, then resumes the same target |
 | E5 | Die and respawn | Compass still in the inventory (death keeps the inventory); shift-right-click resumes |
@@ -82,6 +82,8 @@ Hub = the last `hubSecondsBeforeStart` seconds before the match (default 15). Pl
 
 ## F. Gates keep their real state
 
+**Run 1: accepted by the developer without running** (the test scenario has no gate objective in front of the main objective; the gate rule's glue in `NavigationAccess` is therefore still unseen live).
+
 | ID | Do | Expect |
 |---|---|---|
 | F1 | B (attacker) navigates to **Keep** while **Gate** is still closed and defender-owned | Guided up to the gate, told it is locked for a siege (partial route); never through it |
@@ -91,6 +93,8 @@ Hub = the last `hubSecondsBeforeStart` seconds before the match (default 15). Pl
 | F5 | C (bystander, not in the match) stands in town and uses `/navigate` | Unaffected: normal behaviour, carried through per the siege's non-member rule |
 
 ## G. Before the match and robustness
+
+**Run 1: accepted by the developer without running.**
 
 | ID | Do | Expect |
 |---|---|---|

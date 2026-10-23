@@ -25,12 +25,12 @@ called and however often recapture swapped the sides. Order, top first:
 
 1. objectives **under attack** (an enemy of the holder stands in the radius) — defenders are sent to the fight,
    attackers to the capture in progress;
-2. the team's own job — defenders their objectives, attackers the ones to capture;
+2. the team's own job — defenders their objectives, attackers the ones to capture (inside each group: front line first, main objective last, see below);
 3. the other kind;
 4. the team's **spawn** (new players lose their way back too).
 
 Objectives captured for good (nothing left to defend or take) and objectives without a location are left out.
-Inside a group the scenario's objective order holds. The list is rebuilt on every click; the position is kept by a
+Inside a group the **front line comes first** (developer request 2026-10-23): regular objectives before an instant-victory ("main") one, nearest to where the attackers spawn first (horizontal distance to the nearest spawnpoint of an attacker-role team), then the scenario's own order as the last tie-break. With no attacker spawn positions only "main objective last" and the scenario order apply. The list is rebuilt on every click; the position is kept by a
 stable key (`objective:<id>`, `spawn:<id>`), so an objective that moves to the top because it came under attack does
 not make the next click skip or repeat an entry. Each selection says what it is: `Compass 2/5: Keep Gate (defend,
 under attack, 62% held)`.
@@ -231,4 +231,18 @@ live-tested:** the glue in `NavigationAccess` (needs a running server) and the w
   at the next cooldown or `/siege admin reload`. A console line per round now states the three values and the decision.
   No ItemBlueprint is involved. If a round that started after a reload still gives nothing, the console line says why.
 - **Seeds:** `NavigationItem` is in the SiegeScenario and SiegeLobby seeds (see the seeds README).
+
+## 13. Run 1, later findings (2026-10-23)
+
+- **D2 resolved:** after `/siege admin reload` the compass is given to siege players at the hub (confirms the frozen-config explanation in §12).
+- **Order of the list — front line first (changed).** Until now the order inside a group was the scenario's objective order, so a
+  main objective with the lowest sort order came first for both teams. It now ranks regular objectives before the main one and
+  the nearest to the attackers' spawn first (see §2), so with an objective between the attackers and the keep the list reads
+  "front-line objective, then the keep". Straight-line distance is a heuristic (it ignores walls and gates); route distance on the
+  road network is possible later. Unit-tested (`SiegeCompassTargetsTest`), to be re-checked live in a scenario with a front-line objective.
+- **F and G accepted by the developer without running them** — the test scenario "[TEST] Cinix Garrison" has no gate objective
+  in front of the main objective, so the gate-state rule (§11) was not exercised. For the record: that rule changed
+  `NavigationAccess.gateAvailability`, `NavigationEligibility`, `NavigationService` (scope check, `lobbyChanged`) and
+  `SiegeGateController`; the road router (A*) itself was not touched. The pure decision (`SiegeGateStance`) is unit-tested, the glue
+  in `NavigationAccess` is not covered by any test and has not been seen live.
 
