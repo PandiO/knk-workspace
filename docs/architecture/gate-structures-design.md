@@ -1,7 +1,7 @@
 # Gate Structures — System & Mechanics Design
 
 **Status:** Living document — update in place as the code changes
-**Last updated:** 2026-10-23 (§4 jamming on a door's own blocks, KNG-272; §9 `POST api/GateDoors/search`, KNG-273; §10 open-scan gaps) — earlier: 2026-10-22 (§5 gate damage visuals, held-item melee damage and enchantment interplay; rest based on a full read-only code scan of `knk-web-api` `master`@`76644fe`, `knk-plugin` `main`@`e6e428b`, `knk-web-app` `main`@`4ff5dc6`, immediately after the `gate-structure-animation`/`gate-animation`/`gate-animation-2` branches were fast-forward merged into each repo's default branch)
+**Last updated:** 2026-10-23 (§4 open-scan pairing along the slide, empty open-door anchor = the anchor, stale open scans ignored, scan refusal, KNG-268/270/271; jamming on a door's own blocks, KNG-272; §9 `POST api/GateDoors/search`, KNG-273) — earlier: 2026-10-22 (§5 gate damage visuals, held-item melee damage and enchantment interplay; rest based on a full read-only code scan of `knk-web-api` `master`@`76644fe`, `knk-plugin` `main`@`e6e428b`, `knk-web-app` `main`@`4ff5dc6`, immediately after the `gate-structure-animation`/`gate-animation`/`gate-animation-2` branches were fast-forward merged into each repo's default branch)
 **Companion docs:** `docs/guides/developer/gate-structures-developer-guide.md` (implementation), `docs/guides/admin/gate-structures-admin-guide.md` (config/commands), `docs/guides/users/gate-structures-player-guide.md` (player-facing), `docs/specs/gate-structure-animation/` (the full design-history trail this doc summarizes into current-state form)
 
 Gate structures are the siege-game's gates/drawbridges/portcullises — animated, damageable, destructible world objects that block or allow passage through a wall, and (per the vision doc) form the primary objective of the Siege minigame. This doc describes the feature **as it currently exists**, not as a changelog of how it got there — see `docs/reports/gate-structure-merge-2026-09-21.md` for what the 2026-09-21 merge specifically added, and `docs/specs/gate-structure-animation/` for the decision-by-decision history.
@@ -55,7 +55,13 @@ Most gates have no manually-scanned open state and just follow the pure geometri
 
 **Open-only blocks** (scanned in the open state with no closed-side counterpart) get a synthesized closed-frame starting position — computed once at load by inverse-transforming their real open-scan position back through the fitted `RigidTransform` — so they animate across the full swing instead of only appearing at the end.
 
-Blocks matched between closed and open scans use the Hungarian algorithm (`GateBlockPairing`, true minimum-total-distance bipartite assignment) rather than greedy nearest-neighbor — a greedy matcher was found to produce visibly non-rigid motion on dense REGION captures and was replaced.
+**Sliding doors (VERTICAL/LATERAL, KNG-271):** each closed block pairs with the open-scan block the motion vector puts it on (`GateBlockPairing.pairAlongTranslation`, block-rounded); only the blocks left over on both sides are paired by nearest distance, and an unpaired closed block follows the procedural motion (and clipping). Pairing by list position, used before, drifted across columns once air was dropped from two scans with air in different cells.
+
+**Open-door anchor (KNG-270):** the open scan covers a box of the closed box's size and directions, starting at `OpenAnchorPoint` — or at `AnchorPoint` when that is empty, meaning the opened door stays inside the door box (`GateBlockScanTaskHandler.openScanOrigin`; the loader reads it back the same way). Each scanned row stores its world position, so the loader ignores an open scan, with a console warning, when it was made from another point than the one it is read from (the open-door anchor moved, was cleared or its location was edited in place: `GateLoaderAdapter.openScanAnchorMismatch`).
+
+**Scan refusal (KNG-268):** creating a `GateBlockScan`/`GateOpenedBlockScan` world task answers 409 `GateScanNotReady` (`GateScanReadiness`) for a region door without its captured region, a flood-fill open scan or a door without an anchor; the form shows the message.
+
+For ROTATION, blocks matched between closed and open scans use the Hungarian algorithm (`GateBlockPairing`, true minimum-total-distance bipartite assignment) rather than greedy nearest-neighbor — a greedy matcher was found to produce visibly non-rigid motion on dense REGION captures and was replaced.
 
 ### Mechanism 1 — automatic rasterized gap-fill
 
@@ -131,5 +137,5 @@ The plugin loads all gates at startup (or on-demand per-district, triggered by a
 - `GateBlockScanRequestDto` (web-api) is defined but unused — the real scan pipeline reads a raw `gateDoorId` property out of the world task's input JSON instead.
 - Test coverage is uneven: the animation math, event/consequence listeners, and health/respawn logic are well covered on the plugin side; `GateStructureService` and the backend's health-hits-zero/respawn-restores-health business rules (which live in `GateDoorRepository`) have little to no direct test coverage on the web-api side.
 - Siege objective and guard-defense fields are schema-only placeholders (§8).
-- Open-state scans (Mechanism 2) on VERTICAL/LATERAL doors pair closed and open blocks by **list index after air is dropped**, so two scans with air in different cells pair blocks across columns and can jam the door ([KNG-271](https://linear.app/kngpandi/issue/KNG-271)). A door that only rises and loses decoration (chains) needs no open scan: procedural motion with `MotionDistanceBlocks` and `ClipToGeometryBounds` does it.
-- The GateDoor form doesn't explain the open anchor (the corner of a same-size box that matches the anchor's corner, the anchor itself when the door opens inside its own box, [KNG-270](https://linear.app/kngpandi/issue/KNG-270)) nor that a REGION open scan first needs `/gatedoor capture <door> opened` ([KNG-268](https://linear.app/kngpandi/issue/KNG-268)).
+- `MotionDistanceBlocks = 0` is not "no motion": `GateLoaderAdapter.resolveMotionDistance` falls back to the door's height (VERTICAL) or width (LATERAL).
+- Whether a region door's region has been captured isn't shown in the form; a scan without it is refused with the capture command (KNG-268).
