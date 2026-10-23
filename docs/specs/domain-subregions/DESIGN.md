@@ -340,7 +340,7 @@ Open notes, not blocking:
 
 ## 13. Implementation status (2026-10-23)
 
-Branch `claude/domain-expansion-regions-s46gvf` in each repo; nothing merged, nothing live-tested. Check with the [smoke test](../../guides/domain-subregions-smoke-test.md); [admin guide](../../guides/admin/domain-subregions-admin-guide.md).
+Branch `claude/domain-expansion-regions-s46gvf` in each repo; nothing merged. **Smoke test passed 2026-10-23** (developer, sections 0-7). One bug was found and fixed: a gate's edit form showed no sub-regions (`503c541`); re-check that one before merging. Check with the [smoke test](../../guides/domain-subregions-smoke-test.md); [admin guide](../../guides/admin/domain-subregions-admin-guide.md).
 
 | Phase | Commit(s) | Tests |
 |---|---|---|
@@ -349,7 +349,7 @@ Branch `claude/domain-expansion-regions-s46gvf` in each repo; nothing merged, no
 | P3 resolution, events ([KNG-256](https://linear.app/kngpandi/issue/KNG-256)) | knk-plugin `f93758d`, knk-web-api `43e95dc` (discovery, analytics) | as above |
 | P4 shapes, containment ([KNG-257](https://linear.app/kngpandi/issue/KNG-257)) | knk-plugin `5e4aa67` | as above |
 | P5 orphans ([KNG-258](https://linear.app/kngpandi/issue/KNG-258)) | knk-plugin `808acc4`, `46f805e` (bookkeeping flags by name) | as above |
-| P6 web app, docs ([KNG-259](https://linear.app/kngpandi/issue/KNG-259)) | knk-web-app `4b88565`, knk-web-api `6d438bf` (display seeds), this repo | web app: `tsc` clean outside 3 errors already in `sessionPinnedRows.test.ts`; util tests 316 passed |
+| P6 web app, docs ([KNG-259](https://linear.app/kngpandi/issue/KNG-259)) | knk-web-app `4b88565`, knk-web-api `6d438bf` (display seeds), `503c541` (gate edit form lists its sub-regions), this repo | web app: `tsc` clean outside 3 errors already in `sessionPinnedRows.test.ts`; util tests 316 passed |
 
 **Changes against this design:**
 
