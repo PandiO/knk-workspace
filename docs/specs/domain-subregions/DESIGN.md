@@ -348,7 +348,7 @@ Branch `claude/domain-expansion-regions-s46gvf` in each repo; nothing merged, no
 | P2 mirror, access ([KNG-255](https://linear.app/kngpandi/issue/KNG-255)) | knk-plugin `0ec8b8e` | Gradle core / api-client / paper all green (final: 2230 / 268 / 1983) |
 | P3 resolution, events ([KNG-256](https://linear.app/kngpandi/issue/KNG-256)) | knk-plugin `f93758d`, knk-web-api `43e95dc` (discovery, analytics) | as above |
 | P4 shapes, containment ([KNG-257](https://linear.app/kngpandi/issue/KNG-257)) | knk-plugin `5e4aa67` | as above |
-| P5 orphans ([KNG-258](https://linear.app/kngpandi/issue/KNG-258)) | knk-plugin `808acc4` | as above |
+| P5 orphans ([KNG-258](https://linear.app/kngpandi/issue/KNG-258)) | knk-plugin `808acc4`, `46f805e` (bookkeeping flags by name) | as above |
 | P6 web app, docs ([KNG-259](https://linear.app/kngpandi/issue/KNG-259)) | knk-web-app `4b88565`, knk-web-api `6d438bf` (display seeds), this repo | web app: `tsc` clean outside 3 errors already in `sessionPinnedRows.test.ts`; util tests 316 passed |
 
 **Changes against this design:**
@@ -359,6 +359,7 @@ Branch `claude/domain-expansion-regions-s46gvf` in each repo; nothing merged, no
 - **§9.2 Placement checks are not built.** "Inside the parent domain" and the touch warning moved to [KNG-261](https://linear.app/kngpandi/issue/KNG-261). One `DomainSubRegion` form serves every domain type, and there is no "touches" validation type yet.
 - **§7.1 Snapshot identity.** `DomainSnapshot` is equal by domain id (no `regionIds` component was added). Analytics records domain enter/leave events by the main region id.
 - **§7.1 Discovery and analytics.** The API resolves a sub-region id to its domain in discovery and in world-analytics ingestion.
+- **Bookkeeping flags by name** (`46f805e`). WorldGuard keys flags by object, and `knk-creation-timestamp` and `knk-orphaned-since` were unregistered, so after a restart neither could be read back. Both are now read and written by name (`RegionBookkeepingFlags`) and registered in `onLoad`. This also likely fixes temp regions reported "without a creation time" after a restart. The mirror copies the main region's own flag objects, so a flag WorldGuard doesn't know no longer fails the copy.
 - **Web app.** `findParentLinkField` links a child of any domain type through a field typed `Domain`. Before, it needed the exact parent type, so the sub-region form's `DomainId` would not have been filled in.
 - **Display seeds.** Structure and GateStructure seed v2 list the sub-regions. Town and District have no display seed.
 - **Navigation.** It still knows only the main region: [KNG-260](https://linear.app/kngpandi/issue/KNG-260).

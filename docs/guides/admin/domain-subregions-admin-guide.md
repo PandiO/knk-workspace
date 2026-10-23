@@ -1,6 +1,6 @@
 # Domain sub-regions — admin guide
 
-**Status:** Draft v1. Describes the unmerged feature branches `claude/domain-expansion-regions-s46gvf`: knk-web-api `6d438bf`, knk-plugin `808acc4`, knk-web-app `4b88565`. Not live-tested yet; see the [smoke test](../domain-subregions-smoke-test.md).
+**Status:** Draft v1. Describes the unmerged feature branches `claude/domain-expansion-regions-s46gvf`: knk-web-api `6d438bf`, knk-plugin `46f805e`, knk-web-app `4b88565`. Not live-tested yet; see the [smoke test](../domain-subregions-smoke-test.md).
 **Last updated:** 2026-10-23
 **Linear:** [KNG-253](https://linear.app/kngpandi/issue/KNG-253) (design) and phases [KNG-254](https://linear.app/kngpandi/issue/KNG-254) to [KNG-259](https://linear.app/kngpandi/issue/KNG-259)
 **Design:** [`specs/domain-subregions/DESIGN.md`](../../specs/domain-subregions/DESIGN.md)

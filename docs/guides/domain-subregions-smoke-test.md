@@ -1,6 +1,6 @@
 # Domain sub-regions — smoke test checklist
 
-**Status:** To test (v2). Written for the unmerged branches `claude/domain-expansion-regions-s46gvf`: knk-web-api `6d438bf`, knk-plugin `808acc4`, knk-web-app `4b88565`.
+**Status:** To test (v2). Written for the unmerged branches `claude/domain-expansion-regions-s46gvf`: knk-web-api `6d438bf`, knk-plugin `46f805e`, knk-web-app `4b88565`.
 **Last updated:** 2026-10-23 (v2: deploy order, first-sync and cache timing, form and display checks, other domain types, finalize-temp-names, new shapes on main regions)
 **Linear:** [KNG-259](https://linear.app/kngpandi/issue/KNG-259) (P6); covers [KNG-254](https://linear.app/kngpandi/issue/KNG-254) to [KNG-258](https://linear.app/kngpandi/issue/KNG-258)
 **Related:** [admin guide](admin/domain-subregions-admin-guide.md), [design](../specs/domain-subregions/DESIGN.md) §13
@@ -96,6 +96,8 @@ Wait about a minute after section 1 so the game server has looked up the new reg
    - **Expect:** no gate enter message, and no refusal even if Allow entry is off.
 4. `/knk regions temp`.
    - **Expect:** the tower is under "Orphaned sub-regions not old enough yet".
+   - Note the `knk-orphaned-since` value. Restart the server and check `/rg info` again.
+   - **Expect:** the same value. The mark survives a restart, so the 14 days don't start over.
 5. `/knk regions temp purge 1`.
    - **Expect:** the tower is kept (it was orphaned just now).
 6. Adopt it again: on the gate, Create New sub-region, claim the task, type `select domain_<gate>_sub_<n>`, then finish the form.
