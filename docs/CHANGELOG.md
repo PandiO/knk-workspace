@@ -4,7 +4,32 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
-_Nothing at the moment._
+- **Non-op players can pick up a world lootbox inside a protected region** ([KNG-266](https://linear.app/kngpandi/issue/KNG-266);
+  knk-plugin `claude/kng-266-lootbox-worldguard` `e07a346b`, not merged, not live-tested). WorldGuard refused the click on
+  a box in a spawn area inside a domain region to anyone who isn't a member, so only ops could pick boxes up there. The
+  plugin now tells WorldGuard to allow clicks on lootbox entities only; every other entity in the region stays protected.
+
+## 2026-10-23
+
+- **Item blueprint Category filter in the web app, child categories included** ([KNG-263](https://linear.app/kngpandi/issue/KNG-263);
+  knk-web-app `main` `b83e376`, merged directly, no PR; checked by the developer). The
+  item blueprint list and every item blueprint picker get a Category filter that lists the category tree; choosing
+  "Weapons" also shows the blueprints in Swords and Bows. The API's item blueprint search already worked this way (since
+  2026-09-26), and so does the in-game item catalogue's category button. The list also shows each blueprint's category.
+
+- **Item blueprints are cached for their own configured time** ([KNG-262](https://linear.app/kngpandi/issue/KNG-262),
+  item blueprints only; knk-plugin `main` `64f39d28`, merged directly, no PR; smoke-tested by the developer).
+  The plugin now keeps item blueprints for `cache.entities.itemBlueprints.ttl-minutes` (20 minutes) instead of the
+  global 60 s, so the catalogue, kits and `/knk ib give` call the API far less often. A blueprint edited in the web app
+  reaches the game within 20 minutes, or at once after `/knk cache refresh`. The other entities still use the global TTL.
+
+- **Menu paging: the right page number and a fast item catalogue** ([KNG-230](https://linear.app/kngpandi/issue/KNG-230),
+  [KNG-231](https://linear.app/kngpandi/issue/KNG-231); knk-plugin `main` `fae0b3b2`,
+  merged directly, no PR; smoke-tested by the developer). Pager arrows show the current page instead of "Page 1/N" in every paged menu. Changing
+  page re-renders from the open menu instead of fetching its template again. While a page loads, its arrows turn into a
+  clock "Loading page N…" (and the action bar says it after half a second); further clicks wait for it; a failed load
+  puts the previous page back with a message. The item catalogue keeps built pages for a minute, shared by all players,
+  and loads the next page in the background, so paging forward is usually instant.
 
 ## 2026-10-22
 
