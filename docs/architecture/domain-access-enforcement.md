@@ -1,7 +1,7 @@
 # Domain access (AllowEntry / AllowExit) — enforcement on the game server
 
 **Status:** Implemented, **live-tested by the developer and merged to trunk 2026-10-08** (knk-plugin `main` `790c662`, knk-web-api `master` `be7b70e`; feature commits `dfffcb7` / `32fca08`). Refusal-in-chat follow-up [KNG-74](https://linear.app/kngpandi/issue/KNG-74) live-tested and merged 2026-10-09 (knk-plugin `main` `fd869aa`, feature commit `a608aa7`). Linear [KNG-56](https://linear.app/kngpandi/issue/KNG-56) (follows [KNG-55](https://linear.app/kngpandi/issue/KNG-55))
-**Last updated:** 2026-10-09 (KNG-74 merged; live checklist §6 item 9 passed)
+**Last updated:** 2026-10-23 (`knk-domain-id` and domain sub-regions, KNG-255, merged and live-tested: knk-plugin `9dfd7aae`); 2026-10-09 (KNG-74 merged; live checklist §6 item 9 passed)
 **Decision record:** [`reports/2026-10-06-domain-access-enforcement-options.md`](../reports/2026-10-06-domain-access-enforcement-options.md) (option C chosen by the developer on 2026-10-06)
 **Related:** [`managed-worldguard-regions.md`](managed-worldguard-regions.md) (parent/priority/category flags on the same regions); KNG-57 (SignalR push), KNG-58 (offline cache for other data)
 
@@ -17,6 +17,12 @@ A player may not move **into** a domain whose `AllowEntry` is false, nor **out o
 
 The rule itself is `knk-core/.../core/regions/access/RegionAccessRules` (pure, unit-tested).
 
+- **One domain, several regions** (KNG-255, [sub-regions](../specs/domain-subregions/DESIGN.md)). A domain can have sub-regions besides its main region. The rule groups regions by their `knk-domain-id` flag:
+  - a region entered while the player is still in another region of the same domain is not an entry;
+  - a region left for another region of the same domain is not an exit.
+  - A region without the flag counts as its own domain, as before.
+- **Where it applies.** The WorldGuard handler passes the destination set, and `preview` passes the regions at `to`.
+
 ## 2. Where the rules live — on the WorldGuard regions
 
 Each domain's region carries three custom WorldGuard flags:
@@ -26,6 +32,7 @@ Each domain's region carries three custom WorldGuard flags:
 | `knk-allow-entry` | `allow` / `deny` (from `Domain.AllowEntry`) |
 | `knk-allow-exit` | `allow` / `deny` (from `Domain.AllowExit`) |
 | `knk-domain-name` | the domain's name, for messages |
+| `knk-domain-id` | the domain's id (KNG-255): every region of a domain carries it, so its main region and sub-regions count as one domain |
 
 - **Persistence.** WorldGuard saves them with the region (regions file or database), so the **last synced rules are enforced at startup, at join and while knk-web-api is down**.
 - **Registration.** They are registered in `KnKPlugin.onLoad` (`DomainAccessFlags`), before WorldGuard loads its regions.
@@ -39,7 +46,7 @@ Each domain's region carries three custom WorldGuard flags:
   - on `/knk regions repair`;
   - right after a new domain region is finalized;
   - later, on a push from the API (KNG-57).
-- **Writes:** a region whose flags differ is corrected. Flags on a region no domain owns any more are cleared, because a stale `deny` would lock players out for good.
+- **Writes:** a region whose flags differ is corrected. A domain's sub-regions get the same flags as its main region (KNG-255). Flags on a region no domain owns any more are cleared, because a stale `deny` would lock players out for good.
 - **Idempotent:** a repeat run with the same rules changes nothing and doesn't save.
 - **On failure:** if the API is unreachable, nothing is touched.
 

@@ -8,6 +8,31 @@ _Nothing at the moment._
 
 ## 2026-10-23
 
+- **Domain sub-regions: one domain, several WorldGuard regions** ([KNG-253](https://linear.app/kngpandi/issue/KNG-253),
+  phases KNG-254–KNG-259; knk-web-api `master` `779629e`, knk-plugin `main` `9dfd7aae`, knk-web-app `main` `bf0d142`, merged directly, no PR; smoke-tested by the developer). A town, district,
+  structure or gate can have extra regions besides its main one, added in a new "Sub-regions" step of its form. Example:
+  a garrison gate's round tower next to its house.
+  - **Naming.** Each sub-region is drawn through its own world task and renamed `domain_<id>_sub_<n>` on save.
+  - **Copy of the main region.** The game server keeps every sub-region a copy of the main region: priority, flags,
+    owners, members, with the main region as parent. This runs every 5 minutes, on `/knk regions repair` and on the new
+    `/knk regions sync`.
+  - **One domain.** Walking between a domain's regions gives no enter or leave message and no access refusal, even
+    with Allow exit off. A door location in the tower counts as inside the gate. Discovery and analytics count the
+    domain once.
+  - **Round selections.** `//sel cyl` (and ellipsoid, convex) now becomes a polygon along its block outline, for every
+    region a world task draws. Before, it became the box around it.
+  - **Removed sub-regions.** One no domain lists is orphaned within two syncs, and the daily cleanup deletes it after
+    `regions.temp-retention.days` (14). `/knk regions temp [purge]` lists and purges orphans.
+  - **Fixes on the way.**
+    - `knk-creation-timestamp` and the new orphan mark are now read back after a restart. Temp regions used to read as
+      "without a creation time" after one.
+    - A gate's edit form lists its sub-regions.
+  - **Deploy.** Run the migration `DomainSubRegions`, import the seeds (`DomainSubRegion`; Town, District and Structure
+    v2; GateStructure v3; display seeds v2), and deploy API and plugin together
+    ([admin guide](guides/admin/domain-subregions-admin-guide.md), [design](specs/domain-subregions/DESIGN.md)).
+  - **Not yet.** Placement checks for a drawn sub-region ([KNG-261](https://linear.app/kngpandi/issue/KNG-261)), and
+    navigation knowing sub-regions ([KNG-260](https://linear.app/kngpandi/issue/KNG-260)).
+
 - **Enchantments from the server scan, vanilla and custom in one picker** ([KNG-250](https://linear.app/kngpandi/issue/KNG-250);
   knk-web-api `master` `a1f8838`, knk-web-app `main` `f9ee73c`, knk-plugin `main` `c7806b87`, merged directly, no PR;
   live-tested by the developer). The **Scan server** of the Minecraft catalogue now reads the server's enchantments too,
