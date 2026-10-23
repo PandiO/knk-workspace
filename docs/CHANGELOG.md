@@ -4,6 +4,11 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Item blueprint Category filter in the web app, child categories included** ([KNG-263](https://linear.app/kngpandi/issue/KNG-263);
+  knk-web-app branch `claude/kng-263-blueprint-category-filter` `e827cc1`, unit-tested, not checked in a browser). The
+  item blueprint list and every item blueprint picker get a Category filter that lists the category tree; choosing
+  "Weapons" also shows the blueprints in Swords and Bows. The API's item blueprint search already worked this way (since
+  2026-09-26), and so does the in-game item catalogue's category button. The list also shows each blueprint's category.
 - **Item blueprints are cached for their own configured time** ([KNG-262](https://linear.app/kngpandi/issue/KNG-262),
   item blueprints only; knk-plugin branch `claude/kng-262-itemblueprint-ttl` `555320ec`, unit-tested, not live-tested).
   The plugin now keeps item blueprints for `cache.entities.itemBlueprints.ttl-minutes` (20 minutes) instead of the
