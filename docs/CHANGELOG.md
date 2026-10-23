@@ -4,6 +4,11 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Item blueprints are cached for their own configured time** ([KNG-262](https://linear.app/kngpandi/issue/KNG-262),
+  item blueprints only; knk-plugin branch `claude/kng-262-itemblueprint-ttl` `555320ec`, unit-tested, not live-tested).
+  The plugin now keeps item blueprints for `cache.entities.itemBlueprints.ttl-minutes` (20 minutes) instead of the
+  global 60 s, so the catalogue, kits and `/knk ib give` call the API far less often. A blueprint edited in the web app
+  reaches the game within 20 minutes, or at once after `/knk cache refresh`. The other entities still use the global TTL.
 - **Menu paging: the right page number and a fast item catalogue** ([KNG-230](https://linear.app/kngpandi/issue/KNG-230),
   [KNG-231](https://linear.app/kngpandi/issue/KNG-231); knk-plugin branch `claude/kng-230-231-menu-paging` `0f5b3b40`,
   unit-tested, not live-tested). Pager arrows show the current page instead of "Page 1/N" in every paged menu. Changing
