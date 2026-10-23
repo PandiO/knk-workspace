@@ -4,7 +4,13 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
-_Nothing at the moment._
+- **Menu paging: the right page number and a fast item catalogue** ([KNG-230](https://linear.app/kngpandi/issue/KNG-230),
+  [KNG-231](https://linear.app/kngpandi/issue/KNG-231); knk-plugin branch `claude/kng-230-231-menu-paging` `0f5b3b40`,
+  unit-tested, not live-tested). Pager arrows show the current page instead of "Page 1/N" in every paged menu. Changing
+  page re-renders from the open menu instead of fetching its template again. While a page loads, its arrows turn into a
+  clock "Loading page N…" (and the action bar says it after half a second); further clicks wait for it; a failed load
+  puts the previous page back with a message. The item catalogue keeps built pages for a minute, shared by all players,
+  and loads the next page in the background, so paging forward is usually instant.
 
 ## 2026-10-22
 
