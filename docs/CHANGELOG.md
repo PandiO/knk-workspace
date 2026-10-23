@@ -8,6 +8,19 @@ _Nothing at the moment._
 
 ## 2026-10-23
 
+- **Enchantments from the server scan, vanilla and custom in one picker** ([KNG-250](https://linear.app/kngpandi/issue/KNG-250);
+  knk-web-api `master` `a1f8838`, knk-web-app `main` `f9ee73c`, knk-plugin `main` `c7806b87`, merged directly, no PR;
+  live-tested by the developer). The **Scan server** of the Minecraft catalogue now reads the server's enchantments too,
+  plus knk-plugin's 12 custom enchantments as `knk:<id>`. Old rows in another notation (a custom `chaos` saved without
+  namespace) merge into the scanned row; unknown rows nothing uses are deleted and used ones become Missing. Every
+  enchantment gets an enchantment definition (existing ones are linked, never deleted), so the item blueprint and lootbox
+  pickers offer every vanilla and custom enchantment. The enchantment picker in forms searches the database, shows
+  vanilla and custom together with a Custom badge and an All / Vanilla / Custom filter, and never creates anything on a
+  pick any more (fixes [KNG-243](https://linear.app/kngpandi/issue/KNG-243)). The catalogue page shows the enchantment
+  counters and "Missing enchantments still used". The built-in enchantment list and the hybrid picker are gone. Run the
+  migration `MinecraftEnchantmentCatalogFields`, deploy plugin and API together and scan
+  ([admin guide](guides/admin/minecraft-catalogue-admin-guide.md), [plan §12](specs/minecraft-catalog/IMPLEMENTATION_PLAN.md)).
+
 - **Non-op players can pick up a world lootbox inside a protected region** ([KNG-266](https://linear.app/kngpandi/issue/KNG-266);
   knk-plugin `main` `1fbcb046`, merged directly, no PR; smoke-tested by the developer). WorldGuard refused the click on
   a box in a spawn area inside a domain region to anyone who isn't a member, so only ops could pick boxes up there. The
