@@ -6,6 +6,71 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 _Nothing at the moment._
 
+## 2026-10-23
+
+- **Domain sub-regions: one domain, several WorldGuard regions** ([KNG-253](https://linear.app/kngpandi/issue/KNG-253),
+  phases KNG-254–KNG-259; knk-web-api `master` `779629e`, knk-plugin `main` `9dfd7aae`, knk-web-app `main` `bf0d142`, merged directly, no PR; smoke-tested by the developer). A town, district,
+  structure or gate can have extra regions besides its main one, added in a new "Sub-regions" step of its form. Example:
+  a garrison gate's round tower next to its house.
+  - **Naming.** Each sub-region is drawn through its own world task and renamed `domain_<id>_sub_<n>` on save.
+  - **Copy of the main region.** The game server keeps every sub-region a copy of the main region: priority, flags,
+    owners, members, with the main region as parent. This runs every 5 minutes, on `/knk regions repair` and on the new
+    `/knk regions sync`.
+  - **One domain.** Walking between a domain's regions gives no enter or leave message and no access refusal, even
+    with Allow exit off. A door location in the tower counts as inside the gate. Discovery and analytics count the
+    domain once.
+  - **Round selections.** `//sel cyl` (and ellipsoid, convex) now becomes a polygon along its block outline, for every
+    region a world task draws. Before, it became the box around it.
+  - **Removed sub-regions.** One no domain lists is orphaned within two syncs, and the daily cleanup deletes it after
+    `regions.temp-retention.days` (14). `/knk regions temp [purge]` lists and purges orphans.
+  - **Fixes on the way.**
+    - `knk-creation-timestamp` and the new orphan mark are now read back after a restart. Temp regions used to read as
+      "without a creation time" after one.
+    - A gate's edit form lists its sub-regions.
+  - **Deploy.** Run the migration `DomainSubRegions`, import the seeds (`DomainSubRegion`; Town, District and Structure
+    v2; GateStructure v3; display seeds v2), and deploy API and plugin together
+    ([admin guide](guides/admin/domain-subregions-admin-guide.md), [design](specs/domain-subregions/DESIGN.md)).
+  - **Not yet.** Placement checks for a drawn sub-region ([KNG-261](https://linear.app/kngpandi/issue/KNG-261)), and
+    navigation knowing sub-regions ([KNG-260](https://linear.app/kngpandi/issue/KNG-260)).
+
+- **Enchantments from the server scan, vanilla and custom in one picker** ([KNG-250](https://linear.app/kngpandi/issue/KNG-250);
+  knk-web-api `master` `a1f8838`, knk-web-app `main` `f9ee73c`, knk-plugin `main` `c7806b87`, merged directly, no PR;
+  live-tested by the developer). The **Scan server** of the Minecraft catalogue now reads the server's enchantments too,
+  plus knk-plugin's 12 custom enchantments as `knk:<id>`. Old rows in another notation (a custom `chaos` saved without
+  namespace) merge into the scanned row; unknown rows nothing uses are deleted and used ones become Missing. Every
+  enchantment gets an enchantment definition (existing ones are linked, never deleted), so the item blueprint and lootbox
+  pickers offer every vanilla and custom enchantment. The enchantment picker in forms searches the database, shows
+  vanilla and custom together with a Custom badge and an All / Vanilla / Custom filter, and never creates anything on a
+  pick any more (fixes [KNG-243](https://linear.app/kngpandi/issue/KNG-243)). The catalogue page shows the enchantment
+  counters and "Missing enchantments still used". The built-in enchantment list and the hybrid picker are gone. Run the
+  migration `MinecraftEnchantmentCatalogFields`, deploy plugin and API together and scan
+  ([admin guide](guides/admin/minecraft-catalogue-admin-guide.md), [plan §12](specs/minecraft-catalog/IMPLEMENTATION_PLAN.md)).
+
+- **Non-op players can pick up a world lootbox inside a protected region** ([KNG-266](https://linear.app/kngpandi/issue/KNG-266);
+  knk-plugin `main` `1fbcb046`, merged directly, no PR; smoke-tested by the developer). WorldGuard refused the click on
+  a box in a spawn area inside a domain region to anyone who isn't a member, so only ops could pick boxes up there. The
+  plugin now tells WorldGuard to allow clicks on lootbox entities only; every other entity in the region stays protected.
+
+- **Item blueprint Category filter in the web app, child categories included** ([KNG-263](https://linear.app/kngpandi/issue/KNG-263);
+  knk-web-app `main` `b83e376`, merged directly, no PR; checked by the developer). The
+  item blueprint list and every item blueprint picker get a Category filter that lists the category tree; choosing
+  "Weapons" also shows the blueprints in Swords and Bows. The API's item blueprint search already worked this way (since
+  2026-09-26), and so does the in-game item catalogue's category button. The list also shows each blueprint's category.
+
+- **Item blueprints are cached for their own configured time** ([KNG-262](https://linear.app/kngpandi/issue/KNG-262),
+  item blueprints only; knk-plugin `main` `64f39d28`, merged directly, no PR; smoke-tested by the developer).
+  The plugin now keeps item blueprints for `cache.entities.itemBlueprints.ttl-minutes` (20 minutes) instead of the
+  global 60 s, so the catalogue, kits and `/knk ib give` call the API far less often. A blueprint edited in the web app
+  reaches the game within 20 minutes, or at once after `/knk cache refresh`. The other entities still use the global TTL.
+
+- **Menu paging: the right page number and a fast item catalogue** ([KNG-230](https://linear.app/kngpandi/issue/KNG-230),
+  [KNG-231](https://linear.app/kngpandi/issue/KNG-231); knk-plugin `main` `fae0b3b2`,
+  merged directly, no PR; smoke-tested by the developer). Pager arrows show the current page instead of "Page 1/N" in every paged menu. Changing
+  page re-renders from the open menu instead of fetching its template again. While a page loads, its arrows turn into a
+  clock "Loading page N…" (and the action bar says it after half a second); further clicks wait for it; a failed load
+  puts the previous page back with a message. The item catalogue keeps built pages for a minute, shared by all players,
+  and loads the next page in the background, so paging forward is usually instant.
+
 ## 2026-10-22
 
 - **Minecraft catalogue from the server itself** ([KNG-200](https://linear.app/kngpandi/issue/KNG-200); knk-web-api

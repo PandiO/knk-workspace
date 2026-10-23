@@ -1,7 +1,7 @@
 # Minecraft catalogue (materials and blocks): implementation plan
 
-**Status:** Implemented and merged 2026-10-22 (knk-web-api `master` `4f34f58`, knk-web-app `main` `0622a87`, knk-plugin `main` `69c93885`); live-tested by the developer. Follow-ups: KNG-250 (enchantments), KNG-251 (block-state picker, the optional phase 6). Decisions D1-D12 in §11.
-**Last updated:** 2026-10-22
+**Status:** Implemented and merged 2026-10-22 (knk-web-api `master` `4f34f58`, knk-web-app `main` `0622a87`, knk-plugin `main` `69c93885`); live-tested by the developer. KNG-250 (enchantments, §12) merged 2026-10-23 (knk-web-api `master` `a1f8838`, knk-web-app `main` `f9ee73c`, knk-plugin `main` `c7806b87`) after the developer's live test. Follow-up: KNG-251 (block-state picker, the optional phase 6). Decisions D1-D12 in §11.
+**Last updated:** 2026-10-23
 **Issue:** [KNG-200](https://linear.app/kngpandi/issue/KNG-200). Related: [KNG-195](https://linear.app/kngpandi/issue/KNG-195) (hybrid submit fixes, In Review), [KNG-182](https://linear.app/kngpandi/issue/KNG-182) (Minecraft 26.3).
 
 Scope: the catalogue of Minecraft materials (`MinecraftMaterialRef`) and block states
@@ -568,7 +568,7 @@ phase. Live testing happens once, after phase 4 (D12).
 | Phase | Status | Where |
 |---|---|---|
 | 2 Schema + audit | Code-complete 2026-10-21, not merged | knk-web-api `claude/relaxed-davinci-hsdspe`: migration `MinecraftCatalogEntryFields`; `Services/MinecraftCatalog/` (`MinecraftNamespaceKey`, `MinecraftBlockState`, `MinecraftMaterialReferences`, `MinecraftCatalogMaintenanceService`); `MinecraftCatalogController` (`GET audit`, `POST backfill`, `POST materials/{sourceId}/merge-into/{targetId}`, all `knk.admin.content`); the backfill also runs at startup before the item seeds; read-only catalogue fields on the material/block DTOs |
-| 3 Scan + ingest + icons | Code-complete 2026-10-21, not merged, not live-tested (D12) | knk-web-api `d33213b`: `MinecraftCatalogScanService` (request/list/get/cancel/ingest, icon override), `MinecraftIconResolver` (config `MinecraftCatalog:Icons`, defaults in code), snapshot/scan DTOs, scan status as concurrency token (snapshot only, no schema change). knk-plugin `a513cc71`, `b5b5450b`, `21eb8751`: knk-core `catalog/CatalogSnapshot` (hash), knk-api-client `MinecraftCatalogApi` (PUT with a 2-minute read timeout), knk-paper `catalog/BukkitMaterialCatalogSource` + `tasks/MinecraftCatalogScanTaskHandler` registered in `KnKPlugin`. knk-web-app `91cc7ae`, `938d86b`, `634708d`: `/admin/minecraft-catalog` (scan, polling, cancel, history; needs-attention with merge; missing icons with overrides), `minecraftCatalogClient`, `MinecraftIcon` |
+| 3 Scan + ingest + icons | Code-complete 2026-10-21, not merged, not live-tested (D12) | knk-web-api `d33213b`: `MinecraftCatalogScanService` (request/list/get/cancel/ingest, icon override), `MinecraftIconResolver` (config `MinecraftCatalog:Icons`, defaults in code), snapshot/scan DTOs, scan status as concurrency token (snapshot only, no schema change). knk-plugin `a513cc71`, `b5b5450b`, `21eb8751`: knk-core `catalog/CatalogSnapshot` (hash), knk-api-client `MinecraftCatalogApi` (PUT with a 2-minute read timeout), knk-paper `catalog/BukkitMaterialCatalogSource (renamed `BukkitCatalogSource` in KNG-250)` + `tasks/MinecraftCatalogScanTaskHandler` registered in `KnKPlugin`. knk-web-app `91cc7ae`, `938d86b`, `634708d`: `/admin/minecraft-catalog` (scan, polling, cancel, history; needs-attention with merge; missing icons with overrides), `minecraftCatalogClient`, `MinecraftIcon` |
 | 4 DB-only picker | Code-complete 2026-10-21, not merged, not live-tested (D12) | knk-web-api `e9d581e`; knk-web-app `b6ba680`..`de23957` (picker `kind` filter, "New" badge only for unsaved rows, `MinecraftIcon` in material/block columns, DisplayField/DisplaySection and a new item blueprint Icon column, icon-override list on the admin page). See "Phase 4 as built" below |
 | 1 Stabilise | Code-complete 2026-10-21, not merged, not live-tested (D12) | Started before KNG-195 merged, because the overlap that D10 assumed doesn't exist: KNG-195 changes `normalizeFormSubmission` and DTOs/services phase 1 doesn't touch, and both repos' branches merge cleanly with `claude/kng-195-form-submit-fixes` (checked with `git merge-tree`). knk-web-api `c5da4b1`: hybrid merge by normalised key, saved-only rows filtered, `id: null` for unsaved rows, sorting and page size, one row per block state, 409 with the existing id on create/update, parallel get-or-create returns the winner, new `POST MinecraftBlockRefs/get-or-create`. knk-web-app `841488b`, `f8d0e72`, `a5af37f`: id 0/"0"/null is no id; unsaved material rows keyed and compared by the normalised key (blocks: key + state); auto-create through get-or-create (materials `persistFromCatalog`, blocks the new `getOrCreate`); stale search responses ignored. There is no select-all control in the app (the handler was never rendered), so none was added |
 | Live test of phases 1-4 | Passed (developer, 2026-10-22) | Scan #1 on Minecraft 26.3: 1812 entries (1752 inserted, 60 updated, 0 merged/deleted/missing, 98 without an icon); no duplicate rows, search works, item blueprint picker OK, dashboard and picker tables OK, audit clean |
@@ -666,3 +666,195 @@ clarification of D5 followed in chat the same day.
 | D10 | Start while KNG-195 is unmerged | Start phase 2 now (API only, hardly overlaps KNG-195); phase 1 follows once KNG-195 is merged |
 | D11 | Phase 1 size | The full phase 1 as planned, although phase 4 replaces the hybrid picker |
 | D12 | Live tests | Only at the end: phases 1-4 are built with automated tests, the developer tests everything in one live run |
+
+## 12. Enchantments (KNG-250, 2026-10-22)
+
+[KNG-250](https://linear.app/kngpandi/issue/KNG-250) gives `MinecraftEnchantmentRef` the KNG-200
+treatment: the server scan is the source, the database the catalogue, and the static
+`Data/minecraft_enchantment_catalog.json`, the hybrid merge and the hybrid mode of
+`PagedEntityTable` go. It also fixes [KNG-243](https://linear.app/kngpandi/issue/KNG-243): a picker
+no longer creates refs or definitions.
+
+### 12.1 Decisions
+
+| # | Decision |
+|---|---|
+| E1 | **Custom enchantments are in the scan** (developer, 2026-10-22), from knk-core `EnchantmentRegistry`, keyed `knk:<id>` |
+| E2 | One enchantment picker shows vanilla and custom together, with a Custom badge and a filter (all / vanilla / custom) |
+| E3 | The scan makes sure every scanned enchantment has an `EnchantmentDefinition`. It links every unlinked matching definition, and creates one when none is linked. This replaces the picker's auto-create, so blueprint and lootbox pickers (which pick definitions) offer every vanilla and custom enchantment. Existing definitions are never deleted and are only changed in two ways: they are linked, and a vanilla definition still at its ref's previous level follows the server's max level (§12.4 step 5). `AbilityDefinition` rows are never touched |
+| E4 | Enchantment refs get the catalogue fields (`CatalogStatus`, `FirstSeenVersion`, `LastSeenVersion`, `LastScanId`) and the KNG-200 clean-up rules: notation duplicates merged, unreferenced unseen rows deleted, referenced ones `Missing` |
+| E5 | Icon: the enchanted book icon the same scan resolved for `minecraft:enchanted_book`. It is set when the ref has no `IconUrl` or one ending in `/enchanted_book.png`, so a URL set by hand stays |
+| E6 | Schema version 1 is still accepted; it leaves enchantments alone |
+| E7 | Removed: the static JSON and `MinecraftEnchantmentCatalogService`, `GET MinecraftEnchantmentRefs/hybrid`, the `SearchHybrid` alias (`MinecraftPickerFilters.LegacyPicker`), `isPersisted` on enchantment list rows, and the hybrid mode of `PagedEntityTable` |
+
+### 12.2 Snapshot schema version 2
+
+Version 1 (§5.2a) plus an `enchantments` list:
+
+```json
+{
+  "schemaVersion": 2,
+  "minecraftVersion": "26.3", "serverVersion": "...", "contentHash": "...",
+  "entries": [ ... as in version 1 ... ],
+  "enchantments": [
+    { "key": "minecraft:sharpness", "isCustom": false, "maxLevel": 5,
+      "translationKey": "enchantment.minecraft.sharpness", "displayName": "Sharpness", "category": null },
+    { "key": "knk:flash_chaos", "isCustom": true, "maxLevel": 1,
+      "translationKey": null, "displayName": "Flash Chaos", "category": "SUPPORT" }
+  ]
+}
+```
+
+- **Vanilla** (and data-pack) enchantments: everything in Paper's enchantment registry.
+  - `key` is the registry key.
+  - `maxLevel` is `getMaxLevel()`.
+  - `translationKey` is the enchantment's translation key.
+  - `displayName` is its description rendered to `en_US` through `GlobalTranslator`, or null when
+    that rendering just returns the key.
+  - `category` is null.
+  - `isCustom` is false.
+- **Custom** enchantments: everything in knk-core `EnchantmentRegistry`.
+  - `key` is `knk:` plus the lower-case id.
+  - `displayName` and `maxLevel` come from the registry.
+  - `translationKey` is null.
+  - `category` is the type, `ATTACK` or `SUPPORT`.
+  - `isCustom` is true.
+- **Validation.** `enchantments` is required in version 2 and may be empty, with at most 1,000
+  entries. Every key must be a valid namespaced key and unique in the list. A custom entry must not
+  use the `minecraft` namespace. Otherwise 400, as for materials.
+- **`contentHash` v2.**
+  1. Take the version 1 text of the entries (§5.2a, steps 1-3).
+  2. Append `\n#enchantments`.
+  3. For each enchantment sorted by `key` (ordinal), append `\n` +
+     `key|isCustom|maxLevel|translationKey|displayName|category`, with the same encoding as for
+     materials.
+  4. Take the SHA-256 of the UTF-8 bytes, as lower-case hex.
+- **Test vector v2.** The two §5.2a entries plus the two enchantments above give
+  `ab2c65626e6508eb4c169dabefda5ef7570f94c8d966f31adecc624dfe823154`; with no enchantments
+  it is `9846ad62d84d42d5a05e0cbac900ab6f671bf3bb0dd7c1bb5961aa2316f63c3e`. The text for the first
+  is
+  `minecraft:apple|true|false|64|item.minecraft.apple||\nminecraft:stone|true|true|64|block.minecraft.stone|Stone|minecraft:stone\n#enchantments\nknk:flash_chaos|true|1||Flash Chaos|SUPPORT\nminecraft:sharpness|false|5|enchantment.minecraft.sharpness|Sharpness|`.
+  Plugin and API pin both.
+- The handler's `outputJson` adds `enchantmentCount`.
+- The scan DTO adds `enchantmentCount`, `enchantmentsInserted`, `enchantmentsUpdated`,
+  `enchantmentsUnchanged`, `enchantmentsMerged`, `enchantmentsDeleted`,
+  `enchantmentsMarkedMissing`, `enchantmentDefinitionsCreated` and `enchantmentDefinitionsLinked`.
+  All are 0 or null for a version 1 scan.
+
+### 12.3 Which scanned key an existing row belongs to
+
+The material normaliser adds `minecraft:` to a bare key, which is wrong for custom keys: an old
+custom ref stored as `chaos` must merge into `knk:chaos`, not be deleted. So an existing ref (or an
+unlinked definition) is matched in this order:
+
+1. If its key has the `minecraft` namespace, it belongs to that normalised key.
+2. If it has the `knk` namespace or no namespace, and it compares equal to a scanned custom id
+   after `AbilityDefinition.MatchKey` (strip any namespace, keep lower-case letters and digits:
+   `knk:flash_chaos`, `flash_chaos` and `flashchaos` are equal), it belongs to that custom key.
+   For a key without namespace this only applies when the row is marked custom or no scanned
+   vanilla enchantment has that name.
+3. If it has no namespace, it belongs to `knk:<key>` when the row is marked custom, else to
+   `minecraft:<key>`.
+4. Otherwise it belongs to its own normalised key (e.g. a data-pack namespace).
+
+Definitions match the same way. A custom definition is keyed by the ability key, e.g. `chaos`.
+
+### 12.4 Ingest (same transaction as the materials)
+
+1. Load all enchantment refs and group them by the key from §12.3.
+2. Merge each group into its first row: the row whose key already equals the target, else the
+   lowest id. `EnchantmentDefinition.MinecraftEnchantmentRefId` is repointed to the kept row, and
+   the duplicates are deleted and saved before the kept row takes the key.
+3. Upsert every scanned enchantment:
+   - `NamespaceKey`, `DisplayName` (scanned, else derived from the key), `MaxLevel` and `IsCustom`;
+   - `Category` (the scanned one; null keeps the row's legacy category such as `Weapon`);
+   - `CatalogStatus = Active`, the versions and `LastScanId`;
+   - the icon per E5.
+4. Unseen refs: deleted when no `EnchantmentDefinition` references them, else marked `Missing`.
+5. Definitions (E3), for each scanned enchantment:
+   - A vanilla definition linked to the ref whose `MaxLevel` equals the ref's level before this scan
+     takes the scanned max level. The seeds leave ref and definition at the same level, so seeded
+     definitions get the vanilla maximum; a level set by staff stays.
+   - Every unlinked definition matching per §12.3 and of the same kind (custom/vanilla) is linked.
+   - If no definition is linked after that, a new one is created:
+   - `Key`: the vanilla key, or the custom id;
+   - `DisplayName` and `MaxLevel` from the scan;
+   - `IsCustom` from the scan;
+   - linked to the ref.
+
+   On the next startup, the AbilityDefinition seed attaches abilities to new custom definitions it
+   knows.
+
+### 12.5 API surface
+
+- **Picker search.** `POST api/MinecraftEnchantmentRefs/search` with `Picker=true` runs on the
+  database:
+  - `origin` = `vanilla` | `custom` | all, plus the legacy `category` filter;
+  - Missing rows hidden;
+  - sorted by display name;
+  - search over key, display name, legacy name and category.
+
+  Without `Picker` it is the admin table: every row, sortable, with `isCustom`, `catalogStatus` and
+  `lastSeenVersion` in the list DTO.
+- **No catalogue lookups when creating.**
+  - `POST get-or-create` creates an `Unverified` ref from the normalised key.
+  - `EnchantmentDefinitionService` does the same for an unknown `enchantmentNamespaceKey`
+    (bare custom ids become `knk:<id>` when the definition is custom).
+  - The V1 and lootbox seeds create `Unverified` refs. Ref and definition start at the highest
+    level the lootbox seed rolls or gives (at least 1), and the first scan raises them to the vanilla
+    maximum.
+- **Audit.** `GET api/MinecraftCatalog/audit` adds `enchantmentCount`, `unverifiedEnchantmentCount`
+  and `missingEnchantmentsReferenced` (each with the definitions that use it).
+
+### 12.6 Plugin
+
+- `CatalogSource` also returns the enchantments.
+  - Vanilla ones come from `RegistryAccess.registryAccess().getRegistry(RegistryKey.ENCHANTMENT)`,
+    on the main thread.
+  - Custom ones come from `EnchantmentRegistry.getInstance().getAll()`.
+- knk-core `CatalogSnapshot`/`CatalogEnchantment` carry schema 2 and the v2 hash.
+- The api-client DTO adds `enchantments`.
+- Tests pin both v2 vectors.
+
+### 12.7 Web app
+
+- **Picker.** `HybridEnchantmentPicker` becomes `MinecraftEnchantmentPicker` (the field type
+  `HybridMinecraftEnchantmentRefPicker` stays):
+  - a database search with `Picker: 'true'`;
+  - a Custom badge;
+  - an all / vanilla / custom filter;
+  - the settings JSON `originFilter` sets the initial filter, and `categoryFilter` still works.
+- **`PagedEntityTable`** loses the hybrid mode entirely: `isHybridCatalogEntity`, the New badge,
+  `persistUnsavedRow`, `handleCreateAndSelect`, the unused `handleSelectAll` and `SearchHybrid`.
+- **Clients and types.** The client loses `getHybrid` and `persistFromCatalog`, and the
+  `MinecraftHybridEnchantmentOptionDto` type goes.
+- **Row keys.** `sessionPinnedRows` keys enchantment refs by id like other entities.
+- **Admin page.** The catalogue page shows the enchantment counters of a scan and the
+  Missing-but-referenced enchantments.
+
+### 12.8 Upgrade
+
+1. Run the additive migration `MinecraftEnchantmentCatalogFields`.
+2. Deploy the plugin and the API together, then scan. An older plugin still sends schema 1,
+   which is accepted and leaves enchantments alone.
+3. After the scan, check "Needs attention" for Missing enchantments that definitions still use.
+
+### 12.9 Implementation status (merged 2026-10-23)
+
+Live-tested by the developer on 2026-10-23 ("all work") and merged `--no-ff` without PR: knk-web-api `master`
+`a1f8838`, knk-web-app `main` `f9ee73c` (after merging KNG-263's category filter into the branch), knk-plugin `main`
+`c7806b87`. Feature-branch commits:
+
+| Repo | Commit | What |
+|---|---|---|
+| knk-web-api | `f265e16` | schema 2 validation and hash; enchantment ingest (§12.3-12.4); migration `MinecraftEnchantmentCatalogFields`; database picker search; audit section (skipped while the migration is pending); static catalogue, hybrid route and the `SearchHybrid` alias removed; seeds without catalogue |
+| knk-web-app | `13c31bd` | `MinecraftEnchantmentPicker` (Custom badge, All/Vanilla/Custom, `originFilter` setting, also in the field editor's settings JSON); hybrid mode removed from `PagedEntityTable`, so a pick never creates anything (KNG-243); id-based row keys; Kind/Status columns; enchantment counters and "Missing enchantments still used" on the catalogue page |
+| knk-plugin | `ca189a88` | `CatalogEnchantment`, schema 2 `CatalogSnapshot` (v2 hash only), `CustomEnchantmentCatalog` from `EnchantmentRegistry`, `BukkitCatalogSource` (renamed) reads `RegistryKey.ENCHANTMENT`; the translation key comes from the translatable `description()` because `Enchantment.translationKey()` is deprecated for removal in 26.3; `outputJson` adds `enchantmentCount` |
+
+Tests:
+- API: 2,991 tests with MySQL; 4 fail identically on `master` (unrelated, [KNG-252](https://linear.app/kngpandi/issue/KNG-252)).
+- Web: 168 suites and 1,048 tests (170 and 1,060 after merging main with KNG-263).
+- Plugin: knk-core 2,211, knk-api-client 268, knk-paper 1,982 (2,215, 268 and 1,994 after merging main).
+
+The live test covered the scan with enchantments, the custom `knk:<id>` rows, the merge of old rows and the
+pickers.

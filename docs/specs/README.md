@@ -13,7 +13,7 @@ Central home for requirements, specifications, and implementation roadmaps acros
 - kits/: Kit (equipment loadout) design, implementation plan, and legacy-DB seed data
 - enchantment-books/: permanent enchantment books outside siege (Linear KNG-5)
 - game-settings/: global Game Settings - announcements, join spawn, respawn policy, per-world game mode/time/weather/spawn, applied by the plugin (Linear KNG-52)
-- domain-subregions/: several WorldGuard regions per domain (expansion regions), synced from the main region; orphan retention, cylinder shapes, per-domain access and messages (Linear KNG-253; design draft, not implemented)
+- domain-subregions/: several WorldGuard regions per domain (expansion regions), synced from the main region; orphan retention, cylinder shapes, per-domain access and messages (Linear KNG-253; implemented, merged and live-tested 2026-10-23; follow-ups KNG-260, KNG-261)
 - navigation/: road network (survey-learned road profiles, auto-detected junctions on every level) and `/navigate` guidance with live gate/entry availability (Linear KNG-27)
 - production-storage-transport/: the resource-economy backbone: storages (domain/player/clan), production kinds with yield areas, transport orders (simulated, then NPC/courier), town logistics (V2 port, design draft rev. 2, 2026-10-09)
 - siege-survival/: cooperative endless NPC-wave defense, gate repair, spawnzone progression and match equipment/economy (Linear KNG-50, child of KNG-37; design only)

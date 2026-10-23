@@ -1,7 +1,7 @@
 # Managed WorldGuard regions — hierarchy, priority, flags and startup repair
 
 **Status:** Implemented, merged to trunk (2026-09-29, [knk-plugin#6](https://github.com/PandiO/knk-plugin/pull/6), [knk-web-api#3](https://github.com/PandiO/knk-web-api/pull/3); KNG-43 follow-up 2026-10-04) and **smoke-tested in game and accepted 2026-10-05** — Linear KNG-46, §9. Region-step re-run replacement (KNG-103) merged 2026-10-18 after its in-game check ([knk-plugin#12](https://github.com/PandiO/knk-plugin/pull/12), [knk-web-api#10](https://github.com/PandiO/knk-web-api/pull/10))
-**Last updated:** 2026-10-23 (§7 "Domain sub-regions", KNG-254–KNG-258, on unmerged feature branches); 2026-10-18 (KNG-103 in-game check passed and merged; §7 recovering a domain the old bug left on a temp name, purge keeps what the last repair saw; §9 result); 2026-10-12 (§7 "Re-running a domain's region step" and `/knk regions temp`, KNG-103; §9 checklist, not yet run); 2026-10-06 (§5 "Rank-dependent access" links the domain entry/exit enforcement, KNG-55/KNG-56); 2026-10-05 (KNG-46 in-game smoke test passed; parent-inheritance decision accepted; vanilla spawn-protection note, §8 item 10)
+**Last updated:** 2026-10-23 (§7 "Domain sub-regions", KNG-254–KNG-258, merged and live-tested); 2026-10-18 (KNG-103 in-game check passed and merged; §7 recovering a domain the old bug left on a temp name, purge keeps what the last repair saw; §9 result); 2026-10-12 (§7 "Re-running a domain's region step" and `/knk regions temp`, KNG-103; §9 checklist, not yet run); 2026-10-06 (§5 "Rank-dependent access" links the domain entry/exit enforcement, KNG-55/KNG-56); 2026-10-05 (KNG-46 in-game smoke test passed; parent-inheritance decision accepted; vanilla spawn-protection note, §8 item 10)
 **Supersedes:** Linear KNG-12 ("no WG flags on town/district regions"), the assumption noted in `CombatSafezone`'s Javadoc
 **Evidence:** [`reports/2026-09-28-v1-permissions-worldguard-inventory.md`](../reports/2026-09-28-v1-permissions-worldguard-inventory.md) (categorized v1 inventory), the v3 domain model (`Town → District → Structure`, `GateStructure : Structure`), `vision.md` §2
 
@@ -139,7 +139,7 @@ Before KNG-103 the rename refused whenever `domain_<id>` existed, so re-running 
 
 `config.yml`, `regions.managed`: `startup-repair.{enabled,delay-ticks,attempts,retry-delay-seconds,page-size}`, `resource-production-block-break`, `manage-global-region`, `overrides.<regionId>.{kind,priority,parent,flags}`, `extra-regions[].{region,kind,parent}`. Bad entries are logged and ignored, never fatal. The override mechanism is how a House/Property/Room/`property_47` counterpart is identified until `Structure` gets subtypes, and where any exact v1 priority is recorded.
 
-### Domain sub-regions (KNG-254–KNG-258, unmerged)
+### Domain sub-regions (KNG-254–KNG-258; merged 2026-10-23, knk-plugin `9dfd7aae`, live-tested)
 
 A domain can have extra regions besides its main `WgRegionId` ([design](../specs/domain-subregions/DESIGN.md), [admin guide](../guides/admin/domain-subregions-admin-guide.md)), named `domain_<domainId>_sub_<id>`. They are **not** managed by the policy above.
 
@@ -155,7 +155,7 @@ A domain can have extra regions besides its main `WgRegionId` ([design](../specs
 2. **`allow-blocks` / wood farm**: needs a v3 listener to restrict block breaking in `RESOURCE_PRODUCTION` regions to logs; until then `block-break` is not opened up. Linear KNG-48.
 3. **Exact v1 priorities** unknown (§2). Supply `regions.yml` to compare, or set overrides. Linear KNG-49 (also the Arena/Battleground entity decision).
 4. ~~Town/Structure creation don't finalize temp region names~~ — fixed by KNG-43 (§7); existing temp-named domains need one `finalize-temp-names` call.
-5. **`TempRegionRetentionTask`** (14 days after creation; configurable as `regions.temp-retention.days` since KNG-258, unmerged; `knk-creation-timestamp` flag) deletes a temp-named region only when (a) the last repair didn't see a domain use it (and the repair has run at all), (b) it has a valid timestamp older than the cutoff, and (c) a fresh `GET /Domains/by-region/{id}` right before the delete returns 404. An API error keeps the region. Policy: `knk-core` `TempRegionCleanupPolicy` (KNG-43; before, only (a) existed, so a domain created after the last repair was not protected).
+5. **`TempRegionRetentionTask`** (14 days after creation; configurable as `regions.temp-retention.days` since KNG-258; `knk-creation-timestamp` flag) deletes a temp-named region only when (a) the last repair didn't see a domain use it (and the repair has run at all), (b) it has a valid timestamp older than the cutoff, and (c) a fresh `GET /Domains/by-region/{id}` right before the delete returns 404. An API error keeps the region. Policy: `knk-core` `TempRegionCleanupPolicy` (KNG-43; before, only (a) existed, so a domain created after the last repair was not protected).
 6. **Entry gating by rank** and **greetings** remain v3-plugin behaviour, not WG flags (§5).
 7. **Arena/battleground regions** have no domain entity; they are managed only through `extra-regions`.
 8. `WorldGuardManagementCommand` (`/knk wgm rename`) is not registered anywhere (dead code) — left as is.

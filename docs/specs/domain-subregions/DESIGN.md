@@ -1,7 +1,7 @@
 # Domain sub-regions (expansion regions) — design
 
-**Status:** Design accepted by the developer (2026-10-23, rev. 2). **Implemented on unmerged feature branches, not live-tested** (§13): every phase KNG-254–KNG-259 is In Review. Follow-ups: [KNG-260](https://linear.app/kngpandi/issue/KNG-260) (navigation), [KNG-261](https://linear.app/kngpandi/issue/KNG-261) (placement checks).
-**Last updated:** 2026-10-23 (§13 implementation status and the changes against this design; phase issues KNG-254–KNG-259 filed. Rev. 2: the 7 decisions in §12 taken, all as recommended; §6 select renames. Rev. 1: investigation of v1/v2 and the current API, plugin and web app; first design)
+**Status:** Implemented, **merged to trunk and live-tested 2026-10-23** (developer smoke test, sections 0-7; the gate edit-form fix re-checked): knk-web-api `master` `779629e`, knk-plugin `main` `9dfd7aae`, knk-web-app `main` `bf0d142`, knk-workspace `main`. Phases KNG-254–KNG-259 Done. Follow-ups: [KNG-260](https://linear.app/kngpandi/issue/KNG-260) (navigation), [KNG-261](https://linear.app/kngpandi/issue/KNG-261) (placement checks).
+**Last updated:** 2026-10-23 (merged to trunk after the smoke test; §13 implementation status and the changes against this design; phase issues KNG-254–KNG-259 filed. Rev. 2: the 7 decisions in §12 taken, all as recommended; §6 select renames. Rev. 1: investigation of v1/v2 and the current API, plugin and web app; first design)
 **Linear:** [KNG-253](https://linear.app/kngpandi/issue/KNG-253). Related: [KNG-103](https://linear.app/kngpandi/issue/KNG-103) (region step re-run, replace in place), [KNG-56](https://linear.app/kngpandi/issue/KNG-56) (access flags), [KNG-46](https://linear.app/kngpandi/issue/KNG-46) / [KNG-43](https://linear.app/kngpandi/issue/KNG-43) (managed regions, rename on save), [KNG-111](https://linear.app/kngpandi/issue/KNG-111) (domain world)
 **Sources:** developer request 2026-10-23; `knk-v1-archive` (`src/DataManager/{Towns,Districts,Worldguard,Creations}.java`, `src/Models/creations/{Town,District,Structure}Creation.java`, `src/Towns/{Town,TownCommands,TownEvents}.java`); `knk-v2-archive` (`model/dominion/Dominion.java`, `util/WorldguardUtil.java`); knk-web-api `master` `4f34f58`; knk-plugin `main` `69c9388`; knk-web-app default branch; [managed WorldGuard regions](../../architecture/managed-worldguard-regions.md); [domain access enforcement](../../architecture/domain-access-enforcement.md); [legacy towns/districts/gates](../legacy/towns-districts-gates.md)
 
@@ -340,7 +340,7 @@ Open notes, not blocking:
 
 ## 13. Implementation status (2026-10-23)
 
-Branch `claude/domain-expansion-regions-s46gvf` in each repo; nothing merged. **Smoke test passed 2026-10-23** (developer, sections 0-7). One bug was found and fixed: a gate's edit form showed no sub-regions (`503c541`); re-check that one before merging. Check with the [smoke test](../../guides/domain-subregions-smoke-test.md); [admin guide](../../guides/admin/domain-subregions-admin-guide.md).
+Merged to trunk 2026-10-23 (knk-web-api `master` `779629e`, knk-plugin `main` `9dfd7aae`, knk-web-app `main` `bf0d142`). **Smoke test passed 2026-10-23** (developer, sections 0-7). One bug was found and fixed: a gate's edit form showed no sub-regions (`503c541`); re-checked by the developer before the merge. Check with the [smoke test](../../guides/domain-subregions-smoke-test.md); [admin guide](../../guides/admin/domain-subregions-admin-guide.md).
 
 | Phase | Commit(s) | Tests |
 |---|---|---|
@@ -364,9 +364,8 @@ Branch `claude/domain-expansion-regions-s46gvf` in each repo; nothing merged. **
 - **Display seeds.** Structure and GateStructure seed v2 list the sub-regions. Town and District have no display seed.
 - **Navigation.** It still knows only the main region: [KNG-260](https://linear.app/kngpandi/issue/KNG-260).
 
-**Before merging:**
-- run the smoke test;
+**Deploying it elsewhere** (alpha, production):
 - apply the `DomainSubRegions` migration;
-- import the seeds;
+- import the seeds (§4.3; [admin guide](../../guides/admin/domain-subregions-admin-guide.md));
 - deploy the API and the plugin together.
 

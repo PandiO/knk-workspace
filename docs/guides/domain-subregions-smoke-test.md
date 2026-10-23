@@ -1,6 +1,6 @@
 # Domain sub-regions — smoke test checklist
 
-**Status:** To test (v2). Written for the unmerged branches `claude/domain-expansion-regions-s46gvf`: knk-web-api `6d438bf`, knk-plugin `46f805e`, knk-web-app `4b88565`.
+**Status:** **Passed 2026-10-23** (developer, sections 0-7). One bug was found: a gate's edit form listed no sub-regions; it was fixed in knk-web-api `503c541` and re-checked. Merged: knk-web-api `master` `779629e`, knk-plugin `main` `9dfd7aae`, knk-web-app `main` `bf0d142`.
 **Last updated:** 2026-10-23 (v2: deploy order, first-sync and cache timing, form and display checks, other domain types, finalize-temp-names, new shapes on main regions)
 **Linear:** [KNG-259](https://linear.app/kngpandi/issue/KNG-259) (P6); covers [KNG-254](https://linear.app/kngpandi/issue/KNG-254) to [KNG-258](https://linear.app/kngpandi/issue/KNG-258)
 **Related:** [admin guide](admin/domain-subregions-admin-guide.md), [design](../specs/domain-subregions/DESIGN.md) §13
