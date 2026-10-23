@@ -93,16 +93,23 @@ Full steps and troubleshooting: [email guide § 6–7](email.md). Mails go to th
 (`Email__Transport=Pickup`) or, with `Transport=Log` and `AllowLogTransport=true`, the API log.
 
 1. **Start-up guard.** `ASPNETCORE_ENVIRONMENT=Production` with `Email__Provider=Log` → the API refuses to start and
-   names `AllowLogTransport`. Add `Email__AllowLogTransport=true` → it starts.
+   names `AllowLogTransport`. Add `Email__AllowLogTransport=true` → it starts. Run it with
+   `dotnet run --no-launch-profile --urls http://localhost:5294`: the launch profile forces Development, in which the
+   guard is off. Production also needs `ConnectionStrings__MySqlDbConnection` and a 32+ character `Security__Jwt__Secret`
+   as environment variables (user-secrets load in Development only).
 2. **Test mail.** `/admin/email` → *Send test mail to me* → row **Sent**, the mail (or `.eml`, or log line) exists.
 3. **Reset mail.** *Forgot password* → mail with a working link → reset works, old sessions end; the row is Sent with no
    content left.
-4. **Email-change notice.** Change the email on the account page, then back through the staff `update-email` → the old
-   address gets the notice both times.
+4. **Email-change notice.** Change the email on the account page, then as staff through the user form on
+   `/admin/users/<id>` (there is no separate "update email" button; the form calls the staff endpoint) → the old address
+   gets the notice both times.
 5. **Privacy confirm.** Request data deletion → the confirm mail arrives. Cancel the request.
 6. **Relay down.** Stop the relay → *Forgot password* still answers the usual message → row **Pending** with attempts
    and a last error → start the relay → **Sent**. A reset older than 30 min becomes **Expired** instead.
-7. **Throttle.** Four resets for one address within an hour (60 s apart) → the 4th row is **Suppressed**.
+7. **Throttle.** Four resets for one address within an hour → the 4th row is **Suppressed**. `forgot-password` has
+   its own per-address cooldown (`Security:PasswordResetRequestCooldownSeconds`, 60 s) that silently drops repeats,
+   so either wait 70 s between requests or start the API with `Security__PasswordResetRequestCooldownSeconds=5` and
+   post four requests 8 s apart to `api/Auth/forgot-password` (`{"email":"…"}`).
 8. **Staff page access.** A staff member without `knk.admin.config` gets the "needs knk.admin.config" screen on
    `/admin/email` and no **Mail** nav entry.
 
@@ -286,4 +293,5 @@ children are closed.
 
 | Date | Who | Heads (api / app / plugin) | Sections run | Result / issues |
 |---|---|---|---|---|
+| 2026-10-23 | Pandi (dev API + web app on the PC, Pickup transport) | api `8f489b9` / app `eeea86f` / plugin `90b01850` | § 1 | **Passed**, all 8 steps. Three guide fixes folded in: the guard needs `--no-launch-profile`; the staff email change goes through the user form; the reset cooldown hides the throttle unless lowered. |
 | 2026-10-23 | Pandi (dev DB on the NAS) | api `8f489b9` / app `eeea86f` / plugin `90b01850` | § 0 | **Passed.** Migrations applied, § 0.2 data checks OK, the chain's 9 `[MySqlFact]`s 9/9 green (sequential run, 206 s). Setup bumps folded into § 0.2. Full `requires-mysql` set in parallel exhausted the NAS's connections (59/124 failed on "Too many connections"), not re-run; not needed for this feature. |
