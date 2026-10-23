@@ -1,6 +1,6 @@
 # Navigation compass — a guide item for sieges (and beyond)
 
-**Status:** Implemented on `claude/siege-navigation-compass-pl2trj` in knk-plugin, knk-web-api and knk-web-app; **unit-tested, not yet live-tested** (see §8). Not merged.
+**Status:** Merged to the default branches 2026-10-23 (knk-plugin `main` `2662dca4`, knk-web-api `master` `9da15e0`, knk-web-app `main` `b0e617e`). Smoke test run 1 (developer, 2026-10-23): passed, F and G accepted without running (§13). Open: the gate rule's glue is unseen live; the siege configuration is frozen per round (§12).
 **Last updated:** 2026-10-22 (§10: the siege gives the item; §11: match scope and real gate states — C2 and C3 reversed)
 **Linear:** [KNG-234](https://linear.app/kngpandi/issue/KNG-234)
 **Builds on:** [navigation/DESIGN.md](../navigation/DESIGN.md) §6 (`/navigate`), [siege-minigame](../siege-minigame/) (objectives, teams), the item blueprints.

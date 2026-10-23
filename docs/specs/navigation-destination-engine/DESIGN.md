@@ -1,7 +1,7 @@
 # Navigation destination engine — which places a player may navigate to
 
 **Status:** Proposed — design for the developer's review. **No code.** Decisions of 2026-10-22 are recorded in §1.
-**Last updated:** 2026-10-22 (E9–E13 recorded)
+**Last updated:** 2026-10-23 (E9–E13 recorded; KNG-234 merged to main 2026-10-23, so the engine's base is `main`)
 **Linear:** [KNG-235](https://linear.app/kngpandi/issue/KNG-235) with phases [KNG-236](https://linear.app/kngpandi/issue/KNG-236) (P1), [KNG-237](https://linear.app/kngpandi/issue/KNG-237) (P2), [KNG-238](https://linear.app/kngpandi/issue/KNG-238) (P3), [KNG-239](https://linear.app/kngpandi/issue/KNG-239) (P4), [KNG-240](https://linear.app/kngpandi/issue/KNG-240) (P5).
 **Builds on:** [navigation/DESIGN.md](../navigation/DESIGN.md) (`/navigate`, §6), [navigation-compass/DESIGN.md](../navigation-compass/DESIGN.md)
 (§11: match scope, which this design generalises), [user-features/DESIGN.md](../user-features/DESIGN.md) §6.1 (owner/staff mode),

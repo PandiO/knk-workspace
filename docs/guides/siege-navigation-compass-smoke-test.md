@@ -1,7 +1,7 @@
 # Siege navigation compass — smoke test (KNG-234)
 
-**Status:** To test (written 2026-10-22). **Last updated:** 2026-10-23 (run 1: A-D done; E1-E2 order changed to front line first; F and G accepted without running)
-**Branch under test:** `claude/siege-navigation-compass-pl2trj` in knk-plugin, knk-web-api, knk-web-app (knk-workspace for docs). Not merged; unit-tested only.
+**Status:** Run 1 done 2026-10-23 by the developer: A, B, C (C6 accepted), D1-D2 passed individually; the rest of D and E reported working ("other than that it works"); F and G accepted without running (the test scenario has no gate objective). Merged to the default branches the same day. Still unseen live: the gate-state rule in a scenario with a gate objective (F), the front-line order in a scenario with an objective between the attackers and the keep (E1-E2).
+**Branch tested:** `claude/siege-navigation-compass-pl2trj` in knk-plugin, knk-web-api, knk-web-app (knk-workspace for docs); merged 2026-10-23.
 **Design:** [navigation-compass/DESIGN.md](../specs/navigation-compass/DESIGN.md) (§6 decisions, §8, §10, §11)
 **Report back:** PASS / FAIL per step ID, plus for each FAIL the exact chat lines and what you did.
 
