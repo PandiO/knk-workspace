@@ -24,13 +24,21 @@ The builder has no UI for step conditions yet (filed as [KNG-274](https://linear
 ```js
 // KNG-186 test helper: adds / switches / removes a Completion condition on the District form's
 // "Region and access" step ("Allow entry must be ticked"). Paste once, then call e.g. knkStepCondition('add').
+// It renews the access token first (the stored one is short-lived) the same way the web app does.
 window.knkStepCondition = async function (action, entity = 'District', stepMatch = /region and access/i) {
     const api = 'http://localhost:5294/api';                      // the API's HTTP profile; change if yours differs
-    const token = localStorage.getItem('knk.accessToken') || sessionStorage.getItem('knk.accessToken');
-    if (!token) return console.error('Not logged in: no token in storage.');
-    const headers = { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' };
-    const call = async (method, path, body) => {
-        const r = await fetch(`${api}/${path}`, { method, headers, body: body ? JSON.stringify(body) : undefined });
+    const store = localStorage.getItem('knk.accessToken') ? localStorage : sessionStorage;
+    const refresh = async () => {
+        const r = await fetch(`${api}/Auth/refresh`, { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+        if (!r.ok) throw new Error(`Could not renew the session (${r.status}): log in to the web app again, then retry.`);
+        const token = (await r.json()).accessToken;
+        store.setItem('knk.accessToken', token);
+        return token;
+    };
+    let token = await refresh();
+    const call = async (method, path, body, retry = true) => {
+        const r = await fetch(`${api}/${path}`, { method, headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: body ? JSON.stringify(body) : undefined });
+        if (r.status === 401 && retry) { token = await refresh(); return call(method, path, body, false); }
         if (!r.ok) throw new Error(`${method} ${path} → ${r.status} ${await r.text()}`);
         return r.status === 204 ? null : r.json();
     };
@@ -66,7 +74,7 @@ window.knkStepCondition = async function (action, entity = 'District', stepMatch
 | `knkStepCondition('on')` | back to active (sends `isActive: true` explicitly) | 11 → 12 |
 | `knkStepCondition('remove')` | removes it | 14 |
 
-The helper prints the saved step's `conditions` and whether the configuration JSON still carries an `isActive` (it must not, step 7). Refresh the wizard page after each call: the wizard loads the configuration when the form opens.
+If it says it could not renew the session, log in to the web app again and paste the helper again. The helper prints the saved step's `conditions` and whether the configuration JSON still carries an `isActive` (it must not, step 7). Refresh the wizard page after each call: the wizard loads the configuration when the form opens.
 
 7. **Default is active.** In the GET body, every entry under a field's `validations` and a step's `conditions` (if any) carries `"isActive": true`; the configuration itself has **no** `isActive` property. Expected: no `false` anywhere unless you set one before.
    *What is being tested:* a **step condition** (`conditions` on a step) is a third thing next to a field's **Required** checkbox and a field's **validation rules**. Required is checked first on Next; a step condition is a rule over the step's values that the builder can't author yet, so it is added through the API here.
