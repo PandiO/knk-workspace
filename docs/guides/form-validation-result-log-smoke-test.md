@@ -19,7 +19,7 @@ Run on the dev server with the four branches merged locally in knk-web-api and k
 
 ## 1. KNG-186 — step completion conditions run
 
-The builder has no UI for step conditions yet (filed as KNG-270), so they are authored through the API. You don't need to hand-write requests: open the web app in the browser **logged in as an admin**, press F12 → **Console**, paste the helper below once, then call it.
+The builder has no UI for step conditions yet (filed as [KNG-274](https://linear.app/kngpandi/issue/KNG-274)), so they are authored through the API. You don't need to hand-write requests: open the web app in the browser **logged in as an admin**, press F12 → **Console**, paste the helper below once, then call it.
 
 ```js
 // KNG-186 test helper: adds / switches / removes a Completion condition on the District form's
