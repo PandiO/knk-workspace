@@ -8,6 +8,14 @@ _Nothing at the moment._
 
 ## 2026-10-24
 
+- **Domain names: whitespace and newlines trimmed** (not in Linear, free issue limit; knk-web-api `master` `09cf7e4` + `ac0f160`,
+  knk-web-app `main` `83609f7`, knk-plugin `main` `1593e70`; merged directly, no PR; not live-tested). The dev database held
+  districts named `Residential District\n`: the form wizard's String field is a textarea, so Enter added a newline the API stored as is,
+  and the action bar in game showed `You are now entering Residential District []`. `Domain.Name` now trims in its setter, and
+  Town, District, Structure, GateStructure and `POST`/`PUT api/Domains` trim `Name` and `Description` at both ends in one place
+  (`DomainNameRules`) and refuse a name that is empty after trimming (400). The plugin strips names defensively as well. **Deploy:**
+  migration `TrimDomainNames` strips the whitespace from the existing `domains.Name` rows (data only, nothing to undo). The web app
+  drops a line break at either end of any String field on submit (plain spaces stay: a chat prefix means them).
 - **Form wizard: step completion conditions run** ([KNG-186](https://linear.app/kngpandi/issue/KNG-186); knk-web-api `master` `a38c8ee`,
   knk-web-app `main` `00e4af6`, merged directly, no PR; smoke-tested by the developer, [guide](guides/form-validation-result-log-smoke-test.md)).
   A step's completion condition ("Allow entry must be ticked before you continue") now stops Next while it fails. The API sent every
