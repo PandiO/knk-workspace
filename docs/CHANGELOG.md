@@ -4,7 +4,14 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
-_Nothing at the moment._
+- **Domain names: whitespace and newlines trimmed** (not in Linear yet, free issue limit — to file; knk-web-api
+  `claude/domain-name-trim`, knk-web-app `claude/domain-name-trim`, not merged, not live-tested). The dev database
+  held districts named `Residential District\n`: the form wizard's String field is a textarea, so Enter added a
+  newline the API stored as is, and the action bar in game showed `You are now entering Residential District []`.
+  Town, District, Structure, GateStructure and `PUT api/Domains/{id}` now trim `Name` and `Description` at both
+  ends in one place (`DomainNameRules`) and refuse a name that is empty after trimming (400). **Deploy:** migration
+  `TrimDomainNames` strips the whitespace from the existing `domains` rows (data only, nothing to undo). The web
+  app drops a line break at either end of any String field on submit (plain spaces stay: a chat prefix means them).
 
 ## 2026-10-24
 
