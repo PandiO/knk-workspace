@@ -63,9 +63,9 @@ Minecraft client ──► play.knightsandkings.net ──► playit.gg tunnel �
 
 | Repo | Minimum | On the NAS today | Action |
 |---|---|---|---|
-| knk-web-api | `master` ≥ `30c5dc5` (KNG-64 merge) | `knk-web-api:alpha-be9f4e1a` since 2026-10-22 (KNG-64 included, private) | Done (§ 3, [report](../reports/2026-10-22-alpha-api-kng64-upgrade.md)) |
+| knk-web-api | `master` ≥ `30c5dc5` (KNG-64 merge) | `knk-web-api:alpha-4aeb7947` since 2026-10-24 (KNG-64 and KNG-205 included, private; [KNG-275](https://linear.app/kngpandi/issue/KNG-275)) | Done (§ 3, [report](../reports/2026-10-22-alpha-api-kng64-upgrade.md)) |
 | knk-web-app | `main` ≥ `98c0a76` | not built | Build in runbook Phase 6 (§ 6) |
-| knk-plugin | `main` ≥ `34c9261`, plus the KNG-114 hub loader | not built | Build in runbook Phase 4 (§ 5). KNG-128/129 (new-player onboarding) are on `main` since `4726fe4` (2026-10-18); its `onboarding:` block in `config.yml` falls back to defaults when missing |
+| knk-plugin | `main` ≥ `34c9261`, plus the KNG-114 hub loader | `plugins/KnightsAndKings.jar` from `main` `d56e41da` since 2026-10-24 ([KNG-225](https://linear.app/kngpandi/issue/KNG-225)) | Done (runbook Phase 4, [report](../reports/2026-10-24-alpha-api-4aeb794-and-plugin-stage-2.md)); later builds via `plugins/update/` (§ 5) |
 
 Build from the **current** trunk head at the moment you package, and record the exact commit, as the runbook does for
 `17ee730a`.
@@ -142,11 +142,12 @@ MinecraftPlugin__BaseUrl=http://minecraft:8081
 # and you relay them. To send real mail, give the API an egress network and Email__SmtpPassword from a secret file.
 # No paid mailbox is needed for the alpha: E0 (KNG-211) relays through the free knightsandkingsmc@gmail.com account.
 # Receiving support@knightsandkings.net can use Cloudflare Email Routing (free) to forward to that Gmail.
-Email__Provider=Log                                 # must be set: appsettings.json defaults to Smtp
+Email__Transport=Log                                # must be set: appsettings.json defaults to Smtp (Email__Provider is the pre-KNG-206 name)
 # REQUIRED from the API build with the email engine (KNG-206, merged 2026-10-24) on: outside Development the API refuses to start with
 # the Log transport unless this is true. Keep it only while there is no relay; once E0's relay works, switch to
 # Email__Transport=Smtp (docs/guides/email.md) and remove this line. Afterwards set it only in an emergency.
 Email__AllowLogTransport=true
+App__PublicBaseUrl=https://app.knightsandkings.net  # links in invitation, reset and admission messages (KNG-205)
 Telemetry__Enabled=false                            # already set
 ```
 

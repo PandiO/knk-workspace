@@ -23,3 +23,14 @@ Rehearsed on 2026-10-22 in a scratch Docker host against an empty MySQL 9.6.0 (s
 - the logs contain no secret values.
 
 Report: `docs/reports/2026-10-22-alpha-api-kng64-upgrade.md`.
+
+Deployed builds:
+- `be9f4e1a` on 2026-10-22 (KNG-227);
+- `4aeb7947` on 2026-10-24 (KNG-275), [report](../../docs/reports/2026-10-24-alpha-api-4aeb794-and-plugin-stage-2.md).
+  From this build the API refuses the Log mail transport outside Development, so the Compose block sets
+  `Email__Transport=Log` with `Email__AllowLogTransport=true` until the mail relay (KNG-211) exists.
+
+For each update:
+1. Rehearse it with the previous migrator first, then the new one.
+2. Change `compose.api-service.yaml`.
+3. After the switch, update `RECORDED_SHA` in `scripts/nas-ops/stage-a/ops/compose` and its NAS copy.
