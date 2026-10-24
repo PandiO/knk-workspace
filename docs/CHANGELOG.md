@@ -4,7 +4,19 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
-_Nothing at the moment._
+- **Siege playtest follow-ups (2026-10-24)** — branch `claude/dreamy-fermi-4h2ldl` in knk-plugin, knk-web-api, knk-web-app and
+  knk-workspace; not in Linear (free issue limit). Five changes from the developer's test round:
+  (1) a melee hit on a gate door with a **Fire Aspect** weapon has a chance per level (`gates.fire-aspect.ignite-chance-per-level`,
+  15 % × level) of setting the block alight like a flaming arrow; (2) the new **Cleaving** custom enchantment (I–IV): gate hits
+  ×1.25/×1.5/×1.75/×2, and a right-click on a door block is a charged strike of 5/6/7/8 such hits (netherite sword: 50/72/98/128 of a
+  500 HP gate) with wood-break sounds and splinters, then a 60/50/40/30 s per-player cooldown (`gates.cleaving` in `config.yml`;
+  the API's ability catalogue and permanent enchant books know it too); (3) the **spawn picker opens at the team split** in the hub
+  (no picker at match start; the start teleports everyone to their choice; the Information menu's "Change spawnpoint" shows from the
+  hub on); (4) the **spawn menu shrinks** to its options, and `MenuTemplateSeed.RepairSiegeLayoutAsync` fixes the growth, minimum
+  height and spawn-button phases of siege menus seeded before these layout changes (seeds are create-only, so an existing database
+  kept the old 5/6-row static menus); (5) **`/siege skip` seconds are settings**: `PlayerSkipMatchmakingSeconds` (60) and
+  `AdminSkipMatchmakingSeconds` (31) on the global siege configuration, web app → Siege settings → "Skipping matchmaking"
+  (migration `AddSiegeSkipSeconds`; the plugin floors both at one second before voting closes).
 
 ## 2026-10-24
 

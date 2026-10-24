@@ -413,11 +413,14 @@ never v2's hardcoded `"TestSiege"`.
 
 ### 6.5 Match start
 Activate objectives (banner block, capture circle particles visible to members only, floating
-percentage `TextDisplay`) and spawn safe-zone rings → teleport each member to their team's
-`SortOrder = 0` spawnpoint → per-team scoreboards/tab list → open the spawn picker for members whose
-team has ≥ 2 options → team `StartMessage` on the action bar 2 s later → `SiegeMatch` → `InProgress`
+percentage `TextDisplay`) and spawn safe-zone rings → teleport each member to their **spawn choice**
+(made at the team split, §6.4; the team's `SortOrder = 0` spawnpoint when they made none) → per-team
+scoreboards/tab list → team `StartMessage` on the action bar 2 s later → `SiegeMatch` → `InProgress`
 (with participants and team assignments). *(Updated 2026-09-26: the scenario lock is taken at the draw
-and the gate lockdown runs at the hub, T-15 (§8.2) — no longer at match start.)*
+and the gate lockdown runs at the hub, T-15 (§8.2) — no longer at match start. Updated 2026-10-24,
+playtest: the spawn picker opens at the team split (T-10, in the hub), not at the start — members pick
+where they begin while they wait, and the start teleports them there; the choice travels into the
+match roster. The start itself opens no menu.)*
 
 Match length = `clamp(ceil(members × PerPlayerSeconds), MinSeconds, MaxSeconds)` using the member count
 at start (v2 formula, now configurable per scenario).
@@ -430,11 +433,12 @@ at start (v2 formula, now configurable per scenario).
 - Respawn at the member's **current spawn choice** (a team spawnpoint, or a held objective with
   `SpawnWhenHeld`); if that objective has since been lost, fall back to spawnpoint `SortOrder = 0`.
   Respawn restores health/food for both kinds (v2 only did it for spawnpoints).
-- The spawn choice is **remembered**. The picker opens at match start (ignoring it stores the team
-  default) and after a respawn (delay from `SiegeConfiguration`) only while no choice is stored — both
-  only when the team has ≥ 2 options (v1 rule). Picking an option from a picker opened at start/respawn
+- The spawn choice is **remembered**. The picker opens once at the team split in the hub (§6.4; ignoring
+  it stores the team default) and after a respawn (delay from `SiegeConfiguration`) only while no choice
+  is stored — both only when the team has ≥ 2 options (v1 rule). Picking before the start only sets where
+  the member starts (the start teleports them there); picking from a picker opened after a respawn
   teleports immediately **and** becomes the new current choice; picking from the Information menu's
-  "Change spawnpoint" (`/siege menu`) only sets the choice. Contested objectives (§7.2) can't be picked;
+  "Change spawnpoint" (`/siege menu`, shown from the team split on) only sets the choice. Contested objectives (§7.2) can't be picked;
   checked at click time. When an objective is captured, members who had chosen it get their team's
   default spawnpoint as their choice and a chat message pointing to `/siege menu` (Information → Change
   spawnpoint). *(Updated 2026-09-26, smoke test: the picker no longer opens after every respawn.)*
@@ -769,10 +773,10 @@ the main thread and hold no Bukkit mutators.
 | `/siege info [lobbyKey]` | `knk.siege.play` | Status in chat (still chat-only) |
 | `/siege vote <scenario\|random>` | `knk.siege.play` | Chat voting, alongside the menu |
 | `/siege spawn [option]` | `knk.siege.play` | Opens the spawn picker / sets the spawn choice |
-| `/siege skip <lobbyKey>` | `knk.siege.skip` | Skips cooldown, or shortens matchmaking to 1 minute left (v1 donator perk; grantable to a premium group via the permission system) |
+| `/siege skip <lobbyKey>` | `knk.siege.skip` | Skips cooldown, or shortens matchmaking to `SiegeConfiguration.PlayerSkipMatchmakingSeconds` left (default 60; never under one second before voting closes) — web app Siege settings → "Skipping matchmaking" (playtest 2026-10-24; v1 donator perk, grantable to a premium group via the permission system) |
 | `/siege admin list` | `knk.siege.admin.list` | All lobbies, phases, members |
 | `/siege admin start\|stop <lobbyKey> [reason]` | `knk.siege.admin.control` | Start matchmaking now / abort (restore, no rewards) — replaces v2's always-throwing `/siege remove` |
-| `/siege admin skip <lobbyKey>` | `knk.siege.admin.control` | v2 `skipStage` semantics, fixed (N9): cooldown → matchmaking; matchmaking → T-31 |
+| `/siege admin skip <lobbyKey>` | `knk.siege.admin.control` | v2 `skipStage` semantics, fixed (N9): cooldown → matchmaking; matchmaking → `SiegeConfiguration.AdminSkipMatchmakingSeconds` left (default 31 = T-31, same floor) |
 | `/siege admin kick <player>` | `knk.siege.admin.control` | Remove a member (restore applies) |
 | `/siege admin reload` | `knk.siege.admin.reload` | Refresh lobby/scenario config for lobbies not in a match |
 | `/siege admin manage …` | `knk.siege.admin.manage` | Pointer to the web-app forms (Kits `/kit manage` precedent) |
