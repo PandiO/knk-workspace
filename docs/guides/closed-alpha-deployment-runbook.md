@@ -1,7 +1,7 @@
 # Closed-alpha deployment runbook
 
-**Status:** In progress — phases 0–3 complete; phase 3b (API upgrade to the KNG-64 build, [KNG-227](https://linear.app/kngpandi/issue/KNG-227)) complete 2026-10-22 ([report](../reports/2026-10-22-alpha-api-kng64-upgrade.md)); API updated to `4aeb794` ([KNG-275](https://linear.app/kngpandi/issue/KNG-275)) and phase 4 Stage 2 (KnK plugin `d56e41da`, [KNG-225](https://linear.app/kngpandi/issue/KNG-225)) done 2026-10-24 ([report](../reports/2026-10-24-alpha-api-4aeb794-and-plugin-stage-2.md)); `/hub` waits for a hub selection in the approved seed. Phase 5 (playit.gg, `play.knightsandkings.net`) done 2026-10-24 ([report](../reports/2026-10-24-alpha-phase-5-playit.md)). Phase 6 (web app, `app.knightsandkings.net`, own tunnel, Access; API `a38c8ee9`) done 2026-10-24 ([report](../reports/2026-10-24-alpha-phase-6-web-ingress.md)). Security probe (go-live § 8) passed 2026-10-24 privately and through Cloudflare ([report](../reports/2026-10-24-alpha-security-probe.md)). HSTS and the apex redirect done the same day. Phase 7 deferred to beta (developer, 2026-10-24); the alpha uses manual snapshots (`scripts/alpha-snapshot/`). Next: the approved seed, Phase 9. Web hostname decided 2026-10-21: `app.knightsandkings.net`
-**Last updated:** 2026-10-24 (Phase 6 web and ingress; Phase 5 playit; Phase 4 Stage 2 and the API update to `4aeb794`; Phase 9: KNG-205 invitations merged, the feature-branch notes replaced); 2026-10-22; 2026-10-21 (Phase 9: invite-only switch-over, `mailrelay` and `cfproxy` containers — KNG-205/KNG-218); 2026-10-18
+**Status:** In progress — phases 0–3 complete; phase 3b (API upgrade to the KNG-64 build, [KNG-227](https://linear.app/kngpandi/issue/KNG-227)) complete 2026-10-22 ([report](../reports/2026-10-22-alpha-api-kng64-upgrade.md)); API updated to `4aeb794` ([KNG-275](https://linear.app/kngpandi/issue/KNG-275)) and phase 4 Stage 2 (KnK plugin `d56e41da`, [KNG-225](https://linear.app/kngpandi/issue/KNG-225)) done 2026-10-24 ([report](../reports/2026-10-24-alpha-api-4aeb794-and-plugin-stage-2.md)); `/hub` waits for a hub selection in the approved seed. Phase 5 (playit.gg, `play.knightsandkings.net`) done 2026-10-24 ([report](../reports/2026-10-24-alpha-phase-5-playit.md)). Phase 6 (web app, `app.knightsandkings.net`, own tunnel, Access; API `a38c8ee9`) done 2026-10-24 ([report](../reports/2026-10-24-alpha-phase-6-web-ingress.md)). Security probe (go-live § 8) passed 2026-10-24 privately and through Cloudflare ([report](../reports/2026-10-24-alpha-security-probe.md)). HSTS and the apex redirect done the same day. Phase 7 deferred to beta (developer, 2026-10-24); the alpha uses manual snapshots (`scripts/alpha-snapshot/`). Phase 9 done 2026-10-24: mail relay, Access sync and bypass, sign-up by invitation, admission gate with the whitelist off ([report](../reports/2026-10-24-alpha-phase-9-invite-only.md)). Next: the approved seed, then the first alpha run. Web hostname decided 2026-10-21: `app.knightsandkings.net`
+**Last updated:** 2026-10-24 (Phase 9 E0 mail relay live; Phase 6 web and ingress; Phase 5 playit; Phase 4 Stage 2 and the API update to `4aeb794`; Phase 9: KNG-205 invitations merged, the feature-branch notes replaced); 2026-10-22; 2026-10-21 (Phase 9: invite-only switch-over, `mailrelay` and `cfproxy` containers — KNG-205/KNG-218); 2026-10-18
 **Progress report:** [2026-10-11 closed-alpha infrastructure progress](../reports/2026-10-11-closed-alpha-infrastructure-progress.md)
 **Handoff:** [2026-10-11 closed-alpha infrastructure](../ai-agents/handoffs/2026-10-11-closed-alpha-infrastructure.md)
 **Security layer:** [closed alpha go-live (KNG-64)](alpha-go-live.md) — required builds, API/plugin configuration,
@@ -475,7 +475,7 @@ clone the stack, never upgrade the only alpha copy in place, compile and test
 all plugins, inspect Paper's conversion output, and validate both worlds
 before scheduling a cutover.
 
-## Phase 9 — invite-only switch-over (KNG-218; prepared, not started)
+## Phase 9 — invite-only switch-over (KNG-218; **done 2026-10-24**)
 
 Merged to every trunk on 2026-10-24 (all four repos) and smoke-tested on dev. Design: [invitations DESIGN](../specs/invitations/DESIGN.md); how it works:
 [account identity and admission](../architecture/account-identity-and-admission.md). **Preconditions:** the feature is
@@ -486,8 +486,8 @@ after KNG-182), and the [invitations smoke test](invitations-smoke-test.md) § 0
 
 | Service | Purpose | Networks | Guide |
 |---|---|---|---|
-| `mailrelay` | SMTP relay holding the Gmail (later provider) credentials, so the API itself needs no internet (KNG-211, E0) | `backend`, `mail-egress` | [email guide § 3](email.md) |
-| `cfproxy` | tinyproxy that only allows `api.cloudflare.com:443`, for the Access list sync (KNG-216) | `backend`, `mail-egress` | [alpha go-live § 6.1](alpha-go-live.md) |
+| `mailrelay` | SMTP relay holding the Gmail (later provider) credentials, so the API itself needs no internet (KNG-211, E0). **Live 2026-10-24** ([report](../reports/2026-10-24-alpha-phase-9-invite-only.md), [`scripts/alpha-mail/`](../../scripts/alpha-mail/README.md)) | `mail` (internal, `172.31.250.16/28`, with the API), `mail-egress` | [email guide § 3](email.md) |
+| `cfproxy` | tinyproxy that only allows `api.cloudflare.com:443`, for the Access list sync (KNG-216) | `mail`, `mail-egress` | [alpha go-live § 6.1](alpha-go-live.md) |
 
 **API keys added** (in `/etc/knk/api.env` through the existing secret wrapper; full block in
 [alpha go-live § 4.1](alpha-go-live.md)): `Security__Registration__Mode`, `Invitations__*` (defaults are fine),

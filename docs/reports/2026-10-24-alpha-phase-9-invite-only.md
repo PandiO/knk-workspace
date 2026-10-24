@@ -1,0 +1,131 @@
+# Closed alpha Phase 9: invite-only switch-over (mail relay, Access sync, sign-up, gate) — 2026-10-24
+
+**Status:** Done. The alpha runs invite-only: mail relay (§ 1–5), Access sync and sign-up bypass (§ 6), sign-up by invitation (§ 7), the admission gate with the whitelist off (§ 8), alpha checks (§ 9)
+**Last updated:** 2026-10-24
+**Linear:** [KNG-211](https://linear.app/kngpandi/issue/KNG-211) (E0), part of [KNG-218](https://linear.app/kngpandi/issue/KNG-218) (Phase 9)
+**Runbook:** [closed-alpha deployment runbook](../guides/closed-alpha-deployment-runbook.md) Phase 9 ·
+[alpha go-live](../guides/alpha-go-live.md) § 4 · **Build files:** [`scripts/alpha-mail/`](../../scripts/alpha-mail/README.md)
+
+The developer ran every NAS command in an SSH session. Claude Code (cloud session) wrote the blocks and rehearsed them in
+a scratch Docker host first. The Gmail app password was typed at a hidden `read -rs` prompt on the NAS; it was never
+printed, logged or recorded.
+
+## 1. Design
+
+| Item | Value |
+|---|---|
+| Image | `boky/postfix:v5.1.0@sha256:aafc772384232497bed875e1eb66b4d3e54ba1ebc86e2e185a6dc1dbc48182ef` (same digest on the NAS) |
+| Relay | `[smtp.gmail.com]:587`, user `knightsandkingsmc@gmail.com`, password from `RELAYHOST_PASSWORD_FILE`; `smtp_tls_security_level=encrypt` |
+| Accepts | clients from `172.31.250.16/28` only (`POSTFIX_mynetworks`), senders `@gmail.com` only; IPv4 only |
+| Hardening | `cap_drop: ALL` + CHOWN, DAC_OVERRIDE, FOWNER, SETUID, SETGID, NET_BIND_SERVICE, KILL; `no-new-privileges`; no ports; json-file logs 3 × 10 MB. Postfix runs as root and drops to its own users, so no fixed UID |
+| Networks | new `mail` (internal, `172.31.250.16/28`: api, mailrelay; later `cfproxy`) and `mail-egress` (internet: mailrelay). This replaces the earlier plan (`backend` + `mail-egress`): the relay can't reach MySQL |
+| API | joins `mail`; `Email__Transport=Smtp`, `SmtpHost=mailrelay`, `SmtpPort=587`, `UseStartTls=false`, `SmtpUsername` empty, `FromAddress=knightsandkingsmc@gmail.com`; `Email__AllowLogTransport` removed. Same image `alpha-a38c8ee9`, no migration |
+| Secret | `secrets/gmail_app_password`: a Gmail app password (16 letters), `root:root 600` |
+
+Scratch rehearsal (same block, API `a38c8ee9`): relay healthy; `@gmail.com` sender from `mail` → `250 queued`; other sender
+→ `554 Access denied`; client outside `mynetworks` → `554 Client host rejected`; the API's forgot-password mail reached
+`mailrelay:587`.
+
+## 2. What was changed on the NAS
+
+| Item | Value |
+|---|---|
+| Snapshot | `knk-alpha-snapshot pre-mailrelay` (world 3.0 GB) before the switch |
+| Compose | `32367622…` → **`00659fef998f83f4b01eb30b5594275615e90f5d94a26650e4cce5a4b65077d6`**, Portainer stack 42 identical; backup in `backups/<TS>/`. The diff removed only the three Log-transport lines; everything else was additions |
+| Start | `up -d --no-deps mailrelay api`: networks `knk-alpha_mail` and `knk-alpha_mail-egress` created; both `healthy`. API on `backend`, `webapi`, `mail` (`172.31.250.18`); mailrelay on `mail` (`172.31.250.19`) and `mail-egress`. No ports |
+| Logs | API: 0 refuse/key lines. Relay: the image's notice that it upgrades `hash:` maps to `lmdb:`, and two Postfix warnings that `postqueue`/`postdrop` aren't set-gid. Those two are only used for mail submitted inside the container (the `sendmail` command); the API uses SMTP, so they don't matter. Secret in logs: 0 |
+| `knk-ops` | `secret-files` expects `gmail_app_password` (wrapper `8b41b0a2…`); `compose` records `00659fef…` (wrapper `2937b76b…`). Both match `scripts/nas-ops/stage-a/SHA256SUMS` |
+
+## 3. Tests
+
+| Test | Result |
+|---|---|
+| `/admin/email` → *Send test mail to me* | arrived |
+| Forgot password | the mail arrived; the link starts with `https://app.knightsandkings.net` |
+| Relay log | `TLS connection established to smtp.gmail.com`, `status=sent (250 2.0.0 OK …)` |
+| Relay stopped, forgot password | the page gave the generic answer; the API logged a failed attempt with a next try (outbox retry) |
+| Relay started again | the outbox retried with its backoff and the mail arrived |
+| `ssh knk-nas-ops compose` / `secret-files` | `matches_recorded: true`; 8 files incl. `gmail_app_password` `root:root 600`, `missing: []` |
+
+## 4. Notes
+
+- Gmail sends as `knightsandkingsmc@gmail.com` whatever the From. Free Gmail allows about 500 recipients a day, far
+  above the alpha's needs (the API's hourly throttle stays below it).
+- The app password stops working if the Google account password changes or 2-Step Verification is turned off.
+  Then mail stays in the outbox (`/admin/email` shows the failures) until a new app password is in the secret file and
+  the relay is restarted (`up -d --no-deps --force-recreate mailrelay`).
+- Emergency fallback: `Email__Transport=Log` with `Email__AllowLogTransport=true` (links go to the API log).
+
+## 5. Next
+
+Phase 9 step 2, KNG-216: `cfproxy` on `mail` + `mail-egress`, the Cloudflare list `knk-api-testers`, the policy, the API
+token, the bypass application and the `CloudflareAccess__*` settings (go-live § 6.1).
+
+## 6. Addendum, later the same day: Access sync and the sign-up bypass (KNG-216)
+
+Phase 9 step 2 ([KNG-216](https://linear.app/kngpandi/issue/KNG-216), go-live § 6.1). Files:
+[`scripts/alpha-cfproxy/`](../../scripts/alpha-cfproxy/README.md), `scripts/alpha-api/api-entrypoint.sh`,
+`scripts/alpha-api/compose.api-service.yaml`.
+
+| Item | Result |
+|---|---|
+| `cfproxy` | Own image `knk-cfproxy:alpha-1` (Alpine 3.22, tinyproxy 1.11.2, built on the NAS; `vimagick/tinyproxy:1.11.2` from the guide doesn't exist). UID 2004, read-only, no ports, `mail` + `mail-egress`, healthy. From the API: `example.com` → 403 |
+| Token | Account API token `knk-alpha access sync` (*Manage Account → Account API tokens*): **Zero Trust Read + Write only**, IP filter = the home IPv4, no expiry. `secrets/cloudflare_api_token` (`2002:2002 600`); `api-entrypoint.sh` (mounted from `config/api/`) exports it. Not in `docker inspect` or the logs. `accounts/{id}/tokens/verify` → active (the `user/tokens/verify` endpoint doesn't know account tokens) |
+| Settings | `config/api/cloudflare-access.env` (root 600, `env_file`): `SyncEnabled`, `AccountId`, `ListId`; `ProxyUrl` in Compose |
+| Compose | `00659fef…` → **`b849fa1e20de55538f2a772966107729cdbcf2dbb0f2dd1652d5d54820b605c6`**, Portainer identical; `knk-ops` `compose` and `secret-files` (expects `cloudflare_api_token`) updated |
+| List | `knk-api-testers` (type EMAIL). Before turning the sync on, the desired set was checked: only the developer's three accounts (`__pandi__`, `admin`, `alpha-probe`), no testers yet |
+| Sync on | `SyncEnabled=true` + recreate: `Cloudflare Access sync: 2 added, 1 removed, 3 in the list`; `/admin/invitations` *Access sync: last OK · 0 pending · 3 on the list* |
+| Policy | `KnK alpha`: new policy `Allow testers` (Allow, Include Email list `knk-api-testers`) next to `Allow staff` and `Probe service token`; session duration 1 month |
+| Bypass | Application `KnK sign-up (bypass)`, policy `Bypass sign-up` (Bypass, Everyone): `/invite`, `/invite/*`, `/join*`, `/link*`, `/static/*`, `/favicon.ico`, `/manifest.json`, `/logo*.png`, `/api/Invitations/check`, `/api/Admission/claim/check`, `/api/Auth/register` |
+
+Checks (2026-10-24):
+- `curl` without cookies: `/`, `/account`, `/api/Users/1`, `/api/health`, `/admin/invitations` → 302 to the Access
+  login; `/invite/x`, `/join`, `/link`, `/favicon.ico`, `/manifest.json` → 200.
+- A personal invite to a test address: the list went to 4 within seconds, the invite mail arrived and its link opened
+  without the Access login; revoking it took the list back to 3.
+- The admin line updates on the page's *Refresh* button, not by itself (the status is read when the page loads).
+- The yellow "Sign-up with invitations is off (Mode is LinkCode)" banner is expected until step 3.
+
+Kill switch: `CloudflareAccess__SyncEnabled=false` in `config/api/cloudflare-access.env`, then
+`up -d --no-deps --force-recreate api`. Deleting the bypass application closes sign-up again.
+
+## 7. Addendum: sign-up by invitation (Phase 9 step 3)
+
+`Security__Registration__Mode: Invite` added to the `api` block (after `AllowWebFirst`); Compose `b849fa1e…` →
+**`7bbcb8af0639eb2b004b60c0b08f8de3751a7f829e7732dbfd75c3023f745407`**, Portainer identical, `knk-ops` updated. API
+healthy, no fail/crit lines. Developer test (private window): the yellow banner on `/admin/invitations` is gone; a
+personal invite to a test alias → sign-up from the mail link → the done page announced the Cloudflare PIN → the list
+went to 4 → the PIN mail arrived → login → `/account/link`. Kill switch: `Mode: LinkCode`.
+
+**Developer feedback:** invitees shouldn't have to do the Cloudflare PIN after signing up in the app. The design
+(invitations DESIGN § 5.8) accepts one PIN per device per 30 days. Options weighed: keep it; Google as an extra Access login method; remove Access from the site (the KNK login alone); KnK as Access's OIDC provider. **Decision (developer, 2026-10-24): keep it as is for the alpha**; revisit for the beta on the VPS.
+
+## 8. Addendum: the admission gate, whitelist off (Phase 9 step 4)
+
+| Item | Result |
+|---|---|
+| Before | Whitelist `MrBedue`, `__pandi__`, `__dominic14__`; `__pandi__` and `MrBedue` have admitted accounts, `__dominic14__` (the developer's second account) had none |
+| Plugin | `plugins/KnightsAndKings/config.yml` (`2001:2001 600`; `web.public-url` was already set): `admission:` appended with `mode: invite`, `api-timeout-ms: 3000`, `link-url: ""` |
+| Compose | `minecraft`: `ENABLE_WHITELIST` and `ENFORCE_WHITELIST` `"TRUE"` → `"FALSE"` (the itzg image rewrites `server.properties` from them at every start, so `/whitelist off` alone wouldn't last). `7bbcb8af…` → **`1070b55c0aa25cf0d0c00f95f8f7f3ef7447f905b7133f07620a5b520b68aca5`**, Portainer identical, `knk-ops` updated. Backups `backups/20261024T201407Z/` (Compose, stack copy, `config.yml`) |
+| Restart | `save-all flush`, `up -d --no-deps minecraft`: healthy; `[KnK Admission] admission.mode=invite`; `white-list=false`, `enforce-whitelist=false`, `online-mode=true`; no ERROR/SEVERE, no link-URL warning |
+| In game | `__pandi__` joins. `__dominic14__` got the disconnect screen with a claim code (the same code on rejoin), linked it on `/account/link` with the `+t2` invite account, then got in with the first-join welcome. Log: `Refused __dominic14__ (<uuid>): admission.kick`, no code in any refusal line |
+
+Kill switch: restore `config.yml` and the Compose file from the backup (gate off, whitelist on), copy to Portainer,
+`save-all flush`, `up -d --no-deps minecraft`.
+
+## 9. Alpha checks (switch-over step 5, smoke test § 9)
+
+| Check | Result |
+|---|---|
+| Invite-code guessing through Cloudflare (`POST /api/Invitations/check`) | 10 × 200 with the generic "invalid" answer, then 429 |
+| Claim-code guessing (`POST /api/Admission/claim/check`) | 20 × 200, then 429 |
+| Mail limit (personal invite + 4 resends) | first three mails Sent, the 4th Suppressed, the 4th resend refused |
+| Revoked invite link from the mail | generic "invalid or has expired" page |
+| Five wrong claim codes on `/account/link` (invited, unlinked account) | the sixth try: "Too many attempts. Try again in 15 minutes." |
+| Expired claim code (§ 4 step 15), gate-off kill switch (§ 6) | **not run on the alpha**: they need a never-joined Minecraft account, and both passed on dev. Run them when a new tester joins, if wanted |
+
+Test accounts left behind: the `+t2` account (linked to `__dominic14__`), the `+t4` account (unlinked), `alpha-probe`.
+Delete or deactivate them before the first run if the tester count should be clean (they use Access seats only when
+they log in).
+
+Phase 9 is complete. Next: the approved seed (hub selection), then the first alpha run with the § 10 invite.

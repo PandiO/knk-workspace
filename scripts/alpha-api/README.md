@@ -29,6 +29,8 @@ Deployed builds:
 - `4aeb7947` on 2026-10-24 (KNG-275), [report](../../docs/reports/2026-10-24-alpha-api-4aeb794-and-plugin-stage-2.md).
   From this build the API refuses the Log mail transport outside Development, so the Compose block sets
   `Email__Transport=Log` with `Email__AllowLogTransport=true` until the mail relay (KNG-211) exists.
+- Phase 9 E0 (KNG-211, 2026-10-24): same image, mail through `mailrelay` (`Email__Transport=Smtp`, network `mail`,
+  [`scripts/alpha-mail/`](../alpha-mail/README.md)).
 
 For each update:
 1. Rehearse it with the previous migrator first, then the new one.

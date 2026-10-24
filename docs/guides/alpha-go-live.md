@@ -4,7 +4,7 @@
 (the Codex NAS rollout). Not yet followed end to end. 2026-10-21: web hostname decided (`app.knightsandkings.net`),
 DNS in Cloudflare, Minecraft console/autostart/plugin updates ([KNG-225](https://linear.app/kngpandi/issue/KNG-225)).
 2026-10-22: § 3 (API upgrade) done on the NAS ([KNG-227](https://linear.app/kngpandi/issue/KNG-227)); § 3–4 corrected from that run.
-**Last updated:** 2026-10-24 (KNG-205 invitations merged: the feature-branch notes replaced; settings as before, all off until § 11.1); 2026-10-22; 2026-10-21 (KNG-218, invitations chain link 7: § 4.1 settings after the invite-only switch-over, § 5.1 admission gate instead of the whitelist, § 9 F2, § 10 invite mail, § 11 kill switches and **§ 11.1 the switch-over steps**, § 12); 2026-10-21 (§ 6.1: Cloudflare Access sync, `cfproxy`, the sign-up bypass — KNG-216, feature branch; § 4: `Email__AllowLogTransport` for API builds with the KNG-206 email engine; notes pointing to the KNG-205 invitations plan); 2026-10-18
+**Last updated:** 2026-10-24 (Phase 9 done: invite-only live, § 10 invite text, § 11.1; Phase 9 E0: the mail relay is live, § 4 mail block is SMTP; KNG-205 invitations merged: the feature-branch notes replaced; settings as before, all off until § 11.1); 2026-10-22; 2026-10-21 (KNG-218, invitations chain link 7: § 4.1 settings after the invite-only switch-over, § 5.1 admission gate instead of the whitelist, § 9 F2, § 10 invite mail, § 11 kill switches and **§ 11.1 the switch-over steps**, § 12); 2026-10-21 (§ 6.1: Cloudflare Access sync, `cfproxy`, the sign-up bypass — KNG-216, feature branch; § 4: `Email__AllowLogTransport` for API builds with the KNG-206 email engine; notes pointing to the KNG-205 invitations plan); 2026-10-18
 **Applies to:** builds that **include KNG-64**: knk-web-api `master` ≥ `30c5dc5`, knk-web-app `main` ≥ `98c0a76`,
 knk-plugin `main` ≥ `34c9261`. **Never expose an older API.**
 **Linear:** [KNG-64](https://linear.app/kngpandi/issue/KNG-64) (parent), [KNG-68](https://linear.app/kngpandi/issue/KNG-68) (this guide)
@@ -137,16 +137,16 @@ ForwardedHeaders__KnownNetworks=<subnet nginx shares with api, e.g. 172.30.0.0/2
 # Region callbacks to the plugin's RegionHttpServer, over service DNS (the plugin binds 0.0.0.0 inside its container).
 MinecraftPlugin__BaseUrl=http://minecraft:8081
 
-# Planned 2026-10-21 (KNG-211): an SMTP relay container gives mail a way out; see invitations IMPLEMENTATION_PLAN § 2.
-# The backend network has no internet access, so SMTP can't work there. Use Log: reset links go to the API log,
-# and you relay them. To send real mail, give the API an egress network and Email__SmtpPassword from a secret file.
-# No paid mailbox is needed for the alpha: E0 (KNG-211) relays through the free knightsandkingsmc@gmail.com account.
+# Live since 2026-10-24 (KNG-211, E0): mail goes through the stack's mailrelay container (network mail) to the free
+# knightsandkingsmc@gmail.com account; the API itself has no internet. Block: scripts/alpha-mail/.
 # Receiving support@knightsandkings.net can use Cloudflare Email Routing (free) to forward to that Gmail.
-Email__Transport=Log                                # must be set: appsettings.json defaults to Smtp (Email__Provider is the pre-KNG-206 name)
-# REQUIRED from the API build with the email engine (KNG-206, merged 2026-10-24) on: outside Development the API refuses to start with
-# the Log transport unless this is true. Keep it only while there is no relay; once E0's relay works, switch to
-# Email__Transport=Smtp (docs/guides/email.md) and remove this line. Afterwards set it only in an emergency.
-Email__AllowLogTransport=true
+Email__Transport=Smtp
+Email__SmtpHost=mailrelay
+Email__SmtpPort=587
+Email__UseStartTls=false                            # internal hop; the relay does TLS to Gmail
+Email__SmtpUsername=                                # empty: the relay holds the Gmail app password
+Email__FromAddress=knightsandkingsmc@gmail.com
+# Emergency only (relay broken): Email__Transport=Log plus Email__AllowLogTransport=true; reset links go to the API log.
 App__PublicBaseUrl=https://app.knightsandkings.net  # links in invitation, reset and admission messages (KNG-205)
 Telemetry__Enabled=false                            # already set
 ```
@@ -193,7 +193,7 @@ Security__Registration__Mode=Invite
 # Admission (defaults): claim codes live 15 min; invited accounts unlinked after 2 days get one reminder mail (0 = off).
 # Admission__ClaimCodeMinutes=15  Admission__FinishLinkingReminderDays=2
 
-# Cloudflare Access sync (§ 6.1): on from § 11.1 step 2. ApiToken lives only in /etc/knk/api.env (mode 600).
+# Cloudflare Access sync (§ 6.1): on from § 11.1 step 2. ApiToken: alpha secrets/cloudflare_api_token (KNG-216).
 CloudflareAccess__SyncEnabled=true
 CloudflareAccess__AccountId=<account id>
 CloudflareAccess__ListId=<id of knk-api-testers>
@@ -385,42 +385,12 @@ that was invited or grandfathered. A second Access application opens only the si
 before their address is on the list. Do the steps in this order; nothing changes for testers until step 7.
 
 **1. Forward proxy (`cfproxy`).** The API has no internet on purpose, so its Cloudflare calls go through a small
-proxy that allows only `api.cloudflare.com:443`. Add to the `knk-alpha` stack:
+proxy that allows only `CONNECT api.cloudflare.com:443`. On the alpha it's tinyproxy, built on the NAS as
+`knk-cfproxy:alpha-1` from [`scripts/alpha-cfproxy/`](../../scripts/alpha-cfproxy/README.md) (config baked in, UID 2004,
+read-only), on the networks `mail` (with the API; the only allowed client subnet) and `mail-egress`.
 
-```yaml
-  cfproxy:
-    image: vimagick/tinyproxy:1.11.2        # pin the tag you test; no :latest
-    restart: unless-stopped
-    networks: [backend, mail-egress]        # backend: the API reaches it; mail-egress: the network with internet
-    volumes:
-      - /etc/knk/cfproxy/tinyproxy.conf:/etc/tinyproxy/tinyproxy.conf:ro
-      - /etc/knk/cfproxy/filter:/etc/tinyproxy/filter:ro
-```
-
-`/etc/knk/cfproxy/tinyproxy.conf`:
-
-```
-Port 8888
-Listen 0.0.0.0
-Timeout 30
-MaxClients 10
-LogLevel Info
-Allow <backend subnet, e.g. 172.20.0.0/16>
-ConnectPort 443
-FilterDefaultDeny Yes
-FilterExtended Yes
-Filter "/etc/tinyproxy/filter"
-```
-
-`/etc/knk/cfproxy/filter` (one line):
-
-```
-^api\.cloudflare\.com$
-```
-
-Check from the API container: `curl -sS -x http://cfproxy:8888 https://api.cloudflare.com/client/v4/ -o /dev/null -w '%{http_code}\n'`
-answers (any HTTP code, e.g. 400/404, means the proxy let it through), and `curl -x http://cfproxy:8888 https://example.com`
-is refused (403 from tinyproxy).
+Check from the stack: a `CONNECT` to `api.cloudflare.com:443` through `cfproxy:8888` is answered 200, `example.com`
+gets 403 from tinyproxy.
 
 **2. The list.** Zero Trust → *My Team* → *Lists* (or *Reusable components → Lists*) → *Create list*: name
 **`knk-api-testers`**, type **User email addresses**. Add **one staff address** so the list is never empty. Note the
@@ -432,8 +402,9 @@ list → `knk-api-testers`** rule. Keep the existing hand-made *Emails* include 
 Set the application's **session duration to 30 days** (it was 24 h), so the PIN is rare.
 
 **4. The API token.** *My Profile → API Tokens → Create custom token*: permission **Account → Zero Trust → Edit**,
-account resources **only this account**, no zone permissions. Put it in `/etc/knk/api.env` (mode 600) as
-`CloudflareAccess__ApiToken=…`. Never in compose files, appsettings or a ticket.
+account resources **only this account**, no zone permissions. On the alpha it goes in
+`secrets/cloudflare_api_token` (`2002:2002 600`); `scripts/alpha-api/api-entrypoint.sh` exports it as
+`CloudflareAccess__ApiToken`. Never in compose files, appsettings or a ticket.
 
 **5. The bypass application.** Access → *Add an application → Self-hosted*, same hostname `app.knightsandkings.net`, name
 "KnK sign-up (bypass)", with these paths (Access uses the most specific path, so everything else stays behind *Allow
@@ -447,7 +418,8 @@ testers*):
 
 One policy: **Action Bypass, Include Everyone**. The WAF rule on `/api/Auth/` stays.
 
-**6. The API settings** (in `/etc/knk/api.env` next to the token):
+**6. The API settings.** On the alpha `ProxyUrl` is in the Compose block; the other three are in
+`config/api/cloudflare-access.env` (root 600, an `env_file`), so the kill switch needs no Compose edit:
 
 ```bash
 CloudflareAccess__AccountId=<account id>
@@ -581,29 +553,23 @@ and through Cloudflare ([report](../reports/2026-10-24-alpha-security-probe.md))
 
 ## 10. Tester invite (template)
 
-**After the invite-only switch-over** (§ 11.1; merged 2026-10-24, off until then) the invite **is** the system mail: create a
-personal invite on `/admin/invitations` and the API sends it (expires in 7 days; *Resend* gives a fresh link). The
-mail links `/invite/<token>`; the tester signs up, gets the Cloudflare PIN, then joins the server and enters the code
-shown on the disconnect screen on `/account/link`. For a **shared code** (Discord, a friend group) post this short text
-with the code from the result panel:
+**Invite-only since 2026-10-24** (§ 11.1). The invite **is** the system mail: create a personal invite on
+`/admin/invitations` (group **Alpha Tester**) and the API sends it. It expires in 7 days; *Resend* gives a fresh link
+(3 mails per address per hour, 3 resends a day). The tester:
+1. opens `/invite/<token>` from the mail and signs up (no Cloudflare step yet);
+2. opens the site: Cloudflare emails a one-time PIN, once per device per 30 days;
+3. joins **play.knightsandkings.net**, gets a code on the disconnect screen and enters it on `/account/link`;
+4. joins again and plays.
+
+Players who already had an account (grandfathered) just join. For a **shared code** (Discord, a friend group) post this
+short text with the code from the result panel:
 
 > Knights & Kings closed alpha: sign up at **https://app.knightsandkings.net/join** with code `KNK-XXXXX-XXXXX` (valid until
-> <date>, <n> places). Then join **play.knightsandkings.net** (Java Edition 26.3): you'll get a code on screen; enter
-> it on the website to link your Minecraft account. Never give that code to anyone; staff never ask for it.
-> Bugs or questions: <channel>. This is an alpha: progress may be reset.
+> <date>, <n> places). Cloudflare then emails you a one-time PIN to open the site. Join **play.knightsandkings.net**
+> (Java Edition 26.3): you'll get a code on screen; enter it on the website to link your Minecraft account. Never give
+> that code to anyone; staff never ask for it. Bugs or questions: <channel>. This is an alpha: progress may be reset.
 
-**Before the switch-over** (today's alpha), the hand-sent text:
-
-> Welcome to the **Knights & Kings closed alpha**!
-> 1. Join the Minecraft server **play.knightsandkings.net** (Java Edition 26.3). Your name is on the whitelist.
-> 2. In game, type `/account link`. You get an 8-character code (click it to copy).
-> 3. Open **https://app.knightsandkings.net**, enter this email address to get a one-time PIN, then choose **Create account** and
->    enter the code, your email and a password.
-> 4. From then on, you can log in with your Minecraft name or your email.
->
-> Found a bug or something confusing? Send it to <channel> with what you did, what you expected, and a screenshot.
->
-> This is a closed **alpha**: things will break, and your progress may be **reset** between or during test runs.
+The whitelist text used before the switch-over is retired (git history has it).
 
 ---
 
@@ -623,6 +589,8 @@ with the code from the result panel:
   hand again); delete the bypass application (sign-up pages behind Access again). Each one alone is safe.
 
 ### 11.1 Switch-over to invite-only (KNG-218)
+
+**Done on the alpha 2026-10-24** ([report](../reports/2026-10-24-alpha-phase-9-invite-only.md) § 6–9): mail relay, Access sync and bypass, `Mode=Invite`, the gate with the whitelist off (Compose `ENABLE_WHITELIST`/`ENFORCE_WHITELIST: "FALSE"`, or the itzg image turns it back on at every start).
 
 *Merged to every trunk on 2026-10-24 and smoke-tested on dev ([smoke test](invitations-smoke-test.md), § 0–6 and § 8).
 Preconditions (plan § 8): E0's relay live (KNG-211), the merged builds deployed per [plan § 9](../specs/invitations/IMPLEMENTATION_PLAN.md#9-merge-and-deploy-order)
