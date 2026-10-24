@@ -1,7 +1,7 @@
 # Closed-alpha deployment runbook
 
-**Status:** In progress — phases 0–3 complete; phase 3b (API upgrade to the KNG-64 build, [KNG-227](https://linear.app/kngpandi/issue/KNG-227)) complete 2026-10-22 ([report](../reports/2026-10-22-alpha-api-kng64-upgrade.md)); API updated to `4aeb794` ([KNG-275](https://linear.app/kngpandi/issue/KNG-275)) and phase 4 Stage 2 (KnK plugin `d56e41da`, [KNG-225](https://linear.app/kngpandi/issue/KNG-225)) done 2026-10-24 ([report](../reports/2026-10-24-alpha-api-4aeb794-and-plugin-stage-2.md)); `/hub` waits for a hub selection in the approved seed. Phase 5 (playit.gg) is next. Web hostname decided 2026-10-21: `app.knightsandkings.net`
-**Last updated:** 2026-10-24 (Phase 4 Stage 2 and the API update to `4aeb794`; Phase 9: KNG-205 invitations merged, the feature-branch notes replaced); 2026-10-22; 2026-10-21 (Phase 9: invite-only switch-over, `mailrelay` and `cfproxy` containers — KNG-205/KNG-218); 2026-10-18
+**Status:** In progress — phases 0–3 complete; phase 3b (API upgrade to the KNG-64 build, [KNG-227](https://linear.app/kngpandi/issue/KNG-227)) complete 2026-10-22 ([report](../reports/2026-10-22-alpha-api-kng64-upgrade.md)); API updated to `4aeb794` ([KNG-275](https://linear.app/kngpandi/issue/KNG-275)) and phase 4 Stage 2 (KnK plugin `d56e41da`, [KNG-225](https://linear.app/kngpandi/issue/KNG-225)) done 2026-10-24 ([report](../reports/2026-10-24-alpha-api-4aeb794-and-plugin-stage-2.md)); `/hub` waits for a hub selection in the approved seed. Phase 5 (playit.gg, `play.knightsandkings.net`) done 2026-10-24 ([report](../reports/2026-10-24-alpha-phase-5-playit.md)). Phase 6 (web app and ingress) is next. Web hostname decided 2026-10-21: `app.knightsandkings.net`
+**Last updated:** 2026-10-24 (Phase 5 playit; Phase 4 Stage 2 and the API update to `4aeb794`; Phase 9: KNG-205 invitations merged, the feature-branch notes replaced); 2026-10-22; 2026-10-21 (Phase 9: invite-only switch-over, `mailrelay` and `cfproxy` containers — KNG-205/KNG-218); 2026-10-18
 **Progress report:** [2026-10-11 closed-alpha infrastructure progress](../reports/2026-10-11-closed-alpha-infrastructure-progress.md)
 **Handoff:** [2026-10-11 closed-alpha infrastructure](../ai-agents/handoffs/2026-10-11-closed-alpha-infrastructure.md)
 **Security layer:** [closed alpha go-live (KNG-64)](alpha-go-live.md) — required builds, API/plugin configuration,
@@ -361,7 +361,17 @@ Private acceptance before ingress:
 - after a NAS reboot (or `sudo systemctl restart docker`) the server comes back healthy on its own;
 - one jar swap through `plugins/update/` has been done and the startup log shows the new build.
 
-## Phase 5 — playit.gg and Minecraft DNS
+## Phase 5 — playit.gg and Minecraft DNS (complete)
+
+> **Done 2026-10-24** ([report](../reports/2026-10-24-alpha-phase-5-playit.md)):
+> - service `playit` (agent 1.0.12 pinned, `--secret-path` from `secrets/playit_secret`, UID 2003, read-only,
+>   network `egress` only), block in [`scripts/alpha-playit/`](../../scripts/alpha-playit/);
+> - the tunnel goes to `minecraft:25565`;
+> - **playit Premium, region Germany**: the free global tunnel ran through California (~155 ms from NL), now ~27 ms;
+> - `play.knightsandkings.net` is a playit **external domain**: Cloudflare NS `play` → `ns1/ns2.playit-dns.com`.
+>   A CNAME doesn't work, because playit routes Minecraft Java by the handshake hostname;
+> - Proxy Protocol is off (undecided).
+
 
 - Run the playit agent as its own Compose service, not an ad-hoc
   `docker run` command.
@@ -372,13 +382,15 @@ Private acceptance before ingress:
   registrar), point `play.knightsandkings.net` to the address assigned by
   playit according to playit's Minecraft custom-domain instructions. The
   record must be **DNS only** (grey cloud): Cloudflare's free proxy does not
-  carry Minecraft TCP.
+  carry Minecraft TCP. *As built:* not a CNAME but an NS delegation of `play` to
+  playit's DNS plus playit's *external domain* (see the status note above).
 - If playit assigns a non-default public port, use the required SRV record or
   request an allocation compatible with standard Java clients.
 
 Acceptance: a test player outside the LAN connects using
 `play.knightsandkings.net`; no router port-forward is required; scans from the
-internet cannot reach NAS MySQL/RCON/Portainer.
+internet cannot reach NAS MySQL/RCON/Portainer. (2026-10-24: the first two pass; the
+external scan is in go-live checklist § 9 D.)
 
 ## Phase 6 — web app and HTTP ingress
 

@@ -285,7 +285,12 @@ link URL; a stranger sees the five-line screen with a code; the server log says 
 admission.kick" without the code.
 
 **playit.gg:**
-- Follow runbook Phase 5.
+- Follow runbook Phase 5 (done 2026-10-24, [report](../reports/2026-10-24-alpha-phase-5-playit.md)).
+- **Custom domain:** playit routes Minecraft Java tunnels by the hostname in the handshake. A CNAME to the tunnel address
+  resolves but can't connect. Add `play.knightsandkings.net` as a playit *external domain* (Cloudflare NS record `play`
+  → `ns1.playit-dns.com`/`ns2.playit-dns.com`, then *Change domain* on the tunnel). This needs Premium.
+- **Region:** the free tunnel uses global anycast and ran through California (~155 ms from NL). A Premium regional tunnel
+  (Germany) gives ~27 ms.
 - If the tunnel gets a non-default port, add an SRV record `_minecraft._tcp.play`, so testers can still type
   `play.knightsandkings.net`.
 - Paper sees playit's address, not the player's. If your playit tunnel offers Proxy Protocol, enable it there and in
@@ -507,7 +512,7 @@ Both must end with `ALL CHECKS PASSED`. The last check trips the login rate limi
 ## 9. Go-live checklist
 
 **A. Code**
-- [ ] The API runs a KNG-64 build (`master` ≥ `30c5dc5`), and 78 migrations are applied (§ 3).
+- [ ] The API runs a KNG-64 build (`master` ≥ `30c5dc5`), and the migration count of the built source is applied (§ 3; 93 for `4aeb7947`).
 - [ ] The web app and plugin come from KNG-64 builds (§ 2). The plugin has the KNG-114 loader.
 
 **B. Secrets and config**
