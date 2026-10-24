@@ -22,19 +22,21 @@ Run on the dev server with the four branches merged locally in knk-web-api and k
 The builder has no UI for step conditions yet, so they are authored through the API: `GET /api/FormConfigurations/<F>`, edit the JSON, `PUT /api/FormConfigurations/<F>` with the whole body.
 
 7. **Default is active.** In the GET body, every entry under a field's `validations` and a step's `conditions` (if any) carries `"isActive": true`; the configuration itself has **no** `isActive` property. Expected: no `false` anywhere unless you set one before.
-8. **Add a completion condition** to the first step of the District form, without an `isActive`:
+   *What is being tested:* a **step condition** (`conditions` on a step) is a third thing next to a field's **Required** checkbox and a field's **validation rules**. Required is checked first on Next; a step condition is a rule over the step's values that the builder can't author yet, so it is added through the API here.
+8. **Add a completion condition** to the **Region and access** step (its Boolean fields are optional, so Required can't get in the way), without an `isActive`:
    ```json
    { "conditionType": "Completion",
-     "conditionJson": "{\"conditions\":[{\"fieldName\":\"Description\",\"operator\":\"IsNotEmpty\"}]}",
-     "errorMessage": "Fill in the description before you continue." }
+     "conditionJson": "{\"conditions\":[{\"fieldName\":\"AllowEntry\",\"operator\":\"Equals\",\"value\":true}]}",
+     "errorMessage": "Allow entry before you continue." }
    ```
    PUT, then GET again. Expected: the condition is stored with `"isActive": true` (a request without the flag means active).
-9. **It blocks Next.** Open the District in the wizard (Edit), clear **Description** on step 1, click **Next**. Expected: toast "Fill in the description before you continue.", the wizard stays on step 1, nothing is saved. Before KNG-186 this condition never ran.
-10. **It passes when met.** Fill Description, Next. Expected: step 2.
-11. **Switched off.** PUT the condition with `"isActive": false`, GET shows `false`. Clear Description, Next. Expected: step 2, no toast.
+9. **It blocks Next.** Open the District in the wizard (Edit), go to **Region and access**, untick **Allow entry**, click **Next**. Expected: a red **toast** (the notification that slides in at the page edge, from `ToastRegion`; not a field border) saying "Allow entry before you continue.", the wizard stays on this step, nothing is saved. Before KNG-186 this condition never ran.
+10. **It passes when met.** Tick Allow entry, Next. Expected: the next step.
+11. **Switched off.** In the GET body set that condition's `"isActive": false` and PUT the whole body back; GET shows `false`. Untick Allow entry, Next. Expected: the next step, no toast. This proves the flag round-trips and that a stored `false` is the one thing that switches a condition off (until KNG-186 the API sent `false` for every condition).
 12. **Export/import keeps the flag.** Forms page → the District form → **Export**. Expected: the file shows `"isActive": false` on that condition and no `isActive` on active conditions or validations (so the shipped seed files are unchanged). Import the file as a non-default copy. Expected: the copy's condition is `false`; the copy's other rules are active.
 13. **Builder still saves.** Open the District form in the builder, change the description, Save. Expected: saves without error (the form configuration no longer sends `isActive`). Create a new configuration from scratch, Save, Expected: same.
 14. **Clean up:** PUT the District form without the test condition (or leave it `false`).
+    Findings so far (2026-10-24, developer): step 7 accepted, step 10 passes; step 9 was first written against the Required field Description, which the Required check catches before any condition runs, and was corrected to the optional Allow entry.
 
 ## 2. KNG-269 — the result log
 
