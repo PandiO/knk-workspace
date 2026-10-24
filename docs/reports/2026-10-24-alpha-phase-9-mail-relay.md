@@ -1,6 +1,6 @@
 # Closed alpha Phase 9 E0: mail relay `mailrelay` (KNG-211) — 2026-10-24
 
-**Status:** Live. The alpha API sends real mail through the stack's own Postfix relay to Gmail
+**Status:** Live. The alpha API sends real mail through the stack's own Postfix relay to Gmail. Addendum § 6: the Cloudflare Access sync and the sign-up bypass (KNG-216) are live too
 **Last updated:** 2026-10-24
 **Linear:** [KNG-211](https://linear.app/kngpandi/issue/KNG-211) (E0), part of [KNG-218](https://linear.app/kngpandi/issue/KNG-218) (Phase 9)
 **Runbook:** [closed-alpha deployment runbook](../guides/closed-alpha-deployment-runbook.md) Phase 9 ·
@@ -60,3 +60,31 @@ Scratch rehearsal (same block, API `a38c8ee9`): relay healthy; `@gmail.com` send
 
 Phase 9 step 2, KNG-216: `cfproxy` on `mail` + `mail-egress`, the Cloudflare list `knk-api-testers`, the policy, the API
 token, the bypass application and the `CloudflareAccess__*` settings (go-live § 6.1).
+
+## 6. Addendum, later the same day: Access sync and the sign-up bypass (KNG-216)
+
+Phase 9 step 2 ([KNG-216](https://linear.app/kngpandi/issue/KNG-216), go-live § 6.1). Files:
+[`scripts/alpha-cfproxy/`](../../scripts/alpha-cfproxy/README.md), `scripts/alpha-api/api-entrypoint.sh`,
+`scripts/alpha-api/compose.api-service.yaml`.
+
+| Item | Result |
+|---|---|
+| `cfproxy` | Own image `knk-cfproxy:alpha-1` (Alpine 3.22, tinyproxy 1.11.2, built on the NAS; `vimagick/tinyproxy:1.11.2` from the guide doesn't exist). UID 2004, read-only, no ports, `mail` + `mail-egress`, healthy. From the API: `example.com` → 403 |
+| Token | Account API token `knk-alpha access sync` (*Manage Account → Account API tokens*): **Zero Trust Read + Write only**, IP filter = the home IPv4, no expiry. `secrets/cloudflare_api_token` (`2002:2002 600`); `api-entrypoint.sh` (mounted from `config/api/`) exports it. Not in `docker inspect` or the logs. `accounts/{id}/tokens/verify` → active (the `user/tokens/verify` endpoint doesn't know account tokens) |
+| Settings | `config/api/cloudflare-access.env` (root 600, `env_file`): `SyncEnabled`, `AccountId`, `ListId`; `ProxyUrl` in Compose |
+| Compose | `00659fef…` → **`b849fa1e20de55538f2a772966107729cdbcf2dbb0f2dd1652d5d54820b605c6`**, Portainer identical; `knk-ops` `compose` and `secret-files` (expects `cloudflare_api_token`) updated |
+| List | `knk-api-testers` (type EMAIL). Before turning the sync on, the desired set was checked: only the developer's three accounts (`__pandi__`, `admin`, `alpha-probe`), no testers yet |
+| Sync on | `SyncEnabled=true` + recreate: `Cloudflare Access sync: 2 added, 1 removed, 3 in the list`; `/admin/invitations` *Access sync: last OK · 0 pending · 3 on the list* |
+| Policy | `KnK alpha`: new policy `Allow testers` (Allow, Include Email list `knk-api-testers`) next to `Allow staff` and `Probe service token`; session duration 1 month |
+| Bypass | Application `KnK sign-up (bypass)`, policy `Bypass sign-up` (Bypass, Everyone): `/invite`, `/invite/*`, `/join*`, `/link*`, `/static/*`, `/favicon.ico`, `/manifest.json`, `/logo*.png`, `/api/Invitations/check`, `/api/Admission/claim/check`, `/api/Auth/register` |
+
+Checks (2026-10-24):
+- `curl` without cookies: `/`, `/account`, `/api/Users/1`, `/api/health`, `/admin/invitations` → 302 to the Access
+  login; `/invite/x`, `/join`, `/link`, `/favicon.ico`, `/manifest.json` → 200.
+- A personal invite to a test address: the list went to 4 within seconds, the invite mail arrived and its link opened
+  without the Access login; revoking it took the list back to 3.
+- The admin line updates on the page's *Refresh* button, not by itself (the status is read when the page loads).
+- The yellow "Sign-up with invitations is off (Mode is LinkCode)" banner is expected until step 3.
+
+Kill switch: `CloudflareAccess__SyncEnabled=false` in `config/api/cloudflare-access.env`, then
+`up -d --no-deps --force-recreate api`. Deleting the bypass application closes sign-up again.

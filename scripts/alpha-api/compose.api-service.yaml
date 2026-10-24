@@ -32,6 +32,8 @@
       Security__PasswordResetFrontendBaseUrl: https://app.knightsandkings.net
       Security__PasswordResetExposeTokenInDevelopment: "false"
       Security__Registration__AllowWebFirst: "false"
+      # Phase 9 step 3 (KNG-218): sign-up by invitation. Kill switch: LinkCode.
+      Security__Registration__Mode: Invite
       Security__RefreshCookie__SameSite: Lax
       MinecraftPlugin__BaseUrl: http://minecraft:8081
       # Phase 9 E0 (KNG-211): mail through the stack's own relay; no login and no TLS on the internal hop,
