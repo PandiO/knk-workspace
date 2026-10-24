@@ -19,7 +19,54 @@ Run on the dev server with the four branches merged locally in knk-web-api and k
 
 ## 1. KNG-186 — step completion conditions run
 
-The builder has no UI for step conditions yet, so they are authored through the API: `GET /api/FormConfigurations/<F>`, edit the JSON, `PUT /api/FormConfigurations/<F>` with the whole body.
+The builder has no UI for step conditions yet (filed as KNG-270), so they are authored through the API. You don't need to hand-write requests: open the web app in the browser **logged in as an admin**, press F12 → **Console**, paste the helper below once, then call it.
+
+```js
+// KNG-186 test helper: adds / switches / removes a Completion condition on the District form's
+// "Region and access" step ("Allow entry must be ticked"). Paste once, then call e.g. knkStepCondition('add').
+window.knkStepCondition = async function (action, entity = 'District', stepMatch = /region and access/i) {
+    const api = 'http://localhost:5294/api';                      // the API's HTTP profile; change if yours differs
+    const token = localStorage.getItem('knk.accessToken') || sessionStorage.getItem('knk.accessToken');
+    if (!token) return console.error('Not logged in: no token in storage.');
+    const headers = { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' };
+    const call = async (method, path, body) => {
+        const r = await fetch(`${api}/${path}`, { method, headers, body: body ? JSON.stringify(body) : undefined });
+        if (!r.ok) throw new Error(`${method} ${path} → ${r.status} ${await r.text()}`);
+        return r.status === 204 ? null : r.json();
+    };
+    let config = await call('GET', `FormConfigurations/${entity}?defaultOnly=true`);
+    if (Array.isArray(config)) config = config.find(c => c.isDefault) || config[0];
+    const step = config.steps.find(s => stepMatch.test(s.stepName));
+    if (!step) return console.error('No step matching', stepMatch, 'in', config.steps.map(s => s.stepName));
+    const isTest = c => c.errorMessage === 'Allow entry before you continue.';
+    step.conditions = (step.conditions || []).filter(c => !isTest(c));
+    if (action === 'add' || action === 'on' || action === 'off') {
+        step.conditions.push({
+            conditionType: 'Completion',
+            conditionJson: JSON.stringify({ conditions: [{ fieldName: 'AllowEntry', operator: 'Equals', value: true }] }),
+            errorMessage: 'Allow entry before you continue.',
+            ...(action === 'off' ? { isActive: false } : {})   // 'add' sends no flag on purpose: the API must store it as active
+        });
+    } else if (action !== 'remove') {
+        return console.error("action must be 'add', 'on', 'off' or 'remove'");
+    }
+    await call('PUT', `FormConfigurations/${config.id}`, config);
+    const saved = await call('GET', `FormConfigurations/${config.id}`);
+    const savedStep = saved.steps.find(s => stepMatch.test(s.stepName));
+    console.log(`Form ${saved.id} "${saved.configurationName}", step "${savedStep.stepName}" conditions:`, savedStep.conditions);
+    console.log('Configuration has isActive property:', 'isActive' in saved);
+    return savedStep.conditions;
+};
+```
+
+| Call | Does | Use in step |
+| -- | -- | -- |
+| `knkStepCondition('add')` | adds the condition **without** an `isActive` → must come back `isActive: true` | 8 |
+| `knkStepCondition('off')` | same condition with `isActive: false` | 11 |
+| `knkStepCondition('on')` | back to active (sends `isActive: true` explicitly) | 11 → 12 |
+| `knkStepCondition('remove')` | removes it | 14 |
+
+The helper prints the saved step's `conditions` and whether the configuration JSON still carries an `isActive` (it must not, step 7). Refresh the wizard page after each call: the wizard loads the configuration when the form opens.
 
 7. **Default is active.** In the GET body, every entry under a field's `validations` and a step's `conditions` (if any) carries `"isActive": true`; the configuration itself has **no** `isActive` property. Expected: no `false` anywhere unless you set one before.
    *What is being tested:* a **step condition** (`conditions` on a step) is a third thing next to a field's **Required** checkbox and a field's **validation rules**. Required is checked first on Next; a step condition is a rule over the step's values that the builder can't author yet, so it is added through the API here.
