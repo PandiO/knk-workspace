@@ -28,9 +28,14 @@
       Security__Registration__AllowWebFirst: "false"
       Security__RefreshCookie__SameSite: Lax
       MinecraftPlugin__BaseUrl: http://minecraft:8081
-      # KNG-205/206: Log transport on purpose until the mail relay (KNG-211); reset links go to the API log.
-      Email__Transport: Log
-      Email__AllowLogTransport: "true"
+      # Phase 9 E0 (KNG-211): mail through the stack's own relay; no login and no TLS on the internal hop,
+      # mailrelay does the TLS and authentication to Gmail.
+      Email__Transport: Smtp
+      Email__SmtpHost: mailrelay
+      Email__SmtpPort: "587"
+      Email__UseStartTls: "false"
+      Email__SmtpUsername: ""
+      Email__FromAddress: knightsandkingsmc@gmail.com
       App__PublicBaseUrl: https://app.knightsandkings.net
       # Phase 6: trust X-Forwarded-For only from nginx (the webapi network); per-client rate limits and lockout.
       ForwardedHeaders__Enabled: "true"
@@ -44,6 +49,7 @@
     networks:
       - backend
       - webapi
+      - mail
     security_opt:
       - no-new-privileges:true
     cap_drop:
