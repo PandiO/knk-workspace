@@ -1,6 +1,6 @@
 # Dashboard as the CRUD hub — proposal and plan
 
-**Status:** Proposal; decisions 1–3 taken by the developer 2026-10-24, decision 4 (nav label) open (no code written)
+**Status:** Proposal; all four decisions taken by the developer 2026-10-24; ready to implement (no code written)
 **Date:** 2026-10-24
 **Issues:** [KNG-60](https://linear.app/kngpandi/issue/KNG-60) (return to origin, raised to High), [KNG-145](https://linear.app/kngpandi/issue/KNG-145) ("New X" on every list, list state in the URL), parent roadmap [KNG-140](https://linear.app/kngpandi/issue/KNG-140)
 **Code basis:** knk-web-app `main` @ `b7c0e88` (2026-10-24)
@@ -126,7 +126,19 @@ with the API's reason, as today.
 2. After a successful Submit: return at once to `returnTo` and show a success toast on the dashboard
    (no 3 s modal). Plus the submit-pending feedback above.
 3. "New" on a type without a default form configuration goes to `/forms/{type}`.
+4. Nav label "Forms" → **"Entity setup"** in link 2, with the ⚙ button: page title to match, route
+   `/forms` unchanged, the living docs that say "Forms page" updated in place (`architecture/
+   web-app-architecture.md`, `guides/web-app-reading-guide.md`, `guides/alpha-hardening-smoke-test.md`,
+   `guides/authoring-a-siege-scenario.md`, `guides/developer/gate-structures-developer-guide.md`,
+   `architecture/multiworld-follow-ups.md`). Saved Progress stays on the page for now.
 
-## Open decisions (reversible defaults proposed)
+## Follow-up (on the hub issue, after link 2)
 
-4. Nav label "Forms" → "Entity setup" (or similar): now, or with NAV-5.
+Move the page's second role to the dashboard so `/forms/{type}` is purely setup: a **"Drafts (n)"**
+chip next to New that lists this type's Saved Progress and resumes one, and a **"New with: {config}"**
+dropdown on New for non-default form configurations. Until then those two actions are only on the
+Entity setup page.
+
+## Open decisions
+
+None.
