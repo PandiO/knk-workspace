@@ -295,7 +295,8 @@ admission.kick" without the code.
   `play.knightsandkings.net`.
 - Paper sees playit's address, not the player's. If your playit tunnel offers Proxy Protocol, enable it there and in
   Paper's `config/paper-global.yml` (`proxies.proxy-protocol: true`) so that bans and logs see real IPs. Enable
-  either both or neither.
+  either both or neither. With the itzg image also set `USES_PROXY_PROTOCOL=true`, or its health check (no PROXY
+  header) marks the container unhealthy. **On since 2026-10-24** (playit v2); direct LAN connections are then refused.
 
 ---
 
@@ -532,7 +533,8 @@ Both must end with `ALL CHECKS PASSED`. The last check trips the login rate limi
       loads.
 - [ ] An outside client joins via `play.knightsandkings.net` with no router port-forward.
 - [ ] From outside (a phone hotspot), `nmap -p 80,443,3306,5000,8081,25565,25575 <home-ip>` shows everything closed
-      or filtered.
+      or filtered. (2026-10-24, before Phase 6: 13 ports closed/filtered with macOS `nc`, no IPv6; repeat after
+      Phase 6, [Phase 5 report](../reports/2026-10-24-alpha-phase-5-playit.md) § 8.)
 
 **E. Security probe**
 - [ ] Private and Cloudflare runs: `ALL CHECKS PASSED` (§ 8).

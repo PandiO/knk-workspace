@@ -370,7 +370,9 @@ Private acceptance before ingress:
 > - **playit Premium, region Germany**: the free global tunnel ran through California (~155 ms from NL), now ~27 ms;
 > - `play.knightsandkings.net` is a playit **external domain**: Cloudflare NS `play` → `ns1/ns2.playit-dns.com`.
 >   A CNAME doesn't work, because playit routes Minecraft Java by the handshake hostname;
-> - Proxy Protocol is off (undecided).
+> - **Proxy Protocol on** (playit v2, Paper `proxies.proxy-protocol: true`, `USES_PROXY_PROTOCOL=true` for the
+>   image's health check); every connection must come through playit;
+> - external scan from a phone hotspot: all checked ports closed/filtered, and the NAS has no IPv6.
 
 
 - Run the playit agent as its own Compose service, not an ad-hoc
@@ -389,8 +391,8 @@ Private acceptance before ingress:
 
 Acceptance: a test player outside the LAN connects using
 `play.knightsandkings.net`; no router port-forward is required; scans from the
-internet cannot reach NAS MySQL/RCON/Portainer. (2026-10-24: the first two pass; the
-external scan is in go-live checklist § 9 D.)
+internet cannot reach NAS MySQL/RCON/Portainer. (2026-10-24: all three pass; the scan
+is in the [report](../reports/2026-10-24-alpha-phase-5-playit.md) § 8.)
 
 ## Phase 6 — web app and HTTP ingress
 

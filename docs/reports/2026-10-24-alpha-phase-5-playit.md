@@ -66,15 +66,14 @@ Agent start (12:16:47Z): `Starting playitd … secret_path=Some("/run/secrets/pl
 | A player outside the LAN connects | yes: phone hotspot through the playit address (free tunnel); `play.knightsandkings.net` from the LAN goes through the same public path |
 | No router port-forward | yes: the agent only dials out, and the NAS has none |
 | Only Minecraft TCP is tunnelled | yes: one tunnel to `minecraft:25565`; the agent isn't on `backend` |
-| Internet scan can't reach MySQL/RCON/Portainer | **open**: `nmap` from outside is in the go-live checklist § 9 D |
+| Internet scan can't reach MySQL/RCON/Portainer | yes, later the same day (§ 8): all 13 ports closed/filtered from a phone hotspot; no IPv6 |
 
 ## 6. Decisions and settings to remember
 
 - playit **Premium** is a monthly cost (developer, 2026-10-24). If it lapses, the tunnel falls back to the free route
   through the US, and the custom domain may stop working.
-- **Proxy Protocol is off.** Paper sees playit's address, not the player's, so IP bans and per-IP logs don't work. Turning
-  it on means the tunnel setting **and** Paper's `proxies.proxy-protocol: true` together, with a Minecraft restart
-  (go-live § 5). Undecided.
+- **Proxy Protocol is on** since later the same day (§ 8): playit v2 + Paper `proxies.proxy-protocol: true` +
+  `USES_PROXY_PROTOCOL=true` for the health check. Paper sees real player addresses.
 - **The whitelist is the gate.** The server is public now: `online-mode=true`, the whitelist is enforced,
   `admission.mode=whitelist` until KNG-218.
 - The developer noted the US routing as an extra reason for the VPS track ([KNG-241](https://linear.app/kngpandi/issue/KNG-241), measurement added
@@ -88,3 +87,33 @@ Agent start (12:16:47Z): `Starting playitd … secret_path=Some("/run/secrets/pl
   `knk-alpha-playit` (or `knk-alpha-minecraft`) yet.
 - The Proxy Protocol decision (§ 6).
 - The external `nmap` scan (go-live § 9 D).
+
+## 8. Addendum, later the same day: Proxy Protocol and external port scan
+
+**Proxy Protocol on** (developer decision, 2026-10-24 ~13:35Z). Until then Paper saw every player as the playit
+container's 172.x address, so IP bans, logs and Paper's per-IP limits couldn't tell players apart.
+
+| Step | Result |
+|---|---|
+| Backups | `backups/20261024T133503Z/` (`compose.yaml`, stack 42 copy, `paper-global.yml`) |
+| Paper | `minecraft-data/config/paper-global.yml`: `proxies.proxy-protocol: false` → `true` |
+| Compose | `minecraft.environment` + `USES_PROXY_PROTOCOL: "true"`. The itzg image (`scripts/start-finalExec`) then gives `mc-health` `--use-proxy`, so the health check sends a PROXY header too; without it the container would report unhealthy. Compose `90c1853b…` → **`c4e17e5638cb665940b33e7058ef751541978d5a3daab0aaa2a6064020ef7905`**, Portainer identical; the `knk-ops compose` wrapper records it (wrapper `b661d942…`) |
+| Restart | `save-all flush`, then `up -d --no-deps minecraft`: healthy after ~30 s, `Done (11.330s)`, API UP, 0 ERROR/SEVERE. Paper warns `Using HAProxy, please ensure the server port is adequately firewalled`. 25565 is reachable only on the stack's Docker networks (API, playit), no port is published, and the scan below confirms nothing is reachable from outside |
+| playit | Tunnel → Proxy Protocol **v2** |
+| Check | The login line shows the player's real public address (`[/x.x.3.254:…]`, the developer's phone hotspot), not 172.x |
+
+From now on every Minecraft connection must arrive through playit. A direct LAN connection (like the temporary relay of
+the 2026-10-22 load check) is rejected.
+
+**External port scan** (go-live § 9 D, runbook Phase 5 acceptance). Done with macOS `nc -z -G 3 -w 3` from the
+developer's MacBook on a phone hotspot; Homebrew `nmap` would have had to compile from source, so it was stopped.
+
+| Check | Result |
+|---|---|
+| Vantage point | Hotspot IPv4 `178.230.x.x`, different from the home IPv4 `31.201.x.x` (the NAS's own `api.ipify.org` answer) |
+| Control | `nc` against `portquiz.net:443` → OPEN, so open ports are detected |
+| Home IPv4, TCP 22, 80, 443, 3306, 5000, 8080, 8081, 8443, 9000, 9443, 25565, 25575, 33060 | **all closed/filtered** |
+| IPv6 | The NAS has no global IPv6 address and no IPv6 egress (`api6.ipify.org` empty), so there's nothing to scan |
+
+Phase 5 acceptance is now complete. Open from § 7: only the Linear issue (to file) and
+[KNG-228](https://linear.app/kngpandi/issue/KNG-228) (`knk-ops` coverage of the playit and Minecraft containers).
