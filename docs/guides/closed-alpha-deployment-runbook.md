@@ -1,7 +1,7 @@
 # Closed-alpha deployment runbook
 
-**Status:** In progress — phases 0–3 complete; phase 3b (API upgrade to the KNG-64 build, [KNG-227](https://linear.app/kngpandi/issue/KNG-227)) complete 2026-10-22 ([report](../reports/2026-10-22-alpha-api-kng64-upgrade.md)); API updated to `4aeb794` ([KNG-275](https://linear.app/kngpandi/issue/KNG-275)) and phase 4 Stage 2 (KnK plugin `d56e41da`, [KNG-225](https://linear.app/kngpandi/issue/KNG-225)) done 2026-10-24 ([report](../reports/2026-10-24-alpha-api-4aeb794-and-plugin-stage-2.md)); `/hub` waits for a hub selection in the approved seed. Phase 5 (playit.gg, `play.knightsandkings.net`) done 2026-10-24 ([report](../reports/2026-10-24-alpha-phase-5-playit.md)). Phase 6 (web app and ingress) is next. Web hostname decided 2026-10-21: `app.knightsandkings.net`
-**Last updated:** 2026-10-24 (Phase 5 playit; Phase 4 Stage 2 and the API update to `4aeb794`; Phase 9: KNG-205 invitations merged, the feature-branch notes replaced); 2026-10-22; 2026-10-21 (Phase 9: invite-only switch-over, `mailrelay` and `cfproxy` containers — KNG-205/KNG-218); 2026-10-18
+**Status:** In progress — phases 0–3 complete; phase 3b (API upgrade to the KNG-64 build, [KNG-227](https://linear.app/kngpandi/issue/KNG-227)) complete 2026-10-22 ([report](../reports/2026-10-22-alpha-api-kng64-upgrade.md)); API updated to `4aeb794` ([KNG-275](https://linear.app/kngpandi/issue/KNG-275)) and phase 4 Stage 2 (KnK plugin `d56e41da`, [KNG-225](https://linear.app/kngpandi/issue/KNG-225)) done 2026-10-24 ([report](../reports/2026-10-24-alpha-api-4aeb794-and-plugin-stage-2.md)); `/hub` waits for a hub selection in the approved seed. Phase 5 (playit.gg, `play.knightsandkings.net`) done 2026-10-24 ([report](../reports/2026-10-24-alpha-phase-5-playit.md)). Phase 6 (web app, `app.knightsandkings.net`, own tunnel, Access; API `a38c8ee9`) done 2026-10-24 ([report](../reports/2026-10-24-alpha-phase-6-web-ingress.md)). Next: HSTS, the security probe (go-live § 8), Phase 7 backups, the approved seed. Web hostname decided 2026-10-21: `app.knightsandkings.net`
+**Last updated:** 2026-10-24 (Phase 6 web and ingress; Phase 5 playit; Phase 4 Stage 2 and the API update to `4aeb794`; Phase 9: KNG-205 invitations merged, the feature-branch notes replaced); 2026-10-22; 2026-10-21 (Phase 9: invite-only switch-over, `mailrelay` and `cfproxy` containers — KNG-205/KNG-218); 2026-10-18
 **Progress report:** [2026-10-11 closed-alpha infrastructure progress](../reports/2026-10-11-closed-alpha-infrastructure-progress.md)
 **Handoff:** [2026-10-11 closed-alpha infrastructure](../ai-agents/handoffs/2026-10-11-closed-alpha-infrastructure.md)
 **Security layer:** [closed alpha go-live (KNG-64)](alpha-go-live.md) — required builds, API/plugin configuration,
@@ -394,7 +394,21 @@ Acceptance: a test player outside the LAN connects using
 internet cannot reach NAS MySQL/RCON/Portainer. (2026-10-24: all three pass; the scan
 is in the [report](../reports/2026-10-24-alpha-phase-5-playit.md) § 8.)
 
-## Phase 6 — web app and HTTP ingress
+## Phase 6 — web app and HTTP ingress (complete)
+
+> **Done 2026-10-24** ([report](../reports/2026-10-24-alpha-phase-6-web-ingress.md)). As built:
+> - a `web` service: nginx-unprivileged with the static build plus the `/api` proxy, files in
+>   [`scripts/alpha-web/`](../../scripts/alpha-web/);
+> - the alpha's **own tunnel** `knk-alpha` with its own `cloudflared` (token file), separate from the personal
+>   tunnel;
+> - internal networks `webapi` (API ↔ nginx, `172.31.250.0/28`, the `ForwardedHeaders` known network) and `edge`
+>   (nginx ↔ cloudflared), with `cfegress` for cloudflared's internet;
+> - route `app.knightsandkings.net` → `http://web:8080` **without** a Host header override;
+> - Access application `KnK alpha` (staff emails, OTP), the WAF rule on `/api/Auth/`, Always Use HTTPS;
+> - API updated to `a38c8ee9` (95 migrations) in the same change.
+>
+> Open: HSTS, the security probe, the apex `knightsandkings.net` (520).
+
 
 - Package the exact web-app revision after the API is stable.
 - Prefer serving the web app and proxying `/api` to `api:5000` under the same
