@@ -1,6 +1,6 @@
 # Form validation: step completion conditions (KNG-186) and the rule result log (KNG-269) — smoke test
 
-**Status:** Run 1 (2026-10-24, developer): 7–16 and 18–21 pass, 23–26 accepted; 17 and 22 to re-test after the fixes below
+**Status:** Run 1 (2026-10-24, developer): 7–16 and 18–21 pass, 23–26 accepted; 17 re-tested and passed; 22 to confirm after its rewrite
 **Last updated:** 2026-10-24
 **Linear:** [KNG-186](https://linear.app/kngpandi/issue/KNG-186) · [KNG-269](https://linear.app/kngpandi/issue/KNG-269)
 **Branches:** check out `claude/kng-186-269-form-validation` in **both** knk-web-api and knk-web-app: it merges `claude/kng-186-form-condition-isactive` and `claude/kng-269-validation-result-log` of each repo (merged 2026-10-24, no conflicts; EF snapshot verified against the model). The two feature branches stay separate for review; nothing is merged to trunk until this test passes.
@@ -121,7 +121,7 @@ Each step says what the API console, the browser and the rows should show.
 | 10 (2nd) | Blocked, then fixed (2026-10-24) | after the migration the batch answered correctly but with `Results`/`FromCache` capitalised (new DTO properties lacked `JsonPropertyName`; the API doesn't camelCase by default), so the wizard found no results and showed "Validation failed to execute." Fixed on the KNG-269 branch, merged into the combined branch; re-test. Side observation: the log itself worked (second response `fromCache: true`) |
 | 10–15 | Pass (2026-10-24, developer) | after the two fixes |
 | 16 | Pass with noise (2026-10-24) | `Answered from the result log` seen; the API console also logged a handled `step_progress` duplicate-key race on Next (pre-existing, EF logs it before `WorkflowRepository.AddStepAsync` swallows it), filed separately |
-| 17 | Blocked, then fixed (2026-10-24) | Re-check not visible: the wizard cleared every validation result on each step change, so a passing cached result was never shown. Fixed on the KNG-269 web-app branch: results are kept across Previous/Next; step reworded |
+| 17 | Blocked, then fixed; **re-test passed** (2026-10-24, developer) | Re-check not visible: the wizard cleared every validation result on each step change, so a passing cached result was never shown. Fixed on the KNG-269 web-app branch: results are kept across Previous/Next; step reworded |
 | 18–21 | Pass (2026-10-24, developer) | 20 accepted |
 | 22 | Not a failure (2026-10-24) | the row written by the Re-run in 21 answered the rule with the plugin down, by design; step rewritten to make a miss first, re-test |
 | 23–26 | Accepted (2026-10-24, developer) | |
