@@ -88,3 +88,14 @@ Checks (2026-10-24):
 
 Kill switch: `CloudflareAccess__SyncEnabled=false` in `config/api/cloudflare-access.env`, then
 `up -d --no-deps --force-recreate api`. Deleting the bypass application closes sign-up again.
+
+## 7. Addendum: sign-up by invitation (Phase 9 step 3)
+
+`Security__Registration__Mode: Invite` added to the `api` block (after `AllowWebFirst`); Compose `b849fa1e…` →
+**`7bbcb8af0639eb2b004b60c0b08f8de3751a7f829e7732dbfd75c3023f745407`**, Portainer identical, `knk-ops` updated. API
+healthy, no fail/crit lines. Developer test (private window): the yellow banner on `/admin/invitations` is gone; a
+personal invite to a test alias → sign-up from the mail link → the done page announced the Cloudflare PIN → the list
+went to 4 → the PIN mail arrived → login → `/account/link`. Kill switch: `Mode: LinkCode`.
+
+**Developer feedback:** invitees shouldn't have to do the Cloudflare PIN after signing up in the app. The design
+(invitations DESIGN § 5.8) accepted one PIN per device per 30 days; the options are in the tracker row (open decision).
