@@ -1,7 +1,7 @@
 # Closed-alpha deployment runbook
 
-**Status:** In progress — phases 0–3 complete; phase 4 Stage 1 (Minecraft container without the KnK plugin, [KNG-225](https://linear.app/kngpandi/issue/KNG-225)) running since 2026-10-21 ([report](../reports/2026-10-21-minecraft-container.md)); phase 3b (API upgrade to the KNG-64 build, [KNG-227](https://linear.app/kngpandi/issue/KNG-227)) complete 2026-10-22 ([report](../reports/2026-10-22-alpha-api-kng64-upgrade.md)); phase 4 Stage 2 is next. Web hostname decided 2026-10-21: `app.knightsandkings.net`
-**Last updated:** 2026-10-24 (Phase 9: KNG-205 invitations merged, the feature-branch notes replaced); 2026-10-22; 2026-10-21 (Phase 9: invite-only switch-over, `mailrelay` and `cfproxy` containers — KNG-205/KNG-218); 2026-10-18
+**Status:** In progress — phases 0–3 complete; phase 3b (API upgrade to the KNG-64 build, [KNG-227](https://linear.app/kngpandi/issue/KNG-227)) complete 2026-10-22 ([report](../reports/2026-10-22-alpha-api-kng64-upgrade.md)); API updated to `4aeb794` ([KNG-275](https://linear.app/kngpandi/issue/KNG-275)) and phase 4 Stage 2 (KnK plugin `d56e41da`, [KNG-225](https://linear.app/kngpandi/issue/KNG-225)) done 2026-10-24 ([report](../reports/2026-10-24-alpha-api-4aeb794-and-plugin-stage-2.md)); `/hub` waits for a hub selection in the approved seed. Phase 5 (playit.gg) is next. Web hostname decided 2026-10-21: `app.knightsandkings.net`
+**Last updated:** 2026-10-24 (Phase 4 Stage 2 and the API update to `4aeb794`; Phase 9: KNG-205 invitations merged, the feature-branch notes replaced); 2026-10-22; 2026-10-21 (Phase 9: invite-only switch-over, `mailrelay` and `cfproxy` containers — KNG-205/KNG-218); 2026-10-18
 **Progress report:** [2026-10-11 closed-alpha infrastructure progress](../reports/2026-10-11-closed-alpha-infrastructure-progress.md)
 **Handoff:** [2026-10-11 closed-alpha infrastructure](../ai-agents/handoffs/2026-10-11-closed-alpha-infrastructure.md)
 **Security layer:** [closed alpha go-live (KNG-64)](alpha-go-live.md) — required builds, API/plugin configuration,
@@ -242,6 +242,17 @@ Exact commands and configuration: [alpha go-live § 3–4](alpha-go-live.md#3-up
 > stack back on its own. The host `compose.yaml` is authoritative and is copied to Portainer stack 42 (A6). Stage 2 (KnK
 > plugin, update swap, private acceptance) waited for Phase 3b, which completed on 2026-10-22. Details:
 > [2026-10-21 report](../reports/2026-10-21-minecraft-container.md).
+
+> **Status 2026-10-24 (Stage 2 done):** the KnK jar from knk-plugin `main` `d56e41da` (`7bc85e7d…`) runs against API
+> `alpha-4aeb7947` (KNG-275, 93 migrations). Results:
+> - startup clean: `knk_hub` loaded, `RegionHttpServer` on `0.0.0.0:8081` with the API key (the API gets 401 without
+>   it), `admission.mode=whitelist`, API UP, TPS 20;
+> - one `plugins/update/` swap confirmed by jar hash (KNG-264: the version is always `0.1.0`);
+> - in game: join, domain messages, both builds and a restart passed.
+>
+> `/hub` stays unavailable until the approved seed selects a hub: the placeholder DB has no `HubSettingsJson`.
+> Release folders: `releases/plugin/<commit>/` in the stack directory. Details:
+> [2026-10-24 report](../reports/2026-10-24-alpha-api-4aeb794-and-plugin-stage-2.md).
 
 ### 4.1 Service definition
 
