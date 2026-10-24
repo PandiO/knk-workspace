@@ -4,8 +4,14 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
-- **Siege playtest follow-ups (2026-10-24)** — branch `claude/dreamy-fermi-4h2ldl` in knk-plugin, knk-web-api, knk-web-app and
-  knk-workspace; not in Linear (free issue limit). Five changes from the developer's test round:
+_Nothing at the moment._
+
+## 2026-10-24
+
+- **Siege playtest follow-ups (2026-10-24)** — merged `--no-ff` from `claude/dreamy-fermi-4h2ldl`: knk-plugin `main` `75d619b`,
+  knk-web-api `master` `1aba1ee` (migration `AddSiegeSkipSeconds`), knk-web-app `main` `4a9537e`, knk-workspace `main`; not in
+  Linear (free issue limit). Live run 1 by the developer the same day: every section works except the menu validation retry
+  with the API down at plugin start (continued on knk-plugin branch `claude/menu-validation-retry`). Five changes from the test round:
   (1) a melee hit on a gate door with a **Fire Aspect** weapon has a chance per level (`gates.fire-aspect.ignite-chance-per-level`,
   15 % × level) of setting the block alight like a flaming arrow; (2) the new **Cleaving** custom enchantment (I–IV): gate hits
   ×1.25/×1.5/×1.75/×2, and a right-click on a door block is a charged strike of 5/6/7/8 such hits (netherite sword: 50/72/98/128 of a
@@ -20,12 +26,12 @@ This is a human-readable record of capabilities merged into the V3 default branc
   Two defects found in the developer's second round the same day and fixed on the branch: (a) with the API down when the
   plugin started, every inventory menu stayed unavailable until a restart (the startup validation lists the templates once)
   - the list is now retried (10 s, 20 s, 40 s, then every minute), a menu the validation never saw is validated on its first
-  open, and a siege menu that falls back to chat logs why; (b) a member waiting in the **server hub** was never moved to the
+  open, and a siege menu that falls back to chat logs why - **the retry did not help on the dev server** (the per-key fetches
+  still fail while the connectivity monitor reports the API down and the pass then ends without another retry; see the
+  `claude/menu-validation-retry` branch); (b) a member waiting in the **server hub** was never moved to the
   scenario hub or their spawnpoint: the hub is a domain with AllowExit off and the siege used a plain teleport, which the
   domain-access rule refuses - siege teleports now use the same scoped border-crossing transfer as the hub's portal and
   outage actions, and a refused siege teleport is logged instead of ignored.
-
-## 2026-10-24
 
 - **Domain names: whitespace and newlines trimmed** (not in Linear, free issue limit; knk-web-api `master` `09cf7e4` + `ac0f160`,
   knk-web-app `main` `83609f7`, knk-plugin `main` `1593e70`; merged directly, no PR; not live-tested). The dev database held
