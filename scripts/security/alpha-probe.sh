@@ -57,6 +57,10 @@ json_num() { grep -o "\"$1\" *: *[0-9][0-9]*" | head -1 | sed 's/^[^:]*: *//'; }
 
 req GET /api/health
 if [ "$CODE" = 000 ]; then echo "FAIL  API unreachable at $BASE"; exit 99; fi
+if [[ "$CODE" =~ ^30[1278]$ ]] || grep -qi 'cloudflareaccess' <<<"$BODY"; then
+  echo "FAIL  $BASE answers $CODE (a Cloudflare Access login redirect?): pass --cf-id/--cf-secret of a service token"
+  echo "      that a Service Auth policy on the Access application accepts"; exit 98
+fi
 echo "== anonymous"
 expect_code "health is public"                               "200"     GET    /api/health
 expect_code "user list needs login"                          "401"     GET    /api/Users
@@ -70,19 +74,22 @@ expect_code "form config delete needs login"                 "401"     DELETE /a
 expect_code "web-first user create refused"                  "401|403" POST   /api/Users "${JSON[@]}" -d '{"username":"alpha-probe","email":"probe@example.invalid","password":"Kq7!vR2#pLx9-wT4","passwordConfirmation":"Kq7!vR2#pLx9-wT4"}'
 expect_code "test controller removed"                        "401|404" DELETE /api/TestDisplay/cleanup
 req GET "/api/Users/check-duplicate?email=probe%40example.invalid"
-[ "$CODE" != 000 ] && ! grep -qi 'conflictingUserId' <<<"$BODY"; check "check-duplicate exposes no user id" $? "$CODE ${BODY:0:120}"
+[[ "$CODE" =~ ^[24] ]] && ! grep -qi 'conflictingUserId' <<<"$BODY"; check "check-duplicate exposes no user id" $? "$CODE ${BODY:0:120}"
 req POST /api/Users/validate-link-code/ZZZZZZZZ
-[ "$CODE" != 000 ] && ! grep -qi '"email"' <<<"$BODY"; check "validate-link-code exposes no email" $? "$CODE ${BODY:0:120}"
+[[ "$CODE" =~ ^[24] ]] && ! grep -qi '"email"' <<<"$BODY"; check "validate-link-code exposes no email" $? "$CODE ${BODY:0:120}"
 req GET /api/Towns/not-a-number
-[ "$CODE" != 000 ] && ! grep -qiE 'exception|stack|at knkwebapi|MySql' <<<"$BODY"; check "errors carry no exception text" $? "$CODE ${BODY:0:160}"
+[[ "$CODE" =~ ^[24] ]] && ! grep -qiE 'exception|stack|at knkwebapi|MySql' <<<"$BODY"; check "errors carry no exception text" $? "$CODE ${BODY:0:160}"
 
 if [ -n "$PLAYER" ]; then
   echo "== player (${PLAYER%%:*})"
   LOGIN="${PLAYER%%:*}"; PASS="${PLAYER#*:}"
   login() {
-    req POST /api/Auth/login "${JSON[@]}" -c "$TMP/jar" -d "{\"login\":\"$LOGIN\",\"password\":\"$PASS\",\"rememberMe\":false}"
+    req POST /api/Auth/login "${JSON[@]}" -c "$TMP/jar" -D "$TMP/hdr" -d "{\"login\":\"$LOGIN\",\"password\":\"$PASS\",\"rememberMe\":false}"
     AT=$(json_str accessToken <<<"$BODY")
     RT=$(awk '$6=="refreshToken"{print $7}' "$TMP/jar" 2>/dev/null | tail -1)
+    # Over plain http curl drops a Secure cookie (as a browser would): read it from the Set-Cookie header instead.
+    COOKIE_HDR=$(grep -i '^set-cookie: *refreshToken=' "$TMP/hdr" 2>/dev/null | tail -1 | tr -d '\r')
+    [ -z "$RT" ] && RT=$(sed -n 's/^[Ss]et-[Cc]ookie: *refreshToken=\([^;]*\).*/\1/p' <<<"$COOKIE_HDR")
   }
   login
   [ "$CODE" = "200" ] && [ -n "$AT" ]; check "player can log in with login=<name or email>" $? "got $CODE: ${BODY:0:120}"
@@ -91,7 +98,10 @@ fi
 if [ -n "$PLAYER" ]; then
   [ -z "$(json_str refreshToken <<<"$BODY")" ]
   check "refresh token not in the response body" $? "body has refreshToken"
-  [ -n "$RT" ]; check "refresh token set as HttpOnly cookie" $? "no refreshToken cookie (behind a proxy? check Path=/api/Auth)"
+  [ -n "$RT" ] && grep -qi 'httponly' <<<"$COOKIE_HDR"; check "refresh token set as HttpOnly cookie" $? "no HttpOnly refreshToken Set-Cookie (behind a proxy? check Path=/api/Auth)"
+  if [[ "$BASE" == https://* ]]; then
+    grep -qi 'secure' <<<"$COOKIE_HDR"; check "refresh cookie is Secure" $? "Set-Cookie without Secure"
+  fi
   AUTH=(-H "Authorization: Bearer $AT")
   UID_=$(curl -sS "${CF[@]}" "${AUTH[@]}" "$BASE/api/Auth/me" 2>/dev/null | json_num id)
   expect_code "player reads own profile"                     "200"     GET    "/api/Users/$UID_" "${AUTH[@]}"
@@ -103,7 +113,7 @@ if [ -n "$PLAYER" ]; then
   if [ -n "$RT" ]; then
     expect_code "refresh token is not accepted as bearer"    "401"     GET    /api/Auth/me -H "Authorization: Bearer $RT"
   fi
-  expect_code "logout"                                       "200|204" POST   /api/Auth/logout -b "$TMP/jar" -c "$TMP/jar"
+  expect_code "logout"                                       "200|204" POST   /api/Auth/logout -H "Cookie: refreshToken=$RT"
   if [ -n "$RT" ]; then
     expect_code "refresh after logout is refused"            "401"     POST   /api/Auth/refresh -H "Cookie: refreshToken=$RT"
   fi
