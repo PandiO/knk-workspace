@@ -1,8 +1,8 @@
 # Account identity and admission — who an account is, how it is created, who may play
 
-**Status:** Describes the **invite-only design as built on the feature branch** `claude/player-signup-invitation-flow-f4v7ul`
-(knk-web-api, knk-web-app, knk-plugin; invitations chain links 1–7, 2026-10-21). **Not merged, not live-tested.** Until
-it merges, trunk still works as described in "Before the feature" below. Living document: update it in place when the
+**Status:** Describes the **invite-only design as merged to every trunk on 2026-10-24** (knk-web-api, knk-web-app,
+knk-plugin; invitations chain links 1–7, smoke-tested on dev). **Off by default until the alpha switch-over**
+([alpha go-live § 11.1](../guides/alpha-go-live.md)); until then the live behaviour is "Before the feature" below. Living document: update it in place when the
 code changes.
 **Last updated:** 2026-10-21 (written by invitations chain link 7, KNG-218)
 **Linear:** [KNG-205](https://linear.app/kngpandi/issue/KNG-205) (parent), [KNG-206](https://linear.app/kngpandi/issue/KNG-206),

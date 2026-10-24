@@ -1,8 +1,8 @@
 # Invitations, email engine and admission gate — smoke test
 
-**Status:** Written 2026-10-21 (invitations chain link 7, KNG-218). **Not run yet.** Describes the code on the feature
-branch `claude/player-signup-invitation-flow-f4v7ul` in every repo, not merged.
-**Last updated:** 2026-10-21
+**Status:** Written 2026-10-21 (invitations chain link 7, KNG-218). **Run on dev 2026-10-23/24** (Findings below: § 0–6
+and § 8 passed or accepted, § 7 waits for the alpha); the feature is merged to every trunk since 2026-10-24.
+**Last updated:** 2026-10-24
 **Linear:** [KNG-218](https://linear.app/kngpandi/issue/KNG-218) (I3, this guide), parent
 [KNG-205](https://linear.app/kngpandi/issue/KNG-205); the packages it checks: [KNG-206](https://linear.app/kngpandi/issue/KNG-206)
 (E1), [KNG-207](https://linear.app/kngpandi/issue/KNG-207)/[KNG-208](https://linear.app/kngpandi/issue/KNG-208) (L0),
@@ -44,7 +44,7 @@ Settings that switch the feature on, all off by default:
 ### 0.1 Builds
 
 Record the heads you test (`git rev-parse --short HEAD`) for knk-web-api, knk-web-app, knk-plugin. The plugin branch
-must contain KNG-182 (`claude/mc-26.2-upgrade` `88497649` or plugin `main` once it is merged).
+must contain KNG-182 (plugin `main` since `857d4b1e`; the feature itself is on `main` since `d56e41da`).
 
 ### 0.2 Database and MySQL tests
 
@@ -273,7 +273,7 @@ With `Mode=Invite`, `admission.mode: invite`, whitelist off, all in one pass:
 - [ ] **API stopped:** a known player gets in; a stranger gets "unavailable".
 - [ ] **Staff "Detach web login":** works.
 
-When § 0–8 pass on dev, the feature branches can merge (plan § 9: one PR per repo; the plugin after KNG-182).
+§ 0–8 passed on dev and the feature branches were merged on 2026-10-24 (plan § 9 steps 2–4; see the chain report).
 
 ---
 

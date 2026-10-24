@@ -2,8 +2,8 @@
 
 **Version**: 1.2  
 **Last Updated**: October 21, 2026 (KNG-218: "Getting an account" rewritten for invite-only sign-up. **It describes the
-invitations feature ([KNG-205](https://linear.app/kngpandi/issue/KNG-205)) on its feature branch, not merged and not
-yet switched on for the alpha**; until the switch-over, new players follow "Existing players" below.) Before:
+invitations feature ([KNG-205](https://linear.app/kngpandi/issue/KNG-205)), merged 2026-10-24 but not yet switched on
+for the alpha**; until the switch-over, new players follow "Existing players" below.) Before:
 KNG-208, `/account create` and web → game linking removed.  
 **Plugin**: knk-plugin
 
@@ -462,7 +462,7 @@ Need help? Contact the server administrators:
 
 ### Version 1.2 (October 21, 2026)
 - "Getting an account" for invite-only sign-up: invitation → account → Cloudflare PIN → join → code → link (KNG-205;
-  feature branch, not yet live)
+  merged 2026-10-24, not yet live)
 - Existing players keep `/account link`
 
 ### Version 1.1 (January 30, 2026)

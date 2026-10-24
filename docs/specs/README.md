@@ -14,7 +14,10 @@ Central home for requirements, specifications, and implementation roadmaps acros
 - kits/: Kit (equipment loadout) design, implementation plan, and legacy-DB seed data
 - enchantment-books/: permanent enchantment books outside siege (Linear KNG-5)
 - game-settings/: global Game Settings - announcements, join spawn, respawn policy, per-world game mode/time/weather/spawn, applied by the plugin (Linear KNG-52)
+- domain-subregions/: several WorldGuard regions per domain (expansion regions), synced from the main region; orphan retention, cylinder shapes, per-domain access and messages (Linear KNG-253; implemented, merged and live-tested 2026-10-23; follow-ups KNG-260, KNG-261)
 - navigation/: road network (survey-learned road profiles, auto-detected junctions on every level) and `/navigate` guidance with live gate/entry availability (Linear KNG-27)
+- navigation-compass/: the navigation compass item for sieges — right-click cycles team-relevant objectives, shift-click stops, bound by material + display name and configured on the web app's navigation page (Linear KNG-234)
+- navigation-destination-engine/: design (proposed, no code) for one engine that builds each player's list of navigable destinations from providers and exclusive-scope policies, enforced by a handle, persisted for offline use (Linear KNG-235, phases KNG-236 to KNG-240; follow-up of KNG-234)
 - production-storage-transport/: the resource-economy backbone: storages (domain/player/clan), production kinds with yield areas, transport orders (simulated, then NPC/courier), town logistics (V2 port, design draft rev. 2, 2026-10-09)
 - siege-survival/: cooperative endless NPC-wave defense, gate repair, spawnzone progression and match equipment/economy (Linear KNG-50, child of KNG-37; design only)
 - user-features/: rank/permission/title/salary architecture
@@ -42,6 +45,7 @@ Central home for requirements, specifications, and implementation roadmaps acros
 - Portfolio overview: [docs/specs/project-overview/IMPLEMENTATION_ROADMAP.md](docs/specs/project-overview/IMPLEMENTATION_ROADMAP.md), [docs/specs/project-overview/CHANGES_SUMMARY.md](docs/specs/project-overview/CHANGES_SUMMARY.md), [docs/specs/project-overview/SOURCES_LOCATION.md](docs/specs/project-overview/SOURCES_LOCATION.md)
 - API contract snapshots: [docs/specs/api/README.md](docs/specs/api/README.md) (includes swagger export and contract notes)
 - Items domain: [docs/specs/items/IMPLEMENTATION_PLAN.md](docs/specs/items/IMPLEMENTATION_PLAN.md)
+- Minecraft catalogue (materials/blocks, server scan, icons): [docs/specs/minecraft-catalog/IMPLEMENTATION_PLAN.md](docs/specs/minecraft-catalog/IMPLEMENTATION_PLAN.md)
 - Item grades (10-tier scale, DropChance, enchant-book level cap; KNG-6): [items/GRADE_DROPCHANCE.md](items/GRADE_DROPCHANCE.md)
 - Enchantment books (KNG-5): [enchantment-books/ENCHANTMENT_BOOK_APPLICATION.md](enchantment-books/ENCHANTMENT_BOOK_APPLICATION.md)
 - Road navigation (KNG-27, decided design rev. 4, built in parallel with siege): [navigation/DESIGN.md](navigation/DESIGN.md), [navigation/IMPLEMENTATION_PLAN.md](navigation/IMPLEMENTATION_PLAN.md) (agent handoff), [navigation/REV6_PROPOSAL.md](navigation/REV6_PROPOSAL.md) (rev. 6, accepted in principle: curated tiles first — plan §5.7 — then open areas first), [navigation/REV7_PROPOSAL.md](navigation/REV7_PROPOSAL.md) (rev. 7, proposed 2026-10-09: routing view cut at gates and access borders, entrances for structures, which access rules apply to roads); research in [../reports/2026-09-27-road-navigation-research.md](../reports/2026-09-27-road-navigation-research.md) and [../reports/2026-09-27-open-world-navigation-research.md](../reports/2026-09-27-open-world-navigation-research.md) (how Rockstar/Ubisoft do it)

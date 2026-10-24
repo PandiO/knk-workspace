@@ -1,7 +1,7 @@
 # Invitations chain — progress report
 
-**Status:** **Chain complete** — links 1–7 done (2026-10-21), nothing merged, nothing live-tested, nothing switched on. The [final summary](#final-summary-chain-complete) at the end has the merge and deploy order, the decisions to review, the combined live checklist and the NAS/Cloudflare to-dos.
-**Last updated:** 2026-10-21 (link 7, final summary)
+**Status:** **Merged** — links 1–7 done (2026-10-21), smoke-tested on dev (2026-10-23/24, [smoke test](../guides/invitations-smoke-test.md)) and merged to every trunk on 2026-10-24: knk-web-api `master` `4aeb794`, knk-web-app `main` `b7c0e88`, knk-plugin `main` `d56e41da`, knk-workspace `main`. Nothing switched on: the switch-over is [alpha go-live § 11.1](../guides/alpha-go-live.md). The [final summary](#final-summary-chain-complete) at the end has the merge and deploy order, the decisions to review, the combined live checklist and the NAS/Cloudflare to-dos.
+**Last updated:** 2026-10-24 (merged; dev smoke test); 2026-10-21 (link 7, final summary)
 **Linear:** [KNG-205](https://linear.app/kngpandi/issue/KNG-205) and its children (see the [charter](../ai-agents/handoffs/INVITATIONS_CHAIN.md))
 **Branch:** `claude/player-signup-invitation-flow-f4v7ul` in every repo. knk-plugin's is based on `claude/mc-26.2-upgrade` (KNG-182).
 
@@ -1195,6 +1195,13 @@ checklist (links 1–6 above, alpha go-live § 6.1) and plan § 8's extra checks
 4. Merge (below), then § 9 on the alpha at each switch-over step.
 
 ### Merge and deploy order (plan § 9, with L7-6)
+
+**Done 2026-10-24 (steps 2–4):** KNG-182 was already on plugin `main`; each trunk was merged into the feature branch
+first (api `e6656f0`, app `7076b15`, plugin `f4a24ff4`; conflicts: the EF model snapshot, `App.tsx`/`Navigation.tsx`,
+five docs), tests re-run (API 3212 passed / the 4 known-red / 86 skipped; app 184 suites / 1140 tests, `npm run build`
+with `main`'s warnings; plugin core 2178 / api-client 271 / paper 1890), then merged directly, no PR: knk-web-api
+`master` `4aeb794`, knk-web-app `main` `b7c0e88`, knk-plugin `main` `d56e41da`, knk-workspace `main`. Two dev-test
+fixes went in before: api `d78dc75`, plugin `7bea0793`. Step 1 (NAS relay) and steps 5–6 remain.
 
 1. **E0 first, independently:** cherry-pick knk-web-api `110451f` to `master` if the relay goes live before the
    merge (it only matters for the current `System.Net.Mail` code). Then the NAS relay (KNG-211).

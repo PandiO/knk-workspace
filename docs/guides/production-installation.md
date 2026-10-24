@@ -3,7 +3,7 @@
 **Status:** Draft v1 — written for review. Not yet followed on a real production host. The database, API, seed and
 web-server steps were rehearsed in a scratch environment on 2026-10-07 (see [Appendix A](#appendix-a--what-was-verified-and-how)).
 The Paper server steps and the CI/CD workflows are untested drafts.
-**Last updated:** 2026-10-21 (§4.3, §9.3, §11 F/G: invite-only sign-up, admission gate and Access sync — KNG-205/KNG-218, invitations feature branch, not merged); 2026-10-21 (§4.3 mail: the KNG-206 email engine on the invitations feature branch — `Email__Transport`, relay option, `App__PublicBaseUrl`, Log guard); 2026-10-17 (§7.7: FormConfiguration export/import and bundled seeds merged, KNG-138/139; two new migrations, see the note in §7.7); 2026-10-12 (§7.7: KNG-138 on a feature branch); 2026-10-08 (security and alpha-hosting update for KNG-64)
+**Last updated:** 2026-10-24 (§4.3, §9.3, §11 F/G: KNG-205 invitations merged, the feature-branch notes replaced); 2026-10-22 (§7.7: DisplayConfiguration export/import and the priority 2/3 form seeds and display seeds merged, KNG-139); 2026-10-21 (§4.3, §9.3, §11 F/G: invite-only sign-up, admission gate and Access sync — KNG-205/KNG-218); 2026-10-21 (§4.3 mail: the KNG-206 email engine on the invitations feature branch — `Email__Transport`, relay option, `App__PublicBaseUrl`, Log guard); 2026-10-17 (§7.7: FormConfiguration export/import and bundled seeds merged, KNG-138/139; two new migrations, see the note in §7.7); 2026-10-12 (§7.7: KNG-138 on a feature branch); 2026-10-08 (security and alpha-hosting update for KNG-64)
 **Applies to:** trunk only. knk-web-api `master` `1805cf9`, knk-web-app `main`, knk-plugin `main` `c7d5a1e`; 61 EF
 migrations, the latest being `20261006193103_UniquePermissionGrantHolderNode`. Feature branches that haven't been
 merged, such as road navigation, are not covered. Re-check § 2 and the seed table manifest after each trunk merge.
@@ -370,19 +370,21 @@ Email__SmtpUsername=knightsandkingsmc@gmail.com
 Email__SmtpPassword=<gmail app password>
 Email__FromAddress=knightsandkingsmc@gmail.com
 Email__FromName=Knights & Kings
-# [KNG-206, feature branch until merged] the email engine reads Email__Transport (Smtp | Log | Pickup) first and
+# [KNG-206, merged 2026-10-24] the email engine reads Email__Transport (Smtp | Log | Pickup) first and
 # falls back to Email__Provider; links in mails use App__PublicBaseUrl. Optional: Email__ReplyToAddress, Email__DailyCap.
 # Email__Transport=Smtp
 # App__PublicBaseUrl=https://play.example.com
 # Relay option instead of direct Gmail (the API host then needs no SMTP password, the relay holds it):
 # Email__SmtpHost=<relay host>  Email__UseStartTls=false  Email__SmtpUsername=  (and no Email__SmtpPassword)
 
-# --- [KNG-205, feature branch until merged] invite-only sign-up (docs/guides/alpha-go-live.md § 4.1, § 11.1) ---
+# --- [KNG-205, merged 2026-10-24] invite-only sign-up (docs/guides/alpha-go-live.md § 4.1, § 11.1) ---
 # Defaults keep today's behaviour: Mode=LinkCode, sync off. Switch on in the order of alpha go-live § 11.1.
 # Security__Registration__Mode=Invite                 # LinkCode (default) | Invite | Open (= Invite today)
 # Invitations__DefaultExpiryDays=7  Invitations__MaxExpiryDays=30  Invitations__SharedDefaultMaxUses=5
 # Invitations__SharedMaxUsesCap=50  Invitations__ResendPerDay=3   Invitations__InvitableGroups__0=Alpha Tester
 # Admission__ClaimCodeMinutes=15    Admission__FinishLinkingReminderDays=2
+# Security__LinkAttempts__MaxFailures=5  __WindowMinutes=15  __LockMinutes=15   (wrong link/claim codes per account)
+# Email__AllowLogTransport=true    only while Email__Transport=Log outside Development; the API refuses to start without it
 # Cloudflare Access list sync, only if the site sits behind Cloudflare Access (KNG-216):
 # CloudflareAccess__SyncEnabled=true  CloudflareAccess__AccountId=<id>  CloudflareAccess__ListId=<id>
 # CloudflareAccess__ApiToken=<Account → Zero Trust → Edit token>   (this file only)
@@ -407,7 +409,7 @@ Notes:
 - Leave the rest at the `appsettings.json` defaults: `Security:BcryptRounds` 10, the link-code, cooldown and
   token lifetimes, `Discovery:MaxNewPerHour`, the `CurrencyMonitor:*` thresholds, and `ClientActivity`. Override one
   the same way if you need to.
-- **[KNG-205, feature branch]** On a host whose API has no internet (the NAS), mail goes through a `mailrelay`
+- **[KNG-205]** On a host whose API has no internet (the NAS), mail goes through a `mailrelay`
   container and the Access sync through a `cfproxy` container (tinyproxy allowing only `api.cloudflare.com:443`); see
   [email guide § 3](email.md) and [alpha go-live § 6.1](alpha-go-live.md). On a VPS with outbound internet, point
   `Email__SmtpHost` at the provider and leave `CloudflareAccess__ProxyUrl` empty.
@@ -896,6 +898,12 @@ import refuses to run anyway once users exist. Content changes after launch reac
   additive migrations, `20261012075746_AddFormFieldSelectionLimits` and
   `20261012085922_AddFormSubmissionProgressCreatedEntities`: apply them (`dotnet ef database update`) before the new
   web app runs against a database, since its FormField reads and draft saves need the new columns.
+  **2026-10-22:** display configurations work the same way (Export JSON and **Import / Seeds** on the display
+  configuration list, `knk-displayconfig/1`; published unless imported as a draft). The API now ships 30 more form
+  seeds (domain family, people, items, kits and lootboxes) and 7 display seeds (`Data/DisplayConfigurationSeeds/`).
+  On a fresh production database import them with "make default"; where the entity already has a default, import
+  first, review, then make it default. Join (`.join`) seeds go before the forms that use them (the dry run names a
+  missing one). No migration.
 
 ---
 
@@ -1046,7 +1054,7 @@ Production values in `server.properties`:
 |---|---|---|
 | `online-mode` | `true` | **Critical.** Player identity in the API is the Mojang UUID. Offline mode lets anyone join as anyone, including you. |
 | `enforce-secure-profile` | `true` | signed chat (vanilla default) |
-| `white-list` / `enforce-whitelist` | `true` during closed beta | invite-only until you're confident. **[KNG-205, feature branch]:** with the plugin's `admission.mode: invite` (admission gate, claim code on the disconnect screen) set `white-list=false`; turning it back on is the kill switch ([alpha go-live § 5.1, § 11.1](alpha-go-live.md)) |
+| `white-list` / `enforce-whitelist` | `true` during closed beta | invite-only until you're confident. **[KNG-205]:** with the plugin's `admission.mode: invite` (admission gate, claim code on the disconnect screen) set `white-list=false`; turning it back on is the kill switch ([alpha go-live § 5.1, § 11.1](alpha-go-live.md)) |
 | `server-port` | `25565` | |
 | `enable-rcon` | `true` | console access without attaching to the process |
 | `rcon.port` / `rcon.password` | `25575` / `<from the vault>` | port blocked by ufw (§ 3.4), use only from the host |
@@ -1113,7 +1121,9 @@ mcrcon -H 127.0.0.1 -P 25575 -p '<rcon password>' "list"   # console commands ov
    web:
      public-url: "https://play.example.com"    # [KNG-64] shown in the /account link message
    # region-http.port is not in the file; the default 8081 matches MinecraftPlugin__BaseUrl.
-   admission:                                  # [KNG-214, feature branch] missing section = whitelist (gate off)
+   # messages.link-code-generated: take the current default text (register URL, "never give this code" warning);
+   # a config.yml from an older build keeps its old text, since the plugin only adds missing keys.
+   admission:                                  # [KNG-214] missing section = whitelist (gate off)
      mode: whitelist                           # invite: claim code on the disconnect screen; read at start-up only
      api-timeout-ms: 3000
      link-url: ""                              # empty: {web.public-url}/link

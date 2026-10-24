@@ -1,8 +1,7 @@
 # Email — admin guide
 
-**Status:** Current for the invitations feature branch `claude/player-signup-invitation-flow-f4v7ul` (knk-web-api
-`a8b42ca`, knk-web-app `aecd811`; KNG-206, not merged, not live-tested). Trunk still has the old in-memory mail queue
-until the branch merges.
+**Status:** Current for knk-web-api `master` and knk-web-app `main` since the KNG-206 merge on 2026-10-24 (smoke-tested on
+dev with the Pickup transport, [invitations smoke test § 1](invitations-smoke-test.md)); not yet live on the alpha.
 **Last updated:** 2026-10-21 (written by invitations chain link 2)
 **Linear:** [KNG-206](https://linear.app/kngpandi/issue/KNG-206) (engine), [KNG-211](https://linear.app/kngpandi/issue/KNG-211) (relay on the alpha)
 **Design:** [invitations DESIGN § 4](../specs/invitations/DESIGN.md), [IMPLEMENTATION_PLAN § 3](../specs/invitations/IMPLEMENTATION_PLAN.md)
