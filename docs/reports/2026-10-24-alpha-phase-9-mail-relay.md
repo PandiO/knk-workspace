@@ -98,4 +98,4 @@ personal invite to a test alias → sign-up from the mail link → the done page
 went to 4 → the PIN mail arrived → login → `/account/link`. Kill switch: `Mode: LinkCode`.
 
 **Developer feedback:** invitees shouldn't have to do the Cloudflare PIN after signing up in the app. The design
-(invitations DESIGN § 5.8) accepted one PIN per device per 30 days; the options are in the tracker row (open decision).
+(invitations DESIGN § 5.8) accepts one PIN per device per 30 days. Options weighed: keep it; Google as an extra Access login method; remove Access from the site (the KNK login alone); KnK as Access's OIDC provider. **Decision (developer, 2026-10-24): keep it as is for the alpha**; revisit for the beta on the VPS.
