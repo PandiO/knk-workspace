@@ -404,7 +404,12 @@ never v2's hardcoded `"TestSiege"`.
   `SiegeMatch` row yet). Otherwise create the `SiegeMatch` (`Created`).
 
 ### 6.4 Hub and team split
-- T-15: snapshot + teleport every member to the hub (§9); joining closes; gate lockdown (§8.2).
+- T-15: snapshot + teleport every member to the hub (§9); joining closes; gate lockdown (§8.2). Every siege
+  teleport (this one, the start, spawn picks, the vault restore) goes through `SiegeBukkit.teleport`, which
+  the plugin points at the same scoped border-crossing transfer the server hub's portal uses (exempt from
+  domain AllowEntry/AllowExit while it runs, then a WorldGuard session resync): a member waiting in the
+  server hub - a domain with AllowExit off - is moved like anyone else. A refused move is logged.
+  *(Playtest 2026-10-24: a plain teleport was refused there and the member silently stayed in the hub.)*
 - T-10: split into the scenario's N teams. **Snake draft by title bracket** (highest first, alternating
   direction per round) — v1 sorted by title before dealing, v2 shuffled; this keeps shuffling's fairness
   for equal brackets while spreading veterans. Replaces v2's `Partition.ofSize`, which throws when there

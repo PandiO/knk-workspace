@@ -17,6 +17,13 @@ This is a human-readable record of capabilities merged into the V3 default branc
   kept the old 5/6-row static menus); (5) **`/siege skip` seconds are settings**: `PlayerSkipMatchmakingSeconds` (60) and
   `AdminSkipMatchmakingSeconds` (31) on the global siege configuration, web app → Siege settings → "Skipping matchmaking"
   (migration `AddSiegeSkipSeconds`; the plugin floors both at one second before voting closes).
+  Two defects found in the developer's second round the same day and fixed on the branch: (a) with the API down when the
+  plugin started, every inventory menu stayed unavailable until a restart (the startup validation lists the templates once)
+  - the list is now retried (10 s, 20 s, 40 s, then every minute), a menu the validation never saw is validated on its first
+  open, and a siege menu that falls back to chat logs why; (b) a member waiting in the **server hub** was never moved to the
+  scenario hub or their spawnpoint: the hub is a domain with AllowExit off and the siege used a plain teleport, which the
+  domain-access rule refuses - siege teleports now use the same scoped border-crossing transfer as the hub's portal and
+  outage actions, and a refused siege teleport is logged instead of ignored.
 
 ## 2026-10-24
 

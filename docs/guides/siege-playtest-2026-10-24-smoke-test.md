@@ -1,6 +1,6 @@
 # Siege playtest follow-ups (2026-10-24) — smoke test
 
-**Status:** Not run yet. Implemented on branch `claude/dreamy-fermi-4h2ldl` in knk-plugin, knk-web-api, knk-web-app and knk-workspace after the developer's siege test round of 2026-10-24; unit tests pass in all three repos, nothing seen live yet.
+**Status:** Run 1 (developer, 2026-10-24): A–E work once the API is up. Two findings fixed on the branch the same day, to re-test: the menus were unavailable because the API was offline when the plugin started (F), and members who joined from the server hub were never teleported to the scenario hub or their spawnpoint (G). Implemented on branch `claude/dreamy-fermi-4h2ldl` in knk-plugin, knk-web-api, knk-web-app and knk-workspace.
 **Branch tested:** `claude/dreamy-fermi-4h2ldl` (all four repos).
 **Design:** [siege-minigame/DESIGN.md](../specs/siege-minigame/DESIGN.md) §6.4–6.6 and §11.1, [MENU_TEMPLATES.md](../specs/siege-minigame/MENU_TEMPLATES.md) C.3/C.4; the gate numbers are in knk-plugin's `config.yml` under `gates.fire-aspect` and `gates.cleaving`.
 **Report back:** PASS / FAIL per step ID, plus for each FAIL the exact chat lines and what you did.
@@ -65,3 +65,19 @@ If a menu is still 5 or 6 rows after D1–D4, check the API log line from step 0
 | E3 | Set the admin value to 0, Save | Refused: "adminSkipMatchmakingSeconds must be between 1 and 86400 seconds." |
 | E4 | `/siege admin reload`, then as a player with `knk.siege.skip`: `/siege skip <lobby>` during a 5-minute matchmaking | "Shortened matchmaking of …: the siege begins in 1m 30s." |
 | E5 | Set the player value to 10 (below "vote closes" 30), reload, skip again in a fresh matchmaking | Matchmaking is shortened to 31 s, not 10 — the floor is one second before voting closes |
+
+## F. Menus while the API is down at startup
+
+| ID | Do | Expect |
+|---|---|---|
+| F1 | Start the Paper server with the API stopped | Log: `InventoryMenu startup validation: failed to list menu templates (API down?); menus stay unavailable until a retry succeeds - next try in 10 s`, then `still can't be listed (try 2); next try in 20 s`, … |
+| F2 | Start the API | Within a minute: `InventoryMenu startup validation: checked N menu(s), 0 blocked (after K retries).` `/siege` and `/siegemenu` open their menus without a server restart |
+| F3 | While the menus are still unavailable, `/siegemenu` in a lobby | Chat fallback plus one log line `[Siege] Menu 'siege.information' is unavailable (not validated at startup …)`; `/knk menu broken` lists nothing |
+
+## G. Joining from the server hub
+
+| ID | Do | Expect |
+|---|---|---|
+| G1 | Stand in the server hub (the hub domain, AllowExit off) and `/siege join <lobby>`; wait for T-15 | You are teleported to the scenario's hub with the "You are at the hub of …" message, like a player who joined from the open world |
+| G2 | Let the match start | You start at your spawn choice (C4); after the match the restore puts you back in the server hub |
+| G3 | Server log during G1/G2 | No `[Siege] Teleport of … was refused` line. If one appears, another plugin or region rule cancelled the move: send the line |
