@@ -114,4 +114,5 @@ Each step says what the API console, the browser and the rows should show.
 
 | Step | Result | Notes |
 | -- | -- | -- |
-| | | |
+| 7 | Pass (2026-10-24, developer) | configuration JSON has no `isActive` |
+| 8 | Pass (2026-10-24, developer) | form 75 "District - Default (seed v1)", condition stored on "Region and access" through the console helper |
