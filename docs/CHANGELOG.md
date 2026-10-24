@@ -6,6 +6,107 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 _Nothing at the moment._
 
+## 2026-10-24
+
+- **Invite-only sign-up, email engine, admission gate and web-first linking — merged, off by default**
+  ([KNG-205](https://linear.app/kngpandi/issue/KNG-205) with KNG-206, KNG-207, KNG-208, KNG-211 (API half), KNG-212,
+  KNG-214, KNG-216, KNG-218; knk-web-api `master` `4aeb794`, knk-web-app `main` `b7c0e88`, knk-plugin `main`
+  `d56e41da`, merged directly, no PR; smoke-tested by the developer on dev 2026-10-23/24, every section of the
+  [invitations smoke test](guides/invitations-smoke-test.md) passed or accepted except § 7, which needs the alpha's
+  Cloudflare). The seven chain links below are now on the trunks. Nothing changes until the switch-over
+  ([alpha go-live § 11.1](guides/alpha-go-live.md)): `Security:Registration:Mode` stays `LinkCode`, the plugin's
+  `admission.mode` stays `whitelist`, `CloudflareAccess:SyncEnabled` stays false. **Deploy:** five migrations
+  (`LinkCodePurpose`, `AddEmailOutbox`, `AddInvitations`, `SeedInvitationStaffNode`, `SeedAlphaTesterGroup`); outside
+  Development the API refuses to start with the Log transport unless `Email__AllowLogTransport=true` (until the relay);
+  the plugin's `config.yml` needs `web.public-url`, the `admission:` section (missing = whitelist) and the new
+  `messages.link-code-generated` text, which an existing file keeps old. Two defects found on dev and fixed: a claim
+  code reused from the database was sent without a UTC marker and the plugin fell back to its offline store (api
+  `d78dc75`); the first join after a web-first or `/link` link got "Welcome back" and every discovery message at once
+  instead of the first-join welcome, kits and quiet minutes (plugin `7bea0793`, which also stops a crash in the join
+  telemetry for an operator without an account).
+- **Invitations chain, link 7: rollout preparation (I3) — the chain is complete**
+  ([KNG-218](https://linear.app/kngpandi/issue/KNG-218), parent [KNG-205](https://linear.app/kngpandi/issue/KNG-205);
+  branch `claude/player-signup-invitation-flow-f4v7ul`: knk-web-api `8f489b9`). A data migration seeds the **Alpha
+  Tester** group (weight 1, under Default, no extra permissions) that invitations grant by default; it leaves an
+  existing group of that name alone. New: the [invitations smoke test](guides/invitations-smoke-test.md) (every check
+  of the email engine, invitations, the admission gate, the Access sync, the kill switches and the alpha switch-over)
+  and the living [account identity and admission](architecture/account-identity-and-admission.md) architecture doc.
+  The alpha go-live guide, the closed-alpha runbook, the production installation guide and the player account guide
+  describe the invite-only state after the switch-over, with the five switch-over steps and the kill switches
+  ([alpha go-live § 11.1](guides/alpha-go-live.md)). Merged 2026-10-24 (entry above).
+- **Invitations chain, link 6: Cloudflare Access sync and the sign-up bypass (A1)**
+  ([KNG-216](https://linear.app/kngpandi/issue/KNG-216); branch `claude/player-signup-invitation-flow-f4v7ul`:
+  knk-web-api `641f9c1`, knk-web-app `eeea86f`). With `CloudflareAccess__SyncEnabled=true`, the API keeps the
+  Cloudflare Zero Trust email list `knk-api-testers` in sync: a new personal invite's address is added within seconds,
+  a revoke, an unused expiry, a deactivation, a deletion or a merge removes it, and a sign-up with a shared code adds
+  the new address during registration. Calls go through a `cfproxy` forward proxy that only allows
+  `api.cloudflare.com`. `/admin/invitations` shows "Access sync: last OK 12:04 · 0 pending", red with the error, and
+  the sign-up page tells new players that Cloudflare emails them a one-time PIN next. The NAS and dashboard steps
+  (proxy, list, policy, token, bypass application for the sign-up pages, 30-day session) are in alpha go-live § 6.1.
+  Off by default, so deploying changes nothing.
+- **Invitations chain, link 5: admission gate on the game server (I2, plugin)**
+  ([KNG-214](https://linear.app/kngpandi/issue/KNG-214); branch `claude/player-signup-invitation-flow-f4v7ul`:
+  knk-plugin `90b01850`, on the KNG-182 branch). With `admission.mode: invite` in the plugin's `config.yml`, the game
+  server asks the API about every connecting player right after Mojang sign-in: admitted accounts and operators get in,
+  a new player is turned away with the claim code and the `/link` address on the disconnect screen, a deactivated
+  account is refused. If the API doesn't answer within 3 seconds, players the server already knows still get in and
+  strangers are asked to try again. A refused player no longer gets an account created. After a link the player sees
+  "Your Minecraft account is now linked to the web account st\*\*\*@example.com. Not you? Tell staff right away." in
+  game. The default stays `admission.mode: whitelist`, so deploying the plugin changes nothing until the switch-over.
+ 
+- **Invitations chain, link 4: admission gate (server side), claim codes and Minecraft linking (I2)**
+  ([KNG-214](https://linear.app/kngpandi/issue/KNG-214); branch `claude/player-signup-invitation-flow-f4v7ul`:
+  knk-web-api `4d1fe00` + `44c5f63`, knk-web-app `a3f00fd` + `60ec323`). The API answers the game server's new
+  pre-login question `GET api/Admission/{uuid}` (plugin key): with `Security:Registration:Mode=Invite` a player without
+  an admitted account gets a claim code `XXXX-XXXX` for the disconnect screen (15 minutes, one per player), a
+  deactivated one is refused; in every other mode everyone is admitted, so nothing changes until the switch. `/link`
+  (open without an account) checks that code; a logged-in player links straight away, a new player signs up with an
+  invitation and is linked in the same step. `/account/link` is the new onboarding page after an invitation sign-up
+  and takes both claim codes and `/account link` codes; a banner reminds unlinked players. Linking a web account to
+  Minecraft gives the starting balance, a "linked" mail and an in-game notice with the masked address. Staff get
+  **Admit** and **Detach web login** on the player profile. An unlinked invited account gets one reminder mail after
+  two days. The landing page shows the new join steps. The game server's side follows in link 5.
+
+- **Invitations chain, link 3: invitations and invite-based registration (I1)**
+  ([KNG-212](https://linear.app/kngpandi/issue/KNG-212); branch `claude/player-signup-invitation-flow-f4v7ul`:
+  knk-web-api `77042fd` + `8ca8507`, knk-web-app `dfa5cdd` + `18f3c9f`). Staff with the new node `knk.admin.invites`
+  (granted to Admin by a seed migration) get **Invitations** (`/admin/invitations`): personal invites by email, in
+  bulk, emailed or as copy-links (single use, 7 days by default, at most 30), and shared codes `KNK-XXXXX-XXXXX` with
+  a label and a use cap (5 by default, at most 50); links and codes are shown once and only their SHA-256 is stored;
+  resend (rotates the link, 3 a day), rotate, pause/resume, revoke, and a redemptions drawer. `/invite/:token` (the
+  address shown locked and verified, the token removed from the address bar) and `/join?code=` sign up with an
+  invitation once `Security:Registration:Mode=Invite` is set, creating a web account (`web-…` name, no starting
+  balance until Minecraft is linked) and taking the use in one conditional UPDATE. The default stays `LinkCode`:
+  today's `/account link` registration is unchanged and invite fields are refused. Migration `AddInvitations`
+  grandfathers every active account as admitted; accounts the plugin creates are admitted until the mode is
+  `Invite`. Account page: "Email verified" badge.
+
+- **Invitations chain, link 2: the email engine (E1)** ([KNG-206](https://linear.app/kngpandi/issue/KNG-206); branch
+  `claude/player-signup-invitation-flow-f4v7ul`: knk-web-api `0d7ec4a` + `a8b42ca`, knk-web-app `aecd811`). Every mail
+  now goes through a persistent `email_outbox` table, written in the same transaction as the change that causes it, and
+  a background dispatcher that retries (1 min … 4 h, Failed after 6 attempts), drops reset mails whose link expired, and
+  deletes the content once sent. MailKit replaces `System.Net.Mail`; HTML and text templates share one layout; a
+  throttle caps mails per recipient (3 per kind, 6 in total per hour) and per day (300). Password reset, the
+  email-change notice and the data-deletion mails use it, and a staff email change now notifies the old address too.
+  Staff with `knk.admin.config` get **Mail** (`/admin/email`): the mail log with masked addresses, Retry and "Send test
+  mail to me". New settings `Email:Transport`, `Email:AllowLogTransport`, `App:PublicBaseUrl` and others; outside
+  Development the API refuses to start with the Log transport unless `Email:AllowLogTransport=true` (the alpha needs it
+  until its relay works). [Email guide](guides/email.md).
+
+- **Invitations chain, link 1: optional SMTP auth (E0 API half), link-code hygiene and the linking rules (L0)**
+  ([KNG-211](https://linear.app/kngpandi/issue/KNG-211), [KNG-207](https://linear.app/kngpandi/issue/KNG-207),
+  [KNG-208](https://linear.app/kngpandi/issue/KNG-208); branch `claude/player-signup-invitation-flow-f4v7ul`:
+  knk-web-api `110451f` + `bb4b9ee`, knk-web-app `2bf70ab`, knk-plugin `30b10e6e` on the KNG-182 branch). With
+  `Email:SmtpUsername` empty the reset and privacy mails go out without SMTP credentials, for the alpha's mail relay
+  (`110451f` is self-contained for a cherry-pick to `master`). `linkcodes` rows carry a `Purpose` (link, password
+  reset, admission claim) instead of being told apart by length; link codes are drawn without modulo bias; an hourly
+  job expires and, after 7 days, deletes finished codes; five wrong codes block an account for 15 minutes (429
+  `TooManyAttempts`). Linking a web-only account to an existing Minecraft account now folds the web login **into
+  the Minecraft account** (decision I7): it keeps its id, stats, groups and balances (the higher of each), the shell
+  is soft-deleted and signed out, and the web app is logged into the merged account. 409 `AlreadyRegistered` /
+  `AlreadyLinked` refusals. The plugin's `/account` usage no longer lists `create`, the dead merge flow is gone and the
+  link-code message ends with "Never give this code to anyone; staff never ask for it."
+
 ## 2026-10-23
 
 - **Gate doors: open-door scans that work as expected** ([KNG-268](https://linear.app/kngpandi/issue/KNG-268),
