@@ -1,5 +1,5 @@
   api:
-    image: knk-web-api:alpha-be9f4e1a
+    image: knk-web-api:alpha-4aeb7947
     container_name: knk-alpha-api
     restart: unless-stopped
     init: true
@@ -28,7 +28,10 @@
       Security__Registration__AllowWebFirst: "false"
       Security__RefreshCookie__SameSite: Lax
       MinecraftPlugin__BaseUrl: http://minecraft:8081
-      Email__Provider: Log
+      # KNG-205/206: Log transport on purpose until the mail relay (KNG-211); reset links go to the API log.
+      Email__Transport: Log
+      Email__AllowLogTransport: "true"
+      App__PublicBaseUrl: https://app.knightsandkings.net
     volumes:
       - /srv/docker/stacks/knk-alpha/secrets/mysql_app_password:/run/secrets/mysql_app_password:ro
       - /srv/docker/stacks/knk-alpha/secrets/plugin_api_key:/run/secrets/plugin_api_key:ro
