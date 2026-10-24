@@ -4,7 +4,7 @@
 (the Codex NAS rollout). Not yet followed end to end. 2026-10-21: web hostname decided (`app.knightsandkings.net`),
 DNS in Cloudflare, Minecraft console/autostart/plugin updates ([KNG-225](https://linear.app/kngpandi/issue/KNG-225)).
 2026-10-22: § 3 (API upgrade) done on the NAS ([KNG-227](https://linear.app/kngpandi/issue/KNG-227)); § 3–4 corrected from that run.
-**Last updated:** 2026-10-24 (Phase 9 E0: the mail relay is live, § 4 mail block is SMTP; KNG-205 invitations merged: the feature-branch notes replaced; settings as before, all off until § 11.1); 2026-10-22; 2026-10-21 (KNG-218, invitations chain link 7: § 4.1 settings after the invite-only switch-over, § 5.1 admission gate instead of the whitelist, § 9 F2, § 10 invite mail, § 11 kill switches and **§ 11.1 the switch-over steps**, § 12); 2026-10-21 (§ 6.1: Cloudflare Access sync, `cfproxy`, the sign-up bypass — KNG-216, feature branch; § 4: `Email__AllowLogTransport` for API builds with the KNG-206 email engine; notes pointing to the KNG-205 invitations plan); 2026-10-18
+**Last updated:** 2026-10-24 (Phase 9 done: invite-only live, § 10 invite text, § 11.1; Phase 9 E0: the mail relay is live, § 4 mail block is SMTP; KNG-205 invitations merged: the feature-branch notes replaced; settings as before, all off until § 11.1); 2026-10-22; 2026-10-21 (KNG-218, invitations chain link 7: § 4.1 settings after the invite-only switch-over, § 5.1 admission gate instead of the whitelist, § 9 F2, § 10 invite mail, § 11 kill switches and **§ 11.1 the switch-over steps**, § 12); 2026-10-21 (§ 6.1: Cloudflare Access sync, `cfproxy`, the sign-up bypass — KNG-216, feature branch; § 4: `Email__AllowLogTransport` for API builds with the KNG-206 email engine; notes pointing to the KNG-205 invitations plan); 2026-10-18
 **Applies to:** builds that **include KNG-64**: knk-web-api `master` ≥ `30c5dc5`, knk-web-app `main` ≥ `98c0a76`,
 knk-plugin `main` ≥ `34c9261`. **Never expose an older API.**
 **Linear:** [KNG-64](https://linear.app/kngpandi/issue/KNG-64) (parent), [KNG-68](https://linear.app/kngpandi/issue/KNG-68) (this guide)
@@ -553,29 +553,23 @@ and through Cloudflare ([report](../reports/2026-10-24-alpha-security-probe.md))
 
 ## 10. Tester invite (template)
 
-**After the invite-only switch-over** (§ 11.1; merged 2026-10-24, off until then) the invite **is** the system mail: create a
-personal invite on `/admin/invitations` and the API sends it (expires in 7 days; *Resend* gives a fresh link). The
-mail links `/invite/<token>`; the tester signs up, gets the Cloudflare PIN, then joins the server and enters the code
-shown on the disconnect screen on `/account/link`. For a **shared code** (Discord, a friend group) post this short text
-with the code from the result panel:
+**Invite-only since 2026-10-24** (§ 11.1). The invite **is** the system mail: create a personal invite on
+`/admin/invitations` (group **Alpha Tester**) and the API sends it. It expires in 7 days; *Resend* gives a fresh link
+(3 mails per address per hour, 3 resends a day). The tester:
+1. opens `/invite/<token>` from the mail and signs up (no Cloudflare step yet);
+2. opens the site: Cloudflare emails a one-time PIN, once per device per 30 days;
+3. joins **play.knightsandkings.net**, gets a code on the disconnect screen and enters it on `/account/link`;
+4. joins again and plays.
+
+Players who already had an account (grandfathered) just join. For a **shared code** (Discord, a friend group) post this
+short text with the code from the result panel:
 
 > Knights & Kings closed alpha: sign up at **https://app.knightsandkings.net/join** with code `KNK-XXXXX-XXXXX` (valid until
-> <date>, <n> places). Then join **play.knightsandkings.net** (Java Edition 26.3): you'll get a code on screen; enter
-> it on the website to link your Minecraft account. Never give that code to anyone; staff never ask for it.
-> Bugs or questions: <channel>. This is an alpha: progress may be reset.
+> <date>, <n> places). Cloudflare then emails you a one-time PIN to open the site. Join **play.knightsandkings.net**
+> (Java Edition 26.3): you'll get a code on screen; enter it on the website to link your Minecraft account. Never give
+> that code to anyone; staff never ask for it. Bugs or questions: <channel>. This is an alpha: progress may be reset.
 
-**Before the switch-over** (today's alpha), the hand-sent text:
-
-> Welcome to the **Knights & Kings closed alpha**!
-> 1. Join the Minecraft server **play.knightsandkings.net** (Java Edition 26.3). Your name is on the whitelist.
-> 2. In game, type `/account link`. You get an 8-character code (click it to copy).
-> 3. Open **https://app.knightsandkings.net**, enter this email address to get a one-time PIN, then choose **Create account** and
->    enter the code, your email and a password.
-> 4. From then on, you can log in with your Minecraft name or your email.
->
-> Found a bug or something confusing? Send it to <channel> with what you did, what you expected, and a screenshot.
->
-> This is a closed **alpha**: things will break, and your progress may be **reset** between or during test runs.
+The whitelist text used before the switch-over is retired (git history has it).
 
 ---
 
@@ -595,6 +589,8 @@ with the code from the result panel:
   hand again); delete the bypass application (sign-up pages behind Access again). Each one alone is safe.
 
 ### 11.1 Switch-over to invite-only (KNG-218)
+
+**Done on the alpha 2026-10-24** ([report](../reports/2026-10-24-alpha-phase-9-invite-only.md) § 6–9): mail relay, Access sync and bypass, `Mode=Invite`, the gate with the whitelist off (Compose `ENABLE_WHITELIST`/`ENFORCE_WHITELIST: "FALSE"`, or the itzg image turns it back on at every start).
 
 *Merged to every trunk on 2026-10-24 and smoke-tested on dev ([smoke test](invitations-smoke-test.md), § 0–6 and § 8).
 Preconditions (plan § 8): E0's relay live (KNG-211), the merged builds deployed per [plan § 9](../specs/invitations/IMPLEMENTATION_PLAN.md#9-merge-and-deploy-order)

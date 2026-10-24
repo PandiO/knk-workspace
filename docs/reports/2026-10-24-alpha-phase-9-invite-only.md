@@ -1,6 +1,6 @@
-# Closed alpha Phase 9 E0: mail relay `mailrelay` (KNG-211) — 2026-10-24
+# Closed alpha Phase 9: invite-only switch-over (mail relay, Access sync, sign-up, gate) — 2026-10-24
 
-**Status:** Live. The alpha API sends real mail through the stack's own Postfix relay to Gmail. Addendum § 6: the Cloudflare Access sync and the sign-up bypass (KNG-216) are live too
+**Status:** Done. The alpha runs invite-only: mail relay (§ 1–5), Access sync and sign-up bypass (§ 6), sign-up by invitation (§ 7), the admission gate with the whitelist off (§ 8), alpha checks (§ 9)
 **Last updated:** 2026-10-24
 **Linear:** [KNG-211](https://linear.app/kngpandi/issue/KNG-211) (E0), part of [KNG-218](https://linear.app/kngpandi/issue/KNG-218) (Phase 9)
 **Runbook:** [closed-alpha deployment runbook](../guides/closed-alpha-deployment-runbook.md) Phase 9 ·
@@ -99,3 +99,33 @@ went to 4 → the PIN mail arrived → login → `/account/link`. Kill switch: `
 
 **Developer feedback:** invitees shouldn't have to do the Cloudflare PIN after signing up in the app. The design
 (invitations DESIGN § 5.8) accepts one PIN per device per 30 days. Options weighed: keep it; Google as an extra Access login method; remove Access from the site (the KNK login alone); KnK as Access's OIDC provider. **Decision (developer, 2026-10-24): keep it as is for the alpha**; revisit for the beta on the VPS.
+
+## 8. Addendum: the admission gate, whitelist off (Phase 9 step 4)
+
+| Item | Result |
+|---|---|
+| Before | Whitelist `MrBedue`, `__pandi__`, `__dominic14__`; `__pandi__` and `MrBedue` have admitted accounts, `__dominic14__` (the developer's second account) had none |
+| Plugin | `plugins/KnightsAndKings/config.yml` (`2001:2001 600`; `web.public-url` was already set): `admission:` appended with `mode: invite`, `api-timeout-ms: 3000`, `link-url: ""` |
+| Compose | `minecraft`: `ENABLE_WHITELIST` and `ENFORCE_WHITELIST` `"TRUE"` → `"FALSE"` (the itzg image rewrites `server.properties` from them at every start, so `/whitelist off` alone wouldn't last). `7bbcb8af…` → **`1070b55c0aa25cf0d0c00f95f8f7f3ef7447f905b7133f07620a5b520b68aca5`**, Portainer identical, `knk-ops` updated. Backups `backups/20261024T201407Z/` (Compose, stack copy, `config.yml`) |
+| Restart | `save-all flush`, `up -d --no-deps minecraft`: healthy; `[KnK Admission] admission.mode=invite`; `white-list=false`, `enforce-whitelist=false`, `online-mode=true`; no ERROR/SEVERE, no link-URL warning |
+| In game | `__pandi__` joins. `__dominic14__` got the disconnect screen with a claim code (the same code on rejoin), linked it on `/account/link` with the `+t2` invite account, then got in with the first-join welcome. Log: `Refused __dominic14__ (<uuid>): admission.kick`, no code in any refusal line |
+
+Kill switch: restore `config.yml` and the Compose file from the backup (gate off, whitelist on), copy to Portainer,
+`save-all flush`, `up -d --no-deps minecraft`.
+
+## 9. Alpha checks (switch-over step 5, smoke test § 9)
+
+| Check | Result |
+|---|---|
+| Invite-code guessing through Cloudflare (`POST /api/Invitations/check`) | 10 × 200 with the generic "invalid" answer, then 429 |
+| Claim-code guessing (`POST /api/Admission/claim/check`) | 20 × 200, then 429 |
+| Mail limit (personal invite + 4 resends) | first three mails Sent, the 4th Suppressed, the 4th resend refused |
+| Revoked invite link from the mail | generic "invalid or has expired" page |
+| Five wrong claim codes on `/account/link` (invited, unlinked account) | the sixth try: "Too many attempts. Try again in 15 minutes." |
+| Expired claim code (§ 4 step 15), gate-off kill switch (§ 6) | **not run on the alpha**: they need a never-joined Minecraft account, and both passed on dev. Run them when a new tester joins, if wanted |
+
+Test accounts left behind: the `+t2` account (linked to `__dominic14__`), the `+t4` account (unlinked), `alpha-probe`.
+Delete or deactivate them before the first run if the tester count should be clean (they use Access seats only when
+they log in).
+
+Phase 9 is complete. Next: the approved seed (hub selection), then the first alpha run with the § 10 invite.
