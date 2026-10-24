@@ -503,16 +503,21 @@ bootstrap with the plugin key, from a container on `knk-alpha_backend`.
 
 Run [`scripts/security/alpha-probe.sh`](../../scripts/security/alpha-probe.sh). It needs only bash and curl.
 
-- **Privately, before ingress.** On the NAS, run it from the pinned .NET SDK image, which is already pulled and has
-  bash and curl:
+- **Privately, before ingress.** On the NAS, run it from the API image, which has bash and curl:
   ```bash
-  docker run --rm --network knk-alpha_backend -v "$PWD/scripts/security:/s:ro" --entrypoint bash \
-    mcr.microsoft.com/dotnet/sdk:8.0-bookworm-slim /s/alpha-probe.sh http://api:5000 --player '<test>:<password>'
+  docker run --rm --network knk-alpha_backend --user 65534:65534 --cap-drop ALL -v "<dir with the script>:/s:ro" \
+    --entrypoint bash knk-web-api:alpha-<sha> /s/alpha-probe.sh http://api:5000 --player "<test>:$PW"
   ```
+  Over plain `http` curl drops the `Secure` refresh cookie, so the script reads it from `Set-Cookie`.
 - **Through Cloudflare, after ingress** (from your PC):
   `scripts/security/alpha-probe.sh https://app.knightsandkings.net --player '<test>:<password>' --cf-id <id> --cf-secret <secret>`.
 
 Both must end with `ALL CHECKS PASSED`. The last check trips the login rate limiter for about a minute.
+
+The service token needs a policy with Action **Service Auth** that is **attached to the application**. Otherwise
+Access answers 302, and the script stops with a hint. The test account must be non-staff. The User form can't create a
+web account (it has no password field), so staff create it with `POST /api/Users`. **Passed on 2026-10-24**, privately
+and through Cloudflare ([report](../reports/2026-10-24-alpha-security-probe.md)).
 
 ---
 
@@ -543,7 +548,7 @@ Both must end with `ALL CHECKS PASSED`. The last check trips the login rate limi
       Phase 6, [Phase 5 report](../reports/2026-10-24-alpha-phase-5-playit.md) § 8.)
 
 **E. Security probe**
-- [ ] Private and Cloudflare runs: `ALL CHECKS PASSED` (§ 8).
+- [x] Private and Cloudflare runs: `ALL CHECKS PASSED` (§ 8). 2026-10-24, API `a38c8ee9` ([report](../reports/2026-10-24-alpha-security-probe.md)).
 
 **F. Player flow (a tester or a second account)** — before the invite-only switch-over
 - [ ] A whitelisted player joins, and `/account link` shows the code (click to copy) and `https://app.knightsandkings.net/auth/register`.
