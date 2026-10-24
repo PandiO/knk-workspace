@@ -22,3 +22,6 @@ API and Minecraft, a world owned by 2001):
 - after deleting rows and a world file, `restore … all` brought both back (144 tables, 4 triggers, owner 2001:2001). It
   also made the safety snapshot, kept the replaced world and restarted the services;
 - a cancelled restore changed nothing.
+
+On the NAS since 2026-10-24: the first snapshot `20261024T180424Z-initial` took 19 s (world 3.0 GB with zstd; API 95
+migrations, 144 tables). Every container kept running.
