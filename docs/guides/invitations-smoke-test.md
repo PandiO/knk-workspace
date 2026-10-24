@@ -180,21 +180,32 @@ step says otherwise.
 5. **Web-first.** Personal invite → sign up → `/account/link` (steps; the unlinked banner is hidden there and shown on
    other pages) → join with the stranger → enter the code → `/account`: linked, username = the Minecraft name, banner
    gone; `/admin/email` shows Welcome and MinecraftLinked; the profile activity shows "Minecraft account linked"; the
-   balance log shows the SIGNUP_GRANT once. Rejoin → admitted → first-join welcome and kits **once**; chat shows
-   "Your Minecraft account is now linked to the web account st***@…".
+   balance log shows the SIGNUP_GRANT once. Rejoin → admitted → first-join welcome and kits **once** and the
+   discovery announcements held for `onboarding.discovery-quiet-minutes` (one summary afterwards), exactly as on a
+   game-first join; chat shows "Your Minecraft account is now linked to the web account st***@…".
 6. **Game-first.** A second new account joins → code → `/link` logged out → "Verified: <name>" → invitation code →
    `/join` shows "<name> will be linked" → sign up → linked at once, the invite used once → rejoin → admitted.
 7. **Log in from `/link`.** `/link` logged out → *Log in* → back on `/link` with the code kept → "Link <name> to my
    account" → linked.
-8. **Not admitted web account.** A claim code entered on a web account that was never admitted → "You need an
-   invitation …" (403).
+8. **Not admitted web account.** Needs a **valid** claim code (from a stranger's disconnect screen, step 2) and a web
+   account that is **not** admitted. Invited accounts are admitted by their invite and get a generated `web-…`
+   username until linked, so un-admit one by email, not by name:
+   `UPDATE users SET AdmittedAt = NULL WHERE Email = 'tester2@example.com';`, log in as it, enter the stranger's code
+   on `/account/link` → "You need an invitation …" (403). A made-up code answers "invalid or expired" instead, which
+   is step 15's check, not this one.
 9. **Grandfathered and operators.** A grandfathered player joins normally. An operator without an account joins (one
    "Failed to create user … 403" warning, no crash).
-10. **Deactivated.** Deactivate an account on the web → its player gets "This account is deactivated".
-11. **Staff Access card.** Admin → player profile → **Access**: *Admit* on a not-admitted account (confirm; activity
+10. **Deactivated.** There is no deactivate button; `IsActive` is a plain field of the user record. As staff, open the
+    user form (the same one as § 1 step 4) and untick **Is active** if the form shows it, otherwise
+    `UPDATE users SET IsActive = 0 WHERE Email = 'tester2@example.com';` → its player gets "This account is
+    deactivated" (a staff save also ends the account's web sessions). Afterwards set `IsActive = 1` again.
+11. **Staff Access card.** Admin → player profile → **Access**: *Admit* on a not-admitted account (the button only
+    shows while the card says "Not admitted"; use the `AdmittedAt = NULL` update from step 8 and reload) (confirm; activity
     "Admitted by staff"; the player now gets in); *Detach web login* on a linked account → its sessions end, it can't
     log in, the Minecraft account stays; `/account link` registration works for it again.
-12. **Plugin create refused.** `curl -X POST -H "X-API-Key: $KEY" -H 'Content-Type: application/json' "$API/api/Users" -d '{"username":"Stranger","uuid":"<new uuid>"}'`
+12. **Plugin create refused.** `$KEY` is the plugin key: `dotnet user-secrets list` in the API repo shows it as
+    `Security:PluginApiKey` (the same value as the plugin's `api.auth.api-key`). Without the header the answer is 401.
+    `curl -X POST -H "X-API-Key: $KEY" -H 'Content-Type: application/json' "$API/api/Users" -d '{"username":"Stranger","uuid":"<new uuid>"}'`
     → 403 `NotAdmitted`.
 13. **Finish-linking reminder.** An invited account left unlinked for 2+ days (or edit `CreatedAt`) → one FinishLinking
     mail within the hour, none on later sweeps.
@@ -294,6 +305,7 @@ children are closed.
 
 | Date | Who | Heads (api / app / plugin) | Sections run | Result / issues |
 |---|---|---|---|---|
+| 2026-10-24 | Pandi (dev API, web app and Paper 26.3 dev server on the PC) | api `d78dc75` / app `eeea86f` / plugin `90b01850` → `7bea0793` | § 4 (re-run), § 5, § 6, § 8 | § 4 steps 1–7, 9, 12–15 **passed** after `d78dc75` (14 got its 429 after 14 requests: earlier UI attempts count). **Defect found** at steps 5–6: the first join after a web-first or `/link` link got "Welcome back" and the discovery announcements at once, not the game-first first join; the plugin only marked a first join for an account it created itself. Fixed in plugin `7bea0793`: an admitted account the server has never seen gets the same first join (welcome, kits once, quiet discoveries); steps 5–6 to be re-run. Same commit guards the `TelemetryListener` NPE for a player without a user id (step 9's operator). Steps 8, 10, 11 were run against the wrong row (invited accounts are named `web-…`, so `WHERE Username = 'tester2'` matched nothing); guide reworded, to be re-run. § 5 **passed**. § 6 **passed** (Sign-up pages closed: accepted, no Cloudflare on dev). § 7 skipped (no Cloudflare test account). § 8 **passed**. |
 | 2026-10-23 | Pandi (dev API, web app and Paper 26.3 dev server on the PC) | api `8f489b9` → `d78dc75` / app `eeea86f` / plugin `90b01850` | § 2, § 3, § 4 steps 1–5 | § 2 **passed** (the red warning line needs `messages.link-code-generated` updated in an existing server `config.yml`; the default has it). § 3 **passed** (3.0 only as `InvalidInvite`, run after the switch; 3.5 with an existing row). § 4: **defect found** — the second join of a stranger got "Can't check your access right now": a reused claim code read from MySQL serialized `expiresAt` without `Z`, the plugin's `Instant` parser threw, the gate fell to the offline store (which knew the dev-server regular and let it in). Fixed in api `d78dc75` (expiry stamped UTC + regression test); § 4 to be re-run from step 2. Also seen: `TelemetryListener.onUserDataLoaded` NPE when a player has no user row (follow-up, pre-existing). |
 | 2026-10-23 | Pandi (dev API + web app on the PC, Pickup transport) | api `8f489b9` / app `eeea86f` / plugin `90b01850` | § 1 | **Passed**, all 8 steps. Three guide fixes folded in: the guard needs `--no-launch-profile`; the staff email change goes through the user form; the reset cooldown hides the throttle unless lowered. |
 | 2026-10-23 | Pandi (dev DB on the NAS) | api `8f489b9` / app `eeea86f` / plugin `90b01850` | § 0 | **Passed.** Migrations applied, § 0.2 data checks OK, the chain's 9 `[MySqlFact]`s 9/9 green (sequential run, 206 s). Setup bumps folded into § 0.2. Full `requires-mysql` set in parallel exhausted the NAS's connections (59/124 failed on "Too many connections"), not re-run; not needed for this feature. |
