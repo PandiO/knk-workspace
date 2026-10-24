@@ -4,7 +4,7 @@
 (the Codex NAS rollout). Not yet followed end to end. 2026-10-21: web hostname decided (`app.knightsandkings.net`),
 DNS in Cloudflare, Minecraft console/autostart/plugin updates ([KNG-225](https://linear.app/kngpandi/issue/KNG-225)).
 2026-10-22: § 3 (API upgrade) done on the NAS ([KNG-227](https://linear.app/kngpandi/issue/KNG-227)); § 3–4 corrected from that run.
-**Last updated:** 2026-10-24 (KNG-205 invitations merged: the feature-branch notes replaced; settings as before, all off until § 11.1); 2026-10-22; 2026-10-21 (KNG-218, invitations chain link 7: § 4.1 settings after the invite-only switch-over, § 5.1 admission gate instead of the whitelist, § 9 F2, § 10 invite mail, § 11 kill switches and **§ 11.1 the switch-over steps**, § 12); 2026-10-21 (§ 6.1: Cloudflare Access sync, `cfproxy`, the sign-up bypass — KNG-216, feature branch; § 4: `Email__AllowLogTransport` for API builds with the KNG-206 email engine; notes pointing to the KNG-205 invitations plan); 2026-10-18
+**Last updated:** 2026-10-24 (Phase 9 E0: the mail relay is live, § 4 mail block is SMTP; KNG-205 invitations merged: the feature-branch notes replaced; settings as before, all off until § 11.1); 2026-10-22; 2026-10-21 (KNG-218, invitations chain link 7: § 4.1 settings after the invite-only switch-over, § 5.1 admission gate instead of the whitelist, § 9 F2, § 10 invite mail, § 11 kill switches and **§ 11.1 the switch-over steps**, § 12); 2026-10-21 (§ 6.1: Cloudflare Access sync, `cfproxy`, the sign-up bypass — KNG-216, feature branch; § 4: `Email__AllowLogTransport` for API builds with the KNG-206 email engine; notes pointing to the KNG-205 invitations plan); 2026-10-18
 **Applies to:** builds that **include KNG-64**: knk-web-api `master` ≥ `30c5dc5`, knk-web-app `main` ≥ `98c0a76`,
 knk-plugin `main` ≥ `34c9261`. **Never expose an older API.**
 **Linear:** [KNG-64](https://linear.app/kngpandi/issue/KNG-64) (parent), [KNG-68](https://linear.app/kngpandi/issue/KNG-68) (this guide)
@@ -137,16 +137,16 @@ ForwardedHeaders__KnownNetworks=<subnet nginx shares with api, e.g. 172.30.0.0/2
 # Region callbacks to the plugin's RegionHttpServer, over service DNS (the plugin binds 0.0.0.0 inside its container).
 MinecraftPlugin__BaseUrl=http://minecraft:8081
 
-# Planned 2026-10-21 (KNG-211): an SMTP relay container gives mail a way out; see invitations IMPLEMENTATION_PLAN § 2.
-# The backend network has no internet access, so SMTP can't work there. Use Log: reset links go to the API log,
-# and you relay them. To send real mail, give the API an egress network and Email__SmtpPassword from a secret file.
-# No paid mailbox is needed for the alpha: E0 (KNG-211) relays through the free knightsandkingsmc@gmail.com account.
+# Live since 2026-10-24 (KNG-211, E0): mail goes through the stack's mailrelay container (network mail) to the free
+# knightsandkingsmc@gmail.com account; the API itself has no internet. Block: scripts/alpha-mail/.
 # Receiving support@knightsandkings.net can use Cloudflare Email Routing (free) to forward to that Gmail.
-Email__Transport=Log                                # must be set: appsettings.json defaults to Smtp (Email__Provider is the pre-KNG-206 name)
-# REQUIRED from the API build with the email engine (KNG-206, merged 2026-10-24) on: outside Development the API refuses to start with
-# the Log transport unless this is true. Keep it only while there is no relay; once E0's relay works, switch to
-# Email__Transport=Smtp (docs/guides/email.md) and remove this line. Afterwards set it only in an emergency.
-Email__AllowLogTransport=true
+Email__Transport=Smtp
+Email__SmtpHost=mailrelay
+Email__SmtpPort=587
+Email__UseStartTls=false                            # internal hop; the relay does TLS to Gmail
+Email__SmtpUsername=                                # empty: the relay holds the Gmail app password
+Email__FromAddress=knightsandkingsmc@gmail.com
+# Emergency only (relay broken): Email__Transport=Log plus Email__AllowLogTransport=true; reset links go to the API log.
 App__PublicBaseUrl=https://app.knightsandkings.net  # links in invitation, reset and admission messages (KNG-205)
 Telemetry__Enabled=false                            # already set
 ```
