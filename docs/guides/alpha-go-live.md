@@ -366,7 +366,10 @@ before adding zone-wide rules.
 
 **Zone settings (free plan; set them on `knightsandkings.net`, they are per zone):**
 - SSL/TLS **Full**, *Always Use HTTPS*.
-- HSTS after the first successful visit.
+- HSTS after the first successful visit. *(On since 2026-10-24: 6 months, includeSubDomains and preload off.)*
+- The apex and `www` redirect (Redirect Rule, 302) to `app.knightsandkings.net`, using an originless
+  `AAAA @ 100::` proxied record. The GoDaddy parking records were removed. Don't add zone-wide rules that would hit
+  `play.`, which is delegated to playit's DNS.
 - One WAF rate-limiting rule: path starts with `/api/Auth/`, more than 30 requests per 10 s per IP → block for 10 s.
 - Bot Fight Mode **off** for this host.
 

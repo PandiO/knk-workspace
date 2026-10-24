@@ -115,3 +115,30 @@ whitelisted player joining Minecraft creates one. Worth confirming that this was
   `minecraft` yet.
 - Phase 9 (invite-only, KNG-218) adds the Access sync, the sign-up bypass, `mailrelay` and `cfproxy` on this setup
   (go-live § 6.1).
+
+## 8. Addendum, later the same day: HSTS and the apex
+
+**HSTS** (zone `knightsandkings.net`, SSL/TLS → Edge Certificates): on, max-age 6 months, includeSubDomains **off**
+(only `app.` serves a website), preload **off**, No-Sniff off (nginx already sends `nosniff`). Check:
+`curl -sI https://app.knightsandkings.net` → `Strict-Transport-Security: max-age=15552000`.
+
+**Apex (`knightsandkings.net` answered 520).** DNS cleanup of records imported from GoDaddy:
+
+| Record | Was | Action |
+|---|---|---|
+| `knightsandkings.net` A `15.197.148.33`, A `3.33.130.190` (proxied) | GoDaddy parking/forwarding, the cause of the 520 | deleted |
+| `knightsandkings.net` AAAA `100::` (proxied) | — | **added**: an originless placeholder for the redirect rule |
+| `_domainconnect` CNAME → `_domainconnect.gd.domaincontrol.com` (proxied) | GoDaddy Domain Connect | deleted |
+| `ftp` CNAME → apex (proxied) | GoDaddy default | deleted |
+| `knightsandkings.net` NS `ns55`/`ns56.domaincontrol.com` | Old GoDaddy nameservers, imported as records. Public NS at 1.1.1.1 and 8.8.8.8: only `barbara`/`michael.ns.cloudflare.com` | deleted |
+| `www` CNAME → apex (proxied) | — | kept (covered by the redirect) |
+| `app` Tunnel `knk-alpha` | — | kept |
+
+The zone has no MX or TXT records, so mail isn't affected. `play` is delegated to playit by NS and appears separately.
+
+**Redirect rule** `apex to app` (Rules → Redirect Rules): hostname `knightsandkings.net` or `www.knightsandkings.net` →
+static `https://app.knightsandkings.net`, **302**, query string not preserved. 302 instead of 301 so that a later public
+site on the apex (KNG-155) doesn't fight cached redirects. Check: both hostnames → `302 Found`,
+`Location: https://app.knightsandkings.net/`.
+
+With this the § 7 open items "HSTS" and "the apex answers 520" are done.
