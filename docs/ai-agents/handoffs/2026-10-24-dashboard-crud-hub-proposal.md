@@ -1,6 +1,6 @@
 # Dashboard as the CRUD hub — proposal and plan
 
-**Status:** Proposal, waiting for the developer's decisions (no code written)
+**Status:** Proposal; decisions 1–3 taken by the developer 2026-10-24, decision 4 (nav label) open (no code written)
 **Date:** 2026-10-24
 **Issues:** [KNG-60](https://linear.app/kngpandi/issue/KNG-60) (return to origin, raised to High), [KNG-145](https://linear.app/kngpandi/issue/KNG-145) ("New X" on every list, list state in the URL), parent roadmap [KNG-140](https://linear.app/kngpandi/issue/KNG-140)
 **Code basis:** knk-web-app `main` @ `b7c0e88` (2026-10-24)
@@ -105,12 +105,28 @@ type that has one (as today).
   their View/row click is disabled with a hint.
 - `returnTo` values that are absolute or protocol-relative URLs are ignored.
 
+## Submit feedback (developer requirement, 2026-10-24; goes into link 1)
+
+The developer has seen Submit give no feedback for several seconds, then the success modal, and
+wondered whether the click registered. Cause (`src/components/FormWizard/FormWizard.tsx` ~L2447–2624):
+`saving` ("Submitting…", button disabled) only covers `saveProgress(Completed)`; `finally` clears it,
+then `onComplete?.(...)` fires without being awaited, and `FormWizardPage.handleComplete` runs the
+real create/update (plus the domain world resolve) with no pending state. The button reads "Submit"
+again and can be clicked twice.
+
+Fix: `onComplete` returns a promise and the wizard awaits it inside the `saving` window (one
+re-entrancy guard so a second click is a no-op); the Submit button stays "Submitting…" and disabled, the
+step strip and Cancel are disabled too, and a short status line ("Saving {Type}…") appears next to the
+button. The result then goes to `returnTo` with a toast (decision 2). Submit failure keeps the form open
+with the API's reason, as today.
+
+## Decisions taken (2026-10-24)
+
+1. Route: `/dashboard/:entityName`; bare `/dashboard` reopens the last viewed type.
+2. After a successful Submit: return at once to `returnTo` and show a success toast on the dashboard
+   (no 3 s modal). Plus the submit-pending feedback above.
+3. "New" on a type without a default form configuration goes to `/forms/{type}`.
+
 ## Open decisions (reversible defaults proposed)
 
-1. Route for the type: `/dashboard/:entityName` (proposed) or `/dashboard?type=`.
-2. Success feedback after Submit: keep the 3 s auto-close modal on the form (proposed, target now
-   `returnTo`), or return at once and show a toast on the Dashboard.
-3. "New" when the type has no default form configuration: go to `/forms/{type}`, which already shows the
-   "No default configuration" warning and the config list (proposed), or disable the button (needs one
-   more call per type).
 4. Nav label "Forms" → "Entity setup" (or similar): now, or with NAV-5.
