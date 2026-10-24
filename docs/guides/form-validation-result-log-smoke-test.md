@@ -3,9 +3,9 @@
 **Status:** To test (written 2026-10-24); both branch pairs pushed, not merged
 **Last updated:** 2026-10-24
 **Linear:** [KNG-186](https://linear.app/kngpandi/issue/KNG-186) · [KNG-269](https://linear.app/kngpandi/issue/KNG-269)
-**Branches:** knk-web-api `claude/kng-186-form-condition-isactive` (`2abb38a`) + `claude/kng-269-validation-result-log` (`355b819`); knk-web-app `claude/kng-186-form-condition-isactive` (`4831f97`) + `claude/kng-269-validation-result-log` (`7403e85`). Both pairs branch from trunk; merge the two of each repo locally (they touch `FormWizard.tsx` in different places).
+**Branches:** check out `claude/kng-186-269-form-validation` in **both** knk-web-api and knk-web-app: it merges `claude/kng-186-form-condition-isactive` and `claude/kng-269-validation-result-log` of each repo (merged 2026-10-24, no conflicts; EF snapshot verified against the model). The two feature branches stay separate for review; nothing is merged to trunk until this test passes.
 
-Run on the dev server with the four branches merged locally in knk-web-api and knk-web-app (or trunk once merged). The region rules need the plugin running. Keep three windows open while testing: the API console (every rule run prints `[VALIDATION_TRACE_BACKEND]` lines; a reuse prints `Answered from the result log`), the browser's network tab, and a SQL client on the dev DB. Record each step in **Findings** at the end.
+Run on the dev server with `claude/kng-186-269-form-validation` checked out in knk-web-api and knk-web-app (or trunk once merged). The region rules need the plugin running. Keep three windows open while testing: the API console (every rule run prints `[VALIDATION_TRACE_BACKEND]` lines; a reuse prints `Answered from the result log`), the browser's network tab, and a SQL client on the dev DB. Record each step in **Findings** at the end.
 
 ## 0. Setup
 
