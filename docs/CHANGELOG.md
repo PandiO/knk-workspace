@@ -6,6 +6,21 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 _Nothing at the moment._
 
+## 2026-10-24
+
+- **Form wizard: step completion conditions run** ([KNG-186](https://linear.app/kngpandi/issue/KNG-186); knk-web-api `master` `a38c8ee`,
+  knk-web-app `main` `00e4af6`, merged directly, no PR; smoke-tested by the developer, [guide](guides/form-validation-result-log-smoke-test.md)).
+  A step's completion condition ("Allow entry must be ticked before you continue") now stops Next while it fails. The API sent every
+  condition and field validation as inactive before, so none ever ran. `StepCondition` and `FieldValidation` have a real `IsActive`
+  (migration `FormConditionAndValidationIsActive`, default on), kept by save, clone and export/import; the form configuration's own
+  never-set flag is gone. The builder can't author step conditions yet ([KNG-274](https://linear.app/kngpandi/issue/KNG-274)).
+- **Form wizard: validation rules remember their last run** ([KNG-269](https://linear.app/kngpandi/issue/KNG-269); same merges).
+  The API keeps the most recent run of each API-backed rule per entity (or per draft) and answers from it while the rule and the
+  inputs it reads are unchanged, so re-opening an entity no longer re-runs every region check against the game server. Region
+  rules expire after 24 h (`ValidationResultLog:ExternalStateTtlHours`), a redrawn region drops its rows, a check the plugin
+  couldn't complete is never remembered, and the log never blocks a form if it can't be read. A step's rules go in one
+  `validate-batch` request; a reused result shows "checked … ago" with a **Re-check** that runs the rule for real.
+
 ## 2026-10-23
 
 - **Domain sub-regions: one domain, several WorldGuard regions** ([KNG-253](https://linear.app/kngpandi/issue/KNG-253),

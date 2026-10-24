@@ -1,11 +1,11 @@
 # Form validation: step completion conditions (KNG-186) and the rule result log (KNG-269) — smoke test
 
-**Status:** Run 1 (2026-10-24, developer): 7–16 and 18–21 pass, 23–26 accepted; 17 re-tested and passed; 22 to confirm after its rewrite
-**Last updated:** 2026-10-24
+**Status:** Passed 2026-10-24 (run 1, developer): every step passed or was accepted after the four fixes recorded in Findings; **merged** to trunk 2026-10-24 (knk-web-api `master` `a38c8ee`, knk-web-app `main` `00e4af6`)
+**Last updated:** 2026-10-24 (passed and merged)
 **Linear:** [KNG-186](https://linear.app/kngpandi/issue/KNG-186) · [KNG-269](https://linear.app/kngpandi/issue/KNG-269)
-**Branches:** check out `claude/kng-186-269-form-validation` in **both** knk-web-api and knk-web-app: it merges `claude/kng-186-form-condition-isactive` and `claude/kng-269-validation-result-log` of each repo (merged 2026-10-24, no conflicts; EF snapshot verified against the model). The two feature branches stay separate for review; nothing is merged to trunk until this test passes.
+**Branches:** merged to trunk 2026-10-24 (knk-web-api `master` `a38c8ee`, knk-web-app `main` `00e4af6`); the test branches `claude/kng-186-269-form-validation`, `claude/kng-186-form-condition-isactive` and `claude/kng-269-validation-result-log` are history.
 
-Run on the dev server with `claude/kng-186-269-form-validation` checked out in knk-web-api and knk-web-app (or trunk once merged). The region rules need the plugin running. Keep three windows open while testing: the API console (every rule run prints `[VALIDATION_TRACE_BACKEND]` lines; a reuse prints `Answered from the result log`), the browser's network tab, and a SQL client on the dev DB. Record each step in **Findings** at the end.
+Run on the dev server with trunk (knk-web-api `master`, knk-web-app `main`) checked out. The region rules need the plugin running. Keep three windows open while testing: the API console (every rule run prints `[VALIDATION_TRACE_BACKEND]` lines; a reuse prints `Answered from the result log`), the browser's network tab, and a SQL client on the dev DB. Record each step in **Findings** at the end.
 
 ## 0. Setup
 
@@ -123,5 +123,5 @@ Each step says what the API console, the browser and the rows should show.
 | 16 | Pass with noise (2026-10-24) | `Answered from the result log` seen; the API console also logged a handled `step_progress` duplicate-key race on Next (pre-existing, EF logs it before `WorkflowRepository.AddStepAsync` swallows it), filed separately |
 | 17 | Blocked, then fixed; **re-test passed** (2026-10-24, developer) | Re-check not visible: the wizard cleared every validation result on each step change, so a passing cached result was never shown. Fixed on the KNG-269 web-app branch: results are kept across Previous/Next; step reworded |
 | 18–21 | Pass (2026-10-24, developer) | 20 accepted |
-| 22 | Not a failure (2026-10-24) | the row written by the Re-run in 21 answered the rule with the plugin down, by design; step rewritten to make a miss first, re-test |
+| 22 | Not a failure; **re-test passed** (2026-10-24, developer) | the row written by the Re-run in 21 answered the rule with the plugin down, by design; step rewritten to make a miss first |
 | 23–26 | Accepted (2026-10-24, developer) | |
