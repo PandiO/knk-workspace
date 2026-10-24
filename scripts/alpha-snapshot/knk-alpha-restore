@@ -1,0 +1,76 @@
+#!/usr/bin/env bash
+# knk-alpha-restore: put a knk-alpha-snapshot back.   sudo knk-alpha-restore <snapshot name or dir> [db|world|all]
+# Takes a safety snapshot "pre-restore" first, checks the snapshot's SHA256SUMS, asks for confirmation, then:
+#   db     stops api and minecraft (the plugin writes too), recreates knightsandkings_alpha from db.sql.gz
+#   world  stops minecraft, moves minecraft-data aside to minecraft-data.replaced-<time>, unpacks the snapshot's world
+# and starts what it stopped. Images and compose.yaml are NOT changed: when the snapshot is from another API build
+# (see meta.txt), restore the matching compose.yaml from config.tar first, or the schema won't match.
+set -euo pipefail
+umask 077
+export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+STACK="${KNK_STACK_DIR:-/srv/docker/stacks/knk-alpha}"
+ROOT="${KNK_SNAPSHOT_DIR:-/srv/backups/knk-alpha/snapshots}"
+MYSQL=knk-alpha-mysql
+DB=knightsandkings_alpha
+compose() { docker compose -f "$STACK/compose.yaml" --project-directory "$STACK" "$@"; }
+log() { printf '%s  %s\n' "$(date -u +%H:%M:%S)" "$*"; }
+sql() { docker exec "$MYSQL" sh -c 'MYSQL_PWD="$(cat /run/secrets/mysql_root_password)" exec mysql --user=root --host=127.0.0.1 -N -B -e "$1"' sh "$1"; }
+
+[ "$(id -u)" = 0 ] || { echo "run with sudo" >&2; exit 1; }
+[ $# -ge 1 ] || { echo "usage: knk-alpha-restore <snapshot> [db|world|all]   (snapshots: ls $ROOT)" >&2; exit 64; }
+snap="$1"; what="${2:-all}"
+[ -d "$snap" ] || snap="$ROOT/$snap"
+[ -d "$snap" ] || { echo "no snapshot $1 in $ROOT" >&2; exit 66; }
+case "$what" in db|world|all) ;; *) echo "what: db, world or all" >&2; exit 64 ;; esac
+world_file=$(cd "$snap" && ls minecraft-data.tar* 2>/dev/null | head -1 || true)
+
+log "checking $snap"
+(cd "$snap" && sha256sum -c --quiet SHA256SUMS) || { echo "SHA256SUMS mismatch: not restoring" >&2; exit 65; }
+sed -n '1,6p' "$snap/meta.txt"
+snap_migrations=$(sed -n 's/^database .*: [0-9]* tables, \([0-9]*\) migrations.*/\1/p' "$snap/meta.txt")
+now_migrations=$(sql "SELECT COUNT(*) FROM $DB.__EFMigrationsHistory" 2>/dev/null || echo "?")
+if [ "$what" != world ] && [ "$snap_migrations" != "$now_migrations" ]; then
+  echo
+  echo "WARNING: the snapshot has $snap_migrations migrations, the database now $now_migrations. The running API image"
+  echo "         expects the current schema. Restore the snapshot's compose.yaml (config.tar) and recreate the API too."
+fi
+if [ "$what" != db ] && [ -z "$world_file" ]; then echo "this snapshot has no world archive" >&2; exit 66; fi
+echo
+read -r -p "Restore '$what' from $(basename "$snap")? Type RESTORE to continue: " answer
+[ "$answer" = RESTORE ] || { echo "cancelled"; exit 1; }
+
+log "safety snapshot first"
+"$(dirname "$(readlink -f "$0")")/knk-alpha-snapshot" pre-restore
+exec 9>/run/knk-alpha-snapshot.lock
+flock -n 9 || { echo "another knk-alpha snapshot or restore is running" >&2; exit 75; }
+
+if [ "$what" = world ]; then stop=(minecraft); else stop=(api minecraft); fi
+log "stopping ${stop[*]}"
+compose stop "${stop[@]}"
+trap 'log "an error stopped the restore: starting ${stop[*]} again"; compose start "${stop[@]}" || true' ERR
+
+if [ "$what" != world ]; then
+  log "database: recreating $DB from db.sql.gz"
+  sql "DROP DATABASE IF EXISTS $DB"
+  zcat "$snap/db.sql.gz" | docker exec -i "$MYSQL" sh -c 'MYSQL_PWD="$(cat /run/secrets/mysql_root_password)" exec mysql --user=root --host=127.0.0.1'
+  tables=$(sql "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='$DB' AND table_type='BASE TABLE'")
+  log "database: $tables tables, $(sql "SELECT COUNT(*) FROM $DB.__EFMigrationsHistory") migrations"
+fi
+if [ "$what" != db ]; then
+  aside="$STACK/minecraft-data.replaced-$(date -u +%Y%m%dT%H%M%SZ)"
+  log "world: moving the current folder to $(basename "$aside")"
+  mv "$STACK/minecraft-data" "$aside"
+  log "world: unpacking $world_file"
+  case "$world_file" in
+    *.zst) zstd -q -d -c "$snap/$world_file" | tar --numeric-owner -C "$STACK" -xf - ;;
+    *)     tar --numeric-owner -C "$STACK" -xf "$snap/$world_file" ;;
+  esac
+fi
+
+trap - ERR
+log "starting ${stop[*]}"
+compose start "${stop[@]}"
+log "done. Check: docker ps, knk-ops api-health/db-summary, and the game."
+[ "$what" != db ] && echo "The replaced world is kept at $aside: delete it once the restore is accepted."
+exit 0

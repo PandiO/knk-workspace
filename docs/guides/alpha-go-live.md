@@ -539,7 +539,10 @@ and through Cloudflare ([report](../reports/2026-10-24-alpha-security-probe.md))
 
 **C. Data**
 - [ ] The holder-id clash query returns no rows.
-- [ ] A clean baseline dump exists **after** the KNG-64 migrations, and one restore was rehearsed (runbook Phase 7).
+- [x] A clean baseline dump exists **after** the KNG-64 migrations (2026-10-22/24 baselines).
+- [ ] ~~One restore was rehearsed (runbook Phase 7).~~ **Deferred to the beta** (developer, 2026-10-24). For the alpha:
+      `knk-alpha-snapshot` before/after each session and before updates, `knk-alpha-restore` tested on a mock stack
+      ([`scripts/alpha-snapshot/`](../../scripts/alpha-snapshot/)).
 
 **D. Services**
 - [ ] mysql, api and minecraft are healthy. No ports are published except through cloudflared and playit.
@@ -587,7 +590,7 @@ with the code from the result panel:
 > Knights & Kings closed alpha: sign up at **https://app.knightsandkings.net/join** with code `KNK-XXXXX-XXXXX` (valid until
 > <date>, <n> places). Then join **play.knightsandkings.net** (Java Edition 26.3): you'll get a code on screen; enter
 > it on the website to link your Minecraft account. Never give that code to anyone; staff never ask for it.
-> Bugs or questions: <channel>.
+> Bugs or questions: <channel>. This is an alpha: progress may be reset.
 
 **Before the switch-over** (today's alpha), the hand-sent text:
 
@@ -599,6 +602,8 @@ with the code from the result panel:
 > 4. From then on, you can log in with your Minecraft name or your email.
 >
 > Found a bug or something confusing? Send it to <channel> with what you did, what you expected, and a screenshot.
+>
+> This is a closed **alpha**: things will break, and your progress may be **reset** between or during test runs.
 
 ---
 

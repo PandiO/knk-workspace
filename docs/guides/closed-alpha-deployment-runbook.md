@@ -1,6 +1,6 @@
 # Closed-alpha deployment runbook
 
-**Status:** In progress — phases 0–3 complete; phase 3b (API upgrade to the KNG-64 build, [KNG-227](https://linear.app/kngpandi/issue/KNG-227)) complete 2026-10-22 ([report](../reports/2026-10-22-alpha-api-kng64-upgrade.md)); API updated to `4aeb794` ([KNG-275](https://linear.app/kngpandi/issue/KNG-275)) and phase 4 Stage 2 (KnK plugin `d56e41da`, [KNG-225](https://linear.app/kngpandi/issue/KNG-225)) done 2026-10-24 ([report](../reports/2026-10-24-alpha-api-4aeb794-and-plugin-stage-2.md)); `/hub` waits for a hub selection in the approved seed. Phase 5 (playit.gg, `play.knightsandkings.net`) done 2026-10-24 ([report](../reports/2026-10-24-alpha-phase-5-playit.md)). Phase 6 (web app, `app.knightsandkings.net`, own tunnel, Access; API `a38c8ee9`) done 2026-10-24 ([report](../reports/2026-10-24-alpha-phase-6-web-ingress.md)). Security probe (go-live § 8) passed 2026-10-24 privately and through Cloudflare ([report](../reports/2026-10-24-alpha-security-probe.md)). HSTS and the apex redirect done the same day. Next: Phase 7 backups, the approved seed, Phase 9. Web hostname decided 2026-10-21: `app.knightsandkings.net`
+**Status:** In progress — phases 0–3 complete; phase 3b (API upgrade to the KNG-64 build, [KNG-227](https://linear.app/kngpandi/issue/KNG-227)) complete 2026-10-22 ([report](../reports/2026-10-22-alpha-api-kng64-upgrade.md)); API updated to `4aeb794` ([KNG-275](https://linear.app/kngpandi/issue/KNG-275)) and phase 4 Stage 2 (KnK plugin `d56e41da`, [KNG-225](https://linear.app/kngpandi/issue/KNG-225)) done 2026-10-24 ([report](../reports/2026-10-24-alpha-api-4aeb794-and-plugin-stage-2.md)); `/hub` waits for a hub selection in the approved seed. Phase 5 (playit.gg, `play.knightsandkings.net`) done 2026-10-24 ([report](../reports/2026-10-24-alpha-phase-5-playit.md)). Phase 6 (web app, `app.knightsandkings.net`, own tunnel, Access; API `a38c8ee9`) done 2026-10-24 ([report](../reports/2026-10-24-alpha-phase-6-web-ingress.md)). Security probe (go-live § 8) passed 2026-10-24 privately and through Cloudflare ([report](../reports/2026-10-24-alpha-security-probe.md)). HSTS and the apex redirect done the same day. Phase 7 deferred to beta (developer, 2026-10-24); the alpha uses manual snapshots (`scripts/alpha-snapshot/`). Next: the approved seed, Phase 9. Web hostname decided 2026-10-21: `app.knightsandkings.net`
 **Last updated:** 2026-10-24 (Phase 6 web and ingress; Phase 5 playit; Phase 4 Stage 2 and the API update to `4aeb794`; Phase 9: KNG-205 invitations merged, the feature-branch notes replaced); 2026-10-22; 2026-10-21 (Phase 9: invite-only switch-over, `mailrelay` and `cfproxy` containers — KNG-205/KNG-218); 2026-10-18
 **Progress report:** [2026-10-11 closed-alpha infrastructure progress](../reports/2026-10-11-closed-alpha-infrastructure-progress.md)
 **Handoff:** [2026-10-11 closed-alpha infrastructure](../ai-agents/handoffs/2026-10-11-closed-alpha-infrastructure.md)
@@ -430,7 +430,31 @@ Acceptance: external alpha users can load the web app and authenticate; the
 browser calls only the intended API origin; admin routes enforce KnK roles;
 no internal management service is exposed.
 
-## Phase 7 — backup automation and rehearsal
+## Phase 7 — backup automation and rehearsal (deferred to beta; alpha: manual snapshots)
+
+> **Decision 2026-10-24 (developer):** the 2–3 closed alpha runs (friends and close relations) test functionality and
+> performance, not data safety. Alpha data is disposable, and testers are told progress may be reset (go-live § 10).
+> The full plan below (schedule, off-site, retention, restore rehearsal, RPO/RTO) moves to the **beta**, which is
+> also when the move to a VPS is planned ([KNG-241](https://linear.app/kngpandi/issue/KNG-241)). Building it on the
+> NAS now would partly be thrown away.
+>
+> **For the alpha:** `sudo knk-alpha-snapshot [label]` and `sudo knk-alpha-restore <snapshot> [db|world|all]`
+> ([`scripts/alpha-snapshot/`](../../scripts/alpha-snapshot/)): a database dump, the world (during
+> `save-off`, no downtime), config and secrets, kept on the NAS (newest 10), restorable in minutes. **Rule:** a
+> snapshot before and after each alpha session and before every update. The realistic alpha risk is a bad update or
+> an operator mistake mid-session, not a disk failure.
+>
+> **Plan for the beta** (agreed design, 2026-10-24):
+> - restic (encrypted, deduplicated) every 6 hours: database dump, world during `save-off`, config and secrets;
+>   no downtime;
+> - a local repository plus a daily `restic copy` off-site. An EU provider, e.g. Hetzner Storage Box, because
+>   player emails are personal data;
+> - a monthly offline copy;
+> - retention: last 8 snapshots plus 14 daily, 8 weekly and 6 monthly;
+> - status file plus a `knk-ops backup-status` check;
+> - a restore rehearsal into throwaway MySQL and Paper containers, with the RTO recorded;
+> - the restic password also in the developer's password manager.
+
 
 - Nightly logical dump of `knightsandkings_alpha`, with retention and
   checksum.
