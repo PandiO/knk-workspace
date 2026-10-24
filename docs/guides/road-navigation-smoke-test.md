@@ -997,7 +997,7 @@ as for a destination behind a closed gate.
 **Run 9 (2026-10-09, developer, knk-plugin `9391780`): all pass** - A8/A9 with the South Gate closed (around district
 16 to the gate's spawn) and the closest-point guidance. The temporary diagnostics are removed (`10b9a16`). The
 follow-up fixes since the first trunk merge (C3: `a8ec1ec`, `b6cb699`; A8/A9: `758dbc5`, `9391780`) are merged to
-knk-plugin `main` (see the header). Still open: C6 (siege).
+knk-plugin `main` (see the header). Still open: C6 (siege) - the developer runs it at the closed alpha on 2026-10-25.
 
 **Finding N15 (2026-10-09, developer) — "too far from any road" for a target above a road.** From (1419, 82, -550),
 `/nav Keep Tower Roof` (Location 79 at (1410, 113, -506)) said "Keep Tower Roof is too far from any road." The player
