@@ -32,6 +32,7 @@
 | 10 | ArmorRepair | 1 | Support | 120s | Click | Full repair armor |
 | 11 | Resistance | 2 | Support | 120s | Click | Resistance lvl × (lvl × 100 + 100t) |
 | 12 | Invisibility | 1 | Support | 90s | Click | Invisibility × 200t |
+| 13 | Cleaving | 4 | Attack | 60/50/40/30s | Gate hit / gate right-click | Gate door hits ×1.25/1.5/1.75/2; charged strike = 5/6/7/8 such hits (netherite: 50/72/98/128 of 500 HP), then the cooldown. Gates only (siege playtest 2026-10-24; `gates.cleaving` in the plugin config) |
 
 ---
 

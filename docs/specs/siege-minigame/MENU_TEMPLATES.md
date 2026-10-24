@@ -277,7 +277,7 @@ bounce-back.~~ *(Updated 2026-09-26, smoke test: a lobby in cooldown or disabled
 
 | Slot | Material | Name | Lore | Action | Conditions |
 |---|---|---|---|---|---|
-| 2 | `COMPASS` | `&aChange spawnpoint` | `&7Click to choose where you` · `&7respawn when killed` · `` · `&7Current: &a$siegeViewer.getCurrentSpawnName$` | `menu.open {key: siege.spawnpoint}` | Render: phase `IN_PROGRESS` + `siege.participating` (fixes N14) |
+| 2 | `COMPASS` | `&aChange spawnpoint` | `&7Click to choose where you` · `&7respawn when killed` · `` · `&7Current: &a$siegeViewer.getCurrentSpawnName$` | `menu.open {key: siege.spawnpoint}` | Render: phase `HUB,IN_PROGRESS` + `siege.participating` (fixes N14; `HUB` since the 2026-10-24 playtest — the picker opens at the team split) |
 | 4 | `$siege.getBannerMaterial$` (in progress + participating: the viewer's team banner via `BannerPatterns` = `$siegeViewer.getTeamBannerPatterns$`) | `&7$siege.getName$` | as C.2 row lore (T20) + `$siegeViewer.getTeamLine$` (`&7Your team: <colour><name>` or null) | — | — |
 | 6 | `COMPASS` | `&7Objective information` | static help text restored from v1 (`&6How to play` · `&7Objectives are marked by a banner.` · `&7Stand inside an objective's circle` · `&7to capture (attackers) or defend it.` · `&7Capturing a "&aWin&7" objective ends the game.` · `&7Held objectives are extra spawnpoints.` · `&7Selected gates can be opened and closed` · `&7by the team that owns them.` · `$siege.getRecaptureLine$` (`&7Captured objectives can be retaken.` or null — DESIGN D5) · `&7Enchantment books appear near objectives;` · `&7click one onto an item to apply it.` · `&8Siege enchantments are removed afterwards.`) + `&7Objectives: &a$siege.getObjectiveCount$` · `&7Objectives with a gate: &a$siege.getGateObjectiveCount$` | — | Render: scenario known (drawn, or phase ≥ HUB) |
 | 8 | `BARRIER` | `&c$menu.getBackLabel$` | `&7$menu.getBackHint$` | `menu.back` | — |
@@ -329,13 +329,20 @@ In `COOLDOWN` the source returns an empty page.
 Pinned pager in Body: none by default (27 capacity); if the member list exceeds it, the Body's last row
 (slots 45–53) holds a pinned Prev (45) / Next (53) + filler, as in C.2 (capacity 18).
 
-### C.4 `siege.spawnpoint` — respawn picker, Height 3, `AutoRefreshTicks` 20
+### C.4 `siege.spawnpoint` — spawn picker, Height 3 (`Dynamic`, `MinHeight` 2), `AutoRefreshTicks` 20
 
-Opened by the runtime at match start and by C.3's "Change spawnpoint", only if the team has ≥ 2 options
-(v1 rule). After a respawn it opens only while the member has no stored choice. *(Updated 2026-09-26,
-smoke test: the choice is remembered — ignoring the picker at match start stores the team default, so it
-doesn't reopen on every death; a captured objective resets its choosers to the team default with a chat
-hint to `/siege menu`.)* No `ctx` needed — resolves the viewer's own match.
+Opened by the runtime at the team split (T-10, in the hub) and by C.3's "Change spawnpoint", only if the
+team has ≥ 2 options (v1 rule). After a respawn it opens only while the member has no stored choice.
+*(Updated 2026-09-26, smoke test: the choice is remembered — ignoring the picker stores the team default,
+so it doesn't reopen on every death; a captured objective resets its choosers to the team default with a
+chat hint to `/siege menu`. Updated 2026-10-24, playtest: it opens at the team split instead of at match
+start, against the scenario's initial holdings — the start then teleports everyone to their choice and
+opens nothing; the menu shrinks to its option rows.)* No `ctx` needed — resolves the viewer's own match,
+or their lobby at the hub once teams are split (`SiegeService.spawnScopeOf`).
+
+Seeding is create-only, so `MenuTemplateSeed.RepairSiegeLayoutAsync` (run after every seed) brings the
+three siege menus' growth/minimum height and this button's phases up to date in an existing database
+without touching anything else.
 
 | Section | Kind | DisplaySlot | W×H | Content |
 |---|---|---|---|---|
