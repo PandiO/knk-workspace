@@ -1,5 +1,5 @@
   api:
-    image: knk-web-api:alpha-4aeb7947
+    image: knk-web-api:alpha-a38c8ee9
     container_name: knk-alpha-api
     restart: unless-stopped
     init: true
@@ -32,6 +32,9 @@
       Email__Transport: Log
       Email__AllowLogTransport: "true"
       App__PublicBaseUrl: https://app.knightsandkings.net
+      # Phase 6: trust X-Forwarded-For only from nginx (the webapi network); per-client rate limits and lockout.
+      ForwardedHeaders__Enabled: "true"
+      ForwardedHeaders__KnownNetworks: 172.31.250.0/28
     volumes:
       - /srv/docker/stacks/knk-alpha/secrets/mysql_app_password:/run/secrets/mysql_app_password:ro
       - /srv/docker/stacks/knk-alpha/secrets/plugin_api_key:/run/secrets/plugin_api_key:ro
@@ -40,6 +43,7 @@
       - /srv/docker/stacks/knk-alpha/config/api/appsettings.Production.json:/app/appsettings.Production.json:ro
     networks:
       - backend
+      - webapi
     security_opt:
       - no-new-privileges:true
     cap_drop:

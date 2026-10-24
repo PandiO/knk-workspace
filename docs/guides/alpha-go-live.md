@@ -63,8 +63,8 @@ Minecraft client ──► play.knightsandkings.net ──► playit.gg tunnel �
 
 | Repo | Minimum | On the NAS today | Action |
 |---|---|---|---|
-| knk-web-api | `master` ≥ `30c5dc5` (KNG-64 merge) | `knk-web-api:alpha-4aeb7947` since 2026-10-24 (KNG-64 and KNG-205 included, private; [KNG-275](https://linear.app/kngpandi/issue/KNG-275)) | Done (§ 3, [report](../reports/2026-10-22-alpha-api-kng64-upgrade.md)) |
-| knk-web-app | `main` ≥ `98c0a76` | not built | Build in runbook Phase 6 (§ 6) |
+| knk-web-api | `master` ≥ `30c5dc5` (KNG-64 merge) | `knk-web-api:alpha-a38c8ee9` since 2026-10-24 (KNG-64, KNG-205, KNG-186/269; behind `app.knightsandkings.net` `/api`) | Done (§ 3, [report](../reports/2026-10-22-alpha-api-kng64-upgrade.md)) |
+| knk-web-app | `main` ≥ `98c0a76` | `knk-web-app:alpha-00e4af61` at `https://app.knightsandkings.net` since 2026-10-24 | Done (runbook Phase 6, [report](../reports/2026-10-24-alpha-phase-6-web-ingress.md)) |
 | knk-plugin | `main` ≥ `34c9261`, plus the KNG-114 hub loader | `plugins/KnightsAndKings.jar` from `main` `d56e41da` since 2026-10-24 ([KNG-225](https://linear.app/kngpandi/issue/KNG-225)) | Done (runbook Phase 4, [report](../reports/2026-10-24-alpha-api-4aeb794-and-plugin-stage-2.md)); later builds via `plugins/update/` (§ 5) |
 
 Build from the **current** trunk head at the moment you package, and record the exact commit, as the runbook does for
@@ -343,6 +343,12 @@ server {
 ```
 
 **Cloudflare Tunnel:** add a public hostname `app.knightsandkings.net` → `http://<nginx>:80` on the existing tunnel.
+
+> **As built 2026-10-24** ([report](../reports/2026-10-24-alpha-phase-6-web-ingress.md)): not the existing tunnel but the alpha's
+> own (`knk-alpha`, `cloudflared` in the `knk-alpha` stack with `TUNNEL_TOKEN_FILE`). nginx is the `web` service
+> (nginx-unprivileged, port **8080**; [`scripts/alpha-web/`](../../scripts/alpha-web/)). The route is a *published application*
+> with service URL `http://web:8080`. **Leave the HTTP Host Header empty**: an override such as `web:8080` makes every
+> `/api` call fail `AllowedHosts` (400). The web app's lockfile needs npm 11, so build with Node 24.
 
 **Cloudflare Access:** add a Self-hosted application for the **whole** `app.knightsandkings.net`. The policy *Allow testers*
 includes each tester's email, with One-time PIN login and a 24-hour session. *(After the switch-over, § 6.1: the

@@ -1,0 +1,49 @@
+  web:
+    # Runbook Phase 6: the web app (static build) and the /api proxy for app.knightsandkings.net.
+    image: knk-web-app:alpha-00e4af61
+    container_name: knk-alpha-web
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m,uid=101,gid=101,mode=0700
+    # webapi: to api:5000 only; edge: reached by cloudflared only. Both internal, so no internet.
+    networks:
+      - webapi
+      - edge
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  cloudflared:
+    # Runbook Phase 6: the alpha's own tunnel "knk-alpha", separate from the personal HomeNetwork tunnel.
+    # Its public hostname app.knightsandkings.net -> http://web:8080 is set in the Zero Trust dashboard.
+    # The token comes from a file (--token-file), never the command line or environment.
+    image: cloudflare/cloudflared:2026.10.3@sha256:faa8e0a1475f137c910be6025f43c8e4092fdd35461b31e19fd1390657a1ff39
+    container_name: knk-alpha-cloudflared
+    restart: unless-stopped
+    command: ["tunnel", "run"]
+    environment:
+      TUNNEL_TOKEN_FILE: /run/secrets/cloudflared_token
+      TUNNEL_METRICS: 127.0.0.1:20241
+    volumes:
+      - /srv/docker/stacks/knk-alpha/secrets/cloudflared_token:/run/secrets/cloudflared_token:ro
+    read_only: true
+    networks:
+      - edge
+      - cfegress
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
