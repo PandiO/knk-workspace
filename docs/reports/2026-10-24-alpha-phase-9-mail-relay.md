@@ -44,7 +44,7 @@ Scratch rehearsal (same block, API `a38c8ee9`): relay healthy; `@gmail.com` send
 | Forgot password | the mail arrived; the link starts with `https://app.knightsandkings.net` |
 | Relay log | `TLS connection established to smtp.gmail.com`, `status=sent (250 2.0.0 OK …)` |
 | Relay stopped, forgot password | the page gave the generic answer; the API logged a failed attempt with a next try (outbox retry) |
-| Relay started again | the queued mail is retried by the outbox backoff; delivery was still pending when this report was written |
+| Relay started again | the outbox retried with its backoff and the mail arrived |
 | `ssh knk-nas-ops compose` / `secret-files` | `matches_recorded: true`; 8 files incl. `gmail_app_password` `root:root 600`, `missing: []` |
 
 ## 4. Notes

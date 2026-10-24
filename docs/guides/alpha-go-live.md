@@ -193,7 +193,7 @@ Security__Registration__Mode=Invite
 # Admission (defaults): claim codes live 15 min; invited accounts unlinked after 2 days get one reminder mail (0 = off).
 # Admission__ClaimCodeMinutes=15  Admission__FinishLinkingReminderDays=2
 
-# Cloudflare Access sync (§ 6.1): on from § 11.1 step 2. ApiToken lives only in /etc/knk/api.env (mode 600).
+# Cloudflare Access sync (§ 6.1): on from § 11.1 step 2. ApiToken: alpha secrets/cloudflare_api_token (KNG-216).
 CloudflareAccess__SyncEnabled=true
 CloudflareAccess__AccountId=<account id>
 CloudflareAccess__ListId=<id of knk-api-testers>
@@ -385,42 +385,12 @@ that was invited or grandfathered. A second Access application opens only the si
 before their address is on the list. Do the steps in this order; nothing changes for testers until step 7.
 
 **1. Forward proxy (`cfproxy`).** The API has no internet on purpose, so its Cloudflare calls go through a small
-proxy that allows only `api.cloudflare.com:443`. Add to the `knk-alpha` stack:
+proxy that allows only `CONNECT api.cloudflare.com:443`. On the alpha it's tinyproxy, built on the NAS as
+`knk-cfproxy:alpha-1` from [`scripts/alpha-cfproxy/`](../../scripts/alpha-cfproxy/README.md) (config baked in, UID 2004,
+read-only), on the networks `mail` (with the API; the only allowed client subnet) and `mail-egress`.
 
-```yaml
-  cfproxy:
-    image: vimagick/tinyproxy:1.11.2        # pin the tag you test; no :latest
-    restart: unless-stopped
-    networks: [backend, mail-egress]        # backend: the API reaches it; mail-egress: the network with internet
-    volumes:
-      - /etc/knk/cfproxy/tinyproxy.conf:/etc/tinyproxy/tinyproxy.conf:ro
-      - /etc/knk/cfproxy/filter:/etc/tinyproxy/filter:ro
-```
-
-`/etc/knk/cfproxy/tinyproxy.conf`:
-
-```
-Port 8888
-Listen 0.0.0.0
-Timeout 30
-MaxClients 10
-LogLevel Info
-Allow <backend subnet, e.g. 172.20.0.0/16>
-ConnectPort 443
-FilterDefaultDeny Yes
-FilterExtended Yes
-Filter "/etc/tinyproxy/filter"
-```
-
-`/etc/knk/cfproxy/filter` (one line):
-
-```
-^api\.cloudflare\.com$
-```
-
-Check from the API container: `curl -sS -x http://cfproxy:8888 https://api.cloudflare.com/client/v4/ -o /dev/null -w '%{http_code}\n'`
-answers (any HTTP code, e.g. 400/404, means the proxy let it through), and `curl -x http://cfproxy:8888 https://example.com`
-is refused (403 from tinyproxy).
+Check from the stack: a `CONNECT` to `api.cloudflare.com:443` through `cfproxy:8888` is answered 200, `example.com`
+gets 403 from tinyproxy.
 
 **2. The list.** Zero Trust → *My Team* → *Lists* (or *Reusable components → Lists*) → *Create list*: name
 **`knk-api-testers`**, type **User email addresses**. Add **one staff address** so the list is never empty. Note the
@@ -432,8 +402,9 @@ list → `knk-api-testers`** rule. Keep the existing hand-made *Emails* include 
 Set the application's **session duration to 30 days** (it was 24 h), so the PIN is rare.
 
 **4. The API token.** *My Profile → API Tokens → Create custom token*: permission **Account → Zero Trust → Edit**,
-account resources **only this account**, no zone permissions. Put it in `/etc/knk/api.env` (mode 600) as
-`CloudflareAccess__ApiToken=…`. Never in compose files, appsettings or a ticket.
+account resources **only this account**, no zone permissions. On the alpha it goes in
+`secrets/cloudflare_api_token` (`2002:2002 600`); `scripts/alpha-api/api-entrypoint.sh` exports it as
+`CloudflareAccess__ApiToken`. Never in compose files, appsettings or a ticket.
 
 **5. The bypass application.** Access → *Add an application → Self-hosted*, same hostname `app.knightsandkings.net`, name
 "KnK sign-up (bypass)", with these paths (Access uses the most specific path, so everything else stays behind *Allow
@@ -447,7 +418,8 @@ testers*):
 
 One policy: **Action Bypass, Include Everyone**. The WAF rule on `/api/Auth/` stays.
 
-**6. The API settings** (in `/etc/knk/api.env` next to the token):
+**6. The API settings.** On the alpha `ProxyUrl` is in the Compose block; the other three are in
+`config/api/cloudflare-access.env` (root 600, an `env_file`), so the kill switch needs no Compose edit:
 
 ```bash
 CloudflareAccess__AccountId=<account id>

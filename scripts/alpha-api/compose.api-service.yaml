@@ -5,9 +5,15 @@
     init: true
     stop_grace_period: 30s
     user: "2002:2002"
+    # Phase 9 (KNG-216): the image's entrypoint plus the optional Cloudflare token file (scripts/alpha-api/api-entrypoint.sh).
+    entrypoint: ["/bin/sh", "/opt/knk/api-entrypoint.sh"]
     depends_on:
       mysql:
         condition: service_healthy
+    # Phase 9 (KNG-216): CloudflareAccess__SyncEnabled (the kill switch), __AccountId and __ListId live on the NAS
+    # only (identifiers, not secrets); change the file and recreate the API, no Compose edit.
+    env_file:
+      - /srv/docker/stacks/knk-alpha/config/api/cloudflare-access.env
     environment:
       ASPNETCORE_URLS: http://+:5000
       ASPNETCORE_ENVIRONMENT: Production
@@ -40,10 +46,14 @@
       # Phase 6: trust X-Forwarded-For only from nginx (the webapi network); per-client rate limits and lockout.
       ForwardedHeaders__Enabled: "true"
       ForwardedHeaders__KnownNetworks: 172.31.250.0/28
+      # Phase 9 (KNG-216): Access list sync through cfproxy; the token comes from secrets/cloudflare_api_token.
+      CloudflareAccess__ProxyUrl: http://cfproxy:8888
     volumes:
       - /srv/docker/stacks/knk-alpha/secrets/mysql_app_password:/run/secrets/mysql_app_password:ro
       - /srv/docker/stacks/knk-alpha/secrets/plugin_api_key:/run/secrets/plugin_api_key:ro
       - /srv/docker/stacks/knk-alpha/secrets/jwt_secret:/run/secrets/jwt_secret:ro
+      - /srv/docker/stacks/knk-alpha/secrets/cloudflare_api_token:/run/secrets/cloudflare_api_token:ro
+      - /srv/docker/stacks/knk-alpha/config/api/api-entrypoint.sh:/opt/knk/api-entrypoint.sh:ro
       # Log levels (finding A5); environment variables with dots don't survive the sh entrypoint.
       - /srv/docker/stacks/knk-alpha/config/api/appsettings.Production.json:/app/appsettings.Production.json:ro
     networks:

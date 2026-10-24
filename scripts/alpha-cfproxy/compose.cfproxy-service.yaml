@@ -1,0 +1,29 @@
+  cfproxy:
+    # Phase 9 (KNG-216): forward proxy for the API's Cloudflare Access list sync. Allows only CONNECT to
+    # api.cloudflare.com:443 from the mail network (config baked into the image, scripts/alpha-cfproxy/).
+    image: knk-cfproxy:alpha-1
+    container_name: knk-alpha-cfproxy
+    restart: unless-stopped
+    user: "2004:2004"
+    read_only: true
+    environment:
+      TZ: UTC
+    healthcheck:
+      test: ["CMD", "nc", "-z", "-w", "3", "127.0.0.1", "8888"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    # mail: the API reaches cfproxy:8888; mail-egress: out to api.cloudflare.com. No published ports.
+    networks:
+      - mail
+      - mail-egress
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
