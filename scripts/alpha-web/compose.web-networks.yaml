@@ -1,0 +1,11 @@
+  # Phase 6: nginx <-> API only. The API trusts X-Forwarded-For from this subnet (ForwardedHeaders__KnownNetworks).
+  webapi:
+    internal: true
+    ipam:
+      config:
+        - subnet: 172.31.250.0/28
+  # Phase 6: cloudflared <-> nginx only.
+  edge:
+    internal: true
+  # Phase 6: internet for cloudflared only.
+  cfegress: {}

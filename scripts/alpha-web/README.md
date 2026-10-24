@@ -22,3 +22,15 @@ container standing in for `cloudflared`:
 - the `edge` network can't reach the API directly;
 - 12 failed logins from one `CF-Connecting-IP` → 429 from the 11th on, while another IP still gets 401. So the API's
   `ForwardedHeaders` trust (known network = the `webapi` subnet) partitions the rate limits per real client.
+
+Compose blocks for the NAS `knk-alpha` stack:
+- `compose.web-services.yaml`: the services `web` and `cloudflared`, which go before `volumes:`;
+- `compose.web-networks.yaml`: the networks `webapi` (internal, `172.31.250.0/28`), `edge` (internal) and `cfegress`,
+  appended at the end of `networks:`.
+
+The `api` block (`scripts/alpha-api/compose.api-service.yaml`) joins `webapi` and gets
+`ForwardedHeaders__Enabled=true` and `ForwardedHeaders__KnownNetworks=172.31.250.0/28`.
+
+`cloudflared` (2026.10.3, distroless, UID 65532) runs the alpha's own tunnel `knk-alpha` with
+`TUNNEL_TOKEN_FILE=/run/secrets/cloudflared_token`. The token file is `secrets/cloudflared_token`, `65532:65532 600`.
+Metrics only on `127.0.0.1`.
