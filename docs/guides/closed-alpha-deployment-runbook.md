@@ -1,7 +1,7 @@
 # Closed-alpha deployment runbook
 
 **Status:** In progress — phases 0–3 complete; phase 4 Stage 1 (Minecraft container without the KnK plugin, [KNG-225](https://linear.app/kngpandi/issue/KNG-225)) running since 2026-10-21 ([report](../reports/2026-10-21-minecraft-container.md)); phase 3b (API upgrade to the KNG-64 build, [KNG-227](https://linear.app/kngpandi/issue/KNG-227)) complete 2026-10-22 ([report](../reports/2026-10-22-alpha-api-kng64-upgrade.md)); phase 4 Stage 2 is next. Web hostname decided 2026-10-21: `app.knightsandkings.net`
-**Last updated:** 2026-10-22
+**Last updated:** 2026-10-24 (Phase 9: KNG-205 invitations merged, the feature-branch notes replaced); 2026-10-22; 2026-10-21 (Phase 9: invite-only switch-over, `mailrelay` and `cfproxy` containers — KNG-205/KNG-218); 2026-10-18
 **Progress report:** [2026-10-11 closed-alpha infrastructure progress](../reports/2026-10-11-closed-alpha-infrastructure-progress.md)
 **Handoff:** [2026-10-11 closed-alpha infrastructure](../ai-agents/handoffs/2026-10-11-closed-alpha-infrastructure.md)
 **Security layer:** [closed alpha go-live (KNG-64)](alpha-go-live.md) — required builds, API/plugin configuration,
@@ -334,7 +334,8 @@ KNG-64 plugin settings (a copied dev `config.yml` keeps its old values):
 with `MinecraftPlugin__BaseUrl=http://minecraft:8081` (the service name).
 The Minecraft container also needs an internet-capable network for Mojang
 session servers, since `backend` is internal. Use `online-mode=true` and the
-whitelist. See [alpha go-live § 5](alpha-go-live.md#5-minecraft-and-plugin-runbook-phases-45).
+whitelist. See [alpha go-live § 5](alpha-go-live.md#5-minecraft-and-plugin-runbook-phases-45). After the invite-only
+switch-over (Phase 9) the plugin's admission gate replaces the whitelist.
 
 Private acceptance before ingress:
 
@@ -409,3 +410,38 @@ Phase 4). The original rule still applies to any later Minecraft upgrade:
 clone the stack, never upgrade the only alpha copy in place, compile and test
 all plugins, inspect Paper's conversion output, and validate both worlds
 before scheduling a cutover.
+
+## Phase 9 — invite-only switch-over (KNG-218; prepared, not started)
+
+Merged to every trunk on 2026-10-24 (all four repos) and smoke-tested on dev. Design: [invitations DESIGN](../specs/invitations/DESIGN.md); how it works:
+[account identity and admission](../architecture/account-identity-and-admission.md). **Preconditions:** the feature is
+merged per the [plan § 9](../specs/invitations/IMPLEMENTATION_PLAN.md#9-merge-and-deploy-order) (knk-plugin only
+after KNG-182), and the [invitations smoke test](invitations-smoke-test.md) § 0–8 passed on dev.
+
+**Two helper containers join the `knk-alpha` stack** (neither publishes a port):
+
+| Service | Purpose | Networks | Guide |
+|---|---|---|---|
+| `mailrelay` | SMTP relay holding the Gmail (later provider) credentials, so the API itself needs no internet (KNG-211, E0) | `backend`, `mail-egress` | [email guide § 3](email.md) |
+| `cfproxy` | tinyproxy that only allows `api.cloudflare.com:443`, for the Access list sync (KNG-216) | `backend`, `mail-egress` | [alpha go-live § 6.1](alpha-go-live.md) |
+
+**API keys added** (in `/etc/knk/api.env` through the existing secret wrapper; full block in
+[alpha go-live § 4.1](alpha-go-live.md)): `Security__Registration__Mode`, `Invitations__*` (defaults are fine),
+`Admission__*` (defaults), `CloudflareAccess__SyncEnabled|AccountId|ListId|ProxyUrl`, `CloudflareAccess__ApiToken`
+(secret file only), `Email__Transport=Smtp` + `Email__SmtpHost=mailrelay` + `App__PublicBaseUrl`. **Plugin:** the
+`admission:` section in `config.yml` ([alpha go-live § 5.1](alpha-go-live.md)). **Minecraft:** `white-list=false` at
+the end.
+
+**Order** (each deploy: back up → migrator → API → web app → plugin):
+1. Deploy everything behaviour-neutral (`Registration:Mode=LinkCode`, `admission.mode: whitelist`, sync off). The
+   migrator applies five migrations, among them `AddInvitations` (admits every active account) and
+   `SeedAlphaTesterGroup`.
+2. Start `cfproxy`; set up the Cloudflare list, policy, token and bypass application; turn the sync on.
+3. `Security__Registration__Mode=Invite`.
+4. `admission.mode: invite`, restart the server, then `white-list=false`.
+5. Run the smoke test's "alpha" sections.
+
+The step details and the kill switches are in [alpha go-live § 11.1](alpha-go-live.md).
+
+Acceptance: a new tester gets in with only an invite mail (sign-up → Cloudflare PIN → join → code → link → rejoin); the
+current testers join without a code; the whitelist is off; `/admin/invitations` shows the Access sync green.

@@ -6,6 +6,7 @@ Central home for requirements, specifications, and implementation roadmaps acros
 - arena-duels/: player-vs-player arena duels — invite with stake offers, escrow, lobby warmup, spectator menu, battleground PvP, kit and drop modes (Linear KNG-197; design accepted 2026-10-21, phases KNG-209–KNG-222, not implemented)
 - npc-platform/: shared NPC traits, behavior and tutorial guide; agreed requirements and open investigations (KNG-36)
 - project-overview/: portfolio-level summaries and source pointers (CHANGES, implementation roadmap, source map)
+- invitations/: invite-only sign-up, email engine, admission gate and web-first Minecraft linking (KNG-205, KNG-206; built on the feature branch, not merged)
 - users/: user/account management specs and requirements (including linking, merge, password rules)
 - towns/: towns/world feature specs and hybrid create/edit flow notes
 - api/: API contract snapshots and backlog for REST endpoints
@@ -13,7 +14,10 @@ Central home for requirements, specifications, and implementation roadmaps acros
 - kits/: Kit (equipment loadout) design, implementation plan, and legacy-DB seed data
 - enchantment-books/: permanent enchantment books outside siege (Linear KNG-5)
 - game-settings/: global Game Settings - announcements, join spawn, respawn policy, per-world game mode/time/weather/spawn, applied by the plugin (Linear KNG-52)
+- domain-subregions/: several WorldGuard regions per domain (expansion regions), synced from the main region; orphan retention, cylinder shapes, per-domain access and messages (Linear KNG-253; implemented, merged and live-tested 2026-10-23; follow-ups KNG-260, KNG-261)
 - navigation/: road network (survey-learned road profiles, auto-detected junctions on every level) and `/navigate` guidance with live gate/entry availability (Linear KNG-27)
+- navigation-compass/: the navigation compass item for sieges — right-click cycles team-relevant objectives, shift-click stops, bound by material + display name and configured on the web app's navigation page (Linear KNG-234)
+- navigation-destination-engine/: design (proposed, no code) for one engine that builds each player's list of navigable destinations from providers and exclusive-scope policies, enforced by a handle, persisted for offline use (Linear KNG-235, phases KNG-236 to KNG-240; follow-up of KNG-234)
 - production-storage-transport/: the resource-economy backbone: storages (domain/player/clan), production kinds with yield areas, transport orders (simulated, then NPC/courier), town logistics (V2 port, design draft rev. 2, 2026-10-09)
 - siege-survival/: cooperative endless NPC-wave defense, gate repair, spawnzone progression and match equipment/economy (Linear KNG-50, child of KNG-37; design only)
 - user-features/: rank/permission/title/salary architecture
@@ -23,6 +27,7 @@ Central home for requirements, specifications, and implementation roadmaps acros
 - reconcile/: reconciliation guides for aligning legacy data with v2
 
 ## Key documents
+- Invite-only sign-up, email engine and web-first Minecraft linking (KNG-205, KNG-206; decided 2026-10-21; built on the feature branch `claude/player-signup-invitation-flow-f4v7ul` by the invitations chain, links 1–7, 2026-10-21; not merged, not live-tested; architecture: [account-identity-and-admission.md](../architecture/account-identity-and-admission.md), smoke test: [invitations-smoke-test.md](../guides/invitations-smoke-test.md)): [invitations/DESIGN.md](invitations/DESIGN.md), [invitations/IMPLEMENTATION_PLAN.md](invitations/IMPLEMENTATION_PLAN.md) (work packages KNG-211/206/207/208/212/214/216/218) — admin personal invites and shared codes with expiry/use caps, a persistent email outbox with real delivery from the NAS, a plugin admission gate whose disconnect-screen claim code links a Mojang-authenticated UUID to an invited web account, and a Cloudflare Access allow-list kept in sync by the API.
 - Arena duels (KNG-197; design + plan accepted 2026-10-21, not implemented; phase issues KNG-209–KNG-222; siege kit mode KNG-199): [arena-duels/DESIGN.md](arena-duels/DESIGN.md), [arena-duels/IMPLEMENTATION_PLAN.md](arena-duels/IMPLEMENTATION_PLAN.md)
 
 - Dev environment (KNG-163, proposal 2026-10-12): [dev-environment/DEV_DB_REMOTE_ACCESS.md](dev-environment/DEV_DB_REMOTE_ACCESS.md) — NAS dev database for cloud sessions over Cloudflare Tunnel + Access, scheduled backups, versioned DB environments and the deploy pipeline. Decisions E1-E4 made 2026-10-12.

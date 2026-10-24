@@ -6,7 +6,7 @@ knk-plugin [#7](https://github.com/PandiO/knk-plugin/pull/7) (branch `claude/ui-
 nothing merged). Verification: [2026-10-08 report](../../reports/2026-10-08-alpha-hardening-verification.md). The
 deviations agreed during implementation are listed in the PR descriptions (for example `RequireServiceOrPermissionForWrites`,
 the 30 s refresh grace window, web-first registration living in `Auth/register`, the CORS defaults in the Development file).
-**Last updated:** 2026-10-11
+**Last updated:** 2026-10-21 (§ 12 follow-up note: KNG-205 invitations plan); 2026-10-11
 **Linear:** [KNG-64](https://linear.app/kngpandi/issue/KNG-64) (parent), KNG-65 to KNG-70 (work packages, § 11)
 **Sources:**
 - [UI/UX assessment](../../reports/2026-10-08-web-app-ux-assessment.md) §§ 3, 12: the findings this plan fixes.
@@ -567,6 +567,7 @@ assessment's live checks against a running API. Every line must say `PASS`:
 
 - Email verification (D8).
 - Turn on web-first sign-up for marketing, as web-only accounts.
+- *Follow-up 2026-10-21:* invite-only sign-up with web-first accounts, an email engine and a plugin admission gate replace D1/D2's code-only sign-up and the manual whitelist; Cloudflare Access (D10) stays with an API-synced list. See [invitations DESIGN](../invitations/DESIGN.md) and [plan](../invitations/IMPLEMENTATION_PLAN.md) ([KNG-205](https://linear.app/kngpandi/issue/KNG-205)). Not built yet; this plan's sections stay valid until then.
 - Move to a VPS (production guide).
 - Content-Security-Policy header (needs a CSP-clean build: inline scripts and styles).
 - An in-memory access token instead of `localStorage` for "remember me".
