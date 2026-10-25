@@ -8,6 +8,21 @@ _Nothing at the moment._
 
 ## 2026-10-25
 
+- **Invite-only onboarding: the Cloudflare step in every flow, no dead end from `/auth/register` or the login page,
+  claim codes recognised in link-code fields** — knk-web-api `master` `fa28f7ea` and knk-web-app `main` `0d612702`, merged `--no-ff` from `claude/invite-only-register-page`
+  (2026-10-25; comment on KNG-218, no issue of its own — free issue limit; found on the alpha with the first two
+  testers). New anonymous `GET api/Auth/onboarding-info` (`registrationMode`, `accessGate`, `publicBaseUrl`; to add to
+  the Cloudflare bypass). With the Access sync on: the sign-up form's done step lists Cloudflare's email + 6-digit code
+  step and its button is a **full page load** (the in-app navigation skipped Cloudflare and every call then failed
+  with "Network error"); `/invite`, `/join`, `/link` and the login page show the journey with that step; a missing
+  Cloudflare session is recognised (health probe, opaque redirect) and answered with one banner, "Sign in with
+  Cloudflare"; the invitation, welcome, finish-linking and password-reset mails carry the step (`{{#accessGate}}` blocks).
+  With the sync off nothing about Cloudflare shows. Under `Mode=Invite` the register page opens on an invitation step (invitation code → `/join`, the
+  server's `XXXX-XXXX` code → `/link?code=`, the link-code form behind "Already playing and got a code from
+  `/account link`?"), the login page's **Create an account** continues the invite flow (`/invite` with the kept personal
+  invitation, `/link` with a verified claim code, else `/join`), the invite and join forms' **Log in** returns to them, a
+  claim code typed with its dash into a link-code field is routed to the claim flow (look-alikes folded on
+  `/account/link`), and every claim refusal says the code stays valid for 15 minutes. Not deployed yet; to be tested directly on the alpha (report: deploy and rollback steps).
 - **Menu startup validation keeps retrying while the API is down** — knk-plugin `main` `ad5786c`, merged `--no-ff` from
   `claude/menu-validation-retry` on 2026-10-25 (not in Linear, free issue limit). The 2026-10-24 retry only re-listed the templates; on the dev server the list came back
   while every per-key fetch still failed (the connectivity monitor still reported the API down), and the pass ended with

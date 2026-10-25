@@ -33,8 +33,11 @@ Knights & Kings is invite-only. You need an **invitation** from staff: either a 
 
 1. **Sign up.** Open the link in your invitation email (your address is filled in), or go to **/join** and enter the
    shared code with your email. Choose a password and accept the alpha rules.
-2. **Open the site.** The site is protected by Cloudflare: it emails you a one-time PIN. Use the **same address** you
-   signed up with. You then land on **Link your Minecraft account**.
+2. **Cloudflare sign-in.** Press **Continue to Cloudflare sign-in**. The site is protected by Cloudflare: its page asks
+   for your email — type the **same address** you signed up with — and Cloudflare emails you a **6-digit code** (sender
+   Cloudflare, not Knights & Kings; check spam). Enter it and you're in on this device for 30 days. You then land on
+   **Link your Minecraft account**. If the site ever says "Your Cloudflare sign-in has expired or isn't active on this
+   device", press **Sign in with Cloudflare** and do the same again.
 3. **Join the server** (`play.knightsandkings.net`, Java Edition 26.3). You're stopped with a screen like:
    *"Knights & Kings is invite-only. Go to …/link and enter `K7QH-M2XA` (valid 15 minutes)."*
 4. **Enter that code** on the website. Your Minecraft name now shows on your account.
@@ -43,7 +46,9 @@ Knights & Kings is invite-only. You need an **invitation** from staff: either a 
 
 **Joined the server before you had an invitation?** That's fine: note the code from the screen, go to **/link**, and
 the site keeps it for 15 minutes while you sign up with your invitation; your Minecraft account is linked in the same
-step. Codes expire after 15 minutes; join again for a new one. **Never give the code to anyone; staff never ask for it.**
+step. The same code stays valid for 15 minutes: joining again shows it again, or a new one once it has expired. If you
+end up on **Register** or **Log in** instead, they point you back to the invitation sign-up (typed the server's code into
+a link-code field? it's recognised by its dash). **Never give the code to anyone; staff never ask for it.**
 
 ### Existing players (played before the invitations)
 
@@ -51,7 +56,8 @@ Your account was carried over: you keep joining as before, without a code. If yo
 
 1. Join the Minecraft server
 2. Type `/account link` to get an 8-character code and the website address
-3. On the website, open **Register**, enter the code, your email and a password
+3. On the website, open **Register**; while sign-ups are invite-only it opens on the invitation step, so click
+   **Already playing and got a code from /account link?** first. Enter the code, your email and a password
 4. You can now log in to the web app! Codes only go from the game to the website, never the other way.
 
 On your first join you get a welcome message with a **[Link it now]** button. Clicking it runs `/account link`, which
