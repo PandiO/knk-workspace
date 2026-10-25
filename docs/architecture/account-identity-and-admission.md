@@ -4,7 +4,7 @@
 knk-plugin; invitations chain links 1–7, smoke-tested on dev). **Off by default until the alpha switch-over**
 ([alpha go-live § 11.1](../guides/alpha-go-live.md)); until then the live behaviour is "Before the feature" below. Living document: update it in place when the
 code changes.
-**Last updated:** 2026-10-25 (§ 4: the anonymous `registration-info` call and the mode-aware sign-up and login pages, § 7: not in the bypass — branch `claude/invite-only-register-page`, not merged); 2026-10-21 (written by invitations chain link 7, KNG-218)
+**Last updated:** 2026-10-25 (§ 4: the anonymous `onboarding-info` call, the mode-aware sign-up and login pages; § 7: the Cloudflare step after sign-up, the missing-session banner, the bypass row — branch `claude/invite-only-register-page`, not merged); 2026-10-21 (written by invitations chain link 7, KNG-218)
 **Linear:** [KNG-205](https://linear.app/kngpandi/issue/KNG-205) (parent), [KNG-206](https://linear.app/kngpandi/issue/KNG-206),
 [KNG-207](https://linear.app/kngpandi/issue/KNG-207), [KNG-208](https://linear.app/kngpandi/issue/KNG-208),
 [KNG-212](https://linear.app/kngpandi/issue/KNG-212), [KNG-214](https://linear.app/kngpandi/issue/KNG-214),
@@ -101,8 +101,9 @@ refuses a UUID without an admitted account (403 `NotAdmitted`, operators include
 get a row.
 
 **The web app knows the mode** (branch `claude/invite-only-register-page`, 2026-10-25, after a tester dead-ended on the
-alpha): `GET api/Auth/registration-info` (anonymous, `lookup` rate limit) answers `{ mode }` and nothing else — the
-invitable groups and limits stay on the staff-only `GET api/Invitations/options`. `useRegistrationMode` asks once per page
+alpha): `GET api/Auth/onboarding-info` (anonymous, `auth` rate limit, in the Cloudflare bypass) answers
+`{ registrationMode, accessGate, publicBaseUrl }` and nothing else — `accessGate` is `CloudflareAccess:SyncEnabled`; the
+invitable groups and limits stay on the staff-only `GET api/Invitations/options`. `useOnboardingInfo` asks once per page
 load. Under `Invite`/`Open`: `/auth/register` opens on an invitation step (an invitation code → `/join`, the claim code
 `XXXX-XXXX` → `/link?code=`, 8 plain characters → the link-code step, which otherwise sits behind "Already playing and got
 a code from `/account link`?"); the login page's **Create an account** goes to `/invite` (a personal invitation kept for
@@ -166,9 +167,8 @@ Decision I8: Access stays, and the API keeps its allow-list (DESIGN § 5.8).
 - **Two Access applications on the web host.** *Allow testers* (whole host; include = the API-owned Zero Trust email
   list `knk-api-testers` + a hand-made staff *Emails* rule; 30-day session) and a **bypass** application for only the
   sign-up paths (`/invite*`, `/join*`, `/link*`, the SPA's static files, `api/Invitations/check`,
-  `api/Admission/claim/check`, `api/Auth/register`). **Not** in the bypass: `api/Auth/registration-info` (§ 4) — only
-  `/auth/register` and `/auth/login` call it, and those pages sit behind *Allow testers* like the rest of `/auth`
-  (decision kept 2026-10-25: the bypass is not widened).
+  `api/Admission/claim/check`, `api/Auth/register`, and since 2026-10-25 `api/Auth/onboarding-info`, § 4 — the one
+  path the developer adds to the bypass application with that deploy).
 - **Desired set:** lower-cased emails of personal invites not revoked, not used up and not expired; plus active,
   non-deleted users with an email and (`AdmittedAt` or `InvitedViaInvitationId`). Frozen players stay in.
 - **Reconcile** (`CloudflareAccessSync` singleton, run by `CloudflareAccessSyncService` at start, every
@@ -178,7 +178,20 @@ Decision I8: Access stays, and the API keeps its allow-list (DESIGN § 5.8).
   `UserService.RevokeSessionsAsync`); reactivation and *Admit*. Privacy erasure and unused expiry are caught by the
   5-minute run.
 - **Inline add:** every successful registration adds the address with a 5 s timeout and answers `accessGate: true`
-  while the sync is on; the sign-up form then shows the Cloudflare PIN step.
+  while the sync is on; the sign-up form then shows the Cloudflare step.
+- **The Cloudflare step, as the player sees it** (2026-10-25, after the first two testers got "Linking failed" and
+  "Network error"): the browser only gets its Access session from a *document* request to a protected path, so the
+  sign-up form's button **Continue to Cloudflare sign-in** is a full page load of `/account/link`, never an in-app
+  navigation. The form lists what comes: Cloudflare asks for the **email** (the one just used), mails a **6-digit code**
+  (sender Cloudflare, check spam), then the site opens for 30 days on that device. `/invite`, `/join` and `/link` show
+  the whole journey with that step, the login page notes it, and the invitation, welcome, finish-linking and
+  password-reset mails carry it — all only while `accessGate` is true (mail blocks `{{#accessGate}}…{{/accessGate}}`,
+  rendered from the setting).
+- **A missing Access session is recognised:** an API call from a browser without a session dies on Cloudflare's redirect
+  (CORS hides it, the app saw a network error). When a request fails without a response and `accessGate` is on, the
+  service-call layer probes `GET api/Health` with `redirect: manual`; an opaque redirect means "no Cloudflare session":
+  the error becomes the one wording "Your Cloudflare sign-in has expired or isn't active on this device", a banner
+  offers **Sign in with Cloudflare** (a page reload), nothing retries and the app session stays.
 - **Egress:** only the named `cloudflare` HttpClient uses `ProxyUrl` (`cfproxy`, tinyproxy allowing
   `api.cloudflare.com:443` only). The token (Account → Zero Trust → Edit) is env-only.
 - **Status:** `GET api/Invitations/access-sync` (`knk.admin.invites`) → the line on `/admin/invitations`.

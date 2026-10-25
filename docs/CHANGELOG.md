@@ -4,10 +4,16 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
-- **Invite-only register page: no dead end from `/auth/register` or the login page, claim codes recognised in link-code
-  fields** — knk-web-app and knk-web-api branches `claude/invite-only-register-page` (2026-10-25; not in Linear, free
-  issue limit; found on the alpha during the Bedrock crossplay trial). New anonymous `GET api/Auth/registration-info`
-  (only the mode). Under `Mode=Invite` the register page opens on an invitation step (invitation code → `/join`, the
+- **Invite-only onboarding: the Cloudflare step in every flow, no dead end from `/auth/register` or the login page,
+  claim codes recognised in link-code fields** — knk-web-app and knk-web-api branches `claude/invite-only-register-page`
+  (2026-10-25; comment on KNG-218, no issue of its own — free issue limit; found on the alpha with the first two
+  testers). New anonymous `GET api/Auth/onboarding-info` (`registrationMode`, `accessGate`, `publicBaseUrl`; to add to
+  the Cloudflare bypass). With the Access sync on: the sign-up form's done step lists Cloudflare's email + 6-digit code
+  step and its button is a **full page load** (the in-app navigation skipped Cloudflare and every call then failed
+  with "Network error"); `/invite`, `/join`, `/link` and the login page show the journey with that step; a missing
+  Cloudflare session is recognised (health probe, opaque redirect) and answered with one banner, "Sign in with
+  Cloudflare"; the invitation, welcome, finish-linking and password-reset mails carry the step (`{{#accessGate}}` blocks).
+  With the sync off nothing about Cloudflare shows. Under `Mode=Invite` the register page opens on an invitation step (invitation code → `/join`, the
   server's `XXXX-XXXX` code → `/link?code=`, the link-code form behind "Already playing and got a code from
   `/account link`?"), the login page's **Create an account** continues the invite flow (`/invite` with the kept personal
   invitation, `/link` with a verified claim code, else `/join`), the invite and join forms' **Log in** returns to them, a

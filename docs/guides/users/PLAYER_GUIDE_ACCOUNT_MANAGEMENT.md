@@ -33,8 +33,11 @@ Knights & Kings is invite-only. You need an **invitation** from staff: either a 
 
 1. **Sign up.** Open the link in your invitation email (your address is filled in), or go to **/join** and enter the
    shared code with your email. Choose a password and accept the alpha rules.
-2. **Open the site.** The site is protected by Cloudflare: it emails you a one-time PIN. Use the **same address** you
-   signed up with. You then land on **Link your Minecraft account**.
+2. **Cloudflare sign-in.** Press **Continue to Cloudflare sign-in**. The site is protected by Cloudflare: its page asks
+   for your email — type the **same address** you signed up with — and Cloudflare emails you a **6-digit code** (sender
+   Cloudflare, not Knights & Kings; check spam). Enter it and you're in on this device for 30 days. You then land on
+   **Link your Minecraft account**. If the site ever says "Your Cloudflare sign-in has expired or isn't active on this
+   device", press **Sign in with Cloudflare** and do the same again.
 3. **Join the server** (`play.knightsandkings.net`, Java Edition 26.3). You're stopped with a screen like:
    *"Knights & Kings is invite-only. Go to …/link and enter `K7QH-M2XA` (valid 15 minutes)."*
 4. **Enter that code** on the website. Your Minecraft name now shows on your account.

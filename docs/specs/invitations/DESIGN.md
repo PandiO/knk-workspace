@@ -412,7 +412,9 @@ Two pieces solve this.
 - A second Access application on the same hostname covers only these paths, with a *Bypass* policy. Access applies the most specific path, so everything else stays behind the tester policy.
   - Pages: `/invite/*`, `/join*`, `/link*`.
   - The SPA's static files: `/static/*`, `/favicon.ico`, `/manifest.json`, `/logo*.png`. These are public build output anyway.
-  - The anonymous API calls those pages make: `/api/Invitations/check`, `/api/Admission/claim/check`, `/api/Auth/register`.
+  - The anonymous API calls those pages make: `/api/Invitations/check`, `/api/Admission/claim/check`, `/api/Auth/register`,
+    and since 2026-10-25 `/api/Auth/onboarding-info` (the registration mode, whether the Cloudflare step applies, the
+    public URL — nothing else), which the pages call to show the Cloudflare instructions only when the sync is on.
 - These endpoints are already anonymous and rate-limited in the API. The WAF rule on `/api/Auth/` stays.
 
 **2. The API keeps the tester list in sync.**
@@ -440,6 +442,13 @@ Two pieces solve this.
   1. invite mail → sign-up page (no PIN);
   2. "Done" page: "Next, Cloudflare sends you a one-time PIN to open the site";
   3. PIN → `/account/link`.
+
+  *As built 2026-10-25 (after the first testers):* the "Done" page lists the steps (Cloudflare asks for your **email**
+  first, then mails a 6-digit code from Cloudflare) and its button is a **full page load** of `/account/link`, since an
+  in-app navigation never reaches Cloudflare and every API call then fails with a hidden redirect ("Network error").
+  The app recognises that state (a probe of `/api/Health` with `redirect: manual` answers an opaque redirect) and shows
+  one banner, "Sign in with Cloudflare", which reloads the page. The invitation, welcome, finish-linking and
+  password-reset mails carry the same step while `CloudflareAccess:SyncEnabled` is on.
 
   The Access session for the tester policy is set to 30 days (today 24 h), so the PIN step is rare after that.
 - **Credentials and egress:**
