@@ -4,7 +4,7 @@
 (the Codex NAS rollout). Not yet followed end to end. 2026-10-21: web hostname decided (`app.knightsandkings.net`),
 DNS in Cloudflare, Minecraft console/autostart/plugin updates ([KNG-225](https://linear.app/kngpandi/issue/KNG-225)).
 2026-10-22: § 3 (API upgrade) done on the NAS ([KNG-227](https://linear.app/kngpandi/issue/KNG-227)); § 3–4 corrected from that run.
-**Last updated:** 2026-10-24 (Phase 9 done: invite-only live, § 10 invite text, § 11.1; Phase 9 E0: the mail relay is live, § 4 mail block is SMTP; KNG-205 invitations merged: the feature-branch notes replaced; settings as before, all off until § 11.1); 2026-10-22; 2026-10-21 (KNG-218, invitations chain link 7: § 4.1 settings after the invite-only switch-over, § 5.1 admission gate instead of the whitelist, § 9 F2, § 10 invite mail, § 11 kill switches and **§ 11.1 the switch-over steps**, § 12); 2026-10-21 (§ 6.1: Cloudflare Access sync, `cfproxy`, the sign-up bypass — KNG-216, feature branch; § 4: `Email__AllowLogTransport` for API builds with the KNG-206 email engine; notes pointing to the KNG-205 invitations plan); 2026-10-18
+**Last updated:** 2026-10-25 (§ 4, § 4.2: `Seeding__IncludeExamples=false` and the one-time example cleanup script, not deployed yet); 2026-10-24 (Phase 9 done: invite-only live, § 10 invite text, § 11.1; Phase 9 E0: the mail relay is live, § 4 mail block is SMTP; KNG-205 invitations merged: the feature-branch notes replaced; settings as before, all off until § 11.1); 2026-10-22; 2026-10-21 (KNG-218, invitations chain link 7: § 4.1 settings after the invite-only switch-over, § 5.1 admission gate instead of the whitelist, § 9 F2, § 10 invite mail, § 11 kill switches and **§ 11.1 the switch-over steps**, § 12); 2026-10-21 (§ 6.1: Cloudflare Access sync, `cfproxy`, the sign-up bypass — KNG-216, feature branch; § 4: `Email__AllowLogTransport` for API builds with the KNG-206 email engine; notes pointing to the KNG-205 invitations plan); 2026-10-18
 **Applies to:** builds that **include KNG-64**: knk-web-api `master` ≥ `30c5dc5`, knk-web-app `main` ≥ `98c0a76`,
 knk-plugin `main` ≥ `34c9261`. **Never expose an older API.**
 **Linear:** [KNG-64](https://linear.app/kngpandi/issue/KNG-64) (parent), [KNG-68](https://linear.app/kngpandi/issue/KNG-68) (this guide)
@@ -149,6 +149,7 @@ Email__FromAddress=knightsandkingsmc@gmail.com
 # Emergency only (relay broken): Email__Transport=Log plus Email__AllowLogTransport=true; reset links go to the API log.
 App__PublicBaseUrl=https://app.knightsandkings.net  # links in invitation, reset and admission messages (KNG-205)
 Telemetry__Enabled=false                            # already set
+Seeding__IncludeExamples=false                      # no example menus, lobby, trade goods or Test tag (§ 4.2)
 ```
 
 `Cors__AllowedOrigins` stays empty: the browser only talks to its own origin. `ForwardedHeaders__*` stays off until
@@ -213,6 +214,37 @@ App__PublicBaseUrl=https://app.knightsandkings.net
 
 The stack then has two small helper containers besides the API: **`mailrelay`** (the SMTP relay of KNG-211,
 [email guide § 3](email.md)) and **`cfproxy`** (§ 6.1 step 1). Neither publishes a port.
+
+### 4.2 No example rows from the startup seeders
+
+The API seeds on every start, create-only by natural key. Without `Seeding__IncludeExamples=false` it adds back the
+examples that the knk seed (`knk-dev-db-seed`) deliberately leaves out: the nine `example.*` menu templates, the disabled
+siege lobby `example`, the 18 trade-good blueprints (Bolt of Silk … Sack of Flour) and the tag `Test`. That happened
+on 2026-10-25: the seed was loaded into `knightsandkings_alpha`, and the first start of `alpha-a38c8ee9` left 158
+blueprints instead of 140, 27 menus instead of 18, 2 lobbies and 8 tags. Kits, enchantment books (Cleaving included),
+lootboxes, the hub and the other real menus are seeded either way. The default is `true`, so dev keeps the examples.
+
+The setting exists on knk-web-api branch `claude/seeding-include-examples` (`75f7af1`), which is not merged into
+`master` yet (2026-10-25). Order on the alpha:
+
+1. **Build and deploy** the API from `master` once that branch is merged (the same build brings the `TrimDomainNames`
+   migration, so run the migrator first as in § 3 steps 3–5). Put `Seeding__IncludeExamples=false` in the API's
+   environment in `compose.yaml` before the new container starts. Its startup log then says
+   `ItemBlueprint example catalog seed skipped` and `SiegeLobby seed skipped`.
+2. **Back up** `knightsandkings_alpha` (§ 3 step 1).
+3. **Clean up once** with [`scripts/maintenance/remove-seeded-examples.sql`](../../scripts/maintenance/remove-seeded-examples.sql):
+   run the whole file with the MySQL client inside `knk-alpha-mysql`, as root, the same way as the holder-id repair
+   in § 3. It deletes exactly those rows by natural key, with their own child rows (menu sections, items and
+   bindings; blueprint enchantments, tag links and origins). The first result lists every example row with `delete`
+   or `KEEP: <reason>`. It keeps a row that something real still uses: kit equipment or contents, lootbox entries
+   or claims, item instances, another menu that opens or checks it, a lobby with matches, a rotation or that is
+   enabled, or a `Test` tag on a category or a kept blueprint. The last result counts the rows. On the alpha, expect
+   9 menus, 1 lobby, 18 blueprints and 1 tag deleted and nothing kept. A second run changes nothing. The script was
+   tried on a MariaDB 10.4 copy of the seed, not yet on MySQL 9.6, so take the backup.
+4. **Check** the seed's counts: 18 `menu_templates`, 140 `item_blueprints`, 1 `siege_lobbies`, 7 `tags`. Restart
+   the API once (`docker compose up -d --no-deps api`): the counts must not change.
+
+If the old image restarts after step 3, it adds the examples again. Deploy the new build first, as in step 1.
 
 ---
 
