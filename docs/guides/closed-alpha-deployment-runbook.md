@@ -1,7 +1,7 @@
 # Closed-alpha deployment runbook
 
 **Status:** In progress — phases 0–3 complete; phase 3b (API upgrade to the KNG-64 build, [KNG-227](https://linear.app/kngpandi/issue/KNG-227)) complete 2026-10-22 ([report](../reports/2026-10-22-alpha-api-kng64-upgrade.md)); API updated to `4aeb794` ([KNG-275](https://linear.app/kngpandi/issue/KNG-275)) and phase 4 Stage 2 (KnK plugin `d56e41da`, [KNG-225](https://linear.app/kngpandi/issue/KNG-225)) done 2026-10-24 ([report](../reports/2026-10-24-alpha-api-4aeb794-and-plugin-stage-2.md)); `/hub` waits for a hub selection in the approved seed. Phase 5 (playit.gg, `play.knightsandkings.net`) done 2026-10-24 ([report](../reports/2026-10-24-alpha-phase-5-playit.md)). Phase 6 (web app, `app.knightsandkings.net`, own tunnel, Access; API `a38c8ee9`) done 2026-10-24 ([report](../reports/2026-10-24-alpha-phase-6-web-ingress.md)). Security probe (go-live § 8) passed 2026-10-24 privately and through Cloudflare ([report](../reports/2026-10-24-alpha-security-probe.md)). HSTS and the apex redirect done the same day. Phase 7 deferred to beta (developer, 2026-10-24); the alpha uses manual snapshots (`scripts/alpha-snapshot/`). Phase 9 done 2026-10-24: mail relay, Access sync and bypass, sign-up by invitation, admission gate with the whitelist off ([report](../reports/2026-10-24-alpha-phase-9-invite-only.md)). Approved seed and fresh world imported 2026-10-24 ([report](../reports/2026-10-24-alpha-seed-import.md)); `/hub` works. Next: the first alpha run. Web hostname decided 2026-10-21: `app.knightsandkings.net`
-**Last updated:** 2026-10-24 (Phase 9 E0 mail relay live; Phase 6 web and ingress; Phase 5 playit; Phase 4 Stage 2 and the API update to `4aeb794`; Phase 9: KNG-205 invitations merged, the feature-branch notes replaced); 2026-10-22; 2026-10-21 (Phase 9: invite-only switch-over, `mailrelay` and `cfproxy` containers — KNG-205/KNG-218); 2026-10-18
+**Last updated:** 2026-10-25 (`ALLOW_FLIGHT=TRUE` on the Minecraft service, § 4.1); 2026-10-24 (Phase 9 E0 mail relay live; Phase 6 web and ingress; Phase 5 playit; Phase 4 Stage 2 and the API update to `4aeb794`; Phase 9: KNG-205 invitations merged, the feature-branch notes replaced); 2026-10-22; 2026-10-21 (Phase 9: invite-only switch-over, `mailrelay` and `cfproxy` containers — KNG-205/KNG-218); 2026-10-18
 **Progress report:** [2026-10-11 closed-alpha infrastructure progress](../reports/2026-10-11-closed-alpha-infrastructure-progress.md)
 **Handoff:** [2026-10-11 closed-alpha infrastructure](../ai-agents/handoffs/2026-10-11-closed-alpha-infrastructure.md)
 **Security layer:** [closed alpha go-live (KNG-64)](alpha-go-live.md) — required builds, API/plugin configuration,
@@ -262,6 +262,10 @@ A `minecraft` service in the `knk-alpha` Compose file (`container_name: knk-alph
 - `TYPE=PAPER`, `VERSION=26.3`, `PAPER_BUILD=<pinned build>`, `EULA=TRUE`, so a restart never pulls a newer Paper;
 - `MEMORY=4G`, `deploy.resources.limits.memory` about 5 GiB;
 - `ONLINE_MODE=TRUE`, `ENABLE_WHITELIST=TRUE`, `ENFORCE_WHITELIST=TRUE`;
+- `ALLOW_FLIGHT=TRUE` (since 2026-10-25): vanilla kicks a player who is airborne for about 80 ticks ("Flying is
+  not enabled on this server"); Bedrock players through Geyser and laggy Java players tripped it as a false positive.
+  WorldGuard has no fly check, so this is the only switch. The property is read at start-up, so a change needs
+  `up -d minecraft`, not `restart` ([report](../reports/2026-10-25-alpha-allow-flight.md));
 - `restart: unless-stopped` (autostart: Docker itself must be enabled at boot, `systemctl is-enabled docker`);
 - `stop_grace_period: 2m`, so Paper saves both worlds when the NAS shuts down;
 - the image's built-in health check (`mc-health`);

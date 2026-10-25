@@ -255,6 +255,10 @@ If the old image restarts after step 3, it adds the examples again. Deploy the n
 `whitelist add <name>`. playit makes the server reachable from anywhere, so the whitelist is the gate **until the
 invite-only switch-over** (§ 5.1, § 11.1).
 
+`allow-flight=true` (Compose `ALLOW_FLIGHT=TRUE`, since 2026-10-25): without it vanilla kicks Bedrock players through
+Geyser, and Java players during lag, for "flying". WorldGuard has no part in that kick
+([report](../reports/2026-10-25-alpha-allow-flight.md)).
+
 **Plugin `plugins/KnightsAndKings/config.yml`:** a config.yml copied from the dev server keeps its old values. Set
 these by hand:
 
