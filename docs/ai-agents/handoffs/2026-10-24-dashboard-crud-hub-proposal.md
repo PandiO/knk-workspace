@@ -1,20 +1,20 @@
 # Dashboard as the CRUD hub — proposal and plan
 
-**Status:** Proposal; all four decisions taken by the developer 2026-10-24; ready to implement (no code written)
+**Status:** Proposal; all four decisions taken by the developer 2026-10-24; ready to implement (no code written). Filed as PandiO/knk-workspace#177 on 2026-10-25
 **Date:** 2026-10-24
 **Issues:** [KNG-60](https://linear.app/kngpandi/issue/KNG-60) (return to origin, raised to High), [KNG-145](https://linear.app/kngpandi/issue/KNG-145) ("New X" on every list, list state in the URL), parent roadmap [KNG-140](https://linear.app/kngpandi/issue/KNG-140)
 **Code basis:** knk-web-app `main` @ `b7c0e88` (2026-10-24)
 
-## To file in Linear
+## Filed (2026-10-25)
 
-Linear refused a new issue on 2026-10-24 ("exceeded the free issue limit for this workspace"), so the
-proposal below lives here and as a comment on KNG-145 until the developer makes room. Needed:
-
-- **One issue** "Dashboard as the CRUD hub: New + settings (⚙) on the entity header, forms open without
-  the explorer and return to the dashboard, flat explorer list" — priority High, related to KNG-60,
-  KNG-145, KNG-140, KNG-147. Body = sections "Developer request" to "Open decisions" below.
-- KNG-145: move "New X on the Dashboard" into that issue; KNG-145 keeps page/search/sort/tab state in
-  the URL, rows as links, bulk actions.
+The hub issue is [PandiO/knk-workspace#177](https://github.com/PandiO/knk-workspace/issues/177) (sub-issue of
+#24). KNG-60 is [#58](https://github.com/PandiO/knk-workspace/issues/58), KNG-145 is
+[#39](https://github.com/PandiO/knk-workspace/issues/39), KNG-140 is
+[#24](https://github.com/PandiO/knk-workspace/issues/24). Re-checked on knk-web-app `main` `0d61270`
+(2026-10-25): the analysis below still holds; two additions (completed-before-save and the error-only
+`ToastRegion`) are in #177 and in the plan
+[`2026-10-25-ux-dashboard-signalr-plan.md`](2026-10-25-ux-dashboard-signalr-plan.md), which supersedes the
+"Implementation plan" section below for ordering.
 
 ## Developer request (2026-10-24)
 
