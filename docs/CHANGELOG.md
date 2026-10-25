@@ -4,7 +4,16 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
-_Nothing at the moment._
+- **Invite-only register page: no dead end from `/auth/register` or the login page, claim codes recognised in link-code
+  fields** — knk-web-app and knk-web-api branches `claude/invite-only-register-page` (2026-10-25; not in Linear, free
+  issue limit; found on the alpha during the Bedrock crossplay trial). New anonymous `GET api/Auth/registration-info`
+  (only the mode). Under `Mode=Invite` the register page opens on an invitation step (invitation code → `/join`, the
+  server's `XXXX-XXXX` code → `/link?code=`, the link-code form behind "Already playing and got a code from
+  `/account link`?"), the login page's **Create an account** continues the invite flow (`/invite` with the kept personal
+  invitation, `/link` with a verified claim code, else `/join`), the invite and join forms' **Log in** returns to them, a
+  claim code typed with its dash into a link-code field is routed to the claim flow (look-alikes folded on
+  `/account/link`), and every claim refusal says the code stays valid for 15 minutes. Not live-tested yet (smoke test
+  § 3 step 11, § 4 step 16).
 
 ## 2026-10-25
 

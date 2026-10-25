@@ -416,7 +416,9 @@ testers*):
 | Static files of the SPA | `/static/*`, `/favicon.ico`, `/manifest.json`, `/logo*.png` |
 | Anonymous API calls of those pages | `/api/Invitations/check`, `/api/Admission/claim/check`, `/api/Auth/register` |
 
-One policy: **Action Bypass, Include Everyone**. The WAF rule on `/api/Auth/` stays.
+One policy: **Action Bypass, Include Everyone**. The WAF rule on `/api/Auth/` stays. The anonymous
+`/api/Auth/registration-info` (2026-10-25, knk-web-api `claude/invite-only-register-page`) is deliberately **not** on this
+list: only `/auth/register` and `/auth/login` call it, and both stay behind *Allow testers*.
 
 **6. The API settings.** On the alpha `ProxyUrl` is in the Compose block; the other three are in
 `config/api/cloudflare-access.env` (root 600, an `env_file`), so the kill switch needs no Compose edit:

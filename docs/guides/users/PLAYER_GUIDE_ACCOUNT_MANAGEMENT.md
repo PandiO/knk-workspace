@@ -43,7 +43,9 @@ Knights & Kings is invite-only. You need an **invitation** from staff: either a 
 
 **Joined the server before you had an invitation?** That's fine: note the code from the screen, go to **/link**, and
 the site keeps it for 15 minutes while you sign up with your invitation; your Minecraft account is linked in the same
-step. Codes expire after 15 minutes; join again for a new one. **Never give the code to anyone; staff never ask for it.**
+step. The same code stays valid for 15 minutes: joining again shows it again, or a new one once it has expired. If you
+end up on **Register** or **Log in** instead, they point you back to the invitation sign-up (typed the server's code into
+a link-code field? it's recognised by its dash). **Never give the code to anyone; staff never ask for it.**
 
 ### Existing players (played before the invitations)
 
@@ -51,7 +53,8 @@ Your account was carried over: you keep joining as before, without a code. If yo
 
 1. Join the Minecraft server
 2. Type `/account link` to get an 8-character code and the website address
-3. On the website, open **Register**, enter the code, your email and a password
+3. On the website, open **Register**; while sign-ups are invite-only it opens on the invitation step, so click
+   **Already playing and got a code from /account link?** first. Enter the code, your email and a password
 4. You can now log in to the web app! Codes only go from the game to the website, never the other way.
 
 On your first join you get a welcome message with a **[Link it now]** button. Clicking it runs `/account link`, which

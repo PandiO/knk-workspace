@@ -4,7 +4,7 @@
 knk-plugin; invitations chain links 1–7, smoke-tested on dev). **Off by default until the alpha switch-over**
 ([alpha go-live § 11.1](../guides/alpha-go-live.md)); until then the live behaviour is "Before the feature" below. Living document: update it in place when the
 code changes.
-**Last updated:** 2026-10-21 (written by invitations chain link 7, KNG-218)
+**Last updated:** 2026-10-25 (§ 4: the anonymous `registration-info` call and the mode-aware sign-up and login pages, § 7: not in the bypass — branch `claude/invite-only-register-page`, not merged); 2026-10-21 (written by invitations chain link 7, KNG-218)
 **Linear:** [KNG-205](https://linear.app/kngpandi/issue/KNG-205) (parent), [KNG-206](https://linear.app/kngpandi/issue/KNG-206),
 [KNG-207](https://linear.app/kngpandi/issue/KNG-207), [KNG-208](https://linear.app/kngpandi/issue/KNG-208),
 [KNG-212](https://linear.app/kngpandi/issue/KNG-212), [KNG-214](https://linear.app/kngpandi/issue/KNG-214),
@@ -100,6 +100,18 @@ Without an invite and without a code under `Invite`: 403 `InviteRequired`. The p
 refuses a UUID without an admitted account (403 `NotAdmitted`, operators included, L4-5), so refused strangers never
 get a row.
 
+**The web app knows the mode** (branch `claude/invite-only-register-page`, 2026-10-25, after a tester dead-ended on the
+alpha): `GET api/Auth/registration-info` (anonymous, `lookup` rate limit) answers `{ mode }` and nothing else — the
+invitable groups and limits stay on the staff-only `GET api/Invitations/options`. `useRegistrationMode` asks once per page
+load. Under `Invite`/`Open`: `/auth/register` opens on an invitation step (an invitation code → `/join`, the claim code
+`XXXX-XXXX` → `/link?code=`, 8 plain characters → the link-code step, which otherwise sits behind "Already playing and got
+a code from `/account link`?"); the login page's **Create an account** goes to `/invite` (a personal invitation kept for
+the tab in `sessionStorage`, `knk.pendingInvite`), `/link` (a verified claim code) or `/join`, instead of `/auth/register`;
+the invite and join forms' **Log in** returns to them (`returnTo`). A claim code typed with its dash into a link-code field
+(`/auth/register`, `/account/link`) is recognised (`looksLikeClaimCode`: link codes have no dash) and routed to the claim
+flow with the look-alikes folded; every claim refusal says the code stays valid for 15 minutes and is shown again on
+rejoin. While the mode is unknown (API unreachable) the pages behave as under `LinkCode`.
+
 ## 5. Linking cases
 
 `UserService.LinkMinecraftAccountAsync`, from `/account/link` (logged in) or register-with-`claimCode`. Order: limiter →
@@ -154,7 +166,9 @@ Decision I8: Access stays, and the API keeps its allow-list (DESIGN § 5.8).
 - **Two Access applications on the web host.** *Allow testers* (whole host; include = the API-owned Zero Trust email
   list `knk-api-testers` + a hand-made staff *Emails* rule; 30-day session) and a **bypass** application for only the
   sign-up paths (`/invite*`, `/join*`, `/link*`, the SPA's static files, `api/Invitations/check`,
-  `api/Admission/claim/check`, `api/Auth/register`).
+  `api/Admission/claim/check`, `api/Auth/register`). **Not** in the bypass: `api/Auth/registration-info` (§ 4) — only
+  `/auth/register` and `/auth/login` call it, and those pages sit behind *Allow testers* like the rest of `/auth`
+  (decision kept 2026-10-25: the bypass is not widened).
 - **Desired set:** lower-cased emails of personal invites not revoked, not used up and not expired; plus active,
   non-deleted users with an email and (`AdmittedAt` or `InvitedViaInvitationId`). Frozen players stay in.
 - **Reconcile** (`CloudflareAccessSync` singleton, run by `CloudflareAccessSyncService` at start, every
