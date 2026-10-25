@@ -128,8 +128,9 @@ used up (it wasn't: 15 minutes, re-shown on every rejoin).
 - knk-web-api: `dotnet test --filter "AuthOnboardingInfoTests|EndpointAccessRulesTests|EmailTemplateRendererTests|
   EmailComposerAndThrottleTests|EmailDispatcherTests|RegistrationAndLoginTests|InviteRegistrationTests|AccountSecurityTests"`
   → 104 passed.
-- knk-web-app: `npm run test:ci` (whole suite) and `CI=true npm run build` (ESLint warnings are errors) — results in
-  the tracker row. New/extended: `cloudflareAccess.test` (probe verdicts, memo, gate off ⇒ no probe), `serviceCall.cloudflare.test`
+- knk-web-app: `npm run test:ci` → 193 suites, 1214 tests passed (head `a4e3052`); `npm run build` OK. The `CI=true`
+  build (ESLint warnings as errors) fails on pre-existing warnings in untouched files (`PagedEntityTable`, `PathBuilder`,
+  `SearchableDropdown`, …) — the same on `main` `4a9537e`; none in the files of this branch. New/extended: `cloudflareAccess.test` (probe verdicts, memo, gate off ⇒ no probe), `serviceCall.cloudflare.test`
   (TypeError + opaque redirect ⇒ `CloudflareSession`; gate off or API down ⇒ plain network error),
   `CloudflareSessionBanner.test`, `OnboardingJourney.test`, InvitePage/JoinPage (done step text, **full page load**, journey
   with/without the step), LinkPage (order list), AccountLinkPage (lifetime note), LoginForm (gate note, Cloudflare wording),
