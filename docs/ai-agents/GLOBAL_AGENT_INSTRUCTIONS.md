@@ -50,14 +50,15 @@ component repo's commit or PR).
 Linear (team KNG) was the work list until 2026-10-25, when the free issue
 limit made new issues impossible. It stays as a read-only archive: don't
 create, edit or comment on Linear issues. Every open KNG issue was copied
-with its id in the title, such as `[KNG-205] ...`, so search the GitHub
+with its id in the title, such as `[KNG-27] ...`, so search the GitHub
 issues for `[KNG-n]` to find the copy of a `KNG-n` reference. Closed KNG
 issues exist only in Linear; their links in docs stay valid.
 
 Issue conventions:
 
-- Type: `Bug`, `Feature`, or `Task` (everything else, incl. improvements,
-  which also get the `improvement` label).
+- Type as a label: `bug`, `feature` or `improvement`; no type label for
+  other tasks. (GitHub issue types need an organization account, so this
+  user-owned repo can't store them.)
 - Status: open without a status label = Backlog/Todo; `status:in-progress`;
   `status:in-review` (waiting for the developer's test); closed as completed
   = Done; closed as not planned = Canceled; closed as duplicate = Duplicate.
