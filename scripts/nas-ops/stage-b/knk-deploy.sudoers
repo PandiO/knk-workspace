@@ -1,0 +1,4 @@
+# knk-deploy Stage B: the forced-command account may run only the root-owned knk-deploy program.
+# The program validates every argument itself (grammar in its docstring). Edit with visudo -f.
+Defaults:knk-deploy env_reset, !setenv, !lecture, secure_path="/usr/sbin:/usr/bin:/sbin:/bin"
+knk-deploy ALL=(root) NOPASSWD: /usr/local/libexec/knk-deploy/knk-deploy

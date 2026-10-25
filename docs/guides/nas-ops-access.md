@@ -1,7 +1,7 @@
 # NAS operations access for agents (`knk-ops`)
 
-**Status:** Stage A (read-only checks) installed on the NAS and verified 2026-10-18 · Stage B (deploy) designed, **not installed**
-**Last updated:** 2026-10-22
+**Status:** Stage A (read-only checks) installed on the NAS and verified 2026-10-18 · Stage B (`knk-deploy`, delegated changes) built and tested 2026-10-25, **install pending**
+**Last updated:** 2026-10-25 (§ 7 Stage B rebuilt for delegated changes)
 **Sources:** wrapper sources and checksums in [`scripts/nas-ops/stage-a/`](../../scripts/nas-ops/stage-a/) ·
 session report [2026-10-18 NAS ops access and alpha check](../reports/2026-10-18-nas-ops-access-and-alpha-check.md) ·
 [closed-alpha deployment runbook](closed-alpha-deployment-runbook.md)
@@ -146,49 +146,88 @@ sudo journalctl -t knk-ops --since today --no-pager -o short-iso
   sudo rm -r /usr/local/libexec/knk-ops /etc/ssh/knk-ops /var/lib/knk-ops
   ```
 
-## 7. Stage B (deploy): design, not installed
+## 7. Stage B: delegated changes (`knk-deploy`)
 
-Goal: let an agent help run an alpha upgrade with the developer approving each
-step, still without a shell or any caller-chosen input.
+**Status:** built and tested 2026-10-25 (65 end-to-end checks on a mock stack:
+[`scripts/nas-ops/stage-b/tests/`](../../scripts/nas-ops/stage-b/tests/test_knk_deploy.py)); install steps below.
+Developer decisions 2026-10-25: Claude Code sessions on the PC may update the alpha to **trunk** builds and change its
+Compose and plugin configs, **asking the developer before every change** (Claude Code `ask` rules); the NAS gets
+**no GitHub access** — the PC builds and uploads. This replaces the 2026-10-18 design (no arguments, approval files).
 
-- **Separate account `knk-deploy`** with its own passphrase-protected (or
-  hardware) key, its own `Match` block, dispatcher and sudoers file. The
-  Stage A key can never reach it.
-- **No arguments.** What may be deployed comes from a root-owned approval file
-  that only the developer writes with `sudo` (image tag + image ID, migrator
-  image ID, source commit and source-archive hash, hash of the Compose file to
-  switch to). Operations read it; they take nothing from SSH.
-- **Operations:**
+```text
+Claude Code on the developer PC (LAN)
+  -> scripts/nas-ops/stage-b/pc/knk-release.sh api|web|plugin [commit]   checks the commit is on trunk, archives or
+                                                                          builds it, uploads it (stdin)
+  -> ssh knk-deploy <command> ...         own ed25519 key, from the PC's LAN address only, Claude asks first
+  -> sshd, account knk-deploy             ForceCommand, no TTY/forwarding/sftp, MaxSessions 1
+  -> /usr/local/libexec/knk-deploy/dispatch     ≤ 4 words of [a-z0-9.-], known verbs only, timeout per verb
+  -> sudo -n /usr/local/libexec/knk-deploy/knk-deploy <words>   root, validates the grammar again, one at a time
+```
 
-  | Operation | Does |
-  |---|---|
-  | `backup-db` | dump `knightsandkings_alpha` + sha256 into a new timestamped, root-only folder; never deletes |
-  | `verify-release` | check the approved image IDs exist and match; check source and Compose hashes |
-  | `migrate` | run the approved migrator image once on `knk-alpha_backend` with a schema-rights account; refuses without a `backup-db` from the last hour |
-  | `switch` | install the approved Compose file and recreate only the `api` service |
-  | `health` | `api-health` + `log-errors` + `secret-scan` in one report |
-  | `restart-api` | restart only `knk-alpha-api` |
-  | `rollback` | switch back to the previous approved Compose/image (database restore stays a manual, human step) |
-  | `mc-stage-plugin` | copy the approved plugin jar (path + SHA-256 in the approval file) to `plugins/update/KnightsAndKings.jar` after checking its hash ([KNG-225](https://linear.app/kngpandi/issue/KNG-225), runbook § 4.3) |
-  | `mc-restart` | `rcon-cli save-all flush`, then restart only `knk-alpha-minecraft` |
-  | `mc-health` | container state and health, restart count, the KnK plugin version line and `/knk health` result from the startup log |
+### 7.1 Commands
 
-  The Minecraft operations were added to the design on 2026-10-21. Until Stage B exists, the developer does the
-  same steps by hand (runbook § 4.3). A read-only `mc-health` could also join Stage A first.
+| Command | Does |
+|---|---|
+| `status` | containers (state, health, image), Compose hash, live plugin jar hash, migrations in the DB, last 5 snapshots, the inbox, the last change |
+| `compose-get` · `config-get NAME` · `logs SERVICE [MINUTES]` | read the Compose file, a plugin config, or a container log (≤ 400 lines); secret values appear as `<<secret:NAME>>` |
+| `upload api-src\|web-src\|plugin-jar COMMIT < file` | store a `git archive --prefix=source/` (`.tar.gz`, only `source/` paths) or the KnK jar (must contain `plugin.yml` `name: KnightsAndKings`) |
+| `upload compose\|config-NAME SHA256 < file` | store a new Compose file or config; the content must hash to the named SHA-256 |
+| `deploy-api COMMIT` | build `knk-web-api:alpha-<c8>` + migrator from NAS-owned build files (`/srv/docker/build/knk-web-api/_files`) and the upload; refuse a build with fewer migrations than the DB; snapshot; with new migrations stop `api` and run the migrator; switch the `image` line; health; roll back the Compose file if unhealthy (the DB keeps applied migrations — the message names the restore command) |
+| `deploy-web COMMIT` | the same for `knk-web-app:alpha-<c8>` (`_files`: Dockerfile, nginx.conf, .dockerignore) |
+| `deploy-plugin COMMIT` | `releases/plugin/<c8>/`, snapshot, back up the live jar, `plugins/update/` swap, `save-all flush`, restart; checks the live jar hash and `Enabling KnightsAndKings`; rolls back the jar otherwise |
+| `compose-apply SHA256` | policy check (§ 7.2), install with backup + Portainer copy + `knk-ops` hash, `up -d --no-deps` of the changed services (`save-all flush` first for Minecraft), health, automatic rollback |
+| `config-apply NAME SHA256` | NAME ∈ `knk`, `geyser`, `floodgate`, `mcxboxbroadcast`, `paper-global`; tokens back to secret values, owner/mode kept, backup, Minecraft restart, plugin check, automatic rollback |
+| `snapshot LABEL` · `restart SERVICE` · `rollback` | `knk-alpha-snapshot LABEL`; restart one service (not MySQL); undo the last change (Compose, jar or config — never the database) |
 
-- Every run is logged like Stage A plus an append-only deployment log. On the
-  PC these operations go in Claude Code's **ask** list, never allow.
+Every change lands in `/var/lib/knk-deploy/deploy.log` (JSON lines, no secret values) and syslog (`journalctl -t
+knk-deploy`); backups in `/var/lib/knk-deploy/backups/<time>-<what>/`.
 
-**Prerequisites before Stage B is enabled** (details in the
-[2026-10-18 report](../reports/2026-10-18-nas-ops-access-and-alpha-check.md) § 4):
+### 7.2 What can't be done through it
 
-1. ~~A dedicated runtime UID for the API, with the secret files owned by it.~~ Done 2026-10-22 (UID 2002, KNG-227).
-2. ~~A root-owned `knk-alpha` stack directory.~~ Done 2026-10-22.
-3. A read-only MySQL account for checks; limit `root@%`. Open: [KNG-242](https://linear.app/kngpandi/issue/KNG-242).
-4. ~~Decide whether Portainer stack 42 or the host Compose file is authoritative.~~ Decided 2026-10-21: the host file; stack 42 is a copy.
-5. ~~Archive the leftover `compose.api.pending.yaml`.~~ Done 2026-10-22 (`backups/20261011-archive/`).
-6. ~~Lower the API's log volume (~186,000 lines/day).~~ Done 2026-10-22 (mounted `appsettings.Production.json`).
-7. The real alpha database created from the approved seed set, and a passed restore rehearsal.
+- No shell, no free command, no path, no Docker flag from the caller; no access to `secrets/`; MySQL only through the
+  migrator of a built trunk image. Database restores stay manual (`knk-alpha-restore`).
+- **Compose policy** (against the running file, on `docker compose config` output): no removed services; no
+  `privileged`, host network/PID/IPC/userns, devices, sysctls, `build`, extra hosts; no new capabilities, ports or
+  `external` networks; `cap_drop: ALL`, `no-new-privileges` and `read_only` can't be dropped; a new service needs a
+  non-root user, `cap_drop: ALL` and `no-new-privileges`; no switch to root; images need a tag or digest (no
+  `latest`); bind mounts only from paths the file already uses or under `config/`, `minecraft-data`, `releases/` —
+  never `docker.sock`, `/etc`, `/root`, `/home`, `/var/lib/docker`, `/`; a service may not gain a secret file it
+  didn't mount before; an internal network can't become external and a service without internet can't gain it.
+- Secret values never leave the NAS: reads replace them with `<<secret:NAME>>`, applies put them back; an unknown
+  token is refused. New or rotated secrets stay a developer step (`read -rs`).
+- Trunk-only is enforced on the PC (`knk-release.sh` checks `merge-base --is-ancestor` against `origin/master|main`),
+  not on the NAS, which has no GitHub access. The Claude Code `ask` rules make the developer confirm each change.
+
+### 7.3 For agents using it
+
+- Read first (`status`, `compose-get`, `config-get`, `logs` — allowed without asking). Build and upload only through
+  `knk-release.sh`; never upload a non-trunk commit, and say which commit and what it changes before each change.
+- One change at a time; after each, `status` plus Stage A `api-health`/`log-errors`. A `refused` is final: explain it,
+  don't try variations. On `failed` the tool has rolled back; report, don't retry blindly.
+- Record each change in a dated report and the tracker, as before (the NAS log is not the record).
+
+### 7.4 Install (developer)
+
+Sources: [`scripts/nas-ops/stage-b/`](../../scripts/nas-ops/stage-b/) (`SHA256SUMS`). NAS files, all `root:root`:
+
+| NAS path | Mode | Source |
+|---|---|---|
+| `/usr/local/libexec/knk-deploy/dispatch` | 0755 | `stage-b/dispatch` |
+| `/usr/local/libexec/knk-deploy/knk-deploy` | 0755 | `stage-b/knk-deploy` |
+| `/etc/ssh/sshd_config.d/61-knk-deploy.conf` | 0644 | `stage-b/61-knk-deploy.conf` |
+| `/etc/sudoers.d/knk-deploy` | 0440 | `stage-b/knk-deploy.sudoers` |
+| `/etc/ssh/knk-deploy/authorized_keys` | 0644 | `restrict,from="192.168.50.208",command="/usr/local/libexec/knk-deploy/dispatch" ssh-ed25519 … knk-deploy@pc` |
+| `/var/lib/knk-deploy/` | 0700 | state, inbox, backups, log |
+| `/srv/docker/build/knk-web-api/_files/`, `/srv/docker/build/knk-web-app/_files/` | 0700 | the current build files (copied from the last build folders) |
+
+Account `knk-deploy`: system account, password locked, shell `/bin/sh`, home `/var/lib/knk-deploy-home` (empty,
+root-owned), not in `docker` or `sudo`. PC: key `~/.ssh/knk-deploy_ed25519`, `~/.ssh/config` host `knk-deploy`
+(`HostName 192.168.50.119`, `User knk-deploy`, `IdentitiesOnly yes`, `BatchMode yes`), Claude Code `ask` rules for
+`upload`, `deploy-*`, `compose-apply`, `config-apply`, `snapshot`, `restart`, `rollback` and `knk-release.sh`; `allow`
+for `status`, `compose-get`, `config-get`, `logs`.
+
+**Revoke:** `sudo truncate -s 0 /etc/ssh/knk-deploy/authorized_keys` (logins stop), or remove
+`/etc/sudoers.d/knk-deploy` (nothing runs). **Remove:** as § 6 with `knk-deploy` paths. Stage A is independent of it.
 
 ## 8. Limitations
 

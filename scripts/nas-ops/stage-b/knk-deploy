@@ -1,0 +1,853 @@
+#!/usr/bin/python3 -I
+"""knk-deploy (Stage B): bounded change operations on the NAS knk-alpha stack for Claude Code on the LAN PC.
+
+Runs as root through sudo, started only by the knk-deploy dispatcher. Every argument is validated here again.
+The caller never gets a shell, never chooses a path or a command, and never sees a secret value:
+  - code arrives as an upload (stdin) named by its git commit; the PC checks that the commit is on trunk;
+  - images are built from NAS-owned build files (/srv/docker/build/<repo>/_files) plus the uploaded source;
+  - Compose changes pass a policy check against the running file (no privileges, ports, host paths or secrets
+    that weren't there before);
+  - config files travel with secret values replaced by <<secret:NAME>> tokens, both ways.
+Every change takes a backup first, checks health afterwards and rolls back by itself when health fails.
+Database restores stay a manual step (knk-alpha-restore).
+
+Usage (via ssh knk-deploy <command> ...):
+  status | compose-get | config-get NAME | logs SERVICE [MINUTES]
+  upload api-src|web-src|plugin-jar COMMIT   < file      upload compose|config-NAME SHA256 < file
+  deploy-api COMMIT | deploy-web COMMIT | deploy-plugin COMMIT
+  compose-apply SHA256 | config-apply NAME SHA256
+  snapshot LABEL | restart SERVICE | rollback
+"""
+import datetime
+import fcntl
+import hashlib
+import io
+import json
+import os
+import re
+import shutil
+import subprocess
+import sys
+import tarfile
+import time
+import zipfile
+
+STACK = '/srv/docker/stacks/knk-alpha'
+COMPOSE = STACK + '/compose.yaml'
+PORTAINER = '/var/lib/docker/volumes/portainer_data/_data/compose/42/docker-compose.yml'
+SECRETS = STACK + '/secrets'
+MC_DATA = STACK + '/minecraft-data'
+RELEASES = STACK + '/releases'
+BUILD = '/srv/docker/build'
+STATE = '/var/lib/knk-deploy'
+INBOX = STATE + '/inbox'
+BACKUPS = STATE + '/backups'
+LOG = STATE + '/deploy.log'
+LAST = STATE + '/last.json'
+LOCK = '/run/knk-deploy.lock'
+SNAPSHOT_CMD = '/usr/local/sbin/knk-alpha-snapshot'
+SNAPSHOT_DIR = '/srv/backups/knk-alpha/snapshots'
+KNK_OPS_COMPOSE = '/usr/local/libexec/knk-ops/ops/compose'
+DB = 'knightsandkings_alpha'
+DOCKER = '/usr/bin/docker'
+MC_UID = 2001
+
+SERVICES = ('api', 'web', 'minecraft', 'mysql', 'mailrelay', 'cfproxy', 'cloudflared', 'playit')
+RESTARTABLE = ('api', 'web', 'minecraft', 'mailrelay', 'cfproxy', 'cloudflared', 'playit')
+CONFIGS = {
+    'knk': MC_DATA + '/plugins/KnightsAndKings/config.yml',
+    'geyser': MC_DATA + '/plugins/Geyser-Spigot/config.yml',
+    'floodgate': MC_DATA + '/plugins/floodgate/config.yml',
+    'mcxboxbroadcast': MC_DATA + '/plugins/Geyser-Spigot/extensions/mcxboxbroadcast/config.yml',
+    'paper-global': MC_DATA + '/config/paper-global.yml',
+}
+UPLOADS = {  # kind: (id pattern, max bytes, file name)
+    'api-src': ('commit', 64 << 20, 'api-src-{id}.tar.gz'),
+    'web-src': ('commit', 64 << 20, 'web-src-{id}.tar.gz'),
+    'plugin-jar': ('commit', 96 << 20, 'plugin-jar-{id}.jar'),
+    'compose': ('sha256', 512 << 10, 'compose-{id}.yaml'),
+}
+for _name in CONFIGS:
+    UPLOADS['config-' + _name] = ('sha256', 2 << 20, 'config-' + _name + '-{id}.yml')
+
+# Bind-mount sources a changed or new service may use (besides those the running file already has).
+ALLOWED_BIND_PREFIXES = (STACK + '/config/', STACK + '/minecraft-data', STACK + '/releases/')
+FORBIDDEN_BIND = ('/var/run/docker.sock', '/run/docker.sock', '/', '/etc', '/root', '/home', '/var/lib/docker', '/proc', '/sys', '/dev')
+API_FILES = ('Dockerfile', 'migrator-entrypoint.sh', 'appsettings.Production.json', 'docker-entrypoint.sh', '.dockerignore')
+WEB_FILES = ('Dockerfile', 'nginx.conf', '.dockerignore')
+
+PATTERNS = {
+    'commit': re.compile(r'^[0-9a-f]{40}$'),
+    'sha256': re.compile(r'^[0-9a-f]{64}$'),
+    'label': re.compile(r'^[a-z0-9][a-z0-9-]{0,39}$'),
+}
+
+
+class Refused(Exception):
+    """A request the policy or a precondition refuses; nothing was changed."""
+
+
+class Failed(Exception):
+    """A step failed after something may have changed; the message says what state remains."""
+
+
+def now():
+    return datetime.datetime.now(datetime.timezone.utc)
+
+
+def stamp():
+    return now().strftime('%Y%m%dT%H%M%SZ')
+
+
+def step(msg):
+    print(f'{now():%H:%M:%S}  {msg}', file=sys.stderr, flush=True)
+
+
+def run(args, check=True, timeout=600, input_bytes=None, capture=True):
+    p = subprocess.run(args, input=input_bytes, capture_output=capture, timeout=timeout)
+    if check and p.returncode != 0:
+        err = (p.stderr or b'').decode('utf-8', 'replace').strip().splitlines()[-5:]
+        raise Failed(f'{os.path.basename(args[0])} {args[1] if len(args) > 1 else ""} failed (rc {p.returncode}): ' + ' | '.join(err))
+    return p
+
+
+def compose_cmd(*args, file=None):
+    return [DOCKER, 'compose', '-f', file or COMPOSE, '--project-directory', STACK, *args]
+
+
+def sha256_file(path):
+    h = hashlib.sha256()
+    with open(path, 'rb') as f:
+        for chunk in iter(lambda: f.read(1 << 20), b''):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def sha256_bytes(b):
+    return hashlib.sha256(b).hexdigest()
+
+
+def journal(entry):
+    entry = {'time': now().isoformat(timespec='seconds'), **entry}
+    os.makedirs(STATE, mode=0o700, exist_ok=True)
+    with open(LOG, 'a') as f:
+        f.write(json.dumps(entry, sort_keys=True) + '\n')
+
+
+# ---------- secrets: never shown, never taken from the caller ----------
+
+def secret_values():
+    out = {}
+    if not os.path.isdir(SECRETS):
+        return out
+    for name in sorted(os.listdir(SECRETS)):
+        p = os.path.join(SECRETS, name)
+        if os.path.isfile(p) and not os.path.islink(p):
+            v = open(p, 'rb').read().decode('utf-8', 'replace').strip()
+            if len(v) >= 6:
+                out[name] = v
+    return out
+
+
+def redact(text, secrets=None):
+    secrets = secret_values() if secrets is None else secrets
+    for name, v in sorted(secrets.items(), key=lambda kv: -len(kv[1])):
+        text = text.replace(v, f'<<secret:{name}>>')
+    return text
+
+
+TOKEN = re.compile(r'<<secret:([A-Za-z0-9._-]+)>>')
+
+
+def unredact(text, secrets=None):
+    secrets = secret_values() if secrets is None else secrets
+    unknown = sorted({m for m in TOKEN.findall(text) if m not in secrets})
+    if unknown:
+        raise Refused('unknown secret token(s): ' + ', '.join(unknown))
+    return TOKEN.sub(lambda m: secrets[m.group(1)], text)
+
+
+# ---------- compose policy ----------
+
+def normalize(path):
+    p = run(compose_cmd('config', '--format', 'json', file=path), check=False, timeout=60)
+    if p.returncode != 0:
+        msg = (p.stderr or b'').decode('utf-8', 'replace').strip().splitlines()[-3:]
+        raise Refused('compose file is not valid: ' + ' | '.join(redact(m) for m in msg))
+    return json.loads(p.stdout)
+
+
+def _binds(svc):
+    out = []
+    for v in svc.get('volumes') or []:
+        if isinstance(v, dict) and v.get('type') == 'bind':
+            out.append(os.path.normpath(v.get('source', '')))
+    return out
+
+
+def _caps(svc):
+    return sorted(svc.get('cap_add') or [])
+
+
+def _ports(svc):
+    return json.dumps(svc.get('ports') or [], sort_keys=True)
+
+
+def _networks(svc):
+    n = svc.get('networks') or {}
+    return sorted(n.keys() if isinstance(n, dict) else n)
+
+
+def _is_root(user):
+    u = (user or '').split(':')[0].strip()
+    return u in ('', '0', 'root')
+
+
+def _bind_allowed(src, old_all_binds):
+    if src in old_all_binds:
+        return True
+    if src in FORBIDDEN_BIND or src.endswith('docker.sock'):
+        return False
+    if src.startswith(SECRETS + '/') or src == SECRETS:
+        return False
+    return any(src == p.rstrip('/') or src.startswith(p) for p in ALLOWED_BIND_PREFIXES)
+
+
+def policy_problems(old, new):
+    """Reasons to refuse switching from the running compose model `old` to `new` (both from `compose config`)."""
+    problems = []
+    osv, nsv = old.get('services', {}), new.get('services', {})
+    onet, nnet = old.get('networks', {}) or {}, new.get('networks', {}) or {}
+    old_all_binds = {b for s in osv.values() for b in _binds(s)}
+
+    for name in sorted(set(osv) - set(nsv)):
+        problems.append(f'{name}: removing a service is not allowed here')
+    for key in ('secrets', 'configs'):
+        if (new.get(key) or {}) != (old.get(key) or {}):
+            problems.append(f'top-level {key}: changes are not allowed')
+    for name, net in sorted(nnet.items()):
+        o = onet.get(name)
+        if net.get('external') and not (o or {}).get('external'):
+            problems.append(f'network {name}: external networks are not allowed')
+        if net.get('driver') not in (None, 'bridge'):
+            problems.append(f'network {name}: driver {net.get("driver")} is not allowed')
+        if o is not None and o.get('internal') and not net.get('internal'):
+            problems.append(f'network {name}: may not stop being internal')
+    for name, vol in sorted((new.get('volumes') or {}).items()):
+        if (vol or {}).get('driver_opts') and vol != (old.get('volumes') or {}).get(name):
+            problems.append(f'volume {name}: driver options are not allowed')
+
+    for name, s in sorted(nsv.items()):
+        o = osv.get(name)
+        if s == o:
+            continue
+        where = f'{name}:'
+        if s.get('privileged'):
+            problems.append(f'{where} privileged is not allowed')
+        nm = s.get('network_mode') or ''
+        if nm and nm != (o or {}).get('network_mode') and (nm == 'host' or nm.startswith(('container:', 'service:'))):
+            problems.append(f'{where} network_mode {nm} is not allowed')
+        for k in ('pid', 'ipc', 'userns_mode', 'uts', 'cgroup'):
+            if s.get(k) == 'host' or (s.get(k) or '').startswith('container:'):
+                problems.append(f'{where} {k}: {s.get(k)} is not allowed')
+        for k in ('devices', 'device_cgroup_rules', 'sysctls', 'cgroup_parent', 'build', 'extra_hosts'):
+            if (s.get(k) or None) != ((o or {}).get(k) or None):
+                problems.append(f'{where} {k} may not change')
+        if not set(_caps(s)) <= set(_caps(o) if o else []):
+            problems.append(f'{where} cap_add may not gain capabilities ({", ".join(sorted(set(_caps(s)) - set(_caps(o) if o else [])))})')
+        if 'ALL' not in [c.upper() for c in (s.get('cap_drop') or [])] and 'ALL' in [c.upper() for c in ((o or {}).get('cap_drop') or [])]:
+            problems.append(f'{where} cap_drop ALL may not be removed')
+        if o is None and 'ALL' not in [c.upper() for c in (s.get('cap_drop') or [])]:
+            problems.append(f'{where} a new service needs cap_drop: [ALL]')
+        if _ports(s) != (_ports(o) if o else '[]'):
+            problems.append(f'{where} published ports may not change')
+        if o is None:
+            if _is_root(s.get('user')):
+                problems.append(f'{where} a new service needs a fixed non-root user')
+        elif s.get('user') != o.get('user') and _is_root(s.get('user')):
+            problems.append(f'{where} user may not change to root')
+        nnp = lambda x: any('no-new-privileges' in str(v) and 'false' not in str(v) for v in (x or {}).get('security_opt') or [])
+        if (o is None or nnp(o)) and not nnp(s):
+            problems.append(f'{where} needs security_opt no-new-privileges:true')
+        if o is not None and o.get('read_only') and not s.get('read_only'):
+            problems.append(f'{where} read_only may not be switched off')
+        image = s.get('image') or ''
+        if o is not None and image == o.get('image'):
+            image = 'unchanged:ok'
+        if not image or image.endswith(':latest') or (':' not in image.rsplit('/', 1)[-1] and '@sha256:' not in image):
+            problems.append(f'{where} image needs an explicit tag or digest')
+        old_service_binds = set(_binds(o)) if o else set()
+        for src in _binds(s):
+            if src.startswith(SECRETS + '/') and src not in old_service_binds:
+                problems.append(f'{where} may not gain secret file {os.path.basename(src)}')
+            elif not _bind_allowed(src, old_all_binds):
+                problems.append(f'{where} bind mount {src} is not allowed')
+        for v in s.get('volumes') or []:
+            if isinstance(v, dict) and v.get('type') not in ('bind', 'volume', 'tmpfs'):
+                problems.append(f'{where} volume type {v.get("type")} is not allowed')
+        for ef in s.get('env_file') or []:
+            path = ef.get('path') if isinstance(ef, dict) else ef
+            olds = [(e.get('path') if isinstance(e, dict) else e) for e in ((o or {}).get('env_file') or [])]
+            if path not in olds and not str(path).startswith(STACK + '/config/'):
+                problems.append(f'{where} env_file {path} is not allowed')
+        if o is not None:
+            internet_old = [n for n in _networks(o) if not (onet.get(n) or {}).get('internal')]
+            for n in _networks(s):
+                if n not in _networks(o) and not (nnet.get(n) or {}).get('internal') and not internet_old:
+                    problems.append(f'{where} may not gain internet access (network {n})')
+    return problems
+
+
+def changed_services(old, new):
+    osv, nsv = old.get('services', {}), new.get('services', {})
+    names = [n for n in nsv if nsv[n] != osv.get(n)]
+    # A service whose network definition changed must be recreated too.
+    onet, nnet = old.get('networks', {}) or {}, new.get('networks', {}) or {}
+    touched = {n for n in set(onet) | set(nnet) if onet.get(n) != nnet.get(n)}
+    for n, s in nsv.items():
+        if n not in names and touched & set(_networks(s)):
+            names.append(n)
+    return sorted(names)
+
+
+# ---------- the stack ----------
+
+def container(service):
+    return f'knk-alpha-{service}'
+
+
+def state_of(service):
+    p = run([DOCKER, 'inspect', '-f', '{{.State.Status}}|{{if .State.Health}}{{.State.Health.Status}}{{end}}|{{.Config.Image}}|{{.State.StartedAt}}', container(service)], check=False, timeout=30)
+    if p.returncode != 0:
+        return {'service': service, 'state': 'missing'}
+    st, health, image, started = p.stdout.decode().strip().split('|', 3)
+    return {'service': service, 'state': st, 'health': health or None, 'image': image, 'started': started}
+
+
+def wait_healthy(service, timeout):
+    deadline = time.time() + timeout
+    last = {}
+    while time.time() < deadline:
+        last = state_of(service)
+        if last.get('state') == 'running' and last.get('health') in ('healthy', None):
+            if last.get('health') == 'healthy':
+                return last
+            if time.time() > deadline - timeout + 15:  # no health check: running for 15 s
+                return last
+        if last.get('state') in ('exited', 'dead') or last.get('health') == 'unhealthy':
+            break
+        time.sleep(5)
+    raise Failed(f'{service} did not become healthy ({last.get("state")}/{last.get("health")})')
+
+
+def mc_flush():
+    if state_of('minecraft').get('state') == 'running':
+        run([DOCKER, 'exec', container('minecraft'), 'rcon-cli', 'save-all', 'flush'], check=False, timeout=120)
+
+
+def snapshot(label):
+    step(f'snapshot {label}')
+    p = run([SNAPSHOT_CMD, label], check=False, timeout=1800)
+    if p.returncode != 0:
+        tail = (p.stdout + p.stderr).decode('utf-8', 'replace').strip().splitlines()[-2:]
+        raise Refused('snapshot failed, nothing changed: ' + ' | '.join(tail))
+    names = sorted(n for n in os.listdir(SNAPSHOT_DIR) if n.endswith('-' + label))
+    return names[-1] if names else None
+
+
+def db_migrations():
+    p = run([DOCKER, 'exec', container('mysql'), 'sh', '-c',
+             'MYSQL_PWD="$(cat /run/secrets/mysql_root_password)" exec mysql -uroot -h127.0.0.1 -N -B -e "$1"', 'sh',
+             f'SELECT COUNT(*) FROM {DB}.__EFMigrationsHistory'], timeout=60)
+    return int(p.stdout.decode().strip())
+
+
+def install_compose(text, why):
+    """Back up the running file, install `text` as compose.yaml and the Portainer copy, update knk-ops. Returns the backup."""
+    bdir = os.path.join(BACKUPS, stamp() + '-' + why)
+    os.makedirs(bdir, mode=0o700)
+    shutil.copy2(COMPOSE, os.path.join(bdir, 'compose.yaml'))
+    tmp = COMPOSE + '.knk-deploy'
+    with open(tmp, 'w') as f:
+        f.write(text)
+    os.chmod(tmp, 0o600)
+    os.replace(tmp, COMPOSE)
+    if os.path.isfile(PORTAINER):
+        shutil.copyfile(COMPOSE, PORTAINER)
+    record_compose_hash()
+    return bdir
+
+
+def record_compose_hash():
+    h = sha256_file(COMPOSE)
+    if os.path.isfile(KNK_OPS_COMPOSE):
+        lines = open(KNK_OPS_COMPOSE).read().split('\n')
+        lines = [f'RECORDED_SHA={h}' if line.startswith('RECORDED_SHA=') else line for line in lines]
+        tmp = KNK_OPS_COMPOSE + '.knk-deploy'
+        with open(tmp, 'w') as f:
+            f.write('\n'.join(lines))
+        os.chmod(tmp, 0o755)
+        os.replace(tmp, KNK_OPS_COMPOSE)
+    return h
+
+
+def up(services):
+    if 'minecraft' in services:
+        mc_flush()
+    run(compose_cmd('up', '-d', '--no-deps', *services), timeout=900)
+
+
+def restore_compose(bdir, services):
+    step('rollback: restoring the previous compose.yaml')
+    shutil.copy2(os.path.join(bdir, 'compose.yaml'), COMPOSE)
+    if os.path.isfile(PORTAINER):
+        shutil.copyfile(COMPOSE, PORTAINER)
+    record_compose_hash()
+    run(compose_cmd('up', '-d', '--no-deps', *services), check=False, timeout=900)
+    for s in services:
+        try:
+            wait_healthy(s, 300)
+        except Failed as e:
+            step(f'rollback: {e}')
+
+
+def switch_compose(new_text, why, health_timeouts, note_on_failure=None):
+    """Policy check, install, recreate the changed services, health; roll back on failure. Returns a result dict."""
+    old_model = normalize(COMPOSE)
+    tmp = os.path.join(STATE, 'candidate-compose.yaml')
+    with open(tmp, 'w') as f:
+        f.write(new_text)
+    os.chmod(tmp, 0o600)
+    new_model = normalize(tmp)
+    problems = policy_problems(old_model, new_model)
+    if problems:
+        raise Refused('compose policy: ' + '; '.join(problems))
+    services = changed_services(old_model, new_model)
+    if not services:
+        raise Refused('the new compose file changes no service')
+    old_hash = sha256_file(COMPOSE)
+    bdir = install_compose(new_text, why)
+    step(f'compose installed ({old_hash[:12]} -> {sha256_file(COMPOSE)[:12]}), recreating {", ".join(services)}')
+    try:
+        up(services)
+        health = [wait_healthy(s, health_timeouts.get(s, 180)) for s in services]
+    except (Failed, subprocess.TimeoutExpired) as e:
+        restore_compose(bdir, services)
+        raise Failed(f'{e}; rolled back to compose {old_hash[:12]}' + (f' ({note_on_failure})' if note_on_failure else ''))
+    return {'compose_before': old_hash, 'compose_after': sha256_file(COMPOSE), 'services': services, 'backup': bdir, 'health': health}
+
+
+def set_last(record):
+    with open(LAST, 'w') as f:
+        json.dump(record, f, indent=1, sort_keys=True)
+
+
+def replace_image_line(text, repo, tag):
+    pattern = re.compile(r'^(    image: ' + re.escape(repo) + r':)alpha-[0-9a-f]{8}$', re.M)
+    if len(pattern.findall(text)) != 1:
+        raise Refused(f'expected exactly one "image: {repo}:alpha-<sha8>" line in compose.yaml')
+    return pattern.sub(lambda m: m.group(1) + tag, text)
+
+
+def inbox_file(kind, ident):
+    path = os.path.join(INBOX, UPLOADS[kind][2].format(id=ident))
+    if not os.path.isfile(path):
+        raise Refused(f'nothing uploaded as {kind} {ident[:12]}; run upload first')
+    return path
+
+
+def source_names_ok(names):
+    for n in names:
+        norm = os.path.normpath(n)
+        if norm != n.rstrip('/') or n.startswith('/') or '..' in norm.split('/') or not (norm == 'source' or norm.startswith('source/')):
+            return False
+    return bool(names)
+
+
+def extract_source(archive, dest):
+    with tarfile.open(archive, 'r:gz') as t:
+        if not source_names_ok(t.getnames()):
+            raise Refused('the archive must contain only source/ (git archive --prefix=source/)')
+        t.extractall(dest, filter='data')
+
+
+def build_image(repo, commit, files, targets):
+    c8 = commit[:8]
+    archive = inbox_file('api-src' if repo == 'knk-web-api' else 'web-src', commit)
+    ahash = sha256_file(archive)
+    files_dir = os.path.join(BUILD, repo, '_files')
+    for f in files:
+        if not os.path.isfile(os.path.join(files_dir, f)):
+            raise Refused(f'build file {repo}/_files/{f} is missing on the NAS')
+    bdir = os.path.join(BUILD, repo, c8)
+    if os.path.exists(bdir):
+        shutil.rmtree(bdir)
+    os.makedirs(bdir, mode=0o700)
+    extract_source(archive, bdir)
+    shutil.copy2(archive, os.path.join(bdir, f'{repo}-{c8}.tar.gz'))
+    for f in files:
+        shutil.copy2(os.path.join(files_dir, f), os.path.join(bdir, f))
+    built = {}
+    for target, tag in targets:
+        step(f'build {tag}' + (f' (target {target})' if target else ''))
+        logf = os.path.join(bdir, f'build-{stamp()}-{target or "image"}.log')
+        args = [DOCKER, 'build', '-t', tag, '--build-arg', f'SOURCE_REVISION={c8}', '--build-arg', f'SOURCE_ARCHIVE_SHA256={ahash}',
+                '--build-arg', f'BUILD_DATE={now():%Y-%m-%dT%H:%M:%SZ}', bdir]
+        if target:
+            args[2:2] = ['--target', target]
+        with open(logf, 'wb') as lf:
+            p = subprocess.run(args, stdout=lf, stderr=subprocess.STDOUT, timeout=3600)
+        if p.returncode != 0:
+            tail = open(logf, 'rb').read().decode('utf-8', 'replace').strip().splitlines()[-6:]
+            raise Refused(f'build of {tag} failed: ' + ' | '.join(redact(t) for t in tail))
+        built[tag] = run([DOCKER, 'image', 'inspect', '-f', '{{.Id}}', tag]).stdout.decode().strip()
+    return bdir, ahash, built
+
+
+def source_migrations(bdir):
+    mdir = os.path.join(bdir, 'source', 'Migrations')
+    return len([f for f in os.listdir(mdir) if f.endswith('.cs') and not f.endswith('.Designer.cs') and 'ModelSnapshot' not in f])
+
+
+# ---------- commands ----------
+
+def cmd_status():
+    plugin = os.path.join(MC_DATA, 'plugins', 'KnightsAndKings.jar')
+    snaps = sorted(os.listdir(SNAPSHOT_DIR))[-5:] if os.path.isdir(SNAPSHOT_DIR) else []
+    try:
+        migrations = db_migrations()
+    except Exception:  # noqa: BLE001 - status must not fail on a stopped database
+        migrations = None
+    last = json.load(open(LAST)) if os.path.isfile(LAST) else None
+    return {'services': [state_of(s) for s in SERVICES], 'compose_sha256': sha256_file(COMPOSE),
+            'plugin_jar_sha256': sha256_file(plugin) if os.path.isfile(plugin) else None,
+            'db_migrations': migrations, 'snapshots': snaps,
+            'inbox': sorted(os.listdir(INBOX)) if os.path.isdir(INBOX) else [], 'last_change': last}
+
+
+def cmd_compose_get():
+    text = open(COMPOSE).read()
+    return {'sha256': sha256_file(COMPOSE), 'compose': redact(text)}
+
+
+def cmd_config_get(name):
+    text = open(CONFIGS[name], encoding='utf-8').read()
+    return {'name': name, 'sha256_redacted': sha256_bytes(redact(text).encode()), 'content': redact(text)}
+
+
+def cmd_logs(service, minutes):
+    p = run([DOCKER, 'logs', '--since', f'{minutes}m', '--tail', '400', container(service)], check=False, timeout=60)
+    text = (p.stdout + p.stderr).decode('utf-8', 'replace')[-200_000:]
+    return {'service': service, 'minutes': minutes, 'log': redact(text)}
+
+
+def cmd_upload(kind, ident):
+    _, limit, fname = UPLOADS[kind]
+    os.makedirs(INBOX, mode=0o700, exist_ok=True)
+    data = sys.stdin.buffer.read(limit + 1)
+    if len(data) > limit:
+        raise Refused(f'upload larger than {limit >> 10} KiB')
+    if not data:
+        raise Refused('empty upload')
+    h = sha256_bytes(data)
+    if UPLOADS[kind][0] == 'sha256' and h != ident:
+        raise Refused(f'content hash {h[:12]} does not match the named {ident[:12]}')
+    if kind.endswith('-src'):
+        try:
+            with tarfile.open(fileobj=io.BytesIO(data), mode='r:gz') as t:
+                names = t.getnames()
+        except tarfile.TarError as e:
+            raise Refused(f'not a tar.gz: {e}')
+        if not source_names_ok(names):
+            raise Refused('the archive must contain only source/ (git archive --prefix=source/)')
+    if kind == 'plugin-jar':
+        try:
+            with zipfile.ZipFile(io.BytesIO(data)) as z:
+                yml = z.read('plugin.yml').decode('utf-8', 'replace')
+        except (zipfile.BadZipFile, KeyError):
+            raise Refused('not a plugin jar (no plugin.yml)')
+        if not re.search(r'^name:\s*KnightsAndKings\s*$', yml, re.M):
+            raise Refused('plugin.yml does not name KnightsAndKings')
+    path = os.path.join(INBOX, fname.format(id=ident))
+    with open(path + '.part', 'wb') as f:
+        f.write(data)
+    os.replace(path + '.part', path)
+    return {'kind': kind, 'id': ident, 'bytes': len(data), 'sha256': h}
+
+
+def cmd_deploy_api(commit):
+    c8 = commit[:8]
+    tag, mtag = f'knk-web-api:alpha-{c8}', f'knk-web-api-migrator:alpha-{c8}'
+    new_text = replace_image_line(open(COMPOSE).read(), 'knk-web-api', f'alpha-{c8}')
+    bdir, ahash, built = build_image('knk-web-api', commit, API_FILES, [('runtime', tag), ('migrator', mtag)])
+    have, want = db_migrations(), source_migrations(bdir)
+    step(f'migrations: database {have}, source {want}')
+    if want < have:
+        raise Refused(f'the source has {want} migrations, the database {have}: an older build; refusing')
+    snap = snapshot(f'pre-api-{c8}')
+    applied = None
+    if want > have:
+        step('stop api, run the migrator')
+        run(compose_cmd('stop', 'api'), timeout=120)
+        logf = os.path.join(bdir, f'migrate-{stamp()}.log')
+        with open(logf, 'wb') as lf:
+            p = subprocess.run([DOCKER, 'run', '--rm', '--name', 'knk-alpha-migrator', '--network', 'knk-alpha_backend',
+                                '--security-opt', 'no-new-privileges:true', '-e', 'Database__MySqlServerVersion=9.6.0',
+                                '-v', f'{SECRETS}/mysql_root_password:/run/secrets/mysql_root_password:ro',
+                                '-v', f'{SECRETS}/jwt_secret:/run/secrets/jwt_secret:ro', mtag], stdout=lf, stderr=subprocess.STDOUT, timeout=1800)
+        log = open(logf, 'rb').read().decode('utf-8', 'replace')
+        applied = re.findall(r"Applying migration '([^']+)'", log)
+        if p.returncode != 0 or not log.rstrip().endswith('Done.'):
+            run(compose_cmd('start', 'api'), check=False, timeout=120)
+            raise Failed(f'migrator failed (rc {p.returncode}); api restarted on the old image; migrations applied: {applied}. '
+                         f'Restore the database by hand if needed: knk-alpha-restore {snap} db')
+    note = (f'the database keeps the new migrations {applied}; if the old build fails on them: knk-alpha-restore {snap} db'
+            if applied else None)
+    result = switch_compose(new_text, f'api-{c8}', {'api': 240}, note)
+    record = {'kind': 'deploy-api', 'commit': commit, 'archive_sha256': ahash, 'images': built, 'snapshot': snap,
+              'migrations_applied': applied, 'db_migrations': db_migrations(), **result}
+    set_last(record)
+    return record
+
+
+def cmd_deploy_web(commit):
+    c8 = commit[:8]
+    tag = f'knk-web-app:alpha-{c8}'
+    new_text = replace_image_line(open(COMPOSE).read(), 'knk-web-app', f'alpha-{c8}')
+    _, ahash, built = build_image('knk-web-app', commit, WEB_FILES, [(None, tag)])
+    result = switch_compose(new_text, f'web-{c8}', {'web': 120})
+    record = {'kind': 'deploy-web', 'commit': commit, 'archive_sha256': ahash, 'images': built, **result}
+    set_last(record)
+    return record
+
+
+def restart_minecraft(timeout=420):
+    mc_flush()
+    run(compose_cmd('restart', 'minecraft'), timeout=300)
+    return wait_healthy('minecraft', timeout)
+
+
+def plugin_started(since):
+    p = run([DOCKER, 'logs', '--since', since, container('minecraft')], check=False, timeout=60)
+    log = (p.stdout + p.stderr).decode('utf-8', 'replace')
+    ok = 'Enabling KnightsAndKings' in log and 'Error occurred while enabling KnightsAndKings' not in log
+    return ok, len(re.findall(r'\b(ERROR|SEVERE)\]', log))
+
+
+def cmd_deploy_plugin(commit):
+    c8 = commit[:8]
+    jar = inbox_file('plugin-jar', commit)
+    jhash = sha256_file(jar)
+    live = os.path.join(MC_DATA, 'plugins', 'KnightsAndKings.jar')
+    upd = os.path.join(MC_DATA, 'plugins', 'update')
+    rel = os.path.join(RELEASES, 'plugin', c8)
+    os.makedirs(rel, mode=0o700, exist_ok=True)
+    shutil.copy2(jar, os.path.join(rel, 'KnightsAndKings.jar'))
+    with open(os.path.join(rel, 'SOURCE.txt'), 'w') as f:
+        f.write(f'knk-plugin {commit}, uploaded through knk-deploy, {now():%Y-%m-%dT%H:%M:%SZ}\n')
+    snap = snapshot(f'pre-plugin-{c8}')
+    bdir = os.path.join(BACKUPS, stamp() + f'-plugin-{c8}')
+    os.makedirs(bdir, mode=0o700)
+    before = sha256_file(live)
+    shutil.copy2(live, os.path.join(bdir, 'KnightsAndKings.jar'))
+
+    def stage(src):
+        os.makedirs(upd, exist_ok=True)
+        os.chown(upd, MC_UID, MC_UID)
+        dst = os.path.join(upd, 'KnightsAndKings.jar')
+        shutil.copyfile(src, dst)
+        os.chown(dst, MC_UID, MC_UID)
+        os.chmod(dst, 0o644)
+
+    stage(jar)
+    since = now().strftime('%Y-%m-%dT%H:%M:%SZ')
+    try:
+        health = restart_minecraft()
+        ok, errors = plugin_started(since)
+        if sha256_file(live) != jhash:
+            raise Failed('the live jar is not the new one (plugins/update not applied)')
+        if not ok:
+            raise Failed('KnightsAndKings did not enable')
+    except (Failed, subprocess.TimeoutExpired) as e:
+        step('rollback: previous plugin jar')
+        stage(os.path.join(bdir, 'KnightsAndKings.jar'))
+        try:
+            restart_minecraft()
+        except Failed:
+            pass
+        raise Failed(f'{e}; rolled back to jar {before[:12]}')
+    record = {'kind': 'deploy-plugin', 'commit': commit, 'jar_sha256': jhash, 'jar_before': before, 'backup': bdir,
+              'snapshot': snap, 'errors_in_startup_log': errors, 'health': health}
+    set_last(record)
+    return record
+
+
+def cmd_compose_apply(h):
+    text = unredact(open(inbox_file('compose', h), encoding='utf-8').read())
+    result = switch_compose(text, 'compose', {'minecraft': 420, 'api': 240})
+    record = {'kind': 'compose-apply', 'upload_sha256': h, **result}
+    set_last(record)
+    return record
+
+
+def cmd_config_apply(name, h):
+    path = CONFIGS[name]
+    text = unredact(open(inbox_file('config-' + name, h), encoding='utf-8').read())
+    bdir = os.path.join(BACKUPS, stamp() + f'-config-{name}')
+    os.makedirs(bdir, mode=0o700)
+    shutil.copy2(path, os.path.join(bdir, os.path.basename(path)))
+    st = os.stat(path)
+    before = sha256_file(path)
+
+    def write(content_bytes):
+        tmp = path + '.knk-deploy'
+        with open(tmp, 'wb') as f:
+            f.write(content_bytes)
+        os.chown(tmp, st.st_uid, st.st_gid)
+        os.chmod(tmp, st.st_mode & 0o777)
+        os.replace(tmp, path)
+
+    write(text.encode('utf-8'))
+    since = now().strftime('%Y-%m-%dT%H:%M:%SZ')
+    try:
+        health = restart_minecraft()
+        ok, errors = plugin_started(since)
+        if not ok:
+            raise Failed('KnightsAndKings did not enable after the config change')
+    except (Failed, subprocess.TimeoutExpired) as e:
+        step('rollback: previous config')
+        write(open(os.path.join(bdir, os.path.basename(path)), 'rb').read())
+        try:
+            restart_minecraft()
+        except Failed:
+            pass
+        raise Failed(f'{e}; rolled back {name}')
+    record = {'kind': 'config-apply', 'name': name, 'before': before, 'after': sha256_file(path), 'backup': bdir,
+              'errors_in_startup_log': errors, 'health': health}
+    set_last(record)
+    return record
+
+
+def cmd_snapshot(label):
+    return {'snapshot': snapshot(label)}
+
+
+def cmd_restart(service):
+    if service == 'minecraft':
+        return {'health': restart_minecraft()}
+    run(compose_cmd('restart', service), timeout=300)
+    return {'health': wait_healthy(service, 240)}
+
+
+def cmd_rollback():
+    if not os.path.isfile(LAST):
+        raise Refused('no recorded change to roll back')
+    last = json.load(open(LAST))
+    kind = last.get('kind')
+    if kind in ('deploy-api', 'deploy-web', 'compose-apply'):
+        restore_compose(last['backup'], last['services'])
+        health = [wait_healthy(s, 300) for s in last['services']]
+        note = None
+        if kind == 'deploy-api' and last.get('migrations_applied'):
+            note = (f'the database keeps the migrations {last["migrations_applied"]}; restore it by hand if the old build '
+                    f'needs that: knk-alpha-restore {last.get("snapshot")} db')
+        out = {'rolled_back': kind, 'compose': sha256_file(COMPOSE), 'health': health, 'note': note}
+    elif kind == 'deploy-plugin':
+        upd = os.path.join(MC_DATA, 'plugins', 'update')
+        os.makedirs(upd, exist_ok=True)
+        dst = os.path.join(upd, 'KnightsAndKings.jar')
+        shutil.copyfile(os.path.join(last['backup'], 'KnightsAndKings.jar'), dst)
+        os.chown(dst, MC_UID, MC_UID)
+        out = {'rolled_back': kind, 'health': restart_minecraft()}
+    elif kind == 'config-apply':
+        path = CONFIGS[last['name']]
+        st = os.stat(path)
+        shutil.copyfile(os.path.join(last['backup'], os.path.basename(path)), path)
+        os.chown(path, st.st_uid, st.st_gid)
+        out = {'rolled_back': kind, 'name': last['name'], 'health': restart_minecraft()}
+    else:
+        raise Refused(f'cannot roll back a {kind}')
+    os.replace(LAST, LAST + f'.rolled-back-{stamp()}')
+    return out
+
+
+# ---------- entry ----------
+
+def parse(argv):
+    """Map argv to (handler, args). Raises Refused for anything not in the grammar."""
+    def need(cond):
+        if not cond:
+            raise Refused('bad arguments')
+    if not argv:
+        raise Refused('no command')
+    c, a = argv[0], argv[1:]
+    ident = lambda s, kind: PATTERNS[kind].match(s or '') is not None
+    if c in ('status', 'compose-get', 'rollback'):
+        need(not a)
+        return {'status': cmd_status, 'compose-get': cmd_compose_get, 'rollback': cmd_rollback}[c], []
+    if c == 'config-get':
+        need(len(a) == 1 and a[0] in CONFIGS)
+        return cmd_config_get, a
+    if c == 'logs':
+        need(1 <= len(a) <= 2 and a[0] in SERVICES and (len(a) == 1 or (a[1].isdigit() and 1 <= int(a[1]) <= 180)))
+        return cmd_logs, [a[0], int(a[1]) if len(a) == 2 else 30]
+    if c == 'upload':
+        need(len(a) == 2 and a[0] in UPLOADS and ident(a[1], UPLOADS[a[0]][0]))
+        return cmd_upload, a
+    if c in ('deploy-api', 'deploy-web', 'deploy-plugin'):
+        need(len(a) == 1 and ident(a[0], 'commit'))
+        return {'deploy-api': cmd_deploy_api, 'deploy-web': cmd_deploy_web, 'deploy-plugin': cmd_deploy_plugin}[c], a
+    if c == 'compose-apply':
+        need(len(a) == 1 and ident(a[0], 'sha256'))
+        return cmd_compose_apply, a
+    if c == 'config-apply':
+        need(len(a) == 2 and a[0] in CONFIGS and ident(a[1], 'sha256'))
+        return cmd_config_apply, a
+    if c == 'snapshot':
+        need(len(a) == 1 and ident(a[0], 'label'))
+        return cmd_snapshot, a
+    if c == 'restart':
+        need(len(a) == 1 and a[0] in RESTARTABLE)
+        return cmd_restart, a
+    raise Refused('unknown command')
+
+
+READ_ONLY = ('status', 'compose-get', 'config-get', 'logs')
+
+
+def main(argv):
+    os.umask(0o077)
+    if os.geteuid() != 0:
+        print(json.dumps({'ok': False, 'error': 'must run as root'}))
+        return 1
+    try:
+        handler, args = parse(argv)
+    except Refused as e:
+        print(json.dumps({'ok': False, 'error': 'refused', 'reason': str(e)}))
+        journal({'command': argv[0] if argv else None, 'result': 'refused', 'reason': str(e)})
+        return 64
+    lockf = open(LOCK, 'w')
+    try:
+        fcntl.flock(lockf, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except OSError:
+        print(json.dumps({'ok': False, 'error': 'busy'}))
+        return 75
+    started = time.time()
+    entry = {'command': argv[0], 'args': [x for x in argv[1:]]}
+    try:
+        result = handler(*args)
+        out = {'ok': True, 'command': argv[0], **(result or {})}
+        code = 0
+    except Refused as e:
+        out, code = {'ok': False, 'error': 'refused', 'reason': redact(str(e))}, 65
+    except (Failed, subprocess.TimeoutExpired) as e:
+        out, code = {'ok': False, 'error': 'failed', 'reason': redact(str(e))}, 1
+    if argv[0] not in READ_ONLY or code != 0:
+        brief = {k: v for k, v in out.items() if k not in ('compose', 'content', 'log', 'services')}
+        journal({**entry, 'result': 'ok' if code == 0 else out['error'], 'seconds': round(time.time() - started), 'out': brief})
+    print(json.dumps(out, indent=1, sort_keys=True, default=str))
+    return code
+
+
+if __name__ == '__main__':
+    sys.exit(main(sys.argv[1:]))

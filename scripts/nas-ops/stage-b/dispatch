@@ -1,0 +1,43 @@
+#!/bin/bash
+# knk-deploy forced-command dispatcher (root-owned, run by sshd for user knk-deploy). Stage B.
+# Splits the SSH command into at most four words from a fixed character set and hands them to the root-owned
+# knk-deploy program through sudo; knk-deploy validates the grammar again. stdin passes through (uploads).
+set -u
+PATH=/usr/sbin:/usr/bin:/sbin:/bin
+export PATH
+umask 077
+
+PROG=/usr/local/libexec/knk-deploy/knk-deploy
+req="${SSH_ORIGINAL_COMMAND-}"
+client="${SSH_CONNECTION-}"
+client="${client%% *}"
+client="${client:-local}"
+
+log() { logger -t knk-deploy -p auth.notice -- "$*"; }
+
+deny() {
+  local h
+  h="$(printf '%s' "$req" | sha256sum | cut -c1-12)"
+  log "cmd=- result=denied reason=$1 client=$client len=${#req} sha=$h"
+  printf '{"ok":false,"error":"denied"}\n'
+  exit 64
+}
+
+[ -n "$req" ] || deny empty
+[ "${#req}" -le 200 ] || deny too-long
+[[ "$req" =~ ^[a-z0-9][a-z0-9.-]*( [a-z0-9][a-z0-9.-]*){0,3}$ ]] || deny charset
+
+read -r -a words <<< "$req"
+case "${words[0]}" in
+  status|compose-get|config-get|logs) limit=120 ;;
+  upload|snapshot|restart|rollback|config-apply) limit=1800 ;;
+  compose-apply) limit=2400 ;;
+  deploy-api|deploy-web|deploy-plugin) limit=7200 ;;
+  *) deny not-allowlisted ;;
+esac
+
+timeout "$limit" sudo -n -- "$PROG" "${words[@]}"
+rc=$?
+if [ "$rc" -eq 0 ]; then result=ok; else result=fail; fi
+log "cmd=${words[0]} result=$result rc=$rc client=$client"
+exit "$rc"
