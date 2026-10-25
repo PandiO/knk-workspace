@@ -63,8 +63,8 @@ Minecraft client ──► play.knightsandkings.net ──► playit.gg tunnel �
 
 | Repo | Minimum | On the NAS today | Action |
 |---|---|---|---|
-| knk-web-api | `master` ≥ `30c5dc5` (KNG-64 merge) | `knk-web-api:alpha-a38c8ee9` since 2026-10-24 (KNG-64, KNG-205, KNG-186/269; behind `app.knightsandkings.net` `/api`) | Done (§ 3, [report](../reports/2026-10-22-alpha-api-kng64-upgrade.md)) |
-| knk-web-app | `main` ≥ `98c0a76` | `knk-web-app:alpha-00e4af61` at `https://app.knightsandkings.net` since 2026-10-24 | Done (runbook Phase 6, [report](../reports/2026-10-24-alpha-phase-6-web-ingress.md)) |
+| knk-web-api | `master` ≥ `30c5dc5` (KNG-64 merge) | `knk-web-api:alpha-fa28f7ea` since 2026-10-25 (invite-only onboarding, [report](../reports/2026-10-25-invite-only-register-page.md); before: `alpha-a38c8ee9`; behind `app.knightsandkings.net` `/api`) | Done (§ 3, [report](../reports/2026-10-22-alpha-api-kng64-upgrade.md)) |
+| knk-web-app | `main` ≥ `98c0a76` | `knk-web-app:alpha-0d612702` at `https://app.knightsandkings.net` since 2026-10-25 (before: `alpha-00e4af61`) | Done (runbook Phase 6, [report](../reports/2026-10-24-alpha-phase-6-web-ingress.md)) |
 | knk-plugin | `main` ≥ `34c9261`, plus the KNG-114 hub loader | `plugins/KnightsAndKings.jar` from `main` `d56e41da` since 2026-10-24 ([KNG-225](https://linear.app/kngpandi/issue/KNG-225)) | Done (runbook Phase 4, [report](../reports/2026-10-24-alpha-api-4aeb794-and-plugin-stage-2.md)); later builds via `plugins/update/` (§ 5) |
 
 Build from the **current** trunk head at the moment you package, and record the exact commit, as the runbook does for
@@ -414,9 +414,11 @@ testers*):
 |---|---|
 | Pages | `/invite/*`, `/invite`, `/join*`, `/link*` |
 | Static files of the SPA | `/static/*`, `/favicon.ico`, `/manifest.json`, `/logo*.png` |
-| Anonymous API calls of those pages | `/api/Invitations/check`, `/api/Admission/claim/check`, `/api/Auth/register` |
+| Anonymous API calls of those pages | `/api/Invitations/check`, `/api/Admission/claim/check`, `/api/Auth/register`, **`/api/Auth/onboarding-info`** (2026-10-25, knk-web-api `claude/invite-only-register-page`: the mode, whether this Cloudflare step applies, the public URL — the invite, join and link pages ask it before sign-up, and the app uses it to recognise a missing Cloudflare session) |
 
-One policy: **Action Bypass, Include Everyone**. The WAF rule on `/api/Auth/` stays.
+One policy: **Action Bypass, Include Everyone**. The WAF rule on `/api/Auth/` stays. **Developer action with the
+2026-10-25 deploy:** add the `/api/Auth/onboarding-info` path to the bypass application; without it the pages behind
+the bypass can't ask and fall back to "no Cloudflare step" texts (nothing breaks, the guidance is just missing).
 
 **6. The API settings.** On the alpha `ProxyUrl` is in the Compose block; the other three are in
 `config/api/cloudflare-access.env` (root 600, an `env_file`), so the kill switch needs no Compose edit:
@@ -556,18 +558,23 @@ and through Cloudflare ([report](../reports/2026-10-24-alpha-security-probe.md))
 **Invite-only since 2026-10-24** (§ 11.1). The invite **is** the system mail: create a personal invite on
 `/admin/invitations` (group **Alpha Tester**) and the API sends it. It expires in 7 days; *Resend* gives a fresh link
 (3 mails per address per hour, 3 resends a day). The tester:
-1. opens `/invite/<token>` from the mail and signs up (no Cloudflare step yet);
-2. opens the site: Cloudflare emails a one-time PIN, once per device per 30 days;
-3. joins **play.knightsandkings.net**, gets a code on the disconnect screen and enters it on `/account/link`;
+1. opens `/invite/<token>` from the mail and signs up (no Cloudflare step yet; the mail and the page list these steps);
+2. presses **Continue to Cloudflare sign-in**: a full page load, so Cloudflare shows its login — the tester types the
+   **same email**, Cloudflare mails a **6-digit code** (sender Cloudflare, check spam), once per device per 30 days
+   (2026-10-25: before this, the in-app navigation skipped Cloudflare's page and every API call failed with "Network
+   error" until the tester found the PIN by hand);
+3. joins **play.knightsandkings.net** (Java or Bedrock), gets a code on the disconnect screen and enters it on `/account/link`;
 4. joins again and plays.
 
 Players who already had an account (grandfathered) just join. For a **shared code** (Discord, a friend group) post this
 short text with the code from the result panel:
 
 > Knights & Kings closed alpha: sign up at **https://app.knightsandkings.net/join** with code `KNK-XXXXX-XXXXX` (valid until
-> <date>, <n> places). Cloudflare then emails you a one-time PIN to open the site. Join **play.knightsandkings.net**
-> (Java Edition 26.3): you'll get a code on screen; enter it on the website to link your Minecraft account. Never give
-> that code to anyone; staff never ask for it. Bugs or questions: <channel>. This is an alpha: progress may be reset.
+> <date>, <n> places). After sign-up the site is guarded by Cloudflare: it asks for your email (the one you signed up
+> with) and emails you a 6-digit code — from Cloudflare, not from us; check spam. Then join **play.knightsandkings.net**
+> (Java Edition 26.3 or Bedrock): you'll get a code on screen; enter it on the website to link your Minecraft account,
+> and join again. Never give that code to anyone; staff never ask for it. Bugs or questions: <channel>. This is an
+> alpha: progress may be reset.
 
 The whitelist text used before the switch-over is retired (git history has it).
 

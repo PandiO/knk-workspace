@@ -1,7 +1,7 @@
 # Gate Structures — Player Guide
 
 **Status:** Living document — update in place as the game changes
-**Last updated:** 2026-09-21
+**Last updated:** 2026-10-25 (invincible gates can't be set on fire either)
 
 Gates, drawbridges, and portcullises are animated, damageable barriers built into walls around towns and districts — and a central part of sieges. Here's what you'll actually experience with them.
 
@@ -27,7 +27,7 @@ Gates have their own health and can be damaged and destroyed like any siege obje
 
 - Hitting a gate (melee, arrows, explosions, or breaking its blocks directly) chips away at its health.
 - Setting a gate on fire (fire arrows, fire charges) burns continuously — the longer it burns and the more of it is alight, the more damage it racks up per tick, so leaving a gate burning is a real ongoing threat, not a one-time hit.
-- Some gates are **invincible** and can't be damaged at all (useful for gates an admin doesn't want contested) — you'll just see your hits do nothing.
+- Some gates are **invincible** and can't be damaged at all (useful for gates an admin doesn't want contested) — you'll just see your hits do nothing, and fire arrows, fire charges, flint and steel or a Fire Aspect weapon won't set them alight at all.
 - When a gate's health hits zero, it's **destroyed**: its blocks vanish with an explosion effect, and (for gates that can respawn) it rebuilds itself automatically after a set amount of time, restoring full health. A server-wide message announces it when a gate comes back.
 - A destroyed gate that can't respawn stays down until an admin repairs it.
 

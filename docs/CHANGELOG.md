@@ -8,6 +8,26 @@ _Nothing at the moment._
 
 ## 2026-10-25
 
+- **Invincible gates refuse ignition** — hotfix, knk-plugin `main` `ee35fb1`, merged `--no-ff` from `claude/adoring-wright-ejn8f7` on 2026-10-25 (developer decision 2026-10-25; not in Linear,
+  free issue limit). Not live-tested yet. Before, a flame arrow, fire charge, flint and steel or Fire Aspect hit on an effectively-invincible gate (door
+  flag or structure `IsInvincibleOverride`) started a burn whose damage no-op'd while its fire and smoke showed for the whole
+  duration. Now `GateDoorHitService.handleIgnite` fires no `GateDoorIgniteEvent` for such a gate, and `GateFireSystem` puts out a
+  burning gate that becomes invincible (a siege override mid-burn). Direct hits are unchanged (event fires, `HealthSystem` no-ops).
+- **Invite-only onboarding: the Cloudflare step in every flow, no dead end from `/auth/register` or the login page,
+  claim codes recognised in link-code fields** — knk-web-api `master` `fa28f7ea` and knk-web-app `main` `0d612702`, merged `--no-ff` from `claude/invite-only-register-page`
+  (2026-10-25; comment on KNG-218, no issue of its own — free issue limit; found on the alpha with the first two
+  testers). New anonymous `GET api/Auth/onboarding-info` (`registrationMode`, `accessGate`, `publicBaseUrl`; to add to
+  the Cloudflare bypass). With the Access sync on: the sign-up form's done step lists Cloudflare's email + 6-digit code
+  step and its button is a **full page load** (the in-app navigation skipped Cloudflare and every call then failed
+  with "Network error"); `/invite`, `/join`, `/link` and the login page show the journey with that step; a missing
+  Cloudflare session is recognised (health probe, opaque redirect) and answered with one banner, "Sign in with
+  Cloudflare"; the invitation, welcome, finish-linking and password-reset mails carry the step (`{{#accessGate}}` blocks).
+  With the sync off nothing about Cloudflare shows. Under `Mode=Invite` the register page opens on an invitation step (invitation code → `/join`, the
+  server's `XXXX-XXXX` code → `/link?code=`, the link-code form behind "Already playing and got a code from
+  `/account link`?"), the login page's **Create an account** continues the invite flow (`/invite` with the kept personal
+  invitation, `/link` with a verified claim code, else `/join`), the invite and join forms' **Log in** returns to them, a
+  claim code typed with its dash into a link-code field is routed to the claim flow (look-alikes folded on
+  `/account/link`), and every claim refusal says the code stays valid for 15 minutes. Deployed to the alpha the same day (API `alpha-fa28f7ea`, web `alpha-0d612702`); waiting for the tester's check.
 - **Menu startup validation keeps retrying while the API is down** — knk-plugin `main` `ad5786c`, merged `--no-ff` from
   `claude/menu-validation-retry` on 2026-10-25 (not in Linear, free issue limit). The 2026-10-24 retry only re-listed the templates; on the dev server the list came back
   while every per-key fetch still failed (the connectivity monitor still reported the API down), and the pass ended with
