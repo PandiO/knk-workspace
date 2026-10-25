@@ -58,3 +58,11 @@ warnings) fall on the API restart of the cleanup check and are transient. At 14:
 - Plugin: `backups/20261025T140211Z/KnightsAndKings-before.jar` → `plugins/update/KnightsAndKings.jar`
   (`2001:2001`), `save-all flush`, restart.
 - Data: snapshot `…-pre-6f08383d`.
+
+## 4. Later the same day: `ALLOW_FLIGHT` workaround (developer)
+
+15:02Z: the developer added `ALLOW_FLIGHT: "TRUE"` to the `minecraft` environment (itzg → `allow-flight=true` in
+`server.properties`) because players were kicked for "flying" by mistake; a real fix gets its own issue. Compose
+`41f7b64a…` → **`82def53828bc3f8ad45fdbbe0c89cdd282724fd1e4fd10604ccd05e7c086eeba`** (backup
+`backups/20261025T150142Z/`, Portainer identical); the `knk-ops compose` wrapper records it. Side effect to keep in
+mind: with flight allowed, Paper no longer kicks real fly hacks either — remove the line when the fix ships.
