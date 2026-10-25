@@ -6,11 +6,13 @@ This repository is the canonical Knights and Kings documentation source. Read
 overlapping claims, publish a feature-scoped claim, and use the standing
 feature branch (or create one from the current default branch).
 
-For intended behavior consult the current feature plan and Linear issue; for
-implemented behavior inspect the current default branches of affected code
-repos. Date and verify old handoffs before using them. Documentation lives
-under `docs/`; dated audits go to `docs/reports/`. Claude Code can also
-load [CLAUDE.md](CLAUDE.md) for repo-specific conventions.
+For intended behavior consult the current feature plan and GitHub issue
+(`PandiO/knk-workspace` issues; Linear is a read-only archive since
+2026-10-25); for implemented behavior inspect the current default branches
+of affected code repos. Date and verify old handoffs before using them.
+Documentation lives under `docs/`; dated audits go to `docs/reports/`.
+Claude Code can also load [CLAUDE.md](CLAUDE.md) for repo-specific
+conventions.
 
 ## Conventions for working in this repo
 

@@ -24,7 +24,7 @@ spec and default branches before interpreting older priority notes.
    in **each** affected repo. A feature branch shows proposed behavior until
    merged. Check its diff from the current default branch before reusing it.
 3. For intended behavior, use the current feature's design/implementation plan
-   in `knk-workspace/docs/specs/` and its Linear issue, checking their status
+   in `knk-workspace/docs/specs/` and its GitHub issue, checking their status
    headers and later decisions. Flag conflicts with live code rather than
    silently choosing a side.
 4. Apply this shared workflow and the relevant repo's `AGENTS.md` together.
@@ -39,12 +39,34 @@ If sources conflict and no developer decision resolves it, surface the
 specific conflict and choose a reversible course where possible. Do not
 represent an unmerged implementation or unverified live test as shipped.
 
-## Linear is the work list
+## GitHub Issues is the work list
 
-Linear (team KNG) is the one list of work to implement (developer decision
-2026-10-15).
+The issues of `PandiO/knk-workspace` are the one list of work to implement
+(developer decisions 2026-10-15 and 2026-10-25). File every issue there, also
+for work in the component repos, and reference it as
+`PandiO/knk-workspace#123` (a bare `#123` resolves to the wrong repo from a
+component repo's commit or PR).
 
-1. Implement only what a Linear issue covers. Specs, handoffs, reports,
+Linear (team KNG) was the work list until 2026-10-25, when the free issue
+limit made new issues impossible. It stays as a read-only archive: don't
+create, edit or comment on Linear issues. Every open KNG issue was copied
+with its id in the title, such as `[KNG-27] ...`, so search the GitHub
+issues for `[KNG-n]` to find the copy of a `KNG-n` reference. Closed KNG
+issues exist only in Linear; their links in docs stay valid.
+
+Issue conventions:
+
+- Type as a label: `bug`, `feature` or `improvement`; no type label for
+  other tasks. (GitHub issue types need an organization account, so this
+  user-owned repo can't store them.)
+- Status: open without a status label = Backlog/Todo; `status:in-progress`;
+  `status:in-review` (waiting for the developer's test); closed as completed
+  = Done; closed as not planned = Canceled; closed as duplicate = Duplicate.
+- Optional `priority:urgent|high|medium|low`. Phased work uses sub-issues
+  under a parent issue.
+- PRs in any repo close an issue with `Closes PandiO/knk-workspace#123`.
+
+1. Implement only what an issue covers. Specs, handoffs, reports,
    `docs/backlog/`, code comments and chat are input, not a work list:
    anything found there that should be built gets an issue first. Scope a
    session, chain link, branch and tracker row by issue id.
@@ -54,7 +76,8 @@ Linear (team KNG) is the one list of work to implement (developer decision
    Fix it on the branch under test and note it in that issue or test report.
    If it isn't fixed in that sitting, it gets an issue.
 3. When the developer mentions a bug, idea or request, in any session and on
-   any topic, search Linear for it (open, done and canceled). If no issue
+   any topic, search the issues for it (open and closed; for older work
+   also Linear, read-only). If no issue
    covers it, create one in that session (what was said, repro, where in the
    code, date) and give the developer its id. Never leave it only in chat, a
    handoff or a report.
@@ -63,12 +86,13 @@ Linear (team KNG) is the one list of work to implement (developer decision
    issue that covers it; a "found in passing" list in a report is not enough.
    Never describe a known gap in code or docs as intended behaviour without
    the issue id next to it.
-5. Keep the issue's status true: In Progress when work starts, In Review
-   while it waits for the developer's test, Done once merged (or as the
-   developer decides). Link the branch or PR.
+5. Keep the issue's status true: `status:in-progress` when work starts,
+   swap it for `status:in-review` while it waits for the developer's test,
+   close it as completed once merged (or as the developer decides) and drop
+   the status label. Link the branch or PR in a comment.
 
-Without Linear access, list the items under "To file in Linear" in your
-tracker row or handoff and tell the developer.
+Without GitHub issue access, list the items under "To file" in your tracker
+row or handoff and tell the developer.
 
 ## Parallel sessions and branches
 

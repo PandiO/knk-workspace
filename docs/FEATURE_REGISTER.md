@@ -1,10 +1,10 @@
 # Knights & Kings feature register
 
-**Status:** Active · **Last updated:** 2026-10-24 (Accounts row: KNG-205 invite-only sign-up merged, links 1–7, smoke-tested on dev); 2026-10-23 (KNG-250 merged: Minecraft catalogue row now covers enchantments); 2026-10-18 (KNG-107 merged: permissions row; KNG-103 merged: managed WorldGuard regions row); 2026-10-17 (form wizard chain merged, targeted refresh note); 2026-10-11 (KNG-34 rows: merged to trunk and live-tested; Kits row: KNG-81 plugin half) · **First reconciled:** 2026-09-28 · [KNG-33](https://linear.app/kngpandi/issue/KNG-33)
+**Status:** Active · **Last updated:** 2026-10-25 (issue tracker moved to GitHub Issues; wording only); 2026-10-24 (Accounts row: KNG-205 invite-only sign-up merged, links 1–7, smoke-tested on dev); 2026-10-23 (KNG-250 merged: Minecraft catalogue row now covers enchantments); 2026-10-18 (KNG-107 merged: permissions row; KNG-103 merged: managed WorldGuard regions row); 2026-10-17 (form wizard chain merged, targeted refresh note); 2026-10-11 (KNG-34 rows: merged to trunk and live-tested; Kits row: KNG-81 plugin half) · **First reconciled:** 2026-09-28 · [KNG-33](https://linear.app/kngpandi/issue/KNG-33)
 
 This is the index of intended gameplay and shipped surfaces, not a substitute for a feature's design, code, or issue. V1's wider gameplay and V2's stronger data model are both inputs to V3. An absent V2 port is **not** a decision to drop a V1 feature. The [vision](vision/vision.md) decides intent; a [feature spec](specs/README.md) decides detailed behavior; the actual default branches decide whether code has shipped.
 
-**Evidence baseline (checked 2026-09-30):** `knk-workspace/main` `4757fbb`, `knk-plugin/main` `27b4236`, `knk-web-api/master` `29b6c5d`, and `knk-web-app/main` `b9a3c43`. Legacy columns use the dated scans linked below. Later default-branch commits or Linear decisions supersede this snapshot and must update the affected rows.
+**Evidence baseline (checked 2026-09-30):** `knk-workspace/main` `4757fbb`, `knk-plugin/main` `27b4236`, `knk-web-api/master` `29b6c5d`, and `knk-web-app/main` `b9a3c43`. Legacy columns use the dated scans linked below. Later default-branch commits or issue decisions supersede this snapshot and must update the affected rows.
 
 **Targeted refresh (2026-10-04):** the moderation/private-message rows were rechecked after plugin
 `main` merge `1a69ec3`; KNG-24, KNG-25 and KNG-28 are merged and Done. KNG-26/29/30 are also Done
@@ -35,9 +35,9 @@ and live-tested: knk-web-api `master` `17ee730`, knk-plugin `main` `b5eee6e`; se
 - **Implementation:** `complete` = the documented scope is code-complete; `partial` = some required behavior exists; `none` = no V3 implementation identified. This says what was built, independently of where it is merged.
 - **Merge:** `trunk` = the stated implementation is on all required default branches; `branch` = it exists only on a feature branch; `mixed` = only some required components or behavior are on trunk; `—` = nothing is ready to merge. A branch is never counted as shipped.
 - **Verification:** `live` = a documented live game or admin check; `pending` = no complete documented live check; `mixed` = part tested. Code status does not imply release readiness. Consult each feature's plan for the test scope.
-- **Next:** `maintain`, `finish`, `design`, `decide`, or `later`. A Linear issue can be Done while remaining follow-ups have their own issues; the register tracks the whole feature.
+- **Next:** `maintain`, `finish`, `design`, `decide`, or `later`. An issue can be closed while remaining follow-ups have their own issues; the register tracks the whole feature.
 
-For each changed row, include its source, spec or issue and the date of the evidence in the change or PR. Check current `main` (workspace, plugin, app) and `master` (API), plus the feature plan and Linear, before changing `branch` to `trunk`. At merge, update this register, relevant guides, and [CHANGELOG.md](CHANGELOG.md) using the [documentation maintenance guide](guides/developer/DOCUMENTATION_MAINTENANCE.md). Keep uncertain claims explicit. This inventory groups behavior by player-facing capability; it does not imply one issue or one release per row.
+For each changed row, include its source, spec or issue and the date of the evidence in the change or PR. Check current `main` (workspace, plugin, app) and `master` (API), plus the feature plan and issue, before changing `branch` to `trunk`. At merge, update this register, relevant guides, and [CHANGELOG.md](CHANGELOG.md) using the [documentation maintenance guide](guides/developer/DOCUMENTATION_MAINTENANCE.md). Keep uncertain claims explicit. This inventory groups behavior by player-facing capability; it does not imply one issue or one release per row.
 
 ### World, travel and settlement
 
