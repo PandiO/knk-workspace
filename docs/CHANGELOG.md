@@ -4,14 +4,15 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
-- **Invincible gates refuse ignition** — knk-plugin `claude/adoring-wright-ejn8f7` (developer decision 2026-10-25; not in Linear,
-  free issue limit). Before, a flame arrow, fire charge, flint and steel or Fire Aspect hit on an effectively-invincible gate (door
-  flag or structure `IsInvincibleOverride`) started a burn whose damage no-op'd while its fire and smoke showed for the whole
-  duration. Now `GateDoorHitService.handleIgnite` fires no `GateDoorIgniteEvent` for such a gate, and `GateFireSystem` puts out a
-  burning gate that becomes invincible (a siege override mid-burn). Direct hits are unchanged (event fires, `HealthSystem` no-ops).
+_Nothing at the moment._
 
 ## 2026-10-25
 
+- **Invincible gates refuse ignition** — hotfix, knk-plugin `main` `ee35fb1`, merged `--no-ff` from `claude/adoring-wright-ejn8f7` on 2026-10-25 (developer decision 2026-10-25; not in Linear,
+  free issue limit). Not live-tested yet. Before, a flame arrow, fire charge, flint and steel or Fire Aspect hit on an effectively-invincible gate (door
+  flag or structure `IsInvincibleOverride`) started a burn whose damage no-op'd while its fire and smoke showed for the whole
+  duration. Now `GateDoorHitService.handleIgnite` fires no `GateDoorIgniteEvent` for such a gate, and `GateFireSystem` puts out a
+  burning gate that becomes invincible (a siege override mid-burn). Direct hits are unchanged (event fires, `HealthSystem` no-ops).
 - **Invite-only onboarding: the Cloudflare step in every flow, no dead end from `/auth/register` or the login page,
   claim codes recognised in link-code fields** — knk-web-api `master` `fa28f7ea` and knk-web-app `main` `0d612702`, merged `--no-ff` from `claude/invite-only-register-page`
   (2026-10-25; comment on KNG-218, no issue of its own — free issue limit; found on the alpha with the first two
