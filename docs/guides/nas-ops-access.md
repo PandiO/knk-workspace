@@ -153,7 +153,7 @@ sudo journalctl -t knk-ops --since today --no-pager -o short-iso
 2026-10-25** (files match `SHA256SUMS` of `1f23251`; key `SHA256:P6YDRiBC9wxhevkpJnd2aDjcKKUaox4De2Cw0rC732E`
 `knk-deploy@pc`, `from="192.168.50.208"`; `_files` copied from the `6f08383d`/`0d612702` build folders). PC test:
 `status` ok, `status; id` denied, `restart mysql` refused, `config-get knk` shows the plugin key as a token.
-Archive the files with `git -c core.autocrlf=false archive` on Windows, or the line endings change.
+Archive the files with `git -c core.autocrlf=false archive` on Windows, or the line endings change. Hardening update `a6d59a6` (`knk-deploy` `1f1aad31…`, dispatcher unchanged `e6f9c1e9…`) installed the same evening; the previous program is kept as `/var/lib/knk-deploy/knk-deploy.before-a6d59a6`.
 Developer decisions 2026-10-25: Claude Code sessions on the PC may update the alpha to **trunk** builds and change its
 Compose and plugin configs, **asking the developer before every change** (Claude Code `ask` rules); the NAS gets
 **no GitHub access** — the PC builds and uploads. This replaces the 2026-10-18 design (no arguments, approval files).
