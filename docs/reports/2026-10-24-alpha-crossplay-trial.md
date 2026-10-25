@@ -1,7 +1,6 @@
 # Closed alpha: Bedrock crossplay trial (Geyser + Floodgate over NetherNet) — 2026-10-24
 
-**Status:** Partly working. Bedrock on Windows joins the alpha and plays; consoles see the Friends-tab session but the
-join fails on a known MCXboxBroadcast bug (fix expected with Bedrock 26.60, ~2026-10-27)
+**Status:** Working. Bedrock on Windows and PlayStation (Friends tab, MCXboxBroadcast 26.60 dev build) reach the alpha and its admission gate
 **Last updated:** 2026-10-25
 **Linear:** none. **To file** (free plan issue limit)
 **Background:** [Bedrock console access](2026-10-06-bedrock-console-access.md) (2026-10-06 research)
@@ -63,3 +62,14 @@ developer, 2026-10-24), `session.remote-address/remote-port` set to the playit a
 Other notes: `TURN CreatePermission … 403` warnings come from the broadcaster's own ICE (Microsoft relays refuse its internal addresses) and are harmless; playit doesn't log UDP; `nethernet-debug` adds nothing to the console log (set back to `false`).
 
 **Next:** after 2026-10-27, swap in the MCXboxBroadcast build for 26.60 (check the 26.60 Geyser build too) and retest with the PlayStation friend; one direct join from outside the home network (a friend's phone or PC). Meanwhile the session stays visible but joins fail; set `friend-sync.auto-friend: false` or remove the jar if that confuses testers.
+
+## 6. Consoles with the MCXboxBroadcast 26.60 dev build (2026-10-25)
+
+The maintainer posted dev builds in the donor Discord. Installed: `MCXboxBroadcastExtension.jar`
+`DEV (git-feature/26.60-3600197)` (`028df078…`), which replaces the transfer with `HttpRelaySignaling` (the console's
+offer and candidates are relayed to Geyser's built-in signaling). Build 159 kept in `backups/<TS>/`. Result: the
+PlayStation friend joins through the Friends tab and gets the KnK claim-code screen. **Consoles work.**
+
+Finding (web app, not crossplay): from the invite page he clicked *Log in* → *Create an account*, which leads to the
+generic link-code register page; in Invite mode that page can't succeed and doesn't recognise a claim code typed into
+the link-code field. Handoff: [`2026-10-25-invite-only-register-page-prompt.md`](../ai-agents/handoffs/2026-10-25-invite-only-register-page-prompt.md).
