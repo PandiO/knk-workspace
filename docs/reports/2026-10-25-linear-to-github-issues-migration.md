@@ -21,12 +21,17 @@ Linear's free plan caps a workspace at 250 non-archived issues. The cap was hit 
 
 **Issue numbers:** the copies are #22–#148 except the tracker items listed below. Numbers interleave because six batches ran in parallel.
 
-## Not done / follow-ups for the developer
+## Follow-ups (updated 2026-10-25, later the same day)
 
-- [ ] **Linear:** optionally mark the copied issues (for example with a "Moved to GitHub" comment) or leave the workspace untouched. Agents were told not to edit Linear any more. The 1-month auto-archive keeps freeing slots either way.
-- [ ] **Project board (optional):** create a GitHub Project for `PandiO/knk-workspace` issues (board grouped by the `status:*` labels, or a Status field moved by hand). Agents can't edit Project fields with their tools, so the labels are the source of truth.
-- [ ] **Component repos:** their `AGENTS.md`/`CLAUDE.md` files may still say "Linear issue". They point at the shared global instructions, which now say GitHub, but a local mention can be updated when each repo is next touched.
-- [ ] **Label colours:** labels were created automatically with the default grey; recolour them in the repo's label settings if you like.
+- **Label colours: done.** `bug` red, `feature` blue, `improvement` purple, `status:in-progress` yellow, `status:in-review` green, `priority:urgent|high|medium|low` red → light blue, `linear-import` grey. `priority:urgent` was created (no imported issue used it).
+- **Component repos: nothing to change.** The `AGENTS.md`/`CLAUDE.md` files of knk-plugin, knk-web-api and knk-web-app never mention Linear. They defer to the shared global instructions, which now say GitHub. The remaining `Linear KNG-n` mentions are code comments citing closed issues (KNG-5, 6, 17, 41, 42); those Linear links still resolve, so they stay as history.
+- [ ] **Project board (developer, GitHub UI):** Claude Code sessions can't create Projects (GraphQL is blocked and the REST API only reaches repository endpoints). Steps:
+  1. github.com → your profile → Projects → **New project** → *Table*, name it "Knights and Kings".
+  2. ⋯ → **Workflows** → enable **Auto-add to project** with filter `repo:PandiO/knk-workspace is:issue` (adds new issues), and **Item closed** → Status *Done*.
+  3. Add the existing issues once: in the project, paste `repo:PandiO/knk-workspace is:issue is:open` in the add-item search and select all (or run *Auto-add* backfill if offered).
+  4. Save views filtered on the labels, which stay the source of truth (agents can't edit Project fields): **In progress** `label:"status:in-progress"`, **In review** `label:"status:in-review"`, **Backlog** `is:open -label:"status:in-progress" -label:"status:in-review"` (sort by labels for priority), **Bugs** `is:open label:bug`.
+
+  The plain issue list with the same filters works without a Project too.
 
 ## Tracker items filed 2026-10-25
 
