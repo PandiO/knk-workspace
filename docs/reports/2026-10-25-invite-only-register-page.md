@@ -3,10 +3,11 @@
 **Status:** Implemented and pushed 2026-10-25, **not merged, not live-tested**. Waiting for the developer's review and
 the dev smoke test (steps below), then the alpha deploy of both images.
 **Last updated:** 2026-10-25
-**Linear:** none yet — creating the issue was refused (free-tier issue limit). To file: "Invite mode: the generic
-register page dead-ends (no invite/claim field), and a claim code typed as a link code is rejected without guidance"
-(KNG-205 family; related [KNG-212](https://linear.app/kngpandi/issue/KNG-212),
-[KNG-214](https://linear.app/kngpandi/issue/KNG-214), [KNG-218](https://linear.app/kngpandi/issue/KNG-218)).
+**Linear:** no issue of its own — creating one was refused (free-tier issue limit); recorded as a comment on
+[KNG-218](https://linear.app/kngpandi/issue/KNG-218) (2026-10-25). **To file** when the limit allows: "Invite mode: the
+generic register page dead-ends (no invite/claim field), and a claim code typed as a link code is rejected without
+guidance" (KNG-205 family; related [KNG-212](https://linear.app/kngpandi/issue/KNG-212),
+[KNG-214](https://linear.app/kngpandi/issue/KNG-214)).
 **Handoff:** `docs/ai-agents/handoffs/2026-10-25-invite-only-register-page-prompt.md` (on knk-workspace branch
 `claude/closed-alpha-readiness-p89505`; its status line should read "Done 2026-10-25, see this report" once that branch
 and this one meet on `main`) · **Found on:** the alpha Bedrock crossplay trial, 2026-10-24/25 (report on the same branch).
