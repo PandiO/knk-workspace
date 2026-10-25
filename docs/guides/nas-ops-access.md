@@ -1,6 +1,6 @@
 # NAS operations access for agents (`knk-ops`)
 
-**Status:** Stage A (read-only checks) installed on the NAS and verified 2026-10-18 · Stage B (`knk-deploy`, delegated changes) built and tested 2026-10-25, **install pending**
+**Status:** Stage A (read-only checks) installed on the NAS and verified 2026-10-18 · Stage B (`knk-deploy`, delegated changes) built, tested and **installed 2026-10-25**
 **Last updated:** 2026-10-25 (§ 7 Stage B rebuilt for delegated changes)
 **Sources:** wrapper sources and checksums in [`scripts/nas-ops/stage-a/`](../../scripts/nas-ops/stage-a/) ·
 session report [2026-10-18 NAS ops access and alpha check](../reports/2026-10-18-nas-ops-access-and-alpha-check.md) ·
@@ -149,7 +149,11 @@ sudo journalctl -t knk-ops --since today --no-pager -o short-iso
 ## 7. Stage B: delegated changes (`knk-deploy`)
 
 **Status:** built and tested 2026-10-25 (65 end-to-end checks on a mock stack:
-[`scripts/nas-ops/stage-b/tests/`](../../scripts/nas-ops/stage-b/tests/test_knk_deploy.py)); install steps below.
+[`scripts/nas-ops/stage-b/tests/`](../../scripts/nas-ops/stage-b/tests/test_knk_deploy.py)); **installed on the NAS
+2026-10-25** (files match `SHA256SUMS` of `1f23251`; key `SHA256:P6YDRiBC9wxhevkpJnd2aDjcKKUaox4De2Cw0rC732E`
+`knk-deploy@pc`, `from="192.168.50.208"`; `_files` copied from the `6f08383d`/`0d612702` build folders). PC test:
+`status` ok, `status; id` denied, `restart mysql` refused, `config-get knk` shows the plugin key as a token.
+Archive the files with `git -c core.autocrlf=false archive` on Windows, or the line endings change.
 Developer decisions 2026-10-25: Claude Code sessions on the PC may update the alpha to **trunk** builds and change its
 Compose and plugin configs, **asking the developer before every change** (Claude Code `ask` rules); the NAS gets
 **no GitHub access** — the PC builds and uploads. This replaces the 2026-10-18 design (no arguments, approval files).
