@@ -27,7 +27,7 @@ _Nothing at the moment._
   `/account link`?"), the login page's **Create an account** continues the invite flow (`/invite` with the kept personal
   invitation, `/link` with a verified claim code, else `/join`), the invite and join forms' **Log in** returns to them, a
   claim code typed with its dash into a link-code field is routed to the claim flow (look-alikes folded on
-  `/account/link`), and every claim refusal says the code stays valid for 15 minutes. Not deployed yet; to be tested directly on the alpha (report: deploy and rollback steps).
+  `/account/link`), and every claim refusal says the code stays valid for 15 minutes. Deployed to the alpha the same day (API `alpha-fa28f7ea`, web `alpha-0d612702`); waiting for the tester's check.
 - **Menu startup validation keeps retrying while the API is down** — knk-plugin `main` `ad5786c`, merged `--no-ff` from
   `claude/menu-validation-retry` on 2026-10-25 (not in Linear, free issue limit). The 2026-10-24 retry only re-listed the templates; on the dev server the list came back
   while every per-key fetch still failed (the connectivity monitor still reported the API down), and the pass ended with

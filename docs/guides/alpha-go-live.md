@@ -63,8 +63,8 @@ Minecraft client ──► play.knightsandkings.net ──► playit.gg tunnel �
 
 | Repo | Minimum | On the NAS today | Action |
 |---|---|---|---|
-| knk-web-api | `master` ≥ `30c5dc5` (KNG-64 merge) | `knk-web-api:alpha-a38c8ee9` since 2026-10-24 (KNG-64, KNG-205, KNG-186/269; behind `app.knightsandkings.net` `/api`) | Done (§ 3, [report](../reports/2026-10-22-alpha-api-kng64-upgrade.md)) |
-| knk-web-app | `main` ≥ `98c0a76` | `knk-web-app:alpha-00e4af61` at `https://app.knightsandkings.net` since 2026-10-24 | Done (runbook Phase 6, [report](../reports/2026-10-24-alpha-phase-6-web-ingress.md)) |
+| knk-web-api | `master` ≥ `30c5dc5` (KNG-64 merge) | `knk-web-api:alpha-fa28f7ea` since 2026-10-25 (invite-only onboarding, [report](../reports/2026-10-25-invite-only-register-page.md); before: `alpha-a38c8ee9`; behind `app.knightsandkings.net` `/api`) | Done (§ 3, [report](../reports/2026-10-22-alpha-api-kng64-upgrade.md)) |
+| knk-web-app | `main` ≥ `98c0a76` | `knk-web-app:alpha-0d612702` at `https://app.knightsandkings.net` since 2026-10-25 (before: `alpha-00e4af61`) | Done (runbook Phase 6, [report](../reports/2026-10-24-alpha-phase-6-web-ingress.md)) |
 | knk-plugin | `main` ≥ `34c9261`, plus the KNG-114 hub loader | `plugins/KnightsAndKings.jar` from `main` `d56e41da` since 2026-10-24 ([KNG-225](https://linear.app/kngpandi/issue/KNG-225)) | Done (runbook Phase 4, [report](../reports/2026-10-24-alpha-api-4aeb794-and-plugin-stage-2.md)); later builds via `plugins/update/` (§ 5) |
 
 Build from the **current** trunk head at the moment you package, and record the exact commit, as the runbook does for

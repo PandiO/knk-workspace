@@ -1,8 +1,8 @@
 # Invite-only onboarding — the Cloudflare step in every flow, the register page in Invite mode, claim codes typed as link codes
 
 **Status:** **Merged 2026-10-25** at the developer's request, to be tested directly on the closed alpha (no dev run):
-knk-web-api `master` `fa28f7ea`, knk-web-app `main` `0d612702`. **Not deployed yet**: the developer runs the NAS steps in
-"Alpha deploy and rollback" below, then a tester checks the fixes.
+knk-web-api `master` `fa28f7ea`, knk-web-app `main` `0d612702`. **Deployed to the alpha 2026-10-25 ~12:55Z** (see
+"Alpha deploy record"); waiting for the tester's check.
 **Last updated:** 2026-10-25 (scope extended the same day with the handoff: the Cloudflare one-time code step, mails,
 missing-session detection)
 **Linear:** no issue of its own — creating one was refused (free-tier issue limit); recorded as a comment on
@@ -28,7 +28,23 @@ report" once that branch and this one meet on `main`) · **Found on:** the alpha
 | knk-web-app | `claude/invite-only-register-page` | `main` `4a9537e` | `a4e3052` (`f50e74b` the register page, then the Cloudflare step) |
 | knk-workspace | `claude/ecstatic-babbage-7r9f1w` | `main` `d89d1ba` | this report, docs above, tracker row |
 
+## Alpha deploy record (2026-10-25)
+
+| Item | Value |
+|---|---|
+| Archives | `deployment-sources/knk-web-api/fa28f7ea/knk-web-api-fa28f7ea.tar.gz` `438867484b1ffa6ad8c553005e63dd674571749667d83ff47c351159dcad5a92`; `deployment-sources/knk-web-app/0d612702/knk-web-app-0d612702.tar.gz` `856198039a460f614aec2fd444315f78f225d2023a87feb62de713386b5567aa` (`git archive -c core.autocrlf=false --prefix=source/` on the PC) |
+| Images | `knk-web-api:alpha-fa28f7ea` `ee7b5c14ced1`, `knk-web-api-migrator:alpha-fa28f7ea` `6014eaca2c81`, `knk-web-app:alpha-0d612702` `8d242e2b593f`; build files copied unchanged from the `a38c8ee9` / `00e4af61` build folders |
+| Snapshot before | `/srv/backups/knk-alpha/snapshots/20261025T124011Z-pre-fa28f7ea` (3.1 G; 144 tables, 96 migrations); compose backup and migrator log in `backups/20261025T124007Z/` |
+| Migration | **one**, `20261024120000_TrimDomainNames` (data only), `Done.` → 97 migrations. `AddSiegeSkipSeconds` was already applied before this deploy (96 in the snapshot), so the old API had been running with those columns: rollback compatibility confirmed in practice. The migrator ran while the old API was still up (see the slip below); harmless for a data-only trim |
+| Compose | `1070b55c…` → **`73c6cd9a8d279e83ad14d7e1951833f8020716480bd8e3278616d1820ad069b3`**, Portainer stack 42 identical, `RECORDED_SHA` updated; diff = the two image lines |
+| Checks | `api-health` 200/200; `db-summary` 144 tables, 97 migrations, 4 users; `compose` `matches_recorded: true`; `log-errors` 0 error/critical/exception; public `GET /api/Auth/onboarding-info` without a Cloudflare session → `Invite`, `accessGate: true`, `https://app.knightsandkings.net` (the bypass path was added in the dashboard) |
+| Slip | `/srv/docker/stacks/knk-alpha` is `root:root 700` (finding A2), so `cd $S` failed for the admin shell and the first `docker compose stop/up` ran without a project ("no configuration file provided"). Fixed by running compose as `sudo bash -c "cd $S && docker compose …"`. The blocks below use that form |
+| Rollback | `TS=20261025T124007Z`: restore its `compose.yaml` → stack 42 → `sudo bash -c "cd $S && docker compose up -d --no-deps api web"` → `RECORDED_SHA`; no DB restore needed |
+
 ## Alpha deploy and rollback (the developer runs these on the NAS)
+
+Run every `docker compose` as `sudo bash -c "cd /srv/docker/stacks/knk-alpha && docker compose …"`: the stack folder is
+root-only.
 
 **What ships.** Building from the trunk heads brings this fix plus what was merged after the running images
 (`knk-web-api:alpha-a38c8ee9`, `knk-web-app:alpha-00e4af61`): the siege skip-seconds settings and the domain-name trim
