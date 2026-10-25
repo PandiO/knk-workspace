@@ -1,5 +1,5 @@
   api:
-    image: knk-web-api:alpha-a38c8ee9
+    image: knk-web-api:alpha-fa28f7ea
     container_name: knk-alpha-api
     restart: unless-stopped
     init: true

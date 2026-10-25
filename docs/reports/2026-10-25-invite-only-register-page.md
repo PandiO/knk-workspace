@@ -1,8 +1,8 @@
 # Invite-only onboarding — the Cloudflare step in every flow, the register page in Invite mode, claim codes typed as link codes
 
-**Status:** Implemented and pushed 2026-10-25, **not merged, not live-tested**. Waiting for the developer's review, the
-dev smoke test (steps below) and the alpha deploy of both images **plus one Cloudflare dashboard change** (the bypass
-path, see "Deploy note").
+**Status:** **Merged 2026-10-25** at the developer's request, to be tested directly on the closed alpha (no dev run):
+knk-web-api `master` `fa28f7ea`, knk-web-app `main` `0d612702`. **Not deployed yet**: the developer runs the NAS steps in
+"Alpha deploy and rollback" below, then a tester checks the fixes.
 **Last updated:** 2026-10-25 (scope extended the same day with the handoff: the Cloudflare one-time code step, mails,
 missing-session detection)
 **Linear:** no issue of its own — creating one was refused (free-tier issue limit); recorded as a comment on
@@ -28,16 +28,54 @@ report" once that branch and this one meet on `main`) · **Found on:** the alpha
 | knk-web-app | `claude/invite-only-register-page` | `main` `4a9537e` | `a4e3052` (`f50e74b` the register page, then the Cloudflare step) |
 | knk-workspace | `claude/ecstatic-babbage-7r9f1w` | `main` `d89d1ba` | this report, docs above, tracker row |
 
-## Deploy note
+## Alpha deploy and rollback (the developer runs these on the NAS)
 
-1. **API image first** (`GET api/Auth/onboarding-info`; the web app falls back to today's behaviour without it), then
-   the **web image**.
-2. **Cloudflare dashboard, once:** add `/api/Auth/onboarding-info` to the "KnK sign-up (bypass)" application's paths
-   (go-live § 6.1). Without it the pages behind the bypass (`/invite`, `/join`, `/link`) can't fetch the info: they then
-   show no Cloudflare text and the missing-session detection stays off on those pages — nothing breaks, the guidance is
-   missing. The pages behind *Allow testers* (`/auth/*`, `/account/*`) reach it either way.
-3. Nothing else changes: no new settings. `CloudflareAccess__SyncEnabled` keeps switching all Cloudflare texts and the
-   mail blocks; `Security__Registration__Mode` keeps switching the invite texts.
+**What ships.** Building from the trunk heads brings this fix plus what was merged after the running images
+(`knk-web-api:alpha-a38c8ee9`, `knk-web-app:alpha-00e4af61`): the siege skip-seconds settings and the domain-name trim
+(API and web), merged 2026-10-24 and run on dev. **Two migrations** come with them; this fix adds none:
+
+| Migration | What it does | Effect on a rollback |
+|---|---|---|
+| `20261024120000_TrimDomainNames` | `UPDATE domains` trims spaces at the ends of names | data only; the old image reads trimmed names fine |
+| `20261024224826_AddSiegeSkipSeconds` | two `int NOT NULL` columns on `siege_configurations`, with DB defaults 31 and 60 | additive; the old image doesn't map them and its inserts get the defaults |
+
+So **a rollback is an image swap, no database restore**. The dump in step 1 is only for the unexpected.
+
+**Deploy** (same procedure as the 2026-10-24 updates: [go-live § 3](../guides/alpha-go-live.md), `scripts/alpha-api/README.md`,
+`scripts/alpha-web/README.md`; host `compose.yaml` authoritative, never "Update the stack"):
+
+1. **Back up.** Copy the host `compose.yaml` to `backups/<TS>/`. Take a dated dump of `knightsandkings_alpha`
+   (`alpha-db-pre-fa28f7ea/<TS>/`, as `alpha-db-pre-4aeb7947`). **Keep the old images** — don't prune: `alpha-a38c8ee9`
+   and `alpha-00e4af61` are the rollback.
+2. **Sources.** On the PC: `git archive -c core.autocrlf=false --prefix=source/` of knk-web-api `fa28f7ea` and
+   knk-web-app `0d612702` into `deployment-sources/knk-web-api/fa28f7ea/` and `deployment-sources/knk-web-app/0d612702/`, unpack
+   into `/srv/docker/build/knk-web-api/fa28f7ea/` and `/srv/docker/build/knk-web-app/0d612702/` next to the unchanged build files.
+3. **Build** `knk-web-api:alpha-fa28f7ea`, `knk-web-api-migrator:alpha-fa28f7ea` (target `migrator`) and
+   `knk-web-app:alpha-0d612702` (legacy builder, as before).
+4. **API.** Stop `api`; run the `fa28f7ea` migrator once as in the 4aeb7947 run → exactly the 2 migrations above, 97 in total
+   (`knk-ops db-summary`). Set the `api` image line to `alpha-fa28f7ea` (the repo block `scripts/alpha-api/compose.api-service.yaml`
+   already says so), copy to Portainer stack 42's file, `docker compose up -d --no-deps api`. Check `knk-ops api-health` 200/200.
+5. **Web.** Set the `web` image line to `alpha-0d612702`, `docker compose up -d --no-deps web`.
+6. **Cloudflare dashboard:** add `/api/Auth/onboarding-info` to the "KnK sign-up (bypass)" application's paths
+   ([go-live § 6.1](../guides/alpha-go-live.md)). Without it the invite, join and link pages show no Cloudflare guidance
+   (nothing breaks).
+7. **Quick check** in a private window before the tester: `https://app.knightsandkings.net/api/Auth/onboarding-info` →
+   `{"registrationMode":"Invite","accessGate":true,"publicBaseUrl":"https://app.knightsandkings.net"}` without a Cloudflare
+   login (proves the bypass); `/auth/register` opens on "Sign up with your invitation"; the login page's "Create an
+   account" points to `/join`. Then update `RECORDED_SHA` in `scripts/nas-ops/stage-a/ops/compose` and its NAS copy.
+
+**Tester check:** smoke test § 7 steps 6–7 (fresh browser: invite → sign-up → Cloudflare page → 6-digit code →
+`/account/link` with no "Network error" → linked; cookie gone → the banner), § 3 step 11 and § 4 step 16. A new personal
+invite mail shows the Cloudflare step (§ 7 step 8).
+
+**Rollback** (minutes; only if something breaks):
+1. Set the `api` image line back to `alpha-a38c8ee9` and the `web` line back to `alpha-00e4af61` in the host `compose.yaml`
+   (or restore the step 1 copy), copy to stack 42, `docker compose up -d --no-deps api web`.
+2. No migration down and no restore: both migrations are compatible with the old image (table above). Restore the
+   step 1 dump only if data is found damaged.
+3. The bypass path may stay: the old API answers it with 404 and the old pages never call it.
+4. Code: `git revert -m 1 fa28f7ea` on knk-web-api `master` and `git revert -m 1 0d612702` on knk-web-app `main`, so the trunks
+   match what runs; then the fix goes back to its branch for another round.
 
 ## What was wrong (2026-10-25, both testers)
 
@@ -140,7 +178,7 @@ used up (it wasn't: 15 minutes, re-shown on every rejoin).
 - The pre-existing `tsc --noEmit` errors in `categoryTree.test.ts` and `sessionPinnedRows.test.ts` are unrelated
   (same 11 errors on `main`).
 
-## Still to verify live (dev, then the alpha)
+## Still to verify live (on the alpha, by the developer's choice)
 
 **The Cloudflare step needs the alpha (or a dev Access setup):** smoke test § 7 steps 6–8 — fresh private window, invite
 mail → sign-up → the done panel → **Continue to Cloudflare sign-in** → Cloudflare's page (email, 6-digit code) →
