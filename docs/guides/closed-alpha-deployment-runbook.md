@@ -1,7 +1,7 @@
 # Closed-alpha deployment runbook
 
 **Status:** In progress — phases 0–3 complete; phase 3b (API upgrade to the KNG-64 build, [KNG-227](https://linear.app/kngpandi/issue/KNG-227)) complete 2026-10-22 ([report](../reports/2026-10-22-alpha-api-kng64-upgrade.md)); API updated to `4aeb794` ([KNG-275](https://linear.app/kngpandi/issue/KNG-275)) and phase 4 Stage 2 (KnK plugin `d56e41da`, [KNG-225](https://linear.app/kngpandi/issue/KNG-225)) done 2026-10-24 ([report](../reports/2026-10-24-alpha-api-4aeb794-and-plugin-stage-2.md)); `/hub` waits for a hub selection in the approved seed. Phase 5 (playit.gg, `play.knightsandkings.net`) done 2026-10-24 ([report](../reports/2026-10-24-alpha-phase-5-playit.md)). Phase 6 (web app, `app.knightsandkings.net`, own tunnel, Access; API `a38c8ee9`) done 2026-10-24 ([report](../reports/2026-10-24-alpha-phase-6-web-ingress.md)). Security probe (go-live § 8) passed 2026-10-24 privately and through Cloudflare ([report](../reports/2026-10-24-alpha-security-probe.md)). HSTS and the apex redirect done the same day. Phase 7 deferred to beta (developer, 2026-10-24); the alpha uses manual snapshots (`scripts/alpha-snapshot/`). Phase 9 done 2026-10-24: mail relay, Access sync and bypass, sign-up by invitation, admission gate with the whitelist off ([report](../reports/2026-10-24-alpha-phase-9-invite-only.md)). Approved seed and fresh world imported 2026-10-24 ([report](../reports/2026-10-24-alpha-seed-import.md)); `/hub` works. Next: the first alpha run. Web hostname decided 2026-10-21: `app.knightsandkings.net`
-**Last updated:** 2026-10-24 (Phase 9 E0 mail relay live; Phase 6 web and ingress; Phase 5 playit; Phase 4 Stage 2 and the API update to `4aeb794`; Phase 9: KNG-205 invitations merged, the feature-branch notes replaced); 2026-10-22; 2026-10-21 (Phase 9: invite-only switch-over, `mailrelay` and `cfproxy` containers — KNG-205/KNG-218); 2026-10-18
+**Last updated:** 2026-10-25 (§ 4.3/§ 4.4: spark, `/spark ping` for every player through `permissions.yml`, `command-visibility.always-show`); 2026-10-24 (Phase 9 E0 mail relay live; Phase 6 web and ingress; Phase 5 playit; Phase 4 Stage 2 and the API update to `4aeb794`; Phase 9: KNG-205 invitations merged, the feature-branch notes replaced); 2026-10-22; 2026-10-21 (Phase 9: invite-only switch-over, `mailrelay` and `cfproxy` containers — KNG-205/KNG-218); 2026-10-18
 **Progress report:** [2026-10-11 closed-alpha infrastructure progress](../reports/2026-10-11-closed-alpha-infrastructure-progress.md)
 **Handoff:** [2026-10-11 closed-alpha infrastructure](../ai-agents/handoffs/2026-10-11-closed-alpha-infrastructure.md)
 **Security layer:** [closed alpha go-live (KNG-64)](alpha-go-live.md) — required builds, API/plugin configuration,
@@ -295,6 +295,10 @@ A `minecraft` service in the `knk-alpha` Compose file (`container_name: knk-alph
   replaces the jar from `plugins/update/` on start ([Paper docs: updating](https://docs.papermc.io/paper/updating/)).
   Verify that swap once on the dev server before relying on it. Never `/reload`.
 - **Rollback:** the previous release folder's jar goes through the same path.
+- **spark** (optional profiler): every player may run `/spark ping`. KnK's permission model doesn't answer other
+  plugins' checks, so the node is granted in Bukkit's `permissions.yml` under `/data` (stack path
+  `minecraft-data/permissions.yml`), as in [production installation § 9.2](production-installation.md#92-dependencies),
+  plus `spark` in `command-visibility.always-show` (§ 4.4). Restart the container after changing either file.
 - Later: a Stage B operation does the staging and restart from the approval file ([NAS ops access](nas-ops-access.md)
   § 7), and CI publishes the jar ([KNG-226](https://linear.app/kngpandi/issue/KNG-226)).
 
@@ -341,7 +345,8 @@ bypasses for the alpha.
 KNG-64 plugin settings (a copied dev `config.yml` keeps its old values):
 `api.auth.type: apikey`, `api.allow-untrusted-ssl: false`,
 `region-http.bind-address: "0.0.0.0"` (inside the container; never publish
-8081), `web.public-url: "https://app.knightsandkings.net"`. The API reaches the plugin
+8081), `web.public-url: "https://app.knightsandkings.net"`, and `command-visibility.always-show: [spark]`
+so `/spark` stays in players' `/` list (§ 4.3). The API reaches the plugin
 with `MinecraftPlugin__BaseUrl=http://minecraft:8081` (the service name).
 The Minecraft container also needs an internet-capable network for Mojang
 session servers, since `backend` is internal. Use `online-mode=true` and the

@@ -3,7 +3,7 @@
 **Status:** Draft v1 — written for review. Not yet followed on a real production host. The database, API, seed and
 web-server steps were rehearsed in a scratch environment on 2026-10-07 (see [Appendix A](#appendix-a--what-was-verified-and-how)).
 The Paper server steps and the CI/CD workflows are untested drafts.
-**Last updated:** 2026-10-24 (§4.3, §9.3, §11 F/G: KNG-205 invitations merged, the feature-branch notes replaced); 2026-10-22 (§7.7: DisplayConfiguration export/import and the priority 2/3 form seeds and display seeds merged, KNG-139); 2026-10-21 (§4.3, §9.3, §11 F/G: invite-only sign-up, admission gate and Access sync — KNG-205/KNG-218); 2026-10-21 (§4.3 mail: the KNG-206 email engine on the invitations feature branch — `Email__Transport`, relay option, `App__PublicBaseUrl`, Log guard); 2026-10-17 (§7.7: FormConfiguration export/import and bundled seeds merged, KNG-138/139; two new migrations, see the note in §7.7); 2026-10-12 (§7.7: KNG-138 on a feature branch); 2026-10-08 (security and alpha-hosting update for KNG-64)
+**Last updated:** 2026-10-25 (§9.2, §9.5: optional spark plugin, `/spark ping` for every player through Bukkit's `permissions.yml`, `command-visibility.always-show`); 2026-10-24 (§4.3, §9.3, §11 F/G: KNG-205 invitations merged, the feature-branch notes replaced); 2026-10-22 (§7.7: DisplayConfiguration export/import and the priority 2/3 form seeds and display seeds merged, KNG-139); 2026-10-21 (§4.3, §9.3, §11 F/G: invite-only sign-up, admission gate and Access sync — KNG-205/KNG-218); 2026-10-21 (§4.3 mail: the KNG-206 email engine on the invitations feature branch — `Email__Transport`, relay option, `App__PublicBaseUrl`, Log guard); 2026-10-17 (§7.7: FormConfiguration export/import and bundled seeds merged, KNG-138/139; two new migrations, see the note in §7.7); 2026-10-12 (§7.7: KNG-138 on a feature branch); 2026-10-08 (security and alpha-hosting update for KNG-64)
 **Applies to:** trunk only. knk-web-api `master` `1805cf9`, knk-web-app `main`, knk-plugin `main` `c7d5a1e`; 61 EF
 migrations, the latest being `20261006193103_UniquePermissionGrantHolderNode`. Feature branches that haven't been
 merged, such as road navigation, are not covered. Re-check § 2 and the seed table manifest after each trunk merge.
@@ -1039,6 +1039,24 @@ deliberately; don't auto-update.
   Modrinth, and record the versions in the release manifest (§ 10.2).
 - No Vault, LuckPerms, ProtocolLib or Citizens. **Don't install a permissions plugin:** permissions come from the web
   API (`KnkPermissible`), and a second system would conflict with it.
+- **spark** (optional profiler, [performance guide § 3.1](performance-metrics-and-capacity.md#31-papers-own-tools)):
+  if you install it, let every player use `/spark ping` and nothing else. KnK's permission model (web app groups,
+  `/knk user … perm grant`) only answers KnK's own checks. Other plugins such as spark ask Bukkit, where an
+  undeclared node means ops only. Grant the node in Bukkit's own `permissions.yml` in the server root:
+
+  ```yaml
+  # permissions.yml — every non-op player may run /spark ping (not the umbrella "spark" node:
+  # that also opens the profiler, heap dumps and the other diagnostics)
+  players.spark:
+    description: Spark commands every player may use
+    default: true
+    children:
+      spark.ping: true
+  ```
+
+  Bukkit can't see KnK ranks, so `default: true` means every player. That matches the rank model: every player holds
+  Default or a premium rank that inherits from it. Restart Paper to apply it (never `/reload`), and add `spark` to
+  `command-visibility.always-show` (§ 9.5) so `/spark` stays in players' `/` list.
 
 ### 9.3 First start, EULA and `server.properties`
 
@@ -1127,6 +1145,9 @@ mcrcon -H 127.0.0.1 -P 25575 -p '<rcon password>' "list"   # console commands ov
      mode: whitelist                           # invite: claim code on the disconnect screen; read at start-up only
      api-timeout-ms: 3000
      link-url: ""                              # empty: {web.public-url}/link
+   command-visibility:                         # [KNG-107] the "/" list players see
+     always-show:                              # other plugins' commands kept in the list for everyone
+       - spark                                 # spark declares no permission; /spark ping is granted in permissions.yml (§ 9.2)
    ```
 
    ```bash

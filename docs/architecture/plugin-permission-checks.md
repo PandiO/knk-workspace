@@ -1,7 +1,7 @@
 # Plugin permission checks and command visibility
 
 **Status:** Implemented, live-tested by the developer and merged 2026-10-18: knk-plugin `main` `3ca5b3f`, knk-web-api `master` `ac3c869`. Linear [KNG-107](https://linear.app/kngpandi/issue/KNG-107)
-**Last updated:** 2026-10-18
+**Last updated:** 2026-10-25 (§ 3: other plugins' nodes are Bukkit-only; `always-show` example)
 **Related:** [`offline-security-cache.md`](offline-security-cache.md) (answers when the API can't be asked); [`api-connectivity.md`](api-connectivity.md) (no API call while DOWN); [`specs/user-features/DESIGN.md`](../specs/user-features/DESIGN.md) §2.2 (the resolution rules); KNG-24 (Bukkit-or-in-house checks), KNG-30 (completion sweep)
 
 ## 1. Problem
@@ -57,6 +57,11 @@ in the background; `warm` (executors that decide what to allow, e.g. `/knk user`
   plugins' commands the player can't run, or that declare no permission and have no permission test of their
   own (`OtherPluginCommandVisibility`; Bukkit checks only, ops see everything). Config `command-visibility.*`:
   `hide-namespaced`, `hide-other-plugins-without-permission`, `always-show`.
+- **Other plugins' own permission checks** ask Bukkit, never KnK's model: a node granted to a group in the web
+  app or with `/knk user … perm grant` doesn't reach them. Grant such nodes to every player in Bukkit's
+  `permissions.yml`, and list the command in `always-show` when it declares no permission. Example: spark, with
+  `spark.ping` in `permissions.yml` and `always-show: [spark]`
+  ([production installation § 9.2](../guides/production-installation.md#92-dependencies)).
 - **Usage lines** name only the action typed (`/knk currency lock`, `/knk user <p> gems`) or the held ones.
 
 Hiding is cosmetic: every command still checks its own nodes when run.

@@ -5,7 +5,7 @@ endpoints it relies on ([KNG-232](https://linear.app/kngpandi/issue/KNG-232)) ar
 knk-plugin `main` `390d88a4` and knk-web-api `master` `3658cf2`, unit-tested but **not yet run against a live Paper server,
 MySQL or the NAS**; both default off, so they need a new build and the config in § 5 to take effect. § 5 says how to use
 the guide before they are deployed.
-**Last updated:** 2026-10-22 (§ 4.2/§ 5 aligned with the implemented metric names)
+**Last updated:** 2026-10-25 (§ 3.1: `/spark ping` for every player); 2026-10-22 (§ 4.2/§ 5 aligned with the implemented metric names)
 **Applies to:** the closed-alpha NAS stack ([runbook](closed-alpha-deployment-runbook.md)): Paper 26.3 in a Docker
 container, knk-web-api, MySQL, all on one shared host (Ryzen 7 5700G, ~15 GiB RAM, Frigate also running; see the
 [infrastructure report](../reports/2026-10-11-closed-alpha-infrastructure-progress.md) § 2).
@@ -66,6 +66,9 @@ docker exec <mc-container> jcmd $(docker exec <mc-container> pgrep -f paper | he
   your build): `/spark profiler start`, play for 5–10 minutes, `/spark profiler stop` gives a web report showing
   *which plugin or system* eats the tick. `/spark healthreport` summarises TPS, CPU, memory and disk.
   Use it after every load test — it answers "what is slow", which the metrics below only localise to a feature.
+  Players get `/spark ping` only (their own latency): it is granted in Bukkit's `permissions.yml`, not in the web
+  app, and `/spark` is kept in their `/` list by the plugin's `command-visibility.always-show`
+  ([production installation § 9.2](production-installation.md#92-dependencies)). The rest of spark stays ops-only.
 
 ### 3.2 A zero-install history for the container
 Until Prometheus is up, log the container's stats to CSV so you have data when you decide:
