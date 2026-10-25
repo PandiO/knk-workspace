@@ -999,7 +999,7 @@ Added to the [smoke test](../guides/arena-duels-smoke-test.md) and tagged there:
 
 | Repo | Base | Head | Phases |
 |---|---|---|---|
-| knk-web-api | `master` (`1aba1ee` merged in) | `ab382a6` | P1, P2, P7, P6, P2 follow-up, P9 (13 commits, two of them merges) |
+| knk-web-api | `master` (`1aba1ee` merged in) | `23e675b` | P1, P2, P7, P6, P2 follow-up, P9, smoke-test fix (14 commits, two of them merges). `23e675b` (2026-10-25): `AddArenas` re-added five columns that master's two 2026-10-12 migrations already create (`FormSubmissionProgresses.CreatedEntitiesJson`, `FormFields.CanCreate/IncrementValue/MaxSelection/MinSelection`), so `dotnet ef database update` failed with "Duplicate column name" in the developer's first smoke-test run (§0.1 step 2); the ten stray operations were removed, nothing else changed |
 | knk-web-app | `main` (`4a9537e` merged in) | `cacb6fa` | P1, P7, P9 (4 commits, one a merge) |
 | knk-plugin | `main` (`ad5786ce` merged in; includes KNG-182) | `57afdf25` | P3, P0, P1, P2, P7, P4, P5, P6, P8, P9 (22 commits, five of them merges) |
 | knk-workspace | `main` (`3ed5a22` merged in) | this commit | report sections, living docs, guide, checklist, DESIGN rev. 6 |

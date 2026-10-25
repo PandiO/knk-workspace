@@ -16,7 +16,7 @@ This is plan Phase 8's steps 1–15, with every live check the phase sections of
 
 | Repo | Branch | Head to deploy |
 |---|---|---|
-| knk-web-api | `claude/arena-duels` | `ab382a6` (includes `master` `1aba1ee`) |
+| knk-web-api | `claude/arena-duels` | `23e675b` (includes `master` `1aba1ee`; `23e675b` fixes `AddArenas` so `dotnet ef database update` no longer fails with "Duplicate column name 'CreatedEntitiesJson'", found in the first test run) |
 | knk-web-app | `claude/arena-duels` | `cacb6fa` (includes `main` `4a9537e`) |
 | knk-plugin | `claude/arena-duels` | `57afdf25` (includes `main` `ad5786ce`) |
 
