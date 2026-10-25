@@ -73,6 +73,10 @@ for _name in CONFIGS:
 # Bind-mount sources a changed or new service may use (besides those the running file already has).
 ALLOWED_BIND_PREFIXES = (STACK + '/config/', STACK + '/minecraft-data', STACK + '/releases/')
 FORBIDDEN_BIND = ('/var/run/docker.sock', '/run/docker.sock', '/', '/etc', '/root', '/home', '/var/lib/docker', '/proc', '/sys', '/dev')
+# Services whose command/entrypoint may change through compose-apply (our own images); every other existing service
+# keeps its command and entrypoint. Image changes must be a local build (knk-*) or pinned by digest.
+COMMAND_CHANGE_OK = ('api', 'web')
+RAW_FORBIDDEN = re.compile(r'^\s*(include|extends)\s*:', re.M)
 API_FILES = ('Dockerfile', 'migrator-entrypoint.sh', 'appsettings.Production.json', 'docker-entrypoint.sh', '.dockerignore')
 WEB_FILES = ('Dockerfile', 'nginx.conf', '.dockerignore')
 
@@ -272,10 +276,16 @@ def policy_problems(old, new):
         if o is not None and o.get('read_only') and not s.get('read_only'):
             problems.append(f'{where} read_only may not be switched off')
         image = s.get('image') or ''
-        if o is not None and image == o.get('image'):
-            image = 'unchanged:ok'
-        if not image or image.endswith(':latest') or (':' not in image.rsplit('/', 1)[-1] and '@sha256:' not in image):
-            problems.append(f'{where} image needs an explicit tag or digest')
+        if o is None or image != o.get('image'):
+            local = re.match(r'^knk-[a-z0-9-]+:[A-Za-z0-9._-]+$', image) is not None
+            pinned = re.search(r'@sha256:[0-9a-f]{64}$', image) is not None
+            if not (local or pinned):
+                problems.append(f'{where} image {image or "(none)"} must be a local knk-* build or pinned with @sha256:')
+        # 2: command/entrypoint only for our own services
+        if o is not None and name not in COMMAND_CHANGE_OK:
+            for k in ('command', 'entrypoint', 'working_dir'):
+                if s.get(k) != o.get(k):
+                    problems.append(f'{where} {k} may not change (only api and web)')
         old_service_binds = set(_binds(o)) if o else set()
         for src in _binds(s):
             if src.startswith(SECRETS + '/') and src not in old_service_binds:
@@ -413,6 +423,8 @@ def restore_compose(bdir, services):
 
 def switch_compose(new_text, why, health_timeouts, note_on_failure=None):
     """Policy check, install, recreate the changed services, health; roll back on failure. Returns a result dict."""
+    if RAW_FORBIDDEN.search(new_text):
+        raise Refused('compose policy: include: and extends: are not allowed (they read other files)')
     old_model = normalize(COMPOSE)
     tmp = os.path.join(STATE, 'candidate-compose.yaml')
     with open(tmp, 'w') as f:
@@ -425,6 +437,8 @@ def switch_compose(new_text, why, health_timeouts, note_on_failure=None):
     services = changed_services(old_model, new_model)
     if not services:
         raise Refused('the new compose file changes no service')
+    image_changes = {n: {'from': (old_model['services'].get(n) or {}).get('image'), 'to': new_model['services'][n].get('image')}
+                     for n in services if (old_model['services'].get(n) or {}).get('image') != new_model['services'][n].get('image')}
     old_hash = sha256_file(COMPOSE)
     bdir = install_compose(new_text, why)
     step(f'compose installed ({old_hash[:12]} -> {sha256_file(COMPOSE)[:12]}), recreating {", ".join(services)}')
@@ -434,7 +448,8 @@ def switch_compose(new_text, why, health_timeouts, note_on_failure=None):
     except (Failed, subprocess.TimeoutExpired) as e:
         restore_compose(bdir, services)
         raise Failed(f'{e}; rolled back to compose {old_hash[:12]}' + (f' ({note_on_failure})' if note_on_failure else ''))
-    return {'compose_before': old_hash, 'compose_after': sha256_file(COMPOSE), 'services': services, 'backup': bdir, 'health': health}
+    return {'compose_before': old_hash, 'compose_after': sha256_file(COMPOSE), 'services': services, 'image_changes': image_changes,
+            'backup': bdir, 'health': health}
 
 
 def set_last(record):
