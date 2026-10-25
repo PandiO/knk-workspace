@@ -16,9 +16,9 @@ This is plan Phase 8's steps 1–15, with every live check the phase sections of
 
 | Repo | Branch | Head to deploy |
 |---|---|---|
-| knk-web-api | `claude/arena-duels` | `23e675b` (includes `master` `1aba1ee`; `23e675b` fixes `AddArenas` so `dotnet ef database update` no longer fails with "Duplicate column name 'CreatedEntitiesJson'", found in the first test run) |
-| knk-web-app | `claude/arena-duels` | `cacb6fa` (includes `main` `4a9537e`) |
-| knk-plugin | `claude/arena-duels` | `57afdf25` (includes `main` `ad5786ce`) |
+| knk-web-api | `claude/arena-duels` | `b220af1` (includes `master` `fa28f7e`; trunk re-merged 2026-10-25 for the alpha stack) |
+| knk-web-app | `claude/arena-duels` | `7f4c418` (includes `main` `0d61270`) |
+| knk-plugin | `claude/arena-duels` | `ca533e43` (includes `main` `ee35fb1d`) |
 
 Since P9 the plugin branch is based on knk-plugin `main`, which has Minecraft 26.3 / Java 25 (KNG-182 merged). The dev server must be the 26.3 server ([minecraft-26.3-upgrade-smoke-test.md](minecraft-26.3-upgrade-smoke-test.md)); a 1.21 server won't load the jar.
 

@@ -999,14 +999,16 @@ Added to the [smoke test](../guides/arena-duels-smoke-test.md) and tagged there:
 
 | Repo | Base | Head | Phases |
 |---|---|---|---|
-| knk-web-api | `master` (`1aba1ee` merged in) | `23e675b` | P1, P2, P7, P6, P2 follow-up, P9, smoke-test fix (14 commits, two of them merges). `23e675b` (2026-10-25): `AddArenas` re-added five columns that master's two 2026-10-12 migrations already create (`FormSubmissionProgresses.CreatedEntitiesJson`, `FormFields.CanCreate/IncrementValue/MaxSelection/MinSelection`), so `dotnet ef database update` failed with "Duplicate column name" in the developer's first smoke-test run (§0.1 step 2); the ten stray operations were removed, nothing else changed |
-| knk-web-app | `main` (`4a9537e` merged in) | `cacb6fa` | P1, P7, P9 (4 commits, one a merge) |
-| knk-plugin | `main` (`ad5786ce` merged in; includes KNG-182) | `57afdf25` | P3, P0, P1, P2, P7, P4, P5, P6, P8, P9 (22 commits, five of them merges) |
+| knk-web-api | `master` (`fa28f7e` merged in 2026-10-25) | `b220af1` | P1, P2, P7, P6, P2 follow-up, P9, smoke-test fix (14 commits, two of them merges). `23e675b` (2026-10-25): `AddArenas` re-added five columns that master's two 2026-10-12 migrations already create (`FormSubmissionProgresses.CreatedEntitiesJson`, `FormFields.CanCreate/IncrementValue/MaxSelection/MinSelection`), so `dotnet ef database update` failed with "Duplicate column name" in the developer's first smoke-test run (§0.1 step 2); the ten stray operations were removed, nothing else changed |
+| knk-web-app | `main` (`0d61270` merged in 2026-10-25) | `7f4c418` | P1, P7, P9 (4 commits, one a merge) |
+| knk-plugin | `main` (`ee35fb1d` merged in 2026-10-25; includes KNG-182) | `ca533e43` | P3, P0, P1, P2, P7, P4, P5, P6, P8, P9 (22 commits, five of them merges) |
 | knk-workspace | `main` (`3ed5a22` merged in) | this commit | report sections, living docs, guide, checklist, DESIGN rev. 6 |
 
 Per-commit detail: the merge plan's table above and each phase's section.
 
 ### Tests at the P9 heads
+
+**Re-merge 2026-10-25 (before the alpha deploy), by the coordinator:** trunks merged again (api `b220af1`, app `7f4c418`, plugin `ca533e43`, workspace docs), no conflicts. API 3482 passed / 4 known reds / 87 skipped; web app 200 suites / 1245 tests; plugin 0 failures (core 2491, api-client 291, paper 2290). Figures below are from the P9 run.
 
 knk-plugin (`57afdf25`): core 2491, api-client 291 (2 skipped), paper 2273 (18 skipped), 0 failures. knk-web-api (`ab382a6`): 3468 passed, the 4 known reds, 87 skipped. knk-web-app (`cacb6fa`): 194 suites / 1193 tests green. (The counts grew mostly through the trunk merges; P9's own additions are in its section.)
 
