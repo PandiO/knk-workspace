@@ -3,7 +3,7 @@
 **Status:** Draft v1 — written for review. Not yet followed on a real production host. The database, API, seed and
 web-server steps were rehearsed in a scratch environment on 2026-10-07 (see [Appendix A](#appendix-a--what-was-verified-and-how)).
 The Paper server steps and the CI/CD workflows are untested drafts.
-**Last updated:** 2026-10-24 (§4.3, §9.3, §11 F/G: KNG-205 invitations merged, the feature-branch notes replaced); 2026-10-22 (§7.7: DisplayConfiguration export/import and the priority 2/3 form seeds and display seeds merged, KNG-139); 2026-10-21 (§4.3, §9.3, §11 F/G: invite-only sign-up, admission gate and Access sync — KNG-205/KNG-218); 2026-10-21 (§4.3 mail: the KNG-206 email engine on the invitations feature branch — `Email__Transport`, relay option, `App__PublicBaseUrl`, Log guard); 2026-10-17 (§7.7: FormConfiguration export/import and bundled seeds merged, KNG-138/139; two new migrations, see the note in §7.7); 2026-10-12 (§7.7: KNG-138 on a feature branch); 2026-10-08 (security and alpha-hosting update for KNG-64)
+**Last updated:** 2026-10-25 (§1/§3.4 G6: RegionHttpServer is loopback + `X-API-Key` since KNG-64; §nginx: WebSocket upgrade headers for the planned SignalR hub, #66); 2026-10-24 (§4.3, §9.3, §11 F/G: KNG-205 invitations merged, the feature-branch notes replaced); 2026-10-22 (§7.7: DisplayConfiguration export/import and the priority 2/3 form seeds and display seeds merged, KNG-139); 2026-10-21 (§4.3, §9.3, §11 F/G: invite-only sign-up, admission gate and Access sync — KNG-205/KNG-218); 2026-10-21 (§4.3 mail: the KNG-206 email engine on the invitations feature branch — `Email__Transport`, relay option, `App__PublicBaseUrl`, Log guard); 2026-10-17 (§7.7: FormConfiguration export/import and bundled seeds merged, KNG-138/139; two new migrations, see the note in §7.7); 2026-10-12 (§7.7: KNG-138 on a feature branch); 2026-10-08 (security and alpha-hosting update for KNG-64)
 **Applies to:** trunk only. knk-web-api `master` `1805cf9`, knk-web-app `main`, knk-plugin `main` `c7d5a1e`; 61 EF
 migrations, the latest being `20261006193103_UniquePermissionGrantHolderNode`. Feature branches that haven't been
 merged, such as road navigation, are not covered. Re-check § 2 and the seed table manifest after each trunk merge.
@@ -75,7 +75,7 @@ what is specific to this project.
 | Browser → web app | HTTPS, static files | none | nginx |
 | Browser → API | HTTPS `/api/...` (same origin) | JWT bearer + httpOnly refresh cookie | web app `src/config/appConfig.ts:11`; API `Security:Jwt:*` |
 | Plugin → API | HTTP on loopback | `X-API-Key` = `Security:PluginApiKey` | plugin `api.*` in `config.yml`; API env |
-| API → plugin | HTTP `127.0.0.1:8081` (`RegionHttpServer`) | **none** today (G6); `X-API-Key` and a loopback bind **[KNG-64]** | API `MinecraftPlugin:BaseUrl`; plugin `region-http.port` |
+| API → plugin | HTTP `127.0.0.1:8081` (`RegionHttpServer`) | `X-API-Key`, loopback bind by default (KNG-64, merged; G6 resolved) | API `MinecraftPlugin:BaseUrl`; plugin `region-http.port` |
 | API → MySQL | TCP loopback | DB user `knk_app` | `ConnectionStrings:MySqlDbConnection` |
 | Players → Paper | TCP 25565 | Mojang (`online-mode=true`) | `server.properties` |
 
@@ -159,7 +159,7 @@ where it's used.
 
 | # | Severity | Repo | Gap | Workaround in this guide | Proper fix |
 |---|---|---|---|---|---|
-| G1 | **Blocker** | web-app | API base URL hard-coded to `http://localhost:5294/api` (`src/config/appConfig.ts:11`). Nothing reads env vars. | Build with `baseUrl: '/api'` (same origin), § 8.1 | Read `process.env.REACT_APP_API_BASE_URL` with `/api` as default **— [KNG-64] fixed on branch, pending merge** |
+| G1 | **Blocker** | web-app | API base URL hard-coded to `http://localhost:5294/api` (`src/config/appConfig.ts:11`). Nothing reads env vars. | Build with `baseUrl: '/api'` (same origin), § 8.1 | Read `process.env.REACT_APP_API_BASE_URL` with `/api` as default **— [KNG-64] fixed and merged** (loopback default, `X-API-Key`; checked 2026-10-25 on plugin `main` `ee35fb1`) |
 | G2 | ~~Blocker~~ Info | web-app | `npm ci` fails **with npm 10 only**: `Missing: yaml@2.9.1 from lock file`. **Corrected 2026-10-08:** the lock file is valid for npm 11 (the developer's 11.6.2; see knk-web-app `f077570`), and regenerating it with npm 10 only churns peer flags. | Use npm 11 (`npx npm@11 ci`) | Pin Node 22 + npm 11 in CI and on build hosts (`corepack` or `npm i -g npm@11`); never regenerate the lock file with npm 10 |
 | G3 | Should-fix | web-app | `CI=true npm run build` fails on ~20 existing ESLint warnings (CRA treats warnings as errors under CI) | Build with `CI=false` | Fix the warnings, then build with `CI=true` |
 | G4 | Should-fix | web-api | CORS origins hard-coded to localhost (`Program.cs:131-147`) | Same origin (§ 1.1) makes CORS irrelevant | Read the allowed origins from config (`Cors:AllowedOrigins`) **— [KNG-64] fixed on branch, pending merge** |
@@ -268,7 +268,7 @@ sudo ufw status verbose
 ```
 
 Ports that must **not** be reachable from outside: 3306 (MySQL), 5000 (API, nginx proxies it), **8081** (plugin
-`RegionHttpServer`, unauthenticated, G6) and 25575 (RCON).
+`RegionHttpServer`; authenticated and loopback-bound since KNG-64, keep it closed anyway) and 25575 (RCON).
 
 > **Concept — Docker bypasses ufw.** A port published as `"3306:3306"` is opened by Docker's own iptables rules,
 > *before* ufw sees the traffic. Always publish as `"127.0.0.1:3306:3306"`, or use host networking with a loopback
@@ -954,6 +954,10 @@ server {
         proxy_set_header X-Real-IP         $remote_addr;
         proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
+        # WebSocket upgrade for the SignalR hub at /api/hubs/web (planned, #66; harmless before then)
+        proxy_set_header Upgrade           $http_upgrade;
+        proxy_set_header Connection        "upgrade";
+        proxy_read_timeout 120s;
         client_max_body_size 10m;
     }
 

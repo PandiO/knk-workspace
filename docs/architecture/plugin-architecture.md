@@ -1,12 +1,12 @@
 ---
 status: active
-last_updated: 2026-09-21
+last_updated: 2026-10-25
 ---
 
 # knk-plugin Architecture
 
 Spigot/Paper Minecraft plugin for Knights and Kings V3. Multi-module Gradle
-(Kotlin DSL), Java 21 toolchain, targets Paper API `1.21.10-R0.1-SNAPSHOT`.
+(Kotlin DSL), Java 25 toolchain, targets Paper API 26.3 (`gradle.properties`; corrected 2026-10-25, the 2026-09-21 scan said Java 21 / 1.21.10).
 This document describes structure and data flow as verified by a read-only
 codebase scan on 2026-09-21 — see `docs/reports/plugin-scan-2026-09-21.md`
 for the full inventory this was drawn from, and
@@ -166,8 +166,8 @@ that refuses to serve stale cache data.
 `STALE_OK` (downgraded to `CACHE_FIRST` at runtime if the entity's
 `allow-stale` is false — `DataAccessSettings.resolvePolicy()` lines 65-73).
 
-Caching itself is purely in-memory (`knk-core/cache/BaseCache.java` wraps a
-TTL-keyed map, no disk persistence); `CacheManager.java`
+Caching itself is in-memory (`knk-core/cache/BaseCache.java` wraps a
+TTL-keyed map); *since 2026-09-21 the plugin also keeps disk state* (KNG-58 `offline-security.json`, the game-settings store, statistics/discovery/PM spools, road tiles); `CacheManager.java`
 (`knk-paper/.../cache/CacheManager.java`) is the Paper-side lifecycle owner.
 
 ### Local storage — migration complete
@@ -183,6 +183,8 @@ to the shared MySQL DB. This confirms the V2→V3 storage migration is
 complete for every entity type the plugin touches.
 
 ### Sync/polling model — mixed, not purely on-demand
+
+> *2026-10-25:* the list below is the 2026-09-21 scan and misses about twenty loops, TTLs and pull-on-join paths added since (player notifications 2 s, domain access 5 min, game settings 30 s, lootbox runtime 60 s, …). The complete, file:line-referenced list is [`reports/2026-10-25-realtime-sync-inventory.md`](../reports/2026-10-25-realtime-sync-inventory.md); the planned replacement by push events is [`specs/realtime-signalr/DESIGN.md`](../specs/realtime-signalr/DESIGN.md) (#66).
 
 - **Outbound polling (tech debt, self-flagged):**
   `HeadlessWorldTaskPoller.java` calls `worldTasksApi.listByStatus("Pending")`

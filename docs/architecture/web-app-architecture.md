@@ -1,7 +1,7 @@
 # knk-web-app — Architecture
 
 **Status:** Living document — reflects actual code, updated in place on each rescan
-**Last updated:** 2026-09-18 (scan basis: `knk-web-app` @ `4ff5dc6`, branch `claude/web-app-codebase-scan-4yqibi`); spot edits 2026-10-09 (ObjectTypeExplorer, KNG-61), 2026-10-10 (FormWizard Boolean fields, KNG-53), 2026-10-12 (FormWizard child forms, KNG-133, KNG-134; List edit load, step header, List validation, KNG-135, KNG-137, KNG-164; form session registry, KNG-136; cancel / delete-draft prompt, KNG-162; form configuration export/import, KNG-138); 2026-10-17 (form wizard chain merged to `main`; smoke-test follow-ups KNG-166..169, KNG-172, KNG-173: step strip, confirmations and refusals, rule builder parent forms, picker columns, metadata refresh); 2026-10-22 (display configuration export/import; KNG-195 hybrid picker submit); 2026-10-23 (step completion conditions run, KNG-186); 2026-10-23 (validation result log, batch validate, Re-check, KNG-269)
+**Last updated:** 2026-09-18 (scan basis: `knk-web-app` @ `4ff5dc6`, branch `claude/web-app-codebase-scan-4yqibi`); spot edits 2026-10-09 (ObjectTypeExplorer, KNG-61), 2026-10-10 (FormWizard Boolean fields, KNG-53), 2026-10-12 (FormWizard child forms, KNG-133, KNG-134; List edit load, step header, List validation, KNG-135, KNG-137, KNG-164; form session registry, KNG-136; cancel / delete-draft prompt, KNG-162; form configuration export/import, KNG-138); 2026-10-17 (form wizard chain merged to `main`; smoke-test follow-ups KNG-166..169, KNG-172, KNG-173: step strip, confirmations and refusals, rule builder parent forms, picker columns, metadata refresh); 2026-10-22 (display configuration export/import; KNG-195 hybrid picker submit); 2026-10-23 (step completion conditions run, KNG-186); 2026-10-23 (validation result log, batch validate, Re-check, KNG-269); 2026-10-25 (toast region, world-task polling; UX re-evaluation in `reports/2026-10-25-web-app-ux-reevaluation.md`)
 **Source scan:** `docs/reports/web-app-scan-2026-09-18.md`
 
 ## Stack
@@ -16,7 +16,7 @@
   `DisplayConfigBuilder` for reorderable steps/sections/fields).
 - Icons: `lucide-react`.
 - Reactive error bus: `rxjs` — a single `Subject`-like `logging.errorHandler` used to
-  surface toast-style errors app-wide (see `src/App.tsx` lines 40–58).
+  surface toast-style errors app-wide (`src/components/ToastRegion.tsx`, mounted in `App.tsx`; errors only, no success variant yet — 2026-10-25).
 - No Redux/Zustand/MobX — state is local `useState`/`useEffect` plus one React Context
   (`AuthContext`) for auth, plus a small manual in-memory cache in
   `hooks/useEntityMetadata.ts` (module-level `metadataBundleCache` /
@@ -263,9 +263,9 @@ a `REACT_APP_*` environment variable, matching the note already in this repo's
 ## Talks to (other components)
 
 - **knk-web-api**: REST only, JWT bearer + a refresh cookie, as above. No GraphQL,
-  no websockets/SSE observed anywhere in `src/` (the `Workflow/TaskStatusMonitor` and
-  `WorldTask`-related code poll via `worldTaskClient`, not push — see scan report,
-  though note `TaskStatusMonitor` itself is currently unreferenced/orphaned).
+  no websockets/SSE anywhere in `src/`. World-task status is polled every 2 s by
+  `components/Workflow/WorldBoundFieldRenderer.tsx` (`TaskStatusMonitor` was deleted) and catalog scans
+  every 3 s; the SignalR plan replaces both ([`specs/realtime-signalr/DESIGN.md`](../specs/realtime-signalr/DESIGN.md), #66; 2026-10-25).
 - **knk-plugin**: no direct contact — the web app never talks to the plugin. The only
   connection is indirect, via `knk-web-api`, through the Minecraft-account link-code
   flow described above.
