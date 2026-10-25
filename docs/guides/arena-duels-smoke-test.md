@@ -1,8 +1,8 @@
 # Arena duels (KNG-197) — smoke test
 
-**Status:** To test · **Last updated:** 2026-10-21 · [KNG-222](https://linear.app/kngpandi/issue/KNG-222) (P8), phases [KNG-209](https://linear.app/kngpandi/issue/KNG-209)–[KNG-221](https://linear.app/kngpandi/issue/KNG-221)
+**Status:** To test · **Last updated:** 2026-10-25 (P9: arena areas instead of child domains, trunk merges; heads, setup and steps 6–10 changed, `P9·n` checks added) · [KNG-222](https://linear.app/kngpandi/issue/KNG-222) (P8), phases [KNG-209](https://linear.app/kngpandi/issue/KNG-209)–[KNG-221](https://linear.app/kngpandi/issue/KNG-221), P9 on [KNG-197](https://linear.app/kngpandi/issue/KNG-197)
 
-**Design:** [DESIGN](../specs/arena-duels/DESIGN.md) · **Plan:** [IMPLEMENTATION_PLAN](../specs/arena-duels/IMPLEMENTATION_PLAN.md) Phase 8 · **Guide:** [arena-duels.md](arena-duels.md) · **Background:** [chain report](../reports/2026-10-21-arena-duels-chain.md) (per-phase details; the tag after each check, e.g. `P4·6`, is that phase's live check number in the report)
+**Design:** [DESIGN](../specs/arena-duels/DESIGN.md) · **Plan:** [IMPLEMENTATION_PLAN](../specs/arena-duels/IMPLEMENTATION_PLAN.md) Phase 8 · **Guide:** [arena-duels.md](arena-duels.md) · **Background:** [chain report](../reports/2026-10-21-arena-duels-chain.md) (per-phase details; the tag after each check, e.g. `P4·6`, is that phase's live check number in the report). Since P9 (DESIGN rev. 6) battlegrounds, spectator areas and the lobby are **arena areas**, not domains; checks of P1·5, P1·7, P1·8, P4·4 and P6·8 that assumed child domains or a warp are rewritten below and tagged with the P9 check that replaces them.
 
 This is plan Phase 8's steps 1–15, with every live check the phase sections of the chain report added, sorted into the step they belong to, plus the siege regression check from P0 (§S) and the checks that fit no step (§X). Record each result in **Findings** at the end (pass / fail + what you saw). Use **non-op accounts** for every permission check: ops pass in-game checks.
 
@@ -16,35 +16,36 @@ This is plan Phase 8's steps 1–15, with every live check the phase sections of
 
 | Repo | Branch | Head to deploy |
 |---|---|---|
-| knk-web-api | `claude/arena-duels` | `57f26a2` (from `master` `2d71155`) |
-| knk-web-app | `claude/arena-duels` | `6afaa8b` (from `main` `e30c815`) |
-| knk-plugin | `claude/arena-duels` | `0f6dd1ca` (on the KNG-182 branch `claude/mc-26.2-upgrade` `88497649`; P8 changed only `CLAUDE.md`, so a `d8897a79` build is the same code) |
+| knk-web-api | `claude/arena-duels` | `ab382a6` (includes `master` `1aba1ee`) |
+| knk-web-app | `claude/arena-duels` | `cacb6fa` (includes `main` `4a9537e`) |
+| knk-plugin | `claude/arena-duels` | `57afdf25` (includes `main` `ad5786ce`) |
 
-The plugin branch is built on **KNG-182** (Minecraft 26.3, Java 25). The dev server must be the 26.3 server from that branch ([minecraft-26.3-upgrade-smoke-test.md](minecraft-26.3-upgrade-smoke-test.md)); a 1.21 server won't load the jar.
+Since P9 the plugin branch is based on knk-plugin `main`, which has Minecraft 26.3 / Java 25 (KNG-182 merged). The dev server must be the 26.3 server ([minecraft-26.3-upgrade-smoke-test.md](minecraft-26.3-upgrade-smoke-test.md)); a 1.21 server won't load the jar.
 
-1. [ ] **Back up the dev database.** Two migrations add tables and seed rows.
-2. [ ] **API:** `dotnet build knkwebapi_v2.csproj` (a plain `dotnet build` at the root fails on Linux, KNG-223), `dotnet ef database update`, start it. Migrations `AddArenas` and `AddDuelMatches`.
-   - [ ] Tables `arenas`, `arena_battlegrounds`, `arena_spectator_areas`, `arena_kits`, `duel_matches`, `duel_policies` (one row, defaults), `duel_restrictions` exist. (P2·1)
-   - [ ] `discovery_reward_rules` has `Arena` and `ArenaSpectatorArea` (on) and `ArenaBattleground` (off). (P1·1)
+1. [ ] **Back up the dev database.** Three migrations add, then replace tables and seed rows.
+2. [ ] **API:** `dotnet build knkwebapi_v2.csproj` (a plain `dotnet build` at the root fails on Linux, KNG-223), `dotnet ef database update`, start it. Migrations `AddArenas`, `AddDuelMatches` and `ReplaceArenaChildDomainsWithAreas`.
+   - [ ] Tables `arenas` (no `LobbyLocationId`), `arena_areas`, `arena_area_regions`, `arena_kits`, `duel_matches`, `duel_policies` (one row, defaults), `duel_restrictions` exist; `arena_battlegrounds` and `arena_spectator_areas` don't. (P2·1, P9·1)
+   - [ ] `discovery_reward_rules` has `Arena` (on) and no `ArenaBattleground` / `ArenaSpectatorArea` rows. (P1·1, P9·1)
    - [ ] `GET api/MenuTemplates/by-key/duel_matches` (and `duel_match_detail`, `arena_main`, `duel_challenge`) exist after the start. (P6·1)
-3. [ ] **Web app:** `npx -y npm@11 ci`, then start or build. Import the form seeds (**Import / seeds**) in this order: `ArenaKit.join`, `Arena`, `ArenaBattleground`, `ArenaSpectatorArea`. (P1·2)
+3. [ ] **Web app:** `npx -y npm@11 ci`, then start or build. Import the form seeds (**Import / seeds**) in this order: `ArenaKit.join`, `Arena`, `ArenaAreaRegion`, `ArenaArea`. The dry run names no missing seed. (P1·2, P9·1)
 4. [ ] **Plugin:** `./gradlew build -x deployToDevServer -Porg.gradle.java.installations.paths=<JDK 25>` for the test counts, then deploy the jar to the 26.3 dev server (or a plain `./gradlew build`, which deploys). Start. Expected: no menu validation errors for the duel templates (P6·1); `duels:` block in `config.yml` with defaults (guide §2.1).
 5. [ ] **Grants:** S has `knk.admin.*` (covers `knk.admin.world`, `knk.admin.duel`, `knk.admin.duel.review`). Keep a second staff account **S2** without `knk.admin.duel.review` for the permission checks. A, B and C have only the default player nodes.
 
 ### 0.2 Create `arena_2` (no seed: the developer chose the forms, KNG-197)
 
 6. [ ] In game, `/rg list` in the arena's world: note `arena_2` and its 8 flagged `…-battleground` children. (P1·3)
-7. [ ] **Arena form** (web app): name, key `arena_2`, its district and street, region `arena_2` (typed), **Duels enabled off**. Save. (P1·3)
-8. [ ] **Battlegrounds**: from the arena's last step, add at least **three** of the eight (type the existing region ids), each disabled at first. Then, standing on each spawn, capture spawn A and spawn B with **Send to Minecraft** and enable it. (P1·3, P1·7)
-9. [ ] **Spectator area**: create one with a temp region over the stands (**Send to Minecraft**). Location = the arrival point. **Teleport enabled** on, no conditions yet. (P1·7)
-10. [ ] **Locations**: lobby (inside the arena, outside the battlegrounds) and exit (outside the arena) with **Send to Minecraft**.
+7. [ ] **Arena form** (web app): name, key `arena_2`, its district and street, region `arena_2` (typed), spawn point, **exit** (outside the arena, **Send to Minecraft**). **Duels enabled** is off by default; leave it. There is no lobby field. Save. (P1·3, P9·2)
+8. [ ] **Lobby**: from the arena's last step add an area of kind **LOBBY**, key `lobby`, an **arrival location** inside the arena (outside the battlegrounds), save; then in its Regions step draw a region over the waiting room (**Send to Minecraft**). Enable it. (P9·2)
+9. [ ] **Battlegrounds**: add at least **three** areas of kind **BATTLEGROUND**, disabled at first, each adopting one of the eight existing regions (type its id in the Regions step). Give **one of them a second region**: draw a box next to it with **Send to Minecraft** so the two parts touch (the "two-part battleground", used in §10). Then, standing on each spawn, capture spawn A and spawn B and enable it. (P1·3, P1·7, P9·2)
+10. [ ] **Spectator area**: an area of kind **SPECTATOR**, key `stands`, a region over the stands (**Send to Minecraft**), an **arrival location** in it, no title or price yet. Enable it. (P9·2)
 11. [ ] **Eligible kits**: add two kits (call them **Knight** and **Archer**); pick one that normally needs a higher title than A has. Allow all four gear modes for now; default `OWN_GEAR_KEEP`.
 12. [ ] Turn **Duels enabled** on. Save.
-13. [ ] Restart the game server (or `/knk regions repair`). (P1·4)
+13. [ ] Restart the game server (or `/knk regions repair`). (P1·4, P9·3)
     - [ ] `arena_2`: priority 40, parent its district.
-    - [ ] Each battleground: priority 50, parent `arena_2`, `pvp allow`, `entry allow`; after the access sync, `knk-allow-entry deny`. v1's `entry deny` is gone.
-    - [ ] The spectator area: renamed `domain_<id>`, parent `arena_2`, priority 50, no flags. (P1·7)
-    - [ ] `/warp` lists the spectator area. (P1·7)
+    - [ ] Every area region is renamed `arena_<arenaId>_<kind>_<n>` (`battleground`, `spectator`, `lobby`; v1's `arena_2,…-battleground` ids are gone), parent `arena_2`.
+    - [ ] Battleground regions: priority 50, `pvp allow`, `entry allow` (v1's `entry deny` is gone). Spectator and lobby regions: priority 50, `entry allow`. **None** has `knk-allow-entry`, `knk-allow-exit`, `knk-domain-name` or `knk-domain-id`, also after the next access sync.
+    - [ ] Re-run the world task of the lobby's region (draw it again): the region is replaced in place under the same name; nothing named `tempregion_worldtask_…` is left. (P9·3)
+    - [ ] `/warp` does **not** list the spectator area (KNG-240 is the future listing). (P9·8)
 14. [ ] Set the town around the arena to `pvp deny` if it isn't already (the plan's precondition).
 
 ---
@@ -54,6 +55,7 @@ The plugin branch is built on **KNG-182** (Minecraft 26.3, Java 25). The dev ser
 - [ ] The Arena form saves and validates. Refused: no gear mode; a kit mode without kits; `MaxOffers` 7; fee 21. (Plan 1, P1·6)
 - [ ] Two eligible kits: drag their order, save, reload → the order sticks. Deleting one of them on the kit page is refused and names the arena. (P1·6)
 - [ ] A battleground spawn in another world is refused. (P1·7)
+- [ ] **Area rules** (P9·2): a second LOBBY area is refused; changing the kind of an area that has regions is refused; enabling a battleground without both spawns or without a region is refused; deleting the last region of an enabled battleground is refused; a region id that belongs to a domain (e.g. a town's `town_1`, or a domain sub-region) or to another area is refused; `arena_2` itself as an area region is refused; a region in another world is refused. With duels on, disabling the lobby, clearing its arrival or deleting it is refused; with duels off, turning them on without a usable lobby is refused.
 - [ ] Change `MaxOffers` to **2**; in game the next negotiation allows only offer + one counter (offer 2/2 has no **[Counter]**). Set it back to **3**. (Plan 1, P1·6)
 - [ ] **Gear mode button**: with two modes allowed, the editor cycles only through those two; with one, the label is fixed. Re-allow what the later steps need. (P5·4)
 
@@ -96,23 +98,30 @@ The plugin branch is built on **KNG-182** (Minecraft 26.3, Java 25). The dev ser
 
 ## 7. Warmup
 
-- [ ] **Broadcast** to everyone: "⚔ Duel at arena_2: A vs B - own gear - stakes: …  [Spectate] [Details]"; hover shows what each does. [Details] opens the match detail; [Spectate] starts the stands' warp. (Plan 7, P6·2)
+- [ ] **Broadcast** to everyone: "⚔ Duel at arena_2: A vs B - own gear - stakes: …  [Spectate] [Details]"; hover shows what each does. [Details] opens the match detail; [Spectate] starts the spectate teleport (§8). (Plan 7, P6·2)
 - [ ] **Spam cooldown**: the same duelists start another duel within 120 s → no second broadcast; after `duels.announce.cooldown-seconds` it broadcasts again. (P6·3)
 - [ ] **Toggles**: `AnnounceFriendly` off → a duel without stakes isn't broadcast, a staked one is. `AnnounceMatches` off → nothing is broadcast; results go only to the duelists and the stands. Turn both back on. (P6·4)
 - [ ] **`/duels`** (C): two heads per live duel, refreshed every second; "No duels right now" when empty. A head opens the detail: both cards (title, XP, playtime, duel W/L/D; PvP kills only if that player shows them: hide them in A's statistics settings and check), kits, coins, the real stake items with names and enchantments. (Plan 7, P6·9)
 - [ ] **Teleports and commands** refused for duelists from the accept on: `/spawn`, `/warp`, `/home`, `/tpa` to a duelist, `/back`, `/hub` ("You are in a duel."). Staff `/tp` with `knk.admin.duel` passes. (Plan 7, P4·5)
 - [ ] Duelists can't hit each other or be hit in the lobby. (Plan 7)
+- [ ] **Lobby during the warmup** (P9·6): while A and B are in their warmup, C tries to walk (and to pearl) into the lobby → refused with "The arena lobby is reserved for the duelists during a warmup."; S with `knk.region.bypass` walks in. Once the match is on its battleground, C can walk in. With a second pair accepting while the first warms up, the second pair's lobby teleport isn't refused.
 - [ ] **Sidebar and boss bar (duelists)**: from the accept on, "Your duel: vs B", stage and timer, gear and stakes, the arena's other live duels, "Queue: 1/3 waiting", "Battlegrounds: 1/8 busy". Boss bar: warmup countdown, "Waiting for a free battleground (#2 in line)" when full, "Get ready: 7", the fight timer (or "no time limit"), then "A won!". Both go at the exit and the normal board is back. (P6·6)
 - [ ] **KIT_CHOICE**: the placeholder is the first eligible kit; the clickable prompt and `[Menu]`; `/duel kit Archer` → "You will fight with Archer", B sees "A picked Archer", the picker shows the opponent's pick; a pick in the countdown is refused; at the countdown the picker closes: "The kits are locked". No pick → the placeholder fights. (Plan 7, P4·7, P5·11, P3)
 - [ ] **Kit consumables** can't be eaten or drunk in the warmup (kit modes). (P4·6)
 
 ## 8. Spectator area
 
-- [ ] C reaches the stands **on foot**, by **`/warp`**, and from **`/arena` → Spectate** (and the detail's "Go to the spectator area"). Each runs the warp: 5 s warmup, then the teleport. (Plan 8, P6·8)
-- [ ] Set a **gem price** on the warp → charged after the warmup. Set a **minimum title** C doesn't have → refused with the reason, nothing charged. Remove both. (Plan 8, P6·8)
-- [ ] In the stands during a live duel: the arena's sidebar and the boss bar of the newest fight. Walking out removes both. A rank or premium change (which resets scoreboards) leaves the duel board alone. (P6·7)
-- [ ] **`/arena`**: info, rules (gear modes, offers, stake limits, fee, ratio, pair limit, daily cap, timings), queue, live duels, Spectate (disabled without a warp), Challenge a player (disabled outside the arena; a click from outside says "Stand inside the arena…"), My claims (highlighted when something waits; a click collects it). The challenge picker lists online players, those in a duel greyed out; a pick opens the proposal editor. `/arena arena_2` from elsewhere; tab completion lists arenas. (P6·10, P5·13)
-- [ ] `/navigate` lists the arena and the spectator area, not the battlegrounds. Walking into the arena gives the "arena" discovery message; a battleground gives none. (P1·8)
+- [ ] C walks into the stands **on foot**: no refusal, no enter or leave message, no discovery. (P9·8)
+- [ ] C uses **`/arena` → Spectate**, the warmup broadcast's **[Spectate]**, the detail's "Go to the spectator area" and `/duels spectate arena_2`: each starts the same teleport (normal warmup, then the arrival location; no cooldown); "You are watching the duels from stands (arena_2)." (Plan 8, P6·8, P9·7)
+- [ ] With no title or price set, nothing reaches the API's spectate-fee route (API log). (P9·7)
+- [ ] Set a **gem price** (e.g. 5) on the area → "Paid 5 gems to watch; refunded if you don't arrive.", then the warmup; the gems ledger shows one charge. Move during the warmup → the teleport is cancelled and the gems are refunded. (Plan 8, P9·7)
+- [ ] Set a **minimum title** C doesn't have → refused with the API's reason, nothing charged, no warmup. S (teleport bypass nodes) passes both. Remove both conditions. (Plan 8, P9·7)
+- [ ] A (a duelist of a running match) clicks Spectate → "You can't spectate during your own duel." (P9·7)
+- [ ] Remove the spectator area's arrival → Spectate says "Walk to stands to watch; it has no teleport arrival." and the menu button is disabled; set it back. (P9·7)
+- [ ] In the stands during a live duel: the arena's sidebar and the boss bar of the newest fight. Walking out removes both. A rank or premium change (which resets scoreboards) leaves the duel board alone. (P6·7, P9·9)
+- [ ] **`/arena`**: info, rules (gear modes, offers, stake limits, fee, ratio, pair limit, daily cap, timings), queue, live duels, Spectate (disabled without a spectator area with an arrival), Challenge a player (disabled outside the arena; standing in an area or a sub-region of the arena counts as inside; a click from outside says "Stand inside the arena…"), My claims (highlighted when something waits; a click collects it). The challenge picker lists online players, those in a duel greyed out; a pick opens the proposal editor. `/arena arena_2` from elsewhere; tab completion lists arenas. (P6·10, P5·13, P9·9)
+- [ ] `/navigate` lists the arena, **not** the battlegrounds, the stands or the lobby. Walking into the arena gives the "arena" enter message and discovery; walking into any area gives neither. (P1·8, P9·8)
+- [ ] A and B, while in their duel, can't start a `/navigate`; a siege member whose match is running still gets the navigation compass (the merged navigation rule). (P9·11)
 
 ## 9. Countdown
 
@@ -125,7 +134,8 @@ The plugin branch is built on **KNG-182** (Minecraft 26.3, Java 25). The dev ser
 - [ ] C (or S without fighting) can't hit either duelist, and the duelists can't hit C. (Plan 10, P4·3)
 - [ ] A custom enchantment (lifesteal, fire) triggers in the fight. (Plan 10, P4·3)
 - [ ] Leaving is refused in the countdown and the fight: walk, ender pearl, chorus fruit, elytra, boat. (Plan 10, P4·4)
-- [ ] A non-duelist can't walk, pearl or ride into a battleground (domain-access message); S with `knk.region.bypass` can walk in. (Plan 10, P4·4, P1·5)
+- [ ] A non-duelist can't walk, pearl or ride into a battleground ("This battleground is reserved for a duel."); S with `knk.region.bypass` can walk in. Same on a free battleground with no match. (Plan 10, P4·4, P1·5, P9·4)
+- [ ] **Two-part battleground** (from §0.2 step 9; disable the others so the match lands there): A and B fight **across both parts**: walking, pearling and knocking each other from one part into the other is neither refused nor counted as leaving; PvP works in both. C is refused at the edge of **each** part, from outside and by pearl. Leaving the union is refused for A and B with "You can't leave the battleground during a duel."; the exit teleport at the end passes. (P9·4, P9·5)
 - [ ] Only `/duel`, `/msg`, `/r`, `/staffchat` work in the countdown and the fight. (P4·1)
 - [ ] The exit teleport at the end works. (P4·4)
 
@@ -204,6 +214,8 @@ P0 moved siege's hooks onto the shared minigame registry with no behaviour chang
 - [ ] **Lootbox**: a reel finishing mid-match says "kept safe" and arrives after the restore, not in the kit; opening a lootbox during a duel is refused. (P4·14)
 - [ ] **Staff list**: `/knk duel list` shows running matches (token, #id, phase, coins) and held or unclaimed escrow. (P5·14)
 - [ ] **Player permission**: a group without `knk.duel` gets "no permission" for `/duel` and `/arena`, and neither is in its tab list. (P5·15)
+- [ ] **Orphaned area region** (P9·10): delete one area region row in the web app (not the last of an enabled battleground). Within two access-sync intervals (`regions.access.sync.interval-minutes`, 5) the WorldGuard region loses its parent and gets `knk-orphaned-since`; `/knk regions temp` lists it; adding it back to an area with its id before the retention ends adopts it again (renamed for its new row) and the mark is removed at the next pass. It is deleted by the daily cleanup only after `regions.temp-retention.days`.
+- [ ] **Trunk merge** (P9·11): on a town with a KNG-253 sub-region, the sub-region still mirrors the main region and entering it isn't a second "enter" (the KNG-255 grouping); the web app's moderation page shows both the Duels and the Invitations links; the player profile page loads.
 
 ---
 

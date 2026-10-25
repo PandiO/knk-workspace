@@ -1,8 +1,8 @@
 # Arena duels — admin setup and player guide
 
-**Status:** Draft for the live test · **Last updated:** 2026-10-21 · [KNG-197](https://linear.app/kngpandi/issue/KNG-197), guide from [KNG-222](https://linear.app/kngpandi/issue/KNG-222)
+**Status:** Draft for the live test · **Last updated:** 2026-10-25 (P9: battlegrounds, spectator areas and the lobby are arena areas, not domains; spectate teleport; DESIGN rev. 6) · [KNG-197](https://linear.app/kngpandi/issue/KNG-197), guide from [KNG-222](https://linear.app/kngpandi/issue/KNG-222)
 
-**Branch only.** Arena duels are on the `claude/arena-duels` branches of knk-web-api, knk-web-app and knk-plugin (the plugin branch is based on the Minecraft 26.3 branch `claude/mc-26.2-upgrade`, KNG-182). Nothing is merged or live-tested yet. Check the [feature register](../FEATURE_REGISTER.md) before treating anything here as shipped.
+**Branch only.** Arena duels are on the `claude/arena-duels` branches of knk-web-api, knk-web-app and knk-plugin (all three include their trunk as of 2026-10-25; the plugin's trunk `main` has Minecraft 26.3 since KNG-182 merged). Nothing is merged or live-tested yet. Check the [feature register](../FEATURE_REGISTER.md) before treating anything here as shipped.
 
 **Background:** [DESIGN](../specs/arena-duels/DESIGN.md) (rules and the reasons for them), [IMPLEMENTATION_PLAN](../specs/arena-duels/IMPLEMENTATION_PLAN.md), the [chain report](../reports/2026-10-21-arena-duels-chain.md) (what each phase built, deviations), and the [smoke-test checklist](arena-duels-smoke-test.md).
 
@@ -14,7 +14,7 @@ Contents: [1. What duels are](#1-what-duels-are) · [2. Admin setup](#2-admin-se
 
 Two players fight one-on-one on a battleground inside an arena. Before the fight they agree on stakes (coins and items) and a gear mode, in a short exchange of offers. When the invitee accepts, the stakes are taken from both players at once and held until the result. The winner gets the pot less the arena's fee. A draw or a cancel gives each player back exactly what they put in.
 
-- **Where:** an arena is a structure (an `Arena` domain). It has one or more **battlegrounds** where the fights happen, a **lobby** where duelists wait, an **exit** where they go afterwards, and optionally a **spectator area** (the stands).
+- **Where:** an arena is a structure (an `Arena` domain). Inside it are its **areas**: one or more **battlegrounds** where the fights happen, a **lobby** where duelists wait, and optionally a **spectator area** (the stands). Duelists go to the arena's **exit** afterwards. Areas are not domains: walking in or out of one shows no message and gives no discovery; only the arena itself does.
 - **Gear modes** (the arena decides which are offered):
 
   | Mode | What happens |
@@ -34,12 +34,12 @@ Two players fight one-on-one on a battleground inside an arena. Before the fight
 ### 2.1 Before you start
 
 - **Permissions**
-  - Arena, battleground and spectator-area forms: `knk.admin.world` (web app).
+  - Arena, arena area and area region forms: `knk.admin.world` (web app).
   - Duel review pages, the review policy and duel restrictions: `knk.admin.duel.review` (web app and `/knk duel review` in game). `knk.admin.*` includes it. It is not seeded into any group.
   - Staff duel commands (`/knk duel list|cancel|refund`) and the staff bypass of the duel teleport and command guards: `knk.admin.duel`.
   - Players: `knk.duel` (default true) for `/duel`, `/duels` and `/arena`.
-- **Deploy** the three `claude/arena-duels` branches (API, web app, plugin). The API applies two migrations on start: `AddArenas` and `AddDuelMatches`. On its first start it also adds the duel menu templates (`duel_matches`, `duel_match_detail`, `arena_main`, `duel_challenge`); these are create-only seeds, so they never overwrite a template you edited.
-- **Import the form seeds** in the web app (**Import / seeds**), in this order: `ArenaKit.join`, `Arena`, `ArenaBattleground`, `ArenaSpectatorArea`.
+- **Deploy** the three `claude/arena-duels` branches (API, web app, plugin). The API applies three migrations on start: `AddArenas`, `AddDuelMatches` and `ReplaceArenaChildDomainsWithAreas` (P9: drops the rev. 2–5 battleground and spectator-area tables, their domain rows and `arenas.LobbyLocationId`, and adds `arena_areas` and `arena_area_regions`; an arena made with the older branch keeps its settings but loses its battlegrounds, spectator areas and lobby point). On its first start it also adds the duel menu templates (`duel_matches`, `duel_match_detail`, `arena_main`, `duel_challenge`); these are create-only seeds, so they never overwrite a template you edited.
+- **Import the form seeds** in the web app (**Import / seeds**), in this order: `ArenaKit.join`, `Arena`, `ArenaAreaRegion`, `ArenaArea`. (The `ArenaBattleground` and `ArenaSpectatorArea` seeds are gone; delete their form configurations if an older branch imported them.)
 - **Kits** you want to offer in kit modes must exist already (the normal kit pages).
 - **Plugin config** (`config.yml`, `duels:`) holds only technical knobs; everything about gameplay is set per arena in the web app. Defaults:
 
@@ -63,55 +63,79 @@ Two players fight one-on-one on a battleground inside an arena. Before the fight
 
 An arena is created like any other structure, in the web app's **Arena** form. There is no migration or seed for v1's `arena_2`: you create it in the form and point it at the existing WorldGuard region.
 
-1. **General**: name, key (unique, e.g. `arena_2`), district and street, the region, and the locations.
-   - **Region:** for an existing region, type its id (`/rg list` in the arena's world; `arena_2` for the v1 arena). For a new one, use **Send to Minecraft** to draw a temp region; it is renamed `domain_<id>` when you save.
-   - **Location** is the arena's own point. **Lobby** is where duelists arrive for the warmup; it is required once duels are on. **Exit** is where duelists go after the match; empty means the arena's own Location. Use **Send to Minecraft** to capture each point where you stand. The lobby and every spawn must be in the same world as the arena.
-   - **Duels enabled:** leave this off until the lobby is set and at least one battleground is enabled.
+1. **General**: name, key (unique, e.g. `arena_2`), district and street, the region, the spawn point and the exit.
+   - **Region:** for an existing region, type its id (`/rg list` in the arena's world; `arena_2` for the v1 arena). For a new one, use **Send to Minecraft** to draw a temp region; it is renamed `domain_<id>` when you save. Extra parts of the arena go in the last step's **Sub-regions** (KNG-253, as for any domain).
+   - **Spawn point** is the arena's own Location. **Exit** is where duelists go after the match; empty means the spawn point. Use **Send to Minecraft** to capture each point where you stand. There is no lobby field any more: the lobby is an area (§2.5).
+   - **Duels enabled:** off for a new arena (the form's default, and the API saves a new arena with it off when it isn't sent). Turn it on once the lobby area exists and at least one battleground is enabled (§2.7).
 2. **Negotiation & stakes**: `MaxOffers` (1–6, default 3: offer, counter, final offer), `OfferSeconds` (60 per turn), coin and item stakes on or off, `MaxCoinStake` (10,000 per side), `MaxItemStacks` (9 per side), `MinStakeRatioPercent` (50: the smaller side's stake must be worth at least half the larger; 0 = off), `FeePercent` (5, range 0–20; taken only from the coin pot of a decisive result).
 3. **Eligibility & abuse limits**: minimum account age and title for anyone staking (empty = the `/pay` rule), `MaxStakedDuelsPerPairPerDay` (3), `PairCooldownMinutes` (10), `DailyCoinWinCap` (25,000; 0 = off).
 4. **Gear & kits**: which gear modes the arena offers (at least one), and the default mode (must be one of them). Drop mode is off by default.
 5. **Eligible kits**: the kits offered in the two kit modes, in order. Drag to reorder. The first kit is the default in kit-choice mode, used when a player doesn't pick. A kit mode needs at least one kit. Kits skip their own requirements in the arena (title, cost, cooldown): the list is the only gate, so it doubles as a kit try-out. A kit an arena offers can't be deleted on the kit page until it is removed here.
 6. **Timing & queue**: `WarmupSeconds` (30), `CountdownSeconds` (10), `FightTimeLimitSeconds` (300; 0 = no limit, at the limit the match is a draw with a full refund), `MaxWaitSeconds` (180 waiting for a free battleground, then cancel and refund), `WinnerLingerSeconds` (5), `MaxQueuedMatches` (3 accepted matches not yet on a battleground; the next accept is refused).
 7. **Announcements**: `AnnounceMatches` (the arena's broadcast switch) and `AnnounceFriendly` (also broadcast duels without stakes).
-8. **Battlegrounds and spectator areas**: owned lists, added after the arena is saved (see below).
+8. **Battlegrounds, spectator areas and lobby**: the arena's **Areas** (owned list, added after the arena is saved, §2.3) and its **Sub-regions**.
 
-The form refuses: no gear mode, a kit mode without kits, a default mode that isn't allowed, `MaxOffers` outside 1–6, a fee over 20, a ratio over 100, duels on without a lobby, and a location in another world.
+The form refuses: no gear mode, a kit mode without kits, a default mode that isn't allowed, `MaxOffers` outside 1–6, a fee over 20, a ratio over 100, duels on without a usable lobby (§2.5), and a location in another world.
 
-After saving, the region gets its place in the managed hierarchy at the next startup repair or `/knk regions repair`: the arena under its district, priority 40 (see [managed regions](../architecture/managed-worldguard-regions.md) §4–§5).
+After saving, the region gets its place in the managed hierarchy at the next startup repair or `/knk regions repair`: the arena under its district, priority 40 (see [managed regions](../architecture/managed-worldguard-regions.md) §4–§5). The arena is a normal domain: entering it shows its name, gives the arena discovery, and it is a `/navigate` target.
 
-### 2.3 Battlegrounds
+### 2.3 Areas and their regions
 
-Add each battleground from the arena's last step (or the **Arena battleground** form):
+Battlegrounds, the spectator area and the lobby are all **areas** of the arena, made in one form (**Arena area**, from the arena's last step or on its own):
 
-1. **General**: name, key (unique within the arena, e.g. `north`), sort order (the allocator fills battlegrounds in this order), enabled.
-2. **Region and access**: the region. For v1's arena, type the existing ids of the eight flagged battlegrounds (`arena_2,<part>-battleground`; check with `/rg list`). Leave **Allow entry** off: that is what keeps everyone but the two duelists out.
-3. **Spawns**: spawn A (challenger) and spawn B (opponent), captured with **Send to Minecraft**. An enabled battleground needs both.
+1. **General**: the arena, the **kind** (`BATTLEGROUND`, `SPECTATOR` or `LOBBY`), a key (unique within the arena, e.g. `north`, `stands`, `lobby`), a name (shown in menus, the boss bar and messages; empty = the key), the order, and **Enabled** (off for a new area).
+2. **Battleground spawns** (battlegrounds only): spawn A (challenger) and spawn B (opponent).
+3. **Arrival and spectating** (spectator areas and the lobby): the **arrival location** where a teleport lands; for a spectator area also the **minimum title** and the **gem price** of the spectate teleport (§2.6).
+4. **Regions**: one or more regions, added after the area's first save. Each is drawn with **Send to Minecraft** (a world task, like a domain's sub-region) or adopted by typing an existing id. On save the region is **renamed** `arena_<arenaId>_<kind>_<n>` (`battleground`, `spectator` or `lobby`; `n` is the region row's id). Running a region's world task again replaces that region in place.
 
-What the server does with a battleground region (after the repair): priority 50 under the arena, `pvp allow` and `entry allow` enforced, and `knk-allow-entry deny` from its Allow entry setting. Players can't walk, ride, pearl or teleport in. The duel runtime lets the two duelists in for their match and keeps them in until the exit teleport. Staff with `knk.region.bypass` can walk in to watch; the combat rule still keeps them out of the fight. Battlegrounds give no discovery reward and are not `/navigate` targets.
+Rules the API checks:
 
-**Create the battleground domains before the repair runs.** A battleground left only in `regions.managed.extra-regions` (no domain row) gets `entry allow` but no `knk-allow-entry deny`, so it would be open. The `extra-regions` entries for `arena_2` are not needed once the domains exist.
+- Fields of another kind are cleared on save (a spectator area switched to a battleground keeps no arrival point). The kind can't be changed while the area has regions.
+- At most one lobby per arena. Keys are unique within the arena.
+- A region must be in the arena's world, and its id may not belong to any domain (main region or sub-region) or to another area. The arena's own region can't be added.
+- Spawns and the arrival location must be in the world of the area's regions.
+- An enabled battleground needs both spawns and at least one region; its last region can't be removed while it is enabled.
 
-### 2.4 The spectator area and its warp
+**The area is the union of its regions.** A battleground drawn as two parts (for example two boxes around an L-shaped floor) is one battleground: walking from one part into the other is not leaving it.
 
-A spectator area is optional (0..n per arena; normally one). Without one, players can still watch from wherever they can see the battlegrounds, but there is no `[Spectate]` button.
+What the server does with area regions (after the repair, or right after the rename): parent = the arena's region; battlegrounds priority 50 with `pvp allow` and `entry allow`; spectator areas priority 50 (floor 40) with `entry allow`; the lobby priority 50 with `entry allow`. No `knk-allow-entry` or other domain flags: who may enter is decided by the duel runtime (§2.4–§2.6), not by WorldGuard. An area region no arena lists any more (its row, area or arena deleted) is unhooked after two checks and deleted by the daily temp-region cleanup after `regions.temp-retention.days` (14); `/knk regions temp` lists it until then, and it can be adopted again with its id.
 
-1. **General**: name; the arena.
-2. **Region and access**: draw the stands with **Send to Minecraft** (or type an existing region). Leave **Allow entry** on: the stands are an ordinary walkable area. It becomes a plain child of the arena (priority 50, no flags); normal town rules apply between spectators.
-3. **Warp**: the domain's own Location is the arrival point. Turn on **Teleport enabled** to make it a warp. The usual warp conditions apply and are enforced: gem price, minimum title, premium tier, discovery required.
+### 2.4 Battlegrounds
 
-Players reach the stands on foot, with `/warp`, from the arena menu's **Spectate**, from the **Go to the spectator area** button in a match's detail, and from the **[Spectate]** button in the warmup broadcast. All of these start the same warp, so the warmup, price and conditions apply each time. The arena's first spectator area with **Teleport enabled** is the one these buttons use; an area without a warp shows "walk to …" and the buttons are disabled.
+Add one area of kind `BATTLEGROUND` per fighting floor:
 
-Players standing in the stands (or anywhere in the arena's region) see the arena's duel sidebar while a match is live, and the boss bar of the newest fight.
+- **Order** is the allocation order: the first free enabled battleground gets the next match.
+- For v1's arena, adopt the existing ids of the eight flagged battlegrounds as their regions (`arena_2,<part>-battleground`; check with `/rg list`). They are renamed `arena_<id>_battleground_<n>`, and v1's `entry deny` is replaced by `entry allow` at the repair. The `regions.managed.extra-regions` entries for `arena_2` are not needed.
+- Capture spawn A and spawn B with **Send to Minecraft**, then turn **Enabled** on.
 
-### 2.5 Turning it on and a first test
+Who may be on a battleground: nobody, except the two duelists of the match it is allocated to, from the countdown teleport until the exit teleport. Others are refused walking, riding, gliding, by pearl, chorus fruit or teleport ("This battleground is reserved for a duel."). The duelists can't leave during the countdown and the fight; the exit teleport at the end has its own pass. Duelists trying to walk, pearl or ride out get "You can't leave the battleground during a duel." Staff with `knk.region.bypass` can walk in to watch; the combat rule still keeps them out of the fight. Battlegrounds give no discovery reward, no enter/leave message and are not `/navigate` targets.
 
-1. Set the lobby and exit, enable at least one battleground with both spawns, then turn **Duels enabled** on and save.
-2. Restart the game server (or `/knk regions repair`) so the regions get their parent, priority and flags. Check with `/rg info` on a battleground: priority 50, `pvp allow`, `entry allow`, `knk-allow-entry deny`.
+### 2.5 The lobby
+
+Exactly one area of kind `LOBBY`, with a region over the waiting room and an **arrival location** (where both duelists land after the accept). It must be **enabled and have an arrival location** before duels can be turned on, and while duels are on it can't be disabled, lose its arrival or be deleted.
+
+While a match of this arena is in its warmup, only duelists of the arena's matches (and `knk.region.bypass` staff) may enter the lobby; everyone else is refused ("The arena lobby is reserved for the duelists during a warmup."). Otherwise it is open. A player already standing in the lobby when a warmup starts is not moved out.
+
+### 2.6 The spectator area and the spectate teleport
+
+A spectator area is optional (0..n per arena; normally one). Without one, players can still watch from wherever they can see the battlegrounds, but **Spectate** buttons are disabled.
+
+- Draw the stands as the area's regions. They are free to walk into for everyone.
+- Set the **arrival location** to make the area reachable by teleport. Optional conditions of that teleport: **Minimum title to spectate** and **Spectate price (gems)**. They apply only to the teleport, not to walking in.
+
+**Spectate** in the arena menu (`/arena`), the **[Spectate]** button in the warmup broadcast, **Go to the spectator area** in a match's detail and `/duels spectate <arena>` all start the same teleport: the normal teleport warmup (cancelled by moving or damage), no cooldown. Which area: the arena's first enabled spectator area (by order) with an arrival location. If the area has a title or price, the plugin asks the API first: a player below the title is refused with the reason and nothing is charged; otherwise the gems are charged before the warmup ("Paid 5 gems to watch; refunded if you don't arrive.") and refunded when the teleport doesn't happen. Staff with the teleport bypass nodes (`knk.teleport.bypass.requirements`, `knk.teleport.bypass.cost`) skip them, as for warps. Duelists can't spectate during their own duel. The stands are not in `/warp` (a future improvement, [KNG-240](https://linear.app/kngpandi/issue/KNG-240)).
+
+Players standing in the stands (or anywhere in the arena: its region, its sub-regions or any area) see the arena's duel sidebar while a match is live, and the boss bar of the newest fight.
+
+### 2.7 Turning it on and a first test
+
+1. Create the lobby (enabled, arrival, region), enable at least one battleground with both spawns and a region, set the exit, then turn **Duels enabled** on and save.
+2. Restart the game server (or `/knk regions repair`) so the regions get their parent, priority and flags. Check with `/rg info` on a battleground region: name `arena_<id>_battleground_<n>`, parent the arena's region, priority 50, `pvp allow`, `entry allow`, no `knk-allow-entry`.
 3. With two accounts, stand inside the arena and run `/duel <other player> quick`; accept from the chat line. Follow the match to the exit. The full test is the [smoke-test checklist](arena-duels-smoke-test.md).
 
 The plugin reads arenas through a cache (15 minutes); a new invite refreshes the arena first, so a settings change applies to the next negotiation. A match keeps the settings it was accepted with, including the fee.
 
-### 2.6 Hub menu
+### 2.8 Hub menu
 
 There is no hub tile for duels yet. Players use `/arena` and `/duels`. If you want a tile, it is a small change to the hub menu seed (an `OpenTile` to `duel_matches`), or add one through the menu editor.
 
@@ -237,7 +261,7 @@ A voided, reverted or confiscated result no longer counts for duel statistics, a
 
 ### 5.5 Watching duels
 
-- Every duel is announced when the warmup starts (unless the arena turned it off): **[Spectate]** takes you to the stands, **[Details]** shows the stakes, kits and both players' stats.
+- Every duel is announced when the warmup starts (unless the arena turned it off): **[Spectate]** teleports you to the stands (after the usual warmup; the arena may ask for a minimum title or a few gems, which the message tells you before you pay), **[Details]** shows the stakes, kits and both players' stats. Walking into the stands is always free.
 - `/duels` lists the live duels; click a head for the details.
 - `/arena` shows the arena's rules, its queue and live duels, **Spectate**, **Challenge a player** and **My claims**.
 - In the stands you see the duel sidebar and a boss bar for the newest fight. You can't hit the duelists and they can't hit you.
@@ -258,7 +282,11 @@ Duel wins, losses and draws are on your profile and **visible to everyone by def
 | "Duel not started: X no longer has every staked item." | An item was moved or dropped after it was staked. Nothing was taken. |
 | An API refusal (pair cooldown, daily limit, new account, review hold, restriction, stake ratio) | The API checks every rule again at accept; its message names the player and the rule. Nothing was taken. |
 | "You are in a duel." on `/spawn`, `/hub`, `/warp`, a siege join | Duelists can't teleport or join a siege from the accept until the exit. |
-| Nobody can enter a battleground, not even the duelists | The battleground's Allow entry is on, or the region still has v1's `entry deny`: run `/knk regions repair` and check `/rg info`. |
-| Anyone can walk into a battleground | It has no domain row (only `extra-regions`), or Allow entry is on. |
-| No `[Spectate]` button | The arena has no spectator area with **Teleport enabled**. |
+| Nobody can enter a battleground, not even the duelists | The region still has v1's `entry deny` (or another region's owner rule): run `/knk regions repair` and check `/rg info` for `entry allow`. |
+| Anyone can walk into a battleground | The region isn't one of the battleground area's regions (check the area's Regions list and that it was renamed `arena_<id>_battleground_<n>`), or the plugin hasn't refreshed the arena yet (15-minute cache; a restart reads it fresh). |
+| "This battleground is reserved for a duel." on a battleground with no match | Expected: battlegrounds are closed whenever no match holds them. Staff need `knk.region.bypass`. |
+| "The arena lobby is reserved for the duelists during a warmup." | A match of the arena is in its warmup; the lobby opens again when it moves on. |
+| Spectate disabled, or "Walk to … to watch" | The arena has no enabled spectator area, or it has no arrival location. |
+| Spectate refused with a title or price message | The spectator area's minimum title or gem price; nothing was charged. |
+| "Duels enabled" refused on save | The arena has no enabled lobby area with an arrival location. |
 | Winnings missing | `/duel claim`; staff: `/knk duel list` shows unclaimed and held escrow. |

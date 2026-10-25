@@ -1,7 +1,7 @@
 # Domain access (AllowEntry / AllowExit) — enforcement on the game server
 
 **Status:** Implemented, **live-tested by the developer and merged to trunk 2026-10-08** (knk-plugin `main` `790c662`, knk-web-api `master` `be7b70e`; feature commits `dfffcb7` / `32fca08`). Refusal-in-chat follow-up [KNG-74](https://linear.app/kngpandi/issue/KNG-74) live-tested and merged 2026-10-09 (knk-plugin `main` `fd869aa`, feature commit `a608aa7`). Linear [KNG-56](https://linear.app/kngpandi/issue/KNG-56) (follows [KNG-55](https://linear.app/kngpandi/issue/KNG-55))
-**Last updated:** 2026-10-23 (`knk-domain-id` and domain sub-regions, KNG-255, merged and live-tested: knk-plugin `9dfd7aae`); 2026-10-21 (§3.1 the `DomainAccessExemptions` port and the duel battleground exemption, arena duels KNG-209/KNG-217, on `claude/arena-duels`, not merged; respawn row names the minigame registry); 2026-10-09 (KNG-74 merged; live checklist §6 item 9 passed)
+**Last updated:** 2026-10-25 (§3.1 arena duels rev. 6, KNG-197, on `claude/arena-duels`, not merged: battlegrounds, spectator areas and the lobby are arena areas, not domains; the duel runtime enforces them with its own session handler, §3.2, and no longer registers an exemption); 2026-10-23 (`knk-domain-id` and domain sub-regions, KNG-255, merged and live-tested: knk-plugin `9dfd7aae`); 2026-10-21 (§3.1 the `DomainAccessExemptions` port and the duel battleground exemption, arena duels KNG-209/KNG-217, on `claude/arena-duels`, not merged; respawn row names the minigame registry); 2026-10-09 (KNG-74 merged; live checklist §6 item 9 passed)
 **Decision record:** [`reports/2026-10-06-domain-access-enforcement-options.md`](../reports/2026-10-06-domain-access-enforcement-options.md) (option C chosen by the developer on 2026-10-06)
 **Related:** [`managed-worldguard-regions.md`](managed-worldguard-regions.md) (parent/priority/category flags on the same regions); KNG-57 (SignalR push), KNG-58 (offline cache for other data)
 
@@ -88,13 +88,34 @@ so every path in the table above sees the same answer: WorldGuard crossings (wal
 teleport), the teleport engine's up-front refusal, and the join/respawn check. The existing `exemptWhile` (skip judging
 a runtime's own move) is unchanged.
 
-**The duel provider** (`DuelBattlegroundAccess`, KNG-217): battlegrounds are domains with `AllowEntry = false`, so
-nobody may enter them. For a match on a battleground it grants entry to the two duelists from the countdown teleport,
-confines them there in the countdown and the fight (walking, pearls, chorus fruit, elytra and boats are refused), gives
-a one-shot exit pass right before the runtime's own `ARENA_SYSTEM` exit teleport, and revokes everything on every end
-path. It lives in memory only, so a crash leaves nothing behind (unlike v1's WorldGuard memberships). Staff with
-`knk.region.bypass` still pass as before. See [managed regions](managed-worldguard-regions.md) §5 for the
-battleground's flags.
+Since KNG-255 the call is `RegionAccessRules.evaluate(playerId, entered, exited, destination, exemptions)` (the main
+region and the sub-regions of a domain count as one). No provider is registered on the branch any more: arena duels
+P4's `DuelBattlegroundAccess` was the only one and is gone with DESIGN rev. 6 (below). The port stays for other
+minigames.
+
+### 3.2 Arena areas are not domains (arena duels DESIGN rev. 6)
+
+On the `claude/arena-duels` branches, not merged. An arena's battlegrounds, spectator areas and lobby are
+`ArenaArea` rows with their own regions (`arena_<arenaId>_<kind>_<n>`), **not domains**: they carry no `AllowEntry` /
+`AllowExit`, the access sync gives their regions no `knk-allow-entry`/`knk-allow-exit`/`knk-domain-id` (and clears
+any it finds), they send no enter/leave message, give no discovery and are no `/navigate` target. Everything in §1–§3.1
+therefore ignores them; the **arena** itself is a normal domain and keeps all of it.
+
+Who may enter them is the duel runtime's rule, `ArenaAreaAccess` (knk-plugin `paper/duel/`, rules in knk-core
+`core/duel/ArenaAreaAccessRules`): a second WorldGuard session handler, registered next to `DomainAccessHandler`
+(same move types: walk, glide, ride, pearl, chorus fruit, teleport), plus a preview in the teleport engine's
+`RegionTeleportRestriction` so a refused teleport is refused before its warmup. An area is the **union** of its
+regions, so moving between two parts of one area is neither leaving nor entering it.
+
+| Area | Entering | Leaving |
+|---|---|---|
+| battleground | only the two duelists it is allocated to, from the countdown teleport until the exit teleport | refused for them in the countdown and the fight; the runtime's `ARENA_SYSTEM` exit teleport carries a one-shot pass |
+| lobby | while a match of the arena is in its warmup, only duelists of that arena's matches; otherwise anyone | free |
+| spectator area | free | free |
+
+Staff with `knk.region.bypass` pass. The state is in memory only; a crash leaves nothing behind. WorldGuard's own
+`entry` is `allow` on every area region ([managed regions](managed-worldguard-regions.md) §5), so only this rule
+decides. Details: arena duels [DESIGN](../specs/arena-duels/DESIGN.md) §8.2.
 
 ## 4. What the region tracker still does
 

@@ -1,7 +1,7 @@
 # Arena duels chain — progress report
 
-**Status:** P0–P7 pushed and In Review; P8 prepared the live test (guide, checklist, merge plan) and waits for the developer. Chain summary at the end.
-**Last updated:** 2026-10-21
+**Status:** P0–P7 pushed and In Review; P8 prepared the live test (guide, checklist, merge plan); P9 (2026-10-25) replaced the child-domain areas with arena areas (DESIGN rev. 6) and merged every trunk into the branches. Waits for the developer's live test. Chain summary at the end.
+**Last updated:** 2026-10-25 (P9 section; P8 merge plan updated: no KNG-182 step, new heads and commits; chain summary)
 **Linear:** [KNG-197](https://linear.app/kngpandi/issue/KNG-197) (design) and its phase issues.
 **Charter:** [ARENA_DUELS_CHAIN.md](../ai-agents/handoffs/ARENA_DUELS_CHAIN.md). **Design:** [DESIGN.md](../specs/arena-duels/DESIGN.md), [IMPLEMENTATION_PLAN.md](../specs/arena-duels/IMPLEMENTATION_PLAN.md).
 
@@ -836,15 +836,15 @@ knk-web-api and knk-web-app: no P8 commits (no trunk change to merge).
 
 ### Merge plan (after the developer's sign-off)
 
-**Dependency:** the plugin branch is built on KNG-182 (`claude/mc-26.2-upgrade`, Minecraft 26.3 / Java 25). It can't merge into knk-plugin `main` before KNG-182 does: merging it would bring all of KNG-182 with it.
+*Updated by P9 (2026-10-25): KNG-182 has merged into knk-plugin `main` and P9 merged every trunk into the branches, so the KNG-182 step is gone; heads and commits below are the P9 ones.*
+
+**Dependency:** none left between the repos' trunks: the plugin branch now includes knk-plugin `main` (`ad5786ce`, with KNG-182's Minecraft 26.3 / Java 25). The order below only keeps the API ahead of its clients.
 
 **Order:**
-1. **knk-web-api** `claude/arena-duels` → `master` (merge commit, no squash; "merged directly, no PR" as for KNG-193, or a PR if the developer prefers). It is additive: two migrations (`AddArenas`, `AddDuelMatches`), new endpoints, create-only menu seeds. The current plugin on `main` doesn't call any of it, so it is safe on its own.
+1. **knk-web-api** `claude/arena-duels` → `master` (merge commit, no squash; "merged directly, no PR" as for KNG-193, or a PR if the developer prefers). It is additive: three migrations (`AddArenas`, `AddDuelMatches`, `ReplaceArenaChildDomainsWithAreas`; the last only reshapes the first's tables), new endpoints, create-only menu seeds. The current plugin on `main` doesn't call any of it, so it is safe on its own.
 2. **knk-web-app** `claude/arena-duels` → `main`. Additive (arena forms' API clients, staff duel pages, alert rule codes). Needs the API from step 1.
-3. **knk-plugin**: first **KNG-182** (`claude/mc-26.2-upgrade`) → `main`, by its own sign-off. Then merge the new `origin/main` into `claude/arena-duels`, re-run `./gradlew build -x deployToDevServer`, and merge `claude/arena-duels` → `main`. If KNG-182 has already landed by the sign-off, only the second part remains.
+3. **knk-plugin** `claude/arena-duels` → `main` (merge commit). If `main` has moved, merge it into the branch first and re-run `./gradlew build -x deployToDevServer`.
 4. **knk-workspace** `claude/arena-duels` → `main`, after the last code merge: the docs, with the "on `claude/arena-duels`, not merged" notes in the guide, register, specs README, teleport DESIGN, managed-regions and domain-access docs changed to the trunk commits, the register row set to `trunk` and its verification to `live` (or `mixed` for unchecked steps), and the CHANGELOG entry added.
-
-If KNG-182 is still waiting at sign-off: steps 1, 2 and 4 can go ahead; then the CHANGELOG entry waits for step 3 (players can't duel before the plugin ships), and the register says `mixed`.
 
 Before each merge: fetch, check the trunk tip, merge the trunk into the branch again if it moved, re-run that repo's build and tests.
 
@@ -852,12 +852,12 @@ Before each merge: fetch, check the trunk tip, merge the trunk into the branch a
 
 | Repo | From base | Commits |
 |---|---|---|
-| knk-web-api | `master` `2d71155` | `1f65a12`, `05a9049`, `6507641`, `a8a26c3` (P1); `53f42cf`, `d208a74` (merge), `a0da408` (P2); `dc704f3` (P7); `7872831` (P6); `57f26a2` (P2 follow-up: staff-only review data, `SYS_CONFISCATED`) |
-| knk-web-app | `main` `e30c815` | `7fa594b` (P1); `6afaa8b` (P7) |
-| knk-plugin | `claude/mc-26.2-upgrade` `88497649` (KNG-182) | `1f5ebdfa`, `36195de3` (P3); `e3814cef`, `d00826c5` (P0 + merge); `02bca4e0` (P1); `1e17f985`, `2be401b5` (P2); `d0332108` (P7); `01b5d6a0`, `0c175f03`, `6fe453b1`, `bccd338d`, `089bd357` (P4); `4cb1aa80`, `ea7ecb4e`, `d1016f42` (P5); `0d62c543`, `a6fdd17c`, `d8897a79` (P6); `0f6dd1ca` (P8 docs) |
-| knk-workspace | `main` | the P0–P8 report sections, `managed-worldguard-regions.md`, the siege, currency and player-statistics DESIGN edits, and the P8 docs (see each section) |
+| knk-web-api | `master` `1aba1ee` (merged in by `5abd34c`) | `1f65a12`, `05a9049`, `6507641`, `a8a26c3` (P1); `53f42cf`, `d208a74` (merge), `a0da408` (P2); `dc704f3` (P7); `7872831` (P6); `57f26a2` (P2 follow-up: staff-only review data, `SYS_CONFISCATED`); `351daaa`, `ab382a6` (P9) — head `ab382a6` |
+| knk-web-app | `main` `4a9537e` (merged in by `4dd6265`) | `7fa594b` (P1); `6afaa8b` (P7); `cacb6fa` (P9) — head `cacb6fa` |
+| knk-plugin | `main` `ad5786ce` (merged in by `d74cfa10`; includes KNG-182) | `1f5ebdfa`, `36195de3` (P3); `e3814cef`, `d00826c5` (P0 + merge); `02bca4e0` (P1); `1e17f985`, `2be401b5` (P2); `d0332108` (P7); `01b5d6a0`, `0c175f03`, `6fe453b1`, `bccd338d`, `089bd357` (P4); `4cb1aa80`, `ea7ecb4e`, `d1016f42` (P5); `0d62c543`, `a6fdd17c`, `d8897a79` (P6); `0f6dd1ca` (P8 docs); `57afdf25` (P9) — head `57afdf25` |
+| knk-workspace | `main` `3ed5a22` (merged in by `a1d109c`) | the P0–P9 report sections, `managed-worldguard-regions.md`, `domain-access-enforcement.md`, the siege, currency and player-statistics DESIGN edits, arena duels DESIGN rev. 6 and plan Phase 9 (`5249a9d`), and the P8/P9 docs (see each section) |
 
-**After the merge:** add the CHANGELOG entry; set KNG-209, 210, 213, 215, 217, 219, 220, 221 and 222 to Done; move the P0–P8 tracker rows to "Recently completed" with the trunk commits.
+**After the merge:** add the CHANGELOG entry; set KNG-209, 210, 213, 215, 217, 219, 220, 221 and 222 to Done; move the P0–P9 tracker rows to "Recently completed" with the trunk commits.
 
 ### CHANGELOG entry (draft, for the merge date)
 
@@ -872,11 +872,12 @@ Before each merge: fetch, check the trunk tip, merge the trunk into the branch a
   teleport to the arena lobby for a warmup, then fight on a free battleground after a 10 s countdown: PvP works
   there even in a no-PvP town, nobody else can join in, and nobody can leave or teleport until the end. Every
   duel is announced with [Spectate] and [Details]; `/duels` lists live duels, `/arena` shows the arena, its queue
-  and rules, and the stands are a normal warp. Duel wins, losses and draws are public by default.
-  Staff set up arenas, battlegrounds, spectator areas, eligible kits and every duel setting in the web app; results
+  and rules, and [Spectate] teleports players to the stands (the arena may set a minimum title or a gem price for that teleport; walking in is free). Duel wins, losses and draws are public by default.
+  Staff set up arenas, their areas (battlegrounds, spectator areas, the lobby, each with its own regions), eligible kits and every duel setting in the web app; results
   that look thrown are flagged, and repeated ones held for review on the new Duels pages (release, void, revert,
-  confiscate, stakes-only restrictions, review policy). Admin: migrations `AddArenas` and `AddDuelMatches`; create
-  `arena_2` in the Arena form ([guide](guides/arena-duels.md)). Requires Minecraft 26.3 (KNG-182).
+  confiscate, stakes-only restrictions, review policy). Admin: migrations `AddArenas`, `AddDuelMatches` and
+  `ReplaceArenaChildDomainsWithAreas`; create `arena_2` in the Arena form and its areas in the area form
+  ([guide](guides/arena-duels.md)).
   Live-tested by the developer (<date>, [smoke test](guides/arena-duels-smoke-test.md)); <known limits>.
 ```
 
@@ -893,32 +894,129 @@ The whole [smoke-test checklist](../guides/arena-duels-smoke-test.md). P8 adds n
 
 ---
 
-## Chain summary (P0–P8)
+## P9 — arena areas instead of child domains, trunk merges ([KNG-197](https://linear.app/kngpandi/issue/KNG-197), DESIGN rev. 6)
 
-**State on 2026-10-21:** every phase is pushed and In Review; P8 prepared the live test. Nothing is merged, deployed or live-tested. The developer runs the [smoke test](../guides/arena-duels-smoke-test.md) on the dev server (Minecraft 26.3, from the KNG-182 branch) and signs off; then P8 merges per the plan above.
+**Session:** Claude Code cloud session (subagent of the chain coordinator), 2026-10-25. **Status:** pushed; tracked on KNG-197 (comments only: the Linear workspace is at its free issue limit, so there is no phase issue). KNG-210, 217, 219, 220 and 222 stay In Review with a comment each. Nothing merged into a trunk, deployed or live-tested.
+
+**Why:** the developer's design revision of 2026-10-24 (KNG-197, D12 revised): battlegrounds, spectator areas and the lobby are not domains (domains carry enter/leave messages, discovery, navigation and entry/exit flags these areas must not have). They are `ArenaArea` rows with 1..n `ArenaAreaRegion`s; the duel runtime enforces access itself. DESIGN rev. 6 (§4.1, §4.2, §8.2, §9.3, §13.4) and plan Phase 9 were written first (`5249a9d`).
+
+### Commits
+
+| Repo | Branch | Commit | What |
+|---|---|---|---|
+| knk-workspace | `claude/arena-duels` | `5249a9d` | DESIGN rev. 6, plan Phase 9 |
+| knk-workspace | `main` | `e417b07` | tracker row (moved to "Recently completed" at the end of the phase) |
+| knk-web-api | `claude/arena-duels` | `5abd34c` | merge `origin/master` `1aba1ee` (conflicts: `AuditAction.cs`, `FormConfigurationSeedFilesTests.cs`, seed `README.md`, kept both sides; model snapshot regenerated and checked: no pending model changes) |
+| knk-web-api | `claude/arena-duels` | `351daaa` | arena areas: models, migration, DTOs, service validation, controller routes, region rename, spectate fee, form seeds, tests |
+| knk-web-api | `claude/arena-duels` | `ab382a6` | the duel menu's Spectate tile lore describes the spectate teleport, not the warp |
+| knk-web-app | `claude/arena-duels` | `4dd6265` | merge `origin/main` `4a9537e` (conflicts: `PlayerProfilePage.tsx` imports, `UserModerationPage.tsx` keeps both the Duels and the Invitations links) |
+| knk-web-app | `claude/arena-duels` | `cacb6fa` | entity types `arenaarea` / `arenaarearegion` replace `arenabattleground` / `arenaspectatorarea` |
+| knk-plugin | `claude/arena-duels` | `d74cfa10` | merge `origin/main` `ad5786ce` (KNG-182, KNG-253/255 sub-regions, KNG-234 navigation compass and more; conflicts below) |
+| knk-plugin | `claude/arena-duels` | `57afdf25` | arena areas and the duel runtime's own area access rule |
+| knk-workspace | `claude/arena-duels` | `a1d109c` | merge `origin/main` `3ed5a22` (header conflicts in the register, specs README and the two architecture docs, kept both) |
+| knk-workspace | `claude/arena-duels` | this commit | guide, smoke test, managed-regions and domain-access docs, P8 merge plan, this section, chain summary; DESIGN §9.3/R4 charge timing as built |
+
+**Plugin merge conflicts and how they were resolved:** `CLAUDE.md` (both lines kept); `ArchitectureGuardTest` (both allowed packages, `catalog` and `minigame`); `RegionAccessRules` (KNG-255's new grouping signature plus P0's exemptions: `evaluate(playerId, entered, exited, destination, exemptions)`, `DomainAccessService` calls it); `KnKPlugin` navigation eligibility: main's KNG-234 rule (siege members only while their match isn't running are excluded) and the branch's "any minigame member is excluded" became `NavigationEligibility.minigameMembersOutsideSiegeMatch` (any minigame member, except a siege member whose match is running), with a test; `siegeMembers` re-added; `DataAccessFactoryItemBlueprintsTest` given the new `arenas()` argument.
+
+### Tests
+
+| Repo | Head | Before (after the trunk merge) | After |
+|---|---|---|---|
+| knk-web-api | `ab382a6` | 3452 passed, 4 failed, 87 skipped | **3468 passed, 4 failed, 87 skipped.** The 4 are the known reds: `PathResolutionServiceTests.ValidatePathAsync_AllowsValidV1Paths` ×2 (`Town.Name`, `Town.WgRegionId`), `ClientActivityStoreTests.RecordsRequestsIntoRollingBuckets`, `FieldValidationServiceTests.ValidateConditionalRequiredAsync_WithConditionMet_ValidatesRequired`. `dotnet ef migrations has-pending-model-changes`: none |
+| knk-web-app | `cacb6fa` | 193 suites / 1189 tests | **194 suites / 1193 tests, all green** (`npm run test:ci`). `tsc --noEmit` shows only the pre-existing errors in `categoryTree.test.ts` (5) and `sessionPinnedRows.test.ts` (3); `npm run build` compiles with the usual warnings |
+| knk-plugin | `57afdf25` | core 2482, api-client 291 (2 skipped), paper 2267 (18 skipped) | **BUILD SUCCESSFUL: knk-core 2491, knk-api-client 291 (2 skipped), knk-paper 2273 (18 skipped), 0 failures** (`./gradlew build -x deployToDevServer`, Temurin JDK 25 toolchain, Gradle on JDK 21) |
+
+What the new and changed tests cover:
+
+- **API:** `ArenaServiceTests` rewritten for areas (create/update/delete, each validation rule of DESIGN §4.1: spawns and region of an enabled battleground, one lobby, usable lobby while duels are on, kind-foreign fields cleared, kind change with regions refused, location and region worlds, region ids unique across domains/sub-regions/area regions, the arena's own region refused, the last region of an enabled battleground; rename on create/update to `arena_<a>_<kind>_<n>` with parent and `domainType`, KNG-103 replace; a new arena without `isDuelEnabled` is off); `TeleportDestinationServiceTests` (spectate fee: not available without an enabled spectator area with arrival, title too low refused with nothing charged, gems charged once per key, bypass flags, refund); `DuelMatchServiceTests` (start-fight only on a `BATTLEGROUND` area); `EndpointAccessRulesTests.ArenaAreaRoutes_AndTheSpectateFee_HaveTheirRules`; `FormConfigurationSeedFilesTests` (the two new seeds import, the removed ones are gone); discovery and navigation type lists.
+- **Plugin:** `KnkArenaTest`, `ArenaMapperTest`, `ArenasDataAccessTest` (area by region, arena by region), `DomainRegionSpecsTest` (one spec per area region, kind, parent), `ManagedRegionPolicyTest` (`LOBBY`, `SPECTATOR_AREA` enforce `entry allow`), `RegionRenamePlanTest` (the `arena_…` names), `OrphanedSubRegionsTest` (listed regions), new `ArenaAreaAccessRulesTest`; paper `DuelListenersTest` (two-part battleground: walking between the parts is free, an outsider is refused at both; exit refused in countdown and fight; the exit pass; lobby during a warmup; spectator free; staff bypass; the session handler's decision), new `DuelSpectatorsTest` (union of the arena's regions), `DuelMenuFeatureTest` (spectate: pay then teleport, title refusal, no API call without conditions, refund on a cancelled teleport, duelist refused), `DuelPresentationTest`, `DuelViewsTest`, `NavigationDestinationsTest`.
+- **Web app:** `entityApiMapping.arena.test.ts` (the two new entity types and routes), new `FormWizard.arenaAreaForm.ui.test.tsx` (the area form renders and submits; the Arena form's areas step).
+
+### API / plugin contract (what changed)
+
+| Route | Rule | Notes |
+|---|---|---|
+| `GET api/Arenas`, `GET api/Arenas/{id}` | as before | `ArenaDto` without `lobbyLocation`; new `areas: ArenaAreaDto[]` (id, kind, key, name, sortOrder, isEnabled, spawnA/B, arrival, teleportMinTitleBracketId, teleportPriceGems, `regions: {id, wgRegionId, worldName}[]`) and `subRegions` (KNG-253). The list DTO has `areaCount` |
+| `GET/POST api/Arenas/{arenaId}/areas`, `POST api/Arenas/areas`, `GET/PUT/DELETE api/Arenas/areas/{id}`, `POST api/Arenas/areas/search` | writes `[RequireServiceOrPermission(knk.admin.world)]` | area CRUD (form wizard routes included) |
+| `GET/POST api/Arenas/areas/{areaId}/regions`, `POST api/Arenas/areas/regions`, `GET/PUT/DELETE api/Arenas/areas/regions/{id}`, `POST api/Arenas/areas/regions/search` | same | region rows; create/update renames to `arena_<arenaId>_<kind>_<id>` through `POST /Regions/rename` with `domainType` `ArenaBattleground`/`ArenaSpectatorArea`/`ArenaLobby` and the arena's region as parent |
+| `GET api/Arenas/areas/by-region/{regionId}?world=` | read | the orphan check's fresh lookup; 404 when no area lists the region |
+| `POST api/teleport-destinations/spectate-fee` | `[RequirePluginService]` | body: `userId`, `arenaAreaId`, `idempotencyKey`, `bypassRequirements`, `bypassCost`; answers like the other teleport charges (allowed, charged amount, currency, refusal reason and message). Refunds use the existing `POST api/teleport-destinations/refund` with the same key |
+| `finalize-temp-names` | as before | also finalizes area regions |
+
+Removed: the `ArenaBattleground` / `ArenaSpectatorArea` entities, routes, form seeds, discovery rule types and navigation types; `Arena.LobbyLocationId`. `DuelMatch.BattlegroundId` now points at `arena_areas` (SetNull).
+
+Plugin side: `KnkArena.areas()` / `subRegionIds()` with `usableBattlegrounds()`, `lobby()`, `lobbyLocation()`, `spectateTarget()`, `ownRegionIds()`; managed kinds `BATTLEGROUND`, `SPECTATOR_AREA`, new `LOBBY` (floor 50); `ArenaAreaAccess` (WorldGuard session handler + teleport-engine preview) replaces `DuelBattlegroundAccess`, and nothing is registered with `DomainAccessExemptions` any more; `DuelSpectateTeleports` runs the spectate teleport; the orphaned area-region pass runs every `regions.access.sync.interval-minutes` from a fresh `GET api/Arenas` (never the cache) and feeds `TempRegionRetentionTask`.
+
+### Deviations and interpretations (reversible; also a comment on KNG-197)
+
+1. **Spectate fee before the warmup.** DESIGN rev. 6 first said "charged once the warmup succeeded". As built, the plugin asks the API before the `ARENA` warmup (the engine's arena plan has no charge step at arrival); the charge is refunded whenever the teleport doesn't arrive (moved, damaged, refused, failed). A title refusal now comes before the warmup. An area without title or price doesn't call the API at all. DESIGN §9.3 and R4 were updated to say so.
+2. **Defaults:** a new arena saved without `isDuelEnabled` gets **off** (the form default is off too); a new area is **disabled** until turned on.
+3. **Region names:** `<n>` in `arena_<arenaId>_<kind>_<n>` is the `ArenaAreaRegion` id (DESIGN interpretation, kept).
+4. **One lobby** per arena; the lobby counts only when enabled and with an arrival location.
+5. **Kind-foreign fields are cleared** on save; changing the kind of an area that has regions is refused (its regions' names and managed kind would be wrong).
+6. **Region world** must be the arena's world.
+7. **Duelists can't spectate** during their own duel ("You can't spectate during your own duel.").
+8. **Lobby entry during a warmup** is allowed to any duelist of a running match of the same arena (so a second pair's lobby teleport isn't refused by the first pair's warmup); a player who is already in the lobby when a warmup starts isn't moved out (DESIGN §8.2 known limit).
+9. **`isOnBattleground`** stays phase-based in `DuelService` (the duel's own state); the union of the battleground's regions is enforced by `ArenaAreaAccess`.
+10. **`ArenaAreaRegion` form has no containment rule** (the arena's region is two hops away from the region form; the same gap as KNG-261 for domain sub-regions).
+11. **Orphaned area regions** are reported in `/knk regions temp` with the orphaned sub-regions.
+12. **The migration deletes the rev. 2–5 child-domain rows** (and their discovery rule rows). On a database where another table references one of those domain rows with a restricting key, the migration would fail; no such data is expected (the branch was never deployed and `arena_2` was never seeded). Its `Down` restores the discovery rows, not the domains.
+13. **The Arena form's last step also lists the KNG-253 `SubRegions`**, since an arena is a domain.
+14. **Navigation eligibility merged rule** (trunk merge): any minigame member is excluded from `/navigate`, except a siege member whose match is running (KNG-234's compass).
+15. **The teleport engine's preview** (`RegionTeleportRestriction`) also asks the area rule, so a teleport onto a reserved battleground or the lobby during a warmup is refused before its warmup, as for domains.
+16. **Spectate tile lore** in the duel menu seed (API `MenuTemplateSeed.Duel.cs` and the plugin's `content-seeds.json`) now describes the teleport and its conditions; the strings were patched in place in `content-seeds.json` rather than re-exported (a re-export churned unrelated ids).
+17. **`Arena.json` form seed edited in place** (same `configurationGuid`, "seed v1"): the branch was never imported anywhere that matters; re-import it.
+
+### Left out / found in passing
+
+- `/warp` listing of spectator areas: not built (KNG-240, future).
+- No `ArenaAreaRegion` containment rule (item 10 above).
+- No hub tile (unchanged P6/P8 open question).
+
+### Live checks for the smoke test
+
+Added to the [smoke test](../guides/arena-duels-smoke-test.md) and tagged there:
+
+1. **P9·1** Migration: `arena_areas` and `arena_area_regions` exist, the rev. 2–5 tables and `arenas.LobbyLocationId` don't; only the `Arena` discovery rule; seeds import in the order `ArenaKit.join`, `Arena`, `ArenaAreaRegion`, `ArenaArea`.
+2. **P9·2** The area form: lobby, battlegrounds (one with two parts), spectator area; every validation rule of DESIGN §4.1.
+3. **P9·3** Regions renamed `arena_<a>_<kind>_<n>`, parent the arena's region, priorities, `pvp allow` / `entry allow`, no `knk-*` access flags; a re-run world task replaces the region in place.
+4. **P9·4** Two-part battleground: the duelists fight across both parts; an outsider is refused at each part (walk, pearl, teleport); staff with `knk.region.bypass` pass.
+5. **P9·5** Leaving the battleground's union is refused in the countdown and the fight; the exit teleport passes.
+6. **P9·6** The lobby refuses an outsider during a warmup, opens again afterwards; a second pair's lobby teleport isn't refused.
+7. **P9·7** Spectate teleport: no conditions → no API call; gem price charged once and refunded on a cancelled warmup; title refusal with nothing charged; duelists refused; no arrival → "walk to".
+8. **P9·8** Areas are quiet: no enter/leave message, no discovery, not in `/navigate` or `/warp`; the arena keeps all three.
+9. **P9·9** Sidebar and boss bar in any spectator region; "inside the arena" for `/duel` counts areas and sub-regions.
+10. **P9·10** An orphaned area region is unhooked and marked after two passes, listed in `/knk regions temp`, adopted again or deleted after the retention.
+11. **P9·11** Trunk-merge regressions: KNG-253 sub-region mirroring and enter grouping, the navigation rule for duelists and siege members, the web app's moderation and profile pages.
+
+---
+
+## Chain summary (P0–P9)
+
+**State on 2026-10-25:** every phase is pushed and In Review; P8 prepared the live test; P9 reworked the areas (DESIGN rev. 6) and merged the trunks in. Nothing is merged into a trunk, deployed or live-tested. The developer runs the [smoke test](../guides/arena-duels-smoke-test.md) on the dev server (Minecraft 26.3, knk-plugin `main` since KNG-182 merged) and signs off; then the merge plan above runs.
 
 ### Commits per repo (branch `claude/arena-duels`)
 
 | Repo | Base | Head | Phases |
 |---|---|---|---|
-| knk-web-api | `master` `2d71155` | `57f26a2` | P1, P2, P7, P6, P2 follow-up (10 commits, one of them a merge) |
-| knk-web-app | `main` `e30c815` | `6afaa8b` | P1, P7 (2 commits) |
-| knk-plugin | `claude/mc-26.2-upgrade` `88497649` (KNG-182) | `0f6dd1ca` | P3, P0, P1, P2, P7, P4, P5, P6, P8 (20 commits, four of them merges) |
-| knk-workspace | `main` | this commit | report sections, living docs, guide, checklist |
+| knk-web-api | `master` (`1aba1ee` merged in) | `ab382a6` | P1, P2, P7, P6, P2 follow-up, P9 (13 commits, two of them merges) |
+| knk-web-app | `main` (`4a9537e` merged in) | `cacb6fa` | P1, P7, P9 (4 commits, one a merge) |
+| knk-plugin | `main` (`ad5786ce` merged in; includes KNG-182) | `57afdf25` | P3, P0, P1, P2, P7, P4, P5, P6, P8, P9 (22 commits, five of them merges) |
+| knk-workspace | `main` (`3ed5a22` merged in) | this commit | report sections, living docs, guide, checklist, DESIGN rev. 6 |
 
 Per-commit detail: the merge plan's table above and each phase's section.
 
-### Tests at the P8 heads
+### Tests at the P9 heads
 
-knk-plugin: core 2338, api-client 275 (2 skipped), paper 2013 (18 skipped), 0 failures. knk-web-api (`57f26a2`): 2875 passed, the 4 known reds, 73 skipped. knk-web-app: 160 suites / 965 tests green.
+knk-plugin (`57afdf25`): core 2491, api-client 291 (2 skipped), paper 2273 (18 skipped), 0 failures. knk-web-api (`ab382a6`): 3468 passed, the 4 known reds, 87 skipped. knk-web-app (`cacb6fa`): 194 suites / 1193 tests green. (The counts grew mostly through the trunk merges; P9's own additions are in its section.)
 
 ### Merge order
 
-knk-web-api → knk-web-app → (KNG-182 into knk-plugin `main`, then `main` into the duel branch) knk-plugin → knk-workspace docs + CHANGELOG. Details in the P8 merge plan.
+knk-web-api → knk-web-app → knk-plugin → knk-workspace docs + CHANGELOG (no KNG-182 step any more). Details in the P8 merge plan (updated by P9).
 
 ### Combined live checklist
 
-[`guides/arena-duels-smoke-test.md`](../guides/arena-duels-smoke-test.md): setup, plan steps 1–15 with every phase's live checks, the siege regression (P0), and the extras.
+[`guides/arena-duels-smoke-test.md`](../guides/arena-duels-smoke-test.md): setup, plan steps 1–15 with every phase's live checks (P9's `P9·1`–`P9·11` included), the siege regression (P0), and the extras.
 
 ### Developer decisions (KNG-197)
 
@@ -927,12 +1025,13 @@ Taken during the chain, all recorded as comments on [KNG-197](https://linear.app
 | Date | Decision | Where it lives |
 |---|---|---|
 | 2026-10-21 | **Item value in the stake ratio** = the item instance's `ItemBlueprint` base price (`BasePriceMin` × amount; no instance or blueprint = 0); the ratio compares coins + item value per side | P3 `36195de3`, P2 `a0da408`; the plugin can't value items yet, so the API's check at lock-in is binding ([KNG-224](https://linear.app/kngpandi/issue/KNG-224)) |
-| 2026-10-21 | **Battlegrounds keep `entry allow` + `pvp allow`**; `knk-allow-entry deny` through the domain-access handler is the only entry guard | P1 `02bca4e0`; managed-regions §5 |
+| 2026-10-21 | **Battlegrounds keep `entry allow` + `pvp allow`**; `knk-allow-entry deny` through the domain-access handler is the only entry guard | P1 `02bca4e0`; managed-regions §5. *Superseded 2026-10-24 (below): the guard is now the duel runtime's own area rule* |
 | 2026-10-21 | **No `arena_2` migration or seed**; staff create arenas in the forms | P1 `a8a26c3` (endpoint removed); checklist §0.2 |
 | 2026-10-21 | **Deaths and quits by phase as built**: a death before the countdown cancels, a death in the countdown forfeits, both quitting on one tick cancels, a death plus the other's quit on one tick is decided by the death | P3 |
 | 2026-10-21 | **Match review data is staff-only**: `reviewSignals`, `reviewDetails`, `reviewTier` only for `knk.admin.duel.review` or the plugin key; others see the plain review state and result. Announcements stay public with the arena toggles | P2 follow-up `57f26a2` (`DuelMatchesController` strips the three fields for other callers; `DuelMatchesControllerTests`). Guide §3.1, checklist P2·10 |
 | 2026-10-21 | **Confiscated coins go to a new `SYS_CONFISCATED` account**, not `SYS_FEES` | P2 follow-up `57f26a2` (`CurrencyReasons`: `DUEL_CONFISCATION` moves `SYS_DUEL` → `SYS_CONFISCATED`; the fee stays in `SYS_FEES`). Guide §3.2, checklist P2·7 / P7·8 |
 | 2026-10-21 | **Duel W/L/D visibility as built**: a metric-level "Wins: Nobody" also hides duel wins; the player can re-show them per context | P7, no change |
+| 2026-10-24 | **Arena areas, not child domains** (DESIGN rev. 6, D12/D16 revised, §13.4 R1–R6): battlegrounds, spectator areas and the lobby are `ArenaArea` + `ArenaAreaRegion` rows; regions drawn by world tasks and renamed `arena_<arenaId>_<kind>_<n>`; managed kinds `BATTLEGROUND`, `SPECTATOR_AREA`, new `LOBBY` under the arena region, `pvp allow` on battlegrounds, `entry allow` everywhere; the duel runtime's own WorldGuard rule over the union of an area's regions (battleground: the allocated pair and `knk.region.bypass` staff, no exit in countdown/fight except the exit pass; lobby duelists-only during a warmup; stands free); spectating is an `ARENA` teleport to the spectator area's arrival with its title and gem conditions; `/warp` listing is future (KNG-240); the arena keeps its domain behaviour | P9 `351daaa`, `ab382a6`, `cacb6fa`, `57afdf25`; guide §2.3–§2.6; checklist `P9·n` |
 
 The P2 follow-up `57f26a2` landed after P8's first test run; the coordinator re-ran the knk-web-api build and tests on it (P8 tests table above) and updated the checklist's §0.1 table and the merge plan's commit list. The chain was paused by the developer 15:05Z–17:35Z (subscription budget) between P8's first push and this re-test; nothing changed on the branches in between.
 
@@ -941,6 +1040,9 @@ The P2 follow-up `57f26a2` landed after P8's first test run; the coordinator re-
 1. **Hub tile** (P6) for `/duels` or `/arena`: wanted? A small seed change. (P2's two questions and P7's are answered above.)
 
 ### Follow-ups filed or recorded
+
+- [KNG-240](https://linear.app/kngpandi/issue/KNG-240): spectator areas in `/warp` and the teleport menu through the destination engine (future, DESIGN §15).
+- P9 deviations 1–17 (P9 section) are on KNG-197 for the developer to confirm or reverse.
 
 - [KNG-199](https://linear.app/kngpandi/issue/KNG-199): siege kit mode (reuses P0's vault and P4's kit loan; `KitGrantPlacer` overflow note there).
 - [KNG-223](https://linear.app/kngpandi/issue/KNG-223): `dotnet build` at the knk-web-api root fails on Linux (lower-case `tests\` in the `.sln`). Filed by P7.
