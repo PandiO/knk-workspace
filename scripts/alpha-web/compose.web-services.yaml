@@ -1,6 +1,6 @@
   web:
     # Runbook Phase 6: the web app (static build) and the /api proxy for app.knightsandkings.net.
-    image: knk-web-app:alpha-00e4af61
+    image: knk-web-app:alpha-0d612702
     container_name: knk-alpha-web
     restart: unless-stopped
     read_only: true

@@ -2,7 +2,9 @@
 
 **Status:** Written 2026-10-21 (invitations chain link 7, KNG-218). **Run on dev 2026-10-23/24** (Findings below: § 0–6
 and § 8 passed or accepted, § 7 waits for the alpha); the feature is merged to every trunk since 2026-10-24.
-**Last updated:** 2026-10-24
+**Last updated:** 2026-10-25 (§ 3 step 11, § 4 step 16, § 7 steps 6–8: the register and login pages in Invite mode, a claim
+code typed as a link code, the Cloudflare step in every flow and the missing-session banner — branch
+`claude/invite-only-register-page` in knk-web-app and knk-web-api, found on the alpha 2026-10-25); 2026-10-24
 **Linear:** [KNG-218](https://linear.app/kngpandi/issue/KNG-218) (I3, this guide), parent
 [KNG-205](https://linear.app/kngpandi/issue/KNG-205); the packages it checks: [KNG-206](https://linear.app/kngpandi/issue/KNG-206)
 (E1), [KNG-207](https://linear.app/kngpandi/issue/KNG-207)/[KNG-208](https://linear.app/kngpandi/issue/KNG-208) (L0),
@@ -162,6 +164,14 @@ Full steps and troubleshooting: [email guide § 6–7](email.md). Mails go to th
    link.
 10. **Revoked link from the mail.** Revoke a personal invite, then click the link in its mail → the same generic
     "invalid or has expired" page as for a made-up link (no "revoked" wording).
+11. **No dead end from the login page or `/auth/register`** (alpha finding 2026-10-25, knk-web-app
+    `claude/invite-only-register-page`, needs knk-web-api with `GET api/Auth/onboarding-info`). Logged out:
+    `/auth/register` opens on **Sign up with your invitation** (no link-code field; "Already playing and got a code from
+    `/account link`?" unfolds it); a shared code typed there → `/join?code=…` checked; `K7QH-M2XA` typed there →
+    `/link?code=…` checked at once. `/auth/login` → **Create an account** → `/join` with the "invite-only" note. Open a
+    personal invite link → **Log in** → the login page's **Create an account** → back on `/invite` with the same
+    invitation (the token is kept for the tab; it is forgotten after sign-up or when the invite is invalid). Under
+    `Mode=LinkCode` all of this is as before: `/auth/register` opens on the link code and the login page links to it.
 
 ## 4. Admission gate and claim linking (I2, KNG-214) — `Mode=Invite` + `admission.mode: invite`
 
@@ -216,6 +226,13 @@ step says otherwise.
     account, `Security:LinkAttempts`). `/link` logged out (`claim/check`) gets 429 after 20 a minute per IP.
 15. **Expired claim code.** Wait 16 minutes after the disconnect screen, then enter the code → refused; the page says
     to join again for a new code. Rejoin → a **new** code.
+16. **Claim code typed as a link code** (2026-10-25). Logged out, on `/auth/register` → "Already playing…" → type the
+    disconnect-screen code **with its dash** into the link-code field → the field says it's the server's code, the
+    button reads **Continue with this code** → `/link` shows "Verified: <name>" without retyping. Type it **without**
+    the dash → "invalid or has expired" plus the hint "Is this the code the server showed you…" linking to `/link`.
+    Logged in as an unlinked account, on `/account/link` type `k7qh-m2xo` (a look-alike O) → "Recognised as the code
+    from the server's disconnect screen" → linked (the O was read as 0). Every claim refusal on `/link`,
+    `/account/link` and the invite sign-up form ends with "The same code stays valid for 15 minutes…".
 
 ## 5. API outage with the gate on
 
@@ -250,6 +267,22 @@ On dev with a Cloudflare test account, or on the alpha as part of § 9 step 2. N
 4. **Invite lifecycle.** Create a personal invite → its address is in the list within ~5 s; revoke → gone; resend an
    expired one → back.
 5. **Shared-code sign-up.** The new address is in the list before the PIN panel shows; the panel names the address.
+6. **The Cloudflare step, fresh browser** (2026-10-25; alpha only, or dev behind a test Access setup; the bypass
+   application must list `/api/Auth/onboarding-info`). Private window → invite link → the page lists "What happens
+   next" with the Cloudflare step → sign up → the "Your account is ready" panel lists: Cloudflare asks for your
+   **email**, mails a **6-digit code** from Cloudflare, then "link your Minecraft account" → **Continue to Cloudflare
+   sign-in** → Cloudflare's own login page appears (a page load, the address bar leaves the app), type the same email →
+   the code mail (sender Cloudflare) → enter it → `/account/link` opens with **no** "Network error" and the claim code
+   links. `/join` and `/link` (logged out, verified code) show the same step in their lists; the login page shows "First
+   time on this device? Cloudflare asks for your email…".
+7. **Missing session recognised.** In a browser with a Cloudflare session, delete the `CF_Authorization` cookie (or wait
+   for its expiry) and submit a code on `/account/link` → not "Linking failed" but the banner "Your Cloudflare sign-in has
+   expired or isn't active on this device" with **Sign in with Cloudflare**, the field's error says the same, nothing
+   retries → the button reloads the page → Cloudflare's login → back on the page, linking works. Logging in without a
+   session shows the same wording instead of "Network error".
+8. **Mails carry the step.** With the sync on, a new personal invite mail lists the three steps including Cloudflare's
+   email + 6-digit code; the Welcome, FinishLinking and PasswordReset mails have their Cloudflare line (`/admin/email`).
+   With `SyncEnabled=false` none of them mention Cloudflare (step 1), and the app shows no Cloudflare text anywhere.
 6. **Personal-invite sign-up** (address already listed) → registration succeeds; note whether the API logs an "inline
    add failed" warning (L6-7, duplicate append).
 7. **Account changes.** Deactivate → removed within ~5 s; reactivate → back. Staff email change → old address out, new
