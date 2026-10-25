@@ -72,4 +72,4 @@ PlayStation friend joins through the Friends tab and gets the KnK claim-code scr
 
 Finding (web app, not crossplay): from the invite page he clicked *Log in* → *Create an account*, which leads to the
 generic link-code register page; in Invite mode that page can't succeed and doesn't recognise a claim code typed into
-the link-code field. Handoff: [`2026-10-25-invite-only-register-page-prompt.md`](../ai-agents/handoffs/2026-10-25-invite-only-register-page-prompt.md).
+the link-code field. A second Java tester (PC) signed up fine but, like the first, got "Linking failed" and later "Network error" until both found the Cloudflare PIN themselves: after sign-up the app navigates in-app, so Cloudflare's login (and its PIN mail) never appears and API calls fail behind Access. Handoff (both findings, dynamic on invite mode/Access sync): [`2026-10-25-invite-only-register-page-prompt.md`](../ai-agents/handoffs/2026-10-25-invite-only-register-page-prompt.md).
