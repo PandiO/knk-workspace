@@ -1,7 +1,7 @@
 # Arena duels — design
 
-**Status:** Design accepted by the developer (2026-10-21, rev. 5). Nothing implemented. Every question is decided (§13). Implementation is split into phase issues [KNG-209](https://linear.app/kngpandi/issue/KNG-209), [KNG-210](https://linear.app/kngpandi/issue/KNG-210), [KNG-213](https://linear.app/kngpandi/issue/KNG-213), [KNG-215](https://linear.app/kngpandi/issue/KNG-215), [KNG-217](https://linear.app/kngpandi/issue/KNG-217), [KNG-219](https://linear.app/kngpandi/issue/KNG-219), [KNG-220](https://linear.app/kngpandi/issue/KNG-220), [KNG-221](https://linear.app/kngpandi/issue/KNG-221), [KNG-222](https://linear.app/kngpandi/issue/KNG-222) ([plan](IMPLEMENTATION_PLAN.md)).
-**Last updated:** 2026-10-21 (rev. 5: duel restrictions decided, §10.3 / §13.3; phase issues filed). 2026-10-20 (rev. 4: kit modes vault before the lobby teleport and hold pending deliveries such as lootbox rolls, §8.4; never hold on a first flag, staff can revert a paid result at any time, §10.3. Rev. 3: open points O1–O6 decided; escalating review tiers for suspicious results, §10.3; siege kit mode split out as KNG-199. Rev. 2: developer answers; arenas as domains; per-arena settings in the web app; gear modes with kits and inventory drop; queue cap; spectator area as a warp domain; abuse prevention §10)
+**Status:** Design accepted by the developer (2026-10-21, rev. 5); **rev. 6 (2026-10-24, developer: battlegrounds, spectator areas and the lobby are arena areas, not child domains)**. Implemented on the `claude/arena-duels` branches (phases P0–P9), not merged or live-tested yet. Every question is decided (§13). Implementation is split into phase issues [KNG-209](https://linear.app/kngpandi/issue/KNG-209), [KNG-210](https://linear.app/kngpandi/issue/KNG-210), [KNG-213](https://linear.app/kngpandi/issue/KNG-213), [KNG-215](https://linear.app/kngpandi/issue/KNG-215), [KNG-217](https://linear.app/kngpandi/issue/KNG-217), [KNG-219](https://linear.app/kngpandi/issue/KNG-219), [KNG-220](https://linear.app/kngpandi/issue/KNG-220), [KNG-221](https://linear.app/kngpandi/issue/KNG-221), [KNG-222](https://linear.app/kngpandi/issue/KNG-222) ([plan](IMPLEMENTATION_PLAN.md)).
+**Last updated:** 2026-10-25 (rev. 6, developer decision of 2026-10-24 on KNG-197: D12 and D16 revised, §4.1 `ArenaArea` + `ArenaAreaRegion` replace the battleground and spectator-area child domains and `Arena.LobbyLocationId`, §4.2 area fields, §8.2 the duel runtime's own access rule, §9.3 spectating by an `ARENA` teleport, §13.4; implementation in plan Phase 9). 2026-10-21 (rev. 5: duel restrictions decided, §10.3 / §13.3; phase issues filed). 2026-10-20 (rev. 4: kit modes vault before the lobby teleport and hold pending deliveries such as lootbox rolls, §8.4; never hold on a first flag, staff can revert a paid result at any time, §10.3. Rev. 3: open points O1–O6 decided; escalating review tiers for suspicious results, §10.3; siege kit mode split out as KNG-199. Rev. 2: developer answers; arenas as domains; per-arena settings in the web app; gear modes with kits and inventory drop; queue cap; spectator area as a warp domain; abuse prevention §10)
 **Linear:** [KNG-197](https://linear.app/kngpandi/issue/KNG-197) (this design); related [KNG-49](https://linear.app/kngpandi/issue/KNG-49) (Arena/Battleground entities), [KNG-21](https://linear.app/kngpandi/issue/KNG-21) (currency ledger), [KNG-34](https://linear.app/kngpandi/issue/KNG-34) (statistics), [KNG-36](https://linear.app/kngpandi/issue/KNG-36) (NPC platform, for the later Arena NPC)
 **Sources:** developer request and answers 2026-10-20; `knk-v1-archive` (`src/Arenas/{Duel,DuelInvite,DuelCommands,DuelEvents,Arena,ArenaCommands,ArenaMenuClick}.java`, `src/Menu/{Menu,DuelSetupClick}.java`, `src/Listeners/PlayerListener.java`, `src/Main/Main.java`); knk-plugin `main` `79be488`; knk-web-api `master` `2d71155`; specs [teleport](../teleport/DESIGN.md), [siege-minigame](../siege-minigame/DESIGN.md), [currency-payments](../currency-payments/DESIGN.md), [player-statistics](../player-statistics/DESIGN.md), [kits](../kits/DESIGN.md), [lootboxes](../lootboxes/DESIGN.md), [managed WorldGuard regions](../../architecture/managed-worldguard-regions.md), [domain access enforcement](../../architecture/domain-access-enforcement.md), [legacy inventory-menu screens](../legacy/inventory-menu-screens.md) §3.15.
 **Plan:** [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md)
@@ -33,7 +33,7 @@ Added with the answers (2026-10-20):
 11. **Accepting** is refused while the invitee is in a minigame or in combat.
 12. A configurable **queue cap per arena** (e.g. at most 3 duels waiting).
 13. A **kit mode** to even the odds. The admin enables it and picks eligible kits per arena. The proposal then either names one kit for both, or says "kits only", and each duelist picks from the eligible kits.
-14. An optional **spectator area** per arena. You can reach it on foot, from the arena's menu, or by warp. Warps go through the normal engine and keep its conditions (title, cost).
+14. An optional **spectator area** per arena. You can reach it on foot, from the arena's menu, or by warp. Warps go through the normal engine and keep its conditions (title, cost). *Rev. 6 (developer, 2026-10-24): on foot and from the arena menu / `/duels spectate`, by an engine teleport that checks the area's own title and gem conditions (§9.3); a `/warp` listing is a future improvement (§15, KNG-240).*
 15. An Arena NPC that starts duels: later, recorded as a future update (§15).
 
 ## 2. What exists today, and what v1 taught us
@@ -80,8 +80,8 @@ Worth borrowing from v1:
 | Need | Reuse | Gap |
 |---|---|---|
 | Arena as a domain | `Domain` (TPT base, table `domains`; region, `AllowEntry/AllowExit`, `Location`, warp fields) → `Structure` (`structures`; Street, HouseNumber, District) → `GateStructure` (`gate_structures`) is the precedent for a typed child | No Arena type. Arena regions are config-only (`regions.managed.extra-regions`, kinds `ARENA` 40 / `BATTLEGROUND` 50). |
-| Spectator warp with conditions | A domain **is** a `/warp` destination when `TeleportEnabled` + `Location` + `AllowEntry`. `TeleportDestinationService` checks title bracket, premium tier, discovery and gem price (teleport DESIGN §3.7) | none; a spectator-area domain gets it for free |
-| Battleground entry | `DomainAccessHandler`, a WG session handler enforcing `knk-allow-entry/exit` from `Domain.AllowEntry/AllowExit` on walk, vehicle and teleport (domain-access DESIGN §1) | No per-player exemption hook (only owners/members, `knk.region.bypass`, WG bypass) |
+| Spectator warp with conditions | A domain **is** a `/warp` destination when `TeleportEnabled` + `Location` + `AllowEntry`. `TeleportDestinationService` checks title bracket, premium tier, discovery and gem price (teleport DESIGN §3.7) | rev. 6: the stands are an area, not a domain; the spectate teleport gets its own title/gem check on the teleport fee path (§9.3) |
+| Battleground entry | `DomainAccessHandler`, a WG session handler enforcing `knk-allow-entry/exit` from `Domain.AllowEntry/AllowExit` on walk, vehicle and teleport (domain-access DESIGN §1) | rev. 6: areas aren't domains; the duel runtime registers a session handler of its own on the same pattern (§8.2) |
 | Lobby teleport with "cancel if it fails" | `TeleportService.start(TeleportPlan)` → `CompletableFuture<TeleportOutcome>` (`TELEPORTED/DENIED/CANCELLED/FAILED`); `check(plan)` pre-checks the guards; warmup is cancelled by movement, damage or quit | One subject per plan; no system or minigame `TeleportKind`. `TeleportKind.HUB` arrives with the unmerged KNG-182 branch. |
 | Blocking other teleports while in a match | the `TeleportRestriction` interface (siege registers `SiegeTeleportRestriction`) | none |
 | Match lifecycle | the siege pattern: Bukkit-free state machine in `core/siege` returning `SiegeEffect`s, a 1 s ticker in `SiegeService`, `SiegeMatchObserver` hooks, `SiegeResultSpool` | No shared minigame framework. Siege membership is hard-wired at about 12 touchpoints in `KnKPlugin` (§11). |
@@ -114,63 +114,91 @@ Worth borrowing from v1:
 | **D9** | **Gear modes** per match, chosen in the proposal from what the arena allows (§6.2):<br>- `OWN_GEAR_KEEP`: own gear, the inventory is kept on death<br>- `OWN_GEAR_DROP`: own gear, the loser's inventory goes to the winner<br>- `FIXED_KIT`: both use the kit the proposal names<br>- `KIT_CHOICE`: each duelist picks from the eligible kits<br><br>The arena's admin settings decide which modes the proposal may offer. | developer | Kits even the odds. Drop mode is the high-stakes variant. The admin controls both. |
 | **D10** | **Any death in `FIGHT` loses**, whatever the cause. Quitting or disconnecting from `BATTLE_COUNTDOWN` on is a **forfeit**. Before that it **cancels** with a full refund. | developer (Q3: cancel) | A cancel never moves value between players (§10), so cancelling can't be abused for transfers. |
 | **D11** | **Fight time limit `Arena.FightTimeLimitSeconds`**, set in the web app, default 300, `0` = no limit. At the limit the match is a **draw with full refund**. With no limit, players can agree a draw with `/duel draw`; staff can cancel. | developer (Q5) | Configurable. With no limit, an agreed draw and staff cancel stop a match that would otherwise never end. |
-| **D12** | **Arenas are domains**:<br>- `Arena : Structure`<br>- `ArenaBattleground : Domain`, a child of the arena<br>- `ArenaSpectatorArea : Domain`, a child of the arena<br><br>Each has its own TPT table. This closes the KNG-49 entity question for arenas. | developer (Q2) | Region, entry and exit rules, warps, discovery and navigation come with the domain model. The managed-region repair classifies regions by type, not by `extra-regions`. |
+| **D12** | **Arenas are domains; their battlegrounds, spectator areas and lobby are not** (rev. 6, developer 2026-10-24):<br>- `Arena : Structure` stays a domain with normal domain behaviour (enter/leave message, discovery, `/navigate`, entry/exit flags, KNG-253 sub-regions)<br>- its **areas** are the arena's own sub-structure: `ArenaArea` (kind `BATTLEGROUND`, `SPECTATOR` or `LOBBY`) with 1..n `ArenaAreaRegion`s (§4.1)<br>- areas carry no domain behaviour: no enter/leave messages, discovery, navigation or `knk-allow-entry/exit` flags<br><br>Rev. 2–5 had `ArenaBattleground : Domain` and `ArenaSpectatorArea : Domain` (TPT child domains) and `Arena.LobbyLocationId`; rev. 6 replaces all three. | developer (Q2; revised 2026-10-24) | Domains carry global rules (enter/leave messaging, discovery, navigation, entry and exit flags) these areas must not have, and a child model of `Domain` for them was ambiguous. The arena keeps what a domain gives it. An area can be drawn from several regions (a round battleground, a ring of stands), and the duel runtime enforces access over the union of its regions (§8.2). |
 | **D13** | **Concurrent matches, one per battleground; a capped queue per arena** (`Arena.MaxQueuedMatches`, default 3). | developer (queue cap) / proposed | `arena_2` has 8 battlegrounds. The cap stops a crowded lobby. |
 | **D14** | **Staking needs eligibility.** The rules are an account-age minimum, a title minimum, and no freeze or transfer lock. They are per arena, defaulting to the `/pay` rules in `CurrencyPolicy`. They apply to anyone staking coins or items, and to both players in `OWN_GEAR_DROP`. **Gems can't be staked.** | developer (Q6: configurable) | A thrown duel is a disguised transfer. Gems are non-transferable by decision ([currency DESIGN](../currency-payments/DESIGN.md) line 603). |
 | **D15** | **Arena fee: 5% of the coin pot on decisive results**, configurable 0–20%. None on draws, cancels or friendly duels. The fee is posted to a sink, not paid to anyone. | proposed (developer asked for a recommendation, Q7) | It is a coin sink for the economy, and it makes laundering coins through thrown duels cost money every time. Honest players only pay when there is a winner. |
-| **D16** | **Battleground entry uses the domain-access handler with a duel exemption**, not WG membership (§8.2). The `BATTLEGROUND` managed policy drops `entry deny` and keeps `pvp allow`. | proposed (developer asked for a recommendation, Q8) | WG membership gives build rights in the region and stays in WG's region files after a crash. The domain-access handler already enforces entry and exit on walk, vehicle and teleport. |
+| **D16** | **Area access is enforced by the duel runtime's own WorldGuard session rule** over the union of an area's regions (rev. 6, §8.2), not by WG membership and not by the domain-access handler. The managed policy gives battleground regions `pvp allow` + `entry allow`, and every area region `entry allow`; the runtime decides who may cross. | proposed (Q8, developer asked for a recommendation); mechanism revised 2026-10-24 (developer) | WG membership gives build rights in the region and stays in WG's region files after a crash. Areas are not domains any more (D12), so the domain-access handler and its exemptions port no longer apply to them. A session rule of the runtime's own covers walk, vehicle, glide, pearl and teleport the same way. |
 | **D17** | **Duel W/L/D are visible to everyone by default.** Each player can change it through the normal statistics visibility setting. | developer (Q9) | A public competitive record, with the player in control. |
 | **D18** | **Accept rules**: the invitee may accept from anywhere, except while in a minigame (siege, another duel or negotiation lock), combat-tagged, frozen or dead. | developer (Q10, confirmed O1) | The lobby teleport brings the invitee. |
-| **D19** | **Spectating is physical and passive.** Spectators stand in the arena's spectator area (normal gamemode) and use a read-only menu. Spectator betting is out of scope. | proposed | Simple and safe. Betting is gambling with its own abuse model. |
+| **D19** | **Spectating is physical and passive.** Spectators stand in the arena's spectator area (normal gamemode) and use a read-only menu. They walk in, or take an `ARENA` engine teleport from the arena menu or `/duels spectate` that checks the area's optional title and gem conditions (§9.3). Spectator betting is out of scope. | proposed; teleport path developer 2026-10-24 | Simple and safe. Betting is gambling with its own abuse model. |
 
 ## 4. Data model
 
-### 4.1 Arena domain types (API, form-configurable, `knk.admin.world`)
+### 4.1 The arena domain and its areas (API, form-configurable, `knk.admin.world`)
+
+*Rev. 6 (developer, 2026-10-24).* Rev. 2–5 modelled battlegrounds and spectator areas as child domains (`ArenaBattleground : Domain`, `ArenaSpectatorArea : Domain`) and the lobby as `Arena.LobbyLocationId`. They are now **areas**: plain owned rows of the arena, each with its own WorldGuard regions and no domain behaviour.
 
 ```
-Domain (domains)
+Domain (domains)                                    ── KNG-253: + SubRegions 0..n (DomainSubRegion)
  └─ Structure (structures: StreetId, HouseNumber, DistrictId)
-     └─ Arena (arenas)                         ── one row per arena; its WgRegionId is the whole arena
+     └─ Arena (arenas)                              ── one row per arena; its WgRegionId (+ sub-regions) is the whole arena
           Key (unique)
-          LobbyLocationId     (FK Location, Restrict)   where duelists arrive for warmup
           ExitLocationId?     (FK Location, Restrict)   null → the domain's own Location
           IsDuelEnabled
           … duel settings, §4.2
-          Battlegrounds   1..n  ArenaBattleground
-          SpectatorAreas  0..n  ArenaSpectatorArea (normally one)
+          Areas           0..n  ArenaArea
           EligibleKits    0..n  ArenaKit
 
- Domain
-  ├─ ArenaBattleground (arena_battlegrounds)   ── a fighting area; WgRegionId = its region
-  │    ArenaId (FK cascade), Key, SortOrder, IsEnabled
-  │    SpawnALocationId, SpawnBLocationId (FK Location, Restrict)
-  │    AllowEntry = false (default; the duel exemption lets duelists in, §8.2)
-  └─ ArenaSpectatorArea (arena_spectator_areas) ── an ordinary walkable, warpable domain
-       ArenaId (FK cascade)
-       (inherited) Location = warp arrival point, TeleportEnabled, TeleportPriceGems,
-       TeleportMinTitleBracketId, TeleportMinPremiumGroupId, TeleportRequiresDiscovery, AllowEntry
+ArenaArea (arena_areas)                             ── plain owned table, NOT a Domain
+  Id, ArenaId (FK cascade)
+  Kind        : BATTLEGROUND | SPECTATOR | LOBBY   (stored as a string)
+  Key         (unique per arena, e.g. "bg1", "stands", "lobby")
+  Name?       (label for menus and the boss bar; null → Key)
+  SortOrder   (battleground allocation order; the first enabled spectator area is the spectate target)
+  IsEnabled
+  SpawnALocationId?, SpawnBLocationId?   (FK Location, Restrict)   BATTLEGROUND only
+  ArrivalLocationId?                     (FK Location, Restrict)   SPECTATOR and LOBBY: where a teleport lands
+  TeleportMinTitleBracketId?             (FK TitleBracket, SetNull) SPECTATOR only: minimum title to teleport there
+  TeleportPriceGems?                     (int ≥ 0)                 SPECTATOR only: gem price of that teleport
+  Regions     1..n  ArenaAreaRegion
 
-ArenaKit (arena_kits): ArenaId (FK cascade), KitId (FK Restrict), SortOrder; unique (ArenaId, KitId)
+ArenaAreaRegion (arena_area_regions)
+  Id, ArenaAreaId (FK cascade)
+  WgRegionId  (tempregion_worldtask_<n> until saved, then arena_<arenaId>_<kind>_<id>)
+  WorldName
+  CreatedAt
+
+ArenaKit (arena_kits): ArenaId (FK cascade), KitId (FK Restrict), SequenceNumber; key (ArenaId, KitId)
+DuelMatch.BattlegroundId → ArenaArea (SetNull)
 ```
 
-- The **managed-region repair** maps the new types to kinds:
+- **Kinds:**
 
-  | Domain type | Kind | Parent region |
-  |---|---|---|
-  | `Arena` | `ARENA` | its District's region |
-  | `ArenaBattleground` | `BATTLEGROUND` | its Arena's region |
-  | `ArenaSpectatorArea` | plain child, no category flags | its Arena's region |
+  | Kind | What it is | Per arena | Uses |
+  |---|---|---|---|
+  | `BATTLEGROUND` | a fighting area; one match at a time (D13) | 1..n (needed for a match, not for saving) | `SpawnA`/`SpawnB`, regions |
+  | `SPECTATOR` | the stands | 0..n, normally one | `Arrival`, `TeleportMinTitleBracketId`, `TeleportPriceGems`, regions |
+  | `LOBBY` | where duelists warm up (§5) | 0..1 (1 while duels are on) | `Arrival`, regions |
 
-  The `extra-regions` entries for `arena_2` are no longer needed (comment on KNG-49).
-- The **domain region finalizer** (`IDomainRegionNameFinalizer`, KNG-43) gets the two child types with the arena as parent, so creating them through the FormWizard renames their temp regions as for other domains.
-- **Seed**: `arena_2` with its 8 flagged battlegrounds becomes the first Arena. Its District/Street is chosen by staff. Locations and the spectator area are set by staff in the web app or in-game.
-- Arenas, battlegrounds and spectator areas automatically get discovery (first-entry rewards) and `/navigate` support as domains. Battlegrounds should have discovery and navigation turned off; the seed sets the overrides.
+  Fields of another kind are cleared on save, so a form switched from spectator to battleground keeps no stale arrival point.
+- **Regions.** An area has one or more WorldGuard regions; the area is their **union** (KNG-253's union containment is the pattern): walking from one part of a battleground into the other is neither leaving nor entering it (§8.2). Regions are drawn through world tasks (`ReagionCreate`, like a domain sub-region) or adopted with `select`, and **renamed on save** to `arena_<arenaId>_<kind>_<regionId>` (`kind` in lower case: `battleground`, `spectator`, `lobby`; `regionId` is the `ArenaAreaRegion` id, stable when another part is removed). A re-run of a region's world task replaces it in place (KNG-103).
+- **Validation (API):**
+  - an **enabled battleground** needs both spawns and at least one region; the last region of an enabled battleground can't be removed
+  - **duels on** (`IsDuelEnabled`) needs an enabled `LOBBY` area with an arrival location; that area can't be disabled, emptied of its arrival or deleted while duels are on
+  - at most one `LOBBY` area per arena; `Key` unique within the arena
+  - spawns and arrival locations lie in the world of one of the area's regions (the arena's world while the area has none)
+  - a region lies in the arena's world, and its id isn't used by any domain's main region, any domain sub-region or another area region in that world
+  - `TeleportPriceGems` ≥ 0; the title bracket exists
+- **Managed-region repair** (plugin, from the arenas list; areas are not in the domain lists):
+
+  | Region | Kind | Parent region | Policy |
+  |---|---|---|---|
+  | `Arena` | `ARENA` | its District's region | as before |
+  | `BATTLEGROUND` area region | `BATTLEGROUND` (floor 50) | the arena's main region | `pvp allow` + `entry allow` (ENFORCE) |
+  | `SPECTATOR` area region | `SPECTATOR_AREA` (floor 40) | the arena's main region | `entry allow` (ENFORCE) |
+  | `LOBBY` area region | `LOBBY` (new, floor 50) | the arena's main region | `entry allow` (ENFORCE) |
+
+  `entry allow` everywhere: WorldGuard never refuses an area; the duel runtime decides (§8.2). Area regions get no `knk-allow-entry/exit`, `knk-domain-name` or `knk-domain-id`: the domain access sync clears them, so they count as no domain.
+- **Orphans.** An area region that no arena lists any more (the row, its area or its arena was deleted) is an orphan, handled like a KNG-253 orphaned sub-region: after two arena refreshes without it, its parent link is removed and it gets `knk-orphaned-since`; the daily temp-region cleanup deletes it once that is older than the retention period (`regions.temp-retention.days`, 14) and a fresh `GET api/Arenas/areas/by-region/{id}` answers 404. Until then it can be adopted again with `select`.
+- **Seed**: none (developer, 2026-10-21). Staff create `arena_2` in the Arena form and its areas in the area form, adopting v1's `arena_2,<part>-battleground` regions with `select` (renamed on save).
+- **No discovery or navigation for areas.** The arena itself has both, as a structure. The `ArenaBattleground`/`ArenaSpectatorArea` discovery rule types and navigation types of rev. 2–5 are removed.
 
 ### 4.2 Duel settings on the Arena (web-app form, defaults in brackets)
 
 | Group | Field | Default | Notes |
 |---|---|---|---|
-| General | `IsDuelEnabled` | true | |
+| General | `IsDuelEnabled` | true | needs an enabled `LOBBY` area with an arrival location (§4.1); a new arena is saved with it off until the lobby exists |
 | | `MaxQueuedMatches` | 3 | matches that are accepted but not yet in a battleground (TRAVELLING + WARMUP + waiting) |
 | Negotiation | `MaxOffers` | 3 | 1–6; D2 |
 | | `OfferSeconds` | 60 | per turn |
@@ -196,6 +224,18 @@ ArenaKit (arena_kits): ArenaId (FK cascade), KitId (FK Restrict), SortOrder; uni
 | | `WinnerLingerSeconds` | 5 | |
 | Announcements | `AnnounceMatches` | true | |
 | | `AnnounceFriendly` | true | duels without stakes |
+
+- **Area fields** (the `ArenaArea` form, §4.1):
+
+  | Kind | Field | Default | Notes |
+  |---|---|---|---|
+  | all | `Kind`, `Key`, `Name`, `SortOrder`, `IsEnabled` | —, —, null, 0, false | turn a battleground on once both spawns and a region are set |
+  | `BATTLEGROUND` | `SpawnALocationId`, `SpawnBLocationId` | null | where the challenger / opponent stand in the countdown |
+  | `LOBBY` | `ArrivalLocationId` | null | the lobby teleport's destination (D6); replaces rev. 5's `Arena.LobbyLocationId` |
+  | `SPECTATOR` | `ArrivalLocationId` | null | the spectate teleport's destination; without one the area is reached on foot only |
+  | `SPECTATOR` | `TeleportMinTitleBracketId` | null (none) | minimum title for the spectate teleport (not for walking in) |
+  | `SPECTATOR` | `TeleportPriceGems` | null (free) | gem price of the spectate teleport, charged through the teleport fee path |
+  | — | `Regions` | — | `ArenaAreaRegion` list (owned, after the area's first save), drawn by world task |
 
 - The API validates the settings. At least one gear mode must be allowed. A kit mode needs at least one eligible kit. `DefaultGearMode` must be allowed. `MinStakeRatioPercent` is 0–100.
 - The detection thresholds and escalation rules of §10.3 are cross-arena (they follow players, not arenas). They live in one global `DuelPolicy` record, edited in the web app like `CurrencyPolicy`.
@@ -334,7 +374,7 @@ DuelMatch (duel_matches)
 
 **Invite rules** (checked at invite, and again at accept where marked):
 - **Inviter**:
-  - is inside an enabled arena's region
+  - is inside an enabled arena: its main region, one of its KNG-253 sub-regions or one of its areas' regions (rev. 6)
   - is not combat-tagged, in a minigame or frozen
   - has no other outgoing negotiation
 - **Invitee**:
@@ -539,17 +579,24 @@ Each action is idempotent and recorded with the reviewer.
 - A `DisallowedPVPEvent` (WorldGuard) handler cancels the event for the same `FIGHT` pair. That covers potions, fire and other paths WG blocks.
 - `WorldGuardCombatSafezones.combatExemption` becomes a composite of siege OR duel, so custom-enchantment effects work in battlegrounds (KNG-11).
 
-### 8.2 Entering and leaving the battleground (D16)
+### 8.2 Entering and leaving the arena's areas (D16, rev. 6)
 
-- **Entry**: battlegrounds are domains with `AllowEntry = false`, so `DomainAccessHandler` refuses entry on foot, by vehicle and by teleport.
-- **New hook in the handler**: a `DomainAccessExemptions` registry (a small port). The duel runtime grants an exemption to the two duelists for their allocated battleground. It runs from the countdown teleport to the exit teleport and is cleared on every end path. It lives in memory only, so a crash leaves nothing behind.
-- **Exit**: `AllowExit` stays true. The runtime adds a confinement rule through the same registry:
-  - in COUNTDOWN and FIGHT, crossing out of the battleground is refused (walk, pearl, chorus fruit, elytra, vehicle)
-  - the runtime's own `ARENA_SYSTEM` exit teleport is the only way out, allowed by a one-shot pass
-- **Managed policy change**:
-  - `BATTLEGROUND` drops `entry deny` (`knk-allow-entry` covers it now)
-  - it keeps `pvp allow` (ENFORCE), which takes WG's own PvP checks out of the fighting pair's way
-- **Staff** with `knk.region.bypass` can still enter to watch. The combat rule keeps them out of the fight.
+Areas are not domains (D12), so `DomainAccessHandler` and P0's `DomainAccessExemptions` port don't see them. The duel runtime registers its **own WorldGuard session handler**, `ArenaAreaAccess`, next to `DomainAccessHandler` (same registration, same move types: walk, vehicle, glide, pearl, chorus fruit, teleport).
+
+- **Union containment.** For every crossing the handler looks up which areas the origin and the destination lie in, over **all** regions of each area (KNG-253's union pattern). An area is *entered* when none of its regions contains the origin and one contains the destination, and *left* the other way round. Moving between two parts of one battleground is neither.
+- **Rules:**
+
+  | Area | Entering | Leaving |
+  |---|---|---|
+  | `BATTLEGROUND` | only the two duelists the battleground is allocated to, from the countdown teleport until the exit teleport; everyone else refused ("This battleground is reserved for a duel.") | refused for those duelists in `BATTLE_COUNTDOWN` and `FIGHT`; the runtime's own `ARENA_SYSTEM` exit teleport carries a one-shot pass |
+  | `LOBBY` | while a match of this arena is in `WARMUP`, only duelists of this arena's matches; otherwise anyone | free |
+  | `SPECTATOR` | free | free |
+
+- **Staff** with `knk.region.bypass` (and WorldGuard's own region bypass) pass every rule, so they can still watch from inside. The combat rule (§8.1) keeps them out of the fight.
+- **Memory only**: the allocation and the passes live in the runtime; a crash leaves nothing behind (the next start has no matches, so a free battleground refuses everyone again).
+- **Managed policy**: battleground regions keep `pvp allow` (ENFORCE), which takes WG's own PvP checks out of the fighting pair's way, and every area region gets `entry allow`, so WorldGuard's own entry rule (or a v1 `entry deny` on an adopted region) never keeps a duelist out.
+- **Known limit**: the rules act on crossings. A player already standing in the lobby when a warmup starts isn't moved out, and nobody can be standing on a battleground when it is allocated except staff, since entry is refused whenever no match holds it.
+- **`DomainAccessExemptions`** (P0) stays in the plugin for other minigames; duels no longer register with it.
 - **Why not WG membership (v1)**: members get build rights in the region and its children, the membership persists in WG's files after a crash, and it needs a startup sweep.
 
 ### 8.3 Other restrictions
@@ -622,7 +669,7 @@ Each action is idempotent and recorded with the reviewer.
 | Hub / API outage | `HubOutageService.releaseFromMinigame` becomes a composite (§11). An outage aborts the duel and refunds it (coins once the API is back); kit vaults are restored at once, then held deliveries |
 | Combat tag | sending and accepting are refused while tagged; the lobby teleport respects it; ENDING clears both tags |
 | Statistics | `StatisticsContextResolver` returns `duel` for match participants |
-| Discovery, navigation, lootboxes | same exemptions as siege. Lootbox rolls and other item deliveries are held from LOCKING until the restore, and opening a lootbox during a match is refused (§8.4) |
+| Discovery, navigation, lootboxes | areas have no discovery or navigation (D12); for players the same exemptions as siege. Lootbox rolls and other item deliveries are held from LOCKING until the restore, and opening a lootbox during a match is refused (§8.4) |
 | Scoreboard | duel sidebar for duelists and spectators; `ScoreboardUtil.setKeepOwnScoreboard` takes a composite predicate |
 | Freeze / staff | a frozen duelist forfeits only if frozen in FIGHT; staff `/knk duel cancel` at any phase (refund) |
 
@@ -657,19 +704,22 @@ Each action is idempotent and recorded with the reviewer.
 
 ### 9.3 Spectator area and arena menu
 
-- **The spectator area** is an `ArenaSpectatorArea` domain. Players reach it:
-  - **on foot**: it's an ordinary region with `AllowEntry` on
-  - **by `/warp` and the teleport menu**, when the admin sets `TeleportEnabled`
-  - **from the arena menu and the spectator menu's "Go to the spectator area" button**, which starts the same warp
-- Warps use the normal engine (player warmup, cooldown) and the domain's warp conditions (minimum title, premium tier, discovery, gem price). Nothing duel-specific is added.
-- Players standing in an arena's spectator area see that arena's duel sidebar and a boss bar for the most recent match.
+*Rev. 6 (developer, 2026-10-24).*
+
+- **The spectator area** is an arena area of kind `SPECTATOR` (§4.1). Players reach it:
+  - **on foot**: free; its regions refuse nobody (§8.2)
+  - **from `[Spectate]`** in the arena menu, the warmup announcement, the spectator menu's "Go to the spectator area" button and `/duels spectate <arena>`: an engine teleport of kind **`ARENA`** (player warmup, cancelled by movement or damage; no cooldown, no `/back` entry needed) to the area's `ArrivalLocation`
+- **Conditions of the spectate teleport**, set per area: `TeleportMinTitleBracketId` (the player's title must be at least that bracket) and `TeleportPriceGems` (charged once the warmup succeeded, through the teleport fee path of knk-web-api, idempotent per attempt, refunded when the teleport doesn't happen). Both are checked by the API at the charge; a refusal names the reason and charges nothing. Staff with the teleport bypass nodes skip them, as for warps.
+- Which area: the arena's first enabled `SPECTATOR` area (by `SortOrder`) with an arrival location. One without an arrival is reached on foot only ("walk to …"); an arena without a spectator area says so, and the button is disabled.
+- **Not a `/warp` destination.** Listing the stands in `/warp` and the teleport menu through the destination engine is a future improvement ([KNG-240](https://linear.app/kngpandi/issue/KNG-240), §15); nothing duel-specific is added to the warp list now.
+- Players standing in an arena's spectator area (any of its regions) see that arena's duel sidebar and a boss bar for the most recent match.
 - Duelists can't hit spectators and spectators can't hit duelists (§8.1). Between spectators, the normal town rules apply.
 - **The arena menu** (`/arena`, and later the Arena NPC, §15) shows:
   - arena info
   - live matches (opens the detail)
   - the queue (`2/3 waiting`) and battleground use
   - `[Spectate]`
-  - `[Challenge a player]`, only inside the arena: it opens a picker of online players, then the proposal editor
+  - `[Challenge a player]`, only inside the arena (its regions, its sub-regions or its areas): it opens a picker of online players, then the proposal editor
   - `[My claims]`
   - the arena's rules: allowed gear modes, fee, limits
 
@@ -788,7 +838,7 @@ Siege membership is hard-wired as single lambdas at about 12 places in `KnKPlugi
 
 `MinigameRegistry` composes siege and duel. In the same no-behaviour-change refactor:
 - `SiegePlayerVault` → `MinigamePlayerVault`
-- a `DomainAccessExemptions` hook in `DomainAccessHandler`
+- a `DomainAccessExemptions` hook in `DomainAccessHandler` (rev. 6: kept for other minigames; the duel areas use their own session rule, §8.2)
 
 It also helps the later minigames (KNG-72, KNG-50).
 
@@ -824,7 +874,7 @@ Gameplay settings live on the Arena (§4.2) and are edited in the web app.
 | Q5 | Fight time limit | Configurable, including no limit | D11 |
 | Q6 | Stake cap / eligibility | Configurable (eligibility = account age, title, no freeze/lock) | D14, §4.2 |
 | Q7 | Arena fee | Asked for a recommendation → 5%, configurable | D15 |
-| Q8 | Battleground entry | Asked for a recommendation → domain-access exemption | D16, §8.2 |
+| Q8 | Battleground entry | Asked for a recommendation → domain-access exemption (rev. 6: the duel runtime's own session rule, §13.4) | D16, §8.2 |
 | Q9 | Public duel W/L/D | Yes, with per-player visibility | D17 |
 | Q10 | Where the invitee accepts | Not while in a minigame or in combat | D18 |
 | Q11 | Other entry points | Arena NPC later; recorded as a future update | §15 |
@@ -858,6 +908,24 @@ Gameplay settings live on the Arena (§4.2) and are edited in the web app.
 | Abuse across the economy (duels plus `/pay` and trading) | the existing currency transfer lock |
 | Serious or confirmed cheating | freeze |
 
+### 13.4 Arena areas instead of child domains (developer, 2026-10-24, rev. 6)
+
+| # | Point | Decision | Where |
+|---|---|---|---|
+| R1 | Battlegrounds, spectator areas and the lobby as child domains | **Not domains.** Domains carry enter/leave messaging, discovery, navigation and entry/exit flags these areas must not have. They become the arena's own `ArenaArea` (kind `BATTLEGROUND`/`SPECTATOR`/`LOBBY`) with 1..n `ArenaAreaRegion`; replaces `ArenaBattleground`, `ArenaSpectatorArea` and `Arena.LobbyLocationId` | D12, §4.1, §4.2 |
+| R2 | Regions of an area | Drawn through world tasks like domain regions, renamed on save to `arena_<arenaId>_<kind>_<n>`, KNG-253 / KNG-103 rename and orphan retention reused; managed kinds `BATTLEGROUND`, `SPECTATOR_AREA` and a new `LOBBY`, parent = the arena region, `pvp allow` on battlegrounds, `entry allow` everywhere | §4.1 |
+| R3 | Who enforces access | The duel runtime, with its own WorldGuard session rule over the union of an area's regions: battleground entry for the allocated pair and `knk.region.bypass` staff only, exit refused in `BATTLE_COUNTDOWN`/`FIGHT` except the one-shot exit pass; spectator areas free on foot | D16, §8.2 |
+| R4 | Spectator warp conditions | **Kept**, as optional fields on the spectator area (minimum title bracket, gem price), checked by the API when the `ARENA` teleport's warmup succeeded (nothing charged on a refusal); a `/warp` listing through the destination engine is a future improvement (KNG-240) | §9.3, §15 |
+| R5 | Lobby rules | **Duelists-only during a warmup**: while a match is in `WARMUP` there, only duelists (and `knk.region.bypass` staff) may enter the lobby regions; open otherwise | §8.2 |
+| R6 | The arena itself | Keeps normal domain behaviour (enter/leave message, discovery, `/navigate`); only its areas are quiet | D12 |
+| — | Unchanged | Stake ratio by item value, staff-only review data, `SYS_CONFISCATED`, deaths and quits by phase, W/L/D visibility stay as decided and built (2026-10-21) | §10, report |
+
+**Interpretations made when writing rev. 6** (reversible; also on KNG-197):
+- `<n>` in the region name is the `ArenaAreaRegion` id, so names stay stable when another part is removed (KNG-253 Q-naming reasoning).
+- At most one `LOBBY` area per arena; the lobby counts only when enabled and with an arrival location.
+- The title condition is checked by the API at the charge (after the warmup), like a warp's; the price notice is shown before the warmup.
+- Lobby entry during a warmup is allowed to any duelist of a running match of the same arena (so a second match's lobby teleport isn't refused by the first match's warmup).
+
 ## 14. Alternative considered: stakes in warmup
 
 The developer chose invitation-phase stakes (D1). For the record:
@@ -871,6 +939,7 @@ The developer chose invitation-phase stakes (D1). For the record:
 
 ## 15. Future updates (file an issue when picked up)
 
+- **Spectator areas in `/warp`**: list a spectator area as a warp destination through the navigation destination engine ([KNG-240](https://linear.app/kngpandi/issue/KNG-240)), with its title and gem conditions; until then spectating goes through the arena menu (§9.3).
 - **Arena NPC**: an NPC (shared NPC platform, KNG-36) that opens the arena menu: challenge a player, spectate, rules. The v1 "Arena Owner" (`Traits/ArenaMaster.java`) is the precedent.
 - **Spectator betting**: needs its own gambling and abuse design.
 - **Team duels (2v2) and tournaments**: the vision notes a "duel/tournament for a title".
