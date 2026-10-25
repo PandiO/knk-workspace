@@ -1,7 +1,7 @@
 # Gate Structures — Admin Guide
 
 **Status:** Living document — update in place as the code changes
-**Last updated:** 2026-09-21 (based on a full read-only code scan of `knk-plugin` `main`@`e6e428b` and `knk-web-app` `main`@`4ff5dc6`)
+**Last updated:** 2026-10-23 (open-door scan in step 5: empty open-door anchor, seed v3, scan refusal, KNG-268/270/271; decorated doors and jam troubleshooting, KNG-272/KNG-273) — earlier: 2026-10-22 (`gates.damage-cracks`; rest based on a full read-only code scan of `knk-plugin` `main`@`e6e428b` and `knk-web-app` `main`@`4ff5dc6`)
 **Companion docs:** `docs/architecture/gate-structures-design.md` (mechanics), `docs/guides/developer/gate-structures-developer-guide.md` (implementation)
 
 Everything a server admin needs to configure, author, and operate gate structures — in-game commands, permissions, `config.yml` tuning, and how to author a new gate through the web app.
@@ -14,7 +14,7 @@ There's no dedicated "Gate" page — gates are managed through the generic admin
 2. **Create the GateStructure first** (name, description, district, street, optional guard spawn locations — guard/siege fields exist on the form but have no live gameplay effect yet, see the design doc §8). Save it.
 3. Once saved, open the structure again and use the **Gate Doors** list field's "Create New" button to add one or more doors inline — this is disabled with a tooltip until the structure itself has been saved. Each door opens as its own nested form (in a modal), pre-linked to the parent structure.
 4. In the door form, configure geometry, animation, health, display, and damage fields. **The static/simple form only offers `PLANE_GRID` and `FLOOD_FILL` for geometry mode** — `REGION` mode requires a backend-authored dynamic form (ask a developer if you need a region-shaped door and don't see the option).
-5. For `PLANE_GRID`/`FLOOD_FILL` doors, once the door itself is saved, use the in-form "Start scan"/"Re-scan" button to run a block scan — this runs headless on the server (no in-game claim code needed), scanning the door's **closed** shape. If the door needs a custom open-state shape (Mechanism 2 — see design doc §4), a second "opened block scan" field does the same for the open anchor point.
+5. For `PLANE_GRID`/`FLOOD_FILL` doors, once the door itself is saved, use the in-form "Start scan"/"Re-scan" button to run a block scan — this runs headless on the server (no in-game claim code needed), scanning the door's **closed** shape. If the door needs a custom open-state shape (Mechanism 2 — see design doc §4), a second "opened block scan" field does the same for the open anchor point. The open scan covers a box of the same width × height × depth, in the same directions, starting at the open anchor — so the open anchor is the corner of the opened door's box that matches the anchor's corner. Leave it **empty** when the door opens inside its own box: the scan then starts at the anchor (GateDoor form seed v3, KNG-270). If the open-door anchor is moved, cleared or its location edited, the old open scan is ignored (console warning) until you scan again. Before the open scan, build the open shape in the world; afterwards rebuild the closed one. A door that only rises and loses decoration (chains above a portcullis disappearing into the gatehouse) needs no open scan at all: set `MotionDistanceBlocks` and keep **Clip to geometry bounds** on, so blocks leaving the box are removed. For a REGION door, capture the opened region first with `/gatedoor capture <door> opened` — a scan without it is refused with that command ("Couldn't start", KNG-268). Scan lists show how many blocks were scanned.
 6. If an admin abandons a door mid-form, it's saved as an in-progress draft; reopening the parent structure later shows it listed inline with who started it and when, with a "Continue" button to resume rather than starting a duplicate door.
 7. For `REGION`-mode doors (dynamic form only) or any door needing a WorldEdit-captured footprint, use the in-game `/knk gate door capture`/`redefine` commands (below) instead of/in addition to the web form.
 
@@ -64,6 +64,12 @@ gates:
   fire-duration-seconds: 8                # how long an ignited block keeps burning
   fire-damage-per-tick: 2.0               # health damage per still-burning block, per tick
   fire-tick-interval-seconds: 1           # how often the fire system ticks
+  damage-cracks:
+    enabled: true                         # damaged gates show vanilla's 10 block-breaking crack stages over their HP (visual only)
+  melee-damage:
+    from-held-item: true                  # a click on a gate does what the held item does to a player (attack damage + Sharpness); false = flat 10
+    multiplier: 1.0                       # scales the item damage for balance
+  area-enchantment-radius-blocks: 5.0     # chaos / flash_chaos reach gates this far (entities: 3)
   passthrough-instant-open-radius-blocks: 1     # Instant Open: sideways search radius around the player
   passthrough-instant-open-timeout-seconds: 5   # Instant Open: safety-net auto-restore timeout
   rotationGapFill:
@@ -79,7 +85,7 @@ Changing `rotationGapFill.rasterization-enabled` and the `world-sync`/`state-syn
 
 ## Troubleshooting
 
-- **A gate won't open/close** — check `/knk gate info <door>` for `JAMMED` state first (a real player-placed block is blocking the animation path; clear it and the jam releases automatically). If not jammed, check `isActive`/`isDestroyed`/`isInvincible` — a structure-level override may be masking the door's own value; check with the structure's override state, not just the door.
+- **A gate won't open/close** — check `/knk gate info <door>` for `JAMMED` state first (a real player-placed block is blocking the animation path; clear it and the jam releases automatically). Since KNG-272 a door no longer jams on its own blocks of another material (decorated doors, chains above fences). A door with an open-state scan that jams at once may have a bad scan: check that `gate_opened_block_snapshots` starts at the open-door anchor (or the anchor when that is empty) and holds only the door's blocks and air. Since KNG-271 a sliding door's open scan is paired along the slide, so blocks no longer change columns. If not jammed, check `isActive`/`isDestroyed`/`isInvincible` — a structure-level override may be masking the door's own value; check with the structure's override state, not just the door.
 - **A gate is invincible when it shouldn't be** — check for an active `IsInvincibleOverride` on the parent structure (`/knk gate admin override <structure> invincible clear` to remove it) before assuming the door's own setting is wrong.
 - **New gates in a district aren't loading** — gates load lazily on a player's first WorldGuard-region entry into that district, plus a full load at server startup. Use `/knk gate admin reload district <id>` to force a refresh without waiting for a player to trigger it.
 - **A door's blocks look wrong after a scan** — the closed-state scan (`GateBlockScan`) and open-state scan (`GateOpenedBlockScan`) are independent; re-run the specific one that's wrong, not both by default.

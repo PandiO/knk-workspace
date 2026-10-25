@@ -1,7 +1,7 @@
 # Lootboxes — Design
 
 **Status:** Decided — merged to trunk 2026-09-27 (round-2 smoke test and follow-ups: IMPLEMENTATION_PLAN "Open TODOs", Linear KNG-31)
-**Last updated:** 2026-09-27
+**Last updated:** 2026-10-23 (KNG-266: WorldGuard listener in §3.4)
 **Linear:** [KNG-19](https://linear.app/kngpandi/issue/KNG-19/lootboxes-per-category-world-lootboxes-with-grade-weighted-rolls-v1)
 **Sources:** `knk-v1-archive` (single commit `4117e7e`): `src/Products/{Product,SpecialItemEvents,Enchantment}.java`,
 `src/Treasure/*`, `src/Main/Main.java`, `src/KillsDeaths/KillDeathStat.java`, `src/Minigames/{BanditAmbushes,OcelotSpawn}.java`,
@@ -421,6 +421,7 @@ Components (new unless noted):
 | knk-paper | `lootbox/LootboxPresenter` | Spawns and removes the entities |
 | knk-paper | `listeners/LootboxChunkListener` | `ChunkLoadEvent` renders cached spawns in that chunk; `EntitiesLoadEvent` removes any entity carrying `knk_lootbox` whose token isn't active (belt and braces) |
 | knk-paper | `listeners/LootboxInteractListener` | `PlayerInteractEntityEvent` on the `Interaction`. Checks `knk.lootbox.open`, not in staff/owner/vanish mode (unless configured), distance ≤ `claim-max-distance`, a free slot (else "Your inventory is full — make room to open this lootbox", **no API call**), and `ClaimGuard`. Then claims async and delivers on the main thread. |
+| knk-paper | `lootbox/LootboxWorldGuardListener` | KNG-266 (2026-10-23): WorldGuard refuses entity uses to non-members of a region, so a box inside a domain region couldn't be clicked by non-op players. A player's WorldGuard `UseEntityEvent` on a box entity (`LootboxPresenter.isBoxEntity`) is marked allowed at LOW, before WorldGuard's region check; every other entity stays protected, and the checks above still decide. Left-click and token items weren't affected. |
 | knk-paper | `item/BlueprintItemAssembler` (**extracted** from `ItemBlueprintsDebugCommand:233-320`) | Blueprint plus an enchant list → ItemStack. Skips enchantments that fail `canEnchantItem` or `conflictsWith` and reports them in `delivered.note`. **The one entry point for blueprint items** (2026-10-05): `assemble(…defaults, rolled, options, quantity)` is used by lootbox drops and the reel's decoys, `assembleDefaults` by kits and `/knk itemblueprints give` — see [item render pipeline](../../architecture/item-render-pipeline.md). |
 | knk-paper | `mapper/ItemInstanceTag` (new, like `ItemGradeTag`) | PDC `knightsandkings:knk_item_instance` (LONG = `ItemInstance.Id`): `stamp(meta, id)` and `read(item)`. The item's identity from now on; lore stays display only (vision §9.1). |
 | knk-paper | `lootbox/LootboxDelivery` | Builds the item with `BlueprintItemAssembler.assemble` (+ `ItemGradeTag` via the mapper; `decoy(...)` builds the reel's passing items the same way, 2026-10-05), stamps `ItemInstanceTag` when the claim has an `itemInstanceId` (stackables get no tag, so they stack normally), adds it to the inventory, and if leftovers remain drops them with `Item#setOwner(uuid)` + `setCanMobPickup(false)`, then ACKs `delivered`. |

@@ -1,10 +1,11 @@
 # Minecraft 26.3 upgrade — smoke test
 
-**Status:** In progress. Steps 1–4 passed (server logs of 2026-10-18, see **Findings**). For the dev server live test
-of [KNG-182](https://linear.app/kngpandi/issue/KNG-182) before it merges.
-**Last updated:** 2026-10-19
-**Branch:** knk-plugin `claude/mc-26.2-upgrade` (it targets 26.3 despite the name). Test a build that includes
-KNG-193 (`bddb907c` or later), so the drawbridge keyframes are covered on 26.3 too.
+**Status:** Done. The developer's runs on 2026-10-20 and 2026-10-21 passed every step; step 17 first failed because
+the server had started while the API was down (KNG-201) and passed after a restart. See **Findings**. KNG-182 merged
+into knk-plugin `main` as `857d4b1e` on 2026-10-21.
+**Last updated:** 2026-10-21
+**Branch:** knk-plugin `claude/mc-26.2-upgrade` (it targets 26.3 despite the name), merged. It also carries KNG-193
+(drawbridge keyframes) and KNG-188 (`/hub`).
 **Related:** [gate smoke test](gate-smoke-test.md) · [road navigation smoke test](road-navigation-smoke-test.md) ·
 [hub smoke test 2026-10-17](../reports/2026-10-17-hub-smoke-test.md) ·
 [siege checklist](../reports/2026-09-26-siege-smoke-test-checklist.md) ·
@@ -53,7 +54,7 @@ Pre-flight on the 1.21.10 folder before the copy, checked read-only on 2026-10-1
    unconverted.
 4. Log scan from start to "Done": KnK, FAWE and WorldGuard enable without `SEVERE` lines or exceptions. Search for
    `NoSuchMethodError`, `NoClassDefFoundError`, `Invalid`, `Unknown`, `Could not`. `version` shows 26.3, and
-   `plugins` lists FastAsyncWorldEdit, WorldGuard and KnightsAndKings in green.
+   `plugins` lists FastAsyncWorldEdit, WorldGuard, WorldEditSelectionVisualizer and KnightsAndKings in green.
 5. The managed-region repair at startup reports its counts with no failures, and `/knk health` shows the API as
    reachable.
 
@@ -158,6 +159,8 @@ Gate door snapshots are block-data strings saved under 1.21.x. Paper doesn't upg
   `Data/minecraft_material_catalog.json`). It lacks 279 materials 26.3 has (copper tools, shelves, cinnabar …), and
   its `minecraft:chain` no longer exists (renamed `iron_chain` in 1.21.9). An item template using `minecraft:chain`
   doesn't resolve; that was already the case on 1.21.10.
+- The gate 14/15 animation warnings "fell outside GeometryWidth/Height/Depth bounds" at startup. The 1.21.10 server
+  logs them too.
 
 ## Findings
 
@@ -167,4 +170,18 @@ Gate door snapshots are block-data strings saved under 1.21.x. Paper doesn't upg
 | 2026-10-18 | 2 | **Pass.** On 26.3 with KnK at 21:07: `Completed legacy CraftBukkit import for world 'knk_hub' (minecraft:knk_hub)`, then `[KnK Worlds] knk_hub: loaded (normal)`. | Plugin jar from `6ccafaa6` (`api-version: "26.3"`). |
 | 2026-10-18 | 3 | **Pass.** `world_KNK-DEV/dimensions/minecraft/` holds `overworld`, `the_nether`, `the_end`, `knk_hub`; the old root folders are gone, and `hub` is untouched. | — |
 | 2026-10-18 | 4 | **Pass (log part).** The 21:07 run has 0 SEVERE/ERROR lines. Its 12 warnings are known: gate data (gate 29 has no doors, door 12 has sheared reference points), the gate 14/15 animation "fell outside GeometryWidth/Height/Depth bounds" lines that the 1.21.10 server also logs, a disabled siege lobby, and the dev SSL notice. | `plugins` / `version` not checked yet. |
-| | 6 | **To do.** No second KnK start after the `knk_hub` import yet: this is the step that checks the KNG-182 loader fix. | — |
+| 2026-10-20 (developer, dev server) | 4 | Rest of the step (`version`, `plugins`) not reported. | — |
+| 2026-10-20 | 5 | **Pass.** | — |
+| 2026-10-20 | 6 | **Pass.** The KNG-182 world loader fix holds on the second start. | — |
+| 2026-10-20 | 7–16 | **Pass.** | — |
+| 2026-10-20 | 17 | **Fail, not a 26.3 problem.** `/menu` shows only the background panes and Exit, with nothing in the console. The server had been started while the API was down. Menu startup validation then skips every menu and never runs again, so every hub tile (each has a `menu-available` condition) stays hidden until a restart. | [KNG-201](https://linear.app/kngpandi/issue/KNG-201). Workaround: start the server with the API up. |
+| 2026-10-20 | 18 | **Not run**, blocked by 17. `/knk menu open items.catalog` reaches the catalogue without the hub. | Re-run after a restart with the API up. |
+| 2026-10-20 | 19–20 | **Pass.** | — |
+| 2026-10-20 | 21 | Accepted without a run. | — |
+| 2026-10-20 | 22–24 | **Pass.** Step 24 includes the drawbridge (door 14). | — |
+| 2026-10-20 | 25 | Accepted without a run. | — |
+| 2026-10-20 | 26–34 | **Pass.** | — |
+| 2026-10-20 | 35–38 | Accepted without a run. | — |
+| 2026-10-21 (developer, after a restart with the API up) | 4 | **Pass.** `version` and `plugins` checked. | — |
+| 2026-10-21 | 17 | **Pass.** The hub shows its tiles. | — |
+| 2026-10-21 | 18 | **Pass, with two catalogue paging bugs** (the code involved has nothing 26.3-specific): the pager arrows keep saying "Page 1/5", and a page change takes about 5 s with no loading feedback. | [KNG-230](https://linear.app/kngpandi/issue/KNG-230), [KNG-231](https://linear.app/kngpandi/issue/KNG-231) |

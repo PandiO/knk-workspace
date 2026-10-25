@@ -11,7 +11,7 @@ OP=compose
 STACK=/srv/docker/stacks/knk-alpha
 HOST_FILE=$STACK/compose.yaml
 PORTAINER_FILE=/var/lib/docker/volumes/portainer_data/_data/compose/42/docker-compose.yml
-RECORDED_SHA=b4c501eedee03404f6829390dc9eb1d3b3eeb0dd0886136081cce5276a4e298c
+RECORDED_SHA=1070b55c0aa25cf0d0c00f95f8f7f3ef7447f905b7133f07620a5b520b68aca5
 
 file_sha() {
   [ -f "$1" ] || return 1

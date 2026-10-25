@@ -37,6 +37,21 @@ acceptance wait for the approved seed/content set (unless the developer
 explicitly requests a disposable infrastructure rehearsal). Do not expose the
 API or start Minecraft before the relevant prerequisites pass.
 
+## Addendum (Claude Code, 2026-10-21): superseded points
+
+Read the [runbook](../../guides/closed-alpha-deployment-runbook.md) over this handoff where they differ:
+
+- **Minecraft version:** the alpha starts on Paper 26.3 / Java 25 (developer decision 2026-10-18, KNG-182), not
+  Paper 1.21.10 / Java 21 as in checklist item 10 and "Decisions to preserve" below.
+- **Minecraft container:** set it up now on the KNG-182 branch build, with an RCON console, autostart and plugin
+  updates through `plugins/update/` ([KNG-225](https://linear.app/kngpandi/issue/KNG-225); runbook Phase 4;
+  [session prompt](2026-10-21-minecraft-container-prompt.md)).
+- **Web hostname:** decided, `app.knightsandkings.net` (checklist item 5 is closed).
+- **DNS:** `knightsandkings.net` is an active Cloudflare zone; `play.knightsandkings.net` is created in Cloudflare
+  DNS as a DNS-only record, not in GoDaddy DNS.
+- **API build commit:** build from the then-current `master` (`2d71155` on 2026-10-21), not `07fda99e`.
+- **CI/CD:** hand deploys for the first alpha; CI-built images are [KNG-226](https://linear.app/kngpandi/issue/KNG-226).
+
 ## Addendum (Claude Code, 2026-10-11, updated after the KNG-64 merge)
 
 Read this before Phase 4.

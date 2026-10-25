@@ -489,8 +489,8 @@ CREATE INDEX IX_FieldValidationRule_DependsOnFieldId ON FieldValidationRules(Dep
 
 ### Frontend
 - **Debouncing:** 300ms delay after typing stops before validation executes
-- **Caching:** Store validation results to avoid redundant API calls
-- **Batching:** If multiple rules on same field, batch API calls
+- **Caching:** Store validation results to avoid redundant API calls — done server-side since KNG-269 (2026-10-23): the API keeps the last run per rule and subject and skips the validator while the rule and its inputs are unchanged; see `docs/architecture/web-api-architecture.md` "Result log"
+- **Batching:** If multiple rules on same field, batch API calls — the wizard's Next uses `POST /api/field-validation-rules/validate-batch` for the whole step (KNG-269)
 
 ### Backend
 - **Eager Loading:** Use EF Core `.Include()` to load dependencies in one query

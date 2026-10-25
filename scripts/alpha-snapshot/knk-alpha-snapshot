@@ -1,0 +1,110 @@
+#!/usr/bin/env bash
+# knk-alpha-snapshot: a point-in-time copy of the NAS knk-alpha stack, run by hand (closed alpha, runbook Phase 7 lite).
+# Run it before and after each alpha session and before every update:  sudo knk-alpha-snapshot [label]
+# It writes <snapshot dir>/<UTC time>[-label]/ with:
+#   db.sql.gz                 mysqldump --single-transaction of knightsandkings_alpha (no locks, no downtime)
+#   minecraft-data.tar[.zst]  the world folder, taken during save-off / save-all flush (players keep playing)
+#   config.tar                compose.yaml, config/, releases/, secrets/ (root-only, like the stack's own secrets/)
+#   meta.txt, SHA256SUMS
+# and keeps the newest KNK_SNAPSHOT_KEEP (default 10). Restore with knk-alpha-restore.
+set -euo pipefail
+umask 077
+export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+STACK="${KNK_STACK_DIR:-/srv/docker/stacks/knk-alpha}"
+ROOT="${KNK_SNAPSHOT_DIR:-/srv/backups/knk-alpha/snapshots}"
+KEEP="${KNK_SNAPSHOT_KEEP:-10}"
+PORTAINER_COPY="${KNK_PORTAINER_COPY:-/var/lib/docker/volumes/portainer_data/_data/compose/42/docker-compose.yml}"
+MYSQL=knk-alpha-mysql
+MC=knk-alpha-minecraft
+DB=knightsandkings_alpha
+
+[ "$(id -u)" = 0 ] || { echo "run with sudo" >&2; exit 1; }
+label="${1:-}"
+if [ -n "$label" ] && ! [[ "$label" =~ ^[a-z0-9][a-z0-9-]{0,39}$ ]]; then
+  echo "label: lower-case letters, digits and '-', at most 40" >&2; exit 64
+fi
+exec 9>/run/knk-alpha-snapshot.lock
+flock -n 9 || { echo "another knk-alpha snapshot or restore is running" >&2; exit 75; }
+
+log() { printf '%s  %s\n' "$(date -u +%H:%M:%S)" "$*"; }
+running() { [ "$(docker inspect -f '{{.State.Running}}' "$1" 2>/dev/null)" = true ]; }
+sql() { docker exec "$MYSQL" sh -c 'MYSQL_PWD="$(cat /run/secrets/mysql_root_password)" exec mysql --user=root --host=127.0.0.1 -N -B -e "$1"' sh "$1"; }
+
+ts=$(date -u +%Y%m%dT%H%M%SZ)
+name="$ts${label:+-$label}"
+out="$ROOT/$name"
+install -d -m 700 "$ROOT"
+mkdir -m 700 "$out"
+cleanup_failed() { log "FAILED, removing the incomplete $out"; rm -rf "$out"; }
+trap cleanup_failed ERR
+
+# 1. Database: a consistent read inside one transaction, nothing is locked.
+running "$MYSQL" || { echo "$MYSQL is not running" >&2; false; }
+log "database: dump $DB"
+docker exec "$MYSQL" sh -c 'MYSQL_PWD="$(cat /run/secrets/mysql_root_password)" exec mysqldump --user=root --host=127.0.0.1 --single-transaction --routines --triggers --events --hex-blob --set-gtid-purged=OFF --databases "$1"' sh "$DB" \
+  | gzip -6 > "$out/db.sql.gz"
+gzip -t "$out/db.sql.gz"
+tables=$(zcat "$out/db.sql.gz" | grep -c '^CREATE TABLE' || true)
+migrations=$(sql "SELECT COUNT(*) FROM $DB.__EFMigrationsHistory")
+latest=$(sql "SELECT MAX(MigrationId) FROM $DB.__EFMigrationsHistory")
+log "database: $tables tables, $migrations migrations (latest $latest)"
+
+# 2. World: Paper stops writing to disk (save-off), flushes, we copy, Paper writes again (save-on) - always, via the trap.
+if command -v zstd >/dev/null; then world_file=minecraft-data.tar.zst; compress=(zstd -q -T0 -3); else world_file=minecraft-data.tar; compress=(cat); fi
+world="not taken"
+if [ -d "$STACK/minecraft-data" ]; then
+  if running "$MC"; then
+    trap 'docker exec "$MC" rcon-cli save-on >/dev/null 2>&1 || true; cleanup_failed' ERR
+    log "world: save-off, save-all flush"
+    docker exec "$MC" rcon-cli save-off >/dev/null
+    docker exec "$MC" rcon-cli save-all flush >/dev/null
+    sleep 3
+  else
+    log "world: $MC is not running, copying the folder as it is"
+  fi
+  log "world: archive minecraft-data"
+  set +e
+  tar --numeric-owner --warning=no-file-changed -C "$STACK" -cf - minecraft-data | "${compress[@]}" > "$out/$world_file"
+  rc=("${PIPESTATUS[@]}")
+  set -e
+  if running "$MC"; then docker exec "$MC" rcon-cli save-on >/dev/null; log "world: save-on"; fi
+  trap cleanup_failed ERR
+  # tar exit 1 = a file changed while it was read (logs, the live player data saves); 2 or more = a real error.
+  if [ "${rc[0]}" -gt 1 ] || [ "${rc[1]}" -ne 0 ]; then echo "world archive failed (tar ${rc[0]}, compress ${rc[1]})" >&2; false; fi
+  world="$world_file, $(du -h "$out/$world_file" | cut -f1)"
+fi
+
+# 3. Configuration and secrets of the stack (root-only, like the stack itself).
+log "config: compose.yaml, config/, releases/, secrets/"
+parts=()
+for p in compose.yaml config releases secrets; do [ -e "$STACK/$p" ] && parts+=("$p"); done
+tar --numeric-owner -C "$STACK" -cf "$out/config.tar" "${parts[@]}"
+[ -f "$PORTAINER_COPY" ] && cp -p "$PORTAINER_COPY" "$out/portainer-stack42-docker-compose.yml"
+
+# 4. What this snapshot belongs to.
+{
+  echo "snapshot  $name"
+  echo "created   $(date -u +%FT%TZ)"
+  echo "label     ${label:-none}"
+  echo "database  $DB: $tables tables, $migrations migrations, latest $latest"
+  echo "world     $world"
+  echo "compose   $(sha256sum "$STACK/compose.yaml" | cut -c1-64)"
+  echo "containers:"
+  docker ps -a --filter name=knk-alpha --format '  {{.Names}}  {{.Image}}  {{.Status}}' | sort
+  echo "image ids:"
+  for c in $(docker ps -a --filter name=knk-alpha --format '{{.Names}}' | sort); do
+    echo "  $c  $(docker inspect -f '{{.Image}}' "$c")"
+  done
+} > "$out/meta.txt"
+(cd "$out" && sha256sum -- * > SHA256SUMS)
+trap - ERR
+
+# 5. Keep the newest $KEEP.
+mapfile -t all < <(find "$ROOT" -mindepth 1 -maxdepth 1 -type d -regextype posix-extended -regex '.*/[0-9]{8}T[0-9]{6}Z(-[a-z0-9-]+)?' -printf '%f\n' | sort)
+if [ "${#all[@]}" -gt "$KEEP" ]; then
+  for old in "${all[@]:0:${#all[@]}-KEEP}"; do log "retention: removing $old"; rm -rf -- "${ROOT:?}/$old"; done
+fi
+
+log "done: $out ($(du -sh "$out" | cut -f1))"
+cat "$out/meta.txt" | sed -n '1,6p'

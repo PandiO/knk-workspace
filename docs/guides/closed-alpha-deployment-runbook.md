@@ -1,7 +1,7 @@
 # Closed-alpha deployment runbook
 
-**Status:** In progress — phases 0–3 complete; phase 3b (API upgrade to the KNG-64 build) and phase 4 (Minecraft preparation) are next
-**Last updated:** 2026-10-18
+**Status:** In progress — phases 0–3 complete; phase 3b (API upgrade to the KNG-64 build, [KNG-227](https://linear.app/kngpandi/issue/KNG-227)) complete 2026-10-22 ([report](../reports/2026-10-22-alpha-api-kng64-upgrade.md)); API updated to `4aeb794` ([KNG-275](https://linear.app/kngpandi/issue/KNG-275)) and phase 4 Stage 2 (KnK plugin `d56e41da`, [KNG-225](https://linear.app/kngpandi/issue/KNG-225)) done 2026-10-24 ([report](../reports/2026-10-24-alpha-api-4aeb794-and-plugin-stage-2.md)); `/hub` waits for a hub selection in the approved seed. Phase 5 (playit.gg, `play.knightsandkings.net`) done 2026-10-24 ([report](../reports/2026-10-24-alpha-phase-5-playit.md)). Phase 6 (web app, `app.knightsandkings.net`, own tunnel, Access; API `a38c8ee9`) done 2026-10-24 ([report](../reports/2026-10-24-alpha-phase-6-web-ingress.md)). Security probe (go-live § 8) passed 2026-10-24 privately and through Cloudflare ([report](../reports/2026-10-24-alpha-security-probe.md)). HSTS and the apex redirect done the same day. Phase 7 deferred to beta (developer, 2026-10-24); the alpha uses manual snapshots (`scripts/alpha-snapshot/`). Phase 9 done 2026-10-24: mail relay, Access sync and bypass, sign-up by invitation, admission gate with the whitelist off ([report](../reports/2026-10-24-alpha-phase-9-invite-only.md)). Next: the approved seed, then the first alpha run. Web hostname decided 2026-10-21: `app.knightsandkings.net`
+**Last updated:** 2026-10-24 (Phase 9 E0 mail relay live; Phase 6 web and ingress; Phase 5 playit; Phase 4 Stage 2 and the API update to `4aeb794`; Phase 9: KNG-205 invitations merged, the feature-branch notes replaced); 2026-10-22; 2026-10-21 (Phase 9: invite-only switch-over, `mailrelay` and `cfproxy` containers — KNG-205/KNG-218); 2026-10-18
 **Progress report:** [2026-10-11 closed-alpha infrastructure progress](../reports/2026-10-11-closed-alpha-infrastructure-progress.md)
 **Handoff:** [2026-10-11 closed-alpha infrastructure](../ai-agents/handoffs/2026-10-11-closed-alpha-infrastructure.md)
 **Security layer:** [closed alpha go-live (KNG-64)](alpha-go-live.md) — required builds, API/plugin configuration,
@@ -23,8 +23,8 @@ continuing.
 - **Re-check and open findings:** the 2026-10-18 state and alpha findings A1–A6 (runtime UID and
   secret ownership, stack-directory ownership, `root@%`, leftover pending Compose file, API log
   volume, Portainer vs host Compose authority) are in the
-  [2026-10-18 report](../reports/2026-10-18-nas-ops-access-and-alpha-check.md). Resolve them
-  with Phase 3b.
+  [2026-10-18 report](../reports/2026-10-18-nas-ops-access-and-alpha-check.md). Phase 3b resolved A1, A2, A4, A5
+  and A6 on 2026-10-22; A3 (`root@%`) is open as [KNG-242](https://linear.app/kngpandi/issue/KNG-242).
 
 ## Phase 0 — protect existing infrastructure (complete)
 
@@ -180,24 +180,35 @@ No fresh database dump was required because every canonical seeder reported
 zero creates, updates, and normalizations. Expected derived background jobs
 did run. The original clean baseline dump remains the rollback source.
 
-## Phase 3b — upgrade the API to the KNG-64 build (next)
+## Phase 3b — upgrade the API to the KNG-64 build (complete)
 
-The accepted `17ee730a` image predates the KNG-64 merge (knk-web-api `30c5dc5`): no default-deny
-API, refresh sessions, code-based signup, rate limits or permission-escalation guard. It is private, so
-nothing is exposed, but it must not stay the alpha API. Before the plugin connects in Phase 4:
+The accepted `17ee730a` image predated the KNG-64 merge (knk-web-api `30c5dc5`): no default-deny
+API, refresh sessions, code-based signup, rate limits or permission-escalation guard. Steps, also the procedure for
+later API updates with migrations:
 
-1. Dump `knightsandkings_alpha` (new dated file; keep the clean baseline).
-2. Run the holder-id clash check. The dev dump predates the dev DB's `admin`/Staff (id 29) repair; repair
-   with `scripts/maintenance/repair-holder-id-clash.sql` if it returns a row.
-3. Build `knk-web-api:alpha-<sha>` from `master` ≥ `30c5dc5` with the same Dockerfile, plus a migrator
-   image (`dotnet ef database update`) from the same source.
-4. Stop the API, run the migrator once with a schema-rights account. It applies
-   `AddRefreshTokensAndTokenVersion` and `AddDomainWorldName`, whose timestamps are older than the DB's
-   newest migration, so use `database update`, not `migrations script <from>`. Expect 78 migrations.
-5. Add the KNG-64 configuration, switch the image, start, and repeat the Phase 3.3 acceptance.
+1. Dump `knightsandkings_alpha` (new dated file, `--set-gtid-purged=OFF`; keep the clean baseline).
+2. Run the holder-id clash check (`knk-ops db-summary` reports `holder_id_clashes`). The dev dump predates the dev DB's
+   `admin`/Staff (id 29) repair; repair with `scripts/maintenance/repair-holder-id-clash.sql` if it returns a row.
+3. Build `knk-web-api:alpha-<sha>` and `knk-web-api-migrator:alpha-<sha>` from one `git archive` of trunk with the
+   build files in [`scripts/alpha-api/`](../../scripts/alpha-api/) (runtime UID 2002, migrator target). The NAS has
+   no buildx: use the legacy builder without `--progress`.
+4. Stop the API, dump again, and run the migrator once with a schema-rights account (root until KNG-242). It applies
+   migrations whose timestamps can be older than the DB's newest one, so use `database update`, not
+   `migrations script <from>`. Compare the migration count with the built source (`Migrations/` without designers).
+5. Add the KNG-64 configuration, switch the image in the host `compose.yaml`, copy it to Portainer stack 42, recreate
+   only `api`, and repeat the Phase 3.3 acceptance.
 6. Take a new clean baseline dump.
-7. Resolve findings A1–A6 of the [2026-10-18 report](../reports/2026-10-18-nas-ops-access-and-alpha-check.md)
-   in the same build/configuration change, and re-run the `knk-ops` checks afterwards.
+7. Re-run the `knk-ops` checks. After a Compose change, update `RECORDED_SHA` in
+   `scripts/nas-ops/stage-a/ops/compose` and its NAS copy.
+
+**Result 2026-10-22** ([report](../reports/2026-10-22-alpha-api-kng64-upgrade.md), [KNG-227](https://linear.app/kngpandi/issue/KNG-227)):
+- source `be9f4e1a`, archive SHA-256 `37916e02…c66a`;
+- image `knk-web-api:alpha-be9f4e1a` (`0b47f0095495…`), healthy as `2002:2002`;
+- 6 migrations applied, **82** in total (not 78: `master` gained four more after `07fda99e`), 137 tables;
+- Compose `2af121b6…`, Portainer stack 42 identical;
+- new clean baseline `alpha-db-clean/20261022T182711Z-kng64/` (`45ddfcae…`).
+
+All `knk-ops` checks pass. A1, A2, A4, A5 and A6 are resolved; A3 is [KNG-242](https://linear.app/kngpandi/issue/KNG-242).
 
 Exact commands and configuration: [alpha go-live § 3–4](alpha-go-live.md#3-upgrade-the-alpha-api-to-kng-64-runbook-phase-3b).
 
@@ -205,7 +216,7 @@ Exact commands and configuration: [alpha go-live § 3–4](alpha-go-live.md#3-up
 
 > **Decision 2026-10-18 (developer, [KNG-182](https://linear.app/kngpandi/issue/KNG-182)):** the alpha starts on
 > **Paper 26.3 / Java 25** (first 26.2; moved to 26.3 stable the same day), not 1.21.10; the former Phase 8 upgrade is folded into this phase. Consequences:
-> - the plugin jar comes from knk-plugin `main` after KNG-182 (`claude/mc-26.2-upgrade`) merges; earlier `main`
+> - the plugin jar comes from knk-plugin `main` at or after `857d4b1e` (KNG-182, merged 2026-10-21); earlier `main`
 >   builds target 1.21.10 only, and later ones run only on 26.3;
 > - the staging sources stay 1.21.10 and are the rollback. Paper converts the **live copy** on its first start
 >   (after a 30 s "World storage migration is required" warning), and converted worlds cannot be downgraded;
@@ -214,6 +225,81 @@ Exact commands and configuration: [alpha go-live § 3–4](alpha-go-live.md#3-up
 >   when the plugin first loads it, so check worlds in the new layout, not as separate folders;
 > - every plugin jar needs a 26.3 build (the dev server moves to FastAsyncWorldEdit 2.16.1 and WorldGuard 7.0.20);
 > - players need a Java Edition 26.3 client.
+
+> **Decision 2026-10-21 (developer, [KNG-225](https://linear.app/kngpandi/issue/KNG-225)):** set the container up
+> **now**, with a jar built from the KNG-182 branch (`claude/mc-26.2-upgrade`), and deliver later plugin builds
+> (from `main` once KNG-182 merges) without rebuilding the container. The container needs a remote console and
+> must start on its own after a NAS reboot. Session prompt:
+> [2026-10-21 Minecraft container](../ai-agents/handoffs/2026-10-21-minecraft-container-prompt.md).
+> Phase 3b ran on 2026-10-22, so the API is the KNG-64 build `be9f4e1a`. The database is still the placeholder, so
+> a run against it is a **disposable rehearsal**, and the world copy is replaced when the approved seed is exported (worlds and
+> world-coupled rows must come from the same moment, production guide § 7.4).
+
+> **Status 2026-10-21 (paused after Stage 1):** `knk-alpha-minecraft` runs Paper 26.3 build 205 on the image pinned
+> above, as UID 2001, with FAWE 2.16.1 and WorldGuard 7.0.20 and no KnK jar yet. Its worlds were copied from the
+> converted dev server `DEV_SERVER_26.3`, not from staging, and the staging tree stays the rollback. Other choices:
+> `mem_limit` 6 GiB, no ports, and the RCON console works. A `systemctl restart docker` saved the worlds and brought the
+> stack back on its own. The host `compose.yaml` is authoritative and is copied to Portainer stack 42 (A6). Stage 2 (KnK
+> plugin, update swap, private acceptance) waited for Phase 3b, which completed on 2026-10-22. Details:
+> [2026-10-21 report](../reports/2026-10-21-minecraft-container.md).
+
+> **Status 2026-10-24 (Stage 2 done):** the KnK jar from knk-plugin `main` `d56e41da` (`7bc85e7d…`) runs against API
+> `alpha-4aeb7947` (KNG-275, 93 migrations). Results:
+> - startup clean: `knk_hub` loaded, `RegionHttpServer` on `0.0.0.0:8081` with the API key (the API gets 401 without
+>   it), `admission.mode=whitelist`, API UP, TPS 20;
+> - one `plugins/update/` swap confirmed by jar hash (KNG-264: the version is always `0.1.0`);
+> - in game: join, domain messages, both builds and a restart passed.
+>
+> `/hub` stays unavailable until the approved seed selects a hub: the placeholder DB has no `HubSettingsJson`.
+> Release folders: `releases/plugin/<commit>/` in the stack directory. Details:
+> [2026-10-24 report](../reports/2026-10-24-alpha-api-4aeb794-and-plugin-stage-2.md).
+
+### 4.1 Service definition
+
+A `minecraft` service in the `knk-alpha` Compose file (`container_name: knk-alpha-minecraft`):
+
+- image `itzg/minecraft-server` `java25` variant, **pinned by digest** (record it in a progress report);
+- `TYPE=PAPER`, `VERSION=26.3`, `PAPER_BUILD=<pinned build>`, `EULA=TRUE`, so a restart never pulls a newer Paper;
+- `MEMORY=4G`, `deploy.resources.limits.memory` about 5 GiB;
+- `ONLINE_MODE=TRUE`, `ENABLE_WHITELIST=TRUE`, `ENFORCE_WHITELIST=TRUE`;
+- `restart: unless-stopped` (autostart: Docker itself must be enabled at boot, `systemctl is-enabled docker`);
+- `stop_grace_period: 2m`, so Paper saves both worlds when the NAS shuts down;
+- the image's built-in health check (`mc-health`);
+- volume: one host directory for `/data` (worlds, `plugins/`, configs) under the stack path, created as a **copy**
+  of the verified staging sources;
+- secrets: the RCON password as a file (`RCON_PASSWORD_FILE`), mode 600, never in Compose or Portainer;
+- networks: `backend` (API at `http://api:5000/api`, region callbacks on `minecraft:8081`) plus an egress network
+  for Mojang session servers and the Paper download;
+- **no published ports**: not 25565 (playit reaches it over Docker DNS in Phase 5), not 25575, not 8081;
+- no hard `depends_on` on the API: the plugin handles an API outage (KNG-115) and must not keep the server down.
+
+### 4.2 Console
+
+- RCON is on 25575 inside the container only. Console sessions:
+  - Portainer → container `knk-alpha-minecraft` → *Console* → command `rcon-cli`;
+  - or over SSH: `sudo docker exec -it knk-alpha-minecraft rcon-cli`.
+- `stdin_open: true` and `tty: true` also allow `sudo docker attach knk-alpha-minecraft` (detach with Ctrl-P Ctrl-Q;
+  Ctrl-C stops the server).
+- From outside the LAN there is no console route yet. Exposing Portainer or a web RCON through the tunnel needs its
+  own Access application and a decision; don't add one as a side effect.
+
+### 4.3 Plugins and plugin updates
+
+- Install the 26.3 builds of FastAsyncWorldEdit 2.16.1 and WorldGuard 7.0.20, and the KnK jar under the **fixed
+  filename** `plugins/KnightsAndKings.jar` (the shadow jar's own name carries the version; a fixed name is what
+  the update folder matches).
+- Keep a release folder per build next to the stack (`releases/plugin/<commit>/` with the jar, its SHA-256 and the
+  source commit), root-owned.
+- **Update:** copy the approved jar to `plugins/update/KnightsAndKings.jar`, compare the live `config.yml` with the
+  new jar's defaults, then restart at a quiet moment: `rcon-cli save-all flush`, then restart the container. Paper
+  replaces the jar from `plugins/update/` on start ([Paper docs: updating](https://docs.papermc.io/paper/updating/)).
+  Verify that swap once on the dev server before relying on it. Never `/reload`.
+- **Rollback:** the previous release folder's jar goes through the same path.
+- Later: a Stage B operation does the staging and restart from the approval file ([NAS ops access](nas-ops-access.md)
+  § 7), and CI publishes the jar ([KNG-226](https://linear.app/kngpandi/issue/KNG-226)).
+
+### 4.4 Runtime, world loader and plugin configuration
+
 
 Do not start from the staging directories. Create a separate live data path,
 then copy the verified sources into it while preserving staging as rollback.
@@ -230,8 +316,8 @@ Initial runtime:
 - no published RCON or web-RCON ports;
 - Minecraft port not router-forwarded if playit is used.
 
-Before booting both worlds, KNG-114 must implement/verify the KnK-owned
-existing-world loader. Required properties:
+The KnK-owned existing-world loader (KNG-114, merged 2026-10-17) must show
+these properties live during acceptance:
 
 - load `knk_hub` on the main thread during startup;
 - fail closed if the hub cannot load;
@@ -255,11 +341,12 @@ bypasses for the alpha.
 KNG-64 plugin settings (a copied dev `config.yml` keeps its old values):
 `api.auth.type: apikey`, `api.allow-untrusted-ssl: false`,
 `region-http.bind-address: "0.0.0.0"` (inside the container; never publish
-8081), `web.public-url: "https://<web-host>"`. The API reaches the plugin
+8081), `web.public-url: "https://app.knightsandkings.net"`. The API reaches the plugin
 with `MinecraftPlugin__BaseUrl=http://minecraft:8081` (the service name).
 The Minecraft container also needs an internet-capable network for Mojang
 session servers, since `backend` is internal. Use `online-mode=true` and the
-whitelist. See [alpha go-live § 5](alpha-go-live.md#5-minecraft-and-plugin-runbook-phases-45).
+whitelist. See [alpha go-live § 5](alpha-go-live.md#5-minecraft-and-plugin-runbook-phases-45). After the invite-only
+switch-over (Phase 9) the plugin's admission gate replaces the whitelist.
 
 Private acceptance before ingress:
 
@@ -270,31 +357,67 @@ Private acceptance before ingress:
 - an unknown player creates/links an alpha account rather than touching dev;
 - restart preserves both worlds and account state;
 - memory/CPU remain acceptable alongside Frigate.
+- `rcon-cli` works from Portainer's console and over SSH; nothing listens on a published port;
+- after a NAS reboot (or `sudo systemctl restart docker`) the server comes back healthy on its own;
+- one jar swap through `plugins/update/` has been done and the startup log shows the new build.
 
-## Phase 5 — playit.gg and Minecraft DNS
+## Phase 5 — playit.gg and Minecraft DNS (complete)
+
+> **Done 2026-10-24** ([report](../reports/2026-10-24-alpha-phase-5-playit.md)):
+> - service `playit` (agent 1.0.12 pinned, `--secret-path` from `secrets/playit_secret`, UID 2003, read-only,
+>   network `egress` only), block in [`scripts/alpha-playit/`](../../scripts/alpha-playit/);
+> - the tunnel goes to `minecraft:25565`;
+> - **playit Premium, region Germany**: the free global tunnel ran through California (~155 ms from NL), now ~27 ms;
+> - `play.knightsandkings.net` is a playit **external domain**: Cloudflare NS `play` → `ns1/ns2.playit-dns.com`.
+>   A CNAME doesn't work, because playit routes Minecraft Java by the handshake hostname;
+> - **Proxy Protocol on** (playit v2, Paper `proxies.proxy-protocol: true`, `USES_PROXY_PROTOCOL=true` for the
+>   image's health check); every connection must come through playit;
+> - external scan from a phone hotspot: all checked ports closed/filtered, and the NAS has no IPv6.
+
 
 - Run the playit agent as its own Compose service, not an ad-hoc
   `docker run` command.
 - Store its secret key in a protected secret file.
 - Route only Minecraft TCP to the Minecraft service/port.
 - Do not tunnel MySQL, RCON, Portainer, Docker, or the API through playit.
-- In GoDaddy DNS, point `play.knightsandkings.net` to the hostname assigned by
-  playit according to playit's Minecraft custom-domain instructions.
+- In **Cloudflare DNS** (zone `knightsandkings.net`; GoDaddy is only the
+  registrar), point `play.knightsandkings.net` to the address assigned by
+  playit according to playit's Minecraft custom-domain instructions. The
+  record must be **DNS only** (grey cloud): Cloudflare's free proxy does not
+  carry Minecraft TCP. *As built:* not a CNAME but an NS delegation of `play` to
+  playit's DNS plus playit's *external domain* (see the status note above).
 - If playit assigns a non-default public port, use the required SRV record or
   request an allocation compatible with standard Java clients.
 
 Acceptance: a test player outside the LAN connects using
 `play.knightsandkings.net`; no router port-forward is required; scans from the
-internet cannot reach NAS MySQL/RCON/Portainer.
+internet cannot reach NAS MySQL/RCON/Portainer. (2026-10-24: all three pass; the scan
+is in the [report](../reports/2026-10-24-alpha-phase-5-playit.md) § 8.)
 
-## Phase 6 — web app and HTTP ingress
+## Phase 6 — web app and HTTP ingress (complete)
+
+> **Done 2026-10-24** ([report](../reports/2026-10-24-alpha-phase-6-web-ingress.md)). As built:
+> - a `web` service: nginx-unprivileged with the static build plus the `/api` proxy, files in
+>   [`scripts/alpha-web/`](../../scripts/alpha-web/);
+> - the alpha's **own tunnel** `knk-alpha` with its own `cloudflared` (token file), separate from the personal
+>   tunnel;
+> - internal networks `webapi` (API ↔ nginx, `172.31.250.0/28`, the `ForwardedHeaders` known network) and `edge`
+>   (nginx ↔ cloudflared), with `cfegress` for cloudflared's internet;
+> - route `app.knightsandkings.net` → `http://web:8080` **without** a Host header override;
+> - Access application `KnK alpha` (staff emails, OTP), the WAF rule on `/api/Auth/`, Always Use HTTPS;
+> - API updated to `a38c8ee9` (95 migrations) in the same change.
+>
+> HSTS (6 months, no subdomains, no preload) on; the apex and `www` redirect (302) to `app.` after the GoDaddy
+> leftovers were removed from DNS; security probe passed (all 2026-10-24).
+
 
 - Package the exact web-app revision after the API is stable.
 - Prefer serving the web app and proxying `/api` to `api:5000` under the same
   public origin. This avoids broad CORS configuration.
-- Route the web application through Cloudflare Tunnel/nginx at the selected
-  public hostname (the earlier working name was `knk.oldenzeelit.nl`; confirm
-  the final production name before publishing).
+- Route the web application through Cloudflare Tunnel/nginx at
+  `app.knightsandkings.net` (developer decision 2026-10-21; `knk.oldenzeelit.nl`
+  is not used). Zone settings and the WAF rule are per zone, so set them on
+  `knightsandkings.net` ([alpha go-live § 6](alpha-go-live.md#6-web-app-and-ingress-runbook-phase-6)).
 - Apply Cloudflare Access to the **whole** web host during the closed alpha
   (KNG-64 plan decision D10: invited emails only), but do not use it as a
   substitute for application authorization. The plugin calls the API over
@@ -307,7 +430,31 @@ Acceptance: external alpha users can load the web app and authenticate; the
 browser calls only the intended API origin; admin routes enforce KnK roles;
 no internal management service is exposed.
 
-## Phase 7 — backup automation and rehearsal
+## Phase 7 — backup automation and rehearsal (deferred to beta; alpha: manual snapshots)
+
+> **Decision 2026-10-24 (developer):** the 2–3 closed alpha runs (friends and close relations) test functionality and
+> performance, not data safety. Alpha data is disposable, and testers are told progress may be reset (go-live § 10).
+> The full plan below (schedule, off-site, retention, restore rehearsal, RPO/RTO) moves to the **beta**, which is
+> also when the move to a VPS is planned ([KNG-241](https://linear.app/kngpandi/issue/KNG-241)). Building it on the
+> NAS now would partly be thrown away.
+>
+> **For the alpha:** `sudo knk-alpha-snapshot [label]` and `sudo knk-alpha-restore <snapshot> [db|world|all]`
+> ([`scripts/alpha-snapshot/`](../../scripts/alpha-snapshot/)): a database dump, the world (during
+> `save-off`, no downtime), config and secrets, kept on the NAS (newest 10), restorable in minutes. **Rule:** a
+> snapshot before and after each alpha session and before every update. The realistic alpha risk is a bad update or
+> an operator mistake mid-session, not a disk failure.
+>
+> **Plan for the beta** (agreed design, 2026-10-24):
+> - restic (encrypted, deduplicated) every 6 hours: database dump, world during `save-off`, config and secrets;
+>   no downtime;
+> - a local repository plus a daily `restic copy` off-site. An EU provider, e.g. Hetzner Storage Box, because
+>   player emails are personal data;
+> - a monthly offline copy;
+> - retention: last 8 snapshots plus 14 daily, 8 weekly and 6 monthly;
+> - status file plus a `knk-ops backup-status` check;
+> - a restore rehearsal into throwaway MySQL and Paper containers, with the RTO recorded;
+> - the restic password also in the developer's password manager.
+
 
 - Nightly logical dump of `knightsandkings_alpha`, with retention and
   checksum.
@@ -327,3 +474,38 @@ Phase 4). The original rule still applies to any later Minecraft upgrade:
 clone the stack, never upgrade the only alpha copy in place, compile and test
 all plugins, inspect Paper's conversion output, and validate both worlds
 before scheduling a cutover.
+
+## Phase 9 — invite-only switch-over (KNG-218; **done 2026-10-24**)
+
+Merged to every trunk on 2026-10-24 (all four repos) and smoke-tested on dev. Design: [invitations DESIGN](../specs/invitations/DESIGN.md); how it works:
+[account identity and admission](../architecture/account-identity-and-admission.md). **Preconditions:** the feature is
+merged per the [plan § 9](../specs/invitations/IMPLEMENTATION_PLAN.md#9-merge-and-deploy-order) (knk-plugin only
+after KNG-182), and the [invitations smoke test](invitations-smoke-test.md) § 0–8 passed on dev.
+
+**Two helper containers join the `knk-alpha` stack** (neither publishes a port):
+
+| Service | Purpose | Networks | Guide |
+|---|---|---|---|
+| `mailrelay` | SMTP relay holding the Gmail (later provider) credentials, so the API itself needs no internet (KNG-211, E0). **Live 2026-10-24** ([report](../reports/2026-10-24-alpha-phase-9-invite-only.md), [`scripts/alpha-mail/`](../../scripts/alpha-mail/README.md)) | `mail` (internal, `172.31.250.16/28`, with the API), `mail-egress` | [email guide § 3](email.md) |
+| `cfproxy` | tinyproxy that only allows `api.cloudflare.com:443`, for the Access list sync (KNG-216) | `mail`, `mail-egress` | [alpha go-live § 6.1](alpha-go-live.md) |
+
+**API keys added** (in `/etc/knk/api.env` through the existing secret wrapper; full block in
+[alpha go-live § 4.1](alpha-go-live.md)): `Security__Registration__Mode`, `Invitations__*` (defaults are fine),
+`Admission__*` (defaults), `CloudflareAccess__SyncEnabled|AccountId|ListId|ProxyUrl`, `CloudflareAccess__ApiToken`
+(secret file only), `Email__Transport=Smtp` + `Email__SmtpHost=mailrelay` + `App__PublicBaseUrl`. **Plugin:** the
+`admission:` section in `config.yml` ([alpha go-live § 5.1](alpha-go-live.md)). **Minecraft:** `white-list=false` at
+the end.
+
+**Order** (each deploy: back up → migrator → API → web app → plugin):
+1. Deploy everything behaviour-neutral (`Registration:Mode=LinkCode`, `admission.mode: whitelist`, sync off). The
+   migrator applies five migrations, among them `AddInvitations` (admits every active account) and
+   `SeedAlphaTesterGroup`.
+2. Start `cfproxy`; set up the Cloudflare list, policy, token and bypass application; turn the sync on.
+3. `Security__Registration__Mode=Invite`.
+4. `admission.mode: invite`, restart the server, then `white-list=false`.
+5. Run the smoke test's "alpha" sections.
+
+The step details and the kill switches are in [alpha go-live § 11.1](alpha-go-live.md).
+
+Acceptance: a new tester gets in with only an invite mail (sign-up → Cloudflare PIN → join → code → link → rejoin); the
+current testers join without a code; the whitelist is off; `/admin/invitations` shows the Access sync green.

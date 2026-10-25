@@ -4,8 +4,325 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
-- **`/hub` takes any player to the hub** ([KNG-188](https://linear.app/kngpandi/issue/KNG-188); merged into the
-  knk-plugin KNG-182 branch `claude/mc-26.2-upgrade` at `88497649`, reaches `main` with it). `/hub` goes to the hub spawn selected on the Game
+_Nothing at the moment._
+
+## 2026-10-25
+
+- **Menu startup validation keeps retrying while the API is down** — knk-plugin `main` `ad5786c`, merged `--no-ff` from
+  `claude/menu-validation-retry` on 2026-10-25 (not in Linear, free issue limit). The 2026-10-24 retry only re-listed the templates; on the dev server the list came back
+  while every per-key fetch still failed (the connectivity monitor still reported the API down), and the pass ended with
+  nothing validated. Now a template that can't be fetched keeps the pass retrying (10 s, 20 s, 40 s, then every minute) until
+  every listed menu is validated or blocked, and the API-recovery event (KNG-115) starts a pass at once. Not live-tested yet (the merge of the siege follow-ups before it was).
+
+## 2026-10-24
+
+- **Siege playtest follow-ups (2026-10-24)** — merged `--no-ff` from `claude/dreamy-fermi-4h2ldl`: knk-plugin `main` `75d619b`,
+  knk-web-api `master` `1aba1ee` (migration `AddSiegeSkipSeconds`), knk-web-app `main` `4a9537e`, knk-workspace `main`; not in
+  Linear (free issue limit). Live run 1 by the developer the same day: every section works except the menu validation retry
+  with the API down at plugin start (continued on knk-plugin branch `claude/menu-validation-retry`). Five changes from the test round:
+  (1) a melee hit on a gate door with a **Fire Aspect** weapon has a chance per level (`gates.fire-aspect.ignite-chance-per-level`,
+  15 % × level) of setting the block alight like a flaming arrow; (2) the new **Cleaving** custom enchantment (I–IV): gate hits
+  ×1.25/×1.5/×1.75/×2, and a right-click on a door block is a charged strike of 5/6/7/8 such hits (netherite sword: 50/72/98/128 of a
+  500 HP gate) with wood-break sounds and splinters, then a 60/50/40/30 s per-player cooldown (`gates.cleaving` in `config.yml`;
+  the API's ability catalogue and permanent enchant books know it too); (3) the **spawn picker opens at the team split** in the hub
+  (no picker at match start; the start teleports everyone to their choice; the Information menu's "Change spawnpoint" shows from the
+  hub on); (4) the **spawn menu shrinks** to its options, and `MenuTemplateSeed.RepairSiegeLayoutAsync` fixes the growth, minimum
+  height and spawn-button phases of siege menus seeded before these layout changes (seeds are create-only, so an existing database
+  kept the old 5/6-row static menus); (5) **`/siege skip` seconds are settings**: `PlayerSkipMatchmakingSeconds` (60) and
+  `AdminSkipMatchmakingSeconds` (31) on the global siege configuration, web app → Siege settings → "Skipping matchmaking"
+  (migration `AddSiegeSkipSeconds`; the plugin floors both at one second before voting closes).
+  Two defects found in the developer's second round the same day and fixed on the branch: (a) with the API down when the
+  plugin started, every inventory menu stayed unavailable until a restart (the startup validation lists the templates once)
+  - the list is now retried (10 s, 20 s, 40 s, then every minute), a menu the validation never saw is validated on its first
+  open, and a siege menu that falls back to chat logs why - **the retry did not help on the dev server** (the per-key fetches
+  still fail while the connectivity monitor reports the API down and the pass then ends without another retry; see the
+  `claude/menu-validation-retry` branch); (b) a member waiting in the **server hub** was never moved to the
+  scenario hub or their spawnpoint: the hub is a domain with AllowExit off and the siege used a plain teleport, which the
+  domain-access rule refuses - siege teleports now use the same scoped border-crossing transfer as the hub's portal and
+  outage actions, and a refused siege teleport is logged instead of ignored.
+
+- **Domain names: whitespace and newlines trimmed** (not in Linear, free issue limit; knk-web-api `master` `09cf7e4` + `ac0f160`,
+  knk-web-app `main` `83609f7`, knk-plugin `main` `1593e70`; merged directly, no PR; not live-tested). The dev database held
+  districts named `Residential District\n`: the form wizard's String field is a textarea, so Enter added a newline the API stored as is,
+  and the action bar in game showed `You are now entering Residential District []`. `Domain.Name` now trims in its setter, and
+  Town, District, Structure, GateStructure and `POST`/`PUT api/Domains` trim `Name` and `Description` at both ends in one place
+  (`DomainNameRules`) and refuse a name that is empty after trimming (400). The plugin strips names defensively as well. **Deploy:**
+  migration `TrimDomainNames` strips the whitespace from the existing `domains.Name` rows (data only, nothing to undo). The web app
+  drops a line break at either end of any String field on submit (plain spaces stay: a chat prefix means them).
+- **Form wizard: step completion conditions run** ([KNG-186](https://linear.app/kngpandi/issue/KNG-186); knk-web-api `master` `a38c8ee`,
+  knk-web-app `main` `00e4af6`, merged directly, no PR; smoke-tested by the developer, [guide](guides/form-validation-result-log-smoke-test.md)).
+  A step's completion condition ("Allow entry must be ticked before you continue") now stops Next while it fails. The API sent every
+  condition and field validation as inactive before, so none ever ran. `StepCondition` and `FieldValidation` have a real `IsActive`
+  (migration `FormConditionAndValidationIsActive`, default on), kept by save, clone and export/import; the form configuration's own
+  never-set flag is gone. The builder can't author step conditions yet ([KNG-274](https://linear.app/kngpandi/issue/KNG-274)).
+- **Form wizard: validation rules remember their last run** ([KNG-269](https://linear.app/kngpandi/issue/KNG-269); same merges).
+  The API keeps the most recent run of each API-backed rule per entity (or per draft) and answers from it while the rule and the
+  inputs it reads are unchanged, so re-opening an entity no longer re-runs every region check against the game server. Region
+  rules expire after 24 h (`ValidationResultLog:ExternalStateTtlHours`), a redrawn region drops its rows, a check the plugin
+  couldn't complete is never remembered, and the log never blocks a form if it can't be read. A step's rules go in one
+  `validate-batch` request; a reused result shows "checked … ago" with a **Re-check** that runs the rule for real.
+- **Invite-only sign-up, email engine, admission gate and web-first linking — merged, off by default**
+  ([KNG-205](https://linear.app/kngpandi/issue/KNG-205) with KNG-206, KNG-207, KNG-208, KNG-211 (API half), KNG-212,
+  KNG-214, KNG-216, KNG-218; knk-web-api `master` `4aeb794`, knk-web-app `main` `b7c0e88`, knk-plugin `main`
+  `d56e41da`, merged directly, no PR; smoke-tested by the developer on dev 2026-10-23/24, every section of the
+  [invitations smoke test](guides/invitations-smoke-test.md) passed or accepted except § 7, which needs the alpha's
+  Cloudflare). The seven chain links below are now on the trunks. Nothing changes until the switch-over
+  ([alpha go-live § 11.1](guides/alpha-go-live.md)): `Security:Registration:Mode` stays `LinkCode`, the plugin's
+  `admission.mode` stays `whitelist`, `CloudflareAccess:SyncEnabled` stays false. **Deploy:** five migrations
+  (`LinkCodePurpose`, `AddEmailOutbox`, `AddInvitations`, `SeedInvitationStaffNode`, `SeedAlphaTesterGroup`); outside
+  Development the API refuses to start with the Log transport unless `Email__AllowLogTransport=true` (until the relay);
+  the plugin's `config.yml` needs `web.public-url`, the `admission:` section (missing = whitelist) and the new
+  `messages.link-code-generated` text, which an existing file keeps old. Two defects found on dev and fixed: a claim
+  code reused from the database was sent without a UTC marker and the plugin fell back to its offline store (api
+  `d78dc75`); the first join after a web-first or `/link` link got "Welcome back" and every discovery message at once
+  instead of the first-join welcome, kits and quiet minutes (plugin `7bea0793`, which also stops a crash in the join
+  telemetry for an operator without an account).
+- **Invitations chain, link 7: rollout preparation (I3) — the chain is complete**
+  ([KNG-218](https://linear.app/kngpandi/issue/KNG-218), parent [KNG-205](https://linear.app/kngpandi/issue/KNG-205);
+  branch `claude/player-signup-invitation-flow-f4v7ul`: knk-web-api `8f489b9`). A data migration seeds the **Alpha
+  Tester** group (weight 1, under Default, no extra permissions) that invitations grant by default; it leaves an
+  existing group of that name alone. New: the [invitations smoke test](guides/invitations-smoke-test.md) (every check
+  of the email engine, invitations, the admission gate, the Access sync, the kill switches and the alpha switch-over)
+  and the living [account identity and admission](architecture/account-identity-and-admission.md) architecture doc.
+  The alpha go-live guide, the closed-alpha runbook, the production installation guide and the player account guide
+  describe the invite-only state after the switch-over, with the five switch-over steps and the kill switches
+  ([alpha go-live § 11.1](guides/alpha-go-live.md)). Merged 2026-10-24 (entry above).
+- **Invitations chain, link 6: Cloudflare Access sync and the sign-up bypass (A1)**
+  ([KNG-216](https://linear.app/kngpandi/issue/KNG-216); branch `claude/player-signup-invitation-flow-f4v7ul`:
+  knk-web-api `641f9c1`, knk-web-app `eeea86f`). With `CloudflareAccess__SyncEnabled=true`, the API keeps the
+  Cloudflare Zero Trust email list `knk-api-testers` in sync: a new personal invite's address is added within seconds,
+  a revoke, an unused expiry, a deactivation, a deletion or a merge removes it, and a sign-up with a shared code adds
+  the new address during registration. Calls go through a `cfproxy` forward proxy that only allows
+  `api.cloudflare.com`. `/admin/invitations` shows "Access sync: last OK 12:04 · 0 pending", red with the error, and
+  the sign-up page tells new players that Cloudflare emails them a one-time PIN next. The NAS and dashboard steps
+  (proxy, list, policy, token, bypass application for the sign-up pages, 30-day session) are in alpha go-live § 6.1.
+  Off by default, so deploying changes nothing.
+- **Invitations chain, link 5: admission gate on the game server (I2, plugin)**
+  ([KNG-214](https://linear.app/kngpandi/issue/KNG-214); branch `claude/player-signup-invitation-flow-f4v7ul`:
+  knk-plugin `90b01850`, on the KNG-182 branch). With `admission.mode: invite` in the plugin's `config.yml`, the game
+  server asks the API about every connecting player right after Mojang sign-in: admitted accounts and operators get in,
+  a new player is turned away with the claim code and the `/link` address on the disconnect screen, a deactivated
+  account is refused. If the API doesn't answer within 3 seconds, players the server already knows still get in and
+  strangers are asked to try again. A refused player no longer gets an account created. After a link the player sees
+  "Your Minecraft account is now linked to the web account st\*\*\*@example.com. Not you? Tell staff right away." in
+  game. The default stays `admission.mode: whitelist`, so deploying the plugin changes nothing until the switch-over.
+ 
+- **Invitations chain, link 4: admission gate (server side), claim codes and Minecraft linking (I2)**
+  ([KNG-214](https://linear.app/kngpandi/issue/KNG-214); branch `claude/player-signup-invitation-flow-f4v7ul`:
+  knk-web-api `4d1fe00` + `44c5f63`, knk-web-app `a3f00fd` + `60ec323`). The API answers the game server's new
+  pre-login question `GET api/Admission/{uuid}` (plugin key): with `Security:Registration:Mode=Invite` a player without
+  an admitted account gets a claim code `XXXX-XXXX` for the disconnect screen (15 minutes, one per player), a
+  deactivated one is refused; in every other mode everyone is admitted, so nothing changes until the switch. `/link`
+  (open without an account) checks that code; a logged-in player links straight away, a new player signs up with an
+  invitation and is linked in the same step. `/account/link` is the new onboarding page after an invitation sign-up
+  and takes both claim codes and `/account link` codes; a banner reminds unlinked players. Linking a web account to
+  Minecraft gives the starting balance, a "linked" mail and an in-game notice with the masked address. Staff get
+  **Admit** and **Detach web login** on the player profile. An unlinked invited account gets one reminder mail after
+  two days. The landing page shows the new join steps. The game server's side follows in link 5.
+
+- **Invitations chain, link 3: invitations and invite-based registration (I1)**
+  ([KNG-212](https://linear.app/kngpandi/issue/KNG-212); branch `claude/player-signup-invitation-flow-f4v7ul`:
+  knk-web-api `77042fd` + `8ca8507`, knk-web-app `dfa5cdd` + `18f3c9f`). Staff with the new node `knk.admin.invites`
+  (granted to Admin by a seed migration) get **Invitations** (`/admin/invitations`): personal invites by email, in
+  bulk, emailed or as copy-links (single use, 7 days by default, at most 30), and shared codes `KNK-XXXXX-XXXXX` with
+  a label and a use cap (5 by default, at most 50); links and codes are shown once and only their SHA-256 is stored;
+  resend (rotates the link, 3 a day), rotate, pause/resume, revoke, and a redemptions drawer. `/invite/:token` (the
+  address shown locked and verified, the token removed from the address bar) and `/join?code=` sign up with an
+  invitation once `Security:Registration:Mode=Invite` is set, creating a web account (`web-…` name, no starting
+  balance until Minecraft is linked) and taking the use in one conditional UPDATE. The default stays `LinkCode`:
+  today's `/account link` registration is unchanged and invite fields are refused. Migration `AddInvitations`
+  grandfathers every active account as admitted; accounts the plugin creates are admitted until the mode is
+  `Invite`. Account page: "Email verified" badge.
+
+- **Invitations chain, link 2: the email engine (E1)** ([KNG-206](https://linear.app/kngpandi/issue/KNG-206); branch
+  `claude/player-signup-invitation-flow-f4v7ul`: knk-web-api `0d7ec4a` + `a8b42ca`, knk-web-app `aecd811`). Every mail
+  now goes through a persistent `email_outbox` table, written in the same transaction as the change that causes it, and
+  a background dispatcher that retries (1 min … 4 h, Failed after 6 attempts), drops reset mails whose link expired, and
+  deletes the content once sent. MailKit replaces `System.Net.Mail`; HTML and text templates share one layout; a
+  throttle caps mails per recipient (3 per kind, 6 in total per hour) and per day (300). Password reset, the
+  email-change notice and the data-deletion mails use it, and a staff email change now notifies the old address too.
+  Staff with `knk.admin.config` get **Mail** (`/admin/email`): the mail log with masked addresses, Retry and "Send test
+  mail to me". New settings `Email:Transport`, `Email:AllowLogTransport`, `App:PublicBaseUrl` and others; outside
+  Development the API refuses to start with the Log transport unless `Email:AllowLogTransport=true` (the alpha needs it
+  until its relay works). [Email guide](guides/email.md).
+
+- **Invitations chain, link 1: optional SMTP auth (E0 API half), link-code hygiene and the linking rules (L0)**
+  ([KNG-211](https://linear.app/kngpandi/issue/KNG-211), [KNG-207](https://linear.app/kngpandi/issue/KNG-207),
+  [KNG-208](https://linear.app/kngpandi/issue/KNG-208); branch `claude/player-signup-invitation-flow-f4v7ul`:
+  knk-web-api `110451f` + `bb4b9ee`, knk-web-app `2bf70ab`, knk-plugin `30b10e6e` on the KNG-182 branch). With
+  `Email:SmtpUsername` empty the reset and privacy mails go out without SMTP credentials, for the alpha's mail relay
+  (`110451f` is self-contained for a cherry-pick to `master`). `linkcodes` rows carry a `Purpose` (link, password
+  reset, admission claim) instead of being told apart by length; link codes are drawn without modulo bias; an hourly
+  job expires and, after 7 days, deletes finished codes; five wrong codes block an account for 15 minutes (429
+  `TooManyAttempts`). Linking a web-only account to an existing Minecraft account now folds the web login **into
+  the Minecraft account** (decision I7): it keeps its id, stats, groups and balances (the higher of each), the shell
+  is soft-deleted and signed out, and the web app is logged into the merged account. 409 `AlreadyRegistered` /
+  `AlreadyLinked` refusals. The plugin's `/account` usage no longer lists `create`, the dead merge flow is gone and the
+  link-code message ends with "Never give this code to anyone; staff never ask for it."
+
+## 2026-10-23
+
+- **Gate doors: open-door scans that work as expected** ([KNG-268](https://linear.app/kngpandi/issue/KNG-268),
+  [KNG-270](https://linear.app/kngpandi/issue/KNG-270), [KNG-271](https://linear.app/kngpandi/issue/KNG-271); knk-plugin
+  `main` `6ad683f8`, knk-web-api `master` `a853d37`, knk-web-app `main` `1d79af0`, merged directly, no PR; live-tested
+  by the developer).
+  - **Pairing along the slide.** A sliding door with an open-door scan moves each block to the open block straight
+    along its slide; blocks no longer change columns (that jammed door 17).
+  - **Empty open-door anchor = the anchor.** For a door that opens inside its own box, leave the open-door anchor
+    empty: the scan starts at the anchor. An open scan made from another point than the one it is read from (anchor
+    moved, cleared or edited) is ignored with a console warning until you scan again.
+  - **Scans that can't work are refused** with the reason: a region door without its captured region (the message
+    names `/gatedoor capture <id> opened|closed`), an open scan on a flood-fill door, a door without an anchor. A failed
+    scan shows its reason once, and scan lists show "N blocks scanned." instead of a card per block and a broken picker.
+  - **Deploy.** Import **GateDoor seed v3** and make it the default: it explains the open-door anchor and when an
+    open-door scan is needed ([admin guide](guides/admin/gate-structures-admin-guide.md)).
+
+- **Gate doors: no more jamming on their own decoration, and a GateDoor dashboard** ([KNG-272](https://linear.app/kngpandi/issue/KNG-272),
+  [KNG-273](https://linear.app/kngpandi/issue/KNG-273); knk-plugin `main` `c09e9483`, knk-web-api `master` `85c0a26`,
+  knk-web-app `main` `0ed300c`, merged directly, no PR; live-tested by the developer).
+  - **Decorated doors move.** A door whose blocks of different materials follow each other in the direction it moves
+    (chains above a portcullis, a decorated top row) jammed on its own blocks: a fence rising into the cell a chain had
+    just left found the chain there and called it an obstruction. The door now clears such a cell first. A block a
+    player puts in the way still jams it.
+  - **GateDoor dashboard.** The web app's dashboard and GateDoor pickers list doors across all gates, with the gate's
+    name, through the new `POST api/GateDoors/search` (search on door or gate name, filters gate, type, state, active).
+  - **Configuring a door like this.** A door that rises and loses its chains needs no open-state scan: motion distance
+    plus *Clip to geometry bounds* removes the chains as they leave the door box
+    ([admin guide](guides/admin/gate-structures-admin-guide.md)). The open-scan pitfalls found on the way are fixed in
+    the entry above.
+
+- **Domain sub-regions: one domain, several WorldGuard regions** ([KNG-253](https://linear.app/kngpandi/issue/KNG-253),
+  phases KNG-254–KNG-259; knk-web-api `master` `779629e`, knk-plugin `main` `9dfd7aae`, knk-web-app `main` `bf0d142`, merged directly, no PR; smoke-tested by the developer). A town, district,
+  structure or gate can have extra regions besides its main one, added in a new "Sub-regions" step of its form. Example:
+  a garrison gate's round tower next to its house.
+  - **Naming.** Each sub-region is drawn through its own world task and renamed `domain_<id>_sub_<n>` on save.
+  - **Copy of the main region.** The game server keeps every sub-region a copy of the main region: priority, flags,
+    owners, members, with the main region as parent. This runs every 5 minutes, on `/knk regions repair` and on the new
+    `/knk regions sync`.
+  - **One domain.** Walking between a domain's regions gives no enter or leave message and no access refusal, even
+    with Allow exit off. A door location in the tower counts as inside the gate. Discovery and analytics count the
+    domain once.
+  - **Round selections.** `//sel cyl` (and ellipsoid, convex) now becomes a polygon along its block outline, for every
+    region a world task draws. Before, it became the box around it.
+  - **Removed sub-regions.** One no domain lists is orphaned within two syncs, and the daily cleanup deletes it after
+    `regions.temp-retention.days` (14). `/knk regions temp [purge]` lists and purges orphans.
+  - **Fixes on the way.**
+    - `knk-creation-timestamp` and the new orphan mark are now read back after a restart. Temp regions used to read as
+      "without a creation time" after one.
+    - A gate's edit form lists its sub-regions.
+  - **Deploy.** Run the migration `DomainSubRegions`, import the seeds (`DomainSubRegion`; Town, District and Structure
+    v2; GateStructure v3; display seeds v2), and deploy API and plugin together
+    ([admin guide](guides/admin/domain-subregions-admin-guide.md), [design](specs/domain-subregions/DESIGN.md)).
+  - **Not yet.** Placement checks for a drawn sub-region ([KNG-261](https://linear.app/kngpandi/issue/KNG-261)), and
+    navigation knowing sub-regions ([KNG-260](https://linear.app/kngpandi/issue/KNG-260)).
+
+- **Enchantments from the server scan, vanilla and custom in one picker** ([KNG-250](https://linear.app/kngpandi/issue/KNG-250);
+  knk-web-api `master` `a1f8838`, knk-web-app `main` `f9ee73c`, knk-plugin `main` `c7806b87`, merged directly, no PR;
+  live-tested by the developer). The **Scan server** of the Minecraft catalogue now reads the server's enchantments too,
+  plus knk-plugin's 12 custom enchantments as `knk:<id>`. Old rows in another notation (a custom `chaos` saved without
+  namespace) merge into the scanned row; unknown rows nothing uses are deleted and used ones become Missing. Every
+  enchantment gets an enchantment definition (existing ones are linked, never deleted), so the item blueprint and lootbox
+  pickers offer every vanilla and custom enchantment. The enchantment picker in forms searches the database, shows
+  vanilla and custom together with a Custom badge and an All / Vanilla / Custom filter, and never creates anything on a
+  pick any more (fixes [KNG-243](https://linear.app/kngpandi/issue/KNG-243)). The catalogue page shows the enchantment
+  counters and "Missing enchantments still used". The built-in enchantment list and the hybrid picker are gone. Run the
+  migration `MinecraftEnchantmentCatalogFields`, deploy plugin and API together and scan
+  ([admin guide](guides/admin/minecraft-catalogue-admin-guide.md), [plan §12](specs/minecraft-catalog/IMPLEMENTATION_PLAN.md)).
+
+- **Non-op players can pick up a world lootbox inside a protected region** ([KNG-266](https://linear.app/kngpandi/issue/KNG-266);
+  knk-plugin `main` `1fbcb046`, merged directly, no PR; smoke-tested by the developer). WorldGuard refused the click on
+  a box in a spawn area inside a domain region to anyone who isn't a member, so only ops could pick boxes up there. The
+  plugin now tells WorldGuard to allow clicks on lootbox entities only; every other entity in the region stays protected.
+
+- **Item blueprint Category filter in the web app, child categories included** ([KNG-263](https://linear.app/kngpandi/issue/KNG-263);
+  knk-web-app `main` `b83e376`, merged directly, no PR; checked by the developer). The
+  item blueprint list and every item blueprint picker get a Category filter that lists the category tree; choosing
+  "Weapons" also shows the blueprints in Swords and Bows. The API's item blueprint search already worked this way (since
+  2026-09-26), and so does the in-game item catalogue's category button. The list also shows each blueprint's category.
+
+- **Item blueprints are cached for their own configured time** ([KNG-262](https://linear.app/kngpandi/issue/KNG-262),
+  item blueprints only; knk-plugin `main` `64f39d28`, merged directly, no PR; smoke-tested by the developer).
+  The plugin now keeps item blueprints for `cache.entities.itemBlueprints.ttl-minutes` (20 minutes) instead of the
+  global 60 s, so the catalogue, kits and `/knk ib give` call the API far less often. A blueprint edited in the web app
+  reaches the game within 20 minutes, or at once after `/knk cache refresh`. The other entities still use the global TTL.
+
+- **Menu paging: the right page number and a fast item catalogue** ([KNG-230](https://linear.app/kngpandi/issue/KNG-230),
+  [KNG-231](https://linear.app/kngpandi/issue/KNG-231); knk-plugin `main` `fae0b3b2`,
+  merged directly, no PR; smoke-tested by the developer). Pager arrows show the current page instead of "Page 1/N" in every paged menu. Changing
+  page re-renders from the open menu instead of fetching its template again. While a page loads, its arrows turn into a
+  clock "Loading page N…" (and the action bar says it after half a second); further clicks wait for it; a failed load
+  puts the previous page back with a message. The item catalogue keeps built pages for a minute, shared by all players,
+  and loads the next page in the background, so paging forward is usually instant.
+
+## 2026-10-22
+
+- **Minecraft catalogue from the server itself** ([KNG-200](https://linear.app/kngpandi/issue/KNG-200); knk-web-api
+  `master` `4f34f58`, knk-web-app `main` `0622a87`, knk-plugin `main` `69c93885`, merged directly, no PR). **Scan server** on
+  the new admin page `/admin/minecraft-catalog` has knk-plugin read the server's registry (a headless WorldTask). The API
+  stores every item and block with its name, item/block flags, default block state and a picture from a versioned public
+  asset source (PrismarineJS, then InventivetalentDev), keeping ids, merging rows that only differ in notation, deleting
+  unreferenced rows the server doesn't know and marking referenced ones Missing. Material pickers search this database
+  only: items by default (`categoryFilter` BLOCK/ANY/BANNER), with name, key and icon; no more duplicate rows or poor
+  search. The item blueprint overview shows the item's picture. The page also lists missing icons (with your own URL as
+  override), an audit with **Merge into…**, and a backfill. The built-in material list (1.21.4, half of its icon URLs
+  broken) and the hybrid picker are gone; a new database stays empty until its first scan. Run the two migrations as the
+  [admin guide](guides/admin/minecraft-catalogue-admin-guide.md) describes. Live-tested by the developer on Minecraft 26.3
+  (1812 entries). Follow-ups: [KNG-250](https://linear.app/kngpandi/issue/KNG-250) (enchantments),
+  [KNG-251](https://linear.app/kngpandi/issue/KNG-251) (block-state picker). In passing: the object dashboard and form
+  pickers now find their column definitions (the lookup was case-sensitive).
+
+- **Performance metrics for the closed alpha** ([KNG-232](https://linear.app/kngpandi/issue/KNG-232); knk-plugin
+  `main` `390d88a4`, knk-web-api `master` `3658cf2`, merged directly, no PR; unit-tested, not live-tested, everything off by default). The plugin can serve a Prometheus `/metrics` (`metrics.enabled`, off by default, bearer token) with TPS, tick
+  time, players, chunks and entities per world, JVM heap/off-heap/GC, process CPU/RSS, the container's memory working set
+  against its limit, API-call latency and the cost of 16 recurring tasks. The API's `/metrics` is now real
+  (`Telemetry__Prometheus__Enabled` + a bearer token; the earlier note that it existed was wrong) and adds .NET runtime,
+  HTTP client, process/cgroup and database-command metrics. Read the
+  [performance metrics and capacity guide](guides/performance-metrics-and-capacity.md) for the collection stack, load
+  steps, acceptance thresholds and the NAS-vs-cloud decision.
+
+- **Default forms and display pages for the rest of the game content** ([KNG-139](https://linear.app/kngpandi/issue/KNG-139);
+  knk-web-api `master` `3eac5ec`, knk-web-app `main` `0736ef3`, merged directly, no PR). 30 more bundled form seeds
+  (Town, District, Street, Structure, Location; User, permission groups and grants, banners, Clan; grades, tags,
+  categories, enchantments, item blueprints; kits and lootboxes), reworked from the dev forms with a description on
+  every step and field and their known bugs fixed, and 7 display seeds (Structure, GateStructure with a warp and
+  navigation section, User, ItemBlueprint, EnchantmentDefinition, MinecraftMaterialRef, ItemBlueprintDefaultEnchantment).
+  Display configurations get **Export JSON** and **Import / Seeds** like form configurations (`knk-displayconfig/1`).
+  Import both from the configuration lists and make them the default. Smoke-tested by the developer on 2026-10-22:
+  every step passed or was accepted. Follow-ups: [KNG-243](https://linear.app/kngpandi/issue/KNG-243),
+  [KNG-244](https://linear.app/kngpandi/issue/KNG-244), [KNG-246](https://linear.app/kngpandi/issue/KNG-246),
+  [KNG-247](https://linear.app/kngpandi/issue/KNG-247), [KNG-248](https://linear.app/kngpandi/issue/KNG-248);
+  details in the [seed review notes](reports/2026-10-19-kng-139-seed-review-notes.md).
+- **Form saves keep what they should** ([KNG-195](https://linear.app/kngpandi/issue/KNG-195); same merges). A
+  Structure's spawn point captured in game is saved; editing a player no longer unfreezes them or resets their email
+  verification, account origin, gender, active state or gate pass-through; picking the empty option of an optional
+  list no longer makes the save fail; a material or vanilla enchantment that isn't in the database yet is saved from
+  the picker; saving a custom enchantment keeps its ability.
+
+- **Gates can be warp destinations, and the gate form has the /navigate and road settings**
+  ([KNG-229](https://linear.app/kngpandi/issue/KNG-229); knk-web-api `master` `be9f4e1`, merged directly, no PR). The
+  bundled form seed "GateStructure - Default (seed v2)" adds "Entry rule on roads" and "Navigate to", plus a "Warp
+  destination" step (on/off, price in gems, minimum title, minimum premium tier, discovered gates only), as on the
+  Structure form. The API now stores a gate's warp settings; before, `GateStructureService` ignored them, although
+  `/warp` already listed gates. A save without the warp step (the plugin, the v1 form) keeps them. Import the seed from
+  Import / Seeds and make it the default; it imports next to v1. Smoke-tested by the developer on 2026-10-22: every step
+  passed or was accepted.
+
+## 2026-10-21
+
+- **The plugin runs on Minecraft 26.3** ([KNG-182](https://linear.app/kngpandi/issue/KNG-182); knk-plugin `main`
+  `857d4b1e`, merged directly, no PR). Paper 26.3 build 205 on Java 25 (Gradle 8.14 itself still runs on Java 21),
+  `api-version` 26.3, WorldEdit 7.4.6 and WorldGuard 7.0.20 (the dev server runs FastAsyncWorldEdit 2.16.1). The world
+  loader also finds worlds in Paper 26.x's `<level>/dimensions/minecraft/<name>/`, where Paper moves the hub and the
+  other worlds on their first load, so the second start no longer reports the hub missing. Offline `/inventory` and
+  `/enderchest` read `<world>/players/data`. Paper converts the world storage on the first 26.3 start; it can't be
+  undone. Live-tested by the developer on `DEV_SERVER_26.3` on 2026-10-18 and 2026-10-20
+  ([smoke test](guides/minecraft-26.3-upgrade-smoke-test.md)): every step passed or was accepted except the hub
+  tiles of `/menu`, which were hidden because the server had started while the API was down
+  ([KNG-201](https://linear.app/kngpandi/issue/KNG-201), not a 26.3 problem). The same startup-only shape was found
+  in siege, gates and regions ([KNG-202](https://linear.app/kngpandi/issue/KNG-202),
+  [KNG-203](https://linear.app/kngpandi/issue/KNG-203), [KNG-204](https://linear.app/kngpandi/issue/KNG-204)).
+- **`/hub` takes any player to the hub** ([KNG-188](https://linear.app/kngpandi/issue/KNG-188); reached knk-plugin
+  `main` with KNG-182 at `857d4b1e`, through the KNG-182 branch). Its three live checks are still to run. `/hub` goes to the hub spawn selected on the Game
   Settings page through the regular teleport engine: warmup, movement and combat cancel, the safe-spot check, and the
   siege, freeze and outage guards. It has its own cooldown, and the groups' spawn settings set its cooldown and price.
   Without a usable hub it says "The hub isn't available right now." and moves nobody. Staff can send a player with
