@@ -30,6 +30,7 @@ Deployed builds:
   From this build the API refuses the Log mail transport outside Development, so the Compose block sets
   `Email__Transport=Log` with `Email__AllowLogTransport=true` until the mail relay (KNG-211) exists.
 - `fa28f7ea` on 2026-10-25 (invite-only onboarding, `GET api/Auth/onboarding-info`), [report](../../docs/reports/2026-10-25-invite-only-register-page.md).
+- `6f08383d` on 2026-10-25 (`Seeding__IncludeExamples=false`, example rows removed once), [report](../../docs/reports/2026-10-25-alpha-update-api-6f08383d-plugin-ee35fb1d.md).
   The stack folder is root-only: run compose as `sudo bash -c "cd /srv/docker/stacks/knk-alpha && docker compose …"`.
 - Phase 9 E0 (KNG-211, 2026-10-24): same image, mail through `mailrelay` (`Email__Transport=Smtp`, network `mail`,
   [`scripts/alpha-mail/`](../alpha-mail/README.md)).

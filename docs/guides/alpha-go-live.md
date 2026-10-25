@@ -224,8 +224,7 @@ on 2026-10-25: the seed was loaded into `knightsandkings_alpha`, and the first s
 blueprints instead of 140, 27 menus instead of 18, 2 lobbies and 8 tags. Kits, enchantment books (Cleaving included),
 lootboxes, the hub and the other real menus are seeded either way. The default is `true`, so dev keeps the examples.
 
-The setting exists on knk-web-api branch `claude/seeding-include-examples` (`75f7af1`), which is not merged into
-`master` yet (2026-10-25). Order on the alpha:
+**Done on the alpha 2026-10-25** (API `6f08383d`, [report](../reports/2026-10-25-alpha-update-api-6f08383d-plugin-ee35fb1d.md)): 9 menus, the lobby and 18 blueprints removed, the `Test` tag kept (the real blueprint *Mighty Mace* uses it); afterwards 18 menus, 149 blueprints, 1 lobby, 8 tags, stable across restarts. Order, for a rebuilt database:
 
 1. **Build and deploy** the API from `master` once that branch is merged (the same build brings the `TrimDomainNames`
    migration, so run the migrator first as in § 3 steps 3–5). Put `Seeding__IncludeExamples=false` in the API's
@@ -241,8 +240,10 @@ The setting exists on knk-web-api branch `claude/seeding-include-examples` (`75f
    enabled, or a `Test` tag on a category or a kept blueprint. The last result counts the rows. On the alpha, expect
    9 menus, 1 lobby, 18 blueprints and 1 tag deleted and nothing kept. A second run changes nothing. The script was
    tried on a MariaDB 10.4 copy of the seed, not yet on MySQL 9.6, so take the backup.
-4. **Check** the seed's counts: 18 `menu_templates`, 140 `item_blueprints`, 1 `siege_lobbies`, 7 `tags`. Restart
-   the API once (`docker compose up -d --no-deps api`): the counts must not change.
+4. **Check** the counts: 18 `menu_templates`, 149 `item_blueprints` with API `6f08383d` (the seed's 140 plus real items newer
+   seeders add), 1 `siege_lobbies`, 8 `tags` (`Test` stays while *Mighty Mace* uses it). Restart the API once: the
+   counts must not change. Install the Compose change with `up -d --no-deps api` first — `docker compose restart`
+   keeps the old container and its old settings, and an old image seeds the examples again.
 
 If the old image restarts after step 3, it adds the examples again. Deploy the new build first, as in step 1.
 
