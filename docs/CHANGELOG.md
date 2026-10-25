@@ -4,8 +4,12 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
-- **WorldGuard's global region is protected** — knk-plugin `claude/brave-mayer-1uh602` (QOL hotfix for `main`, not in
-  Linear: free issue limit). Where no region but `__global__` applies (outside every domain, arena and other region) a default
+_Nothing at the moment._
+
+## 2026-10-25
+
+- **WorldGuard's global region is protected** — knk-plugin `main` `e74a141`, merged `--no-ff` from `claude/brave-mayer-1uh602` on
+  2026-10-25 (QOL hotfix, not in Linear: free issue limit). Where no region but `__global__` applies (outside every domain, arena and other region) a default
   player can't break or place blocks (buckets included), can't place, break, use or hit item frames, paintings and armor stands,
   and can't use crafting blocks (crafting table, crafter, furnaces, brewing stand, anvils, enchanting table, smithing table,
   grindstone, stonecutter, loom, cartography and fletching table; `regions.global.crafting-blocks`); explosions break no blocks
@@ -13,10 +17,7 @@ This is a human-readable record of capabilities merged into the V3 default branc
   WorldGuard's region bypass (ops) are not restricted; inside any region nothing changes. Refusals show a 2 s-throttled
   action-bar notice. New `GlobalRegionProtectionListener` (`knk-paper/.../paper/regions/`) + test, switch
   `regions.global.protection` (default on). A plugin rule, not flags on `__global__` (those would also bind region members).
-  Not live-tested.
-
-## 2026-10-25
-
+  knk-paper tests 2135 / 0 failures (JDK 25). Not live-tested.
 - **Menu startup validation keeps retrying while the API is down** — knk-plugin `main` `ad5786c`, merged `--no-ff` from
   `claude/menu-validation-retry` on 2026-10-25 (not in Linear, free issue limit). The 2026-10-24 retry only re-listed the templates; on the dev server the list came back
   while every per-key fetch still failed (the connectivity monitor still reported the API down), and the pass ended with
