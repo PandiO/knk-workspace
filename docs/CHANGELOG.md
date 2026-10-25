@@ -4,7 +4,11 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
-_Nothing at the moment._
+- **Invincible gates refuse ignition** — knk-plugin `claude/adoring-wright-ejn8f7` (developer decision 2026-10-25; not in Linear,
+  free issue limit). Before, a flame arrow, fire charge, flint and steel or Fire Aspect hit on an effectively-invincible gate (door
+  flag or structure `IsInvincibleOverride`) started a burn whose damage no-op'd while its fire and smoke showed for the whole
+  duration. Now `GateDoorHitService.handleIgnite` fires no `GateDoorIgniteEvent` for such a gate, and `GateFireSystem` puts out a
+  burning gate that becomes invincible (a siege override mid-burn). Direct hits are unchanged (event fires, `HealthSystem` no-ops).
 
 ## 2026-10-25
 
