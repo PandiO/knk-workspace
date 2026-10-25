@@ -148,12 +148,12 @@ sudo journalctl -t knk-ops --since today --no-pager -o short-iso
 
 ## 7. Stage B: delegated changes (`knk-deploy`)
 
-**Status:** built and tested 2026-10-25 (65 end-to-end checks on a mock stack:
+**Status:** built and tested 2026-10-25 (72 end-to-end checks after the hardening of the same evening on a mock stack:
 [`scripts/nas-ops/stage-b/tests/`](../../scripts/nas-ops/stage-b/tests/test_knk_deploy.py)); **installed on the NAS
 2026-10-25** (files match `SHA256SUMS` of `1f23251`; key `SHA256:P6YDRiBC9wxhevkpJnd2aDjcKKUaox4De2Cw0rC732E`
 `knk-deploy@pc`, `from="192.168.50.208"`; `_files` copied from the `6f08383d`/`0d612702` build folders). PC test:
 `status` ok, `status; id` denied, `restart mysql` refused, `config-get knk` shows the plugin key as a token.
-Archive the files with `git -c core.autocrlf=false archive` on Windows, or the line endings change.
+Archive the files with `git -c core.autocrlf=false archive` on Windows, or the line endings change. Hardening update `a6d59a6` (`knk-deploy` `1f1aad31…`, dispatcher unchanged `e6f9c1e9…`) installed the same evening; the previous program is kept as `/var/lib/knk-deploy/knk-deploy.before-a6d59a6`.
 Developer decisions 2026-10-25: Claude Code sessions on the PC may update the alpha to **trunk** builds and change its
 Compose and plugin configs, **asking the developer before every change** (Claude Code `ask` rules); the NAS gets
 **no GitHub access** — the PC builds and uploads. This replaces the 2026-10-18 design (no arguments, approval files).
@@ -191,10 +191,12 @@ knk-deploy`); backups in `/var/lib/knk-deploy/backups/<time>-<what>/`.
 - No shell, no free command, no path, no Docker flag from the caller; no access to `secrets/`; MySQL only through the
   migrator of a built trunk image. Database restores stay manual (`knk-alpha-restore`).
 - **Compose policy** (against the running file, on `docker compose config` output): no removed services; no
-  `privileged`, host network/PID/IPC/userns, devices, sysctls, `build`, extra hosts; no new capabilities, ports or
-  `external` networks; `cap_drop: ALL`, `no-new-privileges` and `read_only` can't be dropped; a new service needs a
-  non-root user, `cap_drop: ALL` and `no-new-privileges`; no switch to root; images need a tag or digest (no
-  `latest`); bind mounts only from paths the file already uses or under `config/`, `minecraft-data`, `releases/` —
+  `privileged`, host network/PID/IPC/userns, devices, sysctls, `build`, extra hosts; no `include:`/`extends:` (they
+  read other files); no new capabilities, ports or `external` networks; `cap_drop: ALL`, `no-new-privileges` and
+  `read_only` can't be dropped; a new service needs a non-root user, `cap_drop: ALL` and `no-new-privileges`; no
+  switch to root; `command`/`entrypoint`/`working_dir` of an existing service may change only for `api` and `web`; a
+  changed or new image must be a local `knk-*` build or pinned `@sha256:` (no tag-only third-party images), and every
+  image change is listed in the result (`image_changes`); bind mounts only from paths the file already uses or under `config/`, `minecraft-data`, `releases/` —
   never `docker.sock`, `/etc`, `/root`, `/home`, `/var/lib/docker`, `/`; a service may not gain a secret file it
   didn't mount before; an internal network can't become external and a service without internet can't gain it.
 - Secret values never leave the NAS: reads replace them with `<<secret:NAME>>`, applies put them back; an unknown

@@ -269,6 +269,11 @@ def run_tests(m, S, root):
         'no nnp': base.replace('    security_opt: ["no-new-privileges:true"]\n    cap_drop: [ALL]\n  minecraft', '    cap_drop: [ALL]\n  minecraft'),
         'host network': base.replace('    networks: [webapi]\n', '    network_mode: host\n'),
         'latest image': base.replace(f'knk-web-app:alpha-{OLD_WEB}', 'nginx:latest'),
+        'include': 'include:\n  - /etc/hostname\n' + base,
+        'extends': base.replace('    container_name: knk-alpha-web\n', '    container_name: knk-alpha-web\n    extends:\n      file: /etc/hosts\n      service: x\n'),
+        'minecraft command': base.replace('    entrypoint: ["sh", "/data/start.sh"]\n', '    entrypoint: ["sh", "-c", "id"]\n'),
+        'mysql command': base.replace('    command: ["sh", "-c", "printf', '    command: ["sh", "-c", "echo x; printf'),
+        'third-party tag': base.replace('    image: alpine:3.22\n    container_name: knk-alpha-minecraft', '    image: alpine:3.21\n    container_name: knk-alpha-minecraft'),
     }
     for name, text in cases.items():
         data = text.encode()
@@ -303,6 +308,16 @@ def run_tests(m, S, root):
     # --- rollback of the last good change ---
     code, out = call(m, 'rollback')
     check('rollback compose-apply', code == 0 and compose_text(S) == base, out)
+
+    # --- third-party image change pinned by digest: allowed, reported ---
+    digest = sh('docker', 'image', 'inspect', '-f', '{{index .RepoDigests 0}}', 'alpine:3.22').stdout.decode().strip()
+    pinned = base.replace('    image: alpine:3.22\n    container_name: knk-alpha-minecraft', f'    image: {digest}\n    container_name: knk-alpha-minecraft')
+    h = hashlib.sha256(pinned.encode()).hexdigest()
+    call(m, 'upload', 'compose', h, stdin=pinned.encode())
+    code, out = call(m, 'compose-apply', h)
+    check('digest-pinned image change allowed and reported', code == 0 and out.get('image_changes', {}).get('minecraft', {}).get('to') == digest, out)
+    code, out = call(m, 'rollback')
+    check('rollback image change', code == 0 and compose_text(S) == base, out)
 
     # --- config-apply ---
     code, out = call(m, 'config-get', 'knk')
