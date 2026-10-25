@@ -4,11 +4,15 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
-- **Menu startup validation keeps retrying while the API is down** — knk-plugin branch `claude/menu-validation-retry`
-  (not in Linear, free issue limit). The 2026-10-24 retry only re-listed the templates; on the dev server the list came back
+_Nothing at the moment._
+
+## 2026-10-25
+
+- **Menu startup validation keeps retrying while the API is down** — knk-plugin `main` `ad5786c`, merged `--no-ff` from
+  `claude/menu-validation-retry` on 2026-10-25 (not in Linear, free issue limit). The 2026-10-24 retry only re-listed the templates; on the dev server the list came back
   while every per-key fetch still failed (the connectivity monitor still reported the API down), and the pass ended with
   nothing validated. Now a template that can't be fetched keeps the pass retrying (10 s, 20 s, 40 s, then every minute) until
-  every listed menu is validated or blocked, and the API-recovery event (KNG-115) starts a pass at once. Not live-tested yet.
+  every listed menu is validated or blocked, and the API-recovery event (KNG-115) starts a pass at once. Not live-tested yet (the merge of the siege follow-ups before it was).
 
 ## 2026-10-24
 
