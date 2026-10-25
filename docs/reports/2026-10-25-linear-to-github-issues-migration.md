@@ -23,6 +23,7 @@ Linear's free plan caps a workspace at 250 non-archived issues. The cap was hit 
 
 ## Follow-ups (updated 2026-10-25, later the same day)
 
+- **Linear closed out: done.** Each of the 112 copied KNG issues got a comment "Moved to GitHub: PandiO/knk-workspace#n (2026-10-25) …" and was set to **Canceled** (moved, not dropped). Linear has no open KNG issues left; the canceled ones auto-archive after a month and stay searchable.
 - **Label colours: done.** `bug` red, `feature` blue, `improvement` purple, `status:in-progress` yellow, `status:in-review` green, `priority:urgent|high|medium|low` red → light blue, `linear-import` grey. `priority:urgent` was created (no imported issue used it).
 - **Component repos: nothing to change.** The `AGENTS.md`/`CLAUDE.md` files of knk-plugin, knk-web-api and knk-web-app never mention Linear. They defer to the shared global instructions, which now say GitHub. The remaining `Linear KNG-n` mentions are code comments citing closed issues (KNG-5, 6, 17, 41, 42); those Linear links still resolve, so they stay as history.
 - [ ] **Project board (developer, GitHub UI):** Claude Code sessions can't create Projects (GraphQL is blocked and the REST API only reaches repository endpoints). Steps:

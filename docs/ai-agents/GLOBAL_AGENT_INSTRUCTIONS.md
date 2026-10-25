@@ -51,8 +51,10 @@ Linear (team KNG) was the work list until 2026-10-25, when the free issue
 limit made new issues impossible. It stays as a read-only archive: don't
 create, edit or comment on Linear issues. Every open KNG issue was copied
 with its id in the title, such as `[KNG-27] ...`, so search the GitHub
-issues for `[KNG-n]` to find the copy of a `KNG-n` reference. Closed KNG
-issues exist only in Linear; their links in docs stay valid.
+issues for `[KNG-n]` to find the copy of a `KNG-n` reference; the copied
+Linear issues are Canceled with a "Moved to GitHub: PandiO/knk-workspace#n"
+comment. Issues closed before the move exist only in Linear; their links in
+docs stay valid.
 
 Issue conventions:
 
