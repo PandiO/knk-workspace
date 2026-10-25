@@ -4,7 +4,13 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
-_Nothing at the moment._
+- **No block breaking in WorldGuard's global region** — knk-plugin `claude/brave-mayer-1uh602` (QOL hotfix for `main`,
+  not in Linear: free issue limit). Where no region but `__global__` applies (outside every domain, arena and other region)
+  a default player's block break is cancelled with an action-bar notice (at most one per 2 s); `knk.region.bypass` holders and
+  WorldGuard's region bypass (ops) pass; inside any region nothing changes. New `GlobalRegionBlockBreakListener`
+  (`knk-paper/.../paper/regions/`) + test, switch `regions.global.deny-block-break` (default on) in `config.yml`. Done by the
+  plugin, not by a `block-break deny` flag on `__global__`, which would also bind region members, pistons and TNT. Placing
+  blocks is not covered. Not live-tested.
 
 ## 2026-10-25
 
