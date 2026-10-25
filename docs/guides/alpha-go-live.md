@@ -4,7 +4,7 @@
 (the Codex NAS rollout). Not yet followed end to end. 2026-10-21: web hostname decided (`app.knightsandkings.net`),
 DNS in Cloudflare, Minecraft console/autostart/plugin updates ([KNG-225](https://linear.app/kngpandi/issue/KNG-225)).
 2026-10-22: § 3 (API upgrade) done on the NAS ([KNG-227](https://linear.app/kngpandi/issue/KNG-227)); § 3–4 corrected from that run.
-**Last updated:** 2026-10-24 (Phase 9 done: invite-only live, § 10 invite text, § 11.1; Phase 9 E0: the mail relay is live, § 4 mail block is SMTP; KNG-205 invitations merged: the feature-branch notes replaced; settings as before, all off until § 11.1); 2026-10-22; 2026-10-21 (KNG-218, invitations chain link 7: § 4.1 settings after the invite-only switch-over, § 5.1 admission gate instead of the whitelist, § 9 F2, § 10 invite mail, § 11 kill switches and **§ 11.1 the switch-over steps**, § 12); 2026-10-21 (§ 6.1: Cloudflare Access sync, `cfproxy`, the sign-up bypass — KNG-216, feature branch; § 4: `Email__AllowLogTransport` for API builds with the KNG-206 email engine; notes pointing to the KNG-205 invitations plan); 2026-10-18
+**Last updated:** 2026-10-24 (§ 9 checklist ticked after Phase 9; Phase 9 done: invite-only live, § 10 invite text, § 11.1; Phase 9 E0: the mail relay is live, § 4 mail block is SMTP; KNG-205 invitations merged: the feature-branch notes replaced; settings as before, all off until § 11.1); 2026-10-22; 2026-10-21 (KNG-218, invitations chain link 7: § 4.1 settings after the invite-only switch-over, § 5.1 admission gate instead of the whitelist, § 9 F2, § 10 invite mail, § 11 kill switches and **§ 11.1 the switch-over steps**, § 12); 2026-10-21 (§ 6.1: Cloudflare Access sync, `cfproxy`, the sign-up bypass — KNG-216, feature branch; § 4: `Email__AllowLogTransport` for API builds with the KNG-206 email engine; notes pointing to the KNG-205 invitations plan); 2026-10-18
 **Applies to:** builds that **include KNG-64**: knk-web-api `master` ≥ `30c5dc5`, knk-web-app `main` ≥ `98c0a76`,
 knk-plugin `main` ≥ `34c9261`. **Never expose an older API.**
 **Linear:** [KNG-64](https://linear.app/kngpandi/issue/KNG-64) (parent), [KNG-68](https://linear.app/kngpandi/issue/KNG-68) (this guide)
@@ -501,28 +501,28 @@ and through Cloudflare ([report](../reports/2026-10-24-alpha-security-probe.md))
 ## 9. Go-live checklist
 
 **A. Code**
-- [ ] The API runs a KNG-64 build (`master` ≥ `30c5dc5`), and the migration count of the built source is applied (§ 3; 93 for `4aeb7947`).
-- [ ] The web app and plugin come from KNG-64 builds (§ 2). The plugin has the KNG-114 loader.
+- [x] The API runs a KNG-64 build (`master` ≥ `30c5dc5`), and the migration count of the built source is applied (§ 3; 93 for `4aeb7947`).
+- [x] The web app and plugin come from KNG-64 builds (§ 2). The plugin has the KNG-114 loader.
 
 **B. Secrets and config**
-- [ ] The secret files are mode 600 and owned by the runtime UID, and no value appears in Compose, Portainer or logs (runbook).
+- [x] The secret files are mode 600 and owned by the runtime UID, and no value appears in Compose, Portainer or logs (runbook).
 - [ ] The dev DB password is rotated (it was committed before KNG-64), and the dev machines use `dotnet user-secrets`.
-- [ ] The API has the § 4 keys: `ForwardedHeaders` trusts only the nginx network, and `AllowWebFirst=false`.
-- [ ] The plugin has `api.auth.type: apikey`, `region-http.bind-address: "0.0.0.0"` with 8081 unpublished, and
+- [x] The API has the § 4 keys: `ForwardedHeaders` trusts only the nginx network, and `AllowWebFirst=false`.
+- [x] The plugin has `api.auth.type: apikey`, `region-http.bind-address: "0.0.0.0"` with 8081 unpublished, and
       `web.public-url`.
 
 **C. Data**
-- [ ] The holder-id clash query returns no rows.
+- [x] The holder-id clash query returns no rows (2026-10-22).
 - [x] A clean baseline dump exists **after** the KNG-64 migrations (2026-10-22/24 baselines).
 - [ ] ~~One restore was rehearsed (runbook Phase 7).~~ **Deferred to the beta** (developer, 2026-10-24). For the alpha:
       `knk-alpha-snapshot` before/after each session and before updates, `knk-alpha-restore` tested on a mock stack
       ([`scripts/alpha-snapshot/`](../../scripts/alpha-snapshot/)).
 
 **D. Services**
-- [ ] mysql, api and minecraft are healthy. No ports are published except through cloudflared and playit.
-- [ ] `https://app.knightsandkings.net` shows the Access login, then the landing page after the PIN. A deep link (`/auth/login`)
+- [x] mysql, api and minecraft are healthy. No ports are published except through cloudflared and playit.
+- [x] `https://app.knightsandkings.net` shows the Access login, then the landing page after the PIN. A deep link (`/auth/login`)
       loads.
-- [ ] An outside client joins via `play.knightsandkings.net` with no router port-forward.
+- [x] An outside client joins via `play.knightsandkings.net` with no router port-forward.
 - [ ] From outside (a phone hotspot), `nmap -p 80,443,3306,5000,8081,25565,25575 <home-ip>` shows everything closed
       or filtered. (2026-10-24, before Phase 6: 13 ports closed/filtered with macOS `nc`, no IPv6; repeat after
       Phase 6, [Phase 5 report](../reports/2026-10-24-alpha-phase-5-playit.md) § 8.)
@@ -530,7 +530,7 @@ and through Cloudflare ([report](../reports/2026-10-24-alpha-security-probe.md))
 **E. Security probe**
 - [x] Private and Cloudflare runs: `ALL CHECKS PASSED` (§ 8). 2026-10-24, API `a38c8ee9` ([report](../reports/2026-10-24-alpha-security-probe.md)).
 
-**F. Player flow (a tester or a second account)** — before the invite-only switch-over
+**F. Player flow (a tester or a second account)** — the `/account link` registration item is replaced by F2 since the switch-over (2026-10-24); the other three still apply
 - [ ] A whitelisted player joins, and `/account link` shows the code (click to copy) and `https://app.knightsandkings.net/auth/register`.
       They register with the code and land on the account page, logged in.
 - [ ] Log in with the Minecraft name and log out on a phone.
@@ -539,10 +539,10 @@ and through Cloudflare ([report](../reports/2026-10-24-alpha-security-probe.md))
 
 **F2. Invite flow** — after the switch-over (§ 11.1; merged 2026-10-24, off until then). Details:
 [invitations smoke test](invitations-smoke-test.md) § 9.
-- [ ] Every active account was admitted by the migration (smoke test § 0.2), and `Alpha Tester` exists.
-- [ ] `/admin/invitations` shows "Access sync: last OK …" in green.
-- [ ] A personal invite mail arrives; the link opens without an Access login; sign-up → the PIN step → `/account/link`.
-- [ ] Joining with the new Minecraft account shows a claim code; entering it links the account; the rejoin gets the
+- [x] Every active account was admitted by the migration (smoke test § 0.2), and `Alpha Tester` exists.
+- [x] `/admin/invitations` shows "Access sync: last OK …" in green.
+- [x] A personal invite mail arrives; the link opens without an Access login; sign-up → the PIN step → `/account/link`.
+- [x] Joining with the new Minecraft account shows a claim code; entering it links the account; the rejoin gets the
       first-join welcome and kits once, and the chat names the linked web account.
 - [ ] A shared code (`/join`) works for its use cap and no further.
 - [ ] A grandfathered tester joins without a code; an operator joins; `/whitelist` is off.
