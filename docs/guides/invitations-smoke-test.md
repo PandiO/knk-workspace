@@ -2,7 +2,7 @@
 
 **Status:** Written 2026-10-21 (invitations chain link 7, KNG-218). **Run on dev 2026-10-23/24** (Findings below: § 0–6
 and § 8 passed or accepted, § 7 waits for the alpha); the feature is merged to every trunk since 2026-10-24.
-**Last updated:** 2026-10-26 (§ 4 steps 16–17: claim code fields, #192, not merged); 2026-10-25 (§ 3 step 11, § 4 step 16, § 7 steps 6–8: the register and login pages in Invite mode, a claim
+**Last updated:** 2026-10-26 (§ 4 step 17a: the dash from the start, #196, knk-web-app `claude/claim-code-dash-196`, not merged); 2026-10-26 (§ 4 steps 16–17: claim code fields, #192, merged); 2026-10-25 (§ 3 step 11, § 4 step 16, § 7 steps 6–8: the register and login pages in Invite mode, a claim
 code typed as a link code, the Cloudflare step in every flow and the missing-session banner — branch
 `claude/invite-only-register-page` in knk-web-app and knk-web-api, found on the alpha 2026-10-25); 2026-10-24
 **Linear:** [KNG-218](https://linear.app/kngpandi/issue/KNG-218) (I3, this guide), parent
@@ -246,6 +246,15 @@ step says otherwise.
     the server** → "Checking…" → `/link` shows "Verified: <name>" at once; a made-up `ABCD1234` there → the link-code
     step opens filled in (as before). A screen reader reads one field, "Code from the server", with the hint "The 8
     letters and digits; the field adds the dash itself."
+17a. **The dash is there from the start** (#196, knk-web-app `claude/claim-code-dash-196`). On `/link` (logged out):
+    the empty field shows `____-____` in grey with a dark dash, no example code. Type `k` → `K___-____`; `7q` →
+    `K7Q_-____`: the dash never disappears and the typed letters sit exactly on the slots (no doubled or shifted
+    characters). The 4th character → `K7QH-____`, caret after the dash; finish → `K7QH-M2XA`, no slots left. Backspace
+    four times from `K7QH-M2` → `K7Q_-____`. Select all and paste the **same** code without its dash (`K7QHM2XA`) → it
+    stays `K7QH-M2XA` (it used to lose its last character). Repeat step 17's paste, Backspace/Delete, caret and
+    capitals checks: all as before. On a phone the slots line up too, and a one-time-code / password-manager fill shows
+    the code without slots. Same on `/account/link` as an unlinked account. A screen reader still reads only the field,
+    its label and the hint (not the underscores).
 
 ## 5. API outage with the gate on
 

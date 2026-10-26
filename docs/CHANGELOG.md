@@ -4,7 +4,12 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
-(Nothing at the moment.)
+- **Claim code field shows the dash from the start** — knk-web-app `claude/claim-code-dash-196`
+  (PandiO/knk-workspace#196, follow-up of #192; UX/realtime chain link 3b, 2026-10-26). On `/link` and `/account/link`
+  the field shows `____-____` while empty and keeps the dash visible while the first four characters are typed
+  (`K7__-____`); paste, autofill, Backspace/Delete across the dash and capitals work as before. Pasting the same code
+  without its dash over the whole field no longer loses a character. Live checklist: `guides/invitations-smoke-test.md`
+  step 17a.
 
 ## 2026-10-26
 
