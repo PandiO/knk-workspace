@@ -4,7 +4,13 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
-_Nothing at the moment._
+- **Dashboard keeps its place; Submit waits for the save** — knk-web-app `claude/kng-60-dashboard-hub`
+  (PandiO/knk-workspace#177 link 1, #58; UX/realtime chain link 1, 2026-10-26). Not merged, not live-tested. The
+  dashboard's type is in the URL (`/dashboard/{type}`; bare `/dashboard` reopens the last viewed type). Edit opens the
+  form with `returnTo`, and Submit and Cancel go back to that dashboard type (the table reloads). Submit stays
+  "Submitting…" with a "Saving {Type}…" line until the entity is saved; a second click does nothing. The draft is marked
+  Completed only after the entity was saved. A success toast replaces the 3 s "Form completed" modal. Live checklist:
+  `guides/dashboard-return-smoke-test.md`.
 
 ## 2026-10-25
 

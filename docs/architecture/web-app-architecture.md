@@ -1,7 +1,7 @@
 # knk-web-app — Architecture
 
 **Status:** Living document — reflects actual code, updated in place on each rescan
-**Last updated:** 2026-09-18 (scan basis: `knk-web-app` @ `4ff5dc6`, branch `claude/web-app-codebase-scan-4yqibi`); spot edits 2026-10-09 (ObjectTypeExplorer, KNG-61), 2026-10-10 (FormWizard Boolean fields, KNG-53), 2026-10-12 (FormWizard child forms, KNG-133, KNG-134; List edit load, step header, List validation, KNG-135, KNG-137, KNG-164; form session registry, KNG-136; cancel / delete-draft prompt, KNG-162; form configuration export/import, KNG-138); 2026-10-17 (form wizard chain merged to `main`; smoke-test follow-ups KNG-166..169, KNG-172, KNG-173: step strip, confirmations and refusals, rule builder parent forms, picker columns, metadata refresh); 2026-10-22 (display configuration export/import; KNG-195 hybrid picker submit); 2026-10-23 (step completion conditions run, KNG-186); 2026-10-23 (validation result log, batch validate, Re-check, KNG-269); 2026-10-25 (toast region, world-task polling; UX re-evaluation in `reports/2026-10-25-web-app-ux-reevaluation.md`)
+**Last updated:** 2026-09-18 (scan basis: `knk-web-app` @ `4ff5dc6`, branch `claude/web-app-codebase-scan-4yqibi`); spot edits 2026-10-09 (ObjectTypeExplorer, KNG-61), 2026-10-10 (FormWizard Boolean fields, KNG-53), 2026-10-12 (FormWizard child forms, KNG-133, KNG-134; List edit load, step header, List validation, KNG-135, KNG-137, KNG-164; form session registry, KNG-136; cancel / delete-draft prompt, KNG-162; form configuration export/import, KNG-138); 2026-10-17 (form wizard chain merged to `main`; smoke-test follow-ups KNG-166..169, KNG-172, KNG-173: step strip, confirmations and refusals, rule builder parent forms, picker columns, metadata refresh); 2026-10-22 (display configuration export/import; KNG-195 hybrid picker submit); 2026-10-23 (step completion conditions run, KNG-186); 2026-10-23 (validation result log, batch validate, Re-check, KNG-269); 2026-10-25 (toast region, world-task polling; UX re-evaluation in `reports/2026-10-25-web-app-ux-reevaluation.md`); 2026-10-26 (dashboard type in the URL, `returnTo`, submit pending state, success toast — PandiO/knk-workspace#177 link 1, #58)
 **Source scan:** `docs/reports/web-app-scan-2026-09-18.md`
 
 ## Stack
@@ -16,7 +16,8 @@
   `DisplayConfigBuilder` for reorderable steps/sections/fields).
 - Icons: `lucide-react`.
 - Reactive error bus: `rxjs` — a single `Subject`-like `logging.errorHandler` used to
-  surface toast-style errors app-wide (`src/components/ToastRegion.tsx`, mounted in `App.tsx`; errors only, no success variant yet — 2026-10-25).
+  surface toast-style errors app-wide (`src/components/ToastRegion.tsx`, mounted in `App.tsx`). Success toasts go through `toast.success()`
+  (`src/utils/toast.ts`, its own `Subject`; green, 5 s; #177 link 1); the full feedback kit is #33.
 - No Redux/Zustand/MobX — state is local `useState`/`useEffect` plus one React Context
   (`AuthContext`) for auth, plus a small manual in-memory cache in
   `hooks/useEntityMetadata.ts` (module-level `metadataBundleCache` /
@@ -97,6 +98,19 @@ entity. Two parallel generic engines carry most of the CRUD surface:
    `entity-references` check (entities still pending in the run ignored), then the entity's normal
    delete (`getDeleteFunctionForEntity`); in use / 409 = skipped and reported. Cancel never deletes
    the draft; nothing is deleted automatically.
+   **Submit and the way back** (#177 link 1, #58): a form opened from another page carries
+   `?returnTo=` (`utils/returnTo.ts`: `editFormPath`/`newFormPath`/`withReturnTo`, same-origin paths
+   only via `sanitizeReturnTo`). On the last step the wizard saves the progress as `InProgress`, then
+   **awaits** `onComplete` (the page's `handleComplete`, which saves the entity and returns
+   `true`/`false`), and marks the progress `Completed` only after a successful save, then calls
+   `onCompleted`. A refused save (false or a throw) leaves the draft `InProgress`, so the cleanup of
+   completed progress never deletes a draft whose entity doesn't exist. During that window Submit reads
+   "Submitting…" and is disabled (a ref guards re-entry), Previous / Save Draft / the page's Cancel are
+   disabled (`onSubmittingChange`), and a "Saving {Type}…" line shows. After `onCompleted` the page goes
+   straight to the parent display page (child creation), else `returnTo`, else `/dashboard/{type}`,
+   with a success toast ("{Type} created." / "updated."); the old 3 s success modal is gone. Cancel
+   (`handleLeaveForm`) goes to the parent display page, else `returnTo`, else stays on the Forms page.
+   `ChildFormModal` returns `false` from its `onComplete` on a failed child save for the same reason.
    **Export / import** (KNG-138): the form configuration list (`FormWizard/FormConfigurationTable.tsx`)
    has **Export JSON** per row (downloads the API's portable `knk-formconfig/1` file,
    `utils/forms/formConfigPortability.ts`) and **Import / Seeds**, which opens
@@ -135,7 +149,10 @@ entity. Two parallel generic engines carry most of the CRUD surface:
 
 A third, older, simpler config path — `src/config/objectConfigs.tsx`, a static
 TypeScript map of `ObjectConfig` per entity type (fields, icons, validators,
-formatters) — still drives `ObjectDashboard` (the `/dashboard` list/CRUD view) and the
+formatters) — still drives `ObjectDashboard` (the `/dashboard` list/CRUD view; the selected type
+is in the URL as `/dashboard/:entityName` and bare `/dashboard` reopens the last viewed type from
+localStorage `knk.dashboard.lastEntityType`, `utils/lastDashboardType.ts`; Edit opens the form with
+`returnTo`, #177 link 1) and the
 "Create New" menu in `Navigation`. It currently only covers 11 entity types
 (`location, town, district, structure, street, category, itemType,
 minecraftblockref, minecraftmaterialref, gatestructure, gatedoor`), while the
