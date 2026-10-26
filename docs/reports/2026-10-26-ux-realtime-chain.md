@@ -42,7 +42,13 @@ flagged decisions.)
   `docs/guides/realtime-smoke-test.md` § S1 on workspace `claude/realtime-signalr` `e878ee2`. `realtime.enabled` is off by
   default. Links 6, 8 and 10 continue this branch, so it is best merged once at the end (or after link 6) unless you
   want S1 live earlier. Flags L4-1…L4-11; L4: the startup-only siege work (#31) stays with link 10 as the charter says.
-- **Merge links 1 + 3** (web-app and workspace `claude/kng-60-dashboard-hub`) to open link 5 (form wizard) and link 9.
+- **Test link 2** (#185, #38, #192), three independent web-app branches: `claude/route-gates-185` `0d14806`
+  (checklist `guides/alpha-hardening-smoke-test.md` step 27a on workspace `claude/route-gates-185` `6d181c2`),
+  `claude/styling-quick-wins-38` `918f6b7` (five steps in the link 2 block), `claude/claim-code-field-192` `e2a5521`
+  (`guides/invitations-smoke-test.md` steps 16–17 on workspace `claude/claim-code-field-192` `4496485`). They gate
+  nothing. Merging #185 after links 1+3 gives one mechanical `Navigation.tsx` conflict (resolution in the link 2
+  block); workspace CHANGELOG conflicts: keep all entries. Flags L2-4 (border fix on all ~104 fields), L2-7, L2-10.
+- **Merge links 1 + 3** **This is the only thing the web-app side waits on now.** (web-app and workspace `claude/kng-60-dashboard-hub`) to open link 5 (form wizard) and link 9.
 - **Flags L1-1…L1-7** (link 1 block) are reversible defaults; answer only if you disagree. L1-1: a Submit without
   `returnTo` lands on `/dashboard/{type}`, not `/forms/{type}`.
 
