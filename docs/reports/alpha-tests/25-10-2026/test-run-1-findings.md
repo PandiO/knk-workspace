@@ -1,7 +1,7 @@
 # Closed alpha test run 1 — findings (2026-10-25)
 
 **Status:** Triaged; all items filed as GitHub issues. Priorities are preliminary.
-**Last updated:** 2026-10-25 (package A report linked: #150, #152, #153, #154)
+**Last updated:** 2026-10-26 (package B report linked: #151, #155, #156); 2026-10-25 (package A report linked: #150, #152, #153, #154)
 **Issues:** parent [PandiO/knk-workspace#149](https://github.com/PandiO/knk-workspace/issues/149), one sub-issue per
 item (#150–#176)
 **Handoff (P0 + P1):** [2026-10-25-alpha-run-1-p0-p1.md](../../../ai-agents/handoffs/2026-10-25-alpha-run-1-p0-p1.md)
@@ -58,9 +58,9 @@ movement check will probably snap the player back.
 
 | # | Finding | Type | Prio | Issue |
 |---|---|---|---|---|
-| 4.1 + 4.5 | Freeze spam can't be countered. Developer decision 2026-10-25: fix it with admin-configurable values per enchantment (proc chance, cooldown on/off and length, duration, per-level multiplier) | Feature | **P0** | [#151](https://github.com/PandiO/knk-workspace/issues/151) |
-| 4.2 | Frozen players are kicked for flying. Workaround since 15:02Z: `ALLOW_FLIGHT: "TRUE"` for the whole server ([report § 4](../../2026-10-25-alpha-update-api-6f08383d-plugin-ee35fb1d.md)), which also lets fly hacks through | Bug | P1 | [#155](https://github.com/PandiO/knk-workspace/issues/155) |
-| 4.3 | Weaker defaults; freeze maybe an ability with a cooldown | Improvement | P1 | [#156](https://github.com/PandiO/knk-workspace/issues/156) |
+| 4.1 + 4.5 | Freeze spam can't be countered. Developer decision 2026-10-25: fix it with admin-configurable values per enchantment (proc chance, cooldown on/off and length, duration, per-level multiplier) | Feature | **P0** | [#151](https://github.com/PandiO/knk-workspace/issues/151) · in review, [package B report](2026-10-26-package-b-enchantments-freeze.md) |
+| 4.2 | Frozen players are kicked for flying. Workaround since 15:02Z: `ALLOW_FLIGHT: "TRUE"` for the whole server ([report § 4](../../2026-10-25-alpha-update-api-6f08383d-plugin-ee35fb1d.md)), which also lets fly hacks through | Bug | P1 | [#155](https://github.com/PandiO/knk-workspace/issues/155) · in review, [package B report](2026-10-26-package-b-enchantments-freeze.md) |
+| 4.3 | Weaker defaults; freeze maybe an ability with a cooldown | Improvement | P1 | [#156](https://github.com/PandiO/knk-workspace/issues/156) · in review, [package B report](2026-10-26-package-b-enchantments-freeze.md) |
 | 4.4 | Player names visible during the flash/chaos effect | Bug | P2 | [#169](https://github.com/PandiO/knk-workspace/issues/169) |
 | 4.6 | Boss bar with the remaining time of an effect like freeze | Feature | P2 | [#170](https://github.com/PandiO/knk-workspace/issues/170) |
 
