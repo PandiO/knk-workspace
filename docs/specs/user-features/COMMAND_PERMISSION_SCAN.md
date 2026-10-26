@@ -7,6 +7,7 @@
 > (v1/v2), added 2026-09-25 to close that gap.
 
 **Status:** Final — new scan, requested to fill the gap left by the legacy spec-mining pass.
+**Superseded for v3 by:** [reports/2026-10-26-command-permission-scan.md](../../reports/2026-10-26-command-permission-scan.md) (rescan against the in-house rank system, PandiO/knk-workspace#158). §§ 1–2 (v1/v2) still stand.
 **Method:** v1/v2 findings are carried forward verbatim from [`legacy-spec-mining`'s
 `user-system.md`](../legacy/user-system.md) (already source-grounded — not re-derived here).
 v3 findings are a direct, fresh read of `knk-plugin` `main` (`plugin.yml` + every
