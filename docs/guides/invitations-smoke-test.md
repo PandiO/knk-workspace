@@ -230,9 +230,22 @@ step says otherwise.
     disconnect-screen code **with its dash** into the link-code field → the field says it's the server's code, the
     button reads **Continue with this code** → `/link` shows "Verified: <name>" without retyping. Type it **without**
     the dash → "invalid or has expired" plus the hint "Is this the code the server showed you…" linking to `/link`.
-    Logged in as an unlinked account, on `/account/link` type `k7qh-m2xo` (a look-alike O) → "Recognised as the code
-    from the server's disconnect screen" → linked (the O was read as 0). Every claim refusal on `/link`,
-    `/account/link` and the invite sign-up form ends with "The same code stays valid for 15 minutes…".
+    Logged in as an unlinked account, on `/account/link` type `k7qh-m2xo` (a look-alike O) → the field shows
+    `K7QH-M2XO` → linked (the API read the O as 0). Every claim refusal on `/link`, `/account/link` and the invite
+    sign-up form ends with "The same code stays valid for 15 minutes…" (on `/account/link`: for a code without I, L,
+    O or U, or the kept one from `/link`).
+17. **The field shows the separator itself** (#192, knk-web-app `claude/claim-code-field-192`). Get a claim code from
+    the disconnect screen. On `/link` (logged out): type it **without** the dash → after the 4th character the field
+    shows the dash and the caret jumps past it; the result reads like the screen (`ABCD-EFGH`). Type a dash anyway →
+    nothing doubles. Select all, paste `ABCD-EFGH`, `ABCDEFGH`, `abcd efgh` in turn → each lands as `ABCD-EFGH`.
+    Click right after the dash and press Backspace → the 4th character goes (not just the dash); click right before it
+    and press Delete → the 5th goes. Typing in the middle keeps the caret in place. Continue → "Verified: <name>". On
+    a phone, the keyboard opens in capitals and autofill/one-time-code still works. Repeat on `/account/link` as an
+    unlinked account (also try an `/account link` code from chat with an O or L in it → shown `ABCD-OL12`, links). On
+    `/auth/register` (`Mode=Invite`), type the claim code **without** its dash into **Invitation code or code from
+    the server** → "Checking…" → `/link` shows "Verified: <name>" at once; a made-up `ABCD1234` there → the link-code
+    step opens filled in (as before). A screen reader reads one field, "Code from the server", with the hint "The 8
+    letters and digits; the field adds the dash itself."
 
 ## 5. API outage with the gate on
 

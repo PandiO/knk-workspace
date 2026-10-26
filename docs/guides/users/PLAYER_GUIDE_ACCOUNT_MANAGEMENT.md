@@ -40,7 +40,8 @@ Knights & Kings is invite-only. You need an **invitation** from staff: either a 
    device", press **Sign in with Cloudflare** and do the same again.
 3. **Join the server** (`play.knightsandkings.net`, Java Edition 26.3). You're stopped with a screen like:
    *"Knights & Kings is invite-only. Go to …/link and enter `K7QH-M2XA` (valid 15 minutes)."*
-4. **Enter that code** on the website. Your Minecraft name now shows on your account.
+4. **Enter that code** on the website: type the 8 letters and digits, the field adds the dash itself. Your Minecraft
+   name now shows on your account.
 5. **Join again.** You're in, with the first-join welcome and starter kits. The chat confirms which web account
    (e.g. `st***@gmail.com`) is linked — if that isn't you, tell staff right away.
 

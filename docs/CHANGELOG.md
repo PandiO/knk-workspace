@@ -4,7 +4,14 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
-_Nothing at the moment._
+- **Claim code fields show the separator themselves** — knk-web-app `claude/claim-code-field-192`
+  (PandiO/knk-workspace#192; UX/realtime chain link 2, 2026-10-26; closed alpha test run 1, #149). Not merged, not
+  live-tested. On `/link` and `/account/link` the code field shows `XXXX-XXXX` as the player types or pastes the 8
+  characters (with or without a dash, or with a space); the player never types the dash, the caret stays put, and
+  Backspace/Delete work across it. The register page's invitation step checks 8 plain characters as a claim code
+  first and goes on to `/link` verified when it is one. The separator is one constant (`CLAIM_CODE_SEPARATOR`, a dash
+  until the testers decide; the API and the disconnect screen use a dash too). The link-code field and its #57 hints are
+  unchanged. Live checklist: `guides/invitations-smoke-test.md` step 17.
 
 ## 2026-10-25
 
