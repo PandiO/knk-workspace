@@ -182,9 +182,19 @@ lines in the prompt (global instructions "Session chains"). A1/A2 can share the 
 - New requirement from the answers: **world tasks anchored to the draft** so a task can always be found again from its
   form submission (DESIGN §8.7, part of #180): one session per draft, task linked to the draft and field, silent draft
   save on the first task, reattach and apply finished results on mount.
-- Defaults not asked (Q9, Q13–Q15) kept as proposed. **Still open:** Q16, the 2026-10-08 SignalR comment on KNG-57 in
-  Linear (developer to check).
+- Q9, Q13–Q15 confirmed (second round, 2026-10-26). Q16 closed: the 2026-10-08 Linear comment is superseded by this
+  design.
+
+**Second round (2026-10-26)**
+- #192 (claim code dash, test run 1): **keep `XXXX-XXXX`**, the web fields show the separator themselves (players type or
+  paste 8 characters); dash or space on the disconnect screen: **ask one or two testers first**.
+- World tasks: Replace **releases** the held task (not cancel); sessions without a draft removed after **7 days**; the
+  first task **saves the draft silently**.
+- #71 stays medium; #38 raised to **medium**; #186 cleanup is a **script after a backup** (`scripts/maintenance/`).
+- #104: **English only** for now; multi-language much later.
+- #92: a **Light / Dark / System toggle in the account menu on all pages** (remembered per browser, dark palette on the
+  #95 tokens), so testers can see both and give feedback; this replaces the "light admin / dark public" choice for now.
 
 ## 8. Next step
 
-Start A1 (#177 link 1) from this plan and the 2026-10-24 handoff. S1 (#178) starts while A2 is built. Open: Q16.
+Start A1 (#177 link 1) from this plan and the 2026-10-24 handoff. S1 (#178) starts while A2 is built. No open questions.
