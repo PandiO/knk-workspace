@@ -32,6 +32,10 @@ flagged decisions.)
 
 - Nothing yet.
 
+## Coordinator notes
+
+- 2026-10-26: the developer pre-approved attaching `PandiO/knk-plugin`, `knk-web-app`, `knk-web-api`, `knk-dev-db-seed` and `knk-workspace` with `add_repo` (access push) for the coordinator and every link session it creates for this chain. Link prompts carry this as one appended sentence; it was also sent to link 1's session.
+
 ## Follow-ups filed by links
 
 - None yet.
