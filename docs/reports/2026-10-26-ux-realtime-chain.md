@@ -15,11 +15,11 @@ test), `merged`, `blocked: <reason>`.
 | Link | Issues | Branch | Status | Started | Heads (api / web-app / plugin / workspace) | Tests vs baseline |
 |---|---|---|---|---|---|---|
 | 1 | #177 (link 1), #58 | `claude/kng-60-dashboard-hub` | in review | create_session session_01Lr2FyBpZG3fDCq51LuFgSM, 2026-10-26 (a first subagent run was stopped by the developer before pushing anything) | — / `df78e73` / — / `7143596` | web-app 1232/1232 (baseline 1214/1214), suites 195 (193); `tsc` 9 errors = baseline; build OK, same warnings |
-| 2 | #185, #38, #192 | `claude/route-gates-185`, `claude/styling-quick-wins-38`, `claude/claim-code-field-192` | in progress | subagent (fallback: add_repo needed in-session approval), 2026-10-26 | — | — |
+| 2 | #185, #38, #192 | `claude/route-gates-185`, `claude/styling-quick-wins-38`, `claude/claim-code-field-192` | in review | subagent (fallback: add_repo needed in-session approval), 2026-10-26 | — / route-gates `0d14806`, styling `918f6b7`, claim-code `e2a5521` / — / route-gates `6d181c2`, styling `262bca9`, claim-code `4496485` | web-app 1218 / 1218 / 1240, all passed (baseline 1214/1214), suites 194 (193); `tsc` 9 errors = baseline; build OK, same 24 warnings |
 | 3 | #177 (link 2), #81, #39 (menu) | `claude/kng-60-dashboard-hub` | in review | subagent (fallback: add_repo needed in-session approval), 2026-10-26 | — / `9a203f8` / — / `186c851` | web-app 1270/1270 (baseline 1232/1232), suites 201 (195); `tsc` 9 errors = baseline; build OK, same 24 warnings |
-| 4 | #178 | `claude/realtime-signalr` | in progress | create_session session_01CKkjS6mCCEw1VUWVwZJqnA, 2026-10-26 | — | — |
+| 4 | #178 | `claude/realtime-signalr` | in review | subagent (fallback: add_repo needed in-session approval), 2026-10-26 | `b8a29d7` / — / `a64b7f83` / `e878ee2` | API 3338 passed, 4 failed (#99, = baseline reds), 87 skipped (baseline 3296/4/87); plugin core 2319 (2312), api-client 290 (280), paper 2149 (2140), 0 failures |
 | 5 | #64 (FormWizard), #109, #186 | `claude/form-wizard-edit-mode` | waiting: links 1 and 3 merged | — | — | — |
-| 6 | #179 | `claude/realtime-signalr` | waiting: link 4 done | — | — | — |
+| 6 | #179 | `claude/realtime-signalr` | in progress | subagent (fallback: add_repo needed in-session approval), 2026-10-26 | — | — |
 | 7 | #180 | `claude/world-task-hardening` | waiting: link 5 merged | — | — | — |
 | 8 | #181 | `claude/realtime-signalr` | waiting: link 6 done, link 7 merged | — | — | — |
 | 9 | #39 (rest), #177 follow-up | `claude/entity-lists-url-state` | waiting: link 3 merged | — | — | — |
@@ -38,7 +38,17 @@ flagged decisions.)
 - **Test link 3** (#177 link 2, #81, #39 menu): web-app `claude/kng-60-dashboard-hub` `9a203f8`; live checklist
   [guides/dashboard-return-smoke-test.md](../guides/dashboard-return-smoke-test.md) sections 8–14 on workspace branch
   `claude/kng-60-dashboard-hub` `186c851`. Flags L3-1…L3-9 (link 3 block) are reversible defaults.
-- **Merge links 1 + 3** (web-app and workspace `claude/kng-60-dashboard-hub`) to open link 5 (form wizard) and link 9.
+- **Test link 4** (#178, SignalR S1): API `claude/realtime-signalr` `b8a29d7`, plugin `a64b7f83`; live checklist
+  `docs/guides/realtime-smoke-test.md` § S1 on workspace `claude/realtime-signalr` `e878ee2`. `realtime.enabled` is off by
+  default. Links 6, 8 and 10 continue this branch, so it is best merged once at the end (or after link 6) unless you
+  want S1 live earlier. Flags L4-1…L4-11; L4: the startup-only siege work (#31) stays with link 10 as the charter says.
+- **Test link 2** (#185, #38, #192), three independent web-app branches: `claude/route-gates-185` `0d14806`
+  (checklist `guides/alpha-hardening-smoke-test.md` step 27a on workspace `claude/route-gates-185` `6d181c2`),
+  `claude/styling-quick-wins-38` `918f6b7` (five steps in the link 2 block), `claude/claim-code-field-192` `e2a5521`
+  (`guides/invitations-smoke-test.md` steps 16–17 on workspace `claude/claim-code-field-192` `4496485`). They gate
+  nothing. Merging #185 after links 1+3 gives one mechanical `Navigation.tsx` conflict (resolution in the link 2
+  block); workspace CHANGELOG conflicts: keep all entries. Flags L2-4 (border fix on all ~104 fields), L2-7, L2-10.
+- **Merge links 1 + 3** **This is the only thing the web-app side waits on now.** (web-app and workspace `claude/kng-60-dashboard-hub`) to open link 5 (form wizard) and link 9.
 - **Flags L1-1…L1-7** (link 1 block) are reversible defaults; answer only if you disagree. L1-1: a Submit without
   `returnTo` lands on `/dashboard/{type}`, not `/forms/{type}`.
 
@@ -48,8 +58,10 @@ flagged decisions.)
 
 ## Follow-ups filed by links
 
+- Link 4: no new issue (API reds = #99, `.sln` path case = #106); WT2 notes as a comment on [#181](https://github.com/PandiO/knk-workspace/issues/181).
 - Link 1: comment on [#63](https://github.com/PandiO/knk-workspace/issues/63): `tsc --noEmit` on web-app `main` has 9
   test-file errors, not 2 (adds `categoryTree.test.ts` ×5 and `cloudflareAccess.test.ts` ×1).
+- Link 2: comment on [#95](https://github.com/PandiO/knk-workspace/issues/95): about 104 form fields set `focus:ring-primary` without a ring width, so they have no focus ring (#38 only gives them their border).
 
 ---
 
@@ -200,3 +212,227 @@ admin layout, #72/#148 User form).
   (`ObjectDashboard` header). `PagedEntityTable` has the new `emptyState` prop; controlled mode should keep it.
 - #30: `utils/breadcrumbs.ts` (`trailTo`, `formTrail`, `detailTrail`) and `components/Breadcrumbs.tsx` are the trail to
   reuse in the admin layout.
+
+## Link 4 — #178 (S1): SignalR foundation
+
+**Started:** subagent (fallback: `add_repo` needed in-session approval), 2026-10-26; finished 2026-10-26. Ran at the same
+time as link 3 (other component repos).
+**Base:** knk-web-api `master` `6f08383`, knk-plugin `main` `ee35fb1d` (both unchanged at the end, nothing to merge);
+knk-workspace branch created from `main` `ead2aa4`, `origin/main` `1bcd876` merged in before the last push (`e878ee2`).
+
+**Commits**
+- knk-web-api `claude/realtime-signalr`: `b8a29d7` hubs, envelope, publisher, presence registry + tests. Head **`b8a29d7`**.
+- knk-plugin `claude/realtime-signalr`: `e01254f5` core/api-client realtime client (backoff, seq, resync hooks, stats,
+  SignalR transport); `a64b7f83` paper wiring, `realtime.*` config, `realtime.server-id`, `/knk health`, metrics, shadow
+  relocations. Head **`a64b7f83`**.
+- knk-workspace `claude/realtime-signalr`: `72f79f0` DESIGN/plan status (+ DESIGN §4.6 "as built"), architecture
+  (plugin, web-api §6, api-connectivity), production-installation + alpha-go-live (`realtime:` block, nginx
+  `/api/hubs/`), new `guides/realtime-smoke-test.md`, guides README, CHANGELOG; `e878ee2` merge of `main`. Head **`e878ee2`**.
+
+**What was built**
+- **API** (`Realtime/`): `/api/hubs/game` (policy `KnkRealtimeGameServer` = the `[RequirePluginService]` key check, constant
+  time; `X-Knk-Server-Id` required, 1–64 of `[A-Za-z0-9._-]`; groups `servers`, `server:{id}`; first message `Welcome`
+  seq 1) and `/api/hubs/web` (JWT incl. the TokenVersion check; `access_token` query string read in `OnMessageReceived`
+  for this path only; closes when the token expires; group `user:{id}`; no client methods). Envelope `{v, seq, type, at,
+  actor, payload}`. `IRealtimePublisher` → bounded channel (1000, drop-oldest, logged) → `RealtimeDispatchService`
+  (one reader, `seq` per connection). `PresenceRegistry` + `PresenceStore` (`User.IsOnline`/`LastSeenAt`):
+  `ReportRoster` reconciles every row, `PlayerJoined`/`PlayerLeft`, `PresenceSweepService` marks a server's players
+  offline after 60 s without reconnect. Meter `Knk.Realtime`. Optional settings section `Realtime`.
+- **Plugin:** `knk-core/.../core/realtime/` (`ReconnectBackoff` 1/2/5/10/30 s ±20 %, `SequenceTracker`, `ResyncHooks`,
+  `RealtimeState`, `RealtimeStats` as a metrics collector; package added to the Bukkit-free guard),
+  `knk-api-client/.../api/realtime/` (`RealtimeClient` on one executor thread: reconnect, pause/resume, fresh seq per
+  connection, fire-and-forget `send`; `SignalRHubTransport` on `com.microsoft.signalr` 10.0.13, Gson 2.11.0;
+  `RealtimeEnvelope`), `knk-paper/.../paper/realtime/` (`RealtimeService`: roster + resync on the main thread on every
+  (re)connect and after a gap, `PlayerJoined`/`PlayerLeft`, paused on `ApiConnectivityChangedEvent` DOWN, resumed on UP;
+  `RealtimeDispatcher`; `RealtimeSettings`). `config.yml` `realtime:` (`enabled: false`, `server-id: "localhost"`,
+  `hub-url`, `hub-path`, `backoff-seconds`, `backoff-jitter`). `realtime.server-id` replaces the hard-coded
+  `"localhost"` passed to world-task claims. `/knk health` line; `knk_realtime_*` on the KNG-232 endpoint. Shadow jar
+  relocates RxJava, reactive-streams and Gson; slf4j comes from Paper.
+
+**Tests vs baseline**
+- API: **3338 passed, 4 failed, 87 skipped of 3429** (baseline 3296 / 4 / 87 of 3387). +42 new in `Tests/.../Realtime/`
+  (registry, store, publisher/dispatcher, both hubs end to end on a test server with the .NET SignalR client over long
+  polling). The 4 reds are #99 (PathResolution ×2, FieldValidation, ClientActivityStore; the last one also red on a clean
+  `master` worktree today). `dotnet build` at the repo root fails on the `.sln` path case (#106); built with the csproj.
+- Plugin (`./gradlew build -x deployToDevServer`, JDK 25 toolchain): core **2319** (2312), api-client **290** (280, 2
+  skipped both), paper **2149** (2140, 18 skipped both); 0 failures. Shadow jar checked: SignalR inside, RxJava/Gson
+  relocated, no slf4j.
+- Interop (not committed): the Java client against the API branch's hubs in a scratch host over WebSockets: `Welcome`
+  seq 1, roster reconcile (stale online row set offline), join/leave, a published message as seq 2, grace expiry, and a
+  reconnect after killing and restarting the API (backoff 1/2/5/10/30 s; roster corrected the rows again).
+- `[MySqlFact]` tests: none written (presence uses plain EF reads/writes; covered on InMemory).
+
+**Flagged decisions (reversible)**
+- **L4-1** `realtime.server-id` defaults to `"localhost"` (the old hard-coded value), so a server without the key claims
+  tasks exactly as before. `game-settings.server-id` and `lootboxes.server-id` (default `"default"`) stay separate keys;
+  unifying them is not in S1.
+- **L4-2** Per-connection `seq` (DESIGN §4.2) is done by the API's own connection/group registry (`RealtimeConnections`);
+  SignalR's group feature is not used, because it can't number per connection.
+- **L4-3** A `Welcome {serverId, presenceGraceSeconds}` event (seq 1) was added so S1 has one message to verify the path
+  end to end; documented in DESIGN §4.6.
+- **L4-4** A game-hub connection without a valid `X-Knk-Server-Id` is closed (not filed under a default id).
+  `Realtime:AllowedServerIds` exists (empty = any id, logged), per DESIGN §7.3.
+- **L4-5** A roster reconciles **all** users: anyone marked online in the database but on no connected (or in-grace)
+  server's roster is set offline. Correct while every game server that shares the API uses the hub (one server today).
+- **L4-6** The REST `PUT api/users/{id}/presence` on join/quit is kept even while the hub is connected (a second,
+  idempotent write) instead of being skipped; less risk, no listener change.
+- **L4-7** The resync also runs on the first connect at startup (DESIGN: every (re)connect); it re-reads caches loaded
+  moments earlier, which is harmless.
+- **L4-8** S1 resync hooks: the `/knk cache refresh` hooks, `DomainAccessFlagSync.syncNow()`, `LootboxRuntime.refresh()`.
+  Not in S1: the user-cache re-read and the notification drain (S2, #179), open world tasks (WT2, #181), and the
+  startup-only siege work (#31): the issue text names it for S1, but the charter's link table and the plan put it in S3
+  (link 10, #182). The hook list is where it goes.
+- **L4-9** `realtime.fallback-poll-multiplier` (DESIGN §4.4) is not added yet: nothing slows down in S1; S2 adds the key
+  with the slower re-syncs (plan S2, Q4).
+- **L4-10** `scripts/alpha-web/nginx.conf` is unchanged: the plugin connects straight to `http://api:5000` and the web
+  hub has no browser client before WT2. `production-installation.md` documents a `/api/hubs/` location with
+  `access_log off` (the browser's JWT is in the query string); the alpha config needs the same when WT2 lands.
+- **L4-11** SignalR Java client **10.0.13** (2026-10-13), not 10.0.14 (released 2026-10-25); Gson pinned to 2.11.0.
+
+**Deviations from the plan/design:** L4-8 (siege startup work left to link 10 as the charter says) and L4-3 (one extra
+event type). `RealtimeDispatcher` is in knk-paper as designed; the pure pieces (backoff, sequence, hooks, stats) are in
+knk-core so they are unit-tested without Bukkit.
+
+**Live checklist:** [guides/realtime-smoke-test.md](../guides/realtime-smoke-test.md) § S1 (workspace branch
+`claude/realtime-signalr` until merged): off changes nothing, connect, presence on join/quit, API restart (paused while
+DOWN, immediate reconnect on UP), reconcile after a crash, 60 s grace, resync, world-task server id, no waiting, wrong
+key/id.
+
+**Deploy notes:** API: no migration, no new secret; optional section `Realtime` (`ChannelCapacity`,
+`PresenceGraceSeconds`, `PresenceSweepSeconds`, `KeepAliveSeconds`, `ClientTimeoutSeconds`, `AllowedServerIds`); keep
+`Microsoft.AspNetCore` logging at Warning (request URLs with `access_token` are logged at Information). Plugin: add the
+`realtime:` block to an existing `config.yml` (the bundled one has it, `enabled: false`); the hub needs
+`api.auth.type: apikey`. The plugin jar grows by the SignalR client, RxJava 3 and Gson (about 3.5 MB, mostly RxJava; shadow jar 14.2 MB).
+
+**Follow-ups filed:** none new; the reds are #99 and the `.sln` path is #106. Comment on #181 with the WT2 notes below.
+
+**Notes for later links**
+- Link 6 (S2, #179): publish with `IRealtimePublisher.PublishToGameServers(type, payload, actor: new RealtimeActor(userId,
+  "web"))` after `SaveChangesAsync`; on the plugin register handlers with `realtimeService.dispatcher().register(type, v,
+  executor, handler)` **before** `start()` in `KnKPlugin.initializeRealtime()` (the client listens for the registered
+  types on each connect). Add the user-cache re-read and the notification drain as `ResyncHooks`, and
+  `realtime.fallback-poll-multiplier` to `RealtimeSettings`. `RealtimeService.isConnected()` tells the pollers to slow down.
+- Link 8 (WT2, #181): `PresenceRegistry.ServerOf(uuid)` answers "is the initiator online"; `RealtimeConnection.Groups` is
+  fixed at connect, so `task:{id}` joins need a mutating method on `RealtimeConnections`; the web hub has no client
+  methods yet (add join/leave with the `CreatedByUserId` / `knk.admin.world` check, DESIGN §7.3); add `/api/hubs/` with
+  `access_log off` to `scripts/alpha-web/nginx.conf`.
+- Link 10 (S3, #182): the startup-only siege work goes into `ResyncHooks` (`initializeRealtime`); the entity events go
+  through one `IRealtimeEventSink` in front of `IRealtimePublisher`.
+- Hub tests: `Tests/.../Realtime/RealtimeHubTests.cs` builds a test server with `AddKnkRealtime` +
+  `MapKnkRealtimeHubs` and connects with long polling; reuse it for new hub methods.
+
+## Link 2 — #185, #38, #192: route gates, styling quick wins, claim code field
+
+**Started:** subagent (fallback: add_repo needed in-session approval), 2026-10-26; finished 2026-10-26.
+**Base:** knk-web-app `main` `0d61270` for all three branches (unchanged at the end; nothing to merge in). knk-workspace
+branches from `main` `a46e8fd` (current at the end). One branch per issue; nothing in knk-web-api or knk-plugin.
+
+**Commits**
+- knk-web-app `claude/route-gates-185`: `0d14806` route gates + nav entries + test. Head **`0d14806`**.
+- knk-web-app `claude/styling-quick-wins-38`: `918f6b7` Tailwind config, `index.css`, style test. Head **`918f6b7`**.
+- knk-web-app `claude/claim-code-field-192`: `b82dad6` `ClaimCodeInput` + separator constant; `e2a5521` the pages.
+  Head **`e2a5521`**.
+- knk-workspace `claude/route-gates-185` **`6d181c2`**: CHANGELOG, `guides/game-settings.md`,
+  `guides/authoring-a-siege-scenario.md` § 4, `guides/alpha-hardening-smoke-test.md` step 27a.
+- knk-workspace `claude/styling-quick-wins-38` **`262bca9`**: CHANGELOG, `architecture/web-app-architecture.md` (styling).
+- knk-workspace `claude/claim-code-field-192` **`4496485`**: CHANGELOG, `architecture/account-identity-and-admission.md`
+  § 4, `guides/users/PLAYER_GUIDE_ACCOUNT_MANAGEMENT.md` step 4, `guides/invitations-smoke-test.md` steps 16–17.
+
+**What changed (web-app)**
+- **#185:** `/admin/game-settings` and its nav link need `knk.admin.config` (`SERVER_CONFIG_PERMISSION_NODE`, the API's
+  `StaffPermissions.ServerConfig`), `/admin/siege-configuration` and its link `knk.siege.admin.manage`
+  (`SIEGE_ADMIN_PERMISSION_NODE`, `StaffPermissions.SiegeManage`); both constants in `hooks/useStaffAccess.ts`. Before:
+  the moderator node. Without the node: no nav link, and the page says "Staff only" naming the node.
+- **#38:** `primary.dark` `#1d4ed8` in `tailwind.config.js` (28 `hover:*-primary-dark` uses get a hover state);
+  `.btn` is `inline-flex items-center justify-center gap-2` and `.btn > svg` drops its own `mx` margin; `.btn-tertiary`
+  (transparent, primary text, light primary hover) for Save Draft; `.input` gets `border`; a zero-specificity base rule
+  (`:where(input…, select, textarea):where([class*=border-gray-300], [class*=border-slate-300])`) gives fields that set a
+  border colour but no width their 1px (preflight sets 0 and `@tailwindcss/forms` isn't installed).
+  `src/__tests__/tailwindStyles.test.ts` compiles `index.css` with the project config and checks all of it.
+- **#192:** `components/auth/ClaimCodeInput.tsx`: one labelled input holding the 8 characters and showing `XXXX-XXXX`;
+  the separator appears once the first group is full; typed/pasted separators (dash, en dash, space) are ignored; the
+  caret is kept; Backspace/Delete on the separator remove the character beyond it. `utils/claimCode.ts`:
+  `CLAIM_CODE_SEPARATOR` (one constant, `-`), `CLAIM_CODE_SHAPE`, `CLAIM_CODE_EXAMPLE`, `CLAIM_CODE_SEPARATOR_NAME`,
+  `claimCodeChars`; `looksLikeClaimCode` also takes a space between the groups. Used on `/link` (folds look-alikes) and
+  `/account/link` (takes link codes too: keeps O/I/L, sends the 8 characters unfolded; `ValidateLinkCodeAsync` already
+  tries the link code, then the folded claim form). Register page, invitation step: 8 plain characters without a U are
+  checked with `claim/check` first; a live claim code is kept (`knk.pendingClaim`) and the player lands on `/link`
+  verified; otherwise the link-code step opens as before. Help texts and placeholders use the constants.
+
+**Tests vs baseline** (Node 22, `npx npm@11 ci`)
+- Baseline `main` `0d61270`: 1214/1214, 193 suites; `tsc --noEmit` 9 errors (#63); build OK, 24 warning lines.
+- `claude/route-gates-185`: **1218/1218, 194 suites** (+4: `Navigation.settingsGates.test.tsx`); tsc 9; build OK, 24.
+- `claude/styling-quick-wins-38`: **1218/1218, 194 suites** (+4: `tailwindStyles.test.ts`); tsc 9; build OK, 24;
+  the production CSS holds the new rules (checked in `build/static/css`).
+- `claude/claim-code-field-192`: **1240/1240, 194 suites** (+26: `ClaimCodeInput.test.tsx` 15, `claimCode` 3, `LinkPage`
+  3, `AccountLinkPage` +2 net, `RegisterForm` +3; 3 existing cases rewritten for the new field); tsc 9; build OK, 24.
+- The three branches merge into each other cleanly (trial merge of all three on `main`).
+
+**Merge notes**
+- **`claude/route-gates-185` vs links 1+3 (`claude/kng-60-dashboard-hub`): one mechanical conflict** in
+  `src/components/Navigation.tsx` `NAV_LINKS` (link 3 renamed "Forms" on the line just above the Game Settings entry).
+  Resolution: keep links 1+3's Dashboard / "Entity setup" lines and this branch's Game Settings / Siege Settings lines
+  (`node: SERVER_CONFIG_PERMISSION_NODE` / `node: SIEGE_ADMIN_PERMISSION_NODE`). The import line and `nodeAccess` merge
+  cleanly. The other two branches merge cleanly with links 1+3.
+- knk-workspace: each of the three branches, links 1+3 and link 4 add an entry under CHANGELOG "Unreleased" (keep all);
+  nothing else conflicts (the header lines that links 1+3 also edit were left alone; dates are inline).
+
+**Flagged decisions (reversible)**
+- **L2-1** (#185) No read-only view: there is no read node for either page, and the API's GETs only need a login. A
+  holder of neither node sees "Staff only". A read-only mode can follow with #26 if wanted.
+- **L2-2** (#185) The siege node is not matched by `knk.admin.*` (only `knk.siege.*`, `knk.siege.admin.*`, `*`), so an
+  admin with `knk.admin.*` but no siege node no longer sees Siege Settings; that matches what the API refuses.
+- **L2-3** (#38) `.btn > svg` drops the icon's own `mr-2`/`ml-*` (about 41 call sites) so the new `gap-2` doesn't double
+  the spacing; every button icon is 8 px from its label.
+- **L2-4** (#38) The border rule reaches beyond Game Settings: about 104 fields in 25 files written as
+  `rounded-md border-gray-300 …` (builders, wizard field renderers, lootbox filters, paged-table category filter) now
+  show a 1px border. That is the same bug everywhere; a field that sets `border-0`/`border-2` keeps its own. Their missing
+  focus ring is commented on #95.
+- **L2-5** (#38) `primary-dark` = `#1d4ed8` (Tailwind blue-700, one step darker than `primary`); `btn-tertiary` =
+  text button in primary blue. Both move to tokens with #95.
+- **L2-6** (#192) The field shows the separator as soon as the first group is full (`ABCD-`), so the player sees it
+  before typing the 5th character; a typed dash then changes nothing.
+- **L2-7** (#192) `/account/link` takes both codes in one field, so link codes are shown `ABCD-OLIL` too (the API ignores
+  hyphens). Its "Recognised as the code from the server's disconnect screen" note is gone (the field always shows that
+  shape); the 15-minute note on a refusal now shows for a code without I, L, O or U (the #57 rule) or the kept one.
+- **L2-8** (#192) The invitation step's `claim/check` probe for 8 plain characters costs one anonymous lookup (per-IP
+  lookup limit, 20 a minute); a failed probe falls back to the link-code step.
+- **L2-9** (#192) The register page's link-code field is unchanged (no mask): it keeps a typed dash, which is what lets
+  the #57 detection route a claim code to `/link`. The issue's optional "link-code fields with their own pattern" is not
+  done.
+- **L2-10** (#192) **Dash or space is still the testers' call.** Today everything uses a dash, so no API or plugin change
+  was needed. If they choose a space: change `CLAIM_CODE_SEPARATOR` (web; texts and fields follow), the API's
+  `LinkCodeService.FormatClaimCode` (the plugin's disconnect screen shows the API's string; check its message text
+  for a hard-coded example), and let the
+  register page's link-code field keep a typed space (`normalizeLinkCodeInput` keeps only dashes). The API already
+  ignores spaces when reading a code.
+
+**Deviations:** none from the plan. Per issue, one branch from `main`, as the charter says.
+
+**Live checklist**
+- #185: `guides/alpha-hardening-smoke-test.md` step 27a (workspace `claude/route-gates-185`).
+- #192: `guides/invitations-smoke-test.md` step 17 (and the updated step 16) (workspace `claude/claim-code-field-192`).
+- #38 (web-app `claude/styling-quick-wins-38`, no guide of its own):
+  1. Log in page: hover **Log in** → the button turns darker blue; the "Forgot password?" link darkens too. Open a
+     non-danger confirm or message dialog (`FeedbackModal` / `useConfirm`, e.g. an error message on the dashboard) →
+     its blue button darkens on hover.
+  2. Game Settings: **Refresh** and **Save** show the icon left of the label, not above it. Text fields and dropdowns have
+     a visible grey border that turns blue on focus.
+  3. A form in the wizard: **Previous / Save Draft / Next** have their icons beside the label with normal spacing;
+     **Save Draft** is blue text on no background, light blue on hover.
+  4. Entity setup → edit a form configuration (field editor) and a display configuration: every input shows one border
+     (no double border, no thicker one). Lootboxes → Drop log filters: same.
+  5. Buttons that span the width on a phone (login, register, `/link`) keep their label centred.
+
+**Deploy notes:** web app only, per branch. No API, plugin, migration, setting or script.
+
+**Follow-ups:** comment on [#95](https://github.com/PandiO/knk-workspace/issues/95): the ~104 colour-only bordered fields
+have no focus ring (`focus:ring-primary` without a width). Nothing else filed.
+
+**Notes for later links**
+- Tests that render `Navigation` must open the menu (`Open menu`): jsdom measures every width as 0, so the links live in
+  the menu panel (`Navigation.settingsGates.test.tsx`).
+- `src/__tests__/tailwindStyles.test.ts` compiles `index.css` with the real config (node environment, `raw` content);
+  reuse it for the #95 tokens.
+- New permission-node constants for web pages go next to `CONTENT_PERMISSION_NODE` in `hooks/useStaffAccess.ts`; a nav
+  entry with `node:` also needs its `usePermission` line in `Navigation`'s `nodeAccess`.
