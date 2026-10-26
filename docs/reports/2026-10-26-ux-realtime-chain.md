@@ -1,6 +1,6 @@
 # Dashboard, form wizard and realtime chain — progress report
 
-**Status:** In progress — links 1–3 merged; link 4 in review; link 6 running (2026-10-26)
+**Status:** In progress — links 1–3 merged; links 4 and 6 in review (2026-10-26)
 **Last updated:** 2026-10-26
 **Charter:** [UX_REALTIME_CHAIN.md](../ai-agents/handoffs/UX_REALTIME_CHAIN.md) · **Coordinator prompt:**
 [2026-10-26-ux-realtime-coordinator-prompt.md](../ai-agents/handoffs/2026-10-26-ux-realtime-coordinator-prompt.md)
@@ -19,7 +19,7 @@ test), `merged`, `blocked: <reason>`.
 | 3 | #177 (link 2), #81, #39 (menu) | `claude/kng-60-dashboard-hub` | merged: knk-web-app `main` `7ba0f4b`, knk-workspace `main` `78bf6a3` (2026-10-26, by the coordinator at the developer's request) | subagent (fallback: add_repo needed in-session approval), 2026-10-26 | — / `9a203f8` / — / `186c851` | web-app 1270/1270 (baseline 1232/1232), suites 201 (195); `tsc` 9 errors = baseline; build OK, same 24 warnings |
 | 4 | #178 | `claude/realtime-signalr` | in review | subagent (fallback: add_repo needed in-session approval), 2026-10-26 | `b8a29d7` / — / `a64b7f83` / `e878ee2` | API 3338 passed, 4 failed (#99, = baseline reds), 87 skipped (baseline 3296/4/87); plugin core 2319 (2312), api-client 290 (280), paper 2149 (2140), 0 failures |
 | 5 | #64 (FormWizard), #109, #186 | `claude/form-wizard-edit-mode` | ready (gate open: links 1+3 merged); waits for link 6 to free knk-web-api | — | — | — |
-| 6 | #179 | `claude/realtime-signalr` | in progress | subagent (fallback: add_repo needed in-session approval), 2026-10-26 | — | — |
+| 6 | #179 | `claude/realtime-signalr` | in review | subagent (fallback: add_repo needed in-session approval), 2026-10-26 | `38b0466` / — / `b48f1484` / `ae949bd` | API 3361 passed, 4 failed (#99, = baseline reds), 87 skipped (baseline 3338/4/87); plugin core 2323 (2319), api-client 298 (290), paper 2163 (2149), 0 failures |
 | 7 | #180 | `claude/world-task-hardening` | waiting: link 5 merged | — | — | — |
 | 8 | #181 | `claude/realtime-signalr` | waiting: link 6 done, link 7 merged | — | — | — |
 | 9 | #39 (rest), #177 follow-up | `claude/entity-lists-url-state` | ready (gate open: link 3 merged); runs after link 5 (same web-app files, charter gate note) | — | — | — |
@@ -38,6 +38,10 @@ flagged decisions.)
   `docs/guides/realtime-smoke-test.md` § S1 on workspace `claude/realtime-signalr` `e878ee2`. `realtime.enabled` is off by
   default. Links 6, 8 and 10 continue this branch, so it is best merged once later unless you want S1 live earlier.
   Flags L4-1…L4-11; the startup-only siege work (#31) stays with link 10 as the charter says.
+- **Test link 6** (#179, SignalR S2, same branch): API `38b0466`, plugin `b48f1484`; live checklist
+  `docs/guides/realtime-smoke-test.md` § S2 on workspace `claude/realtime-signalr` `ae949bd` (run § S1 first). Flags
+  L6-1…L6-12 (link 6 block). L6-1: the ×4 slowdown applies only to the social-spy re-check for now; the notification
+  poll stops while connected; the other timers slow down when S3 pushes their changes.
 
 ## Coordinator notes
 
@@ -46,6 +50,9 @@ flagged decisions.)
 ## Follow-ups filed by links
 
 - Link 4: no new issue (API reds = #99, `.sln` path case = #106); WT2 notes as a comment on [#181](https://github.com/PandiO/knk-workspace/issues/181).
+- Link 6: comment on [#76](https://github.com/PandiO/knk-workspace/issues/76): with the hub the display symptom should be
+  gone (set reloaded before the redraw; live check pending); with the hub down the `RankChanged` poll path still
+  doesn't drop the permission set (left as is: channel off = today's behaviour). No new issue.
 - Link 1: comment on [#63](https://github.com/PandiO/knk-workspace/issues/63): `tsc --noEmit` on web-app `main` has 9
   test-file errors, not 2 (adds `categoryTree.test.ts` ×5 and `cloudflareAccess.test.ts` ×1).
 - Link 2: comment on [#95](https://github.com/PandiO/knk-workspace/issues/95): about 104 form fields set `focus:ring-primary` without a ring width, so they have no focus ring (#38 only gives them their border).
@@ -423,3 +430,119 @@ have no focus ring (`focus:ring-primary` without a width). Nothing else filed.
   reuse it for the #95 tokens.
 - New permission-node constants for web pages go next to `CONTENT_PERMISSION_NODE` in `hooks/useStaffAccess.ts`; a nav
   entry with `node:` also needs its `usePermission` line in `Navigation`'s `nodeAccess`.
+
+## Link 6 — #179 (S2): user state pushed to the game server
+
+**Started:** subagent (fallback: `add_repo` needed in-session approval), 2026-10-26; finished 2026-10-26. Ran while link 2
+was finishing in knk-web-app (no shared component repo).
+**Base:** link 4's heads, knk-web-api `claude/realtime-signalr` `b8a29d7` (API `master` `6f08383` already in it, unchanged)
+and knk-plugin `a64b7f83` (plugin `main` `ee35fb1d` already in it, unchanged). knk-workspace `claude/realtime-signalr`
+`e878ee2` with `origin/main` merged in at the start (`9b0e507`) and before the last push (`ae949bd`, CHANGELOG
+conflict resolved by keeping both sides).
+
+**Commits**
+- knk-web-api `claude/realtime-signalr`: `38b0466` user-state events, event sink (after commit), hub-backed notification
+  queue + tests. Head **`38b0466`**.
+- knk-plugin `claude/realtime-signalr`: `0a188d1b` payload records, offline answers, `FallbackPolling`; `b48f1484`
+  `UserStateSync` handlers, pushed notifications, resync steps, `realtime.fallback-poll-multiplier`. Head **`b48f1484`**.
+- knk-workspace `claude/realtime-signalr`: `9b0e507` merge of `main`; `b0eeaa7` DESIGN status + §6.7 "S2 as built", plan
+  status, plugin and web-api architecture, smoke test § S2 (and S1's step count), guides README, alpha-go-live and
+  production-installation (`fallback-poll-multiplier`), CHANGELOG; `ae949bd` merge of `main`. Head **`ae949bd`**.
+
+**What was built**
+- **API events** (`Realtime/UserStateEvents.cs`, contracts in `Realtime/Contracts/RealtimeEnvelope.cs`):
+  `UserPermissionsChanged {userId, uuid, reason}` from `UserPermissionGroupService` (upsert, delete, rank-expiry sweep;
+  the `RankChanged` notification stays) and `PermissionGrantService` (user holder); `PermissionGroupChanged {groupId,
+  op}` from `PermissionGroupService` (Created/Updated/Deleted) and group-held grants (GrantsChanged; a grant moved
+  between holders tells both); `UserBalancesChanged {userId, uuid, coins, gems, xp}` from `CurrencyService.ExecuteAsync`
+  (every non-replayed posting, committed balances); `UserFrozenChanged {frozen, reason, by}`; `UserModeChanged {mode}`
+  (only on a change); `UserChanged {fields}` (multipliers, gate method, link, merge).
+- **After commit** (`Realtime/RealtimeEventSink.cs`): scoped `IRealtimeEventSink`; `AfterCommitRealtimeEventSink` sends at
+  once or, while a transaction is open on the scope's `KnKDbContext`, when it commits. `RealtimeTransactionEvents` is an
+  EF Core transaction interceptor (`Program.cs`, next to the KNG-232 one): commit = send held events in order; rollback,
+  failure or a new transaction = drop. Actor source from the request: plugin key → `plugin`, user → `web`, none →
+  `system`. This is the sink DESIGN §4.3 asks for; S3's interceptor and option C plug in behind it.
+- **Hub-backed notification queue** (`Realtime/HubPlayerNotificationQueue.cs`): replaces the `IPlayerNotificationQueue`
+  registration, decorates `InMemoryPlayerNotificationQueue` (still the store behind `GET pending` / `POST acknowledge`).
+  Pushes `PlayerNotification` (payload = the REST DTO) to the player's server when the presence registry has them
+  online, to every server for server-wide ones; `PlayerJoined` pushes what waited for that player plus server-wide ones.
+- **Plugin** (`paper/realtime/UserStateSync`, `BukkitUserStateDisplay`; `api/realtime/UserStateEvents`): handlers as in
+  DESIGN §6.1 (see §6.7 on the branch). Permissions: drop effective set + offline answers (#76), then for an online
+  player reload the set, re-read the user, redraw the tab list, re-check visibility, the "/" list, social spy and the
+  mode (a lost mode node drops the mode). Group change: online players whose cached effective groups contain it.
+  Balances: into the user cache; XP change → re-read (title, prestige). Freeze/mode: at once, idempotent. `UserChanged`:
+  re-read (online) or drop. Pushed notifications go through the poller's delivery and are acknowledged over REST.
+  Resync gets two steps after S1's: re-read every online player, then drain the notification queue once.
+  `PlayerNotificationPoller` makes no HTTP call while connected. In-game `/freeze` and `/unfreeze` tell the player once.
+- **`realtime.fallback-poll-multiplier`** (default 4, 1–60) + `core/realtime/FallbackPolling` (`throttle`, `interval`).
+
+**Tests vs baseline**
+- API (`dotnet test`, built with the csproj as in link 4): **3361 passed, 4 failed, 87 skipped of 3452** (baseline 3338 /
+  4 / 87 of 3429, re-run at the start). +23 in `Tests/.../Realtime/` (`UserStateEventTests` 16: sink held/flushed/dropped,
+  source, every publish point incl. a real ledger posting and its replay; `HubPlayerNotificationQueueTests` 5;
+  `RealtimeHubTests` +2: `PlayerJoined` pushes the waiting notification, a scope's sink event reaches the game hub as
+  seq 2). The 4 reds are #99, as at baseline.
+- Plugin (`./gradlew build -x deployToDevServer`, JDK 25 toolchain): core **2323** (2319), api-client **298** (290, 2
+  skipped both), paper **2163** (2149, 18 skipped both); 0 failures. New: `UserStateCoreTest` 4, `UserStateEventsTest`
+  8, `UserStateSyncTest` 13, `RealtimeSettingsTest` +1.
+- Not run: a Java-client-against-API interop host as in link 4 (the API hub test asserts the JSON the Java parse tests
+  read); `[MySqlFact]` tests (none written: the transaction path is covered with the sink's transaction switch, not a
+  real MySQL transaction).
+
+**Flagged decisions (reversible)**
+- **L6-1** The ×4 slowdown (`realtime.fallback-poll-multiplier`) applies in S2 only to the re-sync whose changes S2
+  pushes: the social-spy re-check (60 s → 4 min). Domain access, game settings, lootbox runtime, grades, roads and
+  telemetry config keep their interval until S3 (#182) pushes their changes; slowing them now would delay those changes
+  with nothing in their place. The notification poll stops entirely while connected (DESIGN §4.3: drains only while
+  the hub is down and once on reconnect). The permission (30 s) and user (60 s) TTLs are unchanged.
+- **L6-2** No event for a user without a Minecraft UUID (nothing on a game server to update).
+- **L6-3** After-commit by an EF Core transaction interceptor, built now as the `IRealtimeEventSink` of §4.3 (S3 reuses
+  it). A transaction disposed without commit or rollback has its held events dropped at the context's next transaction
+  (or with the context).
+- **L6-4** `UserBalancesChanged` is published from the one posting choke point (`CurrencyService.ExecuteAsync`) rather
+  than from each of the methods DESIGN lists; it covers them all, plus transfers, salary, rewards and merges.
+  Coins/gems-only changes update the cache without a redraw (the tab list doesn't show them); an XP change re-reads.
+  Two concurrent postings for one user could arrive out of commit order; the cache then holds the older values until
+  the next event or the 60 s TTL.
+- **L6-5** Notifications: pushed only when the presence registry has the player online (server-wide ones to every
+  server); re-pushed on `PlayerJoined`; while nobody is online a pushed one stays queued. The plugin remembers the last
+  512 acknowledged ids so a push and an overlapping drain never show one twice. The store is still in memory (lost on
+  an API restart, as before; not in #179's scope).
+- **L6-6** Group fan-out uses the cached effective groups (parents included); an empty list (older API) counts as a
+  member; a player with no cached summary is skipped (their join loads everything fresh).
+- **L6-7** A mode set in the web app for a player without its node: they stay visible and the stored mode goes back to
+  None (as a join does). Permission UNAVAILABLE (API down, no last answer): the mode is applied (hidden is the safe side,
+  KNG-58).
+- **L6-8** `StatisticsVisibilityChanged` (a DESIGN §6.1 row, not in #179's scope) was not built: the plugin's menus
+  re-read the setting.
+- **L6-9** The generic user edit (`UserService.UpdateAsync`, form wizard/dashboard) sends no `UserChanged`: User is on
+  S3's `EntityChanged` allow-list (§6.3).
+- **L6-10** No echo suppression: a change made in game comes back as an event and the handlers are idempotent (the
+  in-game freeze message now shows once whichever arrives first).
+- **L6-11** The `RankChanged` notification is still queued next to `UserPermissionsChanged`, so with the hub both
+  redraw (harmless); with the hub down it is the only path, unchanged.
+- **L6-12** The #76 display symptom: with the hub the set is reloaded before the redraw, so the tab-list team should be
+  right without a rejoin; live check § S2 step 1. Comment on #76.
+
+**Deviations from the plan/design:** L6-1 (slowdown scope), L6-4 (publish point), L6-8 (one §6.1 row not built). DESIGN
+§6.7 on the branch records the as-built state.
+
+**Live checklist:** [guides/realtime-smoke-test.md](../guides/realtime-smoke-test.md) § S2 (workspace branch
+`claude/realtime-signalr` until merged; run § S1 first): rank, group node edit, direct grant, offline answers (#76),
+group fan-out, balances, freeze, mode, other user fields, pushed notifications, hub-down fallback, resync.
+
+**Deploy notes:** API: no migration, no new setting or secret. Plugin: optional `realtime.fallback-poll-multiplier: 4`
+in the `realtime:` block (missing = 4). Still `realtime.enabled: false` by default.
+
+**Follow-ups filed:** none new; comment on #76 (above).
+
+**Notes for later links**
+- Link 8 (WT2, #181): `IRealtimeEventSink` sends to game servers only (`RealtimeEvent.ServerId` null = all); add a web
+  target (or call `IRealtimePublisher.PublishToWebUser`) for `WorldTaskUpdated`, through the sink so it waits for the
+  commit. `HubPlayerNotificationQueue.PushPendingTo` (called from `GameServerHub.PlayerJoined`) is the pattern for
+  offering a queued task when its player joins.
+- Link 10 (S3, #182): the after-commit sink is in place; the `SaveChangesInterceptor` should hand `RealtimeEvent`s to
+  `IRealtimeEventSink` and needs no commit handling of its own. When an event lands, wrap its timer with
+  `KnKPlugin.fallbackPolling` (`throttle(...)` for fixed-rate timers, `interval(...)` for self-rescheduling ones). A
+  generic `EntityChanged(User)` can call `UserStateSync`'s re-read path. Resync steps are registered in
+  `KnKPlugin.registerUserStateSync`/`initializeRealtime`.
