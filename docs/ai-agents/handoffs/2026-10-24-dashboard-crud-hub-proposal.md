@@ -1,6 +1,6 @@
 # Dashboard as the CRUD hub — proposal and plan
 
-**Status:** Proposal; all four decisions taken by the developer 2026-10-24; ready to implement (no code written). Filed as PandiO/knk-workspace#177 on 2026-10-25
+**Status:** Implemented on knk-web-app `claude/kng-60-dashboard-hub` (plan steps 1 and 2 = #177 links 1 and 2, UX/realtime chain links 1 and 3, 2026-10-26); not merged, waiting for the developer's test. Step 3 is #39 (chain link 9). Filed as PandiO/knk-workspace#177 on 2026-10-25
 **Date:** 2026-10-24
 **Issues:** [KNG-60](https://linear.app/kngpandi/issue/KNG-60) (return to origin, raised to High), [KNG-145](https://linear.app/kngpandi/issue/KNG-145) ("New X" on every list, list state in the URL), parent roadmap [KNG-140](https://linear.app/kngpandi/issue/KNG-140)
 **Code basis:** knk-web-app `main` @ `b7c0e88` (2026-10-24)

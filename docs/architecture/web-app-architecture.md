@@ -1,7 +1,7 @@
 # knk-web-app — Architecture
 
 **Status:** Living document — reflects actual code, updated in place on each rescan
-**Last updated:** 2026-09-18 (scan basis: `knk-web-app` @ `4ff5dc6`, branch `claude/web-app-codebase-scan-4yqibi`); spot edits 2026-10-09 (ObjectTypeExplorer, KNG-61), 2026-10-10 (FormWizard Boolean fields, KNG-53), 2026-10-12 (FormWizard child forms, KNG-133, KNG-134; List edit load, step header, List validation, KNG-135, KNG-137, KNG-164; form session registry, KNG-136; cancel / delete-draft prompt, KNG-162; form configuration export/import, KNG-138); 2026-10-17 (form wizard chain merged to `main`; smoke-test follow-ups KNG-166..169, KNG-172, KNG-173: step strip, confirmations and refusals, rule builder parent forms, picker columns, metadata refresh); 2026-10-22 (display configuration export/import; KNG-195 hybrid picker submit); 2026-10-23 (step completion conditions run, KNG-186); 2026-10-23 (validation result log, batch validate, Re-check, KNG-269); 2026-10-25 (toast region, world-task polling; UX re-evaluation in `reports/2026-10-25-web-app-ux-reevaluation.md`)
+**Last updated:** 2026-09-18 (scan basis: `knk-web-app` @ `4ff5dc6`, branch `claude/web-app-codebase-scan-4yqibi`); spot edits 2026-10-09 (ObjectTypeExplorer, KNG-61), 2026-10-10 (FormWizard Boolean fields, KNG-53), 2026-10-12 (FormWizard child forms, KNG-133, KNG-134; List edit load, step header, List validation, KNG-135, KNG-137, KNG-164; form session registry, KNG-136; cancel / delete-draft prompt, KNG-162; form configuration export/import, KNG-138); 2026-10-17 (form wizard chain merged to `main`; smoke-test follow-ups KNG-166..169, KNG-172, KNG-173: step strip, confirmations and refusals, rule builder parent forms, picker columns, metadata refresh); 2026-10-22 (display configuration export/import; KNG-195 hybrid picker submit); 2026-10-23 (step completion conditions run, KNG-186); 2026-10-23 (validation result log, batch validate, Re-check, KNG-269); 2026-10-25 (toast region, world-task polling; UX re-evaluation in `reports/2026-10-25-web-app-ux-reevaluation.md`); 2026-10-26 (dashboard type in the URL, `returnTo`, submit pending state, success toast — PandiO/knk-workspace#177 link 1, #58); 2026-10-26 (dashboard header New/Configure, flat explorer with marker, open form without the explorer + breadcrumb, detail page header, metadata-driven Create New, "Entity setup" — #177 link 2, #81, #39)
 **Source scan:** `docs/reports/web-app-scan-2026-09-18.md`
 
 ## Stack
@@ -16,7 +16,8 @@
   `DisplayConfigBuilder` for reorderable steps/sections/fields).
 - Icons: `lucide-react`.
 - Reactive error bus: `rxjs` — a single `Subject`-like `logging.errorHandler` used to
-  surface toast-style errors app-wide (`src/components/ToastRegion.tsx`, mounted in `App.tsx`; errors only, no success variant yet — 2026-10-25).
+  surface toast-style errors app-wide (`src/components/ToastRegion.tsx`, mounted in `App.tsx`). Success toasts go through `toast.success()`
+  (`src/utils/toast.ts`, its own `Subject`; green, 5 s; #177 link 1); the full feedback kit is #33.
 - No Redux/Zustand/MobX — state is local `useState`/`useEffect` plus one React Context
   (`AuthContext`) for auth, plus a small manual in-memory cache in
   `hooks/useEntityMetadata.ts` (module-level `metadataBundleCache` /
@@ -97,6 +98,29 @@ entity. Two parallel generic engines carry most of the CRUD surface:
    `entity-references` check (entities still pending in the run ignored), then the entity's normal
    delete (`getDeleteFunctionForEntity`); in use / 409 = skipped and reported. Cancel never deletes
    the draft; nothing is deleted automatically.
+   **Submit and the way back** (#177 link 1, #58): a form opened from another page carries
+   `?returnTo=` (`utils/returnTo.ts`: `editFormPath`/`newFormPath`/`withReturnTo`, same-origin paths
+   only via `sanitizeReturnTo`). On the last step the wizard saves the progress as `InProgress`, then
+   **awaits** `onComplete` (the page's `handleComplete`, which saves the entity and returns
+   `true`/`false`), and marks the progress `Completed` only after a successful save, then calls
+   `onCompleted`. A refused save (false or a throw) leaves the draft `InProgress`, so the cleanup of
+   completed progress never deletes a draft whose entity doesn't exist. During that window Submit reads
+   "Submitting…" and is disabled (a ref guards re-entry), Previous / Save Draft / the page's Cancel are
+   disabled (`onSubmittingChange`), and a "Saving {Type}…" line shows. After `onCompleted` the page goes
+   straight to the parent display page (child creation), else `returnTo`, else `/dashboard/{type}`,
+   with a success toast ("{Type} created." / "updated."); the old 3 s success modal is gone. Cancel
+   (`handleLeaveForm`) goes to the parent display page, else `returnTo`, else stays on the Entity setup
+   page (`/forms`).
+   **Open form** (#177 link 2): while the wizard is open, `FormWizardPage` hides the
+   `ObjectTypeExplorer` and shows a breadcrumb (`components/Breadcrumbs.tsx`) built by
+   `utils/breadcrumbs.ts` `formTrail` from `returnTo` ("Dashboard › Town › Edit Cinix"; without
+   `returnTo`: "Entity setup › Town › New Town"). The trail is plain `{label, to?}[]` data so the admin
+   layout (#30) can render it later; `useEntityLabel` fetches the edited entity's name (else "#id"). A
+   crumb leaves the form without the Cancel question. The configuration lists keep the explorer.
+   "New" (`?autoOpen=true`) on a type without a default form configuration shows "To create a new
+   {Type}, this type needs a default form configuration" (#177 decision 3). The page title and nav label
+   are **"Entity setup"** (route `/forms` unchanged, decision 4).
+   `ChildFormModal` returns `false` from its `onComplete` on a failed child save for the same reason.
    **Export / import** (KNG-138): the form configuration list (`FormWizard/FormConfigurationTable.tsx`)
    has **Export JSON** per row (downloads the API's portable `knk-formconfig/1` file,
    `utils/forms/formConfigPortability.ts`) and **Import / Seeds**, which opens
@@ -133,16 +157,41 @@ entity. Two parallel generic engines carry most of the CRUD surface:
    read-only entity detail views, driven by `DisplayConfigurationDto`
    (`displayConfigClient`).
 
+**Dashboard as the CRUD hub** (`ObjectDashboard`, `/dashboard`; #177): the selected type is in the
+URL as `/dashboard/:entityName` and bare `/dashboard` reopens the last viewed type from localStorage
+`knk.dashboard.lastEntityType` (`utils/lastDashboardType.ts`, link 1). Next to the type's title:
+**"New {Type}"** (`newFormPath(type, returnTo)`) and a cogwheel **"Configure {Type}"** to the type's
+Entity setup page (`/forms/{type}`); "New {Type}" is also the empty state of the table
+(`PagedEntityTable` `emptyState`, shown only without a search or filter). The explorer is one flat
+list: types without a published default display configuration get a muted marker ("No display
+configuration – set one up via ⚙", `ObjectTypeExplorer` `marked`), and for them View and the row
+click are disabled with the same hint. View opens `/display/{type}/{id}?returnTo=…`, Edit
+`/forms/{type}/edit/{id}?returnTo=…`, except **User rows: Edit opens the player profile**
+`/admin/users/{id}` (`utils/returnTo.ts` `entityEditPath`; the generic User form stays for create
+until #72/#148).
+
+**Detail page** (`DisplayWizardPage`, #81): `EntityDetailHeader` replaces the heading that showed the
+display configuration's name: the entity's own name (`utils/entityLabel.ts`), its type, a breadcrumb
+(`detailTrail`), **Back** to `returnTo` (else `/dashboard/{type}`), **Edit** coming back to the page and
+**Delete** with a confirmation naming the entity (success toast, then Back's target). The tab title is
+"{name} · {Type}". `DisplayWizard` takes the header as `renderHeader(entity)`.
+
+**Create New menu** (`components/CreateNewMenu.tsx`, #177 link 2 / #39 CRUD-2): built from the entity
+metadata — every type with a create client in `utils/entityApiMapping.ts`
+(`hasCreateFunctionForEntity`), A–Z — instead of the hand-kept list in `config/objectConfigs.tsx`,
+which offered `itemType` (no API mapping) and missed about 15 types. A pick opens the default form and
+comes back to the dashboard on that type. A filter box gets focus on open (ArrowUp/ArrowDown, Enter,
+Escape). Without metadata the built-in list is the fallback.
+
 A third, older, simpler config path — `src/config/objectConfigs.tsx`, a static
 TypeScript map of `ObjectConfig` per entity type (fields, icons, validators,
-formatters) — still drives `ObjectDashboard` (the `/dashboard` list/CRUD view) and the
-"Create New" menu in `Navigation`. It currently only covers 11 entity types
-(`location, town, district, structure, street, category, itemType,
-minecraftblockref, minecraftmaterialref, gatestructure, gatedoor`), while the
-form/display engines pull their entity list from the backend's live metadata endpoint
-(`metadataClient.getAllEntityMetadata`), so the two config systems are not the same
-list and can drift — see `docs/reports/web-app-scan-2026-09-18.md` for the "two
-competing config systems" note under Legacy/Orphaned.
+formatters) — still gives `ObjectDashboard` and the pickers their built-in table columns
+(`getColumnDefinitions`), the Create New menu its icons, and the dashboard its type list when the
+metadata can't be loaded. Its type list (19 types, including the unmapped `itemType`) is not the
+backend's live metadata list (`metadataClient.getAllEntityMetadata`), which the dashboard, the
+explorer, the Create New menu and the form/display engines use — see
+`docs/reports/web-app-scan-2026-09-18.md` for the "two competing config systems" note under
+Legacy/Orphaned.
 
 Entity metadata itself (which fields exist on which backend entity, display config,
 validation rules) is fetched once per session and cached at module scope by
@@ -153,7 +202,7 @@ saving default table columns) notifies every mounted instance, so an open picker
 without remounting.
 
 **Picker columns** (KNG-166): `PagedEntityTable` shows the entity's saved default table columns
-(Forms page → Default Table Columns) or else the built-in columns of
+(Entity setup page → Default Table Columns) or else the built-in columns of
 `config/objectConfigs.tsx` (District: Town, World; Street: Districts, Towns; Structure and
 GateStructure: street + number, District, Town). Built-in columns read the list DTO's flat field and
 fall back to the full DTO's nested shape (`utils/forms/pickerRowValues.ts`), so pinned and searched
@@ -172,10 +221,10 @@ src/
   components/
     FormWizard/            — generic create/edit engine (config-driven)
     FormConfigBuilder/      — admin UI to author FormConfigurationDto records
-    DisplayWizard/          — generic read-only detail-view engine
+    DisplayWizard/          — generic read-only detail-view engine; `EntityDetailHeader` (name, Back/Edit/Delete, #81)
     DisplayConfigBuilder/   — admin UI to author DisplayConfigurationDto records
     ObjectDashboard/        — legacy static-config-driven list/CRUD dashboard
-    ObjectTypeExplorer/     — left-nav entity type picker (ObjectDashboard, FormWizardPage): search, A–Z/Z–A sort, optional groups, settings in localStorage (KNG-61)
+    ObjectTypeExplorer/     — left-nav entity type picker (ObjectDashboard, FormWizardPage): search, A–Z/Z–A sort, optional groups (unused since #177 link 2), `marked` entries, settings in localStorage (KNG-61)
     PagedEntityTable/       — generic server-paged table, used by both dashboard and forms
     PathBuilder/            — path/reference picker for cross-entity field bindings
     Workflow/               — WorldTask/job polling UI (siege/world-mutation background tasks)
@@ -277,9 +326,8 @@ a `REACT_APP_*` environment variable, matching the note already in this repo's
   adding an entity to one does not automatically add it to the other.
 - `pages/admin/EntityTypeConfigurationPage.tsx` is fully built but has no route in
   `App.tsx` and no link in `Navigation.tsx` — currently unreachable in the running app.
-- `DisplayWizardPage`'s `edit`/`create` action handlers navigate to `/form/...`
-  (singular), but the only matching routes are `/forms/...` (plural) — these two
-  actions are effectively dead ends in the UI today.
+- ~~`DisplayWizardPage`'s `edit`/`create` action handlers navigate to `/form/...`~~ —
+  fixed: they go to `/forms/...` with a `returnTo` to the detail page (#177 link 2, #81).
 - `components/DynamicForm.tsx` and `components/ObjectView.tsx` are large (383 and 411
   lines), fully unreferenced, and (for `DynamicForm.tsx`) import three apiClient
   modules — `apiClients/districts`, `apiClients/streets`, `apiClients/locations` —

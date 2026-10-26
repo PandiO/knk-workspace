@@ -4,7 +4,22 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
-_Nothing at the moment._
+- **Dashboard keeps its place; Submit waits for the save** — knk-web-app `claude/kng-60-dashboard-hub`
+  (PandiO/knk-workspace#177 link 1, #58; UX/realtime chain link 1, 2026-10-26). Not merged, not live-tested. The
+  dashboard's type is in the URL (`/dashboard/{type}`; bare `/dashboard` reopens the last viewed type). Edit opens the
+  form with `returnTo`, and Submit and Cancel go back to that dashboard type (the table reloads). Submit stays
+  "Submitting…" with a "Saving {Type}…" line until the entity is saved; a second click does nothing. The draft is marked
+  Completed only after the entity was saved. A success toast replaces the 3 s "Form completed" modal. Live checklist:
+  `guides/dashboard-return-smoke-test.md`.
+- **Dashboard as the CRUD hub: New, Configure, breadcrumbs, detail page header, Create New from metadata** — knk-web-app
+  `claude/kng-60-dashboard-hub` (PandiO/knk-workspace#177 link 2, #81, #39 Create New menu; UX/realtime chain link 3,
+  2026-10-26). Not merged, not live-tested. "New {Type}" and a cogwheel to the type's Entity setup page next to the
+  dashboard title, "New {Type}" in an empty table. One flat explorer list; types without a display configuration are
+  marked and their View is disabled. An open form hides the explorer and shows a breadcrumb back to where it was opened.
+  The detail page shows the entity's name with Back, Edit and Delete and its own tab title. Edit on a User row opens the
+  player profile. The nav "Create New" menu lists every type the app can create (from the entity metadata; no more
+  `itemType`, about 15 types added) and navigates once. The nav and page "Forms" are now "Entity setup" (route `/forms`).
+  Live checklist: `guides/dashboard-return-smoke-test.md` sections 8–14.
 
 ## 2026-10-25
 
