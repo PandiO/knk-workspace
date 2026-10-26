@@ -1,7 +1,7 @@
 # knk-web-app — Reading & Implementation Guide
 
 **Status:** Living document — updated in place on each rescan
-**Last updated:** 2026-09-18
+**Last updated:** 2026-09-18; spot edit 2026-10-26 (Create New menu from metadata, detail page actions, "Entity setup" — PandiO/knk-workspace#177 link 2)
 **Companion docs:** `docs/architecture/web-app-architecture.md` (structure/data-flow),
 `docs/reports/web-app-scan-2026-09-18.md` (dated raw findings this guide is based on)
 
@@ -46,12 +46,12 @@ citations/line numbers for a specific claim.
      `FormConfigurationDto`/`DisplayConfigurationDto` via the builder UI or the
      backend) before touching the engine components — the engines are meant to be
      entity-agnostic.
-4. **`src/config/objectConfigs.tsx`** — a *separate*, older, static per-entity config
-   used only by `ObjectDashboard` (`/dashboard`) and the top-nav "Create New" menu.
-   This is **not** the same registry the form/display engines use (see architecture
-   doc's "two competing registries" note) — if you add a new entity type and it's not
-   showing up on the dashboard or in "Create New", this is almost certainly why: you
-   need to add it here explicitly.
+4. **`src/config/objectConfigs.tsx`** — a *separate*, older, static per-entity config.
+   Since #177 link 2 it only gives tables their built-in columns, the Create New menu its
+   icons, and the dashboard a fallback type list when the metadata can't be loaded. The
+   dashboard, the explorer and the "Create New" menu list the backend's live metadata; a
+   new type shows up in "Create New" once it has a create client in
+   `utils/entityApiMapping.ts` (see the architecture doc's "two competing registries" note).
 5. **`src/apiClients/`** — one file per backend resource, all following the identical
    `ObjectManager`-subclass pattern (see architecture doc's "Data flow" section for the
    exact call chain). Once you've read one (`townClient.ts` is a short, representative
@@ -87,17 +87,16 @@ citations/line numbers for a specific claim.
   Both are unreferenced predecessors to `FormWizard`/`DisplayWizard`; `DynamicForm.tsx`
   additionally imports apiClient modules that no longer exist. They're scan-flagged as
   deletion candidates, not examples to follow.
-- **`DisplayWizardPage`'s edit/create actions are currently broken** — they navigate to
-  `/form/...` (singular), but the real routes are `/forms/...` (plural). If you're
-  touching that page, fix the path or confirm with the human owner whether that's
-  intentionally disabled pending something else.
+- **`DisplayWizardPage`'s edit/create actions** go to `/forms/...` with a `returnTo` to
+  the detail page, and the page has its own header with Back / Edit / Delete (#177 link 2,
+  #81; the `/form/...` dead route this note warned about is fixed).
 - **`EntityTypeConfigurationPage` exists but has no route** — if you need per-entity
   icon/color/sort configuration in the running app, you'll need to add the route and a
   nav link yourself; don't assume it's reachable today.
 - **`FormWizardPage` hardcodes `userId = '1'`** for saved-progress tracking (line 120)
   — if you're working on that feature, this is a known gap, not a red herring.
 - **Two entity registries, not one** — see `config/objectConfigs.tsx` note above. If
-  something "works in Forms but not Dashboard" or vice versa, check this split first.
+  something "works in Entity setup (`/forms`) but not Dashboard" or vice versa, check this split first.
 
 ## Where to look for cross-repo context
 
