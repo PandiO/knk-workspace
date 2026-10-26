@@ -16,7 +16,7 @@ test), `merged`, `blocked: <reason>`.
 |---|---|---|---|---|---|---|
 | 1 | #177 (link 1), #58 | `claude/kng-60-dashboard-hub` | in review | create_session session_01Lr2FyBpZG3fDCq51LuFgSM, 2026-10-26 (a first subagent run was stopped by the developer before pushing anything) | — / `df78e73` / — / `7143596` | web-app 1232/1232 (baseline 1214/1214), suites 195 (193); `tsc` 9 errors = baseline; build OK, same warnings |
 | 2 | #185, #38, #192 | `claude/route-gates-185`, `claude/styling-quick-wins-38`, `claude/claim-code-field-192` | ready (waits for a free web-app slot: link 3 runs on web-app) | — | — | — |
-| 3 | #177 (link 2), #81, #39 (menu) | `claude/kng-60-dashboard-hub` | in progress | create_session session_01P5NEMTVCmtEoMEML8xwffq, 2026-10-26 | — | — |
+| 3 | #177 (link 2), #81, #39 (menu) | `claude/kng-60-dashboard-hub` | in progress | subagent (fallback: add_repo needed in-session approval), 2026-10-26 | — | — |
 | 4 | #178 | `claude/realtime-signalr` | in progress | create_session session_01CKkjS6mCCEw1VUWVwZJqnA, 2026-10-26 | — | — |
 | 5 | #64 (FormWizard), #109, #186 | `claude/form-wizard-edit-mode` | waiting: links 1 and 3 merged | — | — | — |
 | 6 | #179 | `claude/realtime-signalr` | waiting: link 4 done | — | — | — |
