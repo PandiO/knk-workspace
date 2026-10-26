@@ -4,7 +4,12 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
-_Nothing at the moment._
+- **Game Settings and Siege settings open only for the node their API checks** — knk-web-app `claude/route-gates-185`
+  (PandiO/knk-workspace#185; UX/realtime chain link 2, 2026-10-26). Not merged, not live-tested. `/admin/game-settings`
+  and its nav link need `knk.admin.config`, `/admin/siege-configuration` and its link `knk.siege.admin.manage`
+  (before: the moderator node `knk.admin.user.manage`, so a moderator got an editable page, "The hub-eligible domains
+  could not be loaded" and a refused Save). Without the node the link is hidden and the page says "Staff only" with the
+  node it needs. Live checklist: `guides/alpha-hardening-smoke-test.md` step 27a.
 
 ## 2026-10-25
 

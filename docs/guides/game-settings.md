@@ -10,7 +10,8 @@ weather and spawn point, and the server-list MOTD. It also sets exceptions per p
 ## Before you start
 
 - Open the web app → **Game Settings** (`/admin/game-settings`). You need a staff account whose group holds
-  `knk.admin.config`; without it, Save fails with an error.
+  `knk.admin.config` (or `knk.admin.*` / `*`); without it the nav has no **Game Settings** link and the page says
+  "Staff only" (#185).
 - The page lists the **Minecraft worlds** the server reported. A world appears there, with a settings block, once
   the plugin has reported it. That takes up to 30 s after the server or a world starts.
 - **Save Settings** stores everything on the page at once. **Reload** discards unsaved edits.

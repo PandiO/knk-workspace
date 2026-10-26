@@ -89,7 +89,8 @@ is free, so to get rid of it rename its key (or leave it disabled) instead of de
 
 ## 4. Siege settings (global)
 
-Nav **Siege Settings** (`/admin/siege-configuration`) holds the server-wide tuning: capture step, headshot multiplier,
+Nav **Siege Settings** (`/admin/siege-configuration`, needs `knk.siege.admin.manage`, the node the API checks on Save;
+without it the link is hidden and the page says "Staff only") holds the server-wide tuning: capture step, headshot multiplier,
 banned commands, non-member gate view, title brackets and so on. The capture step defaults to the developer's playtest
 tuning: attack A1 10, A2 2 (10 on instant-victory objectives), defence 6/3/6. Save sends only the changed fields.
 

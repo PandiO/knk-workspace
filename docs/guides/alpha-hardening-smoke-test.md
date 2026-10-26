@@ -86,6 +86,11 @@ Use a non-op alt for every in-game step: ops pass every in-game check. Record ea
 27. As Moderator (`/admin/users`): grant yourself any node → refused; grant another user `*` or a node you don't hold →
     refused; assign the Staff group to someone → refused; detach a group from a parent group that holds nodes you
     don't have → refused. Granting a node you do hold to someone else → works.
+27a. As Moderator (only `knk.admin.user.manage`, `.perm`, `.group`; #185): the nav has no **Game Settings** and no
+    **Siege Settings**; `/admin/game-settings` shows "Staff only" naming `knk.admin.config`, `/admin/siege-configuration`
+    names `knk.siege.admin.manage` (no editable page, no "hub-eligible domains could not be loaded"). Grant the Moderator
+    `knk.admin.config` (as owner) and reload → Game Settings is back and saves; Siege Settings stays hidden until
+    `knk.siege.admin.manage` is granted too.
 28. Signed out: `/leaderboards` and `/players/<name>` work (public, viewer-filtered); signed in as the Player,
     `/account` shows Statistics and "Delete my data".
 
