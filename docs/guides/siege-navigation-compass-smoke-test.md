@@ -1,6 +1,6 @@
 # Siege navigation compass — smoke test (KNG-234)
 
-**Status:** Run 1 done 2026-10-23 by the developer: A, B, C (C6 accepted), D1-D2 passed individually; the rest of D and E reported working ("other than that it works"); F and G accepted without running (the test scenario has no gate objective). Merged to the default branches the same day. Still unseen live: the gate-state rule in a scenario with a gate objective (F), the front-line order in a scenario with an objective between the attackers and the keep (E1-E2).
+**Status:** Run 1 done 2026-10-23 by the developer: A, B, C (C6 accepted), D1-D2 passed individually; the rest of D and E reported working ("other than that it works"); F and G accepted without running (the test scenario has no gate objective). Merged to the default branches the same day. Still unseen live: the gate-state rule in a scenario with a gate objective (F), the front-line order in a scenario with an objective between the attackers and the keep (E1-E2). F6-F8 added 2026-10-26 for PandiO/knk-workspace#176 (gate objectives lead attackers to the gate; not merged yet).
 **Branch tested:** `claude/siege-navigation-compass-pl2trj` in knk-plugin, knk-web-api, knk-web-app (knk-workspace for docs); merged 2026-10-23.
 **Design:** [navigation-compass/DESIGN.md](../specs/navigation-compass/DESIGN.md) (§6 decisions, §8, §10, §11)
 **Report back:** PASS / FAIL per step ID, plus for each FAIL the exact chat lines and what you did.
@@ -91,6 +91,9 @@ Hub = the last `hubSecondsBeforeStart` seconds before the match (default 15). Pl
 | F3 | A (defender) navigates to Keep while their own Gate is closed | Route passes it with a "right-click the … to pass" hint |
 | F4 | Destroy/open the gate by other means mid-route | The route updates to the new state |
 | F5 | C (bystander, not in the match) stands in town and uses `/navigate` | Unaffected: normal behaviour, carried through per the siege's non-member rule |
+| F6 | (PandiO/knk-workspace#176, knk-plugin `claude/alpha-run-1-console-nav`) B (attacker) selects a **gate objective** whose capture point lies behind its closed gate (alpha: Northern Gate, from the island) | Guided to the **outer door**, on the attackers' side at its foot - not to the capture point on the gatehouse, never to a structure nearby (the crane) |
+| F7 | The outer door is opened or destroyed; B clicks the compass again | The next closed door in the way (inner door), or the capture point itself when none is left |
+| F8 | A (defender) selects the same objective | The capture point, as before |
 
 ## G. Before the match and robustness
 
