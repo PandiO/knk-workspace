@@ -1,6 +1,6 @@
 # Dashboard as the CRUD hub: return, submit pending state, toast, New/Configure, breadcrumbs, detail header, Create New (#177 links 1–2, #58, #81, #39) — smoke test
 
-**Status:** Not run yet — waiting for the developer's test (2026-10-26)
+**Status:** Run by the developer on 2026-10-26 on knk-web-app `main` `7ba0f4b`: all steps work or accepted (findings below)
 **Last updated:** 2026-10-26 (sections 8–14 added for #177 link 2 = chain link 3)
 **Issues:** [PandiO/knk-workspace#177](https://github.com/PandiO/knk-workspace/issues/177) (links 1 and 2) ·
 [#58](https://github.com/PandiO/knk-workspace/issues/58) · [#81](https://github.com/PandiO/knk-workspace/issues/81) (detail
@@ -151,19 +151,22 @@ Use a slow save: Chrome DevTools → Network → throttling **Slow 3G** (or Offl
 
 ## Findings
 
+Developer, 2026-10-26. Also found: the explorer has two scrollbars and should offer favourites (#194); the
+entity header's New/⚙ buttons stick to the app header while the title doesn't (#195).
+
 | Step | Result | Notes |
 |---|---|---|
-| 1 | | |
-| 2 | | |
-| 3 | | |
-| 4 | | |
-| 5 | | |
-| 6 | | |
-| 7 | | |
-| 8 | | |
-| 9 | | |
-| 10 | | |
-| 11 | | |
-| 12 | | |
-| 13 | | |
-| 14 | | |
+| 1 | Works (1.1–1.5) | |
+| 2 | Works; 2.3 accepted | |
+| 3 | Works | |
+| 4 | Accepted | |
+| 5 | Accepted | |
+| 6 | Accepted | |
+| 7 | Accepted | |
+| 8 | Accepted | |
+| 9 | Works | |
+| 10 | Works | |
+| 11 | Works | |
+| 12 | Works | |
+| 13 | Works | |
+| 14 | Works; remove the link from the nav: #197 | |
