@@ -1,6 +1,6 @@
 # Dashboard, form wizard and realtime chain — progress report
 
-**Status:** In progress — link 1 in review (2026-10-26)
+**Status:** In progress — link 1 in review; links 3 and 4 running (2026-10-26)
 **Last updated:** 2026-10-26
 **Charter:** [UX_REALTIME_CHAIN.md](../ai-agents/handoffs/UX_REALTIME_CHAIN.md) · **Coordinator prompt:**
 [2026-10-26-ux-realtime-coordinator-prompt.md](../ai-agents/handoffs/2026-10-26-ux-realtime-coordinator-prompt.md)
@@ -15,9 +15,9 @@ test), `merged`, `blocked: <reason>`.
 | Link | Issues | Branch | Status | Started | Heads (api / web-app / plugin / workspace) | Tests vs baseline |
 |---|---|---|---|---|---|---|
 | 1 | #177 (link 1), #58 | `claude/kng-60-dashboard-hub` | in review | create_session session_01Lr2FyBpZG3fDCq51LuFgSM, 2026-10-26 (a first subagent run was stopped by the developer before pushing anything) | — / `df78e73` / — / `7143596` | web-app 1232/1232 (baseline 1214/1214), suites 195 (193); `tsc` 9 errors = baseline; build OK, same warnings |
-| 2 | #185, #38, #192 | `claude/route-gates-185`, `claude/styling-quick-wins-38`, `claude/claim-code-field-192` | waiting: link 1 done | — | — | — |
-| 3 | #177 (link 2), #81, #39 (menu) | `claude/kng-60-dashboard-hub` | waiting: link 1 done | — | — | — |
-| 4 | #178 | `claude/realtime-signalr` | waiting: link 1 done (then together with link 3) | — | — | — |
+| 2 | #185, #38, #192 | `claude/route-gates-185`, `claude/styling-quick-wins-38`, `claude/claim-code-field-192` | ready (waits for a free web-app slot: link 3 runs on web-app) | — | — | — |
+| 3 | #177 (link 2), #81, #39 (menu) | `claude/kng-60-dashboard-hub` | in progress | create_session session_01P5NEMTVCmtEoMEML8xwffq, 2026-10-26 | — | — |
+| 4 | #178 | `claude/realtime-signalr` | in progress | create_session session_01CKkjS6mCCEw1VUWVwZJqnA, 2026-10-26 | — | — |
 | 5 | #64 (FormWizard), #109, #186 | `claude/form-wizard-edit-mode` | waiting: links 1 and 3 merged | — | — | — |
 | 6 | #179 | `claude/realtime-signalr` | waiting: link 4 done | — | — | — |
 | 7 | #180 | `claude/world-task-hardening` | waiting: link 5 merged | — | — | — |
@@ -30,9 +30,13 @@ test), `merged`, `blocked: <reason>`.
 (The coordinator keeps this list current: links in review with their checklist location, merges that unblock a gate,
 flagged decisions.)
 
-- **Link 1 in review:** live checklist [guides/dashboard-return-smoke-test.md](../guides/dashboard-return-smoke-test.md) on
-  workspace branch `claude/kng-60-dashboard-hub` (web-app branch of the same name). Flagged decisions L1-1…L1-7 in the
-  link 1 block. Link 3 and link 4 gates are open (link 1 done); link 5's gate needs link 1 **merged**.
+- **Test link 1** (#177 link 1, #58): web-app `claude/kng-60-dashboard-hub` `df78e73`; live checklist
+  [guides/dashboard-return-smoke-test.md](../guides/dashboard-return-smoke-test.md) on workspace branch
+  `claude/kng-60-dashboard-hub` `7143596`. Link 3 continues the same branch, so links 1 and 3 can be tested and merged
+  together.
+- **Merge links 1 + 3** (web-app and workspace `claude/kng-60-dashboard-hub`) to open link 5 (form wizard) and link 9.
+- **Flags L1-1…L1-7** (link 1 block) are reversible defaults; answer only if you disagree. L1-1: a Submit without
+  `returnTo` lands on `/dashboard/{type}`, not `/forms/{type}`.
 
 ## Coordinator notes
 
