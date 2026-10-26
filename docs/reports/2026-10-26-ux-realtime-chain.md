@@ -22,7 +22,7 @@ test), `merged`, `blocked: <reason>`.
 | 6 | #179 | `claude/realtime-signalr` | in review | subagent (fallback: add_repo needed in-session approval), 2026-10-26 | `38b0466` / — / `b48f1484` / `ae949bd` | API 3361 passed, 4 failed (#99, = baseline reds), 87 skipped (baseline 3338/4/87); plugin core 2323 (2319), api-client 298 (290), paper 2163 (2149), 0 failures |
 | 7 | #180 | `claude/world-task-hardening` | waiting: link 5 merged | — | — | — |
 | 8 | #181 | `claude/realtime-signalr` | waiting: link 6 done, link 7 merged | — | — | — |
-| 9 | #39 (rest), #177 follow-up | `claude/entity-lists-url-state` | ready (gate open: link 3 merged); runs after link 5 (same web-app files, charter gate note) | — | — | — |
+| 9 | #39 (rest), #177 follow-up | `claude/entity-lists-url-state` | waiting: link 5 merged (same web-app files: wizard pickers, coordinator default) | — | — | — |
 | 10 | #182 | `claude/realtime-signalr` | waiting: link 8 done | — | — | — |
 
 ## Waiting for the developer
@@ -34,6 +34,12 @@ flagged decisions.)
   the live test): `guides/dashboard-return-smoke-test.md` (links 1+3), `guides/alpha-hardening-smoke-test.md` step 27a
   (#185), `guides/invitations-smoke-test.md` steps 16–17 (#192), the five #38 steps in the link 2 block. Flags L1-*,
   L2-* (L2-4, L2-7, L2-10), L3-* are reversible defaults.
+- **Test and merge link 5** (#64 FormWizard part, #109, #186): `claude/form-wizard-edit-mode` web-app `6b3fd8b`, API
+  `09305ef`, workspace `5d8a28c`; live checklist `guides/form-wizard-edit-mode-smoke-test.md` sections 1–7 on the workspace
+  branch. Deploy web app and API together (an old API refuses a draft without `userId`), then back up and run
+  `scripts/maintenance/remove-user1-drafts-and-workflow-sessions.sql` once (alpha-go-live § 4.3). **Its merge opens links 7
+  and 9; every remaining link waits on it** (8 on 7, 10 on 8). Flags L5-1…L5-14; L5-1 (any `knk.admin.content` holder can
+  open a draft by id), L5-3 (no user = 401).
 - **Test link 4** (#178, SignalR S1): API `claude/realtime-signalr` `b8a29d7`, plugin `a64b7f83`; live checklist
   `docs/guides/realtime-smoke-test.md` § S1 on workspace `claude/realtime-signalr` `e878ee2`. `realtime.enabled` is off by
   default. Links 6, 8 and 10 continue this branch, so it is best merged once later unless you want S1 live earlier.
