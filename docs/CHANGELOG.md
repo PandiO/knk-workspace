@@ -4,7 +4,11 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
-(Nothing at the moment.)
+- **Dashboard header spacing** — knk-web-app `claude/dashboard-header-195` (PandiO/knk-workspace#195; UX/realtime
+  chain link 3b, 2026-10-26). The dashboard no longer starts against the app's top header: explorer, title and the
+  "New {Type}" / ⚙ buttons start 24 px lower, on one row, centred on each other and lined up with the table; the
+  buttons are the same height, and on a phone a long "New {Type}" is cut off instead of pushing ⚙ off-screen. Live
+  checklist: `guides/dashboard-return-smoke-test.md` section 8a.
 
 ## 2026-10-26
 
