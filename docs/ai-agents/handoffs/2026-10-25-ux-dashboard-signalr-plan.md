@@ -198,3 +198,7 @@ lines in the prompt (global instructions "Session chains"). A1/A2 can share the 
 ## 8. Next step
 
 Start A1 (#177 link 1) from this plan and the 2026-10-24 handoff. S1 (#178) starts while A2 is built. No open questions.
+
+Implementation runs as a session chain: charter [UX_REALTIME_CHAIN.md](UX_REALTIME_CHAIN.md), coordinator prompt
+[2026-10-26-ux-realtime-coordinator-prompt.md](2026-10-26-ux-realtime-coordinator-prompt.md), progress report
+[reports/2026-10-26-ux-realtime-chain.md](../../reports/2026-10-26-ux-realtime-chain.md).
