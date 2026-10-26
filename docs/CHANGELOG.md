@@ -4,7 +4,17 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
-(Nothing at the moment.)
+- **Form wizard: footer, unsaved-changes guard, blur validation, Save on any step; drafts per admin** —
+  knk-web-app and knk-web-api `claude/form-wizard-edit-mode` (PandiO/knk-workspace#109, #186, #64 FormWizard part;
+  UX/realtime chain link 5, 2026-10-26). Not merged, not live-tested. The form's buttons (Cancel, Previous, Save
+  Draft, Next/Submit) stick to the bottom of the window; leaving a form with unsaved changes (a link, Back, the
+  breadcrumb, a reload) asks first, and Cancel no longer asks when nothing changed; a field is checked when it loses the
+  focus, and a refused Next shows a summary that links to the fields; editing an existing entity can be saved from
+  any step ("Save changes"); one-line text fields are inputs ("Multi-line text" toggle in the field editor for the
+  rest). Drafts and workflow sessions now belong to the logged-in admin (they were all saved as user 1, so Saved
+  Progress was shared): the API takes the owner from the login. One-time cleanup after deploy and a backup:
+  `scripts/maintenance/remove-user1-drafts-and-workflow-sessions.sql`. The debug logs in the form wizard are gone.
+  Live checklist: [guides/form-wizard-edit-mode-smoke-test.md](guides/form-wizard-edit-mode-smoke-test.md).
 
 ## 2026-10-26
 

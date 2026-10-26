@@ -1,15 +1,18 @@
 # knk-web-app — Architecture
 
 **Status:** Living document — reflects actual code, updated in place on each rescan
-**Last updated:** 2026-09-18 (scan basis: `knk-web-app` @ `4ff5dc6`, branch `claude/web-app-codebase-scan-4yqibi`); spot edits 2026-10-09 (ObjectTypeExplorer, KNG-61), 2026-10-10 (FormWizard Boolean fields, KNG-53), 2026-10-12 (FormWizard child forms, KNG-133, KNG-134; List edit load, step header, List validation, KNG-135, KNG-137, KNG-164; form session registry, KNG-136; cancel / delete-draft prompt, KNG-162; form configuration export/import, KNG-138); 2026-10-17 (form wizard chain merged to `main`; smoke-test follow-ups KNG-166..169, KNG-172, KNG-173: step strip, confirmations and refusals, rule builder parent forms, picker columns, metadata refresh); 2026-10-22 (display configuration export/import; KNG-195 hybrid picker submit); 2026-10-23 (step completion conditions run, KNG-186); 2026-10-23 (validation result log, batch validate, Re-check, KNG-269); 2026-10-25 (toast region, world-task polling; UX re-evaluation in `reports/2026-10-25-web-app-ux-reevaluation.md`); 2026-10-26 (dashboard type in the URL, `returnTo`, submit pending state, success toast — PandiO/knk-workspace#177 link 1, #58); 2026-10-26 (dashboard header New/Configure, flat explorer with marker, open form without the explorer + breadcrumb, detail page header, metadata-driven Create New, "Entity setup" — #177 link 2, #81, #39)
+**Last updated:** 2026-09-18 (scan basis: `knk-web-app` @ `4ff5dc6`, branch `claude/web-app-codebase-scan-4yqibi`); spot edits 2026-10-09 (ObjectTypeExplorer, KNG-61), 2026-10-10 (FormWizard Boolean fields, KNG-53), 2026-10-12 (FormWizard child forms, KNG-133, KNG-134; List edit load, step header, List validation, KNG-135, KNG-137, KNG-164; form session registry, KNG-136; cancel / delete-draft prompt, KNG-162; form configuration export/import, KNG-138); 2026-10-17 (form wizard chain merged to `main`; smoke-test follow-ups KNG-166..169, KNG-172, KNG-173: step strip, confirmations and refusals, rule builder parent forms, picker columns, metadata refresh); 2026-10-22 (display configuration export/import; KNG-195 hybrid picker submit); 2026-10-23 (step completion conditions run, KNG-186); 2026-10-23 (validation result log, batch validate, Re-check, KNG-269); 2026-10-25 (toast region, world-task polling; UX re-evaluation in `reports/2026-10-25-web-app-ux-reevaluation.md`); 2026-10-26 (dashboard type in the URL, `returnTo`, submit pending state, success toast — PandiO/knk-workspace#177 link 1, #58); 2026-10-26 (dashboard header New/Configure, flat explorer with marker, open form without the explorer + breadcrumb, detail page header, metadata-driven Create New, "Entity setup" — #177 link 2, #81, #39); 2026-10-26 (data router, unsaved-changes guard, sticky footer, blur validation + error summary, Save on any step in edit mode, single-line input, drafts owned by the login — #109, #186, #64 FormWizard part)
 **Source scan:** `docs/reports/web-app-scan-2026-09-18.md`
 
 ## Stack
 
 - React 18 + TypeScript, bootstrapped with **Create React App** (`react-scripts` 5.0.1) —
   not Vite, not Next.js.
-- Routing: `react-router-dom` v7 (`BrowserRouter`/`Routes`/`Route`), all defined in
-  `src/App.tsx`.
+- Routing: `react-router-dom` v7, all routes defined in `src/App.tsx` (`Routes`/`Route`). Since #109
+  `App` mounts a **data router** (`createBrowserRouter` with one catch-all route around those `<Routes>`,
+  `RouterProvider`) instead of `BrowserRouter`, because `useBlocker` (the form wizard's leave guard) only
+  works inside one. Tests that mock `react-router-dom` or use a `MemoryRouter` still work: the guard
+  skips `useBlocker` without a data router (`hooks/useLeaveGuard.tsx`).
 - Styling: Tailwind CSS utility classes only. Fluent UI (`@fluentui/react-components`)
   was removed 2026-10-08 (KNG-71): only its provider was used. Shared component classes in
   `src/index.css`: `.btn` (`inline-flex`, `gap-2`; an icon's own `mx` margin is dropped under it) with
@@ -98,12 +101,37 @@ entity. Two parallel generic engines carry most of the CRUD surface:
    `createdEntitiesJson` with every progress save (`utils/forms/createdEntities.ts`: type, id, label
    fields, origin, creation order); resuming that draft seeds the registry (`seed()`), so pickers pin
    the entities again. `FormWizardPage` wraps the wizard in `FormSessionRoot` (a registry without a
-   form-path entry) next to `FormWizard/FormCancelAction.tsx` ("Cancel form"); deleting a draft from
+   form-path entry) with `FormWizard/FormCancelAction.tsx` ("Cancel form", in the wizard's footer since #109); deleting a draft from
    Saved Progress reads the summary's `createdEntitiesJson`. Both show `CreatedEntitiesPrompt` (Keep =
    default, Delete); Delete runs `utils/forms/deleteCreatedEntities.ts`: newest first, the API's
    `entity-references` check (entities still pending in the run ignored), then the entity's normal
    delete (`getDeleteFunctionForEntity`); in use / 409 = skipped and reported. Cancel never deletes
-   the draft; nothing is deleted automatically.
+   the draft; nothing is deleted automatically. Drafts and workflow sessions belong to the logged-in
+   user (#186): the web app sends no user id (the `userId = '1'` constant and the `userId` props of
+   `FormWizard`, `ChildFormModal`, `JoinEntityFormModal`, `ManyToManyRelationshipEditor` are gone); the
+   API takes the owner from the token. Saved Progress asks for the caller's own drafts
+   (`formSubmissionClient.getByEntityTypeName` sends `mine=true`); the relationship-drafts list
+   (`useRelationshipDrafts`) still shows every staff member's drafts with their owner's name.
+   **Footer, unsaved changes and validation** (#109): the wizard's actions sit in a footer that sticks
+   to the bottom of the window (`data-testid="wizard-footer"`; the card has no `overflow-hidden`, which
+   would stop `sticky`): the page's Cancel (`footerStart` slot), Previous, Save Draft, in edit mode
+   **Save changes** on every step but the last, and Next/Submit. The wizard keeps a **dirty flag** (any
+   field, multi-field or many-to-many change; cleared by a successful progress save) and reports it
+   through `onDirtyChange`. `FormWizardPage` feeds it to `hooks/useLeaveGuard.tsx`: with unsaved changes
+   a link, Back/Forward or any URL change asks "Leave this form?" (Stay / Leave form, `useBlocker`), a
+   reload or closing the tab gets the browser's question (`beforeunload`), and the breadcrumb asks through
+   `confirmLeave`; a successful submit and an already-confirmed Cancel call `allowLeave`. Cancel leaves
+   at once when nothing was created or changed. A field is validated on **blur** (message shown or
+   cleared); its own validations run (`utils/forms/fieldRuleValidation.ts`: MinLength, MaxLength,
+   Range, Regex, Email; Custom stays on the API). A refused Next/Save shows `FormWizard/FormErrorSummary.tsx`
+   at the top of the fields, which takes the focus; each item links to (and focuses) its field
+   (`wizard-field-{fieldName}` boxes). A failed completion condition or blocking rule is also shown on the
+   form. **Save changes** checks the current step as Next does, then every other visible step
+   (`findInvalidOtherStep`); a step that would refuse the save is shown with its messages, else the entity
+   is saved through the same submit path as Submit. **String fields** are a one-line `<input>` tied to
+   their label; a text area for settings `"multiline": true` (field editor toggle "Multi-line text"),
+   for fields named …Description / …Lore without that setting, and for a value that already holds a line
+   break (`utils/forms/stringFieldMultiline.ts`).
    **Submit and the way back** (#177 link 1, #58): a form opened from another page carries
    `?returnTo=` (`utils/returnTo.ts`: `editFormPath`/`newFormPath`/`withReturnTo`, same-origin paths
    only via `sanitizeReturnTo`). On the last step the wizard saves the progress as `InProgress`, then
@@ -122,7 +150,7 @@ entity. Two parallel generic engines carry most of the CRUD surface:
    `utils/breadcrumbs.ts` `formTrail` from `returnTo` ("Dashboard › Town › Edit Cinix"; without
    `returnTo`: "Entity setup › Town › New Town"). The trail is plain `{label, to?}[]` data so the admin
    layout (#30) can render it later; `useEntityLabel` fetches the edited entity's name (else "#id"). A
-   crumb leaves the form without the Cancel question. The configuration lists keep the explorer.
+   crumb asks "Leave this form?" first when the form has unsaved changes (#109). The configuration lists keep the explorer.
    "New" (`?autoOpen=true`) on a type without a default form configuration shows "To create a new
    {Type}, this type needs a default form configuration" (#177 decision 3). The page title and nav label
    are **"Entity setup"** (route `/forms` unchanged, decision 4).
