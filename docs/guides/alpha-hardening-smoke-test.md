@@ -1,7 +1,7 @@
 # Closed alpha hardening (KNG-64) — smoke test
 
 **Status:** Passed 2026-10-11 (run 1, developer): all steps pass or are accepted after the fixes in the findings below; phone login (29-30) and the seed import (33) not run
-**Last updated:** 2026-10-26 (step 27a, #185, not merged); 2026-10-18 (step 10's known issue fixed by KNG-103); 2026-10-11
+**Last updated:** 2026-10-18 (step 10's known issue fixed by KNG-103); 2026-10-11
 **Plan:** [specs/alpha-hardening/IMPLEMENTATION_PLAN.md](../specs/alpha-hardening/IMPLEMENTATION_PLAN.md) ·
 **Automated run:** [reports/2026-10-08-alpha-hardening-verification.md](../reports/2026-10-08-alpha-hardening-verification.md) ·
 **Linear:** [KNG-64](https://linear.app/kngpandi/issue/KNG-64) (KNG-65..71)
@@ -86,7 +86,7 @@ Use a non-op alt for every in-game step: ops pass every in-game check. Record ea
 27. As Moderator (`/admin/users`): grant yourself any node → refused; grant another user `*` or a node you don't hold →
     refused; assign the Staff group to someone → refused; detach a group from a parent group that holds nodes you
     don't have → refused. Granting a node you do hold to someone else → works.
-27a. As Moderator (only `knk.admin.user.manage`, `.perm`, `.group`; #185): the nav has no **Game Settings** and no
+27a. As Moderator (only `knk.admin.user.manage`, `.perm`, `.group`; #185, added 2026-10-26): the nav has no **Game Settings** and no
     **Siege Settings**; `/admin/game-settings` shows "Staff only" naming `knk.admin.config`, `/admin/siege-configuration`
     names `knk.siege.admin.manage` (no editable page, no "hub-eligible domains could not be loaded"). Grant the Moderator
     `knk.admin.config` (as owner) and reload → Game Settings is back and saves; Siege Settings stays hidden until
