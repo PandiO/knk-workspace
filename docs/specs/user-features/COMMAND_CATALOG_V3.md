@@ -393,6 +393,12 @@ READ-ONLY in its own class javadoc where present.
 
 ## 4. `custom-enchantments` (`/ce` tree — separate from `/knk item enchantments`)
 
+> **Update 2026-10-26 (PandiO/knk-workspace#193, knk-plugin `claude/custom-enchantment-permissions`, not merged):**
+> the `/ce` nodes below and the per-enchantment node now also accept rank grants (Bukkit/op first, then the in-house
+> model), `customenchantments.use.*` / `customenchantments.use.<id>` grant enchantments as a group, and `/ce info
+> <player>` enforces `.info.others` (the gap described below is fixed on that branch). See
+> [plugin-permission-checks.md § 4](../../architecture/plugin-permission-checks.md).
+
 Dispatched via `EnchantmentCommandHandler.java` (root executor for `/ce`,
 wired in `EnchantmentBootstrap.java:32-66`), which routes to per-subcommand
 `EnchantmentSubcommand` implementations

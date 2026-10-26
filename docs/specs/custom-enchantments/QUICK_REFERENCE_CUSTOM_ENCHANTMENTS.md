@@ -254,7 +254,14 @@ customenchantments.health_boost
 customenchantments.armor_repair
 customenchantments.resistance
 customenchantments.invisibility
+customenchantments.cleaving
+customenchantments.use.*        # every enchantment, also later ones (grant this to a rank)
+customenchantments.use.<id>     # one enchantment, the group form
 ```
+
+Since PandiO/knk-workspace#193 (branch `claude/custom-enchantment-permissions`, not merged) these resolve through
+the rank system as well as Bukkit (all `default: op`). Only abilities (right-click) and `/ce add <id>` check them;
+attack effects have no permission check.
 
 ---
 
