@@ -1,7 +1,7 @@
 # Closed alpha hardening (KNG-64) — smoke test
 
 **Status:** Passed 2026-10-11 (run 1, developer): all steps pass or are accepted after the fixes in the findings below; phone login (29-30) and the seed import (33) not run
-**Last updated:** 2026-10-18 (step 10's known issue fixed by KNG-103); 2026-10-11
+**Last updated:** 2026-10-18 (step 10's known issue fixed by KNG-103); 2026-10-11; 2026-10-26 nav label "Forms" → "Entity setup" (PandiO/knk-workspace#177)
 **Plan:** [specs/alpha-hardening/IMPLEMENTATION_PLAN.md](../specs/alpha-hardening/IMPLEMENTATION_PLAN.md) ·
 **Automated run:** [reports/2026-10-08-alpha-hardening-verification.md](../reports/2026-10-08-alpha-hardening-verification.md) ·
 **Linear:** [KNG-64](https://linear.app/kngpandi/issue/KNG-64) (KNG-65..71)
@@ -78,14 +78,19 @@ Use a non-op alt for every in-game step: ops pass every in-game check. Record ea
 
 ## 5. Roles and web access
 
-24. As the Player: the nav has no Dashboard/Forms/admin links; `/dashboard`, `/forms`, `/admin/game-settings` show
+24. As the Player: the nav has no Dashboard/Entity setup/admin links; `/dashboard`, `/forms`, `/admin/game-settings` show
     "Staff only".
-25. As Content staff: Dashboard and Forms work; creating/editing a content entity (e.g. an item blueprint or a menu)
+25. As Content staff: Dashboard and Entity setup (`/forms`) work; creating/editing a content entity (e.g. an item blueprint or a menu)
     works; saving a **world** entity (Domain, Town, Street, Location) shows a 403 error.
-26. As owner: Dashboard, Forms, Game Settings (save a change and revert it), Roads, Diagnostics etc. all work.
+26. As owner: Dashboard, Entity setup, Game Settings (save a change and revert it), Roads, Diagnostics etc. all work.
 27. As Moderator (`/admin/users`): grant yourself any node → refused; grant another user `*` or a node you don't hold →
     refused; assign the Staff group to someone → refused; detach a group from a parent group that holds nodes you
     don't have → refused. Granting a node you do hold to someone else → works.
+27a. As Moderator (only `knk.admin.user.manage`, `.perm`, `.group`; #185, added 2026-10-26): the nav has no **Game Settings** and no
+    **Siege Settings**; `/admin/game-settings` shows "Staff only" naming `knk.admin.config`, `/admin/siege-configuration`
+    names `knk.siege.admin.manage` (no editable page, no "hub-eligible domains could not be loaded"). Grant the Moderator
+    `knk.admin.config` (as owner) and reload → Game Settings is back and saves; Siege Settings stays hidden until
+    `knk.siege.admin.manage` is granted too.
 28. Signed out: `/leaderboards` and `/players/<name>` work (public, viewer-filtered); signed in as the Player,
     `/account` shows Statistics and "Delete my data".
 
