@@ -291,7 +291,7 @@ key/id.
 `PresenceGraceSeconds`, `PresenceSweepSeconds`, `KeepAliveSeconds`, `ClientTimeoutSeconds`, `AllowedServerIds`); keep
 `Microsoft.AspNetCore` logging at Warning (request URLs with `access_token` are logged at Information). Plugin: add the
 `realtime:` block to an existing `config.yml` (the bundled one has it, `enabled: false`); the hub needs
-`api.auth.type: apikey`. The plugin jar grows by the SignalR client and RxJava (about 2 MB).
+`api.auth.type: apikey`. The plugin jar grows by the SignalR client, RxJava 3 and Gson (about 3.5 MB, mostly RxJava; shadow jar 14.2 MB).
 
 **Follow-ups filed:** none new; the reds are #99 and the `.sln` path is #106. Comment on #181 with the WT2 notes below.
 
