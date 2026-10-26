@@ -4,7 +4,13 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
-_Nothing at the moment._
+- **Buttons and inputs look as intended** — knk-web-app `claude/styling-quick-wins-38` (PandiO/knk-workspace#38;
+  UX/realtime chain link 2, 2026-10-26). Not merged, not live-tested. `primary-dark` exists (`#1d4ed8`), so the primary
+  CTAs (login, register, account, every `FeedbackModal` confirm) darken on hover; `.btn*` are `inline-flex` with a gap,
+  so an icon sits beside its label instead of above it; `btn-tertiary` (Save Draft) is styled; form fields that set
+  `border-gray-300`/`border-slate-300` without a width (Game Settings, the builders, lootbox filters) and `.input` show a
+  1px border. The `text-gray-400` contrast sweep stays with #95. Live checklist: the link 2 block of
+  `reports/2026-10-26-ux-realtime-chain.md` (knk-workspace `main`).
 
 ## 2026-10-25
 

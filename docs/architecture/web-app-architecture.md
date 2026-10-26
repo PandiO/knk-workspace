@@ -11,7 +11,13 @@
 - Routing: `react-router-dom` v7 (`BrowserRouter`/`Routes`/`Route`), all defined in
   `src/App.tsx`.
 - Styling: Tailwind CSS utility classes only. Fluent UI (`@fluentui/react-components`)
-  was removed 2026-10-08 (KNG-71): only its provider was used.
+  was removed 2026-10-08 (KNG-71): only its provider was used. Shared component classes in
+  `src/index.css`: `.btn` (`inline-flex`, `gap-2`; an icon's own `mx` margin is dropped under it) with
+  `.btn-primary` / `-secondary` / `-tertiary` / `-danger`, `.panel`, `.input`. Colours in `tailwind.config.js`:
+  `primary` (`DEFAULT`, `light`, `dark`), `secondary`, `accent`, `surface`. `@tailwindcss/forms` is **not** installed:
+  a field written `rounded-md border-gray-300 …` gets its 1px border from a zero-specificity base rule in `index.css`
+  (#38, 2026-10-26, branch `claude/styling-quick-wins-38`); `src/__tests__/tailwindStyles.test.ts` compiles the CSS
+  and checks these. Tokens follow in #95.
 - Drag-and-drop: `@dnd-kit/*` (used in `FormWizard`, `FormConfigBuilder`,
   `DisplayConfigBuilder` for reorderable steps/sections/fields).
 - Icons: `lucide-react`.
