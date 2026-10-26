@@ -1,8 +1,7 @@
 # Realtime channel (SignalR) between knk-web-api, knk-plugin and knk-web-app
 
-**Status:** Proposed — design for the developer's review. **No code.** Proposed defaults are marked **(proposed)**
-and listed again as questions in §12; nothing here is decided until the developer confirms it.
-**Last updated:** 2026-10-25
+**Status:** Accepted design (developer decisions 2026-10-26, §12). **No code yet.**
+**Last updated:** 2026-10-26 (decisions recorded; §8.3 delivery and busy flow, §8.7 tasks anchored to the draft, §4.3 publishing path)
 **Issue:** [PandiO/knk-workspace#66](https://github.com/PandiO/knk-workspace/issues/66) (KNG-57, priority high); phase issues in
 [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md). Related: #76 (KNG-170, rank changes don't reach the server),
 #121 (KNG-262, cache TTLs), #31 (KNG-202, startup-only siege work), #35 (KNG-176), #34 (KNG-246), #145 (KNG-249), #75.
@@ -89,7 +88,7 @@ reports server events); erasure push with REST catch-up (GDPR, KNG-34 D14–D16,
                                 services publish after commit           resync, dispatch to handlers)
 ```
 
-### 4.1 Hubs **(proposed)**
+### 4.1 Hubs
 
 | Hub | Path | Auth | Who connects | Groups |
 |---|---|---|---|---|
@@ -104,7 +103,7 @@ reports server events); erasure push with REST catch-up (GDPR, KNG-34 D14–D16,
   Cloudflare Access).
 - Keep-alive 15 s / client timeout 30 s (SignalR defaults); nginx `proxy_read_timeout` above 30 s.
 
-### 4.2 Message envelope and versioning **(proposed)**
+### 4.2 Message envelope and versioning
 
 Every server→client message is one hub method per event type with a single argument:
 
@@ -121,7 +120,7 @@ Every server→client message is one hub method per event type with a single arg
 - Contract types live in `knk-web-api/Realtime/Contracts/` (C#) and `knk-api-client/.../realtime/` (Java); one
   catalogue table in this document (§6) is the human-readable source.
 
-### 4.3 Publishing on the API **(proposed)**
+### 4.3 Publishing on the API
 
 - New `IRealtimePublisher` (singleton) with typed methods (`UserPermissionsChanged(userId, reason)`,
   `EntityChanged(type, id, op)`, …) that wrap `IHubContext<GameServerHub>` / `IHubContext<WebHub>`. Fire-and-forget on a
@@ -130,13 +129,20 @@ Every server→client message is one hub method per event type with a single arg
   right hooks: the 13 `IPlayerNotificationQueue` enqueue sites and `AuditLogService.RecordAsync` callers).
 - **Generic `EntityChanged`** for entity CRUD through one EF Core `SaveChangesInterceptor` that, after a successful save,
   publishes `{type, id, op}` for an allow-list of entity types the plugin caches (§6.3). This covers every write path
-  (form wizard, dashboard, import, seeders off) without touching ~30 services. **(proposed; alternative: explicit calls
-  per service — more code, but no "magic". Question Q3.)**
+  (form wizard, dashboard, import, seeders off) without touching ~30 services. **Decided (Q3, 2026-10-26): option A
+  now** — the interceptor collects changes and sends them only after the save *and its transaction* committed (16
+  services/repositories use explicit transactions); explicit calls for user-state events and for bulk paths the
+  interceptor can't see (`CurrencyRepository` `ExecuteUpdateAsync` for balances, `UserRepository` raw SQL for presence,
+  `MinecraftCatalogMaintenanceService` bulk updates). **Longer term option C** (the developer wants gameplay in the
+  web app, which needs many detailed events and a robust feed): the same interceptor writes outbox rows inside the
+  transaction and a dispatcher sends them (like `EmailDispatcher`), giving durable, ordered, replayable events. Build A
+  so the switch is local: the interceptor produces typed event records and hands them to one `IRealtimeEventSink`;
+  A's sink sends after commit, C's sink writes the outbox.
 - `IPlayerNotificationQueue` gets a hub-backed implementation: online server → send at once over the hub; no server
   connected or player offline → keep it queued as today, and `PlayerNotificationPoller` keeps draining that queue
   only while the hub is down (and on reconnect). Same 9 types, same plugin handlers.
 
-### 4.4 Plugin client **(proposed)**
+### 4.4 Plugin client
 
 - New `knk-api-client` package `realtime/`: `RealtimeClient` built on `HubConnectionBuilder` with `withHeader("X-API-Key")`,
   `withHeader("X-Knk-Server-Id")`; Shadow relocates `io.reactivex.rxjava3` and `com.google.gson` (okhttp/okio are already
@@ -153,7 +159,7 @@ Every server→client message is one hub method per event type with a single arg
   `realtime.fallback-poll-multiplier` (how much the periodic re-syncs slow down while connected).
 - Metrics: connection state, reconnects, messages by type, resyncs, gaps (fits the KNG-232 `metrics:` section).
 
-### 4.5 Web app client **(proposed)**
+### 4.5 Web app client
 
 - `@microsoft/signalr` npm package, one `RealtimeProvider` context at `App` level, connected only for logged-in users;
   `accessTokenFactory` returns the current access token (refresh on 401 through the existing token service).
@@ -161,7 +167,7 @@ Every server→client message is one hub method per event type with a single arg
 - First consumer: world tasks (§8). Later consumers: the dashboard refreshes a type's table when an `EntityChanged` for
   that type arrives from another admin (nice-to-have, §9), the player profile shows live online state.
 
-## 5. Presence (needed for R4) **(proposed)**
+## 5. Presence (needed for R4)
 
 - `PresenceRegistry` (API singleton): `serverId → {connectionId, connectedAt, players: uuid → {userId, name, world,
   joinedAt}}`.
@@ -194,7 +200,7 @@ Every server→client message is one hub method per event type with a single arg
 
 | Type | Published from | Plugin handler |
 |---|---|---|
-| `GateChanged {gateStructureId, op}` | `GateStructureService`, `GateDoorService` writes | reload that gate (`GateCommandSupport` reload path), skip during a running siege match → apply after the match **(proposed)** |
+| `GateChanged {gateStructureId, op}` | `GateStructureService`, `GateDoorService` writes | reload that gate (`GateCommandSupport` reload path), skip during a running siege match → apply after the match |
 | `DomainAccessChanged {domainId}` | Domain/Town/District/Structure/SubRegion writes that touch AllowEntry/AllowExit | `DomainAccessFlagSync.syncNow()` (or a single-domain variant) |
 | `GameSettingsChanged` | `GameSettingsService.UpdateAsync`, `HubSettingsService` | `GameSettingsManager.refreshNow()` |
 | `SiegeConfigChanged {scope}` | `SiegeConfigurationService`, `SiegeLobbyService`, `SiegeScenarioService` | refresh config; lobbies/scenarios apply between matches (as `RefreshConfigEffect` does) |
@@ -220,7 +226,7 @@ hub-down case.
 | `Heartbeat` | not needed: SignalR keep-alive + connection state are the server liveness |
 
 Batched data (statistics, discoveries, PM logs, telemetry, analytics, gate state) **stays on REST**: it is spooled,
-idempotent and already resilient. **(proposed)**
+idempotent and already resilient.
 
 ### 6.5 API → web app
 
@@ -233,7 +239,7 @@ idempotent and already resilient. **(proposed)**
 
 ### 6.6 Region rename and containment (later, optional)
 
-`RegionHttpServer` stays for now **(proposed)**: it works, it is authenticated and loopback-bound, and the containment
+`RegionHttpServer` stays for now: it works, it is authenticated and loopback-bound, and the containment
 checks are synchronous queries a web user waits on. Moving them onto the hub needs SignalR client results
 (`ISingleClientProxy.InvokeAsync<T>` / Java `onWithResult`); worth it only when the plugin no longer needs to expose a
 port (e.g. API and game server on different hosts). #66's open question "Whether RegionHttpServer's inbound HTTP moves
@@ -250,7 +256,7 @@ order matters only within one entity, where "re-read latest" is correct regardle
 
 Everything falls back to today's polls/TTLs/codes (P5). While connected, the plugin multiplies the periodic re-sync
 intervals by `realtime.fallback-poll-multiplier` (default 4: domain access 20 min, game settings 2 min, …) instead of
-stopping them **(proposed)**.
+stopping them.
 
 ### 7.3 Security
 
@@ -280,7 +286,7 @@ sequence, or reuse the deletion request rows) and the plugin calls `GET /api/pri
   clickable Accept/Decline in chat).
 - No more stuck tasks: every task ends Completed, Failed, Cancelled or Expired.
 
-### 8.2 REST hardening first (useful even without the hub) **(proposed)**
+### 8.2 REST hardening first (useful even without the hub)
 
 Schema (`world_tasks`):
 - `CreatedByUserId` (FK User, from the JWT on create; never from the body). `WorkflowSession.UserId` also from the JWT
@@ -305,8 +311,9 @@ Pending ──claim──► InProgress ──complete──► Completed
 ```
 
 - `claim` succeeds only from `Pending` (or is idempotent for the **same** `ClaimedByUuid`); otherwise 409.
-  The claim body carries the task code when claimed by code, and the API checks it; claiming by numeric id is removed
-  from `/knk task-claim`.
+  The claim body carries the task code when claimed by code, and the API checks it. Claiming by numeric id needs the
+  separate node `knk.tasks.any` (owner/rescue only; Q11 decided 2026-10-26). In-game command: `/knk task <code>`,
+  `/knk task-claim` kept as alias.
 - `complete`/`fail` only from `InProgress` and only by the claiming server; otherwise 409. Gate-scan apply failures
   answer 409/422 instead of 500.
 - New endpoints: `POST {id}/cancel` (web creator or `knk.admin.world`), `POST {id}/release` (plugin),
@@ -322,13 +329,21 @@ Plugin hygiene in the same phase: handler state keyed by UUID in concurrent maps
 thread; in-game `cancel` → `release` (or `cancel` if the player says so), quit → release, plugin disable → release
 all; heartbeat every 60 s for held tasks; `server-id` from config; headless poller claims before it runs a task.
 
-Web hygiene: "Capture again"/"Try again"/leaving the form → `cancel` the old task; persist the task id in the draft
-field state (or look it up with `GET session/{id}/open`) so a reload reattaches; stop polling when the task is closed;
+Web hygiene: "Capture again"/"Try again"/leaving the form → `cancel` the old task; reattach through the draft (§8.7); stop polling when the task is closed;
 show Expired/Cancelled with a "Start again" button; recover from a stuck InProgress with "Cancel task".
 
 ### 8.3 The offer (R4, R5)
 
-On `POST /WorldTasks` the web app sends `deliver: "auto" | "code" | {"userId": n}` **(proposed; default "auto")**.
+Decided 2026-10-26 (Q6–Q8): the normal **"Send to Minecraft"** button means *auto*; a separate **"Hand off to…"**
+action sends it to another player; the code stays as fallback. On `POST /WorldTasks` the web app sends
+`deliver: "auto" | "code" | {"userId": n}`.
+
+**Before sending (busy check, developer decision):** the web app calls `GET /api/WorldTasks/active-for-me` (the
+caller's open task in game, if any, with its form/field label). If the player already holds a task, the web app does
+not send blindly but asks: **Queue** (offered automatically when the current task ends), **Hand off** (pick an online
+player, as 2. below), **Replace** (the current task is released or cancelled — the dialog says which form loses it —
+and the new one is offered), or **Cancel** (nothing sent). The plugin still re-checks on arrival (race: a task claimed
+in between) and reports `busy`, which the web app shows with the same choices.
 
 1. **auto** — the API looks up the creator's `User.Uuid` in the `PresenceRegistry`.
    - Online → `TargetUserId = creator`, `OfferState = Offered`, push `WorldTaskOffered {taskId, uuid, taskType,
@@ -336,10 +351,10 @@ On `POST /WorldTasks` the web app sends `deliver: "auto" | "code" | {"userId": n
    - The plugin checks `Bukkit.getPlayer(uuid)` online, holds `knk.tasks`, no open task (KNG-174 rule). If yes:
      `POST {id}/claim` (by uuid, offer path, no code needed), start the handler, chat: "Task from the web app: {label}
      — {instructions}. Type `cancel` to hand it back." Reports `WorldTaskOfferResult {accepted}`.
-   - Busy (already holds a task) → the task is **queued** for that player and offered when the current one ends
-     **(proposed; alternative: decline → code)**. Offline after all, or no permission → `declined`.
+   - Busy → handled before sending (busy check above); a late race reports `busy`. Offline after all, or no
+     permission → `declined`, and the web app shows the code.
    - Not online (registry) → no offer; behaves as **code**.
-2. **{userId}** (admin B) — the web app offers a picker "Send to an online admin" listing online users who hold
+2. **{userId}** (admin B, "Hand off to…") — the web app offers a picker listing online users who hold
    `knk.admin.world` / `knk.tasks` (new `GET /api/presence/online-staff?node=knk.tasks`). The plugin shows admin B a
    clickable `[Accept] [Decline]` chat line (not an auto-claim, since admin B didn't start it). Accept → claim.
    Decline/timeout (default 2 min) → `OfferState = Declined/TimedOut`, the web app expands the code.
@@ -359,6 +374,8 @@ wins via the conditional claim **(not in the first version)**.
   region/WorldEdit session, tell the player "The web app cancelled this task".
 - Headless tasks: `WorldTaskCreated {taskId, type}` to the `servers` group → the plugin claims, then runs (stops double
   scans); `HeadlessWorldTaskPoller` stays as safety net at 60 s while connected.
+- Queue: when a player's task ends (complete, fail, release, cancel), the API offers that player's next queued task
+  (oldest first) with the same auto-claim.
 - Resync on (re)connect: `GET open?serverId=` → tasks this server holds but has no local handler for (restart) →
   `release`; tasks offered to a player who is online here → re-offer; held and alive → heartbeat.
 
@@ -368,8 +385,9 @@ wins via the conditional claim **(not in the first version)**.
   hub reconnect (or while disconnected, every 10 s) it re-fetches `GET {id}`.
 - States shown: *Sending to {you} in game…* → *Claimed by {name} in game* (with "Cancel task") → *Completed* (fills the
   field as today via `extractTaskResult`) / *Failed {reason}* / *Expired* / *Cancelled* (each with "Start again").
-- Delivery choice next to the button: "Send to me in game" (default when the API says the user is online; shown via
-  `GET /api/presence/me`), "Send to an online admin…", "Use a task code".
+- Buttons: **"Send to Minecraft"** (auto: offered to and claimed by you when you are online, `GET /api/presence/me`;
+  otherwise it shows the task code), a secondary **"Hand off to…"** (online player picker, Accept/Decline in game), and
+  the task code always visible as fallback. The busy check (§8.3) runs before either sends.
 
 ### 8.6 Fallback summary
 
@@ -379,8 +397,31 @@ wins via the conditional claim **(not in the first version)**.
 | Initiator offline | Code flow (or "send to an online admin") |
 | Admin B in game | Targeted offer with Accept/Decline; code as fallback |
 | Plugin restart mid-task | Resync releases the task to Pending; web shows "Released — sent again"/code |
-| Player quits mid-task | Release; offer again on rejoin if `TargetUserId` is them **(proposed)** |
+| Player quits mid-task | Release; offer again on rejoin if `TargetUserId` is them |
 | Web user leaves the form | Cancel |
+
+### 8.7 Tasks anchored to the draft (developer decision 2026-10-26)
+
+**Problem (verified on web app `0d61270`, API `6f08383`):** every time a form opens, including resuming a draft, the
+web app creates a **new** `WorkflowSession` (`FormWizardPage.tsx:318`, `:449`); world tasks hang off that session; the
+draft (`FormSubmissionProgress`) has no link to the session or its tasks; the task id lives only in the field's React
+state (`WorldBoundFieldRenderer.tsx:411`). So reload, step change, closing a child form or resuming loses the task, a
+task finished while the tab was closed never reaches the draft, and abandoned sessions pile up. A draft only exists
+after Save Draft, Next or Submit.
+
+**Design (option 2 of the 2026-10-26 analysis):**
+- The first world task in a form saves the draft silently if none exists, so a task always has a draft.
+- One workflow session per draft: `FormSubmissionProgress.WorkflowSessionId` (or the session gets
+  `FormSubmissionProgressId`); resuming reuses it. Child forms (`ChildFormModal`) use their own child progress the same way.
+- `WorldTask.FormSubmissionProgressId` next to `StepKey`/`FieldName`; plus `AppliedAt` (when the result was written into
+  the draft).
+- `GET /api/FormSubmissionProgress/{id}/world-tasks` returns the latest task per field. On mount the field panel
+  reattaches: waiting / in game / **completed but not applied** → fills the field with `extractTaskResult`, saves the
+  draft and calls `POST /WorldTasks/{id}/applied`.
+- Replacing a field's task ("Capture again") cancels the previous one for that field.
+- The #180 sweep also removes sessions with no draft and no activity (default 7 days) and their open tasks.
+- Later, if needed: the API writes the result into the draft itself on completion (option 3), which needs the web
+  app's field-mapping rules (location spread, region id, item/kit scan fan-out) on the server.
 
 ## 9. Web app: entity CRUD push (nice-to-have)
 
@@ -408,23 +449,24 @@ about the game server); small once the web hub exists. Phase S4 web part, low pr
 - Moving batched REST reports (statistics, discoveries, PM logs, telemetry) onto the hub.
 - Player-facing web notifications ("you were paid") — a feature of its own once the web hub exists.
 
-## 12. Open decisions (proposed defaults; developer to confirm)
+## 12. Decisions (developer, 2026-10-26)
 
-| # | Question | Proposed default |
+| # | Question | Decision |
 |---|---|---|
-| Q1 | Two hubs (`/api/hubs/game`, `/api/hubs/web`) in the API process, no backplane? | Yes |
-| Q2 | Java client `com.microsoft.signalr` (shaded) vs. OkHttp WebSocket with own JSON protocol? | SignalR client (same okhttp; gives invocations and client results) |
-| Q3 | Generic `EntityChanged` via an EF `SaveChangesInterceptor` + allow-list, vs. explicit publish calls in every service? | Interceptor for entity CRUD; explicit calls for user-state events |
-| Q4 | Keep periodic re-syncs while connected, slowed ×4? | Yes |
-| Q5 | Presence from hub connection + roster (writes the existing `IsOnline`/`LastSeenAt`), grace 60 s? | Yes |
-| Q6 | World task delivery default "auto" (offer to initiator if online, auto-claim without asking)? | Yes, as the developer asked; the player can type `cancel` to hand it back |
-| Q7 | Initiator already busy with another task: queue the new one, or fall back to the code? | Queue (offer when the current task ends) |
-| Q8 | Admin B: targeted offer with Accept/Decline (no silent auto-claim), timeout 2 min? | Yes |
-| Q9 | Broadcast "any online staff" offers in the first version? | No (later) |
-| Q10 | Pending expiry 30 min, InProgress lease 3 min with 60 s heartbeats, release (not fail) when the lease expires? | Yes |
-| Q11 | Rename the world-task "claim code" to "task code" in UI/docs (invitations own "claim code")? Remove claiming by numeric id? | Yes / yes |
-| Q12 | Gate edits during a running siege match: apply after the match? | Yes |
-| Q13 | `RegionHttpServer` stays HTTP for now (hub version later, S6)? | Yes |
-| Q14 | Erasure catch-up table (persisted sequence) in S5, separate from S1–S4? | Yes |
-| Q15 | `realtime.enabled` default false until each phase is live-tested on the dev server, then true on the alpha? | Yes |
-| Q16 | Where should the 2026-10-08 "SignalR recommendation comment" on KNG-57 (Linear, read-only, not readable from this session) be reflected? | Developer to paste or confirm nothing in it conflicts with this design |
+| Q1 | Two hubs in the API process, no backplane | **Yes** |
+| Q2 | Java client `com.microsoft.signalr` (shaded) | **Yes** |
+| Q3 | Publishing entity CRUD | **Option A now** (interceptor + allow-list, sent after commit; explicit calls for user state and bulk paths), **option C (outbox) as the longer-term target** for gameplay in the web app; build A behind one event sink so the switch is local (§4.3) |
+| Q4 | Periodic re-syncs while connected | **Keep, ×4 slower** |
+| Q5 | Presence from the hub (roster, joined/left, 60 s grace) | **Yes** |
+| Q6 | Auto-claim for the online initiator | **Yes, on the normal "Send to Minecraft" button**; a separate "Hand off to…" action for another player (§8.3, §8.5) |
+| Q7 | Initiator already holds a task | **The web app checks before sending** and offers Queue / Hand off / Replace / Cancel (§8.3) |
+| Q8 | Admin B | **Accept/Decline in chat, 2 min timeout** |
+| Q9 | Broadcast offers in the first version | No (default, not asked) |
+| Q10 | Pending expiry 30 min, lease 3 min, release on lease expiry | **Yes**; plus tasks anchored to the draft (§8.7) |
+| Q11 | Naming and id claims | **Rename to "task code"**; id claims only with `knk.tasks.any` (owner/rescue) |
+| Q12 | Gate edits during a running siege match | **Apply after the match** |
+| Q13 | `RegionHttpServer` stays HTTP for now (S6 later) | Yes (default, not asked) |
+| Q14 | Erasure catch-up in its own phase S5 | Yes (default, not asked) |
+| Q15 | `realtime.enabled` default false until each phase is live-tested | Yes (default, not asked) |
+| Q16 | The 2026-10-08 "SignalR recommendation comment" on KNG-57 (Linear) | **Open:** the developer checks it against this design |
+| — | When S1 starts | **While #177 link 2 (A2) is built** |

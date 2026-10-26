@@ -1,7 +1,7 @@
 # Plan: web app UX re-evaluation, dashboard CRUD hub + form wizard, SignalR (incl. world tasks)
 
-**Status:** Proposal for the developer's review (overnight session 2026-10-25). **No code written.** Decisions I took
-are in §6, questions for the developer in §7.
+**Status:** Accepted with the developer's decisions of 2026-10-26 (§7a). **No code written.** My own decisions are in §6;
+the questions as asked are in §7.
 **Date:** 2026-10-25
 **Branch:** knk-workspace `claude/sharp-ptolemy-124hvw` (includes the 2026-10-24 dashboard handoff from
 `claude/tender-cerf-elcye5`). Not merged into `main`.
@@ -153,7 +153,38 @@ lines in the prompt (global instructions "Session chains"). A1/A2 can share the 
 - Q16: the 2026-10-08 "SignalR recommendation comment" on KNG-57 is in Linear and I couldn't read it from this
   session; please check it doesn't conflict with the design.
 
+## 7a. Developer decisions (2026-10-26, asked in the session)
+
+**Dashboard / form wizard / UX**
+- Q-U1 re-scoping: **accepted** (#33 split, #81 split, #26 split, clickable steps #109 → #68, CRUD-9 own issue, #104 →
+  separate public site, #92 under #95, #38 tokens → #95 and lootbox bits → #26).
+- Q-U2 priorities: **applied** (#109, #30, #33 (a), #81 (a) high; #122, #104 low; #71 stays medium — no
+  medium-high label exists, it is first in line among the mediums).
+- Q-U3/Q-U4: **both** into #177 link 2: the detail page header (#81 a) and the metadata-driven Create New menu (no other
+  issue plans the menu replacement; #39 CRUD-2 pointed at it and now points to #177).
+- Q-U5: **minimal success toast in link 1**, the full kit (#33) later.
+- Q-U6: User rows: **Edit opens the player profile**; the generic form stays for create until #72/#148 are fixed.
+- Q-U7: #186: **delete all old drafts and workflow sessions** owned by user 1 (one-time cleanup with the fix).
+- Q-U8: **SignalR S1 starts while A2 is built.**
+- Q-U9: #24 body **rewritten** to match the re-evaluation.
+- Q-U10: think-aloud (#83) **after A2**.
+
+**SignalR / world tasks** (recorded in [DESIGN §12](../../specs/realtime-signalr/DESIGN.md)):
+- Hubs and Java client as proposed; presence as proposed; periodic re-syncs kept ×4 slower; gate edits apply after
+  a running match.
+- Publishing: **option A now, option C (outbox) as the long-term target**, because the developer wants to build
+  gameplay in the web app, which needs many detailed events and a robust feed. A is built behind one event sink so the
+  switch stays local (DESIGN §4.3). Pros/cons and the decision matrix were given in the session; summary: A 29, C 31,
+  B 19 of 39 weighted points; C wins on transactions and durability only.
+- World tasks: **"Send to Minecraft" = auto** (offered to and claimed by the online initiator); a separate **"Hand off
+  to…"** action; **busy check before sending** with Queue / Hand off / Replace / Cancel; admin B gets **Accept/Decline,
+  2 min**; expiry 30 min, lease 3 min, release; **rename to "task code"**; id claims only with `knk.tasks.any`.
+- New requirement from the answers: **world tasks anchored to the draft** so a task can always be found again from its
+  form submission (DESIGN §8.7, part of #180): one session per draft, task linked to the draft and field, silent draft
+  save on the first task, reattach and apply finished results on mount.
+- Defaults not asked (Q9, Q13–Q15) kept as proposed. **Still open:** Q16, the 2026-10-08 SignalR comment on KNG-57 in
+  Linear (developer to check).
+
 ## 8. Next step
 
-Developer reviews §7 and DESIGN §12. Then: start A1 (#177 link 1) from this plan and the 2026-10-24 handoff; I can
-apply the issue edits from Q-U1/Q-U2/Q-U9 in the same go.
+Start A1 (#177 link 1) from this plan and the 2026-10-24 handoff. S1 (#178) starts while A2 is built. Open: Q16.
