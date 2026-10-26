@@ -1,7 +1,7 @@
 # Knights & Kings - Player Account Management Guide
 
 **Version**: 1.2  
-**Last Updated**: October 21, 2026 (KNG-218: "Getting an account" rewritten for invite-only sign-up. **It describes the
+**Last Updated**: October 26, 2026 (step 4: the code field adds the dash, #192, not merged); October 21, 2026 (KNG-218: "Getting an account" rewritten for invite-only sign-up. **It describes the
 invitations feature ([KNG-205](https://linear.app/kngpandi/issue/KNG-205)), merged 2026-10-24 but not yet switched on
 for the alpha**; until the switch-over, new players follow "Existing players" below.) Before:
 KNG-208, `/account create` and web → game linking removed.  

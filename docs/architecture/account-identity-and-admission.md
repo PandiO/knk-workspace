@@ -4,7 +4,7 @@
 knk-plugin; invitations chain links 1–7, smoke-tested on dev). **Off by default until the alpha switch-over**
 ([alpha go-live § 11.1](../guides/alpha-go-live.md)); until then the live behaviour is "Before the feature" below. Living document: update it in place when the
 code changes.
-**Last updated:** 2026-10-25 (§ 4: the anonymous `onboarding-info` call, the mode-aware sign-up and login pages; § 7: the Cloudflare step after sign-up, the missing-session banner, the bypass row — branch `claude/invite-only-register-page`, not merged); 2026-10-21 (written by invitations chain link 7, KNG-218)
+**Last updated:** 2026-10-26 (§ 4: claim code fields, #192, branch `claude/claim-code-field-192`, not merged); 2026-10-25 (§ 4: the anonymous `onboarding-info` call, the mode-aware sign-up and login pages; § 7: the Cloudflare step after sign-up, the missing-session banner, the bypass row — branch `claude/invite-only-register-page`, not merged); 2026-10-21 (written by invitations chain link 7, KNG-218)
 **Linear:** [KNG-205](https://linear.app/kngpandi/issue/KNG-205) (parent), [KNG-206](https://linear.app/kngpandi/issue/KNG-206),
 [KNG-207](https://linear.app/kngpandi/issue/KNG-207), [KNG-208](https://linear.app/kngpandi/issue/KNG-208),
 [KNG-212](https://linear.app/kngpandi/issue/KNG-212), [KNG-214](https://linear.app/kngpandi/issue/KNG-214),

@@ -2,7 +2,7 @@
 
 **Status:** Written 2026-10-21 (invitations chain link 7, KNG-218). **Run on dev 2026-10-23/24** (Findings below: § 0–6
 and § 8 passed or accepted, § 7 waits for the alpha); the feature is merged to every trunk since 2026-10-24.
-**Last updated:** 2026-10-25 (§ 3 step 11, § 4 step 16, § 7 steps 6–8: the register and login pages in Invite mode, a claim
+**Last updated:** 2026-10-26 (§ 4 steps 16–17: claim code fields, #192, not merged); 2026-10-25 (§ 3 step 11, § 4 step 16, § 7 steps 6–8: the register and login pages in Invite mode, a claim
 code typed as a link code, the Cloudflare step in every flow and the missing-session banner — branch
 `claude/invite-only-register-page` in knk-web-app and knk-web-api, found on the alpha 2026-10-25); 2026-10-24
 **Linear:** [KNG-218](https://linear.app/kngpandi/issue/KNG-218) (I3, this guide), parent
