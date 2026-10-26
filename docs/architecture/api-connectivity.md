@@ -3,6 +3,7 @@
 **Status:** Live · **Last updated:** 2026-10-11 — merged after a developer live test
 ([KNG-115](https://linear.app/kngpandi/issue/KNG-115)): knk-web-api `master` `17ee730`, knk-plugin
 `main` `b5eee6e`. All decisions below were accepted by the developer on 2026-10-11.
+2026-10-26: second subscriber, the realtime client (#178 S1, branch `claude/realtime-signalr`; § "Subscribing").
 2026-10-15: first consumer of the state, [KNG-171](https://linear.app/kngpandi/issue/KNG-171) — reads
 skip the API while it is DOWN (§ "Reads skip the API while DOWN"). Implemented on knk-plugin branch
 `wt/kng-171`; live-tested by the developer and merged 2026-10-17 ([knk-plugin #14](https://github.com/PandiO/knk-plugin/pull/14)).
@@ -141,6 +142,7 @@ Subscribers of the state:
 | Consumer | Use | Status |
 |---|---|---|
 | `DataAccessExecutor` gateway reads, incl. permission checks (KNG-171) | synchronous `ApiOutageSignal`, not the event: while DOWN no call, answer from the caches and the offline store | branch `wt/kng-171`, not merged |
+| `RealtimeService` (#178 S1, only with `realtime.enabled`) | the event: on DOWN no more hub reconnect attempts (a live connection is left alone), on UP one attempt right away with a fresh backoff | branch `claude/realtime-signalr`, not merged |
 
 Not subscribed yet (by design, KNG-115 scope):
 

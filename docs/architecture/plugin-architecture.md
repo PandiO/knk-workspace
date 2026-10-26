@@ -1,6 +1,6 @@
 ---
 status: active
-last_updated: 2026-10-25
+last_updated: 2026-10-26
 ---
 
 # knk-plugin Architecture
@@ -204,6 +204,14 @@ complete for every entity type the plugin touches.
   `knk-web-api` can ask the plugin WorldGuard/WorldEdit questions it can't
   answer itself. This is a distinct channel from both the REST client and
   the poller — the only place the API calls *into* the plugin.
+- **Realtime channel (SignalR, #178 S1; on branch `claude/realtime-signalr`, not merged; off by default):**
+  `paper/realtime/RealtimeService` keeps one connection to the API's game hub (`/api/hubs/game`, plugin key +
+  `X-Knk-Server-Id` = `realtime.server-id`) through `api/realtime/RealtimeClient` (backoff 1/2/5/10/30 s, paused
+  while `ApiConnectivityMonitor` says DOWN). On every (re)connect it sends the online roster (the API's presence)
+  and runs `core/realtime/ResyncHooks` on the main thread: the `/knk cache refresh` hooks, the domain access flag
+  sync and the lootbox runtime refresh. Incoming events go through `RealtimeDispatcher` (S1: only `Welcome`); the
+  polls above stay as the fallback. `realtime.server-id` also replaces the hard-coded `"localhost"` in world-task
+  claims. Design: [`specs/realtime-signalr/DESIGN.md`](../specs/realtime-signalr/DESIGN.md) §4.6.
 - Everything else (commands, player-triggered lookups) is on-demand via the
   cache-first data access layer.
 

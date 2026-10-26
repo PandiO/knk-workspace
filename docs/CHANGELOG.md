@@ -4,7 +4,13 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
-_Nothing at the moment._
+- **Realtime channel, S1 foundation** ([PandiO/knk-workspace#178](https://github.com/PandiO/knk-workspace/issues/178), branch
+  `claude/realtime-signalr` in knk-web-api, knk-plugin and knk-workspace): SignalR hubs in the API (`/api/hubs/game`
+  with the plugin key and `X-Knk-Server-Id`, `/api/hubs/web` with the JWT), a publisher with per-connection
+  sequence numbers, and presence from the game server (roster on every connect, join/quit, 60 s grace) in
+  `User.IsOnline`. The plugin connects with backoff, pauses while the API is down and re-reads its caches on every
+  (re)connect; `realtime.server-id` replaces the hard-coded `localhost` on world-task claims. Off by default
+  (`realtime.enabled: false`); no business events yet (S2). Checklist: [realtime smoke test](guides/realtime-smoke-test.md).
 
 ## 2026-10-25
 

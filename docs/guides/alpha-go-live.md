@@ -4,7 +4,7 @@
 (the Codex NAS rollout). Not yet followed end to end. 2026-10-21: web hostname decided (`app.knightsandkings.net`),
 DNS in Cloudflare, Minecraft console/autostart/plugin updates ([KNG-225](https://linear.app/kngpandi/issue/KNG-225)).
 2026-10-22: § 3 (API upgrade) done on the NAS ([KNG-227](https://linear.app/kngpandi/issue/KNG-227)); § 3–4 corrected from that run.
-**Last updated:** 2026-10-25 (§ 4, § 4.2: `Seeding__IncludeExamples=false` and the one-time example cleanup script, not deployed yet); 2026-10-24 (§ 9 checklist ticked after Phase 9; Phase 9 done: invite-only live, § 10 invite text, § 11.1; Phase 9 E0: the mail relay is live, § 4 mail block is SMTP; KNG-205 invitations merged: the feature-branch notes replaced; settings as before, all off until § 11.1); 2026-10-22; 2026-10-21 (KNG-218, invitations chain link 7: § 4.1 settings after the invite-only switch-over, § 5.1 admission gate instead of the whitelist, § 9 F2, § 10 invite mail, § 11 kill switches and **§ 11.1 the switch-over steps**, § 12); 2026-10-21 (§ 6.1: Cloudflare Access sync, `cfproxy`, the sign-up bypass — KNG-216, feature branch; § 4: `Email__AllowLogTransport` for API builds with the KNG-206 email engine; notes pointing to the KNG-205 invitations plan); 2026-10-18
+**Last updated:** 2026-10-26 (§ 5: plugin `realtime:` block and checks, SignalR S1 #178, feature branch); 2026-10-25 (§ 4, § 4.2: `Seeding__IncludeExamples=false` and the one-time example cleanup script, not deployed yet); 2026-10-24 (§ 9 checklist ticked after Phase 9; Phase 9 done: invite-only live, § 10 invite text, § 11.1; Phase 9 E0: the mail relay is live, § 4 mail block is SMTP; KNG-205 invitations merged: the feature-branch notes replaced; settings as before, all off until § 11.1); 2026-10-22; 2026-10-21 (KNG-218, invitations chain link 7: § 4.1 settings after the invite-only switch-over, § 5.1 admission gate instead of the whitelist, § 9 F2, § 10 invite mail, § 11 kill switches and **§ 11.1 the switch-over steps**, § 12); 2026-10-21 (§ 6.1: Cloudflare Access sync, `cfproxy`, the sign-up bypass — KNG-216, feature branch; § 4: `Email__AllowLogTransport` for API builds with the KNG-206 email engine; notes pointing to the KNG-205 invitations plan); 2026-10-18
 **Applies to:** builds that **include KNG-64**: knk-web-api `master` ≥ `30c5dc5`, knk-web-app `main` ≥ `98c0a76`,
 knk-plugin `main` ≥ `34c9261`. **Never expose an older API.**
 **Linear:** [KNG-64](https://linear.app/kngpandi/issue/KNG-64) (parent), [KNG-68](https://linear.app/kngpandi/issue/KNG-68) (this guide)
@@ -271,11 +271,21 @@ region-http:
   port: 8081
 web:
   public-url: "https://app.knightsandkings.net"       # /account link shows app.knightsandkings.net/auth/register
+# [#178, feature branch claude/realtime-signalr; not in an alpha build yet] SignalR channel to the API. Keep it off
+# on the alpha until the developer's dev-server check (guides/realtime-smoke-test.md) passed.
+realtime:
+  enabled: false
+  server-id: "alpha-1"                   # any id of [A-Za-z0-9._-], max 64; also stored on world tasks claimed here
+  hub-url: ""                            # empty: http://api:5000/api/hubs/game, straight over knk-alpha_backend
 ```
 
 Checks:
 - The startup log shows `RegionHttpServer listening on 0.0.0.0:8081 (X-API-Key required)`, and there's no warning about a missing
   `web.public-url`.
+- With `realtime.enabled: true` (#178): `Realtime: connected to the game hub` in the plugin log, `Game server alpha-1
+  connected to the realtime hub` in the API log, and `/knk health` shows `realtime: connected`. The plugin reaches the
+  hub over the backend network; nginx and Cloudflare are not involved. The API needs no setting for it (section
+  `Realtime` has defaults: `Realtime__PresenceGraceSeconds=60`, `Realtime__ChannelCapacity=1000`).
 - `/knk health` shows the API as UP.
 - The API log has no 401 or 403 for plugin calls.
 

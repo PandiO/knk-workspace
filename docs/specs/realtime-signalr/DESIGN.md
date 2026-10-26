@@ -1,7 +1,7 @@
 # Realtime channel (SignalR) between knk-web-api, knk-plugin and knk-web-app
 
-**Status:** Accepted design (developer decisions 2026-10-26, §12). **No code yet.**
-**Last updated:** 2026-10-26 (decisions recorded; §8.3 delivery and busy flow, §8.7 tasks anchored to the draft, §4.3 publishing path)
+**Status:** Accepted design (developer decisions 2026-10-26, §12). **S1 (§4–§5) implemented on `claude/realtime-signalr`** (knk-web-api, knk-plugin; 2026-10-26, #178), not merged, `realtime.enabled: false` until the live check; S2–S5 not started.
+**Last updated:** 2026-10-26 (S1 built: implementation notes in §4.6; decisions recorded; §8.3 delivery and busy flow, §8.7 tasks anchored to the draft, §4.3 publishing path)
 **Issue:** [PandiO/knk-workspace#66](https://github.com/PandiO/knk-workspace/issues/66) (KNG-57, priority high); phase issues in
 [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md). Related: #76 (KNG-170, rank changes don't reach the server),
 #121 (KNG-262, cache TTLs), #31 (KNG-202, startup-only siege work), #35 (KNG-176), #34 (KNG-246), #145 (KNG-249), #75.
@@ -166,6 +166,25 @@ Every server→client message is one hub method per event type with a single arg
 - Built-in `withAutomaticReconnect`; after reconnect, components re-fetch what they show (P2).
 - First consumer: world tasks (§8). Later consumers: the dashboard refreshes a type's table when an `EntityChanged` for
   that type arrives from another admin (nice-to-have, §9), the player profile shows live online state.
+
+### 4.6 S1 as built (2026-10-26, #178)
+
+- **API** (`knk-web-api/Realtime/`): `RealtimeSetup` (DI, hub mapping, `access_token` reader for `/api/hubs/web`),
+  `Hubs/GameServerHub` (policy `KnkRealtimeGameServer` = the plugin key check of `[RequirePluginService]`; header
+  `X-Knk-Server-Id`, 1–64 of `[A-Za-z0-9._-]`, else the connection is closed), `Hubs/WebHub` (default JWT policy,
+  closes when the token expires), `RealtimePublisher` (bounded channel, drop-oldest) + `RealtimeDispatchService`
+  (one reader; expands a group to its connections and numbers `seq` per connection, so SignalR's own groups are not
+  used), `Presence/` (`PresenceRegistry`, `PresenceStore` on `User.IsOnline`/`LastSeenAt`, `PresenceSweepService`),
+  meter `Knk.Realtime`. Settings section `Realtime` (`ChannelCapacity` 1000, `PresenceGraceSeconds` 60,
+  `PresenceSweepSeconds` 10, `KeepAliveSeconds` 15, `ClientTimeoutSeconds` 30, `AllowedServerIds` empty = any).
+- **Event in S1:** only `Welcome {serverId, presenceGraceSeconds}`, the first message (seq 1) on each game-server
+  connection. Business events start with S2.
+- **Plugin:** `knk-core/.../core/realtime/` (backoff, sequence tracker, resync hooks, stats), `knk-api-client/.../api/realtime/`
+  (`RealtimeClient`, `SignalRHubTransport` on `com.microsoft.signalr` 10.0.13, `RealtimeEnvelope`),
+  `knk-paper/.../paper/realtime/` (`RealtimeService`, `RealtimeDispatcher`, `RealtimeSettings`). Resync hooks in S1:
+  the `/knk cache refresh` hooks, `DomainAccessFlagSync.syncNow()`, `LootboxRuntime.refresh()`. The startup-only
+  siege work (#31) joins in S3 (#182, charter link 10); the notification drain and the slower re-syncs in S2.
+- `/knk health` shows the channel; the KNG-232 `/metrics` endpoint exports `knk_realtime_*`.
 
 ## 5. Presence (needed for R4)
 

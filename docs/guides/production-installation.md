@@ -3,7 +3,7 @@
 **Status:** Draft v1 — written for review. Not yet followed on a real production host. The database, API, seed and
 web-server steps were rehearsed in a scratch environment on 2026-10-07 (see [Appendix A](#appendix-a--what-was-verified-and-how)).
 The Paper server steps and the CI/CD workflows are untested drafts.
-**Last updated:** 2026-10-25 (§1/§3.4 G6: RegionHttpServer is loopback + `X-API-Key` since KNG-64; §nginx: WebSocket upgrade headers for the planned SignalR hub, #66); 2026-10-24 (§4.3, §9.3, §11 F/G: KNG-205 invitations merged, the feature-branch notes replaced); 2026-10-22 (§7.7: DisplayConfiguration export/import and the priority 2/3 form seeds and display seeds merged, KNG-139); 2026-10-21 (§4.3, §9.3, §11 F/G: invite-only sign-up, admission gate and Access sync — KNG-205/KNG-218); 2026-10-21 (§4.3 mail: the KNG-206 email engine on the invitations feature branch — `Email__Transport`, relay option, `App__PublicBaseUrl`, Log guard); 2026-10-17 (§7.7: FormConfiguration export/import and bundled seeds merged, KNG-138/139; two new migrations, see the note in §7.7); 2026-10-12 (§7.7: KNG-138 on a feature branch); 2026-10-08 (security and alpha-hosting update for KNG-64)
+**Last updated:** 2026-10-26 (§nginx: `/api/hubs/` without access log; § 9.5 plugin `realtime:` block — SignalR S1, #178, feature branch); 2026-10-25 (§1/§3.4 G6: RegionHttpServer is loopback + `X-API-Key` since KNG-64; §nginx: WebSocket upgrade headers for the planned SignalR hub, #66); 2026-10-24 (§4.3, §9.3, §11 F/G: KNG-205 invitations merged, the feature-branch notes replaced); 2026-10-22 (§7.7: DisplayConfiguration export/import and the priority 2/3 form seeds and display seeds merged, KNG-139); 2026-10-21 (§4.3, §9.3, §11 F/G: invite-only sign-up, admission gate and Access sync — KNG-205/KNG-218); 2026-10-21 (§4.3 mail: the KNG-206 email engine on the invitations feature branch — `Email__Transport`, relay option, `App__PublicBaseUrl`, Log guard); 2026-10-17 (§7.7: FormConfiguration export/import and bundled seeds merged, KNG-138/139; two new migrations, see the note in §7.7); 2026-10-12 (§7.7: KNG-138 on a feature branch); 2026-10-08 (security and alpha-hosting update for KNG-64)
 **Applies to:** trunk only. knk-web-api `master` `1805cf9`, knk-web-app `main`, knk-plugin `main` `c7d5a1e`; 61 EF
 migrations, the latest being `20261006193103_UniquePermissionGrantHolderNode`. Feature branches that haven't been
 merged, such as road navigation, are not covered. Re-check § 2 and the seed table manifest after each trunk merge.
@@ -954,11 +954,27 @@ server {
         proxy_set_header X-Real-IP         $remote_addr;
         proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
-        # WebSocket upgrade for the SignalR hub at /api/hubs/web (planned, #66; harmless before then)
+        # WebSocket upgrade for the SignalR hub at /api/hubs/web (#66; harmless before then)
+        proxy_set_header Upgrade           $http_upgrade;
+        proxy_set_header Connection        "upgrade";
+        proxy_read_timeout 120s;                 # above the hub's 30 s client timeout
+        client_max_body_size 10m;
+    }
+
+    # [#178, feature branch claude/realtime-signalr] The browser hub sends its JWT as ?access_token= (a WebSocket
+    # can't carry headers), so keep these requests out of the access log. Same proxy settings as /api/.
+    # Only needed once the web app connects (WT2, #181); the game server connects to the API directly, not here.
+    location /api/hubs/ {
+        access_log off;
+        proxy_pass http://127.0.0.1:5000;
+        proxy_http_version 1.1;
+        proxy_set_header Host              $host;
+        proxy_set_header X-Real-IP         $remote_addr;
+        proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
         proxy_set_header Upgrade           $http_upgrade;
         proxy_set_header Connection        "upgrade";
         proxy_read_timeout 120s;
-        client_max_body_size 10m;
     }
 
     # Health probes stay private: monitor them from the host, not the internet.
@@ -1131,6 +1147,10 @@ mcrcon -H 127.0.0.1 -P 25575 -p '<rcon password>' "list"   # console commands ov
      mode: whitelist                           # invite: claim code on the disconnect screen; read at start-up only
      api-timeout-ms: 3000
      link-url: ""                              # empty: {web.public-url}/link
+   realtime:                                   # [#178, feature branch] SignalR channel to the API; off by default
+     enabled: false                            # on only after the realtime smoke test (guides/realtime-smoke-test.md)
+     server-id: "localhost"                    # this server's id; also stored on world tasks claimed here
+     hub-url: ""                               # empty: http://127.0.0.1:5000/api/hubs/game (from api.base-url)
    ```
 
    ```bash
