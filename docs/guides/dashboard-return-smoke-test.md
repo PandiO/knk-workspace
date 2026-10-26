@@ -104,7 +104,7 @@ Branch: knk-web-app `claude/dashboard-header-195` (on `main` `6b02bb0`).
 3. The title's left edge lines up with the table's left edge (and the search box); the cogwheel's right edge with the
    table's right edge.
 4. Switch to a type with a long name (e.g. Minecraft Enchantment Ref): same row; if it doesn't fit, the buttons wrap
-   below the title, still together and right of nothing else.
+   below the title and stay together.
 5. Phone width (or a narrow window, ~390 px): the title may take two lines, the buttons sit below it; a long
    "New {Type}" is cut off with "…" (hover or long-press shows the full name) and the cogwheel stays on screen.
 6. Scroll the table: the header row scrolls with it as before (it isn't sticky); the explorer stays in place.
