@@ -19,7 +19,7 @@ test), `merged`, `blocked: <reason>`.
 | 3 | #177 (link 2), #81, #39 (menu) | `claude/kng-60-dashboard-hub` | in review | subagent (fallback: add_repo needed in-session approval), 2026-10-26 | — / `9a203f8` / — / `186c851` | web-app 1270/1270 (baseline 1232/1232), suites 201 (195); `tsc` 9 errors = baseline; build OK, same 24 warnings |
 | 4 | #178 | `claude/realtime-signalr` | in review | subagent (fallback: add_repo needed in-session approval), 2026-10-26 | `b8a29d7` / — / `a64b7f83` / `e878ee2` | API 3338 passed, 4 failed (#99, = baseline reds), 87 skipped (baseline 3296/4/87); plugin core 2319 (2312), api-client 290 (280), paper 2149 (2140), 0 failures |
 | 5 | #64 (FormWizard), #109, #186 | `claude/form-wizard-edit-mode` | waiting: links 1 and 3 merged | — | — | — |
-| 6 | #179 | `claude/realtime-signalr` | waiting: link 4 done | — | — | — |
+| 6 | #179 | `claude/realtime-signalr` | in progress | subagent (fallback: add_repo needed in-session approval), 2026-10-26 | — | — |
 | 7 | #180 | `claude/world-task-hardening` | waiting: link 5 merged | — | — | — |
 | 8 | #181 | `claude/realtime-signalr` | waiting: link 6 done, link 7 merged | — | — | — |
 | 9 | #39 (rest), #177 follow-up | `claude/entity-lists-url-state` | waiting: link 3 merged | — | — | — |
@@ -38,6 +38,10 @@ flagged decisions.)
 - **Test link 3** (#177 link 2, #81, #39 menu): web-app `claude/kng-60-dashboard-hub` `9a203f8`; live checklist
   [guides/dashboard-return-smoke-test.md](../guides/dashboard-return-smoke-test.md) sections 8–14 on workspace branch
   `claude/kng-60-dashboard-hub` `186c851`. Flags L3-1…L3-9 (link 3 block) are reversible defaults.
+- **Test link 4** (#178, SignalR S1): API `claude/realtime-signalr` `b8a29d7`, plugin `a64b7f83`; live checklist
+  `docs/guides/realtime-smoke-test.md` § S1 on workspace `claude/realtime-signalr` `e878ee2`. `realtime.enabled` is off by
+  default. Links 6, 8 and 10 continue this branch, so it is best merged once at the end (or after link 6) unless you
+  want S1 live earlier. Flags L4-1…L4-11; L4: the startup-only siege work (#31) stays with link 10 as the charter says.
 - **Merge links 1 + 3** (web-app and workspace `claude/kng-60-dashboard-hub`) to open link 5 (form wizard) and link 9.
 - **Flags L1-1…L1-7** (link 1 block) are reversible defaults; answer only if you disagree. L1-1: a Submit without
   `returnTo` lands on `/dashboard/{type}`, not `/forms/{type}`.
