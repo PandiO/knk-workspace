@@ -1,6 +1,6 @@
 # Dashboard, form wizard and realtime chain — progress report
 
-**Status:** Not started (2026-10-26)
+**Status:** In progress — link 1 running (2026-10-26)
 **Last updated:** 2026-10-26
 **Charter:** [UX_REALTIME_CHAIN.md](../ai-agents/handoffs/UX_REALTIME_CHAIN.md) · **Coordinator prompt:**
 [2026-10-26-ux-realtime-coordinator-prompt.md](../ai-agents/handoffs/2026-10-26-ux-realtime-coordinator-prompt.md)
@@ -14,7 +14,7 @@ test), `merged`, `blocked: <reason>`.
 
 | Link | Issues | Branch | Status | Started | Heads (api / web-app / plugin / workspace) | Tests vs baseline |
 |---|---|---|---|---|---|---|
-| 1 | #177 (link 1), #58 | `claude/kng-60-dashboard-hub` | ready | — | — | — |
+| 1 | #177 (link 1), #58 | `claude/kng-60-dashboard-hub` | in progress | subagent, 2026-10-26 | — | — |
 | 2 | #185, #38, #192 | `claude/route-gates-185`, `claude/styling-quick-wins-38`, `claude/claim-code-field-192` | waiting: link 1 done | — | — | — |
 | 3 | #177 (link 2), #81, #39 (menu) | `claude/kng-60-dashboard-hub` | waiting: link 1 done | — | — | — |
 | 4 | #178 | `claude/realtime-signalr` | waiting: link 1 done (then together with link 3) | — | — | — |
