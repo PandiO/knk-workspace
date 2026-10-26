@@ -5,7 +5,8 @@
 **Status:** Implemented — all MVP phases (1–9) merged into the default branches on 2026-09-26 and smoke-tested live
 by the developer; Phase 10 (Scheduled lobbies) is post-MVP, not started. Seven decisions with the developer (§0; D6
 changed after the smoke test); remaining open questions in §13.
-**Last updated:** 2026-10-06 (§9.3: v3's blanket non-OP item-pickup cancel is gone); 2026-09-27 (§3.9: location checks are admin-configured field-validation rules, not hard-coded);
+**Last updated:** 2026-10-25 (§6.8, §8.1, §8.3, §11.1, §13 Q5: rejoin after a disconnect, `/siege join <player>`,
+defender pass-through — alpha test run 1, on knk-plugin `claude/alpha-run-1-siege`, not merged); 2026-10-06 (§9.3: v3's blanket non-OP item-pickup cancel is gone); 2026-09-27 (§3.9: location checks are admin-configured field-validation rules, not hard-coded);
 2026-09-26 synced with the smoke-tested build (area lockdown removed, gates removed for non-members, remembered
 spawn choice, capture feedback, reward multipliers, menus implemented, commands/API)
 
@@ -465,7 +466,18 @@ Resolve the real attacker (projectile shooter). Then:
 - A team with zero members **forfeits**; if only one alliance group still has members, it wins
   immediately (`TeamEliminated`). If total members fall below `PlayersMin`, the match ends with
   `NotEnoughPlayers` and normal win resolution (v2 ended the match in this case too).
-- No mid-match rejoin after a disconnect in MVP (§13 Q5).
+- ~~No mid-match rejoin after a disconnect in MVP (§13 Q5).~~ *(Updated 2026-10-25, alpha test run 1,
+  [PandiO/knk-workspace#150](https://github.com/PandiO/knk-workspace/issues/150); on knk-plugin
+  `claude/alpha-run-1-siege`, not merged.)* A **disconnect** (quit, or a server kick such as the flying kick)
+  at the hub or in a running match keeps the member's place for `siege.rejoin-window-seconds` (plugin
+  `config.yml`, default 300; `0` = the MVP rule above). The member is still removed at once (vault restored
+  on quit, team counts and the membership end checks as before); logging back in within the window, with
+  the same round still on, puts them back on their team: a new vault snapshot that keeps the pre-siege
+  return location, the hub or their team's spawn, scoreboard and objective labels. `participantLeft` is
+  held back until the window passes, so a member who came back is present at the end (rewards, no loss)
+  and their earlier kills/deaths/captures are merged into their result. `/siege leave` and
+  `/siege admin kick` stay immediate leaves. An admin can also add anyone with `/siege join <player>`
+  (§11.1).
 
 ### 6.9 Command filter
 While in `HUB`/`IN_PROGRESS`, only `SiegeConfiguration.AllowedCommands` run (v2 declared the list but
@@ -578,7 +590,7 @@ result without granting again. For each participant still in the match at the en
 
 | Gate | Control (open/close) | Damage | On objective capture |
 |---|---|---|---|
-| Selected (`SiegeScenarioGate`), not an objective | Owner team's alliance only (via the existing gate interaction → `GateDoorInteractEvent`) | Enemies of the owner, if `Damageable` | — |
+| Selected (`SiegeScenarioGate`), not an objective | Owner team's alliance only (via the existing gate interaction → `GateDoorInteractEvent`): pass-through since 2026-10-25 (§8.3) | Enemies of the owner, if `Damageable` | — |
 | Selected **and** referenced by an objective | Owner/holder alliance; ownership moves to the capturer's team | Same as above | Owner := capturer's team; forced to `GateStateOnCapture` (default `OPEN`) — again on every recapture when `AllowRecapture` |
 | Any other gate in the scenario's districts (the town when it has none) — "area gates" | Nobody (held `OPEN`) | Nobody (invincible) | — |
 
@@ -604,7 +616,16 @@ plugin then sets the same overrides locally and moves each door with `GateManage
 
 ### 8.3 During the match
 `SiegeGateListener` handles `GateDoorInteractEvent` (control permission per §8.1, deny message
-otherwise) and `GateDoorDamageEvent` (cancel unless an enemy of the current owner damages a
+otherwise). *(Updated 2026-10-25, alpha test run 1,
+[PandiO/knk-workspace#154](https://github.com/PandiO/knk-workspace/issues/154); on knk-plugin
+`claude/alpha-run-1-siege`, not merged.)* Members allowed to control a gate **pass through** it: a
+right-click on the closed gate opens it (animated) and it closes again by itself after the hold time
+(`gates.siege.defender-pass-through-seconds`, `0` = the doors' longest `PassThroughDurationSeconds`), so it
+can't be left open for the attackers; a right-click while such a pass-through is open extends it; a
+right-click on a gate that stands open for another reason (initial state `OPEN`, an objective capture)
+closes it, as before. An objective capture or the round's end cancels a pending close.
+`gates.siege.defender-pass-through: false` restores the MVP toggle (right-click opens, right-click closes).
+The rest of this section is unchanged: and `GateDoorDamageEvent` (cancel unless an enemy of the current owner damages a
 `Damageable` selected gate). Objective capture calls `SiegeGateController.transferOwnership(gate, team,
 GateStateOnCapture)`.
 
@@ -783,6 +804,7 @@ the main thread and hold no Bukkit mutators.
 | `/siege admin start\|stop <lobbyKey> [reason]` | `knk.siege.admin.control` | Start matchmaking now / abort (restore, no rewards) — replaces v2's always-throwing `/siege remove` |
 | `/siege admin skip <lobbyKey>` | `knk.siege.admin.control` | v2 `skipStage` semantics, fixed (N9): cooldown → matchmaking; matchmaking → `SiegeConfiguration.AdminSkipMatchmakingSeconds` left (default 31 = T-31, same floor) |
 | `/siege admin kick <player>` | `knk.siege.admin.control` | Remove a member (restore applies) |
+| `/siege join <player> [lobbyKey] [team]` | `knk.siege.admin.join` | *(Added 2026-10-25, [PandiO/knk-workspace#152](https://github.com/PandiO/knk-workspace/issues/152); on knk-plugin `claude/alpha-run-1-siege`, not merged.)* Puts an online player into a round: in matchmaking an ordinary join for them; at the hub or in a running match they are added like a rejoin (§6.8) on the given team (id or name), the team of their kept place, else the smallest team. Without a lobby: the lobby of their kept place, else the only lobby with a round on. Capacity, title requirement and `knk.siege.play` are not checked. A lobby key as the first argument still means the sender joins. Admin only, not the general staff rank (no rank seed yet: [PandiO/knk-workspace#158](https://github.com/PandiO/knk-workspace/issues/158)) |
 | `/siege admin reload` | `knk.siege.admin.reload` | Refresh lobby/scenario config for lobbies not in a match |
 | `/siege admin manage …` | `knk.siege.admin.manage` | Pointer to the web-app forms (Kits `/kit manage` precedent) |
 
@@ -837,7 +859,9 @@ as owned children), `SiegeLobbies`, `SiegeConfiguration`. Plus:
    siege (§9.4).
 4. **"Skilled match" title ranges** (v1 `titleIDMin/Max`). MVP ports only a minimum bracket per
    scenario. Wanted as a lobby-level min/max bracket band?
-5. **Rejoin after disconnect** mid-match (keep the slot for N seconds)? MVP: no.
+5. ~~**Rejoin after disconnect** mid-match (keep the slot for N seconds)? MVP: no.~~ **Resolved 2026-10-25**
+   (alpha test run 1, [PandiO/knk-workspace#150](https://github.com/PandiO/knk-workspace/issues/150)): the
+   place is kept for `siege.rejoin-window-seconds` (default 300), see §6.8.
 6. **Team chat** during a match (not in either legacy version)?
 7. **Siege stats in the player profile** (user-management composite view): add a "Siege" panel from
    `SiegeMatchParticipant` aggregates in a later phase?

@@ -1,7 +1,7 @@
 # Closed alpha test run 1 — findings (2026-10-25)
 
 **Status:** Triaged; all items filed as GitHub issues. Priorities are preliminary.
-**Last updated:** 2026-10-25
+**Last updated:** 2026-10-25 (package A report linked: #150, #152, #153, #154)
 **Issues:** parent [PandiO/knk-workspace#149](https://github.com/PandiO/knk-workspace/issues/149), one sub-issue per
 item (#150–#176)
 **Handoff (P0 + P1):** [2026-10-25-alpha-run-1-p0-p1.md](../../../ai-agents/handoffs/2026-10-25-alpha-run-1-p0-p1.md)
@@ -28,8 +28,8 @@ in the triage session.
 
 | # | Finding | Type | Prio | Issue |
 |---|---|---|---|---|
-| 1.1 | A siege member who gets kicked can't rejoin the match | Bug | **P0** | [#150](https://github.com/PandiO/knk-workspace/issues/150) |
-| 1.2 | `/siege join <username>` for admins (also the fallback for 1.1) | Feature | P1 | [#152](https://github.com/PandiO/knk-workspace/issues/152) |
+| 1.1 | A siege member who gets kicked can't rejoin the match | Bug | **P0** | [#150](https://github.com/PandiO/knk-workspace/issues/150) · in review, [package A report](2026-10-25-package-a-siege-match.md) |
+| 1.2 | `/siege join <username>` for admins (also the fallback for 1.1) | Feature | P1 | [#152](https://github.com/PandiO/knk-workspace/issues/152) · in review, [package A report](2026-10-25-package-a-siege-match.md) |
 | 1.3 | A player who joins during a match gets no scoreboard format (colours etc.) | Bug | P2 | [#163](https://github.com/PandiO/knk-workspace/issues/163) |
 | 1.4 | Clearer result message with more stats, also values that are 0 | Improvement | P2 | [#164](https://github.com/PandiO/knk-workspace/issues/164) |
 | 1.5 | Siege results log: detailed in the web app, short in game with a link | Feature | P3 | [#174](https://github.com/PandiO/knk-workspace/issues/174) |
@@ -38,7 +38,7 @@ in the triage session.
 
 | # | Finding | Type | Prio | Issue |
 |---|---|---|---|---|
-| 2.1 | The losing team seems to get no rewards — verify | Bug (verify) | P1 | [#153](https://github.com/PandiO/knk-workspace/issues/153) |
+| 2.1 | The losing team seems to get no rewards — verify | Bug (verify) | P1 | [#153](https://github.com/PandiO/knk-workspace/issues/153) · in review, [package A report](2026-10-25-package-a-siege-match.md) |
 | 2.2 | Extra rewards for gate damage and objective capture points | Improvement | P2 | [#165](https://github.com/PandiO/knk-workspace/issues/165) |
 | 2.3 | Exploit-proof base reward for playing a full match | Improvement | P2 | [#166](https://github.com/PandiO/knk-workspace/issues/166) |
 
@@ -46,7 +46,7 @@ in the triage session.
 
 | # | Finding | Type | Prio | Issue |
 |---|---|---|---|---|
-| 3.1 | Siege defenders use animated pass-through (open, then close shortly after) instead of toggling the gate; check the current behaviour first | Improvement (verify) | P1 | [#154](https://github.com/PandiO/knk-workspace/issues/154) |
+| 3.1 | Siege defenders use animated pass-through (open, then close shortly after) instead of toggling the gate; check the current behaviour first | Improvement (verify) | P1 | [#154](https://github.com/PandiO/knk-workspace/issues/154) · in review, [package A report](2026-10-25-package-a-siege-match.md) |
 | 3.2 | Four pass-through styles: (a) animated, (b) snap open/close, (c) walk-path block removal, (d) teleport through | Feature | P2 | [#167](https://github.com/PandiO/knk-workspace/issues/167) |
 | 3.3 | Snap and walk-path only visible to the player using it — spike first | Improvement | P2 | [#168](https://github.com/PandiO/knk-workspace/issues/168) |
 
