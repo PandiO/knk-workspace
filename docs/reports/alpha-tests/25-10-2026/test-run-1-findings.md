@@ -84,13 +84,13 @@ Open question: what `/tp all <player>` means next to `/tphere all`.
 
 | # | Finding | Type | Prio | Issue |
 |---|---|---|---|---|
-| 7.1 | Configurable inventory item that opens `/menu` on click, for console players | Feature | P1 | [#160](https://github.com/PandiO/knk-workspace/issues/160) |
+| 7.1 | Configurable inventory item that opens `/menu` on click, for console players | Feature | P1 | [#160](https://github.com/PandiO/knk-workspace/issues/160) · in review, [package D report](2026-10-26-package-d-console-navigation.md) |
 
 ## 8. Crossplay (Bedrock/console)
 
 | # | Finding | Type | Prio | Issue |
 |---|---|---|---|---|
-| 8.1 | Console players' block breaks only show on their own client; suspected Geyser, Floodgate or MCXboxBroadcast | Bug | P1 | [#161](https://github.com/PandiO/knk-workspace/issues/161) |
+| 8.1 | Console players' block breaks only show on their own client; suspected Geyser, Floodgate or MCXboxBroadcast | Bug | P1 | [#161](https://github.com/PandiO/knk-workspace/issues/161) · in review, [package D report](2026-10-26-package-d-console-navigation.md) |
 
 ## 9. Kits
 
@@ -120,7 +120,7 @@ Open question: what `/tp all <player>` means next to `/tphere all`.
 
 | # | Finding | Type | Prio | Issue |
 |---|---|---|---|---|
-| 13.1 | Navigation to the northern gate sends attackers on the island to the crane (tester Ivo) | Bug | P1 | [#176](https://github.com/PandiO/knk-workspace/issues/176) |
+| 13.1 | Navigation to the northern gate sends attackers on the island to the crane (tester Ivo) | Bug | P1 | [#176](https://github.com/PandiO/knk-workspace/issues/176) · in review, [package D report](2026-10-26-package-d-console-navigation.md) |
 
 ## Original notes (developer, 2026-10-25)
 
