@@ -4,7 +4,11 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
-(Nothing at the moment.)
+- **Dashboard explorer: one scrollbar, favourite types on top** — knk-web-app `claude/dashboard-explorer-194`
+  (PandiO/knk-workspace#194; UX/realtime chain link 3b, 2026-10-26). The explorer's list is the only thing that
+  scrolls (it showed two scrollbars). A star on every type marks it a favourite: favourites are listed at the top
+  A–Z, the rest A–Z below; kept per browser (localStorage). Live checklist: `guides/dashboard-return-smoke-test.md`
+  section 9a.
 
 ## 2026-10-26
 

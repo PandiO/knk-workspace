@@ -1,7 +1,7 @@
 # Dashboard as the CRUD hub: return, submit pending state, toast, New/Configure, breadcrumbs, detail header, Create New (#177 links 1–2, #58, #81, #39) — smoke test
 
 **Status:** Run by the developer on 2026-10-26 on knk-web-app `main` `7ba0f4b`: all steps work or accepted (findings below)
-**Last updated:** 2026-10-26 (sections 8–14 added for #177 link 2 = chain link 3)
+**Last updated:** 2026-10-26 (section 9a: one scrollbar and favourites, #194, knk-web-app `claude/dashboard-explorer-194`, not merged); 2026-10-26 (sections 8–14 added for #177 link 2 = chain link 3)
 **Issues:** [PandiO/knk-workspace#177](https://github.com/PandiO/knk-workspace/issues/177) (links 1 and 2) ·
 [#58](https://github.com/PandiO/knk-workspace/issues/58) · [#81](https://github.com/PandiO/knk-workspace/issues/81) (detail
 page header) · [#39](https://github.com/PandiO/knk-workspace/issues/39) (Create New menu only)
@@ -100,6 +100,30 @@ Use a slow save: Chrome DevTools → Network → throttling **Slow 3G** (or Offl
 3. Pick such a type. Expected: its table shows; the 👁 **View** button is greyed out with the same tooltip and clicking
    a row does nothing; Edit, Delete and New work.
 4. A type with a display configuration: View and the row click open the detail page (section 11).
+
+## 9a. One scrollbar and favourite types (#194)
+
+Branch: knk-web-app `claude/dashboard-explorer-194` (on `main` `6b02bb0`). Clear the site data once, or start in a
+private window, to begin without favourites.
+
+1. On `/dashboard/Town` with a window lower than the explorer's list (or zoom in until it is): the explorer has **one**
+   vertical scrollbar, inside the white panel under the search box; no second one at the panel's edge and no horizontal
+   one below it. Scroll the list with the wheel and by dragging that scrollbar: only the list moves; the "Entity types"
+   header and the search box stay put.
+2. Every type has a grey **star** at the right. Click the star of **Town**, then of **Category** and of a type further
+   down. Expected: they move to a **Favourites** section at the top (gold stars), A–Z among themselves; below a thin
+   line the other types A–Z as before. The star doesn't select the type (the table doesn't change).
+3. Reload the page, and open `/dashboard` in a new tab of the same browser. Expected: the same favourites on top.
+   Another browser (or a private window) has none: they are per browser (localStorage
+   `knk.dashboard.favouriteEntityTypes`).
+4. Sort Z–A with the sort button: favourites stay on top, both parts sorted Z–A. Search `t`: matching favourites stay
+   on top; search for a type that isn't a favourite: the Favourites section disappears while searching.
+5. Click a gold star: the type goes back into the A–Z list. Remove every favourite: the Favourites heading goes.
+6. The selected type is still highlighted when it is a favourite; the crossed-out eye of types without a display
+   configuration stays next to the name, left of the star.
+7. Phone width (or a narrow window): the explorer's drawer opens from the rail, shows the stars and scrolls in one
+   place; picking a type closes it, a star doesn't.
+8. Entity setup (`/forms`): its explorer has no stars (favourites are a dashboard feature for now).
 
 ## 10. An open form hides the explorer and shows a breadcrumb
 
