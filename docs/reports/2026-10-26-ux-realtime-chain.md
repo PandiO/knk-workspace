@@ -34,6 +34,10 @@ flagged decisions.)
 - **Links 1, 2 and 3 live-tested by the developer on 2026-10-26:** every step works or accepted. Follow-ups filed:
   #194 (explorer: one scrollbar, favourites on top), #195 (dashboard entity header styling), #196 (claim code field shows
   the dash from the start), #197 (remove "Entity setup" from the nav; not scheduled). #194–#196 run as follow-up link 3b.
+- **Test link 3b** (#194, #195, #196), three web-app branches from `main` `6b02bb0`: `claude/dashboard-explorer-194`
+  `29a6883`, `claude/dashboard-header-195` `be4adab`, `claude/claim-code-dash-196` `b8138e3` (docs on the workspace
+  branches of the same names). Checklist per issue in the link 3b block. They gate nothing and merge cleanly with each
+  other and with link 5; workspace CHANGELOG/"Last updated" conflicts are mechanical (keep both). Flags L3b-1…L3b-9.
 - **Test and merge link 5** (#64 FormWizard part, #109, #186): `claude/form-wizard-edit-mode` web-app `6b3fd8b`, API
   `09305ef`, workspace `5d8a28c`; live checklist `guides/form-wizard-edit-mode-smoke-test.md` sections 1–7 on the workspace
   branch. Deploy web app and API together (an old API refuses a draft without `userId`), then back up and run
