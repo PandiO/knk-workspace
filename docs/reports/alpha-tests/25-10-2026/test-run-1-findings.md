@@ -1,7 +1,7 @@
 # Closed alpha test run 1 — findings (2026-10-25)
 
 **Status:** Triaged; all items filed as GitHub issues. Priorities are preliminary.
-**Last updated:** 2026-10-25
+**Last updated:** 2026-10-26 (package C report linked: #157, #158, #159, #162)
 **Issues:** parent [PandiO/knk-workspace#149](https://github.com/PandiO/knk-workspace/issues/149), one sub-issue per
 item (#150–#176)
 **Handoff (P0 + P1):** [2026-10-25-alpha-run-1-p0-p1.md](../../../ai-agents/handoffs/2026-10-25-alpha-run-1-p0-p1.md)
@@ -68,9 +68,9 @@ movement check will probably snap the player back.
 
 | # | Finding | Type | Prio | Issue |
 |---|---|---|---|---|
-| 5.1 | Only ops could open chests in towns. Denying it in domains is intended; add bypass nodes for moderators and admins (not the general staff rank); staff mode and owner mode always bypass | Improvement | P1 | [#157](https://github.com/PandiO/knk-workspace/issues/157) |
-| 5.2 | Audit every KnK command for a permission node and add the missing ones (gamemode is op-only; KnK items) | Improvement | P1 | [#158](https://github.com/PandiO/knk-workspace/issues/158) |
-| 5.3 | Notify permitted players when a join is refused (ban, whitelist, access mode), with the reason | Feature | P1 | [#159](https://github.com/PandiO/knk-workspace/issues/159) |
+| 5.1 | Only ops could open chests in towns. Denying it in domains is intended; add bypass nodes for moderators and admins (not the general staff rank); staff mode and owner mode always bypass | Improvement | P1 | [#157](https://github.com/PandiO/knk-workspace/issues/157) · in review, [package C report](2026-10-26-package-c-permissions-domains.md) |
+| 5.2 | Audit every KnK command for a permission node and add the missing ones (gamemode is op-only; KnK items) | Improvement | P1 | [#158](https://github.com/PandiO/knk-workspace/issues/158) · in review, [package C report](2026-10-26-package-c-permissions-domains.md) |
+| 5.3 | Notify permitted players when a join is refused (ban, whitelist, access mode), with the reason | Feature | P1 | [#159](https://github.com/PandiO/knk-workspace/issues/159) · in review, [package C report](2026-10-26-package-c-permissions-domains.md) |
 
 ## 6. Teleport, spawn and hub
 
@@ -108,7 +108,7 @@ Open question: what `/tp all <player>` means next to `/tphere all`.
 
 | # | Finding | Type | Prio | Issue |
 |---|---|---|---|---|
-| 11.1 | No effect damage (e.g. fire) inside domains unless a flag allows it | Improvement | P1 | [#162](https://github.com/PandiO/knk-workspace/issues/162) |
+| 11.1 | No effect damage (e.g. fire) inside domains unless a flag allows it | Improvement | P1 | [#162](https://github.com/PandiO/knk-workspace/issues/162) · in review, [package C report](2026-10-26-package-c-permissions-domains.md) |
 
 ## 12. Combat / world cleanup
 

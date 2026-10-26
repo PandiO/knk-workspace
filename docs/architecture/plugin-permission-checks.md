@@ -1,7 +1,7 @@
 # Plugin permission checks and command visibility
 
 **Status:** Implemented, live-tested by the developer and merged 2026-10-18: knk-plugin `main` `3ca5b3f`, knk-web-api `master` `ac3c869`. Linear [KNG-107](https://linear.app/kngpandi/issue/KNG-107)
-**Last updated:** 2026-10-18
+**Last updated:** 2026-10-26 (§ 4 "Bukkit-only checks", alpha run 1 package C, [PandiO/knk-workspace#158](https://github.com/PandiO/knk-workspace/issues/158), in review on `claude/alpha-run-1-permissions`, not merged); 2026-10-18
 **Related:** [`offline-security-cache.md`](offline-security-cache.md) (answers when the API can't be asked); [`api-connectivity.md`](api-connectivity.md) (no API call while DOWN); [`specs/user-features/DESIGN.md`](../specs/user-features/DESIGN.md) §2.2 (the resolution rules); KNG-24 (Bukkit-or-in-house checks), KNG-30 (completion sweep)
 
 ## 1. Problem
@@ -61,7 +61,26 @@ in the background; `warm` (executors that decide what to allow, e.g. `/knk user`
 
 Hiding is cosmetic: every command still checks its own nodes when run.
 
-## 4. Tests
+## 4. Bukkit-only checks and vanilla commands
+
+The in-house permission set never reaches Bukkit's permissions: the plugin attaches no `PermissionAttachment`. A
+node checked with Bukkit's own `hasPermission` therefore works only for ops and for its `plugin.yml` default, and a
+rank grant has no effect. Every vanilla command needs its `minecraft.command.*` node, which only ops hold.
+
+- **Rule:** check a node a rank should be able to hold through `KnkPermissible`, `CommandPermissions`,
+  `PlayerCommandSupport`, or a Bukkit-or-KnK predicate (`GatePassThroughRules`' check, `MenuPermissions`). Declare it in
+  `plugin.yml` (`CommandNodesTest` checks every node of a gated command is declared).
+- **Vanilla commands a rank needs** get a KnK command that takes over the bare label (`/tp`, and since #158
+  `/gamemode`; vanilla stays reachable as `/minecraft:<command>`).
+- **Package C (#158, in review)** moved menu item visibility/action permissions and the `permission-node` condition
+  (`MenuPermissions`), the Player manager's reads and freeze buttons, gate block breaking and InstantOpen
+  pass-through onto the in-house check. **Still Bukkit-only:** the custom-enchantment nodes
+  (`customenchantments.<id>` for SUPPORT enchantments, the `/ce` subcommand nodes) — to be filed under #149 (scan F6).
+
+Full inventory of commands, nodes, checks and rank seeds:
+[reports/2026-10-26-command-permission-scan.md](../reports/2026-10-26-command-permission-scan.md).
+
+## 5. Tests
 
 - knk-core: `EffectivePermissionResolverTest` (the API's rules, ranked and unranked), `PermissionsDataAccessEffectiveSetTest`
   (one request for many nodes, shared cold loads, preload, stale answers, API DOWN, unknown user, unranked conflicts, invalidation).
