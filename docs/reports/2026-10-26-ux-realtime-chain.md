@@ -17,7 +17,7 @@ test), `merged`, `blocked: <reason>`.
 | 1 | #177 (link 1), #58 | `claude/kng-60-dashboard-hub` | in review | create_session session_01Lr2FyBpZG3fDCq51LuFgSM, 2026-10-26 (a first subagent run was stopped by the developer before pushing anything) | — / `df78e73` / — / `7143596` | web-app 1232/1232 (baseline 1214/1214), suites 195 (193); `tsc` 9 errors = baseline; build OK, same warnings |
 | 2 | #185, #38, #192 | `claude/route-gates-185`, `claude/styling-quick-wins-38`, `claude/claim-code-field-192` | in progress | subagent (fallback: add_repo needed in-session approval), 2026-10-26 | — | — |
 | 3 | #177 (link 2), #81, #39 (menu) | `claude/kng-60-dashboard-hub` | in review | subagent (fallback: add_repo needed in-session approval), 2026-10-26 | — / `9a203f8` / — / `186c851` | web-app 1270/1270 (baseline 1232/1232), suites 201 (195); `tsc` 9 errors = baseline; build OK, same 24 warnings |
-| 4 | #178 | `claude/realtime-signalr` | in progress | create_session session_01CKkjS6mCCEw1VUWVwZJqnA, 2026-10-26 | — | — |
+| 4 | #178 | `claude/realtime-signalr` | in review | subagent (fallback: add_repo needed in-session approval), 2026-10-26 | `b8a29d7` / — / `a64b7f83` / `e878ee2` | API 3338 passed, 4 failed (#99, = baseline reds), 87 skipped (baseline 3296/4/87); plugin core 2319 (2312), api-client 290 (280), paper 2149 (2140), 0 failures |
 | 5 | #64 (FormWizard), #109, #186 | `claude/form-wizard-edit-mode` | waiting: links 1 and 3 merged | — | — | — |
 | 6 | #179 | `claude/realtime-signalr` | waiting: link 4 done | — | — | — |
 | 7 | #180 | `claude/world-task-hardening` | waiting: link 5 merged | — | — | — |
@@ -48,6 +48,7 @@ flagged decisions.)
 
 ## Follow-ups filed by links
 
+- Link 4: no new issue (API reds = #99, `.sln` path case = #106); WT2 notes as a comment on [#181](https://github.com/PandiO/knk-workspace/issues/181).
 - Link 1: comment on [#63](https://github.com/PandiO/knk-workspace/issues/63): `tsc --noEmit` on web-app `main` has 9
   test-file errors, not 2 (adds `categoryTree.test.ts` ×5 and `cloudflareAccess.test.ts` ×1).
 
@@ -200,3 +201,111 @@ admin layout, #72/#148 User form).
   (`ObjectDashboard` header). `PagedEntityTable` has the new `emptyState` prop; controlled mode should keep it.
 - #30: `utils/breadcrumbs.ts` (`trailTo`, `formTrail`, `detailTrail`) and `components/Breadcrumbs.tsx` are the trail to
   reuse in the admin layout.
+
+## Link 4 — #178 (S1): SignalR foundation
+
+**Started:** subagent (fallback: `add_repo` needed in-session approval), 2026-10-26; finished 2026-10-26. Ran at the same
+time as link 3 (other component repos).
+**Base:** knk-web-api `master` `6f08383`, knk-plugin `main` `ee35fb1d` (both unchanged at the end, nothing to merge);
+knk-workspace branch created from `main` `ead2aa4`, `origin/main` `1bcd876` merged in before the last push (`e878ee2`).
+
+**Commits**
+- knk-web-api `claude/realtime-signalr`: `b8a29d7` hubs, envelope, publisher, presence registry + tests. Head **`b8a29d7`**.
+- knk-plugin `claude/realtime-signalr`: `e01254f5` core/api-client realtime client (backoff, seq, resync hooks, stats,
+  SignalR transport); `a64b7f83` paper wiring, `realtime.*` config, `realtime.server-id`, `/knk health`, metrics, shadow
+  relocations. Head **`a64b7f83`**.
+- knk-workspace `claude/realtime-signalr`: `72f79f0` DESIGN/plan status (+ DESIGN §4.6 "as built"), architecture
+  (plugin, web-api §6, api-connectivity), production-installation + alpha-go-live (`realtime:` block, nginx
+  `/api/hubs/`), new `guides/realtime-smoke-test.md`, guides README, CHANGELOG; `e878ee2` merge of `main`. Head **`e878ee2`**.
+
+**What was built**
+- **API** (`Realtime/`): `/api/hubs/game` (policy `KnkRealtimeGameServer` = the `[RequirePluginService]` key check, constant
+  time; `X-Knk-Server-Id` required, 1–64 of `[A-Za-z0-9._-]`; groups `servers`, `server:{id}`; first message `Welcome`
+  seq 1) and `/api/hubs/web` (JWT incl. the TokenVersion check; `access_token` query string read in `OnMessageReceived`
+  for this path only; closes when the token expires; group `user:{id}`; no client methods). Envelope `{v, seq, type, at,
+  actor, payload}`. `IRealtimePublisher` → bounded channel (1000, drop-oldest, logged) → `RealtimeDispatchService`
+  (one reader, `seq` per connection). `PresenceRegistry` + `PresenceStore` (`User.IsOnline`/`LastSeenAt`):
+  `ReportRoster` reconciles every row, `PlayerJoined`/`PlayerLeft`, `PresenceSweepService` marks a server's players
+  offline after 60 s without reconnect. Meter `Knk.Realtime`. Optional settings section `Realtime`.
+- **Plugin:** `knk-core/.../core/realtime/` (`ReconnectBackoff` 1/2/5/10/30 s ±20 %, `SequenceTracker`, `ResyncHooks`,
+  `RealtimeState`, `RealtimeStats` as a metrics collector; package added to the Bukkit-free guard),
+  `knk-api-client/.../api/realtime/` (`RealtimeClient` on one executor thread: reconnect, pause/resume, fresh seq per
+  connection, fire-and-forget `send`; `SignalRHubTransport` on `com.microsoft.signalr` 10.0.13, Gson 2.11.0;
+  `RealtimeEnvelope`), `knk-paper/.../paper/realtime/` (`RealtimeService`: roster + resync on the main thread on every
+  (re)connect and after a gap, `PlayerJoined`/`PlayerLeft`, paused on `ApiConnectivityChangedEvent` DOWN, resumed on UP;
+  `RealtimeDispatcher`; `RealtimeSettings`). `config.yml` `realtime:` (`enabled: false`, `server-id: "localhost"`,
+  `hub-url`, `hub-path`, `backoff-seconds`, `backoff-jitter`). `realtime.server-id` replaces the hard-coded
+  `"localhost"` passed to world-task claims. `/knk health` line; `knk_realtime_*` on the KNG-232 endpoint. Shadow jar
+  relocates RxJava, reactive-streams and Gson; slf4j comes from Paper.
+
+**Tests vs baseline**
+- API: **3338 passed, 4 failed, 87 skipped of 3429** (baseline 3296 / 4 / 87 of 3387). +42 new in `Tests/.../Realtime/`
+  (registry, store, publisher/dispatcher, both hubs end to end on a test server with the .NET SignalR client over long
+  polling). The 4 reds are #99 (PathResolution ×2, FieldValidation, ClientActivityStore; the last one also red on a clean
+  `master` worktree today). `dotnet build` at the repo root fails on the `.sln` path case (#106); built with the csproj.
+- Plugin (`./gradlew build -x deployToDevServer`, JDK 25 toolchain): core **2319** (2312), api-client **290** (280, 2
+  skipped both), paper **2149** (2140, 18 skipped both); 0 failures. Shadow jar checked: SignalR inside, RxJava/Gson
+  relocated, no slf4j.
+- Interop (not committed): the Java client against the API branch's hubs in a scratch host over WebSockets: `Welcome`
+  seq 1, roster reconcile (stale online row set offline), join/leave, a published message as seq 2, grace expiry, and a
+  reconnect after killing and restarting the API (backoff 1/2/5/10/30 s; roster corrected the rows again).
+- `[MySqlFact]` tests: none written (presence uses plain EF reads/writes; covered on InMemory).
+
+**Flagged decisions (reversible)**
+- **L4-1** `realtime.server-id` defaults to `"localhost"` (the old hard-coded value), so a server without the key claims
+  tasks exactly as before. `game-settings.server-id` and `lootboxes.server-id` (default `"default"`) stay separate keys;
+  unifying them is not in S1.
+- **L4-2** Per-connection `seq` (DESIGN §4.2) is done by the API's own connection/group registry (`RealtimeConnections`);
+  SignalR's group feature is not used, because it can't number per connection.
+- **L4-3** A `Welcome {serverId, presenceGraceSeconds}` event (seq 1) was added so S1 has one message to verify the path
+  end to end; documented in DESIGN §4.6.
+- **L4-4** A game-hub connection without a valid `X-Knk-Server-Id` is closed (not filed under a default id).
+  `Realtime:AllowedServerIds` exists (empty = any id, logged), per DESIGN §7.3.
+- **L4-5** A roster reconciles **all** users: anyone marked online in the database but on no connected (or in-grace)
+  server's roster is set offline. Correct while every game server that shares the API uses the hub (one server today).
+- **L4-6** The REST `PUT api/users/{id}/presence` on join/quit is kept even while the hub is connected (a second,
+  idempotent write) instead of being skipped; less risk, no listener change.
+- **L4-7** The resync also runs on the first connect at startup (DESIGN: every (re)connect); it re-reads caches loaded
+  moments earlier, which is harmless.
+- **L4-8** S1 resync hooks: the `/knk cache refresh` hooks, `DomainAccessFlagSync.syncNow()`, `LootboxRuntime.refresh()`.
+  Not in S1: the user-cache re-read and the notification drain (S2, #179), open world tasks (WT2, #181), and the
+  startup-only siege work (#31): the issue text names it for S1, but the charter's link table and the plan put it in S3
+  (link 10, #182). The hook list is where it goes.
+- **L4-9** `realtime.fallback-poll-multiplier` (DESIGN §4.4) is not added yet: nothing slows down in S1; S2 adds the key
+  with the slower re-syncs (plan S2, Q4).
+- **L4-10** `scripts/alpha-web/nginx.conf` is unchanged: the plugin connects straight to `http://api:5000` and the web
+  hub has no browser client before WT2. `production-installation.md` documents a `/api/hubs/` location with
+  `access_log off` (the browser's JWT is in the query string); the alpha config needs the same when WT2 lands.
+- **L4-11** SignalR Java client **10.0.13** (2026-10-13), not 10.0.14 (released 2026-10-25); Gson pinned to 2.11.0.
+
+**Deviations from the plan/design:** L4-8 (siege startup work left to link 10 as the charter says) and L4-3 (one extra
+event type). `RealtimeDispatcher` is in knk-paper as designed; the pure pieces (backoff, sequence, hooks, stats) are in
+knk-core so they are unit-tested without Bukkit.
+
+**Live checklist:** [guides/realtime-smoke-test.md](../guides/realtime-smoke-test.md) § S1 (workspace branch
+`claude/realtime-signalr` until merged): off changes nothing, connect, presence on join/quit, API restart (paused while
+DOWN, immediate reconnect on UP), reconcile after a crash, 60 s grace, resync, world-task server id, no waiting, wrong
+key/id.
+
+**Deploy notes:** API: no migration, no new secret; optional section `Realtime` (`ChannelCapacity`,
+`PresenceGraceSeconds`, `PresenceSweepSeconds`, `KeepAliveSeconds`, `ClientTimeoutSeconds`, `AllowedServerIds`); keep
+`Microsoft.AspNetCore` logging at Warning (request URLs with `access_token` are logged at Information). Plugin: add the
+`realtime:` block to an existing `config.yml` (the bundled one has it, `enabled: false`); the hub needs
+`api.auth.type: apikey`. The plugin jar grows by the SignalR client and RxJava (about 2 MB).
+
+**Follow-ups filed:** none new; the reds are #99 and the `.sln` path is #106. Comment on #181 with the WT2 notes below.
+
+**Notes for later links**
+- Link 6 (S2, #179): publish with `IRealtimePublisher.PublishToGameServers(type, payload, actor: new RealtimeActor(userId,
+  "web"))` after `SaveChangesAsync`; on the plugin register handlers with `realtimeService.dispatcher().register(type, v,
+  executor, handler)` **before** `start()` in `KnKPlugin.initializeRealtime()` (the client listens for the registered
+  types on each connect). Add the user-cache re-read and the notification drain as `ResyncHooks`, and
+  `realtime.fallback-poll-multiplier` to `RealtimeSettings`. `RealtimeService.isConnected()` tells the pollers to slow down.
+- Link 8 (WT2, #181): `PresenceRegistry.ServerOf(uuid)` answers "is the initiator online"; `RealtimeConnection.Groups` is
+  fixed at connect, so `task:{id}` joins need a mutating method on `RealtimeConnections`; the web hub has no client
+  methods yet (add join/leave with the `CreatedByUserId` / `knk.admin.world` check, DESIGN §7.3); add `/api/hubs/` with
+  `access_log off` to `scripts/alpha-web/nginx.conf`.
+- Link 10 (S3, #182): the startup-only siege work goes into `ResyncHooks` (`initializeRealtime`); the entity events go
+  through one `IRealtimeEventSink` in front of `IRealtimePublisher`.
+- Hub tests: `Tests/.../Realtime/RealtimeHubTests.cs` builds a test server with `AddKnkRealtime` +
+  `MapKnkRealtimeHubs` and connects with long polling; reuse it for new hub methods.
