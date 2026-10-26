@@ -14,7 +14,7 @@ test), `merged`, `blocked: <reason>`.
 
 | Link | Issues | Branch | Status | Started | Heads (api / web-app / plugin / workspace) | Tests vs baseline |
 |---|---|---|---|---|---|---|
-| 1 | #177 (link 1), #58 | `claude/kng-60-dashboard-hub` | in progress | subagent, 2026-10-26 | — | — |
+| 1 | #177 (link 1), #58 | `claude/kng-60-dashboard-hub` | in progress | create_session session_01Lr2FyBpZG3fDCq51LuFgSM, 2026-10-26 (a first subagent run was stopped by the developer before pushing anything) | — | — |
 | 2 | #185, #38, #192 | `claude/route-gates-185`, `claude/styling-quick-wins-38`, `claude/claim-code-field-192` | waiting: link 1 done | — | — | — |
 | 3 | #177 (link 2), #81, #39 (menu) | `claude/kng-60-dashboard-hub` | waiting: link 1 done | — | — | — |
 | 4 | #178 | `claude/realtime-signalr` | waiting: link 1 done (then together with link 3) | — | — | — |
