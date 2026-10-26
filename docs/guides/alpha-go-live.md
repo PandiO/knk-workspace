@@ -277,6 +277,7 @@ realtime:
   enabled: false
   server-id: "alpha-1"                   # any id of [A-Za-z0-9._-], max 64; also stored on world tasks claimed here
   hub-url: ""                            # empty: http://api:5000/api/hubs/game, straight over knk-alpha_backend
+  fallback-poll-multiplier: 4            # [#179] re-syncs the hub covers run 4x slower while connected
 ```
 
 Checks:

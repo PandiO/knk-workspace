@@ -11,6 +11,13 @@ This is a human-readable record of capabilities merged into the V3 default branc
   `User.IsOnline`. The plugin connects with backoff, pauses while the API is down and re-reads its caches on every
   (re)connect; `realtime.server-id` replaces the hard-coded `localhost` on world-task claims. Off by default
   (`realtime.enabled: false`); no business events yet (S2). Checklist: [realtime smoke test](guides/realtime-smoke-test.md).
+- **Realtime channel, S2 user state** ([PandiO/knk-workspace#179](https://github.com/PandiO/knk-workspace/issues/179), same
+  branch): rank and group membership, permission grants, permission group edits, balances, freeze, active mode and
+  other user fields changed in the web app (or by a rank expiring) reach an online player at once instead of after
+  the 2 s poll, the 30 s permission cache, the 60 s user cache or a rejoin. A permission change also drops the
+  player's remembered offline answers (#76). Player notifications are pushed; the 2 s poll stops while connected. The
+  API sends events only after the database transaction committed. New optional plugin key
+  `realtime.fallback-poll-multiplier` (default 4). Still off by default. Checklist: realtime smoke test § S2.
 
 ## 2026-10-25
 

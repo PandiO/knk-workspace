@@ -1,7 +1,7 @@
 # Realtime channel (SignalR) between knk-web-api, knk-plugin and knk-web-app
 
-**Status:** Accepted design (developer decisions 2026-10-26, §12). **S1 (§4–§5) implemented on `claude/realtime-signalr`** (knk-web-api, knk-plugin; 2026-10-26, #178), not merged, `realtime.enabled: false` until the live check; S2–S5 not started.
-**Last updated:** 2026-10-26 (S1 built: implementation notes in §4.6; decisions recorded; §8.3 delivery and busy flow, §8.7 tasks anchored to the draft, §4.3 publishing path)
+**Status:** Accepted design (developer decisions 2026-10-26, §12). **S1 (§4–§5) and S2 (§6.1) implemented on `claude/realtime-signalr`** (knk-web-api, knk-plugin; 2026-10-26, #178, #179), not merged, `realtime.enabled: false` until the live check; WT1, WT2 and S3–S5 not started.
+**Last updated:** 2026-10-26 (S2 built: implementation notes in §6.7; S1 built: §4.6; decisions recorded; §8.3 delivery and busy flow, §8.7 tasks anchored to the draft, §4.3 publishing path)
 **Issue:** [PandiO/knk-workspace#66](https://github.com/PandiO/knk-workspace/issues/66) (KNG-57, priority high); phase issues in
 [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md). Related: #76 (KNG-170, rank changes don't reach the server),
 #121 (KNG-262, cache TTLs), #31 (KNG-202, startup-only siege work), #35 (KNG-176), #34 (KNG-246), #145 (KNG-249), #75.
@@ -263,6 +263,46 @@ checks are synchronous queries a web user waits on. Moving them onto the hub nee
 (`ISingleClientProxy.InvokeAsync<T>` / Java `onWithResult`); worth it only when the plugin no longer needs to expose a
 port (e.g. API and game server on different hosts). #66's open question "Whether RegionHttpServer's inbound HTTP moves
 onto the hub" → **later, phase S6**.
+
+### 6.7 S2 as built (2026-10-26, #179)
+
+- **API.** `Realtime/RealtimeEventSink.cs`: `IRealtimeEventSink` (scoped) is the one place services hand events to
+  (option A of §4.3). `AfterCommitRealtimeEventSink` sends at once, or, while a transaction is open on the scope's
+  `KnKDbContext`, holds the event until it commits: `RealtimeTransactionEvents` is an EF Core transaction interceptor
+  (added next to the KNG-232 command interceptor in `Program.cs`) that sends a context's held events on commit and
+  drops them on rollback, failure or a new transaction. The actor's source is taken from the request (plugin key =
+  `plugin`, logged-in user = `web`, none = `system`). S3's entity interceptor and option C's outbox plug in behind the
+  same interface. `Realtime/UserStateEvents.cs` builds the payloads; users without a Minecraft UUID get no event.
+- **Publish points.** `UserPermissionGroupService` (upsert, delete, rank-expiry sweep; next to the `RankChanged`
+  notification, which stays), `PermissionGrantService` (every write; a user holder → `UserPermissionsChanged`, a
+  group holder → `PermissionGroupChanged {op: GrantsChanged}`, a grant moved between holders tells both),
+  `PermissionGroupService` (create, update, delete), `CurrencyService.ExecuteAsync` (every posting that wasn't a
+  replay → `UserBalancesChanged` per user with the balances after it; this covers Grant, Spend, AdminAdjust, Reverse,
+  transfers and `UserService.AdjustBalancesAsync`, whose outer transaction holds the events until it commits),
+  `UserService.SetFrozenAsync`, `UpdateActiveModeAsync` (only on a change), `SetPersonalMultipliersAsync`,
+  `UpdateGatePassThroughMethodAsync`, the link and merge paths (`UserChanged` with `fields`).
+  `StatisticsVisibilityChanged` (§6.1) was not built: the plugin's menus re-read it already.
+- **Hub-backed notification queue.** `Realtime/HubPlayerNotificationQueue.cs` replaces the `IPlayerNotificationQueue`
+  registration and decorates `InMemoryPlayerNotificationQueue`, which stays the store behind `GET pending` /
+  `POST acknowledge`. A new notification is pushed at once (`PlayerNotification`, payload = the REST DTO) to the
+  player's server when the presence registry has them online, to every server when it is server-wide (user 0);
+  otherwise it waits as before. `PlayerJoined` over the hub pushes what waited for that player plus the server-wide
+  ones. The plugin acknowledges over REST as before, so a lost push is still pending for the next drain.
+- **Plugin.** `knk-api-client/.../realtime/UserStateEvents` (types and payload records), `knk-paper/.../realtime/
+  UserStateSync` (handlers) with `BukkitUserStateDisplay` (tab list, visibility, "/" list, social spy, mode checks).
+  `UserPermissionsChanged` drops the effective set and the offline-store answers (`OfflineSecurityStore.
+  forgetPermissionAnswers`, #76), then for an online player reloads the set, re-reads the user and redraws, and drops
+  a mode whose node is gone. `PermissionGroupChanged` fans out to online players whose cached effective groups
+  (parents included) contain the group. `UserBalancesChanged` writes the values into the user cache and re-reads only
+  when XP changed (title and prestige are computed by the API). Freeze and mode apply at once and are idempotent, so
+  the echo of an in-game `/freeze` or mode toggle changes nothing.
+- **Resync** (after the S1 steps): re-read every online player (redraw, freeze, mode, permission-dependent state;
+  their offline answers dropped), then one drain of the notification queue. `PlayerNotificationPoller` makes no HTTP
+  call while the hub is connected.
+- **Slower re-syncs (Q4).** `realtime.fallback-poll-multiplier` (default 4) and `core/realtime/FallbackPolling`. In S2
+  it applies to the re-sync whose changes S2 pushes: the social-spy re-check (60 s → 4 min). The other timers (domain
+  access, game settings, lootbox runtime, grades, roads, telemetry config) keep their interval until their events
+  land in S3 (#182); slowing them now would delay those changes with nothing pushed in their place.
 
 ## 7. Reliability
 

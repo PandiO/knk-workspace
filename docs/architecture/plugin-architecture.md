@@ -212,6 +212,13 @@ complete for every entity type the plugin touches.
   sync and the lootbox runtime refresh. Incoming events go through `RealtimeDispatcher` (S1: only `Welcome`); the
   polls above stay as the fallback. `realtime.server-id` also replaces the hard-coded `"localhost"` in world-task
   claims. Design: [`specs/realtime-signalr/DESIGN.md`](../specs/realtime-signalr/DESIGN.md) §4.6.
+  **S2 (#179, same branch):** `paper/realtime/UserStateSync` handles the user-state events: a permission, group,
+  balance, freeze, mode or user change made in the web app (or by a rank expiring) reaches an online player at once
+  (effective set and offline-store answers dropped and reloaded, user re-read, tab list redrawn, visibility, "/" list,
+  social spy and mode re-checked). Player notifications are pushed (`PlayerNotification`) instead of polled:
+  `PlayerNotificationPoller` makes no HTTP call while the hub is connected and drains once per (re)connect, which also
+  re-reads every online player. While connected the social-spy re-check runs `realtime.fallback-poll-multiplier`
+  (default 4) times slower. Design §6.7.
 - Everything else (commands, player-triggered lookups) is on-demand via the
   cache-first data access layer.
 

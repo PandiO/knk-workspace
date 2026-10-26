@@ -1,7 +1,7 @@
 # knk-web-api — Architecture
 
 **Status:** Living document — update in place as the code changes
-**Last updated:** 2026-10-26 (§6: realtime hubs, #178 S1 on a feature branch); 2026-09-18 (based on a full read-only code scan; see `docs/reports/web-api-scan-2026-09-18.md` for the raw findings this doc summarizes); spot edits 2026-10-12 (FormField selection limits, KNG-164; created-entity provenance, reference check and DELETE 409 filter, KNG-162; FormConfiguration export/import and bundled seeds, KNG-138; the first seeds and stronger seed tests, KNG-139); 2026-10-17 (form wizard chain merged to `master`; smoke-test follow-ups: refusal reasons, KNG-169; FormConfiguration delete, KNG-172; region rule messages, KNG-173; validation result metadata, GateStructure house number, rule dependency path on update); 2026-10-22 (KNG-139 priority 2/3 seeds and DisplayConfiguration export/import; KNG-195 form submit fixes; gate warp settings, KNG-229); 2026-10-23 (step condition / field validation `IsActive`, KNG-186); 2026-10-23 (validation result log and validate-batch, KNG-269); 2026-10-25 (§6 plugin auth, health probe and RegionHttpServer callers corrected from the SignalR inventory)
+**Last updated:** 2026-10-26 (§6: realtime hubs, #178 S1 and #179 S2 on a feature branch); 2026-09-18 (based on a full read-only code scan; see `docs/reports/web-api-scan-2026-09-18.md` for the raw findings this doc summarizes); spot edits 2026-10-12 (FormField selection limits, KNG-164; created-entity provenance, reference check and DELETE 409 filter, KNG-162; FormConfiguration export/import and bundled seeds, KNG-138; the first seeds and stronger seed tests, KNG-139); 2026-10-17 (form wizard chain merged to `master`; smoke-test follow-ups: refusal reasons, KNG-169; FormConfiguration delete, KNG-172; region rule messages, KNG-173; validation result metadata, GateStructure house number, rule dependency path on update); 2026-10-22 (KNG-139 priority 2/3 seeds and DisplayConfiguration export/import; KNG-195 form submit fixes; gate warp settings, KNG-229); 2026-10-23 (step condition / field validation `IsActive`, KNG-186); 2026-10-23 (validation result log and validate-batch, KNG-269); 2026-10-25 (§6 plugin auth, health probe and RegionHttpServer callers corrected from the SignalR inventory)
 
 ## 1. Stack & shape
 
@@ -81,7 +81,12 @@ Contrary to what both this repo's and knk-plugin's CLAUDE.md currently say ("no 
   process: `/api/hubs/game` (plugin key via the `KnkRealtimeGameServer` policy, `X-Knk-Server-Id`; presence methods
   `ReportRoster`/`PlayerJoined`/`PlayerLeft` write `User.IsOnline`/`LastSeenAt`, players of a server gone > 60 s
   are marked offline) and `/api/hubs/web` (JWT; `access_token` query string on this path only). Services publish
-  through `IRealtimePublisher` (bounded queue, `seq` per connection). No business events yet (S2+). Hubs are not MVC
+  through `IRealtimePublisher` (bounded queue, `seq` per connection). **S2 (#179, same branch):** the user-state
+  events (`UserPermissionsChanged`, `PermissionGroupChanged`, `UserBalancesChanged`, `UserFrozenChanged`,
+  `UserModeChanged`, `UserChanged`) go through the scoped `IRealtimeEventSink`, which holds an event raised inside a
+  database transaction until it commits (`RealtimeTransactionEvents`, an EF Core transaction interceptor on
+  `KnKDbContext`); `IPlayerNotificationQueue` is `HubPlayerNotificationQueue`, which pushes a notification to the
+  player's server at once and keeps the in-memory queue behind `api/PlayerNotifications` (design §6.7). Hubs are not MVC
   actions, so `DefaultCallerRequiredFilter`/`EndpointAccessRulesTests` don't cover them; their rules are on the
   endpoints (`RealtimeSetup.MapKnkRealtimeHubs`) and tested in `Tests/.../Realtime/RealtimeHubTests.cs`.
 - **Headless world-task polling**: the plugin polls for tasks it needs to execute (`HeadlessWorldTaskPoller.java`, 5s interval backing off to 60s when idle) rather than being notified — the plugin's own source comments already flag this as a known gap ("should eventually be replaced by the API pushing a notification, e.g. SignalR"). There is no SignalR/WebSocket/Hub anywhere in this repo today.

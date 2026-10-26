@@ -1151,6 +1151,7 @@ mcrcon -H 127.0.0.1 -P 25575 -p '<rcon password>' "list"   # console commands ov
      enabled: false                            # on only after the realtime smoke test (guides/realtime-smoke-test.md)
      server-id: "localhost"                    # this server's id; also stored on world tasks claimed here
      hub-url: ""                               # empty: http://127.0.0.1:5000/api/hubs/game (from api.base-url)
+     fallback-poll-multiplier: 4               # [#179] re-syncs the hub covers run 4x slower while connected
    ```
 
    ```bash

@@ -1,6 +1,6 @@
 # Realtime channel (SignalR) — implementation plan
 
-**Status:** Accepted (developer decisions 2026-10-26, [DESIGN.md](DESIGN.md) §12). **S1 (#178) built on `claude/realtime-signalr`** (knk-web-api, knk-plugin, knk-workspace; 2026-10-26), in review, not merged; the other phases not started.
+**Status:** Accepted (developer decisions 2026-10-26, [DESIGN.md](DESIGN.md) §12). **S1 (#178) and S2 (#179) built on `claude/realtime-signalr`** (knk-web-api, knk-plugin, knk-workspace; 2026-10-26), in review, not merged; the other phases not started.
 **Last updated:** 2026-10-26
 **Issue:** [PandiO/knk-workspace#66](https://github.com/PandiO/knk-workspace/issues/66) (KNG-57); phase issues are sub-issues of #66
 (numbers in the table below).
