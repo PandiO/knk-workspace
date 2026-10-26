@@ -1,7 +1,7 @@
 # Game Settings — admin guide
 
 **Status:** Current. Describes trunk since the KNG-52 merge of 2026-10-10 (see the [plan](../specs/game-settings/IMPLEMENTATION_PLAN.md)).
-**Last updated:** 2026-10-15 (`game-settings.server-id`, KNG-118, branch `wt/kng-118`, not merged)
+**Last updated:** 2026-10-26 (route gated on `knk.admin.config`, #185, branch `claude/route-gates-185`, not merged); 2026-10-15 (`game-settings.server-id`, KNG-118, branch `wt/kng-118`, not merged)
 
 The Game Settings page sets server-wide rules for joining, respawning, each world's game mode, time,
 weather and spawn point, and the server-list MOTD. It also sets exceptions per permission group. The plugin picks up a saved change within about 30 seconds. To apply it at once, run
@@ -10,7 +10,8 @@ weather and spawn point, and the server-list MOTD. It also sets exceptions per p
 ## Before you start
 
 - Open the web app → **Game Settings** (`/admin/game-settings`). You need a staff account whose group holds
-  `knk.admin.config`; without it, Save fails with an error.
+  `knk.admin.config` (or `knk.admin.*` / `*`); without it the nav has no **Game Settings** link and the page says
+  "Staff only" (#185).
 - The page lists the **Minecraft worlds** the server reported. A world appears there, with a settings block, once
   the plugin has reported it. That takes up to 30 s after the server or a world starts.
 - **Save Settings** stores everything on the page at once. **Reload** discards unsaved edits.

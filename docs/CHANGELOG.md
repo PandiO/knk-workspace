@@ -19,6 +19,45 @@ This is a human-readable record of capabilities merged into the V3 default branc
   API sends events only after the database transaction committed. New optional plugin key
   `realtime.fallback-poll-multiplier` (default 4). Still off by default. Checklist: realtime smoke test § S2.
 
+## 2026-10-26
+
+- **Dashboard keeps its place; Submit waits for the save** — knk-web-app `main` `7ba0f4b`, merged `--no-ff` from `claude/kng-60-dashboard-hub`
+  (PandiO/knk-workspace#177 link 1, #58; UX/realtime chain link 1, 2026-10-26). Not live-tested yet. The
+  dashboard's type is in the URL (`/dashboard/{type}`; bare `/dashboard` reopens the last viewed type). Edit opens the
+  form with `returnTo`, and Submit and Cancel go back to that dashboard type (the table reloads). Submit stays
+  "Submitting…" with a "Saving {Type}…" line until the entity is saved; a second click does nothing. The draft is marked
+  Completed only after the entity was saved. A success toast replaces the 3 s "Form completed" modal. Live checklist:
+  `guides/dashboard-return-smoke-test.md`.
+- **Dashboard as the CRUD hub: New, Configure, breadcrumbs, detail page header, Create New from metadata** — knk-web-app
+  `main` `7ba0f4b`, merged `--no-ff` from `claude/kng-60-dashboard-hub` (PandiO/knk-workspace#177 link 2, #81, #39 Create New menu; UX/realtime chain link 3,
+  2026-10-26). Not live-tested yet. "New {Type}" and a cogwheel to the type's Entity setup page next to the
+  dashboard title, "New {Type}" in an empty table. One flat explorer list; types without a display configuration are
+  marked and their View is disabled. An open form hides the explorer and shows a breadcrumb back to where it was opened.
+  The detail page shows the entity's name with Back, Edit and Delete and its own tab title. Edit on a User row opens the
+  player profile. The nav "Create New" menu lists every type the app can create (from the entity metadata; no more
+  `itemType`, about 15 types added) and navigates once. The nav and page "Forms" are now "Entity setup" (route `/forms`).
+  Live checklist: `guides/dashboard-return-smoke-test.md` sections 8–14.
+- **Game Settings and Siege settings open only for the node their API checks** — knk-web-app `main` `7ba0f4b`, merged `--no-ff` from `claude/route-gates-185`
+  (PandiO/knk-workspace#185; UX/realtime chain link 2, 2026-10-26). Not live-tested yet. `/admin/game-settings`
+  and its nav link need `knk.admin.config`, `/admin/siege-configuration` and its link `knk.siege.admin.manage`
+  (before: the moderator node `knk.admin.user.manage`, so a moderator got an editable page, "The hub-eligible domains
+  could not be loaded" and a refused Save). Without the node the link is hidden and the page says "Staff only" with the
+  node it needs. Live checklist: `guides/alpha-hardening-smoke-test.md` step 27a.
+- **Buttons and inputs look as intended** — knk-web-app `main` `7ba0f4b`, merged `--no-ff` from `claude/styling-quick-wins-38` (PandiO/knk-workspace#38;
+  UX/realtime chain link 2, 2026-10-26). Not live-tested yet. `primary-dark` exists (`#1d4ed8`), so the primary
+  CTAs (login, register, account, every `FeedbackModal` confirm) darken on hover; `.btn*` are `inline-flex` with a gap,
+  so an icon sits beside its label instead of above it; `btn-tertiary` (Save Draft) is styled; form fields that set
+  `border-gray-300`/`border-slate-300` without a width (Game Settings, the builders, lootbox filters) and `.input` show a
+  1px border. The `text-gray-400` contrast sweep stays with #95. Live checklist: the link 2 block of
+  `reports/2026-10-26-ux-realtime-chain.md` (knk-workspace `main`).
+- **Claim code fields show the separator themselves** — knk-web-app `main` `7ba0f4b`, merged `--no-ff` from `claude/claim-code-field-192`
+  (PandiO/knk-workspace#192; UX/realtime chain link 2, 2026-10-26; closed alpha test run 1, #149). Not live-tested yet. On `/link` and `/account/link` the code field shows `XXXX-XXXX` as the player types or pastes the 8
+  characters (with or without a dash, or with a space); the player never types the dash, the caret stays put, and
+  Backspace/Delete work across it. The register page's invitation step checks 8 plain characters as a claim code
+  first and goes on to `/link` verified when it is one. The separator is one constant (`CLAIM_CODE_SEPARATOR`, a dash
+  until the testers decide; the API and the disconnect screen use a dash too). The link-code field and its #57 hints are
+  unchanged. Live checklist: `guides/invitations-smoke-test.md` step 17.
+
 ## 2026-10-25
 
 - **Invincible gates refuse ignition** — hotfix, knk-plugin `main` `ee35fb1`, merged `--no-ff` from `claude/adoring-wright-ejn8f7` on 2026-10-25 (developer decision 2026-10-25; not in Linear,

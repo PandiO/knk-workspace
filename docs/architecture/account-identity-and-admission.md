@@ -4,7 +4,7 @@
 knk-plugin; invitations chain links 1–7, smoke-tested on dev). **Off by default until the alpha switch-over**
 ([alpha go-live § 11.1](../guides/alpha-go-live.md)); until then the live behaviour is "Before the feature" below. Living document: update it in place when the
 code changes.
-**Last updated:** 2026-10-25 (§ 4: the anonymous `onboarding-info` call, the mode-aware sign-up and login pages; § 7: the Cloudflare step after sign-up, the missing-session banner, the bypass row — branch `claude/invite-only-register-page`, not merged); 2026-10-21 (written by invitations chain link 7, KNG-218)
+**Last updated:** 2026-10-26 (§ 4: claim code fields, #192, branch `claude/claim-code-field-192`, not merged); 2026-10-25 (§ 4: the anonymous `onboarding-info` call, the mode-aware sign-up and login pages; § 7: the Cloudflare step after sign-up, the missing-session banner, the bypass row — branch `claude/invite-only-register-page`, not merged); 2026-10-21 (written by invitations chain link 7, KNG-218)
 **Linear:** [KNG-205](https://linear.app/kngpandi/issue/KNG-205) (parent), [KNG-206](https://linear.app/kngpandi/issue/KNG-206),
 [KNG-207](https://linear.app/kngpandi/issue/KNG-207), [KNG-208](https://linear.app/kngpandi/issue/KNG-208),
 [KNG-212](https://linear.app/kngpandi/issue/KNG-212), [KNG-214](https://linear.app/kngpandi/issue/KNG-214),
@@ -108,10 +108,23 @@ load. Under `Invite`/`Open`: `/auth/register` opens on an invitation step (an in
 `XXXX-XXXX` → `/link?code=`, 8 plain characters → the link-code step, which otherwise sits behind "Already playing and got
 a code from `/account link`?"); the login page's **Create an account** goes to `/invite` (a personal invitation kept for
 the tab in `sessionStorage`, `knk.pendingInvite`), `/link` (a verified claim code) or `/join`, instead of `/auth/register`;
-the invite and join forms' **Log in** returns to them (`returnTo`). A claim code typed with its dash into a link-code field
-(`/auth/register`, `/account/link`) is recognised (`looksLikeClaimCode`: link codes have no dash) and routed to the claim
-flow with the look-alikes folded; every claim refusal says the code stays valid for 15 minutes and is shown again on
-rejoin. While the mode is unknown (API unreachable) the pages behave as under `LinkCode`.
+the invite and join forms' **Log in** returns to them (`returnTo`). A claim code typed with its dash into the register
+page's link-code field is recognised (`looksLikeClaimCode`: link codes have no dash) and routed to the claim flow; typed
+without it, the refusal hints at `/link` when the code could be a claim code (no I, L, O, U); every claim refusal says the
+code stays valid for 15 minutes and is shown again on rejoin. While the mode is unknown (API unreachable) the pages
+behave as under `LinkCode`.
+
+**Claim code fields (#192, branch `claude/claim-code-field-192`, not merged).** `/link` and `/account/link` use
+`ClaimCodeInput`: one labelled text field that holds the 8 characters and shows them as `XXXX-XXXX`, adding the
+separator itself once the first group is full; a typed or pasted separator (dash, en dash, space) is ignored and
+Backspace/Delete on it remove the character beyond. `/link` folds the look-alikes while typing; `/account/link` also
+takes `/account link` codes, so it keeps O, I and L and sends the characters unfolded (`ValidateLinkCodeAsync` tries the
+link code, then the folded claim form). The register page's invitation step checks 8 plain characters without a U with
+`claim/check` first and goes on to `/link` verified (`sessionStorage` `knk.pendingClaim`) when it is a live claim code;
+anything else opens the link-code step as before. The separator is one constant in `src/utils/claimCode.ts`
+(`CLAIM_CODE_SEPARATOR`, with `CLAIM_CODE_SHAPE` / `CLAIM_CODE_EXAMPLE` for texts): a dash until the testers have chosen
+between a dash and a space; the API (`LinkCodeService.FormatClaimCode`) and the plugin's disconnect screen use a dash and
+change with it.
 
 ## 5. Linking cases
 

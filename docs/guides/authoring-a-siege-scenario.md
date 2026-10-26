@@ -1,7 +1,7 @@
 # Authoring a siege scenario (admin how-to)
 
 **Status:** Living document — update in place
-**Last updated:** 2026-09-26 (siege merged to the default branches after two live smoke-test rounds; area lockdown
+**Last updated:** 2026-10-26 (§ 4: Siege Settings needs `knk.siege.admin.manage`, #185, not merged); 2026-09-26 (siege merged to the default branches after two live smoke-test rounds; area lockdown
 removed, non-member gate view updated)
 
 How an admin builds a playable siege from nothing: a banner and a clan for the defenders, a **scenario** (the map and
@@ -89,7 +89,8 @@ is free, so to get rid of it rename its key (or leave it disabled) instead of de
 
 ## 4. Siege settings (global)
 
-Nav **Siege Settings** (`/admin/siege-configuration`) holds the server-wide tuning: capture step, headshot multiplier,
+Nav **Siege Settings** (`/admin/siege-configuration`, needs `knk.siege.admin.manage`, the node the API checks on Save;
+without it the link is hidden and the page says "Staff only") holds the server-wide tuning: capture step, headshot multiplier,
 banned commands, non-member gate view, title brackets and so on. The capture step defaults to the developer's playtest
 tuning: attack A1 10, A2 2 (10 on instant-victory objectives), defence 6/3/6. Save sends only the changed fields.
 

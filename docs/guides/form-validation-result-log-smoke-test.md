@@ -1,7 +1,7 @@
 # Form validation: step completion conditions (KNG-186) and the rule result log (KNG-269) — smoke test
 
 **Status:** Passed 2026-10-24 (run 1, developer): every step passed or was accepted after the four fixes recorded in Findings; **merged** to trunk 2026-10-24 (knk-web-api `master` `a38c8ee`, knk-web-app `main` `00e4af6`)
-**Last updated:** 2026-10-24 (passed and merged)
+**Last updated:** 2026-10-24 (passed and merged); 2026-10-26 nav label "Forms" → "Entity setup" (PandiO/knk-workspace#177)
 **Linear:** [KNG-186](https://linear.app/kngpandi/issue/KNG-186) · [KNG-269](https://linear.app/kngpandi/issue/KNG-269)
 **Branches:** merged to trunk 2026-10-24 (knk-web-api `master` `a38c8ee`, knk-web-app `main` `00e4af6`); the test branches `claude/kng-186-269-form-validation`, `claude/kng-186-form-condition-isactive` and `claude/kng-269-validation-result-log` are history.
 
@@ -88,7 +88,7 @@ If it says it could not renew the session, log in to the web app again and paste
 9. **It blocks Next.** Open the District in the wizard (Edit), go to **Region and access**, untick **Allow entry**, click **Next**. Expected: a red **toast** (the notification that slides in at the page edge, from `ToastRegion`; not a field border) saying "Allow entry before you continue.", the wizard stays on this step, nothing is saved. Before KNG-186 this condition never ran.
 10. **It passes when met.** Tick Allow entry, Next. Expected: the next step.
 11. **Switched off.** In the GET body set that condition's `"isActive": false` and PUT the whole body back; GET shows `false`. Untick Allow entry, Next. Expected: the next step, no toast. This proves the flag round-trips and that a stored `false` is the one thing that switches a condition off (until KNG-186 the API sent `false` for every condition).
-12. **Export/import keeps the flag.** Forms page → the District form → **Export**. Expected: the file shows `"isActive": false` on that condition and no `isActive` on active conditions or validations (so the shipped seed files are unchanged). Import the file as a non-default copy. Expected: the copy's condition is `false`; the copy's other rules are active.
+12. **Export/import keeps the flag.** Entity setup page (`/forms`, nav "Entity setup") → the District form → **Export**. Expected: the file shows `"isActive": false` on that condition and no `isActive` on active conditions or validations (so the shipped seed files are unchanged). Import the file as a non-default copy. Expected: the copy's condition is `false`; the copy's other rules are active.
 13. **Builder still saves.** Open the District form in the builder, change the description, Save. Expected: saves without error (the form configuration no longer sends `isActive`). Create a new configuration from scratch, Save, Expected: same.
 14. **Clean up:** PUT the District form without the test condition (or leave it `false`).
     Findings so far (2026-10-24, developer): step 7 accepted, step 10 passes; step 9 was first written against the Required field Description, which the Required check catches before any condition runs, and was corrected to the optional Allow entry.

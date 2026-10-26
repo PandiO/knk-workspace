@@ -1,6 +1,6 @@
 # Dashboard, form wizard and realtime chain — progress report
 
-**Status:** In progress — link 1 in review; links 3 and 4 running (2026-10-26)
+**Status:** In progress — links 1–3 merged; link 4 in review; link 6 running (2026-10-26)
 **Last updated:** 2026-10-26
 **Charter:** [UX_REALTIME_CHAIN.md](../ai-agents/handoffs/UX_REALTIME_CHAIN.md) · **Coordinator prompt:**
 [2026-10-26-ux-realtime-coordinator-prompt.md](../ai-agents/handoffs/2026-10-26-ux-realtime-coordinator-prompt.md)
@@ -14,15 +14,15 @@ test), `merged`, `blocked: <reason>`.
 
 | Link | Issues | Branch | Status | Started | Heads (api / web-app / plugin / workspace) | Tests vs baseline |
 |---|---|---|---|---|---|---|
-| 1 | #177 (link 1), #58 | `claude/kng-60-dashboard-hub` | in review | create_session session_01Lr2FyBpZG3fDCq51LuFgSM, 2026-10-26 (a first subagent run was stopped by the developer before pushing anything) | — / `df78e73` / — / `7143596` | web-app 1232/1232 (baseline 1214/1214), suites 195 (193); `tsc` 9 errors = baseline; build OK, same warnings |
-| 2 | #185, #38, #192 | `claude/route-gates-185`, `claude/styling-quick-wins-38`, `claude/claim-code-field-192` | in review | subagent (fallback: add_repo needed in-session approval), 2026-10-26 | — / route-gates `0d14806`, styling `918f6b7`, claim-code `e2a5521` / — / route-gates `6d181c2`, styling `262bca9`, claim-code `4496485` | web-app 1218 / 1218 / 1240, all passed (baseline 1214/1214), suites 194 (193); `tsc` 9 errors = baseline; build OK, same 24 warnings |
-| 3 | #177 (link 2), #81, #39 (menu) | `claude/kng-60-dashboard-hub` | in review | subagent (fallback: add_repo needed in-session approval), 2026-10-26 | — / `9a203f8` / — / `186c851` | web-app 1270/1270 (baseline 1232/1232), suites 201 (195); `tsc` 9 errors = baseline; build OK, same 24 warnings |
+| 1 | #177 (link 1), #58 | `claude/kng-60-dashboard-hub` | merged: knk-web-app `main` `7ba0f4b`, knk-workspace `main` `78bf6a3` (2026-10-26, by the coordinator at the developer's request) | create_session session_01Lr2FyBpZG3fDCq51LuFgSM, 2026-10-26 (a first subagent run was stopped by the developer before pushing anything) | — / `df78e73` / — / `7143596` | web-app 1232/1232 (baseline 1214/1214), suites 195 (193); `tsc` 9 errors = baseline; build OK, same warnings |
+| 2 | #185, #38, #192 | `claude/route-gates-185`, `claude/styling-quick-wins-38`, `claude/claim-code-field-192` | merged: knk-web-app `main` `7ba0f4b`, knk-workspace `main` `78bf6a3` (2026-10-26, by the coordinator at the developer's request) | subagent (fallback: add_repo needed in-session approval), 2026-10-26 | — / route-gates `0d14806`, styling `918f6b7`, claim-code `e2a5521` / — / route-gates `6d181c2`, styling `262bca9`, claim-code `4496485` | web-app 1218 / 1218 / 1240, all passed (baseline 1214/1214), suites 194 (193); `tsc` 9 errors = baseline; build OK, same 24 warnings |
+| 3 | #177 (link 2), #81, #39 (menu) | `claude/kng-60-dashboard-hub` | merged: knk-web-app `main` `7ba0f4b`, knk-workspace `main` `78bf6a3` (2026-10-26, by the coordinator at the developer's request) | subagent (fallback: add_repo needed in-session approval), 2026-10-26 | — / `9a203f8` / — / `186c851` | web-app 1270/1270 (baseline 1232/1232), suites 201 (195); `tsc` 9 errors = baseline; build OK, same 24 warnings |
 | 4 | #178 | `claude/realtime-signalr` | in review | subagent (fallback: add_repo needed in-session approval), 2026-10-26 | `b8a29d7` / — / `a64b7f83` / `e878ee2` | API 3338 passed, 4 failed (#99, = baseline reds), 87 skipped (baseline 3296/4/87); plugin core 2319 (2312), api-client 290 (280), paper 2149 (2140), 0 failures |
-| 5 | #64 (FormWizard), #109, #186 | `claude/form-wizard-edit-mode` | waiting: links 1 and 3 merged | — | — | — |
+| 5 | #64 (FormWizard), #109, #186 | `claude/form-wizard-edit-mode` | ready (gate open: links 1+3 merged); waits for link 6 to free knk-web-api | — | — | — |
 | 6 | #179 | `claude/realtime-signalr` | in progress | subagent (fallback: add_repo needed in-session approval), 2026-10-26 | — | — |
 | 7 | #180 | `claude/world-task-hardening` | waiting: link 5 merged | — | — | — |
 | 8 | #181 | `claude/realtime-signalr` | waiting: link 6 done, link 7 merged | — | — | — |
-| 9 | #39 (rest), #177 follow-up | `claude/entity-lists-url-state` | waiting: link 3 merged | — | — | — |
+| 9 | #39 (rest), #177 follow-up | `claude/entity-lists-url-state` | ready (gate open: link 3 merged); runs after link 5 (same web-app files, charter gate note) | — | — | — |
 | 10 | #182 | `claude/realtime-signalr` | waiting: link 8 done | — | — | — |
 
 ## Waiting for the developer
@@ -30,27 +30,14 @@ test), `merged`, `blocked: <reason>`.
 (The coordinator keeps this list current: links in review with their checklist location, merges that unblock a gate,
 flagged decisions.)
 
-- **Links 1 and 3 together:** one branch, one test pass, one merge.
-- **Test link 1** (#177 link 1, #58): web-app `claude/kng-60-dashboard-hub` `df78e73`; live checklist
-  [guides/dashboard-return-smoke-test.md](../guides/dashboard-return-smoke-test.md) on workspace branch
-  `claude/kng-60-dashboard-hub` `7143596`. Link 3 continues the same branch, so links 1 and 3 can be tested and merged
-  together.
-- **Test link 3** (#177 link 2, #81, #39 menu): web-app `claude/kng-60-dashboard-hub` `9a203f8`; live checklist
-  [guides/dashboard-return-smoke-test.md](../guides/dashboard-return-smoke-test.md) sections 8–14 on workspace branch
-  `claude/kng-60-dashboard-hub` `186c851`. Flags L3-1…L3-9 (link 3 block) are reversible defaults.
+- **Live test links 1, 2 and 3** (merged into web-app `main` `7ba0f4b` on 2026-10-26 at the developer's request, before
+  the live test): `guides/dashboard-return-smoke-test.md` (links 1+3), `guides/alpha-hardening-smoke-test.md` step 27a
+  (#185), `guides/invitations-smoke-test.md` steps 16–17 (#192), the five #38 steps in the link 2 block. Flags L1-*,
+  L2-* (L2-4, L2-7, L2-10), L3-* are reversible defaults.
 - **Test link 4** (#178, SignalR S1): API `claude/realtime-signalr` `b8a29d7`, plugin `a64b7f83`; live checklist
   `docs/guides/realtime-smoke-test.md` § S1 on workspace `claude/realtime-signalr` `e878ee2`. `realtime.enabled` is off by
-  default. Links 6, 8 and 10 continue this branch, so it is best merged once at the end (or after link 6) unless you
-  want S1 live earlier. Flags L4-1…L4-11; L4: the startup-only siege work (#31) stays with link 10 as the charter says.
-- **Test link 2** (#185, #38, #192), three independent web-app branches: `claude/route-gates-185` `0d14806`
-  (checklist `guides/alpha-hardening-smoke-test.md` step 27a on workspace `claude/route-gates-185` `6d181c2`),
-  `claude/styling-quick-wins-38` `918f6b7` (five steps in the link 2 block), `claude/claim-code-field-192` `e2a5521`
-  (`guides/invitations-smoke-test.md` steps 16–17 on workspace `claude/claim-code-field-192` `4496485`). They gate
-  nothing. Merging #185 after links 1+3 gives one mechanical `Navigation.tsx` conflict (resolution in the link 2
-  block); workspace CHANGELOG conflicts: keep all entries. Flags L2-4 (border fix on all ~104 fields), L2-7, L2-10.
-- **Merge links 1 + 3** **This is the only thing the web-app side waits on now.** (web-app and workspace `claude/kng-60-dashboard-hub`) to open link 5 (form wizard) and link 9.
-- **Flags L1-1…L1-7** (link 1 block) are reversible defaults; answer only if you disagree. L1-1: a Submit without
-  `returnTo` lands on `/dashboard/{type}`, not `/forms/{type}`.
+  default. Links 6, 8 and 10 continue this branch, so it is best merged once later unless you want S1 live earlier.
+  Flags L4-1…L4-11; the startup-only siege work (#31) stays with link 10 as the charter says.
 
 ## Coordinator notes
 
