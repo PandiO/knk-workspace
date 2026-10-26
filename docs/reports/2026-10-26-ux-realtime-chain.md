@@ -1,6 +1,6 @@
 # Dashboard, form wizard and realtime chain — progress report
 
-**Status:** In progress — links 1–3 merged; links 4 and 6 in review (2026-10-26)
+**Status:** In progress — links 1–3 merged; links 4, 5 and 6 in review (2026-10-26)
 **Last updated:** 2026-10-26
 **Charter:** [UX_REALTIME_CHAIN.md](../ai-agents/handoffs/UX_REALTIME_CHAIN.md) · **Coordinator prompt:**
 [2026-10-26-ux-realtime-coordinator-prompt.md](../ai-agents/handoffs/2026-10-26-ux-realtime-coordinator-prompt.md)
@@ -18,7 +18,7 @@ test), `merged`, `blocked: <reason>`.
 | 2 | #185, #38, #192 | `claude/route-gates-185`, `claude/styling-quick-wins-38`, `claude/claim-code-field-192` | merged: knk-web-app `main` `7ba0f4b`, knk-workspace `main` `78bf6a3` (2026-10-26, by the coordinator at the developer's request) | subagent (fallback: add_repo needed in-session approval), 2026-10-26 | — / route-gates `0d14806`, styling `918f6b7`, claim-code `e2a5521` / — / route-gates `6d181c2`, styling `262bca9`, claim-code `4496485` | web-app 1218 / 1218 / 1240, all passed (baseline 1214/1214), suites 194 (193); `tsc` 9 errors = baseline; build OK, same 24 warnings |
 | 3 | #177 (link 2), #81, #39 (menu) | `claude/kng-60-dashboard-hub` | merged: knk-web-app `main` `7ba0f4b`, knk-workspace `main` `78bf6a3` (2026-10-26, by the coordinator at the developer's request) | subagent (fallback: add_repo needed in-session approval), 2026-10-26 | — / `9a203f8` / — / `186c851` | web-app 1270/1270 (baseline 1232/1232), suites 201 (195); `tsc` 9 errors = baseline; build OK, same 24 warnings |
 | 4 | #178 | `claude/realtime-signalr` | in review | subagent (fallback: add_repo needed in-session approval), 2026-10-26 | `b8a29d7` / — / `a64b7f83` / `e878ee2` | API 3338 passed, 4 failed (#99, = baseline reds), 87 skipped (baseline 3296/4/87); plugin core 2319 (2312), api-client 290 (280), paper 2149 (2140), 0 failures |
-| 5 | #64 (FormWizard), #109, #186 | `claude/form-wizard-edit-mode` | in progress | subagent (fallback: add_repo needed in-session approval), 2026-10-26 | — | — |
+| 5 | #64 (FormWizard), #109, #186 | `claude/form-wizard-edit-mode` | in review | subagent (fallback: add_repo needed in-session approval), 2026-10-26 | `09305ef` / `6b3fd8b` / — / `5d8a28c` | web-app 1330/1330, suites 209 (baseline 1304/1304, 204); `tsc` 9 errors = baseline; build OK, same 24 warnings; API 3356 passed, 4 failed (#99, = baseline reds), 88 skipped (baseline on the merged `master` `4d7a806`: 3339/4/88) |
 | 6 | #179 | `claude/realtime-signalr` | in review | subagent (fallback: add_repo needed in-session approval), 2026-10-26 | `38b0466` / — / `b48f1484` / `ae949bd` | API 3361 passed, 4 failed (#99, = baseline reds), 87 skipped (baseline 3338/4/87); plugin core 2323 (2319), api-client 298 (290), paper 2163 (2149), 0 failures |
 | 7 | #180 | `claude/world-task-hardening` | waiting: link 5 merged | — | — | — |
 | 8 | #181 | `claude/realtime-signalr` | waiting: link 6 done, link 7 merged | — | — | — |
@@ -53,6 +53,7 @@ flagged decisions.)
 - Link 6: comment on [#76](https://github.com/PandiO/knk-workspace/issues/76): with the hub the display symptom should be
   gone (set reloaded before the redraw; live check pending); with the hub down the `RankChanged` poll path still
   doesn't drop the permission set (left as is: channel off = today's behaviour). No new issue.
+- Link 5: comment on [#95](https://github.com/PandiO/knk-workspace/issues/95): fields in their error state (`border-red-300`) have no border width (the #38 base rule covers `border-gray-300` only); fixed for the wizard's String field only. Comment on [#64](https://github.com/PandiO/knk-workspace/issues/64): FormWizard part done, the JoinEntityFormModal / ManyToManyRelationshipEditor debug logs and the rest stay. No new issue.
 - Link 1: comment on [#63](https://github.com/PandiO/knk-workspace/issues/63): `tsc --noEmit` on web-app `main` has 9
   test-file errors, not 2 (adds `categoryTree.test.ts` ×5 and `cloudflareAccess.test.ts` ×1).
 - Link 2: comment on [#95](https://github.com/PandiO/knk-workspace/issues/95): about 104 form fields set `focus:ring-primary` without a ring width, so they have no focus ring (#38 only gives them their border).
@@ -546,3 +547,131 @@ in the `realtime:` block (missing = 4). Still `realtime.enabled: false` by defau
   `KnKPlugin.fallbackPolling` (`throttle(...)` for fixed-rate timers, `interval(...)` for self-rescheduling ones). A
   generic `EntityChanged(User)` can call `UserStateSync`'s re-read path. Resync steps are registered in
   `KnKPlugin.registerUserStateSync`/`initializeRealtime`.
+
+## Link 5 — #64 (FormWizard part), #109, #186: form wizard footer, leave guard, validation, Save on any step; drafts per admin
+
+**Started:** subagent (fallback: `add_repo` needed in-session approval), 2026-10-26; finished 2026-10-26. Nothing else ran at
+the same time. Worktrees under `/home/user/wt-link5/` (the coordinator's checkouts untouched).
+**Base:** knk-web-app `main` `7ba0f4b` (links 1–3 merged), knk-web-api `master` `6f08383`, knk-workspace `main` `baf99a4`.
+Before the final push the trunks had moved (alpha run 1 merges): web-app `main` `6b02bb0`, API `master` `4d7a806` and
+workspace `main` merged in, no conflicts.
+
+**Commits**
+- knk-web-app `claude/form-wizard-edit-mode`: `f4cea8d` FormWizard debug block and console logs removed (#64, first, as
+  the charter says); `ffd8a2e` debug logs in FormWizardPage and FieldRenderers; `dd8f973` no `userId = '1'` (#186 web);
+  `9c69576` sticky footer, dirty flag, blur validation + error summary, Save on any step in edit mode, single-line input
+  (#109); `4a054a9` data router, `useLeaveGuard` (`useBlocker` + `beforeunload`), Cancel in the footer, breadcrumb asks
+  (#109); `ca1f238` String field border/padding; `6b3fd8b` merge of `main` `6b02bb0`. Head **`6b3fd8b`**.
+- knk-web-api `claude/form-wizard-edit-mode`: `0b55731` drafts and workflow sessions owned by the JWT caller (#186);
+  `09305ef` merge of `master` `4d7a806`. Head **`09305ef`**.
+- knk-workspace `claude/form-wizard-edit-mode`: `64be9d9` cleanup script, web-app and web-api architecture, smoke test +
+  guides README, alpha-go-live § 4.3, CHANGELOG; `5d8a28c` merge of `main`. Head **`5d8a28c`**.
+
+**What changed**
+- API (#186): `POST api/FormSubmissionProgress` takes the owner from the JWT and ignores the body's `userId` (401 without
+  a user). `GET .../entity?mine=true` (new) or the old `userId` parameter (any value) and `GET .../user` list the caller's
+  rows only; without `mine`/`userId` every owner's rows are listed (the relationship-drafts view). `POST api/Workflows`:
+  a logged-in caller owns the session; a game-server call without a user keeps the body's owner and must name one (400).
+  No migration.
+- Web app (#186): the `userId = '1'` constant and the `userId` prop chain (FormWizard, ChildFormModal,
+  JoinEntityFormModal, ManyToManyRelationshipEditor) are gone; drafts and sessions are created without a user id; Saved
+  Progress sends `mine=true`.
+- Web app (#109): footer sticking to the bottom of the window with the page's Cancel (`footerStart`), Previous, Save
+  Draft, **Save changes** (edit mode, every step but the last) and Next/Submit; the card lost `overflow-hidden` (it
+  stopped `sticky`). Dirty flag (any change; cleared by a successful progress save) → `onDirtyChange` →
+  `hooks/useLeaveGuard.tsx`: links, Back/Forward and URL changes ask "Leave this form?" (Stay / Leave form) through
+  `useBlocker`; reload/close gets `beforeunload`; the breadcrumb asks through `confirmLeave` (closes L3-2); submit and a
+  confirmed Cancel pass (`allowLeave`). `App.tsx` now mounts a data router (`createBrowserRouter`, one catch-all route
+  around the existing `<Routes>`) because `useBlocker` needs one. Cancel leaves at once when nothing was created or
+  changed. Blur validation shows/clears the field's message; the field's own validations run
+  (`utils/forms/fieldRuleValidation.ts`); a refused Next/Save shows `FormErrorSummary` (focus, links that focus the field);
+  failed completion conditions and blocking rules are also shown on the form. Save changes checks the current step like
+  Next, then every other visible step (`findInvalidOtherStep`), jumps to a step that would refuse the save, else submits
+  through the normal submit path. String fields are an `<input>` tied to their label; a text area by setting
+  (`multiline`, field editor toggle "Multi-line text"), by name (…Description/…Lore) or when the value has a line break.
+- Workspace: `scripts/maintenance/remove-user1-drafts-and-workflow-sessions.sql` (developer decision 2026-10-26: delete,
+  script after a backup, not a migration).
+
+**Tests vs baseline** (Node 22, `npx npm@11 ci`; .NET 8.0.132)
+- Web app `npm run test:ci` equivalent (`react-scripts test --watchAll=false`): **1330/1330, 209 suites** (baseline
+  1304/1304, 204). New suites: `FormWizard.editModeFooter.ui` (7: footer, input/textarea, blur, summary + focus, dirty,
+  edit-mode Save from step 1, Save refused by a later step), `hooks/useLeaveGuard` (5, with a real memory data router:
+  link asks / Stay / Leave, own action, allowLeave, beforeunload), `fieldRuleValidation` (5), `stringFieldMultiline` (4),
+  `formSubmissionClient.owner` (3); new cases in `FormWizardPage.returnTo` (dirty flag + breadcrumb asks),
+  `cancelCreatedEntities` (Cancel without changes), `ChildFormModal.workflowSession` (no userId); updated: shared-field
+  test finds the input by its label, required-list test also checks the summary link, "Close" → "Stay".
+- `npx tsc --noEmit`: 9 errors, identical to baseline (#63). `npm run build`: compiles, same 24 warnings in the same files
+  as `main` (line numbers shifted).
+- API: **3356 passed, 4 failed, 88 skipped**; the merged `master` `4d7a806` alone gives 3339/4/88 (the 4 = #99 reds:
+  PathResolution ×2, ClientActivityStore, FieldValidationService). New: `Api/DraftAndWorkflowOwnershipTests` (17). The
+  root `.sln` still fails `dotnet build` on the `tests/` path case (#106); built the `.csproj` as before.
+- Browser check (not a substitute for the live test): the production build served locally with a stubbed API, driven by
+  Cypress (Electron): footer is `position: sticky`; Name is an input, Description a text area; blur message; summary link
+  focuses Name; nav link and breadcrumb ask, Stay keeps the typed value; Back from an in-app navigation asks; Save Draft
+  clears the question; Leave form follows the link; the draft POST has no `userId`. Spec kept out of the repo.
+- Cleanup script: run twice on MySQL 8.0 against a database built from all migrations, with seeded rows (owner as a
+  variable): user-1 drafts deleted, another user's child draft unlinked and kept, a draft after `@fixed_since` kept;
+  plain session deleted with its steps and task; catalog-scan session, session whose task region is a domain's region
+  and one whose region is a sub-region's kept with the reason; second run changed nothing. Road-edge/spawn-area
+  branches ran but had no rows.
+
+**Flagged decisions (reversible)**
+- **L5-1** Ownership is enforced on create and on "my drafts" lists only. Read/update/delete by id stay open to every
+  `knk.admin.content` holder, because the relationship-drafts view (`useRelationshipDrafts`) deliberately lets staff
+  resume a colleague's draft; an update keeps the stored owner. Without `mine`/`userId` the entity list still shows all
+  owners.
+- **L5-2** The old `userId` query parameter means "mine" whatever its value (an older client sent `1`); `mine=true` is
+  the new spelling. `GET .../user` ignores its parameter.
+- **L5-3** A draft POST without a logged-in user answers 401; `POST api/Workflows` from the game server (no user) keeps
+  the body's owner and needs one (the plugin doesn't call it today; the API's own catalog-scan sessions are unaffected).
+- **L5-4** Cleanup script: lives in knk-workspace `scripts/maintenance/` next to `remove-seeded-examples.sql` (the
+  precedent the decision names). Besides deleting, it keeps catalog-scan sessions (server-created for the real admin) and
+  sessions whose world task's `tempregion_worldtask_<id>` is still a region of a domain, sub-region, spawn area or road
+  edge (DomainWorldResolver reads the world from that task), with the reason; `@fixed_since` (default now, UTC) protects
+  user 1's own rows created after the deploy; other users' child drafts of a deleted draft lose the parent link.
+- **L5-5** Data router: `createBrowserRouter([{ path: '*', element: <AppContent/> }])` around the existing `<Routes>`
+  (smallest change). The guard blocks a change of path or query (not hash) while dirty.
+- **L5-6** Dirty = changed since the form opened or the last successful progress save. Next saves the progress, so after
+  Next nothing asks (the draft holds the values); a world-task result counts as a change.
+- **L5-7** Save changes is a separate button in edit mode on every step but the last (the last keeps Submit). It checks
+  the other steps with the local rules and the stored blocking API results; API rules of steps never opened are not run
+  live (they run on the API's save as before).
+- **L5-8** Blur shows "X is required" also when the field was only tabbed through.
+- **L5-9** String fields: one line unless `multiline: true` in settings, the name ends in Description/Lore (and no
+  setting), or the value has a line break. The toggle writes `true`/`false` explicitly.
+- **L5-10** No `<form>` element: a submit inside a child form modal would bubble through React's portal to the parent's
+  form. Enter in a field does not submit.
+- **L5-11** The wizard's field validations (MinLength/MaxLength/Range/Regex/Email, parameters `min`/`max`/`minLength`/
+  `maxLength`/`pattern`) run client-side now; no builder UI authors them yet, so today they only matter for imported
+  configurations.
+- **L5-12** The leave dialog's buttons are "Stay" / "Leave form" (Cancel's own "Leave this form?" too; it said "Close").
+- **L5-13** #64 scope: `FormWizard.tsx` plus `FormWizardPage.tsx` (link 1 left its logs for this link) and
+  `FieldRenderers.tsx` (changed anyway). JoinEntityFormModal / ManyToManyRelationshipEditor debug logs stay (#64 comment).
+- **L5-14** The String field got `border px-3 py-2`: in its error state it had no border width (#95 comment for the
+  other field types).
+
+**Deviations:** none from the plan. The error summary lists the current step's fields (Save jumps to the failing step
+first).
+
+**Live checklist:** [guides/form-wizard-edit-mode-smoke-test.md](../guides/form-wizard-edit-mode-smoke-test.md) (workspace
+branch `claude/form-wizard-edit-mode` until merged), sections 1–7.
+
+**Deploy notes:** deploy web app **and** API from `claude/form-wizard-edit-mode` together (the web app no longer sends a
+user id; an old API would refuse the draft with "UserId is required"). No migration, no setting. Afterwards, once, after a
+backup: `scripts/maintenance/remove-user1-drafts-and-workflow-sessions.sql` (alpha-go-live § 4.3 on the workspace
+branch).
+
+**Follow-ups:** comments on #95 (error-state border width) and #64 (remaining debug logs). No new issue.
+
+**Notes for later links**
+- Link 7 (#180): drafts and workflow sessions now carry the real caller (`WorkflowsController.Create` sets `UserId` from
+  the JWT). Session reads/resume/delete are not owner-checked yet, and `POST api/Workflows` needs `knk.admin.world` (or
+  the game server): a content-only admin gets no session (the web app swallows the refusal), so world-task panels don't
+  show for them. A silent draft save on the first task (DESIGN §8.7) clears the dirty flag, which is right. FormWizard
+  props now include `onDirtyChange` and `footerStart`.
+- Link 9: `App.tsx` mounts a data router. The leave guard blocks any path **or query** change while a form is dirty; keep
+  page/search/sort URL state away from an open form, or narrow `shouldBlock` in `hooks/useLeaveGuard.tsx`.
+- Tests: Jest 27 can't resolve `react-router-dom` v7 directly; blocker tests use
+  `jest.mock('react-router-dom', () => jest.requireActual('react-router'), { virtual: true })` with `createMemoryRouter`
+  (see `hooks/__tests__/useLeaveGuard.test.tsx`). Components rendered under a mocked router or a `MemoryRouter` skip
+  `useBlocker` (no data router context).
