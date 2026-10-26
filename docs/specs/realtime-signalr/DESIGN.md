@@ -341,8 +341,8 @@ action sends it to another player; the code stays as fallback. On `POST /WorldTa
 **Before sending (busy check, developer decision):** the web app calls `GET /api/WorldTasks/active-for-me` (the
 caller's open task in game, if any, with its form/field label). If the player already holds a task, the web app does
 not send blindly but asks: **Queue** (offered automatically when the current task ends), **Hand off** (pick an online
-player, as 2. below), **Replace** (the current task is released or cancelled — the dialog says which form loses it —
-and the new one is offered), or **Cancel** (nothing sent). The plugin still re-checks on arrival (race: a task claimed
+player, as 2. below), **Replace** (the current task is **released** back to Pending with its task code, so the other
+form can still get it done — the dialog names that form — and the new one is offered), or **Cancel** (nothing sent). The plugin still re-checks on arrival (race: a task claimed
 in between) and reports `busy`, which the web app shows with the same choices.
 
 1. **auto** — the API looks up the creator's `User.Uuid` in the `PresenceRegistry`.
@@ -461,12 +461,15 @@ about the game server); small once the web hub exists. Phase S4 web part, low pr
 | Q6 | Auto-claim for the online initiator | **Yes, on the normal "Send to Minecraft" button**; a separate "Hand off to…" action for another player (§8.3, §8.5) |
 | Q7 | Initiator already holds a task | **The web app checks before sending** and offers Queue / Hand off / Replace / Cancel (§8.3) |
 | Q8 | Admin B | **Accept/Decline in chat, 2 min timeout** |
-| Q9 | Broadcast offers in the first version | No (default, not asked) |
+| Q9 | Broadcast offers in the first version | **No** (confirmed 2026-10-26) |
 | Q10 | Pending expiry 30 min, lease 3 min, release on lease expiry | **Yes**; plus tasks anchored to the draft (§8.7) |
 | Q11 | Naming and id claims | **Rename to "task code"**; id claims only with `knk.tasks.any` (owner/rescue) |
 | Q12 | Gate edits during a running siege match | **Apply after the match** |
-| Q13 | `RegionHttpServer` stays HTTP for now (S6 later) | Yes (default, not asked) |
-| Q14 | Erasure catch-up in its own phase S5 | Yes (default, not asked) |
-| Q15 | `realtime.enabled` default false until each phase is live-tested | Yes (default, not asked) |
-| Q16 | The 2026-10-08 "SignalR recommendation comment" on KNG-57 (Linear) | **Open:** the developer checks it against this design |
+| Q13 | `RegionHttpServer` stays HTTP for now (S6 later) | **Yes** (confirmed 2026-10-26) |
+| Q14 | Erasure catch-up in its own phase S5 | **Yes** (confirmed 2026-10-26) |
+| Q15 | `realtime.enabled` default false until each phase is live-tested | **Yes** (confirmed 2026-10-26) |
+| Q16 | The 2026-10-08 "SignalR recommendation comment" on KNG-57 (Linear) | **Closed:** superseded by this design (developer, 2026-10-26) |
 | — | When S1 starts | **While #177 link 2 (A2) is built** |
+| Q17 | Busy check "Replace": what happens to the held task | **Released** to Pending (its task code stays usable), not cancelled |
+| Q18 | Sessions with no draft and no activity | **Removed after 7 days** with their open tasks |
+| Q19 | First world task in a new form | **Saves the draft silently** (no modal) |
