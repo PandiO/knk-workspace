@@ -15,7 +15,7 @@ test), `merged`, `blocked: <reason>`.
 | Link | Issues | Branch | Status | Started | Heads (api / web-app / plugin / workspace) | Tests vs baseline |
 |---|---|---|---|---|---|---|
 | 1 | #177 (link 1), #58 | `claude/kng-60-dashboard-hub` | in review | create_session session_01Lr2FyBpZG3fDCq51LuFgSM, 2026-10-26 (a first subagent run was stopped by the developer before pushing anything) | — / `df78e73` / — / `7143596` | web-app 1232/1232 (baseline 1214/1214), suites 195 (193); `tsc` 9 errors = baseline; build OK, same warnings |
-| 2 | #185, #38, #192 | `claude/route-gates-185`, `claude/styling-quick-wins-38`, `claude/claim-code-field-192` | in progress | subagent (fallback: add_repo needed in-session approval), 2026-10-26 | — | — |
+| 2 | #185, #38, #192 | `claude/route-gates-185`, `claude/styling-quick-wins-38`, `claude/claim-code-field-192` | in review | subagent (fallback: add_repo needed in-session approval), 2026-10-26 | — / route-gates `0d14806`, styling `918f6b7`, claim-code `e2a5521` / — / route-gates `6d181c2`, styling `262bca9`, claim-code `4496485` | web-app 1218 / 1218 / 1240, all passed (baseline 1214/1214), suites 194 (193); `tsc` 9 errors = baseline; build OK, same 24 warnings |
 | 3 | #177 (link 2), #81, #39 (menu) | `claude/kng-60-dashboard-hub` | in review | subagent (fallback: add_repo needed in-session approval), 2026-10-26 | — / `9a203f8` / — / `186c851` | web-app 1270/1270 (baseline 1232/1232), suites 201 (195); `tsc` 9 errors = baseline; build OK, same 24 warnings |
 | 4 | #178 | `claude/realtime-signalr` | in review | subagent (fallback: add_repo needed in-session approval), 2026-10-26 | `b8a29d7` / — / `a64b7f83` / `e878ee2` | API 3338 passed, 4 failed (#99, = baseline reds), 87 skipped (baseline 3296/4/87); plugin core 2319 (2312), api-client 290 (280), paper 2149 (2140), 0 failures |
 | 5 | #64 (FormWizard), #109, #186 | `claude/form-wizard-edit-mode` | waiting: links 1 and 3 merged | — | — | — |
@@ -55,6 +55,7 @@ flagged decisions.)
 - Link 4: no new issue (API reds = #99, `.sln` path case = #106); WT2 notes as a comment on [#181](https://github.com/PandiO/knk-workspace/issues/181).
 - Link 1: comment on [#63](https://github.com/PandiO/knk-workspace/issues/63): `tsc --noEmit` on web-app `main` has 9
   test-file errors, not 2 (adds `categoryTree.test.ts` ×5 and `cloudflareAccess.test.ts` ×1).
+- Link 2: comment on [#95](https://github.com/PandiO/knk-workspace/issues/95): about 104 form fields set `focus:ring-primary` without a ring width, so they have no focus ring (#38 only gives them their border).
 
 ---
 
@@ -313,3 +314,119 @@ key/id.
   through one `IRealtimeEventSink` in front of `IRealtimePublisher`.
 - Hub tests: `Tests/.../Realtime/RealtimeHubTests.cs` builds a test server with `AddKnkRealtime` +
   `MapKnkRealtimeHubs` and connects with long polling; reuse it for new hub methods.
+
+## Link 2 — #185, #38, #192: route gates, styling quick wins, claim code field
+
+**Started:** subagent (fallback: add_repo needed in-session approval), 2026-10-26; finished 2026-10-26.
+**Base:** knk-web-app `main` `0d61270` for all three branches (unchanged at the end; nothing to merge in). knk-workspace
+branches from `main` `a46e8fd` (current at the end). One branch per issue; nothing in knk-web-api or knk-plugin.
+
+**Commits**
+- knk-web-app `claude/route-gates-185`: `0d14806` route gates + nav entries + test. Head **`0d14806`**.
+- knk-web-app `claude/styling-quick-wins-38`: `918f6b7` Tailwind config, `index.css`, style test. Head **`918f6b7`**.
+- knk-web-app `claude/claim-code-field-192`: `b82dad6` `ClaimCodeInput` + separator constant; `e2a5521` the pages.
+  Head **`e2a5521`**.
+- knk-workspace `claude/route-gates-185` **`6d181c2`**: CHANGELOG, `guides/game-settings.md`,
+  `guides/authoring-a-siege-scenario.md` § 4, `guides/alpha-hardening-smoke-test.md` step 27a.
+- knk-workspace `claude/styling-quick-wins-38` **`262bca9`**: CHANGELOG, `architecture/web-app-architecture.md` (styling).
+- knk-workspace `claude/claim-code-field-192` **`4496485`**: CHANGELOG, `architecture/account-identity-and-admission.md`
+  § 4, `guides/users/PLAYER_GUIDE_ACCOUNT_MANAGEMENT.md` step 4, `guides/invitations-smoke-test.md` steps 16–17.
+
+**What changed (web-app)**
+- **#185:** `/admin/game-settings` and its nav link need `knk.admin.config` (`SERVER_CONFIG_PERMISSION_NODE`, the API's
+  `StaffPermissions.ServerConfig`), `/admin/siege-configuration` and its link `knk.siege.admin.manage`
+  (`SIEGE_ADMIN_PERMISSION_NODE`, `StaffPermissions.SiegeManage`); both constants in `hooks/useStaffAccess.ts`. Before:
+  the moderator node. Without the node: no nav link, and the page says "Staff only" naming the node.
+- **#38:** `primary.dark` `#1d4ed8` in `tailwind.config.js` (28 `hover:*-primary-dark` uses get a hover state);
+  `.btn` is `inline-flex items-center justify-center gap-2` and `.btn > svg` drops its own `mx` margin; `.btn-tertiary`
+  (transparent, primary text, light primary hover) for Save Draft; `.input` gets `border`; a zero-specificity base rule
+  (`:where(input…, select, textarea):where([class*=border-gray-300], [class*=border-slate-300])`) gives fields that set a
+  border colour but no width their 1px (preflight sets 0 and `@tailwindcss/forms` isn't installed).
+  `src/__tests__/tailwindStyles.test.ts` compiles `index.css` with the project config and checks all of it.
+- **#192:** `components/auth/ClaimCodeInput.tsx`: one labelled input holding the 8 characters and showing `XXXX-XXXX`;
+  the separator appears once the first group is full; typed/pasted separators (dash, en dash, space) are ignored; the
+  caret is kept; Backspace/Delete on the separator remove the character beyond it. `utils/claimCode.ts`:
+  `CLAIM_CODE_SEPARATOR` (one constant, `-`), `CLAIM_CODE_SHAPE`, `CLAIM_CODE_EXAMPLE`, `CLAIM_CODE_SEPARATOR_NAME`,
+  `claimCodeChars`; `looksLikeClaimCode` also takes a space between the groups. Used on `/link` (folds look-alikes) and
+  `/account/link` (takes link codes too: keeps O/I/L, sends the 8 characters unfolded; `ValidateLinkCodeAsync` already
+  tries the link code, then the folded claim form). Register page, invitation step: 8 plain characters without a U are
+  checked with `claim/check` first; a live claim code is kept (`knk.pendingClaim`) and the player lands on `/link`
+  verified; otherwise the link-code step opens as before. Help texts and placeholders use the constants.
+
+**Tests vs baseline** (Node 22, `npx npm@11 ci`)
+- Baseline `main` `0d61270`: 1214/1214, 193 suites; `tsc --noEmit` 9 errors (#63); build OK, 24 warning lines.
+- `claude/route-gates-185`: **1218/1218, 194 suites** (+4: `Navigation.settingsGates.test.tsx`); tsc 9; build OK, 24.
+- `claude/styling-quick-wins-38`: **1218/1218, 194 suites** (+4: `tailwindStyles.test.ts`); tsc 9; build OK, 24;
+  the production CSS holds the new rules (checked in `build/static/css`).
+- `claude/claim-code-field-192`: **1240/1240, 194 suites** (+26: `ClaimCodeInput.test.tsx` 15, `claimCode` 3, `LinkPage`
+  3, `AccountLinkPage` +2 net, `RegisterForm` +3; 3 existing cases rewritten for the new field); tsc 9; build OK, 24.
+- The three branches merge into each other cleanly (trial merge of all three on `main`).
+
+**Merge notes**
+- **`claude/route-gates-185` vs links 1+3 (`claude/kng-60-dashboard-hub`): one mechanical conflict** in
+  `src/components/Navigation.tsx` `NAV_LINKS` (link 3 renamed "Forms" on the line just above the Game Settings entry).
+  Resolution: keep links 1+3's Dashboard / "Entity setup" lines and this branch's Game Settings / Siege Settings lines
+  (`node: SERVER_CONFIG_PERMISSION_NODE` / `node: SIEGE_ADMIN_PERMISSION_NODE`). The import line and `nodeAccess` merge
+  cleanly. The other two branches merge cleanly with links 1+3.
+- knk-workspace: each of the three branches, links 1+3 and link 4 add an entry under CHANGELOG "Unreleased" (keep all);
+  nothing else conflicts (the header lines that links 1+3 also edit were left alone; dates are inline).
+
+**Flagged decisions (reversible)**
+- **L2-1** (#185) No read-only view: there is no read node for either page, and the API's GETs only need a login. A
+  holder of neither node sees "Staff only". A read-only mode can follow with #26 if wanted.
+- **L2-2** (#185) The siege node is not matched by `knk.admin.*` (only `knk.siege.*`, `knk.siege.admin.*`, `*`), so an
+  admin with `knk.admin.*` but no siege node no longer sees Siege Settings; that matches what the API refuses.
+- **L2-3** (#38) `.btn > svg` drops the icon's own `mr-2`/`ml-*` (about 41 call sites) so the new `gap-2` doesn't double
+  the spacing; every button icon is 8 px from its label.
+- **L2-4** (#38) The border rule reaches beyond Game Settings: about 104 fields in 25 files written as
+  `rounded-md border-gray-300 …` (builders, wizard field renderers, lootbox filters, paged-table category filter) now
+  show a 1px border. That is the same bug everywhere; a field that sets `border-0`/`border-2` keeps its own. Their missing
+  focus ring is commented on #95.
+- **L2-5** (#38) `primary-dark` = `#1d4ed8` (Tailwind blue-700, one step darker than `primary`); `btn-tertiary` =
+  text button in primary blue. Both move to tokens with #95.
+- **L2-6** (#192) The field shows the separator as soon as the first group is full (`ABCD-`), so the player sees it
+  before typing the 5th character; a typed dash then changes nothing.
+- **L2-7** (#192) `/account/link` takes both codes in one field, so link codes are shown `ABCD-OLIL` too (the API ignores
+  hyphens). Its "Recognised as the code from the server's disconnect screen" note is gone (the field always shows that
+  shape); the 15-minute note on a refusal now shows for a code without I, L, O or U (the #57 rule) or the kept one.
+- **L2-8** (#192) The invitation step's `claim/check` probe for 8 plain characters costs one anonymous lookup (per-IP
+  lookup limit, 20 a minute); a failed probe falls back to the link-code step.
+- **L2-9** (#192) The register page's link-code field is unchanged (no mask): it keeps a typed dash, which is what lets
+  the #57 detection route a claim code to `/link`. The issue's optional "link-code fields with their own pattern" is not
+  done.
+- **L2-10** (#192) **Dash or space is still the testers' call.** Today everything uses a dash, so no API or plugin change
+  was needed. If they choose a space: change `CLAIM_CODE_SEPARATOR` (web; texts and fields follow), the API's
+  `LinkCodeService.FormatClaimCode` (the plugin's disconnect screen shows the API's string; check its message text
+  for a hard-coded example), and let the
+  register page's link-code field keep a typed space (`normalizeLinkCodeInput` keeps only dashes). The API already
+  ignores spaces when reading a code.
+
+**Deviations:** none from the plan. Per issue, one branch from `main`, as the charter says.
+
+**Live checklist**
+- #185: `guides/alpha-hardening-smoke-test.md` step 27a (workspace `claude/route-gates-185`).
+- #192: `guides/invitations-smoke-test.md` step 17 (and the updated step 16) (workspace `claude/claim-code-field-192`).
+- #38 (web-app `claude/styling-quick-wins-38`, no guide of its own):
+  1. Log in page: hover **Log in** → the button turns darker blue; the "Forgot password?" link darkens too. Open a
+     non-danger confirm or message dialog (`FeedbackModal` / `useConfirm`, e.g. an error message on the dashboard) →
+     its blue button darkens on hover.
+  2. Game Settings: **Refresh** and **Save** show the icon left of the label, not above it. Text fields and dropdowns have
+     a visible grey border that turns blue on focus.
+  3. A form in the wizard: **Previous / Save Draft / Next** have their icons beside the label with normal spacing;
+     **Save Draft** is blue text on no background, light blue on hover.
+  4. Entity setup → edit a form configuration (field editor) and a display configuration: every input shows one border
+     (no double border, no thicker one). Lootboxes → Drop log filters: same.
+  5. Buttons that span the width on a phone (login, register, `/link`) keep their label centred.
+
+**Deploy notes:** web app only, per branch. No API, plugin, migration, setting or script.
+
+**Follow-ups:** comment on [#95](https://github.com/PandiO/knk-workspace/issues/95): the ~104 colour-only bordered fields
+have no focus ring (`focus:ring-primary` without a width). Nothing else filed.
+
+**Notes for later links**
+- Tests that render `Navigation` must open the menu (`Open menu`): jsdom measures every width as 0, so the links live in
+  the menu panel (`Navigation.settingsGates.test.tsx`).
+- `src/__tests__/tailwindStyles.test.ts` compiles `index.css` with the real config (node environment, `raw` content);
+  reuse it for the #95 tokens.
+- New permission-node constants for web pages go next to `CONTENT_PERMISSION_NODE` in `hooks/useStaffAccess.ts`; a nav
+  entry with `node:` also needs its `usePermission` line in `Navigation`'s `nodeAccess`.
