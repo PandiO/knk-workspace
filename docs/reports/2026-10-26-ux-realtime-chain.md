@@ -15,7 +15,7 @@ test), `merged`, `blocked: <reason>`.
 | Link | Issues | Branch | Status | Started | Heads (api / web-app / plugin / workspace) | Tests vs baseline |
 |---|---|---|---|---|---|---|
 | 1 | #177 (link 1), #58 | `claude/kng-60-dashboard-hub` | in review | create_session session_01Lr2FyBpZG3fDCq51LuFgSM, 2026-10-26 (a first subagent run was stopped by the developer before pushing anything) | — / `df78e73` / — / `7143596` | web-app 1232/1232 (baseline 1214/1214), suites 195 (193); `tsc` 9 errors = baseline; build OK, same warnings |
-| 2 | #185, #38, #192 | `claude/route-gates-185`, `claude/styling-quick-wins-38`, `claude/claim-code-field-192` | ready (waits for a free web-app slot: link 3 runs on web-app) | — | — | — |
+| 2 | #185, #38, #192 | `claude/route-gates-185`, `claude/styling-quick-wins-38`, `claude/claim-code-field-192` | in progress | subagent (fallback: add_repo needed in-session approval), 2026-10-26 | — | — |
 | 3 | #177 (link 2), #81, #39 (menu) | `claude/kng-60-dashboard-hub` | in review | subagent (fallback: add_repo needed in-session approval), 2026-10-26 | — / `9a203f8` / — / `186c851` | web-app 1270/1270 (baseline 1232/1232), suites 201 (195); `tsc` 9 errors = baseline; build OK, same 24 warnings |
 | 4 | #178 | `claude/realtime-signalr` | in progress | create_session session_01CKkjS6mCCEw1VUWVwZJqnA, 2026-10-26 | — | — |
 | 5 | #64 (FormWizard), #109, #186 | `claude/form-wizard-edit-mode` | waiting: links 1 and 3 merged | — | — | — |
@@ -30,6 +30,7 @@ test), `merged`, `blocked: <reason>`.
 (The coordinator keeps this list current: links in review with their checklist location, merges that unblock a gate,
 flagged decisions.)
 
+- **Links 1 and 3 together:** one branch, one test pass, one merge.
 - **Test link 1** (#177 link 1, #58): web-app `claude/kng-60-dashboard-hub` `df78e73`; live checklist
   [guides/dashboard-return-smoke-test.md](../guides/dashboard-return-smoke-test.md) on workspace branch
   `claude/kng-60-dashboard-hub` `7143596`. Link 3 continues the same branch, so links 1 and 3 can be tested and merged
