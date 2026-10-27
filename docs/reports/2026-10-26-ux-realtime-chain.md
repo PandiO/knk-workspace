@@ -36,7 +36,10 @@ flagged decisions.)
   the dash from the start), #197 (remove "Entity setup" from the nav; not scheduled). #194–#196 run as follow-up link 3b.
 - **Live test link 3b** (#194, #195, #196; merged into web-app `main` `c3c0c9f` on 2026-10-26 at the developer's request):
   checklist per issue in the link 3b block. Flags L3b-1…L3b-9.
-- **Link 5: developer tests it on 2026-10-27.**
+- **Link 5 live-tested by the developer on 2026-10-27:** sections 1–6 work or accepted, except two leave-guard bugs in
+  4.3 (typing then clearing still asks; after Next the guard forgets step 1's values). A fix round runs on
+  `claude/form-wizard-edit-mode` (subagent, 2026-10-27); merge link 5 after its re-test (4.3a/4.3b). Section 7 (cleanup
+  script) runs after the deploy.
 - **Test and merge link 5** (#64 FormWizard part, #109, #186): `claude/form-wizard-edit-mode` web-app `6b3fd8b`, API
   `09305ef`, workspace `5d8a28c`; live checklist `guides/form-wizard-edit-mode-smoke-test.md` sections 1–7 on the workspace
   branch. Deploy web app and API together (an old API refuses a draft without `userId`), then back up and run
