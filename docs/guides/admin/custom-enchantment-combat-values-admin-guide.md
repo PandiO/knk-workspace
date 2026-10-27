@@ -3,8 +3,9 @@
 **Status:** Living document — update in place as the code changes. Describes the package branches
 `claude/alpha-run-1-enchantments` (knk-web-api `0ecbe53`, knk-web-app `de93b69`, knk-plugin `fcb2e08a`); **not merged,
 not deployed, not live-tested**
-**Last updated:** 2026-10-27 (§ 5: effect boss bars and the flash_chaos name-tag blackout, #169/#170, in review on
-`claude/alpha-run-1-effects`, knk-plugin `911eb2a`, not merged); 2026-10-26 (PandiO/knk-workspace#151, #156, #155)
+**Last updated:** 2026-10-27 (§ 5 round 2: name tags hidden while blinded and the invisible player's own tag, red
+`Frozen by <staff> for: <reason>` bar, #169/#170, in review on `claude/alpha-run-1-effects`, knk-plugin `9bc2b31`, not
+merged); 2026-10-27 (§ 5: effect boss bars and the flash_chaos name-tag blackout, knk-plugin `911eb2a`); 2026-10-26 (PandiO/knk-workspace#151, #156, #155)
 **Companion docs:** [ability definition reference](../../specs/custom-enchantments/ABILITY_DEFINITION_REFERENCE.md),
 [package B report](../../reports/alpha-tests/25-10-2026/2026-10-26-package-b-enchantments-freeze.md)
 
@@ -77,9 +78,10 @@ freeze also ends when the player leaves or dies. With this deployed the server-w
 Known limit: a staff `/fly on` given to a frozen player who couldn't fly before is taken away again when the freeze
 ends.
 
-## 5. What the victim sees: boss bars and the flash blackout (#169, #170)
+## 5. What players see: boss bars and hidden name tags (#169, #170)
 
-In review on knk-plugin `claude/alpha-run-1-effects` (`911eb2a`), **not merged, not live-tested**.
+In review on knk-plugin `claude/alpha-run-1-effects` (`9bc2b31`, round 2 after the developer's smoke test of
+2026-10-27), **not merged, not live-tested**.
 
 **Boss bars ([#170](https://github.com/PandiO/knk-workspace/issues/170)).** A player hit by a timed debuff from a custom
 enchantment gets one boss bar per effect, `Poison · 4s`, counting down (refreshed every 5 ticks):
@@ -88,7 +90,13 @@ enchantment gets one boss bar per effect, `Poison · 4s`, counting down (refresh
 |---|---|
 | Poison, Wither, Freeze, Blindness, Confusion | `Poison`, `Wither`, `Frozen`, `Blindness`, `Nausea` · remaining time |
 | Flash Chaos (on players around the user) | `Slowness` (5 s) and `Nausea` (12.5 s) |
-| Staff `/freeze` | static, full `Frozen` bar (no timer) until `/unfreeze`; back on the next join while still frozen |
+| Staff `/freeze` | static, full **red** bar `Frozen by <staff> for: <reason>` (no timer) until `/unfreeze`; back on the next join while still frozen |
+
+The staff freeze bar names the staff member who froze the player. It says `staff` instead when that isn't known: a
+freeze from the console, by a staff member who is vanished (owner/staff mode, so the bar doesn't give them away), from
+the web app, or from before a server restart (only the reason is stored with the user). A relog on the same server run
+keeps the name. Without a reason the bar reads just `Frozen by <staff>`; a reason over 60 characters is cut with `…`.
+The Player manager's freeze button uses the reason `Frozen by a member of staff`.
 
 The same effect again restarts its bar (no second bar). A bar follows the real effect: milk or an early unfreeze ends
 it, a longer copy of the potion from elsewhere keeps its longer time. Timed bars go on death, every bar on quit. The
@@ -96,13 +104,21 @@ durations are the combat values above (§ 1, § 3), so a change in the web app c
 plugin's own, next to the navigation bar and any other boss bar. Creatures get nothing. Self-buffs (Strength,
 Resistance, Invisibility) have no bar: they are not debuffs.
 
-**Flash blackout ([#169](https://github.com/PandiO/knk-workspace/issues/169)).** A player caught by **Flash Chaos** no
-longer sees other players' name tags for as long as the nausea lasts (12.5 s); other players' views don't change. A
-second flash extends the blackout. It ends early on death and quit. The tab list, the sidebar (siege timer and
-objectives) and the health below names stay. Plain **Chaos** has no blinding debuff (damage and knockback only), so it
-doesn't hide name tags.
+**Blinded players see no name tags ([#169](https://github.com/PandiO/knk-workspace/issues/169)).** A player blinded by
+the **Blindness** enchantment sees no other player's name tag for as long as the blindness lasts (its combat-value
+duration); other players' views don't change. A second blindness hit extends it. It ends early when the blindness is
+gone (milk), on death and on quit. The tab list, the sidebar (siege timer and objectives) and the health below names
+stay. **Flash Chaos** and plain **Chaos** don't hide name tags (developer decision 2026-10-27; Flash Chaos keeps its
+Slowness and Nausea).
 
-How (for staff debugging): the victim is shown a private copy of their own scoreboard (the rank board, or their siege
-team's board in a match) with every team's name tag set to hidden; the copy follows the real board every second and the
-real board comes back afterwards. A siege match that starts or ends during a blackout swaps the board behind the copy.
+How (for staff debugging): the blinded player is shown a private copy of their own scoreboard (the rank board, or their
+siege team's board in a match) with every team's name tag set to hidden; the copy follows the real board every second
+and the real board comes back afterwards. A siege match that starts or ends meanwhile swaps the board behind the copy.
 
+**Invisible players' own name tag ([#169](https://github.com/PandiO/knk-workspace/issues/169)).** While the
+**Invisibility** ability is active, the user's name tag is hidden from other players, and it shows again when the
+invisibility ends (also by milk or death). The game does this itself for an invisible player, except for players on the
+same scoreboard team when that team may "see friendly invisibles". The rank teams (`default`, `owner`, `staff`,
+`tier_<id>`) now have that turned off, so players of the same rank no longer see an invisible player's tag (or
+see-through body). In a siege match, **teammates still see their invisible teammate** (name tag and see-through body);
+the other teams don't. Nobody is moved between teams for this.
