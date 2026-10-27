@@ -1,6 +1,6 @@
 # Alpha run 1 P2/P3 fixes — smoke test
 
-**Status:** Written 2026-10-27 for the P2/P3 package branches (E, F, G, I; H on hold); not merged, not run
+**Status:** Run 1 on dev 2026-10-27 (§ 5–8 pass or accepted, changes asked for #169, #170, #175; § 1–4 wait for the next closed alpha test; § 9 on hold). Not merged
 **Last updated:** 2026-10-27
 **Issues:** parent [PandiO/knk-workspace#149](https://github.com/PandiO/knk-workspace/issues/149); #163, #164, #165,
 #166, #169, #170, #171, #172, #174, #175, #198, #199 (§ 1–8); #167 (§ 9, on hold)
@@ -172,4 +172,4 @@ Only after you've decided on #167; add H to the combined stack (all three repos,
 
 | Run | Date | Commits tested | Sections passed | Problems (issue ids) |
 |---|---|---|---|---|
-| | | | | |
+| 1 | 2026-10-27 | Developer, dev stack per § 0 (F, G, I) | § 5 all pass; § 6.1–6.3, 6.5 pass, 6.4 and 6.6 accepted; § 7.1–7.3 pass, 7.4–7.6 accepted; § 8.1–8.4 pass. **§ 1–4 not run** (siege match tests wait for the next closed alpha test); § 9 on hold | Changes asked: #169 hide name tags only for abilities that apply blindness (victim's view), not Flash Chaos; hide the invoker's tag while invisibility is granted. #170 staff freeze bar red, text "Frozen by <player>/staff for: <reason>". #175 optional amount (`/knk item more 64` mints 64 regardless of max stack size). New: ability-cooldown boss bars (#202) |
