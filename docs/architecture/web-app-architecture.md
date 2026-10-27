@@ -1,7 +1,7 @@
 # knk-web-app — Architecture
 
 **Status:** Living document — reflects actual code, updated in place on each rescan
-**Last updated:** 2026-09-18 (scan basis: `knk-web-app` @ `4ff5dc6`, branch `claude/web-app-codebase-scan-4yqibi`); spot edits 2026-10-09 (ObjectTypeExplorer, KNG-61), 2026-10-10 (FormWizard Boolean fields, KNG-53), 2026-10-12 (FormWizard child forms, KNG-133, KNG-134; List edit load, step header, List validation, KNG-135, KNG-137, KNG-164; form session registry, KNG-136; cancel / delete-draft prompt, KNG-162; form configuration export/import, KNG-138); 2026-10-17 (form wizard chain merged to `main`; smoke-test follow-ups KNG-166..169, KNG-172, KNG-173: step strip, confirmations and refusals, rule builder parent forms, picker columns, metadata refresh); 2026-10-22 (display configuration export/import; KNG-195 hybrid picker submit); 2026-10-23 (step completion conditions run, KNG-186); 2026-10-23 (validation result log, batch validate, Re-check, KNG-269); 2026-10-25 (toast region, world-task polling; UX re-evaluation in `reports/2026-10-25-web-app-ux-reevaluation.md`); 2026-10-26 (dashboard type in the URL, `returnTo`, submit pending state, success toast — PandiO/knk-workspace#177 link 1, #58); 2026-10-26 (dashboard header New/Configure, flat explorer with marker, open form without the explorer + breadcrumb, detail page header, metadata-driven Create New, "Entity setup" — #177 link 2, #81, #39); 2026-10-26 (dashboard explorer: one scrollbar, favourite types — #194, branch `claude/dashboard-explorer-194`, merged into `main` `c3c0c9f`), 2026-10-26 (dashboard header row spacing — #195, branch `claude/dashboard-header-195`, merged into `main` `c3c0c9f`); 2026-10-26 (data router, unsaved-changes guard, sticky footer, blur validation + error summary, Save on any step in edit mode, single-line input, drafts owned by the login — #109, #186, #64 FormWizard part)
+**Last updated:** 2026-09-18 (scan basis: `knk-web-app` @ `4ff5dc6`, branch `claude/web-app-codebase-scan-4yqibi`); spot edits 2026-10-09 (ObjectTypeExplorer, KNG-61), 2026-10-10 (FormWizard Boolean fields, KNG-53), 2026-10-12 (FormWizard child forms, KNG-133, KNG-134; List edit load, step header, List validation, KNG-135, KNG-137, KNG-164; form session registry, KNG-136; cancel / delete-draft prompt, KNG-162; form configuration export/import, KNG-138); 2026-10-17 (form wizard chain merged to `main`; smoke-test follow-ups KNG-166..169, KNG-172, KNG-173: step strip, confirmations and refusals, rule builder parent forms, picker columns, metadata refresh); 2026-10-22 (display configuration export/import; KNG-195 hybrid picker submit); 2026-10-23 (step completion conditions run, KNG-186); 2026-10-23 (validation result log, batch validate, Re-check, KNG-269); 2026-10-25 (toast region, world-task polling; UX re-evaluation in `reports/2026-10-25-web-app-ux-reevaluation.md`); 2026-10-26 (dashboard type in the URL, `returnTo`, submit pending state, success toast — PandiO/knk-workspace#177 link 1, #58); 2026-10-26 (dashboard header New/Configure, flat explorer with marker, open form without the explorer + breadcrumb, detail page header, metadata-driven Create New, "Entity setup" — #177 link 2, #81, #39); 2026-10-26 (dashboard explorer: one scrollbar, favourite types — #194, branch `claude/dashboard-explorer-194`, merged into `main` `c3c0c9f`), 2026-10-26 (dashboard header row spacing — #195, branch `claude/dashboard-header-195`, merged into `main` `c3c0c9f`); 2026-10-26 (data router, unsaved-changes guard, sticky footer, blur validation + error summary, Save on any step in edit mode, single-line input, drafts owned by the login — #109, #186, #64 FormWizard part); 2026-10-27 (unsaved changes compared by value across all steps, Next's progress save no longer counts as saved — #109 fix round)
 **Source scan:** `docs/reports/web-app-scan-2026-09-18.md`
 
 ## Stack
@@ -115,13 +115,18 @@ entity. Two parallel generic engines carry most of the CRUD surface:
    **Footer, unsaved changes and validation** (#109): the wizard's actions sit in a footer that sticks
    to the bottom of the window (`data-testid="wizard-footer"`; the card has no `overflow-hidden`, which
    would stop `sticky`): the page's Cancel (`footerStart` slot), Previous, Save Draft, in edit mode
-   **Save changes** on every step but the last, and Next/Submit. The wizard keeps a **dirty flag** (any
-   field, multi-field or many-to-many change; cleared by a successful progress save) and reports it
-   through `onDirtyChange`. `FormWizardPage` feeds it to `hooks/useLeaveGuard.tsx`: with unsaved changes
+   **Save changes** on every step but the last, and Next/Submit. The wizard reports **unsaved changes**
+   through `onDirtyChange`: the values of every step (hidden-stash values included) compared with a
+   snapshot (`utils/forms/formValuesSnapshot.ts`; '' / null / undefined / [] are the same empty value,
+   a number equals its text), taken just before the first change (in edit mode: the loaded entity) and
+   re-taken only by **Save Draft** and a successful Submit / Save changes; the progress save behind Next
+   does not (link 5 fix round, 2026-10-27: typing and clearing is no change, step 1's values still count
+   on step 2). A mousedown on a footer button keeps the focus in the field, so a blur message can't
+   move the button away under the click. `FormWizardPage` feeds it to `hooks/useLeaveGuard.tsx`: with unsaved changes
    a link, Back/Forward or any URL change asks "Leave this form?" (Stay / Leave form, `useBlocker`), a
    reload or closing the tab gets the browser's question (`beforeunload`), and the breadcrumb asks through
    `confirmLeave`; a successful submit and an already-confirmed Cancel call `allowLeave`. Cancel leaves
-   at once when nothing was created or changed. A field is validated on **blur** (message shown or
+   at once when nothing was created or changed (the same value comparison). A field is validated on **blur** (message shown or
    cleared); its own validations run (`utils/forms/fieldRuleValidation.ts`: MinLength, MaxLength,
    Range, Regex, Email; Custom stays on the API). A refused Next/Save shows `FormWizard/FormErrorSummary.tsx`
    at the top of the fields, which takes the focus; each item links to (and focuses) its field

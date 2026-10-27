@@ -1,11 +1,12 @@
 # Form wizard: footer, unsaved-changes guard, blur validation, Save on any step, drafts per admin (#109, #186, #64) — smoke test
 
-**Status:** Not run yet — waiting for the developer's test (2026-10-26)
-**Last updated:** 2026-10-26
+**Status:** Run by the developer on 2026-10-27: sections 1–6 work or accepted, two bugs in 4.3 fixed in web-app
+`ff58c83` (fix round) — re-test 4.3a and 4.3b; section 7 runs after the deploy
+**Last updated:** 2026-10-27 (Findings; steps 4.3a/4.3b for the fix round)
 **Issues:** [PandiO/knk-workspace#109](https://github.com/PandiO/knk-workspace/issues/109) (footer, guard, validation, Save
 on any step, single-line input) · [#186](https://github.com/PandiO/knk-workspace/issues/186) (drafts and workflow
 sessions per admin + cleanup) · [#64](https://github.com/PandiO/knk-workspace/issues/64) (FormWizard debug logs only)
-**Branches:** `claude/form-wizard-edit-mode` in knk-web-app (on `main` `7ba0f4b`), knk-web-api (on `master` `6f08383`) and
+**Branches:** `claude/form-wizard-edit-mode` in knk-web-app (on `main` `7ba0f4b`; `main` `c3c0c9f` merged in on 2026-10-27), knk-web-api (on `master` `6f08383`) and
 knk-workspace (these docs, the cleanup script). No migration, no setting. Test web app and API together: the web app
 no longer sends a user id, and the API takes it from the login.
 **Chain:** [UX_REALTIME_CHAIN.md](../ai-agents/handoffs/UX_REALTIME_CHAIN.md) link 5; report
@@ -50,6 +51,14 @@ Handy SQL:
 2. Open it again and press **Cancel form** without typing. Expected: you leave at once (nothing created, nothing changed).
 3. Open it again, type a name, click **Dashboard** in the nav. Expected: "Leave this form?" with **Stay** and **Leave
    form**. Stay: the form and the typed name stay. Again → Leave form: you are on the dashboard.
+   - **3a** (fix round). Open it again, type a name, then clear it again (also: type in Description and clear it).
+     Click **Dashboard**; open it again, do the same and press **Cancel form**; again with a **breadcrumb**. Expected:
+     you leave at once every time, no question (the values are the ones the form was opened with). The same in edit
+     mode: change the name and change it back.
+   - **3b** (fix round). Open a new Town form, fill in step 1, press **Next**. On step 2, without typing, click
+     **Dashboard** in the nav. Expected: "Leave this form?" (step 1's values count; the automatic save behind Next is
+     not a Save Draft). Stay, then try the breadcrumb and **Cancel form**: the same question each time. Previous,
+     clear what you typed on step 1, then Dashboard: no question.
 4. Type a name, then click a **breadcrumb** crumb. Expected: the same question (link 3's L3-2 is closed by this).
 5. Type a name, then press the browser's **Back**. Expected: the same question.
 6. Type a name, then **reload** the page (F5) or close the tab. Expected: the browser's own "Leave site?" question.
@@ -98,10 +107,10 @@ Only after the API and web app of this branch are deployed, and after a backup
 
 | Step | Result | Notes |
 |---|---|---|
-| 1 | | |
-| 2 | | |
-| 3 | | |
-| 4 | | |
-| 5 | | |
-| 6 | | |
-| 7 | | |
+| 1 | Works (developer, 2026-10-27) | |
+| 2 | Works (developer, 2026-10-27) | |
+| 3 | Works (developer, 2026-10-27) | |
+| 4 | Steps 1, 2, 4–9 work; 3 works but two bugs (developer, 2026-10-27) | Typing then clearing still asked "Leave this form?"; after Next, leaving from step 2 asked nothing (step 1's values were treated as saved). Both fixed in web-app `ff58c83` (fix round 2026-10-27): unsaved changes compare the values of every step with the ones the form was opened with; only Save Draft and a successful Submit / Save changes count as saved. Also found in the fix round's browser check: on a short form, Cancel right after clearing Name did nothing (the field's blur message moved the footer under the click); a footer button press now keeps the focus in the field. Re-test **4.3a** and **4.3b** |
+| 5 | Works (developer, 2026-10-27) | |
+| 6 | 6.1–6.2 work, 6.3–6.4 accepted (developer, 2026-10-27) | |
+| 7 | Not run yet | After the deploy, on the alpha DB |
