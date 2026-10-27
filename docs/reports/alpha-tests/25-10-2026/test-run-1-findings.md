@@ -4,6 +4,7 @@
 **Last updated:** 2026-10-26 (package C report linked: #157, #158, #159, #162); 2026-10-26 (package B report linked: #151, #155, #156); 2026-10-25 (package A report linked: #150, #152, #153, #154)
 **Issues:** parent [PandiO/knk-workspace#149](https://github.com/PandiO/knk-workspace/issues/149), one sub-issue per
 item (#150–#176)
+**Next:** test run 2 results and the run 3 checklist in [test-run-3-checklist.md](../27-10-2026/test-run-3-checklist.md)
 **Handoff (P0 + P1):** [2026-10-25-alpha-run-1-p0-p1.md](../../../ai-agents/handoffs/2026-10-25-alpha-run-1-p0-p1.md)
 
 The developer's notes from the first closed-alpha test run (written in Dutch, "Todo lijst alpha test run 1"), plus
