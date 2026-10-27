@@ -1,7 +1,8 @@
 # Authoring a siege scenario (admin how-to)
 
 **Status:** Living document — update in place
-**Last updated:** 2026-10-26 (§ 4: Siege Settings needs `knk.siege.admin.manage`, #185, not merged); 2026-09-26 (siege merged to the default branches after two live smoke-test rounds; area lockdown
+**Last updated:** 2026-10-27 (after a match: post-match wait at the hub, result hover, match pages, `/siege history`;
+alpha run 1 package F, #198/#164/#174, not merged); 2026-10-26 (§ 4: Siege Settings needs `knk.siege.admin.manage`, #185, not merged); 2026-09-26 (siege merged to the default branches after two live smoke-test rounds; area lockdown
 removed, non-member gate view updated)
 
 How an admin builds a playable siege from nothing: a banner and a clan for the defenders, a **scenario** (the map and
@@ -100,8 +101,13 @@ tuning: attack A1 10, A2 2 (10 on instant-victory objectives), defence 6/3/6. Sa
    enters cooldown, never mid-match.
 2. `/siege admin list` → your lobby, and how many rotation scenarios are ready.
 3. `/siege admin start <key>` if the lobby isn't running; players `/siege join <key>`, `/siege vote`.
-4. After a match: rewards go to participants still present at the end (win, holding, capture). History is under
-   `GET /api/siege-matches`.
+4. After a match: rewards go to participants still present at the end (win, holding, capture, gate damage, taking
+   part). History is under `GET /api/siege-matches`. *(2026-10-27, alpha run 1 package F, not merged.)* The players
+   then wait at the scenario's **hub location** with the result for Siege settings → "After the match" (default 30 s;
+   0 = straight home), so pick a hub where a few dozen players can stand. Each sees one result line; hovering it
+   shows every stat and reward. With `web.public-url` set in the plugin's `config.yml` the line links to the public
+   match page (`/siege/matches/<id>`), which is also listed under "Siege matches" on each player's public profile;
+   in game `/siege history` lists a player's last five matches.
 
 ## Pitfalls
 

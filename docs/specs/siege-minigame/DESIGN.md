@@ -5,7 +5,10 @@
 **Status:** Implemented — all MVP phases (1–9) merged into the default branches on 2026-09-26 and smoke-tested live
 by the developer; Phase 10 (Scheduled lobbies) is post-MVP, not started. Seven decisions with the developer (§0; D6
 changed after the smoke test); remaining open questions in §13.
-**Last updated:** 2026-10-27 (§7.6: gate damage and participation rewards, alpha test run 1
+**Last updated:** 2026-10-27 (§5.4, §6.5, §6.10, §7.6, §11: alpha test run 1 package F — member-only scoreboards
+with a ` [Siege]` tag for everyone else, post-match phase at the hub, result hover, final countdown, `/siege history` and the
+public match pages, [PandiO/knk-workspace#163](https://github.com/PandiO/knk-workspace/issues/163)/[#164](https://github.com/PandiO/knk-workspace/issues/164)/[#198](https://github.com/PandiO/knk-workspace/issues/198)/[#199](https://github.com/PandiO/knk-workspace/issues/199)/[#174](https://github.com/PandiO/knk-workspace/issues/174),
+on `claude/alpha-run-1-results` in knk-plugin, knk-web-api and knk-web-app, not merged); 2026-10-27 (§7.6: gate damage and participation rewards, alpha test run 1
 [PandiO/knk-workspace#165](https://github.com/PandiO/knk-workspace/issues/165)/[#166](https://github.com/PandiO/knk-workspace/issues/166),
 on `claude/alpha-run-1-rewards` in knk-plugin, knk-web-api and knk-web-app, not merged); 2026-10-25 (§6.8, §8.1, §8.3, §11.1, §13 Q5: rejoin after a disconnect, `/siege join <player>`,
 defender pass-through — alpha test run 1, on knk-plugin `claude/alpha-run-1-siege`, not merged); 2026-10-06 (§9.3: v3's blanket non-OP item-pickup cancel is gone); 2026-09-27 (§3.9: location checks are admin-configured field-validation rules, not hard-coded);
@@ -269,7 +272,8 @@ split 10 s), matchmaking announcement marks (`290,60,30,15`), kill-streak announ
 (`5,10,15`; streak > 3), headshot multiplier (1.5 — v2 value; 1.0 disables), allowed-commands list
 (`/siege`, `/msg`, `/r`, `/staffchat`, `/menu`), the spawn-picker/respawn delay (20 ticks), and the
 enchant-drop tunables (§9.4: chance per second, 30‰ in v2; allowed enchantment keys; level range 1–2;
-max books alive per match).
+max books alive per match). Since 2026-10-27 also `PostMatchSeconds` (§6.10, #198; default 30, 0–600, 0 = no
+post-match wait), edited on the web app's Siege settings page ("After the match").
 
 ### 3.9 Scenario validation (server-side, `SiegeScenarioService`)
 
@@ -374,6 +378,14 @@ DISABLED ─enable─► MATCHMAKING ──T-15──► HUB ──T-0──► 
 `HUB` is a real phase (`SiegePhase.HUB`) covering the last 15 s before the match (joining closes at
 T-15, as v2 effectively did). *(Updated 2026-09-26: was described as a sub-state of matchmaking.)*
 
+*(Alpha run 1, 2026-10-27, [#198](https://github.com/PandiO/knk-workspace/issues/198), not merged.)* A match that ends
+normally (win, timeout, elimination, too few players) goes to **`POST_MATCH`** instead of `ENDING` when
+`SiegeConfiguration.PostMatchSeconds` > 0 (default 30): the result is recorded (`complete`) at once, the members wait at
+the scenario hub with the result (§6.10), and when the time is up they are restored and the lobby enters `COOLDOWN`.
+`POST_MATCH` counts as match-active (snapshot, command filter, inventory guards, no combat) and blocks discovery. With
+`PostMatchSeconds = 0`, and for aborts (admin stop, restart, outage), the old `ENDING` path is used. An admin stop or
+shutdown during `POST_MATCH` restores everyone at once (nothing is recorded again).
+
 ### 5.5 Runtime locks
 
 A scenario, and every gate it touches, can be in `HUB`/`IN_PROGRESS` for at most one lobby. Candidate
@@ -423,7 +435,7 @@ never v2's hardcoded `"TestSiege"`.
 Activate objectives (banner block, capture circle particles visible to members only, floating
 percentage `TextDisplay`) and spawn safe-zone rings → teleport each member to their **spawn choice**
 (made at the team split, §6.4; the team's `SortOrder = 0` spawnpoint when they made none) → per-team
-scoreboards/tab list → team `StartMessage` on the action bar 2 s later → `SiegeMatch` → `InProgress`
+scoreboards/tab list (members only; ` [Siege]` tag on the shared board, §6.10) → team `StartMessage` on the action bar 2 s later → `SiegeMatch` → `InProgress`
 (with participants and team assignments). *(Updated 2026-09-26: the scenario lock is taken at the draw
 and the gate lockdown runs at the hub, T-15 (§8.2) — no longer at match start. Updated 2026-10-24,
 playtest: the spawn picker opens at the team split (T-10, in the hub), not at the start — members pick
@@ -437,7 +449,7 @@ at start (v2 formula, now configurable per scenario).
 - In a match: `keepInventory` + `keepLevel`, no item/XP drops, no vanilla death message (required by D2
   — drops would otherwise duplicate on restore). Killer credit: kill, streak; announce to the killer's
   team at 5/10/15 kills and at streaks > 3 (fixing N12's wrong number); victim +1 death; tab-list suffix
-  `[K/D]`.
+  `[K/D]` (since 2026-10-27, #163: on the members' siege boards only, §6.10).
 - Respawn at the member's **current spawn choice** (a team spawnpoint, or a held objective with
   `SpawnWhenHeld`); if that objective has since been lost, fall back to spawnpoint `SortOrder = 0`.
   Respawn restores health/food for both kinds (v2 only did it for spawnpoints).
@@ -484,6 +496,35 @@ Resolve the real attacker (projectile shooter). Then:
 ### 6.9 Command filter
 While in `HUB`/`IN_PROGRESS`, only `SiegeConfiguration.AllowedCommands` run (v2 declared the list but
 never enforced it, N10). Bypass permission `knk.siege.bypass.commands` for staff.
+
+### 6.10 Results, final countdown and the post-match phase *(alpha run 1, 2026-10-27, not merged)*
+
+- **Final countdown** ([#199](https://github.com/PandiO/knk-workspace/issues/199)): in the last 15 s of `IN_PROGRESS`
+  (`SiegeLobbyStateMachine.FINAL_COUNTDOWN_SECONDS`) every member gets "The siege ends in N seconds" on the action bar
+  and a tick sound each second; the last 5 also show as a title. The sidebar's time turns red. An early end (instant
+  victory, elimination) simply stops it.
+- **Post-match phase** ([#198](https://github.com/PandiO/knk-workspace/issues/198)): at the end every member still in
+  the match is teleported to the scenario hub (respawned first when dead, fire put out), gets a Victory!/Defeat/Draw
+  title and "You return to where you were in 30 seconds … Leave now with /siege leave". The sidebar shows "Match over"
+  and "Return in". Rewards were already granted by `complete` at the end. When the time runs out everyone is restored
+  (vault: inventory, stats, return location) as after a normal end. `/siege leave` restores a member at once and keeps
+  their result and rewards; a quit restores as after a normal end (inventory now, location on the next join); there is
+  no rejoin into the post-match wait (kept places end with the match: the completion already reported everyone).
+  The `[Siege]` tag and the siege board stay until the member is restored.
+- **Result message** ([#164](https://github.com/PandiO/knk-workspace/issues/164)): one compact chat line per member
+  present at the end — `[Siege] Victory! 5 kills · 2 deaths · +120 coins, +12 XP [details] [match page]`. Hovering
+  shows everything, zeros included: lobby and outcome, why it ended, team, kills, deaths, best streak, objectives
+  captured, gate damage, active time of match time, and the rewards (coins with the KNG-16 multiplier breakdown, gems,
+  XP, then win / objectives gained / captures / gate damage steps / taking part with the active time when it didn't
+  pay). It is sent when the server's `complete` answer arrives, or after 5 s without the rewards ("being confirmed")
+  and then a second "Your rewards: …" line with its own hover when they arrive. A spooled result says the rewards
+  are confirmed later; an unrecorded round says there are none. `[match page]` opens
+  `web.public-url/siege/matches/{id}` (#174) and is left out while `web.public-url` is empty.
+- **Scoreboards** ([#163](https://github.com/PandiO/knk-workspace/issues/163)): only members get the per-team siege
+  boards (§6.5), at the start and on a rejoin or admin join. `[K/D]` is a `PLAYER_LIST` objective on those boards (it
+  used to be a global custom tab name everyone saw). Everyone else keeps the shared `ScoreboardUtil` board, where a
+  member is moved to a twin of their rank team (`default.siege`, `tier_12.siege`, … — same colour and prefix, suffix
+  ` [Siege]`) so the tab list and the name tag show ` [Siege]` until they are restored; a rank refresh keeps the tag.
 
 ## 7. Capture, win and reward rules
 
@@ -600,9 +641,11 @@ result without granting again. For each participant still in the match at the en
   `TitleProgression`, whose promotion bonuses are scaled by the same personal × rank multipliers
   (KNG-16). Coins/gems go to `User.Coins`/`User.Gems`. Amounts are stored on `SiegeMatchParticipant`.
   Not written to the admin `AuditLog` (not an admin action); the match rows are the audit trail.
-- In game the plugin prints the rewards in the shared KNG-16 `RewardMessageFormat`: "Siege reward: 250
+- ~~In game the plugin prints the rewards in the shared KNG-16 `RewardMessageFormat`: "Siege reward: 250
   ×2 Personal ×1.5 Royal = +750 coins", then +XP / +gems lines and a grey "win · 2 objectives gained ·
-  1 capture" line (since #165/#166 also "· 312 gate damage · taking part" when those were paid).
+  1 capture" line (since #165/#166 also "· 312 gate damage · taking part" when those were paid).~~
+  *(2026-10-27, #164, not merged.)* In game the rewards are part of the compact result line and its hover (§6.10);
+  the coin line in the hover keeps the KNG-16 format ("Coins: 250 ×2 Personal ×1.5 Royal = +750 coins").
 
 ## 8. Gates (D3)
 
@@ -819,6 +862,8 @@ the main thread and hold no Bukkit mutators.
 | `/siege info [lobbyKey]` | `knk.siege.play` | Status in chat (still chat-only) |
 | `/siege vote <scenario\|random>` | `knk.siege.play` | Chat voting, alongside the menu |
 | `/siege spawn [option]` | `knk.siege.play` | Opens the spawn picker / sets the spawn choice |
+| `/siege history` | `knk.siege.play` | *(2026-10-27, [#174](https://github.com/PandiO/knk-workspace/issues/174), not merged.)* Your last 5 finished matches (date, outcome, scenario, team, kills/deaths) with a `[details]` link to each match page and one to your public profile; links only when `web.public-url` is set. Reads `GET api/siege-matches/public/users/{you}` as you |
+| `/siege leave` during the post-match wait | `knk.siege.play` | *(2026-10-27, #198.)* Returns you at once; result and rewards are kept |
 | `/siege skip <lobbyKey>` | `knk.siege.skip` | Skips cooldown, or shortens matchmaking to `SiegeConfiguration.PlayerSkipMatchmakingSeconds` left (default 60; never under one second before voting closes) — web app Siege settings → "Skipping matchmaking" (playtest 2026-10-24; v1 donator perk, grantable to a premium group via the permission system) |
 | `/siege admin list` | `knk.siege.admin.list` | All lobbies, phases, members |
 | `/siege admin start\|stop <lobbyKey> [reason]` | `knk.siege.admin.control` | Start matchmaking now / abort (restore, no rewards) — replaces v2's always-throwing `/siege remove` |
@@ -843,6 +888,15 @@ as owned children), `SiegeLobbies`, `SiegeConfiguration`. Plus:
   objective results → rewards) · `POST /{id}/abort` · `POST /abort-unfinished` · `GET /` (history,
   `?userId=&lobbyId=`) · `GET /{id}` · `GET /{id}/gate-snapshots` · `POST /{id}/gate-lockdown` ·
   `POST /{id}/gate-restore` · `POST /restore-stale-gates` (§8.2, §8.4).
+- *(2026-10-27, [#174](https://github.com/PandiO/knk-workspace/issues/174), not merged.)* Public results log:
+  `GET /api/siege-matches/public/users/{userId}?limit=` (finished matches of a player, newest first, 1–50, default 20)
+  and `GET /api/siege-matches/public/{id}` (one finished match: teams with outcome, participants, objectives with
+  captures), both `[AllowAnonymous]`. Match facts are public; each participant's own numbers follow their statistics
+  visibility in the `siege` context (kills = `pvp_kills`, deaths, best streak = `highest_killstreak`, captures =
+  `objectives_captured`, `gate_damage`, coins/gems = `economy`): the player and staff (`knk.admin.statistics.view`)
+  see all, other signed-in players what is set to Everyone, anonymous visitors none (null). XP and active time are
+  always shown. The older `GET /` and `GET /{id}` keep needing the plugin key or a login (default-deny) and are unfiltered.
+  Web app: "Siege matches" on the public player profile and the page `/siege/matches/:id`.
 - *(Updated 2026-09-26.)* Plugin write auth is opt-in: match writes carry `[RequirePluginServiceKey]`,
   which enforces only when `Security:PluginServiceKey` is set (header `X-API-Key`); empty = open. The
   Siege/Clan/BannerDesign/FormConfig CRUD controllers have **no `[Authorize]` today** — "CRUD requires
