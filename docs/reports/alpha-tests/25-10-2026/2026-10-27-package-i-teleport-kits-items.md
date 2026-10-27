@@ -1,6 +1,6 @@
 # Alpha test run 1 — package I: teleport, kits, items (2026-10-27)
 
-**Status:** In review — pushed on `claude/alpha-run-1-teleport-items`: knk-plugin `aa185fa` (round 2; round 1 `9b25ee7`,
+**Status:** In review (round 2b 2026-10-27: knk-plugin `060d38d`) — pushed on `claude/alpha-run-1-teleport-items`: knk-plugin `aa185fa` (round 2; round 1 `9b25ee7`,
 from `main` `3550cbb`), knk-web-api `cbd8074` (from `master` `4d7a806`, unchanged in round 2); not merged, not deployed;
 round 1 smoke-tested on dev 2026-10-27 (§ 6), round 2 not live-tested
 **Last updated:** 2026-10-27
@@ -112,4 +112,21 @@ unchanged (`cbd8074`, "Migrations (fresh DB)" green in round 1).
 - [ ] Nearly full inventory: `/knk item more 500` on bread → reply gives the count not given; nothing on the ground.
 - [ ] Instance item (lootbox): `/knk item more 5` → 5 copies with 5 new ids in one go; with 2 free slots → 2 copies, "room for 2 of 5"; audit log one `ItemInstanceCloned` with 5 (or 2) ids.
 - [ ] `/knk item more 0`, `abc`, `9999` → usage, nothing given; tab after `/knk item more ` offers 1/8/16/32/64.
+
+## 7. Round 2b (2026-10-27, developer decision after review)
+
+The developer confirmed round 2's choices with one change: **the amount has no upper limit**. `/knk item more <amount>`
+gives that many more and adds them until the inventory is full; nothing is ever dropped. knk-plugin `060d38d`:
+
+- `parseAmount` accepts any whole number from 1 up (larger than `Integer.MAX_VALUE` is capped there); `0`, negatives,
+  decimals, text and extra arguments still show the usage `Usage: /knk item more [amount]`. The 2304 constant is gone.
+- Plain items: the inventory's room for the item (empty storage slots × max stack size plus free space on similar
+  stacks) is computed first, and only that many are built and added, so a huge amount stays cheap. The reply counts
+  what wasn't given ("Gave you n of N; your inventory had no room for m more (not given).").
+- Instance items: unchanged (one copy per free slot, minted in one call). Round 1's last drop is removed: copies minted
+  for slots that filled up while the API answered are **not dropped**; their ids are logged and the reply says how many
+  weren't given (those minted instances exist in the database without an item in game).
+- Tests: `ItemMoreCommandTest` 15 → 18 (no upper limit, huge amount builds only what fits, minted copies not dropped;
+  the max-1 test now expects 36 single items in an empty inventory). Plugin: core 2378 / api-client 284 / paper 2277,
+  0 failures. No API change.
 
