@@ -1,7 +1,7 @@
 # Plugin permission checks and command visibility
 
 **Status:** Implemented, live-tested by the developer and merged 2026-10-18: knk-plugin `main` `3ca5b3f`, knk-web-api `master` `ac3c869`. Linear [KNG-107](https://linear.app/kngpandi/issue/KNG-107)
-**Last updated:** 2026-10-26 (§ 4 "Bukkit-only checks", alpha run 1 package C, [PandiO/knk-workspace#158](https://github.com/PandiO/knk-workspace/issues/158), in review on `claude/alpha-run-1-permissions`, not merged); 2026-10-18
+**Last updated:** 2026-10-27 (§ 4: package I rank seeds, #171/#175, in review on `claude/alpha-run-1-teleport-items`, not merged); 2026-10-26 (§ 4 "Bukkit-only checks", alpha run 1 package C, [PandiO/knk-workspace#158](https://github.com/PandiO/knk-workspace/issues/158), in review on `claude/alpha-run-1-permissions`, not merged); 2026-10-18
 **Related:** [`offline-security-cache.md`](offline-security-cache.md) (answers when the API can't be asked); [`api-connectivity.md`](api-connectivity.md) (no API call while DOWN); [`specs/user-features/DESIGN.md`](../specs/user-features/DESIGN.md) §2.2 (the resolution rules); KNG-24 (Bukkit-or-in-house checks), KNG-30 (completion sweep)
 
 ## 1. Problem
@@ -76,6 +76,12 @@ rank grant has no effect. Every vanilla command needs its `minecraft.command.*` 
   (`MenuPermissions`), the Player manager's reads and freeze buttons, gate block breaking and InstantOpen
   pass-through onto the in-house check. **Still Bukkit-only:** the custom-enchantment nodes
   (`customenchantments.<id>` for SUPPORT enchantments, the `/ce` subcommand nodes) — to be filed under #149 (scan F6).
+
+- **Package I (#171, #175, in review)** adds `knk.teleport.all.hub|spawn|tp|tphere` (Moderator, Admin),
+  `knk.teleport.exempt.*` (no rank) and `knk.admin.item.more` (Admin) — all checked through `KnkPermissible`, seeded
+  by knk-web-api `SeedTeleportAllAndItemMoreNodes` with the same parent-chain rule as package C's migration.
+  Teleporting another player now needs the same rank or lower (`RankHierarchy.actorAtLeast`); other staff actions keep
+  `actorOutranks`.
 
 Full inventory of commands, nodes, checks and rank seeds:
 [reports/2026-10-26-command-permission-scan.md](../reports/2026-10-26-command-permission-scan.md).

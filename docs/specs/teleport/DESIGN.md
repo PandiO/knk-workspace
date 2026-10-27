@@ -1,7 +1,7 @@
 # Teleportation Commands — Design
 
 **Status:** Decided — implementation in progress (branch `claude/teleport`)
-**Last updated:** 2026-10-19 (§3.6: `/hub` to the hub spawn, KNG-188)
+**Last updated:** 2026-10-27 (§3.2/§3.3: `all` forms, same rank or lower, exemptions — [PandiO/knk-workspace#171](https://github.com/PandiO/knk-workspace/issues/171), in review on `claude/alpha-run-1-teleport-items`, not merged); 2026-10-19 (§3.6: `/hub` to the hub spawn, KNG-188)
 **Linear:** [KNG-17](https://linear.app/kngpandi/issue/KNG-17/teleportation-staff-tp-tpa-requests-spawn-domain-warps-v1-port)
 **Sources:** `knk-v1-archive` (`src/UsefulCommands/PlayerTeleportCommand.java`, `src/UsefulCommands/SpawnCommand.java`,
 `src/SpawnPoints/SpawnPoint.java`, `src/SpawnPoints/SpawnPointCommands.java`, `src/Teleport/*`, `src/Houses/HomeCommands.java`,
@@ -267,10 +267,23 @@ the sender; console may run the "others" forms.
 | `/warp <domain>` | `/point <domain>` | `knk.teleport.warp` | Domain spawn teleport (§3.7). Name match is case-insensitive; ambiguous names list `Type:Name` choices; `town:Kardenna` form accepted. |
 | `/warp <domain> <player>` | — | `knk.teleport.staff.others` | Send a player, instant, free. Console allowed. |
 | `/tp <player>` | `/knk tp <player>` (kept) | `knk.teleport.staff` (or legacy `knk.admin.tp`) | Self → player, instant. Rank check (existing behaviour). |
-| `/tp <player> <target>` | — | `knk.teleport.staff.others` | Player → player, instant. The actor must outrank both players (console skips the check). |
+| `/tp <player> <target>` | — | `knk.teleport.staff.others` | Player → player, instant. Both players must be of the actor's rank or lower (#171; was strictly lower; console skips the check). |
 | `/tp <x> <y> <z> [world] [yaw pitch]` | `~` relative coords | `knk.teleport.staff` | Self → coordinates. |
 | `/tphere <player>` | — | `knk.teleport.staff.others` | Target → self, instant, rank-checked. |
+| `/tp all <player>` | — | `knk.teleport.all.tp` | Every eligible player → `<player>` (#171). |
+| `/tphere all` | — | `knk.teleport.all.tphere` | Every eligible player → you (#171). |
+| `/spawn all`, `/hub all` | — | `knk.teleport.all.spawn`, `knk.teleport.all.hub` | Every eligible player to their spawn / the hub (#171). |
 | any staff form + `-s` | `silent`/`s` last arg (v1) | `knk.teleport.staff.silent` | No message to the moved/visited player. Always silent when the actor is vanished. |
+
+**Moving other players ([#171](https://github.com/PandiO/knk-workspace/issues/171), 2026-10-27, in review):** every
+form that moves another player (`/tp`, `/tphere`, `/spawn`, `/hub`, `/warp`, `/back` on someone) needs that player to be
+of the actor's **rank or lower** (highest active group weight, `RankHierarchy.actorAtLeast`); `/freeze`, `/inventory`,
+`/enderchest` and `/knk user` keep strictly lower. A player holding `knk.teleport.exempt.<hub|spawn|tp|tphere>` (or
+`knk.teleport.exempt.*`), or in staff or owner mode, is not moved by another player's teleport of that type; the console
+and `knk.admin.user.manage.all` still move such a player when they name them, but **never with `all`**. The `all` forms
+move every online player of the actor's rank or lower that isn't exempt, never the actor (nor the `/tp all` target),
+report "Teleported n of m players" and who wasn't moved; `-s` works as on the single forms. Code:
+`teleport/TeleportExemptions`.
 
 `/tp` vs vanilla: declaring `tp` in `plugin.yml` makes the bare label resolve to the plugin; vanilla stays reachable as
 `/minecraft:tp` (op level 2). See §5 Q1 — the default taken here is to own `/tp` and `/tphere` and leave `/teleport`
@@ -290,6 +303,8 @@ vanilla.
 | `knk.teleport.staff` | `/tp <player>`, `/tp <coords>`; staff teleports skip warmup/cost/cooldown/safety | Staff groups |
 | `knk.teleport.staff.others` | Move other players (`/tp a b`, `/tphere`, `/spawn <p>`, `/warp <d> <p>`) | Staff groups |
 | `knk.teleport.staff.silent` | `-s` flag | Staff groups |
+| `knk.teleport.all.hub` / `.spawn` / `.tp` / `.tphere` | The `all` forms (#171) | Moderator, Admin (migration `SeedTeleportAllAndItemMoreNodes`, for review) |
+| `knk.teleport.exempt.hub` / `.spawn` / `.tp` / `.tphere`, `knk.teleport.exempt.*` | Not moved by others' teleports of that type (#171) | nobody (staff/owner mode already exempt) |
 | `knk.region.bypass` | Skip `AllowEntry`/`AllowExit` denials (in `WorldGuardRegionListener`) | Staff groups |
 | existing `knk.admin.tp` | Accepted as an alias of `knk.teleport.staff` for `/knk tp` / `/tp <player>` during transition | unchanged |
 | existing `knk.siege.bypass.lockdown`, `knk.siege.bypass.commands` | Reused, not duplicated | unchanged |
