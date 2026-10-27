@@ -24,6 +24,8 @@ All features integrate with the base animation system defined in REQUIREMENTS_GA
 
 ## Feature 1: Pass-Through System
 
+> **2026-10-27 ([PandiO/knk-workspace#167](https://github.com/PandiO/knk-workspace/issues/167), in review, not merged):** each door now offers a set of pass-through styles (animated, snap, walk-path, teleport) plus a default style, with structure overrides; the player's own `GatePassThroughMethod` is used when the door offers it, otherwise the door's default. Current behaviour: the [admin guide](../../guides/admin/gate-structures-admin-guide.md#pass-through-styles-pandioknk-workspace167). The draft below predates it.
+
 ### Business Requirements
 
 **Goal**: Allow authorized players to walk through gates without manual interaction, improving gameplay flow for friendly/VIP players.

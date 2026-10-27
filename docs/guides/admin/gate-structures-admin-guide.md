@@ -1,7 +1,7 @@
 # Gate Structures — Admin Guide
 
 **Status:** Living document — update in place as the code changes
-**Last updated:** 2026-10-25 (troubleshooting: an invincible gate refuses ignition) — earlier: 2026-10-23 (open-door scan in step 5: empty open-door anchor, seed v3, scan refusal, KNG-268/270/271; decorated doors and jam troubleshooting, KNG-272/KNG-273) — earlier: 2026-10-22 (`gates.damage-cracks`; rest based on a full read-only code scan of `knk-plugin` `main`@`e6e428b` and `knk-web-app` `main`@`4ff5dc6`)
+**Last updated:** 2026-10-27 (pass-through styles per door and the snap style, [PandiO/knk-workspace#167](https://github.com/PandiO/knk-workspace/issues/167), in review on `claude/alpha-run-1-gates`, not merged) — earlier: 2026-10-25 (troubleshooting: an invincible gate refuses ignition) — earlier: 2026-10-23 (open-door scan in step 5: empty open-door anchor, seed v3, scan refusal, KNG-268/270/271; decorated doors and jam troubleshooting, KNG-272/KNG-273) — earlier: 2026-10-22 (`gates.damage-cracks`; rest based on a full read-only code scan of `knk-plugin` `main`@`e6e428b` and `knk-web-app` `main`@`4ff5dc6`)
 **Companion docs:** `docs/architecture/gate-structures-design.md` (mechanics), `docs/guides/developer/gate-structures-developer-guide.md` (implementation)
 
 Everything a server admin needs to configure, author, and operate gate structures — in-game commands, permissions, `config.yml` tuning, and how to author a new gate through the web app.
@@ -18,6 +18,18 @@ There's no dedicated "Gate" page — gates are managed through the generic admin
 6. If an admin abandons a door mid-form, it's saved as an in-progress draft; reopening the parent structure later shows it listed inline with who started it and when, with a "Continue" button to resume rather than starting a duplicate door.
 7. For `REGION`-mode doors (dynamic form only) or any door needing a WorldEdit-captured footprint, use the in-game `/knk gate door capture`/`redefine` commands (below) instead of/in addition to the web form.
 
+### Pass-through styles (PandiO/knk-workspace#167)
+
+A door with "Allow pass-through" on offers a set of styles - **Animated** (the door animates open and shut),
+**Snap** (the door blocks change to open at once and back after the pass-through time, no animation),
+**Walk-path** (only the blocks in the player's way are removed; players also need `knk.gate.passthrough.instant`) and
+**Teleport** (the player is put on the other side) - plus a **Default style**. A player's own style
+(`/gate passthrough`, or the staff User form) is used when the door offers it, otherwise the door's default style, which is always
+offered. Set them on the GateDoor form's "Pass-through" step (seed v4) or in the Gate Door object config; override them
+for every door of a gate with `/gate override` (above) or `PATCH api/GateStructures/{id}/overrides`. Doors that existed
+before #167 offer Animated, Walk-path and Teleport and default to Animated, so nothing changed until a door is edited.
+The siege defender pass-through (#154) stays animated, the non-member carry stays teleport.
+
 ## Commands
 
 All under `/knk gate ...`. A door is selected either by a bare id/name (when globally unique, or the structure has only one door) or `<gateStructure> <gateDoor>`.
@@ -28,7 +40,8 @@ All under `/knk gate ...`. A door is selected either by a bare id/name (when glo
 | `/knk gate close <door>` | Starts the closing animation | `knk.gate.close.<doorId>` or `knk.gate.close.*` |
 | `/knk gate info <door>` | Prints id/type/state/active/destroyed/health/invincible/blocks/motion type/face direction | none — open to anyone |
 | `/knk gate list` | Lists all cached gates with distance from the sender | none |
-| `/knk gate passthrough <default\|instant\|teleport>` | Sets the sender's own preferred pass-through mode (player-facing, see the player guide) | none to set it; `instant` only actually takes effect with `knk.gate.passthrough.instant`, otherwise silently downgrades to `default` |
+| `/knk gate passthrough <default\|snap\|instant\|teleport>` | Sets the sender's own preferred pass-through style (player-facing, see the player guide). Used at a door that offers it, otherwise the door's default style ([PandiO/knk-workspace#167](https://github.com/PandiO/knk-workspace/issues/167)) | none to set it; `instant` only actually takes effect with `knk.gate.passthrough.instant`, otherwise the door's default style is used |
+| `/gate override <structure> passanimated\|passsnap\|passwalkpath\|passteleport <true\|false\|clear>` and `/gate override <structure> passdefault <default\|snap\|instant\|teleport\|clear>` | Structure-wide override of the pass-through styles every door offers, and of their default style ([PandiO/knk-workspace#167](https://github.com/PandiO/knk-workspace/issues/167)); `/gate info` lists active overrides, `/gatedoor info` a door's effective styles | `knk.gate.admin` |
 | `/knk gate door capture <door> [closed\|opened]` | Starts a fresh WorldEdit region capture for a REGION-mode door — draw with `//sel poly`/`//sel cuboid`/`//sel convex`, then type `save` or `cancel` in chat | `knk.gate.admin` |
 | `/knk gate door redefine <door> [closed\|opened]` | Re-loads the door's existing captured region into your active WorldEdit selection for editing, mirroring WorldGuard's own `/rg redefine` | `knk.gate.admin` |
 | `/knk gate admin health <door> <amount>` | Force-sets current health (clamped 0..max) | `knk.gate.admin` |

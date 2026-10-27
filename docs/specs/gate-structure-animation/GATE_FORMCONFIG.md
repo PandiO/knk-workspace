@@ -78,6 +78,7 @@ sectie 4 hieronder voor de status van beide).
 | --- | --- |
 | `PassThroughDurationSeconds` | `AllowPassThrough == true` |
 | `PassThroughConditionsJson` | `AllowPassThrough == true` |
+| `AllowAnimatedPassThrough`, `AllowSnapPassThrough`, `AllowWalkPathPassThrough`, `AllowTeleportPassThrough`, `DefaultPassThroughMethod` | `AllowPassThrough == true` (GateDoor seed v4, [PandiO/knk-workspace#167](https://github.com/PandiO/knk-workspace/issues/167)) |
 | `ContinuousDamageMultiplier` | `AllowContinuousDamage == true` |
 | `ContinuousDamageDurationSeconds` | `AllowContinuousDamage == true` |
 | `HealthDisplayMode` | `ShowHealthDisplay == true` |

@@ -1,7 +1,7 @@
 # Gate Structures — Player Guide
 
 **Status:** Living document — update in place as the game changes
-**Last updated:** 2026-10-25 (invincible gates can't be set on fire either)
+**Last updated:** 2026-10-27 (pass-through styles per gate and the new snap style, [PandiO/knk-workspace#167](https://github.com/PandiO/knk-workspace/issues/167), in review on `claude/alpha-run-1-gates`, not merged) — earlier: 2026-10-25 (invincible gates can't be set on fire either)
 
 Gates, drawbridges, and portcullises are animated, damageable barriers built into walls around towns and districts — and a central part of sieges. Here's what you'll actually experience with them.
 
@@ -9,11 +9,13 @@ Gates, drawbridges, and portcullises are animated, damageable barriers built int
 
 - **`/knk gate info <name>`** — check a gate's state, health, and type. Works for anyone, no permission needed.
 - **`/knk gate list`** — see every gate near you and how far away it is.
-- If a gate allows pass-through and you have permission, **right-clicking it while it's closed** will let you through — how depends on your chosen mode:
-  - **Default** — the gate swings/slides fully open, stays open for a few seconds, then auto-closes on its own. Right-clicking again while it's open or opening just resets that timer.
-  - **Instant Open** (needs the instant-open permission) — only the blocks directly in your path vanish for a moment, letting you step straight through without waiting for the whole gate to animate; they reappear once you're past.
+- If a gate allows pass-through and you have permission, **right-clicking it while it's closed** will let you through — how depends on your chosen style and on the styles that gate offers:
+  - **Default (animated)** — the gate swings/slides fully open, stays open for a few seconds, then auto-closes on its own. Right-clicking again while it's open or opening just resets that timer.
+  - **Snap** — the gate blocks jump to open at once (no animation), stay open for a few seconds, then jump back to closed. Right-clicking again resets the timer.
+  - **Instant Open (walk-path)** (needs the instant-open permission) — only the blocks directly in your path vanish for a moment, letting you step straight through without waiting for the whole gate to animate; they reappear once you're past.
   - **Teleport** — you're moved straight to the other side; the gate itself never animates.
-- Set your preferred mode any time with **`/knk gate passthrough <default|instant|teleport>`**. If you pick `instant` without the permission for it, you'll just get `default` behavior instead — no error, it quietly falls back.
+- Set your preferred style any time with **`/gate passthrough <default|snap|instant|teleport>`** (staff can also set it on your account in the web app's User form). Each gate decides which styles it offers: when it doesn't offer yours, or you pick `instant` without the permission for it, you get that gate's own default style — no error, it quietly falls back. `/gatedoor info` shows a door's styles.
+- In a siege, defenders still open their gate animated, and non-members are still carried through by teleport.
 
 ## Animation
 

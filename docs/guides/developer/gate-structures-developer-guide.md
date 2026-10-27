@@ -1,7 +1,7 @@
 # Gate Structures — Developer Guide
 
 **Status:** Living document — update in place as the code changes
-**Last updated:** 2026-09-21 (based on a full read-only code scan of `knk-web-api` `master`@`76644fe`, `knk-plugin` `main`@`e6e428b`, `knk-web-app` `main`@`4ff5dc6`)
+**Last updated:** 2026-10-27 (pass-through styles, [PandiO/knk-workspace#167](https://github.com/PandiO/knk-workspace/issues/167), in review on `claude/alpha-run-1-gates`, not merged) — earlier: 2026-09-21 (based on a full read-only code scan of `knk-web-api` `master`@`76644fe`, `knk-plugin` `main`@`e6e428b`, `knk-web-app` `main`@`4ff5dc6`)
 **Companion docs:** `docs/architecture/gate-structures-design.md` (the "what and why" — read this first), `docs/guides/admin/gate-structures-admin-guide.md`, `docs/specs/gate-structure-animation/` (design-history trail)
 
 Purpose: get a developer productive extending or debugging gate structures without re-deriving the file layout and cross-repo wiring from scratch.
@@ -73,7 +73,7 @@ There is **no dedicated GatePage/GateDoorPage component** in the web-app — gat
 
 **Adding a new geometry mode**: extend `GeometryDefinitionMode` in all three repos' enums, add a scan branch in `GateBlockScanTaskHandler`, and a bounds-check branch in `GateFrameCalculator.isWithinGeometryBounds`/`rasterizeRotationFrame`. REGION mode is the most recent precedent to follow.
 
-**Adding a new pass-through mode**: extend `GatePassThroughMethod` (both repos) and add a branch in `GatePassThroughService`.
+**Adding a new pass-through mode**: extend `GatePassThroughMethod` (all three repos: API `Models/User.cs`, plugin `knk-core/.../users/GatePassThroughMethod` incl. its wire names, web app `UserProfileSummaryDtos.ts`), add a branch in `GatePassThroughService.dispatch`, and an `Allow<Style>PassThrough` flag on `GateDoor` (+ structure override, DTOs, mapping, migration, GateDoor form seed, `CachedGateDoor`/`CachedGateStructure`, `GateLoaderAdapter.allowedPassThroughMethods`). Since [PandiO/knk-workspace#167](https://github.com/PandiO/knk-workspace/issues/167) the style a player gets is decided by `knk-core/.../gates/GatePassThroughStyles.resolve` (preference if the door offers it, else the door's default; walk-path needs `knk.gate.passthrough.instant`); snap uses `GateManager.snapGate`, which puts the door in OPENING/CLOSING with a start time one whole animation in the past so `GateAnimationTask` finishes it on its next tick.
 
 **Adding a new damage cause**: add an entry to `GateDamageConsequenceListener.DAMAGE_BY_CAUSE` and a detection call from the relevant Bukkit event in `GateEventListener`.
 
