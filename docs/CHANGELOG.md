@@ -18,6 +18,22 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## 2026-10-26
 
+- **Dashboard explorer: one scrollbar, favourite types on top** — knk-web-app `main` `c3c0c9f`, merged `--no-ff` from `claude/dashboard-explorer-194`
+  (PandiO/knk-workspace#194; UX/realtime chain link 3b, 2026-10-26). The explorer's list is the only thing that
+  scrolls (it showed two scrollbars). A star on every type marks it a favourite: favourites are listed at the top
+  A–Z, the rest A–Z below; kept per browser (localStorage). Live checklist: `guides/dashboard-return-smoke-test.md`
+  section 9a.
+- **Dashboard header spacing** — knk-web-app `main` `c3c0c9f`, merged `--no-ff` from `claude/dashboard-header-195` (PandiO/knk-workspace#195; UX/realtime
+  chain link 3b, 2026-10-26). The dashboard no longer starts against the app's top header: explorer, title and the
+  "New {Type}" / ⚙ buttons start 24 px lower, on one row, centred on each other and lined up with the table; the
+  buttons are the same height, and on a phone a long "New {Type}" is cut off instead of pushing ⚙ off-screen. Live
+  checklist: `guides/dashboard-return-smoke-test.md` section 8a.
+- **Claim code field shows the dash from the start** — knk-web-app `main` `c3c0c9f`, merged `--no-ff` from `claude/claim-code-dash-196`
+  (PandiO/knk-workspace#196, follow-up of #192; UX/realtime chain link 3b, 2026-10-26). On `/link` and `/account/link`
+  the field shows `____-____` while empty and keeps the dash visible while the first four characters are typed
+  (`K7__-____`); paste, autofill, Backspace/Delete across the dash and capitals work as before. Pasting the same code
+  without its dash over the whole field no longer loses a character. Live checklist: `guides/invitations-smoke-test.md`
+  step 17a.
 - **Dashboard keeps its place; Submit waits for the save** — knk-web-app `main` `7ba0f4b`, merged `--no-ff` from `claude/kng-60-dashboard-hub`
   (PandiO/knk-workspace#177 link 1, #58; UX/realtime chain link 1, 2026-10-26). Not live-tested yet. The
   dashboard's type is in the URL (`/dashboard/{type}`; bare `/dashboard` reopens the last viewed type). Edit opens the

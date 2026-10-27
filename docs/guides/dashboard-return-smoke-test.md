@@ -1,7 +1,7 @@
 # Dashboard as the CRUD hub: return, submit pending state, toast, New/Configure, breadcrumbs, detail header, Create New (#177 links 1–2, #58, #81, #39) — smoke test
 
-**Status:** Not run yet — waiting for the developer's test (2026-10-26)
-**Last updated:** 2026-10-26 (sections 8–14 added for #177 link 2 = chain link 3)
+**Status:** Run by the developer on 2026-10-26 on knk-web-app `main` `7ba0f4b`: all steps work or accepted (findings below)
+**Last updated:** 2026-10-26 (section 8a: header row spacing, #195, knk-web-app `claude/dashboard-header-195`, merged into `main` `c3c0c9f`); 2026-10-26 (section 9a: one scrollbar and favourites, #194, knk-web-app `claude/dashboard-explorer-194`, merged into `main` `c3c0c9f`); 2026-10-26 (sections 8–14 added for #177 link 2 = chain link 3)
 **Issues:** [PandiO/knk-workspace#177](https://github.com/PandiO/knk-workspace/issues/177) (links 1 and 2) ·
 [#58](https://github.com/PandiO/knk-workspace/issues/58) · [#81](https://github.com/PandiO/knk-workspace/issues/81) (detail
 page header) · [#39](https://github.com/PandiO/knk-workspace/issues/39) (Create New menu only)
@@ -92,6 +92,23 @@ Use a slow save: Chrome DevTools → Network → throttling **Slow 3G** (or Offl
 6. A type with **no rows** (or search the table for nothing, then clear the search). Expected: the empty table says
    "No {Type} yet." with a **New {Type}** button; with a search that matches nothing it says "No results found".
 
+## 8a. Header row spacing (#195)
+
+Branch: knk-web-app `claude/dashboard-header-195` (on `main` `6b02bb0`).
+
+1. On `/dashboard/Town` at a normal desktop width: there is a gap (about 24 px) between the app's top header and the
+   dashboard. The explorer panel, the title **Town** and the **New Town** / cogwheel buttons all start at that same
+   height; nothing touches the app header.
+2. Title and buttons are on one row and centred on each other: the middle of "Town" is level with the middle of the
+   buttons. **New Town** and the cogwheel are the same height (the cogwheel is a square).
+3. The title's left edge lines up with the table's left edge (and the search box); the cogwheel's right edge with the
+   table's right edge.
+4. Switch to a type with a long name (e.g. Minecraft Enchantment Ref): same row; if it doesn't fit, the buttons wrap
+   below the title and stay together.
+5. Phone width (or a narrow window, ~390 px): the title may take two lines, the buttons sit below it; a long
+   "New {Type}" is cut off with "…" (hover or long-press shows the full name) and the cogwheel stays on screen.
+6. Scroll the table: the header row scrolls with it as before (it isn't sticky); the explorer stays in place.
+
 ## 9. Flat explorer with the "no display configuration" marker
 
 1. On the dashboard the explorer is **one A–Z list** (no "Entities" / "Without display configuration" headings).
@@ -100,6 +117,30 @@ Use a slow save: Chrome DevTools → Network → throttling **Slow 3G** (or Offl
 3. Pick such a type. Expected: its table shows; the 👁 **View** button is greyed out with the same tooltip and clicking
    a row does nothing; Edit, Delete and New work.
 4. A type with a display configuration: View and the row click open the detail page (section 11).
+
+## 9a. One scrollbar and favourite types (#194)
+
+Branch: knk-web-app `claude/dashboard-explorer-194` (on `main` `6b02bb0`). Clear the site data once, or start in a
+private window, to begin without favourites.
+
+1. On `/dashboard/Town` with a window lower than the explorer's list (or zoom in until it is): the explorer has **one**
+   vertical scrollbar, inside the white panel under the search box; no second one at the panel's edge and no horizontal
+   one below it. Scroll the list with the wheel and by dragging that scrollbar: only the list moves; the "Entity types"
+   header and the search box stay put.
+2. Every type has a grey **star** at the right. Click the star of **Town**, then of **Category** and of a type further
+   down. Expected: they move to a **Favourites** section at the top (gold stars), A–Z among themselves; below a thin
+   line the other types A–Z as before. The star doesn't select the type (the table doesn't change).
+3. Reload the page, and open `/dashboard` in a new tab of the same browser. Expected: the same favourites on top.
+   Another browser (or a private window) has none: they are per browser (localStorage
+   `knk.dashboard.favouriteEntityTypes`).
+4. Sort Z–A with the sort button: favourites stay on top, both parts sorted Z–A. Search `t`: matching favourites stay
+   on top; search for a type that isn't a favourite: the Favourites section disappears while searching.
+5. Click a gold star: the type goes back into the A–Z list. Remove every favourite: the Favourites heading goes.
+6. The selected type is still highlighted when it is a favourite; the crossed-out eye of types without a display
+   configuration stays next to the name, left of the star.
+7. Phone width (or a narrow window): the explorer's drawer opens from the rail, shows the stars and scrolls in one
+   place; picking a type closes it, a star doesn't.
+8. Entity setup (`/forms`): its explorer has no stars (favourites are a dashboard feature for now).
 
 ## 10. An open form hides the explorer and shows a breadcrumb
 
@@ -151,19 +192,22 @@ Use a slow save: Chrome DevTools → Network → throttling **Slow 3G** (or Offl
 
 ## Findings
 
+Developer, 2026-10-26. Also found: the explorer has two scrollbars and should offer favourites (#194); the
+entity header's New/⚙ buttons stick to the app header while the title doesn't (#195).
+
 | Step | Result | Notes |
 |---|---|---|
-| 1 | | |
-| 2 | | |
-| 3 | | |
-| 4 | | |
-| 5 | | |
-| 6 | | |
-| 7 | | |
-| 8 | | |
-| 9 | | |
-| 10 | | |
-| 11 | | |
-| 12 | | |
-| 13 | | |
-| 14 | | |
+| 1 | Works (1.1–1.5) | |
+| 2 | Works; 2.3 accepted | |
+| 3 | Works | |
+| 4 | Accepted | |
+| 5 | Accepted | |
+| 6 | Accepted | |
+| 7 | Accepted | |
+| 8 | Accepted | |
+| 9 | Works | |
+| 10 | Works | |
+| 11 | Works | |
+| 12 | Works | |
+| 13 | Works | |
+| 14 | Works; remove the link from the nav: #197 | |
