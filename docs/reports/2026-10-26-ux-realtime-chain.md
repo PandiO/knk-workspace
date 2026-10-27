@@ -19,7 +19,7 @@ test), `merged`, `blocked: <reason>`.
 | 3 | #177 (link 2), #81, #39 (menu) | `claude/kng-60-dashboard-hub` | merged: knk-web-app `main` `7ba0f4b`, knk-workspace `main` `78bf6a3` (2026-10-26, by the coordinator at the developer's request) | subagent (fallback: add_repo needed in-session approval), 2026-10-26 | — / `9a203f8` / — / `186c851` | web-app 1270/1270 (baseline 1232/1232), suites 201 (195); `tsc` 9 errors = baseline; build OK, same 24 warnings |
 | 3b | #194, #195, #196 (follow-ups of links 1–3) | `claude/dashboard-explorer-194`, `claude/dashboard-header-195`, `claude/claim-code-dash-196` | merged: knk-web-app `main` `c3c0c9f` (2026-10-26, by the coordinator at the developer's request) | subagent, 2026-10-26 | — / explorer `29a6883`, header `be4adab`, claim-code `b8138e3` / — / explorer `3aea976`, header `61dcf23`, claim-code `31c41bd` | web-app 1315 / 1305 / 1311, all passed (baseline 1304/1304, suites 205 / 204 / 204 (204)); `tsc` 9 errors = baseline; build OK, same 24 warnings |
 | 4 | #178 | `claude/realtime-signalr` | in review | subagent (fallback: add_repo needed in-session approval), 2026-10-26 | `b8a29d7` / — / `a64b7f83` / `e878ee2` | API 3338 passed, 4 failed (#99, = baseline reds), 87 skipped (baseline 3296/4/87); plugin core 2319 (2312), api-client 290 (280), paper 2149 (2140), 0 failures |
-| 5 | #64 (FormWizard), #109, #186 | `claude/form-wizard-edit-mode` | in review | subagent (fallback: add_repo needed in-session approval), 2026-10-26 | `09305ef` / `6b3fd8b` / — / `5d8a28c` | web-app 1330/1330, suites 209 (baseline 1304/1304, 204); `tsc` 9 errors = baseline; build OK, same 24 warnings; API 3356 passed, 4 failed (#99, = baseline reds), 88 skipped (baseline on the merged `master` `4d7a806`: 3339/4/88) |
+| 5 | #64 (FormWizard), #109, #186 | `claude/form-wizard-edit-mode` | in review (fix round 2026-10-27 done: re-test 4.3a/4.3b) | subagent (fallback: add_repo needed in-session approval), 2026-10-26; fix round subagent 2026-10-27 | `09305ef` / `ff58c83` / — / `1e21ee2` | fix round: web-app 1359/1359, suites 212 (baseline on the merged `main` `c3c0c9f`: 1349/1349, 210); link 5: web-app 1330/1330, suites 209 (baseline 1304/1304, 204); `tsc` 9 errors = baseline; build OK, same 24 warnings; API 3356 passed, 4 failed (#99, = baseline reds), 88 skipped (baseline on the merged `master` `4d7a806`: 3339/4/88) |
 | 6 | #179 | `claude/realtime-signalr` | in review | subagent (fallback: add_repo needed in-session approval), 2026-10-26 | `38b0466` / — / `b48f1484` / `ae949bd` | API 3361 passed, 4 failed (#99, = baseline reds), 87 skipped (baseline 3338/4/87); plugin core 2323 (2319), api-client 298 (290), paper 2163 (2149), 0 failures |
 | 7 | #180 | `claude/world-task-hardening` | waiting: link 5 merged | — | — | — |
 | 8 | #181 | `claude/realtime-signalr` | waiting: link 6 done, link 7 merged | — | — | — |
@@ -37,11 +37,12 @@ flagged decisions.)
 - **Live test link 3b** (#194, #195, #196; merged into web-app `main` `c3c0c9f` on 2026-10-26 at the developer's request):
   checklist per issue in the link 3b block. Flags L3b-1…L3b-9.
 - **Link 5 live-tested by the developer on 2026-10-27:** sections 1–6 work or accepted, except two leave-guard bugs in
-  4.3 (typing then clearing still asks; after Next the guard forgets step 1's values). A fix round runs on
-  `claude/form-wizard-edit-mode` (subagent, 2026-10-27); merge link 5 after its re-test (4.3a/4.3b). Section 7 (cleanup
+  4.3 (typing then clearing still asks; after Next the guard forgets step 1's values). Fix round done (subagent,
+  2026-10-27): web-app `ff58c83`, workspace `1e21ee2` (link 5 block, "fix round"); merge link 5 after its re-test
+  (4.3a/4.3b). Section 7 (cleanup
   script) runs after the deploy.
-- **Test and merge link 5** (#64 FormWizard part, #109, #186): `claude/form-wizard-edit-mode` web-app `6b3fd8b`, API
-  `09305ef`, workspace `5d8a28c`; live checklist `guides/form-wizard-edit-mode-smoke-test.md` sections 1–7 on the workspace
+- **Test and merge link 5** (#64 FormWizard part, #109, #186): `claude/form-wizard-edit-mode` web-app `ff58c83`, API
+  `09305ef`, workspace `1e21ee2`; live checklist `guides/form-wizard-edit-mode-smoke-test.md` sections 1–7 on the workspace
   branch. Deploy web app and API together (an old API refuses a draft without `userId`), then back up and run
   `scripts/maintenance/remove-user1-drafts-and-workflow-sessions.sql` once (alpha-go-live § 4.3). **Its merge opens links 7
   and 9; every remaining link waits on it** (8 on 7, 10 on 8). Flags L5-1…L5-14; L5-1 (any `knk.admin.content` holder can
@@ -689,6 +690,66 @@ branch).
   `jest.mock('react-router-dom', () => jest.requireActual('react-router'), { virtual: true })` with `createMemoryRouter`
   (see `hooks/__tests__/useLeaveGuard.test.tsx`). Components rendered under a mocked router or a `MemoryRouter` skip
   `useBlocker` (no data router context).
+
+### Link 5 — fix round (2026-10-27)
+
+**Started:** subagent of the coordinator, 2026-10-27, after the developer's live test (sections 1, 2, 3, 5 work; 6.1–6.2
+work, 6.3–6.4 accepted; 4: steps 1, 2, 4–9 work, step 3 works with two bugs). Own worktrees under `/home/user/wt-link5fix/`.
+**Base:** web-app `main` `c3c0c9f` (link 3b) merged into `claude/form-wizard-edit-mode` (`839f284`, clean); workspace `main`
+`6216787` merged into the feature branch (`52fa9c0`; one mechanical conflict, the "Last updated" line of
+`architecture/web-app-architecture.md`: both notes kept). No API change.
+
+**Bugs, cause, fix** (web-app `ff58c83`, `FormWizard.tsx` + new `utils/forms/formValuesSnapshot.ts`)
+1. **Typing then clearing still asked "Leave this form?".** Cause: the dirty flag was set by any change
+   (`setDirty(true)` in the change handlers) and never looked at the values. Fix: unsaved changes are the form's values
+   compared with a baseline snapshot: every step (hidden-stash values included), '' / null / undefined / [] and an object
+   without values are the same empty value, a number equals its text, key order doesn't matter, gate geometry is
+   re-derived on both sides. The baseline is taken just before the first change (nothing the load does counts; in edit
+   mode it holds the loaded entity, in a resumed draft the draft).
+2. **After Next the guard forgot.** Cause: `saveProgress` cleared the dirty flag after **every** successful save,
+   including the automatic `InProgress` save behind Next, so step 1's values counted as saved and the nav link,
+   breadcrumb and Cancel ("nothing created or changed") let the form go. Fix: only an explicit **Save Draft**
+   (`Paused`) and a successful Submit / Save changes re-take the baseline; Cancel uses the same comparison.
+3. Found in the browser check (same feature, #109): on a short form, **Cancel right after clearing Name did nothing** —
+   the mousedown blurred Name, its "Name is required" message pushed the footer (which sits right under a short form)
+   24 px down, and the mouseup missed the button. Fix: a mousedown on a footer button no longer takes the focus from the
+   field (`preventDefault` on the footer for button targets); Next/Save still validate the step themselves.
+
+**Tests vs baseline** (Node 22, `npx npm@11 ci`)
+- Baseline (branch with `main` `c3c0c9f` merged, before the fix): `npm run test:ci` **1349/1349, 210 suites**;
+  `npx tsc --noEmit` 9 errors (#63); `npm run build` compiles, 24 warning lines in 15 files.
+- After: **1359/1359, 212 suites** (+10: `formValuesSnapshot` 4; `FormWizard.leaveGuardValues.ui` 6 — with the real
+  `useLeaveGuard` in a memory data router and the real `FormCancelAction`: type+clear → nav link and Cancel leave at once;
+  fill step 1, Next, then nav link / breadcrumb / Cancel on step 2 all ask; back on step 1 with the name cleared → no
+  question; Save Draft → no question, one more change → question, back to the saved value → none; edit mode change and
+  revert → Cancel leaves at once; footer mousedown keeps the focus). The 5 guard cases fail on the unfixed code. tsc 9
+  (= baseline); build compiles, the same 24 warnings (one line number shifted).
+
+**Browser check** (Chromium via Playwright; production build served locally, API stubbed with `page.route`: a 2-step
+Category form Name*/Description → Notes, entity 4 for edit mode). Unfixed build (`839f284`): type+clear then nav link
+and breadcrumb **asked**; fill step 1, Next, nav link from step 2 **did not ask**. Fixed build: type+clear (Name and
+Description) → nav link, breadcrumb and Cancel leave at once, no question; fill step 1 → Next (one POST, status
+InProgress) → nav link, breadcrumb and Cancel each ask, Stay keeps step 2; Previous shows the name, clearing it → nav
+leaves without a question; Save Draft (PUT status Paused) → one more letter → asks, back to the saved value → leaves;
+edit mode `/forms/Category/edit/4` (Name "Weapons"): changed name → Cancel asks, changed back + Description typed and
+cleared → nav leaves. Also: tab out of Name shows "Name is required"; Next with Name cleared shows the summary; a reload
+after typing gets the browser's question, and after typing and clearing the `beforeunload` handler is gone again (a
+dispatched `beforeunload` is no longer cancelled; a reload a few ms after the clear can still race the effect);
+Submit from step 2 goes to the dashboard without a question.
+
+**Workspace** `claude/form-wizard-edit-mode` `1e21ee2`: smoke test Findings for sections 1–7 (developer's results; 4: the
+two bugs, fixed in `ff58c83`), new steps **4.3a** (type then clear, also Cancel/breadcrumb and edit mode → no question)
+and **4.3b** (fill step 1, Next, leave from step 2 via nav/breadcrumb/Cancel → question), Status/Last updated, guides
+README row; web-app architecture (#109 paragraph); CHANGELOG entry.
+
+**Flags:** **L5-6** is replaced: unsaved = the values differ from the baseline (opened with, or last Save Draft / successful
+submit); the progress save behind Next keeps the question. **L5-15** A footer button press keeps the focus in the field
+(no blur message on mousedown); keyboard users tabbing to a button still get the blur message.
+
+**Notes for later links:** link 7 (#180): a silent draft save on the first task (DESIGN §8.7, `InProgress`) no longer
+clears the unsaved state (link 5's note said it did); if it should, call it with `Paused` semantics or re-take the
+baseline explicitly. Automated value changes (scan results, world-task results) count as changes because they move the
+values away from the baseline.
 
 ## Link 3b — #194, #195, #196: dashboard explorer, dashboard header, claim code dash
 
