@@ -1,7 +1,8 @@
 # Alpha test run 1 — package I: teleport, kits, items (2026-10-27)
 
-**Status:** In review — pushed on `claude/alpha-run-1-teleport-items`: knk-plugin `9b25ee7` (from `main` `3550cbb`),
-knk-web-api `cbd8074` (from `master` `4d7a806`); not merged, not deployed, not live-tested
+**Status:** In review — pushed on `claude/alpha-run-1-teleport-items`: knk-plugin `aa185fa` (round 2; round 1 `9b25ee7`,
+from `main` `3550cbb`), knk-web-api `cbd8074` (from `master` `4d7a806`, unchanged in round 2); not merged, not deployed;
+round 1 smoke-tested on dev 2026-10-27 (§ 6), round 2 not live-tested
 **Last updated:** 2026-10-27
 **Issues:** [PandiO/knk-workspace#171](https://github.com/PandiO/knk-workspace/issues/171) (P2),
 [#172](https://github.com/PandiO/knk-workspace/issues/172) (P2), [#175](https://github.com/PandiO/knk-workspace/issues/175) (P3);
@@ -70,3 +71,45 @@ Deploy both branches (the API migration seeds the ranks). Use non-op accounts of
 ## 5. Not done / follow-ups
 
 Nothing filed: no out-of-scope bug found. Open review points are § 2.1, 2.5 and 2.6.
+
+## 6. Round 2 (2026-10-27)
+
+**Input:** the developer's smoke test run 1 on dev ([#175 comment](https://github.com/PandiO/knk-workspace/issues/175)):
+fill, second stack, no room, instance copy and refusal without the node all work. Change asked: an optional amount,
+`/knk item more <amount>`; on a max-stack-1 item blueprint item `/knk item more 64` gives 64 of it, regardless of its max
+stack size. Without an amount the round-1 behaviour stays.
+
+**Change** (knk-plugin `aa185fa`, `ItemMoreCommand`, `KnkAdminCommand`, `ItemCommand`, `plugin.yml`; no API change):
+
+| Case | `/knk item more <amount>` |
+|---|---|
+| Plain item (no instance id; this includes item-blueprint items such as a max-1 sword) | Exactly `amount` more, built as stacks of the item's max size (64 → 64 single swords; 150 bread → 64 + 64 + 22) and added like a pickup: matching stacks are topped up first, then empty slots. The held stack is never changed itself. |
+| Item with `knk_item_instance` | `amount` new instances minted in **one** `POST api/ItemInstances/{id}/clone` call (`count`), one single item per copy and empty slot — limited to the empty slots (≤ 36), so the API's existing `count` limit of 64 always suffices. |
+| Not enough room | What fits is given; the rest is **not** given (nothing dropped) and the reply says so ("Gave you 8 of 20; your inventory had no room for 12 more (not given)"). Instance items: only as many instances as there are empty slots are minted ("room for 5 of 64; the rest is not made"); no room at all → refused, nothing minted. |
+| Bad amount (`0`, negative, text, > 2304, extra args) | Usage `/knk item more [amount 1-2304]`, nothing given. |
+| Tab completion | `more` then `1`, `8`, `16`, `32`, `64` (after `knk.admin.item` is listed, as before). |
+
+**Decisions (review):**
+1. **Upper bound 2304** (36 storage slots × 64), a constant, not a config key: more can never fit in a player inventory
+   (armour/offhand slots aren't filled), so a larger amount only means "not given". Easy to turn into a config key later.
+2. **Overflow is not given, not dropped.** The round-1 no-amount path refused when full; dropping thousands of items at
+   the feet on a typo is worse than a clear count. (The one remaining drop is round 1's race: instance copies minted for
+   free slots that filled up while the API answered drop at the feet, so a minted id is never lost.)
+3. **No API change.** Instance copies are single items, so one run can never need more than 36 instances; round 1's
+   `count` 1..64 on the clone endpoint covers it in one call — no batch endpoint, no new access rule, no migration.
+4. **An amount always means "this many more"**, also for a held stack below its max (10 bread + `64` → 74 bread across
+   two stacks), rather than "fill to `amount`".
+
+**Tests:** knk-plugin `gradle build -x deployToDevServer` (JDK 25 toolchain): **core 2378 / api-client 284 / paper 2274,
+0 failures** (round 1: 2378 / 284 / 2267; skipped 0 / 2 / 18 unchanged). `ItemMoreCommandTest` 8 → 15: max-1 item ×64,
+spread over stacks, partial fit, no room, bad amounts, instance amount in one call, instance amount limited to free
+slots. `KnkAdminCommand` tab completion and dispatch have no unit harness; they are on the live checklist. knk-web-api
+unchanged (`cbd8074`, "Migrations (fresh DB)" green in round 1).
+
+**Re-test (smoke test run 2):**
+- [ ] Hold a max-stack-1 item-blueprint item: `/knk item more 64` → 64 of it (one per slot as far as there is room); reply "Gave you 64 more", or "Gave you n of 64 … not given" with fewer free slots.
+- [ ] Hold 10 bread: `/knk item more 150` → 160 bread in total (stacks topped up, then 64s); `/knk item more` without amount still fills to 64.
+- [ ] Nearly full inventory: `/knk item more 500` on bread → reply gives the count not given; nothing on the ground.
+- [ ] Instance item (lootbox): `/knk item more 5` → 5 copies with 5 new ids in one go; with 2 free slots → 2 copies, "room for 2 of 5"; audit log one `ItemInstanceCloned` with 5 (or 2) ids.
+- [ ] `/knk item more 0`, `abc`, `9999` → usage, nothing given; tab after `/knk item more ` offers 1/8/16/32/64.
+
