@@ -1,7 +1,7 @@
 # Alpha run 1 P2/P3 fixes — smoke test
 
 **Status:** Run 1 on dev 2026-10-27 (§ 5–8 pass or accepted, changes asked for #169, #170, #175; § 1–4 wait for the next closed alpha test; § 9 on hold). Not merged
-**Last updated:** 2026-10-27
+**Last updated:** 2026-10-27 (§ 0 merge fix and § 6 for G round 2; § 8 steps 5–8 for I round 2b)
 **Issues:** parent [PandiO/knk-workspace#149](https://github.com/PandiO/knk-workspace/issues/149); #163, #164, #165,
 #166, #169, #170, #171, #172, #174, #175, #198, #199 (§ 1–8); #167 (§ 9, on hold)
 **Handoff:** [2026-10-27-alpha-run-1-p2-p3.md](../ai-agents/handoffs/2026-10-27-alpha-run-1-p2-p3.md) (decisions § 1,
@@ -20,19 +20,26 @@ commits you tested.
 |---|---|---|---|---|
 | E siege rewards | `claude/alpha-run-1-rewards` | `3461708` | `16a47f5` | `ead3b39` |
 | F siege results (contains E) | `claude/alpha-run-1-results` | `61f1008` | `1972569` | `6917a0f` |
-| G effects | `claude/alpha-run-1-effects` | `911eb2a` | — | — |
-| I teleport, kits, items | `claude/alpha-run-1-teleport-items` | `9b25ee7` | `cbd8074` | — |
+| G effects (round 2) | `claude/alpha-run-1-effects` | `9bc2b31` | — | — |
+| I teleport, kits, items (round 2b) | `claude/alpha-run-1-teleport-items` | `060d38d` | `cbd8074` | — |
 | H gates (on hold, § 9) | `claude/alpha-run-1-gates` | `e7c5a93` | `87f6ab0` | `0af1dbf` |
 
 1. **API tests first.** None of the API branches has run `dotnet test` (no NuGet in the session that built them). On
    your machine, run `dotnet test Tests/knkwebapi_v2.Tests/knkwebapi_v2.Tests.csproj` on F (`1972569`, contains E) and
    I (`cbd8074`). Expect only the 4 known reds from `master`.
 2. **Build one combined dev stack** in a local test branch per repo (don't push it to a trunk):
-   - knk-plugin from `main`: merge F, then G, then I. G conflicts in `SiegeScoreboardPresenter.java`: keep F's version
-     and change F's two helpers to `setBoard` → `ViewerScoreboards.set(player, board)` and `boardOf` →
-     `ViewerScoreboards.current(player)` (import `net.knightsandkings.knk.paper.utils.ViewerScoreboards`), drop G's
-     `lastTabName` line. Build with `./gradlew build -x deployToDevServer` (the coordinator's trial of exactly this
-     merge: core 2409 / api-client 288 / paper 2304, 0 failures), then `./gradlew :knk-paper:dev`.
+   - knk-plugin from `main`: merge F, then G, then I. **Since G round 2, git merges G into F without a conflict, but
+     the result does not compile** — fix `SiegeScoreboardPresenter.java` by hand before building:
+     - in `show(...)`: delete G's four lines (the `// #169: through a name-tag blackout…` comment, its
+       `previousBoards.putIfAbsent(… ViewerScoreboards.current(p))`, and the first `Scoreboard own = …` /
+       `if (own != null) ViewerScoreboards.set(p, own);` pair); keep F's `boardOf`/`setBoard` lines and
+       `ScoreboardUtil.setSiegeTag(p, true)`;
+     - in `restore(...)`: delete G's `if (previous != null) ViewerScoreboards.set(player, previous);` and the
+       `lastTabName` line; keep F's `setBoard` line and `setSiegeTag(player, false)`;
+     - F's helpers become `setBoard` → `ViewerScoreboards.set(player, board)` and `boardOf` →
+       `ViewerScoreboards.current(player)` (G's `ViewerScoreboards` import is already there).
+     Build with `./gradlew build -x deployToDevServer` (the coordinator's trial of exactly this merge, F + G round 2 +
+     I round 2b: core 2401 / api-client 288 / paper 2325, 0 failures), then `./gradlew :knk-paper:dev`.
    - knk-web-api from `master`: merge F, then I (clean). Run it; the migrations `AddSiegeGateDamageAndParticipationRewards`,
      `AddSiegePostMatchSeconds` and `SeedTeleportAllAndItemMoreNodes` apply on start-up.
    - knk-web-app from `main`: merge F (clean). (`npx npm@11 ci`, then `npm start`.)
@@ -107,22 +114,30 @@ commits you tested.
 5. In game, A types `/siege history`. **Expect:** the last 5 matches, each with a working link.
 6. Clear `web.public-url`, restart, `/siege history`. **Expect:** the list without links. Set it back.
 
-## 6. Flash Chaos name tags and effect bars (G: #169, #170)
+## 6. Name tags and effect bars (G: #169, #170)
 
-1. Outside a siege (survival, not in a safezone), A hits B with a Flash Chaos weapon. **Expect:**
-   - B sees no name tags for about 12.5 s; A and C still see all tags.
-   - B has Slowness and Nausea boss bars counting down.
-   - Afterwards B's tags, tab colours and below-name health are back.
-2. Hit B again with Flash Chaos mid-blackout. **Expect:** the blackout lasts until the second one ends.
-3. Hit B with Flash Chaos, then kill B (or B logs out). **Expect:** tags back after respawn or rejoin.
-4. In a siege match, A Flash-Chaoses B. **Expect:** B keeps the siege sidebar (timer ticking) and team colours, and
-   the siege board is back afterwards. Hit B shortly before the match ends: after the return B has the normal board.
-5. Hit B with Poison, Wither, Freeze, Blindness and Confusion enchantments in turn. **Expect:** one bar per effect,
-   with the name and seconds left, counting down and gone when it ends. Two effects at once: two bars. The same
-   effect again: its bar restarts, no second bar.
-6. B drinks milk with potion bars showing. **Expect:** the potion bars go. B dies with bars showing: all timed bars go.
-7. Staff `/freeze B`. **Expect:** a fixed "Frozen" bar until `/unfreeze B`; still there after B relogs while frozen.
-   Start `/navigate` for B while frozen: both bars show.
+Run 1 tested round 1 (Flash Chaos blackout); these are the round 2 steps (knk-plugin `9bc2b31`).
+
+1. **Blindness hides name tags.** Hit another player (survival, outside a safezone) until the Blindness enchantment
+   triggers. **Expect:** the victim sees a `Blindness · Ns` bar and no name tags at all for that time; you and
+   bystanders still see every tag. Afterwards the victim's tags, tab colours and below-name health are back.
+2. **Milk, overlap, death.** Blind the victim, they drink milk: tags back within about a second. Blind them twice in a
+   row: the blackout lasts until the second ends. Blind them, then they die or relog: tags back on respawn or rejoin.
+3. **Siege variant.** Blind a player in a siege match: the siege sidebar keeps ticking and team colours stay; afterwards
+   the siege board is back. If the match ends during the blackout, they end on the normal board.
+4. **Flash Chaos no longer hides tags.** Flash Chaos near another player: Slowness and Nausea bars, name tags stay.
+5. **Invisibility hides the user's own tag.** Use the Invisibility ability. **Expect:** no other player sees your name
+   tag, same rank or not (check with a same-rank player next to you). It comes back when the invisibility ends, right
+   after milk, and after death.
+6. **Invisibility in a siege.** Use it in a match: your teammates still see you (see-through, with tag); the other team
+   sees nothing.
+7. **Staff freeze bar.** `/freeze <player> <reason>`: a **red** bar `Frozen by <you> for: <reason>` until `/unfreeze`.
+   Variants: from the console → `Frozen by staff for: <reason>`; while you're vanished in staff/owner mode →
+   `Frozen by staff …`; from the web app's Player manager → `Frozen by <you> for: Frozen by a member of staff`; the
+   frozen player relogs → same text; server restart while frozen → `Frozen by staff for: <reason>`; with an active
+   `/navigate` route both bars show.
+8. **Effect bars (regression).** Poison, Wither, Freeze, Blindness and Confusion: one counting-down bar each; the same
+   effect again restarts its bar; milk removes potion bars; death removes all timed bars.
 
 ## 7. Teleport `all` and the rank rule (I: #171)
 
@@ -151,6 +166,17 @@ Use the Admin, Moderator, Staff and Default accounts. Give Staff `/staffmode` on
    with the `/knk lootbox` admin lookup or `GET api/ItemInstances/{id}`); the original keeps its id; the audit log shows
    `ItemInstanceCloned`.
 4. Moderator (no `knk.admin.item.more`) tries it. **Expect:** refused.
+
+Round 2b (`/knk item more [amount]`, knk-plugin `060d38d`):
+
+5. Hold a max-stack-1 item-blueprint item, 20 free slots, `/knk item more 64`. **Expect:** 20 given, "Gave you 20 of
+   64 … no room for 44 more (not given)", nothing on the ground.
+6. Hold 10 bread, `/knk item more 150`. **Expect:** 160 bread in total. `/knk item more 1000000`: the inventory fills
+   with bread, the reply counts the rest, nothing dropped.
+7. Lootbox instance item, `/knk item more 5`. **Expect:** 5 copies with 5 new ids and one `ItemInstanceCloned` audit
+   entry. With 2 free slots: 2 copies, "room for 2 of 5; the rest is not made".
+8. `/knk item more 0`, `abc`, `1.5`. **Expect:** `Usage: /knk item more [amount]`, nothing given; tab after
+   `/knk item more ` offers 1/8/16/32/64.
 
 ## 9. Gate pass-through styles (H: #167) — on hold
 
