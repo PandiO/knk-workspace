@@ -61,8 +61,8 @@ movement check will probably snap the player back.
 | 4.1 + 4.5 | Freeze spam can't be countered. Developer decision 2026-10-25: fix it with admin-configurable values per enchantment (proc chance, cooldown on/off and length, duration, per-level multiplier) | Feature | **P0** | [#151](https://github.com/PandiO/knk-workspace/issues/151) · in review, [package B report](2026-10-26-package-b-enchantments-freeze.md) |
 | 4.2 | Frozen players are kicked for flying. Workaround since 15:02Z: `ALLOW_FLIGHT: "TRUE"` for the whole server ([report § 4](../../2026-10-25-alpha-update-api-6f08383d-plugin-ee35fb1d.md)), which also lets fly hacks through | Bug | P1 | [#155](https://github.com/PandiO/knk-workspace/issues/155) · in review, [package B report](2026-10-26-package-b-enchantments-freeze.md) |
 | 4.3 | Weaker defaults; freeze maybe an ability with a cooldown | Improvement | P1 | [#156](https://github.com/PandiO/knk-workspace/issues/156) · in review, [package B report](2026-10-26-package-b-enchantments-freeze.md) |
-| 4.4 | Player names visible during the flash/chaos effect | Bug | P2 | [#169](https://github.com/PandiO/knk-workspace/issues/169) |
-| 4.6 | Boss bar with the remaining time of an effect like freeze | Feature | P2 | [#170](https://github.com/PandiO/knk-workspace/issues/170) |
+| 4.4 | Player names visible during the flash/chaos effect | Bug | P2 | [#169](https://github.com/PandiO/knk-workspace/issues/169) · in review, [package G report](2026-10-27-package-g-effects.md) |
+| 4.6 | Boss bar with the remaining time of an effect like freeze | Feature | P2 | [#170](https://github.com/PandiO/knk-workspace/issues/170) · in review, [package G report](2026-10-27-package-g-effects.md) |
 
 ## 5. Permissions, ranks and staff tools
 

@@ -3,7 +3,8 @@
 **Status:** Living document — update in place as the code changes. Describes the package branches
 `claude/alpha-run-1-enchantments` (knk-web-api `0ecbe53`, knk-web-app `de93b69`, knk-plugin `fcb2e08a`); **not merged,
 not deployed, not live-tested**
-**Last updated:** 2026-10-26 (PandiO/knk-workspace#151, #156, #155)
+**Last updated:** 2026-10-27 (§ 5: effect boss bars and the flash_chaos name-tag blackout, #169/#170, in review on
+`claude/alpha-run-1-effects`, knk-plugin `911eb2a`, not merged); 2026-10-26 (PandiO/knk-workspace#151, #156, #155)
 **Companion docs:** [ability definition reference](../../specs/custom-enchantments/ABILITY_DEFINITION_REFERENCE.md),
 [package B report](../../reports/alpha-tests/25-10-2026/2026-10-26-package-b-enchantments-freeze.md)
 
@@ -75,3 +76,33 @@ freeze also ends when the player leaves or dies. With this deployed the server-w
 
 Known limit: a staff `/fly on` given to a frozen player who couldn't fly before is taken away again when the freeze
 ends.
+
+## 5. What the victim sees: boss bars and the flash blackout (#169, #170)
+
+In review on knk-plugin `claude/alpha-run-1-effects` (`911eb2a`), **not merged, not live-tested**.
+
+**Boss bars ([#170](https://github.com/PandiO/knk-workspace/issues/170)).** A player hit by a timed debuff from a custom
+enchantment gets one boss bar per effect, `Poison · 4s`, counting down (refreshed every 5 ticks):
+
+| Source | Bar |
+|---|---|
+| Poison, Wither, Freeze, Blindness, Confusion | `Poison`, `Wither`, `Frozen`, `Blindness`, `Nausea` · remaining time |
+| Flash Chaos (on players around the user) | `Slowness` (5 s) and `Nausea` (12.5 s) |
+| Staff `/freeze` | static, full `Frozen` bar (no timer) until `/unfreeze`; back on the next join while still frozen |
+
+The same effect again restarts its bar (no second bar). A bar follows the real effect: milk or an early unfreeze ends
+it, a longer copy of the potion from elsewhere keeps its longer time. Timed bars go on death, every bar on quit. The
+durations are the combat values above (§ 1, § 3), so a change in the web app changes the bar too. The bars are the
+plugin's own, next to the navigation bar and any other boss bar. Creatures get nothing. Self-buffs (Strength,
+Resistance, Invisibility) have no bar: they are not debuffs.
+
+**Flash blackout ([#169](https://github.com/PandiO/knk-workspace/issues/169)).** A player caught by **Flash Chaos** no
+longer sees other players' name tags for as long as the nausea lasts (12.5 s); other players' views don't change. A
+second flash extends the blackout. It ends early on death and quit. The tab list, the sidebar (siege timer and
+objectives) and the health below names stay. Plain **Chaos** has no blinding debuff (damage and knockback only), so it
+doesn't hide name tags.
+
+How (for staff debugging): the victim is shown a private copy of their own scoreboard (the rank board, or their siege
+team's board in a match) with every team's name tag set to hidden; the copy follows the real board every second and the
+real board comes back afterwards. A siege match that starts or ends during a blackout swaps the board behind the copy.
+
