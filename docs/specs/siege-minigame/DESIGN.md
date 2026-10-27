@@ -5,7 +5,9 @@
 **Status:** Implemented — all MVP phases (1–9) merged into the default branches on 2026-09-26 and smoke-tested live
 by the developer; Phase 10 (Scheduled lobbies) is post-MVP, not started. Seven decisions with the developer (§0; D6
 changed after the smoke test); remaining open questions in §13.
-**Last updated:** 2026-10-25 (§6.8, §8.1, §8.3, §11.1, §13 Q5: rejoin after a disconnect, `/siege join <player>`,
+**Last updated:** 2026-10-27 (§7.6: gate damage and participation rewards, alpha test run 1
+[PandiO/knk-workspace#165](https://github.com/PandiO/knk-workspace/issues/165)/[#166](https://github.com/PandiO/knk-workspace/issues/166),
+on `claude/alpha-run-1-rewards` in knk-plugin, knk-web-api and knk-web-app, not merged); 2026-10-25 (§6.8, §8.1, §8.3, §11.1, §13 Q5: rejoin after a disconnect, `/siege join <player>`,
 defender pass-through — alpha test run 1, on knk-plugin `claude/alpha-run-1-siege`, not merged); 2026-10-06 (§9.3: v3's blanket non-OP item-pickup cancel is gone); 2026-09-27 (§3.9: location checks are admin-configured field-validation rules, not hard-coded);
 2026-09-26 synced with the smoke-tested build (area lockdown removed, gates removed for non-members, remembered
 spawn choice, capture feedback, reward multipliers, menus implemented, commands/API)
@@ -572,6 +574,24 @@ result without granting again. For each participant still in the match at the en
   × `CoinRewardHolding`/`ExpRewardHolding` (generalises v2's attackers-only rule to any team).
 - **Capture:** per objective the participant personally captured × `CoinRewardCapture`/`ExpRewardCapture`
   — at most once per participant per objective, so recapture ping-pong can't farm rewards.
+- **Gate damage** *(2026-10-27, #165, not merged)*: per full `GateDamageRewardStep` HP (default 100) the participant
+  took off the scenario's gates × `CoinRewardGateDamage`/`ExpRewardGateDamage` (defaults 10 / 1). The plugin counts,
+  per match member, the effective HP loss of the gates the match's lockdown holds: direct hits (the attacker, a
+  projectile's shooter, a primed TNT's source) and each igniter's share of a fire tick (the gate fire system's
+  per-block igniter split), also while the member is away within the rejoin window. Damage the siege gate rules
+  refuse (defenders, area gates) never reaches the gate, so it isn't counted. Reported as `gateDamage` per
+  participant with `complete`; the API stores whole HP on `SiegeMatchParticipant.GateDamage`.
+- **Participation** *(2026-10-27, #166, not merged)*: `CoinRewardParticipation`/`ExpRewardParticipation` (defaults
+  25 / 3) once per match when the participant was active (not AFK) for at least `ParticipationMinActivePercent`
+  (default 75, 0–100) % of their match time. Their **match time** runs from first joining the match to its end
+  (rejoins and time away within the rejoin window included, so a disconnect counts against them); **active** is the
+  part they were present and not AFK per the statistics AFK tracker (automatic AFK after
+  `statistics.afk.idle-seconds` counts from the last activity; `/afk` counts from the command). The plugin observes
+  this every siege tick and reports `activeSeconds` and `matchSeconds`; the API decides. Without statistics (or with
+  AFK off) every present second is active. A missing match time (an older plugin) pays only at 0 %. No daily cap
+  and no match-size rule (developer decision 2026-10-27). Stored on `SiegeMatchParticipant.ActiveSeconds`/`MatchSeconds`.
+- Leavers (left before the end) get none of these, as before. All amounts are edited per scenario on the scenario
+  wizard's Rewards step (form seed "SiegeScenario - Default (seed v2)").
 - **Coins** = base × `PersonalSalaryMultiplier` × rank multiplier (the product of the user's active
   `PermissionGroup.SalaryMultiplier`s, premium tiers included, via `RankMultipliersDto`). Salary's
   `GlobalMultiplier` is not applied. XP and gems are not multiplied. The reward DTO carries `baseCoins`,
@@ -582,7 +602,7 @@ result without granting again. For each participant still in the match at the en
   Not written to the admin `AuditLog` (not an admin action); the match rows are the audit trail.
 - In game the plugin prints the rewards in the shared KNG-16 `RewardMessageFormat`: "Siege reward: 250
   ×2 Personal ×1.5 Royal = +750 coins", then +XP / +gems lines and a grey "win · 2 objectives gained ·
-  1 capture" line.
+  1 capture" line (since #165/#166 also "· 312 gate damage · taking part" when those were paid).
 
 ## 8. Gates (D3)
 
