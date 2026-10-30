@@ -1,10 +1,10 @@
 # Shared NPC platform — traits, behavior and tutorial guide
 
 **Status:** Working design; agreed tutorial requirements recorded, platform architecture and implementation investigations still open. No NPC implementation delivered by this document.
-**Last updated:** 2026-10-06
+**Last updated:** 2026-10-30 (automatic navigation and shared optional lane overrides; developer decision, #146)
 **Linear:** [KNG-36](https://linear.app/kngpandi/issue/KNG-36/design-shared-npc-traits-and-pathfinding-platform)
 **Standing workspace branch:** none; `codex/kng-36-npc-platform-design` was merged into `main` on 2026-10-18 and deleted
-**Authority:** Developer discussion through 2026-10-06 and KNG-36 description/comments read on that date. Confirmed decisions below preserve that discussion; proposed interfaces and unresolved questions are explicitly labeled. This is the consolidated design reference for continued discussion, not a completed platform design or implementation plan.
+**Authority:** Developer navigation correction on 2026-10-30 and discussion through 2026-10-06 and KNG-36 description/comments read on that date. Confirmed decisions below preserve that discussion; proposed interfaces and unresolved questions are explicitly labeled. This is the consolidated design reference for continued discussion, not a completed platform design or implementation plan.
 
 ## 1. Purpose and scope
 
@@ -83,6 +83,19 @@ Distance sensing and event integration may be shared services rather than Citize
 Proposed robustness requirements for later implementation: one active guide per participant/tutorial session; idempotent summon/cleanup; ignore stale movement or dialogue callbacks after cleanup; isolate player responses. These are engineering proposals for review, not claims about existing support.
 
 ## 6. Movement and spawn details
+
+### Automatic navigation and optional lane overrides (confirmed 2026-10-30)
+
+Developer decision, tracked in [#146](https://github.com/PandiO/knk-workspace/issues/146): automatic navigation is the default. Reuse the roads infrastructure for suitable route legs and local walkable pathfinding (A* or the selected equivalent) for connections and off-road travel. NPCs must not require an admin-authored lane or be restricted to roads. This is a required design direction, not a claim that physical NPC execution is implemented.
+
+Optional admin lane overrides belong to the shared navigation trait/capability, not exclusively to Siege Survival. Guards, escorts and other consumers can reuse this support. A concrete override is configuration on the NPC or movement assignment; the generic trait must not hard-code scenario routes. Behavior chooses the destination, while navigation selects automatic routing or the applicable ordered routepoint override and performs local pathfinding between points.
+
+Overrides guide routing but do not bypass movement profiles, domain/gate permissions or physical collision. Report an unusable segment with a reason. Exact configuration schema, precedence between NPC and assignment overrides, interruption/resume, and whether an invalid override permits automatic fallback remain open design work under #146; do not silently ignore an override.
+
+For the first Siege gate-targeting slice, spawning immediately triggers target selection/path planning, followed by movement as soon as a usable path is ready; no intentional startup delay. This does not override the tutorial's distinct invitation/waiting behavior. The gate destination is a reachable attack/approach position, not a path through a closed door. Nearest-by-route target selection remains a proposal, not an approved universal policy.
+
+Acceptance additions: navigate from a configured spawn without any lane, use appropriate road and off-road legs, follow an optional override, report an invalid override without bypassing access/collision, and reuse the same navigation capability outside Siege. Benchmark physical execution and search budgets before choosing a library.
+
 
 ### Tutorial movement profile
 

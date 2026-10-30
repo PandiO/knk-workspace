@@ -1,18 +1,18 @@
 # Siege Survival — Defend the Castle
 
 **Status:** Gameplay design recorded from developer decisions; not implemented. Integration details marked proposed or to verify are not approved balance values.
-**Last updated:** 2026-09-30
+**Last updated:** 2026-10-30 (navigation decision supersedes mandatory lanes; #146)
 **Linear:** [KNG-50](https://linear.app/kngpandi/issue/KNG-50/siege-survival-endless-npc-waves-gate-repair-and-match-economy), child of [KNG-37](https://linear.app/kngpandi/issue/KNG-37/design-dungeon-waves-and-siege-pve-defense-mode)
 **Dependencies:** [KNG-36 NPC platform](https://linear.app/kngpandi/issue/KNG-36/design-shared-npc-traits-and-pathfinding-platform); existing Siege, gate runtime, inventory menus, item blueprints, lootboxes and currency ledger.
-**Authority:** The developer's 2026-09-30 conversation and corrections define this mode. Existing PvP Siege rules remain unchanged. This document is the canonical survival specification, not a claim that the proposed entities, endpoints or gameplay already exist.
+**Authority:** The developer's 2026-09-30 conversation and corrections define this mode, with mandatory lanes superseded by the 2026-10-30 automatic-navigation/optional-override decision. Existing PvP Siege rules remain unchanged. This document is the canonical survival specification, not a claim that the proposed entities, endpoints or gameplay already exist.
 
 Related: [Siege design](../siege-minigame/DESIGN.md), [Siege implementation status](../siege-minigame/IMPLEMENTATION_PLAN.md), [scenario authoring](../../guides/authoring-a-siege-scenario.md), [lootboxes](../lootboxes/DESIGN.md), [currency payments](../currency-payments/DESIGN.md), [gate runtime](../gate-structure-animation/INDEX.md), [implementation plan](IMPLEMENTATION_PLAN.md).
 
 ## 1. Goal and first-release scope
 
-A cooperative, lane-based survival variant within Siege. One human defender team protects a town/castle against an NPC attacker team. Waves are discrete, endless and increasingly difficult, inspired by Call of Duty Zombies. Gate-linked objectives form successive defensive lines. Players aim for the highest number of completed waves; there is no final wave or ordinary victory condition.
+A cooperative survival variant within Siege. One human defender team protects a town/castle against an NPC attacker team. Waves are discrete, endless and increasingly difficult, inspired by Call of Duty Zombies. Gate-linked objectives form successive defensive lines. Players aim for the highest number of completed waves; there is no final wave or ordinary victory condition.
 
-The first release includes BOTH inventory modes, cooperative gate repairs, explicit NPC spawnzones and lane routepoints, special waves, personal transferable match currency, fixed equipment purchases AND a Mystery Box based on the existing lootbox functionality. Mystery Box is not deferred. Material costs, repair puzzles and extra repair cooldowns are excluded from this release.
+The first release includes BOTH inventory modes, cooperative gate repairs, explicit NPC spawnzones and optional lane overrides, special waves, personal transferable match currency, fixed equipment purchases AND a Mystery Box based on the existing lootbox functionality. Mystery Box is not deferred. Material costs, repair puzzles and extra repair cooldowns are excluded from this release.
 
 Keep the existing lobby, scenario, team identity, gate/objective references, spawnpoint selection, match history and restoration infrastructure wherever their semantics fit. NPCs are match actors, not fake player accounts. Do not apply player-team population checks to the NPC team.
 
@@ -43,8 +43,8 @@ Reuse Siege's outer matchmaking/vote/hub/match/cooldown lifecycle. Proposed surv
 
 1. At entry, durably snapshot the player's ordinary state before teleport or inventory replacement; snapshot affected gates before applying match overrides.
 2. Select scenario, equipment mode and difficulty; freeze that configuration revision for the match. All human participants join the defender team. Initial objective owners and gate states establish the castle defenses; initial NPC spawnzones are enabled.
-3. Start wave 1 after the preparation countdown. Select its normal or special profile, generate the finite wave population and distribute it over configured lanes/spawnzones with configured pacing.
-4. A wave completes only when its planned spawn queue is exhausted AND no wave enemies remain alive. A temporarily empty lane or a spawn delay cannot finish a wave. Technical despawns/stuck-enemy recovery must not count as earned kills; define recovery accounting explicitly.
+3. Start wave 1 after the preparation countdown. Select its normal or special profile, generate the finite wave population and distribute it over configured spawnzones with configured pacing.
+4. A wave completes only when its planned spawn queue is exhausted AND no wave enemies remain alive. A temporarily empty combat area or a spawn delay cannot finish a wave. Technical despawns/stuck-enemy recovery must not count as earned kills; define recovery accounting explicitly.
 5. Record the completed wave and eligible contributions. Enter intermission, respawn dead players with valid spawn choices, and display the configurable countdown. Survivors remain in play. No implied automatic gate repair or gear refill for survivors.
 6. Start the next, harder wave. Repeat without a configured final wave.
 7. Main-objective loss or an active-wave team wipe goes straight to ENDING: cancel remaining spawns and repairs, freeze results, settle permanent rewards, remove match entities/items, restore players and gates, then run ordinary lobby cooldown.
@@ -61,7 +61,7 @@ Reuse a SiegeObjective referencing a scenario-selected GateStructure. The main o
 
 | Objective/door state | Required behavior |
 |---|---|
-| Defender-held; intact closed door | Real door blocks the lane; NPCs may damage it. |
+| Defender-held; intact closed door | Real door blocks the route; NPCs may damage it. |
 | Defender-held; capturezone reachable through a valid route | NPCs normally advance to capture the objective, engaging nearby defenders as appropriate. |
 | Defender-held; route blocked by a selected breakable door | NPCs attack that door, then reroute through the breach. |
 | Defender-held; destroyed door | Opening is traversable, objective remains held, repair allowed, deeper spawnzones remain inactive. |
@@ -70,7 +70,7 @@ Reuse a SiegeObjective referencing a scenario-selected GateStructure. The main o
 
 A destroyed door has no remaining damageable body during repair. An intact closed door MUST be damageable by enemies; an ambiguous voice-transcript sentence about a closed door being invulnerable cannot override the repeated break-through design. Do not grant general invulnerability to closed gates.
 
-Default NPC route logic: choose an eligible downstream defender objective on the assigned lane; if its capturezone is physically reachable without breaching, move there; otherwise select the blocking breakable gate on that lane. After gate destruction, repair closure or objective capture, reassess the route. Route eligibility must include planned breach actions: a blocked-but-breakable gate does not make the entire spawnzone unusable. Avoid arbitrary straight-line nearest-objective selection through walls or another lane.
+Default NPC route logic: choose an eligible defender objective under the scenario rules; if its capturezone is physically reachable without breaching, move there; otherwise select a blocking breakable gate on a valid candidate route. After gate destruction, repair closure or objective capture, reassess the route. Route eligibility must include planned breach actions: a blocked-but-breakable gate does not make the entire spawnzone unusable. Avoid arbitrary straight-line nearest-objective selection through walls or forbidden areas.
 
 Players within an aggro radius can temporarily divert enemies. Configure aggro range, leash distance and return behavior so a player cannot stall a wave by dragging its NPCs indefinitely outside the battle. A proposed difficulty option forces gate-first attacks even when an alternative capture route exists. Exact AI priorities, capture weight per NPC/archetype and chase parameters need balance tests, not invented constants.
 
@@ -96,9 +96,13 @@ No extra cooldown after completion. A subsequent destruction starts a new repair
 
 Reuse existing obstruction/collision handling; do not introduce a separate 'zone must be empty' repair restriction. Test both the initial reconstruction of a destroyed door and subsequent animation: calling a respawn API that immediately places closed blocks may bypass animation collision handling. A jammed closure must report its actual state; completed work does not imply physically CLOSED while obstructed. Once reconstructed, normal enemy damage applies; do not reapply full health on every animation tick or retry.
 
-## 6. Spawnzones and lanes — Defend the Castle
+## 6. Spawnzones, automatic navigation and optional lanes — Defend the Castle
 
-Author multiple NPC spawnzones within the scenario, each containing valid spawnpoints or a bounded spawn area, a lane assignment, wave/profile eligibility and an objective-ownership activation condition. Provide explicit lane routepoints guiding enemies through the intended defensive sequence; local pathfinding traverses between these points and handles combat detours.
+Author multiple NPC spawnzones within the scenario, each containing valid spawnpoints or a bounded spawn area, wave/profile eligibility and an objective-ownership activation condition. A lane assignment is optional. Admins must be able to configure an initial outside-castle spawn and later objective-unlocked spawnzones without drawing routes.
+
+**Confirmed developer correction, 2026-10-30 (#146):** NPCs use automatic navigation by default, combining suitable existing road infrastructure with local A* / walkable pathfinding, including off-road routes. An admin may supply an ordered lane override when automatic routing does not yield the intended route. Override support belongs to the shared NPC navigation capability and is reusable outside this mode; Siege supplies configuration, eligible targets and match rules. Local pathfinding connects override points while preserving access and collision constraints. See [shared navigation contract](../npc-platform/DESIGN.md#automatic-navigation-and-optional-lane-overrides-confirmed-2026-10-30).
+
+For the initial gate-only slice, a spawned NPC immediately starts target selection and route planning, then moves when a usable path is available, without an intentional waiting period. It approaches a reachable attack position at an eligible gate. Exact target ranking remains open. This focused slice does not remove the full mode's player/objective behavior requirements.
 
 Example progression: outside-castle zone initially active → NPCs breach outer gate → NPCs capture outer objective → courtyard zone becomes eligible → next defensive line. **Breach alone does not activate courtyard spawns.** An intact but open door likewise does not advance the spawn frontier.
 
@@ -108,11 +112,13 @@ The aim is for new NPCs to appear near the current fighting area. Proposed zone 
 
 Recapture is optional and off by default. Proposed when enabled: reevaluate zone prerequisites against current ownership, stop future spawns in zones that become ineligible, preserve existing NPCs and move the spawn frontier outward. Confirm this policy before enabling recapture scenarios.
 
-Physical NPC navigation is distinct from player `/navigate` visual guidance. KNG-27's road graph may help choose high-level lanes but does not by itself prove NPC traversal, crowd handling or gate breach behavior. Start with the existing NPC pathfinder plus explicit waypoints if it passes the representative castle tests; extend it only for demonstrated gaps. KNG-36 defines the shared NPC platform dependency.
+Physical NPC navigation is distinct from player `/navigate` visual guidance. Road routing and walkable path search do not by themselves prove entity traversal, crowd handling or gate breach behavior. Compare reusable KnK pathfinding and candidate movers on the castle map, covering both automatic routing without lanes and optional overrides. KNG-36 defines the shared platform boundaries; #146 owns the follow-up design. No Citizens or behavior-tree library is selected by this decision.
+
+Validation must include a complete scenario with no authored lanes, a configured override followed in order, an invalid override reported without bypassing collision/access, and route reassessment after gate destruction or repair. Automatic fallback from an invalid override and override precedence remain to be designed in #146. Objective-driven spawn unlocks and wave accounting remain unchanged.
 
 ## 7. Wave scaling and special rounds
 
-Per difficulty, configure enemy count/composition growth, health, movement speed, attack damage, gate damage, capture contribution, spawn pacing, lane distribution and repair rate. Snapshot config at match start. Include server limits for live NPCs and spawning/pathfinding work; a large late-wave population can queue rather than spawning every enemy simultaneously.
+Per difficulty, configure enemy count/composition growth, health, movement speed, attack damage, gate damage, capture contribution, spawn pacing, spawnzone distribution and repair rate. Snapshot config at match start. Include server limits for live NPCs and spawning/pathfinding work; a large late-wave population can queue rather than spawning every enemy simultaneously.
 
 Special profiles can replace a normal wave at an interval (for example every fifth wave) AND at explicit wave numbers. A wolf-only round is an example, not a required specific mob. Profiles can specify different archetypes, amounts and scaling. Configuration supports both scheduling methods together, not only an exclusive choice.
 
@@ -157,22 +163,22 @@ These are required conceptual records, not approved class names or database migr
 | Record/configuration | Required fields/relationships |
 |---|---|
 | Survival scenario settings | SiegeScenario reference, mode, human/NPC team references, main objective, inventory mode, difficulty profile, intermission timing, recapture policy, baseline loadout, reward-policy revision. |
-| Difficulty/wave profile | Scaling rules, archetype composition, pacing, per-lane weights, capture/gate damage, aggro/leash values, repair work rate, resource limits. |
-| Spawnzone | Scenario, location bounds/points, lane, initial availability, objective prerequisite ALL/ANY, eligibility/weight. |
-| Lane | Ordered routepoints, successive objectives/gates, zone references and optional alternate route. |
+| Difficulty/wave profile | Scaling rules, archetype composition, pacing, spawnzone weights, capture/gate damage, aggro/leash values, repair work rate, resource limits. |
+| Spawnzone | Scenario, location bounds/points, optional lane override, initial availability, objective prerequisite ALL/ANY, eligibility/weight. |
+| Optional lane override | Shared navigation configuration with ordered routepoints, referenced by an NPC or movement assignment; optional scenario bindings. No mandatory route per spawnzone. |
 | Special-wave schedule | Explicit wave numbers and/or interval/start offset, profile reference, deterministic priority. |
 | Purchase/Mystery Box point | Scenario, location, price, pool/product references and interaction limits. |
 | Runtime/checkpoint | Match/config ids, reached/completed wave, pending/alive NPC accounting, owners, repair work, personal match balances and transaction ids, item/drop/delivery tracking, contributions and pending settlement. |
 
 Plugin owns live simulation and main-thread world mutations; API owns configuration, durable match results and permanent ledger grants. Pure wave/repair/scheduling logic belongs in Bukkit-free core. NPC platform provides combat, actor identity and path requests. Server validates all purchases/transfers/capture/repair membership; no client-supplied wave number or payout is trusted. Changes made in the editor apply to future matches, not the running snapshot.
 
-Readiness validates human/NPC role identity, one main objective, compatible selected gates and capture locations, valid baseline gear/pools, initial spawnzone and lane routepoints, nonzero scaling/repair parameters, valid special-wave schedule and dependency references. NPC teams do not need fake user rows or ordinary player spawn requirements. Use existing FormConfiguration/DisplayConfiguration and configured location-validation rules; avoid hard-coded assumptions that all enemy spawns must be inside the town.
+Readiness validates human/NPC role identity, one main objective, compatible selected gates and capture locations, valid baseline gear/pools, an initial spawnzone, optional override routepoints when configured, nonzero scaling/repair parameters, valid special-wave schedule and dependency references. NPC teams do not need fake user rows or ordinary player spawn requirements. Use existing FormConfiguration/DisplayConfiguration and configured location-validation rules; avoid hard-coded assumptions that all enemy spawns must be inside the town.
 
 ## 11. Player/admin experience and observability
 
 Player HUD: wave number/type, enemies remaining plus queued spawns, pause countdown, objective ownership/pressure, gate state/health, repair work/contributors, own temporary balance and spectating/next-respawn status. Equipment purchases, Mystery Box odds/pool description and teammate transfers use the existing inventory-menu conventions. Result screen distinguishes match currency from permanent coins/gems/XP.
 
-Admin authoring: select survival mode, difficulty and inventory variant; reference gates/objectives; capture NPC zones/spawnpoints, lane waypoints and purchase locations in-game through existing location tools; preview wave schedules/compositions/repair duration; run readiness. Defend the Castle is the first representative scenario. Label future authoring controls as planned until implemented; the existing Siege guide describes current PvP tooling only.
+Admin authoring: select survival mode, difficulty and inventory variant; reference gates/objectives; capture NPC zones/spawnpoints, optional override waypoints and purchase locations in-game through existing location tools; preview wave schedules/compositions/repair duration; run readiness. Defend the Castle is the first representative scenario. Label future authoring controls as planned until implemented; the existing Siege guide describes current PvP tooling only.
 
 Record wave start/end, enemy spawn/death/removal reasons, target/path failures, objective capture, door destruction/repair, active repair contribution, currency earning/spend/transfer and box roll/delivery, player death/respawn/leave, cleanup and settlement retries. Aggregate per match/wave/player for balance and debugging; integrate with the shared player-telemetry design when available. Do not invent a full replay recorder as part of this feature. Track tick time, live NPC/item counts, spawn backlog, path work and stuck enemies.
 
@@ -193,7 +199,7 @@ Read-only checks used current workspace main `98372da0a54de6384334290208d7081628
 2. Verify destroyed-door reconstruction uses collision handling, including large NPCs; choose the repair interaction input after Paper testing.
 3. Confirm destroyed-only repair and per-door health/work semantics for multi-door structures; define animation-time damage/jam transitions.
 4. Confirm old-zone weighting and recapture zone deactivation; default recapture remains disabled meanwhile.
-5. Validate physical waypoint pathfinding, reachability including breach edges, chase leash and NPC capture weights with the castle map.
+5. Validate automatic physical navigation without lanes and optional waypoint overrides, reachability including breach edges, chase leash and NPC capture weights with the castle map.
 6. Confirm special-schedule collisions, purchase/spectator-transfer access, late-join/disconnect/abort policies and whether side-capture reduction is disabled.
 7. Supply progression targets and review resulting reward curves. Configure gameplay values with previews, not fixed invented defaults.
 

@@ -1,7 +1,7 @@
 # Road Navigation — Last-mile walkable pathfinding (design)
 
 **Status:** Design decided — **Phases A-C implemented** (knk-core `roads/walk/`, knk-paper `navigation/walk/` + direct-mode wiring, unmerged, knk-plugin `claude/navigation-walkable-path` `305829b`, 2026-10-02); live test and Phase D next. Reviewed by the developer on 2026-10-02 (§11): decided items 1-4, 5 (pending live test), 6, 8; item 7 (scope) decided. No open decisions remain except the live test of item 5.
-**Last updated:** 2026-10-15 (rev. 13: §10 Phase D step 1, a player shut in close to the road, KNG-124; rev. 12: §6 "no way out" on walk paths, KNG-121; rev. 11: §5/§9 climb allowance for tall buildings, KNG-108; rev. 10: §10 Phase D step 1, the walk to the road, KNG-75; rev. 9: §11-5 no straight line after a failed search, finding N8; rev. 8: §4/§9 wall cost, finding N7; rev. 7: §11-5 partial paths implemented; rev. 6: §5/§9 detour allowance, live-test finding N2; rev. 5: §10 "Phase C status"; rev. 4: §10 "Phase B status"; rev. 3: §10 "Phase A status"; rev. 2: ladders, interact-gated doors, chunk-loading rationale, §13 KNG-36)
+**Last updated:** 2026-10-30 (NPC reuse clarification in §13; no implementation change)
 **Linear:** [KNG-51](https://linear.app/kngpandi/issue/KNG-51/navigation-last-mile-walkable-pathfinding-for-direct-modeoff-road-legs)
 (split out of [KNG-27](https://linear.app/kngpandi/issue/KNG-27/road-navigation-auto-detected-road-graph-junctionsendpoints-from-road))
 **Parent design:** [DESIGN.md](DESIGN.md) §6.2 ("real off-road pathfinding is Phase 6" — this document is the
@@ -388,7 +388,7 @@ the render distance; lag spike (TPS) while a path is computed.
 [specs/siege-survival/DESIGN.md](../siege-survival/DESIGN.md) §6, §12. KNG-36 is a **design** issue for the NPC platform:
 it must "integrate with KNG-27 road navigation only where it actually solves NPC movement" and cover off-road,
 vertical movement, doors/gates, crowds, changing WorldGuard access, chunk lifecycle, and budgets/benchmarks for path
-computation. Siege survival's plan is "start with the existing NPC pathfinder plus explicit waypoints; extend it only
+computation. The original Siege survival plan (superseded for mandatory waypoints on 2026-10-30 below) was "start with the existing NPC pathfinder plus explicit waypoints; extend it only
 for demonstrated gaps". (The V3 plugin has no Citizens usage today — a grep on `claude/road-navigation` found none — so
 "the existing NPC pathfinder" is V1 Citizens knowledge KNG-36 is meant to mine; not verified here.)
 
@@ -413,13 +413,9 @@ a `MovementProfile` parameter in the extraction (a larger NPC needs more clearan
 **KNG-51 will not do:** crowd avoidance, following the path with an entity, repath-on-collision, per-NPC budgets,
 faction access rules. Those are KNG-36's.
 
-**How KNG-36 would plausibly use it.** Siege lanes are explicit waypoints with "local pathfinding between these
-points": bounded segments of tens of blocks — the same shape as the last-mile search — so `WalkPathfinder` between
-consecutive waypoints, executed by whatever mover KNG-36 picks (whether Citizens can follow a precomputed waypoint list
-is a KNG-36 question). The KNG-27 road graph helps only for long-distance routing (a travelling NPC, DESIGN §8 Phase 6
-"NPC routing with the same `AccessPolicy` for NPC factions"), and it needs this search for its off-road ends too.
-Siege-survival §13 item 5 already asks to validate physical waypoint pathfinding on the castle map: KNG-36 should
-benchmark `roads/walk/` against the Citizens navigator there, rather than assume either.
+**Updated NPC navigation decision (2026-10-30, [#146](https://github.com/PandiO/knk-workspace/issues/146)).** Automatic routing is the default: combine suitable road-graph routes with bounded local walkable searches, including off-road legs. Siege admins configure spawnpoints and objective-based unlocks without mandatory lanes. Optional ordered lane overrides are a shared NPC navigation capability, reusable by guards and escorts as well as Siege. Local search connects those points under the actor's movement/access profile; overrides do not bypass collision or authorization.
+
+Reuse of this search layer does not select an entity mover. Benchmark KnK search plus a physical executor against suitable alternatives on the castle map, both with and without an override; cover crowds, gate changes, path failures and budgets. Override configuration precedence and invalid-override fallback remain open. See [NPC platform](../npc-platform/DESIGN.md#automatic-navigation-and-optional-lane-overrides-confirmed-2026-10-30) and [Siege Survival §6](../siege-survival/DESIGN.md#6-spawnzones-automatic-navigation-and-optional-lanes--defend-the-castle). Earlier mandatory-lane wording is superseded. KNG-36's design publication is closed; #146 continues NPC behavior/navigation design.
 
 **Sequencing:** Phases 0-B do not depend on KNG-36 (backlog, itself blocked by KNG-35) and must not wait for it.
 The risk to manage is the reverse: KNG-36's requirements widening KNG-51. Keep KNG-51 to player guidance and let KNG-36

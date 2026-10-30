@@ -1,7 +1,7 @@
 # Siege Survival — Implementation Plan
 
 **Status:** Planned; documentation only. No gameplay code implemented in KNG-50's design publication.
-**Last updated:** 2026-09-30
+**Last updated:** 2026-10-30 (automatic navigation and optional lane overrides; #146)
 **Linear:** [KNG-50](https://linear.app/kngpandi/issue/KNG-50/siege-survival-endless-npc-waves-gate-repair-and-match-economy), child of KNG-37; shared NPC platform dependency KNG-36.
 **Design:** [DESIGN.md](DESIGN.md) is authoritative for gameplay. Proposed integration choices and open clarifications remain explicitly marked there.
 **Documentation branch:** `codex/kng-50-siege-survival-design`; publish to workspace main explicitly authorized by Pandi. Future code work must claim its own files and check standing branches before starting.
@@ -12,14 +12,14 @@ Read current AGENTS.md and shared instructions; refresh ACTIVE_SESSIONS and publ
 
 Inspect current Siege actor/roster/capture/lifecycle, player vault and inventory guards, gate animation/health/ownership APIs, lootbox roll/reel and pending delivery, ledger/rewards and FormConfiguration authoring. Record reusable paths and actual required changes. Check KNG-36's minimal NPC vertical slice before selecting an adapter; keep actor identity distinct from persistent User rows. KNG-27 can supply high-level routes only after its status and fitness are verified.
 
-Resolve DESIGN section 13 clarifications in the issue, preserving the confirmed gameplay. Author a representative Defend the Castle scenario with multiple gate lines, alternate routes, several NPC spawnzones, lane routepoints and repair/shop/box points. No reward amounts until Pandi supplies progression targets.
+Resolve DESIGN section 13 clarifications in the issue, preserving the confirmed gameplay. Author a representative Defend the Castle scenario with multiple gate lines, alternate routes, several NPC spawnzones, optional lane overrides and repair/shop/box points; also validate a scenario without any authored lanes. No reward amounts until Pandi supplies progression targets.
 
 ## 2. Phases and deliverables
 
 | Phase | Work | Exit condition |
 |---|---|---|
-| 1 — contracts/config | Add survival mode settings, role-aware readiness, wave/difficulty/special profiles, NPC zones/lanes and purchase references. Design immutable match configuration and result/checkpoint contracts. | CRUD and configured location rules validate a castle scenario; PvP scenario validation unchanged. |
-| 2 — wave runtime/NPC slice | Implement wave queue/alive accounting, intermission respawn/spectating, wipe/main-objective termination, lane traversal, gate breach and NPC capture membership. | One complete wave, breach and capture work on the castle; no NPC-team auto-forfeit. |
+| 1 — contracts/config | Add survival mode settings, role-aware readiness, wave/difficulty/special profiles, NPC zones/optional shared lane overrides and purchase references. Design immutable match configuration and result/checkpoint contracts. | CRUD and configured location rules validate a castle scenario; PvP scenario validation unchanged. |
+| 2 — wave runtime/NPC slice | Implement wave queue/alive accounting, intermission respawn/spectating, wipe/main-objective termination, automatic navigation and optional override traversal, gate breach and NPC capture membership. | One complete wave, breach and capture work on the castle; no NPC-team auto-forfeit. |
 | 3 — repairs/frontier | Add shared repair work, contributor channel, completion/animation integration, ownership cancellation and objective-driven zone frontier. | A04–A08 pass, including destroyed-door reconstruction and general entity collision tests. |
 | 4 — BOTH equipment modes/economy | Preserve own-gear safeguards; add match loadout, death drops, pickup lifetime/cleanup, personal balance, transfers, fixed purchases and Mystery Box match adapter. | A09–A11 pass; no real inventory/instance/currency leaks. Both modes are required for first release. |
 | 5 — specials/rewards/recovery | Add both special schedules, configurable reward inputs, API settlement/idempotency, persistent results/pending payout and restoration/restart behavior. | A01/A12–A14 pass; reward calibration preview works and final rates await review. |
@@ -32,7 +32,7 @@ Do not split the first release by deferring one inventory mode or Mystery Box. P
 
 Pure/core checks: additive repair work and pause/cancel semantics; wave queue completion; difficulty composition; explicit/interval schedule resolution; spawnzone prerequisites/recapture; reached-versus-completed accounting. API checks: configuration/readiness, authoritative reward calculation, duplicate/retried settlement, atomic match transfers/purchases and one-roll-one-delivery. Regression checks: ordinary Siege player-only PvP, inventory restore, drop guards, non-member gates, lootbox world quotas/claims, ledger and title progression.
 
-Live castle checks: NPC and player obstruction handling at reconstructed/closing gates, large NPC bounding boxes, mobs crowding narrow lanes, alternate routes and blocked-but-breakable paths, repaired closures requiring reroute, side-objective progression, two repairers under combat, last-player death/main capture race, intermission pickup/spawn selection and Mystery Box interruption.
+Live castle checks: NPC and player obstruction handling at reconstructed/closing gates, large NPC bounding boxes, mobs crowding narrow lanes, automatic road/off-road routes without authored lanes, optional override routes and invalid-override diagnostics, and blocked-but-breakable paths, repaired closures requiring reroute, side-objective progression, two repairers under combat, last-player death/main capture race, intermission pickup/spawn selection and Mystery Box interruption.
 
 Fault checks: API loss during start/repair purchase/result reporting; plugin restart while inventory is replaced or a box reel is running; duplicate request delivery; cleanup and settlement retries; disconnect/no remaining humans; chunk unload and stuck enemies. Restore ordinary player/gate state without issuing duplicate equipment or rewards. Proposed first release aborts on restart instead of promising match resume.
 
