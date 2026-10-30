@@ -21,7 +21,7 @@ Keep the existing lobby, scenario, team identity, gate/objective references, spa
 | ID | Confirmed decision |
 |---|---|
 | S01 | Endless escalating waves; configurable pause between waves. No fixed last wave. |
-| S02 | One player defender team and one NPC attacker team. NPCs target players and objectives. |
+| S02 | One player defender team and one NPC attacker team. NPCs target players and objectives, may breach eligible gates, and can be occupied by eligible distractors. |
 | S03 | Defeat on capture of the main objective OR all remaining defenders dying during a wave. Losing a side objective does not end the game. |
 | S04 | Dead players spectate until the pause preceding the next wave; reuse available Siege spawnpoints/held-objective spawn choices. |
 | S05 | Objective recapture is configurable, default off. Main-objective capture always ends the match. |
@@ -75,6 +75,20 @@ Default NPC route logic: choose an eligible defender objective under the scenari
 Players within an aggro radius can temporarily divert enemies. Configure aggro range, leash distance and return behavior so a player cannot stall a wave by dragging its NPCs indefinitely outside the battle. A proposed difficulty option forces gate-first attacks even when an alternative capture route exists. Shared utility scoring, switch margin and minimum commitment are confirmed below; numerical preferences, capture weight per NPC/archetype and chase parameters still need balance tests, not invented constants.
 
 NPC presence must participate in the objective capture calculation as the attacker team; the current player-only roster scan is insufficient. Reuse configurable capture/contest feedback rather than equating zone capture with gate health damage. Document whether existing side-capture reduction is enabled for this scenario; proposed default is off until explicitly balanced for survival.
+
+### Fourth target type: distractor (confirmed 2026-10-30)
+
+Siege NPC target types are players, gates, objectives and **distractors**. The confirmed distractor action is to approach a reachable position near the distractor and then stand there to occupy the NPC. Do not attack or damage the distractor. It is a temporary target with a position, validity/lifetime and attractiveness used by target selection.
+
+The physical representation is deliberately undecided: dropped item, entity or block are alternatives, not a requirement to implement all three. A representation adapter supplies the logical target and invalidates it when its backing object disappears or its lifetime expires. The shared behavior must not depend on a particular Minecraft representation.
+
+Apply hard eligibility/match isolation before utility scoring. The distractor participates in the existing preference/proximity comparison, switch margin and minimum commitment; it does not automatically force aggro or bypass those rules. At arrival, remain near it while it is valid and remains the selected target. Once commitment expires, a sufficiently higher-scoring eligible target may replace it under the usual policy; lifetime is not an unconditional forced hold.
+
+Disappearance/expiry invalidates the target immediately, including during commitment, and triggers target reevaluation. Navigation failure uses the existing bounded recovery and failure-to-behavior contract. Standing near a distractor does not damage it or count as capturing an objective.
+
+Still open under #146: item/entity/block choice and adapter, creation/activation/ownership and removal mechanics, lifetime and attraction values, detection/arrival range, crowd placement and behavior if the distractor itself moves. No guaranteed lure, explosion, damage, purchase/consumption mechanic or numeric default is implied.
+
+Acceptance: an eligible distractor can win scoring; NPC approaches and stands without attacking it; a lower-scoring distractor does not force a switch; commitment and switch margin remain effective; expiry/removal releases even a committed NPC; a distractor in another match is excluded; an unreachable distractor reports navigation failure rather than granting a teleport or bypass.
 
 ### Objective and gate eligibility overrides (confirmed 2026-10-30)
 

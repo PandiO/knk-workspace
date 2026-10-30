@@ -104,6 +104,14 @@ The shared eligibility interface evaluates an NPC, candidate target, intended ac
 
 Check required intermediate actions too: a permitted destination does not authorize damaging a forbidden blocking gate. Route planning/execution must respect that result, including during lane fallback. Denying damage does not itself deny passage through an open, otherwise authorized doorway. Explicit allow does not increase utility or bypass physical capability, independent authorization or match isolation. A target becoming forbidden invalidates the action immediately despite minimum commitment. See [Siege policy](../siege-survival/DESIGN.md#objective-and-gate-eligibility-overrides-confirmed-2026-10-30). Contract names and schema remain proposed; no implementation is claimed.
 
+### Logical distractor target and idle action (confirmed 2026-10-30)
+
+Provide a reusable logical temporary-target boundary for an NPC distractor: position, validity/expiry and configurable attractiveness. The target's backing representation (dropped item, entity or block) is not selected. A platform adapter exposes it to shared selection without making behavior depend on that representation.
+
+The confirmed behavior is approach a reachable nearby position, then stand there without attacking the distractor while it remains the selected valid target. Eligibility, preference/proximity scoring, minimum commitment and switch margin apply normally; there is no implicit forced-aggro exception. Removal or expiry immediately invalidates the goal and releases commitment. Ordinary score-driven switching remains possible after commitment, so the lifetime does not force an unconditional hold. Navigation failure follows the existing recovery/result contract.
+
+Siege is the first consuming mode, but target selection and approach/idle behavior are shared building blocks. Lifetime, ranges, weights, crowd placement, moving-distractor handling and creation/adapter details remain open in [#146](https://github.com/PandiO/knk-workspace/issues/146); see [Siege distractor requirements](../siege-survival/DESIGN.md#fourth-target-type-distractor-confirmed-2026-10-30). This is design only.
+
 ## 6. Movement and spawn details
 
 ### Automatic navigation and optional lane overrides (confirmed 2026-10-30)

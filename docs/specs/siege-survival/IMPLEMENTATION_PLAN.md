@@ -30,6 +30,9 @@ Do not split the first release by deferring one inventory mode or Mystery Box. P
 
 ## 3. Validation and recovery plan
 
+Distractor checks (2026-10-30, #146): fourth logical target type; approach then stand nearby without attacking; normal eligibility/scoring/commitment/switch-margin rules; immediate invalidation on expiry/removal; cross-match exclusion; bounded navigation failure handling. Validate that a higher-scoring alternative can replace it after commitment, rather than treating lifetime as forced aggro. Physical item/entity/block adapter, creation mechanics, lifetime/range/weight values and crowd placement remain open before implementation.
+
+
 Eligibility override checks (2026-10-30, #146): standard/allow/deny independently for objectives and gates; filter before scoring; denied gates excluded as intermediate breach actions even for allowed objectives; permitted alternative route or explicit failure; gate allow does not authorize a denied objective; allow does not boost scores or bypass match/access/physical rules. Gate attack denial alone must not block otherwise permitted passage through an open gate. Configuration/schema and gate-versus-door binding still need implementation design.
 
 
