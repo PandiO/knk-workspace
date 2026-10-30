@@ -26,7 +26,7 @@ KNG-36 is sequenced after [KNG-35](https://linear.app/kngpandi/issue/KNG-35). It
 | Progression system | Owns completable steps, conditions and durable per-player progress | Separate from NPC traits and behavior |
 | Platform adapter | Executes platform-neutral intentions in Paper/Citizens or another runtime | Required design boundary; implementation choice pending audit |
 
-Do not embed tutorial state, spawn coordinates or permission inheritance from a nearby player inside a generic movement trait. Avoid conflicting patrol, combat and dialogue movement requests through behavior arbitration; its priority/interruption policy still needs design.
+Do not embed tutorial state, spawn coordinates or permission inheritance from a nearby player inside a generic movement trait. Avoid conflicting patrol, combat and dialogue movement requests through behavior arbitration; target scoring, switch margin and minimum commitment are agreed in §5a; wider interruption contracts remain open.
 
 ## 3. Confirmed decisions
 
@@ -81,6 +81,22 @@ These describe responsibilities to evaluate, not final API/class names.
 Distance sensing and event integration may be shared services rather than Citizens traits. Audit first. Lifecycle must remain distinct from movement even if a consuming behavior calls both.
 
 Proposed robustness requirements for later implementation: one active guide per participant/tutorial session; idempotent summon/cleanup; ignore stale movement or dialogue callbacks after cleanup; isolate player responses. These are engineering proposals for review, not claims about existing support.
+
+## 5a. Shared target scoring and commitment (confirmed 2026-10-30)
+
+Developer decisions under [#146](https://github.com/PandiO/knk-workspace/issues/146) establish utility-based target selection with two complementary stability controls. This belongs to shared behavior arbitration, not to navigation or a Siege-only implementation.
+
+1. Filter candidates through hard eligibility rules first: permitted target/action, faction/team and match membership where relevant, and hard pursuit constraints. High scores never override these rules.
+2. Compare eligible goals using configurable target-type preference and proximity. Closer candidates have higher proximity contribution; do not multiply preference by raw distance and thereby reward distant targets. A preference-times-normalized-proximity expression is an illustrative model; the final curve, normalization and numerical weights are not approved defaults.
+3. On adopting a target/behavior decision, start a configurable **minimum commitment duration**. While the current action remains valid and unfinished, ordinary score changes do not replace it before that duration expires. Continue updating the route to the same moving target; navigation replanning is not a new target decision.
+4. After the minimum duration, allow score-driven replacement only when the challenger exceeds the current target by a configurable **switch margin** (hysteresis). Duration expiry permits reevaluation, not a mandatory switch. Exact absolute/relative margin semantics, equality/tie handling and reevaluation cadence remain open.
+5. Hard invalidation ends commitment immediately: target death, leaving the match, authorization loss, exceeding the hard pursuit limit, or terminal unreachable/failure after the navigation recovery policy. Ordinary route recalculation or temporary blockage is not automatically terminal failure. Completed actions may advance immediately; the hold must not force continued attacks on a destroyed gate.
+
+Minimum commitment and switch margin are configurable by NPC profile, with per-behavior configuration supported in the design. Exact schema/override precedence and numeric tuning remain open. Each NPC owns its current target and commitment state; the shared arbitration layer ensures one movement owner and delegates route execution to navigation. On invalidation/failure it decides whether to resume the previous assignment, choose another target, wait or stop under the consuming feature's rules.
+
+Acceptance scenarios: small score fluctuations do not cause oscillation; a higher-scoring player does not interrupt a valid gate action during its minimum commitment; after expiry the switch margin still applies; invalidation/completion is handled without waiting; path updates toward the same target do not restart commitment; guards and Siege attackers reuse the same mechanism with different configuration.
+
+A temporary score bonus for being attacked was discussed separately, but its inclusion/stacking/decay and interaction with commitment are not finalized by this decision. Do not introduce an implicit damage-triggered bypass of commitment. Behavior-tree/library selection and wider combat rules remain open; this is design only, not implemented gameplay.
 
 ## 6. Movement and spawn details
 
@@ -183,7 +199,7 @@ Audit V1/V2/V3 and compare a Citizens navigator with reusable KnK pathfinding on
 | O05 | Personal NPC visibility/collision, concurrent instances and lifecycle on server restart/teleport/world change |
 | O06 | Permission holder/schema, override precedence, temporary grant scope and safe exit |
 | O07 | Verified GateDoor pass-through mechanism and NPC-compatible traversal |
-| O08 | Exact trait boundaries, engine-neutral contracts, Citizens integration and behavior arbitration |
+| O08 | Exact trait boundaries, engine-neutral contracts and runtime/library choice; scoring + switch margin + minimum commitment agreed in §5a. Remaining arbitration work: numeric tuning, margin semantics, reevaluation cadence, configuration precedence and wider interruption contracts |
 | O09 | Dialogue delivery/authoring, response timeout, tutorial completion/departure presentation |
 | O10 | V2 Progressable/Creation and Siege comparison; progression boundary only in KNG-36 |
 | O11 | City guard profile: patrol, aggro/defense, dialogue interruptions and return to patrol |

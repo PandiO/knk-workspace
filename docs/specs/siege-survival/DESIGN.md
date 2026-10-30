@@ -72,9 +72,17 @@ A destroyed door has no remaining damageable body during repair. An intact close
 
 Default NPC route logic: choose an eligible defender objective under the scenario rules; if its capturezone is physically reachable without breaching, move there; otherwise select a blocking breakable gate on a valid candidate route. After gate destruction, repair closure or objective capture, reassess the route. Route eligibility must include planned breach actions: a blocked-but-breakable gate does not make the entire spawnzone unusable. Avoid arbitrary straight-line nearest-objective selection through walls or forbidden areas.
 
-Players within an aggro radius can temporarily divert enemies. Configure aggro range, leash distance and return behavior so a player cannot stall a wave by dragging its NPCs indefinitely outside the battle. A proposed difficulty option forces gate-first attacks even when an alternative capture route exists. Exact AI priorities, capture weight per NPC/archetype and chase parameters need balance tests, not invented constants.
+Players within an aggro radius can temporarily divert enemies. Configure aggro range, leash distance and return behavior so a player cannot stall a wave by dragging its NPCs indefinitely outside the battle. A proposed difficulty option forces gate-first attacks even when an alternative capture route exists. Shared utility scoring, switch margin and minimum commitment are confirmed below; numerical preferences, capture weight per NPC/archetype and chase parameters still need balance tests, not invented constants.
 
 NPC presence must participate in the objective capture calculation as the attacker team; the current player-only roster scan is insufficient. Reuse configurable capture/contest feedback rather than equating zone capture with gate health damage. Document whether existing side-capture reduction is enabled for this scenario; proposed default is off until explicitly balanced for survival.
+
+### Target preference and decision stability (confirmed 2026-10-30)
+
+Use the [shared scoring and commitment policy](../npc-platform/DESIGN.md#5a-shared-target-scoring-and-commitment-confirmed-2026-10-30). After hard eligibility checks, compare player/gate/objective choices using configured preference and proximity contributions. A selected valid, unfinished action retains its target for a configurable minimum duration despite ordinary score fluctuations. After that duration, a challenger must exceed the current score by the configured switch margin; expiration alone does not force a change.
+
+A gate-focused attacker can therefore commit to an eligible player without flipping back to the gate every moment the player moves. Continue replanning toward that same player. Hard pursuit limits, death, leaving the match, authorization loss or terminal navigation failure end commitment without waiting; completing/destroying a gate also releases the action. Siege supplies the eligible goals and scenario constraints; behavior owns target replacement, and navigation executes the current assignment.
+
+NPC-profile and per-behavior commitment configuration are design requirements. Concrete values, score curves, absolute/relative switch margins and reevaluation intervals remain unset. Any existing gate-first difficulty proposal must be reconciled explicitly with this shared policy rather than silently bypassing it. Damage-response score bonuses remain a separate open design point.
 
 ## 5. Cooperative repair
 
@@ -104,7 +112,7 @@ Author multiple NPC spawnzones within the scenario, each containing valid spawnp
 
 **Caller contract (2026-10-30):** the Survival game manager supplies configured spawn requests to lifecycle, and eligible goals, movement rules and optional lane configuration to the NPC assignment/behavior. Behavior chooses the active goal; shared navigation plans from the actor's current position under the effective ruleset. Rules such as ladder use and door opening are configurable, with the complete catalogue/defaults still to be finalized. This is a consumer of the [shared navigation ruleset](../npc-platform/DESIGN.md#caller-supplied-navigation-ruleset-confirmed-2026-10-30), not a Siege-only navigation implementation. Rules cannot bypass access, physical capabilities or collision.
 
-For the initial gate-only slice, a spawned NPC immediately starts target selection and route planning, then moves when a usable path is available, without an intentional waiting period. It approaches a reachable attack position at an eligible gate. Exact target ranking remains open. This focused slice does not remove the full mode's player/objective behavior requirements.
+For the initial gate-only slice, a spawned NPC immediately starts target selection and route planning, then moves when a usable path is available, without an intentional waiting period. It approaches a reachable attack position at an eligible gate. The shared preference/proximity scoring and commitment model applies; numerical ranking and tuning remain open. This focused slice does not remove the full mode's player/objective behavior requirements.
 
 Example progression: outside-castle zone initially active → NPCs breach outer gate → NPCs capture outer objective → courtyard zone becomes eligible → next defensive line. **Breach alone does not activate courtyard spawns.** An intact but open door likewise does not advance the spawn frontier.
 
@@ -165,7 +173,7 @@ These are required conceptual records, not approved class names or database migr
 | Record/configuration | Required fields/relationships |
 |---|---|
 | Survival scenario settings | SiegeScenario reference, mode, human/NPC team references, main objective, inventory mode, difficulty profile, intermission timing, recapture policy, baseline loadout, reward-policy revision. |
-| Difficulty/wave profile | Scaling rules, archetype composition, pacing, spawnzone weights, capture/gate damage, aggro/leash values, repair work rate, resource limits. |
+| Difficulty/wave profile | Scaling rules, archetype composition, pacing, spawnzone weights, capture/gate damage, aggro/leash values, target preference/proximity settings, switch margin and minimum commitment duration, repair work rate, resource limits. |
 | Spawnzone | Scenario, location bounds/points, optional lane override, initial availability, objective prerequisite ALL/ANY, eligibility/weight. |
 | Optional lane override | Shared navigation configuration with ordered routepoints, referenced by an NPC or movement assignment; optional scenario bindings. No mandatory route per spawnzone. |
 | Special-wave schedule | Explicit wave numbers and/or interval/start offset, profile reference, deterministic priority. |
