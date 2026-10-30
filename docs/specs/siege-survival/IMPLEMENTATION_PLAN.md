@@ -18,7 +18,7 @@ Resolve DESIGN section 13 clarifications in the issue, preserving the confirmed 
 
 | Phase | Work | Exit condition |
 |---|---|---|
-| 1 — contracts/config | Add survival mode settings, role-aware readiness, wave/difficulty/special profiles, NPC zones/optional shared lane overrides and purchase references. Design immutable match configuration and result/checkpoint contracts. | CRUD and configured location rules validate a castle scenario; PvP scenario validation unchanged. |
+| 1 — contracts/config | Add survival mode settings, role-aware readiness, wave/difficulty/special profiles, NPC zones/optional shared lane overrides, per-objective/gate target eligibility overrides, and purchase references. Design immutable match configuration and result/checkpoint contracts. | CRUD and configured location rules validate a castle scenario; PvP scenario validation unchanged. |
 | 2 — wave runtime/NPC slice | Implement wave queue/alive accounting, intermission respawn/spectating, wipe/main-objective termination, automatic navigation and optional override traversal, gate breach and NPC capture membership. | One complete wave, breach and capture work on the castle; no NPC-team auto-forfeit. |
 | 3 — repairs/frontier | Add shared repair work, contributor channel, completion/animation integration, ownership cancellation and objective-driven zone frontier. | A04–A08 pass, including destroyed-door reconstruction and general entity collision tests. |
 | 4 — BOTH equipment modes/economy | Preserve own-gear safeguards; add match loadout, death drops, pickup lifetime/cleanup, personal balance, transfers, fixed purchases and Mystery Box match adapter. | A09–A11 pass; no real inventory/instance/currency leaks. Both modes are required for first release. |
@@ -29,6 +29,9 @@ Resolve DESIGN section 13 clarifications in the issue, preserving the confirmed 
 Do not split the first release by deferring one inventory mode or Mystery Box. Phases describe implementation order, not permission to ship an incomplete requested mode. Publish status and handoffs with exact commits, actual verification and remaining live checks after each phase.
 
 ## 3. Validation and recovery plan
+
+Eligibility override checks (2026-10-30, #146): standard/allow/deny independently for objectives and gates; filter before scoring; denied gates excluded as intermediate breach actions even for allowed objectives; permitted alternative route or explicit failure; gate allow does not authorize a denied objective; allow does not boost scores or bypass match/access/physical rules. Gate attack denial alone must not block otherwise permitted passage through an open gate. Configuration/schema and gate-versus-door binding still need implementation design.
+
 
 Target-selection checks (confirmed design, 2026-10-30, #146): eligibility before utility scoring; preference/proximity weighting; configurable minimum commitment plus switch margin; no score-driven switch before commitment expires; no mandatory switch at expiry; hard invalidation and completed actions release immediately. Verify route updates to the same target do not restart commitment, temporary route blockage uses navigation recovery, and terminal failure reaches behavior. Cover a gate-to-player diversion and reuse with a non-Siege NPC. Numeric tuning and damage-response bonuses remain open; no production defaults are implied.
 

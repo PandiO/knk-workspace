@@ -76,6 +76,20 @@ Players within an aggro radius can temporarily divert enemies. Configure aggro r
 
 NPC presence must participate in the objective capture calculation as the attacker team; the current player-only roster scan is insufficient. Reuse configurable capture/contest feedback rather than equating zone capture with gate health damage. Document whether existing side-capture reduction is enabled for this scenario; proposed default is off until explicitly balanced for survival.
 
+### Objective and gate eligibility overrides (confirmed 2026-10-30)
+
+Admins can configure an independent three-state NPC targeting override for each objective and each gate in the Siege scenario: **follow standard rules**, **explicitly allow**, or **explicitly deny**. These are conceptual values, not implemented enum/API names. This is separate from spawnzone unlock conditions and from lane overrides.
+
+Evaluate the override before utility scoring. A denied objective cannot be selected for capture. A denied gate cannot be selected for damage/breaching, including as an intermediate action on a route to an otherwise allowed objective. Navigation must not present that forbidden breach as an executable route; seek a permitted alternative or report failure for behavior to handle. Denying attack does not by itself forbid walking through a physically open, otherwise authorized passage.
+
+Allow makes the action eligible under this scenario policy; it does not raise the target's utility score or bypass match isolation, physical reachability, the actor's capabilities, or independent authorization/safety constraints. Following standard rules adds no override. An allowed objective does not implicitly allow its blocking gate, and an allowed gate does not implicitly allow capture of its associated objective. Existing invalidation rules apply when a current action becomes forbidden.
+
+Siege owns the override configuration and resolves it for the NPC/action/context. Shared target selection consumes an allowed/denied result with a reason, rather than embedding Siege settings. The same generic eligibility boundary can serve other NPC consumers. Exact persistence schema, gate-versus-door binding and runtime configuration-update mechanics remain implementation design questions; this decision does not add conditional unlock expressions or select new defaults.
+
+The goal actions remain distinct: approach and attack a valid player; enter and remain in a reachable capturezone to contribute to objective capture; damage an eligible blocking gate where breaching is required. Destroying a gate is not objective capture. Target scoring, minimum commitment and switch margin govern ordinary choices; hard eligibility is never overridden by score or commitment.
+
+Acceptance additions: verify all three override states independently for gates and objectives; denied targets never enter scoring; an allowed objective behind a denied gate uses an alternative permitted route or fails cleanly; allowing a gate does not allow a denied objective; explicit allow neither boosts utility nor bypasses match/access/collision constraints; forbidding gate damage alone does not close an open passage.
+
 ### Target preference and decision stability (confirmed 2026-10-30)
 
 Use the [shared scoring and commitment policy](../npc-platform/DESIGN.md#5a-shared-target-scoring-and-commitment-confirmed-2026-10-30). After hard eligibility checks, compare player/gate/objective choices using configured preference and proximity contributions. A selected valid, unfinished action retains its target for a configurable minimum duration despite ordinary score fluctuations. After that duration, a challenger must exceed the current score by the configured switch margin; expiration alone does not force a change.
@@ -175,6 +189,7 @@ These are required conceptual records, not approved class names or database migr
 | Survival scenario settings | SiegeScenario reference, mode, human/NPC team references, main objective, inventory mode, difficulty profile, intermission timing, recapture policy, baseline loadout, reward-policy revision. |
 | Difficulty/wave profile | Scaling rules, archetype composition, pacing, spawnzone weights, capture/gate damage, aggro/leash values, target preference/proximity settings, switch margin and minimum commitment duration, repair work rate, resource limits. |
 | Spawnzone | Scenario, location bounds/points, optional lane override, initial availability, objective prerequisite ALL/ANY, eligibility/weight. |
+| Objective/gate target override | Independent per-scenario target setting: standard rules / allow / deny; resolved before scoring and applied to intermediate gate breaching. Allow never grants physical or cross-match access. |
 | Optional lane override | Shared navigation configuration with ordered routepoints, referenced by an NPC or movement assignment; optional scenario bindings. No mandatory route per spawnzone. |
 | Special-wave schedule | Explicit wave numbers and/or interval/start offset, profile reference, deterministic priority. |
 | Purchase/Mystery Box point | Scenario, location, price, pool/product references and interaction limits. |

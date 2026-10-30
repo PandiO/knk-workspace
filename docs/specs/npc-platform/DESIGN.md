@@ -98,6 +98,12 @@ Acceptance scenarios: small score fluctuations do not cause oscillation; a highe
 
 A temporary score bonus for being attacked was discussed separately, but its inclusion/stacking/decay and interaction with commitment are not finalized by this decision. Do not introduce an implicit damage-triggered bypass of commitment. Behavior-tree/library selection and wider combat rules remain open; this is design only, not implemented gameplay.
 
+### Consumer-owned target eligibility overrides (confirmed 2026-10-30)
+
+The shared eligibility interface evaluates an NPC, candidate target, intended action and caller context, returning allowed/denied with a reason before scoring. Siege resolves independent objective/gate overrides (standard rules / allow / deny); those settings belong to the consuming mode, not the generic navigation trait. Other controllers can implement their own policies through the same boundary.
+
+Check required intermediate actions too: a permitted destination does not authorize damaging a forbidden blocking gate. Route planning/execution must respect that result, including during lane fallback. Denying damage does not itself deny passage through an open, otherwise authorized doorway. Explicit allow does not increase utility or bypass physical capability, independent authorization or match isolation. A target becoming forbidden invalidates the action immediately despite minimum commitment. See [Siege policy](../siege-survival/DESIGN.md#objective-and-gate-eligibility-overrides-confirmed-2026-10-30). Contract names and schema remain proposed; no implementation is claimed.
+
 ## 6. Movement and spawn details
 
 ### Automatic navigation and optional lane overrides (confirmed 2026-10-30)
