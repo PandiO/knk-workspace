@@ -99,6 +99,21 @@ For the first Siege gate-targeting slice, spawning immediately triggers target s
 Acceptance additions: navigate from a configured spawn without any lane, use appropriate road and off-road legs, follow an optional override, report an invalid override without bypassing access/collision, and reuse the same navigation capability outside Siege. Verify bounded retry to the next required point, blocked-result delivery to behavior when fallback is off, opt-in automatic routing to the destination when enabled, and failure reporting if that route also fails. Benchmark physical execution and search budgets before choosing a library.
 
 
+### Caller-supplied navigation ruleset (confirmed 2026-10-30)
+
+The consuming feature/controller supplies the NPC's assignment context. In Siege this is the Survival game manager; guards, escorts and tutorials use their own controllers. No Siege-specific manager dependency belongs in the shared navigation trait.
+
+- The controller supplies a spawn request/location to lifecycle. Lifecycle validates and creates the actor. Navigation starts from the actor's actual position; it does not own spawning or assume the original spawnpoint is the current position.
+- The controller supplies eligible goals and gameplay constraints. Behavior selects the current goal and arbitrates competing actions; navigation receives that destination/target, the effective movement ruleset and any applicable lane override.
+- The shared navigation capability uses suitable road infrastructure and local pathfinding under that ruleset, or follows the optional override with the agreed bounded-retry/default-off automatic fallback policy.
+- Movement rules must be configurable and may be supplied by the caller for an assignment. Ladder use and door opening are explicit examples. Candidate settings to finalize include swimming, gap jumping, maximum upward step/jump, maximum drop, and door/gate interaction. These are a mix of flags and numeric limits, not all booleans. The transcript's first movement example was unclear; do not infer an additional confirmed capability from it.
+- Capability, authorization and physical execution remain separate: allowing door interaction in a ruleset does not itself grant access to every door or imply a usable opening. The selected mover must support permitted actions. Door opening is not gate breaching; breaching still requires the relevant capability and behavior.
+- Planner and executor must use consistent effective movement constraints, including during override fallback. Proposed implementation guard: reject/report unsupported combinations instead of silently treating them as executable.
+
+The configurable-ruleset requirement is confirmed; the complete field catalogue, defaults per archetype, precedence between template/instance/assignment rules, and update semantics are still open under #146. Existing tutorial movement restrictions remain its specific profile, not universal NPC defaults. HTTP endpoints and DTOs are not selected by this decision.
+
+Acceptance additions: the same navigation capability accepts different caller-supplied rulesets; ladder-disabled planning does not select a ladder route; door-opening permission in a profile cannot bypass domain/gate authorization; assignment rules remain effective during lane retries and automatic fallback. Physical traversal support must be verified for each selected capability.
+
 ### Tutorial movement profile
 
 | Capability | Initial rule |
