@@ -8,6 +8,10 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## 2026-11-01
 
+- **Invitation code fields with fixed `KNK-` and dashes** — knk-web-app `main` `1c9524d` (PandiO/knk-workspace#208,
+  QOL hotfix after alpha test run 1). The invitation code fields on `/join` and `/link` show `KNK-_____-_____` from
+  the start; the player types only the 10 characters, and a pasted `KNK-ABCDE-FGHJK` (with or without dashes or the
+  `KNK` prefix) lands as the same code.
 - **Claim code field centered** — knk-web-app `main` `eac1013` (PandiO/knk-workspace#206, QOL hotfix after alpha
   test run 1). On `/link` and `/account` the code and its `____-____` mask now sit in the middle of the field
   instead of against its left edge; typed characters still land on their slots.

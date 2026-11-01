@@ -62,6 +62,10 @@ Live tracker of in-progress work across all four Knights and Kings repos
 
 ## Recently completed
 
+### 2026-11-01 — Invitation code fields with fixed KNK- and dashes (#208)
+
+Same session; QOL hotfix on knk-web-app `main` `1c9524d`: `/join` and `/link` invitation fields show `KNK-_____-_____` (prefix and dash drawn by the field, pasted codes with or without dashes/prefix land the same). `ClaimCodeInput` generalised into `src/components/auth/SegmentedCodeInput.tsx`; new `InviteCodeInput.tsx`, `src/utils/inviteCode.ts` + tests. `RegisterForm` combined field unchanged. Full suite 1378/1379 (#207); Chromium check; live check left to the developer.
+
 ### 2026-11-01 — Claim code field centered on /link (#206)
 
 Claude Code cloud session (Pandi); QOL hotfix after alpha test run 1, straight on knk-web-app `main` `eac1013` (`src/components/auth/ClaimCodeInput.tsx` + test): the `____-____` mask and the typed code are centered in the field on `/link` and `/account`, characters stay on their slots. Unit tests + Chromium check on `/link`; live check on the deployed app left to the developer. Found in passing: #207 (time-bombed InvitePage test, red on `main` since 2026-10-28).
