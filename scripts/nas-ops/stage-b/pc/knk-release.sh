@@ -35,9 +35,10 @@ if [ "$kind" = plugin ]; then
   wt="$tmp/wt"
   git -C "$dir" worktree add -q --detach "$wt" "$commit"
   trap 'git -C "$dir" worktree remove --force "$wt" >/dev/null 2>&1; rm -rf "$tmp"' EXIT
-  # shadowJar only: a plain `build` also runs deployToDevServer.
+  # shadowJar only: a plain `build` also runs deployToDevServer. `.\` because with NoDefaultCurrentDirectoryInExePath
+  # set (Claude Code sets it) cmd.exe doesn't run a bare gradlew.bat from the current folder.
   if [ -f "$wt/gradlew.bat" ] && command -v cmd.exe >/dev/null; then
-    (cd "$wt" && cmd.exe //c "gradlew.bat :knk-paper:shadowJar -q") >"$tmp/gradle.log" 2>&1 || { tail -20 "$tmp/gradle.log"; exit 1; }
+    (cd "$wt" && cmd.exe //c ".\\gradlew.bat :knk-paper:shadowJar -q") >"$tmp/gradle.log" 2>&1 || { tail -20 "$tmp/gradle.log"; exit 1; }
   else
     (cd "$wt" && ./gradlew :knk-paper:shadowJar -q) >"$tmp/gradle.log" 2>&1 || { tail -20 "$tmp/gradle.log"; exit 1; }
   fi
