@@ -1,6 +1,6 @@
 # Dashboard, form wizard and realtime chain — progress report
 
-**Status:** In progress — links 1–3, 3b and 5 merged; links 4, 6 and 7 in review (2026-11-01)
+**Status:** In progress — links 1–3, 3b and 5 merged; links 4, 6, 7 and 9 in review (2026-11-01)
 **Last updated:** 2026-11-01
 **Charter:** [UX_REALTIME_CHAIN.md](../ai-agents/handoffs/UX_REALTIME_CHAIN.md) · **Coordinator prompt:**
 [2026-10-26-ux-realtime-coordinator-prompt.md](../ai-agents/handoffs/2026-10-26-ux-realtime-coordinator-prompt.md)
@@ -23,7 +23,7 @@ test), `merged`, `blocked: <reason>`.
 | 6 | #179 | `claude/realtime-signalr` | in review | subagent (fallback: add_repo needed in-session approval), 2026-10-26 | `38b0466` / — / `b48f1484` / `ae949bd` | API 3361 passed, 4 failed (#99, = baseline reds), 87 skipped (baseline 3338/4/87); plugin core 2323 (2319), api-client 298 (290), paper 2163 (2149), 0 failures |
 | 7 | #180 | `claude/world-task-hardening` | in review | subagent (fallback: add_repo needed in-session approval), 2026-11-01 | `115c418` / `d7a0896` / `21de734e` / `e06c1e0` | API 3448 passed, 4 failed (#99, = baseline reds), 88 skipped (baseline 3397/4/88); web-app 1378 passed, 1 failed (#204 base red), suites 216 (baseline 1364/1, 213); `tsc` 9 = baseline; build OK, same 24 warnings; plugin core 2401 (2401), api-client 291 (288), paper 2364 (2343), 0 failures |
 | 8 | #181 | `claude/realtime-signalr` | waiting: link 6 done, link 7 merged | — | — | — |
-| 9 | #39 (rest), #177 follow-up | `claude/entity-lists-url-state` | in progress | subagent (fallback: add_repo needed in-session approval), 2026-11-01 | — | — |
+| 9 | #39 (rest), #177 follow-up | `claude/entity-lists-url-state` | in review | subagent (fallback: add_repo needed in-session approval), 2026-11-01 | — / `6b2a4eb` / — / `015e5c1` | web-app 1402 passed, 1 failed (#204 base red), suites 217 (baseline 1364/1, 213); `tsc` 9 = baseline; build OK, 22 warnings (baseline 24: two `PagedEntityTable` hook warnings gone) |
 | 10 | #182 | `claude/realtime-signalr` | waiting: link 8 done | — | — | — |
 
 ## Waiting for the developer
@@ -55,6 +55,10 @@ flagged decisions.)
   Deploy API, plugin and web app together; one additive migration. **Before the first sweep read L7-8:** old sessions
   without a draft and without a Completed task, older than 7 days, are deleted (back up). Flags L7-1…L7-18. Its merge
   opens link 8 (with link 6 done) and frees knk-web-app for link 9.
+- **Test link 9** (#39 rest, #177 follow-up): web-app `claude/entity-lists-url-state` `6b2a4eb`; live checklist
+  `docs/guides/entity-lists-url-state-smoke-test.md` on workspace `claude/entity-lists-url-state` `015e5c1`. Web app only.
+  Merges cleanly with link 7's `claude/world-task-hardening` (trial merge; `FormWizardPage.tsx` auto-merged). Flags
+  L9-1…L9-13; bulk actions split into #205.
 - **Test link 6** (#179, SignalR S2, same branch): API `38b0466`, plugin `b48f1484`; live checklist
   `docs/guides/realtime-smoke-test.md` § S2 on workspace `claude/realtime-signalr` `ae949bd` (run § S1 first). Flags
   L6-1…L6-12 (link 6 block). L6-1: the ×4 slowdown applies only to the social-spy re-check for now; the notification
@@ -66,6 +70,7 @@ flagged decisions.)
 
 ## Follow-ups filed by links
 
+- Link 9: #205 (bulk actions on the dashboard table, split from #39). Comments on [#39](https://github.com/PandiO/knk-workspace/issues/39) and [#177](https://github.com/PandiO/knk-workspace/issues/177).
 - Link 7: no new issue; comments on [#34](https://github.com/PandiO/knk-workspace/issues/34) (temp regions of completed tasks for abandoned forms) and [#181](https://github.com/PandiO/knk-workspace/issues/181) (WT2 notes).
 - From the coordinator's link 5 merge check (2026-11-01): #204 (web-app `InvitePage.test.tsx` fixture expired on 2026-10-28; red on `main`, recorded as a base red by later links).
 - From the developer's live test of links 1–3 (2026-10-26, filed by the coordinator): #194, #195, #196, #197.
@@ -1055,3 +1060,115 @@ completed tasks for abandoned forms) and [#181](https://github.com/PandiO/knk-wo
 - Link 9 (`PagedEntityTable` URL state): this link changed `FormWizard.tsx` (world-task state, effects), `FormWizardPage.tsx`
   (`handleOpenConfiguration`), `ChildFormModal.tsx`, `FieldEditor.tsx`; merge after this link or expect conflicts there.
 - The API sweep runs in every API process (one API instance today, DESIGN §11).
+
+## Link 9 — #39 (rest), #177 follow-up: entity lists URL state, rows as links, "Drafts (n)" and "New with"
+
+**Started:** subagent (fallback: `add_repo` needed in-session approval), 2026-11-01; finished 2026-11-01. Nothing else ran at
+the same time. Own worktrees under `/home/user/wt-link9/` (the coordinator's checkouts untouched).
+**Base:** knk-web-app `main` `b3b415d` (links 3 and 5 merged; unchanged at the end, nothing to merge in). knk-workspace
+branch from `main` `4d1f3aa`, `main` `50c2c45` (this link's claim) merged in. Not based on link 7's unmerged
+`claude/world-task-hardening`.
+
+**Commits**
+- knk-web-app `claude/entity-lists-url-state`: `3bc8f22` lootbox and moderation tabs in the URL, player names as profile
+  links; `9a15c28` `PagedEntityTable` controlled mode, rows as links, `aria-sort`, `utils/tableQueryParams.ts`; `f77ebff`
+  dashboard table state in the URL, row links, "Drafts (n)", "New with", Entity setup opens `?configId=` / `?resume=`;
+  `6b2a4eb` merge-safe test (see notes). Head **`6b2a4eb`**.
+- knk-workspace `claude/entity-lists-url-state`: `52eac9c` web-app architecture, new
+  `guides/entity-lists-url-state-smoke-test.md` + guides README row, CHANGELOG (Unreleased), dashboard hub proposal status;
+  `015e5c1` merge of `main`. Head **`015e5c1`**.
+
+**What changed (web-app)**
+- `PagedEntityTable`: optional **controlled mode** `query` + `onQueryChange` (page, search, sort, filters from the caller;
+  one stable object per distinct value, so no refetch loop; every change goes to `onQueryChange`); the search box follows
+  an outside change (Back/Forward); a page past the end moves to the last page (both modes). **`rowHref`**: the first
+  cell is an `<a href>` (middle-click, Ctrl/Cmd-click, keyboard); a plain click calls `onRowClick` (the app navigates);
+  Ctrl-click and middle-click elsewhere on the row `window.open` the address; ignored while rows are selectable. Sortable
+  headers are `<button>`s inside the `th` (keyboard) and the `th` has **`aria-sort`**. No `react-router-dom` import (the
+  pickers' tests render it without a router). Without `query` the table works as before.
+- `utils/tableQueryParams.ts`: `readTableQuery` / `writeTableQuery` / `toSearch` for `?page=&q=&sort=&dir=desc&f.<key>=`
+  (defaults left out, other parameters kept).
+- `ObjectDashboard`: the table is controlled from `location.search`; changes `navigate({pathname, search}, {replace:
+  true})`; another type opens its bare URL. View, Edit and the row links take their `returnTo` from the location, so they
+  come back to the same page/search/sort (link 1's note: free). Rows link to `displayPath(...)` only when View works.
+- #177 follow-up: `hooks/useDashboardFormOptions.ts` (the type's form configurations other than the default, A–Z; the
+  caller's drafts without Completed/Abandoned, newest first) and `ObjectDashboard/DashboardHeaderMenu.tsx` (popover:
+  focus on the first item, ArrowUp/Down, Escape back to the button, click outside closes). A ▾ attached to "New {Type}"
+  ("New with", hidden without other configurations) and a "Drafts (n)" chip (hidden without drafts; footer "All saved
+  progress (Entity setup)"). `utils/returnTo.ts` `newFormWithConfigPath` (`/forms/{type}?configId=…`) and
+  `resumeDraftPath` (`?resume=…`), both with `returnTo`. `FormWizardPage`: `configsLoadedFor` (set when the
+  configuration and progress lists finished loading) and one effect that opens the named configuration
+  (`handleOpenConfiguration`) or resumes the draft (`handleResumeProgress`) once per request; an unknown configuration
+  gives the error toast "That form configuration was not found. Pick one from the list below." and stays on the lists.
+- `hooks/useTabParam.ts` (`useSearchParams`, `?tab=`, default left out, unknown = default, `replace`): `LootboxesPage`
+  (`initialTab` stays the default) and `UserModerationPage`. Moderation player names are `Link`s to `/admin/users/{id}`
+  (row click kept, the link stops the row's second navigate).
+
+**Tests vs baseline** (Node 22, `npx npm@11 ci`)
+- Baseline `main` `b3b415d`: `npm run test:ci` **1364 passed, 1 failed, 213 suites** (the red = `InvitePage.test.tsx`
+  "keeps the invitation for the tab…", #204); `npx tsc --noEmit` 9 errors (#63); `npm run build` compiles, 24 warning lines.
+- After: **1402 passed, 1 failed (#204), 217 suites** (+38). New suites: `PagedEntityTable.controlled` (12: controlled fetch,
+  page/sort to `onQueryChange`, debounced search, outside search change, no refetch on an equal query, clamp; `aria-sort` and
+  header buttons in both modes; links: plain click, modified clicks left to the browser, row Ctrl/middle-click, none
+  without `rowHref` or while selectable), `tableQueryParams` (5), `FormWizardPage.openFromUrl` (4), `UserModerationPage.urlState`
+  (3). New cases: `ObjectDashboard` (+11: URL → table query, changes → replace navigate, no navigate for the same query,
+  row links with the query in `returnTo`, none without a display configuration; New with / Drafts: hidden, A–Z + keyboard +
+  Escape, drafts filtered and sorted + resume, footer link, click outside, failed requests), `LootboxesPage` (+2),
+  `returnTo` (+1); the #195 header test follows the split-button wrapper. `tsc` 9 = baseline. Build compiles, **22**
+  warning lines: the two `PagedEntityTable` `react-hooks/exhaustive-deps` warnings of the baseline are gone (explicit
+  disables with a reason), nothing new.
+- Trial merge with link 7 (`origin/claude/world-task-hardening` + this branch): clean (`FormWizardPage.tsx` auto-merged);
+  `src/pages`, `ObjectDashboard`, `PagedEntityTable`, `FormWizard`, `Workflow` suites on the result 465/466 (the red =
+  #204) after `6b2a4eb`.
+- No browser check: no Chromium/Playwright in this environment. The live checklist covers it.
+
+**Flagged decisions (reversible)**
+- **L9-1** Table changes (page, sort, search, filter) **replace** the history entry: Back leaves the dashboard type rather
+  than stepping back through pages; the URL still holds the view for refresh, sharing and `returnTo`.
+- **L9-2** Parameter names `page`, `q`, `sort`, `dir=desc`, `f.<key>` (the item blueprint Category filter: `f.CategoryId`);
+  defaults left out; the page size (fixed 10) is not in the URL; an unknown `sort` key goes to the API as before (no
+  client-side check).
+- **L9-3** Only the dashboard's table is controlled. The wizard's pickers and the Minecraft pickers stay uncontrolled, so
+  they never change the URL and link 5's leave guard (blocks query changes while a form is dirty) needed no change.
+- **L9-4** Rows as links: the link is the first cell's content; the rest of the row keeps the click, and Ctrl/Cmd-click or
+  middle-click on it opens a new tab via `window.open(href, '_blank', 'noopener')`. Types without a published default
+  display configuration get no links (as View). The link takes the first column's text colour `text-gray-900`.
+- **L9-5** Sortable headers became buttons (keyboard), beyond the `aria-sort` the issue names; their name is the column
+  label (no "Sort by" label, so the column header reads as before).
+- **L9-6** A page past the end (shared link, rows deleted) moves to the last page, in both modes.
+- **L9-7** "Drafts (n)" = the caller's Saved Progress of the type (#186, `mine=true`) **without Completed and Abandoned**,
+  child drafts of that type included, newest first (`updatedAt`); no delete from the chip (Entity setup keeps it).
+- **L9-8** "New with" is a ▾ split button on New listing every configuration but the default, A–Z (all of them when there
+  is no default); hidden when there are none. The ▾ has the accessible name "New {Type} with another form".
+- **L9-9** `?configId=` / `?resume=` are handled once per type and value after the lists loaded; they stay in the URL
+  while the form is open (a later Cancel without `returnTo` doesn't reopen it). A draft whose configuration is gone does
+  nothing, as Resume on the Entity setup page.
+- **L9-10** Tabs: `?tab=`, default tab left out, an unknown value reads as the default, switching **replaces** the entry.
+  The lootbox Odds tab's selected type is not in the URL.
+- **L9-11** Moderation: only the tab is in the URL, not the "All players" search and page (the issue names the tab).
+- **L9-12** Bulk actions (#39 CRUD-4, "where they make sense") are not in this link's charter row or plan step A4: split
+  into **#205**; #39 moved to `status:in-review` for the rest.
+- **L9-13** The header requests (form configurations, drafts) are extras: a failure leaves them out (the API client's usual
+  failure toast still shows).
+
+**Deviations:** none from the charter row; bulk actions split off (L9-12).
+
+**Live checklist:** [guides/entity-lists-url-state-smoke-test.md](../guides/entity-lists-url-state-smoke-test.md)
+(workspace branch `claude/entity-lists-url-state` until merged), sections 1–6.
+
+**Deploy notes:** web app only. No API, plugin, migration, setting or script.
+
+**Follow-ups filed:** #205 (bulk actions). Comments on #39 and #177.
+
+**Notes for later links**
+- **Merge order with link 7:** this branch changes `FormWizardPage.tsx` (a `configsLoadedFor` state + `useRef` next to
+  `autoOpenForm`, one effect after the auto-open effect, one line in `loadConfigurationsAndProgress`'s `finally`); link 7
+  changes the same file elsewhere (`handleOpenConfiguration`, an import). Either order merges cleanly (trial merge). With
+  link 7, resuming a draft from "Drafts (n)" also reuses the draft's workflow session (`resolveWorkflowSessionId` reads the
+  draft once more); `FormWizardPage.openFromUrl.test.tsx` therefore doesn't count `getById` calls. `FormWizard.tsx`,
+  `ChildFormModal.tsx`, `FieldEditor.tsx`: not touched.
+- #183 (web live updates): the dashboard table refreshes through `refreshKey`; `useDashboardFormOptions` reloads per type
+  only (add a refresh trigger when drafts are pushed).
+- #30 (admin IA): `hooks/useTabParam.ts` is reusable for other tabbed admin pages; #33: `DashboardHeaderMenu` is a small
+  popover, not the planned accessible `Dialog`.
+- The moderation tab buttons have no `role="tab"` / `aria-selected` (the lootbox page has them); left as is.
