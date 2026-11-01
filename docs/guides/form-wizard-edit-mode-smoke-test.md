@@ -1,7 +1,6 @@
 # Form wizard: footer, unsaved-changes guard, blur validation, Save on any step, drafts per admin (#109, #186, #64) — smoke test
 
-**Status:** Run by the developer on 2026-10-27: sections 1–6 work or accepted, two bugs in 4.3 fixed in web-app
-`ff58c83` (fix round) — re-test 4.3a and 4.3b; section 7 runs after the deploy
+**Status:** Sections 1–6 pass (developer, 2026-10-27, re-test of 4.3a/4.3b on 2026-11-01); merged 2026-11-01 (web-app `main` `b3b415d`, API `master` `8df59b7`); section 7 after the deploy
 **Last updated:** 2026-10-27 (Findings; steps 4.3a/4.3b for the fix round)
 **Issues:** [PandiO/knk-workspace#109](https://github.com/PandiO/knk-workspace/issues/109) (footer, guard, validation, Save
 on any step, single-line input) · [#186](https://github.com/PandiO/knk-workspace/issues/186) (drafts and workflow

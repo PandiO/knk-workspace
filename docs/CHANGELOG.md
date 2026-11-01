@@ -4,9 +4,13 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+(Nothing at the moment.)
+
+## 2026-11-01
+
 - **Form wizard: footer, unsaved-changes guard, blur validation, Save on any step; drafts per admin** —
-  knk-web-app and knk-web-api `claude/form-wizard-edit-mode` (PandiO/knk-workspace#109, #186, #64 FormWizard part;
-  UX/realtime chain link 5, 2026-10-26; fix round 2026-10-27 after the developer's live test). Not merged. The form's buttons (Cancel, Previous, Save
+  knk-web-app `main` `b3b415d` and knk-web-api `master` `8df59b7`, merged `--no-ff` from `claude/form-wizard-edit-mode` (PandiO/knk-workspace#109, #186, #64 FormWizard part;
+  UX/realtime chain link 5, 2026-10-26; fix round 2026-10-27 after the developer's live test). Live-tested sections 1–6. The form's buttons (Cancel, Previous, Save
   Draft, Next/Submit) stick to the bottom of the window; leaving a form with unsaved changes (a link, Back, the
   breadcrumb, a reload) asks first, and Cancel no longer asks when nothing changed — "changed" means the values
   differ from the ones the form was opened with (or last saved with Save Draft), on any step: typing and clearing a
