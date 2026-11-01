@@ -1,6 +1,6 @@
 ---
 status: active
-last_updated: 2026-10-25
+last_updated: 2026-11-01
 ---
 
 # knk-plugin Architecture
@@ -191,6 +191,14 @@ complete for every entity type the plugin touches.
   on a backing-off interval (5s → up to 60s, `config.yml:60,65`). Its own
   Javadoc (lines 14-23) says this is a placeholder for a future
   push/SignalR notification.
+  *#180 (branch `claude/world-task-hardening`):* the poller claims a scan before it runs it (claim mode `headless`), so
+  two servers don't run it twice. Every claim the server holds is in `tasks/WorldTaskLeases` (filled by
+  `tasks/LeaseTrackingWorldTasksApi`, the `WorldTasksApi` the handlers use) and is renewed every
+  `world-tasks.heartbeat-interval-seconds` (60); a 409 stops the player's handler. Quit
+  (`listeners/WorldTaskQuitListener`), plugin disable and a restart (`GET open?serverId=`) hand tasks back. In chat,
+  `cancel` hands a task back and `discard` cancels it; `WorldTaskChatListener` runs task chat on the main thread and
+  handler state is keyed by UUID. `/knk task <code>` (alias `task-claim`; id claims need `knk.tasks.any`). Server id:
+  `realtime.server-id`, default `localhost`.
 - **Outbound push (periodic):** `GateStateSyncTask` pushes in-memory gate
   state back to the API every `gates.state-sync-interval-seconds`
   (default 120s, `config.yml:73`) as a safety net, plus a periodic
