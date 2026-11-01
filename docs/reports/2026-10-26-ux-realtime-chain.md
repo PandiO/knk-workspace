@@ -1,6 +1,6 @@
 # Dashboard, form wizard and realtime chain — progress report
 
-**Status:** In progress — links 1–3, 3b and 5 merged; links 4 and 6 in review; link 7 running (2026-11-01)
+**Status:** In progress — links 1–3, 3b and 5 merged; links 4, 6 and 7 in review (2026-11-01)
 **Last updated:** 2026-11-01
 **Charter:** [UX_REALTIME_CHAIN.md](../ai-agents/handoffs/UX_REALTIME_CHAIN.md) · **Coordinator prompt:**
 [2026-10-26-ux-realtime-coordinator-prompt.md](../ai-agents/handoffs/2026-10-26-ux-realtime-coordinator-prompt.md)
@@ -21,7 +21,7 @@ test), `merged`, `blocked: <reason>`.
 | 4 | #178 | `claude/realtime-signalr` | in review | subagent (fallback: add_repo needed in-session approval), 2026-10-26 | `b8a29d7` / — / `a64b7f83` / `e878ee2` | API 3338 passed, 4 failed (#99, = baseline reds), 87 skipped (baseline 3296/4/87); plugin core 2319 (2312), api-client 290 (280), paper 2149 (2140), 0 failures |
 | 5 | #64 (FormWizard), #109, #186 | `claude/form-wizard-edit-mode` | merged: web-app `main` `b3b415d`, API `master` `8df59b7`, workspace `main` `6e2b98c` (2026-11-01, by the coordinator at the developer's request) | subagent (fallback: add_repo needed in-session approval), 2026-10-26; fix round subagent 2026-10-27 | `09305ef` / `ff58c83` / — / `1e21ee2` | fix round: web-app 1359/1359, suites 212 (baseline on the merged `main` `c3c0c9f`: 1349/1349, 210); link 5: web-app 1330/1330, suites 209 (baseline 1304/1304, 204); `tsc` 9 errors = baseline; build OK, same 24 warnings; API 3356 passed, 4 failed (#99, = baseline reds), 88 skipped (baseline on the merged `master` `4d7a806`: 3339/4/88) |
 | 6 | #179 | `claude/realtime-signalr` | in review | subagent (fallback: add_repo needed in-session approval), 2026-10-26 | `38b0466` / — / `b48f1484` / `ae949bd` | API 3361 passed, 4 failed (#99, = baseline reds), 87 skipped (baseline 3338/4/87); plugin core 2323 (2319), api-client 298 (290), paper 2163 (2149), 0 failures |
-| 7 | #180 | `claude/world-task-hardening` | in progress | subagent (fallback: add_repo needed in-session approval), 2026-11-01 | — | — |
+| 7 | #180 | `claude/world-task-hardening` | in review | subagent (fallback: add_repo needed in-session approval), 2026-11-01 | `115c418` / `d7a0896` / `21de734e` / `e06c1e0` | API 3448 passed, 4 failed (#99, = baseline reds), 88 skipped (baseline 3397/4/88); web-app 1378 passed, 1 failed (#204 base red), suites 216 (baseline 1364/1, 213); `tsc` 9 = baseline; build OK, same 24 warnings; plugin core 2401 (2401), api-client 291 (288), paper 2364 (2343), 0 failures |
 | 8 | #181 | `claude/realtime-signalr` | waiting: link 6 done, link 7 merged | — | — | — |
 | 9 | #39 (rest), #177 follow-up | `claude/entity-lists-url-state` | ready (gate open: links 3 and 5 merged); waits for link 7 to free knk-web-app | — | — | — |
 | 10 | #182 | `claude/realtime-signalr` | waiting: link 8 done | — | — | — |
@@ -43,6 +43,11 @@ flagged decisions.)
   `docs/guides/realtime-smoke-test.md` § S1 on workspace `claude/realtime-signalr` `e878ee2`. `realtime.enabled` is off by
   default. Links 6, 8 and 10 continue this branch, so it is best merged once later unless you want S1 live earlier.
   Flags L4-1…L4-11; the startup-only siege work (#31) stays with link 10 as the charter says.
+- **Test link 7** (#180, WT1): `claude/world-task-hardening` API `115c418`, web-app `d7a0896`, plugin `21de734e`; live
+  checklist `docs/guides/world-task-hardening-smoke-test.md` on workspace `claude/world-task-hardening` `e06c1e0`.
+  Deploy API, plugin and web app together; one additive migration. **Before the first sweep read L7-8:** old sessions
+  without a draft and without a Completed task, older than 7 days, are deleted (back up). Flags L7-1…L7-18. Its merge
+  opens link 8 (with link 6 done) and frees knk-web-app for link 9.
 - **Test link 6** (#179, SignalR S2, same branch): API `38b0466`, plugin `b48f1484`; live checklist
   `docs/guides/realtime-smoke-test.md` § S2 on workspace `claude/realtime-signalr` `ae949bd` (run § S1 first). Flags
   L6-1…L6-12 (link 6 block). L6-1: the ×4 slowdown applies only to the social-spy re-check for now; the notification
@@ -54,6 +59,7 @@ flagged decisions.)
 
 ## Follow-ups filed by links
 
+- Link 7: no new issue; comments on [#34](https://github.com/PandiO/knk-workspace/issues/34) (temp regions of completed tasks for abandoned forms) and [#181](https://github.com/PandiO/knk-workspace/issues/181) (WT2 notes).
 - From the coordinator's link 5 merge check (2026-11-01): #204 (web-app `InvitePage.test.tsx` fixture expired on 2026-10-28; red on `main`, recorded as a base red by later links).
 - From the developer's live test of links 1–3 (2026-10-26, filed by the coordinator): #194, #195, #196, #197.
 
@@ -890,3 +896,155 @@ admin with every node, 40 entity types, 23 rows per table; scrollbars shown with
   are unaffected (the star has only an `aria-label`).
 - `ClaimCodeInput`'s mask needs the input to keep a fixed-pitch font (`font-mono`) for the slots to line up; both call
   sites have it.
+
+## Link 7 — #180 (WT1): world-task hardening and tasks anchored to the draft
+
+**Started:** subagent (fallback: `add_repo` needed in-session approval), 2026-11-01; finished 2026-11-01. Nothing else ran at
+the same time. Own worktrees under `/home/user/wt-link7/` (the coordinator's checkouts untouched).
+**Base:** knk-web-api `master` `8df59b7`, knk-web-app `main` `b3b415d` (link 5 merged), knk-plugin `main` `c8232607`,
+knk-workspace `main` `b7563d0` (fast-forward). The component trunks had not moved at the end; nothing to merge in.
+
+**Commits**
+- knk-web-api `claude/world-task-hardening`: `fed9a9a` schema + migration `20261101153314_AddWorldTaskHardening`
+  (`dotnet ef`); `115c418` state machine, task codes, cancel/release/heartbeat/open/applied, draft link, sweep, tests.
+  Head **`115c418`**.
+- knk-plugin `claude/world-task-hardening`: `0fbbf720` api-client (claim body with the API's field names, claim modes,
+  release/cancel/heartbeat/open, task code redacted from logged URLs); `58d6012f` paper (leases + heartbeat, hand back on
+  cancel/quit/disable/restart, main-thread chat, UUID keys, `/knk task`, `knk.tasks.any`, headless claim-before-run,
+  fail without handler); `21de734e` DTO read test. Head **`21de734e`**.
+- knk-web-app `claude/world-task-hardening`: `d7a0896` draft anchoring, reattach/apply, cancel on leave and on Capture
+  again/Try again, Cancel task, Cancelled/Expired + Start again, task code, builder task types. Head **`d7a0896`**.
+- knk-workspace `claude/world-task-hardening`: `e06c1e0` `specs/world-tasks/README.md` § Lifecycle (as built) + the other
+  world-task docs marked historical where they contradict it, API_CONTRACT claim section, web-api/web-app/plugin
+  architecture, `guides/world-task-hardening-smoke-test.md` + guides README, CHANGELOG (Unreleased), DESIGN/plan status.
+  Head **`e06c1e0`**.
+
+**What was built**
+- **API.** `WorldTaskStatuses` (Pending, InProgress, Completed, Failed, Cancelled, Expired; `CanTransition`). `Status` is
+  a concurrency token next to a new `RowVersion`, so every write is conditional: a second claimer, a claim that loses a
+  race, a complete after a cancel answer **409** `{code, message, status}`; a refused result (validation, gate scan
+  apply) fails the task and answers **422** (was 500). Claim only from Pending; the same uuid on the same server is
+  idempotent (renews the lease); modes `code` (code checked), `id` (game server checked `knk.tasks.any`), `headless`
+  (scan types only), `offer` (#181, `TargetUserId`). The plugin's old claim field names (`serverId`,
+  `minecraftUsername`, `linkCode`) are read too: **before, the API stored neither server nor player** (names didn't
+  match). Complete/fail/release/heartbeat only from InProgress and by the claiming server (when `serverId` is sent).
+  Task codes: `RandomNumberGenerator`, unique among open tasks (retry), lookups ignore closed tasks, case/dashes ignored.
+  Creator from the JWT (session owner for the game server). New endpoints: `POST {id}/cancel`, `{id}/release`,
+  `{id}/heartbeat`, `{id}/applied`, `GET open?serverId=`, `GET session/{id}/open`,
+  `GET api/FormSubmissionProgress/{id}/world-tasks` (latest per field). `POST {id}/status` only takes known statuses and
+  allowed transitions. A new task for a field cancels the field's open one; the first task of a draft links the draft to
+  its session (`FormSubmissionProgress.WorkflowSessionId`, also saved by the web app). `WorldTaskSweepService` (30 s,
+  section `WorldTasks`, optional): Pending past `ExpiresAt` → Expired; InProgress past `LeaseUntil` → Pending (code
+  kept, fresh expiry, `ReleaseCount`+1); sessions with no draft and no activity for 7 days → removed with their tasks,
+  except sessions with a Completed task or a catalogue scan. Catalogue scan: creator set, an Expired task fails the scan.
+- **Plugin.** `tasks/WorldTaskLeases` + `tasks/LeaseTrackingWorldTasksApi` (the `WorldTasksApi` every handler, command and
+  the poller use): sends the server id, holds each claim and heartbeats it (`world-tasks.heartbeat-interval-seconds`,
+  60); a 409/404 stops the player's handler ("was cancelled in the web app" / "is no longer yours"). Chat `cancel` hands
+  the task back (release), `discard` cancels it. Quit (`listeners/WorldTaskQuitListener`), plugin disable (bounded 5 s)
+  and startup (`GET open?serverId=`, release what no handler holds) hand tasks back. Handler state in
+  `ConcurrentHashMap<UUID,…>`; `WorldTaskChatListener` checks off-thread whether the player has a task and only then
+  routes on the main thread (waits up to 2 s to hide the command). `/knk task <code>` with `task-claim` as alias; id
+  claims need `knk.tasks.any` (plugin.yml, default op, not seeded); a lost race says who has it; a claimed task without a
+  handler is failed with the reason. Headless poller claims (`headless`) before running; a scan whose result can't be
+  sent and an item/kit scan that didn't complete go back to Pending. `/knk tasks` / `task-status` know the new statuses.
+- **Web app.** `FormWizard` keeps `fieldTasks` (latest task per field; loaded from the draft on resume, updated by the
+  panels), `ensureWorldTaskAnchor` saves the draft silently (InProgress) before the first task, applied results trigger
+  a draft save + `POST {id}/applied`, unmount (leaving the form, closing a child form) cancels open tasks.
+  `utils/forms/worldTaskLifecycle.ts` (`resolveWorkflowSessionId`: a resumed draft or child draft reuses its session).
+  `WorldBoundFieldRenderer`: reattaches (`initialTask`), applies a result finished while the form was closed, stops
+  polling once closed, "Cancel task" on Pending/InProgress, Cancelled/Expired banners with "Start again", Capture again
+  / Try again cancel an open task, "Task code" and `/knk task <code>` with the expiry time. Form builder: only
+  `LocationSelection` (default), `ReagionCreate`, `RegionClaim`, `ItemScan`, `KitScan`, `GateBlockScan`,
+  `GateOpenedBlockScan` (`utils/forms/worldTaskTypes.ts`); a stored other type shows "(no handler in game)".
+
+**Tests vs baseline** (.NET 8.0.132, Node 22 + `npx npm@11 ci`, JDK 25 toolchain under Gradle on JDK 21)
+- API: **3448 passed, 4 failed, 88 skipped of 3540** (baseline 3397 / 4 / 88 of 3489; the 4 = #99: PathResolution ×2,
+  FieldValidationService, ClientActivityStore). +51: `Services/WorldTasks/WorldTaskStateMachineTests` (33, real
+  repositories on EF InMemory, incl. a two-context claim race), `WorldTaskSweeperTests` (4), `Api/WorldTasksControllerTests`
+  (7), draft keeps its session (1), six routes added to `RequireServiceOrPermissionAttributeTests.ProtectedRoutes`;
+  `WorldTaskServiceGateScanTests` set up a session. Built with the `.csproj` (root `.sln` path case, #106). No `[MySqlFact]`
+  tests written (the conditional update is EF's concurrency token; checked on InMemory only).
+- Web app `react-scripts test --watchAll=false`: **1378 passed, 1 failed, 216 suites** (baseline 1364 passed / 1 failed,
+  213 suites; the red is `InvitePage.test.tsx`, #204, base red). New: `WorldBoundFieldRenderer.lifecycle` (7),
+  `FormWizard.worldTaskDraft.ui` (2: silent draft save → task for the draft → unmount cancels; resumed draft applies a
+  finished result, saves, marks applied), `utils/forms/worldTaskLifecycle` (5); phase7 test updated to `/knk task`.
+  `npx tsc --noEmit` 9 errors = baseline (#63). `npm run build` compiles, 24 warning lines in the same 15 files.
+- Plugin `./gradlew build -x deployToDevServer`: core **2401** (2401), api-client **291** (288; 2 skipped both), paper
+  **2364** (2343; 18 skipped both), 0 failures. New: `WorldTaskLeasesTest` (9), `KnkTaskClaimCommandFlowTest` (6),
+  `WorldTaskChatListenerTest` (3), `HeadlessWorldTaskPollerClaimTest` (1), registry and Location handler cases,
+  `WorldTaskCodeRedactionTest` (3).
+
+**Flagged decisions (reversible)**
+- **L7-1** Task codes are unique among open tasks by a check-and-retry, not a unique index: `LinkCode` is `longtext`
+  and closed rows hold duplicate codes, so an index needs a type change (not additive). Closed tasks keep their code for
+  the record; lookups and claims ignore it. A same-millisecond create race could still pair two codes (36^6 space).
+- **L7-2** No "Failed after N releases" (DESIGN §8.2 mentions it as an option): a lapsed lease always releases (Q10);
+  `ReleaseCount` is recorded and shown ("handed back in game").
+- **L7-3** Id claims: the plugin checks `knk.tasks.any` and sends `claimMode: id`; the API trusts the game server (it
+  can't see Bukkit permissions; ops). `knk.tasks.any` is `default: op` in plugin.yml and no seed gives it to a rank.
+- **L7-4** `claim`, `complete`, `fail`, `release`, `heartbeat` and `GET open` are game-server only now
+  (`[RequirePluginService]`); a web user with `knk.admin.world` could call claim/complete/fail before (nobody did).
+- **L7-5** The "only the claiming server" check runs when `serverId` is sent (the new plugin always sends it).
+- **L7-6** `POST {id}/cancel` keeps the controller's rule (`knk.admin.world` or the game server): the creator needs
+  `knk.admin.world` to create a task at all, so "creator or knk.admin.world" is the same set today.
+- **L7-7** In game `cancel` = hand back (release), `discard` = cancel for good (DESIGN: "release, or cancel if the player
+  says so").
+- **L7-8** The sweep keeps sessions with a Completed task (its output is read later, e.g. a temp region's world) and
+  catalogue-scan sessions. Rows from before #180 count from their last update: on the first sweep after the deploy, old
+  Pending tasks older than 30 min expire, old InProgress tasks are released (and expire 30 min later), and **every old
+  session without a draft link and without a Completed task, older than 7 days, is deleted** (no session had a draft
+  link before). Intended (Q18); back up first.
+- **L7-9** Draft ↔ session: `FormSubmissionProgress.WorkflowSessionId` (the design's first option); the web app saves
+  it and the API also sets it on a draft's first task. Child forms: a child FormWizard anchors its tasks to its own
+  child draft; a child that inherits the parent's session (world-task hint) links its draft to the parent's session.
+- **L7-10** The silent draft save (first task) and the save after an applied result are InProgress saves: the
+  "Leave this form?" question stays (link 5 fix round semantics), although the draft holds the value.
+- **L7-11** Leaving the form (FormWizard unmount: Cancel, a link, closing a child form, Save Draft then leave) cancels
+  its open tasks (DESIGN §8.6); a reload doesn't, so the draft reattaches. ItemScan/KitScan are marked applied after
+  their fan-out finished.
+- **L7-12** Reattach shows Pending, InProgress, Failed and Expired; an applied Completed task and a Cancelled one show
+  nothing (the field holds the value / the task is history).
+- **L7-13** Orphan temp regions: no API-driven deletion. Cancelled/released region tasks never complete, and the region
+  handler deletes its temp region when the API refuses the completion or the heartbeat stops the handler. A region
+  task that completed for an abandoned form keeps its temp region until `TempRegionRetentionTask` (comment on #34).
+- **L7-14** The server id comes from `realtime.server-id` (default `localhost`) without adding link 4's `realtime:`
+  block to `config.yml` (avoids a conflict); merging `claude/realtime-signalr` gives one mechanical conflict in
+  `KnKPlugin.registerCommands()`.
+- **L7-15** Form builder: "Custom" and the Verify*/LocationCapture types are gone from the list; a stored one is shown
+  with "(no handler in game)" and kept. `ReagionCreate`/`RegionClaim` stay (the plugin finds the region handler by the
+  `WgRegionId` field name).
+- **L7-16** A headless scan whose result can't reach the API, and an item/kit scan that didn't complete, go back to
+  Pending; a Location/region session whose `save` couldn't be sent keeps its session (the player saves again).
+- **L7-17** Task codes are redacted from the plugin's logged URLs and no longer in its log messages; with
+  `api.debug-logging` on, response bodies still show `linkCode`. On the API, `by-link-code/{code}` appears in request
+  logs at Information: keep `Microsoft.AspNetCore` at Warning outside Development (as L4 noted for the hub).
+- **L7-18** `GET by-link-code` answers only open tasks, so `/knk task-status <code>` of a closed task says "not found"
+  (use the id).
+
+**Deviations from the plan/design:** L7-2 (no fail after N releases) and L7-13 (no API-driven temp region deletion; the
+handler cleanup covers cancelled/released tasks). Otherwise as DESIGN §8.2/§8.7.
+
+**Live checklist:** [guides/world-task-hardening-smoke-test.md](../guides/world-task-hardening-smoke-test.md) (workspace
+branch `claude/world-task-hardening` until merged), sections 0–6.
+
+**Deploy notes:** deploy **API, plugin and web app together** (the old plugin runs scans without claiming them, which
+the new API refuses; the old web app doesn't link drafts). API: back up, then migration `AddWorldTaskHardening`
+(additive: 13 columns on `world_tasks`, `WorkflowSessionId` on `FormSubmissionProgresses`, indexes and FKs); optional
+section `WorldTasks` (`PendingTtlMinutes` 30, `LeaseMinutes` 3, `SweepEnabled`, `SweepIntervalSeconds` 30,
+`SessionRetentionDays` 7, `SweepBatchSize` 200); no secret. Read L7-8 before the first sweep. Plugin: optional
+`world-tasks.heartbeat-interval-seconds` (bundled `config.yml` has it), `realtime.server-id` (default `localhost`);
+`knk.tasks.any` for whoever may claim by id. No cleanup script.
+
+**Follow-ups filed:** none new. Comments on [#34](https://github.com/PandiO/knk-workspace/issues/34) (temp regions of
+completed tasks for abandoned forms) and [#181](https://github.com/PandiO/knk-workspace/issues/181) (WT2 notes below).
+
+**Notes for later links**
+- Link 8 (WT2, #181): schema, `WorldTaskOfferStates` and claim mode `offer` are in place (comment on #181). Merging
+  `claude/realtime-signalr` into knk-plugin: `KnKPlugin.registerCommands()` serverId line (both read
+  `realtime.server-id`; keep one); a trial merge also conflicts in `user/UserAdminService.java`, which is the realtime
+  branch against today's `main`, not this link. knk-web-api: no file is changed by both branches. Register
+  `WorldTaskLeases.releaseOrphans()` as a `ResyncHooks` step; `WorldTaskCancelled` can reuse `WorldTaskLeases` `onLost`.
+  Web: feed `WorldTaskUpdated` into the panel's `onTaskChange`/state instead of the 2 s poll.
+- Link 9 (`PagedEntityTable` URL state): this link changed `FormWizard.tsx` (world-task state, effects), `FormWizardPage.tsx`
+  (`handleOpenConfiguration`), `ChildFormModal.tsx`, `FieldEditor.tsx`; merge after this link or expect conflicts there.
+- The API sweep runs in every API process (one API instance today, DESIGN §11).
