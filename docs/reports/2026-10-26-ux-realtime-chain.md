@@ -23,7 +23,7 @@ test), `merged`, `blocked: <reason>`.
 | 6 | #179 | `claude/realtime-signalr` | in review | subagent (fallback: add_repo needed in-session approval), 2026-10-26 | `38b0466` / — / `b48f1484` / `ae949bd` | API 3361 passed, 4 failed (#99, = baseline reds), 87 skipped (baseline 3338/4/87); plugin core 2323 (2319), api-client 298 (290), paper 2163 (2149), 0 failures |
 | 7 | #180 | `claude/world-task-hardening` | in review | subagent (fallback: add_repo needed in-session approval), 2026-11-01 | `115c418` / `d7a0896` / `21de734e` / `e06c1e0` | API 3448 passed, 4 failed (#99, = baseline reds), 88 skipped (baseline 3397/4/88); web-app 1378 passed, 1 failed (#204 base red), suites 216 (baseline 1364/1, 213); `tsc` 9 = baseline; build OK, same 24 warnings; plugin core 2401 (2401), api-client 291 (288), paper 2364 (2343), 0 failures |
 | 8 | #181 | `claude/realtime-signalr` | waiting: link 6 done, link 7 merged | — | — | — |
-| 9 | #39 (rest), #177 follow-up | `claude/entity-lists-url-state` | ready (gate open: links 3 and 5 merged); waits for link 7 to free knk-web-app | — | — | — |
+| 9 | #39 (rest), #177 follow-up | `claude/entity-lists-url-state` | in progress | subagent (fallback: add_repo needed in-session approval), 2026-11-01 | — | — |
 | 10 | #182 | `claude/realtime-signalr` | waiting: link 8 done | — | — | — |
 
 ## Waiting for the developer
@@ -39,6 +39,13 @@ flagged decisions.)
 - **Link 5 merged** on 2026-11-01 at the developer's request after the re-test: web-app `main` `b3b415d`, API `master`
   `8df59b7`, workspace `main` `6e2b98c`. **After deploying web app and API together:** back up, then run
   `scripts/maintenance/remove-user1-drafts-and-workflow-sessions.sql` once (smoke test section 7, alpha-go-live § 4.3).
+- **Test link 7** (#180, world-task hardening): API `claude/world-task-hardening` `115c418`, plugin `21de734e`, web-app
+  `d7a0896`; live checklist `docs/guides/world-task-hardening-smoke-test.md` on workspace `claude/world-task-hardening`
+  `e06c1e0`. Deploy API, plugin and web app together and run the migration after a backup. Decisions to see: L7-8 (first
+  sweep removes old workflow sessions without a draft link or Completed task, older than 7 days), L7-1 (codes unique by
+  check-and-retry, no index), L7-4 (claim/complete/fail/release/heartbeat game-server only), L7-13 (no API-driven temp
+  region deletion; comment on #34). Coordinator check 2026-11-01: heads match, migration additive, access rules and
+  sweep spot-checked.
 - **Test link 4** (#178, SignalR S1): API `claude/realtime-signalr` `b8a29d7`, plugin `a64b7f83`; live checklist
   `docs/guides/realtime-smoke-test.md` § S1 on workspace `claude/realtime-signalr` `e878ee2`. `realtime.enabled` is off by
   default. Links 6, 8 and 10 continue this branch, so it is best merged once later unless you want S1 live earlier.
