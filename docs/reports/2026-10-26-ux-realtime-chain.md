@@ -58,7 +58,7 @@ flagged decisions.)
 - **Test link 9** (#39 rest, #177 follow-up): web-app `claude/entity-lists-url-state` `6b2a4eb`; live checklist
   `docs/guides/entity-lists-url-state-smoke-test.md` on workspace `claude/entity-lists-url-state` `015e5c1`. Web app only.
   Merges cleanly with link 7's `claude/world-task-hardening` (trial merge; `FormWizardPage.tsx` auto-merged). Flags
-  L9-1…L9-13; bulk actions split into #205.
+  L9-1…L9-13; bulk actions split into #205. Coordinator check 2026-11-01: heads match; `FormWizardPage.tsx` URL-open effect spot-checked (drafts still owner-checked by the API).
 - **Test link 6** (#179, SignalR S2, same branch): API `38b0466`, plugin `b48f1484`; live checklist
   `docs/guides/realtime-smoke-test.md` § S2 on workspace `claude/realtime-signalr` `ae949bd` (run § S1 first). Flags
   L6-1…L6-12 (link 6 block). L6-1: the ×4 slowdown applies only to the social-spy re-check for now; the notification
