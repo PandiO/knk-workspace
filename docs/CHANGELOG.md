@@ -4,7 +4,16 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
-(Nothing at the moment.)
+- **Entity lists: table state and tabs in the URL, rows as links, "Drafts (n)" and "New with"** — knk-web-app
+  `claude/entity-lists-url-state` (PandiO/knk-workspace#39, #177 follow-up; UX/realtime chain link 9, 2026-11-01). The
+  dashboard's page, search and sort are in the URL (`/dashboard/Street?page=2&q=north&sort=name&dir=desc`), so Back,
+  a refresh, a shared link and coming back from a form or the detail page keep the view. Rows are links to the
+  detail page (middle-click, Ctrl/Cmd-click, keyboard); sortable headers are keyboard buttons with `aria-sort`. The
+  lootbox and moderation pages keep the selected tab in `?tab=`, and the moderation tables' player names link to the
+  profile. Next to "New {Type}": a ▾ "New with" menu for the type's other form configurations and a "Drafts (n)" chip
+  that resumes one of your open drafts. The form wizard's pickers are unchanged (they keep their state in the table,
+  not the URL). Web app only. Smoke test:
+  [guides/entity-lists-url-state-smoke-test.md](guides/entity-lists-url-state-smoke-test.md).
 
 ## 2026-11-01
 

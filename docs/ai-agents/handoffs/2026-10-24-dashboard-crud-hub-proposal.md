@@ -1,6 +1,6 @@
 # Dashboard as the CRUD hub — proposal and plan
 
-**Status:** Implemented on knk-web-app `claude/kng-60-dashboard-hub` (plan steps 1 and 2 = #177 links 1 and 2, UX/realtime chain links 1 and 3, 2026-10-26); not merged, waiting for the developer's test. Step 3 is #39 (chain link 9). Filed as PandiO/knk-workspace#177 on 2026-10-25
+**Status:** Implemented on knk-web-app `claude/kng-60-dashboard-hub` (plan steps 1 and 2 = #177 links 1 and 2, UX/realtime chain links 1 and 3, 2026-10-26); not merged, waiting for the developer's test. Step 3 (#39 remainder: page/search/sort in the URL, rows as links) and the follow-up ("Drafts (n)", "New with: {config}") implemented on knk-web-app `claude/entity-lists-url-state` (chain link 9, 2026-11-01); not merged. Bulk actions are not built (#39 comment). Filed as PandiO/knk-workspace#177 on 2026-10-25
 **Date:** 2026-10-24
 **Issues:** [KNG-60](https://linear.app/kngpandi/issue/KNG-60) (return to origin, raised to High), [KNG-145](https://linear.app/kngpandi/issue/KNG-145) ("New X" on every list, list state in the URL), parent roadmap [KNG-140](https://linear.app/kngpandi/issue/KNG-140)
 **Code basis:** knk-web-app `main` @ `b7c0e88` (2026-10-24)

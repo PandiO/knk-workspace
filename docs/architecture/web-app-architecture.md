@@ -1,7 +1,7 @@
 # knk-web-app — Architecture
 
 **Status:** Living document — reflects actual code, updated in place on each rescan
-**Last updated:** 2026-09-18 (scan basis: `knk-web-app` @ `4ff5dc6`, branch `claude/web-app-codebase-scan-4yqibi`); spot edits 2026-10-09 (ObjectTypeExplorer, KNG-61), 2026-10-10 (FormWizard Boolean fields, KNG-53), 2026-10-12 (FormWizard child forms, KNG-133, KNG-134; List edit load, step header, List validation, KNG-135, KNG-137, KNG-164; form session registry, KNG-136; cancel / delete-draft prompt, KNG-162; form configuration export/import, KNG-138); 2026-10-17 (form wizard chain merged to `main`; smoke-test follow-ups KNG-166..169, KNG-172, KNG-173: step strip, confirmations and refusals, rule builder parent forms, picker columns, metadata refresh); 2026-10-22 (display configuration export/import; KNG-195 hybrid picker submit); 2026-10-23 (step completion conditions run, KNG-186); 2026-10-23 (validation result log, batch validate, Re-check, KNG-269); 2026-10-25 (toast region, world-task polling; UX re-evaluation in `reports/2026-10-25-web-app-ux-reevaluation.md`); 2026-10-26 (dashboard type in the URL, `returnTo`, submit pending state, success toast — PandiO/knk-workspace#177 link 1, #58); 2026-10-26 (dashboard header New/Configure, flat explorer with marker, open form without the explorer + breadcrumb, detail page header, metadata-driven Create New, "Entity setup" — #177 link 2, #81, #39); 2026-10-26 (dashboard explorer: one scrollbar, favourite types — #194, branch `claude/dashboard-explorer-194`, merged into `main` `c3c0c9f`), 2026-10-26 (dashboard header row spacing — #195, branch `claude/dashboard-header-195`, merged into `main` `c3c0c9f`); 2026-10-26 (data router, unsaved-changes guard, sticky footer, blur validation + error summary, Save on any step in edit mode, single-line input, drafts owned by the login — #109, #186, #64 FormWizard part); 2026-10-27 (unsaved changes compared by value across all steps, Next's progress save no longer counts as saved — #109 fix round)
+**Last updated:** 2026-09-18 (scan basis: `knk-web-app` @ `4ff5dc6`, branch `claude/web-app-codebase-scan-4yqibi`); spot edits 2026-10-09 (ObjectTypeExplorer, KNG-61), 2026-10-10 (FormWizard Boolean fields, KNG-53), 2026-10-12 (FormWizard child forms, KNG-133, KNG-134; List edit load, step header, List validation, KNG-135, KNG-137, KNG-164; form session registry, KNG-136; cancel / delete-draft prompt, KNG-162; form configuration export/import, KNG-138); 2026-10-17 (form wizard chain merged to `main`; smoke-test follow-ups KNG-166..169, KNG-172, KNG-173: step strip, confirmations and refusals, rule builder parent forms, picker columns, metadata refresh); 2026-10-22 (display configuration export/import; KNG-195 hybrid picker submit); 2026-10-23 (step completion conditions run, KNG-186); 2026-10-23 (validation result log, batch validate, Re-check, KNG-269); 2026-10-25 (toast region, world-task polling; UX re-evaluation in `reports/2026-10-25-web-app-ux-reevaluation.md`); 2026-10-26 (dashboard type in the URL, `returnTo`, submit pending state, success toast — PandiO/knk-workspace#177 link 1, #58); 2026-10-26 (dashboard header New/Configure, flat explorer with marker, open form without the explorer + breadcrumb, detail page header, metadata-driven Create New, "Entity setup" — #177 link 2, #81, #39); 2026-10-26 (dashboard explorer: one scrollbar, favourite types — #194, branch `claude/dashboard-explorer-194`, merged into `main` `c3c0c9f`), 2026-10-26 (dashboard header row spacing — #195, branch `claude/dashboard-header-195`, merged into `main` `c3c0c9f`); 2026-10-26 (data router, unsaved-changes guard, sticky footer, blur validation + error summary, Save on any step in edit mode, single-line input, drafts owned by the login — #109, #186, #64 FormWizard part); 2026-10-27 (unsaved changes compared by value across all steps, Next's progress save no longer counts as saved — #109 fix round); 2026-11-01 (dashboard table state in the URL, rows as links, `aria-sort`, lootbox/moderation tab in the URL, "Drafts (n)" and "New with" — PandiO/knk-workspace#39, #177 follow-up, branch `claude/entity-lists-url-state`, not merged)
 **Source scan:** `docs/reports/web-app-scan-2026-09-18.md`
 
 ## Stack
@@ -216,6 +216,31 @@ View opens `/display/{type}/{id}?returnTo=…`, Edit
 `/admin/users/{id}` (`utils/returnTo.ts` `entityEditPath`; the generic User form stays for create
 until #72/#148).
 
+**Table state in the URL** (#39, branch `claude/entity-lists-url-state` until merged): the dashboard drives
+`PagedEntityTable` in **controlled mode** (`query` + `onQueryChange`); page, search, sort and filters are query
+parameters of `/dashboard/{type}` (`utils/tableQueryParams.ts`: `?page=2&q=north&sort=name&dir=desc&f.CategoryId=4`,
+defaults left out). A change replaces the history entry (Back leaves the type rather than stepping through pages);
+picking another type opens its bare URL (page 1, no search). View, Edit and the row links build their `returnTo`
+from the location, so a form or detail page comes back to the same page, search and sort. A page past the end (a
+shared link, rows deleted) moves to the last page. Without `query` the table keeps its own state, as the form
+wizard's pickers (`FieldRenderers`, the Minecraft pickers) do; they never touch the URL, so the unsaved-changes guard
+(which blocks query changes) is unaffected. **Rows as links** (`rowHref`): the first cell is an `<a href>` to the
+detail page (middle-click, Ctrl/Cmd-click, keyboard), a plain click still goes through the app's navigation, and a
+Ctrl-click or middle-click elsewhere on the row opens a new tab; only for types whose View works, never while rows
+are selectable. Sortable headers are buttons (keyboard) with `aria-sort`.
+
+**"Drafts (n)" and "New with"** (#177 follow-up): next to "New {Type}" a chevron lists the type's form
+configurations other than the default ("New with"), and a "Drafts (n)" chip lists the caller's open drafts of the
+type (Saved Progress without Completed/Abandoned, newest first; `hooks/useDashboardFormOptions.ts`,
+`ObjectDashboard/DashboardHeaderMenu.tsx`). Both open the Entity setup page with `?configId=` / `?resume=` and
+`returnTo` (`newFormWithConfigPath`, `resumeDraftPath`); `FormWizardPage` opens that configuration or draft once
+its lists loaded (an unknown configuration shows an error toast and stays on the lists). The chip and chevron are
+hidden when there is nothing to list; Saved Progress and the configuration lists stay on the Entity setup page.
+
+**Tabs in the URL** (#39): `/admin/lootboxes?tab=odds` and `/admin/users?tab=demoted` (`hooks/useTabParam.ts`;
+the default tab is left out, an unknown value reads as the default, switching replaces the history entry). On the
+moderation page the player names are links to the profile.
+
 **Detail page** (`DisplayWizardPage`, #81): `EntityDetailHeader` replaces the heading that showed the
 display configuration's name: the entity's own name (`utils/entityLabel.ts`), its type, a breadcrumb
 (`detailTrail`), **Back** to `returnTo` (else `/dashboard/{type}`), **Edit** coming back to the page and
@@ -271,7 +296,7 @@ src/
     DisplayConfigBuilder/   — admin UI to author DisplayConfigurationDto records
     ObjectDashboard/        — legacy static-config-driven list/CRUD dashboard
     ObjectTypeExplorer/     — left-nav entity type picker (ObjectDashboard, FormWizardPage): search, A–Z/Z–A sort, optional groups (unused since #177 link 2), `marked` entries, `favourites` with a star per type (#194, dashboard only), settings in localStorage (KNG-61)
-    PagedEntityTable/       — generic server-paged table, used by both dashboard and forms
+    PagedEntityTable/       — generic server-paged table, used by both dashboard and forms; controlled mode (`query`/`onQueryChange`), `rowHref`, `aria-sort` (#39)
     PathBuilder/            — path/reference picker for cross-entity field bindings
     Workflow/               — WorldTask/job polling UI (siege/world-mutation background tasks)
     minecraft/              — hybrid pickers for Minecraft material/enchantment refs
