@@ -54,6 +54,7 @@ flagged decisions.)
 
 ## Follow-ups filed by links
 
+- From the coordinator's link 5 merge check (2026-11-01): #204 (web-app `InvitePage.test.tsx` fixture expired on 2026-10-28; red on `main`, recorded as a base red by later links).
 - From the developer's live test of links 1–3 (2026-10-26, filed by the coordinator): #194, #195, #196, #197.
 
 - Link 4: no new issue (API reds = #99, `.sln` path case = #106); WT2 notes as a comment on [#181](https://github.com/PandiO/knk-workspace/issues/181).
