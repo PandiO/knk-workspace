@@ -1,7 +1,7 @@
 # Closed alpha test run 3 — checklist (planned)
 
 **Status:** Planned; date not set. Carries over the steps test run 2 left for later.
-**Last updated:** 2026-11-01 (packages F, G, I and #193 merged; § 4 now part of the run, § 4a added)
+**Last updated:** 2026-11-01 (G and I tested, § 5; packages F, G, I and #193 merged; § 4 now part of the run, § 4a added)
 **Issues:** parent [PandiO/knk-workspace#149](https://github.com/PandiO/knk-workspace/issues/149)
 **Previous run:** [test run 1 findings](../25-10-2026/test-run-1-findings.md) · fixes in the
 [alpha run 1 handoff](../../../ai-agents/handoffs/2026-10-25-alpha-run-1-p0-p1.md) (packages A–D, merged 2026-10-26)
@@ -95,6 +95,25 @@ Merged into knk-plugin `main` `c8232607`, knk-web-api `master` `22a28ab`, knk-we
 | Teleport, kits, items (I) | #171, #172, #175 |
 
 ## 5. Results
+
+### 2026-11-01 (developer, on knk-plugin `main` `c8232607`, knk-web-api `master` `22a28ab`)
+
+| Step (P2/P3 smoke test guide) | Issue | Result |
+|---|---|---|
+| § 6.1 Blindness hides name tags | #169 | Works |
+| § 6.2 milk, overlap, death | #169 | Accepted |
+| § 6.3 siege variant | #169 | Accepted |
+| § 6.4 Flash Chaos keeps tags | #169 | Works |
+| § 6.5 Invisibility hides the user's tag | #169 | Works. Follow-up: hide the player fully (armour too), staying in the tab list → #211 |
+| § 6.6 Invisibility in a siege | #169 | Works |
+| § 6.7 staff freeze bar | #170 | Works |
+| § 7.1–7.3 rank rule, `all` forms | #171 | Works |
+| § 7.4–7.6 without node, exempt, strictly-lower | #171 | Accepted |
+| § 8.1 kits tooltip | #172 | Works. Follow-up: other lore lines (rank-rule line) still wide; general lore wrap → #212 |
+| § 8.2–8.9 `/knk item more` | #175 | Works |
+
+Closed as completed: #169, #170, #171, #172, #175. Still to test: §§ 2–4 (A, D, #193) and the E/F steps of § 4a
+(#163, #164, #165, #166, #174, #198, #199).
 
 Fill in during the run: per step works / fails (with what happened) / skipped. New findings get a GitHub issue under
 #149 or a new parent issue for run 3.
