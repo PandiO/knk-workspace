@@ -1,7 +1,7 @@
 # Dashboard, form wizard and realtime chain — progress report
 
-**Status:** In progress — links 1–3 merged; links 4, 5 and 6 in review (2026-10-26)
-**Last updated:** 2026-10-26
+**Status:** In progress — links 1–3, 3b and 5 merged; links 4 and 6 in review; link 7 running (2026-11-01)
+**Last updated:** 2026-11-01
 **Charter:** [UX_REALTIME_CHAIN.md](../ai-agents/handoffs/UX_REALTIME_CHAIN.md) · **Coordinator prompt:**
 [2026-10-26-ux-realtime-coordinator-prompt.md](../ai-agents/handoffs/2026-10-26-ux-realtime-coordinator-prompt.md)
 **Base at start:** knk-web-app `main` `0d61270`, knk-web-api `master` `6f08383`, knk-plugin `main` `ee35fb1` (re-check:
@@ -19,11 +19,11 @@ test), `merged`, `blocked: <reason>`.
 | 3 | #177 (link 2), #81, #39 (menu) | `claude/kng-60-dashboard-hub` | merged: knk-web-app `main` `7ba0f4b`, knk-workspace `main` `78bf6a3` (2026-10-26, by the coordinator at the developer's request) | subagent (fallback: add_repo needed in-session approval), 2026-10-26 | — / `9a203f8` / — / `186c851` | web-app 1270/1270 (baseline 1232/1232), suites 201 (195); `tsc` 9 errors = baseline; build OK, same 24 warnings |
 | 3b | #194, #195, #196 (follow-ups of links 1–3) | `claude/dashboard-explorer-194`, `claude/dashboard-header-195`, `claude/claim-code-dash-196` | merged: knk-web-app `main` `c3c0c9f` (2026-10-26, by the coordinator at the developer's request) | subagent, 2026-10-26 | — / explorer `29a6883`, header `be4adab`, claim-code `b8138e3` / — / explorer `3aea976`, header `61dcf23`, claim-code `31c41bd` | web-app 1315 / 1305 / 1311, all passed (baseline 1304/1304, suites 205 / 204 / 204 (204)); `tsc` 9 errors = baseline; build OK, same 24 warnings |
 | 4 | #178 | `claude/realtime-signalr` | in review | subagent (fallback: add_repo needed in-session approval), 2026-10-26 | `b8a29d7` / — / `a64b7f83` / `e878ee2` | API 3338 passed, 4 failed (#99, = baseline reds), 87 skipped (baseline 3296/4/87); plugin core 2319 (2312), api-client 290 (280), paper 2149 (2140), 0 failures |
-| 5 | #64 (FormWizard), #109, #186 | `claude/form-wizard-edit-mode` | in review (fix round 2026-10-27 done: re-test 4.3a/4.3b) | subagent (fallback: add_repo needed in-session approval), 2026-10-26; fix round subagent 2026-10-27 | `09305ef` / `ff58c83` / — / `1e21ee2` | fix round: web-app 1359/1359, suites 212 (baseline on the merged `main` `c3c0c9f`: 1349/1349, 210); link 5: web-app 1330/1330, suites 209 (baseline 1304/1304, 204); `tsc` 9 errors = baseline; build OK, same 24 warnings; API 3356 passed, 4 failed (#99, = baseline reds), 88 skipped (baseline on the merged `master` `4d7a806`: 3339/4/88) |
+| 5 | #64 (FormWizard), #109, #186 | `claude/form-wizard-edit-mode` | merged: web-app `main` `b3b415d`, API `master` `8df59b7`, workspace `main` `6e2b98c` (2026-11-01, by the coordinator at the developer's request) | subagent (fallback: add_repo needed in-session approval), 2026-10-26; fix round subagent 2026-10-27 | `09305ef` / `ff58c83` / — / `1e21ee2` | fix round: web-app 1359/1359, suites 212 (baseline on the merged `main` `c3c0c9f`: 1349/1349, 210); link 5: web-app 1330/1330, suites 209 (baseline 1304/1304, 204); `tsc` 9 errors = baseline; build OK, same 24 warnings; API 3356 passed, 4 failed (#99, = baseline reds), 88 skipped (baseline on the merged `master` `4d7a806`: 3339/4/88) |
 | 6 | #179 | `claude/realtime-signalr` | in review | subagent (fallback: add_repo needed in-session approval), 2026-10-26 | `38b0466` / — / `b48f1484` / `ae949bd` | API 3361 passed, 4 failed (#99, = baseline reds), 87 skipped (baseline 3338/4/87); plugin core 2323 (2319), api-client 298 (290), paper 2163 (2149), 0 failures |
-| 7 | #180 | `claude/world-task-hardening` | waiting: link 5 merged | — | — | — |
+| 7 | #180 | `claude/world-task-hardening` | in progress | subagent (fallback: add_repo needed in-session approval), 2026-11-01 | — | — |
 | 8 | #181 | `claude/realtime-signalr` | waiting: link 6 done, link 7 merged | — | — | — |
-| 9 | #39 (rest), #177 follow-up | `claude/entity-lists-url-state` | waiting: link 5 merged (same web-app files: wizard pickers, coordinator default) | — | — | — |
+| 9 | #39 (rest), #177 follow-up | `claude/entity-lists-url-state` | ready (gate open: links 3 and 5 merged); waits for link 7 to free knk-web-app | — | — | — |
 | 10 | #182 | `claude/realtime-signalr` | waiting: link 8 done | — | — | — |
 
 ## Waiting for the developer
@@ -36,17 +36,9 @@ flagged decisions.)
   the dash from the start), #197 (remove "Entity setup" from the nav; not scheduled). #194–#196 run as follow-up link 3b.
 - **Live test link 3b** (#194, #195, #196; merged into web-app `main` `c3c0c9f` on 2026-10-26 at the developer's request):
   checklist per issue in the link 3b block. Flags L3b-1…L3b-9.
-- **Link 5 live-tested by the developer on 2026-10-27:** sections 1–6 work or accepted, except two leave-guard bugs in
-  4.3 (typing then clearing still asks; after Next the guard forgets step 1's values). Fix round done (subagent,
-  2026-10-27): web-app `ff58c83`, workspace `1e21ee2` (link 5 block, "fix round"); merge link 5 after its re-test
-  (4.3a/4.3b). Section 7 (cleanup
-  script) runs after the deploy.
-- **Test and merge link 5** (#64 FormWizard part, #109, #186): `claude/form-wizard-edit-mode` web-app `ff58c83`, API
-  `09305ef`, workspace `1e21ee2`; live checklist `guides/form-wizard-edit-mode-smoke-test.md` sections 1–7 on the workspace
-  branch. Deploy web app and API together (an old API refuses a draft without `userId`), then back up and run
-  `scripts/maintenance/remove-user1-drafts-and-workflow-sessions.sql` once (alpha-go-live § 4.3). **Its merge opens links 7
-  and 9; every remaining link waits on it** (8 on 7, 10 on 8). Flags L5-1…L5-14; L5-1 (any `knk.admin.content` holder can
-  open a draft by id), L5-3 (no user = 401).
+- **Link 5 merged** on 2026-11-01 at the developer's request after the re-test: web-app `main` `b3b415d`, API `master`
+  `8df59b7`, workspace `main` `6e2b98c`. **After deploying web app and API together:** back up, then run
+  `scripts/maintenance/remove-user1-drafts-and-workflow-sessions.sql` once (smoke test section 7, alpha-go-live § 4.3).
 - **Test link 4** (#178, SignalR S1): API `claude/realtime-signalr` `b8a29d7`, plugin `a64b7f83`; live checklist
   `docs/guides/realtime-smoke-test.md` § S1 on workspace `claude/realtime-signalr` `e878ee2`. `realtime.enabled` is off by
   default. Links 6, 8 and 10 continue this branch, so it is best merged once later unless you want S1 live earlier.
