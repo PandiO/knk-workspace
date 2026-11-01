@@ -1,7 +1,7 @@
 # Plugin permission checks and command visibility
 
 **Status:** Implemented, live-tested by the developer and merged 2026-10-18: knk-plugin `main` `3ca5b3f`, knk-web-api `master` `ac3c869`. Linear [KNG-107](https://linear.app/kngpandi/issue/KNG-107)
-**Last updated:** 2026-10-27 (§ 4: package I rank seeds, #171/#175, in review on `claude/alpha-run-1-teleport-items`, not merged); 2026-10-26 (§ 4 "Bukkit-only checks", alpha run 1 package C, [PandiO/knk-workspace#158](https://github.com/PandiO/knk-workspace/issues/158), in review on `claude/alpha-run-1-permissions`, not merged); 2026-10-18
+**Last updated:** 2026-11-01 (packages F, G, I and #193 merged: § 4 custom enchantments, package I seeds); 2026-10-27 (§ 4: package I rank seeds, #171/#175, in review on `claude/alpha-run-1-teleport-items`, not merged); 2026-10-26 (§ 4 "Bukkit-only checks", alpha run 1 package C, [PandiO/knk-workspace#158](https://github.com/PandiO/knk-workspace/issues/158), in review on `claude/alpha-run-1-permissions`, not merged); 2026-10-18
 **Related:** [`offline-security-cache.md`](offline-security-cache.md) (answers when the API can't be asked); [`api-connectivity.md`](api-connectivity.md) (no API call while DOWN); [`specs/user-features/DESIGN.md`](../specs/user-features/DESIGN.md) §2.2 (the resolution rules); KNG-24 (Bukkit-or-in-house checks), KNG-30 (completion sweep)
 
 ## 1. Problem
@@ -72,12 +72,11 @@ rank grant has no effect. Every vanilla command needs its `minecraft.command.*` 
   `plugin.yml` (`CommandNodesTest` checks every node of a gated command is declared).
 - **Vanilla commands a rank needs** get a KnK command that takes over the bare label (`/tp`, and since #158
   `/gamemode`; vanilla stays reachable as `/minecraft:<command>`).
-- **Package C (#158, in review)** moved menu item visibility/action permissions and the `permission-node` condition
+- **Package C (#158, merged 2026-10-26)** moved menu item visibility/action permissions and the `permission-node` condition
   (`MenuPermissions`), the Player manager's reads and freeze buttons, gate block breaking and InstantOpen
-  pass-through onto the in-house check. **Still Bukkit-only:** the custom-enchantment nodes
-  (`customenchantments.<id>` for SUPPORT enchantments, the `/ce` subcommand nodes) — to be filed under #149 (scan F6).
+  pass-through onto the in-house check. The custom-enchantment nodes (scan F6) moved in #193, see below.
 
-- **Package I (#171, #175, in review)** adds `knk.teleport.all.hub|spawn|tp|tphere` (Moderator, Admin),
+- **Package I (#171, #175, merged 2026-11-01)** adds `knk.teleport.all.hub|spawn|tp|tphere` (Moderator, Admin),
   `knk.teleport.exempt.*` (no rank) and `knk.admin.item.more` (Admin) — all checked through `KnkPermissible`, seeded
   by knk-web-api `SeedTeleportAllAndItemMoreNodes` with the same parent-chain rule as package C's migration.
   Teleporting another player now needs the same rank or lower (`RankHierarchy.actorAtLeast`); other staff actions keep
@@ -86,10 +85,28 @@ rank grant has no effect. Every vanilla command needs its `minecraft.command.*` 
 Full inventory of commands, nodes, checks and rank seeds:
 [reports/2026-10-26-command-permission-scan.md](../reports/2026-10-26-command-permission-scan.md).
 
+### Custom enchantments
+
+PandiO/knk-workspace#193 (merged 2026-11-01). The ability and `/ce`
+checks were Bukkit-only on nodes plugin.yml didn't declare, so only ops could use abilities. They now go through
+`EnchantmentPermissions` (knk-paper `enchantment/`) on top of `CommandPermissions`: Bukkit/op first, then the cached
+in-house answer.
+
+- An enchantment `<id>` is usable with `customenchantments.<id>` or `customenchantments.use.<id>`. The group node
+  **`customenchantments.use.*`** covers every enchantment, also ids added later. Not `customenchantments.*`: by the
+  resolver's prefix rule it would also grant the `/ce` admin nodes (`customenchantments.command.*`). To withhold one
+  enchantment from a rank holding the group node, deny `customenchantments.use.<id>`.
+- Checked for SUPPORT abilities on right-click (`EnchantmentInteractListener`, cache-only: fails closed until the
+  player's set is loaded, which happens at join) and for `/ce add <id>`. ATTACK effects on hit and Cleaving have no
+  permission check at all.
+- `/ce` subcommand nodes run through `CommandPermissions.whenAllowed`; the `.others` nodes and the root and
+  subcommand tab completion through `has`/`hasForCompletion`. `/ce info <player>` now enforces `.info.others`.
+
 ## 5. Tests
 
 - knk-core: `EffectivePermissionResolverTest` (the API's rules, ranked and unranked), `PermissionsDataAccessEffectiveSetTest`
   (one request for many nodes, shared cold loads, preload, stale answers, API DOWN, unknown user, unranked conflicts, invalidation).
 - knk-paper: `CommandPermissionsTest` (`warmForListing`), `CommandRegistryPermissionsTest` (help listing and paging),
-  `GatedCommandVisibilityListenerTest`, `OtherPluginCommandVisibilityTest`, `CompletionPermissionsTest`, per-command tests.
+  `GatedCommandVisibilityListenerTest`, `OtherPluginCommandVisibilityTest`, `CompletionPermissionsTest`, per-command tests; `EnchantmentPermissionsTest`,
+  `EnchantmentInteractListenerPermissionTest`, `EnchantmentCommandHandlerTest` (#193).
 - knk-web-api: `PermissionResolutionServiceTests.GetEffectiveAsync_SourceRank_*`.
