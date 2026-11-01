@@ -62,6 +62,10 @@ Live tracker of in-progress work across all four Knights and Kings repos
 
 ## Recently completed
 
+### 2026-11-01 — Claim code field centered on /link (#206)
+
+Claude Code cloud session (Pandi); QOL hotfix after alpha test run 1, straight on knk-web-app `main` `eac1013` (`src/components/auth/ClaimCodeInput.tsx` + test): the `____-____` mask and the typed code are centered in the field on `/link` and `/account`, characters stay on their slots. Unit tests + Chromium check on `/link`; live check on the deployed app left to the developer. Found in passing: #207 (time-bombed InvitePage test, red on `main` since 2026-10-28).
+
 ### 2026-10-30 — Fourth NPC target: distractor (#146 / #41)
 
 Codex voice session; authorized main documentation continuation. NPC/Siege specs and implementation checks now cover approaching and standing near a temporary distractor, normal selection/commitment, and immediate expiry/removal invalidation. Item/entity/block representation and tuning remain open. Consistency reviewed; no gameplay code or live tests.

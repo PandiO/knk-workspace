@@ -8,6 +8,9 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## 2026-11-01
 
+- **Claim code field centered** — knk-web-app `main` `eac1013` (PandiO/knk-workspace#206, QOL hotfix after alpha
+  test run 1). On `/link` and `/account` the code and its `____-____` mask now sit in the middle of the field
+  instead of against its left edge; typed characters still land on their slots.
 - **Form wizard: footer, unsaved-changes guard, blur validation, Save on any step; drafts per admin** —
   knk-web-app `main` `b3b415d` and knk-web-api `master` `8df59b7`, merged `--no-ff` from `claude/form-wizard-edit-mode` (PandiO/knk-workspace#109, #186, #64 FormWizard part;
   UX/realtime chain link 5, 2026-10-26; fix round 2026-10-27 after the developer's live test). Live-tested sections 1–6. The form's buttons (Cancel, Previous, Save
