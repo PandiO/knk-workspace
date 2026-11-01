@@ -21,7 +21,9 @@ COPY source/package.json source/package-lock.json ./
 RUN npm ci --no-audit --no-fund
 
 COPY source/ ./
-RUN npm run build
+# Readable for nginx (UID 101) whatever modes the build context had: an extract with umask 077 once left
+# build/brand and build/images 0700, and nginx answered them with index.html (#210).
+RUN npm run build && chmod -R a+rX build
 
 FROM nginxinc/nginx-unprivileged:1.28-alpine@sha256:7377697a821c131a924a7105fafbe7414db4e9fcc77a6f08f776f33f141ec3f8 AS runtime
 

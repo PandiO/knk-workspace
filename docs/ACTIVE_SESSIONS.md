@@ -62,6 +62,10 @@ Live tracker of in-progress work across all four Knights and Kings repos
 
 ## Recently completed
 
+### 2026-11-01 — Alpha images broken: knk-deploy extract fix prepared (#210) — waiting for the developer's install
+
+Same session. Root cause: `knk-deploy` extracts sources with umask 077 and the `data` filter, so source directories were 0700 and `alpha-b3b415d0` served `index.html` for `/brand/*` and `/images/*`. Prepared on knk-workspace `claude/dazzling-dijkstra-37xmt1`: `scripts/nas-ops/stage-b/knk-deploy` (`source_filter`, dirs 0755), new `tests/test_extract_source.py` (10/10), `SHA256SUMS`, `scripts/alpha-web/Dockerfile` (`chmod -R a+rX build`) + README, `docs/guides/nas-ops-access.md` § 7. Verified locally: `npm run build` from a umask-077 extract gives `build/brand` 700, 755 after the chmod. Not run: the root+Docker end-to-end `test_knk_deploy.py` (no Docker daemon in the cloud session). Next: developer installs the program and the Dockerfile on the NAS, then `deploy-web`. #209 (Access bypass paths) is separate and still open.
+
 ### 2026-11-01 — Invitation code fields with fixed KNK- and dashes (#208)
 
 Same session; QOL hotfix on knk-web-app `main` `1c9524d`: `/join` and `/link` invitation fields show `KNK-_____-_____` (prefix and dash drawn by the field, pasted codes with or without dashes/prefix land the same). `ClaimCodeInput` generalised into `src/components/auth/SegmentedCodeInput.tsx`; new `InviteCodeInput.tsx`, `src/utils/inviteCode.ts` + tests. `RegisterForm` combined field unchanged. Full suite 1378/1379 (#207); Chromium check; live check left to the developer.

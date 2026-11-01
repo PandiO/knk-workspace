@@ -1,7 +1,7 @@
 # NAS operations access for agents (`knk-ops`)
 
 **Status:** Stage A (read-only checks) installed on the NAS and verified 2026-10-18 · Stage B (`knk-deploy`, delegated changes) built, tested and **installed 2026-10-25**
-**Last updated:** 2026-10-25 (§ 7 Stage B rebuilt for delegated changes)
+**Last updated:** 2026-11-01 (§ 7: source extraction fix for #210, not installed yet); 2026-10-25 (§ 7 Stage B rebuilt for delegated changes)
 **Sources:** wrapper sources and checksums in [`scripts/nas-ops/stage-a/`](../../scripts/nas-ops/stage-a/) ·
 session report [2026-10-18 NAS ops access and alpha check](../reports/2026-10-18-nas-ops-access-and-alpha-check.md) ·
 [closed-alpha deployment runbook](closed-alpha-deployment-runbook.md)
@@ -154,6 +154,8 @@ sudo journalctl -t knk-ops --since today --no-pager -o short-iso
 `knk-deploy@pc`, `from="192.168.50.208"`; `_files` copied from the `6f08383d`/`0d612702` build folders). PC test:
 `status` ok, `status; id` denied, `restart mysql` refused, `config-get knk` shows the plugin key as a token.
 Archive the files with `git -c core.autocrlf=false archive` on Windows, or the line endings change. Hardening update `a6d59a6` (`knk-deploy` `1f1aad31…`, dispatcher unchanged `e6f9c1e9…`) installed the same evening; the previous program is kept as `/var/lib/knk-deploy/knk-deploy.before-a6d59a6`.
+
+**Update for [#210](https://github.com/PandiO/knk-workspace/issues/210) (2026-11-01, branch `claude/dazzling-dijkstra-37xmt1`, not installed yet):** `extract_source()` used `tarfile`'s `data` filter, which creates directories with the program's umask 077. Every directory of a source archive came out 0700, so the first web deploy through `knk-deploy` (`alpha-b3b415d0`) had `build/brand` and `build/images` unreadable for nginx (UID 101), and nginx answered them with `index.html`. The new `source_filter` keeps the `data` filter's checks and gives directories 0755 (the build folder itself stays 0700). `knk-deploy` is now `e5778e0a…`, the dispatcher is unchanged. New test without root or Docker: `python3 scripts/nas-ops/stage-b/tests/test_extract_source.py` (10/10; 5 fail on the old program). Install as § 7.4 (keep the old program as `knk-deploy.before-210`), copy the new `scripts/alpha-web/Dockerfile` into `/srv/docker/build/knk-web-app/_files/`, then `deploy-web` again. `SHA256SUMS` now also covers `pc/knk-release.sh` as changed on 2026-11-01.
 Developer decisions 2026-10-25: Claude Code sessions on the PC may update the alpha to **trunk** builds and change its
 Compose and plugin configs, **asking the developer before every change** (Claude Code `ask` rules); the NAS gets
 **no GitHub access** — the PC builds and uploads. This replaces the 2026-10-18 design (no arguments, approval files).
