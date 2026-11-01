@@ -4,7 +4,7 @@
 (the Codex NAS rollout). Not yet followed end to end. 2026-10-21: web hostname decided (`app.knightsandkings.net`),
 DNS in Cloudflare, Minecraft console/autostart/plugin updates ([KNG-225](https://linear.app/kngpandi/issue/KNG-225)).
 2026-10-22: § 3 (API upgrade) done on the NAS ([KNG-227](https://linear.app/kngpandi/issue/KNG-227)); § 3–4 corrected from that run.
-**Last updated:** 2026-10-25 (§ 4, § 4.2: `Seeding__IncludeExamples=false` and the one-time example cleanup script, not deployed yet); 2026-10-24 (§ 9 checklist ticked after Phase 9; Phase 9 done: invite-only live, § 10 invite text, § 11.1; Phase 9 E0: the mail relay is live, § 4 mail block is SMTP; KNG-205 invitations merged: the feature-branch notes replaced; settings as before, all off until § 11.1); 2026-10-22; 2026-10-21 (KNG-218, invitations chain link 7: § 4.1 settings after the invite-only switch-over, § 5.1 admission gate instead of the whitelist, § 9 F2, § 10 invite mail, § 11 kill switches and **§ 11.1 the switch-over steps**, § 12); 2026-10-21 (§ 6.1: Cloudflare Access sync, `cfproxy`, the sign-up bypass — KNG-216, feature branch; § 4: `Email__AllowLogTransport` for API builds with the KNG-206 email engine; notes pointing to the KNG-205 invitations plan); 2026-10-18
+**Last updated:** 2026-10-26 (§ 4.3: the #186 user-1 drafts cleanup script, feature branch `claude/form-wizard-edit-mode`); 2026-10-25 (§ 4, § 4.2: `Seeding__IncludeExamples=false` and the one-time example cleanup script, not deployed yet); 2026-10-24 (§ 9 checklist ticked after Phase 9; Phase 9 done: invite-only live, § 10 invite text, § 11.1; Phase 9 E0: the mail relay is live, § 4 mail block is SMTP; KNG-205 invitations merged: the feature-branch notes replaced; settings as before, all off until § 11.1); 2026-10-22; 2026-10-21 (KNG-218, invitations chain link 7: § 4.1 settings after the invite-only switch-over, § 5.1 admission gate instead of the whitelist, § 9 F2, § 10 invite mail, § 11 kill switches and **§ 11.1 the switch-over steps**, § 12); 2026-10-21 (§ 6.1: Cloudflare Access sync, `cfproxy`, the sign-up bypass — KNG-216, feature branch; § 4: `Email__AllowLogTransport` for API builds with the KNG-206 email engine; notes pointing to the KNG-205 invitations plan); 2026-10-18
 **Applies to:** builds that **include KNG-64**: knk-web-api `master` ≥ `30c5dc5`, knk-web-app `main` ≥ `98c0a76`,
 knk-plugin `main` ≥ `34c9261`. **Never expose an older API.**
 **Linear:** [KNG-64](https://linear.app/kngpandi/issue/KNG-64) (parent), [KNG-68](https://linear.app/kngpandi/issue/KNG-68) (this guide)
@@ -246,6 +246,20 @@ lootboxes, the hub and the other real menus are seeded either way. The default i
    keeps the old container and its old settings, and an old image seeds the examples again.
 
 If the old image restarts after step 3, it adds the examples again. Deploy the new build first, as in step 1.
+
+### 4.3 Drafts and workflow sessions saved as user 1 (#186)
+
+Until [#186](https://github.com/PandiO/knk-workspace/issues/186) every admin's form drafts and workflow sessions were
+saved as user 1 (shared Saved Progress, wrong world-task initiator). Once the API and web app with the fix
+(`claude/form-wizard-edit-mode`, not merged yet) are deployed, the owner comes from the login. Then, once:
+
+1. **Back up** `knightsandkings_alpha` (§ 3 step 1).
+2. **Clean up** with [`scripts/maintenance/remove-user1-drafts-and-workflow-sessions.sql`](../../scripts/maintenance/remove-user1-drafts-and-workflow-sessions.sql),
+   the same way as § 4.2 step 3. It deletes user 1's drafts and workflow sessions (with their steps and world tasks)
+   created before `@fixed_since` (default: now; set the deploy time when you run it later). It keeps catalog-scan
+   sessions and sessions whose world task's `tempregion_worldtask_<id>` is still a domain's, sub-region's, spawn
+   area's or road edge's region, with the reason. A second run changes nothing. Tried on MySQL 8.0 against a database
+   built from the migrations (2026-10-26).
 
 ---
 
