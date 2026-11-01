@@ -1,7 +1,7 @@
 # Closed alpha test run 3 — checklist (planned)
 
 **Status:** Planned; date not set. Carries over the steps test run 2 left for later.
-**Last updated:** 2026-10-27
+**Last updated:** 2026-11-01 (packages F, G, I and #193 merged; § 4 now part of the run, § 4a added)
 **Issues:** parent [PandiO/knk-workspace#149](https://github.com/PandiO/knk-workspace/issues/149)
 **Previous run:** [test run 1 findings](../25-10-2026/test-run-1-findings.md) · fixes in the
 [alpha run 1 handoff](../../../ai-agents/handoffs/2026-10-25-alpha-run-1-p0-p1.md) (packages A–D, merged 2026-10-26)
@@ -61,10 +61,10 @@ knk-web-app `main` `6b02bb0`). Results as reported by the developer.
   outer gate's foot, not the crane. With the outer gate open or broken, it leads to the capture point (or the inner
   door). Defenders unchanged. Same check for South Gate from the south spawn.
 
-## 4. When merged: custom enchantment permissions
+## 4. Custom enchantment permissions (#193)
 
-Only if [#193](https://github.com/PandiO/knk-workspace/issues/193) (knk-plugin `claude/custom-enchantment-permissions`)
-is merged and deployed before the run. Grant `customenchantments.use.*` to the Default rank first.
+[#193](https://github.com/PandiO/knk-workspace/issues/193) is merged (knk-plugin `main` `c8232607`, 2026-11-01). Grant
+`customenchantments.use.*` to the Default rank first; until then only ops can use abilities.
 
 - [ ] A non-op Default player with `customenchantments.use.*` can use each ability on right-click: chaos,
   flash_chaos, health_boost, armor_repair, resistance, invisibility. Without the grant: nothing happens.
@@ -73,6 +73,26 @@ is merged and deployed before the run. Grant `customenchantments.use.*` to the D
 - [ ] An op without grants can still use everything, including `/ce add/remove/reload`. A Default player with
   `use.*` can't run `/ce add` or `/ce reload` and doesn't see them in tab completion.
 - [ ] `/ce info <player>` is refused without `customenchantments.command.info.others` and works with it.
+
+## 4a. P2/P3 packages F, G and I (merged 2026-11-01)
+
+Merged into knk-plugin `main` `c8232607`, knk-web-api `master` `22a28ab`, knk-web-app `main` `b20101a`. Package H
+(gates, #167) is on hold and not merged. Setup and every step: the
+[P2/P3 smoke test guide](../../../guides/alpha-run-1-p2-p3-smoke-test.md) §§ 1–8 (skip § 0.2, the merge is done, and
+§ 9, gates). Before the run:
+
+- Deploy the trunks; the API runs `AddSiegeGateDamageAndParticipationRewards`, `AddSiegePostMatchSeconds` and
+  `SeedTeleportAllAndItemMoreNodes`. E's reward defaults then apply to every existing scenario.
+- Web app: import **SiegeScenario – Default (seed v2)** and make it the default (keep v1 until imported
+  SiegeObjective/SiegeSpawnpoint copies are repointed, see the seed README).
+- Plugin `config.yml`: set `web.public-url` to the API's `App:PublicBaseUrl` (#174 links).
+
+| Area | Issues |
+|---|---|
+| Siege rewards (E) | #165, #166 |
+| Siege results (F) | #163, #164, #174, #198, #199 |
+| Effects (G) | #169, #170 |
+| Teleport, kits, items (I) | #171, #172, #175 |
 
 ## 5. Results
 
