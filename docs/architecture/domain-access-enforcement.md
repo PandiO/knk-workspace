@@ -1,7 +1,7 @@
 # Domain access (AllowEntry / AllowExit) — enforcement on the game server
 
 **Status:** Implemented, **live-tested by the developer and merged to trunk 2026-10-08** (knk-plugin `main` `790c662`, knk-web-api `master` `be7b70e`; feature commits `dfffcb7` / `32fca08`). Refusal-in-chat follow-up [KNG-74](https://linear.app/kngpandi/issue/KNG-74) live-tested and merged 2026-10-09 (knk-plugin `main` `fd869aa`, feature commit `a608aa7`). Linear [KNG-56](https://linear.app/kngpandi/issue/KNG-56) (follows [KNG-55](https://linear.app/kngpandi/issue/KNG-55))
-**Last updated:** 2026-10-23 (`knk-domain-id` and domain sub-regions, KNG-255, merged and live-tested: knk-plugin `9dfd7aae`); 2026-10-09 (KNG-74 merged; live checklist §6 item 9 passed)
+**Last updated:** 2026-10-26 (§ 7 storage bypass and effect damage, alpha run 1 package C, #157/#162, in review on `claude/alpha-run-1-permissions`, not merged); 2026-10-23 (`knk-domain-id` and domain sub-regions, KNG-255, merged and live-tested: knk-plugin `9dfd7aae`); 2026-10-09 (KNG-74 merged; live checklist §6 item 9 passed)
 **Decision record:** [`reports/2026-10-06-domain-access-enforcement-options.md`](../reports/2026-10-06-domain-access-enforcement-options.md) (option C chosen by the developer on 2026-10-06)
 **Related:** [`managed-worldguard-regions.md`](managed-worldguard-regions.md) (parent/priority/category flags on the same regions); KNG-57 (SignalR push), KNG-58 (offline cache for other data)
 
@@ -110,3 +110,21 @@ With a non-bypass account:
 - Ending navigation within the hold leaves the refusal in the action bar.
 
 No findings. Merged to knk-plugin `main` as `fd869aa` (merged with the KNG-27/51 follow-ups already on `main`; Gradle core 1753 / api-client 206 / paper 1305 green on the merge).
+
+## 7. Other domain rules (alpha run 1 package C, in review)
+
+Not part of AllowEntry/AllowExit, but enforced on the same domain regions. Pushed on knk-plugin
+`claude/alpha-run-1-permissions`, not merged; see the [package C report](../reports/alpha-tests/25-10-2026/2026-10-26-package-c-permissions-domains.md).
+
+- **Storage** ([PandiO/knk-workspace#157](https://github.com/PandiO/knk-workspace/issues/157)). WorldGuard refuses
+  chests and other storage in a domain region to anyone who isn't a member, unless the region allows it
+  (`chest-access`, falling back to `build`). Developer decision 2026-10-25: that stays. `ContainerAccessWorldGuardListener`
+  marks WorldGuard's use event allowed (before its check, like the hub) for players in staff or owner mode and holders
+  of `knk.region.bypass.containers` (seeded for Moderator and Admin, not the Staff group). Storage = blocks with an
+  inventory, storage minecarts, chest boats. `knk.region.bypass` does not cover it.
+- **Effect damage** ([#162](https://github.com/PandiO/knk-workspace/issues/162)). Inside any domain, players take no
+  damage from `regions.effect-damage.causes` (default fire, burning, lava, campfire, magma, poison, wither, magic,
+  dragon's breath, freezing), and burning is put out. The custom WorldGuard flag `knk-effect-damage` (`allow`/`deny`,
+  registered in `onLoad`, resolved the WorldGuard way) decides when set; unset, a spot where `pvp` resolves to `allow`
+  keeps effect damage. Siege members whose lobby is at the hub or in a match keep the siege's rules. Domains come from
+  the cached region-to-domain map (fail open, as the KNG-11 safezone). Rule: `knk-core/.../regions/DomainEffectDamage`.

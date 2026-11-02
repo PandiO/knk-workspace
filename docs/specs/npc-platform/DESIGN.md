@@ -1,10 +1,10 @@
 # Shared NPC platform — traits, behavior and tutorial guide
 
 **Status:** Working design; agreed tutorial requirements recorded, platform architecture and implementation investigations still open. No NPC implementation delivered by this document.
-**Last updated:** 2026-10-06
+**Last updated:** 2026-10-30 (automatic navigation and shared optional lane overrides; developer decision, #146)
 **Linear:** [KNG-36](https://linear.app/kngpandi/issue/KNG-36/design-shared-npc-traits-and-pathfinding-platform)
 **Standing workspace branch:** none; `codex/kng-36-npc-platform-design` was merged into `main` on 2026-10-18 and deleted
-**Authority:** Developer discussion through 2026-10-06 and KNG-36 description/comments read on that date. Confirmed decisions below preserve that discussion; proposed interfaces and unresolved questions are explicitly labeled. This is the consolidated design reference for continued discussion, not a completed platform design or implementation plan.
+**Authority:** Developer navigation correction on 2026-10-30 and discussion through 2026-10-06 and KNG-36 description/comments read on that date. Confirmed decisions below preserve that discussion; proposed interfaces and unresolved questions are explicitly labeled. This is the consolidated design reference for continued discussion, not a completed platform design or implementation plan.
 
 ## 1. Purpose and scope
 
@@ -26,7 +26,7 @@ KNG-36 is sequenced after [KNG-35](https://linear.app/kngpandi/issue/KNG-35). It
 | Progression system | Owns completable steps, conditions and durable per-player progress | Separate from NPC traits and behavior |
 | Platform adapter | Executes platform-neutral intentions in Paper/Citizens or another runtime | Required design boundary; implementation choice pending audit |
 
-Do not embed tutorial state, spawn coordinates or permission inheritance from a nearby player inside a generic movement trait. Avoid conflicting patrol, combat and dialogue movement requests through behavior arbitration; its priority/interruption policy still needs design.
+Do not embed tutorial state, spawn coordinates or permission inheritance from a nearby player inside a generic movement trait. Avoid conflicting patrol, combat and dialogue movement requests through behavior arbitration; target scoring, switch margin and minimum commitment are agreed in §5a; wider interruption contracts remain open.
 
 ## 3. Confirmed decisions
 
@@ -82,7 +82,67 @@ Distance sensing and event integration may be shared services rather than Citize
 
 Proposed robustness requirements for later implementation: one active guide per participant/tutorial session; idempotent summon/cleanup; ignore stale movement or dialogue callbacks after cleanup; isolate player responses. These are engineering proposals for review, not claims about existing support.
 
+## 5a. Shared target scoring and commitment (confirmed 2026-10-30)
+
+Developer decisions under [#146](https://github.com/PandiO/knk-workspace/issues/146) establish utility-based target selection with two complementary stability controls. This belongs to shared behavior arbitration, not to navigation or a Siege-only implementation.
+
+1. Filter candidates through hard eligibility rules first: permitted target/action, faction/team and match membership where relevant, and hard pursuit constraints. High scores never override these rules.
+2. Compare eligible goals using configurable target-type preference and proximity. Closer candidates have higher proximity contribution; do not multiply preference by raw distance and thereby reward distant targets. A preference-times-normalized-proximity expression is an illustrative model; the final curve, normalization and numerical weights are not approved defaults.
+3. On adopting a target/behavior decision, start a configurable **minimum commitment duration**. While the current action remains valid and unfinished, ordinary score changes do not replace it before that duration expires. Continue updating the route to the same moving target; navigation replanning is not a new target decision.
+4. After the minimum duration, allow score-driven replacement only when the challenger exceeds the current target by a configurable **switch margin** (hysteresis). Duration expiry permits reevaluation, not a mandatory switch. Exact absolute/relative margin semantics, equality/tie handling and reevaluation cadence remain open.
+5. Hard invalidation ends commitment immediately: target death, leaving the match, authorization loss, exceeding the hard pursuit limit, or terminal unreachable/failure after the navigation recovery policy. Ordinary route recalculation or temporary blockage is not automatically terminal failure. Completed actions may advance immediately; the hold must not force continued attacks on a destroyed gate.
+
+Minimum commitment and switch margin are configurable by NPC profile, with per-behavior configuration supported in the design. Exact schema/override precedence and numeric tuning remain open. Each NPC owns its current target and commitment state; the shared arbitration layer ensures one movement owner and delegates route execution to navigation. On invalidation/failure it decides whether to resume the previous assignment, choose another target, wait or stop under the consuming feature's rules.
+
+Acceptance scenarios: small score fluctuations do not cause oscillation; a higher-scoring player does not interrupt a valid gate action during its minimum commitment; after expiry the switch margin still applies; invalidation/completion is handled without waiting; path updates toward the same target do not restart commitment; guards and Siege attackers reuse the same mechanism with different configuration.
+
+A temporary score bonus for being attacked was discussed separately, but its inclusion/stacking/decay and interaction with commitment are not finalized by this decision. Do not introduce an implicit damage-triggered bypass of commitment. Behavior-tree/library selection and wider combat rules remain open; this is design only, not implemented gameplay.
+
+### Consumer-owned target eligibility overrides (confirmed 2026-10-30)
+
+The shared eligibility interface evaluates an NPC, candidate target, intended action and caller context, returning allowed/denied with a reason before scoring. Siege resolves independent objective/gate overrides (standard rules / allow / deny); those settings belong to the consuming mode, not the generic navigation trait. Other controllers can implement their own policies through the same boundary.
+
+Check required intermediate actions too: a permitted destination does not authorize damaging a forbidden blocking gate. Route planning/execution must respect that result, including during lane fallback. Denying damage does not itself deny passage through an open, otherwise authorized doorway. Explicit allow does not increase utility or bypass physical capability, independent authorization or match isolation. A target becoming forbidden invalidates the action immediately despite minimum commitment. See [Siege policy](../siege-survival/DESIGN.md#objective-and-gate-eligibility-overrides-confirmed-2026-10-30). Contract names and schema remain proposed; no implementation is claimed.
+
+### Logical distractor target and idle action (confirmed 2026-10-30)
+
+Provide a reusable logical temporary-target boundary for an NPC distractor: position, validity/expiry and configurable attractiveness. The target's backing representation (dropped item, entity or block) is not selected. A platform adapter exposes it to shared selection without making behavior depend on that representation.
+
+The confirmed behavior is approach a reachable nearby position, then stand there without attacking the distractor while it remains the selected valid target. Eligibility, preference/proximity scoring, minimum commitment and switch margin apply normally; there is no implicit forced-aggro exception. Removal or expiry immediately invalidates the goal and releases commitment. Ordinary score-driven switching remains possible after commitment, so the lifetime does not force an unconditional hold. Navigation failure follows the existing recovery/result contract.
+
+Siege is the first consuming mode, but target selection and approach/idle behavior are shared building blocks. Lifetime, ranges, weights, crowd placement, moving-distractor handling and creation/adapter details remain open in [#146](https://github.com/PandiO/knk-workspace/issues/146); see [Siege distractor requirements](../siege-survival/DESIGN.md#fourth-target-type-distractor-confirmed-2026-10-30). This is design only.
+
 ## 6. Movement and spawn details
+
+### Automatic navigation and optional lane overrides (confirmed 2026-10-30)
+
+Developer decision, tracked in [#146](https://github.com/PandiO/knk-workspace/issues/146): automatic navigation is the default. Reuse the roads infrastructure for suitable route legs and local walkable pathfinding (A* or the selected equivalent) for connections and off-road travel. NPCs must not require an admin-authored lane or be restricted to roads. This is a required design direction, not a claim that physical NPC execution is implemented.
+
+Optional admin lane overrides belong to the shared navigation trait/capability, not exclusively to Siege Survival. Guards, escorts and other consumers can reuse this support. A concrete override is configuration on the NPC or movement assignment; the generic trait must not hard-code scenario routes. Behavior chooses the destination, while navigation selects automatic routing or the applicable ordered routepoint override and performs local pathfinding between points.
+
+Overrides guide routing but do not bypass movement profiles, domain/gate permissions or physical collision. Report an unusable segment with a reason. **Failure policy confirmed 2026-10-30:** first retry local pathfinding toward the next required routepoint within a bounded retry budget; routepoints remain binding during these attempts. If the segment remains unusable, navigation reports a blocked/failed result with a reason. Behavior owns the response (for example waiting, selecting another target or ending the assignment); the generic navigation trait must not hard-code Siege or guard decisions.
+
+Each lane override has an "allow automatic alternative route" setting, **off by default**. When explicitly enabled, navigation may leave the override after bounded retries and attempt an automatic route to the assignment's destination, still respecting movement, access and collision rules. If that attempt fails, report failure to behavior. This policy applies to every NPC consumer, not just Siege. Exact retry counts/timing, configuration schema, precedence between NPC and assignment overrides, and interruption/resume remain open under #146; no numeric defaults are approved.
+
+For the first Siege gate-targeting slice, spawning immediately triggers target selection/path planning, followed by movement as soon as a usable path is ready; no intentional startup delay. This does not override the tutorial's distinct invitation/waiting behavior. The gate destination is a reachable attack/approach position, not a path through a closed door. Nearest-by-route target selection remains a proposal, not an approved universal policy.
+
+Acceptance additions: navigate from a configured spawn without any lane, use appropriate road and off-road legs, follow an optional override, report an invalid override without bypassing access/collision, and reuse the same navigation capability outside Siege. Verify bounded retry to the next required point, blocked-result delivery to behavior when fallback is off, opt-in automatic routing to the destination when enabled, and failure reporting if that route also fails. Benchmark physical execution and search budgets before choosing a library.
+
+
+### Caller-supplied navigation ruleset (confirmed 2026-10-30)
+
+The consuming feature/controller supplies the NPC's assignment context. In Siege this is the Survival game manager; guards, escorts and tutorials use their own controllers. No Siege-specific manager dependency belongs in the shared navigation trait.
+
+- The controller supplies a spawn request/location to lifecycle. Lifecycle validates and creates the actor. Navigation starts from the actor's actual position; it does not own spawning or assume the original spawnpoint is the current position.
+- The controller supplies eligible goals and gameplay constraints. Behavior selects the current goal and arbitrates competing actions; navigation receives that destination/target, the effective movement ruleset and any applicable lane override.
+- The shared navigation capability uses suitable road infrastructure and local pathfinding under that ruleset, or follows the optional override with the agreed bounded-retry/default-off automatic fallback policy.
+- Movement rules must be configurable and may be supplied by the caller for an assignment. Ladder use and door opening are explicit examples. Candidate settings to finalize include swimming, gap jumping, maximum upward step/jump, maximum drop, and door/gate interaction. These are a mix of flags and numeric limits, not all booleans. The transcript's first movement example was unclear; do not infer an additional confirmed capability from it.
+- Capability, authorization and physical execution remain separate: allowing door interaction in a ruleset does not itself grant access to every door or imply a usable opening. The selected mover must support permitted actions. Door opening is not gate breaching; breaching still requires the relevant capability and behavior.
+- Planner and executor must use consistent effective movement constraints, including during override fallback. Proposed implementation guard: reject/report unsupported combinations instead of silently treating them as executable.
+
+The configurable-ruleset requirement is confirmed; the complete field catalogue, defaults per archetype, precedence between template/instance/assignment rules, and update semantics are still open under #146. Existing tutorial movement restrictions remain its specific profile, not universal NPC defaults. HTTP endpoints and DTOs are not selected by this decision.
+
+Acceptance additions: the same navigation capability accepts different caller-supplied rulesets; ladder-disabled planning does not select a ladder route; door-opening permission in a profile cannot bypass domain/gate authorization; assignment rules remain effective during lane retries and automatic fallback. Physical traversal support must be verified for each selected capability.
 
 ### Tutorial movement profile
 
@@ -153,7 +213,7 @@ Audit V1/V2/V3 and compare a Citizens navigator with reusable KnK pathfinding on
 | O05 | Personal NPC visibility/collision, concurrent instances and lifecycle on server restart/teleport/world change |
 | O06 | Permission holder/schema, override precedence, temporary grant scope and safe exit |
 | O07 | Verified GateDoor pass-through mechanism and NPC-compatible traversal |
-| O08 | Exact trait boundaries, engine-neutral contracts, Citizens integration and behavior arbitration |
+| O08 | Exact trait boundaries, engine-neutral contracts and runtime/library choice; scoring + switch margin + minimum commitment agreed in §5a. Remaining arbitration work: numeric tuning, margin semantics, reevaluation cadence, configuration precedence and wider interruption contracts |
 | O09 | Dialogue delivery/authoring, response timeout, tutorial completion/departure presentation |
 | O10 | V2 Progressable/Creation and Siege comparison; progression boundary only in KNG-36 |
 | O11 | City guard profile: patrol, aggro/defense, dialogue interruptions and return to patrol |

@@ -19,8 +19,40 @@ This is a human-readable record of capabilities merged into the V3 default branc
   API sends events only after the database transaction committed. New optional plugin key
   `realtime.fallback-poll-multiplier` (default 4). Still off by default. Checklist: realtime smoke test § S2.
 
+## 2026-11-01
+
+- **Form wizard: footer, unsaved-changes guard, blur validation, Save on any step; drafts per admin** —
+  knk-web-app `main` `b3b415d` and knk-web-api `master` `8df59b7`, merged `--no-ff` from `claude/form-wizard-edit-mode` (PandiO/knk-workspace#109, #186, #64 FormWizard part;
+  UX/realtime chain link 5, 2026-10-26; fix round 2026-10-27 after the developer's live test). Live-tested sections 1–6. The form's buttons (Cancel, Previous, Save
+  Draft, Next/Submit) stick to the bottom of the window; leaving a form with unsaved changes (a link, Back, the
+  breadcrumb, a reload) asks first, and Cancel no longer asks when nothing changed — "changed" means the values
+  differ from the ones the form was opened with (or last saved with Save Draft), on any step: typing and clearing a
+  field again is no change, and moving on with Next does not count as saving; a field is checked when it loses the
+  focus, and a refused Next shows a summary that links to the fields; editing an existing entity can be saved from
+  any step ("Save changes"); one-line text fields are inputs ("Multi-line text" toggle in the field editor for the
+  rest). Drafts and workflow sessions now belong to the logged-in admin (they were all saved as user 1, so Saved
+  Progress was shared): the API takes the owner from the login. One-time cleanup after deploy and a backup:
+  `scripts/maintenance/remove-user1-drafts-and-workflow-sessions.sql`. The debug logs in the form wizard are gone.
+  Live checklist: [guides/form-wizard-edit-mode-smoke-test.md](guides/form-wizard-edit-mode-smoke-test.md).
+
 ## 2026-10-26
 
+- **Dashboard explorer: one scrollbar, favourite types on top** — knk-web-app `main` `c3c0c9f`, merged `--no-ff` from `claude/dashboard-explorer-194`
+  (PandiO/knk-workspace#194; UX/realtime chain link 3b, 2026-10-26). The explorer's list is the only thing that
+  scrolls (it showed two scrollbars). A star on every type marks it a favourite: favourites are listed at the top
+  A–Z, the rest A–Z below; kept per browser (localStorage). Live checklist: `guides/dashboard-return-smoke-test.md`
+  section 9a.
+- **Dashboard header spacing** — knk-web-app `main` `c3c0c9f`, merged `--no-ff` from `claude/dashboard-header-195` (PandiO/knk-workspace#195; UX/realtime
+  chain link 3b, 2026-10-26). The dashboard no longer starts against the app's top header: explorer, title and the
+  "New {Type}" / ⚙ buttons start 24 px lower, on one row, centred on each other and lined up with the table; the
+  buttons are the same height, and on a phone a long "New {Type}" is cut off instead of pushing ⚙ off-screen. Live
+  checklist: `guides/dashboard-return-smoke-test.md` section 8a.
+- **Claim code field shows the dash from the start** — knk-web-app `main` `c3c0c9f`, merged `--no-ff` from `claude/claim-code-dash-196`
+  (PandiO/knk-workspace#196, follow-up of #192; UX/realtime chain link 3b, 2026-10-26). On `/link` and `/account/link`
+  the field shows `____-____` while empty and keeps the dash visible while the first four characters are typed
+  (`K7__-____`); paste, autofill, Backspace/Delete across the dash and capitals work as before. Pasting the same code
+  without its dash over the whole field no longer loses a character. Live checklist: `guides/invitations-smoke-test.md`
+  step 17a.
 - **Dashboard keeps its place; Submit waits for the save** — knk-web-app `main` `7ba0f4b`, merged `--no-ff` from `claude/kng-60-dashboard-hub`
   (PandiO/knk-workspace#177 link 1, #58; UX/realtime chain link 1, 2026-10-26). Not live-tested yet. The
   dashboard's type is in the URL (`/dashboard/{type}`; bare `/dashboard` reopens the last viewed type). Edit opens the

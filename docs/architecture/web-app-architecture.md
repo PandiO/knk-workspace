@@ -1,15 +1,18 @@
 # knk-web-app — Architecture
 
 **Status:** Living document — reflects actual code, updated in place on each rescan
-**Last updated:** 2026-09-18 (scan basis: `knk-web-app` @ `4ff5dc6`, branch `claude/web-app-codebase-scan-4yqibi`); spot edits 2026-10-09 (ObjectTypeExplorer, KNG-61), 2026-10-10 (FormWizard Boolean fields, KNG-53), 2026-10-12 (FormWizard child forms, KNG-133, KNG-134; List edit load, step header, List validation, KNG-135, KNG-137, KNG-164; form session registry, KNG-136; cancel / delete-draft prompt, KNG-162; form configuration export/import, KNG-138); 2026-10-17 (form wizard chain merged to `main`; smoke-test follow-ups KNG-166..169, KNG-172, KNG-173: step strip, confirmations and refusals, rule builder parent forms, picker columns, metadata refresh); 2026-10-22 (display configuration export/import; KNG-195 hybrid picker submit); 2026-10-23 (step completion conditions run, KNG-186); 2026-10-23 (validation result log, batch validate, Re-check, KNG-269); 2026-10-25 (toast region, world-task polling; UX re-evaluation in `reports/2026-10-25-web-app-ux-reevaluation.md`); 2026-10-26 (dashboard type in the URL, `returnTo`, submit pending state, success toast — PandiO/knk-workspace#177 link 1, #58); 2026-10-26 (dashboard header New/Configure, flat explorer with marker, open form without the explorer + breadcrumb, detail page header, metadata-driven Create New, "Entity setup" — #177 link 2, #81, #39)
+**Last updated:** 2026-09-18 (scan basis: `knk-web-app` @ `4ff5dc6`, branch `claude/web-app-codebase-scan-4yqibi`); spot edits 2026-10-09 (ObjectTypeExplorer, KNG-61), 2026-10-10 (FormWizard Boolean fields, KNG-53), 2026-10-12 (FormWizard child forms, KNG-133, KNG-134; List edit load, step header, List validation, KNG-135, KNG-137, KNG-164; form session registry, KNG-136; cancel / delete-draft prompt, KNG-162; form configuration export/import, KNG-138); 2026-10-17 (form wizard chain merged to `main`; smoke-test follow-ups KNG-166..169, KNG-172, KNG-173: step strip, confirmations and refusals, rule builder parent forms, picker columns, metadata refresh); 2026-10-22 (display configuration export/import; KNG-195 hybrid picker submit); 2026-10-23 (step completion conditions run, KNG-186); 2026-10-23 (validation result log, batch validate, Re-check, KNG-269); 2026-10-25 (toast region, world-task polling; UX re-evaluation in `reports/2026-10-25-web-app-ux-reevaluation.md`); 2026-10-26 (dashboard type in the URL, `returnTo`, submit pending state, success toast — PandiO/knk-workspace#177 link 1, #58); 2026-10-26 (dashboard header New/Configure, flat explorer with marker, open form without the explorer + breadcrumb, detail page header, metadata-driven Create New, "Entity setup" — #177 link 2, #81, #39); 2026-10-26 (dashboard explorer: one scrollbar, favourite types — #194, branch `claude/dashboard-explorer-194`, merged into `main` `c3c0c9f`), 2026-10-26 (dashboard header row spacing — #195, branch `claude/dashboard-header-195`, merged into `main` `c3c0c9f`); 2026-10-26 (data router, unsaved-changes guard, sticky footer, blur validation + error summary, Save on any step in edit mode, single-line input, drafts owned by the login — #109, #186, #64 FormWizard part); 2026-10-27 (unsaved changes compared by value across all steps, Next's progress save no longer counts as saved — #109 fix round)
 **Source scan:** `docs/reports/web-app-scan-2026-09-18.md`
 
 ## Stack
 
 - React 18 + TypeScript, bootstrapped with **Create React App** (`react-scripts` 5.0.1) —
   not Vite, not Next.js.
-- Routing: `react-router-dom` v7 (`BrowserRouter`/`Routes`/`Route`), all defined in
-  `src/App.tsx`.
+- Routing: `react-router-dom` v7, all routes defined in `src/App.tsx` (`Routes`/`Route`). Since #109
+  `App` mounts a **data router** (`createBrowserRouter` with one catch-all route around those `<Routes>`,
+  `RouterProvider`) instead of `BrowserRouter`, because `useBlocker` (the form wizard's leave guard) only
+  works inside one. Tests that mock `react-router-dom` or use a `MemoryRouter` still work: the guard
+  skips `useBlocker` without a data router (`hooks/useLeaveGuard.tsx`).
 - Styling: Tailwind CSS utility classes only. Fluent UI (`@fluentui/react-components`)
   was removed 2026-10-08 (KNG-71): only its provider was used. Shared component classes in
   `src/index.css`: `.btn` (`inline-flex`, `gap-2`; an icon's own `mx` margin is dropped under it) with
@@ -98,12 +101,42 @@ entity. Two parallel generic engines carry most of the CRUD surface:
    `createdEntitiesJson` with every progress save (`utils/forms/createdEntities.ts`: type, id, label
    fields, origin, creation order); resuming that draft seeds the registry (`seed()`), so pickers pin
    the entities again. `FormWizardPage` wraps the wizard in `FormSessionRoot` (a registry without a
-   form-path entry) next to `FormWizard/FormCancelAction.tsx` ("Cancel form"); deleting a draft from
+   form-path entry) with `FormWizard/FormCancelAction.tsx` ("Cancel form", in the wizard's footer since #109); deleting a draft from
    Saved Progress reads the summary's `createdEntitiesJson`. Both show `CreatedEntitiesPrompt` (Keep =
    default, Delete); Delete runs `utils/forms/deleteCreatedEntities.ts`: newest first, the API's
    `entity-references` check (entities still pending in the run ignored), then the entity's normal
    delete (`getDeleteFunctionForEntity`); in use / 409 = skipped and reported. Cancel never deletes
-   the draft; nothing is deleted automatically.
+   the draft; nothing is deleted automatically. Drafts and workflow sessions belong to the logged-in
+   user (#186): the web app sends no user id (the `userId = '1'` constant and the `userId` props of
+   `FormWizard`, `ChildFormModal`, `JoinEntityFormModal`, `ManyToManyRelationshipEditor` are gone); the
+   API takes the owner from the token. Saved Progress asks for the caller's own drafts
+   (`formSubmissionClient.getByEntityTypeName` sends `mine=true`); the relationship-drafts list
+   (`useRelationshipDrafts`) still shows every staff member's drafts with their owner's name.
+   **Footer, unsaved changes and validation** (#109): the wizard's actions sit in a footer that sticks
+   to the bottom of the window (`data-testid="wizard-footer"`; the card has no `overflow-hidden`, which
+   would stop `sticky`): the page's Cancel (`footerStart` slot), Previous, Save Draft, in edit mode
+   **Save changes** on every step but the last, and Next/Submit. The wizard reports **unsaved changes**
+   through `onDirtyChange`: the values of every step (hidden-stash values included) compared with a
+   snapshot (`utils/forms/formValuesSnapshot.ts`; '' / null / undefined / [] are the same empty value,
+   a number equals its text), taken just before the first change (in edit mode: the loaded entity) and
+   re-taken only by **Save Draft** and a successful Submit / Save changes; the progress save behind Next
+   does not (link 5 fix round, 2026-10-27: typing and clearing is no change, step 1's values still count
+   on step 2). A mousedown on a footer button keeps the focus in the field, so a blur message can't
+   move the button away under the click. `FormWizardPage` feeds it to `hooks/useLeaveGuard.tsx`: with unsaved changes
+   a link, Back/Forward or any URL change asks "Leave this form?" (Stay / Leave form, `useBlocker`), a
+   reload or closing the tab gets the browser's question (`beforeunload`), and the breadcrumb asks through
+   `confirmLeave`; a successful submit and an already-confirmed Cancel call `allowLeave`. Cancel leaves
+   at once when nothing was created or changed (the same value comparison). A field is validated on **blur** (message shown or
+   cleared); its own validations run (`utils/forms/fieldRuleValidation.ts`: MinLength, MaxLength,
+   Range, Regex, Email; Custom stays on the API). A refused Next/Save shows `FormWizard/FormErrorSummary.tsx`
+   at the top of the fields, which takes the focus; each item links to (and focuses) its field
+   (`wizard-field-{fieldName}` boxes). A failed completion condition or blocking rule is also shown on the
+   form. **Save changes** checks the current step as Next does, then every other visible step
+   (`findInvalidOtherStep`); a step that would refuse the save is shown with its messages, else the entity
+   is saved through the same submit path as Submit. **String fields** are a one-line `<input>` tied to
+   their label; a text area for settings `"multiline": true` (field editor toggle "Multi-line text"),
+   for fields named …Description / …Lore without that setting, and for a value that already holds a line
+   break (`utils/forms/stringFieldMultiline.ts`).
    **Submit and the way back** (#177 link 1, #58): a form opened from another page carries
    `?returnTo=` (`utils/returnTo.ts`: `editFormPath`/`newFormPath`/`withReturnTo`, same-origin paths
    only via `sanitizeReturnTo`). On the last step the wizard saves the progress as `InProgress`, then
@@ -122,7 +155,7 @@ entity. Two parallel generic engines carry most of the CRUD surface:
    `utils/breadcrumbs.ts` `formTrail` from `returnTo` ("Dashboard › Town › Edit Cinix"; without
    `returnTo`: "Entity setup › Town › New Town"). The trail is plain `{label, to?}[]` data so the admin
    layout (#30) can render it later; `useEntityLabel` fetches the edited entity's name (else "#id"). A
-   crumb leaves the form without the Cancel question. The configuration lists keep the explorer.
+   crumb asks "Leave this form?" first when the form has unsaved changes (#109). The configuration lists keep the explorer.
    "New" (`?autoOpen=true`) on a type without a default form configuration shows "To create a new
    {Type}, this type needs a default form configuration" (#177 decision 3). The page title and nav label
    are **"Entity setup"** (route `/forms` unchanged, decision 4).
@@ -167,11 +200,18 @@ entity. Two parallel generic engines carry most of the CRUD surface:
 URL as `/dashboard/:entityName` and bare `/dashboard` reopens the last viewed type from localStorage
 `knk.dashboard.lastEntityType` (`utils/lastDashboardType.ts`, link 1). Next to the type's title:
 **"New {Type}"** (`newFormPath(type, returnTo)`) and a cogwheel **"Configure {Type}"** to the type's
-Entity setup page (`/forms/{type}`); "New {Type}" is also the empty state of the table
+Entity setup page (`/forms/{type}`). Title and buttons share one flex row (items centred, `min-h-9`, buttons `h-9`);
+the dashboard has `pt-6`, because the page wrapper's top padding is exactly the app header's height, so explorer, title
+row and table start level and clear of the header (#195). "New {Type}" is also the empty state of the table
 (`PagedEntityTable` `emptyState`, shown only without a search or filter). The explorer is one flat
 list: types without a published default display configuration get a muted marker ("No display
 configuration – set one up via ⚙", `ObjectTypeExplorer` `marked`), and for them View and the row
-click are disabled with the same hint. View opens `/display/{type}/{id}?returnTo=…`, Edit
+click are disabled with the same hint. Only the explorer's list scrolls (the sidebar column is `overflow: hidden` and
+the explorer's `aside` is `min-h-0`; it used to show two scrollbars, #194). A star on each type toggles it as a
+**favourite** (`ObjectTypeExplorer` `favourites`): favourites are listed first under "Favourites", sorted like the rest,
+which follows below; they are kept per browser in localStorage `knk.dashboard.favouriteEntityTypes`
+(`utils/dashboardFavourites.ts`; per account on the API can come later). The Entity setup page's explorer has no stars.
+View opens `/display/{type}/{id}?returnTo=…`, Edit
 `/forms/{type}/edit/{id}?returnTo=…`, except **User rows: Edit opens the player profile**
 `/admin/users/{id}` (`utils/returnTo.ts` `entityEditPath`; the generic User form stays for create
 until #72/#148).
@@ -230,7 +270,7 @@ src/
     DisplayWizard/          — generic read-only detail-view engine; `EntityDetailHeader` (name, Back/Edit/Delete, #81)
     DisplayConfigBuilder/   — admin UI to author DisplayConfigurationDto records
     ObjectDashboard/        — legacy static-config-driven list/CRUD dashboard
-    ObjectTypeExplorer/     — left-nav entity type picker (ObjectDashboard, FormWizardPage): search, A–Z/Z–A sort, optional groups (unused since #177 link 2), `marked` entries, settings in localStorage (KNG-61)
+    ObjectTypeExplorer/     — left-nav entity type picker (ObjectDashboard, FormWizardPage): search, A–Z/Z–A sort, optional groups (unused since #177 link 2), `marked` entries, `favourites` with a star per type (#194, dashboard only), settings in localStorage (KNG-61)
     PagedEntityTable/       — generic server-paged table, used by both dashboard and forms
     PathBuilder/            — path/reference picker for cross-entity field bindings
     Workflow/               — WorldTask/job polling UI (siege/world-mutation background tasks)
