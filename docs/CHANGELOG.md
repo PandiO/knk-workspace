@@ -7,8 +7,8 @@ This is a human-readable record of capabilities merged into the V3 default branc
 - **Design tokens and switchable themes (rebrand phase 1)** — knk-web-app and knk-workspace `claude/design-tokens-95`
   (PandiO/knk-workspace#95, 2026-11-02). Every colour of the web app is now a theme token (CSS variables that
   Tailwind reads), with three themes to compare live: `current` (today's look, the default), `brand` (the 2020
-  styleguide: brand red, orange call to action, black navigation, Lato 2.015, Cinzel headings standing in for
-  Enchanted Land) and `proposal` (charcoal, orange accents, red only for danger, warm neutrals). Staff switch them in
+  styleguide: brand red, orange call to action, black navigation, Lato 2.015, headings in the
+  Enchanted Land demo font) and `proposal` (charcoal, orange accents, red only for danger, warm neutrals, Cinzel headings). Staff switch them in
   the account menu; `?theme=` picks one per tab. A unit test checks WCAG AA contrast of every token pair in every
   theme. Accessibility fixes in all themes: `text-gray-400` → a 4.5:1 secondary text colour, a focus ring on every
   text field, 3:1 field borders, a visible red border and an icon on field errors, darker primary-button hover.

@@ -51,10 +51,13 @@ _Added 2026-11-02 for PandiO/knk-workspace#95 (rebrand phase 1), knk-web-app bra
     `danger` / `success` / `warning` / `info`, each with `DEFAULT` (text/icon/filled), `strong` (text on the tints),
     `soft` (alert background), `muted` (badge background), `line` (alert border) and `fg` (text on the filled colour;
     not for info). The key `primary` kept its name, so its ~580 uses switch with no component edit.
-  - Fonts: `--font-body` (Tailwind `font-sans`, the body) and `--font-display` (Tailwind `font-display`; `h1`
-    and the nav title). `current` keeps `'Inter', sans-serif` (Inter is never loaded: the Google `@import` in
+  - Fonts: `--font-body` (Tailwind `font-sans`, the body) and `--font-display` (Tailwind `font-display`; `h1`,
+    the dashboard and detail page titles, the nav title; no faux bold). `current` keeps `'Inter', sans-serif` (Inter is never loaded: the Google `@import` in
     `index.css` comes after other rules, so the system sans renders, as before). Lato 2.015 and Cinzel are
-    self-hosted under the OFL in `src/theme/fonts/` and only downloaded when a theme uses them.
+    self-hosted under the OFL in `src/theme/fonts/` and only downloaded when a theme uses them. `brand` uses the
+    Enchanted Land **demo** (personal-use licence, readme kept alongside; a webfont licence is needed once the
+    project earns anything) with a `unicode-range` of the characters the demo draws, so its empty punctuation and
+    accent glyphs fall back to Lato (guide § 2).
 - **Switching:** `src/theme/themes.ts` (`THEMES`, `resolveInitialTheme`, `applyTheme`, `selectTheme`,
   `useActiveTheme`, `themePickerVisible`). `index.tsx` applies the theme before the first render. Order: `?theme=`
   (kept per tab in sessionStorage) → the picker's choice (localStorage `knk.theme`) → `current`; storage access is in

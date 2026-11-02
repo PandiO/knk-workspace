@@ -44,13 +44,26 @@ Example side by side: `https://<host>/dashboard?theme=current` in one tab and `�
 | Danger | Red | Red (close to brand red: icon + text always) | Brand red (`#BE1622`) |
 | Info boxes | Blue | Charcoal/grey (the guide has no blue) | Steel blue |
 | Body font | System sans (Inter was never loaded; unchanged) | Lato 2.015 | Lato 2.015 |
-| Page titles (h1) and the nav title | Body font | Cinzel (stand-in for Enchanted Land) | Cinzel |
+| Page titles (h1, the dashboard and detail titles) and the nav title | Body font | Enchanted Land (demo) | Cinzel |
 
 Fonts: **Lato 2.015** (the latofonts.com release with Regular 400, Medium 500, SemiBold 600 and Bold 700; Google's Lato
 has no 500/600) and **Cinzel** 600/700, both self-hosted under the SIL OFL 1.1 (`src/theme/fonts/`, licences next to
-them). Enchanted Land is **not** used: its licence is open (#92 Q6). Cinzel is a free Roman-capitals display face picked
-as a placeholder; it is legible, but it is not calligraphic like Enchanted Land. A browser only downloads a font once a
-theme uses it, so `current` loads none of them.
+them). A browser only downloads a font once a theme uses it, so `current` loads none of them.
+
+**Enchanted Land** (the guide's heading font, Dennis Ludlow / Sharkshock) is in `brand` since 2026-11-02 (developer
+decision: try it while the project is a non-commercial hobby, to judge readability and accessibility). Notes:
+
+- It is the **free demo** (`src/theme/fonts/enchanted-land-demo.woff2`, converted from the fontspace TTF, file
+  otherwise unmodified; its readme is kept next to it, which the demo licence requires). Free for personal use;
+  Sharkshock counts use as commercial once it "results in a personal, business, or corporate financial gain" (any
+  income, also donations or a store): then a **webfont licence** is needed (sharkshock.net/license, one-time price,
+  no page-view limits) and the full version can replace the demo.
+- The demo draws only letters, digits, space, `!`, `.` and a few accented letters; other punctuation and most accents
+  (`& ' - , : ?`, `é`, ...) are empty glyphs. The font face has a `unicode-range` of the drawn characters, so those
+  fall back to Lato (visible in "Knights & Kings").
+- One weight: headings are not faux-bolded. The designer advises against all caps.
+- Things to judge: legibility of titles at 24–30px, entity names with mixed letters and digits, contrast of the thin
+  strokes on the black nav, and how it sits next to Lato. `proposal` keeps Cinzel, so the two can be compared.
 
 **`current` vs `main`:** the same, apart from these accessibility fixes (they apply in every theme):
 
@@ -67,7 +80,8 @@ theme uses it, so `current` loads none of them.
 
 Compare in this order; the first six are on tokens, so they are a fair comparison (see § 5 for the rest).
 
-1. **Landing** (`/`, logged out): CTA colour and text, the "Closed alpha" badge, headings (Cinzel in brand/proposal).
+1. **Landing** (`/`, logged out): CTA colour and text, the "Closed alpha" badge, headings (Enchanted Land in brand,
+   Cinzel in proposal).
 2. **Login** (`/auth/login`): backdrop (light / black / charcoal), card, field focus ring (Tab into a field), an
    error (wrong password).
 3. **Dashboard** (`/dashboard/<type>`): navigation bar, explorer, table head and rows, selected row, New/Configure
@@ -103,9 +117,9 @@ Things to look at in the live comparison. None of them block a decision.
 
 ## 4. Open decisions (#92)
 
-- **Q6 heading font:** buy the Enchanted Land webfont licence, or keep a free stand-in (Cinzel now) or Lato headings
-  plus an SVG wordmark? With the licence, add the font files under `src/theme/fonts/` and set `--font-display` in the
-  brand theme.
+- **Q6 heading font:** partly decided 2026-11-02: try the Enchanted Land demo in `brand` (above). Still open: keep it
+  after the readability test (then buy the webfont licence before any income, and swap in the full version), or use
+  Cinzel / Lato headings plus an SVG wordmark.
 - **Q7 light/dark split:** a light admin with a dark public side (recommended in the assessment; the brand and
   proposal themes show this with the dark auth backdrop and nav), or dark everywhere? A full dark admin theme is not
   built: it would be a fourth token set, and the screens below still on raw colours would need migrating first.
