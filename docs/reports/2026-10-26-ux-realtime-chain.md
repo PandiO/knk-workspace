@@ -24,7 +24,7 @@ test), `merged`, `blocked: <reason>`.
 | 7 | #180 | `claude/world-task-hardening` | in review | subagent (fallback: add_repo needed in-session approval), 2026-11-01 | `115c418` / `d7a0896` / `21de734e` / `e06c1e0` | API 3448 passed, 4 failed (#99, = baseline reds), 88 skipped (baseline 3397/4/88); web-app 1378 passed, 1 failed (#204 base red), suites 216 (baseline 1364/1, 213); `tsc` 9 = baseline; build OK, same 24 warnings; plugin core 2401 (2401), api-client 291 (288), paper 2364 (2343), 0 failures |
 | 8 | #181 | `claude/realtime-signalr` | in review (stacked on unmerged link 7: the branch contains `claude/world-task-hardening` in all four repos, see coordinator notes 2026-11-02 and the link 8 block) | subagent (fallback: add_repo needed in-session approval), 2026-11-02 | `a27f61e` / `c7a3e85` / `8fa35148` / `3e8a71b` | API 3562 passed, 4 failed (#99, = baseline reds), 88 skipped (baseline on the merged branch 3513/4/88); web-app 1407 passed, 1 failed (#204 base red), suites 221 (baseline 1392/1, 218); `tsc` 9 = baseline; build OK, 24 warnings; plugin core 2412 (2412), api-client 313 (309), paper 2406 (2387), 0 failures |
 | 9 | #39 (rest), #177 follow-up | `claude/entity-lists-url-state` | in review | subagent (fallback: add_repo needed in-session approval), 2026-11-01 | — / `6b2a4eb` / — / `015e5c1` | web-app 1402 passed, 1 failed (#204 base red), suites 217 (baseline 1364/1, 213); `tsc` 9 = baseline; build OK, 22 warnings (baseline 24: two `PagedEntityTable` hook warnings gone) |
-| 10 | #182 | `claude/realtime-signalr` | waiting: link 8 done | — | — | — |
+| 10 | #182 | `claude/realtime-signalr` | in progress | subagent (fallback: add_repo needed in-session approval), 2026-11-02 | — | — |
 
 ## Waiting for the developer
 
@@ -62,7 +62,7 @@ flagged decisions.)
 - **Test link 8** (#181, WT2, same branch, **stacked on link 7**): API `claude/realtime-signalr` `a27f61e`, plugin `8fa35148`,
   web-app `c7a3e85`; live checklist `docs/guides/realtime-smoke-test.md` § WT2 on workspace `claude/realtime-signalr`
   `3e8a71b` (run § S1 and link 7's checklist first). Deploy the three together; the branch contains link 7 (its migration,
-  L7-8). Flags L8-1…L8-20; deviations L8-2 (poll 2 s while the web hub is down, 10 s safety net while up), L8-4, L8-15.
+  L7-8). Flags L8-1…L8-20; deviations L8-2 (poll 2 s while the web hub is down, 10 s safety net while up), L8-4, L8-15. Coordinator check 2026-11-02: heads match, link 7 is an ancestor of `claude/realtime-signalr` in all four repos, Presence/active-for-me access rules spot-checked.
 - **Test link 6** (#179, SignalR S2, same branch): API `38b0466`, plugin `b48f1484`; live checklist
   `docs/guides/realtime-smoke-test.md` § S2 on workspace `claude/realtime-signalr` `ae949bd` (run § S1 first). Flags
   L6-1…L6-12 (link 6 block). L6-1: the ×4 slowdown applies only to the social-spy re-check for now; the notification
