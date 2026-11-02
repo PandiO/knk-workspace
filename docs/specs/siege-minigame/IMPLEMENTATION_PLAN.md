@@ -1134,7 +1134,9 @@ No knk-plugin, knk-web-app or DB change.
   - knk-web-api `knkwebapi_v2.sln` references `tests/knkwebapi_v2.Tests/…` but the folder is `Tests/`, so
     `dotnet build` of the solution fails on a case-sensitive file system, and the repo `CLAUDE.md`'s
     `dotnet test tests/knkwebapi_v2.Tests/...` path is wrong on Linux. Build `knkwebapi_v2.csproj` and test
-    `Tests/knkwebapi_v2.Tests/knkwebapi_v2.Tests.csproj` directly. Not changed here.
+    `Tests/knkwebapi_v2.Tests/knkwebapi_v2.Tests.csproj` directly. Not changed here. *(Since fixed: CLAUDE.md
+    says `Tests/`, and the `.sln` path was corrected 2026-11-02, so a plain `dotnet build` works on Linux;
+    [PandiO/knk-workspace#106](https://github.com/PandiO/knk-workspace/issues/106).)*
   - Charter §9's web-api baseline (633) predates the menu-content trunk merge; the real baseline is 676.
   - `UserService.AdjustBalancesAsync` writes an AuditLog row for every balance change, which DESIGN §7.6 says siege
     rewards must not - hence the extraction instead of reuse.
