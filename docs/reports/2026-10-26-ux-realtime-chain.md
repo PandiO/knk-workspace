@@ -22,7 +22,7 @@ test), `merged`, `blocked: <reason>`.
 | 5 | #64 (FormWizard), #109, #186 | `claude/form-wizard-edit-mode` | merged: web-app `main` `b3b415d`, API `master` `8df59b7`, workspace `main` `6e2b98c` (2026-11-01, by the coordinator at the developer's request) | subagent (fallback: add_repo needed in-session approval), 2026-10-26; fix round subagent 2026-10-27 | `09305ef` / `ff58c83` / — / `1e21ee2` | fix round: web-app 1359/1359, suites 212 (baseline on the merged `main` `c3c0c9f`: 1349/1349, 210); link 5: web-app 1330/1330, suites 209 (baseline 1304/1304, 204); `tsc` 9 errors = baseline; build OK, same 24 warnings; API 3356 passed, 4 failed (#99, = baseline reds), 88 skipped (baseline on the merged `master` `4d7a806`: 3339/4/88) |
 | 6 | #179 | `claude/realtime-signalr` | in review | subagent (fallback: add_repo needed in-session approval), 2026-10-26 | `38b0466` / — / `b48f1484` / `ae949bd` | API 3361 passed, 4 failed (#99, = baseline reds), 87 skipped (baseline 3338/4/87); plugin core 2323 (2319), api-client 298 (290), paper 2163 (2149), 0 failures |
 | 7 | #180 | `claude/world-task-hardening` | in review | subagent (fallback: add_repo needed in-session approval), 2026-11-01 | `115c418` / `d7a0896` / `21de734e` / `e06c1e0` | API 3448 passed, 4 failed (#99, = baseline reds), 88 skipped (baseline 3397/4/88); web-app 1378 passed, 1 failed (#204 base red), suites 216 (baseline 1364/1, 213); `tsc` 9 = baseline; build OK, same 24 warnings; plugin core 2401 (2401), api-client 291 (288), paper 2364 (2343), 0 failures |
-| 8 | #181 | `claude/realtime-signalr` | waiting: link 6 done, link 7 merged | — | — | — |
+| 8 | #181 | `claude/realtime-signalr` | in progress (stacked on unmerged link 7, see coordinator notes 2026-11-02) | subagent (fallback: add_repo needed in-session approval), 2026-11-02 | — | — |
 | 9 | #39 (rest), #177 follow-up | `claude/entity-lists-url-state` | in review | subagent (fallback: add_repo needed in-session approval), 2026-11-01 | — / `6b2a4eb` / — / `015e5c1` | web-app 1402 passed, 1 failed (#204 base red), suites 217 (baseline 1364/1, 213); `tsc` 9 = baseline; build OK, 22 warnings (baseline 24: two `PagedEntityTable` hook warnings gone) |
 | 10 | #182 | `claude/realtime-signalr` | waiting: link 8 done | — | — | — |
 
@@ -66,6 +66,13 @@ flagged decisions.)
 
 ## Coordinator notes
 
+
+- **2026-11-02, link 8 gate waived (reversible default):** the developer is busy this week and asked to continue
+  implementation and test later. Link 8's gate ("link 7 merged") is replaced by stacking: link 8 merges
+  `claude/world-task-hardening` (link 7, in review) and the current trunks into `claude/realtime-signalr`, merges only,
+  no rebase. Nothing untested goes to a trunk. Consequences: merging `claude/realtime-signalr` later also merges link 7;
+  fixes from the link 7 test go to `claude/world-task-hardening` and are merged into `claude/realtime-signalr` again.
+  Link 10 follows link 8 on the same branch. To undo: stop link 8 and leave the branch as it was.
 - 2026-10-26: the developer pre-approved attaching `PandiO/knk-plugin`, `knk-web-app`, `knk-web-api`, `knk-dev-db-seed` and `knk-workspace` with `add_repo` (access push) for the coordinator and every link session it creates for this chain. Link prompts carry this as one appended sentence; it was also sent to link 1's session.
 
 ## Follow-ups filed by links
