@@ -1,6 +1,6 @@
 # Closed alpha: web images fix — `knk-deploy` extract permissions, web `1c9524d0` — 2026-11-02
 
-**Status:** Deployed; the developer's check in the browser is pending
+**Status:** Done — deployed and verified by the developer 2026-11-02
 **Last updated:** 2026-11-02
 **Issue:** [#210](https://github.com/PandiO/knk-workspace/issues/210) (related: [#209](https://github.com/PandiO/knk-workspace/issues/209), Access bypass paths, still open)
 **Procedure:** [NAS ops access § 7](../guides/nas-ops-access.md) (`knk-deploy`, Stage B)
@@ -51,5 +51,5 @@ centered (#206) and the invitation code fields with fixed `KNK-` and dashes (#20
 | Check | Result |
 |---|---|
 | `deploy-web` health | healthy |
-| Browser: logo and landing slideshow, `knk-shield.png` served as `image/png` | pending (developer) |
+| Browser: logo and landing slideshow | **back** (developer, 2026-11-02) |
 | `/link` claim code field centered, `/join` invitation field `KNK-_____-_____` | pending (developer) |
