@@ -5,7 +5,9 @@
 **Status:** Implemented — all MVP phases (1–9) merged into the default branches on 2026-09-26 and smoke-tested live
 by the developer; Phase 10 (Scheduled lobbies) is post-MVP, not started. Seven decisions with the developer (§0; D6
 changed after the smoke test); remaining open questions in §13.
-**Last updated:** 2026-10-27 (§5.4, §6.5, §6.10, §7.6, §11: alpha test run 1 package F — member-only scoreboards
+**Last updated:** 2026-11-02 (D6, §8.1, §8.5, §13 Q2: non-members keep every siege-area gate's **pre-game**
+state — per-player blocks, server-side crossing checks, per-player virtual opening, per-player hover text via
+PacketEvents; **design only, not implemented**, plan Phase 11); 2026-10-27 (§5.4, §6.5, §6.10, §7.6, §11: alpha test run 1 package F — member-only scoreboards
 with a ` [Siege]` tag for everyone else, post-match phase at the hub, result hover, final countdown, `/siege history` and the
 public match pages, [PandiO/knk-workspace#163](https://github.com/PandiO/knk-workspace/issues/163)/[#164](https://github.com/PandiO/knk-workspace/issues/164)/[#198](https://github.com/PandiO/knk-workspace/issues/198)/[#199](https://github.com/PandiO/knk-workspace/issues/199)/[#174](https://github.com/PandiO/knk-workspace/issues/174),
 on `claude/alpha-run-1-results` in knk-plugin, knk-web-api and knk-web-app, not merged); 2026-10-27 (§7.6: gate damage and participation rewards, alpha test run 1
@@ -32,7 +34,7 @@ model, `TitleBracket`), `docs/specs/gate-structure-animation/` (gate runtime, ov
 | D3 | How do gates behave? | **Admin-selected gates only.** A scenario lists the gates that take part. Selected gates are active, damageable and **opened/closed by their owning team**. A selected gate may be flagged as (part of) an objective: still damageable, and capturing it transfers open/close control to the capturing team, **defaulting to open** on capture. All other gates in the scenario's town/districts are forced **open** for the match and cannot be controlled or damaged. Pre-siege gate states are restored after. Siege players vs. everyone else: see D6 (§8.5). |
 | D4 | Clan scope | **Minimal `Clan` is in this plan** (vision §3.2 fields incl. full multi-layer banner and `DefaultForTown`). Scenario teams either reference a Clan or define an ad-hoc identity. |
 | D5 | Objective recapture (round 2) | **Per-scenario boolean `AllowRecapture`, default `false`** (legacy: captured is final). When on, a captured objective can be taken back (§7.3). |
-| D6 | Scenario-area lockdown (round 2) | ~~**On.** Non-members see every affected gate in its pre-lockdown state, with temporary pass-through where view and physics disagree.~~ **(Updated 2026-09-26, smoke test: area lockdown removed.)** Non-members are never moved out of or kept out of the scenario area; they can't fight members (§6.7), can't capture (only roster members count) and can't use siege gates. For non-members every locked siege gate is **removed** (per-player view) and walking into a really closed door carries them across (§8.5). `LockdownScenarioArea` stays in the model but has no effect. |
+| D6 | Scenario-area lockdown (round 2) | ~~**On.** Non-members see every affected gate in its pre-lockdown state, with temporary pass-through where view and physics disagree.~~ **(Updated 2026-09-26, smoke test: area lockdown removed.)** Non-members are never moved out of or kept out of the scenario area; they can't fight members (§6.7), can't capture (only roster members count) and can't use siege gates. For non-members every locked siege gate is **removed** (per-player view) and walking into a really closed door carries them across (§8.5). `LockdownScenarioArea` stays in the model but has no effect. **(Updated 2026-11-02, design only — plan Phase 11.)** The "gates removed" view is replaced: for non-members **every gate in the siege area (area gates and siege gates) keeps its pre-game state** — what they see, what they can cross and what the gate hover tells them. The world still holds the siege state; per-player fake blocks show the pre-game state and server-side crossing checks keep non-members out of anything a pre-game-closed gate blocked (§8.5). |
 | D7 | Enchant-book drops (round 2) | **Keep them** (v2 mechanic). Enchantments applied during the siege are **removed after the siege**, so every item's pre-siege state is restored exactly (§9.4). |
 
 ## 1. Scope
@@ -658,8 +660,10 @@ result without granting again. For each participant still in the match at the en
 | Any other gate in the scenario's districts (the town when it has none) — "area gates" | Nobody (held `OPEN`) | Nobody (invincible) | — |
 
 Districts define the siege area for gate selection only: gates there that aren't selected in the
-scenario's Gates step are the area gates. Pass-through is disabled on all affected gates for members;
-non-members get the §8.5 carry-across. Owners open/close a selected gate by right-clicking it.
+scenario's Gates step are the area gates. Pass-through is disabled on all affected gates for members.
+The table describes the **real** gates, which only members play with. *(Updated 2026-11-02, design only.)*
+For non-members every affected gate — selected or area gate — keeps its **pre-game** state: view, crossing
+and hover (§8.5). Owners open/close a selected gate by right-clicking it.
 ~~`AnimateDuringSiege` is honoured for every state change.~~ *(Updated 2026-09-26: `AnimateDuringSiege`
 is **not** honoured — every siege state change animates, because the gate package has no public instant
 placement; open follow-up.)* Destroyed gates stay destroyed until the match ends (`CanRespawnOverride = false`).
@@ -710,38 +714,106 @@ next siege schema change); the readiness warning `LOCKDOWN_WITHOUT_DISTRICTS` wa
 (deny region entry into the districts during `HUB`/`IN_PROGRESS`, move non-members to the nearest exit)
 was built in Phase 7a and taken out after the smoke test.
 
-**Goal (developer, D6, as changed):** siege members see and are blocked by the siege gate states;
-everyone else is bothered as little as possible. ~~Everyone else sees every affected gate exactly as it
-was before the lockdown.~~
+> **Redesigned 2026-11-02 (developer decisions; design only, not implemented — plan Phase 11).** The rest
+> of this section is the new target. What the merged build does today (2026-09-26 smoke-test version):
+> every locked **siege** gate is sent to non-members as air (`Player.sendBlockChange`, every cell of both
+> resting frames, within 96 blocks), walking into a really closed door carries them across with `TELEPORT`,
+> area gates are simply open for everyone, and the hover shows the siege state to everyone. That let
+> non-members through gates that were closed before the match, which the new goal forbids.
 
-**Constraint:** gates are real blocks, and the server validates movement against real blocks for
-everybody. So the *physical* world holds the siege state, and anything a non-member sees differently is
-a **per-player view**, plus movement handling where the view and the physics disagree.
+**Goal (developer, 2026-11-02):** siege members see, use and are blocked by the siege gate states. For
+everyone else, **every gate in the siege area — area gates and siege gates — keeps its pre-game state**:
+they see it, are blocked by it and read it in the hover. Nobody who isn't in the match can reach anything
+that a gate closed before the match blocked off, by any means. Brief flickers (animation frames, a lost
+fake block) are accepted; a way through is not.
 
-**View mechanism** (`SiegeGateViewService`, Paper API only — no ProtocolLib):
-- For non-members every locked siege gate is **removed**: every cell of each door's closed and open
-  resting frames (`GateViewCells`) is sent as air with `Player.sendBlockChange` to non-members within
-  96 blocks. *(Updated 2026-09-26: was "send the pre-lockdown block set"; the setting value
-  `PreLockdownView` now means "gates removed".)*
-- **Walking through:** air on the client doesn't make a really solid block passable, so a non-member who
-  walks into a door that is really closed is carried across it with the existing
-  `GatePassThroughService` **`TELEPORT`** mode (at most once per second). `TELEPORT` doesn't open the real
-  door, unlike `DEFAULT`/`INSTANT_OPEN`, which would affect siege players and are never used.
-  Pass-through is never refused because of the area. No virtual collision is needed any more (nothing
-  looks closed that is really open).
-- **Re-send:** every 5 ticks, per (viewer, door) only when the door's real state or frame changed, or
-  the viewer is new in range; teleport, respawn, join and world change force a re-send. Animation frames
-  overwrite the fakes until the next pass — a brief flicker, accepted. No `PlayerChunkLoadEvent` hook:
-  leaving the 96-block range drops the record, so coming back re-sends.
-- Members get no fakes. When a lockdown ends, everyone who got fakes is sent the real blocks again ~5 s
-  later (after the restore animations).
+**Constraint:** gates are real blocks, and the server checks movement against real blocks for everybody.
+The **real world keeps the siege state** (area gates held open, siege gates as the teams set them). What a
+non-member sees differently is a per-player view, and what they may cross is decided by the plugin on the
+server — **never by the fake blocks**, which only make it look and feel right for normal clients.
 
-Fake blocks don't affect projectiles, mobs or dropped items. That's accepted: non-members can't damage
-members anyway (§6.7).
+**Pre-game state.** Per door from the match's `SiegeMatchGateSnapshot` (§8.2): open, closed or destroyed,
+plus the pre-game health, overrides and pass-through settings. A pre-game destroyed door counts as open.
 
-**Degrade switch:** `SiegeConfiguration.NonMemberGateView` = `PreLockdownView` (default: gates removed,
-as above) | `PassThroughOnly` (no fakes: non-members see and collide with the real siege gates;
-right-clicking a door that was open before the lockdown still carries them across with `TELEPORT`).
+**Per door, for non-members:**
+
+| Pre-game | Real (siege) | Non-member sees | Crossing |
+|---|---|---|---|
+| closed | closed | real blocks | real collision; the crossing check also applies (harmless) |
+| open | open | real blocks | free |
+| **closed** | **open / destroyed / moving** | fake **closed** frame | blocked by the **crossing check** (below); normal clients already collide with the fake blocks |
+| **open** | **closed** | fake **air** (both resting frames) | walking into the door carries them across with `GatePassThroughService` **`TELEPORT`** (at most once per second) — the only way to pass a really closed block; only siege gates closed by a team hit this case, area gates are held open |
+
+**View mechanism** (`SiegeGateViewService`, Paper `Player.sendBlockChange`):
+- Fake blocks only where the pre-game state differs from the real one (the two bold rows), sent to
+  non-members within 96 blocks. The fake closed frame is the door's stored closed block set
+  (`GateBlockSnapshot`, cached by the gate package; cells via `GateViewCells`).
+- **Re-send:** every 5 ticks, per (viewer, door) when the door's real state or frame changed or the viewer
+  is new in range; teleport, respawn, join and world change force a re-send. Also re-send the touched cells
+  right after a non-member's `PlayerInteractEvent` / `BlockDamageEvent` on a fake cell (the server answers
+  those with the real block). Animation frames overwrite the fakes until the next pass — a brief flicker,
+  accepted. Leaving the 96-block range drops the record, so coming back re-sends.
+- The drawbridge display-entity animation is **not** hidden from non-members (decided 2026-11-02); its
+  frames are part of the accepted flicker.
+- Members get no fakes. When the gates are restored (§8.4), everyone who got fakes is sent the real blocks
+  again ~5 s later (after the restore animations).
+
+**Crossing check** (`SiegeGateCrossingGuard`, new; server-side, the part that actually keeps non-members out):
+- **Blocked boxes:** for every locked door whose pre-game state is **closed**, the cells of its pre-game
+  closed frame form a blocked box, indexed by chunk. They apply whatever the real door does, so a fake
+  block that was lost or overwritten never opens a way through.
+- **Walking / movement:** on `PlayerMoveEvent` of a non-member near a blocked box, the **whole path**
+  from the old to the new position (the player's hitbox swept along it) is tested, not only the end
+  point — that covers sprinting, elytra, riptide, water flow and pistons. If the path crosses a box, the
+  move is refused (`setTo(from)`). Normal clients rarely trigger this because they already bump into the
+  fake blocks; it catches modified clients, lag and lost fakes.
+- **Vehicles:** the same test on `VehicleMoveEvent` for vehicles carrying a non-member (horses, boats,
+  minecarts — `PlayerMoveEvent` doesn't fire for riders). On a crossing the vehicle is put back where it
+  was and stopped, and the non-member passengers are ejected on their side.
+- **Ender pearls and chorus fruit:** projectiles use the real blocks, so a pearl flies through a really
+  open gate. A `PlayerTeleportEvent` with cause `ENDER_PEARL` or `CONSUMABLE_EFFECT` whose straight path
+  from start to destination crosses a blocked box is cancelled (accepted side effect: a pearl thrown in an
+  arc over a gate whose straight line crosses the box is refused too). Plugin and command teleports are
+  not checked.
+- Short action-bar message on a refusal ("This gate is closed outside the siege").
+- Exempt: members, spectator game mode, staff in an active OWNER/STAFF mode.
+- Not covered on purpose: arrows, mobs, pets and dropped items pass through really open gates. Only
+  player access is enforced; non-members can't hurt members anyway (§6.7).
+
+**Per-player opening under pre-game rules.** A non-member who could open or pass the door before the
+match (the pre-game gate permissions and pass-through settings from the snapshot) uses the gate's usual
+right-click:
+- Pre-game closed, **really open** → **per-player virtual opening**: only that player is sent air for the
+  door and gets a crossing allowance for the door's `PassThroughDurationSeconds`; nobody else sees a
+  change. When it ends, their fakes come back; a player still standing in the frame keeps the allowance
+  until they step out. *(Reversible default: a timed opening, not a lasting per-player toggle — review.)*
+- Pre-game closed, **really closed** → carried across with `TELEPORT`.
+- Everyone else is refused with the gate's normal deny message.
+
+**Gate hover** (per-player text via **PacketEvents**, decided 2026-11-02):
+- Each door keeps its single `TextDisplay` (`GateDisplayManager`). A PacketEvents listener rewrites the
+  display's text in the entity-metadata packets sent to **non-members**, replacing it with a pre-game hover:
+  rendered as if `CurrentSiegeId` were null (`SIEGE_ONLY` lines hidden), from the snapshot's pre-game open
+  state, health and overrides. Members get the siege hover unchanged.
+- `GateDisplayManager` gets a render function that takes a state source (live gate vs. snapshot), so both
+  texts come from one formatter. When someone joins or leaves the match, a fresh metadata packet is sent to
+  that player for every door in range so their hover switches.
+- **Dependency:** PacketEvents is **shaded and relocated** into knk-plugin, so the server install
+  (`docs/guides/production-installation.md` §9.2, "no ProtocolLib") doesn't change. Before building,
+  confirm the PacketEvents release supports the server's Minecraft version (26.3) and that Geyser/Bedrock
+  clients get the rewritten text.
+- Per-team hover texts are possible later on the same listener; not planned.
+
+**Leaving the match.** A member who leaves is restored and teleported to their pre-siege return location
+(§6.8, §9.2), so nobody is stranded behind a pre-game-closed gate; no extra exit rule (decided 2026-11-02).
+Phase 11 must confirm the teleport happens on every leave path (leave, kick, elimination, quit + later join).
+Someone who joins the match drops their fakes, crossing checks and pre-game hover at once.
+
+**Degrade switch:** `SiegeConfiguration.NonMemberGateView` = `PreLockdownView` (default; the value keeps its
+name and goes back to its original meaning: the pre-game view above) | `PassThroughOnly` (no fake blocks and
+no hover rewrite: non-members see the real siege gates). *(Reversible default — review.)* The **crossing check
+stays on in both modes**, because keeping non-members out is the requirement; with `PassThroughOnly` they meet
+a refusal message at a gate that looks open.
 
 **Relation to the gate spec:** `REQUIREMENTS_GATE_ADVANCED_FEATURES.md` Feature 4 ("objective gates
 open on capture and can be recaptured", 0.5× friendly-fire damage) is superseded for Siege by D3.
@@ -928,7 +1000,8 @@ as owned children), `SiegeLobbies`, `SiegeConfiguration`. Plus:
 1. ~~Objective recapture~~ — **resolved (D5):** per-scenario `AllowRecapture`, default `false` (§7.3).
 2. ~~Scenario-area lockdown~~ — **resolved (D6):** ~~on, plus the non-member gate view with a
    temporary-pass-through fallback~~ *(Updated 2026-09-26, smoke test: lockdown removed; non-members see
-   siege gates removed and are carried through closed doors, §8.5.)*
+   siege gates removed and are carried through closed doors, §8.5.)* *(Updated 2026-11-02, design only:
+   non-members keep every siege-area gate's pre-game state, enforced server-side, §8.5.)*
 3. ~~Enchant-book drops~~ — **resolved (D7):** kept; siege-applied enchantments are stripped after the
    siege (§9.4).
 4. **"Skilled match" title ranges** (v1 `titleIDMin/Max`). MVP ports only a minimum bracket per
