@@ -1,6 +1,6 @@
 # Dashboard, form wizard and realtime chain — progress report
 
-**Status:** In progress — links 1–3, 3b and 5 merged; links 4, 6, 7, 8, 9 and 10 in review (2026-11-02); every link of the chain has run
+**Status:** Chain complete — links 1–3, 3b and 5 merged; links 4, 6, 7, 8, 9 and 10 in review, waiting for the developer (2026-11-02)
 **Last updated:** 2026-11-02
 **Charter:** [UX_REALTIME_CHAIN.md](../ai-agents/handoffs/UX_REALTIME_CHAIN.md) · **Coordinator prompt:**
 [2026-10-26-ux-realtime-coordinator-prompt.md](../ai-agents/handoffs/2026-10-26-ux-realtime-coordinator-prompt.md)
@@ -39,13 +39,6 @@ flagged decisions.)
 - **Link 5 merged** on 2026-11-01 at the developer's request after the re-test: web-app `main` `b3b415d`, API `master`
   `8df59b7`, workspace `main` `6e2b98c`. **After deploying web app and API together:** back up, then run
   `scripts/maintenance/remove-user1-drafts-and-workflow-sessions.sql` once (smoke test section 7, alpha-go-live § 4.3).
-- **Test link 7** (#180, world-task hardening): API `claude/world-task-hardening` `115c418`, plugin `21de734e`, web-app
-  `d7a0896`; live checklist `docs/guides/world-task-hardening-smoke-test.md` on workspace `claude/world-task-hardening`
-  `e06c1e0`. Deploy API, plugin and web app together and run the migration after a backup. Decisions to see: L7-8 (first
-  sweep removes old workflow sessions without a draft link or Completed task, older than 7 days), L7-1 (codes unique by
-  check-and-retry, no index), L7-4 (claim/complete/fail/release/heartbeat game-server only), L7-13 (no API-driven temp
-  region deletion; comment on #34). Coordinator check 2026-11-01: heads match, migration additive, access rules and
-  sweep spot-checked.
 - **Test link 4** (#178, SignalR S1): API `claude/realtime-signalr` `b8a29d7`, plugin `a64b7f83`; live checklist
   `docs/guides/realtime-smoke-test.md` § S1 on workspace `claude/realtime-signalr` `e878ee2`. `realtime.enabled` is off by
   default. Links 6, 8 and 10 continue this branch, so it is best merged once later unless you want S1 live earlier.
@@ -54,7 +47,7 @@ flagged decisions.)
   checklist `docs/guides/world-task-hardening-smoke-test.md` on workspace `claude/world-task-hardening` `e06c1e0`.
   Deploy API, plugin and web app together; one additive migration. **Before the first sweep read L7-8:** old sessions
   without a draft and without a Completed task, older than 7 days, are deleted (back up). Flags L7-1…L7-18. Its merge
-  opens link 8 (with link 6 done) and frees knk-web-app for link 9.
+  opens link 8 (with link 6 done) and frees knk-web-app for link 9. Coordinator check 2026-11-01: heads match, migration additive, access rules and sweep spot-checked.
 - **Test link 9** (#39 rest, #177 follow-up): web-app `claude/entity-lists-url-state` `6b2a4eb`; live checklist
   `docs/guides/entity-lists-url-state-smoke-test.md` on workspace `claude/entity-lists-url-state` `015e5c1`. Web app only.
   Merges cleanly with link 7's `claude/world-task-hardening` (trial merge; `FormWizardPage.tsx` auto-merged). Flags
@@ -67,11 +60,51 @@ flagged decisions.)
   `e769c4c`, plugin `eb22a655` (web app unchanged at `c7a3e85`); live checklist `docs/guides/realtime-smoke-test.md` § S3
   on workspace `claude/realtime-signalr` `c04d3df` (run § S1 first). No new setting, no migration of its own. Decisions to
   see: L10-1 (GateChanged only for definition edits), L10-5 (only gates a running match holds wait), L10-8 (#31 retried
-  on the hub reconnect only; the abort never once this run created a match). Flags L10-1…L10-15.
+  on the hub reconnect only; the abort never once this run created a match). Flags L10-1…L10-15. Coordinator check 2026-11-02: heads match; the entity-change interceptor sends on SavedChanges and drops on SaveChangesFailed/Canceled.
 - **Test link 6** (#179, SignalR S2, same branch): API `38b0466`, plugin `b48f1484`; live checklist
   `docs/guides/realtime-smoke-test.md` § S2 on workspace `claude/realtime-signalr` `ae949bd` (run § S1 first). Flags
   L6-1…L6-12 (link 6 block). L6-1: the ×4 slowdown applies only to the social-spy re-check for now; the notification
   poll stops while connected; the other timers slow down when S3 pushes their changes.
+
+## Chain end (coordinator, 2026-11-02)
+
+Every link has run. **Merged:** links 1–3, 3b, 5. **In review, waiting for the developer's live test and merge:**
+
+| Branch | Links | Checklist (workspace feature branch) | Contains |
+|---|---|---|---|
+| `claude/world-task-hardening` | 7 | `docs/guides/world-task-hardening-smoke-test.md` | — |
+| `claude/entity-lists-url-state` | 9 | `docs/guides/entity-lists-url-state-smoke-test.md` | — (merges cleanly with link 7) |
+| `claude/realtime-signalr` | 4, 6, 8, 10 | `docs/guides/realtime-smoke-test.md` § S1, S2, WT2, S3 | link 7 (stacked, waiver 2026-11-02) |
+
+Suggested test and merge order: link 9 (web app only, independent); link 7 (one additive migration; read L7-8 and back up
+before the first sweep); then the realtime branch (S1 → S2 → WT2 → S3; `realtime.enabled` off by default, so merging it
+is safe before the hub is switched on). Fixes found while testing link 7 go to its branch and are merged into
+`claude/realtime-signalr` again. Deploy API, plugin and web app together for links 7 and 8.
+
+Base reds the links worked around, still open: #99 (4 API tests), #204 (InvitePage fixture), #63 (9 `tsc` errors),
+#106 (`.sln` path case).
+
+### Proposed next chain (for the developer to approve; nothing started)
+
+Two lanes that share no component repo, as in this chain:
+
+**Lane W, web app (sequential):**
+1. Quick fixes: #204 (test fixture), #197 (drop "Entity setup" from the nav).
+2. #95 token layer (contrast rules), then #33 feedback primitives (toast API, Dialog, danger/required-reason confirm),
+   then #187 data and format primitives (DataTable/Pager, `format.ts`, SettingsPage shell). Everything below builds on these.
+3. #30 admin information architecture (route-meta table, grouped sidebar, breadcrumbs).
+4. Screens on the primitives: #119 player profile (needs #33), #26 settings help and confirms (needs #187), #188 then #189
+   entity detail page (#188 needs an API part), #191 relation picker, #205 bulk actions (open decisions in the issue).
+5. #71 form and display builders.
+
+**Lane R, API + plugin (after the realtime branch is merged):**
+1. #184 S5 account-erasure push (GDPR; priority medium).
+2. #31 rest: siege startup work on API recovery when the hub is off (link 10 fixed only the hub path).
+3. #34 lootbox spawn-area region renames.
+4. #183 S4 live updates in the web app (touches web app: runs after lane W step 3, or between its steps).
+
+**Separate, before an open beta:** #139 email verification (API + web app; needs real SMTP). **Needs decisions first:**
+#92 rebrand phases 2–4 (Q6 font licence, Q7 light admin / dark public), #190 settings audit (low).
 
 ## Coordinator notes
 
