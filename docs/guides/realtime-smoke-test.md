@@ -1,11 +1,12 @@
 # Realtime channel (SignalR) — smoke test
 
-**Status:** S1, S2 and WT2 to test (written 2026-10-26 and 2026-11-02 for branch `claude/realtime-signalr`, not merged, not run)
-**Last updated:** 2026-11-02 (§ WT2, #181)
+**Status:** S1, S2, WT2 and S3 to test (written 2026-10-26 and 2026-11-02 for branch `claude/realtime-signalr`, not merged, not run)
+**Last updated:** 2026-11-02 (§ S3, #182); 2026-11-02 (§ WT2, #181)
 **Design:** [specs/realtime-signalr/DESIGN.md](../specs/realtime-signalr/DESIGN.md) (§4–§5, as built: §4.6) ·
 [IMPLEMENTATION_PLAN.md](../specs/realtime-signalr/IMPLEMENTATION_PLAN.md) ·
 **Issues:** [PandiO/knk-workspace#178](https://github.com/PandiO/knk-workspace/issues/178) (S1),
-[#179](https://github.com/PandiO/knk-workspace/issues/179) (S2), [#181](https://github.com/PandiO/knk-workspace/issues/181) (WT2), parent
+[#179](https://github.com/PandiO/knk-workspace/issues/179) (S2), [#181](https://github.com/PandiO/knk-workspace/issues/181) (WT2),
+[#182](https://github.com/PandiO/knk-workspace/issues/182) (S3), parent
 [#66](https://github.com/PandiO/knk-workspace/issues/66)
 
 Manual checks of the realtime channel between knk-web-api and the game server, one section per phase. Run on the dev
@@ -155,6 +156,57 @@ Use a form with a Location or region field (e.g. a new Town).
     `realtime.enabled: false`: nobody is online, every task shows its code, exactly as on the #180 branch.
 
 Record the times of 2, 6 and 9 under **Findings**.
+
+## S3 — config and entity changes pushed to the game server (#182)
+
+**Builds and config:** knk-web-api and knk-plugin on `claude/realtime-signalr` (as WT2: the branch contains #180's
+migration), `realtime.enabled: true`. **API and plugin:** no new setting, no migration. **People:** staff member **S**
+in the web app (`knk.admin.world`, `knk.admin.content`, siege/lootbox/game settings pages), player **P** online in game.
+Goal: **in effect on the running server within about 2 s** of Save (the 500 ms merge window included). Plugin log at
+INFO shows `Realtime: reloaded gate structure …`; `/knk health` `messages` goes up per event.
+
+1. **Off changes nothing.** With `realtime.enabled: false` edit a gate's door name and a district's AllowEntry: nothing
+   happens until `/gate reload` / the 5 min access sync, exactly as before. The plugin still reports its worlds over REST
+   (`PUT api/GameSettings/runtime-worlds` in the API log every 10 min). Set it back to `true`.
+2. **Gate edit.** S changes a gate door's animation duration or a gate's health display override and saves: the plugin
+   log shows `reloaded gate structure N (k door(s))` within 2 s and the next open/close uses the new value. Add a door:
+   it works without `/gate reload`. Delete a door: it no longer opens (`/gate list` doesn't show it). Delete a gate
+   structure (one no siege uses): `removed from the cache`.
+3. **Gate edit during a siege match (Q12).** Start a siege match whose scenario holds gate **G**. Edit G in the web app:
+   the log says `edited in the web app during a siege match; applied after the match` and G keeps its lockdown. Edit a
+   gate outside the scenario: reloaded at once. End the match: after the gates are restored G is reloaded with the edit.
+4. **Domain access.** S sets AllowEntry off on a district: within 2 s P can't walk in (the WorldGuard flag is set; no
+   5 min wait, no `/knk regions repair`). Back on: P walks in. Add a sub-region to a town: its flags follow at once.
+5. **Game and hub settings.** Change the join announcement or a world's time lock in Game Settings: in effect within
+   2 s (log `Applied game settings`). Mark another domain as hub-eligible: the hub settings re-read follow.
+6. **Siege config.** Change a lobby's cooldown or a scenario's player limit: `/siege` shows it at once for lobbies
+   between matches; a lobby in a match takes it at its next cooldown (log `new configuration applies at its next
+   cooldown`).
+7. **Lootbox config.** Change a lootbox type's weight or a spawn area's max active boxes: the runtime re-reads at once
+   (no 60 s wait); boxes already in the world stay.
+8. **Teleport and navigation.** Turn a town's warp on or change its price: `/warp` (and the warp menu) shows it at
+   once. Change the navigation compass name or a type default: the next `/navigate` uses it.
+9. **Roads.** Approve a road tile in the road review page (or change a profile): the plugin re-reads that world's tiles
+   within 2 s instead of after the 10 min tile timer.
+10. **Telemetry config.** As the owner, add an enhanced telemetry target for P: the plugin's config poll runs at once
+    (P's enhanced sampling starts without the 60 s wait).
+11. **Cached entities.** Rename an item blueprint, a kit or a menu template, or change a grade: the next use in game
+    (give, kit claim, menu open, enchant-book cap) shows the new value without `/knk cache refresh`. Edit P's user in
+    the dashboard (e.g. their gender or username): P is re-read and redrawn at once. A catalogue maintenance run that
+    touches many materials sends one event (the whole material cache is dropped once).
+12. **Worlds over the hub.** Load or unload a world (e.g. `/mv load`): the API's Game Settings page lists it at once;
+    the API log shows no REST `runtime-worlds` call while connected. Stop the hub (API restart): the next report goes
+    over REST again.
+13. **Startup-only siege work (#31).** Stop the API, start the game server, wait for "Done" (log: `Runtime config
+    unavailable … no lobbies started`), then start the API. When the plugin reconnects to the hub the resync runs
+    "siege startup work": the lobbies appear in `/siege` without `/siege admin reload`, title brackets show on join
+    denials, gates a crash left locked are restored, and the previous run's unfinished matches are aborted (API
+    `SiegeMatches` with `ServerRestart`). A second reconnect runs none of them again. With `realtime.enabled: false` the
+    old behaviour stays (`/siege admin reload` needed; #31 stays open for that path).
+14. **Slower safety nets.** With the hub connected the 5 min domain access sync, the 30 s game settings re-read and the
+    60 s lootbox refresh run 4× less often (API request log); with the hub down they are back at their intervals.
+
+Record the times of 2, 4, 5 and 8 under **Findings**.
 
 ## Findings
 

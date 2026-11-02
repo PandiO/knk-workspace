@@ -26,6 +26,15 @@ This is a human-readable record of capabilities merged into the V3 default branc
   shown as the fallback. The web app follows the task live (web hub, `@microsoft/signalr`), a cancel in the web app
   stops the task in game at once, and headless scans start at once. With `realtime.enabled: false` (the default)
   everything works as before. Checklist: [realtime smoke test](guides/realtime-smoke-test.md) § WT2.
+- **Realtime channel, S3 config and entity push** ([PandiO/knk-workspace#182](https://github.com/PandiO/knk-workspace/issues/182),
+  branch `claude/realtime-signalr` in knk-web-api, knk-plugin and knk-workspace): a gate, a domain's entry/exit rules,
+  game and hub settings, siege, lootbox, warp, navigation, road and telemetry settings, and the entities the game
+  server caches (towns, districts, structures, items, kits, menus, grades, tags, title brackets, users, ...) edited in
+  the web app are in effect on the running server within about two seconds instead of after a reload, a timer or a
+  cache TTL. A gate held by a running siege match takes its edit after the match. The game server reports its worlds
+  over the hub, and the siege's startup work that failed because the API was down (lobbies, title brackets, stale
+  gates, unfinished matches; #31) runs again when the hub reconnects. The periodic re-syncs stay as a slower safety
+  net. Still off by default (`realtime.enabled: false`); no new setting, no migration. Checklist: realtime smoke test § S3.
 - **World tasks that always end, and tasks anchored to the form draft** — PandiO/knk-workspace#180 (WT1 of #66),
   branch `claude/world-task-hardening` in knk-web-api, knk-plugin, knk-web-app and knk-workspace. A task now ends
   Completed, Failed, Cancelled or Expired: it expires after 30 min unclaimed, a claim lasts while the game server sends

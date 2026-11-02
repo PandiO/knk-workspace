@@ -4,8 +4,9 @@
 in review); §8.2 and §8.7 (WT1, #180) built on `claude/world-task-hardening` (link 7, 2026-11-01, not merged; as built:
 [world-tasks/README.md § Lifecycle](../world-tasks/README.md#lifecycle-and-endpoints-pandioknk-workspace180)); **§8.3–§8.6 (WT2,
 #181) built on `claude/realtime-signalr`** (link 8, 2026-11-02, stacked on the unmerged WT1 branch, which it contains; as built:
-§8.8), `realtime.enabled: false` until the live check; S3–S5 not started.
-**Last updated:** 2026-11-02 (WT2 built: §8.8); 2026-11-01 (status: WT1 built, #180); 2026-10-26 (S2 built: implementation notes in §6.7; S1 built: §4.6; decisions recorded; §8.3 delivery and busy flow, §8.7 tasks anchored to the draft, §4.3 publishing path)
+§8.8); **§6.2–§6.4 (S3, #182) built on `claude/realtime-signalr`** (link 10, 2026-11-02; as built: §6.8),
+`realtime.enabled: false` until the live check; S4–S5 not started.
+**Last updated:** 2026-11-02 (S3 built: §6.8); 2026-11-02 (WT2 built: §8.8); 2026-11-01 (status: WT1 built, #180); 2026-10-26 (S2 built: implementation notes in §6.7; S1 built: §4.6; decisions recorded; §8.3 delivery and busy flow, §8.7 tasks anchored to the draft, §4.3 publishing path)
 **Issue:** [PandiO/knk-workspace#66](https://github.com/PandiO/knk-workspace/issues/66) (KNG-57, priority high); phase issues in
 [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md). Related: #76 (KNG-170, rank changes don't reach the server),
 #121 (KNG-262, cache TTLs), #31 (KNG-202, startup-only siege work), #35 (KNG-176), #34 (KNG-246), #145 (KNG-249), #75.
@@ -307,6 +308,57 @@ onto the hub" → **later, phase S6**.
   it applies to the re-sync whose changes S2 pushes: the social-spy re-check (60 s → 4 min). The other timers (domain
   access, game settings, lootbox runtime, grades, roads, telemetry config) keep their interval until their events
   land in S3 (#182); slowing them now would delay those changes with nothing pushed in their place.
+
+### 6.8 S3 as built (2026-11-02, #182)
+
+- **One save interceptor (option A, Q3).** `Realtime/RealtimeEntityChangeInterceptor` (EF Core `SaveChangesInterceptor`,
+  singleton, added in `Program.cs` next to the S2 transaction interceptor) notes the watched entities before a save
+  and which properties changed; after the save succeeded it reads their ids and hands the events of
+  `Realtime/RealtimeEntityChangeMap` (pure, unit-tested) to the context's `IRealtimeEventSink`, so they go out at once
+  or when the explicit transaction commits (dropped on rollback or a failed save). Option C swaps only the sink.
+- **`EntityChanged {type, id, op, key}`** for the §6.3 allow-list. `key` (added) is the natural key the plugin caches
+  some types by: a user's UUID, a domain's or sub-region's region id, a menu template's key. More than 50 entities of
+  one type in one save → one event with `id: null` ("drop everything of that type"). A user change that only touches
+  presence, password, token, email or salary-payout columns sends nothing.
+- **Config events from the same map:** `DomainAccessChanged {domainId}` (a domain added/deleted, AllowEntry/AllowExit
+  or region id changed; a sub-region added/deleted/moved), `GameSettingsChanged {scope}` (game settings except the
+  runtime worlds report alone; `Domain.IsHub` = scope `hub`), `SiegeConfigChanged {scope}` (configuration, lobby,
+  lobby rotation, scenario and its districts, gates, teams, spawnpoints, objectives; never matches),
+  `LootboxConfigChanged {scope}` (configuration, type and its weights/pool/enchant rolls, spawn areas and their types,
+  special entries; never spawns, claims or tokens), `TeleportDestinationsChanged` (a warp domain's teleport columns,
+  name, location or world), `NavigationSettingsChanged` (compass settings, type defaults, a domain's navigation/road
+  override), `RoadNetworkChanged {world}` (tiles, nodes, edges; profiles = `world: null`; not the dirty flag alone),
+  `TelemetryConfigChanged` (enhanced targets, test runs). Duplicates within a save are sent once.
+- **`GateChanged {gateStructureId, op}`** is sent explicitly by `GateStructureService` (create, update, delete,
+  overrides) and `GateDoorService` (door create/update/delete, region data, block snapshots added/cleared), not by
+  the map: the game server's own runtime writes (health, open state, operational toggles) and the siege
+  lockdown/restore (`SiegeMatchGateService`) send nothing. The plugin reloads that one structure
+  (`getByIdWithSnapshots` → `GateLoaderAdapter.loadAndCacheStructure`, drops doors the API no longer has, then the
+  world/DB sync check of its doors); a deleted structure leaves the cache. A structure a running match holds
+  (`SiegeGateController.isLocked`) waits until the round released its gates and their API restore answered (Q12).
+- **Plugin handlers** (`paper/realtime/ConfigRealtimeSync`, `GateRealtimeSync`; `api/realtime/ConfigEvents`): the
+  existing refresh paths (P3) — `DomainAccessFlagSync.syncNow()`, `GameSettingsManager.refreshNow()`,
+  `SiegeService.refreshFromApi()` (= `/siege admin reload`: lobbies between matches now, running ones at their next
+  cooldown), `LootboxRuntime.refresh()`, the `/knk cache refresh` hooks for warps/spawn/navigation, the road network
+  refresh (one world or all), `TelemetryFlushTask.pollConfig()`. A burst for one section (a scenario and its
+  spawnpoints) is merged into one refresh after 500 ms (`core/realtime/Coalescer`). `EntityChanged` goes through
+  `core/realtime/EntityChangeRouter` to the data-access caches of that type (one id, or the type), the region→domain
+  cache for domains, the grade catalogue for grades, the siege title ranks for title brackets, and for a user the S2
+  re-read (`UserStateSync.userEntityChanged`). Open menus are not refreshed by the event (they re-read on open).
+- **`ReportWorlds` (§6.4).** While connected `GameSettingsManager` sends the loaded worlds over the hub (same body as
+  `PUT api/GameSettings/runtime-worlds`, same `game-settings.server-id`); REST stays the fallback. No answer: a new
+  world that adds a world-settings entry comes back as `GameSettingsChanged`.
+- **Startup-only siege work (#31, §4.4 step 3).** `core/realtime/PendingStartupWork` holds three steps — abort
+  unfinished matches (`SiegeMatchRecorder.retryRecovery`; never once this run created a match), restore stale gates
+  (`SiegeGateController.retryRecovery`; waits while a lockdown of this run is active), runtime config + title
+  brackets (`SiegeService.retryStartup`). Each runs at startup as before; one that failed runs again on every hub
+  (re)connect (resync step "siege startup work"), in that order, until it got through. With the hub off, unchanged.
+- **Slower re-syncs (Q4).** While connected these now run `realtime.fallback-poll-multiplier` times less often: domain
+  access sync, game settings re-read, lootbox runtime refresh, road tiles and meta, telemetry config poll, grade
+  catalogue. The entity cache TTLs (#121) and the permission/user TTLs are unchanged.
+- **Not in S3:** web consumers of `EntityChanged` (#183), erasure (#184), a Location row's coordinates (a warp point
+  moved without touching the domain) and the time-based expiry of an enhanced telemetry target (both stay on the
+  poll/TTL).
 
 ## 7. Reliability
 

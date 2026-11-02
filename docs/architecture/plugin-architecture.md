@@ -235,6 +235,17 @@ complete for every entity type the plugin touches.
   `WorldTaskOfferWithdrawn`, and runs the headless poll at once on `WorldTaskCreated` (the poll itself stays at 60 s
   while connected). In-game `cancel` releases with `handBack: true`. Resync step "world tasks" =
   `WorldTaskLeases.releaseOrphans()`. Design §8.8.
+  **S3 (#182, same branch):** `paper/realtime/ConfigRealtimeSync` handles the config events with the existing refresh
+  paths (domain access sync, `GameSettingsManager.refreshNow()`, `SiegeService.refreshFromApi()` = `/siege admin
+  reload`, `LootboxRuntime.refresh()`, the warp/spawn/navigation `/knk cache refresh` hooks, the road network refresh,
+  the telemetry config poll), merged per section for 500 ms (`core/realtime/Coalescer`); `EntityChanged` goes through
+  `core/realtime/EntityChangeRouter` to the data-access caches of that type (and the S2 user re-read for a user).
+  `GateRealtimeSync` reloads one gate structure on `GateChanged` (a deleted one leaves `GateManager`); a gate a running
+  siege match holds waits for the round's gate restore (Q12). While connected the loaded worlds go over the hub
+  (`ReportWorlds`), and the domain access sync, game settings, lootbox runtime, road and telemetry timers and the grade
+  catalogue run `realtime.fallback-poll-multiplier` times slower. Resync step "siege startup work"
+  (`core/realtime/PendingStartupWork`, #31) re-runs the startup abort, stale gate restore and siege config/title
+  brackets that failed at start. Design §6.8.
 - Everything else (commands, player-triggered lookups) is on-demand via the
   cache-first data access layer.
 
