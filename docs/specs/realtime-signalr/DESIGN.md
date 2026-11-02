@@ -2,8 +2,10 @@
 
 **Status:** Accepted design (developer decisions 2026-10-26, §12). S1 (§4–§5) and S2 (§6.1) built on `claude/realtime-signalr` (links 4, 6,
 in review); §8.2 and §8.7 (WT1, #180) built on `claude/world-task-hardening` (link 7, 2026-11-01, not merged; as built:
-[world-tasks/README.md § Lifecycle](../world-tasks/README.md#lifecycle-and-endpoints-pandioknk-workspace180)).
-**Last updated:** 2026-11-01 (status: WT1 built, #180); 2026-10-26 (S2 built: implementation notes in §6.7; S1 built: §4.6; decisions recorded; §8.3 delivery and busy flow, §8.7 tasks anchored to the draft, §4.3 publishing path)
+[world-tasks/README.md § Lifecycle](../world-tasks/README.md#lifecycle-and-endpoints-pandioknk-workspace180)); **§8.3–§8.6 (WT2,
+#181) built on `claude/realtime-signalr`** (link 8, 2026-11-02, stacked on the unmerged WT1 branch, which it contains; as built:
+§8.8), `realtime.enabled: false` until the live check; S3–S5 not started.
+**Last updated:** 2026-11-02 (WT2 built: §8.8); 2026-11-01 (status: WT1 built, #180); 2026-10-26 (S2 built: implementation notes in §6.7; S1 built: §4.6; decisions recorded; §8.3 delivery and busy flow, §8.7 tasks anchored to the draft, §4.3 publishing path)
 **Issue:** [PandiO/knk-workspace#66](https://github.com/PandiO/knk-workspace/issues/66) (KNG-57, priority high); phase issues in
 [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md). Related: #76 (KNG-170, rank changes don't reach the server),
 #121 (KNG-262, cache TTLs), #31 (KNG-202, startup-only siege work), #35 (KNG-176), #34 (KNG-246), #145 (KNG-249), #75.
@@ -483,6 +485,58 @@ after Save Draft, Next or Submit.
 - The #180 sweep also removes sessions with no draft and no activity (default 7 days) and their open tasks.
 - Later, if needed: the API writes the result into the draft itself on completion (option 3), which needs the web
   app's field-mapping rules (location spread, region id, item/kit scan fan-out) on the server.
+
+### 8.8 WT2 as built (2026-11-02, #181)
+
+Branch `claude/realtime-signalr` in knk-web-api, knk-plugin and knk-web-app (the web app's first commit on it). It
+contains the WT1 branch (`claude/world-task-hardening`, merged in, not on a trunk yet). Flags L8-1…L8-20 in the
+[progress report](../../reports/2026-10-26-ux-realtime-chain.md) (link 8 block).
+
+- **Delivery** (`POST api/WorldTasks`, `deliver`, default `auto`): `auto` offers the task to the creator when their
+  UUID is on a **connected** game server (`PresenceRegistry.ConnectedServerOf`; a server in its grace period doesn't
+  count), Busy when they already hold an InProgress task; `code` never offers; `queue` sets `OfferState = Queued`
+  (offered when their task ends, or when they join); `replace` releases their held task(s) with the code (`OfferState`
+  Declined, `WorldTaskCancelled {status: Pending}` stops the handler) and offers this one; `{userId}` is "Hand off to…"
+  (Accept/Decline; not online → Declined). Headless types are never offered: `WorldTaskCreated` instead. Two new
+  `OfferState` strings, `Queued` and `Busy` (no migration).
+- **Game hub events** (`Realtime/Contracts/WorldTaskContracts.cs`; through `IRealtimeEventSink`, so after the save):
+  `WorldTaskOffered {taskId, uuid, taskType, fieldName, label, entityType, mode: auto-claim|accept, fromUsername,
+  timeoutSeconds}` to the player's server; `WorldTaskCancelled {taskId, status, uuid, reason}` (web cancel, sweep
+  expiry, Replace, a field's task replaced, a catalogue scan cancelled) and `WorldTaskOfferWithdrawn {taskId, uuid,
+  reason}` (claimed with the code by someone else, offer timed out) to every server; `WorldTaskCreated {taskId,
+  taskType}` to every server for a new or released headless task. Hub invocation `WorldTaskOfferResult {taskId,
+  result, uuid}`: declined / offline / no-permission → Declined, timed-out → TimedOut, busy → Busy; only an open offer
+  changes, an answer from another player is ignored. `ReportRoster` and `PlayerJoined` offer what waits for those
+  players (Offered, Accepted = handed back by a quit or restart, Queued; one per player, none while they hold a task).
+- **State machine additions:** the `offer` claim needs `OfferState = Offered`; a claim by code/id by someone else while
+  Offered/Queued/Busy sets `None` (and withdraws an open offer); `release` with `handBack: true` (in-game `cancel`) sets
+  Declined, so the player is not offered it again; the player's next queued task is offered after complete, fail,
+  cancel and a hand-back (not after a quit or restart release). Sweep: an offer unanswered after
+  `WorldTasks:OfferTimeoutSeconds` (120) → TimedOut + withdrawn.
+- **Web hub:** `JoinTask(id)` (creator or `knk.admin.world`, DESIGN §7.3) / `LeaveTask(id)` change the connection's
+  groups (`RealtimeConnection.Join/Leave`); `WorldTaskUpdated` (status, offer state and target, claimer, error, expiry;
+  never the task code or the output) goes to `task:{id}` and `user:{creator}`, once per connection
+  (`IRealtimePublisher.PublishToWebGroups`); `CatalogScanUpdated {scanId, worldTaskId, taskStatus}` to `user:{starter}`
+  (no progress value: the scan has none).
+- **REST:** `GET api/WorldTasks/active-for-me` (held task, its form name, queue length), `GET api/Presence/me`
+  (online on a connected server), `GET api/Presence/online-staff?node=knk.tasks` (`knk.admin.world`; online holders of
+  `knk.tasks` or `knk.admin.world` except the caller).
+- **Plugin** (`paper/realtime/WorldTaskRealtimeSync`, `api/realtime/WorldTaskEvents`): auto-claim checks the player is
+  here, holds `knk.tasks` and has nothing open, then claims (`claimMode: offer`) and starts the handler (the
+  `/knk task` path); otherwise it answers. Hand-off: clickable `[Accept] [Decline]` running
+  `/knk task accept|decline <id>`, local timeout = the offer's. `WorldTaskCancelled` stops a held task's handler at
+  once; `WorldTaskCreated` runs the headless poll now, which stays at its 60 s idle interval while connected. Resync
+  step "world tasks" = `WorldTaskLeases.releaseOrphans()`.
+- **Web app** (`src/realtime/RealtimeProvider.tsx`, `@microsoft/signalr` 10.0.11): one connection per logged-in tab to
+  `${REACT_APP_API_BASE_URL}/hubs/web`, automatic reconnect, then a restart loop (1/2/5/10/30 s) after a close (token
+  expiry); task groups joined again and components told to re-read after every reconnect. `WorldBoundFieldRenderer`:
+  "Send to Minecraft" runs the busy check (only while the hub is connected and you are online) with Queue / Hand off /
+  Replace / Cancel naming the form; "Hand off to…" picker; the offer state above the task code, the code folded away
+  while an offer is out; renders from `WorldTaskUpdated` (reads `GET {id}` for a Completed result); poll 10 s while
+  connected (safety net), 2 s while not (unchanged #180). `MinecraftCatalogScanCard` reads the scan on
+  `CatalogScanUpdated`, poll 15 s while connected, 3 s while not.
+- **Off = as before:** with `realtime.enabled: false` no server is connected, nobody is online, nothing is offered,
+  the task code flow and every poll are #180's. A web app whose hub can't connect polls every 2 s as before.
 
 ## 9. Web app: entity CRUD push (nice-to-have)
 

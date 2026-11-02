@@ -963,7 +963,7 @@ server {
 
     # [#178, feature branch claude/realtime-signalr] The browser hub sends its JWT as ?access_token= (a WebSocket
     # can't carry headers), so keep these requests out of the access log. Same proxy settings as /api/.
-    # Only needed once the web app connects (WT2, #181); the game server connects to the API directly, not here.
+    # Needed since the web app connects (WT2, #181, same branch); the game server connects to the API directly, not here.
     location /api/hubs/ {
         access_log off;
         proxy_pass http://127.0.0.1:5000;

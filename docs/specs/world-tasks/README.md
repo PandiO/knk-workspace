@@ -3,7 +3,7 @@
 **Status:** Living reference for the lifecycle (§ "Lifecycle and endpoints" below, as built by PandiO/knk-workspace#180 on
 the `claude/world-task-hardening` branches, not merged yet). The other files in this folder are older design notes:
 where they differ from that section, the section is current.
-**Last updated:** 2026-11-01 (world-task hardening and tasks anchored to the draft, #180; design
+**Last updated:** 2026-11-02 (§ "Over the realtime channel": offers, hand-off, busy check, #181, branch `claude/realtime-signalr`); 2026-11-01 (world-task hardening and tasks anchored to the draft, #180; design
 [realtime-signalr/DESIGN.md](../realtime-signalr/DESIGN.md) §8.2, §8.7)
 
 ## Overview
@@ -177,6 +177,25 @@ Pending ──claim──► InProgress ──complete──► Completed
   tasks back. The server id is `realtime.server-id` (default `localhost`).
 - The headless poller claims a scan before running it, so two servers don't scan twice.
 - Handler state is keyed by UUID; task chat is handled on the main thread.
+
+### Over the realtime channel (PandiO/knk-workspace#181, WT2; branch `claude/realtime-signalr`)
+
+With the plugin's `realtime.enabled: true` (off by default; DESIGN §8.8 has the details):
+
+- `POST /` takes `deliver`: `"auto"` (default) offers the task to its creator when they are online on a connected game
+  server and claims it there at once; `"code"` never offers; `"queue"` offers it when the creator's current task ends;
+  `"replace"` hands the creator's current task back (it keeps its task code) and offers this one; `{"userId": n}` sends
+  it to another online player, who gets `[Accept] [Decline]` in chat for 2 minutes (`/knk task accept|decline <id>`).
+  The task code is always generated and keeps working; the web app shows it folded while an offer is out and expanded
+  when there is none, or it was declined, timed out, or arrived while the player was busy.
+- `OfferState`: None, Offered, Accepted, Declined, TimedOut, Queued, Busy. The `offer` claim needs Offered.
+- New reads: `GET active-for-me` (the task you hold in game, its form, your queue: the web app's busy check),
+  `GET api/Presence/me`, `GET api/Presence/online-staff` (`knk.admin.world`; online `knk.tasks` holders except you).
+- In game: a web cancel or expiry stops the handler at once (no heartbeat wait); in-game `cancel` hands the task back
+  for good (not offered again); a quit or restart hands it back and it is offered again when the player is back.
+  Headless scans start at once (`WorldTaskCreated`).
+- The web app follows a task over the web hub (`WorldTaskUpdated`) and polls every 10 s as a safety net; without the
+  hub it polls every 2 s as before.
 
 The form builder offers only task types with a handler: `LocationSelection` (the default), `ReagionCreate` and
 `RegionClaim` (on a `WgRegionId` field), `ItemScan`, `KitScan`, `GateBlockScan`, `GateOpenedBlockScan`.

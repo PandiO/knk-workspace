@@ -18,6 +18,14 @@ This is a human-readable record of capabilities merged into the V3 default branc
   player's remembered offline answers (#76). Player notifications are pushed; the 2 s poll stops while connected. The
   API sends events only after the database transaction committed. New optional plugin key
   `realtime.fallback-poll-multiplier` (default 4). Still off by default. Checklist: realtime smoke test § S2.
+- **World tasks over the realtime channel (WT2)** ([PandiO/knk-workspace#181](https://github.com/PandiO/knk-workspace/issues/181),
+  branch `claude/realtime-signalr` in knk-web-api, knk-plugin, knk-web-app and knk-workspace; the branch contains the
+  world-task hardening below): "Send to Minecraft" offers the task to you in game and claims it there at once when you
+  are online (no code to type); if you already hold a task the web app asks Queue / Hand off / Replace / Cancel;
+  "Hand off to…" sends it to another online admin, who gets Accept/Decline in chat (2 min). The task code is always
+  shown as the fallback. The web app follows the task live (web hub, `@microsoft/signalr`), a cancel in the web app
+  stops the task in game at once, and headless scans start at once. With `realtime.enabled: false` (the default)
+  everything works as before. Checklist: [realtime smoke test](guides/realtime-smoke-test.md) § WT2.
 - **World tasks that always end, and tasks anchored to the form draft** — PandiO/knk-workspace#180 (WT1 of #66),
   branch `claude/world-task-hardening` in knk-web-api, knk-plugin, knk-web-app and knk-workspace. A task now ends
   Completed, Failed, Cancelled or Expired: it expires after 30 min unclaimed, a claim lasts while the game server sends

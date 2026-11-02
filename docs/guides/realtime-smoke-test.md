@@ -1,11 +1,11 @@
 # Realtime channel (SignalR) — smoke test
 
-**Status:** S1 and S2 to test (written 2026-10-26 for branch `claude/realtime-signalr`, not merged, not run)
-**Last updated:** 2026-10-26
+**Status:** S1, S2 and WT2 to test (written 2026-10-26 and 2026-11-02 for branch `claude/realtime-signalr`, not merged, not run)
+**Last updated:** 2026-11-02 (§ WT2, #181)
 **Design:** [specs/realtime-signalr/DESIGN.md](../specs/realtime-signalr/DESIGN.md) (§4–§5, as built: §4.6) ·
 [IMPLEMENTATION_PLAN.md](../specs/realtime-signalr/IMPLEMENTATION_PLAN.md) ·
 **Issues:** [PandiO/knk-workspace#178](https://github.com/PandiO/knk-workspace/issues/178) (S1),
-[#179](https://github.com/PandiO/knk-workspace/issues/179) (S2), parent
+[#179](https://github.com/PandiO/knk-workspace/issues/179) (S2), [#181](https://github.com/PandiO/knk-workspace/issues/181) (WT2), parent
 [#66](https://github.com/PandiO/knk-workspace/issues/66)
 
 Manual checks of the realtime channel between knk-web-api and the game server, one section per phase. Run on the dev
@@ -106,6 +106,55 @@ member **S** logged in to the web app with the user/permission/currency/moderati
 
 Measure 1, 2, 6, 7 and 8 with a stopwatch or the log timestamps (`at` in the envelope; plugin log at FINE) and
 record the times under **Findings**.
+
+## WT2 — world tasks over SignalR (#181)
+
+**Builds:** knk-web-api, knk-plugin **and knk-web-app** on `claude/realtime-signalr` (the branch contains the world-task
+hardening of #180 too: run its migration `AddWorldTaskHardening` after a backup, and read its smoke test
+`world-task-hardening-smoke-test.md` on `claude/world-task-hardening` first). Plugin `realtime.enabled: true` as in S1.
+**API:** optional `WorldTasks:OfferTimeoutSeconds` (default 120). **Proxy:** the browser connects to `/api/hubs/web`
+(dev: the API directly; alpha: `scripts/alpha-web/nginx.conf` `location /api/hubs/`). **People:** admin **A** (web app
+with `knk.admin.world`, a linked Minecraft account, `knk.tasks` in game) and admin **B** (`knk.tasks`, online in game).
+Use a form with a Location or region field (e.g. a new Town).
+
+1. **Web hub connects.** Log in to the web app as A. Browser dev tools → Network → WS: `/api/hubs/web?id=…` is open
+   (with `access_token` in the query string; the API request log stays quiet about it at Warning). Log out: it closes.
+2. **Send to Minecraft = auto-claim.** A is online in game, holds no task. In the form press **Send to Minecraft**.
+   Within a second: the panel says "Sent to you in game…" with the task code folded away ("Or use task code …"); in
+   game A gets "Task from the web app: Town › Location", "✓ Task claimed. Type 'cancel' to hand it back." and the
+   handler's prompts; the panel shows "Claimed by A" without waiting for a poll. Finish it in game: the field fills
+   within a second.
+3. **Offline = task code.** A leaves the game. Send to Minecraft: the yellow task code block shows at once (no "Sent
+   to" line); `/knk task <code>` after joining works as before.
+4. **Busy: Queue.** A online and holding a task (step 2 without finishing). In a second form field press **Send to
+   Minecraft**: the panel asks "You already have a task open in game." naming the field and the form, with Queue /
+   Hand off… / Replace / Cancel. **Cancel** sends nothing. **Queue**: "Queued: it is sent to you in game when your
+   current task ends." (the code stays visible). Finish the first task: the queued one is offered and claimed at once.
+5. **Busy: Replace.** As 4, choose **Replace**: in game the first task stops with "Task N was handed back: the web app
+   sent you task #M instead." and the new one starts. The first form's panel shows its task code again ("handed back").
+6. **Hand off to… + Accept.** B online. Press **Hand off to…**: B is listed (A is not). Pick B: the panel says "Sent to
+   B in game, waiting for Accept or Decline (2 min)…"; B sees "A sent you a task from the web app: …" and
+   `[Accept] [Decline]`. B clicks **[Accept]**: claimed and started; the panel shows "Claimed by B".
+7. **Decline and timeout.** Hand off again; B clicks **[Decline]**: the panel says "B declined it in game" and expands
+   the code. Hand off again and let 2 minutes pass: B gets "The offer … timed out.", the panel "No answer from B".
+   Clicking [Accept] afterwards says there is no open offer.
+8. **Code beats the offer.** Hand off to B, then A types `/knk task <code>` (unfold it): A has the task, B's offer line
+   is withdrawn ("The offer of … is no longer open: Claimed by A with the task code.").
+9. **Cancel in the web app stops it at once.** While A runs a task, press **Cancel task** in the panel: in game the
+   handler stops within a second with "… was cancelled in the web app." (before #181: on the next heartbeat, up to 60 s).
+10. **In-game cancel / quit.** A types `cancel` during a task: the panel shows the task code again (not offered again).
+    Start another, then A quits mid-task and rejoins: the task is offered (auto-claim) again on join.
+11. **Server restart.** While A holds a task, restart the game server: on reconnect the task is handed back and, with
+    A online again, offered again.
+12. **Scans start at once.** Start a gate block scan or a catalogue scan (Admin → Minecraft catalogue → Scan server):
+    the plugin log shows the claim within a second (not after the 5–60 s poll). The catalogue page updates the scan's
+    status as soon as it changes (no 3 s poll in the network tab; one `GET scans/{id}` per change, plus a 15 s
+    safety net).
+13. **Hub down = as before.** Stop the API's hub for the browser (or block `/api/hubs/` in the proxy): the panel polls
+    every 2 s, "Hand off to…" is hidden, "Send to Minecraft" sends without the busy question. Set the plugin to
+    `realtime.enabled: false`: nobody is online, every task shows its code, exactly as on the #180 branch.
+
+Record the times of 2, 6 and 9 under **Findings**.
 
 ## Findings
 

@@ -1,6 +1,6 @@
 ---
 status: active
-last_updated: 2026-11-01
+last_updated: 2026-11-02
 ---
 
 # knk-plugin Architecture
@@ -227,6 +227,14 @@ complete for every entity type the plugin touches.
   `PlayerNotificationPoller` makes no HTTP call while the hub is connected and drains once per (re)connect, which also
   re-reads every online player. While connected the social-spy re-check runs `realtime.fallback-poll-multiplier`
   (default 4) times slower. Design §6.7.
+  **WT2 (#181, same branch):** `paper/realtime/WorldTaskRealtimeSync` handles `WorldTaskOffered` (auto-claim for a
+  player who sent the task from the web app: checks they are here, hold `knk.tasks` and have nothing open, then claims
+  with `claimMode: offer` and starts the handler; a hand-off shows clickable `[Accept] [Decline]` =
+  `/knk task accept|decline <id>`, 2 min), answers `WorldTaskOfferResult` (declined, timed-out, busy, offline,
+  no-permission) over the hub, stops a held task's handler at once on `WorldTaskCancelled`, drops the line on
+  `WorldTaskOfferWithdrawn`, and runs the headless poll at once on `WorldTaskCreated` (the poll itself stays at 60 s
+  while connected). In-game `cancel` releases with `handBack: true`. Resync step "world tasks" =
+  `WorldTaskLeases.releaseOrphans()`. Design §8.8.
 - Everything else (commands, player-triggered lookups) is on-demand via the
   cache-first data access layer.
 
