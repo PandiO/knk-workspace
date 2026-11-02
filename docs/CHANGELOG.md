@@ -18,6 +18,16 @@ This is a human-readable record of capabilities merged into the V3 default branc
   player's remembered offline answers (#76). Player notifications are pushed; the 2 s poll stops while connected. The
   API sends events only after the database transaction committed. New optional plugin key
   `realtime.fallback-poll-multiplier` (default 4). Still off by default. Checklist: realtime smoke test § S2.
+- **World tasks that always end, and tasks anchored to the form draft** — PandiO/knk-workspace#180 (WT1 of #66),
+  branch `claude/world-task-hardening` in knk-web-api, knk-plugin, knk-web-app and knk-workspace. A task now ends
+  Completed, Failed, Cancelled or Expired: it expires after 30 min unclaimed, a claim lasts while the game server sends
+  heartbeats (released to Pending after 3 min without), and in-game `cancel`, quitting or a server restart hand it back
+  with its task code; `discard` and the web app's "Cancel task" cancel it. Only one player can claim a task (409), the
+  task code is checked and unique among open tasks, and the command is `/knk task <code>` (id claims need
+  `knk.tasks.any`). The first task of a form saves the draft silently; a resumed draft keeps its workflow session and
+  its fields find their tasks again, including results finished while the form was closed. Leaving the form cancels its
+  open tasks; the form builder offers only task types the game server can run. Smoke test:
+  [world-task-hardening-smoke-test.md](guides/world-task-hardening-smoke-test.md). One additive migration.
 
 ## 2026-11-01
 

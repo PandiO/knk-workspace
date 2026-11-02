@@ -1,5 +1,11 @@
 # WorldTask Requirements
 
+> **Status:** Historical design notes (before PandiO/knk-workspace#180, 2026-11-01). Where this file differs, the
+> [lifecycle section of README.md](README.md#lifecycle-and-endpoints-pandioknk-workspace180) is current: the task code is
+> checked on claim and unique among open tasks, a second claim answers 409, tasks expire, are released and cancelled,
+> the command is `/knk task <code>`, and the web app polls in `WorldBoundFieldRenderer` every 2 s (there is no
+> `TaskStatusMonitor`).
+
 ## Functional Requirements
 
 ### FR-1: Task Lifecycle Management
@@ -11,7 +17,7 @@
 - Task must initialize in "Pending" state
 
 **FR-1.2:** System shall support task claiming by Minecraft players
-- Player claims task via `/worldtask claim {linkCode}` command
+- Player claims task via `/knk task {code}` command
 - Claiming transitions task from Pending → InProgress
 - Claiming records player username, server ID, and timestamp
 - Claiming is idempotent: same player re-claiming updates timestamp only
@@ -83,7 +89,7 @@
 - Cleanup handles cascade deletions properly
 
 **FR-3.5:** Plugin shall provide task management commands
-- `/worldtask claim {linkCode}` - Claim a pending task
+- `/knk task {code}` - Claim a pending task
 - `/worldtask list` - List available pending tasks
 - `/worldtask status` - Show current task status
 - All commands provide feedback to player in chat
