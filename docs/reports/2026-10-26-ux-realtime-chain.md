@@ -1,7 +1,7 @@
 # Dashboard, form wizard and realtime chain — progress report
 
-**Status:** In progress — links 1–3, 3b and 5 merged; links 4, 6, 7 and 9 in review (2026-11-01)
-**Last updated:** 2026-11-01
+**Status:** In progress — links 1–3, 3b and 5 merged; links 4, 6, 7, 8 and 9 in review (2026-11-02)
+**Last updated:** 2026-11-02
 **Charter:** [UX_REALTIME_CHAIN.md](../ai-agents/handoffs/UX_REALTIME_CHAIN.md) · **Coordinator prompt:**
 [2026-10-26-ux-realtime-coordinator-prompt.md](../ai-agents/handoffs/2026-10-26-ux-realtime-coordinator-prompt.md)
 **Base at start:** knk-web-app `main` `0d61270`, knk-web-api `master` `6f08383`, knk-plugin `main` `ee35fb1` (re-check:
@@ -22,7 +22,7 @@ test), `merged`, `blocked: <reason>`.
 | 5 | #64 (FormWizard), #109, #186 | `claude/form-wizard-edit-mode` | merged: web-app `main` `b3b415d`, API `master` `8df59b7`, workspace `main` `6e2b98c` (2026-11-01, by the coordinator at the developer's request) | subagent (fallback: add_repo needed in-session approval), 2026-10-26; fix round subagent 2026-10-27 | `09305ef` / `ff58c83` / — / `1e21ee2` | fix round: web-app 1359/1359, suites 212 (baseline on the merged `main` `c3c0c9f`: 1349/1349, 210); link 5: web-app 1330/1330, suites 209 (baseline 1304/1304, 204); `tsc` 9 errors = baseline; build OK, same 24 warnings; API 3356 passed, 4 failed (#99, = baseline reds), 88 skipped (baseline on the merged `master` `4d7a806`: 3339/4/88) |
 | 6 | #179 | `claude/realtime-signalr` | in review | subagent (fallback: add_repo needed in-session approval), 2026-10-26 | `38b0466` / — / `b48f1484` / `ae949bd` | API 3361 passed, 4 failed (#99, = baseline reds), 87 skipped (baseline 3338/4/87); plugin core 2323 (2319), api-client 298 (290), paper 2163 (2149), 0 failures |
 | 7 | #180 | `claude/world-task-hardening` | in review | subagent (fallback: add_repo needed in-session approval), 2026-11-01 | `115c418` / `d7a0896` / `21de734e` / `e06c1e0` | API 3448 passed, 4 failed (#99, = baseline reds), 88 skipped (baseline 3397/4/88); web-app 1378 passed, 1 failed (#204 base red), suites 216 (baseline 1364/1, 213); `tsc` 9 = baseline; build OK, same 24 warnings; plugin core 2401 (2401), api-client 291 (288), paper 2364 (2343), 0 failures |
-| 8 | #181 | `claude/realtime-signalr` | in progress (stacked on unmerged link 7, see coordinator notes 2026-11-02) | subagent (fallback: add_repo needed in-session approval), 2026-11-02 | — | — |
+| 8 | #181 | `claude/realtime-signalr` | in review (stacked on unmerged link 7: the branch contains `claude/world-task-hardening` in all four repos, see coordinator notes 2026-11-02 and the link 8 block) | subagent (fallback: add_repo needed in-session approval), 2026-11-02 | `a27f61e` / `c7a3e85` / `8fa35148` / `3e8a71b` | API 3562 passed, 4 failed (#99, = baseline reds), 88 skipped (baseline on the merged branch 3513/4/88); web-app 1407 passed, 1 failed (#204 base red), suites 221 (baseline 1392/1, 218); `tsc` 9 = baseline; build OK, 24 warnings; plugin core 2412 (2412), api-client 313 (309), paper 2406 (2387), 0 failures |
 | 9 | #39 (rest), #177 follow-up | `claude/entity-lists-url-state` | in review | subagent (fallback: add_repo needed in-session approval), 2026-11-01 | — / `6b2a4eb` / — / `015e5c1` | web-app 1402 passed, 1 failed (#204 base red), suites 217 (baseline 1364/1, 213); `tsc` 9 = baseline; build OK, 22 warnings (baseline 24: two `PagedEntityTable` hook warnings gone) |
 | 10 | #182 | `claude/realtime-signalr` | waiting: link 8 done | — | — | — |
 
@@ -59,6 +59,10 @@ flagged decisions.)
   `docs/guides/entity-lists-url-state-smoke-test.md` on workspace `claude/entity-lists-url-state` `015e5c1`. Web app only.
   Merges cleanly with link 7's `claude/world-task-hardening` (trial merge; `FormWizardPage.tsx` auto-merged). Flags
   L9-1…L9-13; bulk actions split into #205. Coordinator check 2026-11-01: heads match; `FormWizardPage.tsx` URL-open effect spot-checked (drafts still owner-checked by the API).
+- **Test link 8** (#181, WT2, same branch, **stacked on link 7**): API `claude/realtime-signalr` `a27f61e`, plugin `8fa35148`,
+  web-app `c7a3e85`; live checklist `docs/guides/realtime-smoke-test.md` § WT2 on workspace `claude/realtime-signalr`
+  `3e8a71b` (run § S1 and link 7's checklist first). Deploy the three together; the branch contains link 7 (its migration,
+  L7-8). Flags L8-1…L8-20; deviations L8-2 (poll 2 s while the web hub is down, 10 s safety net while up), L8-4, L8-15.
 - **Test link 6** (#179, SignalR S2, same branch): API `38b0466`, plugin `b48f1484`; live checklist
   `docs/guides/realtime-smoke-test.md` § S2 on workspace `claude/realtime-signalr` `ae949bd` (run § S1 first). Flags
   L6-1…L6-12 (link 6 block). L6-1: the ×4 slowdown applies only to the social-spy re-check for now; the notification
@@ -77,6 +81,7 @@ flagged decisions.)
 
 ## Follow-ups filed by links
 
+- Link 8: no new issue; comment on [#181](https://github.com/PandiO/knk-workspace/issues/181) (heads, tests, checklist, flags L8-1…L8-20).
 - Link 9: #205 (bulk actions on the dashboard table, split from #39). Comments on [#39](https://github.com/PandiO/knk-workspace/issues/39) and [#177](https://github.com/PandiO/knk-workspace/issues/177).
 - Link 7: no new issue; comments on [#34](https://github.com/PandiO/knk-workspace/issues/34) (temp regions of completed tasks for abandoned forms) and [#181](https://github.com/PandiO/knk-workspace/issues/181) (WT2 notes).
 - From the coordinator's link 5 merge check (2026-11-01): #204 (web-app `InvitePage.test.tsx` fixture expired on 2026-10-28; red on `main`, recorded as a base red by later links).
@@ -1179,3 +1184,149 @@ branch from `main` `4d1f3aa`, `main` `50c2c45` (this link's claim) merged in. No
 - #30 (admin IA): `hooks/useTabParam.ts` is reusable for other tabbed admin pages; #33: `DashboardHeaderMenu` is a small
   popover, not the planned accessible `Dialog`.
 - The moderation tab buttons have no `role="tab"` / `aria-selected` (the lootbox page has them); left as is.
+
+## Link 8 — #181 (WT2): world tasks over SignalR
+
+**Started:** subagent (fallback: `add_repo` needed in-session approval), 2026-11-02; finished 2026-11-02. Nothing else ran at
+the same time. Own worktrees under `/home/user/wt-link8/` (the coordinator's `/home/user/knk-workspace` untouched).
+**Gate waived (coordinator notes 2026-11-02):** link 7 (`claude/world-task-hardening`, #180) is in review, not merged. Link 8
+is **stacked on it**: in every repo the current trunk and then `origin/claude/world-task-hardening` were merged into
+`claude/realtime-signalr` (merges only, `--no-ff`, no rebase, no force-push, nothing pushed to link 7's branch or a trunk).
+**`claude/realtime-signalr` now contains link 7 in all four repos**: merging it later also merges link 7; fixes from the
+link 7 test go to `claude/world-task-hardening` and are merged in again.
+**Base:** knk-web-api `master` `8df59b7`, knk-plugin `main` `c8232607`, knk-web-app `main` `1c9524d` (branch created from
+it; no realtime branch existed in knk-web-app), knk-workspace `main` `33073da`; link 7 heads API `115c418`, plugin
+`21de734e`, web-app `d7a0896`, workspace `e06c1e0`. Trunks unchanged at the end (re-checked before the last push).
+
+**Merge commits**
+- knk-web-api: `1df2350` (master, no conflict), `8876926` (link 7, no conflict).
+- knk-plugin: `f47e3b9c` (main; conflict in `UserAdminService.setFrozen`: kept main's freezer name, #170, and the realtime
+  branch's tell-once check, #179), `96b42971` (link 7; conflict in `KnKPlugin.registerCommands()`: both read
+  `realtime.server-id` with the same validation, kept link 7's `worldTaskServerId()`).
+- knk-web-app: `0f2887e` (link 7, no conflict; main was the branch's base).
+- knk-workspace: `8eb3ffe` (main; Last updated lines only), `af281c8` (link 7; status lines of DESIGN/plan/architecture,
+  the web-api §6 bullet and the CHANGELOG list, both sides kept).
+
+**Commits (heads)**
+- knk-web-api `claude/realtime-signalr`: `11f0e0e` delivery/offers/queue/presence endpoints/hub events + tests; `c8a89ca`
+  hand-off picker leaves out the caller; `a27f61e` Replace reason text. Head **`a27f61e`**.
+- knk-plugin `claude/realtime-signalr`: `8fa35148` api-client events/offer claim/hand-back, paper `WorldTaskRealtimeSync`,
+  accept/decline, poller push. Head **`8fa35148`**.
+- knk-web-app `claude/realtime-signalr` (new): `c7a3e85` `@microsoft/signalr`, `RealtimeProvider`, renderer, scan card.
+  Head **`c7a3e85`**.
+- knk-workspace `claude/realtime-signalr`: `3e8a71b` DESIGN §8.8 + status, plan status, smoke test § WT2 (+ guides
+  README), plugin/web-api/web-app architecture, `specs/world-tasks/README.md` § "Over the realtime channel", CHANGELOG,
+  `scripts/alpha-web/nginx.conf` `location /api/hubs/`, production-installation note. Head **`3e8a71b`**.
+
+**What was built** (DESIGN §8.8 on the branch is the as-built reference)
+- **API.** `POST api/WorldTasks` takes `deliver`: `auto` (default; offered to the creator when their UUID is on a
+  *connected* game server, Busy when they hold a task), `code`, `queue`, `replace` (their held task is released with its
+  code, Declined, and its handler stopped), `{userId}` (hand-off, Accept/Decline; not online → Declined). New
+  `OfferState` strings `Queued` and `Busy` (no migration). `Services/WorldTaskRealtime` publishes through the after-commit
+  sink: game hub `WorldTaskOffered`, `WorldTaskCancelled` (web cancel, expiry, Replace, field replaced, scan cancelled),
+  `WorldTaskOfferWithdrawn`, `WorldTaskCreated` (headless); web hub `WorldTaskUpdated` to `task:{id}` + `user:{creator}`
+  (once per connection: `RealtimeEvent.WebGroups`, `IRealtimePublisher.PublishToWebGroups`) and `CatalogScanUpdated` to the
+  starter. Game hub invocation `WorldTaskOfferResult`; `ReportRoster`/`PlayerJoined` offer what waits for those players.
+  Web hub `JoinTask`/`LeaveTask` (creator or `knk.admin.world`; `RealtimeConnection.Join/Leave`). Offer claim only while
+  Offered; a code claim by someone else withdraws the offer; `release {handBack: true}` = Declined; the queue advances on
+  complete/fail/cancel/hand-back. Sweep: offers unanswered after `WorldTasks:OfferTimeoutSeconds` (120) time out. New reads
+  `GET api/WorldTasks/active-for-me`, `GET api/Presence/me`, `GET api/Presence/online-staff` (`knk.admin.world`).
+- **Plugin.** `paper/realtime/WorldTaskRealtimeSync` (+ `api/realtime/WorldTaskEvents`): auto-claim (checks online,
+  `knk.tasks`, nothing open; claims with mode `offer`, starts the handler through `KnkTaskClaimCommand.startClaimed`),
+  hand-off `[Accept] [Decline]` (`/knk task accept|decline <id>`, local timeout), answers over the hub, stops a held task at
+  once on `WorldTaskCancelled`, runs the headless poll at once on `WorldTaskCreated` (60 s safety net while connected),
+  resync step "world tasks" (`releaseOrphans`). In-game `cancel` releases with `handBack`.
+- **Web app.** `src/realtime/RealtimeProvider.tsx` (`@microsoft/signalr` 10.0.11; one connection per logged-in tab,
+  reconnect, task groups re-joined, re-read on reconnect). `WorldBoundFieldRenderer`: busy check before "Send to Minecraft"
+  (Queue / Hand off… / Replace / Cancel, naming the form), "Hand off to…" picker, offer state above the task code (folded
+  while an offer is out), live status from `WorldTaskUpdated`. `MinecraftCatalogScanCard` on `CatalogScanUpdated`.
+
+**Tests vs baseline** (baselines re-run on the merged branches before any change; .NET 8.0.132, Node 22 + `npx npm@11 ci`,
+JDK 25 toolchain under Gradle on JDK 21)
+- API: **3562 passed, 4 failed, 88 skipped of 3654** (baseline 3513 / 4 / 88 of 3605). The 4 = #99 (PathResolution ×2,
+  FieldValidationService conditional required, ClientActivityStore), as at baseline. +49: `Services/WorldTasks/WorldTaskDeliveryTests`
+  (35: parse, auto/offline/busy/code/headless, queue + offer on completion and on join, replace, hand-off online/offline/unknown
+  user, offer claim and every offer answer, code beats the offer, cancel event, quit vs hand-back, rejoin re-offer, busy
+  check, sweep offer timeout and expiry event), `Realtime/WorldTaskHubTests` (9: `JoinTask` own/foreign/staff, one update
+  per connection, no task code in the payload, offer to the player's server + `WorldTaskOfferResult`, roster/join re-offer,
+  headless/cancel to every server, connection groups, web-group sink, `ConnectedServerOf`), `Api/PresenceControllerTests` (4),
+  one `ProtectedRoutes` row. Built with the `.csproj` (root `.sln`, #106). No `[MySqlFact]` tests written (offer state
+  changes use the #180 concurrency token; InMemory only).
+- Web app `npm run test:ci`: **1407 passed, 1 failed, 221 suites** (baseline 1392 / 1, 218 suites; the red is
+  `InvitePage.test.tsx`, #204). New: `realtime/RealtimeProvider` (6), `WorldBoundFieldRenderer.realtime` (8),
+  `MinecraftCatalogScanCard.realtime` (1). `npx tsc --noEmit` 9 errors = baseline (#63). `npm run build` compiles, 24
+  warning lines (none in the changed files).
+- Plugin `./gradlew build -x deployToDevServer`: core **2412** (2412), api-client **313** (309; 2 skipped both), paper
+  **2406** (2387; 18 skipped both), 0 failures. New: `WorldTaskRealtimeSyncTest` (15), `WorldTaskEventsTest` (4), claim
+  command accept/decline (2), poller interval (1), leases hand-back/take (+1).
+- Not run: a browser or Java client against a live API (the API hub tests use the .NET client over long polling; the
+  plugin parse tests read the JSON the API tests assert).
+
+**Flagged decisions (reversible)**
+- **L8-1** Gate waived by the coordinator at the developer's request: stacked on unmerged link 7 (above).
+- **L8-2** Web poll **2 s while the web hub is not connected** (the #180 poll, unchanged, so realtime off = today) and a
+  **10 s safety poll while connected**. DESIGN §8.5/§8.6 said 10 s only while disconnected and none while connected.
+- **L8-3** The busy check (`presence/me` + `active-for-me`) runs only while the web hub is connected and you are online in
+  game; otherwise "Send to Minecraft" sends `auto` straight away (the API re-checks: Busy). "Hand off to…" skips it (your
+  held task doesn't matter for someone else's), and is shown only while the web hub is connected.
+- **L8-4** A busy *race* (API or plugin says busy after the check) shows the task code with a notice instead of the four
+  choices again: the task exists already, and Queue/Replace for an existing task would need a new endpoint. Start again
+  re-runs the check.
+- **L8-5** `WorldTaskOfferResult` only over the hub (DESIGN §6.4), no REST twin; a lost answer ends as TimedOut by the sweep.
+  The 120 s timeout also covers auto-claim offers whose server never answers.
+- **L8-6** `OfferState` gains `Queued` and `Busy` (string column, 20 chars; no migration).
+- **L8-7** Queued tasks keep the 30 min Pending expiry (Q10); a long first task can let a queued one expire (its code shows
+  the whole time).
+- **L8-8** In-game `cancel` = hand back for good (`handBack`, Declined, not offered again); quit/restart/disable releases keep
+  Accepted and are offered again on join/roster (DESIGN §8.6). The queue moves on complete, fail, cancel and a hand-back,
+  not on a quit or restart release (the player is gone).
+- **L8-9** Replace sets the released task's `OfferState` to Declined (not offered to the same player again; its form shows
+  the code) and tells the game server with `WorldTaskCancelled {status: Pending}`.
+- **L8-10** `WorldTaskCancelled`, `WorldTaskOfferWithdrawn` and `WorldTaskCreated` go to every game server; a server ignores
+  a task it doesn't hold or show (one server today).
+- **L8-11** Payloads never carry the task code or the output; the web app reads `GET {id}` once a task is Completed.
+- **L8-12** Online for offers = on a **connected** server (`ConnectedServerOf`); a server in its 60 s grace period doesn't
+  count (the offer couldn't reach it). `presence/me` uses the same rule.
+- **L8-13** `online-staff`: `knk.admin.world` only; `node` limited to `knk.tasks` (default) and `knk.admin.world`; the
+  caller is left out.
+- **L8-14** A code/id claim by someone else while Offered/Queued/Busy resets `OfferState` to None (no re-offer later) and
+  withdraws an open Accept/Decline line.
+- **L8-15** `CatalogScanUpdated {scanId, worldTaskId, taskStatus}` has no `progress` (DESIGN §6.5 named it; the scan has no
+  progress value); the card reads the scan on each event and polls 15 s while connected (3 s while not).
+- **L8-16** The plugin answers `busy` to a second offer while the player has an Accept/Decline line open.
+- **L8-17** `@microsoft/signalr` **10.0.11** (2026-08-04), exact; same major as the Java client (10.0.13). Lock change is
+  additions only (npm 11).
+- **L8-18** Web hub token: the stored access token, one `refreshSession()` when there is none; after a close (the API closes
+  on token expiry) the provider restarts with 1/2/5/10/30 s backoff and a fresh token.
+- **L8-19** Headless poll: its idle interval (60 s) while connected; `WorldTaskCreated` runs one poll at once.
+- **L8-20** Headless tasks are never offered; `WorldTaskCreated` on create and whenever one goes back to Pending (release,
+  lease lapse).
+
+**Deviations from the plan/design:** L8-2 (poll intervals), L8-4 (busy race shows the code), L8-15 (no scan progress).
+Otherwise as DESIGN §8.3–§8.6.
+
+**Live checklist:** [guides/realtime-smoke-test.md](../guides/realtime-smoke-test.md) **§ WT2** (workspace branch
+`claude/realtime-signalr` `3e8a71b` until merged; run § S1 first, and link 7's `world-task-hardening-smoke-test.md`): web hub,
+auto-claim, offline = code, busy Queue/Replace, hand-off Accept/Decline/timeout, code beats the offer, web cancel stops at
+once, in-game cancel / quit / restart, pushed scans, hub-down fallback.
+
+**Deploy notes:** deploy API, plugin **and web app** from `claude/realtime-signalr` together (they contain link 7: run its
+additive migration `AddWorldTaskHardening` after a backup and read L7-8 first). API: no new migration or secret; optional
+`WorldTasks:OfferTimeoutSeconds` (120). Proxy: `location /api/hubs/` with `access_log off` (alpha:
+`scripts/alpha-web/nginx.conf` on the branch; production: `guides/production-installation.md`); keep
+`Microsoft.AspNetCore` logging at Warning (the browser's JWT is in the hub URL). Plugin: nothing new in `config.yml`;
+offers need `realtime.enabled: true` and `knk.tasks`. Web app: new dependency `@microsoft/signalr` (`npm ci`).
+
+**Follow-ups filed:** none new.
+
+**Notes for later links**
+- Link 9 (`claude/entity-lists-url-state`, in review): a trial merge into this branch's web-app head `c7a3e85` is clean
+  (`FormWizardPage.tsx` auto-merges, as with link 7). Link 8 changed none of link 9's files (`PagedEntityTable`, dashboard
+  pages); its web-app files are `App.tsx` (provider), `WorldBoundFieldRenderer.tsx`, `MinecraftCatalogScanCard.tsx`,
+  `worldTaskClient.ts`, `WorkflowDtos.ts`, `utils/enums.ts`, new `src/realtime/`.
+- Link 10 (S3, #182): web events go through `RealtimeEvent.ToWeb(type, payload, groups)` on the same sink; the web client
+  listens to the types in `WEB_EVENT_TYPES` (`src/realtime/RealtimeProvider.tsx`): add a type there for #183's
+  `EntityChanged`/`PresenceChanged`. `RealtimeConnection.Join/Leave` is ready for `staff`/`entity:{type}` groups (decided by
+  the API, DESIGN §7.3). Startup-only siege work (#31) still waits for its `ResyncHooks` step.
+- #183 (web live updates): `useRealtimeEvent` + `useRealtimeReconnected` are the consumer pattern; the dashboard's
+  `refreshKey` can be bumped from an event.
