@@ -7,7 +7,7 @@ by the developer; Phase 10 (Scheduled lobbies) is post-MVP, not started. Seven d
 changed after the smoke test); remaining open questions in §13.
 **Last updated:** 2026-11-02 (D6, §8.1, §8.5, §13 Q2: non-members keep every siege-area gate's **pre-game**
 state — per-player blocks, server-side crossing checks, per-player virtual opening, per-player hover text via
-PacketEvents; **design only, not implemented**, plan Phase 11); 2026-10-27 (§5.4, §6.5, §6.10, §7.6, §11: alpha test run 1 package F — member-only scoreboards
+PacketEvents; code complete on knk-plugin `claude/siege-pregame-gate-view`, **not merged, not live-tested**, plan Phase 11); 2026-10-27 (§5.4, §6.5, §6.10, §7.6, §11: alpha test run 1 package F — member-only scoreboards
 with a ` [Siege]` tag for everyone else, post-match phase at the hub, result hover, final countdown, `/siege history` and the
 public match pages, [PandiO/knk-workspace#163](https://github.com/PandiO/knk-workspace/issues/163)/[#164](https://github.com/PandiO/knk-workspace/issues/164)/[#198](https://github.com/PandiO/knk-workspace/issues/198)/[#199](https://github.com/PandiO/knk-workspace/issues/199)/[#174](https://github.com/PandiO/knk-workspace/issues/174),
 on `claude/alpha-run-1-results` in knk-plugin, knk-web-api and knk-web-app, not merged); 2026-10-27 (§7.6: gate damage and participation rewards, alpha test run 1
@@ -714,7 +714,8 @@ next siege schema change); the readiness warning `LOCKDOWN_WITHOUT_DISTRICTS` wa
 (deny region entry into the districts during `HUB`/`IN_PROGRESS`, move non-members to the nearest exit)
 was built in Phase 7a and taken out after the smoke test.
 
-> **Redesigned 2026-11-02 (developer decisions; design only, not implemented — plan Phase 11).** The rest
+> **Redesigned 2026-11-02 (developer decisions; implemented on knk-plugin `claude/siege-pregame-gate-view`, not merged,
+> not live-tested — plan Phase 11).** The rest
 > of this section is the new target. What the merged build does today (2026-09-26 smoke-test version):
 > every locked **siege** gate is sent to non-members as air (`Player.sendBlockChange`, every cell of both
 > resting frames, within 96 blocks), walking into a really closed door carries them across with `TELEPORT`,
