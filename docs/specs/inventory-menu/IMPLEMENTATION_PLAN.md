@@ -649,7 +649,10 @@ item's click actions keep working**. Before this, V3 had only `DisplayMode` HIGH
   - The interval is per item (`BlinkTicks` binding), not a plugin `config.yml` key.
   - `SiegeVoteOptionView` (the viewer's vote) still uses HIGHLIGHT; switching it to BLINK is a one-line
     change if wanted.
-- **Not done (API/web, to file):** knk-web-api's `MenuDisplayMode` enum has no `Blink` value, so the
-  `DisplayMode` *column* cannot be set to it through the CRUD API or the web editor yet; until then use a
-  `DisplayMode` binding. The plugin already parses a `Blink` column value. `BlinkTicks` is a free-text
-  target property and needs no API change.
+- **API follow-up ([PandiO/knk-workspace#49](https://github.com/PandiO/knk-workspace/issues/49), 2026-11-02,
+  knk-web-api `claude/menus-128-49-zc3swp`, not merged):** knk-web-api's `MenuDisplayMode` enum gains `Blink`,
+  so the `DisplayMode` *column* can be set to it through the CRUD API. The column stores the name
+  (varchar(20)), so no migration; the plugin already parses a `Blink` column value. There is no web
+  menu-template editor yet (the authoring UI is deferred, see "Explicitly out of scope" above); when it is
+  built, its DisplayMode choices must include Blink. `BlinkTicks` is a free-text target property and needs
+  no API change.
