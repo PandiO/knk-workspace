@@ -4,7 +4,18 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
-(Nothing at the moment.)
+- **Hygiene and docs batch** — branch `claude/hygiene-docs-2026-11-xpd9o0` in knk-plugin, knk-web-api, knk-web-app and
+  knk-workspace (2026-11-02, in review). The plugin's version is stamped at build time, `0.1.0+<commit>` (`dev`
+  without git), and logged with the commit as the first startup line; CI passes `-PgitCommit=<sha>`
+  ([#136](https://github.com/PandiO/knk-workspace/issues/136)). A plain `dotnet build` works on Linux at the API's repo
+  root ([#106](https://github.com/PandiO/knk-workspace/issues/106)). The admin client-activity totals no longer count
+  each request twice or add up across hours; one red API test is left for a decision on the ConditionalRequired
+  rule config ([#99](https://github.com/PandiO/knk-workspace/issues/99)). Dead code removed: the API's
+  `ExtractLocationDataFromTaskOutput` and the web app's location `worldName` default `'world'`
+  ([#147](https://github.com/PandiO/knk-workspace/issues/147)). Docs: production-installation G10/§ 12.3 metrics
+  ([#48](https://github.com/PandiO/knk-workspace/issues/48)), Game Settings § 3.6 runtime worlds per server (#147),
+  stale statements in the legacy, teleport, siege and specs README docs
+  ([#135](https://github.com/PandiO/knk-workspace/issues/135)).
 
 ## 2026-11-01
 
