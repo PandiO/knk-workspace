@@ -1,18 +1,18 @@
 # Siege Survival — Defend the Castle
 
 **Status:** Gameplay design recorded from developer decisions; not implemented. Integration details marked proposed or to verify are not approved balance values.
-**Last updated:** 2026-10-30 (navigation decision supersedes mandatory lanes; #146)
+**Last updated:** 2026-11-02 (developer requirements review: configurable end conditions with lobby override, ghost state for dead players, per-stat round scaling, third equipment mode KITS, in-world Mystery Box animation with an enchanted-book variant); 2026-10-30 (navigation decision supersedes mandatory lanes; #146)
 **Linear:** [KNG-50](https://linear.app/kngpandi/issue/KNG-50/siege-survival-endless-npc-waves-gate-repair-and-match-economy), child of [KNG-37](https://linear.app/kngpandi/issue/KNG-37/design-dungeon-waves-and-siege-pve-defense-mode)
 **Dependencies:** [KNG-36 NPC platform](https://linear.app/kngpandi/issue/KNG-36/design-shared-npc-traits-and-pathfinding-platform); existing Siege, gate runtime, inventory menus, item blueprints, lootboxes and currency ledger.
-**Authority:** The developer's 2026-09-30 conversation and corrections define this mode, with mandatory lanes superseded by the 2026-10-30 automatic-navigation/optional-override decision. Existing PvP Siege rules remain unchanged. This document is the canonical survival specification, not a claim that the proposed entities, endpoints or gameplay already exist.
+**Authority:** The developer's 2026-09-30 conversation and corrections define this mode, with mandatory lanes superseded by the 2026-10-30 automatic-navigation/optional-override decision and the 2026-11-02 requirements review (S17–S25) superseding S03, S05, S11 and the chest-menu Mystery Box reel. Existing PvP Siege rules remain unchanged. This document is the canonical survival specification, not a claim that the proposed entities, endpoints or gameplay already exist.
 
 Related: [Siege design](../siege-minigame/DESIGN.md), [Siege implementation status](../siege-minigame/IMPLEMENTATION_PLAN.md), [scenario authoring](../../guides/authoring-a-siege-scenario.md), [lootboxes](../lootboxes/DESIGN.md), [currency payments](../currency-payments/DESIGN.md), [gate runtime](../gate-structure-animation/INDEX.md), [implementation plan](IMPLEMENTATION_PLAN.md).
 
 ## 1. Goal and first-release scope
 
-A cooperative survival variant within Siege. One human defender team protects a town/castle against an NPC attacker team. Waves are discrete, endless and increasingly difficult, inspired by Call of Duty Zombies. Gate-linked objectives form successive defensive lines. Players aim for the highest number of completed waves; there is no final wave or ordinary victory condition.
+A cooperative survival variant within Siege. One human defender team protects a town/castle against an NPC attacker team. Waves (rounds) are discrete, endless and increasingly difficult, inspired by Call of Duty Zombies. Gate-linked objectives form successive defensive lines. Players aim for the highest number of completed waves; there is no final wave or ordinary victory condition. The game ends on a team wipe or on an end condition the scenario enables (§3a).
 
-The first release includes BOTH inventory modes, cooperative gate repairs, explicit NPC spawnzones and optional lane overrides, special waves, personal transferable match currency, fixed equipment purchases AND a Mystery Box based on the existing lootbox functionality. Mystery Box is not deferred. Material costs, repair puzzles and extra repair cooldowns are excluded from this release.
+The first release includes ALL THREE equipment modes (own inventory, kits, Zombies-style match progression), cooperative gate repairs, explicit NPC spawnzones and optional lane overrides, special waves, personal transferable match currency, fixed equipment purchases AND the Mystery Box in both variants (items and enchanted books) based on the existing lootbox roll functionality, with an in-world item-entity animation (§8a). Mystery Box is not deferred. Material costs, repair puzzles and extra repair cooldowns are excluded from this release.
 
 Keep the existing lobby, scenario, team identity, gate/objective references, spawnpoint selection, match history and restoration infrastructure wherever their semantics fit. NPCs are match actors, not fake player accounts. Do not apply player-team population checks to the NPC team.
 
@@ -22,42 +22,80 @@ Keep the existing lobby, scenario, team identity, gate/objective references, spa
 |---|---|
 | S01 | Endless escalating waves; configurable pause between waves. No fixed last wave. |
 | S02 | One player defender team and one NPC attacker team. NPCs target players and objectives, may breach eligible gates, and can be occupied by eligible distractors. |
-| S03 | Defeat on capture of the main objective OR all remaining defenders dying during a wave. Losing a side objective does not end the game. |
-| S04 | Dead players spectate until the pause preceding the next wave; reuse available Siege spawnpoints/held-objective spawn choices. |
-| S05 | Objective recapture is configurable, default off. Main-objective capture always ends the match. |
+| S03 | *(Superseded 2026-11-02 by S17–S19.)* ~~Defeat on capture of the main objective OR all remaining defenders dying during a wave.~~ A team wipe always ends the game; objective-based endings are configurable (§3a). Capturing an objective without the game-ending flag never ends the game. |
+| S04 | Dead players become ghosts (S20) until the pause preceding the next wave; reuse available Siege spawnpoints/held-objective spawn choices. |
+| S05 | Objective recapture is configurable, default off. *(Updated 2026-11-02:)* ~~Main-objective capture always ends the match.~~ A game-ending objective ends the match only while objective endings are enabled (S18). |
 | S06 | Gates are closed defensive barriers while intact and defender-owned; NPCs capture reachable zones, otherwise damage the blocking door. Door destruction is separate from objective capture. Target preference may vary with difficulty. |
 | S07 | Destroyed doors can be repaired while their objective remains defender-owned, including during waves and objective pressure. |
 | S08 | Repair requires staying nearby and performing a channelled interaction. No material/currency cost. Taking damage does not stop a player's contribution; fighting back requires stopping repair. |
 | S09 | Repair work persists when interrupted; each active player adds configurable health-equivalent work per second. Difficulty sets the rate. Health is restored in one step only at completion, followed by the normal closing animation. No additional cooldown. |
 | S10 | NPC spawnzone progression depends ONLY on objective capture, never merely on an open or destroyed door. |
-| S11 | Both own-inventory Siege behavior and a Zombies-style isolated match inventory are available per scenario from the first release. |
-| S12 | Zombies players hold individual match balances and can give a chosen amount to a teammate. Mystery Box uses configurable content and match-currency price. |
+| S11 | *(Updated 2026-11-02, S23.)* Three equipment modes per scenario from the first release: own inventory (Siege behavior), kits (S23) and a Zombies-style isolated match inventory. |
+| S12 | Zombies players hold individual match balances and can give a chosen amount to a teammate. Mystery Box uses configurable content; *(updated 2026-11-02, S24)* whether and how a roll costs anything is open. |
 | S13 | Zombies death drops equipment at the death location; teammates or the returning player can retrieve it. Respawn gives the basic loadout; the match balance is retained. Inventory rules are scenario settings, not individual player choices. |
 | S14 | Special waves support both recurring intervals and explicit wave numbers, with their own enemy profiles. |
 | S15 | Permanent coins, gems and experience accrue during the match and are granted once after its end. Match currency is credited immediately for purchases during play. |
 | S16 | Permanent reward amounts await developer-supplied progression targets (hours to levels/purchases, expected games and earnings/hour). Do not invent a payout table. |
+| S17 | *(2026-11-02)* Any number of objectives can carry the game-ending flag ("ends the game when captured by the enemy"), the same flag as Siege's main objective (`InstantVictory`). Survival needs no single main objective. |
+| S18 | *(2026-11-02)* Scenario setting "objective captures end the game" (on/off) with a survival lobby override `Inherit` / on / off, following the Siege navigation-compass precedent (most specific wins: lobby → scenario). Off: no flagged objective ends the game. |
+| S19 | *(2026-11-02)* Scenario setting "end when all objectives are captured" (on/off), independent of S18; both, either or neither can be enabled. With both off only a team wipe ends the game. |
+| S20 | *(2026-11-02)* A player killed during a wave becomes a ghost until the next intermission respawn: invulnerable, no hunger loss, ignored by all NPCs, unable to interact or take part in any way, not in vanilla spectator mode (no flight, no passing through blocks). Teammates see ghosts translucent; NPCs and anyone else don't see them. Mechanics that revive a dead player mid-wave may be added later. |
+| S21 | *(2026-11-02)* By default every new wave raises both the enemy count and the NPC base stats: health, walking speed, melee damage, ranged damage and attack speed. Admins can change the growth per stat. |
+| S22 | *(2026-11-02)* Spawnpoints carry spawn conditions so admins can author "overrun": spawnzones inside a gate line activate only when that gate's objective falls (confirms S10). |
+| S23 | *(2026-11-02)* Kits mode: admins select Kit instances for the scenario; each player picks one of them. The kits' own conditions (permission, title bracket, cooldown) and prices (claim cost, premium gems) do not apply. |
+| S24 | *(2026-11-02)* The Mystery Box has two variants, items and enchanted books, both rolled from configured pools with percentage drop chances. The chest-menu reel is replaced by an in-world animation of a non-pickable item entity on a block, with sounds and particles. The roller claims the final item by right-clicking it; unclaimed it despawns after 10 seconds, then a new roll can start. Cost is to be determined. |
+| S25 | *(2026-11-02, confirms §3 step 1)* The ordinary player state is snapshotted when the player is sent to the pre-game lobby (the Siege hub) and restored when the game ends, the same as Siege. |
 
 ## 3. Match and wave lifecycle
 
 Reuse Siege's outer matchmaking/vote/hub/match/cooldown lifecycle. Proposed survival substates inside a running match are PREPARING, WAVE_ACTIVE, INTERMISSION and ENDING; these are design names, not current enums.
 
-1. At entry, durably snapshot the player's ordinary state before teleport or inventory replacement; snapshot affected gates before applying match overrides.
-2. Select scenario, equipment mode and difficulty; freeze that configuration revision for the match. All human participants join the defender team. Initial objective owners and gate states establish the castle defenses; initial NPC spawnzones are enabled.
+1. When the player is sent to the pre-game lobby (the Siege hub, T-15), durably snapshot the player's ordinary state before teleport or inventory replacement, exactly as Siege's vault does (S25; Siege design §6.4/§9). Restore it when the game ends or the player leaves. Snapshot affected gates before applying match overrides.
+2. Select scenario, equipment mode and difficulty; resolve the end-condition settings against the lobby override (§3a); freeze that configuration revision for the match. All human participants join the defender team. In kits mode each player picks a kit at the hub (§8). Initial objective owners and gate states establish the castle defenses; initial NPC spawnzones are enabled.
 3. Start wave 1 after the preparation countdown. Select its normal or special profile, generate the finite wave population and distribute it over configured spawnzones with configured pacing.
 4. A wave completes only when its planned spawn queue is exhausted AND no wave enemies remain alive. A temporarily empty combat area or a spawn delay cannot finish a wave. Technical despawns/stuck-enemy recovery must not count as earned kills; define recovery accounting explicitly.
 5. Record the completed wave and eligible contributions. Enter intermission, respawn dead players with valid spawn choices, and display the configurable countdown. Survivors remain in play. No implied automatic gate repair or gear refill for survivors.
 6. Start the next, harder wave. Repeat without a configured final wave.
-7. Main-objective loss or an active-wave team wipe goes straight to ENDING: cancel remaining spawns and repairs, freeze results, settle permanent rewards, remove match entities/items, restore players and gates, then run ordinary lobby cooldown.
+7. An active-wave team wipe or an enabled end condition (§3a) goes straight to ENDING: cancel remaining spawns and repairs, freeze results, settle permanent rewards, remove match entities/items, restore players and gates, then run ordinary lobby cooldown.
 
 Persist both highest wave reached and last fully completed wave. A wipe in wave 10 means reached 10, completed 9; use completed waves for the base reward to avoid awarding a cleared-wave bonus for failure. Endless survival must not inherit PvP's timer-expiry defender victory. A technical duration/resource limit, if added, is an explicit abort policy rather than a secret win condition.
 
-Player death is not quitting or roster removal. Dead spectators remain participants and are eligible for the result. Intermission respawns occur at its start, giving preparation time before the next active wave. Losing a selected spawn objective invalidates that choice; fall back to a valid defender team spawn. No mid-wave respawn.
+Player death is not quitting or roster removal. Dead players (ghosts, §3b) remain participants and are eligible for the result. Intermission respawns occur at its start, giving preparation time before the next active wave. Losing a selected spawn objective invalidates that choice; fall back to a valid defender team spawn. No mid-wave respawn in the first release; a future revive mechanic would be an explicit, separately designed exception.
 
 Proposed first-release compatibility: keep Siege's no mid-match rejoin/late-join policy; explicit leave/disconnect restores ordinary state and forfeits rewards under existing rules. If nobody remains connected, abort rather than running indefinitely. Confirm disconnect/minimum-player semantics before implementation; do not let the empty NPC player roster trigger instant forfeit.
 
+### 3a. End conditions (confirmed 2026-11-02, S17–S19)
+
+A team wipe (every defender dead during an active wave) always ends the game. The scenario adds two independent, configurable end conditions:
+
+| Condition | Configuration | Effect when enabled |
+|---|---|---|
+| Game-ending objective captured | Per objective: the game-ending flag (Siege's `InstantVictory`; any number of objectives). Per scenario: "objective captures end the game", overridable per survival lobby. | NPCs capturing any flagged objective end the game immediately. |
+| All objectives captured | Per scenario: "end when all objectives are captured". | The game ends when NPCs hold every objective of the scenario at the same time. |
+
+Both, either or neither can be enabled. With both off only a team wipe ends the game. When objective captures are disabled, a flagged objective behaves like any other objective on capture (ownership transfer, open-on-capture, spawnzone unlocks) and the game continues.
+
+**Lobby override.** The survival lobby holds `Inherit` / on / off for "objective captures end the game", resolved per match the way Siege resolves the navigation compass ([navigation-compass design](../navigation-compass/DESIGN.md), C9): the most specific level wins, lobby → scenario, and `Inherit` defers to the scenario. Survival only; ordinary Siege lobbies get no such setting. The "all objectives captured" condition is a scenario setting without a lobby override.
+
+Proposed defaults (to confirm): objective captures end the game ON, all objectives captured OFF, lobby `Inherit`, so a scenario with one flagged objective plays like the original "main objective" design. Readiness warns, without failing, when no end condition other than a team wipe is reachable (no flagged objective, or objective endings off, and all-captured off) so an admin sees that the game is wipe-only. With recapture enabled, "all objectives captured" checks ownership at the moment of each capture.
+
+Record a distinct end reason per condition (team wipe, game-ending objective captured, all objectives captured) plus the technical aborts. These are conceptual reasons, not the current `SiegeMatch.EndReason` values.
+
+### 3b. Dead players: ghost state (confirmed 2026-11-02, S20)
+
+A defender killed during a wave does not respawn until the next intermission; until then they are a ghost:
+
+- **Not vanilla spectator mode.** No flight, no passing through blocks, so hidden passages and easter eggs stay hidden. The ghost walks like a normal player (proposed: confined to the scenario area, returned to a team spawn if they leave it).
+- **Invulnerable**: no damage from any source and no hunger loss.
+- **Ignored by all NPCs**: ghosts fail hard target eligibility (§4) before any scoring, so no NPC selects, chases or keeps commitment to them; becoming a ghost invalidates every current NPC target on that player immediately.
+- **No participation**: no block breaking/placing or block/entity interaction, no attacking, no item pickup or drop, no containers, no capturezone contribution, no repair work, no purchases, Mystery Box rolls or currency transfers, and no use of items or abilities. Chat and team communication remain.
+- **Visibility**: teammates see ghosts translucent; NPCs and anyone else don't see them at all. Ghosts have no collision with players or NPCs. Implementation to verify on Paper: invisibility combined with the team's see-friendly-invisibles option, and hiding the player from non-members.
+
+At the intermission respawn the ghost state ends and the player respawns under the equipment mode's rules (§8). The ghost state also ends when the game ends (restore). A team wipe means all defenders are ghosts (or gone) during an active wave. Mid-wave revive mechanics may be added later; they must clear the ghost state through the same path as the intermission respawn.
+
 ## 4. Objectives, gates and NPC targeting
 
-Reuse a SiegeObjective referencing a scenario-selected GateStructure. The main objective is identified explicitly (reuse the instant-victory reference where compatible). The objective's capture points/holder and each GateDoor's health/destroyed/open state are independent.
+Reuse a SiegeObjective referencing a scenario-selected GateStructure. Game-ending objectives are marked with the per-objective flag (reuse `InstantVictory`; zero, one or several per scenario, §3a). The objective's capture points/holder and each GateDoor's health/destroyed/open state are independent.
 
 | Objective/door state | Required behavior |
 |---|---|
@@ -65,8 +103,9 @@ Reuse a SiegeObjective referencing a scenario-selected GateStructure. The main o
 | Defender-held; capturezone reachable through a valid route | NPCs normally advance to capture the objective, engaging nearby defenders as appropriate. |
 | Defender-held; route blocked by a selected breakable door | NPCs attack that door, then reroute through the breach. |
 | Defender-held; destroyed door | Opening is traversable, objective remains held, repair allowed, deeper spawnzones remain inactive. |
-| NPC-held side objective | Transfer ownership and use open-on-capture behavior; no defender repairs. Activate its configured next spawnzones. |
-| NPC-held main objective | End the match immediately. |
+| NPC-held objective (no ending applies) | Transfer ownership and use open-on-capture behavior; no defender repairs. Activate its configured next spawnzones. |
+| NPC-held game-ending objective, objective endings enabled | End the match immediately (§3a). |
+| NPC-held last objective, all-captured ending enabled | End the match immediately (§3a). |
 
 A destroyed door has no remaining damageable body during repair. An intact closed door MUST be damageable by enemies; an ambiguous voice-transcript sentence about a closed door being invulnerable cannot override the repeated break-through design. Do not grant general invulnerability to closed gates.
 
@@ -142,6 +181,8 @@ Author multiple NPC spawnzones within the scenario, each containing valid spawnp
 
 For the initial gate-only slice, a spawned NPC immediately starts target selection and route planning, then moves when a usable path is available, without an intentional waiting period. It approaches a reachable attack position at an eligible gate. The shared preference/proximity scoring and commitment model applies; numerical ranking and tuning remain open. This focused slice does not remove the full mode's player/objective behavior requirements.
 
+**Spawn conditions and "overrun" (confirmed 2026-11-02, S22).** Admins configure a spawn condition on each spawnzone (its spawnpoints inherit it): always active from the start, or active once the listed objectives are NPC-held. Example: a walled town with two entrances, each blocked by a gate structure that doubles as an objective. Spawnzones authored just inside each gate activate only when that gate's objective falls, so NPCs then also appear inside the walls and overrun the town.
+
 Example progression: outside-castle zone initially active → NPCs breach outer gate → NPCs capture outer objective → courtyard zone becomes eligible → next defensive line. **Breach alone does not activate courtyard spawns.** An intact but open door likewise does not advance the spawn frontier.
 
 Activation is ownership-driven. Define objective prerequisites with an explicit ALL/ANY policy when multiple objectives control a zone, validate their references and ensure at least one initial usable spawnzone. New eligible zones affect future queued spawn selections, not already spawned enemies. Never teleport or erase live enemies merely because a zone's eligibility changes.
@@ -156,7 +197,9 @@ Validation must include a complete scenario with no authored lanes, a configured
 
 ## 7. Wave scaling and special rounds
 
-Per difficulty, configure enemy count/composition growth, health, movement speed, attack damage, gate damage, capture contribution, spawn pacing, spawnzone distribution and repair rate. Snapshot config at match start. Include server limits for live NPCs and spawning/pathfinding work; a large late-wave population can queue rather than spawning every enemy simultaneously.
+Per difficulty, configure enemy count/composition growth, health, walking speed, melee damage, ranged damage, attack speed, gate damage, capture contribution, spawn pacing, spawnzone distribution and repair rate. Snapshot config at match start.
+
+**Default progression (confirmed 2026-11-02, S21).** Higher waves are progressively harder by default: each wave raises the enemy count and the NPC base stats health, walking speed, melee damage, ranged damage and attack speed. Each stat has its own growth rule (for example a per-wave increment or multiplier from a base value, with an optional cap) applied to the archetype's base values. Growth curves, caps and base values remain unset balance values, not invented defaults; a "by default increasing" profile only means the shipped default profile has nonzero growth for count and every listed stat. Admins can lower, flatten or raise each growth per difficulty. Cap stats where Minecraft limits apply (for example movement speeds that break pathfinding, attack cooldowns) and validate those limits in readiness. Include server limits for live NPCs and spawning/pathfinding work; a large late-wave population can queue rather than spawning every enemy simultaneously.
 
 Special profiles can replace a normal wave at an interval (for example every fifth wave) AND at explicit wave numbers. A wolf-only round is an example, not a required specific mob. Profiles can specify different archetypes, amounts and scaling. Configuration supports both scheduling methods together, not only an exclusive choice.
 
@@ -164,33 +207,56 @@ Proposed deterministic collision rule: explicit wave-number entry overrides recu
 
 ## 8. Equipment modes, purchases and death
 
-| Rule | OWN_INVENTORY | MATCH_PROGRESSION (Zombies-style) |
+| Rule | OWN_INVENTORY | KITS (2026-11-02, S23) | MATCH_PROGRESSION (Zombies-style) |
+|---|---|---|---|
+| Entry | Use existing personal gear; snapshot/restore. | Snapshot ordinary state at the hub, clear the inventory, player picks one of the scenario's kits; grant it. | Snapshot ordinary state, replace with configured baseline gear or empty inventory. |
+| Death during active wave | Keep existing Siege inventory/death safeguards; become a ghost until the next intermission. | Proposed: Siege no-drop safeguards as in own inventory; become a ghost. | Drop match equipment at death location, then become a ghost. |
+| Respawn | Retain the match's own-gear behavior. | Proposed: re-grant the selected kit fresh (no duplicate of the kept inventory). | Give baseline loadout; retain personal match balance. |
+| Ground pickup | Existing Siege rules/exceptions. | Existing Siege rules/exceptions. | Own-match equipment drops can be picked up by teammates or the returning player. |
+| Exit/end/crash recovery | Restore ordinary snapshot. | Remove kit items and restore ordinary snapshot. | Remove temporary gear and restore ordinary snapshot. |
+
+All three modes ship together and are selected per scenario. In every mode, anything gained during the game (Mystery Box items, pickups, kit items) is wiped by the snapshot restore at the end, as in Siege (Siege D2).
+
+**Kits mode.** Admins select one or more existing Kit instances ([kits design](../kits/DESIGN.md)) for the scenario. Each player picks one at the hub (proposed: in the same menu flow as the spawn picker; a player who doesn't pick gets the scenario's first kit). The grant reuses the kits grant pipeline (`BlueprintItemAssembler.assembleDefaults` and the grant-placement algorithm) but skips everything else of an ordinary claim: no permission/title-bracket/premium-tier condition, no cooldown, no `CostAmount` and no premium gems purchase, and no `KitClaim` or `KitPurchase` row. Kit items are tagged with the match id and never leave the match. Open: whether a player may switch kit at an intermission respawn, and whether kits mode also uses match currency and purchase points (proposed: no, unless enabled later).
+
+The match-currency rules below apply to MATCH_PROGRESSION. In MATCH_PROGRESSION, each player has an individual temporary balance; earnings are immediately spendable. Transfer a chosen positive amount to a teammate in the same live match: debit sender and credit recipient atomically, reject overdrafts and cross-match recipients, and identify retries so they cannot pay twice. Match currency is separate from User.Coins/User.Gems and cannot be converted or taken home.
+
+Provide fixed equipment purchase points and Mystery Box points with configured locations, interaction range, prices, item pools/blueprint references and eligibility. Earn currency from configured NPC kills/wave events/contributions; exact amounts and assists distribution remain tunable. Proposed v1 purchase availability: allow both active waves and intermission. Ghosts cannot buy, transfer or receive-and-use anything (S20; resolves the earlier dead-player transfer question).
+
+### 8a. Mystery Box: items and enchanted books (updated 2026-11-02, S24)
+
+The Mystery Box ships in two variants, each placed as its own point in the scenario:
+
+| Variant | Pool entries | Result |
 |---|---|---|
-| Entry | Use existing personal gear; snapshot/restore. | Snapshot ordinary state, replace with configured baseline gear or empty inventory. |
-| Death during active wave | Keep existing Siege inventory/death safeguards; wait for next intermission. | Drop match equipment at death location, then spectate. |
-| Respawn | Retain the match's own-gear behavior. | Give baseline loadout; retain personal match balance. |
-| Ground pickup | Existing Siege rules/exceptions. | Own-match equipment drops can be picked up by teammates or the returning player. |
-| Exit/end/crash recovery | Restore ordinary snapshot. | Remove temporary gear and restore ordinary snapshot. |
+| Items | Item blueprints, each with a percentage drop chance; optional enchantments per entry with their own chances | The assembled item (display name, enchantments) |
+| Enchanted books | Enchantments (and level), each with a percentage drop chance | An enchanted book with the rolled enchantment |
 
-Both modes ship together and are selected per scenario. In MATCH_PROGRESSION, each player has an individual temporary balance; earnings are immediately spendable. Transfer a chosen positive amount to a teammate in the same live match: debit sender and credit recipient atomically, reject overdrafts and cross-match recipients, and identify retries so they cannot pay twice. Match currency is separate from User.Coins/User.Gems and cannot be converted or taken home.
+The enchanted-book box is a variation of the same Mystery Box, not a separate system: same point type, roll path, animation and claim rules, with a different pool kind. Readiness validates that each pool's chances are valid (proposed: they sum to 100%) and that every blueprint/enchantment reference exists. Roll authoritatively with the existing lootbox roll components (`LootboxRollEngine` odds logic, `BlueprintItemAssembler.assemble`) adapted to percentage chances, and record one roll and at most one delivery per roll id. Do not call ordinary world-lootbox redemption, mint persistent player-owned item instances, consume world daily quotas or leak tokens into the restored inventory.
 
-Provide fixed equipment purchase points and Mystery Box points with configured locations, interaction range, prices, item pools/blueprint references and eligibility. Earn currency from configured NPC kills/wave events/contributions; exact amounts and assists distribution remain tunable. Proposed v1 purchase availability: allow both active waves and intermission; disable for spectators. Confirm dead-player transfer permissions during implementation.
+**In-world animation (replaces the chest-menu reel).** The box is a block in the world (an end portal frame, an opened chest or similar; the exact block is to be determined). A roll plays a carousel draw on top of it, modeled on the lootbox opening reel (§3.9 of the [lootbox design](../lootboxes/DESIGN.md)): a non-pickable item entity above the block is replaced rapidly by passing items from the pool, each showing its display name and enchantment glint, slowing down until it stops on the rolled item. Ticking sounds and particle effects accompany the draw, with a distinct sound and particles for the final item. As in the lootbox reel, the result is rolled before the animation starts, passing items are drawn with the real odds and there are no fake near misses. No player can pick the displayed items up, and hoppers or mobs can't take them.
 
-Mystery Box immediately ships using existing lootbox roll/catalog/enchantment/reel components where appropriate. Charge once and record one authoritative roll and one delivery per purchase id. Configure its pool and price per scenario. Adapt the components to match scope: do not blindly call ordinary world-lootbox redemption and mint persistent player-owned gear, consume world daily quotas, or leak its tokens into the restored ordinary inventory. Existing reel/pending-delivery behavior needs entry, death, match-end and restart checks (KNG-44 is a relevant follow-up). Define whether an interrupted reel delivers before death or into the same match's pending delivery, without rerolling or duplicating.
+**Claim.** The player who started the roll claims the final item by right-clicking it (proposed: only the roller; teammates can't take it). It then goes into the roller's inventory, or drops as a match-scoped item owned by the roller if the inventory is full. Unclaimed, it despawns after 10 seconds (configurable) and is forfeited. Only after the claim or despawn can the box start a new roll; one roll at a time per box. Implementation to verify: a plain dropped item entity does not receive right-click interactions on Paper, so the claim likely needs an `Interaction` entity hitbox (or an `ItemDisplay` with one) over the shown item.
 
-Tag and track every match equipment item, ground drop and pending grant by match id. Only members of that match can pick it up; deny outsiders, containers, hoppers and cross-match transfers. Items must survive long enough for a subsequent intermission retrieval; proposed lifetime is the match duration, subject to a configured count limit and explicit overflow handling, not vanilla despawn. On finish/abort remove all remaining items and pending deliveries. Do not duplicate a death loadout while also retaining it on the corpse and giving a new baseline set.
+**Cost.** To be determined whether a roll costs anything. Configure an optional price per box; in MATCH_PROGRESSION it would be paid in match currency, charged once per roll id. For own-inventory and kits mode there is no match currency, so the cost model there is open (free, a per-player cooldown, or another currency).
+
+**Interruptions.** Proposed: if the roller dies (becomes a ghost), leaves or the game ends during the animation or before claiming, the roll is forfeited and the shown item removed, without rerolling or duplicating; a charged price is not refunded. Plugin restart aborts the match (§3) and removes the box entities. KNG-44's pending-delivery follow-up does not apply to this in-world claim.
+
+### 8b. Match item tracking and drop guards
+
+Tag and track every match equipment item, kit item, Mystery Box item, ground drop and pending grant by match id. Only members of that match can pick it up; deny outsiders, containers, hoppers and cross-match transfers. Items must survive long enough for a subsequent intermission retrieval; proposed lifetime is the match duration, subject to a configured count limit and explicit overflow handling, not vanilla despawn. On finish/abort remove all remaining items and pending deliveries. Do not duplicate a death loadout while also retaining it on the corpse and giving a new baseline set.
 
 The current Siege keepInventory and no-drop guards need a mode-specific exception for Zombies death drops and pickup. Do not loosen safeguards for ordinary Siege or own-inventory mode. Ordinary persisted item-instance identity/ownership needs special care: transient Mystery Box rewards should reuse the roll result without creating claimable permanent instances unless a reviewed match-scoped lifecycle supports them.
 
 ## 9. Permanent rewards and balance calibration
 
-Permanent coins, gems and experience are different from spendable match currency. Accumulate reward inputs during play; grant permanent rewards once when the match ends normally (wipe or main-objective capture). A loss is the expected terminal outcome of endless survival and must not automatically mean zero rewards.
+Permanent coins, gems and experience are different from spendable match currency. Accumulate reward inputs during play; grant permanent rewards once when the match ends normally (team wipe or an enabled end condition, §3a). A loss is the expected terminal outcome of endless survival and must not automatically mean zero rewards.
 
 Reward design: a configurable base per completed wave, scaling for later waves, plus measured contributions such as kills/assists, successful repair work and objective defense. Store raw inputs and the reward-policy version, and calculate authoritatively on the API. Values, curves, contribution weights and ceilings remain UNSET pending developer targets. A 'troostprijs' or hard per-match cap was only proposed in conversation, not a locked reward decision.
 
 Calibration inputs supplied by Pandi: desired hours to representative levels and purchases, typical match duration/waves, minigame share of overall progression, other income sources, and expected average/high-performing hourly yield. An agent may then simulate candidate reward curves across scenarios and difficulties for review. Include salary/rank multipliers and title-promotion bonuses when measuring effective progression; do not add a second multiplier or award wave income twice.
 
-Reuse the current ledger and Siege settlement's idempotency; separate survival formula selection from the PvP win/holding/capture calculator. Dead spectators still present at end qualify. Proposed leave/disconnect and abort policy inherits current Siege (no permanent reward on voluntary leave, admin abort or server restart); confirm desired accrued-reward recovery before changing it. No additional persistent payout per wave.
+Reuse the current ledger and Siege settlement's idempotency; separate survival formula selection from the PvP win/holding/capture calculator. Ghosts (dead players) still present at end qualify. Proposed leave/disconnect and abort policy inherits current Siege (no permanent reward on voluntary leave, admin abort or server restart); confirm desired accrued-reward recovery before changing it. No additional persistent payout per wave.
 
 Persist an accrued result or pending settlement before attempting the API payout. Completion retries return the same stored breakdown; inventory/gate cleanup must not duplicate rewards or hang indefinitely behind an unavailable API. Display reached/completed wave, contributions, end reason and the permanent payout, separately from final temporary match balance.
 
@@ -200,26 +266,28 @@ These are required conceptual records, not approved class names or database migr
 
 | Record/configuration | Required fields/relationships |
 |---|---|
-| Survival scenario settings | SiegeScenario reference, mode, human/NPC team references, main objective, inventory mode, difficulty profile, intermission timing, recapture policy, baseline loadout, reward-policy revision. |
-| Difficulty/wave profile | Scaling rules, archetype composition, pacing, spawnzone weights, capture/gate damage, aggro/leash values, target preference/proximity settings, switch margin and minimum commitment duration, repair work rate, resource limits. |
-| Spawnzone | Scenario, location bounds/points, optional lane override, initial availability, objective prerequisite ALL/ANY, eligibility/weight. |
+| Survival scenario settings | SiegeScenario reference, mode, human/NPC team references, per-objective game-ending flag, "objective captures end the game" and "end when all objectives are captured" settings, equipment mode (own inventory / kits / match progression), selected kits, difficulty profile, intermission timing, recapture policy, baseline loadout, reward-policy revision. |
+| Survival lobby override | Lobby reference; "objective captures end the game" `Inherit` / on / off (navigation-compass precedent: lobby → scenario). |
+| Difficulty/wave profile | Per-wave growth of enemy count and of health, walking speed, melee damage, ranged damage and attack speed; other scaling rules, archetype composition, pacing, spawnzone weights, capture/gate damage, aggro/leash values, target preference/proximity settings, switch margin and minimum commitment duration, repair work rate, resource limits. |
+| Spawnzone | Scenario, location bounds/points, optional lane override, spawn condition (initially active, or objective prerequisite ALL/ANY), eligibility/weight. |
 | Objective/gate target override | Independent per-scenario target setting: standard rules / allow / deny; resolved before scoring and applied to intermediate gate breaching. Allow never grants physical or cross-match access. |
 | Optional lane override | Shared navigation configuration with ordered routepoints, referenced by an NPC or movement assignment; optional scenario bindings. No mandatory route per spawnzone. |
 | Special-wave schedule | Explicit wave numbers and/or interval/start offset, profile reference, deterministic priority. |
-| Purchase/Mystery Box point | Scenario, location, price, pool/product references and interaction limits. |
-| Runtime/checkpoint | Match/config ids, reached/completed wave, pending/alive NPC accounting, owners, repair work, personal match balances and transaction ids, item/drop/delivery tracking, contributions and pending settlement. |
+| Purchase point | Scenario, location, price, product references and interaction limits. |
+| Mystery Box point | Scenario, block location, variant (items / enchanted books), pool with percentage chances, optional price, claim timeout (default 10 s), interaction limits. |
+| Runtime/checkpoint | Match/config ids, resolved end conditions, reached/completed wave, ghost state per player, kit choice, active Mystery Box rolls, pending/alive NPC accounting, owners, repair work, personal match balances and transaction ids, item/drop/delivery tracking, contributions and pending settlement. |
 
 Plugin owns live simulation and main-thread world mutations; API owns configuration, durable match results and permanent ledger grants. Pure wave/repair/scheduling logic belongs in Bukkit-free core. NPC platform provides combat, actor identity and path requests. Server validates all purchases/transfers/capture/repair membership; no client-supplied wave number or payout is trusted. Changes made in the editor apply to future matches, not the running snapshot.
 
-Readiness validates human/NPC role identity, one main objective, compatible selected gates and capture locations, valid baseline gear/pools, an initial spawnzone, optional override routepoints when configured, nonzero scaling/repair parameters, valid special-wave schedule and dependency references. NPC teams do not need fake user rows or ordinary player spawn requirements. Use existing FormConfiguration/DisplayConfiguration and configured location-validation rules; avoid hard-coded assumptions that all enemy spawns must be inside the town.
+Readiness validates human/NPC role identity, end conditions (warning when only a team wipe can end the game), selected kits in kits mode, valid Mystery Box pools, compatible selected gates and capture locations, valid baseline gear/pools, an initial spawnzone, optional override routepoints when configured, nonzero scaling/repair parameters, valid special-wave schedule and dependency references. NPC teams do not need fake user rows or ordinary player spawn requirements. Use existing FormConfiguration/DisplayConfiguration and configured location-validation rules; avoid hard-coded assumptions that all enemy spawns must be inside the town.
 
 ## 11. Player/admin experience and observability
 
-Player HUD: wave number/type, enemies remaining plus queued spawns, pause countdown, objective ownership/pressure, gate state/health, repair work/contributors, own temporary balance and spectating/next-respawn status. Equipment purchases, Mystery Box odds/pool description and teammate transfers use the existing inventory-menu conventions. Result screen distinguishes match currency from permanent coins/gems/XP.
+Player HUD: wave number/type, enemies remaining plus queued spawns, pause countdown, objective ownership/pressure and which objectives end the game, gate state/health, repair work/contributors, own temporary balance and ghost/next-respawn status. Equipment purchases, the kit picker, Mystery Box odds/pool description and teammate transfers use the existing inventory-menu conventions; the Mystery Box roll itself plays in the world (§8a). Result screen distinguishes match currency from permanent coins/gems/XP.
 
-Admin authoring: select survival mode, difficulty and inventory variant; reference gates/objectives; capture NPC zones/spawnpoints, optional override waypoints and purchase locations in-game through existing location tools; preview wave schedules/compositions/repair duration; run readiness. Defend the Castle is the first representative scenario. Label future authoring controls as planned until implemented; the existing Siege guide describes current PvP tooling only.
+Admin authoring: select survival mode, difficulty, equipment mode, kits and end conditions; reference gates/objectives; capture NPC zones/spawnpoints, optional override waypoints and purchase locations in-game through existing location tools; preview wave schedules/compositions/repair duration; run readiness. Defend the Castle is the first representative scenario. Label future authoring controls as planned until implemented; the existing Siege guide describes current PvP tooling only.
 
-Record wave start/end, enemy spawn/death/removal reasons, target/path failures, objective capture, door destruction/repair, active repair contribution, currency earning/spend/transfer and box roll/delivery, player death/respawn/leave, cleanup and settlement retries. Aggregate per match/wave/player for balance and debugging; integrate with the shared player-telemetry design when available. Do not invent a full replay recorder as part of this feature. Track tick time, live NPC/item counts, spawn backlog, path work and stuck enemies.
+Record wave start/end, enemy spawn/death/removal reasons, target/path failures, objective capture, door destruction/repair, active repair contribution, currency earning/spend/transfer and box roll/claim/forfeit, player death/ghost/respawn/leave, end condition and reason, cleanup and settlement retries. Aggregate per match/wave/player for balance and debugging; integrate with the shared player-telemetry design when available. Do not invent a full replay recorder as part of this feature. Track tick time, live NPC/item counts, spawn backlog, path work and stuck enemies.
 
 ## 12. Current-source checks and integration risks (2026-09-30)
 
@@ -229,7 +297,7 @@ Read-only checks used current workspace main `98372da0a54de6384334290208d7081628
 - `knk-paper/.../siege/SiegeGateController.java` has player-based gate damage attribution and sets `CanRespawnOverride=false`; restore can call `healthSystem.respawnGate`. Survival needs explicit authorized NPC gate damage and a deliberate repair path without enabling unrelated automatic gate respawns.
 - Existing Siege design sections 6.6/9.3 retain inventory on death and prohibit drops/pickup. Zombies needs scoped death-drop/pickup behavior and durable ordinary-inventory restore. Existing roster elimination/capture scans must understand NPC teams.
 - `knk-web-api/Services/SiegeMatchService.cs` grants rewards server-side exactly once with the currency ledger (`SIEGE_REWARD`, key `siege-match:{id}`) and currently delegates to the PvP `SiegeRewardCalculator`. Add survival reward inputs/logic while preserving settlement idempotency and title progression.
-- `Services/Lootbox/LootboxRollEngine.cs` supplies pure roll and odds logic. It currently supports the Grade table's full scale; older lootbox design sections still say 1–5 only. Do not copy stale grade limits or world-claim ownership/quota rules into the match adapter.
+- `Services/Lootbox/LootboxRollEngine.cs` supplies pure roll and odds logic (2026-11-02: the survival Mystery Box needs percentage chances per entry; check whether the engine's weights map onto them or a small adapter is needed). It currently supports the Grade table's full scale; older lootbox design sections still say 1–5 only. Do not copy stale grade limits or world-claim ownership/quota rules into the match adapter.
 - KNG-27 navigation was recorded as unmerged on its feature branches; KNG-36 shared NPC platform and KNG-37 consumers are still backlog. Do not describe either as a shipped physical NPC navigation dependency.
 
 ## 13. Open implementation clarifications (not missing core gameplay decisions)
@@ -239,25 +307,32 @@ Read-only checks used current workspace main `98372da0a54de6384334290208d7081628
 3. Confirm destroyed-only repair and per-door health/work semantics for multi-door structures; define animation-time damage/jam transitions.
 4. Confirm old-zone weighting and recapture zone deactivation; default recapture remains disabled meanwhile.
 5. Validate automatic physical navigation without lanes and optional waypoint overrides, reachability including breach edges, chase leash and NPC capture weights with the castle map.
-6. Confirm special-schedule collisions, purchase/spectator-transfer access, late-join/disconnect/abort policies and whether side-capture reduction is disabled.
+6. Confirm special-schedule collisions, late-join/disconnect/abort policies and whether side-capture reduction is disabled. (Ghost purchase/transfer access is resolved: none, S20.)
 7. Supply progression targets and review resulting reward curves. Configure gameplay values with previews, not fixed invented defaults.
+8. *(2026-11-02)* Confirm end-condition defaults (§3a: objective endings on, all-captured off, lobby `Inherit`).
+9. *(2026-11-02)* Kits mode: may a player switch kit at an intermission respawn; default kit when nobody picks; whether kits mode gets match currency or purchase points.
+10. *(2026-11-02)* Mystery Box: whether a roll costs anything per equipment mode; the block used (end portal frame, open chest, …); roller-only claim; forfeit without refund on death/leave; pool chances must sum to 100%.
+11. *(2026-11-02)* Ghosts: confinement to the scenario area; how to hide them from non-members and NPCs while teammates see them translucent (verify on Paper).
 
 ## 14. Acceptance checklist
 
 | ID | Required check |
 |---|---|
 | A01 | Endless waves advance only after all planned enemies spawn and die; queued/stuck/despawned enemies cannot manufacture a wave clear. |
-| A02 | Final living defender death or main capture ends once; side capture does not end; dead spectators count for settlement. |
-| A03 | Dead defenders return at intermission start with valid spawn choices, never during the active wave. |
+| A02 | Final living defender death ends once; a flagged objective ends the game only with objective endings enabled (scenario setting, lobby override wins); all-captured ends only when enabled; unflagged captures never end; with both conditions off only a wipe ends; ghosts count for settlement. |
+| A03 | Dead defenders return at intermission start with valid spawn choices, never during the active wave. Until then they are ghosts: no damage or hunger, never targeted by NPCs, no interaction of any kind, no flight or noclip, translucent to teammates and hidden from everyone else. |
 | A04 | NPCs break blocked doors and capture reachable zones; closed intact doors are damageable; door destruction never changes objective ownership. |
 | A05 | Opening/destruction never enables deeper spawnzones; objective capture does; already spawned NPCs remain in place. |
 | A06 | One/two repairers have additive rates; interruption retains work; taking damage and capturezone pressure do not cancel. Death/action-stop/range loss removes only that contributor. |
 | A07 | Complete repair restores health once and closes through normal gate behavior; no gradual healing, materials or extra cooldown. Lost objective prevents repair. |
 | A08 | Reconstruction/animation do not trap players or representative NPCs; jam state and routing remain truthful. |
-| A09 | Both inventory modes work; ordinary PvP/own-gear drop guards remain intact; Zombies death drops are reclaimable after the wave and removed at end. |
+| A09 | All three equipment modes work; ordinary PvP/own-gear drop guards remain intact; kits mode grants the selected kit without its conditions, cooldown, price or claim records; Zombies death drops are reclaimable after the wave and removed at end. |
 | A10 | Match balance pays immediately, survives respawn and transfers atomically only within the match; purchases cannot overdraft or duplicate on retries. |
-| A11 | Mystery Box uses existing roll components and match-scoped delivery; no persistent gear/token/instance leakage on death, exit or restart. |
+| A11 | Both Mystery Box variants roll from their percentage pools with existing roll components; the in-world animation shows non-pickable items with name/enchantments, sounds and particles and stops on the pre-rolled item; only the roller claims by right-click; unclaimed items despawn after 10 s before the next roll; no persistent gear/token/instance leakage on death, exit or restart. |
 | A12 | Recurring AND explicit special waves select deterministically and continue scaling. |
 | A13 | Permanent rewards accrue during play and settle once after normal loss; failed/repeated completion and promotion handling cannot duplicate funds or XP. |
 | A14 | Gate/player snapshots restore on end/abort/restart; no match NPCs/items, overrides or pending grants leak into the shared world. |
 | A15 | Admin configuration/readiness, player HUD/menus, result history, telemetry and representative late-wave load checks are documented and tested. |
+| A16 | Wave scaling raises enemy count, health, walking speed, melee and ranged damage and attack speed by default; per-stat growth configuration and caps apply. |
+| A17 | Spawnzones with an objective condition stay inactive until that objective falls, then spawn inside the line (overrun). |
+| A18 | The snapshot taken when sent to the hub restores on end, leave and crash in every equipment mode; gained items are wiped. |
