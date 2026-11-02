@@ -1,7 +1,7 @@
 # Closed alpha test run 3 — checklist (planned)
 
 **Status:** Planned; date not set. Carries over the steps test run 2 left for later.
-**Last updated:** 2026-11-01 (G and I tested, § 5; packages F, G, I and #193 merged; § 4 now part of the run, § 4a added)
+**Last updated:** 2026-11-02 (#193 accepted, § 4 and § 5); 2026-11-01 (G and I tested, § 5; packages F, G, I and #193 merged; § 4 now part of the run, § 4a added)
 **Issues:** parent [PandiO/knk-workspace#149](https://github.com/PandiO/knk-workspace/issues/149)
 **Previous run:** [test run 1 findings](../25-10-2026/test-run-1-findings.md) · fixes in the
 [alpha run 1 handoff](../../../ai-agents/handoffs/2026-10-25-alpha-run-1-p0-p1.md) (packages A–D, merged 2026-10-26)
@@ -63,8 +63,9 @@ knk-web-app `main` `6b02bb0`). Results as reported by the developer.
 
 ## 4. Custom enchantment permissions (#193)
 
-[#193](https://github.com/PandiO/knk-workspace/issues/193) is merged (knk-plugin `main` `c8232607`, 2026-11-01). Grant
-`customenchantments.use.*` to the Default rank first; until then only ops can use abilities.
+[#193](https://github.com/PandiO/knk-workspace/issues/193) is merged (knk-plugin `main` `c8232607`, 2026-11-01). **All steps accepted by
+the developer on 2026-11-02; #193 closed.** Grant `customenchantments.use.*` to the Default rank; without it only ops
+can use abilities.
 
 - [ ] A non-op Default player with `customenchantments.use.*` can use each ability on right-click: chaos,
   flash_chaos, health_boost, armor_repair, resistance, invisibility. Without the grant: nothing happens.
@@ -112,7 +113,13 @@ Merged into knk-plugin `main` `c8232607`, knk-web-api `master` `22a28ab`, knk-we
 | § 8.1 kits tooltip | #172 | Works. Follow-up: other lore lines (rank-rule line) still wide; general lore wrap → #212 |
 | § 8.2–8.9 `/knk item more` | #175 | Works |
 
-Closed as completed: #169, #170, #171, #172, #175. Still to test: §§ 2–4 (A, D, #193) and the E/F steps of § 4a
+Closed as completed: #169, #170, #171, #172, #175.
+
+### 2026-11-02 (developer)
+
+§ 4 custom enchantment permissions (#193): all steps accepted; #193 closed as completed.
+
+Still to test: §§ 2–3 (A, D) and the E/F steps of § 4a
 (#163, #164, #165, #166, #174, #198, #199).
 
 Fill in during the run: per step works / fails (with what happened) / skipped. New findings get a GitHub issue under

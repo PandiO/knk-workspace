@@ -87,7 +87,7 @@ Full inventory of commands, nodes, checks and rank seeds:
 
 ### Custom enchantments
 
-PandiO/knk-workspace#193 (merged 2026-11-01). The ability and `/ce`
+PandiO/knk-workspace#193 (merged 2026-11-01, accepted 2026-11-02). The ability and `/ce`
 checks were Bukkit-only on nodes plugin.yml didn't declare, so only ops could use abilities. They now go through
 `EnchantmentPermissions` (knk-paper `enchantment/`) on top of `CommandPermissions`: Bukkit/op first, then the cached
 in-house answer.
