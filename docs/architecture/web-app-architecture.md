@@ -47,11 +47,11 @@ _Added 2026-11-02 for PandiO/knk-workspace#95 (rebrand phase 1), knk-web-app bra
   - Semantic tokens `--color-*`, Tailwind keys: `primary` (`DEFAULT`, `dark` hover, `light` icons only, `fg`), `cta`
     (`DEFAULT`, `dark`, `fg`), `canvas` (page), `surface` (`DEFAULT`, `alt`, `hover`), `fg` (text), `muted`
     (secondary text), `line` (decorative borders), `field` (form field borders, 3:1), `focus` (rings), `backdrop`
-    (`DEFAULT`, `fg`: behind the auth cards), `nav` (`DEFAULT`, `fg`, `muted`, `hover`, `line`, `accent`), and
+    (`DEFAULT`, `fg`: behind the auth cards), `nav` (`DEFAULT`, `fg`, `muted`, `hover`, `line`, `accent`; `--color-nav-action*` colours a `.btn-primary` inside the bar), and
     `danger` / `success` / `warning` / `info`, each with `DEFAULT` (text/icon/filled), `strong` (text on the tints),
     `soft` (alert background), `muted` (badge background), `line` (alert border) and `fg` (text on the filled colour;
     not for info). The key `primary` kept its name, so its ~580 uses switch with no component edit.
-  - Fonts: `--font-body` (Tailwind `font-sans`, the body) and `--font-display` (Tailwind `font-display`; `h1`, `h2`
+  - Fonts: `--font-body` (Tailwind `font-sans`, the body) and `--font-display` (Tailwind `font-display`; `h1`
     and the nav title). `current` keeps `'Inter', sans-serif` (Inter is never loaded: the Google `@import` in
     `index.css` comes after other rules, so the system sans renders, as before). Lato 2.015 and Cinzel are
     self-hosted under the OFL in `src/theme/fonts/` and only downloaded when a theme uses them.

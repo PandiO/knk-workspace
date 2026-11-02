@@ -44,7 +44,7 @@ Example side by side: `https://<host>/dashboard?theme=current` in one tab and `�
 | Danger | Red | Red (close to brand red: icon + text always) | Brand red (`#BE1622`) |
 | Info boxes | Blue | Charcoal/grey (the guide has no blue) | Steel blue |
 | Body font | System sans (Inter was never loaded; unchanged) | Lato 2.015 | Lato 2.015 |
-| Headings (h1, h2, the nav title) | Body font | Cinzel (stand-in for Enchanted Land) | Cinzel |
+| Page titles (h1) and the nav title | Body font | Cinzel (stand-in for Enchanted Land) | Cinzel |
 
 Fonts: **Lato 2.015** (the latofonts.com release with Regular 400, Medium 500, SemiBold 600 and Bold 700; Google's Lato
 has no 500/600) and **Cinzel** 600/700, both self-hosted under the SIL OFL 1.1 (`src/theme/fonts/`, licences next to
@@ -65,7 +65,7 @@ theme uses it, so `current` loads none of them.
 
 ## 3. Checklist for the live comparison
 
-Compare in this order; the first five are fully on tokens, so they are a fair comparison (see § 5 for the rest).
+Compare in this order; the first six are on tokens, so they are a fair comparison (see § 5 for the rest).
 
 1. **Landing** (`/`, logged out): CTA colour and text, the "Closed alpha" badge, headings (Cinzel in brand/proposal).
 2. **Login** (`/auth/login`): backdrop (light / black / charcoal), card, field focus ring (Tab into a field), an
@@ -82,6 +82,24 @@ Compare in this order; the first five are fully on tokens, so they are a fair co
 
 Screenshots of the screens in each theme (taken with mocked data):
 [`reports/assets/2026-11-design-themes/`](../reports/assets/2026-11-design-themes/).
+
+### Findings from the screenshots (2026-11-02, mocked data)
+
+Things to look at in the live comparison. None of them block a decision.
+
+- **brand:** primary and danger are the same red. Edit and Delete on the detail page, and Next next to a field error,
+  differ only by icon and label. That is the trade-off the `proposal` theme avoids.
+- **brand / proposal, auth pages:** the dark backdrop is a box inset from the window edges (the app's page padding
+  around every route). A full-bleed public layout is #92 phase 2 work.
+- **proposal:** primary links are charcoal like the body text, so they are underlined in this theme. Create New in the
+  charcoal bar uses the orange call-to-action colour (token `nav-action`).
+- **Every theme:** colours on unmigrated components stay fixed: the purple "Patron" chip and yellow mode chip on the
+  player profile, the green Edit / blue-grey View chips on the detail page's child cards.
+- **brand / proposal:** the fixed navigation bar keeps its rounded corners (`.panel`), which show as small light
+  notches at both ends on the dark bar. Unchanged from `main` (barely visible on the white bar).
+- Seen in every theme and unrelated to colour (not changed here): the table search box on the dashboard is shorter
+  than the explorer search; the form wizard's sticky footer is see-through and the "Town (Town) 9 fields" box above
+  it looks like debug output; the detail page shows raw ISO dates.
 
 ## 4. Open decisions (#92)
 
