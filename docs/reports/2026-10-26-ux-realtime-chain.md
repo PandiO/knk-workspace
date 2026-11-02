@@ -1,6 +1,6 @@
 # Dashboard, form wizard and realtime chain — progress report
 
-**Status:** In progress — links 1–3, 3b and 5 merged; links 4, 6, 7, 8 and 9 in review (2026-11-02)
+**Status:** In progress — links 1–3, 3b and 5 merged; links 4, 6, 7, 8, 9 and 10 in review (2026-11-02); every link of the chain has run
 **Last updated:** 2026-11-02
 **Charter:** [UX_REALTIME_CHAIN.md](../ai-agents/handoffs/UX_REALTIME_CHAIN.md) · **Coordinator prompt:**
 [2026-10-26-ux-realtime-coordinator-prompt.md](../ai-agents/handoffs/2026-10-26-ux-realtime-coordinator-prompt.md)
@@ -24,7 +24,7 @@ test), `merged`, `blocked: <reason>`.
 | 7 | #180 | `claude/world-task-hardening` | in review | subagent (fallback: add_repo needed in-session approval), 2026-11-01 | `115c418` / `d7a0896` / `21de734e` / `e06c1e0` | API 3448 passed, 4 failed (#99, = baseline reds), 88 skipped (baseline 3397/4/88); web-app 1378 passed, 1 failed (#204 base red), suites 216 (baseline 1364/1, 213); `tsc` 9 = baseline; build OK, same 24 warnings; plugin core 2401 (2401), api-client 291 (288), paper 2364 (2343), 0 failures |
 | 8 | #181 | `claude/realtime-signalr` | in review (stacked on unmerged link 7: the branch contains `claude/world-task-hardening` in all four repos, see coordinator notes 2026-11-02 and the link 8 block) | subagent (fallback: add_repo needed in-session approval), 2026-11-02 | `a27f61e` / `c7a3e85` / `8fa35148` / `3e8a71b` | API 3562 passed, 4 failed (#99, = baseline reds), 88 skipped (baseline on the merged branch 3513/4/88); web-app 1407 passed, 1 failed (#204 base red), suites 221 (baseline 1392/1, 218); `tsc` 9 = baseline; build OK, 24 warnings; plugin core 2412 (2412), api-client 313 (309), paper 2406 (2387), 0 failures |
 | 9 | #39 (rest), #177 follow-up | `claude/entity-lists-url-state` | in review | subagent (fallback: add_repo needed in-session approval), 2026-11-01 | — / `6b2a4eb` / — / `015e5c1` | web-app 1402 passed, 1 failed (#204 base red), suites 217 (baseline 1364/1, 213); `tsc` 9 = baseline; build OK, 22 warnings (baseline 24: two `PagedEntityTable` hook warnings gone) |
-| 10 | #182 | `claude/realtime-signalr` | in progress | subagent (fallback: add_repo needed in-session approval), 2026-11-02 | — | — |
+| 10 | #182 | `claude/realtime-signalr` | in review (same branch as links 4, 6 and 8, so also stacked on unmerged link 7) | subagent (fallback: add_repo needed in-session approval), 2026-11-02 | `e769c4c` / — (unchanged `c7a3e85`) / `eb22a655` / `c04d3df` | API 3580 passed, 4 failed (#99, = baseline reds), 88 skipped (baseline 3562/4/88); plugin core 2420 (2412), api-client 317 (313), paper 2414 (2406), 0 failures |
 
 ## Waiting for the developer
 
@@ -63,6 +63,11 @@ flagged decisions.)
   web-app `c7a3e85`; live checklist `docs/guides/realtime-smoke-test.md` § WT2 on workspace `claude/realtime-signalr`
   `3e8a71b` (run § S1 and link 7's checklist first). Deploy the three together; the branch contains link 7 (its migration,
   L7-8). Flags L8-1…L8-20; deviations L8-2 (poll 2 s while the web hub is down, 10 s safety net while up), L8-4, L8-15. Coordinator check 2026-11-02: heads match, link 7 is an ancestor of `claude/realtime-signalr` in all four repos, Presence/active-for-me access rules spot-checked.
+- **Test link 10** (#182, S3, same branch as links 4, 6 and 8, so it contains link 7 too): API `claude/realtime-signalr`
+  `e769c4c`, plugin `eb22a655` (web app unchanged at `c7a3e85`); live checklist `docs/guides/realtime-smoke-test.md` § S3
+  on workspace `claude/realtime-signalr` `c04d3df` (run § S1 first). No new setting, no migration of its own. Decisions to
+  see: L10-1 (GateChanged only for definition edits), L10-5 (only gates a running match holds wait), L10-8 (#31 retried
+  on the hub reconnect only; the abort never once this run created a match). Flags L10-1…L10-15.
 - **Test link 6** (#179, SignalR S2, same branch): API `38b0466`, plugin `b48f1484`; live checklist
   `docs/guides/realtime-smoke-test.md` § S2 on workspace `claude/realtime-signalr` `ae949bd` (run § S1 first). Flags
   L6-1…L6-12 (link 6 block). L6-1: the ×4 slowdown applies only to the social-spy re-check for now; the notification
@@ -81,6 +86,7 @@ flagged decisions.)
 
 ## Follow-ups filed by links
 
+- Link 10: no new issue; comments on [#182](https://github.com/PandiO/knk-workspace/issues/182) (heads, tests, checklist, flags L10-1…L10-15) and [#31](https://github.com/PandiO/knk-workspace/issues/31) (startup work retried on the hub reconnect; the hub-off path stays open).
 - Link 8: no new issue; comment on [#181](https://github.com/PandiO/knk-workspace/issues/181) (heads, tests, checklist, flags L8-1…L8-20).
 - Link 9: #205 (bulk actions on the dashboard table, split from #39). Comments on [#39](https://github.com/PandiO/knk-workspace/issues/39) and [#177](https://github.com/PandiO/knk-workspace/issues/177).
 - Link 7: no new issue; comments on [#34](https://github.com/PandiO/knk-workspace/issues/34) (temp regions of completed tasks for abandoned forms) and [#181](https://github.com/PandiO/knk-workspace/issues/181) (WT2 notes).
@@ -1330,3 +1336,124 @@ offers need `realtime.enabled: true` and `knk.tasks`. Web app: new dependency `@
   the API, DESIGN §7.3). Startup-only siege work (#31) still waits for its `ResyncHooks` step.
 - #183 (web live updates): `useRealtimeEvent` + `useRealtimeReconnected` are the consumer pattern; the dashboard's
   `refreshKey` can be bumped from an event.
+
+## Link 10 — #182 (S3): config and entity push
+
+**Started:** subagent (fallback: `add_repo` needed in-session approval), 2026-11-02; finished 2026-11-02. Nothing else ran
+at the same time. Own worktrees under `/home/user/wt-link10/` (the link 8 worktrees detached; the coordinator's
+`/home/user/knk-workspace` untouched).
+**Base:** link 8's heads, knk-web-api `claude/realtime-signalr` `a27f61e`, knk-plugin `8fa35148` (knk-web-app `c7a3e85`
+not changed). `origin/master` (API, `8df59b7`), `origin/main` (plugin, `c8232607`) and `origin/claude/world-task-hardening`
+(API `115c418`, plugin `21de734e`) were already in the branch, at the start and before the last push: nothing to merge.
+knk-workspace `claude/realtime-signalr` `3e8a71b` with `origin/main` `85340ae` merged in at the start (`b934e6b`, no conflict).
+Push dry-run passed in all four repos before any change.
+
+**Commits (heads)**
+- knk-web-api `claude/realtime-signalr`: `e769c4c` entity interceptor and map, config events, `GateChanged`, `ReportWorlds`
+  + tests. Head **`e769c4c`**.
+- knk-plugin `claude/realtime-signalr`: `30530a4c` api-client `ConfigEvents`, core `Coalescer`/`EntityChangeRouter`/
+  `PendingStartupWork`, recorder retry, gate removal; `eb22a655` paper `ConfigRealtimeSync`, `GateRealtimeSync`, worlds over
+  the hub, siege startup retry, slower timers. Head **`eb22a655`**.
+- knk-workspace `claude/realtime-signalr`: `b934e6b` merge of `main`; `c04d3df` DESIGN §6.8 + status, plan status, smoke test
+  § S3, guides README, plugin and web-api architecture, CHANGELOG. Head **`c04d3df`**.
+
+**What was built** (DESIGN §6.8 on the branch is the as-built reference)
+- **API.** `Realtime/RealtimeEntityChangeInterceptor` (EF Core save interceptor, singleton, in `Program.cs` next to the S2
+  transaction interceptor) notes watched entities before a save and their modified properties; after a successful save
+  it maps them (`Realtime/RealtimeEntityChangeMap`, pure) and hands the events to the after-commit `IRealtimeEventSink`
+  (held until an explicit transaction commits, dropped on rollback or a failed save; option C swaps only the sink).
+  Events: `EntityChanged {type, id, op, key}` for the DESIGN §6.3 allow-list; `DomainAccessChanged {domainId}`;
+  `GameSettingsChanged {scope}` (game, hub); `SiegeConfigChanged`, `LootboxConfigChanged`, `TeleportDestinationsChanged`,
+  `NavigationSettingsChanged`, `TelemetryConfigChanged` `{scope}`; `RoadNetworkChanged {world}`. `GateChanged
+  {gateStructureId, op}` from `GateStructureService`/`GateDoorService` definition edits. Game hub `ReportWorlds` =
+  `PUT api/GameSettings/runtime-worlds` over the hub. No new endpoint, setting or migration.
+- **Plugin.** `paper/realtime/ConfigRealtimeSync` (each event → its existing refresh path, merged per section for 500 ms
+  by `core/realtime/Coalescer`; `EntityChanged` → `core/realtime/EntityChangeRouter` → the data-access caches of that type,
+  the region→domain cache, the grade catalogue, the siege title ranks, the S2 user re-read). `paper/realtime/GateRealtimeSync`
+  (one structure reloaded, doors the API no longer has dropped, a deleted structure removed; a gate a running match holds
+  waits for `SiegeGateController`'s after-release hook). `GameSettingsManager` reports worlds over the hub while connected.
+  Resync step "siege startup work" (`core/realtime/PendingStartupWork`, #31): abort unfinished matches
+  (`SiegeMatchRecorder.retryRecovery`), restore stale gates (`SiegeGateController.retryRecovery`), runtime config + title
+  brackets (`SiegeService.retryStartup`), each only when it failed at startup. Slower while connected: domain access sync,
+  game settings, lootbox runtime, roads, telemetry config, grade catalogue (`setFallbackPolling`).
+
+**Tests vs baseline** (baselines on the branch before any change; .NET 8.0.132, JDK 25 toolchain under Gradle on JDK 21)
+- API (`dotnet test`, built with the `.csproj`, #106): **3580 passed, 4 failed, 88 skipped of 3672** (baseline 3562 / 4 / 88
+  of 3654). The 4 = #99 (PathResolution ×2, FieldValidationService conditional required, ClientActivityStore), as at
+  baseline. +18: `Realtime/ConfigEntityEventTests` (17: map rules per event, collapse, dedupe, ignored user columns,
+  runtime-worlds and dirty-flag echoes; the interceptor on an InMemory context: generated id, modified properties,
+  delete, unwatched entity, transaction commit/rollback; gate services definition vs runtime writes) and
+  `RealtimeHubTests.GameHub_ReportWorlds_RecordsTheReportLikeTheRestEndpoint` (1). No `[MySqlFact]` tests (the
+  transaction path uses the sink's transaction switch, as in S2).
+- Plugin (`./gradlew build -x deployToDevServer`): core **2420** (2412), api-client **317** (313; 2 skipped both), paper
+  **2414** (2406; 18 skipped both), 0 failures. New: `ConfigSyncCoreTest` (5), `SiegeMatchRecorderTest` +2,
+  `GateManagerTest` +1, `ConfigEventsTest` (4), `ConfigRealtimeSyncTest` (8).
+- Web app: not changed (no tests run).
+- Not run: a Java client against a live API, a dev server.
+
+**Flagged decisions (reversible)**
+- **L10-1** `GateChanged` is sent explicitly by the gate services for definition edits (create/update/delete, overrides,
+  region data, block snapshots), not derived by the interceptor: the game server's own runtime writes (health, open
+  state, operational toggles) and the siege lockdown/restore send nothing (no reload loop, no reload in a match).
+  Plugin-originated definition writes (region capture, block scans) do send one.
+- **L10-2** The other §6.2 events come from the interceptor's map (entity type + modified properties) instead of explicit
+  calls in each service listed in DESIGN §6.2: every write path is covered without touching ~20 services. Echo filters:
+  the runtime worlds report alone, a road tile's dirty flag alone, a user's presence/password/token/email/salary-payout
+  columns alone.
+- **L10-3** `EntityChanged` gains an optional `key` (user UUID, region id, menu template key: the keys the plugin caches by)
+  and `id: null` = "drop the whole type" when one save touches more than 50 entities of a type (catalogue maintenance,
+  seeders).
+- **L10-4** `EntityChanged` handlers invalidate caches (and re-read an online user); "refresh open menus that show it"
+  (§6.3) was not built: menus re-read on open and their auto-refresh.
+- **L10-5** Q12 applied per gate: only a structure a running match holds (`SiegeGateController.isLocked`) waits; other
+  gates reload at once. The waiting edit is applied after the round's gates were restored and the API restore answered
+  (new after-release hook); a delete stays a delete.
+- **L10-6** Bursts are merged per section for 500 ms (one save often sends several events: a structure and its doors, a
+  scenario and its spawnpoints, a survey's tiles). A gate reload is one structure via `getByIdWithSnapshots` (not
+  `/gate reload` of all gates); a deleted structure leaves the cache, its blocks stay in the world.
+- **L10-7** `ReportWorlds` over the hub while connected, no answer (REST returned the settings; a world that adds a world
+  settings entry comes back as `GameSettingsChanged`); REST when not connected. The body carries
+  `game-settings.server-id` as REST does (not `realtime.server-id`; L4-1 keeps them separate).
+- **L10-8** #31's startup work is retried on the hub (re)connect only (DESIGN §4.4 step 3): with `realtime.enabled:
+  false` nothing changes, so #31 stays open for that path (comment there). Steps run in order (abort, gates, config),
+  each after the previous finished; a failed one does not block the later ones (they were independent at startup too).
+  The abort is never retried once this run created a match row (it would end the live match); the gate restore waits
+  while a lockdown of this run is active.
+- **L10-9** Slower while connected (×`realtime.fallback-poll-multiplier`, L6-1's follow-up): domain access sync (5 → 20
+  min), game settings (30 s → 2 min), lootbox runtime (60 s → 4 min; it also re-reads active boxes, which keep their
+  `LootboxWorldChanged` notification), road tiles/meta, telemetry config poll, grade catalogue. Not slowed: the entity
+  cache TTLs (#121), permission/user TTLs, the headless poll (WT2).
+- **L10-10** Teleport: a warp domain's teleport columns, name, location id or world (or a domain becoming/ceasing to be a
+  warp) send `TeleportDestinationsChanged`; moving the warp's Location row itself sends nothing (Location is not
+  watched; TTL as before). `Domain.IsHub` → `GameSettingsChanged {scope: hub}`.
+- **L10-11** `TelemetryConfigChanged` on enhanced target / test run rows; a target's time-based expiry sends nothing (poll).
+- **L10-12** No echo suppression by actor: plugin-originated writes that pass the filters (in-game lootbox areas, gate
+  captures and scans, road surveys) come back as events; handlers are idempotent and merged.
+- **L10-13** `EntityChanged(PermissionGroup)` duplicates S2's `PermissionGroupChanged` (the group list is dropped twice;
+  harmless).
+- **L10-14** `SiegeMatch*`, `LootboxSpawn`/claims/tokens and the road surveys/seeds/proposals are not watched (runtime
+  data the plugin writes or doesn't cache).
+- **L10-15** No new config keys and no migration; `realtime.enabled` stays `false` by default and with it off every
+  timer, report and startup path is as before.
+
+**Deviations from the plan/design:** L10-2 (config events from the interceptor map rather than per-service calls),
+L10-3 (`key`, id-less collapse), L10-4 (no open-menu refresh), L10-8 (#31 retried on the hub path only). Otherwise as
+DESIGN §6.2–§6.4.
+
+**Live checklist:** [guides/realtime-smoke-test.md](../guides/realtime-smoke-test.md) **§ S3** (workspace branch
+`claude/realtime-signalr` `c04d3df` until merged; run § S1 first): off changes nothing, gate edit, gate edit during a
+match, domain access, game/hub settings, siege, lootbox, teleport/navigation, roads, telemetry, cached entities, worlds
+over the hub, siege startup work after an API outage at start, slower safety nets.
+
+**Deploy notes:** deploy API and plugin from `claude/realtime-signalr` together (the branch contains links 4, 6, 7 and 8:
+see their deploy notes, link 7's migration first). Link 10 itself: no migration, no new setting or secret, nothing new
+in `config.yml`; the events need `realtime.enabled: true`.
+
+**Follow-ups filed:** none new; comments on #182 and #31.
+
+**Notes for later links**
+- #183 (web live updates): the interceptor's `EntityChanged` can go to a `staff` web group too: add a `RealtimeEvent.ToWeb`
+  twin in `RealtimeEntityChangeMap.Map` (the web client listens to `WEB_EVENT_TYPES` in `src/realtime/RealtimeProvider.tsx`).
+- #121: with the hub up the entity TTLs only matter for missed events; the TTL work can assume that.
+- Option C (outbox): replace the sink factory in `RealtimeSetup` (`RealtimeEntityChangeInterceptor`'s `sinkFor`) with one
+  that writes outbox rows in the transaction; the map stays.
