@@ -66,7 +66,7 @@ Live tracker of in-progress work across all four Knights and Kings repos
 
 ### 2026-11-02 — Siege Survival requirements review (KNG-50)
 
-Claude Code session (Pandi); documentation only, uncommitted in the workspace checkout pending the developer's publish decision. Checked the developer's survival requirements against `docs/specs/siege-survival/DESIGN.md` and `IMPLEMENTATION_PLAN.md`; added S17–S25: per-objective game-ending flag with a scenario setting and survival-only lobby override (navigation-compass `Inherit` precedent), optional all-objectives-captured ending, ghost state for dead players (teammates see them translucent), per-stat wave scaling, overrun spawn conditions, a third KITS equipment mode, in-world Mystery Box animation with an enchanted-book variant, hub snapshot. New open points in DESIGN §13 items 8–11. Links and whitespace checked; no code or live tests.
+Claude Code session (Pandi); documentation only, on knk-workspace branch `claude/siege-survival-requirements-review` pending the developer's merge decision. Checked the developer's survival requirements against `docs/specs/siege-survival/DESIGN.md` and `IMPLEMENTATION_PLAN.md`; added S17–S25: per-objective game-ending flag with a scenario setting and survival-only lobby override (navigation-compass `Inherit` precedent), optional all-objectives-captured ending, ghost state for dead players (teammates see them translucent), per-stat wave scaling, overrun spawn conditions, a third KITS equipment mode, in-world Mystery Box animation with an enchanted-book variant, hub snapshot. New open points in DESIGN §13 items 8–11. Links and whitespace checked; no code or live tests.
 
 ### 2026-10-30 — Fourth NPC target: distractor (#146 / #41)
 
