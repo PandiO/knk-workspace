@@ -479,11 +479,19 @@ def source_names_ok(names):
     return bool(names)
 
 
+def source_filter(member, path):
+    # The 'data' filter creates directories with the process umask (077 here), so every directory of the source
+    # became 0700 and the web image's nginx (UID 101) could not read public/brand or public/images (#210).
+    # Directories get 0755 instead; the build folder itself stays 0700, so nothing opens up on the NAS.
+    member = tarfile.data_filter(member, path)
+    return member.replace(mode=0o755, deep=False) if member.isdir() else member
+
+
 def extract_source(archive, dest):
     with tarfile.open(archive, 'r:gz') as t:
         if not source_names_ok(t.getnames()):
             raise Refused('the archive must contain only source/ (git archive --prefix=source/)')
-        t.extractall(dest, filter='data')
+        t.extractall(dest, filter=source_filter)
 
 
 def build_image(repo, commit, files, targets):

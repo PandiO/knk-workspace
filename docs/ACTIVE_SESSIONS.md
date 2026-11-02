@@ -69,6 +69,18 @@ Live tracker of in-progress work across all four Knights and Kings repos
 
 Claude Code session (Pandi); documentation only, merged to knk-workspace `main` by developer request (branch `claude/siege-survival-requirements-review`). Checked the developer's survival requirements against `docs/specs/siege-survival/DESIGN.md` and `IMPLEMENTATION_PLAN.md`; added S17–S25: per-objective game-ending flag with a scenario setting and survival-only lobby override (navigation-compass `Inherit` precedent), optional all-objectives-captured ending, ghost state for dead players (teammates see them translucent), per-stat wave scaling, overrun spawn conditions, a third KITS equipment mode, in-world Mystery Box animation with an enchanted-book variant, hub snapshot. New open points in DESIGN §13 items 8–11. Links and whitespace checked; no code or live tests.
 
+### 2026-11-02 — Alpha images broken: knk-deploy extract fix installed, web `alpha-1c9524d0` deployed (#210) — done, images verified
+
+Same session. Root cause: `knk-deploy` extracts sources with umask 077 and the `data` filter, so source directories were 0700 and `alpha-b3b415d0` served `index.html` for `/brand/*` and `/images/*`. Prepared on knk-workspace `claude/dazzling-dijkstra-37xmt1`: `scripts/nas-ops/stage-b/knk-deploy` (`source_filter`, dirs 0755), new `tests/test_extract_source.py` (10/10), `SHA256SUMS`, `scripts/alpha-web/Dockerfile` (`chmod -R a+rX build`) + README, `docs/guides/nas-ops-access.md` § 7. Verified locally: `npm run build` from a umask-077 extract gives `build/brand` 700, 755 after the chmod. Not run: the root+Docker end-to-end `test_knk_deploy.py` (no Docker daemon in the cloud session). 2026-11-02: the developer installed both on the NAS and deployed web `1c9524d0` (healthy); [report](reports/2026-11-02-alpha-web-image-permissions-fix.md). The developer confirmed the images are back; #210 closed. #209 done the same day: the developer added `/brand/*` and `/images/*` to the bypass app (checked without an Access session: `image/png`, `image/jpeg`). #209 (Access bypass paths) is separate and still open.
+
+### 2026-11-01 — Invitation code fields with fixed KNK- and dashes (#208)
+
+Same session; QOL hotfix on knk-web-app `main` `1c9524d`: `/join` and `/link` invitation fields show `KNK-_____-_____` (prefix and dash drawn by the field, pasted codes with or without dashes/prefix land the same). `ClaimCodeInput` generalised into `src/components/auth/SegmentedCodeInput.tsx`; new `InviteCodeInput.tsx`, `src/utils/inviteCode.ts` + tests. `RegisterForm` combined field unchanged. Full suite 1378/1379 (#207); Chromium check; live check left to the developer.
+
+### 2026-11-01 — Claim code field centered on /link (#206)
+
+Claude Code cloud session (Pandi); QOL hotfix after alpha test run 1, straight on knk-web-app `main` `eac1013` (`src/components/auth/ClaimCodeInput.tsx` + test): the `____-____` mask and the typed code are centered in the field on `/link` and `/account`, characters stay on their slots. Unit tests + Chromium check on `/link`; live check on the deployed app left to the developer. Found in passing: #207 (time-bombed InvitePage test, red on `main` since 2026-10-28).
+
 ### 2026-10-30 — Fourth NPC target: distractor (#146 / #41)
 
 Codex voice session; authorized main documentation continuation. NPC/Siege specs and implementation checks now cover approaching and standing near a temporary distractor, normal selection/commitment, and immediate expiry/removal invalidation. Item/entity/block representation and tuning remain open. Consistency reviewed; no gameplay code or live tests.
