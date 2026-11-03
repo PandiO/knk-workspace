@@ -4,7 +4,11 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
-(Nothing at the moment.)
+- **Register page: link-code field with the dash** — knk-web-app `claude/register-code-mask-229`
+  (PandiO/knk-workspace#229, UX/realtime chain link 3c). `/auth/register`'s link-code field is the same masked field as
+  `/link` (`____-____`, the dash drawn by the field; O, I and L are kept for `/account link` codes). A code refused as
+  a link code that is a live claim code from the disconnect screen goes on to `/link`, verified. Smoke test
+  [guides/invitations-smoke-test.md](guides/invitations-smoke-test.md) § 4 steps 16 and 17c.
 
 ## 2026-11-03
 
