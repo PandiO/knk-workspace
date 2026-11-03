@@ -6,6 +6,16 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 (Nothing at the moment.)
 
+## 2026-11-02
+
+- **Item lore wraps; item scans leave out generated lore** — knk-plugin `main` `27798ab` and knk-web-app `main`
+  `b770597`, merged `--no-ff` from `claude/item-lore-212-40-0ud18o` (PandiO/knk-workspace#212, #40; smoke test
+  accepted 2026-11-03). A lore line wider than `lore.max-width` (default 40 visible characters) continues on the next
+  line in the same colour: blueprint item descriptions and origin lines, every menu's lore, and the kits menu's
+  rank-rule line. Scanning an item in the ItemBlueprint form (or a kit with KitScan) fills Display description with
+  only the description as written: no custom-enchantment, Grade or Origin lines, and no wrapped pieces. See
+  [item-render-pipeline.md](architecture/item-render-pipeline.md) § 2a/2b.
+
 ## 2026-11-01
 
 - **Invitation code fields with fixed `KNK-` and dashes** — knk-web-app `main` `1c9524d` (PandiO/knk-workspace#208,
