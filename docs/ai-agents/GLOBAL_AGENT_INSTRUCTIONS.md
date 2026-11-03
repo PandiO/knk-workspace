@@ -140,6 +140,19 @@ repo file (a handoff doc) was refused, which blocked a link (form wizard chain, 
 - `create_session` has no effort setting; session links run at the environment default. Pass the model explicitly.
 - Before a link changes anything: `git push --dry-run` on the feature branch of every repo it will change.
 
+## Closed alpha test runs
+
+Follow [closed alpha test runs](../guides/closed-alpha-test-runs.md) for anything about a run with testers. In
+short:
+
+- Only sessions **with testers** are numbered test runs. The developer's own checks are "developer pre-checks" or
+  smoke test runs and never change the next run's number.
+- Each run has `docs/reports/alpha-tests/test-run-<n>/` with `test-run-<n>-preparation.md`, `-checklist.md` and
+  `-findings.md`; the date goes in the headers, not the folder name.
+- When a fix package for a run leaves an open decision, a live check that needs several players, or a known issue,
+  add it to the **next** run's preparation plan (scope, decisions table or known issues), not only to the package
+  report or handoff.
+
 ## Handoff and documentation
 
 The developer has a full-time weekday job and may only have time for brief

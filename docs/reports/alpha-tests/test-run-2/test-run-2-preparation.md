@@ -1,11 +1,12 @@
 # Closed alpha test run 2 — preparation
 
 **Status:** Draft for the developer; date not set
-**Last updated:** 2026-11-03
+**Last updated:** 2026-11-03 (folder renamed `27-10-2026/` → `test-run-2/`; process guide linked)
 **Issues:** parent [PandiO/knk-workspace#149](https://github.com/PandiO/knk-workspace/issues/149) (run 1 findings);
 new findings go under a new parent issue "Closed alpha test run 2 (<date>): findings"
 **Checklist:** [test-run-2-checklist.md](test-run-2-checklist.md) (the steps; this file is the session plan around them)
 **Previous run:** [test run 1 findings](../25-10-2026/test-run-1-findings.md)
+**Process:** [closed alpha test runs](../../../guides/closed-alpha-test-runs.md) (numbering, layout, triage; agreed by the developer 2026-11-03)
 
 What to set up before test run 2, how to run the session, which decisions to take with the testers and what to ask
 them. Defaults below are taken from the package reports and the developer's decisions of 2026-10-25/27; check them
