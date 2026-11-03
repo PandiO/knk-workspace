@@ -1,6 +1,8 @@
 # syntax=docker/dockerfile:1
 # knk-alpha web app image (runbook Phase 6). Context layout: source/ (git archive of knk-web-app), nginx.conf,
 # .dockerignore. Create React App reads REACT_APP_* at build time, so they are fixed here.
+# REACT_APP_THEME_PICKER=on: alpha testers get the theme picker in the account menu (#95, 2026-11-03); the
+# app's own default is staff only. It does nothing on a web-app build without the themes (before #95 merges).
 
 ARG SOURCE_REVISION
 ARG SOURCE_ARCHIVE_SHA256
@@ -15,7 +17,8 @@ ENV CI=false \
     CYPRESS_INSTALL_BINARY=0 \
     GENERATE_SOURCEMAP=false \
     REACT_APP_API_BASE_URL=/api \
-    REACT_APP_MC_SERVER_ADDRESS=play.knightsandkings.net
+    REACT_APP_MC_SERVER_ADDRESS=play.knightsandkings.net \
+    REACT_APP_THEME_PICKER=on
 
 COPY source/package.json source/package-lock.json ./
 RUN npm ci --no-audit --no-fund
