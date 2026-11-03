@@ -1,7 +1,7 @@
 # Dashboard as the CRUD hub: return, submit pending state, toast, New/Configure, breadcrumbs, detail header, Create New (#177 links 1–2, #58, #81, #39) — smoke test
 
 **Status:** Run by the developer on 2026-10-26 on knk-web-app `main` `7ba0f4b`: all steps work or accepted (findings below)
-**Last updated:** 2026-11-03 (section 9c: explorer filter, #226, knk-web-app `claude/explorer-filter-226`, not merged); 2026-10-26 (section 8a: header row spacing, #195, knk-web-app `claude/dashboard-header-195`, merged into `main` `c3c0c9f`); 2026-10-26 (section 9a: one scrollbar and favourites, #194, knk-web-app `claude/dashboard-explorer-194`, merged into `main` `c3c0c9f`); 2026-10-26 (sections 8–14 added for #177 link 2 = chain link 3)
+**Last updated:** 2026-11-03 (section 9c: explorer filter, #226, knk-web-app `claude/explorer-filter-226`, not merged); 2026-11-03 (section 9b: favourites are copies, #225, merged 2026-11-03 into knk-web-app `main` `a6d83c9`, live-tested 2026-11-03); 2026-10-26 (section 8a: header row spacing, #195, knk-web-app `claude/dashboard-header-195`, merged into `main` `c3c0c9f`); 2026-10-26 (section 9a: one scrollbar and favourites, #194, knk-web-app `claude/dashboard-explorer-194`, merged into `main` `c3c0c9f`); 2026-10-26 (sections 8–14 added for #177 link 2 = chain link 3)
 **Issues:** [PandiO/knk-workspace#177](https://github.com/PandiO/knk-workspace/issues/177) (links 1 and 2) ·
 [#58](https://github.com/PandiO/knk-workspace/issues/58) · [#81](https://github.com/PandiO/knk-workspace/issues/81) (detail
 page header) · [#39](https://github.com/PandiO/knk-workspace/issues/39) (Create New menu only)
@@ -142,6 +142,22 @@ private window, to begin without favourites.
    place; picking a type closes it, a star doesn't.
 8. Entity setup (`/forms`): its explorer has no stars (favourites are a dashboard feature for now).
 
+## 9b. Favourites are copies; the list keeps every type (#225)
+
+Branch: knk-web-app `claude/explorer-favourite-copies-225` (on `main` `c02b365`, #95 merged in); all five link 3c branches together: `claude/link-3c-combined`. Developer feedback from the link 3b
+live test (2026-11-03): a starred type should not go "missing" from the list. This changes steps 9a.2 and 9a.5.
+
+1. On `/dashboard/Town` star **Town** and **Category**. Expected: both appear under **Favourites** at the top (A–Z,
+   gold stars) **and** stay in the list below, now headed **All entity types**, at their usual A–Z place; that list
+   still holds every type (count it against the types you know, or scroll through).
+2. Both copies of a favourite show a gold star. Click the star of the **lower** copy of Town: Town leaves Favourites
+   and stays in the list (grey star). Star it again from the list, then unstar it from the Favourites copy: same.
+3. Select **Category** (a favourite) in either place: both copies are highlighted; the table shows Category.
+4. Sort Z–A: Favourites Z–A on top, the full list Z–A below, favourites included. Search `t`: matching favourites on
+   top and again in the list; search a type that isn't a favourite: no Favourites section, no "All entity types"
+   heading, just the matches.
+5. Remove every favourite: no Favourites section and no "All entity types" heading; the list looks as before #194.
+6. Reload: favourites kept (per browser, as in 9a.3). Phone width: the drawer shows both parts; a star doesn't close it.
 ## 9c. Filter the explorer: display and form configuration (#226)
 
 Branch: knk-web-app `claude/explorer-filter-226` (on `main` `c02b365`, #95 merged in); all five link 3c branches together: `claude/link-3c-combined`. Developer feedback from the link 3b live test

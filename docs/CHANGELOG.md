@@ -7,10 +7,23 @@ This is a human-readable record of capabilities merged into the V3 default branc
 - **Dashboard explorer: filter by display and form configuration** — knk-web-app `claude/explorer-filter-226`
   (PandiO/knk-workspace#226, UX/realtime chain link 3c). A filter button next to the sort button narrows the type list
   to types with or without a published default display configuration and with or without a form configuration
-  (Any / Yes / No each), remembered per browser like the sort. Smoke test
+  (a dropdown Any / Yes / No each), remembered per browser like the sort. Smoke test
   [guides/dashboard-return-smoke-test.md](guides/dashboard-return-smoke-test.md) § 9c.
 
 ## 2026-11-03
+
+- **Dashboard explorer: favourites are copies** — knk-web-app `main` `a6d83c9`, merged from
+  `claude/explorer-favourite-copies-225` (PandiO/knk-workspace#225, UX/realtime chain link 3c). A starred type shows under "Favourites" at the top and still
+  in the full list below ("All entity types") at its usual place, so nothing goes missing from the list. Smoke test
+  [guides/dashboard-return-smoke-test.md](guides/dashboard-return-smoke-test.md) § 9b.
+- **Code entry pages centred** — knk-web-app `main` `603843d`, merged from `claude/code-entry-centred-228` (PandiO/knk-workspace#228, UX/realtime
+  chain link 3c). While the code entry is all the card holds (`/link` before the code is verified, `/join` before the
+  invitation is valid), its text, label, hint and error are centred like the code; steps with more on them stay
+  left-aligned. Smoke test [guides/invitations-smoke-test.md](guides/invitations-smoke-test.md) § 4 step 17b.
+- **Error text dark red again** — knk-web-app `main` `8e6c48a`, merged from `claude/danger-text-230`
+  (PandiO/knk-workspace#230). A bug in #95's token codemod had split `text-danger-strong` into a class that doesn't
+  exist on 12 lines in 8 files (login, register, `/link`, invite sign-up, form wizard, table errors); restored, the
+  codemod rule fixed and a unit test guards against unknown token classes.
 
 - **Design tokens and switchable themes (rebrand phase 1)** — knk-web-app `main` `c02b365`, merged
   `--no-ff` from `claude/design-tokens-95` (PandiO/knk-workspace#95, #92; compared live by the developer 2026-11-03). Every colour of the web app is now a theme token (CSS variables that
