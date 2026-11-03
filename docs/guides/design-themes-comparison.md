@@ -2,7 +2,7 @@
 
 **Status:** Compared live by the developer on 2026-11-03 (all screens work; `brand` preferred, all three themes and the
 picker stay); fix round done on knk-web-app `claude/design-tokens-95` (§ 6). Merged 2026-11-03 (knk-web-app `main` `c02b365`)
-**Last updated:** 2026-11-03 (fourth theme `brand-red`); 2026-11-03 (fix round after the live comparison: brand primary orange, heading font on player pages
+**Last updated:** 2026-11-03 (§ 7 page background, #231, on a branch); 2026-11-03 (fourth theme `brand-red`); 2026-11-03 (fix round after the live comparison: brand primary orange, heading font on player pages
 only, full-bleed auth pages, picker for alpha testers)
 **Issue:** [PandiO/knk-workspace#95](https://github.com/PandiO/knk-workspace/issues/95) (token layer, contrast rules,
 switchable themes); [#92](https://github.com/PandiO/knk-workspace/issues/92) (rebrand phases 2–4, sub-issue) holds the
@@ -201,3 +201,85 @@ knk-web-app `claude/design-tokens-95` `64feecc`:
   bar in `brand`. The bar no longer uses `.panel`: bottom border only, square corners, in every theme (`current` loses
   its barely visible side borders and rounding); `brand`'s bar edge is dark grey instead of red. Checked in `brand`,
   `brand-red` and `proposal` at 1440 and 390 px.
+
+## 7. Page background: landing image 1 behind every page (#231)
+
+**Status:** on knk-web-app branch `claude/page-background-image-231` (`4220f6f`, from `main` `603843d`), not merged; waiting for the developer's live
+comparison. **Off by default**: players see no change until the developer decides (with it off, every page is
+pixel-identical to `main`). Issue [PandiO/knk-workspace#231](https://github.com/PandiO/knk-workspace/issues/231).
+
+The landing page's image 1 sits fixed behind every page (`object-fit: cover`, so it fills the window at every width
+without stretching). The colours that cover it today stay, but as translucent layers, so the image shows through.
+Works in all four themes.
+
+### How to switch
+
+- **Account menu** → under **Theme (design comparison)** → **Background image** (a tick when on). Same visibility as
+  the theme picker: staff, or every logged-in user with `REACT_APP_THEME_PICKER=on` (the alpha build). Switches at once,
+  the menu stays open; saved in this browser (localStorage) for every tab.
+- **URL:** `?bg=on` or `?bg=off` on any page, this tab only (kept for reloads and navigation in the tab), logged out
+  too. Combine with the theme: `…/dashboard?theme=brand&bg=on` in one tab, `…/dashboard?theme=brand&bg=off` in another.
+- **Build flag** `REACT_APP_PAGE_BACKGROUND=on` makes it the default for everyone (a choice in the menu or `?bg=`
+  still wins). Unset = off. Only for when the developer decides to keep it.
+- No storage (private window, blocked site data): the toggle and `?bg=` still work for the open tab.
+
+### The layers and their opacity
+
+Per theme as tokens in `src/theme/tokens.css`; the rules in `src/theme/pageBackground.css`.
+
+| Layer | What | `current` | `brand` / `brand-red` | `proposal` |
+|---|---|---|---|---|
+| Page backdrop (`--page-bg-canvas-alpha`) | the grey page colour behind everything | 75 % | 75 % | 75 % |
+| Cards (`--page-bg-surface-alpha`) | `bg-white`, `bg-surface`, `.panel`: cards, tables, panels, secondary buttons | 92 % | 88 % | 85 % |
+| Auth backdrop (`--page-bg-backdrop-alpha`) | behind the login/register/link cards | 75 % (light, inside the page) | 75 % black, straight on the image | 75 % charcoal, straight on the image |
+
+So the image shows at 25 % through the page backdrop and at 2–4 % through a card. Pages that paint their own
+full-height page colour (account and admin pages) let the page backdrop through instead.
+
+**Stay solid** (for readability, or because content scrolls under them): form fields, menus and list boxes, dialogs
+and anything inside them, tooltips, everything positioned (dropdowns, sticky headers and footers, toasts), the quiet
+grey blocks (table heads, the detail page's value boxes), the coloured alert and badge tints, the navigation bar (it
+was already 95 % with a blur), and the cards on the dark auth backdrop in `brand`/`brand-red`/`proposal` (a white card
+at 88 % over black would make grey text only 3.7:1).
+
+### Contrast (WCAG AA)
+
+The image has both extremes (darkest pixel almost black, lightest almost white), so every value is checked over pure
+black and pure white: it holds wherever text lands. `src/theme/__tests__/contrast.test.ts` (extended) checks every
+theme's text and UI pairs on a card over the page backdrop, the text on the page backdrop, and the auth backdrop text;
+it fails the build if an alpha or colour is lowered below AA. The cards' alphas are set by their most demanding text
+(slate-500 needs 91 % in `current`, grey-500 85 % in `brand`).
+
+At 75 % over the darkest part of the image the page backdrop itself is mid grey (`#b6b7b8` in `current`). Mid-tone text
+cannot reach 4.5:1 there, so **text straight on the page backdrop** (page titles, breadcrumbs, the "TOWN" eyebrow,
+helper text above a card) is darker while the background is on: the muted text and the 500/600 greys take the theme's
+700 grey, links/borders/focus rings take a new dark `--color-canvas-link` (`current` `#173C96`, `brand` `#693500`,
+`brand-red` `#870F19`, `proposal` charcoal as before), and field borders the 700 grey. Inside cards, menus and fields
+the theme's own colours come back.
+
+Not covered: status-coloured text (red/green/amber) placed straight on the page backdrop outside a card or alert
+(none in the screens checked), and screens still on raw Tailwind colours (§ 5).
+
+### Image and loading
+
+- `public/images/1-1920.avif` (104 kB) with `1-1920.webp` (153 kB) as fallback, 1920 × 1079, made from `1.jpg`
+  (287 kB, unchanged); a `<picture>` picks AVIF where the browser takes it.
+- Only requested while the background is on (off: nothing is loaded). Low fetch priority, so the page's own requests go
+  first. Not on the landing page: its slideshow starts with image 1 itself, so the landing loads the picture once.
+
+### Checklist for the live comparison
+
+1. As staff (or with `REACT_APP_THEME_PICKER=on`): account menu → **Background image** on. The image appears at once
+   behind the dashboard; the menu stays open and solid.
+2. Flip through the four themes with the background on: page backdrop, cards and tables translucent; nav bar solid.
+3. Dashboard (`/dashboard/Town`): explorer list and table readable; the search fields keep a visible border.
+4. Entity detail page (`/display/<Type>/<id>`): breadcrumb, eyebrow and title on the backdrop readable; value boxes
+   solid.
+5. Form wizard (create and edit): step header, fields and the sticky footer readable while scrolling.
+6. Login, register and `/link` logged out with `?bg=on`: in `brand`/`brand-red`/`proposal` the dark backdrop shows the
+   image through it and the card is solid; in `current` the light backdrop box.
+7. Landing page: unchanged (the slideshow); browser dev tools → Network: `1.jpg` once, no `1-1920.*`.
+8. Phone width (390 px): the image covers the screen without stretching.
+9. Two tabs: `?bg=on` and `?bg=off` side by side; reload each, the choice stays per tab.
+10. Background off again (menu or `?bg=off`): the app looks exactly as before.
+11. Decide: keep (then default on via `REACT_APP_PAGE_BACKGROUND=on`, or for players too), change the alphas, or drop it.

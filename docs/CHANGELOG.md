@@ -4,7 +4,12 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
-(Nothing at the moment.)
+- **Page background: landing image 1 behind every page, to compare** — knk-web-app `claude/page-background-image-231` `4220f6f`
+  (PandiO/knk-workspace#231). Off by default (players see no change); staff switch it in the account menu under the
+  theme picker, anyone per tab with `?bg=on|off`. The page backdrop (75 %), cards and tables (85–92 % per theme) and
+  the auth backdrop (75 %) turn translucent over a 104 kB AVIF / 153 kB WebP copy of the image; fields, menus, dialogs
+  and sticky bars stay solid. Text keeps WCAG AA over the image's darkest and lightest pixel (contrast test extended).
+  Guide: [guides/design-themes-comparison.md](guides/design-themes-comparison.md) § 7.
 
 ## 2026-11-03
 
