@@ -4,7 +4,11 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
-(Nothing at the moment.)
+- **Dashboard explorer: filter by display and form configuration** — knk-web-app `claude/explorer-filter-226`
+  (PandiO/knk-workspace#226, UX/realtime chain link 3c). A filter button next to the sort button narrows the type list
+  to types with or without a published default display configuration and with or without a form configuration
+  (Any / Yes / No each), remembered per browser like the sort. Smoke test
+  [guides/dashboard-return-smoke-test.md](guides/dashboard-return-smoke-test.md) § 9c.
 
 ## 2026-11-03
 
