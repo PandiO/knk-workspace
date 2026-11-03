@@ -37,7 +37,7 @@ Example side by side: `https://<host>/dashboard?theme=current` in one tab and `â
 
 `brand-red` (added 2026-11-03 at the developer's request, to choose between red and orange quickly) is `brand` with
 one difference: the primary family (buttons, links, focus ring, Create New) is brand red `#BE1622` with white text, as
-`brand` had until the fix round of 2026-11-03. Everything else is `brand`'s: black nav with the red line, Lato,
+`brand` had until the fix round of 2026-11-03. Everything else is `brand`'s: black nav, Lato,
 Enchanted Land on player-facing pages, the full-bleed dark auth and landing. Primary and danger are the same red again
 there, so Edit and Delete differ only by icon and label (every danger state keeps its icon and text).
 
@@ -46,7 +46,7 @@ there, so Edit and Delete differ only by icon and label (every danger state keep
 | Idea | Today's look, rebuilt on tokens | The 2020 styleguide as written | Brand colours used sparingly; red only means danger |
 | Primary (buttons, links, focus) | Blue `#2563EB` | Orange `#F29100` with black text; links, borders and focus in a darker orange (`#A35200`) | Charcoal `#353535`; focus ring dark orange |
 | Call to action (landing "Create account") | Green (darker: AA fix) | Orange `#F29100`, black text | Orange, black text |
-| Navigation bar | White | Black with a brand-red line under it, orange active item, orange Create New | Charcoal, orange active underline |
+| Navigation bar | White | Black, orange active item, orange Create New (red Create New in `brand-red`) | Charcoal, orange active underline |
 | Neutrals (all `gray-*`/`slate-*`) | Tailwind's cool greys | Pure greys around charcoal | Warm "parchment" greys |
 | Page background | Light grey | Light grey | Parchment `#F5F2EC` |
 | Login / register / link pages, landing | Light backdrop inside the page padding (as before) | Full-bleed black backdrop (the guide's "black for contrast") | Full-bleed charcoal backdrop |
@@ -144,8 +144,9 @@ Things to look at in the live comparison. None of them block a decision.
   charcoal bar uses the orange call-to-action colour (token `nav-action`).
 - **Every theme:** colours on unmigrated components stay fixed: the purple "Patron" chip and yellow mode chip on the
   player profile, the green Edit / blue-grey View chips on the detail page's child cards.
-- **brand / proposal:** the fixed navigation bar keeps its rounded corners (`.panel`), which show as small light
-  notches at both ends on the dark bar. Unchanged from `main` (barely visible on the white bar).
+- **brand / proposal (fixed 2026-11-03):** the fixed navigation bar had rounded corners and a border on every side
+  (`.panel`): light notches at both ends of the dark bar, and in `brand` a red outline (the developer's report). The bar
+  now has square corners and a bottom border only, in every theme; no red line under it.
 - Seen in every theme and unrelated to colour (not changed here): the table search box on the dashboard is shorter
   than the explorer search; the form wizard's sticky footer is see-through and the "Town (Town) 9 fields" box above
   it looks like debug output; the detail page shows raw ISO dates.
@@ -191,9 +192,12 @@ knk-web-app `claude/design-tokens-95` `64feecc`:
   canvas; `--color-primary-text-dark`; `--color-primary-line` `#C46A00`, 3:1) through Tailwind's `textColor` /
   `borderColor` / `ringColor`, so no component changed for that. Text on a filled primary is `text-primary-fg` (36
   swaps of `text-white`, codemod pass `--primary-fg-only`). Focus is the dark orange; the bar's own controls use a new
-  `--color-nav-focus` (orange on the black/charcoal bar). Brand red is the line under the black bar.
+  `--color-nav-focus` (orange on the black/charcoal bar). (The red line under the black bar was removed again the same day: see below.)
 - **Heading font split:** `usePublicSurface()` in 16 player-facing pages; `h1` gets `--font-display` only under
   `data-surface="public"`. The nav title and the dashboard/detail titles are back on the body font.
 - **Full-bleed auth and landing** in `brand` and `proposal` (`.public-full-bleed`: fixed to the window, below the nav).
 - Contrast test updated for the new tokens (primary text/line, nav focus); a test for the surface hook.
-
+- **Navigation bar** (developer's report 2026-11-03, `a47767e`): a thin red outline with red rounded corners around the
+  bar in `brand`. The bar no longer uses `.panel`: bottom border only, square corners, in every theme (`current` loses
+  its barely visible side borders and rounding); `brand`'s bar edge is dark grey instead of red. Checked in `brand`,
+  `brand-red` and `proposal` at 1440 and 390 px.
