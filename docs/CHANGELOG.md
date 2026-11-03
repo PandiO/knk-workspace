@@ -4,7 +4,11 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
-(Nothing at the moment.)
+- **Open form without the type overview card** — knk-web-app `claude/form-hide-type-card-227`
+  (PandiO/knk-workspace#227, UX/realtime chain link 3c). A form opened from the dashboard or the Entity setup page no
+  longer has the entity type card ("EnchantmentDefinition (EnchantmentDefinition) 19 fields ▸ Fields") above it; the
+  Entity setup page keeps it while no form is open. Smoke test
+  [guides/dashboard-return-smoke-test.md](guides/dashboard-return-smoke-test.md) § 10a.
 
 ## 2026-11-03
 
