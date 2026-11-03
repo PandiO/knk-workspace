@@ -154,7 +154,7 @@ private window, to begin without favourites.
 
 ## 10a. No type overview card above an open form (#227)
 
-Branch: knk-web-app `claude/form-hide-type-card-227` (on `main` `44f9395`). Developer feedback from the link 3b live
+Branch: knk-web-app `claude/form-hide-type-card-227` (on `main` `c02b365`, #95 merged in); all five link 3c branches together: `claude/link-3c-combined`. Developer feedback from the link 3b live
 test (2026-11-03): the card "EnchantmentDefinition (EnchantmentDefinition) 19 fields ▸ Fields" above an open form
 looked like debug output.
 
