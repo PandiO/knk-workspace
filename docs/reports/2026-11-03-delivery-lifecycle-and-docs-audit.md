@@ -1,6 +1,6 @@
 # Delivery lifecycle and documentation upkeep: audit and proposal
 
-**Status:** Proposal, waiting for the developer's decision · **Date:** 2026-11-03 · **Scope:** agent instructions in
+**Status:** Proposal, decisions recorded 2026-11-03 (§ 6), not yet applied · **Date:** 2026-11-03 · **Scope:** agent instructions in
 `knk-workspace`, `knk-web-api`, `knk-web-app`, `knk-plugin`, `knk-dev-db-seed`, plus the docs they should keep current
 
 **Evidence baseline:** the default branches of each repo as cloned on 2026-11-03 (`knk-workspace` at the tip of
@@ -180,5 +180,90 @@ Allowed statuses: `Draft`, `Current`, `Needs review`, `Stale`, `Superseded`.
 5. Weekly drift check as a scheduled cloud session (proposed), or as a manual prompt?
 6. Language of the player handbook (`handleiding.md` is Dutch; most current docs are English).
 
-Nothing in this report has been applied yet; § 4 items 1–2 can be done in one small cross-repo session once
-approved.
+Nothing in this report has been applied yet. The developer's decisions are in § 6 and replace §§ 3–5 where they
+differ.
+
+## 6. Developer decisions (2026-11-03) and the revised plan
+
+| # | Decision | Effect on the plan |
+|---|---|---|
+| 1 | Docs are written **after** the developer's smoke test, **before** merge; the docs checklist blocks closing the issue | § 3.1 is revised as below |
+| 2 | Plugin `config.yml` changes are documented thoroughly; on each deployment they are merged into the dev and alpha configs | New § 6.2 |
+| 3 | `production-installation.md` is the from-scratch guide | See § 6.3: the runbook covers different ground, so nothing is retired outright |
+| 4 | All documentation lives in `knk-workspace`, including `knk-plugin/docs/` | § 3.3 consolidation goes ahead with the exceptions in § 6.4 |
+| 5 | A weekly scheduled docs check | § 3.7 accepted |
+| 6 | The player handbook is in English | § 3.4: replace `handleiding.md` with an English handbook and archive the Dutch file |
+| 7 | Question: is the plan enough for a GitHub wiki or changelog? | Not yet; § 6.5 adds what is missing |
+
+### 6.1 Lifecycle with a docs phase
+
+`status:in-progress` → `status:in-review` (developer smoke test, fix rounds) → **`status:docs`** (new label: test
+signed off, docs being written on the feature branches) → merge with the docs → closed.
+
+- **At `in-review`:** the PR's "Docs impact" section lists *which* docs and config keys will change, without writing
+  them yet. The smoke-test guide and anything needed to run the test on dev (config keys, migrations, scripts) must
+  exist before testing, as now. The docs are written by a later, often fresh, session, which has only this list and the
+  diff to go on.
+- **At `docs`:** write or update every item on the list against the tested behaviour. Then the register, the guides
+  index and the changelog entry, merged together with the code.
+- **Closing:** the issue closes only when the code and docs are on the default branches and the deployment notes
+  (§ 6.2) are in place.
+
+### 6.2 Configuration changes (plugin `config.yml`, API settings)
+
+The plugin calls `saveDefaultConfig()` (`KnKPlugin.onEnable`). That writes `config.yml` only when none exists, so new
+keys never reach an existing server file and silently use the defaults built into the jar. Each change to
+`knk-paper/src/main/resources/config.yml` or to an API setting therefore needs:
+
+1. **A reference entry** in a living `guides/admin/plugin-configuration.md` (and an API settings table in
+   `production-installation.md` § 4): key, type, default, what it does, safe values, which feature or issue added it,
+   and whether a restart or `/reload` picks it up.
+2. **A "Config to merge" item in the PR and the changelog entry**: added, renamed, removed or changed-default keys,
+   with the YAML snippet to paste.
+3. **A deployment-log step** (§ 3.5): for each environment, which keys were merged and checked.
+4. **Later, a tool:** a small script or `/knk config diff` that lists keys present in the jar's default `config.yml`
+   but missing from the server's file. This makes the manual merge checkable.
+
+### 6.3 Install documents
+
+`production-installation.md` is the only from-scratch guide (database, API, web app, Paper server with the plugin,
+secrets, seed). The closed-alpha runbook is the NAS rollout log for one environment, and `alpha-go-live.md` is the
+KNG-64 layer on top of it. Neither has the same goal, so neither is retired. Instead:
+
+- `production-installation.md` stays canonical for "set up Knights and Kings from scratch". It gets a local
+  development counterpart (`guides/developer/local-setup.md`), which is currently spread over the repos' `CLAUDE.md`
+  files.
+- The runbook and go-live keep only NAS- and alpha-specific steps and link to the installation guide for the rest.
+  Each completed runbook phase feeds lessons back into the installation guide.
+- Once the alpha is past go-live, `alpha-go-live.md` can be archived as a dated record.
+
+### 6.4 Consolidating docs into the workspace
+
+Move `knk-plugin/docs/` (ADRs to `architecture/adr/`, `ai/` to `ai-agents/`, the rest to `architecture/` or
+`archive/`), the plugin's root `PHASE_*`/`STATUS_*`/`TEST_*` files, `knk-web-app/TESTING*.md` and
+`knk-web-api/OBSERVABILITY.md`, leaving a pointer where something links to them. These stay in the component repos:
+
+- a short `README.md` per repo (what it is, build/run quick start, link to the workspace docs; GitHub shows it on the
+  repo page)
+- `AGENTS.md`, `CLAUDE.md` and `.github/` (templates, workflows, copilot instructions)
+- the seed repo's `README.md`, which is the manual for its tools (link to it from the workspace)
+
+### 6.5 Changelog and wiki on GitHub
+
+The plan gives the raw material (tags, a deployment log, a dated changelog). For project awareness and marketing it
+also needs:
+
+- **GitHub Releases** on `knk-workspace`, one per deploy tag, with notes in two parts: *What's new* (player language,
+  no commit hashes) and *Admin steps* (migrations, config to merge, scripts). Changelog entries therefore start with
+  a one-sentence player summary, followed by the technical detail.
+- **A public player site instead of the built-in wiki.** The GitHub wiki is a separate git repo outside PRs, reviews
+  and the agents' normal branch flow. A GitHub Pages site built from `docs/` (MkDocs Material or similar, via an
+  Action) keeps one source of truth. It publishes only a curated part: the player handbook, feature pages, the release
+  notes and the vision summary.
+- **Feature pages** written for players (what it is, how to start, a screenshot), one per shipped feature in the
+  register, created at the docs phase only after live verification (maintenance guide, "Consistency checks").
+- **A media folder** (`docs/media/<feature>/`) for screenshots and clips from test runs, with a note on what may be
+  shown publicly.
+- **Public-repo hygiene:** `knk-workspace` is public. `nas-ops-access.md` and `production-installation.md` contain
+  LAN addresses (`192.168.50.x`). The maintenance guide already says live hostnames stay out of public docs, so replace
+  them with placeholders as part of § 3.8.
