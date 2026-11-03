@@ -1,7 +1,8 @@
 # Entity lists: table state and tabs in the URL, rows as links, "Drafts (n)" and "New with" (#39, #177 follow-up) — smoke test
 
-**Status:** Written 2026-11-01 for knk-web-app `claude/entity-lists-url-state`; not merged, not run
-**Last updated:** 2026-11-01
+**Status:** Written 2026-11-01 for knk-web-app `claude/entity-lists-url-state`; run by the developer 2026-11-03: every step
+works or is accepted, after one fix (4.2, knk-web-app `d72194b`; Findings below). Not merged
+**Last updated:** 2026-11-03
 **Issues:** [PandiO/knk-workspace#39](https://github.com/PandiO/knk-workspace/issues/39) (page/search/sort and tabs in the
 URL, rows as links, `aria-sort`) · [#177](https://github.com/PandiO/knk-workspace/issues/177) follow-up ("Drafts (n)", "New
 with: {config}")
@@ -99,9 +100,9 @@ Needs a type with a second, non-default form configuration (add one on the Entit
 
 | Step | Result | Notes |
 |---|---|---|
-| 1 | | |
-| 2 | | |
-| 3 | | |
-| 4 | | |
-| 5 | | |
-| 6 | | |
+| 1 | Works | All 9 steps. |
+| 2 | Works | All 5 steps. |
+| 3 | Works | All 9 steps. |
+| 4 | Works / accepted, one fix | 4.1 works. 4.2 works, but long configuration names were cut off and hovering didn't show the full name (most configurations differ only at the end of their name) → fixed in knk-web-app `d72194b`: the "New with" and "Resume a draft" menus let names and descriptions wrap in a wider menu (18–28rem, never wider than the screen), and every item shows its full name and description on hover. 4.3 and 4.4 accepted. 4.5 works. |
+| 5 | Works / accepted | 5.1–5.4 work. 5.5 and 5.6 accepted. |
+| 6 | Works | All 5 steps. |
