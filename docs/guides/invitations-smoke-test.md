@@ -268,6 +268,11 @@ step says otherwise.
     - `Mode=Invite`, invitation step: 8 plain characters that are no live claim code (e.g. `ABCD1234`) → the link-code
       step opens filled in as `ABCD-1234`.
     - Fewer than 8 characters → "Enter the 8-character code from /account link." without a request.
+    - Layout (fix round 2026-11-03): the step heading ("Enter your link code"), the three instructions, the label, the
+      field, its hint, an error and the claim hint are centred under the centred page heading, and **Check code** is
+      one full-width button (as on `/link`); the same for the invitation step (`Mode=Invite`: heading, notice, label,
+      the field's text). After a valid code the email and password step is left-aligned as before, with **Back** and
+      **Create account**; the Done step is centred. Check at phone width too.
 
 ## 5. API outage with the gate on
 
