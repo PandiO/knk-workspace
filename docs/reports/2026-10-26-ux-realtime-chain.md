@@ -23,7 +23,7 @@ test), `merged`, `blocked: <reason>`.
 | 6 | #179 | `claude/realtime-signalr` | in review | subagent (fallback: add_repo needed in-session approval), 2026-10-26 | `38b0466` / — / `b48f1484` / `ae949bd` | API 3361 passed, 4 failed (#99, = baseline reds), 87 skipped (baseline 3338/4/87); plugin core 2323 (2319), api-client 298 (290), paper 2163 (2149), 0 failures |
 | 7 | #180 | `claude/world-task-hardening` | in review | subagent (fallback: add_repo needed in-session approval), 2026-11-01 | `115c418` / `d7a0896` / `21de734e` / `e06c1e0` | API 3448 passed, 4 failed (#99, = baseline reds), 88 skipped (baseline 3397/4/88); web-app 1378 passed, 1 failed (#204 base red), suites 216 (baseline 1364/1, 213); `tsc` 9 = baseline; build OK, same 24 warnings; plugin core 2401 (2401), api-client 291 (288), paper 2364 (2343), 0 failures |
 | 8 | #181 | `claude/realtime-signalr` | in review (stacked on unmerged link 7: the branch contains `claude/world-task-hardening` in all four repos, see coordinator notes 2026-11-02 and the link 8 block) | subagent (fallback: add_repo needed in-session approval), 2026-11-02 | `a27f61e` / `c7a3e85` / `8fa35148` / `3e8a71b` | API 3562 passed, 4 failed (#99, = baseline reds), 88 skipped (baseline on the merged branch 3513/4/88); web-app 1407 passed, 1 failed (#204 base red), suites 221 (baseline 1392/1, 218); `tsc` 9 = baseline; build OK, 24 warnings; plugin core 2412 (2412), api-client 313 (309), paper 2406 (2387), 0 failures |
-| 9 | #39 (rest), #177 follow-up | `claude/entity-lists-url-state` | in review | subagent (fallback: add_repo needed in-session approval), 2026-11-01 | — / `6b2a4eb` / — / `015e5c1` | web-app 1402 passed, 1 failed (#204 base red), suites 217 (baseline 1364/1, 213); `tsc` 9 = baseline; build OK, 22 warnings (baseline 24: two `PagedEntityTable` hook warnings gone) |
+| 9 | #39 (rest), #177 follow-up | `claude/entity-lists-url-state` | in review (live-tested 2026-11-03, one fix; ready to merge) | subagent (fallback: add_repo needed in-session approval), 2026-11-01; fix round subagent 2026-11-03 | — / `d72194b` / — / `fb27146` | fix round: web-app 1403 passed, 1 failed (#204 base red), suites 217; `tsc` 9 = baseline; build OK, 22 warnings; link 9: web-app 1402 passed, 1 failed (#204 base red), suites 217 (baseline 1364/1, 213); `tsc` 9 = baseline; build OK, 22 warnings (baseline 24: two `PagedEntityTable` hook warnings gone) |
 | 10 | #182 | `claude/realtime-signalr` | in review (same branch as links 4, 6 and 8, so also stacked on unmerged link 7) | subagent (fallback: add_repo needed in-session approval), 2026-11-02 | `e769c4c` / — (unchanged `c7a3e85`) / `eb22a655` / `c04d3df` | API 3580 passed, 4 failed (#99, = baseline reds), 88 skipped (baseline 3562/4/88); plugin core 2420 (2412), api-client 317 (313), paper 2414 (2406), 0 failures |
 
 ## Waiting for the developer
@@ -48,8 +48,9 @@ flagged decisions.)
   Deploy API, plugin and web app together; one additive migration. **Before the first sweep read L7-8:** old sessions
   without a draft and without a Completed task, older than 7 days, are deleted (back up). Flags L7-1…L7-18. Its merge
   opens link 8 (with link 6 done) and frees knk-web-app for link 9. Coordinator check 2026-11-01: heads match, migration additive, access rules and sweep spot-checked.
-- **Test link 9** (#39 rest, #177 follow-up): web-app `claude/entity-lists-url-state` `6b2a4eb`; live checklist
-  `docs/guides/entity-lists-url-state-smoke-test.md` on workspace `claude/entity-lists-url-state` `015e5c1`. Web app only.
+- **Test link 9** (#39 rest, #177 follow-up): **live-tested 2026-11-03; ready to merge** (one fix, step 4.2: web-app
+  `d72194b`). Web-app `claude/entity-lists-url-state` `d72194b`; live checklist
+  `docs/guides/entity-lists-url-state-smoke-test.md` (Findings filled) on workspace `claude/entity-lists-url-state` `fb27146`. Web app only.
   Merges cleanly with link 7's `claude/world-task-hardening` (trial merge; `FormWizardPage.tsx` auto-merged). Flags
   L9-1…L9-13; bulk actions split into #205. Coordinator check 2026-11-01: heads match; `FormWizardPage.tsx` URL-open effect spot-checked (drafts still owner-checked by the API).
 - **Test link 8** (#181, WT2, same branch, **stacked on link 7**): API `claude/realtime-signalr` `a27f61e`, plugin `8fa35148`,
@@ -1223,6 +1224,18 @@ branch from `main` `4d1f3aa`, `main` `50c2c45` (this link's claim) merged in. No
 - #30 (admin IA): `hooks/useTabParam.ts` is reusable for other tabbed admin pages; #33: `DashboardHeaderMenu` is a small
   popover, not the planned accessible `Dialog`.
 - The moderation tab buttons have no `role="tab"` / `aria-selected` (the lootbox page has them); left as is.
+
+**Developer test 2026-11-03 and fix round:** the developer ran the live checklist on 2026-11-03: every step works or is
+accepted. § 1 (9 steps), § 2 (5), § 3 (9) and § 6 (5) work; § 4: 4.1 and 4.5 work, 4.3 and 4.4 accepted, 4.2 works but
+long form configuration names were cut off in the "New with" menu and hovering didn't show the full name (most
+configurations differ only at the end of their name); § 5: 5.1–5.4 work, 5.5 and 5.6 accepted. Fix (subagent,
+2026-11-03): knk-web-app `d72194b` — `DashboardHeaderMenu` lets labels and details wrap (no `truncate`) in a menu that
+grows with its content between 18rem and 28rem (never wider than the viewport), and every item has a `title` with the
+full name and description; the "Drafts (n)" menu shares the component, so draft configuration names wrap too. New
+`ObjectDashboard` test for the full name, the wrap and the title in both menus; keyboard navigation unchanged. Checks:
+`npm run test:ci` 1403 passed, 1 failed (#204 base red), 217 suites; `tsc` 9 = baseline; build OK, 22 warnings (as
+before). Findings filled in the smoke test, workspace `fb27146`. New heads: web-app **`d72194b`**, workspace
+**`fb27146`**. Ready to merge.
 
 ## Link 8 — #181 (WT2): world tasks over SignalR
 
