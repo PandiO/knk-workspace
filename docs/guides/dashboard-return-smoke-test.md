@@ -144,7 +144,7 @@ private window, to begin without favourites.
 
 ## 9c. Filter the explorer: display and form configuration (#226)
 
-Branch: knk-web-app `claude/explorer-filter-226` (on `main` `44f9395`). Developer feedback from the link 3b live test
+Branch: knk-web-app `claude/explorer-filter-226` (on `main` `c02b365`, #95 merged in); all five link 3c branches together: `claude/link-3c-combined`. Developer feedback from the link 3b live test
 (2026-11-03). Have at least one type with and one without a published default display configuration (the crossed-out
 eye), and one with and one without any form configuration.
 
