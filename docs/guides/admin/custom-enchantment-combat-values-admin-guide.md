@@ -147,7 +147,7 @@ can still show; the client draws them from entity data that Paper has no per-vie
 
 In review on knk-plugin `claude/enchantments-201-202` (`ed704eff`), **not merged, not live-tested**.
 
-The player who used an ability gets a **yellow** boss bar with its remaining cooldown, `Flash Chaos cooldown · 1:28`
+The player who used an ability gets a **grey** boss bar (white bar, grey text; boss bars have no grey) with its remaining cooldown, `Flash Chaos cooldown · 1:28`
 (`m:ss` from one minute up, seconds below), counting down until it can be used again:
 
 | Ability | Bar |
@@ -160,6 +160,6 @@ The other on-hit enchantments (Poison, Wither, Blindness, Confusion, Strength) k
 length is the cooldown that was applied (§ 1/§ 3; with the cooldown switched off there is no bar). Using the ability
 again after it is ready restarts the bar. The bar follows the cooldown store: `/ce cooldown clear [player]` removes it
 at once. It stays through death (the cooldown keeps running), goes on quit and comes back on join while the cooldown
-still runs (then full at the time left). The bars sit next to the debuff bars (§ 5), the staff freeze bar and the
-navigation bar.
+still runs (then full at the time left). The bars sit next to the debuff bars (§ 5) and the staff freeze bar; the
+navigation bar always stays on top of them (developer, 2026-11-03).
 
