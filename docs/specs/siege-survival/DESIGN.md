@@ -386,7 +386,7 @@ Read-only checks used current workspace main `98372da0a54de6384334290208d7081628
 - Existing Siege design sections 6.6/9.3 retain inventory on death and prohibit drops/pickup. *(2026-11-03:)* survival keeps that behavior in every mode (S40), so no death-drop exception is needed; it still needs durable ordinary-inventory restore. Existing roster elimination/capture scans must understand NPC teams.
 - `knk-web-api/Services/SiegeMatchService.cs` grants rewards server-side exactly once with the currency ledger (`SIEGE_REWARD`, key `siege-match:{id}`) and currently delegates to the PvP `SiegeRewardCalculator`. Add survival reward inputs/logic while preserving settlement idempotency and title progression.
 - `Services/Lootbox/LootboxRollEngine.cs` supplies pure roll and odds logic (2026-11-02: the survival Mystery Box needs percentage chances per entry; check whether the engine's weights map onto them or a small adapter is needed). It currently supports the Grade table's full scale; older lootbox design sections still say 1–5 only. Do not copy stale grade limits or world-claim ownership/quota rules into the match adapter.
-- KNG-27 navigation was recorded as unmerged on its feature branches; KNG-36 shared NPC platform and KNG-37 consumers are still backlog. Do not describe either as a shipped physical NPC navigation dependency.
+- *(Corrected 2026-11-03.)* KNG-27 navigation (and KNG-51, 73/92, 104, 108, 123, 234) is merged on plugin main; its `WalkSearch` gives block-level paths but has only a player movement profile. KNG-36 shared NPC platform and KNG-37 consumers are still backlog. Mob movement for v1 is new work (see the [implementation checks report](../../reports/2026-11-03-siege-survival-implementation-checks.md) §8).
 
 ## 13. Open implementation clarifications (not missing core gameplay decisions)
 
@@ -407,7 +407,7 @@ Read-only checks used current workspace main `98372da0a54de6384334290208d7081628
 15. *(Resolved, S41.)* Deaths during the break respawn when the next round starts and never count toward a wipe.
 16. *(Resolved, S42.)* v1 enemies are vanilla mobs with custom goal hooks; KNG-36 is not a v1 body dependency.
 17. *(Resolved 2026-11-03, S45.)* Inventories are kept on death in all three modes "for now"; revisit if match progression needs Zombies-style death drops later.
-18. *(2026-11-03)* Remaining implementation checks (not developer decisions): right-click claim on a shown item (`Interaction` hitbox), ghost visibility, headshot/critical-hit detection, scaling attack speed and ranged damage on vanilla mobs, destroyed-door reconstruction collision with large mobs.
+18. *(Investigated 2026-11-03, [report](../../reports/2026-11-03-siege-survival-implementation-checks.md); live tests still needed.)* Remaining implementation checks (not developer decisions): right-click claim on a shown item (`Interaction` hitbox), ghost visibility, headshot/critical-hit detection, scaling attack speed and ranged damage on vanilla mobs, destroyed-door reconstruction collision with large mobs.
 
 ## 14. Acceptance checklist
 
