@@ -207,7 +207,8 @@ entity. Two parallel generic engines carry most of the CRUD surface:
    layout (#30) can render it later; `useEntityLabel` fetches the edited entity's name (else "#id"). A
    crumb asks "Leave this form?" first when the form has unsaved changes (#109). The configuration lists keep the explorer.
    The type overview card (`FormWizard/EntityMetadataNavigator`: name, field count, "Fields") shows only on the
-   configuration lists, not above an open form (#227).
+   configuration lists, not above an open form (#227); the breadcrumb then sits in the form card's centred column
+   (`max-w-4xl mx-auto`, the same as `FormWizard`'s card), so both start at the same left edge.
    "New" (`?autoOpen=true`) on a type without a default form configuration shows "To create a new
    {Type}, this type needs a default form configuration" (#177 decision 3). The page title and nav label
    are **"Entity setup"** (route `/forms` unchanged, decision 4).

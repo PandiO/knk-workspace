@@ -165,6 +165,9 @@ looked like debug output.
 3. On `/forms/EnchantmentDefinition` (⚙ from the dashboard, no form open): the card is still there above Default
    Table Columns. Open a configuration from the list: the card goes; **Cancel form** (→ Leave): back on the lists,
    the card is back.
+4. Fix round (2026-11-03): with a form open (e.g. Dashboard › BannerLayer › Edit #1) the breadcrumb's left edge lines
+   up with the form card's left edge (both in the card's centred column, max 56rem wide), on a wide window and at phone
+   width. Without a form open (`/forms/BannerLayer`) the page looks as before: explorer, type card and lists unmoved.
 
 
 1. From `/dashboard/Town` click 👁 View (or the row). Expected: `/display/Town/{id}?returnTo=%2Fdashboard%2FTown`; the
