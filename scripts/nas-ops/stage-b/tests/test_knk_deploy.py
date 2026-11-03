@@ -5,6 +5,9 @@
 
 It builds tiny alpine images that stand in for the API, migrator, web app, MySQL and Minecraft, runs every command
 of knk-deploy against them (including failures that must roll back) and removes everything at the end.
+
+NEVER on the NAS or any host that runs the real knk-alpha stack: the mock containers use the live container names
+(knk-alpha-web, ...) and the cleanup force-removes every knk-web-*:alpha-* image. Use a throwaway Linux VM or WSL.
 """
 import contextlib
 import hashlib
@@ -148,6 +151,10 @@ CMD ["sleep", "infinity"]
 def main():
     if os.geteuid() != 0:
         sys.exit('run as root')
+    live = subprocess.run(['docker', 'ps', '-a', '--format', '{{.Names}}'], capture_output=True, text=True).stdout.split()
+    if os.path.exists('/srv/docker/stacks/knk-alpha') or any(n.startswith('knk-alpha-') for n in live):
+        sys.exit('refused: this host runs the real knk-alpha stack; the test would replace its containers and '
+                 'delete its images. Run it on a throwaway Linux VM or WSL with Docker.')
     root = tempfile.mkdtemp(prefix='knk-deploy-test-')
     S = os.path.join(root, 'knk-alpha')
     m = load()

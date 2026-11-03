@@ -6,8 +6,38 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 (Nothing at the moment.)
 
+## 2026-11-03
+
+- **Entity lists: table state and tabs in the URL, rows as links, "Drafts (n)" and "New with"** — knk-web-app
+  `main` `44f9395`, merged `--no-ff` from `claude/entity-lists-url-state` (PandiO/knk-workspace#39, #177 follow-up; UX/realtime chain link 9; smoke test passed 2026-11-03). The
+  dashboard's page, search and sort are in the URL (`/dashboard/Street?page=2&q=north&sort=name&dir=desc`), so Back,
+  a refresh, a shared link and coming back from a form or the detail page keep the view. Rows are links to the
+  detail page (middle-click, Ctrl/Cmd-click, keyboard); sortable headers are keyboard buttons with `aria-sort`. The
+  lootbox and moderation pages keep the selected tab in `?tab=`, and the moderation tables' player names link to the
+  profile. Next to "New {Type}": a ▾ "New with" menu for the type's other form configurations and a "Drafts (n)" chip
+  that resumes one of your open drafts. The form wizard's pickers are unchanged (they keep their state in the table,
+  not the URL). Web app only. Smoke test:
+  [guides/entity-lists-url-state-smoke-test.md](guides/entity-lists-url-state-smoke-test.md).
+
+## 2026-11-02
+
+- **Item lore wraps; item scans leave out generated lore** — knk-plugin `main` `27798ab` and knk-web-app `main`
+  `b770597`, merged `--no-ff` from `claude/item-lore-212-40-0ud18o` (PandiO/knk-workspace#212, #40; smoke test
+  accepted 2026-11-03). A lore line wider than `lore.max-width` (default 40 visible characters) continues on the next
+  line in the same colour: blueprint item descriptions and origin lines, every menu's lore, and the kits menu's
+  rank-rule line. Scanning an item in the ItemBlueprint form (or a kit with KitScan) fills Display description with
+  only the description as written: no custom-enchantment, Grade or Origin lines, and no wrapped pieces. See
+  [item-render-pipeline.md](architecture/item-render-pipeline.md) § 2a/2b.
+
 ## 2026-11-01
 
+- **Invitation code fields with fixed `KNK-` and dashes** — knk-web-app `main` `1c9524d` (PandiO/knk-workspace#208,
+  QOL hotfix after alpha test run 1). The invitation code fields on `/join` and `/link` show `KNK-_____-_____` from
+  the start; the player types only the 10 characters, and a pasted `KNK-ABCDE-FGHJK` (with or without dashes or the
+  `KNK` prefix) lands as the same code.
+- **Claim code field centered** — knk-web-app `main` `eac1013` (PandiO/knk-workspace#206, QOL hotfix after alpha
+  test run 1). On `/link` and `/account` the code and its `____-____` mask now sit in the middle of the field
+  instead of against its left edge; typed characters still land on their slots.
 - **Form wizard: footer, unsaved-changes guard, blur validation, Save on any step; drafts per admin** —
   knk-web-app `main` `b3b415d` and knk-web-api `master` `8df59b7`, merged `--no-ff` from `claude/form-wizard-edit-mode` (PandiO/knk-workspace#109, #186, #64 FormWizard part;
   UX/realtime chain link 5, 2026-10-26; fix round 2026-10-27 after the developer's live test). Live-tested sections 1–6. The form's buttons (Cancel, Previous, Save

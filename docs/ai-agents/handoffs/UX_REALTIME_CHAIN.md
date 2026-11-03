@@ -69,7 +69,7 @@ updates, #119, #26, #187–#191, #139. The think-aloud (#83) is run by the devel
    | Repo | Commands |
    |---|---|
    | API | `dotnet build`, `dotnet test Tests/knkwebapi_v2.Tests/knkwebapi_v2.Tests.csproj` |
-   | Web app | `npm ci`, `npm run test:ci`, `npm run build`, `npx tsc --noEmit` (2 known errors: #63) |
+   | Web app | `npm ci`, `npm run test:ci`, `CI=true npm run build`, `npx tsc --noEmit` (all clean since `main` `439ad85`, 2026-11-02: #63, #200, #204) |
    | Plugin | `./gradlew build -x deployToDevServer` |
 
    Record the counts **before** changing anything (baseline) and compare at the end. Known reds on the API trunk: #99

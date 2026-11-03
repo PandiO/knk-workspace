@@ -1,6 +1,6 @@
 # Gate Animation System - Architecture Decisions
 
-**Last Updated**: January 31, 2026
+**Last Updated**: 2026-11-03 (Decision 6: animated rebuild of destroyed gates)
 
 ---
 
@@ -172,6 +172,30 @@ Gates should be destructible by players and possibly self-repair. How to impleme
 - `CanRespawn` (bool): If true, gate respawns after destruction
 - `RespawnRateSeconds` (int): Time to respawn (e.g., 300 = 5 minutes)
 - Plugin respects these settings when calculating damage
+
+---
+
+## Decision 6: Animated rebuild of destroyed gate doors (confirmed 2026-11-03)
+
+### Context
+Rebuilding a destroyed door today is instant: `HealthSystem.respawnGate` → `restoreGateBlocks` places the closed blocks at once, with no entity collision handling, and broadcasts "Gate '…' has been restored!" to the whole server ([Siege Survival implementation checks](../../reports/2026-11-03-siege-survival-implementation-checks.md) §5). Siege Survival repairs need a rebuild that can't trap players or mobs.
+
+### Decision (developer, 2026-11-03)
+One rebuild mechanic for **every** destroyed-door rebuild: normal world gates (`CanRespawn` timer), Siege and Siege Survival repairs.
+
+1. **Rebuild state setting.** Each GateDoor gets an optional enum setting for the state it is rebuilt in: **open** or **closed**, default **open**. (Conceptual name, e.g. `RebuildState`; not an implemented field.)
+2. **Rebuild animation.** The door's blocks are placed in the rebuild state's position, showing the block-break overlay at its most damaged stage. The overlay then steps through all 10 break stages from most damaged to undamaged. The door is not damageable while rebuilding.
+3. **Return to the normal state.** When all blocks are rebuilt, the door returns to its normal state, its `OpenedState`. If that differs from the rebuild state (e.g. rebuilt open, normally closed), the normal open/close animation runs, including entity collision handling and jam reporting.
+4. **Rebuild complete.** When that animation finishes (or immediately, when the states match) the door reaches **rebuild complete**, a lifecycle state/event, and health is full.
+5. **Notifications.** Rebuild complete notifies a **subscriber list** of groups/players. Siege and Siege Survival subscribe the team that controls the gate. There is **no server-wide announcement**. The list is customizable and meant to be built upon later.
+
+### Notes for implementation (proposed, not decided)
+- Replaces the instant `respawnGate` placement and its server-wide broadcast; rebuilds should not bypass the animation path.
+- Placing the rebuild-state blocks should evacuate entities from those cells the same way an animation step does, so a rebuild in the closed state can't enclose anyone. Default open keeps the doorway clear while the cracks heal.
+- The break overlay is a per-viewer block-damage display (Paper `Player#sendBlockDamage`); `GateCrackVisuals` already renders health-based cracks and can be reused. Stage duration is configurable (proposal: 10 ticks per stage, 5 s total).
+- Subscribers: a configured static list (players, groups) plus runtime contributors such as Siege's controlling team. Default for world gates: empty, so no message. Persistence shape and message wording open.
+- A jam during the return animation keeps the door out of rebuild complete until it actually reaches its state; report the real state.
+- Survival's damaged-door repair (no rebuild needed) restores health in one step and closes through the normal animation if open (Siege Survival DESIGN §5).
 
 ---
 
