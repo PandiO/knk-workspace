@@ -5,7 +5,7 @@ Build files for `knk-web-app:alpha-<sha>`. They are copied into `/srv/docker/bui
 
 | File | Use |
 |---|---|
-| `Dockerfile` | Two stages:<br>• build: `node:24-bookworm-slim`, `npm ci`, `npm run build` with `REACT_APP_API_BASE_URL=/api`, `REACT_APP_MC_SERVER_ADDRESS=play.knightsandkings.net`, no source maps, no Cypress binary;<br>• runtime: `nginxinc/nginx-unprivileged:1.28-alpine` (UID 101, port 8080).<br>Both pinned by digest |
+| `Dockerfile` | Two stages:<br>• build: `node:24-bookworm-slim`, `npm ci`, `npm run build` with `REACT_APP_API_BASE_URL=/api`, `REACT_APP_MC_SERVER_ADDRESS=play.knightsandkings.net`, `REACT_APP_THEME_PICKER=on` (testers see the theme picker, #95), no source maps, no Cypress binary;<br>• runtime: `nginxinc/nginx-unprivileged:1.28-alpine` (UID 101, port 8080).<br>Both pinned by digest |
 | `nginx.conf` | The `app.knightsandkings.net` server. It serves the SPA (deep links → `index.html`, `/static/` cached for a year, `index.html` no-cache) and proxies `/api/` to `api:5000`. Docker DNS through a variable upstream, so nginx starts without the API. Passes `CF-Connecting-IP` as `X-Forwarded-For`, plus `X-Forwarded-Proto: https`. `/health/` is denied. Sets `nosniff`, `DENY` and `Referrer-Policy` headers |
 | `.dockerignore` | Leaves `node_modules`, `build`, `cypress` and `.git` out of the context |
 

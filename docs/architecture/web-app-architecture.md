@@ -1,7 +1,7 @@
 # knk-web-app — Architecture
 
 **Status:** Living document — reflects actual code, updated in place on each rescan
-**Last updated:** 2026-09-18 (scan basis: `knk-web-app` @ `4ff5dc6`, branch `claude/web-app-codebase-scan-4yqibi`); spot edits 2026-10-09 (ObjectTypeExplorer, KNG-61), 2026-10-10 (FormWizard Boolean fields, KNG-53), 2026-10-12 (FormWizard child forms, KNG-133, KNG-134; List edit load, step header, List validation, KNG-135, KNG-137, KNG-164; form session registry, KNG-136; cancel / delete-draft prompt, KNG-162; form configuration export/import, KNG-138); 2026-10-17 (form wizard chain merged to `main`; smoke-test follow-ups KNG-166..169, KNG-172, KNG-173: step strip, confirmations and refusals, rule builder parent forms, picker columns, metadata refresh); 2026-10-22 (display configuration export/import; KNG-195 hybrid picker submit); 2026-10-23 (step completion conditions run, KNG-186); 2026-10-23 (validation result log, batch validate, Re-check, KNG-269); 2026-10-25 (toast region, world-task polling; UX re-evaluation in `reports/2026-10-25-web-app-ux-reevaluation.md`); 2026-10-26 (dashboard type in the URL, `returnTo`, submit pending state, success toast — PandiO/knk-workspace#177 link 1, #58); 2026-10-26 (dashboard header New/Configure, flat explorer with marker, open form without the explorer + breadcrumb, detail page header, metadata-driven Create New, "Entity setup" — #177 link 2, #81, #39); 2026-10-26 (dashboard explorer: one scrollbar, favourite types — #194, branch `claude/dashboard-explorer-194`, merged into `main` `c3c0c9f`), 2026-10-26 (dashboard header row spacing — #195, branch `claude/dashboard-header-195`, merged into `main` `c3c0c9f`); 2026-10-26 (data router, unsaved-changes guard, sticky footer, blur validation + error summary, Save on any step in edit mode, single-line input, drafts owned by the login — #109, #186, #64 FormWizard part); 2026-10-27 (unsaved changes compared by value across all steps, Next's progress save no longer counts as saved — #109 fix round); 2026-11-02 (design tokens and switchable themes — #95, branch `claude/design-tokens-95`, not merged)
+**Last updated:** 2026-09-18 (scan basis: `knk-web-app` @ `4ff5dc6`, branch `claude/web-app-codebase-scan-4yqibi`); spot edits 2026-10-09 (ObjectTypeExplorer, KNG-61), 2026-10-10 (FormWizard Boolean fields, KNG-53), 2026-10-12 (FormWizard child forms, KNG-133, KNG-134; List edit load, step header, List validation, KNG-135, KNG-137, KNG-164; form session registry, KNG-136; cancel / delete-draft prompt, KNG-162; form configuration export/import, KNG-138); 2026-10-17 (form wizard chain merged to `main`; smoke-test follow-ups KNG-166..169, KNG-172, KNG-173: step strip, confirmations and refusals, rule builder parent forms, picker columns, metadata refresh); 2026-10-22 (display configuration export/import; KNG-195 hybrid picker submit); 2026-10-23 (step completion conditions run, KNG-186); 2026-10-23 (validation result log, batch validate, Re-check, KNG-269); 2026-10-25 (toast region, world-task polling; UX re-evaluation in `reports/2026-10-25-web-app-ux-reevaluation.md`); 2026-10-26 (dashboard type in the URL, `returnTo`, submit pending state, success toast — PandiO/knk-workspace#177 link 1, #58); 2026-10-26 (dashboard header New/Configure, flat explorer with marker, open form without the explorer + breadcrumb, detail page header, metadata-driven Create New, "Entity setup" — #177 link 2, #81, #39); 2026-10-26 (dashboard explorer: one scrollbar, favourite types — #194, branch `claude/dashboard-explorer-194`, merged into `main` `c3c0c9f`), 2026-10-26 (dashboard header row spacing — #195, branch `claude/dashboard-header-195`, merged into `main` `c3c0c9f`); 2026-10-26 (data router, unsaved-changes guard, sticky footer, blur validation + error summary, Save on any step in edit mode, single-line input, drafts owned by the login — #109, #186, #64 FormWizard part); 2026-10-27 (unsaved changes compared by value across all steps, Next's progress save no longer counts as saved — #109 fix round); 2026-11-02 (design tokens and switchable themes — #95, branch `claude/design-tokens-95`, not merged); 2026-11-03 (fix round after the live comparison: orange brand primary, heading font on player pages only, full-bleed auth pages)
 **Source scan:** `docs/reports/web-app-scan-2026-09-18.md`
 
 ## Stack
@@ -44,15 +44,20 @@ _Added 2026-11-02 for PandiO/knk-workspace#95 (rebrand phase 1), knk-web-app bra
   `current`. Two layers:
   - Neutral ramps `--gray-50…950` and `--slate-50…950`. `tailwind.config.js` maps Tailwind's `gray` and `slate` to
     them, so all ~2,600 gray/slate classes follow the theme without edits (Tailwind's own values in `current`).
-  - Semantic tokens `--color-*`, Tailwind keys: `primary` (`DEFAULT`, `dark` hover, `light` icons only, `fg`), `cta`
+  - Semantic tokens `--color-*`, Tailwind keys: `primary` (`DEFAULT`, `dark` hover, `light` icons only, `fg`; as text,
+    border, ring or divide it reads `--color-primary-text`, `-text-dark` and `-line` through Tailwind's `textColor` /
+    `borderColor` / `ringColor` / `divideColor`, because the `brand` fill orange is too light for text on white), `cta`
     (`DEFAULT`, `dark`, `fg`), `canvas` (page), `surface` (`DEFAULT`, `alt`, `hover`), `fg` (text), `muted`
     (secondary text), `line` (decorative borders), `field` (form field borders, 3:1), `focus` (rings), `backdrop`
-    (`DEFAULT`, `fg`: behind the auth cards), `nav` (`DEFAULT`, `fg`, `muted`, `hover`, `line`, `accent`; `--color-nav-action*` colours a `.btn-primary` inside the bar), and
+    (`DEFAULT`, `fg`: behind the auth cards), `nav` (`DEFAULT`, `fg`, `muted`, `hover`, `line`, `accent`, `focus`; `--color-nav-action*` colours a `.btn-primary`
+    inside the bar), and
     `danger` / `success` / `warning` / `info`, each with `DEFAULT` (text/icon/filled), `strong` (text on the tints),
     `soft` (alert background), `muted` (badge background), `line` (alert border) and `fg` (text on the filled colour;
     not for info). The key `primary` kept its name, so its ~580 uses switch with no component edit.
-  - Fonts: `--font-body` (Tailwind `font-sans`, the body) and `--font-display` (Tailwind `font-display`; `h1`,
-    the dashboard and detail page titles, the nav title; no faux bold). `current` keeps `'Inter', sans-serif` (Inter is never loaded: the Google `@import` in
+  - Fonts: `--font-body` (Tailwind `font-sans`, the body) and `--font-display` (Tailwind `font-display`): `h1` on
+    player-facing pages only, no faux bold. A player-facing page calls `usePublicSurface()` (`src/theme/surface.ts`),
+    which sets `data-surface="public"` on `<html>` while it is mounted; admin pages and the nav title keep the body
+    font (developer's rule 2026-11-03; the brand guide sets no such limit). `current` keeps `'Inter', sans-serif` (Inter is never loaded: the Google `@import` in
     `index.css` comes after other rules, so the system sans renders, as before). Lato 2.015 and Cinzel are
     self-hosted under the OFL in `src/theme/fonts/` and only downloaded when a theme uses them. `brand` uses the
     Enchanted Land **demo** (personal-use licence, readme kept alongside; a webfont licence is needed once the
@@ -66,6 +71,8 @@ _Added 2026-11-02 for PandiO/knk-workspace#95 (rebrand phase 1), knk-web-app bra
 - **Contrast:** `src/theme/__tests__/contrast.test.ts` parses `tokens.css` and checks every text/background pair
   (4.5:1) and UI pair (field border, focus ring, nav underline, icons: 3:1) in every theme, plus that every theme
   defines the same tokens. A failing pair fails `npm run test:ci`.
+- **Full-bleed public layout:** `.public-full-bleed` (auth pages' `<main>`, the landing root) is fixed to the
+  window in `brand` and `proposal`, so the dark backdrop fills it; `current` keeps the padded layout.
 - **Accessibility base rules** in `index.css` (all themes): a 2px `--color-focus` ring on every focused text field
   (specificity 0,1,1: it loses to a field's own `focus:ring-*`); `--color-field` on `border-gray-300` /
   `border-slate-300` fields; `--color-danger` (and a 1px width) on `border-red-300` fields; `.field-error` puts an

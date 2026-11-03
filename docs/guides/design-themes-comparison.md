@@ -1,7 +1,9 @@
 # Design themes: live comparison (rebrand phase 1, #95)
 
-**Status:** Written 2026-11-02 for knk-web-app `claude/design-tokens-95`; not merged, not compared yet
-**Last updated:** 2026-11-02
+**Status:** Compared live by the developer on 2026-11-03 (all screens work; `brand` preferred, all three themes and the
+picker stay); fix round done on knk-web-app `claude/design-tokens-95` (§ 6). Not merged
+**Last updated:** 2026-11-03 (fix round after the live comparison: brand primary orange, heading font on player pages
+only, full-bleed auth pages, picker for alpha testers)
 **Issue:** [PandiO/knk-workspace#95](https://github.com/PandiO/knk-workspace/issues/95) (token layer, contrast rules,
 switchable themes); [#92](https://github.com/PandiO/knk-workspace/issues/92) (rebrand phases 2–4, sub-issue) holds the
 open decisions below
@@ -19,10 +21,11 @@ rebrand takes (#92).
 
 - **Account menu** (top right, the person icon) → **Theme (design comparison)** → Current / Brand / Proposal. The menu
   stays open, so you can flip back and forth. The choice is saved in this browser (localStorage) for every tab.
-  - Shown to staff only: anyone with the moderator node (`knk.admin.user.manage`) or the content node
-    (`knk.admin.content`). Players never see it.
-  - Build flag `REACT_APP_THEME_PICKER`: `on` shows it to every logged-in user (local testing), `off` hides it for
-    everyone. Unset = staff only.
+  - Default: staff only, anyone with the moderator node (`knk.admin.user.manage`) or the content node
+    (`knk.admin.content`).
+  - Build flag `REACT_APP_THEME_PICKER`: `on` shows it to every logged-in user, `off` hides it for everyone. Unset =
+    staff only. **The alpha build sets `on`** (developer decision 2026-11-03: testers try the themes too):
+    `scripts/alpha-web/Dockerfile` and [alpha-go-live.md § 6](alpha-go-live.md).
 - **URL:** add `?theme=current`, `?theme=brand` or `?theme=proposal` to any page. It applies to that tab only (it
   survives reloads and navigation in the tab), so two tabs can show two themes side by side. It works logged out too
   (landing, login), for anyone; it is harmless, as it only changes colours.
@@ -35,20 +38,32 @@ Example side by side: `https://<host>/dashboard?theme=current` in one tab and `�
 | | `current` (default) | `brand` | `proposal` ("calm brand") |
 |---|---|---|---|
 | Idea | Today's look, rebuilt on tokens | The 2020 styleguide as written | Brand colours used sparingly; red only means danger |
-| Primary (buttons, links, focus) | Blue `#2563EB` | Brand red `#BE1622` | Charcoal `#353535`; focus ring dark orange |
+| Primary (buttons, links, focus) | Blue `#2563EB` | Orange `#F29100` with black text; links, borders and focus in a darker orange (`#A35200`) | Charcoal `#353535`; focus ring dark orange |
 | Call to action (landing "Create account") | Green (darker: AA fix) | Orange `#F29100`, black text | Orange, black text |
-| Navigation bar | White | Black, orange active underline | Charcoal, orange active underline |
+| Navigation bar | White | Black with a brand-red line under it, orange active item, orange Create New | Charcoal, orange active underline |
 | Neutrals (all `gray-*`/`slate-*`) | Tailwind's cool greys | Pure greys around charcoal | Warm "parchment" greys |
 | Page background | Light grey | Light grey | Parchment `#F5F2EC` |
-| Login / register / link pages | Light backdrop | Black backdrop (the guide's "black for contrast") | Charcoal backdrop |
-| Danger | Red | Red (close to brand red: icon + text always) | Brand red (`#BE1622`) |
+| Login / register / link pages, landing | Light backdrop inside the page padding (as before) | Full-bleed black backdrop (the guide's "black for contrast") | Full-bleed charcoal backdrop |
+| Danger | Red | Red (differs from the orange primary; icon + text always) | Brand red (`#BE1622`) |
 | Info boxes | Blue | Charcoal/grey (the guide has no blue) | Steel blue |
 | Body font | System sans (Inter was never loaded; unchanged) | Lato 2.015 | Lato 2.015 |
-| Page titles (h1, the dashboard and detail titles) and the nav title | Body font | Enchanted Land (demo) | Cinzel |
+| Page titles (h1) on player-facing pages | Body font | Enchanted Land (demo) | Cinzel |
+| Headings on manager and admin pages, the nav title | Body font | Lato | Lato |
 
 Fonts: **Lato 2.015** (the latofonts.com release with Regular 400, Medium 500, SemiBold 600 and Bold 700; Google's Lato
 has no 500/600) and **Cinzel** 600/700, both self-hosted under the SIL OFL 1.1 (`src/theme/fonts/`, licences next to
 them). A browser only downloads a font once a theme uses it, so `current` loads none of them.
+
+**Where the heading font goes (developer's rule, 2026-11-03):** the decorative heading font (Enchanted Land in `brand`,
+Cinzel in `proposal`) is for **player-facing pages only**: landing, the auth pages, leaderboards and statistics, the
+public player profile, siege match pages, the player's own account pages, the data-deletion confirmation and 404.
+Manager and admin pages (dashboard, entity detail, form wizard, admin pages) and the nav title use Lato. The brand
+guide itself sets no such limit: it names Enchanted Land as the heading font ("koptekst") for communication with
+Lato as the body text; the split is the project's own rule. In code: a player-facing page calls `usePublicSurface()`
+(`src/theme/surface.ts`), which marks `<html data-surface="public">`; only `h1`s under it get `--font-display`.
+
+**Lato** stays the body and secondary font in `brand` (and `proposal`): the developer likes it, for example in the
+dashboard tables (`PagedEntityTable`).
 
 **Enchanted Land** (the guide's heading font, Dennis Ludlow / Sharkshock) is in `brand` since 2026-11-02 (developer
 decision: try it while the project is a non-commercial hobby, to judge readability and accessibility). Notes:
@@ -62,8 +77,8 @@ decision: try it while the project is a non-commercial hobby, to judge readabili
   (`& ' - , : ?`, `é`, ...) are empty glyphs. The font face has a `unicode-range` of the drawn characters, so those
   fall back to Lato (visible in "Knights & Kings").
 - One weight: headings are not faux-bolded. The designer advises against all caps.
-- Things to judge: legibility of titles at 24–30px, entity names with mixed letters and digits, contrast of the thin
-  strokes on the black nav, and how it sits next to Lato. `proposal` keeps Cinzel, so the two can be compared.
+- Things to judge: legibility of titles at 24–30px and how it sits next to Lato. `proposal` keeps Cinzel, so the two
+  can be compared.
 
 **`current` vs `main`:** the same, apart from these accessibility fixes (they apply in every theme):
 
@@ -82,7 +97,7 @@ Compare in this order; the first six are on tokens, so they are a fair compariso
 
 1. **Landing** (`/`, logged out): CTA colour and text, the "Closed alpha" badge, headings (Enchanted Land in brand,
    Cinzel in proposal).
-2. **Login** (`/auth/login`): backdrop (light / black / charcoal), card, field focus ring (Tab into a field), an
+2. **Login** (`/auth/login`): backdrop (light / full-bleed black / full-bleed charcoal), card, field focus ring (Tab into a field), an
    error (wrong password).
 3. **Dashboard** (`/dashboard/<type>`): navigation bar, explorer, table head and rows, selected row, New/Configure
    buttons, a success toast (save something).
@@ -97,14 +112,28 @@ Compare in this order; the first six are on tokens, so they are a fair compariso
 Screenshots of the screens in each theme (taken with mocked data):
 [`reports/assets/2026-11-design-themes/`](../reports/assets/2026-11-design-themes/).
 
+### Results of the developer's live comparison (2026-11-03)
+
+Relayed by the UX/realtime chain coordinator. All screens work; the developer likes `brand`. All three themes and the
+picker stay, so testers can try them too. Requested and done in the fix round (§ 6):
+
+1. `brand` primary from red to the guide's orange (the orange of the selected nav item), with AA contrast; danger
+   stays red, the red stays as an accent.
+2. Enchanted Land only on player-facing pages; Lato on manager/admin headings and the nav title; the same split for
+   Cinzel in `proposal`.
+3. Lato stays the body/secondary font in `brand` (liked in the `PagedEntityTable`): no change.
+4. The inset dark box on the auth pages looked odd: full-bleed backdrop for the auth and landing layout in `brand` and
+   `proposal` (a prioritised #92 phase 2 item; the rest of phase 2 stays open). `current` keeps its layout.
+5. The picker for testers: the alpha build sets `REACT_APP_THEME_PICKER=on`; the app default stays staff only.
+
 ### Findings from the screenshots (2026-11-02, mocked data)
 
 Things to look at in the live comparison. None of them block a decision.
 
-- **brand:** primary and danger are the same red. Edit and Delete on the detail page, and Next next to a field error,
-  differ only by icon and label. That is the trade-off the `proposal` theme avoids.
-- **brand / proposal, auth pages:** the dark backdrop is a box inset from the window edges (the app's page padding
-  around every route). A full-bleed public layout is #92 phase 2 work.
+- **brand (fixed 2026-11-03):** primary and danger were the same red, so Edit and Delete on the detail page differed
+  only by icon and label. With the orange primary they differ by colour too.
+- **brand / proposal, auth pages (fixed 2026-11-03):** the dark backdrop was a box inset from the window edges (the
+  app's page padding around every route); it is full-bleed now.
 - **proposal:** primary links are charcoal like the body text, so they are underlined in this theme. Create New in the
   charcoal bar uses the orange call-to-action colour (token `nav-action`).
 - **Every theme:** colours on unmigrated components stay fixed: the purple "Patron" chip and yellow mode chip on the
@@ -117,15 +146,17 @@ Things to look at in the live comparison. None of them block a decision.
 
 ## 4. Open decisions (#92)
 
-- **Q6 heading font:** partly decided 2026-11-02: try the Enchanted Land demo in `brand` (above). Still open: keep it
-  after the readability test (then buy the webfont licence before any income, and swap in the full version), or use
-  Cinzel / Lato headings plus an SVG wordmark.
-- **Q7 light/dark split:** a light admin with a dark public side (recommended in the assessment; the brand and
-  proposal themes show this with the dark auth backdrop and nav), or dark everywhere? A full dark admin theme is not
-  built: it would be a fourth token set, and the screens below still on raw colours would need migrating first.
-- **Primary colour:** brand red as the primary (brand) or charcoal with red kept for danger (proposal)? Brand red and
-  error red are close, so with `brand` every danger state relies on its icon and text.
-- **Which theme becomes the default**, and whether the picker stays (for example as a player-facing dark/light
+Decided 2026-11-03 (developer, after the live comparison):
+
+- **Q6 heading font:** Enchanted Land on player-facing pages only (Lato elsewhere); the demo for now; buy the webfont
+  licence before the project has any income, and swap in the full version then.
+- **Q7 light/dark split:** a light admin with a dark public/auth side. The full-bleed dark auth and landing layout is
+  done; the rest of #92 phase 2 (dark public pages beyond auth and landing) stays open.
+- **Primary colour in `brand`:** orange (was red); red is an accent and danger.
+
+Still open:
+
+- **Which theme becomes the default**, and whether the picker stays after the alpha (for example as a player-facing
   choice) or goes once the rebrand is decided.
 
 ## 5. Coverage: what is on tokens
@@ -144,3 +175,19 @@ configuration builders, Game Settings and its cards, Siege settings, lootboxes, 
 invitations and mail admin, moderation list, economy pages, owner pages (diagnostics, privacy, analytics),
 leaderboards and statistics, siege match pages, account pages, world-task renderers (`Workflow/*`). `npm run
 lint:colors` in knk-web-app lists them with counts and reports any file that gains raw colour classes.
+
+## 6. Fix round after the live comparison (2026-11-03)
+
+knk-web-app `claude/design-tokens-95` `64feecc`:
+
+- **Orange primary in `brand`:** `--color-primary` `#F29100` with black `--color-primary-fg`; hover `#DE8000`.
+  `text-primary`, `border-primary` and `ring-primary` read new tokens (`--color-primary-text` `#A35200`, 5:1 on the
+  canvas; `--color-primary-text-dark`; `--color-primary-line` `#C46A00`, 3:1) through Tailwind's `textColor` /
+  `borderColor` / `ringColor`, so no component changed for that. Text on a filled primary is `text-primary-fg` (36
+  swaps of `text-white`, codemod pass `--primary-fg-only`). Focus is the dark orange; the bar's own controls use a new
+  `--color-nav-focus` (orange on the black/charcoal bar). Brand red is the line under the black bar.
+- **Heading font split:** `usePublicSurface()` in 16 player-facing pages; `h1` gets `--font-display` only under
+  `data-surface="public"`. The nav title and the dashboard/detail titles are back on the body font.
+- **Full-bleed auth and landing** in `brand` and `proposal` (`.public-full-bleed`: fixed to the window, below the nav).
+- Contrast test updated for the new tokens (primary text/line, nav focus); a test for the surface hook.
+
