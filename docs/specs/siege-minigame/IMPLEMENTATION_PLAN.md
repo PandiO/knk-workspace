@@ -5,7 +5,7 @@
 live smoke-test rounds passed (`docs/reports/2026-09-26-siege-smoke-test-checklist.md`). Phase 10 (Scheduled lobbies)
 is post-MVP and not started. The per-phase status blocks below are the historical record; where later work changed a
 decision, "Current behaviour" and "Audit" below win.
-**Last updated:** 2026-10-06 (`PlayerListener.onItemPickup` removed - see "Current behaviour"); 2026-09-27 (readiness runs the configured field-validation rules instead of hard-coded location
+**Last updated:** 2026-11-02 (new Phase 11: pre-game gate view for non-members — code complete on knk-plugin `claude/siege-pregame-gate-view`, not merged, not live-tested); 2026-10-06 (`PlayerListener.onItemPickup` removed - see "Current behaviour"); 2026-09-27 (readiness runs the configured field-validation rules instead of hard-coded location
 checks - merged to trunk, see "Current behaviour"); 2026-09-26 merged to trunk, plan audit
 
 Ref: `DESIGN.md` (decisions — not restated here), `MENU_TEMPLATES.md`,
@@ -20,7 +20,7 @@ follow-ups" and "Second smoke-test round fixes" bullets under the Phase 9 status
   capture, or use siege gates. `SiegeAreaLockdown`, its listener and `knk.siege.bypass.lockdown` are gone;
   `SiegeScenario.LockdownScenarioArea` has no effect (column kept) and the `LOCKDOWN_WITHOUT_DISTRICTS` warning is
   removed. Supersedes the 7a/7b status text about the lockdown, decision 3 of 7b and 7a's manual step 7.
-- **Non-member gate view:** locked siege gates are removed for non-members; walking into a really closed door carries
+- **Non-member gate view** *(to be replaced by Phase 11, decided 2026-11-02, not implemented)*: locked siege gates are removed for non-members; walking into a really closed door carries
   them across (TELEPORT pass-through). No pre-lockdown frames, no virtual collision. `PassThroughOnly` still turns it
   off. Supersedes the 7b "Behaviour" paragraph and manual steps 1–3.
 - **Respawn:** the spawn choice is remembered (picker at match start; after a respawn only without a stored choice); a
@@ -1553,6 +1553,87 @@ knk-plugin `0fa6d06` (knk-paper uncompiled):
   history pages.
 - Siege panel in the user-management player profile (DESIGN §13 Q7).
 - Open questions Q4–Q6, Q8 as decided.
+
+## Phase 11 — Pre-game gate view for non-members (knk-paper) — code complete, not live-tested
+
+Decided with the developer 2026-11-02; DESIGN D6 and §8.5 are the spec. Replaces the "gates removed" view.
+Branch: one new standing branch in knk-plugin (e.g. `claude/siege-pregame-gate-view`) from `main`; knk-workspace
+docs only. No web-api change expected: the pre-game state comes from the existing `SiegeMatchGateSnapshot`, and
+`SiegeConfiguration.NonMemberGateView` keeps its values (`PreLockdownView` goes back to meaning the pre-game view).
+
+**11a — Pre-game model + view** (`SiegeGateViewService`)
+- Per locked door: pre-game state (open / closed / destroyed-as-open) from the lockdown snapshot, kept in
+  `SiegeGateController.lockedDoors()`.
+- Fakes per DESIGN §8.5 table: pre-game closed + real not closed → fake closed frame (`GateBlockSnapshot` cells);
+  pre-game open + real closed → fake air; otherwise none. Area gates and siege gates alike.
+- Re-send rules as today, plus an immediate re-send of the touched cells after a non-member's
+  `PlayerInteractEvent` / `BlockDamageEvent` on a fake cell. Membership changes switch a player's view at once.
+- Pre-game open + really closed: `TELEPORT` carry-across on walking in (existing code path, now for this row only).
+
+**11b — Crossing check** (`SiegeGateCrossingGuard`, new)
+- Blocked boxes = pre-game closed frames of locked doors, chunk-indexed; active from lockdown to restore.
+- Swept-hitbox path test (pure, Bukkit-free in knk-core → unit-tested: straight moves, diagonal, fast moves that
+  skip a 1-block frame, standing next to / under a frame, allowance on/off).
+- Hooks: `PlayerMoveEvent` (non-members near a box), `VehicleMoveEvent` (put back + stop + eject non-member
+  riders), `PlayerTeleportEvent` with `ENDER_PEARL` / `CONSUMABLE_EFFECT` (cancel on crossing). Action-bar
+  message. Exempt: members, spectators, active OWNER/STAFF mode. Applies in both `NonMemberGateView` modes.
+
+**11c — Per-player virtual opening**
+- Right-click by a non-member on a pre-game-closed door: check the pre-game permissions/pass-through settings;
+  really open → send air + crossing allowance for `PassThroughDurationSeconds` (kept while still in the frame);
+  really closed → `TELEPORT`; otherwise the normal deny message.
+
+**11d — Per-player hover via PacketEvents**
+- Add PacketEvents to knk-paper, **shaded and relocated** (no server install change); first confirm a release
+  that supports Minecraft 26.3.
+- `GateDisplayManager`: one formatter with a state source (live / pre-game snapshot).
+- Packet listener on entity-metadata packets for gate `TextDisplay`s: non-member viewer + locked door → replace
+  the text with the pre-game hover. Re-send metadata to a player when they join or leave the match.
+
+**Exit / live verification** (member A, non-member B, side by side; plus a modified-movement test if available):
+1. A gate closed before the match, held open for the siege: A walks through; B sees it closed, can't walk, ride,
+   sprint-jump, elytra or pearl through it; B's hover shows it closed with its pre-game health.
+2. A siege gate open before the match, closed by defenders: A is blocked; B sees it open and is carried across.
+3. B owns a pre-game-closed area gate: right-click opens it for B only (A and a third player see no change); it
+   closes for B after the pass-through time.
+4. Animations at lockdown and restore: brief flicker only; no way through at any moment.
+5. A leaves the match from behind a pre-game-closed gate → returned to the pre-siege location. B joins the match
+   → fakes, checks and pre-game hover go away at once.
+6. `PassThroughOnly`: no fakes and no hover rewrite, crossing check still refuses B.
+7. Restore: everyone sees the real gates again; hovers back to normal.
+8. Bedrock (Geyser) client as B: fakes, blocking and hover text.
+
+**Phase 11 status (2026-11-02): code complete on knk-plugin `claude/siege-pregame-gate-view` (`81aa172`, from `main`
+`c823260`), pushed, not merged, not live-tested.** Issues PandiO/knk-workspace#213 (parent), #214–#217. Built and tested in
+the cloud container (JDK 25): knk-core 2420, knk-api-client 288 (2 skipped), knk-paper 2348 (18 skipped) — 0 failures; the
+shaded jar holds PacketEvents only under `net/knightsandkings/knk/libs/packetevents` (no Adventure/Netty copies).
+- **Classes:** knk-core `siege/SiegePreGameGate` (pure: per-door view, click outcome, swept-hitbox crossing; 19 tests);
+  knk-paper `siege/SiegeGateViewService` (rewritten), new `siege/SiegeGateCrossingGuard` and `siege/SiegeGateHoverPackets`,
+  `SiegeGateController` (`nonMemberClick`, `canNonMemberPass`, `preStateOf`, `realStateOf`; `tryNonMemberPassThrough`
+  removed), `SiegeGateListener` (non-members' clicks go to the view service), `GateDisplayManager` (`HoverState` +
+  static formatter, `displayOf`), `GatePassThroughRules.canPass(admin, use, flag)`, `NavigationAccess` (non-members are
+  routed by the pre-game state), `KnKPlugin` (PacketEvents load/init/terminate, wiring), `knk-paper/build.gradle.kts`
+  (PacketEvents 2.14.0, codemc repo, relocation).
+- **Decisions made while building (review):**
+  1. ★ Fake **solid** blocks are only ever the pre-game closed frame. Everything else that differs is sent as air, so a
+     non-member is never shown a floor that isn't there (a lowered drawbridge deck of a door that was open before the
+     match but is closed now is not faked).
+  2. ★ A non-member's click on a door that looks closed but is really open is found by a line-of-sight search (4.5
+     blocks, stops at the first really solid block), because the server sees air there and the gate package fires
+     nothing. Really closed doors still go through `GateDoorInteractEvent`.
+  3. Fakes are re-sent on change as before, plus every 20 ticks to non-members within 12 blocks (a click or dig on a fake
+     block makes the client drop it).
+  4. Crossing-check exemption: spectators and anyone in an active mode (`ModeService.getActiveMode != NONE`, i.e. STAFF
+     or OWNER).
+  5. A vehicle crossing: non-member riders are removed, the vehicle is put back and stopped, the riders are put back.
+  6. `PassThroughOnly`: no fakes and no hover rewrite; crossing check, per-player opening and TELEPORT carry stay.
+  7. Hover: the rewrite replaces the text display's `ADV_COMPONENT` entry (no hard-coded metadata index); a viewer who
+     starts or stops getting the pre-game hover has the display re-sent (`hideEntity`/`showEntity`). If PacketEvents
+     fails to load, the plugin starts anyway and non-members see the live hover (logged).
+- **Known risks:** a gate whose closed frame is horizontal (a floor hatch) shown closed over a real hole could leave a
+  non-member standing on a fake floor; pearls thrown in an arc over a pre-game-closed gate are refused when the straight
+  line crosses it (accepted); Bedrock/Geyser untested.
+- **Live checklist:** the 8 exit steps above.
 
 ## Delegation notes
 
