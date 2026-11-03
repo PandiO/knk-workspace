@@ -4,7 +4,10 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
-(Nothing at the moment.)
+- **Code entry pages centred** — knk-web-app `claude/code-entry-centred-228` (PandiO/knk-workspace#228, UX/realtime
+  chain link 3c). While the code entry is all the card holds (`/link` before the code is verified, `/join` before the
+  invitation is valid), its text, label, hint and error are centred like the code; steps with more on them stay
+  left-aligned. Smoke test [guides/invitations-smoke-test.md](guides/invitations-smoke-test.md) § 4 step 17b.
 
 ## 2026-11-03
 
