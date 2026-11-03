@@ -4,7 +4,10 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
-(Nothing at the moment.)
+- **Dashboard explorer: favourites are copies** — knk-web-app `claude/explorer-favourite-copies-225`
+  (PandiO/knk-workspace#225, UX/realtime chain link 3c). A starred type shows under "Favourites" at the top and still
+  in the full list below ("All entity types") at its usual place, so nothing goes missing from the list. Smoke test
+  [guides/dashboard-return-smoke-test.md](guides/dashboard-return-smoke-test.md) § 9b.
 
 ## 2026-11-03
 
