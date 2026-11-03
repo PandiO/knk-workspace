@@ -1,7 +1,7 @@
 # Shared NPC platform — traits, behavior and tutorial guide
 
 **Status:** Working design; agreed tutorial requirements recorded, platform architecture and implementation investigations still open. No NPC implementation delivered by this document.
-**Last updated:** 2026-10-30 (automatic navigation and shared optional lane overrides; developer decision, #146)
+**Last updated:** 2026-11-03 (§5b reusable, code-configurable attack rate and movement speed; developer decision); 2026-10-30 (automatic navigation and shared optional lane overrides; developer decision, #146)
 **Linear:** [KNG-36](https://linear.app/kngpandi/issue/KNG-36/design-shared-npc-traits-and-pathfinding-platform)
 **Standing workspace branch:** none; `codex/kng-36-npc-platform-design` was merged into `main` on 2026-10-18 and deleted
 **Authority:** Developer navigation correction on 2026-10-30 and discussion through 2026-10-06 and KNG-36 description/comments read on that date. Confirmed decisions below preserve that discussion; proposed interfaces and unresolved questions are explicitly labeled. This is the consolidated design reference for continued discussion, not a completed platform design or implementation plan.
@@ -111,6 +111,23 @@ Provide a reusable logical temporary-target boundary for an NPC distractor: posi
 The confirmed behavior is approach a reachable nearby position, then stand there without attacking the distractor while it remains the selected valid target. Eligibility, preference/proximity scoring, minimum commitment and switch margin apply normally; there is no implicit forced-aggro exception. Removal or expiry immediately invalidates the goal and releases commitment. Ordinary score-driven switching remains possible after commitment, so the lifetime does not force an unconditional hold. Navigation failure follows the existing recovery/result contract.
 
 Siege is the first consuming mode, but target selection and approach/idle behavior are shared building blocks. Lifetime, ranges, weights, crowd placement, moving-distractor handling and creation/adapter details remain open in [#146](https://github.com/PandiO/knk-workspace/issues/146); see [Siege distractor requirements](../siege-survival/DESIGN.md#fourth-target-type-distractor-confirmed-2026-10-30). This is design only.
+
+## 5b. Attack rate and movement speed (confirmed 2026-11-03)
+
+**Developer decision:** attack speed and movement-speed limits are shared NPC capabilities, reusable by every NPC consumer (Siege Survival first), and **highly configurable in code**. Siege Survival only supplies values (its round scaling) and does not own the mechanics.
+
+Background ([implementation checks report](../../reports/2026-11-03-siege-survival-implementation-checks.md) §4, §10): vanilla mobs ignore the `ATTACK_SPEED` attribute; melee uses a fixed 20-tick interval and skeleton bows a fixed 40-tick minimum; arrow damage doesn't read `ATTACK_DAMAGE`; victims ignore most of a second hit within 10 ticks; mob ground speed grows roughly with the square of the speed value.
+
+Proposed shape (names conceptual):
+
+| Part | Responsibility |
+|---|---|
+| Combat profile | Per NPC type/profile: melee cooldown, melee damage, ranged cooldown, draw/charge time, projectile damage, optional per-target-type overrides. Code-defined defaults with config overrides. |
+| Speed profile | Per NPC type/profile: base movement speed, comfort limit and hard cap (proposed 0.4 / 0.5 effective, to measure live), optional per-terrain/movement-profile factors. |
+| Modifier pipeline | Consumers add and remove modifiers by a source key (e.g. `survival:round`, `survival:per-player`, a status effect), as multipliers or additions. The resolver combines base × modifiers and clamps to the profile's bounds (melee cooldown floor proposed 10 ticks because of invulnerability frames). Clamping is reported, not silent. |
+| Paper adapters | A custom attack goal (MobGoals) that runs the resolved cooldown and calls the vanilla attack; a projectile-damage hook (damage or shoot event) for ranged damage; an `AttributeModifier` for movement speed. Remove the vanilla attack goals they replace. |
+
+Pure resolution logic lives in Bukkit-free core and is unit-tested; adapters stay thin. Every value has a code default, can be overridden by configuration and can be changed per actor at runtime through the modifier pipeline. Survival's stat scaling (Siege Survival DESIGN §7) feeds this pipeline. Open: exact profile schema and config location, whether cooldown jitter is configurable, and the measured speed limits.
 
 ## 6. Movement and spawn details
 

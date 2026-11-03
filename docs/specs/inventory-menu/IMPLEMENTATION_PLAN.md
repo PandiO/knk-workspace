@@ -649,7 +649,32 @@ item's click actions keep working**. Before this, V3 had only `DisplayMode` HIGH
   - The interval is per item (`BlinkTicks` binding), not a plugin `config.yml` key.
   - `SiegeVoteOptionView` (the viewer's vote) still uses HIGHLIGHT; switching it to BLINK is a one-line
     change if wanted.
-- **Not done (API/web, to file):** knk-web-api's `MenuDisplayMode` enum has no `Blink` value, so the
-  `DisplayMode` *column* cannot be set to it through the CRUD API or the web editor yet; until then use a
-  `DisplayMode` binding. The plugin already parses a `Blink` column value. `BlinkTicks` is a free-text
-  target property and needs no API change.
+- **API follow-up ([PandiO/knk-workspace#49](https://github.com/PandiO/knk-workspace/issues/49), accepted and
+  merged into knk-web-api `master` `38e6abc` on 2026-11-02, not deployed):** knk-web-api's `MenuDisplayMode` enum gains `Blink`,
+  so the `DisplayMode` *column* can be set to it through the CRUD API. The column stores the name
+  (varchar(20)), so no migration; the plugin already parses a `Blink` column value. There is no web
+  menu-template editor yet (the authoring UI is deferred, see "Explicitly out of scope" above); when it is
+  built, its DisplayMode choices must include Blink. `BlinkTicks` is a free-text target property and needs
+  no API change.
+
+## Follow-up: anvil search/filter prompt on Paper's `AnvilView` (PandiO/knk-workspace#128, smoke-tested and merged 2026-11-02)
+
+- **Problem (Paper 26.3):** the Phase 5/7 anvil prompt opened `Bukkit.createInventory(null, ANVIL, ...)`. Paper
+  builds that as a custom inventory, not an `AnvilInventory`, so the typed text was always read as "" (Confirm
+  cleared the search), the prepare/click handlers never matched the anvil (vanilla's preview and
+  "Enchantment Cost: 1" stayed), and Cancel closed every menu.
+- **Now** (`knk-paper/.../paper/menu/AnvilCaptureManager`, `MenuService#promptSearch`/`#promptFilter`/
+  `#reopenAfterPrompt`, labels in `knk-core/.../core/menu/MenuTextPrompt`):
+  - the anvil is a real `MenuType.ANVIL` view; events are matched by the `AnvilView`, the text is
+    `AnvilView#getRenameText()`, the cost is 0;
+  - left item: a barrier, "Cancel / Back to the menu (or press Escape)" in its lore; its *name* is the
+    current search or filter value, because the client fills the rename field with the input item's name;
+  - result item: green `Search for "<text>"`, yellow `Clear search` when blank (filter:
+    `Filter <facet>: "<text>"` / `Clear filter <facet>`);
+  - Cancel and Escape reopen the menu the prompt came from with its search, filters and page; another
+    inventory opening or a disconnect ends the prompt silently;
+  - the anvil's slots are emptied before every close (a `MenuType.ANVIL` view hands its input items back to
+    the player on close), also on plugin disable.
+- **Tests:** `MenuTextPromptTest`, `AnvilCaptureManagerTest`, `MenuPromptReopenTest` (no server).
+- **Merged:** knk-plugin `main` `306937f` (2026-11-02), after the developer's smoke test on Paper 26.3; not
+  deployed.

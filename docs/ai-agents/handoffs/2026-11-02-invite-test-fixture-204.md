@@ -1,6 +1,6 @@
 # Handoff: fix the expired InvitePage test fixture (#204)
 
-**Status:** Ready to start
+**Status:** Done — merged 2026-11-02 (knk-web-app `main` `439ad85`, together with #203, #200, #63); see the Recently completed entry in `ACTIVE_SESSIONS.md`
 **Last updated:** 2026-11-02
 **Issue:** [PandiO/knk-workspace#204](https://github.com/PandiO/knk-workspace/issues/204)
 

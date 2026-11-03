@@ -72,9 +72,9 @@ You implement PandiO/knk-workspace#95 in knk-web-app: rebrand phase 1. It adds a
 Don't base on them; keep class swaps mechanical so the later merges stay easy. Do a trial merge of each into your head and list the conflicting files in your summary.
 
 **Checks:**
-- `npx npm@11 ci`, `npm run test:ci`. Known base red: `InvitePage.test.tsx`, #204, which is being fixed separately.
-- `npx tsc --noEmit`: the baseline is 9 errors (#63).
-- `npm run build`: the baseline is 24 warnings.
+- `npx npm@11 ci`, `npm run test:ci`. Baseline (knk-web-app `main` `439ad85`, 2026-11-02): all green, 1379 tests; #204 is merged.
+- `npx tsc --noEmit`: the baseline is 0 errors (#63 and #200 merged); don't add any.
+- `CI=true npm run build`: compiles with 0 warnings since `439ad85` (#200), so a new lint warning fails the build. (Before 2026-11-02 the baseline was 1 red test, 9 tsc errors and 24 build warnings.)
 - Use the npm 11 lock file only.
 - If Playwright/Chromium is available, take screenshots of the five priority screens in each theme, light only. Put them on the workspace branch under `docs/reports/assets/2026-11-design-themes/`.
 

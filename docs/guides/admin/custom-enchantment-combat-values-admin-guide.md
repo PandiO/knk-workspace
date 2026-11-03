@@ -3,9 +3,7 @@
 **Status:** Living document — update in place as the code changes. Describes the package branches
 `claude/alpha-run-1-enchantments` (knk-web-api `0ecbe53`, knk-web-app `de93b69`, knk-plugin `fcb2e08a`); **not merged,
 not deployed, not live-tested**
-**Last updated:** 2026-11-02 (§ 1/§ 3: Flash Chaos's Slowness and Nausea as combat values, form seed v3, #201; § 6:
-ability cooldown boss bars, #202; in review on `claude/enchantments-201-202`, knk-plugin `ed704eff`, knk-web-api
-`8a02258`, knk-web-app `d058aea`, **not merged, not live-tested**); 2026-10-27 (§ 5 round 2: name tags hidden while blinded and the invisible player's own tag, red
+**Last updated:** 2026-11-02 (§ 1/§ 3: Flash Chaos's Slowness and Nausea as combat values, form seed v3, #201; § 6: ability cooldown boss bars, #202; in review on `claude/enchantments-201-202`, knk-plugin `ed704eff`, knk-web-api `8a02258`, knk-web-app `d058aea`, **not merged, not live-tested**); 2026-11-02 (§ 5: invisible players' armour and held items hidden, #211, in review on `claude/invisibility-full-hide`, not merged); 2026-10-27 (§ 5 round 2: name tags hidden while blinded and the invisible player's own tag, red
 `Frozen by <staff> for: <reason>` bar, #169/#170, in review on `claude/alpha-run-1-effects`, knk-plugin `9bc2b31`, not
 merged); 2026-10-27 (§ 5: effect boss bars and the flash_chaos name-tag blackout, knk-plugin `911eb2a`); 2026-10-26 (PandiO/knk-workspace#151, #156, #155)
 **Companion docs:** [ability definition reference](../../specs/custom-enchantments/ABILITY_DEFINITION_REFERENCE.md),
@@ -134,6 +132,16 @@ same scoreboard team when that team may "see friendly invisibles". The rank team
 `tier_<id>`) now have that turned off, so players of the same rank no longer see an invisible player's tag (or
 see-through body). In a siege match, **teammates still see their invisible teammate** (name tag and see-through body);
 the other teams don't. Nobody is moved between teams for this.
+
+**Invisible players' armour and held items ([#211](https://github.com/PandiO/knk-workspace/issues/211); branch
+`claude/invisibility-full-hide`, knk-plugin `3c5407e`, in review, not merged).** Vanilla Invisibility still shows armour
+and held items. While the **Invisibility** ability is active, players who don't see through it get empty armour and
+hands for the user instead (per-viewer equipment packets; the user's real items don't change). The user **stays in
+the tab list** and can still be hit; owner/staff mode's `hidePlayer` isn't used because it also removes the tab entry.
+Who still sees everything: siege teammates (see-through body, tag and equipment) and spectators. The ability's potion no
+longer shows swirl particles. It ends when the invisibility ends (time, milk, death, a command) and on plugin disable;
+on quit the ability's invisibility is removed, so after a relog everyone sees the player. Arrows stuck in the body
+can still show; the client draws them from entity data that Paper has no per-viewer API for (to check live).
 
 ## 6. Ability cooldown bars (#202)
 
