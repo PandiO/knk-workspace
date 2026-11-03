@@ -1,0 +1,184 @@
+# Delivery lifecycle and documentation upkeep: audit and proposal
+
+**Status:** Proposal, waiting for the developer's decision · **Date:** 2026-11-03 · **Scope:** agent instructions in
+`knk-workspace`, `knk-web-api`, `knk-web-app`, `knk-plugin`, `knk-dev-db-seed`, plus the docs they should keep current
+
+**Evidence baseline:** the default branches of each repo as cloned on 2026-11-03 (`knk-workspace` at the tip of
+`claude/happy-cerf-74sbro`, which branched from `main`).
+
+## 1. Short answer
+
+**No.** The agent entrypoints cover the *coordination* loop in detail: the tracker row, issue status labels, branches,
+chains and handoffs. Agents follow that loop reliably because it is written into the file every agent reads first.
+The *documentation* loop exists as well: [`guides/developer/DOCUMENTATION_MAINTENANCE.md`](../guides/developer/DOCUMENTATION_MAINTENANCE.md)
+has a good feature lifecycle, guide minimums and a changelog rule. But **no agent entrypoint links to it**:
+
+| File an agent reads first | Mentions the tracker, issues and branches | Mentions docs upkeep (guides, changelog, register) |
+|---|---|---|
+| `knk-workspace/AGENTS.md`, `CLAUDE.md` | yes | only folder layout and "reports are dated" |
+| `docs/ai-agents/GLOBAL_AGENT_INSTRUCTIONS.md` | yes, about 120 lines | one paragraph on *where* docs go and what a handoff holds; no link to the maintenance guide, nothing on player/admin/install guides, changelog or register |
+| `knk-web-api/AGENTS.md`, `CLAUDE.md` | via the global file | no; migrations are mentioned only as commands |
+| `knk-web-app/AGENTS.md`, `CLAUDE.md` | via the global file | no |
+| `knk-plugin/AGENTS.md`, `CLAUDE.md` | via the global file | no; the plugin also has its own `docs/` folder and old `PHASE_*`/`STATUS_*` files in its root |
+| `knk-dev-db-seed` | **no `AGENTS.md` or `CLAUDE.md` at all** | n/a; only the `README.md` (good, but agents aren't told when to rebuild the seed) |
+| `docs/ai-agents/AGENT-GUIDE.md`, `guardrails.md` | **empty files (0 lines)** | — |
+
+The only route to the maintenance guide is the "Start here" table in `docs/README.md`, which the entrypoints don't send
+agents to. So documentation gets updated when a handoff or prompt happens to ask for it, not because a rule requires it.
+
+## 2. What is kept current, and what drifts
+
+**Kept current (written into handoffs and chain prompts):** `CHANGELOG.md` (last entry 2026-11-01), the
+`FEATURE_REGISTER.md` rows touched by recent work, smoke-test checklists per branch, the closed-alpha runbooks, and test
+run folders.
+
+**Drifting:**
+
+- **Player guides.** `guides/users/commands.md` and `handleiding.md` carry `status: stale` and
+  `last_updated: 2018-10-19` / `2018-10-03`. The guides index itself says there are no player or admin guides for
+  currency, discoveries, lootboxes, kits, menus, ranks and moderation. Merged and live-tested features without a player
+  guide include Siege (the authoring guide is admin-only), road navigation, invitations and accounts, player
+  statistics, private messages, teleports/homes/warps and custom enchantments.
+- **Guide index statuses don't move after a merge.** `guides/README.md` still lists the invitations smoke test and the
+  email guide as "not merged, not run", while the register and changelog record KNG-205 as merged on 2026-10-24.
+  Nobody is told to update the index row at merge time.
+- **Installation and production.** `production-installation.md` is "Draft v1, not yet followed on a real production
+  host". The NAS runbook is the real procedure and is ahead of it, so two install documents are diverging.
+- **No record of what is deployed.** There are no git tags or releases in any component repo (0 tags in api, app and
+  plugin). Nothing says which commit of each component runs on knk-alpha today. The changelog explicitly says it
+  doesn't track deploys. The seed's content-patch procedure needs "the seed the server has", which is also recorded
+  nowhere.
+- **Inconsistent headers.** Bold `Status/Last updated` lines in most docs, YAML front matter in the old user guides, and
+  very long "Last updated" lines that pile up change history (the register's header line runs to about 1,500
+  characters). Those lines are hard to scan and invite merge conflicts.
+- **Docs living in the component repos.** `knk-plugin/docs/` (ADRs, cache, migration mode, `ai/`) and root files such
+  as `PHASE_1_COMPLETION.md`, `TEST_FIXES_SUMMARY.md`; `knk-web-app/TESTING_IMPLEMENTATION_SUMMARY.md`. This conflicts
+  with "docs belong in `knk-workspace/docs/`" and nothing says which copy wins.
+- **CI.** `knk-plugin` runs a build, `knk-web-api` runs migrations against a fresh DB, `knk-web-app` has no workflow,
+  and no repo checks docs or links.
+
+## 3. Proposal: one definition of done, enforced at the step agents already follow
+
+Principle: put documentation duties **at the same checkpoints where agents already reliably act** (tracker row, issue
+status label, PR) instead of in a guide they must remember to open.
+
+### 3.1 Add a "Shipping a change" section to `GLOBAL_AGENT_INSTRUCTIONS.md` (highest impact)
+
+Draft text:
+
+> ## Shipping a change: documentation is part of done
+>
+> Follow [documentation maintenance](../guides/developer/DOCUMENTATION_MAINTENANCE.md). An issue is not ready for
+> `status:in-review` until the docs below are drafted on the feature branch, and is not closed until they are on
+> `main`. Answer each line in the PR's "Docs impact" section with the file you changed or `n/a (reason)`:
+>
+> 1. **Spec / plan:** status line and phase table say branch or trunk and live-test state.
+> 2. **Architecture / API contract:** schema, endpoint, event, config or cross-component change.
+> 3. **Developer guide / repo README:** new dependency, command, config key, migration or failure mode.
+> 4. **Admin guide:** new or changed permission, form, config, world setup or recovery step.
+> 5. **Player guide:** new or changed command, menu, cost, reward, message or web page a player sees.
+> 6. **Install / production / runbook:** new env var, secret, port, container, migration or one-time script for a
+>    deploy (production-installation, closed-alpha runbook, go-live).
+> 7. **Seed:** new or changed content tables or ids that the seed or a live content patch must carry.
+> 8. **Register, guides index, changelog:** register row; `guides/README.md` row status; a changelog entry at merge.
+>
+> If a guide that should exist doesn't, write the first version (guide minimums in the maintenance guide) or file an
+> issue labelled `docs` and link it in the PR. "Docs later" without an issue id is not allowed.
+
+Also: fill or delete the empty `AGENT-GUIDE.md` and `guardrails.md`. Empty files suggest there are rules that aren't
+there.
+
+### 3.2 PR templates in all five repos (makes 3.1 hard to skip)
+
+Add `.github/pull_request_template.md` with `Closes PandiO/knk-workspace#…`, a summary, the tests run, live-test
+state, and the eight-line **Docs impact** checklist above, each answered with the `knk-workspace` path changed, the
+linked docs PR or `n/a`. Agents already read PR templates before opening PRs, so this is the most reliable enforcement
+available without CI.
+
+### 3.3 One line in each component repo's `AGENTS.md`
+
+> Docs for changes here live in `knk-workspace/docs/` (not in this repo). Before asking for review, complete the
+> "Shipping a change" checklist in the global instructions; repo-specific triggers: …
+
+Repo-specific triggers:
+
+- **knk-web-api:** a migration means the seed (3.6), production-installation § migrations and the runbook; a new
+  setting means the config table in production-installation; a new endpoint means `docs/specs/api/`.
+- **knk-web-app:** a new page, form or wording players see means the player guide; an admin page means the admin guide.
+- **knk-plugin:** a command or permission node means `guides/users/commands.md` and
+  `architecture/plugin-permission-checks.md`; `config.yml` keys mean the admin guide and production-installation.
+- **knk-dev-db-seed:** see 3.6.
+
+Also decide on `knk-plugin/docs/` and the root status files: move the still-relevant ones to `knk-workspace/docs/`
+(ADRs to `architecture/adr/`) and archive the rest, or record that the plugin keeps code-level notes locally.
+
+### 3.4 Give player and admin guides a home and a backlog
+
+- Rebuild `guides/users/commands.md` **from the code** (the plugin's command catalogue and `plugin.yml`) and mark it
+  as generated or checked against a named commit. Commands drift fastest and are the most visible.
+- Replace `handleiding.md` with a short V3 player handbook index that links one page per feature area.
+- File one `docs` issue per missing guide (the list in § 2), with a parent "Player and admin guide coverage" issue.
+  Then it is real work in the work list rather than a note in the guides index.
+- Add a **Docs** column to `FEATURE_REGISTER.md` (player / admin / dev guide: link, `missing #n` or `n/a`), so gaps
+  appear in the same place as implementation status.
+
+### 3.5 Deployment and releases: record what runs where
+
+- Add a living `guides/deployments.md` (or `docs/DEPLOYMENTS.md` next to the changelog) with one row per deploy:
+  date, environment (dev, knk-alpha), the commit of the api, app and plugin, the seed or patch applied, migrations
+  run, one-time scripts run, who checked it, and a rollback note. Nobody needs to remember what is on the NAS any more.
+- Tag what you deploy: `alpha-YYYY-MM-DD` (or semver per component) on each component's deployed commit. The
+  changelog can then group entries by tag, and "Unreleased" means merged but not deployed.
+- Make the NAS runbook the source of truth for knk-alpha, and turn `production-installation.md` into the
+  environment-neutral version that is updated **from** each completed runbook phase. Otherwise mark it as superseded.
+- Add one changelog subsection per release, "Admin steps for this deploy", collecting migrations, config keys and
+  cleanup scripts from the entries. These items are currently scattered through entries, for example the user-1
+  drafts cleanup script in the 2026-11-01 entry.
+
+### 3.6 Seed repository
+
+Add `AGENTS.md`/`CLAUDE.md` to `knk-dev-db-seed`: entrypoint to the global instructions, private repo (no secrets,
+no raw exports), commands from the README, and **when to rebuild**: after an API migration that adds or changes
+content tables, after content changes on dev that alpha needs, and before each alpha deploy (then record the seed or
+patch in the deployment log, 3.5).
+
+### 3.7 Maintenance cycle: catch the drift that gets through
+
+- **Weekly docs-drift check** (a scheduled cloud session, or the developer's Sunday check-in prompt): list the last
+  week's merges to each default branch and the files they touched, and compare them with the changelog, the register,
+  the guide index and the command reference. File `docs` issues for gaps and write a dated `reports/` file. Read-only
+  apart from issues and the report, so it is safe to run unattended.
+- **Per test run:** the test-run preparation plan gets a line "guides testers will use are current", which turns the
+  alpha runs into a check of the player guides.
+- **Lightweight CI** (later): a markdown link checker on `knk-workspace`, a build-and-test workflow for `knk-web-app`,
+  and optionally a check that fails a component PR whose body has an empty Docs impact section.
+
+### 3.8 Header and format hygiene
+
+Standardise on `**Status:** … · **Last updated:** YYYY-MM-DD (one-line reason)`: **only the latest change** in the
+header, and history in git or a "Changes" section at the bottom. Convert the YAML front matter in the old user guides.
+Allowed statuses: `Draft`, `Current`, `Needs review`, `Stale`, `Superseded`.
+
+## 4. Suggested order
+
+| # | Change | Effort | Why first |
+|---|---|---|---|
+| 1 | 3.1 global "Shipping a change" section + link to the maintenance guide | small | Every agent reads it; fixes the root cause |
+| 2 | 3.2 PR templates (5 repos) + 3.3 repo `AGENTS.md` lines + 3.6 seed entrypoint | small | Enforcement at a step agents already follow |
+| 3 | 3.5 deployment log + tags, starting with what runs on knk-alpha now | small to medium | Highest risk of being forgotten; needs the developer's memory while it is fresh |
+| 4 | 3.4 `docs` issues for missing guides, register Docs column, regenerated commands reference | medium | Turns the backlog into tracked work |
+| 5 | 3.7 weekly drift check | small | Safety net |
+| 6 | 3.8 headers, plugin `docs/` consolidation, CI link check | medium | Hygiene |
+
+## 5. Decisions for the developer
+
+1. Docs duties as a **blocker** for `status:in-review` (proposed), or only for closing the issue?
+2. Release identity: date tags such as `alpha-2026-11-03` across repos (proposed), or semver per component?
+3. `production-installation.md`: keep it as the generic guide updated from the runbook (proposed), or retire it in
+   favour of the runbook?
+4. `knk-plugin/docs/`: move to the workspace (proposed), or keep code-level notes local?
+5. Weekly drift check as a scheduled cloud session (proposed), or as a manual prompt?
+6. Language of the player handbook (`handleiding.md` is Dutch; most current docs are English).
+
+Nothing in this report has been applied yet; § 4 items 1–2 can be done in one small cross-repo session once
+approved.
