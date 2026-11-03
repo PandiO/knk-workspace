@@ -65,6 +65,10 @@ Live tracker of in-progress work across all four Knights and Kings repos
 
 ## Recently completed
 
+### 2026-11-03 — Siege Survival v1 design complete (KNG-50 / #41)
+
+Claude Code session (Pandi); documentation only, merged to `main` 2026-11-03 from branch `claude/siege-survival-design-complete`. S68: distractors out of v1. DESIGN and IMPLEMENTATION_PLAN marked design-complete for v1; plan gains phase 0 (animated gate rebuild for all gates, NPC attack-rate/speed profiles, ghost visibility arbiter, size-aware gate evacuation, NPC siege gate damage, weighted capture) and phase 1 synced with S46/S54. Next: implementation claim per the plan.
+
 ### 2026-11-03 — Alpha test runs: numbering fixed (run 3 → run 2), run 2 preparation, test-run process guide (#149) — done, merged
 
 Claude Code session (Pandi), docs only, branch `claude/alpha-test-run-2-prep`, merged to `main` 2026-11-03. The 2026-10-27 developer pre-check of packages A–D had been labelled "test run 2", so the next tester run became "run 3". Renamed `reports/alpha-tests/27-10-2026/test-run-3-checklist.md` → [test-run-2-checklist.md](reports/alpha-tests/test-run-2/test-run-2-checklist.md) (folder now `test-run-2/`) (§ 1 now "Developer pre-checks"), fixed the links here and in the run 1 findings, added [test-run-2-preparation.md](reports/alpha-tests/test-run-2/test-run-2-preparation.md) (scope, go/no-go, session plan, decisions D1–D14, tester questions, triage). New living guide [closed alpha test runs](guides/closed-alpha-test-runs.md) (numbering, `test-run-<n>/` layout, preparation plan contents, triage, exit bar) and a short section in `ai-agents/GLOBAL_AGENT_INSTRUCTIONS.md`. **Next (developer):** set the run date.
