@@ -15,7 +15,8 @@ This is a human-readable record of capabilities merged into the V3 default branc
   Compared live by the developer 2026-11-03; fix round: `brand` primary is the guide's orange (black text,
   a darker orange for links), red stays for danger and as an accent; the decorative heading font only on
   player-facing pages (Lato on admin pages); full-bleed dark auth and landing pages in `brand`/`proposal`; the alpha
-  build shows the picker to testers (`REACT_APP_THEME_PICKER=on`). Not merged. Guide:
+  build shows the picker to testers (`REACT_APP_THEME_PICKER=on`). A fourth theme, `brand-red`, is `brand` with the
+  brand red as primary, to compare red and orange. Not merged. Guide:
   [guides/design-themes-comparison.md](guides/design-themes-comparison.md).
 
 ## 2026-11-01

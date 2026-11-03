@@ -2,7 +2,7 @@
 
 **Status:** Compared live by the developer on 2026-11-03 (all screens work; `brand` preferred, all three themes and the
 picker stay); fix round done on knk-web-app `claude/design-tokens-95` (§ 6). Not merged
-**Last updated:** 2026-11-03 (fix round after the live comparison: brand primary orange, heading font on player pages
+**Last updated:** 2026-11-03 (fourth theme `brand-red`); 2026-11-03 (fix round after the live comparison: brand primary orange, heading font on player pages
 only, full-bleed auth pages, picker for alpha testers)
 **Issue:** [PandiO/knk-workspace#95](https://github.com/PandiO/knk-workspace/issues/95) (token layer, contrast rules,
 switchable themes); [#92](https://github.com/PandiO/knk-workspace/issues/92) (rebrand phases 2–4, sub-issue) holds the
@@ -13,20 +13,20 @@ optional build flag, below).
 **Background:** [UX assessment §11](../reports/2026-10-08-web-app-ux-assessment.md#11-brand-alignment) (brand guide, gap
 table, token design, contrast rules); brand guide `docs/vision/brand/huisstijlhandboek.pdf`.
 
-The web app has three themes. Each one is a set of CSS variables; switching changes one attribute on the page, so it
+The web app has four themes. Each one is a set of CSS variables; switching changes one attribute on the page, so it
 is instant and needs no reload. Use them to compare designs in the running app, then decide which direction the
 rebrand takes (#92).
 
 ## 1. How to switch
 
-- **Account menu** (top right, the person icon) → **Theme (design comparison)** → Current / Brand / Proposal. The menu
+- **Account menu** (top right, the person icon) → **Theme (design comparison)** → Current / Brand / Brand (red) / Proposal. The menu
   stays open, so you can flip back and forth. The choice is saved in this browser (localStorage) for every tab.
   - Default: staff only, anyone with the moderator node (`knk.admin.user.manage`) or the content node
     (`knk.admin.content`).
   - Build flag `REACT_APP_THEME_PICKER`: `on` shows it to every logged-in user, `off` hides it for everyone. Unset =
     staff only. **The alpha build sets `on`** (developer decision 2026-11-03: testers try the themes too):
     `scripts/alpha-web/Dockerfile` and [alpha-go-live.md § 6](alpha-go-live.md).
-- **URL:** add `?theme=current`, `?theme=brand` or `?theme=proposal` to any page. It applies to that tab only (it
+- **URL:** add `?theme=current`, `?theme=brand`, `?theme=brand-red` or `?theme=proposal` to any page. It applies to that tab only (it
   survives reloads and navigation in the tab), so two tabs can show two themes side by side. It works logged out too
   (landing, login), for anyone; it is harmless, as it only changes colours.
 - No storage (private window, blocked site data): the picker and the URL parameter still work for the open tab.
@@ -35,7 +35,13 @@ Example side by side: `https://<host>/dashboard?theme=current` in one tab and `�
 
 ## 2. What each theme changes
 
-| | `current` (default) | `brand` | `proposal` ("calm brand") |
+`brand-red` (added 2026-11-03 at the developer's request, to choose between red and orange quickly) is `brand` with
+one difference: the primary family (buttons, links, focus ring, Create New) is brand red `#BE1622` with white text, as
+`brand` had until the fix round of 2026-11-03. Everything else is `brand`'s: black nav with the red line, Lato,
+Enchanted Land on player-facing pages, the full-bleed dark auth and landing. Primary and danger are the same red again
+there, so Edit and Delete differ only by icon and label (every danger state keeps its icon and text).
+
+| | `current` (default) | `brand` (`brand-red`: primary red) | `proposal` ("calm brand") |
 |---|---|---|---|
 | Idea | Today's look, rebuilt on tokens | The 2020 styleguide as written | Brand colours used sparingly; red only means danger |
 | Primary (buttons, links, focus) | Blue `#2563EB` | Orange `#F29100` with black text; links, borders and focus in a darker orange (`#A35200`) | Charcoal `#353535`; focus ring dark orange |
