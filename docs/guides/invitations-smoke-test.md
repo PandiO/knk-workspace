@@ -256,7 +256,7 @@ step says otherwise.
     capitals checks: all as before. On a phone the slots line up too, and a one-time-code / password-manager fill shows
     the code without slots. Same on `/account/link` as an unlinked account. A screen reader still reads only the field,
     its label and the hint (not the underscores).
-17c. **The register page's link-code field has the dash too** (#229, knk-web-app `claude/register-code-mask-229`;
+17c. **The register page's link-code field has the dash too** (#229, knk-web-app `claude/register-code-mask-229` or all of link 3c in `claude/link-3c-combined`;
     developer feedback from the link 3b live test, 2026-11-03, open point L2-9 / L3b-9). `/auth/register` (with
     `Mode=LinkCode`, or `Mode=Invite` → "Already playing and got a code from /account link?"): the **Link code** field
     shows `____-____` from the start like `/link`, and the hint "The 8 letters and digits; the field adds the dash
