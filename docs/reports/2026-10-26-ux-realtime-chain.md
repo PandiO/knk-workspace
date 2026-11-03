@@ -1,7 +1,7 @@
 # Dashboard, form wizard and realtime chain — progress report
 
-**Status:** Chain complete — links 1–3, 3b and 5 merged; links 4, 6, 7, 8, 9 and 10 in review, waiting for the developer (2026-11-02)
-**Last updated:** 2026-11-02
+**Status:** Chain complete — links 1–3, 3b, 5 and 9 merged; links 4, 6, 7, 8 and 10 in review, waiting for the developer (2026-11-03)
+**Last updated:** 2026-11-03
 **Charter:** [UX_REALTIME_CHAIN.md](../ai-agents/handoffs/UX_REALTIME_CHAIN.md) · **Coordinator prompt:**
 [2026-10-26-ux-realtime-coordinator-prompt.md](../ai-agents/handoffs/2026-10-26-ux-realtime-coordinator-prompt.md)
 **Base at start:** knk-web-app `main` `0d61270`, knk-web-api `master` `6f08383`, knk-plugin `main` `ee35fb1` (re-check:
@@ -23,7 +23,7 @@ test), `merged`, `blocked: <reason>`.
 | 6 | #179 | `claude/realtime-signalr` | in review | subagent (fallback: add_repo needed in-session approval), 2026-10-26 | `38b0466` / — / `b48f1484` / `ae949bd` | API 3361 passed, 4 failed (#99, = baseline reds), 87 skipped (baseline 3338/4/87); plugin core 2323 (2319), api-client 298 (290), paper 2163 (2149), 0 failures |
 | 7 | #180 | `claude/world-task-hardening` | in review | subagent (fallback: add_repo needed in-session approval), 2026-11-01 | `115c418` / `d7a0896` / `21de734e` / `e06c1e0` | API 3448 passed, 4 failed (#99, = baseline reds), 88 skipped (baseline 3397/4/88); web-app 1378 passed, 1 failed (#204 base red), suites 216 (baseline 1364/1, 213); `tsc` 9 = baseline; build OK, same 24 warnings; plugin core 2401 (2401), api-client 291 (288), paper 2364 (2343), 0 failures |
 | 8 | #181 | `claude/realtime-signalr` | in review (stacked on unmerged link 7: the branch contains `claude/world-task-hardening` in all four repos, see coordinator notes 2026-11-02 and the link 8 block) | subagent (fallback: add_repo needed in-session approval), 2026-11-02 | `a27f61e` / `c7a3e85` / `8fa35148` / `3e8a71b` | API 3562 passed, 4 failed (#99, = baseline reds), 88 skipped (baseline on the merged branch 3513/4/88); web-app 1407 passed, 1 failed (#204 base red), suites 221 (baseline 1392/1, 218); `tsc` 9 = baseline; build OK, 24 warnings; plugin core 2412 (2412), api-client 313 (309), paper 2406 (2387), 0 failures |
-| 9 | #39 (rest), #177 follow-up | `claude/entity-lists-url-state` | in review (live-tested 2026-11-03, one fix; ready to merge) | subagent (fallback: add_repo needed in-session approval), 2026-11-01; fix round subagent 2026-11-03 | — / `d72194b` / — / `fb27146` | fix round: web-app 1403 passed, 1 failed (#204 base red), suites 217; `tsc` 9 = baseline; build OK, 22 warnings; link 9: web-app 1402 passed, 1 failed (#204 base red), suites 217 (baseline 1364/1, 213); `tsc` 9 = baseline; build OK, 22 warnings (baseline 24: two `PagedEntityTable` hook warnings gone) |
+| 9 | #39 (rest), #177 follow-up | `claude/entity-lists-url-state` | merged: web-app `main` `44f9395`, workspace `main` `1507b7d` (2026-11-03, by the coordinator at the developer's request after the live test) | subagent (fallback: add_repo needed in-session approval), 2026-11-01; fix round subagent 2026-11-03 | — / `d72194b` / — / `fb27146` | fix round: web-app 1403 passed, 1 failed (#204 base red), suites 217; `tsc` 9 = baseline; build OK, 22 warnings; link 9: web-app 1402 passed, 1 failed (#204 base red), suites 217 (baseline 1364/1, 213); `tsc` 9 = baseline; build OK, 22 warnings (baseline 24: two `PagedEntityTable` hook warnings gone) |
 | 10 | #182 | `claude/realtime-signalr` | in review (same branch as links 4, 6 and 8, so also stacked on unmerged link 7) | subagent (fallback: add_repo needed in-session approval), 2026-11-02 | `e769c4c` / — (unchanged `c7a3e85`) / `eb22a655` / `c04d3df` | API 3580 passed, 4 failed (#99, = baseline reds), 88 skipped (baseline 3562/4/88); plugin core 2420 (2412), api-client 317 (313), paper 2414 (2406), 0 failures |
 
 ## Waiting for the developer
@@ -48,11 +48,7 @@ flagged decisions.)
   Deploy API, plugin and web app together; one additive migration. **Before the first sweep read L7-8:** old sessions
   without a draft and without a Completed task, older than 7 days, are deleted (back up). Flags L7-1…L7-18. Its merge
   opens link 8 (with link 6 done) and frees knk-web-app for link 9. Coordinator check 2026-11-01: heads match, migration additive, access rules and sweep spot-checked.
-- **Test link 9** (#39 rest, #177 follow-up): **live-tested 2026-11-03; ready to merge** (one fix, step 4.2: web-app
-  `d72194b`). Web-app `claude/entity-lists-url-state` `d72194b`; live checklist
-  `docs/guides/entity-lists-url-state-smoke-test.md` (Findings filled) on workspace `claude/entity-lists-url-state` `fb27146`. Web app only.
-  Merges cleanly with link 7's `claude/world-task-hardening` (trial merge; `FormWizardPage.tsx` auto-merged). Flags
-  L9-1…L9-13; bulk actions split into #205. Coordinator check 2026-11-01: heads match; `FormWizardPage.tsx` URL-open effect spot-checked (drafts still owner-checked by the API).
+- **Link 9 merged** on 2026-11-03 at the developer's request after the live test (all steps pass after the 4.2 fix `d72194b`): web-app `main` `44f9395` (conflict in `PagedEntityTable.tsx`: kept main's #218 comments; merged result 1422/1422 tests, `tsc` 0, `CI=true` build OK), workspace `main` `1507b7d`.
 - **Test link 8** (#181, WT2, same branch, **stacked on link 7**): API `claude/realtime-signalr` `a27f61e`, plugin `8fa35148`,
   web-app `c7a3e85`; live checklist `docs/guides/realtime-smoke-test.md` § WT2 on workspace `claude/realtime-signalr`
   `3e8a71b` (run § S1 and link 7's checklist first). Deploy the three together; the branch contains link 7 (its migration,
