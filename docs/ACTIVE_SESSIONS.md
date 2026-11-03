@@ -65,6 +65,10 @@ Live tracker of in-progress work across all four Knights and Kings repos
 
 ## Recently completed
 
+### 2026-11-03 — Siege Survival v1 design complete (KNG-50 / #41)
+
+Claude Code session (Pandi); documentation only, branch `claude/siege-survival-design-complete`. S68: distractors out of v1. DESIGN and IMPLEMENTATION_PLAN marked design-complete for v1; plan gains phase 0 (animated gate rebuild for all gates, NPC attack-rate/speed profiles, ghost visibility arbiter, size-aware gate evacuation, NPC siege gate damage, weighted capture) and phase 1 synced with S46/S54. Next: implementation claim per the plan.
+
 ### 2026-11-03 — Siege Survival implementation checks (KNG-50)
 
 Claude Code session (Pandi); research only, merged to knk-workspace `main` 2026-11-03 from branch `claude/siege-survival-impl-checks`. Read knk-plugin main `c823260`, knk-web-api master, Paper API 26.3 sources and the vanilla 26.3 server jar (`javap`) for the ten implementation checks in Siege Survival DESIGN §13; findings in [report](reports/2026-11-03-siege-survival-implementation-checks.md). Main follow-ups: `ModeService` un-hides ghosts, `respawnGate` skips collision handling, mobs ignore `ATTACK_SPEED`, capture and siege gate damage are player-only, no mob code exists. No code changed; live tests listed in the report. Developer follow-up decisions recorded on the same branch: animated rebuild for all destroyed gates (gate DECISIONS Decision 6), provisional sneak repair input, shared code-configurable NPC attack rate and speed (NPC platform §5b); Survival DESIGN S64–S67.
