@@ -263,7 +263,7 @@ which follows below; they are kept per browser in localStorage `knk.dashboard.fa
 (`utils/dashboardFavourites.ts`; per account on the API can come later). The Entity setup page's explorer has no stars.
 A **filter** button next to the sort toggle (`ObjectTypeExplorer` `filters`, #226) offers **Display configuration**
 (the marker's rule: a published default display configuration) and **Form configuration** (at least one, from
-`GET api/FormConfigurations/entity-names`), each Any / Yes / No; set filters narrow favourites and the list alike and
+`GET api/FormConfigurations/entity-names`), each a labelled select Any / Yes / No in a compact inline panel; set filters narrow favourites and the list alike and
 are kept per page like the sort (localStorage `objectTypeExplorer.dashboard.filters`). A filter whose data hasn't
 loaded (or failed) is neither offered nor applied; its stored choice is kept for the next load.
 View opens `/display/{type}/{id}?returnTo=…`, Edit

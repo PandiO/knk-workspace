@@ -149,10 +149,12 @@ Branch: knk-web-app `claude/explorer-filter-226` (on `main` `c02b365`, #95 merge
 eye), and one with and one without any form configuration.
 
 1. On `/dashboard/Town`: right of the A–Z / Z–A button a **filter** button (funnel icon, tooltip "Filter entity
-   types"). Click it: a small panel opens under the search box with **Display configuration** and **Form
-   configuration**, each **Any / Yes / No** (Any selected), plus **Clear filters** (greyed out) and **Done**.
+   types"). Click it: a compact panel opens under the search box with two rows, **Display configuration** and **Form
+   configuration**, each with a dropdown **Any / Yes / No** (Any selected; fix round 2026-11-03: a dropdown instead
+   of three buttons), plus **Clear filters** (greyed out) and **Done**. Tab reaches both dropdowns; arrow keys change
+   them.
 2. Display configuration → **No**: only types with the crossed-out eye remain. → **Yes**: only types without it. The
-   filter button turns blue with a "1" badge.
+   filter button and the set dropdown turn the primary colour (blue in `current`, orange in `brand`) with a "1" badge.
 3. Display configuration **Any**, Form configuration → **No**: only types without any form configuration remain (check
    one on its ⚙ Entity setup page: "No form configurations found"). → **Yes**: only types with at least one. Both
    filters set: the badge says "2" and both apply.
