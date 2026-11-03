@@ -3,7 +3,7 @@
 **Status:** Living document — update in place as the code changes. Describes the package branches
 `claude/alpha-run-1-enchantments` (knk-web-api `0ecbe53`, knk-web-app `de93b69`, knk-plugin `fcb2e08a`); **not merged,
 not deployed, not live-tested**
-**Last updated:** 2026-11-02 (§ 1/§ 3: Flash Chaos's Slowness and Nausea as combat values, form seed v3, #201; § 6: ability cooldown boss bars, #202; in review on `claude/enchantments-201-202`, knk-plugin `ed704eff`, knk-web-api `8a02258`, knk-web-app `d058aea`, **not merged, not live-tested**); 2026-11-02 (§ 5: invisible players' armour and held items hidden, #211, in review on `claude/invisibility-full-hide`, not merged); 2026-10-27 (§ 5 round 2: name tags hidden while blinded and the invisible player's own tag, red
+**Last updated:** 2026-11-03 (§ 1/§ 3/§ 6: #201/#202 merged; § 6 grey cooldown bars, navigation bar on top); 2026-11-02 (§ 1/§ 3: Flash Chaos's Slowness and Nausea as combat values, form seed v3, #201; § 6: ability cooldown boss bars, #202; in review on `claude/enchantments-201-202`, knk-plugin `ed704eff`, knk-web-api `8a02258`, knk-web-app `d058aea`, **not merged, not live-tested**); 2026-11-02 (§ 5: invisible players' armour and held items hidden, #211, in review on `claude/invisibility-full-hide`, not merged); 2026-10-27 (§ 5 round 2: name tags hidden while blinded and the invisible player's own tag, red
 `Frozen by <staff> for: <reason>` bar, #169/#170, in review on `claude/alpha-run-1-effects`, knk-plugin `9bc2b31`, not
 merged); 2026-10-27 (§ 5: effect boss bars and the flash_chaos name-tag blackout, knk-plugin `911eb2a`); 2026-10-26 (PandiO/knk-workspace#151, #156, #155)
 **Companion docs:** [ability definition reference](../../specs/custom-enchantments/ABILITY_DEFINITION_REFERENCE.md),
@@ -145,7 +145,7 @@ can still show; the client draws them from entity data that Paper has no per-vie
 
 ## 6. Ability cooldown bars (#202)
 
-In review on knk-plugin `claude/enchantments-201-202` (`ed704eff`), **not merged, not live-tested**.
+Merged 2026-11-03 (knk-plugin `main` `4f29e9c3`); tested by the developer the same day. Grey bars and the navigation bar on top (`7e43fb87`) still need a live re-check.
 
 The player who used an ability gets a **grey** boss bar (white bar, grey text; boss bars have no grey) with its remaining cooldown, `Flash Chaos cooldown · 1:28`
 (`m:ss` from one minute up, seconds below), counting down until it can be used again:
