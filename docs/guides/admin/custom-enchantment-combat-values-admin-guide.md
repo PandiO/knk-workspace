@@ -162,3 +162,34 @@ at once. It stays through death (the cooldown keeps running), goes on quit and c
 still runs (then full at the time left). The bars sit next to the debuff bars (§ 5) and the staff freeze bar; the
 navigation bar always stays on top of them (developer, 2026-11-03).
 
+
+## 7. Death messages for Chaos and Flash Chaos kills (#222)
+
+In review on `claude/death-messages-222` (knk-plugin `13c0a205`, 2026-11-03), **not merged, not live-tested**.
+
+A player killed by **Chaos** or **Flash Chaos** gets a death message that names the ability and the player who used
+it, instead of vanilla's melee `<victim> was slain by <player>`:
+
+`Steve was killed with Flash Chaos by Alex`
+
+Only a death inside the ability's own hit counts (developer decision 2026-11-03). Every other death keeps the vanilla
+message: Poison or Wither over time, a fall or another hit shortly after a custom-enchantment hit, and a normal sword
+kill. In a siege match there is still no death message (the match clears it, as before). The kill is credited as
+before: the ability damages with its user as the source, so the killer, the PvP statistics (#164) and the siege kill
+handling are unchanged.
+
+The text is in the plugin's `config.yml`, read at every death (so `/ce reload` applies a change; no API or web-app
+setting):
+
+```yaml
+custom-enchantments:
+  death-messages:
+    enabled: true                    # false = vanilla messages for these kills too
+    default: "%victim% was killed with %enchantment% by %player%"
+    overrides:                       # optional, per enchantment id
+      chaos: "%victim% was blown apart by %player%'s %enchantment%"
+```
+
+Placeholders: `%victim%`, `%player%` (who used the ability), `%enchantment%` (its display name, `Chaos` /
+`Flash Chaos`); `&` colour codes work. An override that is empty uses the default. The names are plain player names
+(no rank prefix).
