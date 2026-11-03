@@ -1,7 +1,7 @@
 # knk-web-app — Architecture
 
 **Status:** Living document — reflects actual code, updated in place on each rescan
-**Last updated:** 2026-09-18 (scan basis: `knk-web-app` @ `4ff5dc6`, branch `claude/web-app-codebase-scan-4yqibi`); spot edits 2026-10-09 (ObjectTypeExplorer, KNG-61), 2026-10-10 (FormWizard Boolean fields, KNG-53), 2026-10-12 (FormWizard child forms, KNG-133, KNG-134; List edit load, step header, List validation, KNG-135, KNG-137, KNG-164; form session registry, KNG-136; cancel / delete-draft prompt, KNG-162; form configuration export/import, KNG-138); 2026-10-17 (form wizard chain merged to `main`; smoke-test follow-ups KNG-166..169, KNG-172, KNG-173: step strip, confirmations and refusals, rule builder parent forms, picker columns, metadata refresh); 2026-10-22 (display configuration export/import; KNG-195 hybrid picker submit); 2026-10-23 (step completion conditions run, KNG-186); 2026-10-23 (validation result log, batch validate, Re-check, KNG-269); 2026-10-25 (toast region, world-task polling; UX re-evaluation in `reports/2026-10-25-web-app-ux-reevaluation.md`); 2026-10-26 (dashboard type in the URL, `returnTo`, submit pending state, success toast — PandiO/knk-workspace#177 link 1, #58); 2026-10-26 (dashboard header New/Configure, flat explorer with marker, open form without the explorer + breadcrumb, detail page header, metadata-driven Create New, "Entity setup" — #177 link 2, #81, #39); 2026-10-26 (dashboard explorer: one scrollbar, favourite types — #194, branch `claude/dashboard-explorer-194`, merged into `main` `c3c0c9f`), 2026-10-26 (dashboard header row spacing — #195, branch `claude/dashboard-header-195`, merged into `main` `c3c0c9f`); 2026-10-26 (data router, unsaved-changes guard, sticky footer, blur validation + error summary, Save on any step in edit mode, single-line input, drafts owned by the login — #109, #186, #64 FormWizard part); 2026-10-27 (unsaved changes compared by value across all steps, Next's progress save no longer counts as saved — #109 fix round); 2026-11-01 (dashboard table state in the URL, rows as links, `aria-sort`, lootbox/moderation tab in the URL, "Drafts (n)" and "New with" — PandiO/knk-workspace#39, #177 follow-up, branch `claude/entity-lists-url-state`, not merged); 2026-11-03 (explorer filter: display / form configuration — #226, branch `claude/explorer-filter-226`, not merged)
+**Last updated:** 2026-09-18 (scan basis: `knk-web-app` @ `4ff5dc6`, branch `claude/web-app-codebase-scan-4yqibi`); spot edits 2026-10-09 (ObjectTypeExplorer, KNG-61), 2026-10-10 (FormWizard Boolean fields, KNG-53), 2026-10-12 (FormWizard child forms, KNG-133, KNG-134; List edit load, step header, List validation, KNG-135, KNG-137, KNG-164; form session registry, KNG-136; cancel / delete-draft prompt, KNG-162; form configuration export/import, KNG-138); 2026-10-17 (form wizard chain merged to `main`; smoke-test follow-ups KNG-166..169, KNG-172, KNG-173: step strip, confirmations and refusals, rule builder parent forms, picker columns, metadata refresh); 2026-10-22 (display configuration export/import; KNG-195 hybrid picker submit); 2026-10-23 (step completion conditions run, KNG-186); 2026-10-23 (validation result log, batch validate, Re-check, KNG-269); 2026-10-25 (toast region, world-task polling; UX re-evaluation in `reports/2026-10-25-web-app-ux-reevaluation.md`); 2026-10-26 (dashboard type in the URL, `returnTo`, submit pending state, success toast — PandiO/knk-workspace#177 link 1, #58); 2026-10-26 (dashboard header New/Configure, flat explorer with marker, open form without the explorer + breadcrumb, detail page header, metadata-driven Create New, "Entity setup" — #177 link 2, #81, #39); 2026-10-26 (dashboard explorer: one scrollbar, favourite types — #194, branch `claude/dashboard-explorer-194`, merged into `main` `c3c0c9f`), 2026-10-26 (dashboard header row spacing — #195, branch `claude/dashboard-header-195`, merged into `main` `c3c0c9f`); 2026-10-26 (data router, unsaved-changes guard, sticky footer, blur validation + error summary, Save on any step in edit mode, single-line input, drafts owned by the login — #109, #186, #64 FormWizard part); 2026-10-27 (unsaved changes compared by value across all steps, Next's progress save no longer counts as saved — #109 fix round); 2026-11-01 (dashboard table state in the URL, rows as links, `aria-sort`, lootbox/moderation tab in the URL, "Drafts (n)" and "New with" — PandiO/knk-workspace#39, #177 follow-up, merged 2026-11-03); 2026-11-02 (design tokens and switchable themes — #95, merged 2026-11-03); 2026-11-03 (fix round after the live comparison: orange brand primary, heading font on player pages only, full-bleed auth pages); 2026-11-03 (explorer filter: display / form configuration — #226, branch `claude/explorer-filter-226`, not merged)
 **Source scan:** `docs/reports/web-app-scan-2026-09-18.md`
 
 ## Stack
@@ -16,11 +16,11 @@
 - Styling: Tailwind CSS utility classes only. Fluent UI (`@fluentui/react-components`)
   was removed 2026-10-08 (KNG-71): only its provider was used. Shared component classes in
   `src/index.css`: `.btn` (`inline-flex`, `gap-2`; an icon's own `mx` margin is dropped under it) with
-  `.btn-primary` / `-secondary` / `-tertiary` / `-danger`, `.panel`, `.input`. Colours in `tailwind.config.js`:
-  `primary` (`DEFAULT`, `light`, `dark`), `secondary`, `accent`, `surface`. `@tailwindcss/forms` is **not** installed:
-  a field written `rounded-md border-gray-300 …` gets its 1px border from a zero-specificity base rule in `index.css`
-  (#38, 2026-10-26, branch `claude/styling-quick-wins-38`); `src/__tests__/tailwindStyles.test.ts` compiles the CSS
-  and checks these. Tokens follow in #95.
+  `.btn-primary` / `-secondary` / `-tertiary` / `-danger` / `-cta`, `.panel`, `.input`, `.field-error`. Every colour
+  is a theme token (see [Design tokens and themes](#design-tokens-and-themes), #95, branch `claude/design-tokens-95`,
+  not merged). `@tailwindcss/forms` is **not** installed: a field written `rounded-md border-gray-300 …` gets its
+  1px border from a zero-specificity base rule in `index.css` (#38); `src/__tests__/tailwindStyles.test.ts` compiles
+  the CSS and checks these.
 - Drag-and-drop: `@dnd-kit/*` (used in `FormWizard`, `FormConfigBuilder`,
   `DisplayConfigBuilder` for reorderable steps/sections/fields).
 - Icons: `lucide-react`.
@@ -33,6 +33,56 @@
   `metadataBundlePromise`, not React state).
 - Testing: Jest + React Testing Library (`react-scripts test`), 38 `*.test.ts(x)` files;
   Cypress for e2e (2 specs: `hello-world.cy.ts`, `registration.cy.ts`).
+
+## Design tokens and themes
+
+_Added 2026-11-02 for PandiO/knk-workspace#95 (rebrand phase 1), knk-web-app branch `claude/design-tokens-95` on
+`main` `1c9524d`; not merged. How to compare the themes: [design-themes-comparison.md](../guides/design-themes-comparison.md)._
+
+- **Tokens** live in `src/theme/tokens.css` (imported in `src/index.tsx` before `index.css`) as `"R G B"` CSS
+  variables, one block per theme under `:root[data-theme="current" | "brand" | "proposal"]`; a bare `:root` is
+  `current`. Two layers:
+  - Neutral ramps `--gray-50…950` and `--slate-50…950`. `tailwind.config.js` maps Tailwind's `gray` and `slate` to
+    them, so all ~2,600 gray/slate classes follow the theme without edits (Tailwind's own values in `current`).
+  - Semantic tokens `--color-*`, Tailwind keys: `primary` (`DEFAULT`, `dark` hover, `light` icons only, `fg`; as text,
+    border, ring or divide it reads `--color-primary-text`, `-text-dark` and `-line` through Tailwind's `textColor` /
+    `borderColor` / `ringColor` / `divideColor`, because the `brand` fill orange is too light for text on white), `cta`
+    (`DEFAULT`, `dark`, `fg`), `canvas` (page), `surface` (`DEFAULT`, `alt`, `hover`), `fg` (text), `muted`
+    (secondary text), `line` (decorative borders), `field` (form field borders, 3:1), `focus` (rings), `backdrop`
+    (`DEFAULT`, `fg`: behind the auth cards), `nav` (`DEFAULT`, `fg`, `muted`, `hover`, `line`, `accent`, `focus`; `--color-nav-action*` colours a `.btn-primary`
+    inside the bar), and
+    `danger` / `success` / `warning` / `info`, each with `DEFAULT` (text/icon/filled), `strong` (text on the tints),
+    `soft` (alert background), `muted` (badge background), `line` (alert border) and `fg` (text on the filled colour;
+    not for info). The key `primary` kept its name, so its ~580 uses switch with no component edit.
+  - Fonts: `--font-body` (Tailwind `font-sans`, the body) and `--font-display` (Tailwind `font-display`): `h1` on
+    player-facing pages only, no faux bold. A player-facing page calls `usePublicSurface()` (`src/theme/surface.ts`),
+    which sets `data-surface="public"` on `<html>` while it is mounted; admin pages and the nav title keep the body
+    font (developer's rule 2026-11-03; the brand guide sets no such limit). `current` keeps `'Inter', sans-serif` (Inter is never loaded: the Google `@import` in
+    `index.css` comes after other rules, so the system sans renders, as before). Lato 2.015 and Cinzel are
+    self-hosted under the OFL in `src/theme/fonts/` and only downloaded when a theme uses them. `brand` uses the
+    Enchanted Land **demo** (personal-use licence, readme kept alongside; a webfont licence is needed once the
+    project earns anything) with a `unicode-range` of the characters the demo draws, so its empty punctuation and
+    accent glyphs fall back to Lato (guide § 2).
+- **Switching:** `src/theme/themes.ts` (`THEMES`, `resolveInitialTheme`, `applyTheme`, `selectTheme`,
+  `useActiveTheme`, `themePickerVisible`). `index.tsx` applies the theme before the first render. Order: `?theme=`
+  (kept per tab in sessionStorage) → the picker's choice (localStorage `knk.theme`) → `current`; storage access is in
+  try/catch. The picker is a `menuitemradio` group in the account menu (`Navigation.tsx`) for holders of the moderator
+  or content node; `REACT_APP_THEME_PICKER=on|off` overrides that.
+- **Contrast:** `src/theme/__tests__/contrast.test.ts` parses `tokens.css` and checks every text/background pair
+  (4.5:1) and UI pair (field border, focus ring, nav underline, icons: 3:1) in every theme, plus that every theme
+  defines the same tokens. A failing pair fails `npm run test:ci`.
+- **Full-bleed public layout:** `.public-full-bleed` (auth pages' `<main>`, the landing root) is fixed to the
+  window in `brand` and `proposal`, so the dark backdrop fills it; `current` keeps the padded layout.
+- **Accessibility base rules** in `index.css` (all themes): a 2px `--color-focus` ring on every focused text field
+  (specificity 0,1,1: it loses to a field's own `focus:ring-*`); `--color-field` on `border-gray-300` /
+  `border-slate-300` fields; `--color-danger` (and a 1px width) on `border-red-300` fields; `.field-error` puts an
+  alert icon (CSS mask) before a field's error text, so danger is never colour alone.
+- **Migration tooling:** `scripts/codemods/tokens-95.js` swaps raw classes for tokens one for one (blue-600 →
+  primary, red-600 → danger, gray-900 → fg, bg-white → surface, text-gray-400 → muted, …; `--sweep-only` does just
+  the text-gray-400 sweep). It is idempotent: after merging a branch that still has raw classes, run it on the changed
+  files. `npm run lint:colors` (`scripts/report-raw-colors.js`) counts raw palette classes per file against
+  `scripts/raw-colors-baseline.json` and reports files that gained some; it never fails unless given `--strict`
+  (not in CI; there is no CI workflow in the repo). Migrated and unmigrated screens: guide § 5.
 
 ## High-level shape
 

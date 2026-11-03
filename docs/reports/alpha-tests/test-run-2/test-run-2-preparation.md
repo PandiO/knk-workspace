@@ -30,9 +30,12 @@ teleport, kits, items (I: #171, #172, #175), custom enchantment permissions (#19
 **Only if merged and deployed before the run:** #211 (Invisibility hides the player fully), #212 (lore wrap). Add their
 checks to the checklist when they are.
 
-**Out of scope:** gate pass-through styles (#167, on hold), client-only gate blocks (#168, skipped), arrows (#173,
-skipped). Siege non-member gate work (#213–#217) and the realtime chain (#178–#182) unless merged and deployed; if
-they are, test them in a separate block, not mixed into the run 1 retests.
+**New features, separate block (checklist § 4b, added 2026-11-03):** siege pre-game gate view for non-members
+(#213, parts #214–#217) and gate pass-through styles (#167), on the `claude/siege-pregame-gate-view` feature branches
+in all three repos. They are merged to trunk only after this block passes.
+
+**Out of scope:** client-only gate blocks (#168, skipped), arrows (#173, skipped). The realtime chain (#178–#182)
+unless merged and deployed; if it is, test it in a separate block, not mixed into the run 1 retests.
 
 ## 2. Before the run (go / no-go)
 
@@ -40,6 +43,10 @@ The alpha runs knk-web-api `master` `8df59b75`, knk-web-app `main` `b3b415d0` (w
 knk-plugin `main` `c8232607` ([update report 2026-11-01](../../2026-11-01-alpha-update-trunk-heads.md)). Anything
 merged since needs a deploy (and a dated update report) or must be left out of scope.
 
+- [ ] **§ 4b feature branches** (#213, #167): the three `claude/siege-pregame-gate-view` heads deployed together
+  (knk-plugin `231da73f`, knk-web-api `32c0773`, knk-web-app `8f518aa` as of 2026-11-03). This includes their trunk
+  merges, and adds the `AddGatePassThroughStyles` migration and GateDoor seed v4. `knk-release.sh` refuses non-trunk
+  commits, so the deploy route needs a developer decision first. Without it, § 4b is out of scope.
 - [ ] **Freeze builds.** Record the API, web and plugin commits in the checklist's results header. No deploys during
   the session; hotfixes go after the debrief.
 - [ ] **Snapshot** the database and world before the session (`knk-deploy`), so a broken match or economy can be reset.
