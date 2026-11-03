@@ -2,7 +2,7 @@
 
 **Status:** Written 2026-10-21 (invitations chain link 7, KNG-218). **Run on dev 2026-10-23/24** (Findings below: § 0–6
 and § 8 passed or accepted, § 7 waits for the alpha); the feature is merged to every trunk since 2026-10-24.
-**Last updated:** 2026-10-26 (§ 4 step 17a: the dash from the start, #196, knk-web-app `claude/claim-code-dash-196`, merged into `main` `c3c0c9f`); 2026-10-26 (§ 4 steps 16–17: claim code fields, #192, merged); 2026-10-25 (§ 3 step 11, § 4 step 16, § 7 steps 6–8: the register and login pages in Invite mode, a claim
+**Last updated:** 2026-11-03 (§ 4 step 17b: code entry cards centred, #228, merged 2026-11-03 into knk-web-app `main` `603843d`, live-tested 2026-11-03); 2026-10-26 (§ 4 step 17a: the dash from the start, #196, knk-web-app `claude/claim-code-dash-196`, merged into `main` `c3c0c9f`); 2026-10-26 (§ 4 steps 16–17: claim code fields, #192, merged); 2026-10-25 (§ 3 step 11, § 4 step 16, § 7 steps 6–8: the register and login pages in Invite mode, a claim
 code typed as a link code, the Cloudflare step in every flow and the missing-session banner — branch
 `claude/invite-only-register-page` in knk-web-app and knk-web-api, found on the alpha 2026-10-25); 2026-10-24
 **Linear:** [KNG-218](https://linear.app/kngpandi/issue/KNG-218) (I3, this guide), parent
@@ -255,6 +255,15 @@ step says otherwise.
     capitals checks: all as before. On a phone the slots line up too, and a one-time-code / password-manager fill shows
     the code without slots. Same on `/account/link` as an unlinked account. A screen reader still reads only the field,
     its label and the hint (not the underscores).
+17b. **Code entry cards centred** (#228, knk-web-app `claude/code-entry-centred-228` or all of link 3c in `claude/link-3c-combined`; developer feedback from the link
+    3b live test, 2026-11-03). `/link` logged out (and logged in as an unlinked account): heading, the "Joining the
+    server showed you a code…" text, the label **Code from the server**, the field with its `____-____` and the hint
+    "The 8 letters and digits; the field adds the dash itself." are all centred; so is a red error after a wrong code.
+    Typing, caret and the slots behave as in 17/17a. Continue with a valid code: the **Verified** step (log in / sign
+    up with an invitation, the numbered list) stays left-aligned. `/join` without a code: the label **Invitation
+    code**, the `KNK-_____-_____` field and its hint are centred; a wrong code → the "This invitation is invalid…" box
+    is centred too. A valid code → the sign-up form is left-aligned as before. `/account/link` (numbered steps) and
+    `/auth/register` are unchanged.
 
 ## 5. API outage with the gate on
 
