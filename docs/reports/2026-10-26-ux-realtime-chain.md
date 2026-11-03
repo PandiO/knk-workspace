@@ -18,7 +18,7 @@ test), `merged`, `blocked: <reason>`.
 | 2 | #185, #38, #192 | `claude/route-gates-185`, `claude/styling-quick-wins-38`, `claude/claim-code-field-192` | merged: knk-web-app `main` `7ba0f4b`, knk-workspace `main` `78bf6a3` (2026-10-26, by the coordinator at the developer's request) | subagent (fallback: add_repo needed in-session approval), 2026-10-26 | — / route-gates `0d14806`, styling `918f6b7`, claim-code `e2a5521` / — / route-gates `6d181c2`, styling `262bca9`, claim-code `4496485` | web-app 1218 / 1218 / 1240, all passed (baseline 1214/1214), suites 194 (193); `tsc` 9 errors = baseline; build OK, same 24 warnings |
 | 3 | #177 (link 2), #81, #39 (menu) | `claude/kng-60-dashboard-hub` | merged: knk-web-app `main` `7ba0f4b`, knk-workspace `main` `78bf6a3` (2026-10-26, by the coordinator at the developer's request) | subagent (fallback: add_repo needed in-session approval), 2026-10-26 | — / `9a203f8` / — / `186c851` | web-app 1270/1270 (baseline 1232/1232), suites 201 (195); `tsc` 9 errors = baseline; build OK, same 24 warnings |
 | 3b | #194, #195, #196 (follow-ups of links 1–3) | `claude/dashboard-explorer-194`, `claude/dashboard-header-195`, `claude/claim-code-dash-196` | merged: knk-web-app `main` `c3c0c9f` (2026-10-26, by the coordinator at the developer's request) | subagent, 2026-10-26 | — / explorer `29a6883`, header `be4adab`, claim-code `b8138e3` / — / explorer `3aea976`, header `61dcf23`, claim-code `31c41bd` | web-app 1315 / 1305 / 1311, all passed (baseline 1304/1304, suites 205 / 204 / 204 (204)); `tsc` 9 errors = baseline; build OK, same 24 warnings |
-| 3c | #225, #226, #227, #228, #229 (follow-ups of link 3b's live test, 2026-11-03) | `claude/explorer-favourite-copies-225`, `claude/explorer-filter-226`, `claude/form-hide-type-card-227`, `claude/code-entry-centred-228`, `claude/register-code-mask-229` | in review | subagent of the coordinator, 2026-11-03 | — / favourites `35486dd`, filter `f9f5e25`, type card `d86c4e6`, centred `31e4b68`, register mask `940bedd` / — / `53d93fc`, `c7e4f45`, `a35fb07`, `593a908`, `e7576df` | web-app 1424 / 1431 / 1424 / 1425 / 1425, all passed, 220 suites (baseline on `main` `44f9395`: 1422/1422, 220); `tsc` 0 = baseline; `CI=true` build OK; all five merged together 1441/1441, `tsc` 0 |
+| 3c | #225, #226, #227, #228, #229 (follow-ups of link 3b's live test, 2026-11-03) | `claude/explorer-favourite-copies-225`, `claude/explorer-filter-226`, `claude/form-hide-type-card-227`, `claude/code-entry-centred-228`, `claude/register-code-mask-229`; all five together: `claude/link-3c-combined` (testing only) | in review | subagent of the coordinator, 2026-11-03 (update after #95 the same day) | — / favourites `9c364a5`, filter `64bc998`, type card `66de410`, centred `439c8ed`, register mask `f604c99`, combined `cea6b6a` / — / `175f484`, `67662ae`, `2efb802`, `b7376f3`, `95c7150` | after merging `main` `c02b365` (#95): web-app 1775 / 1782 / 1775 / 1776 / 1776, combined 1792, all passed, 223 suites (baseline `main` 1773/1773); `tsc` 0; `CI=true` build OK; `lint:colors` adds no raw colour (the two files over the baseline are `main`'s own); first run on `44f9395`: 1424 / 1431 / 1424 / 1425 / 1425 (baseline 1422) |
 | 4 | #178 | `claude/realtime-signalr` | in review | subagent (fallback: add_repo needed in-session approval), 2026-10-26 | `b8a29d7` / — / `a64b7f83` / `e878ee2` | API 3338 passed, 4 failed (#99, = baseline reds), 87 skipped (baseline 3296/4/87); plugin core 2319 (2312), api-client 290 (280), paper 2149 (2140), 0 failures |
 | 5 | #64 (FormWizard), #109, #186 | `claude/form-wizard-edit-mode` | merged: web-app `main` `b3b415d`, API `master` `8df59b7`, workspace `main` `6e2b98c` (2026-11-01, by the coordinator at the developer's request) | subagent (fallback: add_repo needed in-session approval), 2026-10-26; fix round subagent 2026-10-27 | `09305ef` / `ff58c83` / — / `1e21ee2` | fix round: web-app 1359/1359, suites 212 (baseline on the merged `main` `c3c0c9f`: 1349/1349, 210); link 5: web-app 1330/1330, suites 209 (baseline 1304/1304, 204); `tsc` 9 errors = baseline; build OK, same 24 warnings; API 3356 passed, 4 failed (#99, = baseline reds), 88 skipped (baseline on the merged `master` `4d7a806`: 3339/4/88) |
 | 6 | #179 | `claude/realtime-signalr` | in review | subagent (fallback: add_repo needed in-session approval), 2026-10-26 | `38b0466` / — / `b48f1484` / `ae949bd` | API 3361 passed, 4 failed (#99, = baseline reds), 87 skipped (baseline 3338/4/87); plugin core 2323 (2319), api-client 298 (290), paper 2163 (2149), 0 failures |
@@ -38,16 +38,17 @@ flagged decisions.)
 - **Link 3b live-tested 2026-11-03** (#194, #195, #196; on web-app `main`): every step works. The developer's feedback
   became #225 (favourites as copies), #226 (explorer filter), #227 (no type card above an open form), #228 (centred code
   entry cards), #229 (masked link-code field on `/auth/register`, L2-9 / L3b-9); they run as follow-up link 3c.
-- **Test link 3c** (#225–#229, web app only, one branch per issue from `main` `44f9395`; no API, plugin, migration or
-  setting). Steps per issue in the link 3c block; full text on the workspace branches of the same names:
-  - #225 `claude/explorer-favourite-copies-225` web-app `35486dd`, workspace `53d93fc`: `guides/dashboard-return-smoke-test.md` § 9b.
-  - #226 `claude/explorer-filter-226` web-app `f9f5e25`, workspace `c7e4f45`: same guide § 9c.
-  - #227 `claude/form-hide-type-card-227` web-app `d86c4e6`, workspace `a35fb07`: same guide § 10a.
-  - #228 `claude/code-entry-centred-228` web-app `31e4b68`, workspace `593a908`: `guides/invitations-smoke-test.md` § 4 step 17b.
-  - #229 `claude/register-code-mask-229` web-app `940bedd`, workspace `e7576df`: same guide § 4 steps 16 and 17c.
-  The five web-app branches merge cleanly with each other and with `claude/world-task-hardening` / `claude/realtime-signalr`;
-  three conflict with `claude/design-tokens-95` (#95) in one hunk each (merge-order notes in the link 3c block). Flags
-  L3c-1…L3c-8.
+- **Test link 3c** (#225–#229, web app only; no API, plugin, migration or setting). **All five in one checkout:**
+  knk-web-app `claude/link-3c-combined` `cea6b6a` (`main` `c02b365` + the five branches; for testing only, merge per
+  branch). Per issue (each branch has `main` `c02b365`, #95, merged in); full steps on the workspace branches of the same names:
+  - #225 `claude/explorer-favourite-copies-225` web-app `9c364a5`, workspace `175f484`: `guides/dashboard-return-smoke-test.md` § 9b.
+  - #226 `claude/explorer-filter-226` web-app `64bc998`, workspace `67662ae`: same guide § 9c.
+  - #227 `claude/form-hide-type-card-227` web-app `66de410`, workspace `2efb802`: same guide § 10a.
+  - #228 `claude/code-entry-centred-228` web-app `439c8ed`, workspace `b7376f3`: `guides/invitations-smoke-test.md` § 4 step 17b.
+  - #229 `claude/register-code-mask-229` web-app `f604c99`, workspace `95c7150`: same guide § 4 steps 16 and 17c.
+  Check the changed screens in the `brand` and `current` themes too (`?theme=brand`). The branches merge cleanly with
+  each other, `claude/world-task-hardening` and `claude/realtime-signalr`. Flags L3c-1…L3c-8; #230 (broken
+  `field-error-strong` classes from #95's codemod, also in `/link`'s error box) is a separate fix.
 - **Link 5 merged** on 2026-11-01 at the developer's request after the re-test: web-app `main` `b3b415d`, API `master`
   `8df59b7`, workspace `main` `6e2b98c`. **After deploying web app and API together:** back up, then run
   `scripts/maintenance/remove-user1-drafts-and-workflow-sessions.sql` once (smoke test section 7, alpha-go-live § 4.3).
@@ -128,7 +129,9 @@ Two lanes that share no component repo, as in this chain:
 
 ## Follow-ups filed by links
 
-- Link 3c: none beyond its own issues; #225–#229 were filed from the developer's link 3b live test (sub-issues of #24).
+- Link 3c: #225–#229 were filed from the developer's link 3b live test (sub-issues of #24). While merging #95: #230 (the #95
+  codemod turned `text-danger-strong` into a non-existent `field-error-strong` / stray `-strong` class on 12 lines in 8
+  files on `main`; the error text in those boxes loses its colour).
 - Link 10: no new issue; comments on [#182](https://github.com/PandiO/knk-workspace/issues/182) (heads, tests, checklist, flags L10-1…L10-15) and [#31](https://github.com/PandiO/knk-workspace/issues/31) (startup work retried on the hub reconnect; the hub-off path stays open).
 - Link 8: no new issue; comment on [#181](https://github.com/PandiO/knk-workspace/issues/181) (heads, tests, checklist, flags L8-1…L8-20).
 - Link 9: #205 (bulk actions on the dashboard table, split from #39). Comments on [#39](https://github.com/PandiO/knk-workspace/issues/39) and [#177](https://github.com/PandiO/knk-workspace/issues/177).
@@ -1613,3 +1616,27 @@ of link 3b (all steps passed). Issues filed by this link as sub-issues of #24 (l
   code → `/link` "Verified"; 5. invitation step `ABCD1234` → link-code step filled in as `ABCD-1234`.
 
 **Deploy notes:** web app only, per branch. No API, plugin, migration, setting or script.
+
+### Link 3c — update after #95 (2026-11-03)
+
+At the coordinator's request, after #95 was merged (knk-web-app `main` `c02b365`, knk-workspace `main`):
+- **Main merged into every branch** (`--no-ff`, no rebase). Web-app heads: #225 `9c364a5` (merge `4e941c8`, then the
+  "All entity types" heading `text-gray-500` → `text-muted`), #226 `64bc998`, #227 `66de410`, #228 `439c8ed`, #229 `f604c99`.
+  Workspace heads (main merged, the architecture "Last updated" conflict kept both notes; smoke-test branch lines name
+  the new base and the combined branch): `175f484`, `67662ae`, `2efb802`, `b7376f3`, `95c7150`.
+- **Conflicts resolved with #95's tokens:** #226 `ObjectTypeExplorer.tsx` (kept the filter's empty state; the whole
+  filter UI now uses `border-field`, `text-muted`, `bg-surface(-alt|-hover)`, `border-line`, `border-primary` /
+  `text-primary`, badge `bg-primary text-primary-fg`, `ring-focus`), #228 `LinkPage.tsx` (main's `border-danger-line
+  bg-danger-soft` box plus the centring; main's broken `field-error-strong` left as is, #230), #229 `RegisterForm.tsx`
+  (kept the masked field; its format hint `text-muted`).
+- **`claude/link-3c-combined` `cea6b6a`:** `main` `c02b365` plus the five branches (`--no-ff` each, no conflicts), for one
+  test checkout; merging into `main` stays per branch.
+- **Checks** (Node 22, `npx npm@11 ci`): `main` baseline 1773/1773. #225 1775, #226 1782, #227 1775, #228 1776, #229 1776,
+  combined 1792 — all passed, 223 suites; `tsc --noEmit` 0 everywhere; `CI=true npm run build` OK everywhere. `npm run
+  lint:colors`: no file of link 3c over the baseline; the report lists only `DashboardHeaderMenu.tsx` (10) and
+  `PagedEntityTable.tsx` (6 vs 5), the same on `main` (not from link 3c).
+- **Theme check** (combined build, Chromium, stub API, `?theme=current` and `?theme=brand`): explorer favourites +
+  "All entity types", the filter panel (active button and badge blue/white in `current`, orange with black text in
+  `brand`), `/forms/Town` with the type card, `/link` and `/join` centred (computed `text-align: center` on the label
+  and the error box), `/auth/register` masked field `ABCD-1___`. No page errors. The `/link` error text renders in the
+  default text colour instead of dark red: #230.
