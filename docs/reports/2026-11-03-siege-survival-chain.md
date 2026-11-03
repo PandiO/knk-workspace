@@ -22,7 +22,22 @@ flagged decisions.)
   3. #180 `claude/world-task-hardening` (plugin, API, web app) — with #167 it opens **S4** (migrations).
   4. `claude/realtime-signalr` (plugin, API, web app; contains link 7 = `claude/world-task-hardening`; `realtime.enabled`
      off by default — check which link 10 changes act with the flag off before merging without the SignalR checklists) —
-     needed by **G1** and **S3** (`GateManager`, gate services, Siege files).
+     needed by **G1** and **S3** (`GateManager`, gate services, Siege files). **Flag-off check done (coordinator,
+     2026-11-03, read-only audit of plugin `8fa35148..eb22a655` and API `a27f61e..e769c4c`):** the plugin flag is
+     `realtime.enabled: false` (`knk-paper/src/main/resources/config.yml`, `paper/realtime/RealtimeSettings`); with it off
+     `RealtimeService.start()` only logs and never connects. **The API has no enable flag** (`Realtime` options are
+     capacity, presence grace and allowed server ids; hubs are mapped unconditionally since link 4). Link 10 changes that
+     still act with the flag off: the EF `RealtimeEntityChangeInterceptor` runs on every `SaveChanges` (CPU/alloc only,
+     try/catch, no DB writes; a "Realtime queue full" warning is possible during bulk writes with nobody subscribed);
+     `GateDoorService.Clear*BlockSnapshotsAsync` does one extra read; the plugin installs `GateRealtimeSync`/config-sync
+     hooks that are no-ops while disconnected, `SiegeGateController.roundReleased` schedules a main-thread hook call, and
+     the throttled timers keep their intervals. Everything else (entity-change router, cache invalidation, gate reloads,
+     `ReportWorlds`, startup-work resync) is inert. No migration, no new endpoint, no new config key in link 10; the branch
+     contains link 7 in all three repos (its migration ships with this merge). Caveat: the web app's `RealtimeProvider`
+     (link 8) still opens `/api/hubs/web` for logged-in users, so "flag off" is plugin-only. Smallest non-SignalR check
+     set before merging flag-off: API tests; one ordinary entity save and one bulk write watching the API log for
+     "realtime entity changes failed" / "Realtime queue full"; plugin tests and one dev-server start with the flag off
+     ("Realtime channel disabled" log line, timers still fire) plus one siege round start/end; link 7's own checklist.
   5. Arena-duels decision: merge `claude/arena-duels` or catch it up with `main` (plugin is 23 ahead / 40 behind) —
      needed by **S3**.
   6. Web building blocks (#95 `claude/design-tokens…`, #39 rest `claude/entity-lists-url-state`, #33, #187, #30) or a
