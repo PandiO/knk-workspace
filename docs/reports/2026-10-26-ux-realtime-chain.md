@@ -1,6 +1,6 @@
 # Dashboard, form wizard and realtime chain — progress report
 
-**Status:** Chain complete — links 1–3, 3b, 5 and 9 merged; links 4, 6, 7, 8 and 10 in review, waiting for the developer (2026-11-03)
+**Status:** Chain complete — links 1–3, 3b, 5 and 9 merged; links 4, 6, 7, 8 and 10 and follow-up link 3c (#225–#229) in review, waiting for the developer (2026-11-03)
 **Last updated:** 2026-11-03
 **Charter:** [UX_REALTIME_CHAIN.md](../ai-agents/handoffs/UX_REALTIME_CHAIN.md) · **Coordinator prompt:**
 [2026-10-26-ux-realtime-coordinator-prompt.md](../ai-agents/handoffs/2026-10-26-ux-realtime-coordinator-prompt.md)
@@ -18,6 +18,7 @@ test), `merged`, `blocked: <reason>`.
 | 2 | #185, #38, #192 | `claude/route-gates-185`, `claude/styling-quick-wins-38`, `claude/claim-code-field-192` | merged: knk-web-app `main` `7ba0f4b`, knk-workspace `main` `78bf6a3` (2026-10-26, by the coordinator at the developer's request) | subagent (fallback: add_repo needed in-session approval), 2026-10-26 | — / route-gates `0d14806`, styling `918f6b7`, claim-code `e2a5521` / — / route-gates `6d181c2`, styling `262bca9`, claim-code `4496485` | web-app 1218 / 1218 / 1240, all passed (baseline 1214/1214), suites 194 (193); `tsc` 9 errors = baseline; build OK, same 24 warnings |
 | 3 | #177 (link 2), #81, #39 (menu) | `claude/kng-60-dashboard-hub` | merged: knk-web-app `main` `7ba0f4b`, knk-workspace `main` `78bf6a3` (2026-10-26, by the coordinator at the developer's request) | subagent (fallback: add_repo needed in-session approval), 2026-10-26 | — / `9a203f8` / — / `186c851` | web-app 1270/1270 (baseline 1232/1232), suites 201 (195); `tsc` 9 errors = baseline; build OK, same 24 warnings |
 | 3b | #194, #195, #196 (follow-ups of links 1–3) | `claude/dashboard-explorer-194`, `claude/dashboard-header-195`, `claude/claim-code-dash-196` | merged: knk-web-app `main` `c3c0c9f` (2026-10-26, by the coordinator at the developer's request) | subagent, 2026-10-26 | — / explorer `29a6883`, header `be4adab`, claim-code `b8138e3` / — / explorer `3aea976`, header `61dcf23`, claim-code `31c41bd` | web-app 1315 / 1305 / 1311, all passed (baseline 1304/1304, suites 205 / 204 / 204 (204)); `tsc` 9 errors = baseline; build OK, same 24 warnings |
+| 3c | #225, #226, #227, #228, #229 (follow-ups of link 3b's live test, 2026-11-03) | `claude/explorer-favourite-copies-225`, `claude/explorer-filter-226`, `claude/form-hide-type-card-227`, `claude/code-entry-centred-228`, `claude/register-code-mask-229` | in review | subagent of the coordinator, 2026-11-03 | — / favourites `35486dd`, filter `f9f5e25`, type card `d86c4e6`, centred `31e4b68`, register mask `940bedd` / — / `53d93fc`, `c7e4f45`, `a35fb07`, `593a908`, `e7576df` | web-app 1424 / 1431 / 1424 / 1425 / 1425, all passed, 220 suites (baseline on `main` `44f9395`: 1422/1422, 220); `tsc` 0 = baseline; `CI=true` build OK; all five merged together 1441/1441, `tsc` 0 |
 | 4 | #178 | `claude/realtime-signalr` | in review | subagent (fallback: add_repo needed in-session approval), 2026-10-26 | `b8a29d7` / — / `a64b7f83` / `e878ee2` | API 3338 passed, 4 failed (#99, = baseline reds), 87 skipped (baseline 3296/4/87); plugin core 2319 (2312), api-client 290 (280), paper 2149 (2140), 0 failures |
 | 5 | #64 (FormWizard), #109, #186 | `claude/form-wizard-edit-mode` | merged: web-app `main` `b3b415d`, API `master` `8df59b7`, workspace `main` `6e2b98c` (2026-11-01, by the coordinator at the developer's request) | subagent (fallback: add_repo needed in-session approval), 2026-10-26; fix round subagent 2026-10-27 | `09305ef` / `ff58c83` / — / `1e21ee2` | fix round: web-app 1359/1359, suites 212 (baseline on the merged `main` `c3c0c9f`: 1349/1349, 210); link 5: web-app 1330/1330, suites 209 (baseline 1304/1304, 204); `tsc` 9 errors = baseline; build OK, same 24 warnings; API 3356 passed, 4 failed (#99, = baseline reds), 88 skipped (baseline on the merged `master` `4d7a806`: 3339/4/88) |
 | 6 | #179 | `claude/realtime-signalr` | in review | subagent (fallback: add_repo needed in-session approval), 2026-10-26 | `38b0466` / — / `b48f1484` / `ae949bd` | API 3361 passed, 4 failed (#99, = baseline reds), 87 skipped (baseline 3338/4/87); plugin core 2323 (2319), api-client 298 (290), paper 2163 (2149), 0 failures |
@@ -34,8 +35,19 @@ flagged decisions.)
 - **Links 1, 2 and 3 live-tested by the developer on 2026-10-26:** every step works or accepted. Follow-ups filed:
   #194 (explorer: one scrollbar, favourites on top), #195 (dashboard entity header styling), #196 (claim code field shows
   the dash from the start), #197 (remove "Entity setup" from the nav; not scheduled). #194–#196 run as follow-up link 3b.
-- **Live test link 3b** (#194, #195, #196; merged into web-app `main` `c3c0c9f` on 2026-10-26 at the developer's request):
-  checklist per issue in the link 3b block. Flags L3b-1…L3b-9.
+- **Link 3b live-tested 2026-11-03** (#194, #195, #196; on web-app `main`): every step works. The developer's feedback
+  became #225 (favourites as copies), #226 (explorer filter), #227 (no type card above an open form), #228 (centred code
+  entry cards), #229 (masked link-code field on `/auth/register`, L2-9 / L3b-9); they run as follow-up link 3c.
+- **Test link 3c** (#225–#229, web app only, one branch per issue from `main` `44f9395`; no API, plugin, migration or
+  setting). Steps per issue in the link 3c block; full text on the workspace branches of the same names:
+  - #225 `claude/explorer-favourite-copies-225` web-app `35486dd`, workspace `53d93fc`: `guides/dashboard-return-smoke-test.md` § 9b.
+  - #226 `claude/explorer-filter-226` web-app `f9f5e25`, workspace `c7e4f45`: same guide § 9c.
+  - #227 `claude/form-hide-type-card-227` web-app `d86c4e6`, workspace `a35fb07`: same guide § 10a.
+  - #228 `claude/code-entry-centred-228` web-app `31e4b68`, workspace `593a908`: `guides/invitations-smoke-test.md` § 4 step 17b.
+  - #229 `claude/register-code-mask-229` web-app `940bedd`, workspace `e7576df`: same guide § 4 steps 16 and 17c.
+  The five web-app branches merge cleanly with each other and with `claude/world-task-hardening` / `claude/realtime-signalr`;
+  three conflict with `claude/design-tokens-95` (#95) in one hunk each (merge-order notes in the link 3c block). Flags
+  L3c-1…L3c-8.
 - **Link 5 merged** on 2026-11-01 at the developer's request after the re-test: web-app `main` `b3b415d`, API `master`
   `8df59b7`, workspace `main` `6e2b98c`. **After deploying web app and API together:** back up, then run
   `scripts/maintenance/remove-user1-drafts-and-workflow-sessions.sql` once (smoke test section 7, alpha-go-live § 4.3).
@@ -116,6 +128,7 @@ Two lanes that share no component repo, as in this chain:
 
 ## Follow-ups filed by links
 
+- Link 3c: none beyond its own issues; #225–#229 were filed from the developer's link 3b live test (sub-issues of #24).
 - Link 10: no new issue; comments on [#182](https://github.com/PandiO/knk-workspace/issues/182) (heads, tests, checklist, flags L10-1…L10-15) and [#31](https://github.com/PandiO/knk-workspace/issues/31) (startup work retried on the hub reconnect; the hub-off path stays open).
 - Link 8: no new issue; comment on [#181](https://github.com/PandiO/knk-workspace/issues/181) (heads, tests, checklist, flags L8-1…L8-20).
 - Link 9: #205 (bulk actions on the dashboard table, split from #39). Comments on [#39](https://github.com/PandiO/knk-workspace/issues/39) and [#177](https://github.com/PandiO/knk-workspace/issues/177).
@@ -948,6 +961,12 @@ admin with every node, 40 entity types, 23 rows per table; scrollbars shown with
 
 **Follow-ups:** none filed. The same-code paste bug was fixed on `claude/claim-code-dash-196` (L3b-8).
 
+**Live test (developer, 2026-11-03, on web-app `main`):** every step of #194, #195 and #196 works. Feedback, filed as
+new issues and run as follow-up link 3c: #225 (starred types also stay in the normal list: favourites as copies), #226
+(a filter button next to sort: has display / form configuration), #227 (hide the entity type overview card above an
+open form), #228 (centre all text of the code entry card on `/link` and the invitation code page), #229 (the
+`/auth/register` link-code field gets the masked claim-code input: L2-9 / L3b-9 resolved).
+
 **Notes for later links**
 - Link 9 (#177 follow-up, "Drafts (n)" / "New with: {config}"): they go into the `data-testid="dashboard-header"` row's
   button group (`flex min-w-0 max-w-full items-center gap-2`, buttons `h-9`) on `claude/dashboard-header-195`; merge it
@@ -1499,3 +1518,98 @@ in `config.yml`; the events need `realtime.enabled: true`.
 - #121: with the hub up the entity TTLs only matter for missed events; the TTL work can assume that.
 - Option C (outbox): replace the sink factory in `RealtimeSetup` (`RealtimeEntityChangeInterceptor`'s `sinkFor`) with one
   that writes outbox rows in the transaction; the map stays.
+
+## Link 3c — #225, #226, #227, #228, #229: explorer favourites and filter, open form without the type card, code entry pages
+
+**Started:** subagent of the coordinator, 2026-11-03; finished 2026-11-03. Follow-up link for the developer's live test
+of link 3b (all steps passed). Issues filed by this link as sub-issues of #24 (label `improvement`).
+**Base:** knk-web-app `main` `44f9395` for all five branches; knk-workspace branches of the same names from `main`
+`657311e`. Web app only. Own worktrees under `/home/user/wt-link3c/`.
+
+**Commits** (web-app / workspace heads)
+- `claude/explorer-favourite-copies-225`: `35486dd` / `53d93fc` (smoke test § 9b, web-app architecture, CHANGELOG).
+- `claude/explorer-filter-226`: `f9f5e25` / `c7e4f45` (smoke test § 9c, web-app architecture, CHANGELOG).
+- `claude/form-hide-type-card-227`: `d86c4e6` / `a35fb07` (smoke test § 10a, web-app architecture, CHANGELOG).
+- `claude/code-entry-centred-228`: `31e4b68` / `593a908` (invitations smoke test 17b, CHANGELOG).
+- `claude/register-code-mask-229`: `940bedd` / `e7576df` (invitations smoke test 16 + 17c, account identity § 4, player
+  account guide, CHANGELOG).
+
+**What changed (web-app)**
+- **#225:** `ObjectTypeExplorer` no longer removes favourites from the list: "Favourites" on top, then "All entity
+  types" (heading only while favourites show) with every type; with groups, every type is bucketed as before. Both
+  copies are starred and highlighted when selected.
+- **#226:** `ObjectTypeExplorer` `filters` prop (`{ id, label, entityNames | null }[]`): a filter button (ListFilter
+  icon, `aria-expanded`, badge with the count) right of the sort toggle opens an inline panel under the search row with
+  Any / Yes / No radio groups per filter, Clear filters and Done (Escape closes, focus back on the button). Set filters
+  narrow favourites and the list; "No entity types match" offers Clear filters. Stored in localStorage
+  `objectTypeExplorer.<storageKey>.filters` (`{"displayConfiguration":"no"}`; corrupt = none). `ObjectDashboard` passes
+  "Display configuration" (the existing marker's set) and "Form configuration" (new call to
+  `formConfigClient.getEntityNames()` = `GET api/FormConfigurations/entity-names`).
+- **#227:** `FormWizardPage` renders `EntityMetadataNavigator` only while no wizard is open.
+- **#228:** `/link` code step: the form gets `text-center` (intro, label, hint) and so does the error box while the code
+  step shows; `/join` code step: the form gets `text-center` (label, hint, the invalid-invitation box).
+- **#229:** `RegisterForm`'s link-code field is `ClaimCodeInput foldLookAlikes={false}` with the format hint; state is
+  the 8 characters. "Check code" asks `validate-link-code`; on a refusal of a code without U it asks `claim/check`
+  (folded) and a live claim code is kept (`savePendingClaim`) and goes to `/link`. The "That's the code from the
+  server's disconnect screen" note and the "Continue with this code" label are gone (the shape no longer tells);
+  the refusal hint for a possible claim code stays. `normalizeLinkCodeInput` (only used there) removed.
+
+**Tests vs baseline** (Node 22, `npx npm@11 ci`, per branch)
+- Baseline `main` `44f9395`: `npm run test:ci` 1422/1422, 220 suites; `npx tsc --noEmit` 0 errors; `CI=true npm run
+  build` compiles.
+- #225 1424/1424 (+2 explorer, dashboard tests updated for the copies); #226 1431/1431 (+7 explorer, +2 dashboard);
+  #227 1424/1424 (+2 `FormWizardPage.entitySetup`); #228 1425/1425 (+2 LinkPage, +1 JoinPage); #229 1425/1425 (+5,
+  −2 replaced/removed in `RegisterForm.test.tsx`). All 220 suites, `tsc` 0, `CI=true` build OK on every branch.
+- All five merged together on `main`: 1441/1441, `tsc` 0.
+- No browser check this time (unit tests only); the mask of #229 copies the input's font and spacing like on `/link`.
+
+**Flagged decisions (reversible)**
+- **L3c-1** (#225) Under the favourites the list gets an "All entity types" heading (only while favourites show), so the
+  second copy reads as the full list rather than a duplicate.
+- **L3c-2** (#226) "Form configuration: Yes" = at least one form configuration (not necessarily a default); "Display
+  configuration: Yes" = a published default display configuration, the same rule as the crossed-out eye.
+- **L3c-3** (#226) Filters apply to favourites too (a hidden favourite is hidden in both places); dashboard only (the
+  Entity setup explorer has no filter button), like the stars.
+- **L3c-4** (#226) The panel is inline under the search row, not a popover, so the scrolling list can't clip it; a
+  filter whose data is still loading or failed is not offered and its stored choice waits.
+- **L3c-5** (#227) The card is hidden for every open form on the Entity setup route (from the dashboard or from the
+  setup page), not only for forms opened from the dashboard.
+- **L3c-6** (#228) Centred only while the code entry is the whole card: `/link` before verification and `/join` before a
+  valid code. `/account/link` (numbered instructions), `/auth/register` and the `/link` verified step stay left-aligned.
+- **L3c-7** (#229) Without the dash as a signal, a refused link code without U costs one extra anonymous `claim/check`
+  (per-IP lookup limit, as L2-8 for the invitation step); a 429 or network error on `validate-link-code` asks nothing more.
+- **L3c-8** (#229) Look-alikes are not folded in the field (O, I, L stay, like `/account/link`); the claim probe folds them.
+
+**Merge notes**
+- knk-web-app: the five branches merge cleanly into `main`, with each other (#225 and #226 both edit
+  `ObjectTypeExplorer.tsx` and its tests in different places) and with `claude/world-task-hardening` (`d7a0896`) and
+  `claude/realtime-signalr` (`c7a3e85`) (#227's one-line `FormWizardPage.tsx` change merges cleanly with both).
+- With `claude/design-tokens-95` (#95, `64feecc`): every branch conflicts in `src/components/PagedEntityTable/PagedEntityTable.tsx`,
+  which already conflicts between `main` and #95 (not from link 3c). Own conflicts, one hunk each: #226
+  `src/components/ObjectTypeExplorer/ObjectTypeExplorer.tsx` (the "No entity types match" block), #228
+  `src/pages/auth/LinkPage.tsx` (the error box classes), #229 `src/components/auth/RegisterForm.tsx` (the link-code field's
+  classes). #225 and #227 have no own conflict with #95. Suggested order: merge link 3c first (small), then resolve #95's
+  token classes onto these lines when #95 is brought up to date with `main`.
+- knk-workspace: mechanical conflicts only — `docs/CHANGELOG.md` "Unreleased" (each branch replaces "(Nothing at the
+  moment.)": keep all), the "Last updated" lines of `guides/dashboard-return-smoke-test.md`,
+  `architecture/web-app-architecture.md` (#225–#227) and `guides/invitations-smoke-test.md` (#228, #229): keep every
+  note; #225 and #226 both insert a section after § 9a step 8 (keep § 9b, then § 9c) and edit the favourites sentence
+  of the architecture paragraph (keep both).
+
+**Live checklist** (short; full text in the guides named above)
+- **#225** (§ 9b): 1. star Town and Category → in Favourites **and** still in "All entity types" at their place;
+  2. unstar from either copy → only leaves Favourites; 3. selected favourite highlighted in both places; 4. Z–A and
+  search apply to both parts; 5. no favourites → no headings.
+- **#226** (§ 9c): 1. filter button right of sort opens Any/Yes/No for Display and Form configuration; 2. Display No →
+  only types with the crossed-out eye, badge "1"; 3. Form No/Yes → types without/with a form configuration; 4. nothing
+  left → "No entity types match" + Clear filters; 5. Escape/Done closes, table unchanged; 6. reload keeps the filters;
+  `/forms` has no filter button.
+- **#227** (§ 10a): 1. Dashboard › EnchantmentDefinition › Edit Sharpness → breadcrumb then form, no type card; 2. same
+  for New, New with, a draft; 3. `/forms/<Type>` without a form still shows the card; open + Cancel → card back.
+- **#228** (step 17b): 1. `/link` code step: all text, label, hint and error centred; 2. verified step left-aligned;
+  3. `/join` code entry and its invalid box centred; sign-up form left-aligned.
+- **#229** (steps 16, 17c): 1. `/auth/register` link-code field shows `____-____` and the hint; 2. typing, paste,
+  Backspace/Delete as on `/link`, O/I/L kept; 3. a valid `/account link` code → "This code belongs to …"; 4. a live claim
+  code → `/link` "Verified"; 5. invitation step `ABCD1234` → link-code step filled in as `ABCD-1234`.
+
+**Deploy notes:** web app only, per branch. No API, plugin, migration, setting or script.
