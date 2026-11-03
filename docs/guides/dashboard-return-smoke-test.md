@@ -144,7 +144,7 @@ private window, to begin without favourites.
 
 ## 9b. Favourites are copies; the list keeps every type (#225)
 
-Branch: knk-web-app `claude/explorer-favourite-copies-225` (on `main` `44f9395`). Developer feedback from the link 3b
+Branch: knk-web-app `claude/explorer-favourite-copies-225` (on `main` `c02b365`, #95 merged in); all five link 3c branches together: `claude/link-3c-combined`. Developer feedback from the link 3b
 live test (2026-11-03): a starred type should not go "missing" from the list. This changes steps 9a.2 and 9a.5.
 
 1. On `/dashboard/Town` star **Town** and **Category**. Expected: both appear under **Favourites** at the top (A–Z,
