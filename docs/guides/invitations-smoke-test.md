@@ -255,7 +255,7 @@ step says otherwise.
     capitals checks: all as before. On a phone the slots line up too, and a one-time-code / password-manager fill shows
     the code without slots. Same on `/account/link` as an unlinked account. A screen reader still reads only the field,
     its label and the hint (not the underscores).
-17b. **Code entry cards centred** (#228, knk-web-app `claude/code-entry-centred-228`; developer feedback from the link
+17b. **Code entry cards centred** (#228, knk-web-app `claude/code-entry-centred-228` or all of link 3c in `claude/link-3c-combined`; developer feedback from the link
     3b live test, 2026-11-03). `/link` logged out (and logged in as an unlinked account): heading, the "Joining the
     server showed you a code…" text, the label **Code from the server**, the field with its `____-____` and the hint
     "The 8 letters and digits; the field adds the dash itself." are all centred; so is a red error after a wrong code.
