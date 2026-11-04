@@ -1,7 +1,7 @@
 # NPC behavior model — perception, psychology, decisions and combat (guards first)
 
 **Status:** Working concept from a developer design session; not approved defaults, not an implementation plan, nothing implemented. Items marked *(future update)* belong to the overall vision but are not planned for the first version.
-**Last updated:** 2026-11-04 (initial concept, developer voice design session)
+**Last updated:** 2026-11-04 (hybrid navigation decision in §2: K&K plans, Citizens moves); 2026-11-04 (initial concept, developer voice design session)
 **Issue:** [PandiO/knk-workspace#234](https://github.com/PandiO/knk-workspace/issues/234)
 **Parent design:** [npc-platform/DESIGN.md](DESIGN.md) (KNG-36), mainly its O11 (city guard profile) and O12 (combat, stats, factions, debugging, performance); related [#146](https://github.com/PandiO/knk-workspace/issues/146)
 **Authority:** Developer statements in the 2026-11-04 session. Where this document says "agreed" or "developer", the developer chose it; everything else is a proposal recorded for discussion. Library, schema and numeric values are examples, not defaults.
@@ -26,13 +26,22 @@ This document adds a behavior model on top of the existing platform boundaries; 
 | §5b combat and speed profiles, modifier pipeline | Combat style profiles and proficiency (§10) feed the §5b resolver as modifiers; they don't own cooldown/damage mechanics |
 | §6 automatic navigation, optional lane overrides, caller-supplied ruleset | Dynamic routes (§12) choose destinations; KnK navigation executes them |
 
-**Conflict to resolve:** the session's first architecture sketch put execution "on top of the Citizens navigator". V3 has no Citizens dependency (#146) and §6 selects KnK navigation; the executor choice stays open under the §9 platform audit. Citizens/Sentinel are kept below as references only.
+### Execution layer: hybrid navigation (developer decision 2026-11-04)
+
+The developer chose a **hybrid**: K&K navigation plans, Citizens moves.
+
+- **Route planning: K&K navigation.** The road graph and the walk pathfinder ([navigation](../navigation/DESIGN.md), [last-mile](../navigation/LAST_MILE_PATHFINDING.md)) plan long routes and hand Citizens the waypoints (proposed API: `Navigator.setTarget(Iterable<Vector>)`, to verify against the Citizens version in use).
+- **Movement: Citizens.** Citizens executes stepping, jumping, doors and unstuck handling. For short off-road legs (for example to a post on a wall) it pathfinds itself; its block examiners are configured to respect K&K movement rulesets and domain/gate access, so DESIGN §6's rules stay binding.
+- **Reason:** K&K runs many human-like (player-shaped) NPCs. Those have no vanilla AI, and Citizens' movement code is mature and maintained across Minecraft updates; building and maintaining that ourselves would cost far more.
+- **Consequence:** V3 takes on a Citizens dependency again (the V3 plugin has none today). Main risk: waiting on a Citizens release after a Minecraft update. The DESIGN §2 platform-adapter boundary keeps behavior Citizens-free so the executor can still be swapped.
+
+Still to do under the DESIGN §9 audit: check the Citizens API version and licence, confirm waypoint following and block-examiner hooks, and benchmark on the castle map (many NPCs, closed gates, changed permissions, unloaded chunks). Siege Survival's mob-based plan (Paper MobGoals, DESIGN §5b) is not changed by this decision; whether Siege attackers also move through Citizens is open.
 
 ## 3. References
 
 **Libraries and plugins**
 
-- **Citizens**: NPC base and navigator; no meaningful library of combat presets.
+- **Citizens**: NPC base and navigator; selected as the movement executor (§2). No meaningful library of combat presets.
 - **Sentinel** (mcmonkeyprojects, open source): the main Citizens combat add-on: targeting, melee/ranged, weapon switching, chasing, guarding, respawning. Useful for targeting filters and the attack loop; monolithic, not composable.
 - **MythicMobs**: skills/targeters/triggers; best reference for describing combat behavior in config.
 - **Paper Mob Goals API**: priority-based goals; pattern for small reusable behaviors (keep distance, flee at low health, strafe). §5b already proposes a MobGoals adapter.
@@ -64,7 +73,7 @@ Direction: a hybrid of Sentinel-style targeting, Mythic-style config and goal-st
 4. **Psychological model** (§9): personality, physical state, mood, emotions, relationships.
 5. **Decision layer** (§8): utility-scored actions.
 6. **Combat** (§10): style profiles, proficiency, weapon switching.
-7. **Execution**: navigation (§6 of DESIGN, §12 here) and the §5b attack/speed adapters.
+7. **Execution**: K&K route planning + Citizens movement (§2 hybrid decision; DESIGN §6, §12 here) and the §5b attack/speed adapters.
 
 ## 5. Perception
 
@@ -274,7 +283,7 @@ Gate-specific staffing, shifts and schedules are deferred to a dedicated gate-gu
 - **Points of interest (POIs)** with a type label and weight, defined per structure type. Gate: wall left, wall right, inner wall/gate, outer wall/gate, tower, wall walk. Town: market stall, tavern, bench, well, armoury door.
 - Walls between gates have no regions and don't fit the road navigation profiles (mostly one block type), so labelled POIs cover them (developer).
 - Road navigation paths can be tagged (main road, wall walk) as preferred routes.
-- NPCs pick their next POI by utility (time since last watched, importance, distance, role, mood); a **coverage map** cools recently seen areas and heats unseen ones so groups spread out. KnK navigation executes the route (DESIGN §6). Hand-placed fixed routes stay possible (ceremonial guards); they map to DESIGN §6 lane overrides.
+- NPCs pick their next POI by utility (time since last watched, importance, distance, role, mood); a **coverage map** cools recently seen areas and heats unseen ones so groups spread out. K&K navigation plans the route and Citizens walks it (§2 hybrid decision; DESIGN §6 rules apply). Hand-placed fixed routes stay possible (ceremonial guards); they map to DESIGN §6 lane overrides.
 
 **Phase 2, learning POI patterns** (developer request; build after labels and heuristics):
 
@@ -309,7 +318,7 @@ Not in the first version: Law & Order (local/global laws, crimes, punishments, j
 
 ## 16. Open questions
 
-- Executor choice (§2 conflict) and how traits map onto DESIGN §2 template/instance/trait/behavior boundaries.
+- Citizens verification and benchmark for the hybrid (§2); whether Siege attackers also use Citizens; how traits map onto DESIGN §2 template/instance/trait/behavior boundaries.
 - Axis ranges, baselines, drift and decay rates; default influence sources; personality presets.
 - How alert states enable actions; situational states (fire, monster attack).
 - Proficiency growth curve and talent caps; ranged/melee switching thresholds.
