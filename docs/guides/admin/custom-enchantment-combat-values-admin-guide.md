@@ -3,7 +3,7 @@
 **Status:** Living document — update in place as the code changes. Describes the trunks (knk-plugin `main`,
 knk-web-api `master`, knk-web-app `main`): package B (#151, #155, #156) merged 2026-10-26 and live-tested 2026-10-27;
 later sections note their own state
-**Last updated:** 2026-11-03 (§ 1/§ 2/§ 3: Chaos and Flash Chaos area damage, gate damage and radii as combat values, form seed v4, #223; in review on `claude/area-damage-223`, knk-plugin `9c1a7e9d`, knk-web-api `5b3afc3`, knk-web-app `53d715b`, **not merged, not live-tested**); 2026-11-03 (§ 5: #211 keeps the swirl particles, knk-plugin `main` `8f11bed5`); 2026-11-03 (status lines: B, G, #211 merged; § 1/§ 3/§ 6: #201/#202 merged; § 6 grey cooldown bars, navigation bar on top); 2026-11-02 (§ 1/§ 3: Flash Chaos's Slowness and Nausea as combat values, form seed v3, #201; § 6: ability cooldown boss bars, #202; in review on `claude/enchantments-201-202`, knk-plugin `ed704eff`, knk-web-api `8a02258`, knk-web-app `d058aea`, **not merged, not live-tested**); 2026-11-02 (§ 5: invisible players' armour and held items hidden, #211, in review on `claude/invisibility-full-hide`, not merged); 2026-10-27 (§ 5 round 2: name tags hidden while blinded and the invisible player's own tag, red
+**Last updated:** 2026-11-04 (§ 1/§ 2/§ 3 #223 and § 7 #222 merged, knk-plugin `main` `bd4eff6`, knk-web-api `master` `369fd1c`, knk-web-app `main` `8613916`; smoke-tested by the developer 2026-11-04; § 7: the default death message says `using <item>`); 2026-11-03 (§ 1/§ 2/§ 3: Chaos and Flash Chaos area damage, gate damage and radii as combat values, form seed v4, #223; § 7: death messages, #222); 2026-11-03 (§ 5: #211 keeps the swirl particles, knk-plugin `main` `8f11bed5`); 2026-11-03 (status lines: B, G, #211 merged; § 1/§ 3/§ 6: #201/#202 merged; § 6 grey cooldown bars, navigation bar on top); 2026-11-02 (§ 1/§ 3: Flash Chaos's Slowness and Nausea as combat values, form seed v3, #201; § 6: ability cooldown boss bars, #202; in review on `claude/enchantments-201-202`, knk-plugin `ed704eff`, knk-web-api `8a02258`, knk-web-app `d058aea`, **not merged, not live-tested**); 2026-11-02 (§ 5: invisible players' armour and held items hidden, #211, in review on `claude/invisibility-full-hide`, not merged); 2026-10-27 (§ 5 round 2: name tags hidden while blinded and the invisible player's own tag, red
 `Frozen by <staff> for: <reason>` bar, #169/#170, in review on `claude/alpha-run-1-effects`, knk-plugin `9bc2b31`, not
 merged); 2026-10-27 (§ 5: effect boss bars and the flash_chaos name-tag blackout, knk-plugin `911eb2a`); 2026-10-26 (PandiO/knk-workspace#151, #156, #155)
 **Companion docs:** [ability definition reference](../../specs/custom-enchantments/ABILITY_DEFINITION_REFERENCE.md),
@@ -185,12 +185,17 @@ navigation bar always stays on top of them (developer, 2026-11-03).
 
 ## 7. Death messages for Chaos and Flash Chaos kills (#222)
 
-In review on `claude/death-messages-222` (knk-plugin `13c0a205`, 2026-11-03), **not merged, not live-tested**.
+Merged 2026-11-04 (knk-plugin `main` `bd4eff6`) after the developer's smoke test the same day; the `using <item>` part
+was added after that test (developer request) and still needs a live look.
 
-A player killed by **Chaos** or **Flash Chaos** gets a death message that names the ability and the player who used
-it, instead of vanilla's melee `<victim> was slain by <player>`:
+A player killed by **Chaos** or **Flash Chaos** gets a death message that names the ability, the player who used it
+and the item it was used with, instead of vanilla's melee `<victim> was slain by <player>`:
 
-`Steve was killed with Flash Chaos by Alex`
+`Steve was killed with Flash Chaos by Alex using [Storm Blade]`
+
+The item is shown like vanilla's `using [Sword]`: its name in brackets, and hovering over it shows the item. Unlike
+vanilla, which adds `using` only for an item with a custom name, the ability message always names the item (an
+unnamed one shows its normal name, `[Diamond Sword]`); if the item is unknown, ` using …` is left out.
 
 Only a death inside the ability's own hit counts (developer decision 2026-11-03). Every other death keeps the vanilla
 message: Poison or Wither over time, a fall or another hit shortly after a custom-enchantment hit, and a normal sword
@@ -205,11 +210,12 @@ setting):
 custom-enchantments:
   death-messages:
     enabled: true                    # false = vanilla messages for these kills too
-    default: "%victim% was killed with %enchantment% by %player%"
+    default: "%victim% was killed with %enchantment% by %player% using %item%"
     overrides:                       # optional, per enchantment id
-      chaos: "%victim% was blown apart by %player%'s %enchantment%"
+      chaos: "%victim% was blown apart by %player%'s %enchantment% using %item%"
 ```
 
 Placeholders: `%victim%`, `%player%` (who used the ability), `%enchantment%` (its display name, `Chaos` /
-`Flash Chaos`); `&` colour codes work. An override that is empty uses the default. The names are plain player names
+`Flash Chaos`), `%item%` (the item, with hover; leave it out of a pattern to drop it); `&` colour codes work. A server
+that kept an older `config.yml` without `%item%` in `default` shows no item until the line is updated. An override that is empty uses the default. The names are plain player names
 (no rank prefix).
