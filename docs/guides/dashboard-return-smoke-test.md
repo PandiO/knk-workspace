@@ -1,7 +1,7 @@
 # Dashboard as the CRUD hub: return, submit pending state, toast, New/Configure, breadcrumbs, detail header, Create New (#177 links 1–2, #58, #81, #39) — smoke test
 
 **Status:** Run by the developer on 2026-10-26 on knk-web-app `main` `7ba0f4b`: all steps work or accepted (findings below)
-**Last updated:** 2026-11-03 (section 9c: explorer filter, #226, knk-web-app `claude/explorer-filter-226`, not merged); 2026-11-03 (section 9b: favourites are copies, #225, merged 2026-11-03 into knk-web-app `main` `a6d83c9`, live-tested 2026-11-03); 2026-10-26 (section 8a: header row spacing, #195, knk-web-app `claude/dashboard-header-195`, merged into `main` `c3c0c9f`); 2026-10-26 (section 9a: one scrollbar and favourites, #194, knk-web-app `claude/dashboard-explorer-194`, merged into `main` `c3c0c9f`); 2026-10-26 (sections 8–14 added for #177 link 2 = chain link 3)
+**Last updated:** 2026-11-03 (section 9c: explorer filter, #226, merged 2026-11-04 into knk-web-app `main` `738c16a`); 2026-11-03 (section 9b: favourites are copies, #225, merged 2026-11-03 into knk-web-app `main` `a6d83c9`, live-tested 2026-11-03); 2026-10-26 (section 8a: header row spacing, #195, knk-web-app `claude/dashboard-header-195`, merged into `main` `c3c0c9f`); 2026-10-26 (section 9a: one scrollbar and favourites, #194, knk-web-app `claude/dashboard-explorer-194`, merged into `main` `c3c0c9f`); 2026-10-26 (sections 8–14 added for #177 link 2 = chain link 3); section 10a: no type overview card above an open form, #227, merged 2026-11-04 into knk-web-app `main` `738c16a`); 2026-10-26 (sections 8–14 added for #177 link 2 = chain link 3)
 **Issues:** [PandiO/knk-workspace#177](https://github.com/PandiO/knk-workspace/issues/177) (links 1 and 2) ·
 [#58](https://github.com/PandiO/knk-workspace/issues/58) · [#81](https://github.com/PandiO/knk-workspace/issues/81) (detail
 page header) · [#39](https://github.com/PandiO/knk-workspace/issues/39) (Create New menu only)
@@ -194,7 +194,23 @@ eye), and one with and one without any form configuration.
 4. On `/forms/Town` open a configuration (or resume Saved Progress). Expected: no explorer; breadcrumb **Entity setup ›
    Town › New Town**. Click **Town**: the configuration lists come back with the explorer.
 
-## 11. Detail page header (#81)
+## 10a. No type overview card above an open form (#227)
+
+Branch: knk-web-app `claude/form-hide-type-card-227` (on `main` `c02b365`, #95 merged in); all five link 3c branches together: `claude/link-3c-combined`. Developer feedback from the link 3b live
+test (2026-11-03): the card "EnchantmentDefinition (EnchantmentDefinition) 19 fields ▸ Fields" above an open form
+looked like debug output.
+
+1. `/dashboard/EnchantmentDefinition` → ✏️ **Edit** "Sharpness" (any row). Expected: the breadcrumb **Dashboard ›
+   EnchantmentDefinition › Edit Sharpness** and directly below it the form; no card with the type name, "(…)", the
+   field count and "▸ Fields".
+2. Same for **New {Type}**, "New with ▾" → another configuration, and "Drafts (n)" → a draft: no card above the form.
+3. On `/forms/EnchantmentDefinition` (⚙ from the dashboard, no form open): the card is still there above Default
+   Table Columns. Open a configuration from the list: the card goes; **Cancel form** (→ Leave): back on the lists,
+   the card is back.
+4. Fix round (2026-11-03): with a form open (e.g. Dashboard › BannerLayer › Edit #1) the breadcrumb's left edge lines
+   up with the form card's left edge (both in the card's centred column, max 56rem wide), on a wide window and at phone
+   width. Without a form open (`/forms/BannerLayer`) the page looks as before: explorer, type card and lists unmoved.
+
 
 1. From `/dashboard/Town` click 👁 View (or the row). Expected: `/display/Town/{id}?returnTo=%2Fdashboard%2FTown`; the
    heading is the town's **name** (before: the display configuration's name), "TOWN" above it, a breadcrumb
