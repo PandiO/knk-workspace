@@ -2,7 +2,7 @@
 
 **Status:** Compared live by the developer on 2026-11-03 (all screens work; `brand` preferred, all three themes and the
 picker stay); fix round done on knk-web-app `claude/design-tokens-95` (§ 6). Merged 2026-11-03 (knk-web-app `main` `c02b365`)
-**Last updated:** 2026-11-04 (§ 7 page background, #231, on a branch: toggle in the cogwheel menu); 2026-11-04 (theme
+**Last updated:** 2026-11-04 (§ 7 page background, #231: approved, on by default; toggle in the cogwheel menu); 2026-11-04 (theme
 switcher as a cogwheel for every visitor, knk-web-app `main` `865fe53`); 2026-11-03 (fourth theme `brand-red`); 2026-11-03 (fix round after the live comparison: brand primary orange, heading font on player pages
 only, full-bleed auth pages, picker for alpha testers)
 **Issue:** [PandiO/knk-workspace#95](https://github.com/PandiO/knk-workspace/issues/95) (token layer, contrast rules,
@@ -209,9 +209,10 @@ knk-web-app `claude/design-tokens-95` `64feecc`:
 
 ## 7. Page background: landing image 1 behind every page (#231)
 
-**Status:** on knk-web-app branch `claude/page-background-image-231` (`1cdff0d`, `main` `738c16a` merged in), not merged; waiting for the developer's live
-comparison. **Off by default**: players see no change until the developer decides (with it off, every page is
-pixel-identical to `main`). Issue [PandiO/knk-workspace#231](https://github.com/PandiO/knk-workspace/issues/231).
+**Status:** approved by the developer on 2026-11-04 after the live comparison, **on by default** for every visitor;
+knk-web-app branch `claude/page-background-image-231` (`6c4892c`, `main` `d0c2ba8` merged in), to be merged by the
+coordinator. Turned off (by the visitor or the build), every page is pixel-identical to the app without it. Issue
+[PandiO/knk-workspace#231](https://github.com/PandiO/knk-workspace/issues/231).
 
 The landing page's image 1 sits fixed behind every page (`object-fit: cover`, so it fills the window at every width
 without stretching). The colours that cover it today stay, but as translucent layers, so the image shows through.
@@ -219,14 +220,17 @@ Works in all four themes.
 
 ### How to switch
 
+Without a choice of their own, every visitor gets the background. To turn it off or on again:
+
 - **Theme switcher** (the cogwheel, § 1) → **Background image**, the last item under the four themes (a tick when on).
   Same visibility as the themes: every visitor, logged in (in the navigation bar) or out (floating top right); hidden
   only with `REACT_APP_THEME_PICKER=off`. Switches at once, the menu stays open; saved in this browser (localStorage)
   for every tab. Keyboard: End jumps to it.
 - **URL:** `?bg=on` or `?bg=off` on any page, this tab only (kept for reloads and navigation in the tab), logged out
   too. Combine with the theme: `…/dashboard?theme=brand&bg=on` in one tab, `…/dashboard?theme=brand&bg=off` in another.
-- **Build flag** `REACT_APP_PAGE_BACKGROUND=on` makes it the default for everyone (a choice in the menu or `?bg=`
-  still wins). Unset = off. Only for when the developer decides to keep it.
+- **Build flag** `REACT_APP_PAGE_BACKGROUND=off` makes off the default for a build (a choice in the menu or `?bg=`
+  still wins). Unset or any other value = on. The alpha build (`scripts/alpha-web/Dockerfile`) doesn't set it, so it
+  gets the background.
 - No storage (private window, blocked site data): the toggle and `?bg=` still work for the open tab.
 
 ### The layers and their opacity
@@ -273,19 +277,19 @@ Not covered: status-coloured text (red/green/amber) placed straight on the page 
 - Only requested while the background is on (off: nothing is loaded). Low fetch priority, so the page's own requests go
   first. Not on the landing page: its slideshow starts with image 1 itself, so the landing loads the picture once.
 
-### Checklist for the live comparison
+### Checklist (smoke test after the merge)
 
-1. Cogwheel → **Background image** on (logged in on the dashboard, and logged out on the login page). The image
-   appears at once; the menu stays open and solid.
+1. In a fresh private window (no stored choice), open the login page and then the dashboard: the background is there
+   and the cogwheel's **Background image** is ticked. Untick it: it goes at once, the menu stays open and solid, and it
+   stays off after a reload.
 2. Flip through the four themes with the background on: page backdrop, cards and tables translucent; nav bar solid.
 3. Dashboard (`/dashboard/Town`): explorer list and table readable; the search fields keep a visible border.
 4. Entity detail page (`/display/<Type>/<id>`): breadcrumb, eyebrow and title on the backdrop readable; value boxes
    solid.
 5. Form wizard (create and edit): step header, fields and the sticky footer readable while scrolling.
-6. Login, register and `/link` logged out with `?bg=on`: in `brand`/`brand-red`/`proposal` the dark backdrop shows the
+6. Login, register and `/link` logged out: in `brand`/`brand-red`/`proposal` the dark backdrop shows the
    image through it and the card is solid; in `current` the light backdrop box.
 7. Landing page: unchanged (the slideshow); browser dev tools → Network: `1.jpg` once, no `1-1920.*`.
 8. Phone width (390 px): the image covers the screen without stretching.
 9. Two tabs: `?bg=on` and `?bg=off` side by side; reload each, the choice stays per tab.
-10. Background off again (menu or `?bg=off`): the app looks exactly as before.
-11. Decide: keep (then default on via `REACT_APP_PAGE_BACKGROUND=on`, or for players too), change the alphas, or drop it.
+10. Background off (menu or `?bg=off`): the app looks exactly as without it.
