@@ -1,8 +1,10 @@
 # Realtime channel (SignalR) — implementation plan
 
 **Status:** Accepted (developer decisions 2026-10-26, [DESIGN.md](DESIGN.md) §12). S1 and S2 built (`claude/realtime-signalr`,
-in review); WT1 built (`claude/world-task-hardening`, #180, 2026-11-01, not merged).
-**Last updated:** 2026-11-01 (WT1 status)
+in review); WT1 built (`claude/world-task-hardening`, #180, 2026-11-01, not merged); **WT2 built** (`claude/realtime-signalr`
+in knk-web-api, knk-plugin and knk-web-app, #181, 2026-11-02, stacked on WT1; as built: DESIGN §8.8); **S3 built**
+(`claude/realtime-signalr` in knk-web-api and knk-plugin, #182, 2026-11-02; as built: DESIGN §6.8).
+**Last updated:** 2026-11-02 (S3 status); 2026-11-02 (WT2 status)
 **Issue:** [PandiO/knk-workspace#66](https://github.com/PandiO/knk-workspace/issues/66) (KNG-57); phase issues are sub-issues of #66
 (numbers in the table below).
 **Order across features:** [2026-10-25-ux-dashboard-signalr-plan.md](../../ai-agents/handoffs/2026-10-25-ux-dashboard-signalr-plan.md)

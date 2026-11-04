@@ -1,9 +1,12 @@
 # Realtime channel (SignalR) between knk-web-api, knk-plugin and knk-web-app
 
-**Status:** Accepted design (developer decisions 2026-10-26, §12). S1 and S2 built on `claude/realtime-signalr` (links 4, 6,
+**Status:** Accepted design (developer decisions 2026-10-26, §12). S1 (§4–§5) and S2 (§6.1) built on `claude/realtime-signalr` (links 4, 6,
 in review); §8.2 and §8.7 (WT1, #180) built on `claude/world-task-hardening` (link 7, 2026-11-01, not merged; as built:
-[world-tasks/README.md § Lifecycle](../world-tasks/README.md#lifecycle-and-endpoints-pandioknk-workspace180)).
-**Last updated:** 2026-11-01 (status: WT1 built, #180); 2026-10-26 (decisions recorded; §8.3 delivery and busy flow, §8.7 tasks anchored to the draft, §4.3 publishing path)
+[world-tasks/README.md § Lifecycle](../world-tasks/README.md#lifecycle-and-endpoints-pandioknk-workspace180)); **§8.3–§8.6 (WT2,
+#181) built on `claude/realtime-signalr`** (link 8, 2026-11-02, stacked on the unmerged WT1 branch, which it contains; as built:
+§8.8); **§6.2–§6.4 (S3, #182) built on `claude/realtime-signalr`** (link 10, 2026-11-02; as built: §6.8),
+`realtime.enabled: false` until the live check; S4–S5 not started.
+**Last updated:** 2026-11-02 (S3 built: §6.8); 2026-11-02 (WT2 built: §8.8); 2026-11-01 (status: WT1 built, #180); 2026-10-26 (S2 built: implementation notes in §6.7; S1 built: §4.6; decisions recorded; §8.3 delivery and busy flow, §8.7 tasks anchored to the draft, §4.3 publishing path)
 **Issue:** [PandiO/knk-workspace#66](https://github.com/PandiO/knk-workspace/issues/66) (KNG-57, priority high); phase issues in
 [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md). Related: #76 (KNG-170, rank changes don't reach the server),
 #121 (KNG-262, cache TTLs), #31 (KNG-202, startup-only siege work), #35 (KNG-176), #34 (KNG-246), #145 (KNG-249), #75.
@@ -169,6 +172,25 @@ Every server→client message is one hub method per event type with a single arg
 - First consumer: world tasks (§8). Later consumers: the dashboard refreshes a type's table when an `EntityChanged` for
   that type arrives from another admin (nice-to-have, §9), the player profile shows live online state.
 
+### 4.6 S1 as built (2026-10-26, #178)
+
+- **API** (`knk-web-api/Realtime/`): `RealtimeSetup` (DI, hub mapping, `access_token` reader for `/api/hubs/web`),
+  `Hubs/GameServerHub` (policy `KnkRealtimeGameServer` = the plugin key check of `[RequirePluginService]`; header
+  `X-Knk-Server-Id`, 1–64 of `[A-Za-z0-9._-]`, else the connection is closed), `Hubs/WebHub` (default JWT policy,
+  closes when the token expires), `RealtimePublisher` (bounded channel, drop-oldest) + `RealtimeDispatchService`
+  (one reader; expands a group to its connections and numbers `seq` per connection, so SignalR's own groups are not
+  used), `Presence/` (`PresenceRegistry`, `PresenceStore` on `User.IsOnline`/`LastSeenAt`, `PresenceSweepService`),
+  meter `Knk.Realtime`. Settings section `Realtime` (`ChannelCapacity` 1000, `PresenceGraceSeconds` 60,
+  `PresenceSweepSeconds` 10, `KeepAliveSeconds` 15, `ClientTimeoutSeconds` 30, `AllowedServerIds` empty = any).
+- **Event in S1:** only `Welcome {serverId, presenceGraceSeconds}`, the first message (seq 1) on each game-server
+  connection. Business events start with S2.
+- **Plugin:** `knk-core/.../core/realtime/` (backoff, sequence tracker, resync hooks, stats), `knk-api-client/.../api/realtime/`
+  (`RealtimeClient`, `SignalRHubTransport` on `com.microsoft.signalr` 10.0.13, `RealtimeEnvelope`),
+  `knk-paper/.../paper/realtime/` (`RealtimeService`, `RealtimeDispatcher`, `RealtimeSettings`). Resync hooks in S1:
+  the `/knk cache refresh` hooks, `DomainAccessFlagSync.syncNow()`, `LootboxRuntime.refresh()`. The startup-only
+  siege work (#31) joins in S3 (#182, charter link 10); the notification drain and the slower re-syncs in S2.
+- `/knk health` shows the channel; the KNG-232 `/metrics` endpoint exports `knk_realtime_*`.
+
 ## 5. Presence (needed for R4)
 
 - `PresenceRegistry` (API singleton): `serverId → {connectionId, connectedAt, players: uuid → {userId, name, world,
@@ -246,6 +268,97 @@ checks are synchronous queries a web user waits on. Moving them onto the hub nee
 (`ISingleClientProxy.InvokeAsync<T>` / Java `onWithResult`); worth it only when the plugin no longer needs to expose a
 port (e.g. API and game server on different hosts). #66's open question "Whether RegionHttpServer's inbound HTTP moves
 onto the hub" → **later, phase S6**.
+
+### 6.7 S2 as built (2026-10-26, #179)
+
+- **API.** `Realtime/RealtimeEventSink.cs`: `IRealtimeEventSink` (scoped) is the one place services hand events to
+  (option A of §4.3). `AfterCommitRealtimeEventSink` sends at once, or, while a transaction is open on the scope's
+  `KnKDbContext`, holds the event until it commits: `RealtimeTransactionEvents` is an EF Core transaction interceptor
+  (added next to the KNG-232 command interceptor in `Program.cs`) that sends a context's held events on commit and
+  drops them on rollback, failure or a new transaction. The actor's source is taken from the request (plugin key =
+  `plugin`, logged-in user = `web`, none = `system`). S3's entity interceptor and option C's outbox plug in behind the
+  same interface. `Realtime/UserStateEvents.cs` builds the payloads; users without a Minecraft UUID get no event.
+- **Publish points.** `UserPermissionGroupService` (upsert, delete, rank-expiry sweep; next to the `RankChanged`
+  notification, which stays), `PermissionGrantService` (every write; a user holder → `UserPermissionsChanged`, a
+  group holder → `PermissionGroupChanged {op: GrantsChanged}`, a grant moved between holders tells both),
+  `PermissionGroupService` (create, update, delete), `CurrencyService.ExecuteAsync` (every posting that wasn't a
+  replay → `UserBalancesChanged` per user with the balances after it; this covers Grant, Spend, AdminAdjust, Reverse,
+  transfers and `UserService.AdjustBalancesAsync`, whose outer transaction holds the events until it commits),
+  `UserService.SetFrozenAsync`, `UpdateActiveModeAsync` (only on a change), `SetPersonalMultipliersAsync`,
+  `UpdateGatePassThroughMethodAsync`, the link and merge paths (`UserChanged` with `fields`).
+  `StatisticsVisibilityChanged` (§6.1) was not built: the plugin's menus re-read it already.
+- **Hub-backed notification queue.** `Realtime/HubPlayerNotificationQueue.cs` replaces the `IPlayerNotificationQueue`
+  registration and decorates `InMemoryPlayerNotificationQueue`, which stays the store behind `GET pending` /
+  `POST acknowledge`. A new notification is pushed at once (`PlayerNotification`, payload = the REST DTO) to the
+  player's server when the presence registry has them online, to every server when it is server-wide (user 0);
+  otherwise it waits as before. `PlayerJoined` over the hub pushes what waited for that player plus the server-wide
+  ones. The plugin acknowledges over REST as before, so a lost push is still pending for the next drain.
+- **Plugin.** `knk-api-client/.../realtime/UserStateEvents` (types and payload records), `knk-paper/.../realtime/
+  UserStateSync` (handlers) with `BukkitUserStateDisplay` (tab list, visibility, "/" list, social spy, mode checks).
+  `UserPermissionsChanged` drops the effective set and the offline-store answers (`OfflineSecurityStore.
+  forgetPermissionAnswers`, #76), then for an online player reloads the set, re-reads the user and redraws, and drops
+  a mode whose node is gone. `PermissionGroupChanged` fans out to online players whose cached effective groups
+  (parents included) contain the group. `UserBalancesChanged` writes the values into the user cache and re-reads only
+  when XP changed (title and prestige are computed by the API). Freeze and mode apply at once and are idempotent, so
+  the echo of an in-game `/freeze` or mode toggle changes nothing.
+- **Resync** (after the S1 steps): re-read every online player (redraw, freeze, mode, permission-dependent state;
+  their offline answers dropped), then one drain of the notification queue. `PlayerNotificationPoller` makes no HTTP
+  call while the hub is connected.
+- **Slower re-syncs (Q4).** `realtime.fallback-poll-multiplier` (default 4) and `core/realtime/FallbackPolling`. In S2
+  it applies to the re-sync whose changes S2 pushes: the social-spy re-check (60 s → 4 min). The other timers (domain
+  access, game settings, lootbox runtime, grades, roads, telemetry config) keep their interval until their events
+  land in S3 (#182); slowing them now would delay those changes with nothing pushed in their place.
+
+### 6.8 S3 as built (2026-11-02, #182)
+
+- **One save interceptor (option A, Q3).** `Realtime/RealtimeEntityChangeInterceptor` (EF Core `SaveChangesInterceptor`,
+  singleton, added in `Program.cs` next to the S2 transaction interceptor) notes the watched entities before a save
+  and which properties changed; after the save succeeded it reads their ids and hands the events of
+  `Realtime/RealtimeEntityChangeMap` (pure, unit-tested) to the context's `IRealtimeEventSink`, so they go out at once
+  or when the explicit transaction commits (dropped on rollback or a failed save). Option C swaps only the sink.
+- **`EntityChanged {type, id, op, key}`** for the §6.3 allow-list. `key` (added) is the natural key the plugin caches
+  some types by: a user's UUID, a domain's or sub-region's region id, a menu template's key. More than 50 entities of
+  one type in one save → one event with `id: null` ("drop everything of that type"). A user change that only touches
+  presence, password, token, email or salary-payout columns sends nothing.
+- **Config events from the same map:** `DomainAccessChanged {domainId}` (a domain added/deleted, AllowEntry/AllowExit
+  or region id changed; a sub-region added/deleted/moved), `GameSettingsChanged {scope}` (game settings except the
+  runtime worlds report alone; `Domain.IsHub` = scope `hub`), `SiegeConfigChanged {scope}` (configuration, lobby,
+  lobby rotation, scenario and its districts, gates, teams, spawnpoints, objectives; never matches),
+  `LootboxConfigChanged {scope}` (configuration, type and its weights/pool/enchant rolls, spawn areas and their types,
+  special entries; never spawns, claims or tokens), `TeleportDestinationsChanged` (a warp domain's teleport columns,
+  name, location or world), `NavigationSettingsChanged` (compass settings, type defaults, a domain's navigation/road
+  override), `RoadNetworkChanged {world}` (tiles, nodes, edges; profiles = `world: null`; not the dirty flag alone),
+  `TelemetryConfigChanged` (enhanced targets, test runs). Duplicates within a save are sent once.
+- **`GateChanged {gateStructureId, op}`** is sent explicitly by `GateStructureService` (create, update, delete,
+  overrides) and `GateDoorService` (door create/update/delete, region data, block snapshots added/cleared), not by
+  the map: the game server's own runtime writes (health, open state, operational toggles) and the siege
+  lockdown/restore (`SiegeMatchGateService`) send nothing. The plugin reloads that one structure
+  (`getByIdWithSnapshots` → `GateLoaderAdapter.loadAndCacheStructure`, drops doors the API no longer has, then the
+  world/DB sync check of its doors); a deleted structure leaves the cache. A structure a running match holds
+  (`SiegeGateController.isLocked`) waits until the round released its gates and their API restore answered (Q12).
+- **Plugin handlers** (`paper/realtime/ConfigRealtimeSync`, `GateRealtimeSync`; `api/realtime/ConfigEvents`): the
+  existing refresh paths (P3) — `DomainAccessFlagSync.syncNow()`, `GameSettingsManager.refreshNow()`,
+  `SiegeService.refreshFromApi()` (= `/siege admin reload`: lobbies between matches now, running ones at their next
+  cooldown), `LootboxRuntime.refresh()`, the `/knk cache refresh` hooks for warps/spawn/navigation, the road network
+  refresh (one world or all), `TelemetryFlushTask.pollConfig()`. A burst for one section (a scenario and its
+  spawnpoints) is merged into one refresh after 500 ms (`core/realtime/Coalescer`). `EntityChanged` goes through
+  `core/realtime/EntityChangeRouter` to the data-access caches of that type (one id, or the type), the region→domain
+  cache for domains, the grade catalogue for grades, the siege title ranks for title brackets, and for a user the S2
+  re-read (`UserStateSync.userEntityChanged`). Open menus are not refreshed by the event (they re-read on open).
+- **`ReportWorlds` (§6.4).** While connected `GameSettingsManager` sends the loaded worlds over the hub (same body as
+  `PUT api/GameSettings/runtime-worlds`, same `game-settings.server-id`); REST stays the fallback. No answer: a new
+  world that adds a world-settings entry comes back as `GameSettingsChanged`.
+- **Startup-only siege work (#31, §4.4 step 3).** `core/realtime/PendingStartupWork` holds three steps — abort
+  unfinished matches (`SiegeMatchRecorder.retryRecovery`; never once this run created a match), restore stale gates
+  (`SiegeGateController.retryRecovery`; waits while a lockdown of this run is active), runtime config + title
+  brackets (`SiegeService.retryStartup`). Each runs at startup as before; one that failed runs again on every hub
+  (re)connect (resync step "siege startup work"), in that order, until it got through. With the hub off, unchanged.
+- **Slower re-syncs (Q4).** While connected these now run `realtime.fallback-poll-multiplier` times less often: domain
+  access sync, game settings re-read, lootbox runtime refresh, road tiles and meta, telemetry config poll, grade
+  catalogue. The entity cache TTLs (#121) and the permission/user TTLs are unchanged.
+- **Not in S3:** web consumers of `EntityChanged` (#183), erasure (#184), a Location row's coordinates (a warp point
+  moved without touching the domain) and the time-based expiry of an enhanced telemetry target (both stay on the
+  poll/TTL).
 
 ## 7. Reliability
 
@@ -424,6 +537,58 @@ after Save Draft, Next or Submit.
 - The #180 sweep also removes sessions with no draft and no activity (default 7 days) and their open tasks.
 - Later, if needed: the API writes the result into the draft itself on completion (option 3), which needs the web
   app's field-mapping rules (location spread, region id, item/kit scan fan-out) on the server.
+
+### 8.8 WT2 as built (2026-11-02, #181)
+
+Branch `claude/realtime-signalr` in knk-web-api, knk-plugin and knk-web-app (the web app's first commit on it). It
+contains the WT1 branch (`claude/world-task-hardening`, merged in, not on a trunk yet). Flags L8-1…L8-20 in the
+[progress report](../../reports/2026-10-26-ux-realtime-chain.md) (link 8 block).
+
+- **Delivery** (`POST api/WorldTasks`, `deliver`, default `auto`): `auto` offers the task to the creator when their
+  UUID is on a **connected** game server (`PresenceRegistry.ConnectedServerOf`; a server in its grace period doesn't
+  count), Busy when they already hold an InProgress task; `code` never offers; `queue` sets `OfferState = Queued`
+  (offered when their task ends, or when they join); `replace` releases their held task(s) with the code (`OfferState`
+  Declined, `WorldTaskCancelled {status: Pending}` stops the handler) and offers this one; `{userId}` is "Hand off to…"
+  (Accept/Decline; not online → Declined). Headless types are never offered: `WorldTaskCreated` instead. Two new
+  `OfferState` strings, `Queued` and `Busy` (no migration).
+- **Game hub events** (`Realtime/Contracts/WorldTaskContracts.cs`; through `IRealtimeEventSink`, so after the save):
+  `WorldTaskOffered {taskId, uuid, taskType, fieldName, label, entityType, mode: auto-claim|accept, fromUsername,
+  timeoutSeconds}` to the player's server; `WorldTaskCancelled {taskId, status, uuid, reason}` (web cancel, sweep
+  expiry, Replace, a field's task replaced, a catalogue scan cancelled) and `WorldTaskOfferWithdrawn {taskId, uuid,
+  reason}` (claimed with the code by someone else, offer timed out) to every server; `WorldTaskCreated {taskId,
+  taskType}` to every server for a new or released headless task. Hub invocation `WorldTaskOfferResult {taskId,
+  result, uuid}`: declined / offline / no-permission → Declined, timed-out → TimedOut, busy → Busy; only an open offer
+  changes, an answer from another player is ignored. `ReportRoster` and `PlayerJoined` offer what waits for those
+  players (Offered, Accepted = handed back by a quit or restart, Queued; one per player, none while they hold a task).
+- **State machine additions:** the `offer` claim needs `OfferState = Offered`; a claim by code/id by someone else while
+  Offered/Queued/Busy sets `None` (and withdraws an open offer); `release` with `handBack: true` (in-game `cancel`) sets
+  Declined, so the player is not offered it again; the player's next queued task is offered after complete, fail,
+  cancel and a hand-back (not after a quit or restart release). Sweep: an offer unanswered after
+  `WorldTasks:OfferTimeoutSeconds` (120) → TimedOut + withdrawn.
+- **Web hub:** `JoinTask(id)` (creator or `knk.admin.world`, DESIGN §7.3) / `LeaveTask(id)` change the connection's
+  groups (`RealtimeConnection.Join/Leave`); `WorldTaskUpdated` (status, offer state and target, claimer, error, expiry;
+  never the task code or the output) goes to `task:{id}` and `user:{creator}`, once per connection
+  (`IRealtimePublisher.PublishToWebGroups`); `CatalogScanUpdated {scanId, worldTaskId, taskStatus}` to `user:{starter}`
+  (no progress value: the scan has none).
+- **REST:** `GET api/WorldTasks/active-for-me` (held task, its form name, queue length), `GET api/Presence/me`
+  (online on a connected server), `GET api/Presence/online-staff?node=knk.tasks` (`knk.admin.world`; online holders of
+  `knk.tasks` or `knk.admin.world` except the caller).
+- **Plugin** (`paper/realtime/WorldTaskRealtimeSync`, `api/realtime/WorldTaskEvents`): auto-claim checks the player is
+  here, holds `knk.tasks` and has nothing open, then claims (`claimMode: offer`) and starts the handler (the
+  `/knk task` path); otherwise it answers. Hand-off: clickable `[Accept] [Decline]` running
+  `/knk task accept|decline <id>`, local timeout = the offer's. `WorldTaskCancelled` stops a held task's handler at
+  once; `WorldTaskCreated` runs the headless poll now, which stays at its 60 s idle interval while connected. Resync
+  step "world tasks" = `WorldTaskLeases.releaseOrphans()`.
+- **Web app** (`src/realtime/RealtimeProvider.tsx`, `@microsoft/signalr` 10.0.11): one connection per logged-in tab to
+  `${REACT_APP_API_BASE_URL}/hubs/web`, automatic reconnect, then a restart loop (1/2/5/10/30 s) after a close (token
+  expiry); task groups joined again and components told to re-read after every reconnect. `WorldBoundFieldRenderer`:
+  "Send to Minecraft" runs the busy check (only while the hub is connected and you are online) with Queue / Hand off /
+  Replace / Cancel naming the form; "Hand off to…" picker; the offer state above the task code, the code folded away
+  while an offer is out; renders from `WorldTaskUpdated` (reads `GET {id}` for a Completed result); poll 10 s while
+  connected (safety net), 2 s while not (unchanged #180). `MinecraftCatalogScanCard` reads the scan on
+  `CatalogScanUpdated`, poll 15 s while connected, 3 s while not.
+- **Off = as before:** with `realtime.enabled: false` no server is connected, nobody is online, nothing is offered,
+  the task code flow and every poll are #180's. A web app whose hub can't connect polls every 2 s as before.
 
 ## 9. Web app: entity CRUD push (nice-to-have)
 

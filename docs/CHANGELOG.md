@@ -4,6 +4,37 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Realtime channel, S1 foundation** ([PandiO/knk-workspace#178](https://github.com/PandiO/knk-workspace/issues/178), branch
+  `claude/realtime-signalr` in knk-web-api, knk-plugin and knk-workspace): SignalR hubs in the API (`/api/hubs/game`
+  with the plugin key and `X-Knk-Server-Id`, `/api/hubs/web` with the JWT), a publisher with per-connection
+  sequence numbers, and presence from the game server (roster on every connect, join/quit, 60 s grace) in
+  `User.IsOnline`. The plugin connects with backoff, pauses while the API is down and re-reads its caches on every
+  (re)connect; `realtime.server-id` replaces the hard-coded `localhost` on world-task claims. Off by default
+  (`realtime.enabled: false`); no business events yet (S2). Checklist: [realtime smoke test](guides/realtime-smoke-test.md).
+- **Realtime channel, S2 user state** ([PandiO/knk-workspace#179](https://github.com/PandiO/knk-workspace/issues/179), same
+  branch): rank and group membership, permission grants, permission group edits, balances, freeze, active mode and
+  other user fields changed in the web app (or by a rank expiring) reach an online player at once instead of after
+  the 2 s poll, the 30 s permission cache, the 60 s user cache or a rejoin. A permission change also drops the
+  player's remembered offline answers (#76). Player notifications are pushed; the 2 s poll stops while connected. The
+  API sends events only after the database transaction committed. New optional plugin key
+  `realtime.fallback-poll-multiplier` (default 4). Still off by default. Checklist: realtime smoke test § S2.
+- **World tasks over the realtime channel (WT2)** ([PandiO/knk-workspace#181](https://github.com/PandiO/knk-workspace/issues/181),
+  branch `claude/realtime-signalr` in knk-web-api, knk-plugin, knk-web-app and knk-workspace; the branch contains the
+  world-task hardening below): "Send to Minecraft" offers the task to you in game and claims it there at once when you
+  are online (no code to type); if you already hold a task the web app asks Queue / Hand off / Replace / Cancel;
+  "Hand off to…" sends it to another online admin, who gets Accept/Decline in chat (2 min). The task code is always
+  shown as the fallback. The web app follows the task live (web hub, `@microsoft/signalr`), a cancel in the web app
+  stops the task in game at once, and headless scans start at once. With `realtime.enabled: false` (the default)
+  everything works as before. Checklist: [realtime smoke test](guides/realtime-smoke-test.md) § WT2.
+- **Realtime channel, S3 config and entity push** ([PandiO/knk-workspace#182](https://github.com/PandiO/knk-workspace/issues/182),
+  branch `claude/realtime-signalr` in knk-web-api, knk-plugin and knk-workspace): a gate, a domain's entry/exit rules,
+  game and hub settings, siege, lootbox, warp, navigation, road and telemetry settings, and the entities the game
+  server caches (towns, districts, structures, items, kits, menus, grades, tags, title brackets, users, ...) edited in
+  the web app are in effect on the running server within about two seconds instead of after a reload, a timer or a
+  cache TTL. A gate held by a running siege match takes its edit after the match. The game server reports its worlds
+  over the hub, and the siege's startup work that failed because the API was down (lobbies, title brackets, stale
+  gates, unfinished matches; #31) runs again when the hub reconnects. The periodic re-syncs stay as a slower safety
+  net. Still off by default (`realtime.enabled: false`); no new setting, no migration. Checklist: realtime smoke test § S3.
 - **World tasks that always end, and tasks anchored to the form draft** — PandiO/knk-workspace#180 (WT1 of #66),
   branch `claude/world-task-hardening` in knk-web-api, knk-plugin, knk-web-app and knk-workspace. A task now ends
   Completed, Failed, Cancelled or Expired: it expires after 30 min unclaimed, a claim lasts while the game server sends
