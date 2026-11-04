@@ -1,9 +1,9 @@
 # WorldTask Feature Documentation
 
-**Status:** Living reference for the lifecycle (§ "Lifecycle and endpoints" below, as built by PandiO/knk-workspace#180 on
-the `claude/world-task-hardening` branches, not merged yet). The other files in this folder are older design notes:
+**Status:** Living reference for the lifecycle (§ "Lifecycle and endpoints" below, as built by PandiO/knk-workspace#180, merged
+into the default branches 2026-11-04 with #181). The other files in this folder are older design notes:
 where they differ from that section, the section is current.
-**Last updated:** 2026-11-02 (§ "Over the realtime channel": offers, hand-off, busy check, #181, branch `claude/realtime-signalr`); 2026-11-01 (world-task hardening and tasks anchored to the draft, #180; design
+**Last updated:** 2026-11-04 (#180 and #181 merged); 2026-11-02 (§ "Over the realtime channel": offers, hand-off, busy check, #181, branch `claude/realtime-signalr`); 2026-11-01 (world-task hardening and tasks anchored to the draft, #180; design
 [realtime-signalr/DESIGN.md](../realtime-signalr/DESIGN.md) §8.2, §8.7)
 
 ## Overview

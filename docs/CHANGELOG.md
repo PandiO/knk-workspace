@@ -4,8 +4,12 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
-- **Realtime channel, S1 foundation** ([PandiO/knk-workspace#178](https://github.com/PandiO/knk-workspace/issues/178), branch
-  `claude/realtime-signalr` in knk-web-api, knk-plugin and knk-workspace): SignalR hubs in the API (`/api/hubs/game`
+_Nothing listed right now._
+
+## 2026-11-04
+
+- **World tasks and the realtime channel merged** — 2026-11-04 at the developer's request after the smoke tests of #180 (all steps work or accepted) and #181 WT2 (works or accepted; follow-ups for step 6 and 10 filed): knk-web-api `master` `2258df5`, knk-plugin `main` `e1b6a7a9`, knk-web-app `main` `d0c2ba8`, knk-workspace `main`. Merges `claude/world-task-hardening` and `claude/realtime-signalr` (S1, S2, WT2, S3); one additive migration (`AddWorldTaskHardening`, back up first: the first sweep removes week-old sessions without a draft). The plugin keeps `realtime.enabled: false` until set; an existing server `config.yml` needs the `realtime:` block added by hand, and the web app needs `npm install` (new `@microsoft/signalr`). S1, S2 and S3 were not run as checklist sections. The five entries below were written for the feature branches; branch names in them are historical.
+- **Realtime channel, S1 foundation** ([PandiO/knk-workspace#178](https://github.com/PandiO/knk-workspace/issues/178), merged 2026-11-04): SignalR hubs in the API (`/api/hubs/game`
   with the plugin key and `X-Knk-Server-Id`, `/api/hubs/web` with the JWT), a publisher with per-connection
   sequence numbers, and presence from the game server (roster on every connect, join/quit, 60 s grace) in
   `User.IsOnline`. The plugin connects with backoff, pauses while the API is down and re-reads its caches on every
@@ -45,8 +49,6 @@ This is a human-readable record of capabilities merged into the V3 default branc
   its fields find their tasks again, including results finished while the form was closed. Leaving the form cancels its
   open tasks; the form builder offers only task types the game server can run. Smoke test:
   [world-task-hardening-smoke-test.md](guides/world-task-hardening-smoke-test.md). One additive migration.
-
-## 2026-11-04
 
 - **Hygiene and docs batch** — merged 2026-11-04: knk-web-api `master` `71b814c`, knk-web-app `main` `22100c3`,
   knk-plugin `main` `ed750ddf`, knk-workspace `main` `559124c`. The plugin's version is stamped at build time, `0.1.0+<commit>` (`dev`

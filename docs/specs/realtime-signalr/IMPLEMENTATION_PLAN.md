@@ -1,10 +1,7 @@
 # Realtime channel (SignalR) — implementation plan
 
-**Status:** Accepted (developer decisions 2026-10-26, [DESIGN.md](DESIGN.md) §12). S1 and S2 built (`claude/realtime-signalr`,
-in review); WT1 built (`claude/world-task-hardening`, #180, 2026-11-01, not merged); **WT2 built** (`claude/realtime-signalr`
-in knk-web-api, knk-plugin and knk-web-app, #181, 2026-11-02, stacked on WT1; as built: DESIGN §8.8); **S3 built**
-(`claude/realtime-signalr` in knk-web-api and knk-plugin, #182, 2026-11-02; as built: DESIGN §6.8).
-**Last updated:** 2026-11-02 (S3 status); 2026-11-02 (WT2 status)
+**Status:** Accepted (developer decisions 2026-10-26, [DESIGN.md](DESIGN.md) §12). S1, S2, WT1 (#180), WT2 (#181) and S3 (#182) **merged 2026-11-04** (API `master` `2258df5`, plugin `main` `e1b6a7a9`, web app `main` `d0c2ba8`; as built: DESIGN §6.8, §8.8). Follow-ups of the WT2 test: offer permission check and Send again (see the #181 comments).
+**Last updated:** 2026-11-04 (S1–S3, WT1, WT2 merged); 2026-11-02 (S3 status); 2026-11-02 (WT2 status)
 **Issue:** [PandiO/knk-workspace#66](https://github.com/PandiO/knk-workspace/issues/66) (KNG-57); phase issues are sub-issues of #66
 (numbers in the table below).
 **Order across features:** [2026-10-25-ux-dashboard-signalr-plan.md](../../ai-agents/handoffs/2026-10-25-ux-dashboard-signalr-plan.md)
