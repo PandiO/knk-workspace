@@ -4,7 +4,7 @@
 (the Codex NAS rollout). Not yet followed end to end. 2026-10-21: web hostname decided (`app.knightsandkings.net`),
 DNS in Cloudflare, Minecraft console/autostart/plugin updates ([KNG-225](https://linear.app/kngpandi/issue/KNG-225)).
 2026-10-22: § 3 (API upgrade) done on the NAS ([KNG-227](https://linear.app/kngpandi/issue/KNG-227)); § 3–4 corrected from that run.
-**Last updated:** 2026-10-26 (§ 5: plugin `realtime:` block and checks, SignalR S1 #178, feature branch); 2026-11-01 (§ 6.1 step 5: `/brand/*` and `/images/*` in the bypass app, #209); 2026-10-26 (§ 4.3: the #186 user-1 drafts cleanup script, feature branch `claude/form-wizard-edit-mode`); 2026-10-25 (§ 4, § 4.2: `Seeding__IncludeExamples=false` and the one-time example cleanup script, not deployed yet); 2026-10-24 (§ 9 checklist ticked after Phase 9; Phase 9 done: invite-only live, § 10 invite text, § 11.1; Phase 9 E0: the mail relay is live, § 4 mail block is SMTP; KNG-205 invitations merged: the feature-branch notes replaced; settings as before, all off until § 11.1); 2026-10-22; 2026-10-21 (KNG-218, invitations chain link 7: § 4.1 settings after the invite-only switch-over, § 5.1 admission gate instead of the whitelist, § 9 F2, § 10 invite mail, § 11 kill switches and **§ 11.1 the switch-over steps**, § 12); 2026-10-21 (§ 6.1: Cloudflare Access sync, `cfproxy`, the sign-up bypass — KNG-216, feature branch; § 4: `Email__AllowLogTransport` for API builds with the KNG-206 email engine; notes pointing to the KNG-205 invitations plan); 2026-10-18
+**Last updated:** 2026-11-04 (§ 6: page background on by default, `REACT_APP_PAGE_BACKGROUND=off`, #231, feature branch); 2026-10-26 (§ 5: plugin `realtime:` block and checks, SignalR S1 #178, feature branch); 2026-11-01 (§ 6.1 step 5: `/brand/*` and `/images/*` in the bypass app, #209); 2026-10-26 (§ 4.3: the #186 user-1 drafts cleanup script, feature branch `claude/form-wizard-edit-mode`); 2026-10-25 (§ 4, § 4.2: `Seeding__IncludeExamples=false` and the one-time example cleanup script, not deployed yet); 2026-10-24 (§ 9 checklist ticked after Phase 9; Phase 9 done: invite-only live, § 10 invite text, § 11.1; Phase 9 E0: the mail relay is live, § 4 mail block is SMTP; KNG-205 invitations merged: the feature-branch notes replaced; settings as before, all off until § 11.1); 2026-10-22; 2026-10-21 (KNG-218, invitations chain link 7: § 4.1 settings after the invite-only switch-over, § 5.1 admission gate instead of the whitelist, § 9 F2, § 10 invite mail, § 11 kill switches and **§ 11.1 the switch-over steps**, § 12); 2026-10-21 (§ 6.1: Cloudflare Access sync, `cfproxy`, the sign-up bypass — KNG-216, feature branch; § 4: `Email__AllowLogTransport` for API builds with the KNG-206 email engine; notes pointing to the KNG-205 invitations plan); 2026-10-18
 **Applies to:** builds that **include KNG-64**: knk-web-api `master` ≥ `30c5dc5`, knk-web-app `main` ≥ `98c0a76`,
 knk-plugin `main` ≥ `34c9261`. **Never expose an older API.**
 **Linear:** [KNG-64](https://linear.app/kngpandi/issue/KNG-64) (parent), [KNG-68](https://linear.app/kngpandi/issue/KNG-68) (this guide)
@@ -368,7 +368,9 @@ REACT_APP_API_BASE_URL=/api REACT_APP_MC_SERVER_ADDRESS=play.knightsandkings.net
 ```
 
 The theme switcher (cogwheel, #95) shows for every visitor without a setting; `REACT_APP_THEME_PICKER=off` hides it.
-See [design-themes-comparison.md](design-themes-comparison.md).
+The page background (landing image 1 behind every page, #231) is on by default without a setting; visitors can turn it
+off in the cogwheel menu, and `REACT_APP_PAGE_BACKGROUND=off` makes off the default for the build. See
+[design-themes-comparison.md](design-themes-comparison.md) (§ 7 for the background).
 
 **nginx:** the server block for `app.knightsandkings.net`. nginx has to share a network with `api`: attach the existing
 `core`-stack nginx to an alpha network, or add a small nginx container to the `knk-alpha` stack that `cloudflared`

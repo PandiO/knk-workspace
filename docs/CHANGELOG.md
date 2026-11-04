@@ -4,9 +4,18 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
-_Nothing listed right now._
+(Nothing at the moment.)
 
 ## 2026-11-04
+
+- **Page background: landing image 1 behind every page, on by default** — knk-web-app
+  `main` `1cbee21`, merged from `claude/page-background-image-231` (PandiO/knk-workspace#231; developer approved 2026-11-04 after the live
+  comparison, on by default). Every visitor can turn it off with the "Background image" item under the themes in the
+  cogwheel theme switcher (remembered per browser), per tab with `?bg=off`, or for a whole build with
+  `REACT_APP_PAGE_BACKGROUND=off`. The page backdrop (75 %), cards and tables (85–92 % per theme) and the auth backdrop
+  (75 %) turn translucent over a 104 kB AVIF / 153 kB WebP copy of the image; fields, menus, dialogs and sticky bars
+  stay solid. Text keeps WCAG AA over the image's darkest and lightest pixel (contrast test extended). The landing page
+  keeps its slideshow and loads image 1 once. Guide: [guides/design-themes-comparison.md](guides/design-themes-comparison.md) § 7.
 
 - **World tasks and the realtime channel merged** — 2026-11-04 at the developer's request after the smoke tests of #180 (all steps work or accepted) and #181 WT2 (works or accepted; follow-ups for step 6 and 10 filed): knk-web-api `master` `2258df5`, knk-plugin `main` `e1b6a7a9`, knk-web-app `main` `d0c2ba8`, knk-workspace `main`. Merges `claude/world-task-hardening` and `claude/realtime-signalr` (S1, S2, WT2, S3); one additive migration (`AddWorldTaskHardening`, back up first: the first sweep removes week-old sessions without a draft). The plugin keeps `realtime.enabled: false` until set; an existing server `config.yml` needs the `realtime:` block added by hand, and the web app needs `npm install` (new `@microsoft/signalr`). S1, S2 and S3 were not run as checklist sections. The five entries below were written for the feature branches; branch names in them are historical.
 - **Realtime channel, S1 foundation** ([PandiO/knk-workspace#178](https://github.com/PandiO/knk-workspace/issues/178), merged 2026-11-04): SignalR hubs in the API (`/api/hubs/game`
