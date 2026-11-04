@@ -1,7 +1,7 @@
 # Dashboard, form wizard and realtime chain — progress report
 
-**Status:** Chain complete — links 1–3, 3b, 5 and 9 merged; links 4, 6, 7, 8 and 10 and follow-up link 3c (#225–#229) in review, waiting for the developer (2026-11-03)
-**Last updated:** 2026-11-03
+**Status:** Chain complete — every link merged (links 7 and 4/6/8/10 merged 2026-11-04 by session `session_01R1w2UxCy2RFHRje73afPgP`; link 3c and #231 by the coordinator); live tests of links 7 and 4/6/8/10 still open (2026-11-04)
+**Last updated:** 2026-11-04
 **Charter:** [UX_REALTIME_CHAIN.md](../ai-agents/handoffs/UX_REALTIME_CHAIN.md) · **Coordinator prompt:**
 [2026-10-26-ux-realtime-coordinator-prompt.md](../ai-agents/handoffs/2026-10-26-ux-realtime-coordinator-prompt.md)
 **Base at start:** knk-web-app `main` `0d61270`, knk-web-api `master` `6f08383`, knk-plugin `main` `ee35fb1` (re-check:
@@ -30,6 +30,11 @@ test), `merged`, `blocked: <reason>`.
 ## Waiting for the developer
 
 (The coordinator keeps this list current: links in review with their checklist location, merges that unblock a gate,
+- **2026-11-04:** links 7 (#180) and 4/6/8/10 (#178, #179, #181, #182) were merged by another session
+  (`session_01R1w2UxCy2RFHRje73afPgP`): knk-web-api `master` `7a63dec`/`2258df5`, knk-web-app `main` `bed7fd1`/`d0c2ba8`,
+  plugin and workspace likewise. Their live checklists (world-task hardening; realtime § S1, S2, WT2, S3) are still
+  untested; `realtime.enabled` stays off by default. #231 (page background, on by default) merged by the coordinator:
+  web-app `main` `1cbee21`, workspace `main` `28b075a`.
 flagged decisions.)
 
 - **Links 1, 2 and 3 live-tested by the developer on 2026-10-26:** every step works or accepted. Follow-ups filed:
