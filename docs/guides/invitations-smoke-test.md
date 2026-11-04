@@ -2,7 +2,7 @@
 
 **Status:** Written 2026-10-21 (invitations chain link 7, KNG-218). **Run on dev 2026-10-23/24** (Findings below: § 0–6
 and § 8 passed or accepted, § 7 waits for the alpha); the feature is merged to every trunk since 2026-10-24.
-**Last updated:** 2026-11-03 (§ 4 step 17b: code entry cards centred, #228, merged 2026-11-03 into knk-web-app `main` `603843d`, live-tested 2026-11-03); 2026-10-26 (§ 4 step 17a: the dash from the start, #196, knk-web-app `claude/claim-code-dash-196`, merged into `main` `c3c0c9f`); 2026-10-26 (§ 4 steps 16–17: claim code fields, #192, merged); 2026-10-25 (§ 3 step 11, § 4 step 16, § 7 steps 6–8: the register and login pages in Invite mode, a claim
+**Last updated:** 2026-11-03 (§ 4 steps 16 and 17c: the register page's link-code field is masked, #229, merged 2026-11-04 into knk-web-app `main` `738c16a`); 2026-11-03 (§ 4 step 17b: code entry cards centred, #228, merged 2026-11-03 into knk-web-app `main` `603843d`, live-tested 2026-11-03); 2026-10-26 (§ 4 step 17a: the dash from the start, #196, knk-web-app `claude/claim-code-dash-196`, merged into `main` `c3c0c9f`); 2026-10-26 (§ 4 steps 16–17: claim code fields, #192, merged); 2026-10-25 (§ 3 step 11, § 4 step 16, § 7 steps 6–8: the register and login pages in Invite mode, a claim
 code typed as a link code, the Cloudflare step in every flow and the missing-session banner — branch
 `claude/invite-only-register-page` in knk-web-app and knk-web-api, found on the alpha 2026-10-25); 2026-10-24
 **Linear:** [KNG-218](https://linear.app/kngpandi/issue/KNG-218) (I3, this guide), parent
@@ -226,10 +226,11 @@ step says otherwise.
     account, `Security:LinkAttempts`). `/link` logged out (`claim/check`) gets 429 after 20 a minute per IP.
 15. **Expired claim code.** Wait 16 minutes after the disconnect screen, then enter the code → refused; the page says
     to join again for a new code. Rejoin → a **new** code.
-16. **Claim code typed as a link code** (2026-10-25). Logged out, on `/auth/register` → "Already playing…" → type the
-    disconnect-screen code **with its dash** into the link-code field → the field says it's the server's code, the
-    button reads **Continue with this code** → `/link` shows "Verified: <name>" without retyping. Type it **without**
-    the dash → "invalid or has expired" plus the hint "Is this the code the server showed you…" linking to `/link`.
+16. **Claim code typed as a link code** (2026-10-25; since #229 the field draws the dash itself, see 17c). Logged out,
+    on `/auth/register` → "Already playing…" → type the disconnect-screen code into the link-code field (with or
+    without its dash, it shows `XXXX-XXXX`) → **Check code** → `/link` shows "Verified: <name>" without retyping. A
+    made-up code without U → "invalid or has expired" plus the hint "Is this the code the server showed you…" linking
+    to `/link`.
     Logged in as an unlinked account, on `/account/link` type `k7qh-m2xo` (a look-alike O) → the field shows
     `K7QH-M2XO` → linked (the API read the O as 0). Every claim refusal on `/link`, `/account/link` and the invite
     sign-up form ends with "The same code stays valid for 15 minutes…" (on `/account/link`: for a code without I, L,
@@ -262,8 +263,25 @@ step says otherwise.
     Typing, caret and the slots behave as in 17/17a. Continue with a valid code: the **Verified** step (log in / sign
     up with an invitation, the numbered list) stays left-aligned. `/join` without a code: the label **Invitation
     code**, the `KNK-_____-_____` field and its hint are centred; a wrong code → the "This invitation is invalid…" box
-    is centred too. A valid code → the sign-up form is left-aligned as before. `/account/link` (numbered steps) and
-    `/auth/register` are unchanged.
+    is centred too. A valid code → the sign-up form is left-aligned as before. `/account/link` (numbered steps) is
+    unchanged; `/auth/register`'s code steps are centred too since #229 (17c).
+17c. **The register page's link-code field has the dash too** (#229, knk-web-app `claude/register-code-mask-229` or all of link 3c in `claude/link-3c-combined`;
+    developer feedback from the link 3b live test, 2026-11-03, open point L2-9 / L3b-9). `/auth/register` (with
+    `Mode=LinkCode`, or `Mode=Invite` → "Already playing and got a code from /account link?"): the **Link code** field
+    shows `____-____` from the start like `/link`, and the hint "The 8 letters and digits; the field adds the dash
+    itself." Repeat 17a's typing, paste, Backspace/Delete and caret checks there. Letters are **not** folded (an
+    `/account link` code with O, I or L, e.g. `abcdol12` → `ABCD-OL12`).
+    - A valid `/account link` code (from chat) → **Check code** → "This code belongs to <name>" → email and password
+      as before (§ 2 step 2).
+    - A live claim code from the disconnect screen → **Check code** → `/link` with "Verified: <name>" (16).
+    - `Mode=Invite`, invitation step: 8 plain characters that are no live claim code (e.g. `ABCD1234`) → the link-code
+      step opens filled in as `ABCD-1234`.
+    - Fewer than 8 characters → "Enter the 8-character code from /account link." without a request.
+    - Layout (fix round 2026-11-03): the step heading ("Enter your link code"), the three instructions, the label, the
+      field, its hint, an error and the claim hint are centred under the centred page heading, and **Check code** is
+      one full-width button (as on `/link`); the same for the invitation step (`Mode=Invite`: heading, notice, label,
+      the field's text). After a valid code the email and password step is left-aligned as before, with **Back** and
+      **Create account**; the Done step is centred. Check at phone width too.
 
 ## 5. API outage with the gate on
 

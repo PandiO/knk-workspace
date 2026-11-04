@@ -114,7 +114,8 @@ binds to a same-named field or to the **first** field (:2793-2805), so a capture
   field and owned collection). The session registry in §3 makes a "delete what this form created?" prompt possible;
   left as a follow-up.
 - `api/Services/WorkflowService.ExtractLocationDataFromTaskOutput` reads `worldName` while the plugin sends `World`;
-  the method has no callers, so it has no effect today.
+  the method has no callers, so it has no effect today. (Fixed by KNG-118 D9, then removed 2026-11-02:
+  [PandiO/knk-workspace#147](https://github.com/PandiO/knk-workspace/issues/147).)
 
 ## 3. Proposed design
 

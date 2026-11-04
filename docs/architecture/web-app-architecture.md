@@ -1,7 +1,7 @@
 # knk-web-app — Architecture
 
 **Status:** Living document — reflects actual code, updated in place on each rescan
-**Last updated:** 2026-09-18 (scan basis: `knk-web-app` @ `4ff5dc6`, branch `claude/web-app-codebase-scan-4yqibi`); spot edits 2026-10-09 (ObjectTypeExplorer, KNG-61), 2026-10-10 (FormWizard Boolean fields, KNG-53), 2026-10-12 (FormWizard child forms, KNG-133, KNG-134; List edit load, step header, List validation, KNG-135, KNG-137, KNG-164; form session registry, KNG-136; cancel / delete-draft prompt, KNG-162; form configuration export/import, KNG-138); 2026-10-17 (form wizard chain merged to `main`; smoke-test follow-ups KNG-166..169, KNG-172, KNG-173: step strip, confirmations and refusals, rule builder parent forms, picker columns, metadata refresh); 2026-10-22 (display configuration export/import; KNG-195 hybrid picker submit); 2026-10-23 (step completion conditions run, KNG-186); 2026-10-23 (validation result log, batch validate, Re-check, KNG-269); 2026-10-25 (toast region, world-task polling; UX re-evaluation in `reports/2026-10-25-web-app-ux-reevaluation.md`); 2026-10-26 (dashboard type in the URL, `returnTo`, submit pending state, success toast — PandiO/knk-workspace#177 link 1, #58); 2026-10-26 (dashboard header New/Configure, flat explorer with marker, open form without the explorer + breadcrumb, detail page header, metadata-driven Create New, "Entity setup" — #177 link 2, #81, #39); 2026-10-26 (dashboard explorer: one scrollbar, favourite types — #194, branch `claude/dashboard-explorer-194`, merged into `main` `c3c0c9f`), 2026-10-26 (dashboard header row spacing — #195, branch `claude/dashboard-header-195`, merged into `main` `c3c0c9f`); 2026-10-26 (data router, unsaved-changes guard, sticky footer, blur validation + error summary, Save on any step in edit mode, single-line input, drafts owned by the login — #109, #186, #64 FormWizard part); 2026-10-27 (unsaved changes compared by value across all steps, Next's progress save no longer counts as saved — #109 fix round); 2026-11-01 (dashboard table state in the URL, rows as links, `aria-sort`, lootbox/moderation tab in the URL, "Drafts (n)" and "New with" — PandiO/knk-workspace#39, #177 follow-up, merged 2026-11-03); 2026-11-02 (design tokens and switchable themes — #95, merged 2026-11-03); 2026-11-03 (fix round after the live comparison: orange brand primary, heading font on player pages only, full-bleed auth pages); 2026-11-03 (explorer favourites are copies — #225, branch `claude/explorer-favourite-copies-225`, not merged)
+**Last updated:** 2026-09-18 (scan basis: `knk-web-app` @ `4ff5dc6`, branch `claude/web-app-codebase-scan-4yqibi`); spot edits 2026-10-09 (ObjectTypeExplorer, KNG-61), 2026-10-10 (FormWizard Boolean fields, KNG-53), 2026-10-12 (FormWizard child forms, KNG-133, KNG-134; List edit load, step header, List validation, KNG-135, KNG-137, KNG-164; form session registry, KNG-136; cancel / delete-draft prompt, KNG-162; form configuration export/import, KNG-138); 2026-10-17 (form wizard chain merged to `main`; smoke-test follow-ups KNG-166..169, KNG-172, KNG-173: step strip, confirmations and refusals, rule builder parent forms, picker columns, metadata refresh); 2026-10-22 (display configuration export/import; KNG-195 hybrid picker submit); 2026-10-23 (step completion conditions run, KNG-186); 2026-10-23 (validation result log, batch validate, Re-check, KNG-269); 2026-10-25 (toast region, world-task polling; UX re-evaluation in `reports/2026-10-25-web-app-ux-reevaluation.md`); 2026-10-26 (dashboard type in the URL, `returnTo`, submit pending state, success toast — PandiO/knk-workspace#177 link 1, #58); 2026-10-26 (dashboard header New/Configure, flat explorer with marker, open form without the explorer + breadcrumb, detail page header, metadata-driven Create New, "Entity setup" — #177 link 2, #81, #39); 2026-10-26 (dashboard explorer: one scrollbar, favourite types — #194, branch `claude/dashboard-explorer-194`, merged into `main` `c3c0c9f`), 2026-10-26 (dashboard header row spacing — #195, branch `claude/dashboard-header-195`, merged into `main` `c3c0c9f`); 2026-10-26 (data router, unsaved-changes guard, sticky footer, blur validation + error summary, Save on any step in edit mode, single-line input, drafts owned by the login — #109, #186, #64 FormWizard part); 2026-10-27 (unsaved changes compared by value across all steps, Next's progress save no longer counts as saved — #109 fix round); 2026-11-01 (dashboard table state in the URL, rows as links, `aria-sort`, lootbox/moderation tab in the URL, "Drafts (n)" and "New with" — PandiO/knk-workspace#39, #177 follow-up, merged 2026-11-03); 2026-11-02 (design tokens and switchable themes — #95, merged 2026-11-03); 2026-11-03 (fix round after the live comparison: orange brand primary, heading font on player pages only, full-bleed auth pages); 2026-11-03 (explorer favourites are copies — #225, branch `claude/explorer-favourite-copies-225`, not merged); 2026-11-03 (explorer filter: display / form configuration — #226, merged 2026-11-04); 2026-11-03 (open form without the type overview card — #227, merged 2026-11-04)
 **Source scan:** `docs/reports/web-app-scan-2026-09-18.md`
 
 ## Stack
@@ -66,8 +66,10 @@ _Added 2026-11-02 for PandiO/knk-workspace#95 (rebrand phase 1), knk-web-app bra
 - **Switching:** `src/theme/themes.ts` (`THEMES`, `resolveInitialTheme`, `applyTheme`, `selectTheme`,
   `useActiveTheme`, `themePickerVisible`). `index.tsx` applies the theme before the first render. Order: `?theme=`
   (kept per tab in sessionStorage) → the picker's choice (localStorage `knk.theme`) → `current`; storage access is in
-  try/catch. The picker is a `menuitemradio` group in the account menu (`Navigation.tsx`) for holders of the moderator
-  or content node; `REACT_APP_THEME_PICKER=on|off` overrides that.
+  try/catch. The switcher is `src/theme/ThemeSwitcher.tsx`, a cogwheel menu button with `menuitemradio`
+  items, for every visitor (2026-11-04): `variant="nav"` in `Navigation.tsx` left of the account menu, and
+  `variant="floating"` fixed top-right in `App.tsx` when logged out. `REACT_APP_THEME_PICKER=off` hides it
+  (`themePickerVisible()`).
 - **Contrast:** `src/theme/__tests__/contrast.test.ts` parses `tokens.css` and checks every text/background pair
   (4.5:1) and UI pair (field border, focus ring, nav underline, icons: 3:1) in every theme, plus that every theme
   defines the same tokens. A failing pair fails `npm run test:ci`.
@@ -206,6 +208,9 @@ entity. Two parallel generic engines carry most of the CRUD surface:
    `returnTo`: "Entity setup › Town › New Town"). The trail is plain `{label, to?}[]` data so the admin
    layout (#30) can render it later; `useEntityLabel` fetches the edited entity's name (else "#id"). A
    crumb asks "Leave this form?" first when the form has unsaved changes (#109). The configuration lists keep the explorer.
+   The type overview card (`FormWizard/EntityMetadataNavigator`: name, field count, "Fields") shows only on the
+   configuration lists, not above an open form (#227); the breadcrumb then sits in the form card's centred column
+   (`max-w-4xl mx-auto`, the same as `FormWizard`'s card), so both start at the same left edge.
    "New" (`?autoOpen=true`) on a type without a default form configuration shows "To create a new
    {Type}, this type needs a default form configuration" (#177 decision 3). The page title and nav label
    are **"Entity setup"** (route `/forms` unchanged, decision 4).
@@ -262,6 +267,11 @@ the explorer's `aside` is `min-h-0`; it used to show two scrollbars, #194). A st
 and stay in the full list below ("All entity types") at their usual place too: copies, so the list always holds every
 type (#225; both copies are starred and highlighted when selected); they are kept per browser in localStorage `knk.dashboard.favouriteEntityTypes`
 (`utils/dashboardFavourites.ts`; per account on the API can come later). The Entity setup page's explorer has no stars.
+A **filter** button next to the sort toggle (`ObjectTypeExplorer` `filters`, #226) offers **Display configuration**
+(the marker's rule: a published default display configuration) and **Form configuration** (at least one, from
+`GET api/FormConfigurations/entity-names`), each a labelled select Any / Yes / No in a compact inline panel; set filters narrow favourites and the list alike and
+are kept per page like the sort (localStorage `objectTypeExplorer.dashboard.filters`). A filter whose data hasn't
+loaded (or failed) is neither offered nor applied; its stored choice is kept for the next load.
 View opens `/display/{type}/{id}?returnTo=…`, Edit
 `/forms/{type}/edit/{id}?returnTo=…`, except **User rows: Edit opens the player profile**
 `/admin/users/{id}` (`utils/returnTo.ts` `entityEditPath`; the generic User form stays for create
@@ -346,7 +356,7 @@ src/
     DisplayWizard/          — generic read-only detail-view engine; `EntityDetailHeader` (name, Back/Edit/Delete, #81)
     DisplayConfigBuilder/   — admin UI to author DisplayConfigurationDto records
     ObjectDashboard/        — legacy static-config-driven list/CRUD dashboard
-    ObjectTypeExplorer/     — left-nav entity type picker (ObjectDashboard, FormWizardPage): search, A–Z/Z–A sort, optional groups (unused since #177 link 2), `marked` entries, `favourites` with a star per type, listed on top as copies (#194, #225, dashboard only), settings in localStorage (KNG-61)
+    ObjectTypeExplorer/     — left-nav entity type picker (ObjectDashboard, FormWizardPage): search, A–Z/Z–A sort, optional groups (unused since #177 link 2), `marked` entries, `favourites` with a star per type, listed on top as copies (#194, #225, dashboard only), `filters` (Any/Yes/No selects, #226, dashboard only), settings in localStorage (KNG-61)
     PagedEntityTable/       — generic server-paged table, used by both dashboard and forms; controlled mode (`query`/`onQueryChange`), `rowHref`, `aria-sort` (#39)
     PathBuilder/            — path/reference picker for cross-entity field bindings
     Workflow/               — WorldTask/job polling UI (siege/world-mutation background tasks)

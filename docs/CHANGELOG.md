@@ -4,12 +4,67 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
-- **Page background: landing image 1 behind every page, to compare** — knk-web-app `claude/page-background-image-231` `4220f6f`
-  (PandiO/knk-workspace#231). Off by default (players see no change); staff switch it in the account menu under the
-  theme picker, anyone per tab with `?bg=on|off`. The page backdrop (75 %), cards and tables (85–92 % per theme) and
-  the auth backdrop (75 %) turn translucent over a 104 kB AVIF / 153 kB WebP copy of the image; fields, menus, dialogs
+- **Page background: landing image 1 behind every page, to compare** — knk-web-app
+  `claude/page-background-image-231` `1cdff0d` (PandiO/knk-workspace#231). Off by default (players see no change);
+  switched with the "Background image" item under the themes in the cogwheel theme switcher (same visibility), or per
+  tab with `?bg=on|off`. The page backdrop (75 %), cards and tables (85–92 % per theme) and the auth backdrop (75 %)
+  turn translucent over a 104 kB AVIF / 153 kB WebP copy of the image; fields, menus, dialogs
   and sticky bars stay solid. Text keeps WCAG AA over the image's darkest and lightest pixel (contrast test extended).
   Guide: [guides/design-themes-comparison.md](guides/design-themes-comparison.md) § 7.
+- **Hygiene and docs batch** — branch `claude/hygiene-docs-2026-11-xpd9o0` in knk-plugin, knk-web-api, knk-web-app and
+  knk-workspace (2026-11-02, in review). The plugin's version is stamped at build time, `0.1.0+<commit>` (`dev`
+  without git), and logged with the commit as the first startup line; CI passes `-PgitCommit=<sha>`
+  ([#136](https://github.com/PandiO/knk-workspace/issues/136)). A plain `dotnet build` works on Linux at the API's repo
+  root ([#106](https://github.com/PandiO/knk-workspace/issues/106)). The admin client-activity totals no longer count
+  each request twice or add up across hours; a ConditionalRequired rule now really makes a field required: its config is
+  `{"condition":{"op","value"}}` (older forms still read) and values compare by text; the unused
+  `FieldValidationService` is gone; all API tests green ([#99](https://github.com/PandiO/knk-workspace/issues/99), 2026-11-04). Dead code removed: the API's
+  `ExtractLocationDataFromTaskOutput` and the web app's location `worldName` default `'world'`
+  ([#147](https://github.com/PandiO/knk-workspace/issues/147)). Docs: production-installation G10/§ 12.3 metrics
+  ([#48](https://github.com/PandiO/knk-workspace/issues/48)), Game Settings § 3.6 runtime worlds per server (#147),
+  stale statements in the legacy, teleport, siege and specs README docs
+  ([#135](https://github.com/PandiO/knk-workspace/issues/135)).
+
+## 2026-11-04
+
+- **Dashboard explorer: filter by display and form configuration** — knk-web-app `main` `738c16a`, merged from
+  `claude/explorer-filter-226` (PandiO/knk-workspace#226, UX/realtime chain link 3c; live-tested 2026-11-03/04). A filter button next to the sort button narrows the type list
+  to types with or without a published default display configuration and with or without a form configuration
+  (a dropdown Any / Yes / No each), remembered per browser like the sort. Smoke test
+  [guides/dashboard-return-smoke-test.md](guides/dashboard-return-smoke-test.md) § 9c.
+- **Open form without the type overview card** — knk-web-app `main` `738c16a`, merged from
+  `claude/form-hide-type-card-227` (PandiO/knk-workspace#227, UX/realtime chain link 3c; live-tested 2026-11-03/04). A form opened from the dashboard or the Entity setup page no
+  longer has the entity type card ("EnchantmentDefinition (EnchantmentDefinition) 19 fields ▸ Fields") above it; the
+  Entity setup page keeps it while no form is open. Smoke test
+  [guides/dashboard-return-smoke-test.md](guides/dashboard-return-smoke-test.md) § 10a.
+- **Register page: link-code field with the dash** — knk-web-app `main` `738c16a`, merged from
+  `claude/register-code-mask-229` (PandiO/knk-workspace#229, UX/realtime chain link 3c; live-tested 2026-11-03/04). `/auth/register`'s link-code field is the same masked field as
+  `/link` (`____-____`, the dash drawn by the field; O, I and L are kept for `/account link` codes). A code refused as
+  a link code that is a live claim code from the disconnect screen goes on to `/link`, verified. Smoke test
+  [guides/invitations-smoke-test.md](guides/invitations-smoke-test.md) § 4 steps 16 and 17c.
+
+- **Dashboard menus and entity table follow the theme** — knk-web-app `main` `596c51a`, merged `--no-ff` from
+  `claude/tokens-dashboard-menu` (PandiO/knk-workspace#95 follow-up). The "New with" / "Drafts" menus and the entity
+  table (search box, sortable headers, selected-row stripe, links, paging text) use the theme tokens instead of fixed
+  greys and green, so they change with the theme. In `current` only the menu items' text is a shade darker.
+
+- **Shield banner patterns and armour trims on item blueprints and item instances** — knk-web-api `master` `93f9380` (migration
+  `AddItemShieldBannerAndArmorTrim`, form seed `ItemBlueprint.json`, re-import it), knk-plugin `main` `497e0fe`, knk-web-app `main` `4dd11d0`,
+  merged `--no-ff` from `claude/shield-banner-trim-232` ([PandiO/knk-workspace#232](https://github.com/PandiO/knk-workspace/issues/232);
+  developer smoke test 2026-11-04: shield pattern checks passed, armour trim accepted). A shield's base colour and its
+  pattern layers (bottom to top) and an armour piece's trim (pattern + material) are stored on the blueprint, copied
+  onto each minted instance (frozen, like the grade; `/knk item more` clones copy them), applied when the plugin builds
+  the item, and scanned back by the item and kit scans. The web app edits them on the blueprint form (new field type
+  `BannerLayers`) and shows them on the item instance detail. The armour trim check asked for in #232 found no trim
+  support in any repo; it was added. Smoke test: [guides/shield-banner-trim-smoke-test.md](guides/shield-banner-trim-smoke-test.md).
+  Architecture: [item render pipeline § 2c](architecture/item-render-pipeline.md).
+
+- **Theme switcher as a cogwheel, for every visitor** — knk-web-app `main` `865fe53`, merged `--no-ff` from
+  `claude/theme-switcher-button` (PandiO/knk-workspace#95, developer request 2026-11-04). A cogwheel button opens the
+  themes (Current, Brand, Brand (red), Proposal, each with a short description): in the navigation bar when logged in,
+  floating in the top-right corner of the landing and auth pages when logged out, so new visitors can try them. The
+  themes left the account menu. `REACT_APP_THEME_PICKER=off` hides it; the alpha build no longer sets `on`. Guide:
+  [guides/design-themes-comparison.md](guides/design-themes-comparison.md) § 1.
 
 ## 2026-11-03
 

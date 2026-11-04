@@ -1,7 +1,7 @@
 # Teleportation Commands — Design
 
-**Status:** Decided — implementation in progress (branch `claude/teleport`)
-**Last updated:** 2026-10-27 (§3.2/§3.3: `all` forms, same rank or lower, exemptions — [PandiO/knk-workspace#171](https://github.com/PandiO/knk-workspace/issues/171), in review on `claude/alpha-run-1-teleport-items`, not merged); 2026-10-19 (§3.6: `/hub` to the hub spawn, KNG-188)
+**Status:** Implemented and merged to trunk (KNG-17, `claude/teleport` merged 2026-09-28: knk-plugin `main` `9bae3769`, knk-web-api `master` `ae4dccd`, knk-web-app `main` `ac2db3b`); the `all` forms (#171) merged 2026-11-01 (plugin `20791049`, API `22a28ab`). Live state per the [feature register](../../FEATURE_REGISTER.md).
+**Last updated:** 2026-11-02 (status header: merged, it still said "implementation in progress"; [PandiO/knk-workspace#135](https://github.com/PandiO/knk-workspace/issues/135)); 2026-10-27 (§3.2/§3.3: `all` forms, same rank or lower, exemptions — [PandiO/knk-workspace#171](https://github.com/PandiO/knk-workspace/issues/171), merged 2026-11-01); 2026-10-19 (§3.6: `/hub` to the hub spawn, KNG-188)
 **Linear:** [KNG-17](https://linear.app/kngpandi/issue/KNG-17/teleportation-staff-tp-tpa-requests-spawn-domain-warps-v1-port)
 **Sources:** `knk-v1-archive` (`src/UsefulCommands/PlayerTeleportCommand.java`, `src/UsefulCommands/SpawnCommand.java`,
 `src/SpawnPoints/SpawnPoint.java`, `src/SpawnPoints/SpawnPointCommands.java`, `src/Teleport/*`, `src/Houses/HomeCommands.java`,
@@ -275,7 +275,7 @@ the sender; console may run the "others" forms.
 | `/spawn all`, `/hub all` | — | `knk.teleport.all.spawn`, `knk.teleport.all.hub` | Every eligible player to their spawn / the hub (#171). |
 | any staff form + `-s` | `silent`/`s` last arg (v1) | `knk.teleport.staff.silent` | No message to the moved/visited player. Always silent when the actor is vanished. |
 
-**Moving other players ([#171](https://github.com/PandiO/knk-workspace/issues/171), 2026-10-27, in review):** every
+**Moving other players ([#171](https://github.com/PandiO/knk-workspace/issues/171), 2026-10-27, merged 2026-11-01):** every
 form that moves another player (`/tp`, `/tphere`, `/spawn`, `/hub`, `/warp`, `/back` on someone) needs that player to be
 of the actor's **rank or lower** (highest active group weight, `RankHierarchy.actorAtLeast`); `/freeze`, `/inventory`,
 `/enderchest` and `/knk user` keep strictly lower. A player holding `knk.teleport.exempt.<hub|spawn|tp|tphere>` (or

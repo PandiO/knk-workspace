@@ -353,12 +353,11 @@ admission.kick" without the code.
 
 ```bash
 # in knk-web-app at the main commit you package
-REACT_APP_API_BASE_URL=/api REACT_APP_MC_SERVER_ADDRESS=play.knightsandkings.net REACT_APP_THEME_PICKER=on CI=false npm run build
+REACT_APP_API_BASE_URL=/api REACT_APP_MC_SERVER_ADDRESS=play.knightsandkings.net CI=false npm run build
 ```
 
-`REACT_APP_THEME_PICKER=on` shows the theme picker (account menu) to every logged-in alpha tester, so they can try the
-three themes (#95, developer decision 2026-11-03; the app's default is staff only). Leave it out to keep the picker for
-staff. See [design-themes-comparison.md](design-themes-comparison.md).
+The theme switcher (cogwheel, #95) shows for every visitor without a setting; `REACT_APP_THEME_PICKER=off` hides it.
+See [design-themes-comparison.md](design-themes-comparison.md).
 
 **nginx:** the server block for `app.knightsandkings.net`. nginx has to share a network with `api`: attach the existing
 `core`-stack nginx to an alpha network, or add a small nginx container to the `knk-alpha` stack that `cloudflared`

@@ -3,7 +3,7 @@
 **Status:** Draft v1 — written for review. Not yet followed on a real production host. The database, API, seed and
 web-server steps were rehearsed in a scratch environment on 2026-10-07 (see [Appendix A](#appendix-a--what-was-verified-and-how)).
 The Paper server steps and the CI/CD workflows are untested drafts.
-**Last updated:** 2026-10-25 (§1/§3.4 G6: RegionHttpServer is loopback + `X-API-Key` since KNG-64; §nginx: WebSocket upgrade headers for the planned SignalR hub, #66); 2026-10-24 (§4.3, §9.3, §11 F/G: KNG-205 invitations merged, the feature-branch notes replaced); 2026-10-22 (§7.7: DisplayConfiguration export/import and the priority 2/3 form seeds and display seeds merged, KNG-139); 2026-10-21 (§4.3, §9.3, §11 F/G: invite-only sign-up, admission gate and Access sync — KNG-205/KNG-218); 2026-10-21 (§4.3 mail: the KNG-206 email engine on the invitations feature branch — `Email__Transport`, relay option, `App__PublicBaseUrl`, Log guard); 2026-10-17 (§7.7: FormConfiguration export/import and bundled seeds merged, KNG-138/139; two new migrations, see the note in §7.7); 2026-10-12 (§7.7: KNG-138 on a feature branch); 2026-10-08 (security and alpha-hosting update for KNG-64)
+**Last updated:** 2026-11-02 (G10, § 12.3: the KNG-232 Prometheus endpoints of the API and the plugin, both off by default, [PandiO/knk-workspace#48](https://github.com/PandiO/knk-workspace/issues/48)); 2026-10-25 (§1/§3.4 G6: RegionHttpServer is loopback + `X-API-Key` since KNG-64; §nginx: WebSocket upgrade headers for the planned SignalR hub, #66); 2026-10-24 (§4.3, §9.3, §11 F/G: KNG-205 invitations merged, the feature-branch notes replaced); 2026-10-22 (§7.7: DisplayConfiguration export/import and the priority 2/3 form seeds and display seeds merged, KNG-139); 2026-10-21 (§4.3, §9.3, §11 F/G: invite-only sign-up, admission gate and Access sync — KNG-205/KNG-218); 2026-10-21 (§4.3 mail: the KNG-206 email engine on the invitations feature branch — `Email__Transport`, relay option, `App__PublicBaseUrl`, Log guard); 2026-10-17 (§7.7: FormConfiguration export/import and bundled seeds merged, KNG-138/139; two new migrations, see the note in §7.7); 2026-10-12 (§7.7: KNG-138 on a feature branch); 2026-10-08 (security and alpha-hosting update for KNG-64)
 **Applies to:** trunk only. knk-web-api `master` `1805cf9`, knk-web-app `main`, knk-plugin `main` `c7d5a1e`; 61 EF
 migrations, the latest being `20261006193103_UniquePermissionGrantHolderNode`. Feature branches that haven't been
 merged, such as road navigation, are not covered. Re-check § 2 and the seed table manifest after each trunk merge.
@@ -168,7 +168,7 @@ where it's used.
 | G7 | Should-fix | web-api | `dotnet ef migrations bundle` and `migrations script --idempotent` both fail: (a) the design-time host runs the startup seeds in `Program.cs` before migrating, so an empty DB crashes; (b) the idempotent script wraps triggers in procedures (`ERROR 1303`) | "Migrator" image runs `dotnet ef database update` (§ 5.3) | Add an `IDesignTimeDbContextFactory` and a fixed `ServerVersion`, and skip seeds when EF tooling runs |
 | G8 | Should-fix | plugin | Bundled `config.yml` has `allow-untrusted-ssl: true` and an empty `api-key`, so the plugin **disables itself** on first start | Set both in § 9.5 | Default `allow-untrusted-ssl: false` **— [KNG-64] fixed on branch, pending merge** |
 | G9 | Info | web-api | `ServerVersion.AutoDetect(...)` (`Program.cs:51`) connects to MySQL at startup and while building EF tooling, so the API can't start (or build a bundle) without a reachable DB | `depends_on: service_healthy` in Compose | `new MySqlServerVersion(new Version(8, 4))` |
-| G10 | Info | web-api | `/metrics` is **not** exposed (no Prometheus exporter package); `CLAUDE.md` says otherwise. Telemetry exports OTLP to `localhost:4317` by default | `Telemetry__Enabled=false` until a collector exists | Add the exporter, or run an OTel collector (§ 12.3) |
+| G10 | Info | web-api, plugin | Metrics are **off by default**. Since KNG-232 (merged 2026-10-22) the API has a Prometheus `/metrics` endpoint (`Telemetry__Prometheus__Enabled`; outside Development it needs `Telemetry__Prometheus__BearerToken` or the API refuses to start) and the plugin has its own `metrics:` endpoint (port 9225, `127.0.0.1` by default, a bearer token required on any other address). With `Telemetry__Enabled=true` and the shipped `Telemetry:Exporter` `otlp`, the API also exports OTLP metrics and traces to `localhost:4317`, where nothing listens without a collector | `Telemetry__Enabled=false` until a Prometheus scraper exists | Run Prometheus and turn both endpoints on (§ 12.3, [performance metrics guide](performance-metrics-and-capacity.md) § 4–5) |
 | G11 | Info | web-api | `/health/ready` only runs a "self" check, not a DB check | Smoke test hits a DB-backed endpoint (§ 6.4) | `AddDbContextCheck<KnKDbContext>()` |
 | G12 | Info | web-api | `[Authorize(Policy="RequireAdmin")]` (`AdminClientsController`) can never pass: no token carries an `Admin` role claim | none needed | Switch it to `[RequirePermission(...)]` **— [KNG-64] fixed on branch, pending merge** |
 | G13 | Info | plugin | Jar is always `knk-paper-0.1.0-SNAPSHOT.jar`, `plugin.yml` says `0.1.0`; the task-claim server id is hard-coded `"localhost"` (`KnKPlugin.java:1207`) | Rename the jar on release (§ 10.4) | Take the version from the git tag in Gradle and `processResources` |
@@ -268,7 +268,8 @@ sudo ufw status verbose
 ```
 
 Ports that must **not** be reachable from outside: 3306 (MySQL), 5000 (API, nginx proxies it), **8081** (plugin
-`RegionHttpServer`; authenticated and loopback-bound since KNG-64, keep it closed anyway) and 25575 (RCON).
+`RegionHttpServer`; authenticated and loopback-bound since KNG-64, keep it closed anyway), 9225 (plugin `metrics:`
+endpoint, § 12.3) and 25575 (RCON). The API's `/metrics` path must not be routed by nginx either.
 
 > **Concept — Docker bypasses ufw.** A port published as `"3306:3306"` is opened by Docker's own iptables rules,
 > *before* ufw sees the traffic. Always publish as `"127.0.0.1:3306:3306"`, or use host networking with a loopback
@@ -393,8 +394,13 @@ Email__FromName=Knights & Kings
 # --- game server link: API → plugin region checks (RegionHttpServer) ---
 MinecraftPlugin__BaseUrl=http://127.0.0.1:8081
 
-# --- observability: off until an OTLP collector exists (G10, § 12.3) ---
+# --- observability: off until a Prometheus scraper exists (G10, § 12.3) ---
 Telemetry__Enabled=false
+# To scrape /metrics instead (never routed through nginx/Cloudflare; see § 12.3):
+# Telemetry__Enabled=true
+# Telemetry__Exporter=prometheus                       # no OTLP export to localhost:4317
+# Telemetry__Prometheus__Enabled=true
+# Telemetry__Prometheus__BearerToken=<openssl rand -hex 32>
 Logging__LogLevel__Default=Information
 Logging__LogLevel__Microsoft.AspNetCore=Warning
 ```
@@ -1472,9 +1478,22 @@ Tick these in order; write problems and fixes into a dated note under `docs/repo
   `https://play.example.com/api/health` every minute, a TCP check on `mc.example.com:25565`, and a *heartbeat* the
   backup script pings at the end, which alerts when the backup didn't run.
 - **Disk space:** a full disk is the most common cause of a dead MySQL. Alert at 80%.
-- **Later:** the API has OpenTelemetry built in. Run an OTel collector + Prometheus + Grafana (or a hosted service),
-  point `Telemetry__Otlp__Endpoint` at it and set `Telemetry__Enabled=true`. The currency monitor already raises
-  in-game alerts for ledger anomalies (`CurrencyMonitor:*`).
+- **Metrics (off by default; KNG-232, merged 2026-10-22, not yet run live):** both the API and the plugin expose a
+  Prometheus endpoint for a scraper on the host or the LAN, never through nginx/Cloudflare. Set-up, metric names,
+  the Prometheus + Grafana stack (with cAdvisor and node-exporter) and the panels to build first are in the
+  [performance metrics and capacity guide](performance-metrics-and-capacity.md) § 4–5.
+  - **API** `/metrics` (`/etc/knk/api.env`, § 4.3): `Telemetry__Enabled=true`, `Telemetry__Prometheus__Enabled=true`,
+    `Telemetry__Prometheus__BearerToken=<openssl rand -hex 32>` (required outside Development; the API refuses to
+    start without it). Set `Telemetry__Exporter=prometheus` too unless an OTel collector listens at
+    `Telemetry__Otlp__Endpoint`: the shipped `otlp` exporter sends metrics and traces to `localhost:4317`.
+  - **Plugin** `metrics:` in `config.yml`: `enabled: true`, `port: 9225`, `bind-address` `127.0.0.1` for a scraper
+    on the same host (or the Docker bridge IP for one in a container, never `0.0.0.0`), and a `token` (required on
+    any non-loopback address). It is not the region-callback port (8081). If the port is taken the plugin logs
+    SEVERE and the server still starts.
+  - The scraper sends `Authorization: Bearer <token>` to each. Keep both ports closed in the firewall (§ 3.4).
+- **Alerts:** none ship yet; alert rules and dashboards are [KNG-233](https://linear.app/kngpandi/issue/KNG-233) (search
+  the issues for `[KNG-233]`). The currency monitor already raises in-game alerts for ledger anomalies
+  (`CurrencyMonitor:*`).
 
 ### 12.4 Restore drill (quarterly, and before every risky migration)
 

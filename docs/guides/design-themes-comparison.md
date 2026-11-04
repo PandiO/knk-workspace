@@ -2,7 +2,8 @@
 
 **Status:** Compared live by the developer on 2026-11-03 (all screens work; `brand` preferred, all three themes and the
 picker stay); fix round done on knk-web-app `claude/design-tokens-95` (§ 6). Merged 2026-11-03 (knk-web-app `main` `c02b365`)
-**Last updated:** 2026-11-03 (§ 7 page background, #231, on a branch); 2026-11-03 (fourth theme `brand-red`); 2026-11-03 (fix round after the live comparison: brand primary orange, heading font on player pages
+**Last updated:** 2026-11-04 (§ 7 page background, #231, on a branch: toggle in the cogwheel menu); 2026-11-04 (theme
+switcher as a cogwheel for every visitor, knk-web-app `main` `865fe53`); 2026-11-03 (fourth theme `brand-red`); 2026-11-03 (fix round after the live comparison: brand primary orange, heading font on player pages
 only, full-bleed auth pages, picker for alpha testers)
 **Issue:** [PandiO/knk-workspace#95](https://github.com/PandiO/knk-workspace/issues/95) (token layer, contrast rules,
 switchable themes); [#92](https://github.com/PandiO/knk-workspace/issues/92) (rebrand phases 2–4, sub-issue) holds the
@@ -19,13 +20,16 @@ rebrand takes (#92).
 
 ## 1. How to switch
 
-- **Account menu** (top right, the person icon) → **Theme (design comparison)** → Current / Brand / Brand (red) / Proposal. The menu
-  stays open, so you can flip back and forth. The choice is saved in this browser (localStorage) for every tab.
-  - Default: staff only, anyone with the moderator node (`knk.admin.user.manage`) or the content node
-    (`knk.admin.content`).
-  - Build flag `REACT_APP_THEME_PICKER`: `on` shows it to every logged-in user, `off` hides it for everyone. Unset =
-    staff only. **The alpha build sets `on`** (developer decision 2026-11-03: testers try the themes too):
-    `scripts/alpha-web/Dockerfile` and [alpha-go-live.md § 6](alpha-go-live.md).
+- **Theme switcher** (the cogwheel) → Current / Brand / Brand (red) / Proposal, each with a one-line description. The
+  menu stays open, so you can flip back and forth. The choice is saved in this browser (localStorage) for every tab.
+  - **Every visitor sees it**, logged in or not (developer request 2026-11-04, so new visitors can try the themes
+    too): logged in it sits in the navigation bar, left of the account menu; logged out (landing, login, register and
+    the other auth pages) it floats in the top-right corner. On a phone the menu spans the window under the bar.
+  - Keyboard: Enter, Space or ArrowDown opens it on the selected theme; arrows, Home and End move; Escape closes it
+    and puts the focus back on the cogwheel.
+  - Build flag `REACT_APP_THEME_PICKER=off` hides it for everyone (the URL parameter below still works); unset or any
+    other value shows it. Until 2026-11-04 the picker was a group in the account menu, for staff only, and the alpha
+    build set `on` to show it to testers; that is no longer needed.
 - **URL:** add `?theme=current`, `?theme=brand`, `?theme=brand-red` or `?theme=proposal` to any page. It applies to that tab only (it
   survives reloads and navigation in the tab), so two tabs can show two themes side by side. It works logged out too
   (landing, login), for anyone; it is harmless, as it only changes colours.
@@ -130,7 +134,8 @@ picker stay, so testers can try them too. Requested and done in the fix round (�
 3. Lato stays the body/secondary font in `brand` (liked in the `PagedEntityTable`): no change.
 4. The inset dark box on the auth pages looked odd: full-bleed backdrop for the auth and landing layout in `brand` and
    `proposal` (a prioritised #92 phase 2 item; the rest of phase 2 stays open). `current` keeps its layout.
-5. The picker for testers: the alpha build sets `REACT_APP_THEME_PICKER=on`; the app default stays staff only.
+5. The picker for testers: the alpha build set `REACT_APP_THEME_PICKER=on`; the app default stayed staff only.
+   (Superseded 2026-11-04: the cogwheel switcher shows for every visitor, § 1.)
 
 ### Findings from the screenshots (2026-11-02, mocked data)
 
@@ -204,7 +209,7 @@ knk-web-app `claude/design-tokens-95` `64feecc`:
 
 ## 7. Page background: landing image 1 behind every page (#231)
 
-**Status:** on knk-web-app branch `claude/page-background-image-231` (`4220f6f`, from `main` `603843d`), not merged; waiting for the developer's live
+**Status:** on knk-web-app branch `claude/page-background-image-231` (`1cdff0d`, `main` `738c16a` merged in), not merged; waiting for the developer's live
 comparison. **Off by default**: players see no change until the developer decides (with it off, every page is
 pixel-identical to `main`). Issue [PandiO/knk-workspace#231](https://github.com/PandiO/knk-workspace/issues/231).
 
@@ -214,9 +219,10 @@ Works in all four themes.
 
 ### How to switch
 
-- **Account menu** → under **Theme (design comparison)** → **Background image** (a tick when on). Same visibility as
-  the theme picker: staff, or every logged-in user with `REACT_APP_THEME_PICKER=on` (the alpha build). Switches at once,
-  the menu stays open; saved in this browser (localStorage) for every tab.
+- **Theme switcher** (the cogwheel, § 1) → **Background image**, the last item under the four themes (a tick when on).
+  Same visibility as the themes: every visitor, logged in (in the navigation bar) or out (floating top right); hidden
+  only with `REACT_APP_THEME_PICKER=off`. Switches at once, the menu stays open; saved in this browser (localStorage)
+  for every tab. Keyboard: End jumps to it.
 - **URL:** `?bg=on` or `?bg=off` on any page, this tab only (kept for reloads and navigation in the tab), logged out
   too. Combine with the theme: `…/dashboard?theme=brand&bg=on` in one tab, `…/dashboard?theme=brand&bg=off` in another.
 - **Build flag** `REACT_APP_PAGE_BACKGROUND=on` makes it the default for everyone (a choice in the menu or `?bg=`
@@ -269,8 +275,8 @@ Not covered: status-coloured text (red/green/amber) placed straight on the page 
 
 ### Checklist for the live comparison
 
-1. As staff (or with `REACT_APP_THEME_PICKER=on`): account menu → **Background image** on. The image appears at once
-   behind the dashboard; the menu stays open and solid.
+1. Cogwheel → **Background image** on (logged in on the dashboard, and logged out on the login page). The image
+   appears at once; the menu stays open and solid.
 2. Flip through the four themes with the background on: page backdrop, cards and tables translucent; nav bar solid.
 3. Dashboard (`/dashboard/Town`): explorer list and table readable; the search fields keep a visible border.
 4. Entity detail page (`/display/<Type>/<id>`): breadcrumb, eyebrow and title on the backdrop readable; value boxes
