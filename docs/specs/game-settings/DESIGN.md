@@ -1,7 +1,7 @@
 # Game Settings — Design
 
 **Status:** Implemented, live-tested and merged (2026-10-10): knk-web-api `master` `8cce48d`, knk-plugin `main` `973aa68b`, knk-web-app `main` `12c1d60`. All decisions are settled (§7); open follow-ups in §8.
-**Last updated:** 2026-10-12
+**Last updated:** 2026-11-04
 **Linear:** [KNG-52](https://linear.app/kngpandi/issue/KNG-52)
 **Sources:** knk-web-api `master` `099f936` (`Controllers/GameSettingsController.cs`, `Services/GameSettingsService.cs`, `Dtos/GameSettingsDtos.cs`, `Models/GameSettings.cs`, commit `285baf3` of 2026-08-19); knk-web-app `main` `3953658` (`src/pages/admin/GameSettingsPage.tsx`, commits `f3206c5`/`21e84c9` of 2026-08-21); knk-plugin `main` `5c85a3d` and the shelved stash `19-08-26: Workable: GameSettings feature` (base `961597e`); [vision §2.7](../../vision/vision.md#27-game-world-settings); [teleport DESIGN §3.6](../teleport/DESIGN.md) (`/spawn`).
 **Plan and status:** [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md). **Admin how-to:** [guides/game-settings.md](../../guides/game-settings.md).
@@ -219,6 +219,13 @@ A player whose summary isn't cached yet (a brand-new account on its very first j
 `motd` replaces the server.properties motd in the Minecraft server list (`ServerListPingEvent`). It has at most two
 lines, takes the same colour codes as announcements, and fills in `{online}` and `{max}`. An empty value or no
 settings read yet leaves the server's own motd. The API rejects more than two lines or more than 512 characters.
+
+### 3.10 Chat token limits (PandiO/knk-workspace#233)
+
+`chatTokens` (column `ChatTokenSettingsJson`, migration `AddChatTokenSettings`): `maxTokensPerMessage` (0–20) and
+`statCooldownSeconds` (0–3600) for the chat hashtag tokens (`#hand`, `#kills`, …). Both 0 = off, the default; null on
+update keeps them. Holders of `knk.chat.tokens.bypass` skip both. Feature guide:
+[guides/chat-tokens.md](../../guides/chat-tokens.md). *On the `claude/chat-tokens-233` branches, not merged.*
 
 ### Text formatting (all texts)
 

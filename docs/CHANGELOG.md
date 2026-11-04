@@ -4,7 +4,15 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
-(Nothing at the moment.)
+- **Chat tokens** — `claude/chat-tokens-233` in knk-plugin, knk-web-api, knk-web-app and knk-workspace
+  (PandiO/knk-workspace#233). `#hand` shows the held item with its tooltip. Statistics and profile tokens (`#stats`,
+  `#kills`, `#deaths`, `#kd`, `#streak`, `#wins`, `#playtime`, `#balance`, `#title`, `#xp`, `#discoveries`) also work as
+  `#kills@Steve`. `#location` shares the position, and `#tokens` lists the tokens. They work in chat, `/msg`, `/r` and staff chat.
+  - Privacy: a token shows what `/stats <player>` shows another player (new `audience=public` statistics read). Sharing your
+    own private statistic asks first (make public / send without / never ask).
+  - Limits: per message and a statistics cooldown, on the Game Settings page, off by default.
+  - Nodes: `knk.chat.token.*` seeded for the Default group, `knk.chat.tokens.bypass` for the staff ranks.
+  - Two API migrations. Guide and smoke test: [guides/chat-tokens.md](guides/chat-tokens.md). Not run in game.
 
 ## 2026-11-03
 

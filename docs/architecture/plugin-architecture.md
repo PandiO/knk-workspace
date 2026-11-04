@@ -121,6 +121,16 @@ Structure under `knk-paper/src/main/java/net/knightsandkings/knk/paper/`:
 `dataaccess/`, `http/`, `integration/`, `regions/`, `tasks/`, `config/`,
 `user/`. No `gui/`/`menus/` package exists (confirmed, see below).
 
+**Chat tokens** (PandiO/knk-workspace#233, *branch `claude/chat-tokens-233`, not merged*): `#hand`, `#kills`,
+`#kills@Steve`, … in public chat, private messages and staff chat. The registry, parser and statistics views are in
+`knk-core/.../core/chat/tokens/`, and the Paper glue in `knk-paper/.../paper/chat/tokens/`:
+- `ChatTokenListener`: public chat at HIGH, `ignoreCancelled`.
+- `ChatTokenExpander`, used by `MessagingService` and `StaffChatCommand`.
+- `ChatTokenService`: expansion and the share prompt.
+
+`PlayerListener.onChat` renders the line from the event's final message for this. See
+[guides/chat-tokens.md](../guides/chat-tokens.md).
+
 ## Data flow
 
 ```
