@@ -1,7 +1,7 @@
 # Item render pipeline — one path from blueprint to item
 
 **Status:** Implemented and merged to knk-plugin `main` 2026-10-05 (`74607a9`); developer smoke test passed (see the lootboxes plan, "Smoke test results — 2026-10-05"). The pipeline itself existed since lootboxes Phase 0; the single `assemble` entry point and the decoy/colour changes are new in that merge
-**Last updated:** 2026-11-04 (shield banner patterns and armour trims on blueprints and instances, [#232](https://github.com/PandiO/knk-workspace/issues/232): on branches `claude/shield-banner-trim-232`, not merged, § 2c); 2026-11-03 (lore line wrap, [#212](https://github.com/PandiO/knk-workspace/issues/212), and scan `descriptionLore`, [#40](https://github.com/PandiO/knk-workspace/issues/40): merged 2026-11-02 to knk-plugin `main` `27798ab` and knk-web-app `main` `b770597`; developer smoke test accepted 2026-11-03); 2026-10-18 (KNG-175 merged to knk-plugin `main` `147806d8`); 2026-10-15 (items catalogue goes through `assembleDefaults`, [KNG-175](https://linear.app/kngpandi/issue/KNG-175))
+**Last updated:** 2026-11-04 (shield banner patterns and armour trims on blueprints and instances, [#232](https://github.com/PandiO/knk-workspace/issues/232): merged and smoke-tested, § 2c); 2026-11-03 (lore line wrap, [#212](https://github.com/PandiO/knk-workspace/issues/212), and scan `descriptionLore`, [#40](https://github.com/PandiO/knk-workspace/issues/40): merged 2026-11-02 to knk-plugin `main` `27798ab` and knk-web-app `main` `b770597`; developer smoke test accepted 2026-11-03); 2026-10-18 (KNG-175 merged to knk-plugin `main` `147806d8`); 2026-10-15 (items catalogue goes through `assembleDefaults`, [KNG-175](https://linear.app/kngpandi/issue/KNG-175))
 **Linear:** [KNG-54](https://linear.app/kngpandi/issue/KNG-54) (Done)
 **Why this exists:** developer request 2026-10-05 — all lore colouring, custom-enchantment rendering and grade/origin rendering should be applied in one spot, so a route that spawns an item can't render it differently from the others.
 **See also:** [lootboxes design §3.4/§3.9](../specs/lootboxes/DESIGN.md), [enchantment books](../specs/enchantment-books/ENCHANTMENT_BOOK_APPLICATION.md), [items plan](../specs/items/IMPLEMENTATION_PLAN.md), [kits](../specs/kits/DESIGN.md)
@@ -67,7 +67,7 @@ Enchantment detection ignores colours (it matches the plain display name + level
 
 ### 2c. Shield banner patterns and armour trims ([#232](https://github.com/PandiO/knk-workspace/issues/232))
 
-**Status:** on `claude/shield-banner-trim-232` in knk-web-api, knk-plugin and knk-web-app (2026-11-04), not merged; in-game smoke test pending ([guide](../guides/shield-banner-trim-smoke-test.md)).
+**Status:** merged 2026-11-04 (knk-web-api `master` `93f9380`, knk-plugin `main` `497e0fe`, knk-web-app `main` `cde5815`); developer smoke test the same day, shield pattern checks passed, armour trim accepted ([guide](../guides/shield-banner-trim-smoke-test.md)).
 
 A shield's banner and an armour piece's trim are stored data, not lore, and round-trip scan → save → build like the description:
 
@@ -125,7 +125,7 @@ Lootbox **token** items (`LootboxTokenDelivery.build`), **siege enchant books** 
 
 ## 7. History
 
-- 2026-11-04 ([#232](https://github.com/PandiO/knk-workspace/issues/232), on branches, not merged): shield banner patterns (base colour + layers) and armour trims stored on blueprints and instances, applied in `fromBlueprint`, scanned back, edited in the web app (§ 2c).
+- 2026-11-04 ([#232](https://github.com/PandiO/knk-workspace/issues/232); merged, smoke test accepted the same day): shield banner patterns (base colour + layers) and armour trims stored on blueprints and instances, applied in `fromBlueprint`, scanned back, edited in the web app (§ 2c).
 
 - KNG-5 (2026-09-26): `CustomEnchantmentLore` introduced (books skipped the "enchantments first" reorder).
 - KNG-29 (2026-10-04): stable lore section spacing (`ItemLoreLayout`); Flaming Samurai's inline `&7` removed — which, as found 2026-10-05, made its description vanilla purple, since the plugin applied no colour.

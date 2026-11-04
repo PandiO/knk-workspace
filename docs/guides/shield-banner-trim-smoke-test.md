@@ -1,6 +1,6 @@
 # Shield banner patterns and armour trims on blueprints and instances — smoke test
 
-**Status:** Not run yet. Branches `claude/shield-banner-trim-232` in knk-web-api, knk-plugin and knk-web-app (2026-11-04), not merged
+**Status:** Run by the developer 2026-11-04 on the dev stack: § 1–2 shield pattern checks **passed**, § 3 armour trim **accepted**. Merged 2026-11-04 (knk-web-api `master` `93f9380`, knk-plugin `main` `497e0fe`, knk-web-app `main` `cde5815`)
 **Last updated:** 2026-11-04
 **Issue:** [PandiO/knk-workspace#232](https://github.com/PandiO/knk-workspace/issues/232)
 **Architecture:** [item render pipeline § 2c](../architecture/item-render-pipeline.md#2c-shield-banner-patterns-and-armour-trims-232)
@@ -11,15 +11,15 @@ checked here. Record each run under **Findings** at the end, with the commits yo
 
 ## 0. Setup
 
-1. **knk-web-api** on `claude/shield-banner-trim-232`: run it once; the migration `AddItemShieldBannerAndArmorTrim`
+1. **knk-web-api** (`master` since 2026-11-04): run it once; the migration `AddItemShieldBannerAndArmorTrim`
    applies on start-up (two new tables `item_blueprint_banner_layers` / `item_instance_banner_layers`, three nullable
    columns on `item_blueprints` and on `item_instances`). `dotnet test` on the branch: expect green (the session ran the
    full suite; see the PR description for the count).
-2. **knk-web-app** on `claude/shield-banner-trim-232` (`npx npm@11 ci`, `npm start`). Web app, **Import / seeds**:
+2. **knk-web-app** (`main`; `npx npm@11 ci`, `npm start`). Web app, **Import / seeds**:
    re-import **ItemBlueprint – Default (seed v1)** (the seed file gained four fields on the "Item in game" step:
    Shield base colour, Shield banner pattern, Armour trim pattern, Armour trim material) and keep it the default.
    Without the re-import the form has no fields for the look and a scan silently keeps nothing of it.
-3. **knk-plugin** on `claude/shield-banner-trim-232`: `./gradlew :knk-paper:dev`, restart the dev server.
+3. **knk-plugin** (`main`): `./gradlew :knk-paper:dev`, restart the dev server.
 4. In game, as an op: a shield with a loom pattern of **at least three layers** (loom: shield + banner with layers, or
    `/give @s minecraft:shield[base_color=red,banner_patterns=[{pattern:"minecraft:stripe_top",color:"yellow"},{pattern:"minecraft:cross",color:"white"},{pattern:"minecraft:border",color:"black"}]]`),
    a **plain shield**, and a **netherite chestplate with a trim**
@@ -81,4 +81,4 @@ checked here. Record each run under **Findings** at the end, with the commits yo
 
 | Date | Tester | knk-web-api | knk-plugin | knk-web-app | Result |
 |---|---|---|---|---|---|
-| | | | | | |
+| 2026-11-04 | developer (Pandi) | `29b0778` | `4c059ed` | `438d045` | § 1–2 shield pattern pass; § 3 armour trim accepted; merged the same day |
