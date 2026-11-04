@@ -4,8 +4,12 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
-- **Hygiene and docs batch** — branch `claude/hygiene-docs-2026-11-xpd9o0` in knk-plugin, knk-web-api, knk-web-app and
-  knk-workspace (2026-11-02, in review). The plugin's version is stamped at build time, `0.1.0+<commit>` (`dev`
+(Nothing at the moment.)
+
+## 2026-11-04
+
+- **Hygiene and docs batch** — merged 2026-11-04: knk-web-api `master` `71b814c`, knk-web-app `main` `22100c3`,
+  knk-plugin `main` `ed750ddf`, knk-workspace `main` `559124c`. The plugin's version is stamped at build time, `0.1.0+<commit>` (`dev`
   without git), and logged with the commit as the first startup line; CI passes `-PgitCommit=<sha>`
   ([#136](https://github.com/PandiO/knk-workspace/issues/136)). A plain `dotnet build` works on Linux at the API's repo
   root ([#106](https://github.com/PandiO/knk-workspace/issues/106)). The admin client-activity totals no longer count
@@ -17,8 +21,6 @@ This is a human-readable record of capabilities merged into the V3 default branc
   ([#48](https://github.com/PandiO/knk-workspace/issues/48)), Game Settings § 3.6 runtime worlds per server (#147),
   stale statements in the legacy, teleport, siege and specs README docs
   ([#135](https://github.com/PandiO/knk-workspace/issues/135)).
-
-## 2026-11-04
 
 - **Dashboard explorer: filter by display and form configuration** — knk-web-app `main` `738c16a`, merged from
   `claude/explorer-filter-226` (PandiO/knk-workspace#226, UX/realtime chain link 3c; live-tested 2026-11-03/04). A filter button next to the sort button narrows the type list
