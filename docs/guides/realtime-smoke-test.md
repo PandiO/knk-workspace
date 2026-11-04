@@ -3,7 +3,7 @@
 **Status:** WT2 run by the developer 2026-11-04 (works or accepted; one bug, step 6). S1, S2 and S3 were not run as
 sections (S1 connect and presence were exercised by WT2). Merged into the default branches 2026-11-04;
 `realtime.enabled` stays `false` by default
-**Last updated:** 2026-11-04 (WT2 findings; merged); 2026-11-02 (§ S3, #182); 2026-11-02 (§ WT2, #181)
+**Last updated:** 2026-11-04 (§ WT2 follow-ups #239/#240, feature branch); 2026-11-04 (WT2 findings; merged); 2026-11-02 (§ S3, #182); 2026-11-02 (§ WT2, #181)
 **Design:** [specs/realtime-signalr/DESIGN.md](../specs/realtime-signalr/DESIGN.md) (§4–§5, as built: §4.6) ·
 [IMPLEMENTATION_PLAN.md](../specs/realtime-signalr/IMPLEMENTATION_PLAN.md) ·
 **Issues:** [PandiO/knk-workspace#178](https://github.com/PandiO/knk-workspace/issues/178) (S1),
@@ -158,6 +158,30 @@ Use a form with a Location or region field (e.g. a new Town).
     `realtime.enabled: false`: nobody is online, every task shows its code, exactly as on the #180 branch.
 
 Record the times of 2, 6 and 9 under **Findings**.
+
+## WT2 follow-ups — offer permission and Send again (#239, #240)
+
+**Builds:** knk-web-api, knk-plugin and knk-web-app on `claude/world-task-offer-followups` (no migration, no new
+setting). Plugin `realtime.enabled: true`. **People:** admin A as in WT2; player B in the Staff group, **not op**, with
+no Bukkit grant of `knk.tasks` (the node comes only from the group in the web app).
+
+1. **Hand off to a non-op staff member.** As WT2 step 6: B is listed; pick B. B gets "A sent you a task from the web
+   app: …" with `[Accept] [Decline]`; Accept claims and starts it. (Before #239: the panel said "B declined" at once.)
+2. **Refused in game.** A non-op admin with `knk.admin.world` but **without** `knk.tasks`, online in game, presses
+   Send to Minecraft: in chat "The web app tried to send you a task (…), but you don't have world-task access in game
+   (knk.tasks)"; the panel says "You don't have world-task access in game (knk.tasks). Use the task code, or hand it
+   off." (not "could not be sent").
+3. **Non-op admin, auto-claim.** If A is op, repeat WT2 step 2 with a non-op admin: the task is claimed in game.
+4. **Send again after an in-game cancel.** A starts a task (auto-claim) and types `cancel`. The yellow card shows the
+   `/knk task <code>` command with a copy button (no separate "Task code:" box), **Send again** and **Hand off to…**.
+   Send again: A gets the same task again at once ("Task from the web app: …"), same task code.
+5. **Send again while busy.** A holds another task; on a waiting task press Send again: the Queue / Hand off /
+   Replace / Cancel question appears; Queue queues this task, Replace hands the other one back.
+6. **Send again while offline.** A leaves the game; Send again: "You're not online in game. Join the server and press
+   Send again, or use the task code." Nothing is sent.
+7. **Hand off a waiting task.** After a Decline or timeout (WT2 step 7), press Hand off to… on the card and pick B
+   again: the same task is offered (Accept/Decline).
+8. **No hub.** Block `/api/hubs/`: the card shows the command only, no Send again / Hand off.
 
 ## S3 — config and entity changes pushed to the game server (#182)
 

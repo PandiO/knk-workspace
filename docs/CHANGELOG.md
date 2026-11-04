@@ -4,7 +4,14 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
-_Nothing listed right now._
+- **World-task offers reach non-op staff, and "Send again"** — [PandiO/knk-workspace#239](https://github.com/PandiO/knk-workspace/issues/239)
+  and [#240](https://github.com/PandiO/knk-workspace/issues/240), follow-ups of the developer's WT2 test; branch
+  `claude/world-task-offer-followups` in knk-web-api, knk-plugin and knk-web-app. The plugin checks `knk.tasks` for an
+  offer like a command's node (Bukkit or the knk permission model), so staff whose group grants it get the
+  Accept/Decline line or the auto-claim; a refused player is told why, and the web app says "doesn't have world-task
+  access" instead of "declined" (new offer state `NoPermission`). A waiting task's code card has **Send again** and
+  **Hand off to…** (`POST api/WorldTasks/{id}/offer`, same busy check, same task and code) and shows only the
+  `/knk task <code>` command. No migration. Checklist: [realtime smoke test § WT2 follow-ups](guides/realtime-smoke-test.md).
 
 ## 2026-11-04
 
