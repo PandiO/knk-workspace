@@ -232,7 +232,7 @@ Audit V1/V2/V3 and compare a Citizens navigator with reusable KnK pathfinding on
 | O05 | Personal NPC visibility/collision, concurrent instances and lifecycle on server restart/teleport/world change |
 | O06 | Permission holder/schema, override precedence, temporary grant scope and safe exit |
 | O07 | Verified GateDoor pass-through mechanism and NPC-compatible traversal |
-| O08 | Exact trait boundaries, engine-neutral contracts and runtime/library choice; scoring + switch margin + minimum commitment agreed in §5a. Remaining arbitration work: numeric tuning, margin semantics, reevaluation cadence, configuration precedence and wider interruption contracts |
+| O08 | Exact trait boundaries, engine-neutral contracts and runtime/library choice; scoring + switch margin + minimum commitment agreed in §5a. Remaining arbitration work: numeric tuning, margin semantics, reevaluation cadence, configuration precedence and wider interruption contracts. Proposed precedence (code defaults → template chain → fragments → template → instance → assignment → runtime modifiers; hard rules outside): [BEHAVIOR_MODEL.md §15.3](BEHAVIOR_MODEL.md#153-precedence), to confirm |
 | O09 | Dialogue delivery/authoring, response timeout, tutorial completion/departure presentation |
 | O10 | V2 Progressable/Creation and Siege comparison; progression boundary only in KNG-36 |
 | O11 | City guard profile: patrol, aggro/defense, dialogue interruptions and return to patrol. Concept 2026-11-04 in [BEHAVIOR_MODEL.md](BEHAVIOR_MODEL.md) (#234); decisions still to confirm |
