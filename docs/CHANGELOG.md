@@ -8,6 +8,11 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## 2026-11-04
 
+- **Dashboard menus and entity table follow the theme** — knk-web-app `main` `596c51a`, merged `--no-ff` from
+  `claude/tokens-dashboard-menu` (PandiO/knk-workspace#95 follow-up). The "New with" / "Drafts" menus and the entity
+  table (search box, sortable headers, selected-row stripe, links, paging text) use the theme tokens instead of fixed
+  greys and green, so they change with the theme. In `current` only the menu items' text is a shade darker.
+
 - **Theme switcher as a cogwheel, for every visitor** — knk-web-app `main` `865fe53`, merged `--no-ff` from
   `claude/theme-switcher-button` (PandiO/knk-workspace#95, developer request 2026-11-04). A cogwheel button opens the
   themes (Current, Brand, Brand (red), Proposal, each with a short description): in the navigation bar when logged in,
