@@ -1,7 +1,7 @@
 # NPC behavior model — perception, psychology, decisions and combat (guards first)
 
 **Status:** Working concept from a developer design session; not approved defaults, not an implementation plan, nothing implemented. Items marked *(future update)* belong to the overall vision but are not planned for the first version.
-**Last updated:** 2026-11-04 (developer decisions on design pass 2: alert states weight but never lock §7.1, four situations §7.2, guard-specific orders §7.3, presets §9.7, influence sources incl. gate state §9.8, five weapon-skill modifiers §11.1, inspector and web decision viewer §14, templates §15); 2026-11-04 (design pass 2: §7.1 action gating, §7.2 situations, §9.7 personality presets, §9.8 default influence sources, §11.1 proficiency growth, §11.2 ranged/melee switching, §14 debugging tools, §15 configuration and templates; all proposals); 2026-11-04 (hybrid navigation decision in §2: K&K plans, Citizens moves); 2026-11-04 (initial concept, developer voice design session)
+**Last updated:** 2026-11-04 (developer decisions: guard entity, garrisons and staffing §16, gate confrontation §17); 2026-11-04 (developer decisions on design pass 2: alert states weight but never lock §7.1, four situations §7.2, guard-specific orders §7.3, presets §9.7, influence sources incl. gate state §9.8, five weapon-skill modifiers §11.1, inspector and web decision viewer §14, templates §15); 2026-11-04 (design pass 2: §7.1 action gating, §7.2 situations, §9.7 personality presets, §9.8 default influence sources, §11.1 proficiency growth, §11.2 ranged/melee switching, §14 debugging tools, §15 configuration and templates; all proposals); 2026-11-04 (hybrid navigation decision in §2: K&K plans, Citizens moves); 2026-11-04 (initial concept, developer voice design session)
 **Issue:** [PandiO/knk-workspace#234](https://github.com/PandiO/knk-workspace/issues/234)
 **Parent design:** [npc-platform/DESIGN.md](DESIGN.md) (KNG-36), mainly its O11 (city guard profile) and O12 (combat, stats, factions, debugging, performance); related [#146](https://github.com/PandiO/knk-workspace/issues/146)
 **Authority:** Developer statements in the 2026-11-04 session. Where this document says "agreed" or "developer", the developer chose it; everything else is a proposal recorded for discussion. Library, schema and numeric values are examples, not defaults.
@@ -451,7 +451,7 @@ Band values are examples for tuning and live testing.
 
 ### 12.1 Posts and patrols (concept)
 
-Gate-specific staffing, shifts and schedules are deferred to a dedicated gate-guarding session (developer).
+Staffing and assignments were decided in the guard-entity session (developer 2026-11-04): see §16. Shifts are a *(future update)*.
 
 - **Posts**: position, facing, watch area; idle behavior (glancing, shifting, turning).
 - **Patrol routes**: waypoints with optional pause, look direction, action; looping, back-and-forth or branching.
@@ -598,17 +598,70 @@ This ordering is proposed as the shared answer to the precedence questions left 
 }
 ```
 
-## 16. Future updates (overview)
+## 16. Guard entity, garrisons and staffing (developer decisions 2026-11-04)
 
-Not in the first version: Law & Order (local/global laws, crimes, punishments, jail, bounties, witnesses, wanted lists; see [vision §6](../../vision/vision.md#6-law-crime--safety)) · reputation and renown · persistent memory · personal place knowledge and knowledge sharing · barracks and training · smell · disguises · routines and off-duty life · command hierarchy and squads beyond the basic blackboard · trading influence on mood · distilled models, Generative Agents, RL, local LLM dialogue · fire extinguishing and bucket chains · weapon proficiency transfer and rust · bribery (corrupt preset) · mood and suspicion timelines in the web app · command hierarchy with order delegation and briefing (§7.3) · paranoid watchman and mercenary presets.
+There is **one guard entity**. "Gate guard" is an assignment, not a separate type: the same guard can move from a gate to the palace without changing type.
 
-## 17. Open questions
+### 16.1 The guard
 
-Decided 2026-11-04 (developer, design pass 2): §7.1, §7.2, §7.3, §9.7, §9.8, §11.1 (structure), §14, §15. Still proposals: §11.2 switching thresholds and the §11.1 curve.
+- **Clan = loyalty, assignment = posting.** A clan holding several towns can station its guards in any of them; the clan never decides on its own which town a guard defends. A guard's clan is fixed in the first version (allegiance data: [#236](https://github.com/PandiO/knk-workspace/issues/236)).
+- *(future update)* **Town conquest:** each guard decides by loyalty whether to resist, desert or swear allegiance to the new clan. Towns can't change clan today, and that isn't planned soon.
+- **Persistence:** rolled personality, weapon skills and experience, equipment (including familiar items, [#237](https://github.com/PandiO/knk-workspace/issues/237)), orders, mood and memory survive restarts and respawns.
+- **Clean respawn:** dying has no after-effects (no morale loss, no reset).
+- *(future update)* Permanent death and replacement by fresh recruits.
+- **Hierarchy:** three ranks (guard, sergeant, captain) and a commander the guard reports to. First version: stored data plus the `core:captain_nearby` / `core:captain_fallen` influences (§9.8); order delegation stays a *(future update)* (§7.3).
 
-- Guard entity: stored data, ties to regions, clans and orders (next design session, together with gate staffing).
+### 16.2 Presets and creation
+
+- **Full presets** (for example "Synixian commander") bundle everything: NPC type, traits, mood settings, character type, armour, weapons, proficiencies and rank. This is a §15 template that is complete enough to spawn.
+- Presets are **authored in the web app only**.
+- **Create instance** from a preset with one action, in the web app or in game (a menu; spawns where the admin stands). Chosen per instance: clan and assignment (or slot, §16.4).
+
+### 16.3 Garrison and quarters
+
+- **Garrison:** a new **structure type** next to Gate. A town has one or more garrisons. A garrison is the default spawn and respawn place for the town's guards and other soldier NPCs. Tracked in [#238](https://github.com/PandiO/knk-workspace/issues/238).
+- **Quarters:** a capability any structure can have, not tied to one type: a garrison always has quarters, a large gatehouse can switch them on, later barracks or a castle. First version: a spawn point and a **bed count**. Each guard has a **home quarters** where he respawns.
+- **Housing capacity** of a town = beds across all its quarters.
+- *(future update)* Registering individual beds and assigning them to guards; garrison food consumption ([town logistics](../production-storage-transport/TOWN_LOGISTICS.md) already lists garrisons as consumers), pay and contentment (§9.8 `core:paid`, `core:fed`, `core:housing`).
+- **Respawn:** after a delay set per garrison, at the guard's home quarters; he then walks back to his slot. The slot stays empty meanwhile, so a gate under attack really weakens.
+
+### 16.4 Assignments and slots
+
+- An **assignment** ties guards to a place (a gate, a district, the palace) and a duty there; its orders (§7.3) come with it.
+- A **slot** has: place, duty type, preset, priority and orders. Example: a gate needs four guards, two archers and two swordsmen.
+- **Duty types**, all in the first version: **fixed post** (beside the gate), **patrol** between points of interest (§12.2, the wall walk) and **roam** within an area (a market).
+- **Filling:**
+  - Manual override: an admin puts a specific guard on a specific slot.
+  - Garrison setting **auto-fill slots**: creates guards from each slot's preset, only up to the town's housing capacity.
+  - **Slot priority:** higher-priority slots fill first (the palace or main gate before a quiet side gate). Slots beyond capacity stay empty. Example: one garrison with 5 beds and 7 slots → 2 empty slots.
+- **Shifts:** guards are always on duty in the first version. Shifts, sleeping in quarters and handovers: *(future update, second version)*.
+
+## 17. Gate confrontation (developer decisions 2026-11-04)
+
+The §8 action *confront / question* in detail. The dialogue only gathers information; the behavior model decides what happens.
+
+- **Dialogue:** the guard's line appears in chat with **clickable answers**. Each answer maps to an **intent** (trader, visiting, adventurer passing through, refuge, hostile/rude).
+- **Answers, first version:** trader · visiting family · adventurer passing through · adventurer seeking refuge · rude refusal ("none of yours").
+- *(future update)* **Free typing:** a small language model reads what the player typed, maps it to the same intents with a believability score, and writes the guard's reply in character. Intents are the bridge, so decisions stay deterministic and debuggable (consistent with §8 "Role of LLMs").
+- **Answers shift suspicion,** checked against what the guard sees. "Trader" while carrying goods relaxes him; an answer that contradicts what he sees raises suspicion. A rude answer annoys most guards; a mellow one may let it slide.
+- **Follow-up questions** depending on personality, for example "trader" → "what are you carrying?" with answer options.
+- **Inventory check:** a guard who is still suspicious asks to check the inventory. The player may **refuse** (suspicion rises sharply; entry likely denied) or **accept** (the guard compares the actual items with the answers). A caught lie escalates.
+- **Weapon in hand:** switching to a weapon in the hotbar raises suspicion; switching away lowers it. How strongly depends on personality.
+- **Armour is neutral by default:** players travel in full armour, so it isn't suspicious by itself. It only counts where an order says so (for example no armour in the palace). What does count: weapon in hand, enemy clan colours or heraldry, behavior. (Refines §7 behavior factors and §5 sight modifiers.)
+- **Ignoring the guard:** he calls out once more, then steps into the path; pushing through jumps suspicion to Alarmed. Personality shapes the reaction (a strict guard draws his weapon, a lazy one shrugs).
+- **Timing:** the guard checks whether there is time to call out. Someone sprinting at him who would pass first gets an immediate reaction instead (block, shout an alarm, a strict guard draws). Sprinting through a checkpoint is suspicious in itself.
+
+## 18. Future updates (overview)
+
+Not in the first version: Law & Order (local/global laws, crimes, punishments, jail, bounties, witnesses, wanted lists; see [vision §6](../../vision/vision.md#6-law-crime--safety)) · reputation and renown · persistent memory · personal place knowledge and knowledge sharing · barracks and training · smell · disguises · routines and off-duty life · command hierarchy and squads beyond the basic blackboard · trading influence on mood · distilled models, Generative Agents, RL, local LLM dialogue · fire extinguishing and bucket chains · weapon proficiency transfer and rust · bribery (corrupt preset) · mood and suspicion timelines in the web app · command hierarchy with order delegation and briefing (§7.3) · paranoid watchman and mercenary presets · town conquest and guard loyalty choice · permanent death and recruits · individual beds, garrison food, pay · shifts and handovers · free-text dialogue with a small language model.
+
+## 19. Open questions
+
+Decided 2026-11-04 (developer, design pass 2): §7.1, §7.2, §7.3, §9.7, §9.8, §11.1 (structure), §14, §15, §16, §17. Still proposals: §11.2 switching thresholds and the §11.1 curve.
+
+- Guard entity, garrisons and staffing (§16) and gate confrontation (§17): decided 2026-11-04; schema and quarters capability shape to work out under #238.
+- Clan is chosen per instance (§16.2); whether a preset may also preset a clan (a "Synixian commander" always Synixian) was raised but not answered.
 - Numeric tuning: tag weights per state, axis ranges and decay rates, preset values, influence magnitudes, skill curves and how the five skill modifiers combine, switching bands; Mehrabian coefficients to verify.
 - Allegiance for NPCs and gates ([#236](https://github.com/PandiO/knk-workspace/issues/236)); item familiarity mechanic ([#237](https://github.com/PandiO/knk-workspace/issues/237)).
 - Citizens verification and benchmark for the hybrid (§2); whether Siege attackers also use Citizens; how traits map onto DESIGN §2 template/instance/trait/behavior boundaries.
 - Performance budgets for perception and appraisal with many NPCs.
-- Gate-guarding session: staffing, shifts, schedules per post.
