@@ -4,7 +4,16 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
-(Nothing at the moment.)
+- **World tasks that always end, and tasks anchored to the form draft** — PandiO/knk-workspace#180 (WT1 of #66),
+  branch `claude/world-task-hardening` in knk-web-api, knk-plugin, knk-web-app and knk-workspace. A task now ends
+  Completed, Failed, Cancelled or Expired: it expires after 30 min unclaimed, a claim lasts while the game server sends
+  heartbeats (released to Pending after 3 min without), and in-game `cancel`, quitting or a server restart hand it back
+  with its task code; `discard` and the web app's "Cancel task" cancel it. Only one player can claim a task (409), the
+  task code is checked and unique among open tasks, and the command is `/knk task <code>` (id claims need
+  `knk.tasks.any`). The first task of a form saves the draft silently; a resumed draft keeps its workflow session and
+  its fields find their tasks again, including results finished while the form was closed. Leaving the form cancels its
+  open tasks; the form builder offers only task types the game server can run. Smoke test:
+  [world-task-hardening-smoke-test.md](guides/world-task-hardening-smoke-test.md). One additive migration.
 
 ## 2026-11-04
 

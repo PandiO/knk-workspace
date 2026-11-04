@@ -1,7 +1,9 @@
 # Realtime channel (SignalR) between knk-web-api, knk-plugin and knk-web-app
 
-**Status:** Accepted design (developer decisions 2026-10-26, §12). **No code yet.**
-**Last updated:** 2026-10-26 (decisions recorded; §8.3 delivery and busy flow, §8.7 tasks anchored to the draft, §4.3 publishing path)
+**Status:** Accepted design (developer decisions 2026-10-26, §12). S1 and S2 built on `claude/realtime-signalr` (links 4, 6,
+in review); §8.2 and §8.7 (WT1, #180) built on `claude/world-task-hardening` (link 7, 2026-11-01, not merged; as built:
+[world-tasks/README.md § Lifecycle](../world-tasks/README.md#lifecycle-and-endpoints-pandioknk-workspace180)).
+**Last updated:** 2026-11-01 (status: WT1 built, #180); 2026-10-26 (decisions recorded; §8.3 delivery and busy flow, §8.7 tasks anchored to the draft, §4.3 publishing path)
 **Issue:** [PandiO/knk-workspace#66](https://github.com/PandiO/knk-workspace/issues/66) (KNG-57, priority high); phase issues in
 [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md). Related: #76 (KNG-170, rank changes don't reach the server),
 #121 (KNG-262, cache TTLs), #31 (KNG-202, startup-only siege work), #35 (KNG-176), #34 (KNG-246), #145 (KNG-249), #75.

@@ -1,5 +1,11 @@
 # WorldTask Field Population - Testing & Usage Guide
 
+> **Status:** Historical design notes (before PandiO/knk-workspace#180, 2026-11-01). Where this file differs, the
+> [lifecycle section of README.md](README.md#lifecycle-and-endpoints-pandioknk-workspace180) is current: the task code is
+> checked on claim and unique among open tasks, a second claim answers 409, tasks expire, are released and cancelled,
+> the command is `/knk task <code>`, and the web app polls in `WorldBoundFieldRenderer` every 2 s (there is no
+> `TaskStatusMonitor`).
+
 ## Overview
 
 The WorldTask feature has been enhanced to properly handle field auto-population when tasks complete in Minecraft. This guide explains what was fixed and how to test it.
