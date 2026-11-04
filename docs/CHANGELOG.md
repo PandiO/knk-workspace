@@ -20,6 +20,22 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## 2026-11-04
 
+- **Dashboard explorer: filter by display and form configuration** — knk-web-app `main` `738c16a`, merged from
+  `claude/explorer-filter-226` (PandiO/knk-workspace#226, UX/realtime chain link 3c; live-tested 2026-11-03/04). A filter button next to the sort button narrows the type list
+  to types with or without a published default display configuration and with or without a form configuration
+  (a dropdown Any / Yes / No each), remembered per browser like the sort. Smoke test
+  [guides/dashboard-return-smoke-test.md](guides/dashboard-return-smoke-test.md) § 9c.
+- **Open form without the type overview card** — knk-web-app `main` `738c16a`, merged from
+  `claude/form-hide-type-card-227` (PandiO/knk-workspace#227, UX/realtime chain link 3c; live-tested 2026-11-03/04). A form opened from the dashboard or the Entity setup page no
+  longer has the entity type card ("EnchantmentDefinition (EnchantmentDefinition) 19 fields ▸ Fields") above it; the
+  Entity setup page keeps it while no form is open. Smoke test
+  [guides/dashboard-return-smoke-test.md](guides/dashboard-return-smoke-test.md) § 10a.
+- **Register page: link-code field with the dash** — knk-web-app `main` `738c16a`, merged from
+  `claude/register-code-mask-229` (PandiO/knk-workspace#229, UX/realtime chain link 3c; live-tested 2026-11-03/04). `/auth/register`'s link-code field is the same masked field as
+  `/link` (`____-____`, the dash drawn by the field; O, I and L are kept for `/account link` codes). A code refused as
+  a link code that is a live claim code from the disconnect screen goes on to `/link`, verified. Smoke test
+  [guides/invitations-smoke-test.md](guides/invitations-smoke-test.md) § 4 steps 16 and 17c.
+
 - **Dashboard menus and entity table follow the theme** — knk-web-app `main` `596c51a`, merged `--no-ff` from
   `claude/tokens-dashboard-menu` (PandiO/knk-workspace#95 follow-up). The "New with" / "Drafts" menus and the entity
   table (search box, sortable headers, selected-row stripe, links, paging text) use the theme tokens instead of fixed
