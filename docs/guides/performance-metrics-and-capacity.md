@@ -5,7 +5,7 @@ endpoints it relies on ([KNG-232](https://linear.app/kngpandi/issue/KNG-232)) ar
 knk-plugin `main` `390d88a4` and knk-web-api `master` `3658cf2`, unit-tested but **not yet run against a live Paper server,
 MySQL or the NAS**; both default off, so they need a new build and the config in § 5 to take effect. § 5 says how to use
 the guide before they are deployed.
-**Last updated:** 2026-10-22 (§ 4.2/§ 5 aligned with the implemented metric names)
+**Last updated:** 2026-11-02 (§ 5.2: `Telemetry__Exporter=prometheus` stops the OTLP export, checked against API `master` `8df59b7` `Program.cs`; [PandiO/knk-workspace#48](https://github.com/PandiO/knk-workspace/issues/48)); 2026-10-22 (§ 4.2/§ 5 aligned with the implemented metric names)
 **Applies to:** the closed-alpha NAS stack ([runbook](closed-alpha-deployment-runbook.md)): Paper 26.3 in a Docker
 container, knk-web-api, MySQL, all on one shared host (Ryzen 7 5700G, ~15 GiB RAM, Frigate also running; see the
 [infrastructure report](../reports/2026-10-11-closed-alpha-infrastructure-progress.md) § 2).
@@ -228,9 +228,9 @@ nginx/Cloudflare. Metrics (Prometheus names): ASP.NET Core `http_server_request_
 (GC, heap, allocations, thread pool, lock contention), outbound `http_client_*`, `knk_process_cpu_time_seconds_total`,
 `knk_process_memory_working_set_bytes`, `knk_cgroup_memory_{usage,working_set,limit}_bytes`,
 `knk_cgroup_cpu_*`, `knk_db_command_duration_seconds_*{kind,outcome}` (reader time ends when the reader is
-returned), plus the existing `Knk.Currency/Lootbox/Statistics/Telemetry` meters. The OTLP exporter still points at
-`localhost:4317`; set `Telemetry__Otlp__EnableMetrics=false` (or run a collector) to stop it logging export errors.
-See `knk-web-api/OBSERVABILITY.md` on the branch.
+returned), plus the existing `Knk.Currency/Lootbox/Statistics/Telemetry` meters. The shipped `Telemetry:Exporter` is
+`otlp`, which sends metrics and traces to `localhost:4317`; without a collector set `Telemetry__Exporter=prometheus`
+(stops both; `Telemetry__Otlp__EnableMetrics=false` alone leaves the trace export on). See `knk-web-api/OBSERVABILITY.md`.
 
 ### 5.3 Before those branches are deployed
 Use § 3 plus cAdvisor/node-exporter from § 4 (they need no KnK code) and record players online by hand. That is
