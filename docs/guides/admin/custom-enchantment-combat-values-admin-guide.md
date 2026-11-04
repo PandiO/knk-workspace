@@ -3,7 +3,7 @@
 **Status:** Living document — update in place as the code changes. Describes the trunks (knk-plugin `main`,
 knk-web-api `master`, knk-web-app `main`): package B (#151, #155, #156) merged 2026-10-26 and live-tested 2026-10-27;
 later sections note their own state
-**Last updated:** 2026-11-04 (§ 1/§ 2/§ 3 #223 and § 7 #222 merged, knk-plugin `main` `bd4eff6`, knk-web-api `master` `369fd1c`, knk-web-app `main` `8613916`; smoke-tested by the developer 2026-11-04; § 7: the default death message says `using <item>`); 2026-11-03 (§ 1/§ 2/§ 3: Chaos and Flash Chaos area damage, gate damage and radii as combat values, form seed v4, #223; § 7: death messages, #222); 2026-11-03 (§ 5: #211 keeps the swirl particles, knk-plugin `main` `8f11bed5`); 2026-11-03 (status lines: B, G, #211 merged; § 1/§ 3/§ 6: #201/#202 merged; § 6 grey cooldown bars, navigation bar on top); 2026-11-02 (§ 1/§ 3: Flash Chaos's Slowness and Nausea as combat values, form seed v3, #201; § 6: ability cooldown boss bars, #202; in review on `claude/enchantments-201-202`, knk-plugin `ed704eff`, knk-web-api `8a02258`, knk-web-app `d058aea`, **not merged, not live-tested**); 2026-11-02 (§ 5: invisible players' armour and held items hidden, #211, in review on `claude/invisibility-full-hide`, not merged); 2026-10-27 (§ 5 round 2: name tags hidden while blinded and the invisible player's own tag, red
+**Last updated:** 2026-11-04 (§ 8: public info page, #221; in review on `claude/enchantment-info-221`, knk-web-api `bcf0332`, knk-web-app `a346cea`, **not merged, not live-tested**); 2026-11-04 (§ 1/§ 2/§ 3 #223 and § 7 #222 merged, knk-plugin `main` `bd4eff6`, knk-web-api `master` `369fd1c`, knk-web-app `main` `8613916`; smoke-tested by the developer 2026-11-04; § 7: the default death message says `using <item>`); 2026-11-03 (§ 1/§ 2/§ 3: Chaos and Flash Chaos area damage, gate damage and radii as combat values, form seed v4, #223; § 7: death messages, #222); 2026-11-03 (§ 5: #211 keeps the swirl particles, knk-plugin `main` `8f11bed5`); 2026-11-03 (status lines: B, G, #211 merged; § 1/§ 3/§ 6: #201/#202 merged; § 6 grey cooldown bars, navigation bar on top); 2026-11-02 (§ 1/§ 3: Flash Chaos's Slowness and Nausea as combat values, form seed v3, #201; § 6: ability cooldown boss bars, #202; in review on `claude/enchantments-201-202`, knk-plugin `ed704eff`, knk-web-api `8a02258`, knk-web-app `d058aea`, **not merged, not live-tested**); 2026-11-02 (§ 5: invisible players' armour and held items hidden, #211, in review on `claude/invisibility-full-hide`, not merged); 2026-10-27 (§ 5 round 2: name tags hidden while blinded and the invisible player's own tag, red
 `Frozen by <staff> for: <reason>` bar, #169/#170, in review on `claude/alpha-run-1-effects`, knk-plugin `9bc2b31`, not
 merged); 2026-10-27 (§ 5: effect boss bars and the flash_chaos name-tag blackout, knk-plugin `911eb2a`); 2026-10-26 (PandiO/knk-workspace#151, #156, #155)
 **Companion docs:** [ability definition reference](../../specs/custom-enchantments/ABILITY_DEFINITION_REFERENCE.md),
@@ -219,3 +219,39 @@ Placeholders: `%victim%`, `%player%` (who used the ability), `%enchantment%` (it
 `Flash Chaos`), `%item%` (the item, with hover; leave it out of a pattern to drop it); `&` colour codes work. A server
 that kept an older `config.yml` without `%item%` in `default` shows no item until the line is updated. An override that is empty uses the default. The names are plain player names
 (no rank prefix).
+
+## 8. The public info page (#221)
+
+In review on `claude/enchantment-info-221` (knk-web-api `bcf0332`, knk-web-app `a346cea`, 2026-11-04), **not merged,
+not live-tested**.
+
+Web app → **Guides** → *Custom enchantments and abilities* (`/guides/enchantments`), open to everyone, signed out too
+(developer decisions 2026-11-03 on #221). Signed in, the navigation bar has a **Guides** link; signed out, the landing
+page links the guides. Only the custom (KnK) enchantments are listed, grouped into on-hit enchantments, right-click
+abilities and siege enchantments. Per enchantment the page shows:
+
+- how it goes off (on hit by chance / right-click / gate hits) and whom it affects (the one you hit, yourself, everyone
+  around you, gate doors), with a short description;
+- per level: the chance per hit, the cooldown, each effect with its potion level, duration and who gets it, the area
+  and gate damage (Chaos, Flash Chaos; with the damage and knockback radius and "armour lowers the damage"), the
+  healing (Health Boost) and Cleaving's gate numbers;
+- notes on safezones, siege and gates.
+
+**The numbers are the combat values of § 1**, read when the page is opened: change one in the web app and reload the
+page. An empty field shows its default (§ 3), as the plugin uses it. The page works the per-level numbers out like the
+plugin (whole ticks, the level multiplier, the chance kept between 0 and 100 %).
+
+What the page can't take from the combat values:
+
+- **Cleaving**: its gate numbers are the plugin's `config.yml` (`gates.cleaving`); the page shows the **default**
+  settings (+25 % per level, a charged strike of 5/6/7/8 times with a 60/50/40/30 s cooldown). A changed `config.yml`
+  is not shown.
+- The fixed facts (Poison II, Wither II, Nausea, Blindness I, Strength / Resistance at the enchantment's level, Health
+  Boost healing 6 health per level, Armor Repair) are written into knk-web-api
+  (`Services/EnchantmentInfo/EnchantmentInfoCatalog.cs`). They mirror the plugin's effects; a change to an effect in
+  the plugin needs the same change there.
+- A custom enchantment definition without a built-in effect in the plugin is listed under "Other custom enchantments"
+  with its description only.
+
+The API serves the page at `GET /api/EnchantmentDefinitions/public/info` (anonymous; only the custom definitions and
+only what players may know).
