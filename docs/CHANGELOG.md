@@ -9,8 +9,9 @@ This is a human-readable record of capabilities merged into the V3 default branc
   without git), and logged with the commit as the first startup line; CI passes `-PgitCommit=<sha>`
   ([#136](https://github.com/PandiO/knk-workspace/issues/136)). A plain `dotnet build` works on Linux at the API's repo
   root ([#106](https://github.com/PandiO/knk-workspace/issues/106)). The admin client-activity totals no longer count
-  each request twice or add up across hours; one red API test is left for a decision on the ConditionalRequired
-  rule config ([#99](https://github.com/PandiO/knk-workspace/issues/99)). Dead code removed: the API's
+  each request twice or add up across hours; a ConditionalRequired rule now really makes a field required: its config is
+  `{"condition":{"op","value"}}` (older forms still read) and values compare by text; the unused
+  `FieldValidationService` is gone; all API tests green ([#99](https://github.com/PandiO/knk-workspace/issues/99), 2026-11-04). Dead code removed: the API's
   `ExtractLocationDataFromTaskOutput` and the web app's location `worldName` default `'world'`
   ([#147](https://github.com/PandiO/knk-workspace/issues/147)). Docs: production-installation G10/§ 12.3 metrics
   ([#48](https://github.com/PandiO/knk-workspace/issues/48)), Game Settings § 3.6 runtime worlds per server (#147),
