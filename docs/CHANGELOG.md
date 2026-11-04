@@ -4,7 +4,15 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
-(Nothing at the moment.)
+- **Shield banner patterns and armour trims on item blueprints and item instances** — `claude/shield-banner-trim-232` in
+  knk-web-api (migration `AddItemShieldBannerAndArmorTrim`, form seed `ItemBlueprint.json`), knk-plugin and knk-web-app
+  ([PandiO/knk-workspace#232](https://github.com/PandiO/knk-workspace/issues/232)). A shield's base colour and its
+  pattern layers (bottom to top) and an armour piece's trim (pattern + material) are stored on the blueprint, copied
+  onto each minted instance (frozen, like the grade; `/knk item more` clones copy them), applied when the plugin builds
+  the item, and scanned back by the item and kit scans. The web app edits them on the blueprint form (new field type
+  `BannerLayers`) and shows them on the item instance detail. The armour trim check asked for in #232 found no trim
+  support in any repo; it was added. Smoke test: [guides/shield-banner-trim-smoke-test.md](guides/shield-banner-trim-smoke-test.md).
+  Architecture: [item render pipeline § 2c](architecture/item-render-pipeline.md).
 
 ## 2026-11-03
 
