@@ -4,7 +4,7 @@
 knk-plugin; invitations chain links 1–7, smoke-tested on dev). **Off by default until the alpha switch-over**
 ([alpha go-live § 11.1](../guides/alpha-go-live.md)); until then the live behaviour is "Before the feature" below. Living document: update it in place when the
 code changes.
-**Last updated:** 2026-10-26 (§ 4: the claim code field shows the dash from the start, #196, branch `claude/claim-code-dash-196`, merged into `main` `c3c0c9f`); 2026-10-26 (§ 4: claim code fields, #192, merged to knk-web-app `main` `7ba0f4b`); 2026-10-25 (§ 4: the anonymous `onboarding-info` call, the mode-aware sign-up and login pages; § 7: the Cloudflare step after sign-up, the missing-session banner, the bypass row — branch `claude/invite-only-register-page`, not merged); 2026-10-21 (written by invitations chain link 7, KNG-218)
+**Last updated:** 2026-11-03 (§ 4: the register page's link-code field is the masked claim-code field, #229, branch `claude/register-code-mask-229`, not merged); 2026-10-26 (§ 4: the claim code field shows the dash from the start, #196, branch `claude/claim-code-dash-196`, merged into `main` `c3c0c9f`); 2026-10-26 (§ 4: claim code fields, #192, merged to knk-web-app `main` `7ba0f4b`); 2026-10-25 (§ 4: the anonymous `onboarding-info` call, the mode-aware sign-up and login pages; § 7: the Cloudflare step after sign-up, the missing-session banner, the bypass row — branch `claude/invite-only-register-page`, not merged); 2026-10-21 (written by invitations chain link 7, KNG-218)
 **Linear:** [KNG-205](https://linear.app/kngpandi/issue/KNG-205) (parent), [KNG-206](https://linear.app/kngpandi/issue/KNG-206),
 [KNG-207](https://linear.app/kngpandi/issue/KNG-207), [KNG-208](https://linear.app/kngpandi/issue/KNG-208),
 [KNG-212](https://linear.app/kngpandi/issue/KNG-212), [KNG-214](https://linear.app/kngpandi/issue/KNG-214),
@@ -108,10 +108,13 @@ load. Under `Invite`/`Open`: `/auth/register` opens on an invitation step (an in
 `XXXX-XXXX` → `/link?code=`, 8 plain characters → the link-code step, which otherwise sits behind "Already playing and got
 a code from `/account link`?"); the login page's **Create an account** goes to `/invite` (a personal invitation kept for
 the tab in `sessionStorage`, `knk.pendingInvite`), `/link` (a verified claim code) or `/join`, instead of `/auth/register`;
-the invite and join forms' **Log in** returns to them (`returnTo`). A claim code typed with its dash into the register
-page's link-code field is recognised (`looksLikeClaimCode`: link codes have no dash) and routed to the claim flow; typed
-without it, the refusal hints at `/link` when the code could be a claim code (no I, L, O, U); every claim refusal says the
-code stays valid for 15 minutes and is shown again on rejoin. While the mode is unknown (API unreachable) the pages
+the invite and join forms' **Log in** returns to them (`returnTo`). The register page's link-code field is the masked
+`ClaimCodeInput` without look-alike folding (#229, like `/account/link`), so a dash no longer tells a claim code from a
+link code: **Check code** asks `validate-link-code` first; when that refuses a code without a U, it asks `claim/check`
+(look-alikes folded) and a live claim code goes on to `/link`, verified (kept in `sessionStorage`). Otherwise the refusal
+hints at `/link` when the code could be a claim code (no I, L, O, U); every claim refusal says the code stays valid for
+15 minutes and is shown again on rejoin. (Before #229 the field kept a typed dash and `looksLikeClaimCode` routed a code
+with one to `/link?code=`.) While the mode is unknown (API unreachable) the pages
 behave as under `LinkCode`.
 
 **Claim code fields (#192, merged 2026-10-26).** `/link` and `/account/link` use

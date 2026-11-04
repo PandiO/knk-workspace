@@ -1,7 +1,7 @@
 # Knights & Kings - Player Account Management Guide
 
 **Version**: 1.2  
-**Last Updated**: October 26, 2026 (step 4: the field shows `____-____` from the start, #196, not merged); October 26, 2026 (step 4: the code field adds the dash, #192); October 21, 2026 (KNG-218: "Getting an account" rewritten for invite-only sign-up. **It describes the
+**Last Updated**: November 3, 2026 (the Register page's code field shows the dash too, #229, not merged); October 26, 2026 (step 4: the field shows `____-____` from the start, #196, not merged); October 26, 2026 (step 4: the code field adds the dash, #192); October 21, 2026 (KNG-218: "Getting an account" rewritten for invite-only sign-up. **It describes the
 invitations feature ([KNG-205](https://linear.app/kngpandi/issue/KNG-205)), merged 2026-10-24 but not yet switched on
 for the alpha**; until the switch-over, new players follow "Existing players" below.) Before:
 KNG-208, `/account create` and web → game linking removed.  
@@ -49,7 +49,7 @@ Knights & Kings is invite-only. You need an **invitation** from staff: either a 
 the site keeps it for 15 minutes while you sign up with your invitation; your Minecraft account is linked in the same
 step. The same code stays valid for 15 minutes: joining again shows it again, or a new one once it has expired. If you
 end up on **Register** or **Log in** instead, they point you back to the invitation sign-up (typed the server's code into
-a link-code field? it's recognised by its dash). **Never give the code to anyone; staff never ask for it.**
+the link-code field? the site recognises it and takes you on to **/link**). **Never give the code to anyone; staff never ask for it.**
 
 ### Existing players (played before the invitations)
 
