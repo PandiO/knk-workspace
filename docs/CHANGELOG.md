@@ -25,6 +25,17 @@ This is a human-readable record of capabilities merged into the V3 default branc
   table (search box, sortable headers, selected-row stripe, links, paging text) use the theme tokens instead of fixed
   greys and green, so they change with the theme. In `current` only the menu items' text is a shade darker.
 
+- **Shield banner patterns and armour trims on item blueprints and item instances** — knk-web-api `master` `93f9380` (migration
+  `AddItemShieldBannerAndArmorTrim`, form seed `ItemBlueprint.json`, re-import it), knk-plugin `main` `497e0fe`, knk-web-app `main` `4dd11d0`,
+  merged `--no-ff` from `claude/shield-banner-trim-232` ([PandiO/knk-workspace#232](https://github.com/PandiO/knk-workspace/issues/232);
+  developer smoke test 2026-11-04: shield pattern checks passed, armour trim accepted). A shield's base colour and its
+  pattern layers (bottom to top) and an armour piece's trim (pattern + material) are stored on the blueprint, copied
+  onto each minted instance (frozen, like the grade; `/knk item more` clones copy them), applied when the plugin builds
+  the item, and scanned back by the item and kit scans. The web app edits them on the blueprint form (new field type
+  `BannerLayers`) and shows them on the item instance detail. The armour trim check asked for in #232 found no trim
+  support in any repo; it was added. Smoke test: [guides/shield-banner-trim-smoke-test.md](guides/shield-banner-trim-smoke-test.md).
+  Architecture: [item render pipeline § 2c](architecture/item-render-pipeline.md).
+
 - **Theme switcher as a cogwheel, for every visitor** — knk-web-app `main` `865fe53`, merged `--no-ff` from
   `claude/theme-switcher-button` (PandiO/knk-workspace#95, developer request 2026-11-04). A cogwheel button opens the
   themes (Current, Brand, Brand (red), Proposal, each with a short description): in the navigation bar when logged in,
