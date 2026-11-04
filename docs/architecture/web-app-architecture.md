@@ -66,8 +66,10 @@ _Added 2026-11-02 for PandiO/knk-workspace#95 (rebrand phase 1), knk-web-app bra
 - **Switching:** `src/theme/themes.ts` (`THEMES`, `resolveInitialTheme`, `applyTheme`, `selectTheme`,
   `useActiveTheme`, `themePickerVisible`). `index.tsx` applies the theme before the first render. Order: `?theme=`
   (kept per tab in sessionStorage) → the picker's choice (localStorage `knk.theme`) → `current`; storage access is in
-  try/catch. The picker is a `menuitemradio` group in the account menu (`Navigation.tsx`) for holders of the moderator
-  or content node; `REACT_APP_THEME_PICKER=on|off` overrides that.
+  try/catch. The switcher is `src/theme/ThemeSwitcher.tsx`, a cogwheel menu button with `menuitemradio`
+  items, for every visitor (2026-11-04): `variant="nav"` in `Navigation.tsx` left of the account menu, and
+  `variant="floating"` fixed top-right in `App.tsx` when logged out. `REACT_APP_THEME_PICKER=off` hides it
+  (`themePickerVisible()`).
 - **Contrast:** `src/theme/__tests__/contrast.test.ts` parses `tokens.css` and checks every text/background pair
   (4.5:1) and UI pair (field border, focus ring, nav underline, icons: 3:1) in every theme, plus that every theme
   defines the same tokens. A failing pair fails `npm run test:ci`.
