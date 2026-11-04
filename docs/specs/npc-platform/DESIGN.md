@@ -1,7 +1,7 @@
 # Shared NPC platform — traits, behavior and tutorial guide
 
 **Status:** Working design; agreed tutorial requirements recorded, platform architecture and implementation investigations still open. No NPC implementation delivered by this document.
-**Last updated:** 2026-11-03 (§5b reusable, code-configurable attack rate and movement speed; developer decision); 2026-10-30 (automatic navigation and shared optional lane overrides; developer decision, #146)
+**Last updated:** 2026-11-04 (guard behavior model concept in [BEHAVIOR_MODEL.md](BEHAVIOR_MODEL.md), #234; pointers in §1 and §10); 2026-11-03 (§5b reusable, code-configurable attack rate and movement speed; developer decision); 2026-10-30 (automatic navigation and shared optional lane overrides; developer decision, #146)
 **Linear:** [KNG-36](https://linear.app/kngpandi/issue/KNG-36/design-shared-npc-traits-and-pathfinding-platform)
 **Standing workspace branch:** none; `codex/kng-36-npc-platform-design` was merged into `main` on 2026-10-18 and deleted
 **Authority:** Developer navigation correction on 2026-10-30 and discussion through 2026-10-06 and KNG-36 description/comments read on that date. Confirmed decisions below preserve that discussion; proposed interfaces and unresolved questions are explicitly labeled. This is the consolidated design reference for continued discussion, not a completed platform design or implementation plan.
@@ -10,7 +10,7 @@
 
 NPCs are central to Knights and Kings: enemies, allies, guards, shopkeepers, quest givers, tutorial guides and later companions/bosses. Shared capabilities must be composable. A quest giver may also trade, walk a route and react when attacked. Possessing a capability does not mean using it continuously: behavior decides when it runs.
 
-Start with a personal tutorial guide as the first concrete design slice, then use a city guard to challenge reuse across patrol, dialogue and combat. KNG-36's wider remit remains: audit V1 Citizens integrations, V2 remnants and current V3 before selecting Citizens adapters or replacements; define engine-neutral domain/configuration versus Paper runtime boundaries; address stats, equipment, factions, combat, persistence, authoring, diagnostics, security and performance. The tutorial example does not silently finalize those areas.
+Start with a personal tutorial guide as the first concrete design slice, then use a city guard to challenge reuse across patrol, dialogue and combat. KNG-36's wider remit remains: audit V1 Citizens integrations, V2 remnants and current V3 before selecting Citizens adapters or replacements; define engine-neutral domain/configuration versus Paper runtime boundaries; address stats, equipment, factions, combat, persistence, authoring, diagnostics, security and performance. The tutorial example does not silently finalize those areas. The guard behavior concept (perception, alert states, psychological model, decision model, combat, dynamic navigation) is recorded in [BEHAVIOR_MODEL.md](BEHAVIOR_MODEL.md) ([#234](https://github.com/PandiO/knk-workspace/issues/234), 2026-11-04); it is a working concept that builds on §5a, §5b and §6.
 
 KNG-36 is sequenced after [KNG-35](https://linear.app/kngpandi/issue/KNG-35). Its later consumers include [KNG-37](https://linear.app/kngpandi/issue/KNG-37) and [Siege survival / KNG-50](../siege-survival/DESIGN.md). Recording these decisions does not start gameplay-mode implementation or complete KNG-36.
 
@@ -233,8 +233,8 @@ Audit V1/V2/V3 and compare a Citizens navigator with reusable KnK pathfinding on
 | O08 | Exact trait boundaries, engine-neutral contracts and runtime/library choice; scoring + switch margin + minimum commitment agreed in §5a. Remaining arbitration work: numeric tuning, margin semantics, reevaluation cadence, configuration precedence and wider interruption contracts |
 | O09 | Dialogue delivery/authoring, response timeout, tutorial completion/departure presentation |
 | O10 | V2 Progressable/Creation and Siege comparison; progression boundary only in KNG-36 |
-| O11 | City guard profile: patrol, aggro/defense, dialogue interruptions and return to patrol |
-| O12 | Wider platform: combat, HP/damage/stats, equipment, factions, scripting, persistence, admin tools, debugging/security and numerical performance budgets |
+| O11 | City guard profile: patrol, aggro/defense, dialogue interruptions and return to patrol. Concept 2026-11-04 in [BEHAVIOR_MODEL.md](BEHAVIOR_MODEL.md) (#234); decisions still to confirm |
+| O12 | Wider platform: combat, HP/damage/stats, equipment, factions, scripting, persistence, admin tools, debugging/security and numerical performance budgets. Combat, psychology, debugging and performance concept in [BEHAVIOR_MODEL.md](BEHAVIOR_MODEL.md) (#234) |
 
 Suggested sequence: finish movement/gate investigations → dialogue/proximity/lifecycle decisions → city guard reuse check → platform design and phased implementation plan → minimal NPC vertical slice. Do not silently convert unresolved options into implementation defaults.
 
