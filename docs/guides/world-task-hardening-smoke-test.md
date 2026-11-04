@@ -1,8 +1,8 @@
 # World-task hardening and tasks anchored to the draft (#180) — smoke test
 
-**Status:** Written 2026-11-01 for `claude/world-task-hardening` (knk-web-api, knk-plugin, knk-web-app, knk-workspace);
-not merged, not run
-**Last updated:** 2026-11-01
+**Status:** Run by the developer 2026-11-04 on the `claude/realtime-signalr` builds (which contain this branch): all
+steps work or accepted. Merged into the default branches 2026-11-04 (with the realtime branch)
+**Last updated:** 2026-11-04 (findings of the developer's run; merged)
 **Issue:** [PandiO/knk-workspace#180](https://github.com/PandiO/knk-workspace/issues/180) (WT1 of #66); design
 [realtime-signalr/DESIGN.md](../specs/realtime-signalr/DESIGN.md) §8.2, §8.7; reference
 [specs/world-tasks/README.md § Lifecycle](../specs/world-tasks/README.md#lifecycle-and-endpoints-pandioknk-workspace180)
@@ -99,9 +99,10 @@ Record each step in **Findings** at the end (works / doesn't / accepted).
 
 | Step | Result | Notes |
 |---|---|---|
-| 1 | | |
-| 2 | | |
-| 3 | | |
-| 4 | | |
-| 5 | | |
-| 6 | | |
+| 0 | Done | Developer, 2026-11-04 |
+| 1 | Works | |
+| 2 | Works | |
+| 3 | Works | |
+| 4 | Accepted | |
+| 5 | Works | |
+| 6 | Accepted | |

@@ -1,7 +1,9 @@
 # Realtime channel (SignalR) — smoke test
 
-**Status:** S1, S2, WT2 and S3 to test (written 2026-10-26 and 2026-11-02 for branch `claude/realtime-signalr`, not merged, not run)
-**Last updated:** 2026-11-02 (§ S3, #182); 2026-11-02 (§ WT2, #181)
+**Status:** WT2 run by the developer 2026-11-04 (works or accepted; one bug, step 6). S1, S2 and S3 were not run as
+sections (S1 connect and presence were exercised by WT2). Merged into the default branches 2026-11-04;
+`realtime.enabled` stays `false` by default
+**Last updated:** 2026-11-04 (WT2 findings; merged); 2026-11-02 (§ S3, #182); 2026-11-02 (§ WT2, #181)
 **Design:** [specs/realtime-signalr/DESIGN.md](../specs/realtime-signalr/DESIGN.md) (§4–§5, as built: §4.6) ·
 [IMPLEMENTATION_PLAN.md](../specs/realtime-signalr/IMPLEMENTATION_PLAN.md) ·
 **Issues:** [PandiO/knk-workspace#178](https://github.com/PandiO/knk-workspace/issues/178) (S1),
@@ -210,4 +212,26 @@ Record the times of 2, 4, 5 and 8 under **Findings**.
 
 ## Findings
 
-_No run yet._
+### WT2 — developer, 2026-11-04
+
+Builds: `claude/realtime-signalr` in knk-web-api (`e769c4c`), knk-plugin (`eb22a655`) and knk-web-app (`c7a3e85`),
+plugin `realtime.enabled: true`. Setup notes: the dev server's existing `config.yml` had no `realtime:` block (add it by
+hand, see S1); the web app needs `npm install` after checkout (new `@microsoft/signalr`), else the hub never connects.
+
+| Step | Result | Notes |
+|---|---|---|
+| 1 | Works | After `npm install` |
+| 2 | Works | A passes the in-game `knk.tasks` check (op or a Bukkit grant); see step 6 |
+| 3 | Works | |
+| 4 | Works | |
+| 5 | Works | |
+| 6 | Accepted, **bug** | B (Staff group, not op) got no Accept/Decline line; the panel said at once that B declined. The plugin checks `knk.tasks` with Bukkit only (`WorldTaskRealtimeSync.onOffered`), which doesn't see group grants made in the API, answers `no-permission` silently, and the API records that as Declined. Auto-claim (step 2) has the same check, so a non-op admin gets the task code instead. Follow-up issue (see the #181 comment) |
+| 7 | Accepted | |
+| 8 | Accepted | |
+| 9 | Works | |
+| 10 | Works | Wish: a **Send again** button wherever the panel falls back to the task code (handed back, quit, declined, timed out, offline), instead of Cancel task + a new task; and drop the separate "Task code:" block, keep only the copyable `/knk task <code>` command. Follow-up issue (see the #181 comment) |
+| 11 | Accepted | |
+| 12 | Accepted | |
+| 13 | Accepted | |
+
+Times for steps 2, 6 and 9 were not recorded.
