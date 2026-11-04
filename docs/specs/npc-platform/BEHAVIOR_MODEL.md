@@ -1,7 +1,7 @@
 # NPC behavior model — perception, psychology, decisions and combat (guards first)
 
 **Status:** Working concept from a developer design session; not approved defaults, not an implementation plan, nothing implemented. Items marked *(future update)* belong to the overall vision but are not planned for the first version.
-**Last updated:** 2026-11-04 (design pass 2: §7.1 action gating, §7.2 situations, §9.7 personality presets, §9.8 default influence sources, §11.1 proficiency growth, §11.2 ranged/melee switching, §14 debugging tools, §15 configuration and templates; all proposals); 2026-11-04 (hybrid navigation decision in §2: K&K plans, Citizens moves); 2026-11-04 (initial concept, developer voice design session)
+**Last updated:** 2026-11-04 (developer decisions on design pass 2: alert states weight but never lock §7.1, four situations §7.2, guard-specific orders §7.3, presets §9.7, influence sources incl. gate state §9.8, five weapon-skill modifiers §11.1, inspector and web decision viewer §14, templates §15); 2026-11-04 (design pass 2: §7.1 action gating, §7.2 situations, §9.7 personality presets, §9.8 default influence sources, §11.1 proficiency growth, §11.2 ranged/melee switching, §14 debugging tools, §15 configuration and templates; all proposals); 2026-11-04 (hybrid navigation decision in §2: K&K plans, Citizens moves); 2026-11-04 (initial concept, developer voice design session)
 **Issue:** [PandiO/knk-workspace#234](https://github.com/PandiO/knk-workspace/issues/234)
 **Parent design:** [npc-platform/DESIGN.md](DESIGN.md) (KNG-36), mainly its O11 (city guard profile) and O12 (combat, stats, factions, debugging, performance); related [#146](https://github.com/PandiO/knk-workspace/issues/146)
 **Authority:** Developer statements in the 2026-11-04 session. Where this document says "agreed" or "developer", the developer chose it; everything else is a proposal recorded for discussion. Library, schema and numeric values are examples, not defaults.
@@ -138,35 +138,32 @@ Example: a stranger at the outer gate in peacetime may only reach *curious*; the
 - **Per guard**: the most serious target state, coloured by mood; drives posture, speed, attention.
 - **Per post / town**: a shared alert level (alarm, bell) that lowers thresholds for all guards there and can summon reinforcements.
 
-### 7.1 How alert states enable actions (proposal, design pass 2)
+### 7.1 How alert states influence actions (developer decision 2026-11-04)
 
-Alert states act in two ways: they **gate** actions (hard eligibility, §5a step 1) and they **weight** actions (a consideration in §8). Gating keeps a calm guard from drawing steel; weighting keeps behavior smooth near a threshold.
+**Decided: alert states never lock actions.** They only make actions more or less likely (weighting). The only hard locks are the platform's existing hard rules: §5a eligibility and consumer overrides, permissions (NPC-12), Siege rules.
 
-**Gating by action tags, not action ids.** Each action carries tags (for example `idle`, `observe`, `verbal`, `force.nonlethal`, `force.lethal`, `pursue`, `support`, `withdraw`). Each alert state lists the tags it allows. A new action plugs in by tagging itself; no state table changes.
+- **Weighting by action tags.** Each action carries tags (`idle`, `observe`, `verbal`, `force.nonlethal`, `force.lethal`, `pursue`, `support`, `withdraw`); each state gives each tag a weight multiplier. A new action plugs in by tagging itself. The consideration reads continuous suspicion, so behavior changes smoothly inside a state.
+- **Curves must be steep.** With no locks, a calm guard must practically never draw a weapon; the weights near 0 for `force.*` in Calm/Watchful/Curious carry that. The inspector (§14) shows when a curve is too flat.
+- **Orders and rules of engagement** (§7.3) shift the same weights, for example kill on sight makes `force.lethal` dominant from the first sighting.
+- A targeted action uses that target's state; patrol or rest use the guard-level state and post alert level.
+- States also carry **effects** that are not actions: weapon drawn, walk speed, head tracking, perception bonus from Wary up.
+- States are a registry (id, thresholds, tag weights, effects), retunable without code changes.
 
-| State | Allowed tags (adds to the row above unless noted) | Example actions unlocked | Blocked |
-|---|---|---|---|
-| Calm | `idle`, `duty` | Hold post, patrol, rest, chat | — |
-| Watchful | `observe` (glance only) | Glance at target | — |
-| Curious | `observe` | Watch target, turn to face, step closer | — |
-| Wary | `verbal`, `position` | Call over, position between target and gate | `idle` (rest, chat) |
-| Confronting | `verbal.demand` | Question, order to leave, demand disarm | `idle` |
-| Alarmed | `force.nonlethal`, `support`, `threaten` | Draw weapon, warn, shove, subdue, raise alarm, call backup | `idle` |
-| Hostile | `force.lethal`, `pursue`, `withdraw` | Engage melee/ranged, pursue, retreat, surrender | `idle`, `verbal.demand` |
-| Searching | `search`, `support`, `duty` | Search last known position, call backup, return to post | `idle`, `force.lethal` until target re-seen |
-| Aftermath | `duty`, `idle.talk` | Tighter patrol, talk about the incident | `idle.rest` until calm |
+Proposed starting weights (examples to tune; × = multiplier on the action score):
 
-`withdraw` (retreat, surrender, freeze) is allowed from Alarmed upward but only wins when fear-driven tendencies are high; the state allows it, the psychology decides it.
+| State | Strongly favoured | Strongly suppressed (near 0, never locked) |
+|---|---|---|
+| Calm | `idle`, `duty` | `force.*`, `pursue`, `verbal.demand` |
+| Watchful | `duty`, `observe` (glance) | `force.*`, `pursue` |
+| Curious | `observe` | `force.*`, `pursue` |
+| Wary | `observe`, `verbal`, `position` | `idle`, `force.lethal` |
+| Confronting | `verbal.demand` | `idle`, `force.lethal` |
+| Alarmed | `threaten`, `force.nonlethal`, `support` | `idle` |
+| Hostile | `force.lethal`, `pursue`, `withdraw` (when fear is high) | `idle`, `verbal.demand` |
+| Searching | `search`, `support`, `duty` | `idle`, `force.lethal` until the target is seen again |
+| Aftermath | `duty`, `idle.talk` | `idle.rest` until calm |
 
-**Effective eligibility** = state allows the tag ∩ rules of engagement allow it (§10; zero tolerance can unlock `force.lethal` already at Alarmed, lenient keeps it locked until the guard is hurt) ∩ the action's own preconditions ∩ consumer eligibility (§5a overrides). High scores never override a gate.
-
-**Which state counts.** A targeted action uses that target's state; an untargeted action (patrol, rest) uses the guard-level state and the post alert level. Each state also carries **effects** that are not actions: weapon drawn or sheathed, walk speed, head tracking, perception bonus (from Wary: focal range up, peripheral detection faster).
-
-**Weighting.** The consideration "alert state of target" reads continuous suspicion, not the state name, so watching gets more likely as suspicion rises inside Curious instead of jumping at the edge.
-
-States are a **registry** (id, enter/exit thresholds, allowed tags, effects), so a consumer can add or retune states without code changes.
-
-### 7.2 Situational states (proposal, design pass 2)
+### 7.2 Situational states (developer decision 2026-11-04)
 
 A **situation** is an event that is not about one suspect: fire, a monster attack, a siege, the alarm bell. It is a registry entry with:
 
@@ -174,7 +171,7 @@ A **situation** is an event that is not about one suspect: fire, a monster attac
 - `scope`: post, town or domain; `severity` levels.
 - `influence`: an influence source (§9.6) it switches on, for example `core:monster_attack` raises arousal.
 - `unlocks`: action tags only this situation allows (fire: `situation.fire`).
-- `orders`: a modifier on duty actions (go to the muster point, guard the gate).
+- `orders`: default orders the situation hands to the guards it affects (go to the muster point, hold the gate); see §7.3.
 - `targets`: how it changes per-target handling (monsters count as known enemies).
 - `end`: condition that clears it, then guards enter Aftermath.
 
@@ -183,10 +180,24 @@ A **situation** is an event that is not about one suspect: fire, a monster attac
 | Monster attack | Yes | Hostile mobs in the zone count as known enemies and go straight to Hostile on sight, inside leash and ROE. Raises the post alert level; players keep the normal ladder with lowered thresholds. |
 | Alarm bell / post alarm | Yes | Raises the post or town alert level (§7 three levels); guards in earshot muster at the post or the alarm source. |
 | Siege | Yes (follows Siege rules) | Siege controller supplies eligibility and ROE; the situation sets mood and alert level. |
-| Fire | Partly | Raise the alarm, keep people away, avoid burning blocks (navigation). Extinguishing and bucket chains *(future update)*. |
+| Fire | Yes, basic | Raise the alarm, keep people away, avoid burning blocks (navigation). Extinguishing and bucket chains *(future update)*. |
 | Riot, crime wave | No | *(future update: Law & Order)* |
 
+**Decided:** all four (monster attack, alarm bell, siege, basic fire response) are in the first version.
+
 Situations stack; the highest severity sets the alert level. A situation never bypasses eligibility or permissions.
+
+### 7.3 Orders (developer decision 2026-11-04)
+
+Orders are separate from mood. They are scoring modifiers and rules of engagement, not emotions; they can change how a guard feels only through appraisal (for example an order he disagrees with), never directly.
+
+- **Orders belong to the guard, not the region.** Guards are assigned to regions and each guard holds the orders for his assignment. There are no region-wide rules that every NPC inside obeys automatically.
+- An order has: the assignment or region it applies to, a rules-of-engagement preset or explicit tag weights, an optional **target filter** (everyone, everyone except permission group X, members of clan Y, monsters), and optional duty targets (posts, POIs).
+- **First version:** admins assign orders to guards directly (web app and in game).
+- Situations (§7.2) can hand default orders to the guards they affect.
+- *(future update)* **Command hierarchy:** a regional commander delegates orders to his subordinates and briefs guards transferred in from other regions. Until briefed, a newcomer does not know the local orders; briefing gaps and miscommunication are wanted behavior. Builds on knowledge sharing (§12.3).
+
+**Example, the palace during the alpha:** the palace entrances stay blocked by closed gates (no hard district entry deny). A few secret paths still lead in. Palace guards get the order "kill on sight", filtered to everyone except staff permission groups. Anyone matching the filter goes straight to Hostile on sight and lethal actions dominate the scoring.
 
 ## 8. Decision model
 
@@ -290,7 +301,7 @@ Anything that affects an NPC registers under one shape (developer: new systems s
 
 Examples: war, siege, curfew, festival, crime in town, fallen comrade, captain nearby, night shift, long watch, bad weather, bribe, insult, praise; later trading events (fair trade, price gouging, scarcity, smuggling).
 
-### 9.7 Personality presets (proposal, design pass 2)
+### 9.7 Personality presets (developer decision 2026-11-04)
 
 Traits are stored −1…1 internally and shown 0–100 in config and the web app (50 = population average). A preset sets trait values; everything else is **derived** from traits, so presets don't repeat tuning. A preset may add a few explicit goal-weight overrides where traits alone don't capture it (a zealot's low "stay alive").
 
@@ -305,9 +316,13 @@ Traits are stored −1…1 internally and shown 0–100 in config and the web ap
 | Sergeant / captain | 40 | 85 | 70 | 40 | 30 | — | Confronts, gives orders, steadies others |
 | Friendly gatekeeper | 65 | 55 | 75 | 75 | 35 | — | Talks first, tolerant of strangers |
 | Brute | 25 | 45 | 55 | 15 | 45 | — | Escalates fast |
+| Noble knight | 45 | 80 | 55 | 65 | 25 | Standard "warn before striking" weighted high | Disciplined, calm, fair; always warns first |
+| Royal guard (Praetorian-style) | 55 | 95 | 45 | 40 | 10 | Loyalty to the lord very high; template starts with high proficiency | Elite, sharp, observant, unshakeable; suits the palace |
+| Paranoid watchman *(future update)* | 30 | 60 | 35 | 30 | 80 | — | Sees threats everywhere |
+| Mercenary *(future update, needs contentment)* | 50 | 50 | 50 | 40 | 35 | Low loyalty | Competent, retreats once the pay isn't worth the risk |
 | Corrupt *(future update, needs bribery)* | 50 | 35 | 55 | 40 | 40 | HH 15 | Takes bribes |
 
-Values are examples to tune. **Variance:** each instance rolls each trait once at creation (normal distribution, proposed σ = 8, clamped 0–100), seeded by the NPC id and persisted, so two recruits differ but a guard does not change on restart.
+Values are examples to tune. **Decided:** the set above, including noble knight and royal guard, ships in the first version; paranoid watchman, mercenary and corrupt are future updates. **Variance:** each instance rolls each trait once at creation (normal distribution, proposed σ = 8, clamped 0–100), seeded by the NPC id and persisted, so two recruits differ but a guard does not change on restart.
 
 **What traits derive** (direction only; curves to tune):
 
@@ -322,9 +337,9 @@ Values are examples to tune. **Variance:** each instance rolls each trait once a
 | Force threshold (escalation ladder) | High A | Low A, zero-tolerance orders |
 | Boredom rate on quiet posts | High E, high O | High C |
 
-### 9.8 Default influence sources (proposal, design pass 2)
+### 9.8 Default influence sources (developer decision 2026-11-04)
 
-Core ships these under `core:`; everything else comes from feature modules. Sizes are relative (S/M/L) until tuned.
+**Decided:** this list, plus gate state, is the first-version default. Core ships these under `core:`; everything else comes from feature modules. Sizes are relative (S/M/L) until tuned.
 
 | Id | Scope | Mode | Main effect | First version |
 |---|---|---|---|---|
@@ -341,11 +356,20 @@ Core ships these under `core:`; everything else comes from feature modules. Size
 | `core:captain_nearby` | Group, in range | Lasting while near | D +S; suppresses `idle` actions | Yes |
 | `core:captain_fallen` | Group | Impulse | D −L, P −M (morale loss, as in Assassin's Creed) | Yes |
 | `core:threat_repelled` | Group | Impulse | Relief and pride; P +M, D +M | Yes |
+| `core:gate_damaged` / `core:gate_destroyed` / `core:gate_repaired` | Gate, seen or heard nearby | Impulse; damaged also lasting while under attack | Neutral event, appraised per NPC (below) | Yes |
 | `core:festival` | Town | Lasting | P +M; stranger suspicion −M (crowds), boredom −M | Yes |
 | `core:insulted` / `core:praised` | NPC | Impulse | Standard "respect the guard" violated or honoured | With dialogue |
 | `core:paid`, `core:fed`, `core:housing` | NPC, group | Lasting | Contentment | *(future update: routines and needs)* |
 | `core:bribe` | NPC | Impulse | Honesty-humility check | *(future update)* |
 | `trade:*` | Town, NPC | Mixed | Fair trade, price gouging, scarcity, smuggling | *(future update)* |
+
+**Gate state is appraised, not hard-coded** (developer 2026-11-04). The event only says "this gate was damaged, destroyed or repaired"; each NPC judges it against its own goals and allegiance (§9.4):
+
+- **Defenders** of that gate (same side as its owner): the gate protects the town, so "protect the town" is threatened. Destroyed → large morale loss (D and P down, like captain fallen); damaged → tension (A up); repaired or held → relief and pride.
+- **Attackers**: their goal is achieved. Destroyed → morale gain.
+- **Non-violent or fearful bystanders** (villagers, high neuroticism, a "no violence" standard): the gate meant safety, so its fall threatens "stay safe" → fear; the violence itself breaks their standard → distress. They tend to flee or hide.
+
+**Dependency:** this needs NPCs to belong to a clan or faction and gates to have an owning side ([PandiO/knk-workspace#236](https://github.com/PandiO/knk-workspace/issues/236)). Without it, the NPC cannot tell whose gate fell.
 
 ## 10. Reaction to being attacked
 
@@ -369,27 +393,34 @@ The §5a note that a damage-triggered score bonus is still open applies here; th
 - **Melee variety**: quick strike, heavy blow, thrust, shield bash; block, parry, dodge; weighted by proficiency and personality.
 - **Barracks and training** *(future update)*: barracks, training grounds and academies per town with a quality level; towns with good training produce better soldiers; trainer skill, equipment, drill time and wartime experience as factors.
 
-### 11.1 Proficiency growth (proposal, design pass 2)
+### 11.1 Weapon skill: five modifiers (developer decision 2026-11-04)
 
-Proficiency `p` per weapon type runs 0–100. It rises with experience `xp` along a saturating curve, which gives diminishing returns and a talent cap in one formula:
+**Decided:** weapon skill has two kinds of growth on two levels, plus item familiarity, for **five modifiers** in total. This replaces the earlier practice-ceiling proposal.
+
+| Modifier | Level | Grows from | Notes |
+|---|---|---|---|
+| Proficiency, type | Weapon type (swords) | Training, drills and combat | Drills can reach 100 % |
+| Proficiency, kind | Weapon kind (diamond sword) | Training, drills and combat with that kind | Extra skill on top of the type |
+| Combat experience, type | Weapon type | Real fights only | Adds on top of proficiency; mastery beyond training |
+| Combat experience, kind | Weapon kind | Real fights only with that kind | |
+| Item familiarity | One item instance (this exact sword) | Time owning and using that item | Shared with players; lost when the item is lost |
+
+**Item familiarity** reuses the developer's vision mechanic (the longer you keep one item instance, the better you fight with it), so players and NPCs share one system. It is not yet written in `docs/vision/`; tracked in [PandiO/knk-workspace#237](https://github.com/PandiO/knk-workspace/issues/237). A guard who has carried the same sword for years fights better with it, and disarming him costs him something.
+
+**Proposed curve** (not decided): each of the four skill values uses the same saturating shape, giving diminishing returns and a talent cap:
 
 ```latex
 p(xp) = p_0 + (cap - p_0)\,(1 - e^{-xp / k})
 ```
 
-- `p0`: starting proficiency from the template (recruit 15, soldier 35, veteran 60; examples).
-- `cap`: talent cap per NPC and weapon type, template base ± variance, rolled once like traits (for example 60–95).
-- `k`: learning constant; higher conscientiousness (drill) and openness (learning) lower it a little.
+- `p0` from the template (recruit 15, soldier 35, veteran 60; the royal guard template starts high), `cap` rolled per NPC (talent), `k` lowered a little by conscientiousness and openness.
+- Combat experience per hit, block or parry = `base × challenge`, challenge = opponent power ÷ own power clamped 0.25–2, so trivial opponents teach almost nothing.
+- How the five combine (additive bonuses vs. multiplied factors) and familiarity's growth curve: open, to settle with #237.
+- Transfer between related weapon types and rust when unused: *(future update)*.
 
-**Where experience comes from**
+**What skill changes** (combined skill applied as §5b modifiers; values are examples):
 
-- Combat: each landed hit, block or parry gives `base × challenge`, where `challenge` = opponent power ÷ own power, clamped 0.25–2. Trivial opponents teach almost nothing, so farming chickens doesn't make a master.
-- Practice and drills: about a quarter of combat rate, and practice alone stops at a **practice ceiling** (proposed 70 % of the gap to `cap`). Mastery needs real fights.
-- Transfer between related weapons (sword ↔ axe, bow ↔ crossbow) and slow rust when unused: *(future update)*.
-
-**What proficiency changes** (applied as §5b modifiers, linear between novice and master; values are examples):
-
-| Effect | Novice (0) | Master (100) |
+| Effect | Novice | Master |
 |---|---|---|
 | Melee damage multiplier | 0.85 | 1.15 |
 | Attack cooldown multiplier | 1.15 | 0.90 (still clamped by §5b floors) |
@@ -460,9 +491,9 @@ Agreed: build the utility system first with level of detail and time-slicing; in
 
 Numeric budgets follow the platform audit (DESIGN §9).
 
-## 14. Debugging tools (proposal, design pass 2)
+## 14. Debugging tools (developer decision 2026-11-04)
 
-Without an inspector, tuning is guesswork. First version: an in-game inspector, a decision trace with JSON export, sandbox controls and a scenario test harness in core. Staff-only (a permission node), shown per viewer, and it costs nothing unless someone is inspecting.
+Without an inspector, tuning is guesswork. **Decided** for the first version: in-game inspector (with vision and hearing visualisation), decision trace with JSON export, sandbox controls, scenario test harness in core, and a web admin decision viewer. Staff-only (a permission node), shown per viewer, and it costs nothing unless someone is inspecting.
 
 ### 14.1 In-game inspector
 
@@ -471,7 +502,7 @@ Without an inspector, tuning is guesswork. First version: an in-game inspector, 
 | View | Shows |
 |---|---|
 | Overlay above the NPC | Guard-level alert state, named mood, current action, commitment time left |
-| Perception (particles, per viewer) | Focal cone and peripheral arc; a line to each target, coloured seen / peripheral only / blocked; heard noise events as fading markers; last known position |
+| Perception debug mode (particles, per viewer) | Focal cone and peripheral arc; hearing range as a particle circle; a line to each target, coloured seen / peripheral only / blocked; heard noise events as fading markers; last known position |
 | Suspicion | Per target: value, state, and the top contributing factors with their share (stranger +, restricted area ×, agitated mood ×) |
 | Psychology | Traits (rolled values), PAD now vs baseline, named mood, active emotions with intensity and decay, active influence sources with scope and time left |
 | Decision | All actions ranked: score, tendency fit, each consideration's input → curve output, modifiers; ineligible actions with the gate that blocked them (state, ROE, precondition, consumer); the margin a challenger still needs |
@@ -496,11 +527,20 @@ The decision model lives in Bukkit-free core, so scripted scenarios run as unit 
 
 **Observer effect:** an inspected NPC runs at full level of detail (§13); the overlay says so, so nobody tunes a far-away NPC by watching it up close.
 
-**Web app inspector** with timelines of mood and suspicion over a shift, through the realtime channel: *(future update)*.
+### 14.5 Web admin decision viewer (first version, developer 2026-11-04)
 
-## 15. Configuration and templates (proposal, design pass 2)
+An admin page in knk-web-app built on the decision trace JSON (§14.2):
+
+- Select NPC instances; browse each one's decision history (log, newest first).
+- Open one decision as a **flow-chart visualisation**, laid out like a neural-network diagram: inputs (suspicion, mood, health, distance, orders…) on the left, considerations in the middle, every candidate action on the right; the chosen action highlighted, edge thickness showing how much each input contributed, and the main reasons listed.
+
+Timelines of mood and suspicion over a shift: *(future update)*.
+
+## 15. Configuration and templates (developer decision 2026-11-04)
 
 ### 15.1 Where configuration lives
+
+**Decided:** templates live in the database and are edited in the web app; shipped presets are JSON seed files; one parent via `extends` plus `include` fragments. A template bundles traits, behaviors, mood modifiers, combat style and the other modules; each NPC rolls its own variance; **orders sit on the individual guard** (§7.3), on top of the template. Exact merge rules, depth limit and the precedence order below are the agreed direction; details can still change during implementation.
 
 Follows the existing K&K pattern (code defaults, admin-editable data in knk-web-api, plugin cache through the API client, JSON seed files in the repo):
 
@@ -526,7 +566,7 @@ Lowest to highest:
 2. Parent chain, root first
 3. Fragments, in `include` order
 4. The template's own values
-5. Instance overrides (one specific NPC)
+5. Instance overrides (one specific NPC), including the guard's orders (§7.3)
 6. Assignment context from the controller (gate post orders and ROE, Siege rules, tutorial profile)
 7. Runtime modifiers (§5b pipeline, influence sources, situations), which stack on the resolved values rather than replace them
 
@@ -560,14 +600,15 @@ This ordering is proposed as the shared answer to the precedence questions left 
 
 ## 16. Future updates (overview)
 
-Not in the first version: Law & Order (local/global laws, crimes, punishments, jail, bounties, witnesses, wanted lists; see [vision §6](../../vision/vision.md#6-law-crime--safety)) · reputation and renown · persistent memory · personal place knowledge and knowledge sharing · barracks and training · smell · disguises · routines and off-duty life · command hierarchy and squads beyond the basic blackboard · trading influence on mood · distilled models, Generative Agents, RL, local LLM dialogue · fire extinguishing and bucket chains · weapon proficiency transfer and rust · bribery (corrupt preset) · web app inspector with mood and suspicion timelines.
+Not in the first version: Law & Order (local/global laws, crimes, punishments, jail, bounties, witnesses, wanted lists; see [vision §6](../../vision/vision.md#6-law-crime--safety)) · reputation and renown · persistent memory · personal place knowledge and knowledge sharing · barracks and training · smell · disguises · routines and off-duty life · command hierarchy and squads beyond the basic blackboard · trading influence on mood · distilled models, Generative Agents, RL, local LLM dialogue · fire extinguishing and bucket chains · weapon proficiency transfer and rust · bribery (corrupt preset) · mood and suspicion timelines in the web app · command hierarchy with order delegation and briefing (§7.3) · paranoid watchman and mercenary presets.
 
 ## 17. Open questions
 
-Design pass 2 (2026-11-04) answered the topics below with proposals (§7.1, §7.2, §9.7, §9.8, §11.1, §11.2, §14, §15); they become decisions once the developer confirms them.
+Decided 2026-11-04 (developer, design pass 2): §7.1, §7.2, §7.3, §9.7, §9.8, §11.1 (structure), §14, §15. Still proposals: §11.2 switching thresholds and the §11.1 curve.
 
+- Guard entity: stored data, ties to regions, clans and orders (next design session, together with gate staffing).
+- Numeric tuning: tag weights per state, axis ranges and decay rates, preset values, influence magnitudes, skill curves and how the five skill modifiers combine, switching bands; Mehrabian coefficients to verify.
+- Allegiance for NPCs and gates ([#236](https://github.com/PandiO/knk-workspace/issues/236)); item familiarity mechanic ([#237](https://github.com/PandiO/knk-workspace/issues/237)).
 - Citizens verification and benchmark for the hybrid (§2); whether Siege attackers also use Citizens; how traits map onto DESIGN §2 template/instance/trait/behavior boundaries.
-- Numeric tuning: axis ranges and drift/decay rates, preset values, influence magnitudes, proficiency constants, switching bands; Mehrabian coefficients to verify.
-- Confirm: alert-state gating table and ROE interaction (§7.1); which situations ship first (§7.2); presets and variance (§9.7); default influence list (§9.8); practice ceiling (§11.1); inspector scope (§14); config location, inheritance and precedence (§15, shared with DESIGN §5a/§5b/§6, O06, O08).
 - Performance budgets for perception and appraisal with many NPCs.
 - Gate-guarding session: staffing, shifts, schedules per post.
