@@ -1,7 +1,7 @@
 # Dashboard as the CRUD hub: return, submit pending state, toast, New/Configure, breadcrumbs, detail header, Create New (#177 links 1–2, #58, #81, #39) — smoke test
 
 **Status:** Run by the developer on 2026-10-26 on knk-web-app `main` `7ba0f4b`: all steps work or accepted (findings below)
-**Last updated:** 2026-11-03 (section 9b: favourites are copies, #225, merged 2026-11-03 into knk-web-app `main` `a6d83c9`, live-tested 2026-11-03); 2026-10-26 (section 8a: header row spacing, #195, knk-web-app `claude/dashboard-header-195`, merged into `main` `c3c0c9f`); 2026-10-26 (section 9a: one scrollbar and favourites, #194, knk-web-app `claude/dashboard-explorer-194`, merged into `main` `c3c0c9f`); 2026-10-26 (sections 8–14 added for #177 link 2 = chain link 3)
+**Last updated:** 2026-11-03 (section 9c: explorer filter, #226, knk-web-app `claude/explorer-filter-226`, not merged); 2026-11-03 (section 9b: favourites are copies, #225, merged 2026-11-03 into knk-web-app `main` `a6d83c9`, live-tested 2026-11-03); 2026-10-26 (section 8a: header row spacing, #195, knk-web-app `claude/dashboard-header-195`, merged into `main` `c3c0c9f`); 2026-10-26 (section 9a: one scrollbar and favourites, #194, knk-web-app `claude/dashboard-explorer-194`, merged into `main` `c3c0c9f`); 2026-10-26 (sections 8–14 added for #177 link 2 = chain link 3)
 **Issues:** [PandiO/knk-workspace#177](https://github.com/PandiO/knk-workspace/issues/177) (links 1 and 2) ·
 [#58](https://github.com/PandiO/knk-workspace/issues/58) · [#81](https://github.com/PandiO/knk-workspace/issues/81) (detail
 page header) · [#39](https://github.com/PandiO/knk-workspace/issues/39) (Create New menu only)
@@ -158,6 +158,31 @@ live test (2026-11-03): a starred type should not go "missing" from the list. Th
    heading, just the matches.
 5. Remove every favourite: no Favourites section and no "All entity types" heading; the list looks as before #194.
 6. Reload: favourites kept (per browser, as in 9a.3). Phone width: the drawer shows both parts; a star doesn't close it.
+## 9c. Filter the explorer: display and form configuration (#226)
+
+Branch: knk-web-app `claude/explorer-filter-226` (on `main` `c02b365`, #95 merged in); all five link 3c branches together: `claude/link-3c-combined`. Developer feedback from the link 3b live test
+(2026-11-03). Have at least one type with and one without a published default display configuration (the crossed-out
+eye), and one with and one without any form configuration.
+
+1. On `/dashboard/Town`: right of the A–Z / Z–A button a **filter** button (funnel icon, tooltip "Filter entity
+   types"). Click it: a compact panel opens under the search box with two rows, **Display configuration** and **Form
+   configuration**, each with a dropdown **Any / Yes / No** (Any selected; fix round 2026-11-03: a dropdown instead
+   of three buttons), plus **Clear filters** (greyed out) and **Done**. Tab reaches both dropdowns; arrow keys change
+   them.
+2. Display configuration → **No**: only types with the crossed-out eye remain. → **Yes**: only types without it. The
+   filter button and the set dropdown turn the primary colour (blue in `current`, orange in `brand`) with a "1" badge.
+3. Display configuration **Any**, Form configuration → **No**: only types without any form configuration remain (check
+   one on its ⚙ Entity setup page: "No form configurations found"). → **Yes**: only types with at least one. Both
+   filters set: the badge says "2" and both apply.
+4. With a filter set, search and sort still work on what is left; favourites (if any) are filtered too. A combination
+   that leaves nothing: "No entity types match" with a **Clear filters** link → everything back, the badge gone.
+5. The table on the right doesn't change when you filter; picking a type works as before. **Done** or **Escape** closes
+   the panel and puts the keyboard focus back on the filter button; the filters stay on.
+6. Reload, and open `/dashboard` in a new tab: the same filters are on (per browser, like the sort; localStorage
+   `objectTypeExplorer.dashboard.filters`). Entity setup (`/forms`) has no filter button.
+7. Optional: stop the API's form configuration list from answering (or test as a role that can't read it): the panel
+   offers only **Display configuration**; nothing disappears because of the missing data.
+8. Phone width: the drawer shows the filter button and panel; choosing a filter doesn't close the drawer.
 
 ## 10. An open form hides the explorer and shows a breadcrumb
 
