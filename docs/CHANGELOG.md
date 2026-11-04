@@ -14,6 +14,15 @@ This is a human-readable record of capabilities merged into the V3 default branc
   support in any repo; it was added. Smoke test: [guides/shield-banner-trim-smoke-test.md](guides/shield-banner-trim-smoke-test.md).
   Architecture: [item render pipeline § 2c](architecture/item-render-pipeline.md).
 
+## 2026-11-04
+
+- **Theme switcher as a cogwheel, for every visitor** — knk-web-app `main` `865fe53`, merged `--no-ff` from
+  `claude/theme-switcher-button` (PandiO/knk-workspace#95, developer request 2026-11-04). A cogwheel button opens the
+  themes (Current, Brand, Brand (red), Proposal, each with a short description): in the navigation bar when logged in,
+  floating in the top-right corner of the landing and auth pages when logged out, so new visitors can try them. The
+  themes left the account menu. `REACT_APP_THEME_PICKER=off` hides it; the alpha build no longer sets `on`. Guide:
+  [guides/design-themes-comparison.md](guides/design-themes-comparison.md) § 1.
+
 ## 2026-11-03
 
 - **Dashboard explorer: favourites are copies** — knk-web-app `main` `a6d83c9`, merged from
