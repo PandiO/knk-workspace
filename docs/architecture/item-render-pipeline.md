@@ -1,7 +1,7 @@
 # Item render pipeline — one path from blueprint to item
 
 **Status:** Implemented and merged to knk-plugin `main` 2026-10-05 (`74607a9`); developer smoke test passed (see the lootboxes plan, "Smoke test results — 2026-10-05"). The pipeline itself existed since lootboxes Phase 0; the single `assemble` entry point and the decoy/colour changes are new in that merge
-**Last updated:** 2026-11-03 (lore line wrap, [#212](https://github.com/PandiO/knk-workspace/issues/212), and scan `descriptionLore`, [#40](https://github.com/PandiO/knk-workspace/issues/40): merged 2026-11-02 to knk-plugin `main` `27798ab` and knk-web-app `main` `b770597`; developer smoke test accepted 2026-11-03); 2026-10-18 (KNG-175 merged to knk-plugin `main` `147806d8`); 2026-10-15 (items catalogue goes through `assembleDefaults`, [KNG-175](https://linear.app/kngpandi/issue/KNG-175))
+**Last updated:** 2026-11-04 (shield banner patterns and armour trims on blueprints and instances, [#232](https://github.com/PandiO/knk-workspace/issues/232): merged and smoke-tested, § 2c); 2026-11-03 (lore line wrap, [#212](https://github.com/PandiO/knk-workspace/issues/212), and scan `descriptionLore`, [#40](https://github.com/PandiO/knk-workspace/issues/40): merged 2026-11-02 to knk-plugin `main` `27798ab` and knk-web-app `main` `b770597`; developer smoke test accepted 2026-11-03); 2026-10-18 (KNG-175 merged to knk-plugin `main` `147806d8`); 2026-10-15 (items catalogue goes through `assembleDefaults`, [KNG-175](https://linear.app/kngpandi/issue/KNG-175))
 **Linear:** [KNG-54](https://linear.app/kngpandi/issue/KNG-54) (Done)
 **Why this exists:** developer request 2026-10-05 — all lore colouring, custom-enchantment rendering and grade/origin rendering should be applied in one spot, so a route that spawns an item can't render it differently from the others.
 **See also:** [lootboxes design §3.4/§3.9](../specs/lootboxes/DESIGN.md), [enchantment books](../specs/enchantment-books/ENCHANTMENT_BOOK_APPLICATION.md), [items plan](../specs/items/IMPLEMENTATION_PLAN.md), [kits](../specs/kits/DESIGN.md)
@@ -19,7 +19,7 @@ An item that a player can hold and that comes from an `ItemBlueprint` is made by
 
 ## 2. What happens, in order
 
-1. **`ItemBlueprintBukkitMapper.fromBlueprint`** (the assembler's item factory): material, display name, **description lore** (each line wrapped, § 2a), grade star line, origin line (wrapped), `ItemLoreLayout.compose` spacing, `knk_grade` tag, permanent enchantment-book decoration (`EnchantBookItems.decorate`).
+1. **`ItemBlueprintBukkitMapper.fromBlueprint`** (the assembler's item factory): material, display name, **description lore** (each line wrapped, § 2a), grade star line, origin line (wrapped), `ItemLoreLayout.compose` spacing, `knk_grade` tag, **shield banner and armour trim** (§ 2c), permanent enchantment-book decoration (`EnchantBookItems.decorate`).
 2. **`BlueprintItemAssembler.enchant`**, once for the defaults (as authored, no vanilla rules) and once for rolled enchantments (vanilla `canEnchantItem`/`conflictsWith` rules on): vanilla enchantments via `addUnsafeEnchantment`; custom enchantments as lore lines through `EnchantmentRepository.applyEnchantment`, then `CustomEnchantmentLore.enchantmentsFirst` (custom lines on top, then description, then Grade/Origin; blank-line spacing from `ItemLoreLayout`). Books never get enchantments (they teach one).
 3. Optional **meta stamp** (lootbox `knk_item_instance` tag; stackables get none).
 4. **Quantity** (`applyQuantity`: at least 1, at most the blueprint's own max stack, else the material's).
@@ -65,6 +65,27 @@ Custom-enchantment lines and the grade line are not wrapped (they are short, and
 
 Enchantment detection ignores colours (it matches the plain display name + level), so the description colour can't make a description line look like an enchantment or vice versa (test: `CustomEnchantmentLoreTest.aDarkGrayDescription…`).
 
+### 2c. Shield banner patterns and armour trims ([#232](https://github.com/PandiO/knk-workspace/issues/232))
+
+**Status:** merged 2026-11-04 (knk-web-api `master` `93f9380`, knk-plugin `main` `497e0fe`, knk-web-app `main` `4dd11d0`); developer smoke test the same day, shield pattern checks passed, armour trim accepted ([guide](../guides/shield-banner-trim-smoke-test.md)).
+
+A shield's banner and an armour piece's trim are stored data, not lore, and round-trip scan → save → build like the description:
+
+| Where | Shield banner | Armour trim |
+|---|---|---|
+| **knk-web-api** `ItemBlueprint` | `ShieldBannerBaseColor` (`BannerDyeColor?`, the shield's own colour) + child table `item_blueprint_banner_layers` (`ItemBlueprintBannerLayer`: `SortOrder`, `PatternKey`, `Color`; bottom to top, same shape as the clan `BannerLayer`) | `ArmorTrimPattern` + `ArmorTrimMaterial` (registry keys, both or neither) |
+| **knk-web-api** `ItemInstance` | the same two, copied from the blueprint at mint and **frozen** like `GradeId` (`item_instance_banner_layers`); `/knk item more` clones copy the source's | same |
+| **API DTOs** | `shieldBannerBaseColor` + `shieldBannerLayers: [{patternKey, color}]` on the blueprint read/create/update DTOs, the instance DTO and the lootbox claim result (the instance's copy, else the blueprint's) | `armorTrimPattern` + `armorTrimMaterial` on the same DTOs |
+| **Validation** (`Services/ItemAppearanceRules.cs`) | any casing; bare or namespaced keys (`BannerPatternKeys.Normalize`); layers without a base colour get `WHITE` (Minecraft's shield default); an unknown colour or pattern is a **400**, never dropped | `ArmorTrimKeys` mirrors the `trim_pattern`/`trim_material` registries (paper-api 26.3); a trim needs both keys |
+| **knk-plugin** build | `ItemAppearanceBukkitMapper.applyShieldBanner` in `fromBlueprint`: `ShieldMeta.setBaseColor` + `setPatterns` through `BannerPatternSpec` and `BannerDesignBukkitMapper.toLayers` (the clan/menu banner path, so every banner renders one way); a banner **item** gets the layers only (its colour is the material); other metas are left alone | `applyArmorTrim`: `ArmorMeta.setTrim(new ArmorTrim(material, pattern))` on armour metas |
+| **knk-plugin** lootbox drop | `LootboxDelivery.withClaimLook`: the claim's look (the instance's frozen one) replaces the cached blueprint's before the build, like `withClaimGrade`; a claim from an API without the fields changes nothing | same |
+| **knk-plugin** scan (`ScannedItemJsonBuilder`) | `shieldBanner: {baseColor, layers}` only when the item has one (`ItemAppearanceBukkitMapper.readShieldBanner`) | `armorTrim: {pattern, material}` only when trimmed |
+| **knk-web-app** form (`ItemBlueprint.json` seed, "Item in game" step) | `ShieldBannerBaseColor` (Enum) + `ShieldBannerLayers` (new field type **`BannerLayers`**: ordered rows of pattern and colour, bottom first, `BannerLayersField`; pattern list from `GET /api/BannerDesigns/pattern-keys`, bundled fallback) | `ArmorTrimPattern` + `ArmorTrimMaterial` (String) |
+| **knk-web-app** scan | `applyItemScanResult` fills the four fields from `shieldBanner`/`armorTrim` (`src/utils/scannedItemLook.ts`), clears them for a plain item, and asks first when the form already holds a look; KitScan's blueprint creation sends them too | |
+| **knk-web-app** instance detail | `ItemInstanceDetail` shows "Shield banner" and "Armour trim" rows when the instance has them | |
+
+A pattern or trim key the running server doesn't know (authored for a newer version) is skipped with a warning and the rest of the item is built, as `BannerDesignBukkitMapper` does for clan banners. The developer's armour trim check (#232): no trim support existed in any repo before this change; it was added here.
+
 ## 3. Who spawns blueprint items (all go through §1)
 
 | Route | Code | Entry point |
@@ -99,9 +120,12 @@ Lootbox **token** items (`LootboxTokenDelivery.build`), **siege enchant books** 
 - Adding or removing a custom enchantment on an existing item? `CustomEnchantmentLore.apply` / `remove`, never `repository.applyEnchantment`/`removeEnchantment` directly.
 - A new lore section (like Grade/Origin)? Add it in `ItemBlueprintBukkitMapper` and let `ItemLoreLayout.compose` place it.
 - A long lore line? Don't wrap by hand: menu lore and blueprint descriptions already go through `LoreWrap` (§ 2a); for other lore call `LoreWrap.wrap`/`wrapAll` (configured width) rather than a local wrap.
-- Tests: `BlueprintItemAssemblerTest` (the assembler), `ItemBlueprintLoreColorTest`, `CustomEnchantmentLoreTest`, `LootboxDeliveryTest` (drops and decoys), `LoreWrapTest` (wrap/unwrap), `ItemScanDescriptionLoreTest` (scan of a built item).
+- A shield's pattern or an armour trim? It is data on the blueprint/instance (§ 2c), applied by `ItemAppearanceBukkitMapper` inside `fromBlueprint`; never set `BannerMeta`/`ArmorMeta` by hand on a blueprint item.
+- Tests: `BlueprintItemAssemblerTest` (the assembler), `ItemBlueprintLoreColorTest`, `CustomEnchantmentLoreTest`, `LootboxDeliveryTest` (drops and decoys, the claim's look), `LoreWrapTest` (wrap/unwrap), `ItemScanDescriptionLoreTest` (scan of a built item), `ItemAppearanceBukkitMapperTest` + `KnkShieldBannerTest` + `ItemAppearanceMapperTest` (§ 2c; applying a real pattern/trim needs the server registries and is the in-game smoke test).
 
 ## 7. History
+
+- 2026-11-04 ([#232](https://github.com/PandiO/knk-workspace/issues/232); merged, smoke test accepted the same day): shield banner patterns (base colour + layers) and armour trims stored on blueprints and instances, applied in `fromBlueprint`, scanned back, edited in the web app (§ 2c).
 
 - KNG-5 (2026-09-26): `CustomEnchantmentLore` introduced (books skipped the "enchantments first" reorder).
 - KNG-29 (2026-10-04): stable lore section spacing (`ItemLoreLayout`); Flaming Samurai's inline `&7` removed — which, as found 2026-10-05, made its description vanilla purple, since the plugin applied no colour.
