@@ -1,10 +1,10 @@
 # NPC behavior model — perception, psychology, decisions and combat (guards first)
 
 **Status:** Working concept from a developer design session; not approved defaults, not an implementation plan, nothing implemented. Items marked *(future update)* belong to the overall vision but are not planned for the first version.
-**Last updated:** 2026-11-04 (developer decisions: guard entity, garrisons and staffing §16, gate confrontation §17); 2026-11-04 (developer decisions on design pass 2: alert states weight but never lock §7.1, four situations §7.2, guard-specific orders §7.3, presets §9.7, influence sources incl. gate state §9.8, five weapon-skill modifiers §11.1, inspector and web decision viewer §14, templates §15); 2026-11-04 (design pass 2: §7.1 action gating, §7.2 situations, §9.7 personality presets, §9.8 default influence sources, §11.1 proficiency growth, §11.2 ranged/melee switching, §14 debugging tools, §15 configuration and templates; all proposals); 2026-11-04 (hybrid navigation decision in §2: K&K plans, Citizens moves); 2026-11-04 (initial concept, developer voice design session)
+**Last updated:** 2026-11-05 (developer decisions, design pass 3: skill-based ranged/melee switching §11.2, weighted 0–100 weapon skill with a power-law curve §11.1, scale targets and benchmark plan §13, optional preset clan §16.2, Garrison holds its own gate and quarters in any structure §16.3, town-level guard settings and auto-fill per town §16.4, clan control and sides §16.5, military management pages §16.6); 2026-11-04 (developer decisions: guard entity, garrisons and staffing §16, gate confrontation §17); 2026-11-04 (developer decisions on design pass 2: alert states weight but never lock §7.1, four situations §7.2, guard-specific orders §7.3, presets §9.7, influence sources incl. gate state §9.8, five weapon-skill modifiers §11.1, inspector and web decision viewer §14, templates §15); 2026-11-04 (design pass 2: §7.1 action gating, §7.2 situations, §9.7 personality presets, §9.8 default influence sources, §11.1 proficiency growth, §11.2 ranged/melee switching, §14 debugging tools, §15 configuration and templates; all proposals); 2026-11-04 (hybrid navigation decision in §2: K&K plans, Citizens moves); 2026-11-04 (initial concept, developer voice design session)
 **Issue:** [PandiO/knk-workspace#234](https://github.com/PandiO/knk-workspace/issues/234)
 **Parent design:** [npc-platform/DESIGN.md](DESIGN.md) (KNG-36), mainly its O11 (city guard profile) and O12 (combat, stats, factions, debugging, performance); related [#146](https://github.com/PandiO/knk-workspace/issues/146)
-**Authority:** Developer statements in the 2026-11-04 session. Where this document says "agreed" or "developer", the developer chose it; everything else is a proposal recorded for discussion. Library, schema and numeric values are examples, not defaults.
+**Authority:** Developer statements in the 2026-11-04 sessions and the 2026-11-05 design pass 3 (voice session, recorded in the concept doc first). Where this document says "agreed" or "developer", the developer chose it; everything else is a proposal recorded for discussion. Library, schema and numeric values are examples, not defaults.
 
 ## 1. Purpose and goals
 
@@ -35,7 +35,7 @@ The developer chose a **hybrid**: K&K navigation plans, Citizens moves.
 - **Reason:** K&K runs many human-like (player-shaped) NPCs. Those have no vanilla AI, and Citizens' movement code is mature and maintained across Minecraft updates; building and maintaining that ourselves would cost far more.
 - **Consequence:** V3 takes on a Citizens dependency again (the V3 plugin has none today). Main risk: waiting on a Citizens release after a Minecraft update. The DESIGN §2 platform-adapter boundary keeps behavior Citizens-free so the executor can still be swapped.
 
-Still to do under the DESIGN §9 audit: check the Citizens API version and licence, confirm waypoint following and block-examiner hooks, and benchmark on the castle map (many NPCs, closed gates, changed permissions, unloaded chunks). Siege Survival's mob-based plan (Paper MobGoals, DESIGN §5b) is not changed by this decision; whether Siege attackers also move through Citizens is open.
+Still to do under the DESIGN §9 audit: check the Citizens API version and licence, confirm waypoint following and block-examiner hooks, and benchmark on the castle map (many NPCs, closed gates, changed permissions, unloaded chunks). Planned as [#241](https://github.com/PandiO/knk-workspace/issues/241) (desk check #242, spike #243, benchmark #244; developer decision 2026-11-05, details in §13). Siege Survival's mob-based plan (Paper MobGoals, DESIGN §5b) is not changed by this decision; whether Siege attackers also move through Citizens is open.
 
 ## 3. References
 
@@ -407,15 +407,32 @@ The §5a note that a damage-triggered score bonus is still open applies here; th
 
 **Item familiarity** reuses the developer's vision mechanic (the longer you keep one item instance, the better you fight with it), so players and NPCs share one system. It is not yet written in `docs/vision/`; tracked in [PandiO/knk-workspace#237](https://github.com/PandiO/knk-workspace/issues/237). A guard who has carried the same sword for years fights better with it, and disarming him costs him something.
 
-**Proposed curve** (not decided): each of the four skill values uses the same saturating shape, giving diminishing returns and a talent cap:
+**Combined skill (developer decision 2026-11-05):** a **weighted sum on a 0–100 scale**. The score is mapped onto the effect table below (0 = novice, 100 = master); it is not used directly as a percentage. A 0–200 scale was considered and dropped, since the effect table does the real tuning. Starting shares:
+
+| Modifier | Share |
+|---|---|
+| Proficiency, type | 60 |
+| Proficiency, kind | 10 |
+| Combat experience, type | 15 |
+| Combat experience, kind | 5 |
+| Item familiarity | 10 |
+
+Drills alone reach 70 ("trained soldier"); the last 30 only come from real fights and a weapon the NPC trusts. Shares are starting values for tuning.
+
+**First version (developer decision 2026-11-05):** proficiency is set by the preset plus rolled variance and does **not** grow; it grows once drills arrive *(future update, with shifts and barracks)*. Combat experience grows from fights; familiarity grows with time owned (#237).
+
+**Growth curve (developer decision 2026-11-05):** the **power law of practice** (Newell & Rosenbloom 1981; consistent with Ericsson's research on deliberate practice and expertise), replacing the earlier exponential saturating proposal. Fast early gains, then a very long slow tail; not an S-curve. Illustrative form, constants to tune:
 
 ```latex
-p(xp) = p_0 + (cap - p_0)\,(1 - e^{-xp / k})
+skill(n) = cap - (cap - p_0)\,(1 + n / n_0)^{-\alpha}
 ```
 
-- `p0` from the template (recruit 15, soldier 35, veteran 60; the royal guard template starts high), `cap` rolled per NPC (talent), `k` lowered a little by conscientiousness and openness.
+- `n` = experience (weighted hits, blocks and parries), `n0` and `α` set the pace, `cap` rolled per NPC (talent).
+- **Pace target (developer):** decent after a few dozen fights; near full combat experience only after **at least about 100 battles** against equal opponents; long-term players (around 1000 play hours) should be really good, and top mastery takes months to years (the developer referenced War Thunder progression).
 - Combat experience per hit, block or parry = `base × challenge`, challenge = opponent power ÷ own power clamped 0.25–2, so trivial opponents teach almost nothing.
-- How the five combine (additive bonuses vs. multiplied factors) and familiarity's growth curve: open, to settle with #237.
+- **Starting values (developer, starting points):** recruit 15, soldier 35, veteran 60, royal guard 75.
+- **Death:** a guard keeps all combat experience when he dies (clean respawn, §16.1).
+- Familiarity's own growth curve: with #237, since players share it.
 - Transfer between related weapon types and rust when unused: *(future update)*.
 
 **What skill changes** (combined skill applied as §5b modifiers; values are examples):
@@ -428,11 +445,20 @@ p(xp) = p_0 + (cap - p_0)\,(1 - e^{-xp / k})
 | Reaction delay | 400 ms | 150 ms |
 | Block / parry window | narrow | wide |
 
-### 11.2 Ranged/melee switching thresholds (proposal, design pass 2)
+### 11.2 Ranged/melee switching thresholds (developer decisions 2026-11-05)
 
 Weapon choice is two utility actions, *engage ranged* and *engage melee*, under §5a scoring.
 
-**Hard eligibility for ranged**: has a ranged weapon and ammo; line of sight; no ally in the line of fire (raycast corridor); target not inside the **panic distance** (proposed 3 blocks; you don't draw a bow while being hit).
+**Hard eligibility for ranged**: has a ranged weapon and ammo; line of sight; no ally in the line of fire (raycast corridor); target not inside the **panic distance** (3 blocks, developer 2026-11-05; you don't draw a bow while being hit).
+
+**Time-to-contact, skill-based (developer decision 2026-11-05):** the distance bands below are defaults. On top, a guard only picks the ranged weapon if the target can't reach melee range before he is ready to shoot (swap + draw; a full bow draw is 20 ticks, so with the 10-tick swap about 1.5 s; a sprinting player covers about 5.6 blocks/s). A target standing still (on a wall) keeps the bands; a target running at the guard triggers the switch earlier. Weapon skill and nerves (neuroticism, current fear) shape two things:
+
+- **Judgement:** how well the guard estimates the target's closing speed. A recruit or a nervous guard misjudges and switches late; a veteran judges well and may switch early.
+- **Speed:** skill shortens the swap and the draw.
+
+**Loaded crossbow (developer decision):** counts as a ready one-shot weapon with no draw time, so a swordsman can fire one bolt and then draw his sword.
+
+**Archer backing off (developer decision):** an archer is not held to his slot's area when he backs off. He retreats until he can use the bow safely again: beyond the back-to-ranged distance plus a safety margin, not just to the band edge.
 
 **Considerations**: distance (curve per style), proficiency ratio ranged ÷ melee, own health (low health favours keeping distance), the target's weapon (an archer at range → close in behind a shield or take cover), allies already in melee (favours ranged support), and target reachable by navigation (unreachable, for example on a wall or across water → ranged if possible, otherwise hold and call archers).
 
@@ -445,7 +471,7 @@ Weapon choice is two utility actions, *engage ranged* and *engage melee*, under 
 | Spearman | ≤ 6 | ≥ 12 and has a bow | 3–4 (reach) | Keeps the target at spear length |
 | Shield-bearer | — | — | melee | Advances on archers with shield raised |
 
-Band values are examples for tuning and live testing.
+Band values are **starting values for live testing** (developer 2026-11-05); the archer's switch to melee stays at 3 blocks. Mounted combat bands: *(future update)*.
 
 ## 12. Posts, patrols and dynamic navigation
 
@@ -490,6 +516,16 @@ Agreed: build the utility system first with level of detail and time-slicing; in
 **Later, to investigate**: distilled small models trained from LLM output or recorded tuned behavior · Generative Agents architecture for memory and relationships · reinforcement learning for combat micro-behavior (for example Unity ML-Agents) · small local LLMs for dialogue.
 
 Numeric budgets follow the platform audit (DESIGN §9).
+
+**Scale targets (developer 2026-11-05):**
+
+- Phoenix, the only town today: 6 gates (2 outer, 1 keep, 2 garrison, 1 castle), 2–4 guards per gate by size and priority, about 30 guards in total; not all spawned at once, about 15–30 active.
+- First year: about 3 kingdoms with about 7 towns each; a capital has double the guards (about 60). About 3 × 60 + 18 × 30 ≈ 720 guards in the world, most in unloaded areas.
+- **Main target: 60–100 guards active near players at once** (a busy siege at a capital); 200 is the stress test.
+
+**Verification plan (developer decision 2026-11-05):** [#241](https://github.com/PandiO/knk-workspace/issues/241) with three steps: Citizens desk check ([#242](https://github.com/PandiO/knk-workspace/issues/242)), throwaway spike branch ([#243](https://github.com/PandiO/knk-workspace/issues/243)), castle-map benchmark and proposed budgets ([#244](https://github.com/PandiO/knk-workspace/issues/244)). It runs on the dev server and in the closed alpha; neither is representative of a live server, so results are indicative and budgets get rechecked on the live host later. This track is independent of the Siege Survival chain and goes first; the data model that doesn't depend on Citizens (§16.3–16.5, #236, #238) can start alongside.
+
+**Proposed budgets** (to confirm after #244): all NPC behaviour and movement ≤ 10 ms of the 50 ms tick at 100 active guards; perception ≤ 2 ms per tick, event-driven; re-planning every 5–10 ticks near players, 1/s at mid range, once per 5 s far away, summary only when unloaded; new long routes async and queued, never dropped; degrade by level of detail first, then slower re-planning, then queued spawns.
 
 ## 14. Debugging tools (developer decision 2026-11-04)
 
@@ -615,15 +651,18 @@ There is **one guard entity**. "Gate guard" is an assignment, not a separate typ
 
 - **Full presets** (for example "Synixian commander") bundle everything: NPC type, traits, mood settings, character type, armour, weapons, proficiencies and rank. This is a §15 template that is complete enough to spawn.
 - Presets are **authored in the web app only**.
+- **Preset clan (developer decision 2026-11-05):** a preset may carry an optional **default clan**, pre-filled and changeable per instance. Auto-filled guards take the town's controlling clan (§16.5), which wins over the preset's clan. Example: "Synixian" is a clan, the ruling family of the town Synix (spelling to verify), a regional centre of power; their race is human and they are more like a nation.
 - **Create instance** from a preset with one action, in the web app or in game (a menu; spawns where the admin stands). Chosen per instance: clan and assignment (or slot, §16.4).
 
 ### 16.3 Garrison and quarters
 
-- **Garrison:** a new **structure type** next to Gate. A town has one or more garrisons. A garrison is the default spawn and respawn place for the town's guards and other soldier NPCs. Tracked in [#238](https://github.com/PandiO/knk-workspace/issues/238).
-- **Quarters:** a capability any structure can have, not tied to one type: a garrison always has quarters, a large gatehouse can switch them on, later barracks or a castle. First version: a spawn point and a **bed count**. Each guard has a **home quarters** where he respawns.
+- **Garrison:** a new **structure type** next to Gate. A town can have garrisons; a garrison always has quarters. Tracked in [#238](https://github.com/PandiO/knk-workspace/issues/238).
+- **Garrison with a gate (developer decision 2026-11-05):** the tower-plus-house building in [domain sub-regions §1](../domain-subregions/DESIGN.md#1-requested-behaviour), today one GateStructure, becomes a **Garrison structure that holds its own gate** as a separate Gate structure inside it. The gate keeps working as today; the garrison holds the quarters and guard settings. The existing gate moves under the new garrison (small migration).
+- **Quarters (developer decision 2026-11-05):** a **separate record** (structure, spawn point, bed count) that any structure can have: a garrison always, a large gatehouse optionally, later barracks or a castle. Each guard has a **home quarters** where he respawns.
+- **Guards need quarters, not a garrison (developer, corrected 2026-11-05):** a town can house guards if it has quarters in any structure. A gate structure has quarters, not a garrison. A garrison adds benefits: higher comfort and better guard management rules, feeding guard motivation and loyalty *(details: future update)*.
 - **Housing capacity** of a town = beds across all its quarters.
 - *(future update)* Registering individual beds and assigning them to guards; garrison food consumption ([town logistics](../production-storage-transport/TOWN_LOGISTICS.md) already lists garrisons as consumers), pay and contentment (§9.8 `core:paid`, `core:fed`, `core:housing`).
-- **Respawn:** after a delay set per garrison, at the guard's home quarters; he then walks back to his slot. The slot stays empty meanwhile, so a gate under attack really weakens.
+- **Respawn:** after the respawn delay (§16.4 settings), at the guard's home quarters; he then walks back to his slot. The slot stays empty meanwhile, so a gate under attack really weakens.
 
 ### 16.4 Assignments and slots
 
@@ -632,9 +671,30 @@ There is **one guard entity**. "Gate guard" is an assignment, not a separate typ
 - **Duty types**, all in the first version: **fixed post** (beside the gate), **patrol** between points of interest (§12.2, the wall walk) and **roam** within an area (a market).
 - **Filling:**
   - Manual override: an admin puts a specific guard on a specific slot.
-  - Garrison setting **auto-fill slots**: creates guards from each slot's preset, only up to the town's housing capacity.
-  - **Slot priority:** higher-priority slots fill first (the palace or main gate before a quiet side gate). Slots beyond capacity stay empty. Example: one garrison with 5 beds and 7 slots → 2 empty slots.
+  - **Auto-fill (developer decision 2026-11-05)** runs **per town** over all its slots, highest priority first, up to the town's total beds; it creates guards from each slot's preset. Each new guard's home quarters is the **nearest quarters with a free bed**. The manual override stays: admins can place a specific guard on a slot and set his quarters.
+  - **Slot priority:** higher-priority slots fill first (the palace or main gate before a quiet side gate). Slots beyond capacity stay empty. Example: 5 beds in the town and 7 slots → 2 empty slots.
+- **Guard settings (developer decision 2026-11-05):** respawn delay and auto-fill are **town settings** (defaults); a Garrison can override them for its own guards.
 - **Shifts:** guards are always on duty in the first version. Shifts, sleeping in quarters and handovers: *(future update, second version)*.
+
+### 16.5 Allegiance: clan control and sides (developer decisions 2026-11-05)
+
+Builds on the minimal `Clan` on trunk (Siege plan §3.2: name, colour, banner, `IsNpc`, `DefaultForTownId`) and settles [#236](https://github.com/PandiO/knk-workspace/issues/236).
+
+- **NPC membership:** a clan field on the NPC instance; **required for guards**, empty for villagers and bystanders.
+- **Clan control on towns and districts:** towns and districts get a **controlling clan** field (which clan holds control there). This brings the vision's `controlledBy` ([vision §2.6](../../vision/vision.md#26-ownership-controlledby-long-term-open)) forward for towns and districts.
+- **Structures inherit:** every structure in a town or district (garrisons, gates, …) uses that controlling clan automatically, with an optional **per-structure override**. A **district's clan overrides its town's**.
+- **Town without a clan:** allowed. The back end then auto-creates a **fallback clan** named after the town (`IsNpc = true`, `DefaultForTownId` = that town; the vision §3.2 baseline crown/garrison clan) and uses it. Guards therefore always have a clan, and the side resolver never sees "no side" for a town.
+- **Side resolver** (core): side of an NPC, side of a structure, relation between two sides. Inside a **Siege match the match team decides** an NPC's side, not his clan (Survival attackers have ad-hoc teams).
+- **Relations, first version:** same clan = friendly; other clans neutral; hostility only through orders (§7.3) or an active siege. Alliances and diplomacy: *(future update)*.
+- *(future update)* **Conquest:** clans besiege a town and take control district by district, gradually gaining or losing the town; the district override is the hook for it.
+
+### 16.6 Military management pages (developer 2026-11-05)
+
+- **Web app pages** to run a town's military: garrisons, quarters, slot priorities, where each guard is stationed, auto-fill result and manual override ([#245](https://github.com/PandiO/knk-workspace/issues/245)). In-game inventory menus later *(future update)*.
+- **"Management" means runtime administration** of towns, clans and structures (taxes, item and resource distribution, military staffing), not admin CRUD such as renaming a town or changing its districts.
+- **Permissions, first version:** admin only, meaning permission groups holding the matching permission nodes. *(future update)* Public town roles and clan control decide who manages a town's military, as part of town runtime management ([#246](https://github.com/PandiO/knk-workspace/issues/246)); leaning: information pages are publicly viewable, to settle there.
+- **UI standard:** intuitive, accessible and polished, with Minecraft icons from the material catalog and in-game structure pictures ([#247](https://github.com/PandiO/knk-workspace/issues/247)).
+- **Sprint (developer):** the resource production structures work ([#22](https://github.com/PandiO/knk-workspace/issues/22), KNG-83) should finish its design soon and ship in the same test phase as the garrison and guard NPC work.
 
 ## 17. Gate confrontation (developer decisions 2026-11-04)
 
@@ -653,15 +713,14 @@ The §8 action *confront / question* in detail. The dialogue only gathers inform
 
 ## 18. Future updates (overview)
 
-Not in the first version: Law & Order (local/global laws, crimes, punishments, jail, bounties, witnesses, wanted lists; see [vision §6](../../vision/vision.md#6-law-crime--safety)) · reputation and renown · persistent memory · personal place knowledge and knowledge sharing · barracks and training · smell · disguises · routines and off-duty life · command hierarchy and squads beyond the basic blackboard · trading influence on mood · distilled models, Generative Agents, RL, local LLM dialogue · fire extinguishing and bucket chains · weapon proficiency transfer and rust · bribery (corrupt preset) · mood and suspicion timelines in the web app · command hierarchy with order delegation and briefing (§7.3) · paranoid watchman and mercenary presets · town conquest and guard loyalty choice · permanent death and recruits · individual beds, garrison food, pay · shifts and handovers · free-text dialogue with a small language model.
+Not in the first version: Law & Order (local/global laws, crimes, punishments, jail, bounties, witnesses, wanted lists; see [vision §6](../../vision/vision.md#6-law-crime--safety)) · reputation and renown · persistent memory · personal place knowledge and knowledge sharing · barracks and training · smell · disguises · routines and off-duty life · command hierarchy and squads beyond the basic blackboard · trading influence on mood · distilled models, Generative Agents, RL, local LLM dialogue · fire extinguishing and bucket chains · weapon proficiency transfer and rust · bribery (corrupt preset) · mood and suspicion timelines in the web app · command hierarchy with order delegation and briefing (§7.3) · paranoid watchman and mercenary presets · town conquest and guard loyalty choice · permanent death and recruits · individual beds, garrison food, pay · shifts and handovers · free-text dialogue with a small language model · drills and proficiency growth · mounted combat bands · garrison comfort, motivation and loyalty effects · alliances and diplomacy · conquest district by district · public town roles managing the military · in-game military management menus.
 
 ## 19. Open questions
 
-Decided 2026-11-04 (developer, design pass 2): §7.1, §7.2, §7.3, §9.7, §9.8, §11.1 (structure), §14, §15, §16, §17. Still proposals: §11.2 switching thresholds and the §11.1 curve.
+Decided 2026-11-04 (developer, design pass 2): §7.1, §7.2, §7.3, §9.7, §9.8, §11.1 (structure), §14, §15, §16, §17. Decided 2026-11-05 (design pass 3): §11.1 combination and curve, §11.2 switching, §13 scale targets and verification plan, §16.2 preset clan, §16.3–16.4 garrison, quarters and town settings, §16.5 allegiance, §16.6 management pages.
 
-- Guard entity, garrisons and staffing (§16) and gate confrontation (§17): decided 2026-11-04; schema and quarters capability shape to work out under #238.
-- Clan is chosen per instance (§16.2); whether a preset may also preset a clan (a "Synixian commander" always Synixian) was raised but not answered.
-- Numeric tuning: tag weights per state, axis ranges and decay rates, preset values, influence magnitudes, skill curves and how the five skill modifiers combine, switching bands; Mehrabian coefficients to verify.
-- Allegiance for NPCs and gates ([#236](https://github.com/PandiO/knk-workspace/issues/236)); item familiarity mechanic ([#237](https://github.com/PandiO/knk-workspace/issues/237)).
-- Citizens verification and benchmark for the hybrid (§2); whether Siege attackers also use Citizens; how traits map onto DESIGN §2 template/instance/trait/behavior boundaries.
-- Performance budgets for perception and appraisal with many NPCs.
+- Schema for Garrison, quarters, slots and town guard settings: under [#238](https://github.com/PandiO/knk-workspace/issues/238); clan control, NPC clan and fallback clan: under [#236](https://github.com/PandiO/knk-workspace/issues/236).
+- Numeric tuning: tag weights per state, axis ranges and decay rates, preset values, influence magnitudes, power-law constants (`n0`, `α`), skill shares, switching bands and the time-to-contact judgement error; Mehrabian coefficients to verify.
+- Item familiarity mechanic and curve ([#237](https://github.com/PandiO/knk-workspace/issues/237)).
+- Citizens verification, benchmark and budgets ([#241](https://github.com/PandiO/knk-workspace/issues/241)); whether Siege attackers also use Citizens (answered by #244); how traits map onto DESIGN §2 template/instance/trait/behavior boundaries.
+- Town runtime management, public town roles and who may view or manage ([#246](https://github.com/PandiO/knk-workspace/issues/246)).
