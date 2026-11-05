@@ -4,7 +4,15 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
-(Nothing at the moment.)
+- **Production, storage and transport design rev. 3; new shops design (docs only)** — knk-workspace branch
+  `claude/production-storage-transport-rev3-qx7ks2`, not merged ([#22](https://github.com/PandiO/knk-workspace/issues/22), KNG-83). The four design documents now follow the developer's
+  [decision record of 2026-11-05](specs/production-storage-transport/DECISIONS_2026-11-05.md): raw-unit capacity with
+  `UnitsPerSlot` and `ItemBlueprint.StorageWeight`, a capped reward inbox with overflow to `SYS_LOSS`, simulated V1
+  transport carried by producer workers, NPC transporters as the next follow-up, a modifier pipeline with level and
+  weather sources, a worker's share in harvesting, reserve-and-collect distribution, and shops in V1. New:
+  [shops design](specs/shops/DESIGN.md) (shops, shopkeepers, display stalls) and an NPC lifecycle and reliability
+  section in the [NPC platform design](specs/npc-platform/DESIGN.md) §6a. New phases P10-P12
+  ([#248](https://github.com/PandiO/knk-workspace/issues/248)-[#250](https://github.com/PandiO/knk-workspace/issues/250)) and Later issues [#251](https://github.com/PandiO/knk-workspace/issues/251)-[#257](https://github.com/PandiO/knk-workspace/issues/257). No code.
 
 ## 2026-11-10
 
