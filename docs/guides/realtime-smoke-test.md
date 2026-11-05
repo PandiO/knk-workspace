@@ -2,8 +2,8 @@
 
 **Status:** WT2 run by the developer 2026-11-04 (works or accepted; one bug, step 6). S1, S2 and S3 were not run as
 sections (S1 connect and presence were exercised by WT2). Merged into the default branches 2026-11-04;
-`realtime.enabled` stays `false` by default
-**Last updated:** 2026-11-04 (§ WT2 follow-ups #239/#240, feature branch); 2026-11-04 (WT2 findings; merged); 2026-11-02 (§ S3, #182); 2026-11-02 (§ WT2, #181)
+`realtime.enabled` stays `false` by default; WT2 follow-ups (#239, #240) run by the developer 2026-11-05: all work, merged the same day
+**Last updated:** 2026-11-05 (§ WT2 follow-ups: findings, merged); 2026-11-04 (§ WT2 follow-ups #239/#240, feature branch); 2026-11-04 (WT2 findings; merged); 2026-11-02 (§ S3, #182); 2026-11-02 (§ WT2, #181)
 **Design:** [specs/realtime-signalr/DESIGN.md](../specs/realtime-signalr/DESIGN.md) (§4–§5, as built: §4.6) ·
 [IMPLEMENTATION_PLAN.md](../specs/realtime-signalr/IMPLEMENTATION_PLAN.md) ·
 **Issues:** [PandiO/knk-workspace#178](https://github.com/PandiO/knk-workspace/issues/178) (S1),
@@ -161,7 +161,7 @@ Record the times of 2, 6 and 9 under **Findings**.
 
 ## WT2 follow-ups — offer permission and Send again (#239, #240)
 
-**Builds:** knk-web-api, knk-plugin and knk-web-app on `claude/world-task-offer-followups` (no migration, no new
+**Builds:** knk-web-api, knk-plugin and knk-web-app `claude/world-task-offer-followups` (merged 2026-11-05; no migration, no new
 setting). Plugin `realtime.enabled: true`. **People:** admin A as in WT2; player B in the Staff group, **not op**, with
 no Bukkit grant of `knk.tasks` (the node comes only from the group in the web app).
 
@@ -259,3 +259,9 @@ hand, see S1); the web app needs `npm install` after checkout (new `@microsoft/s
 | 13 | Accepted | |
 
 Times for steps 2, 6 and 9 were not recorded.
+
+### WT2 follow-ups (#239, #240) — developer, 2026-11-05
+
+Builds: `claude/world-task-offer-followups` in knk-web-api (`daf09cc`), knk-plugin (`d0655e28`) and knk-web-app
+(`16659be`). Result: **all steps work** (1–8). Merged into the default branches the same day: knk-web-api `master`
+`453729e`, knk-plugin `main` `33122cf4`, knk-web-app `main` `4d0c6ed`.

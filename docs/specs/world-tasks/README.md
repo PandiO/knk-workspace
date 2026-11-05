@@ -189,9 +189,9 @@ With the plugin's `realtime.enabled: true` (off by default; DESIGN §8.8 has the
   The task code is always generated and keeps working; the web app shows it folded while an offer is out and expanded
   when there is none, or it was declined, timed out, or arrived while the player was busy.
 - `OfferState`: None, Offered, Accepted, Declined, TimedOut, Queued, Busy, and NoPermission (the game server refused it:
-  the player lacks `knk.tasks` in game; [#239](https://github.com/PandiO/knk-workspace/issues/239), branch `claude/world-task-offer-followups`, not merged). The `offer`
+  the player lacks `knk.tasks` in game; [#239](https://github.com/PandiO/knk-workspace/issues/239), merged 2026-11-05). The `offer`
   claim needs Offered. The plugin checks `knk.tasks` like a command's node (Bukkit or the knk permission model, #239).
-- `POST {id}/offer` ("Send again", [#240](https://github.com/PandiO/knk-workspace/issues/240), branch `claude/world-task-offer-followups`, not merged): offers a
+- `POST {id}/offer` ("Send again", [#240](https://github.com/PandiO/knk-workspace/issues/240), merged 2026-11-05): offers a
   waiting task again with `deliver` `"auto"` (default), `"queue"`, `"replace"` or `{"userId": n}`; the same task
   and code, fresh expiry. 409 while it is offered, once it isn't Pending, for a scan, or for auto/replace while the
   creator isn't online in game; `"code"` is a 400.

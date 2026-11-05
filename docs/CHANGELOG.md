@@ -4,9 +4,13 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+(Nothing at the moment.)
+
+## 2026-11-05
+
 - **World-task offers reach non-op staff, and "Send again"** — [PandiO/knk-workspace#239](https://github.com/PandiO/knk-workspace/issues/239)
-  and [#240](https://github.com/PandiO/knk-workspace/issues/240), follow-ups of the developer's WT2 test; branch
-  `claude/world-task-offer-followups` in knk-web-api, knk-plugin and knk-web-app. The plugin checks `knk.tasks` for an
+  and [#240](https://github.com/PandiO/knk-workspace/issues/240), follow-ups of the developer's WT2 test; merged 2026-11-05 after the developer's smoke test (all steps work):
+  knk-web-api `master` `453729e`, knk-plugin `main` `33122cf4`, knk-web-app `main` `4d0c6ed`. The plugin checks `knk.tasks` for an
   offer like a command's node (Bukkit or the knk permission model), so staff whose group grants it get the
   Accept/Decline line or the auto-claim; a refused player is told why, and the web app says "doesn't have world-task
   access" instead of "declined" (new offer state `NoPermission`). A waiting task's code card has **Send again** and
@@ -14,6 +18,15 @@ This is a human-readable record of capabilities merged into the V3 default branc
   `/knk task <code>` command. No migration. Checklist: [realtime smoke test § WT2 follow-ups](guides/realtime-smoke-test.md).
 
 ## 2026-11-04
+
+- **Page background: landing image 1 behind every page, on by default** — knk-web-app
+  `main` `1cbee21`, merged from `claude/page-background-image-231` (PandiO/knk-workspace#231; developer approved 2026-11-04 after the live
+  comparison, on by default). Every visitor can turn it off with the "Background image" item under the themes in the
+  cogwheel theme switcher (remembered per browser), per tab with `?bg=off`, or for a whole build with
+  `REACT_APP_PAGE_BACKGROUND=off`. The page backdrop (75 %), cards and tables (85–92 % per theme) and the auth backdrop
+  (75 %) turn translucent over a 104 kB AVIF / 153 kB WebP copy of the image; fields, menus, dialogs and sticky bars
+  stay solid. Text keeps WCAG AA over the image's darkest and lightest pixel (contrast test extended). The landing page
+  keeps its slideshow and loads image 1 once. Guide: [guides/design-themes-comparison.md](guides/design-themes-comparison.md) § 7.
 
 - **World tasks and the realtime channel merged** — 2026-11-04 at the developer's request after the smoke tests of #180 (all steps work or accepted) and #181 WT2 (works or accepted; follow-ups for step 6 and 10 filed): knk-web-api `master` `2258df5`, knk-plugin `main` `e1b6a7a9`, knk-web-app `main` `d0c2ba8`, knk-workspace `main`. Merges `claude/world-task-hardening` and `claude/realtime-signalr` (S1, S2, WT2, S3); one additive migration (`AddWorldTaskHardening`, back up first: the first sweep removes week-old sessions without a draft). The plugin keeps `realtime.enabled: false` until set; an existing server `config.yml` needs the `realtime:` block added by hand, and the web app needs `npm install` (new `@microsoft/signalr`). S1, S2 and S3 were not run as checklist sections. The five entries below were written for the feature branches; branch names in them are historical.
 - **Realtime channel, S1 foundation** ([PandiO/knk-workspace#178](https://github.com/PandiO/knk-workspace/issues/178), merged 2026-11-04): SignalR hubs in the API (`/api/hubs/game`
