@@ -1,7 +1,7 @@
 # Siege Survival implementation chain — progress report
 
-**Status:** S1 and S2 in review (pushed 2026-11-03, knk-plugin `claude/siege-survival` `b5f86586`, core only, no live test); chain paused — G1, S3 and S4 wait for merges (see "Waiting for the developer")
-**Last updated:** 2026-11-03 (coordinator: S1/S2 verified, chain paused)
+**Status:** S1 and S2 in review (knk-plugin `claude/siege-survival`, updated from `main` 2026-11-05, head `34c7bf70`); **S4 running** (phase 1 contracts, migration deferred until #167 merges); G1 and S3 wait for #213 and the arena-duels decision
+**Last updated:** 2026-11-05 (coordinator: gate re-check, branch update, S4 started)
 **Charter:** [SIEGE_SURVIVAL_CHAIN.md](../ai-agents/handoffs/SIEGE_SURVIVAL_CHAIN.md) · **Coordinator prompt:**
 [2026-11-03-siege-survival-coordinator-prompt.md](../ai-agents/handoffs/2026-11-03-siege-survival-coordinator-prompt.md) ·
 **Plan:** [IMPLEMENTATION_PLAN.md §2a](../specs/siege-survival/IMPLEMENTATION_PLAN.md#2a-delivery-order-and-merge-gates-2026-11-03) ·
@@ -15,6 +15,21 @@ knk-workspace `main` `84a5a63` (re-check: later merges on the trunks happen; eac
 (The coordinator keeps this list current: links in review with their checklist location, merges that open the next gate,
 flagged decisions.)
 
+- **2026-11-05 gate re-check** (plugin `main` `33122cf4`, API `master` `2e3dfeb`, web app `main` `a7b231d`): #180
+  `claude/world-task-hardening` and `claude/realtime-signalr` are **merged** in all repos (0 ahead). Still open: #167
+  `claude/alpha-run-1-gates` (1 commit per repo, in review since 2026-10-27; **trial merge into every trunk: 0 conflicts**),
+  #213 `claude/siege-pregame-gate-view` (plugin 5 ahead / 25 behind, conflicts with plugin `main` in `knk-paper/build.gradle.kts`
+  and `KnKPlugin.java`; API and web app stack on #167), `claude/arena-duels` (plugin 23 ahead / 71 behind). So **G1 and S3 stay
+  closed**; **S4's gate is half open** (#180 yes, #167 no).
+- **S4 started 2026-11-05 at the developer's request** ("start the next link") with one coordinator deviation: **no migration in
+  S4**. The S4 gate exists to keep the EF migration chain linear behind #167's `20261027150000_AddGatePassThroughStyles`; S4
+  therefore adds entities, DbContext mapping, DTOs, services, controllers, readiness, form seeds and api-client DTOs, and the
+  one additive migration (`dotnet ef migrations add AddSiegeSurvivalPhase1`) is a small coordinator step **right after #167
+  merges**. Until then a database has no survival tables (API tests use the InMemory provider). **Merging #167 is now the one
+  merge that unblocks the chain's next steps** (S4 migration, then S5 once S3 is done); #213 and the arena-duels decision open S3 and G1.
+- **Branch update 2026-11-05:** `origin/main` merged into knk-plugin `claude/siege-survival` (`34c7bf70`; one conflict in
+  `ArchitectureGuardTest` — main added `"realtime"` to the Bukkit-free packages, both entries kept). Build green: knk-core 2638,
+  knk-api-client 321 (2 skipped), knk-paper 2504 (18 skipped), 0 failures.
 - **S1 and S2 are in review, nothing to live-test.** Both are core-only (knk-core, Bukkit-free, unit tests): knk-plugin
   `claude/siege-survival` `b5f86586` (S1 commits `7c460647`, `a0425700`, `ba074b8c`; S2 commits `662689bc`, `8517d844`,
   `8cf2761e`; S1 merged S2 before its push). Coordinator verification build on `b5f86586`: knk-core 2433 → 2595 tests
@@ -72,6 +87,11 @@ web app `main` `b770597`). A gate is open only when every branch it names is at 
 
 Result: **G1, S3 and S4 are closed**; S1 and S2 (no gate) start now. The heads match the ones recorded in plan §2a.
 
+Re-check 2026-11-05 (plugin `main` `33122cf4`, API `master` `2e3dfeb`, web app `main` `a7b231d`): `claude/world-task-hardening` 0/0/0 ahead
+(merged), `claude/realtime-signalr` 0/0/0 ahead (merged), `claude/alpha-run-1-gates` still 1/1/1 ahead (trial merge clean in all
+three), `claude/siege-pregame-gate-view` plugin 5 ahead (`231da73f`), API 2 (`32c0773`), web app 4 (`8f518aa`), `claude/arena-duels`
+unchanged. `claude/siege-survival` plugin `34c7bf70` (8 ahead, 0 behind after the update).
+
 ## Summary
 
 Status values: `ready` (gate open), `waiting: <gate>`, `in progress`, `in review` (pushed, waiting for the developer's
@@ -83,7 +103,7 @@ test), `merged`, `blocked: <reason>`.
 | S2 | NPC platform §5b core: combat and speed profiles, modifier pipeline by source, clamping with a report | plugin `claude/siege-survival`, `knk-core/.../core/npc/` only | in review | create_session session_01R1w2UxEVJTzDXBdKWkGihy, 2026-11-03 | plugin `8cf2761e` / — / — / — | core 2433 → 2494 (+61, 0 failures); api-client 288, paper 2385 unchanged |
 | G1 | Animated rebuild for all destroyed gates (gate Decision 6), size-aware evacuation | API, plugin, web app `claude/gate-animated-rebuild` | waiting: #167, #213, realtime merged | — | — | — |
 | S3 | Siege prerequisites: visibility arbiter, NPC gate-damage cause, weighted capture presence, mob kills out of PvE statistics | plugin `claude/siege-survival` | waiting: realtime, #213 merged; arena-duels merged or caught up | — | — | — |
-| S4 | Phase 1 contracts/config: entities, migrations, DTOs, form seeds, readiness; api-client DTOs | API, plugin api-client `claude/siege-survival` | waiting: #167, #180 merged | — | — | — |
+| S4 | Phase 1 contracts/config: API entities (no migration yet), DTOs, services, readiness, form seeds; api-client DTOs | API, plugin api-client `claude/siege-survival` | in progress (migration deferred until #167 merges) | create_session session_01R1w2UwPn7oGLNgHm17vf7C, 2026-11-05 | — | — |
 | S5 | Phase 2 runtime slice (mob spawning and goals, §5b adapters, ghost state, waves, end conditions) | plugin `claude/siege-survival` | waiting: S1–S4 on the branch | — | — | — |
 | S6 | Phase 3 repairs and frontier (sneak repair input, provisional) | plugin `claude/siege-survival` | waiting: G1 merged | — | — | — |
 | S7 | Phase 4 equipment modes, economy, Mystery Box | API, plugin `claude/siege-survival` | waiting: S4 | — | — | — |
@@ -107,6 +127,9 @@ test), `merged`, `blocked: <reason>`.
   push) and was applied by the coordinator; the #41 comment for S1 was posted by the coordinator. Baseline Maven Central
   downloads hit HTTP 429 through the proxy several times; `--max-workers=1` with
   `-Dorg.gradle.internal.repository.max.tentatives=12 -Dorg.gradle.internal.repository.initial.backoff=4000` got through.
+- 2026-11-05: developer asked to update the branch and start the next link. Branch updated (`34c7bf70`, green). Gate re-check
+  above; S4 started as session_01R1w2UwPn7oGLNgHm17vf7C with the migration deferred (decision and reasons under "Waiting for the
+  developer"). #167 is a clean merge everywhere and is the merge to do next.
 - Next coordinator run: re-run the gate check; start G1 (`claude/gate-animated-rebuild`, from the trunks) as soon as #167,
   #213 and realtime are merged, S4 as soon as #167 and #180 are merged, S3 as soon as realtime, #213 and the arena-duels
   decision are in; then S5 (first live checkpoint), S6–S8 batched into one checklist, S9 last.
