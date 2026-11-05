@@ -2,6 +2,9 @@
 
 **Status:** Draft, **rev. 2**. Rev. 2 takes in the developer's 18 notes of 2026-10-09 (listed in the revision
 history). The decisions in §14 are open; each one has a recommendation. Nothing is implemented.
+**Superseded in part (2026-11-05):** the developer's voice design review is recorded in
+[DECISIONS_2026-11-05.md](DECISIONS_2026-11-05.md), which is authoritative where it differs from this document
+until rev. 3.
 **Last updated:** 2026-10-09
 **Companion documents:**
 - [PRODUCTION_KINDS.md](PRODUCTION_KINDS.md): farms, loggers, quarries, mines, fisheries, flower farms and florists,
