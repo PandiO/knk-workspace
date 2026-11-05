@@ -1,7 +1,7 @@
 # Realtime channel (SignalR) between knk-web-api, knk-plugin and knk-web-app
 
 **Status:** Accepted design (developer decisions 2026-10-26, §12). S1 (§4–§5), S2 (§6.1), WT1 (§8.2, §8.7, #180; as built: [world-tasks/README.md § Lifecycle](../world-tasks/README.md#lifecycle-and-endpoints-pandioknk-workspace180)), WT2 (§8.3–§8.6, #181; as built: §8.8) and S3 (§6.2–§6.4, #182; as built: §6.8) **merged into the default branches 2026-11-04** (API `master` `2258df5`, plugin `main` `e1b6a7a9`, web app `main` `d0c2ba8`) after the developer's smoke tests of #180 and WT2; `realtime.enabled: false` by default in the plugin. S4–S5 not started.
-**Last updated:** 2026-11-05 (#239 offer permission check, #240 Send again merged); 2026-11-04 (#239, #240 on a feature branch); 2026-11-02 (S3 built: §6.8); 2026-11-02 (WT2 built: §8.8); 2026-11-01 (status: WT1 built, #180); 2026-10-26 (S2 built: implementation notes in §6.7; S1 built: §4.6; decisions recorded; §8.3 delivery and busy flow, §8.7 tasks anchored to the draft, §4.3 publishing path)
+**Last updated:** 2026-11-05 (#31 rest on branch `claude/siege-startup-retry-31`: §6.8 note); 2026-11-05 (#239 offer permission check, #240 Send again merged); 2026-11-04 (#239, #240 on a feature branch); 2026-11-02 (S3 built: §6.8); 2026-11-02 (WT2 built: §8.8); 2026-11-01 (status: WT1 built, #180); 2026-10-26 (S2 built: implementation notes in §6.7; S1 built: §4.6; decisions recorded; §8.3 delivery and busy flow, §8.7 tasks anchored to the draft, §4.3 publishing path)
 **Issue:** [PandiO/knk-workspace#66](https://github.com/PandiO/knk-workspace/issues/66) (KNG-57, priority high); phase issues in
 [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md). Related: #76 (KNG-170, rank changes don't reach the server),
 #121 (KNG-262, cache TTLs), #31 (KNG-202, startup-only siege work), #35 (KNG-176), #34 (KNG-246), #145 (KNG-249), #75.
@@ -348,6 +348,11 @@ onto the hub" → **later, phase S6**.
   (`SiegeGateController.retryRecovery`; waits while a lockdown of this run is active), runtime config + title
   brackets (`SiegeService.retryStartup`). Each runs at startup as before; one that failed runs again on every hub
   (re)connect (resync step "siege startup work"), in that order, until it got through. With the hub off, unchanged.
+  *2026-11-05 (#31 rest, UX chain 2 link R2, branch `claude/siege-startup-retry-31`, not merged):* the same steps also
+  run on every API connectivity transition into UP (UNKNOWN→UP included) and on a fallback retry (30 s, 1 min, 2 min,
+  then every 5 min while pending and not DOWN), hub on or off, through `core/realtime/StartupWorkRetry`; the resync
+  step calls it too, and `PendingStartupWork.runPending` is single-flight (a call during a pass shares one queued pass),
+  so two triggers never run a step twice.
 - **Slower re-syncs (Q4).** While connected these now run `realtime.fallback-poll-multiplier` times less often: domain
   access sync, game settings re-read, lootbox runtime refresh, road tiles and meta, telemetry config poll, grade
   catalogue. The entity cache TTLs (#121) and the permission/user TTLs are unchanged.

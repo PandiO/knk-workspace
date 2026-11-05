@@ -4,7 +4,15 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
-(Nothing at the moment.)
+- **Siege startup work retried when the API is back, also with the realtime hub off** —
+  [PandiO/knk-workspace#31](https://github.com/PandiO/knk-workspace/issues/31) (KNG-202, the rest after #182), knk-plugin
+  branch `claude/siege-startup-retry-31` (contains the unmerged R1 branch `claude/realtime-erasure-184`). When the API
+  was down at server start, the siege's startup-only work (abort the previous run's unfinished matches, restore gates a
+  crash left locked, fetch the runtime config with its lobbies and the title brackets) now runs again by itself once the
+  API connectivity turns UP, in that order, and on a fallback retry (30 s, 1 min, 2 min, then every 5 min) while
+  anything is left and the API is not DOWN. `/siege admin reload` is no longer needed. With the hub on, the reconnect
+  and the UP transition share one runner (each step runs once). A match this run created is never aborted. No new
+  setting, no API change. Checklist: [API outage smoke test § #31](guides/api-outage-smoke-test.md).
 
 ## 2026-11-05
 
