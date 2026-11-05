@@ -4,6 +4,20 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Web app admin navigation: grouped admin sidebar, breadcrumbs and titles from one route table** —
+  [PandiO/knk-workspace#30](https://github.com/PandiO/knk-workspace/issues/30) (chain 2 link W4; fixes
+  [#262](https://github.com/PandiO/knk-workspace/issues/262)), knk-web-app `claude/admin-ia-30` (**contains** W1's
+  `claude/nav-entity-setup-197` and W3's `claude/data-primitives-187`, which contains W2's #33: merging it merges
+  #197, #33 and #187 too), not merged, not live-tested. One route-meta table (`src/routes/routeTable.ts`) gives
+  every page its layout (public, player, admin; each with its own error boundary), its gate (the same nodes as
+  before), its tab title (ten pages had none) and its place in the navigation. The top bar has Home, Leaderboards,
+  Guides and Admin; the admin pages are in a grouped sidebar (Content, World, Players & support, Economy, Settings,
+  Owner; an "Admin pages" menu below 1280 px) that shows each page only with the node its API checks, so the
+  economy pages and Orphaned Locations no longer need the moderator node to be found and Invitations finally shows.
+  `/admin` lists the same pages with a line each. Every admin page has a breadcrumb trail ("Economy › Balance event
+  log › Transaction", "Content › Dashboard › Town › Entity setup"). URLs unchanged. Theme tokens only (raw colour
+  classes 2710 → 2705). No API change. Checklist: [admin navigation smoke test](guides/admin-navigation-smoke-test.md).
+
 - **Web app data and format primitives: one table and pager, one date/number format, tied labels, a settings page
   with unsaved-change handling** — [PandiO/knk-workspace#187](https://github.com/PandiO/knk-workspace/issues/187),
   knk-web-app `claude/data-primitives-187` (chain 2 link W3; **contains W2's branch**, so merging it merges #33 too).

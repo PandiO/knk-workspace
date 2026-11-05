@@ -72,7 +72,7 @@ Save (n), and ask before you lose changes.
    asks the same way; without a change it reloads at once.
 6. Change two values and **Save (2)**: a toast "Saved 2 settings." at the bottom right, the header is back to "No
    unsaved changes." with the new "Last saved" time. Reload the page: the values stayed.
-7. Game Settings: the same header ("Game Manager Settings"). Change the MOTD: "1 unsaved change.", Server List MOTD
+7. Game Settings: the same header ("Game Manager Settings"; "Game settings" since #30). Change the MOTD: "1 unsaved change.", Server List MOTD
    gets "Changed". Change a world's weather: "2 unsaved changes.", that world's card gets "Changed". Save: toast "Game
    settings saved.". Clicking a label (Join Announcement, Default GameMode, Clear Weight …) puts the cursor in its field.
 8. Game Settings refusal: pick a hub spawn in another world (or anything the API refuses) and Save: the API's reason

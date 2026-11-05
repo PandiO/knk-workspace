@@ -1,7 +1,7 @@
 # Dashboard as the CRUD hub: return, submit pending state, toast, New/Configure, breadcrumbs, detail header, Create New (#177 links 1–2, #58, #81, #39) — smoke test
 
 **Status:** Run by the developer on 2026-10-26 on knk-web-app `main` `7ba0f4b`: all steps work or accepted (findings below)
-**Last updated:** 2026-11-05 (section 14a: no "Entity setup" nav link, #197, knk-web-app `claude/nav-entity-setup-197`, not merged); 2026-11-03 (section 9c: explorer filter, #226, merged 2026-11-04 into knk-web-app `main` `738c16a`); 2026-11-03 (section 9b: favourites are copies, #225, merged 2026-11-03 into knk-web-app `main` `a6d83c9`, live-tested 2026-11-03); 2026-10-26 (section 8a: header row spacing, #195, knk-web-app `claude/dashboard-header-195`, merged into `main` `c3c0c9f`); 2026-10-26 (section 9a: one scrollbar and favourites, #194, knk-web-app `claude/dashboard-explorer-194`, merged into `main` `c3c0c9f`); 2026-10-26 (sections 8–14 added for #177 link 2 = chain link 3); section 10a: no type overview card above an open form, #227, merged 2026-11-04 into knk-web-app `main` `738c16a`); 2026-10-26 (sections 8–14 added for #177 link 2 = chain link 3)
+**Last updated:** 2026-11-05 (section 14a: note for #30, admin sidebar); 2026-11-05 (section 14a: no "Entity setup" nav link, #197, knk-web-app `claude/nav-entity-setup-197`, not merged); 2026-11-03 (section 9c: explorer filter, #226, merged 2026-11-04 into knk-web-app `main` `738c16a`); 2026-11-03 (section 9b: favourites are copies, #225, merged 2026-11-03 into knk-web-app `main` `a6d83c9`, live-tested 2026-11-03); 2026-10-26 (section 8a: header row spacing, #195, knk-web-app `claude/dashboard-header-195`, merged into `main` `c3c0c9f`); 2026-10-26 (section 9a: one scrollbar and favourites, #194, knk-web-app `claude/dashboard-explorer-194`, merged into `main` `c3c0c9f`); 2026-10-26 (sections 8–14 added for #177 link 2 = chain link 3); section 10a: no type overview card above an open form, #227, merged 2026-11-04 into knk-web-app `main` `738c16a`); 2026-10-26 (sections 8–14 added for #177 link 2 = chain link 3)
 **Issues:** [PandiO/knk-workspace#177](https://github.com/PandiO/knk-workspace/issues/177) (links 1 and 2) ·
 [#58](https://github.com/PandiO/knk-workspace/issues/58) · [#81](https://github.com/PandiO/knk-workspace/issues/81) (detail
 page header) · [#39](https://github.com/PandiO/knk-workspace/issues/39) (Create New menu only)
@@ -252,7 +252,9 @@ looked like debug output.
 ## 14a. No "Entity setup" nav link (#197)
 
 Branch knk-web-app `claude/nav-entity-setup-197` (on `main` `a7b231d`); docs on knk-workspace
-`claude/nav-entity-setup-197`. Web app only: no API or plugin change, no migration, no setting. Log in as content
+`claude/nav-entity-setup-197`. **With #30** (`claude/admin-ia-30`, which contains this branch) the admin links moved
+from the bar to the admin sidebar: read "the nav's Dashboard" below as the sidebar's **Dashboard** (and the bar's
+**Admin**), see the [admin navigation smoke test](admin-navigation-smoke-test.md). Web app only: no API or plugin change, no migration, no setting. Log in as content
 staff (`knk.admin.content`) and check in the `current` and `brand` themes, with the page background on and off.
 
 1. The nav has **Dashboard** but no **Entity setup** link, in every width: labels, icons only and the menu button

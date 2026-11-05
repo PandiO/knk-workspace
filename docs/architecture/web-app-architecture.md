@@ -1,14 +1,17 @@
 # knk-web-app — Architecture
 
 **Status:** Living document — reflects actual code, updated in place on each rescan
-**Last updated:** 2026-11-05 (no "Entity setup" nav link, the Dashboard link is current on the content-tool pages — #197, branch `claude/nav-entity-setup-197`, not merged); 2026-11-05 (data and format primitives: `DataTable`/`Pager`, `utils/format.ts`, `Field`, `SettingsPage` shell with dirty state — #187, branch `claude/data-primitives-187`, stacked on #33, not merged); 2026-11-05 (feedback primitives: one accessible `Dialog`, `ConfirmDialog` with danger and a reason, general toasts, all overlays moved — #33, branch `claude/feedback-primitives-33`, not merged); 2026-11-05 (#239 offer permission check, #240 Send again merged); 2026-11-04 (#239, #240 on a feature branch); 2026-11-02 (`src/realtime/RealtimeProvider`, world tasks and catalogue scans over the web hub — #181, branch `claude/realtime-signalr`); 2026-11-01 (world tasks anchored to the draft, cancel/expired states, task code, builder task types — #180, branch `claude/world-task-hardening`); 2026-09-18 (scan basis: `knk-web-app` @ `4ff5dc6`, branch `claude/web-app-codebase-scan-4yqibi`); spot edits 2026-10-09 (ObjectTypeExplorer, KNG-61), 2026-10-10 (FormWizard Boolean fields, KNG-53), 2026-10-12 (FormWizard child forms, KNG-133, KNG-134; List edit load, step header, List validation, KNG-135, KNG-137, KNG-164; form session registry, KNG-136; cancel / delete-draft prompt, KNG-162; form configuration export/import, KNG-138); 2026-10-17 (form wizard chain merged to `main`; smoke-test follow-ups KNG-166..169, KNG-172, KNG-173: step strip, confirmations and refusals, rule builder parent forms, picker columns, metadata refresh); 2026-10-22 (display configuration export/import; KNG-195 hybrid picker submit); 2026-10-23 (step completion conditions run, KNG-186); 2026-10-23 (validation result log, batch validate, Re-check, KNG-269); 2026-10-25 (toast region, world-task polling; UX re-evaluation in `reports/2026-10-25-web-app-ux-reevaluation.md`); 2026-10-26 (dashboard type in the URL, `returnTo`, submit pending state, success toast — PandiO/knk-workspace#177 link 1, #58); 2026-10-26 (dashboard header New/Configure, flat explorer with marker, open form without the explorer + breadcrumb, detail page header, metadata-driven Create New, "Entity setup" — #177 link 2, #81, #39); 2026-10-26 (dashboard explorer: one scrollbar, favourite types — #194, branch `claude/dashboard-explorer-194`, merged into `main` `c3c0c9f`), 2026-10-26 (dashboard header row spacing — #195, branch `claude/dashboard-header-195`, merged into `main` `c3c0c9f`); 2026-10-26 (data router, unsaved-changes guard, sticky footer, blur validation + error summary, Save on any step in edit mode, single-line input, drafts owned by the login — #109, #186, #64 FormWizard part); 2026-10-27 (unsaved changes compared by value across all steps, Next's progress save no longer counts as saved — #109 fix round); 2026-11-01 (dashboard table state in the URL, rows as links, `aria-sort`, lootbox/moderation tab in the URL, "Drafts (n)" and "New with" — PandiO/knk-workspace#39, #177 follow-up, merged 2026-11-03); 2026-11-02 (design tokens and switchable themes — #95, merged 2026-11-03); 2026-11-03 (fix round after the live comparison: orange brand primary, heading font on player pages only, full-bleed auth pages); 2026-11-03 (explorer favourites are copies — #225, branch `claude/explorer-favourite-copies-225`, not merged); 2026-11-03 (explorer filter: display / form configuration — #226, merged 2026-11-04); 2026-11-03 (open form without the type overview card — #227, merged 2026-11-04)
+**Last updated:** 2026-11-05 (admin information architecture: route-meta table, public/player/admin layout routes, grouped admin sidebar, breadcrumbs, `/admin` overview — #30, branch `claude/admin-ia-30`, stacked on #197 and #187 (which contains #33), not merged); 2026-11-05 (no "Entity setup" nav link, the Dashboard link is current on the content-tool pages — #197, branch `claude/nav-entity-setup-197`, not merged); 2026-11-05 (data and format primitives: `DataTable`/`Pager`, `utils/format.ts`, `Field`, `SettingsPage` shell with dirty state — #187, branch `claude/data-primitives-187`, stacked on #33, not merged); 2026-11-05 (feedback primitives: one accessible `Dialog`, `ConfirmDialog` with danger and a reason, general toasts, all overlays moved — #33, branch `claude/feedback-primitives-33`, not merged); 2026-11-05 (#239 offer permission check, #240 Send again merged); 2026-11-04 (#239, #240 on a feature branch); 2026-11-02 (`src/realtime/RealtimeProvider`, world tasks and catalogue scans over the web hub — #181, branch `claude/realtime-signalr`); 2026-11-01 (world tasks anchored to the draft, cancel/expired states, task code, builder task types — #180, branch `claude/world-task-hardening`); 2026-09-18 (scan basis: `knk-web-app` @ `4ff5dc6`, branch `claude/web-app-codebase-scan-4yqibi`); spot edits 2026-10-09 (ObjectTypeExplorer, KNG-61), 2026-10-10 (FormWizard Boolean fields, KNG-53), 2026-10-12 (FormWizard child forms, KNG-133, KNG-134; List edit load, step header, List validation, KNG-135, KNG-137, KNG-164; form session registry, KNG-136; cancel / delete-draft prompt, KNG-162; form configuration export/import, KNG-138); 2026-10-17 (form wizard chain merged to `main`; smoke-test follow-ups KNG-166..169, KNG-172, KNG-173: step strip, confirmations and refusals, rule builder parent forms, picker columns, metadata refresh); 2026-10-22 (display configuration export/import; KNG-195 hybrid picker submit); 2026-10-23 (step completion conditions run, KNG-186); 2026-10-23 (validation result log, batch validate, Re-check, KNG-269); 2026-10-25 (toast region, world-task polling; UX re-evaluation in `reports/2026-10-25-web-app-ux-reevaluation.md`); 2026-10-26 (dashboard type in the URL, `returnTo`, submit pending state, success toast — PandiO/knk-workspace#177 link 1, #58); 2026-10-26 (dashboard header New/Configure, flat explorer with marker, open form without the explorer + breadcrumb, detail page header, metadata-driven Create New, "Entity setup" — #177 link 2, #81, #39); 2026-10-26 (dashboard explorer: one scrollbar, favourite types — #194, branch `claude/dashboard-explorer-194`, merged into `main` `c3c0c9f`), 2026-10-26 (dashboard header row spacing — #195, branch `claude/dashboard-header-195`, merged into `main` `c3c0c9f`); 2026-10-26 (data router, unsaved-changes guard, sticky footer, blur validation + error summary, Save on any step in edit mode, single-line input, drafts owned by the login — #109, #186, #64 FormWizard part); 2026-10-27 (unsaved changes compared by value across all steps, Next's progress save no longer counts as saved — #109 fix round); 2026-11-01 (dashboard table state in the URL, rows as links, `aria-sort`, lootbox/moderation tab in the URL, "Drafts (n)" and "New with" — PandiO/knk-workspace#39, #177 follow-up, merged 2026-11-03); 2026-11-02 (design tokens and switchable themes — #95, merged 2026-11-03); 2026-11-03 (fix round after the live comparison: orange brand primary, heading font on player pages only, full-bleed auth pages); 2026-11-03 (explorer favourites are copies — #225, branch `claude/explorer-favourite-copies-225`, not merged); 2026-11-03 (explorer filter: display / form configuration — #226, merged 2026-11-04); 2026-11-03 (open form without the type overview card — #227, merged 2026-11-04)
 **Source scan:** `docs/reports/web-app-scan-2026-09-18.md`
 
 ## Stack
 
 - React 18 + TypeScript, bootstrapped with **Create React App** (`react-scripts` 5.0.1) —
   not Vite, not Next.js.
-- Routing: `react-router-dom` v7, all routes defined in `src/App.tsx` (`Routes`/`Route`). Since #109
+- Routing: `react-router-dom` v7. Since #30 (branch `claude/admin-ia-30`) every route is an entry of the
+  **route-meta table** `src/routes/routeTable.ts` and `src/routes/AppRoutes.tsx` builds the `Routes` from it
+  (see [Routes, layouts and the admin sidebar](#routes-layouts-and-the-admin-sidebar)); `src/App.tsx` only
+  maps each route id to its page. Since #109
   `App` mounts a **data router** (`createBrowserRouter` with one catch-all route around those `<Routes>`,
   `RouterProvider`) instead of `BrowserRouter`, because `useBlocker` (the form wizard's leave guard) only
   works inside one. Tests that mock `react-router-dom` or use a `MemoryRouter` still work: the guard
@@ -312,8 +315,9 @@ entity. Two parallel generic engines carry most of the CRUD surface:
    **Open form** (#177 link 2): while the wizard is open, `FormWizardPage` hides the
    `ObjectTypeExplorer` and shows a breadcrumb (`components/Breadcrumbs.tsx`) built by
    `utils/breadcrumbs.ts` `formTrail` from `returnTo` ("Dashboard › Town › Edit Cinix"; without
-   `returnTo`: "Entity setup › Town › New Town"). The trail is plain `{label, to?}[]` data so the admin
-   layout (#30) can render it later; `useEntityLabel` fetches the edited entity's name (else "#id"). A
+   `returnTo`: "Entity setup › Town › New Town"). The trail is plain `{label, to?}[]` data; inside the admin
+   layout it starts with the group crumb ("Content", #30). Since #30 the configuration lists show
+   "Dashboard › Town › Entity setup" (`entitySetupTrail`, LW1-2); `useEntityLabel` fetches the edited entity's name (else "#id"). A
    crumb asks "Leave this form?" first when the form has unsaved changes (#109). The configuration lists keep the explorer.
    The type overview card (`FormWizard/EntityMetadataNavigator`: name, field count, "Fields") shows only on the
    configuration lists, not above an open form (#227); the breadcrumb then sits in the form card's centred column
@@ -418,19 +422,62 @@ display configuration's name: the entity's own name (`utils/entityLabel.ts`), it
 **Delete** with a confirmation naming the entity (success toast, then Back's target). The tab title is
 "{name} · {Type}". `DisplayWizard` takes the header as `renderHeader(entity)`.
 
-**Navigation** (`components/Navigation.tsx`): one list `NAV_LINKS`, each link shown only to holders of its
-node (`node`, `usePermission`) or of the moderator node (`staffOnly`); `navLayout.ts` picks labels, icons or a
-menu button by measured width. Content staff get one content link, **Dashboard**: since #197 the Entity setup page
-(`/forms`), the form/display builders it opens (`/admin/form-configurations/*`, `/admin/display-configurations/*`)
-and the detail pages (`/display/*`) have no link of their own, and the Dashboard link is the current one
-(`aria-current="page"`, also in the menu panel) on them (`DASHBOARD_ACTIVE_ALSO`, matched per path segment by
-`isAtOrUnder`). Every route the Entity setup page offers is per type, and its explorer lists the same types as the
-dashboard's (both `useEntityMetadata` `baseMetadata`; types without a display configuration are marked on the
-dashboard, not left out), so the ⚙ reaches all of it. Pages without a nav link and their only way in (2026-11-05):
-Balance log, Currency policy and Currency alerts, Orphaned Locations — buttons on Moderation (`/admin/users`, needs
-`knk.admin.user.manage`), so holders of only their own nodes reach them by URL (#30); the account pages — the
-account menu; the enchantment guide — `/guides`; transaction details, siege matches and public profiles — links
-in lists. The other top-level pages are reached only through the nav.
+**Navigation** (`components/Navigation.tsx`, since #30): the bar's links come from the route-meta table
+(`topNav`): **Home**, **Leaderboards**, **Guides** and, for anyone holding the node of at least one admin page,
+**Admin** (`/admin`). `navLayout.ts` picks labels, icons or a menu button by measured width. A link is the current
+one (`aria-current="page"`, also in the menu panel) on its page and the pages below it in the table (`parent`: a
+public profile lights up Leaderboards, the enchantment guide Guides); Admin on every page of the admin layout. The
+admin pages themselves are in the admin sidebar (next section); the old `NAV_LINKS`, its hand-kept `nodeAccess`
+map (which missed the invitations node, #262) and #197's `DASHBOARD_ACTIVE_ALSO` list are gone. Entity setup
+(`/forms`), the builders and the detail pages have no link of their own: they sit under Dashboard in the table, so
+Dashboard is the current sidebar link there (LW1-1). Pages reached only from inside other pages: the account pages
+(account menu), transaction details, siege matches and public profiles (links in lists), Entity setup (the
+dashboard's ⚙ per type, "All saved progress").
+
+## Routes, layouts and the admin sidebar
+
+PandiO/knk-workspace#30 (chain 2 link W4, branch `claude/admin-ia-30`, not merged).
+
+- **Route-meta table** (`src/routes/routeTable.ts`, `ROUTES`): one entry per route with `path`, `layout`
+  (`public` | `player` | `admin`), `access` (`public`, `login`, `staff` + node, `owner` + node), `title`, and for
+  admin pages `group` (Content, World, Players & support, Economy, Settings, Owner), `sidebar` (icon and a one-line
+  description; only these are listed), `parent` (breadcrumb parent and link highlighting) and `breadcrumbs`
+  (`page` when the page draws its own trail: open form, detail page). `topNav` marks the bar's links. `REDIRECTS`
+  keeps old URLs (`/admin/form-configurations`, `/admin/display-configurations` → `/forms`). Helpers: `matchRoute`
+  (react-router's ranking, so `/admin/users/balance-log` is the balance log, not a player profile), `lineageOf`,
+  `isWithin`, `trailFor`, `SIDEBAR_ROUTES`, `ADMIN_NODES`, `TOP_NAV_ROUTES`. URLs and gates are the ones `App.tsx`
+  had (pinned in `routes/__tests__/routeTable.test.ts`); a new page is one entry here plus its element in `App.tsx`
+  (`RouteElements` is typed by the table's ids, so a missing page fails `tsc`).
+- **Gates** (`routes/RouteGate.tsx`): `login` → `ProtectedRoute`, `staff` → `StaffRoute` (the node; "Staff only"
+  without it), `owner` → `OwnerRoute` (exact grants, D24). Display only: the API checks the same node.
+- **Layout routes** (`src/layouts/`, built by `routes/AppRoutes.tsx`): `PublicLayout` (landing, auth pages,
+  invites, leaderboards, guides, public profiles, siege matches, the deletion confirmation, 404), `PlayerLayout`
+  (`/account`, `/account/link`, `/account/transactions`), `AdminLayout` (`/admin`, the dashboard, Entity setup,
+  builders, detail pages, `/admin/*`, `/owner/*`). Each has the page frame (`PageFrame`; admin is wider,
+  `max-w-screen-2xl`), `RouteTitle` and its own `RouteErrorBoundary` (X-4): a crash leaves the bar and the sidebar
+  working. An outer boundary in `App.tsx` only catches a crash of a layout itself. Logged out there is still no bar
+  (LANDING_PAGE_NAVIGATION_ARCHITECTURE).
+- **Titles**: `RouteTitle` sets `document.title` from the entry ("Road network · Knights & Kings"). It renders
+  before the page, so a page with a better title still sets its own with `usePageTitle` (the detail page: entity
+  and type; Entity setup; the landing page). The static `usePageTitle` calls in the pages are gone; the ten pages
+  that had no title (Roads, Mail log, Invitations, Minecraft catalogue, Leaderboards, the owner pages, Orphaned
+  Locations, public profiles) get one.
+- **Admin sidebar** (`components/admin/AdminNavList.tsx` in `AdminLayout`): from `xl` a sticky panel left of the
+  page; below `xl` an **Admin pages** button opens the same list (Escape, a click outside or a choice closes it).
+  `routes/useAdminNav.ts` lists every sidebar page whose node the user holds, by group, through
+  `usePermissions(ADMIN_NODES)` (`hooks/useStaffAccess.ts`: one cached check per node, shared with `usePermission`
+  and the route gates). Economy pages and Orphaned Locations are listed by their own node (they used to be buttons
+  on Moderation only); Invitations shows for `knk.admin.invites` (#262). A page's link is current on the pages
+  below it (`parent`): Player moderation on a profile, Balance event log on a transaction, Dashboard on Entity
+  setup, the builders and detail pages. The `/admin` overview (`pages/admin/AdminHomePage.tsx`) is the same list
+  as a page, by group with each page's description; no sidebar next to it; "No admin pages" without any node.
+- **Breadcrumbs**: `AdminLayout` draws `trailFor(route)` above the page: the group (linking to its section on
+  `/admin`, `#admin-group-<id>`), the parents, the page ("Economy › Balance event log › Transaction"). A parent
+  with the page's own title is left out (`/dashboard/Town` is "Content › Dashboard"). Pages with
+  `breadcrumbs: 'page'` draw their own trail; the layout puts the group crumb in front through
+  `BreadcrumbPrefixContext` (`components/Breadcrumbs.tsx`), so every admin trail starts with its group.
+- **Height**: the dashboard and Entity setup fill the window (`ObjectDashboard.css`); `--admin-chrome` (the
+  measured height of the row with the menu button and trail) is taken off, so the page doesn't scroll.
 
 **Create New menu** (`components/CreateNewMenu.tsx`, #177 link 2 / #39 CRUD-2): built from the entity
 metadata — every type with a create client in `utils/entityApiMapping.ts`
@@ -470,9 +517,11 @@ them ("Use built-in columns"; the API stores an empty list as none).
 
 ```
 src/
-  App.tsx                 — route table + top-level error toast plumbing
+  App.tsx                 — maps each route id to its page; the shell (bar, toasts, background)
+  routes/                 — routeTable.ts (route-meta table), AppRoutes, RouteGate, useRouteMeta, useAdminNav (#30)
+  layouts/                — PublicLayout, PlayerLayout, AdminLayout (sidebar + breadcrumbs), PageFrame, RouteTitle (#30)
   pages/                  — one component per route (see reading guide for the table)
-    admin/                — GameSettingsPage (routed), EntityTypeConfigurationPage (NOT routed)
+    admin/                — the admin pages (AdminHomePage = /admin overview, #30)
     auth/                 — login/register/forgot/reset pages + barrel index.ts
   components/
     FormWizard/            — generic create/edit engine (config-driven)
@@ -600,8 +649,8 @@ a `REACT_APP_*` environment variable, matching the note already in this repo's
 - Two independent, only-partially-overlapping "which entities exist" registries
   (`config/objectConfigs.tsx` static map vs. the live `metadataClient` bundle) —
   adding an entity to one does not automatically add it to the other.
-- `pages/admin/EntityTypeConfigurationPage.tsx` is fully built but has no route in
-  `App.tsx` and no link in `Navigation.tsx` — currently unreachable in the running app.
+- ~~`pages/admin/EntityTypeConfigurationPage.tsx` is fully built but has no route~~ — the file no longer
+  exists (checked 2026-11-05, #30); every page is an entry of `routes/routeTable.ts`.
 - ~~`DisplayWizardPage`'s `edit`/`create` action handlers navigate to `/form/...`~~ —
   fixed: they go to `/forms/...` with a `returnTo` to the detail page (#177 link 2, #81).
 - `components/DynamicForm.tsx` and `components/ObjectView.tsx` are large (383 and 411
