@@ -4,7 +4,10 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
-(Nothing at the moment.)
+- Cleaving's gate numbers (gate damage bonus per level, charged strike at level I and per level, strike cooldown and its
+  change per level) are admin combat values, shown live on the Guides page; the plugin's `config.yml`
+  `gates.cleaving` keys are removed (PandiO/knk-workspace#259, branch `claude/cleaving-combat-values-259`; needs the
+  API migration `AddCleavingCombatValues` and form seed EnchantmentDefinition v5).
 
 ## 2026-11-05
 
