@@ -4,7 +4,13 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
-(Nothing at the moment.)
+- **No "Entity setup" link in the nav** — [PandiO/knk-workspace#197](https://github.com/PandiO/knk-workspace/issues/197)
+  (chain 2 link W1), knk-web-app `claude/nav-entity-setup-197`, not merged, not live-tested. The Entity setup page
+  (route `/forms`, unchanged) is opened with the dashboard's ⚙ on a type, the "Drafts (n)" menu's "All saved
+  progress" or by URL; the nav's **Dashboard** link is the current one there, on the form/display builders and on
+  detail pages. Nothing else was reachable only through that link: every part of the page is per type and its type
+  list is the dashboard's. Web app only, no migration, no setting. Checklist:
+  [dashboard return smoke test § 14a](guides/dashboard-return-smoke-test.md).
 
 ## 2026-11-05
 
