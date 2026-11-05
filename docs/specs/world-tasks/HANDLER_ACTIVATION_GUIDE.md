@@ -1,5 +1,11 @@
 # WorldTask Handler Activation Guide
 
+> **Status:** Historical design notes (before PandiO/knk-workspace#180, 2026-11-01). Where this file differs, the
+> [lifecycle section of README.md](README.md#lifecycle-and-endpoints-pandioknk-workspace180) is current: the task code is
+> checked on claim and unique among open tasks, a second claim answers 409, tasks expire, are released and cancelled,
+> the command is `/knk task <code>`, and the web app polls in `WorldBoundFieldRenderer` every 2 s (there is no
+> `TaskStatusMonitor`).
+
 ## Overview
 
 This guide explains how the WorldTask feature is activated from the web app when creating or editing entities, and what specific types/IDs need to be provided from the web app to the API.
@@ -122,7 +128,7 @@ Display output to admin:
 LinkCode: ABC123
 Minecraft Instructions:
 1. Join the server
-2. Type: /worldtask claim ABC123
+2. Type: /knk task ABC123
 3. Type: save
 ```
 
@@ -133,7 +139,7 @@ Minecraft Instructions:
 When the player claims the task, the plugin routes it:
 
 ```java
-// Player types: /worldtask claim ABC123
+// Player types: /knk task ABC123
 // Plugin calls:
 
 worldTasksApi.getByLinkCode("ABC123")
