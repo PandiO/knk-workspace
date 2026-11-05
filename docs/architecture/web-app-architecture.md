@@ -1,7 +1,7 @@
 # knk-web-app — Architecture
 
 **Status:** Living document — reflects actual code, updated in place on each rescan
-**Last updated:** 2026-11-05 (#239 offer permission check, #240 Send again merged); 2026-11-04 (#239, #240 on a feature branch); 2026-11-02 (`src/realtime/RealtimeProvider`, world tasks and catalogue scans over the web hub — #181, branch `claude/realtime-signalr`); 2026-11-01 (world tasks anchored to the draft, cancel/expired states, task code, builder task types — #180, branch `claude/world-task-hardening`); 2026-09-18 (scan basis: `knk-web-app` @ `4ff5dc6`, branch `claude/web-app-codebase-scan-4yqibi`); spot edits 2026-10-09 (ObjectTypeExplorer, KNG-61), 2026-10-10 (FormWizard Boolean fields, KNG-53), 2026-10-12 (FormWizard child forms, KNG-133, KNG-134; List edit load, step header, List validation, KNG-135, KNG-137, KNG-164; form session registry, KNG-136; cancel / delete-draft prompt, KNG-162; form configuration export/import, KNG-138); 2026-10-17 (form wizard chain merged to `main`; smoke-test follow-ups KNG-166..169, KNG-172, KNG-173: step strip, confirmations and refusals, rule builder parent forms, picker columns, metadata refresh); 2026-10-22 (display configuration export/import; KNG-195 hybrid picker submit); 2026-10-23 (step completion conditions run, KNG-186); 2026-10-23 (validation result log, batch validate, Re-check, KNG-269); 2026-10-25 (toast region, world-task polling; UX re-evaluation in `reports/2026-10-25-web-app-ux-reevaluation.md`); 2026-10-26 (dashboard type in the URL, `returnTo`, submit pending state, success toast — PandiO/knk-workspace#177 link 1, #58); 2026-10-26 (dashboard header New/Configure, flat explorer with marker, open form without the explorer + breadcrumb, detail page header, metadata-driven Create New, "Entity setup" — #177 link 2, #81, #39); 2026-10-26 (dashboard explorer: one scrollbar, favourite types — #194, branch `claude/dashboard-explorer-194`, merged into `main` `c3c0c9f`), 2026-10-26 (dashboard header row spacing — #195, branch `claude/dashboard-header-195`, merged into `main` `c3c0c9f`); 2026-10-26 (data router, unsaved-changes guard, sticky footer, blur validation + error summary, Save on any step in edit mode, single-line input, drafts owned by the login — #109, #186, #64 FormWizard part); 2026-10-27 (unsaved changes compared by value across all steps, Next's progress save no longer counts as saved — #109 fix round); 2026-11-01 (dashboard table state in the URL, rows as links, `aria-sort`, lootbox/moderation tab in the URL, "Drafts (n)" and "New with" — PandiO/knk-workspace#39, #177 follow-up, merged 2026-11-03); 2026-11-02 (design tokens and switchable themes — #95, merged 2026-11-03); 2026-11-03 (fix round after the live comparison: orange brand primary, heading font on player pages only, full-bleed auth pages); 2026-11-03 (explorer favourites are copies — #225, branch `claude/explorer-favourite-copies-225`, not merged); 2026-11-03 (explorer filter: display / form configuration — #226, merged 2026-11-04); 2026-11-03 (open form without the type overview card — #227, merged 2026-11-04)
+**Last updated:** 2026-11-05 (feedback primitives: one accessible `Dialog`, `ConfirmDialog` with danger and a reason, general toasts, all overlays moved — #33, branch `claude/feedback-primitives-33`, not merged); 2026-11-05 (#239 offer permission check, #240 Send again merged); 2026-11-04 (#239, #240 on a feature branch); 2026-11-02 (`src/realtime/RealtimeProvider`, world tasks and catalogue scans over the web hub — #181, branch `claude/realtime-signalr`); 2026-11-01 (world tasks anchored to the draft, cancel/expired states, task code, builder task types — #180, branch `claude/world-task-hardening`); 2026-09-18 (scan basis: `knk-web-app` @ `4ff5dc6`, branch `claude/web-app-codebase-scan-4yqibi`); spot edits 2026-10-09 (ObjectTypeExplorer, KNG-61), 2026-10-10 (FormWizard Boolean fields, KNG-53), 2026-10-12 (FormWizard child forms, KNG-133, KNG-134; List edit load, step header, List validation, KNG-135, KNG-137, KNG-164; form session registry, KNG-136; cancel / delete-draft prompt, KNG-162; form configuration export/import, KNG-138); 2026-10-17 (form wizard chain merged to `main`; smoke-test follow-ups KNG-166..169, KNG-172, KNG-173: step strip, confirmations and refusals, rule builder parent forms, picker columns, metadata refresh); 2026-10-22 (display configuration export/import; KNG-195 hybrid picker submit); 2026-10-23 (step completion conditions run, KNG-186); 2026-10-23 (validation result log, batch validate, Re-check, KNG-269); 2026-10-25 (toast region, world-task polling; UX re-evaluation in `reports/2026-10-25-web-app-ux-reevaluation.md`); 2026-10-26 (dashboard type in the URL, `returnTo`, submit pending state, success toast — PandiO/knk-workspace#177 link 1, #58); 2026-10-26 (dashboard header New/Configure, flat explorer with marker, open form without the explorer + breadcrumb, detail page header, metadata-driven Create New, "Entity setup" — #177 link 2, #81, #39); 2026-10-26 (dashboard explorer: one scrollbar, favourite types — #194, branch `claude/dashboard-explorer-194`, merged into `main` `c3c0c9f`), 2026-10-26 (dashboard header row spacing — #195, branch `claude/dashboard-header-195`, merged into `main` `c3c0c9f`); 2026-10-26 (data router, unsaved-changes guard, sticky footer, blur validation + error summary, Save on any step in edit mode, single-line input, drafts owned by the login — #109, #186, #64 FormWizard part); 2026-10-27 (unsaved changes compared by value across all steps, Next's progress save no longer counts as saved — #109 fix round); 2026-11-01 (dashboard table state in the URL, rows as links, `aria-sort`, lootbox/moderation tab in the URL, "Drafts (n)" and "New with" — PandiO/knk-workspace#39, #177 follow-up, merged 2026-11-03); 2026-11-02 (design tokens and switchable themes — #95, merged 2026-11-03); 2026-11-03 (fix round after the live comparison: orange brand primary, heading font on player pages only, full-bleed auth pages); 2026-11-03 (explorer favourites are copies — #225, branch `claude/explorer-favourite-copies-225`, not merged); 2026-11-03 (explorer filter: display / form configuration — #226, merged 2026-11-04); 2026-11-03 (open form without the type overview card — #227, merged 2026-11-04)
 **Source scan:** `docs/reports/web-app-scan-2026-09-18.md`
 
 ## Stack
@@ -25,8 +25,9 @@
   `DisplayConfigBuilder` for reorderable steps/sections/fields).
 - Icons: `lucide-react`.
 - Reactive error bus: `rxjs` — a single `Subject`-like `logging.errorHandler` used to
-  surface toast-style errors app-wide (`src/components/ToastRegion.tsx`, mounted in `App.tsx`). Success toasts go through `toast.success()`
-  (`src/utils/toast.ts`, its own `Subject`; green, 5 s; #177 link 1); the full feedback kit is #33.
+  surface toast-style errors app-wide (`src/components/ToastRegion.tsx`, mounted in `App.tsx`). Every other toast goes
+  through `toast.success/info/warning/error()` (`src/utils/toast.ts`, #177 link 1, general since #33); see
+  [Feedback: toasts, dialogs and confirms](#feedback-toasts-dialogs-and-confirms).
 - No Redux/Zustand/MobX — state is local `useState`/`useEffect` plus one React Context
   (`AuthContext`) for auth, plus a small manual in-memory cache in
   `hooks/useEntityMetadata.ts` (module-level `metadataBundleCache` /
@@ -85,6 +86,52 @@ _Added 2026-11-02 for PandiO/knk-workspace#95 (rebrand phase 1), knk-web-app bra
   files. `npm run lint:colors` (`scripts/report-raw-colors.js`) counts raw palette classes per file against
   `scripts/raw-colors-baseline.json` and reports files that gained some; it never fails unless given `--strict`
   (not in CI; there is no CI workflow in the repo). Migrated and unmigrated screens: guide § 5.
+
+## Feedback: toasts, dialogs and confirms
+
+PandiO/knk-workspace#33 (branch `claude/feedback-primitives-33`, not merged). Three primitives; use them instead of
+building an overlay or a status banner by hand.
+
+| Need | Use | Where |
+|---|---|---|
+| News that needs no answer ("Town saved", "Copied", a change with Undo) | `toast.success/info/warning/error(message, { action?, durationMs? })` | `utils/toast.ts` → `components/ToastRegion.tsx` |
+| A yes/no question, a delete | `const [confirm, confirmModal, confirmWithReason] = useConfirm()` | `hooks/useConfirm.tsx` → `components/ConfirmDialog.tsx` |
+| A question that needs a reason for the audit log (MOD-2, #119) | `confirmWithReason({ …, reason: { hint, required?, minLength? } })` → the trimmed reason or `null` | same |
+| A message the user must read (an error with the API's reason) | `FeedbackModal` | `components/FeedbackModal.tsx` |
+| Anything else in an overlay: a form, an editor, a picker, a details drawer | `<Dialog>` | `components/Dialog.tsx` |
+
+- **`Dialog`**: `role="dialog"` (or `alertdialog` for a question) with `aria-modal`, `aria-labelledby` (its `title`)
+  and `aria-describedby` (its `description`). Focus moves in when it opens (`initialFocusRef`, else
+  `[data-autofocus]`, else the body's first field, else the footer's first button), Tab and Shift+Tab stay inside, focus
+  returns to the opener when it closes. Escape and the × close it; a backdrop click only with `closeOnBackdrop` (on for
+  messages, questions and drawers; off for forms, editors and pickers, so a stray click keeps what was typed);
+  `dismissible={false}` turns all three off while something saves. Nested dialogs (a child form's error) work: only the
+  innermost reacts to Escape and keeps focus. Rendered in a portal on `<body>` at `z-[60]` (above the nav, below the
+  toasts at `z-[100]`), page scroll locked. Header (title, description, optional icon, ×), a scrolling body and an
+  optional footer that stays visible; `size` `sm`…`6xl`/`full`, `placement="right"` for a drawer. Theme tokens only;
+  with the page background on (#231) its surface stays solid (`pageBackground.css` keeps `[aria-modal]` opaque).
+- **Confirm**: `danger` makes the action red (`btn-danger`) and starts focus on Cancel; otherwise focus starts on the
+  action. Escape, the × and a click outside answer no; with a reason field a click outside does nothing (the text would
+  be lost). The reason field has a tied label, `aria-required`, and on an empty submit `aria-invalid` plus a
+  `role="alert"` message, focus back in the field. The leave-form questions (`useLeaveGuard`, `FormCancelAction`) are
+  danger.
+- **Toasts**: one per kind and text (a repeat restarts its timer), at most 4, in a polite `role="status"` region; each
+  names its kind for screen readers ("Success: …"). 5 s (warning and error 8 s, with an action at least 10 s,
+  `durationMs: null` until dismissed); the timer waits while the pointer or focus is on the toast. A plain
+  `toast.error(message)` still goes through `logging.errorHandler` (≈45 call sites send there); with options it goes
+  straight to the region. Success after a save or delete is a toast now, not a `FeedbackModal` with `autoCloseMs`
+  (entity setup page, form/display builders, the wizard's Save Draft, the form submit since #177).
+- **Overlays on the Dialog** (all 16 the 2026-10-25 re-evaluation counted): `FeedbackModal`, `ChildFormModal`,
+  `JoinEntityFormModal`, `ScanConflictModal`, `DomainWorldPromptModal`, `CreatedEntitiesPrompt`,
+  `ConfigurationImportPanel`, `MaterialMergeTargetDialog`, both builders' `FieldEditor` and `Reusable*Selector`
+  (cards are `aria-pressed` buttons), the Invitations redemptions drawer and the telemetry event drawer. Not dialogs
+  on purpose: the dashboard explorer's narrow-screen drawer (navigation below the bar), the theme and account
+  popovers, and the inline confirmation panels with `role="dialog"` in the page flow (data deletion, privacy
+  preview, statistics group change, the world-task busy check in `WorldBoundFieldRenderer`).
+- The configuration tables' ⋯ menus give focus back to their trigger before an item runs, so a confirm opened from
+  the menu returns focus to ⋯ instead of the top of the page.
+- Tests: `components/__tests__/Dialog.test.tsx`, `overlaysOnDialog.test.tsx`, `ToastRegion.test.tsx`,
+  `hooks/__tests__/useConfirm.test.tsx`. No jest-axe in the repo; roles, names, focus and keys are checked one by one.
 
 ## High-level shape
 
@@ -237,8 +284,9 @@ entity. Two parallel generic engines carry most of the CRUD surface:
    (which runs the hybrid search), as `{field}Id` + `{field}NamespaceKey`; a catalog row that isn't saved yet
    (id 0) goes by namespace key only, and the API creates the ref.
    **Confirmations and refusals** (KNG-169, KNG-82): no `window.confirm`/`alert` is left. Questions
-   go through `hooks/useConfirm.tsx` (`const [confirm, confirmModal] = useConfirm()`, a
-   `FeedbackModal` with confirm/cancel labels and a red `danger` button); the configuration tables
+   go through `hooks/useConfirm.tsx` (`const [confirm, confirmModal, confirmWithReason] = useConfirm()`,
+   the `ConfirmDialog` since #33: an `alertdialog` with confirm/cancel labels, a red `danger` button and an
+   optional reason field); the configuration tables
    hand a delete to the page, which asks once. A refused operation shows the API's reason
    (`utils/apiRefusalReason.ts`; the API's 409 names what still uses the item), never "please try
    again". A `FeedbackModal` without `onContinue` shows a single Close button.
