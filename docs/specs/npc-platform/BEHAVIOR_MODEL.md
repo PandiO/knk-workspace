@@ -1,7 +1,7 @@
 # NPC behavior model — perception, psychology, decisions and combat (guards first)
 
 **Status:** Working concept from a developer design session; not approved defaults, not an implementation plan, nothing implemented. Items marked *(future update)* belong to the overall vision but are not planned for the first version.
-**Last updated:** 2026-11-05 (developer decisions, design pass 3: skill-based ranged/melee switching §11.2, weighted 0–100 weapon skill with a power-law curve §11.1, scale targets and benchmark plan §13, optional preset clan §16.2, Garrison holds its own gate and quarters in any structure §16.3, town-level guard settings and auto-fill per town §16.4, clan control and sides §16.5, military management pages §16.6); 2026-11-04 (developer decisions: guard entity, garrisons and staffing §16, gate confrontation §17); 2026-11-04 (developer decisions on design pass 2: alert states weight but never lock §7.1, four situations §7.2, guard-specific orders §7.3, presets §9.7, influence sources incl. gate state §9.8, five weapon-skill modifiers §11.1, inspector and web decision viewer §14, templates §15); 2026-11-04 (design pass 2: §7.1 action gating, §7.2 situations, §9.7 personality presets, §9.8 default influence sources, §11.1 proficiency growth, §11.2 ranged/melee switching, §14 debugging tools, §15 configuration and templates; all proposals); 2026-11-04 (hybrid navigation decision in §2: K&K plans, Citizens moves); 2026-11-04 (initial concept, developer voice design session)
+**Last updated:** 2026-11-05 (developer decisions on item familiarity §11.1, follow-up voice session, #237); 2026-11-05 (developer decisions, design pass 3: skill-based ranged/melee switching §11.2, weighted 0–100 weapon skill with a power-law curve §11.1, scale targets and benchmark plan §13, optional preset clan §16.2, Garrison holds its own gate and quarters in any structure §16.3, town-level guard settings and auto-fill per town §16.4, clan control and sides §16.5, military management pages §16.6); 2026-11-04 (developer decisions: guard entity, garrisons and staffing §16, gate confrontation §17); 2026-11-04 (developer decisions on design pass 2: alert states weight but never lock §7.1, four situations §7.2, guard-specific orders §7.3, presets §9.7, influence sources incl. gate state §9.8, five weapon-skill modifiers §11.1, inspector and web decision viewer §14, templates §15); 2026-11-04 (design pass 2: §7.1 action gating, §7.2 situations, §9.7 personality presets, §9.8 default influence sources, §11.1 proficiency growth, §11.2 ranged/melee switching, §14 debugging tools, §15 configuration and templates; all proposals); 2026-11-04 (hybrid navigation decision in §2: K&K plans, Citizens moves); 2026-11-04 (initial concept, developer voice design session)
 **Issue:** [PandiO/knk-workspace#234](https://github.com/PandiO/knk-workspace/issues/234)
 **Parent design:** [npc-platform/DESIGN.md](DESIGN.md) (KNG-36), mainly its O11 (city guard profile) and O12 (combat, stats, factions, debugging, performance); related [#146](https://github.com/PandiO/knk-workspace/issues/146)
 **Authority:** Developer statements in the 2026-11-04 sessions and the 2026-11-05 design pass 3 (voice session, recorded in the concept doc first). Where this document says "agreed" or "developer", the developer chose it; everything else is a proposal recorded for discussion. Library, schema and numeric values are examples, not defaults.
@@ -403,7 +403,7 @@ The §5a note that a damage-triggered score bonus is still open applies here; th
 | Proficiency, kind | Weapon kind (diamond sword) | Training, drills and combat with that kind | Extra skill on top of the type |
 | Combat experience, type | Weapon type | Real fights only | Adds on top of proficiency; mastery beyond training |
 | Combat experience, kind | Weapon kind | Real fights only with that kind | |
-| Item familiarity | One item instance (this exact sword) | Time owning and using that item | Shared with players; lost when the item is lost |
+| Item familiarity | One item instance (this exact sword), per owner | Mostly use with that item, a little time held in hand | Shared with players; belongs to the person–item pair |
 
 **Item familiarity** reuses the developer's vision mechanic (the longer you keep one item instance, the better you fight with it), so players and NPCs share one system. It is not yet written in `docs/vision/`; tracked in [PandiO/knk-workspace#237](https://github.com/PandiO/knk-workspace/issues/237). A guard who has carried the same sword for years fights better with it, and disarming him costs him something.
 
@@ -419,7 +419,7 @@ The §5a note that a damage-triggered score bonus is still open applies here; th
 
 Drills alone reach 70 ("trained soldier"); the last 30 only come from real fights and a weapon the NPC trusts. Shares are starting values for tuning.
 
-**First version (developer decision 2026-11-05):** proficiency is set by the preset plus rolled variance and does **not** grow; it grows once drills arrive *(future update, with shifts and barracks)*. Combat experience grows from fights; familiarity grows with time owned (#237).
+**First version (developer decision 2026-11-05):** proficiency is set by the preset plus rolled variance and does **not** grow; it grows once drills arrive *(future update, with shifts and barracks)*. Combat experience grows from fights; familiarity grows from use (below, #237).
 
 **Growth curve (developer decision 2026-11-05):** the **power law of practice** (Newell & Rosenbloom 1981; consistent with Ericsson's research on deliberate practice and expertise), replacing the earlier exponential saturating proposal. Fast early gains, then a very long slow tail; not an S-curve. Illustrative form, constants to tune:
 
@@ -432,8 +432,17 @@ skill(n) = cap - (cap - p_0)\,(1 + n / n_0)^{-\alpha}
 - Combat experience per hit, block or parry = `base × challenge`, challenge = opponent power ÷ own power clamped 0.25–2, so trivial opponents teach almost nothing.
 - **Starting values (developer, starting points):** recruit 15, soldier 35, veteran 60, royal guard 75.
 - **Death:** a guard keeps all combat experience when he dies (clean respawn, §16.1).
-- Familiarity's own growth curve: with #237, since players share it.
+- Familiarity's own rules: below.
 - Transfer between related weapon types and rust when unused: *(future update)*.
+
+**Item familiarity (developer decisions 2026-11-05, follow-up voice session; [#237](https://github.com/PandiO/knk-workspace/issues/237)):** shared by players and NPCs.
+
+- **Grows from use:** mostly hits, blocks and kills with that exact item, plus a small amount for time held in hand. Time merely owned (for example in a chest) does not count.
+- **Belongs to the person–item pair**, not the item: a new owner starts from zero; if the old owner gets the item back, his familiarity returns.
+- **Decay:** slow after about a week without use, never below half of what was earned. Computed lazily from a last-used timestamp when the item is next used (no background ticking).
+- **Curve:** the same power-law shape as combat experience, but faster: near full after a few weeks of regular use.
+- **Display:** a lore line with a word tier instead of a number (for example "Familiar: well worn"), visible only to the owner; the exact value in the web app.
+- Values (weights per action, decay rate, tiers) are starting points to tune.
 
 **What skill changes** (combined skill applied as §5b modifiers; values are examples):
 
@@ -717,10 +726,10 @@ Not in the first version: Law & Order (local/global laws, crimes, punishments, j
 
 ## 19. Open questions
 
-Decided 2026-11-04 (developer, design pass 2): §7.1, §7.2, §7.3, §9.7, §9.8, §11.1 (structure), §14, §15, §16, §17. Decided 2026-11-05 (design pass 3): §11.1 combination and curve, §11.2 switching, §13 scale targets and verification plan, §16.2 preset clan, §16.3–16.4 garrison, quarters and town settings, §16.5 allegiance, §16.6 management pages.
+Decided 2026-11-04 (developer, design pass 2): §7.1, §7.2, §7.3, §9.7, §9.8, §11.1 (structure), §14, §15, §16, §17. Decided 2026-11-05 (design pass 3): §11.1 combination and curve, §11.2 switching, §13 scale targets and verification plan, §16.2 preset clan, §16.3–16.4 garrison, quarters and town settings, §16.5 allegiance, §16.6 management pages; item familiarity rules (§11.1, follow-up session).
 
 - Schema for Garrison, quarters, slots and town guard settings: under [#238](https://github.com/PandiO/knk-workspace/issues/238); clan control, NPC clan and fallback clan: under [#236](https://github.com/PandiO/knk-workspace/issues/236).
 - Numeric tuning: tag weights per state, axis ranges and decay rates, preset values, influence magnitudes, power-law constants (`n0`, `α`), skill shares, switching bands and the time-to-contact judgement error; Mehrabian coefficients to verify.
-- Item familiarity mechanic and curve ([#237](https://github.com/PandiO/knk-workspace/issues/237)).
+- Item familiarity: rules decided 2026-11-05 (§11.1); storage on `ItemInstance` and tuning values under [#237](https://github.com/PandiO/knk-workspace/issues/237).
 - Citizens verification, benchmark and budgets ([#241](https://github.com/PandiO/knk-workspace/issues/241)); whether Siege attackers also use Citizens (answered by #244); how traits map onto DESIGN §2 template/instance/trait/behavior boundaries.
 - Town runtime management, public town roles and who may view or manage ([#246](https://github.com/PandiO/knk-workspace/issues/246)).
