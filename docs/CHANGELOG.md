@@ -4,7 +4,16 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
-(Nothing at the moment.)
+- **GDPR account erasure reaches the game server at once (realtime S5)** — [PandiO/knk-workspace#184](https://github.com/PandiO/knk-workspace/issues/184),
+  branch `claude/realtime-erasure-184` in knk-web-api, knk-plugin and knk-workspace (UX chain 2, link R1). When the API
+  executes a data-deletion request it records each erased account in a new erasure feed (migration
+  `AddPrivacyErasureEvents`) and pushes `AccountErased` to the game server. With `realtime.enabled: true` the plugin
+  kicks the player with a neutral message and deletes what it keeps about them (offline security store, caches,
+  discovery and statistics spools, PM-log queue and local log lines, siege vault, hub-outage return point); Minecraft's
+  own player files are listed for the owner, not deleted. On every hub (re)connect it catches up through
+  `GET api/privacy/erasures?since=`. Off by default; the hourly offline-cache re-check stays the backstop. The feed keeps
+  a former UUID for 35 days (`Privacy:ErasureFeedUuidRetentionDays`). Checklist: [realtime smoke test § S5](guides/realtime-smoke-test.md);
+  design: [DESIGN §7.5](specs/realtime-signalr/DESIGN.md).
 
 ## 2026-11-05
 

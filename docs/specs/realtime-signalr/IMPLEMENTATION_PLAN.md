@@ -1,7 +1,8 @@
 # Realtime channel (SignalR) — implementation plan
 
 **Status:** Accepted (developer decisions 2026-10-26, [DESIGN.md](DESIGN.md) §12). S1, S2, WT1 (#180), WT2 (#181) and S3 (#182) **merged 2026-11-04** (API `master` `2258df5`, plugin `main` `e1b6a7a9`, web app `main` `d0c2ba8`; as built: DESIGN §6.8, §8.8); all smoke-tested by the developer (WT2 2026-11-04, S1–S3 2026-11-05), #178, #179, #182 closed. Follow-ups of the WT2 test: offer permission check and Send again (see the #181 comments).
-**Last updated:** 2026-11-05 (S1–S3 smoke-tested, issues closed); 2026-11-04 (S1–S3, WT1, WT2 merged); 2026-11-02 (S3 status); 2026-11-02 (WT2 status)
+**S5 (#184):** built 2026-11-05 on `claude/realtime-erasure-184` in API, plugin and workspace (DESIGN §7.5); in review, not merged.
+**Last updated:** 2026-11-05 (S5 built on `claude/realtime-erasure-184`, not merged); 2026-11-05 (S1–S3 smoke-tested, issues closed); 2026-11-04 (S1–S3, WT1, WT2 merged); 2026-11-02 (S3 status); 2026-11-02 (WT2 status)
 **Issue:** [PandiO/knk-workspace#66](https://github.com/PandiO/knk-workspace/issues/66) (KNG-57); phase issues are sub-issues of #66
 (numbers in the table below).
 **Order across features:** [2026-10-25-ux-dashboard-signalr-plan.md](../../ai-agents/handoffs/2026-10-25-ux-dashboard-signalr-plan.md)
@@ -24,7 +25,7 @@ because it is useful without the hub and touches different files.
 | **WT2 World tasks over SignalR** (R3–R5) | #181 | API, plugin, web app | "Send to Minecraft" = auto (offer + claim for the online initiator), "Hand off to…" (Accept/Decline, 2 min), busy check before sending with Queue / Hand off / Replace / Cancel (`GET active-for-me`), queue delivery when a task ends, presence lookup, `WorldTaskOffered`/`Cancelled`/`Created` to the game hub, auto-claim for the initiator, Accept/Decline for admin B, queue when busy, `WorldTaskOfferResult`, `GET /api/presence/me` + `online-staff`, web `RealtimeProvider` + `@microsoft/signalr`, `WorldBoundFieldRenderer` on `WorldTaskUpdated` (10 s poll only while disconnected), catalog scan card on `CatalogScanUpdated` | S1, WT1 | M–L |
 | **S3 Config and entity push** (R2) | #182 | API, plugin | `EntityChanged` (option A: interceptor + allow-list behind one event sink, sent after commit; outbox = option C later, DESIGN §4.3), `GateChanged` (after-match rule Q12), `DomainAccessChanged`, `GameSettingsChanged`, `SiegeConfigChanged`, `LootboxConfigChanged`, teleport/navigation/road/telemetry events, `ReportWorlds`; run startup-only siege work on (re)connect (#31) | S1 | M |
 | **S4 Web live updates** (nice-to-have) | #183 | API, web app | `EntityChanged` to `staff` → dashboard refresh of the shown type; `PresenceChanged` on profile/moderation | S1, WT2 (web client), dashboard hub #177 | S |
-| **S5 Erasure push** (GDPR) | #184 | API, plugin | `AccountErased` + persisted catch-up (`GET /api/privacy/erasures?since=`), plugin deletes local data, kick if online | S1; KNG-58 store | M |
+| **S5 Erasure push** (GDPR) | #184 | API, plugin | `AccountErased` + persisted catch-up (`GET /api/privacy/erasures?since=`), plugin deletes local data, kick if online. **Built 2026-11-05 on `claude/realtime-erasure-184` (chain 2 link R1), not merged; as built: DESIGN §7.5** | S1; KNG-58 store | M |
 | **S6 Region calls over the hub** (optional) | — (not filed; decide later, Q13) | API, plugin | rename + containment as hub invocations with client results; retire `RegionHttpServer` | S1 | M |
 
 S2 and WT1 can run in parallel (different files: WT1 is world-task code, S2 is user/permission code). WT2 needs both

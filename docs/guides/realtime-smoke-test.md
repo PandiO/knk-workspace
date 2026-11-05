@@ -1,13 +1,14 @@
 # Realtime channel (SignalR) — smoke test
 
 **Status:** All sections run by the developer (WT2 2026-11-04; WT2 follow-ups, S1, S2, S3 2026-11-05) and merged into the
-default branches; S1–S3 issues closed 2026-11-05. `realtime.enabled` stays `false` by default
-**Last updated:** 2026-11-05 (S1, S2, S3 findings; S2 steps 5 and 7 corrected); 2026-11-05 (§ WT2 follow-ups: findings, merged); 2026-11-04 (§ WT2 follow-ups #239/#240, feature branch); 2026-11-04 (WT2 findings; merged); 2026-11-02 (§ S3, #182); 2026-11-02 (§ WT2, #181)
+default branches; S1–S3 issues closed 2026-11-05. § S5 (#184) added 2026-11-05 for branch `claude/realtime-erasure-184`,
+not run yet. `realtime.enabled` stays `false` by default
+**Last updated:** 2026-11-05 (§ S5, #184, feature branch); 2026-11-05 (S1, S2, S3 findings; S2 steps 5 and 7 corrected); 2026-11-05 (§ WT2 follow-ups: findings, merged); 2026-11-04 (§ WT2 follow-ups #239/#240, feature branch); 2026-11-04 (WT2 findings; merged); 2026-11-02 (§ S3, #182); 2026-11-02 (§ WT2, #181)
 **Design:** [specs/realtime-signalr/DESIGN.md](../specs/realtime-signalr/DESIGN.md) (§4–§5, as built: §4.6) ·
 [IMPLEMENTATION_PLAN.md](../specs/realtime-signalr/IMPLEMENTATION_PLAN.md) ·
 **Issues:** [PandiO/knk-workspace#178](https://github.com/PandiO/knk-workspace/issues/178) (S1),
 [#179](https://github.com/PandiO/knk-workspace/issues/179) (S2), [#181](https://github.com/PandiO/knk-workspace/issues/181) (WT2),
-[#182](https://github.com/PandiO/knk-workspace/issues/182) (S3), parent
+[#182](https://github.com/PandiO/knk-workspace/issues/182) (S3), [#184](https://github.com/PandiO/knk-workspace/issues/184) (S5), parent
 [#66](https://github.com/PandiO/knk-workspace/issues/66)
 
 Manual checks of the realtime channel between knk-web-api and the game server, one section per phase. Run on the dev
@@ -234,6 +235,42 @@ INFO shows `Realtime: reloaded gate structure …`; `/knk health` `messages` goe
     60 s lootbox refresh run 4× less often (API request log); with the hub down they are back at their intervals.
 
 Record the times of 2, 4, 5 and 8 under **Findings**.
+
+## S5 — account erasure pushed to the game server (#184)
+
+**Builds:** knk-web-api and knk-plugin on `claude/realtime-erasure-184`. **API:** back up the database, then run the
+additive migration `AddPrivacyErasureEvents` (new table `privacy_erasure_events`). For this test only, set
+`Privacy__GraceDays=0` on the dev API so a filed request can be executed at once (put it back afterwards; default 5).
+**Plugin:** `realtime.enabled: true`; the bundled `realtime.erasure` block (kick message, `settle-seconds: 2`) needs no
+change. **People:** the owner **O** (`knk.owner.privacy.manage`, the owner privacy page) and throwaway test accounts
+**T1**, **T2**, **T3** linked to Minecraft accounts you can play. Erasure is irreversible: never use a real player.
+Plugin log lines start with `[KnK Privacy]` and name only the erasure number.
+
+1. **Off changes nothing.** With `realtime.enabled: false` erase T3 while they are online (O files the request on the
+   owner privacy page, then Execute): T3 stays online, the plugin log has no `[KnK Privacy]` line, and no
+   `erasure-feed.json` appears in `plugins/KnightsAndKings/`. (Their offline-store entry goes at the hourly re-check,
+   as before.) Have T3 leave, set `realtime.enabled: true` and restart; continue with T1.
+2. **Online player.** T1 is online and has local data: send a `/msg` to another player and back, and stand in a
+   discovered domain. O erases T1. Within about 2 s T1 is disconnected with "Your account data has been deleted." and
+   the log shows `Erasure #N applied: player kicked, ...` with the counts (offline security store, user caches, private
+   message log file, ...). `offline-security.json` (after a few seconds) and `logs/private-messages-*.log` no longer
+   contain T1's UUID; `erasure-feed.json` has `"lastId":N`.
+3. **Minecraft's own files.** The log says `N Minecraft player file(s) kept, listed in erasure-minecraft-files.txt`;
+   that file lists T1's `players/data/<uuid>.dat` (and stats/advancements). The files themselves are still there: delete
+   them by hand if you decide to, then clear the list.
+4. **Returning player.** T1 joins again with the same Minecraft account: the server treats them as a new player (a new
+   account, or the admission gate's answer for a new player), with nothing of the old account (balances, ranks).
+5. **Caught up after the server was down.** Stop the Minecraft server. O erases T2. Start the server: on the hub
+   connect the resync step "account erasures" logs `Erasure #N+1 applied: ...` (T2's offline-store entry and spool
+   files gone) and `erasure-feed.json` moves to N+1. Restart once more: nothing is applied again.
+6. **API down during the catch-up.** Stop the API, erase nobody, start the Minecraft server, then start the API: the
+   catch-up runs at the hub connect and applies nothing new; no errors beyond the connection messages.
+7. **Feed endpoint.** `curl -s https://<api>/api/privacy/erasures?since=0` without a key: 401; with a web login: 403;
+   with `X-API-Key: <plugin key>`: the rows with `erasureId`, `userId`, `formerUuid`, `erasedAt`, and `lastId`,
+   `hasMore`, `latestId`.
+8. **Settle time.** Put `Privacy__GraceDays` back to 5 (or remove it) and restart the API.
+
+Record under **Findings** how long 2 took and the counts the log showed.
 
 ## Findings
 
