@@ -4,7 +4,12 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
-(Nothing at the moment.)
+- **Chat and tab-list colours from any group, by precedence** — [PandiO/knk-workspace#260](https://github.com/PandiO/knk-workspace/issues/260),
+  branch `claude/group-colours-260` in knk-web-api and knk-plugin. Each colour comes from the first of the player's
+  groups in the permission-check order (hierarchy, then weight) that sets it, the Default group last; before, only a
+  premium tier or Default counted, so e.g. the Staff group's colours were never drawn. A group's own colours now beat
+  the fixed owner/staff chat and tab-list look; a staff member with a tier shows the tier's colours unless the Staff
+  group sets its own. No migration. Checklist: [group colours smoke test](guides/group-colours-smoke-test.md).
 
 ## 2026-11-05
 

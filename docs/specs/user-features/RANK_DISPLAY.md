@@ -5,7 +5,7 @@
 `20260926081602_AddPermissionGroupDisplayColors` and `20260926121530_PremiumRanksInheritDefault`.
 knk-paper was never compiled in the cloud session (Paper's Maven repo is blocked there); the developer's
 local build and in-game test are what verified it.
-**Last updated:** 2026-11-05 (#260 decision: colours by group precedence, not built); 2026-09-26 (follow-up on trunk: API enforces one rank, live sync for web-app changes and
+**Last updated:** 2026-11-05 (#260: colours by group precedence, built on `claude/group-colours-260`, not merged); 2026-09-26 (follow-up on trunk: API enforces one rank, live sync for web-app changes and
 expiring ranks - knk-web-api `1c90d0b`, knk-plugin `9a5da8d`)
 
 Restores v1's chat line (title in chat, KNG-8) and per-tier colors in chat and the tab list (KNG-7), and
@@ -54,12 +54,16 @@ falling back field by field to the **Default** group's value (found by name, `Us
 loaded once per request). A player without a premium tier therefore gets Default's colors whether or not
 they hold the Default membership.
 
-  **To change ([PandiO/knk-workspace#260](https://github.com/PandiO/knk-workspace/issues/260), developer decision
-  2026-11-05, not built yet):** the colours of a group that is not a premium tier (e.g. Staff) are never drawn today.
-  Each field will come from the first group in the player's precedence order (`PermissionGroupPrecedence`: hierarchy
-  first, a held group before its parents, then the highest `Weight`; the order the permission check, Game Settings and
-  teleport fees use) that has it set, with the Default group as the last fallback; the premium tier loses its special
-  place.
+  **Changing ([PandiO/knk-workspace#260](https://github.com/PandiO/knk-workspace/issues/260), developer decision
+  2026-11-05; built on branch `claude/group-colours-260`, not merged):** each
+  field comes from the first group in the player's precedence order (`PermissionGroupPrecedence`: hierarchy first, a
+  held group before its parents, then the highest `Weight`; the order the permission check, Game Settings and
+  teleport fees use) that sets it, with the Default group as the last fallback (`Services/GroupDisplayStyles`); the
+  premium tier has no special place. The summary also says which group supplied each field (`nameColorGroupId`,
+  `chatPrimaryColorGroupId`, `chatSecondaryColorGroupId`; null = the Default group's or none). In game a group's own
+  colours beat the fixed owner/staff styles, field by field (chat: `ChatLineFormat`; tab list: its own team
+  `group_<id>`, replacing `tier_<id>`); the Default group's never do. So a staff member who also holds a tier shows the
+  tier's colours unless the Staff group sets its own (Staff outweighs the tiers).
 
 ## 3. Chat (knk-plugin)
 
@@ -72,6 +76,9 @@ they hold the Default membership.
 | Premium | `-{Noble Title}- Name: msg` | brackets `chatSecondaryColor`, rest `chatPrimaryColor` | no (unless the codes say so) |
 | Everyone else | `-{Title}- Name: msg` | Default's colors; `ColorOptions.defaultformat/defaultsubjects` if the API sends none | no |
 
+- **#260 (branch `claude/group-colours-260`, not merged):** for owner and staff, a chat colour set by one of the
+  player's groups (not the Default group's) replaces the fixed `ColorOptions` one, field by field; tag and bold
+  title stay.
 - The message takes the name's **color** but not its formats, so a bold tier style doesn't bold every
   message. Color codes typed in the message still win.
 - The `-{…}-` part is left out when there's nothing to put in it (summary not cached yet).
@@ -80,6 +87,10 @@ they hold the Default membership.
 - `utils/LegacyStyles` turns the `&` codes into an Adventure `Style` (Bukkit-free).
 
 ## 4. Tab list / nametag (knk-plugin)
+
+**#260 (branch `claude/group-colours-260`, not merged):** a group whose tab-list colour won gets its own team
+`group_<id>` (replacing `tier_<id>`), before the owner/staff teams; the list below applies when no group but
+Default sets one.
 
 `ScoreboardUtil.setScoreboard` puts each player on one team via `utils/TabListTeam`, in v1's order:
 owner (DARK_PURPLE), staff (BLUE, a new team), `tier_<groupId>` (created on demand, colored by
