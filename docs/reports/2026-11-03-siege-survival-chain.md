@@ -1,7 +1,7 @@
 # Siege Survival implementation chain — progress report
 
 **Status:** S1 and S2 in review (knk-plugin `claude/siege-survival`, updated from `main` 2026-11-05, head `34c7bf70`); **S4 in review** (API `043bd2a` pushed; plugin api-client commit and this bookkeeping delivered as patches; migration deferred until #167 merges); G1 and S3 wait for #213 and the arena-duels decision
-**Last updated:** 2026-11-05 (coordinator: gate re-check, branch update, S4 started)
+**Last updated:** 2026-11-05 (coordinator: S4 verified and in review; chain paused again until #167 merges)
 **Charter:** [SIEGE_SURVIVAL_CHAIN.md](../ai-agents/handoffs/SIEGE_SURVIVAL_CHAIN.md) · **Coordinator prompt:**
 [2026-11-03-siege-survival-coordinator-prompt.md](../ai-agents/handoffs/2026-11-03-siege-survival-coordinator-prompt.md) ·
 **Plan:** [IMPLEMENTATION_PLAN.md §2a](../specs/siege-survival/IMPLEMENTATION_PLAN.md#2a-delivery-order-and-merge-gates-2026-11-03) ·
@@ -15,6 +15,20 @@ knk-workspace `main` `84a5a63` (re-check: later merges on the trunks happen; eac
 (The coordinator keeps this list current: links in review with their checklist location, merges that open the next gate,
 flagged decisions.)
 
+- **S4 is in review (2026-11-05), nothing to live-test:** knk-web-api `claude/siege-survival` `043bd2a` and knk-plugin
+  `claude/siege-survival` `699d1889`. Coordinator verification: API 3659 → 3779 passed (0 failed, 88 skipped, baseline run on
+  `master` `2e3dfeb`); plugin build green (knk-api-client 321 → 330, knk-core 2638 and knk-paper 2504 unchanged). Scope check: 45
+  new API files, 4 existing files edited (`KnKDbContext.cs`, DI, seeds README, one seed test), `Migrations/` untouched; plugin
+  only `knk-api-client` (+ `KnkApiClient` wiring). Flags S4-1 … S4-18 (modelling choices and balance placeholder defaults) in the
+  S4 block; none needs a decision before S5, but S4-7 (profile defaults) and S4-8 (near-players slider default 0) are worth a
+  look. Follow-up filed: [#265](https://github.com/PandiO/knk-workspace/issues/265) (survival scenarios in the lobby runtime
+  config, survival flag on `SiegeRuntimeScenarioDto`).
+- **What opens the next step:** merge **#167** `claude/alpha-run-1-gates` (clean in all three repos). Then the coordinator adds the
+  one additive migration `AddSiegeSurvivalPhase1` on the API branch (checklist in the S4 block, Deviations). **S3** needs #213 and
+  the arena-duels decision; **S5** needs S3; **S7** has its plan gate (S4) open, but its API half (match-scoped Mystery Box roll
+  endpoint, one roll/one delivery rows) needs a migration (same #167 wait) and its plugin half attaches to the survival match
+  runtime that S5 builds, so the coordinator holds S7 until S5 exists unless the developer says otherwise. **G1** needs #167,
+  #213 (and realtime, merged).
 - **2026-11-05 gate re-check** (plugin `main` `33122cf4`, API `master` `2e3dfeb`, web app `main` `a7b231d`): #180
   `claude/world-task-hardening` and `claude/realtime-signalr` are **merged** in all repos (0 ahead). Still open: #167
   `claude/alpha-run-1-gates` (1 commit per repo, in review since 2026-10-27; **trial merge into every trunk: 0 conflicts**),
@@ -130,6 +144,10 @@ test), `merged`, `blocked: <reason>`.
 - 2026-11-05: developer asked to update the branch and start the next link. Branch updated (`34c7bf70`, green). Gate re-check
   above; S4 started as session_01R1w2UwPn7oGLNgHm17vf7C with the migration deferred (decision and reasons under "Waiting for the
   developer"). #167 is a clean merge everywhere and is the merge to do next.
+- 2026-11-05 (S4 done): the S4 session could attach neither knk-plugin nor knk-workspace (permission classifier), so its api-client
+  commit and this bookkeeping came as `send_message` patches (sha256-checked, `git am`, pushed by the coordinator); the API push
+  worked from the session. Pattern for later links: give the link's `source_url` the repo it pushes most to, and expect patches
+  for the others. Follow-up #265 filed; S7 held until S5 (reasoning under "Waiting for the developer").
 - Next coordinator run: re-run the gate check; start G1 (`claude/gate-animated-rebuild`, from the trunks) as soon as #167,
   #213 and realtime are merged, S4 as soon as #167 and #180 are merged, S3 as soon as realtime, #213 and the arena-duels
   decision are in; then S5 (first live checkpoint), S6–S8 batched into one checklist, S9 last.
