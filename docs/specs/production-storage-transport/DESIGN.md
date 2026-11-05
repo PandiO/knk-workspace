@@ -1,11 +1,10 @@
 # Production, storage and transport — Design
 
-**Status:** Draft, **rev. 2**. Rev. 2 takes in the developer's 18 notes of 2026-10-09 (listed in the revision
-history). The decisions in §14 are open; each one has a recommendation. Nothing is implemented.
-**Superseded in part (2026-11-05):** the developer's voice design review is recorded in
-[DECISIONS_2026-11-05.md](DECISIONS_2026-11-05.md), which is authoritative where it differs from this document
-until rev. 3.
-**Last updated:** 2026-10-09
+**Status:** Draft, **rev. 3**. Rev. 3 takes in the developer's voice design review of 2026-11-05, recorded in
+[DECISIONS_2026-11-05.md](DECISIONS_2026-11-05.md). Rev. 2 took in the 18 notes of 2026-10-09. §14 lists what is
+settled and what is still open. Nothing is implemented. Items are tagged **[V1]** (first version), **[Later]** (in the
+concept, a future update) or **[Parked]** (direction agreed, details open).
+**Last updated:** 2026-11-05
 **Companion documents:**
 - [PRODUCTION_KINDS.md](PRODUCTION_KINDS.md): farms, loggers, quarries, mines, fisheries, flower farms and florists,
   animal farms, hunters. Covers yield areas, surveys, levels, player harvesting and block regeneration.
@@ -15,8 +14,9 @@ until rev. 3.
 
 **Evidence:** [reports/2026-10-09-v2-production-storage-transport-scan.md](../../reports/2026-10-09-v2-production-storage-transport-scan.md)
 covers the V2 code on all branches, the vision and V1. "V2 defect n" refers to scan §7.
-**Linear:** [KNG-83](https://linear.app/kngpandi/issue/KNG-83) is the parent. The phase and follow-up issues are
-listed in the implementation plan.
+**Issue:** [PandiO/knk-workspace#22](https://github.com/PandiO/knk-workspace/issues/22) (`[KNG-83]`, Linear
+[KNG-83](https://linear.app/kngpandi/issue/KNG-83)) is the parent. The phase and follow-up issues are listed in the
+implementation plan.
 **Related:**
 - [KNG-47](https://linear.app/kngpandi/issue/KNG-47): Structure subtypes.
 - [KNG-48](https://linear.app/kngpandi/issue/KNG-48): block-break in resource regions.
@@ -25,6 +25,8 @@ listed in the implementation plan.
 - [currency](../currency-payments/DESIGN.md): ledger patterns and payments.
 - [items](../items/IMPLEMENTATION_PLAN.md): `ItemBlueprint` and `ItemInstance`.
 - [lootboxes](../lootboxes/DESIGN.md): reward delivery.
+- [shops](../shops/DESIGN.md): shops, shopkeepers and display stalls (new in rev. 3).
+- [NPC platform](../npc-platform/DESIGN.md): NPC lifecycle and reliability (shopkeepers, workers, carriers).
 
 **Revision history**
 
@@ -45,6 +47,17 @@ listed in the implementation plan.
   - **Territory** and road connection for rural producers (14).
   - **Warehouses as distribution hubs** with town rules and trade (15).
   - **Supply-and-demand pricing** (16).
+- **Rev. 3 (2026-11-05, [decision record](DECISIONS_2026-11-05.md)):**
+  - Full concept now, solid foundation first: every item is tagged [V1], [Later] or [Parked].
+  - Principles clarified: harvest moves, partial moves, deliberate `SYS_LOSS` losses, in-game runtime management
+    later (§2).
+  - Capacity in raw units; container-derived caps = slots × `UnitsPerSlot`; `ItemBlueprint.StorageWeight` (default
+    1); `StackSlots` dropped (§4.4, replaces D3).
+  - Reward inbox: hard cap raised by premium, overflow to `SYS_LOSS`, warnings, 30-day expiry (§4.6, replaces D7).
+  - Transport: simulated only in V1, robbery off; producer workers carry orders; unconnected producers produce until
+    full; NPC transporters with virtual movement designed as the next follow-up; town carrier pool for hire later (§7).
+  - Shops, shopkeepers and display stalls are in V1, with their own [design](../shops/DESIGN.md) (§10).
+  - The production structures work and the garrison/guard NPC work ship in the same test phase.
 
 ## 1. Role and scope
 
@@ -86,17 +99,27 @@ ownership/payout model have their own future designs. This document defines only
    - V3 does the same, mirroring its own currency ledger: currency `System` accounts are the virtual storages here.
    - So "goods in transit", "goods stolen" and "goods produced" are all the same operation.
    - Every item is accounted for at every moment, and reconciliation is a sum (§4.3).
+   - **Harvesting (rev. 3):** structure production moves `SYS_PRODUCTION → structure Output storage` each cycle
+     (`Production`). In manual player harvesting, the player's share goes to the player's real inventory and is
+     recorded as `SYS_PRODUCTION → SYS_WORLD` (`PlayerHarvest`). Those items re-enter the system only by deposit or
+     sale. The town's share is a normal move into the structure's Output storage (PRODUCTION_KINDS.md §6).
 3. **Physical gameplay on top of abstract truth.** A cart, an NPC mule, a courier's sealed crate or a warehouse
    chest is a **view** of API-held stock or a **token** for it. It is never a second copy. This is the lesson of V2's
    chest era (scan §3.1) and the way to make robbing and escorting safe against item duplication (§7).
 4. **Data-driven where admins configure, code where behavior differs.** Production kinds, levels, yield tables,
-   distribution rules and multipliers are data, edited in the web app. Area models, the state machine and stock rules
-   are code.
+   distribution rules and production modifiers are data, edited in the web app. Area models, the state machine and
+   stock rules are code.
 5. **Web app first for admin** (note 10). Every entity has FormConfig CRUD. Every automated decision leaves a
-   readable trace: what was produced, why, which multipliers applied, which rule sent which cargo where. In-game menus
-   cover viewing and in-world actions.
+   readable trace: what was produced, why, which modifiers applied, which rule sent which cargo where. In-game menus
+   cover viewing and in-world actions. **[Later]** runtime management (distribution rules, reserves, taxes and similar
+   town administration) also becomes available in game
+   ([#256](https://github.com/PandiO/knk-workspace/issues/256)).
 6. **Never lose or duplicate an item.** Each move is complete or doesn't happen. Overflow is held, re-routed or
    returned. Plugin-originated actions carry idempotency keys.
+   - Partial moves stay allowed: `Partial` mode accepts what fits and reports the rest as rejected; the rejected
+     amount stays in the source (§4.5).
+   - Deliberate, ledger-recorded losses to `SYS_LOSS` (inbox overflow and expiry, §4.6) do not break this principle.
+     The ledger keeps the record.
 
 ## 3. Domain model
 
@@ -137,7 +160,7 @@ TransportLane (read model: road distances)                       ┘
 LogisticsPolicy (per Town, per Warehouse) ─── LogisticsRule      ┐ distribution context (TOWN_LOGISTICS.md)
 SupplyRequest / ReplenishmentPlan, TradeAgreement                ┘
 
-Territory (Domain subtype), Warehouse / ProductionStructure / later Shop (Structure subtypes)   world context
+Territory (Domain subtype), Warehouse / ProductionStructure / Shop (Structure subtypes)   world context
 ```
 
 Each aggregate is changed only through its application service:
@@ -170,10 +193,11 @@ inside your own transaction").
   - transport settings (`AutomaticTransport`, threshold, capacity);
   - `WarehousePreference` and `PreferredWarehouseId`;
   - `RoadConnection` state (§7.6);
+  - `WorkersTotal` (default 2) and the workers currently present (§7.7) [V1];
   - areas, lines and storages.
   - One subtype for all kinds; the **kind is data** (PRODUCTION_KINDS.md §2).
-- **Shops** (later, own design) become `Shop : Structure`, with merchandise and input storages and a shop level
-  (note 12).
+- **`Shop : Structure`** [V1, rev. 3]: Input and Merchandise storages, a shop level, its own worker, a stored
+  shopkeeper spawn location and registered display spots. See [shops DESIGN](../shops/DESIGN.md) and §10.
 
 ## 4. Stock model
 
@@ -198,6 +222,8 @@ Other fields:
 - `RowVersion`.
 
 A holder can have several storages: V2's "one storage for upgrade resources, another for other items".
+
+The five kinds are enough for now (rev. 3, confirmed).
 
 ### 4.2 Stock lines: fungible and unique items
 
@@ -235,21 +261,33 @@ Reasons (initial):
 - `TransportLoad`, `TransportDeliver`, `TransportReturn`, `TransportRobbed`, `TransportLost`
 - `Distribution`, `Trade`
 - `Deposit`, `Withdraw`
-- `RewardInbox` (undeliverable reward parked), `InboxClaim`
+- `RewardInbox` (undeliverable reward parked), `InboxClaim`, `InboxOverflow` and `InboxExpired` (to `SYS_LOSS`,
+  §4.6)
 - `ContainerSync` (§6)
 - `PlayerHarvest` (PRODUCTION_KINDS.md §6)
 - `Spoilage` (later)
 - `AdminAdjust`
 
-### 4.4 Capacity
+### 4.4 Capacity [V1] (rev. 3, replaces D3)
+
+**All capacity and all economy rules count in raw units.** Reserves, quotas and days of cover are raw units too.
 
 A value object on the storage:
 
 - `MaxDistinct`;
-- `MaxUnits`;
-- `UnitWeighting`: `Raw` (one item = one unit; the V2 rule) or `StackSlots` (a stack of up to 64 = one slot, so a
-  16-stackable item uses 4× the space of a 64-stackable one; the chest-era `ChestUtil` rule).
-- Capacity can be **fixed** (admin or level defined) or **derived** from bound containers (§6.3).
+- `MaxUnits` (raw units);
+- `UnitsPerSlot`, for storages with bound containers.
+
+**Capacity use** = Σ amount × `ItemBlueprint.StorageWeight`.
+
+- `ItemBlueprint.StorageWeight` is a decimal, **default 1** for every item, added from the start. Per-item weighting
+  (bulky stone vs small gems) is **[Later]** tuning: data only, no migration or code change.
+- **Container-derived capacity:** physical storage sets the size of the cap through a conversion, not 1:1:
+  `capacity (units) = physical container slots bound to the storage × UnitsPerSlot`.
+  Example: factor 200, 10 double chests = 540 slots → 108,000 units, whatever the item type.
+- `UnitsPerSlot` is raised by the structure's level or set by an admin.
+- Storages without bound containers keep a **fixed** raw cap, defined by an admin or the level.
+- The rev. 2 `StackSlots` weighting mode is dropped. There is no `UnitWeighting` field.
 - Levels (PRODUCTION_KINDS.md §5, shop levels) raise caps by writing the value; nothing is recomputed implicitly.
 - Over-cap after lowering a cap: removals only, nothing trimmed silently (rev. 1 rule).
 - Capacity limits real storages only. Virtual and transit storages are unbounded; a transit storage is bounded by its
@@ -286,7 +324,16 @@ This is one entry point for every reward or grant that should reach a player:
    places the items (§8.2).
 
 This replaces today's "drop the leftovers at the player's feet" in `KitGrantPlacer` (`:279`) and
-`LootboxDelivery` (`:329-341`). Inbox capacity, expiry and premium size are open decisions (D7).
+`LootboxDelivery` (`:329-341`).
+
+**Inbox limits [V1] (rev. 3, replaces D7).** The inbox is a quality-of-life bonus over vanilla; keeping room is the
+player's responsibility.
+
+- **Hard cap.** Premium tiers raise it (part of the commercial model).
+- **Overflow is lost.** A reward that arrives when the inbox is full moves to `SYS_LOSS` (`InboxOverflow`). The
+  ledger keeps the record.
+- **Warnings** as the inbox approaches its cap, and a notification when something is lost.
+- **30-day expiry**, with reminders. Expired items move to `SYS_LOSS` (`InboxExpired`).
 
 ## 5. API ownership and plugin cooperation
 
@@ -347,15 +394,24 @@ These are the improvements over V2. They apply only to Backed mode.
   flag. That avoids per-tick event floods.
 - **Reconcile on chunk load:** a content hash is compared with the last synced hash; a mismatch triggers a snapshot
   sync. Changes while the chunk was unloaded can only come from outside the server.
-- **Derived capacity** = slots × stack size of the bound containers, so placing a chest adds capacity. This is what
-  V2 tried with `capacityUsed`.
+- **Derived capacity** = bound slots × `UnitsPerSlot` (§4.4), so placing a chest adds capacity. This is what V2
+  tried with `capacityUsed`.
 - **Partial sync** (note 4, "in part or in full"): a container may carry a slot filter (blueprints or categories).
   Only matching items are stock; others are unmanaged.
 
-Recommendation: build Terminal (with the deposit and withdraw engine, implementation plan) and Display first.
-Design Backed in detail when housing arrives, because it is only needed for player-built storage (D8).
+Decided (rev. 3, D8): build **Terminal** (with the deposit and withdraw engine, implementation plan) and **Display**
+first [V1]. A typical warehouse has a few terminal chests and many display chests. **[Later]** Backed mode, designed
+in detail when housing arrives, because it is only needed for player-built storage.
+
+Container-derived capacity (`bound slots × UnitsPerSlot`, §4.4) applies to every mode.
 
 ## 7. Transport (notes 1, 17)
+
+**V1 scope (rev. 3):** simulated transport only, robbery **off** (D6). The purpose is to prove that yields, storage
+moves and transport into warehouses work end to end. The lifecycle and its branches (AwaitingSpace, re-route,
+return, stalled, cancelled), the automatic triggers, stock-based sizing, the preferred-or-nearest warehouse within the
+effective town, and manual orders with a dry run are all [V1]. Physical carriers, robbery, escort and route risk are
+[Later].
 
 ### 7.1 Order model
 
@@ -394,8 +450,8 @@ Planned/Assigned → Cancelled
 
 | Mode | How it moves | Cargo token | Robbery | Status |
 |---|---|---|---|---|
-| **Simulated** | The ETA comes from lane distance / speed. Nothing walks. | None. | A risk roll per leg against the route risk (§7.5) can produce an `Ambushed` event. It is resolved automatically, or turned into a spawned encounter if players are near. | First phase. It stays as the fallback when no carrier is available. |
-| **NPC caravan** | An NPC (mule, cart, wagon driver) walks the road route (KNG-27 graph + KNG-36 NPC platform). The NPC's position is reported to the API with progress. | The NPC entity carries the order id. It has no inventory of its own. | Killing or stopping the NPC lets attackers open a **loot view** of the transit storage (Terminal-style) and take items as `TransportRobbed` moves. | After KNG-36. |
+| **Simulated** | The ETA comes from lane distance / speed. Nothing walks. In V1 the order is carried by one of the producer's own workers (§7.7). | None. | Off in V1 (D6). Later: a risk roll per leg against the route risk (§7.5) can produce an `Ambushed` event. It is resolved automatically, or turned into a spawned encounter if players are near. | **[V1].** It stays as the fallback when no carrier is available. |
+| **NPC caravan** | An NPC (mule, cart, wagon driver) walks the road route (KNG-27 graph + KNG-36 NPC platform). The NPC's position is reported to the API with progress. See §7.8. | The NPC entity carries the order id. It has no inventory of its own. | Killing or stopping the NPC lets attackers open a **loot view** of the transit storage (Terminal-style) and take items as `TransportRobbed` moves. | **[Later], next follow-up after V1** ([#251](https://github.com/PandiO/knk-workspace/issues/251)). |
 | **Player courier** | A player accepts a courier contract (a quest or job board; profession Transporter/Trademaster, concept L229). The player gets a **sealed cargo crate** item. | The crate is an `ItemInstance` bound to the order. It is not stackable and can't be opened by the courier. Whoever holds the crate holds the right to the cargo; the items stay in the transit storage. | If the courier dies, the crate drops and anyone can pick it up (V1 "kill the courier for a bounty", `Minigames/Transport.java`). Delivering a crate at a stop's terminal completes delivery. A thief can "fence" a crate at a black market or open it at a thieves' den, moving the cargo to themselves; they become wanted (iPhone L268-272). | With the quest and job systems. |
 | **Escort** (add-on to NPC or courier) | Players or guard NPCs accompany a carrier. | — | They lower risk and defend during ambushes. Escort rewards are paid on delivery. | With caravans. |
 
@@ -404,14 +460,16 @@ transit storage, so killing, dropping, duplicating or crashing can't copy goods.
 
 ### 7.4 Planning and triggers
 
-- **Automatic from producers:**
+- **Automatic from producers** [V1]:
   - Fires when occupancy reaches the threshold, a line is blocked full, or the distinct cap blocks a line (V2
     defect 7).
-  - The order is sized by stock up to carrier capacity (V2 defect 8).
+  - The order is sized by stock up to carrier capacity (V2 defect 8). In V1 that is the capacity of the producer's
+    worker who carries it (§7.7).
   - The destination follows the producer's preference within its effective town (§7.6).
-- **Distribution:** warehouse → consumers (shops, workshops, garrisons), planned by the town's logistics policy
-  (TOWN_LOGISTICS.md).
-- **Trade:** warehouse → another town's warehouse, under a trade agreement (TOWN_LOGISTICS.md §6).
+- **Distribution** [V1, rev. 3]: reserve and collect. The warehouse reserves stock for each consumer (shop,
+  workshop, garrison); the consumer sends its own worker to collect it as a collection order. Planned by the town's
+  logistics policy (TOWN_LOGISTICS.md §5).
+- **Trade** [Later]: warehouse → another town's warehouse, under a trade agreement (TOWN_LOGISTICS.md §6).
 - **Manual and Quest:** created by admins or by quest scripts. A dry run previews the plan (replaces
   `/test transportpreperation`).
 
@@ -433,7 +491,8 @@ Escorts and the carrier's quality lower it. This is how clans and kingdoms exert
 - protect their own;
 - take the law buildings that keep roads safe.
 
-The formula is a later balancing task. The model only needs per-leg risk and the event log.
+The formula is a later balancing task. The model only needs per-leg risk and the event log. Route risk is [Later];
+V1 has no robbery (D6).
 
 ### 7.6 Roads and lanes (note 14)
 
@@ -443,9 +502,38 @@ The formula is a later balancing task. The model only needs per-leg risk and the
 - Simulated ETA = road length / carrier speed. NPC and courier carriers walk the actual route.
 - **Road connection:** a rural `ProductionStructure` (in a Territory) must be connected to its town's road
   network. Its `RoadConnection` state is `Connected`, `Unconnected` or `Unmeasured`.
-  - `Unconnected` producers can still produce.
-  - Automatic transports from them are held, with a warning. Alternatively they could run with an off-road penalty
-    (D5).
+- **Unconnected producer [V1] (rev. 3, D5):** it keeps producing into its local storage, but automatic transport is
+  held. When the local storage is full, the line stops, like any full producer. Both the **missing road connection**
+  and the **full storage** show as warnings in the dashboard. There is no off-road transport.
+
+### 7.7 Producer workers carry the goods [V1] (rev. 3)
+
+- Each `ProductionStructure` has its **own workers**, **2 by default**. They can be simulated or rendered; that
+  doesn't matter for the model.
+- Output scales with the workers present. When one of two workers leaves to carry a transport order, output drops to
+  **50%**. With both away, it stops. Full output resumes when the worker returns.
+- A transport order is carried by one of the structure's own workers. The worker's capacity bounds the order size.
+  If no worker is free, the order waits.
+- This is the first, built-in form of the staffing modifier: a modifier source "workers present / workers total"
+  (PRODUCTION_KINDS.md §4.2).
+- Consumers (shops, workshops, garrisons) use the same rule for collection orders (TOWN_LOGISTICS.md §5).
+- **[Parked]** worker count growing with structure level.
+
+### 7.8 NPC transporters [Later, next follow-up after V1] (rev. 3)
+
+Designed now, built right after V1 ([#251](https://github.com/PandiO/knk-workspace/issues/251)).
+
+- **Carrier:** a caravan NPC (mule, cart, driver) on the NPC platform. It holds only the order id, never items.
+- **Route:** it walks the real road route (road graph) and reports progress to the API.
+- **Virtual movement:** when no players are near, the NPC despawns and advances along the route on a timer. It
+  reappears at the right position when a player comes close. This keeps load low and ETAs reliable. It follows the
+  [NPC lifecycle rules](../npc-platform/DESIGN.md) (non-persistent entities, one live entity per NPC id).
+- **Capacity and speed** per carrier type (mule vs wagon), possibly tied to a level.
+- **[Later] Town carrier pool for hire** ([#252](https://github.com/PandiO/knk-workspace/issues/252)): a town has a
+  carrier pool (stable, caravan yard, carters' guild), standalone or as quarters inside a warehouse, mirroring the
+  garrison rule for guards. The town or the structure itself pays to hire carriers when its own workers can't keep up
+  with its output and orders. It combines the "town pool" and "hired per order" options and needs town treasury
+  accounts.
 
 ## 8. Item identity (note 9)
 
@@ -478,37 +566,48 @@ game-wide rule (its own issue):
   output).
 - **Yield source** per structure (note 8): `Derived` (from a survey of the area's contents), `Configured` (an admin
   table), or `Hybrid` (survey-derived, with admin pins, exclusions and overrides; recommended default).
-- **Rate** = base rate × multipliers:
-  - level (note 11);
-  - town;
-  - territory;
-  - technology (later);
-  - season (later);
-  - pool depletion from player harvesting (note 13);
-  - shared-area competition.
-  - Each cycle writes a `ProductionCycleRecord` with the multiplier breakdown (insight, note 10).
+- **Rate** = base rate run through the **modifier pipeline** (rev. 3; PRODUCTION_KINDS.md §4.2). Each modifier has a
+  scope, a target, an effect (multiply or add) and an active window. New factors are new modifier sources; the engine
+  doesn't change.
+  - [V1] sources: structure **level** and **weather** (custom climate zones with daily stored rolls), plus the
+    built-in worker-availability scaling (§7.7), the pool fill factor and the shared-area split.
+  - [Later] sources: painted fertility map, technologies, seasons, staffing, soil exhaustion, events, neighbour
+    bonuses, upkeep, war disruption.
+  - Each cycle writes a `ProductionCycleRecord` that lists **each** applied modifier (insight, note 10).
 - **Cycles**:
   - anchored to the cycle length, so there is no drift (V2 defect 5);
   - catch-up is capped;
   - inputs are consumed when a line has them (V2 defect 12);
   - a full output storage puts the line in `BlockedFull`.
-- **Player harvesting** in yield areas, with rights, yield and depletion of a shared `ResourcePool`, and **block
-  regeneration** (notes 13, 18): PRODUCTION_KINDS.md §6-7.
+- **Player harvesting** in yield areas counts as working for the town: an automatic worker's share goes to the
+  player, the rest goes straight into the structure's Output storage, and the town gains net output (rev. 3). Rights,
+  the shared `ResourcePool` and **block regeneration** (notes 13, 18): PRODUCTION_KINDS.md §6-7.
 
-## 10. Processing, shops and levels (note 12; hooks)
+## 10. Processing, shops and levels (note 12)
 
-- Processing is a production line with inputs. It runs at a processing structure: a workshop, a shop with a
-  workshop, a sawmill. Inputs come from an `Input` storage that distribution keeps filled (TOWN_LOGISTICS.md §3).
-- **Shop level** (shop design) sets:
-  - production speed (cycle length multiplier);
-  - yield;
-  - input cost per cycle;
-  - the price multiplier;
-  - storage caps.
-- The level-definition pattern is the same as for production kinds (PRODUCTION_KINDS.md §5), so one admin UI
-  serves both.
-- **Pricing** (note 16) reads supply and demand from this network: warehouse stock, days of cover, inflow, sales.
-  See TOWN_LOGISTICS.md §7.
+Shops are **[V1]** since rev. 3 (they were deferred to KNG-91 before). Full design:
+[shops DESIGN](../shops/DESIGN.md). Summary:
+
+- **`Shop : Structure`** with an **Input** and a **Merchandise** storage. Two kinds:
+  - **processing shops** (bakery, blacksmith) turn inputs into goods on production lines, then sell them;
+  - **trading shops** (general store, market stall) sell goods as they are.
+- **Every shop can also buy from players and resell**, processing shops included. A bought unique item becomes a
+  `StockUnit` in Merchandise (enchantments intact) and goes back on sale as that exact item. Each shop type has
+  **accepted categories** (a weaponsmith buys weapons only).
+- **Build order inside the same update:** a static admin catalogue first; then restocking from the warehouse by the
+  shop's own worker (reserve and collect), processing, and players selling to shops.
+- Processing is a production line with inputs. It runs at a processing structure: a workshop, a processing shop, a
+  sawmill. Inputs come from an `Input` storage that the shop's worker refills by collecting reservations
+  (TOWN_LOGISTICS.md §5).
+- **Interim pricing** until the pricing model: a static catalogue price wins; otherwise sell price = blueprint base
+  price × shop tax modifier × shop level modifier; buy-back from players = the same × a buy-back percentage
+  (default 50%).
+- **Shop level** sets processing speed (cycle length multiplier), yield, input cost per cycle, the price multiplier
+  and storage caps. The level-definition pattern and admin UI are the same as for production kinds
+  (PRODUCTION_KINDS.md §5).
+- **Shopkeeper NPCs** and **display stalls** are [V1] too; see the shops design §5-6.
+- **Pricing** (note 16) [Later] reads supply and demand from this network: warehouse stock, days of cover, inflow,
+  sales. See TOWN_LOGISTICS.md §7.
 
 ## 11. Admin, debug and insight (note 10)
 
@@ -516,17 +615,17 @@ game-wide rule (its own issue):
 
 - **FormConfig CRUD:**
   - Territory, Warehouse, ProductionStructure (with areas and initial lines), ProductionKind and levels, Storage
-    and container bindings;
+    and container bindings, climate zones and weather types, Shop with catalogue, levels and display spots;
   - transport orders (manual), logistics policies and rules, trade agreements;
   - blueprint vanilla matches.
 - **Logistics dashboard per town:**
   - warehouses (fill, days of cover per key resource);
-  - producers (line states, last survey, level, road connection);
+  - producers (line states, last survey, level, road connection, workers present);
   - open orders on a timeline with carrier mode, ETA and risk;
   - warnings.
 - **Structure detail:**
   - area surveys, with a 2D plot of composition from survey data;
-  - lines, each with its cycle history and multiplier breakdown;
+  - lines, each with its cycle history and modifier breakdown;
   - a "why not producing" explanation;
   - storage contents.
 - **Ledger explorer:** stock transactions filtered by storage, blueprint, reason, actor and reference, with
@@ -534,11 +633,12 @@ game-wide rule (its own issue):
 - **Order detail:** event timeline, cargo, the route on a map (road edges), risk per leg.
 - **Simulator:** forecast the next N hours of production and transport for a structure or town without writing
   anything (dry-run planner). Useful for balancing.
-- **Health:** reconciler results, storages over cap, unconnected producers, stalled orders, sync conflicts.
+- **Health:** reconciler results, storages over cap, unconnected producers, full storages, stalled orders, sync
+  conflicts, inboxes near their cap.
 
 ### 11.2 In game (secondary)
 
-- Menus: structure logistics, storage terminal, inbox, transport orders.
+- Menus: structure logistics, storage terminal, inbox, transport orders, shop menus (shops DESIGN).
 - Commands under `/knk storage|production|transport|logistics` for in-world actions and testing:
   - bind a container;
   - run a survey;
@@ -548,7 +648,7 @@ game-wide rule (its own issue):
 
 ## 12. V2 → V3 concept map (updated)
 
-| V2 | V3 rev. 2 |
+| V2 | V3 rev. 3 |
 |---|---|
 | `Storage` (structure or user) | `Storage` with kind and holder (Domain, Player, Clan, Transit, Virtual) |
 | `StorageItems` map | `StockLine` (fungible) + `StockUnit` (instances) |
@@ -560,7 +660,7 @@ game-wide rule (its own issue):
 | `GenerationDeliveryType.SPAWN_ON_GROUND` | Dropped |
 | `transportThreshold`, nearest or preferred warehouse | Kept, with fixed semantics (§7.4) |
 | `TransportOrder` / `TransportOrderItem` / `TransportRouteNode` | `TransportOrder` / `TransportOrderLine` / `TransportStop` + transit storage + assignments + events |
-| `simulatedTravelTime` (unused), commented-out `transportNPC` | Simulated mode with real ETA; NPC caravan and player courier modes |
+| `simulatedTravelTime` (unused), commented-out `transportNPC` | Simulated mode with real ETA, carried by producer workers (V1); NPC caravan and player courier modes (Later) |
 | `Structure.town` (wilderness "ruling town") | `Territory` claimed by a town (§3.3) |
 | `GenerationCommandListener` + subscriber set | Domain events → notification outbox → plugin events and messages |
 | `/generation updates`, `/storage …`, `/test transportpreperation` | Web-app tools first; `/knk logistics watch`, `/knk storage …`, dry runs |
@@ -608,20 +708,31 @@ Rev. 1 decisions now superseded:
 - D7: simulated transport is now explicitly the first mode, not the design.
 - D13 is generalized in §8.
 
-**Open (recommendation first):**
+**Settled by the developer (2026-11-05, [decision record](DECISIONS_2026-11-05.md) §9):**
 
-| # | Question | Recommendation |
+- All six principles (§2), with the rev. 3 clarifications.
+- The five storage kinds, `StockLine` and `StockUnit` (§4.1-4.2).
+- Shops, shopkeepers and display stalls are in V1 ([shops DESIGN](../shops/DESIGN.md)).
+- The production structures work and the garrison/guard NPC work ship in the same test phase.
+
+| # | Question | Outcome (2026-11-05) |
 |---|---|---|
-| D1 | Territory scope now | A minimal `Territory : Domain` with `ClaimedByTownId` and an optional region. Province, controlledBy, accessConditions and resourceYield come later. |
-| D2 | Ownership and payouts (vision §4.5) | Still deferred. Storages and holders are ready for it. Producers stay town/staff-run until the property economy design. |
-| D3 | Capacity weighting default | `StackSlots` for container-bound storages (it matches what players see). `Raw` for abstract ones. |
-| D4 | Output full | Stall without accruing (rev. 1 D4). Shown on the dashboard. |
-| D5 | Unconnected rural producer | Production continues. Automatic transport is held, with a warning. No off-road transport. |
-| D6 | Simulated-mode robbery | Off by default. A per-town switch enables risk rolls with automatic outcomes, so routes matter before NPCs exist. |
-| D7 | Inbox limits | No hard cap. Expiry after 30 days moves items to `SYS_LOSS`, with reminders. Premium tiers get a larger **stash**; the inbox is not a premium feature. |
-| D8 | Container modes first | Terminal + Display. Backed with housing. |
-| D9 | Courier crates | An `ItemInstance` bound to the order. Not soulbound, so it can be stolen. It expires with the order. |
-| D10 | Ledger retention | Keep all moves. Roll `Production` moves up per line per day after 30 days. |
-| D11 | Vanilla shadow blueprints (§8) | Generate automatically for every obtainable material, in an "Uncurated" category. Admins curate later. |
+| D1 | Territory scope now | Not discussed; recommendation stands: a minimal `Territory : Domain` with `ClaimedByTownId` and an optional region. Province, controlledBy, accessConditions and resourceYield come later. |
+| D2 | Ownership and payouts (vision §4.5) | Not discussed; recommendation stands: still deferred. Storages and holders are ready for it. Producers stay town/staff-run until the property economy design. |
+| D3 | Capacity weighting | **Replaced** (§4.4): raw units everywhere; container-derived caps = slots × `UnitsPerSlot`; `ItemBlueprint.StorageWeight` default 1; `StackSlots` dropped. |
+| D4 | Output full | **Confirmed:** stall without accruing. Shown on the dashboard. |
+| D5 | Unconnected rural producer | **Confirmed** with the §7.6 wording: produce into local storage until full, then stop; automatic transport held; warnings for the missing road and the full storage. No off-road transport. |
+| D6 | Simulated-mode robbery | **Off in V1.** |
+| D7 | Inbox limits | **Replaced** (§4.6): hard cap raised by premium tiers; overflow to `SYS_LOSS`; near-cap warnings and a loss notification; 30-day expiry with reminders. |
+| D8 | Container modes first | **Confirmed:** Terminal + Display. Backed with housing [Later]. |
+| D9 | Courier crates | Not discussed; recommendation stands: an `ItemInstance` bound to the order. Not soulbound, so it can be stolen. It expires with the order. [Later] |
+| D10 | Ledger retention | Not discussed; recommendation stands: keep all moves. Roll `Production` moves up per line per day after 30 days. |
+| D11 | Vanilla shadow blueprints (§8) | Not discussed; recommendation stands: generate automatically for every obtainable material, in an "Uncurated" category. Admins curate later. |
+
+**Still open:**
+
+- Exact activation radius for spawn-on-demand NPCs ([NPC platform](../npc-platform/DESIGN.md)).
+- [Parked] producer worker count growing with structure level (§7.7).
+- Whether selling to a shop should be more or less attractive than selling to a marketplace vendor (shops DESIGN).
 
 Production- and logistics-specific decisions are in the companion documents.
