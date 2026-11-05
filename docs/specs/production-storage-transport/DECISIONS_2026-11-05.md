@@ -3,6 +3,8 @@
 **Status:** Approved by the developer (voice design review, 2026-11-05). This record is **authoritative** where it
 differs from DESIGN.md, PRODUCTION_KINDS.md, TOWN_LOGISTICS.md or IMPLEMENTATION_PLAN.md (all rev. 2, 2026-10-09)
 until those documents are revised to rev. 3.
+**Folded in:** 2026-11-05, rev. 3 of all four documents takes in this record. The record stays the source for the
+wording of each decision.
 **Last updated:** 2026-11-05
 **Parent issue:** KNG-83 (now tracked as a `[KNG-83]` issue in `PandiO/knk-workspace`).
 **Scope of the review:** principles, storage, production structures, transport, NPC transporters, warehouses and
