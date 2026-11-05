@@ -1,7 +1,7 @@
 # knk-web-app — Architecture
 
 **Status:** Living document — reflects actual code, updated in place on each rescan
-**Last updated:** 2026-11-05 (feedback primitives: one accessible `Dialog`, `ConfirmDialog` with danger and a reason, general toasts, all overlays moved — #33, branch `claude/feedback-primitives-33`, not merged); 2026-11-05 (#239 offer permission check, #240 Send again merged); 2026-11-04 (#239, #240 on a feature branch); 2026-11-02 (`src/realtime/RealtimeProvider`, world tasks and catalogue scans over the web hub — #181, branch `claude/realtime-signalr`); 2026-11-01 (world tasks anchored to the draft, cancel/expired states, task code, builder task types — #180, branch `claude/world-task-hardening`); 2026-09-18 (scan basis: `knk-web-app` @ `4ff5dc6`, branch `claude/web-app-codebase-scan-4yqibi`); spot edits 2026-10-09 (ObjectTypeExplorer, KNG-61), 2026-10-10 (FormWizard Boolean fields, KNG-53), 2026-10-12 (FormWizard child forms, KNG-133, KNG-134; List edit load, step header, List validation, KNG-135, KNG-137, KNG-164; form session registry, KNG-136; cancel / delete-draft prompt, KNG-162; form configuration export/import, KNG-138); 2026-10-17 (form wizard chain merged to `main`; smoke-test follow-ups KNG-166..169, KNG-172, KNG-173: step strip, confirmations and refusals, rule builder parent forms, picker columns, metadata refresh); 2026-10-22 (display configuration export/import; KNG-195 hybrid picker submit); 2026-10-23 (step completion conditions run, KNG-186); 2026-10-23 (validation result log, batch validate, Re-check, KNG-269); 2026-10-25 (toast region, world-task polling; UX re-evaluation in `reports/2026-10-25-web-app-ux-reevaluation.md`); 2026-10-26 (dashboard type in the URL, `returnTo`, submit pending state, success toast — PandiO/knk-workspace#177 link 1, #58); 2026-10-26 (dashboard header New/Configure, flat explorer with marker, open form without the explorer + breadcrumb, detail page header, metadata-driven Create New, "Entity setup" — #177 link 2, #81, #39); 2026-10-26 (dashboard explorer: one scrollbar, favourite types — #194, branch `claude/dashboard-explorer-194`, merged into `main` `c3c0c9f`), 2026-10-26 (dashboard header row spacing — #195, branch `claude/dashboard-header-195`, merged into `main` `c3c0c9f`); 2026-10-26 (data router, unsaved-changes guard, sticky footer, blur validation + error summary, Save on any step in edit mode, single-line input, drafts owned by the login — #109, #186, #64 FormWizard part); 2026-10-27 (unsaved changes compared by value across all steps, Next's progress save no longer counts as saved — #109 fix round); 2026-11-01 (dashboard table state in the URL, rows as links, `aria-sort`, lootbox/moderation tab in the URL, "Drafts (n)" and "New with" — PandiO/knk-workspace#39, #177 follow-up, merged 2026-11-03); 2026-11-02 (design tokens and switchable themes — #95, merged 2026-11-03); 2026-11-03 (fix round after the live comparison: orange brand primary, heading font on player pages only, full-bleed auth pages); 2026-11-03 (explorer favourites are copies — #225, branch `claude/explorer-favourite-copies-225`, not merged); 2026-11-03 (explorer filter: display / form configuration — #226, merged 2026-11-04); 2026-11-03 (open form without the type overview card — #227, merged 2026-11-04)
+**Last updated:** 2026-11-05 (data and format primitives: `DataTable`/`Pager`, `utils/format.ts`, `Field`, `SettingsPage` shell with dirty state — #187, branch `claude/data-primitives-187`, stacked on #33, not merged); 2026-11-05 (feedback primitives: one accessible `Dialog`, `ConfirmDialog` with danger and a reason, general toasts, all overlays moved — #33, branch `claude/feedback-primitives-33`, not merged); 2026-11-05 (#239 offer permission check, #240 Send again merged); 2026-11-04 (#239, #240 on a feature branch); 2026-11-02 (`src/realtime/RealtimeProvider`, world tasks and catalogue scans over the web hub — #181, branch `claude/realtime-signalr`); 2026-11-01 (world tasks anchored to the draft, cancel/expired states, task code, builder task types — #180, branch `claude/world-task-hardening`); 2026-09-18 (scan basis: `knk-web-app` @ `4ff5dc6`, branch `claude/web-app-codebase-scan-4yqibi`); spot edits 2026-10-09 (ObjectTypeExplorer, KNG-61), 2026-10-10 (FormWizard Boolean fields, KNG-53), 2026-10-12 (FormWizard child forms, KNG-133, KNG-134; List edit load, step header, List validation, KNG-135, KNG-137, KNG-164; form session registry, KNG-136; cancel / delete-draft prompt, KNG-162; form configuration export/import, KNG-138); 2026-10-17 (form wizard chain merged to `main`; smoke-test follow-ups KNG-166..169, KNG-172, KNG-173: step strip, confirmations and refusals, rule builder parent forms, picker columns, metadata refresh); 2026-10-22 (display configuration export/import; KNG-195 hybrid picker submit); 2026-10-23 (step completion conditions run, KNG-186); 2026-10-23 (validation result log, batch validate, Re-check, KNG-269); 2026-10-25 (toast region, world-task polling; UX re-evaluation in `reports/2026-10-25-web-app-ux-reevaluation.md`); 2026-10-26 (dashboard type in the URL, `returnTo`, submit pending state, success toast — PandiO/knk-workspace#177 link 1, #58); 2026-10-26 (dashboard header New/Configure, flat explorer with marker, open form without the explorer + breadcrumb, detail page header, metadata-driven Create New, "Entity setup" — #177 link 2, #81, #39); 2026-10-26 (dashboard explorer: one scrollbar, favourite types — #194, branch `claude/dashboard-explorer-194`, merged into `main` `c3c0c9f`), 2026-10-26 (dashboard header row spacing — #195, branch `claude/dashboard-header-195`, merged into `main` `c3c0c9f`); 2026-10-26 (data router, unsaved-changes guard, sticky footer, blur validation + error summary, Save on any step in edit mode, single-line input, drafts owned by the login — #109, #186, #64 FormWizard part); 2026-10-27 (unsaved changes compared by value across all steps, Next's progress save no longer counts as saved — #109 fix round); 2026-11-01 (dashboard table state in the URL, rows as links, `aria-sort`, lootbox/moderation tab in the URL, "Drafts (n)" and "New with" — PandiO/knk-workspace#39, #177 follow-up, merged 2026-11-03); 2026-11-02 (design tokens and switchable themes — #95, merged 2026-11-03); 2026-11-03 (fix round after the live comparison: orange brand primary, heading font on player pages only, full-bleed auth pages); 2026-11-03 (explorer favourites are copies — #225, branch `claude/explorer-favourite-copies-225`, not merged); 2026-11-03 (explorer filter: display / form configuration — #226, merged 2026-11-04); 2026-11-03 (open form without the type overview card — #227, merged 2026-11-04)
 **Source scan:** `docs/reports/web-app-scan-2026-09-18.md`
 
 ## Stack
@@ -132,6 +132,66 @@ building an overlay or a status banner by hand.
   the menu returns focus to ⋯ instead of the top of the page.
 - Tests: `components/__tests__/Dialog.test.tsx`, `overlaysOnDialog.test.tsx`, `ToastRegion.test.tsx`,
   `hooks/__tests__/useConfirm.test.tsx`. No jest-axe in the repo; roles, names, focus and keys are checked one by one.
+
+## Data and format primitives: tables, pager, formatting, fields, settings pages
+
+PandiO/knk-workspace#187 (branch `claude/data-primitives-187`, stacked on #33's branch, not merged). Use these instead
+of a hand-rolled `<table>`, pager, `toLocaleString`, unlabelled input or settings header.
+
+| Need | Use | Where |
+|---|---|---|
+| A list of rows (sortable headers, rows that open a page) | `<DataTable columns rows rowKey sort onSortChange rowHref onRowClick …>` | `components/DataTable.tsx` |
+| Pages under a list | `<Pager page pageSize totalCount onPageChange label? noun?>` | `components/Pager.tsx` |
+| A server-paged entity list (dashboard, wizard pickers) | `PagedEntityTable` (fetching, query modes, selection, pinned rows) — draws through `DataTable`/`Pager` | `components/PagedEntityTable/` |
+| A date, time or number on screen | `formatDateTime`, `formatDate`, `formatTime`, `formatNumber`, `formatPercent`, `numberFormat`; `parseApiDate` | `utils/format.ts` |
+| A labelled control | `<Field label hint? error? required? inline? id?>` around the control (or a render function) | `components/Field.tsx` |
+| A page of settings saved with one Save | `<SettingsPage …>` + `<SettingsSection title changed?>` | `components/SettingsPage.tsx` |
+
+- **`DataTable`** (built from #39's work in `PagedEntityTable`, which now renders through it): with `rowHref` the
+  link column (`linkColumn`, default the first) is a real `<a href>` — middle-click, Ctrl/Cmd-click and the keyboard
+  work; a plain click on the link or anywhere on the row calls `onRowClick` (the caller navigates in the app);
+  Ctrl/Cmd-click or middle-click on the row opens a new tab; controls inside a linked row keep their own clicks. A
+  sortable header is a `<button>` inside `<th aria-sort>`; `nextSort(current, key)` gives asc → desc → off. Also
+  `sections` with a heading row (the pickers' "Created in this form"), `leading`/`rowLeading` elements, `isRowSelected`
+  styling, a `rowActions` column (sr-only "Actions" header), `empty`, `loading`, `caption` (the table's accessible
+  name) and `density="compact"` for lists inside cards. Wide tables scroll inside their own container.
+- **`Pager`**: a `<nav aria-label>` (default "Pagination") with "Showing a to b of n {noun}" from `sm` up, Previous,
+  "Page x of y" (`aria-live="polite"`) and Next; numbers through `formatNumber`. The caller decides when to show it.
+- **`utils/format.ts`, one locale policy**: numbers in `NUMBER_LOCALE` `en-US` (`1,234,567`, as the game's chat,
+  currency DESIGN §4 D6); dates and times in the viewer's own locale and zone (`DATE_LOCALE` undefined); missing or
+  unreadable values as `-`. API dates without a zone (a MySQL `DATETIME`, `2026-11-05T20:52:02`) are **UTC**:
+  `parseApiDate`/`parseUtc` read them so (was `parseUtc` in `components/currency/BalanceLedgerTable.tsx`); `new Date(…)`
+  on them shifts by the UTC offset. A bare `2026-11-05` is a calendar date (`formatDate` shows that day). The six local
+  `new Intl.NumberFormat('en-US')` constants (currency pages, retention, transactions) use the shared `numberFormat`.
+  The detail page's `DisplayField.formatValue` and template variables (`useTemplateParser`) show ISO date-times as a
+  date and time whatever the field type (configurations often have none or `String`), numbers for `Integer`/`Number`/
+  `Decimal`. Account → Transactions shows local time instead of raw UTC text.
+- **`Field`**: generated id (`useId`) or a fixed `id`, `htmlFor`, `aria-describedby` for hint and error (keeps the
+  control's own), `aria-invalid`, `required` with an `aria-hidden` star, the error as `role="alert"`; `inline` puts a
+  checkbox before its label. `.input` has no padding of its own: add `px-3 py-2` (as the migrated pages do).
+- **`SettingsPage`** (SET-4, SET-7): a sticky header (`top-16`, under the nav; solid with the page background on)
+  with the title, "Last saved {when} by {who}", "n unsaved changes" (`aria-live`), optional Reload, Discard and
+  Save (n). The page owns its values and passes `dirtyCount` (Siege's pattern: count against the saved values, mark
+  changed fields, send only those); `canSave={false}` while a value is invalid. `onSave` may resolve a message: success
+  is `toast.success(message ?? "Saved n changes.")`; a throw keeps the changes and shows `saveErrorMessage(error)`
+  (default the API's reason) in the header as `role="alert"`. With changes: in-app navigation (links, Back/Forward) asks
+  "Leave without saving?" through `useConfirm` (danger, focus on Stay; `NavigationBlocker`/`useHasDataRouter`
+  exported by `hooks/useLeaveGuard.tsx`, so it needs App's data router), a reload or tab close gets the browser's
+  question, Discard and Reload ask first. `loadError` replaces the form with a message and Retry (nothing can be saved
+  over the real values, SET-1). On a phone the header drops the description and shows Reload as an icon.
+  `SettingsSection` is a titled card with an optional "Changed" mark.
+- **Migrated (first set):** dashboard and wizard pickers (`PagedEntityTable`); Player moderation (four tables, the
+  All-players pager, filters on `Field`, dates/numbers, tokens; header buttons wrap at phone width); Game Settings
+  (dirty state per group and per world, Discard, labels on `Field`, worlds table on `DataTable`; the data-retention
+  card still saves on its own); Siege configuration; the detail page's values; the wizard's Integer/Decimal/DateTime
+  inputs now have the id their label points at. **Left for later:** Lootbox Settings tab, Currency policy and Roads on
+  the shell (#26; the lootbox tab loses edits on a tab switch, so it needs the shell inside a tab), the detail page's
+  layout and child tables (#188/#189), player profile (#119), the other hand-rolled tables and pagers (Balance log,
+  currency alerts, email log, invitations, location retention, lootbox drop log/tokens, discovery, roads), the
+  remaining `toLocale*` calls and unlabelled labels (the wizard's list/object field groups, account pages).
+- Tests: `components/__tests__/{DataTable,Field,SettingsPage}.test.tsx`, `utils/__tests__/format.test.ts`,
+  `DisplayWizard/__tests__/DisplayField.format.test.tsx`, `FormWizard/__tests__/FieldRenderers.labels.test.tsx`, and
+  the page tests of Game Settings, Siege and moderation.
 
 ## High-level shape
 
@@ -405,7 +465,8 @@ src/
     DisplayConfigBuilder/   — admin UI to author DisplayConfigurationDto records
     ObjectDashboard/        — legacy static-config-driven list/CRUD dashboard
     ObjectTypeExplorer/     — left-nav entity type picker (ObjectDashboard, FormWizardPage): search, A–Z/Z–A sort, optional groups (unused since #177 link 2), `marked` entries, `favourites` with a star per type, listed on top as copies (#194, #225, dashboard only), `filters` (Any/Yes/No selects, #226, dashboard only), settings in localStorage (KNG-61)
-    PagedEntityTable/       — generic server-paged table, used by both dashboard and forms; controlled mode (`query`/`onQueryChange`), `rowHref`, `aria-sort` (#39)
+    PagedEntityTable/       — generic server-paged table, used by both dashboard and forms; controlled mode (`query`/`onQueryChange`), `rowHref`, `aria-sort` (#39); draws through `DataTable`/`Pager` (#187)
+    DataTable.tsx, Pager.tsx, Field.tsx, SettingsPage.tsx — data and format primitives (#187); see § Data and format primitives
     PathBuilder/            — path/reference picker for cross-entity field bindings
     Workflow/               — WorldTask/job polling UI (siege/world-mutation background tasks)
     minecraft/              — hybrid pickers for Minecraft material/enchantment refs

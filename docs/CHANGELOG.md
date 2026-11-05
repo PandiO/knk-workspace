@@ -4,6 +4,18 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Web app data and format primitives: one table and pager, one date/number format, tied labels, a settings page
+  with unsaved-change handling** — [PandiO/knk-workspace#187](https://github.com/PandiO/knk-workspace/issues/187),
+  knk-web-app `claude/data-primitives-187` (chain 2 link W3; **contains W2's branch**, so merging it merges #33 too).
+  `DataTable` and `Pager` (rows as real links, sortable headers announced with `aria-sort`, one pager style) draw the
+  dashboard table, the form pickers and Player moderation's four lists. `utils/format.ts`: numbers in en-US, dates in
+  the viewer's own time, API dates without a zone read as UTC; the detail page and Account → Transactions no longer
+  show raw ISO dates. `Field` ties every label to its input (moderation filters, settings fields, the wizard's number
+  and date fields). Game Settings and Siege configuration share one settings header: last saved, "n unsaved changes",
+  Discard and Save (n), a question before leaving, reloading or discarding changes, a toast on save and the API's
+  reason in the header on a refusal; Game Settings had no unsaved-change handling before. Theme tokens only (raw
+  colour classes 2865 → 2710). No API change. Checklist: [data primitives smoke test](guides/data-primitives-smoke-test.md).
+
 - **Web app feedback primitives: one accessible dialog, confirm with danger and a reason, general toasts** —
   [PandiO/knk-workspace#33](https://github.com/PandiO/knk-workspace/issues/33), knk-web-app `claude/feedback-primitives-33`
   (chain 2 link W2). Every overlay of the web app (messages, confirms, child forms, the builders' field editors and
