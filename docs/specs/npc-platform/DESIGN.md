@@ -187,7 +187,7 @@ Tutorial configuration owns candidate locations and selection order. If the pref
 
 Developer decision of 2026-11-05 ([production/storage/transport decision record §8](../production-storage-transport/DECISIONS_2026-11-05.md#8-npc-lifecycle-and-reliability-v1--applies-to-the-npc-platform)). **[V1]**. V1 (legacy) suffered from disappearing and duplicated NPCs. The **NPC platform owns all of this**; consumers don't build their own spawn bookkeeping.
 
-**Consumers:** guards (garrisons, [BEHAVIOR_MODEL.md](BEHAVIOR_MODEL.md) when merged), shopkeepers ([shops DESIGN §6](../shops/DESIGN.md), #249), producer and consumer workers when rendered ([production DESIGN §7.7](../production-storage-transport/DESIGN.md)), and later carriers (NPC caravans, #251).
+**Consumers:** guards (garrisons; behavior model in [#234](https://github.com/PandiO/knk-workspace/issues/234), PR #235), shopkeepers ([shops DESIGN §6](../shops/DESIGN.md), #249), producer and consumer workers when rendered ([production DESIGN §7.7](../production-storage-transport/DESIGN.md)), and later carriers (NPC caravans, #251).
 
 Requirements:
 
