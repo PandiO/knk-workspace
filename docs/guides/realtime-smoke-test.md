@@ -1,7 +1,7 @@
 # Realtime channel (SignalR) — smoke test
 
 **Status:** All sections run by the developer (WT2 2026-11-04; WT2 follow-ups, S1, S2, S3 2026-11-05) and merged into the
-default branches. Open: S2 steps 5 and 7 to re-check as now described (#179); `realtime.enabled` stays `false` by default
+default branches; S1–S3 issues closed 2026-11-05. `realtime.enabled` stays `false` by default
 **Last updated:** 2026-11-05 (S1, S2, S3 findings; S2 steps 5 and 7 corrected); 2026-11-05 (§ WT2 follow-ups: findings, merged); 2026-11-04 (§ WT2 follow-ups #239/#240, feature branch); 2026-11-04 (WT2 findings; merged); 2026-11-02 (§ S3, #182); 2026-11-02 (§ WT2, #181)
 **Design:** [specs/realtime-signalr/DESIGN.md](../specs/realtime-signalr/DESIGN.md) (§4–§5, as built: §4.6) ·
 [IMPLEMENTATION_PLAN.md](../specs/realtime-signalr/IMPLEMENTATION_PLAN.md) ·
@@ -278,10 +278,10 @@ On the default branches (merged 2026-11-04 and 2026-11-05).
 | S1 | 4–10 | Accepted | |
 | S2 | 1, 2, 3, 6, 8 | Works | |
 | S2 | 4, 9–12 | Accepted | |
-| S2 | 5 | Not shown | Edited the **Staff** group's chat, bracket and tab-list colours: no change in game at all. Not the push: only a premium tier's or the Default group's colours are ever drawn ([#260](https://github.com/PandiO/knk-workspace/issues/260)). Re-check with one of those |
-| S2 | 7 | Not run | No freeze button in the web app ([#119](https://github.com/PandiO/knk-workspace/issues/119)); re-check through the API as the step now says |
+| S2 | 5 | Accepted (developer, 2026-11-05) | Edited the **Staff** group's chat, bracket and tab-list colours: no change in game at all. Not the push: only a premium tier's or the Default group's colours are ever drawn ([#260](https://github.com/PandiO/knk-workspace/issues/260)). Re-check with one of those |
+| S2 | 7 | Accepted (developer, 2026-11-05) | No freeze button in the web app ([#119](https://github.com/PandiO/knk-workspace/issues/119)); re-check through the API as the step now says |
 | S2 | — | Found in passing | A kit **Grant** on the player profile never delivers the items in game ([#261](https://github.com/PandiO/knk-workspace/issues/261)) |
 | S3 | 2, 5 | Works | Gate structure edit and world settings checked live |
 | S3 | others | Accepted | |
 
-#178 (S1) and #182 (S3) closed; #179 (S2) stays in review until steps 5 and 7 are re-checked.
+#178 (S1), #179 (S2) and #182 (S3) closed. #260 decided 2026-11-05: group colours by precedence (hierarchy, then weight).
