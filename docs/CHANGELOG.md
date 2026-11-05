@@ -4,7 +4,15 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
-(Nothing at the moment.)
+- **Live updates in the web app (Realtime S4)** — [PandiO/knk-workspace#183](https://github.com/PandiO/knk-workspace/issues/183),
+  branch `claude/realtime-web-live-183` in knk-web-api, knk-web-app (stacked on `claude/admin-ia-30`) and knk-workspace.
+  When another admin saves, the dashboard table of that type and an open detail page re-read themselves quietly ("Updated
+  by alice at 21:52"; a deleted entity says so with Back); the moderation list's Online/Offline badges and a new badge
+  on the player profile follow players joining and quitting. The API sends these over the existing web hub only to
+  staff holding the node that gates the same data over REST (`knk.admin.content`; users and presence
+  `knk.admin.user.manage`), checked per message (cached 30 s). Without a hub connection everything works as before. No
+  migration, no plugin change; optional `Realtime:WebPermissionCacheSeconds`. Checklist:
+  [realtime smoke test § S4](guides/realtime-smoke-test.md). Design: [DESIGN §6.9](specs/realtime-signalr/DESIGN.md).
 
 ## 2026-11-05
 

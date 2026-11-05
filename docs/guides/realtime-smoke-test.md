@@ -1,13 +1,14 @@
 # Realtime channel (SignalR) — smoke test
 
 **Status:** All sections run by the developer (WT2 2026-11-04; WT2 follow-ups, S1, S2, S3 2026-11-05) and merged into the
-default branches; S1–S3 issues closed 2026-11-05. `realtime.enabled` stays `false` by default
-**Last updated:** 2026-11-05 (S1, S2, S3 findings; S2 steps 5 and 7 corrected); 2026-11-05 (§ WT2 follow-ups: findings, merged); 2026-11-04 (§ WT2 follow-ups #239/#240, feature branch); 2026-11-04 (WT2 findings; merged); 2026-11-02 (§ S3, #182); 2026-11-02 (§ WT2, #181)
+default branches; S1–S3 issues closed 2026-11-05. `realtime.enabled` stays `false` by default. § S4 (#183) is on the
+feature branch `claude/realtime-web-live-183`, not run yet
+**Last updated:** 2026-11-05 (§ S4, #183, feature branch); 2026-11-05 (S1, S2, S3 findings; S2 steps 5 and 7 corrected); 2026-11-05 (§ WT2 follow-ups: findings, merged); 2026-11-04 (§ WT2 follow-ups #239/#240, feature branch); 2026-11-04 (WT2 findings; merged); 2026-11-02 (§ S3, #182); 2026-11-02 (§ WT2, #181)
 **Design:** [specs/realtime-signalr/DESIGN.md](../specs/realtime-signalr/DESIGN.md) (§4–§5, as built: §4.6) ·
 [IMPLEMENTATION_PLAN.md](../specs/realtime-signalr/IMPLEMENTATION_PLAN.md) ·
 **Issues:** [PandiO/knk-workspace#178](https://github.com/PandiO/knk-workspace/issues/178) (S1),
 [#179](https://github.com/PandiO/knk-workspace/issues/179) (S2), [#181](https://github.com/PandiO/knk-workspace/issues/181) (WT2),
-[#182](https://github.com/PandiO/knk-workspace/issues/182) (S3), parent
+[#182](https://github.com/PandiO/knk-workspace/issues/182) (S3), [#183](https://github.com/PandiO/knk-workspace/issues/183) (S4), parent
 [#66](https://github.com/PandiO/knk-workspace/issues/66)
 
 Manual checks of the realtime channel between knk-web-api and the game server, one section per phase. Run on the dev
@@ -234,6 +235,43 @@ INFO shows `Realtime: reloaded gate structure …`; `/knk health` `messages` goe
     60 s lootbox refresh run 4× less often (API request log); with the hub down they are back at their intervals.
 
 Record the times of 2, 4, 5 and 8 under **Findings**.
+
+## S4 — live updates in the web app (#183)
+
+**Builds:** knk-web-api and knk-web-app on `claude/realtime-web-live-183` (the web-app branch contains the admin IA
+branch `claude/admin-ia-30`, W1–W4). **API:** no migration; optional setting `Realtime:WebPermissionCacheSeconds`
+(default 30). **Plugin:** none; the web part works with the plugin's `realtime.enabled` on or off (presence then comes
+from the REST join/quit calls). **People:** staff **A** and **B** in two browsers (or a normal and a private window),
+both with `knk.admin.content` and `knk.admin.user.manage`; a third account **C** with `knk.admin.content` only; player
+**P** who can join the game server. Design: [DESIGN §6.9](../specs/realtime-signalr/DESIGN.md).
+
+1. **Dashboard refresh.** A and B open `/dashboard/Town` (or any type both can edit). B edits a town's description
+   and saves. Within about 1 s A's table shows the new text without a spinner or a page jump, and above the table
+   "Updated by B at hh:mm". B's own dashboard shows no such line for B's own save. Create and delete a town in B: A's
+   table follows (the row appears/disappears; page, search and sort stay).
+2. **Other types stay quiet.** B saves a street while A shows towns: A's table is not re-read (browser network tab:
+   no `Towns/search`). A Town saved by B also refreshes A's **Domain** list if A shows that type.
+3. **Detail page.** A opens a town's detail page; B edits it: A's values change in place with "Updated by B at …".
+   B deletes it: A sees "This Town was deleted by B." with **Back** (to the dashboard type); the stale values stay
+   readable.
+4. **Moderation list online badge.** A opens Player moderation (All players). P joins the game: within about 1 s P's
+   row turns **Online**; P quits: **Offline**. The list is not reordered and no rows are added or removed. On "By group
+   / online", run a search, then let P join or quit: the badge follows; tick "Currently online only" without Search,
+   then restart the API: after the hub reconnects the list is read again with the filter of the last Search.
+5. **Profile badge.** A opens P's profile (`/admin/users/{id}`): "Offline · last seen …" or "Online" next to Reload.
+   P joins / quits: the badge changes without Reload. An account without a Minecraft UUID shows no badge.
+6. **Permission gating.** C (content only) keeps the dashboard updates of step 1 but receives no `PresenceChanged`
+   (browser devtools → Network → the `hubs/web` WebSocket → Messages: no `PresenceChanged` frames while P joins and
+   quits) and no `EntityChanged` for `User` (edit a user's name as A). Take `knk.admin.content` away from C (or its
+   group) while C's dashboard is open: within 30 s C stops getting `EntityChanged` (REST answers 403 at once). A
+   player without staff nodes gets neither event.
+7. **Hub down = as before.** Stop the API for a minute with A's dashboard open: nothing breaks; after it is back the
+   hub reconnects and the table is read again once (quietly). In a build whose proxy doesn't forward `/api/hubs/web`
+   (or with the hub blocked in devtools) the pages behave as before: Reload and Back show changes.
+8. **Bursts.** With A on the Minecraft materials dashboard, run a catalogue scan or maintenance run that changes many
+   materials: A's table is re-read once (one `search` request after the burst), not once per row.
+
+Record under **Findings**: the delay of steps 1, 4 and 5, and step 6's result.
 
 ## Findings
 
