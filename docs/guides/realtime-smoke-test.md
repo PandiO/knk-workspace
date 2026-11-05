@@ -1,9 +1,8 @@
 # Realtime channel (SignalR) — smoke test
 
-**Status:** WT2 run by the developer 2026-11-04 (works or accepted; one bug, step 6). S1, S2 and S3 were not run as
-sections (S1 connect and presence were exercised by WT2). Merged into the default branches 2026-11-04;
-`realtime.enabled` stays `false` by default; WT2 follow-ups (#239, #240) run by the developer 2026-11-05: all work, merged the same day
-**Last updated:** 2026-11-05 (§ WT2 follow-ups: findings, merged); 2026-11-04 (§ WT2 follow-ups #239/#240, feature branch); 2026-11-04 (WT2 findings; merged); 2026-11-02 (§ S3, #182); 2026-11-02 (§ WT2, #181)
+**Status:** All sections run by the developer (WT2 2026-11-04; WT2 follow-ups, S1, S2, S3 2026-11-05) and merged into the
+default branches. Open: S2 steps 5 and 7 to re-check as now described (#179); `realtime.enabled` stays `false` by default
+**Last updated:** 2026-11-05 (S1, S2, S3 findings; S2 steps 5 and 7 corrected); 2026-11-05 (§ WT2 follow-ups: findings, merged); 2026-11-04 (§ WT2 follow-ups #239/#240, feature branch); 2026-11-04 (WT2 findings; merged); 2026-11-02 (§ S3, #182); 2026-11-02 (§ WT2, #181)
 **Design:** [specs/realtime-signalr/DESIGN.md](../specs/realtime-signalr/DESIGN.md) (§4–§5, as built: §4.6) ·
 [IMPLEMENTATION_PLAN.md](../specs/realtime-signalr/IMPLEMENTATION_PLAN.md) ·
 **Issues:** [PandiO/knk-workspace#178](https://github.com/PandiO/knk-workspace/issues/178) (S1),
@@ -84,12 +83,14 @@ member **S** logged in to the web app with the user/permission/currency/moderati
    the plugin reports DOWN, then let P use the node again: refused. (Before #179 the remembered answer allowed it for
    up to 72 h of outage.) Start the API again.
 5. **Group fan-out.** With P and a second player Q online, Q not in the group: edit the group's chat colour or a node.
+   Use the **Default group or a premium tier**: only their colours are drawn (#260; a Staff group's colours never are).
    P is redrawn at once; Q is untouched (no API calls for Q in the API log).
 6. **Balances.** S adds 100 coins to P (player profile → Balances): P's profile menu and `/balance` show it at once.
    Add enough XP for the next title: the promotion effect and the tab-list footer (title, prestige) change within 2 s.
    A `/pay` between two players and a lootbox or salary reward also update the cached balance (one
    `UserBalancesChanged` per player).
-7. **Freeze.** S freezes P in the web app with a reason: P gets "You have been frozen: {reason}" at once and can't
+7. **Freeze.** S freezes P with a reason (no button in the web app yet, #119: call `PUT /api/Users/{id}/freeze` with
+   `{"reason": "…"}` and `PUT /api/Users/{id}/unfreeze`, e.g. from Swagger): P gets "You have been frozen: {reason}" at once and can't
    move. Unfreeze: "You have been unfrozen." at once. Then `/freeze P test` in game: the message shows **once** (the
    event echo changes nothing).
 8. **Active mode.** For a staff member with `knk.mode.staff` online, set Staff mode in the web app: vanished at once
@@ -265,3 +266,22 @@ Times for steps 2, 6 and 9 were not recorded.
 Builds: `claude/world-task-offer-followups` in knk-web-api (`daf09cc`), knk-plugin (`d0655e28`) and knk-web-app
 (`16659be`). Result: **all steps work** (1–8). Merged into the default branches the same day: knk-web-api `master`
 `453729e`, knk-plugin `main` `33122cf4`, knk-web-app `main` `4d0c6ed`.
+
+### S1, S2, S3 — developer, 2026-11-05
+
+On the default branches (merged 2026-11-04 and 2026-11-05).
+
+| Section | Step | Result | Notes |
+|---|---|---|---|
+| S1 | 1, 2 | Works | |
+| S1 | 3 | Works (stored and shown); no live update | The `/admin/users` table doesn't update presence by itself: the web hub sends no presence events yet. That is S4, [#183](https://github.com/PandiO/knk-workspace/issues/183) |
+| S1 | 4–10 | Accepted | |
+| S2 | 1, 2, 3, 6, 8 | Works | |
+| S2 | 4, 9–12 | Accepted | |
+| S2 | 5 | Not shown | Edited the **Staff** group's chat, bracket and tab-list colours: no change in game at all. Not the push: only a premium tier's or the Default group's colours are ever drawn ([#260](https://github.com/PandiO/knk-workspace/issues/260)). Re-check with one of those |
+| S2 | 7 | Not run | No freeze button in the web app ([#119](https://github.com/PandiO/knk-workspace/issues/119)); re-check through the API as the step now says |
+| S2 | — | Found in passing | A kit **Grant** on the player profile never delivers the items in game ([#261](https://github.com/PandiO/knk-workspace/issues/261)) |
+| S3 | 2, 5 | Works | Gate structure edit and world settings checked live |
+| S3 | others | Accepted | |
+
+#178 (S1) and #182 (S3) closed; #179 (S2) stays in review until steps 5 and 7 are re-checked.
