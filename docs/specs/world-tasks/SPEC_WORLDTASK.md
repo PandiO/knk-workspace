@@ -1,5 +1,11 @@
 # WorldTask Technical Specification
 
+> **Status:** Historical design notes (before PandiO/knk-workspace#180, 2026-11-01). Where this file differs, the
+> [lifecycle section of README.md](README.md#lifecycle-and-endpoints-pandioknk-workspace180) is current: the task code is
+> checked on claim and unique among open tasks, a second claim answers 409, tasks expire, are released and cancelled,
+> the command is `/knk task <code>`, and the web app polls in `WorldBoundFieldRenderer` every 2 s (there is no
+> `TaskStatusMonitor`).
+
 ## 1. Data Model
 
 ### WorldTask Entity
@@ -109,7 +115,7 @@ Pending ──[claim]──> InProgress ──[complete]──> Completed
 - **Format**: 6-character alphanumeric string (A-Z, 0-9)
 - **Uniqueness**: Database unique constraint
 - **Generation**: Random with collision detection
-- **Usage**: Player claims task via `/worldtask claim {linkCode}`
+- **Usage**: Player claims task via `/knk task {code}`
 - **Security**: Non-sequential, non-guessable
 
 Example LinkCodes: `ABC123`, `XYZ789`, `K9P2WQ`
@@ -240,7 +246,7 @@ if (registry.isHandlingAnyTask(player)) {
 
 ```java
 // Admin claims a task
-/worldtask claim ABC123
+/knk task ABC123
   → Plugin looks up task by LinkCode
   → Calls handler.startTask(player, taskId, inputJson)
   → Task enters "InProgress" state

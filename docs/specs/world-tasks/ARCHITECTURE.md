@@ -1,5 +1,11 @@
 # WorldTask System Architecture
 
+> **Status:** Historical design notes (before PandiO/knk-workspace#180, 2026-11-01). Where this file differs, the
+> [lifecycle section of README.md](README.md#lifecycle-and-endpoints-pandioknk-workspace180) is current: the task code is
+> checked on claim and unique among open tasks, a second claim answers 409, tasks expire, are released and cancelled,
+> the command is `/knk task <code>`, and the web app polls in `WorldBoundFieldRenderer` every 2 s (there is no
+> `TaskStatusMonitor`).
+
 ## High-Level Data Flow
 
 ```
@@ -65,7 +71,7 @@
 ┌─ Minecraft Plugin (Java) ──────────────────────────────────────┐
 │                                                                 │
 │  1. Player receives LinkCode from web                          │
-│  2. Player joins server and types: /worldtask claim {code}     │
+│  2. Player joins server and types: /knk task {code}     │
 │  3. Plugin fetches task via GET /api/worldtasks/{id}           │
 │  4. Router identifies handler by FieldName                     │
 │  5. Handler initializes task mode                              │
@@ -88,7 +94,7 @@
 │  └─ KnkApiClient (base HTTP client)                            │
 │                                                                 │
 │  Data Flow:                                                    │
-│  /worldtask claim ABC123                                       │
+│  /knk task ABC123                                       │
 │    → KnkTaskClaimCommand.execute()                             │
 │    → WorldTasksApiImpl.getByLinkCode("ABC123")                  │
 │    → WorldTaskHandlerRegistry.startTask(player, "Location"...) │
@@ -189,7 +195,7 @@ KnKPlugin (Main Plugin Class)
 └─ Inject services
 
 Commands
-├─ /worldtask claim {linkCode}
+├─ /knk task {code}
 │  └─ KnkTaskClaimCommand
 │     ├─ Fetch task from API
 │     ├─ Call handler.startTask()
@@ -292,7 +298,7 @@ Implementations
        ┌─────────┐
        │ Pending │
        └────┬────┘
-            │ /worldtask claim {code}
+            │ /knk task {code}
             │ OR
             │ Plugin calls claim()
             ▼

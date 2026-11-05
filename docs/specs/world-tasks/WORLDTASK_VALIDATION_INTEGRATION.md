@@ -1,5 +1,11 @@
 # WorldTask Validation Integration
 
+> **Status:** Historical design notes (before PandiO/knk-workspace#180, 2026-11-01). Where this file differs, the
+> [lifecycle section of README.md](README.md#lifecycle-and-endpoints-pandioknk-workspace180) is current: the task code is
+> checked on claim and unique among open tasks, a second claim answers 409, tasks expire, are released and cancelled,
+> the command is `/knk task <code>`, and the web app polls in `WorldBoundFieldRenderer` every 2 s (there is no
+> `TaskStatusMonitor`).
+
 **Feature:** Real-time validation during WorldTask execution in Minecraft  
 **Created:** February 3, 2026  
 **Status:** Implemented; decision 1 superseded 2026-10-17 (see the update below)  

@@ -1,6 +1,6 @@
 # Inter-Field Validation Dependencies - Quick Reference Guide
 
-**Last Updated:** January 18, 2026  
+**Last Updated:** 2026-11-04 (ConditionalRequired config contract, PandiO/knk-workspace#99); January 18, 2026  
 **Status:** Ready for Implementation ✅
 
 ---
@@ -112,11 +112,13 @@ public class FieldValidationRule
 ```json
 {
   "condition": {
-    "operator": "equals",
+    "op": "equals",
     "value": true
   }
 }
 ```
+
+> **2026-11-04 (PandiO/knk-workspace#99):** the implemented contract is `{"condition":{"op","value","property"?}}`, case-insensitive; `"operator"` and a flat `{"op","value"}` are still read for saved rules. Values compare by text (`true` matches `"true"`); for an Object dependency `property` picks the loaded record's field (default `Id`). `"in"` takes a comma-separated string or an array in `value`.
 
 **Operators:**
 - `"equals"` - Dependency field equals value
@@ -128,7 +130,7 @@ public class FieldValidationRule
 **Example Use Case:**
 - Field: `Structure.PublicAccessPoint`
 - Depends On: `Structure.IsPublic`
-- ConfigJson: `{ "condition": { "operator": "equals", "value": true } }`
+- ConfigJson: `{ "condition": { "op": "equals", "value": true } }`
 - Validation: If IsPublic is true, PublicAccessPoint is required
 
 **Error Message Template:**

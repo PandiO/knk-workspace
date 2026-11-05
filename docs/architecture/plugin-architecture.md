@@ -1,6 +1,6 @@
 ---
 status: active
-last_updated: 2026-10-25
+last_updated: 2026-11-02
 ---
 
 # knk-plugin Architecture
@@ -191,6 +191,14 @@ complete for every entity type the plugin touches.
   on a backing-off interval (5s → up to 60s, `config.yml:60,65`). Its own
   Javadoc (lines 14-23) says this is a placeholder for a future
   push/SignalR notification.
+  *#180 (branch `claude/world-task-hardening`):* the poller claims a scan before it runs it (claim mode `headless`), so
+  two servers don't run it twice. Every claim the server holds is in `tasks/WorldTaskLeases` (filled by
+  `tasks/LeaseTrackingWorldTasksApi`, the `WorldTasksApi` the handlers use) and is renewed every
+  `world-tasks.heartbeat-interval-seconds` (60); a 409 stops the player's handler. Quit
+  (`listeners/WorldTaskQuitListener`), plugin disable and a restart (`GET open?serverId=`) hand tasks back. In chat,
+  `cancel` hands a task back and `discard` cancels it; `WorldTaskChatListener` runs task chat on the main thread and
+  handler state is keyed by UUID. `/knk task <code>` (alias `task-claim`; id claims need `knk.tasks.any`). Server id:
+  `realtime.server-id`, default `localhost`.
 - **Outbound push (periodic):** `GateStateSyncTask` pushes in-memory gate
   state back to the API every `gates.state-sync-interval-seconds`
   (default 120s, `config.yml:73`) as a safety net, plus a periodic
@@ -204,6 +212,40 @@ complete for every entity type the plugin touches.
   `knk-web-api` can ask the plugin WorldGuard/WorldEdit questions it can't
   answer itself. This is a distinct channel from both the REST client and
   the poller — the only place the API calls *into* the plugin.
+- **Realtime channel (SignalR, #178 S1; on branch `claude/realtime-signalr`, not merged; off by default):**
+  `paper/realtime/RealtimeService` keeps one connection to the API's game hub (`/api/hubs/game`, plugin key +
+  `X-Knk-Server-Id` = `realtime.server-id`) through `api/realtime/RealtimeClient` (backoff 1/2/5/10/30 s, paused
+  while `ApiConnectivityMonitor` says DOWN). On every (re)connect it sends the online roster (the API's presence)
+  and runs `core/realtime/ResyncHooks` on the main thread: the `/knk cache refresh` hooks, the domain access flag
+  sync and the lootbox runtime refresh. Incoming events go through `RealtimeDispatcher` (S1: only `Welcome`); the
+  polls above stay as the fallback. `realtime.server-id` also replaces the hard-coded `"localhost"` in world-task
+  claims. Design: [`specs/realtime-signalr/DESIGN.md`](../specs/realtime-signalr/DESIGN.md) §4.6.
+  **S2 (#179, same branch):** `paper/realtime/UserStateSync` handles the user-state events: a permission, group,
+  balance, freeze, mode or user change made in the web app (or by a rank expiring) reaches an online player at once
+  (effective set and offline-store answers dropped and reloaded, user re-read, tab list redrawn, visibility, "/" list,
+  social spy and mode re-checked). Player notifications are pushed (`PlayerNotification`) instead of polled:
+  `PlayerNotificationPoller` makes no HTTP call while the hub is connected and drains once per (re)connect, which also
+  re-reads every online player. While connected the social-spy re-check runs `realtime.fallback-poll-multiplier`
+  (default 4) times slower. Design §6.7.
+  **WT2 (#181, same branch):** `paper/realtime/WorldTaskRealtimeSync` handles `WorldTaskOffered` (auto-claim for a
+  player who sent the task from the web app: checks they are here, hold `knk.tasks` and have nothing open, then claims
+  with `claimMode: offer` and starts the handler; a hand-off shows clickable `[Accept] [Decline]` =
+  `/knk task accept|decline <id>`, 2 min), answers `WorldTaskOfferResult` (declined, timed-out, busy, offline,
+  no-permission) over the hub, stops a held task's handler at once on `WorldTaskCancelled`, drops the line on
+  `WorldTaskOfferWithdrawn`, and runs the headless poll at once on `WorldTaskCreated` (the poll itself stays at 60 s
+  while connected). In-game `cancel` releases with `handBack: true`. Resync step "world tasks" =
+  `WorldTaskLeases.releaseOrphans()`. Design §8.8.
+  **S3 (#182, same branch):** `paper/realtime/ConfigRealtimeSync` handles the config events with the existing refresh
+  paths (domain access sync, `GameSettingsManager.refreshNow()`, `SiegeService.refreshFromApi()` = `/siege admin
+  reload`, `LootboxRuntime.refresh()`, the warp/spawn/navigation `/knk cache refresh` hooks, the road network refresh,
+  the telemetry config poll), merged per section for 500 ms (`core/realtime/Coalescer`); `EntityChanged` goes through
+  `core/realtime/EntityChangeRouter` to the data-access caches of that type (and the S2 user re-read for a user).
+  `GateRealtimeSync` reloads one gate structure on `GateChanged` (a deleted one leaves `GateManager`); a gate a running
+  siege match holds waits for the round's gate restore (Q12). While connected the loaded worlds go over the hub
+  (`ReportWorlds`), and the domain access sync, game settings, lootbox runtime, road and telemetry timers and the grade
+  catalogue run `realtime.fallback-poll-multiplier` times slower. Resync step "siege startup work"
+  (`core/realtime/PendingStartupWork`, #31) re-runs the startup abort, stale gate restore and siege config/title
+  brackets that failed at start. Design §6.8.
 - Everything else (commands, player-triggered lookups) is on-demand via the
   cache-first data access layer.
 

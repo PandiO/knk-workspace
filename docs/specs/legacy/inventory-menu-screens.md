@@ -493,9 +493,11 @@ v3: product↔shop assignment is data the web-app should own; not an in-game men
   `/duel <name>`; alone → "No players online!".
 - **Choose duel-type and place bets!** (54) — **one Inventory shared by both duellists** (G4): 0 and 8
   both Back; 4 arena card; 45 / 53 the two players' heads; 46 / 52 Ready/Unready clay per player; 48 / 50
-  "Duel type" per player (Coins → Practice → Coins; Shift-left → Items); free stake slots 10–12, 14–16,
-  19–21, 23–25 (G2). Coin bets are typed in chat (G5). Each player may only click their own half; changes
-  reset readiness; both Ready starts the duel.
+  "Duel type" per player (a click cycles Coins → Items → Practice → Coins, `v1:src/Menu/DuelSetupClick.java:92-111`;
+  Shift-left on Coins asks for the coin bet in chat, G5); free stake slots 10–12, 14–16, 19–21, 23–25 (G2). Each
+  player may only click their own half. Ready needs both players on the same duel type, and a Ready player can't
+  add or remove stake items; nothing resets the *other* player's Ready when one side changes something. Both Ready
+  starts the duel. *(Type cycle and readiness corrected 2026-11-02, [PandiO/knk-workspace#135](https://github.com/PandiO/knk-workspace/issues/135).)*
 
 ---
 

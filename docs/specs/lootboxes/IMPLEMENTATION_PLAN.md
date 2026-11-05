@@ -668,6 +668,7 @@ Merged to knk-plugin `main` 2026-10-05 as `74607a9`. knk-web-api and knk-web-app
 - knk-web-app: `npm ci` fails on trunk (lockfile lacks the optional `yaml@2` peer; `npm ci --legacy-peer-deps` works);
   `CI=true npm run build` fails on existing lint warnings.
 - knk-web-api: `knkwebapi_v2.sln` points at `tests/` (lowercase), so building the solution fails on Linux (`Tests/`).
+  *(Fixed 2026-11-02, [PandiO/knk-workspace#106](https://github.com/PandiO/knk-workspace/issues/106): plain `dotnet build` works.)*
 
 ## Cross-feature dependencies
 

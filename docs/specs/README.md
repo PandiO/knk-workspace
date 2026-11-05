@@ -6,7 +6,7 @@ Central home for requirements, specifications, and implementation roadmaps acros
 - arena-duels/: player-vs-player arena duels — invite with stake offers, escrow, lobby warmup, spectator menu, battleground PvP, kit and drop modes (Linear KNG-197; design accepted 2026-10-21, phases KNG-209–KNG-222, not implemented)
 - npc-platform/: shared NPC traits, behavior and tutorial guide; agreed requirements and open investigations (KNG-36); guard behavior model concept in BEHAVIOR_MODEL.md (#234)
 - project-overview/: portfolio-level summaries and source pointers (CHANGES, implementation roadmap, source map)
-- invitations/: invite-only sign-up, email engine, admission gate and web-first Minecraft linking (KNG-205, KNG-206; built on the feature branch, not merged)
+- invitations/: invite-only sign-up, email engine, admission gate and web-first Minecraft linking (KNG-205, KNG-206; merged to every trunk 2026-10-24)
 - users/: user/account management specs and requirements (including linking, merge, password rules)
 - towns/: towns/world feature specs and hybrid create/edit flow notes
 - api/: API contract snapshots and backlog for REST endpoints
@@ -24,38 +24,38 @@ Central home for requirements, specifications, and implementation roadmaps acros
 - siege-survival/: cooperative endless NPC-wave defense, gate repair, spawnzone progression and match equipment/economy (Linear KNG-50, child of KNG-37; design only)
 - user-features/: rank/permission/title/salary architecture
 - user-management/: tailored admin module built on top of user-features
-- player-statistics/: KNG-34 player statistics, leaderboards, owner-only diagnostics and world analytics — finalized design + implementation plan (implemented by the chain on `claude/kind-dijkstra-y9d279`, all links done 2026-10-03, not merged)
+- player-statistics/: KNG-34 player statistics, leaderboards, owner-only diagnostics and world analytics — finalized design + implementation plan (implemented by the chain on `claude/kind-dijkstra-y9d279`, merged and live-tested 2026-10-11)
 - legacy/: legacy reference notes kept for historical context
 - reconcile/: reconciliation guides for aligning legacy data with v2
 
 ## Key documents
-- Invite-only sign-up, email engine and web-first Minecraft linking (KNG-205, KNG-206; decided 2026-10-21; built on the feature branch `claude/player-signup-invitation-flow-f4v7ul` by the invitations chain, links 1–7, 2026-10-21; not merged, not live-tested; architecture: [account-identity-and-admission.md](../architecture/account-identity-and-admission.md), smoke test: [invitations-smoke-test.md](../guides/invitations-smoke-test.md)): [invitations/DESIGN.md](invitations/DESIGN.md), [invitations/IMPLEMENTATION_PLAN.md](invitations/IMPLEMENTATION_PLAN.md) (work packages KNG-211/206/207/208/212/214/216/218) — admin personal invites and shared codes with expiry/use caps, a persistent email outbox with real delivery from the NAS, a plugin admission gate whose disconnect-screen claim code links a Mojang-authenticated UUID to an invited web account, and a Cloudflare Access allow-list kept in sync by the API.
+- Invite-only sign-up, email engine and web-first Minecraft linking (KNG-205, KNG-206; decided 2026-10-21; built on the feature branch `claude/player-signup-invitation-flow-f4v7ul` by the invitations chain, links 1–7, 2026-10-21; merged to every trunk 2026-10-24, smoke-tested on dev; architecture: [account-identity-and-admission.md](../architecture/account-identity-and-admission.md), smoke test: [invitations-smoke-test.md](../guides/invitations-smoke-test.md)): [invitations/DESIGN.md](invitations/DESIGN.md), [invitations/IMPLEMENTATION_PLAN.md](invitations/IMPLEMENTATION_PLAN.md) (work packages KNG-211/206/207/208/212/214/216/218) — admin personal invites and shared codes with expiry/use caps, a persistent email outbox with real delivery from the NAS, a plugin admission gate whose disconnect-screen claim code links a Mojang-authenticated UUID to an invited web account, and a Cloudflare Access allow-list kept in sync by the API.
 - Arena duels (KNG-197; design + plan accepted 2026-10-21, not implemented; phase issues KNG-209–KNG-222; siege kit mode KNG-199): [arena-duels/DESIGN.md](arena-duels/DESIGN.md), [arena-duels/IMPLEMENTATION_PLAN.md](arena-duels/IMPLEMENTATION_PLAN.md)
 
 - Dev environment (KNG-163, proposal 2026-10-12): [dev-environment/DEV_DB_REMOTE_ACCESS.md](dev-environment/DEV_DB_REMOTE_ACCESS.md) — NAS dev database for cloud sessions over Cloudflare Tunnel + Access, scheduled backups, versioned DB environments and the deploy pipeline. Decisions E1-E4 made 2026-10-12.
 
 - Form wizard (2026-10-11, analysis + proposed design, not implemented): [form-configurations/FORM_WIZARD_SESSION_CONCEPTS.md](form-configurations/FORM_WIZARD_SESSION_CONCEPTS.md) (List "Create New" children never saved, pickers showing entities made in this form session, Edit instance seeding; KNG-133..136, KNG-162) and [form-configurations/DEFAULT_FORM_SEEDS.md](form-configurations/DEFAULT_FORM_SEEDS.md) (FormConfiguration export/import, agent-authored default forms and their authoring guide; KNG-137..139). Decided 2026-10-11 (D1 = A, S1 = A); D2 default in KNG-162. Implemented by the [form wizard chain](../ai-agents/handoffs/FORM_WIZARD_CHAIN.md).
 
-- Player statistics (KNG-34; design finalized 2026-10-03, implemented by chain links 2-7 on `claude/kind-dijkstra-y9d279`, done 2026-10-03, not merged): [player-statistics/DESIGN.md](player-statistics/DESIGN.md) (binding §F "Finalized design"), [player-statistics/IMPLEMENTATION_PLAN.md](player-statistics/IMPLEMENTATION_PLAN.md); evidence [../reports/2026-10-03-player-statistics-source-audit.md](../reports/2026-10-03-player-statistics-source-audit.md). Reconciles KNG-14 (counters) and KNG-23 (provenance = existing ledger).
+- Player statistics (KNG-34; design finalized 2026-10-03, implemented by chain links 2-7 on `claude/kind-dijkstra-y9d279`, done 2026-10-03, merged 2026-10-11 after the live smoke test): [player-statistics/DESIGN.md](player-statistics/DESIGN.md) (binding §F "Finalized design"), [player-statistics/IMPLEMENTATION_PLAN.md](player-statistics/IMPLEMENTATION_PLAN.md); evidence [../reports/2026-10-03-player-statistics-source-audit.md](../reports/2026-10-03-player-statistics-source-audit.md). Reconciles KNG-14 (counters) and KNG-23 (provenance = existing ledger).
 
 - Game Settings (KNG-52; merged and live-tested 2026-10-10): [game-settings/DESIGN.md](game-settings/DESIGN.md), [game-settings/IMPLEMENTATION_PLAN.md](game-settings/IMPLEMENTATION_PLAN.md); admin how-to [../guides/game-settings.md](../guides/game-settings.md)
 - Shared NPC platform (KNG-36, working design; not implemented): [npc-platform/DESIGN.md](npc-platform/DESIGN.md). Tutorial lifecycle, movement profile, access and gate pass-through investigations. Guard behavior model (perception, alert states, psychology, decisions, combat, dynamic navigation; working concept 2026-11-04, [#234](https://github.com/PandiO/knk-workspace/issues/234)): [npc-platform/BEHAVIOR_MODEL.md](npc-platform/BEHAVIOR_MODEL.md).
 - Production, storage, transport and distribution (draft rev. 2 2026-10-09, not implemented; Linear KNG-83): [production-storage-transport/DESIGN.md](production-storage-transport/DESIGN.md), [PRODUCTION_KINDS.md](production-storage-transport/PRODUCTION_KINDS.md), [TOWN_LOGISTICS.md](production-storage-transport/TOWN_LOGISTICS.md), [IMPLEMENTATION_PLAN.md](production-storage-transport/IMPLEMENTATION_PLAN.md); evidence in [../reports/2026-10-09-v2-production-storage-transport-scan.md](../reports/2026-10-09-v2-production-storage-transport-scan.md).
 - Siege survival / Defend the Castle (KNG-50 / #41, design recorded 2026-09-30, **design complete for v1 2026-11-03**; not implemented): [siege-survival/DESIGN.md](siege-survival/DESIGN.md), [siege-survival/IMPLEMENTATION_PLAN.md](siege-survival/IMPLEMENTATION_PLAN.md). All three equipment modes (own inventory, kits, match progression) and the Mystery Box in both variants (items, enchanted books) are first-release scope; requirements review 2026-11-02 added configurable end conditions with a lobby override, the ghost state and per-stat wave scaling; the v1 review (2026-11-02, merged 2026-11-03) adds scaling presets, a 10 s round delay, per-kill rewards (30 coins/3 XP from the dev seed) and 70 match currency per kill, a 1000-currency Mystery Box on an end portal frame, admin-selected vanilla monster types, inventories kept on death, a default kit and a 1-player minimum; 2026-11-03: CoD-style stuck-enemy handling, purchase points and transfers in every equipment mode, then S46–S63 (no separate objective switch, damaged-door repair, near-players spawn slider, mob unlock rounds, special waves in v1, restart aborts).
-- User domain: [docs/specs/users/SPEC_USER.md](docs/specs/users/SPEC_USER.md), [docs/specs/users/SPEC_USER_ACCOUNT_MANAGEMENT.md](docs/specs/users/SPEC_USER_ACCOUNT_MANAGEMENT.md), [docs/specs/users/REQUIREMENTS_USER.md](docs/specs/users/REQUIREMENTS_USER.md), [docs/specs/users/USER_ACCOUNT_MANAGEMENT_IMPLEMENTATION_ROADMAP.md](docs/specs/users/USER_ACCOUNT_MANAGEMENT_IMPLEMENTATION_ROADMAP.md), [docs/specs/users/USER_ACCOUNT_MANAGEMENT_QUICK_REFERENCE.md](docs/specs/users/USER_ACCOUNT_MANAGEMENT_QUICK_REFERENCE.md)
-- Towns domain: [docs/specs/towns/SPEC_TOWNS.md](docs/specs/towns/SPEC_TOWNS.md), [docs/specs/towns/CREATE_FLOW_SPLIT_TOWNS.md](docs/specs/towns/CREATE_FLOW_SPLIT_TOWNS.md), [docs/specs/towns/LOGIC_CANDIDATES_TOWNS.md](docs/specs/towns/LOGIC_CANDIDATES_TOWNS.md), [docs/specs/towns/REQUIREMENTS_HYBRID_CREATE_EDIT_FLOW.md](docs/specs/towns/REQUIREMENTS_HYBRID_CREATE_EDIT_FLOW.md)
-- Portfolio overview: [docs/specs/project-overview/IMPLEMENTATION_ROADMAP.md](docs/specs/project-overview/IMPLEMENTATION_ROADMAP.md), [docs/specs/project-overview/CHANGES_SUMMARY.md](docs/specs/project-overview/CHANGES_SUMMARY.md), [docs/specs/project-overview/SOURCES_LOCATION.md](docs/specs/project-overview/SOURCES_LOCATION.md)
-- API contract snapshots: [docs/specs/api/README.md](docs/specs/api/README.md) (includes swagger export and contract notes)
-- Items domain: [docs/specs/items/IMPLEMENTATION_PLAN.md](docs/specs/items/IMPLEMENTATION_PLAN.md)
-- Minecraft catalogue (materials/blocks, server scan, icons): [docs/specs/minecraft-catalog/IMPLEMENTATION_PLAN.md](docs/specs/minecraft-catalog/IMPLEMENTATION_PLAN.md)
+- User domain: [docs/specs/users/SPEC_USER.md](users/SPEC_USER.md), [docs/specs/users/SPEC_USER_ACCOUNT_MANAGEMENT.md](users/SPEC_USER_ACCOUNT_MANAGEMENT.md), [docs/specs/users/REQUIREMENTS_USER.md](users/REQUIREMENTS_USER.md), [docs/specs/users/USER_ACCOUNT_MANAGEMENT_IMPLEMENTATION_ROADMAP.md](users/USER_ACCOUNT_MANAGEMENT_IMPLEMENTATION_ROADMAP.md), [docs/specs/users/USER_ACCOUNT_MANAGEMENT_QUICK_REFERENCE.md](users/USER_ACCOUNT_MANAGEMENT_QUICK_REFERENCE.md)
+- Towns domain: [docs/specs/towns/SPEC_TOWNS.md](towns/SPEC_TOWNS.md), [docs/specs/towns/CREATE_FLOW_SPLIT_TOWNS.md](towns/CREATE_FLOW_SPLIT_TOWNS.md), [docs/specs/towns/LOGIC_CANDIDATES_TOWNS.md](towns/LOGIC_CANDIDATES_TOWNS.md), [docs/specs/towns/REQUIREMENTS_HYBRID_CREATE_EDIT_FLOW.md](towns/REQUIREMENTS_HYBRID_CREATE_EDIT_FLOW.md)
+- Portfolio overview: [docs/specs/project-overview/IMPLEMENTATION_ROADMAP.md](project-overview/IMPLEMENTATION_ROADMAP.md), [docs/specs/project-overview/CHANGES_SUMMARY.md](project-overview/CHANGES_SUMMARY.md), [docs/specs/project-overview/SOURCES_LOCATION.md](project-overview/SOURCES_LOCATION.md)
+- API contract snapshots: [docs/specs/api/README.md](api/README.md) (includes swagger export and contract notes)
+- Items domain: [docs/specs/items/IMPLEMENTATION_PLAN.md](items/IMPLEMENTATION_PLAN.md)
+- Minecraft catalogue (materials/blocks, server scan, icons): [docs/specs/minecraft-catalog/IMPLEMENTATION_PLAN.md](minecraft-catalog/IMPLEMENTATION_PLAN.md)
 - Item grades (10-tier scale, DropChance, enchant-book level cap; KNG-6): [items/GRADE_DROPCHANCE.md](items/GRADE_DROPCHANCE.md)
 - Enchantment books (KNG-5): [enchantment-books/ENCHANTMENT_BOOK_APPLICATION.md](enchantment-books/ENCHANTMENT_BOOK_APPLICATION.md)
 - Road navigation (KNG-27, decided design rev. 4, built in parallel with siege): [navigation/DESIGN.md](navigation/DESIGN.md), [navigation/IMPLEMENTATION_PLAN.md](navigation/IMPLEMENTATION_PLAN.md) (agent handoff), [navigation/REV6_PROPOSAL.md](navigation/REV6_PROPOSAL.md) (rev. 6, accepted in principle: curated tiles first — plan §5.7 — then open areas first), [navigation/REV7_PROPOSAL.md](navigation/REV7_PROPOSAL.md) (rev. 7, proposed 2026-10-09: routing view cut at gates and access borders, entrances for structures, which access rules apply to roads); research in [../reports/2026-09-27-road-navigation-research.md](../reports/2026-09-27-road-navigation-research.md) and [../reports/2026-09-27-open-world-navigation-research.md](../reports/2026-09-27-open-world-navigation-research.md) (how Rockstar/Ubisoft do it)
-- Kits domain: [docs/specs/kits/DESIGN.md](docs/specs/kits/DESIGN.md), [docs/specs/kits/IMPLEMENTATION_PLAN.md](docs/specs/kits/IMPLEMENTATION_PLAN.md), [docs/specs/kits/SEED_DATA.md](docs/specs/kits/SEED_DATA.md)
-- User features (rank/permissions/title/salary): [docs/specs/user-features/DESIGN.md](docs/specs/user-features/DESIGN.md), [docs/specs/user-features/IMPLEMENTATION_PLAN.md](docs/specs/user-features/IMPLEMENTATION_PLAN.md)
-- User management (admin module): [docs/specs/user-management/DESIGN.md](docs/specs/user-management/DESIGN.md), [docs/specs/user-management/IMPLEMENTATION_PLAN.md](docs/specs/user-management/IMPLEMENTATION_PLAN.md)
-- Reconciliation: [docs/specs/reconcile/README.md](docs/specs/reconcile/README.md)
-- Legacy reference: [docs/specs/legacy/README.md](docs/specs/legacy/README.md)
+- Kits domain: [docs/specs/kits/DESIGN.md](kits/DESIGN.md), [docs/specs/kits/IMPLEMENTATION_PLAN.md](kits/IMPLEMENTATION_PLAN.md), [docs/specs/kits/SEED_DATA.md](kits/SEED_DATA.md)
+- User features (rank/permissions/title/salary): [docs/specs/user-features/DESIGN.md](user-features/DESIGN.md), [docs/specs/user-features/IMPLEMENTATION_PLAN.md](user-features/IMPLEMENTATION_PLAN.md)
+- User management (admin module): [docs/specs/user-management/DESIGN.md](user-management/DESIGN.md), [docs/specs/user-management/IMPLEMENTATION_PLAN.md](user-management/IMPLEMENTATION_PLAN.md)
+- Reconciliation: [docs/specs/reconcile/README.md](reconcile/README.md)
+- Legacy reference: [docs/specs/legacy/README.md](legacy/README.md)
 - Siege minigame (MVP driver, vision §7): [siege-minigame/DESIGN.md](siege-minigame/DESIGN.md),
   [siege-minigame/IMPLEMENTATION_PLAN.md](siege-minigame/IMPLEMENTATION_PLAN.md),
   [siege-minigame/MENU_TEMPLATES.md](siege-minigame/MENU_TEMPLATES.md) (legacy siege menus inventoried
@@ -65,13 +65,13 @@ Central home for requirements, specifications, and implementation roadmaps acros
   (scheduled lobbies) post-MVP. Admin how-to:
   [../guides/authoring-a-siege-scenario.md](../guides/authoring-a-siege-scenario.md)
 - Command catalogs (every Minecraft command across all three codebases — syntax, permissions,
-  behavior, feature allocation): [docs/specs/legacy/commands-v1.md](docs/specs/legacy/commands-v1.md),
-  [docs/specs/legacy/commands-v2.md](docs/specs/legacy/commands-v2.md),
-  [docs/specs/user-features/COMMAND_CATALOG_V3.md](docs/specs/user-features/COMMAND_CATALOG_V3.md)
+  behavior, feature allocation): [docs/specs/legacy/commands-v1.md](legacy/commands-v1.md),
+  [docs/specs/legacy/commands-v2.md](legacy/commands-v2.md),
+  [docs/specs/user-features/COMMAND_CATALOG_V3.md](user-features/COMMAND_CATALOG_V3.md)
 - Event-listener catalogs (every Bukkit/Spigot event handler across all three codebases — the
-  passive/reactive behavior commands don't cover): [docs/specs/legacy/events-v1.md](docs/specs/legacy/events-v1.md),
-  [docs/specs/legacy/events-v2.md](docs/specs/legacy/events-v2.md),
-  [docs/specs/user-features/EVENT_CATALOG_V3.md](docs/specs/user-features/EVENT_CATALOG_V3.md)
+  passive/reactive behavior commands don't cover): [docs/specs/legacy/events-v1.md](legacy/events-v1.md),
+  [docs/specs/legacy/events-v2.md](legacy/events-v2.md),
+  [docs/specs/user-features/EVENT_CATALOG_V3.md](user-features/EVENT_CATALOG_V3.md)
 
 ## Conventions
 - Keep feature requirements and roadmaps grouped by domain folder above.

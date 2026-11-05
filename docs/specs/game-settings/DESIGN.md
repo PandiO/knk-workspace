@@ -1,7 +1,7 @@
 # Game Settings — Design
 
 **Status:** Implemented, live-tested and merged (2026-10-10): knk-web-api `master` `8cce48d`, knk-plugin `main` `973aa68b`, knk-web-app `main` `12c1d60`. All decisions are settled (§7); open follow-ups in §8.
-**Last updated:** 2026-10-12
+**Last updated:** 2026-11-02 (§3.6, §4: runtime worlds kept per game server, KNG-118 A9 / [PandiO/knk-workspace#147](https://github.com/PandiO/knk-workspace/issues/147)); 2026-10-12
 **Linear:** [KNG-52](https://linear.app/kngpandi/issue/KNG-52)
 **Sources:** knk-web-api `master` `099f936` (`Controllers/GameSettingsController.cs`, `Services/GameSettingsService.cs`, `Dtos/GameSettingsDtos.cs`, `Models/GameSettings.cs`, commit `285baf3` of 2026-08-19); knk-web-app `main` `3953658` (`src/pages/admin/GameSettingsPage.tsx`, commits `f3206c5`/`21e84c9` of 2026-08-21); knk-plugin `main` `5c85a3d` and the shelved stash `19-08-26: Workable: GameSettings feature` (base `961597e`); [vision §2.7](../../vision/vision.md#27-game-world-settings); [teleport DESIGN §3.6](../teleport/DESIGN.md) (`/spawn`).
 **Plan and status:** [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md). **Admin how-to:** [guides/game-settings.md](../../guides/game-settings.md).
@@ -161,6 +161,11 @@ because nothing is visible.
   plugin compares its loaded worlds (name, folder, environment, player count, primary flag) with its last
   report. It sends `PUT /api/GameSettings/runtime-worlds` only when something changed, or every 10 minutes. The
   API adds a default block for a world it has not seen yet, so the page shows a block for every world.
+- **One report per game server** (KNG-118 A9): the report carries the plugin's `game-settings.server-id` (blank =
+  `"default"`, also the id of reports from plugins before KNG-118), and replaces only that server's worlds. Give
+  every game server that shares one API its own id. A server that stops reporting drops off after 30 minutes
+  (three missed 10-minute heartbeats): its worlds are removed at the next report of any server
+  (`GameSettingsService.RuntimeWorldsStaleAfter`). Details: [multiworld follow-ups §2](../../architecture/multiworld-follow-ups.md).
 
 ### 3.7 Offline copy
 
@@ -233,6 +238,7 @@ settings read yet leaves the server's own motd. The API rejects more than two li
 game-settings:
   refresh-interval-seconds: 30        # min 5
   runtime-sync-interval-seconds: 30   # min 5; reports only on change (or every 10 min)
+  server-id: "default"                # this game server's id in the runtime-worlds report (§3.6); blank = "default"
   backup-history-limit: 48            # 0 = keep no history
 ```
 

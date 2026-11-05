@@ -6,6 +6,112 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 (Nothing at the moment.)
 
+## 2026-11-04
+
+- **Page background: landing image 1 behind every page, on by default** — knk-web-app
+  `main` `1cbee21`, merged from `claude/page-background-image-231` (PandiO/knk-workspace#231; developer approved 2026-11-04 after the live
+  comparison, on by default). Every visitor can turn it off with the "Background image" item under the themes in the
+  cogwheel theme switcher (remembered per browser), per tab with `?bg=off`, or for a whole build with
+  `REACT_APP_PAGE_BACKGROUND=off`. The page backdrop (75 %), cards and tables (85–92 % per theme) and the auth backdrop
+  (75 %) turn translucent over a 104 kB AVIF / 153 kB WebP copy of the image; fields, menus, dialogs and sticky bars
+  stay solid. Text keeps WCAG AA over the image's darkest and lightest pixel (contrast test extended). The landing page
+  keeps its slideshow and loads image 1 once. Guide: [guides/design-themes-comparison.md](guides/design-themes-comparison.md) § 7.
+
+- **World tasks and the realtime channel merged** — 2026-11-04 at the developer's request after the smoke tests of #180 (all steps work or accepted) and #181 WT2 (works or accepted; follow-ups for step 6 and 10 filed): knk-web-api `master` `2258df5`, knk-plugin `main` `e1b6a7a9`, knk-web-app `main` `d0c2ba8`, knk-workspace `main`. Merges `claude/world-task-hardening` and `claude/realtime-signalr` (S1, S2, WT2, S3); one additive migration (`AddWorldTaskHardening`, back up first: the first sweep removes week-old sessions without a draft). The plugin keeps `realtime.enabled: false` until set; an existing server `config.yml` needs the `realtime:` block added by hand, and the web app needs `npm install` (new `@microsoft/signalr`). S1, S2 and S3 were not run as checklist sections. The five entries below were written for the feature branches; branch names in them are historical.
+- **Realtime channel, S1 foundation** ([PandiO/knk-workspace#178](https://github.com/PandiO/knk-workspace/issues/178), merged 2026-11-04): SignalR hubs in the API (`/api/hubs/game`
+  with the plugin key and `X-Knk-Server-Id`, `/api/hubs/web` with the JWT), a publisher with per-connection
+  sequence numbers, and presence from the game server (roster on every connect, join/quit, 60 s grace) in
+  `User.IsOnline`. The plugin connects with backoff, pauses while the API is down and re-reads its caches on every
+  (re)connect; `realtime.server-id` replaces the hard-coded `localhost` on world-task claims. Off by default
+  (`realtime.enabled: false`); no business events yet (S2). Checklist: [realtime smoke test](guides/realtime-smoke-test.md).
+- **Realtime channel, S2 user state** ([PandiO/knk-workspace#179](https://github.com/PandiO/knk-workspace/issues/179), same
+  branch): rank and group membership, permission grants, permission group edits, balances, freeze, active mode and
+  other user fields changed in the web app (or by a rank expiring) reach an online player at once instead of after
+  the 2 s poll, the 30 s permission cache, the 60 s user cache or a rejoin. A permission change also drops the
+  player's remembered offline answers (#76). Player notifications are pushed; the 2 s poll stops while connected. The
+  API sends events only after the database transaction committed. New optional plugin key
+  `realtime.fallback-poll-multiplier` (default 4). Still off by default. Checklist: realtime smoke test § S2.
+- **World tasks over the realtime channel (WT2)** ([PandiO/knk-workspace#181](https://github.com/PandiO/knk-workspace/issues/181),
+  branch `claude/realtime-signalr` in knk-web-api, knk-plugin, knk-web-app and knk-workspace; the branch contains the
+  world-task hardening below): "Send to Minecraft" offers the task to you in game and claims it there at once when you
+  are online (no code to type); if you already hold a task the web app asks Queue / Hand off / Replace / Cancel;
+  "Hand off to…" sends it to another online admin, who gets Accept/Decline in chat (2 min). The task code is always
+  shown as the fallback. The web app follows the task live (web hub, `@microsoft/signalr`), a cancel in the web app
+  stops the task in game at once, and headless scans start at once. With `realtime.enabled: false` (the default)
+  everything works as before. Checklist: [realtime smoke test](guides/realtime-smoke-test.md) § WT2.
+- **Realtime channel, S3 config and entity push** ([PandiO/knk-workspace#182](https://github.com/PandiO/knk-workspace/issues/182),
+  branch `claude/realtime-signalr` in knk-web-api, knk-plugin and knk-workspace): a gate, a domain's entry/exit rules,
+  game and hub settings, siege, lootbox, warp, navigation, road and telemetry settings, and the entities the game
+  server caches (towns, districts, structures, items, kits, menus, grades, tags, title brackets, users, ...) edited in
+  the web app are in effect on the running server within about two seconds instead of after a reload, a timer or a
+  cache TTL. A gate held by a running siege match takes its edit after the match. The game server reports its worlds
+  over the hub, and the siege's startup work that failed because the API was down (lobbies, title brackets, stale
+  gates, unfinished matches; #31) runs again when the hub reconnects. The periodic re-syncs stay as a slower safety
+  net. Still off by default (`realtime.enabled: false`); no new setting, no migration. Checklist: realtime smoke test § S3.
+- **World tasks that always end, and tasks anchored to the form draft** — PandiO/knk-workspace#180 (WT1 of #66),
+  branch `claude/world-task-hardening` in knk-web-api, knk-plugin, knk-web-app and knk-workspace. A task now ends
+  Completed, Failed, Cancelled or Expired: it expires after 30 min unclaimed, a claim lasts while the game server sends
+  heartbeats (released to Pending after 3 min without), and in-game `cancel`, quitting or a server restart hand it back
+  with its task code; `discard` and the web app's "Cancel task" cancel it. Only one player can claim a task (409), the
+  task code is checked and unique among open tasks, and the command is `/knk task <code>` (id claims need
+  `knk.tasks.any`). The first task of a form saves the draft silently; a resumed draft keeps its workflow session and
+  its fields find their tasks again, including results finished while the form was closed. Leaving the form cancels its
+  open tasks; the form builder offers only task types the game server can run. Smoke test:
+  [world-task-hardening-smoke-test.md](guides/world-task-hardening-smoke-test.md). One additive migration.
+
+- **Hygiene and docs batch** — merged 2026-11-04: knk-web-api `master` `71b814c`, knk-web-app `main` `22100c3`,
+  knk-plugin `main` `ed750ddf`, knk-workspace `main` `559124c`. The plugin's version is stamped at build time, `0.1.0+<commit>` (`dev`
+  without git), and logged with the commit as the first startup line; CI passes `-PgitCommit=<sha>`
+  ([#136](https://github.com/PandiO/knk-workspace/issues/136)). A plain `dotnet build` works on Linux at the API's repo
+  root ([#106](https://github.com/PandiO/knk-workspace/issues/106)). The admin client-activity totals no longer count
+  each request twice or add up across hours; a ConditionalRequired rule now really makes a field required: its config is
+  `{"condition":{"op","value"}}` (older forms still read) and values compare by text; the unused
+  `FieldValidationService` is gone; all API tests green ([#99](https://github.com/PandiO/knk-workspace/issues/99), 2026-11-04). Dead code removed: the API's
+  `ExtractLocationDataFromTaskOutput` and the web app's location `worldName` default `'world'`
+  ([#147](https://github.com/PandiO/knk-workspace/issues/147)). Docs: production-installation G10/§ 12.3 metrics
+  ([#48](https://github.com/PandiO/knk-workspace/issues/48)), Game Settings § 3.6 runtime worlds per server (#147),
+  stale statements in the legacy, teleport, siege and specs README docs
+  ([#135](https://github.com/PandiO/knk-workspace/issues/135)).
+
+- **Dashboard explorer: filter by display and form configuration** — knk-web-app `main` `738c16a`, merged from
+  `claude/explorer-filter-226` (PandiO/knk-workspace#226, UX/realtime chain link 3c; live-tested 2026-11-03/04). A filter button next to the sort button narrows the type list
+  to types with or without a published default display configuration and with or without a form configuration
+  (a dropdown Any / Yes / No each), remembered per browser like the sort. Smoke test
+  [guides/dashboard-return-smoke-test.md](guides/dashboard-return-smoke-test.md) § 9c.
+- **Open form without the type overview card** — knk-web-app `main` `738c16a`, merged from
+  `claude/form-hide-type-card-227` (PandiO/knk-workspace#227, UX/realtime chain link 3c; live-tested 2026-11-03/04). A form opened from the dashboard or the Entity setup page no
+  longer has the entity type card ("EnchantmentDefinition (EnchantmentDefinition) 19 fields ▸ Fields") above it; the
+  Entity setup page keeps it while no form is open. Smoke test
+  [guides/dashboard-return-smoke-test.md](guides/dashboard-return-smoke-test.md) § 10a.
+- **Register page: link-code field with the dash** — knk-web-app `main` `738c16a`, merged from
+  `claude/register-code-mask-229` (PandiO/knk-workspace#229, UX/realtime chain link 3c; live-tested 2026-11-03/04). `/auth/register`'s link-code field is the same masked field as
+  `/link` (`____-____`, the dash drawn by the field; O, I and L are kept for `/account link` codes). A code refused as
+  a link code that is a live claim code from the disconnect screen goes on to `/link`, verified. Smoke test
+  [guides/invitations-smoke-test.md](guides/invitations-smoke-test.md) § 4 steps 16 and 17c.
+
+- **Dashboard menus and entity table follow the theme** — knk-web-app `main` `596c51a`, merged `--no-ff` from
+  `claude/tokens-dashboard-menu` (PandiO/knk-workspace#95 follow-up). The "New with" / "Drafts" menus and the entity
+  table (search box, sortable headers, selected-row stripe, links, paging text) use the theme tokens instead of fixed
+  greys and green, so they change with the theme. In `current` only the menu items' text is a shade darker.
+
+- **Shield banner patterns and armour trims on item blueprints and item instances** — knk-web-api `master` `93f9380` (migration
+  `AddItemShieldBannerAndArmorTrim`, form seed `ItemBlueprint.json`, re-import it), knk-plugin `main` `497e0fe`, knk-web-app `main` `4dd11d0`,
+  merged `--no-ff` from `claude/shield-banner-trim-232` ([PandiO/knk-workspace#232](https://github.com/PandiO/knk-workspace/issues/232);
+  developer smoke test 2026-11-04: shield pattern checks passed, armour trim accepted). A shield's base colour and its
+  pattern layers (bottom to top) and an armour piece's trim (pattern + material) are stored on the blueprint, copied
+  onto each minted instance (frozen, like the grade; `/knk item more` clones copy them), applied when the plugin builds
+  the item, and scanned back by the item and kit scans. The web app edits them on the blueprint form (new field type
+  `BannerLayers`) and shows them on the item instance detail. The armour trim check asked for in #232 found no trim
+  support in any repo; it was added. Smoke test: [guides/shield-banner-trim-smoke-test.md](guides/shield-banner-trim-smoke-test.md).
+  Architecture: [item render pipeline § 2c](architecture/item-render-pipeline.md).
+
+- **Theme switcher as a cogwheel, for every visitor** — knk-web-app `main` `865fe53`, merged `--no-ff` from
+  `claude/theme-switcher-button` (PandiO/knk-workspace#95, developer request 2026-11-04). A cogwheel button opens the
+  themes (Current, Brand, Brand (red), Proposal, each with a short description): in the navigation bar when logged in,
+  floating in the top-right corner of the landing and auth pages when logged out, so new visitors can try them. The
+  themes left the account menu. `REACT_APP_THEME_PICKER=off` hides it; the alpha build no longer sets `on`. Guide:
+  [guides/design-themes-comparison.md](guides/design-themes-comparison.md) § 1.
+
 ## 2026-11-03
 
 - **Dashboard explorer: favourites are copies** — knk-web-app `main` `a6d83c9`, merged from

@@ -2,7 +2,7 @@
 
 **Status:** Requirements Definition  
 **Created:** January 18, 2026  
-**Last Updated:** January 18, 2026
+**Last Updated:** 2026-11-04 (ConditionalRequired ConfigJson contract, PandiO/knk-workspace#99); January 18, 2026
 
 ## Overview
 
@@ -82,7 +82,7 @@ Some validation rules should only apply when another field meets certain criteri
 2. Admin adds FieldValidationRule to `PublicAccessPoint`:
    - **ValidationType:** "ConditionalRequired"
    - **DependsOnFieldId:** `IsPublic` field
-   - **ConfigJson:** `{ "condition": { "operator": "equals", "value": true } }`
+   - **ConfigJson:** `{ "condition": { "op": "equals", "value": true } }`
    - **ErrorMessage:** "Public structures require a public access point."
    - **IsBlocking:** true
 3. Admin adds second FieldValidationRule to `PublicAccessPoint`:
@@ -154,6 +154,8 @@ The FormConfigBuilder UI displays a "Configuration Health" panel showing:
 }
 ```
 
+> **2026-11-04 (PandiO/knk-workspace#99):** the implemented contract is `{"condition":{"op","value","property"?}}`, case-insensitive; `"operator"` and a flat `{"op","value"}` are still read for saved rules. Values compare by text (`true` matches `"true"`); for an Object dependency `property` picks the loaded record's field (default `Id`). `"in"` takes a comma-separated string or an array in `value`.
+
 **Validation Logic:**
 1. Extract `regionPropertyPath` from ConfigJson
 2. Fetch dependency field value (entity ID)
@@ -200,8 +202,9 @@ The FormConfigBuilder UI displays a "Configuration Health" panel showing:
 ```json
 {
   "condition": {
-    "operator": "equals" | "notEquals" | "greaterThan" | "lessThan" | "in",
-    "value": <any> | "values": [<any>]  // For 'in' operator
+    "op": "equals" | "notEquals" | "greaterThan" | "lessThan" | "contains" | "in",
+    "value": <any>  // for 'in': "a,b,c" or ["a","b","c"]
+    "property": "Name"  // optional, Object dependency only (default "Id")
   }
 }
 ```
@@ -323,7 +326,7 @@ namespace knkwebapi_v2.Models
         /// EXAMPLES:
         /// LocationInsideRegion: { "regionPropertyPath": "WgRegionId", "allowBoundary": false }
         /// RegionContainment: { "parentRegionPath": "WgRegionId", "requireFullContainment": true }
-        /// ConditionalRequired: { "condition": { "operator": "equals", "value": true } }
+        /// ConditionalRequired: { "condition": { "op": "equals", "value": true } }
         /// </summary>
         public string ConfigJson { get; set; } = "{}";
         
