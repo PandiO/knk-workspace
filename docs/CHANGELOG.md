@@ -4,7 +4,16 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
-(Nothing at the moment.)
+- **Web app feedback primitives: one accessible dialog, confirm with danger and a reason, general toasts** —
+  [PandiO/knk-workspace#33](https://github.com/PandiO/knk-workspace/issues/33), knk-web-app `claude/feedback-primitives-33`
+  (chain 2 link W2). Every overlay of the web app (messages, confirms, child forms, the builders' field editors and
+  template pickers, the import panel, the Invitations and telemetry drawers; 16 in all) now uses one `Dialog`: labelled
+  `dialog`/`alertdialog` with `aria-modal`, focus moved in and returned, Tab kept inside, Escape and × close it, a click
+  outside only closes messages and questions (never a form), nothing closes while saving. Deletes and "Leave this
+  form?" are red with focus on Cancel; `useConfirm` can ask for a reason (`confirmWithReason`, for the audit-log actions
+  of #119). Success after a save or delete is a toast instead of a box that closed after 3 s; toasts get info/warning
+  kinds, an optional action and wait while hovered. Theme tokens only (raw colour classes 3089 → 2865). No API change.
+  Checklist: [feedback primitives smoke test](guides/feedback-primitives-smoke-test.md).
 
 ## 2026-11-05
 
