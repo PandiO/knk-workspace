@@ -1,6 +1,6 @@
 # Siege Survival implementation chain — progress report
 
-**Status:** S1, S2 and S4 in review; **S3 running** (started 2026-11-06 at the developer's request to continue on the feature branch); the survival migration is now on the API branch; G1 waits for #167 and #213
+**Status:** S1, S2 and S4 in review; **S3 in review** (plugin `6b80638e`, pushed 2026-11-06; started at the developer's request to continue on the feature branch; regression checklist in the S3 block); the survival migration is now on the API branch; G1 waits for #167 and #213
 **Last updated:** 2026-11-06 (coordinator: S3 started, migration added, gate wait replaced by conflict management)
 **Charter:** [SIEGE_SURVIVAL_CHAIN.md](../ai-agents/handoffs/SIEGE_SURVIVAL_CHAIN.md) · **Coordinator prompt:**
 [2026-11-03-siege-survival-coordinator-prompt.md](../ai-agents/handoffs/2026-11-03-siege-survival-coordinator-prompt.md) ·
@@ -126,7 +126,7 @@ test), `merged`, `blocked: <reason>`.
 | S1 | Survival core logic (waves, kills, round delay, stuck rules, end conditions, scaling presets, monster mix, specials, repair maths, spawn selection, rewards, Mystery Box pick) | plugin `claude/siege-survival`, `knk-core/.../core/survival/` only | in review | create_session session_01R1w2UvKtghxZowkQBTRYqG, 2026-11-03 | plugin `b5f86586` (merge of S1 + S2's `8cf2761e`) / — / — / workspace `main` (this report; bookkeeping applied by the coordinator from S1's patch) | knk-core 2433 → 2595 (S1 +101, S2 +61), 0 failed; api-client 288 and paper 2385 unchanged |
 | S2 | NPC platform §5b core: combat and speed profiles, modifier pipeline by source, clamping with a report | plugin `claude/siege-survival`, `knk-core/.../core/npc/` only | in review | create_session session_01R1w2UxEVJTzDXBdKWkGihy, 2026-11-03 | plugin `8cf2761e` / — / — / — | core 2433 → 2494 (+61, 0 failures); api-client 288, paper 2385 unchanged |
 | G1 | Animated rebuild for all destroyed gates (gate Decision 6), size-aware evacuation | API, plugin, web app `claude/gate-animated-rebuild` | waiting: #167, #213, realtime merged | — | — | — |
-| S3 | Siege prerequisites: visibility arbiter, NPC gate-damage cause, weighted capture presence, mob kills out of PvE statistics | plugin `claude/siege-survival` | in progress (started on the developer's request although #213 and arena-duels are unmerged; shared files `SiegeGateController.java`, `KnKPlugin.java`) | create_session session_01R1w2UuxjTGuarBTYzmFpVi, 2026-11-06 | — | — |
+| S3 | Siege prerequisites: visibility arbiter, NPC gate-damage cause, weighted capture presence, mob kills out of PvE statistics | plugin `claude/siege-survival` | in review (pushed 2026-11-06; started on the developer's request although #213 and arena-duels are unmerged; shared files `SiegeGateController.java` (3 additive hunks), `KnKPlugin.java` (5 small hunks), listed in the S3 block) | create_session session_01R1w2UuxjTGuarBTYzmFpVi, 2026-11-06 | plugin `6b80638e` / — / — / workspace `main` (S3 block, patch) | core 2638 → 2663, paper 2504 → 2535, api-client 330 unchanged; 0 failures (JDK 25) |
 | S4 | Phase 1 contracts/config: API entities (no migration yet), DTOs, services, readiness, form seeds; api-client DTOs | API, plugin api-client `claude/siege-survival` | in review (migration deferred until #167 merges; plugin commit as a patch, see the S4 block) | create_session session_01R1w2UwPn7oGLNgHm17vf7C, 2026-11-05 | plugin `699d1889` (`3d5cb1bd` applied by the coordinator) / api `043bd2a` / — / workspace `main` (S4 block, patch) | API 3659 → 3779 passed, 0 failed, 88 skipped; api-client 321 → 330, 0 failed, 2 skipped; core 2638 / paper 2504 unchanged, build green (coordinator, `699d1889`) |
 | S5 | Phase 2 runtime slice (mob spawning and goals, §5b adapters, ghost state, waves, end conditions) | plugin `claude/siege-survival` | waiting: S1–S4 on the branch | — | — | — |
 | S6 | Phase 3 repairs and frontier (sneak repair input, provisional) | plugin `claude/siege-survival` | waiting: G1 merged | — | — | — |
@@ -171,6 +171,190 @@ test), `merged`, `blocked: <reason>`.
 
 (Each link appends its block here: scope done, commits per repo, tests baseline → result, deviations, flags, checklist
 location, notes for later links.)
+
+## Link S3 — Siege prerequisites (2026-11-06)
+
+Session session_01R1w2UuxjTGuarBTYzmFpVi (started by the coordinator on the developer's request, with #213 and
+arena-duels unmerged). knk-plugin `claude/siege-survival`, base `699d1889` (S1, S2, S4; `main` `33122cf4` merged), head
+**`6b80638e`**. knk-workspace could be attached read-only only (the `add_repo` push attach was refused by the permission
+classifier), so this block came as a patch. Scope: plan §2a row S3 / phase 0 items "visibility arbiter", "team-based siege
+gate damage for NPCs", "weighted, actor-aware capture presence", "mob kills out of ordinary PvE statistics". Behaviour-neutral
+for ordinary PvP Siege, world gates, the invisibility enchantment and spectators: nothing changes until a Survival runtime
+(S5) marks a ghost or registers a match actor; proven by the unchanged existing tests plus the regression tests below.
+
+### Scope done
+
+**A. One visibility arbiter.** `knk-core/.../core/visibility/` (Bukkit-free, added to `ArchitectureGuardTest`):
+`PlayerVisibilityRules.decide(targetIsGhost, viewerOnGhostTeam, targetVanished)` → `VISIBLE | HIDDEN | HIDDEN_UNLESS_STAFF`,
+in this order: (1) a **ghost** is `HIDDEN` from every viewer its `GhostTeam` doesn't include — wins over everything, no
+permission reveals it; (2) a vanished (owner/staff mode) target is `HIDDEN_UNLESS_STAFF` (hide now, show when the viewer's
+staff/owner check resolves true — the pre-S3 `ModeService` rule); (3) otherwise `VISIBLE`. `GhostTeam(key, Predicate<UUID>
+membership)` is the team whose living and ghost members see the ghost (equality by key). Paper adapter
+`paper/visibility/PlayerVisibilityArbiter`: the **only** caller of `hidePlayer`/`showPlayer`; `markGhost(player, team)`
+(hides from outsiders, applies infinite particle-less Invisibility for the siege boards' see-friendly-invisibles, refreshes),
+`clearGhost(player)` (removes it, refreshes), `isGhost`, `ghostTeamOf`, `ghosts()`, `forget`, `apply(viewer, target)`,
+`refreshVisibilityOf/For`. `ModeService` owns the arbiter (`visibility()` getter) and routes `refreshVisibilityOf`,
+`refreshVisibilityFor`, `applyMode` and `forget` through it; its old `applyVisibility` is gone, so the un-hide the checks
+report §2 found (join, permission change) can't happen. Spectators, `InvisibleEquipment` (equipment packets) and
+`SiegeWorldPresenter` (display entities) never called `hidePlayer` and are untouched.
+
+**B. NPC gate damage with a team-based check.** `GateDoorDamageEvent.Cause.NPC_MELEE` (additive);
+`GateDamageConsequenceListener` amount 10 for it (the caller passes the factored damage anyway). New package
+`paper/siege/npc/`: `MatchActor(entityId, lobbyId, teamId, captureWeight)`; `MatchActorRegistry` (register/unregister/clear
+per lobby, `actorOf(Entity)` incl. a projectile's shooter, `isActor`, persistent-data tag `<plugin>:match_actor` =
+`"<lobbyId>:<teamId>"` read back by `tagOf` for the leftover sweep, `presences(lobbyId, center, radius)` = living actors in
+range as weighted `Presence`s, pruning dead/gone ones); `NpcGateDamage.hit(mob, block[, multiplier])` → `NOT_AN_ACTOR |
+NOT_A_DOOR | REFUSED | CANCELLED | HIT`, damage `10 × multiplier` (the difficulty's gate damage factor, default 1), through
+`GateDoorHitService.handleDamage(door, mob, block, NPC_MELEE, damage)` — the same per-door `HealthSystem` path as a
+player, only while the door is CLOSED. `SiegeGateController.mayDamage(Entity, int)` (additive overload) resolves a player or
+a projectile's player shooter as before and a registered actor of **the lockdown's own lobby** by team through the existing
+`SiegeGatePlan.canDamage` (enemy of the current owner; never the own alliance's gate; other lobbies' actors and untagged mobs
+stay refused); `setMatchActors(Function<Entity, Optional<MatchActor>>)`. `SiegeGateListener` hands the causing entity to
+that overload (its player-only `attacker()` helper removed). `HealthSystem.repairToFull(door)` (heal a standing door to max,
+cracks/display/persist/state listeners, returns the HP restored, does not open or close) and `rebuildForClosing(door)`
+(destroyed → standing, active, full health, **OPEN at the last frame**, no blocks placed, no broadcast, persisted; the
+caller's `gateManager.closeGate(id)` then rebuilds it through the normal closing animation).
+
+**C. Weighted, actor-aware capture presence.** `core/siege/SiegeActorKind { PLAYER, NPC }`.
+`ObjectiveState.Presence(actorId, teamId, distance, kind, weight)` with the old 3-arg constructor (= PLAYER, weight 1),
+`Presence.npc(entityId, teamId, distance, weight)`, `playerId()` (null for an NPC), `contributes()` (weight > 0).
+`CaptureCalculator.attackPressure(double)/defensePressure(double)/delta(double, double, iv)`: the same formula with the weight
+sum in place of the head count, `A1 + (w − 1)·A2` floored at 0, the delta truncated towards zero — whole-number weights give
+exactly the int formula. `ObjectiveState.step` sums weights per side (head counts stay in `StepResult` for feedback); the
+capturer is the closest contributing attacker, which may be an NPC: `CaptureEvent` gained `capturerKind` and
+`capturerActorId`; `capturerId` is **null** for an NPC capture, `rewardEligible` false (8-arg constructor kept).
+`CaptureActivityTracker` lists players only in `actors`, the NPC team still in `actorTeamIds`. `SiegeService`:
+`setActorPresence(ActorPresenceSource)` adds the lobby's actors (`MatchActorRegistry::presences`) to each objective's
+presence, `setPresenceExclusion(Predicate<UUID>)` for ghosts (DESIGN §3b: no capture contribution), and the null-capturer
+paths (`roster.recordCapture` skipped, announcement names the NPC team, result rows without a user). Side-capture reduction
+untouched (S51 is S5's setting).
+
+**D. Mob kills out of ordinary PvE statistics.** `core/statistics/CreatureClass { ORDINARY, MATCH_NPC }`;
+`CombatStatisticsRules.countsPveKill(spawnReason, excluded, creature)` (never for a match NPC) and
+`countsCreatureDamage(creature)`; `DeathCauseClassifier.LastDamager.MATCH_NPC` → `Cause.MATCH_NPC` with no metric
+(`recorded()` false). `CombatStatisticsListener` takes a `Predicate<Entity> matchNpc` (4-arg constructor; the 3-arg one =
+none): no PvE kill for a match NPC, no `damage_dealt.mob` / `damage_received.mob` with one (also behind its projectile), no
+`deaths_by_cause.*` for a death to one; `DEATHS` and the Siege roster projection are as before.
+
+**E. Wiring (`KnKPlugin`, 5 small hunks, see below):** `matchActors = new MatchActorRegistry(this)` after the siege
+service; `siegeService.setActorPresence(matchActors::presences)`; `siegeGates.setMatchActors(matchActors::actorOf)`; the
+statistics listener's predicate `entity -> matchActors != null && matchActors.isActor(entity)`; `getMatchActors()`.
+
+### Commits (knk-plugin `claude/siege-survival`)
+
+`c4b7b2da` core: weighted capture presence + match-NPC statistics classification · `392f17d1` visibility arbiter (core
+rule, Paper adapter, `ModeService` delegation) · `8d4908ba` NPC gate damage (`NPC_MELEE`, `siege/npc`, controller
+overload, `HealthSystem` repair methods) · `9c373a0e` actors in `SiegeService` presence, statistics exclusion, `KnKPlugin`
+wiring · `6b80638e` presence exclusion hook for ghosts. Head `6b80638e`.
+
+### Tests (`./gradlew build -x deployToDevServer`, JDK 25 toolchain)
+
+| Module | Baseline (`699d1889`) | Result (`6b80638e`) |
+|---|---|---|
+| knk-core | 2638, 0 failed | 2663 (+25: `WeightedCapturePresenceTest`, `MatchNpcStatisticsTest`, `PlayerVisibilityRulesTest`), 0 failed |
+| knk-api-client | 330, 0 failed, 2 skipped | 330, 0 failed, 2 skipped (unchanged) |
+| knk-paper | 2504, 0 failed, 18 skipped | 2535 (+31: `PlayerVisibilityArbiterTest`, `MatchActorRegistryTest`, `NpcGateDamageTest`, `SiegeGateControllerNpcDamageTest`, `HealthSystemRepairTest`, `CombatStatisticsMatchNpcTest`), 0 failed, 18 skipped |
+
+Every pre-existing test runs unchanged (`CaptureCalculatorTest`, `ObjectiveCaptureTest`, `HolderRelativeScoringTest`,
+`CaptureActivityTrackerTest`, `SiegeGatePlanTest`, `GateDamageConsequenceListenerTest`, `CombatStatisticsListenerTest`,
+`OfflineFreezeAndModeTest`, …); the only edited test file is `ArchitectureGuardTest` (+`"visibility"`).
+
+### Deviations
+
+- `HealthSystem.repairToFull` does **not** close an open door (report §7 wrote "then closeGate if the door is open"): a heal
+  entry point shouldn't move doors; S6 closes after the heal where S49 wants it (one call, `gateManager.closeGate(id)`).
+- The ghost's translucency (vanilla Invisibility, infinite, no particles/icon) is applied by `markGhost` and removed by
+  `clearGhost` rather than left to S5, so one place owns the whole ghost look; S5 can pass no-op effect functions through the
+  package-private constructor if it wants to own it (flag S3-3).
+- `SiegeService.setPresenceExclusion` (ghosts out of capture presence) is a small addition beyond the four items: the report
+  §8 asks the actor-aware presence model to "exclude ghosts", and S5 has no other hook into the private presence scan.
+
+### Hunks in the shared files (for the #213 / arena-duels merges)
+
+`SiegeGateController.java` (3 hunks, all additive): imports `MatchActor`, `Entity`, `Projectile`, `java.util.function.Function`;
+after `mayDamage(Player, int)` a new block: field `matchActors` (default `Optional.empty()`), `setMatchActors(...)`,
+`mayDamage(Entity, int)`. No existing line changed.
+`KnKPlugin.java` (5 hunks): field `matchActors` after `siegeGates` (~l. 318); the `CombatStatisticsListener` constructor
+call gets a 4th argument (~l. 1581, the one existing line that changed: the closing `), this);` moved to the new argument
+line); two lines after `siegeService.setHistoryApi(...)` (~l. 4076); one line after the `SiegeGateListener` registration
+(~l. 4145); `getMatchActors()` after `getSiegeGates()` (~l. 4189). `git diff 699d1889..6b80638e -- <file>` shows them.
+
+### Flags for the developer (interpretations and defaults)
+
+- **S3-1** Staff/owner vanish permission does **not** reveal a ghost: the ghost reason wins; staff see ghosts only as
+  teammates. (Alternative: staff see everything — one line in `PlayerVisibilityRules`.)
+- **S3-2** A ghost who is also in owner/staff mode stays hidden from teammates without the staff node (vanish still applies
+  within the team); teammates with it see them.
+- **S3-3** Translucency = infinite Invisibility effect without particles; `clearGhost` removes *any* Invisibility, so a
+  ghost whose invisibility-enchantment ability was running loses it at the respawn (edge case, accepted).
+- **S3-4** `hidePlayer` side effects accepted as in report §2: a ghost leaves outsiders' tab list, and `/msg`, `/tpa`,
+  `/pay` lookups (`VisiblePlayers.canSee`) treat them as offline for outsiders.
+- **S3-5** Weighted delta truncated towards zero (a fraction of a point is dropped, never carried); a lone actor lighter
+  than one player presses `A1 + (w − 1)·A2`, floored at 0; weight 0 = present but not counted, not contesting.
+- **S3-6** An NPC capture credits nobody: `capturerId` null, no reward, announcement "<NPC team> captured <objective>!",
+  the result's objective row has no capturer user, telemetry `player` null (already null-safe).
+- **S3-7** Capture feedback (`Started`/`Ongoing`) names players only; the NPC team appears in `actorTeamIds` (so a retake
+  announcement still works when the NPC team held the objective before).
+- **S3-8** NPC gate hit = 10 HP (a player's left click) × the caller's factor; refused unless the door is CLOSED, active,
+  standing (as for players); `NpcGateDamage.Outcome` tells the caller why.
+- **S3-9** An actor damages only gates of the lockdown of its own lobby; other lobbies' actors and untagged mobs are
+  refused as before; a mob's projectile resolves to the mob.
+- **S3-10** NPC gate damage is credited to nobody (`SiegeGateDamageSink`, `GateDamageStatisticsSink` stay player-only):
+  Survival's door telemetry is S5/S8's.
+- **S3-11** `rebuildForClosing` leaves the door OPEN at frame `animationDurationTicks` with no blocks; the first closing
+  steps vacate empty cells. **Live check for S6:** a destroyed door rebuilt this way closes cleanly with a player and a
+  large mob in the doorway (G1's return animation then replaces the look).
+- **S3-12** Statistics exclusion covers PvE kills, mob damage dealt/received and the death cause; `DEATHS` still counts an
+  open-world death to a match NPC (Survival members are in a running match, where `DEATHS` is already left to the roster).
+- **S3-13** Tag `<plugin>:match_actor` = `"<lobbyId>:<teamId>"` (string); the registry is in-memory, the tag is for S5's
+  startup sweep (`tagOf`).
+- **S3-14** `presences()` forgets dead, invalid or missing actors on the way; `captureWeight` must be finite and ≥ 0.
+- **S3-15** `ModeService` keeps its public constructor; the arbiter is built inside it (`PlayerVisibilityArbiter.bukkit`),
+  so `KnKPlugin`'s mode wiring is unchanged.
+
+### Follow-ups found (not fixed; the coordinator files issues)
+
+- Report §2's remaining ghost mechanics are S5's, not S3's: `setInvulnerable(true)` and re-applying it after
+  `JoinLoadingGuard` (which toggles invulnerability on join), `EntityTargetLivingEntityEvent` safety net,
+  `ProjectileHitEvent` cancel, team collision rule NEVER, hunger/pickup/interaction cancels, adventure mode, armour vault.
+- `GateDamageConsequenceListener.DAMAGE_BY_CAUSE` is still a hard-coded map (10 for every cause); a config key per cause
+  would let the NPC base damage be tuned without a build (today the difficulty factor covers it).
+- `SiegeMenuSnapshots` shows "?" as the last capturer of an NPC-captured objective; a team name would read better (S9/UX).
+
+### Notes for later links
+
+- **S5 (runtime):** ghosts: `plugin.getModeService().visibility()` (or keep the `ModeService` reference) →
+  `markGhost(player, new GhostTeam("siege:" + lobbyId + ":" + teamId, id -> roster.teamOf(id).orElse(-1) == teamId))` on
+  death, `clearGhost(player)` at the intermission respawn, match end and restore; also call
+  `siegeService.setPresenceExclusion(id -> arbiter.isGhost(id))` once at startup so ghosts never count in capture. Actors:
+  `plugin.getMatchActors().register(mob, lobbyId, npcTeamId, difficulty.captureContribution)` after spawning,
+  `unregister(uuid)` on death/removal, `clear(lobbyId)` at match end; capture presence and gate damage then work with no
+  further wiring. Gate breach: `new NpcGateDamage(new GateDoorHitService(gateManager), plugin.getMatchActors()).hit(mob,
+  block, difficulty.gateDamageFactor)` on the breach goal's timer (`GateDoorHitService` is a stateless wrapper; the stand
+  point is `core/siege/SiegeGateApproach`). Leftover sweep at startup: remove living mobs with `tagOf(entity).isPresent()`.
+  NPC targeting of ghosts: `arbiter.isGhost(uuid)` is the hard-eligibility check.
+- **S6 (repairs):** damaged standing door → `healthSystem.repairToFull(door)` then `gateManager.closeGate(door.getId())` if
+  open (S49); destroyed door → `healthSystem.rebuildForClosing(door)` then `gateManager.closeGate(door.getId())`, and listen
+  with a `GateStateListener` for the real CLOSED (a jam leaves CLOSING).
+- **S8 (results):** `CaptureEvent.capturedByNpc()` / `capturerActorId` tell NPC captures apart in the result spool.
+
+### Regression checklist for the developer (one ordinary PvP siege match, one sitting)
+
+1. Start a PvP siege with two teams; one player in staff mode before the start: they are hidden from non-staff and shown to
+   staff, exactly as before; `/mode` off shows them again; a relog keeps the mode.
+2. Stand in an objective's ring with 1 attacker vs 0, 1 and 2 defenders: the capture bar moves at the familiar rates (5
+   points/s alone; 7 − 6 = 1 with two attackers against one defender); the capture announcement names the player.
+3. Hit a locked enemy gate with a sword and an arrow: damage lands and shows in the match's gate-damage reward; hit your own
+   team's gate: refused; let a zombie hit a locked gate: nothing happens (as before).
+4. Kill a wild zombie and die to one during the match: `pve_kills` and `deaths_by_cause.mob` unchanged from before.
+5. Use the invisibility enchantment ability once: teammates see the body, the other team nothing; tab list unchanged.
+6. After the match: gates restored, boards restored, no "Gate restored" broadcast change, no error in the log mentioning
+   `visibility`, `MatchActor` or `NPC`.
+
+### To file (no GitHub issue access from this session)
+
+- The three follow-ups above (S5 ghost mechanics are covered by #41 already; the damage-map config key and the menu
+  capturer name are new).
 
 ## Link S4 — phase 1 contracts/config (2026-11-05)
 
