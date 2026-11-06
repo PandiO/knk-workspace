@@ -1,7 +1,7 @@
 # Siege Survival implementation chain — progress report
 
-**Status:** S1, S2, S3 and S4 (+ migration) in review; **S5 running** (phase 2 runtime slice, the first live checkpoint; started 2026-11-06); G1 waits for #167 and #213
-**Last updated:** 2026-11-06 (coordinator: S3 verified, S5 started)
+**Status:** S1–S5 in review (S5 pushed 2026-11-06: plugin `280da6fe`, the **first live checkpoint** `docs/guides/siege-survival-smoke-test.md` is ready to run); G1 waits for #167 and #213
+**Last updated:** 2026-11-06 (S5 block added by the link; coordinator: S3 verified, S5 started)
 **Charter:** [SIEGE_SURVIVAL_CHAIN.md](../ai-agents/handoffs/SIEGE_SURVIVAL_CHAIN.md) · **Coordinator prompt:**
 [2026-11-03-siege-survival-coordinator-prompt.md](../ai-agents/handoffs/2026-11-03-siege-survival-coordinator-prompt.md) ·
 **Plan:** [IMPLEMENTATION_PLAN.md §2a](../specs/siege-survival/IMPLEMENTATION_PLAN.md#2a-delivery-order-and-merge-gates-2026-11-03) ·
@@ -140,7 +140,7 @@ test), `merged`, `blocked: <reason>`.
 | G1 | Animated rebuild for all destroyed gates (gate Decision 6), size-aware evacuation | API, plugin, web app `claude/gate-animated-rebuild` | waiting: #167, #213, realtime merged | — | — | — |
 | S3 | Siege prerequisites: visibility arbiter, NPC gate-damage cause, weighted capture presence, mob kills out of PvE statistics | plugin `claude/siege-survival` | in review (pushed 2026-11-06; started on the developer's request although #213 and arena-duels are unmerged; shared files `SiegeGateController.java` (3 additive hunks), `KnKPlugin.java` (5 small hunks), listed in the S3 block) | create_session session_01R1w2UuxjTGuarBTYzmFpVi, 2026-11-06 | plugin `6b80638e` / — / — / workspace `main` (S3 block, patch) | core 2638 → 2663, paper 2504 → 2535, api-client 330 unchanged; 0 failures (JDK 25) |
 | S4 | Phase 1 contracts/config: API entities (no migration yet), DTOs, services, readiness, form seeds; api-client DTOs | API, plugin api-client `claude/siege-survival` | in review (migration deferred until #167 merges; plugin commit as a patch, see the S4 block) | create_session session_01R1w2UwPn7oGLNgHm17vf7C, 2026-11-05 | plugin `699d1889` (`3d5cb1bd` applied by the coordinator) / api `043bd2a` / — / workspace `main` (S4 block, patch) | API 3659 → 3779 passed, 0 failed, 88 skipped; api-client 321 → 330, 0 failed, 2 skipped; core 2638 / paper 2504 unchanged, build green (coordinator, `699d1889`) |
-| S5 | Phase 2 runtime slice (mob spawning and goals, §5b adapters, ghost state, waves, end conditions) + live checklist | plugin `claude/siege-survival`; workspace `claude/siege-survival` (checklist) | in progress | create_session session_01R1w2UuecHgiqgXCbskAjGT, 2026-11-06 | — | — |
+| S5 | Phase 2 runtime slice (mob spawning and goals, §5b adapters, ghost state, waves, end conditions) + live checklist | plugin `claude/siege-survival`; workspace `claude/siege-survival` (checklist) | in review (pushed 2026-11-06; live checkpoint `docs/guides/siege-survival-smoke-test.md` to run; shared files `KnKPlugin.java` (5 additive hunks), `SiegeService.java` (13 small hunks), `SiegeLobbyStateMachine.java`, listed in the S5 block) | create_session session_01R1w2UuecHgiqgXCbskAjGT, 2026-11-06 | plugin `280da6fe` / — / — / workspace `claude/siege-survival` `4857fd2` (checklist, patch) + `main` (S5 block, patch) | core 2663 → 2678, api-client 330 unchanged, paper 2535 → 2580; 0 failures (JDK 25) |
 | S6 | Phase 3 repairs and frontier (sneak repair input, provisional) | plugin `claude/siege-survival` | waiting: G1 merged | — | — | — |
 | S7 | Phase 4 equipment modes, economy, Mystery Box | API, plugin `claude/siege-survival` | waiting: S4 | — | — | — |
 | S8 | Phase 5 specials, results, recovery, per-kill settlement | API, plugin `claude/siege-survival` | waiting: S7 | — | — | — |
@@ -186,6 +186,281 @@ test), `merged`, `blocked: <reason>`.
 
 (Each link appends its block here: scope done, commits per repo, tests baseline → result, deviations, flags, checklist
 location, notes for later links.)
+
+## Link S5 — phase 2 runtime slice (2026-11-06)
+
+Session session_01R1w2UuecHgiqgXCbskAjGT (started by the coordinator). knk-plugin `claude/siege-survival`, base `6b80638e`
+(S1–S4, `main` `33122cf4` merged; neither moved during the link), head **`280da6fe`** (pushed). knk-workspace could be
+attached read-only only (the push attach was refused by the permission classifier, as for S1/S3/S4), so the checklist
+commit (workspace branch `claude/siege-survival`, `4857fd2` on top of `main` `bbf08e4`) and this bookkeeping came as
+patches. Scope: plan §2a row S5, phase 2 "wave runtime/NPC slice": a survival match runs on the server — vanilla
+monsters spawn in waves, walk to the castle, breach the gate door, capture the objective; dead players are ghosts; the
+match ends on the configured end condition. **First live checkpoint:** `docs/guides/siege-survival-smoke-test.md`
+(workspace branch `claude/siege-survival`). Behaviour-neutral for ordinary PvP Siege: nothing survival-related runs
+unless a lobby's drawn scenario has a survival configuration on the API; proven by the unchanged existing tests and
+the new PvP-default tests (`SiegeLobbyStateMachineRulesTest`, `SurvivalModeHooksTest`).
+
+### Scope done
+
+**A. How a lobby becomes a survival match.** `paper/siege/survival/SurvivalConfigurationCache` asks the API for the
+survival scenarios (`GET api/siege-survival/scenarios`) and each enabled scenario's configuration at startup and every
+5 minutes, refreshes the drawn scenario with the lobby id at the draw (new observer method
+`SiegeMatchObserver.scenarioDrawn`) and the match freezes what is cached when it starts (`SurvivalConfigurationMapper`:
+`ConfigurationDto` → S1 records exactly as S4's notes describe; `SurvivalConfiguration` is the frozen record). The Siege
+lifecycle is reused unchanged through two small seams with PvP defaults: `core/siege/SiegeScenarioRules` on the lobby
+state machine (min players, timed, startable) and `paper/siege/SiegeModeHooks` on `SiegeService` (single human team,
+membership-end suppression, no rejoin slot, result override, match capture configuration). `SurvivalModeHooks`
+answers for survival scenarios: min players from the survival settings (S37), **untimed** (no timer-expiry defender
+victory), every human on `humanTeamId` (the NPC team row stays with 0 members and **cannot forfeit**: the PvP
+membership check is skipped while a human is left), no rejoin slot (disconnect = leave), side-capture reduction 0 (S51),
+and the match result from the survival end reason (S5-5). A survival configuration whose readiness has errors is not
+startable: the draw cancels with "no scenario available" and the log names the errors.
+
+**B. Waves and rounds** (`SurvivalMatch`, one per lobby, ticked every server tick by `SurvivalMatchRuntime`): PREPARING
+for one intermission length after the Siege start, then `WavePopulationPlanner.plan` → `SurvivalRounds.startWave`; the
+spawn loop hands out one planned enemy per difficulty spawn interval while `RoundSpawnQueue.canSpawn()`, zone via
+`SpawnZoneSelector.select(frontier.activeZones() filtered by the zone's wave range, livingPlayerPositions, random)`,
+spawn at a random `Spawn` point (or inside `areaRadius`, snapped to the ground); `completeWaveIfDone` → intermission
+with the action-bar countdown → next round; `SpawnFrontier.update(npcHeld)` on every capture (zones activated are
+announced); `StuckMonitor` per round: a progress sample every 20 ticks (damage dealt/taken, distance to the target,
+navigation blocked), stuck → the same planned enemy respawns at the active zone nearest the players with its round
+stats, respawn limit → system kill, last-enemies glow + direct pursuit, round backstop; every stuck event goes to the
+logger (`StuckTelemetrySink`). `EndConditionEvaluator` runs after every state change (round start/end, player death,
+member left, capture); the match then ends with the survival reason (team wipe, insta-lose objective, all captured, no
+players left; admin abort/restart come from the Siege side) — spawns cancelled, mobs removed, actors cleared — and asks
+`SiegeService.endMatch` (new public method) one tick later, so players and gates are restored by the ordinary Siege
+ending. `WaveRecord` (reached/completed) is kept on the match and shown in the status and the end message; the result
+DTOs are not written (S8). Special waves are planned through `WavePopulationPlanner` with the mapped profiles and
+schedule (spawns use the zones with `forSpecialWaves`). Kill accounting: `recordDeath(id, PLAYER)` when the mob's killer
+is a player, `ENVIRONMENT` otherwise, `SYSTEM` for stuck/backstop kills and for enemies that could not be spawned; no
+ledger (S7).
+
+**C. Mobs as match actors** (`SurvivalSpawner`): `EntityType` from the monster type id, `world.spawn(…, CUSTOM)`,
+non-persistent, no distance despawn, no sun burning, no item pickup, drops/XP cleared on death;
+`matchActors.register(mob, lobbyId, npcTeamId, captureContributionWeight)` (S3's tag persists), unregister on
+death/removal, `clear(lobbyId)` at match end, leftover sweep at startup and on `EntitiesLoadEvent` (`tagOf` present,
+not registered → removed). Stats per round: `WaveScaling.statMultipliers(round, players)` → max health = vanilla base ×
+multiplier (healed), melee/projectile damage and movement speed as `survival:round` multipliers, the three cooldown/draw
+stats × 1/attack-speed multiplier (one `NpcStatPipeline` per plugin, profile id = lower-cased entity type).
+
+**D. §5b Paper adapters** (`paper/npc`, reusable, no survival dependency): `NpcPlatform.adopt(mob, profileId)` removes
+the vanilla MOVE and TARGET goals and the look goals, installs `NpcMeleeGoal` (walks to the mob's target with its
+pathfinder, attacks in vanilla reach when `pipeline.tryMelee` allows, with the resolved melee damage set as a transient
+`ATTACK_DAMAGE` modifier so the vanilla `attack()` keeps knockback/enchantments) and, for a `RangedEntity`, `NpcBowGoal`
+(closes to 15 blocks, draws for the resolved draw ticks, releases on `tryShot`, `rangedAttack`);
+`NpcProjectileDamageListener` sets the arrow damage from the resolved projectile damage in `EntityShootBowEvent`;
+movement speed = transient `MOVEMENT_SPEED` ADD_NUMBER modifier of (resolved − base), re-applied when
+`pipeline.revision(id)` changes (`refresh` from the survival tick); `FOLLOW_RANGE` raised to 96 the same way; clamp
+reports logged once per revision; `forget(id)` on death/removal. `installGoals` re-strips vanilla goals when
+`reassessWeaponGoal` brought them back (checked each refresh). `MobAttributes` + `NpcAttribute` form the attribute seam
+(the Bukkit `Attribute` constants need a running server's registry).
+
+**E. Goals: navigation, breach, targeting.** New Bukkit-free core package `core/targeting` (added to
+`ArchitectureGuardTest`): `TargetCandidate`/`TargetKind` (player, gate, objective; distractor reserved, S68),
+`TargetPolicy` (preferences, proximity scale, min commitment, switch margin, aggro radius, leash), `TargetSelector`
+(hard eligibility first; score = preference / (1 + distance / scale); the held target wins until the commitment
+expires, then a challenger needs the relative margin; expiry alone never switches; an ineligible held target is released
+at once; players only within the aggro radius and the leash from the anchor unless pursuing directly) and
+`EnemyGoalMachine` (SELECTING → APPROACHING → ATTACKING | BREACHING | CAPTURING | IDLE; bounded navigation retries
+then the target is put aside for a cool-down). `SurvivalTargeting` builds the candidates from the live match
+(`TargetEligibilityRules`: ghosts/dead fail; an objective is eligible while not NPC-held and its own gate has no closed
+door; a gate while a closed, standing, damageable door exists and its objective is not NPC-held; `ALLOW` adds area gates,
+`DENY` removes), with a gate's position being the stand point of `core/siege/SiegeGateApproach` for this mob.
+`MobMover` drives the mob with Paper's `Mob#getPathfinder().moveTo` (re-path every 10 ticks), follows the zone's
+ordered `Lane` points first (opt-in `laneAutoReroute` leaves the override for the destination after the retry budget,
+otherwise the mover reports blocked and the machine changes target). Breach: at the stand point, every 20 ticks the mob
+swings and `NpcGateDamage.hit(mob, door, block, gateDamageFactor)` hits the nearest closed-door block (a HIT counts as
+progress). Capture: in the ring the mob stops; S3's weighted actor presence does the capture. Spawn-zone unlock follows
+ownership (B).
+
+**F. Ghost state** (`SurvivalGhosts`, `GhostRules`, `SurvivalGhostListener`): a member who dies in WAVE_ACTIVE is a
+ghost until the intermission starts, one who dies in INTERMISSION until the next round starts (S41), none before wave 1;
+the effects apply at the respawn (the dead body has no entity): `visibility().markGhost(player, GhostTeam("siege:<lobby>:<team>"))`,
+`setInvulnerable(true)`, `setCollidable(false)`, food kept full; cancels for damage (any source), attacking (also with a
+projectile), hunger loss, block break/place, interaction (blocks, entities), item use/consume, drops, pickups, container
+opening, `EntityTargetLivingEntityEvent` (safety net; every mob targeting the player is also cleared on death),
+`ProjectileHitEvent`; confinement to the town + district WorldGuard regions (S60, teleport back to a team spawn); chat
+untouched; `UserDataLoadedEvent` re-applies the effects after `JoinLoadingGuard` released invulnerability;
+`siegeService.setPresenceExclusion(arbiter::isGhost)` wired (ghosts never count in capture). Release at the transition:
+`clearGhost`, invulnerability off, teleport to `SiegeService.respawnLocation` (the Siege resolution: a lost objective
+spawn falls back to a team spawn); every ghost state ends at match end/restore. Inventories kept, nothing dropped (the
+existing Siege death listener, S40).
+
+**G. Restart and recovery** (S61): the Siege shutdown aborts the match (`SERVER_RESTART`) → `matchEnded` → every mob
+removed, ghosts released, actors cleared; `SurvivalMatchRuntime.shutdown()` runs again from `onDisable` as a safety net;
+leftover tagged mobs are swept at startup and when their chunk loads. No resume.
+
+**H. Observability:** `/knk siege survival status [lobby]` (`knk.admin.siege`, a child of `knk.admin`, registered as a
+`/knk` subcommand read lazily): known survival scenarios, running matches, adopted mobs, match actors; per match the
+substate, waves reached/completed, queue/alive/earned/system kills, intermission left, this round's stat multipliers,
+frontier, players/alive/ghosts, the end-condition snapshot with the verdict, and up to 12 enemies with state, target,
+position, glow/blocked and HP. Stuck telemetry and every lifecycle step go to the logger with a `[Survival] Lobby <key>:`
+prefix; `[NPC]` lines for clamp reports. Nothing persisted. Config: `siege.survival:` in `config.yml` (every value a
+code default, see the flags).
+
+### Commits (knk-plugin `claude/siege-survival`)
+
+`5c87ed0d` target scoring core, Siege mode hooks, NPC platform adapters, configuration mapper · `280da6fe` survival match
+runtime, spawner, mob behaviour, breach, ghosts, admin status, wiring. Head `280da6fe`. 60 files: 53 new (16 main
+classes in `paper/siege/survival`, 6 in `paper/npc`, 8 in `core/targeting`, `core/siege/SiegeScenarioRules`,
+`paper/siege/SiegeModeHooks`, 20 test classes), 7 existing files edited (below).
+
+### Tests (`./gradlew build -x deployToDevServer`, JDK 25 toolchain; `:knk-paper:shadowJar` built, 14.9 MB)
+
+| Module | Baseline (`6b80638e`) | Result (`280da6fe`) |
+|---|---|---|
+| knk-core | 2663, 0 failed | 2678 (+15: `TargetSelectorTest`, `EnemyGoalMachineTest`, `SiegeLobbyStateMachineRulesTest`), 0 failed |
+| knk-api-client | 330, 0 failed, 2 skipped | 330, 0 failed, 2 skipped (unchanged) |
+| knk-paper | 2535, 0 failed, 18 skipped | 2580 (+45: `SurvivalConfigurationMapperTest`, `SurvivalSettingsTest`, `GhostRulesTest`, `SurvivalEndMappingTest`, `TargetEligibilityRulesTest`, `SurvivalGhostsTest`, `SurvivalGhostListenerTest`, `MobMoverTest`, `SurvivalSpawnerTest`, `SurvivalModeHooksTest`, `SurvivalMatchTest`, `NpcPlatformTest`, `NpcMeleeGoalTest`), 0 failed, 18 skipped |
+
+Every pre-existing test runs unchanged; the only edited test file is `ArchitectureGuardTest` (+`"targeting"`).
+
+### Deviations
+
+- **Navigation v1 is Paper's own pathfinder** (`Mob#getPathfinder().moveTo`, follow range raised to 96) following the
+  optional lane points, not `WalkSearch`/the road router: the walk snapshot service and search executor are private to
+  `KnKPlugin` and the player-only access factory would need a mob profile; the prompt allows the mover for v1, and the
+  mover takes a planner later without touching the behaviour (flag S5-11, follow-up).
+- **Reachability is a gate-door heuristic** (an objective behind its own closed door is unreachable; the gate is the
+  target), not a path query (S5-10). The design's "avoid straight-line selection through walls" is covered for the
+  castle's gate lines; an objective reachable only through a wall is caught by the mover's blocked report (the target is
+  put aside).
+- **The PvP result pipeline runs for a survival ending** (announcement, `completeMatch`, PvP participation rewards):
+  survival results and settlement are S8's; the mapping is isolated in `SurvivalEndMapping` (S5-5).
+- Not in S5 by plan: repairs (S6), kits/economy/Mystery Box (S7), results persistence/special-wave rewards/recovery
+  files (S8), authoring UI and HUD (S9).
+- Workspace pushes refused (read-only attach): the checklist and this block are patches for the coordinator.
+
+### Hunks in the shared files (for the #213 / arena-duels merges)
+
+`SiegeGateController.java`, `SiegeGateListener.java` and every gate pass-through/view file: **untouched**.
+`KnKPlugin.java` (5 hunks, all additive, 51 lines): field `siegeSurvival` after `matchActors` (l. 320); `onDisable`
+after the `siegeService.shutdown()` block: `siegeSurvival.shutdown()` in its own try (l. 1298–1304); `registerCommands()`
+after the regions subcommand: the `/knk siege` registration (l. 2609–2614); `initializeSiege()` before
+`siegeService.start()`: `initializeSiegeSurvival();` (l. 4188–4191); after `getMatchActors()`: `getSiegeSurvival()` and
+`initializeSiegeSurvival()` (l. 4212–4244). No existing line changed. `SiegeService.java` (13 hunks, 39 lines): import
+`OptionalInt`; next to `setPresenceExclusion`: field `modeHooks`, `setModeHooks`, public `endMatch(rt, reason)`
+(l. 236–248); `onDraw`: one `scenarioDrawn` observer line after `rt.startRound` (l. 549); `onSplit`/`onStartMatch`:
+`modeHooks.matchConfiguration(...)` around `rt.machine().configuration()` (l. 632, 679); `partition`: single-team filter
+(l. 666); `currentTeams`: single-team placement (l. 726–729); `onEndMatch`: `modeHooks.resolveResult(...).orElseGet(...)`
+(l. 757); `removeMember`: `&& modeHooks.allowRejoin(rt)` on the rejoin slot (l. 1084) and `&&
+!modeHooks.suppressMembershipEnd(rt, match)` on the membership check (l. 1129); `addToRound`: single-team before the
+smallest team (l. 1238–1240); `createLobby`: `machine.setScenarioRules(...)` (l. 2241). `SiegeMatchObserver.java`: the
+`scenarioDrawn` default method (3 lines). `core/siege/SiegeLobbyStateMachine.java` (24 lines): field + setter/getter
+`scenarioRules`; `tick` IN_PROGRESS gated on `rules.timed`; `drawScenario`/`startMatch` use `rules.playersMin` and
+`rules.startable`. `plugin.yml`: `knk.admin.siege` child + node. `config.yml`: the `siege.survival:` block (35 lines).
+`git diff 6b80638e..280da6fe -- <file>` shows them.
+
+### Flags for the developer (defaults and interpretations; every value configurable or in one place)
+
+- **S5-1** A lobby plays survival when its drawn scenario has a survival configuration on the API (cache from
+  `GET api/siege-survival/scenarios` + configuration at startup and every 5 min; lobby-level refresh at the draw;
+  frozen at the start). No flag on the Siege runtime config (#265). `/siege admin reload` does not refresh this cache
+  (follow-up); a server restart or 5 minutes after authoring.
+- **S5-2** The survival `minPlayers` replaces the scenario's PvP `PlayersMin` for that lobby; the scenario still has
+  to pass the PvP structural readiness to be in the lobby's runtime config (both teams with a spawnpoint, `PlayersMin` ≥ 2).
+- **S5-3** A survival configuration with readiness errors cancels the round as `NO_SCENARIO_AVAILABLE` (the players
+  see the ordinary cancel; the log WARNING names the errors).
+- **S5-4** Untimed: the match clock stops (`secondsRemaining` stays at the computed duration), so the PvP scoreboard shows
+  a constant "Time left" until S9 gives survival its own lines.
+- **S5-5** A survival loss ends the Siege match as `TEAM_ELIMINATED` with the **NPC alliance as winner**
+  (`LAST_ALLIANCE_STANDING`; `INSTANT_VICTORY_CAPTURE` when an insta-lose objective fell); "no players left" is a draw;
+  aborts stay aborted. The PvP result screen, `completeMatch` and the PvP participation/holding rewards therefore run
+  for a lost survival match (no win reward); S8 replaces them with the survival result and the per-kill settlement.
+- **S5-6** Human team = `humanTeamId` when the scenario has it, else the first Defender; the NPC team keeps its roster
+  row with 0 members; the PvP membership check is skipped while ≥ 1 human is in the match (with none left the ordinary
+  path ends the match, nothing to settle).
+- **S5-7** Survival lobbies hold no rejoin slot: a disconnect is a leave reported at once (S37).
+- **S5-8** Side-capture reduction is forced to 0 for survival matches (pre-match board and match; S51).
+- **S5-9** Targeting defaults (`siege.survival.targeting`): preference player 1.0 / gate 0.9 / objective 1.0;
+  proximity scale 16 blocks (score halves at 16); minimum commitment 4 s; switch margin 25 % relative; aggro radius 12;
+  leash 24 from the anchor (the mob's last structural target, else its spawn). The difficulty profile's
+  `aggroRadius`/`leashDistance` override the two when set.
+- **S5-10** Reachability heuristic: an objective is eligible only while its own gate has no closed standing door; the
+  gate is the target meanwhile; `ALLOW` makes an area gate (with a closed door) a target too; `DENY` excludes a gate or
+  objective from scoring; a denied gate is never breached on the way to an allowed objective (that objective then
+  reports blocked and is put aside). A target the mover fails to reach 3 times (`blocked-retries`) is put aside for 20 s
+  (`blocked-cooldown-millis`).
+- **S5-11** Navigation: Paper pathfinder `moveTo` every 10 ticks (`repath-ticks`), `FOLLOW_RANGE` 96 (`follow-range`),
+  lane points visited in order (arrive 2.5 blocks), `laneAutoReroute` = after the retry budget the mover leaves the
+  override for the destination; off = blocked is reported. `WalkSearch`/road legs are not used (planner port later).
+- **S5-12** Cadence: behaviour (target decision) every 10 ticks, stuck sample every 20 ticks, door hit every 20 ticks
+  (10 × `gateDamageFactor` HP per hit), gate arrive distance 2.5 blocks (stand point from `SiegeGateApproach`, 1.5
+  blocks off the door), objective arrive = capture radius − 0.5 (≥ 1), ±3 blocks vertically.
+- **S5-13** Stat application: max health via the attribute (vanilla base × multiplier, healed to full); melee damage,
+  projectile damage and movement speed as `survival:round` multipliers; the melee/ranged cooldowns and the draw ×
+  1/attack-speed multiplier; the per-player factor (when `applyToStats`) is folded into the same source (S1-6 left as
+  is: round 1 stays vanilla only with per-player stats off). Speed and follow range are transient ADD_NUMBER modifiers
+  of (resolved − base); the melee damage is a transient ADD_NUMBER on `ATTACK_DAMAGE` set right before `attack()`.
+  Profile id = lower-cased entity type key.
+- **S5-14** Ghost confinement = the town's `TownWgRegionId` plus the district regions; when none resolves, ghosts
+  are not confined (no fallback radius).
+- **S5-15** Ghost look: S3's arbiter (hidden from non-teammates, translucent to teammates) + `setInvulnerable(true)` +
+  `setCollidable(false)` + food kept at 20. The siege scoreboard team collision rule is **not** set to NEVER (it would
+  need a hunk in `SiegeScoreboardPresenter`); `SiegeEnchantBookListener` may un-cancel a ghost's pickup of its own
+  match's enchant book (HIGHEST on the legacy pickup event) — edge, follow-up.
+- **S5-16** PREPARING lasts one intermission length (default 10 s) after the Siege start before wave 1, with the
+  countdown on the action bar.
+- **S5-17** A planned enemy that cannot be spawned (unknown or non-mob type, unloaded world, no usable active zone) is
+  recorded as a `SYSTEM` death so the round can complete; a mob that vanished without a death event (unloaded,
+  removed by something else) as `ENVIRONMENT`. A mob killed by anything but a player (fall, lava, another mob) is
+  `ENVIRONMENT` (no reward, S7).
+- **S5-18** Mobs: `CUSTOM` spawn reason, non-persistent, no far despawn, no daylight burning (zombies, skeletons), no
+  item pickup, drops and XP cleared; vanilla MOVE/TARGET/LOOK goals removed, so a mob never retaliates against a
+  player outside the aggro radius (the design's leash) and never wanders.
+- **S5-19** If no active zone accepts the current round (wave range / special flag), every active usable zone is used.
+- **S5-20** An insta-lose capture is ended by both the Siege `InstantVictory` path and the survival evaluator; the
+  survival end is requested one tick later and both are idempotent (one end, one reason).
+- **S5-21** Admin status permission `knk.admin.siege` (child of `knk.admin`); `/knk siege survival status [lobby]`.
+- **S5-22** Round planning with 0 players at round start uses 1 for the per-player factor (never happens: the match
+  ends first).
+
+### Follow-ups found (not fixed; the coordinator files issues)
+
+- WalkSearch/road-router waypoint planner for mobs (a mob `MovementProfile`, a Player-free access factory, getters for
+  the walk services) behind the mover's planner port (#146).
+- `SiegeScoreboardPresenter`: collision rule NEVER for ghosts (team option), survival lines (round, remaining + queued,
+  countdown, ghost status) — S9/HUD.
+- `/siege admin reload` should also refresh the survival configuration cache.
+- `SiegeEnchantBookListener` vs ghosts (pickup un-cancel edge).
+- The WorldGuard area flags the mobs need (mob damage to players, plugin spawns) are not checked by readiness; a
+  readiness warning or a startup check would save a live test.
+- `SurvivalConfigurationCache` keeps one configuration per scenario; two lobbies drawing the same scenario at once share
+  the lobby-level refresh of the last draw (the lobby override is the only lobby-level field).
+
+### Notes for later links
+
+- **S6 (repairs):** door events: `gateManager.addStateListener` (fires on destroy/rebuild/open/close; re-read the door),
+  no survival event needed; the round loop is `SurvivalMatch.tick()` (add a per-door `DoorRepairWork` advance there,
+  sneaking members from `members()`), objective loss is `SurvivalMatch.onCapture` (frontier update happens there; stop
+  repairs on `npcHeld`); `SurvivalTargeting.closedDoors(gateId)` tells whether a rebuilt door blocks again (the goal
+  machine re-targets automatically: the gate becomes eligible, the objective behind it ineligible).
+- **S7 (economy, kits, Mystery Box):** the kill with its killer is `SurvivalMatch.onMobDeath(mob, killer)` (cause
+  `PLAYER`) — credit the `MatchLedger` and `PermanentRewardAccrual` there (headshot/crit from the damage event would
+  need a listener on `EntityDamageByEntityEvent` MONITOR for actors, which `SurvivalMatchRuntime.onDamageByEntity`
+  already is); ghosts = `SurvivalGhosts.isGhost` (no purchases/transfers); purchase and Mystery Box points are in the
+  API configuration (`SurvivalConfigurationMapper` maps only what S5 uses: add `purchasePoints`/`mysteryBoxPoints`
+  fields there); kits at the hub = `SiegeMatchObserver.memberReadiedAtHub`/the spawn-picker flow.
+- **S8 (results, specials, recovery):** `SurvivalMatch.record()`, `endReason()`, `rounds().currentQueue()` earned/system
+  kills and `siege.contributions()`; the Siege result override is `SurvivalModeHooks.resolveResult` (replace the mapping
+  in `SurvivalEndMapping` with the survival result DTO + `POST …/result`); special profiles/schedule are already
+  planned (`WavePopulationPlanner`), only rewards/announcements are missing; recovery = `SurvivalMatchRuntime.sweep`
+  + the Siege vault/gate recovery (no survival file today).
+- **S9 (authoring/UX):** gaps hit: no web routes for `api/Survival*` (the checklist uses curl), no survival flag on
+  the lobby runtime config (#265), readiness errors are only in the server log at the draw, the PvP scoreboard during
+  survival, no HUD for round/remaining/ghost status, lane points must be captured in-game and posted by id.
+
+### Checklist location
+
+`docs/guides/siege-survival-smoke-test.md` on knk-workspace branch `claude/siege-survival` (commit `4857fd2`, delivered as
+a patch): deploy (API `f87457b` + migration + 18 seeds, plugin `280da6fe`), authoring with REST calls on the dev seed,
+the one-player checkpoint, log lines, the PvP sanity step, the flags to decide.
+
+### To file (no GitHub issue access from this session: the GitHub tools are scoped to knk-plugin)
+
+- The comment on PandiO/knk-workspace#41 (S5 pushed `280da6fe`, tests core 2663 → 2678 / api-client 330 / paper 2535 →
+  2580, 0 failures; checklist location).
+- The six follow-ups above.
 
 ## Link S3 — Siege prerequisites (2026-11-06)
 
