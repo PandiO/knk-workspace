@@ -1,7 +1,7 @@
 # Siege Survival implementation chain — progress report
 
-**Status:** S1 and S2 in review (knk-plugin `claude/siege-survival`, updated from `main` 2026-11-05, head `34c7bf70`); **S4 in review** (API `043bd2a` pushed; plugin api-client commit and this bookkeeping delivered as patches; migration deferred until #167 merges); G1 and S3 wait for #213 and the arena-duels decision
-**Last updated:** 2026-11-05 (coordinator: S4 verified and in review; chain paused again until #167 merges)
+**Status:** S1, S2 and S4 in review; **S3 running** (started 2026-11-06 at the developer's request to continue on the feature branch); the survival migration is now on the API branch; G1 waits for #167 and #213
+**Last updated:** 2026-11-06 (coordinator: S3 started, migration added, gate wait replaced by conflict management)
 **Charter:** [SIEGE_SURVIVAL_CHAIN.md](../ai-agents/handoffs/SIEGE_SURVIVAL_CHAIN.md) · **Coordinator prompt:**
 [2026-11-03-siege-survival-coordinator-prompt.md](../ai-agents/handoffs/2026-11-03-siege-survival-coordinator-prompt.md) ·
 **Plan:** [IMPLEMENTATION_PLAN.md §2a](../specs/siege-survival/IMPLEMENTATION_PLAN.md#2a-delivery-order-and-merge-gates-2026-11-03) ·
@@ -15,6 +15,16 @@ knk-workspace `main` `84a5a63` (re-check: later merges on the trunks happen; eac
 (The coordinator keeps this list current: links in review with their checklist location, merges that open the next gate,
 flagged decisions.)
 
+- **2026-11-06 — continuing on the feature branch (developer's request).** The developer asked to keep implementing instead
+  of waiting for #167/#213/arena-duels. What changed: (1) **the `AddSiegeSurvivalPhase1` migration is on the API branch**
+  (coordinator; 18 `siege_survival_*` tables, 35 indexes, nothing else; `has-pending-model-changes` clean; tests 3779/0/88).
+  Its parent is the current `master` head, so **if #167 merges first, merging `master` into `claude/siege-survival` conflicts in
+  the model snapshot: resolve by `dotnet ef migrations remove` + `add` on the merged branch** (a 10-minute step, no database has
+  the migration yet). (2) **S3 started** on the plugin branch although #213 and arena-duels are unmerged: the only shared
+  files are `SiegeGateController.java` (#213) and `KnKPlugin.java` (both); S3 keeps its hunks there small and additive and
+  lists them, so the later merge is mechanical. (3) S5 follows S3 on the same branch; the chain's live checkpoint (one wave, a
+  breach, a capture) then needs the API branch deployed with its migration — nothing from these branches is deployed, so
+  the linear-migration rule holds in production. Merging #167 and #213 is still the cleanest way to reduce conflict work.
 - **S4 is in review (2026-11-05), nothing to live-test:** knk-web-api `claude/siege-survival` `043bd2a` and knk-plugin
   `claude/siege-survival` `699d1889`. Coordinator verification: API 3659 → 3779 passed (0 failed, 88 skipped, baseline run on
   `master` `2e3dfeb`); plugin build green (knk-api-client 321 → 330, knk-core 2638 and knk-paper 2504 unchanged). Scope check: 45
@@ -116,7 +126,7 @@ test), `merged`, `blocked: <reason>`.
 | S1 | Survival core logic (waves, kills, round delay, stuck rules, end conditions, scaling presets, monster mix, specials, repair maths, spawn selection, rewards, Mystery Box pick) | plugin `claude/siege-survival`, `knk-core/.../core/survival/` only | in review | create_session session_01R1w2UvKtghxZowkQBTRYqG, 2026-11-03 | plugin `b5f86586` (merge of S1 + S2's `8cf2761e`) / — / — / workspace `main` (this report; bookkeeping applied by the coordinator from S1's patch) | knk-core 2433 → 2595 (S1 +101, S2 +61), 0 failed; api-client 288 and paper 2385 unchanged |
 | S2 | NPC platform §5b core: combat and speed profiles, modifier pipeline by source, clamping with a report | plugin `claude/siege-survival`, `knk-core/.../core/npc/` only | in review | create_session session_01R1w2UxEVJTzDXBdKWkGihy, 2026-11-03 | plugin `8cf2761e` / — / — / — | core 2433 → 2494 (+61, 0 failures); api-client 288, paper 2385 unchanged |
 | G1 | Animated rebuild for all destroyed gates (gate Decision 6), size-aware evacuation | API, plugin, web app `claude/gate-animated-rebuild` | waiting: #167, #213, realtime merged | — | — | — |
-| S3 | Siege prerequisites: visibility arbiter, NPC gate-damage cause, weighted capture presence, mob kills out of PvE statistics | plugin `claude/siege-survival` | waiting: realtime, #213 merged; arena-duels merged or caught up | — | — | — |
+| S3 | Siege prerequisites: visibility arbiter, NPC gate-damage cause, weighted capture presence, mob kills out of PvE statistics | plugin `claude/siege-survival` | in progress (started on the developer's request although #213 and arena-duels are unmerged; shared files `SiegeGateController.java`, `KnKPlugin.java`) | create_session session_01R1w2UuxjTGuarBTYzmFpVi, 2026-11-06 | — | — |
 | S4 | Phase 1 contracts/config: API entities (no migration yet), DTOs, services, readiness, form seeds; api-client DTOs | API, plugin api-client `claude/siege-survival` | in review (migration deferred until #167 merges; plugin commit as a patch, see the S4 block) | create_session session_01R1w2UwPn7oGLNgHm17vf7C, 2026-11-05 | plugin `699d1889` (`3d5cb1bd` applied by the coordinator) / api `043bd2a` / — / workspace `main` (S4 block, patch) | API 3659 → 3779 passed, 0 failed, 88 skipped; api-client 321 → 330, 0 failed, 2 skipped; core 2638 / paper 2504 unchanged, build green (coordinator, `699d1889`) |
 | S5 | Phase 2 runtime slice (mob spawning and goals, §5b adapters, ghost state, waves, end conditions) | plugin `claude/siege-survival` | waiting: S1–S4 on the branch | — | — | — |
 | S6 | Phase 3 repairs and frontier (sneak repair input, provisional) | plugin `claude/siege-survival` | waiting: G1 merged | — | — | — |
@@ -148,6 +158,11 @@ test), `merged`, `blocked: <reason>`.
   commit and this bookkeeping came as `send_message` patches (sha256-checked, `git am`, pushed by the coordinator); the API push
   worked from the session. Pattern for later links: give the link's `source_url` the repo it pushes most to, and expect patches
   for the others. Follow-up #265 filed; S7 held until S5 (reasoning under "Waiting for the developer").
+- 2026-11-06: developer: "Can't we continue implementation on the feature branch?" — yes: S3 started (session
+  session_01R1w2UuxjTGuarBTYzmFpVi) with overlap guidance, and the coordinator generated the migration
+  `20261106071958_AddSiegeSurvivalPhase1` on the API branch (design time, `Database__MySqlServerVersion=8.0.36`, dummy
+  connection string; `dotnet-ef` 9.0.10 as in CI). Verified: Up() = 18 CreateTable + 35 CreateIndex, Down() = 18 DropTable, no
+  operation on an existing table; the snapshot diff is additions and reordering only (0 removed lines not re-added).
 - Next coordinator run: re-run the gate check; start G1 (`claude/gate-animated-rebuild`, from the trunks) as soon as #167,
   #213 and realtime are merged, S4 as soon as #167 and #180 are merged, S3 as soon as realtime, #213 and the arena-duels
   decision are in; then S5 (first live checkpoint), S6–S8 batched into one checklist, S9 last.
