@@ -11,7 +11,7 @@ This is a human-readable record of capabilities merged into the V3 default branc
   #197, #33 and #187 too), not merged, not live-tested. One route-meta table (`src/routes/routeTable.ts`) gives
   every page its layout (public, player, admin; each with its own error boundary), its gate (the same nodes as
   before), its tab title (ten pages had none) and its place in the navigation. The top bar has Home, Leaderboards,
-  Guides and Admin; the admin pages are in a grouped sidebar (Content, World, Players & support, Economy, Settings,
+  Guides, Dashboard (content staff; kept by LW4-1, 2026-11-06) and Admin; the admin pages are in a grouped sidebar (Content, World, Players & support, Economy, Settings,
   Owner; an "Admin pages" menu below 1280 px) that shows each page only with the node its API checks, so the
   economy pages and Orphaned Locations no longer need the moderator node to be found and Invitations finally shows.
   `/admin` lists the same pages with a line each. Every admin page has a breadcrumb trail ("Economy › Balance event

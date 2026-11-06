@@ -1,7 +1,7 @@
 # Web app admin navigation: route table, admin sidebar, breadcrumbs (#30) — smoke test
 
 **Status:** Written 2026-11-05 for knk-web-app `claude/admin-ia-30`; not merged, not run
-**Last updated:** 2026-11-05
+**Last updated:** 2026-11-06 (§ 1: Dashboard kept in the bar, LW4-1)
 **Issues:** [PandiO/knk-workspace#30](https://github.com/PandiO/knk-workspace/issues/30) (layout routes, route-meta
 table, grouped admin sidebar, breadcrumbs; sub-issue of [#24](https://github.com/PandiO/knk-workspace/issues/24));
 [#262](https://github.com/PandiO/knk-workspace/issues/262) (Invitations link never showed)
@@ -20,20 +20,25 @@ or a test group). Run the sections in the `current` and the `brand` theme (cogwh
 page background on and once off, and sections 2 and 4 once at phone width (390 px). Record each step in
 **Findings** at the end. Because the branch contains #197, #187 and #33, their smoke tests can run on the same
 checkout ([dashboard return § 14a](dashboard-return-smoke-test.md), [data primitives](data-primitives-smoke-test.md),
-[feedback primitives](feedback-primitives-smoke-test.md)); in § 14a read "Dashboard highlighted" as the sidebar's
-**Dashboard** and the bar's **Admin** (#30 moved the admin links out of the bar).
+[feedback primitives](feedback-primitives-smoke-test.md)); § 14a holds as written for the bar's **Dashboard** (kept
+in the bar, LW4-1), and the sidebar's **Dashboard** is highlighted on the same pages.
 
-What changed for you: the top bar has **Home, Leaderboards, Guides, Admin**; every admin page is in a grouped
+What changed for you: the top bar has **Home, Leaderboards, Guides, Dashboard** (content staff only) **and Admin**;
+every admin page is in a grouped
 sidebar (Content, World, Players & support, Economy, Settings, Owner) that lists only what your permissions open;
 every admin page has a breadcrumb trail and a tab title; **Admin** opens an overview of your pages. URLs are
 unchanged.
 
 ## 1. The bar
 
-1. As the owner: the bar reads **Home, Leaderboards, Guides, Admin** (labels, icons only or the menu button,
-   depending on the width). No Dashboard, Game Settings, Moderation, … links in the bar any more.
-2. **Admin** is underlined (current) on every admin page: `/admin`, the dashboard, Entity setup, a form builder, a
-   detail page, Moderation, Game settings, Diagnostics. On Leaderboards, Leaderboards is current; on a public player
+1. As the owner: the bar reads **Home, Leaderboards, Guides, Dashboard, Admin** (labels, icons only or the menu
+   button, depending on the width). **Dashboard** stays in the bar (LW4-1, developer's decision 2026-11-06) for staff
+   who may open the dashboard (`knk.admin.content`, the same check as the dashboard page). No Game Settings,
+   Moderation, … links in the bar any more.
+2. **Dashboard** is underlined (current) on the dashboard (`/dashboard`, `/dashboard/Town`), Entity setup (`/forms`,
+   `/forms/Town`, an open form), the form and display builders and a detail page (View on a row); **Admin** is not
+   underlined there. **Admin** is underlined on every other admin page: `/admin`, Minecraft catalogue, Moderation,
+   Game settings, Diagnostics; **Dashboard** is not. On Leaderboards, Leaderboards is current; on a public player
    profile (`/players/{name}`) too; on the enchantment guide, Guides.
 3. Log in as a player without any staff node: **Home, Leaderboards, Guides** only; `/admin` says "No admin pages".
 
@@ -78,7 +83,7 @@ unchanged.
 Log in with the partial account (see the top: currency history, invites, config, orphaned locations; no moderator
 node).
 
-1. The bar has **Admin**. `/admin` and the sidebar list exactly: World (Orphaned Locations), Players & support
+1. The bar has **Admin** but no **Dashboard** (no `knk.admin.content`). `/admin` and the sidebar list exactly: World (Orphaned Locations), Players & support
    (Invitations), Economy (Balance event log), Settings (Game settings, Mail log). No Moderation, Dashboard,
    Siege settings, Currency policy/alerts, Owner.
 2. **Balance event log** and **Orphaned Locations** open from the sidebar (before #30 they were buttons on
