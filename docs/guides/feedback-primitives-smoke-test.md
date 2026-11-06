@@ -1,7 +1,7 @@
 # Web app feedback primitives: Dialog, confirm, toasts (#33) — smoke test
 
 **Status:** Written 2026-11-05 for knk-web-app `claude/feedback-primitives-33`; not merged, not run
-**Last updated:** 2026-11-05
+**Last updated:** 2026-11-06 (§ 3: child-form leave question, LW2-2)
 **Issues:** [PandiO/knk-workspace#33](https://github.com/PandiO/knk-workspace/issues/33) (toasts, one accessible
 `Dialog`, confirm with danger and a required reason; sub-issue of [#24](https://github.com/PandiO/knk-workspace/issues/24))
 **Branches:** knk-web-app `claude/feedback-primitives-33` (on `main` `a7b231d`); knk-workspace `claude/feedback-primitives-33`
@@ -49,12 +49,18 @@ bottom right instead of a box that closes after 3 s.
 
 1. Open a form with a relationship field that has **Create new** (e.g. Street → District, or Gate Structure → Street).
    **Create new** opens "Create New {Type}"; focus is in its first field.
-2. Click outside the child form: it stays open (nothing typed is lost). The × closes it.
-3. Open it again, open a dropdown list inside it and press **Escape**: only the list closes. Press **Escape** again: the
-   child form closes and focus is back on **Create new**.
-4. In a child form, make the save fail (e.g. a name that is already taken, or the API stopped) so "Save Failed" opens
+2. Click outside the child form: it stays open (nothing typed is lost). Without typing anything, the × closes it at once
+   (no question).
+3. Open it again, open a dropdown list inside it and press **Escape**: only the list closes. Press **Escape** again
+   (nothing typed): the child form closes at once and focus is back on **Create new**.
+4. **Unsaved changes ask first** (LW2-2, developer's decision 2026-11-06). Open the child form again and type a name.
+   Press **Escape**: a red "Leave this form?" opens over the child form ("Changes you haven't saved are lost…") with
+   focus on **Stay**. **Stay** (or Escape on the question) keeps the child form open with the name still there. Escape
+   again → **Leave form**: the child form closes. Repeat with the ×: the same question. Type a name and clear it again,
+   then Escape: it closes at once (no change). The parent form's own leave question (a link or Cancel form) is unchanged.
+5. In a child form, make the save fail (e.g. a name that is already taken, or the API stopped) so "Save Failed" opens
    over the child form: **Escape** closes only the error, the child form stays.
-5. While a child form saves (Submit), the × is disabled and Escape does nothing.
+6. While a child form saves (Submit), the × is disabled and Escape does nothing.
 
 ## 4. Editors, pickers, import, drawers
 
