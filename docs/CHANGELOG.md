@@ -22,7 +22,8 @@ This is a human-readable record of capabilities merged into the V3 default branc
   template pickers, the import panel, the Invitations and telemetry drawers; 16 in all) now uses one `Dialog`: labelled
   `dialog`/`alertdialog` with `aria-modal`, focus moved in and returned, Tab kept inside, Escape and × close it, a click
   outside only closes messages and questions (never a form), nothing closes while saving. Deletes and "Leave this
-  form?" are red with focus on Cancel; `useConfirm` can ask for a reason (`confirmWithReason`, for the audit-log actions
+  form?" are red with focus on Cancel; a child form with unsaved changes asks "Leave this form?" before Escape or ×
+  close it (LW2-2, 2026-11-06); `useConfirm` can ask for a reason (`confirmWithReason`, for the audit-log actions
   of #119). Success after a save or delete is a toast instead of a box that closed after 3 s; toasts get info/warning
   kinds, an optional action and wait while hovered. Theme tokens only (raw colour classes 3089 → 2865). No API change.
   Checklist: [feedback primitives smoke test](guides/feedback-primitives-smoke-test.md).
