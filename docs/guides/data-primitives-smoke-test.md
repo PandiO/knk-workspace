@@ -1,7 +1,7 @@
 # Web app data and format primitives: tables, formats, labels, settings pages (#187) — smoke test
 
 **Status:** Written 2026-11-05 for knk-web-app `claude/data-primitives-187`; not merged, not run
-**Last updated:** 2026-11-05
+**Last updated:** 2026-11-06 (numbers in the browser's language, LW3-1)
 **Issues:** [PandiO/knk-workspace#187](https://github.com/PandiO/knk-workspace/issues/187) (`DataTable`/`Pager`,
 `format.ts`, `Field`, `SettingsPage` shell; sub-issue of [#24](https://github.com/PandiO/knk-workspace/issues/24))
 **Branches:** knk-web-app `claude/data-primitives-187` (on `main` `a7b231d`, **contains**
@@ -19,7 +19,7 @@ with the page background on and once off ("Background image" in the same menu), 
 width (browser dev tools, 390 px). Record each step in **Findings** at the end.
 
 What changed for you: the dashboard and moderation lists share one table and pager; dates show in your own time and
-numbers as `1,234,567`; Game Settings and Siege configuration have one header with "n unsaved changes", Discard and
+numbers in your browser's language (`1,234,567` in English, `1.234.567` in Dutch); Game Settings and Siege configuration have one header with "n unsaved changes", Discard and
 Save (n), and ask before you lose changes.
 
 ## 1. Dashboard table (it now draws through `DataTable`/`Pager`)
@@ -38,7 +38,9 @@ Save (n), and ask before you lose changes.
 ## 2. Player moderation
 
 1. Moderation → **All players**: one table with Username, Email, Status, Coins and XP; coins and XP are right-aligned
-   with commas (`12,345`).
+   and read like `12,345` in an English browser, `12.345` in a Dutch one (LW3-1, developer's decision 2026-11-06:
+   numbers follow the browser's language). Switch the browser's language (Chrome: Settings → Languages, put Dutch
+   first and restart; Firefox: Settings → Language) and reload to see the other form.
 2. Under it: "Showing 1 to 20 of n players", Previous, "Page 1 of x", Next. Next and Previous load the other pages.
 3. The search box is named by its label (screen reader, or click the label: the cursor goes into the box). Search with
    a name; Enter works.
@@ -52,10 +54,12 @@ Save (n), and ask before you lose changes.
 ## 3. Dates and numbers elsewhere
 
 1. A detail page (Dashboard → a row → 👁): a date field such as Created shows a date and time in your own time, not
-   `2026-11-05T20:52:02`. A configured integer field shows `1,234,567`.
+   `2026-11-05T20:52:02`. A configured integer field shows `1,234,567` (English browser) or `1.234.567` (Dutch).
 2. Account → Transactions: the time column is your local date and time (was UTC text like `2026-11-05 20:52`), and the
    same moment as the Balance log shows for that entry.
-3. Balance log, Currency alerts, Orphaned Locations, a transaction's detail page: dates and amounts look as before.
+3. Balance log, Currency alerts, Orphaned Locations, a transaction's detail page: dates look as before; amounts and
+   counts follow the browser's language like the moderation list (`12.345` in Dutch). Pages not on `format.ts` yet
+   (statistics, roads, lootbox counts) still show `12,345` in every language.
 
 ## 4. Settings pages on the shell (Siege configuration, Game Settings)
 

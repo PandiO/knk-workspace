@@ -8,8 +8,8 @@ This is a human-readable record of capabilities merged into the V3 default branc
   with unsaved-change handling** — [PandiO/knk-workspace#187](https://github.com/PandiO/knk-workspace/issues/187),
   knk-web-app `claude/data-primitives-187` (chain 2 link W3; **contains W2's branch**, so merging it merges #33 too).
   `DataTable` and `Pager` (rows as real links, sortable headers announced with `aria-sort`, one pager style) draw the
-  dashboard table, the form pickers and Player moderation's four lists. `utils/format.ts`: numbers in en-US, dates in
-  the viewer's own time, API dates without a zone read as UTC; the detail page and Account → Transactions no longer
+  dashboard table, the form pickers and Player moderation's four lists. `utils/format.ts`: numbers and dates in the
+  viewer's own language (numbers were en-US until LW3-1, 2026-11-06), dates in the viewer's own time, API dates without a zone read as UTC; the detail page and Account → Transactions no longer
   show raw ISO dates. `Field` ties every label to its input (moderation filters, settings fields, the wizard's number
   and date fields). Game Settings and Siege configuration share one settings header: last saved, "n unsaved changes",
   Discard and Save (n), a question before leaving, reloading or discarding changes, a toast on save and the API's
