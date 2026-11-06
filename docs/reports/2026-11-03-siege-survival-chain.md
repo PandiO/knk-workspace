@@ -1,7 +1,7 @@
 # Siege Survival implementation chain — progress report
 
-**Status:** S1, S2 and S4 in review; **S3 in review** (plugin `6b80638e`, pushed 2026-11-06; started at the developer's request to continue on the feature branch; regression checklist in the S3 block); the survival migration is now on the API branch; G1 waits for #167 and #213
-**Last updated:** 2026-11-06 (coordinator: S3 started, migration added, gate wait replaced by conflict management)
+**Status:** S1, S2, S3 and S4 (+ migration) in review; **S5 running** (phase 2 runtime slice, the first live checkpoint; started 2026-11-06); G1 waits for #167 and #213
+**Last updated:** 2026-11-06 (coordinator: S3 verified, S5 started)
 **Charter:** [SIEGE_SURVIVAL_CHAIN.md](../ai-agents/handoffs/SIEGE_SURVIVAL_CHAIN.md) · **Coordinator prompt:**
 [2026-11-03-siege-survival-coordinator-prompt.md](../ai-agents/handoffs/2026-11-03-siege-survival-coordinator-prompt.md) ·
 **Plan:** [IMPLEMENTATION_PLAN.md §2a](../specs/siege-survival/IMPLEMENTATION_PLAN.md#2a-delivery-order-and-merge-gates-2026-11-03) ·
@@ -15,6 +15,18 @@ knk-workspace `main` `84a5a63` (re-check: later merges on the trunks happen; eac
 (The coordinator keeps this list current: links in review with their checklist location, merges that open the next gate,
 flagged decisions.)
 
+- **S3 is in review (2026-11-06), regression checklist ready:** knk-plugin `claude/siege-survival` `6b80638e`. Coordinator
+  verification build: knk-core 2638 → 2663, knk-paper 2504 → 2535, knk-api-client 330 unchanged, 0 failures; scope check: 20 new
+  files, 15 existing files edited, shared-file hunks exactly as S3 listed (`SiegeGateController.java` 3 additive, `KnKPlugin.java`
+  5 small), nothing in the gate pass-through/view, api-client, `core/survival` or `core/npc` files. **The one-match PvP regression
+  checklist** (6 steps, one sitting) is in the S3 block; it can be run together with S5's live checkpoint on the same deploy.
+  Flags S3-1 … S3-15 (S3-1 staff vanish does not reveal ghosts; S3-11 rebuilt doors start OPEN at the last frame) need no decision
+  before S5. Follow-ups filed: [#267](https://github.com/PandiO/knk-workspace/issues/267) (gate damage per cause as config keys),
+  [#268](https://github.com/PandiO/knk-workspace/issues/268) (NPC team as last capturer in the siege menus).
+- **S5 started 2026-11-06** (session_01R1w2UuecHgiqgXCbskAjGT): the runtime slice on the plugin branch plus the live checklist
+  `docs/guides/siege-survival-smoke-test.md` (workspace branch `claude/siege-survival`), written so one sitting covers deploy
+  (API `f87457b` with the migration + seeds, plugin jar), authoring a minimal castle scenario without the web app, one wave, a
+  breach, a capture, the ghost rules, a team-wipe end, and the S3 PvP regression steps.
 - **2026-11-06 — continuing on the feature branch (developer's request).** The developer asked to keep implementing instead
   of waiting for #167/#213/arena-duels. What changed: (1) **the `AddSiegeSurvivalPhase1` migration is on the API branch**
   (coordinator; 18 `siege_survival_*` tables, 35 indexes, nothing else; `has-pending-model-changes` clean; tests 3779/0/88).
@@ -128,7 +140,7 @@ test), `merged`, `blocked: <reason>`.
 | G1 | Animated rebuild for all destroyed gates (gate Decision 6), size-aware evacuation | API, plugin, web app `claude/gate-animated-rebuild` | waiting: #167, #213, realtime merged | — | — | — |
 | S3 | Siege prerequisites: visibility arbiter, NPC gate-damage cause, weighted capture presence, mob kills out of PvE statistics | plugin `claude/siege-survival` | in review (pushed 2026-11-06; started on the developer's request although #213 and arena-duels are unmerged; shared files `SiegeGateController.java` (3 additive hunks), `KnKPlugin.java` (5 small hunks), listed in the S3 block) | create_session session_01R1w2UuxjTGuarBTYzmFpVi, 2026-11-06 | plugin `6b80638e` / — / — / workspace `main` (S3 block, patch) | core 2638 → 2663, paper 2504 → 2535, api-client 330 unchanged; 0 failures (JDK 25) |
 | S4 | Phase 1 contracts/config: API entities (no migration yet), DTOs, services, readiness, form seeds; api-client DTOs | API, plugin api-client `claude/siege-survival` | in review (migration deferred until #167 merges; plugin commit as a patch, see the S4 block) | create_session session_01R1w2UwPn7oGLNgHm17vf7C, 2026-11-05 | plugin `699d1889` (`3d5cb1bd` applied by the coordinator) / api `043bd2a` / — / workspace `main` (S4 block, patch) | API 3659 → 3779 passed, 0 failed, 88 skipped; api-client 321 → 330, 0 failed, 2 skipped; core 2638 / paper 2504 unchanged, build green (coordinator, `699d1889`) |
-| S5 | Phase 2 runtime slice (mob spawning and goals, §5b adapters, ghost state, waves, end conditions) | plugin `claude/siege-survival` | waiting: S1–S4 on the branch | — | — | — |
+| S5 | Phase 2 runtime slice (mob spawning and goals, §5b adapters, ghost state, waves, end conditions) + live checklist | plugin `claude/siege-survival`; workspace `claude/siege-survival` (checklist) | in progress | create_session session_01R1w2UuecHgiqgXCbskAjGT, 2026-11-06 | — | — |
 | S6 | Phase 3 repairs and frontier (sneak repair input, provisional) | plugin `claude/siege-survival` | waiting: G1 merged | — | — | — |
 | S7 | Phase 4 equipment modes, economy, Mystery Box | API, plugin `claude/siege-survival` | waiting: S4 | — | — | — |
 | S8 | Phase 5 specials, results, recovery, per-kill settlement | API, plugin `claude/siege-survival` | waiting: S7 | — | — | — |
@@ -163,6 +175,9 @@ test), `merged`, `blocked: <reason>`.
   `20261106071958_AddSiegeSurvivalPhase1` on the API branch (design time, `Database__MySqlServerVersion=8.0.36`, dummy
   connection string; `dotnet-ef` 9.0.10 as in CI). Verified: Up() = 18 CreateTable + 35 CreateIndex, Down() = 18 DropTable, no
   operation on an existing table; the snapshot diff is additions and reordering only (0 removed lines not re-added).
+- 2026-11-06 (S3 done, S5 started): S3's bookkeeping came as a checksum-verified patch (workspace attach refused again); the
+  plugin push worked from the session. S5 is the first link with a live checklist; the developer runs S3's regression steps
+  and S5's checkpoint in one sitting on the same deploy (API branch with the migration, plugin jar).
 - Next coordinator run: re-run the gate check; start G1 (`claude/gate-animated-rebuild`, from the trunks) as soon as #167,
   #213 and realtime are merged, S4 as soon as #167 and #180 are merged, S3 as soon as realtime, #213 and the arena-duels
   decision are in; then S5 (first live checkpoint), S6–S8 batched into one checklist, S9 last.
