@@ -167,7 +167,7 @@ test), `merged`, `blocked: <reason>`.
 | S4 | Phase 1 contracts/config: API entities (no migration yet), DTOs, services, readiness, form seeds; api-client DTOs | API, plugin api-client `claude/siege-survival` | in review (migration deferred until #167 merges; plugin commit as a patch, see the S4 block) | create_session session_01R1w2UwPn7oGLNgHm17vf7C, 2026-11-05 | plugin `699d1889` (`3d5cb1bd` applied by the coordinator) / api `043bd2a` / — / workspace `main` (S4 block, patch) | API 3659 → 3779 passed, 0 failed, 88 skipped; api-client 321 → 330, 0 failed, 2 skipped; core 2638 / paper 2504 unchanged, build green (coordinator, `699d1889`) |
 | S5 | Phase 2 runtime slice (mob spawning and goals, §5b adapters, ghost state, waves, end conditions) + live checklist | plugin `claude/siege-survival`; workspace `claude/siege-survival` (checklist) | in review (pushed 2026-11-06; live checkpoint `docs/guides/siege-survival-smoke-test.md` to run; shared files `KnKPlugin.java` (5 additive hunks), `SiegeService.java` (13 small hunks), `SiegeLobbyStateMachine.java`, listed in the S5 block) | create_session session_01R1w2UuecHgiqgXCbskAjGT, 2026-11-06 | plugin `280da6fe` / — / — / workspace `claude/siege-survival` `4857fd2` (checklist, patch) + `main` (S5 block, patch) | core 2663 → 2678, api-client 330 unchanged, paper 2535 → 2580; 0 failures (JDK 25) |
 | S6 | Phase 3 repairs and frontier (sneak repair input, provisional) | plugin `claude/siege-survival` | waiting: G1 merged | — | — | — |
-| S7 | Phase 4 equipment modes, economy, Mystery Box | API, plugin `claude/siege-survival` | waiting: S4 | — | — | — |
+| S7 | Phase 4 equipment modes, economy, Mystery Box | API, plugin `claude/siege-survival` | in progress (S7a API done, S7b plugin next) | S7a create_session session_01R1w2UvBc7PUjauoj69FmF7, 2026-11-07 | plugin `4dc13bc` (api-client, patch) / api `df3e546` / — / workspace `main` (S7a block, patch) | API 3779 → 3814 passed, 0 failed, 88 skipped; api-client 330 → 335, 0 failed, 2 skipped |
 | S8 | Phase 5 specials, results, recovery, per-kill settlement | API, plugin `claude/siege-survival` | waiting: S7 | — | — | — |
 | S9 | Phase 6 authoring, UX, telemetry | web app, API, plugin `claude/siege-survival` | waiting: web building blocks (#95, #33, #187, #30, #39) or waiver; S1–S8 | — | — | — |
 
@@ -217,6 +217,177 @@ test), `merged`, `blocked: <reason>`.
 
 (Each link appends its block here: scope done, commits per repo, tests baseline → result, deviations, flags, checklist
 location, notes for later links.)
+
+## Link S7a — Mystery Box API (2026-11-07)
+
+Session session_01R1w2UvBc7PUjauoj69FmF7 (started by the coordinator). knk-web-api `claude/siege-survival`, base
+`f87457b`, head **`df3e546`** (pushed). knk-plugin `claude/siege-survival`, base `280da6fe`: the api-client commit
+`4dc13bc` could not be pushed (the `add_repo` push attach for knk-plugin and knk-workspace was refused by the permission
+classifier, as for S1/S3/S4/S5; the clones work read-only through the git proxy, `git push --dry-run` answers 403), so it
+is delivered as a two-part `format-patch` and this bookkeeping as a patch on workspace `main`. Scope: plan §2a row S7,
+**the API half of phase 4** (S7a): the match-scoped, authoritative, idempotent Mystery Box roll, its one claim and its
+forfeit, plus the api-client DTOs and client for S7b. Equipment modes, the match ledger, purchase points, transfers,
+the in-world animation and claim, and match item tagging are S7b (plugin).
+
+### Scope done
+
+**API (new files unless noted):**
+
+- `Models/Siege/Survival/SurvivalMysteryBoxRoll.cs`: `SurvivalMysteryBoxRoll` (table `siege_survival_mystery_box_rolls`:
+  unique `RollId` ≤ 64, `SiegeMatchId` cascade, `UserId` Restrict, plain `SurvivalMysteryBoxPointId` / `PoolId` /
+  `EntryId` (no FK, see S7a-1), `Variant`, `EntryJson` (the `SurvivalMysteryBoxEntryDto` as served at roll time),
+  `RolledEnchantmentsJson`, `ReelJson`, `PriceCharged`, `State` `Rolled`/`Claimed`/`Forfeited`, `RolledAt`, `ClaimedAt`,
+  `ForfeitedAt`, `ForfeitReason`) and `SurvivalMysteryBoxDelivery` (table `siege_survival_mystery_box_deliveries`: unique
+  `SurvivalMysteryBoxRollId` cascade, `Kind` `Inventory`/`Drop`, `DeliveredAt`) — **two tables**, the unique index on the
+  delivery is the "at most one delivery per roll" rule at database level. Enums in `Enums/SiegeSurvivalMysteryBoxEnums.cs`
+  (string columns like the phase 1 enums). Mapping: one "Siege Survival phase 4" block in `Properties/KnKDbContext.cs`
+  (edited) with the two DbSets.
+- `Services/Survival/SurvivalMysteryBoxRollEngine.cs` (pure): one uniform draw in [0, 10 000) walked through the entries'
+  cumulative basis points (`SurvivalScaling.ToBasisPoints`, S1-15; total must be exactly 10 000), then for an item entry
+  every `SurvivalMysteryBoxEntryEnchantment` independently by its own basis points; the reel is `reelLength − 1` passing
+  entries drawn with the same odds plus the result last (lootbox DESIGN §3.9: real odds, no fake near misses).
+  Randomness is the lootbox `ILootRandom` (`CryptoLootRandom` in production).
+- `Services/Survival/SurvivalMysteryBoxRollService.cs` (+ `Services/Interfaces/ISurvivalMysteryBoxRollService.cs`,
+  `Repositories/SurvivalMysteryBoxRollRepository.cs` + interface): roll → existing `rollId`: same match/point/user/price
+  → the stored DTO (no second roll), else 409 `RollIdReused`; otherwise match exists (404) and `InProgress` (409
+  `MatchNotInProgress`), point exists and belongs to the match's scenario (404), user is a participant (404) who has not
+  left (409 `ParticipantLeft`), pool passes `SiegeSurvivalReadiness.EvaluatePool` (409 `PoolInvalid` with the `box.*`
+  codes), roll, store, 201. Claim: 404 unknown roll / roll of another match, 409 `RollForfeited` after a forfeit, a repeat
+  answers the stored delivery; forfeit: idempotent (first reason kept), 409 `RollClaimed` after a claim. A unique-index
+  race on insert answers the stored row. `SurvivalMysteryBoxConflictException` carries the 409 code.
+- `Controllers/SiegeSurvivalMysteryBoxController.cs`: `api/siege-survival/matches/{siegeMatchId:int}/mystery-box/…`
+  with class-level `RequireServiceOrPermission(knk.siege.admin.manage)` (plugin key or the Siege node, reads included);
+  `EndpointAccessRulesTests` green, `[AllowAnonymous]` allow-list unchanged. 409 bodies are `{ code, message }`.
+- `Configuration/SiegeSurvivalOptions.cs`: section `SiegeSurvival`, `MysteryBoxReelLength` (default 20; `< 1` → 1).
+  Registered in `DependencyInjection/ServiceCollectionExtensions.cs` (edited: options, repository, service).
+- `Services/SiegeSurvivalReadiness.cs` (edited, additive): `EvaluatePool(pool, blueprintIds, enchantmentIds)` exposes the
+  existing private pool rules for the roll; readiness itself unchanged.
+- `Dtos/SiegeSurvivalMysteryBoxDtos.cs`: the request DTOs and `SurvivalMysteryBoxRollDto` (contract below).
+  `Dtos/SiegeSurvivalDtos.cs` untouched.
+- **Migration `20261107095043_AddSiegeSurvivalMysteryBoxRolls`** (parent `20261106071958_AddSiegeSurvivalPhase1`;
+  dotnet-ef 9.0.10, design time with `Database__MySqlServerVersion=8.0.36`): Up() = 2 `CreateTable` + 5 `CreateIndex`
+  (unique `RollId`, unique delivery per roll, `(SiegeMatchId, RolledAt)`, `(SiegeMatchId, UserId)`, `UserId`), nothing on
+  an existing table; Down() = 2 `DropTable`; snapshot diff +146/−0; `has-pending-model-changes` clean. Pinned by
+  `Tests/.../Migrations/AddSiegeSurvivalMysteryBoxRollsTests.cs`.
+
+**knk-plugin `knk-api-client`** (commit `4dc13bc`, patch): `dto/SiegeSurvivalDtos.java` + `MysteryBoxRollRequestDto`,
+`MysteryBoxClaimRequestDto`, `MysteryBoxForfeitRequestDto`, `MysteryBoxRolledEnchantmentDto`, `MysteryBoxRollDto`;
+`impl/SiegeSurvivalMatchApiImpl.java` (`roll(matchId, pointId, rollId, userId, priceCharged)`, `claim(matchId, rollId,
+deliveryKind)`, `forfeit(matchId, rollId, reason)`, `listRolls(matchId)`, 404 → `null`, `conflictCode(ApiException)` →
+the 409 code, the `DELIVERY_*` / `FORFEIT_*` / code constants), wired as `KnkApiClient.getSiegeSurvivalMatchApi()`.
+knk-core and knk-paper untouched.
+
+**Form seeds / docs:** none (rolls are runtime rows). Readiness codes unchanged.
+
+### Commits
+
+- knk-web-api `claude/siege-survival`: `2bf909f` entities, DTOs, engine, service, controller, options, EF mapping ·
+  `3a067ab` tests · `df3e546` migration (head, pushed).
+- knk-plugin `claude/siege-survival`: `4dc13bc` api-client DTOs and match client (patch, two parts; the coordinator applies
+  with `git am` and pushes).
+
+### Tests (baseline → result)
+
+| Repo / module | Baseline | Result |
+|---|---|---|
+| knk-web-api (`dotnet test`, InMemory) | 3779 passed, 0 failed, 88 skipped (`f87457b`) | 3814 passed, 0 failed, 88 skipped (`df3e546`); `dotnet build` 0 errors |
+| knk-api-client (`:knk-api-client:test`, JDK 25 toolchain) | 330, 0 failed, 2 skipped (`280da6fe`) | 335, 0 failed, 2 skipped (`4dc13bc`) |
+
+New API tests: `SurvivalMysteryBoxRollEngineTests` (cumulative pick at the basis-point boundaries, enchantment
+independence, reel length / real odds / result last, exactly-100 % and empty-pool rejection, 20 000 seeded rolls within
+±1.5 % of 60.5 % / 25 %), `SurvivalMysteryBoxRollServiceTests` (contract shape, enchanted books, idempotent replay
+byte-equal, 409 on a different user/price/point/match, snapshot survives deleting the picked entry, request validation,
+404 unknown match / point / foreign-scenario point / non-participant, 409 Created and Completed match and left
+participant, 409 pool 60.49 % and unknown blueprint, reel length from options, claim once with the first kind kept,
+claim after forfeit 409, forfeit idempotent with the first reason kept, forfeit after claim 409, list oldest first),
+`SiegeSurvivalMysteryBoxAccessTests` (node and routes), `AddSiegeSurvivalMysteryBoxRollsTests`. Existing test edited:
+`SiegeSurvivalDeleteBehaviourTests` (survival table count 18 → 20, three delete rules added).
+
+### Deviations
+
+- **Plugin and workspace pushes denied** (attach refused): api-client commit and bookkeeping as patches (above).
+- **Two extra answer fields:** `deliveryKind` and `forfeitReason` (both nullable) on `SurvivalMysteryBoxRollDto`, so the
+  stored state is complete without a second call; nothing renamed, every field of the brief is there.
+- **One extra 409 cause:** a participant who has left the match (`LeftAt` set) answers 409 `ParticipantLeft` instead of
+  rolling (S59: a roller who leaves forfeits; a left player cannot start a roll either).
+- **Existing files edited** (all outside the #167/#213 claim set): `Properties/KnKDbContext.cs`,
+  `DependencyInjection/ServiceCollectionExtensions.cs`, `Services/SiegeSurvivalReadiness.cs` (one public helper),
+  `Tests/.../SiegeSurvivalDeleteBehaviourTests.cs`; plugin `KnkApiClient.java`, `SiegeSurvivalDtos.java`,
+  `SiegeSurvivalDtosTest.java`. Not touched: every Siege/lootbox/kit file, the S4 endpoints, `SiegeSurvivalDtos.cs`,
+  earlier migrations, the #167 migration, the seeds README.
+
+### Endpoint contract as built
+
+- `POST api/siege-survival/matches/{siegeMatchId:int}/mystery-box/{pointId:int}/roll` — body `{ "rollId": "<≤ 64>",
+  "userId": <int>, "priceCharged": <int ≥ 0> }` → **201** `SurvivalMysteryBoxRollDto`; same `rollId` + same body →
+  **200** the stored DTO; same `rollId`, different body → **409** `RollIdReused`; unknown match / point not in the match's
+  scenario / user not a participant → **404**; match not `InProgress` → **409** `MatchNotInProgress`; participant left →
+  **409** `ParticipantLeft`; pool not valid → **409** `PoolInvalid` (message lists the `box.*` codes); bad body → **400**.
+- `POST …/mystery-box/rolls/{rollId}/claim` — body `{ "deliveryKind": "Inventory" | "Drop" }` (optional, default
+  `Inventory`) → **200** DTO with `state = "Claimed"`, `claimedAt`, `deliveryKind`; repeat → **200** the stored delivery;
+  after a forfeit → **409** `RollForfeited`; unknown roll or a roll of another match → **404**.
+- `POST …/mystery-box/rolls/{rollId}/forfeit` — body `{ "reason": "Timeout" | "RollerDied" | "RollerLeft" |
+  "MatchEnded" }` (optional, default `Timeout`) → **200** DTO with `state = "Forfeited"`, `forfeitedAt`, `forfeitReason`;
+  repeat → **200** (first reason kept); after a claim → **409** `RollClaimed`.
+- `GET …/mystery-box/rolls` → **200** `[SurvivalMysteryBoxRollDto]` oldest first; unknown match → **404**.
+- `SurvivalMysteryBoxRollDto { rollId, siegeMatchId, pointId, userId, variant: "Items" | "EnchantedBooks", entry:
+  SurvivalMysteryBoxEntryDto (snapshot: id, survivalMysteryBoxPoolId, sortOrder, itemBlueprintId, itemBlueprintName,
+  enchantmentDefinitionId, enchantmentKey, enchantmentLevel, chancePercent, chanceBasisPoints, enchantments[]),
+  rolledEnchantments: [{ enchantmentDefinitionId, level }], reel: [entryId, …] (length `SiegeSurvival:MysteryBoxReelLength`,
+  default 20, last = entry.id), priceCharged, state: "Rolled" | "Claimed" | "Forfeited", rolledAt, claimedAt?,
+  deliveryKind?, forfeitedAt?, forfeitReason? }`. Errors: `{ code, message }`. No balance (DESIGN §8).
+- Access: `X-API-Key` (plugin) or a web user with `knk.siege.admin.manage` on every action.
+
+### Flags for the developer
+
+- **S7a-1** The roll row stores the picked entry as a **JSON snapshot** with plain point/pool/entry ids (no foreign keys
+  to the authoring tables): a retry answers the same item after the admin re-balanced the pool, and deleting or editing
+  a pool entry or box point never conflicts with match history. Only the match (cascade) and the user (Restrict, like
+  `SiegeMatchParticipant`) are real FKs. If you prefer FKs with SetNull, say so before S8 settles on the rows.
+- **S7a-2** The reel length is an API setting (`SiegeSurvival:MysteryBoxReelLength`, default 20), not a per-box field:
+  the design has no per-point reel setting and a column would have touched the phase 1 table. The plugin's animation
+  timing (ticks per step) stays plugin config, as for the lootbox reel.
+- **S7a-3** Idempotency compares the whole body: a retry with a different `priceCharged` is a 409, not a replay, so a
+  plugin bug that re-charges can't be hidden by the API. The charge itself is plugin-side (`MatchLedger`, charge id =
+  `rollId`), so the API never refunds (S59) and never knows the balance.
+- **S7a-4** Claim and forfeit are final and mutually exclusive, and the first reason/kind wins on a repeat; a claim after
+  the plugin's own timeout is a `RollForfeited` 409 only if the plugin forfeited first — the API does not run the
+  10-second timer (the plugin owns it, §8a).
+- **S7a-5** The roll list is match-internal, so `GET …/rolls` needs the plugin key or the Siege node like the writes
+  (not "logged in or the game server" like the S4 reads).
+- **S7a-6** A pool that fails the `box.*` rules at roll time is a 409 `PoolInvalid`, even though readiness already blocks
+  the match start: the admin can edit the pool during a match, and the API rolls only on a valid pool.
+
+### Follow-ups found (not fixed)
+
+- `SiegeSurvivalReadiness` validates pools at the scenario level only; a per-pool endpoint for the editor (the same
+  `EvaluatePool`) would let the web app show `box.total` while typing (S9).
+- The roll rows keep `UserId` Restrict, so the user-deletion flow (`DataDeletionController`) will hit them like
+  `SiegeMatchParticipant`; check that flow covers `siege_survival_mystery_box_rolls` when S8 adds more match rows.
+
+### Notes for later links
+
+- **S7b (plugin):** `KnkApiClient.getSiegeSurvivalMatchApi()`. Per roll: `MatchLedger.charge(new ChargeRequest(rollId,
+  matchId, player, point.rollPrice(), "mystery-box"))` first (S1), then `roll(matchId, point.id(), rollId, userId,
+  price)`; retry the same call on a network error (same answer, no second roll); on an `ApiException` with
+  `conflictCode(e)` = `RollIdReused` / `MatchNotInProgress` / `ParticipantLeft` / `PoolInvalid` cancel the roll locally
+  (the charge stands by design, S59; log it). Build the reel from `reel` (entry ids → the pool entries of the frozen
+  configuration, `pool.entries()` by id, result = last) and the shown item from `entry`: Items → assemble
+  `entry.itemBlueprintId()` with `BlueprintItemAssembler.assemble`, then apply `rolledEnchantments` (definition id +
+  level; the entry's `enchantments` list is the chances, not the result); EnchantedBooks → an enchanted book with
+  `entry.enchantmentDefinitionId()` / `entry.enchantmentLevel()`. After the right-click claim: `claim(matchId, rollId,
+  DELIVERY_INVENTORY | DELIVERY_DROP)`; on the timeout / death / leave / match end: `forfeit(matchId, rollId,
+  FORFEIT_*)`. Keep `rollId` ≤ 64 (e.g. `m{matchId}-p{pointId}-{uuid}`), put the pending roll id in the checkpoint's
+  `pendingMysteryBoxRollId` (S4 contract). Use `listRolls(matchId)` on recovery to find `Rolled` rows to forfeit with
+  `FORFEIT_MATCH_ENDED`.
+- **S8 (results):** the roll rows give per match and player the rolls, claims, forfeits (with reason), the price charged
+  and the picked entries — the Mystery Box part of the per-player telemetry (§11) without a new table; join
+  `siege_survival_mystery_box_rolls` on `SiegeMatchId`. Match abort/complete does not touch them (history).
+- **S9:** nothing to author; the roll list could feed a match debug page.
+
+### Checklist location
+
+None: nothing of S7a can be live-tested alone; S7b's checklist covers roll, claim and forfeit end to end.
 
 ## Link S5 — phase 2 runtime slice (2026-11-06)
 
