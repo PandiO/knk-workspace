@@ -1,7 +1,7 @@
 # Siege Survival implementation chain — progress report
 
-**Status:** S1–S5 in review (S5 pushed 2026-11-06: plugin `280da6fe`, the **first live checkpoint** `docs/guides/siege-survival-smoke-test.md` is ready to run); G1 waits for #167 and #213
-**Last updated:** 2026-11-06 (S5 block added by the link; coordinator: S3 verified, S5 started)
+**Status:** S1–S5 in review (S5 pushed 2026-11-06: plugin `280da6fe`, the **first live checkpoint** `docs/guides/siege-survival-smoke-test.md` is ready to run); **S7 running** (phase 4, split: S7a Mystery Box API session_01R1w2UvBc7PUjauoj69FmF7 started 2026-11-07, then S7b plugin); G1 and S6 wait for #167 and #213
+**Last updated:** 2026-11-07 (coordinator: S5 verified, follow-ups #270–#275 filed, S7 started)
 **Charter:** [SIEGE_SURVIVAL_CHAIN.md](../ai-agents/handoffs/SIEGE_SURVIVAL_CHAIN.md) · **Coordinator prompt:**
 [2026-11-03-siege-survival-coordinator-prompt.md](../ai-agents/handoffs/2026-11-03-siege-survival-coordinator-prompt.md) ·
 **Plan:** [IMPLEMENTATION_PLAN.md §2a](../specs/siege-survival/IMPLEMENTATION_PLAN.md#2a-delivery-order-and-merge-gates-2026-11-03) ·
@@ -15,6 +15,31 @@ knk-workspace `main` `84a5a63` (re-check: later merges on the trunks happen; eac
 (The coordinator keeps this list current: links in review with their checklist location, merges that open the next gate,
 flagged decisions.)
 
+- **S5 is in review (verified 2026-11-07), the first live checkpoint is ready to run:** knk-plugin `claude/siege-survival`
+  **`280da6fe`**. Coordinator verification build: knk-core 2663 → 2678, knk-paper 2535 → 2580, knk-api-client 330 unchanged, 0
+  failures, shaded jar built; scope check: 53 new files under `core/targeting`, `paper/npc`, `paper/siege/survival` (+ `SiegeScenarioRules`,
+  `SiegeModeHooks`), 7 existing files edited exactly as the S5 block lists (`KnKPlugin.java` 5 additive hunks, `SiegeService.java` 13
+  small hunks behind `SiegeModeHooks.NONE`, `SiegeLobbyStateMachine.java` behind `SiegeScenarioRules.PVP`, `SiegeMatchObserver`
+  +1 default method, `config.yml`, `plugin.yml`, `ArchitectureGuardTest` +"targeting"); gate controller/listener, pass-through,
+  view and `GateManager` files untouched. **The live checklist** is `docs/guides/siege-survival-smoke-test.md` on knk-workspace
+  `claude/siege-survival` (`ddab6c3`): deploy API `f87457b` (migration + 18 seeds) and plugin `280da6fe`, author the castle scenario
+  with REST calls on the dev seed, the one-player checkpoint, then S3's six PvP regression steps on the same deploy (about 45
+  minutes). **Flags to decide after the test** (S5 block): S5-9 targeting defaults, S5-11 vanilla pathfinder only, S5-10 gate-door
+  reachability heuristic, S5-5 PvP result and rewards for a survival loss until S8, S5-4 constant "Time left", S5-15 ghost collision
+  rule, S5-13 per-player factor folded into `survival:round`, S5-1 5-minute cache refresh. Follow-ups filed:
+  [#270](https://github.com/PandiO/knk-workspace/issues/270) (WalkSearch/road planner for mobs),
+  [#271](https://github.com/PandiO/knk-workspace/issues/271) (scoreboard survival lines + ghost collision rule),
+  [#272](https://github.com/PandiO/knk-workspace/issues/272) (`/siege admin reload` refreshes the survival cache),
+  [#273](https://github.com/PandiO/knk-workspace/issues/273) (`SiegeEnchantBookListener` vs ghosts),
+  [#274](https://github.com/PandiO/knk-workspace/issues/274) (readiness check of WorldGuard flags),
+  [#275](https://github.com/PandiO/knk-workspace/issues/275) (cache keyed per scenario, not per lobby).
+- **S7 started 2026-11-07** on the feature branches (phase 4: equipment modes, match economy, Mystery Box), continuing on the
+  developer's 2026-11-06 request, **split in two sessions** because a link can push only its `source_url` repo: **S7a** (API,
+  session_01R1w2UvBc7PUjauoj69FmF7: match-scoped Mystery Box roll/claim/forfeit endpoints with roll + delivery rows, one additive
+  migration, api-client DTOs as a patch) and then **S7b** (plugin: kits mode, match ledger adapter, purchase points, transfers,
+  in-world Mystery Box animation and claim, match item tagging) against S7a's contract. Match currency stays plugin-side
+  (`MatchLedger`, S1); the API only rolls authoritatively and records one roll and at most one delivery per roll id. Its API half adds the second additive migration behind `AddSiegeSurvivalPhase1` (same
+  rule as before: if #167 merges first, remove + re-add both survival migrations on the merged branch).
 - **S3 is in review (2026-11-06), regression checklist ready:** knk-plugin `claude/siege-survival` `6b80638e`. Coordinator
   verification build: knk-core 2638 → 2663, knk-paper 2504 → 2535, knk-api-client 330 unchanged, 0 failures; scope check: 20 new
   files, 15 existing files edited, shared-file hunks exactly as S3 listed (`SiegeGateController.java` 3 additive, `KnKPlugin.java`
@@ -178,6 +203,12 @@ test), `merged`, `blocked: <reason>`.
 - 2026-11-06 (S3 done, S5 started): S3's bookkeeping came as a checksum-verified patch (workspace attach refused again); the
   plugin push worked from the session. S5 is the first link with a live checklist; the developer runs S3's regression steps
   and S5's checkpoint in one sitting on the same deploy (API branch with the migration, plugin jar).
+- 2026-11-07 (S5 done): S5's session hit the account's 5-hour rate limit mid-report (its plugin push, checklist patch and half the
+  bookkeeping patch were out; the second half came a day later on request). All patches sha256-checked and `git am`-applied; the
+  trailing newline of a `format-patch` file is lost in the message framing and has to be re-added before the checksum matches.
+  Verification and scope as listed under "Waiting for the developer"; #41 commented; #270–#275 filed. S7 started as the next link
+  on the feature branches (its plan gate S4 is open; S6 still needs G1), as S7a (API) first and S7b (plugin) after it, so each
+  session pushes to its own `source_url` repo and only the small api-client commit and the bookkeeping travel as patches.
 - Next coordinator run: re-run the gate check; start G1 (`claude/gate-animated-rebuild`, from the trunks) as soon as #167,
   #213 and realtime are merged, S4 as soon as #167 and #180 are merged, S3 as soon as realtime, #213 and the arena-duels
   decision are in; then S5 (first live checkpoint), S6–S8 batched into one checklist, S9 last.
