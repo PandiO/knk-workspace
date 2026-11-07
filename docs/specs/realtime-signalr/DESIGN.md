@@ -1,7 +1,7 @@
 # Realtime channel (SignalR) between knk-web-api, knk-plugin and knk-web-app
 
 **Status:** Accepted design (developer decisions 2026-10-26, §12). S1 (§4–§5), S2 (§6.1), WT1 (§8.2, §8.7, #180; as built: [world-tasks/README.md § Lifecycle](../world-tasks/README.md#lifecycle-and-endpoints-pandioknk-workspace180)), WT2 (§8.3–§8.6, #181; as built: §8.8) and S3 (§6.2–§6.4, #182; as built: §6.8) **merged into the default branches 2026-11-04** (API `master` `2258df5`, plugin `main` `e1b6a7a9`, web app `main` `d0c2ba8`) after the developer's smoke tests of #180 and WT2; `realtime.enabled: false` by default in the plugin. **S5 (§7.4, #184; as built: §7.5) built 2026-11-05 on `claude/realtime-erasure-184` (API, plugin, workspace), not merged.** S4 not started.
-**Last updated:** 2026-11-05 (S5 built: §7.5, feature branch); 2026-11-05 (#239 offer permission check, #240 Send again merged); 2026-11-04 (#239, #240 on a feature branch); 2026-11-02 (S3 built: §6.8); 2026-11-02 (WT2 built: §8.8); 2026-11-01 (status: WT1 built, #180); 2026-10-26 (S2 built: implementation notes in §6.7; S1 built: §4.6; decisions recorded; §8.3 delivery and busy flow, §8.7 tasks anchored to the draft, §4.3 publishing path)
+**Last updated:** 2026-11-06 (§7.5: an online player's siege vault given back before the erasure kick, decision on LR1-8, feature branch); 2026-11-05 (S5 built: §7.5, feature branch); 2026-11-05 (#239 offer permission check, #240 Send again merged); 2026-11-04 (#239, #240 on a feature branch); 2026-11-02 (S3 built: §6.8); 2026-11-02 (WT2 built: §8.8); 2026-11-01 (status: WT1 built, #180); 2026-10-26 (S2 built: implementation notes in §6.7; S1 built: §4.6; decisions recorded; §8.3 delivery and busy flow, §8.7 tasks anchored to the draft, §4.3 publishing path)
 **Issue:** [PandiO/knk-workspace#66](https://github.com/PandiO/knk-workspace/issues/66) (KNG-57, priority high); phase issues in
 [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md). Related: #76 (KNG-170, rank changes don't reach the server),
 #121 (KNG-262, cache TTLs), #31 (KNG-202, startup-only siege work), #35 (KNG-176), #34 (KNG-246), #145 (KNG-249), #75.
@@ -403,12 +403,15 @@ sequence, or reuse the deletion request rows) and the plugin calls `GET /api/pri
   hasMore, latestId}`, oldest first. `latestId` below the caller's `since` means the position came from another
   database (a reset). A row whose former UUID now belongs to another account (a returning player got a fresh account)
   is served with `formerUuid: null`, so a late catch-up never touches the new account.
-- **Plugin.** `core/privacy/AccountErasureService` on its own worker thread: kick (main thread, `realtime.erasure.
-  kick-message`), wait `settle-seconds` (2) so the quit handlers ran and Minecraft saved the player, then the
+- **Plugin.** `core/privacy/AccountErasureService` on its own worker thread: give back, then kick (main thread, one
+  task, `realtime.erasure.kick-message`; the `BEFORE_KICK` steps run right before the kick while the player is online:
+  the siege vault, developer decision 2026-11-06 on LR1-8), wait `settle-seconds` (2) so the quit handlers ran and Minecraft saved the player, then the
   `LocalDataEraser` steps each feature registered at start: offline security store (account, permission answers, ignore
   lists, the player on others' lists; written at once), user/permission caches and `UserManager`, discovery spool (by
   UUID or user id), statistics spool (their entries and PvP kills either way; emptied batches deleted), PM-log queue
-  and the local PM log lines they sent or received, siege vault (main thread, not restored), hub-outage return point,
+  and the local PM log lines they sent or received, siege vault (main thread; an online player's vault was given back before the kick — inventory, stats and return
+  point, like `/siege admin kick`, and forgotten at once so nothing is given twice — so this removes offline vaults),
+  hub-outage return point,
   and Minecraft's own player files (`players/data|stats|advancements`, the pre-26.1 folders too) **listed** in
   `erasure-minecraft-files.txt` for the owner, never deleted. A UUID the server last knew under another user id (user
   cache, offline store) is treated as "no UUID": only the user-id steps run, no kick. The push applies at once and then

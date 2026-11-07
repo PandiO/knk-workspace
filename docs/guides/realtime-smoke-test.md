@@ -3,7 +3,7 @@
 **Status:** All sections run by the developer (WT2 2026-11-04; WT2 follow-ups, S1, S2, S3 2026-11-05) and merged into the
 default branches; S1–S3 issues closed 2026-11-05. § S5 (#184) added 2026-11-05 for branch `claude/realtime-erasure-184`,
 not run yet. `realtime.enabled` stays `false` by default
-**Last updated:** 2026-11-05 (§ S5, #184, feature branch); 2026-11-05 (S1, S2, S3 findings; S2 steps 5 and 7 corrected); 2026-11-05 (§ WT2 follow-ups: findings, merged); 2026-11-04 (§ WT2 follow-ups #239/#240, feature branch); 2026-11-04 (WT2 findings; merged); 2026-11-02 (§ S3, #182); 2026-11-02 (§ WT2, #181)
+**Last updated:** 2026-11-06 (§ S5 step 2a: siege vault given back before the kick, decision on LR1-8, #184, feature branch); 2026-11-05 (§ S5, #184, feature branch); 2026-11-05 (S1, S2, S3 findings; S2 steps 5 and 7 corrected); 2026-11-05 (§ WT2 follow-ups: findings, merged); 2026-11-04 (§ WT2 follow-ups #239/#240, feature branch); 2026-11-04 (WT2 findings; merged); 2026-11-02 (§ S3, #182); 2026-11-02 (§ WT2, #181)
 **Design:** [specs/realtime-signalr/DESIGN.md](../specs/realtime-signalr/DESIGN.md) (§4–§5, as built: §4.6) ·
 [IMPLEMENTATION_PLAN.md](../specs/realtime-signalr/IMPLEMENTATION_PLAN.md) ·
 **Issues:** [PandiO/knk-workspace#178](https://github.com/PandiO/knk-workspace/issues/178) (S1),
@@ -243,7 +243,7 @@ additive migration `AddPrivacyErasureEvents` (new table `privacy_erasure_events`
 `Privacy__GraceDays=0` on the dev API so a filed request can be executed at once (put it back afterwards; default 5).
 **Plugin:** `realtime.enabled: true`; the bundled `realtime.erasure` block (kick message, `settle-seconds: 2`) needs no
 change. **People:** the owner **O** (`knk.owner.privacy.manage`, the owner privacy page) and throwaway test accounts
-**T1**, **T2**, **T3** linked to Minecraft accounts you can play. Erasure is irreversible: never use a real player.
+**T1**, **T2**, **T3** (and **T4**, **T5** for step 2a) linked to Minecraft accounts you can play. Erasure is irreversible: never use a real player.
 Plugin log lines start with `[KnK Privacy]` and name only the erasure number.
 
 1. **Off changes nothing.** With `realtime.enabled: false` erase T3 while they are online (O files the request on the
@@ -255,6 +255,16 @@ Plugin log lines start with `[KnK Privacy]` and name only the erasure number.
    the log shows `Erasure #N applied: player kicked, ...` with the counts (offline security store, user caches, private
    message log file, ...). `offline-security.json` (after a few seconds) and `logs/private-messages-*.log` no longer
    contain T1's UUID; `erasure-feed.json` has `"lastId":N`.
+2a. **Siege vault given back (decision 2026-11-06 on LR1-8).** T4 joins a siege lobby holding a few known items (e.g.
+   5 different stacks), waits for the hub teleport (the vault is taken there) and changes their inventory during the
+   match (drop or use something). O erases T4 while they are in the match. T4 is disconnected; the log shows
+   `Erasure #N applied: given back before the kick: siege vault items 5, player kicked, ...` (counts only, no name or
+   UUID) and no `siege vault 1` among the deletions; `plugins/KnightsAndKings/siege-vault/` has no file for T4's UUID.
+   T4 joins again (a new account, as in step 4): the pre-match inventory, once (5 stacks, not more), standing where
+   they were before the siege, not in the arena; the match went on without them (or ended for too few players).
+   **Offline vault:** T5 joins a match and quits mid-match (inventory given back on quit, the file waits for the return
+   point). While T5 is offline O erases T5: the log counts `siege vault 1` among the deletions and the file is gone
+   (offline vaults are still discarded). Skip 2a without a siege lobby set up.
 3. **Minecraft's own files.** The log says `N Minecraft player file(s) kept, listed in erasure-minecraft-files.txt`;
    that file lists T1's `players/data/<uuid>.dat` (and stats/advancements). The files themselves are still there: delete
    them by hand if you decide to, then clear the list.
@@ -270,7 +280,7 @@ Plugin log lines start with `[KnK Privacy]` and name only the erasure number.
    `hasMore`, `latestId`.
 8. **Settle time.** Put `Privacy__GraceDays` back to 5 (or remove it) and restart the API.
 
-Record under **Findings** how long 2 took and the counts the log showed.
+Record under **Findings** how long 2 took and the counts the log showed (2 and 2a).
 
 ## Findings
 

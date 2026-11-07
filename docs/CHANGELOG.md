@@ -9,7 +9,9 @@ This is a human-readable record of capabilities merged into the V3 default branc
   executes a data-deletion request it records each erased account in a new erasure feed (migration
   `AddPrivacyErasureEvents`) and pushes `AccountErased` to the game server. With `realtime.enabled: true` the plugin
   kicks the player with a neutral message and deletes what it keeps about them (offline security store, caches,
-  discovery and statistics spools, PM-log queue and local log lines, siege vault, hub-outage return point); Minecraft's
+  discovery and statistics spools, PM-log queue and local log lines, offline siege vaults, hub-outage return point); a
+  player erased while online in a siege gets their siege vault (pre-match inventory, stats, return point) back right
+  before the kick, once (decision 2026-11-06; logged as a count); Minecraft's
   own player files are listed for the owner, not deleted. On every hub (re)connect it catches up through
   `GET api/privacy/erasures?since=`. Off by default; the hourly offline-cache re-check stays the backstop. The feed keeps
   a former UUID for 35 days (`Privacy:ErasureFeedUuidRetentionDays`). Checklist: [realtime smoke test § S5](guides/realtime-smoke-test.md);
