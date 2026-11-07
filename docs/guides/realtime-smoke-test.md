@@ -3,7 +3,7 @@
 **Status:** All sections run by the developer (WT2 2026-11-04; WT2 follow-ups, S1, S2, S3 2026-11-05) and merged into the
 default branches; S1–S3 issues closed 2026-11-05. `realtime.enabled` stays `false` by default. § S4 (#183) is on the
 feature branch `claude/realtime-web-live-183`, not run yet
-**Last updated:** 2026-11-05 (§ S4, #183, feature branch); 2026-11-05 (S1, S2, S3 findings; S2 steps 5 and 7 corrected); 2026-11-05 (§ WT2 follow-ups: findings, merged); 2026-11-04 (§ WT2 follow-ups #239/#240, feature branch); 2026-11-04 (WT2 findings; merged); 2026-11-02 (§ S3, #182); 2026-11-02 (§ WT2, #181)
+**Last updated:** 2026-11-06 (§ S4 step 9: `Realtime:WebLiveUpdatesEnabled` switch, #183, feature branch); 2026-11-05 (§ S4, #183, feature branch); 2026-11-05 (S1, S2, S3 findings; S2 steps 5 and 7 corrected); 2026-11-05 (§ WT2 follow-ups: findings, merged); 2026-11-04 (§ WT2 follow-ups #239/#240, feature branch); 2026-11-04 (WT2 findings; merged); 2026-11-02 (§ S3, #182); 2026-11-02 (§ WT2, #181)
 **Design:** [specs/realtime-signalr/DESIGN.md](../specs/realtime-signalr/DESIGN.md) (§4–§5, as built: §4.6) ·
 [IMPLEMENTATION_PLAN.md](../specs/realtime-signalr/IMPLEMENTATION_PLAN.md) ·
 **Issues:** [PandiO/knk-workspace#178](https://github.com/PandiO/knk-workspace/issues/178) (S1),
@@ -239,8 +239,8 @@ Record the times of 2, 4, 5 and 8 under **Findings**.
 ## S4 — live updates in the web app (#183)
 
 **Builds:** knk-web-api and knk-web-app on `claude/realtime-web-live-183` (the web-app branch contains the admin IA
-branch `claude/admin-ia-30`, W1–W4). **API:** no migration; optional setting `Realtime:WebPermissionCacheSeconds`
-(default 30). **Plugin:** none; the web part works with the plugin's `realtime.enabled` on or off (presence then comes
+branch `claude/admin-ia-30`, W1–W4). **API:** no migration; optional settings `Realtime:WebPermissionCacheSeconds`
+(default 30) and `Realtime:WebLiveUpdatesEnabled` (default `true`; step 9). **Plugin:** none; the web part works with the plugin's `realtime.enabled` on or off (presence then comes
 from the REST join/quit calls). **People:** staff **A** and **B** in two browsers (or a normal and a private window),
 both with `knk.admin.content` and `knk.admin.user.manage`; a third account **C** with `knk.admin.content` only; player
 **P** who can join the game server. Design: [DESIGN §6.9](../specs/realtime-signalr/DESIGN.md).
@@ -271,7 +271,15 @@ both with `knk.admin.content` and `knk.admin.user.manage`; a third account **C**
 8. **Bursts.** With A on the Minecraft materials dashboard, run a catalogue scan or maintenance run that changes many
    materials: A's table is re-read once (one `search` request after the burst), not once per row.
 
-Record under **Findings**: the delay of steps 1, 4 and 5, and step 6's result.
+9. **Switched off (decision 2026-11-06 on LX1-10).** Set `Realtime__WebLiveUpdatesEnabled=false` on the API and
+   restart it (a change of `Realtime:WebLiveUpdatesEnabled` in its appsettings file applies without a restart).
+   Repeat step 1 and P joining in step 4: A's table and badges don't change by themselves (the `hubs/web` WebSocket
+   stays connected but carries no `EntityChanged` or `PresenceChanged` frames); Reload shows the changes. P's profile
+   still opens with the right Online / "Offline · last seen …" badge (the profile summary's `presence`), it just
+   doesn't follow live. The game server still gets its own events (e.g. a gate or town edit is applied in game as in
+   S3). Set it back to `true` (or remove it) and restart: step 1 works again.
+
+Record under **Findings**: the delay of steps 1, 4 and 5, and the results of steps 6 and 9.
 
 ## Findings
 

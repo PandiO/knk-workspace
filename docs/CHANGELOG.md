@@ -11,7 +11,8 @@ This is a human-readable record of capabilities merged into the V3 default branc
   on the player profile follow players joining and quitting. The API sends these over the existing web hub only to
   staff holding the node that gates the same data over REST (`knk.admin.content`; users and presence
   `knk.admin.user.manage`), checked per message (cached 30 s). Without a hub connection everything works as before. No
-  migration, no plugin change; optional `Realtime:WebPermissionCacheSeconds`. Checklist:
+  migration, no plugin change; optional `Realtime:WebPermissionCacheSeconds`, and `Realtime:WebLiveUpdatesEnabled`
+  (default `true`; `false` sends no live web events, the pages then work as before; decision 2026-11-06). Checklist:
   [realtime smoke test § S4](guides/realtime-smoke-test.md). Design: [DESIGN §6.9](specs/realtime-signalr/DESIGN.md).
 
 ## 2026-11-05
