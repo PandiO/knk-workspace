@@ -184,7 +184,7 @@ test), `merged`, `blocked: <reason>`.
 | S4 | Phase 1 contracts/config: API entities (no migration yet), DTOs, services, readiness, form seeds; api-client DTOs | API, plugin api-client `claude/siege-survival` | in review (migration deferred until #167 merges; plugin commit as a patch, see the S4 block) | create_session session_01R1w2UwPn7oGLNgHm17vf7C, 2026-11-05 | plugin `699d1889` (`3d5cb1bd` applied by the coordinator) / api `043bd2a` / — / workspace `main` (S4 block, patch) | API 3659 → 3779 passed, 0 failed, 88 skipped; api-client 321 → 330, 0 failed, 2 skipped; core 2638 / paper 2504 unchanged, build green (coordinator, `699d1889`) |
 | S5 | Phase 2 runtime slice (mob spawning and goals, §5b adapters, ghost state, waves, end conditions) + live checklist | plugin `claude/siege-survival`; workspace `claude/siege-survival` (checklist) | in review (pushed 2026-11-06; live checkpoint `docs/guides/siege-survival-smoke-test.md` to run; shared files `KnKPlugin.java` (5 additive hunks), `SiegeService.java` (13 small hunks), `SiegeLobbyStateMachine.java`, listed in the S5 block) | create_session session_01R1w2UuecHgiqgXCbskAjGT, 2026-11-06 | plugin `280da6fe` / — / — / workspace `claude/siege-survival` `4857fd2` (checklist, patch) + `main` (S5 block, patch) | core 2663 → 2678, api-client 330 unchanged, paper 2535 → 2580; 0 failures (JDK 25) |
 | S6 | Phase 3 repairs and frontier (sneak repair input, provisional) | plugin `claude/siege-survival` | waiting: G1 merged | — | — | — |
-| S7 | Phase 4 equipment modes, economy, Mystery Box | API, plugin `claude/siege-survival` | in progress (S7a API done, S7b plugin next) | S7a create_session session_01R1w2UvBc7PUjauoj69FmF7, 2026-11-07 | plugin `4dc13bc` (api-client, patch) / api `df3e546` / — / workspace `main` (S7a block, patch) | API 3779 → 3814 passed, 0 failed, 88 skipped; api-client 330 → 335, 0 failed, 2 skipped |
+| S7 | Phase 4 equipment modes, economy, Mystery Box | API, plugin `claude/siege-survival`; workspace `claude/siege-survival` (checklist) | in review (S7a + S7b pushed; checklist `docs/guides/siege-survival-economy-smoke-test.md` to run; shared files `KnKPlugin.java` (3 additive hunks), `SiegeCommand.java` (3), `SiegeLobbyRuntime.java` (1), listed in the S7b block) | S7a create_session session_01R1w2UvBc7PUjauoj69FmF7, 2026-11-07; S7b create_session session_01R1w2UwrR15ptNq9RoEXDMB, 2026-11-07 | plugin `18a6001` (S7a api-client `096b47f0` + S7b) / api `df3e546` / — / workspace `claude/siege-survival` `2f51cb2` (checklist, patch) + `main` (S7a and S7b blocks, patches) | API 3779 → 3814 passed, 0 failed, 88 skipped; api-client 330 → 335, 0 failed, 2 skipped; core 2678 → 2703, paper 2580 → 2625, 0 failures (S7b, JDK 25) |
 | S8 | Phase 5 specials, results, recovery, per-kill settlement | API, plugin `claude/siege-survival` | waiting: S7 | — | — | — |
 | S9 | Phase 6 authoring, UX, telemetry | web app, API, plugin `claude/siege-survival` | waiting: web building blocks (#95, #33, #187, #30, #39) or waiver; S1–S8 | — | — | — |
 
@@ -239,6 +239,199 @@ test), `merged`, `blocked: <reason>`.
 
 (Each link appends its block here: scope done, commits per repo, tests baseline → result, deviations, flags, checklist
 location, notes for later links.)
+
+## Link S7b — phase 4 plugin: equipment modes, economy, Mystery Box (2026-11-07)
+
+Session session_01R1w2UwrR15ptNq9RoEXDMB (started by the coordinator). knk-plugin `claude/siege-survival`, base `096b47f0`
+(S1–S5 + S7a's api-client commit), head **`18a6001`** (pushed). knk-workspace: the push attach was refused by the permission
+classifier (one attempt, as for every earlier link); the checklist (branch `claude/siege-survival`, base `ddab6c3`, commit
+`2f51cb2`) and this block are patches for the coordinator. Scope: plan §2a row S7, **the plugin half of phase 4** (DESIGN §8,
+§8a, §8b, §11): equipment modes, match currency and transfers, purchase points, the in-world Mystery Box on S7a's endpoint,
+match item tracking, configuration mapping, status lines, tests, live checklist.
+
+### Scope done
+
+- **A. Equipment modes** (`SurvivalConfiguration.EquipmentSpec`, `SurvivalMatchRuntime.grantEquipment`): `OwnInventory`
+  nothing new; `Kits` — at `memberReadiedAtHub` the player gets the chat hint and the **kit picker** (`kits/SurvivalKitPicker`,
+  a plain inventory menu in the `SiegeEnchantMenu` convention; `/siege kit [name]` reopens it or picks by name/unique prefix),
+  the pick locks at match start (S36), no pick = the default kit (S38) else the first kit; the grant (`kits/SurvivalKitGrants`)
+  clears the already snapshotted inventory and runs the kit's slots through `KitGrantPlacer.resolveAsync` +
+  `BlueprintItemAssembler.assembleDefaults` + `KitGrantPlacer.place` with no claim rule (no permission/title/premium check,
+  no cooldown, no cost, no `KitClaim`/`KitPurchase` row); granted **once** at the start, never at respawn (§8 table, S40/S45);
+  a missing kit → empty inventory, WARNING `KIT MISSING`, chat to the player. `MatchProgression` — the baseline kit the same
+  way, `null` = empty inventory (S4-12). Late joiners (`memberJoinedMatch`) get the same grant. The ordinary Siege vault
+  restore replaces the inventory at the end; the runtime also strips the match's items from every member before the restore.
+- **B. Match currency** (core `economy/MatchEconomy` over S1's `MatchLedger` + `KillRewardCalculator` +
+  `PermanentRewardAccrual`): one per `SurvivalMatch`, created in its constructor with the Siege **match token** as the ledger
+  id, every roster member joined, closed in `end()`/`endedExternally()`/`cleanup()`. `SurvivalMatch.onMobDeath(mob, killer)`
+  credits the kill through `KillBlow` (core `economy/KillBlow`) recorded by `SurvivalInteractionListener.onPlayerHitsActor`
+  (MONITOR on `EntityDamageByEntityEvent`): `critical = event.isCritical()`, `headshot = projectile.getLocation().getY() ≥
+  mob feet Y + mob.getEyeHeight() − 0.3` (`KillBlow.isHeadshot`; a 0.3-block head band below the eyes), kept per mob for 5 s
+  (`economy/KillBlows`); the kill pays 70 (×1.1 floored = 77 on a bonus) to the ledger and the exact permanent coins/XP to the
+  accrual — **not settled** (S8). Ghosts are mirrored into the ledger (`setGhost` on death, cleared at the round transition)
+  so they earn, buy, transfer and receive nothing; a leaver's balance is dropped and the accrual forfeited. Transfers:
+  `/siege pay <player> <amount>` (`SurvivalPlayerCommands`): same live match, positive, atomic, no overdraft, idempotent
+  by `pay-<uuid>`. `/siege balance` shows the own balance and kills; `/knk siege survival status` lists every balance.
+- **C. Purchase points** (`purchase/PurchaseShop`, one per match, a `MatchHook`): right-click on the point's **block** (the
+  location's integer coordinates) or `/siege shop` within `interactionRange` (default 4) opens the offers menu (plain
+  inventory, price and quantity in the lore, unaffordable in red, re-rendered after a purchase); buying charges the ledger
+  with `buy-p<point>-o<offer>-<uuid>` (idempotent), clones the offer's sample item (assembled once at match start with
+  `BlueprintItemAssembler.assemble` and tagged) into `quantity` stacks of the material's max size and gives them; what does
+  not fit is dropped at the player's feet as an owned match item. Waves and breaks alike (S58); ghosts refused (S20); no
+  stock/limits (v1).
+- **D. Mystery Box** (`mysterybox/MysteryBoxStations` per match + `mysterybox/MysteryBoxAnimation`): at match start the
+  block at each point is checked against `blockType` (WARNING when different, never placed), the pool's core validation is
+  logged, the reel faces are assembled off the main thread. Right-click by a living member in range → price check with the
+  "100 match coins per roll; you have n" message → `MatchEconomy.charge(rollId, …, "mystery-box")` with
+  `rollId = m{apiMatchId}-p{pointId}-{uuid}` (core `MysteryBoxRollIds`, ≤ 64) → `getSiegeSurvivalMatchApi().roll(...)` off the
+  main thread, back on it through the main-thread executor; the same call is retried on a transport error (IOException /
+  5xx; 1 s, 2 s, 4 s), a 409 (`conflictCode`) cancels locally with a WARNING and the charge stands (S59); a 404 or a final
+  failure cancels locally the same way. The reel is `MysteryBoxReelPlan.of(dto.reel(), entry.id, maxStepTicks)` (core: the
+  API's ids, the result last, delays from `LootboxReel.plan`'s ease-out) shown by an `ItemDisplay` (face = the entry's
+  assembled item with name and glint) + a `TextDisplay` with the name + an `Interaction` hitbox over the block, a note-block
+  tick and enchant particles per step, level-up sound with totem/end-rod burst on the result; display entities cannot be
+  picked up by anyone. **Claim** (core state machine `MysteryBoxRollState`): a right-click on the hitbox by the **roller**
+  while SHOWN and within `claimTimeoutMillis` → the prize (Items: `assemble(blueprint, defaults, rolledEnchantments)`;
+  EnchantedBooks: an enchanted book with the entry's definition/level) is given or dropped owned when full → `claim(matchId,
+  rollId, Inventory|Drop)`; a teammate gets "Only <roller> can claim this roll." Forfeits: timeout (match tick) →
+  `forfeit(Timeout)`, roller ghost → `RollerDied`, roller left → `RollerLeft`, match end/cleanup/shutdown → `MatchEnded`;
+  entities removed, no refund. One roll at a time per box; `pendingRollIds()` / `pendingRollOf(uuid)` for S8's checkpoint.
+  Leftover display/interaction entities carry `knk:survival_box` and are swept at startup and on chunk load.
+- **E. Match items** (`items/MatchItems`, `items/MatchItemListener`): every kit, baseline, purchase and prize item carries
+  `knk:survival_match` = the match token in its persistent data (the siege-book convention); `MatchItemListener` at
+  `HIGHEST` un-cancels the Siege guard's pickup cancel for members of that match and cancels it for everyone else, cancels
+  mob and hopper/inventory pickups; containers, item frames, drops and death drops are the existing Siege guards (S40).
+  Ground items (purchase/prize overflow) are tracked per match and removed with it, plus a tagged-item sweep of the loaded
+  worlds at match end, at shutdown, at startup and on chunk load; players are stripped of the match's items before the
+  vault restore (`memberRemoved`) and at `matchEnded`.
+- **F. Configuration mapping**: `SurvivalConfigurationMapper` maps `equipment` (mode, selected kits sorted, default,
+  baseline), `purchasePoints` (sorted, offers sorted, offers without a blueprint dropped, defaults for range/quantity/price)
+  and `mysteryBoxPoints` (block type lower-cased, default end portal frame, price/timeout defaults from S1's
+  `MysteryBoxSettings`, the entries as served plus the core `MysteryBoxPool` built from `chanceBasisPoints` — S1-15/S4-11 —
+  with percent converted only when the basis points are missing). Kill rewards were already mapped (S5).
+  `/knk siege survival status` adds `Economy: balances […], kill reward …, ghosts n, accrued kills n, equipment MODE`, a
+  `Shops:` line and one `Mystery Box …` line per point with its pending roll.
+- **G. Tests**: core `MatchEconomyTest`, `KillBlowTest`, `MatchItemRulesTest`, `KitSelectionTest`, `MysteryBoxRollStateTest`,
+  `MysteryBoxReelPlanTest`, `MysteryBoxRollIdsTest`, `PurchaseRulesTest`; paper `MatchItemsTest`, `MatchItemListenerTest`,
+  `KillBlowsTest`, `SurvivalPhase4MappingTest`, `SurvivalKitGrantsTest`, `SurvivalKitPickerTest`, `PurchaseShopTest`,
+  `MysteryBoxAnimationTest`, `MysteryBoxStationsTest` (mocked match API: roll → reel → claim, timeout, death/leave/end
+  forfeits, 409 cancel, denials, transport classification), `SurvivalInteractionListenerTest`, `SurvivalPlayerCommandsTest`,
+  two new cases in `SurvivalMatchTest` (kill credit with the bonus; ghost/leave/end reaching ledger and hooks). The
+  animation takes its scheduler and effects, the shop and the stations their world lookup and player lookup, so nothing
+  needs a server; `Material#isAir` (registry-backed on Paper 26) is avoided in the tag code. `ArchitectureGuardTest` green.
+- **H. Live checklist**: `docs/guides/siege-survival-economy-smoke-test.md` (below).
+
+### Commits
+
+knk-plugin `claude/siege-survival`: `833dad7` core economy/rules/mapping/items · `4ceabc1` kits, shops, Mystery Box,
+commands, wiring · `18a6001` tests and testable seams (head). knk-workspace `claude/siege-survival`: `2f51cb2` checklist
+(patch); `main`: this block (patch).
+
+### Tests (`./gradlew build -x deployToDevServer`, JDK 25 toolchain, Gradle 8.14.3 on JDK 21)
+
+| Module | Baseline `096b47f0` | Result `18a6001` |
+|---|---|---|
+| knk-core | 2678, 0 failed | **2703** (+25), 0 failed |
+| knk-api-client | 335, 0 failed, 2 skipped | 335, 0 failed, 2 skipped (unchanged) |
+| knk-paper | 2580, 0 failed, 18 skipped | **2625** (+45), 0 failed, 18 skipped |
+
+### Deviations
+
+- **Menus are plain inventories, not API-seeded menu definitions:** the Siege spawn picker is a seeded `siege.*` menu; no
+  seed exists for a kit picker, a shop or a transfer menu and seeding is S9's. The kit picker and the shop follow the
+  in-match `SiegeEnchantMenu` convention (an `InventoryHolder`, clicks cancelled, opened on the main thread); transfers are
+  the `/siege pay` command (flag S7b-2). The kit picker opens from the hub readiness callback 5 ticks after the hub
+  teleport, not from inside the spawn-picker menu.
+- **Match id of the tags and the ledger = the Siege match token**, not the API's match id: the token exists synchronously
+  from the round start, the API id arrives asynchronously (`createMatch`); the roll id and the API calls use the API id
+  (`SiegeLobbyRuntime.apiMatchId()`) and refuse a roll until it is known (flag S7b-3).
+- **No "dropped on purpose" ground items**: the Siege inventory guard cancels every drop for members (S40), so the only
+  ground match items are purchase and prize overflow (as §8b lists); nothing to add.
+- **Equipment grants on a late join** (`memberJoinedMatch`, admin `/siege join` or rejoin) are granted like at the start;
+  the design does not say, the alternative (empty inventory) seemed worse.
+- **Recovery**: `listRolls(matchId)` is not called — S5 has no resume and no survival match id survives a restart; the S7a
+  note's "forfeit `Rolled` rows with `MatchEnded` on recovery" is left to S8 (flag S7b-9).
+- **Existing files edited** outside `paper/siege/survival/`: `KnKPlugin.java`, `SiegeCommand.java`, `SiegeLobbyRuntime.java`
+  (hunks below), `config.yml`; `SurvivalMatchTest.java` (two cases appended), `MatchItems` and `SurvivalMatch` got small
+  accessors. Not touched: `SiegeService.java`, `SiegeGateController/Listener`, every gate pass-through/view file,
+  `SiegeScoreboardPresenter`, `knk-api-client` (S7a's contract was complete).
+
+### Hunks in the shared files
+
+`SiegeService.java`: **untouched**. `KnKPlugin.java` (3 additive hunks, +21): field `siegeCommandExecutor` after
+`siegeSurvival` (l. 320–322); `this.siegeCommandExecutor = executor;` after `new SiegeCommand(siegeService)` (l. 4098);
+the phase 4 block in `initializeSiegeSurvival()` before `siegeSurvival.start()` (l. 4244–4261: `MatchItems`, the assembler,
+`setEconomyServices(SurvivalEconomyServices.create(...))`, `MatchItemListener` + `SurvivalInteractionListener`
+registration, `setSurvival` on the `/siege` executor; a WARNING and no phase 4 when the item/material data access is
+missing). `SiegeCommand.java` (3 hunks, +26/−1): field + `setSurvival` (l. 57–63); `case "balance", "pay", "kit", "shop"`
+before `default` (l. 87–104, `knk.siege.play`); the four words in the tab completion (l. 383). `SiegeLobbyRuntime.java`
+(1 hunk, +13): public `apiMatchId()` (the `createMatch` future's value when done) and `userIdOf(UUID)` after `matchToken()`
+(l. 113–124). `config.yml`: `siege.survival.mystery-box.reel-max-step-ticks: 8` (3 lines). `git diff 096b47f0..18a6001 --
+<file>` shows them.
+
+### Flags for the developer
+
+- **S7b-1 (design contradiction, not changed):** §8's kits paragraph says the kit picked at the hub "is re-granted at every
+  respawn"; the §8 table (Respawn row) and S40/S45 say the inventory is kept and the kit is not granted again. The table
+  was followed (one grant at the start). Proposal: drop the sentence from the prose.
+- **S7b-2** Kit picker, shop and transfers are plain menus/commands (above); the seeded-menu versions and a transfer menu
+  are S9 work (the §11 "existing inventory-menu conventions" read as the in-match plain-menu convention).
+- **S7b-3** Item tag and ledger id = Siege match token (above).
+- **S7b-4** Kill bonus detection: critical from Paper's `EntityDamageByEntityEvent#isCritical()`; headshot = projectile
+  position at or above `feet + eyeHeight − 0.3` (the whole head of a zombie: eyes at 1.74 of 1.95 blocks; a spider's head
+  band is proportionally small). Only the killer's own hit of the last 5 s counts as the killing blow's details (a stale hit
+  gives a plain blow). The PvP Siege headshot rule (`SiegeCombatRules.isHeadshot`, projectile above feet + 1.33) was not
+  reused because it assumes a player's height.
+- **S7b-5** Purchase interaction = right-click the point's block, with `/siege shop` as the in-range fallback (the location
+  tools capture a point, not a block face; the block at the integer coordinates is the one). A point without a loadable
+  world is skipped with a WARNING.
+- **S7b-6** A roll that the API refuses (409) or that fails after the retries is cancelled locally and the price is **not**
+  refunded (S59 read strictly, and S7a-3's "the API never refunds"). If a plugin-side refund on an API error is wanted,
+  `MatchEconomy.ledger().credit` would do it in one place (`MysteryBoxStations.cancelLocally`).
+- **S7b-7** Book prizes need a **vanilla** enchantment definition (`EnchantmentDefinitionBukkitMapper.toBukkit`); a custom
+  definition gives a labelled enchanted book without a stored enchantment (WARNING). Custom enchantments on item prizes go
+  through the assembler as for kits/lootboxes.
+- **S7b-8** Reel timing: `siege.survival.mystery-box.reel-max-step-ticks` (default 8, the lootbox reel's) is the slowest
+  step; the step count is S7a's `MysteryBoxReelLength` (20) → about 4–5 s per roll. The claim hitbox is 0.9 × 0.9 blocks
+  over the block; the item floats 1.35 blocks above the block's base.
+- **S7b-9** No roll recovery after a restart: `Rolled` rows of an aborted match stay `Rolled` on the API until S8 forfeits
+  them with `MatchEnded`.
+- **S7b-10** The purchase samples and reel faces are assembled at match start from the cache-first data accesses; an offer
+  whose blueprint cannot be assembled is shown as a barrier "Not available" and refused, a reel entry without an item shows
+  a barrier face with the entry's description (WARNING each).
+- **S7b-11** Ghost timing: the roller's death forfeits at `onPlayerDeath` (ghost), i.e. only when the death makes a ghost
+  (WAVE_ACTIVE/INTERMISSION); a death that ends the match forfeits through the match end instead.
+
+### Follow-ups found (not fixed)
+
+- The settings PUT body's kit field names were not verified against the API (no API clone in this session); the checklist
+  says to read `GET …/settings` first.
+- `SurvivalKitPicker.icon` uses `Enchantment.UNBREAKING` for the glint; Paper's `ItemMeta#setEnchantmentGlintOverride`
+  would avoid the hidden enchantment (cosmetic).
+- `SiegeInventoryGuardListener` blocks dropping for every member: §8b's "items players drop on purpose" can never occur;
+  the design sentence could be dropped or the guard relaxed for match items (decision).
+- The status line reports balances by player name only; a per-player match-item count would need an inventory scan.
+
+### Notes for later links
+
+- **S8 (results, settlement, recovery):** permanent rewards are in `SurvivalMatch.economy().accrual()` (`coins(uuid)`,
+  `xp(uuid)` exact tenths, `settle(members)` rounds once; leavers already forfeited) — call it from the survival result path
+  only when `reason.settlesRewards()`. Balances: `economy().balances()`, kills `economy().kills(uuid)`. Pending roll ids
+  for the checkpoint: `SurvivalMatchRuntime.boxesOf(match).map(b -> b.pendingRollOf(uuid))`; on recovery call
+  `listRolls(matchId)` and `forfeit(…, MatchEnded)` for `Rolled` rows. Match-scoped item removal on recovery is
+  `MatchItems.sweep` (startup) — nothing survives the vault restore anyway. The result DTO's `kitId` is in
+  `SurvivalEconomyServices.kitPicker().selection(lobbyId).resolve(uuid)` until `forget` at the match end (read it before
+  `matchEnded` returns).
+- **S9 (authoring, HUD, menus):** the HUD needs `economy().balance(uuid)` and the pending roll (`pendingRollOf`); seeded
+  menu definitions for the kit picker / shop / transfer should call `SurvivalKitPicker.pick`, `PurchaseShop.buy` and
+  `SurvivalPlayerCommands.pay` (all take ids/names, no Bukkit menu state); the web app has no survival routes (S5 note).
+
+### Checklist location
+
+`docs/guides/siege-survival-economy-smoke-test.md` on knk-workspace branch `claude/siege-survival` (commit `2f51cb2` on
+`ddab6c3`, patch): deploy (API `df3e546` + both migrations + seeds, plugin `18a6001`), REST authoring of kits mode, a purchase
+point with two offers and a Mystery Box point of each variant, the 14 checks, the log lines, the optional mode variants,
+the flags.
 
 ## Link S7a — Mystery Box API (2026-11-07)
 
