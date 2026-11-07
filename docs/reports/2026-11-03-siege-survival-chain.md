@@ -1,7 +1,7 @@
 # Siege Survival implementation chain — progress report
 
-**Status:** S1–S5 in review (S5 pushed 2026-11-06: plugin `280da6fe`, the **first live checkpoint** `docs/guides/siege-survival-smoke-test.md` is ready to run); **S7 running** (phase 4, split: S7a Mystery Box API session_01R1w2UvBc7PUjauoj69FmF7 started 2026-11-07, then S7b plugin); G1 and S6 wait for #167 and #213
-**Last updated:** 2026-11-07 (coordinator: S5 verified, follow-ups #270–#275 filed, S7 started)
+**Status:** S1–S5 in review (S5 pushed 2026-11-06: plugin `280da6fe`, the **first live checkpoint** `docs/guides/siege-survival-smoke-test.md` is ready to run); **S7 running** (phase 4, split: S7a Mystery Box API done and verified 2026-11-07, API `df3e546` + plugin api-client `096b47f0`; **S7b plugin** session_01R1w2UwrR15ptNq9RoEXDMB running); G1 and S6 wait for #167 and #213
+**Last updated:** 2026-11-07 (coordinator: S7a verified, follow-ups #276, #277 filed, S7b started)
 **Charter:** [SIEGE_SURVIVAL_CHAIN.md](../ai-agents/handoffs/SIEGE_SURVIVAL_CHAIN.md) · **Coordinator prompt:**
 [2026-11-03-siege-survival-coordinator-prompt.md](../ai-agents/handoffs/2026-11-03-siege-survival-coordinator-prompt.md) ·
 **Plan:** [IMPLEMENTATION_PLAN.md §2a](../specs/siege-survival/IMPLEMENTATION_PLAN.md#2a-delivery-order-and-merge-gates-2026-11-03) ·
@@ -33,6 +33,23 @@ flagged decisions.)
   [#273](https://github.com/PandiO/knk-workspace/issues/273) (`SiegeEnchantBookListener` vs ghosts),
   [#274](https://github.com/PandiO/knk-workspace/issues/274) (readiness check of WorldGuard flags),
   [#275](https://github.com/PandiO/knk-workspace/issues/275) (cache keyed per scenario, not per lobby).
+- **S7a is in review (verified 2026-11-07), nothing to live-test alone:** knk-web-api `claude/siege-survival` **`df3e546`** and
+  knk-plugin `claude/siege-survival` **`096b47f0`** (S7a's api-client commit `4dc13bc`, applied by the coordinator from the
+  checksum-verified two-part patch; same content, new hash). Coordinator verification: API 3779 → 3814 passed, 0 failed, 88
+  skipped, `has-pending-model-changes` clean, migration `20261107095043_AddSiegeSurvivalMysteryBoxRolls` = 2 CreateTable + 5
+  CreateIndex / 2 DropTable with 0 removed snapshot lines; knk-api-client 330 → 335, 0 failures. Scope: 17 new API files + 5
+  expected edits (DbContext, DI, snapshot, one public `EvaluatePool` helper in readiness, one test's table count); plugin
+  api-client only. Flags S7a-1 … S7a-6 (JSON snapshot instead of FKs, reel length as an API setting, whole-body idempotency, no
+  API-side timeout, roll list access, roll-time pool validation) need no decision before S7b. Follow-ups filed:
+  [#276](https://github.com/PandiO/knk-workspace/issues/276) (per-pool readiness endpoint for the editor),
+  [#277](https://github.com/PandiO/knk-workspace/issues/277) (user-deletion flow vs the survival match rows).
+- **S7b started 2026-11-07** (session_01R1w2UwrR15ptNq9RoEXDMB) on knk-plugin `claude/siege-survival` from `096b47f0`: kits and
+  match-progression entry loadouts, match ledger adapter with kill credit and headshot/crit detection, teammate transfers,
+  purchase points, the in-world Mystery Box (reel animation, roller-only claim, timeout/death/leave forfeit) against S7a's
+  contract, match item tagging; plus a second live checklist `docs/guides/siege-survival-economy-smoke-test.md` (workspace
+  `claude/siege-survival`) that continues S5's smoke test on the same deploy (API `df3e546` with both migrations). It was told to
+  commit in slices (the S5 session lost half a day to the account's 5-hour limit) and to flag the §8 kit re-grant sentence
+  that contradicts the §8 table (S40) rather than pick one silently.
 - **S7 started 2026-11-07** on the feature branches (phase 4: equipment modes, match economy, Mystery Box), continuing on the
   developer's 2026-11-06 request, **split in two sessions** because a link can push only its `source_url` repo: **S7a** (API,
   session_01R1w2UvBc7PUjauoj69FmF7: match-scoped Mystery Box roll/claim/forfeit endpoints with roll + delivery rows, one additive
@@ -209,6 +226,11 @@ test), `merged`, `blocked: <reason>`.
   Verification and scope as listed under "Waiting for the developer"; #41 commented; #270–#275 filed. S7 started as the next link
   on the feature branches (its plan gate S4 is open; S6 still needs G1), as S7a (API) first and S7b (plugin) after it, so each
   session pushes to its own `source_url` repo and only the small api-client commit and the bookkeeping travel as patches.
+- 2026-11-07 (S7a done): API push worked from the API-sourced session; the api-client commit (28 KB, two parts) and the
+  bookkeeping (18 KB) came as patches, byte-exact after re-adding the trailing newline the message framing drops. Verified and
+  applied (plugin head `096b47f0`, workspace `9dd62a9`); #41 commented; #276, #277 filed. S7b started on the plugin as the
+  bulk of phase 4; its checklist continues S5's on one deploy, so the developer's first sitting can cover S3 + S5 + S7 if S7b
+  lands first, or S3 + S5 now and S7 later.
 - Next coordinator run: re-run the gate check; start G1 (`claude/gate-animated-rebuild`, from the trunks) as soon as #167,
   #213 and realtime are merged, S4 as soon as #167 and #180 are merged, S3 as soon as realtime, #213 and the arena-duels
   decision are in; then S5 (first live checkpoint), S6–S8 batched into one checklist, S9 last.
