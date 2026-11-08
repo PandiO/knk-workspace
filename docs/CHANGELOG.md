@@ -4,7 +4,14 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
-(Nothing at the moment.)
+- **Kit "Grant" from the web app reaches the player in game** — [PandiO/knk-workspace#261](https://github.com/PandiO/knk-workspace/issues/261)
+  (chain 3 link P1), branch `claude/kit-grant-delivery-261` in knk-web-api and knk-plugin. A grant on the player
+  profile is now a pending delivery on its `kit_claims` row (additive migration `AddKitClaimDelivery`) plus a
+  `KitDeliveryPending` notification; the plugin hands the items over with the `/kit give` placement: online within
+  seconds (realtime push, or the poll with realtime off), offline on the next join, after a siege when granted during
+  one. The plugin takes each delivery at the API before placing it (`POST api/Kits/deliveries/{claimId}/delivered`,
+  plugin key only), so a grant is never handed over twice. `/kit give` in game is unchanged. Design
+  [kits DESIGN §4.7](specs/kits/DESIGN.md); checklist [guides/kit-grant-delivery-smoke-test.md](guides/kit-grant-delivery-smoke-test.md).
 
 ## 2026-11-05
 

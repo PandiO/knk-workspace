@@ -1,7 +1,7 @@
 # Kits — Design
 
 **Status:** Draft, all open questions resolved with the developer — ready for implementation.
-**Last updated:** 2026-10-11 (§4.4: first-join grant runs in game, KNG-81 plugin half); 2026-10-10 (§4.4: first-join grant idempotent per player, KNG-81); 2026-09-25 (§0c: removed `/kit manage`'s in-game CRUD logic entirely — it's now
+**Last updated:** 2026-11-08 (§4.7: a web-app grant is handed over in game, PandiO/knk-workspace#261); 2026-10-11 (§4.4: first-join grant runs in game, KNG-81 plugin half); 2026-10-10 (§4.4: first-join grant idempotent per player, KNG-81); 2026-09-25 (§0c: removed `/kit manage`'s in-game CRUD logic entirely — it's now
 a pure pointer to the FormWizard, kept only as recognized subcommands so `/kit manage <anything>`
 redirects rather than erroring; `Kit` CRUD is FormWizard-only). Previously updated 2026-09-25
 (added §0b/§4.0/§4.5/§4.6: explicit FormWizard-primary/in-game-fallback CRUD hierarchy, and a
@@ -539,6 +539,31 @@ detail view (the generic FormWizard page) *also* gets a "Give to player" row act
 path to the same endpoint. The player-profile-page surface above is the one this design commits
 to; a second entry point on Kit's own page is a reasonable, low-risk addition but isn't needed to
 satisfy "granting works from the web app," so it's not mandated.
+
+### 4.7 In-game delivery of a web-app grant (PandiO/knk-workspace#261, 2026-11-08)
+
+§4.6's "Grant" wrote the `KitClaim` and nothing placed the items: placement (§4.2) only runs in the plugin's own
+flows (`KitGrantFlow`: `/kit get|give|purchase`, the kits menu), which place straight from the API's response. Now:
+
+- **Who places.** `POST api/Kits/{id}/give` from the game server (plugin key, no web login) is `/kit give`: the
+  plugin places, nothing is pending. From anyone else (a logged-in web user, also under the development key bypass)
+  the claim is written with `DeliveryRequestedAt` and a `KitDeliveryPending` player notification (no payload) is
+  queued. The response carries `claimId` and `deliveryPending`.
+- **Delivery record.** The `kit_claims` row: pending = `DeliveryRequestedAt` set and `DeliveredAt` null. The
+  notification is only a nudge (in-memory, 24 h); losing it delays nothing past the player's next join.
+- **Game server.** `KitGrantDelivery` reads `GET api/Kits/deliveries/pending?userId=` on the player's join (~5 s
+  after, once their account is cached), on `KitDeliveryPending` (pushed over the realtime hub, or polled with
+  `realtime.enabled` off) and after a siege gave the player's own inventory back. Per delivery: resolve the items,
+  **take** it with `POST api/Kits/deliveries/{claimId}/delivered?userId=` (one conditional `UPDATE … WHERE DeliveredAt
+  IS NULL`: 200 for the one call that took it, 409 `AlreadyDelivered` for every later one, 404 when nothing is
+  pending), then place with `KitGrantPlacer` and tell the player *A staff member gave you the "X" kit.* Both routes are
+  `[RequirePluginService]`.
+- **At most once.** Taking before placing means no path (push, poll, join, two servers, a failed confirmation) can
+  place a grant twice. The cost: a crash or logout in the instant between the take and the placement loses that one
+  hand-over (logged with the claim id; staff grant again).
+- **Held back** while the player is in a siege (hub or match): the siege inventory is replaced afterwards.
+- Unchanged: a grant still starts the kit's cooldown (§2.3) and issues its lootbox tokens (own delivery,
+  `LootboxTokensIssued`). The web app doesn't yet say "delivered" / "on the next join" (follow-up).
 
 ## 5. Economy
 
