@@ -186,8 +186,8 @@ world tasks, workflow sessions).
 
 The actions are view, create, edit, delete one, bulk delete and export. In every model:
 
-- view and export follow the dashboard gate;
-- create and edit stay on the area node;
+- view, create and edit stay on the area node (view became gated per area by decision 9, § 4.6);
+- export got its own node by decision 10 (§ 4.8), which works the same in every model;
 - the plugin keeps passing with its key.
 
 **A — Global action nodes on top of the area nodes.**
