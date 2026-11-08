@@ -3,9 +3,11 @@
 **Status:** **Decided 2026-11-08.** The developer answered all 11 questions of the proposal the same day; the record is
 in § 7. **AM1 built** (knk-web-api `claude/dashboard-access-280`, not merged; as built:
 [web-api architecture § 5.1](../../architecture/web-api-architecture.md#51-dashboard-access-model-pandioknk-workspace280-am1--branch-claudedashboard-access-280-not-merged));
-AM2–AM4 to come (§ 5). Developer 2026-11-08: the backfill (§ 4.5) **skips the Staff group**, and nobody changes a group
+**AM2 built** (same branch: read gating per area, lookups; as built:
+[web-api architecture § 5.2](../../architecture/web-api-architecture.md#52-read-gating-per-area-and-lookups-pandioknk-workspace280-am2--branch-claudedashboard-access-280-not-merged));
+AM3–AM4 to come (§ 5). Developer 2026-11-08: the backfill (§ 4.5) **skips the Staff group**, and nobody changes a group
 ranked at or above their own (§ 4.4).
-**Last updated:** 2026-11-08 (AM1 built, Staff decision); 2026-11-08 (decided version, with read gating per area, `knk.admin.export` and the read-endpoint
+**Last updated:** 2026-11-08 (AM2 built); 2026-11-08 (AM1 built, Staff decision); 2026-11-08 (decided version, with read gating per area, `knk.admin.export` and the read-endpoint
 appendix); 2026-11-08 (first version, chain 3 link D1)
 **Issue:** [PandiO/knk-workspace#280](https://github.com/PandiO/knk-workspace/issues/280) (blocks the bulk delete part of
 [#205](https://github.com/PandiO/knk-workspace/issues/205)); roadmap [#24](https://github.com/PandiO/knk-workspace/issues/24).
