@@ -223,7 +223,7 @@ test), `merged`, `blocked: <reason>`.
 | S5 | Phase 2 runtime slice (mob spawning and goals, §5b adapters, ghost state, waves, end conditions) + live checklist | plugin `claude/siege-survival`; workspace `claude/siege-survival` (checklist) | in review (pushed 2026-11-06; live checkpoint `docs/guides/siege-survival-smoke-test.md` to run; shared files `KnKPlugin.java` (5 additive hunks), `SiegeService.java` (13 small hunks), `SiegeLobbyStateMachine.java`, listed in the S5 block) | create_session session_01R1w2UuecHgiqgXCbskAjGT, 2026-11-06 | plugin `280da6fe` / — / — / workspace `claude/siege-survival` `4857fd2` (checklist, patch) + `main` (S5 block, patch) | core 2663 → 2678, api-client 330 unchanged, paper 2535 → 2580; 0 failures (JDK 25) |
 | S6 | Phase 3 repairs and frontier (sneak repair input, provisional) | plugin `claude/siege-survival` | waiting: G1 merged | — | — | — |
 | S7 | Phase 4 equipment modes, economy, Mystery Box | API, plugin `claude/siege-survival`; workspace `claude/siege-survival` (checklist) | in review (S7a + S7b pushed; checklist `docs/guides/siege-survival-economy-smoke-test.md` to run; shared files `KnKPlugin.java` (3 additive hunks), `SiegeCommand.java` (3), `SiegeLobbyRuntime.java` (1), listed in the S7b block) | S7a create_session session_01R1w2UvBc7PUjauoj69FmF7, 2026-11-07; S7b create_session session_01R1w2UwrR15ptNq9RoEXDMB, 2026-11-07 | plugin `18a6001` (S7a api-client `096b47f0` + S7b) / api `df3e546` / — / workspace `claude/siege-survival` `2f51cb2` (checklist, patch) + `main` (S7a and S7b blocks, patches) | API 3779 → 3814 passed, 0 failed, 88 skipped; api-client 330 → 335, 0 failed, 2 skipped; core 2678 → 2703, paper 2580 → 2625, 0 failures (S7b, JDK 25) |
-| S8 | Phase 5 specials, results, recovery, per-kill settlement | API, plugin `claude/siege-survival` | in progress (S8a API done, S8b plugin next) | S8a create_session session_01R1w2Ut17nB8AEkA3dqEKgo, 2026-11-07 (resumed 2026-11-08) | plugin `eb4c44f` (api-client, patch) / api `4d9df4f` / — / workspace `main` (S8a block, patch) | API 3814 → 3858 passed, 0 failed, 88 skipped; api-client +5 tests written, not run (Gradle refused in the session, see S8a block) |
+| S8 | Phase 5 specials, results, recovery, per-kill settlement | API, plugin `claude/siege-survival`; workspace `claude/siege-survival` (checklist) | in review (S8a + S8b pushed; checklist `docs/guides/siege-survival-results-smoke-test.md` to run; shared files `KnKPlugin.java` (1 additive hunk), `SiegeService.java` (2 one-line hunks), `SiegeModeHooks.java` (1 default method), listed in the S8b block) | S8a create_session session_01R1w2Ut17nB8AEkA3dqEKgo, 2026-11-07 (resumed 2026-11-08); S8b create_session session_01R1w2Uw1UvyoErXaAoq6gj8, 2026-11-08 | plugin `f6db7a3` (S8a api-client `f01f926` + S8b) / api `4d9df4f` / — / workspace `claude/siege-survival` `e3f27eb` (checklist, patch) + `main` (S8a and S8b blocks, patches) | API 3814 → 3858 passed, 0 failed, 88 skipped; api-client 340 unchanged, 0 failed, 2 skipped; core 2703 → 2713, paper 2625 → 2657, 0 failures (S8b, JDK 25) |
 | S9 | Phase 6 authoring, UX, telemetry | web app, API, plugin `claude/siege-survival` | waiting: web building blocks (#95, #33, #187, #30, #39) or waiver; S1–S8 | — | — | — |
 
 ## Coordinator notes
@@ -285,6 +285,172 @@ test), `merged`, `blocked: <reason>`.
 
 (Each link appends its block here: scope done, commits per repo, tests baseline → result, deviations, flags, checklist
 location, notes for later links.)
+
+## Link S8b — phase 5 plugin: results, settlement, checkpoints, specials, recovery (2026-11-08)
+
+Session session_01R1w2Uw1UvyoErXaAoq6gj8 (started by the coordinator 2026-11-08). knk-plugin `claude/siege-survival`,
+base `f01f926` (S1–S5, S7a/S7b, S8a's api-client commit), head **`f6db7a3`** (pushed, 4 commits). knk-workspace: the
+checklist on `claude/siege-survival` and this block on `main` are delivered as `format-patch` text (the workspace clone
+is read-only in the session, as for every earlier link). Scope: plan §2a row S8, **the plugin half of phase 5** (S8b):
+posting and settling the result, the survival result screen (flag S5-5), checkpoints, special-round announcements,
+restart recovery. Built against the S8a contract unchanged (no knk-api-client change).
+
+### Scope done
+
+- **Result at the end (DESIGN §9 v1, §10, §11; S32, S62).** `paper/siege/survival/results/`: `SurvivalResults.collect`
+  reads a `SurvivalResultInput` off the match (waves from `WaveRecord`; match-wide earned/system kills, now summed over
+  the rounds by `SurvivalMatch.earnedKills()/systemKills()`; per player kills, bonus kills, match currency earned/spent
+  and the final balance from `MatchEconomy` — which gained those three tallies —, exact `coinsAccrued`/`xpAccrued` from
+  the accrual, deaths from the Siege roster, the kit from the S7b picker's resolution, `presentAtEnd`/`leftAt` from the
+  roster and the leavers the observer reported); `SurvivalResultBuilder` maps it to S8a's `MatchResultDto` exactly as
+  the API recomputes it (`knk-core/.../core/survival/result/SurvivalResultRules`: wire names, settles flag, floor once
+  for present players, 0 for leavers and aborts, totals, `siege-survival:{id}` only when settling; a test pins the
+  names and rules to the api-client's constants). `SurvivalResultPoster` posts off the main thread, retries transport
+  errors and 5xx with the same body (8 attempts, 2 s → 60 s backoff), logs SEVERE and stops on 409 `SettlementMismatch`
+  (the message is logged; numbers are never adjusted), fetches `GET …/result` on `ResultAlreadyStored`/`MatchAborted`
+  and uses that row, treats other 4xx as final. `SurvivalResultService` orchestrates: on `presentResult` it requests the
+  final checkpoint, collects the input, writes the result to the recovery store, shows the screen, posts, and tells
+  the players the API's answer; a result whose API match id is not known yet waits up to 60 s (`SiegeLobbyRuntime.apiMatchId`,
+  polled from the runtime tick) and is dropped with a SEVERE line after that.
+- **Survival result screen instead of the PvP one (S5-5, §11).** `SiegeModeHooks.presentResult(lobby, match, result)`
+  (default false) and two one-line hunks in `SiegeService.onEndMatch`: when the mode presents, the PvP announcement,
+  per-member result lines and the reward follow-up are skipped; the Siege `complete`/`abort` call is made as before
+  (the API records it and pays no PvP legs for survival). `SurvivalResultScreen`: one announcement to everyone online,
+  four lines per present member — waves reached/completed and the end reason in words, kills and bonus kills, the
+  match-currency balance (earned/spent) "gone with the match", and the permanent payout "+C coins, +X XP" with the exact
+  accrual next to it — then the follow-up "Rewards credited …" / "recorded" / why not. Leavers get "none - you left
+  before the end (leavers forfeit)" and aborts "none - the match was aborted (…)". `SurvivalModeHooks.setResultPresenter`
+  routes it; nothing happens for PvP lobbies.
+- **Checkpoints (§10).** `checkpoint/SurvivalCheckpoints` (a `MatchHook`): `PUT …/checkpoint` at round start and end,
+  on every objective capture, death (ghost) and ghost release, on a leave, every `siege.survival.checkpoint-interval-seconds`
+  (new config key, default 30, 0 = off) and once right before the result; one request in flight, latest wins (a change
+  during a send is sent once afterwards with the state of that moment — `core/survival/checkpoint/CheckpointCadence`),
+  never blocking the match; failures logged once a minute. Body: substate, wave/completed, `specialProfileKey`,
+  alive/queued, NPC-held objective ids, active zone ids, `doorRepairs []` (S6), players with ghost/kit/balance/kills/deaths
+  and `pendingMysteryBoxRollId` from `MysteryBoxStations.pendingRollOf`. The revision from the answer is in the status.
+- **Special rounds (§7, S53).** `SurvivalConfiguration.specialProfileLabels` (new component, mapped from the profile
+  DTO's `key`/`name`; the DTO has no description) with `specialProfileKey(id)`/`specialProfileName(id)`; the round title
+  reads "Round n — Special round: <name> · k enemies" plus a chat line; the status shows `special <key>`; the checkpoint
+  carries the key; `MatchHook.roundStarted(round, specialProfileId)`. **No special-wave reward**: §7 says none is implied.
+- **Restart recovery (S61, §3, §12).** Verified chain for an unfinished survival match, unchanged by S8b: clean stop →
+  `KnKPlugin.onDisable` → `SiegeService.shutdown()` → `machine.stop(SERVER_RESTART)` → `onEndMatch` → `resolveResult`
+  (`SurvivalModeHooks` → `SurvivalEndMapping`, aborted result) → `SiegeMatchRecorder.abortMatch(id, SERVER_RESTART)`
+  (retried, spooled to `siege-vault/pending-results` on a transient failure, `spoolInFlight()` on disable); next start →
+  `SiegeMatchRecorder.recoverOnStartup()` replays the spool then `abortUnfinished(ServerRestart)` (also on the realtime
+  reconnect), which is the API's abort that forfeits the open rolls and writes the abort result row (S8a). Added:
+  `recovery/SurvivalRecoveryStore` — one YAML per API match under `plugins/KnightsAndKings/siege-survival/matches/`
+  holding the provisional `ServerRestart` result while the match runs (written when the match id is known, refreshed at
+  round changes and leaves) and the real result from the end until the API has it; `SurvivalResultService.recoverOnStartup`
+  posts every entry again (a pending result as it is — idempotent; an open marker as `ServerRestart`, `settlesRewards=false`,
+  ended now) and deletes the file on any final answer (`ResultAlreadyStored`/`MatchAborted` → the stored row is used);
+  only a transport failure keeps it. `presentResult` also posts `AdminAbort`/`ServerRestart` results at the end of the
+  Siege-side aborts. S5's leftover sweep is untouched.
+- **Admin status and telemetry (§11).** `/knk siege survival status` adds `Checkpoint: API match <id>, revision n, sent n,
+  failures n, interval …, last trigger …` per running match, `special <key>` and `match kills earned/system` in the wave
+  line, and `Result <lobby> match <id>: pending|posted|failed (<409 code>) - <settlement or message> at <time>` for the
+  last 8 results (plus "waiting for the API match id"). Log lines for the posted/settled result (totals, players settled,
+  ledger posting id), checkpoint failures (once a minute), special rounds (start and clear), recovery.
+- **Leavers.** S7b's `SurvivalMatch.onMemberLeft` (economy forfeits the balance and the accrual, Mystery Box hook forfeits
+  a pending roll) was never called by the runtime; the observer's `memberLeft` now calls it (new overload
+  `onMemberLeft(id, evaluateNow=false)`; the end check stays on the next tick, as before) and records the leaver.
+
+### Commits
+
+knk-plugin `claude/siege-survival`: `40d6cdd` result builder, settlement rules, posting; `546c0fe` survival result
+screen, checkpoints, special rounds, restart recovery, wiring; `b614371` unit tests; `f6db7a3` checkpoint status line
+names the API match id. knk-workspace `claude/siege-survival`: `e3f27eb` checklist (patch).
+
+### Tests (`gradle build -x deployToDevServer`, JDK 25 toolchain, Gradle 8.14.3 (local install; the wrapper download got a proxy 504) on JDK 21)
+
+- Baseline on `f01f926`: knk-core 2703, knk-api-client 340 (2 skipped), knk-paper 2625 (18 skipped), 0 failures.
+- Result on `f6db7a3`: **knk-core 2713, knk-api-client 340, knk-paper 2657, 0 failures**; shaded jar built.
+- New: core `SurvivalResultRulesTest`, `CheckpointCadenceTest`, `MatchEconomyTest` tallies; paper `SurvivalMatchFixture`
+  (a running match with N players for the phase 5 tests), `SurvivalResultBuilderTest` (every mapping, leavers, flags per
+  reason, agreement with the api-client), `SurvivalResultPosterTest` (retry/backoff, mismatch stops, stored row on a
+  repeat, 4xx final), `SurvivalResultScreenTest`, `SurvivalResultServiceTest` (wipe shown/persisted/posted/settled with
+  a leaver, admin abort, transport failure keeps the file, waiting for the match id, open marker → `ServerRestart`
+  replay, pending result replay), `SurvivalCheckpointsTest` (contents, triggers, coalescing, interval, failure log, no
+  id), `SurvivalSpecialRoundsTest`, `SurvivalModeHooksPresentResultTest` (PvP default unchanged),
+  `SurvivalRecoveryStoreTest`, `SurvivalSpecialProfileLabelTest`. Existing tests unchanged.
+
+### Deviations
+
+- S8a's note said "do not post a result for an aborted match"; the S8b brief asked for an `AdminAbort`/`ServerRestart`
+  result when the plugin knows the match id and the API has no row yet. The plugin posts it; the API keeps whichever
+  row came first (the plugin's carries waves and kills), and a `ResultAlreadyStored`/`MatchAborted` answer is handled
+  by reading the stored row (flag S8b-5).
+- The restart result is also produced from a **file** (the provisional marker), not only from the live match, so a
+  crash (no `onDisable`) still gets a `ServerRestart` row with the last round boundary's waves; the Siege recorder's
+  `abortUnfinished` remains the path that reaches the API's abort.
+- `equipmentMode` is sent as null (scenario setting): the API's accepted strings for the mode are not in the client
+  contract and a wrong value would have been a 400 that blocks the whole result (flag S8b-1).
+- A core file of S7b (`MatchEconomy`) and S5/S7b survival files (`SurvivalMatch`, `MatchHook`, `SurvivalConfiguration`
+  + mapper, `SurvivalSettings`, `SurvivalModeHooks`, `SurvivalMatchRuntime`) were extended additively; no knk-api-client change.
+- `SurvivalMatch.onMemberLeft` wired from the runtime (see Scope done, Leavers): a behaviour change for survival only.
+
+### Hunks in the shared files
+
+- `KnKPlugin.java`: 1 additive hunk, +7 lines after l.4261 (`siegeSurvival.setResultServices(SurvivalResultServices.create(…))`
+  before `siegeSurvival.start()`).
+- `SiegeService.java`: 2 hunks in `onEndMatch`, l.759 (1 → 2 lines: `boolean presentedByMode = modeHooks.presentResult(…)`
+  and `if (!presentedByMode) announceResult(…)`) and l.766 (`delivery = result.isAborted() || presentedByMode ? null : …`).
+- `SiegeModeHooks.java`: 1 additive hunk, +9 lines after l.49 (`default boolean presentResult(…) { return false; }`).
+- `SiegeLobbyRuntime.java`: untouched. Gate controller/listener, pass-through, view, `GateManager*`, `SiegeScoreboardPresenter`: untouched.
+- `config.yml`: +3 lines (`siege.survival.checkpoint-interval-seconds: 30` with a comment).
+
+### Flags for the developer
+
+- **S8b-1** `equipmentMode` is posted as null (the API falls back to the scenario's setting at post time). If an admin
+  switches the mode during a match the history shows the new one; sending the frozen mode needs the API's accepted
+  strings in the client contract (a one-line S9/S8a follow-up).
+- **S8b-2** A survival result whose API match id never arrives (the round ran unrecorded because `createMatch` failed)
+  waits 60 s and is then dropped with a SEVERE line: there is no row to settle against. The screen still shows the
+  plugin's numbers with "being recorded…" and no follow-up.
+- **S8b-3** No special-wave reward or drop was implemented: DESIGN §7 says "no unrequested special-wave reward or ammo
+  drop is implied" and the profile DTO defines none. The round's start and clear are logged.
+- **S8b-4** The post-match outcome title (`SiegeResultMessage.outcomeTitle`, "Defeat" for the human team since the NPC
+  alliance is the winner, S5-5) is unchanged; only the announcement and the result lines are survival's. A "Survival
+  over — wave n" title is an S9 touch (`SiegeService.beginPostMatch`).
+- **S8b-5** Aborted matches get a plugin result (`AdminAbort`/`ServerRestart`, no settlement) racing the API's abort row;
+  whichever lands first is the history row (`source Plugin` with waves/kills, or `source Abort` with waves 0).
+- **S8b-6** A leaver's kills, bonus kills and match currency earned/spent stay in the result (history); their accrual
+  is forfeited at the leave (S7b's `economy.leave`), so `coinsAccrued`/`xpAccrued` are 0 and `finalMatchBalance` 0.
+- **S8b-7** The first checkpoint of a match is written on the first runtime tick (substate `PREPARING`), so the interval
+  counts from the match start and the round-1 checkpoint follows as a coalesced send; the round-start checkpoint is
+  captured before that tick's first spawn (`aliveEnemies 0`, the full queue).
+- **S8b-8** The provisional recovery marker is refreshed at round starts/ends and leaves, not at every checkpoint, so a
+  crash mid-round posts the waves of the last round boundary (a crash in round 3 → reached 3, completed 2). The API's
+  abort row from `abortUnfinished` has waves 0 anyway when it wins.
+- **S8b-9** Retry policy of the result post: 8 attempts with 2 s, 4 s, … 60 s backoff on transport errors and 5xx, then
+  the file is kept for the next start. Constants in `SurvivalResultPoster`, not config.
+
+### Follow-ups found (not fixed)
+
+- S7b's `SurvivalMatch.onMemberLeft` was dead code (economy/roll forfeit on leave never ran) — fixed here as part of
+  "leavers forfeit"; worth a note in the S7b checklist's step 13 expectations (a leaver's pending roll is now forfeited
+  `RollerLeft` by the plugin).
+- `SiegeService.beginPostMatch` shows the PvP outcome title for survival (S8b-4); S9.
+- The survival `shadowJar` is not produced by `build` (`:knk-paper:shadowJar` separately), as before.
+
+### Notes for later links
+
+- **S6 (repairs):** the checkpoint's `doorRepairs[]` is built in `SurvivalCheckpoints.capture` (`List.of()` today) and the
+  result's `repairWork` per player in `SurvivalResults.collect` (`0.0`): fill both from the door-repair state; add a
+  `MatchHook` call (e.g. `doorRepairChanged`) if a repair should trigger a checkpoint.
+- **S9 (history page, HUD, result screen data):** the result row is `GET api/siege-survival/matches/{id}/result` and the
+  player's history `GET api/siege-survival/results?userId=`; the plugin's screen lines are in `SurvivalResultScreen`
+  (Adventure only) and the per-player input in `SurvivalResultInput.PlayerResult`; the HUD can read
+  `SurvivalMatch.specialProfileKey()`, `earnedKills()`, `economy().balance(uuid)`; the status line formats are in
+  `SurvivalResultService.Status.line()` and `SurvivalCheckpoints.statusLines()`.
+- **Coordinator:** apply the checklist patch on workspace `claude/siege-survival` (base `6035c7f`), this block on `main`;
+  the plugin head `f6db7a3` is pushed.
+
+### Checklist location
+
+`docs/guides/siege-survival-results-smoke-test.md` on knk-workspace branch `claude/siege-survival` (commit `e3f27eb` on
+`6035c7f`, patch): deploy (API `4d9df4f` with the three migrations, plugin `f6db7a3`), the 9 checks (checkpoint rows,
+optional special round, team wipe → survival result screen and the settled row/ledger, leaver, repeat post, admin stop →
+abort row and forfeited roll, one PvP match, restart during a match), the log lines, the flags.
 
 ## Link S8a — survival results, settlement, checkpoint (2026-11-08)
 
