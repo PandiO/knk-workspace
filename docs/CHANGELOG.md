@@ -4,7 +4,31 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
-(Nothing at the moment.)
+- **Dashboard: checkbox selection and Export CSV** — [PandiO/knk-workspace#205](https://github.com/PandiO/knk-workspace/issues/205)
+  export part (chain 3 link V2), knk-web-app `claude/dashboard-export-205` (**contains** V1's
+  `claude/web-fixes-266-263-258` and through it chain 2's `claude/realtime-web-live-183`), not merged, not live-tested.
+  - The dashboard table has a checkbox column. Rows stay links, and the row click still opens the detail page.
+  - A bar above the table shows "n selected" and **Export CSV**. The export holds the selected rows, or with nothing
+    selected the current search across all pages in its sort.
+  - The file has the table's columns in table order with the values the table shows. It is UTF-8 with BOM, named
+    `<Type>-<yyyy-mm-dd>.csv`, holds at most 10,000 rows, and texts that look like formulas are neutralized.
+  - Export needs the new node `knk.admin.export`, so until link AM1 adds it to the API only the owner and Admin have it.
+  - Bulk delete follows in AM3 (#280).
+  - No API change, no setting.
+
+  Checklist: [entity lists smoke test § 7](guides/entity-lists-url-state-smoke-test.md#7-checkbox-selection-and-export-csv-205-export-part-chain-3-v2).
+
+- **Web app fixes: Entity setup at phone width, colour baseline, landing slideshow fade** —
+  [PandiO/knk-workspace#266](https://github.com/PandiO/knk-workspace/issues/266),
+  [#263](https://github.com/PandiO/knk-workspace/issues/263), [#258](https://github.com/PandiO/knk-workspace/issues/258)
+  (chain 3 link V1), knk-web-app `claude/web-fixes-266-263-258` (**contains** chain 2's `claude/realtime-web-live-183`,
+  X1 with W1–W4: merging it merges chain 2's web app too), not merged, not live-tested. Entity setup (`/forms/{type}`)
+  no longer scrolls sideways at 390 px (it was 785 px wide): the configuration lists' buttons wrap under the title and
+  the tables scroll inside their cards. `WorldBoundFieldRenderer` and `BannerLayersField` moved to the theme tokens, so
+  no file is over its raw colour baseline, and `npm run test:ci` now fails when one is. The landing slideshow fades the
+  image out to black and then the next one in (1.25 s each), preloads the next image, and swaps without fades under
+  `prefers-reduced-motion`. No API change, no setting. Checklist:
+  [design themes guide § 8](guides/design-themes-comparison.md#8-smoke-test-entity-setup-at-phone-width-colour-baseline-landing-fade-chain-3-v1).
 
 ## 2026-11-05
 
