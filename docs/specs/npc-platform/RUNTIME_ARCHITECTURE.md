@@ -1,7 +1,7 @@
 # NPC runtime architecture — engine decoupling and scale (analysis)
 
-**Status:** Analysis and proposals for developer review; nothing here is decided except where it cites an existing decision. Nothing implemented.
-**Last updated:** 2026-11-08 (developer decisions: one shared NPC population for Minecraft and the web town simulation, tactical loop in the plugin behind a movable contract, §8.6; decision matrices for the kernel boundary §4.7 and the web town simulation host §11, developer leaning towards a headless JVM sim service); 2026-11-08 (initial analysis, developer request: decouple the behaviour and traits model from Paper, Citizens and Sentinel; efficient spawning, behaviour and interaction for many NPC types; option to run behaviour in the API or a separate non-GUI system)
+**Status:** Analysis with developer decisions of 2026-11-08 (RA-01–RA-04, RA-06–RA-08, RA-11; §8.6); RA-05, RA-09, RA-10 and RA-12 (web town simulation host) still open. Nothing implemented.
+**Last updated:** 2026-11-08 (developer decisions: option A engine-free kernel with Citizens only for movement and no Sentinel dependency, `Mannequin` compared with Citizens player NPC, simulation tiers and budgeted spawning; §8.6, §10); 2026-11-08 (developer decisions: one shared NPC population for Minecraft and the web town simulation, tactical loop in the plugin behind a movable contract, §8.6; decision matrices for the kernel boundary §4.7 and the web town simulation host §11, developer leaning towards a headless JVM sim service); 2026-11-08 (initial analysis, developer request: decouple the behaviour and traits model from Paper, Citizens and Sentinel; efficient spawning, behaviour and interaction for many NPC types; option to run behaviour in the API or a separate non-GUI system)
 **Issue:** [PandiO/knk-workspace#234](https://github.com/PandiO/knk-workspace/issues/234) (guard behavior model); related [#241](https://github.com/PandiO/knk-workspace/issues/241) (Citizens verification: [#242](https://github.com/PandiO/knk-workspace/issues/242) desk check, [#243](https://github.com/PandiO/knk-workspace/issues/243) spike, [#244](https://github.com/PandiO/knk-workspace/issues/244) benchmark)
 **Parent designs:** [DESIGN.md](DESIGN.md) (KNG-36 platform boundaries, §2 platform adapter), [BEHAVIOR_MODEL.md](BEHAVIOR_MODEL.md) (guard behaviour model)
 **Authority:** The developer's request of 2026-11-08 and the principle in [vision §5.1](../../vision/vision.md#51-rank--permission-architecture-decided): minimise dependence on Minecraft/Bukkit-ecosystem plugins because a future migration off Minecraft (Unreal Engine or a custom engine) is a live possibility. Code facts were checked on 2026-11-08 against knk-plugin `main` (`33122cf`); library facts against current Paper and Citizens documentation (§11). Everything else is a proposal.
@@ -286,6 +286,9 @@ The same contract serves in-process calls (option A) and the network (option C):
 ### 8.6 Developer decisions (2026-11-08)
 
 - **One shared NPC population.** An NPC is one record whether it is managed in the web town simulation or met in Minecraft: a worker or guard staffed on the web is the same character that walks in game. On the web it acts at the abstract tier (T1); near players in Minecraft it gets a body (T2/T3). Consequence: exactly one host may simulate an NPC at a time (ownership lease, §11.3).
+- **Kernel boundary: option A (§4.7).** Engine-free `knk-npc-core` with ports; Citizens only behind `Locomotion`/`NpcBody`; Sentinel is a reference, not a dependency; KnK writes the combat executor (RA-01–RA-03).
+- **Bodies:** Paper `Mannequin` with a KnK mover is compared with the Citizens player NPC in the #242 desk check and #244 benchmark; the body may differ per archetype (RA-04).
+- **Scale model:** the four simulation tiers (§6.3) with capability-based systems for every NPC type, and the spawning rules of §7 (RA-06, RA-07); numbers come from #244.
 - **Tactical loop in the plugin first, movable.** Tactical decisions for embodied NPCs run in the plugin on worker threads, called only through the §8.5 message contract so they can move to a headless service without a rewrite. Reflexes and movement execution stay with the body.
 
 ## 9. Player interaction at scale
@@ -300,13 +303,13 @@ The same contract serves in-process calls (option A) and the network (option C):
 
 | ID | Proposal | Default if accepted |
 |---|---|---|
-| RA-01 | New `knk-npc-core` module with no Paper/Bukkit/Citizens/Sentinel dependency, enforced by the build | Yes |
-| RA-02 | Ports as in §4.3; Citizens only behind `Locomotion` (and `NpcBody` if it supplies the body) | Yes |
-| RA-03 | Sentinel is a reference only, not a dependency | Yes |
-| RA-04 | Add `Mannequin` + KnK mover as option B to the #242 desk check and #244 benchmark; body choice may differ per archetype | Yes |
+| RA-01 | New `knk-npc-core` module with no Paper/Bukkit/Citizens/Sentinel dependency, enforced by the build | **Decided 2026-11-08** (§4.7 option A) |
+| RA-02 | Ports as in §4.3; Citizens only behind `Locomotion` (and `NpcBody` if it supplies the body) | **Decided 2026-11-08** (§4.7 option A) |
+| RA-03 | Sentinel is a reference only, not a dependency | **Decided 2026-11-08** (§4.7 option A) |
+| RA-04 | Add `Mannequin` + KnK mover as option B to the #242 desk check and #244 benchmark; body choice may differ per archetype | **Decided 2026-11-08** (compare both in #242–#244; body may differ per archetype) |
 | RA-05 | Replace the `org.bukkit.util.Vector` uses in `knk-core` with KnK geometry types (small refactor, separate issue) | Yes |
-| RA-06 | Four simulation tiers (§6.3) for every NPC type, with capability-based systems | Yes |
-| RA-07 | Spawn queue with per-tick budget, async preparation, persist on despawn (§7) | Yes |
+| RA-06 | Four simulation tiers (§6.3) for every NPC type, with capability-based systems | **Decided 2026-11-08** |
+| RA-07 | Spawn queue with per-tick budget, async preparation, persist on despawn (§7) | **Decided 2026-11-08** |
 | RA-08 | Behaviour split by timescale; start in-process behind a message contract; slow data layer in the API; headless service later on the §8.4 triggers | **Decided 2026-11-08** for the tactical loop (§8.6). Where the slow layer and the web town simulation run is open: §11 (developer leaning: headless JVM sim service) |
 | RA-09 | No C# reimplementation of the psychology/decision model | Yes |
 | RA-11 | One shared NPC population for Minecraft and the web town simulation | **Decided 2026-11-08** (§8.6) |
