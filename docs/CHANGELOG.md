@@ -4,6 +4,26 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Settings pages: units and help, confirms on risky switches, lootbox preview; Lootbox settings, Currency policy and
+  Road network on the settings shell** — [PandiO/knk-workspace#26](https://github.com/PandiO/knk-workspace/issues/26)
+  (chain 3 link V4), knk-web-app `claude/settings-pages-26` (**contains** V3's `claude/player-profile-119` and through it
+  V2, V1 and chain 2's X1), not merged, not live-tested. No API change, no setting.
+  - **Lootboxes → Settings**, **Currency policy** and **Road network** have the settings header of Game and Siege
+    settings: changes counted, Discard, Reload, Save (n), "Leave without saving?" before leaving with changes (on the
+    lootbox page also when switching tabs), a toast on save and the reason in the header when the API refuses.
+  - Settings fields show their unit (ticks, s, h, ‰, bp, ×, coins, gems, boxes) and one line of help, with what the value
+    means ("= 1 s", "= 2.5%", "= 12:00 (noon)"); on Siege and Game settings too.
+  - Switching payments off or on (per currency), lootboxes off or on, a lootbox type's Enabled and a token grant rule ask
+    first and say what happens.
+  - Lootbox settings: the announce thresholds are choices with **Never** (was the number 11), both announcements have a
+    preview with sample values, unknown placeholders are named. The Odds tab shows small chances as "1 in N".
+  - Currency policy: one Save for coins and gems; the lowest sender title is picked from the titles (was a bracket id).
+  - Road network: the navigation defaults no longer save on change; Save saves them together with the compass settings.
+    Road profiles and stretches keep their own Save.
+  - Smoke test: [guides/settings-pages-smoke-test.md](guides/settings-pages-smoke-test.md).
+  - Needs the API later (#26 comment): who saved last on lootbox, siege, road and currency settings; one save for the
+    road settings.
+
 - **Staff player profile: status strip, tabs, freeze/unfreeze, timeline, paged audit; better player search** —
   [PandiO/knk-workspace#119](https://github.com/PandiO/knk-workspace/issues/119) (chain 3 link V3), knk-web-app
   `claude/player-profile-119` (**contains** V2's `claude/dashboard-export-205`, V1 and chain 2's X1), not merged, not
