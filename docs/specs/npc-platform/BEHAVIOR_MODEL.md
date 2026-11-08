@@ -37,7 +37,7 @@ The developer chose a **hybrid**: K&K navigation plans, Citizens moves.
 
 Still to do under the DESIGN §9 audit: check the Citizens API version and licence, confirm waypoint following and block-examiner hooks, and benchmark on the castle map (many NPCs, closed gates, changed permissions, unloaded chunks). Planned as [#241](https://github.com/PandiO/knk-workspace/issues/241) (desk check #242, spike #243, benchmark #244; developer decision 2026-11-05, details in §13). Siege Survival's mob-based plan (Paper MobGoals, DESIGN §5b) is not changed by this decision; whether Siege attackers also move through Citizens is open.
 
-**Engine decoupling (analysis 2026-11-08, proposals only):** [RUNTIME_ARCHITECTURE.md](RUNTIME_ARCHITECTURE.md) analyses how this whole model (perception evaluation, knowledge, alert states, psychology, decisions, skills, combat resolution) can live in an engine-free NPC kernel with Citizens (and any other executor) behind a locomotion port, recommends **not** adopting Sentinel as a dependency, and analyses spawning, level of detail and moving parts of the behaviour out of the game server for KnK's expected NPC population. Since guards are player-shaped (§16.7), the §5b MobGoals attack adapter does not apply to them; their attack loop runs in KnK code (RUNTIME_ARCHITECTURE §5.3).
+**Engine decoupling (developer decisions 2026-11-08: engine-free kernel, Citizens only for movement, no Sentinel dependency, `Mannequin` compared in #242–#244; RUNTIME_ARCHITECTURE §8.6):** [RUNTIME_ARCHITECTURE.md](RUNTIME_ARCHITECTURE.md) analyses how this whole model (perception evaluation, knowledge, alert states, psychology, decisions, skills, combat resolution) can live in an engine-free NPC kernel with Citizens (and any other executor) behind a locomotion port, recommends **not** adopting Sentinel as a dependency, and analyses spawning, level of detail and moving parts of the behaviour out of the game server for KnK's expected NPC population. Since guards are player-shaped (§16.7), the §5b MobGoals attack adapter does not apply to them; their attack loop runs in KnK code (RUNTIME_ARCHITECTURE §5.3).
 
 ## 3. References
 
@@ -49,7 +49,7 @@ Still to do under the DESIGN §9 audit: check the Citizens API version and licen
 - **Paper Mob Goals API**: priority-based goals; pattern for small reusable behaviors (keep distance, flee at low health, strafe). §5b already proposes a MobGoals adapter.
 - **Behavior-tree libraries** (for example gdx-ai): option for decision trees.
 
-Direction: a hybrid of Sentinel-style targeting, Mythic-style config and goal-style composable traits. Sentinel is a **design reference, not a proposed dependency**: its targeting and attack loop would put decision logic inside the Minecraft layer ([RUNTIME_ARCHITECTURE §4.4](RUNTIME_ARCHITECTURE.md#44-citizens-and-sentinel), proposal 2026-11-08).
+Direction: a hybrid of Sentinel-style targeting, Mythic-style config and goal-style composable traits. Sentinel is a **design reference, not a dependency** (developer decision 2026-11-08): its targeting and attack loop would put decision logic inside the Minecraft layer ([RUNTIME_ARCHITECTURE §4.4](RUNTIME_ARCHITECTURE.md#44-citizens-and-sentinel)).
 
 **Games**
 
