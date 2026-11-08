@@ -1,7 +1,7 @@
 # NPC behavior model — perception, psychology, decisions and combat (guards first)
 
 **Status:** Working concept from a developer design session; not approved defaults, not an implementation plan, nothing implemented. Items marked *(future update)* belong to the overall vision but are not planned for the first version.
-**Last updated:** 2026-11-05 (developer decisions on item familiarity §11.1, follow-up voice session, #237); 2026-11-05 (developer decisions, design pass 3: skill-based ranged/melee switching §11.2, weighted 0–100 weapon skill with a power-law curve §11.1, scale targets and benchmark plan §13, optional preset clan §16.2, Garrison holds its own gate and quarters in any structure §16.3, town-level guard settings and auto-fill per town §16.4, clan control and sides §16.5, military management pages §16.6); 2026-11-04 (developer decisions: guard entity, garrisons and staffing §16, gate confrontation §17); 2026-11-04 (developer decisions on design pass 2: alert states weight but never lock §7.1, four situations §7.2, guard-specific orders §7.3, presets §9.7, influence sources incl. gate state §9.8, five weapon-skill modifiers §11.1, inspector and web decision viewer §14, templates §15); 2026-11-04 (design pass 2: §7.1 action gating, §7.2 situations, §9.7 personality presets, §9.8 default influence sources, §11.1 proficiency growth, §11.2 ranged/melee switching, §14 debugging tools, §15 configuration and templates; all proposals); 2026-11-04 (hybrid navigation decision in §2: K&K plans, Citizens moves); 2026-11-04 (initial concept, developer voice design session)
+**Last updated:** 2026-11-08 (developer decision: guards are player-shaped NPCs with a configurable skin by default, §16.7; engine decoupling and scale analysis in [RUNTIME_ARCHITECTURE.md](RUNTIME_ARCHITECTURE.md), referenced from §2, §3, §4, §13); 2026-11-05 (developer decisions on item familiarity §11.1, follow-up voice session, #237); 2026-11-05 (developer decisions, design pass 3: skill-based ranged/melee switching §11.2, weighted 0–100 weapon skill with a power-law curve §11.1, scale targets and benchmark plan §13, optional preset clan §16.2, Garrison holds its own gate and quarters in any structure §16.3, town-level guard settings and auto-fill per town §16.4, clan control and sides §16.5, military management pages §16.6); 2026-11-04 (developer decisions: guard entity, garrisons and staffing §16, gate confrontation §17); 2026-11-04 (developer decisions on design pass 2: alert states weight but never lock §7.1, four situations §7.2, guard-specific orders §7.3, presets §9.7, influence sources incl. gate state §9.8, five weapon-skill modifiers §11.1, inspector and web decision viewer §14, templates §15); 2026-11-04 (design pass 2: §7.1 action gating, §7.2 situations, §9.7 personality presets, §9.8 default influence sources, §11.1 proficiency growth, §11.2 ranged/melee switching, §14 debugging tools, §15 configuration and templates; all proposals); 2026-11-04 (hybrid navigation decision in §2: K&K plans, Citizens moves); 2026-11-04 (initial concept, developer voice design session)
 **Issue:** [PandiO/knk-workspace#234](https://github.com/PandiO/knk-workspace/issues/234)
 **Parent design:** [npc-platform/DESIGN.md](DESIGN.md) (KNG-36), mainly its O11 (city guard profile) and O12 (combat, stats, factions, debugging, performance); related [#146](https://github.com/PandiO/knk-workspace/issues/146)
 **Authority:** Developer statements in the 2026-11-04 sessions and the 2026-11-05 design pass 3 (voice session, recorded in the concept doc first). Where this document says "agreed" or "developer", the developer chose it; everything else is a proposal recorded for discussion. Library, schema and numeric values are examples, not defaults.
@@ -37,6 +37,8 @@ The developer chose a **hybrid**: K&K navigation plans, Citizens moves.
 
 Still to do under the DESIGN §9 audit: check the Citizens API version and licence, confirm waypoint following and block-examiner hooks, and benchmark on the castle map (many NPCs, closed gates, changed permissions, unloaded chunks). Planned as [#241](https://github.com/PandiO/knk-workspace/issues/241) (desk check #242, spike #243, benchmark #244; developer decision 2026-11-05, details in §13). Siege Survival's mob-based plan (Paper MobGoals, DESIGN §5b) is not changed by this decision; whether Siege attackers also move through Citizens is open.
 
+**Engine decoupling (analysis 2026-11-08, proposals only):** [RUNTIME_ARCHITECTURE.md](RUNTIME_ARCHITECTURE.md) analyses how this whole model (perception evaluation, knowledge, alert states, psychology, decisions, skills, combat resolution) can live in an engine-free NPC kernel with Citizens (and any other executor) behind a locomotion port, recommends **not** adopting Sentinel as a dependency, and analyses spawning, level of detail and moving parts of the behaviour out of the game server for KnK's expected NPC population. Since guards are player-shaped (§16.7), the §5b MobGoals attack adapter does not apply to them; their attack loop runs in KnK code (RUNTIME_ARCHITECTURE §5.3).
+
 ## 3. References
 
 **Libraries and plugins**
@@ -47,7 +49,7 @@ Still to do under the DESIGN §9 audit: check the Citizens API version and licen
 - **Paper Mob Goals API**: priority-based goals; pattern for small reusable behaviors (keep distance, flee at low health, strafe). §5b already proposes a MobGoals adapter.
 - **Behavior-tree libraries** (for example gdx-ai): option for decision trees.
 
-Direction: a hybrid of Sentinel-style targeting, Mythic-style config and goal-style composable traits.
+Direction: a hybrid of Sentinel-style targeting, Mythic-style config and goal-style composable traits. Sentinel is a **design reference, not a proposed dependency**: its targeting and attack loop would put decision logic inside the Minecraft layer ([RUNTIME_ARCHITECTURE §4.4](RUNTIME_ARCHITECTURE.md#44-citizens-and-sentinel), proposal 2026-11-08).
 
 **Games**
 
@@ -73,7 +75,9 @@ Direction: a hybrid of Sentinel-style targeting, Mythic-style config and goal-st
 4. **Psychological model** (§9): personality, physical state, mood, emotions, relationships.
 5. **Decision layer** (§8): utility-scored actions.
 6. **Combat** (§10): style profiles, proficiency, weapon switching.
-7. **Execution**: K&K route planning + Citizens movement (§2 hybrid decision; DESIGN §6, §12 here) and the §5b attack/speed adapters.
+7. **Execution**: K&K route planning + Citizens movement (§2 hybrid decision; DESIGN §6, §12 here) and the §5b attack/speed adapters; the body is player-shaped with a configurable skin by default (§16.7).
+
+Layers 1–6 are engine-neutral logic; only layer 7 and the raw sensing inputs of layer 1 touch the game engine. The proposed split and its ports are in [RUNTIME_ARCHITECTURE.md](RUNTIME_ARCHITECTURE.md) §4.
 
 ## 5. Perception
 
@@ -524,7 +528,7 @@ Agreed: build the utility system first with level of detail and time-slicing; in
 
 **Later, to investigate**: distilled small models trained from LLM output or recorded tuned behavior · Generative Agents architecture for memory and relationships · reinforcement learning for combat micro-behavior (for example Unity ML-Agents) · small local LLMs for dialogue.
 
-Numeric budgets follow the platform audit (DESIGN §9).
+Numeric budgets follow the platform audit (DESIGN §9). Spawning, level-of-detail tiers for the wider NPC population (traders, shopkeepers, quest NPCs) and the option of running the slow behaviour layers in knk-web-api or a separate headless service are analysed in [RUNTIME_ARCHITECTURE.md](RUNTIME_ARCHITECTURE.md) §6–§8.
 
 **Scale targets (developer 2026-11-05):**
 
@@ -596,7 +600,7 @@ Follows the existing K&K pattern (code defaults, admin-editable data in knk-web-
 
 ### 15.2 Template structure and inheritance
 
-A template is a named set of **modules**: perception, recognition, alert (states, thresholds, ROE), personality, psychology (goals, standards, attitudes, influence settings), actions, combat style, proficiency, navigation ruleset, post/patrol references. Each module has a schema version.
+A template is a named set of **modules**: appearance (body, skin; §16.7), perception, recognition, alert (states, thresholds, ROE), personality, psychology (goals, standards, attitudes, influence settings), actions, combat style, proficiency, navigation ruleset, post/patrol references. Each module has a schema version.
 
 - **Single parent**: `extends` one template (for example `knk:town_guard` extends `knk:soldier`); depth limit (proposed 5); cycles rejected on save.
 - **Fragments**: `include` an ordered list of partial templates (personality preset, combat style, night shift). This is how presets combine without multiple inheritance.
@@ -632,6 +636,7 @@ This ordering is proposed as the shared answer to the precedence questions left 
   "id": "knk:town_guard",
   "extends": "knk:soldier",
   "include": ["knk:personality/steady_guard", "knk:combat/swordsman"],
+  "appearance": { "body": "player", "skin": "knk:skin/phoenix_guard_01" },
   "personality": { "conscientiousness": 70, "variance": 8 },
   "alert": { "rulesOfEngagement": "standard" },
   "actions": {
@@ -705,6 +710,24 @@ Builds on the minimal `Clan` on trunk (Siege plan §3.2: name, colour, banner, `
 - **UI standard:** intuitive, accessible and polished, with Minecraft icons from the material catalog and in-game structure pictures ([#247](https://github.com/PandiO/knk-workspace/issues/247)).
 - **Sprint (developer):** the resource production structures work ([#22](https://github.com/PandiO/knk-workspace/issues/22), KNG-83) should finish its design soon and ship in the same test phase as the garrison and guard NPC work.
 
+### 16.7 Appearance: player-shaped body and configurable skin (developer decision 2026-11-08)
+
+**Decided:** a guard is by default a **player NPC**: a player-shaped body with a player skin, not a vanilla Minecraft mob (no zombie, villager, pillager or iron golem body). **Its skin is configurable.**
+
+Proposed shape (names conceptual, schema open):
+
+- **Appearance module** in the template (§15.2): `body` (default `player`; other values only where a template explicitly asks for them, for example a monster or Siege attacker that keeps a vanilla mob body) and `skin`.
+- **Skin library**: skins are records in knk-web-api, referenced by namespaced id (`knk:skin/phoenix_guard_01`), each holding the Mojang-signed texture value and signature, the arm model (classic/slim), a display name and its source (uploaded image signed through a skin-signing service such as MineSkin, or copied from a player profile). Storing the signed texture means a spawn never asks Mojang for a profile (rate limits, outages) and the skin cannot change when a player account changes its skin.
+- **Where it is set**, lowest to highest (follows §15.3): code default skin (a neutral guard skin, so an empty template still spawns) → template/preset (a "Phoenix guard" or "Synixian commander" look) → **skin pool** on the template (a list with weights; each instance picks one at creation, seeded by NPC id and persisted, like trait variance in §9.7, so a gate's guards don't all look identical) → **instance override** (a specific captain). Changed in the web app with a preview; changing a skin respawns the visible body, not the NPC's state.
+- **Equipment stays separate**: armour, tabard/banner and weapons render on top of the skin and come from the guard's equipment (§16.1), so clan colours (§16.5, §17 heraldry) don't need a skin per clan. A skin may still be clan-themed.
+- **Name tag**: optional and configurable (hidden by default for immersion is a proposal; shown for staff in the inspector §14.1).
+
+**Consequences** (analysis in [RUNTIME_ARCHITECTURE.md](RUNTIME_ARCHITECTURE.md) §5):
+
+- A player-shaped body has **no vanilla AI**. Movement comes from the executor (§2: Citizens, or a KnK mover on a Paper `Mannequin`), and the attack loop, attack timing and damage come from KnK code driving the §5b resolver; the §5b MobGoals adapter only serves mob-bodied NPCs.
+- Two candidate bodies on Paper 26.3, to compare in the Citizens desk check and spike ([#242](https://github.com/PandiO/knk-workspace/issues/242), [#243](https://github.com/PandiO/knk-workspace/issues/243)): a **Citizens player NPC** (a fake server-side player; skin through Citizens' `SkinTrait` texture + signature) or Paper's **`Mannequin`** entity (vanilla player-model entity since Minecraft 1.21.9, skin through `setProfile(ResolvableProfile)`, no fake player connection). Cost per body, skin behaviour and whether Citizens can drive a `Mannequin` are part of the benchmark ([#244](https://github.com/PandiO/knk-workspace/issues/244)).
+- The skin is engine data (a Minecraft texture). In the engine-neutral model the appearance is a reference to a **look** (`knk:skin/...`); a future engine maps the same id to its own character model.
+
 ## 17. Gate confrontation (developer decisions 2026-11-04)
 
 The §8 action *confront / question* in detail. The dialogue only gathers information; the behavior model decides what happens.
@@ -726,10 +749,12 @@ Not in the first version: Law & Order (local/global laws, crimes, punishments, j
 
 ## 19. Open questions
 
-Decided 2026-11-04 (developer, design pass 2): §7.1, §7.2, §7.3, §9.7, §9.8, §11.1 (structure), §14, §15, §16, §17. Decided 2026-11-05 (design pass 3): §11.1 combination and curve, §11.2 switching, §13 scale targets and verification plan, §16.2 preset clan, §16.3–16.4 garrison, quarters and town settings, §16.5 allegiance, §16.6 management pages; item familiarity rules (§11.1, follow-up session).
+Decided 2026-11-04 (developer, design pass 2): §7.1, §7.2, §7.3, §9.7, §9.8, §11.1 (structure), §14, §15, §16, §17. Decided 2026-11-08: §16.7 player-shaped body with configurable skin by default. Decided 2026-11-05 (design pass 3): §11.1 combination and curve, §11.2 switching, §13 scale targets and verification plan, §16.2 preset clan, §16.3–16.4 garrison, quarters and town settings, §16.5 allegiance, §16.6 management pages; item familiarity rules (§11.1, follow-up session).
 
 - Schema for Garrison, quarters, slots and town guard settings: under [#238](https://github.com/PandiO/knk-workspace/issues/238); clan control, NPC clan and fallback clan: under [#236](https://github.com/PandiO/knk-workspace/issues/236).
 - Numeric tuning: tag weights per state, axis ranges and decay rates, preset values, influence magnitudes, power-law constants (`n0`, `α`), skill shares, switching bands and the time-to-contact judgement error; Mehrabian coefficients to verify.
 - Item familiarity: rules decided 2026-11-05 (§11.1); storage on `ItemInstance` and tuning values under [#237](https://github.com/PandiO/knk-workspace/issues/237).
 - Citizens verification, benchmark and budgets ([#241](https://github.com/PandiO/knk-workspace/issues/241)); whether Siege attackers also use Citizens (answered by #244); how traits map onto DESIGN §2 template/instance/trait/behavior boundaries.
 - Town runtime management, public town roles and who may view or manage ([#246](https://github.com/PandiO/knk-workspace/issues/246)).
+- Appearance (§16.7): skin library schema and signing flow, default skin, whether name tags show, and the body choice (Citizens player NPC or `Mannequin`), decided with #242–#244.
+- Engine decoupling, spawning at scale and where behaviour runs: proposals in [RUNTIME_ARCHITECTURE.md](RUNTIME_ARCHITECTURE.md) §10, awaiting developer decisions.
