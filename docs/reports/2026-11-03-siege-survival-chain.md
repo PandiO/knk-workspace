@@ -1,7 +1,7 @@
 # Siege Survival implementation chain — progress report
 
-**Status:** S1–S5 and S7 (S7a + S7b) in review; two live checklists ready (`docs/guides/siege-survival-smoke-test.md`, `docs/guides/siege-survival-economy-smoke-test.md`); **S8 running** (phase 5, split: S8a results/settlement API session_01R1w2Ut17nB8AEkA3dqEKgo started 2026-11-07, then S8b plugin); G1 and S6 wait for #167 and #213
-**Last updated:** 2026-11-07 (coordinator: S7b verified, follow-ups #278, #279 filed, S8a started)
+**Status:** S1–S5 and S7 in review; two live checklists ready (`docs/guides/siege-survival-smoke-test.md`, `docs/guides/siege-survival-economy-smoke-test.md`); **S8 running** (S8a results/settlement API done and verified 2026-11-08: API `4d9df4f`, plugin api-client `f01f9267`; **S8b plugin** session_01R1w2Uw1UvyoErXaAoq6gj8 running); G1 and S6 wait for #167 and #213
+**Last updated:** 2026-11-08 (coordinator: S8a verified, follow-up #281 filed, S8b started)
 **Charter:** [SIEGE_SURVIVAL_CHAIN.md](../ai-agents/handoffs/SIEGE_SURVIVAL_CHAIN.md) · **Coordinator prompt:**
 [2026-11-03-siege-survival-coordinator-prompt.md](../ai-agents/handoffs/2026-11-03-siege-survival-coordinator-prompt.md) ·
 **Plan:** [IMPLEMENTATION_PLAN.md §2a](../specs/siege-survival/IMPLEMENTATION_PLAN.md#2a-delivery-order-and-merge-gates-2026-11-03) ·
@@ -33,6 +33,24 @@ flagged decisions.)
   [#273](https://github.com/PandiO/knk-workspace/issues/273) (`SiegeEnchantBookListener` vs ghosts),
   [#274](https://github.com/PandiO/knk-workspace/issues/274) (readiness check of WorldGuard flags),
   [#275](https://github.com/PandiO/knk-workspace/issues/275) (cache keyed per scenario, not per lobby).
+- **S8a is in review (verified 2026-11-08), nothing to live-test alone:** knk-web-api `claude/siege-survival` **`4d9df4f`** and
+  knk-plugin `claude/siege-survival` **`f01f9267`** (S8a's api-client commit `eb4c44f`, applied by the coordinator from the
+  checksum-verified patch and compiled here because S8a's session could not run Gradle). Coordinator verification: API 3814 →
+  3858 passed, 0 failed, 88 skipped, `has-pending-model-changes` clean, migration `20261107111655_AddSiegeSurvivalResults` = 3
+  CreateTable + 6 CreateIndex / 3 DropTable with 0 removed snapshot lines; knk-api-client 335 → 340, 0 failures. Scope: 13 new API
+  files + the expected edits (DbContext, DI, DTOs, one currency reason, a 6-line guard and a 1-line abort hook in
+  `SiegeMatchService`, two test files); nothing in the #167/#213 files. S8a stopped once on the account's 5-hour limit after its
+  first slice (2026-11-07 11:28 UTC) and was resumed 2026-11-08 on the developer's go. **Decision wanted — S8a-1:** survival coins
+  are paid without the salary/rank multiplier the PvP reward applies (DESIGN §9 v1 table has none); if wanted, it goes on the API
+  side with a breakdown (S9). Flags S8a-2 … S8a-6 (enabled-only guard, results immutable, strict settlement mismatch, checkpoint
+  = telemetry, access) need no decision before S8b. Follow-ups: [#281](https://github.com/PandiO/knk-workspace/issues/281)
+  (reward-policy version as a frozen survival setting); [#277](https://github.com/PandiO/knk-workspace/issues/277) extended to
+  the player-result rows. Deploy note: API and plugin must move together from here (an S7b plugin against this API gets no PvP
+  reward for a survival loss and posts no result).
+- **S8b started 2026-11-08** (session_01R1w2Uw1UvyoErXaAoq6gj8) on knk-plugin `claude/siege-survival` from `f01f9267`: result
+  posting and settlement at match end, the survival result screen instead of the PvP one (S5-5), checkpoints, special-round
+  announcements, restart recovery, and a third checklist `docs/guides/siege-survival-results-smoke-test.md` (about 15 minutes,
+  same deploy: API `4d9df4f` with the three survival migrations).
 - **S7b is in review (verified 2026-11-07), the economy checklist is ready to run:** knk-plugin `claude/siege-survival`
   **`18a6001c`** (3 commits on `096b47f0`, 51 files, +5290/−5). Coordinator verification build: knk-core 2678 → 2703, knk-api-client
   335 unchanged, knk-paper 2580 → 2625, 0 failures; scope exactly as the S7b block lists: new code under `paper/siege/survival/`
@@ -255,6 +273,10 @@ test), `merged`, `blocked: <reason>`.
   plugin-sourced session, checklist (20 KB, two parts) and block (22 KB, two parts) as checksum-verified patches. Phase 4
   complete in review; #41 commented; #278, #279 filed. The API/plugin split (S7a/S7b) worked well: each session pushes its own
   repo and only the api-client commit and the bookkeeping travel as patches — S8 uses the same split.
+- 2026-11-08 (S8a done, S8b started): the developer noticed S8a's 5-hour stop and asked me to resume it rather than start a
+  fresh session (its context was intact; the first slice was already pushed). Resumed with one message; the rest came in
+  three slices. Its api-client commit was untested (Gradle refused in that session), so the coordinator compiled and tested
+  it before pushing. Patches byte-exact after the usual trailing-newline fix. #41 commented; #281 filed; #277 extended.
 - Next coordinator run: re-run the gate check; start G1 (`claude/gate-animated-rebuild`, from the trunks) as soon as #167,
   #213 and realtime are merged, S4 as soon as #167 and #180 are merged, S3 as soon as realtime, #213 and the arena-duels
   decision are in; then S5 (first live checkpoint), S6–S8 batched into one checklist, S9 last.
