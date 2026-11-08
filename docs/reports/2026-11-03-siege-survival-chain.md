@@ -1,7 +1,7 @@
 # Siege Survival implementation chain — progress report
 
-**Status:** S1–S5 and S7 in review; two live checklists ready (`docs/guides/siege-survival-smoke-test.md`, `docs/guides/siege-survival-economy-smoke-test.md`); **S8 running** (S8a results/settlement API done and verified 2026-11-08: API `4d9df4f`, plugin api-client `f01f9267`; **S8b plugin** session_01R1w2Uw1UvyoErXaAoq6gj8 running); G1 and S6 wait for #167 and #213
-**Last updated:** 2026-11-08 (coordinator: S8a verified, follow-up #281 filed, S8b started)
+**Status:** **S1–S5, S7 and S8 in review** on the feature branches (deploy together: API `4d9df4f` with the three survival migrations, plugin `f6db7a36`); three live checklists ready on workspace `claude/siege-survival` (`siege-survival-smoke-test.md`, `siege-survival-economy-smoke-test.md`, `siege-survival-results-smoke-test.md`, about 90 minutes in one sitting); **no link running**: S6 and G1 wait for #167 and #213, S9 waits for the web building blocks (#95, #33, #187, #30, #39) or a waiver
+**Last updated:** 2026-11-08 (coordinator: S8b verified, follow-up #282 filed, chain paused at the gates)
 **Charter:** [SIEGE_SURVIVAL_CHAIN.md](../ai-agents/handoffs/SIEGE_SURVIVAL_CHAIN.md) · **Coordinator prompt:**
 [2026-11-03-siege-survival-coordinator-prompt.md](../ai-agents/handoffs/2026-11-03-siege-survival-coordinator-prompt.md) ·
 **Plan:** [IMPLEMENTATION_PLAN.md §2a](../specs/siege-survival/IMPLEMENTATION_PLAN.md#2a-delivery-order-and-merge-gates-2026-11-03) ·
@@ -33,6 +33,28 @@ flagged decisions.)
   [#273](https://github.com/PandiO/knk-workspace/issues/273) (`SiegeEnchantBookListener` vs ghosts),
   [#274](https://github.com/PandiO/knk-workspace/issues/274) (readiness check of WorldGuard flags),
   [#275](https://github.com/PandiO/knk-workspace/issues/275) (cache keyed per scenario, not per lobby).
+- **S8b is in review (verified 2026-11-08), the results checklist is ready to run:** knk-plugin `claude/siege-survival`
+  **`f6db7a36`** (4 commits on `f01f9267`, 36 files, +3373/−10). Coordinator verification build: knk-core 2703 → 2713, knk-api-client
+  340 unchanged, knk-paper 2625 → 2657, 0 failures; scope exactly as the S8b block lists (new code under
+  `paper/siege/survival/{results,checkpoint,recovery}/` and `core/survival/{result,checkpoint}/`; additive hunks `KnKPlugin.java`
+  +7, `SiegeModeHooks.java` +9, `SiegeService.java` 2 one-line hunks, `config.yml` +3; gate files, `SiegeLobbyRuntime`,
+  `SiegeScoreboardPresenter` and `knk-api-client` untouched). S8b also wired S7b's dead `SurvivalMatch.onMemberLeft` (leaver
+  forfeits); the S7b checklist's step 13 got the matching note (`b9e412c`). **Checklist**
+  `docs/guides/siege-survival-results-smoke-test.md` on workspace `claude/siege-survival` (`bc5ef9a`, checksum-verified patch):
+  15 minutes continuing the S5 and S7b sittings on the same deploy. Flags S8b-1 … S8b-9 need no decision before the test;
+  S8b-4 (PvP outcome title) and S8b-1 (equipment mode sent as null) are filed as
+  [#282](https://github.com/PandiO/knk-workspace/issues/282) for S9.
+- **The live sitting (about 90 minutes, one deploy):** API `claude/siege-survival` `4d9df4f` (`dotnet ef database update`
+  adds the three `siege_survival_*` migration sets; the 18 form seeds), plugin `claude/siege-survival` `f6db7a36`, dev seed
+  `4cc1263`. Run in order: `siege-survival-smoke-test.md` (S5 checkpoint + S3's six PvP regression steps, 45 min),
+  `siege-survival-economy-smoke-test.md` (kits, balance, shop, pay, Mystery Box, item tags, cleanup, 30 min),
+  `siege-survival-results-smoke-test.md` (result screen, settlement, checkpoints, abort, PvP unchanged, restart, 15 min).
+  Decisions collected for after the sitting: S7b-1 (§8 kit re-grant sentence), S8a-1 (salary multiplier on survival coins),
+  the S5 targeting/navigation defaults (S5-9 … S5-11), S5-5/S8b-4 (what the PvP pipeline still shows).
+- **What opens the next links (2026-11-08):** nothing is running. **S6** (repairs/frontier) needs **G1** (animated rebuild),
+  which needs **#167** and **#213** merged; **S9** needs the web building blocks (#95, #33, #187, #30, #39) merged or the
+  developer's waiver to start on `claude/siege-survival` of knk-web-app. Merge order unchanged: #167 → #213 → arena-duels
+  decision → web building blocks. After #167: remove and re-add the three survival migrations on the merged API branch.
 - **S8a is in review (verified 2026-11-08), nothing to live-test alone:** knk-web-api `claude/siege-survival` **`4d9df4f`** and
   knk-plugin `claude/siege-survival` **`f01f9267`** (S8a's api-client commit `eb4c44f`, applied by the coordinator from the
   checksum-verified patch and compiled here because S8a's session could not run Gradle). Coordinator verification: API 3814 →
@@ -277,9 +299,14 @@ test), `merged`, `blocked: <reason>`.
   fresh session (its context was intact; the first slice was already pushed). Resumed with one message; the rest came in
   three slices. Its api-client commit was untested (Gradle refused in that session), so the coordinator compiled and tested
   it before pushing. Patches byte-exact after the usual trailing-newline fix. #41 commented; #281 filed; #277 extended.
-- Next coordinator run: re-run the gate check; start G1 (`claude/gate-animated-rebuild`, from the trunks) as soon as #167,
-  #213 and realtime are merged, S4 as soon as #167 and #180 are merged, S3 as soon as realtime, #213 and the arena-duels
-  decision are in; then S5 (first live checkpoint), S6–S8 batched into one checklist, S9 last.
+- 2026-11-08 (S8b done): phase 5 complete in review within the day; patches byte-exact; #41 commented; #282 filed. With S8 the
+  chain has no open gate left: S6/G1 wait for #167/#213, S9 for the web blocks or a waiver. The coordinator stops starting
+  links here and waits for the developer's live sitting, merges or a waiver; the three checklists are the next action.
+- Next coordinator run: re-run the gate check; start **G1** (`claude/gate-animated-rebuild`, from the trunks) as soon as #167 and
+  #213 are merged, then **S6** on the feature branch; start **S9** when the web building blocks are merged or the developer
+  waives them (S9 = web routes/forms for the 18 survival entities, lobby runtime flag #265, HUD/scoreboard #271, menus,
+  history page on `GET api/siege-survival/results`, outcome title #282); after #167 merges, re-add the three survival
+  migrations on the merged API branch; apply the developer's decisions from the live sitting as follow-up links.
 
 ## Link blocks
 
