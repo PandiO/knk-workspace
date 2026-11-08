@@ -4,6 +4,26 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Staff player profile: status strip, tabs, freeze/unfreeze, timeline, paged audit; better player search** —
+  [PandiO/knk-workspace#119](https://github.com/PandiO/knk-workspace/issues/119) (chain 3 link V3), knk-web-app
+  `claude/player-profile-119` (**contains** V2's `claude/dashboard-export-205`, V1 and chain 2's X1), not merged, not
+  live-tested. No API change.
+  - The profile header shows online / last seen, mode, **Frozen**, **Payments locked**, premium tier and account flags as
+    chips, with **Freeze** (reason required, saved on the player and in the audit log) and **Unfreeze**; while frozen,
+    since when, by whom and why.
+  - The cards are on six tabs: Overview, Economy, Permissions, Moderation, Activity, Privacy (`?tab=` in the URL).
+  - Activity has a **per-player timeline** (audit log and, with `knk.admin.currency.history`, the balance ledger, newest
+    first, "Load older", filter chips) and the **audit log paged by the server** with an action filter, in place of the
+    last 20 entries.
+  - Actions without their node are disabled with "Requires <node>" (freeze, unfreeze, groups, grants, kit grant,
+    payment lock). A freeze in game shows on an open profile at once (realtime on).
+  - The profile no longer crashes on a summary without groups, permissions, title or salary.
+  - Moderation → All players: a UUID without dashes finds the player, sort by username, email or coins, the search in
+    the URL (Back returns to it), a Last seen column, and **Recently opened** profiles (this browser).
+  - Smoke test: [guides/player-profile-smoke-test.md](guides/player-profile-smoke-test.md).
+  - Needs the API later (#119 comment): unfreeze reason, frozen state in the profile summary, game sessions in the
+    timeline, an online filter and frozen/locked columns in the player search, sort by last seen, kick/ban from the web.
+
 - **Dashboard: checkbox selection and Export CSV** — [PandiO/knk-workspace#205](https://github.com/PandiO/knk-workspace/issues/205)
   export part (chain 3 link V2), knk-web-app `claude/dashboard-export-205` (**contains** V1's
   `claude/web-fixes-266-263-258` and through it chain 2's `claude/realtime-web-live-183`), not merged, not live-tested.
