@@ -4,7 +4,17 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
-(Nothing at the moment.)
+- **Web app fixes: Entity setup at phone width, colour baseline, landing slideshow fade** —
+  [PandiO/knk-workspace#266](https://github.com/PandiO/knk-workspace/issues/266),
+  [#263](https://github.com/PandiO/knk-workspace/issues/263), [#258](https://github.com/PandiO/knk-workspace/issues/258)
+  (chain 3 link V1), knk-web-app `claude/web-fixes-266-263-258` (**contains** chain 2's `claude/realtime-web-live-183`,
+  X1 with W1–W4: merging it merges chain 2's web app too), not merged, not live-tested. Entity setup (`/forms/{type}`)
+  no longer scrolls sideways at 390 px (it was 785 px wide): the configuration lists' buttons wrap under the title and
+  the tables scroll inside their cards. `WorldBoundFieldRenderer` and `BannerLayersField` moved to the theme tokens, so
+  no file is over its raw colour baseline, and `npm run test:ci` now fails when one is. The landing slideshow fades the
+  image out to black and then the next one in (1.25 s each), preloads the next image, and swaps without fades under
+  `prefers-reduced-motion`. No API change, no setting. Checklist:
+  [design themes guide § 8](guides/design-themes-comparison.md#8-smoke-test-entity-setup-at-phone-width-colour-baseline-landing-fade-chain-3-v1).
 
 ## 2026-11-05
 

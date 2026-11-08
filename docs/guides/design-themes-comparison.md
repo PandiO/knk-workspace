@@ -2,7 +2,7 @@
 
 **Status:** Compared live by the developer on 2026-11-03 (all screens work; `brand` preferred, all three themes and the
 picker stay); fix round done on knk-web-app `claude/design-tokens-95` (§ 6). Merged 2026-11-03 (knk-web-app `main` `c02b365`)
-**Last updated:** 2026-11-04 (§ 7 page background, #231: approved, on by default; toggle in the cogwheel menu); 2026-11-04 (theme
+**Last updated:** 2026-11-08 (§ 5 raw colours checked in `test:ci`; § 8 smoke test of chain 3 V1 — #266, #263, #258, knk-web-app `claude/web-fixes-266-263-258`, not merged); 2026-11-04 (§ 7 page background, #231: approved, on by default; toggle in the cogwheel menu); 2026-11-04 (theme
 switcher as a cogwheel for every visitor, knk-web-app `main` `865fe53`); 2026-11-03 (fourth theme `brand-red`); 2026-11-03 (fix round after the live comparison: brand primary orange, heading font on player pages
 only, full-bleed auth pages, picker for alpha testers)
 **Issue:** [PandiO/knk-workspace#95](https://github.com/PandiO/knk-workspace/issues/95) (token layer, contrast rules,
@@ -185,8 +185,11 @@ admin player profile and the public player profile, the landing page CTA and all
 Not migrated (still raw blue/red/green/amber in places; neutrals do follow the theme): the form and display
 configuration builders, Game Settings and its cards, Siege settings, lootboxes, discovery, roads, Minecraft catalogue,
 invitations and mail admin, moderation list, economy pages, owner pages (diagnostics, privacy, analytics),
-leaderboards and statistics, siege match pages, account pages, world-task renderers (`Workflow/*`). `npm run
-lint:colors` in knk-web-app lists them with counts and reports any file that gains raw colour classes.
+leaderboards and statistics, siege match pages, account pages, world-task renderers (`Workflow/*`; the codemod's
+swaps are done in `WorldBoundFieldRenderer`, #263). `npm run lint:colors` in knk-web-app lists them with counts and
+reports any file that gains raw colour classes; since #263 `npm run test:ci` fails on such a file too
+(`src/__tests__/rawColorsBaseline.test.ts`). Fix a file over its baseline with the tokens (run the codemod on it), not
+by raising the baseline.
 
 ## 6. Fix round after the live comparison (2026-11-03)
 
@@ -292,3 +295,32 @@ Not covered: status-coloured text (red/green/amber) placed straight on the page 
 8. Phone width (390 px): the image covers the screen without stretching.
 9. Two tabs: `?bg=on` and `?bg=off` side by side; reload each, the choice stays per tab.
 10. Background off (menu or `?bg=off`): the app looks exactly as without it.
+
+## 8. Smoke test: Entity setup at phone width, colour baseline, landing fade (chain 3 V1)
+
+knk-web-app `claude/web-fixes-266-263-258` ([#266](https://github.com/PandiO/knk-workspace/issues/266),
+[#263](https://github.com/PandiO/knk-workspace/issues/263), [#258](https://github.com/PandiO/knk-workspace/issues/258)).
+The branch contains chain 2's web app (`claude/realtime-web-live-183`), so test it on top of that. No API change, no
+setting. Do steps 1–4 in `current` and `brand`, with the page background on and off (`?theme=…&bg=on|off`).
+
+1. **Entity setup at 390 px** (dev tools device mode, 390 × 844; content staff): Dashboard → Town → ⚙. The page does
+   not scroll sideways (in the console `document.documentElement.scrollWidth` is 390). "Create Form", "Create Form as
+   Default" and "Import / Seeds" sit under the title and wrap; the same for the display configurations.
+2. Same page: the configuration table scrolls sideways inside its card; at its right end "Use" and ⋮ work, and the ⋮
+   menu opens fully on screen. Open "Default Table Columns": the text sits above "Save Columns". With a saved draft,
+   the Saved Progress row shows its details on separate lines and Resume under them.
+3. **1600 px:** Entity setup looks as before (title and buttons on one row, saved progress on one line).
+4. **Colours (#263):** a form with a banner-layers field (shield item blueprint) and a world-task field (e.g. a
+   domain's region step): labels, borders and the status boxes (info, warning, error, success) look as before in
+   `current` and follow the theme in `brand`. In knk-web-app `npm run lint:colors` says "No file has more raw colour
+   classes than the baseline".
+5. **Landing fade (#258):** open `/` and keep the mouse on the text block or outside the window (over the background
+   the slideshow pauses, as before). On load the first image fades in from black. Every 6 s the image fades out to
+   black (about 1.25 s) and the next one fades in (about 1.25 s); no cut to black, no flash. Wait for image 9 → image 1
+   (about a minute): the same.
+6. Dev tools → Network, "Slow 4G", reload: the shown image stays until the next one has loaded; the screen is never
+   black while waiting.
+7. **Reduced motion:** turn on the system's reduce-motion setting (or dev tools → Rendering → "Emulate CSS media
+   feature prefers-reduced-motion: reduce"): the images change at once, without fades and without the black step. It
+   follows the setting without a reload.
+8. Other pages with the page background (#231, e.g. the dashboard with `?bg=on`) are unchanged.
