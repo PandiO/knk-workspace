@@ -1,7 +1,9 @@
 # Dashboard access model — view, create, edit, delete, bulk delete and export
 
-**Status:** Proposed design, **no code**. Waiting for the developer's answers to the open questions (§7).
-**Last updated:** 2026-11-08 (first version, chain 3 link D1)
+**Status:** **Decided 2026-11-08.** The developer answered all 11 questions of the proposal the same day; the record is
+in § 7. No code yet: the work is planned as links AM1–AM4 (§ 5).
+**Last updated:** 2026-11-08 (decided version, with read gating per area, `knk.admin.export` and the read-endpoint
+appendix); 2026-11-08 (first version, chain 3 link D1)
 **Issue:** [PandiO/knk-workspace#280](https://github.com/PandiO/knk-workspace/issues/280) (blocks the bulk delete part of
 [#205](https://github.com/PandiO/knk-workspace/issues/205)); roadmap [#24](https://github.com/PandiO/knk-workspace/issues/24).
 **Related:** alpha hardening D7 and WP1/WP3 ([alpha-hardening/IMPLEMENTATION_PLAN.md](../alpha-hardening/IMPLEMENTATION_PLAN.md)
@@ -144,7 +146,9 @@ dashboard.
   holds the node.
 - So the audience is **who may view**. Delete rights never change who gets an event.
 
-## 2. Goals and the developer's wishes
+## 2. Goals and decisions
+
+### 2.1 What the developer asked for
 
 From #280 and the #205 decisions of 2026-11-06:
 
@@ -154,15 +158,31 @@ From #280 and the #205 decisions of 2026-11-06:
 3. **Bulk delete is for owners and admins only.**
 4. **Bulk delete leans towards all types.**
 5. **Export** (#205): the table's columns in table order with the readable values. With nothing selected it exports the
-   current search across all pages, keeping the sort. It needs **view access only**, so it can ship before this design
-   (chain 3 V2).
+   current search across all pages, keeping the sort.
 6. **Existing grants keep working.** Seeds and migrations are additive only.
 7. Enforced **in the API** (rules pinned by tests), **in the web app** (route table, buttons, bulk bar) and **in
    realtime**.
 
-Not goals: changing the plugin's in-game permissions; gating API reads per area (see Q9); per-record ownership rules.
+### 2.2 Decisions of 2026-11-08
 
-## 3. Alternative models
+| # | Decision |
+|---|---|
+| 1 | Model A: global `knk.admin.delete` / `knk.admin.delete.bulk` on top of the area nodes. |
+| 2 | Bulk delete needs the area node, `knk.admin.delete` and `knk.admin.delete.bulk`. |
+| 3 | `knk.admin.delete` is backfilled to every explicit area-node holder (additive migration). |
+| 4 | Only the owner (`*`) may grant `knk.admin.delete.bulk`, also through wildcards that cover it. |
+| 5 | Every dashboard type needs `knk.admin.delete` to delete, users and permission groups included. |
+| 6 | Bulk delete is allowed for every type except users and permission groups. |
+| 7 | Bulk delete has its own endpoint, `POST api/Dashboard/bulk-delete`: at most 100 ids, a result per row, one audit entry. |
+| 8 | Any area node opens the dashboard. Each user sees only their area's types, and live updates follow the same rule. |
+| 9 | **Every API read (lists and details) of a dashboard type needs its area node.** The proposal had recommended keeping reads open. |
+| 10 | **A new node, `knk.admin.export`, is needed to export any type.** The proposal had recommended no node. |
+| 11 | An action the user may not do: New, Edit and Delete show disabled with "Requires <node>"; the bulk Delete button is hidden. |
+
+Not goals: changing the plugin's in-game permissions; per-record ownership rules beyond the existing ones (drafts,
+world tasks, workflow sessions).
+
+## 3. Alternative models (A chosen, decision 1)
 
 The actions are view, create, edit, delete one, bulk delete and export. In every model:
 
@@ -191,16 +211,17 @@ The actions are view, create, edit, delete one, bulk delete and export. In every
 | Backward compatibility | Area nodes keep create and edit. Delete needs one extra node; a backfill grants it to every explicit area holder, so nobody loses a delete | Same backfill, but per area (one node per area holder) | Needs a resolver change (area node implies its types) or a large backfill. The area nodes lose meaning |
 | Ease of granting | 2 new nodes, one grant each | 2 × 7 areas = 14 new nodes | ~200 nodes; needs a picker UI that doesn't exist yet (KNG-62) |
 | Expressiveness | "Deletes whatever they can edit". Can't say "delete world but not content" for someone who edits both | Delete per area | Everything per type |
-| Escalation guard | Unchanged per node. One small rule for bulk (Q4) | Unchanged; the bulk rule is needed per area | Unchanged; huge group node sets make the "holds every node" group check slow and brittle |
+| Escalation guard | Unchanged per node. One small rule for bulk (decision 4) | Unchanged; the bulk rule is needed per area | Unchanged; huge group node sets make the "holds every node" group check slow and brittle |
 | Wildcards | `knk.admin.*` (Admin) and `*` (owner) cover both. `knk.admin.delete.*` = single + bulk. Kits and siege are outside `knk.admin`, but the delete node is global, so that doesn't matter | `knk.admin.*` covers the `knk.admin.*` areas only. `knk.kit.manage.delete` and `knk.siege.admin.manage.delete` need `knk.kit.*` / `knk.siege.*`, so Admin would not get them | `knk.admin.entity.*` covers all; per-type wildcards work |
 | Realtime audience | No change: the audience is "who may view" | No change | Natural per-type audience, but every type needs a node mapping |
 | Web app checks | 3 nodes per screen (area, delete, bulk) | 3 nodes per area | Up to 5 per type |
 | Cost | Small: attributes, one migration, one guard rule, one bulk endpoint | Medium | Large |
 
-**A is the smallest model that meets every wish**, and it stays open to B later. A per-area delete node can be added
-next to `knk.admin.delete` as an extra requirement without renaming anything, with the same AND pattern.
+Model A was chosen (decision 1). It is the smallest model that meets every wish, and it stays open to B later: a
+per-area delete node can be added next to `knk.admin.delete` as an extra requirement, without renaming anything, by
+the same AND pattern.
 
-## 4. Recommended model (A)
+## 4. Decided model
 
 ### 4.1 Nodes
 
@@ -209,256 +230,520 @@ New constants in `StaffPermissions`:
 | Constant | Node | Meaning | Matched by |
 |---|---|---|---|
 | `Delete` | `knk.admin.delete` | Delete **one** record of a dashboard type whose area node you hold | `knk.admin.delete.*`, `knk.admin.*`, `knk.*`, `*` |
-| `DeleteBulk` | `knk.admin.delete.bulk` | Delete **several** records in one action (bulk bar); also needs `Delete` and the area node | `knk.admin.delete.*`, `knk.admin.*`, `knk.*`, `*` |
+| `DeleteBulk` | `knk.admin.delete.bulk` | Delete **several** records in one action; also needs `Delete` and the area node. **Only the owner hands it out** (§ 4.4) | `knk.admin.delete.*`, `knk.admin.*`, `knk.*`, `*` |
+| `Export` | `knk.admin.export` | Export rows of a dashboard type whose area node you hold (§ 4.8) | `knk.admin.*`, `knk.*`, `*` |
 
-Unchanged:
+The area nodes are unchanged. Each one now means **view**, create and edit in its area; view is new (decision 9):
+`knk.admin.content`, `knk.admin.world`, `knk.kit.manage`, `knk.admin.lootbox.manage`, `knk.siege.admin.manage`,
+`knk.admin.road`, `knk.admin.user.manage` (users and viewing permission groups) and `knk.admin.user.perm` (permission
+group writes).
 
-- **Area nodes:** `knk.admin.content`, `knk.admin.world`, `knk.kit.manage`, `knk.admin.lootbox.manage`,
-  `knk.siege.admin.manage`, `knk.admin.road`, and `knk.admin.user.manage`/`knk.admin.user.perm`. Each keeps meaning
-  view, create and edit in its area.
-- **No node for view, create, edit or export** beyond the area nodes (Q8, Q10).
+### 4.2 One registry: `DashboardAccess`
 
-The rules per action:
+A new static registry in knk-web-api (for example `Attributes/DashboardAccess.cs`) is the single source of truth. It
+has one entry per `[FormConfigurableEntity]` type, holding:
 
-| Action | API rule | Web app shows it when the user holds |
-|---|---|---|
-| View (list, detail) | reads unchanged: any logged-in user (Q9) | the dashboard gate (Q8) and, per type, its area node |
-| Export (CSV) | none of its own (existing reads) | view |
-| Create, edit | area node (unchanged) | area node |
-| Delete one | area node **and** `knk.admin.delete` | area + `knk.admin.delete` |
-| Bulk delete | new bulk endpoint: `knk.admin.delete.bulk` **and** `knk.admin.delete` **and** each type's area node | area + delete + bulk |
+- **area** and **area node:** view, create, edit, and the realtime audience;
+- **read nodes:** the area node plus the "consumer" page nodes of § 4.6.2;
+- **deletable** and **bulk deletable;**
+- **delegates to the type's own services:** search, get by id, delete, and a label selector (`Name`, `DisplayName`,
+  `Username`, `Key`, …).
 
-### 4.2 Default group assignments
-
-| Group | Delete one | Bulk delete | How |
+| Area | Area node | Types (dashboard) | Bulk delete |
 |---|---|---|---|
-| Owner (`*`) | yes | yes | wildcard, nothing to seed |
-| Admin | yes | yes | `knk.admin.*` on the alpha. The migration also grants both nodes to `Admin` unless already covered (`GrantSql` skips covered nodes, so it's a no-op on the alpha and real on a migrations-only database) |
-| Moderator | only where it holds an area node explicitly (backfill) | no | backfill, Q3 |
-| Staff | yes for what it already deletes today (kits, siege setup, users), through the backfill, since it holds `knk.kit.manage`, `knk.siege.admin.manage` and `knk.admin.user.manage` explicitly | no | backfill, Q3 |
-| Default, Alpha Tester, premium | no | no | — |
-| Any user holding an area node directly | yes (backfill) | no | backfill |
+| Content | `knk.admin.content` | Category, Tag, Grade, ItemBlueprint, EnchantmentDefinition, BannerDesign, BannerLayer, Clan, MinecraftBlockRef, MinecraftMaterialRef, MinecraftEnchantmentRef | yes |
+| World | `knk.admin.world` | Domain, Town, District, Structure, Street, Location, GateStructure, GateDoor, DomainSubRegion | yes |
+| Kits | `knk.kit.manage` | Kit | yes |
+| Lootboxes | `knk.admin.lootbox.manage` | LootboxType, LootboxSpecialEntry, LootboxSpawnArea | yes |
+| Siege | `knk.siege.admin.manage` | SiegeScenario, SiegeTeam, SiegeLobby, SiegeObjective, SiegeSpawnpoint | yes |
+| Roads | `knk.admin.road` | RoadProfile | yes |
+| Players | `knk.admin.user.manage` (write of groups: `knk.admin.user.perm`) | User, PermissionGroup | **no** (decision 6) |
 
-A "content editor" or "builder" rank is not seeded (none exists). The developer creates it with `knk.admin.content` or
-`knk.admin.world` and, if wanted, `knk.admin.delete`.
+- **Other `[FormConfigurableEntity]` types** (link rows such as CategoryTag, snapshots, ledger and audit rows,
+  SiegeMatch, …) also get an entry with their area, so that the explorer and realtime have an area for them. They are
+  marked view-only (`deletable: false`).
+- **Three places use the registry:** the bulk-delete, export and lookup endpoints; `RealtimeWebChangeMap.NodeFor`; and
+  the metadata endpoint. `EntityMetadataDto` gains `area`, `accessNode`, `readNodes`, `deletable` and `bulkDeletable`,
+  so the web app never hard-codes a node per type.
+- **A test** checks that every `[FormConfigurableEntity]` type is in the registry (or on a pinned internal list), and
+  that every type `getDeleteFunctionForEntity` handles is `deletable`.
 
-### 4.3 How existing grants keep working
+### 4.3 Rules per action
 
-- **Create and edit:** unchanged. The area node still gates them.
-- **Single delete:** the migration's backfill gives `knk.admin.delete` to every holder (user or group) with an
-  explicit, active, granted area node that a dashboard delete checks. A holder already covered by a wildcard or an
-  explicit deny is skipped. So on day one everybody who can delete today still can. The developer then removes the
-  node where they don't want it (Q3 option B skips the backfill instead).
-- **Bulk delete:** new, so nobody loses anything. Only `*` and `knk.admin.*` get it, plus the explicit Admin grant.
-- **Denies** work as usual:
-  - a user-level `knk.admin.delete.bulk = false` beats a group's `knk.admin.*`, because the user is first in the chain;
-  - inside the Admin group, an exact deny beats its own `knk.admin.*`, because it is more specific.
-- **Plugin:** unchanged. `RequireServiceOrPermission` passes the key, and the plugin deletes no dashboard type.
+| Action | API rule (web users; the plugin passes with its key unless noted) | Web app |
+|---|---|---|
+| Open the dashboard | — (UI only) | route open to holders of **any** area node; the explorer lists only types whose area node is held (decision 8) |
+| View (list, search, detail) | the type's **read nodes** (§ 4.6) | shown for its area's types |
+| Pick or label another type (pickers, relation labels) | **lookup** endpoints: any area node (§ 4.6.3) | lookup mode when the full read isn't allowed |
+| Create, edit | area node (unchanged) | New / New with / Edit disabled with "Requires <node>" without it |
+| Delete one | area node **and** `knk.admin.delete` | Delete disabled with "Requires knk.admin.delete" (or the area node) |
+| Bulk delete | `POST api/Dashboard/bulk-delete`: `knk.admin.delete.bulk` **and** `knk.admin.delete` **and** the type's area node; web users only | "Delete (n)" in the selection bar, **hidden** without all three or for users/groups |
+| Export | `POST api/Dashboard/export`: `knk.admin.export` **and** the type's area node; web users only | Export in the selection bar, disabled with "Requires knk.admin.export" |
 
-### 4.4 Escalation guard
+### 4.4 Groups, grants and the escalation guard
 
-- No change for `knk.admin.delete`. Like any node, it can only be handed out by someone who holds it, never to oneself,
-  and only in groups ranked below one's own.
-- **`knk.admin.delete.bulk` gets one rule (Q4 recommendation B):** only a `*` holder may grant or deny it, or a wildcard
-  that covers it (`knk.admin.delete.*`, `knk.admin.*`, `knk.*`). That keeps "owner and admin only" true: an Admin can't
-  pass bulk delete to a Moderator.
-  - **Side effect:** an Admin can no longer grant `knk.admin.*` to anyone. On today's alpha nobody but the owner does.
-  - **Implementation:** `CanGrantNodeAsync` checks a short `OwnerGrantOnly` list, plus "a wildcard whose prefix covers
-    a listed node".
-  - `HoldsEveryGroupNodeAsync` needs no change. A group containing the node can only be assigned by someone who holds
-    it, which is Admin (rank blocks peers) or the owner.
+**Default assignments** (all additive, § 4.5):
 
-### 4.5 Migration and seed plan (additive only)
+| Group | Delete one | Bulk delete | Export | How |
+|---|---|---|---|---|
+| Owner (`*`) | yes | yes | yes | wildcard |
+| Admin | yes | yes | yes | `knk.admin.*` on the alpha. Plus an explicit grant of all three where it isn't covered (a migrations-only database) |
+| Every holder of an explicit area node (groups and users: Staff, any content/world rank, …) | yes (backfill, decision 3) | no | yes (backfill, like decision 3) | migration |
+| Moderator, Default, Alpha Tester, premium | only through an explicit area node | no | same | — |
 
-One data migration in knk-web-api, `SeedDashboardDeleteNodes`, built with `dotnet ef migrations add` and with no
-schema change:
+**Guard rule for bulk delete** (decision 4), in `PermissionEscalationGuard`:
 
-1. **Admin grants:** `GrantSql("Admin", "knk.admin.delete")` and `GrantSql("Admin", "knk.admin.delete.bulk")` (the
-   helper from `SeedCommandPermissionNodes`). Each is skipped when Admin or an ancestor already has a grant, a deny or a
-   covering wildcard.
-2. **Backfill:** grant `knk.admin.delete` (value 1, no expiry) to every holder in `permission_grants` with an active
-   grant (value 1, not expired) of `knk.admin.content`, `knk.admin.world`, `knk.kit.manage`,
-   `knk.admin.lootbox.manage`, `knk.siege.admin.manage`, `knk.admin.road`, `knk.admin.user.manage` or
-   `knk.admin.user.perm`.
-   - Skip a holder that already has a grant or deny of `knk.admin.delete`, or a wildcard covering it.
-   - A group's members inherit the grant through the group. Per Q5 the list is every area a dashboard delete checks.
-3. **Down:** removes only the value-1, no-expiry `knk.admin.delete` / `knk.admin.delete.bulk` grants on the holders it
-   could have touched. It never touches a deny, as the earlier seed migrations do. Like those, Down can't tell a grant
-   it added from one added by hand afterwards with the same shape; this is documented in the migration comment.
-4. **Tests:**
-   - a unit test of the SQL shape, like `Tests/.../Migrations/SeedCommandPermissionNodesTests.cs`;
-   - a `[MySqlFact]` like `MySql/SeedCommandPermissionNodesMySqlTests.cs` covering: alpha shape (`knk.admin.*` on
-     Admin → no rows), migrations-only shape (rows on Admin), backfill on Staff and on a user with `knk.admin.world`,
-     deny respected, idempotent re-run.
+- **New list.** `OwnerGrantOnly = { "knk.admin.delete.bulk" }`. A node is *covered* when it equals a listed node, or is
+  a wildcard that matches one by `TryMatch` rules (`*`, `knk.*`, `knk.admin.*`, `knk.admin.delete.*`, …).
+- **Granting.** `CanGrantNodeAsync`: granting, denying or revoking a covered node needs `*`. The message is "Only the
+  owner can hand out bulk delete."
+- **Groups.** `CanAssignGroupAsync` and `CanInheritFromGroupAsync` need `*` when the group's parent chain grants a
+  covered node. Otherwise a group made by the owner could carry bulk delete to people an Admin picks.
+- **Effect on Admins.** An Admin can no longer grant `knk.admin.*`, `knk.admin.delete.*` or `knk.*`, nor assign a group
+  that carries them. Assigning such a group was already blocked by rank for the Admin group itself. `knk.admin.delete`
+  and `knk.admin.export` stay grantable by anyone who holds them, as every node is today.
+- **The plugin** is not guard-checked (unchanged). The in-game `/knk user perm` checks its own nodes.
 
-### 4.6 Enforcement points
+**Denies work as usual.** A user-level `knk.admin.delete.bulk = false` beats a group's `knk.admin.*`, because the user
+comes first in the chain. An exact deny inside the Admin group beats its own `knk.admin.*`, because it is more
+specific.
+
+### 4.5 Migration and seed (additive only)
+
+One data migration in knk-web-api, `SeedDashboardActionNodes`, made with `dotnet ef migrations add`. It changes no
+schema.
+
+1. **Admin:**
+   - `GrantSql("Admin", node)` for `knk.admin.delete`, `knk.admin.delete.bulk` and `knk.admin.export`, using the helper
+     from `SeedCommandPermissionNodes`.
+   - Each grant is skipped when Admin or an ancestor already has a grant, a deny or a covering wildcard. On the alpha
+     that means all three are skipped (`knk.admin.*`).
+2. **Backfill:**
+   - **Who:** every holder (user or group) with an active, explicit grant (value 1, not expired) of `knk.admin.content`,
+     `knk.admin.world`, `knk.kit.manage`, `knk.admin.lootbox.manage`, `knk.siege.admin.manage`, `knk.admin.road`,
+     `knk.admin.user.manage` or `knk.admin.user.perm`.
+   - **What:** `knk.admin.delete` and `knk.admin.export`, each value 1 with no expiry.
+   - **Skipped:** a holder (or an ancestor group) that already has a grant or deny of the node, or a covering wildcard.
+   - **Not backfilled:** `knk.admin.delete.bulk`. Nobody loses anything, because it's new.
+3. **Down:** removes only value-1, no-expiry grants of the three nodes on the holders it could have touched. It never
+   touches a deny. Like the earlier seed migrations, Down can't tell its own grant from an identical one added by hand
+   later; the migration comment says so.
+4. **Effect on the alpha:**
+   - **Admin:** nothing changes (wildcard).
+   - **Staff:** gets `knk.admin.delete` and `knk.admin.export`. It holds `knk.kit.manage`, `knk.siege.admin.manage` and
+     `knk.admin.user.manage` explicitly, so it keeps deleting kits, siege setup and users as today.
+   - **Owner:** nothing changes.
+
+### 4.6 Read gating per area (decision 9)
+
+#### 4.6.1 What changes
+
+- **Before:** every read of a dashboard type was open to any logged-in user (default rule).
+- **After:**
+  - **Full reads** (`GET` list and detail, sub-resource `GET`s and `POST …/search`) need one of the type's **read
+    nodes**, or the plugin's key.
+  - **Lookups** (§ 4.6.3) and **form runtime** reads (§ 4.6.4) need **any area node**.
+  - **Public, plugin-only and self** reads keep their rules.
+- **The categories, per endpoint, are in Appendix A:**
+
+| Category | Rule | Examples |
+|---|---|---|
+| **F** full read | the type's read nodes or the plugin key | `GET api/Towns`, `GET api/ItemBlueprints/{id}`, `POST api/Domains/search` |
+| **L** lookup | any area node or the plugin key | new `POST api/Lookup/{type}/search`, `GET api/Lookup/{type}/{id}`; `GET api/Clans/default-for-town/{townId}` |
+| **R** form runtime | any area node or the plugin key | form/display configurations, metadata, entity type configuration, validation rules and their `validate`/`resolve` POSTs, banner pattern keys |
+| **O** own records | any area node + the existing ownership check | drafts (`FormSubmissionProgress`), workflow sessions, `WorldTasks/active-for-me`, a task by its session |
+| **P** public | `[AllowAnonymous]`, unchanged | `EnchantmentDefinitions/public/info`, Leaderboards, Players, SiegeMatches, Auth, Health, invitation and claim checks, `validate-link-code`, `check-duplicate` |
+| **G** game server | `RequirePluginService`, unchanged | `WorldTasks/open`, kit claim/purchase, lootbox spawn and token writes |
+| **U** already stricter | the action's own rule, unchanged | Lootbox reads (`knk.admin.lootbox.manage`), user and permission group reads (`knk.admin.user.manage` or self) |
+
+- **Self reads stay as they are:**
+  - `GET api/Users/{id}` and `…/permissions/check|effective` stay `RequireServiceSelfOrPermission(ManageUsers)`, which
+    the web app's `AuthContext` and `usePermission` depend on;
+  - currency, data deletion and title brackets aren't dashboard types and keep their own rules.
+- **Player summaries.** `GET api/Users/uuid/{uuid}` and `username/{username}` (public view, no email) become **F** with
+  `knk.admin.user.manage`, or the plugin key. The web app doesn't call them: player-facing pages use the anonymous
+  `PlayersController`.
+- **Player-facing web pages read no dashboard type.** Checked in knk-web-app `src/pages/{account,guides,leaderboards,players,siege}`,
+  `AccountManagementPage`, `AccountTransactionsPage` and `LandingPage`: they use the anonymous controllers, the
+  currency controller and auth. The enchantment guide uses `public/info`.
+
+#### 4.6.2 Read nodes: who else may read a type in full
+
+Some admin pages outside an area read another area's records in full. They keep working because their own page node is
+added to the type's read nodes. These are reads only; writes stay on the area node.
+
+| Types | Area node | Also readable with | Why (knk-web-app) |
+|---|---|---|---|
+| Location, Town, District, Structure | `knk.admin.world` | `knk.admin.config` | Game settings builds spawn and hub options from all four lists (`pages/admin/GameSettingsPage.tsx`, `components/admin/gameSettings/locationReferenceOptions.ts`) |
+| Domain | `knk.admin.world` | `knk.admin.discovery` | discovery overrides list domains (`components/admin/discovery/DiscoveryOverridesCard.tsx`) |
+| Town, Street | `knk.admin.world` | `knk.admin.road` | road profiles and edges (`components/admin/roads/RoadProfilesCard.tsx`, `RoadEdgesCard.tsx`) |
+| MinecraftMaterialRef | `knk.admin.content` | `knk.admin.road` | road material input (`components/admin/roads/MaterialKeyInput.tsx`) |
+| ItemBlueprint, EnchantmentDefinition, Category, Grade | `knk.admin.content` | `knk.kit.manage`, `knk.admin.lootbox.manage` | kit contents and lootbox pools show items, enchantments and grades (`FormWizard.tsx` item and enchantment search, `components/lootbox/LootboxDropLogTab.tsx`, `CategoryFilterSelect.tsx`) |
+| Kit | `knk.kit.manage` | `knk.admin.lootbox.manage`, `knk.admin.user.manage` | lootbox token tab; the player profile's "available kits" (`LootboxTokensTab.tsx`, `pages/admin/PlayerProfilePage.tsx`) |
+| every other type | its area node | — | — |
+
+- **What stays blocked:** a page that already writes another area's type keeps needing that area's write node. For
+  example, creating a street from the road edges card needs `knk.admin.world`, as it does today.
+- **Rule for later:** a new cross-area page adds its node here and to Appendix A. The read-rules test (§ 4.7) pins the
+  list.
+
+#### 4.6.3 Pickers and labels across areas
+
+The developer asked how a picker that references another area's type should behave. **Decided: minimal lookups for any
+staff.** A picker never needs another area's full records, and requiring every area's node would make a world builder
+also need `knk.admin.content` just to pick a Clan.
+
+- **Endpoints (category L):**
+  - `POST api/Lookup/{entityType}/search` takes `{ searchTerm, page, pageSize ≤ 50 }` and returns
+    `{ items: [{ id, label, detail? }], total }`.
+  - `GET api/Lookup/{entityType}/{id}` returns `{ id, label, detail? }`.
+  - Both are implemented once, through the registry's search and label delegates.
+  - `detail` is one short, non-sensitive line (a domain's parent, a location's world and coordinates); users get their
+    username only, never an email.
+- **Who:** holders of any area node, or the plugin. The entity type must be in the registry; unknown types return 404.
+- **Web app:**
+  - **Pickers:** when the user holds a read node of the related type, the picker works as today (full table, filters).
+    Otherwise it switches to **lookup mode**: a search box and a Name column, with no filters.
+  - **"Create new" from a picker** is shown only with that type's create (area) node.
+  - **Labels:** `useEntityLabel`, the wizard's related-entity fetch for join entries (`FormWizard.tsx`, around line
+    2319) and the display wizard's related values fall back to `GET api/Lookup/{type}/{id}` without a full read. The
+    link to the detail page shows only with that area's node.
+- **Not a follow-up question:** decided as above.
+
+#### 4.6.4 Form runtime reads, drafts and own records
+
+The wizard and the display pages need these reads for every type a user may edit, so they are open to **any area
+node** (category R/O), not only `knk.admin.content`:
+
+- **Configurations:** `FormConfigurations`, `DisplayConfigurations`, `FormSteps`, `FormFields`, `DisplaySections`,
+  `DisplayFields`, `EntityTypeConfiguration` GETs, and `Metadata`.
+- **Validation and resolution POSTs:** `FieldValidationRules` `validate`, `validate-batch`, `resolve-placeholders`,
+  `resolve-dependencies`, `validate-path`, `health-check/configuration/draft` and `api/field-validations/validate-field`.
+  - **Today** these POSTs count as writes under the class rule `ForWrites(knk.admin.content)`. So a world-only user
+    already gets 403 on validation.
+  - **Change:** they get an explicit "any area node" rule, and `RequireServiceOrPermissionForWritesFilter` skips actions
+    that carry it.
+- **Drafts:** `FormSubmissionProgress`, today `RequirePermission(knk.admin.content)` on the whole controller, becomes
+  any area node. Ownership stays as it is (#186: drafts are the caller's).
+- **World-task and workflow reads of your own:** `WorldTasks` `active-for-me`, `session/{id}`, `session/{id}/open`,
+  `by-link-code` and `{id}`, and `Workflows` `{id}`, `by-guid`, `{id}/progress`. A lootbox manager drawing a spawn area
+  in game reads their own task. The by-status and search lists stay **F** (`knk.admin.world`).
+- **Builder writes stay `knk.admin.content`:** configurations, steps, fields, validation rules, import and seeds.
+
+#### 4.6.5 How it's built
+
+- **Class attribute.** A new `[DashboardReads("<TypeName>")]` (an `IKnkAccessRule`) on each dashboard-type controller.
+  - It reads the type's read nodes from the registry.
+  - It gates GET/HEAD and POST search (`IsSearch`), lets the plugin key pass, and passes any action that carries
+    `[AllowAnonymous]`, `RequirePluginService`, a stricter rule, or one of the method attributes below.
+- **Method attributes:**
+  - `[RequireServiceOrAnyAreaNode]` for categories L and R;
+  - `[RequireServiceOrAnyAreaNode(OwnRecords = true)]` for category O. The ownership check stays inside the action.
+- **`PermissionResolutionService.CheckAnyAsync(userId, nodes)`** builds the holder chain once and returns the first
+  allowed node.
+- **Read check cache.**
+  - A per-request memo, plus a 30 s per-(user, node) memory cache for **read** checks only, like
+    `RealtimeWebAudience`.
+  - Writes stay uncached.
+  - The cache drops a user's entries when their grants, memberships or a group's grants change, at the same service
+    calls that already publish S2's `UserPermissionsChanged` / `PermissionGroupChanged`.
+  - A revoked read therefore stops within 30 s at most, and immediately when the change goes through those services.
+
+### 4.7 Enforcement points
 
 **API (knk-web-api):**
 
-- **Constants** `StaffPermissions.Delete` and `DeleteBulk`.
-- **One registry,** `DashboardAccess` (new, e.g. `Attributes/DashboardAccess.cs`). It maps each dashboard type
-  (`[FormConfigurableEntity]` with a delete endpoint) to its area node, whether single delete is allowed and whether
-  bulk delete is allowed. Three places read it:
-  - the bulk endpoint;
-  - `RealtimeWebChangeMap.NodeFor` (if Q8 = B);
-  - the metadata endpoint (`EntityMetadataDto` gains `accessNode`, `deletable`, `bulkDeletable`), so the web app learns
-    each type's node instead of hard-coding it.
-- **Single delete:** `[RequireServiceOrPermission(StaffPermissions.Delete)]` on the `[HttpDelete("{id}")]` action of
-  every dashboard-type controller. Lootbox controllers use `RequirePermission`, since the plugin never calls them. The
-  class or method area rule stays, so a delete is area AND delete.
+- **Constants:** `Delete`, `DeleteBulk`, `Export`; the `DashboardAccess` registry; metadata fields (§ 4.2).
+- **Single delete:** `[RequireServiceOrPermission(StaffPermissions.Delete)]` (lootbox controllers: `RequirePermission`)
+  on the primary `DELETE {id}` of every registry type that is `deletable`. The class or method area rule stays, so a
+  delete is area AND delete.
   - **Content:** Categories, Tags, Grades, ItemBlueprints, EnchantmentDefinitions, BannerDesigns, BannerLayers, Clans,
     MinecraftBlockRefs, MinecraftMaterialRefs, MinecraftEnchantmentRefs.
-  - **World:** Domains, Towns, Districts, Structures, Streets, Locations, GateStructures, GateDoors
-    (`DELETE GateDoors/{id}` only), DomainSubRegions.
+  - **World:** Domains, Towns, Districts, Structures, Streets, Locations, GateStructures, `DELETE GateDoors/{id}`,
+    DomainSubRegions.
   - **Other areas:** Kits, LootboxTypes, LootboxSpecialEntries, LootboxSpawnAreas, SiegeScenarios, SiegeTeams,
-    SiegeLobbies, SiegeObjectives, SiegeSpawnpoints, RoadProfiles; Users `DELETE {id}` and PermissionGroups
-    `DELETE {id}` (Q5).
-  - **Not covered** (they stay on their area node): builder parts (FormSteps, FormFields, DisplaySections,
-    DisplayFields, FieldValidationRules), whole Form/Display configurations and MenuTemplates (edited in their builders,
-    not on the dashboard), your own drafts (FormSubmissionProgress), WorldTasks and Workflows (lifecycle endpoints),
-    plugin-only deletes, and link deletes (user groups, grants, gate snapshots).
-- **Bulk delete** (Q7 = A): `POST api/Dashboard/bulk-delete` with `{ entityType, ids[] }`.
-  - **Rules:** `[RequirePermission(DeleteBulk)]` and `[RequirePermission(Delete)]` (web users only). In code, the area
-    node of `entityType` from `DashboardAccess` (403 when missing), and `bulkDeletable` (400 for an excluded type).
-  - **Limits:** at most 100 ids; rate-limited like the lookup policy.
-  - **Execution:** each id goes through the type's own service `DeleteAsync` in its own save, so the existing delete
-    checks, dependents and `DeleteConstraintExceptionFilter` messages apply per row.
+    SiegeLobbies, SiegeObjectives, SiegeSpawnpoints, RoadProfiles; `DELETE api/Users/{id}`,
+    `DELETE api/PermissionGroups/{id}` (decision 5).
+  - **Not covered** (they keep their rules): builder parts, whole form/display configurations, MenuTemplates, your own
+    drafts, world-task and workflow lifecycle endpoints, plugin-only deletes, and link deletes (user groups, grants, gate
+    snapshots).
+- **Bulk delete:** `POST api/Dashboard/bulk-delete` with `{ entityType, ids[] }` (decision 7).
+  - **Rules:** `[RequirePermission(DeleteBulk)]` and `[RequirePermission(Delete)]` on the action. In code: the type's
+    area node (403), `bulkDeletable` (400 for users and groups), and at most 100 distinct ids (400).
+  - **Execution:** each id goes through the type's own `DeleteAsync` in its own save, so dependents and
+    `DeleteConstraintExceptionFilter` messages apply per row.
   - **Response:** `{ deleted: [id], refused: [{ id, reason }] }`.
-  - **Audit:** one `AuditLogEntry` (actor, type, count, ids).
-  - **Realtime:** one save per row, so N `EntityChanged` events. The web hook coalesces a burst into one refresh.
+  - **Audit:** one `AuditLogEntry` (actor, type, count, ids, refused count).
+  - **Rate limit:** the lookup policy.
+- **Export:** `POST api/Dashboard/export`, see § 4.8.
+- **Read gating:** § 4.6.5 on every controller in Appendix A; lookup endpoints `api/Lookup/...`.
+- **Guard:** the `OwnerGrantOnly` rule (§ 4.4).
+- **Realtime:** `RealtimeWebChangeMap.NodeFor(type)` returns the registry's **area node** instead of
+  `DefaultNode = knk.admin.content` (decision 8). `NotSent` and the user-managed types are unchanged.
+  - Delete nodes don't change the audience: a `Deleted` event goes to whoever may view the type.
+  - A bulk delete is one save per row, so N events. The web hook coalesces them into one refresh.
 - **Tests:**
-  - a new `Security/DeleteAccessRulesTests`:
-    - every `HttpDelete` on a controller of a `DashboardAccess` type carries `Delete`;
+  - **`Security/DeleteAccessRulesTests`:**
+    - every `HttpDelete` of a deletable registry type carries `Delete`;
     - every other `HttpDelete` is on a pinned exemption list;
-    - the registry covers every `getDeleteFunctionForEntity` type (types listed by name);
-  - `ProtectedRoutes` entries for the bulk endpoint and a sample per area;
-  - `EndpointAccessRulesTests` stays green (the new endpoint has rules);
-  - `PermissionEscalationGuardTests` for the bulk rule (Admin can't grant `knk.admin.delete.bulk` or `knk.admin.*`,
-    owner can, Admin can grant `knk.admin.delete`);
-  - bulk endpoint tests:
-    - 403 without bulk, without delete, and without the area of the type;
-    - 400 for an excluded type or more than 100 ids;
-    - per-row refusal text;
-    - the audit entry.
+    - registry coverage.
+  - **`Security/ReadAccessRulesTests`:**
+    - every GET/HEAD and POST-search action of a registry controller is in exactly one category of § 4.6.1, pinned
+      like the anonymous allow-list;
+    - behaviour: a world-only user gets 403 on `GET api/ItemBlueprints` and 200 on
+      `POST api/Lookup/ItemBlueprint/search`; a config-only user gets 200 on `GET api/Locations`; the plugin key gets
+      200 everywhere; anonymous stays 401.
+  - **Existing suites:** `ProtectedRoutes` entries for the new endpoints and a sample per area; `EndpointAccessRulesTests`
+    green; `ForWritesSearchTests` extended to the runtime POSTs.
+  - **`PermissionEscalationGuardTests`:**
+    - an Admin can't grant or deny `knk.admin.delete.bulk`, `knk.admin.delete.*` or `knk.admin.*`;
+    - an Admin can't assign a group that carries them;
+    - the owner can do all of these;
+    - an Admin can grant `knk.admin.delete` and `knk.admin.export`.
+  - **Migration:** SQL-shape unit tests and a `[MySqlFact]` like `SeedCommandPermissionNodes*Tests` (alpha shape → no
+    Admin rows; migrations-only shape → Admin rows; backfill on Staff and on a user with `knk.admin.world`; deny
+    respected; idempotent).
+  - **Bulk and export endpoint tests:** each missing node → 403; excluded type → 400; more than 100 ids → 400; per-row
+    refusal text; cap; audit entries.
+  - **`RealtimeWebChangeMapTests`:** per area.
+  - **`PermissionResolutionService.CheckAnyAsync`** and the read cache, including invalidation.
 
 **Web app (knk-web-app):**
 
-- **`useEntityAccess(type)`** (new hook on `usePermissions`) returns `{ view, create, edit, delete, bulkDelete, export }`
-  from the type's `accessNode` (metadata), `knk.admin.delete` and `knk.admin.delete.bulk`. It is one cached check per
-  node.
-- **Route table** (Q8 = B):
+- **`useEntityAccess(type)`.** A new hook on `usePermissions` that returns
+  `{ view, read, create, edit, delete, bulkDelete, export }`.
+  - It reads the type's `accessNode`, `readNodes`, `deletable` and `bulkDeletable` from metadata, plus
+    `knk.admin.delete`, `knk.admin.delete.bulk` and `knk.admin.export`.
+  - It makes one cached check per node.
+- **Route table (`src/routes/routeTable.ts`):**
   - `RouteAccess` gains `{ kind: 'staffAny'; nodes: string[] }`;
-  - `dashboard`, `dashboardType` and `entityDetail` take the list of area nodes;
+  - `dashboard`, `dashboardType`, `entityDetail` and `entityEdit` take the list of area nodes;
   - `entitySetup*` and the builders stay on `knk.admin.content`;
-  - `SIDEBAR_NODES` and `TOP_NAV_NODES` read the list;
-  - the type explorer lists only types whose area node is held.
-- **Header:** "New {Type}" and "New with" are shown when `create` holds, else disabled with "Requires <node>" (Q11).
-- **Row actions:** Edit as `edit`; Delete as `delete`, disabled with "Requires knk.admin.delete" or the area node.
-  `handleDelete` moves to `useConfirm` with `danger` (W2), unchanged otherwise.
-- **Selection and bulk bar:** V2 builds the checkbox column (rows stay links) and the bar with Export (`view`). This
-  design adds "Delete (n)" to the bar only with `bulkDelete` and `bulkDeletable`; it is hidden otherwise.
-  - The confirmation names the count and the type, with danger styling. A typed confirmation above 25 rows is an
-    option in Q6.
-  - It calls the bulk endpoint, lists `refused` with their reasons, keeps the refused rows selected and refreshes the
-    table.
-- **Export:** see § 4.7. There is no delete link.
+  - `SIDEBAR_NODES` and `TOP_NAV_NODES` read the list.
+- **Explorer:** lists only types whose area node is held. A type in the URL without the node shows the existing
+  fallback.
+- **Header and rows** (decision 11):
+  - "New {Type}" / "New with" are disabled with "Requires <node>" without `create`;
+  - Edit is disabled without `edit`;
+  - Delete is disabled with "Requires knk.admin.delete" (or the area node);
+  - `handleDelete` moves to `useConfirm` with `danger`.
+- **Selection bar** (V2 builds the checkbox column and the bar):
+  - **"Delete (n)"** is **hidden** without `bulkDelete` and for users and permission groups.
+  - **The confirmation** names the count and the type and uses danger styling. It calls the bulk endpoint in chunks of
+    100, lists the refused rows with their reasons, keeps them selected and refreshes the table.
+  - **Export** is disabled with "Requires knk.admin.export" without the node (§ 4.8).
+- **Pickers, labels and detail links:** § 4.6.3.
+- **Cross-area pages** (Game settings, discovery, roads, lootboxes, the player profile): no change, because their nodes
+  are read nodes (§ 4.6.2).
+- **A 403 on a read** shows "You don't have access to <type>" instead of the generic error.
 - **Tests:**
   - `useEntityAccess` under each node combination;
-  - the dashboard hides or disables New, Edit, Delete and the bulk Delete accordingly;
-  - the route table's `staffAny` gate;
-  - the explorer filter;
-  - the bulk flow: confirm, partial refusal, refresh.
+  - the route table's `staffAny` gate and the explorer filter;
+  - disabled states and their hints;
+  - the bulk flow (confirm, partial refusal, refresh, chunking);
+  - picker lookup mode and the label fallback;
+  - export through the endpoint.
 
-**Realtime:**
+### 4.8 Export (decision 10)
 
-- Delete nodes change nothing: a `Deleted` event goes to whoever may view the type.
-- If Q8 = B, `RealtimeWebChangeMap.NodeFor` returns the type's area node from `DashboardAccess` instead of
-  `DefaultNode`. World-only staff then get world events and no content events, matching what their dashboard shows.
-- Test: `RealtimeWebChangeMapTests` per area.
-- The 30 s audience cache means a revoked view node stops events within 30 s (unchanged).
-
-### 4.7 What export needs
-
-- **Permission:** view of the type (developer, #205). There is no node of its own (Q10 = A), because the same data is
-  already readable by any logged-in user through the API. The dashboard gate is what limits it in practice. User rows
-  stay behind `knk.admin.user.manage` (their area).
-- **Data:**
-  - the table's columns in table order, with the readable values the table shows (same formatter);
-  - selected rows, or with nothing selected the current search across all pages with its sort, fetched page by page
-    from the existing POST `…/search`.
-- **Limits:** a cap with a clear message (V2 decides; 10 000 rows is a reasonable default) and a cancel button while
-  pages load.
-- **No API change.** V2 can ship before this design is approved.
-- **Optional later:** an audit entry per export would need a small API endpoint. Not proposed.
+- **Node:** `knk.admin.export` for every type, together with the type's area node.
+- **Enforced on the server**, which is consistent with decision 7.
+  - **Endpoint:** `POST api/Dashboard/export` with
+    `{ entityType, ids? | query: { searchTerm, filters, sortBy, sortDescending } }`. It returns
+    `{ items: DTO[], total, truncated }`.
+  - **Rules:** `[RequirePermission(Export)]` plus the type's area node from the registry. Web users only.
+  - **Reading:** the endpoint reads through the type's own search service in pages of 500, in the requested sort.
+  - **Cap:** 10 000 rows, with `truncated: true` beyond that.
+  - **Audit:** one `AuditLogEntry` (actor, type, scope `selection`/`search`, count).
+  - **Cost:** small. It reuses the registry delegates that the bulk delete needs anyway.
+- **Formatting stays in the web app.** The CSV is built from the returned rows with the table's own columns, in table
+  order, using the formatters the table uses for its readable values (#205 decision). That way the file matches what
+  the user saw. A server-side CSV would duplicate every formatter.
+- **Limit of the control:** a user who holds the area node can still page through the ordinary search. The export node
+  controls the one-click dump of a whole search and records it in the audit log; it is not a data barrier. Hiding data
+  is the read nodes' job (§ 4.6).
+- **Default groups:** the owner (`*`); Admin (`knk.admin.*`, plus the seed grant); every explicit area-node holder
+  (backfill, § 4.5). Anyone who holds it may grant it (normal guard rules).
+- **Chain 3 V2** (#205 export) is built before AM1. It builds the CSV on the client from the list reads, as planned,
+  but shows Export only to holders of `knk.admin.export`: the button is disabled with "Requires knk.admin.export"
+  otherwise.
+  - Until the migration runs, only the owner and Admin hold the node, through their wildcards.
+  - AM3 then switches V2's data source to the export endpoint.
 
 ## 5. Implementation plan
 
-Links run after the developer answers §7. Chain 3 V2 (export and checkbox column) does not wait for them.
+One feature branch per repo, `claude/dashboard-access-280`. Each link merges the trunk first, plus the unmerged branches
+it builds on; merge only, never rebase.
 
-| Link | Repo | What | Test points |
-|---|---|---|---|
-| AM1 | knk-web-api | Constants; `DashboardAccess` registry; `Delete` rule on every dashboard delete; migration `SeedDashboardDeleteNodes` (Admin + backfill); guard rule for bulk; metadata `accessNode`/`deletable`/`bulkDeletable`; `POST api/Dashboard/bulk-delete` with audit; realtime `NodeFor` per area (Q8 = B) | `DeleteAccessRulesTests`, `ProtectedRoutes`, `EndpointAccessRulesTests`, guard tests, migration SQL + `[MySqlFact]`, bulk endpoint tests, `RealtimeWebChangeMapTests`; full suite vs baseline (#99 reds) |
-| AM2 | knk-web-app (on V2) | `useEntityAccess`; route table `staffAny` + explorer filter (Q8 = B); header and row actions by access; bulk Delete in V2's bar; `useConfirm` for delete; types from metadata | hook, dashboard, route-table, explorer and bulk-flow tests; `test:ci`, `tsc`, `CI=true` build, `lint:colors` not growing; themes `current`/`brand` |
-| AM3 | knk-workspace | Living docs: web-api and web-app architecture (access model), admin guide for ranks (which node does what), smoke test `guides/dashboard-access-smoke-test.md`, CHANGELOG; this design's status | smoke test: Owner, Admin, Staff and a world-only user each try view/create/edit/delete/bulk; Admin can't grant bulk; deny on a user wins; backfill kept a Staff kit delete |
+| Link | Repo | Gate | What | Test points |
+|---|---|---|---|---|
+| **AM1** — actions | knk-web-api | Developer's go; no other link changing knk-web-api at the same time (P1, P3 and V5–V7 are ordered by the coordinator). Merges X1 `claude/realtime-web-live-183` if it is still unmerged (it changes `RealtimeWebChangeMap`) | constants; `DashboardAccess` registry for every `[FormConfigurableEntity]` type; `Delete` rule on every deletable type's `DELETE {id}`; guard `OwnerGrantOnly` (nodes, groups, inheritance); migration `SeedDashboardActionNodes`; `POST api/Dashboard/bulk-delete` and `POST api/Dashboard/export` with audit; metadata `area`/`accessNode`/`readNodes`/`deletable`/`bulkDeletable`; realtime `NodeFor` per area | `DeleteAccessRulesTests`, `ProtectedRoutes`, `EndpointAccessRulesTests`, guard tests, migration SQL + `[MySqlFact]`, bulk and export endpoint tests, `RealtimeWebChangeMapTests`; full suite vs baseline (known #99 reds) |
+| **AM2** — read gating | knk-web-api (same branch) | AM1 done | `[DashboardReads]` on every registry controller; `[RequireServiceOrAnyAreaNode]` (L/R/O) per Appendix A; the `ForWrites` filter skips runtime POSTs; `FormSubmissionProgress` to any area node; lookup endpoints `api/Lookup/{type}/search` and `{id}`; `CheckAnyAsync`; read check cache with invalidation; user summaries to `knk.admin.user.manage` | `ReadAccessRulesTests` (categories pinned; behaviour per role), lookup tests (label, detail, no email, 404 for unknown type), cache tests, `ForWritesSearchTests`; full suite vs baseline |
+| **AM3** — web app | knk-web-app | chain 3 V2 done (AM3 merges V2's branch if it is unmerged; V2 contains X1); AM2 pushed (the contract is final) | `useEntityAccess`; route table `staffAny` and explorer filter; disabled New/Edit/Delete with hints; bulk "Delete (n)" in V2's bar (hidden without the nodes); `useConfirm` for delete; export through `POST api/Dashboard/export` with V2's CSV formatter; picker lookup mode and label fallback; readable 403 on reads; nodes from metadata | hook, route table, explorer, dashboard states, bulk flow, picker and label tests; `test:ci`, `tsc`, `CI=true` build, `lint:colors` not growing; themes `current`/`brand` with page background on and off |
+| **AM4** — docs and smoke test | knk-workspace | AM3 done | living docs: web-api architecture (access model, registry, read categories), web-app architecture (`useEntityAccess`, lookups); admin guide for ranks (which node does what, owner-only bulk); new `guides/dashboard-access-smoke-test.md`; CHANGELOG; this design's status ("built") | smoke test with five accounts (owner, Admin, Staff, a content-only rank, a world-only rank): open the dashboard and see your types; full read vs 403 vs lookup in pickers; create, edit, delete and bulk delete per role; export with and without the node; Admin can't grant bulk; a user deny beats Admin's wildcard; Game settings, discovery, roads and lootbox pages still load for their own nodes; the plugin (apikey) still syncs; live updates per area |
 
-Deploy AM1 before or together with AM2. An old web app against the new API only sees more 403s on delete for holders
-without the node; with the backfill there are none on day one.
+**Deploy** AM1, AM2 and AM3 together, API first in the same window. AM2's read gating would break an old web app's
+pickers for staff without the other areas' nodes. The migration is additive, and nothing needs to be run by hand.
 
 ## 6. Risks and notes
 
-- **Users and permission groups on the dashboard:** today any holder of `knk.admin.user.manage` (Staff on the alpha)
-  can delete a user account through the API, and the dashboard's mapping offers it. With Q5 = B that also needs
-  `knk.admin.delete`, which the backfill gives to Staff. The developer may want to remove it from Staff afterwards.
-- **Global delete node:** with A, someone who edits both content and world can delete both. If that's ever too coarse,
-  add `knk.admin.delete.<area>` later as an extra AND (model B) without renaming.
-- **Wildcard `knk.admin.delete.*`** means single + bulk, so it should only be granted by the owner (it falls under the
-  Q4 rule).
+- **More permission checks.** Every dashboard read now does a permission check. The request memo, the 30 s read cache
+  and `CheckAnyAsync` keep it to about one database round trip per user per half minute.
+- **A missed cross-area read.** A page that reads another area in a way not listed in § 4.6.2 would answer 403 for staff
+  without that area. To catch it: `ReadAccessRulesTests` pins every endpoint, the smoke test runs every admin page per
+  role, and the web app shows a readable 403.
+- **The plugin must use `api.auth.type: apikey`.** In `bearer` mode it isn't the plugin service and would need nodes
+  for every read. The alpha uses `apikey`. AM4 adds this to the production checklist.
+- **Admins hand out less.** After decision 4, Admins can no longer grant `knk.admin.*` (or any wildcard covering bulk
+  delete). On today's alpha only the owner does that.
+- **Staff keep deleting users** through the backfill (they hold `knk.admin.user.manage` explicitly). If that isn't
+  wanted, the developer removes `knk.admin.delete` from Staff after the deploy.
+- **Export isn't a data barrier** (§ 4.8). It controls the one-click dump and audits it.
+- **`knk.admin.delete.*`** means single + bulk, so it falls under the owner-only rule.
 
-## 7. Open questions for the developer
+## 7. Decision record (2026-11-08)
 
-Each has a recommendation (**rec.**).
+The proposal's questions and the developer's answers. (rec. = what the proposal recommended)
 
-1. **Which model?**
-   - A) global `knk.admin.delete` / `knk.admin.delete.bulk` on top of the area nodes (**rec.**);
-   - B) per-area delete nodes (`knk.admin.content.delete`, …);
-   - C) per-type nodes.
-2. **Does bulk delete also need the single-delete node?**
-   - A) yes: bulk = area + `knk.admin.delete` + `knk.admin.delete.bulk`, so a deny on delete also stops bulk (**rec.**);
-   - B) no: bulk = area + `knk.admin.delete.bulk`.
-3. **Who keeps single delete on day one?**
-   - A) everyone who can delete today: backfill `knk.admin.delete` to every explicit area-node holder (**rec.**);
-   - B) only owner and Admin (no backfill; Staff loses kit, siege and user deletes);
-   - C) backfill to the Admin group only.
-4. **Who may hand out `knk.admin.delete.bulk`?**
-   - A) anyone who holds it (guard as today, so an Admin could give it to a Moderator);
-   - B) only the owner (`*`), also for wildcards covering it such as `knk.admin.*` (**rec.**);
-   - C) exact grant only (wildcards don't match it, like D24), seeded to Admin.
-5. **Which deletes need `knk.admin.delete`?**
-   - A) only content and world types;
-   - B) every dashboard type, including kits, lootboxes, siege, roads, users and permission groups (**rec.**);
-   - C) B without users and permission groups (they keep their own rules).
-6. **Which types allow bulk delete?**
-   - A) all dashboard types;
-   - B) all except users and permission groups (**rec.**);
-   - C) only leaf types without dependents;
-   - D) A or B, plus a typed confirmation above 25 rows.
-7. **How is bulk delete enforced?**
-   - A) a new API endpoint that checks `knk.admin.delete.bulk`, max 100 ids, per-row results, one audit entry (**rec.**);
-   - B) the web app sends one delete per row, so the bulk node is only checked in the UI.
-8. **Who may open the dashboard?**
-   - A) holders of `knk.admin.content`, as today;
-   - B) holders of any area node; each sees only their area's types, and live updates follow the area (**rec.**);
-   - C) a new `knk.admin.dashboard` node, seeded to holders of `knk.admin.content`.
-9. **Should API reads (lists, details) be gated per area too?**
-   - A) no, they stay "any logged-in user"; the dashboard gate is in the UI (**rec.**; the wizard pickers read across
-     areas);
-   - B) yes, every GET needs the area node, which needs a separate audit of the pickers and the plugin.
-10. **Does export get its own node?**
-    - A) no, export follows view (**rec.**, as decided for #205);
-    - B) `knk.admin.export` for all types;
-    - C) `knk.admin.export` only for user rows.
-11. **Buttons for an action you may not do:**
-    - A) hide them;
-    - B) show New, Edit and Delete disabled with "Requires <node>", and hide the bulk Delete (**rec.**; like View
-      without a display);
-    - C) disable everything, bulk Delete included.
+1. **Model:** A, global action nodes (rec. A).
+2. **Bulk needs the single-delete node:** yes (rec. A).
+3. **Who keeps single delete on day one:** backfill to every explicit area-node holder (rec. A).
+4. **Who may hand out bulk:** only the owner, wildcards included (rec. B).
+5. **Which deletes need `knk.admin.delete`:** every dashboard type, users and groups included (rec. B).
+6. **Bulk types:** all except users and permission groups (rec. B).
+7. **Bulk enforcement:** a new API endpoint (rec. A).
+8. **Dashboard view:** any area node; per-area types and live updates (rec. B).
+9. **API reads:** **gated by the area node** (B; the proposal recommended A, open reads). Designed in § 4.6.
+10. **Export node:** **`knk.admin.export`** (B; the proposal recommended A, no node). Designed in § 4.8.
+11. **Disallowed actions:** disabled with "Requires <node>", bulk Delete hidden (rec. B).
+
+**Settled while turning the answers into the design** (no further question):
+
+- **Pickers:** minimal lookups (id, label, one detail line) for any area node (§ 4.6.3).
+- **Export:** enforced on the server (`POST api/Dashboard/export`), with CSV formatting in the web app (§ 4.8). Default
+  holders: owner, Admin, and explicit area-node holders.
+- **Consequences of decision 8 that widen access** (no data beyond what an area holder needs to use the wizard):
+  - drafts, validation POSTs and form/display configuration reads open to any area node instead of `knk.admin.content`
+    only (§ 4.6.4);
+  - cross-area page nodes added as read nodes (§ 4.6.2).
+- **Owner-only rule:** it also covers group assignment and inheritance, not only direct grants (§ 4.4).
+
+**Open questions:** none.
+
+## Appendix A — Read endpoints per area and their category
+
+- **Source:** knk-web-api `master` `2e3dfeb`, every GET and every read-like POST (`search`, `validate`, `resolve`,
+  health check) of the controllers behind the dashboard types and the form runtime. Routes are relative to the
+  controller's `api/<Name>` unless they start with `/`.
+- **Categories** (§ 4.6.1): **F** full read (read nodes or plugin key), **L** lookup and **R** form runtime (any area
+  node or plugin key), **O** own records (any area node + ownership), **P** public, **G** game server only, **U** the
+  action's existing stricter rule.
+- **Today:** everything marked F, L, R or O is open to any logged-in user, except the R POSTs, which need
+  `knk.admin.content`.
+
+### A.1 Content — `knk.admin.content`
+
+| Controller | Endpoints | Category |
+|---|---|---|
+| BannerDesigns | `GET /`, `GET {id}`, `GET {id}/layers`, `POST search` | F |
+| BannerDesigns | `GET pattern-keys` | R |
+| BannerLayers | `GET {id}` | F |
+| Categories | `GET /`, `GET {id}`, `GET {id}/children`, `POST search` | F (+ kits, lootbox) |
+| Clans | `GET /`, `GET {id}`, `POST search` | F |
+| Clans | `GET default-for-town/{townId}` | L (the Town form's default) |
+| EnchantmentDefinitions | `GET /`, `GET {id}`, `POST search` | F (+ kits, lootbox) |
+| EnchantmentDefinitions | `GET public/info` | P |
+| Grades | `GET /`, `GET {id}`, `POST search` | F (+ kits, lootbox) |
+| ItemBlueprints | `GET /`, `GET {id}`, `POST search` | F (+ kits, lootbox) |
+| MenuTemplates | `GET /`, `GET {id}`, `GET by-key/{key}` | F (not a dashboard type; area content; the plugin reads by key with its key) |
+| MinecraftBlockRefs | `GET /`, `GET {id}`, `POST search` | F |
+| MinecraftEnchantmentRefs | `GET /`, `GET {id}`, `POST search` | F |
+| MinecraftMaterialRefs | `GET /`, `GET {id}`, `POST search` | F (+ road) |
+| Tags | `GET /`, `GET {id}`, `POST search` | F |
+| MinecraftCatalog | all | U (`knk.admin.content`, unchanged) |
+
+### A.2 Form runtime (writes stay `knk.admin.content`)
+
+| Controller | Endpoints | Category |
+|---|---|---|
+| FormConfigurations | `GET /`, `GET {id}`, `GET {entityName}`, `GET {entityName}/all`, `GET entity-names`, `GET reusable-steps`, `GET reusable-fields` | R |
+| FormConfigurations | `GET {id}/export`, `GET seeds` | F `knk.admin.content` (builder tools) |
+| DisplayConfigurations | `GET /`, `GET {id}`, `GET entity/{entityName}`, `GET entity/{entityName}/all`, `GET entity-names` | R |
+| DisplayConfigurations | `GET {id}/export`, `GET seeds` | F `knk.admin.content` |
+| FormSteps, FormFields | `GET /`, `GET {id}` | R |
+| DisplaySections, DisplayFields | `GET reusable`, `GET {id}` | R |
+| EntityTypeConfiguration | `GET /`, `GET {id}`, `GET by-entity/{name}`, `GET merged/{name}`, `GET merged/all` | R |
+| FieldValidationRules | `GET {id}`, `GET by-field/{fieldId}`, `GET by-configuration/{configId}`, `GET /api/field-validations/rules/{ruleId}/placeholders`, `GET entity/{entityName}/properties`, `GET health-check/configuration/{configId}` | R |
+| FieldValidationRules | `POST validate`, `POST validate-batch`, `POST resolve-placeholders`, `POST resolve-dependencies`, `POST validate-path`, `POST health-check/configuration/draft`, `POST /api/field-validations/validate-field` | R (explicit rule; the `ForWrites` filter skips them) |
+| Metadata | `GET entities`, `GET entity-names`, `GET entities/{name}` | R |
+| FormSubmissionProgress (drafts) | `GET entity`, `GET user`, `GET {id}`, `GET {id}/world-tasks`, `GET entity-references/{type}/{id}` and its writes | O (today the whole controller is `knk.admin.content`) |
+
+### A.3 World — `knk.admin.world`
+
+| Controller | Endpoints | Category |
+|---|---|---|
+| Domains | `GET /`, `GET {id}`, `POST search`, `POST search-region-decisions`, `GET by-region/{regionName}`, `GET access-rules`, `GET world/missing` | F (+ discovery for `GET /`, `{id}`, `search`) |
+| Domains | `POST world/resolve` | F (a read-like POST used by forms; explicit rule) |
+| Towns | `GET /`, `GET {id}`, `POST search` | F (+ config, road) |
+| Districts | `GET /`, `GET {id}`, `POST search` | F (+ config) |
+| Structures | `GET /`, `GET {id}`, `POST search` | F (+ config) |
+| Locations | `GET /`, `GET {id}`, `POST search` | F (+ config) |
+| Streets | `GET /`, `GET {id}`, `GET {id}/road`, `POST search` | F (+ road) |
+| DomainSubRegions | `GET by-domain/{domainId}`, `GET {id}` | F |
+| GateStructures | `GET /`, `GET {id}`, `GET domain/{domainId}`, `POST search` (today `RequireServiceOrLoggedIn`) | F |
+| GateDoors | `GET GateStructures/{id}/doors`, `GET GateDoors/{id}`, `POST GateDoors/search` (today `RequireServiceOrLoggedIn`), `GET GateDoors/{id}/snapshots`, `GET GateDoors/{id}/openedSnapshots` | F |
+| WorldTasks | `GET status/{status}`, `POST search`, `POST user/{userId}/search` | F |
+| WorldTasks | `GET {id}`, `GET by-link-code/{code}`, `GET session/{id}`, `GET session/{id}/open`, `GET active-for-me` | O (creator, session owner, or `knk.admin.world`, as #180/#186 check today) |
+| WorldTasks | `GET open` | G |
+| Workflows | `GET {id}`, `GET by-guid/{guid}`, `GET {id}/progress` | O |
+| Workflows | `GET health` | R |
+| Presence | `GET online-staff` | U (`knk.admin.world`) |
+
+### A.4 Kits — `knk.kit.manage`
+
+| Controller | Endpoints | Category |
+|---|---|---|
+| Kits | `GET /`, `GET {id}`, `POST search` (today `RequireServiceOrLoggedIn`) | F (+ lootbox, user.manage) |
+| Kits | `GET available?userId=` | F (+ user.manage; the plugin with its key) |
+
+### A.5 Lootboxes — `knk.admin.lootbox.manage`
+
+| Controller | Endpoints | Category |
+|---|---|---|
+| LootboxTypes, LootboxSpecialEntries, LootboxSpawnAreas | `GET /`, `GET {id}`, `POST search`; LootboxTypes `GET odds`, `GET {id}/odds` | U (already `knk.admin.lootbox.manage`) |
+
+### A.6 Siege — `knk.siege.admin.manage`
+
+| Controller | Endpoints | Category |
+|---|---|---|
+| SiegeScenarios | `GET /`, `GET {id}`, `POST search` (today `RequireServiceOrLoggedIn`), `GET {id}/readiness` (both routes), `GET {id}/teams`, `GET {id}/objectives` | F |
+| SiegeTeams | `GET {id}`, `POST search`, `GET {id}/spawnpoints` | F |
+| SiegeLobbies | `GET /`, `GET {id}`, `POST search` | F |
+| SiegeLobbies | `GET runtime-config` (both routes) | F (the plugin reads it with its key) |
+| SiegeObjectives, SiegeSpawnpoints | `GET {id}` | F |
+| SiegeMatches | all | P (unchanged) |
+
+### A.7 Roads — `knk.admin.road`
+
+| Controller | Endpoints | Category |
+|---|---|---|
+| RoadProfiles (`api/road-profiles`) | `GET /`, `GET {id}` | F |
+
+### A.8 Players — `knk.admin.user.manage`
+
+| Controller | Endpoints | Category |
+|---|---|---|
+| Users | `GET /`, `GET search`, `POST search`, `GET {id}/profile-summary` | U (already `knk.admin.user.manage`) |
+| Users | `GET {id}`, `GET {id}/permissions/check`, `GET {id}/permissions/effective` | U (self or `knk.admin.user.manage`) |
+| Users | `GET uuid/{uuid}`, `GET username/{username}` | F `knk.admin.user.manage` (today any logged-in user; the web app doesn't call them) |
+| Users | `GET check-duplicate`, `POST validate-link-code/{code}` | P |
+| PermissionGroups | `GET /`, `GET {id}`, `GET {id}/permissions/check`, `GET {id}/expiring-memberships` | U (`knk.admin.user.manage`) |
+| PermissionGroups | `POST search` | U (`knk.admin.user.perm`) |
+
+### A.9 New endpoints
+
+| Endpoint | Rule |
+|---|---|
+| `POST api/Lookup/{entityType}/search`, `GET api/Lookup/{entityType}/{id}` | L: any area node or the plugin key |
+| `POST api/Dashboard/bulk-delete` | `knk.admin.delete.bulk` + `knk.admin.delete` + the type's area node; web users only |
+| `POST api/Dashboard/export` | `knk.admin.export` + the type's area node; web users only |
