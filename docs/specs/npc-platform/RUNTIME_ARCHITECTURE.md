@@ -1,7 +1,7 @@
 # NPC runtime architecture — engine decoupling and scale (analysis)
 
 **Status:** Analysis and proposals for developer review; nothing here is decided except where it cites an existing decision. Nothing implemented.
-**Last updated:** 2026-11-08 (initial analysis, developer request: decouple the behaviour and traits model from Paper, Citizens and Sentinel; efficient spawning, behaviour and interaction for many NPC types; option to run behaviour in the API or a separate non-GUI system)
+**Last updated:** 2026-11-08 (developer decisions: one shared NPC population for Minecraft and the web town simulation, tactical loop in the plugin behind a movable contract, §8.6; decision matrices for the kernel boundary §4.7 and the web town simulation host §11, developer leaning towards a headless JVM sim service); 2026-11-08 (initial analysis, developer request: decouple the behaviour and traits model from Paper, Citizens and Sentinel; efficient spawning, behaviour and interaction for many NPC types; option to run behaviour in the API or a separate non-GUI system)
 **Issue:** [PandiO/knk-workspace#234](https://github.com/PandiO/knk-workspace/issues/234) (guard behavior model); related [#241](https://github.com/PandiO/knk-workspace/issues/241) (Citizens verification: [#242](https://github.com/PandiO/knk-workspace/issues/242) desk check, [#243](https://github.com/PandiO/knk-workspace/issues/243) spike, [#244](https://github.com/PandiO/knk-workspace/issues/244) benchmark)
 **Parent designs:** [DESIGN.md](DESIGN.md) (KNG-36 platform boundaries, §2 platform adapter), [BEHAVIOR_MODEL.md](BEHAVIOR_MODEL.md) (guard behaviour model)
 **Authority:** The developer's request of 2026-11-08 and the principle in [vision §5.1](../../vision/vision.md#51-rank--permission-architecture-decided): minimise dependence on Minecraft/Bukkit-ecosystem plugins because a future migration off Minecraft (Unreal Engine or a custom engine) is a live possibility. Code facts were checked on 2026-11-08 against knk-plugin `main` (`33122cf`); library facts against current Paper and Citizens documentation (§11). Everything else is a proposal.
@@ -117,6 +117,55 @@ Names are conceptual. All are interfaces in `knk-npc-core`; the Paper adapter im
 | Road graph and route planner (if moved off `org.bukkit.util.Vector`) | Possibly locomotion entirely, if the new engine has its own navmesh |
 
 If the kernel runs headless (§8), a new engine can even start as a thin client that only implements the ports over the network.
+
+### 4.7 Implications and decision matrix (RA-01–RA-03)
+
+Requested by the developer on 2026-11-08 before deciding.
+
+**Options compared**
+
+- **A (proposed):** engine-free `knk-npc-core` with ports; Citizens only behind `Locomotion`/`NpcBody`; Sentinel as reference only; KnK writes the combat executor.
+- **B:** the same kernel and ports, but Sentinel executes combat behind `CombatExecutor`.
+- **C:** plugin-native: KnK traits written as Citizens traits, Sentinel does targeting and combat, KnK tunes them.
+- **D:** no Citizens or Sentinel, but no separate kernel either: everything in `knk-paper` on Paper types.
+
+**Matrix** (score 1–5, higher is better; weight 1–3; total out of 85)
+
+| Criterion | Weight | A | B | C | D |
+|---|---|---|---|---|---|
+| Engine portability (vision §5.1) | 3 | 5 | 4 | 1 | 2 |
+| Reuse by a headless host and the web town simulation (shared population, §8.6) | 3 | 5 | 4 | 1 | 1 |
+| Fits the depth of BEHAVIOR_MODEL (suspicion, alert states, psychology, skill-based switching) | 3 | 5 | 3 | 2 | 4 |
+| Low exposure to Minecraft-update lag of third-party plugins | 2 | 4 | 3 | 2 | 4 |
+| Testability and determinism (scenario harness §14.4, replay §14.2) | 2 | 5 | 4 | 2 | 2 |
+| Time to a first playable guard | 2 | 2 | 3 | 5 | 3 |
+| Control over performance | 1 | 4 | 3 | 2 | 4 |
+| Little extra code to own | 1 | 2 | 3 | 5 | 2 |
+| **Weighted total** | | **73** | **59** | **37** | **45** |
+
+Scores are judgements from this analysis, not measurements; the #243 spike and #244 benchmark can correct the performance and update-lag rows.
+
+**What A gives**
+
+- The model, its tests and its traces run without a Minecraft server: in unit tests, in a headless service and behind the web town simulation. The decided scenario harness (BEHAVIOR_MODEL §14.4) and exact replay (§14.2) effectively require this already.
+- A future engine rewrites the adapters only (§4.6).
+- One source of truth for "who is my target and why", which the inspector and web decision viewer (§14) depend on.
+- After a Minecraft update only the movement executor waits on Citizens; with the `Mannequin` mover (RA-04) even that dependency can go.
+
+**What A costs**
+
+- KnK writes the combat executor itself: melee reach and hit checks, bow and crossbow ballistics with target lead, shield timing and friendly-fire checks. Sentinel's MIT-licensed source is the reference, so this is porting known solutions rather than research.
+- A boundary layer: neutral types, snapshots, the body ↔ NPC id map, conversions of ticks to milliseconds. Small, but it has to be kept clean.
+- One more Gradle module and the discipline the build check enforces.
+- The first playable guard comes later than with C, because the ports and executor come first.
+
+**Risks and mitigations**
+
+- *Ports designed before experience* can be wrong. Build them together with the #243 spike and keep them small; widen only when a real adapter needs it.
+- *Minecraft-specific concepts leaking in* (invulnerability ticks, attack-cooldown quirks). Express them as profile values in milliseconds in the kernel (the §5b floors already do this) and keep the quirk handling in the adapter.
+- *Citizens still on the critical path for movement.* Accepted by the §2 hybrid decision; the `Mannequin` mover is the exit.
+
+**Unchanged by A:** the §2 hybrid navigation decision, the §5b resolver and its clamps, Siege's MobGoals adapter for mob bodies. **Knock-on:** reusing the road planner from the kernel needs the `knk-core` `Vector` refactor (RA-05).
 
 ## 5. Player-shaped bodies on Paper
 
@@ -234,6 +283,11 @@ The same contract serves in-process calls (option A) and the network (option C):
 - **Outbound from the kernel:** intents and commands (`MoveTo(waypoints, ruleset)`, `LookAt`, `Attack(target, kind)`, `Say(player, line, answers)`, `Equip`, `Despawn`) with the NPC id and spawn generation, plus trace records.
 - Messages are plain data (JSON or a binary schema), versioned like the template modules (§15.2), and carry simulation time, so replay from a trace (§14.2) works the same in every host.
 
+### 8.6 Developer decisions (2026-11-08)
+
+- **One shared NPC population.** An NPC is one record whether it is managed in the web town simulation or met in Minecraft: a worker or guard staffed on the web is the same character that walks in game. On the web it acts at the abstract tier (T1); near players in Minecraft it gets a body (T2/T3). Consequence: exactly one host may simulate an NPC at a time (ownership lease, §11.3).
+- **Tactical loop in the plugin first, movable.** Tactical decisions for embodied NPCs run in the plugin on worker threads, called only through the §8.5 message contract so they can move to a headless service without a rewrite. Reflexes and movement execution stay with the body.
+
 ## 9. Player interaction at scale
 
 - **Event-driven, never polled.** A right-click, a chat-answer click or entering conversation range produces one event routed by NPC id to the kernel. Idle interaction costs nothing.
@@ -253,16 +307,77 @@ The same contract serves in-process calls (option A) and the network (option C):
 | RA-05 | Replace the `org.bukkit.util.Vector` uses in `knk-core` with KnK geometry types (small refactor, separate issue) | Yes |
 | RA-06 | Four simulation tiers (§6.3) for every NPC type, with capability-based systems | Yes |
 | RA-07 | Spawn queue with per-tick budget, async preparation, persist on despawn (§7) | Yes |
-| RA-08 | Behaviour split by timescale; start in-process behind a message contract; slow data layer in the API; headless service later on the §8.4 triggers | Yes |
+| RA-08 | Behaviour split by timescale; start in-process behind a message contract; slow data layer in the API; headless service later on the §8.4 triggers | **Decided 2026-11-08** for the tactical loop (§8.6). Where the slow layer and the web town simulation run is open: §11 (developer leaning: headless JVM sim service) |
 | RA-09 | No C# reimplementation of the psychology/decision model | Yes |
+| RA-11 | One shared NPC population for Minecraft and the web town simulation | **Decided 2026-11-08** (§8.6) |
+| RA-12 | Host of the web town simulation and abstract NPC work (§11) | Open; matrix favours a headless JVM sim service writing through the API |
 | RA-10 | Replace the §6.1 illustrative population with the developer's own estimates per NPC type | Developer input |
 
 Suggested follow-up issues once accepted (not filed by this analysis): the `knk-npc-core` skeleton with ports and the scenario harness; the `Vector` refactor in `knk-core`; extending #242–#244 with the `Mannequin` option, skin handling and per-archetype costs; the skin library in knk-web-api and the web app.
 
-## 11. Sources
+## 11. Web town simulation without Minecraft
+
+### 11.1 The vision (developer, 2026-11-08)
+
+Besides Minecraft, KnK should offer a **Minecraft-less town simulation** with NPC work, aimed at 4X strategy, town management and resource management, probably through the web app. Inspiration: the browser game Grepolis (timed build queues and troop movements), Sid Meier's Civilization (empire and diplomacy; vision §3.6 already draws on Civilization V for diplomacy) and Anno-style production chains. It extends [vision §4.3](../../vision/vision.md#43-town-economy-simulation-long-term) (semi-autonomous town economies) and builds on the [production, storage and transport](../production-storage-transport/DESIGN.md) design.
+
+With one shared population (§8.6), the web game and Minecraft work on the same towns, stock and NPCs: a caravan sent on the web is a T1 NPC on a real road route; if a player meets it in game it gets a body.
+
+### 11.2 Where the simulation runs: options and matrix
+
+- **A. knk-web-api hosted services:** what the production plan assumes today (`ProductionSweepService`, simulated transport in P3/P5; no phase started).
+- **B. Headless JVM sim service (developer leaning):** a separate process with no GUI and no Minecraft, running `knk-npc-core` and the town simulation, reusing `knk-api-client` and the engine-free road planner; it writes results through the API, which stays the ledger.
+- **C. Separate .NET worker service** sharing the API's domain model and database.
+- **D. Headless JVM service with its own database:** the sim service owns town state; the API forwards to it.
+
+Score 1–5, higher is better; weight 1–3; total out of 90.
+
+| Criterion | Weight | A | B | C | D |
+|---|---|---|---|---|---|
+| Lean API, separation of responsibility (developer priority) | 3 | 1 | 5 | 4 | 5 |
+| One implementation of NPC logic for the shared population | 3 | 2 | 5 | 2 | 5 |
+| Data consistency: one ledger for stock and currency (production DESIGN §3, rule 1) | 3 | 5 | 4 | 3 | 2 |
+| Reuse of existing code | 2 | 4 | 5 | 3 | 3 |
+| Scaling and load isolation from the web API | 2 | 2 | 5 | 4 | 5 |
+| Low operations cost | 2 | 5 | 3 | 3 | 1 |
+| Engine-migration value (serves any future engine) | 2 | 3 | 5 | 3 | 5 |
+| Fit with already-planned work | 1 | 5 | 3 | 3 | 2 |
+| **Weighted total** | | **57** | **81** | **56** | **66** |
+
+Notes on the scores: B keeps rule 1 because every quantity change is still an API transaction, only computed elsewhere; C would let two processes write the same tables and bypass the API's rules; D gives the leanest API but splits the ledger across two databases. B's reuse is high because the Java API client, the NPC kernel and the road planner already exist or are planned in Java.
+
+### 11.3 Implications of option B
+
+**Responsibilities**
+
+| Component | Owns |
+|---|---|
+| knk-web-api | System of record and ledger (stock, currency, NPC records, towns), auth and permissions, CRUD and web endpoints, realtime fan-out to web app and plugin |
+| Sim service (proposed name `knk-sim`) | Time and abstract NPC work: production settling, simulated transport and caravans, worker effects, T0/T1 NPC state (mood drift, needs, staffing effects), 4X timers (build queues, troop and caravan movement), circumstances and events (vision §4.3) |
+| Game server (plugin) | Embodied NPCs (T2/T3), the Minecraft world, players in game |
+| Web app | Presentation; all actions go to the API, never directly to the sim service |
+
+**How it works**
+
+- **Writes go through the API.** The sim service is a trusted service client with **its own service key** (not the plugin's `Security:PluginApiKey`), calling batched, **idempotent** command endpoints (each result carries a cycle or event id, so a retry never produces twice).
+- **Commands from players** (start a building, send a caravan, staff a garrison) are API commands; the API notifies the sim service through the realtime channel or a queue. The sim service pushes outcomes back through the API, which fans them out to the web app and the plugin (SignalR, #178).
+- **Event-driven time, not ticks.** A next-due queue per town, like `NextSettleAt` in the production plan, plus lazy settlement on read. Thousands of towns cost little because nothing runs until something is due.
+- **NPC ownership lease** (needed by the shared population): an API record per NPC naming its current simulator (sim service or a game server) and a generation. A game server takes the lease when it embodies an NPC and hands it back with a state snapshot on despawn; stale holders are rejected. Open rule: what an embodied worker means for production (counts as working only while abstractly at work, or only while physically at the workplace).
+- **Outages.** Sim service down: the web stays browsable, timers catch up on restart with the catch-up cap the production design already has. API down: the sim service pauses writes and retries. Game server down: its leases expire back to the sim service.
+
+**What changes elsewhere if B is chosen**
+
+- The production plan's `ProductionSweepService` (P3) and simulated transport (P5) move from API hosted services to the sim service; the ledger tables, rules and endpoints stay in the API. No phase has started, so this is a plan revision, not a rewrite.
+- One more deployable: JVM runtime, configuration and secrets, OpenTelemetry like the API, health checks, and a place in the alpha hosting setup.
+- A repository decision: a Gradle module next to `knk-npc-core` in knk-plugin (shared build, simplest start) or its own `knk-sim` repository.
+
+**Open for the web game itself** (to design later): turn model (real-time timers like Grepolis vs. turns), how web-only players relate to Minecraft players, which management actions exist only on the web, and anti-abuse rules for timers and trades.
+
+## 12. Sources
 
 - knk-plugin `main` `33122cf` (2026-11-08): `knk-core/build.gradle.kts`, the `org.bukkit` imports listed in §3, `core/roads/`, `core/navigation/`, `core/ports/`, `core/realtime/`, `knk-api-client/build.gradle.kts` (SignalR client).
 - knk-web-api `Realtime/`, `Services/` hosted services.
+- [Production, storage and transport implementation plan](../production-storage-transport/IMPLEMENTATION_PLAN.md) (rev. 2, no phase started): `ProductionSweepService`, P5 simulated transport; [DESIGN §3](../production-storage-transport/DESIGN.md) rule 1 (the API is the single source of truth for stock).
 - Paper `Mannequin` API: [jd.papermc.io Folia 26.2 `Mannequin`](https://jd.papermc.io/folia/26.2/org/bukkit/entity/Mannequin.html), [Paper 1.21.11 `Mannequin`](https://jd.papermc.io/paper/1.21.11/org/bukkit/entity/Mannequin.html); [Minecraft wiki: Mannequin (added 1.21.9)](https://wiki.ronlab.site/content/minecraftwiki_en_all_maxi_2025-11/Mannequin); [SPIGOT-8084](https://hub.spigotmc.org/jira/browse/SPIGOT-8084).
 - Citizens skins: [SkinTrait Javadoc](https://jd.citizensnpcs.co/net/citizensnpcs/trait/SkinTrait.html), [Citizens wiki: Skins](https://wiki.citizensnpcs.co/Skins).
 - Sentinel: [mcmonkeyprojects/sentinel (ecosyste.ms listing: MIT, last push December 2024)](https://awesome.ecosyste.ms/projects/github.com%2Fmcmonkeyprojects%2Fsentinel).

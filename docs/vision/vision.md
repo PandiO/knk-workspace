@@ -141,6 +141,8 @@ Currently: trader/banker, general, spy/thief, engineer, plus room for one more. 
 
 Town economies are intended to run semi-autonomously, distinguishing between **circumstances** (background events players cannot influence) and **events** (player-caused, players can influence). A technology tree unlocks automatically from population activity over time, sped up by universities/libraries, and can regress if no library exists to sustain it.
 
+**Minecraft-less town simulation [Long-term] (developer, 2026-11-08):** besides Minecraft, a town simulation with NPC work aimed at 4X strategy, town management and resource management, probably through the web app, inspired by Grepolis, Sid Meier's Civilization and Anno-style games. It shares towns, stock and NPCs with the Minecraft world (one NPC population). Host and architecture are analysed in [npc-platform/RUNTIME_ARCHITECTURE.md §11](../specs/npc-platform/RUNTIME_ARCHITECTURE.md#11-web-town-simulation-without-minecraft).
+
 ### 4.4 Economic balancing
 
 Real medieval market data as a basis for item/resource values is a nice-to-have, not a requirement — **game balance takes priority over realism**.
