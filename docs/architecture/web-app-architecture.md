@@ -1,7 +1,7 @@
 # knk-web-app — Architecture
 
 **Status:** Living document — reflects actual code, updated in place on each rescan
-**Last updated:** 2026-11-08 (Entity setup at phone width, raw colours checked in `test:ci`, landing slideshow fade out → in, `usePrefersReducedMotion` — #266, #263, #258, branch `claude/web-fixes-266-263-258`, not merged); 2026-11-05 (#239 offer permission check, #240 Send again merged); 2026-11-04 (#239, #240 on a feature branch); 2026-11-02 (`src/realtime/RealtimeProvider`, world tasks and catalogue scans over the web hub — #181, branch `claude/realtime-signalr`); 2026-11-01 (world tasks anchored to the draft, cancel/expired states, task code, builder task types — #180, branch `claude/world-task-hardening`); 2026-09-18 (scan basis: `knk-web-app` @ `4ff5dc6`, branch `claude/web-app-codebase-scan-4yqibi`); spot edits 2026-10-09 (ObjectTypeExplorer, KNG-61), 2026-10-10 (FormWizard Boolean fields, KNG-53), 2026-10-12 (FormWizard child forms, KNG-133, KNG-134; List edit load, step header, List validation, KNG-135, KNG-137, KNG-164; form session registry, KNG-136; cancel / delete-draft prompt, KNG-162; form configuration export/import, KNG-138); 2026-10-17 (form wizard chain merged to `main`; smoke-test follow-ups KNG-166..169, KNG-172, KNG-173: step strip, confirmations and refusals, rule builder parent forms, picker columns, metadata refresh); 2026-10-22 (display configuration export/import; KNG-195 hybrid picker submit); 2026-10-23 (step completion conditions run, KNG-186); 2026-10-23 (validation result log, batch validate, Re-check, KNG-269); 2026-10-25 (toast region, world-task polling; UX re-evaluation in `reports/2026-10-25-web-app-ux-reevaluation.md`); 2026-10-26 (dashboard type in the URL, `returnTo`, submit pending state, success toast — PandiO/knk-workspace#177 link 1, #58); 2026-10-26 (dashboard header New/Configure, flat explorer with marker, open form without the explorer + breadcrumb, detail page header, metadata-driven Create New, "Entity setup" — #177 link 2, #81, #39); 2026-10-26 (dashboard explorer: one scrollbar, favourite types — #194, branch `claude/dashboard-explorer-194`, merged into `main` `c3c0c9f`), 2026-10-26 (dashboard header row spacing — #195, branch `claude/dashboard-header-195`, merged into `main` `c3c0c9f`); 2026-10-26 (data router, unsaved-changes guard, sticky footer, blur validation + error summary, Save on any step in edit mode, single-line input, drafts owned by the login — #109, #186, #64 FormWizard part); 2026-10-27 (unsaved changes compared by value across all steps, Next's progress save no longer counts as saved — #109 fix round); 2026-11-01 (dashboard table state in the URL, rows as links, `aria-sort`, lootbox/moderation tab in the URL, "Drafts (n)" and "New with" — PandiO/knk-workspace#39, #177 follow-up, merged 2026-11-03); 2026-11-02 (design tokens and switchable themes — #95, merged 2026-11-03); 2026-11-03 (fix round after the live comparison: orange brand primary, heading font on player pages only, full-bleed auth pages); 2026-11-03 (explorer favourites are copies — #225, branch `claude/explorer-favourite-copies-225`, not merged); 2026-11-03 (explorer filter: display / form configuration — #226, merged 2026-11-04); 2026-11-03 (open form without the type overview card — #227, merged 2026-11-04)
+**Last updated:** 2026-11-08 (dashboard checkbox selection and Export CSV behind `knk.admin.export` — #205 export part, branch `claude/dashboard-export-205`, not merged); 2026-11-08 (Entity setup at phone width, raw colours checked in `test:ci`, landing slideshow fade out → in, `usePrefersReducedMotion` — #266, #263, #258, branch `claude/web-fixes-266-263-258`, not merged); 2026-11-05 (#239 offer permission check, #240 Send again merged); 2026-11-04 (#239, #240 on a feature branch); 2026-11-02 (`src/realtime/RealtimeProvider`, world tasks and catalogue scans over the web hub — #181, branch `claude/realtime-signalr`); 2026-11-01 (world tasks anchored to the draft, cancel/expired states, task code, builder task types — #180, branch `claude/world-task-hardening`); 2026-09-18 (scan basis: `knk-web-app` @ `4ff5dc6`, branch `claude/web-app-codebase-scan-4yqibi`); spot edits 2026-10-09 (ObjectTypeExplorer, KNG-61), 2026-10-10 (FormWizard Boolean fields, KNG-53), 2026-10-12 (FormWizard child forms, KNG-133, KNG-134; List edit load, step header, List validation, KNG-135, KNG-137, KNG-164; form session registry, KNG-136; cancel / delete-draft prompt, KNG-162; form configuration export/import, KNG-138); 2026-10-17 (form wizard chain merged to `main`; smoke-test follow-ups KNG-166..169, KNG-172, KNG-173: step strip, confirmations and refusals, rule builder parent forms, picker columns, metadata refresh); 2026-10-22 (display configuration export/import; KNG-195 hybrid picker submit); 2026-10-23 (step completion conditions run, KNG-186); 2026-10-23 (validation result log, batch validate, Re-check, KNG-269); 2026-10-25 (toast region, world-task polling; UX re-evaluation in `reports/2026-10-25-web-app-ux-reevaluation.md`); 2026-10-26 (dashboard type in the URL, `returnTo`, submit pending state, success toast — PandiO/knk-workspace#177 link 1, #58); 2026-10-26 (dashboard header New/Configure, flat explorer with marker, open form without the explorer + breadcrumb, detail page header, metadata-driven Create New, "Entity setup" — #177 link 2, #81, #39); 2026-10-26 (dashboard explorer: one scrollbar, favourite types — #194, branch `claude/dashboard-explorer-194`, merged into `main` `c3c0c9f`), 2026-10-26 (dashboard header row spacing — #195, branch `claude/dashboard-header-195`, merged into `main` `c3c0c9f`); 2026-10-26 (data router, unsaved-changes guard, sticky footer, blur validation + error summary, Save on any step in edit mode, single-line input, drafts owned by the login — #109, #186, #64 FormWizard part); 2026-10-27 (unsaved changes compared by value across all steps, Next's progress save no longer counts as saved — #109 fix round); 2026-11-01 (dashboard table state in the URL, rows as links, `aria-sort`, lootbox/moderation tab in the URL, "Drafts (n)" and "New with" — PandiO/knk-workspace#39, #177 follow-up, merged 2026-11-03); 2026-11-02 (design tokens and switchable themes — #95, merged 2026-11-03); 2026-11-03 (fix round after the live comparison: orange brand primary, heading font on player pages only, full-bleed auth pages); 2026-11-03 (explorer favourites are copies — #225, branch `claude/explorer-favourite-copies-225`, not merged); 2026-11-03 (explorer filter: display / form configuration — #226, merged 2026-11-04); 2026-11-03 (open form without the type overview card — #227, merged 2026-11-04)
 **Source scan:** `docs/reports/web-app-scan-2026-09-18.md`
 
 ## Stack
@@ -294,8 +294,35 @@ shared link, rows deleted) moves to the last page. Without `query` the table kee
 wizard's pickers (`FieldRenderers`, the Minecraft pickers) do; they never touch the URL, so the unsaved-changes guard
 (which blocks query changes) is unaffected. **Rows as links** (`rowHref`): the first cell is an `<a href>` to the
 detail page (middle-click, Ctrl/Cmd-click, keyboard), a plain click still goes through the app's navigation, and a
-Ctrl-click or middle-click elsewhere on the row opens a new tab; only for types whose View works, never while rows
-are selectable. Sortable headers are buttons (keyboard) with `aria-sort`.
+Ctrl-click or middle-click elsewhere on the row opens a new tab; only for types whose View works, and not while a row
+click selects (the wizard pickers). Sortable headers are buttons (keyboard) with `aria-sort`.
+
+**Checkbox selection and Export CSV** (#205 export part, branch `claude/dashboard-export-205` until merged):
+- **Selection:** the dashboard passes `selectionConfig={{ mode: 'multiple' }}` with `selectionStyle="checkbox"`, so
+  `DataTable` draws a checkbox column (`selection` prop) and a header box for the rows shown (mixed when some are).
+  Clicks in that cell never reach the row, so the row link, the row click and middle-click keep working. The pickers
+  keep row-click selection (`selectionStyle` `row`, the default). `ObjectDashboard` holds the selected rows across
+  pages and searches of the type; changing the type clears them, and a single Delete removes its row.
+- **Bulk bar:** `PagedEntityTable`'s `renderSelectionBar` hands `ObjectDashboard/DashboardSelectionBar` the
+  selection, the table's columns in table order (`effectiveColumns`), the query and the total. The bar shows
+  "n selected" with Clear, or "None selected · Export takes all N results", and **Export CSV**. It has a slot
+  (`actions`) before Export for link AM3's "Delete (n)".
+- **Export:** the selected rows (in selection order), or with nothing selected the current search across all pages
+  in the current sort (`utils/tableExport.ts` `readSearchRows`: pages of 100 through the type's list API, follows an
+  endpoint that clamps the page size, skips a repeated id). The cap is 10,000 rows (`EXPORT_ROW_LIMIT`, the same as
+  the planned endpoint): the bar says so beforehand, and a toast afterwards. While it pages, the button shows the
+  progress and Cancel stops it.
+- **CSV:** `buildTableCsv` writes the column labels, then each row's cell text (`utils/tableCells.tsx` `cellText`):
+  a column's `render` read as text (`reactNodeToText`), Yes/No for booleans, an object's name, and empty for a
+  missing value. `utils/csv.ts` does RFC 4180 quoting with CRLF, puts `'` before formula-like texts
+  (`=`, `+`, `@`, `-` not followed by a number), and saves UTF-8 with a BOM as `<Type>-<yyyy-mm-dd>.csv`
+  (local date, entity name).
+- **Permission:** Export is enabled only with `knk.admin.export` (`EXPORT_PERMISSION_NODE`, through `usePermissions`).
+  Without it, the button is disabled with "Requires knk.admin.export". Until the API declares the node (link AM1),
+  only `*` and `knk.admin.*` match it, so only the owner and Admin. The list reads stay the real limit (#280 DESIGN
+  § 4.8).
+- **AM3** switches the data source to `POST api/Dashboard/export`. `readSearchRows` already returns that endpoint's
+  `{ items, total, truncated }`, so `buildTableCsv` stays as it is.
 
 **"Drafts (n)" and "New with"** (#177 follow-up): next to "New {Type}" a chevron lists the type's form
 configurations other than the default ("New with"), and a "Drafts (n)" chip lists the caller's open drafts of the
@@ -369,9 +396,9 @@ src/
     FormConfigBuilder/      — admin UI to author FormConfigurationDto records
     DisplayWizard/          — generic read-only detail-view engine; `EntityDetailHeader` (name, Back/Edit/Delete, #81)
     DisplayConfigBuilder/   — admin UI to author DisplayConfigurationDto records
-    ObjectDashboard/        — legacy static-config-driven list/CRUD dashboard
+    ObjectDashboard/        — legacy static-config-driven list/CRUD dashboard; `DashboardSelectionBar` (bulk bar, Export CSV, #205)
     ObjectTypeExplorer/     — left-nav entity type picker (ObjectDashboard, FormWizardPage): search, A–Z/Z–A sort, optional groups (unused since #177 link 2), `marked` entries, `favourites` with a star per type, listed on top as copies (#194, #225, dashboard only), `filters` (Any/Yes/No selects, #226, dashboard only), settings in localStorage (KNG-61)
-    PagedEntityTable/       — generic server-paged table, used by both dashboard and forms; controlled mode (`query`/`onQueryChange`), `rowHref`, `aria-sort` (#39)
+    PagedEntityTable/       — generic server-paged table, used by both dashboard and forms; controlled mode (`query`/`onQueryChange`), `rowHref`, `aria-sort` (#39); `selectionStyle="checkbox"` + `renderSelectionBar` (#205)
     PathBuilder/            — path/reference picker for cross-entity field bindings
     Workflow/               — WorldTask/job polling UI (siege/world-mutation background tasks)
     minecraft/              — hybrid pickers for Minecraft material/enchantment refs
@@ -392,6 +419,7 @@ src/
     tokenService.ts         — localStorage/sessionStorage token persistence
     config-helper.ts         — ConfigurationHelper.gatewayApiUrl → appConfig.api.baseUrl
     enums.ts                 — Controllers enum (maps client → backend controller route segment)
+    csv.ts, tableExport.ts, tableCells.tsx — CSV writing, export rows (selection / all pages, 10,000 cap), cell values as text (#205)
   config/
     appConfig.ts              — base API URL config (not a REACT_APP_* env var)
     objectConfigs.tsx          — legacy static per-entity-type config (see above)
