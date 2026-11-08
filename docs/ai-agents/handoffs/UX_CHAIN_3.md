@@ -32,6 +32,14 @@ after another; at most two component-repo links run at once and they share no co
 | P2 | #264 | Flaky `RealtimeClientTest.stopClosesAndNeverReconnects` | plugin | `claude/realtime-client-flaky-264` | P1 done |
 | P3 | #269 | Temp regions of abandoned drafts cleaned up when the draft is cancelled/expires, not only after 14 days | API, plugin | `claude/temp-region-drafts-269` | P2 done |
 
+| AM1 | #280 | Access model, API part 1: node constants, type→area registry, `knk.admin.delete` on every deletable type, owner-only `knk.admin.delete.bulk`, `knk.admin.export`, migration `SeedDashboardActionNodes` (backfill **without** the Staff group, developer 2026-11-08), `POST api/Dashboard/bulk-delete` and `/export`, metadata fields, live updates per area | API | `claude/dashboard-access-280` | developer's go (given 2026-11-08) and no other link changing knk-web-api |
+| AM2 | #280 | Access model, API part 2: every read gated by area, lookup endpoints for pickers, pinned read-rules test | API | `claude/dashboard-access-280` | AM1 done |
+| AM3 | #280, #205 | Access model in the web app: per-type access, dashboard for any area node, disabled actions with hints, hidden bulk Delete, export via endpoint, picker lookup mode; **#205 bulk delete** | web-app | `claude/dashboard-access-280` | V2 done and AM2 pushed |
+| AM4 | #280 | Living docs, admin guide to the ranks, smoke test with role accounts, CHANGELOG | workspace | `claude/dashboard-access-280` | AM3 done |
+
+Design: `docs/specs/dashboard-access-model/DESIGN.md` on `claude/dashboard-access-model-280` (decided 2026-11-08).
+AM1–AM3 are deployed together, API first.
+
 V5 and V6/V7 touch the API: they wait until no P-lane link changes knk-web-api at the same time (the coordinator
 orders them).
 
