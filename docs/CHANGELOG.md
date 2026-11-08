@@ -4,7 +4,18 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
-(Nothing at the moment.)
+- **Dashboard access model, API part 1 (AM1)** — [PandiO/knk-workspace#280](https://github.com/PandiO/knk-workspace/issues/280),
+  knk-web-api `claude/dashboard-access-280` (stacked on `claude/kit-grant-delivery-261`, which contains chain 2's R1, and
+  on chain 2's X1 API `claude/realtime-web-live-183`: merging it merges those too). New nodes `knk.admin.delete`,
+  `knk.admin.delete.bulk` and `knk.admin.export` on top of the area nodes: every dashboard delete (users and permission
+  groups included) needs the area node and `knk.admin.delete`; `POST api/Dashboard/bulk-delete` (area + delete + bulk,
+  at most 100 ids, a reason per refused row, not for users and groups) and `POST api/Dashboard/export` (area + export,
+  at most 10 000 rows), each with one audit entry. Only the owner hands out bulk delete, also through `knk.admin.*` or
+  groups that carry it; nobody changes a group ranked at or above their own. Migration `SeedDashboardActionNodes`
+  (data only) gives Admin the three nodes where its wildcard doesn't, and delete and export to every explicit
+  area-node holder **except the Staff group**. Metadata names each type's area and action nodes; live updates follow
+  the area. Read gating and lookups (AM2) and the web app (AM3) follow; deploy AM1–AM3 together, API first. Smoke test
+  draft: [guides/dashboard-access-smoke-test.md](guides/dashboard-access-smoke-test.md).
 
 ## 2026-11-05
 

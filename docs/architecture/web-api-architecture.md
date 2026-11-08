@@ -1,7 +1,7 @@
 # knk-web-api — Architecture
 
 **Status:** Living document — update in place as the code changes
-**Last updated:** 2026-11-05 (#239 offer permission check, #240 Send again merged); 2026-11-04 (#239, #240 on a feature branch); 2026-11-02 (§6: config and entity events, `ReportWorlds` — #182, branch `claude/realtime-signalr`); 2026-11-02 (§6: world tasks over the hubs, presence endpoints — #181, branch `claude/realtime-signalr`); 2026-11-01 (world-task state machine, task codes, sweep, tasks anchored to the draft — #180, branch `claude/world-task-hardening`); 2026-10-26 (§6: realtime hubs, #178 S1 and #179 S2 on a feature branch); 2026-09-18 (based on a full read-only code scan; see `docs/reports/web-api-scan-2026-09-18.md` for the raw findings this doc summarizes); spot edits 2026-10-12 (FormField selection limits, KNG-164; created-entity provenance, reference check and DELETE 409 filter, KNG-162; FormConfiguration export/import and bundled seeds, KNG-138; the first seeds and stronger seed tests, KNG-139); 2026-10-26 (drafts and workflow sessions owned by the logged-in caller, PandiO/knk-workspace#186); 2026-10-17 (form wizard chain merged to `master`; smoke-test follow-ups: refusal reasons, KNG-169; FormConfiguration delete, KNG-172; region rule messages, KNG-173; validation result metadata, GateStructure house number, rule dependency path on update); 2026-10-22 (KNG-139 priority 2/3 seeds and DisplayConfiguration export/import; KNG-195 form submit fixes; gate warp settings, KNG-229); 2026-10-23 (step condition / field validation `IsActive`, KNG-186); 2026-10-23 (validation result log and validate-batch, KNG-269); 2026-10-25 (§6 plugin auth, health probe and RegionHttpServer callers corrected from the SignalR inventory); 2026-11-04 (ConditionalRequired ConfigJson contract, `FieldValidationService` removed, PandiO/knk-workspace#99)
+**Last updated:** 2026-11-08 (§5.1 dashboard access model, AM1 of #280 — branch `claude/dashboard-access-280`, not merged); 2026-11-05 (#239 offer permission check, #240 Send again merged); 2026-11-04 (#239, #240 on a feature branch); 2026-11-02 (§6: config and entity events, `ReportWorlds` — #182, branch `claude/realtime-signalr`); 2026-11-02 (§6: world tasks over the hubs, presence endpoints — #181, branch `claude/realtime-signalr`); 2026-11-01 (world-task state machine, task codes, sweep, tasks anchored to the draft — #180, branch `claude/world-task-hardening`); 2026-10-26 (§6: realtime hubs, #178 S1 and #179 S2 on a feature branch); 2026-09-18 (based on a full read-only code scan; see `docs/reports/web-api-scan-2026-09-18.md` for the raw findings this doc summarizes); spot edits 2026-10-12 (FormField selection limits, KNG-164; created-entity provenance, reference check and DELETE 409 filter, KNG-162; FormConfiguration export/import and bundled seeds, KNG-138; the first seeds and stronger seed tests, KNG-139); 2026-10-26 (drafts and workflow sessions owned by the logged-in caller, PandiO/knk-workspace#186); 2026-10-17 (form wizard chain merged to `master`; smoke-test follow-ups: refusal reasons, KNG-169; FormConfiguration delete, KNG-172; region rule messages, KNG-173; validation result metadata, GateStructure house number, rule dependency path on update); 2026-10-22 (KNG-139 priority 2/3 seeds and DisplayConfiguration export/import; KNG-195 form submit fixes; gate warp settings, KNG-229); 2026-10-23 (step condition / field validation `IsActive`, KNG-186); 2026-10-23 (validation result log and validate-batch, KNG-269); 2026-10-25 (§6 plugin auth, health probe and RegionHttpServer callers corrected from the SignalR inventory); 2026-11-04 (ConditionalRequired ConfigJson contract, `FieldValidationService` removed, PandiO/knk-workspace#99)
 
 ## 1. Stack & shape
 
@@ -72,6 +72,62 @@ Key structural facts worth knowing before touching the model:
 Browser clients call the API over REST with a bearer token attached (`src/services/serviceCall.ts` on the web-app side). Every controller except `AdminClientsController`, `AuthController.Me`/`Update`, and `UsersController.LinkMinecraftAccount` has **no** `[Authorize]` attribute — JWT bearer auth is configured globally but most actions don't actually require it. This is broader than the CLAUDE.md's implication that JWT auth gates the API generally; verify with the developer whether this is intentional (internal-tool-style trust) or a gap before shipping wider access.
 
 The web-app is the primary caller for almost every CRUD controller (Towns/Districts/Streets/Structures/Categories/DisplayConfigurations/FormConfigurations/GameSettings/etc.) and for the form-builder/validation/workflow machinery. See the endpoint table in the scan report for the full caller breakdown, including several confirmed **broken web-app client calls** (routes the frontend posts to that don't exist server-side — e.g. `authClient.ts`'s `mergeAccounts` posts to a non-existent `api/Auth/merge` instead of the real `api/Users/merge`).
+
+### 5.1 Dashboard access model (PandiO/knk-workspace#280, AM1 — branch `claude/dashboard-access-280`, not merged)
+
+Design: [specs/dashboard-access-model/DESIGN.md](../specs/dashboard-access-model/DESIGN.md) (model A, decided 2026-11-08).
+AM1 builds the **actions**; read gating per area and the lookup endpoints follow in AM2 (same branch), the web app in
+AM3. Deploy AM1–AM3 together, API first.
+
+- **Nodes** (`StaffPermissions`): `Delete = knk.admin.delete` (delete one), `DeleteBulk = knk.admin.delete.bulk`,
+  `Export = knk.admin.export`. The area nodes are unchanged and still mean view, create and edit in their area:
+  `knk.admin.content`, `knk.admin.world`, `knk.kit.manage`, `knk.admin.lootbox.manage`, `knk.siege.admin.manage`,
+  `knk.admin.road`, `knk.admin.user.manage` (`knk.admin.user.perm` for permission-group writes).
+- **Registry** `Attributes/DashboardAccess.cs`: one entry per `[FormConfigurableEntity]` type, plus `RoadProfile`.
+  Each holds the area, area node, write node, read nodes (area node first, then the cross-area page nodes of the
+  design's § 4.6.2, enforced from AM2), whether it is deletable and bulk deletable, and delegates to the type's own
+  delete and search (the same service calls as its `DELETE {id}` and `POST …/search`). Link rows, snapshots and other
+  `[FormConfigurableEntity]` types are view-only entries. `Security/DashboardAccessTests` pins the coverage.
+- **Single delete:** every deletable type's `DELETE {id}` carries `RequireServiceOrPermission(Delete)`
+  (`RequirePermission` on the lootbox controllers) on top of its class or method area rule, so a delete is area node
+  AND `knk.admin.delete`; users (`knk.admin.user.manage`) and permission groups (`knk.admin.user.perm`) included.
+  `Security/DeleteAccessRulesTests` pins the primary delete per type and an exemption list for every other DELETE
+  (builder parts, menus, drafts, world-task/workflow lifecycle, link deletes, plugin-only and player-own deletes).
+- **`POST api/Dashboard/bulk-delete`** (`DashboardController`, web users only): `RequirePermission(DeleteBulk)` and
+  `RequirePermission(Delete)`, then the type's area node in the action (403), `bulkDeletable` (400
+  `BulkDeleteNotAllowed` for users, permission groups and view-only types), 1–100 distinct positive ids (400), unknown
+  type 404. `DashboardActionService` deletes each id through the type's own delete in its **own DI scope**, so a refused
+  row doesn't poison the next save; the answer is `{ deleted: [id], refused: [{ id, reason }] }` with the single
+  delete's wording (not found; the business rule's message; the `DeleteConstraintExceptionFilter` "still used by …"
+  text from `EntityReferenceService`; a generic text for anything else, never the exception's). One `AuditLogEntry`
+  `DashboardBulkDelete` (target = actor; type, requested, deleted ids, refused count). Rate limit: the `lookup` policy.
+  Each row is its own save, so realtime sends one `EntityChanged` per row.
+- **`POST api/Dashboard/export`** (web users only): `RequirePermission(Export)` and the area node in the action. Body
+  `{ entityType, ids?, query?: { searchTerm, filters, sortBy, sortDescending } }`; reads the type's own search in pages
+  of 500 in the requested sort, at most 10 000 rows (`truncated: true` beyond); with `ids` it scans the search (with the
+  query, if given) for those rows and returns them in its order (scan limit 100 000 rows). Answer
+  `{ items, total, truncated }`, rows exactly as the type's search returns them (the web app formats the CSV with the
+  table's columns). 400 for a type without a search (`RoadProfile`, link rows) and for more than 10 000 ids. One
+  `AuditLogEntry` `DashboardExport` (type, scope `selection`/`search`, count, truncated; never the rows).
+- **Metadata** (`EntityMetadataDto`, `GET api/Metadata/entities…`): `area`, `accessNode`, `writeNode`, `readNodes`,
+  `deletable`, `bulkDeletable`, `exportable` and `actionNodes` (`create`, `edit`, `delete`, `bulkDelete`, `export` →
+  every node the action needs; an action the type doesn't allow is left out), from the registry.
+- **Escalation guard** (`PermissionEscalationGuard`): `OwnerGrantOnly = { knk.admin.delete.bulk }`. Granting,
+  denying or revoking it, or a wildcard that covers it by the resolver's rules (`*`, `knk.*`, `knk.admin.*`,
+  `knk.admin.delete.*`, also `x.*` for the bare `x`), needs `*` ("Only the owner can hand out bulk delete."); so do
+  assigning a group and inheriting from a group whose granted chain covers it (premium ranks included). So **Admins
+  can no longer grant `knk.admin.*`** or hand out a group carrying it. `knk.admin.delete` and `knk.admin.export` stay
+  grantable by anyone who holds them. **Rank (developer 2026-11-08, Staff):** besides handing out and removing
+  groups, a web user now also changes a group's grants (`CanGrantNodeAsync` on a group holder) and creates, edits or
+  deletes a group (`CanChangeGroupAsync`, the group as it is and its new Weight) only below their own highest group.
+- **Migration `SeedDashboardActionNodes`** (data only): Admin gets the three nodes unless its chain decides them (the
+  alpha: `knk.admin.*`, nothing added); every group and user with an active explicit area-node grant gets
+  `knk.admin.delete` and `knk.admin.export`, **except the Staff group**; a holder whose chain (for a user: own grants,
+  then every active group and its parents) has a grant, deny or covering wildcard is skipped. Bulk delete is never
+  backfilled. Down removes only value-1 grants without expiry.
+- **Realtime:** `RealtimeWebChangeMap.NodeFor` returns the type's **area node** (a base type's event, `Domain` for a
+  saved `Town`, uses the base type's area), so live updates follow the area; users, memberships, grants and the audit
+  log stay on `knk.admin.user.manage`, `NotSent` types unchanged. Delete nodes don't change the audience.
 
 ## 6. Talks to knk-plugin
 

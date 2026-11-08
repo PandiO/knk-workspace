@@ -1,8 +1,11 @@
 # Dashboard access model — view, create, edit, delete, bulk delete and export
 
 **Status:** **Decided 2026-11-08.** The developer answered all 11 questions of the proposal the same day; the record is
-in § 7. No code yet: the work is planned as links AM1–AM4 (§ 5).
-**Last updated:** 2026-11-08 (decided version, with read gating per area, `knk.admin.export` and the read-endpoint
+in § 7. **AM1 built** (knk-web-api `claude/dashboard-access-280`, not merged; as built:
+[web-api architecture § 5.1](../../architecture/web-api-architecture.md#51-dashboard-access-model-pandioknk-workspace280-am1--branch-claudedashboard-access-280-not-merged));
+AM2–AM4 to come (§ 5). Developer 2026-11-08: the backfill (§ 4.5) **skips the Staff group**, and nobody changes a group
+ranked at or above their own (§ 4.4).
+**Last updated:** 2026-11-08 (AM1 built, Staff decision); 2026-11-08 (decided version, with read gating per area, `knk.admin.export` and the read-endpoint
 appendix); 2026-11-08 (first version, chain 3 link D1)
 **Issue:** [PandiO/knk-workspace#280](https://github.com/PandiO/knk-workspace/issues/280) (blocks the bulk delete part of
 [#205](https://github.com/PandiO/knk-workspace/issues/205)); roadmap [#24](https://github.com/PandiO/knk-workspace/issues/24).
@@ -330,8 +333,10 @@ schema.
    later; the migration comment says so.
 4. **Effect on the alpha:**
    - **Admin:** nothing changes (wildcard).
-   - **Staff:** gets `knk.admin.delete` and `knk.admin.export`. It holds `knk.kit.manage`, `knk.siege.admin.manage` and
-     `knk.admin.user.manage` explicitly, so it keeps deleting kits, siege setup and users as today.
+   - **Staff:** ~~gets `knk.admin.delete` and `knk.admin.export`~~ — **skipped (developer, 2026-11-08):** Staff keeps
+     balance changes, freeze, kick and ban, but gets no delete (and no export from the backfill). It therefore stops
+     deleting kits, siege setup, road profiles and users after the deploy, unless a Staff member holds an area node
+     themselves.
    - **Owner:** nothing changes.
 
 ### 4.6 Read gating per area (decision 9)
@@ -596,8 +601,8 @@ pickers for staff without the other areas' nodes. The migration is additive, and
   for every read. The alpha uses `apikey`. AM4 adds this to the production checklist.
 - **Admins hand out less.** After decision 4, Admins can no longer grant `knk.admin.*` (or any wildcard covering bulk
   delete). On today's alpha only the owner does that.
-- **Staff keep deleting users** through the backfill (they hold `knk.admin.user.manage` explicitly). If that isn't
-  wanted, the developer removes `knk.admin.delete` from Staff after the deploy.
+- ~~**Staff keep deleting users** through the backfill~~ — decided 2026-11-08: the backfill skips the Staff group, so
+  Staff no longer deletes kits, siege setup, road profiles or users (§ 4.5).
 - **Export isn't a data barrier** (§ 4.8). It controls the one-click dump and audits it.
 - **`knk.admin.delete.*`** means single + bulk, so it falls under the owner-only rule.
 
