@@ -4,7 +4,16 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
-(Nothing at the moment.)
+- **Lootbox spawn areas keep a region drawn in the web form** ([PandiO/knk-workspace#34](https://github.com/PandiO/knk-workspace/issues/34);
+  knk-web-api, knk-plugin and knk-workspace `claude/lootbox-area-rename-34`; the plugin branch contains the unmerged R1 and R2
+  branches). A region drawn through the LootboxSpawnArea form's region task is renamed from `tempregion_worldtask_<n>` to
+  `lootbox_area_<id>` when the area is saved and stretched to the world's full build height, like `/knk lootbox area create`;
+  before, the 14-day temp-region cleanup deleted it and the area stopped spawning. Re-running the region step replaces the area's
+  previous region in place. The cleanup now also asks the lootbox areas before deleting a temp region,
+  `POST /api/Regions/finalize-temp-names` renames temp-named areas, and area names `area_<number>` are reserved. Form seed
+  LootboxSpawnArea v2 updates the descriptions. No migration, no setting. See
+  [managed-worldguard-regions.md](architecture/managed-worldguard-regions.md) §7 and the
+  [smoke test](guides/lootbox-area-region-smoke-test.md).
 
 ## 2026-11-05
 
