@@ -4,6 +4,16 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Temp regions of abandoned drafts go within minutes, not after 14 days** ([PandiO/knk-workspace#269](https://github.com/PandiO/knk-workspace/issues/269);
+  knk-web-api, knk-plugin and knk-workspace `claude/temp-region-drafts-269`; the API branch contains the unmerged
+  `claude/dashboard-access-280` and `claude/lootbox-area-rename-34`, the plugin branch `claude/kit-grant-delivery-261`). A
+  region drawn through a form's region task (`tempregion_worldtask_<n>`) is released when its draft is deleted in Saved
+  Progress, when its task is cancelled, fails or expires after a game server held it, or when the world-task sweep removes
+  its session; the game server removes it every few minutes once no domain, sub-region, lootbox area, road edge or draft
+  names it and it isn't renamed. The daily 14-day cleanup stays as the backstop. One additive migration
+  (`AddTempRegionReleases`), plugin setting `regions.temp-retention.release-interval-minutes` (5). See
+  [managed-worldguard-regions.md](architecture/managed-worldguard-regions.md) §7 and the
+  [smoke test § 7](guides/world-task-hardening-smoke-test.md#7-temp-regions-of-abandoned-drafts-269-feature-branch-claudetemp-region-drafts-269-not-merged).
 - **Lootbox spawn areas keep a region drawn in the web form** ([PandiO/knk-workspace#34](https://github.com/PandiO/knk-workspace/issues/34);
   knk-web-api, knk-plugin and knk-workspace `claude/lootbox-area-rename-34`; the plugin branch contains the unmerged R1 and R2
   branches). A region drawn through the LootboxSpawnArea form's region task is renamed from `tempregion_worldtask_<n>` to
