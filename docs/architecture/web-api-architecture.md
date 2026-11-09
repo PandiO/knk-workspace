@@ -1,7 +1,7 @@
 # knk-web-api — Architecture
 
 **Status:** Living document — update in place as the code changes
-**Last updated:** 2026-11-09 (§5.4 what still uses a record, rows behind a refused delete's "Show details", #44 — branch `claude/picker-details-191-44`, not merged); 2026-11-09 (§5.3 relationships for the entity detail page, #188 — branch `claude/entity-detail-188-189`, not merged); 2026-11-08 (§5.2 read gating per area and lookups, AM2 of #280 — branch `claude/dashboard-access-280`, not merged); 2026-11-08 (§5.1 dashboard access model, AM1 of #280 — branch `claude/dashboard-access-280`, not merged); 2026-11-05 (#239 offer permission check, #240 Send again merged); 2026-11-04 (#239, #240 on a feature branch); 2026-11-02 (§6: config and entity events, `ReportWorlds` — #182, branch `claude/realtime-signalr`); 2026-11-02 (§6: world tasks over the hubs, presence endpoints — #181, branch `claude/realtime-signalr`); 2026-11-01 (world-task state machine, task codes, sweep, tasks anchored to the draft — #180, branch `claude/world-task-hardening`); 2026-10-26 (§6: realtime hubs, #178 S1 and #179 S2 on a feature branch); 2026-09-18 (based on a full read-only code scan; see `docs/reports/web-api-scan-2026-09-18.md` for the raw findings this doc summarizes); spot edits 2026-10-12 (FormField selection limits, KNG-164; created-entity provenance, reference check and DELETE 409 filter, KNG-162; FormConfiguration export/import and bundled seeds, KNG-138; the first seeds and stronger seed tests, KNG-139); 2026-10-26 (drafts and workflow sessions owned by the logged-in caller, PandiO/knk-workspace#186); 2026-10-17 (form wizard chain merged to `master`; smoke-test follow-ups: refusal reasons, KNG-169; FormConfiguration delete, KNG-172; region rule messages, KNG-173; validation result metadata, GateStructure house number, rule dependency path on update); 2026-10-22 (KNG-139 priority 2/3 seeds and DisplayConfiguration export/import; KNG-195 form submit fixes; gate warp settings, KNG-229); 2026-10-23 (step condition / field validation `IsActive`, KNG-186); 2026-10-23 (validation result log and validate-batch, KNG-269); 2026-10-25 (§6 plugin auth, health probe and RegionHttpServer callers corrected from the SignalR inventory); 2026-11-04 (ConditionalRequired ConfigJson contract, `FieldValidationService` removed, PandiO/knk-workspace#99)
+**Last updated:** 2026-11-09 (§5.5 form and display builder drafts, Publish and Duplicate, #71 — branch `claude/builders-71`, not merged); 2026-11-09 (§5.4 what still uses a record, rows behind a refused delete's "Show details", #44 — branch `claude/picker-details-191-44`, not merged); 2026-11-09 (§5.3 relationships for the entity detail page, #188 — branch `claude/entity-detail-188-189`, not merged); 2026-11-08 (§5.2 read gating per area and lookups, AM2 of #280 — branch `claude/dashboard-access-280`, not merged); 2026-11-08 (§5.1 dashboard access model, AM1 of #280 — branch `claude/dashboard-access-280`, not merged); 2026-11-05 (#239 offer permission check, #240 Send again merged); 2026-11-04 (#239, #240 on a feature branch); 2026-11-02 (§6: config and entity events, `ReportWorlds` — #182, branch `claude/realtime-signalr`); 2026-11-02 (§6: world tasks over the hubs, presence endpoints — #181, branch `claude/realtime-signalr`); 2026-11-01 (world-task state machine, task codes, sweep, tasks anchored to the draft — #180, branch `claude/world-task-hardening`); 2026-10-26 (§6: realtime hubs, #178 S1 and #179 S2 on a feature branch); 2026-09-18 (based on a full read-only code scan; see `docs/reports/web-api-scan-2026-09-18.md` for the raw findings this doc summarizes); spot edits 2026-10-12 (FormField selection limits, KNG-164; created-entity provenance, reference check and DELETE 409 filter, KNG-162; FormConfiguration export/import and bundled seeds, KNG-138; the first seeds and stronger seed tests, KNG-139); 2026-10-26 (drafts and workflow sessions owned by the logged-in caller, PandiO/knk-workspace#186); 2026-10-17 (form wizard chain merged to `master`; smoke-test follow-ups: refusal reasons, KNG-169; FormConfiguration delete, KNG-172; region rule messages, KNG-173; validation result metadata, GateStructure house number, rule dependency path on update); 2026-10-22 (KNG-139 priority 2/3 seeds and DisplayConfiguration export/import; KNG-195 form submit fixes; gate warp settings, KNG-229); 2026-10-23 (step condition / field validation `IsActive`, KNG-186); 2026-10-23 (validation result log and validate-batch, KNG-269); 2026-10-25 (§6 plugin auth, health probe and RegionHttpServer callers corrected from the SignalR inventory); 2026-11-04 (ConditionalRequired ConfigJson contract, `FieldValidationService` removed, PandiO/knk-workspace#99)
 
 ## 1. Stack & shape
 
@@ -239,6 +239,47 @@ A delete the database refuses answers 409 `{ code: "DbConstraint", message, refe
     ("These records aren't listed here."), so other users' drafts never show.
 - `EntityReferenceService.GetReferencingRowsAsync` shares the loop with the counts (the ids of the referencing rows, for a
   join row the other side's id); counts and rows always agree.
+
+### 5.5 Builder drafts, Publish and Duplicate (PandiO/knk-workspace#71 — branch `claude/builders-71`, not merged)
+
+The form and display builders save in place without changing what staff use: a configuration's **rows** (steps,
+fields; sections, fields) are always the **published** version the form wizard, "New with", child forms, pickers,
+saved wizard drafts and detail pages read. The builder's working copy waits beside them until **Publish**.
+- **Storage** (migration `AddConfigurationDrafts`, additive): `FormConfigurations.IsDraft` (default `false`: every
+  existing row and every import stays published), `DraftJson`, `DraftSavedAt`, `PublishedAt`;
+  `DisplayConfigurations.DraftJson`, `DraftSavedAt`, `PublishedAt` (display configurations already had `IsDraft`).
+  `DraftJson` is the builder's `FormConfigurationDto` / `DisplayConfigurationDto` as JSON (`Services/ConfigurationDraftJson.cs`,
+  at most 2 MB); `IsDraft` means **never published** (made in the builder or duplicated).
+- **Services** (`FormConfigurationDraftService`, `DisplayConfigurationDraftService`):
+  - *Builder state*: working copy = `DraftJson` else the rows; plus the published DTO (null while never published), the
+    entity's current published default, and for forms the open wizard drafts (`InProgress`/`Paused`) on this configuration.
+  - *Create draft*: a row with name and entity only (`IsDraft`, never the default, no steps) and the copy in `DraftJson`.
+  - *Save draft*: stores the copy, no validation (a draft may be unfinished); the entity can't change; a never-published
+    row takes the copy's name and description (Entity setup lists it).
+  - *Publish* (one transaction): applies the copy through the existing `UpdateAsync` (forms: every check a builder save
+    ran before, refused as "Can't publish: …"; display: `UpdateSections`), moves the default when the copy asks for it
+    (unsets the others), clears the copy, `IsDraft = false`, `PublishedAt = now`. Nothing unpublished → 400. Display's
+    older Publish of a draft without a copy (Entity setup) goes through the same method.
+  - *Discard*: drops the copy (not for a never-published configuration without rows).
+  - *Duplicate*: the portable export of the rows (KNG-138 / knk-displayconfig/1, so conditions and validation rules come
+    along), every own GUID replaced (`WithNewGuids`), imported through `ImportDraftCopyAsync` as a never-published copy
+    that is never the default; "<name> (copy)" unless a name is given. Refused while there are no rows yet.
+- **Endpoints** (both `FormConfigurationsController` and `DisplayConfigurationsController`): `GET {id}/builder`
+  (read category **F** `knk.admin.content` in `ReadAccessRulesTests`, like export and seeds), `POST drafts`,
+  `PUT {id}/draft`, `POST {id}/draft/discard`, `POST {id}/publish`, `POST {id}/duplicate` (writes under the class rule
+  `RequireServiceOrPermissionForWrites(knk.admin.content)`). No delete was added; configuration deletes keep their
+  `knk.admin.content` rule (#280 DESIGN § 4.7 "not covered").
+- **Runtime reads** never get a never-published form: `GET api/FormConfigurations`, `GET {entityName}` (list) and
+  `GET {entityName}/all` take `includeDrafts` (default `false`; only Entity setup asks for them), the default
+  (`defaultOnly`) and `entity-names` skip them in the repository. `GET {id}` still returns the row (empty steps for a
+  never-published one). A legacy `PUT {id}` refuses to make a never-published form the default and keeps the saved copy's
+  default flag in step (`SyncDraftDefaultAsync`, also for display).
+- **Templates**: the web app no longer calls `{configId}/steps/add-from-template` / `steps/{stepId}/fields/add-from-template`
+  (they wrote into the published rows); the endpoints stay for other callers.
+- **Consumers checked**: the plugin's `knk-api-client` reads no form or display configuration (world tasks carry their
+  own input JSON); API-side `FormSubmissionProgressService`, `FieldValidationRuleService`/`DependencyResolutionService`
+  (health checks by id), `WorldTaskRepository` (form name), portability export/seeds and the realtime map all read the rows,
+  i.e. the published version.
 
 ## 6. Talks to knk-plugin
 

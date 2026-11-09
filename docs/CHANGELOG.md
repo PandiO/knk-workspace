@@ -4,6 +4,21 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Form and Display builders: save in place, explicit Publish, Duplicate, Generate from metadata, live preview** —
+  [PandiO/knk-workspace#71](https://github.com/PandiO/knk-workspace/issues/71) (chain 3 link V7), knk-web-api and
+  knk-web-app `claude/builders-71` (both **contain** V6 `claude/picker-details-191-44` and what it contains). **Save**
+  keeps the builder open and stores a draft: the form wizard and the detail pages keep the published version until you
+  press **Publish…**, which first says what changes for staff (steps and fields added, removed or changed, the default it
+  replaces, saved wizard drafts that continue). **Save and close** returns to Entity setup; leaving with unsaved changes
+  asks "Leave without saving?". A new form is a draft (not offered to staff) until its first Publish. **Duplicate** copies
+  the published version under a new name; **Generate from metadata** adds a step or section per group of the entity's
+  properties with sensible field types; **Preview** shows the form or page next to the builder with sample values or a
+  real record. Entity setup marks drafts and unpublished changes and has Duplicate. One additive migration
+  (`AddConfigurationDrafts`: existing configurations stay published), new endpoints `GET {id}/builder`, `POST drafts`,
+  `PUT {id}/draft`, `POST {id}/draft/discard`, `POST {id}/publish`, `POST {id}/duplicate` on both configuration
+  controllers (`knk.admin.content`), no setting. Checklist:
+  [guides/form-display-builders-smoke-test.md](guides/form-display-builders-smoke-test.md).
+
 - **Form wizard relation picker: search as you type, the full table as a fallback; "Show what uses it" on a refused
   delete** — [PandiO/knk-workspace#191](https://github.com/PandiO/knk-workspace/issues/191),
   [PandiO/knk-workspace#44](https://github.com/PandiO/knk-workspace/issues/44) (chain 3 link V6), knk-web-api and
