@@ -4,7 +4,108 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
-(Nothing at the moment.)
+- **Entity detail page: real Select / Unlink / Add, a separate Delete, readable values and errors** —
+  [PandiO/knk-workspace#188](https://github.com/PandiO/knk-workspace/issues/188),
+  [PandiO/knk-workspace#189](https://github.com/PandiO/knk-workspace/issues/189) (chain 3 link V5), knk-web-api and
+  knk-web-app `claude/entity-detail-188-189` (the API branch **contains** AM1+AM2 `claude/dashboard-access-280`, the
+  web-app branch V4 `claude/settings-pages-26` and through it V3, V2, V1 and chain 2's web app). Unlink on a related
+  record only removes the link (never the record); Delete is a separate red action behind a red question; Select and
+  Add pick an existing record in a searchable picker (a child of another parent asks "Move here?"), through the new
+  `POST api/Relationships/{type}/{id}/{property}/link|unlink` (the type's write node; no delete node). Links that
+  can't change here (required parents, locations, gates, kits, lootbox/siege setup, players) show the reason; actions
+  the viewer can't use say "Requires …". Values read as text, related values link to their page, collections show a
+  count and 12 per page, and load errors say what happened ("You don't have access to Town "Cinix"", "doesn't
+  exist"). No migration, no setting. Checklist: [guides/entity-detail-smoke-test.md](guides/entity-detail-smoke-test.md).
+
+- **Settings pages: units and help, confirms on risky switches, lootbox preview; Lootbox settings, Currency policy and
+  Road network on the settings shell** — [PandiO/knk-workspace#26](https://github.com/PandiO/knk-workspace/issues/26)
+  (chain 3 link V4), knk-web-app `claude/settings-pages-26` (**contains** V3's `claude/player-profile-119` and through it
+  V2, V1 and chain 2's X1), not merged, not live-tested. No API change, no setting.
+  - **Lootboxes → Settings**, **Currency policy** and **Road network** have the settings header of Game and Siege
+    settings: changes counted, Discard, Reload, Save (n), "Leave without saving?" before leaving with changes (on the
+    lootbox page also when switching tabs), a toast on save and the reason in the header when the API refuses.
+  - Settings fields show their unit (ticks, s, h, ‰, bp, ×, coins, gems, boxes) and one line of help, with what the value
+    means ("= 1 s", "= 2.5%", "= 12:00 (noon)"); on Siege and Game settings too.
+  - Switching payments off or on (per currency), lootboxes off or on, a lootbox type's Enabled and a token grant rule ask
+    first and say what happens.
+  - Lootbox settings: the announce thresholds are choices with **Never** (was the number 11), both announcements have a
+    preview with sample values, unknown placeholders are named. The Odds tab shows small chances as "1 in N".
+  - Currency policy: one Save for coins and gems; the lowest sender title is picked from the titles (was a bracket id).
+  - Road network: the navigation defaults no longer save on change; Save saves them together with the compass settings.
+    Road profiles and stretches keep their own Save.
+  - Smoke test: [guides/settings-pages-smoke-test.md](guides/settings-pages-smoke-test.md).
+  - Needs the API later (#26 comment): who saved last on lootbox, siege, road and currency settings; one save for the
+    road settings.
+
+- **Staff player profile: status strip, tabs, freeze/unfreeze, timeline, paged audit; better player search** —
+  [PandiO/knk-workspace#119](https://github.com/PandiO/knk-workspace/issues/119) (chain 3 link V3), knk-web-app
+  `claude/player-profile-119` (**contains** V2's `claude/dashboard-export-205`, V1 and chain 2's X1), not merged, not
+  live-tested. No API change.
+  - The profile header shows online / last seen, mode, **Frozen**, **Payments locked**, premium tier and account flags as
+    chips, with **Freeze** (reason required, saved on the player and in the audit log) and **Unfreeze**; while frozen,
+    since when, by whom and why.
+  - The cards are on six tabs: Overview, Economy, Permissions, Moderation, Activity, Privacy (`?tab=` in the URL).
+  - Activity has a **per-player timeline** (audit log and, with `knk.admin.currency.history`, the balance ledger, newest
+    first, "Load older", filter chips) and the **audit log paged by the server** with an action filter, in place of the
+    last 20 entries.
+  - Actions without their node are disabled with "Requires <node>" (freeze, unfreeze, groups, grants, kit grant,
+    payment lock). A freeze in game shows on an open profile at once (realtime on).
+  - The profile no longer crashes on a summary without groups, permissions, title or salary.
+  - Moderation → All players: a UUID without dashes finds the player, sort by username, email or coins, the search in
+    the URL (Back returns to it), a Last seen column, and **Recently opened** profiles (this browser).
+  - Smoke test: [guides/player-profile-smoke-test.md](guides/player-profile-smoke-test.md).
+  - Needs the API later (#119 comment): unfreeze reason, frozen state in the profile summary, game sessions in the
+    timeline, an online filter and frozen/locked columns in the player search, sort by last seen, kick/ban from the web.
+
+- **Dashboard: checkbox selection and Export CSV** — [PandiO/knk-workspace#205](https://github.com/PandiO/knk-workspace/issues/205)
+  export part (chain 3 link V2), knk-web-app `claude/dashboard-export-205` (**contains** V1's
+  `claude/web-fixes-266-263-258` and through it chain 2's `claude/realtime-web-live-183`), not merged, not live-tested.
+  - The dashboard table has a checkbox column. Rows stay links, and the row click still opens the detail page.
+  - A bar above the table shows "n selected" and **Export CSV**. The export holds the selected rows, or with nothing
+    selected the current search across all pages in its sort.
+  - The file has the table's columns in table order with the values the table shows. It is UTF-8 with BOM, named
+    `<Type>-<yyyy-mm-dd>.csv`, holds at most 10,000 rows, and texts that look like formulas are neutralized.
+  - Export needs the new node `knk.admin.export`, so until link AM1 adds it to the API only the owner and Admin have it.
+  - Bulk delete follows in AM3 (#280).
+  - No API change, no setting.
+
+  Checklist: [entity lists smoke test § 7](guides/entity-lists-url-state-smoke-test.md#7-checkbox-selection-and-export-csv-205-export-part-chain-3-v2).
+
+- **Web app fixes: Entity setup at phone width, colour baseline, landing slideshow fade** —
+  [PandiO/knk-workspace#266](https://github.com/PandiO/knk-workspace/issues/266),
+  [#263](https://github.com/PandiO/knk-workspace/issues/263), [#258](https://github.com/PandiO/knk-workspace/issues/258)
+  (chain 3 link V1), knk-web-app `claude/web-fixes-266-263-258` (**contains** chain 2's `claude/realtime-web-live-183`,
+  X1 with W1–W4: merging it merges chain 2's web app too), not merged, not live-tested. Entity setup (`/forms/{type}`)
+  no longer scrolls sideways at 390 px (it was 785 px wide): the configuration lists' buttons wrap under the title and
+  the tables scroll inside their cards. `WorldBoundFieldRenderer` and `BannerLayersField` moved to the theme tokens, so
+  no file is over its raw colour baseline, and `npm run test:ci` now fails when one is. The landing slideshow fades the
+  image out to black and then the next one in (1.25 s each), preloads the next image, and swaps without fades under
+  `prefers-reduced-motion`. No API change, no setting. Checklist:
+  [design themes guide § 8](guides/design-themes-comparison.md#8-smoke-test-entity-setup-at-phone-width-colour-baseline-landing-fade-chain-3-v1).
+
+- **Dashboard access model, API part 2 (AM2)** — [PandiO/knk-workspace#280](https://github.com/PandiO/knk-workspace/issues/280),
+  knk-web-api `claude/dashboard-access-280` (on top of AM1). Every dashboard read is now gated by area: lists, details
+  and searches of a type need one of its read nodes (the area node, or the page node of a page that shows it: Game
+  settings reads locations and towns with `knk.admin.config`, roads read towns and streets, kits and lootboxes read
+  items, …), or the plugin's key. The form wizard's own reads (form and display configurations, metadata, validation),
+  drafts and your own world tasks and workflow sessions are open to anyone holding **any** area node, so a world or
+  kit builder no longer needs `knk.admin.content` to validate a form. New `POST api/Lookup/{type}/search` and
+  `GET api/Lookup/{type}/{id}` give pickers and labels id, name and one short line (users: the username only) for
+  any area node. Public pages, self reads and the plugin are unchanged. No migration, no setting. Deploy AM1–AM3
+  together, API first: an old web app would hit 403 in pickers of other areas.
+
+- **Dashboard access model, API part 1 (AM1)** — [PandiO/knk-workspace#280](https://github.com/PandiO/knk-workspace/issues/280),
+  knk-web-api `claude/dashboard-access-280` (stacked on `claude/kit-grant-delivery-261`, which contains chain 2's R1, and
+  on chain 2's X1 API `claude/realtime-web-live-183`: merging it merges those too). New nodes `knk.admin.delete`,
+  `knk.admin.delete.bulk` and `knk.admin.export` on top of the area nodes: every dashboard delete (users and permission
+  groups included) needs the area node and `knk.admin.delete`; `POST api/Dashboard/bulk-delete` (area + delete + bulk,
+  at most 100 ids, a reason per refused row, not for users and groups) and `POST api/Dashboard/export` (area + export,
+  at most 10 000 rows), each with one audit entry. Only the owner hands out bulk delete, also through `knk.admin.*` or
+  groups that carry it; nobody changes a group ranked at or above their own. Migration `SeedDashboardActionNodes`
+  (data only) gives Admin the three nodes where its wildcard doesn't, and delete and export to every explicit
+  area-node holder **except the Staff group**. Metadata names each type's area and action nodes; live updates follow
+  the area. Read gating and lookups (AM2) and the web app (AM3) follow; deploy AM1–AM3 together, API first. Smoke test
+  draft: [guides/dashboard-access-smoke-test.md](guides/dashboard-access-smoke-test.md).
 
 ## 2026-11-05
 
