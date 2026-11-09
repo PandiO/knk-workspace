@@ -1,7 +1,7 @@
 # knk-web-app — Architecture
 
 **Status:** Living document — reflects actual code, updated in place on each rescan
-**Last updated:** 2026-11-05 (#239 offer permission check, #240 Send again merged); 2026-11-04 (#239, #240 on a feature branch); 2026-11-02 (`src/realtime/RealtimeProvider`, world tasks and catalogue scans over the web hub — #181, branch `claude/realtime-signalr`); 2026-11-01 (world tasks anchored to the draft, cancel/expired states, task code, builder task types — #180, branch `claude/world-task-hardening`); 2026-09-18 (scan basis: `knk-web-app` @ `4ff5dc6`, branch `claude/web-app-codebase-scan-4yqibi`); spot edits 2026-10-09 (ObjectTypeExplorer, KNG-61), 2026-10-10 (FormWizard Boolean fields, KNG-53), 2026-10-12 (FormWizard child forms, KNG-133, KNG-134; List edit load, step header, List validation, KNG-135, KNG-137, KNG-164; form session registry, KNG-136; cancel / delete-draft prompt, KNG-162; form configuration export/import, KNG-138); 2026-10-17 (form wizard chain merged to `main`; smoke-test follow-ups KNG-166..169, KNG-172, KNG-173: step strip, confirmations and refusals, rule builder parent forms, picker columns, metadata refresh); 2026-10-22 (display configuration export/import; KNG-195 hybrid picker submit); 2026-10-23 (step completion conditions run, KNG-186); 2026-10-23 (validation result log, batch validate, Re-check, KNG-269); 2026-10-25 (toast region, world-task polling; UX re-evaluation in `reports/2026-10-25-web-app-ux-reevaluation.md`); 2026-10-26 (dashboard type in the URL, `returnTo`, submit pending state, success toast — PandiO/knk-workspace#177 link 1, #58); 2026-10-26 (dashboard header New/Configure, flat explorer with marker, open form without the explorer + breadcrumb, detail page header, metadata-driven Create New, "Entity setup" — #177 link 2, #81, #39); 2026-10-26 (dashboard explorer: one scrollbar, favourite types — #194, branch `claude/dashboard-explorer-194`, merged into `main` `c3c0c9f`), 2026-10-26 (dashboard header row spacing — #195, branch `claude/dashboard-header-195`, merged into `main` `c3c0c9f`); 2026-10-26 (data router, unsaved-changes guard, sticky footer, blur validation + error summary, Save on any step in edit mode, single-line input, drafts owned by the login — #109, #186, #64 FormWizard part); 2026-10-27 (unsaved changes compared by value across all steps, Next's progress save no longer counts as saved — #109 fix round); 2026-11-01 (dashboard table state in the URL, rows as links, `aria-sort`, lootbox/moderation tab in the URL, "Drafts (n)" and "New with" — PandiO/knk-workspace#39, #177 follow-up, merged 2026-11-03); 2026-11-02 (design tokens and switchable themes — #95, merged 2026-11-03); 2026-11-03 (fix round after the live comparison: orange brand primary, heading font on player pages only, full-bleed auth pages); 2026-11-03 (explorer favourites are copies — #225, branch `claude/explorer-favourite-copies-225`, not merged); 2026-11-03 (explorer filter: display / form configuration — #226, merged 2026-11-04); 2026-11-03 (open form without the type overview card — #227, merged 2026-11-04)
+**Last updated:** 2026-11-09 (form wizard search-as-you-type relation picker with Open full table and a lookup mode for viewers without the type's read node, #191; FeedbackModal "Show details" and "Show what uses it" on a delete refused as in use, #44 — branch `claude/picker-details-191-44`, not merged); 2026-11-09 (entity detail page: real Select / Unlink / Add through `api/Relationships`, a separate Delete, actions disabled with "Requires …", values as text, related values as links, paged collections, readable load errors — #188, #189, branch `claude/entity-detail-188-189`, not merged); 2026-11-08 (settings pages: Lootbox settings tab, Currency policy and Road network on the SettingsPage shell, units and help, confirms on risky switches, lootbox announcement preview — #26, branch `claude/settings-pages-26`, not merged); 2026-11-08 (staff player profile: status strip, tabs, freeze/unfreeze, per-player timeline, paged audit log; moderation search by dashless UUID, sort, search in the URL, recently opened — #119, branch `claude/player-profile-119`, not merged); 2026-11-08 (dashboard checkbox selection and Export CSV behind `knk.admin.export` — #205 export part, branch `claude/dashboard-export-205`, not merged); 2026-11-08 (Entity setup at phone width, raw colours checked in `test:ci`, landing slideshow fade out → in, `usePrefersReducedMotion` — #266, #263, #258, branch `claude/web-fixes-266-263-258`, not merged); 2026-11-05 (#239 offer permission check, #240 Send again merged); 2026-11-04 (#239, #240 on a feature branch); 2026-11-02 (`src/realtime/RealtimeProvider`, world tasks and catalogue scans over the web hub — #181, branch `claude/realtime-signalr`); 2026-11-01 (world tasks anchored to the draft, cancel/expired states, task code, builder task types — #180, branch `claude/world-task-hardening`); 2026-09-18 (scan basis: `knk-web-app` @ `4ff5dc6`, branch `claude/web-app-codebase-scan-4yqibi`); spot edits 2026-10-09 (ObjectTypeExplorer, KNG-61), 2026-10-10 (FormWizard Boolean fields, KNG-53), 2026-10-12 (FormWizard child forms, KNG-133, KNG-134; List edit load, step header, List validation, KNG-135, KNG-137, KNG-164; form session registry, KNG-136; cancel / delete-draft prompt, KNG-162; form configuration export/import, KNG-138); 2026-10-17 (form wizard chain merged to `main`; smoke-test follow-ups KNG-166..169, KNG-172, KNG-173: step strip, confirmations and refusals, rule builder parent forms, picker columns, metadata refresh); 2026-10-22 (display configuration export/import; KNG-195 hybrid picker submit); 2026-10-23 (step completion conditions run, KNG-186); 2026-10-23 (validation result log, batch validate, Re-check, KNG-269); 2026-10-25 (toast region, world-task polling; UX re-evaluation in `reports/2026-10-25-web-app-ux-reevaluation.md`); 2026-10-26 (dashboard type in the URL, `returnTo`, submit pending state, success toast — PandiO/knk-workspace#177 link 1, #58); 2026-10-26 (dashboard header New/Configure, flat explorer with marker, open form without the explorer + breadcrumb, detail page header, metadata-driven Create New, "Entity setup" — #177 link 2, #81, #39); 2026-10-26 (dashboard explorer: one scrollbar, favourite types — #194, branch `claude/dashboard-explorer-194`, merged into `main` `c3c0c9f`), 2026-10-26 (dashboard header row spacing — #195, branch `claude/dashboard-header-195`, merged into `main` `c3c0c9f`); 2026-10-26 (data router, unsaved-changes guard, sticky footer, blur validation + error summary, Save on any step in edit mode, single-line input, drafts owned by the login — #109, #186, #64 FormWizard part); 2026-10-27 (unsaved changes compared by value across all steps, Next's progress save no longer counts as saved — #109 fix round); 2026-11-01 (dashboard table state in the URL, rows as links, `aria-sort`, lootbox/moderation tab in the URL, "Drafts (n)" and "New with" — PandiO/knk-workspace#39, #177 follow-up, merged 2026-11-03); 2026-11-02 (design tokens and switchable themes — #95, merged 2026-11-03); 2026-11-03 (fix round after the live comparison: orange brand primary, heading font on player pages only, full-bleed auth pages); 2026-11-03 (explorer favourites are copies — #225, branch `claude/explorer-favourite-copies-225`, not merged); 2026-11-03 (explorer filter: display / form configuration — #226, merged 2026-11-04); 2026-11-03 (open form without the type overview card — #227, merged 2026-11-04)
 **Source scan:** `docs/reports/web-app-scan-2026-09-18.md`
 
 ## Stack
@@ -83,8 +83,15 @@ _Added 2026-11-02 for PandiO/knk-workspace#95 (rebrand phase 1), knk-web-app bra
   primary, red-600 → danger, gray-900 → fg, bg-white → surface, text-gray-400 → muted, …; `--sweep-only` does just
   the text-gray-400 sweep). It is idempotent: after merging a branch that still has raw classes, run it on the changed
   files. `npm run lint:colors` (`scripts/report-raw-colors.js`) counts raw palette classes per file against
-  `scripts/raw-colors-baseline.json` and reports files that gained some; it never fails unless given `--strict`
-  (not in CI; there is no CI workflow in the repo). Migrated and unmigrated screens: guide § 5.
+  `scripts/raw-colors-baseline.json` and reports files that gained some (exit 0 unless given `--strict`). The same
+  check runs in `npm run test:ci` (`src/__tests__/rawColorsBaseline.test.ts`, #263): a file over its baseline fails
+  the tests, so fix it with the tokens rather than raising the baseline. There is no CI workflow in the repo.
+  Migrated and unmigrated screens: guide § 5.
+- **Reduced motion:** `hooks/usePrefersReducedMotion.ts` follows `prefers-reduced-motion: reduce` (live, without a
+  reload). The landing page's `components/Slideshow.tsx` uses it: a change fades the shown image out to black and then
+  the next one in (1250 ms each, same easing; the next image is preloaded and the shown one stays until it has
+  loaded), and with reduced motion it swaps images without fades (#258). Slides are rendered in index order so React
+  never moves a slide's node during its fade (a moved node drops its CSS transition).
 
 ## High-level shape
 
@@ -144,8 +151,8 @@ entity. Two parallel generic engines carry most of the CRUD surface:
    what a child saved (`useFormSession().register`: type, id or a concept key for an embedded value,
    display DTO, origin form path + field, `created`/`updated`, order). `ObjectField`/`ListField` get
    the created, non-embedded entries of their `objectType` as `pinnedRows` plus a `refreshKey`
-   (`hooks/useSessionPinnedRows.ts`; Locations are never pinned). `PagedEntityTable` shows them in a
-   "Created in this form" section with a New badge, filtered by the search term and the query's
+   (`hooks/useSessionPinnedRows.ts`; Locations are never pinned). The relation picker (below, #191) and the full table
+   behind its "Open full table" (`PagedEntityTable`) show them in a "Created in this form" section with a New badge, filtered by the search term and the query's
    filters on the client and de-duplicated against the page (`utils/forms/sessionPinnedRows.ts`);
    rows are keyed and selected by id (`isSameSelection`), not by array index.
    **What a form created, and cancelling it** (KNG-162): the root wizard of a session
@@ -287,8 +294,35 @@ shared link, rows deleted) moves to the last page. Without `query` the table kee
 wizard's pickers (`FieldRenderers`, the Minecraft pickers) do; they never touch the URL, so the unsaved-changes guard
 (which blocks query changes) is unaffected. **Rows as links** (`rowHref`): the first cell is an `<a href>` to the
 detail page (middle-click, Ctrl/Cmd-click, keyboard), a plain click still goes through the app's navigation, and a
-Ctrl-click or middle-click elsewhere on the row opens a new tab; only for types whose View works, never while rows
-are selectable. Sortable headers are buttons (keyboard) with `aria-sort`.
+Ctrl-click or middle-click elsewhere on the row opens a new tab; only for types whose View works, and not while a row
+click selects (the wizard pickers). Sortable headers are buttons (keyboard) with `aria-sort`.
+
+**Checkbox selection and Export CSV** (#205 export part, branch `claude/dashboard-export-205` until merged):
+- **Selection:** the dashboard passes `selectionConfig={{ mode: 'multiple' }}` with `selectionStyle="checkbox"`, so
+  `DataTable` draws a checkbox column (`selection` prop) and a header box for the rows shown (mixed when some are).
+  Clicks in that cell never reach the row, so the row link, the row click and middle-click keep working. The pickers
+  keep row-click selection (`selectionStyle` `row`, the default). `ObjectDashboard` holds the selected rows across
+  pages and searches of the type; changing the type clears them, and a single Delete removes its row.
+- **Bulk bar:** `PagedEntityTable`'s `renderSelectionBar` hands `ObjectDashboard/DashboardSelectionBar` the
+  selection, the table's columns in table order (`effectiveColumns`), the query and the total. The bar shows
+  "n selected" with Clear, or "None selected · Export takes all N results", and **Export CSV**. It has a slot
+  (`actions`) before Export for link AM3's "Delete (n)".
+- **Export:** the selected rows (in selection order), or with nothing selected the current search across all pages
+  in the current sort (`utils/tableExport.ts` `readSearchRows`: pages of 100 through the type's list API, follows an
+  endpoint that clamps the page size, skips a repeated id). The cap is 10,000 rows (`EXPORT_ROW_LIMIT`, the same as
+  the planned endpoint): the bar says so beforehand, and a toast afterwards. While it pages, the button shows the
+  progress and Cancel stops it.
+- **CSV:** `buildTableCsv` writes the column labels, then each row's cell text (`utils/tableCells.tsx` `cellText`):
+  a column's `render` read as text (`reactNodeToText`), Yes/No for booleans, an object's name, and empty for a
+  missing value. `utils/csv.ts` does RFC 4180 quoting with CRLF, puts `'` before formula-like texts
+  (`=`, `+`, `@`, `-` not followed by a number), and saves UTF-8 with a BOM as `<Type>-<yyyy-mm-dd>.csv`
+  (local date, entity name).
+- **Permission:** Export is enabled only with `knk.admin.export` (`EXPORT_PERMISSION_NODE`, through `usePermissions`).
+  Without it, the button is disabled with "Requires knk.admin.export". Until the API declares the node (link AM1),
+  only `*` and `knk.admin.*` match it, so only the owner and Admin. The list reads stay the real limit (#280 DESIGN
+  § 4.8).
+- **AM3** switches the data source to `POST api/Dashboard/export`. `readSearchRows` already returns that endpoint's
+  `{ items, total, truncated }`, so `buildTableCsv` stays as it is.
 
 **"Drafts (n)" and "New with"** (#177 follow-up): next to "New {Type}" a chevron lists the type's form
 configurations other than the default ("New with"), and a "Drafts (n)" chip lists the caller's open drafts of the
@@ -298,15 +332,133 @@ type (Saved Progress without Completed/Abandoned, newest first; `hooks/useDashbo
 its lists loaded (an unknown configuration shows an error toast and stays on the lists). The chip and chevron are
 hidden when there is nothing to list; Saved Progress and the configuration lists stay on the Entity setup page.
 
+**Entity setup at phone width** (#266): below `sm` the configuration lists' title and buttons stack and the buttons
+wrap (`FormConfigurationTable`, `DisplayConfigurationTable`), as do the Default Table Columns row and the Saved
+Progress rows; the tables scroll inside their card. A table's scroll box is `relative`, because an absolutely
+positioned element without a positioned ancestor (the head's `sr-only` "Actions" label) is placed in page coordinates
+and widens the whole page even inside an `overflow-x-auto` box; `.dashboard-content` (`ObjectDashboard.css`) is
+`position: relative` for the same reason.
+
 **Tabs in the URL** (#39): `/admin/lootboxes?tab=odds` and `/admin/users?tab=demoted` (`hooks/useTabParam.ts`;
 the default tab is left out, an unknown value reads as the default, switching replaces the history entry). On the
 moderation page the player names are links to the profile.
+
+**Settings pages** (#26, branch `claude/settings-pages-26` until merged; the shell itself is #187's
+`components/SettingsPage.tsx`, chain 2 W3): Game settings, Siege settings, **Lootboxes → Settings**, **Currency policy**
+and **Road network** run on the `SettingsPage` shell — a sticky header with the title, "Last saved …", "n unsaved
+changes", Reload, Discard, Save (n); with changes an in-app navigation asks "Leave without saving?" (red Leave, focus on
+Stay) and a reload or closing the tab gets the browser's question; success is a toast, a refusal stays in the header.
+- **Inside a tab** (`embedded`): the Lootbox settings tab is its own shell under the page's h1 (title as h2). A tab switch
+  changes `?tab=` (`useTabParam`), which the shell's navigation blocker sees, so switching tabs with changes asks too;
+  Stay keeps them.
+- **Risky saves** (`confirmSave`): a page returns a question (or null) and the shell asks it, red unless it switches
+  something on, before `onSave`; No keeps the changes and saves nothing. Used for the payments kill switch (per currency,
+  both directions) and the lootbox master switch. Toggles that save at once ask with `useConfirm` before the request:
+  a lootbox type's Enabled (`LootboxTypesTab`, `typeToggleQuestion`) and a token grant rule (`LootboxTokensTab`,
+  `grantToggleQuestion`).
+- **Units and help** (`utils/settingsUnits.ts`, `Field`'s `unit`): one spelling per unit (`UNIT`: ticks, s, h, ‰, bp, ×,
+  ★, coins, gems, boxes) shown right of the input and read with it (`aria-describedby`), one line of help per field, and
+  what the typed value means (`describeTicks` "= 1 s", `describeSeconds`/`describeHours` durations, `describePerMille` and
+  `describeBasisPoints` as %, `describeWorldTime` "= 12:00 (noon)"), joined with `joinHint`. `formatOneIn` puts "1 in N"
+  under small chances on the lootbox Odds tab.
+- **Lootbox settings** (`components/lootbox/LootboxSettingsTab.tsx`): the PUT still sends the whole object; the two
+  announce thresholds are choices "★n and better" / "Never" (`ANNOUNCE_NEVER` = 11); both announcement templates have a
+  preview (`MinecraftLegacyPreview`, sample values `ANNOUNCEMENT_SAMPLE`, empty = the default template as the plugin's
+  `LootboxAnnouncer` has it) and name placeholders the game doesn't fill in.
+- **Currency policy** (`pages/admin/economy/CurrencyPolicyPage.tsx`): coins and gems as two sections with one Save (n);
+  each changed policy is sent with the `updatedAt` it loaded, a 409 marks that currency stale (Save off, "Reload current
+  policy" in its section), other refusals are named per currency in the header. The lowest sender title is a choice of
+  the title brackets (`titleBracketClient.getAll`, `GET api/TitleBrackets`; a number input if they can't be loaded).
+- **Road network** (`pages/admin/RoadsAdminPage.tsx`): the header saves the page's settings — the navigation defaults
+  per domain type (a choice no longer saves on change) and the compass rule — as one batch, applying what saved and
+  naming what was refused. `NavigationCompassCard` and `DomainNavigationDefaultsCard` only edit (the page holds saved
+  values and drafts). Road profiles and stretches are records with their own Save (a stretch's is "Save stretch #n") and
+  are not counted.
+
+**Staff player profile** (`pages/admin/PlayerProfilePage.tsx` + `pages/admin/playerProfile/`, `/admin/users/:id`; #119,
+branch `claude/player-profile-119` until merged):
+- **Status strip** (`PlayerStatusStrip`): chips for online / last seen (live through `PresenceChanged`, #183), no
+  Minecraft account, mode, **Frozen**, **Payments locked**, premium tier, Deactivated, Not admitted, Minecraft-only and
+  Email not verified, with **Freeze** / **Unfreeze** and Reload. While frozen a banner says since when, by whom (the latest
+  `PlayerFrozen` audit entry) and why (`frozenReason`).
+- **Freeze** (`usePlayerFreeze`): the frozen state comes from `GET api/Users/{id}` (`isFrozen`, `frozenReason`; the
+  profile summary doesn't carry it). Freeze asks a required reason (max 200) in `confirmWithReason` and calls
+  `PUT api/Users/{id}/freeze` (`knk.freeze`); Unfreeze is a plain confirm and `PUT …/unfreeze` (`knk.unfreeze`), which
+  takes no reason yet. `UNFREEZE_TAKES_REASON` switches the confirm to an optional reason once the API stores one.
+- **Tabs** (`ProfileTabs`, an ARIA tablist with arrow keys; `?tab=` through `useTabParam`, default Overview): Overview
+  (account, title, premium, statistics), Economy (payment lock, Adjust balance, salary, kits, balance history),
+  Permissions (groups, effective permissions), Moderation (freeze, mode, admission/web login, a note that kick and ban are
+  game commands), Activity (timeline, audit log, discoveries), Privacy (private messages, data deletion). Only the open tab
+  is mounted, so a panel's requests run when its tab opens.
+- **Timeline** (`PlayerTimeline`, `utils/playerTimeline.ts`): `TimelineMerger` merges the audit log about the player
+  (`GET api/audit-log?targetUserId=`) and, with `knk.admin.currency.history`, the balance ledger
+  (`GET api/currency/admin/ledger?userId=`), newest first, 25 per "Load older"; an event is shown only once every source
+  that has rows left has one at least as old. Filter chips per category (Moderation, Economy, Permissions, Progress,
+  Account). Game sessions are not in it (no read endpoint).
+- **Audit log** (`PlayerAuditLog`): `DataTable` + `Pager`, paged by the server (25 per page) with an action filter.
+- **Actions without their node** are disabled with "Requires <node>" (`hooks/useActionGate.ts`, #280's rule):
+  `knk.freeze`, `knk.unfreeze`, `knk.admin.user.group`, `knk.admin.user.perm`, `knk.kit.give`, `knk.admin.currency.lock`.
+- **Live:** an `EntityChanged` for this `User` from someone else (a freeze in game, another staff member) re-reads the
+  summary, the frozen state, the payment lock and the activity.
+- **Robustness:** `normalizeProfileSummary` fills in a summary without groups, permissions, title or salary (an older
+  API, a thin account) instead of crashing; "Back" is the layout's breadcrumb (no `navigate(-1)`).
+
+**Moderation player search** (#119 MOD-5, `UserModerationPage` "All players"): the term (username, email or UUID, a
+substring on the server) is sent trimmed, and a whole UUID without dashes gets its dashes (`utils/playerSearch.ts`).
+Username, Email and Coins sort on the server (`sortBy`/`sortDescending`; `aria-sort`). Term, page and sort are in the URL
+(`?q=&page=&sort=&dir=`, replace) so Back from a profile returns to them. **Recently opened** lists this viewer's last 8
+profiles (`utils/recentPlayers.ts`, localStorage per account, this browser only).
 
 **Detail page** (`DisplayWizardPage`, #81): `EntityDetailHeader` replaces the heading that showed the
 display configuration's name: the entity's own name (`utils/entityLabel.ts`), its type, a breadcrumb
 (`detailTrail`), **Back** to `returnTo` (else `/dashboard/{type}`), **Edit** coming back to the page and
 **Delete** with a confirmation naming the entity (success toast, then Back's target). The tab title is
 "{name} · {Type}". `DisplayWizard` takes the header as `renderHeader(entity)`.
+Since #188 / #189 (branch `claude/entity-detail-188-189`, not merged) the header's Edit and Delete follow the type's
+metadata `actionNodes` (`useAllNodesGate`, all-of): a missing node disables the button with "Edit/Delete: Requires …"
+under it (#280 rule).
+
+**Detail page relationships and readability** (`components/DisplayWizard/`, #188, #189; branch
+`claude/entity-detail-188-189`, not merged):
+- **Data:** `DisplayWizard` loads every type's metadata (`useEntityMetadata`). A section's relationship is the page
+  type's `relationships` entry for its `relatedEntityPropertyName` (`detailPage.ts` `findRelationship`); a link row
+  (`storage: linkRow`, e.g. `ItemBlueprintTag`) stands for its other side (`relatedType` `Tag`, id from
+  `relatedIdField` / `relatedNavigation`).
+- **Buttons** (`ActionButtons`): Select…/Change… (single), Add… (collection header), Unlink (single, and the
+  configuration's "Remove" on items: never a delete), a separate red **Delete** on items (`showDeleteButton`, also in
+  the section editor as "Delete item"), View, Edit, Create New (section only). Without a relationship entry (older
+  API, unknown property) Select/Unlink/Add stay hidden. Each gate (`DisplaySection` `relationshipGate` /
+  `deleteGateOf`): first what the API allows (`canLink`/`canUnlink`, else its `linkReason`/`unlinkReason`), then the
+  nodes (`relationship.nodes`, the related type's `actionNodes.delete`). A disabled button has the reason as title and
+  description; the section shows it once in text ("Change… and Unlink: …"), an item list once above the items.
+- **Actions** (handled in `DisplayWizard`): Unlink asks a plain `useConfirm` ("… stays as it is; only its link … is
+  removed") and calls `relationshipClient.unlink`; Delete asks a danger confirm and calls the related type's delete
+  (a category refusal keeps the FeedbackModal with View children / Reassign parent); Select/Add open
+  `RelationshipPickerDialog` (Dialog, `lookupClient.search` 10 per page, 250 ms after typing, linked rows marked
+  "Linked") and call `relationshipClient.link`; a 409 `AlreadyLinked` asks "Move … here?" and retries with `move`.
+  Success: a toast and a quiet re-read (`refetch(true)`).
+- **Readability:** `DisplayField` renders a `<dt>`/`<dd>` pair (values as text, "-" muted when empty); hot edit saves
+  with Enter, cancels with Escape. The first value of a related section or collection item, and every related-record
+  value, links to `/display/{type}/{id}?returnTo=…` through `DetailLinksContext` when the viewer holds one of that
+  type's `readNodes` (`usePermissions`), else plain text with "Opening X requires one of: …". Collections show a count
+  in the title and 12 items per page with `Pager` (`COLLECTION_PAGE_SIZE`). Load errors keep `status`/`response`
+  (`hooks/withCause.ts`) and `describeLoadProblem` words them: 403 `NoReadAccess` → "You don't have access to this
+  Town" with the nodes (and the record's name from `GET api/Lookup/{type}/{id}` when `lookupGettable`), 404 → "doesn't
+  exist" / "no detail page set up yet", anything else → "couldn't be loaded" with Try again.
+- Clients: `apiClients/relationshipClient.ts` (`api/Relationships`), `apiClients/lookupClient.ts` (`api/Lookup`, also
+  used by the wizard's relation picker, #191, and meant for AM3's picker lookup mode).
+
+**"Show details" on refusals** (PandiO/knk-workspace#44; branch `claude/picker-details-191-44`, not merged):
+`FeedbackModal` takes `details: { label?, load }`: a disclosure button (`aria-expanded`) in the Dialog's scrolling body,
+so the footer stays in view; `load` runs on the first press only (spinner, then the result; an error line with Try
+again); Hide/Show keeps the answer; focus still starts on the footer's first button. A delete refused as in use
+(`utils/referenceDetails.ts` `isReferenceRefusal`: 409 with `code: "DbConstraint"`) offers **Show what uses it**
+(`components/ReferenceDetails.tsx` `refusedDeleteDetails`, `apiClients/entityReferenceClient.ts` →
+`GET api/EntityReferences/{type}/{id}/rows`) on the dashboard's row Delete, the detail page's header Delete (that
+refusal is now a dialog instead of a toast) and an item's Delete on the detail page. Each group reads like the message
+("23 structures", `referenceNoun`); rows link to their detail page when the API says `readable` (the dialog closes),
+are plain text with "Opening … requires one of: …" otherwise, "… and n more" past 20, and groups the API only counts
+show its reason.
 
 **Create New menu** (`components/CreateNewMenu.tsx`, #177 link 2 / #39 CRUD-2): built from the entity
 metadata — every type with a create client in `utils/entityApiMapping.ts`
@@ -333,6 +485,22 @@ icon/color/sort overrides, authored via the — currently unrouted —
 saving default table columns) notifies every mounted instance, so an open picker picks the change up
 without remounting.
 
+**Relation picker** (`components/FormWizard/RelationPicker.tsx`, PandiO/knk-workspace#191; branch
+`claude/picker-details-191-44`, not merged): `ObjectField` and `ListField` show a search box (`role="combobox"`) instead
+of the inline `PagedEntityTable` (an Object field's "Select instance"/"Replace instance" toggle is gone). Nothing is
+fetched, and no permission is asked, until the box is used; then the first 8 matches
+(`RELATION_PICKER_PAGE_SIZE`) after a 250 ms pause, the form session's pinned rows on top (KNG-136, same client-side
+filtering), each with the first two configured default columns as a second line (`utils/forms/relationPicker.ts`
+`optionDetail`, KNG-166). Arrow keys + Enter or a click pick; Escape closes the list only (the surrounding Dialog
+ignores a handled Escape). Single: a pick replaces the value and closes the list. List: a pick adds or removes one row,
+`maxSelection` disables the rest. **Open full table** opens the old table in a `Dialog` (pickerFilters, the category
+filter, pinned rows, selection; a single pick closes it). **Access** (#280, `relationAccess`): with one of the related
+type's metadata `readNodes` (or when the metadata names none) the type's own search; without one `lookupClient.search`
+(`api/Lookup`, names and one detail line, no full table, picked as `{ id, name }` like an edit-loaded reference); a
+type without a lookup says "can't be searched here. Requires one of: …". A lookup takes no filters: `prefer…` filters
+are dropped, `excludeIds` is applied on the page, any other pickerFilter makes the picker say why instead of offering an
+unfiltered list (`lookupFilterPlan`).
+
 **Picker columns** (KNG-166): `PagedEntityTable` shows the entity's saved default table columns
 (Entity setup page → Default Table Columns) or else the built-in columns of
 `config/objectConfigs.tsx` (District: Town, World; Street: Districts, Towns; Structure and
@@ -353,11 +521,12 @@ src/
   components/
     FormWizard/            — generic create/edit engine (config-driven)
     FormConfigBuilder/      — admin UI to author FormConfigurationDto records
-    DisplayWizard/          — generic read-only detail-view engine; `EntityDetailHeader` (name, Back/Edit/Delete, #81)
+    DisplayWizard/          — generic detail-view engine; `EntityDetailHeader` (name, Back/Edit/Delete, #81); relationship actions and picker (#188), `detailPage.ts` (links, load problems, #189)
     DisplayConfigBuilder/   — admin UI to author DisplayConfigurationDto records
-    ObjectDashboard/        — legacy static-config-driven list/CRUD dashboard
+    ObjectDashboard/        — legacy static-config-driven list/CRUD dashboard; `DashboardSelectionBar` (bulk bar, Export CSV, #205)
     ObjectTypeExplorer/     — left-nav entity type picker (ObjectDashboard, FormWizardPage): search, A–Z/Z–A sort, optional groups (unused since #177 link 2), `marked` entries, `favourites` with a star per type, listed on top as copies (#194, #225, dashboard only), `filters` (Any/Yes/No selects, #226, dashboard only), settings in localStorage (KNG-61)
-    PagedEntityTable/       — generic server-paged table, used by both dashboard and forms; controlled mode (`query`/`onQueryChange`), `rowHref`, `aria-sort` (#39)
+    ReferenceDetails.tsx    — what still uses a record, inside FeedbackModal's "Show what uses it" (#44)
+    PagedEntityTable/       — generic server-paged table, used by the dashboard and the relation picker's "Open full table"; controlled mode (`query`/`onQueryChange`), `rowHref`, `aria-sort` (#39); `selectionStyle="checkbox"` + `renderSelectionBar` (#205)
     PathBuilder/            — path/reference picker for cross-entity field bindings
     Workflow/               — WorldTask/job polling UI (siege/world-mutation background tasks)
     minecraft/              — hybrid pickers for Minecraft material/enchantment refs
@@ -378,6 +547,8 @@ src/
     tokenService.ts         — localStorage/sessionStorage token persistence
     config-helper.ts         — ConfigurationHelper.gatewayApiUrl → appConfig.api.baseUrl
     enums.ts                 — Controllers enum (maps client → backend controller route segment)
+    csv.ts, tableExport.ts, tableCells.tsx — CSV writing, export rows (selection / all pages, 10,000 cap), cell values as text (#205)
+    playerTimeline.ts, playerSearch.ts, recentPlayers.ts — player profile timeline merger, moderation search, recently opened (#119)
   config/
     appConfig.ts              — base API URL config (not a REACT_APP_* env var)
     objectConfigs.tsx          — legacy static per-entity-type config (see above)
