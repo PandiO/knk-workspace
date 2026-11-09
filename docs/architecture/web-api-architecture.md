@@ -1,7 +1,7 @@
 # knk-web-api — Architecture
 
 **Status:** Living document — update in place as the code changes
-**Last updated:** 2026-11-08 (§5.2 read gating per area and lookups, AM2 of #280 — branch `claude/dashboard-access-280`, not merged); 2026-11-08 (§5.1 dashboard access model, AM1 of #280 — branch `claude/dashboard-access-280`, not merged); 2026-11-05 (#239 offer permission check, #240 Send again merged); 2026-11-04 (#239, #240 on a feature branch); 2026-11-02 (§6: config and entity events, `ReportWorlds` — #182, branch `claude/realtime-signalr`); 2026-11-02 (§6: world tasks over the hubs, presence endpoints — #181, branch `claude/realtime-signalr`); 2026-11-01 (world-task state machine, task codes, sweep, tasks anchored to the draft — #180, branch `claude/world-task-hardening`); 2026-10-26 (§6: realtime hubs, #178 S1 and #179 S2 on a feature branch); 2026-09-18 (based on a full read-only code scan; see `docs/reports/web-api-scan-2026-09-18.md` for the raw findings this doc summarizes); spot edits 2026-10-12 (FormField selection limits, KNG-164; created-entity provenance, reference check and DELETE 409 filter, KNG-162; FormConfiguration export/import and bundled seeds, KNG-138; the first seeds and stronger seed tests, KNG-139); 2026-10-26 (drafts and workflow sessions owned by the logged-in caller, PandiO/knk-workspace#186); 2026-10-17 (form wizard chain merged to `master`; smoke-test follow-ups: refusal reasons, KNG-169; FormConfiguration delete, KNG-172; region rule messages, KNG-173; validation result metadata, GateStructure house number, rule dependency path on update); 2026-10-22 (KNG-139 priority 2/3 seeds and DisplayConfiguration export/import; KNG-195 form submit fixes; gate warp settings, KNG-229); 2026-10-23 (step condition / field validation `IsActive`, KNG-186); 2026-10-23 (validation result log and validate-batch, KNG-269); 2026-10-25 (§6 plugin auth, health probe and RegionHttpServer callers corrected from the SignalR inventory); 2026-11-04 (ConditionalRequired ConfigJson contract, `FieldValidationService` removed, PandiO/knk-workspace#99)
+**Last updated:** 2026-11-09 (§5.3 relationships for the entity detail page, #188 — branch `claude/entity-detail-188-189`, not merged); 2026-11-08 (§5.2 read gating per area and lookups, AM2 of #280 — branch `claude/dashboard-access-280`, not merged); 2026-11-08 (§5.1 dashboard access model, AM1 of #280 — branch `claude/dashboard-access-280`, not merged); 2026-11-05 (#239 offer permission check, #240 Send again merged); 2026-11-04 (#239, #240 on a feature branch); 2026-11-02 (§6: config and entity events, `ReportWorlds` — #182, branch `claude/realtime-signalr`); 2026-11-02 (§6: world tasks over the hubs, presence endpoints — #181, branch `claude/realtime-signalr`); 2026-11-01 (world-task state machine, task codes, sweep, tasks anchored to the draft — #180, branch `claude/world-task-hardening`); 2026-10-26 (§6: realtime hubs, #178 S1 and #179 S2 on a feature branch); 2026-09-18 (based on a full read-only code scan; see `docs/reports/web-api-scan-2026-09-18.md` for the raw findings this doc summarizes); spot edits 2026-10-12 (FormField selection limits, KNG-164; created-entity provenance, reference check and DELETE 409 filter, KNG-162; FormConfiguration export/import and bundled seeds, KNG-138; the first seeds and stronger seed tests, KNG-139); 2026-10-26 (drafts and workflow sessions owned by the logged-in caller, PandiO/knk-workspace#186); 2026-10-17 (form wizard chain merged to `master`; smoke-test follow-ups: refusal reasons, KNG-169; FormConfiguration delete, KNG-172; region rule messages, KNG-173; validation result metadata, GateStructure house number, rule dependency path on update); 2026-10-22 (KNG-139 priority 2/3 seeds and DisplayConfiguration export/import; KNG-195 form submit fixes; gate warp settings, KNG-229); 2026-10-23 (step condition / field validation `IsActive`, KNG-186); 2026-10-23 (validation result log and validate-batch, KNG-269); 2026-10-25 (§6 plugin auth, health probe and RegionHttpServer callers corrected from the SignalR inventory); 2026-11-04 (ConditionalRequired ConfigJson contract, `FieldValidationService` removed, PandiO/knk-workspace#99)
 
 ## 1. Stack & shape
 
@@ -182,6 +182,40 @@ pinned):
     No rate limit (like the searches it replaces).
 - **The plugin** passes every gated read with its key (`api.auth.type: apikey`); `ReadAccessRulesTests` lists every
   GET and search POST of knk-plugin's `knk-api-client` and runs them through the filters.
+
+### 5.3 Relationships: Select / Unlink / Add (PandiO/knk-workspace#188 — branch `claude/entity-detail-188-189`, not merged)
+
+The entity detail page changes a link without editing the rest of the record and without ever deleting the related
+record.
+- **Catalog** (`Services/RelationshipService.cs` `RelationshipCatalog`): every navigation of every `DashboardAccess` type,
+  read from the EF model once per model, with its storage: `ForeignKey` (a column on the record), `Children` (the related
+  row's column), `Many` (a hidden link table such as `TownStreet`), `LinkRow` (a link entity whose key is the two ids and
+  that stores nothing else, e.g. `ItemBlueprintTag`; one with a level or weight is a record of its own) or `Other`.
+- **What may change** is a reviewed list, `RelationshipCatalog.Supported` (pinned by `RelationshipServiceTests`): category
+  parent / child categories / tags / icon, item blueprint category / grade / tags / icon, town and district streets, a
+  street's districts and town. Their update services only check that the related row exists (reviewed 2026-11-09).
+  Everything else answers with a reason: required parents ("A District always belongs to one Town: …"), domain
+  locations and teleport settings (the world is resolved from them), gates, kits, lootbox and siege setup, the players
+  area (escalation guard). Icons can be replaced, not removed. Adding a pair is one line after a look at the type's
+  update service.
+- **Endpoints** (`Controllers/RelationshipsController.cs`, writes only, no new read):
+  - `POST api/Relationships/{entityType}/{id}/{property}/link` `{ relatedId, move? }`: sets the column, the related
+    row's column or adds the link row. Already linked → `changed: false`. A child of another parent → 409
+    `AlreadyLinked` `{ currentId }` until `move: true`. A parent chain that would loop → 400 `Cycle`.
+  - `POST …/unlink` `{ relatedId }` (required for a collection): clears the column, the related row's column, or
+    removes the link (-table) row. Not linked → 404 `NotLinked` (a reference: `changed: false`).
+  - 404 `UnknownEntityType` / `UnknownRelationship` / `NotFound` / `RelatedNotFound`, 400 `RelationshipNotEditable` with
+    the reason, 409 `Conflict` when the database refuses.
+- **Access** (`Attributes/RequireRelationshipWriteAttribute.cs`, an `IKnkAccessRule`): web users only (the plugin key
+  alone 403), the type's write node and, for `Children`, the related type's write node too (`nodes` per relationship);
+  never `knk.admin.delete`. Missing → 403 `{ code: "NoWriteAccess", entityType, nodes }`.
+- **Metadata:** `EntityMetadataDto.relationships` `[{ property, relatedType, kind, storage, canLink, canUnlink,
+  linkReason?, unlinkReason?, nodes, relatedIdField?, relatedNavigation? }]`.
+- **Realtime:** the existing interceptor publishes the changed row (`Modified` on the record or on the child);
+  link-table and link-row changes publish nothing of their own, so other admins' open pages refresh on their next
+  change or reload (LV5-6).
+- **Display import:** `showDeleteButton` is a known button key; Select/Unlink/Add/Remove are no longer reported as
+  hidden.
 
 ## 6. Talks to knk-plugin
 

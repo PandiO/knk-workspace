@@ -4,6 +4,19 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Entity detail page: real Select / Unlink / Add, a separate Delete, readable values and errors** —
+  [PandiO/knk-workspace#188](https://github.com/PandiO/knk-workspace/issues/188),
+  [PandiO/knk-workspace#189](https://github.com/PandiO/knk-workspace/issues/189) (chain 3 link V5), knk-web-api and
+  knk-web-app `claude/entity-detail-188-189` (the API branch **contains** AM1+AM2 `claude/dashboard-access-280`, the
+  web-app branch V4 `claude/settings-pages-26` and through it V3, V2, V1 and chain 2's web app). Unlink on a related
+  record only removes the link (never the record); Delete is a separate red action behind a red question; Select and
+  Add pick an existing record in a searchable picker (a child of another parent asks "Move here?"), through the new
+  `POST api/Relationships/{type}/{id}/{property}/link|unlink` (the type's write node; no delete node). Links that
+  can't change here (required parents, locations, gates, kits, lootbox/siege setup, players) show the reason; actions
+  the viewer can't use say "Requires …". Values read as text, related values link to their page, collections show a
+  count and 12 per page, and load errors say what happened ("You don't have access to Town "Cinix"", "doesn't
+  exist"). No migration, no setting. Checklist: [guides/entity-detail-smoke-test.md](guides/entity-detail-smoke-test.md).
+
 - **Settings pages: units and help, confirms on risky switches, lootbox preview; Lootbox settings, Currency policy and
   Road network on the settings shell** — [PandiO/knk-workspace#26](https://github.com/PandiO/knk-workspace/issues/26)
   (chain 3 link V4), knk-web-app `claude/settings-pages-26` (**contains** V3's `claude/player-profile-119` and through it
