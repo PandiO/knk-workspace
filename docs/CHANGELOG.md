@@ -4,6 +4,17 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Form wizard relation picker: search as you type, the full table as a fallback; "Show what uses it" on a refused
+  delete** — [PandiO/knk-workspace#191](https://github.com/PandiO/knk-workspace/issues/191),
+  [PandiO/knk-workspace#44](https://github.com/PandiO/knk-workspace/issues/44) (chain 3 link V6), knk-web-api and
+  knk-web-app `claude/picker-details-191-44` (both **contain** V5 `claude/entity-detail-188-189` and what it contains).
+  Relation fields in forms show a search box instead of a large table: the first matches appear as you type, rows created
+  in the same form first, keyboard and mouse picking, and **Open full table** for the old table in a dialog. Staff
+  without access to the related type search by name only (the #280 lookups). A delete refused because the record is
+  still used now offers **Show what uses it**: the records, linked when the viewer may open them, fetched only on request
+  through the new `GET api/EntityReferences/{type}/{id}/rows` (one of the type's read nodes). No migration, no setting.
+  Checklist: [guides/relation-picker-and-delete-details-smoke-test.md](guides/relation-picker-and-delete-details-smoke-test.md).
+
 - **Entity detail page: real Select / Unlink / Add, a separate Delete, readable values and errors** —
   [PandiO/knk-workspace#188](https://github.com/PandiO/knk-workspace/issues/188),
   [PandiO/knk-workspace#189](https://github.com/PandiO/knk-workspace/issues/189) (chain 3 link V5), knk-web-api and

@@ -1,7 +1,7 @@
 # knk-web-api — Architecture
 
 **Status:** Living document — update in place as the code changes
-**Last updated:** 2026-11-09 (§5.3 relationships for the entity detail page, #188 — branch `claude/entity-detail-188-189`, not merged); 2026-11-08 (§5.2 read gating per area and lookups, AM2 of #280 — branch `claude/dashboard-access-280`, not merged); 2026-11-08 (§5.1 dashboard access model, AM1 of #280 — branch `claude/dashboard-access-280`, not merged); 2026-11-05 (#239 offer permission check, #240 Send again merged); 2026-11-04 (#239, #240 on a feature branch); 2026-11-02 (§6: config and entity events, `ReportWorlds` — #182, branch `claude/realtime-signalr`); 2026-11-02 (§6: world tasks over the hubs, presence endpoints — #181, branch `claude/realtime-signalr`); 2026-11-01 (world-task state machine, task codes, sweep, tasks anchored to the draft — #180, branch `claude/world-task-hardening`); 2026-10-26 (§6: realtime hubs, #178 S1 and #179 S2 on a feature branch); 2026-09-18 (based on a full read-only code scan; see `docs/reports/web-api-scan-2026-09-18.md` for the raw findings this doc summarizes); spot edits 2026-10-12 (FormField selection limits, KNG-164; created-entity provenance, reference check and DELETE 409 filter, KNG-162; FormConfiguration export/import and bundled seeds, KNG-138; the first seeds and stronger seed tests, KNG-139); 2026-10-26 (drafts and workflow sessions owned by the logged-in caller, PandiO/knk-workspace#186); 2026-10-17 (form wizard chain merged to `master`; smoke-test follow-ups: refusal reasons, KNG-169; FormConfiguration delete, KNG-172; region rule messages, KNG-173; validation result metadata, GateStructure house number, rule dependency path on update); 2026-10-22 (KNG-139 priority 2/3 seeds and DisplayConfiguration export/import; KNG-195 form submit fixes; gate warp settings, KNG-229); 2026-10-23 (step condition / field validation `IsActive`, KNG-186); 2026-10-23 (validation result log and validate-batch, KNG-269); 2026-10-25 (§6 plugin auth, health probe and RegionHttpServer callers corrected from the SignalR inventory); 2026-11-04 (ConditionalRequired ConfigJson contract, `FieldValidationService` removed, PandiO/knk-workspace#99)
+**Last updated:** 2026-11-09 (§5.4 what still uses a record, rows behind a refused delete's "Show details", #44 — branch `claude/picker-details-191-44`, not merged); 2026-11-09 (§5.3 relationships for the entity detail page, #188 — branch `claude/entity-detail-188-189`, not merged); 2026-11-08 (§5.2 read gating per area and lookups, AM2 of #280 — branch `claude/dashboard-access-280`, not merged); 2026-11-08 (§5.1 dashboard access model, AM1 of #280 — branch `claude/dashboard-access-280`, not merged); 2026-11-05 (#239 offer permission check, #240 Send again merged); 2026-11-04 (#239, #240 on a feature branch); 2026-11-02 (§6: config and entity events, `ReportWorlds` — #182, branch `claude/realtime-signalr`); 2026-11-02 (§6: world tasks over the hubs, presence endpoints — #181, branch `claude/realtime-signalr`); 2026-11-01 (world-task state machine, task codes, sweep, tasks anchored to the draft — #180, branch `claude/world-task-hardening`); 2026-10-26 (§6: realtime hubs, #178 S1 and #179 S2 on a feature branch); 2026-09-18 (based on a full read-only code scan; see `docs/reports/web-api-scan-2026-09-18.md` for the raw findings this doc summarizes); spot edits 2026-10-12 (FormField selection limits, KNG-164; created-entity provenance, reference check and DELETE 409 filter, KNG-162; FormConfiguration export/import and bundled seeds, KNG-138; the first seeds and stronger seed tests, KNG-139); 2026-10-26 (drafts and workflow sessions owned by the logged-in caller, PandiO/knk-workspace#186); 2026-10-17 (form wizard chain merged to `master`; smoke-test follow-ups: refusal reasons, KNG-169; FormConfiguration delete, KNG-172; region rule messages, KNG-173; validation result metadata, GateStructure house number, rule dependency path on update); 2026-10-22 (KNG-139 priority 2/3 seeds and DisplayConfiguration export/import; KNG-195 form submit fixes; gate warp settings, KNG-229); 2026-10-23 (step condition / field validation `IsActive`, KNG-186); 2026-10-23 (validation result log and validate-batch, KNG-269); 2026-10-25 (§6 plugin auth, health probe and RegionHttpServer callers corrected from the SignalR inventory); 2026-11-04 (ConditionalRequired ConfigJson contract, `FieldValidationService` removed, PandiO/knk-workspace#99)
 
 ## 1. Stack & shape
 
@@ -216,6 +216,29 @@ record.
   change or reload (LV5-6).
 - **Display import:** `showDeleteButton` is a known button key; Select/Unlink/Add/Remove are no longer reported as
   hidden.
+
+### 5.4 What still uses a record: rows for "Show details" (PandiO/knk-workspace#44 — branch `claude/picker-details-191-44`, not merged)
+
+A delete the database refuses answers 409 `{ code: "DbConstraint", message, references: [{ referencedBy, count }] }`
+(`DeleteConstraintExceptionFilter`, KNG-162/KNG-172). The rows behind those counts are fetched only when the admin asks:
+- **Endpoint** (`Controllers/EntityReferencesController.cs`): `GET api/EntityReferences/{entityType}/{id}/rows`
+  `?referencedBy=Structure.StreetId&take=20` → `{ entityTypeName, id, groups: [{ referencedBy, entityType, count, listed,
+  readable, nodes, reason?, rows: [{ id, label, detail? }], more }] }`. Only the references that stop a delete (the
+  refusal message's own rule, `EntityReferenceService.BlocksDelete`); `take` 1–50 per group (default 20), sorted by id.
+  Read-only.
+- **Access** (`Attributes/RequireReferenceReadAttribute.cs`, an `IKnkAccessRule`, read category **U** in
+  `ReadAccessRulesTests`): one of the route type's `ReadNodes`, web users only (anonymous 401, the plugin key alone 403,
+  no read node 403 `NoReadAccess`, a type outside `DashboardAccess` 404 `UnknownEntityType`). A custom rule because the
+  nodes depend on the route's type.
+- **What a group shows** (`Services/EntityReferenceRowsService.cs`): never more than the lookup label
+  (`ILookupService.GetAsync`, a user's username only):
+  - rows of a type the caller reads in full (any of its read nodes): labels, `readable: true` (the web app links them);
+  - rows of another dashboard type: labels when the caller holds any area node (what `api/Lookup` gives them anyway),
+    `readable: false`; otherwise only `count`, `listed: false` and the nodes that would read them;
+  - rows that aren't a dashboard type (drafts, form fields, workflow sessions) and rows without a single id: counted only
+    ("These records aren't listed here."), so other users' drafts never show.
+- `EntityReferenceService.GetReferencingRowsAsync` shares the loop with the counts (the ids of the referencing rows, for a
+  join row the other side's id); counts and rows always agree.
 
 ## 6. Talks to knk-plugin
 
