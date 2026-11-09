@@ -1,7 +1,7 @@
 # knk-web-api — Architecture
 
 **Status:** Living document — update in place as the code changes
-**Last updated:** 2026-11-05 (#239 offer permission check, #240 Send again merged); 2026-11-04 (#239, #240 on a feature branch); 2026-11-02 (§6: config and entity events, `ReportWorlds` — #182, branch `claude/realtime-signalr`); 2026-11-02 (§6: world tasks over the hubs, presence endpoints — #181, branch `claude/realtime-signalr`); 2026-11-01 (world-task state machine, task codes, sweep, tasks anchored to the draft — #180, branch `claude/world-task-hardening`); 2026-10-26 (§6: realtime hubs, #178 S1 and #179 S2 on a feature branch); 2026-09-18 (based on a full read-only code scan; see `docs/reports/web-api-scan-2026-09-18.md` for the raw findings this doc summarizes); spot edits 2026-10-12 (FormField selection limits, KNG-164; created-entity provenance, reference check and DELETE 409 filter, KNG-162; FormConfiguration export/import and bundled seeds, KNG-138; the first seeds and stronger seed tests, KNG-139); 2026-10-26 (drafts and workflow sessions owned by the logged-in caller, PandiO/knk-workspace#186); 2026-10-17 (form wizard chain merged to `master`; smoke-test follow-ups: refusal reasons, KNG-169; FormConfiguration delete, KNG-172; region rule messages, KNG-173; validation result metadata, GateStructure house number, rule dependency path on update); 2026-10-22 (KNG-139 priority 2/3 seeds and DisplayConfiguration export/import; KNG-195 form submit fixes; gate warp settings, KNG-229); 2026-10-23 (step condition / field validation `IsActive`, KNG-186); 2026-10-23 (validation result log and validate-batch, KNG-269); 2026-10-25 (§6 plugin auth, health probe and RegionHttpServer callers corrected from the SignalR inventory); 2026-11-04 (ConditionalRequired ConfigJson contract, `FieldValidationService` removed, PandiO/knk-workspace#99)
+**Last updated:** 2026-11-08 (§5.2 read gating per area and lookups, AM2 of #280 — branch `claude/dashboard-access-280`, not merged); 2026-11-08 (§5.1 dashboard access model, AM1 of #280 — branch `claude/dashboard-access-280`, not merged); 2026-11-05 (#239 offer permission check, #240 Send again merged); 2026-11-04 (#239, #240 on a feature branch); 2026-11-02 (§6: config and entity events, `ReportWorlds` — #182, branch `claude/realtime-signalr`); 2026-11-02 (§6: world tasks over the hubs, presence endpoints — #181, branch `claude/realtime-signalr`); 2026-11-01 (world-task state machine, task codes, sweep, tasks anchored to the draft — #180, branch `claude/world-task-hardening`); 2026-10-26 (§6: realtime hubs, #178 S1 and #179 S2 on a feature branch); 2026-09-18 (based on a full read-only code scan; see `docs/reports/web-api-scan-2026-09-18.md` for the raw findings this doc summarizes); spot edits 2026-10-12 (FormField selection limits, KNG-164; created-entity provenance, reference check and DELETE 409 filter, KNG-162; FormConfiguration export/import and bundled seeds, KNG-138; the first seeds and stronger seed tests, KNG-139); 2026-10-26 (drafts and workflow sessions owned by the logged-in caller, PandiO/knk-workspace#186); 2026-10-17 (form wizard chain merged to `master`; smoke-test follow-ups: refusal reasons, KNG-169; FormConfiguration delete, KNG-172; region rule messages, KNG-173; validation result metadata, GateStructure house number, rule dependency path on update); 2026-10-22 (KNG-139 priority 2/3 seeds and DisplayConfiguration export/import; KNG-195 form submit fixes; gate warp settings, KNG-229); 2026-10-23 (step condition / field validation `IsActive`, KNG-186); 2026-10-23 (validation result log and validate-batch, KNG-269); 2026-10-25 (§6 plugin auth, health probe and RegionHttpServer callers corrected from the SignalR inventory); 2026-11-04 (ConditionalRequired ConfigJson contract, `FieldValidationService` removed, PandiO/knk-workspace#99)
 
 ## 1. Stack & shape
 
@@ -72,6 +72,116 @@ Key structural facts worth knowing before touching the model:
 Browser clients call the API over REST with a bearer token attached (`src/services/serviceCall.ts` on the web-app side). Every controller except `AdminClientsController`, `AuthController.Me`/`Update`, and `UsersController.LinkMinecraftAccount` has **no** `[Authorize]` attribute — JWT bearer auth is configured globally but most actions don't actually require it. This is broader than the CLAUDE.md's implication that JWT auth gates the API generally; verify with the developer whether this is intentional (internal-tool-style trust) or a gap before shipping wider access.
 
 The web-app is the primary caller for almost every CRUD controller (Towns/Districts/Streets/Structures/Categories/DisplayConfigurations/FormConfigurations/GameSettings/etc.) and for the form-builder/validation/workflow machinery. See the endpoint table in the scan report for the full caller breakdown, including several confirmed **broken web-app client calls** (routes the frontend posts to that don't exist server-side — e.g. `authClient.ts`'s `mergeAccounts` posts to a non-existent `api/Auth/merge` instead of the real `api/Users/merge`).
+
+### 5.1 Dashboard access model (PandiO/knk-workspace#280, AM1 — branch `claude/dashboard-access-280`, not merged)
+
+Design: [specs/dashboard-access-model/DESIGN.md](../specs/dashboard-access-model/DESIGN.md) (model A, decided 2026-11-08).
+AM1 builds the **actions**; AM2 (same branch) the read gating per area and the lookup endpoints (§ 5.2), the web app
+follows in AM3. Deploy AM1–AM3 together, API first.
+
+- **Nodes** (`StaffPermissions`): `Delete = knk.admin.delete` (delete one), `DeleteBulk = knk.admin.delete.bulk`,
+  `Export = knk.admin.export`. The area nodes are unchanged and still mean view, create and edit in their area:
+  `knk.admin.content`, `knk.admin.world`, `knk.kit.manage`, `knk.admin.lootbox.manage`, `knk.siege.admin.manage`,
+  `knk.admin.road`, `knk.admin.user.manage` (`knk.admin.user.perm` for permission-group writes).
+- **Registry** `Attributes/DashboardAccess.cs`: one entry per `[FormConfigurableEntity]` type, plus `RoadProfile`.
+  Each holds the area, area node, write node, read nodes (area node first, then the cross-area page nodes of the
+  design's § 4.6.2, enforced from AM2), whether it is deletable and bulk deletable, and delegates to the type's own
+  delete and search (the same service calls as its `DELETE {id}` and `POST …/search`). Link rows, snapshots and other
+  `[FormConfigurableEntity]` types are view-only entries. `Security/DashboardAccessTests` pins the coverage.
+- **Single delete:** every deletable type's `DELETE {id}` carries `RequireServiceOrPermission(Delete)`
+  (`RequirePermission` on the lootbox controllers) on top of its class or method area rule, so a delete is area node
+  AND `knk.admin.delete`; users (`knk.admin.user.manage`) and permission groups (`knk.admin.user.perm`) included.
+  `Security/DeleteAccessRulesTests` pins the primary delete per type and an exemption list for every other DELETE
+  (builder parts, menus, drafts, world-task/workflow lifecycle, link deletes, plugin-only and player-own deletes).
+- **`POST api/Dashboard/bulk-delete`** (`DashboardController`, web users only): `RequirePermission(DeleteBulk)` and
+  `RequirePermission(Delete)`, then the type's area node in the action (403), `bulkDeletable` (400
+  `BulkDeleteNotAllowed` for users, permission groups and view-only types), 1–100 distinct positive ids (400), unknown
+  type 404. `DashboardActionService` deletes each id through the type's own delete in its **own DI scope**, so a refused
+  row doesn't poison the next save; the answer is `{ deleted: [id], refused: [{ id, reason }] }` with the single
+  delete's wording (not found; the business rule's message; the `DeleteConstraintExceptionFilter` "still used by …"
+  text from `EntityReferenceService`; a generic text for anything else, never the exception's). One `AuditLogEntry`
+  `DashboardBulkDelete` (target = actor; type, requested, deleted ids, refused count). Rate limit: the `lookup` policy.
+  Each row is its own save, so realtime sends one `EntityChanged` per row.
+- **`POST api/Dashboard/export`** (web users only): `RequirePermission(Export)` and the area node in the action. Body
+  `{ entityType, ids?, query?: { searchTerm, filters, sortBy, sortDescending } }`; reads the type's own search in pages
+  of 500 in the requested sort, at most 10 000 rows (`truncated: true` beyond); with `ids` it scans the search (with the
+  query, if given) for those rows and returns them in its order (scan limit 100 000 rows). Answer
+  `{ items, total, truncated }`, rows exactly as the type's search returns them (the web app formats the CSV with the
+  table's columns). 400 for a type without a search (`RoadProfile`, link rows) and for more than 10 000 ids. One
+  `AuditLogEntry` `DashboardExport` (type, scope `selection`/`search`, count, truncated; never the rows).
+- **Metadata** (`EntityMetadataDto`, `GET api/Metadata/entities…`): `area`, `accessNode`, `writeNode`, `readNodes`,
+  `deletable`, `bulkDeletable`, `exportable`, `lookupSearchable`, `lookupGettable` (AM2) and `actionNodes` (`view`
+  (AM2: the area node, the dashboard lists the type), `create`, `edit`, `delete`, `bulkDelete`, `export` → every node
+  the action needs; an action the type doesn't allow is left out), from the registry.
+- **Escalation guard** (`PermissionEscalationGuard`): `OwnerGrantOnly = { knk.admin.delete.bulk }`. Granting,
+  denying or revoking it, or a wildcard that covers it by the resolver's rules (`*`, `knk.*`, `knk.admin.*`,
+  `knk.admin.delete.*`, also `x.*` for the bare `x`), needs `*` ("Only the owner can hand out bulk delete."); so do
+  assigning a group and inheriting from a group whose granted chain covers it (premium ranks included). So **Admins
+  can no longer grant `knk.admin.*`** or hand out a group carrying it. `knk.admin.delete` and `knk.admin.export` stay
+  grantable by anyone who holds them. **Rank (developer 2026-11-08, Staff):** besides handing out and removing
+  groups, a web user now also changes a group's grants (`CanGrantNodeAsync` on a group holder) and creates, edits or
+  deletes a group (`CanChangeGroupAsync`, the group as it is and its new Weight) only below their own highest group.
+- **Migration `SeedDashboardActionNodes`** (data only): Admin gets the three nodes unless its chain decides them (the
+  alpha: `knk.admin.*`, nothing added); every group and user with an active explicit area-node grant gets
+  `knk.admin.delete` and `knk.admin.export`, **except the Staff group**; a holder whose chain (for a user: own grants,
+  then every active group and its parents) has a grant, deny or covering wildcard is skipped. Bulk delete is never
+  backfilled. Down removes only value-1 grants without expiry.
+- **Realtime:** `RealtimeWebChangeMap.NodeFor` returns the type's **area node** (a base type's event, `Domain` for a
+  saved `Town`, uses the base type's area), so live updates follow the area; users, memberships, grants and the audit
+  log stay on `knk.admin.user.manage`, `NotSent` types unchanged. Delete nodes don't change the audience.
+
+### 5.2 Read gating per area and lookups (PandiO/knk-workspace#280, AM2 — branch `claude/dashboard-access-280`, not merged)
+
+Design § 4.6 and Appendix A. Before AM2 every dashboard read was open to any logged-in user (the default rule); now
+each read endpoint has exactly one **category**, worked out from its attributes by `ReadAccess.Of`
+(`Attributes/ReadAccess.cs`) and pinned per endpoint in `Security/ReadAccessRulesTests` (298 read endpoints: every
+GET/HEAD, every POST search and every POST that carries a read rule of its own; a new one fails the test until it is
+pinned):
+
+| Code | Category | Rule | Count |
+|---|---|---|---|
+| F | full read | `[DashboardReads("<Type>")]` on the controller (or the action): one of the type's **read nodes** (area node + the design's § 4.6.2 page nodes), or the plugin key. Records outside the registry read with an area: `[DashboardReads(DashboardArea.Content)]` (menus, builder export/seeds), `World` (world-task lists, the domain admin reads) | 101 |
+| L | lookup | `[RequireServiceOrAnyAreaNode(ReadCategory.Lookup)]`: any area node or the plugin key (`api/Lookup`, `Clans/default-for-town`) | 3 |
+| R | form runtime | `[RequireServiceOrAnyAreaNode]`: form/display configurations, steps, fields, sections, entity type configuration, metadata, validation rule GETs and the validation/resolve POSTs, banner pattern keys, workflow health | 43 |
+| O | own records | any area node + the ownership the action checks: drafts `[RequireAnyAreaNode]` (web only, was `knk.admin.content`), own world tasks and workflow sessions `[RequireServiceOrAnyAreaNode(ReadCategory.OwnRecords)]` | 13 |
+| P | public | `[AllowAnonymous]`, unchanged (leaderboards, statistics, players, public siege matches, enchantment info, health, auth) | 16 |
+| G | game server | `[RequirePluginService]`, unchanged | 13 |
+| U | stricter | the action's or controller's own rule, unchanged (lootboxes, users and groups, self reads, currency admin, owner nodes, `[Authorize]`) | 83 |
+| D | outside the model | the default rule, unchanged: reads that aren't dashboard types (game, siege, salary and navigation settings, currency of a player, roads other than profiles, title brackets, siege match history, presence `me`) | 26 |
+
+- **"Any area node"** is `DashboardAccess.AreaNodes`: `knk.admin.content`, `knk.admin.world`, `knk.kit.manage`,
+  `knk.admin.lootbox.manage`, `knk.siege.admin.manage`, `knk.admin.road`, `knk.admin.user.manage`.
+- **Precedence** (`ReadAccess.Of`): `[AllowAnonymous]` → P; `[RequirePluginService]` → G; on the action an any-area
+  rule → L/R/O, another access rule or `[Authorize]` → U, `[DashboardReads]` → F; then the same on the controller;
+  else D. `RequireServiceOrPermissionForWrites` and `RequireServiceOrLoggedIn` never decide a read. A filter that isn't
+  the deciding rule for the action steps aside, so a class-level `[DashboardReads]` doesn't add to an action's own rule.
+- **Writes are unchanged.** `DashboardReads` is not an `IKnkAccessRule`, so a write without a rule still gets the
+  default-deny 403. `RequireServiceOrPermissionForWrites` also skips a POST whose action carries a read rule (the
+  validation POSTs, `Domains/world/resolve`); the builder writes stay `knk.admin.content`, world writes
+  `knk.admin.world`.
+- **Refusal:** 403 `{ error: "Forbidden", code: "NoReadAccess", entityType, nodes, message: "You don't have access to
+  <Type>. Requires one of: …" }`; the any-area rules answer 403 "Requires a staff area permission (any of …)".
+- **Player summaries:** `GET api/Users/uuid/{uuid}` and `username/{username}` need `knk.admin.user.manage` or the plugin
+  key (F `User`). Self reads (`GET api/Users/{id}`, `…/permissions/check|effective`) stay
+  `RequireServiceSelfOrPermission`.
+- **Checks:** `PermissionResolutionService.CheckAnyAsync(userId, nodes)` resolves several nodes on one holder chain;
+  `IPermissionReadCache` (singleton) memoises per request and caches each (user, node) answer 30 s, for reads only.
+  `PermissionGrantService` (a user holder: that user; a group: everyone), `UserPermissionGroupService` (that user) and
+  `PermissionGroupService` (everyone) drop the cached answers at the calls that publish S2's `UserPermissionsChanged` /
+  `PermissionGroupChanged`, also without a realtime sink. Anything else (an expiring grant) shows within 30 s.
+- **Lookups** (`Controllers/LookupController.cs`, `Services/LookupService.cs`, `Attributes/DashboardLookups.cs`):
+  - `POST api/Lookup/{entityType}/search` `{ searchTerm, page, pageSize ≤ 50 }` → `{ items: [{ id, label, detail? }],
+    total }` through the type's own search (no filters, no sort); `GET api/Lookup/{entityType}/{id}` → `{ id, label,
+    detail? }` through its own get by id.
+  - Label and detail are read by property name from what the service returns (one short line: a domain's parent and
+    world, a location's world and coordinates, an item's category and grade, …; at most 120 characters).
+  - **Users:** the label is the username, no detail; the search term goes to the `username` filter, so a lookup never
+    matches (or shows) an email.
+  - Unknown type 404 `UnknownEntityType`; a registry type without a lookup (link rows, snapshots, other view-only
+    entries; search for types without a search such as banner layers or road profiles) 400 `LookupNotAvailable`.
+    No rate limit (like the searches it replaces).
+- **The plugin** passes every gated read with its key (`api.auth.type: apikey`); `ReadAccessRulesTests` lists every
+  GET and search POST of knk-plugin's `knk-api-client` and runs them through the filters.
 
 ## 6. Talks to knk-plugin
 

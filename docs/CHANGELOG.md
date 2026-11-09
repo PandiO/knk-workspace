@@ -70,6 +70,30 @@ This is a human-readable record of capabilities merged into the V3 default branc
   `prefers-reduced-motion`. No API change, no setting. Checklist:
   [design themes guide § 8](guides/design-themes-comparison.md#8-smoke-test-entity-setup-at-phone-width-colour-baseline-landing-fade-chain-3-v1).
 
+- **Dashboard access model, API part 2 (AM2)** — [PandiO/knk-workspace#280](https://github.com/PandiO/knk-workspace/issues/280),
+  knk-web-api `claude/dashboard-access-280` (on top of AM1). Every dashboard read is now gated by area: lists, details
+  and searches of a type need one of its read nodes (the area node, or the page node of a page that shows it: Game
+  settings reads locations and towns with `knk.admin.config`, roads read towns and streets, kits and lootboxes read
+  items, …), or the plugin's key. The form wizard's own reads (form and display configurations, metadata, validation),
+  drafts and your own world tasks and workflow sessions are open to anyone holding **any** area node, so a world or
+  kit builder no longer needs `knk.admin.content` to validate a form. New `POST api/Lookup/{type}/search` and
+  `GET api/Lookup/{type}/{id}` give pickers and labels id, name and one short line (users: the username only) for
+  any area node. Public pages, self reads and the plugin are unchanged. No migration, no setting. Deploy AM1–AM3
+  together, API first: an old web app would hit 403 in pickers of other areas.
+
+- **Dashboard access model, API part 1 (AM1)** — [PandiO/knk-workspace#280](https://github.com/PandiO/knk-workspace/issues/280),
+  knk-web-api `claude/dashboard-access-280` (stacked on `claude/kit-grant-delivery-261`, which contains chain 2's R1, and
+  on chain 2's X1 API `claude/realtime-web-live-183`: merging it merges those too). New nodes `knk.admin.delete`,
+  `knk.admin.delete.bulk` and `knk.admin.export` on top of the area nodes: every dashboard delete (users and permission
+  groups included) needs the area node and `knk.admin.delete`; `POST api/Dashboard/bulk-delete` (area + delete + bulk,
+  at most 100 ids, a reason per refused row, not for users and groups) and `POST api/Dashboard/export` (area + export,
+  at most 10 000 rows), each with one audit entry. Only the owner hands out bulk delete, also through `knk.admin.*` or
+  groups that carry it; nobody changes a group ranked at or above their own. Migration `SeedDashboardActionNodes`
+  (data only) gives Admin the three nodes where its wildcard doesn't, and delete and export to every explicit
+  area-node holder **except the Staff group**. Metadata names each type's area and action nodes; live updates follow
+  the area. Read gating and lookups (AM2) and the web app (AM3) follow; deploy AM1–AM3 together, API first. Smoke test
+  draft: [guides/dashboard-access-smoke-test.md](guides/dashboard-access-smoke-test.md).
+
 ## 2026-11-05
 
 - **World-task offers reach non-op staff, and "Send again"** — [PandiO/knk-workspace#239](https://github.com/PandiO/knk-workspace/issues/239)
