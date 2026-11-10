@@ -114,7 +114,7 @@ No findings. Merged to knk-plugin `main` as `fd869aa` (merged with the KNG-27/51
 ## 7. Other domain rules (alpha run 1 package C, in review)
 
 Not part of AllowEntry/AllowExit, but enforced on the same domain regions. Pushed on knk-plugin
-`claude/alpha-run-1-permissions`, not merged; see the [package C report](../reports/alpha-tests/25-10-2026/2026-10-26-package-c-permissions-domains.md).
+`claude/alpha-run-1-permissions`, not merged; see the [package C report](../reports/alpha-tests/test-run-1/2026-10-26-package-c-permissions-domains.md).
 
 - **Storage** ([PandiO/knk-workspace#157](https://github.com/PandiO/knk-workspace/issues/157)). WorldGuard refuses
   chests and other storage in a domain region to anyone who isn't a member, unless the region allows it

@@ -4,7 +4,7 @@
 **Preparation:** [test-run-2-preparation.md](test-run-2-preparation.md) (agenda, decisions and tester questions)
 **Last updated:** 2026-11-03 (§ 4b added: siege pre-game gate view #213 and gate pass-through styles #167, on feature branches); 2026-11-03 (renumbered from "run 3" to run 2: the 2026-10-27 check was a developer pre-check, not a tester run; preparation doc linked); 2026-11-02 (#193 accepted, § 4 and § 5); 2026-11-01 (G and I tested, § 5; packages F, G, I and #193 merged; § 4 now part of the run, § 4a added)
 **Issues:** parent [PandiO/knk-workspace#149](https://github.com/PandiO/knk-workspace/issues/149)
-**Previous run:** [test run 1 findings](../25-10-2026/test-run-1-findings.md) · fixes in the
+**Previous run:** [test run 1 findings](../test-run-1/test-run-1-findings.md) · fixes in the
 [alpha run 1 handoff](../../../ai-agents/handoffs/2026-10-25-alpha-run-1-p0-p1.md) (packages A–D, merged 2026-10-26)
 
 ## 1. Developer pre-checks (2026-10-27)

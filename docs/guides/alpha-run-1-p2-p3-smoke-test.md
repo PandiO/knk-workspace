@@ -5,7 +5,7 @@
 **Issues:** parent [PandiO/knk-workspace#149](https://github.com/PandiO/knk-workspace/issues/149); #163, #164, #165,
 #166, #169, #170, #171, #172, #174, #175, #198, #199 (§ 1–8); #167 (§ 9, on hold)
 **Handoff:** [2026-10-27-alpha-run-1-p2-p3.md](../ai-agents/handoffs/2026-10-27-alpha-run-1-p2-p3.md) (decisions § 1,
-coordinator summary with merge order) · **Package reports:** `docs/reports/alpha-tests/25-10-2026/2026-10-27-package-{e,f,g,h,i}-*.md`
+coordinator summary with merge order) · **Package reports:** `docs/reports/alpha-tests/test-run-1/2026-10-27-package-{e,f,g,h,i}-*.md`
 on each package's knk-workspace branch
 
 Manual checks of the P2/P3 fixes on the **dev** stack (dev API, web app and Paper server), before test run 2 on the

@@ -7,7 +7,7 @@ later sections note their own state
 `Frozen by <staff> for: <reason>` bar, #169/#170, in review on `claude/alpha-run-1-effects`, knk-plugin `9bc2b31`, not
 merged); 2026-10-27 (§ 5: effect boss bars and the flash_chaos name-tag blackout, knk-plugin `911eb2a`); 2026-10-26 (PandiO/knk-workspace#151, #156, #155)
 **Companion docs:** [ability definition reference](../../specs/custom-enchantments/ABILITY_DEFINITION_REFERENCE.md),
-[package B report](../../reports/alpha-tests/25-10-2026/2026-10-26-package-b-enchantments-freeze.md)
+[package B report](../../reports/alpha-tests/test-run-1/2026-10-26-package-b-enchantments-freeze.md)
 
 Since [#151](https://github.com/PandiO/knk-workspace/issues/151) an admin sets, per custom enchantment, how often its
 effect goes off, how long it lasts, how that grows per level and the cooldown of the player who used it. The values
