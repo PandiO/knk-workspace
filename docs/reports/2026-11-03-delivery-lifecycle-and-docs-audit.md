@@ -1,6 +1,6 @@
 # Delivery lifecycle and documentation upkeep: audit and proposal
 
-**Status:** Proposal, decisions recorded 2026-11-03 (§ 6), not yet applied · **Date:** 2026-11-03 · **Scope:** agent instructions in
+**Status:** Applied and merged 2026-11-10 (§ 6.7) · **Date:** 2026-11-03 · **Scope:** agent instructions in
 `knk-workspace`, `knk-web-api`, `knk-web-app`, `knk-plugin`, `knk-dev-db-seed`, plus the docs they should keep current
 
 **Evidence baseline:** the default branches of each repo as cloned on 2026-11-03 (`knk-workspace` at the tip of
