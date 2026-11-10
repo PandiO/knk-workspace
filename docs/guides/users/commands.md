@@ -14,6 +14,12 @@ related_repo: knk-v1-archive
 > [CONTENT_PORT_PLAN.md](../../specs/inventory-menu/CONTENT_PORT_PLAN.md) CP1. The rest of this page is
 > the unchanged v1 reference.
 >
+> **v3 note (2026-11-10):** `/ce info` (custom enchantments on the held item, permission
+> `customenchantments.command.info`, default true) shows the combat values at the item's level under each
+> enchantment; for Cleaving that is a line like `gate hits +25%, charged strike 5x, strike cooldown 60s`
+> (PandiO/knk-workspace#259). See [COMMAND_CATALOG_V3.md](../../specs/user-features/COMMAND_CATALOG_V3.md) §4
+> `/ce info` and the [gate structures player guide](gate-structures-player-guide.md#cleaving-the-siege-enchantment-for-gate-doors).
+>
 > **Superseded by** [docs/specs/legacy/commands-v1.md](../../specs/legacy/commands-v1.md), a complete
 > source-grounded catalog of every v1 command (not just this partial permission-node list), with v2/v3
 > counterparts at [commands-v2.md](../../specs/legacy/commands-v2.md) and

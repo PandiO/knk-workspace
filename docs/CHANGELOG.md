@@ -31,6 +31,12 @@ This is a human-readable record of capabilities merged into the V3 default branc
       ```
       New message key (defaults from the jar until merged by hand): `custom-enchantments.messages.cmd-info-tuning-gate:
       "&8   gate hits +%gateBonus%%, charged strike %strike%x, strike cooldown %strikeCooldown%"`.
+  - **Docs follow-up (PandiO/knk-workspace#306, 2026-11-10):** player guide
+    [gate structures § Cleaving](guides/users/gate-structures-player-guide.md#cleaving-the-siege-enchantment-for-gate-doors)
+    (what it does, the cooldown, where to see the live numbers), `/ce info`'s combat value lines in
+    [COMMAND_CATALOG_V3 § 4](specs/user-features/COMMAND_CATALOG_V3.md), and the latest migration in
+    [production installation](guides/production-installation.md). No knk-dev-db-seed change is needed: after
+    `dotnet ef database update` the API fills Cleaving's empty columns at startup.
 - **Chat tokens** — knk-plugin `main` `b8ab3a0f`, knk-web-api `master` `6f3edd1`, knk-web-app `main` `4d6e2ac`, merged from `claude/chat-tokens-233`
   (PandiO/knk-workspace#233). `#hand` shows the held item with its tooltip. Statistics and profile tokens (`#stats`,
   `#kills`, `#deaths`, `#kd`, `#streak`, `#wins`, `#playtime`, `#balance`, `#title`, `#xp`, `#discoveries`) also work as
