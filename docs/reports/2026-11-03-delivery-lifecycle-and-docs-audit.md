@@ -187,7 +187,7 @@ differ.
 
 | # | Decision | Effect on the plan |
 |---|---|---|
-| 1 | Docs are written **after** the developer's smoke test, **before** merge; the docs checklist blocks closing the issue | § 3.1 is revised as below |
+| 1 | Docs are written **after** the developer's smoke test; the checklist blocks completion. **Amended 2026-11-10:** guides, the register and the wiki are written asynchronously after merge, so they don't slow merges | § 6.1 is replaced by § 6.6 |
 | 2 | Plugin `config.yml` changes are documented thoroughly; on each deployment they are merged into the dev and alpha configs | New § 6.2 |
 | 3 | `production-installation.md` is the from-scratch guide | See § 6.3: the runbook covers different ground, so nothing is retired outright |
 | 4 | All documentation lives in `knk-workspace`, including `knk-plugin/docs/` | § 3.3 consolidation goes ahead with the exceptions in § 6.4 |
@@ -195,7 +195,7 @@ differ.
 | 6 | The player handbook is in English | § 3.4: replace `handleiding.md` with an English handbook and archive the Dutch file |
 | 7 | Question: is the plan enough for a GitHub wiki or changelog? | Not yet; § 6.5 adds what is missing |
 
-### 6.1 Lifecycle with a docs phase
+### 6.1 Lifecycle with a docs phase (superseded 2026-11-10 by § 6.6)
 
 `status:in-progress` → `status:in-review` (developer smoke test, fix rounds) → **`status:docs`** (new label: test
 signed off, docs being written on the feature branches) → merge with the docs → closed.
@@ -267,3 +267,38 @@ also needs:
 - **Public-repo hygiene:** `knk-workspace` is public. `nas-ops-access.md` and `production-installation.md` contain
   LAN addresses (`192.168.50.x`). The maintenance guide already says live hostnames stay out of public docs, so replace
   them with placeholders as part of § 3.8.
+
+### 6.6 Asynchronous docs (developer decision 2026-11-10)
+
+Goal: documentation never holds up a merge. Only the few items that are lost or dangerous when late stay with the
+merge, and the implementing agent writes them, not the developer.
+
+**With the merge (minutes; part of the PR):**
+
+1. **Docs impact list** in the PR, written at `in-review` and corrected after the test: which guides, specs and
+   register rows are affected and what changed in behaviour. This is the handover to the docs session.
+2. **Deploy-critical notes:** config keys to merge (§ 6.2), migrations, one-time scripts, new secrets or ports. A
+   missing note here breaks or silently degrades a deploy (`saveDefaultConfig()` never adds new keys).
+3. **Changelog fragment:** one small file per change in `docs/changelog.d/<issue>-<slug>.md` (player summary, admin
+   steps, links). Separate files mean parallel sessions never conflict on `CHANGELOG.md`; the docs session or the
+   release step folds them in.
+
+**After the merge (asynchronous):**
+
+- When the code PRs merge, the feature issue closes as usual. A **`docs` follow-up issue** is opened as a sub-issue,
+  carrying the docs impact list. The rule "the checklist blocks completion" moves to that follow-up issue and to the
+  parent: the parent is complete when the follow-up is closed.
+- A **docs session** works that issue in parallel with new feature work: player, admin and developer guides, the spec
+  status, register row, guides index, wiki or Pages feature page, screenshots. It runs in its own session on its own
+  `docs/…` branch in `knk-workspace` and touches no code repo. Several merges can be batched into one docs session.
+- **Publishing** (GitHub Pages site, Releases) is triggered by pushes to `main` and by deploy tags, so it needs nobody.
+
+**Guardrails, so async doesn't turn into never:**
+
+- **Release gate:** no deploy to knk-alpha, and no tester run, while a merged feature in that deploy has an open
+  `docs` issue for a player or admin guide. Testers and admins then always get current guides. The gate sits at
+  deploys, which are rare, not at merges, which are frequent.
+- The **weekly check** (§ 3.7) reports open `docs` issues and their age, and catches merges that didn't get a
+  follow-up issue.
+- **Debt cap:** more than about five open `docs` issues, or one older than two weeks, means the next session the
+  developer starts is a docs session.
