@@ -63,6 +63,15 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## 2026-11-05
 
+- **Guides: a public page for every custom enchantment and ability** — anyone, signed in or not, can look up what
+  each Knights and Kings enchantment does, with its chance, cooldown, effects and damage per level. knk-web-api
+  `master` `2e3dfeb`, knk-web-app `main` `a7b231d`, merged from `claude/enchantment-info-221` (PandiO/knk-workspace#221;
+  decisions 2026-11-03: public, custom enchantments only, under a new Guides section). New anonymous read
+  `GET /api/EnchantmentDefinitions/public/info`; pages `/guides` and `/guides/enchantments`, linked from the navigation
+  bar (signed in) and the landing page (signed out). The numbers are the live combat values. Guide: [admin guide
+  § 8](guides/admin/custom-enchantment-combat-values-admin-guide.md#8-the-public-info-page-221). Smoke test run by the
+  developer, all pass.
+  - **Admin steps:** none (no migration, no seed, no config).
 - **World-task offers reach non-op staff, and "Send again"** — [PandiO/knk-workspace#239](https://github.com/PandiO/knk-workspace/issues/239)
   and [#240](https://github.com/PandiO/knk-workspace/issues/240), follow-ups of the developer's WT2 test; merged 2026-11-05 after the developer's smoke test (all steps work):
   knk-web-api `master` `453729e`, knk-plugin `main` `33122cf4`, knk-web-app `main` `4d0c6ed`. The plugin checks `knk.tasks` for an
@@ -74,6 +83,33 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## 2026-11-04
 
+- **Ability kills name the ability, the player and the item** — a player killed by Chaos or Flash Chaos now reads
+  `Steve was killed with Flash Chaos by Alex using [Storm Blade]` instead of a plain melee kill. knk-plugin `main`
+  `bd4eff6`, merged from `claude/death-messages-222` (PandiO/knk-workspace#222; decisions 2026-11-03: one pattern with
+  per-enchantment overrides in `config.yml`, only direct Chaos / Flash Chaos kills). Other deaths keep the vanilla
+  message; a siege match still shows none; the killer and statistics are unchanged. Guide: [admin guide
+  § 7](guides/admin/custom-enchantment-combat-values-admin-guide.md#7-death-messages-for-chaos-and-flash-chaos-kills-222).
+  Smoke test run by the developer, all pass (the `using <item>` part was added after the test, on request).
+  - **Admin steps:** plugin `config.yml`, new block under `custom-enchantments:` (the jar's defaults apply until it is
+    merged by hand):
+    ```yaml
+    custom-enchantments:
+      death-messages:
+        enabled: true
+        default: "%victim% was killed with %enchantment% by %player% using %item%"
+        overrides: {}
+    ```
+- **Chaos and Flash Chaos hit as hard as staff set them** — the area damage, the damage and knockback radius and a
+  separate gate damage of Chaos and Flash Chaos are combat values in the web app (defaults unchanged: 40 / 60 within
+  3 blocks, knockback within 5). knk-plugin `main` `813b9cc` (with #222 in `bd4eff6`), knk-web-api `master` `369fd1c`,
+  knk-web-app `main` `8613916`, merged from `claude/area-damage-223` (PandiO/knk-workspace#223; decisions 2026-11-03:
+  damage grows with the level multiplier, gate damage is its own value). `/ce info` shows an area line. Guide: [admin
+  guide § 1](guides/admin/custom-enchantment-combat-values-admin-guide.md#1-where-to-edit). Smoke test run by the
+  developer, all pass.
+  - **Admin steps:** knk-web-api migration `20261103202219_AddEnchantmentAreaDamage` (four nullable columns; startup
+    fills the defaults); web app: import form seed `EnchantmentDefinition - Default (seed v4)` (or v5 from #259) and
+    make it the default; plugin `config.yml`, new message key (jar default until merged):
+    `custom-enchantments.messages.cmd-info-tuning-area: "&8   area damage %areaDamage% within %damageRadius% blocks, gates %gateDamage%, knockback within %effectRadius% blocks"`.
 - **Page background: landing image 1 behind every page, on by default** — knk-web-app
   `main` `1cbee21`, merged from `claude/page-background-image-231` (PandiO/knk-workspace#231; developer approved 2026-11-04 after the live
   comparison, on by default). Every visitor can turn it off with the "Background image" item under the themes in the
@@ -180,6 +216,20 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## 2026-11-03
 
+- **Flash Chaos's debuffs are adjustable, and abilities show their cooldown** — staff set Flash Chaos's Slowness
+  level and duration and its Nausea duration in the web app, and a player who used an ability sees a grey boss bar
+  counting down until it is ready again. knk-plugin `main` `4f29e9c3`, knk-web-api `master` `c4c7772`, knk-web-app
+  `main` `ff83295`, merged from `claude/enchantments-201-202` (PandiO/knk-workspace#201, #202). Defaults unchanged
+  (Slowness I 5 s, Nausea 12.5 s). Bars for Chaos, Flash Chaos, Health Boost, Armor Repair, Resistance, Invisibility,
+  Freeze (per attacker) and Cleaving's strike; the navigation bar stays on top. Guide: [admin guide § 1, §
+  6](guides/admin/custom-enchantment-combat-values-admin-guide.md#6-ability-cooldown-bars-202). Tested by the developer.
+  - **Admin steps:** knk-web-api migration `AddEnchantmentEffectLevels` (two nullable columns; startup fills the
+    defaults); web app: import form seed `EnchantmentDefinition - Default (seed v3)` (or a later version) and make it
+    the default; plugin `config.yml`, new message key (jar default until merged):
+    `custom-enchantments.messages.cmd-info-tuning-effects: "&8   effect level %effectLevel%, second effect %secondDuration%s"`.
+- **Invisibility keeps its swirl particles** — knk-plugin `main` `8f11bed5`, follow-up of #211 (developer decision):
+  the ability's potion shows the normal particles again.
+  - **Admin steps:** none.
 - **Dashboard explorer: favourites are copies** — knk-web-app `main` `a6d83c9`, merged from
   `claude/explorer-favourite-copies-225` (PandiO/knk-workspace#225, UX/realtime chain link 3c). A starred type shows under "Favourites" at the top and still
   in the full list below ("All entity types") at its usual place, so nothing goes missing from the list. Smoke test
@@ -221,6 +271,13 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## 2026-11-02
 
+- **Invisible means invisible: no floating armour or held items** — while the Invisibility ability is active, other
+  players no longer see the user's armour or what they hold; the user stays in the tab list and can still be hit.
+  knk-plugin `main` `da422f3b`, merged from `claude/invisibility-full-hide` (PandiO/knk-workspace#211). Siege teammates
+  and spectators still see everything; it ends with the invisibility (time, milk, death, a command) and on quit. Guide:
+  [admin guide § 5](guides/admin/custom-enchantment-combat-values-admin-guide.md#5-what-players-see-boss-bars-and-hidden-name-tags-169-170).
+  Known limit: arrows stuck in the body can still show.
+  - **Admin steps:** none.
 - **Item lore wraps; item scans leave out generated lore** — knk-plugin `main` `27798ab` and knk-web-app `main`
   `b770597`, merged `--no-ff` from `claude/item-lore-212-40-0ud18o` (PandiO/knk-workspace#212, #40; smoke test
   accepted 2026-11-03). A lore line wider than `lore.max-width` (default 40 visible characters) continues on the next

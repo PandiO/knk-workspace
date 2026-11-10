@@ -1,7 +1,7 @@
 # Closed alpha test run 2 — preparation
 
 **Status:** Draft for the developer; date not set
-**Last updated:** 2026-11-10 (§ 0: scope and deploy gate for the merges since the 2026-11-01 deploy, draft); 2026-11-03 (folder renamed `27-10-2026/` → `test-run-2/`; process guide linked)
+**Last updated:** 2026-11-10 (§ 0: D15 option A decided; changelog entries added); 2026-11-10 (§ 0: scope and deploy gate for the merges since the 2026-11-01 deploy, draft); 2026-11-03 (folder renamed `27-10-2026/` → `test-run-2/`; process guide linked)
 **Issues:** parent [PandiO/knk-workspace#149](https://github.com/PandiO/knk-workspace/issues/149) (run 1 findings);
 new findings go under a new parent issue "Closed alpha test run 2 (<date>): findings"
 **Checklist:** [test-run-2-checklist.md](test-run-2-checklist.md) (the steps; this file is the session plan around them)
@@ -16,8 +16,8 @@ against the current trunks before the run.
 
 **Where things stand.** The alpha still runs the 2026-11-01 heads (§ 2; no later update report). Since then the trunks
 moved to knk-plugin `main` `121030f`, knk-web-api `master` `b5e57fa` and knk-web-app `main` `9a85238` (plus later
-docs-only commits). § 1 below was written before most of these merges. Either run 2 deploys the current trunks (option
-A, recommended: more to test, one deploy) or freezes on the 2026-11-01 heads (option B: § 1 as written, nothing new).
+docs-only commits). § 1 below was written before most of these merges. **Decided (developer, 2026-11-10): option A**,
+run 2 deploys the current trunks, so the new areas below are in the run (option B, the 2026-11-01 heads, is dropped).
 
 **Merged since the alpha deploy, proposed treatment (option A):**
 
@@ -51,15 +51,15 @@ gap here. Open `documentation` issues on 2026-11-10:
 Minimum before the deploy (proposal): #295, #294, #297, #302 (enchantments + menu item part), and #298 if the
 navigation block stays. The gaps accepted for #296, #299–#301 need your confirmation (D17).
 
-**Also before the deploy:** the CHANGELOG has no entries yet for #201/#202, #211, #221, #222 and #223 (merged
-2026-11-02 to 2026-11-05, before the docs rules of #292). The briefing's "what changed since run 1" list should come
-from the changelog, so add them first.
+**Changelog:** the entries for #201/#202, #211, #221, #222 and #223 (merged 2026-11-02 to 2026-11-05, before the
+docs rules of #292) were added on 2026-11-10, with their admin steps. The briefing's "what changed since run 1" list
+comes from the changelog sections 2026-11-02 to 2026-11-10.
 
 **New decisions** (add to § 4 once taken):
 
 | # | Topic | Question | Who |
 |---|---|---|---|
-| D15 | Deploy scope | Option A (current trunks) or B (2026-11-01 heads)? Deploy the #213/#167 and Siege Survival feature branches for § 4b and a survival block, or leave them out? | Developer |
+| D15 | Deploy scope | **Decided 2026-11-10: option A, the current trunks.** Still open: deploy the #213/#167 and Siege Survival (#41) feature branches for § 4b and a survival block, or leave them out? | Developer |
 | D16 | Run date and length | With option A the plan gains an enchantments block and chat-token moments: about 2.5–3 hours, or move free play to a second session | Developer |
 | D17 | Docs gaps | Accept the gaps proposed above for #296, #299, #300, #301? | Developer |
 
