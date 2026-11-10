@@ -41,7 +41,7 @@ Use [documentation maintenance](developer/DOCUMENTATION_MAINTENANCE.md) when a f
 
 | Guide | Use | Coverage note |
 |---|---|---|
-| [Commands](users/commands.md) | In-game command reference | **Needs reconciliation** against current plugin command catalog before being treated as complete |
+| [Commands](users/commands.md) | Every in-game command: player and staff sections with syntax, who can use it (rank or node), what it does and the main refusals | **Current 2026-11-10**, checked against knk-plugin `main` `121030f` (PandiO/knk-workspace#294); differences from plugin.yml filed as #309–#315 |
 | [User manual](users/handleiding.md) | General player orientation | **Needs a V3 content review** before publication |
 | [Account management](users/PLAYER_GUIDE_ACCOUNT_MANAGEMENT.md) | Player account/linking flow | Compare with current auth implementation before publication |
 | [Siege scenario authoring](authoring-a-siege-scenario.md) | Admin setup | Feature-specific guide exists; add deployment/config changes at merge |
