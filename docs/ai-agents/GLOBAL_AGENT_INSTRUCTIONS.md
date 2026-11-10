@@ -170,8 +170,9 @@ slows a merge.
      plugin only writes `config.yml` when a server has none (`saveDefaultConfig()`), so on dev and alpha new keys
      must be merged by hand at each deploy; until then they silently run on the jar's defaults.
    - API settings (`appsettings`, env vars, secrets), migrations, one-time scripts, ports, containers and seed changes.
-   - Update the plugin configuration reference (`guides/admin/plugin-configuration.md`; until it exists,
-     PandiO/knk-workspace#295) and `guides/production-installation.md` when these change.
+   - Update the [plugin configuration reference](../guides/admin/plugin-configuration.md) (the key's table and
+     § 2.1) and `guides/production-installation.md` when these change. Its § 2 is the merge checklist for every
+     plugin deploy.
 3. **Changelog entry** in `docs/CHANGELOG.md` at merge: start with one sentence a player understands, then the
    technical detail, links and "Admin steps".
 4. **Status:** the spec/plan status, the smoke-test guide's status and the feature register row's merge column.
