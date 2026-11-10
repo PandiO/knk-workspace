@@ -1,7 +1,7 @@
 # Chat tokens (#hand, #stats, #kills, …) — guide and smoke test
 
 **Status:** Written 2026-11-04 for the `claude/chat-tokens-233` branches; not merged, not run in game
-**Last updated:** 2026-11-04
+**Last updated:** 2026-11-10 (Tab completion of `#token@player`, names in their tab-list colour)
 **Issue:** [PandiO/knk-workspace#233](https://github.com/PandiO/knk-workspace/issues/233) (decisions in the
 [issue comment](https://github.com/PandiO/knk-workspace/issues/233#issuecomment-6630208467) and below)
 **Branches:** `claude/chat-tokens-233` in knk-plugin (on `main` `8f11bed`), knk-web-api (on `master` `c4c7772`),
@@ -31,7 +31,15 @@ A player types a token in public chat, a private message (`/msg`, `/r`) or staff
 | `#tokens` | nothing | the list of tokens the sender may use, shown only to them; a message that is only `#tokens` isn't sent |
 
 **Someone else's statistics:** `#kills@Steve` (token first, then `@name`). Works for online and offline players.
-Unknown names stay as typed. The label names the player: `[Steve: 12 kills]`.
+Unknown names stay as typed. The label names the player in their **tab-list colour** (owner purple, staff blue, else
+their group's name colour, the same as `TabListTeam`), also when they are offline: `[Steve: 12 kills]`. The private
+label `[Steve: player kills private]` colours the name the same way. Your own tokens don't show a name.
+
+**Tab completion:** type `#kills@` (or `#k`, or just `#`) and press Tab. The client offers the tokens you may use and,
+for statistics tokens, `#kills@<name>` for every online player you can see. Players hidden by staff or owner mode are
+left out for viewers who can't see them, the same as in the tab list. The list is the client's chat-completion list,
+set by the plugin: it is refreshed a tick after each join or quit and every 5 s, so a mode switch shows up within 5 s.
+Offline players aren't offered, but `#kills@Name` still works for them when typed.
 
 **What text counts as a token:** names are case-insensitive. A token glued to a word (`abc#hand`, `#handy`), a colour code
 (`&#FF0000`), an unknown name (`#lol`), or a broken target (`#kills@`) stays as typed. `#hand`, `#location` and `#tokens`
@@ -74,6 +82,8 @@ DESIGN § F.4). To get that view also for the player themselves, the plugin read
   - `ChatTokenService` (expand, resolve, share prompt).
   - `ChatTokenListener`: public chat at HIGH, `ignoreCancelled`, so chat-capture and world-task prompts never expand tokens. It also prefetches statistics on join.
   - `ChatTokenExpander`, used by `MessagingService` and `StaffChatCommand`.
+  - `ChatTokenCompletionSync`: each player's chat completions (`ChatTokenCompletions` in core), from the tokens they may
+    use and the players they can see.
   - `ChatStatisticsCache`, `ShareConsentFile` and `ChatTokenCommand`.
 - `PlayerListener.onChat` now renders the chat line from the event's final message, so the token listener can replace it.
 - **Speed:** statistics come from a per-player cache of the public view, read at most every 60 s (the plugin uploads
@@ -109,3 +119,7 @@ some kills and deaths.
 | 17 | Deny `knk.chat.token.location` on the Default group; B types `#location` | plain text; `#tokens` no longer lists it |
 | 18 | Start a world-task chat prompt (or another chat-capture prompt) and answer with `#hand` | the answer is taken as typed, not expanded |
 | 19 | Stop the API; A types `#kills` | after about 1 s the line is sent with `#kills` as text; no error to the player |
+| 20 | B types `#kills@` and presses Tab | `#kills@A` (and any other visible player) is offered; B's own name isn't; `#` + Tab lists the tokens |
+| 21 | A staff member switches to staff mode (hidden from B); wait 5 s; B types `#kills@` + Tab | the staff member is no longer offered; after leaving the mode they are again within 5 s |
+| 22 | B types `#kills@A`, `#stats@A`; a premium/coloured-group player and a staff member as A | A's name has A's tab-list colour (staff blue, owner purple, group colour); B's own `#kills` shows no name |
+| 23 | A logs off; B types `#wins@A` | still coloured (from A's stored group) |
