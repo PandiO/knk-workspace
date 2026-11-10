@@ -28,9 +28,9 @@ branches `claude/alpha-run-1-enchantments`, not merged yet (2026-10-26).
 |---|---|---|---|
 | `armor_repair` | Repairs all equipped armor to full durability. Cooldown: 120s. | Assign to custom enchantment definitions where players should have emergency armor restore. | Right-click with the enchanted item to instantly repair all worn armor. |
 | `blindness` | Default: 20% chance at level I, +10 per level, to apply Blindness I for 2/3/4 s (levels I-III); 10 s cooldown per attacker. | Attach to custom EnchantmentDefinition entries to blind the target on a share of hits. | Hit enemies with the enchanted weapon for a chance to blind them. |
-| `chaos` | AoE burst: up to 40 damage in radius 3 and knockback in radius 5. Cooldown: 90s. | Assign for aggressive area control activations. | Right-click to trigger an area blast around you. |
+| `chaos` | Default: AoE burst of 40 damage (also to gates) in radius 3 and knockback in radius 5; damage, gate damage and both radii are combat values (#223). Cooldown: 90s. | Assign for aggressive area control activations. | Right-click to trigger an area blast around you. |
 | `confusion` | Default: 10% chance at level I, +5 per level, to apply Nausea III for 3/4.5/6 s (levels I-III); 8 s cooldown per attacker. | Use when you want probabilistic crowd disruption in melee combat. | Attack to proc confusion on enemies. |
-| `flash_chaos` | AoE burst: up to 60 damage (radius 3) + Slowness I and Nausea II to players in radius 5. Cooldown: 90s. | Assign as a high-impact active ability with PvP-oriented debuffs. | Right-click to unleash a stronger chaos burst with player debuffs. |
+| `flash_chaos` | Default: AoE burst of 60 damage (also to gates) in radius 3, plus Slowness I (5s) and Nausea II (12.5s) to players in radius 5; damage, gate damage and both radii are combat values (#223). Cooldown: 90s. | Assign as a high-impact active ability with PvP-oriented debuffs. | Right-click to unleash a stronger chaos burst with player debuffs. |
 | `freeze` | Default: 10% chance at level I, +5 per level, to freeze the target for 1.5/2.25/3 s (levels I-III); then 20 s cooldown per attacker. | Use for control-focused weapon identities. | Attack players to occasionally immobilize them. |
 | `health_boost` | Heals in 6 pulses (every 5 ticks), scaling by level. Cooldown: 120s. | Assign to survivability-focused enchantments. | Right-click for a short burst of self-healing ticks. |
 | `invisibility` | Applies Invisibility for 200 ticks. Cooldown: 90s. | Use for stealth or repositioning archetypes. | Right-click to become invisible temporarily. |
@@ -38,6 +38,13 @@ branches `claude/alpha-run-1-enchantments`, not merged yet (2026-10-26).
 | `resistance` | Applies Resistance for (level × 100 + 100) ticks. Cooldown: 120s. | Use for temporary defensive windows in combat builds. | Right-click to gain temporary resistance. |
 | `strength` | 15% chance per level to apply Strength to attacker for 300 ticks. Cooldown: 120s. | Assign when on-hit self-buff loops are desired. | Attack to potentially trigger your own strength buff. |
 | `wither` | Default: 10% chance at level I, +5 per level, to apply Wither II for 2/3/4 s (levels I-III); 8 s cooldown per attacker. | Assign for high-pressure offensive builds. | Attack to proc wither on enemies. |
+
+## Public info page (PandiO/knk-workspace#221)
+
+The web app's Guides page shows players every custom enchantment from `GET /api/EnchantmentDefinitions/public/info`.
+Its numbers come from the combat values; the fixed facts per ability (trigger, whom it affects, potion and level) are in
+`Repository/knk-web-api/Services/EnchantmentInfo/EnchantmentInfoCatalog.cs` and mirror knk-plugin's
+`enchantment/effects/impl/*Effect.java`. Change both together. See the admin guide § 8.
 
 ## Operational notes
 

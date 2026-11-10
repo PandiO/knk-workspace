@@ -159,11 +159,13 @@ Makes a field required only when another field meets a condition.
 ```json
 {
   "condition": {
-    "operator": "equals",
+    "op": "equals",
     "value": true
   }
 }
 ```
+
+> **2026-11-04 (PandiO/knk-workspace#99):** the implemented contract is `{"condition":{"op","value","property"?}}`, case-insensitive; `"operator"` and a flat `{"op","value"}` are still read for saved rules. Values compare by text (`true` matches `"true"`); for an Object dependency `property` picks the loaded record's field (default `Id`). `"in"` takes a comma-separated string or an array in `value`.
 
 ---
 

@@ -4,7 +4,7 @@
 [knk-web-app #7](https://github.com/PandiO/knk-web-app/pull/7), [knk-plugin #14](https://github.com/PandiO/knk-plugin/pull/14)), and the
 hub rows came with the hub merge the same day. Their live checks were accepted by the developer without a run. U4 was waiting for the form-wizard
 chain, merged 2026-10-17, so it can start now ([KNG-179](https://linear.app/kngpandi/issue/KNG-179)); P4 is a check for the developer (§5). Linear [KNG-118](https://linear.app/kngpandi/issue/KNG-118).
-**Last updated:** 2026-10-17
+**Last updated:** 2026-11-02 (D9: the unused helper is removed, [PandiO/knk-workspace#147](https://github.com/PandiO/knk-workspace/issues/147)); 2026-10-17
 **Source:** the G rows of the dated [2026-10-10 multiworld capability audit](../reports/2026-10-10-multiworld-capability-audit.md)
 §2 (on the hub branch; the report is a snapshot and is not edited). Hub-blocking rows are KNG-111 to KNG-117 and the
 [hub design](../specs/hub/DESIGN.md) §16.
@@ -18,7 +18,7 @@ are unique **per world** only. This page tracks the smaller, non-hub-blocking mu
 |---|---|---|---|
 | D3 | Deleting a Location deleted its Domain (cascade) | Done on the hub branch | api `bc7b06e`, `7ec345f` (409 `LocationInUseException`) |
 | D8 | District inline Location could be saved with an empty world | **Done here** | §3; api `DistrictService` |
-| D9 | World-task Location without a world became `"world"` | **Done here** | §3; api `WorkflowService.ExtractLocationDataFromTaskOutput` |
+| D9 | World-task Location without a world became `"world"` | **Done here**; helper removed 2026-11-02 ([#147](https://github.com/PandiO/knk-workspace/issues/147)) | §3; api `WorkflowService.ExtractLocationDataFromTaskOutput` (removed) |
 | A5 | Discovery granted by raw region id | **Done here** | [discovery DESIGN §3.11](../specs/domain-discovery/DESIGN.md) |
 | A9 | Runtime-worlds report replaced the whole list (one server) | **Done here** | §2 |
 | U2 | Location capture without a world became `'world'` | **Done here** | §3; app `WorldBoundFieldRenderer` |
@@ -64,7 +64,8 @@ A world the client didn't send is refused instead of invented:
   overwrote it.
 - **D9 (API).** `WorkflowService.ExtractLocationDataFromTaskOutput` returns no Location when the task output names no
   world, instead of one in `"world"`. It reads `World` (what the plugin's Location task writes), `world` and `worldName`
-  in any casing; before it read only `worldName`. Nothing calls this helper today.
+  in any casing; before it read only `worldName`. Nothing called this helper, so it was removed on 2026-11-02
+  ([PandiO/knk-workspace#147](https://github.com/PandiO/knk-workspace/issues/147)).
 - **U2 (web app).** A Location capture whose task output has no world no longer becomes `'world'`. The field shows the
   existing "Could not extract result from task output" banner instead, and the admin captures again.
 
@@ -142,4 +143,4 @@ conflict, so it waited. Now that the chain is merged:
 - **A9:** server id from a new `game-settings.server-id` key, default `"default"`, rather than reusing
   `lootboxes.server-id`. Other servers' entries go stale after 30 minutes.
 - **D8:** a new inline Location without a world is refused (400), not given the District's resolved world.
-- **D9:** the unused `ExtractLocationDataFromTaskOutput` was fixed rather than removed (removal or wiring: [KNG-181](https://linear.app/kngpandi/issue/KNG-181)).
+- **D9:** the unused `ExtractLocationDataFromTaskOutput` was fixed rather than removed (removal or wiring: [KNG-181](https://linear.app/kngpandi/issue/KNG-181)). Removed 2026-11-02 ([PandiO/knk-workspace#147](https://github.com/PandiO/knk-workspace/issues/147)).

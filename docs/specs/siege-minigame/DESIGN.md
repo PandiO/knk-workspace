@@ -7,7 +7,7 @@ by the developer; Phase 10 (Scheduled lobbies) is post-MVP, not started. Seven d
 changed after the smoke test); remaining open questions in §13.
 **Last updated:** 2026-11-02 (D6, §8.1, §8.5, §13 Q2: non-members keep every siege-area gate's **pre-game**
 state — per-player blocks, server-side crossing checks, per-player virtual opening, per-player hover text via
-PacketEvents; code complete on knk-plugin `claude/siege-pregame-gate-view`, **not merged, not live-tested**, plan Phase 11); 2026-10-27 (§5.4, §6.5, §6.10, §7.6, §11: alpha test run 1 package F — member-only scoreboards
+PacketEvents; code complete on knk-plugin `claude/siege-pregame-gate-view`, **not merged, not live-tested**, plan Phase 11); 2026-11-02 (§11: plugin write auth is the fail-closed `[RequirePluginService]`, CRUD writes are permission-gated; [PandiO/knk-workspace#135](https://github.com/PandiO/knk-workspace/issues/135)); 2026-10-27 (§5.4, §6.5, §6.10, §7.6, §11: alpha test run 1 package F — member-only scoreboards
 with a ` [Siege]` tag for everyone else, post-match phase at the hub, result hover, final countdown, `/siege history` and the
 public match pages, [PandiO/knk-workspace#163](https://github.com/PandiO/knk-workspace/issues/163)/[#164](https://github.com/PandiO/knk-workspace/issues/164)/[#198](https://github.com/PandiO/knk-workspace/issues/198)/[#199](https://github.com/PandiO/knk-workspace/issues/199)/[#174](https://github.com/PandiO/knk-workspace/issues/174),
 on `claude/alpha-run-1-results` in knk-plugin, knk-web-api and knk-web-app, not merged); 2026-10-27 (§7.6: gate damage and participation rewards, alpha test run 1
@@ -970,11 +970,16 @@ as owned children), `SiegeLobbies`, `SiegeConfiguration`. Plus:
   see all, other signed-in players what is set to Everyone, anonymous visitors none (null). XP and active time are
   always shown. The older `GET /` and `GET /{id}` keep needing the plugin key or a login (default-deny) and are unfiltered.
   Web app: "Siege matches" on the public player profile and the page `/siege/matches/:id`.
-- *(Updated 2026-09-26.)* Plugin write auth is opt-in: match writes carry `[RequirePluginServiceKey]`,
-  which enforces only when `Security:PluginServiceKey` is set (header `X-API-Key`); empty = open. The
-  Siege/Clan/BannerDesign/FormConfig CRUD controllers have **no `[Authorize]` today** — "CRUD requires
-  admin auth" is an **open decision**, not current behaviour. The web app's Siege Settings page is
-  staff-only in the UI.
+- *(Updated 2026-11-02, [PandiO/knk-workspace#135](https://github.com/PandiO/knk-workspace/issues/135); checked
+  against knk-web-api `master` `8df59b7`.)* Plugin write auth **fails closed**: match writes carry
+  `[RequirePluginService]` (`SiegeMatchesController`; header `X-API-Key` = `Security:PluginApiKey`, KNG-22). An
+  empty key refuses the call (401, or 403 for a logged-in web user); the only opt-out is
+  `Security:AllowUnauthenticatedPluginCalls=true` in Development. The Siege CRUD controllers take
+  `[RequireServiceOrPermission(knk.siege.admin.manage)]` on their writes (`SiegeConfiguration` on the whole class),
+  Clan/BannerDesign/FormConfiguration `[RequireServiceOrPermissionForWrites(knk.admin.content)]`, and the global
+  default-deny filter needs the plugin key or a login for every other call. *(It used to say: opt-in
+  `[RequirePluginServiceKey]`, open when the key is empty, and CRUD with no `[Authorize]`; that was the state of
+  2026-09-26.)*
 
 ## 12. Legacy defect disposition
 

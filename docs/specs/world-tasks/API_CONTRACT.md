@@ -1,5 +1,11 @@
 # WorldTask API Contract
 
+> **Status:** Historical design notes (before PandiO/knk-workspace#180, 2026-11-01). Where this file differs, the
+> [lifecycle section of README.md](README.md#lifecycle-and-endpoints-pandioknk-workspace180) is current: the task code is
+> checked on claim and unique among open tasks, a second claim answers 409, tasks expire, are released and cancelled,
+> the command is `/knk task <code>`, and the web app polls in `WorldBoundFieldRenderer` every 2 s (there is no
+> `TaskStatusMonitor`).
+
 ## Overview
 
 This document defines the complete API contract for WorldTask operations across the Web API endpoints that the plugin and web app interact with.
@@ -178,16 +184,21 @@ worldTasksApi.listByStatus("Pending")
 
 ```json
 {
-  "linkCode": "ABC123",
-  "serverId": "main-server",
-  "minecraftUsername": "PlayerName"
+  "taskCode": "ABC123",
+  "claimedByServerId": "main-server",
+  "claimedByMinecraftUsername": "PlayerName",
+  "claimedByUuid": "0f6c2a1e-7d0b-4c52-9a51-3c1e6f0a9b11",
+  "claimMode": "code"
 }
 ```
 
-**Request Fields:**
-- `linkCode` (string, required): Must match the task's LinkCode
-- `serverId` (string, required): Minecraft server ID handling the claim
-- `minecraftUsername` (string, required): Player who claimed the task
+**Request Fields** (#180; the older `linkCode` / `serverId` / `minecraftUsername` names are read too — before #180 the
+API stored neither the server nor the player from them):
+- `taskCode` (string): must match the task's code when `claimMode` is `code`
+- `claimedByServerId` (string): the game server (`realtime.server-id`)
+- `claimedByMinecraftUsername`, `claimedByUuid` (string): the claiming player (none for a headless claim)
+- `claimMode` (string): `code` (default with a code), `id` (the player holds `knk.tasks.any`), `headless` (scans),
+  `offer` (#181)
 
 **Response: 200 OK**
 
@@ -214,11 +225,11 @@ worldTasksApi.listByStatus("Pending")
 }
 ```
 
-**Error Responses:**
+**Error Responses** (#180):
 - `404 Not Found`: Task does not exist
-- `400 Bad Request`: LinkCode mismatch or invalid state (must be Pending)
-- `409 Conflict`: Task already claimed by another player
-- `500 Internal Server Error`: Unexpected error
+- `400 Bad Request`: task code mismatch, or a claim mode the task doesn't allow
+- `409 Conflict`: the task is not Pending (claimed by someone else, closed, expired) or the claim lost a race;
+  body `{code: "WorldTaskConflict", message, status}`. The same player (uuid) repeating the claim gets 200.
 
 **Plugin Usage:**
 ```java
@@ -571,7 +582,7 @@ interface FailTaskDto {
 
 // 2. Player joins Minecraft server
 // 3. Player claims task
-/worldtask claim ABC123
+/knk task ABC123
 
 // Plugin:
 worldTasksApi.getByLinkCode("ABC123")
