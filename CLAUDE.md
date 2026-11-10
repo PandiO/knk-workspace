@@ -4,6 +4,15 @@ Start at `AGENTS.md`, then read `docs/ai-agents/GLOBAL_AGENT_INSTRUCTIONS.md`
 and the current `docs/ACTIVE_SESSIONS.md`. The shared instructions live in
 this repo, so no cross-repo Claude import is needed here.
 
+## Shipping a change
+
+Essential docs (docs impact list, deploy notes including plugin `config.yml` keys, changelog entry, status)
+ship with the feature before merge. At merge, close the feature issue, put the remaining docs (guides,
+register, site/wiki pages) in a `documentation` sub-issue and start a new docs session for it right away
+with [the docs-session prompt](docs/ai-agents/docs-session-prompt.md). See
+[global instructions § Shipping a change](docs/ai-agents/GLOBAL_AGENT_INSTRUCTIONS.md#shipping-a-change-documentation)
+and [documentation maintenance](docs/guides/developer/DOCUMENTATION_MAINTENANCE.md).
+
 ## Conventions for working in this repo
 
 - Structure: `vision/`, `architecture/`, `guides/`, `ai-agents/`, `specs/`,

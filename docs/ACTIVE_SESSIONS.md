@@ -68,6 +68,10 @@ Live tracker of in-progress work across all four Knights and Kings repos
 
 ## Recently completed
 
+### 2026-11-10 — Docs lifecycle: essential docs before merge, documentation follow-up sessions (#292) — done, merged
+
+[PandiO/knk-workspace#292](https://github.com/PandiO/knk-workspace/issues/292). Merged `--no-ff` 2026-11-10: knk-web-api `master` `f14af59`, knk-web-app `main` `beb506a`, knk-plugin `main` `5de588e`, knk-dev-db-seed `main` `4b71f23`, and knk-workspace `main` (this merge). § Shipping a change in `docs/ai-agents/GLOBAL_AGENT_INSTRUCTIONS.md`, `docs/ai-agents/docs-session-prompt.md`, `DOCUMENTATION_MAINTENANCE.md` lifecycle, Shipping a change sections in every `AGENTS.md`, PR templates in all five repos, new seed `AGENTS.md`/`CLAUDE.md`. Weekly scheduled docs check (Sundays 17:43 UTC). Guide gaps #293 (#294–#302); follow-ups #303, #304, #305. Report: [2026-11-03-delivery-lifecycle-and-docs-audit.md](reports/2026-11-03-delivery-lifecycle-and-docs-audit.md).
+
 ### 2026-11-10 — Chat hashtag tokens with hover tooltips (#233) — done, smoke-tested, merged
 
 Claude Code cloud session (Pandi), session_01R1w2UsfHAwCZ4wq7qECPDG. `#hand`, `#stats`, `#kills`, `#deaths`, `#kd`, `#streak`, `#wins`, `#playtime`, `#balance`, `#title`, `#xp`, `#discoveries`, `#location`, `#tokens` and `#<token>@<player>` in chat, `/msg`, `/r` and staff chat, with Tab completion of visible players and names in their tab-list colour. Developer smoke test passed (guide § 5 steps 1–23). Merged directly, no PR, 2026-11-10 from `claude/chat-tokens-233`: knk-plugin `main` `b8ab3a0f`, knk-web-api `master` `6f3edd1` (migrations `AddChatTokenSettings`, `SeedChatTokenNodes`), knk-web-app `main` `4d6e2ac`, knk-workspace `main` `8819a2c`. Tests on the merged branches: plugin core 2497 / api-client 324 / paper 2523, API 3665/0, web app 2016/2016, tsc 0. Not deployed to the alpha yet: deploy the API (migrations) before the plugin. Declined for now: live suggestions on typing `@` (vanilla chat shows completions on Tab only; the offered `/msg`/`/sc` suggestions and `/c` command were not wanted). [Guide](guides/chat-tokens.md).

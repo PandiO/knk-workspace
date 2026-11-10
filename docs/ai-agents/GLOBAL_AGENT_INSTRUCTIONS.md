@@ -153,6 +153,56 @@ short:
   add it to the **next** run's preparation plan (scope, decisions table or known issues), not only to the package
   report or handoff.
 
+## Shipping a change: documentation
+
+Documentation is part of done (developer decisions 2026-11-03 and 2026-11-10, PandiO/knk-workspace#292). The
+details are in [documentation maintenance](../guides/developer/DOCUMENTATION_MAINTENANCE.md). Essential docs ship
+with the feature. The rest is written asynchronously, in a documentation issue and a separate session, so it never
+slows a merge.
+
+**Before merge (essential; the implementing session writes these on the feature branches):**
+
+1. **Docs impact list** in the PR's "Docs impact" section. Draft it at `status:in-review` and correct it after the
+   developer's test. It names every guide, spec, register row and site page the change affects and what changed in
+   behaviour, so a later session can write those docs from it and the diff.
+2. **Deploy notes** in the PR and the changelog entry, under "Admin steps":
+   - Plugin `config.yml`: every added, renamed or removed key and every changed default, with the YAML to paste. The
+     plugin only writes `config.yml` when a server has none (`saveDefaultConfig()`), so on dev and alpha new keys
+     must be merged by hand at each deploy; until then they silently run on the jar's defaults.
+   - API settings (`appsettings`, env vars, secrets), migrations, one-time scripts, ports, containers and seed changes.
+   - Update the plugin configuration reference (`guides/admin/plugin-configuration.md`; until it exists,
+     PandiO/knk-workspace#295) and `guides/production-installation.md` when these change.
+3. **Changelog entry** in `docs/CHANGELOG.md` at merge: start with one sentence a player understands, then the
+   technical detail, links and "Admin steps".
+4. **Status:** the spec/plan status, the smoke-test guide's status and the feature register row's merge column.
+
+**At merge:**
+
+1. Close the feature issue as completed and drop its status label, as usual.
+2. If the docs impact list has anything not done before merge, create one `documentation` sub-issue under the
+   feature issue, titled `Docs: <feature>`. Copy the list into it, link the merged commits and PRs, and say which
+   items are player/admin guides (these gate deploys, see below).
+3. **Start a new session for it right away.** Use `create_session` (claude-code-remote) with `source_url`
+   `https://github.com/PandiO/knk-workspace` and the prompt in
+   [docs-session prompt](docs-session-prompt.md), filled in. Pass the model explicitly. If `create_session` is
+   unavailable or refused, queue it with `spawn_task`. If that is unavailable too, give the developer the filled
+   prompt in your final message. Note the session or the fallback in the documentation issue and the tracker row.
+   Don't write those docs in the implementing session unless the developer asks: a separate session keeps the merge
+   fast.
+
+**Guardrails:**
+
+- **Deploy gate:** before a deploy to knk-alpha or a tester run, list the open `documentation` issues for features
+  in that deploy. Player and admin guide items must be closed first, or the developer explicitly accepts the gap in
+  the run's preparation plan.
+- **Weekly check:** a scheduled session reports open `documentation` issues and their age, files issues for merges
+  without docs, and writes a dated report in `docs/reports/`.
+- **Debt cap:** with more than five open `documentation` issues, or one older than two weeks, tell the developer at
+  the start of your session, and suggest the next session be a docs session.
+
+All documentation lives in `knk-workspace/docs/`. Component repos keep only their `README.md` (what it is and a quick
+start), `AGENTS.md`, `CLAUDE.md` and `.github/`. Player-facing docs are in English.
+
 ## Handoff and documentation
 
 The developer has a full-time weekday job and may only have time for brief
