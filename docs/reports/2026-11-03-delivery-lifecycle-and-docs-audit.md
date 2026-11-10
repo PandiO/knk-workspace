@@ -302,3 +302,20 @@ merge, and the implementing agent writes them, not the developer.
   follow-up issue.
 - **Debt cap:** more than about five open `docs` issues, or one older than two weeks, means the next session the
   developer starts is a docs session.
+
+### 6.7 Applied (2026-11-10, PandiO/knk-workspace#292)
+
+The developer confirmed § 6.6 with one change: **all essential documentation ships with the feature, before
+merge**. Only guides, the register's remaining columns, the guides index and site/wiki pages go to the `documentation`
+follow-up issue, and the implementing session starts a new docs session for it right away. The `changelog.d/`
+fragments from § 6.6 were dropped: entries still go straight into `CHANGELOG.md` at merge, which already works.
+The existing `documentation` label is used instead of a new `docs` label; no `status:docs` label is needed.
+
+- `GLOBAL_AGENT_INSTRUCTIONS.md` § Shipping a change, `ai-agents/docs-session-prompt.md`, and
+  `DOCUMENTATION_MAINTENANCE.md` lifecycle steps 3–7.
+- "Shipping a change" sections in the `AGENTS.md` of every repo (workspace `CLAUDE.md` too), with repo-specific docs
+  triggers; the plugin's `config.yml` rule is spelled out. New `AGENTS.md` and `CLAUDE.md` in knk-dev-db-seed.
+- `.github/pull_request_template.md` in all five repos (Docs impact, Admin steps for deploy, Changelog).
+- Issues: guide coverage parent #293 with #294–#302; deployment log and releases #303; docs consolidation #304; LAN
+  addresses and headers #305; a comment on the public site issue #104.
+- Scheduled task "KnK weekly docs drift check", Sundays 17:43 UTC, in a fresh session each week.
