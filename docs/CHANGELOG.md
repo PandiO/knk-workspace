@@ -8,13 +8,29 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## 2026-11-10
 
-- **Cleaving's gate numbers as combat values** — knk-plugin `main` `200cbbd`, knk-web-api `master` `f477797`, knk-web-app
-  `main` `b240a02`, merged from `claude/cleaving-combat-values-259` (PandiO/knk-workspace#259). Gate damage bonus per
-  level, charged strike at level I and per level, strike cooldown (Cooldown length) and its change per level are set in
-  the web app's Combat values (defaults = the old 0.25, 5/6/7/8, 60/50/40/30 s) and shown live on the Guides page; the
-  plugin's `config.yml` `gates.cleaving` keys are removed. API migration `AddCleavingCombatValues`, form seed
-  EnchantmentDefinition v5. Smoke test run by the developer, all pass.
-
+- **Cleaving's gate numbers as combat values** — Cleaving's extra gate damage, its charged strike and the strike's
+  cooldown are now set by staff in the web app, and the Guides page shows the live numbers. knk-plugin `main`
+  `121030f`, knk-web-api `master` `b5e57fa`, knk-web-app `main` `9a85238`, merged from `claude/cleaving-combat-values-259`
+  (PandiO/knk-workspace#259; decisions 2026-11-05: level I plus a step per level). New Combat values: gate damage bonus
+  per level, charged strike at level I and per extra level, strike cooldown change per level (the level-I strike
+  cooldown is Cooldown length). Defaults are the old numbers (+25 % per level, strike 5/6/7/8, 60/50/40/30 s); `/ce
+  info` shows a gate line. Guide: [admin guide § 1](guides/admin/custom-enchantment-combat-values-admin-guide.md#1-where-to-edit).
+  Smoke test run by the developer, all pass.
+  - **Admin steps:**
+    - knk-web-api: apply migration `20261105200617_AddCleavingCombatValues` (four nullable columns; the API fills in
+      Cleaving's defaults at startup).
+    - Web app: import form seed `EnchantmentDefinition - Default (seed v5)` and make it the default.
+    - Plugin `config.yml`: the `gates.cleaving` block is **removed** and no longer read. Delete it from the dev and
+      alpha configs (a server that changed these numbers enters them in the web app instead):
+      ```yaml
+      gates:
+        cleaving:                       # delete this block
+          damage-bonus-per-level: 0.25
+          charged-hit-multiplier: [5, 6, 7, 8]
+          charged-cooldown-seconds: [60, 50, 40, 30]
+      ```
+      New message key (defaults from the jar until merged by hand): `custom-enchantments.messages.cmd-info-tuning-gate:
+      "&8   gate hits +%gateBonus%%, charged strike %strike%x, strike cooldown %strikeCooldown%"`.
 - **Chat tokens** — knk-plugin `main` `b8ab3a0f`, knk-web-api `master` `6f3edd1`, knk-web-app `main` `4d6e2ac`, merged from `claude/chat-tokens-233`
   (PandiO/knk-workspace#233). `#hand` shows the held item with its tooltip. Statistics and profile tokens (`#stats`,
   `#kills`, `#deaths`, `#kd`, `#streak`, `#wins`, `#playtime`, `#balance`, `#title`, `#xp`, `#discoveries`) also work as
