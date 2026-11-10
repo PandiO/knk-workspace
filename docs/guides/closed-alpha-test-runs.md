@@ -1,7 +1,7 @@
 # Closed alpha test runs — how they are numbered, prepared, run and reported
 
 **Status:** Current (developer agreed 2026-11-03)
-**Last updated:** 2026-11-03
+**Last updated:** 2026-11-10 (run 1's folder renamed to `test-run-1/`); 2026-11-03
 **Issues:** [PandiO/knk-workspace#149](https://github.com/PandiO/knk-workspace/issues/149) (run 1 findings)
 
 How closed-alpha test runs with testers are numbered, where their documents live, what a preparation plan contains
@@ -32,7 +32,8 @@ document's header, not in the folder name, so the folder can be made before the 
 | `YYYY-MM-DD-package-<x>-<topic>.md` | While fixing | A fix package's report for run `<n>`'s findings |
 | Screenshots, clips | Any time | Next to the document that links them |
 
-Run 1's folder keeps its old name `25-10-2026/` (links in issues and handoffs). Like every report, these files are
+Run 1's folder was named `25-10-2026/` until 2026-11-10 (renamed to `test-run-1/`; the GitHub issue comments with
+old links got a comment with the new ones). Like every report, these files are
 dated and never replaced by a new run; a run's checklist and findings are updated only with that run's results.
 
 ## 3. The preparation plan
