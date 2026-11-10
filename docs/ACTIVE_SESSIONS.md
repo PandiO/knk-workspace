@@ -69,7 +69,7 @@ Live tracker of in-progress work across all four Knights and Kings repos
 
 ### 2026-11-10 — Cleaving's gate numbers as combat values (#259) — done, smoke-tested, merged
 
-Claude Code cloud session (Pandi). Developer smoke test passed 2026-11-10. Merged 2026-11-10: knk-plugin `main` `121030f` (`claude/cleaving-combat-values-259` `93c807e`; merged trunk core 2500 / api-client 324 / paper 2526, 0 failures), knk-web-api `master` `b5e57fa` (`e255362`, migration `AddCleavingCombatValues`, form seed v5; 3678 passed, 0 failed), knk-web-app `main` `9a85238` (`bc4ae42`; 2016/2016), docs knk-workspace `main` (admin guide § 1–3/6/8, gate design, quick reference, CHANGELOG). **Not deployed.** [Report](reports/2026-11-05-cleaving-combat-values.md), [merge report](reports/2026-11-10-cleaving-combat-values-merge.md).
+Claude Code cloud session (Pandi). Developer smoke test passed 2026-11-10. Merged 2026-11-10: knk-plugin `main` `121030f` (`claude/cleaving-combat-values-259` `93c807e`; merged trunk core 2500 / api-client 324 / paper 2526, 0 failures), knk-web-api `master` `b5e57fa` (`e255362`, migration `AddCleavingCombatValues`, form seed v5; 3678 passed, 0 failed), knk-web-app `main` `9a85238` (`bc4ae42`; 2016/2016), docs knk-workspace `main` (admin guide § 1–3/6/8, gate design, quick reference, CHANGELOG). **Not deployed.** [Report](reports/2026-11-05-cleaving-combat-values.md), [merge report](reports/2026-11-10-cleaving-combat-values-merge.md). Remaining docs: [#306](https://github.com/PandiO/knk-workspace/issues/306), docs session `session_01R1w2UumdU6FfTM3JrrWA5y` started 2026-11-10.
 
 ### 2026-11-10 — Docs lifecycle: essential docs before merge, documentation follow-up sessions (#292) — done, merged
 
