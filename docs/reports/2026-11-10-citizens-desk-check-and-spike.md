@@ -1,8 +1,9 @@
 # Citizens desk check and spike branch — 2026-11-10
 
-**Status:** Desk check done (verdict: **go with caveats**); spike built and compiled, unit-tested, **not run on a server**. The spike branch is local only: this session could not push to knk-plugin (see §7).
+**Status:** Desk check done (verdict: **go with caveats**); spike built and compiled, unit-tested, pushed to knk-plugin `claude/citizens-spike` (throwaway), **not run on a server**.
 **Last updated:** 2026-11-10
 **Issue:** [PandiO/knk-workspace#242](https://github.com/PandiO/knk-workspace/issues/242) (desk check) and [#243](https://github.com/PandiO/knk-workspace/issues/243) (spike), parent [#241](https://github.com/PandiO/knk-workspace/issues/241); spec [BEHAVIOR_MODEL §2, §13](../specs/npc-platform/BEHAVIOR_MODEL.md) on `claude/npc-behavior-model` (PR #235)
+**Plan:** [Citizens stress test guide](../guides/citizens-stress-test.md) (the developer's plan; this report covers its "Now" and "This afternoon" steps)
 **Base:** knk-plugin `main` `33122cf4`; Citizens2 `master` `62b9265d` (2026-11-01, version `2.0.44-SNAPSHOT`); CitizensAPI `master` `e776141` (2026-10-20); Citizens Maven repo `maven.citizensnpcs.co`; Paper build list (`fill.papermc.io`).
 
 **Source limits.** Everything below was read from the Citizens source and the Maven/Paper metadata, not from a running server. Minecraft 1.21.x release dates are from memory and were not rechecked; the 26.x dates come from Paper's first build of each version (26.3) and web sources (26.1, 26.2). Licence notes are a reading of the licence text, not legal advice.
@@ -136,7 +137,7 @@ Examiners apply only to Citizens' own A* (`CITIZENS`/`CITIZENS_ASYNC`). With `MI
 
 ## 7. Spike branch (#243)
 
-**Where:** knk-plugin, local branch `claude/citizens-spike`, one commit `5aca937` on `main` `33122cf4`. It was **not pushed**: this session had read access to knk-plugin only. A push-access request was refused by the session's permission check. The patch (`knk-plugin-citizens-spike-5aca937.patch`) and the built jar (`KnightsAndKings-0.1.0+5aca937-citizens-spike.jar`) are in the session scratchpad. To publish the branch, give a session push access to `PandiO/knk-plugin`, or apply the patch with `git am` and push from a local clone. It is a throwaway branch: **never merge it**.
+**Where:** knk-plugin branch [`claude/citizens-spike`](https://github.com/PandiO/knk-plugin/tree/claude/citizens-spike), one commit `db81b0c` on `main` `33122cf4` (pushed 2026-11-10 after the developer granted push access; first built locally as `5aca937`, same content). It is a throwaway branch: **never merge it**.
 
 **What it adds** (≈1,200 lines, 11 files):
 
@@ -180,6 +181,8 @@ Examiners apply only to Citizens' own A* (`CITIZENS`/`CITIZENS_ASYNC`). With `MI
 Also to measure: `PLAYER` vs `MANNEQUIN` cost per NPC; crowding with `collide on`; many simultaneous route requests (`set inflight 1|4|16`).
 
 ## 9. Tonight: commands per step of the plan
+
+The steps are those of the [Citizens stress test guide](../guides/citizens-stress-test.md), "Tonight".
 
 Install Citizens 2.0.44 (build for 26.3, ≥ 2026-11-01) on the dev server, with the config pins of §8.1. Deploy the spike jar, then:
 

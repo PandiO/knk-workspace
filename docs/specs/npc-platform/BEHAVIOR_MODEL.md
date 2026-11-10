@@ -48,7 +48,7 @@ Verification under the DESIGN §9 audit is planned as [#241](https://github.com/
 - **Entity and traits.** `PLAYER` or `MANNEQUIN` (cheaper candidate, to measure). Citizens traits are only hooks for a thin platform adapter (DESIGN §2); behaviour stays Citizens-free.
 - **Gap.** K&K access (walk access, road policy, gate availability) takes a `Player` today, so NPCs need their own access subject (DESIGN §7) before real guards.
 
-Spike (#243): throwaway knk-plugin branch `claude/citizens-spike` with `/knk npcspike`, dense and hop modes and benchmark counters (same report). It is compiled and unit-tested but not yet run on a server.
+Spike (#243): throwaway knk-plugin branch `claude/citizens-spike` (`db81b0c`, never merged) with `/knk npcspike`, dense and hop modes and benchmark counters (same report). It is compiled and unit-tested but not yet run on a server. The dev-server runs follow the [Citizens stress test guide](../../guides/citizens-stress-test.md).
 
 ## 3. References
 
@@ -545,7 +545,7 @@ Numeric budgets follow the platform audit (DESIGN §9).
 - First year: about 3 kingdoms with about 7 towns each; a capital has double the guards (about 60). About 3 × 60 + 18 × 30 ≈ 720 guards in the world, most in unloaded areas.
 - **Main target: 60–100 guards active near players at once** (a busy siege at a capital); 200 is the stress test.
 
-**Verification plan (developer decision 2026-11-05):** [#241](https://github.com/PandiO/knk-workspace/issues/241) with three steps: Citizens desk check ([#242](https://github.com/PandiO/knk-workspace/issues/242)), throwaway spike branch ([#243](https://github.com/PandiO/knk-workspace/issues/243)), castle-map benchmark and proposed budgets ([#244](https://github.com/PandiO/knk-workspace/issues/244)). It runs on the dev server and in the closed alpha; neither is representative of a live server, so results are indicative and budgets get rechecked on the live host later. This track is independent of the Siege Survival chain and goes first; the data model that doesn't depend on Citizens (§16.3–16.5, #236, #238) can start alongside.
+**Verification plan (developer decision 2026-11-05):** [#241](https://github.com/PandiO/knk-workspace/issues/241) with three steps: Citizens desk check ([#242](https://github.com/PandiO/knk-workspace/issues/242)), throwaway spike branch ([#243](https://github.com/PandiO/knk-workspace/issues/243)), castle-map benchmark and proposed budgets ([#244](https://github.com/PandiO/knk-workspace/issues/244)). Steps and status: [Citizens stress test guide](../../guides/citizens-stress-test.md); desk check and spike results: [report 2026-11-10](../../reports/2026-11-10-citizens-desk-check-and-spike.md). It runs on the dev server and in the closed alpha; neither is representative of a live server, so results are indicative and budgets get rechecked on the live host later. This track is independent of the Siege Survival chain and goes first; the data model that doesn't depend on Citizens (§16.3–16.5, #236, #238) can start alongside.
 
 **Proposed budgets** (to confirm after #244): all NPC behaviour and movement ≤ 10 ms of the 50 ms tick at 100 active guards; perception ≤ 2 ms per tick, event-driven; re-planning every 5–10 ticks near players, 1/s at mid range, once per 5 s far away, summary only when unloaded; new long routes async and queued, never dropped; degrade by level of detail first, then slower re-planning, then queued spawns.
 
