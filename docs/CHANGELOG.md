@@ -8,6 +8,18 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## 2026-11-10
 
+- **Plugin configuration reference (docs)** — server admins now have one page for every setting in the plugin's
+  `config.yml`, and a checklist for bringing a server's file up to date at each deploy.
+  [guides/admin/plugin-configuration.md](guides/admin/plugin-configuration.md) gives each key's default, meaning, safe
+  values, origin issue and whether a restart, `/ce reload` or `/knk lootbox reload` picks it up (checked against
+  knk-plugin `main` `121030f`). [`scripts/plugin-config/config_diff.py`](../scripts/plugin-config/config_diff.py)
+  lists the keys a server's file is missing compared with a jar. Docs only, no code change
+  ([PandiO/knk-workspace#295](https://github.com/PandiO/knk-workspace/issues/295)).
+  - **Admin steps:** at the next plugin deploy to dev and alpha, run the merge checklist (§ 2). A file from plugin
+    `d56e41da` (2026-10-24) lacks 43 keys; delete the obsolete `gates.cleaving` block (#259).
+  - Follow-ups: `/knk config diff` in game ([#308](https://github.com/PandiO/knk-workspace/issues/308)); config
+    comment fixes added to [#307](https://github.com/PandiO/knk-workspace/issues/307).
+
 - **Cleaving's gate numbers as combat values** — Cleaving's extra gate damage, its charged strike and the strike's
   cooldown are now set by staff in the web app, and the Guides page shows the live numbers. knk-plugin `main`
   `121030f`, knk-web-api `master` `b5e57fa`, knk-web-app `main` `9a85238`, merged from `claude/cleaving-combat-values-259`
