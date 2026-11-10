@@ -1,7 +1,7 @@
 # Closed alpha test run 2 — preparation
 
 **Status:** Draft for the developer; date not set
-**Last updated:** 2026-11-03 (folder renamed `27-10-2026/` → `test-run-2/`; process guide linked)
+**Last updated:** 2026-11-10 (§ 0: scope and deploy gate for the merges since the 2026-11-01 deploy, draft); 2026-11-03 (folder renamed `27-10-2026/` → `test-run-2/`; process guide linked)
 **Issues:** parent [PandiO/knk-workspace#149](https://github.com/PandiO/knk-workspace/issues/149) (run 1 findings);
 new findings go under a new parent issue "Closed alpha test run 2 (<date>): findings"
 **Checklist:** [test-run-2-checklist.md](test-run-2-checklist.md) (the steps; this file is the session plan around them)
@@ -11,6 +11,57 @@ new findings go under a new parent issue "Closed alpha test run 2 (<date>): find
 What to set up before test run 2, how to run the session, which decisions to take with the testers and what to ask
 them. Defaults below are taken from the package reports and the developer's decisions of 2026-10-25/27; check them
 against the current trunks before the run.
+
+## 0. Scope and deploy gate update (2026-11-10, draft for the developer)
+
+**Where things stand.** The alpha still runs the 2026-11-01 heads (§ 2; no later update report). Since then the trunks
+moved to knk-plugin `main` `121030f`, knk-web-api `master` `b5e57fa` and knk-web-app `main` `9a85238` (plus later
+docs-only commits). § 1 below was written before most of these merges. Either run 2 deploys the current trunks (option
+A, recommended: more to test, one deploy) or freezes on the 2026-11-01 heads (option B: § 1 as written, nothing new).
+
+**Merged since the alpha deploy, proposed treatment (option A):**
+
+| Area | Issues | Needs several players | Proposal |
+|---|---|---|---|
+| Custom enchantments: Chaos / Flash Chaos damage and radii as combat values, ability death messages, Cleaving's gate numbers as combat values, Flash Chaos debuffs, cooldown bars, Invisibility full hide | #223, #222, #259, #201, #202, #211 | yes | **In the run**, new block: a Chaos / Flash Chaos kill shows `… was killed with <Enchantment> by <player> using [<item>]`; Cleaving strikes in the siege match; cooldown bars. D7/D8 can now be answered with live, configurable numbers |
+| Public enchantment info page (Guides) | #221 | no | **Briefing:** point testers to `/guides/enchantments` as their reference |
+| Chat tokens (`#hand`, `#stats`, `#kills@player`, ...) | #233 | yes | **Free play**, with one scripted moment: share a private statistic (the consent prompt) |
+| Realtime channel and world tasks over it, offers to non-op staff | #178–#182, #239, #240 | staff + web | **Separate staff block**, as § 1 already says, or out of scope |
+| Item lore wrap, shield banner patterns and armour trims | #212, #232 | no | Regression only (remove #212 from the known issues in § 6) |
+| Web app look: themes, page background, entity lists, dashboard, form wizard | #95, #231, #177, #225–#230 | no | Regression only; free play on the web app |
+| Still feature branches: siege pre-game gate view + pass-through styles; Siege Survival S1–S8 | #213 (#214–#217), #167; #41 | yes | **Decision D15**: deploy the branches (needs the non-trunk deploy route, § 2) or leave out |
+
+**Deploy gate** ([global instructions § Shipping a change](../../../ai-agents/GLOBAL_AGENT_INSTRUCTIONS.md#shipping-a-change-documentation)):
+before this deploy, the player and admin guide items of the features in it are closed, or the developer accepts the
+gap here. Open `documentation` issues on 2026-11-10:
+
+| Docs issue | Covers | Kind | Gates run 2? | Proposal |
+|---|---|---|---|---|
+| [#295](https://github.com/PandiO/knk-workspace/issues/295) plugin configuration reference | every `config.yml` key + the merge checklist | admin | **yes**: the deploy itself needs it (new keys since 11-01: #222 `death-messages`, #223/#259 messages, #233, `realtime:`; removed `gates.cleaving`) | session running (2026-11-10) |
+| [#294](https://github.com/PandiO/knk-workspace/issues/294) commands reference | `/siege`, `/ce`, `/navigate`, chat tokens, ... | player + staff | yes | session running (2026-11-10) |
+| [#297](https://github.com/PandiO/knk-workspace/issues/297) Siege player guide | joining, teams, objectives, rewards, history | player | **yes** (siege is the run's core) | write before the run |
+| [#302](https://github.com/PandiO/knk-workspace/issues/302) menus, statistics, custom enchantments | the enchantments part (#221–#223, #259) and menus | player + admin | **yes** for enchantments and the menu item (#160) | write before the run; the stats part could be accepted as a gap |
+| [#298](https://github.com/PandiO/knk-workspace/issues/298) navigation, teleports, homes, warps | compass / Northern Gate route (§ 1, D) | player + admin | yes if the navigation block stays | write, or drop the block |
+| [#296](https://github.com/PandiO/knk-workspace/issues/296) English player handbook | entry point for all guides | player | soft | **accept the gap** for run 2 (testers are briefed live) |
+| [#299](https://github.com/PandiO/knk-workspace/issues/299) account, invitations, linking | sign-up and linking | player + admin | only for new testers | accept the gap unless new testers join |
+| [#300](https://github.com/PandiO/knk-workspace/issues/300) economy, kits, lootboxes, discoveries | siege rewards in coins, kits | player + admin | partly | accept the gap (rewards are explained in the briefing) |
+| [#301](https://github.com/PandiO/knk-workspace/issues/301) ranks, permissions, titles, chat, moderation | `guides/chat-tokens.md` exists | player + staff | partly | accept the gap |
+| [#303](https://github.com/PandiO/knk-workspace/issues/303), [#304](https://github.com/PandiO/knk-workspace/issues/304), [#305](https://github.com/PandiO/knk-workspace/issues/305) | deployment log, doc moves, placeholders | process | no | after the run (#303 would help record this deploy) |
+
+Minimum before the deploy (proposal): #295, #294, #297, #302 (enchantments + menu item part), and #298 if the
+navigation block stays. The gaps accepted for #296, #299–#301 need your confirmation (D17).
+
+**Also before the deploy:** the CHANGELOG has no entries yet for #201/#202, #211, #221, #222 and #223 (merged
+2026-11-02 to 2026-11-05, before the docs rules of #292). The briefing's "what changed since run 1" list should come
+from the changelog, so add them first.
+
+**New decisions** (add to § 4 once taken):
+
+| # | Topic | Question | Who |
+|---|---|---|---|
+| D15 | Deploy scope | Option A (current trunks) or B (2026-11-01 heads)? Deploy the #213/#167 and Siege Survival feature branches for § 4b and a survival block, or leave them out? | Developer |
+| D16 | Run date and length | With option A the plan gains an enchantments block and chat-token moments: about 2.5–3 hours, or move free play to a second session | Developer |
+| D17 | Docs gaps | Accept the gaps proposed above for #296, #299, #300, #301? | Developer |
 
 ## 1. Scope
 
