@@ -39,6 +39,13 @@ branches `claude/alpha-run-1-enchantments`, not merged yet (2026-10-26).
 | `strength` | 15% chance per level to apply Strength to attacker for 300 ticks. Cooldown: 120s. | Assign when on-hit self-buff loops are desired. | Attack to potentially trigger your own strength buff. |
 | `wither` | Default: 10% chance at level I, +5 per level, to apply Wither II for 2/3/4 s (levels I-III); 8 s cooldown per attacker. | Assign for high-pressure offensive builds. | Attack to proc wither on enemies. |
 
+## Public info page (PandiO/knk-workspace#221)
+
+The web app's Guides page shows players every custom enchantment from `GET /api/EnchantmentDefinitions/public/info`.
+Its numbers come from the combat values; the fixed facts per ability (trigger, whom it affects, potion and level) are in
+`Repository/knk-web-api/Services/EnchantmentInfo/EnchantmentInfoCatalog.cs` and mirror knk-plugin's
+`enchantment/effects/impl/*Effect.java`. Change both together. See the admin guide § 8.
+
 ## Operational notes
 
 - This setup is intended to reduce dependence on `/ce` command usage for baseline ability attachment.

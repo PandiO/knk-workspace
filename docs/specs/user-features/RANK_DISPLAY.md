@@ -5,7 +5,7 @@
 `20260926081602_AddPermissionGroupDisplayColors` and `20260926121530_PremiumRanksInheritDefault`.
 knk-paper was never compiled in the cloud session (Paper's Maven repo is blocked there); the developer's
 local build and in-game test are what verified it.
-**Last updated:** 2026-09-26 (follow-up on trunk: API enforces one rank, live sync for web-app changes and
+**Last updated:** 2026-11-05 (#260 decision: colours by group precedence, not built); 2026-09-26 (follow-up on trunk: API enforces one rank, live sync for web-app changes and
 expiring ranks - knk-web-api `1c90d0b`, knk-plugin `9a5da8d`)
 
 Restores v1's chat line (title in chat, KNG-8) and per-tier colors in chat and the tab list (KNG-7), and
@@ -53,6 +53,13 @@ recovered `Donator` table) is on the two Linear issues; this note records what v
 falling back field by field to the **Default** group's value (found by name, `UserService.DefaultGroupName`,
 loaded once per request). A player without a premium tier therefore gets Default's colors whether or not
 they hold the Default membership.
+
+  **To change ([PandiO/knk-workspace#260](https://github.com/PandiO/knk-workspace/issues/260), developer decision
+  2026-11-05, not built yet):** the colours of a group that is not a premium tier (e.g. Staff) are never drawn today.
+  Each field will come from the first group in the player's precedence order (`PermissionGroupPrecedence`: hierarchy
+  first, a held group before its parents, then the highest `Weight`; the order the permission check, Game Settings and
+  teleport fees use) that has it set, with the Default group as the last fallback; the premium tier loses its special
+  place.
 
 ## 3. Chat (knk-plugin)
 

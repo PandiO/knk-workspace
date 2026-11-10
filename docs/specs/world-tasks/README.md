@@ -3,7 +3,7 @@
 **Status:** Living reference for the lifecycle (§ "Lifecycle and endpoints" below, as built by PandiO/knk-workspace#180, merged
 into the default branches 2026-11-04 with #181). The other files in this folder are older design notes:
 where they differ from that section, the section is current.
-**Last updated:** 2026-11-04 (#180 and #181 merged); 2026-11-02 (§ "Over the realtime channel": offers, hand-off, busy check, #181, branch `claude/realtime-signalr`); 2026-11-01 (world-task hardening and tasks anchored to the draft, #180; design
+**Last updated:** 2026-11-04 (#239 NoPermission, #240 `POST {id}/offer`, feature branch); 2026-11-04 (#180 and #181 merged); 2026-11-02 (§ "Over the realtime channel": offers, hand-off, busy check, #181, branch `claude/realtime-signalr`); 2026-11-01 (world-task hardening and tasks anchored to the draft, #180; design
 [realtime-signalr/DESIGN.md](../realtime-signalr/DESIGN.md) §8.2, §8.7)
 
 ## Overview
@@ -188,7 +188,13 @@ With the plugin's `realtime.enabled: true` (off by default; DESIGN §8.8 has the
   it to another online player, who gets `[Accept] [Decline]` in chat for 2 minutes (`/knk task accept|decline <id>`).
   The task code is always generated and keeps working; the web app shows it folded while an offer is out and expanded
   when there is none, or it was declined, timed out, or arrived while the player was busy.
-- `OfferState`: None, Offered, Accepted, Declined, TimedOut, Queued, Busy. The `offer` claim needs Offered.
+- `OfferState`: None, Offered, Accepted, Declined, TimedOut, Queued, Busy, and NoPermission (the game server refused it:
+  the player lacks `knk.tasks` in game; [#239](https://github.com/PandiO/knk-workspace/issues/239), merged 2026-11-05). The `offer`
+  claim needs Offered. The plugin checks `knk.tasks` like a command's node (Bukkit or the knk permission model, #239).
+- `POST {id}/offer` ("Send again", [#240](https://github.com/PandiO/knk-workspace/issues/240), merged 2026-11-05): offers a
+  waiting task again with `deliver` `"auto"` (default), `"queue"`, `"replace"` or `{"userId": n}`; the same task
+  and code, fresh expiry. 409 while it is offered, once it isn't Pending, for a scan, or for auto/replace while the
+  creator isn't online in game; `"code"` is a 400.
 - New reads: `GET active-for-me` (the task you hold in game, its form, your queue: the web app's busy check),
   `GET api/Presence/me`, `GET api/Presence/online-staff` (`knk.admin.world`; online `knk.tasks` holders except you).
 - In game: a web cancel or expiry stops the handler at once (no heartbeat wait); in-game `cancel` hands the task back

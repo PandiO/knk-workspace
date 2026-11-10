@@ -1,6 +1,6 @@
 ---
 status: active
-last_updated: 2026-11-02
+last_updated: 2026-11-05
 ---
 
 # knk-plugin Architecture
@@ -234,7 +234,10 @@ complete for every entity type the plugin touches.
   no-permission) over the hub, stops a held task's handler at once on `WorldTaskCancelled`, drops the line on
   `WorldTaskOfferWithdrawn`, and runs the headless poll at once on `WorldTaskCreated` (the poll itself stays at 60 s
   while connected). In-game `cancel` releases with `handBack: true`. Resync step "world tasks" =
-  `WorldTaskLeases.releaseOrphans()`. Design §8.8.
+  `WorldTaskLeases.releaseOrphans()`. Design §8.8. *#239 (merged 2026-11-05):* `knk.tasks` is checked through
+  `WorldTaskRealtimeSync.AccessCheck`, wired in `KnKPlugin.registerWorldTaskSync` to Bukkit or
+  `KnkPermissible.checkAsync` (default Bukkit only); DENIED tells the player and answers `no-permission`, UNAVAILABLE
+  answers `unavailable`.
   **S3 (#182, same branch):** `paper/realtime/ConfigRealtimeSync` handles the config events with the existing refresh
   paths (domain access sync, `GameSettingsManager.refreshNow()`, `SiegeService.refreshFromApi()` = `/siege admin
   reload`, `LootboxRuntime.refresh()`, the warp/spawn/navigation `/knk cache refresh` hooks, the road network refresh,
