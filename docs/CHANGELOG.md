@@ -4,12 +4,16 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
-- Cleaving's gate numbers (gate damage bonus per level, charged strike at level I and per level, strike cooldown and its
-  change per level) are admin combat values, shown live on the Guides page; the plugin's `config.yml`
-  `gates.cleaving` keys are removed (PandiO/knk-workspace#259, branch `claude/cleaving-combat-values-259`; needs the
-  API migration `AddCleavingCombatValues` and form seed EnchantmentDefinition v5).
+(Nothing at the moment.)
 
 ## 2026-11-10
+
+- **Cleaving's gate numbers as combat values** — knk-plugin `main` `200cbbd`, knk-web-api `master` `f477797`, knk-web-app
+  `main` `b240a02`, merged from `claude/cleaving-combat-values-259` (PandiO/knk-workspace#259). Gate damage bonus per
+  level, charged strike at level I and per level, strike cooldown (Cooldown length) and its change per level are set in
+  the web app's Combat values (defaults = the old 0.25, 5/6/7/8, 60/50/40/30 s) and shown live on the Guides page; the
+  plugin's `config.yml` `gates.cleaving` keys are removed. API migration `AddCleavingCombatValues`, form seed
+  EnchantmentDefinition v5. Smoke test run by the developer, all pass.
 
 - **Chat tokens** — knk-plugin `main` `b8ab3a0f`, knk-web-api `master` `6f3edd1`, knk-web-app `main` `4d6e2ac`, merged from `claude/chat-tokens-233`
   (PandiO/knk-workspace#233). `#hand` shows the held item with its tooltip. Statistics and profile tokens (`#stats`,
