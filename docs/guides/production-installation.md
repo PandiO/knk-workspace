@@ -3,10 +3,14 @@
 **Status:** Draft v1 — written for review. Not yet followed on a real production host. The database, API, seed and
 web-server steps were rehearsed in a scratch environment on 2026-10-07 (see [Appendix A](#appendix-a--what-was-verified-and-how)).
 The Paper server steps and the CI/CD workflows are untested drafts.
-**Last updated:** 2026-10-26 (§nginx: `/api/hubs/` without access log; § 9.5 plugin `realtime:` block — SignalR S1, #178, feature branch); 2026-11-02 (G10, § 12.3: the KNG-232 Prometheus endpoints of the API and the plugin, both off by default, [PandiO/knk-workspace#48](https://github.com/PandiO/knk-workspace/issues/48)); 2026-10-25 (§1/§3.4 G6: RegionHttpServer is loopback + `X-API-Key` since KNG-64; §nginx: WebSocket upgrade headers for the planned SignalR hub, #66); 2026-10-24 (§4.3, §9.3, §11 F/G: KNG-205 invitations merged, the feature-branch notes replaced); 2026-10-22 (§7.7: DisplayConfiguration export/import and the priority 2/3 form seeds and display seeds merged, KNG-139); 2026-10-21 (§4.3, §9.3, §11 F/G: invite-only sign-up, admission gate and Access sync — KNG-205/KNG-218); 2026-10-21 (§4.3 mail: the KNG-206 email engine on the invitations feature branch — `Email__Transport`, relay option, `App__PublicBaseUrl`, Log guard); 2026-10-17 (§7.7: FormConfiguration export/import and bundled seeds merged, KNG-138/139; two new migrations, see the note in §7.7); 2026-10-12 (§7.7: KNG-138 on a feature branch); 2026-10-08 (security and alpha-hosting update for KNG-64)
+**Last updated:** 2026-11-10 (header and § 5.3: latest migration `AddCleavingCombatValues`, #259/#306); 2026-10-26 (§nginx: `/api/hubs/` without access log; § 9.5 plugin `realtime:` block — SignalR S1, #178, feature branch); 2026-11-02 (G10, § 12.3: the KNG-232 Prometheus endpoints of the API and the plugin, both off by default, [PandiO/knk-workspace#48](https://github.com/PandiO/knk-workspace/issues/48)); 2026-10-25 (§1/§3.4 G6: RegionHttpServer is loopback + `X-API-Key` since KNG-64; §nginx: WebSocket upgrade headers for the planned SignalR hub, #66); 2026-10-24 (§4.3, §9.3, §11 F/G: KNG-205 invitations merged, the feature-branch notes replaced); 2026-10-22 (§7.7: DisplayConfiguration export/import and the priority 2/3 form seeds and display seeds merged, KNG-139); 2026-10-21 (§4.3, §9.3, §11 F/G: invite-only sign-up, admission gate and Access sync — KNG-205/KNG-218); 2026-10-21 (§4.3 mail: the KNG-206 email engine on the invitations feature branch — `Email__Transport`, relay option, `App__PublicBaseUrl`, Log guard); 2026-10-17 (§7.7: FormConfiguration export/import and bundled seeds merged, KNG-138/139; two new migrations, see the note in §7.7); 2026-10-12 (§7.7: KNG-138 on a feature branch); 2026-10-08 (security and alpha-hosting update for KNG-64)
 **Applies to:** trunk only. knk-web-api `master` `1805cf9`, knk-web-app `main`, knk-plugin `main` `c7d5a1e`; 61 EF
 migrations, the latest being `20261006193103_UniquePermissionGrantHolderNode`. Feature branches that haven't been
 merged, such as road navigation, are not covered. Re-check § 2 and the seed table manifest after each trunk merge.
+**Migrations since (2026-11-10):** knk-web-api `master` `b5e57fa` has 109 migrations; the latest is
+`20261105200617_AddCleavingCombatValues` (#259), which runs after #233's `20261104121131_AddChatTokenSettings` and
+`20261104130000_SeedChatTokenNodes`. The migrator (§ 5.3) applies every missing one in order. Only this count and
+§ 5.3's note were updated for that commit; the rest of the guide still describes the commits above.
 **Sources:** the three repos' code at those commits (file references inline); `docs/specs/*/…_FORMCONFIGS.md` for the
 dev-DB-only content; [`scripts/seed/`](../../scripts/seed/) for the seed tooling.
 
@@ -556,6 +560,12 @@ connections as coming from 127.0.0.1.)
 cd /opt/knk
 sudo docker compose run --rm migrator          # prints "Applying migration '…'" lines, then "Done."
 ```
+
+On knk-web-api `master` `b5e57fa` (2026-11-10) the latest migration is `20261105200617_AddCleavingCombatValues`:
+four nullable `EnchantmentDefinitions` columns for Cleaving's gate numbers. The API fills in Cleaving's defaults at its
+next start (gate bonus 0.25 per level, strike 5x +1 per level, strike cooldown 60 s −10 s per level); then import
+form seed `EnchantmentDefinition - Default (seed v5)` and make it the default (see the
+[2026-11-10 changelog entry](../CHANGELOG.md)).
 
 To see what a release is going to change before you apply it, generate the SQL on your PC or in CI:
 

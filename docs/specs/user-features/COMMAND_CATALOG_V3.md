@@ -460,6 +460,22 @@ enchantments`'s admin/debug catalog browsing and item-blueprint application.
   prints display name/level/id/remaining cooldown (via
   `CooldownManager.getRemainingCooldown`, `InfoEnchantmentCommand.java:71-104`).
   Pure read, no mutation.
+- **Update 2026-11-10 (knk-plugin `main` `121030f`):** `/ce info <player>` now checks `.info.others`
+  (PandiO/knk-workspace#193, merged 2026-11-01), so the gap below is closed on trunk. Under each enchantment's line
+  the command prints the combat values in effect at the item's level (admin-set in the web app, or the plugin's
+  built-in values while the API is unreachable); each line is a `custom-enchantments.messages.*` key in `config.yml`:
+
+  | Line | Shown for | Example | Message key |
+  |---|---|---|---|
+  | chance, duration, cooldown | every custom enchantment (#151) | `chance N%, duration Ns, cooldown Ns` (or `off`) | `cmd-info-tuning` |
+  | effect level, second effect | Flash Chaos (#201) | `effect level N, second effect Ns` | `cmd-info-tuning-effects` |
+  | area damage, gate damage, radii | Chaos, Flash Chaos (#223) | `area damage 40 within 3 blocks, gates 40, knockback within 5 blocks` | `cmd-info-tuning-area` |
+  | gate bonus, charged strike, strike cooldown | Cleaving (#259) | `gate hits +25%, charged strike 5x, strike cooldown 60s` | `cmd-info-tuning-gate` |
+
+  Cleaving's line uses its level: at level IV with the defaults it reads `gate hits +100%, charged strike 8x, strike
+  cooldown 30s`, and `off` replaces the cooldown when it is 0 or turned off (`InfoEnchantmentCommand.gatePlaceholders`).
+  Player view: [gate structures player guide § Cleaving](../../guides/users/gate-structures-player-guide.md#cleaving-the-siege-enchantment-for-gate-doors);
+  admin view: [combat values admin guide § 2](../../guides/admin/custom-enchantment-combat-values-admin-guide.md).
 - **Feature allocation:** `custom-enchantments`
 - **Status:** Finished, player-facing, but with the permission-enforcement
   gap noted above (worth flagging for the v3 permission-system work, since

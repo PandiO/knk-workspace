@@ -2,7 +2,7 @@
 
 **Status:** Merged 2026-10-24 (knk-plugin `main` `75d619b`, knk-web-api `master` `1aba1ee`, knk-web-app `main` `4a9537e`). Run 1 (developer, 2026-10-24): A–E work once the API is up; G (joining from the server hub) passed after its fix; F (menus with the API down at plugin start) **failed** - the menus stayed unavailable and `/menu` was blank - and continues on knk-plugin branch `claude/menu-validation-retry`.
 **Branch tested:** `claude/dreamy-fermi-4h2ldl` (all four repos).
-**Design:** [siege-minigame/DESIGN.md](../specs/siege-minigame/DESIGN.md) §6.4–6.6 and §11.1, [MENU_TEMPLATES.md](../specs/siege-minigame/MENU_TEMPLATES.md) C.3/C.4; the gate numbers are in knk-plugin's `config.yml` under `gates.fire-aspect` and `gates.cleaving`.
+**Design:** [siege-minigame/DESIGN.md](../specs/siege-minigame/DESIGN.md) §6.4–6.6 and §11.1, [MENU_TEMPLATES.md](../specs/siege-minigame/MENU_TEMPLATES.md) C.3/C.4; the gate numbers are in knk-plugin's `config.yml` under `gates.fire-aspect` and `gates.cleaving`. **Since 2026-11-10 (#259)** `gates.cleaving` is removed: Cleaving's numbers are combat values in the web app ([admin guide § 1](admin/custom-enchantment-combat-values-admin-guide.md#1-where-to-edit)); the B steps' numbers are their defaults.
 **Report back:** PASS / FAIL per step ID, plus for each FAIL the exact chat lines and what you did.
 
 ## 0. Prepare
