@@ -1,7 +1,7 @@
 # Player statistics — working design
 
 **Status:** Finalized 2026-10-03 by chain link 1 — the "Finalized design (link 1)" section below is binding for implementation together with [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md). Developer decisions D1-D13 and "Agreed" paragraphs are the developer's; link-1 defaults are numbered `L1-n` and flagged for review in the progress report. Evidence: [source audit](../../reports/2026-10-03-player-statistics-source-audit.md). **Implemented and merged 2026-10-11** after the live smoke test (see IMPLEMENTATION_PLAN.md).
-**Last updated:** 2026-11-04 (§ F.4 public audience for chat tokens, #233, on a branch); merged 2026-10-11 (trunk alignment D21-D23 and smoke-test decision D24 on 2026-10-10)
+**Last updated:** 2026-11-10 (§ F.4 public audience for chat tokens, #233, merged); merged 2026-10-11 (trunk alignment D21-D23 and smoke-test decision D24 on 2026-10-10)
 **Linear:** [KNG-34](https://linear.app/kngpandi/issue/KNG-34/design-player-statistics-provenance-and-world-analytics), [KNG-14](https://linear.app/kngpandi/issue/KNG-14/gameplay-statistics-counters-v2-userstatistics-for-user-statistics), [KNG-23](https://linear.app/kngpandi/issue/KNG-23)
 
 This living note records decisions from the developer conversation. It does not assert that all described fields are already stored or displayed in V3. Precedence: (1) "Developer decisions 2026-10-03", (2) the "Finalized design (link 1)" section, (3) the older discussion sections further down, which are kept as rationale. Where an older section still says "open" or "to be decided", section (2) settles it.
@@ -192,8 +192,7 @@ V1 had an explicit `/afk` toggle plus auto-AFK after 300 s; V2 had nothing (audi
   **anonymous** web visitor sees only the always-public fields (L1-3).
 - **Public audience (PandiO/knk-workspace#233):** `GET api/statistics/users/{id}?audience=public` returns the signed-in
   view also to the player themselves and to staff (an anonymous caller stays anonymous). The plugin's chat tokens show
-  this view to the whole chat, so `#kills` shows what `/stats <player>` shows another player. *On the
-  `claude/chat-tokens-233` branches, not merged.*
+  this view to the whole chat, so `#kills` shows what `/stats <player>` shows another player. *Merged 2026-11-10 (knk-web-api `master` `6f3edd1`).*
 - **Per-context precedence (D8):** a context-level row, if present, decides that context; otherwise the metric-level row
   decides; otherwise nobody. A **total across contexts** is visible only when the metric-level value and every
   context-level override are *everyone* (otherwise a hidden context would leak through the total).

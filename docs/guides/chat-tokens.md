@@ -1,12 +1,13 @@
 # Chat tokens (#hand, #stats, #kills, …) — guide and smoke test
 
-**Status:** Written 2026-11-04 for the `claude/chat-tokens-233` branches; not merged, not run in game
-**Last updated:** 2026-11-10 (Tab completion of `#token@player`, names in their tab-list colour)
+**Status:** Merged 2026-11-10 (knk-plugin `main` `b8ab3a0f`, knk-web-api `master` `6f3edd1`, knk-web-app `main` `4d6e2ac`, merged from `claude/chat-tokens-233`); smoke test § 5 steps 1–23 run by
+the developer: all pass (steps 1–19 on 2026-11-04 to 2026-11-10, 20–23 on 2026-11-10). Not yet deployed to the alpha
+**Last updated:** 2026-11-10 (merged; Tab completion of `#token@player`, names in their tab-list colour)
 **Issue:** [PandiO/knk-workspace#233](https://github.com/PandiO/knk-workspace/issues/233) (decisions in the
 [issue comment](https://github.com/PandiO/knk-workspace/issues/233#issuecomment-6630208467) and below)
-**Branches:** `claude/chat-tokens-233` in knk-plugin (on `main` `8f11bed`), knk-web-api (on `master` `c4c7772`),
-knk-web-app (on `main` `603843d`) and knk-workspace (these docs). Two API migrations (one nullable column, one data-only
-node seed); deploy the API before the plugin.
+**Merged:** knk-plugin `main` `b8ab3a0f`, knk-web-api `master` `6f3edd1`, knk-web-app `main` `4d6e2ac` (branch `claude/chat-tokens-233` in each, plus
+knk-workspace for these docs). Two API migrations (`AddChatTokenSettings`: one nullable column; `SeedChatTokenNodes`:
+data only); deploy the API before the plugin.
 
 ## 1. What players get
 
@@ -40,6 +41,12 @@ for statistics tokens, `#kills@<name>` for every online player you can see. Play
 left out for viewers who can't see them, the same as in the tab list. The list is the client's chat-completion list,
 set by the plugin: it is refreshed a tick after each join or quit and every 5 s, so a mode switch shows up within 5 s.
 Offline players aren't offered, but `#kills@Name` still works for them when typed.
+
+**Why the list needs Tab (decision 2026-11-10):** in normal chat the vanilla client never asks the server for
+suggestions. It matches the word being typed against the completion list above and shows matches only when Tab is
+pressed, and the server can't register a trigger character such as `@`. Only commands (text starting with `/`) get
+suggestions on every keystroke, as `/msg ` does. Two workarounds were offered and declined for now: token suggestions in
+the message part of `/msg`, `/r` and `/sc`, and a `/c <message>` public-chat command with live suggestions.
 
 **What text counts as a token:** names are case-insensitive. A token glued to a word (`abc#hand`, `#handy`), a colour code
 (`&#FF0000`), an unknown name (`#lol`), or a broken target (`#kills@`) stays as typed. `#hand`, `#location` and `#tokens`

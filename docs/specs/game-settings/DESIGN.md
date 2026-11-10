@@ -230,7 +230,7 @@ settings read yet leaves the server's own motd. The API rejects more than two li
 `chatTokens` (column `ChatTokenSettingsJson`, migration `AddChatTokenSettings`): `maxTokensPerMessage` (0–20) and
 `statCooldownSeconds` (0–3600) for the chat hashtag tokens (`#hand`, `#kills`, …). Both 0 = off, the default; null on
 update keeps them. Holders of `knk.chat.tokens.bypass` skip both. Feature guide:
-[guides/chat-tokens.md](../../guides/chat-tokens.md). *On the `claude/chat-tokens-233` branches, not merged.*
+[guides/chat-tokens.md](../../guides/chat-tokens.md). *Merged 2026-11-10 (knk-web-api `master` `6f3edd1`, knk-plugin `main` `b8ab3a0f`, knk-web-app `main` `4d6e2ac`).*
 
 ### Text formatting (all texts)
 

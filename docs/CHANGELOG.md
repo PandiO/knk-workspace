@@ -4,7 +4,11 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
-- **Chat tokens** — `claude/chat-tokens-233` in knk-plugin, knk-web-api, knk-web-app and knk-workspace
+(Nothing at the moment.)
+
+## 2026-11-10
+
+- **Chat tokens** — knk-plugin `main` `b8ab3a0f`, knk-web-api `master` `6f3edd1`, knk-web-app `main` `4d6e2ac`, merged from `claude/chat-tokens-233`
   (PandiO/knk-workspace#233). `#hand` shows the held item with its tooltip. Statistics and profile tokens (`#stats`,
   `#kills`, `#deaths`, `#kd`, `#streak`, `#wins`, `#playtime`, `#balance`, `#title`, `#xp`, `#discoveries`) also work as
   `#kills@Steve`. `#location` shares the position, and `#tokens` lists the tokens. They work in chat, `/msg`, `/r` and staff chat.
@@ -12,7 +16,9 @@ This is a human-readable record of capabilities merged into the V3 default branc
     own private statistic asks first (make public / send without / never ask).
   - Limits: per message and a statistics cooldown, on the Game Settings page, off by default.
   - Nodes: `knk.chat.token.*` seeded for the Default group, `knk.chat.tokens.bypass` for the staff ranks.
-  - Two API migrations. Guide and smoke test: [guides/chat-tokens.md](guides/chat-tokens.md). Not run in game.
+  - Two API migrations. Guide and smoke test: [guides/chat-tokens.md](guides/chat-tokens.md); smoke test run by the developer, all pass.
+  - Tab completion: `#kills@` + Tab offers the online players the viewer can see (staff/owner mode respected); the
+    name in `#kills@Steve` has Steve's tab-list colour. The list opens on Tab only (vanilla chat has no trigger character).
 
 ## 2026-11-05
 
