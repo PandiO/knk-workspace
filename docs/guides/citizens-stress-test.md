@@ -1,6 +1,6 @@
 # Citizens stress test — NPC hybrid navigation
 
-**Status:** Desk check done (go with caveats), spike built, and dev-server runs on 2026-11-10/11. Load passes; the rule checks are being rerun with the spike's recheck and trespass counter.
+**Status:** Done 2026-11-11: **go with caveats** (Citizens hop mode with the K&K examiner in front). Load and rule checks pass; the caveats are in [the verdict on #244](https://github.com/PandiO/knk-workspace/issues/244#issuecomment-6806008046).
 **Last updated:** 2026-11-11
 **Issue:** [PandiO/knk-workspace#241](https://github.com/PandiO/knk-workspace/issues/241): desk check [#242](https://github.com/PandiO/knk-workspace/issues/242), spike [#243](https://github.com/PandiO/knk-workspace/issues/243), benchmark [#244](https://github.com/PandiO/knk-workspace/issues/244)
 **Branch:** knk-plugin `claude/citizens-spike` `ac3c356` (throwaway, **never merge**), on `main` `33122cf4`
@@ -71,6 +71,10 @@ Baseline 2.34 ms (no NPCs). All runs in hop mode with the default settings unles
 | access-removed | 50 | 20.24 / 37.35 | 0.358 | 40 | 2,677 | **failed: about 2/3 walked into the denied district**; K&K blocked 224,497 cells for the rest |
 | 50-hop-6-entry-deny | 50 | 46.98 / 85.81 | 0.893 | 0 | 7,196 | entry left denied by mistake; straight-line fallback took NPCs over ice to the island |
 | 50-hop-h6 | 50 | 4.12 / 5.47 | 0.036 | 71 | 424 | `hop 6` is worse (6.0 stuck per trip): not a route-choice problem |
+| access-removed-v2 | 50 | 3.37 / 3.89 | 0.014 | 0 | 0 | **pass**: `ac3c356`, baseline 2.67; event replan, NPCs wait, 0 trespasses |
+| access-restored-v2 | 50 | 3.82 / 5.34 | 0.023 | 100 | 294 | continued at once |
+| gate-closed-v2 | 50 | 3.68 / 4.56 | 0.020 | (100) | (352) | **pass**: nobody passed, NPCs wait; cumulative counters |
+| gate-reopened-v2 | 50 | 4.29 / 5.86 | 0.032 | (200) | (597) | moved again when the opening animation finished |
 
 What this shows:
 
@@ -79,8 +83,11 @@ What this shows:
 - **Access removed mid-route failed** because a hop leg kept the access it was planned with, and once inside, the entry rule no longer applies. The spike now rechecks (see above); the rerun decides.
 - **Stuck spots are Citizens' movement on stair corners** (a turn where a corner meets a wall and a one-block step next to a stair, for example 1411 50 -496), not route choice. NPCs get through eventually. Likely fix in the real build: K&K waypoints on stair landings and turns.
 - **Dense mode is dropped**: it skips the K&K examiner, hits the 64-chunk capture limit, and got stuck about 100 times per trip.
+- **Rule checks pass with the recheck (v2 runs):** 0 trespasses with entry removed and with the gate closed; waiting NPCs cost 0.014–0.020 ms each. Gap: NPCs stop where they are, while player navigation leads to the edge of the region or the gate; the real adapter should walk to the blocking element, then wait.
 
-## Next session: rerun the rule checks
+**Verdict (2026-11-11): go with caveats.** The caveats the real build must own (recheck and event replans, wait state, partial route to the blocking element, group navigation, bounded detours on the road graph, stair corners, NPCs out of player region handling, NPC access identity, no dense mode) are listed in [the verdict on #244](https://github.com/PandiO/knk-workspace/issues/244#issuecomment-6806008046).
+
+## Rule-check rerun (done 2026-11-11: tests A and B pass, C not run)
 
 Deploy `claude/citizens-spike` `ac3c356` or later (`./gradlew :knk-paper:dev`). The startup line shows `KnightsAndKings 0.1.0+ac3c356…`.
 
