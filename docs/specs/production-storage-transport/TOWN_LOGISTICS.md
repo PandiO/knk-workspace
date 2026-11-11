@@ -206,10 +206,15 @@ Supply-and-demand pricing is later and **needs the developer's pricing documents
 the [shops design](../shops/DESIGN.md): a static catalogue price, or base price × shop tax × shop level, with a 50%
 buy-back.
 
+**2026-11-11:** the developer's handwritten supply-and-demand notes are transcribed in
+[pricing/SUPPLY_DEMAND_NOTES.md](../pricing/SUPPLY_DEMAND_NOTES.md): a linear demand and supply line per shop and
+product, solved for the equilibrium price every hour (`p* = sp + (d·I − T) / (a + b)`). It is the candidate to replace
+the placeholder below; open questions are listed there.
+
 The intent: item prices follow **real supply and demand**, starting from `ItemBlueprint.BasePriceMin/Max`, with
 further multipliers.
 
-The developer's detailed pricing work is not in this repository. The fragments that are here:
+Apart from those notes, the developer's pricing work is not in this repository yet. Other fragments:
 
 - vision §4.4 (balance over realism);
 - vision §9.1 (the base price range feeds supply and demand);
