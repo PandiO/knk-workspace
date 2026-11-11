@@ -12,7 +12,7 @@ explained), 2 pages, Dutch, shared 2026-11-11: [source/vraag-en-aanbodformules-u
 
 **Revision history**
 
-- **2026-11-11:** first transcription, translation and analysis.
+- **2026-11-11:** first transcription, translation and analysis. The same day the developer answered Q1-Q4 (§5).
 
 ## 1. Transcription (Dutch, as written)
 
@@ -88,7 +88,7 @@ Per **shop and product**, recalculated **every period** (1 hour in the example):
 | `d` | average demand per player per period at the standard price | 20 |
 | `b` | supply rise per +1 price | 15 |
 
-Read with a **falling** demand line (see §5, Q1):
+With a **falling** demand line (confirmed by the developer 2026-11-11, §5 Q1; the notes' `+10p` is a slip):
 
 ```
 Qd(p) = d·I − a·(p − sp)        = −a·p + (d·I + a·sp)      → with the example: −10p + (20I + 10sp)
@@ -126,15 +126,22 @@ This replaces the placeholder formula in TOWN_LOGISTICS §7 (scarcity from days 
 
 ## 5. Questions for the developer
 
+Answered 2026-11-11:
+
+| # | Question | Answer |
+|---|---|---|
+| Q1 | The notes write `Qd = 10p + …`, but "10 = demand **drop** per price increase of 1". Is it `Qd = −10p + (20I + 10sp)`? | **Yes, a minus.** So `p* = sp + (d·I − T) / (a + b)`. |
+| Q2 | Is `p*` the shop's sell price directly, or a basis? | **A basis.** Shop level, shop tax and later the margin and turnover tax (#325) apply on top. |
+| Q3 | Band and smoothing? | **Clamp and smooth:** keep the price inside a band (for example `BasePriceMin`..`BasePriceMax`) and move part of the way to `p*` each period. Band and step size to design. |
+| Q4 | What `I` counts | **The town's player count first**, then the shop's distinct customers in the last period once sales data exists. |
+
+Still open (proposal first):
+
 | # | Question | Proposal |
 |---|---|---|
-| Q1 | The notes write `Qd = 10p + …`, but "10 = demand **drop** per price increase of 1". Is it `Qd = −10p + (20I + 10sp)`? | Yes, a minus. With `+10p` demand would rise with price and the equilibrium becomes `p = 4I + 5sp − T/5`, which runs away for a large village. |
-| Q2 | Is the result the shop's sell price directly, or a basis that the shop level, shop tax and margin (#325) then multiply? | Basis; shop level and tax/margin on top, so levels and #325 keep their meaning. |
-| Q3 | Should the price stay inside a band (for example `BasePriceMin`..`BasePriceMax`, or ×0.5..×2 of `sp`), and should it move gradually from hour to hour? | Clamp to a band and smooth (move part of the way each period), so one empty hour doesn't spike the price. |
-| Q4 | Is `I` per village (town), per district, or the shop's own customers from the start? | Town player count first, then the shop's customers per period, as the notes say. |
-| Q5 | Is buy-back (what the shop pays players) derived from the same `p*`? | Yes: buy-back = `p*` × buy-back % (default 50%). |
+| Q5 | Is buy-back (what the shop pays players) derived from the same `p*`? | Yes: buy-back = the shop's price × buy-back % (default 50%). |
 | Q6 | Are `a`, `b`, `d` set per blueprint, per category, or both? | Per category with optional per-blueprint overrides. |
-| Q7 | The notes say "Word documents and iPhone notes" too (#120 step 1). Are there more pricing notes to import, or are these pages the model? | Import any others into this folder before the pricing design. |
+| Q7 | Are there more pricing notes (Word files, iPhone notes, #120 step 1) to import, or are these pages the model? | Import any others into this folder before the pricing design. |
 
 ## 6. Next step
 
