@@ -62,6 +62,7 @@ implementation plan.
   in V1, midpoint base price, enchantments as a percentage, a later shop turnover tax
   ([#325](https://github.com/PandiO/knk-workspace/issues/325)), and the other items listed in §14.
 - **2026-11-11:** Territory is a V1 requirement with region rules T1-T7 (§3.4, decision record §12).
+- **2026-11-11 (later):** Territory is computed, not a WorldGuard region; see [territory DESIGN](../territory/DESIGN.md) (decision record §13).
 
 ## 1. Role and scope
 
@@ -203,6 +204,12 @@ inside your own transaction").
   shopkeeper spawn location and registered display spots. See [shops DESIGN](../shops/DESIGN.md) and §10.
 
 ### 3.4 Territory and region rules [V1] (2026-11-11)
+
+> **Superseded in part (2026-11-11, later the same day):** the developer decided territory is **computed and chunk-cached,
+> not a WorldGuard region**. The required `WgRegionId`, the `TERRITORY` managed region kind and rules T1, T3, T4 and T7 as
+> WorldGuard checks no longer hold; T2 (structures in districts) still does. See [territory DESIGN](../territory/DESIGN.md)
+> and [decision record §13](DECISIONS_2026-11-05.md#13-territory-is-computed-not-a-worldguard-region-2026-11-11).
+> Reconciling this section and P2 is an open item (territory DESIGN §10).
 
 The developer asked for Territory as a V1 requirement of this feature: production structures mostly stand in rural
 land, they still belong to a town, and their regions get the same field validation as districts and gate structures.

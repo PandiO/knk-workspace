@@ -5,7 +5,7 @@ differs from DESIGN.md, PRODUCTION_KINDS.md, TOWN_LOGISTICS.md or IMPLEMENTATION
 until those documents are revised to rev. 3.
 **Folded in:** 2026-11-05, rev. 3 of all four documents takes in this record. The record stays the source for the
 wording of each decision.
-**Last updated:** 2026-11-11 (§11 follow-up answers; §12 Territory)
+**Last updated:** 2026-11-11 (§11 follow-up answers; §12-13 Territory)
 **Parent issue:** KNG-83 (now tracked as a `[KNG-83]` issue in `PandiO/knk-workspace`).
 **Scope of the review:** principles, storage, production structures, transport, NPC transporters, warehouses and
 town logistics, shops, shopkeepers and display stalls, NPC lifecycle.
@@ -392,3 +392,22 @@ districts and gate structures. Replaces the "minimal, optional region" recommend
 Folded into DESIGN §3.4 and IMPLEMENTATION_PLAN P2. Proposals there still to confirm: a required region and town
 claim, which region rules block or warn (T1-T7), and no overlap with other territories or towns (a new
 `RegionNoOverlap` rule type).
+
+## 13. Territory is computed, not a WorldGuard region (2026-11-11)
+
+Developer voice design session, 2026-11-11, after §12. Written up in [territory DESIGN](../territory/DESIGN.md).
+
+- **No WorldGuard region for territory.** Ownership is calculated from distance to the holder's districts and its
+  range (base + power × factor, capital bonus), cached per chunk; border chunks are split and resolved per block.
+  Entry and exit run on chunk crossing; BlueMap draws from the cache. A one-way WorldGuard export is **parked**.
+- **Holders:** territory belongs to a town or a kingdom. Crown land outranks towns. Provinces are optional, between
+  town and kingdom.
+- **Overlap** of equal rank becomes a contested zone with a `TerritoryConflict` entity, resolved by admins in V1.
+- **Structures** belong to a town by a database link; the territory check at creation is a warning. A separate
+  `Loyalty` field is stored in V1; switching and revolts come later.
+- **World modification:** admins only; harvesting at production structures is the one exception.
+- **Later:** expansion points (range or grasp), grasp fading with distance, public safety, a cell grid with layers
+  (base grasp, structure bubbles, patrol trails) fed by a source registry of pull providers and pushed modifiers.
+
+This replaces §12's region proposals (required region, T1/T3/T4/T7 as WorldGuard checks). Reconciling DESIGN §3.4
+and IMPLEMENTATION_PLAN P2 is still to do.
