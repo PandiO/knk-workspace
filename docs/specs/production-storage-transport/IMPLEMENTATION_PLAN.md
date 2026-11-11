@@ -307,9 +307,12 @@ content.
 
 **Plugin:** shop menus on the inventory menu engine, from the developer's V1 menu templates.
 
-**Web app:** shop CRUD, catalogue editor, levels, sales ledger.
+- **hourly trade stats** (`ShopTradeStat` per shop, blueprint and hour, rolled up from the ledger; shops DESIGN
+  §9.1): recorded from V1 for the later pricing model, not used by V1 pricing.
 
-**Tests:** a purchase is atomic (coins and stock together, coins to the town account); confirmation required; a static price wins; formula
+**Web app:** shop CRUD, catalogue editor, levels, sales ledger, trade stats chart.
+
+**Tests:** the hourly rollup matches the ledger and is idempotent per shop and hour; a purchase is atomic (coins and stock together, coins to the town account); confirmation required; a static price wins; formula
 price; 50% buy-back; refused categories; a sold enchanted item comes back on sale with its enchantments; restock and
 processing keep the ledger reconciled.
 

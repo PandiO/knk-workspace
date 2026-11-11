@@ -194,7 +194,29 @@ The number of levels per shop type is free (concept v0.2 had 20 per shop; produc
 
 - FormConfig CRUD: shop types (accepted categories, levels), shops, catalogue entries (static price, pin), display
   spots, shopkeeper spawn location.
-- Shop detail: storages, catalogue, sales and buy-backs (ledger filtered by the shop), worker state, reservations.
+- Shop detail: storages, catalogue, sales and buy-backs (ledger filtered by the shop), worker state, reservations,
+  and the hourly trade stats below as a chart.
+
+### 9.1 Hourly trade stats [V1] (developer, 2026-11-11)
+
+Recorded from the first version on, so the later supply-and-demand pricing
+([pricing notes](../pricing/SUPPLY_DEMAND_NOTES.md)) starts from real data. Nothing in V1 pricing reads them.
+
+`ShopTradeStat`, one row per shop, blueprint and hour (UTC):
+
+| Field | Meaning | Pricing input |
+|---|---|---|
+| `UnitsSold`, `Revenue` | sales to players | demand `Qd` |
+| `UnitsBoughtBack`, `BuyBackPaid` | buy-backs from players | part of supply `T` |
+| `UnitsSupplied` | collections from the warehouse and processing output into Merchandise | part of supply `T` |
+| `DistinctCustomers` | distinct players who bought | `I` (later) |
+| `TownPlayerCount` | the town's player count at the end of the hour | `I` (first) |
+| `AvgSellPrice`, `StockAtEnd` | the price charged and the stock left | price history, stock-outs |
+
+- An hourly rollup job builds the rows from the stock and currency ledger, so they can be rebuilt at any time and
+  never disagree with it. Idempotent per shop and hour.
+- Hours with no trade write no row.
+- Kept indefinitely for now (small rows); revisit with the ledger retention rule (production DESIGN D10).
 
 ## 10. Later
 

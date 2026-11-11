@@ -163,5 +163,6 @@ With few players the price must **not fluctuate much or wildly**. Proposed, to s
 
 **Later**, once the game has real player behaviour to price from: write `docs/specs/pricing/DESIGN.md` with the formula,
 its parameters and storage, the price sweep, the damping in §5a, how shop level, tax and margins apply (#325), and
-then replace TOWN_LOGISTICS §7's placeholder. Until then V1 uses the interim pricing. Collecting the inputs (sales
-and supply per shop and period from the ledger) from V1 on makes the later switch easier.
+then replace TOWN_LOGISTICS §7's placeholder. Until then V1 uses the interim pricing. The inputs are recorded from V1 on as hourly
+trade stats per shop and blueprint ([shops DESIGN §9.1](../shops/DESIGN.md#91-hourly-trade-stats-v1-developer-2026-11-11)),
+decided by the developer 2026-11-11, so the later switch starts from real data.
