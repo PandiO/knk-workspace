@@ -3,7 +3,7 @@
 **Status:** Draft. Written from the developer's voice design session of 2026-11-11. Nothing is implemented. Items
 are tagged **[V1]**, **[Later]** or **[Parked]** (as in the production [DESIGN](../production-storage-transport/DESIGN.md)
 header).
-**Last updated:** 2026-11-11
+**Last updated:** 2026-11-11 (§10: production reconciled; issue #326)
 **Supersedes:** the region-based parts of production [DESIGN §3.4](../production-storage-transport/DESIGN.md#34-territory-and-region-rules-v1-2026-11-11)
 (a required `WgRegionId`, region rules T1, T3, T4 and T7 as WorldGuard checks, the `TERRITORY` managed region kind).
 See [decision record §13](../production-storage-transport/DECISIONS_2026-11-05.md#13-territory-is-computed-not-a-worldguard-region-2026-11-11).
@@ -131,7 +131,8 @@ territory), [navigation](../navigation/DESIGN.md) (the access-rule registry patt
 
 ## 10. Still open
 
-- How the computed territory replaces production DESIGN §3.4's region rules T1-T7 (which become territory lookups,
-  which stay WorldGuard checks on districts and structures), and the matching changes to IMPLEMENTATION_PLAN P2.
+- ~~How the computed territory replaces production DESIGN §3.4's region rules~~: done 2026-11-11. Production DESIGN
+  §3.4 now uses a rural structure's `TownId`, the territory lookup and placement rules P-1 to P-3, and P2 follows it.
+  V1 work: [#326](https://github.com/PandiO/knk-workspace/issues/326).
 - Whether crown land needs its own anchor entity (a point or a set of chunks) and how admins define it.
 - Range distance metric (to the nearest district region edge or centre) and the capital bonus formula.

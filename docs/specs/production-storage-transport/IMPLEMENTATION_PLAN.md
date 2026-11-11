@@ -95,33 +95,36 @@ All **V1**.
 - Restrict FKs;
 - locks.
 
-## P2 — World: Territory, Warehouse, ProductionStructure · [#91](https://github.com/PandiO/knk-workspace/issues/91) (`[KNG-85]`)
+## P2 — World: rural structures, Warehouse, ProductionStructure · [#91](https://github.com/PandiO/knk-workspace/issues/91) (`[KNG-85]`)
 
-**Needs:** DESIGN D1 (Territory is a V1 requirement, 2026-11-11, DESIGN §3.4) and D5 (confirmed 2026-11-05). All
-**V1**.
+**Needs:** the territory V1 work ([#326](https://github.com/PandiO/knk-workspace/issues/326), [territory DESIGN](../territory/DESIGN.md)) for the territory
+lookup used by P-2 and P-3; DESIGN D1 (2026-11-11, DESIGN §3.4) and D5 (confirmed 2026-11-05). All **V1**. The
+district part of this phase doesn't wait for #326.
 
 **API**
 
-- `Territory : Domain` (DESIGN §3.4): required region and `ClaimedByTownId`, optional `ClimateZoneId`; migration.
-- `Structure.TerritoryId` with the District-xor-Territory rule; `DistrictId` and `StreetId` nullable; an
-  effective-town resolver.
-- **Region rules** T1-T6 in the seed forms (Territory, Warehouse, ProductionStructure, later Shop) and a new
-  `RegionNoOverlap` validation type (T3, T4); the same rules checked on save in the API.
+- `Structure.TownId` for rural structures, with the District-xor-Town rule; `DistrictId` and `StreetId` nullable; an
+  effective-town resolver (DESIGN §3.3-3.4).
 - `Warehouse : Structure`.
 - `ProductionStructure : Structure` (fields per DESIGN §3.3, including `WorkersTotal`; `ProductionKindId` nullable
   until P3 seeds kinds).
+- **Placement rules** (DESIGN §3.4): P-1 `RegionContainment` against the district in the Warehouse,
+  ProductionStructure (and later Shop) seed forms; P-2 and P-3 through a new `InsideTerritory` validation type; the
+  same rules checked on save in the API.
+- A flag on structures whose land is contested or outside their town's territory, listed on the
+  `TerritoryConflict` (#326).
 - Default storages on create.
-- Audit and fix every `Structure.District` dereference; list the call sites in the PR.
+- Audit and fix every `Structure.District` and `Structure.Street` dereference; list the call sites in the PR.
 
-**Web app:** FormConfigs with WorldTask capture; the rule builder offers `RegionNoOverlap`.
+**Web app:** FormConfigs with WorldTask capture (district or rural, with the town picker for rural); the rule builder
+offers `InsideTerritory`; the dashboard shows flagged structures.
 
-**Plugin:** managed-region kinds `TERRITORY` (parent: the claiming town), ProductionStructure (`RESOURCE_PRODUCTION`)
-and Warehouse; `RegionNoOverlap` in `WgRegionIdTaskHandler`; territories in `RegionDomainResolver`, region entry
-messages and `/knk regions repair`; tests in `ManagedRegionPolicyTest`.
+**Plugin:** managed-region kinds ProductionStructure (`RESOURCE_PRODUCTION`) and Warehouse (`STRUCTURE`); rural
+structure regions without a parent at their floor priority; `/knk regions repair` handles structures without a
+district; tests in `ManagedRegionPolicyTest`.
 
-**Tests:** District-xor-Territory; effective town for both; each region rule passes and fails as specified (block vs
-warn); overlap with a territory or town is refused; structures without a district or street through navigation,
-discovery and domain access.
+**Tests:** District-xor-Town; effective town for both; P-1 blocks, P-2 and P-3 warn; a structure on land that becomes
+contested keeps its town and is flagged; rural structures through navigation, discovery and domain access.
 
 ## P3 — Production engine · [#86](https://github.com/PandiO/knk-workspace/issues/86) (`[KNG-86]`)
 
@@ -135,7 +138,7 @@ All **V1** unless marked.
 - `ProductionLine` (Configured rates in this phase, decimal accrual, inputs, status, `NextSettleAt` index).
 - **Modifier pipeline (rev. 3):** `ProductionModifier` (scope, target, effect, active window, source), a resolver
   per cycle, and modifier **sources** as an extension point. V1 sources: **structure level** and **weather**.
-- **Weather (rev. 3):** `ClimateZone` (one default; assignable per town or territory), weather types with odds per
+- **Weather (rev. 3):** `ClimateZone` (one default; assignable per town), weather types with odds per
   zone and modifiers per resource category, a **daily stored roll per zone** (`WeatherRoll`), and a sweep that rolls
   once per in-game day.
 - **Producer workers (rev. 3):** `WorkersTotal` (default 2), workers present, and the worker-availability factor in
@@ -394,10 +397,11 @@ Designed for in V1 (fields, extension points), not built.
 ## Smoke test outline (after P5, P6, P7 and P10-P12)
 
 1. In the web app:
-   - create Territory "Cinix North" claimed by Cinix;
+   - give Cinix a power value so its territory reaches the forest north of town (territory feature, #326);
    - create the Docks Warehouse (district) with a terminal chest and a display chest, `UnitsPerSlot` 200; its cap
      shows 27 slots × 200 = 5,400 units per single chest;
-   - create a Coal Mine (district) and a Logger in the territory, with a radius over a forest; each has 2 workers;
+   - create a Coal Mine (district) and a rural Logger for Cinix in that forest, with a radius over the trees; each
+     has 2 workers. Placing the logger outside Cinix's territory shows a warning;
    - give Cinix a climate zone with a high storm chance.
 2. Survey the logger (`/knk production survey`). Check the composition and the derived rates in the web app.
 3. `/knk logistics lanes measure`. The logger shows `Connected`, or `Unconnected` with a held-transport warning. An

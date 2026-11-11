@@ -20,7 +20,8 @@ This is a human-readable record of capabilities merged into the V3 default branc
   DESIGN §3.4), and the developer's supply-and-demand notes are transcribed in [pricing](specs/pricing/SUPPLY_DEMAND_NOTES.md).
   Later on 2026-11-11: new [territory design](specs/territory/DESIGN.md): territory is computed and chunk-cached
   instead of a WorldGuard region, held by a town or kingdom, with contested zones, structure loyalty, and a Later
-  grasp and public-safety grid (decision record §13).
+  grasp and public-safety grid (decision record §13). Production DESIGN §3.4 and P2 now follow it (rural structures
+  link to a town; placement rules P-1 to P-3); territory V1 work is [#326](https://github.com/PandiO/knk-workspace/issues/326).
 
 ## 2026-11-10
 

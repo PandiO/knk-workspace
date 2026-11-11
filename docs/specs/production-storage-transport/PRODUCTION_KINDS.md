@@ -229,13 +229,13 @@ accepted amount and the reason for any shortfall. This is the "why did it produc
 Weather is **custom**, not vanilla. Vanilla weather is world-wide and random, so it can't give a mountain village a
 different climate from a Mediterranean coastal one.
 
-- **Climate zones.** [V1] One default climate, and zones assignable **per town** (or territory). [Later] zones painted
+- **Climate zones.** [V1] One default climate, and zones assignable **per town**. [Later] zones painted
   on the same map grid as the fertility map.
 - Each zone has **weather odds**, for example 30% rain, 5% storm, 10% drought. [Later] the odds vary by season.
 - The system **rolls the weather per zone** once per in-game day and **stores** the roll. So it is traceable and the
   same for everyone.
 - Each **weather type** has **modifiers per resource category**. A storm hits fisheries hard and farms a little; a
-  drought hits farms. These are ordinary pipeline modifiers with scope = the zone's towns and territories, target =
+  drought hits farms. These are ordinary pipeline modifiers with scope = the zone's towns (and their territory), target =
   a category, and an active window = the rolled day.
 - Admins edit zones, odds and weather types in the web app.
 - [Later] per-player weather (Paper `Player#setPlayerWeather`), so players inside a zone see its weather.

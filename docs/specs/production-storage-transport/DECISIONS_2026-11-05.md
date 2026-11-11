@@ -409,5 +409,6 @@ Developer voice design session, 2026-11-11, after §12. Written up in [territory
 - **Later:** expansion points (range or grasp), grasp fading with distance, public safety, a cell grid with layers
   (base grasp, structure bubbles, patrol trails) fed by a source registry of pull providers and pushed modifiers.
 
-This replaces §12's region proposals (required region, T1/T3/T4/T7 as WorldGuard checks). Reconciling DESIGN §3.4
-and IMPLEMENTATION_PLAN P2 is still to do.
+This replaces §12's region proposals (required region, T1/T3/T4/T7 as WorldGuard checks). DESIGN §3.3-3.4 and
+IMPLEMENTATION_PLAN P2 were reconciled the same day: rural structures link to a town (`TownId`), placement rules P-1
+to P-3, territory V1 work in [#326](https://github.com/PandiO/knk-workspace/issues/326).
