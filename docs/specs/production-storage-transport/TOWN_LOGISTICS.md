@@ -209,7 +209,8 @@ buy-back.
 **2026-11-11:** the developer's handwritten supply-and-demand notes are transcribed in
 [pricing/SUPPLY_DEMAND_NOTES.md](../pricing/SUPPLY_DEMAND_NOTES.md): a linear demand and supply line per shop and
 product, solved for the equilibrium price every hour (`p* = sp + (d·I − T) / (a + b)`). It is the candidate to replace
-the placeholder below; open questions are listed there.
+the placeholder below. The developer calls it a foundation, not a worked-out model: it is **Later**, for when there
+is real player behaviour, and must be damped so prices don't swing with a small player count.
 
 The intent: item prices follow **real supply and demand**, starting from `ItemBlueprint.BasePriceMin/Max`, with
 further multipliers.

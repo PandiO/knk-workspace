@@ -1,8 +1,10 @@
 # Pricing: the developer's supply-and-demand notes
 
 **Status:** Source transcription (step 2 of [#120](https://github.com/PandiO/knk-workspace/issues/120), `[KNG-101]`).
-The transcription and translation are faithful to the notes; §4-6 are analysis and proposals for review. Nothing is
-implemented, and the pricing model is not decided yet.
+The transcription and translation are faithful to the notes; §4-6 are analysis and decisions. Nothing is implemented.
+**The notes are a foundation, not a worked-out model** (developer, 2026-11-11): they show how prices should react to
+player consumer behaviour. **Not for V1:** without real player behaviour, and with a small player count, it would
+not work well. V1 shops keep the interim pricing (shops DESIGN §4).
 **Last updated:** 2026-11-11
 **Source:** the developer's handwritten notes "Vraag- en aanbodformules uitleg" (supply and demand formulas
 explained), 2 pages, Dutch, shared 2026-11-11: [source/vraag-en-aanbodformules-uitleg.pdf](source/vraag-en-aanbodformules-uitleg.pdf).
@@ -12,7 +14,8 @@ explained), 2 pages, Dutch, shared 2026-11-11: [source/vraag-en-aanbodformules-u
 
 **Revision history**
 
-- **2026-11-11:** first transcription, translation and analysis. The same day the developer answered Q1-Q4 (§5).
+- **2026-11-11:** first transcription, translation and analysis. The same day the developer answered Q1-Q5 and
+  left Q6 to this session (§5), and set the status: a foundation, Later, damped for small player counts (§5a).
 
 ## 1. Transcription (Dutch, as written)
 
@@ -135,16 +138,30 @@ Answered 2026-11-11:
 | Q3 | Band and smoothing? | **Clamp and smooth:** keep the price inside a band (for example `BasePriceMin`..`BasePriceMax`) and move part of the way to `p*` each period. Band and step size to design. |
 | Q4 | What `I` counts | **The town's player count first**, then the shop's distinct customers in the last period once sales data exists. |
 
-Still open (proposal first):
+Answered later the same day:
 
-| # | Question | Proposal |
+| # | Question | Answer |
 |---|---|---|
-| Q5 | Is buy-back (what the shop pays players) derived from the same `p*`? | Yes: buy-back = the shop's price × buy-back % (default 50%). |
-| Q6 | Are `a`, `b`, `d` set per blueprint, per category, or both? | Per category with optional per-blueprint overrides. |
-| Q7 | Are there more pricing notes (Word files, iPhone notes, #120 step 1) to import, or are these pages the model? | Import any others into this folder before the pricing design. |
+| Q5 | Is buy-back derived from the same `p*`? | **Yes:** the shop pays the equilibrium-based price × 50%. |
+| Q6 | What are 10/15/20, and where are they set? | The developer doesn't remember what the exact numbers stood for and left it to this session. **Decision (session, reversible):** they are example values only. `a`, `b` and `d` are parameters **per item category with optional per-blueprint overrides**, edited in the web app, and tuned from real data. Defaults are set so that the price moves slowly (§5a). |
+| Q7 | More pricing notes to import? | Not known. The developer wrote these notes a while back and added them as they are; import anything else that turns up into this folder. |
+
+## 5a. Damping for a small player base (developer, 2026-11-11)
+
+With few players the price must **not fluctuate much or wildly**. Proposed, to settle in the pricing design:
+
+- **Narrow band:** clamp the final price to a band around `sp` (for example ×0.8..×1.25 to start), within
+  `BasePriceMin`..`BasePriceMax`.
+- **Slow steps:** each period, move only a small fraction of the way from the current price to `p*` (for example
+  10%).
+- **Confidence by volume:** scale that fraction by how much real trade there was (sales and supply in the period
+  against a minimum volume). With almost no trade the price barely moves and drifts back to `sp`.
+- **Longer period while quiet:** compute over a rolling window (for example 24 hours) instead of a single hour until
+  trade volume is high enough.
 
 ## 6. Next step
 
-After the answers: write `docs/specs/pricing/DESIGN.md` with the confirmed formula, its parameters and storage, the
-price sweep, bands and smoothing, how shop level, tax and margins apply (#325), and then replace TOWN_LOGISTICS §7's
-placeholder.
+**Later**, once the game has real player behaviour to price from: write `docs/specs/pricing/DESIGN.md` with the formula,
+its parameters and storage, the price sweep, the damping in §5a, how shop level, tax and margins apply (#325), and
+then replace TOWN_LOGISTICS §7's placeholder. Until then V1 uses the interim pricing. Collecting the inputs (sales
+and supply per shop and period from the ledger) from V1 on makes the later switch easier.
