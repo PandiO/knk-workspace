@@ -89,7 +89,7 @@ This is a human-readable record of capabilities merged into the V3 default branc
   per-enchantment overrides in `config.yml`, only direct Chaos / Flash Chaos kills). Other deaths keep the vanilla
   message; a siege match still shows none; the killer and statistics are unchanged. Guide: [admin guide
   § 7](guides/admin/custom-enchantment-combat-values-admin-guide.md#7-death-messages-for-chaos-and-flash-chaos-kills-222).
-  Smoke test run by the developer, all pass (the `using <item>` part was added after the test, on request).
+  Smoke test run by the developer, all pass (the `using <item>` part was added after the test, on request, and accepted 2026-11-11).
   - **Admin steps:** plugin `config.yml`, new block under `custom-enchantments:` (the jar's defaults apply until it is
     merged by hand):
     ```yaml
