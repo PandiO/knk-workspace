@@ -160,6 +160,8 @@ The number of levels per shop type is free (concept v0.2 had 20 per shop; produc
 - **Greeting:** it greets players who enter the shop region ("Hello there, <username>"), with a cooldown per player.
   Cosmetic only.
 - **Right-click** opens the shop menu (§8).
+- **Invulnerable in V1** (developer, 2026-11-11): players can't damage or kill a shopkeeper, also where PvP is
+  allowed.
 - **Lifecycle** (NPC platform, "NPC lifecycle and reliability"): a non-persistent entity, spawned on demand when a
   player is near and despawned when nobody is; one live entity per NPC id; orphans removed on chunk load. V1 suffered
   from disappearing and duplicated shopkeepers; this is the fix.

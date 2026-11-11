@@ -109,8 +109,9 @@ district part of this phase doesn't wait for #326.
 - `ProductionStructure : Structure` (fields per DESIGN §3.3, including `WorkersTotal`; `ProductionKindId` nullable
   until P3 seeds kinds).
 - **Placement rules** (DESIGN §3.4): P-1 `RegionContainment` against the district in the Warehouse,
-  ProductionStructure (and later Shop) seed forms; P-2 and P-3 through a new `InsideTerritory` validation type; the
-  same rules checked on save in the API.
+  ProductionStructure (and later Shop) seed forms; P-2 and P-3 through a new `InsideTerritory` validation type. All
+  seeded as warnings (`IsBlocking: false`); admins can switch each to blocking. The same rules checked on save in the
+  API.
 - A flag on structures whose land is contested or outside their town's territory, listed on the
   `TerritoryConflict` (#326).
 - Default storages on create.
@@ -120,10 +121,11 @@ district part of this phase doesn't wait for #326.
 offers `InsideTerritory`; the dashboard shows flagged structures.
 
 **Plugin:** managed-region kinds ProductionStructure (`RESOURCE_PRODUCTION`) and Warehouse (`STRUCTURE`); rural
-structure regions without a parent at their floor priority; `/knk regions repair` handles structures without a
+structure regions without a parent at their floor priority (PvP stays allowed); structure NPCs invulnerable; `/knk regions repair` handles structures without a
 district; tests in `ManagedRegionPolicyTest`.
 
-**Tests:** District-xor-Town; effective town for both; P-1 blocks, P-2 and P-3 warn; a structure on land that becomes
+**Tests:** District-xor-Town; effective town for both; P-1 to P-3 warn by default and block when an admin sets
+`IsBlocking`; a structure on land that becomes
 contested keeps its town and is flagged; rural structures through navigation, discovery and domain access.
 
 ## P3 — Production engine · [#86](https://github.com/PandiO/knk-workspace/issues/86) (`[KNG-86]`)

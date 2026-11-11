@@ -5,7 +5,7 @@ differs from DESIGN.md, PRODUCTION_KINDS.md, TOWN_LOGISTICS.md or IMPLEMENTATION
 until those documents are revised to rev. 3.
 **Folded in:** 2026-11-05, rev. 3 of all four documents takes in this record. The record stays the source for the
 wording of each decision.
-**Last updated:** 2026-11-11 (§11 follow-up answers; §12-13 Territory)
+**Last updated:** 2026-11-11 (§11 follow-up answers; §12-14 Territory)
 **Parent issue:** KNG-83 (now tracked as a `[KNG-83]` issue in `PandiO/knk-workspace`).
 **Scope of the review:** principles, storage, production structures, transport, NPC transporters, warehouses and
 town logistics, shops, shopkeepers and display stalls, NPC lifecycle.
@@ -412,3 +412,15 @@ Developer voice design session, 2026-11-11, after §12. Written up in [territory
 This replaces §12's region proposals (required region, T1/T3/T4/T7 as WorldGuard checks). DESIGN §3.3-3.4 and
 IMPLEMENTATION_PLAN P2 were reconciled the same day: rural structures link to a town (`TownId`), placement rules P-1
 to P-3, territory V1 work in [#326](https://github.com/PandiO/knk-workspace/issues/326).
+
+## 14. Rural structures: confirmations (2026-11-11)
+
+The developer's answers on the reconciled DESIGN §3.4:
+
+| # | Question | Decision |
+|---|---|---|
+| R1 | How a rural structure links to its town | **`Structure.TownId`**, with exactly one of `DistrictId` and `TownId` set. Effective town = `District.Town ?? Town`. |
+| R2 | Do placement rules (P-1 to P-3) block or warn? | **It depends on the rule and admins configure it; warn by default.** Every placement rule is seeded as a warning; an admin can make it blocking. |
+| R3 | Production on contested land or outside the town's territory | **Keeps producing**, flagged with a dashboard warning. |
+| R4 | WorldGuard parent of a rural structure's region | **No parent for now**, so PvP stays allowed there. |
+| R5 | The structure's own NPCs (workers, shopkeeper) | **Invulnerable in V1**: players can fight each other there but can't kill a structure's NPCs. |

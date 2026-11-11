@@ -217,36 +217,43 @@ region, rules T1-T7, a `TERRITORY` managed region kind).
 - **A structure belongs to a town by a database link** (territory DESIGN §4), not by its position. A structure is
   either **in a district** (`DistrictId`, as today) or **rural** (`TownId`, no district). Exactly one of the two is
   set: check constraint plus validator. `DistrictId` and `StreetId` become nullable; a rural structure has no street.
-  **Effective town** = `District.Town ?? Town`. Proposal: the field name and the xor rule are this session's reading
-  of "an explicit link in the database".
+  **Effective town** = `District.Town ?? Town` (confirmed by the developer 2026-11-11, decision record §14).
 - **The territory lookup** (territory DESIGN §1): which holder owns a position, from the chunk cache. Production calls
   it to check placement and to flag structures; it never stores territory itself.
 - **Contested or lost land:** when a structure's land becomes contested or leaves its town's territory, the
-  structure keeps its town. It is flagged and listed on the `TerritoryConflict` (territory DESIGN §3-4). Proposal: it
-  keeps producing in V1, with a dashboard warning; effects on output come Later (war disruption, #257).
+  structure keeps its town. It is flagged and listed on the `TerritoryConflict` (territory DESIGN §3-4). It keeps
+  producing in V1, with a dashboard warning (confirmed 2026-11-11); effects on output come Later (war disruption,
+  #257).
 - **Climate zones** are assigned per town (PRODUCTION_KINDS §4.4); there is no territory-level zone in V1.
 
-**Placement rules** (form validation rules; "warn" = the admin sees it and can still save, like the district and
-gate rules today; "block" = the save is refused):
+**Placement rules** (form validation rules; "warn" = the admin sees it and can still save; "block" = the save is
+refused). **Every rule warns by default; admins choose per rule whether it blocks**, through the rule's existing
+`IsBlocking` setting in the form configuration (developer, 2026-11-11):
 
 | # | Rule | How | Level |
 |---|---|---|---|
-| P-1 | A structure in a district has its region inside the district's region (the gate rule, applied to the warehouse, production structure and shop forms; the generic `Structure` form has no such rule today) | existing `RegionContainment`, dependency `District.WgRegionId`, full containment | block (proposal) |
-| P-2 | A rural structure's region (or location) lies inside its town's territory | **new** validation type `InsideTerritory`, a territory lookup | **warn** (territory DESIGN §4) |
-| P-3 | A production area (PRODUCTION_KINDS §3.1) stays inside its structure's district or its town's territory | `RegionContainment` for a district, `InsideTerritory` for a rural structure | warn |
+| P-1 | A structure in a district has its region inside the district's region (the gate rule, applied to the warehouse, production structure and shop forms; the generic `Structure` form has no such rule today) | existing `RegionContainment`, dependency `District.WgRegionId`, full containment | warn (default) |
+| P-2 | A rural structure's region (or location) lies inside its town's territory | **new** validation type `InsideTerritory`, a territory lookup | warn (default; territory DESIGN §4) |
+| P-3 | A production area (PRODUCTION_KINDS §3.1) stays inside its structure's district or its town's territory | `RegionContainment` for a district, `InsideTerritory` for a rural structure | warn (default) |
 
 - No overlap, territory-location or "near the town" rules: territory is computed around the town's districts, and
   overlaps become contested zones, not validation errors.
 - `InsideTerritory` is added to the API's validation registry and the web-app rule builder. It asks the component
   that holds the chunk cache, as `RegionContainment` asks the plugin today. Production areas and structure regions
   with several regions use their region union (KNG-257).
-- The same rules also run when the API saves a structure, so a request outside the form can't skip them (proposal).
+- The same rules also run when the API saves a structure, so a request outside the form can't skip them; a rule set
+  to block refuses the save there too (proposal).
 
 **Plugin:**
 
 - Rural structures keep their own WorldGuard region (`RESOURCE_PRODUCTION` for production structures, `STRUCTURE`
-  for warehouses and shops) for harvest rules and protection. With no district, the region has no parent and gets
-  its kind's floor priority (managed regions §4; territory DESIGN §8 ladder: districts, then structures). Proposal.
+  for warehouses and shops) for harvest rules and protection. With no district, the region has **no parent** and gets
+  its kind's floor priority (managed regions §4; territory DESIGN §8 ladder: districts, then structures). Confirmed
+  2026-11-11: no parent for now, so **PvP stays allowed** around rural structures (world default), with no town flags
+  inherited.
+- **Structure NPCs are invulnerable in V1** (developer, 2026-11-11): players can fight each other near a structure,
+  but can't damage or kill its workers or shopkeeper. Robbing, raiding and killing carriers come Later with physical
+  transport (#251, #53).
 - No `TERRITORY` region kind. Region entry messages for territory come from the territory feature (#326).
 - `/knk regions repair` handles structures without a district.
 
@@ -572,6 +579,7 @@ V1 has no robbery (D6).
   (PRODUCTION_KINDS.md §4.2).
 - Consumers (shops, workshops, garrisons) use the same rule for collection orders (TOWN_LOGISTICS.md §5).
 - **[Parked]** worker count growing with structure level.
+- Rendered workers are **invulnerable in V1** (§3.4).
 
 ### 7.8 NPC transporters [Later, next follow-up after V1] (rev. 3)
 
@@ -773,7 +781,7 @@ Rev. 1 decisions now superseded:
 
 | # | Question | Outcome (2026-11-05) |
 |---|---|---|
-| D1 | Territory scope now | **V1 requirement (developer, 2026-11-11):** territory is **computed and chunk-cached**, not a WorldGuard region ([territory DESIGN](../territory/DESIGN.md), [#326](https://github.com/PandiO/knk-workspace/issues/326), decision record §13). Production uses a rural structure's `TownId`, the territory lookup and placement rules P-1 to P-3 (§3.4). The field names, P-1 blocking and producing on contested land are proposals. |
+| D1 | Territory scope now | **V1 requirement (developer, 2026-11-11):** territory is **computed and chunk-cached**, not a WorldGuard region ([territory DESIGN](../territory/DESIGN.md), [#326](https://github.com/PandiO/knk-workspace/issues/326), decision record §13-14). A rural structure has `TownId` (district XOR town); placement rules P-1 to P-3 warn by default and admins can make each block; contested structures keep producing; rural regions have no parent (PvP allowed); structure NPCs are invulnerable (§3.4). |
 | D2 | Ownership and payouts (vision §4.5) | Not discussed; recommendation stands: still deferred. Storages and holders are ready for it. Producers stay town/staff-run until the property economy design. |
 | D3 | Capacity weighting | **Replaced** (§4.4): raw units everywhere; container-derived caps = slots × `UnitsPerSlot`; `ItemBlueprint.StorageWeight` default 1; `StackSlots` dropped. |
 | D4 | Output full | **Confirmed:** stall without accruing. Shown on the dashboard. |
