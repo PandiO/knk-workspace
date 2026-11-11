@@ -5,7 +5,7 @@ differs from DESIGN.md, PRODUCTION_KINDS.md, TOWN_LOGISTICS.md or IMPLEMENTATION
 until those documents are revised to rev. 3.
 **Folded in:** 2026-11-05, rev. 3 of all four documents takes in this record. The record stays the source for the
 wording of each decision.
-**Last updated:** 2026-11-05
+**Last updated:** 2026-11-11 (§11 follow-up answers)
 **Parent issue:** KNG-83 (now tracked as a `[KNG-83]` issue in `PandiO/knk-workspace`).
 **Scope of the review:** principles, storage, production structures, transport, NPC transporters, warehouses and
 town logistics, shops, shopkeepers and display stalls, NPC lifecycle.
@@ -362,3 +362,23 @@ carriers; the **NPC platform owns all of this**:
   fertility map, technologies, seasons, staffing, exhaustion, events, neighbour bonuses, upkeep, war disruption,
   per-player weather, ceilings/quotas/exports/emergency modes, clan councils, in-game runtime management, trade,
   pricing, professions/paid work for harvesting.
+
+## 11. Follow-up decisions (2026-11-11)
+
+The developer answered the open questions left by rev. 3 (question round in the rev. 3 session, 2026-11-11). Where an
+answer changes a §1-10 item, it says so.
+
+| # | Question | Decision |
+|---|---|---|
+| F1 | Shops: which blueprint base price | The **midpoint** of `BasePriceMin` and `BasePriceMax`. |
+| F2 | Shops: who receives purchase coins before town treasury accounts | **Town accounts now.** A minimal town account kind ships in V1 for shop income. Changes §5.4 / D-L5 (town treasury was Later). Trade and tax stay Later. |
+| F3 | Shops: value of enchantments on unique items | **A percentage** of the base price for now (§6.3 "value per enchantment"). |
+| F4 | Shops: shop tax modifier vs a later town tax | Direction, not built in V1: the town will tax shops, for example one global shop tax collected each period (a week, to be decided) as a percentage of that period's turnover. Inspiration undecided: Dutch law, US law, a hybrid, or medieval law. Shops then set a **margin** from item base prices, the cost of resources and manufacturing, and taxes, so they still make a profit; supply and demand still influence prices. The V1 per-shop tax modifier stays as the interim stand-in. Issue [#325](https://github.com/PandiO/knk-workspace/issues/325). |
+| F5 | Display stalls: sold-out items | **Greyed out** by default; hiding is an option per shop. |
+| F6 | Shops: what a shop's absent worker lowers | **Processing only** for now. This also drives the need for workers-for-hire and transport-for-hire. Once those exist, **sales** are affected too when a shop has only one NPC and it is out fetching stock. |
+| F7 | Selling to a shop vs a marketplace vendor | **Decide later.** |
+| F8 | Modifier order in the pipeline | **Additions first, then multiplications.** |
+| F9 | Net-positive harvest check | **Use the proposed check:** production lost while the pool refills must be below the town's share of one harvest; the web app warns per rule. |
+| F10 | Town's share of a harvest when Output is full | **Lost to the town** (rejected, stays in `SYS_PRODUCTION`, like a full line); the player's share is still paid. |
+| F11 | Uncollected warehouse reservations | **Expire**, released at the next planner run. The exact model is settled in P9. |
+| F12 | Filing Later items | File the Later logistics rules ([#324](https://github.com/PandiO/knk-workspace/issues/324)) and the shop turnover tax ([#325](https://github.com/PandiO/knk-workspace/issues/325)). Clan council governance and harvest professions/paid work are for a **later stage** than those; not filed yet. |

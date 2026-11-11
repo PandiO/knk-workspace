@@ -13,6 +13,9 @@ This is a human-readable record of capabilities merged into the V3 default branc
   [shops design](specs/shops/DESIGN.md) (shops, shopkeepers, display stalls) and an NPC lifecycle and reliability
   section in the [NPC platform design](specs/npc-platform/DESIGN.md) §6a. New phases P10-P12
   ([#248](https://github.com/PandiO/knk-workspace/issues/248)-[#250](https://github.com/PandiO/knk-workspace/issues/250)) and Later issues [#251](https://github.com/PandiO/knk-workspace/issues/251)-[#257](https://github.com/PandiO/knk-workspace/issues/257). No code.
+  2026-11-11: the developer's answers to the open questions are in the decision record §11 and the docs (shop income
+  to a minimal town account in V1, midpoint base price, enchantments as a percentage); Later issues
+  [#324](https://github.com/PandiO/knk-workspace/issues/324) (logistics rules) and [#325](https://github.com/PandiO/knk-workspace/issues/325) (shop turnover tax).
 
 ## 2026-11-10
 

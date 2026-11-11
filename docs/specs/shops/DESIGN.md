@@ -4,7 +4,7 @@
 ([decision record](../production-storage-transport/DECISIONS_2026-11-05.md) §6-8). Shops, shopkeepers and display
 stalls are **[V1]** of the production, storage and transport feature. Nothing is implemented. Tags: **[V1]**,
 **[Later]**, **[Open]** (as in the production [DESIGN](../production-storage-transport/DESIGN.md) header).
-**Last updated:** 2026-11-05
+**Last updated:** 2026-11-11 (open questions answered, [decision record §11](../production-storage-transport/DECISIONS_2026-11-05.md#11-follow-up-decisions-2026-11-11))
 **Issues:** parent [#22](https://github.com/PandiO/knk-workspace/issues/22) (`[KNG-83]`); phases
 [#248](https://github.com/PandiO/knk-workspace/issues/248) (P10 Shops),
 [#249](https://github.com/PandiO/knk-workspace/issues/249) (P11 Shopkeepers),
@@ -21,6 +21,9 @@ stalls are **[V1]** of the production, storage and transport feature. Nothing is
 **Revision history**
 
 - **Draft (2026-11-05):** first version, from the decision record §6-8.
+- **2026-11-11:** the developer's answers to §11 (decision record §11, F1-F7): midpoint base price, shop income to
+  a town account in V1, enchantments as a percentage, a later turnover tax ([#325](https://github.com/PandiO/knk-workspace/issues/325)), sold-out items greyed
+  out, processing-only worker effect.
 
 ## 1. Purpose and scope
 
@@ -77,8 +80,11 @@ This design covers:
 - A shop has its **own worker**, like a producer (production DESIGN §7.7).
 - The town's planner **reserves** stock at the warehouse when the shop's Merchandise or Input falls to its reorder
   point. The worker **collects** it (TOWN_LOGISTICS §5).
-- While the worker is away, the shop's own output (processing) is lowered. Selling to players continues.
-  Proposed; the decision record says "output or service is lowered" without detail for shops.
+- While the worker is away, the shop's own **processing** output is lowered. Selling to players continues (F6,
+  2026-11-11).
+- **[Later]** once workers-for-hire or transport-for-hire exist, **sales** are affected too when a shop has only one
+  NPC and it is out fetching stock. This is part of why hired workers and carriers matter
+  ([#252](https://github.com/PandiO/knk-workspace/issues/252)).
 - Shop levels set default reorder points and target levels; admins can override them.
 
 ## 3. Buying and selling
@@ -91,8 +97,8 @@ This design covers:
 - **Every purchase requires a confirmation**, whatever the channel: shop menu, display stall quick buy, or any
   later channel.
 - A purchase fails cleanly when stock, coins or inventory space run out. Nothing is taken without the item.
-- Who receives the coins (a town account, a system account, a later owner) follows the currency design. Town accounts
-  are [Later] (TOWN_LOGISTICS D-L5). Until then: a system account. **[Open]**
+- The coins go to the **town's account** (F2, 2026-11-11). A minimal town account kind ships in V1 for this; trade
+  and tax on it stay [Later] ([#124](https://github.com/PandiO/knk-workspace/issues/124)). A later owner (ownership, #56) can change who is paid.
 
 ### 3.2 Players sell [V1]
 
@@ -104,8 +110,8 @@ This design covers:
   that exact item. Example: a player sells an enchanted diamond sword to the weaponsmith; it is resold as that sword.
 - The player is paid the buy-back price (§4) in the same database transaction.
 - Merchandise capacity applies (raw units, production DESIGN §4.4). A full shop refuses the sale.
-- **[Open/Later]** whether selling to a shop should be more or less attractive than selling to a marketplace vendor.
-  The developer is unsure.
+- **[Later]** whether selling to a shop should be more or less attractive than selling to a marketplace vendor:
+  decided later (F7).
 
 ## 4. Interim pricing [V1]
 
@@ -115,17 +121,20 @@ Until the supply-and-demand pricing model (TOWN_LOGISTICS §7, [#120](https://gi
 sell price    = static catalogue price, when an admin set one
               | blueprint base price × shop tax modifier × shop level modifier
 buy-back      = sell price formula × BuyBackPercent             (default 50%)
-unique items  = base price + a value per enchantment, then the same modifiers
+unique items  = base price × (1 + Σ enchantment percentages), then the same modifiers
 ```
 
 - A static catalogue price always wins.
-- **Blueprint base price:** `ItemBlueprint` has `BasePriceMin` and `BasePriceMax` today. Proposed: the midpoint, as in
-  the TOWN_LOGISTICS §7 placeholder. **[Open]**
-- **Shop tax modifier:** a per-shop value in V1. A town-wide tax rule is [Later] (TOWN_LOGISTICS §4). **[Open]**
-  whether the later town tax replaces or multiplies the shop value.
+- **Blueprint base price:** the **midpoint** of `ItemBlueprint.BasePriceMin` and `BasePriceMax` (F1), as in the
+  TOWN_LOGISTICS §7 placeholder.
+- **Shop tax modifier:** a per-shop value in V1, the interim stand-in for a town tax.
 - **Shop level modifier:** the level's price multiplier (§5).
-- **Value per enchantment** for unique items: a value per enchantment and level, set by admins. Detail to design in
-  P10. **[Open]**
+- **Enchantments** on unique items: **a percentage** of the base price (F3). Proposed: a configurable percentage per
+  enchantment level, the same for every enchantment until admins need more detail.
+- **[Later] Turnover tax and margins** ([#325](https://github.com/PandiO/knk-workspace/issues/325)): the town will tax shops, for example one global shop
+  tax collected each period (a week, to be decided) as a percentage of that period's turnover. The inspiration is
+  undecided: Dutch law, US law, a hybrid, or medieval law. Shops then set a margin from item base prices, the cost of
+  resources and manufacturing, and taxes, so they still make a profit. Supply and demand still influence prices.
 
 ## 5. Shop levels [V1]
 
@@ -166,7 +175,7 @@ The number of levels per shop type is free (concept v0.2 had 20 per shop; produc
 - **Selection.** Not every shop can show its whole catalogue:
   1. **admin pins** first;
   2. remaining spots filled by the system: in-stock items and best sellers first;
-  3. sold-out items are hidden or greyed out (admin setting per shop; proposed default: greyed out). **[Open]**
+  3. sold-out items are **greyed out** by default; hiding them is an option per shop (F5).
 - **Right-click** a displayed item → the **shop item information** menu (no purchase).
 - **Shift-right-click** → **quick buy**, **always with a confirmation**.
 
@@ -194,14 +203,18 @@ The number of levels per shop type is free (concept v0.2 had 20 per shop; produc
 - Town treasury accounts and town tax ([#124](https://github.com/PandiO/knk-workspace/issues/124)).
 - Marketplace vendors and how they compare with selling to shops (§3.2).
 
-## 11. Open questions
+## 11. Questions and answers
 
-| # | Question | Proposal |
+Answered by the developer on 2026-11-11 ([decision record §11](../production-storage-transport/DECISIONS_2026-11-05.md#11-follow-up-decisions-2026-11-11)).
+
+| # | Question | Outcome |
 |---|---|---|
-| S-1 | Selling to a shop vs a marketplace vendor: more or less attractive? | Open (developer unsure). |
-| S-2 | Which base price: `BasePriceMin`, `BasePriceMax` or the midpoint? | Midpoint. |
-| S-3 | Who receives purchase coins before town accounts exist? | A system account. |
-| S-4 | Value per enchantment for unique items | Admin table per enchantment and level. |
-| S-5 | Sold-out items on display stalls | Greyed out by default, hidden as an option. |
-| S-6 | What a shop's absent worker lowers | Processing output only; sales go on. |
-| S-7 | Shop tax modifier vs the later town tax rule | Keep the shop value; the town tax multiplies it. |
+| S-1 | Selling to a shop vs a marketplace vendor: more or less attractive? | **Decide later** (F7). |
+| S-2 | Which base price? | **Midpoint** of `BasePriceMin` and `BasePriceMax` (F1). |
+| S-3 | Who receives purchase coins? | **The town's account**; a minimal town account kind in V1 (F2). |
+| S-4 | Value of enchantments on unique items | **A percentage** of the base price (F3). |
+| S-5 | Sold-out items on display stalls | **Greyed out** by default, hidden as an option (F5). |
+| S-6 | What a shop's absent worker lowers | **Processing only** for now; sales too once hired workers exist (F6). |
+| S-7 | Shop tax modifier vs a later town tax | Later turnover tax and margin pricing, [#325](https://github.com/PandiO/knk-workspace/issues/325) (F4). The per-shop modifier stays in V1. |
+
+Still open: the turnover tax design (#325) and the shop vs vendor question (S-1).

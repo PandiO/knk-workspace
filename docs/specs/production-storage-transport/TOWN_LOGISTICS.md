@@ -7,7 +7,7 @@ catalogue in §4 belongs to the concept; rev. 3 splits it into a **V1 subset** a
 
 Most of the developer's **pricing** work (Word documents and iPhone notes) is **not in the repository**. It must be
 imported before §7 can be completed; see D-L6.
-**Last updated:** 2026-11-05
+**Last updated:** 2026-11-11 (open questions answered, [decision record §11](DECISIONS_2026-11-05.md#11-follow-up-decisions-2026-11-11))
 **Issue:** [PandiO/knk-workspace#22](https://github.com/PandiO/knk-workspace/issues/22) (`[KNG-83]`, parent); phases
 in [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md).
 
@@ -23,6 +23,9 @@ in [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md).
     in-game management are [Later] (§4.1).
   - Warehouse throughput is [Later] (§5.2).
   - Player sales now happen through shops in V1 (D-L7, [shops DESIGN](../shops/DESIGN.md)).
+- **2026-11-11 ([decision record §11](DECISIONS_2026-11-05.md#11-follow-up-decisions-2026-11-11)):** a minimal town account kind moves into V1 for shop income (D-L5);
+  reservations expire at the next planner run; the Later rules ([#324](https://github.com/PandiO/knk-workspace/issues/324)) and a shop turnover tax
+  ([#325](https://github.com/PandiO/knk-workspace/issues/325)) have issues.
 
 **Sources found in the repo:**
 
@@ -115,7 +118,7 @@ All amounts are **raw units** (DESIGN §4.4). Days of cover convert to raw units
 | **Rebalance** | Later | Keep warehouses within a band of each other for a blueprint. | min share per warehouse, trigger gap | |
 | **Export / import** | Later | What may leave or enter, how much per period, minimum reserve before export, embargoes (power plays). | allow/deny lists, caps, partner towns | "No iron exports to Hostile Town." |
 | **Emergency mode** | Later | A policy switch that overrides the others while active. | mode | **Siege:** exports frozen, military priority up. **Famine:** food reserves doubled. |
-| **Tax / tariff** (needs town accounts) | Later | A percentage on trade and sales into the town treasury. | % per category | Concept L236 "tax rate". |
+| **Tax / tariff** (needs town accounts; [#324](https://github.com/PandiO/knk-workspace/issues/324), shop turnover tax [#325](https://github.com/PandiO/knk-workspace/issues/325)) | Later | A percentage on trade and sales into the town treasury. | % per category | Concept L236 "tax rate". |
 
 Service areas default to the nearest warehouse by road; admins can override the mapping.
 
@@ -123,7 +126,7 @@ Service areas default to the nearest warehouse by road; admins can override the 
 
 - **[V1] Default policy templates** per town size and specialization (concept L144: "some towns are iron/wood-rich,
   others fish/wheat-rich"), **edited by admins in the web app** (D-L3, confirmed).
-- **[Later] Ruled town:** the clan council proposes changes, which take effect at the weekly council (concept L236).
+- **[Later, later stage] Ruled town:** the clan council proposes changes, which take effect at the weekly council (concept L236).
   Trade agreements can change at any time.
 - **[Later]** runtime management (distribution rules, reserves, taxes) also becomes available **in game**
   ([#256](https://github.com/PandiO/knk-workspace/issues/256); town roles and visibility in
@@ -158,15 +161,15 @@ Producers' automatic orders (DESIGN §7.4) bring stock **in**. Consumers' collec
 the same transport lifecycle. In V1 both are simulated; later they can be carried, escorted, ambushed and robbed like
 any transport (note 17).
 
-[Later] in the planner: allocation quotas inside a priority class, ceilings and push of surplus, rebalance orders,
-trade orders under agreements (§6), emergency modes.
+[Later] in the planner ([#324](https://github.com/PandiO/knk-workspace/issues/324)): allocation quotas inside a priority class, ceilings and push of
+surplus, rebalance orders, trade orders under agreements (§6), emergency modes.
 
 ### 5.1 Reservations
 
 A reservation is a claim on warehouse stock for one consumer storage. Proposed shape: warehouse storage, consumer
 storage, blueprint, amount, created and expiry time, the collection order. Reserved stock can't be reserved twice or
-exported. A reservation that isn't collected before its expiry is released at the next planner run. Proposed; the
-exact model is decided in P9.
+exported. A reservation that isn't collected before its expiry is released at the next planner run (F11, confirmed
+2026-11-11). The exact model is decided in P9.
 
 ### 5.2 Warehouse throughput [Later]
 
@@ -245,6 +248,6 @@ Outcomes of the 2026-11-05 review ([decision record](DECISIONS_2026-11-05.md) §
 | D-L2 | Planner interval | **Confirmed:** 10 minutes per town, plus on-demand dry runs. |
 | D-L3 | Default policy for unmanaged towns | **Confirmed:** a template per town size and specialization, edited by admins in the web app. |
 | D-L4 | Who bears trade losses | [Later], with trade. Recommendation stands: the sender until delivery (CIF-like). Insurance or escort contracts can shift it later. |
-| D-L5 | Town treasury | [Later], with trade and tax. Recommendation stands: a new currency `AccountKind.Town`, designed with the currency owner. Also needed by the town carrier pool for hire. |
+| D-L5 | Town treasury | **Changed 2026-11-11 (F2):** a minimal currency `AccountKind.Town` ships in **V1** so shop income goes to the town. Designed with the currency owner. Trade, tax and spending from it (for example the carrier pool for hire) stay [Later] ([#124](https://github.com/PandiO/knk-workspace/issues/124)). |
 | D-L6 | Pricing model | **Still required:** import the developer's pricing documents (Word files, iPhone notes) into `docs/specs/` first, then replace §7's placeholder (#120). |
 | D-L7 | Player sales to warehouses (concept L168) | **Player sales now happen through shops in V1** ([shops DESIGN](../shops/DESIGN.md)). Selling to a warehouse terminal is not part of V1. |

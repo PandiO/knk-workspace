@@ -5,7 +5,7 @@
 [DESIGN §14](DESIGN.md#14-decisions), [PRODUCTION_KINDS §9](PRODUCTION_KINDS.md#9-decisions) and
 [TOWN_LOGISTICS §8](TOWN_LOGISTICS.md#8-decisions); the few still open are listed there. Every item is marked
 **V1** or **Later**. The production structures work and the garrison/guard NPC work ship in the **same test phase**.
-**Last updated:** 2026-11-05
+**Last updated:** 2026-11-11 (open questions answered, [decision record §11](DECISIONS_2026-11-05.md#11-follow-up-decisions-2026-11-11); issues #324, #325)
 **Design:** [DESIGN.md](DESIGN.md), [PRODUCTION_KINDS.md](PRODUCTION_KINDS.md), [TOWN_LOGISTICS.md](TOWN_LOGISTICS.md),
 [shops DESIGN](../shops/DESIGN.md), [NPC platform](../npc-platform/DESIGN.md) (lifecycle).
 **Evidence:** [V2 scan](../../reports/2026-10-09-v2-production-storage-transport-scan.md).
@@ -23,6 +23,8 @@ knk-workspace branch of that name was merged into `main` and deleted on 2026-10-
 - **Rev. 3 (2026-11-05, [decision record](DECISIONS_2026-11-05.md) §10):** decision record items folded into P1, P3,
   P5, P6, P7, P8 and P9; new phases P10 Shops, P11 Shopkeepers and P12 Display stalls; NPC lifecycle requirements on
   the NPC platform; every item marked V1 or Later; new Later issues; smoke test updated.
+- **2026-11-11 ([decision record §11](DECISIONS_2026-11-05.md#11-follow-up-decisions-2026-11-11)):** P10 gains a minimal town account kind and the settled pricing
+  details; P9 releases expired reservations; Later issues #324 and #325.
 
 ## Rules for every phase
 
@@ -272,13 +274,14 @@ The developer reviewed TOWN_LOGISTICS §4 on 2026-11-05; the V1 subset is below.
 - default policy templates, edited by admins;
 - no warehouse workers.
 
-**Later:** ceilings, allocation quotas, export/import and embargoes, emergency modes, rebalance, tax/tariff; clan
-council governance; in-game runtime management ([#256](https://github.com/PandiO/knk-workspace/issues/256)); warehouse throughput ([#253](https://github.com/PandiO/knk-workspace/issues/253)).
+**Later:** ceilings, allocation quotas, export/import and embargoes, emergency modes, rebalance, tax/tariff
+([#324](https://github.com/PandiO/knk-workspace/issues/324)); clan council governance (later stage); in-game runtime management ([#256](https://github.com/PandiO/knk-workspace/issues/256)); warehouse throughput ([#253](https://github.com/PandiO/knk-workspace/issues/253)).
 
 **Web app:** policy and rule editor, planner dry-run view, town supply view with reservations.
 
 **Tests:** reserves never breached; a reservation can't be taken twice; priority under scarcity; collection by the
-consumer's worker lowers its output while away; expired reservations are released; explanation content.
+consumer's worker lowers its output while away; expired reservations are released at the next run; explanation
+content.
 
 ## P10 — Shops · [#248](https://github.com/PandiO/knk-workspace/issues/248)
 
@@ -290,9 +293,12 @@ consumer's worker lowers its output while away; expired reservations are release
    - `ShopCatalogueEntry` (blueprint or item instance, static price, admin pin);
    - shop levels on the production level pattern (processing speed, yield, input cost, price multiplier, storage
      caps), with the same admin UI;
-   - buying: a currency transaction and a stock transaction in one database transaction; **every purchase
-     confirmed**;
-   - interim pricing: a static price wins; otherwise base price × shop tax modifier × shop level modifier.
+   - **minimal town account kind** (`AccountKind.Town`) so shop income goes to the town (decision 2026-11-11; trade,
+     tax and spending stay in [#124](https://github.com/PandiO/knk-workspace/issues/124));
+   - buying: a currency transaction (player → town account) and a stock transaction in one database transaction;
+     **every purchase confirmed**;
+   - interim pricing: a static price wins; otherwise base price (midpoint of `BasePriceMin`/`BasePriceMax`) × shop
+     tax modifier × shop level modifier; enchantments on unique items add a percentage of the base price.
 2. **Then, in the same update:**
    - **restocking** from the warehouse by the shop's own worker (reserve and collect, needs P9);
    - **processing** lines (flour → bread) on the P3 engine;
@@ -303,12 +309,13 @@ consumer's worker lowers its output while away; expired reservations are release
 
 **Web app:** shop CRUD, catalogue editor, levels, sales ledger.
 
-**Tests:** a purchase is atomic (coins and stock together); confirmation required; a static price wins; formula
+**Tests:** a purchase is atomic (coins and stock together, coins to the town account); confirmation required; a static price wins; formula
 price; 50% buy-back; refused categories; a sold enchanted item comes back on sale with its enchantments; restock and
 processing keep the ledger reconciled.
 
-**Later:** real pricing ([#120](https://github.com/PandiO/knk-workspace/issues/120)). **Open:** whether selling to a shop should be more or less attractive than
-selling to a marketplace vendor.
+**Later:** real pricing ([#120](https://github.com/PandiO/knk-workspace/issues/120)); a town turnover tax on shops with shop margins ([#325](https://github.com/PandiO/knk-workspace/issues/325)); sales
+slowed while a shop's only NPC is out, once hired workers exist. **Decided later:** whether selling to a shop should
+be more or less attractive than selling to a marketplace vendor.
 
 ## P11 — Shopkeepers · [#249](https://github.com/PandiO/knk-workspace/issues/249)
 
@@ -331,7 +338,7 @@ greeting cooldown; the menu opens for the right shop.
 - `ShopDisplaySpot`, registered explicitly (like containers; never scanned).
 - Paper item display entities with a floating price label, non-persistent.
 - Selection: admin pins first, then the system fills the rest (in stock and best sellers first); sold-out items are
-  hidden or greyed out.
+  greyed out by default, hidden as an option per shop.
 - Right-click → shop item information menu; shift-right-click → quick buy with a confirmation.
 
 **Tests:** spot selection order; sold-out handling; no duplicate display entities after reloads; quick buy always
@@ -366,8 +373,10 @@ Designed for in V1 (fields, extension points), not built.
 | Inter-town trade and town treasury accounts | [#124](https://github.com/PandiO/knk-workspace/issues/124) (`[KNG-100]`) |
 | Pricing (needs the developer's pricing documents first) | [#120](https://github.com/PandiO/knk-workspace/issues/120) (`[KNG-101]`) |
 | Backed container sync for housing | [#113](https://github.com/PandiO/knk-workspace/issues/113) (`[KNG-102]`) |
-| Ceilings, quotas, export/import, emergency modes, rebalance, tax/tariff; clan council governance | Later part of [#127](https://github.com/PandiO/knk-workspace/issues/127) (`[KNG-98]`); no separate issue yet |
-| Professions, paid work and quests for harvesting; roleplay theft mode | no issue yet |
+| Ceilings, quotas, export/import, emergency modes, rebalance, tax/tariff | [#324](https://github.com/PandiO/knk-workspace/issues/324) |
+| Town turnover tax on shops and shop margin pricing | [#325](https://github.com/PandiO/knk-workspace/issues/325) |
+| Clan council governance | later stage than #324/#325; no issue yet (developer 2026-11-11) |
+| Professions, paid work and quests for harvesting; roleplay theft mode | later stage than #324/#325; no issue yet (developer 2026-11-11) |
 | Processing chains beyond V1 shops, ownership and payouts | [#56](https://github.com/PandiO/knk-workspace/issues/56) (`[KNG-91]`; its shop part moved to P10-P12) |
 
 ## Smoke test outline (after P5, P6, P7 and P10-P12)

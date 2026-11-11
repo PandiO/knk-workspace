@@ -3,7 +3,7 @@
 **Status:** Draft (rev. 3 companion to [DESIGN.md](DESIGN.md)). It records the developer's notes 7, 8, 11, 13 and 18
 of 2026-10-09 and the voice design review of 2026-11-05 ([decision record](DECISIONS_2026-11-05.md)). §9 lists what is
 settled and what is still open. Nothing is implemented. Tags: **[V1]**, **[Later]**, **[Parked]** (DESIGN header).
-**Last updated:** 2026-11-05
+**Last updated:** 2026-11-11 (open questions answered, [decision record §11](DECISIONS_2026-11-05.md#11-follow-up-decisions-2026-11-11))
 **Issue:** [PandiO/knk-workspace#22](https://github.com/PandiO/knk-workspace/issues/22) (`[KNG-83]`, parent); phases
 in [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md).
 **Related:** [KNG-48](https://linear.app/kngpandi/issue/KNG-48) (block-break in resource regions),
@@ -22,6 +22,9 @@ in [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md).
   - Level effects add cycle speed, `UnitsPerSlot` and an upkeep-reduction field without effect (§5).
   - Harvesting counts as **working for the town**: an automatic worker's share, and net-positive pool math (§6).
   - A [Later] list of modifier sources and harvesting extensions (§10).
+- **2026-11-11 ([decision record §11](DECISIONS_2026-11-05.md#11-follow-up-decisions-2026-11-11)):** modifier
+  order (additions, then multiplications), the net-positive harvest check, and a full Output storage on a harvest are
+  confirmed.
 
 ## 1. Purpose
 
@@ -173,7 +176,7 @@ Everything else is a **modifier**:
 | Source | which modifier source made it (level, weather, …) |
 
 - Each cycle collects every modifier whose scope, target and window apply. It applies the additions and the
-  multiplications in a fixed, documented order. Proposed: additions to the base first, then multiplications.
+  multiplications in a fixed order: **additions to the base first, then multiplications** (F8, 2026-11-11).
 - The `ProductionCycleRecord` lists **each** modifier with its source, its effect and its value. This is the "why
   did it produce 7" trace.
 - New factors are new modifier **sources**. The engine does not change.
@@ -321,7 +324,7 @@ service (§7). Each harvest's drops are **split at once**:
 
 Nothing has to be handed back, so the split can't be dodged. Fractions accrue per player and rule, like line accrual
 (§4.3). If the Output storage is full, the town's share is rejected and stays in `SYS_PRODUCTION`, as a full line
-does; the player's share is still paid. Proposed; to confirm with the developer.
+does; the player's share is still paid (F10, confirmed 2026-11-11).
 
 ### 6.3 Impact on the structure: the shared ResourcePool
 
@@ -340,8 +343,8 @@ So heavy player harvesting visibly slows the structure, recovers over time, and 
 floor of 0.5 stands (P-D6).
 
 **The town gains net output (rev. 3).** A harvest must drain the pool by less than it adds to stock, so active workers
-raise the structure's total output. The balance check per `HarvestRule` (proposed): the production the structure
-loses through the lower pool factor, until regeneration refills it, must be smaller than the town's share of one
+raise the structure's total output. The balance check per `HarvestRule` (confirmed 2026-11-11, F9): the production
+the structure loses through the lower pool factor, until regeneration refills it, must be smaller than the town's share of one
 harvest.
 
 ```
@@ -461,12 +464,13 @@ five area models (with the exclusive vs shared split) are confirmed.
 | P-D9 | Byproducts | **Confirmed:** deterministic shares, with optional ±10% per-cycle variation per kind. |
 | P-D10 | Hunters and spawning | **Confirmed:** out of V1. Designed with the mob spawning and bandit work. |
 
+**Settled 2026-11-11** ([decision record §11](DECISIONS_2026-11-05.md#11-follow-up-decisions-2026-11-11)): modifier order (additions, then multiplications; §4.2), the town's share of a
+harvest when Output is full (§6.2), and the net-positive check (§6.3).
+
 **Still open:**
 
-- Modifier order inside the pipeline (proposed: additions first, then multiplications; §4.2).
-- What happens to the town's share of a harvest when the Output storage is full (proposed in §6.2).
-- The net-positive check formula (proposed in §6.3).
 - [Parked] worker count growing with level (§4.5).
+- Professions, paid work and quests for harvesting: a later stage than the logistics rules; no issue yet (F12).
 
 ## 10. Later (rev. 3)
 

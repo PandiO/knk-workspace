@@ -4,7 +4,7 @@
 [DECISIONS_2026-11-05.md](DECISIONS_2026-11-05.md). Rev. 2 took in the 18 notes of 2026-10-09. §14 lists what is
 settled and what is still open. Nothing is implemented. Items are tagged **[V1]** (first version), **[Later]** (in the
 concept, a future update) or **[Parked]** (direction agreed, details open).
-**Last updated:** 2026-11-05
+**Last updated:** 2026-11-11 (open questions answered, [decision record §11](DECISIONS_2026-11-05.md#11-follow-up-decisions-2026-11-11))
 **Companion documents:**
 - [PRODUCTION_KINDS.md](PRODUCTION_KINDS.md): farms, loggers, quarries, mines, fisheries, flower farms and florists,
   animal farms, hunters. Covers yield areas, surveys, levels, player harvesting and block regeneration.
@@ -58,6 +58,9 @@ implementation plan.
     full; NPC transporters with virtual movement designed as the next follow-up; town carrier pool for hire later (§7).
   - Shops, shopkeepers and display stalls are in V1, with their own [design](../shops/DESIGN.md) (§10).
   - The production structures work and the garrison/guard NPC work ship in the same test phase.
+- **2026-11-11 ([decision record §11](DECISIONS_2026-11-05.md#11-follow-up-decisions-2026-11-11)):** answers to the open questions: shop income goes to a town account
+  in V1, midpoint base price, enchantments as a percentage, a later shop turnover tax
+  ([#325](https://github.com/PandiO/knk-workspace/issues/325)), and the other items listed in §14.
 
 ## 1. Role and scope
 
@@ -600,8 +603,10 @@ Shops are **[V1]** since rev. 3 (they were deferred to KNG-91 before). Full desi
   sawmill. Inputs come from an `Input` storage that the shop's worker refills by collecting reservations
   (TOWN_LOGISTICS.md §5).
 - **Interim pricing** until the pricing model: a static catalogue price wins; otherwise sell price = blueprint base
-  price × shop tax modifier × shop level modifier; buy-back from players = the same × a buy-back percentage
-  (default 50%).
+  price (midpoint of `BasePriceMin`/`BasePriceMax`) × shop tax modifier × shop level modifier; buy-back from players
+  = the same × a buy-back percentage (default 50%). Enchantments add a percentage of the base price. Shop income goes
+  to the town's account, a minimal town account kind in V1 (2026-11-11).
+- **[Later]** a town turnover tax on shops, with shops setting their own margins ([#325](https://github.com/PandiO/knk-workspace/issues/325)).
 - **Shop level** sets processing speed (cycle length multiplier), yield, input cost per cycle, the price multiplier
   and storage caps. The level-definition pattern and admin UI are the same as for production kinds
   (PRODUCTION_KINDS.md §5).
@@ -729,10 +734,16 @@ Rev. 1 decisions now superseded:
 | D10 | Ledger retention | Not discussed; recommendation stands: keep all moves. Roll `Production` moves up per line per day after 30 days. |
 | D11 | Vanilla shadow blueprints (§8) | Not discussed; recommendation stands: generate automatically for every obtainable material, in an "Uncurated" category. Admins curate later. |
 
+**Settled 2026-11-11** ([decision record §11](DECISIONS_2026-11-05.md#11-follow-up-decisions-2026-11-11) F1-F12): the shop pricing details, shop income to a town account in V1,
+display stalls, the shop worker effect, the modifier order, the harvest rules and reservation expiry. See the
+companion documents and the shops design §11.
+
 **Still open:**
 
 - Exact activation radius for spawn-on-demand NPCs ([NPC platform](../npc-platform/DESIGN.md)).
 - [Parked] producer worker count growing with structure level (§7.7).
-- Whether selling to a shop should be more or less attractive than selling to a marketplace vendor (shops DESIGN).
+- Whether selling to a shop should be more or less attractive than selling to a marketplace vendor: decided later
+  (shops DESIGN).
+- The shop turnover tax design ([#325](https://github.com/PandiO/knk-workspace/issues/325)).
 
 Production- and logistics-specific decisions are in the companion documents.
