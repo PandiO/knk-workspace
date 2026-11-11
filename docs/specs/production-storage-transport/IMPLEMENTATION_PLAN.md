@@ -97,22 +97,31 @@ All **V1**.
 
 ## P2 — World: Territory, Warehouse, ProductionStructure · [#91](https://github.com/PandiO/knk-workspace/issues/91) (`[KNG-85]`)
 
-**Needs:** DESIGN D1 (recommendation stands) and D5 (confirmed 2026-11-05). All **V1**.
+**Needs:** DESIGN D1 (Territory is a V1 requirement, 2026-11-11, DESIGN §3.4) and D5 (confirmed 2026-11-05). All
+**V1**.
 
 **API**
 
-- `Territory : Domain`.
-- `Structure.TerritoryId` with the District-xor-Territory rule; an effective-town resolver.
+- `Territory : Domain` (DESIGN §3.4): required region and `ClaimedByTownId`, optional `ClimateZoneId`; migration.
+- `Structure.TerritoryId` with the District-xor-Territory rule; `DistrictId` and `StreetId` nullable; an
+  effective-town resolver.
+- **Region rules** T1-T6 in the seed forms (Territory, Warehouse, ProductionStructure, later Shop) and a new
+  `RegionNoOverlap` validation type (T3, T4); the same rules checked on save in the API.
 - `Warehouse : Structure`.
 - `ProductionStructure : Structure` (fields per DESIGN §3.3, including `WorkersTotal`; `ProductionKindId` nullable
   until P3 seeds kinds).
 - Default storages on create.
 - Audit and fix every `Structure.District` dereference; list the call sites in the PR.
 
-**Web app:** FormConfigs with WorldTask capture.
+**Web app:** FormConfigs with WorldTask capture; the rule builder offers `RegionNoOverlap`.
 
-**Plugin:** managed-region kinds for Territory, ProductionStructure and Warehouse; tests in
-`ManagedRegionPolicyTest`.
+**Plugin:** managed-region kinds `TERRITORY` (parent: the claiming town), ProductionStructure (`RESOURCE_PRODUCTION`)
+and Warehouse; `RegionNoOverlap` in `WgRegionIdTaskHandler`; territories in `RegionDomainResolver`, region entry
+messages and `/knk regions repair`; tests in `ManagedRegionPolicyTest`.
+
+**Tests:** District-xor-Territory; effective town for both; each region rule passes and fails as specified (block vs
+warn); overlap with a territory or town is refused; structures without a district or street through navigation,
+discovery and domain access.
 
 ## P3 — Production engine · [#86](https://github.com/PandiO/knk-workspace/issues/86) (`[KNG-86]`)
 

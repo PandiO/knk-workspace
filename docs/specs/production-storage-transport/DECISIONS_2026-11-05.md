@@ -5,7 +5,7 @@ differs from DESIGN.md, PRODUCTION_KINDS.md, TOWN_LOGISTICS.md or IMPLEMENTATION
 until those documents are revised to rev. 3.
 **Folded in:** 2026-11-05, rev. 3 of all four documents takes in this record. The record stays the source for the
 wording of each decision.
-**Last updated:** 2026-11-11 (§11 follow-up answers)
+**Last updated:** 2026-11-11 (§11 follow-up answers; §12 Territory)
 **Parent issue:** KNG-83 (now tracked as a `[KNG-83]` issue in `PandiO/knk-workspace`).
 **Scope of the review:** principles, storage, production structures, transport, NPC transporters, warehouses and
 town logistics, shops, shopkeepers and display stalls, NPC lifecycle.
@@ -382,3 +382,13 @@ answer changes a §1-10 item, it says so.
 | F10 | Town's share of a harvest when Output is full | **Lost to the town** (rejected, stays in `SYS_PRODUCTION`, like a full line); the player's share is still paid. |
 | F11 | Uncollected warehouse reservations | **Expire**, released at the next planner run. The exact model is settled in P9. |
 | F12 | Filing Later items | File the Later logistics rules ([#324](https://github.com/PandiO/knk-workspace/issues/324)) and the shop turnover tax ([#325](https://github.com/PandiO/knk-workspace/issues/325)). Clan council governance and harvest professions/paid work are for a **later stage** than those; not filed yet. |
+
+## 12. Territory as a V1 requirement (2026-11-11)
+
+Developer request, 2026-11-11: **Territory is required for V1.** Production structures mostly stand in the rural
+parts of towns, they must still be connected to a town, and their regions need the same field validation as
+districts and gate structures. Replaces the "minimal, optional region" recommendation of DESIGN D1.
+
+Folded into DESIGN §3.4 and IMPLEMENTATION_PLAN P2. Proposals there still to confirm: a required region and town
+claim, which region rules block or warn (T1-T7), and no overlap with other territories or towns (a new
+`RegionNoOverlap` rule type).

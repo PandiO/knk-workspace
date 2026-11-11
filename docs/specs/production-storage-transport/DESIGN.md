@@ -61,6 +61,7 @@ implementation plan.
 - **2026-11-11 ([decision record §11](DECISIONS_2026-11-05.md#11-follow-up-decisions-2026-11-11)):** answers to the open questions: shop income goes to a town account
   in V1, midpoint base price, enchantments as a percentage, a later shop turnover tax
   ([#325](https://github.com/PandiO/knk-workspace/issues/325)), and the other items listed in §14.
+- **2026-11-11:** Territory is a V1 requirement with region rules T1-T7 (§3.4, decision record §12).
 
 ## 1. Role and scope
 
@@ -179,13 +180,12 @@ inside your own transaction").
 
 ### 3.3 World entities
 
-- **`Territory : Domain`** (new; vision §2.3; note 14). Fields:
-  - `ClaimedByTownId` (nullable; in this feature, a producer's territory must be claimed);
-  - an optional WorldGuard region.
-  - `Province` comes later. Vision fields `controlledBy`, `accessConditions` and `resourceYield` are added when
-    their features need them.
+- **`Territory : Domain`** [V1] (new; vision §2.3; note 14; developer requirement 2026-11-11). The rural land of a
+  town: fields, forests and mines outside the town's settled footprint. Most production structures stand in one.
+  Details, region rules and what is Later: §3.4.
 - **`Structure`** gets `TerritoryId` (nullable). Exactly one of `DistrictId` and `TerritoryId` is set: check
-  constraint plus validator. **Effective town** = `District.Town ?? Territory.ClaimedByTown`. This replaces rev. 1's
+  constraint plus validator. `DistrictId` and `StreetId` become nullable (today both are required); a structure in a
+  territory has no street. **Effective town** = `District.Town ?? Territory.ClaimedByTown`. This replaces rev. 1's
   `RulingTownId`.
 - **`Warehouse : Structure`**: `AcceptsDeliveries`, `Priority`, and a default storage. It is a town's hub; see
   TOWN_LOGISTICS.md.
@@ -201,6 +201,64 @@ inside your own transaction").
   - One subtype for all kinds; the **kind is data** (PRODUCTION_KINDS.md §2).
 - **`Shop : Structure`** [V1, rev. 3]: Input and Merchandise storages, a shop level, its own worker, a stored
   shopkeeper spawn location and registered display spots. See [shops DESIGN](../shops/DESIGN.md) and §10.
+
+### 3.4 Territory and region rules [V1] (2026-11-11)
+
+The developer asked for Territory as a V1 requirement of this feature: production structures mostly stand in rural
+land, they still belong to a town, and their regions get the same field validation as districts and gate structures.
+
+**Sources found** (2026-11-11): vision §2.3 (the Territory entity and its scoping), vision §2.1-2.2 (every part of
+the world belongs to a domain; district containment restored in V3), [#91](https://github.com/PandiO/knk-workspace/issues/91) (`[KNG-85]`, P2), the
+`RegionContainment` and `LocationInsideRegion` form rules (knk-web-api `Services/ValidationMethods/`, seeds
+`District.json` and `GateStructure.json`), [managed regions](../../architecture/managed-worldguard-regions.md) §3-4,
+and [#142](https://github.com/PandiO/knk-workspace/issues/142) (`[KNG-261]`, sub-region placement checks). The API has no Territory or Province today, and
+the FEATURE_REGISTER row "Kingdom/province hierarchy and wilderness Territory" is still `vision`.
+
+**Fields (V1 skeleton, vision §2.3 "cheap and worth building early"):**
+
+| Field | V1 | Note |
+|---|---|---|
+| `Name`, `Description`, `Location` | yes | from `Domain`, like every domain |
+| `WgRegionId`, `WorldName` | **required** (proposal) | The vision made the region optional (nearest-claim geometry). Region rules and in-game tracking need one, so V1 requires it. |
+| `ClaimedByTownId` | **required** (proposal) | Every V1 territory belongs to a town, so every rural structure has an effective town. Unclaimed, province-owned land comes with `Province`. |
+| `AllowEntry`, `AllowExit` | yes | from `Domain`; the full `accessConditions` model is Later |
+| `ProvinceId` | Later | no Province entity yet |
+| `controlledBy`, `resourceYield`, `ambientEncounterProfile` | Later | clan control (#236, #246), the fertility map (#254), bandits |
+| `ClimateZoneId` | V1 | optional; overrides the town's climate zone (PRODUCTION_KINDS §4.4) |
+
+**Region rules** (form validation rules on the existing rule engine; "warn" = the admin sees it and can still save,
+like today's district and gate rules; "block" = the save is refused). Proposals, to confirm:
+
+| # | Rule | Type | Level |
+|---|---|---|---|
+| T1 | A structure in a territory (production structure, warehouse, shop) has its region inside the territory's region | `RegionContainment`, dependency `Territory.WgRegionId`, full containment | block |
+| T2 | A structure in a district has its region inside the district's region (the gate rule, applied to the new structure forms; the generic `Structure` form has no such rule today) | `RegionContainment`, dependency `District.WgRegionId`, full containment | block |
+| T3 | A territory's region doesn't overlap another territory's region | **new** `RegionNoOverlap` | block |
+| T4 | A territory's region doesn't overlap any town region (towns keep their settled footprint, vision §2.3) | **new** `RegionNoOverlap` | block |
+| T5 | A territory's `Location` is inside its region | `LocationInsideRegion` (as the town spawn rule) | block |
+| T6 | A production area region or radius (PRODUCTION_KINDS §3.1) stays inside its structure's territory or district | `RegionContainment` / plugin check | warn (a logger's shared radius may reach a little further) |
+| T7 | A territory is near its claiming town (for example within a configurable distance of the town region) | **new**, like the "touches" check in #142 | warn |
+
+- `RegionNoOverlap` is a new validation type: the API registry, the web-app rule builder and the plugin's
+  `WgRegionIdTaskHandler` (it already checks containment). Use the domain's region union when it has sub-regions,
+  as containment does (KNG-257).
+- The same rules run on the server when a domain is saved through the API, so a request outside the form can't
+  skip them (proposal; today the rules run in the form flow).
+
+**Connection to the town:** `ClaimedByTownId` sets ownership; the road connection (§7.6) sets transport. An
+unconnected territory producer still produces until full (D5).
+
+**Plugin:**
+
+- a managed region kind `TERRITORY`, floor priority 15 (between town 10 and district 20). Its parent is the claiming
+  town's region, so town-wide flags apply in the territory too (proposal; WorldGuard parents don't need geometric
+  containment). Structures in a territory get the territory region as parent.
+- `RegionDomainResolver` and the region entry tracking know territories, so "you enter Blackwood Territory (Cinix)"
+  works like districts.
+- `/knk regions repair` reads territories.
+
+**Audit:** every `Structure.District` and `Structure.Street` dereference (navigation, discovery, managed regions,
+domain access, teleport, siege) handles a structure without a district (#91).
 
 ## 4. Stock model
 
@@ -722,7 +780,7 @@ Rev. 1 decisions now superseded:
 
 | # | Question | Outcome (2026-11-05) |
 |---|---|---|
-| D1 | Territory scope now | Not discussed; recommendation stands: a minimal `Territory : Domain` with `ClaimedByTownId` and an optional region. Province, controlledBy, accessConditions and resourceYield come later. |
+| D1 | Territory scope now | **V1 requirement (developer, 2026-11-11):** `Territory : Domain` with a required region and town claim, region rules T1-T7 (§3.4). Province, controlledBy, accessConditions and resourceYield come later. Required region and claim, levels and T3/T4 are proposals to confirm. |
 | D2 | Ownership and payouts (vision §4.5) | Not discussed; recommendation stands: still deferred. Storages and holders are ready for it. Producers stay town/staff-run until the property economy design. |
 | D3 | Capacity weighting | **Replaced** (§4.4): raw units everywhere; container-derived caps = slots × `UnitsPerSlot`; `ItemBlueprint.StorageWeight` default 1; `StackSlots` dropped. |
 | D4 | Output full | **Confirmed:** stall without accruing. Shown on the dashboard. |
