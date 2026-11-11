@@ -49,7 +49,8 @@ gap here. Open `documentation` issues on 2026-11-10:
 | [#303](https://github.com/PandiO/knk-workspace/issues/303), [#304](https://github.com/PandiO/knk-workspace/issues/304), [#305](https://github.com/PandiO/knk-workspace/issues/305) | deployment log, doc moves, placeholders | process | no | after the run (#303 would help record this deploy) |
 
 Minimum before the deploy (proposal): #295, #294, #297, #302 (enchantments + menu item part), and #298 if the
-navigation block stays. The gaps accepted for #296, #299–#301 need your confirmation (D17).
+navigation block stays. **Accepted by the developer 2026-11-10:** the gaps for #296, #299, #300 and #301, for now; they
+should be resolved soon (D17).
 
 **Changelog:** the entries for #201/#202, #211, #221, #222 and #223 (merged 2026-11-02 to 2026-11-05, before the
 docs rules of #292) were added on 2026-11-10, with their admin steps. The briefing's "what changed since run 1" list
