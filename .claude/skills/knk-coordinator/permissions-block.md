@@ -7,8 +7,9 @@ the link repeats the block verbatim in their prompts.
 Route (developer decision 2026-11-12): variant A, a link started with `create_session`, is the preferred route for
 every link. The link session attaches the other knk repositories with `add_repo`, which a permission rule in
 knk-workspace `.claude/settings.json` allows (PandiO/knk-workspace#331; it applies to sessions whose project is
-knk-workspace). The rule matches the tool, not its arguments: which repositories can be attached comes from the cloud
-session's GitHub access, and the block names the ones the developer authorized. Variant B, a subagent of the
+knk-workspace). The rule matches the tool, not its arguments: a `PreToolUse` hook in the same file
+(`.claude/hooks/add-repo-guard.sh`, developer decision 2026-11-12) denies `add_repo` outside the knk repositories, the
+cloud session's GitHub access limits it too, and the block names the ones the developer authorized. Variant B, a subagent of the
 coordinator, is the fallback when `create_session` is unavailable or an attach is still refused.
 
 History, before the rule existed: a new session only accepted an `add_repo` request that was in its prompt, and an
