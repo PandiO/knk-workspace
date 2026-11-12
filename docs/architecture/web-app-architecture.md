@@ -99,7 +99,9 @@ _Added 2026-11-02 for PandiO/knk-workspace#95 (rebrand phase 1), knk-web-app bra
 ## Feedback: toasts, dialogs and confirms
 
 PandiO/knk-workspace#33 (chain 2 link W2; merged 2026-11-12 in `main` `1371951`; smoke test not run). Three primitives; use them instead of
-building an overlay or a status banner by hand.
+building an overlay or a status banner by hand. **Rule for new code:** a new overlay is a `Dialog`; success after a
+save or delete is a toast, not a `FeedbackModal`; every delete asks through `useConfirm` with `danger: true` (and
+`confirmWithReason` when the audit log needs a reason).
 
 | Need | Use | Where |
 |---|---|---|

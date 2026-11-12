@@ -1,7 +1,7 @@
 # Authoring a siege scenario (admin how-to)
 
 **Status:** Living document — update in place
-**Last updated:** 2026-10-27 (after a match: post-match wait at the hub, result hover, match pages, `/siege history`;
+**Last updated:** 2026-11-12 (relation fields are a search box, #191; § 4: Siege settings under Admin → Settings with units, help and the settings header, #26/#187 — merged 2026-11-12, not live-tested); 2026-10-27 (after a match: post-match wait at the hub, result hover, match pages, `/siege history`;
 alpha run 1 package F, #198/#164/#174, not merged); 2026-10-26 (§ 4: Siege Settings needs `knk.siege.admin.manage`, #185, not merged); 2026-09-26 (siege merged to the default branches after two live smoke-test rounds; area lockdown
 removed, non-member gate view updated)
 
@@ -37,7 +37,8 @@ own name, chat colour and banner, saved only in that scenario.
 The scenario form (`/forms/siegescenario`) has 9 steps. You'll save it several times: teams, gates and objectives need
 a saved scenario, and an objective's gate must already be saved in the scenario's Gates.
 
-1. **General:** Name, Town (Select instance).
+1. **General:** Name, Town (type part of the town's name in the search box and pick it; **Open full table** for the
+   full list; see the [staff web app guide § 5](admin/staff-web-app-guide.md#5-picking-a-related-record-in-a-form)).
 2. **Districts:** one join entry per district of the town that forms the siege area. Your gate picks are checked
    against it, and gates in these districts that you don't select on the Gates step are held open (and can't be
    damaged) during a match. Non-members can still walk around the area; they just can't fight members, capture or
@@ -90,10 +91,17 @@ is free, so to get rid of it rename its key (or leave it disabled) instead of de
 
 ## 4. Siege settings (global)
 
-Nav **Siege Settings** (`/admin/siege-configuration`, needs `knk.siege.admin.manage`, the node the API checks on Save;
-without it the link is hidden and the page says "Staff only") holds the server-wide tuning: capture step, headshot multiplier,
+**Admin** → **Settings** → **Siege settings** (`/admin/siege-configuration`, needs `knk.siege.admin.manage`, the node the API checks on Save;
+without it the page isn't listed and its address says "Staff only") holds the server-wide tuning: capture step, headshot multiplier,
 banned commands, non-member gate view, title brackets and so on. The capture step defaults to the developer's playtest
 tuning: attack A1 10, A2 2 (10 on instant-victory objectives), defence 6/3/6. Save sends only the changed fields.
+
+The page has the settings header of the [staff web app guide § 9](admin/staff-web-app-guide.md#9-settings-pages): "n unsaved
+changes", Discard, **Save (n)** and a question before you leave with unsaved changes. Each field shows its unit and
+one line of help, and what the typed value means: capture values in points, delays in **ticks** with the seconds
+(20 ticks "= 1 s"), durations in **s**, the headshot multiplier as **×** (1 disables headshots, up to 10), the book
+drop chance per second in **‰** with the percentage (10 ‰ "= 1%"), and the side-capture reduction as a fraction from
+0 to 1.
 
 ## 5. Put it live
 
