@@ -1,16 +1,17 @@
 # Agent tooling: MCP servers and the fast-check hook
 
-**Status:** Active · **Last updated:** 2026-11-12 (first version, [PandiO/knk-workspace#331](https://github.com/PandiO/knk-workspace/issues/331), [DESIGN § 10](../../specs/ai-agent-workflow/DESIGN.md#10-tooling-mcp-servers-and-hooks))
+**Status:** Active · **Last updated:** 2026-11-12 (permission rule for `add_repo`, § 4, developer decision 2026-11-12); 2026-11-12 (first version, [PandiO/knk-workspace#331](https://github.com/PandiO/knk-workspace/issues/331), [DESIGN § 10](../../specs/ai-agent-workflow/DESIGN.md#10-tooling-mcp-servers-and-hooks))
 
-What knk-workspace configures for Claude Code sessions started in it: three MCP servers in `.mcp.json` and a Stop hook
-in `.claude/settings.json` that compiles the component repos an agent changed. None of the files holds a secret.
+What knk-workspace configures for Claude Code sessions started in it: three MCP servers in `.mcp.json`, and in
+`.claude/settings.json` a Stop hook that compiles the component repos an agent changed and a permission rule that lets
+sessions attach repositories. None of the files holds a secret.
 
 ## 1. What is configured
 
 | File | What it does |
 |---|---|
 | `.mcp.json` | MCP servers `github`, `playwright` and `context7` (§ 2) |
-| `.claude/settings.json` | One `Stop` hook: `bash "${CLAUDE_PROJECT_DIR}/.claude/hooks/fast-check.sh"`, timeout 600 s (§ 3) |
+| `.claude/settings.json` | One `Stop` hook: `bash "${CLAUDE_PROJECT_DIR}/.claude/hooks/fast-check.sh"`, timeout 600 s (§ 3); `permissions.allow` for `add_repo` and `register_repo_root` (§ 4) |
 | `.claude/hooks/fast-check.sh` | The fast checks (§ 3) |
 | `.gitattributes` | Keeps `*.sh` at LF line endings, so the hook also runs from a Windows checkout (Git Bash) |
 
@@ -123,3 +124,41 @@ From the [hooks reference](https://code.claude.com/docs/en/hooks), read 2026-11-
    A session started inside a component repo does not load it.
 3. It blocks on errors that were already in a checkout, not only on the session's own changes; the message lets the
    agent say so instead of fixing unrelated work.
+
+## 4. Permission rule: attaching repositories in link sessions
+
+Developer decision 2026-11-12 (setup chain, [PandiO/knk-workspace#327](https://github.com/PandiO/knk-workspace/issues/327)):
+chain links start with `create_session` and attach the knk repositories they need themselves, so the developer does
+not have to approve each attach. `.claude/settings.json` therefore has:
+
+```json
+"permissions": {
+  "allow": [
+    "mcp__claude-code-remote__add_repo",
+    "mcp__claude-code-remote__register_repo_root"
+  ]
+}
+```
+
+1. **What it allows.** `add_repo` attaches a GitHub repository to the cloud session; `register_repo_root` tells the
+   session that the clone is done so its `CLAUDE.md` and skills load. Both come from the `claude-code-remote` tools of
+   cloud sessions on claude.ai; on the developer PC the server does not exist and the rule does nothing.
+2. **The rule does not limit which repositories.** Claude Code matches an MCP allow rule on the tool name only:
+   `mcp__<server>__<tool>` or `mcp__<server>__*`, with no specifier. A rule with parentheses (for example one naming
+   the `owner` or `repo` argument) is skipped when the settings file loads, and a specifier on an allow rule would match
+   no call ([permissions, MCP and "Match by input parameter"](https://code.claude.com/docs/en/permissions), read
+   2026-11-12). The developer asked for the rule to be limited to the four knk repositories; the limit therefore
+   comes from the cloud session's GitHub access, not from the rule: the repositories the Claude GitHub App is
+   installed on for the `PandiO` account (GitHub, Settings, Applications, Installed GitHub Apps, Claude, Repository
+   access). `add_repo` refuses a repository the app cannot reach. Keep that list to the repositories sessions should
+   reach (the four knk repositories, plus read-only ones such as `knk-dev-db-seed`). The permissions block in each
+   link prompt also names only the repositories the developer authorized for the chain.
+3. **Where it applies.** Only in sessions whose project is knk-workspace: a cloud session reads the repository's
+   `.claude/settings.json` when it starts with that one repository, which is how coordinators start links
+   (`source_url` knk-workspace). A session started in a component repo does not get the rule. The rule exists only
+   once this file is on the branch the session starts from (`main`, and `next` after the next merge of `main`).
+4. **Remove it** by deleting the two lines (or the whole `permissions` block) from `.claude/settings.json` and
+   merging that; sessions started afterwards ask again before attaching. To refuse attaches outright, add the same
+   names to `permissions.deny` instead (deny wins over allow). To turn it off on one machine only, put
+   `{"permissions": {"deny": ["mcp__claude-code-remote__add_repo"]}}` in the untracked `.claude/settings.local.json`.
+   `/permissions` in Claude Code shows the rules in force and where each comes from.
