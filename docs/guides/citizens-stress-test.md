@@ -1,7 +1,7 @@
 # Citizens stress test — NPC hybrid navigation
 
 **Status:** Done 2026-11-11: **go with caveats** (Citizens hop mode with the K&K examiner in front). Load and rule checks pass; the caveats are in [the verdict on #244](https://github.com/PandiO/knk-workspace/issues/244#issuecomment-6806008046).
-**Last updated:** 2026-11-11
+**Last updated:** 2026-11-12
 **Issue:** [PandiO/knk-workspace#241](https://github.com/PandiO/knk-workspace/issues/241): desk check [#242](https://github.com/PandiO/knk-workspace/issues/242), spike [#243](https://github.com/PandiO/knk-workspace/issues/243), benchmark [#244](https://github.com/PandiO/knk-workspace/issues/244)
 **Branch:** knk-plugin `claude/citizens-spike` `ac3c356` (throwaway, **never merge**), on `main` `33122cf4`
 **Spec:** [BEHAVIOR_MODEL §2 and §13](../specs/npc-platform/BEHAVIOR_MODEL.md#2-fit-with-the-platform-design), [DESIGN §9](../specs/npc-platform/DESIGN.md#9-navigation-reuse-and-platform-audit)
@@ -75,6 +75,8 @@ Baseline 2.34 ms (no NPCs). All runs in hop mode with the default settings unles
 | access-restored-v2 | 50 | 3.82 / 5.34 | 0.023 | 100 | 294 | continued at once |
 | gate-closed-v2 | 50 | 3.68 / 4.56 | 0.020 | (100) | (352) | **pass**: nobody passed, NPCs wait; cumulative counters |
 | gate-reopened-v2 | 50 | 4.29 / 5.86 | 0.032 | (200) | (597) | moved again when the opening animation finished |
+| chunks (2026-11-12) | 20 | 3.85 / 4.85 | 0.099 | 20 | 1,439 | view distance 25: no chunk unloads; almost all stuck events at one spot on the return (1373 53 -69 → hop 1377 52 -84) |
+| chunks-v2 | 20 | 2.04 / 2.51 | 0.011 | 0 | 0 | view/simulation 10: all NPCs stopped at the edge of the loaded area (capture refuses unloaded chunks); spawning 20 at once: 48.8 ms tick |
 
 What this shows:
 
@@ -119,7 +121,7 @@ Deploy `claude/citizens-spike` `ac3c356` or later (`./gradlew :knk-paper:dev`). 
 
 **Pass:** nobody on the keep side while the gate is closed (by eye too), MSPT well below the earlier 22.75 ms, and trips climbing again after reopening. Fewer "no path to hop" after reopening than the earlier 760.
 
-**Test C: unloaded chunks (if time)**
+**Test C: unloaded chunks**: run 2026-11-12 twice, see the results table: NPCs stop at the edge of the loaded area (NAV-12); pause and resume still untested. To test pause and resume, go **with** the NPCs to the far part of the route, then teleport back to spawn so their chunks unload, wait 2 min and go back. Original steps:
 
 1. A route of 150+ blocks (save it as `long`), `spawn 20 hop`.
 2. Fly well away (more than the view distance) for 2 min, then come back.
