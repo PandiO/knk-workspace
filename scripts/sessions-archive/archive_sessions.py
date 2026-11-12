@@ -487,9 +487,11 @@ def update_index(archive_dir: Path, extra: list[Path]) -> tuple[Path, str | None
 
 def write_atomic(path: Path, text: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
+    mode = path.stat().st_mode & 0o777 if path.exists() else 0o644
     fd, tmp = tempfile.mkstemp(dir=path.parent, prefix=f".{path.name}.", suffix=".tmp")
     with os.fdopen(fd, "w", encoding="utf-8", newline="\n") as f:
         f.write(text)
+    os.chmod(tmp, mode)
     os.replace(tmp, path)
 
 
