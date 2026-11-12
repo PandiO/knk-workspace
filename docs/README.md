@@ -24,7 +24,7 @@ The feature register distinguishes intent, implementation and live verification.
 - **`backlog/`** — outstanding work: bugs, epics, stories.
 - **`reports/`** — dated, point-in-time audit/scan/inventory output. Never overwritten — a new scan is a new dated file, not an edit to an old one.
 - **`archive/`** — superseded or historical material kept for reference/provenance, not actively maintained. `vision-history/` specifically holds the evolution of the game's concept documents (2017–2020), kept distinct from the current `vision/vision.md`.
-- **`ai-agents/`** — instructions for AI coding agents working in this repo and its component repos.
+- **`ai-agents/`** — instructions for AI coding agents working in this repo and its component repos. The project skills for session chains (`knk-coordinator`, `knk-link`) are in `.claude/skills/` at the repo root; see the global instructions, "Session chains".
 
 ## Authority order
 

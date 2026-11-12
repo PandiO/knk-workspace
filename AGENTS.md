@@ -4,7 +4,8 @@ This repository is the canonical Knights and Kings documentation source. Read
 [global instructions](docs/ai-agents/GLOBAL_AGENT_INSTRUCTIONS.md) and
 [active sessions](docs/ACTIVE_SESSIONS.md) before changing anything. Check
 overlapping claims, publish a feature-scoped claim, and use the standing
-feature branch (or create one from the current default branch).
+feature branch (or create one from `next` once the global branch model
+applies, until then from the current default branch).
 
 For intended behavior consult the current feature plan and GitHub issue
 (`PandiO/knk-workspace` issues; Linear is a read-only archive since
