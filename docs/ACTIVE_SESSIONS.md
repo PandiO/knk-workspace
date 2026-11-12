@@ -69,7 +69,7 @@ Live tracker of in-progress work across all four Knights and Kings repos
 
 ### 2026-11-12 — AI agent workflow design: roles, `next` branch, risk tiers, skills, CI gate — done, merged
 
-Claude chat session with voice discussion (Pandi). New [specs/ai-agent-workflow/DESIGN.md](specs/ai-agent-workflow/DESIGN.md) (decided 2026-11-12) and its specs README entry. Docs only; the setup chain in its § 12 (CI, `next` branches and labels, coordinator and link skills, MCP and hooks, sessions board archive) is handed to a coordinator session and has not run yet.
+Claude chat session with voice discussion (Pandi). New [specs/ai-agent-workflow/DESIGN.md](specs/ai-agent-workflow/DESIGN.md) (decided 2026-11-12) and its specs README entry. Docs only; the setup chain in its § 12 (CI, `next` branches and labels, coordinator and link skills, MCP and hooks, sessions board archive) is handed to a coordinator session ([prompt](ai-agents/handoffs/2026-11-12-agent-workflow-setup-coordinator.md)) and has not run yet.
 
 ### 2026-11-11 — Docs: menus, statistics and custom enchantments player guides; menu admin guide (#302) — done, merged
 
