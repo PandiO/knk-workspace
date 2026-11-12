@@ -17,7 +17,7 @@ finishes, its row moves here verbatim. Nothing is deleted.
    rules.
 3. Which date counts: a `### YYYY-MM-DD — ...` heading's date; for a table row, the last cell that starts with a date
    (the "Finished" cell, or "Last updated" for a row in the six-column "In progress" layout). An entry with no date
-   goes to [undated.md](undated.md).
+   goes to `undated.md` (created only when such an entry turns up).
 4. Relative links inside entries were written for the board in `docs/`, so read them as relative to `docs/`.
 5. Each file has its own table header; the header is repeated after a row that spans several lines so the next rows
    still render as a table.
@@ -25,4 +25,7 @@ finishes, its row moves here verbatim. Nothing is deleted.
 ## Files
 
 <!-- archive-index:start -->
+1. [2026-11](2026-11.md)
+1. [2026-10](2026-10.md)
+1. [2026-09](2026-09.md)
 <!-- archive-index:end -->
