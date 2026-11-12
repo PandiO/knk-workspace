@@ -10,9 +10,15 @@ Live tracker of in-progress work across all four Knights and Kings repos
   proceeding.
 - Add a row when you start; scope by **feature**, not by repo, since most
   features span all three component repos.
-- Update your row's Status/Last Updated whenever you pause, and move it to
-  "Recently Completed" (below) when you finish, rather than deleting it
-  outright — keeps a short trail of what just happened.
+- Update your row's Status/Last Updated whenever you pause. When you
+  finish, move the row to the current month's file of the
+  [sessions archive](reports/sessions-archive/README.md)
+  (`reports/sessions-archive/YYYY-MM.md`, newest first) rather than
+  deleting it. A row left under "Recently completed" (below) is moved
+  there by `scripts/sessions-archive/archive_sessions.py`.
+- Keep each row short: feature, issue, branch, repos and the main areas
+  touched, not every file. Long detail belongs in a report, linked from
+  the row.
 - This file will get concurrent edits from parallel sessions. That's
   expected — if you hit a merge conflict here, resolve it by keeping both
   rows rather than picking one; conflicts on this file are cheap to fix by
