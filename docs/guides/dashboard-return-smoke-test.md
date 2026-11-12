@@ -1,7 +1,7 @@
 # Dashboard as the CRUD hub: return, submit pending state, toast, New/Configure, breadcrumbs, detail header, Create New (#177 links 1–2, #58, #81, #39) — smoke test
 
 **Status:** Run by the developer on 2026-10-26 on knk-web-app `main` `7ba0f4b`: all steps work or accepted (findings below)
-**Last updated:** 2026-11-03 (section 9c: explorer filter, #226, merged 2026-11-04 into knk-web-app `main` `738c16a`); 2026-11-03 (section 9b: favourites are copies, #225, merged 2026-11-03 into knk-web-app `main` `a6d83c9`, live-tested 2026-11-03); 2026-10-26 (section 8a: header row spacing, #195, knk-web-app `claude/dashboard-header-195`, merged into `main` `c3c0c9f`); 2026-10-26 (section 9a: one scrollbar and favourites, #194, knk-web-app `claude/dashboard-explorer-194`, merged into `main` `c3c0c9f`); 2026-10-26 (sections 8–14 added for #177 link 2 = chain link 3); section 10a: no type overview card above an open form, #227, merged 2026-11-04 into knk-web-app `main` `738c16a`); 2026-10-26 (sections 8–14 added for #177 link 2 = chain link 3)
+**Last updated:** 2026-11-06 (section 14a: note for #30 with Dashboard kept in the bar, LW4-1); 2026-11-05 (section 14a: note for #30, admin sidebar); 2026-11-05 (section 14a: no "Entity setup" nav link, #197, knk-web-app `claude/nav-entity-setup-197`, not merged); 2026-11-03 (section 9c: explorer filter, #226, merged 2026-11-04 into knk-web-app `main` `738c16a`); 2026-11-03 (section 9b: favourites are copies, #225, merged 2026-11-03 into knk-web-app `main` `a6d83c9`, live-tested 2026-11-03); 2026-10-26 (section 8a: header row spacing, #195, knk-web-app `claude/dashboard-header-195`, merged into `main` `c3c0c9f`); 2026-10-26 (section 9a: one scrollbar and favourites, #194, knk-web-app `claude/dashboard-explorer-194`, merged into `main` `c3c0c9f`); 2026-10-26 (sections 8–14 added for #177 link 2 = chain link 3); section 10a: no type overview card above an open form, #227, merged 2026-11-04 into knk-web-app `main` `738c16a`); 2026-10-26 (sections 8–14 added for #177 link 2 = chain link 3)
 **Issues:** [PandiO/knk-workspace#177](https://github.com/PandiO/knk-workspace/issues/177) (links 1 and 2) ·
 [#58](https://github.com/PandiO/knk-workspace/issues/58) · [#81](https://github.com/PandiO/knk-workspace/issues/81) (detail
 page header) · [#39](https://github.com/PandiO/knk-workspace/issues/39) (Create New menu only)
@@ -246,7 +246,33 @@ looked like debug output.
 ## 14. "Entity setup"
 
 1. The nav link that said **Forms** says **Entity setup** and is highlighted on `/forms/...`; the tab title on
-   `/forms/...` is "Entity setup · Knights & Kings". The route is still `/forms`.
+   `/forms/...` is "Entity setup · Knights & Kings". The route is still `/forms`. (Since #197 there is no such
+   link: section 14a.)
+
+## 14a. No "Entity setup" nav link (#197)
+
+Branch knk-web-app `claude/nav-entity-setup-197` (on `main` `a7b231d`); docs on knk-workspace
+`claude/nav-entity-setup-197`. **With #30** (`claude/admin-ia-30`, which contains this branch) the other admin links
+moved from the bar to the admin sidebar; the bar keeps **Dashboard** (LW4-1, 2026-11-06), so "the nav's Dashboard"
+below is the bar's **Dashboard**, and the sidebar's **Dashboard** is highlighted on the same pages; see the
+[admin navigation smoke test](admin-navigation-smoke-test.md). Web app only: no API or plugin change, no migration, no setting. Log in as content
+staff (`knk.admin.content`) and check in the `current` and `brand` themes, with the page background on and off.
+
+1. The nav has **Dashboard** but no **Entity setup** link, in every width: labels, icons only and the menu button
+   (narrow the window or use a phone). Expected: no link to `/forms` anywhere in the bar or the menu.
+2. Dashboard → a type (e.g. Town) → **⚙ Configure Town**. Expected: `/forms/Town` with the form configurations,
+   display configurations, Default Table Columns and Saved Progress of Town; the nav's **Dashboard** link is
+   highlighted (underlined, or filled as an icon).
+3. On that page: **Create Form** opens the form builder; its **Cancel** returns to `/forms/Town`. The same with
+   **Create Display**. Expected: Dashboard stays highlighted on both builders.
+4. Pick a type **without** a display configuration in the dashboard explorer (muted marker) and press ⚙. Expected:
+   its Entity setup page opens like any other (every type of the Entity setup explorer is in the dashboard's).
+5. With an open draft of the type: **Drafts (n)** → **All saved progress (Entity setup)**. Expected: `/forms/{type}`.
+6. Type `/forms` in the address bar. Expected: the Entity setup page with "Select an entity from the sidebar…", the
+   tab title "Entity setup · Knights & Kings", Dashboard highlighted. `/admin/form-configurations` still redirects to
+   `/forms`.
+7. Open a detail page (View on a row). Expected: Dashboard highlighted. Any other nav page (Leaderboards, Game
+   Settings): Dashboard not highlighted.
 
 ## Findings
 
@@ -269,3 +295,4 @@ entity header's New/⚙ buttons stick to the app header while the title doesn't 
 | 12 | Works | |
 | 13 | Works | |
 | 14 | Works; remove the link from the nav: #197 | |
+| 14a | | Not run yet (#197) |

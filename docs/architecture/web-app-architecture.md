@@ -1,14 +1,17 @@
 # knk-web-app — Architecture
 
 **Status:** Living document — reflects actual code, updated in place on each rescan
-**Last updated:** 2026-11-09 (form and display builders: Save keeps the builder open and stores a draft, Save and close, explicit Publish with what changes for staff, Duplicate, Generate from metadata, live preview, "Leave without saving?" — #71, branch `claude/builders-71`, not merged); 2026-11-09 (form wizard search-as-you-type relation picker with Open full table and a lookup mode for viewers without the type's read node, #191; FeedbackModal "Show details" and "Show what uses it" on a delete refused as in use, #44 — branch `claude/picker-details-191-44`, not merged); 2026-11-09 (entity detail page: real Select / Unlink / Add through `api/Relationships`, a separate Delete, actions disabled with "Requires …", values as text, related values as links, paged collections, readable load errors — #188, #189, branch `claude/entity-detail-188-189`, not merged); 2026-11-08 (settings pages: Lootbox settings tab, Currency policy and Road network on the SettingsPage shell, units and help, confirms on risky switches, lootbox announcement preview — #26, branch `claude/settings-pages-26`, not merged); 2026-11-08 (staff player profile: status strip, tabs, freeze/unfreeze, per-player timeline, paged audit log; moderation search by dashless UUID, sort, search in the URL, recently opened — #119, branch `claude/player-profile-119`, not merged); 2026-11-08 (dashboard checkbox selection and Export CSV behind `knk.admin.export` — #205 export part, branch `claude/dashboard-export-205`, not merged); 2026-11-08 (Entity setup at phone width, raw colours checked in `test:ci`, landing slideshow fade out → in, `usePrefersReducedMotion` — #266, #263, #258, branch `claude/web-fixes-266-263-258`, not merged); 2026-11-05 (#239 offer permission check, #240 Send again merged); 2026-11-04 (#239, #240 on a feature branch); 2026-11-02 (`src/realtime/RealtimeProvider`, world tasks and catalogue scans over the web hub — #181, branch `claude/realtime-signalr`); 2026-11-01 (world tasks anchored to the draft, cancel/expired states, task code, builder task types — #180, branch `claude/world-task-hardening`); 2026-09-18 (scan basis: `knk-web-app` @ `4ff5dc6`, branch `claude/web-app-codebase-scan-4yqibi`); spot edits 2026-10-09 (ObjectTypeExplorer, KNG-61), 2026-10-10 (FormWizard Boolean fields, KNG-53), 2026-10-12 (FormWizard child forms, KNG-133, KNG-134; List edit load, step header, List validation, KNG-135, KNG-137, KNG-164; form session registry, KNG-136; cancel / delete-draft prompt, KNG-162; form configuration export/import, KNG-138); 2026-10-17 (form wizard chain merged to `main`; smoke-test follow-ups KNG-166..169, KNG-172, KNG-173: step strip, confirmations and refusals, rule builder parent forms, picker columns, metadata refresh); 2026-10-22 (display configuration export/import; KNG-195 hybrid picker submit); 2026-10-23 (step completion conditions run, KNG-186); 2026-10-23 (validation result log, batch validate, Re-check, KNG-269); 2026-10-25 (toast region, world-task polling; UX re-evaluation in `reports/2026-10-25-web-app-ux-reevaluation.md`); 2026-10-26 (dashboard type in the URL, `returnTo`, submit pending state, success toast — PandiO/knk-workspace#177 link 1, #58); 2026-10-26 (dashboard header New/Configure, flat explorer with marker, open form without the explorer + breadcrumb, detail page header, metadata-driven Create New, "Entity setup" — #177 link 2, #81, #39); 2026-10-26 (dashboard explorer: one scrollbar, favourite types — #194, branch `claude/dashboard-explorer-194`, merged into `main` `c3c0c9f`), 2026-10-26 (dashboard header row spacing — #195, branch `claude/dashboard-header-195`, merged into `main` `c3c0c9f`); 2026-10-26 (data router, unsaved-changes guard, sticky footer, blur validation + error summary, Save on any step in edit mode, single-line input, drafts owned by the login — #109, #186, #64 FormWizard part); 2026-10-27 (unsaved changes compared by value across all steps, Next's progress save no longer counts as saved — #109 fix round); 2026-11-01 (dashboard table state in the URL, rows as links, `aria-sort`, lootbox/moderation tab in the URL, "Drafts (n)" and "New with" — PandiO/knk-workspace#39, #177 follow-up, merged 2026-11-03); 2026-11-02 (design tokens and switchable themes — #95, merged 2026-11-03); 2026-11-03 (fix round after the live comparison: orange brand primary, heading font on player pages only, full-bleed auth pages); 2026-11-03 (explorer favourites are copies — #225, branch `claude/explorer-favourite-copies-225`, not merged); 2026-11-03 (explorer filter: display / form configuration — #226, merged 2026-11-04); 2026-11-03 (open form without the type overview card — #227, merged 2026-11-04)
+**Last updated:** 2026-11-12 (chain 2 W1–W4 and X1 and chain 3 V1–V7 merged into `main` `1371951`; their sections below brought over and marked merged — docs issues #337–#345); 2026-11-05 (live updates on the dashboard, detail page, moderation list and profile — #183, branch `claude/realtime-web-live-183`, merged 2026-11-12); 2026-11-09 (form and display builders: Save keeps the builder open and stores a draft, Save and close, explicit Publish with what changes for staff, Duplicate, Generate from metadata, live preview, "Leave without saving?" — #71, branch `claude/builders-71`, not merged); 2026-11-09 (form wizard search-as-you-type relation picker with Open full table and a lookup mode for viewers without the type's read node, #191; FeedbackModal "Show details" and "Show what uses it" on a delete refused as in use, #44 — branch `claude/picker-details-191-44`, not merged); 2026-11-09 (entity detail page: real Select / Unlink / Add through `api/Relationships`, a separate Delete, actions disabled with "Requires …", values as text, related values as links, paged collections, readable load errors — #188, #189, branch `claude/entity-detail-188-189`, not merged); 2026-11-08 (settings pages: Lootbox settings tab, Currency policy and Road network on the SettingsPage shell, units and help, confirms on risky switches, lootbox announcement preview — #26, branch `claude/settings-pages-26`, not merged); 2026-11-08 (staff player profile: status strip, tabs, freeze/unfreeze, per-player timeline, paged audit log; moderation search by dashless UUID, sort, search in the URL, recently opened — #119, branch `claude/player-profile-119`, not merged); 2026-11-08 (dashboard checkbox selection and Export CSV behind `knk.admin.export` — #205 export part, branch `claude/dashboard-export-205`, not merged); 2026-11-08 (Entity setup at phone width, raw colours checked in `test:ci`, landing slideshow fade out → in, `usePrefersReducedMotion` — #266, #263, #258, branch `claude/web-fixes-266-263-258`, not merged); 2026-11-06 (Dashboard kept in the top bar — LW4-1, #30); 2026-11-06 (numbers in the viewer's locale — LW3-1, #187); 2026-11-06 (child form asks before closing with unsaved changes — LW2-2, #33); 2026-11-05 (admin information architecture: route-meta table, public/player/admin layout routes, grouped admin sidebar, breadcrumbs, `/admin` overview — #30, branch `claude/admin-ia-30`, stacked on #197 and #187 (which contains #33), not merged); 2026-11-05 (no "Entity setup" nav link, the Dashboard link is current on the content-tool pages — #197, branch `claude/nav-entity-setup-197`, not merged); 2026-11-05 (data and format primitives: `DataTable`/`Pager`, `utils/format.ts`, `Field`, `SettingsPage` shell with dirty state — #187, branch `claude/data-primitives-187`, stacked on #33, not merged); 2026-11-05 (feedback primitives: one accessible `Dialog`, `ConfirmDialog` with danger and a reason, general toasts, all overlays moved — #33, branch `claude/feedback-primitives-33`, not merged); 2026-11-05 (#239 offer permission check, #240 Send again merged); 2026-11-04 (#239, #240 on a feature branch); 2026-11-02 (`src/realtime/RealtimeProvider`, world tasks and catalogue scans over the web hub — #181, branch `claude/realtime-signalr`); 2026-11-01 (world tasks anchored to the draft, cancel/expired states, task code, builder task types — #180, branch `claude/world-task-hardening`); 2026-09-18 (scan basis: `knk-web-app` @ `4ff5dc6`, branch `claude/web-app-codebase-scan-4yqibi`); spot edits 2026-10-09 (ObjectTypeExplorer, KNG-61), 2026-10-10 (FormWizard Boolean fields, KNG-53), 2026-10-12 (FormWizard child forms, KNG-133, KNG-134; List edit load, step header, List validation, KNG-135, KNG-137, KNG-164; form session registry, KNG-136; cancel / delete-draft prompt, KNG-162; form configuration export/import, KNG-138); 2026-10-17 (form wizard chain merged to `main`; smoke-test follow-ups KNG-166..169, KNG-172, KNG-173: step strip, confirmations and refusals, rule builder parent forms, picker columns, metadata refresh); 2026-10-22 (display configuration export/import; KNG-195 hybrid picker submit); 2026-10-23 (step completion conditions run, KNG-186); 2026-10-23 (validation result log, batch validate, Re-check, KNG-269); 2026-10-25 (toast region, world-task polling; UX re-evaluation in `reports/2026-10-25-web-app-ux-reevaluation.md`); 2026-10-26 (dashboard type in the URL, `returnTo`, submit pending state, success toast — PandiO/knk-workspace#177 link 1, #58); 2026-10-26 (dashboard header New/Configure, flat explorer with marker, open form without the explorer + breadcrumb, detail page header, metadata-driven Create New, "Entity setup" — #177 link 2, #81, #39); 2026-10-26 (dashboard explorer: one scrollbar, favourite types — #194, branch `claude/dashboard-explorer-194`, merged into `main` `c3c0c9f`), 2026-10-26 (dashboard header row spacing — #195, branch `claude/dashboard-header-195`, merged into `main` `c3c0c9f`); 2026-10-26 (data router, unsaved-changes guard, sticky footer, blur validation + error summary, Save on any step in edit mode, single-line input, drafts owned by the login — #109, #186, #64 FormWizard part); 2026-10-27 (unsaved changes compared by value across all steps, Next's progress save no longer counts as saved — #109 fix round); 2026-11-01 (dashboard table state in the URL, rows as links, `aria-sort`, lootbox/moderation tab in the URL, "Drafts (n)" and "New with" — PandiO/knk-workspace#39, #177 follow-up, merged 2026-11-03); 2026-11-02 (design tokens and switchable themes — #95, merged 2026-11-03); 2026-11-03 (fix round after the live comparison: orange brand primary, heading font on player pages only, full-bleed auth pages); 2026-11-03 (explorer favourites are copies — #225, branch `claude/explorer-favourite-copies-225`, not merged); 2026-11-03 (explorer filter: display / form configuration — #226, merged 2026-11-04); 2026-11-03 (open form without the type overview card — #227, merged 2026-11-04)
 **Source scan:** `docs/reports/web-app-scan-2026-09-18.md`
 
 ## Stack
 
 - React 18 + TypeScript, bootstrapped with **Create React App** (`react-scripts` 5.0.1) —
   not Vite, not Next.js.
-- Routing: `react-router-dom` v7, all routes defined in `src/App.tsx` (`Routes`/`Route`). Since #109
+- Routing: `react-router-dom` v7. Since #30 (branch `claude/admin-ia-30`) every route is an entry of the
+  **route-meta table** `src/routes/routeTable.ts` and `src/routes/AppRoutes.tsx` builds the `Routes` from it
+  (see [Routes, layouts and the admin sidebar](#routes-layouts-and-the-admin-sidebar)); `src/App.tsx` only
+  maps each route id to its page. Since #109
   `App` mounts a **data router** (`createBrowserRouter` with one catch-all route around those `<Routes>`,
   `RouterProvider`) instead of `BrowserRouter`, because `useBlocker` (the form wizard's leave guard) only
   works inside one. Tests that mock `react-router-dom` or use a `MemoryRouter` still work: the guard
@@ -25,8 +28,9 @@
   `DisplayConfigBuilder` for reorderable steps/sections/fields).
 - Icons: `lucide-react`.
 - Reactive error bus: `rxjs` — a single `Subject`-like `logging.errorHandler` used to
-  surface toast-style errors app-wide (`src/components/ToastRegion.tsx`, mounted in `App.tsx`). Success toasts go through `toast.success()`
-  (`src/utils/toast.ts`, its own `Subject`; green, 5 s; #177 link 1); the full feedback kit is #33.
+  surface toast-style errors app-wide (`src/components/ToastRegion.tsx`, mounted in `App.tsx`). Every other toast goes
+  through `toast.success/info/warning/error()` (`src/utils/toast.ts`, #177 link 1, general since #33); see
+  [Feedback: toasts, dialogs and confirms](#feedback-toasts-dialogs-and-confirms).
 - No Redux/Zustand/MobX — state is local `useState`/`useEffect` plus one React Context
   (`AuthContext`) for auth, plus a small manual in-memory cache in
   `hooks/useEntityMetadata.ts` (module-level `metadataBundleCache` /
@@ -92,6 +96,118 @@ _Added 2026-11-02 for PandiO/knk-workspace#95 (rebrand phase 1), knk-web-app bra
   the next one in (1250 ms each, same easing; the next image is preloaded and the shown one stays until it has
   loaded), and with reduced motion it swaps images without fades (#258). Slides are rendered in index order so React
   never moves a slide's node during its fade (a moved node drops its CSS transition).
+
+## Feedback: toasts, dialogs and confirms
+
+PandiO/knk-workspace#33 (branch `claude/feedback-primitives-33`, not merged). Three primitives; use them instead of
+building an overlay or a status banner by hand.
+
+| Need | Use | Where |
+|---|---|---|
+| News that needs no answer ("Town saved", "Copied", a change with Undo) | `toast.success/info/warning/error(message, { action?, durationMs? })` | `utils/toast.ts` → `components/ToastRegion.tsx` |
+| A yes/no question, a delete | `const [confirm, confirmModal, confirmWithReason] = useConfirm()` | `hooks/useConfirm.tsx` → `components/ConfirmDialog.tsx` |
+| A question that needs a reason for the audit log (MOD-2, #119) | `confirmWithReason({ …, reason: { hint, required?, minLength? } })` → the trimmed reason or `null` | same |
+| A message the user must read (an error with the API's reason) | `FeedbackModal` | `components/FeedbackModal.tsx` |
+| Anything else in an overlay: a form, an editor, a picker, a details drawer | `<Dialog>` | `components/Dialog.tsx` |
+
+- **`Dialog`**: `role="dialog"` (or `alertdialog` for a question) with `aria-modal`, `aria-labelledby` (its `title`)
+  and `aria-describedby` (its `description`). Focus moves in when it opens (`initialFocusRef`, else
+  `[data-autofocus]`, else the body's first field, else the footer's first button), Tab and Shift+Tab stay inside, focus
+  returns to the opener when it closes. Escape and the × close it; a backdrop click only with `closeOnBackdrop` (on for
+  messages, questions and drawers; off for forms, editors and pickers, so a stray click keeps what was typed);
+  `dismissible={false}` turns all three off while something saves. Nested dialogs (a child form's error) work: only the
+  innermost reacts to Escape and keeps focus. Rendered in a portal on `<body>` at `z-[60]` (above the nav, below the
+  toasts at `z-[100]`), page scroll locked. Header (title, description, optional icon, ×), a scrolling body and an
+  optional footer that stays visible; `size` `sm`…`6xl`/`full`, `placement="right"` for a drawer. Theme tokens only;
+  with the page background on (#231) its surface stays solid (`pageBackground.css` keeps `[aria-modal]` opaque).
+- **Confirm**: `danger` makes the action red (`btn-danger`) and starts focus on Cancel; otherwise focus starts on the
+  action. Escape, the × and a click outside answer no; with a reason field a click outside does nothing (the text would
+  be lost). The reason field has a tied label, `aria-required`, and on an empty submit `aria-invalid` plus a
+  `role="alert"` message, focus back in the field. The leave-form questions (`useLeaveGuard`, `FormCancelAction`) are
+  danger. A child form (`ChildFormModal`) asks the same "Leave this form?" through `useConfirm` before Escape or the ×
+  closes it when its wizard reports unsaved changes (`onDirtyChange`, the value snapshot of `formValuesSnapshot`);
+  without changes it closes at once (LW2-2, developer's decision 2026-11-06). The question's text is in
+  `utils/forms/leaveFormQuestion.ts`.
+- **Toasts**: one per kind and text (a repeat restarts its timer), at most 4, in a polite `role="status"` region; each
+  names its kind for screen readers ("Success: …"). 5 s (warning and error 8 s, with an action at least 10 s,
+  `durationMs: null` until dismissed); the timer waits while the pointer or focus is on the toast. A plain
+  `toast.error(message)` still goes through `logging.errorHandler` (≈45 call sites send there); with options it goes
+  straight to the region. Success after a save or delete is a toast now, not a `FeedbackModal` with `autoCloseMs`
+  (entity setup page, form/display builders, the wizard's Save Draft, the form submit since #177).
+- **Overlays on the Dialog** (all 16 the 2026-10-25 re-evaluation counted): `FeedbackModal`, `ChildFormModal`,
+  `JoinEntityFormModal`, `ScanConflictModal`, `DomainWorldPromptModal`, `CreatedEntitiesPrompt`,
+  `ConfigurationImportPanel`, `MaterialMergeTargetDialog`, both builders' `FieldEditor` and `Reusable*Selector`
+  (cards are `aria-pressed` buttons), the Invitations redemptions drawer and the telemetry event drawer. Not dialogs
+  on purpose: the dashboard explorer's narrow-screen drawer (navigation below the bar), the theme and account
+  popovers, and the inline confirmation panels with `role="dialog"` in the page flow (data deletion, privacy
+  preview, statistics group change, the world-task busy check in `WorldBoundFieldRenderer`).
+- The configuration tables' ⋯ menus give focus back to their trigger before an item runs, so a confirm opened from
+  the menu returns focus to ⋯ instead of the top of the page.
+- Tests: `components/__tests__/Dialog.test.tsx`, `overlaysOnDialog.test.tsx`, `ToastRegion.test.tsx`,
+  `hooks/__tests__/useConfirm.test.tsx`. No jest-axe in the repo; roles, names, focus and keys are checked one by one.
+
+## Data and format primitives: tables, pager, formatting, fields, settings pages
+
+PandiO/knk-workspace#187 (branch `claude/data-primitives-187`, stacked on #33's branch, not merged). Use these instead
+of a hand-rolled `<table>`, pager, `toLocaleString`, unlabelled input or settings header.
+
+| Need | Use | Where |
+|---|---|---|
+| A list of rows (sortable headers, rows that open a page) | `<DataTable columns rows rowKey sort onSortChange rowHref onRowClick …>` | `components/DataTable.tsx` |
+| Pages under a list | `<Pager page pageSize totalCount onPageChange label? noun?>` | `components/Pager.tsx` |
+| A server-paged entity list (dashboard, wizard pickers) | `PagedEntityTable` (fetching, query modes, selection, pinned rows) — draws through `DataTable`/`Pager` | `components/PagedEntityTable/` |
+| A date, time or number on screen | `formatDateTime`, `formatDate`, `formatTime`, `formatNumber`, `formatPercent`, `numberFormat`; `parseApiDate` | `utils/format.ts` |
+| A labelled control | `<Field label hint? error? required? inline? id?>` around the control (or a render function) | `components/Field.tsx` |
+| A page of settings saved with one Save | `<SettingsPage …>` + `<SettingsSection title changed?>` | `components/SettingsPage.tsx` |
+
+- **`DataTable`** (built from #39's work in `PagedEntityTable`, which now renders through it): with `rowHref` the
+  link column (`linkColumn`, default the first) is a real `<a href>` — middle-click, Ctrl/Cmd-click and the keyboard
+  work; a plain click on the link or anywhere on the row calls `onRowClick` (the caller navigates in the app);
+  Ctrl/Cmd-click or middle-click on the row opens a new tab; controls inside a linked row keep their own clicks. A
+  sortable header is a `<button>` inside `<th aria-sort>`; `nextSort(current, key)` gives asc → desc → off. Also
+  `sections` with a heading row (the pickers' "Created in this form"), `leading`/`rowLeading` elements, `isRowSelected`
+  styling, a `rowActions` column (sr-only "Actions" header), `empty`, `loading`, `caption` (the table's accessible
+  name) and `density="compact"` for lists inside cards. Wide tables scroll inside their own container.
+- **`Pager`**: a `<nav aria-label>` (default "Pagination") with "Showing a to b of n {noun}" from `sm` up, Previous,
+  "Page x of y" (`aria-live="polite"`) and Next; numbers through `formatNumber`. The caller decides when to show it.
+- **`utils/format.ts`, one locale policy**: numbers in the viewer's browser locale (`NUMBER_LOCALE` undefined:
+  `1,234,567` in English, `1.234.567` in Dutch; LW3-1, developer's decision 2026-11-06, was a fixed `en-US`; tests pin
+  `en-US` through `setNumberLocale` in `setupTests.ts`); dates and times in the viewer's own locale and zone
+  (`DATE_LOCALE` undefined); missing or
+  unreadable values as `-`. API dates without a zone (a MySQL `DATETIME`, `2026-11-05T20:52:02`) are **UTC**:
+  `parseApiDate`/`parseUtc` read them so (was `parseUtc` in `components/currency/BalanceLedgerTable.tsx`); `new Date(…)`
+  on them shifts by the UTC offset. A bare `2026-11-05` is a calendar date (`formatDate` shows that day). The six local
+  `new Intl.NumberFormat('en-US')` constants (currency pages, retention, transactions) use the shared `numberFormat`.
+  Call sites with their own `toLocaleString('en-US')` (statistics, roads, lootbox counts, siege) are not on it yet.
+  The detail page's `DisplayField.formatValue` and template variables (`useTemplateParser`) show ISO date-times as a
+  date and time whatever the field type (configurations often have none or `String`), numbers for `Integer`/`Number`/
+  `Decimal`. Account → Transactions shows local time instead of raw UTC text.
+- **`Field`**: generated id (`useId`) or a fixed `id`, `htmlFor`, `aria-describedby` for hint and error (keeps the
+  control's own), `aria-invalid`, `required` with an `aria-hidden` star, the error as `role="alert"`; `inline` puts a
+  checkbox before its label. `.input` has no padding of its own: add `px-3 py-2` (as the migrated pages do).
+- **`SettingsPage`** (SET-4, SET-7): a sticky header (`top-16`, under the nav; solid with the page background on)
+  with the title, "Last saved {when} by {who}", "n unsaved changes" (`aria-live`), optional Reload, Discard and
+  Save (n). The page owns its values and passes `dirtyCount` (Siege's pattern: count against the saved values, mark
+  changed fields, send only those); `canSave={false}` while a value is invalid. `onSave` may resolve a message: success
+  is `toast.success(message ?? "Saved n changes.")`; a throw keeps the changes and shows `saveErrorMessage(error)`
+  (default the API's reason) in the header as `role="alert"`. With changes: in-app navigation (links, Back/Forward) asks
+  "Leave without saving?" through `useConfirm` (danger, focus on Stay; `NavigationBlocker`/`useHasDataRouter`
+  exported by `hooks/useLeaveGuard.tsx`, so it needs App's data router), a reload or tab close gets the browser's
+  question, Discard and Reload ask first. `loadError` replaces the form with a message and Retry (nothing can be saved
+  over the real values, SET-1). On a phone the header drops the description and shows Reload as an icon.
+  `SettingsSection` is a titled card with an optional "Changed" mark.
+- **Migrated (first set):** dashboard and wizard pickers (`PagedEntityTable`); Player moderation (four tables, the
+  All-players pager, filters on `Field`, dates/numbers, tokens; header buttons wrap at phone width); Game Settings
+  (dirty state per group and per world, Discard, labels on `Field`, worlds table on `DataTable`; the data-retention
+  card still saves on its own); Siege configuration; the detail page's values; the wizard's Integer/Decimal/DateTime
+  inputs now have the id their label points at. **Left for later:** Lootbox Settings tab, Currency policy and Roads on
+  the shell (#26; the lootbox tab loses edits on a tab switch, so it needs the shell inside a tab), the detail page's
+  layout and child tables (#188/#189), player profile (#119), the other hand-rolled tables and pagers (Balance log,
+  currency alerts, email log, invitations, location retention, lootbox drop log/tokens, discovery, roads), the
+  remaining `toLocale*` calls and unlabelled labels (the wizard's list/object field groups, account pages).
+- Tests: `components/__tests__/{DataTable,Field,SettingsPage}.test.tsx`, `utils/__tests__/format.test.ts`,
+  `DisplayWizard/__tests__/DisplayField.format.test.tsx`, `FormWizard/__tests__/FieldRenderers.labels.test.tsx`, and
+  the page tests of Game Settings, Siege and moderation.
 
 ## High-level shape
 
@@ -212,15 +328,18 @@ entity. Two parallel generic engines carry most of the CRUD surface:
    **Open form** (#177 link 2): while the wizard is open, `FormWizardPage` hides the
    `ObjectTypeExplorer` and shows a breadcrumb (`components/Breadcrumbs.tsx`) built by
    `utils/breadcrumbs.ts` `formTrail` from `returnTo` ("Dashboard › Town › Edit Cinix"; without
-   `returnTo`: "Entity setup › Town › New Town"). The trail is plain `{label, to?}[]` data so the admin
-   layout (#30) can render it later; `useEntityLabel` fetches the edited entity's name (else "#id"). A
+   `returnTo`: "Entity setup › Town › New Town"). The trail is plain `{label, to?}[]` data; inside the admin
+   layout it starts with the group crumb ("Content", #30). Since #30 the configuration lists show
+   "Dashboard › Town › Entity setup" (`entitySetupTrail`, LW1-2); `useEntityLabel` fetches the edited entity's name (else "#id"). A
    crumb asks "Leave this form?" first when the form has unsaved changes (#109). The configuration lists keep the explorer.
    The type overview card (`FormWizard/EntityMetadataNavigator`: name, field count, "Fields") shows only on the
    configuration lists, not above an open form (#227); the breadcrumb then sits in the form card's centred column
    (`max-w-4xl mx-auto`, the same as `FormWizard`'s card), so both start at the same left edge.
    "New" (`?autoOpen=true`) on a type without a default form configuration shows "To create a new
-   {Type}, this type needs a default form configuration" (#177 decision 3). The page title and nav label
-   are **"Entity setup"** (route `/forms` unchanged, decision 4).
+   {Type}, this type needs a default form configuration" (#177 decision 3). The page title is
+   **"Entity setup"** (route `/forms` unchanged, decision 4). It has **no nav link** since #197: it is opened
+   with the dashboard's ⚙ on one type (or "All saved progress" in its "Drafts (n)" menu) and by URL; see
+   **Navigation** below.
    `ChildFormModal` returns `false` from its `onComplete` on a failed child save for the same reason.
    **Export / import** (KNG-138): the form configuration list (`FormWizard/FormConfigurationTable.tsx`)
    has **Export JSON** per row (downloads the API's portable `knk-formconfig/1` file,
@@ -244,8 +363,9 @@ entity. Two parallel generic engines carry most of the CRUD surface:
    (which runs the hybrid search), as `{field}Id` + `{field}NamespaceKey`; a catalog row that isn't saved yet
    (id 0) goes by namespace key only, and the API creates the ref.
    **Confirmations and refusals** (KNG-169, KNG-82): no `window.confirm`/`alert` is left. Questions
-   go through `hooks/useConfirm.tsx` (`const [confirm, confirmModal] = useConfirm()`, a
-   `FeedbackModal` with confirm/cancel labels and a red `danger` button); the configuration tables
+   go through `hooks/useConfirm.tsx` (`const [confirm, confirmModal, confirmWithReason] = useConfirm()`,
+   the `ConfirmDialog` since #33: an `alertdialog` with confirm/cancel labels, a red `danger` button and an
+   optional reason field); the configuration tables
    hand a delete to the page, which asks once. A refused operation shows the API's reason
    (`utils/apiRefusalReason.ts`; the API's 409 names what still uses the item), never "please try
    again". A `FeedbackModal` without `onContinue` shows a single Close button.
@@ -298,7 +418,7 @@ entity. Two parallel generic engines carry most of the CRUD surface:
 URL as `/dashboard/:entityName` and bare `/dashboard` reopens the last viewed type from localStorage
 `knk.dashboard.lastEntityType` (`utils/lastDashboardType.ts`, link 1). Next to the type's title:
 **"New {Type}"** (`newFormPath(type, returnTo)`) and a cogwheel **"Configure {Type}"** to the type's
-Entity setup page (`/forms/{type}`). Title and buttons share one flex row (items centred, `min-h-9`, buttons `h-9`);
+Entity setup page (`/forms/{type}`), its main way in since #197 (no nav link). Title and buttons share one flex row (items centred, `min-h-9`, buttons `h-9`);
 the dashboard has `pt-6`, because the page wrapper's top padding is exactly the app header's height, so explorer, title
 row and table start level and clear of the header (#195). "New {Type}" is also the empty state of the table
 (`PagedEntityTable` `emptyState`, shown only without a search or filter). The explorer is one flat
@@ -496,6 +616,65 @@ refusal is now a dialog instead of a toast) and an item's Delete on the detail p
 are plain text with "Opening … requires one of: …" otherwise, "… and n more" past 20, and groups the API only counts
 show its reason.
 
+**Navigation** (`components/Navigation.tsx`, since #30): the bar's links come from the route-meta table
+(`topNav`): **Home**, **Leaderboards**, **Guides**, **Dashboard** for holders of the dashboard route's node
+(`knk.admin.content`, `TOP_NAV_NODES`; LW4-1, developer's decision 2026-11-06) and, last, for anyone holding the node
+of at least one admin page, **Admin** (`/admin`). `navLayout.ts` picks labels, icons or a menu button by measured width. A link is the current
+one (`aria-current="page"`, also in the menu panel) on its page and the pages below it in the table (`parent`: a
+public profile lights up Leaderboards, the enchantment guide Guides; Dashboard on the dashboard, Entity setup, the
+builders and the detail pages); Admin on every other page of the admin layout. The other admin pages are in the admin
+sidebar (next section); the old `NAV_LINKS`, its hand-kept `nodeAccess`
+map (which missed the invitations node, #262) and #197's `DASHBOARD_ACTIVE_ALSO` list are gone. Entity setup
+(`/forms`), the builders and the detail pages have no link of their own: they sit under Dashboard in the table, so
+Dashboard is the current bar and sidebar link there (LW1-1, LW4-1). Pages reached only from inside other pages: the account pages
+(account menu), transaction details, siege matches and public profiles (links in lists), Entity setup (the
+dashboard's ⚙ per type, "All saved progress").
+
+## Routes, layouts and the admin sidebar
+
+PandiO/knk-workspace#30 (chain 2 link W4, branch `claude/admin-ia-30`, not merged).
+
+- **Route-meta table** (`src/routes/routeTable.ts`, `ROUTES`): one entry per route with `path`, `layout`
+  (`public` | `player` | `admin`), `access` (`public`, `login`, `staff` + node, `owner` + node), `title`, and for
+  admin pages `group` (Content, World, Players & support, Economy, Settings, Owner), `sidebar` (icon and a one-line
+  description; only these are listed), `parent` (breadcrumb parent and link highlighting) and `breadcrumbs`
+  (`page` when the page draws its own trail: open form, detail page). `topNav` marks the bar's links. `REDIRECTS`
+  keeps old URLs (`/admin/form-configurations`, `/admin/display-configurations` → `/forms`). Helpers: `matchRoute`
+  (react-router's ranking, so `/admin/users/balance-log` is the balance log, not a player profile), `lineageOf`,
+  `isWithin`, `trailFor`, `SIDEBAR_ROUTES`, `ADMIN_NODES`, `TOP_NAV_ROUTES`. URLs and gates are the ones `App.tsx`
+  had (pinned in `routes/__tests__/routeTable.test.ts`); a new page is one entry here plus its element in `App.tsx`
+  (`RouteElements` is typed by the table's ids, so a missing page fails `tsc`).
+- **Gates** (`routes/RouteGate.tsx`): `login` → `ProtectedRoute`, `staff` → `StaffRoute` (the node; "Staff only"
+  without it), `owner` → `OwnerRoute` (exact grants, D24). Display only: the API checks the same node.
+- **Layout routes** (`src/layouts/`, built by `routes/AppRoutes.tsx`): `PublicLayout` (landing, auth pages,
+  invites, leaderboards, guides, public profiles, siege matches, the deletion confirmation, 404), `PlayerLayout`
+  (`/account`, `/account/link`, `/account/transactions`), `AdminLayout` (`/admin`, the dashboard, Entity setup,
+  builders, detail pages, `/admin/*`, `/owner/*`). Each has the page frame (`PageFrame`; admin is wider,
+  `max-w-screen-2xl`), `RouteTitle` and its own `RouteErrorBoundary` (X-4): a crash leaves the bar and the sidebar
+  working. An outer boundary in `App.tsx` only catches a crash of a layout itself. Logged out there is still no bar
+  (LANDING_PAGE_NAVIGATION_ARCHITECTURE).
+- **Titles**: `RouteTitle` sets `document.title` from the entry ("Road network · Knights & Kings"). It renders
+  before the page, so a page with a better title still sets its own with `usePageTitle` (the detail page: entity
+  and type; Entity setup; the landing page). The static `usePageTitle` calls in the pages are gone; the ten pages
+  that had no title (Roads, Mail log, Invitations, Minecraft catalogue, Leaderboards, the owner pages, Orphaned
+  Locations, public profiles) get one.
+- **Admin sidebar** (`components/admin/AdminNavList.tsx` in `AdminLayout`): from `xl` a sticky panel left of the
+  page; below `xl` an **Admin pages** button opens the same list (Escape, a click outside or a choice closes it).
+  `routes/useAdminNav.ts` lists every sidebar page whose node the user holds, by group, through
+  `usePermissions(ADMIN_NODES)` (`hooks/useStaffAccess.ts`: one cached check per node, shared with `usePermission`
+  and the route gates). Economy pages and Orphaned Locations are listed by their own node (they used to be buttons
+  on Moderation only); Invitations shows for `knk.admin.invites` (#262). A page's link is current on the pages
+  below it (`parent`): Player moderation on a profile, Balance event log on a transaction, Dashboard on Entity
+  setup, the builders and detail pages. The `/admin` overview (`pages/admin/AdminHomePage.tsx`) is the same list
+  as a page, by group with each page's description; no sidebar next to it; "No admin pages" without any node.
+- **Breadcrumbs**: `AdminLayout` draws `trailFor(route)` above the page: the group (linking to its section on
+  `/admin`, `#admin-group-<id>`), the parents, the page ("Economy › Balance event log › Transaction"). A parent
+  with the page's own title is left out (`/dashboard/Town` is "Content › Dashboard"). Pages with
+  `breadcrumbs: 'page'` draw their own trail; the layout puts the group crumb in front through
+  `BreadcrumbPrefixContext` (`components/Breadcrumbs.tsx`), so every admin trail starts with its group.
+- **Height**: the dashboard and Entity setup fill the window (`ObjectDashboard.css`); `--admin-chrome` (the
+  measured height of the row with the menu button and trail) is taken off, so the page doesn't scroll.
+
 **Create New menu** (`components/CreateNewMenu.tsx`, #177 link 2 / #39 CRUD-2): built from the entity
 metadata — every type with a create client in `utils/entityApiMapping.ts`
 (`hasCreateFunctionForEntity`), A–Z — instead of the hand-kept list in `config/objectConfigs.tsx`,
@@ -550,9 +729,11 @@ them ("Use built-in columns"; the API stores an empty list as none).
 
 ```
 src/
-  App.tsx                 — route table + top-level error toast plumbing
+  App.tsx                 — maps each route id to its page; the shell (bar, toasts, background)
+  routes/                 — routeTable.ts (route-meta table), AppRoutes, RouteGate, useRouteMeta, useAdminNav (#30)
+  layouts/                — PublicLayout, PlayerLayout, AdminLayout (sidebar + breadcrumbs), PageFrame, RouteTitle (#30)
   pages/                  — one component per route (see reading guide for the table)
-    admin/                — GameSettingsPage (routed), EntityTypeConfigurationPage (NOT routed)
+    admin/                — the admin pages (AdminHomePage = /admin overview, #30)
     auth/                 — login/register/forgot/reset pages + barrel index.ts
   components/
     FormWizard/            — generic create/edit engine (config-driven)
@@ -563,7 +744,8 @@ src/
     ObjectDashboard/        — legacy static-config-driven list/CRUD dashboard; `DashboardSelectionBar` (bulk bar, Export CSV, #205)
     ObjectTypeExplorer/     — left-nav entity type picker (ObjectDashboard, FormWizardPage): search, A–Z/Z–A sort, optional groups (unused since #177 link 2), `marked` entries, `favourites` with a star per type, listed on top as copies (#194, #225, dashboard only), `filters` (Any/Yes/No selects, #226, dashboard only), settings in localStorage (KNG-61)
     ReferenceDetails.tsx    — what still uses a record, inside FeedbackModal's "Show what uses it" (#44)
-    PagedEntityTable/       — generic server-paged table, used by the dashboard and the relation picker's "Open full table"; controlled mode (`query`/`onQueryChange`), `rowHref`, `aria-sort` (#39); `selectionStyle="checkbox"` + `renderSelectionBar` (#205)
+    PagedEntityTable/       — generic server-paged table, used by the dashboard and the relation picker's "Open full table"; controlled mode (`query`/`onQueryChange`), `rowHref`, `aria-sort` (#39); `selectionStyle="checkbox"` + `renderSelectionBar` (#205); draws through `DataTable`/`Pager` (#187)
+    DataTable.tsx, Pager.tsx, Field.tsx, SettingsPage.tsx — data and format primitives (#187); see § Data and format primitives
     PathBuilder/            — path/reference picker for cross-entity field bindings
     Workflow/               — WorldTask/job polling UI (siege/world-mutation background tasks)
     minecraft/              — hybrid pickers for Minecraft material/enchantment refs
@@ -667,6 +849,15 @@ a `REACT_APP_*` environment variable, matching the note already in this repo's
   "Send again" (presence + busy check, then `POST WorldTasks/{id}/offer`) and "Hand off to…" while the hub is
   connected; the busy panel and the picker re-deliver that task instead of creating one (`deliverTask`); the card
   shows only the `/knk task <code>` command; `offerNotice` covers `NoPermission`.
+  *#183 (Realtime S4, branch `claude/realtime-web-live-183`, not merged):* `src/realtime/liveUpdates.ts` listens for
+  `EntityChanged` and `PresenceChanged` (the API sends them only to holders of `knk.admin.content` /
+  `knk.admin.user.manage`): `useLiveEntityChanges` (one debounced call per burst of other staff's changes to a type or
+  entity, a delete, or a reconnect; the context's `userId` skips your own) and `usePresenceChanges`. `ObjectDashboard`
+  refetches its table quietly (`PagedEntityTable` `liveRefreshKey`, rows stay) with "Updated by … at …";
+  `DisplayWizardPage` re-reads quietly (`useEntityData` `refetch(true)`) or says the entity was deleted;
+  `UserModerationPage` updates the Online/Offline badges in place (`applyPresence`) and re-reads quietly on a bulk change
+  or reconnect; `PlayerProfilePage` shows an online badge from the profile summary's `presence`. Tests use
+  `src/test-utils/fakeRealtime.tsx`. DESIGN §6.9.
   *#180 (branch `claude/world-task-hardening`):* the panel stops polling once the task is closed (Completed, Failed,
   Cancelled, Expired) and offers "Cancel task" / "Start again"; tasks are anchored to the draft: `FormWizard` keeps the
   latest task per field (`fieldTasks`, loaded from `GET FormSubmissionProgress/{id}/world-tasks` on resume), saves the
@@ -683,8 +874,8 @@ a `REACT_APP_*` environment variable, matching the note already in this repo's
 - Two independent, only-partially-overlapping "which entities exist" registries
   (`config/objectConfigs.tsx` static map vs. the live `metadataClient` bundle) —
   adding an entity to one does not automatically add it to the other.
-- `pages/admin/EntityTypeConfigurationPage.tsx` is fully built but has no route in
-  `App.tsx` and no link in `Navigation.tsx` — currently unreachable in the running app.
+- ~~`pages/admin/EntityTypeConfigurationPage.tsx` is fully built but has no route~~ — the file no longer
+  exists (checked 2026-11-05, #30); every page is an entry of `routes/routeTable.ts`.
 - ~~`DisplayWizardPage`'s `edit`/`create` action handlers navigate to `/form/...`~~ —
   fixed: they go to `/forms/...` with a `returnTo` to the detail page (#177 link 2, #81).
 - `components/DynamicForm.tsx` and `components/ObjectView.tsx` are large (383 and 411
