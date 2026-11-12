@@ -23,6 +23,7 @@ Central home for requirements, specifications, and implementation roadmaps acros
 - production-storage-transport/: the resource-economy backbone: storages (domain/player/clan), production kinds with yield areas, transport orders (simulated, then NPC/courier), town logistics (V2 port, design draft rev. 2, 2026-10-09)
 - in-game-maps/: battle map tables — web map targeting page shown in game through a server-side browser (MapBrowser) for siege-engine targeting and other map views; direction chosen 2026-11-03, renderer switched from Dynmap to BlueMap after a test render 2026-11-10 (BLUEMAP_EVALUATION.md), no code (GitHub #224)
 - ai-agent-workflow/: how AI agents work on K&K — intake, design, manager and coordinator roles, `next` integration branch with risk tiers and release tags, project skills in knk-workspace, CI as the agent gate, daily digest (decided 2026-11-12; setup chain not yet run)
+- siege-minigame/: the PvP Siege minigame (implemented MVP), its menus, form configs and plan; plus [SIEGE_WEAPONS.md](siege-minigame/SIEGE_WEAPONS.md), siege weapons on team-owned scenario spots (GitHub #354; design in progress 2026-11-12, aiming/firing open, no code)
 - siege-survival/: cooperative endless NPC-wave defense, gate repair, spawnzone progression and match equipment/economy (Linear KNG-50, child of KNG-37; design only)
 - user-features/: rank/permission/title/salary architecture
 - user-management/: tailored admin module built on top of user-features

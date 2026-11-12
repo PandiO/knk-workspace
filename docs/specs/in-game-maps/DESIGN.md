@@ -26,7 +26,7 @@ The same tables are used for other views as well. Which area and which view a ta
 
 There are **no permanent walls of preloaded maps**.
 
-Out of scope here: the siege engines themselves (projectile, reload, damage to gates and objectives). They have no design or issue yet (#224 "Open points").
+Out of scope here: the siege engines themselves (projectile, reload, damage to gates and objectives). They are designed in [siege-minigame/SIEGE_WEAPONS.md](../siege-minigame/SIEGE_WEAPONS.md) (#354, since 2026-11-12); aiming and firing, where this targeting comes in, is #355.
 
 ## 2. Decisions (developer, 2026-11-03)
 
@@ -149,4 +149,4 @@ Tracked in #224. To be split into sub-issues when picked up:
 3. **Plugin:** a battle-map table model (entity or config), the context switch, and the start/stop rules from §6.2.
 4. **Tile pipeline:** offline render, then copy to production; choose a storage option (§7).
 5. **Hosting:** Chromium host on a VPS (§6.3).
-6. **Separately:** design the siege engines themselves (new issue).
+6. **Separately:** design the siege engines themselves: #354, [SIEGE_WEAPONS.md](../siege-minigame/SIEGE_WEAPONS.md).
