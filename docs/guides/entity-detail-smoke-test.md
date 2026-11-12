@@ -1,16 +1,14 @@
 # Entity detail page: real Select / Unlink / Add, separate Delete, readable values and errors (#188, #189) — smoke test
 
 **Status:** Written 2026-11-09 for knk-web-app and knk-web-api `claude/entity-detail-188-189` (chain 3 link V5); **merged 2026-11-12** (knk-web-api `master` `bc97b7d` and knk-web-app `main` `1371951`, with V7); not run by the developer
-**Last updated:** 2026-11-12 (merged with V7); 2026-11-09
+**Last updated:** 2026-11-12 (test on the default branches, docs #343); 2026-11-12 (merged with V7); 2026-11-09
 **Issues:** [PandiO/knk-workspace#188](https://github.com/PandiO/knk-workspace/issues/188) (relationship actions),
 [PandiO/knk-workspace#189](https://github.com/PandiO/knk-workspace/issues/189) (readability); access model
 [#280](https://github.com/PandiO/knk-workspace/issues/280)
 
-About 30 minutes. **One new API endpoint pair, no migration, no setting.** Both branches are stacked:
-
-- knk-web-api `claude/entity-detail-188-189` contains `claude/dashboard-access-280` (AM1 + AM2, and through them P1, R1
-  and X1's API). Deploy it with (or after) AM1/AM2.
-- knk-web-app `claude/entity-detail-188-189` contains V4 `claude/settings-pages-26` (V3, V2, V1, chain 2's X1 with W1–W4).
+About 30 minutes. **One new API endpoint pair, no migration, no setting.** Since the 2026-11-12 merge, test it
+on knk-web-api `master` (from `bc97b7d`, with #280 AM1 + AM2) and knk-web-app `main` (from `1371951`). The feature
+branches were `claude/entity-detail-188-189` in both repos.
 
 You need:
 - **A** — the owner or an Admin account.

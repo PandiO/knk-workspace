@@ -1,16 +1,16 @@
 # Web app feedback primitives: Dialog, confirm, toasts (#33) — smoke test
 
-**Status:** Written 2026-11-05 for knk-web-app `claude/feedback-primitives-33`; not merged, not run
-**Last updated:** 2026-11-06 (§ 3: child-form leave question, LW2-2)
+**Status:** Written 2026-11-05 for knk-web-app `claude/feedback-primitives-33` (chain 2 link W2); **merged 2026-11-12** (knk-web-app `main` `1371951`); not run by the developer
+**Last updated:** 2026-11-12 (merged; run on `main`, docs #338); 2026-11-06 (§ 3: child-form leave question, LW2-2)
 **Issues:** [PandiO/knk-workspace#33](https://github.com/PandiO/knk-workspace/issues/33) (toasts, one accessible
 `Dialog`, confirm with danger and a required reason; sub-issue of [#24](https://github.com/PandiO/knk-workspace/issues/24))
-**Branches:** knk-web-app `claude/feedback-primitives-33` (on `main` `a7b231d`); knk-workspace `claude/feedback-primitives-33`
-(these docs). No API or plugin change, no migration, no setting.
+**Branches:** merged 2026-11-12 into knk-web-app `main` `1371951`; the feature branch was knk-web-app
+`claude/feedback-primitives-33`. No API or plugin change, no migration, no setting.
 **Chain:** [UX_CHAIN_2.md](../ai-agents/handoffs/UX_CHAIN_2.md) link W2; report
 [2026-11-05-ux-chain-2.md](../reports/2026-11-05-ux-chain-2.md) (W2 block). Design notes:
 [web-app architecture § Feedback](../architecture/web-app-architecture.md#feedback-toasts-dialogs-and-confirms).
 
-Web app only: check out `claude/feedback-primitives-33` in knk-web-app, `npx npm@11 ci` if needed, `npm start`, against
+Web app only: knk-web-app `main` (from `1371951`), `npx npm@11 ci` if needed, `npm start`, against
 the dev API on trunk. Log in as an admin with `knk.admin.content`. Run the sections in the `current` and the `brand`
 theme (cogwheel theme switcher), once with the page background on and once off (same menu, "Background image"), and
 sections 1–3 once at phone width (browser dev tools, 390 px). Use a spare type (e.g. Category) for the deletes. Record each

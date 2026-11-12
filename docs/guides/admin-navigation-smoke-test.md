@@ -1,18 +1,17 @@
 # Web app admin navigation: route table, admin sidebar, breadcrumbs (#30) — smoke test
 
-**Status:** Written 2026-11-05 for knk-web-app `claude/admin-ia-30`; not merged, not run
-**Last updated:** 2026-11-06 (§ 1: Dashboard kept in the bar, LW4-1)
+**Status:** Written 2026-11-05 for knk-web-app `claude/admin-ia-30` (chain 2 link W4); **merged 2026-11-12** (knk-web-app `main` `1371951`); not run by the developer
+**Last updated:** 2026-11-12 (merged; run on `main`, docs #340); 2026-11-06 (§ 1: Dashboard kept in the bar, LW4-1)
 **Issues:** [PandiO/knk-workspace#30](https://github.com/PandiO/knk-workspace/issues/30) (layout routes, route-meta
 table, grouped admin sidebar, breadcrumbs; sub-issue of [#24](https://github.com/PandiO/knk-workspace/issues/24));
 [#262](https://github.com/PandiO/knk-workspace/issues/262) (Invitations link never showed)
-**Branches:** knk-web-app `claude/admin-ia-30` (on `main` `a7b231d`, **contains** `claude/nav-entity-setup-197` (#197)
-and `claude/data-primitives-187` (#187, which contains `claude/feedback-primitives-33`, #33)); knk-workspace
-`claude/admin-ia-30` (these docs, contains those branches' docs). No API or plugin change, no migration, no setting.
+**Branches:** merged 2026-11-12 into knk-web-app `main` `1371951` (with #197, #187, #33 and chain 3 V1–V7); the
+feature branch was knk-web-app `claude/admin-ia-30`. No API or plugin change, no migration, no setting.
 **Chain:** [UX_CHAIN_2.md](../ai-agents/handoffs/UX_CHAIN_2.md) link W4; report
 [2026-11-05-ux-chain-2.md](../reports/2026-11-05-ux-chain-2.md) (W4 block). Design notes:
 [web-app architecture § Routes, layouts and the admin sidebar](../architecture/web-app-architecture.md#routes-layouts-and-the-admin-sidebar).
 
-Web app only: check out `claude/admin-ia-30` in knk-web-app, `npx npm@11 ci` if needed, `npm start`, against the dev
+Web app only: knk-web-app `main` (from `1371951`), `npx npm@11 ci` if needed, `npm start`, against the dev
 API on trunk. You need **two accounts**: the owner (or an admin with `*`), and a **staff account with only some
 nodes**, for example `knk.admin.currency.history`, `knk.admin.invites`, `knk.admin.config` and
 `knk.admin.location.orphans` and **not** `knk.admin.user.manage` (grant them on a test user in its player profile,

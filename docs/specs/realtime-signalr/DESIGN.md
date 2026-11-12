@@ -254,7 +254,7 @@ idempotent and already resilient.
 | `WorldTaskUpdated {taskId, status, offer, claimedBy, output?, error?}` | `task:{id}`, `user:{creatorId}` | `WorldBoundFieldRenderer` (§8.5) |
 | `CatalogScanUpdated {scanId, status, progress}` | `user:{starterId}` | `MinecraftCatalogScanCard` (replaces the 3 s poll) |
 | `PresenceChanged {userId, online, serverId, lastSeenAt}` | holders of `knk.admin.user.manage` (S4: no `staff` group, the node is checked per message, §6.9) | player profile / moderation list (S4, #183) |
-| `EntityChanged {type, id, op, actorUserId, actorName}` | holders of `knk.admin.content` (users and their permission rows: `knk.admin.user.manage`; §6.9) | dashboard and detail page live refresh (S4, #183, §9) |
+| `EntityChanged {type, id, op, actorUserId, actorName}` | holders of the type's area node since #280 AM1 (`knk.admin.content`, `knk.admin.world`, …; users and their permission rows: `knk.admin.user.manage`; §6.9) | dashboard and detail page live refresh (S4, #183, §9) |
 
 ### 6.6 Region rename and containment (later, optional)
 
@@ -357,8 +357,8 @@ onto the hub" → **later, phase S6**.
 
 ### 6.9 S4 as built (2026-11-05, #183)
 
-Branch `claude/realtime-web-live-183` in knk-web-api (from `master`), knk-web-app (from `main`, stacked on the admin IA
-branch `claude/admin-ia-30`) and knk-workspace. Flags LX1-1… in the
+Built on `claude/realtime-web-live-183` in knk-web-api, knk-web-app (stacked on the admin IA branch `claude/admin-ia-30`)
+and knk-workspace; **merged 2026-11-12** (API `master` `bc97b7d`, web app `main` `1371951`; smoke test § S4 not run). Flags LX1-1… in the
 [chain 2 report](../../reports/2026-11-05-ux-chain-2.md) (link X1 block). No migration, no plugin change.
 
 - **Same interceptor, a second map.** `Realtime/RealtimeEntityChangeInterceptor` also watches every model with
@@ -379,8 +379,10 @@ branch `claude/admin-ia-30`) and knk-workspace. Flags LX1-1… in the
   sends it only to web connections whose user holds that node, checked with the REST check
   (`IPermissionResolutionService.CheckAsync`, so `*` and `knk.admin.*` match) in `Realtime/RealtimeWebAudience`, cached
   per user and node for `Realtime:WebPermissionCacheSeconds` (30); a failed check is "no" and not cached; without an
-  audience nobody gets it (fail closed). Nodes: `knk.admin.content` for every dashboard type (the dashboard's and the
-  detail page's route node); `knk.admin.user.manage` for `User`, `UserPermissionGroup`, `PermissionGrant`,
+  audience nobody gets it (fail closed). Nodes: as built on the branch, `knk.admin.content` for every dashboard type (the dashboard's and the
+  detail page's route node); **since #280 AM1 (merged with it 2026-11-12) the type's area node** from the
+  `DashboardAccess` registry (`RealtimeWebChangeMap.NodeFor`/`NodeForName`; `knk.admin.content` only for a type
+  outside the registry; a base type's event carries the base type's area node; [access model](../dashboard-access-model/DESIGN.md) § 4.2); `knk.admin.user.manage` for `User`, `UserPermissionGroup`, `PermissionGrant`,
   `PermissionHolder`, `AuditLogEntry` and for `PresenceChanged` (the moderation list `GET api/Users`, the profile summary
   and `online-staff`'s own data need it); **never sent:** `UserIgnore`, `CurrencyTransaction`, `KitPurchase`, `KitClaim`,
   `ItemInstance` (game-server, ledger or lootbox-manager reads). A node taken away stops the events within 30 s (REST is

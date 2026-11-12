@@ -1,7 +1,7 @@
 # Closed alpha hardening (KNG-64) — smoke test
 
 **Status:** Passed 2026-10-11 (run 1, developer): all steps pass or are accepted after the fixes in the findings below; phone login (29-30) and the seed import (33) not run
-**Last updated:** 2026-10-18 (step 10's known issue fixed by KNG-103); 2026-10-11; 2026-10-26 nav label "Forms" → "Entity setup" (PandiO/knk-workspace#177); 2026-11-05 no Entity setup nav link, opened with the dashboard's ⚙ (#197, branch `claude/nav-entity-setup-197`)
+**Last updated:** 2026-10-18 (step 10's known issue fixed by KNG-103); 2026-10-11; 2026-10-26 nav label "Forms" → "Entity setup" (PandiO/knk-workspace#177); 2026-11-05 no Entity setup nav link, opened with the dashboard's ⚙ (#197, branch `claude/nav-entity-setup-197`, merged 2026-11-12)
 **Plan:** [specs/alpha-hardening/IMPLEMENTATION_PLAN.md](../specs/alpha-hardening/IMPLEMENTATION_PLAN.md) ·
 **Automated run:** [reports/2026-10-08-alpha-hardening-verification.md](../reports/2026-10-08-alpha-hardening-verification.md) ·
 **Linear:** [KNG-64](https://linear.app/kngpandi/issue/KNG-64) (KNG-65..71)

@@ -1,9 +1,9 @@
 # Realtime channel (SignalR) — smoke test
 
 **Status:** All sections run by the developer (WT2 2026-11-04; WT2 follow-ups, S1, S2, S3 2026-11-05) and merged into the
-default branches; S1–S3 issues closed 2026-11-05. `realtime.enabled` stays `false` by default. § S4 (#183) is on the
-feature branch `claude/realtime-web-live-183`, not run yet
-**Last updated:** 2026-11-06 (§ S4 step 9: `Realtime:WebLiveUpdatesEnabled` switch, #183, feature branch); 2026-11-05 (§ S4, #183, feature branch); 2026-11-05 (S1, S2, S3 findings; S2 steps 5 and 7 corrected); 2026-11-05 (§ WT2 follow-ups: findings, merged); 2026-11-04 (§ WT2 follow-ups #239/#240, feature branch); 2026-11-04 (WT2 findings; merged); 2026-11-02 (§ S3, #182); 2026-11-02 (§ WT2, #181)
+default branches; S1–S3 issues closed 2026-11-05. `realtime.enabled` stays `false` by default. § S4 (#183) merged
+2026-11-12 (API `master` `bc97b7d`, web app `main` `1371951`), **not run yet**
+**Last updated:** 2026-11-12 (§ S4 merged, not run; accounts and step 6 follow the area nodes of #280 AM1, docs #341); 2026-11-06 (§ S4 step 9: `Realtime:WebLiveUpdatesEnabled` switch, #183, feature branch); 2026-11-05 (§ S4, #183, feature branch); 2026-11-05 (S1, S2, S3 findings; S2 steps 5 and 7 corrected); 2026-11-05 (§ WT2 follow-ups: findings, merged); 2026-11-04 (§ WT2 follow-ups #239/#240, feature branch); 2026-11-04 (WT2 findings; merged); 2026-11-02 (§ S3, #182); 2026-11-02 (§ WT2, #181)
 **Design:** [specs/realtime-signalr/DESIGN.md](../specs/realtime-signalr/DESIGN.md) (§4–§5, as built: §4.6) ·
 [IMPLEMENTATION_PLAN.md](../specs/realtime-signalr/IMPLEMENTATION_PLAN.md) ·
 **Issues:** [PandiO/knk-workspace#178](https://github.com/PandiO/knk-workspace/issues/178) (S1),
@@ -238,12 +238,15 @@ Record the times of 2, 4, 5 and 8 under **Findings**.
 
 ## S4 — live updates in the web app (#183)
 
-**Builds:** knk-web-api and knk-web-app on `claude/realtime-web-live-183` (the web-app branch contains the admin IA
-branch `claude/admin-ia-30`, W1–W4). **API:** no migration; optional settings `Realtime:WebPermissionCacheSeconds`
+**Builds:** knk-web-api `master` and knk-web-app `main` from 2026-11-12 on (merged with the admin IA, W1–W4, and #280
+AM1+AM2). **API:** no migration; optional settings `Realtime:WebPermissionCacheSeconds`
 (default 30) and `Realtime:WebLiveUpdatesEnabled` (default `true`; step 9). **Plugin:** none; the web part works with the plugin's `realtime.enabled` on or off (presence then comes
 from the REST join/quit calls). **People:** staff **A** and **B** in two browsers (or a normal and a private window),
-both with `knk.admin.content` and `knk.admin.user.manage`; a third account **C** with `knk.admin.content` only; player
-**P** who can join the game server. Design: [DESIGN §6.9](../specs/realtime-signalr/DESIGN.md).
+both with `knk.admin.content`, `knk.admin.world` and `knk.admin.user.manage`; a third account **C** with
+`knk.admin.content` and `knk.admin.world` only; player **P** who can join the game server. Since #280 AM1 an
+`EntityChanged` goes to holders of the type's **area node** (towns, domains, streets: `knk.admin.world`; items,
+categories: `knk.admin.content`; see [the access model](../specs/dashboard-access-model/DESIGN.md) § 4.2), and the
+web app still needs `knk.admin.content` to open the dashboard at all (until #280 AM3). Design: [DESIGN §6.9](../specs/realtime-signalr/DESIGN.md).
 
 1. **Dashboard refresh.** A and B open `/dashboard/Town` (or any type both can edit). B edits a town's description
    and saves. Within about 1 s A's table shows the new text without a spinner or a page jump, and above the table
@@ -262,8 +265,9 @@ both with `knk.admin.content` and `knk.admin.user.manage`; a third account **C**
    P joins / quits: the badge changes without Reload. An account without a Minecraft UUID shows no badge.
 6. **Permission gating.** C (content only) keeps the dashboard updates of step 1 but receives no `PresenceChanged`
    (browser devtools → Network → the `hubs/web` WebSocket → Messages: no `PresenceChanged` frames while P joins and
-   quits) and no `EntityChanged` for `User` (edit a user's name as A). Take `knk.admin.content` away from C (or its
-   group) while C's dashboard is open: within 30 s C stops getting `EntityChanged` (REST answers 403 at once). A
+   quits) and no `EntityChanged` for `User` (edit a user's name as A). Take `knk.admin.world` away from C (or its
+   group) while C's Town dashboard is open: within 30 s C stops getting the Town `EntityChanged` (REST answers 403 at
+   once); C still gets them for a Content type such as `Category`. A
    player without staff nodes gets neither event.
 7. **Hub down = as before.** Stop the API for a minute with A's dashboard open: nothing breaks; after it is back the
    hub reconnects and the table is read again once (quietly). In a build whose proxy doesn't forward `/api/hubs/web`

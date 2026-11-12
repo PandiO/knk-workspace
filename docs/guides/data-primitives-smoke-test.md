@@ -1,17 +1,18 @@
 # Web app data and format primitives: tables, formats, labels, settings pages (#187) — smoke test
 
-**Status:** Written 2026-11-05 for knk-web-app `claude/data-primitives-187`; not merged, not run
-**Last updated:** 2026-11-06 (numbers in the browser's language, LW3-1)
+**Status:** Written 2026-11-05 for knk-web-app `claude/data-primitives-187` (chain 2 link W3); **merged 2026-11-12** (knk-web-app `main` `1371951`); not run by the developer
+**Last updated:** 2026-11-12 (merged; run on `main`, docs #339); 2026-11-06 (numbers in the browser's language, LW3-1)
 **Issues:** [PandiO/knk-workspace#187](https://github.com/PandiO/knk-workspace/issues/187) (`DataTable`/`Pager`,
 `format.ts`, `Field`, `SettingsPage` shell; sub-issue of [#24](https://github.com/PandiO/knk-workspace/issues/24))
-**Branches:** knk-web-app `claude/data-primitives-187` (on `main` `a7b231d`, **contains**
-`claude/feedback-primitives-33`, #33); knk-workspace `claude/data-primitives-187` (these docs, contains #33's docs). No
+**Branches:** merged 2026-11-12 into knk-web-app `main` `1371951` (with #33, #30 and chain 3 V1–V7, whose settings
+pages build on this shell: see the [settings pages smoke test](settings-pages-smoke-test.md)); the feature branch was
+knk-web-app `claude/data-primitives-187`. No
 API or plugin change, no migration, no setting.
 **Chain:** [UX_CHAIN_2.md](../ai-agents/handoffs/UX_CHAIN_2.md) link W3; report
 [2026-11-05-ux-chain-2.md](../reports/2026-11-05-ux-chain-2.md) (W3 block). Design notes:
 [web-app architecture § Data and format primitives](../architecture/web-app-architecture.md#data-and-format-primitives-tables-pager-formatting-fields-settings-pages).
 
-Web app only: check out `claude/data-primitives-187` in knk-web-app, `npx npm@11 ci` if needed, `npm start`, against
+Web app only: knk-web-app `main` (from `1371951`), `npx npm@11 ci` if needed, `npm start`, against
 the dev API on trunk. Log in as an admin with `knk.admin.content`, `knk.admin.config`, `knk.siege.admin.manage` and the
 moderation node. Because the branch contains #33, the [feedback primitives smoke test](feedback-primitives-smoke-test.md)
 can run on the same checkout. Run the sections in the `current` and the `brand` theme (cogwheel theme switcher), once

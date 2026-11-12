@@ -183,7 +183,7 @@ pinned):
 - **The plugin** passes every gated read with its key (`api.auth.type: apikey`); `ReadAccessRulesTests` lists every
   GET and search POST of knk-plugin's `knk-api-client` and runs them through the filters.
 
-### 5.3 Relationships: Select / Unlink / Add (PandiO/knk-workspace#188 — branch `claude/entity-detail-188-189`, not merged)
+### 5.3 Relationships: Select / Unlink / Add (PandiO/knk-workspace#188, merged 2026-11-12)
 
 The entity detail page changes a link without editing the rest of the record and without ever deleting the related
 record.
@@ -217,7 +217,7 @@ record.
 - **Display import:** `showDeleteButton` is a known button key; Select/Unlink/Add/Remove are no longer reported as
   hidden.
 
-### 5.4 What still uses a record: rows for "Show details" (PandiO/knk-workspace#44 — branch `claude/picker-details-191-44`, not merged)
+### 5.4 What still uses a record: rows for "Show details" (PandiO/knk-workspace#44, merged 2026-11-12)
 
 A delete the database refuses answers 409 `{ code: "DbConstraint", message, references: [{ referencedBy, count }] }`
 (`DeleteConstraintExceptionFilter`, KNG-162/KNG-172). The rows behind those counts are fetched only when the admin asks:
@@ -240,7 +240,7 @@ A delete the database refuses answers 409 `{ code: "DbConstraint", message, refe
 - `EntityReferenceService.GetReferencingRowsAsync` shares the loop with the counts (the ids of the referencing rows, for a
   join row the other side's id); counts and rows always agree.
 
-### 5.5 Builder drafts, Publish and Duplicate (PandiO/knk-workspace#71 — branch `claude/builders-71`, not merged)
+### 5.5 Builder drafts, Publish and Duplicate (PandiO/knk-workspace#71, merged 2026-11-12)
 
 The form and display builders save in place without changing what staff use: a configuration's **rows** (steps,
 fields; sections, fields) are always the **published** version the form wizard, "New with", child forms, pickers,
@@ -318,14 +318,16 @@ Contrary to what both this repo's and knk-plugin's CLAUDE.md currently say ("no 
   them to the same after-commit sink (no service changes; option C would swap only the sink). `GateChanged` comes from
   `GateStructureService`/`GateDoorService` definition edits (not from runtime state or siege lockdown writes). Game hub
   invocation `ReportWorlds` = `PUT api/GameSettings/runtime-worlds` over the hub. DESIGN §6.8.
-  **S4 (#183, branch `claude/realtime-web-live-183`, not merged):** the same interceptor also feeds
+  **S4 (#183, merged 2026-11-12, `master` `bc97b7d`; smoke test § S4 not run):** the same interceptor also feeds
   `Realtime/RealtimeWebChangeMap` (while a web connection is open): web `EntityChanged {type, id, op, actorUserId,
   actorName}` for every `[FormConfigurableEntity]` type and its dashboard base types, `PresenceChanged {userId, online,
   serverId, lastSeenAt}` when `User.IsOnline` changes. Each names a node (`RealtimeEvent.WebNode` →
   `PublishToWebHolders` → `RealtimeMessage.RequiredNode`); the dispatcher sends it only to web connections whose user
   holds it (`Realtime/RealtimeWebAudience`: `IPermissionResolutionService.CheckAsync`, cached
-  `Realtime:WebPermissionCacheSeconds`, 30; fail closed): `knk.admin.content`, or `knk.admin.user.manage` for users,
-  their permission rows, the audit log and presence; ledger and game-server-only types are never sent. The profile
+  `Realtime:WebPermissionCacheSeconds`, 30; fail closed): since #280 AM1 (same merge) the type's **area node** from
+  `DashboardAccess` (§ 5.1; `RealtimeWebChangeMap.NodeFor`, `knk.admin.content` only for a type outside the registry),
+  or `knk.admin.user.manage` for users, their permission rows, the audit log and presence; a base type's event (a Town
+  also sends `Domain`) carries the base type's own area node; ledger and game-server-only types are never sent. The profile
   summary gains `presence {online, lastSeenAt}`. `Realtime:WebLiveUpdatesEnabled` (default `true`) switches the web
   events off (none built or sent; game-server events and the profile's `presence` stay; decision 2026-11-06). DESIGN §6.9.
 - **Headless world-task polling**: the plugin polls for tasks it needs to execute (`HeadlessWorldTaskPoller.java`, 5s interval backing off to 60s when idle) rather than being notified — the plugin's own source comments already flag this as a known gap ("should eventually be replaced by the API pushing a notification, e.g. SignalR"). There is no SignalR/WebSocket/Hub anywhere in this repo today. *#180:* the poller now claims a scan (claim mode `headless`) before it runs it, and every claim the plugin holds is renewed by `POST api/WorldTasks/{id}/heartbeat`; `claim`, `complete`, `fail`, `release`, `heartbeat` and `GET open?serverId=` are game-server only (`[RequirePluginService]`).

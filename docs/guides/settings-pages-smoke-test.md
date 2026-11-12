@@ -1,12 +1,12 @@
 # Settings pages: units and help, confirms on risky switches, lootbox preview, three pages on the settings shell (#26) — smoke test
 
 **Status:** Written 2026-11-08 for knk-web-app `claude/settings-pages-26` (chain 3 link V4); **merged 2026-11-12** (knk-web-app `main` `1371951`, with V7); not run by the developer
-**Last updated:** 2026-11-12 (merged with V7); 2026-11-08
+**Last updated:** 2026-11-12 (test on `main`, docs #342); 2026-11-12 (merged with V7); 2026-11-08
 **Issues:** [PandiO/knk-workspace#26](https://github.com/PandiO/knk-workspace/issues/26) (SET-5, SET-6 and #38's
 lootbox preview / "1 in N" odds); the shell is [#187](https://github.com/PandiO/knk-workspace/issues/187)'s `SettingsPage`
 
-About 25 minutes. **No API change, no migration, no setting.** The web-app branch contains chain 3's V3
-(`claude/player-profile-119`), V2, V1 and chain 2's X1 with W1–W4, so test it on a build of `claude/settings-pages-26`.
+About 25 minutes. **No API change, no migration, no setting.** Since the 2026-11-12 merge, test it on knk-web-app `main`
+(from `1371951`); the feature branch was `claude/settings-pages-26`.
 
 You need:
 - **A** — the owner or an Admin account (holds `knk.admin.lootbox.manage`, `knk.admin.currency.policy`, `knk.admin.road`,

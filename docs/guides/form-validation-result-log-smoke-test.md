@@ -1,7 +1,7 @@
 # Form validation: step completion conditions (KNG-186) and the rule result log (KNG-269) — smoke test
 
 **Status:** Passed 2026-10-24 (run 1, developer): every step passed or was accepted after the four fixes recorded in Findings; **merged** to trunk 2026-10-24 (knk-web-api `master` `a38c8ee`, knk-web-app `main` `00e4af6`)
-**Last updated:** 2026-10-24 (passed and merged); 2026-10-26 nav label "Forms" → "Entity setup" (PandiO/knk-workspace#177); 2026-11-05 no Entity setup nav link (#197, branch `claude/nav-entity-setup-197`)
+**Last updated:** 2026-10-24 (passed and merged); 2026-10-26 nav label "Forms" → "Entity setup" (PandiO/knk-workspace#177); 2026-11-05 no Entity setup nav link (#197, branch `claude/nav-entity-setup-197`, merged 2026-11-12)
 **Linear:** [KNG-186](https://linear.app/kngpandi/issue/KNG-186) · [KNG-269](https://linear.app/kngpandi/issue/KNG-269)
 **Branches:** merged to trunk 2026-10-24 (knk-web-api `master` `a38c8ee`, knk-web-app `main` `00e4af6`); the test branches `claude/kng-186-269-form-validation`, `claude/kng-186-form-condition-isactive` and `claude/kng-269-validation-result-log` are history.
 

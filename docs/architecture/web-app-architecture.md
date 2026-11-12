@@ -20,8 +20,7 @@
   was removed 2026-10-08 (KNG-71): only its provider was used. Shared component classes in
   `src/index.css`: `.btn` (`inline-flex`, `gap-2`; an icon's own `mx` margin is dropped under it) with
   `.btn-primary` / `-secondary` / `-tertiary` / `-danger` / `-cta`, `.panel`, `.input`, `.field-error`. Every colour
-  is a theme token (see [Design tokens and themes](#design-tokens-and-themes), #95, branch `claude/design-tokens-95`,
-  not merged). `@tailwindcss/forms` is **not** installed: a field written `rounded-md border-gray-300 …` gets its
+  is a theme token (see [Design tokens and themes](#design-tokens-and-themes), #95, merged 2026-11-03). `@tailwindcss/forms` is **not** installed: a field written `rounded-md border-gray-300 …` gets its
   1px border from a zero-specificity base rule in `index.css` (#38); `src/__tests__/tailwindStyles.test.ts` compiles
   the CSS and checks these.
 - Drag-and-drop: `@dnd-kit/*` (used in `FormWizard`, `FormConfigBuilder`,
@@ -41,7 +40,7 @@
 ## Design tokens and themes
 
 _Added 2026-11-02 for PandiO/knk-workspace#95 (rebrand phase 1), knk-web-app branch `claude/design-tokens-95` on
-`main` `1c9524d`; not merged. How to compare the themes: [design-themes-comparison.md](../guides/design-themes-comparison.md)._
+`main` `1c9524d`; merged 2026-11-03. How to compare the themes: [design-themes-comparison.md](../guides/design-themes-comparison.md)._
 
 - **Tokens** live in `src/theme/tokens.css` (imported in `src/index.tsx` before `index.css`) as `"R G B"` CSS
   variables, one block per theme under `:root[data-theme="current" | "brand" | "proposal"]`; a bare `:root` is
@@ -99,7 +98,7 @@ _Added 2026-11-02 for PandiO/knk-workspace#95 (rebrand phase 1), knk-web-app bra
 
 ## Feedback: toasts, dialogs and confirms
 
-PandiO/knk-workspace#33 (branch `claude/feedback-primitives-33`, not merged). Three primitives; use them instead of
+PandiO/knk-workspace#33 (chain 2 link W2; merged 2026-11-12 in `main` `1371951`; smoke test not run). Three primitives; use them instead of
 building an overlay or a status banner by hand.
 
 | Need | Use | Where |
@@ -148,7 +147,7 @@ building an overlay or a status banner by hand.
 
 ## Data and format primitives: tables, pager, formatting, fields, settings pages
 
-PandiO/knk-workspace#187 (branch `claude/data-primitives-187`, stacked on #33's branch, not merged). Use these instead
+PandiO/knk-workspace#187 (chain 2 link W3; merged 2026-11-12 in `main` `1371951`; smoke test not run). Use these instead
 of a hand-rolled `<table>`, pager, `toLocaleString`, unlabelled input or settings header.
 
 | Need | Use | Where |
@@ -379,7 +378,7 @@ entity. Two parallel generic engines carry most of the CRUD surface:
    (`displayConfigClient`).
 
 **Builders: draft, Publish, Duplicate, generate, preview** (`FormConfigBuilder/`, `DisplayConfigBuilder/`,
-`components/configBuilder/`, `utils/configBuilder/`; PandiO/knk-workspace#71, branch `claude/builders-71`, not merged):
+`components/configBuilder/`, `utils/configBuilder/`; PandiO/knk-workspace#71, merged 2026-11-12 in `main` `1371951`; smoke-tested by the developer 2026-11-11/12):
 - **Opening** reads `GET {id}/builder` (`getBuilderState`): the working copy (saved draft, else the published version)
   and the published version. The toolbar (`BuilderToolbar`, sticky from `md`) says *New*, *Draft* (never published),
   *Published · changes not published* or *Published*, and "Unsaved changes." by value (a snapshot of the body Save
@@ -440,7 +439,7 @@ View opens `/display/{type}/{id}?returnTo=…`, Edit
 `/admin/users/{id}` (`utils/returnTo.ts` `entityEditPath`; the generic User form stays for create
 until #72/#148).
 
-**Table state in the URL** (#39, branch `claude/entity-lists-url-state` until merged): the dashboard drives
+**Table state in the URL** (#39, merged 2026-11-03): the dashboard drives
 `PagedEntityTable` in **controlled mode** (`query` + `onQueryChange`); page, search, sort and filters are query
 parameters of `/dashboard/{type}` (`utils/tableQueryParams.ts`: `?page=2&q=north&sort=name&dir=desc&f.CategoryId=4`,
 defaults left out). A change replaces the history entry (Back leaves the type rather than stepping through pages);
@@ -453,7 +452,7 @@ detail page (middle-click, Ctrl/Cmd-click, keyboard), a plain click still goes t
 Ctrl-click or middle-click elsewhere on the row opens a new tab; only for types whose View works, and not while a row
 click selects (the wizard pickers). Sortable headers are buttons (keyboard) with `aria-sort`.
 
-**Checkbox selection and Export CSV** (#205 export part, branch `claude/dashboard-export-205` until merged):
+**Checkbox selection and Export CSV** (#205 export part, merged 2026-11-12; it reads the type's own list API, `POST api/Dashboard/export` replaces that with #280 AM3, not built):
 - **Selection:** the dashboard passes `selectionConfig={{ mode: 'multiple' }}` with `selectionStyle="checkbox"`, so
   `DataTable` draws a checkbox column (`selection` prop) and a header box for the rows shown (mixed when some are).
   Clicks in that cell never reach the row, so the row link, the row click and middle-click keep working. The pickers
@@ -499,7 +498,7 @@ and widens the whole page even inside an `overflow-x-auto` box; `.dashboard-cont
 the default tab is left out, an unknown value reads as the default, switching replaces the history entry). On the
 moderation page the player names are links to the profile.
 
-**Settings pages** (#26, branch `claude/settings-pages-26` until merged; the shell itself is #187's
+**Settings pages** (#26, merged 2026-11-12; the shell itself is #187's
 `components/SettingsPage.tsx`, chain 2 W3): Game settings, Siege settings, **Lootboxes → Settings**, **Currency policy**
 and **Road network** run on the `SettingsPage` shell — a sticky header with the title, "Last saved …", "n unsaved
 changes", Reload, Discard, Save (n); with changes an in-app navigation asks "Leave without saving?" (red Leave, focus on
@@ -532,7 +531,7 @@ Stay) and a reload or closing the tab gets the browser's question; success is a 
   are not counted.
 
 **Staff player profile** (`pages/admin/PlayerProfilePage.tsx` + `pages/admin/playerProfile/`, `/admin/users/:id`; #119,
-branch `claude/player-profile-119` until merged):
+web part merged 2026-11-12; the API part of #119 is not merged):
 - **Status strip** (`PlayerStatusStrip`): chips for online / last seen (live through `PresenceChanged`, #183), no
   Minecraft account, mode, **Frozen**, **Payments locked**, premium tier, Deactivated, Not admitted, Minecraft-only and
   Email not verified, with **Freeze** / **Unfreeze** and Reload. While frozen a banner says since when, by whom (the latest
@@ -570,12 +569,12 @@ display configuration's name: the entity's own name (`utils/entityLabel.ts`), it
 (`detailTrail`), **Back** to `returnTo` (else `/dashboard/{type}`), **Edit** coming back to the page and
 **Delete** with a confirmation naming the entity (success toast, then Back's target). The tab title is
 "{name} · {Type}". `DisplayWizard` takes the header as `renderHeader(entity)`.
-Since #188 / #189 (branch `claude/entity-detail-188-189`, not merged) the header's Edit and Delete follow the type's
+Since #188 / #189 (merged 2026-11-12) the header's Edit and Delete follow the type's
 metadata `actionNodes` (`useAllNodesGate`, all-of): a missing node disables the button with "Edit/Delete: Requires …"
 under it (#280 rule).
 
-**Detail page relationships and readability** (`components/DisplayWizard/`, #188, #189; branch
-`claude/entity-detail-188-189`, not merged):
+**Detail page relationships and readability** (`components/DisplayWizard/`, #188, #189;
+merged 2026-11-12):
 - **Data:** `DisplayWizard` loads every type's metadata (`useEntityMetadata`). A section's relationship is the page
   type's `relationships` entry for its `relatedEntityPropertyName` (`detailPage.ts` `findRelationship`); a link row
   (`storage: linkRow`, e.g. `ItemBlueprintTag`) stands for its other side (`relatedType` `Tag`, id from
@@ -604,7 +603,7 @@ under it (#280 rule).
 - Clients: `apiClients/relationshipClient.ts` (`api/Relationships`), `apiClients/lookupClient.ts` (`api/Lookup`, also
   used by the wizard's relation picker, #191, and meant for AM3's picker lookup mode).
 
-**"Show details" on refusals** (PandiO/knk-workspace#44; branch `claude/picker-details-191-44`, not merged):
+**"Show details" on refusals** (PandiO/knk-workspace#44; merged 2026-11-12):
 `FeedbackModal` takes `details: { label?, load }`: a disclosure button (`aria-expanded`) in the Dialog's scrolling body,
 so the footer stays in view; `load` runs on the first press only (spinner, then the result; an error line with Try
 again); Hide/Show keeps the answer; focus still starts on the footer's first button. A delete refused as in use
@@ -632,7 +631,7 @@ dashboard's ⚙ per type, "All saved progress").
 
 ## Routes, layouts and the admin sidebar
 
-PandiO/knk-workspace#30 (chain 2 link W4, branch `claude/admin-ia-30`, not merged).
+PandiO/knk-workspace#30 (chain 2 link W4; merged 2026-11-12 in `main` `1371951`; smoke test not run).
 
 - **Route-meta table** (`src/routes/routeTable.ts`, `ROUTES`): one entry per route with `path`, `layout`
   (`public` | `player` | `admin`), `access` (`public`, `login`, `staff` + node, `owner` + node), `title`, and for
@@ -700,8 +699,8 @@ icon/color/sort overrides, authored via the — currently unrouted —
 saving default table columns) notifies every mounted instance, so an open picker picks the change up
 without remounting.
 
-**Relation picker** (`components/FormWizard/RelationPicker.tsx`, PandiO/knk-workspace#191; branch
-`claude/picker-details-191-44`, not merged): `ObjectField` and `ListField` show a search box (`role="combobox"`) instead
+**Relation picker** (`components/FormWizard/RelationPicker.tsx`, PandiO/knk-workspace#191;
+merged 2026-11-12): `ObjectField` and `ListField` show a search box (`role="combobox"`) instead
 of the inline `PagedEntityTable` (an Object field's "Select instance"/"Replace instance" toggle is gone). Nothing is
 fetched, and no permission is asked, until the box is used; then the first 8 matches
 (`RELATION_PICKER_PAGE_SIZE`) after a 250 ms pause, the form session's pinned rows on top (KNG-136, same client-side
@@ -849,9 +848,9 @@ a `REACT_APP_*` environment variable, matching the note already in this repo's
   "Send again" (presence + busy check, then `POST WorldTasks/{id}/offer`) and "Hand off to…" while the hub is
   connected; the busy panel and the picker re-deliver that task instead of creating one (`deliverTask`); the card
   shows only the `/knk task <code>` command; `offerNotice` covers `NoPermission`.
-  *#183 (Realtime S4, branch `claude/realtime-web-live-183`, not merged):* `src/realtime/liveUpdates.ts` listens for
-  `EntityChanged` and `PresenceChanged` (the API sends them only to holders of `knk.admin.content` /
-  `knk.admin.user.manage`): `useLiveEntityChanges` (one debounced call per burst of other staff's changes to a type or
+  *#183 (Realtime S4, merged 2026-11-12; smoke test § S4 not run):* `src/realtime/liveUpdates.ts` listens for
+  `EntityChanged` and `PresenceChanged` (the API sends them only to holders of the type's area node since #280 AM1 —
+  `knk.admin.content`, `knk.admin.world`, … — or `knk.admin.user.manage`): `useLiveEntityChanges` (one debounced call per burst of other staff's changes to a type or
   entity, a delete, or a reconnect; the context's `userId` skips your own) and `usePresenceChanges`. `ObjectDashboard`
   refetches its table quietly (`PagedEntityTable` `liveRefreshKey`, rows stay) with "Updated by … at …";
   `DisplayWizardPage` re-reads quietly (`useEntityData` `refetch(true)`) or says the entity was deleted;
