@@ -42,8 +42,8 @@ or into `next`.
 |---|---|---|---|---|---|
 | L1 CI | #328 | In review (done 11:40 UTC, both workflows green) | `claude/agent-setup-ci`: knk-web-api `81b06d9`, knk-web-app `a7d31a2` | [knk-web-api#12](https://github.com/PandiO/knk-web-api/pull/12), [knk-web-app#9](https://github.com/PandiO/knk-web-app/pull/9) | create_session session_01R1w2UsfbmKqEY1QXSx25id |
 | L2 Branches, labels, digest | #329 | In review (done 11:40 UTC; labels and pin left for the developer) | `next`: knk-workspace `6245c9f`, knk-web-api `b5e57fa`, knk-web-app `9a85238`, knk-plugin `121030f`; digest issue [#333](https://github.com/PandiO/knk-workspace/issues/333) | — (no file changes) | subagent (coordinator decision § 3.2) |
-| L3 Skills and instructions | #330 | In review (done 12:05 UTC; docs only) | `claude/agent-setup-skills`: knk-workspace `35c554b` (L3b, § 4.6; was `8321f0d`), knk-web-api `dbb05c5`, knk-web-app `7a974ac`, knk-plugin `0759d22` | [knk-workspace#334](https://github.com/PandiO/knk-workspace/pull/334), [knk-web-api#13](https://github.com/PandiO/knk-web-api/pull/13), [knk-web-app#10](https://github.com/PandiO/knk-web-app/pull/10), [knk-plugin#16](https://github.com/PandiO/knk-plugin/pull/16) | subagent (coordinator decision § 3.2) |
-| L4 Tooling | #331 | In review (done 12:15 UTC; hook tested end to end) | `claude/agent-setup-tooling`: knk-workspace `c1afaf1` (L3b, § 4.6; was `9310d7f`) | [knk-workspace#335](https://github.com/PandiO/knk-workspace/pull/335) | subagent (coordinator decision § 3.3) |
+| L3 Skills and instructions | #330 | In review (done 12:05 UTC; docs only) | `claude/agent-setup-skills`: knk-workspace `d475532` (L3c, § 4.7; L3b `35c554b`, first `8321f0d`), knk-web-api `dbb05c5`, knk-web-app `7a974ac`, knk-plugin `0759d22` | [knk-workspace#334](https://github.com/PandiO/knk-workspace/pull/334), [knk-web-api#13](https://github.com/PandiO/knk-web-api/pull/13), [knk-web-app#10](https://github.com/PandiO/knk-web-app/pull/10), [knk-plugin#16](https://github.com/PandiO/knk-plugin/pull/16) | subagent (coordinator decision § 3.2) |
+| L4 Tooling | #331 | In review (done 12:15 UTC; hook tested end to end) | `claude/agent-setup-tooling`: knk-workspace `f7fad77` (L3c, § 4.7; L3b `c1afaf1`, first `9310d7f`) | [knk-workspace#335](https://github.com/PandiO/knk-workspace/pull/335) | subagent (coordinator decision § 3.3) |
 | L5 Sessions board archive | #332 | In review (done 12:25 UTC; board 486 KB → 65 KB on the branch) | `claude/agent-setup-sessions-archive`: knk-workspace `9f91251` | [knk-workspace#336](https://github.com/PandiO/knk-workspace/pull/336) | create_session session_01R1w2Ux2rKagW6rke2sDnes |
 
 ## 3. Coordinator decisions
@@ -537,3 +537,79 @@ no merge, no force-push.
        not the rule, limits `add_repo`.
     3. Review this block's decisions 5.3 (the docs session merges into `next`) and 5.1 (a) (the optional
        `PreToolUse` limit).
+
+### 4.7 L3c — docs-PR rule and add_repo guard (#330, #331)
+
+Follow-up run as a subagent of the coordinator (2026-11-12, evening), on the open branches #334 and #335 only; no
+component repo, no merge, no force-push. Applies two developer decisions of 2026-11-12 that close L3b's open
+decisions 5.3 and 5.1 (a) (§ 4.6 item 8.3).
+
+1. **Scope done.**
+    1. Decision 1, docs sessions under the `next` model (branch `claude/agent-setup-skills`): the docs session branches
+       from knk-workspace `next`, opens its docs PR into `next` and merges it itself, with a merge commit, after its
+       checks. It is the one exception to "PRs into `next` outside a chain wait for the developer" and is marked as the
+       developer's decision in global "Branches, releases and risk tiers" rule 3, docs-session prompt step 4,
+       `DOCUMENTATION_MAINTENANCE.md` lifecycle item 6 and coordinator § 7.9 (the coordinator does not merge the docs
+       PR). L3b's wording (merge the branch) became "open a docs PR and merge it".
+    2. Decision 2, `add_repo` guard (branch `claude/agent-setup-tooling`): `.claude/hooks/add-repo-guard.sh` (bash,
+       about 110 lines), registered in `.claude/settings.json` under `hooks.PreToolUse` with the matcher
+       `mcp__claude-code-remote__add_repo`, timeout 30 s; the `permissions.allow` rule and the Stop hook stay. It
+       allows owner `PandiO` with `knk-workspace`, `knk-web-api`, `knk-web-app`, `knk-plugin`, `knk-v1-archive`,
+       `knk-v2-archive`, `knk-dev-db-seed` (case-insensitive; `ALLOWED_OWNER` and `ALLOWED_REPOS` at the top of the
+       script). Allowed: exit 0, no output, so the allow rule decides. Everything else, and input it cannot read: exit
+       2 with the reason on stderr (fail closed). Parsing: `python3` with duplicate keys rejected, else a strict
+       `grep`/`sed` parse of the flat `tool_input`; both check GitHub name characters; no `jq`.
+    3. `docs/guides/developer/agent-tooling.md`: § 4 split into § 4.1 (permission rule, now pointing at the guard) and
+       § 4.2 (what the guard allows, how to add a repository, how to turn it off, the hook contract cited from the
+       hooks and permissions docs read 2026-11-12, tests); § 1 table and the `docs/guides/README.md` row mention the
+       guard. `.gitattributes` already covers `*.sh`.
+    4. Consistency: `knk-coordinator/permissions-block.md` (#334) names the guard next to the GitHub App limit.
+2. **Commits and heads.** `claude/agent-setup-skills` `35c554b` → `85e41d9` (decision 1) → `d475532` (permissions
+   block); `claude/agent-setup-tooling` `c1afaf1` → `f7fad77`. Model-free trailer on all three.
+3. **PRs.** [#334](https://github.com/PandiO/knk-workspace/pull/334) and
+   [#335](https://github.com/PandiO/knk-workspace/pull/335) bodies updated (decisions, testing, changelog text);
+   comments on [#330](https://github.com/PandiO/knk-workspace/issues/330) and
+   [#331](https://github.com/PandiO/knk-workspace/issues/331). Not merged.
+4. **Tests.**
+    1. Guard, 15 sample inputs, each with `python3` and without it (PATH without Python, `grep`/`sed` path), same exit
+       code on both paths. Exit 0: `PandiO/knk-plugin`; `PandiO/knk-dev-db-seed` (access read); `pandio/KNK-Web-API`;
+       pretty-printed `PANDIO/knk-v2-archive`. Exit 2 with a reason: `PandiO/other-repo` ("is not on the allowed
+       list"); `evil/knk-plugin` ("the owner must be PandiO"); `PandiO/knk-plugin` written into `repo`; `knk-plugin-x`;
+       missing `repo`; `repo` as an array; an escaped quote in `repo`; a duplicate `repo` key; garbage text ("input is
+       not valid JSON (Expecting value: line 1 column 1 (char 0))"); empty input; no `tool_input`.
+    2. End to end, headless Claude Code 2.1.322 in the branch worktree with a stand-in `claude-code-remote` MCP server
+       (`--mcp-config`, `--strict-mcp-config`) that logs every call it receives. Run 1: the hook passed
+       `PandiO/knk-plugin` (exit 0), which then stopped at the permission check, because Claude Code ignores a project's
+       `permissions.allow` in an untrusted folder; it blocked `someone-else/knk-plugin` and the agent got the reason as
+       the tool error. Run 2 with `--allowedTools mcp__claude-code-remote__add_repo`: `pandio/KNK-Web-App` and
+       `PandiO/knk-dev-db-seed` reached the server; `PandiO/some-other-repo` was blocked (hook exit 2) although the tool
+       was allowed. Server log: only the two allowed calls.
+    3. Checks: `.claude/settings.json` valid JSON; link script over the files each branch changes: #334 58 relative
+       links, #335 54, 0 broken; `git diff --check origin/main...HEAD` clean on both. `git merge-tree`: no conflict
+       between `main`, #334 and #335, or between either and #336; `main` + #334 + #335 + `git cherry-pick da40c73
+       99f0c4a` applies cleanly. #336's board commit `9f91251` conflicts with `main` on `docs/ACTIVE_SESSIONS.md` (the
+       board changed since), as expected for the cherry-pick route of § 1 item 1.4.
+5. **Decisions (DESIGN § 4.3).**
+    1. *Deny form.* Chosen: exit 2 with stderr, which the permissions docs say blocks before permission rules are
+       evaluated, so the allow rule cannot override it. Alternative: JSON `hookSpecificOutput.permissionDecision:
+       "deny"` with `permissionDecisionReason`, same effect, JSON on stdout.
+    2. *Allowed path.* Chosen: exit 0 with no output, leaving the decision to the allow rule. Alternative: JSON
+       `"allow"`, which would approve attaches even after the allow rule is removed.
+    3. *No per-hook off switch.* Chosen: turn it off by removing the `PreToolUse` entry (or `disableAllHooks` on one
+       machine). Alternative: a `KNK_ADD_REPO_GUARD=off` variable like `KNK_FAST_CHECK`, which an agent-edited local
+       settings file could set.
+    4. *Parser.* Chosen: `python3`, else strict `grep`/`sed`; duplicate keys and escaped strings denied. Alternative:
+       also `jq` when present, a third path to test for no gain.
+    5. *Timeout 30 s.* Chosen: generous, since a timed-out PreToolUse hook does not block and the script takes well
+       under a second. Alternative: the default timeout.
+    6. *Docs PR, not a direct merge.* Chosen: the prompt says "open a docs PR into `next` and merge it yourself", as
+       the decision words it. Alternative: keep L3b's direct branch merge, which skips the PR's checks.
+    7. *Permissions block edit on #334.* Chosen: one sentence naming the guard as a path in code (the script arrives
+       with #335). Alternative: leave the block saying the GitHub App is the only limit.
+6. **Out of scope, noted.** Run 1 shows that Claude Code ignores a project's `permissions.allow` in a folder whose
+   trust dialog was not accepted, while hooks still run. Whether claude.ai cloud sessions count the starting
+   repository as trusted is not tested here; the first `create_session` link after #335 merges shows it (if the
+   attach still prompts, the allow rule is not in force there, and the guard still is).
+7. **Blockers.** None.
+8. **Merge notes / what the developer must do.** Merge order unchanged (§ 1 item 1). Decisions 5.3 and 5.1 (a) of
+   § 4.6 are now the developer's; review this block's decisions 5.1–5.7.
