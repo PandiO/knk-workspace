@@ -77,6 +77,7 @@ Baseline 2.34 ms (no NPCs). All runs in hop mode with the default settings unles
 | gate-reopened-v2 | 50 | 4.29 / 5.86 | 0.032 | (200) | (597) | moved again when the opening animation finished |
 | chunks (2026-11-12) | 20 | 3.85 / 4.85 | 0.099 | 20 | 1,439 | view distance 25: no chunk unloads; almost all stuck events at one spot on the return (1373 53 -69 → hop 1377 52 -84) |
 | chunks-v2 | 20 | 2.04 / 2.51 | 0.011 | 0 | 0 | view/simulation 10: all NPCs stopped at the edge of the loaded area (capture refuses unloaded chunks); spawning 20 at once: 48.8 ms tick |
+| chunks-v3 | 20 | 3.77 / 5.81 | 0.101 | 19 | 72 | **pass**: walked with the NPCs, teleported away and back: pauses 57 = resumes 57 |
 
 What this shows:
 
@@ -121,7 +122,7 @@ Deploy `claude/citizens-spike` `ac3c356` or later (`./gradlew :knk-paper:dev`). 
 
 **Pass:** nobody on the keep side while the gate is closed (by eye too), MSPT well below the earlier 22.75 ms, and trips climbing again after reopening. Fewer "no path to hop" after reopening than the earlier 760.
 
-**Test C: unloaded chunks**: run 2026-11-12 twice, see the results table: NPCs stop at the edge of the loaded area (NAV-12); pause and resume still untested. To test pause and resume, go **with** the NPCs to the far part of the route, then teleport back to spawn so their chunks unload, wait 2 min and go back. Original steps:
+**Test C: unloaded chunks**: **pass** on 2026-11-12 (chunks-v3: pauses 57 = resumes 57). Earlier runs showed NPCs stop at the edge of the loaded area (NAV-12). To test pause and resume, go **with** the NPCs to the far part of the route, then teleport back to spawn so their chunks unload, wait 2 min and go back. Original steps:
 
 1. A route of 150+ blocks (save it as `long`), `spawn 20 hop`.
 2. Fly well away (more than the view distance) for 2 min, then come back.

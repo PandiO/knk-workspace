@@ -1,7 +1,7 @@
 # NPC navigation adapter (Citizens) — Implementation Plan
 
-**Status:** Proposed 2026-11-11, not started. Plans the shared NPC navigation capability only (K&K plans, Citizens moves); behavior, guards, garrisons and combat are separate work. Developer answers to Q1–Q7 on 2026-11-12 (Q4 still open); see "Decisions".
-**Last updated:** 2026-11-12 (Phase 7b abstract movement outside loaded areas, spread spawns and targeted replans, from the unloaded-chunk runs; developer answers Q1–Q7; road network components and the router's BLOCKED result from the unloaded-chunk test)
+**Status:** Proposed 2026-11-11, not started. Plans the shared NPC navigation capability only (K&K plans, Citizens moves); behavior, guards, garrisons and combat are separate work. Developer answers to Q1–Q7 on 2026-11-12; see "Decisions".
+**Last updated:** 2026-11-12 (Q4 formations decided; Phase 7b travel bubble first; Phase 7b abstract movement outside loaded areas, spread spawns and targeted replans, from the unloaded-chunk runs; developer answers Q1–Q7; road network components and the router's BLOCKED result from the unloaded-chunk test)
 **Issue:** [PandiO/knk-workspace#241](https://github.com/PandiO/knk-workspace/issues/241) (verification: desk check #242, spike #243, benchmark #244); parent [KNG-36](https://linear.app/kngpandi/issue/KNG-36/design-shared-npc-traits-and-pathfinding-platform), [#146](https://github.com/PandiO/knk-workspace/issues/146), [#234](https://github.com/PandiO/knk-workspace/issues/234)
 **Sources:** [BEHAVIOR_MODEL.md §2](BEHAVIOR_MODEL.md#2-fit-with-the-platform-design) (requirements NAV-01–NAV-11) and §13; [DESIGN.md](DESIGN.md) §2, §6, §7, §9; [desk check and spike report](../../reports/2026-11-10-citizens-desk-check-and-spike.md); [Citizens stress test guide](../../guides/citizens-stress-test.md); [verdict on #244](https://github.com/PandiO/knk-workspace/issues/244#issuecomment-6806008046); code read at knk-plugin `main` `33122cf` and the spike `claude/citizens-spike` `ac3c356`.
 
@@ -83,7 +83,8 @@ Goal: a route planned under old rules is never walked under new ones (NAV-02), a
 
 Goal: groups plan once (NAV-05, developer request).
 
-- `NavGroup`: a leader (or a few scouts) plans the road route; followers get the same hops with a formation offset (column by default; Q4) and follow the leader's progress. One blocked state, one wake-up for the group.
+- `NavGroup`: a leader (or a few scouts) plans the road route; followers get the same hops with a formation offset and follow the leader's progress. One blocked state, one wake-up for the group.
+- `Formation` (Bukkit-free, configurable per group, template or assignment; Q4): column (default), pairs/ranks (soldiers), loose cluster, escort ring (octagon around the leader). Slot offsets are relative to the leader's heading on the route; where the road or walk grid is too narrow for a slot (gates, stairs, wall walks) the group folds into a column and reforms after.
 - A follower that falls behind or gets stuck plans its own leg back to its slot (bounded), not the whole route.
 - Event replans per group, not per NPC.
 
@@ -121,18 +122,19 @@ Goal: fewer stuck events (NAV-07) and checked chunk handling (NAV-11).
 - Run the stress test guide's test C (unloaded chunks) on the production code.
 - Measure `CITIZENS` vs `CITIZENS_ASYNC` and `PLAYER` vs `MANNEQUIN` (Q2).
 
-**Done when:** stuck events per trip on the clean route drop well below the spike's 3.5, and test C passes (pauses = resumes, no NPC stuck for good). Test C must put a player **next to** the walking NPCs and then move that player away, so the NPCs' own chunks unload; the 2026-11-12 runs only showed NPCs stopping at the edge of the loaded area (NAV-12).
+**Done when:** stuck events per trip on the clean route drop well below the spike's 3.5, and test C passes on the production code as it did in the spike (v3, 2026-11-12: pauses 57 = resumes 57).
 
 ## Phase 7b — Movement outside loaded areas (plugin)
 
-Goal: NPCs keep travelling where no player keeps the world loaded (NAV-12; BEHAVIOR_MODEL §13 level of detail).
+Goal: NPCs keep travelling where no player keeps the world loaded (NAV-12; BEHAVIOR_MODEL §13 level of detail). The developer prefers real walking all the way (2026-11-12), so the travel bubble comes first and abstract movement is the fallback.
 
-- **Abstract mover:** when the next hop reaches an unloaded area (or the NPC's chunk unloads), despawn the Citizens entity and continue along the K&K road route by time: route length ÷ speed, with waits at gates and denied regions by the same rules as Phase 3 (the road policy needs no chunks).
+- **Travel bubble (first):** a travelling NPC gets Citizens' `KEEP_CHUNK_LOADED` (Citizens moves a force-load ticket with the chunk the NPC stands in), and K&K puts plugin chunk tickets on the next hop's capture box before capturing it (chunks loaded asynchronously, never generated) and removes them after the leg. A cap on NPCs with a bubble (config), released on arrival or when waiting; idle NPCs at posts never have one. Measure first with a spike setting: chunks loaded per NPC, tick cost, memory, whether NPCs keep moving at chunk borders.
+- **Abstract mover (fallback, above the cap or for long journeys):** when the next hop reaches an unloaded area (or the NPC's chunk unloads), despawn the Citizens entity and continue along the K&K road route by time: route length ÷ speed, with waits at gates and denied regions by the same rules as Phase 3 (the road policy needs no chunks).
 - **Materialize:** when the area around the NPC's computed position loads, spawn the entity there on a safe floor (DESIGN §6 spawn validation) and continue physically.
 - Persist the abstract position with the NPC's state (K&K database is the source of truth), so a restart doesn't lose travelling NPCs.
 - Never load chunks to move an NPC.
 
-**Done when:** an NPC sent along a route that leaves the loaded area arrives at its destination in about the walking time, and appears at the right place on the route when a player goes there midway.
+**Done when:** with the bubble, NPCs walk a route through unloaded areas all the way with no player near (tick cost within the §13 budget at the cap); above the cap, an NPC arrives in about the walking time and appears at the right place on the route when a player goes there midway.
 
 ## Phase 8 — Benchmark gate (dev server, then closed alpha)
 
@@ -147,7 +149,7 @@ Goal: NPCs keep travelling where no player keeps the world loaded (NAV-12; BEHAV
 | Q1 | Where the code lives | **Decouple from the Minecraft API as far as reasonable, without over-engineering**: K&K may one day move to a dedicated or custom game engine. Reuse existing code. The NPC behavior and navigation models will grow a lot (traits, templates, functions). So: all navigation and NPC logic in Bukkit-free knk-core (`core/npc/…`, next to the engine-neutral router, walk pathfinder and `CellAccess` that already live there), with ports for everything the engine provides (mover, world/block queries, access subject, scheduler, events); Citizens and Bukkit only in knk-paper adapters (`paper/npc/…`). Packages grouped by concern (`nav`, `group`, `access`, later `template`, `trait`, `behavior`) so they can be lifted into their own Gradle module when the platform grows. |
 | Q2 | Entity type and pathfinder | `PLAYER` and `CITIZENS` (as recommended); compare `MANNEQUIN` and `CITIZENS_ASYNC` in Phase 7. |
 | Q3 | NPC access before Phase 5 | A configured access profile per template (accepted). |
-| Q4 | Group formation | **Open**, explained to the developer 2026-11-12: how followers line up behind the leader on the shared route (column, pairs, loose cluster). Proposal: column by default. |
+| Q4 | Group formation | **Configurable formations.** Column is the default; pairs or ranks preferred for soldiers; a loose cluster; and an escort ring (an octagon around the leader in the centre, as bodyguards). Formation per group, template or assignment; narrow places (gates, stairs, wall walks) fold any formation into a column and reform after. |
 | Q5 | Gate pass-through for NPCs | Its own follow-up after Phase 5 (agreed). Similar to players, but the permissions must be worked out; it ties into clans and NPC loyalty to towns and clans (BEHAVIOR_MODEL §16.5). |
 | Q6 | Hidden routes | Hidden routes are not in the road graph today: they need their own issue (road data, authoring, who may use them). Phase 6 depends on it. |
 | Q7 | Citizens version | The latest stable Citizens build for 26.3, pinned. Citizens publishes timestamped snapshot builds only, so "stable" means the newest build for 26.3 at the time, pinned; test each Minecraft update on the dev server with the planned Paper build first (desk check report §8.6). |
