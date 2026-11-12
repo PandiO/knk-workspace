@@ -24,7 +24,7 @@ or into `next`.
 
 | Link | Issue | Status | Branch heads | PR | How started |
 |---|---|---|---|---|---|
-| L1 CI | #328 | Running (started 10:34 UTC) | `claude/agent-setup-ci` (knk-web-api, knk-web-app) | — | create_session session_01R1w2UsfbmKqEY1QXSx25id |
+| L1 CI | #328 | In review (done 11:40 UTC, both workflows green) | `claude/agent-setup-ci`: knk-web-api `81b06d9`, knk-web-app `a7d31a2` | [knk-web-api#12](https://github.com/PandiO/knk-web-api/pull/12), [knk-web-app#9](https://github.com/PandiO/knk-web-app/pull/9) | create_session session_01R1w2UsfbmKqEY1QXSx25id |
 | L2 Branches, labels, digest | #329 | Not started | `next` in all four repos | — (no file changes) | — |
 | L3 Skills and instructions | #330 | Not started | `claude/agent-setup-skills` (workspace + three component repos) | — | — |
 | L4 Tooling | #331 | Not started | `claude/agent-setup-tooling` (knk-workspace) | — | — |
@@ -61,3 +61,49 @@ or into `next`.
 ## 4. Link blocks
 
 _(Each link appends its block here when it finishes.)_
+
+### 4.1 L1 — CI for the API and the web app (#328)
+
+1. **Scope done.**
+    1. knk-web-api `.github/workflows/ci.yml`: push (all branches), pull request and manual dispatch; .NET 8
+       (`actions/setup-dotnet` 8.0.x); restore, build, `dotnet test Tests/knkwebapi_v2.Tests/knkwebapi_v2.Tests.csproj`
+       with `--filter "Category!=KnownFailure"`; TRX results uploaded as the `api-test-results` artifact.
+       `migrations.yml` unchanged.
+    2. knk-web-app `.github/workflows/ci.yml`: same triggers; Node 22 with npm cache; `npx npm@11 ci`,
+       `npm run test:ci`, `npx tsc --noEmit`, `CI=true npm run build`.
+    3. The MySQL-dependent (`requires-mysql`) tests are left out the way the suite already skips them: the job sets no
+       `KNK_TEST_MYSQL`, so they skip themselves (88 skipped).
+2. **Commits and heads.** knk-web-api `claude/agent-setup-ci` at `81b06d9`; knk-web-app `claude/agent-setup-ci` at
+   `a7d31a2` (one commit each, from `master` / `main`).
+3. **PRs.** [knk-web-api#12](https://github.com/PandiO/knk-web-api/pull/12),
+   [knk-web-app#9](https://github.com/PandiO/knk-web-app/pull/9). Not merged. The Codex review on both: no findings.
+4. **Tests, baseline → result.**
+    1. knk-web-api, container baseline on `master`: build 0 errors; tests 3678 passed, 0 failed, 88 skipped. GitHub CI
+       on the branch (push run 43209178982, PR run 43209267111): green, 3678 passed, 0 failed, 88 skipped.
+       Migrations (fresh DB) green on both runs too.
+    2. knk-web-app, container baseline on `main`: `npm ci` ok; 237 suites, 2016 tests passed; `tsc` clean; build ok.
+       GitHub CI on the branch (push run 43209192858, PR run 43209282750): green, all four steps.
+    3. Known reds: none. The four tests of #99 and the nl-NL/timing reds recorded by earlier chains are green on the
+       GitHub runner, so nothing is marked `KnownFailure` / `test.skip` and no "Known-failure tests marked in CI" issue
+       was filed (DESIGN § 6.2).
+5. **Decisions (DESIGN § 4.3).**
+    1. *KnownFailure filter added up front.* Chosen: the API test step already filters `Category!=KnownFailure` although
+       no test carries the trait, so a later mark needs no workflow change. Alternatives: (a) add the filter only when a
+       first test is marked, which makes marking a two-file change; (b) a separate known-failure job, more to maintain.
+    2. *MySQL tests.* Chosen: rely on the existing `KNK_TEST_MYSQL` self-skip, as the link prompt says. Alternatives:
+       (a) also filter `Category!=requires-mysql`, which would hide the skipped tests from the count and duplicate the
+       mechanism; (b) a MySQL service container to run them, which belongs to the Testcontainers work, not L1.
+    3. *Extra workflow features.* Chosen: `workflow_dispatch`, a per-ref concurrency group that cancels superseded runs,
+       and the TRX artifact. Alternatives: plain push/pull_request only (simpler, but every push to a PR branch runs
+       twice to completion and failures need the log to read).
+    4. *Install steps.* Chosen: `actions/setup-node` with npm cache, then `npx --yes npm@11 ci` (lock file valid for
+       npm 11 only). Alternative: `npm i -g npm@11` first, which changes the runner's global npm for later steps.
+6. **Out of scope, noted.** GitHub warns that `actions/checkout@v4`, `setup-dotnet@v4`, `setup-node@v4` and
+   `upload-artifact@v4` target Node.js 20 and are forced onto Node.js 24; the existing `migrations.yml` has the same
+   warning. Not red; a later bump to the next major versions clears it (comment on #328).
+7. **At merge (developer).** Merge knk-web-api#12 and knk-web-app#9; nothing to configure (no secrets, no settings).
+   After merge, CI runs on every push to the default branches and `next`. Optionally make the `CI / build-and-test`
+   check required in branch protection. Docs follow-up: mention the CI gate in the developer guide (documentation
+   issue at merge).
+8. **Session note.** The attach of knk-web-api and knk-web-app was refused at 10:34 (§ 3.2), approved by the developer
+   at 11:00, and the link went ahead after the coordinator's go at 11:21.
