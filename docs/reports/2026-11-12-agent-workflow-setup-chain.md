@@ -46,6 +46,18 @@ or into `next`.
    leave the skills and tooling for another day over a claim that only adds lines elsewhere in the files; (b) ask the
    developer first, who is unavailable until the evening.
 
+2. **Attaching repositories in link sessions.** The L1 session (started with knk-workspace only) had both
+   `add_repo` calls for knk-web-api and knk-web-app refused by its permission check at 10:34. The check does not
+   accept the § 0 authorization when it arrives in a prompt written by another session. The developer approved the
+   attach from the phone at 11:00, and the coordinator told the session to go on at 11:21.
+
+   Chosen for the remaining links: L2 and L3 need several component repos, so they run as subagents of this coordinator
+   session, which already has all four repos with push access (the fallback in setup § 3.2). L4 and L5 change only
+   knk-workspace, so they start with `create_session`, which needs no `add_repo`. Alternatives: (a) start L2 and L3
+   with `create_session` too and wait for the developer to approve each attach, which would stall them until the
+   developer looks; (b) let the developer add a permission rule for `add_repo` first, which is the developer's
+   setting to change, not the coordinator's.
+
 ## 4. Link blocks
 
 _(Each link appends its block here when it finishes.)_
