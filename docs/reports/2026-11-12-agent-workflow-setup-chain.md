@@ -24,7 +24,7 @@ or into `next`.
 
 | Link | Issue | Status | Branch heads | PR | How started |
 |---|---|---|---|---|---|
-| L1 CI | #328 | Not started | `claude/agent-setup-ci` (knk-web-api, knk-web-app) | — | — |
+| L1 CI | #328 | Running (started 10:34 UTC) | `claude/agent-setup-ci` (knk-web-api, knk-web-app) | — | create_session session_01R1w2UsfbmKqEY1QXSx25id |
 | L2 Branches, labels, digest | #329 | Not started | `next` in all four repos | — (no file changes) | — |
 | L3 Skills and instructions | #330 | Not started | `claude/agent-setup-skills` (workspace + three component repos) | — | — |
 | L4 Tooling | #331 | Not started | `claude/agent-setup-tooling` (knk-workspace) | — | — |
