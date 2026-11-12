@@ -3,7 +3,7 @@
 **Status:** Done 2026-11-11: **go with caveats** (Citizens hop mode with the K&K examiner in front). Load and rule checks pass; the caveats are in [the verdict on #244](https://github.com/PandiO/knk-workspace/issues/244#issuecomment-6806008046).
 **Last updated:** 2026-11-12
 **Issue:** [PandiO/knk-workspace#241](https://github.com/PandiO/knk-workspace/issues/241): desk check [#242](https://github.com/PandiO/knk-workspace/issues/242), spike [#243](https://github.com/PandiO/knk-workspace/issues/243), benchmark [#244](https://github.com/PandiO/knk-workspace/issues/244)
-**Branch:** knk-plugin `claude/citizens-spike` `ac3c356` (throwaway, **never merge**), on `main` `33122cf4`
+**Branch:** knk-plugin `claude/citizens-spike` `9027991` (throwaway, **never merge**), on `main` `33122cf4`
 **Spec:** [BEHAVIOR_MODEL §2 and §13](../specs/npc-platform/BEHAVIOR_MODEL.md#2-fit-with-the-platform-design), [DESIGN §9](../specs/npc-platform/DESIGN.md#9-navigation-reuse-and-platform-audit)
 **Results:** [desk check and spike report](../reports/2026-11-10-citizens-desk-check-and-spike.md) (its §9 has the commands of the first plan); run results in [#244](https://github.com/PandiO/knk-workspace/issues/244).
 
@@ -133,6 +133,45 @@ Deploy `claude/citizens-spike` `ac3c356` or later (`./gradlew :knk-paper:dev`). 
 **Finishing:** `/knk npcspike clear`. Send the server log and the chat stats; the results go to [#244](https://github.com/PandiO/knk-workspace/issues/244) with a go or no-go recommendation.
 
 **Decision rule:** go when tests A and B pass with zero trespasses. No-go (or rethink) if an NPC ever enters a region or crosses a gate the current rules deny.
+
+## Phase 0: trail mode and the travel bubble (next session)
+
+Spike `9027991` or later. What it tests: [implementation plan Phase 0](../specs/npc-platform/IMPLEMENTATION_PLAN.md) (Q8, NAV-15, NAV-12).
+
+- `spawn <n> trail`: NPCs follow the K&K road line (the line the follow trail shows) as waypoint lists, 32 blocks at a time (`set stretch N`). Citizens' A* only walks to the road, from the road to the goal, and one short recovery leg when stuck.
+- `set keeploaded on|off`: the travel bubble. NPCs keep the chunks they walk through loaded; applies at once.
+- `stats` gains `stray from the K&K road line` (how far NPCs walk from the road centre) and a `bubble:` line; the CSV gains `mode, keeploaded, stray_p50, stray_p95, stray_over2_pct, chunks_held`.
+
+**Before you start:** deploy, check `0.1.0+9027991…` in the startup line, `/knk npcspike baseline` with no NPCs. Use a saved route that stays inside the loaded area for tests 1–2 (for example `south-gate` or the clean route of `50-hop-clean`).
+
+**Test 1: hop vs trail on the same route**
+
+1. `route load <name>`, `clear`, `reset`, `spawn 50 hop`. After 5 min: `stats hop-50`.
+2. `clear`, `reset`, `spawn 50 trail`. After 5 min: `stats trail-50`.
+3. Watch both: do trail NPCs walk the road centre and take stairs and corners well? Note any spot where they get stuck (the log has the first 20 with coordinates).
+
+Compare: `stray_p95` and `stray_over2_pct` (lower is better), stuck per trip (`stuck` ÷ `trips`), trip time, `ms_per_npc`.
+
+**Test 2: rules still hold in trail mode**
+
+Waypoint lists skip the K&K examiner, so only the recheck and the events keep the rules binding.
+
+1. With 50 trail NPCs walking through a gate: `reset`, close the gate, 3 min, `stats trail-gate-closed`; open it, 3 min, `stats trail-gate-reopened`.
+2. Same with entry to a district removed and restored: `stats trail-access-removed`, `stats trail-access-restored`.
+
+**Pass:** `TRESPASSES 0`, nobody passes the closed gate (by eye too).
+
+**Test 3: the travel bubble**
+
+1. View and simulation distance 10. Use the long route from spawn (`spawn-to-unloaded-chunk`).
+2. `set keeploaded on`, `clear`, `reset`, `spawn 20 trail`. Stay at spawn the whole time.
+3. After 3 min and after 8 min: `stats bubble-trail-3m`, `stats bubble-trail-8m`. Trips must climb although nobody is near the far end.
+4. Same with `spawn 20 hop`: `stats bubble-hop-8m`.
+5. `set keeploaded off`, `clear`.
+
+Watch: `chunks held` and chunks per NPC, `ms_per_npc`, `not generated` (must stay 0 on built terrain), server memory (the performance dashboard or `/spark` if installed), and whether NPCs stop at chunk borders.
+
+Send the CSV rows, the `stats` screenshots and the `[NpcSpike]` log lines.
 
 ## Later
 

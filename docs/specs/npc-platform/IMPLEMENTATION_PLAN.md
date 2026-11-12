@@ -34,6 +34,8 @@ Goal: prove how NPCs follow the K&K route as the trail draws it (NAV-15) before 
 - Compare with hop mode on the same routes: stuck per trip, time per trip, how far NPCs stray from the road centre, tick cost. If Citizens' waypoint following can't do stairs and steps well, try a K&K-driven step controller (Citizens only moves the body).
 - Spike setting `keeploaded on|off` for the travel bubble: chunks held per NPC, tick cost, memory, whether NPCs keep moving at chunk borders.
 
+**Status:** built on the spike branch, `9027991` (2026-11-12): `spawn <n> trail`, `set keeploaded on|off`, `set stretch N`, stray-from-road metric; test steps in the [stress test guide](../../guides/citizens-stress-test.md#phase-0-trail-mode-and-the-travel-bubble-next-session). Not yet run on a server.
+
 **Done when:** Q8 is answered with numbers.
 
 ## Phase 1 — Runtime, guard rails and metrics (plugin)
