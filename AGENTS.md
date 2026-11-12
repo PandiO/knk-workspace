@@ -18,9 +18,11 @@ conventions.
 ## Shipping a change
 
 Essential docs (docs impact list, deploy notes including plugin `config.yml` keys, changelog entry, status)
-ship with the feature before merge. At merge, close the feature issue, put the remaining docs (guides,
-register, site/wiki pages) in a `documentation` sub-issue and start a new docs session for it right away
-with [the docs-session prompt](docs/ai-agents/docs-session-prompt.md). See
+ship with the feature before merge. At merge, put the remaining docs (guides, register, site/wiki pages) in a
+`documentation` sub-issue, start a new docs session for it right away with
+[the docs-session prompt](docs/ai-agents/docs-session-prompt.md), and close the feature issue. Once the `next` branch
+model applies, the sub-issue and docs session start at the merge into `next` and the feature issue is closed when the
+developer promotes `next` to trunk. See
 [global instructions § Shipping a change](docs/ai-agents/GLOBAL_AGENT_INSTRUCTIONS.md#shipping-a-change-documentation)
 and [documentation maintenance](docs/guides/developer/DOCUMENTATION_MAINTENANCE.md).
 
