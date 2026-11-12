@@ -28,7 +28,7 @@ or into `next`.
 | L2 Branches, labels, digest | #329 | In review (done 11:40 UTC; labels and pin left for the developer) | `next`: knk-workspace `6245c9f`, knk-web-api `b5e57fa`, knk-web-app `9a85238`, knk-plugin `121030f`; digest issue [#333](https://github.com/PandiO/knk-workspace/issues/333) | — (no file changes) | subagent (coordinator decision § 3.2) |
 | L3 Skills and instructions | #330 | In review (done 12:05 UTC; docs only) | `claude/agent-setup-skills`: knk-workspace `8321f0d`, knk-web-api `dbb05c5`, knk-web-app `7a974ac`, knk-plugin `0759d22` | [knk-workspace#334](https://github.com/PandiO/knk-workspace/pull/334), [knk-web-api#13](https://github.com/PandiO/knk-web-api/pull/13), [knk-web-app#10](https://github.com/PandiO/knk-web-app/pull/10), [knk-plugin#16](https://github.com/PandiO/knk-plugin/pull/16) | subagent (coordinator decision § 3.2) |
 | L4 Tooling | #331 | In review (done 12:15 UTC; hook tested end to end) | `claude/agent-setup-tooling`: knk-workspace `9310d7f` | [knk-workspace#335](https://github.com/PandiO/knk-workspace/pull/335) | subagent (coordinator decision § 3.3) |
-| L5 Sessions board archive | #332 | Not started | `claude/agent-setup-sessions-archive` (knk-workspace) | — | — |
+| L5 Sessions board archive | #332 | Running (started 12:13 UTC) | `claude/agent-setup-sessions-archive` (knk-workspace) | — | create_session session_01R1w2Ux2rKagW6rke2sDnes |
 
 ## 3. Coordinator decisions
 
@@ -63,6 +63,16 @@ or into `next`.
    run L4 as a subagent of this session, which has all four repos and can install the toolchains. L5 still starts with
    `create_session` (knk-workspace only). Alternatives: (a) `create_session` with a throw-away fake sibling repo for
    the test, which proves less about the real checks; (b) ask the developer to approve another attach.
+
+4. **Commit trailers naming the model.** The session attribution the coordinator and the link sessions received
+   names the model in the `Co-Authored-By` trailer, and the bookkeeping commits on `main` (451cf70 to 7a496b0), L1's
+   commits (knk-web-api 81b06d9, knk-web-app a7d31a2) and L3's commits (8321f0d, dbb05c5, 7a974ac, 0759d22c) carry it.
+   That conflicts with the developer's rule that commit messages never name the AI model (L4 noticed and used
+   `Co-Authored-By: Claude`). Chosen: from 12:15 UTC every chain commit uses the model-free trailer; existing commits
+   stay as they are, since rewriting them needs a force-push, which the chain may not do. Alternatives: (a) amend and
+   force-push the feature branches (forbidden); (b) the developer squash-merges the feature PRs and edits the message
+   at merge, which removes the trailer from the default branches if wanted. The same trailer is on earlier commits of
+   the design work (e477178, b1787b5, 68eb738), so this predates the chain.
 
 ## 4. Link blocks
 
