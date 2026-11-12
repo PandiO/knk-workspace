@@ -4,134 +4,246 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+Nothing listed right now. Feature branches keep their draft entry on their own workspace branch until they merge.
+
+## 2026-11-12
+
+- **Admin web app: chain 3 (V1–V7) and chain 2's web app merged, with the access model's API part** — staff get a
+  rebuilt admin web app: builders that save drafts and publish on purpose, a search-as-you-type relation picker, a
+  detail page that links and unlinks properly, clearer settings pages, a staff player profile with freeze, CSV export,
+  a grouped admin sidebar, live updates and one look for dialogs, tables and messages. Merged 2026-11-12 on the
+  developer's "merge V7": knk-web-app `main` `1371951` (merge of `claude/builders-71`, which contains chain 3 V1–V7 and
+  chain 2's X1 with W1–W4), knk-web-api `master` `bc97b7d` (merge of `claude/builders-71`: V7, V6, V5, #280 AM1+AM2,
+  and through AM1 the API parts of P1 #261, chain 2 R1 #184 and X1 #183), knk-workspace `main` `84b7527` (V1–V7 docs).
+  Smoke tests: V7 run by the developer 2026-11-11/12, all pass; V1–V6, W1–W4, X1 and the #280 API steps **not run**.
+  **Not merged:** every plugin branch (chain 2 R1–R3, chain 3 P1–P3), #280 AM3 (web app) and AM4, P2, P3, and chain 2's
+  workspace docs branches (W1–W4, X1, R1; docs follow-ups #337–#341). Reports:
+  [chain 3](reports/2026-11-08-ux-chain-3.md), [chain 2](reports/2026-11-05-ux-chain-2.md). The entries below give
+  each part.
+  - **Admin steps:**
+    1. Back up the database. Deploy **the API first**, then the web app. The plugin doesn't change (no plugin branch
+       is merged, no `config.yml` key added); the web app needs no new package.
+    2. Migrations, applied in this order (`dotnet ef database update`): `20261105200758_AddPrivacyErasureEvents` (R1,
+       one new table), `20261108162526_AddKitClaimDelivery` (P1, two nullable columns on `kit_claims`),
+       `20261108181026_SeedDashboardActionNodes` (AM1, data only), `20261109101501_AddConfigurationDrafts` (V7,
+       additive; existing form and display configurations stay published).
+    3. `SeedDashboardActionNodes` gives the Admin group `knk.admin.delete`, `knk.admin.delete.bulk` and
+       `knk.admin.export` where its wildcard doesn't cover them, and `knk.admin.delete` + `knk.admin.export` to every
+       explicit holder of an area node **except the Staff group** (developer decision 2026-11-08). Before deploying,
+       check that the Admin group still holds `knk.admin.*` (the alpha seed has it): on a database built from
+       migrations alone Admin gets only the three action nodes and no `knk.admin.content` / `knk.admin.world`, so it
+       couldn't read the content and world types.
+    4. The plugin must run with `api.auth.type: apikey` (the alpha does; check dev). Every dashboard read is gated
+       now, and in `bearer` mode the plugin would need nodes for towns, domains, kits, menus and the rest.
+    5. Optional API settings (env): `Realtime__WebLiveUpdatesEnabled` (default `true`; `false` sends no live web
+       events), `Realtime__WebPermissionCacheSeconds` (30), `Privacy__ErasureFeedUuidRetentionDays` (35).
+    6. **What changes for staff on deploy, while the web app part of #280 (AM3) is not merged:**
+       - Every dashboard delete needs `knk.admin.delete` on top of the area node. The **Staff group no longer deletes**
+         kits, siege setup, road profiles or user accounts and **can't export** (its other rights stay: balance
+         changes, freeze, kick, ban). The web app still shows those Delete buttons; the API refuses with its reason.
+       - Only the owner hands out `knk.admin.*`, bulk delete or a group carrying them, and changes a group ranked at
+         or above the actor's own: **Admins can no longer edit the Admin group** from the web.
+       - Every dashboard list, detail and search needs one of the type's read nodes. Admin (`knk.admin.*`) and the
+         owner see everything; Staff keeps players, kits and siege setup (its own area nodes). Pickers in the merged
+         form wizard and detail page fall back to name-only lookups; other pages reading another area answer 403.
+       - Logged-in players without an area node get a handled 403 on `GET api/Metadata` on each page load (a console
+         error, nothing visible; AM3 skips the call).
+       - Export works for holders of `knk.admin.export` (owner, Admin, backfilled area-node holders); bulk delete has
+         no button yet (AM3).
+    7. Chain 2 R1 and P1 are in the API without their plugin parts: account erasures are recorded in the erasure feed
+       but not pushed to the game server yet, and a web "Grant" of a kit is stored as a pending delivery that arrives
+       only once P1's plugin part runs (then all pending grants are handed over).
+
 - **Form and Display builders: save in place, explicit Publish, Duplicate, Generate from metadata, live preview** —
-  [PandiO/knk-workspace#71](https://github.com/PandiO/knk-workspace/issues/71) (chain 3 link V7), knk-web-api and
-  knk-web-app `claude/builders-71` (both **contain** V6 `claude/picker-details-191-44` and what it contains). **Save**
-  keeps the builder open and stores a draft: the form wizard and the detail pages keep the published version until you
-  press **Publish…**, which first says what changes for staff (steps and fields added, removed or changed, the default it
-  replaces, saved wizard drafts that continue). **Save and close** returns to Entity setup; leaving with unsaved changes
-  asks "Leave without saving?". A new form is a draft (not offered to staff) until its first Publish. **Duplicate** copies
-  the published version under a new name; **Generate from metadata** adds a step or section per group of the entity's
-  properties with sensible field types; **Preview** shows the form or page next to the builder with sample values or a
-  real record. Entity setup marks drafts and unpublished changes and has Duplicate. One additive migration
-  (`AddConfigurationDrafts`: existing configurations stay published), new endpoints `GET {id}/builder`, `POST drafts`,
+  staff can save a form or page they're still working on without changing what other staff see, and publish it when
+  it's ready. [PandiO/knk-workspace#71](https://github.com/PandiO/knk-workspace/issues/71) (chain 3 V7). **Save**
+  keeps the builder open and stores a draft: the form wizard and the detail pages keep the published version until
+  you press **Publish…**, which first says what changes for staff (steps and fields added, removed or changed, the
+  default it replaces, saved wizard drafts that continue). **Save and close** follows Save's rule and returns to
+  Entity setup; leaving with unsaved changes asks "Leave without saving?". A new form is a draft (not offered to staff)
+  until its first Publish. **Duplicate** copies the published version under a new name; **Generate from metadata**
+  adds a step or section per group of the entity's properties with sensible field types; **Preview** shows the form or
+  page next to the builder with sample values or a real record. Entity setup marks drafts and unpublished changes and
+  has Duplicate. Migration `AddConfigurationDrafts` (additive), new endpoints `GET {id}/builder`, `POST drafts`,
   `PUT {id}/draft`, `POST {id}/draft/discard`, `POST {id}/publish`, `POST {id}/duplicate` on both configuration
-  controllers (`knk.admin.content`), no setting. Checklist:
-  [guides/form-display-builders-smoke-test.md](guides/form-display-builders-smoke-test.md).
+  controllers (`knk.admin.content`), no setting. Known limit: field validation rules are saved at once, outside the
+  draft (#291). Smoke test passed 2026-11-11/12:
+  [guides/form-display-builders-smoke-test.md](guides/form-display-builders-smoke-test.md). Docs follow-up #345.
 
 - **Form wizard relation picker: search as you type, the full table as a fallback; "Show what uses it" on a refused
-  delete** — [PandiO/knk-workspace#191](https://github.com/PandiO/knk-workspace/issues/191),
-  [PandiO/knk-workspace#44](https://github.com/PandiO/knk-workspace/issues/44) (chain 3 link V6), knk-web-api and
-  knk-web-app `claude/picker-details-191-44` (both **contain** V5 `claude/entity-detail-188-189` and what it contains).
-  Relation fields in forms show a search box instead of a large table: the first matches appear as you type, rows created
-  in the same form first, keyboard and mouse picking, and **Open full table** for the old table in a dialog. Staff
-  without access to the related type search by name only (the #280 lookups). A delete refused because the record is
-  still used now offers **Show what uses it**: the records, linked when the viewer may open them, fetched only on request
-  through the new `GET api/EntityReferences/{type}/{id}/rows` (one of the type's read nodes). No migration, no setting.
-  Checklist: [guides/relation-picker-and-delete-details-smoke-test.md](guides/relation-picker-and-delete-details-smoke-test.md).
+  delete** — picking a town, street or item in a form is now a search box instead of a long table.
+  [PandiO/knk-workspace#191](https://github.com/PandiO/knk-workspace/issues/191),
+  [#44](https://github.com/PandiO/knk-workspace/issues/44) (chain 3 V6). The first matches appear as you type, rows
+  created in the same form first, keyboard and mouse picking, and **Open full table** for the old table in a dialog.
+  Staff without access to the related type search by name only (the #280 lookups). A delete refused because the
+  record is still used offers **Show what uses it**: the records, linked when the viewer may open them, fetched only on
+  request through the new `GET api/EntityReferences/{type}/{id}/rows` (one of the type's read nodes). No migration, no
+  setting. Smoke test not run:
+  [guides/relation-picker-and-delete-details-smoke-test.md](guides/relation-picker-and-delete-details-smoke-test.md).
+  Docs follow-up #344.
 
-- **Entity detail page: real Select / Unlink / Add, a separate Delete, readable values and errors** —
+- **Entity detail page: real Select / Unlink / Add, a separate Delete, readable values and errors** — removing a
+  related record from a detail page now only unlinks it and never deletes it.
   [PandiO/knk-workspace#188](https://github.com/PandiO/knk-workspace/issues/188),
-  [PandiO/knk-workspace#189](https://github.com/PandiO/knk-workspace/issues/189) (chain 3 link V5), knk-web-api and
-  knk-web-app `claude/entity-detail-188-189` (the API branch **contains** AM1+AM2 `claude/dashboard-access-280`, the
-  web-app branch V4 `claude/settings-pages-26` and through it V3, V2, V1 and chain 2's web app). Unlink on a related
-  record only removes the link (never the record); Delete is a separate red action behind a red question; Select and
-  Add pick an existing record in a searchable picker (a child of another parent asks "Move here?"), through the new
-  `POST api/Relationships/{type}/{id}/{property}/link|unlink` (the type's write node; no delete node). Links that
-  can't change here (required parents, locations, gates, kits, lootbox/siege setup, players) show the reason; actions
-  the viewer can't use say "Requires …". Values read as text, related values link to their page, collections show a
-  count and 12 per page, and load errors say what happened ("You don't have access to Town "Cinix"", "doesn't
-  exist"). No migration, no setting. Checklist: [guides/entity-detail-smoke-test.md](guides/entity-detail-smoke-test.md).
+  [#189](https://github.com/PandiO/knk-workspace/issues/189) (chain 3 V5). Delete is a separate red action behind a red
+  question; Select and Add pick an existing record in a searchable picker (a child of another parent asks "Move
+  here?"), through the new `POST api/Relationships/{type}/{id}/{property}/link|unlink` (the type's write node; no
+  delete node). Links that can't change here (required parents, locations, gates, kits, lootbox/siege setup, players)
+  show the reason; actions the viewer can't use say "Requires …". Values read as text, related values link to their
+  page, collections show a count and 12 per page, and load errors say what happened ("You don't have access to Town
+  "Cinix"", "doesn't exist"). No migration, no setting. Smoke test not run:
+  [guides/entity-detail-smoke-test.md](guides/entity-detail-smoke-test.md). Docs follow-up #343.
 
 - **Settings pages: units and help, confirms on risky switches, lootbox preview; Lootbox settings, Currency policy and
-  Road network on the settings shell** — [PandiO/knk-workspace#26](https://github.com/PandiO/knk-workspace/issues/26)
-  (chain 3 link V4), knk-web-app `claude/settings-pages-26` (**contains** V3's `claude/player-profile-119` and through it
-  V2, V1 and chain 2's X1), not merged, not live-tested. No API change, no setting.
+  Road network on the settings shell** — every settings field now says its unit and what the value means, and risky
+  switches ask first. [PandiO/knk-workspace#26](https://github.com/PandiO/knk-workspace/issues/26) (chain 3 V4). Web app
+  only, no API change, no setting.
   - **Lootboxes → Settings**, **Currency policy** and **Road network** have the settings header of Game and Siege
     settings: changes counted, Discard, Reload, Save (n), "Leave without saving?" before leaving with changes (on the
     lootbox page also when switching tabs), a toast on save and the reason in the header when the API refuses.
-  - Settings fields show their unit (ticks, s, h, ‰, bp, ×, coins, gems, boxes) and one line of help, with what the value
-    means ("= 1 s", "= 2.5%", "= 12:00 (noon)"); on Siege and Game settings too.
-  - Switching payments off or on (per currency), lootboxes off or on, a lootbox type's Enabled and a token grant rule ask
-    first and say what happens.
-  - Lootbox settings: the announce thresholds are choices with **Never** (was the number 11), both announcements have a
-    preview with sample values, unknown placeholders are named. The Odds tab shows small chances as "1 in N".
-  - Currency policy: one Save for coins and gems; the lowest sender title is picked from the titles (was a bracket id).
-  - Road network: the navigation defaults no longer save on change; Save saves them together with the compass settings.
-    Road profiles and stretches keep their own Save.
-  - Smoke test: [guides/settings-pages-smoke-test.md](guides/settings-pages-smoke-test.md).
-  - Needs the API later (#26 comment): who saved last on lootbox, siege, road and currency settings; one save for the
-    road settings.
+  - Settings fields show their unit (ticks, s, h, ‰, bp, ×, coins, gems, boxes) and one line of help, with what the
+    value means ("= 1 s", "= 2.5%", "= 12:00 (noon)"); on Siege and Game settings too.
+  - Switching payments off or on (per currency), lootboxes off or on, a lootbox type's Enabled and a token grant rule
+    ask first and say what happens.
+  - Lootbox settings: the announce thresholds are choices with **Never** (was the number 11), both announcements have
+    a preview with sample values, unknown placeholders are named. The Odds tab shows small chances as "1 in N".
+  - Currency policy: one Save for coins and gems; the lowest sender title is picked from the titles (was a bracket
+    id).
+  - Road network: the navigation defaults no longer save on change; Save saves them together with the compass
+    settings. Road profiles and stretches keep their own Save.
+  - Smoke test not run: [guides/settings-pages-smoke-test.md](guides/settings-pages-smoke-test.md). Docs follow-up
+    #342 (admin guides). Who saved last and one save for road settings need the API later (#190).
 
-- **Staff player profile: status strip, tabs, freeze/unfreeze, timeline, paged audit; better player search** —
-  [PandiO/knk-workspace#119](https://github.com/PandiO/knk-workspace/issues/119) (chain 3 link V3), knk-web-app
-  `claude/player-profile-119` (**contains** V2's `claude/dashboard-export-205`, V1 and chain 2's X1), not merged, not
-  live-tested. No API change.
-  - The profile header shows online / last seen, mode, **Frozen**, **Payments locked**, premium tier and account flags as
-    chips, with **Freeze** (reason required, saved on the player and in the audit log) and **Unfreeze**; while frozen,
-    since when, by whom and why.
+- **Staff player profile: status strip, tabs, freeze/unfreeze, timeline, paged audit; better player search** — staff
+  can freeze and unfreeze a player from the web with a reason, and see a player's history on one timeline.
+  [PandiO/knk-workspace#119](https://github.com/PandiO/knk-workspace/issues/119) web part (chain 3 V3). No API change.
+  - The profile header shows online / last seen, mode, **Frozen**, **Payments locked**, premium tier and account flags
+    as chips, with **Freeze** (reason required, saved on the player and in the audit log) and **Unfreeze**; while
+    frozen, since when, by whom and why.
   - The cards are on six tabs: Overview, Economy, Permissions, Moderation, Activity, Privacy (`?tab=` in the URL).
-  - Activity has a **per-player timeline** (audit log and, with `knk.admin.currency.history`, the balance ledger, newest
-    first, "Load older", filter chips) and the **audit log paged by the server** with an action filter, in place of the
-    last 20 entries.
+  - Activity has a **per-player timeline** (audit log and, with `knk.admin.currency.history`, the balance ledger,
+    newest first, "Load older", filter chips) and the **audit log paged by the server** with an action filter.
   - Actions without their node are disabled with "Requires <node>" (freeze, unfreeze, groups, grants, kit grant,
     payment lock). A freeze in game shows on an open profile at once (realtime on).
   - The profile no longer crashes on a summary without groups, permissions, title or salary.
   - Moderation → All players: a UUID without dashes finds the player, sort by username, email or coins, the search in
     the URL (Back returns to it), a Last seen column, and **Recently opened** profiles (this browser).
-  - Smoke test: [guides/player-profile-smoke-test.md](guides/player-profile-smoke-test.md).
-  - Needs the API later (#119 comment): unfreeze reason, frozen state in the profile summary, game sessions in the
-    timeline, an online filter and frozen/locked columns in the player search, sort by last seen, kick/ban from the web.
+  - Smoke test not run: [guides/player-profile-smoke-test.md](guides/player-profile-smoke-test.md). #119 stays open
+    for its API part (unfreeze reason, frozen state in the summary, game sessions in the timeline, search filters,
+    kick/ban from the web).
 
-- **Dashboard: checkbox selection and Export CSV** — [PandiO/knk-workspace#205](https://github.com/PandiO/knk-workspace/issues/205)
-  export part (chain 3 link V2), knk-web-app `claude/dashboard-export-205` (**contains** V1's
-  `claude/web-fixes-266-263-258` and through it chain 2's `claude/realtime-web-live-183`), not merged, not live-tested.
+- **Dashboard: checkbox selection and Export CSV** — staff with the export permission can download the rows they
+  selected, or the whole search, as a spreadsheet file.
+  [PandiO/knk-workspace#205](https://github.com/PandiO/knk-workspace/issues/205) export part (chain 3 V2).
   - The dashboard table has a checkbox column. Rows stay links, and the row click still opens the detail page.
   - A bar above the table shows "n selected" and **Export CSV**. The export holds the selected rows, or with nothing
     selected the current search across all pages in its sort.
   - The file has the table's columns in table order with the values the table shows. It is UTF-8 with BOM, named
     `<Type>-<yyyy-mm-dd>.csv`, holds at most 10,000 rows, and texts that look like formulas are neutralized.
-  - Export needs the new node `knk.admin.export`, so until link AM1 adds it to the API only the owner and Admin have it.
-  - Bulk delete follows in AM3 (#280).
-  - No API change, no setting.
+  - Export needs `knk.admin.export` (owner, Admin and backfilled area-node holders since AM1; not the Staff group).
+    The file is still built in the browser; AM3 moves it to `POST api/Dashboard/export`, and bulk delete follows in
+    AM3 (#280). No API change, no setting.
+  - Smoke test not run:
+    [entity lists smoke test § 7](guides/entity-lists-url-state-smoke-test.md#7-checkbox-selection-and-export-csv-205-export-part-chain-3-v2).
 
-  Checklist: [entity lists smoke test § 7](guides/entity-lists-url-state-smoke-test.md#7-checkbox-selection-and-export-csv-205-export-part-chain-3-v2).
-
-- **Web app fixes: Entity setup at phone width, colour baseline, landing slideshow fade** —
+- **Web app fixes: Entity setup at phone width, colour baseline, landing slideshow fade** — the landing page's
+  pictures now fade through black, and Entity setup fits a phone screen.
   [PandiO/knk-workspace#266](https://github.com/PandiO/knk-workspace/issues/266),
   [#263](https://github.com/PandiO/knk-workspace/issues/263), [#258](https://github.com/PandiO/knk-workspace/issues/258)
-  (chain 3 link V1), knk-web-app `claude/web-fixes-266-263-258` (**contains** chain 2's `claude/realtime-web-live-183`,
-  X1 with W1–W4: merging it merges chain 2's web app too), not merged, not live-tested. Entity setup (`/forms/{type}`)
-  no longer scrolls sideways at 390 px (it was 785 px wide): the configuration lists' buttons wrap under the title and
-  the tables scroll inside their cards. `WorldBoundFieldRenderer` and `BannerLayersField` moved to the theme tokens, so
-  no file is over its raw colour baseline, and `npm run test:ci` now fails when one is. The landing slideshow fades the
-  image out to black and then the next one in (1.25 s each), preloads the next image, and swaps without fades under
-  `prefers-reduced-motion`. No API change, no setting. Checklist:
+  (chain 3 V1). Entity setup (`/forms/{type}`) no longer scrolls sideways at 390 px (it was 785 px wide): the
+  configuration lists' buttons wrap under the title and the tables scroll inside their cards. `WorldBoundFieldRenderer`
+  and `BannerLayersField` moved to the theme tokens, so no file is over its raw colour baseline, and `npm run test:ci`
+  now fails when one is. The landing slideshow fades the image out to black and then the next one in (1.25 s each),
+  preloads the next image, and swaps without fades under `prefers-reduced-motion`. No API change, no setting. Smoke
+  test not run:
   [design themes guide § 8](guides/design-themes-comparison.md#8-smoke-test-entity-setup-at-phone-width-colour-baseline-landing-fade-chain-3-v1).
 
-- **Dashboard access model, API part 2 (AM2)** — [PandiO/knk-workspace#280](https://github.com/PandiO/knk-workspace/issues/280),
-  knk-web-api `claude/dashboard-access-280` (on top of AM1). Every dashboard read is now gated by area: lists, details
-  and searches of a type need one of its read nodes (the area node, or the page node of a page that shows it: Game
-  settings reads locations and towns with `knk.admin.config`, roads read towns and streets, kits and lootboxes read
-  items, …), or the plugin's key. The form wizard's own reads (form and display configurations, metadata, validation),
-  drafts and your own world tasks and workflow sessions are open to anyone holding **any** area node, so a world or
-  kit builder no longer needs `knk.admin.content` to validate a form. New `POST api/Lookup/{type}/search` and
-  `GET api/Lookup/{type}/{id}` give pickers and labels id, name and one short line (users: the username only) for
-  any area node. Public pages, self reads and the plugin are unchanged. No migration, no setting. Deploy AM1–AM3
-  together, API first: an old web app would hit 403 in pickers of other areas.
+- **Dashboard access model, API part (AM1 + AM2)** — who may view, delete, bulk-delete and export each kind of record
+  is now decided per area (content, world, players, kits, siege, …) by the API.
+  [PandiO/knk-workspace#280](https://github.com/PandiO/knk-workspace/issues/280) (stays open for AM3, the web app, and
+  AM4). Design: [specs/dashboard-access-model/DESIGN.md](specs/dashboard-access-model/DESIGN.md).
+  - **AM1 (actions):** new nodes `knk.admin.delete`, `knk.admin.delete.bulk` and `knk.admin.export` on top of the
+    area nodes. Every dashboard delete (users and permission groups included) needs the area node and
+    `knk.admin.delete`; `POST api/Dashboard/bulk-delete` (area + delete + bulk, at most 100 ids, a reason per refused
+    row, not for users and groups) and `POST api/Dashboard/export` (area + export, at most 10 000 rows), each with one
+    audit entry (`DashboardBulkDelete`, `DashboardExport`). Only the owner hands out bulk delete, also through
+    `knk.admin.*` or groups that carry it; nobody changes a group ranked at or above their own. Migration
+    `SeedDashboardActionNodes` (data only; see the Admin steps above). Metadata names each type's area and action
+    nodes; live web updates follow the area node.
+  - **AM2 (reads):** lists, details and searches of a type need one of its read nodes (the area node, or the page node
+    of a page that shows it: Game settings reads locations and towns with `knk.admin.config`, roads read towns and
+    streets, kits and lootboxes read items, …), or the plugin's key. The form wizard's own reads (form and display
+    configurations, metadata, validation), drafts and your own world tasks and workflow sessions are open to anyone
+    holding **any** area node. New `POST api/Lookup/{type}/search` and `GET api/Lookup/{type}/{id}` give pickers and
+    labels id, name and one short line (users: the username only) for any area node. Public pages, self reads and the
+    plugin (with `api.auth.type: apikey`) are unchanged. No migration, no setting.
+  - Smoke test (API part, draft) not run: [guides/dashboard-access-smoke-test.md](guides/dashboard-access-smoke-test.md).
+    Follow-ups #285, #286.
 
-- **Dashboard access model, API part 1 (AM1)** — [PandiO/knk-workspace#280](https://github.com/PandiO/knk-workspace/issues/280),
-  knk-web-api `claude/dashboard-access-280` (stacked on `claude/kit-grant-delivery-261`, which contains chain 2's R1, and
-  on chain 2's X1 API `claude/realtime-web-live-183`: merging it merges those too). New nodes `knk.admin.delete`,
-  `knk.admin.delete.bulk` and `knk.admin.export` on top of the area nodes: every dashboard delete (users and permission
-  groups included) needs the area node and `knk.admin.delete`; `POST api/Dashboard/bulk-delete` (area + delete + bulk,
-  at most 100 ids, a reason per refused row, not for users and groups) and `POST api/Dashboard/export` (area + export,
-  at most 10 000 rows), each with one audit entry. Only the owner hands out bulk delete, also through `knk.admin.*` or
-  groups that carry it; nobody changes a group ranked at or above their own. Migration `SeedDashboardActionNodes`
-  (data only) gives Admin the three nodes where its wildcard doesn't, and delete and export to every explicit
-  area-node holder **except the Staff group**. Metadata names each type's area and action nodes; live updates follow
-  the area. Read gating and lookups (AM2) and the web app (AM3) follow; deploy AM1–AM3 together, API first. Smoke test
-  draft: [guides/dashboard-access-smoke-test.md](guides/dashboard-access-smoke-test.md).
+- **Live updates in the web app (realtime S4)** — when another staff member saves something, the dashboard and the
+  open detail page refresh by themselves, and player lists show who is online.
+  [PandiO/knk-workspace#183](https://github.com/PandiO/knk-workspace/issues/183) (chain 2 X1, API and web app). The
+  dashboard table of that type and an open detail page re-read quietly ("Updated by alice at 21:52"; a deleted entity
+  says so with Back); the moderation list's Online/Offline badges and a badge on the player profile follow players
+  joining and quitting. The API sends these over the existing web hub only to staff holding the node that gates the
+  same data over REST (since AM1 the type's area node; users and presence `knk.admin.user.manage`), checked per message
+  (cached 30 s). Without a hub connection everything works as before. No migration, no plugin change; optional
+  `Realtime:WebPermissionCacheSeconds` (30) and `Realtime:WebLiveUpdatesEnabled` (default `true`; `false` sends no
+  live web events, decision 2026-11-06). Smoke test not run (realtime smoke test § S4, on the unmerged workspace
+  branch `claude/realtime-web-live-183`). Docs follow-up #341.
+
+- **Web app admin navigation: grouped admin sidebar, breadcrumbs and titles from one route table** — every admin page
+  is now in one sidebar grouped by topic, with a breadcrumb trail, and staff only see the pages they can use.
+  [PandiO/knk-workspace#30](https://github.com/PandiO/knk-workspace/issues/30) (chain 2 W4; fixes
+  [#262](https://github.com/PandiO/knk-workspace/issues/262), the Invitations link that never showed). One route-meta
+  table (`src/routes/routeTable.ts`) gives every page its layout (public, player, admin; each with its own error
+  boundary), its gate (the same nodes as before), its tab title and its place in the navigation. The top bar has Home,
+  Leaderboards, Guides, Dashboard (for `knk.admin.content`, LW4-1) and Admin; the admin pages are in a grouped sidebar
+  (Content, World, Players & support, Economy, Settings, Owner; an "Admin pages" menu below 1280 px) that shows each
+  page only with the node its API checks. `/admin` lists the same pages with a line each. Every admin page has a
+  breadcrumb trail ("Economy › Balance event log › Transaction"). URLs unchanged. No API change. Smoke test not run
+  (admin navigation smoke test, on the unmerged workspace branch `claude/admin-ia-30`). Docs follow-up #340.
+
+- **Web app data and format primitives: one table and pager, one date/number format, tied labels, a settings page
+  with unsaved-change handling** — numbers and dates now show in the viewer's own language and time zone, and
+  Game Settings asks before you leave with unsaved changes.
+  [PandiO/knk-workspace#187](https://github.com/PandiO/knk-workspace/issues/187) (chain 2 W3). `DataTable` and `Pager`
+  (rows as real links, sortable headers announced with `aria-sort`) draw the dashboard table, the form pickers and
+  Player moderation's four lists. `utils/format.ts`: numbers and dates in the viewer's locale (LW3-1), API dates
+  without a zone read as UTC; the detail page and Account → Transactions no longer show raw ISO dates. `Field` ties
+  every label to its input. Game Settings and Siege configuration share one settings header: last saved, "n unsaved
+  changes", Discard and Save (n), a question before leaving, reloading or discarding, a toast on save and the API's
+  reason on a refusal. No API change. Smoke test not run (data primitives smoke test, on the unmerged workspace branch
+  `claude/admin-ia-30`). Docs follow-up #339.
+
+- **Web app feedback primitives: one accessible dialog, confirm with danger and a reason, general toasts** — every
+  pop-up in the web app now behaves the same way, deletes ask in red, and "saved" messages are small toasts.
+  [PandiO/knk-workspace#33](https://github.com/PandiO/knk-workspace/issues/33) (chain 2 W2). All 16 overlays (messages,
+  confirms, child forms, the builders' editors and template pickers, the import panel, the Invitations and telemetry
+  drawers) use one `Dialog`: labelled `dialog`/`alertdialog` with `aria-modal`, focus moved in and returned, Tab kept
+  inside, Escape and × close it, a click outside only closes messages and questions (never a form), nothing closes
+  while saving. Deletes and "Leave this form?" are red with focus on Cancel; a child form with unsaved changes asks
+  "Leave this form?" before Escape or × close it (LW2-2). `useConfirm` can ask for a reason. Success is a toast; toasts
+  have info/warning kinds, an optional action and wait while hovered. No API change. Smoke test not run (feedback
+  primitives smoke test, on the unmerged workspace branch `claude/admin-ia-30`). Docs follow-up #338.
+
+- **No "Entity setup" link in the nav** — staff open Entity setup with the dashboard's ⚙ on a type instead of a
+  separate menu link. [PandiO/knk-workspace#197](https://github.com/PandiO/knk-workspace/issues/197) (chain 2 W1). The
+  page (route `/forms`, unchanged) is also reached through the "Drafts (n)" menu's "All saved progress" or by URL; the
+  nav's **Dashboard** link is the current one there, on the builders and on detail pages. Web app only, no migration,
+  no setting. Smoke test not run (dashboard return smoke test § 14a, on the unmerged workspace branch). Docs follow-up
+  #337.
+
+- **API parts only, no visible change yet: account-erasure feed and pending kit deliveries** — nothing changes in game
+  until the plugin parts are merged. [PandiO/knk-workspace#184](https://github.com/PandiO/knk-workspace/issues/184)
+  (chain 2 R1): executing a data-deletion request records each erased account in a new erasure feed (migration
+  `AddPrivacyErasureEvents`, `GET api/privacy/erasures?since=`, plugin key; former UUIDs kept 35 days,
+  `Privacy:ErasureFeedUuidRetentionDays`) and pushes `AccountErased` to the game server, which today's plugin ignores.
+  [PandiO/knk-workspace#261](https://github.com/PandiO/knk-workspace/issues/261) (chain 3 P1): a web "Grant" on the
+  player profile is a pending delivery on its `kit_claims` row (migration `AddKitClaimDelivery`) plus a
+  `KitDeliveryPending` notification; `POST api/Kits/deliveries/{claimId}/delivered` (plugin key only). Today's plugin
+  ignores the notification, so granted kits still don't arrive until P1's plugin part is merged. Both issues stay open
+  for their plugin parts.
 
 ## 2026-11-10
 
