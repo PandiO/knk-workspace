@@ -58,6 +58,12 @@ or into `next`.
    developer looks; (b) let the developer add a permission rule for `add_repo` first, which is the developer's
    setting to change, not the coordinator's.
 
+3. **L4 as a subagent too.** L4's Stop hook must be tested with a deliberate type error in a sibling repo (scope
+   item 2), and a `create_session` link would have only knk-workspace (attaching the others is refused, § 3.2). Chosen:
+   run L4 as a subagent of this session, which has all four repos and can install the toolchains. L5 still starts with
+   `create_session` (knk-workspace only). Alternatives: (a) `create_session` with a throw-away fake sibling repo for
+   the test, which proves less about the real checks; (b) ask the developer to approve another attach.
+
 ## 4. Link blocks
 
 _(Each link appends its block here when it finishes.)_
