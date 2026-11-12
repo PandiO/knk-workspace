@@ -1,7 +1,7 @@
 # Form and Display builders: save in place, Publish, Duplicate, generate, preview (#71) — smoke test
 
 **Status:** Written 2026-11-09 for knk-web-app and knk-web-api `claude/builders-71` (chain 3 link V7); not merged, not run
-**Last updated:** 2026-11-09
+**Last updated:** 2026-11-12
 **Issues:** [PandiO/knk-workspace#71](https://github.com/PandiO/knk-workspace/issues/71) (KNG-147: CRUD-11 save in
 place, CRUD-12 scaffold and Duplicate, CRUD-13 preview, CRUD-14 explicit Publish); access model
 [#280](https://github.com/PandiO/knk-workspace/issues/280)
@@ -30,9 +30,9 @@ You need:
 ## 1. Save in place (CRUD-11), as A
 
 1. Entity setup → Town → the default form's ⋯ → **Edit**. The builder opens with a header: **Form builder: …**, a green
-   **Published** badge, "No unsaved changes.", **Save** disabled and **Publish…** disabled with
-   "Publish: Nothing to publish: the published version is up to date."
-2. Rename a step (or a field label). The header says **Unsaved changes.**; **Save** is enabled.
+   **Published** badge, "No unsaved changes.", **Save** and **Save and close** disabled (hover: "No unsaved changes.") and
+   **Publish…** disabled with "Publish: Nothing to publish: the published version is up to date."
+2. Rename a step (or a field label). The header says **Unsaved changes.**; **Save** and **Save and close** are enabled.
 3. **Save**: a toast "Draft saved. Staff keep the published version until you publish."; you **stay in the builder**; the
    badge reads **Published · changes not published** with "Draft saved <time>".
 4. In the other window open **New Town**: the wizard still shows the **old** step name.
@@ -56,9 +56,9 @@ You need:
    **Published** again.
 3. In the other window open **New Town** again: the new step name shows now. Resume your saved wizard draft: it opens on
    the new version.
-4. Make a broken change: add a field whose **Field name** isn't a Town property (type one by hand), **Save**, **Publish…**
-   → **Publish**: the dialog stays open with the API's reason ("Can't publish: …"); nothing changed for staff (check New
-   Town). Remove the field, Save, Publish.
+4. *Note, nothing to do:* the **Field name** box only offers the type's properties, so a field that isn't a Town property
+   can't be made in the builder. The API's "Can't publish: …" refusal (the dialog stays open, nothing changes for staff)
+   is covered by the API tests only.
 5. Uncheck **Default form for Town (from the next Publish)**, Save, Publish…: the dialog says it stops being the default.
    Cancel and tick it again (or publish and make it the default again on Entity setup).
 6. Unsaved changes are saved first: change a label, press **Publish…** directly (without Save): the dialog shows the
