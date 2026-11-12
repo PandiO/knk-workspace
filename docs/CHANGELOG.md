@@ -4,7 +4,28 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
-Nothing listed right now. Feature branches keep their draft entry on their own workspace branch until they merge.
+- **Dashboard access in the web app; bulk delete** (PandiO/knk-workspace#280 AM3, #205) — staff now see only the
+  dashboard types of the areas they work in, buttons they can't use are greyed out with the permission they need, and
+  owners and Admins can delete many rows at once. Branches (not merged): knk-web-app and knk-web-api
+  `claude/dashboard-access-280`, from `main` `1371951` / `master` `bc97b7d`.
+  - **Web app:** the dashboard, the detail page and the form wizard open for any area node (`knk.admin.content`,
+    `knk.admin.world`, `knk.kit.manage`, `knk.admin.lootbox.manage`, `knk.siege.admin.manage`, `knk.admin.road`,
+    `knk.admin.user.manage`); the explorer lists only the types of the areas held. New, Edit, Delete and ⚙ are disabled
+    with "Requires <node>" from the metadata's `actionNodes`; the bulk **Delete (n)** is hidden without
+    `knk.admin.delete.bulk` and for users and permission groups. Bulk delete confirms with the count and type, calls
+    `POST api/Dashboard/bulk-delete` in chunks of 100, keeps refused rows selected and lists them with their reasons
+    ("Show what uses it" for rows still in use). Export CSV reads through `POST api/Dashboard/export` (audited; CSV
+    format unchanged). Players no longer request `api/Metadata` (a 403 on every page since AM2). Refused reads say
+    "You don't have access to …"; labels and join entries fall back to `api/Lookup`; a picker's Create New needs the
+    related type's create node. Entity setup's lists stay `knk.admin.content`; its configuration Delete also needs
+    `knk.admin.delete`. Audit entries `DashboardBulkDelete` / `DashboardExport` have labels.
+  - **API:** `DELETE api/FormConfigurations/{id}` and `api/DisplayConfigurations/{id}` need `knk.admin.delete` too
+    (developer decision 2026-11-12 on LV7-8); bulk-delete refusals carry a `code` (`InUse`, `NotFound`, `Refused`,
+    `Failed`).
+  - **Admin steps:** no migration, no setting, no plugin change, no new package. Deploy the AM3 API and web app
+    together, **API first** (AM1–AM3 belong together; AM1/AM2 are already on `master`). Accounts that delete form or
+    display configurations need `knk.admin.delete` (Admin and the owner have it; backfilled content holders too).
+    Smoke test: [dashboard access smoke test § 2.1, § 8](guides/dashboard-access-smoke-test.md).
 
 ## 2026-11-12
 
