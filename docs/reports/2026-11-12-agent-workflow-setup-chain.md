@@ -90,6 +90,28 @@ or into `next`.
    at merge, which removes the trailer from the default branches if wanted. The same trailer is on earlier commits of
    the design work (e477178, b1787b5, 68eb738), so this predates the chain.
 
+5. **Developer decisions (2026-11-12, answered in the coordinator session).**
+    1. L3 5.4 confirmed: once the `next` rules apply, link PRs target `next` and the coordinator merges them through the
+       PR with a merge commit; the issue stays `status:in-review` until promotion.
+    2. L3 5.5 confirmed: PRs into `next` outside a chain wait for the developer unless the developer tells a session
+       to merge.
+    3. L3 5.3 confirmed: the `next` rules apply as soon as `.github/workflows/ci.yml` is on knk-web-api `master` and
+       knk-web-app `main`.
+    4. "Shipping a change → At merge" is split: the docs sub-issue and the docs session start when a feature merges into
+       `next`; the feature issue is closed when the developer promotes `next` to trunk.
+    5. Commit trailers: the rule stands (commit messages never name the model; use `Co-Authored-By: Claude`). Existing
+       commits stay as they are.
+    6. Link sessions: `create_session` is the preferred route for every link, with `add_repo` for the four knk
+       repositories allowed by a permission rule; a subagent of the coordinator is the fallback. (Replaces coordinator
+       decision § 3.2's "multi-repo links as subagents".)
+    7. Sessions-board overlap: a claim blocks a link only when the other branch changes the same lines or the claim is
+       active on the same area; additive edits elsewhere in a file are allowed and logged as a decision (confirms § 3.1).
+    8. Board rule: a finished session appends its row straight to `docs/reports/sessions-archive/<YYYY-MM>.md`; the
+       script only cleans up rows left in "Recently completed".
+
+   Applied by a follow-up on the open branches: L3 `claude/agent-setup-skills` (knk-workspace) and L4
+   `claude/agent-setup-tooling` (the permission rule); see § 4.6.
+
 ## 4. Link blocks
 
 _(Each link appends its block here when it finishes.)_
