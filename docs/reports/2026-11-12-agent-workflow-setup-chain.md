@@ -28,7 +28,7 @@ or into `next`.
 | L2 Branches, labels, digest | #329 | In review (done 11:40 UTC; labels and pin left for the developer) | `next`: knk-workspace `6245c9f`, knk-web-api `b5e57fa`, knk-web-app `9a85238`, knk-plugin `121030f`; digest issue [#333](https://github.com/PandiO/knk-workspace/issues/333) | — (no file changes) | subagent (coordinator decision § 3.2) |
 | L3 Skills and instructions | #330 | In review (done 12:05 UTC; docs only) | `claude/agent-setup-skills`: knk-workspace `8321f0d`, knk-web-api `dbb05c5`, knk-web-app `7a974ac`, knk-plugin `0759d22` | [knk-workspace#334](https://github.com/PandiO/knk-workspace/pull/334), [knk-web-api#13](https://github.com/PandiO/knk-web-api/pull/13), [knk-web-app#10](https://github.com/PandiO/knk-web-app/pull/10), [knk-plugin#16](https://github.com/PandiO/knk-plugin/pull/16) | subagent (coordinator decision § 3.2) |
 | L4 Tooling | #331 | In review (done 12:15 UTC; hook tested end to end) | `claude/agent-setup-tooling`: knk-workspace `9310d7f` | [knk-workspace#335](https://github.com/PandiO/knk-workspace/pull/335) | subagent (coordinator decision § 3.3) |
-| L5 Sessions board archive | #332 | Running (started 12:13 UTC) | `claude/agent-setup-sessions-archive` (knk-workspace) | — | create_session session_01R1w2Ux2rKagW6rke2sDnes |
+| L5 Sessions board archive | #332 | In review (done 12:25 UTC; board 486 KB → 65 KB on the branch) | `claude/agent-setup-sessions-archive`: knk-workspace `9f91251` | [knk-workspace#336](https://github.com/PandiO/knk-workspace/pull/336) | create_session session_01R1w2Ux2rKagW6rke2sDnes |
 
 ## 3. Coordinator decisions
 
@@ -349,3 +349,84 @@ _(Each link appends its block here when it finishes.)_
     3. Try the hook once on Windows (Git Bash) with a small change in a component repo; `KNK_FAST_CHECK=off` in
        `.claude/settings.local.json` turns it off if it gets in the way.
     4. Changelog entry at merge (text proposed in #335).
+
+### 4.5 L5 — Sessions board archive (#332)
+
+1. **Scope done.**
+    1. `scripts/sessions-archive/archive_sessions.py` (Python 3 stdlib): moves every entry of the board's "Recently
+       completed" section verbatim into `docs/reports/sessions-archive/YYYY-MM.md` by the entry's date, newest first
+       (new entries are merged in; existing archive entries are never changed, removed or reordered). "In progress",
+       "Paused / blocked" and the notes at the top stay byte for byte. Modes: default (write), `--dry-run` (plan and
+       verify, write nothing), `--check` (exit 1 while entries wait). Exit 2 on a parse error or a failed line check,
+       with nothing written. The archives are written first and the board last, each through a temp file and rename.
+    2. Entries: a heading entry (`### ...` and the lines under it) or a table row (a `|` line under a table header plus
+       every following line that does not start a new row, heading or table). Rows with a literal line break in a
+       cell, and prose paragraphs written under a row, stay with that row. Text before the first entry and the table
+       header lines stay on the board.
+    3. Line check, before any write: every non-blank line of the original board must appear on the new board plus in
+       the lines added to the archive files exactly as often as it was on the board (a line on the board twice must
+       end up twice). Table header and separator lines must stay on the board as often as before; archive files may
+       hold any number of copies, because each archive table starts with its own header and the header is repeated
+       after a row that spans several lines (so later rows still render as a table). The archive scaffolding lines
+       the script writes (title, status line, intro, `## Entries`/`## Table rows`) are allowed the same way. Also
+       checked: no line of an existing archive file disappears, existing archive entries keep text and order, and the
+       board outside the section is unchanged.
+    4. `scripts/sessions-archive/test_archive_sessions.py` (stdlib `unittest`, fixture board with heading entries, a
+       pipe inside backticks, a six-column row, a row with a line break in a cell plus prose under it, an undated row
+       and a duplicate line): 11 tests covering the date rule, dry run, `--check`, a full run, idempotence, appending
+       to an existing month without rewriting it, and aborts on a lost line, a duplicated line, a removed archive line
+       and a changed "In progress" table.
+    5. `docs/reports/sessions-archive/README.md`: rules and a file index the script keeps current between markers.
+       Board "How to use": finished rows go to the current month's archive file (link to the index), and rows stay
+       short (feature, issue, branch, repos, main areas).
+    6. Run on the branch: 239 entries moved (2026-09: 80, 2026-10: 130, 2026-11: 29; none undated). **Board size:
+       486,432 bytes / 492 lines before, 64,755 bytes / 84 lines after.** The rest is mostly long "In progress" rows,
+       left as they are.
+2. **Commits and heads.** knk-workspace `claude/agent-setup-sessions-archive` at `9f91251` (from `main` `eab8b6f`):
+   `da40c73` script, tests, index, "How to use"; `99f0c4a` file modes kept on rewrite, undated wording;
+   `9f91251` the generated move (not to be merged as is, see item 8).
+3. **PR.** [knk-workspace#336](https://github.com/PandiO/knk-workspace/pull/336) (`Closes #332`). Not merged.
+   `git merge-tree` shows no conflict with #334 (L3) or #335 (L4).
+4. **Tests, baseline → result.** Baseline: no build (docs-only repo), no tests for the script before. Result: 11/11
+   unit tests OK. On the real board: the run, then a second run ("nothing to archive"), then `--check` (0 entries
+   waiting, exit 0). An independent multiset comparison (board lines from git against the new board plus the
+   archive files) differs only in the scaffolding lines. The script was also run on a copy of the latest
+   `origin/main` board (`eab8b6f`) right before the push: same 239 entries, clean second run.
+5. **Decisions (DESIGN § 4.3).**
+    1. *Date rule.* Chosen: a heading's `YYYY-MM-DD`; for a row, the last cell of its first line that starts with a
+       date (the "Finished" cell, or "Last updated" for the two rows in the six-column "In progress" layout); no date:
+       `undated.md`. Alternatives: (a) the header's "Finished" column only, which fails for the six-column rows and the
+       seven rows whose cells hold an unbalanced backtick; (b) any date in the entry text, which can pick a date
+       mentioned in the notes; (c) the run date, which loses when the work finished.
+    2. *Archive layout.* Chosen: per month two sections, `## Entries` (heading entries) and `## Table rows` (rows under
+       a copy of their header), each newest first. Alternative: one mixed list in date order, which would need a
+       table header before every run of rows and reads worse.
+    3. *Repeated table headers.* Chosen: repeat the header after a multi-line row so the rows after it render as a
+       table; the line check counts header and separator lines as structure (they must stay on the board; archive
+       copies are free). Alternative: one header per file, which leaves rows after prose rendering as plain text (as
+       on the old board).
+    4. *Relative links in moved entries.* Chosen: keep them verbatim (relative to `docs/`) and say so in each archive
+       file and the index. Alternative: rewrite them to `../../...`, which breaks "verbatim" and the line check.
+    5. *Index upkeep.* Chosen: the script regenerates the file list between markers in the README. Alternative: a
+       hand-kept list, which drifts when a new month appears.
+    6. *Generated move on the branch.* Chosen: separate commit `9f91251` so the developer can skip it at merge and
+       regenerate on fresh `main`. Alternative: leave the move off the branch, which would show nothing to review.
+6. **Out of scope, noted (comment on #332).**
+    1. `docs/ai-agents/GLOBAL_AGENT_INSTRUCTIONS.md` (§ ACTIVE_SESSIONS, "On completion move it to Recently
+       completed") and `docs/ai-agents/docs-session-prompt.md` still tell sessions to move rows to "Recently
+       completed". That still works (the script moves them on), but the wording could point to the archive once
+       L3's #334 is merged.
+    2. Older docs that point to entries "in `ACTIVE_SESSIONS.md`'s Recently completed" (for example
+       `docs/backlog/QOL_BUGFIX_BACKLOG.md`, `docs/specs/user-features/IMPLEMENTATION_PLAN.md`) now find them in the
+       archive files; no link breaks, as they name the section, not an anchor.
+    3. The "In progress" table still holds long rows (about 60 KB); shortening them is the manager's job under the
+       new short-row rule (DESIGN § 8.4).
+7. **Blockers.** None.
+8. **At merge / what the developer must do.**
+    1. Do not merge `9f91251`. Check out fresh `main`, `git cherry-pick da40c73 99f0c4a` (a conflict on the board's
+       "How to use" lines: keep both sides), run `python3 scripts/sessions-archive/archive_sessions.py --dry-run`,
+       then without `--dry-run`, then `--check` (expect 0 waiting); commit, push `main`, close #336.
+    2. Then merge `main` into `next` (item 1.1).
+    3. Changelog entry at merge (developer tooling: "The sessions board keeps only work in progress; finished rows
+       move to monthly archive files under `docs/reports/sessions-archive/`, by `scripts/sessions-archive/
+       archive_sessions.py`.").
