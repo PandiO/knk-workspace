@@ -136,7 +136,7 @@ Deploy `claude/citizens-spike` `ac3c356` or later (`./gradlew :knk-paper:dev`). 
 
 ## Phase 0: trail mode and the travel bubble (next session)
 
-Spike `c6b5b46` or later. What it tests: [implementation plan Phase 0](../specs/npc-platform/IMPLEMENTATION_PLAN.md) (Q8, NAV-15, NAV-12).
+Spike `73cdc22` or later. What it tests: [implementation plan Phase 0](../specs/npc-platform/IMPLEMENTATION_PLAN.md) (Q8, NAV-15, NAV-12).
 
 - `spawn <n> trail`: NPCs follow the K&K road line (the line the follow trail shows) as waypoint lists, 32 blocks at a time (`set stretch N`). Citizens' A* only walks to the road, from the road to the goal, and one short recovery leg when stuck.
 - `set keeploaded on|off`: the travel bubble. NPCs keep the chunks they walk through loaded; applies at once.
@@ -149,7 +149,11 @@ Spike `c6b5b46` or later. What it tests: [implementation plan Phase 0](../specs/
 
 A `spawn` with no spike NPCs starts a run (named after the mode and count); `/knk npcspike run <name>` starts a new file by hand (for example between the gate-closed and gate-reopened phases); `clear` ends it.
 
-**Before you start:** deploy, check `0.1.0+c6b5b46…` in the startup line, `/knk npcspike baseline` with no NPCs. Use a saved route that stays inside the loaded area for tests 1–2 (for example `south-gate` or the clean route of `50-hop-clean`).
+**First run 2026-11-12 (`c6b5b46`):** trail mode stays much closer to the road (stray p95 0.85 blocks vs 1.67 for hop) at lower cost (0.020 vs 0.035 ms per NPC), but most trail NPCs got stuck at a corner near 1411 49 -506 without Citizens reporting it, and the gate and access tests ran with an admin with `knk.region.bypass` as access subject (an admin passes every closed gate, bypass opens every domain), so they don't count. Fixed in `73cdc22` (see below); rerun tests 1 (trail) and 2.
+
+**Access subject:** must be a normal player (no `knk.region.bypass`, not a gate admin): `/knk npcspike set subject <player>`. `spawn` warns when it isn't. A run (spawn with no NPCs, or `run <name>`) now resets the counters.
+
+**Before you start:** deploy, check the startup line for the spike commit, `/knk npcspike baseline` with no NPCs. Use a saved route that stays inside the loaded area for tests 1–2 (for example `south-gate` or the clean route of `50-hop-clean`).
 
 **Test 1: hop vs trail on the same route**
 
