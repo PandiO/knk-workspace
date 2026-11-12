@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
 """Turn K&K town/district WorldGuard regions into BlueMap marker-sets.
 
-Usage: wg2bluemap.py <regions.yml> <map .conf> [floor-y] [ceil-y]
+Usage: wg2bluemap.py <regions.yml> <map .conf> [floor-y] [ceil-y] [town-y]
 Towns = priority 10, districts = priority 20 (managed-worldguard-regions.md).
 Each region becomes an extrude marker (a see-through volume) at its own WG
 height, clamped to floor-y..ceil-y (default 20..120) so full-height regions
 don't become sky-high walls. The volume has no edge lines (a polygon with many
 corners turns into a forest of vertical bars); a separate line marker traces
-the outline once, along the top. Points on a straight line are dropped. A town gets holes where its districts are, so a
+the outline once, along the top. Points on a straight line are dropped.
+With town-y, towns are drawn as a flat shape at that height instead (with
+holes for their districts); districts stay volumes. A town gets holes where its districts are, so a
 click inside a district reaches the district. Rewrites only the block between
 '# >>> knk-regions' and '# <<< knk-regions'.
 """
@@ -44,8 +46,9 @@ def heights(r):
         return r.get("min-y", -64), r.get("max-y", 319) + 1
     return r["min"]["y"], r["max"]["y"] + 1
 
-def main(regions_file, conf_file, floor=20, ceil=120):
+def main(regions_file, conf_file, floor=20, ceil=120, town_y=None):
     floor, ceil = int(floor), int(ceil)
+    town_y = None if town_y is None else int(town_y)
     regions = (yaml.safe_load(open(regions_file)) or {}).get("regions") or {}
     keep = {rid: r for rid, r in regions.items()
             if r.get("priority") in SETS and r.get("type") in ("cuboid", "poly2d")}
@@ -63,6 +66,9 @@ def main(regions_file, conf_file, floor=20, ceil=120):
         lo, hi = max(lo, floor), min(hi, ceil)
         if hi <= lo:
             lo, hi = floor, ceil
+        flat = r["priority"] == 10 and town_y is not None
+        if flat:
+            lo = hi = town_y
         cx = sum(p["x"] for p in pts) / len(pts); cz = sum(p["z"] for p in pts) / len(pts)
         kids = sorted(children.get(rid, []))
         detail = f"<b>{rid}</b><br>{lab[:-1]}"
@@ -77,6 +83,10 @@ def main(regions_file, conf_file, floor=20, ceil=120):
              "line-width": 0,
              "line-color": {"r": rgb[0], "g": rgb[1], "b": rgb[2], "a": 0.0},
              "fill-color": {"r": rgb[0], "g": rgb[1], "b": rgb[2], "a": alpha}}
+        if flat:
+            del m["shape-min-y"], m["shape-max-y"]
+            m.update({"type": "shape", "shape-y": town_y,
+                      "fill-color": {"r": rgb[0], "g": rgb[1], "b": rgb[2], "a": 0.25}})
         if kids:
             m["holes"] = [simplify(outline(keep[k])) for k in kids]
         sets[sid]["markers"][rid] = m
@@ -93,7 +103,7 @@ def main(regions_file, conf_file, floor=20, ceil=120):
         text = text[:text.index(BEGIN)] + text[text.index(END) + len(END):].lstrip("\n")
     open(conf_file, "w").write(text.rstrip("\n") + "\n\n" + block)
     print("markers written:", counts or "none (no priority 10/20 regions found)",
-          f"| height band {floor}..{ceil}")
+          f"| districts {floor}..{ceil} | towns", f"flat at y {town_y}" if town_y is not None else "volumes")
 
 if __name__ == "__main__":
-    main(*sys.argv[1:5])
+    main(*sys.argv[1:6])
