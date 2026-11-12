@@ -1,6 +1,6 @@
 # In-game maps — BlueMap evaluation (Dynmap vs BlueMap)
 
-**Status:** Evaluated and test-rendered on the NAS (2026-11-10). **BlueMap is the preferred map renderer**, replacing Dynmap (decision M2 in [DESIGN.md](DESIGN.md)), pending the follow-ups in §8. No code.
+**Status:** Evaluated and test-rendered on the NAS (2026-11-10). **BlueMap replaces Dynmap as the map renderer**, confirmed by the developer 2026-11-12 (decisions M2–M4 in [DESIGN.md](DESIGN.md)); follow-ups in §8. No code.
 **Last updated:** 2026-11-12 (cave-culling fix for shadowed builds, run 4; first version 2026-11-10)
 **Issue:** [PandiO/knk-workspace#224](https://github.com/PandiO/knk-workspace/issues/224)
 **Related:** [DESIGN.md](DESIGN.md) (battle map tables), #254 (painted resource map over the web map), #32 (VPS hosting), #41 / #23 (siege), #78, #65, #124, #53 (other map uses)
@@ -196,8 +196,8 @@ After a config change, always `docker rm -f bluemap-test` and start again with `
 
 To be split into sub-issues of #224 when picked up:
 
-1. **Update DESIGN.md decisions** M2–M4 to BlueMap once the developer confirms (this doc records the evaluation).
-2. **WorldGuard town regions:** hand-made marker in the map config first, then a plugin/add-on pushing regions through the marker API on the dev server.
+1. ~~Update DESIGN.md decisions M2–M4 to BlueMap~~ — done 2026-11-12.
+2. **WorldGuard town and district regions:** first test with the standalone renderer: [`scripts/bluemap/wg2bluemap.py`](../../../scripts/bluemap/wg2bluemap.py) turns WorldGuard's `regions.yml` (towns = priority 10, districts = priority 20, names `domain_<id>`) into static `marker-sets` in the map config; `--markers` applies them without a re-render. Later: a plugin pushing regions (with town/district names from knk-web-api) through the BlueMap API, kept in sync on region changes.
 3. **Web UI extensibility spike:** one custom marker with a tooltip, one region overlay, one click handler logging world X/Z (the targeting path).
 4. **2D table page prototype** on the low-res tiles; test in headless Chromium for CPU cost and check readability at the table's zoom.
 5. **Plugin on the dev server** (Paper jar) with live players and auto-render off/limited; tiles from the offline render.

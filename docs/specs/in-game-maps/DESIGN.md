@@ -1,7 +1,7 @@
 # In-game maps — battle map tables and siege-engine targeting
 
-**Status:** Direction chosen by the developer (2026-11-03). **Not designed in detail, no code.** Numbers in §6 are estimates and have not been measured.
-**Last updated:** 2026-11-10 (BlueMap evaluation and test render: [BLUEMAP_EVALUATION.md](BLUEMAP_EVALUATION.md); Dynmap is being replaced, see the note under §2)
+**Status:** Direction chosen by the developer (2026-11-03); **map renderer: BlueMap**, confirmed by the developer (2026-11-12) after a test render. **Not designed in detail, no code.** Numbers in §6 are estimates and have not been measured.
+**Last updated:** 2026-11-12 (M2–M4 changed from Dynmap to BlueMap, developer decision; evaluation and test results in [BLUEMAP_EVALUATION.md](BLUEMAP_EVALUATION.md)); 2026-11-03 (first version)
 **Issue:** [PandiO/knk-workspace#224](https://github.com/PandiO/knk-workspace/issues/224)
 **Related:**
 - #41 siege survival, #23 siege PvE
@@ -33,13 +33,13 @@ Out of scope here: the siege engines themselves (projectile, reload, damage to g
 | ID | Decision |
 |---|---|
 | M1 | **Vanilla clients first.** The plugin targets the vanilla experience. A modded-client path is a later option (§5.3), for example alongside a Lord of the Rings mod. The aim is to support both eventually. |
-| M2 | **Dynmap renders the world** and is used for more features than this one. |
-| M3 | **The targeting UI is a web page** built on Dynmap. It is shown in game through a server-side browser plugin (MapBrowser, §4). The developer already has a web-based targeting system. One codebase then serves both the in-game maps and the browser maps. |
-| M4 | **Dynmap is chosen over vanilla `MapRenderer` maps** (§5.1), even with the extra RAM and CPU. Reasons: configurability, scaling to other map uses, and reuse of the web code. Costs are kept in check with the efficiency rules in §6.2. |
+| M2 | **BlueMap renders the world** (changed from Dynmap, 2026-11-12) and is used for more features than this one. Main reason: storage, about 40 GB vs 150–300 GB for the full world ([BLUEMAP_EVALUATION.md](BLUEMAP_EVALUATION.md)). |
+| M3 | **The targeting UI is a web page** built on BlueMap's web app and marker API. In game it is a **2D page on BlueMap's low-res tiles**, shown through a server-side browser plugin (MapBrowser, §4); the 3D viewer needs WebGL, which a GPU-less browser host can't run cheaply. The developer already has a web-based targeting system, ported to BlueMap. One codebase then serves both the in-game maps and the browser maps. |
+| M4 | **A web map (BlueMap) is chosen over vanilla `MapRenderer` maps** (§5.1), even with the extra RAM and CPU. Reasons: configurability, scaling to other map uses, and reuse of the web code. Costs are kept in check with the efficiency rules in §6.2. |
 | M5 | **Battle maps are snapshots.** They don't need to show the current terrain or siege damage. A medieval hand-drawn map wouldn't either. Tiles are pre-rendered offline (§7). |
 | M6 | **For the open beta, the browser runs on a separate VPS** (§6.3), not on the Paper host. |
 
-> **Update 2026-11-10: BlueMap preferred over Dynmap (M2–M4).** A full high-res Dynmap render of the 22k × 17k world was estimated at 150–300 GB per view angle. A BlueMap test render of the alpha world on the NAS extrapolates to **about 40 GB** with free 3D rotation, built-in level of detail and a standalone Docker renderer (weighted score 4.20 vs 2.65). Where this doc says Dynmap, read BlueMap; the web-based targeting page moves to BlueMap's web app and marker API. The in-game tables use a custom **2D page on BlueMap's low-res tiles**, because BlueMap's 3D viewer needs WebGL, which a GPU-less MapBrowser host would render in software. Details, decision matrix and results: [BLUEMAP_EVALUATION.md](BLUEMAP_EVALUATION.md).
+> **Update 2026-11-10, confirmed 2026-11-12: BlueMap replaces Dynmap (M2–M4).** A full high-res Dynmap render of the 22k × 17k world was estimated at 150–300 GB per view angle. A BlueMap test render of the alpha world on the NAS extrapolates to **about 40 GB** with free 3D rotation, built-in level of detail and a standalone Docker renderer (weighted score 4.20 vs 2.65). Where this doc says Dynmap, read BlueMap; the web-based targeting page moves to BlueMap's web app and marker API. The in-game tables use a custom **2D page on BlueMap's low-res tiles**, because BlueMap's 3D viewer needs WebGL, which a GPU-less MapBrowser host would render in software. Details, decision matrix and results: [BLUEMAP_EVALUATION.md](BLUEMAP_EVALUATION.md).
 
 ## 3. How it works
 
