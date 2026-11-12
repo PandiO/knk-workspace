@@ -26,7 +26,7 @@ or into `next`.
 |---|---|---|---|---|---|
 | L1 CI | #328 | In review (done 11:40 UTC, both workflows green) | `claude/agent-setup-ci`: knk-web-api `81b06d9`, knk-web-app `a7d31a2` | [knk-web-api#12](https://github.com/PandiO/knk-web-api/pull/12), [knk-web-app#9](https://github.com/PandiO/knk-web-app/pull/9) | create_session session_01R1w2UsfbmKqEY1QXSx25id |
 | L2 Branches, labels, digest | #329 | In review (done 11:40 UTC; labels and pin left for the developer) | `next`: knk-workspace `6245c9f`, knk-web-api `b5e57fa`, knk-web-app `9a85238`, knk-plugin `121030f`; digest issue [#333](https://github.com/PandiO/knk-workspace/issues/333) | — (no file changes) | subagent (coordinator decision § 3.2) |
-| L3 Skills and instructions | #330 | Not started | `claude/agent-setup-skills` (workspace + three component repos) | — | — |
+| L3 Skills and instructions | #330 | In review (done 12:05 UTC; docs only) | `claude/agent-setup-skills`: knk-workspace `8321f0d`, knk-web-api `dbb05c5`, knk-web-app `7a974ac`, knk-plugin `0759d22` | [knk-workspace#334](https://github.com/PandiO/knk-workspace/pull/334), [knk-web-api#13](https://github.com/PandiO/knk-web-api/pull/13), [knk-web-app#10](https://github.com/PandiO/knk-web-app/pull/10), [knk-plugin#16](https://github.com/PandiO/knk-plugin/pull/16) | subagent (coordinator decision § 3.2) |
 | L4 Tooling | #331 | Not started | `claude/agent-setup-tooling` (knk-workspace) | — | — |
 | L5 Sessions board archive | #332 | Not started | `claude/agent-setup-sessions-archive` (knk-workspace) | — | — |
 
@@ -155,3 +155,83 @@ _(Each link appends its block here when it finishes.)_
     3. Optional: protect `next` in each repo against force-push and deletion (branch protection was out of scope).
     4. After merging L1, L3, L4 and L5 into the default branches, merge each default branch into `next`
        (already item 1.1 of this report).
+
+### 4.3 L3 — Coordinator and link skills, instructions, stale files (#330)
+
+1. **Scope done.**
+    1. knk-workspace `.claude/skills/knk-coordinator/`: `SKILL.md` (158 lines: rule set in force, first run, the loop of
+       DESIGN § 5.1 with `git rev-list --count` gate checks, starting links by `create_session` with an explicit model or
+       as a subagent, `send_later` check-ins with `get_session`/`list_events`, the nine checks of a finished link,
+       merging into `next`, blockers, reporting to the manager) and the supporting files `permissions-block.md`
+       (variant A for `create_session`, variant B for a subagent), `charter-template.md` (binding documents, links
+       table with tier/base/flag, gates, chain notes) and `report-template.md` (summary table, coordinator decisions,
+       link block).
+    2. knk-workspace `.claude/skills/knk-link/SKILL.md` (121 lines): setup (repos, read first, base branch, merge not
+       rebase, push dry run, status label, toolchains incl. JDK 25, baseline table), ten hard rules, finishing (PR with
+       `Closes`/`Part of`, sub-issue, report block, final message), blockers, agent decisions with alternatives.
+    3. `docs/ai-agents/GLOBAL_AGENT_INSTRUCTIONS.md`: new section "Branches, releases and risk tiers" (eight numbered
+       rules from DESIGN § 2 and § 5), applying once `.github/workflows/ci.yml` is on knk-web-api `master` and
+       knk-web-app `main` (#328), current rules until then. "Session chains" rewritten to point at the two skills and
+       keep the dated `add_repo` facts (2026-10-11 and today's refusal). "Authority" item 2, "Parallel sessions" items
+       3 and 5 adjusted. The stale "`create_session` has no effort setting" line corrected (the tool now has `effort`).
+    4. `AGENTS.md` default-branch sentence in knk-workspace, knk-web-api, knk-web-app and knk-plugin: "from `next` once
+       the global branch model applies, until then from the current default branch". No `CLAUDE.md` changed (decision
+       5.1).
+    5. `docs/vision/vision.md`: "Guiding Principle: Platform Independence [decided 2026-11-12]", one paragraph before
+       § 1.
+    6. Deleted the empty `docs/ai-agents/AGENT-GUIDE.md` and `docs/ai-agents/guardrails.md`. Nothing linked to them
+       in any of the four repos (mentions only in the 2026-11-03 audit report, DESIGN and the setup handoff, left
+       unchanged). Copilot files untouched.
+    7. `docs/README.md`: the `ai-agents/` entry names the skills. There is no `docs/ai-agents/README.md`.
+2. **Commits and heads.** One commit each on `claude/agent-setup-skills`: knk-workspace `8321f0d` (from `main`
+   `54434b1`), knk-web-api `dbb05c5` (from `master` `b5e57fa`), knk-web-app `7a974ac` (from `main` `9a85238`),
+   knk-plugin `0759d22` (from `main` `121030f`).
+3. **PRs.** [knk-workspace#334](https://github.com/PandiO/knk-workspace/pull/334) (`Closes #330`),
+   [knk-web-api#13](https://github.com/PandiO/knk-web-api/pull/13), [knk-web-app#10](https://github.com/PandiO/knk-web-app/pull/10),
+   [knk-plugin#16](https://github.com/PandiO/knk-plugin/pull/16) (`Part of #330`). Not merged.
+4. **Tests, baseline → result.** Docs only, no build in any repo (baseline: "docs only, no build"). Link check script
+   over the changed files: 36 relative links, 0 broken. Both `SKILL.md` front matters parse as YAML. `git diff --check`
+   clean. CI: knk-plugin Build green on #16 (push run 43212042737, PR run 43212142739); knk-web-api and knk-web-app have no CI on `master`/`main`
+   until L1 merges.
+5. **Decisions (DESIGN § 4.3).**
+    1. *Component `CLAUDE.md` unchanged.* Chosen: only `AGENTS.md` says "from this repo's current default branch";
+       the `CLAUDE.md` line says to open the shared instructions "from knk-workspace's current default branch", which
+       stays right (the accepted instructions live on trunk), and leaving it keeps clear of the arena-duels branch.
+       Alternatives: (a) add "or `next`" there, which would point agents at unreleased instructions; (b) rewrite the
+       paragraph, which risks a non-mechanical merge with `claude/arena-duels`.
+    2. *Workspace `AGENTS.md` changed too.* Chosen: its "create one from the current default branch" sentence is the
+       same rule, so it gets the same wording. Alternative: leave it, inconsistent with the global section.
+    3. *How "the branch model applies" is checked.* Chosen: `ci.yml` present on knk-web-api `master` and knk-web-app
+       `main` (`git ls-tree`), the condition the DESIGN names, checkable by any agent. Alternatives: (a) a flag line in
+       the global instructions the developer edits after merging L1, one more manual step; (b) the tracker, which the
+       loop must not trust for gates.
+    4. *Merging into `next` through the PR.* Chosen: once the model applies, link PRs target `next` and the coordinator
+       merges them with a merge commit (`merge_pull_request`, `merge_method` `merge`); the issue stays
+       `status:in-review` until promotion (a PR into a non-default branch does not close it). Alternatives: (a) a
+       local merge pushed to `next`, which skips the PR's CI record; (b) squash merges, which lose the history the
+       merge-not-rebase rule keeps.
+    5. *PRs into `next` outside a chain.* Chosen: they wait for the developer unless the developer asks a session to
+       merge, since DESIGN § 5.2 only lets coordinators merge. Alternatives: (a) any session merges after green CI,
+       beyond the design; (b) the manager merges, a role that does not run yet.
+    6. *Route rule as dated guidance.* Chosen: multi-repo links as subagents, `create_session` for single-repo links,
+       "as of 2026-11-12, recheck when the platform changes" (coordinator note 2.1). Alternative: a permanent rule,
+       which would outlive a platform fix.
+    7. *Vision placement.* Chosen: an unnumbered "Guiding Principle" section before § 1, so every existing section
+       number and cross-reference (4.1, 5.1) stays. Alternatives: (a) a new numbered section, which renumbers the
+       document; (b) a paragraph in 5.1, which hides a project-wide principle in the ranks section.
+    8. *Changelog.* Chosen: the PR proposes the entry text; it is written at merge, as the template says. Alternative:
+       an "Unreleased" entry on the branch now, which L4 and L5 would also touch, making three conflicting edits of
+       the same lines.
+6. **Out of scope, noted** (comment on #330). (1) "Shipping a change → At merge" does not yet say whether it means the
+   merge into `next` or the promotion to trunk; (2) retiring `guides/developer/AI_FEATURE_IMPLEMENTATION_WORKFLOW.md`
+   (DESIGN § 9.3) and the platform principle in the design skill (§ 3.2.2) belong to later links.
+7. **Blockers.** None.
+8. **At merge / what the developer must do.**
+    1. Merge after L1: knk-workspace#334, knk-web-api#13, knk-web-app#10, knk-plugin#16 (docs only, any order among
+       them), then each default branch into `next` (item 1.1).
+    2. Add the changelog entry proposed in #334.
+    3. Review decisions 5.3–5.5: they set how coordinators merge into `next` from the first chain after L1.
+9. **Notes for later links.** The skills reference `.claude/skills/knk-coordinator/report-template.md` for the link
+   block; L4's `.claude/settings.json` lives next to `.claude/skills/` without overlap. Session note: the file tool
+   refused to write `report-template.md` (it read the name as a findings report), so that template was written from
+   the shell.
