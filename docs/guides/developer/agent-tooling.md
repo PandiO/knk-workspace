@@ -1,18 +1,20 @@
 # Agent tooling: MCP servers and the fast-check hook
 
-**Status:** Active · **Last updated:** 2026-11-12 (permission rule for `add_repo`, § 4, developer decision 2026-11-12); 2026-11-12 (first version, [PandiO/knk-workspace#331](https://github.com/PandiO/knk-workspace/issues/331), [DESIGN § 10](../../specs/ai-agent-workflow/DESIGN.md#10-tooling-mcp-servers-and-hooks))
+**Status:** Active · **Last updated:** 2026-11-12 (`add_repo` guard hook, § 4.2, developer decision 2026-11-12); 2026-11-12 (permission rule for `add_repo`, § 4, developer decision 2026-11-12); 2026-11-12 (first version, [PandiO/knk-workspace#331](https://github.com/PandiO/knk-workspace/issues/331), [DESIGN § 10](../../specs/ai-agent-workflow/DESIGN.md#10-tooling-mcp-servers-and-hooks))
 
 What knk-workspace configures for Claude Code sessions started in it: three MCP servers in `.mcp.json`, and in
-`.claude/settings.json` a Stop hook that compiles the component repos an agent changed and a permission rule that lets
-sessions attach repositories. None of the files holds a secret.
+`.claude/settings.json` a Stop hook that compiles the component repos an agent changed, a permission rule that lets
+sessions attach repositories and a PreToolUse hook that limits those attaches to the knk repositories. None of the
+files holds a secret.
 
 ## 1. What is configured
 
 | File | What it does |
 |---|---|
 | `.mcp.json` | MCP servers `github`, `playwright` and `context7` (§ 2) |
-| `.claude/settings.json` | One `Stop` hook: `bash "${CLAUDE_PROJECT_DIR}/.claude/hooks/fast-check.sh"`, timeout 600 s (§ 3); `permissions.allow` for `add_repo` and `register_repo_root` (§ 4) |
+| `.claude/settings.json` | One `Stop` hook: `bash "${CLAUDE_PROJECT_DIR}/.claude/hooks/fast-check.sh"`, timeout 600 s (§ 3); `permissions.allow` for `add_repo` and `register_repo_root` (§ 4.1); one `PreToolUse` hook for `add_repo`: `bash "${CLAUDE_PROJECT_DIR}/.claude/hooks/add-repo-guard.sh"`, timeout 30 s (§ 4.2) |
 | `.claude/hooks/fast-check.sh` | The fast checks (§ 3) |
+| `.claude/hooks/add-repo-guard.sh` | The `add_repo` guard: only the knk repositories may be attached (§ 4.2) |
 | `.gitattributes` | Keeps `*.sh` at LF line endings, so the hook also runs from a Windows checkout (Git Bash) |
 
 Project skills live next to these under `.claude/skills/`; they need no settings entry.
@@ -125,7 +127,9 @@ From the [hooks reference](https://code.claude.com/docs/en/hooks), read 2026-11-
 3. It blocks on errors that were already in a checkout, not only on the session's own changes; the message lets the
    agent say so instead of fixing unrelated work.
 
-## 4. Permission rule: attaching repositories in link sessions
+## 4. Attaching repositories in link sessions
+
+### 4.1 Permission rule
 
 Developer decision 2026-11-12 (setup chain, [PandiO/knk-workspace#327](https://github.com/PandiO/knk-workspace/issues/327)):
 chain links start with `create_session` and attach the knk repositories they need themselves, so the developer does
@@ -143,16 +147,15 @@ not have to approve each attach. `.claude/settings.json` therefore has:
 1. **What it allows.** `add_repo` attaches a GitHub repository to the cloud session; `register_repo_root` tells the
    session that the clone is done so its `CLAUDE.md` and skills load. Both come from the `claude-code-remote` tools of
    cloud sessions on claude.ai; on the developer PC the server does not exist and the rule does nothing.
-2. **The rule does not limit which repositories.** Claude Code matches an MCP allow rule on the tool name only:
+2. **The rule itself does not limit which repositories.** Claude Code matches an MCP allow rule on the tool name only:
    `mcp__<server>__<tool>` or `mcp__<server>__*`, with no specifier. A rule with parentheses (for example one naming
    the `owner` or `repo` argument) is skipped when the settings file loads, and a specifier on an allow rule would match
    no call ([permissions, MCP and "Match by input parameter"](https://code.claude.com/docs/en/permissions), read
-   2026-11-12). The developer asked for the rule to be limited to the four knk repositories; the limit therefore
-   comes from the cloud session's GitHub access, not from the rule: the repositories the Claude GitHub App is
-   installed on for the `PandiO` account (GitHub, Settings, Applications, Installed GitHub Apps, Claude, Repository
-   access). `add_repo` refuses a repository the app cannot reach. Keep that list to the repositories sessions should
-   reach (the four knk repositories, plus read-only ones such as `knk-dev-db-seed`). The permissions block in each
-   link prompt also names only the repositories the developer authorized for the chain.
+   2026-11-12). The limit comes from two places: the guard hook in § 4.2, and the cloud session's GitHub access, the
+   repositories the Claude GitHub App is installed on for the `PandiO` account (GitHub, Settings, Applications,
+   Installed GitHub Apps, Claude, Repository access); `add_repo` refuses a repository the app cannot reach. Keep that
+   list to the repositories sessions should reach. The permissions block in each link prompt also names only the
+   repositories the developer authorized for the chain.
 3. **Where it applies.** Only in sessions whose project is knk-workspace: a cloud session reads the repository's
    `.claude/settings.json` when it starts with that one repository, which is how coordinators start links
    (`source_url` knk-workspace). A session started in a component repo does not get the rule. The rule exists only
@@ -162,3 +165,48 @@ not have to approve each attach. `.claude/settings.json` therefore has:
    names to `permissions.deny` instead (deny wins over allow). To turn it off on one machine only, put
    `{"permissions": {"deny": ["mcp__claude-code-remote__add_repo"]}}` in the untracked `.claude/settings.local.json`.
    `/permissions` in Claude Code shows the rules in force and where each comes from.
+
+### 4.2 The `add_repo` guard hook
+
+Developer decision 2026-11-12 (setup chain follow-up L3c, [PandiO/knk-workspace#331](https://github.com/PandiO/knk-workspace/issues/331)):
+a `PreToolUse` hook with the matcher `mcp__claude-code-remote__add_repo` runs `.claude/hooks/add-repo-guard.sh`
+before every `add_repo` call.
+
+1. **What it allows.** Owner `PandiO` and one of `knk-workspace`, `knk-web-api`, `knk-web-app`, `knk-plugin`,
+   `knk-v1-archive`, `knk-v2-archive`, `knk-dev-db-seed`, both compared case-insensitively, with any `access`. Every
+   other call is denied: another owner, another repository, an `owner/repo` value in the `repo` field, and input the
+   script cannot read (missing or non-string `owner`/`repo`, a duplicate key, characters a GitHub name cannot have,
+   input that is not JSON). An allowed call gets no output and exit 0, so the permission rule of § 4.1 lets it through
+   without a prompt; a denied call gets exit 2 and a reason that names the allowed list and says that only the
+   developer changes it.
+2. **How it reads the input.** With `python3` (present in cloud sessions) it parses the JSON; without it, a strict
+   `grep`/`sed` parse of the flat `tool_input` object that accepts exactly one `owner` and one `repo` string without
+   escapes. No `jq`. It never uses `set -e` or `set -u`, because any exit code other than 0 and 2 would let the call
+   through.
+3. **Add a repository** by adding its name to `ALLOWED_REPOS` at the top of the script (a space-separated list, the
+   one place it is defined), and merging that. Sessions pick it up at their next start. Also give the Claude GitHub
+   App access to it (§ 4.1 item 2), or `add_repo` still refuses it.
+4. **Turn it off.** Remove the `PreToolUse` entry from `.claude/settings.json` and merge that; `add_repo` is then
+   limited only by the GitHub App (§ 4.1 item 2). For one machine or one run, `{"disableAllHooks": true}` in the
+   untracked `.claude/settings.local.json` or `claude --settings '{"disableAllHooks": true}'` also turns off the Stop
+   hook (§ 3.3). There is no per-hook environment switch, on purpose: a switch an agent could set would weaken the
+   guard.
+5. **Hook contract used**, from the [hooks reference](https://code.claude.com/docs/en/hooks), read 2026-11-12:
+    1. MCP tools appear in tool events as `mcp__<server>__<tool>`; a matcher of only letters, digits, `_` and `-` is
+       compared as an exact string ("Match MCP tools", "Matcher patterns").
+    2. Input on stdin: the common fields plus `tool_name`, `tool_input` and `tool_use_id` ("PreToolUse").
+    3. Exit 2 blocks the tool call and Claude sees stderr as the denial reason, the same as
+       `hookSpecificOutput.permissionDecision: "deny"` with `permissionDecisionReason` ("PreToolUse decision control",
+       "Exit code 2 behavior per event"). Exit 2 was chosen because it needs no JSON on stdout.
+    4. A blocking hook takes precedence over allow rules: "A hook that exits with code 2 stops the tool call before
+       permission rules are evaluated, so the block applies even when an allow rule would otherwise let the call
+       proceed" ([permissions, "Extend permissions with hooks"](https://code.claude.com/docs/en/permissions)).
+    5. A hook that times out or fails with another exit code does not block (the call continues through the normal
+       permission flow), so the script keeps its work small (timeout 30 s; it runs in well under a second).
+6. **Tested** 2026-11-12: fifteen sample inputs with and without `python3` (allowed, mixed case, pretty-printed,
+   disallowed repository, wrong owner, `owner/repo` in `repo`, a prefix such as `knk-plugin-x`, missing or non-string
+   `repo`, escaped quote, duplicate key, garbage, empty, no `tool_input`), and end to end with headless Claude Code
+   2.1.322 and a stand-in `claude-code-remote` server: allowed calls reached the server, the others were blocked with
+   the reason shown to the agent, also when `add_repo` was allowed on the command line.
+7. **Where it applies:** the same as the permission rule (§ 4.1 item 3): sessions whose project is knk-workspace. On
+   the developer PC `add_repo` does not exist and the hook never runs.
