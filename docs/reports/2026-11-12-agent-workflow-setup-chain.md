@@ -1,6 +1,6 @@
 # AI agent workflow setup chain — progress report
 
-**Status:** Running (coordinator session, 2026-11-12) · **Last updated:** 2026-11-12
+**Status:** In review: all five links done 12:25 UTC, nothing merged (coordinator session, 2026-11-12) · **Last updated:** 2026-11-12
 
 **Issue:** [PandiO/knk-workspace#327](https://github.com/PandiO/knk-workspace/issues/327), links
 [#328](https://github.com/PandiO/knk-workspace/issues/328) (L1),
@@ -16,9 +16,25 @@ or into `next`.
 
 ## 1. Waiting for the developer
 
-1. Evening review and merges, in this order: L1 (CI) → L3 → L4 → L5 (re-run the archive script on fresh main), then
-   merge each default branch into `next`.
-2. Turn off GitHub Actions failure emails in your GitHub notification settings (DESIGN § 7.4).
+1. **Merge order tonight**, every PR still open:
+    1. L1 CI: [knk-web-api#12](https://github.com/PandiO/knk-web-api/pull/12), [knk-web-app#9](https://github.com/PandiO/knk-web-app/pull/9).
+    2. L3 skills and instructions: [knk-workspace#334](https://github.com/PandiO/knk-workspace/pull/334),
+       [knk-web-api#13](https://github.com/PandiO/knk-web-api/pull/13), [knk-web-app#10](https://github.com/PandiO/knk-web-app/pull/10),
+       [knk-plugin#16](https://github.com/PandiO/knk-plugin/pull/16); add the changelog entry proposed in #334.
+    3. L4 tooling: [knk-workspace#335](https://github.com/PandiO/knk-workspace/pull/335); add its changelog entry.
+    4. L5 sessions archive: [knk-workspace#336](https://github.com/PandiO/knk-workspace/pull/336), **not by merging the
+       branch**: on fresh `main` run `git cherry-pick da40c73 99f0c4a`, then the script with `--dry-run`, for real and
+       with `--check`, commit and push, close #336. (Coordinator dry run on `main` `eab8b6f` + those two commits at
+       12:56 UTC: 239 entries, board 486 KB → 65 KB.)
+    5. Then bring `next` up to the new tips: `git merge` the default branch into `next` in all four repos, so `next`
+       carries CI and the skills.
+2. **Your own steps:**
+    1. Turn off GitHub Actions failure emails in your GitHub notification settings (DESIGN § 7.4).
+    2. Create the labels `tier:1`, `tier:2`, `tier:3`, `idea` and pin the "Daily digest" issue #333 (values in § 4.2;
+       no tool in the cloud sessions can do either).
+    3. On the PC: set `GITHUB_PAT` (optionally `CONTEXT7_API_KEY`) and approve the three servers in `/mcp` (§ 4.4).
+3. **Decisions to review:** coordinator decisions § 3.1–3.4; link decisions in § 4.1 item 5, § 4.2, § 4.3 item 5
+   (5.3–5.5 decide how coordinators merge into `next`), § 4.4 item 5, § 4.5.
 
 ## 2. Summary
 
