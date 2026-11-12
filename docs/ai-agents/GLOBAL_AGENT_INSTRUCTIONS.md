@@ -155,8 +155,10 @@ branches start from the default branch, pull requests target it, and only the de
    another unreleased feature can then continue the same day.
 3. **Coordinators merge into `next`** as soon as CI and their link checks pass, for every risk tier: link pull
    requests target `next` and the coordinator merges them through the pull request with a merge commit. Outside a
-   chain, a pull request into `next` waits for the developer unless the developer tells a session to merge it. A merge
-   into `next` does not close the issue; it stays `status:in-review` until the developer promotes `next`.
+   chain, a pull request into `next` waits for the developer unless the developer tells a session to merge it. One
+   exception, also a developer decision of 2026-11-12: a docs session (Shipping a change) branches from knk-workspace
+   `next`, opens its docs pull request into `next` and merges it itself, with a merge commit, once its checks pass. A
+   merge into `next` does not close the issue; it stays `status:in-review` until the developer promotes `next`.
 4. **The developer promotes `next` to trunk** after testing `next` as a whole (the daily digest lists what to test):
    merge into trunk, then the release tag. Only the developer, or the manager session on the developer's explicit go,
    promotes.

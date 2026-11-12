@@ -139,8 +139,9 @@ All of these must hold:
    says so (DESIGN § 5.4).
 8. Before the branch model applies: no merges. List the PRs in report § 1 with the merge order.
 9. When the feature's last link is in `next`, the "At merge" steps of the global instructions (Shipping a change)
-   start: the `documentation` sub-issue and the docs session. The feature issue is closed only when the developer
-   promotes `next` to trunk.
+   start: the `documentation` sub-issue and the docs session. The docs session merges its own docs PR into knk-workspace
+   `next` after its checks (developer decision 2026-11-12); you do not merge it. The feature issue is closed only when
+   the developer promotes `next` to trunk.
 
 ## 8. Blockers
 

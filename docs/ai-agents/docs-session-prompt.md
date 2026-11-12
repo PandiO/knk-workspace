@@ -1,6 +1,6 @@
 # Docs session prompt
 
-**Status:** Current · **Last updated:** 2026-11-12 (starts at the merge into `next`; finished rows go to the sessions archive; PandiO/knk-workspace#330) · 2026-11-10 (first version, PandiO/knk-workspace#292)
+**Status:** Current · **Last updated:** 2026-11-12 (starts at the merge into `next`; docs PR into `next`, merged by the docs session itself, a developer decision; finished rows go to the sessions archive; PandiO/knk-workspace#330) · 2026-11-10 (first version, PandiO/knk-workspace#292)
 
 The implementing session uses this prompt when it starts a docs session after a merge: the feature's merge into `next`
 once the global branch model applies, until then the merge into the default branch. The steps are in
@@ -29,11 +29,12 @@ knk-web-api master, knk-web-app main, knk-plugin main).
 3. If the code disagrees with the issue, the plan or the smoke test, document what the code does, and file a bug or
    decision issue for the difference. Don't document unmerged or unverified behaviour as shipped.
 4. Work on branch claude/docs-<docs issue> from knk-workspace <base: next when the code is in next, else main>. When
-   done, merge it into that base (docs only, describing merged behaviour): into next take next's updates by merge,
-   never rebase, and merge with a merge commit, so the docs reach main with the feature's promotion; into main rebase it
-   on main first, as before. Close the docs issue as completed with a comment that lists the files, and move the
-   tracker row straight into docs/reports/sessions-archive/<YYYY-MM>.md (current month, newest first), not to
-   Recently completed.
+   done (docs only, describing merged behaviour): with base next, take next's updates by merge, never rebase, open a
+   docs PR into next and merge it yourself with a merge commit once its checks pass (developer decision 2026-11-12, the
+   exception to PRs into next waiting for the developer), so the docs reach main with the feature's promotion; with
+   base main, rebase it on main and merge it into main, as before. Close the docs issue as completed with a comment
+   that lists the files, and move the tracker row straight into docs/reports/sessions-archive/<YYYY-MM>.md (current
+   month, newest first), not to Recently completed.
 5. Anything left over (a guide that needs a decision, screenshots that need a live server) becomes a new
    documentation issue; mention it in the closing comment.
 ```
