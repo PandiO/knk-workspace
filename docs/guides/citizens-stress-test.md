@@ -1,6 +1,6 @@
 # Citizens stress test — NPC hybrid navigation
 
-**Status:** Done 2026-11-11: **go with caveats** (Citizens hop mode with the K&K examiner in front). Load and rule checks pass; the caveats are in [the verdict on #244](https://github.com/PandiO/knk-workspace/issues/244#issuecomment-6806008046).
+**Status:** Done. 2026-11-11: **go with caveats** (load and rule checks pass, caveats on [#244](https://github.com/PandiO/knk-workspace/issues/244#issuecomment-6806008046)). 2026-11-12: unloaded chunks (pass) and Phase 0: NPCs follow the K&K line in trail mode (implementation plan Q8 decided), travel bubble works.
 **Last updated:** 2026-11-12
 **Issue:** [PandiO/knk-workspace#241](https://github.com/PandiO/knk-workspace/issues/241): desk check [#242](https://github.com/PandiO/knk-workspace/issues/242), spike [#243](https://github.com/PandiO/knk-workspace/issues/243), benchmark [#244](https://github.com/PandiO/knk-workspace/issues/244)
 **Branch:** knk-plugin `claude/citizens-spike` `c6b5b46` (throwaway, **never merge**), on `main` `33122cf4`
@@ -78,6 +78,12 @@ Baseline 2.34 ms (no NPCs). All runs in hop mode with the default settings unles
 | chunks (2026-11-12) | 20 | 3.85 / 4.85 | 0.099 | 20 | 1,439 | view distance 25: no chunk unloads; almost all stuck events at one spot on the return (1373 53 -69 → hop 1377 52 -84) |
 | chunks-v2 | 20 | 2.04 / 2.51 | 0.011 | 0 | 0 | view/simulation 10: all NPCs stopped at the edge of the loaded area (capture refuses unloaded chunks); spawning 20 at once: 48.8 ms tick |
 | chunks-v3 | 20 | 3.77 / 5.81 | 0.101 | 19 | 72 | **pass**: walked with the NPCs, teleported away and back: pauses 57 = resumes 57 |
+| hop-50 (`c6b5b46`, keep-gate route) | 50 | 3.87 / 5.75 | 0.035 | 100 | 289 | Phase 0; stray p95 1.67, 5.1% over 2 blocks; wall-hugging as before |
+| trail-50 (`c6b5b46`) | 50 | 3.11 / 3.77 | 0.020 | 4 | (silent) | stray p95 0.85; most NPCs stuck at stairs without Citizens reporting it |
+| trail gate/access (`c6b5b46`, MrBedue) | 50 | 2.9–3.2 | 0.021–0.027 | – | – | **pass**: stop at gate closing, wait, resume; 0 trespasses with entry removed (earlier failures: admin with bypass as subject) |
+| trail-50-staircase (`e09afb2`) | 50 | 3.24 / 3.99 | 0.014 | 67 | 86 | watchdog: every stuck NPC recovered; stray p95 0.91, 0% over 2 |
+| bubble-trail-8m (`e09afb2`) | 20 | 2.39 / 3.05 | ≈0 | 40 | 0 | **bubble works**: nobody near, 500 blocks away; 21–33 chunks held |
+| bubble-hop-8m (`e09afb2`) | 20 | 2.90 / 4.33 | ≈0 | 36 | 105 | stray p95 4.4, 26% over 2 blocks; 47–57 chunks held |
 
 What this shows:
 
@@ -134,7 +140,9 @@ Deploy `claude/citizens-spike` `ac3c356` or later (`./gradlew :knk-paper:dev`). 
 
 **Decision rule:** go when tests A and B pass with zero trespasses. No-go (or rethink) if an NPC ever enters a region or crosses a gate the current rules deny.
 
-## Phase 0: trail mode and the travel bubble (next session)
+## Phase 0: trail mode and the travel bubble (done 2026-11-12)
+
+**Result:** trail mode decided (implementation plan Q8): much closer to the road than hop, cheaper, rules hold, and with the progress watchdog every stuck NPC recovers; stairs stay the weak spot (BEHAVIOR_MODEL NAV-18). The travel bubble works at about 1–1.5 chunks per trail NPC. Results in the table above and on [#244](https://github.com/PandiO/knk-workspace/issues/244).
 
 Spike `73cdc22` or later. What it tests: [implementation plan Phase 0](../specs/npc-platform/IMPLEMENTATION_PLAN.md) (Q8, NAV-15, NAV-12).
 

@@ -1,7 +1,7 @@
 # NPC navigation adapter (Citizens) — Implementation Plan
 
 **Status:** Proposed 2026-11-11, not started. Plans the shared NPC navigation capability only (K&K plans, Citizens moves); behavior, guards, garrisons and combat are separate work. Developer answers to Q1–Q7 on 2026-11-12; see "Decisions".
-**Last updated:** 2026-11-12 (Phase 0 route-following spike, metrics and config layering in Phase 1, NAV-14/15/16, Q8; Q4 formations decided; Phase 7b travel bubble first; Phase 7b abstract movement outside loaded areas, spread spawns and targeted replans, from the unloaded-chunk runs; developer answers Q1–Q7; road network components and the router's BLOCKED result from the unloaded-chunk test)
+**Last updated:** 2026-11-12 (Phase 0 done, Q8 decided, NAV-17 in Phase 2, NAV-18 walked lines in Phase 7); 2026-11-12 (Phase 0 route-following spike, metrics and config layering in Phase 1, NAV-14/15/16, Q8; Q4 formations decided; Phase 7b travel bubble first; Phase 7b abstract movement outside loaded areas, spread spawns and targeted replans, from the unloaded-chunk runs; developer answers Q1–Q7; road network components and the router's BLOCKED result from the unloaded-chunk test)
 **Issue:** [PandiO/knk-workspace#241](https://github.com/PandiO/knk-workspace/issues/241) (verification: desk check #242, spike #243, benchmark #244); parent [KNG-36](https://linear.app/kngpandi/issue/KNG-36/design-shared-npc-traits-and-pathfinding-platform), [#146](https://github.com/PandiO/knk-workspace/issues/146), [#234](https://github.com/PandiO/knk-workspace/issues/234)
 **Sources:** [BEHAVIOR_MODEL.md §2](BEHAVIOR_MODEL.md#2-fit-with-the-platform-design) (requirements NAV-01–NAV-11) and §13; [DESIGN.md](DESIGN.md) §2, §6, §7, §9; [desk check and spike report](../../reports/2026-11-10-citizens-desk-check-and-spike.md); [Citizens stress test guide](../../guides/citizens-stress-test.md); [verdict on #244](https://github.com/PandiO/knk-workspace/issues/244#issuecomment-6806008046); code read at knk-plugin `main` `33122cf` and the spike `claude/citizens-spike` `ac3c356`.
 
@@ -13,12 +13,12 @@
 |---|---|---|---|---|---|
 | 0 — Route-following spike | plugin (spike branch) | S | — | — (decides Q8) | NAV-15, NAV-12 |
 | 1 — Runtime, guard rails and metrics | plugin | M | Q1, Q2 | yes (no gameplay) | NAV-08, NAV-10, NAV-16 |
-| 2 — Navigate one NPC | plugin | L | 0, 1; Q3 | yes (admin command) | NAV-01, NAV-03, NAV-11, NAV-14, NAV-15 |
+| 2 — Navigate one NPC | plugin | L | 0, 1; Q3 | yes (admin command) | NAV-01, NAV-03, NAV-11, NAV-14, NAV-15, NAV-17 |
 | 3 — Rules stay binding | plugin | M | 2 | yes | NAV-02, NAV-03, NAV-04 |
 | 4 — Groups | plugin | M | 3; Q4 | yes | NAV-05 |
 | 5 — NPC access identity | web-api, plugin, web-app | L | 2; Q5, DESIGN O06 | yes | NAV-09 |
 | 6 — Detours and hidden routes | web-api, plugin, web-app | L | 3; hidden-routes issue (Q6) | yes | NAV-06 |
-| 7 — Movement quality | plugin | M | 2 | yes | NAV-07, NAV-11 |
+| 7 — Movement quality | plugin | M | 2 | yes | NAV-07, NAV-11, NAV-18 |
 | 7b — Movement outside loaded areas | plugin | L | 3; BEHAVIOR_MODEL §13 level of detail | yes | NAV-12 |
 | 8 — Benchmark gate | plugin (dev server) | S | 3, 4 (5–7 as built) | — | §13 budgets |
 
@@ -34,7 +34,7 @@ Goal: prove how NPCs follow the K&K route as the trail draws it (NAV-15) before 
 - Compare with hop mode on the same routes: stuck per trip, time per trip, how far NPCs stray from the road centre, tick cost. If Citizens' waypoint following can't do stairs and steps well, try a K&K-driven step controller (Citizens only moves the body).
 - Spike setting `keeploaded on|off` for the travel bubble: chunks held per NPC, tick cost, memory, whether NPCs keep moving at chunk borders.
 
-**Status:** built on the spike branch, `9027991` (2026-11-12): `spawn <n> trail`, `set keeploaded on|off`, `set stretch N`, stray-from-road metric; test steps in the [stress test guide](../../guides/citizens-stress-test.md#phase-0-trail-mode-and-the-travel-bubble-next-session). Not yet run on a server.
+**Status:** built on the spike branch, `9027991` and later (2026-11-12): `spawn <n> trail`, `set keeploaded on|off`, `set stretch N`, stray-from-road metric; test steps in the [stress test guide](../../guides/citizens-stress-test.md#phase-0-trail-mode-and-the-travel-bubble-next-session). **Done 2026-11-12** (spike up to `e09afb2`): Q8 decided (see Decisions); results in the [stress test guide](../../guides/citizens-stress-test.md) and [#244](https://github.com/PandiO/knk-workspace/issues/244). Spike additions found on the way: K&K progress watchdog (NAV-17), floor continuity between waypoints, run log files.
 
 **Done when:** Q8 is answered with numbers.
 
@@ -133,7 +133,9 @@ Goal: blocked NPCs look for another way, within limits, including routes not in 
 
 Goal: fewer stuck events (NAV-07) and checked chunk handling (NAV-11).
 
-- Waypoints on stair landings and turns: from the road geometry (vertices on stairs) or a walk-grid scan of the hop's stretch; a hop target never on a stair corner.
+- **Walked lines from players (NAV-18):** sample player positions on road segments (the plugin already sees them; store aggregated, not raw), build a per-segment walked line from enough samples (centre of the walked corridor, ordered along the segment), store it with the road network, and let `RouteFollower` prefer it over the geometric line. Measure stuck per trip on the staircases before and after.
+- **K&K step controller** (only if walked lines aren't enough): K&K steers the NPC body tick by tick on stairs and corners (stair-aware turning and step-up), Citizens only animates.
+- Waypoints on stair landings and turns: from the road geometry (vertices on stairs) or a walk-grid scan of the stretch; never a waypoint on a stair corner.
 - Stuck handling: classify stuck spots (log position and the hop), try one local walk-pathfinder leg around the spot before counting a retry.
 - Run the stress test guide's test C (unloaded chunks) on the production code.
 - Measure `CITIZENS` vs `CITIZENS_ASYNC` and `PLAYER` vs `MANNEQUIN` (Q2).
@@ -169,5 +171,5 @@ Goal: NPCs keep travelling where no player keeps the world loaded (NAV-12; BEHAV
 | Q4 | Group formation | **Configurable formations.** Column is the default; pairs or ranks preferred for soldiers; a loose cluster; and an escort ring (an octagon around the leader in the centre, as bodyguards). Formation per group, template or assignment; narrow places (gates, stairs, wall walks) fold any formation into a column and reform after. |
 | Q5 | Gate pass-through for NPCs | Its own follow-up after Phase 5 (agreed). Similar to players, but the permissions must be worked out; it ties into clans and NPC loyalty to towns and clans (BEHAVIOR_MODEL §16.5). |
 | Q6 | Hidden routes | Hidden routes are not in the road graph today: they need their own issue (road data, authoring, who may use them). Phase 6 depends on it. |
-| Q8 | How NPCs follow the K&K route (NAV-15): Citizens waypoint lists per stretch, short Citizens A* legs between dense points, or a K&K step controller? | **Open**, decided by Phase 0 with numbers. |
+| Q8 | How NPCs follow the K&K route (NAV-15) | **Decided 2026-11-12 from Phase 0:** Citizens waypoint lists along the K&K line, one ~32-block stretch at a time handed over early, floor continuity between waypoints, K&K progress watchdog (NAV-17) with a short Citizens A* recovery leg. Hop mode (Citizens A* per 16-block hop) only for off-road bits. Stairs stay the weak spot: walked lines from players (NAV-18), then a K&K step controller if needed (Phase 7). |
 | Q7 | Citizens version | The latest stable Citizens build for 26.3, pinned. Citizens publishes timestamped snapshot builds only, so "stable" means the newest build for 26.3 at the time, pinned; test each Minecraft update on the dev server with the planned Paper build first (desk check report §8.6). |
