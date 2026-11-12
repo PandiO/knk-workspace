@@ -27,7 +27,7 @@ or into `next`.
 | L1 CI | #328 | In review (done 11:40 UTC, both workflows green) | `claude/agent-setup-ci`: knk-web-api `81b06d9`, knk-web-app `a7d31a2` | [knk-web-api#12](https://github.com/PandiO/knk-web-api/pull/12), [knk-web-app#9](https://github.com/PandiO/knk-web-app/pull/9) | create_session session_01R1w2UsfbmKqEY1QXSx25id |
 | L2 Branches, labels, digest | #329 | In review (done 11:40 UTC; labels and pin left for the developer) | `next`: knk-workspace `6245c9f`, knk-web-api `b5e57fa`, knk-web-app `9a85238`, knk-plugin `121030f`; digest issue [#333](https://github.com/PandiO/knk-workspace/issues/333) | — (no file changes) | subagent (coordinator decision § 3.2) |
 | L3 Skills and instructions | #330 | In review (done 12:05 UTC; docs only) | `claude/agent-setup-skills`: knk-workspace `8321f0d`, knk-web-api `dbb05c5`, knk-web-app `7a974ac`, knk-plugin `0759d22` | [knk-workspace#334](https://github.com/PandiO/knk-workspace/pull/334), [knk-web-api#13](https://github.com/PandiO/knk-web-api/pull/13), [knk-web-app#10](https://github.com/PandiO/knk-web-app/pull/10), [knk-plugin#16](https://github.com/PandiO/knk-plugin/pull/16) | subagent (coordinator decision § 3.2) |
-| L4 Tooling | #331 | Not started | `claude/agent-setup-tooling` (knk-workspace) | — | — |
+| L4 Tooling | #331 | In review (done 12:15 UTC; hook tested end to end) | `claude/agent-setup-tooling`: knk-workspace `9310d7f` | [knk-workspace#335](https://github.com/PandiO/knk-workspace/pull/335) | subagent (coordinator decision § 3.3) |
 | L5 Sessions board archive | #332 | Not started | `claude/agent-setup-sessions-archive` (knk-workspace) | — | — |
 
 ## 3. Coordinator decisions
@@ -241,3 +241,101 @@ _(Each link appends its block here when it finishes.)_
    block; L4's `.claude/settings.json` lives next to `.claude/skills/` without overlap. Session note: the file tool
    refused to write `report-template.md` (it read the name as a findings report), so that template was written from
    the shell.
+
+### 4.4 L4 — MCP config and the fast-check Stop hook (#331)
+
+1. **Scope done.**
+    1. `.mcp.json`: `github` (remote `https://api.githubcopilot.com/mcp/`, `Authorization: Bearer ${GITHUB_PAT}`,
+       `X-MCP-Toolsets: context,repos,issues,pull_requests,actions,labels`), `playwright`
+       (`npx -y @playwright/mcp@0.0.85 --isolated`), `context7` (remote `https://mcp.context7.com/mcp`,
+       `Authorization: Bearer ${CONTEXT7_API_KEY:-}`). Each config is from the server's official docs (GitHub install
+       guide and remote-server headers, microsoft/playwright-mcp README, context7.com all-clients page), read
+       2026-11-12. No token value anywhere.
+    2. `.claude/settings.json`: one `Stop` hook, `bash "${CLAUDE_PROJECT_DIR}/.claude/hooks/fast-check.sh"`, timeout
+       600 s. `.claude/hooks/fast-check.sh` (about 200 lines of bash, no `jq`):
+        1. returns at once on `KNK_FAST_CHECK=off` or `"stop_hook_active": true`;
+        2. finds knk-web-app, knk-web-api and knk-plugin under the workspace's `Repository/` and next to the workspace
+           (both layouts; a checkout reachable both ways is checked once);
+        3. checks a repo only when files that can break its build changed against the merge base with `origin/next`
+           (else `origin/HEAD`, `origin/main`, `origin/master`), committed, staged, unstaged or untracked, and that
+           state has not already passed (state file `knk-fast-check` in the repo's git dir);
+        4. runs `npx tsc --noEmit`, `dotnet build --no-restore -v q -nologo`, `sh ./gradlew compileJava
+           compileTestJava -q`, one after another, `timeout` 300 s each and 540 s for all; never a deploying task;
+        5. errors: exit 2 with the trimmed errors on stderr (blocking); pass, skip (toolchain or packages missing) and
+           timeout: `{"systemMessage": ...}`, not blocking; nothing changed: no output.
+    3. `docs/guides/developer/agent-tooling.md` (what is configured, the servers and env vars `GITHUB_PAT`,
+       `CONTEXT7_API_KEY`, `KNK_FAST_CHECK*`, cloud vs local, the hook contract with the docs it cites, how to turn
+       the hook off) and one row in the developer table of `docs/guides/README.md` after "Commit conventions"
+       (nothing reordered).
+    4. `.gitattributes`: `*.sh text eol=lf` (no existing `.sh` file changes).
+2. **Commits and heads.** knk-workspace `claude/agent-setup-tooling` at `9310d7f` (one commit, from `main` `7a496b0`).
+3. **PR.** [knk-workspace#335](https://github.com/PandiO/knk-workspace/pull/335) (`Closes #331`). Not merged.
+   It and L3's #334 touch different files; `git merge-tree` shows no conflict with #334 or `main`, so they merge in
+   either order.
+4. **Tests, baseline → result.** Baseline: no build in knk-workspace (docs and config only). Hook evidence, from
+   detached worktrees of the three component repos at `origin/next` next to a worktree of the branch (the deliberate
+   errors were never committed; worktrees removed afterwards). Toolchains: Node 22, .NET 8.0.134, JDK 25 installed
+   for the test (`openjdk-25-jdk-headless`).
+    1. No changes: exit 0, no output, 0.29 s.
+    2. Type error appended to knk-web-app `src/utils/claimCode.ts`: exit 2 in 26 s; stderr names the repo, the command
+       (`npx tsc --noEmit`, exit 2, base origin/next) and
+       `src/utils/claimCode.ts(134,14): error TS2322: Type 'string' is not assignable to type 'number'.`
+    3. Same error, input `"stop_hook_active": true`: exit 0, no output, 0.006 s (no checks run).
+    4. Error fixed (change kept): `{"systemMessage": "knk fast check: knk-web-app tsc passed (25s)."}`, exit 0.
+       Same state again: silent, 0.23 s.
+    5. C# error in knk-web-api and Java error in knk-plugin `knk-core`: exit 2 in 27 s with
+       `Services/HookTest.cs(2,96): error CS0029: Cannot implicitly convert type 'string' to 'int'` and
+       `HookTest.java:4: error: incompatible types: String cannot be converted to int`.
+    6. Same errors, `dotnet` not on PATH, `KNK_FAST_CHECK_TIMEOUT=3`: `knk-web-api skipped (dotnet not found);
+       knk-plugin compile timed out after 3s (not blocking; run it yourself)`, exit 0.
+    7. Both fixed: `knk-web-api build passed (72s); knk-plugin compile passed (23s)`; again: silent, 0.43 s.
+    8. Nested layout (`Repository/knk-web-app` in a separate workspace folder) blocked on a new type error; a checkout
+       reachable through both layouts was checked once. `KNK_FAST_CHECK=off`: exit 0 in 0.003 s.
+    9. End to end with a headless Claude Code 2.1.322 session in the branch worktree: the Stop hook blocked, the agent
+       got the tsc error as "Stop hook feedback" and answered that the error predates the session; its second Stop
+       came with `stop_hook_active` and the hook returned exit 0 with no output. `--settings
+       '{"env":{"KNK_FAST_CHECK":"off"}}'` turned it off (exit 0, one turn).
+    10. MCP in that session: `playwright` and `context7` connected; `github` `failed` without `GITHUB_PAT`; a
+        host-provided `github` (`--mcp-config`, source `dynamic`) replaced the project entry of the same name.
+5. **Decisions (DESIGN § 4.3).**
+    1. *Blocking form.* Chosen: exit 2 with the errors on stderr; non-blocking notes as JSON `systemMessage`.
+       Alternatives: (a) JSON `{"decision": "block", "reason": ...}`, same effect but compiler output must be
+       JSON-escaped in bash without `jq`; (b) `hookSpecificOutput.additionalContext`, which reads as guidance rather
+       than an error.
+    2. *Remember passed states.* Chosen: a fingerprint (HEAD, `git diff HEAD`, untracked file hashes, command) per repo
+       in its git dir, so a branch that differs from `next` costs a check only once per new state. Alternatives:
+       (a) check on every stop while the branch differs from base (tsc 25 s, API 20-70 s, Gradle 6-100 s each time);
+       (b) only uncommitted changes, which misses a link's committed breakage.
+    3. *File filter.* Chosen: only build-relevant extensions per repo trigger a check. Alternative: any change, which
+       compiles after a README edit.
+    4. *API check scope.* Chosen: `dotnet build` at the repo root, which builds the solution (API and test project),
+       like the plugin's `compileTestJava`. Alternative: only `knkwebapi_v2.csproj`, which misses broken tests.
+    5. *Missing toolchain or packages.* Chosen: skip with a note (web app without `node_modules`, API without
+       `obj/project.assets.json`, Gradle without a Java 25 toolchain) instead of installing or restoring. Alternatives:
+       (a) run `npm ci`/`dotnet restore` from the hook, slow and network-bound at every first stop; (b) fail, which would
+       block sessions that never touch a toolchain.
+    6. *Errors that predate the session.* Chosen: still blocking, with a message that lets the agent say why they are
+       expected; `stop_hook_active` and the 8-block cap stop any loop. Alternative: compare against the state at
+       session start, which needs per-session state and hides breakage a link inherited.
+    7. *Playwright version.* Chosen: pinned `@playwright/mcp@0.0.85` (current release), so a new npm release does not
+       run unreviewed on the developer PC. Alternative: the official `@latest`, always current but unpinned.
+    8. *Server name `github`.* Chosen: the official name; tested that a host-provided server of the same name wins, so
+       cloud sessions keep their platform tools. Alternative: `github-pat`, which avoids any clash but differs from the
+       tool names the skills and prompts use (`mcp__github__*`).
+    9. *No `enabledMcpjsonServers` in the committed settings.* Chosen: the developer approves the three servers once
+       per machine. Alternative: pre-approve them in `.claude/settings.json`, which Claude Code ignores in untrusted
+       folders anyway and which would auto-start an npm package.
+    10. *`.gitattributes`.* Chosen: add `*.sh text eol=lf` so a Windows checkout with `core.autocrlf` keeps the hook
+        runnable. Alternative: none, relying on each machine's git settings.
+6. **Out of scope, noted.** None filed. The hook is configured in knk-workspace only; a session started inside a
+   component repo does not run it (guide § 3.5).
+7. **Blockers.** None.
+8. **At merge / what the developer must do.**
+    1. Merge knk-workspace#335 (any order with #334), then `main` into `next` (item 1.1).
+    2. On the developer PC: set `GITHUB_PAT` (fine-grained PAT for the four `PandiO/knk-*` repos: Contents, Issues,
+       Pull requests read/write; Actions, Metadata read) and optionally `CONTEXT7_API_KEY`, start Claude Code in
+       knk-workspace, approve the three servers, check `/mcp`; `npx playwright install chromium` if Playwright has no
+       browser.
+    3. Try the hook once on Windows (Git Bash) with a small change in a component repo; `KNK_FAST_CHECK=off` in
+       `.claude/settings.local.json` turns it off if it gets in the way.
+    4. Changelog entry at merge (text proposed in #335).
