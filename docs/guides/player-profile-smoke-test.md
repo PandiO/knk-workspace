@@ -1,7 +1,7 @@
 # Staff player profile: status strip, tabs, freeze/unfreeze, timeline, paged audit, player search (#119) — smoke test
 
-**Status:** Written 2026-11-08 for knk-web-app `claude/player-profile-119` (chain 3 link V3); not merged, not run
-**Last updated:** 2026-11-08
+**Status:** Written 2026-11-08 for knk-web-app `claude/player-profile-119` (chain 3 link V3); **merged 2026-11-12** (knk-web-app `main` `1371951`, with V7); not run by the developer
+**Last updated:** 2026-11-12 (merged with V7); 2026-11-08
 **Issues:** [PandiO/knk-workspace#119](https://github.com/PandiO/knk-workspace/issues/119) (MOD-3 part 1, MOD-4, MOD-5 of
 the [2026-10-08 assessment](../reports/2026-10-08-web-app-ux-assessment.md))
 

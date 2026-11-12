@@ -1,7 +1,7 @@
 # Form and Display builders: save in place, Publish, Duplicate, generate, preview (#71) — smoke test
 
-**Status:** Written 2026-11-09 for knk-web-app and knk-web-api `claude/builders-71` (chain 3 link V7); not merged, not run
-**Last updated:** 2026-11-12
+**Status:** Written 2026-11-09 for knk-web-app and knk-web-api `claude/builders-71` (chain 3 link V7); run by the developer 2026-11-11/12: § 0–10 pass (§ 4.5, 9, 10 accepted; § 1.2 Save and close fixed in web `321e170`; § 3.4 is a note). **Merged 2026-11-12** (knk-web-api `master` `bc97b7d`, knk-web-app `main` `1371951`)
+**Last updated:** 2026-11-12 (smoke test result, merged)
 **Issues:** [PandiO/knk-workspace#71](https://github.com/PandiO/knk-workspace/issues/71) (KNG-147: CRUD-11 save in
 place, CRUD-12 scaffold and Duplicate, CRUD-13 preview, CRUD-14 explicit Publish); access model
 [#280](https://github.com/PandiO/knk-workspace/issues/280)

@@ -1,8 +1,8 @@
 # Dashboard access model — smoke test
 
 **Status:** Draft (AM1 and AM2, API part). AM4 finishes it once AM3 (web app) is built; until then the steps run
-against the API with `curl` or Swagger. Not run yet.
-**Last updated:** 2026-11-08 (§ 7 read gating and lookups, chain 3 link AM2); 2026-11-08 (draft with the AM1 API steps, chain 3 link AM1)
+against the API with `curl` or Swagger. Not run yet. AM1 and AM2 **merged 2026-11-12** into knk-web-api `master` `bc97b7d` (with V5–V7); AM3 (web app) and AM4 not built.
+**Last updated:** 2026-11-12 (AM1+AM2 merged); 2026-11-08 (§ 7 read gating and lookups, chain 3 link AM2); 2026-11-08 (draft with the AM1 API steps, chain 3 link AM1)
 **Design:** [specs/dashboard-access-model/DESIGN.md](../specs/dashboard-access-model/DESIGN.md) · as built:
 [web-api architecture § 5.1](../architecture/web-api-architecture.md#51-dashboard-access-model-pandioknk-workspace280-am1--branch-claudedashboard-access-280-not-merged)
 and [§ 5.2](../architecture/web-api-architecture.md#52-read-gating-per-area-and-lookups-pandioknk-workspace280-am2--branch-claudedashboard-access-280-not-merged)

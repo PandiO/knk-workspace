@@ -1,7 +1,7 @@
 # Entity detail page: real Select / Unlink / Add, separate Delete, readable values and errors (#188, #189) — smoke test
 
-**Status:** Written 2026-11-09 for knk-web-app and knk-web-api `claude/entity-detail-188-189` (chain 3 link V5); not merged, not run
-**Last updated:** 2026-11-09
+**Status:** Written 2026-11-09 for knk-web-app and knk-web-api `claude/entity-detail-188-189` (chain 3 link V5); **merged 2026-11-12** (knk-web-api `master` `bc97b7d` and knk-web-app `main` `1371951`, with V7); not run by the developer
+**Last updated:** 2026-11-12 (merged with V7); 2026-11-09
 **Issues:** [PandiO/knk-workspace#188](https://github.com/PandiO/knk-workspace/issues/188) (relationship actions),
 [PandiO/knk-workspace#189](https://github.com/PandiO/knk-workspace/issues/189) (readability); access model
 [#280](https://github.com/PandiO/knk-workspace/issues/280)

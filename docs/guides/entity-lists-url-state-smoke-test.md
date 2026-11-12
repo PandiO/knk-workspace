@@ -2,7 +2,7 @@
 
 **Status:** Written 2026-11-01 for knk-web-app `claude/entity-lists-url-state`; run by the developer 2026-11-03: every step
 works or is accepted, after one fix (4.2, knk-web-app `d72194b`; Findings below). Merged 2026-11-03 (knk-web-app `main` `44f9395`)
-**Last updated:** 2026-11-08 (§ 7: checkbox selection and Export CSV, #205 export part, chain 3 V2 — knk-web-app `claude/dashboard-export-205`, not merged, not run yet); 2026-11-03
+**Last updated:** 2026-11-12 (§ 7: chain 3 V2 merged into knk-web-app `main` `1371951` with V7; § 7 not run yet); 2026-11-08 (§ 7: checkbox selection and Export CSV, #205 export part, chain 3 V2 — knk-web-app `claude/dashboard-export-205`, not merged, not run yet); 2026-11-03
 **Issues:** [PandiO/knk-workspace#39](https://github.com/PandiO/knk-workspace/issues/39) (page/search/sort and tabs in the
 URL, rows as links, `aria-sort`) · [#177](https://github.com/PandiO/knk-workspace/issues/177) follow-up ("Drafts (n)", "New
 with: {config}")

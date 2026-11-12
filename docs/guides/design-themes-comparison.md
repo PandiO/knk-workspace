@@ -2,7 +2,7 @@
 
 **Status:** Compared live by the developer on 2026-11-03 (all screens work; `brand` preferred, all three themes and the
 picker stay); fix round done on knk-web-app `claude/design-tokens-95` (§ 6). Merged 2026-11-03 (knk-web-app `main` `c02b365`)
-**Last updated:** 2026-11-08 (§ 5 raw colours checked in `test:ci`; § 8 smoke test of chain 3 V1 — #266, #263, #258, knk-web-app `claude/web-fixes-266-263-258`, not merged); 2026-11-04 (§ 7 page background, #231: approved, on by default; toggle in the cogwheel menu); 2026-11-04 (theme
+**Last updated:** 2026-11-12 (§ 8: chain 3 V1 merged into knk-web-app `main` `1371951` with V7; § 8 not run); 2026-11-08 (§ 5 raw colours checked in `test:ci`; § 8 smoke test of chain 3 V1 — #266, #263, #258, knk-web-app `claude/web-fixes-266-263-258`, not merged); 2026-11-04 (§ 7 page background, #231: approved, on by default; toggle in the cogwheel menu); 2026-11-04 (theme
 switcher as a cogwheel for every visitor, knk-web-app `main` `865fe53`); 2026-11-03 (fourth theme `brand-red`); 2026-11-03 (fix round after the live comparison: brand primary orange, heading font on player pages
 only, full-bleed auth pages, picker for alpha testers)
 **Issue:** [PandiO/knk-workspace#95](https://github.com/PandiO/knk-workspace/issues/95) (token layer, contrast rules,

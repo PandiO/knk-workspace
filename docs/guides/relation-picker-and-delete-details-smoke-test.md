@@ -1,7 +1,7 @@
 # Form wizard relation picker and "Show what uses it" on refused deletes (#191, #44) — smoke test
 
-**Status:** Written 2026-11-09 for knk-web-app and knk-web-api `claude/picker-details-191-44` (chain 3 link V6); not merged, not run
-**Last updated:** 2026-11-09
+**Status:** Written 2026-11-09 for knk-web-app and knk-web-api `claude/picker-details-191-44` (chain 3 link V6); **merged 2026-11-12** (knk-web-api `master` `bc97b7d` and knk-web-app `main` `1371951`, with V7); not run by the developer
+**Last updated:** 2026-11-12 (merged with V7); 2026-11-09
 **Issues:** [PandiO/knk-workspace#191](https://github.com/PandiO/knk-workspace/issues/191) (search-as-you-type relation
 picker), [PandiO/knk-workspace#44](https://github.com/PandiO/knk-workspace/issues/44) (FeedbackModal "Show details");
 access model [#280](https://github.com/PandiO/knk-workspace/issues/280)

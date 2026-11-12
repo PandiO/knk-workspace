@@ -1,7 +1,7 @@
 # Realtime channel (SignalR) — implementation plan
 
-**Status:** Accepted (developer decisions 2026-10-26, [DESIGN.md](DESIGN.md) §12). S1, S2, WT1 (#180), WT2 (#181) and S3 (#182) **merged 2026-11-04** (API `master` `2258df5`, plugin `main` `e1b6a7a9`, web app `main` `d0c2ba8`; as built: DESIGN §6.8, §8.8); all smoke-tested by the developer (WT2 2026-11-04, S1–S3 2026-11-05), #178, #179, #182 closed. Follow-ups of the WT2 test: offer permission check and Send again (see the #181 comments).
-**Last updated:** 2026-11-05 (S1–S3 smoke-tested, issues closed); 2026-11-04 (S1–S3, WT1, WT2 merged); 2026-11-02 (S3 status); 2026-11-02 (WT2 status)
+**Status:** Accepted (developer decisions 2026-10-26, [DESIGN.md](DESIGN.md) §12). S1, S2, WT1 (#180), WT2 (#181) and S3 (#182) **merged 2026-11-04** (API `master` `2258df5`, plugin `main` `e1b6a7a9`, web app `main` `d0c2ba8`; as built: DESIGN §6.8, §8.8); all smoke-tested by the developer (WT2 2026-11-04, S1–S3 2026-11-05), #178, #179, #182 closed. Follow-ups of the WT2 test: offer permission check and Send again (see the #181 comments). **S4** (#183, chain 2 X1) **merged 2026-11-12** (API `master` `bc97b7d`, web app `main` `1371951`; not smoke-tested; as-built notes on knk-workspace `claude/realtime-web-live-183`, docs follow-up #341). **S5** (#184, chain 2 R1): API part merged 2026-11-12, plugin part in review (not merged).
+**Last updated:** 2026-11-12 (S4 merged, S5 API part merged); 2026-11-05 (S1–S3 smoke-tested, issues closed); 2026-11-04 (S1–S3, WT1, WT2 merged); 2026-11-02 (S3 status); 2026-11-02 (WT2 status)
 **Issue:** [PandiO/knk-workspace#66](https://github.com/PandiO/knk-workspace/issues/66) (KNG-57); phase issues are sub-issues of #66
 (numbers in the table below).
 **Order across features:** [2026-10-25-ux-dashboard-signalr-plan.md](../../ai-agents/handoffs/2026-10-25-ux-dashboard-signalr-plan.md)

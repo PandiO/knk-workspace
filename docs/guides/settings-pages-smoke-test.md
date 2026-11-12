@@ -1,7 +1,7 @@
 # Settings pages: units and help, confirms on risky switches, lootbox preview, three pages on the settings shell (#26) — smoke test
 
-**Status:** Written 2026-11-08 for knk-web-app `claude/settings-pages-26` (chain 3 link V4); not merged, not run
-**Last updated:** 2026-11-08
+**Status:** Written 2026-11-08 for knk-web-app `claude/settings-pages-26` (chain 3 link V4); **merged 2026-11-12** (knk-web-app `main` `1371951`, with V7); not run by the developer
+**Last updated:** 2026-11-12 (merged with V7); 2026-11-08
 **Issues:** [PandiO/knk-workspace#26](https://github.com/PandiO/knk-workspace/issues/26) (SET-5, SET-6 and #38's
 lootbox preview / "1 in N" odds); the shell is [#187](https://github.com/PandiO/knk-workspace/issues/187)'s `SettingsPage`
 
