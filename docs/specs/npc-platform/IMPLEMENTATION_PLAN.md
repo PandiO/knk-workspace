@@ -1,7 +1,7 @@
 # NPC navigation adapter (Citizens) — Implementation Plan
 
 **Status:** Proposed 2026-11-11, not started. Plans the shared NPC navigation capability only (K&K plans, Citizens moves); behavior, guards, garrisons and combat are separate work. Developer answers to Q1–Q7 on 2026-11-12; see "Decisions".
-**Last updated:** 2026-11-12 (Q4 formations decided; Phase 7b travel bubble first; Phase 7b abstract movement outside loaded areas, spread spawns and targeted replans, from the unloaded-chunk runs; developer answers Q1–Q7; road network components and the router's BLOCKED result from the unloaded-chunk test)
+**Last updated:** 2026-11-12 (Phase 0 route-following spike, metrics and config layering in Phase 1, NAV-14/15/16, Q8; Q4 formations decided; Phase 7b travel bubble first; Phase 7b abstract movement outside loaded areas, spread spawns and targeted replans, from the unloaded-chunk runs; developer answers Q1–Q7; road network components and the router's BLOCKED result from the unloaded-chunk test)
 **Issue:** [PandiO/knk-workspace#241](https://github.com/PandiO/knk-workspace/issues/241) (verification: desk check #242, spike #243, benchmark #244); parent [KNG-36](https://linear.app/kngpandi/issue/KNG-36/design-shared-npc-traits-and-pathfinding-platform), [#146](https://github.com/PandiO/knk-workspace/issues/146), [#234](https://github.com/PandiO/knk-workspace/issues/234)
 **Sources:** [BEHAVIOR_MODEL.md §2](BEHAVIOR_MODEL.md#2-fit-with-the-platform-design) (requirements NAV-01–NAV-11) and §13; [DESIGN.md](DESIGN.md) §2, §6, §7, §9; [desk check and spike report](../../reports/2026-11-10-citizens-desk-check-and-spike.md); [Citizens stress test guide](../../guides/citizens-stress-test.md); [verdict on #244](https://github.com/PandiO/knk-workspace/issues/244#issuecomment-6806008046); code read at knk-plugin `main` `33122cf` and the spike `claude/citizens-spike` `ac3c356`.
 
@@ -11,8 +11,9 @@
 
 | Phase | Repos | Size | Depends on | Shippable alone | Requirements |
 |---|---|---|---|---|---|
-| 1 — Runtime and guard rails | plugin | M | Q1, Q2 | yes (no gameplay) | NAV-08, NAV-10 |
-| 2 — Navigate one NPC | plugin | L | 1; Q3 | yes (admin command) | NAV-01, NAV-03, NAV-11 |
+| 0 — Route-following spike | plugin (spike branch) | S | — | — (decides Q8) | NAV-15, NAV-12 |
+| 1 — Runtime, guard rails and metrics | plugin | M | Q1, Q2 | yes (no gameplay) | NAV-08, NAV-10, NAV-16 |
+| 2 — Navigate one NPC | plugin | L | 0, 1; Q3 | yes (admin command) | NAV-01, NAV-03, NAV-11, NAV-14, NAV-15 |
 | 3 — Rules stay binding | plugin | M | 2 | yes | NAV-02, NAV-03, NAV-04 |
 | 4 — Groups | plugin | M | 3; Q4 | yes | NAV-05 |
 | 5 — NPC access identity | web-api, plugin, web-app | L | 2; Q5, DESIGN O06 | yes | NAV-09 |
@@ -25,7 +26,17 @@ Phases 5, 6 and 7 are independent of each other and can run in any order after t
 
 ---
 
-## Phase 1 — Runtime and guard rails (plugin)
+## Phase 0 — Route-following spike (spike branch)
+
+Goal: prove how NPCs follow the K&K route as the trail draws it (NAV-15) before Phase 2 builds on it, and measure the travel bubble (NAV-12).
+
+- Spike mode `trail`: the road polyline (and the K&K walk legs at the ends) resampled every 1–2 blocks, floor-snapped, handed to Citizens one stretch at a time (about 32 blocks) as a waypoint list; the next stretch is prepared before the NPC reaches the end of the current one (NAV-14). On stuck: one Citizens A* leg to the next waypoint, then back on the line.
+- Compare with hop mode on the same routes: stuck per trip, time per trip, how far NPCs stray from the road centre, tick cost. If Citizens' waypoint following can't do stairs and steps well, try a K&K-driven step controller (Citizens only moves the body).
+- Spike setting `keeploaded on|off` for the travel bubble: chunks held per NPC, tick cost, memory, whether NPCs keep moving at chunk borders.
+
+**Done when:** Q8 is answered with numbers.
+
+## Phase 1 — Runtime, guard rails and metrics (plugin)
 
 Goal: Citizens is wired in safely, and NPCs can exist without touching player systems. No navigation yet.
 
@@ -40,7 +51,10 @@ Goal: Citizens is wired in safely, and NPCs can exist without touching player sy
 - Config `npc.navigation.*` in `config.yml`: enabled (default off), pathfinder, max plans in flight, hop spacing (16), recheck ticks (40), stationary ticks (60).
 - Startup log line: Citizens version or "Citizens not present: NPC navigation unavailable".
 
-**Tests:** runtime off without Citizens; listener audit tests (an NPC `PlayerMoveEvent` does not reach the region resolver); config defaults.
+- **Metrics foundation (NAV-16)** from the start, through `PluginMetrics` (KNG-232): NPC tick time, NPCs by state, chunks held by NPC tickets, plans per second and plan time (road graph and local), queue wait, stuck per trip, trespasses, per world (and per region where useful). Every later phase adds its instruments here; a Grafana dashboard next to the existing performance one (`guides/performance-metrics-and-capacity.md`).
+- **Config layering** for navigation settings: global default → world → region/domain → NPC template → assignment (BEHAVIOR_MODEL §15.3 precedence). First user: the chunk-loading switch (NAV-12, Phase 7b).
+
+**Tests:** runtime off without Citizens; listener audit tests (an NPC `PlayerMoveEvent` does not reach the region resolver); config defaults and override precedence.
 
 **Done when:** the plugin loads with and without Citizens, and a spawned test NPC walking about makes no API calls and no player-system side effects.
 
@@ -50,7 +64,7 @@ Goal: one NPC walks a K&K-planned route under a caller-supplied ruleset (DESIGN 
 
 **knk-core:**
 - `AccessSubject` port: what the access code needs from a mover (identity, bypass, permissions/gate rights, current regions). `NavigationAccess.policyFor`, `WalkAccessFactory` and `GateAvailability` take a `Player` today; add overloads that take an `AccessSubject`, with a `PlayerAccessSubject` adapter so player navigation is unchanged. Until Phase 5, NPCs use a **configured access profile** (template-level allow/deny lists; Q3), never a borrowed player.
-- `HopPlanner`: road route polyline → hops every N blocks, floor-snapped (spike `CitizensSpike.resample` / `snapToFloor`), plus the off-road stretch to the goal.
+- `RouteFollower` (NAV-14, NAV-15): the K&K route (road polyline plus walk legs) as the line to follow, prepared one stretch ahead at a time; executed the way Phase 0 decides (Q8). `HopPlanner` (road route → hops every N blocks, floor-snapped; spike `resample` / `snapToFloor`) stays for Citizens' A* recovery legs. The road route itself is planned on the road graph without chunks; capture and local search only for the stretch ahead.
 - `NpcNavigationService`: per-NPC state machine (IDLE → QUEUED → PLANNING → MOVING → WAITING / PAUSED), a planning queue with a limit on plans in flight, bounded retries per hop (DESIGN §6: 3), and a `NavigationResult` back to the caller.
 
 **knk-paper:**
@@ -128,7 +142,8 @@ Goal: fewer stuck events (NAV-07) and checked chunk handling (NAV-11).
 
 Goal: NPCs keep travelling where no player keeps the world loaded (NAV-12; BEHAVIOR_MODEL §13 level of detail). The developer prefers real walking all the way (2026-11-12), so the travel bubble comes first and abstract movement is the fallback.
 
-- **Travel bubble (first):** a travelling NPC gets Citizens' `KEEP_CHUNK_LOADED` (Citizens moves a force-load ticket with the chunk the NPC stands in), and K&K puts plugin chunk tickets on the next hop's capture box before capturing it (chunks loaded asynchronously, never generated) and removes them after the leg. A cap on NPCs with a bubble (config), released on arrival or when waiting; idle NPCs at posts never have one. Measure first with a spike setting: chunks loaded per NPC, tick cost, memory, whether NPCs keep moving at chunk borders.
+- **Switch with overrides (developer decision 2026-11-12):** whether NPCs load chunks (bubble) or switch to simulated travel, from the Phase 1 config layering: global default, world, region/domain, template, assignment. Tuned from the metrics.
+- **Travel bubble:** a travelling NPC gets Citizens' `KEEP_CHUNK_LOADED` (Citizens moves a force-load ticket with the chunk the NPC stands in), and K&K puts plugin chunk tickets on the next hop's capture box before capturing it (chunks loaded asynchronously, never generated) and removes them after the leg. A cap on NPCs with a bubble (config), released on arrival or when waiting; idle NPCs at posts never have one. Measure first with a spike setting: chunks loaded per NPC, tick cost, memory, whether NPCs keep moving at chunk borders.
 - **Abstract mover (fallback, above the cap or for long journeys):** when the next hop reaches an unloaded area (or the NPC's chunk unloads), despawn the Citizens entity and continue along the K&K road route by time: route length ÷ speed, with waits at gates and denied regions by the same rules as Phase 3 (the road policy needs no chunks).
 - **Materialize:** when the area around the NPC's computed position loads, spawn the entity there on a safe floor (DESIGN §6 spawn validation) and continue physically.
 - Persist the abstract position with the NPC's state (K&K database is the source of truth), so a restart doesn't lose travelling NPCs.
@@ -152,4 +167,5 @@ Goal: NPCs keep travelling where no player keeps the world loaded (NAV-12; BEHAV
 | Q4 | Group formation | **Configurable formations.** Column is the default; pairs or ranks preferred for soldiers; a loose cluster; and an escort ring (an octagon around the leader in the centre, as bodyguards). Formation per group, template or assignment; narrow places (gates, stairs, wall walks) fold any formation into a column and reform after. |
 | Q5 | Gate pass-through for NPCs | Its own follow-up after Phase 5 (agreed). Similar to players, but the permissions must be worked out; it ties into clans and NPC loyalty to towns and clans (BEHAVIOR_MODEL §16.5). |
 | Q6 | Hidden routes | Hidden routes are not in the road graph today: they need their own issue (road data, authoring, who may use them). Phase 6 depends on it. |
+| Q8 | How NPCs follow the K&K route (NAV-15): Citizens waypoint lists per stretch, short Citizens A* legs between dense points, or a K&K step controller? | **Open**, decided by Phase 0 with numbers. |
 | Q7 | Citizens version | The latest stable Citizens build for 26.3, pinned. Citizens publishes timestamped snapshot builds only, so "stable" means the newest build for 26.3 at the time, pinned; test each Minecraft update on the dev server with the planned Paper build first (desk check report §8.6). |
