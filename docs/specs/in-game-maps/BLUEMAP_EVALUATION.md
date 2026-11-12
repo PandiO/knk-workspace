@@ -198,6 +198,8 @@ To be split into sub-issues of #224 when picked up:
 
 1. ~~Update DESIGN.md decisions M2–M4 to BlueMap~~ — done 2026-11-12.
 2. **WorldGuard town and district regions:** first test with the standalone renderer: [`scripts/bluemap/wg2bluemap.py`](../../../scripts/bluemap/wg2bluemap.py) turns WorldGuard's `regions.yml` (towns = priority 10, districts = priority 20, names `domain_<id>`) into static `marker-sets` in the map config; `--markers` applies them without a re-render. Later: a plugin pushing regions (with town/district names from knk-web-api) through the BlueMap API, kept in sync on region changes.
+2b. **Region markers tested 2026-11-12:** towns as a flat shape just above the water (`town-y`, Y 41 on `world_KNK-DEV`, water at Y 40) with holes for their districts; districts as extrude volumes (band 40–100) without edge lines and one outline along the top. Clicking a district reaches the district. Command: `python3 wg2bluemap.py regions.yml config/maps/overworld.conf 40 100 41`, then restart with `--markers -w` (no re-render).
+2c. **Hover tooltips (wanted):** hovering a block inside a town, district or any later domain subtype shows that region's info. BlueMap shows marker info on click only; needs a custom web app script (point-in-polygon on the region outlines, or the region data from knk-web-api). Belongs with item 3.
 3. **Web UI extensibility spike:** one custom marker with a tooltip, one region overlay, one click handler logging world X/Z (the targeting path).
 4. **2D table page prototype** on the low-res tiles; test in headless Chromium for CPU cost and check readability at the table's zoom.
 5. **Plugin on the dev server** (Paper jar) with live players and auto-render off/limited; tiles from the offline render.
