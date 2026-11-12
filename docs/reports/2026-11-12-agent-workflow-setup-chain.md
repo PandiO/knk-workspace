@@ -25,7 +25,7 @@ or into `next`.
 | Link | Issue | Status | Branch heads | PR | How started |
 |---|---|---|---|---|---|
 | L1 CI | #328 | In review (done 11:40 UTC, both workflows green) | `claude/agent-setup-ci`: knk-web-api `81b06d9`, knk-web-app `a7d31a2` | [knk-web-api#12](https://github.com/PandiO/knk-web-api/pull/12), [knk-web-app#9](https://github.com/PandiO/knk-web-app/pull/9) | create_session session_01R1w2UsfbmKqEY1QXSx25id |
-| L2 Branches, labels, digest | #329 | Not started | `next` in all four repos | — (no file changes) | — |
+| L2 Branches, labels, digest | #329 | In review (done 11:40 UTC; labels and pin left for the developer) | `next`: knk-workspace `6245c9f`, knk-web-api `b5e57fa`, knk-web-app `9a85238`, knk-plugin `121030f`; digest issue [#333](https://github.com/PandiO/knk-workspace/issues/333) | — (no file changes) | subagent (coordinator decision § 3.2) |
 | L3 Skills and instructions | #330 | Not started | `claude/agent-setup-skills` (workspace + three component repos) | — | — |
 | L4 Tooling | #331 | Not started | `claude/agent-setup-tooling` (knk-workspace) | — | — |
 | L5 Sessions board archive | #332 | Not started | `claude/agent-setup-sessions-archive` (knk-workspace) | — | — |
@@ -107,3 +107,51 @@ _(Each link appends its block here when it finishes.)_
    issue at merge).
 8. **Session note.** The attach of knk-web-api and knk-web-app was refused at 10:34 (§ 3.2), approved by the developer
    at 11:00, and the link went ahead after the coordinator's go at 11:21.
+
+### 4.2 L2 — `next` branches, labels, digest issue (#329)
+
+1. **Scope done.**
+    1. `next` created in all four repos from the current tip of the default branch
+       (`git push origin origin/<default>:refs/heads/next`, after `git fetch` and a passing `git push --dry-run`). No
+       repo had a `next` branch before. No default branch and no branch protection was changed.
+    2. "Daily digest" issue created: [PandiO/knk-workspace#333](https://github.com/PandiO/knk-workspace/issues/333).
+       It covers what the digest is for (DESIGN § 7), one comment per weekday evening around 17:00 Europe/Amsterdam,
+       the six sections (ready for test in `next`, decisions needed, blocked, progress, new raw ideas, health) and the
+       link to the manager session as the last line of each digest. No labels on it (not a work item).
+    3. Not done, left for the developer (item 7): the four labels and pinning #333. The GitHub MCP tools have no
+       label-creation or pin call, `gh` is not used for writes here, and GraphQL (`pinIssue`) answers 403 from this
+       environment.
+2. **Heads of `next`** (each equal to its default branch at 11:35 UTC):
+    1. knk-workspace `next` = `main` at `6245c9f`.
+    2. knk-web-api `next` = `master` at `b5e57fa`.
+    3. knk-web-app `next` = `main` at `9a85238`.
+    4. knk-plugin `next` = `main` at `121030f`.
+
+   This report commit moves knk-workspace `main` one commit past `next`; that is expected and is caught up by the
+   first merge of `main` into `next`.
+3. **PRs.** None: this link has no branch and no file changes.
+4. **Tests, baseline → result.** No baseline: no file changes. The pushes of `next` started the existing CI
+   workflows on it: knk-plugin Build (run 43210491593) green, knk-web-api Migrations (fresh DB)
+   (run 43210461767) green. knk-web-app and knk-workspace have no workflow on `main` yet (L1's CI lands with
+   knk-web-app#9 / knk-web-api#12).
+5. **Decisions (DESIGN § 4.3).**
+    1. *Labels through a side effect.* Chosen: do not create them. GitHub creates a missing label when an issue is
+       given it, but without a description and in grey, and only by tagging some issue with it. Alternatives: (a) add
+       them to the digest issue and remove them again, which leaves four labels without the descriptions and colours
+       the design asks for and an odd label history on #333; (b) use `gh label create`, ruled out by the link prompt.
+    2. *Digest issue labels.* Chosen: none, since the digest is a standing channel, not work with a status or tier.
+       Alternative: the `documentation` or an `improvement` label, which would put it in work lists and status checks.
+    3. *Empty-day rule.* Chosen: the issue says the manager posts a short comment even on a quiet day, so a missing
+       comment shows a failed run. Alternative: post only when there is news, which makes a broken scheduled run
+       indistinguishable from a quiet day.
+6. **Out of scope, noted.** None.
+7. **At merge / what the developer must do.**
+    1. Create the four labels in PandiO/knk-workspace (Issues → Labels → New label):
+        1. `tier:1`, colour `#0e8a16` (green), "Tweak to existing behaviour: automated tests are the review".
+        2. `tier:2`, colour `#fbca04` (yellow), "Feature change: short smoke test on next".
+        3. `tier:3`, colour `#d93f0b` (orange-red), "New foundations, schema, game feel: full smoke test".
+        4. `idea`, colour `#c5def5` (light blue), "Raw idea captured by intake; still needs working out".
+    2. Pin [#333](https://github.com/PandiO/knk-workspace/issues/333): open it, "Pin issue" in the right sidebar.
+    3. Optional: protect `next` in each repo against force-push and deletion (branch protection was out of scope).
+    4. After merging L1, L3, L4 and L5 into the default branches, merge each default branch into `next`
+       (already item 1.1 of this report).
