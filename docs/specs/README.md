@@ -21,6 +21,7 @@ Central home for requirements, specifications, and implementation roadmaps acros
 - navigation-destination-engine/: design (proposed, no code) for one engine that builds each player's list of navigable destinations from providers and exclusive-scope policies, enforced by a handle, persisted for offline use (Linear KNG-235, phases KNG-236 to KNG-240; follow-up of KNG-234)
 - production-storage-transport/: the resource-economy backbone: storages (domain/player/clan), production kinds with yield areas, transport orders (simulated, then NPC/courier), town logistics (V2 port, design draft rev. 2, 2026-10-09)
 - in-game-maps/: battle map tables — web map targeting page shown in game through a server-side browser (MapBrowser) for siege-engine targeting and other map views; direction chosen 2026-11-03, renderer switched from Dynmap to BlueMap after a test render 2026-11-10 (BLUEMAP_EVALUATION.md), no code (GitHub #224)
+- ai-agent-workflow/: how AI agents work on K&K — intake, design, manager and coordinator roles, `next` integration branch with risk tiers and release tags, project skills in knk-workspace, CI as the agent gate, daily digest (decided 2026-11-12; setup chain not yet run)
 - siege-survival/: cooperative endless NPC-wave defense, gate repair, spawnzone progression and match equipment/economy (Linear KNG-50, child of KNG-37; design only)
 - user-features/: rank/permission/title/salary architecture
 - user-management/: tailored admin module built on top of user-features

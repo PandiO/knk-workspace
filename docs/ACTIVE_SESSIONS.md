@@ -67,6 +67,10 @@ Live tracker of in-progress work across all four Knights and Kings repos
 
 ## Recently completed
 
+### 2026-11-12 — AI agent workflow design: roles, `next` branch, risk tiers, skills, CI gate — done, merged
+
+Claude chat session with voice discussion (Pandi). New [specs/ai-agent-workflow/DESIGN.md](specs/ai-agent-workflow/DESIGN.md) (decided 2026-11-12) and its specs README entry. Docs only; the setup chain in its § 12 (CI, `next` branches and labels, coordinator and link skills, MCP and hooks, sessions board archive) is handed to a coordinator session and has not run yet.
+
 ### 2026-11-11 — Docs: menus, statistics and custom enchantments player guides; menu admin guide (#302) — done, merged
 
 Claude Code cloud session (Pandi). New: [menus](guides/users/menus-player-guide.md), [statistics and public profile](guides/users/statistics-player-guide.md) and [custom enchantments](guides/users/custom-enchantments-player-guide.md) player guides, [inventory menus admin guide](guides/admin/menus-admin-guide.md); guides index and register rows. Checked against knk-plugin `main` `121030f`, knk-web-api `master` `b5e57fa`, knk-web-app `main` `9a85238`. Findings filed: #318–#322 (no web menu editor: decision #319).
