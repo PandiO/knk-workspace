@@ -1,7 +1,7 @@
 # In-game maps — BlueMap evaluation (Dynmap vs BlueMap)
 
 **Status:** Evaluated and test-rendered on the NAS (2026-11-10). **BlueMap is the preferred map renderer**, replacing Dynmap (decision M2 in [DESIGN.md](DESIGN.md)), pending the follow-ups in §8. No code.
-**Last updated:** 2026-11-10 (first version, from the developer conversation and test render the same day)
+**Last updated:** 2026-11-12 (cave-culling fix for shadowed builds, run 4; first version 2026-11-10)
 **Issue:** [PandiO/knk-workspace#224](https://github.com/PandiO/knk-workspace/issues/224)
 **Related:** [DESIGN.md](DESIGN.md) (battle map tables), #254 (painted resource map over the web map), #32 (VPS hosting), #41 / #23 (siege), #78, #65, #124, #53 (other map uses)
 
@@ -76,6 +76,7 @@ Decision rule: go BlueMap if it leads by at least 0.5 after the test and measure
 - **Bandwidth:** serving tens of GB of tiles to many players adds up, for either renderer (Dynmap's larger tiles cost more). Put Cloudflare caching in front of Nginx (the Cloudflare Tunnel is already in place). BlueMap 5.25+ has an `additional-headers` webserver option for cache headers.
 - **WorldGuard regions:** BlueMap supports shape and extruded markers. On the live server, a small plugin (or an existing community add-on) reads WorldGuard regions and pushes them through the marker API. The standalone render can't see WorldGuard, so a first test uses a hand-made marker in the map config.
 - **Version lag:** BlueMap must support each new Minecraft version; check before upgrading the server. 26.3 is supported since BlueMap 5.24.
+- **Cave culling and shadowed builds:** BlueMap skips blocks it treats as caves: no sky light, below `remove-caves-below-y` (default 55) and at least 5 blocks below the highest block in that column. Builds under overhangs or arches below that height get holes (seen at the plaza under the cliff arch near X 1433, Z -519, about Y 35). K&K uses `remove-caves-below-y: 30`, just under the lowest shadowed build. Everything above Y 30 renders, including any caves there; caves below stay hidden. Lower it if a shadowed build sits deeper. Cost measured: about +1% storage.
 - **Custom textures:** add any resource pack or custom blocks to BlueMap's config so the render matches the game.
 - **Render time:** a full first render takes about 20 hours on 4 threads (§6); later updates only touch changed chunks.
 - **Licence:** BlueMap is MIT; Dynmap is Apache 2.0. Both are permissive and allow commercial use, modification and forks, as long as copyright and licence notices are kept. Dynmap's team adds its own policies for anyone using the code beyond contributions, and "Dynmap" is a registered name, so a fork needs a different name. For monetising K&K, Mojang's EULA and Minecraft Usage Guidelines are the real limit, not these licences. Not legal advice.
@@ -88,30 +89,30 @@ Decision rule: go BlueMap if it leads by at least 0.5 after the test and measure
 - **Snapshot pipeline (M5, §7):** unchanged in spirit and easier: the standalone BlueMap container renders a world copy offline; the Paper plugin on production runs with auto-render off or limited, mainly for live players and markers. Config and map ids must match on both sides.
 - **Tile storage (§7):** flat files under `/mnt/fast/knk-alpha/bluemap/web`, served statically (Nginx) — not on the system NVMe.
 
-## 6. Test render results (NAS, 2026-11-10)
+## 6. Test render results (NAS, 2026-11-10 and 2026-11-12)
 
 Setup: standalone BlueMap (`ghcr.io/bluemap-minecraft/bluemap:latest`) in Docker on the NAS, render threads 4, world copy of `world_KNK-DEV` (7.5 GB), working folder `/mnt/fast/knk-alpha/bluemap`. Test area centred on X 1415, Z -522 (town + hills).
 
-| Metric | Run 1: town + hills | Run 2: expanded | Run 3: expanded, unlit chunks included (final) |
-|---|---|---|---|
-| Area rendered (blocks) | 1,000 × 1,000 | 2,000 × 2,000 | 2,000 × 2,000 |
-| Settings | default | default | `ignore-missing-light-data: true`, forced re-render (`-f`) |
-| Render time (4 threads) | about 3–5 min | about 6 min (added area only) | 13 min (full area) |
-| Disk size (`web/maps`) | 147 MB | 334 MB | **430 MB** |
-| File count | 1,062 | 3,036 | 4,106 |
-| Size per million blocks² | 147 MB | 84 MB | **about 108 MB** |
-| Extrapolated full world (22k × 17k, ×374) | about 55 GB | about 31 GB (gaps not rendered) | **about 40 GB**, about 385,000 files |
-| Look on PC (1–5) | | | **5** |
-| Look/performance on phone (1–5) | | | **5**: good on iPhone 16 Pro Max and iPhone 13; budget Android untested |
-| Low-res usable for 2D tables? | | | Depends on zoom; verify with a prototype table page |
+| Metric | Run 1: town + hills | Run 2: expanded | Run 3: unlit chunks included | Run 4: + caves cutoff Y 30 (final, 2026-11-12) |
+|---|---|---|---|---|
+| Area rendered (blocks) | 1,000 × 1,000 | 2,000 × 2,000 | 2,000 × 2,000 | 2,000 × 2,000 |
+| Settings | default | default | `ignore-missing-light-data: true`, forced re-render (`-f`) | run 3 + `remove-caves-below-y: 30` |
+| Render time (4 threads) | about 3–5 min | about 6 min (added area only) | 13 min (full area) | about 13 min |
+| Disk size (`web/maps`) | 147 MB | 334 MB | **430 MB** | **435 MB** |
+| File count | 1,062 | 3,036 | 4,106 | 4,106 |
+| Size per million blocks² | 147 MB | 84 MB | **about 108 MB** | **about 109 MB** |
+| Extrapolated full world (22k × 17k, ×374) | about 55 GB | about 31 GB (gaps not rendered) | **about 40 GB**, about 385,000 files | **about 41 GB** |
+| Look on PC (1–5) | | | **5** | 5; plaza under the arch renders correctly |
+| Look/performance on phone (1–5) | | | **5**: good on iPhone 16 Pro Max and iPhone 13; budget Android untested | |
+| Low-res usable for 2D tables? | | | Depends on zoom; verify with a prototype table page | |
 
-Runs 1–2 left black gaps: WorldPainter chunks never loaded by the server have no light data, and BlueMap skips those by default. Run 3 sets `ignore-missing-light-data: true` and forces a re-render, so it is the representative figure.
+Runs 1–2 left black gaps: WorldPainter chunks never loaded by the server have no light data, and BlueMap skips those by default. Run 3 sets `ignore-missing-light-data: true` and forces a re-render. Run 3 still had holes in shadowed ground below Y 55 (cave culling, §4.3); run 4 sets `remove-caves-below-y: 30` and is the representative figure.
 
 **Full-world estimate: about 40 GB** (range about 30–55 GB depending on how built-up the world is), versus 150–300 GB for Dynmap with a single angle. Full first render: about 20 hours on 4 threads. Long-term, load the world on the server (e.g. Chunky, after a backup, on dev first) so all chunks get proper lighting — players need lit chunks too.
 
 ## 7. Test procedure (reproducible, NAS over SSH)
 
-Run in an SSH session (PowerShell: `ssh <user>@<nas-ip>`). Start with `sudo -i` (the user can't reach the Docker socket) and stay in that root shell, so `MC` and `DATA` are kept.
+Run in an SSH session (PowerShell: `ssh <user>@<nas-ip>`). Start with `sudo -i` (the user can't reach the Docker socket) **on its own**, enter the password, then paste the rest: lines pasted together with `sudo -i` are swallowed by the password prompt. Stay in that root shell, so `MC` and `DATA` are kept.
 
 ### 7.1 Find the container and world
 
@@ -153,6 +154,8 @@ sed -i 's/accept-download: false/accept-download: true/' config/core.conf
 grep -n "render-thread-count" config/core.conf        # set to 4 or lower
 mkdir -p config/maps-off && mv config/maps/nether.conf config/maps/end.conf config/maps-off/
 sed -i 's/#\?\s*ignore-missing-light-data: false/ignore-missing-light-data: true/' config/maps/overworld.conf
+sed -i 's/^\(\s*\)remove-caves-below-y:.*/\1remove-caves-below-y: 30/' config/maps/overworld.conf
+grep -n "ignore-missing-light-data:\|remove-caves-below-y:" config/maps/overworld.conf
 ```
 
 Add the area as a **render mask** at the end of `config/maps/overworld.conf` (top-level `min-x`/`max-x` keys are rejected as an outdated config):
@@ -187,7 +190,7 @@ find /mnt/fast/knk-alpha/bluemap/web/maps -type f | wc -l
 hostname -I                                           # open http://<nas-ip>:8100
 ```
 
-If the container stops on a config error: fix it, `docker rm bluemap-test`, start again. Clean up with `docker stop bluemap-test && docker rm bluemap-test` (files stay).
+After a config change, always `docker rm -f bluemap-test` and start again with `-f`; a container that is still running uses the old config. If the container stops on a config error: fix it and start again. Clean up with `docker stop bluemap-test && docker rm bluemap-test` (files stay).
 
 ## 8. Next steps
 
