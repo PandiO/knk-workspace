@@ -42,8 +42,8 @@ or into `next`.
 |---|---|---|---|---|---|
 | L1 CI | #328 | In review (done 11:40 UTC, both workflows green) | `claude/agent-setup-ci`: knk-web-api `81b06d9`, knk-web-app `a7d31a2` | [knk-web-api#12](https://github.com/PandiO/knk-web-api/pull/12), [knk-web-app#9](https://github.com/PandiO/knk-web-app/pull/9) | create_session session_01R1w2UsfbmKqEY1QXSx25id |
 | L2 Branches, labels, digest | #329 | In review (done 11:40 UTC; labels and pin left for the developer) | `next`: knk-workspace `6245c9f`, knk-web-api `b5e57fa`, knk-web-app `9a85238`, knk-plugin `121030f`; digest issue [#333](https://github.com/PandiO/knk-workspace/issues/333) | — (no file changes) | subagent (coordinator decision § 3.2) |
-| L3 Skills and instructions | #330 | In review (done 12:05 UTC; docs only) | `claude/agent-setup-skills`: knk-workspace `8321f0d`, knk-web-api `dbb05c5`, knk-web-app `7a974ac`, knk-plugin `0759d22` | [knk-workspace#334](https://github.com/PandiO/knk-workspace/pull/334), [knk-web-api#13](https://github.com/PandiO/knk-web-api/pull/13), [knk-web-app#10](https://github.com/PandiO/knk-web-app/pull/10), [knk-plugin#16](https://github.com/PandiO/knk-plugin/pull/16) | subagent (coordinator decision § 3.2) |
-| L4 Tooling | #331 | In review (done 12:15 UTC; hook tested end to end) | `claude/agent-setup-tooling`: knk-workspace `9310d7f` | [knk-workspace#335](https://github.com/PandiO/knk-workspace/pull/335) | subagent (coordinator decision § 3.3) |
+| L3 Skills and instructions | #330 | In review (done 12:05 UTC; docs only) | `claude/agent-setup-skills`: knk-workspace `35c554b` (L3b, § 4.6; was `8321f0d`), knk-web-api `dbb05c5`, knk-web-app `7a974ac`, knk-plugin `0759d22` | [knk-workspace#334](https://github.com/PandiO/knk-workspace/pull/334), [knk-web-api#13](https://github.com/PandiO/knk-web-api/pull/13), [knk-web-app#10](https://github.com/PandiO/knk-web-app/pull/10), [knk-plugin#16](https://github.com/PandiO/knk-plugin/pull/16) | subagent (coordinator decision § 3.2) |
+| L4 Tooling | #331 | In review (done 12:15 UTC; hook tested end to end) | `claude/agent-setup-tooling`: knk-workspace `c1afaf1` (L3b, § 4.6; was `9310d7f`) | [knk-workspace#335](https://github.com/PandiO/knk-workspace/pull/335) | subagent (coordinator decision § 3.3) |
 | L5 Sessions board archive | #332 | In review (done 12:25 UTC; board 486 KB → 65 KB on the branch) | `claude/agent-setup-sessions-archive`: knk-workspace `9f91251` | [knk-workspace#336](https://github.com/PandiO/knk-workspace/pull/336) | create_session session_01R1w2Ux2rKagW6rke2sDnes |
 
 ## 3. Coordinator decisions
@@ -468,3 +468,72 @@ _(Each link appends its block here when it finishes.)_
     3. Changelog entry at merge (developer tooling: "The sessions board keeps only work in progress; finished rows
        move to monthly archive files under `docs/reports/sessions-archive/`, by `scripts/sessions-archive/
        archive_sessions.py`.").
+
+### 4.6 L3b — developer decisions applied to L3 and L4 (#330, #331)
+
+Follow-up run as a subagent of the coordinator (2026-11-12, evening), on the open branches only; no component repo,
+no merge, no force-push.
+
+1. **Scope done** (the developer's decisions in § 3 item 5).
+    1. Decisions 5.3, 5.4, 5.5 (items 5.1–5.3): the global "Branches, releases and risk tiers" section and the
+       coordinator skill (§ 1.3, § 7.2) now state the start condition (`ci.yml` on knk-web-api `master` and
+       knk-web-app `main`), merging link PRs into `next` through the PR with a merge commit, and PRs into `next` outside
+       a chain waiting for the developer as the developer's decisions.
+    2. "At merge" split (item 5.4): global "Shipping a change", `AGENTS.md`, `CLAUDE.md`, the docs-session prompt and
+       the documentation maintenance guide: docs sub-issue and docs session at the merge into `next`, feature issue
+       closed at promotion; before the `next` rules apply, "at merge" is the merge into the default branch. Global
+       "GitHub Issues" item 5 and coordinator § 7.9 follow.
+    3. Commit trailers (item 5.5): link skill hard rule 10 and § 3.1, coordinator § 1.5 and the link prompt (§ 4.4).
+    4. Route (item 5.6): coordinator § 4.1–4.2 (`create_session` with knk-workspace as `source_url` preferred,
+       subagent fallback), `permissions-block.md` (variant A preferred, B fallback), global "Session chains", link
+       skill § 1.1; the 2026-10-11 and 2026-11-12 refusals kept as history.
+    5. Overlap rule (item 5.7): coordinator § 2.4, link skill § 1.2, global "Parallel sessions" item 1.
+    6. Board rule (item 5.8): global "Parallel sessions" item 4, the docs-session prompt, the maintenance guide,
+       link skill § 3.5, coordinator § 9.4. Worded for after #336 (paths in code, no link to the archive README).
+    7. Permission rule (L4 branch): `.claude/settings.json` `permissions.allow` `mcp__claude-code-remote__add_repo` and
+       `mcp__claude-code-remote__register_repo_root`; `docs/guides/developer/agent-tooling.md` § 4 (what it allows,
+       that it does not limit repositories, where it applies, how to remove it).
+2. **Commits and heads.** knk-workspace `claude/agent-setup-skills` `8321f0d` → `35c554b` (one commit);
+   `claude/agent-setup-tooling` `9310d7f` → `c1afaf1` (one commit). Both with the model-free trailer.
+3. **PRs.** [#334](https://github.com/PandiO/knk-workspace/pull/334) and
+   [#335](https://github.com/PandiO/knk-workspace/pull/335): summary, decisions, testing and docs impact rewritten;
+   comments on [#330](https://github.com/PandiO/knk-workspace/issues/330) and
+   [#331](https://github.com/PandiO/knk-workspace/issues/331). Not merged. Component PRs of L3 unchanged.
+4. **Checks.** Link script over every file each branch changes (outside fenced code, anchors included): L3 57 relative
+   links, L4 54, 0 broken. Both `SKILL.md` front matters parse as YAML. `.claude/settings.json` valid JSON.
+   `git diff --check origin/main...HEAD` clean on both. `git merge-tree`: no conflict between #334, #335, `main` and
+   #336.
+5. **Decisions (DESIGN § 4.3).**
+    1. *MCP rule scope.* The Claude Code permissions docs (read 2026-11-12) say MCP allow rules match the tool name only;
+       a `mcp__` rule with parentheses is skipped when the settings file loads. Chosen: the tool-level rule, with the
+       repo limit coming from the cloud session's GitHub access (the Claude GitHub App's repository list for `PandiO`),
+       said in the guide and #335. Alternatives: (a) add a `PreToolUse` hook that denies `add_repo` outside the four knk
+       repositories, which enforces the limit in the repo at the cost of more code in every session (open for the
+       developer); (b) no rule, the developer approves every attach; (c) `mcp__claude-code-remote__*`, which would also
+       allow `create_session`, environment changes and scheduled tasks.
+    2. *`register_repo_root` allowed too.* Chosen: yes, a link needs it after each clone. Alternative: leave it to ask,
+       which stops the link at the same point.
+    3. *Docs session under the branch model.* Chosen: the docs branch starts from knk-workspace `next` and the docs
+       session merges it into `next` itself (docs only, merge commit), so the docs reach `main` with the promotion.
+       Alternatives: (a) merge into `main` at once, documenting unreleased behaviour on trunk; (b) a PR into `next`
+       that waits for the developer (strict 5.5), one more review per feature; (c) start the docs session at promotion,
+       against decision 5.4. Flagged in #334 for review.
+    4. *"Appends its row".* Chosen: "moves the row straight into" the monthly file, newest first, as #336's archive
+       README orders it. Alternative: append at the end of the file, against that order.
+    5. *Archive references before #336.* Chosen: paths in code, no link, so nothing breaks before or after #336.
+       Alternative: link the archive README, broken until #336 is on `main`.
+    6. *Link `source_url`.* Chosen: always knk-workspace (the skills and the rule live there). Alternative: the link's
+       main repo, which loads neither.
+    7. *Consistency edits.* Chosen: also "GitHub Issues" item 5 and the link skill's board sentence, which would
+       otherwise contradict decisions 5.4 and 5.8. Alternative: leave two contradicting rules.
+6. **Out of scope, noted.** Older handoffs under `docs/ai-agents/handoffs/` still say "move the tracker row to Recently
+   completed"; they are dated history and were left as they are.
+7. **Blockers.** None.
+8. **Merge notes / what the developer must do.**
+    1. Merge order as in § 1 item 1: L1, then #334 (and its component PRs), #335, then #336 by cherry-pick; #336 is needed
+       for the board rule's archive folder and script, #335 for the `add_repo` rule. Until #335 is merged, coordinators
+       use the subagent fallback.
+    2. Check that the Claude GitHub App on `PandiO` reaches only the repositories sessions should attach; that list,
+       not the rule, limits `add_repo`.
+    3. Review this block's decisions 5.3 (the docs session merges into `next`) and 5.1 (a) (the optional
+       `PreToolUse` limit).
