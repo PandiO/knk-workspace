@@ -6,6 +6,15 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## 2026-11-13
 
+- **Siege player guide** (PandiO/knk-workspace#297) — no game change; players now have one guide to sieges: how to
+  join and vote, the hub and team split, spawn choice, objectives and how a match is won, fighting, siege gates, the
+  navigation compass, gear and enchantment books, leaving and rejoining, the end of a match, rewards and match history.
+  [guides/users/siege-player-guide.md](guides/users/siege-player-guide.md), written from knk-plugin `main` `57884e97`,
+  knk-web-api `master` `75b5a00` and knk-web-app `main` `3ba747d`. The gate structures player guide no longer calls
+  gate objectives "not live". Filed while writing it: #451 (a kit claimed from the menu during a match is lost at the
+  restore) and #453 (changelog entries for the alpha run 1 Siege packages merged 2026-11-01).
+  - **Admin steps:** none.
+
 - **Dashboard access in the web app; bulk delete** (PandiO/knk-workspace#280 AM3, #205) — staff now see only the
   dashboard types of the areas they work in, buttons they can't use are greyed out with the permission they need, and
   owners and Admins can delete many rows at once. Accepted by the developer 2026-11-13 without a live test and merged 2026-11-13 (knk-web-app `main` `e02ee79`, knk-web-api `master` `45043a7`, also on `next`); the smoke test is in closed alpha
