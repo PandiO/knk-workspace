@@ -1,6 +1,6 @@
 # Agent tooling: MCP servers and the fast-check hook
 
-**Status:** Active · **Last updated:** 2026-11-13 (§ 1 note: Codex review comments come from the ChatGPT Codex connector app, not CI); 2026-11-13 (fast-check: which clones, JDK 25 detection, only passes cached, § 3.1, § 3.6, § 3.7, trial findings of [#331](https://github.com/PandiO/knk-workspace/issues/331)); 2026-11-12 (`add_repo` guard hook, § 4.2, developer decision 2026-11-12); 2026-11-12 (permission rule for `add_repo`, § 4, developer decision 2026-11-12); 2026-11-12 (first version, [PandiO/knk-workspace#331](https://github.com/PandiO/knk-workspace/issues/331), [DESIGN § 10](../../specs/ai-agent-workflow/DESIGN.md#10-tooling-mcp-servers-and-hooks))
+**Status:** Active · **Last updated:** 2026-11-13 (§ 2.8 restart after setting the variables, § 2.9 Playwright output ignored); 2026-11-13 (§ 1 note: Codex review comments come from the ChatGPT Codex connector app, not CI); 2026-11-13 (fast-check: which clones, JDK 25 detection, only passes cached, § 3.1, § 3.6, § 3.7, trial findings of [#331](https://github.com/PandiO/knk-workspace/issues/331)); 2026-11-12 (`add_repo` guard hook, § 4.2, developer decision 2026-11-12); 2026-11-12 (permission rule for `add_repo`, § 4, developer decision 2026-11-12); 2026-11-12 (first version, [PandiO/knk-workspace#331](https://github.com/PandiO/knk-workspace/issues/331), [DESIGN § 10](../../specs/ai-agent-workflow/DESIGN.md#10-tooling-mcp-servers-and-hooks))
 
 What knk-workspace configures for Claude Code sessions started in it: three MCP servers in `.mcp.json`, and in
 `.claude/settings.json` a Stop hook that compiles the component repos an agent changed, a permission rule that lets
@@ -55,7 +55,13 @@ check, but agents must handle every finding before a merge into `next` ([global 
 7. **Turn one server off** without editing the file: toggle it in `/mcp`, or add it to `disabledMcpjsonServers` in your
    own `~/.claude/settings.json` or the untracked `.claude/settings.local.json`, for example
    `{"disabledMcpjsonServers": ["playwright"]}`.
-8. **Later** (DESIGN § 10.1.2): a MySQL MCP with a read-only user for the dev database, and a Docker MCP for the homelab.
+8. **New environment variables need a full restart.** The Claude desktop app reads `GITHUB_PAT` and
+   `CONTEXT7_API_KEY` from your user environment only when it starts. If you set them while it runs, quit it completely
+   (tray icon → Quit) and start it again; otherwise `github` fails with "Authorization header is badly formatted"
+   (an empty `Bearer`) and Context7 silently runs without its key (seen on the developer PC, 2026-11-13).
+9. **Playwright output:** the server saves page snapshots and screenshots in `.playwright-mcp/` in the repo root,
+   which `.gitignore` ignores. It opens a visible browser window; add `--headless` to its `args` if you don't want that.
+10. **Later** (DESIGN § 10.1.2): a MySQL MCP with a read-only user for the dev database, and a Docker MCP for the homelab.
 
 ## 3. The fast-check Stop hook
 
