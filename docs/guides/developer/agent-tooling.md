@@ -21,7 +21,8 @@ Project skills live next to these under `.claude/skills/`; they need no settings
 
 Not configured here: the **Codex review** comments ("Codex Review Summary") on pull requests come from the ChatGPT Codex
 connector GitHub app, set up in the developer's ChatGPT Codex settings. It reviews each new pull request and comments
-only on findings. It is not part of CI (the `Build and test` workflows, [CI guide](ci.md)) and does not gate a merge.
+only on findings. It is not part of CI (the `Build and test` workflows, [CI guide](ci.md)) and not a GitHub status
+check, but agents must handle every finding before a merge into `next` ([global instructions, "Branches" rule 4](../../ai-agents/GLOBAL_AGENT_INSTRUCTIONS.md#branches-releases-and-risk-tiers)).
 
 ## 2. MCP servers (`.mcp.json`)
 

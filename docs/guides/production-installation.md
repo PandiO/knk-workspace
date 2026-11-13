@@ -1295,11 +1295,11 @@ convention and how to read a run:
 Still open from this stage:
 
 - Change `migrations.yml`'s service image from `mysql:8.0` to `mysql:8.4` (§ 5.1).
-- **Protect trunk:** GitHub → Settings → Branches → a rule for `master`/`main` (and `next`) that requires the CI checks
-  (`Build and test / build-and-test`, and `Build / build` for the plugin) to pass before merging. Optional; the developer decides.
-  The API and web-app workflow was named `CI` until 2026-11-13; the rename reaches trunk with the next promotion of
-  `next`. Until then trunk still reports `CI / build-and-test`, so require that name on `master`/`main` (and the new
-  name on `next`) and switch trunk to `Build and test / build-and-test` right after that promotion.
+- **Protect trunk:** GitHub → Settings → Rules → Rulesets: a branch ruleset for `master`/`main` and `next` that
+  requires the CI checks to pass before merging. Required checks are matched by the job's check name, which the
+  2026-11-13 rename of the workflow from "CI" to "Build and test" did not change: `build-and-test` (knk-web-api also
+  `fresh-database`), and `build` for the plugin. The pull request page shows them as "Build and test /
+  build-and-test" (still "CI / build-and-test" on trunk until the rename is promoted). Optional; the developer decides.
 
 ### 10.4 Stage 2 — release artifacts on a tag
 

@@ -20,8 +20,10 @@ the start condition of that branch model (developer decision 2026-11-12,
 | knk-workspace | none | Docs and configuration only. |
 
 The "Codex Review Summary" comments on pull requests come from the ChatGPT Codex connector app, set up in the
-developer's ChatGPT Codex settings. They are a separate code review, not one of these workflows, and do not gate a merge
-([agent tooling § 1](agent-tooling.md#1-what-is-configured)).
+developer's ChatGPT Codex settings. They are a separate code review, not one of these workflows and not a GitHub
+status check, but agents must still handle every finding before a merge into `next` (fix it, or answer on its thread
+why not, and resolve the thread; [global instructions, "Branches" rule 4](../../ai-agents/GLOBAL_AGENT_INSTRUCTIONS.md#branches-releases-and-risk-tiers)).
+See also [agent tooling § 1](agent-tooling.md#1-what-is-configured).
 
 Both `ci.yml` workflows cancel an earlier run of the same branch and event when a new push arrives.
 
