@@ -7,15 +7,21 @@ This is a human-readable record of capabilities merged into the V3 default branc
 - **Form builder: step conditions; form wizard: click a step to jump to it** (PandiO/knk-workspace#88, #68) — staff
   who build forms can now say in the builder what must be filled in before a step may be left or opened, and staff who
   fill in a form can click a step in the progress strip instead of pressing Next many times. No change for players.
-  Pull requests into `next` from `claude/issues-68-88-readiness-wapo57` (knk-web-app, knk-web-api, knk-workspace);
-  [smoke test](guides/form-step-conditions-and-step-jump-smoke-test.md), not run.
+  Branches `claude/issues-68-88-readiness-wapo57`, merged into `next` 2026-11-13 (knk-web-app `next` `1f848f7` (knk-web-app#12), knk-web-api `next` `31abe2d` (knk-web-api#14), knk-workspace `next` `c68df65` (#379));
+  on the trunk when the developer promotes `next`. [Smoke test](guides/form-step-conditions-and-step-jump-smoke-test.md),
+  not run. Staff guide: [§ 5.1 and § 7.1](guides/admin/staff-web-app-guide.md#51-the-steps-of-a-form-next-clicking-a-step-and-what-stops-you)
+  (docs #395). Found while documenting: #396 (every rule that could not run is listed as "game server could not be
+  reached"), #397 (hand-written condition JSON is ignored by the form, or blocks the step when it is not valid JSON).
   - **Form builder (#88):** a **Step conditions** card in the step editor: "before leaving this step" (Completion) or
     "before entering this step" (Entry), active toggle, message, and rules over the step's fields or the fields of
     earlier steps (is, is not, greater / less than, contains, is empty, is not empty; all / any with two or more
-    rules). Values keep the field's type (a tick box stores `true`, not text). Conditions are part of the draft and go
+    rules). Values keep the field's type (a tick box stores `true`, not text). A field that holds a record or a list
+    (a linked entity, a list, a material or enchantment picker, banner layers) only offers "is empty" and "is not
+    empty" (`stepConditionOperatorsFor`), and a list with every entry removed counts as empty. Conditions are part of the draft and go
     live on Publish; Publish refuses a "before leaving" condition without a message. JSON that was not made with the
     editor is shown as text and saved unchanged. A rule whose field is gone is red in the editor and a warning in
-    the configuration health panel (`StepConditionHealth` in knk-web-api).
+    the configuration health panel (`StepConditionHealth` in knk-web-api, which walks the steps in the form's step
+    order, `StepOrderJson`; an info line instead of a warning for a switched-off condition).
   - **Form wizard (#88):** Next also checks the next step's Entry conditions (they were stored but never checked). A
     failed condition is shown above the Next/Submit button as well as in the toast.
   - **Form wizard (#68):** the steps in the progress strip, and in the narrow-screen list, are buttons. Back is always

@@ -3,11 +3,12 @@
 **Status:** Living document — update in place. Describes knk-web-app `next` `e6ba115` and knk-web-api `master` `45043a7`
 (merged 2026-11-12/13; `next` adds #371, create and edit back on `knk.admin.content`, and #374, the same for the detail
 page's link buttons and in the API, knk-web-app `next` `ca1959d` and knk-web-api `next` `b65e66d`; both reach `main`
-when the developer promotes `next`). Only the builders (§ 7) were smoke-tested by the developer (2026-11-11/12, all pass); navigation,
+when the developer promotes `next`; `next` also adds step conditions in the form builder, #88, and clickable form steps,
+#68, knk-web-app `next` `1f848f7` and knk-web-api `next` `31abe2d`, § 5.1 and § 7.1, **not live-tested**). Only the builders (§ 7) were smoke-tested by the developer (2026-11-11/12, all pass); navigation,
 Entity setup without a nav link, the detail page, the relation picker, live updates, the settings pages and the
 dashboard access model with bulk delete (§ 1, § 3) are **not live-tested** yet: their smoke tests are linked in each
 section (the access model's is in closed alpha test run 2, checklist § 4c).
-**Last updated:** 2026-11-13 (Select / Change / Unlink / Add need `knk.admin.content`, the API refuses creates and edits without it, #374, docs #385); 2026-11-13 (New, Edit and the forms need `knk.admin.content` again, #371, docs #378); 2026-11-13 (dashboard per area, disabled actions with "Requires …", bulk delete, export through the
+**Last updated:** 2026-11-13 (§ 5.1 the steps of a form: clicking a step, what stops you; § 7.1 step conditions in the form builder; #68, #88, docs #395); 2026-11-13 (Select / Change / Unlink / Add need `knk.admin.content`, the API refuses creates and edits without it, #374, docs #385); 2026-11-13 (New, Edit and the forms need `knk.admin.content` again, #371, docs #378); 2026-11-13 (dashboard per area, disabled actions with "Requires …", bulk delete, export through the
 API, names-only pickers, readable refusals; #280 AM3 and #205, docs #366); 2026-11-12 (first version,
 PandiO/knk-workspace#337, #338, #340–#345)
 
@@ -193,6 +194,42 @@ have access to Category. Requires one of: …" instead of "Failed to load data".
 
 Smoke test: [relation picker and delete details](../relation-picker-and-delete-details-smoke-test.md) (not run).
 
+### 5.1 The steps of a form: Next, clicking a step, and what stops you
+
+In `next` since 2026-11-13 ([#68](https://github.com/PandiO/knk-workspace/issues/68),
+[#88](https://github.com/PandiO/knk-workspace/issues/88)); not live-tested.
+
+A form shows its steps in a strip above the fields; at phone width the label "Step x of n" opens the same steps as a
+list. You move with **Next** and **Back**, or by **clicking a step** (Tab reaches every step, Enter or Space
+opens it). A step that a display condition hides is not in the strip and is never checked.
+
+1. **Back is always allowed.** Clicking an earlier step, or Back, checks nothing and keeps what you typed.
+2. **Forward is checked.** Clicking a later step runs, for the step you are on and every step in between, the same
+   checks as Next: required fields, list sizes, field validations, the step's conditions (§ 7.1), the blocking
+   validation rules, and on a step with linked entries (for example a siege scenario's Gates) the required fields of
+   every entry. The step you clicked is not checked itself, only whether it may be opened.
+3. **The first step that fails stops you.** A dialog **Can't go to "<step>" yet** names that step and lists the
+   fields and messages. When it is the step you are on, it says `Finish "<step>" first:` and the messages are also
+   on the fields. When it is a step in between, it says `"<step>" needs your attention first:` and has a button
+   **Go to <step>**, which opens that step with the messages in place. A later step that can't be opened yet is
+   listed as `"<step>" can't be opened yet: <message>`.
+4. **Warnings don't stop you.** A validation rule that only warns lets the jump through. After you land, a dialog
+   **Now on "<step>"** lists them under "Warnings (these don't stop you)".
+5. **A check that could not run doesn't stop you either.** When a rule needs the game server and the server can't be
+   reached, the jump goes through and the same dialog lists the rule under "Not checked: the game server could not be
+   reached". Check those again on their step before you submit. (Any rule that could not run is listed under that
+   heading, also when the cause was something else, [#396](https://github.com/PandiO/knk-workspace/issues/396).)
+6. **A failed step condition stays visible.** When Next or Submit is refused by a step condition, the message shows
+   as a toast and in red **above the Next button**, where it stays until you try again or go back.
+7. **A jump saves like Next.** Landing on a later step saves your progress as a draft, the same as pressing Next.
+8. **An edit form or a resumed draft checks itself once.** When you edit an existing record or continue a saved
+   draft, the form runs the validation rules of every step once after loading, before you touch a field, so a step
+   already shows what its rules say when you open it. Nothing is saved by that run. A new, empty form doesn't do it.
+9. While the form is saving or submitting, the steps can't be clicked.
+
+Smoke test: [form step conditions and step jump](../form-step-conditions-and-step-jump-smoke-test.md) § 2, § 5, § 6
+(not run).
+
 ## 6. Live updates
 
 While you have a page open, changes made by other staff show up by themselves
@@ -252,6 +289,62 @@ Saving, publishing, duplicating, discarding and generating need `knk.admin.conte
 > Publish.
 
 Smoke test: [form and display builders](../form-display-builders-smoke-test.md) (run 2026-11-11/12, all pass).
+
+### 7.1 Step conditions
+
+In `next` since 2026-11-13 ([#88](https://github.com/PandiO/knk-workspace/issues/88)); not live-tested. Needs
+`knk.admin.content`, like the rest of the builder.
+
+A step condition says what must hold before someone filling in the form may **leave** a step or **open** it. Select a
+step in the form builder: below its Display Conditions is the **Step conditions** card. It says "No conditions", or
+for example "2 conditions, 1 off".
+
+**Add condition**, then set:
+
+1. **When.** "Before leaving this step (Next / Submit)" is checked when the user presses Next or Submit on this step.
+   "Before entering this step" is checked when the user tries to open this step from the one before it (Next, or a
+   click on a step, § 5.1). A "before entering" condition on the first step is never checked, because the form opens
+   there.
+2. **active.** Untick it to keep the condition but have the form skip it ("Switched off: the form skips this
+   condition.").
+3. **Message.** What the form says when the condition fails. A "before leaving" condition **needs** a message before
+   you can publish; a draft may be saved without one. A "before entering" condition without a message says "This step
+   can't be opened yet."
+4. **Rules.** Each rule is a field, an operator and a value. The field comes from this step, or, with **from an
+   earlier step** ticked, from any step before it. A new "before entering" condition starts with a field of an earlier
+   step, since its own step is still empty at that moment. With two or more rules a **match all / any** switch
+   appears. "In words:" under the rules reads the condition back, for example "Allow entry is ticked and Name
+   (earlier step) is not empty". A condition without rules always passes.
+
+| Field type | Operators | Value |
+|---|---|---|
+| Text, date and time | is, is not, is greater than, is less than, contains, is empty, is not empty | text |
+| Whole number, decimal | the same | a number |
+| Tick box | the same | ticked / not ticked |
+| Choice (enum) | the same | one of the field's values |
+| A linked record, a list, a material or enchantment picker, banner layers | **is empty, is not empty** only | none ("no value needed") |
+
+"is" and "is not" compare the exact value, so a tick box compares with ticked or not ticked and a number with a
+number. A list from which every entry was removed counts as empty.
+
+**Saving and publishing.** Conditions are part of the draft: **Save** stores them, and the form people fill in only
+gets them on **Publish…**. Publish refuses with `Step "<name>" has a "before leaving" condition without a message`
+until every such condition has a message.
+
+**When a rule's field is gone.** If the field a rule reads was renamed, removed or moved to a later step, the rule's
+field box turns red, shows the stored name with "(missing)" and says the rule can never hold. The **Configuration
+health** panel under the builder lists it too, under General: `Step '<name>': a "before leaving" condition reads the
+field '<field>', which is not on this step.` (a note instead of a warning when the condition is switched off). The
+panel checks your working copy, in the order the steps have in the form. It never stops a save or a publish, so fix
+the rule before you publish: a form with such an active condition can't get past that step.
+
+**Hand-written JSON.** A condition whose stored JSON was not made with this editor is shown as text in a **Condition
+JSON** box and saved unchanged. The form only understands the editor's shape: JSON in another shape is not checked
+(the condition always passes), and text that is not valid JSON always fails, so the step can't be left
+([#397](https://github.com/PandiO/knk-workspace/issues/397)). Remove such a condition and build it again with rules.
+
+Smoke test: [form step conditions and step jump](../form-step-conditions-and-step-jump-smoke-test.md) § 1–4 (not
+run).
 
 ## 8. Dialogs, questions and messages
 
@@ -321,5 +414,8 @@ get the new version at once.
 | A save answers "Creating or editing … requires … and knk.admin.content." (for example the Lootboxes **Enable/Disable** toggle or Road network's **New street**) | The API asks for the content node on every create and edit (#374); these two buttons aren't greyed out beforehand yet ([#383](https://github.com/PandiO/knk-workspace/issues/383)) | Ask for `knk.admin.content` |
 | Delete refused with **Show what uses it** | Other records still point at it | Unlink or delete those first |
 | Staff don't see a builder change | It is saved as a draft, not published | **Publish…** |
+| **Publish…** refused: `Step "…" has a "before leaving" condition without a message` | A step condition checked on Next has no message (§ 7.1) | Type the message, or remove the condition |
+| A form can't get past a step and shows a condition's message whatever you fill in | The condition reads a field that is gone or has moved (red rule in the builder, Configuration health warning), or its JSON is not valid | Fix or remove the rule in the builder (§ 7.1) and publish |
+| Clicking a step opens **Can't go to "…" yet** | A step before it is unfinished (§ 5.1) | Fix the listed fields, or **Go to <step>** |
 | A validation rule change applies before Publish | Known limit #291 | Change rules outside play hours |
 | No "Updated by …" lines | Live updates off on the server, the connection is blocked, or you lack the type's area node | Reload; check `Realtime__WebLiveUpdatesEnabled` and the proxy's `/api/hubs/web` |
