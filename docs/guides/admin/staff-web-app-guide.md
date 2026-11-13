@@ -30,7 +30,9 @@ does not repeat the feature guides (siege, game settings, menus, …); it links 
   forms, a value edited in place) and changing a record's links on its detail page need `knk.admin.content` as well
   as the type's area node ([#371](https://github.com/PandiO/knk-workspace/issues/371),
   [#374](https://github.com/PandiO/knk-workspace/issues/374), developer decisions 2026-11-13); the API refuses a create
-  or edit without it too. Editing a user (the player profile) needs only `knk.admin.user.manage`. Deleting needs
+  or edit without it too. Three types are exempt and keep only their own node: users (Edit opens the player profile,
+  `knk.admin.user.manage`), permission groups, and road profiles (edited in Road network's own card,
+  `knk.admin.road`). Deleting needs
   `knk.admin.delete` on top, exporting `knk.admin.export`, and deleting several rows at once
   `knk.admin.delete.bulk`, which only the owner hands out. Entity setup's lists, the builders and the Minecraft
   catalogue need `knk.admin.content` too. Which rank holds what, and how to give someone an area node:
@@ -336,7 +338,7 @@ get the new version at once.
 | **New** / **Edit** greyed out: "Requires knk.admin.content" | Creating and editing need the content node on top of the area node (#371) | Ask for `knk.admin.content` if you should create and edit |
 | "Staff only — This page needs the knk.admin.content permission" on a form | Entity setup, the forms and the builders need the content node. The Lootboxes tabs' New/Edit, Road network's Rename and a detail page section's edit and Create New still lead there instead of being greyed out ([#380](https://github.com/PandiO/knk-workspace/issues/380)) | Ask for `knk.admin.content` |
 | **Select…** / **Add…** / **Unlink**, a value edited in place, the Lootboxes **Enabled** toggle or **Create New Street** greyed out: "Requires knk.admin.content" | Changing a record is an edit and needs the content node (#374, #383) | Ask for `knk.admin.content` if you should change records |
-| A save answers "Creating or editing … requires … and knk.admin.content." | The API asks for the type's write node and the content node on every create and edit (#374) | Ask for `knk.admin.content` |
+| A save answers "Creating or editing … requires … and knk.admin.content." | The API asks for the type's write node and the content node on every create and edit (#374), except for users, permission groups and road profiles | Ask for `knk.admin.content` |
 | Delete refused with **Show what uses it** | Other records still point at it | Unlink or delete those first |
 | Staff don't see a builder change | It is saved as a draft, not published | **Publish…** |
 | A validation rule change applies before Publish | Known limit #291 | Change rules outside play hours |
