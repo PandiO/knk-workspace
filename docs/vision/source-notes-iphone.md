@@ -1,9 +1,6 @@
----
-status: active
-last_updated: 2026-09-13
----
-
 # Source notes — iPhone/Apple Notes export
+
+**Status:** Current · **Last updated:** 2026-11-13 (front matter converted to the header standard, PandiO/knk-workspace#305; last content update 2026-09-13)
 
 > Raw, unedited source material. This is a Word export of an Apple Notes document containing years of scattered notes, feature ideas, and mechanic sketches for Knights & Kings, spanning from the start of v1 through recent (2026) additions. It is **not** organized or vetted — content ranges from throwaway ideas to concrete mechanic specs to dated development TODOs, mixed together roughly in the order they were written, in a mix of Dutch and English.
 >

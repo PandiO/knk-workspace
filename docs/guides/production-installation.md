@@ -1,9 +1,9 @@
 # Knights and Kings — production installation guide (admin)
 
-**Status:** Draft v1 — written for review. Not yet followed on a real production host. The database, API, seed and
+**Status:** Draft · **Last updated:** 2026-11-13 (header converted to the doc header standard, LAN addresses replaced by placeholders, PandiO/knk-workspace#305)
+**State:** Draft v1 — written for review. Not yet followed on a real production host. The database, API, seed and
 web-server steps were rehearsed in a scratch environment on 2026-10-07 (see [Appendix A](#appendix-a--what-was-verified-and-how)).
 The Paper server steps and the CI/CD workflows are untested drafts.
-**Last updated:** 2026-11-12 (header and § 5.3: latest migration `AddConfigurationDrafts`; § 4.3: optional `Realtime__WebLiveUpdatesEnabled` and `Realtime__WebPermissionCacheSeconds` — #341, #345); 2026-11-10 (§ 9.5 and § 13: the [plugin configuration reference](admin/plugin-configuration.md) and its per-deploy merge checklist; stale `config.yml` notes corrected, #295); 2026-11-10 (header and § 5.3: latest migration `AddCleavingCombatValues`, #259/#306); 2026-10-26 (§nginx: `/api/hubs/` without access log; § 9.5 plugin `realtime:` block — SignalR S1, #178, feature branch); 2026-11-02 (G10, § 12.3: the KNG-232 Prometheus endpoints of the API and the plugin, both off by default, [PandiO/knk-workspace#48](https://github.com/PandiO/knk-workspace/issues/48)); 2026-10-25 (§1/§3.4 G6: RegionHttpServer is loopback + `X-API-Key` since KNG-64; §nginx: WebSocket upgrade headers for the planned SignalR hub, #66); 2026-10-24 (§4.3, §9.3, §11 F/G: KNG-205 invitations merged, the feature-branch notes replaced); 2026-10-22 (§7.7: DisplayConfiguration export/import and the priority 2/3 form seeds and display seeds merged, KNG-139); 2026-10-21 (§4.3, §9.3, §11 F/G: invite-only sign-up, admission gate and Access sync — KNG-205/KNG-218); 2026-10-21 (§4.3 mail: the KNG-206 email engine on the invitations feature branch — `Email__Transport`, relay option, `App__PublicBaseUrl`, Log guard); 2026-10-17 (§7.7: FormConfiguration export/import and bundled seeds merged, KNG-138/139; two new migrations, see the note in §7.7); 2026-10-12 (§7.7: KNG-138 on a feature branch); 2026-10-08 (security and alpha-hosting update for KNG-64)
 **Applies to:** trunk only. knk-web-api `master` `1805cf9`, knk-web-app `main`, knk-plugin `main` `c7d5a1e`; 61 EF
 migrations, the latest being `20261006193103_UniquePermissionGrantHolderNode`. Feature branches that haven't been
 merged, such as road navigation, are not covered. Re-check § 2 and the seed table manifest after each trunk merge.
@@ -95,7 +95,7 @@ what is specific to this project.
 
 | Environment | Where | Purpose | Data |
 |---|---|---|---|
-| **dev** | your PC, `DEV_SERVER_1.21.10`, dev DB `knightsandkings_dev_v2` on 192.168.50.119 | build and try features | test data plus the **authored content** (forms, menus, items) |
+| **dev** | your PC, `DEV_SERVER_1.21.10`, dev DB `knightsandkings_dev_v2` on `<nas-ip>` | build and try features | test data plus the **authored content** (forms, menus, items) |
 | **staging** (recommended later) | a second, smaller copy of production (another VPS, or the same host with other ports) | rehearse a release (migrations, seed, plugin jar) before it reaches players | a restored copy of the production backup |
 | **production** | the server(s) in this guide | the live game | real players |
 
@@ -853,7 +853,8 @@ Mixing the two (world rows without the world, or the reverse) is the one combina
 ### 7.5 Export (on your PC, against the dev DB)
 
 Create a read-only MySQL user for exports (once, as root on the dev DB), and a MySQL option file so the password is
-never typed on the command line:
+never typed on the command line. `<nas-ip>` below stands for the LAN address of the host with the dev DB (the real value is in your
+local notes, not in this public repo):
 
 ```sql
 CREATE USER 'knk_seed_reader'@'%' IDENTIFIED BY '<password>';
@@ -863,7 +864,7 @@ GRANT SELECT ON knightsandkings_dev_v2.* TO 'knk_seed_reader'@'%';
 ```ini
 # ~/.knk-dev.cnf  (chmod 600; on Windows keep it in your user profile)
 [client]
-host=192.168.50.119
+host=<nas-ip>
 user=knk_seed_reader
 password=<password>
 ```
@@ -1611,3 +1612,9 @@ throwaway credentials. Nothing touched the dev DB or any real server.
 | knk-web-app `src/config/appConfig.ts` | the compiled-in API URL (G1) |
 | knk-plugin `knk-paper/src/main/resources/config.yml`, `plugin.yml` | plugin settings, commands and permission nodes |
 | knk-plugin `.github/workflows/build.yml` | plugin CI |
+
+## Changes
+
+Header history up to 2026-11-13, as the old `Last updated` line gave it (newer changes: the header and git history):
+
+2026-11-12 (header and § 5.3: latest migration `AddConfigurationDrafts`; § 4.3: optional `Realtime__WebLiveUpdatesEnabled` and `Realtime__WebPermissionCacheSeconds` — #341, #345); 2026-11-10 (§ 9.5 and § 13: the [plugin configuration reference](admin/plugin-configuration.md) and its per-deploy merge checklist; stale `config.yml` notes corrected, #295); 2026-11-10 (header and § 5.3: latest migration `AddCleavingCombatValues`, #259/#306); 2026-10-26 (§nginx: `/api/hubs/` without access log; § 9.5 plugin `realtime:` block — SignalR S1, #178, feature branch); 2026-11-02 (G10, § 12.3: the KNG-232 Prometheus endpoints of the API and the plugin, both off by default, [PandiO/knk-workspace#48](https://github.com/PandiO/knk-workspace/issues/48)); 2026-10-25 (§1/§3.4 G6: RegionHttpServer is loopback + `X-API-Key` since KNG-64; §nginx: WebSocket upgrade headers for the planned SignalR hub, #66); 2026-10-24 (§4.3, §9.3, §11 F/G: KNG-205 invitations merged, the feature-branch notes replaced); 2026-10-22 (§7.7: DisplayConfiguration export/import and the priority 2/3 form seeds and display seeds merged, KNG-139); 2026-10-21 (§4.3, §9.3, §11 F/G: invite-only sign-up, admission gate and Access sync — KNG-205/KNG-218); 2026-10-21 (§4.3 mail: the KNG-206 email engine on the invitations feature branch — `Email__Transport`, relay option, `App__PublicBaseUrl`, Log guard); 2026-10-17 (§7.7: FormConfiguration export/import and bundled seeds merged, KNG-138/139; two new migrations, see the note in §7.7); 2026-10-12 (§7.7: KNG-138 on a feature branch); 2026-10-08 (security and alpha-hosting update for KNG-64)
