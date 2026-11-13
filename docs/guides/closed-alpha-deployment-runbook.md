@@ -33,7 +33,7 @@ procedure itself ([NAS operations access § 7](nas-ops-access.md#7-stage-b-deleg
 `knk-deploy`). The phases below describe how the stack was built.
 
 1. **Deploy gate.** List the open `documentation` issues of the features in this deploy
-   (`gh api -X GET search/issues -f q='repo:PandiO/knk-workspace is:issue is:open label:documentation'`, then match
+   (`gh api -X GET search/issues --paginate -f q='repo:PandiO/knk-workspace is:issue is:open label:documentation'`, then match
    them with the changelog entries since the last deploy). Their player and admin guide items are closed first, or the
    developer accepts the gap in the run's preparation plan
    ([global instructions § Shipping a change](../ai-agents/GLOBAL_AGENT_INSTRUCTIONS.md#shipping-a-change-documentation),
@@ -68,7 +68,8 @@ procedure itself ([NAS operations access § 7](nas-ops-access.md#7-stage-b-deleg
    `docs/reports/`, as deploy reports have been until now; a small deploy may have only the row.
 5. **GitHub Release on knk-workspace.** The developer publishes one release per deploy (sessions can't create tags,
    and knk-workspace has no Release workflow): GitHub → Releases → "Draft a new release", a new tag on the `main`
-   commit of step 4 (until #444 is decided: `alpha-YYYY-MM-DD`), title "knk-alpha YYYY-MM-DD". A session drafts the
+   commit of step 4 (until #444 is decided: `alpha-YYYY-MM-DD`, and `alpha-YYYY-MM-DD.2`, `.3` … for a second or
+   later deploy on the same UTC day, because a tag names one commit and one release), title "knk-alpha YYYY-MM-DD". A session drafts the
    notes in two parts:
 
    ```markdown
