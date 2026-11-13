@@ -1296,7 +1296,7 @@ Still open from this stage:
 
 - Change `migrations.yml`'s service image from `mysql:8.0` to `mysql:8.4` (§ 5.1).
 - **Protect trunk:** GitHub → Settings → Branches → a rule for `master`/`main` (and `next`) that requires the CI checks
-  (`CI / build-and-test`, and `Build / build` for the plugin) to pass before merging. Optional; the developer decides.
+  (`Build and test / build-and-test`, and `Build / build` for the plugin) to pass before merging. Optional; the developer decides.
 
 ### 10.4 Stage 2 — release artifacts on a tag
 

@@ -1,6 +1,6 @@
 # Agent tooling: MCP servers and the fast-check hook
 
-**Status:** Active · **Last updated:** 2026-11-13 (fast-check: which clones, JDK 25 detection, only passes cached, § 3.1, § 3.6, § 3.7, trial findings of [#331](https://github.com/PandiO/knk-workspace/issues/331)); 2026-11-12 (`add_repo` guard hook, § 4.2, developer decision 2026-11-12); 2026-11-12 (permission rule for `add_repo`, § 4, developer decision 2026-11-12); 2026-11-12 (first version, [PandiO/knk-workspace#331](https://github.com/PandiO/knk-workspace/issues/331), [DESIGN § 10](../../specs/ai-agent-workflow/DESIGN.md#10-tooling-mcp-servers-and-hooks))
+**Status:** Active · **Last updated:** 2026-11-13 (§ 1 note: Codex review comments come from the ChatGPT Codex connector app, not CI); 2026-11-13 (fast-check: which clones, JDK 25 detection, only passes cached, § 3.1, § 3.6, § 3.7, trial findings of [#331](https://github.com/PandiO/knk-workspace/issues/331)); 2026-11-12 (`add_repo` guard hook, § 4.2, developer decision 2026-11-12); 2026-11-12 (permission rule for `add_repo`, § 4, developer decision 2026-11-12); 2026-11-12 (first version, [PandiO/knk-workspace#331](https://github.com/PandiO/knk-workspace/issues/331), [DESIGN § 10](../../specs/ai-agent-workflow/DESIGN.md#10-tooling-mcp-servers-and-hooks))
 
 What knk-workspace configures for Claude Code sessions started in it: three MCP servers in `.mcp.json`, and in
 `.claude/settings.json` a Stop hook that compiles the component repos an agent changed, a permission rule that lets
@@ -18,6 +18,10 @@ files holds a secret.
 | `.gitattributes` | Keeps `*.sh` at LF line endings, so the hook also runs from a Windows checkout (Git Bash) |
 
 Project skills live next to these under `.claude/skills/`; they need no settings entry.
+
+Not configured here: the **Codex review** comments ("Codex Review Summary") on pull requests come from the ChatGPT Codex
+connector GitHub app, set up in the developer's ChatGPT Codex settings. It reviews each new pull request and comments
+only on findings. It is not part of CI (the `Build and test` workflows, [CI guide](ci.md)) and does not gate a merge.
 
 ## 2. MCP servers (`.mcp.json`)
 
