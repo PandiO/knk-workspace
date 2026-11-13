@@ -4,6 +4,88 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Plugin parts of UX chains 2 and 3 into `next`** (PandiO/knk-workspace#184, #31, #34, #261, #264, #269) — knk-plugin,
+  knk-web-api and knk-workspace branches `claude/plugin-chains-into-next` (PRs into `next`, not merged; developer's go
+  2026-11-13). The plugin branch merges chain 3 P3 `claude/temp-region-drafts-269` (which contains P1, R3, R2 and R1)
+  and P2 `claude/realtime-client-flaky-264`; the API branch merges P3's API branch (contains R3). The API parts of #184
+  and #261 are on `master` since 2026-11-12. **Deploy order:** back up the database, deploy the API and run
+  `dotnet ef database update` (one new migration here, `AddTempRegionReleases`), then the plugin. One entry per feature
+  follows.
+- **GDPR account erasure reaches the game server at once (realtime S5)**
+  ([PandiO/knk-workspace#184](https://github.com/PandiO/knk-workspace/issues/184), chain 2 R1; plugin part). With
+  `realtime.enabled: true` the plugin acts on the API's `AccountErased` push: an online player is kicked with a neutral
+  message (a siege vault they hold is given back first, once), then everything the server keeps about the account is
+  deleted (offline security store, user and permission caches, discovery and statistics spools, PM-log queue and local
+  log lines, offline siege vaults, hub-outage return point). Minecraft's own player files are listed for the owner, not
+  deleted. Every hub (re)connect catches up through `GET api/privacy/erasures?since=`. With realtime off nothing new
+  runs; the hourly offline-cache re-check stays the backstop. Checklist: [realtime smoke test § S5](guides/realtime-smoke-test.md);
+  design: [DESIGN §7.5](specs/realtime-signalr/DESIGN.md).
+  - **Admin steps:** API part already on `master` (migration `AddPrivacyErasureEvents`, optional
+    `Privacy__ErasureFeedUuidRetentionDays`, default 35). Plugin: new optional block under `realtime:` in `config.yml`
+    (defaults below; a missing block uses them). The push needs `realtime.enabled: true` and `api.auth.type: apikey`.
+    For the smoke test only: `Privacy__GraceDays=0` on the dev API (put it back afterwards).
+
+    ```yaml
+    realtime:
+      erasure:
+        kick-message: "Your account data has been deleted."
+        settle-seconds: 2          # wait between kick and deletion, 0-30
+        feed-file: "erasure-feed.json"
+        minecraft-files-list: "erasure-minecraft-files.txt"
+    ```
+- **Siege startup work retried when the API is back, also with the realtime hub off**
+  ([PandiO/knk-workspace#31](https://github.com/PandiO/knk-workspace/issues/31), chain 2 R2; plugin only). When the API
+  was down at server start, the siege's startup-only work (abort the previous run's unfinished matches, restore gates a
+  crash left locked, fetch the runtime config with its lobbies and the title brackets) runs again by itself once the API
+  connectivity turns UP, in that order, and on a fallback retry (30 s, 1 min, 2 min, then every 5 min) while anything is
+  left and the API is not DOWN. `/siege admin reload` is no longer needed. With the hub on, the reconnect and the UP
+  transition share one runner (each step runs once). Checklist: [API outage smoke test § #31](guides/api-outage-smoke-test.md).
+  - **Admin steps:** none (no migration, no setting, no `config.yml` key); deploy the plugin.
+- **Lootbox spawn areas keep a region drawn in the web form**
+  ([PandiO/knk-workspace#34](https://github.com/PandiO/knk-workspace/issues/34), chain 2 R3; API and plugin). A region
+  drawn through the LootboxSpawnArea form's region task is renamed from `tempregion_worldtask_<n>` to
+  `lootbox_area_<id>` when the area is saved and stretched to the world's full build height; before, the 14-day
+  temp-region cleanup deleted it and the area stopped spawning. Re-running the region step replaces the previous region
+  in place. The cleanup also asks the lootbox areas before deleting a temp region, `POST /api/Regions/finalize-temp-names`
+  renames temp-named areas, and area names `area_<number>` are reserved. See
+  [managed-worldguard-regions.md](architecture/managed-worldguard-regions.md) §7 and the
+  [smoke test](guides/lootbox-area-region-smoke-test.md).
+  - **Admin steps:** deploy API and plugin together (no migration, no setting, no `config.yml` key). Import form seed
+    `LootboxSpawnArea - Default (seed v2)` (`Data/FormConfigurationSeeds/LootboxSpawnArea.json`). Areas still on a temp
+    name: run `POST /api/Regions/finalize-temp-names` once.
+- **Kit "Grant" from the web app reaches the player in game**
+  ([PandiO/knk-workspace#261](https://github.com/PandiO/knk-workspace/issues/261), chain 3 P1; plugin part). The plugin
+  hands a web grant's items over with the `/kit give` placement: online within seconds (realtime push, or the 2 s poll
+  with realtime off), offline on the next join, after a siege when granted during one. It takes each delivery at the
+  API before placing it, so a grant is never handed over twice. `/kit give` in game is unchanged; earlier web grants
+  are not delivered retroactively (grant again). Design [kits DESIGN §4.7](specs/kits/DESIGN.md); checklist
+  [kit grant delivery smoke test](guides/kit-grant-delivery-smoke-test.md).
+  - **Admin steps:** API part already on `master` (migration `AddKitClaimDelivery`); deploy the plugin. No setting, no
+    `config.yml` key.
+- **Realtime client: flaky stop test fixed** ([PandiO/knk-workspace#264](https://github.com/PandiO/knk-workspace/issues/264),
+  chain 3 P2; plugin). `RealtimeClient.stop()` asks the transport to close before it reports STOPPED, which removes the
+  race behind the flaky `RealtimeClientTest.stopClosesAndNeverReconnects`. No visible change in game.
+  - **Admin steps:** none.
+- **Temp regions of abandoned drafts go within minutes, not after 14 days**
+  ([PandiO/knk-workspace#269](https://github.com/PandiO/knk-workspace/issues/269), chain 3 P3; API and plugin). A region
+  drawn through a form's region task (`tempregion_worldtask_<n>`) is released when its draft is deleted in Saved
+  Progress, when its task is cancelled, fails or expires after a game server held it, or when the world-task sweep
+  removes its session; the game server removes it every few minutes once no domain, sub-region, lootbox area, road edge
+  or draft names it and it isn't renamed. The daily 14-day cleanup stays the backstop. See
+  [managed-worldguard-regions.md](architecture/managed-worldguard-regions.md) §7 and the
+  [world-task smoke test § 7](guides/world-task-hardening-smoke-test.md#7-temp-regions-of-abandoned-drafts-269-pr-into-next-not-merged).
+  - **Admin steps:** API first: `dotnet ef database update` (additive migration `AddTempRegionReleases`, one table);
+    optional `WorldTasks__TempRegionReleaseGraceMinutes` (5) and `WorldTasks__TempRegionReleaseKeepDays` (30). Then the
+    plugin, with one new optional key (a plugin on an API without the route logs a warning per pass and removes
+    nothing; set it to 0 until the API is deployed):
+
+    ```yaml
+    regions:
+      temp-retention:
+        days: 14                        # unchanged
+        release-interval-minutes: 5     # new: pass that removes released temp regions; 0 = off
+    ```
+
 - **Staff may freeze and unfreeze players** (PandiO/knk-workspace#367) — developer decision 2026-11-13: Staff helps
   players and enforces the rules (freeze, kick, ban, balances) and doesn't manage the game core. knk-web-api and
   knk-workspace branches `claude/staff-freeze-nodes-367`, not merged.
