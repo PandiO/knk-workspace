@@ -44,6 +44,7 @@ This documentation covers:
 - [ARCHITECTURE.md](ARCHITECTURE.md) - System architecture and data flow
 - [HANDLER_DEVELOPMENT_GUIDE.md](HANDLER_DEVELOPMENT_GUIDE.md) - Creating custom task handlers
 - [API_CONTRACT.md](API_CONTRACT.md) - Complete API endpoint reference
+- [WG_REGION_ID_WORLD_TASK_REQUIREMENTS.md](WG_REGION_ID_WORLD_TASK_REQUIREMENTS.md) - Requirements of the `WgRegionId` task (from legacy CreationStageRegion), moved from knk-plugin `spec/` (PandiO/knk-workspace#304)
 
 ## Quick Start
 

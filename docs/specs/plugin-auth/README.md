@@ -5,6 +5,8 @@
 
 ---
 
+> **2026-11-13:** the plugin-side Phase 6 files, [PHASE_6_COMPLETION_REPORT.md](PHASE_6_COMPLETION_REPORT.md) and [PHASE_6_MANUAL_TESTING_CHECKLIST.md](PHASE_6_MANUAL_TESTING_CHECKLIST.md), moved here from knk-plugin `docs/ai/plugin-auth/`; the Phase 1 status files are in [archive/knk-plugin](../../archive/knk-plugin/) (PandiO/knk-workspace#304).
+
 ## Documentation Structure
 
 The plugin-auth feature is now fully documented across 4 interconnected guides:
