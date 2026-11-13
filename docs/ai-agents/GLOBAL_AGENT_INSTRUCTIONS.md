@@ -157,15 +157,16 @@ branches start from the default branch, pull requests target it, and only the de
    pass, for every risk tier, through the pull request with a merge commit. **Outside a chain** (a one-off fix, a
    tweak, a docs session), the session that opened the pull request merges it into `next` itself, the same way, once
    all of these hold (developer decision 2026-11-13; it replaces the 2026-11-12 rule that such pull requests wait for
-   the developer): CI is green on its head; every Codex finding is handled (rule 4); the issue carries a `tier:` label;
+   the developer): CI is green on its head; every Codex finding is handled (rule 4); the issue carries a `tier:` label (a `documentation`
+   issue counts as `tier:1` and gets that label when it is created);
    `tier:3` work is behind a flag that is off by default (rule 6); the essential docs ship with it (Shipping a change).
    The developer stays the gate at promotion (rule 5), not at the merge into `next`. A merge into `next` does not close
    the issue; it stays `status:in-review` until the developer promotes `next`.
 4. **Codex review findings are handled before a merge into `next`** (developer decision 2026-11-13). The ChatGPT
    Codex connector app reviews every pull request and leaves inline findings (P1, P2, …). Before merging, the session
    that merges (link, coordinator or the session that opened the pull request) reads every finding. Codex reviews
-   when a pull request is opened or marked ready, not on later pushes; after pushes that change code, comment
-   `@codex review` and wait for that review before merging. For each finding, the session fixes what is real and in
+   when a pull request is opened or marked ready, not on later pushes; after any push that changes the pull
+   request's content (code or docs), comment `@codex review` and wait for that review before merging. For each finding, the session fixes what is real and in
    scope, or answers on the finding's thread why not (not a bug, or out of scope with the issue it filed), and resolves
    the thread. A P1 finding blocks the merge until it is fixed or
    the developer decides. Findings are listed in the link's report block.
@@ -262,7 +263,7 @@ Until the branch model applies it means the merge into the default branch, and a
 
 1. Close the feature issue as completed and drop its status label, as usual.
 2. If the docs impact list has anything not done before merge, create one `documentation` sub-issue under the
-   feature issue, titled `Docs: <feature>`. Copy the list into it, link the merged commits and PRs, and say which
+   feature issue, titled `Docs: <feature>`, labelled `documentation` and `tier:1`. Copy the list into it, link the merged commits and PRs, and say which
    items are player/admin guides (these gate deploys, see below).
 3. **Start a new session for it right away.** Use `create_session` (claude-code-remote) with `source_url`
    `https://github.com/PandiO/knk-workspace` and the prompt in

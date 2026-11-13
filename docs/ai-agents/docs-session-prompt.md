@@ -31,7 +31,10 @@ knk-web-api master, knk-web-app main, knk-plugin main).
 4. Work on branch claude/docs-<docs issue> from knk-workspace <base: next when the code is in next, else main>. When
    done (docs only, describing merged behaviour): with base next, take next's updates by merge, never rebase, open a
    docs PR into next and merge it yourself with a merge commit once its checks pass and every Codex review finding
-   on it is fixed or answered on its thread (global instructions, "Branches" rules 3 and 4), so the docs reach main with the feature's promotion; with
+   on it is fixed or answered on its thread (global instructions, "Branches" rules 3 and 4; the docs issue counts as
+   tier:1), so the docs reach main with the feature's promotion. Changes to agent workflow files (.claude/,
+   .mcp.json, docs/ai-agents/, AGENTS.md, CLAUDE.md) don't go into that PR: put them on their own branch from main with
+   a PR into main, merge it after the same checks, then merge main into next by a PR ("Branches" rule 10); with
    base main, rebase it on main and merge it into main, as before. Close the docs issue as completed with a comment
    that lists the files, and move the tracker row straight into docs/reports/sessions-archive/<YYYY-MM>.md (current
    month, newest first), not to Recently completed.
