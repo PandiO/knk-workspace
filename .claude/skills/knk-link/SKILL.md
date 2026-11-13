@@ -63,7 +63,11 @@ something different from this skill, the prompt and charter win.
    proposal, not a silent change. Details the documents leave open: take the most reversible default and log it as an
    agent decision (§ 5).
 3. **Branches:** push only to your link's branch. Never push to a default branch or to `next`, never merge into them,
-   never force-push, never delete branches. The one exception is chain bookkeeping on knk-workspace `main` (§ 3.5).
+   never force-push, never delete branches. The exceptions are chain bookkeeping on knk-workspace `main` (§ 3.6) and changes to agent workflow
+   files (`.claude/`, `.mcp.json`, `docs/ai-agents/`, `AGENTS.md`, `CLAUDE.md`): those go on a separate branch from
+   the repo's default branch, with their own PR into the default branch (global instructions, "Branches" rule 11).
+   You open it and handle its Codex findings like your other PRs and list it in your report block; the coordinator
+   merges it (coordinator skill § 7.10). Don't merge it yourself.
 4. **Behaviour-neutral where the charter says so.** Big or risky work (normally `tier:3`) goes behind the charter's
    config flag, off by default, so it is harmless in `next`.
 5. **Migrations:** only where the charter allows, at most one per link, additive, made with `dotnet ef migrations add`.
@@ -91,17 +95,24 @@ something different from this skill, the prompt and charter win.
    `.github/pull_request_template.md` filled in: Summary, Testing (baseline → result), Docs impact, Admin steps,
    Changelog. `Closes PandiO/knk-workspace#<sub-issue>` in exactly one PR (the main repo of the link, normally
    knk-workspace or the first one); `Part of PandiO/knk-workspace#<sub-issue>` in the others, so an early merge does
-   not close the issue. Do not merge. Check that CI on the PR goes green where CI exists; a red run you caused is
-   yours to fix.
-4. **Sub-issue:** a comment with branches, heads, PRs, tests vs baseline and decisions to review; swap
+   not close the issue. Do not merge (the coordinator does). Check that CI on the PR goes green where CI exists; a red
+   run you caused is yours to fix.
+4. **Codex findings** (global "Branches" rule 4, developer decision 2026-11-13): once the ChatGPT Codex connector has
+   reviewed the PR (its "Codex Review Summary" comment shows the review completed for your head commit), read every
+   inline finding: fix what is real and in scope and push; otherwise answer on the finding's thread why not (not a bug,
+   or out of scope with the issue you filed); resolve the thread. A P1 finding you cannot fix is a blocker. List the
+   findings and what you did in your report block. Codex reviews only when a PR is opened or marked ready (or on a
+   `@codex review` comment), not on every push: after any push that changes the PR's content (code or docs), comment
+   `@codex review` and handle the new findings before you finish.
+5. **Sub-issue:** a comment with branches, heads, PRs, tests vs baseline and decisions to review; swap
    `status:in-progress` for `status:in-review`.
-5. **Report block** in the chain's progress report on knk-workspace `main`: append it under "## 4. Link blocks" in the
+6. **Report block** in the chain's progress report on knk-workspace `main`: append it under "## 4. Link blocks" in the
    format of the link block in `.claude/skills/knk-coordinator/report-template.md`, and update your summary row.
    Commit only that file on top of `origin/main` (a separate detached worktree) and push `HEAD:main`; on a conflict
    fetch, rebase that one commit and keep both sides. Do not edit the sessions board unless your prompt says so;
    when it does, a finished row moves straight into `docs/reports/sessions-archive/<YYYY-MM>.md` (current month,
    newest first), not to "Recently completed".
-6. **Final message** to the coordinator, numbered: PR links, heads per repo, tests baseline → result, decisions,
+7. **Final message** to the coordinator, numbered: PR links, heads per repo, tests baseline → result, decisions,
    blockers, what the developer must do. Then stop; do not start another link.
 
 ## 4. Blockers

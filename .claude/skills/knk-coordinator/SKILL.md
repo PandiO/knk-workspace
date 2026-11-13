@@ -118,10 +118,15 @@ All of these must hold:
 8. Risky or big work (normally `tier:3`) sits behind a config flag that is off by default (DESIGN § 5.3), or the
    charter says why not.
 9. The sub-issue is `status:in-review` with a comment linking the branches and PRs.
+10. **Codex findings handled** (global "Branches" rule 4, developer decision 2026-11-13): every inline finding of the
+    ChatGPT Codex connector on each PR's current head is fixed by the link or answered on its thread with the reason
+    (not a bug, or out of scope with the issue filed), and resolved; the link block lists them. A P1 finding blocks the
+    merge until it is fixed or the developer decides. If the link left findings open, send it back (or fix the small
+    ones yourself before merging) rather than merging over them.
 
 ## 7. Merging into `next` (only once § 1.3 says the branch model applies)
 
-1. Merge as soon as § 6 holds and CI is green, **for every tier** (DESIGN § 5.2). The developer's review gates the
+1. Merge as soon as § 6 holds (Codex findings included, § 6.10) and CI is green, **for every tier** (DESIGN § 5.2). The developer's review gates the
    promotion of `next` to trunk, not this merge.
 2. Merge the link's PR into `next` through the PR with a merge commit (GitHub MCP `merge_pull_request`,
    `merge_method` `merge`), never squash or rebase (developer decision 2026-11-12). A PR into `next` does not close its
@@ -132,7 +137,7 @@ All of these must hold:
    fix link before anything else merges.
 5. A change the developer rejects is reverted (`git revert -m 1 <merge commit>` on a branch, PR into `next`) or fixed
    in `next` before the release.
-6. Never merge into a trunk, never push to `next` except through these merges, never force-push, never delete
+6. Never merge into a trunk (except an agent-workflow-file PR, § 7.10), never push to `next` except through these merges, never force-push, never delete
    branches. Promotion of `next` to trunk (merge plus release tag) is the developer's, or the manager's on the
    developer's explicit go.
 7. Stacking a link on another feature's unmerged branch is the exception, for uncertain work, and only when the charter
@@ -142,6 +147,11 @@ All of these must hold:
    start: the `documentation` sub-issue and the docs session. The docs session merges its own docs PR into knk-workspace
    `next` after its checks (developer decision 2026-11-12); you do not merge it. The feature issue is closed only when
    the developer promotes `next` to trunk.
+10. **Agent-workflow-file PRs from a link** (`.claude/`, `.mcp.json`, `docs/ai-agents/`, `AGENTS.md`, `CLAUDE.md`)
+    target the default branch, not `next` (global "Branches" rule 11). Check them like the link's other PRs (§ 6,
+    Codex findings included), merge them into the default branch with a merge commit, then open a pull request from
+    the default branch into `next` and merge it the same way, so `next` carries the same rules. This is the one merge
+    into a default branch you make; promotion of `next` stays the developer's.
 
 ## 8. Blockers
 
