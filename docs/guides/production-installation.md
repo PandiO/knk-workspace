@@ -1281,7 +1281,7 @@ Roll it out in three stages. Each one is useful on its own.
 ### 10.3 Stage 1 — CI on every push and PR (done)
 
 Stage 1 is in place since 2026-11-13 (PandiO/knk-workspace#328). All of these run on every push, pull request and
-manual dispatch; [continuous integration](developer/continuous-integration.md) has the details, the known-failure
+manual dispatch; [continuous integration](developer/ci.md) has the details, the known-failure
 convention and how to read a run:
 
 - **knk-web-api** `.github/workflows/ci.yml`: .NET 8 restore, build and

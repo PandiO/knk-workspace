@@ -40,7 +40,7 @@ $checklist = @"
 
 🔨 DURING IMPLEMENTATION
 ────────────────────────────────────────────────────────────────
-[ ] Followed Step 4.2 prompt template from AI_FEATURE_IMPLEMENTATION_WORKFLOW.md
+[ ] Followed Step 4.2 prompt template from docs/archive/AI_FEATURE_IMPLEMENTATION_WORKFLOW.md
 [ ] Referenced REQUIREMENTS.md and SPEC.md in implementation
 [ ] Checked existing code patterns in each repository
 [ ] No compilation errors reported
@@ -87,7 +87,7 @@ $checklist = @"
 ════════════════════════════════════════════════════════════════
 
 📚 Reference Documentation:
-   - AI_FEATURE_IMPLEMENTATION_WORKFLOW.md (Step 4, Step 5)
+   - docs/archive/AI_FEATURE_IMPLEMENTATION_WORKFLOW.md (Step 4, Step 5)
    - GIT_COMMIT_CONVENTIONS.md (commit format)
    - docs/features/$FeatureName/IMPLEMENTATION_ROADMAP.md (Phase $Phase details)
    - docs/CODEMAP.md (architecture reference)

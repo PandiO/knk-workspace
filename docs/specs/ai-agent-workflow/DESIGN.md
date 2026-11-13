@@ -1,6 +1,6 @@
 # AI agent workflow: roles, branches, skills and testing
 
-**Status:** Decided 2026-11-12 (developer, voice discussion) · **Last updated:** 2026-11-12
+**Status:** Decided 2026-11-12 (developer, voice discussion) · **Last updated:** 2026-11-13 (§ 9.3 done, PandiO/knk-workspace#362); 2026-11-12
 
 This design adds a delegation layer (intake, design, manager and coordinator roles), a `next` integration branch with
 risk tiers, project skills in knk-workspace, and CI as the gate agents must pass. It builds on the
@@ -174,7 +174,8 @@ Aims:
 1. Delete the empty `docs/ai-agents/AGENT-GUIDE.md` and `docs/ai-agents/guardrails.md`.
 2. Replace `.github/copilot-instructions.md`, `.github/instructions/*` and `.github/prompts/scaffold-entity.prompt.md`
    (old `Repository/` paths, missing `docs/ai/ENTITY_SCAFFOLD_CHECKLIST.md`) with the code-recipe skills (§ 3.2.7).
-3. Retire `guides/developer/AI_FEATURE_IMPLEMENTATION_WORKFLOW.md` to `archive/` once the skills exist.
+3. Retire `guides/developer/AI_FEATURE_IMPLEMENTATION_WORKFLOW.md` to `archive/` once the skills exist. Done
+   2026-11-13 ([PandiO/knk-workspace#362](https://github.com/PandiO/knk-workspace/issues/362)).
 
 ## 10. Tooling: MCP servers and hooks
 

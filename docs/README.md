@@ -1,6 +1,6 @@
 # Knights & Kings documentation
 
-This is the documentation for the Knights & Kings project, covering game design/vision, technical architecture, specs, guides, and historical/analysis material. See [ai-agents/GLOBAL_AGENT_INSTRUCTIONS.md](ai-agents/GLOBAL_AGENT_INSTRUCTIONS.md) for how AI agents should work in this repo, and [ACTIVE_SESSIONS.md](ACTIVE_SESSIONS.md) for the live cross-repo work tracker.
+This is the documentation for the Knights & Kings project, covering game design/vision, technical architecture, specs, guides, and historical/analysis material. See [ai-agents/GLOBAL_AGENT_INSTRUCTIONS.md](ai-agents/GLOBAL_AGENT_INSTRUCTIONS.md) for how AI agents should work in this repo, [ACTIVE_SESSIONS.md](ACTIVE_SESSIONS.md) for the live cross-repo work tracker and the [sessions archive](reports/sessions-archive/README.md) for its finished rows.
 
 ## Start here
 
@@ -10,7 +10,8 @@ This is the documentation for the Knights & Kings project, covering game design/
 | What shipped and when? | [Project changelog](CHANGELOG.md) |
 | How to keep specs, technical docs, player/admin guides and the changelog current? | [Documentation maintenance guide](guides/developer/DOCUMENTATION_MAINTENANCE.md) |
 | How does the system fit together? | [System overview](architecture/system-overview.md), [API architecture](architecture/web-api-architecture.md), [web-app architecture](architecture/web-app-architecture.md), [plugin permission checks and command visibility](architecture/plugin-permission-checks.md) |
-| How to implement and document a feature? | [Feature specs](specs/README.md), [developer code map](guides/developer/CODEMAP.md), [active sessions](ACTIVE_SESSIONS.md) |
+| How to implement and document a feature? | [Feature specs](specs/README.md), [developer code map](guides/developer/CODEMAP.md), [active sessions](ACTIVE_SESSIONS.md), [CI and known failures](guides/developer/ci.md) |
+| How do AI agents work here (chains, tooling)? | [Global agent instructions](ai-agents/GLOBAL_AGENT_INSTRUCTIONS.md), the session-chain skills [`knk-coordinator`](../.claude/skills/knk-coordinator/SKILL.md) and [`knk-link`](../.claude/skills/knk-link/SKILL.md), [agent tooling](guides/developer/agent-tooling.md) (MCP servers, hooks, `add_repo`), [sessions archive](reports/sessions-archive/README.md) |
 | How to play or administer a feature? | [Guides and coverage map](guides/README.md), [commands](guides/users/commands.md), [Siege authoring](guides/authoring-a-siege-scenario.md) |
 
 The feature register distinguishes intent, implementation and live verification. Historical reports in `reports/` may predate current trunk and should not be used as current status without checking code.
@@ -22,9 +23,9 @@ The feature register distinguishes intent, implementation and live verification.
 - **`guides/`** — user-facing and developer-facing how-to guides.
 - **`specs/`** — per-feature design/implementation specs, one subfolder per feature area.
 - **`backlog/`** — outstanding work: bugs, epics, stories.
-- **`reports/`** — dated, point-in-time audit/scan/inventory output. Never overwritten — a new scan is a new dated file, not an edit to an old one.
+- **`reports/`** — dated, point-in-time audit/scan/inventory output. Never overwritten — a new scan is a new dated file, not an edit to an old one. `reports/sessions-archive/` holds the finished rows of `ACTIVE_SESSIONS.md`, one file per month.
 - **`archive/`** — superseded or historical material kept for reference/provenance, not actively maintained. `vision-history/` specifically holds the evolution of the game's concept documents (2017–2020), kept distinct from the current `vision/vision.md`.
-- **`ai-agents/`** — instructions for AI coding agents working in this repo and its component repos. The project skills for session chains (`knk-coordinator`, `knk-link`) are in `.claude/skills/` at the repo root; see the global instructions, "Session chains".
+- **`ai-agents/`** — instructions for AI coding agents working in this repo and its component repos. The project skills for session chains (`knk-coordinator`, `knk-link`) are in `.claude/skills/` at the repo root; see the global instructions, "Session chains". The MCP servers and hooks for Claude Code sessions are described in [agent tooling](guides/developer/agent-tooling.md).
 
 ## Authority order
 
