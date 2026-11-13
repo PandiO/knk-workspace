@@ -7,8 +7,10 @@ This is a human-readable record of capabilities merged into the V3 default branc
 - **API: creates, edits and link changes of dashboard types need `knk.admin.content`** (PandiO/knk-workspace#374,
   follow-up of #371) — developer decision 2026-11-13: "Area staff should not be able to change forms at this point.
   They only work with the content available." The API now says what the web app says since #371. knk-web-api and
-  knk-web-app branches `claude/api-writes-need-content-374`; in `next` when their pull requests are merged, on the
-  trunk when the developer promotes `next`.
+  knk-web-app branches `claude/api-writes-need-content-374`, merged into `next` 2026-11-13 (knk-web-api#15 `b65e66d`,
+  knk-web-app#13 `ca1959d`); on the trunk when the developer promotes `next`. Guides: [dashboard access admin guide
+  § 2, § 4, § 8](guides/admin/dashboard-access-admin-guide.md), [staff web app guide](guides/admin/staff-web-app-guide.md)
+  (docs #385).
   - **API:** the primary create (`POST`) and update (`PUT {id}`) of every dashboard type need the type's write node
     **and** `knk.admin.content` (one rule in `DashboardAccess`, enforced by `RequireDashboardChange`); without it 403
     `NoWriteAccess` "Creating or editing Town requires knk.admin.world and knk.admin.content.". The detail page's

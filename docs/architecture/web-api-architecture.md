@@ -1,7 +1,7 @@
 # knk-web-api — Architecture
 
 **Status:** Living document — update in place as the code changes
-**Last updated:** 2026-11-13 (§5.1/§5.2 merged: AM1+AM2 in `master` `bc97b7d`, AM3 in `45043a7`; §5.1 configuration deletes need `knk.admin.delete`, bulk-delete refusal codes — docs #366); 2026-11-12 (§5.3–§5.5 and §6 web live updates merged 2026-11-12 in `master` `bc97b7d`, §6 web audience per area node since AM1 — docs #341, #343–#345); 2026-11-06 (§6: `Realtime:WebLiveUpdatesEnabled` switch, #183); 2026-11-05 (§6: web live updates, `EntityChanged`/`PresenceChanged` gated per node — #183, branch `claude/realtime-web-live-183`); 2026-11-09 (§5.5 form and display builder drafts, Publish and Duplicate, #71 — branch `claude/builders-71`, not merged); 2026-11-09 (§5.4 what still uses a record, rows behind a refused delete's "Show details", #44 — branch `claude/picker-details-191-44`, not merged); 2026-11-09 (§5.3 relationships for the entity detail page, #188 — branch `claude/entity-detail-188-189`, not merged); 2026-11-08 (§5.2 read gating per area and lookups, AM2 of #280 — branch `claude/dashboard-access-280`, not merged); 2026-11-08 (§5.1 dashboard access model, AM1 of #280 — branch `claude/dashboard-access-280`, not merged); 2026-11-05 (#239 offer permission check, #240 Send again merged); 2026-11-04 (#239, #240 on a feature branch); 2026-11-02 (§6: config and entity events, `ReportWorlds` — #182, branch `claude/realtime-signalr`); 2026-11-02 (§6: world tasks over the hubs, presence endpoints — #181, branch `claude/realtime-signalr`); 2026-11-01 (world-task state machine, task codes, sweep, tasks anchored to the draft — #180, branch `claude/world-task-hardening`); 2026-10-26 (§6: realtime hubs, #178 S1 and #179 S2 on a feature branch); 2026-09-18 (based on a full read-only code scan; see `docs/reports/web-api-scan-2026-09-18.md` for the raw findings this doc summarizes); spot edits 2026-10-12 (FormField selection limits, KNG-164; created-entity provenance, reference check and DELETE 409 filter, KNG-162; FormConfiguration export/import and bundled seeds, KNG-138; the first seeds and stronger seed tests, KNG-139); 2026-10-26 (drafts and workflow sessions owned by the logged-in caller, PandiO/knk-workspace#186); 2026-10-17 (form wizard chain merged to `master`; smoke-test follow-ups: refusal reasons, KNG-169; FormConfiguration delete, KNG-172; region rule messages, KNG-173; validation result metadata, GateStructure house number, rule dependency path on update); 2026-10-22 (KNG-139 priority 2/3 seeds and DisplayConfiguration export/import; KNG-195 form submit fixes; gate warp settings, KNG-229); 2026-10-23 (step condition / field validation `IsActive`, KNG-186); 2026-10-23 (validation result log and validate-batch, KNG-269); 2026-10-25 (§6 plugin auth, health probe and RegionHttpServer callers corrected from the SignalR inventory); 2026-11-04 (ConditionalRequired ConfigJson contract, `FieldValidationService` removed, PandiO/knk-workspace#99)
+**Last updated:** 2026-11-13 (§5.1/§5.3: create, edit and link changes need the write node and `knk.admin.content`, `ChangeNodes`, `RequireDashboardChange`, #374 in `next` `b65e66d`, docs #385); 2026-11-13 (§5.1/§5.2 merged: AM1+AM2 in `master` `bc97b7d`, AM3 in `45043a7`; §5.1 configuration deletes need `knk.admin.delete`, bulk-delete refusal codes — docs #366); 2026-11-12 (§5.3–§5.5 and §6 web live updates merged 2026-11-12 in `master` `bc97b7d`, §6 web audience per area node since AM1 — docs #341, #343–#345); 2026-11-06 (§6: `Realtime:WebLiveUpdatesEnabled` switch, #183); 2026-11-05 (§6: web live updates, `EntityChanged`/`PresenceChanged` gated per node — #183, branch `claude/realtime-web-live-183`); 2026-11-09 (§5.5 form and display builder drafts, Publish and Duplicate, #71 — branch `claude/builders-71`, not merged); 2026-11-09 (§5.4 what still uses a record, rows behind a refused delete's "Show details", #44 — branch `claude/picker-details-191-44`, not merged); 2026-11-09 (§5.3 relationships for the entity detail page, #188 — branch `claude/entity-detail-188-189`, not merged); 2026-11-08 (§5.2 read gating per area and lookups, AM2 of #280 — branch `claude/dashboard-access-280`, not merged); 2026-11-08 (§5.1 dashboard access model, AM1 of #280 — branch `claude/dashboard-access-280`, not merged); 2026-11-05 (#239 offer permission check, #240 Send again merged); 2026-11-04 (#239, #240 on a feature branch); 2026-11-02 (§6: config and entity events, `ReportWorlds` — #182, branch `claude/realtime-signalr`); 2026-11-02 (§6: world tasks over the hubs, presence endpoints — #181, branch `claude/realtime-signalr`); 2026-11-01 (world-task state machine, task codes, sweep, tasks anchored to the draft — #180, branch `claude/world-task-hardening`); 2026-10-26 (§6: realtime hubs, #178 S1 and #179 S2 on a feature branch); 2026-09-18 (based on a full read-only code scan; see `docs/reports/web-api-scan-2026-09-18.md` for the raw findings this doc summarizes); spot edits 2026-10-12 (FormField selection limits, KNG-164; created-entity provenance, reference check and DELETE 409 filter, KNG-162; FormConfiguration export/import and bundled seeds, KNG-138; the first seeds and stronger seed tests, KNG-139); 2026-10-26 (drafts and workflow sessions owned by the logged-in caller, PandiO/knk-workspace#186); 2026-10-17 (form wizard chain merged to `master`; smoke-test follow-ups: refusal reasons, KNG-169; FormConfiguration delete, KNG-172; region rule messages, KNG-173; validation result metadata, GateStructure house number, rule dependency path on update); 2026-10-22 (KNG-139 priority 2/3 seeds and DisplayConfiguration export/import; KNG-195 form submit fixes; gate warp settings, KNG-229); 2026-10-23 (step condition / field validation `IsActive`, KNG-186); 2026-10-23 (validation result log and validate-batch, KNG-269); 2026-10-25 (§6 plugin auth, health probe and RegionHttpServer callers corrected from the SignalR inventory); 2026-11-04 (ConditionalRequired ConfigJson contract, `FieldValidationService` removed, PandiO/knk-workspace#99)
 
 ## 1. Stack & shape
 
@@ -83,7 +83,8 @@ deploy the API before the web app. **Not live-tested:** the [smoke test](../guid
 in closed alpha test run 2 (checklist § 4c). Admin view: [dashboard access admin guide](../guides/admin/dashboard-access-admin-guide.md).
 
 - **Nodes** (`StaffPermissions`): `Delete = knk.admin.delete` (delete one), `DeleteBulk = knk.admin.delete.bulk`,
-  `Export = knk.admin.export`. The area nodes are unchanged and still mean view, create and edit in their area:
+  `Export = knk.admin.export`. The area nodes mean view in their area, and create and edit together with
+  `knk.admin.content` since #374 (see **Create, edit and link changes** below):
   `knk.admin.content`, `knk.admin.world`, `knk.kit.manage`, `knk.admin.lootbox.manage`, `knk.siege.admin.manage`,
   `knk.admin.road`, `knk.admin.user.manage` (`knk.admin.user.perm` for permission-group writes).
 - **Registry** `Attributes/DashboardAccess.cs`: one entry per `[FormConfigurableEntity]` type, plus `RoadProfile`.
@@ -91,6 +92,32 @@ in closed alpha test run 2 (checklist § 4c). Admin view: [dashboard access admi
   design's § 4.6.2, enforced from AM2), whether it is deletable and bulk deletable, and delegates to the type's own
   delete and search (the same service calls as its `DELETE {id}` and `POST …/search`). Link rows, snapshots and other
   `[FormConfigurableEntity]` types are view-only entries. `Security/DashboardAccessTests` pins the coverage.
+- **Create, edit and link changes (PandiO/knk-workspace#374, in `next` `b65e66d` 2026-11-13, PR knk-web-api#15; not
+  yet on `master`; not live-tested, [smoke test § 2.2](../guides/dashboard-access-smoke-test.md#22-create-edit-and-link-changes-need-knkadmincontent-374)):**
+  developer decision 2026-11-13, "Area staff should not be able to change forms at this point. They only work with the
+  content available." Each registry entry has `ChangesNeedContent` (default true) and `ChangeNodes`: all-of
+  `[WriteNode, knk.admin.content]` (just the write node when that is `knk.admin.content` already, or when
+  `changesNeedContent: false`). **Exempt:** `User` (Edit is the player profile, its own endpoints),
+  `PermissionGroup`, `PermissionHolder`, `PermissionGrant`, `UserPermissionGroup` (`knk.admin.user.perm` with the
+  escalation guard) and `RoadProfile` (the roads page edits it; no form).
+  - `[RequireDashboardChange("<Type>")]` (`Attributes/RequireDashboardChangeAttribute.cs`, `DashboardChangeFilter`, an
+    `IKnkAccessRule`) sits on the **primary create and update action** of 29 types, next to the controller's own area
+    rule: the Content, World, Kits, Lootboxes and Siege types of the registry (BannerLayer and DomainSubRegion
+    included). It reads the entry at request time: the plugin key passes (the game server checks its own nodes),
+    anonymous → 401, an unknown type name → 403 "This endpoint has no access rule." (fails closed), a missing node →
+    403 `{ error: "Forbidden", code: "NoWriteAccess", entityType, nodes, message }`, message "Creating or editing Town
+    requires knk.admin.world and knk.admin.content.". `Security/DashboardChangeAccessRulesTests` pins the endpoint list
+    and the filter.
+  - **Only the primary create/update.** Other writes of a type keep their own rules: gate door state, a domain's world
+    backfill, lootbox in-game spawn areas, delete, bulk delete, export, reads, lookups, the player profile's freeze,
+    balance, kick and ban. A per-action attribute rather than the class-level write rule, because that rule also
+    covers delete (decision in the "Link #374" block of the [chain 3 report](../reports/2026-11-08-ux-chain-3.md)).
+  - The **metadata's** `actionNodes.create`/`edit` and every relationship's `nodes` (§ 5.3) are `ChangeNodes`, so the
+    web app's gates and the API agree. No migration and no setting; no config switch (alternative (b) of #374 not
+    taken).
+  - Two pages outside the form wizard use these endpoints and aren't gated beforehand: the lootbox Enable/Disable
+    toggle (`PUT api/LootboxTypes/{id}`) and the roads page's "New street" (`POST api/Streets`):
+    [#383](https://github.com/PandiO/knk-workspace/issues/383).
 - **Single delete:** every deletable type's `DELETE {id}` carries `RequireServiceOrPermission(Delete)`
   (`RequirePermission` on the lootbox controllers) on top of its class or method area rule, so a delete is area node
   AND `knk.admin.delete`; users (`knk.admin.user.manage`) and permission groups (`knk.admin.user.perm`) included.
@@ -120,7 +147,7 @@ in closed alpha test run 2 (checklist § 4c). Admin view: [dashboard access admi
   `AuditLogEntry` `DashboardExport` (type, scope `selection`/`search`, count, truncated; never the rows).
 - **Metadata** (`EntityMetadataDto`, `GET api/Metadata/entities…`): `area`, `accessNode`, `writeNode`, `readNodes`,
   `deletable`, `bulkDeletable`, `exportable`, `lookupSearchable`, `lookupGettable` (AM2) and `actionNodes` (`view`
-  (AM2: the area node, the dashboard lists the type), `create`, `edit`, `delete`, `bulkDelete`, `export` → every node
+  (AM2: the area node, the dashboard lists the type), `create`, `edit` (= `ChangeNodes` since #374), `delete`, `bulkDelete`, `export` → every node
   the action needs; an action the type doesn't allow is left out), from the registry.
 - **Escalation guard** (`PermissionEscalationGuard`): `OwnerGrantOnly = { knk.admin.delete.bulk }`. Granting,
   denying or revoking it, or a wildcard that covers it by the resolver's rules (`*`, `knk.*`, `knk.admin.*`,
@@ -216,8 +243,11 @@ record.
   - 404 `UnknownEntityType` / `UnknownRelationship` / `NotFound` / `RelatedNotFound`, 400 `RelationshipNotEditable` with
     the reason, 409 `Conflict` when the database refuses.
 - **Access** (`Attributes/RequireRelationshipWriteAttribute.cs`, an `IKnkAccessRule`): web users only (the plugin key
-  alone 403), the type's write node and, for `Children`, the related type's write node too (`nodes` per relationship);
-  never `knk.admin.delete`. Missing → 403 `{ code: "NoWriteAccess", entityType, nodes }`.
+  alone 403), the type's change nodes and, for `Children`, the related type's change nodes too (`nodes` per
+  relationship); never `knk.admin.delete`. Since #374 (in `next` `b65e66d`) the change nodes are `ChangeNodes` of
+  § 5.1: the write node **and** `knk.admin.content` (a town's streets: `["knk.admin.world", "knk.admin.content"]`).
+  Missing → 403 `{ code: "NoWriteAccess", entityType, nodes, message }`, message "Changing links of Town requires
+  knk.admin.world and knk.admin.content.".
 - **Metadata:** `EntityMetadataDto.relationships` `[{ property, relatedType, kind, storage, canLink, canUnlink,
   linkReason?, unlinkReason?, nodes, relatedIdField?, relatedNavigation? }]`.
 - **Realtime:** the existing interceptor publishes the changed row (`Modified` on the record or on the child);

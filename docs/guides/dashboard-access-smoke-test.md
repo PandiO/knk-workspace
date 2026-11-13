@@ -6,7 +6,8 @@ test**, scheduled in closed alpha test run 2 (checklist § 4c). AM1 and AM2 merg
 AM4 (living docs, the [admin guide to the ranks](admin/dashboard-access-admin-guide.md)) done 2026-11-13 (#366).
 **#371 (developer 2026-11-13, knk-web-app `claude/form-wizard-content-only-371`, not merged):** the form wizard and
 create/edit are back on `knk.admin.content` (LAM3-1 reverted, answers #368); § 8 steps 6, 7, 9, 19 describe that.
-**#374 (developer 2026-11-13, knk-web-api and knk-web-app `claude/api-writes-need-content-374`, not merged):** the API
+**#374 (developer 2026-11-13, knk-web-api and knk-web-app `claude/api-writes-need-content-374`, merged into `next`
+2026-11-13: API `b65e66d`, web app `ca1959d`; not live-tested; guides in docs #385):** the API
 refuses creates, edits and link changes without `knk.admin.content` too, and the detail page's Select / Unlink / Add
 need it; § 2.2 and § 8 step 9b.
 Known: a `knk.admin.user.manage`-only
