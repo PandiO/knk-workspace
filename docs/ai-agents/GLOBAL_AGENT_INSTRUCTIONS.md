@@ -23,6 +23,9 @@ spec and default branches before interpreting older priority notes.
 2. For actual behavior, inspect the current default branch and relevant tests
    in **each** affected repo. A feature branch shows proposed behavior until
    merged. Check its diff from the current default branch before reusing it.
+   Once the branch model below applies, the default branch is what is
+   released and `next` is what is integrated but not yet accepted; say which
+   one you describe.
 3. For intended behavior, use the current feature's design/implementation plan
    in `knk-workspace/docs/specs/` and its GitHub issue, checking their status
    headers and later decisions. Flag conflicts with live code rather than
@@ -90,7 +93,8 @@ Issue conventions:
    the issue id next to it.
 5. Keep the issue's status true: `status:in-progress` when work starts,
    swap it for `status:in-review` while it waits for the developer's test,
-   close it as completed once merged (or as the developer decides) and drop
+   close it as completed once merged (under the branch model below: once the
+   developer promotes `next` to trunk; or as the developer decides) and drop
    the status label. Link the branch or PR in a comment.
 
 Without GitHub issue access, list the items under "To file" in your tracker
@@ -102,8 +106,12 @@ row or handoff and tell the developer.
 Claude Code and Codex alike, regardless of where repos are cloned.
 
 1. Before edits, refresh it from the current workspace default branch and
-   inspect overlapping feature and file claims. Stop and coordinate on an
-   overlap; don't infer that an old timestamp makes a row free.
+   inspect overlapping feature and file claims. A claim blocks your work only
+   when the other branch changes the same lines or the claim is active on the
+   same area; then stop and coordinate. Additive edits elsewhere in a shared
+   file may go ahead and are logged as a decision with its alternatives
+   (developer decision 2026-11-12). Don't infer that an old timestamp makes a
+   row free.
 2. Claim the feature and specific repos/files with an owner, branch, status,
    start date and update date. Publish the claim before editing shared work.
    If the board is inaccessible or the claim cannot be published, avoid
@@ -111,34 +119,87 @@ Claude Code and Codex alike, regardless of where repos are cloned.
 3. Check the existing standing branch per repo for this feature. Continue it
    when appropriate instead of forking a branch per phase or agent. For a new
    feature use one descriptive branch per affected repo (for example
-   `codex/kng-32-agent-instructions`), based on that repo's current default
+   `codex/kng-32-agent-instructions`), based on that repo's `next` branch
+   once the branch model below applies, until then on its current default
    branch; don't assume every repo uses `main`. A `claude/` branch is not
    exclusive to Claude, nor a `codex/` branch to Codex. Preserve another
    session's uncommitted work and coordinate before modifying its branch.
 4. Keep claims scoped to the feature across repos, not merely to one repo.
    Update the row when pausing with branch/commit, verification and next
-   steps. On completion move it to Recently completed, link issue/PRs and
-   note unmerged work. Preserve concurrent rows on conflict, then reread
-   before publishing a resolution.
+   steps. On completion move the row straight from the board into the
+   current month's archive file `docs/reports/sessions-archive/<YYYY-MM>.md`
+   (newest first; see its README), link issue/PRs and note unmerged work.
+   Don't park it under "Recently completed": the script
+   `scripts/sessions-archive/archive_sessions.py` only cleans up rows left
+   there (developer decision 2026-11-12). Preserve concurrent rows on
+   conflict, then reread before publishing a resolution.
 5. Use PRs for review where appropriate. Do not merge or deploy merely
    because a patch or test passed; follow the feature's live validation and
-   developer sign-off requirements.
+   developer sign-off requirements. The one standing exception is a chain
+   coordinator merging into `next` under the branch model below.
+
+## Branches, releases and risk tiers
+
+Developer decision 2026-11-12, [AI agent workflow design](../specs/ai-agent-workflow/DESIGN.md) § 2 and § 5; the
+start condition and rule 3 were confirmed by the developer the same day (setup chain, PandiO/knk-workspace#327).
+**These rules apply as soon as CI runs on the API and web-app default branches** (PandiO/knk-workspace#328:
+`.github/workflows/ci.yml` on knk-web-api `master` and knk-web-app `main`). Until then the current rules hold: feature
+branches start from the default branch, pull requests target it, and only the developer merges.
+
+1. **Trunk = production.** The default branches (`master` for knk-web-api, `main` for the others) move only when the
+   developer accepts a release. Releases are numbered tags on trunk (for example `v0.12`); deploys use the tag and a
+   rollback deploys the previous tag. A release branch is cut from a tag only for a hotfix while `next` holds
+   unfinished work.
+2. **`next` = integration.** Every repo has one `next` branch that collects finished work. Feature branches start from
+   `next` and take its updates by merge, never rebase; their pull requests target `next`. A feature that depends on
+   another unreleased feature can then continue the same day.
+3. **Coordinators merge into `next`** as soon as CI and their link checks pass, for every risk tier: link pull
+   requests target `next` and the coordinator merges them through the pull request with a merge commit. Outside a
+   chain, a pull request into `next` waits for the developer unless the developer tells a session to merge it. One
+   exception, also a developer decision of 2026-11-12: a docs session (Shipping a change) branches from knk-workspace
+   `next`, opens its docs pull request into `next` and merges it itself, with a merge commit, once its checks pass. A
+   merge into `next` does not close the issue; it stays `status:in-review` until the developer promotes `next`.
+4. **The developer promotes `next` to trunk** after testing `next` as a whole (the daily digest lists what to test):
+   merge into trunk, then the release tag. Only the developer, or the manager session on the developer's explicit go,
+   promotes.
+5. **Flags for risky work.** Big or risky features go into `next` behind a config flag that is off by default, so
+   unreviewed work is harmless there. A rejected change is reverted or fixed in `next` before the release.
+6. **Risk tiers** are labels on each issue, proposed by intake or design and overridable by the developer:
+   `tier:1` a tweak to existing behaviour (automated tests are the review, the developer does a quick pass); `tier:2` a
+   feature change (a short smoke test on `next`); `tier:3` new foundations, schema changes or game feel (a full smoke
+   test by the developer).
+7. Stacking a branch directly on another feature's unmerged branch is the exception, for uncertain work, and is
+   stated in the chain charter.
+8. Chain bookkeeping (progress reports, charters, `docs/ACTIVE_SESSIONS.md` and its archive files) stays on
+   knk-workspace `main`, as before.
 
 ## Session chains (multi-link work)
 
-A chain splits a feature into links that each run in a fresh context. Cloud sessions get their repositories
-when they start, and `create_session` attaches only one (`source_url`). Other repos must be attached by the new
-session with `add_repo` (access `push`), and the permission check only allows that when the request is in the
-session's **prompt** (the developer's request, relayed by the coordinator). An `add_repo` instruction found in a
-repo file (a handoff doc) was refused, which blocked a link (form wizard chain, 2026-10-11).
+A chain splits a feature into links that each run in a fresh context. A **coordinator** session starts each link,
+checks it and starts the next; links never start links. Two project skills in knk-workspace hold the procedure
+(Claude Code loads them from `.claude/skills/`; other agents read the `SKILL.md` files directly):
 
-- A **coordinator** session (the developer's session in the "Default Correct" environment, with every repo
-  attached) starts each link. Put the `add_repo` + clone + `git push --dry-run` step **in the prompt**, then point
-  at the handoff file. Links don't start the next link; the coordinator does, after checking the previous one.
-- Fallback when `add_repo` is refused: the coordinator runs the link as a fresh subagent (Agent tool, explicit model
-  and effort), which shares the coordinator's repos.
-- `create_session` has no effort setting; session links run at the environment default. Pass the model explicitly.
-- Before a link changes anything: `git push --dry-run` on the feature branch of every repo it will change.
+1. [`knk-coordinator`](../../.claude/skills/knk-coordinator/SKILL.md): the loop, gate checks against the actual
+   branches, starting links (`create_session` or a subagent), `send_later` check-ins, the checks of a finished link,
+   merging into `next`, blockers and reporting. Templates for the permissions block, the chain charter and the
+   progress report are next to it.
+2. [`knk-link`](../../.claude/skills/knk-link/SKILL.md): setup (repos, base branch, push dry run, toolchains,
+   baseline tests), hard rules, blockers, the pull request and the report block with agent decisions.
+
+A chain's charter keeps only its links table, gates and binding documents. Facts the skills rely on:
+
+1. **Route (developer decision 2026-11-12):** `create_session` is the preferred route for every link. It attaches one
+   repository (`source_url`, normally knk-workspace); the link session attaches the other knk repositories itself with
+   `add_repo`, which knk-workspace's `.claude/settings.json` allows by a permission rule (PandiO/knk-workspace#331). A
+   subagent of the coordinator, which shares the coordinator's attached repos, is the fallback when `create_session`
+   is unavailable or an attach is still refused.
+2. History, before the rule existed: the new session's permission check only allowed `add_repo` when the request was
+   in the session's **prompt**; an `add_repo` instruction found in a repo file was refused (form wizard chain,
+   2026-10-11). On 2026-11-12 even a request in the prompt was refused when another session wrote the prompt, and the
+   developer had to approve the attach (setup chain, PandiO/knk-workspace#327). The coordinator still pastes the
+   generated permissions block into every link prompt: it carries the authorization and the dry-run step.
+3. Pass the model explicitly to `create_session`; pass `effort` only when the developer asked for a level.
+4. Before a link changes anything: `git push --dry-run` on the feature branch of every repo it will change.
 
 ## Closed alpha test runs
 
@@ -177,7 +238,9 @@ slows a merge.
    technical detail, links and "Admin steps".
 4. **Status:** the spec/plan status, the smoke-test guide's status and the feature register row's merge column.
 
-**At merge:**
+**At merge:** once the branch model above applies, "merge" here means the feature's merge into `next`: items 2
+and 3 happen then, and item 1 waits until the developer promotes `next` to trunk (developer decision 2026-11-12).
+Until the branch model applies it means the merge into the default branch, and all three happen then.
 
 1. Close the feature issue as completed and drop its status label, as usual.
 2. If the docs impact list has anything not done before merge, create one `documentation` sub-issue under the

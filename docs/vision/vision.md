@@ -16,6 +16,12 @@ This project has two distinct planning horizons that should not be conflated:
 
 ---
 
+## Guiding Principle: Platform Independence [decided 2026-11-12]
+
+Knights & Kings — the plugin above all — is built to depend on Minecraft/Paper as little as reasonably possible, so that a later move to another game engine (Unreal or a custom engine) costs as little as possible. This is pragmatic, not dogmatic: game logic lives in the Bukkit-free `knk-core` behind ports, with thin Paper adapters in `knk-paper`, without over-engineering for an engine that doesn't exist yet. Every design notes which of its parts are platform-specific. The same principle already drives owning ranks and permissions in-house (5.1) and the engine-agnostic answers to the scalability problem (4.1).
+
+---
+
 ## 1. Core Concept
 
 Knights & Kings is a persistent medieval-fantasy MMO server. Players are free to progress however they choose — adventuring and exploration, PvP, town life and chores, or climbing the occupation system — with multiple paths to leveling up, building wealth, and improving item quality. There is no single required playstyle.
