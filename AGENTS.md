@@ -4,7 +4,8 @@ This repository is the canonical Knights and Kings documentation source. Read
 [global instructions](docs/ai-agents/GLOBAL_AGENT_INSTRUCTIONS.md) and
 [active sessions](docs/ACTIVE_SESSIONS.md) before changing anything. Check
 overlapping claims, publish a feature-scoped claim, and use the standing
-feature branch (or create one from the current default branch).
+feature branch (or create one from `next` once the global branch model
+applies, until then from the current default branch).
 
 For intended behavior consult the current feature plan and GitHub issue
 (`PandiO/knk-workspace` issues; Linear is a read-only archive since
@@ -13,6 +14,17 @@ of affected code repos. Date and verify old handoffs before using them.
 Documentation lives under `docs/`; dated audits go to `docs/reports/`.
 Claude Code can also load [CLAUDE.md](CLAUDE.md) for repo-specific
 conventions.
+
+## Shipping a change
+
+Essential docs (docs impact list, deploy notes including plugin `config.yml` keys, changelog entry, status)
+ship with the feature before merge. At merge, put the remaining docs (guides, register, site/wiki pages) in a
+`documentation` sub-issue, start a new docs session for it right away with
+[the docs-session prompt](docs/ai-agents/docs-session-prompt.md), and close the feature issue. Once the `next` branch
+model applies, the sub-issue and docs session start at the merge into `next` and the feature issue is closed when the
+developer promotes `next` to trunk. See
+[global instructions § Shipping a change](docs/ai-agents/GLOBAL_AGENT_INSTRUCTIONS.md#shipping-a-change-documentation)
+and [documentation maintenance](docs/guides/developer/DOCUMENTATION_MAINTENANCE.md).
 
 ## Conventions for working in this repo
 

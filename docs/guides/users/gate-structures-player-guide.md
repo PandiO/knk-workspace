@@ -1,7 +1,7 @@
 # Gate Structures — Player Guide
 
 **Status:** Living document — update in place as the game changes
-**Last updated:** 2026-10-25 (invincible gates can't be set on fire either)
+**Last updated:** 2026-11-10 (§ Cleaving: the siege enchantment for gate doors; its numbers are set by staff and shown on the web app's Guides page, PandiO/knk-workspace#259/#306); 2026-10-25 (invincible gates can't be set on fire either)
 
 Gates, drawbridges, and portcullises are animated, damageable barriers built into walls around towns and districts — and a central part of sieges. Here's what you'll actually experience with them.
 
@@ -30,6 +30,30 @@ Gates have their own health and can be damaged and destroyed like any siege obje
 - Some gates are **invincible** and can't be damaged at all (useful for gates an admin doesn't want contested) — you'll just see your hits do nothing, and fire arrows, fire charges, flint and steel or a Fire Aspect weapon won't set them alight at all.
 - When a gate's health hits zero, it's **destroyed**: its blocks vanish with an explosion effect, and (for gates that can respawn) it rebuilds itself automatically after a set amount of time, restoring full health. A server-wide message announces it when a gate comes back.
 - A destroyed gate that can't respawn stays down until an admin repairs it.
+
+### Cleaving: the siege enchantment for gate doors
+
+**Cleaving** (levels I–IV) is a custom enchantment for a melee weapon, made for attacking gates. It does nothing to
+players or mobs.
+
+- **Boosted hits:** your melee hits on a gate door deal extra gate damage. With today's numbers that is +25 % per
+  level (+25 % at I up to +100 % at IV).
+- **Charged strike:** right-click a gate door while the strike is ready. You hear wood breaking and see splinters,
+  the action bar says **Cleaving strike!** and the gate takes several boosted hits' worth of damage at once (5x at
+  level I, then 6x, 7x and 8x). With a netherite sword (no Sharpness) that is 50, 72, 98 and 128 HP of a 500 HP gate.
+- **Cooldown:** after a strike, it has to recharge (60 s at level I, then 50, 40 and 30 s). A boss bar,
+  **Cleaving strike cooldown**, counts it down; right-clicking too early shows **Cleaving strike ready in N s** and
+  the click works as a normal click on the gate. The cooldown is your own; other players' strikes don't affect it.
+- A defender can't hurt their own gate with it: a right-click on your own gate opens it as usual, with no strike and
+  no cooldown. Invincible gates take no damage, and only Survival-mode players can strike.
+
+**The numbers can change.** Staff set Cleaving's bonus, strike and cooldown per level in the web app, so the values
+above are only the starting values. To see the numbers that apply now:
+
+- open **Guides → Custom enchantments and abilities** in the web app (`/guides/enchantments`, no sign-in needed);
+  Cleaving is under **Siege enchantments**, with its numbers per level;
+- or hold the weapon and run `/ce info`. Under Cleaving's line it shows, for your item's level, a line like
+  `gate hits +25%, charged strike 5x, strike cooldown 60s` (`off` when the strike has no cooldown).
 
 ## Notes
 

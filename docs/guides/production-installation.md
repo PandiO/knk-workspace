@@ -2,11 +2,17 @@
 
 **Status:** Draft v1 — written for review. Not yet followed on a real production host. The database, API, seed and
 web-server steps were rehearsed in a scratch environment on 2026-10-07 (see [Appendix A](#appendix-a--what-was-verified-and-how)).
-The Paper server steps and the CI/CD workflows are untested drafts.
-**Last updated:** 2026-10-26 (§nginx: `/api/hubs/` without access log; § 9.5 plugin `realtime:` block — SignalR S1, #178, feature branch); 2026-11-02 (G10, § 12.3: the KNG-232 Prometheus endpoints of the API and the plugin, both off by default, [PandiO/knk-workspace#48](https://github.com/PandiO/knk-workspace/issues/48)); 2026-10-25 (§1/§3.4 G6: RegionHttpServer is loopback + `X-API-Key` since KNG-64; §nginx: WebSocket upgrade headers for the planned SignalR hub, #66); 2026-10-24 (§4.3, §9.3, §11 F/G: KNG-205 invitations merged, the feature-branch notes replaced); 2026-10-22 (§7.7: DisplayConfiguration export/import and the priority 2/3 form seeds and display seeds merged, KNG-139); 2026-10-21 (§4.3, §9.3, §11 F/G: invite-only sign-up, admission gate and Access sync — KNG-205/KNG-218); 2026-10-21 (§4.3 mail: the KNG-206 email engine on the invitations feature branch — `Email__Transport`, relay option, `App__PublicBaseUrl`, Log guard); 2026-10-17 (§7.7: FormConfiguration export/import and bundled seeds merged, KNG-138/139; two new migrations, see the note in §7.7); 2026-10-12 (§7.7: KNG-138 on a feature branch); 2026-10-08 (security and alpha-hosting update for KNG-64)
+The Paper server steps and the release and deploy workflows are untested drafts; the CI workflows (§ 10.3) run on GitHub.
+**Last updated:** 2026-11-13 (§ 10.1 and § 10.3: CI shipped in knk-web-api and knk-web-app; G2, G3, § 8.1 build commands, Appendix A and B updated — #363); 2026-11-12 (header and § 5.3: latest migration `AddConfigurationDrafts`; § 4.3: optional `Realtime__WebLiveUpdatesEnabled` and `Realtime__WebPermissionCacheSeconds` — #341, #345); 2026-11-10 (§ 9.5 and § 13: the [plugin configuration reference](admin/plugin-configuration.md) and its per-deploy merge checklist; stale `config.yml` notes corrected, #295); 2026-11-10 (header and § 5.3: latest migration `AddCleavingCombatValues`, #259/#306); 2026-10-26 (§nginx: `/api/hubs/` without access log; § 9.5 plugin `realtime:` block — SignalR S1, #178, feature branch); 2026-11-02 (G10, § 12.3: the KNG-232 Prometheus endpoints of the API and the plugin, both off by default, [PandiO/knk-workspace#48](https://github.com/PandiO/knk-workspace/issues/48)); 2026-10-25 (§1/§3.4 G6: RegionHttpServer is loopback + `X-API-Key` since KNG-64; §nginx: WebSocket upgrade headers for the planned SignalR hub, #66); 2026-10-24 (§4.3, §9.3, §11 F/G: KNG-205 invitations merged, the feature-branch notes replaced); 2026-10-22 (§7.7: DisplayConfiguration export/import and the priority 2/3 form seeds and display seeds merged, KNG-139); 2026-10-21 (§4.3, §9.3, §11 F/G: invite-only sign-up, admission gate and Access sync — KNG-205/KNG-218); 2026-10-21 (§4.3 mail: the KNG-206 email engine on the invitations feature branch — `Email__Transport`, relay option, `App__PublicBaseUrl`, Log guard); 2026-10-17 (§7.7: FormConfiguration export/import and bundled seeds merged, KNG-138/139; two new migrations, see the note in §7.7); 2026-10-12 (§7.7: KNG-138 on a feature branch); 2026-10-08 (security and alpha-hosting update for KNG-64)
 **Applies to:** trunk only. knk-web-api `master` `1805cf9`, knk-web-app `main`, knk-plugin `main` `c7d5a1e`; 61 EF
 migrations, the latest being `20261006193103_UniquePermissionGrantHolderNode`. Feature branches that haven't been
 merged, such as road navigation, are not covered. Re-check § 2 and the seed table manifest after each trunk merge.
+**Migrations since (2026-11-12):** knk-web-api `master` `bc97b7d` has 113 migrations; the latest is
+`20261109101501_AddConfigurationDrafts` (#71), which runs after the same merge's `20261105200758_AddPrivacyErasureEvents`
+(#184 API part), `20261108162526_AddKitClaimDelivery` (#261 API part) and `20261108181026_SeedDashboardActionNodes`
+(#280 AM1). Before that: `20261105200617_AddCleavingCombatValues` (#259) after #233's `20261104121131_AddChatTokenSettings` and
+`20261104130000_SeedChatTokenNodes`. The migrator (§ 5.3) applies every missing one in order. Only this count and
+§ 5.3's note were updated for that commit; the rest of the guide still describes the commits above.
 **Sources:** the three repos' code at those commits (file references inline); `docs/specs/*/…_FORMCONFIGS.md` for the
 dev-DB-only content; [`scripts/seed/`](../../scripts/seed/) for the seed tooling.
 
@@ -160,13 +166,13 @@ where it's used.
 | # | Severity | Repo | Gap | Workaround in this guide | Proper fix |
 |---|---|---|---|---|---|
 | G1 | **Blocker** | web-app | API base URL hard-coded to `http://localhost:5294/api` (`src/config/appConfig.ts:11`). Nothing reads env vars. | Build with `baseUrl: '/api'` (same origin), § 8.1 | Read `process.env.REACT_APP_API_BASE_URL` with `/api` as default **— [KNG-64] fixed and merged** (loopback default, `X-API-Key`; checked 2026-10-25 on plugin `main` `ee35fb1`) |
-| G2 | ~~Blocker~~ Info | web-app | `npm ci` fails **with npm 10 only**: `Missing: yaml@2.9.1 from lock file`. **Corrected 2026-10-08:** the lock file is valid for npm 11 (the developer's 11.6.2; see knk-web-app `f077570`), and regenerating it with npm 10 only churns peer flags. | Use npm 11 (`npx npm@11 ci`) | Pin Node 22 + npm 11 in CI and on build hosts (`corepack` or `npm i -g npm@11`); never regenerate the lock file with npm 10 |
-| G3 | Should-fix | web-app | `CI=true npm run build` fails on ~20 existing ESLint warnings (CRA treats warnings as errors under CI) | Build with `CI=false` | Fix the warnings, then build with `CI=true` |
+| G2 | ~~Blocker~~ Info | web-app | `npm ci` fails **with npm 10 only**: `Missing: yaml@2.9.1 from lock file`. **Corrected 2026-10-08:** the lock file is valid for npm 11 (the developer's 11.6.2; see knk-web-app `f077570`), and regenerating it with npm 10 only churns peer flags. | Use npm 11 (`npx npm@11 ci`) | Pin Node 22 + npm 11 on build hosts (CI does since 2026-11-13: `npx npm@11 ci` on Node 22, § 10.3) (`corepack` or `npm i -g npm@11`); never regenerate the lock file with npm 10 |
+| G3 | Should-fix | web-app | `CI=true npm run build` fails on ~20 existing ESLint warnings (CRA treats warnings as errors under CI) | Build with `CI=false` | Fix the warnings, then build with `CI=true`. **Update 2026-11-13:** `CI=true npm run build` passes; the web app's CI builds with it and was green at knk-web-app#9 (§ 10.3). |
 | G4 | Should-fix | web-api | CORS origins hard-coded to localhost (`Program.cs:131-147`) | Same origin (§ 1.1) makes CORS irrelevant | Read the allowed origins from config (`Cors:AllowedOrigins`) **— [KNG-64] fixed on branch, pending merge** |
 | G5 | Should-fix | web-api | No forwarded-headers support: behind nginx every request seems to come from 127.0.0.1, so the password-reset cooldown "per email/IP" is per email only, and logs show no client IPs | Accept for beta | `app.UseForwardedHeaders()` with `KnownProxies = 127.0.0.1`, `X-Forwarded-For`/`-Proto` **— [KNG-64] fixed on branch, pending merge** |
 | G6 | Should-fix | plugin | `RegionHttpServer` listens on **all interfaces, port 8081, without authentication** (`http/RegionHttpServer.java:45`) | Firewall blocks 8081 from outside (§ 3.4) | Bind to `127.0.0.1` by default and require the API key **— [KNG-64] fixed on branch, pending merge** |
 | G7 | Should-fix | web-api | `dotnet ef migrations bundle` and `migrations script --idempotent` both fail: (a) the design-time host runs the startup seeds in `Program.cs` before migrating, so an empty DB crashes; (b) the idempotent script wraps triggers in procedures (`ERROR 1303`) | "Migrator" image runs `dotnet ef database update` (§ 5.3) | Add an `IDesignTimeDbContextFactory` and a fixed `ServerVersion`, and skip seeds when EF tooling runs |
-| G8 | Should-fix | plugin | Bundled `config.yml` has `allow-untrusted-ssl: true` and an empty `api-key`, so the plugin **disables itself** on first start | Set both in § 9.5 | Default `allow-untrusted-ssl: false` **— [KNG-64] fixed on branch, pending merge** |
+| G8 | Should-fix | plugin | Bundled `config.yml` has `allow-untrusted-ssl: true` and an empty `api-key`, so the plugin **disables itself** on first start | Set both in § 9.5 | Default `allow-untrusted-ssl: false` **— [KNG-64] merged** (checked at knk-plugin `main` `121030f`); an empty `api-key` still stops the plugin, on purpose |
 | G9 | Info | web-api | `ServerVersion.AutoDetect(...)` (`Program.cs:51`) connects to MySQL at startup and while building EF tooling, so the API can't start (or build a bundle) without a reachable DB | `depends_on: service_healthy` in Compose | `new MySqlServerVersion(new Version(8, 4))` |
 | G10 | Info | web-api, plugin | Metrics are **off by default**. Since KNG-232 (merged 2026-10-22) the API has a Prometheus `/metrics` endpoint (`Telemetry__Prometheus__Enabled`; outside Development it needs `Telemetry__Prometheus__BearerToken` or the API refuses to start) and the plugin has its own `metrics:` endpoint (port 9225, `127.0.0.1` by default, a bearer token required on any other address). With `Telemetry__Enabled=true` and the shipped `Telemetry:Exporter` `otlp`, the API also exports OTLP metrics and traces to `localhost:4317`, where nothing listens without a collector | `Telemetry__Enabled=false` until a Prometheus scraper exists | Run Prometheus and turn both endpoints on (§ 12.3, [performance metrics guide](performance-metrics-and-capacity.md) § 4–5) |
 | G11 | Info | web-api | `/health/ready` only runs a "self" check, not a DB check | Smoke test hits a DB-backed endpoint (§ 6.4) | `AddDbContextCheck<KnKDbContext>()` |
@@ -403,6 +409,10 @@ Telemetry__Enabled=false
 # Telemetry__Prometheus__BearerToken=<openssl rand -hex 32>
 Logging__LogLevel__Default=Information
 Logging__LogLevel__Microsoft.AspNetCore=Warning
+
+# --- realtime: optional, the defaults are right for most hosts (#183, merged 2026-11-12) ---
+# Realtime__WebLiveUpdatesEnabled=true      # false: no live table/detail/online-badge updates in the web app
+# Realtime__WebPermissionCacheSeconds=30    # how long a staff member's node check for live updates is cached
 ```
 
 Notes:
@@ -412,6 +422,13 @@ Notes:
   (**[KNG-64]:** `Secure; SameSite=Lax; Path=/api/Auth`, and the API refuses to start when `Security__Jwt__Secret` is
   empty, shorter than 32 characters, or a value that was ever committed to git).
   That cookie needs HTTPS, so login "works" over plain HTTP, but staying signed in does not.
+- **[#183, merged 2026-11-12]** The web app's live updates (dashboard, detail page, moderation online badges, the
+  player profile's Online badge) go over the existing `/api/hubs/web` hub and need no setting. Only staff whose nodes
+  allow the data receive them: the type's area node (`knk.admin.content`, `knk.admin.world`, …) or
+  `knk.admin.user.manage` for players and presence. `Realtime__WebLiveUpdatesEnabled=false` switches them off (the
+  pages then behave as before: Reload and Back show changes; the game server's realtime events are unaffected).
+  `Realtime__WebPermissionCacheSeconds` (30) is how long it takes before a removed node stops the live updates; REST
+  refuses at once. See [DESIGN § 6.9](../specs/realtime-signalr/DESIGN.md).
 - Leave the rest at the `appsettings.json` defaults: `Security:BcryptRounds` 10, the link-code, cooldown and
   token lifetimes, `Discovery:MaxNewPerHour`, the `CurrencyMonitor:*` thresholds, and `ClientActivity`. Override one
   the same way if you need to.
@@ -556,6 +573,17 @@ connections as coming from 127.0.0.1.)
 cd /opt/knk
 sudo docker compose run --rm migrator          # prints "Applying migration '…'" lines, then "Done."
 ```
+
+On knk-web-api `master` `bc97b7d` (2026-11-12) the latest migration is `20261109101501_AddConfigurationDrafts` (#71):
+form and display configurations get a stored draft beside the published version; existing configurations stay
+published as they are. The same merge adds `AddPrivacyErasureEvents`, `AddKitClaimDelivery` and
+`SeedDashboardActionNodes` (the new `knk.admin.delete`, `knk.admin.delete.bulk` and `knk.admin.export` nodes and their
+backfill, #280; see the [2026-11-12 changelog entry](../CHANGELOG.md) for what staff notice). The one before them,
+`20261105200617_AddCleavingCombatValues`, was the latest on `b5e57fa` (2026-11-10):
+four nullable `EnchantmentDefinitions` columns for Cleaving's gate numbers. The API fills in Cleaving's defaults at its
+next start (gate bonus 0.25 per level, strike 5x +1 per level, strike cooldown 60 s −10 s per level); then import
+form seed `EnchantmentDefinition - Default (seed v5)` and make it the default (see the
+[2026-11-10 changelog entry](../CHANGELOG.md)).
 
 To see what a release is going to change before you apply it, generate the SQL on your PC or in CI:
 
@@ -919,13 +947,13 @@ import refuses to run anyway once users exist. Content changes after launch reac
 
 ```bash
 # knk-web-app at the release tag
-CYPRESS_INSTALL_BINARY=0 npm install          # npm ci once G2 is fixed; skip the Cypress binary on servers/CI
+CYPRESS_INSTALL_BINARY=0 npx npm@11 ci       # npm 11 (G2), as the CI does; skip the Cypress binary on servers
 # G1 workaround: same-origin API path. Do this in CI, never by editing a prod server.
 sed -i "s#baseUrl: 'http://localhost:5294/api'#baseUrl: '/api'#" src/config/appConfig.ts
 grep -n "baseUrl" src/config/appConfig.ts      # must show: baseUrl: '/api',
-CI=false npm run build                         # G3: CI=true fails on existing lint warnings
+CI=true npm run build                          # as the CI does (§ 10.3); G3's lint warnings are gone
 # [KNG-64] after the merge: no sed needed, the URL comes from the environment:
-#   REACT_APP_API_BASE_URL=/api REACT_APP_MC_SERVER_ADDRESS=mc.example.com CI=false npm run build
+#   REACT_APP_API_BASE_URL=/api REACT_APP_MC_SERVER_ADDRESS=mc.example.com CI=true npm run build
 tar -C build -czf knk-web-app-1.0.0.tar.gz .
 ```
 
@@ -1130,13 +1158,14 @@ mcrcon -H 127.0.0.1 -P 25575 -p '<rcon password>' "list"   # console commands ov
 1. Put the released jar in `plugins/`. Remove any older `knk-paper-*.jar`, because two copies conflict.
 2. Start once so `plugins/KnightsAndKings/config.yml` is created. With the default config the plugin then
    **disables itself** (empty `api-key`, G8). That is expected.
-3. Set the production values (and leave the other sections at their defaults for the first run):
+3. Set the production values (and leave the other sections at their defaults for the first run). Every key is
+   described in the [plugin configuration reference](admin/plugin-configuration.md):
 
    ```yaml
    api:
      base-url: "http://127.0.0.1:5000/api"     # loopback to the API; the /api suffix is required
      debug-logging: false
-     allow-untrusted-ssl: false                 # G8: the shipped file says true
+     allow-untrusted-ssl: false                 # G8: the default since KNG-64
      auth:
        type: apikey
        api-key: "<Security__PluginApiKey from /etc/knk/api.env>"
@@ -1144,16 +1173,16 @@ mcrcon -H 127.0.0.1 -P 25575 -p '<rcon password>' "list"   # console commands ov
      timeouts: { connect: 10, read: 10, write: 10 }
    region-http:
      bind-address: "127.0.0.1"                 # [KNG-64] loopback only; requires X-API-Key once api-key is set
+     port: 8081                                # must match the port in the API's MinecraftPlugin__BaseUrl
    web:
      public-url: "https://play.example.com"    # [KNG-64] shown in the /account link message
-   # region-http.port is not in the file; the default 8081 matches MinecraftPlugin__BaseUrl.
    # messages.link-code-generated: take the current default text (register URL, "never give this code" warning);
-   # a config.yml from an older build keeps its old text, since the plugin only adds missing keys.
+   # a config.yml from an older build keeps its old text: the plugin never changes an existing file.
    admission:                                  # [KNG-214] missing section = whitelist (gate off)
      mode: whitelist                           # invite: claim code on the disconnect screen; read at start-up only
      api-timeout-ms: 3000
      link-url: ""                              # empty: {web.public-url}/link
-   realtime:                                   # [#178, feature branch] SignalR channel to the API; off by default
+   realtime:                                   # [#178, merged 2026-11-04] SignalR channel to the API; off by default
      enabled: false                            # on only after the realtime smoke test (guides/realtime-smoke-test.md)
      server-id: "localhost"                    # this server's id; also stored on world tasks claimed here
      hub-url: ""                               # empty: http://127.0.0.1:5000/api/hubs/game (from api.base-url)
@@ -1217,8 +1246,9 @@ restore gives a world and database that match.
 ### 10.1 Concepts
 
 > **CI (continuous integration):** every push and PR is built and tested automatically, so trunk always works. This
-> project already has CI in part: knk-plugin's `build.yml` runs the build and the unit tests, and knk-web-api's
-> `migrations.yml` migrates a fresh MySQL, checks the model snapshot, rolls everything back and re-applies it.
+> project has CI in all three component repos (§ 10.3): `ci.yml` builds and tests knk-web-api and knk-web-app,
+> knk-plugin's `build.yml` runs the build and the unit tests, and knk-web-api's `migrations.yml` migrates a fresh
+> MySQL, checks the model snapshot, rolls everything back and re-applies it.
 >
 > **CD (continuous delivery):** a tagged release automatically produces deployable **artifacts**: the API images, a
 > web build tarball and the plugin jar. Deploying them is a deliberate, approved step. "Continuous *deployment*",
@@ -1248,47 +1278,25 @@ Roll it out in three stages. Each one is useful on its own.
   Deploy notes: migrations in this release, config keys added, manual steps (FormConfigurations to re-create).
   ```
 
-### 10.3 Stage 1 — CI on every push and PR (do this first)
+### 10.3 Stage 1 — CI on every push and PR (done)
 
-**knk-web-app** has no CI at all yet. Draft `.github/workflows/ci.yml` (after G2 is fixed):
+Stage 1 is in place since 2026-11-13 (PandiO/knk-workspace#328). All of these run on every push, pull request and
+manual dispatch; [continuous integration](developer/ci.md) has the details, the known-failure
+convention and how to read a run:
 
-```yaml
-name: CI
-on: { push: { branches: ['**'] }, pull_request: {}, workflow_dispatch: {} }
-jobs:
-  build-test:
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    env: { CYPRESS_INSTALL_BINARY: '0' }
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: '22', cache: 'npm' }
-      - run: npm ci
-      - run: npm run test:ci
-      - run: npm run build
-        env: { CI: 'false' }          # until G3 is fixed; then remove this line
-```
+- **knk-web-api** `.github/workflows/ci.yml`: .NET 8 restore, build and
+  `dotnet test Tests/knkwebapi_v2.Tests/knkwebapi_v2.Tests.csproj --filter "Category!=KnownFailure"`, with the TRX
+  results as the `api-test-results` artifact. The `requires-mysql` tests skip themselves because the job sets no
+  `KNK_TEST_MYSQL`. `migrations.yml` keeps checking the migrations against a fresh MySQL.
+- **knk-web-app** `.github/workflows/ci.yml`: Node 22, `npx npm@11 ci` (G2), `npm run test:ci`, `npx tsc --noEmit`
+  and `CI=true npm run build` (G3 no longer needs `CI=false`).
+- **knk-plugin** `build.yml`: build and unit tests, as before.
 
-**knk-web-api**: keep `migrations.yml` and add a unit-test job. The tests tagged `requires-mysql` need a database,
-so filter them out, or run them in the existing MySQL job with `KNK_TEST_MYSQL` set:
+Still open from this stage:
 
-```yaml
-  unit-tests:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v4
-        with: { dotnet-version: 8.0.x }
-      - run: dotnet test Tests/knkwebapi_v2.Tests/knkwebapi_v2.Tests.csproj --filter "Category!=requires-mysql"
-```
-
-Also change `migrations.yml`'s service image to `mysql:8.4` (§ 5.1).
-
-**knk-plugin:** `build.yml` already does this stage.
-
-**Then protect trunk:** GitHub → Settings → Branches → a rule for `master`/`main` that requires the CI checks to pass
-before merging.
+- Change `migrations.yml`'s service image from `mysql:8.0` to `mysql:8.4` (§ 5.1).
+- **Protect trunk:** GitHub → Settings → Branches → a rule for `master`/`main` (and `next`) that requires the CI checks
+  (`CI / build-and-test`, and `Build / build` for the plugin) to pass before merging. Optional; the developer decides.
 
 ### 10.4 Stage 2 — release artifacts on a tag
 
@@ -1372,7 +1380,9 @@ nothing on the server except deploy.
 2. **Web app** next: step 5.
 3. **Plugin** last, in a short announced maintenance window:
    `mcrcon … "say Restarting for an update in 5 minutes"`, then `systemctl stop minecraft`, run the world backup,
-   swap the jar, add any new `config.yml` keys from the release notes, and `systemctl start minecraft`.
+   swap the jar, merge the new `config.yml` keys by hand
+   ([plugin configuration reference § 2](admin/plugin-configuration.md#2-merging-config-changes-at-a-deploy): the
+   plugin never adds them to an existing file), and `systemctl start minecraft`.
 
 **Rollback:**
 
@@ -1565,7 +1575,8 @@ throwaway credentials. Nothing touched the dev DB or any real server.
 | nginx config from § 8.3: SPA fallback, `/api` proxy + login cookie, `/health` denied, cache and security headers | ✅ (after fixing the `add_header` inheritance trap now noted in the config) |
 | Plugin jar build | ⚠️ not reproduced in the sandbox (Maven Central rate-limited it); GitHub CI `Build` is green on knk-plugin `main` `c7d5a1e` |
 | Paper download API for 1.21.10 | ✅ build 130 resolved with a SHA-256 |
-| Paper server, plugin ↔ API on a live server, TLS issuance, GitHub Actions workflows | ⏳ not tested; do them on staging first |
+| Paper server, plugin ↔ API on a live server, TLS issuance, the release and deploy workflows (§ 10.4, § 10.5) | ⏳ not tested; do them on staging first |
+| _Added 2026-11-13:_ CI workflows (§ 10.3): knk-web-api `ci.yml` and `migrations.yml`, knk-web-app `ci.yml` | ✅ green on GitHub at the L1 runs of PandiO/knk-workspace#328 (API: 3678 passed, 0 failed, 88 skipped) |
 
 ## Appendix B — reference files
 
@@ -1576,7 +1587,9 @@ throwaway credentials. Nothing touched the dev DB or any real server.
 | [`scripts/seed/import-seed.sh`](../../scripts/seed/import-seed.sh) | load it into a new production DB (guarded, one transaction) |
 | knk-web-api `Program.cs` | config binding, startup seeds, CORS, health |
 | knk-web-api `appsettings.json` | every default the env file overrides |
+| knk-web-api `.github/workflows/ci.yml` | API build and unit tests (§ 10.3) |
 | knk-web-api `.github/workflows/migrations.yml` | the fresh-DB migration check CI already runs |
+| knk-web-app `.github/workflows/ci.yml` | web app tests, type check and build (§ 10.3) |
 | knk-web-app `src/config/appConfig.ts` | the compiled-in API URL (G1) |
 | knk-plugin `knk-paper/src/main/resources/config.yml`, `plugin.yml` | plugin settings, commands and permission nodes |
 | knk-plugin `.github/workflows/build.yml` | plugin CI |

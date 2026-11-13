@@ -2,7 +2,7 @@
 
 **Status:** Written 2026-11-01 for knk-web-app `claude/entity-lists-url-state`; run by the developer 2026-11-03: every step
 works or is accepted, after one fix (4.2, knk-web-app `d72194b`; Findings below). Merged 2026-11-03 (knk-web-app `main` `44f9395`)
-**Last updated:** 2026-11-03
+**Last updated:** 2026-11-12 (§ 7: chain 3 V2 merged into knk-web-app `main` `1371951` with V7; § 7 not run yet); 2026-11-08 (§ 7: checkbox selection and Export CSV, #205 export part, chain 3 V2 — knk-web-app `claude/dashboard-export-205`, not merged, not run yet); 2026-11-03
 **Issues:** [PandiO/knk-workspace#39](https://github.com/PandiO/knk-workspace/issues/39) (page/search/sort and tabs in the
 URL, rows as links, `aria-sort`) · [#177](https://github.com/PandiO/knk-workspace/issues/177) follow-up ("Drafts (n)", "New
 with: {config}")
@@ -96,6 +96,71 @@ Needs a type with a second, non-default form configuration (add one on the Entit
 5. Switching tabs doesn't add history entries: Back from `/admin/users?tab=demoted` after switching tabs a few times
    leaves the page.
 
+## 7. Checkbox selection and Export CSV (#205 export part, chain 3 V2)
+
+**Branch:** knk-web-app `claude/dashboard-export-205`. It **contains** V1's `claude/web-fixes-266-263-258` and so chain
+2's `claude/realtime-web-live-183`; merge or test those first, or test this branch on its own. No API change, no
+migration, no setting. The API trunk is enough. **Accounts:**
+- **A:** the owner (`*`) or an Admin (`knk.admin.*`);
+- **B:** a staff account with `knk.admin.content` but without `knk.admin.*` or `knk.admin.export` (e.g. Staff).
+
+Until link AM1 adds the node to the API, only A can export. Pick a type with more than 10 rows and a published default
+display configuration (X, as above), and keep a spreadsheet app at hand (Excel or LibreOffice). Time: about 20 minutes.
+
+1. As A, open `/dashboard/X`. Expected:
+   - a checkbox column on the left, with a header box;
+   - a bar above the table: "None selected · Export takes all N results" and **Export CSV**, where N is the table's
+     "of N results".
+2. Tick two rows. Expected:
+   - the rows are highlighted;
+   - the bar says "2 selected" with **Clear**, and the button says "Export CSV (2)";
+   - the header box shows a dash (some selected);
+   - ticking never opens a row.
+3. Click a ticked row's text, then its first-cell link. Middle-click and Ctrl/Cmd-click the link. Expected: the row click
+   and the link open the detail page as in § 3, and middle/Ctrl-click opens a new tab. Clicks around the checkbox do
+   neither.
+4. Back on the dashboard (the selection is gone after a page reload; that's expected), tick one row on page 1. Go to
+   page 2 and tick one more. Use the header box on page 2. Expected:
+   - the count adds up across pages;
+   - the header box ticks and clears only the rows shown;
+   - **Clear** empties the selection.
+5. Tick three rows on different pages, then **Export CSV (3)**. Expected:
+   - a file `X-<today>.csv` (for example `Street-2026-11-08.csv`);
+   - in the spreadsheet, the same columns as the table in the same order, with the header labels;
+   - three rows in the order you ticked them, showing the table's values (Yes/No, related names, `5/10` style values,
+     not ids or `[object Object]`);
+   - a missing value is an empty cell rather than `-`;
+   - accents and symbols (é, ü, ★, §) come out right;
+   - a success toast "Exported 3 X rows".
+6. Clear the selection. Search a term that matches more than one page, sort a column descending, then **Export CSV**.
+   Expected:
+   - the button shows "Exporting… n / N" while it pages;
+   - the file holds every match, as many rows as "of N results", not only the shown page;
+   - the rows are in the table's sort order.
+7. With a slow network (DevTools → Network → Slow 3G) on a type with several pages, click Export CSV and then
+   **Cancel**. Expected: no file, and an "Export cancelled" toast.
+8. (Optional; no type has more than 10,000 rows yet.) The 10,000 cap is covered by the unit tests and the browser check.
+   With such a type, expected:
+   - the bar says "Only the first 10,000 go into the file (limit)";
+   - the file has 10,000 rows;
+   - a warning toast that stays until it's closed.
+9. Open `X-<today>.csv` with a double click in Excel. Expected: columns split correctly.
+   - If Excel is set to `;` as the list separator (Dutch Windows), the comma file opens in one column. That's LV2-5.
+     Data → From Text/CSV (or LibreOffice) reads it. Note what you see.
+10. A row whose name starts with `=`, `+` or `@` (or create one): in the file it starts with `'`, and Excel shows the
+    text instead of running a formula.
+11. Delete one of the ticked rows with its 🗑. Expected: after the deletion, the count drops by one. Pick another type
+    in the explorer. Expected: the selection is empty.
+12. As B, open `/dashboard/X`. Expected: the checkboxes and the count work, and **Export CSV** is disabled with
+    "Requires knk.admin.export" next to it.
+13. Phone width (390 px, DevTools): the bar wraps (count above, Export below), and the page doesn't scroll sideways.
+    The table scrolls inside its card.
+14. Themes: repeat 1–2 in `current` and `brand` (cogwheel), with the page background on and off. Expected: the bar and
+    the checkboxes are readable in all four, the checkboxes take the theme's primary colour, and selected rows are
+    highlighted.
+15. In a form, open a picker table (e.g. Street's District field). Expected: as in § 3.8, a row click selects with a
+    check mark, there's no checkbox column and no bar.
+
 ## Findings
 
 | Step | Result | Notes |
@@ -106,3 +171,4 @@ Needs a type with a second, non-default form configuration (add one on the Entit
 | 4 | Works / accepted, one fix | 4.1 works. 4.2 works, but long configuration names were cut off and hovering didn't show the full name (most configurations differ only at the end of their name) → fixed in knk-web-app `d72194b`: the "New with" and "Resume a draft" menus let names and descriptions wrap in a wider menu (18–28rem, never wider than the screen), and every item shows its full name and description on hover. 4.3 and 4.4 accepted. 4.5 works. |
 | 5 | Works / accepted | 5.1–5.4 work. 5.5 and 5.6 accepted. |
 | 6 | Works | All 5 steps. |
+| 7 | | Chain 3 V2 (#205), not run yet. |

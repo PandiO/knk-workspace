@@ -16,7 +16,7 @@ check its result, and report to me.
 Setup, before anything else:
 1. In /home/user/knk-workspace, fetch and check out branch claude/adoring-bardeen-94lfsf. Read, in this order:
    docs/ai-agents/handoffs/2026-10-25-alpha-run-1-p0-p1.md (the handoff; binding for the packages; § 1 lists them,
-   § 5 is the progress table you keep), docs/reports/alpha-tests/25-10-2026/test-run-1-findings.md, and on
+   § 5 is the progress table you keep), docs/reports/alpha-tests/test-run-1/test-run-1-findings.md, and on
    origin/main: AGENTS.md, docs/ai-agents/GLOBAL_AGENT_INSTRUCTIONS.md ("Session chains", "GitHub Issues is the work
    list") and docs/ACTIVE_SESSIONS.md.
 2. Check the state: every package marked done or running in § 5 is left alone. For each package you are about to

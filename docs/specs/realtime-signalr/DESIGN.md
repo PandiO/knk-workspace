@@ -1,7 +1,7 @@
 # Realtime channel (SignalR) between knk-web-api, knk-plugin and knk-web-app
 
-**Status:** Accepted design (developer decisions 2026-10-26, §12). S1 (§4–§5), S2 (§6.1), WT1 (§8.2, §8.7, #180; as built: [world-tasks/README.md § Lifecycle](../world-tasks/README.md#lifecycle-and-endpoints-pandioknk-workspace180)), WT2 (§8.3–§8.6, #181; as built: §8.8) and S3 (§6.2–§6.4, #182; as built: §6.8) **merged into the default branches 2026-11-04** (API `master` `2258df5`, plugin `main` `e1b6a7a9`, web app `main` `d0c2ba8`) after the developer's smoke tests of #180 and WT2; `realtime.enabled: false` by default in the plugin. S4–S5 not started.
-**Last updated:** 2026-11-05 (#239 offer permission check, #240 Send again merged); 2026-11-04 (#239, #240 on a feature branch); 2026-11-02 (S3 built: §6.8); 2026-11-02 (WT2 built: §8.8); 2026-11-01 (status: WT1 built, #180); 2026-10-26 (S2 built: implementation notes in §6.7; S1 built: §4.6; decisions recorded; §8.3 delivery and busy flow, §8.7 tasks anchored to the draft, §4.3 publishing path)
+**Status:** Accepted design (developer decisions 2026-10-26, §12). S1 (§4–§5), S2 (§6.1), WT1 (§8.2, §8.7, #180; as built: [world-tasks/README.md § Lifecycle](../world-tasks/README.md#lifecycle-and-endpoints-pandioknk-workspace180)), WT2 (§8.3–§8.6, #181; as built: §8.8) and S3 (§6.2–§6.4, #182; as built: §6.8) **merged into the default branches 2026-11-04** (API `master` `2258df5`, plugin `main` `e1b6a7a9`, web app `main` `d0c2ba8`) after the developer's smoke tests of #180 and WT2; `realtime.enabled: false` by default in the plugin. **S4** (#183, chain 2 X1, web live updates) **merged 2026-11-12** (API `master` `bc97b7d`, web app `main` `1371951`; smoke test § S4 not run); as built: §6.9; since #280 AM1 (same merge) the audience is the type's area node. **S5** (#184, chain 2 R1, account erasure): API part merged 2026-11-12 in `bc97b7d` (migration `AddPrivacyErasureEvents`), plugin part and § 7.5 not merged.
+**Last updated:** 2026-11-12 (§6.9 as built brought over from `claude/realtime-web-live-183` and marked merged, audience per area node since #280 AM1 — docs #341); 2026-11-12 (status: S4 merged, S5 API part merged); 2026-11-06 (§6.9: `Realtime:WebLiveUpdatesEnabled`, decision on LX1-10); 2026-11-05 (S4 built: §6.9, §6.5 table, §9); 2026-11-05 (#239 offer permission check, #240 Send again merged); 2026-11-04 (#239, #240 on a feature branch); 2026-11-02 (S3 built: §6.8); 2026-11-02 (WT2 built: §8.8); 2026-11-01 (status: WT1 built, #180); 2026-10-26 (S2 built: implementation notes in §6.7; S1 built: §4.6; decisions recorded; §8.3 delivery and busy flow, §8.7 tasks anchored to the draft, §4.3 publishing path)
 **Issue:** [PandiO/knk-workspace#66](https://github.com/PandiO/knk-workspace/issues/66) (KNG-57, priority high); phase issues in
 [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md). Related: #76 (KNG-170, rank changes don't reach the server),
 #121 (KNG-262, cache TTLs), #31 (KNG-202, startup-only siege work), #35 (KNG-176), #34 (KNG-246), #145 (KNG-249), #75.
@@ -253,8 +253,8 @@ idempotent and already resilient.
 |---|---|---|
 | `WorldTaskUpdated {taskId, status, offer, claimedBy, output?, error?}` | `task:{id}`, `user:{creatorId}` | `WorldBoundFieldRenderer` (§8.5) |
 | `CatalogScanUpdated {scanId, status, progress}` | `user:{starterId}` | `MinecraftCatalogScanCard` (replaces the 3 s poll) |
-| `PresenceChanged {userId, online, serverId}` | `staff` | player profile / moderation list (later) |
-| `EntityChanged {type, id, op, actorUserId}` | `staff` | dashboard live refresh (later, §9) |
+| `PresenceChanged {userId, online, serverId, lastSeenAt}` | holders of `knk.admin.user.manage` (S4: no `staff` group, the node is checked per message, §6.9) | player profile / moderation list (S4, #183) |
+| `EntityChanged {type, id, op, actorUserId, actorName}` | holders of the type's area node since #280 AM1 (`knk.admin.content`, `knk.admin.world`, …; users and their permission rows: `knk.admin.user.manage`; §6.9) | dashboard and detail page live refresh (S4, #183, §9) |
 
 ### 6.6 Region rename and containment (later, optional)
 
@@ -354,6 +354,56 @@ onto the hub" → **later, phase S6**.
 - **Not in S3:** web consumers of `EntityChanged` (#183), erasure (#184), a Location row's coordinates (a warp point
   moved without touching the domain) and the time-based expiry of an enhanced telemetry target (both stay on the
   poll/TTL).
+
+### 6.9 S4 as built (2026-11-05, #183)
+
+Built on `claude/realtime-web-live-183` in knk-web-api, knk-web-app (stacked on the admin IA branch `claude/admin-ia-30`)
+and knk-workspace; **merged 2026-11-12** (API `master` `bc97b7d`, web app `main` `1371951`; smoke test § S4 not run). Flags LX1-1… in the
+[chain 2 report](../../reports/2026-11-05-ux-chain-2.md) (link X1 block). No migration, no plugin change.
+
+- **Same interceptor, a second map.** `Realtime/RealtimeEntityChangeInterceptor` also watches every model with
+  `[FormConfigurableEntity]` (the dashboard's types) and hands a save's changes to `Realtime/RealtimeWebChangeMap` (pure)
+  besides the game servers' `RealtimeEntityChangeMap`, whose output is unchanged. The web events are only built while a
+  web hub connection is open (`RealtimeConnections.Count(Web) > 0`) and go through the same after-commit sink.
+- **`EntityChanged {type, id, op, actorUserId, actorName}`** on the web hub (same type name as the game servers' event,
+  other payload): one per changed entity of a dashboard type, and one for each `[FormConfigurableEntity]` base type
+  (a Town also sends `Domain`). More than 50 of one type in a save, or a row without a single id (link tables), → one
+  event with `id: null` ("re-read the list"). `actorName` is the `username` claim of the saving web user; null for the
+  game server or a job. A user change that only touches presence, password or token columns sends none.
+- **`PresenceChanged {userId, online, serverId, lastSeenAt}`** when `User.IsOnline` changes in a save: the hub's
+  presence store (roster, joined, left, grace expiry) and the REST `PUT api/Users/{id}/presence` both write through EF,
+  so it works with the plugin's `realtime.enabled` on or off. `serverId` from `PresenceRegistry.ConnectedServerOf`. More
+  than 50 at once (a roster reconcile) → one event with `userId: null`.
+- **Who receives them (no `staff` group).** Each web event names the node that gates the same data over REST
+  (`RealtimeEvent.WebNode` → `IRealtimePublisher.PublishToWebHolders` → `RealtimeMessage.RequiredNode`). The dispatcher
+  sends it only to web connections whose user holds that node, checked with the REST check
+  (`IPermissionResolutionService.CheckAsync`, so `*` and `knk.admin.*` match) in `Realtime/RealtimeWebAudience`, cached
+  per user and node for `Realtime:WebPermissionCacheSeconds` (30); a failed check is "no" and not cached; without an
+  audience nobody gets it (fail closed). Nodes: as built on the branch, `knk.admin.content` for every dashboard type (the dashboard's and the
+  detail page's route node); **since #280 AM1 (merged with it 2026-11-12) the type's area node** from the
+  `DashboardAccess` registry (`RealtimeWebChangeMap.NodeFor`/`NodeForName`; `knk.admin.content` only for a type
+  outside the registry; a base type's event carries the base type's area node; [access model](../dashboard-access-model/DESIGN.md) § 4.2); `knk.admin.user.manage` for `User`, `UserPermissionGroup`, `PermissionGrant`,
+  `PermissionHolder`, `AuditLogEntry` and for `PresenceChanged` (the moderation list `GET api/Users`, the profile summary
+  and `online-staff`'s own data need it); **never sent:** `UserIgnore`, `CurrencyTransaction`, `KitPurchase`, `KitClaim`,
+  `ItemInstance` (game-server, ledger or lootbox-manager reads). A node taken away stops the events within 30 s (REST is
+  denied at once).
+- **REST:** `GET api/Users/{id}/profile-summary` (unchanged rule, `knk.admin.user.manage`) gains `presence {online,
+  lastSeenAt}` (`User.IsOnline`, as the moderation list) for the profile's first badge state. No new endpoint.
+- **Web app** (`src/realtime/liveUpdates.ts`): `useLiveEntityChanges(type, onChange, {id})` gathers a burst (750 ms) of
+  changes by someone else (the context now carries the connected `userId`; your own saves are skipped) into one call
+  with the names, a delete of the watched entity, or a hub reconnect; `usePresenceChanges`. Dashboard: a quiet
+  refetch of the shown page (`PagedEntityTable` `liveRefreshKey`: the rows stay, no spinner) and "Updated by alice at
+  21:52". Detail page: a quiet re-read (`useEntityData` `refetch(true)`, the entity stays on a failed read) with the
+  same line, or "This Town was deleted by alice." with Back. Moderation list: the badges change in place (rows are never
+  added or removed; Search re-runs the filter); `userId: null` or a reconnect re-reads the shown list quietly with the
+  search it ran. Player profile: new Online / "Offline · last seen …" badge, live.
+- **Off = as before:** without a web hub connection nothing arrives; the pages keep their Reload, Back and polls. The
+  web hub does not depend on the plugin's `realtime.enabled`.
+- **Switch (developer decision 2026-11-06 on LX1-10):** API setting `Realtime:WebLiveUpdatesEnabled` (default `true`,
+  env `Realtime__WebLiveUpdatesEnabled`). `false`: the interceptor builds no web `EntityChanged` or `PresenceChanged`
+  (folded into the "web connection open" check in `RealtimeSetup`, read through `IOptionsMonitor` on every save), so
+  none is sent and the pages behave as with the hub down. The game servers' events, the web hub itself (the user's own
+  events) and the profile summary's `presence` field stay.
 
 ## 7. Reliability
 
@@ -596,7 +646,8 @@ contains the WT1 branch (`claude/world-task-hardening`, merged in, not on a trun
 
 When admin A saves a Town in the dashboard, admin B's dashboard showing Towns refreshes its table (`EntityChanged`
 to group `staff`, the dashboard bumps `refreshKey` for the matching type, debounced). Not needed for R1/R2 (they are
-about the game server); small once the web hub exists. Phase S4 web part, low priority.
+about the game server); small once the web hub exists. Phase S4 web part, low priority. **Built 2026-11-05 (#183):**
+§6.9 (gated per node instead of a `staff` group; the detail page and the online badges too).
 
 ## 10. What changes for existing docs and issues
 

@@ -62,8 +62,8 @@ Write-Host "  - DECISIONS.md (document trade-offs)"
 Write-Host "  - COMMIT_HISTORY.md (track commits per phase)"
 Write-Host ""
 Write-Host "Next steps:" -ForegroundColor Cyan
-Write-Host "  1. Follow Step 1 of docs/AI_FEATURE_IMPLEMENTATION_WORKFLOW.md for requirements refinement"
+Write-Host "  1. Follow Step 1 of docs/archive/AI_FEATURE_IMPLEMENTATION_WORKFLOW.md (archived; current: .claude/skills/knk-coordinator, knk-link) for requirements refinement"
 Write-Host "  2. Use Step 2 prompt template to generate REQUIREMENTS.md and SPEC.md"
 Write-Host "  3. Use Step 3 prompt template to generate IMPLEMENTATION_ROADMAP.md"
 Write-Host ""
-Write-Host "Reference: docs/AI_FEATURE_IMPLEMENTATION_WORKFLOW.md" -ForegroundColor Yellow
+Write-Host "Reference: docs/archive/AI_FEATURE_IMPLEMENTATION_WORKFLOW.md (archived; current: .claude/skills/knk-coordinator, knk-link)" -ForegroundColor Yellow
