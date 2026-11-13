@@ -77,9 +77,9 @@ to the website, never the other way.
 
 ## The hub
 
-Everyone arrives in the **hub**, a separate, peaceful area. In the hub:
+When you join you normally arrive in the **hub**, a separate, peaceful area. In the hub:
 
-1. You can't fight or take damage, and you slowly heal and get fed.
+1. You can't fight or take damage, and you usually heal and get fed over time.
 2. You can't build or break blocks, or open chests and other storage. Doors, dropping and picking up items and your
    own inventory work as normal.
 3. You walk into a **portal** to enter the game world. You arrive at your rank's join spot, or the server's default
@@ -88,24 +88,25 @@ Everyone arrives in the **hub**, a separate, peaceful area. In the hub:
 `/hub` takes you back to the hub from the game world, with the same warmup as `/spawn` (see
 [Getting around](#getting-around)).
 
-If the game's services go down while you play, you may be moved to the hub and kept there until they are back. You
-then get a clickable offer to return to where you were (`/hub return`); nothing moves you back without you clicking.
+If the game's services go down while you play, you may be moved to the hub (the server's setting decides) and kept
+there until they are back. You then get a clickable offer to return to where you were (`/hub return`); nothing moves you back without you clicking.
 If you were in a siege match, that match is stopped.
 
 ## The menu
 
 Most things have a menu. When you join and when you respawn you get a **nether star called `Menu (click to open)`**
 in the right-most hotbar slot: click it, or type `/menu`. You can't drop it and you keep it when you die. With a
-completely full inventory you only get the star once there is room (rejoin or respawn); `/menu` always works. The main menu has a tile for your profile (your head),
-kits, sieges, the item catalogue, premium tiers, discoveries and teleports.
+completely full inventory you only get the star once there is room (rejoin or respawn); `/menu` always works. The
+main menu has a tile for your profile (your head), kits, sieges, the item catalogue, premium tiers, discoveries and
+teleports.
 
 Full guide: [Menus](menus-player-guide.md). Every command: [commands reference](commands.md).
 
 ## Your account
 
 Your account joins your Minecraft player and your web login. In game, `/account` (`/acc`) shows your username, email,
-coins, gems and experience. On the website, the **Account** page shows the same, plus your transaction history, your
-discoveries and statistics, and lets you change your email and password, link your Minecraft account and log out on
+coins, gems and experience. On the website, the **Account** page shows the same, plus your transaction history and,
+once your Minecraft account is linked, your discoveries and statistics, and lets you change your email and password, link your Minecraft account and log out on
 all devices. Forgot your password? Use **Forgot password** on the **Log in** page.
 
 <!-- Guide link (PandiO/knk-workspace#299): add the account player guide link on the next line. -->
@@ -121,7 +122,7 @@ all devices. Forgot your password? Use **Forgot password** on the **Log in** pag
 4. `/navigate <place>` shows a particle trail and a boss bar along the roads. It doesn't teleport you; you walk.
    `/navigate stop` ends it.
 
-Teleports have a **warmup** (5 seconds: don't move or take damage), a **cooldown** (30 seconds between teleports of
+By default, teleports have a **warmup** (5 seconds: don't move or take damage), a **cooldown** (30 seconds between teleports of
 the same kind) and are blocked for 10 seconds after a PvP hit and during a siege. Your rank can shorten these.
 
 <!-- Guide link (PandiO/knk-workspace#298): add the navigation and teleports player guide link on the next line. -->
@@ -130,7 +131,7 @@ the same kind) and are blocked for 10 seconds after a PvP hit and during a siege
 
 ## Discoveries
 
-Walk into a town, district or structure for the first time and you **discover** it, earning coins and XP. Some
+Walk into a town, district or structure for the first time and you **discover** it, which can earn you coins and XP. Some
 warps only open once you have discovered the place. See yours with `/discoveries` (`/disc`), the **Discoveries** tile
 in the menu, or your **Account** page on the website. For your first 10 minutes on the server, discoveries are
 announced together in one summary afterwards; you get the rewards straight away.
@@ -155,13 +156,13 @@ announced together in one summary afterwards; you get the rewards straight away.
 1. **Titles** come from experience (XP), which you earn by playing. Some kits, warps and sieges need a certain title. Your title and the
    progress to the next one are in your profile (your head in the menu) and in `/stats`.
 2. **Ranks** decide which commands you can use. Everyone starts with the default rank. The **premium tiers** (Noble,
-   Royal and Dragon Blood) add perks, such as `/siege skip` (Noble) and `/tpahere` and `/back` (Dragon Blood); the
-   **Premium tiers** tile shows them. Staff ranks are Staff, Moderator and Admin.
+   Royal and Dragon Blood) add perks. On the closed alpha these include
+   `/siege skip` (Noble) and `/tpahere` and `/back` (Dragon Blood). The **Premium tiers** tile shows them. Staff ranks are Staff, Moderator and Admin.
 3. **Private messages:** `/msg <player> <message>`, `/reply` (`/r`) to answer, `/ignore <player>` to stop seeing
    someone. Moderators can read private messages.
 4. **Chat tokens:** type `#hand`, `#stats` or `#kills` in chat to show your held item or a statistic; others hover
    over it for the details. If a token would show a statistic you keep private, you're asked first. See [chat tokens](../chat-tokens.md).
-5. `/afk` marks you away. You also go AFK after 5 minutes without moving.
+5. `/afk` marks you away. You also go AFK after 5 minutes idle (if the server has AFK on).
 
 <!-- Guide link (PandiO/knk-workspace#301): add the ranks and chat player guide link on the next line. -->
 > **Full guide:** coming soon (ranks and chat). Until then, see
@@ -172,7 +173,8 @@ announced together in one summary afterwards; you get the rewards straight away.
 The game counts how you play: playtime, kills, deaths, siege results, distance, discoveries and more. `/stats` shows
 yours; `/leaderboard` (`/lb`) opens the leaderboards. On the website, **Leaderboards** shows the top players and
 `/players/<name>` a player's public profile. You decide who sees each statistic (Nobody, Friends or Everyone) with
-`/stats settings` or on your **Account** page.
+`/stats settings` or on your **Account** page. There is no friends list yet, so Friends shows a statistic to nobody
+for now.
 
 Full guide: [Statistics and public profile](statistics-player-guide.md).
 
@@ -195,7 +197,8 @@ Full guide: [Gate structures](gate-structures-player-guide.md).
 ## Siege
 
 Sieges are team matches: attackers try to take a castle's objectives, defenders try to hold them. Type `/siege` or
-click the **Siege Minigame** tile to see the lobbies, and `/siege join` to join one. In the lobby you can vote for the
+click the **Siege Minigame** tile to see the lobbies, and click one or type `/siege join <lobby>` to join it (the
+name can be left out when only one lobby is open). In the lobby you can vote for the
 next scenario with `/siege vote` and choose where you start with `/siege spawn`. Sieges that use it give you a navigation
 compass that points the way to the objectives. During a match only `/siege`, `/siegemenu`, `/navigate` and the commands the
 siege allows work; `/siege leave` leaves it (you
