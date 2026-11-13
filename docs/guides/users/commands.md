@@ -1,7 +1,7 @@
 # In-game commands
 
-**Status:** Current · **Last updated:** 2026-11-13 (desk check of the rank columns, `/lb` and `/pay` against the code, PandiO/knk-workspace#316; not yet checked in game); 2026-11-10 (rebuilt from the plugin's command catalogue, PandiO/knk-workspace#294)
-**Checked against:** knk-plugin `main` `57884e9` (`knk-paper/src/main/resources/plugin.yml`, `knk-paper/.../paper/commands/`), rank seed migrations in knk-web-api `master` `f445d21`
+**Status:** Current · **Last updated:** 2026-11-13 (desk check of the rank columns, `/lb` and `/pay` against the code and the dev seed, PandiO/knk-workspace#316; not yet checked in game); 2026-11-10 (rebuilt from the plugin's command catalogue, PandiO/knk-workspace#294)
+**Checked against:** knk-plugin `main` `57884e9` (`knk-paper/src/main/resources/plugin.yml`, `knk-paper/.../paper/commands/`), rank seed migrations in knk-web-api `master` `f445d21`, dev seed knk-dev-db-seed `4b71f23`
 **Related:** [plugin permission checks](../../architecture/plugin-permission-checks.md), [command permission scan 2026-10-26](../../reports/2026-10-26-command-permission-scan.md), [COMMAND_CATALOG_V3](../../specs/user-features/COMMAND_CATALOG_V3.md) (design notes), [chat tokens](../chat-tokens.md), [plugin configuration reference](../admin/plugin-configuration.md) (the `config.yml` keys behind warmups, cooldowns and limits), [gate structures player guide](gate-structures-player-guide.md), [v1 commands](../../specs/legacy/commands-v1.md) (history)
 
 This page lists every Knights and Kings command on the game server: what it does, who can use it and what the main
@@ -13,11 +13,14 @@ can use them (`/minecraft:<command>`).
 - **Ranks.** Your rank (permission group) decides which commands you can use. The game asks the web API for your
   permissions when you join and keeps them for 30 seconds. A rank change made in the web app reaches the game within
   that time. The "Who" columns below name the lowest rank that holds the command **on the closed alpha's seed data**. A
-  rank also gets everything from the ranks it inherits from: Staff → Moderator → Admin. The premium ranks (Noble,
-  Royal, Dragon Blood) and Alpha Tester each inherit from Default, **not from each other** (seed migration
-  `PremiumRanksInheritDefault`; the alpha's database is still to be checked, PandiO/knk-workspace#316): a command
-  marked Noble or Dragon Blood is that rank's alone. Whether Royal and Dragon Blood should get Noble's perks is
-  PandiO/knk-workspace#430. A rank's own grants come from
+  rank also gets everything from the ranks it inherits from: Staff → Moderator → Admin. How the premium ranks
+  inherit depends on the database. In the dev seed (knk-dev-db-seed `4b71f23`, the 2026-11-01 export,
+  `seed/knk_seed.sql`, table `permission_groups`) they chain Dragon Blood → Royal → Noble → Default, so Royal and
+  Dragon Blood also have Noble's perks, such as `/siege skip`. A fresh database built by the migrations alone doesn't
+  chain them: each premium rank inherits only from Default (`PremiumRanksInheritDefault`), so Noble's perks stay
+  Noble's. The alpha was loaded from the earlier seed `4abf42c` ([import report](../../reports/2026-10-24-alpha-seed-import.md));
+  its chain is still to be checked (PandiO/knk-workspace#316). Which way is meant is PandiO/knk-workspace#430.
+  Alpha Tester inherits from Default. A rank's own grants come from
   the seed data for now (editing them in the web app is PandiO/knk-workspace#50); staff give one player an extra
   permission with `/knk user <player> perm grant <node>`. "Everyone" means the Default rank. "Ops only" means no
   rank holds it yet.
@@ -144,7 +147,7 @@ Note: `/lb` opens the leaderboards, not the lootboxes. Both commands declare it,
 | `/siege vote [number\|name\|random]` | Everyone | Votes for the next scenario. Without a choice it lists them. Voting for your current choice again withdraws your vote. |
 | `/siege spawn [option]` | Everyone | Chooses where you start and respawn. An objective that is being captured can't be picked. |
 | `/siege history` | Everyone | Your last finished matches, with links to the website. |
-| `/siege skip [lobby]` | Noble (only; PandiO/knk-workspace#430) | Skips a lobby's cooldown so matchmaking starts, or shortens matchmaking. |
+| `/siege skip [lobby]` | Noble | Skips a lobby's cooldown so matchmaking starts, or shortens matchmaking. |
 
 - **Commands during a match.** In the hub and during a match only `/siege`, `/siegemenu`, `/navigate` and the
   commands the siege allows work: "You can't use that command during a siege. Allowed: …"
@@ -317,9 +320,10 @@ These came up while checking this page against the code. The page above describe
 - PandiO/knk-workspace#314: `/gatedoor health 0` doesn't destroy the door; `/gate override active|destroyed` fires
   no state change.
 - PandiO/knk-workspace#315 (decision): `/siege skip` works on any lobby; `/knk user … coins|gems|xp` has no rank check.
-- PandiO/knk-workspace#430 (decision): the premium ranks each inherit from Default, so Royal and Dragon Blood don't get
-  Noble's `/siege skip`, although the teleport design expects Noble's perks to reach the higher tiers.
+- PandiO/knk-workspace#430 (decision): the dev seed chains the premium ranks (Royal and Dragon Blood get Noble's
+  perks), the migrations don't (each inherits only from Default).
 
-The rank columns were checked against the seed migrations on 2026-11-13 (PandiO/knk-workspace#316), not yet in game.
-The grants made by hand in the alpha's seed database (for example Dragon Blood's `/tpahere` and `/back`, and the
-Staff → Moderator → Admin chain) still need that check.
+The rank columns were checked on 2026-11-13 against the seed migrations and the dev seed (knk-dev-db-seed `4b71f23`,
+the 2026-11-01 export) (PandiO/knk-workspace#316), not yet in game. The alpha was loaded from the earlier seed
+`4abf42c` (2026-10-24); whether its live database matches the dev seed, the premium rank chain included, is still to
+be checked.
