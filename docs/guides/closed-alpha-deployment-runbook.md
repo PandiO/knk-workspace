@@ -1,6 +1,6 @@
 # Closed-alpha deployment runbook
 
-**Status:** Current · **Last updated:** 2026-11-13 (header converted to the doc header standard, LAN addresses replaced by placeholders, PandiO/knk-workspace#305)
+**Status:** Current · **Last updated:** 2026-11-13 (§ Every deploy: deploy gate, release tags, deployment log row and GitHub Release, PandiO/knk-workspace#303)
 **Progress:** In progress — phases 0–3 complete; phase 3b (API upgrade to the KNG-64 build, [KNG-227](https://linear.app/kngpandi/issue/KNG-227)) complete 2026-10-22 ([report](../reports/2026-10-22-alpha-api-kng64-upgrade.md)); API updated to `4aeb794` ([KNG-275](https://linear.app/kngpandi/issue/KNG-275)) and phase 4 Stage 2 (KnK plugin `d56e41da`, [KNG-225](https://linear.app/kngpandi/issue/KNG-225)) done 2026-10-24 ([report](../reports/2026-10-24-alpha-api-4aeb794-and-plugin-stage-2.md)); `/hub` waits for a hub selection in the approved seed. Phase 5 (playit.gg, `play.knightsandkings.net`) done 2026-10-24 ([report](../reports/2026-10-24-alpha-phase-5-playit.md)). Phase 6 (web app, `app.knightsandkings.net`, own tunnel, Access; API `a38c8ee9`) done 2026-10-24 ([report](../reports/2026-10-24-alpha-phase-6-web-ingress.md)). Security probe (go-live § 8) passed 2026-10-24 privately and through Cloudflare ([report](../reports/2026-10-24-alpha-security-probe.md)). HSTS and the apex redirect done the same day. Phase 7 deferred to beta (developer, 2026-10-24); the alpha uses manual snapshots (`scripts/alpha-snapshot/`). Phase 9 done 2026-10-24: mail relay, Access sync and bypass, sign-up by invitation, admission gate with the whitelist off ([report](../reports/2026-10-24-alpha-phase-9-invite-only.md)). Approved seed and fresh world imported 2026-10-24 ([report](../reports/2026-10-24-alpha-seed-import.md)); `/hub` works. Next: the first alpha run. Web hostname decided 2026-10-21: `app.knightsandkings.net`
 **Progress report:** [2026-10-11 closed-alpha infrastructure progress](../reports/2026-10-11-closed-alpha-infrastructure-progress.md)
 **Handoff:** [2026-10-11 closed-alpha infrastructure](../ai-agents/handoffs/2026-10-11-closed-alpha-infrastructure.md)
@@ -25,6 +25,68 @@ continuing.
   volume, Portainer vs host Compose authority) are in the
   [2026-10-18 report](../reports/2026-10-18-nas-ops-access-and-alpha-check.md). Phase 3b resolved A1, A2, A4, A5
   and A6 on 2026-10-22; A3 (`root@%`) is open as [KNG-242](https://linear.app/kngpandi/issue/KNG-242).
+
+## Every deploy: gate, tags, release and log
+
+Each update of knk-alpha after go-live (API, web app, plugin, seed patch or config) goes through these steps around the
+procedure itself ([NAS operations access § 7](nas-ops-access.md#7-stage-b-delegated-changes-knk-deploy),
+`knk-deploy`). The phases below describe how the stack was built.
+
+1. **Deploy gate.** List the open `documentation` issues of the features in this deploy
+   (`gh api -X GET search/issues -f q='repo:PandiO/knk-workspace is:issue is:open label:documentation'`, then match
+   them with the changelog entries since the last deploy). Their player and admin guide items are closed first, or the
+   developer accepts the gap in the run's preparation plan
+   ([global instructions § Shipping a change](../ai-agents/GLOBAL_AGENT_INSTRUCTIONS.md#shipping-a-change-documentation),
+   [closed alpha test runs](closed-alpha-test-runs.md)).
+2. **Release tags.** A deploy uses release tags on trunk, one per component repo that changes (global instructions,
+   ["Branches" rules 1 and 5](../ai-agents/GLOBAL_AGENT_INSTRUCTIONS.md#branches-releases-and-risk-tiers)). The
+   developer promotes `next` to trunk, then each changed repo gets its tag through its **Release** workflow
+   (`.github/workflows/release.yml`, on the default branch of knk-web-api, knk-web-app and knk-plugin since
+   2026-11-13):
+   - Run it from the repo's Actions tab ("Release" → "Run workflow"), or a session runs it with GitHub MCP
+     `actions_run_trigger` as part of a promotion the developer asked for: workflow `release.yml`, ref = the default
+     branch (`master` for knk-web-api, `main` for the others), inputs `tag` and `sha`.
+   - `tag` is `v<major>.<minor>` or `v<major>.<minor>.<patch>` (for example `v0.2`, a hotfix `v0.2.1`); `sha` is the
+     full 40-character commit, which must be on the default branch. The workflow refuses anything else, and an
+     existing tag.
+   - The job runs in the GitHub environment `release`: every run waits until the developer approves it on GitHub.
+     It then creates the tag and a GitHub Release in that repo with generated notes (the merged pull requests).
+   - Tags `v*` can't be moved or deleted (rulesets), and cloud sessions can't push tags themselves (403).
+   - A component that doesn't change keeps its current tag. Deploy the tag: `knk-release.sh api v0.2` works after
+     `git fetch --tags` on the PC, because the script resolves `<tag>^{commit}` and checks it is on trunk.
+
+   Feature-branch builds can't be tagged or deployed this way (the workflow and `knk-release.sh` both refuse a commit
+   that isn't on trunk); deploying one needs a developer decision first (test run 2, decision D15). How the deploy
+   itself is tagged on knk-workspace is open: [PandiO/knk-workspace#444](https://github.com/PandiO/knk-workspace/issues/444).
+3. **Deploy** as [NAS operations access § 7](nas-ops-access.md#7-stage-b-delegated-changes-knk-deploy) describes: back
+   up, migrator, API, web app, plugin, one change at a time. Merge the new plugin `config.yml` keys by hand
+   ([plugin configuration reference § 2](admin/plugin-configuration.md#2-merging-config-changes-at-a-deploy)), and
+   write down which keys were merged and which run on the jar's defaults.
+4. **Deployment log row.** Add the row to [`docs/DEPLOYMENTS.md`](../DEPLOYMENTS.md) (date, environment, the api, app
+   and plugin commits with their tags, seed commit or patch, migrations, config keys merged, scripts run, checked by,
+   rollback note) and update its "Current state". Commit it to knk-workspace `main` with the deploy's dated report in
+   `docs/reports/`, as deploy reports have been until now; a small deploy may have only the row.
+5. **GitHub Release on knk-workspace.** The developer publishes one release per deploy (sessions can't create tags,
+   and knk-workspace has no Release workflow): GitHub → Releases → "Draft a new release", a new tag on the `main`
+   commit of step 4 (until #444 is decided: `alpha-YYYY-MM-DD`), title "knk-alpha YYYY-MM-DD". A session drafts the
+   notes in two parts:
+
+   ```markdown
+   ## What's new
+   <!-- The first sentence of each changelog entry merged since the previous deploy, in player language, no commit
+        hashes. Staff-only changes in their own short list. -->
+   - …
+
+   ## Admin steps
+   - Components: knk-web-api v0.2 (`1a2b3c4d`), knk-web-app v0.2 (`…`), knk-plugin v0.1 (`…`)
+   - Migrations: … (total …)
+   - Plugin `config.yml` keys merged: … (or: none, defaults apply)
+   - API settings, scripts, seed patch: …
+   - Rollback: …
+   ```
+
+   Link the release in the row's Source column. The component releases from step 2 list pull requests for developers;
+   this release is the one players and testers read.
 
 ## Phase 0 — protect existing infrastructure (complete)
 
@@ -513,6 +575,8 @@ Acceptance: a new tester gets in with only an invite mail (sign-up → Cloudflar
 current testers join without a code; the whitelist is off; `/admin/invitations` shows the Access sync green.
 
 ## Changes
+
+1. 2026-11-13: header converted to the doc header standard, LAN addresses replaced by placeholders, PandiO/knk-workspace#305
 
 Header history up to 2026-11-13, as the old `Last updated` line gave it (newer changes: the header and git history):
 
