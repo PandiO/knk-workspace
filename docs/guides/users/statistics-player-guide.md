@@ -1,7 +1,7 @@
 # Statistics and Public Profile — Player Guide
 
 **Status:** Living document — update in place as the game changes
-**Last updated:** 2026-11-11 (first version, PandiO/knk-workspace#302; checked against knk-plugin `main` `121030f`,
+**Last updated:** 2026-11-13 (§ Your data: link to what happens in game, PandiO/knk-workspace#184); 2026-11-11 (first version, PandiO/knk-workspace#302; checked against knk-plugin `main` `121030f`,
 knk-web-api `master` `b5e57fa` and knk-web-app `main` `9a85238`)
 
 Knights and Kings keeps statistics of how you play: playtime, kills, deaths, siege results, distance travelled,
@@ -94,7 +94,8 @@ keeps private show as `Hidden`.
 ## Your data
 
 You can ask for your data to be deleted on the web app's **Account** page (**Delete my data…**), confirmed by email,
-with a few days to change your mind.
+with a few days to change your mind. What is deleted, and what happens if you are online when it runs, is in the
+[account guide](PLAYER_GUIDE_ACCOUNT_MANAGEMENT.md#can-i-delete-my-account).
 
 ## Messages
 

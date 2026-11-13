@@ -2,8 +2,8 @@
 
 **Status:** All sections run by the developer (WT2 2026-11-04; WT2 follow-ups, S1, S2, S3 2026-11-05) and merged into the
 default branches; S1–S3 issues closed 2026-11-05. `realtime.enabled` stays `false` by default. § S4 (#183) merged
-2026-11-12 (API `master` `bc97b7d`, web app `main` `1371951`), **not run yet**. § S5 (#184): API part merged 2026-11-12, plugin part in the PR into `next` from
-`claude/plugin-chains-into-next` (2026-11-13), **not run yet**
+2026-11-12 (API `master` `bc97b7d`, web app `main` `1371951`), **not run yet**. § S5 (#184): API part merged 2026-11-12, plugin part merged into `next`
+2026-11-13 (knk-plugin `next` `745fcf6`), **not run yet**
 **Last updated:** 2026-11-13 (§ S5 account erasure push, #184, brought into `claude/plugin-chains-into-next`, not run); 2026-11-13 (§ S4: the dashboard opens for any area node since #280 AM3; a world-only account for step 2, docs #366); 2026-11-12 (§ S4 merged, not run; accounts and step 6 follow the area nodes of #280 AM1, docs #341); 2026-11-06 (§ S4 step 9: `Realtime:WebLiveUpdatesEnabled` switch, #183, feature branch); 2026-11-05 (§ S4, #183, feature branch); 2026-11-05 (S1, S2, S3 findings; S2 steps 5 and 7 corrected); 2026-11-05 (§ WT2 follow-ups: findings, merged); 2026-11-04 (§ WT2 follow-ups #239/#240, feature branch); 2026-11-04 (WT2 findings; merged); 2026-11-02 (§ S3, #182); 2026-11-02 (§ WT2, #181)
 **Design:** [specs/realtime-signalr/DESIGN.md](../specs/realtime-signalr/DESIGN.md) (§4–§5, as built: §4.6) ·
 [IMPLEMENTATION_PLAN.md](../specs/realtime-signalr/IMPLEMENTATION_PLAN.md) ·
@@ -231,7 +231,7 @@ INFO shows `Realtime: reloaded gate structure …`; `/knk health` `messages` goe
     "siege startup work": the lobbies appear in `/siege` without `/siege admin reload`, title brackets show on join
     denials, gates a crash left locked are restored, and the previous run's unfinished matches are aborted (API
     `SiegeMatches` with `ServerRestart`). A second reconnect runs none of them again. With `realtime.enabled: false` the
-    same work runs when the API connectivity turns UP (#31 rest, chain 2 link R2, in the PR into `next` from `claude/plugin-chains-into-next`:
+    same work runs when the API connectivity turns UP (#31 rest, chain 2 link R2, merged into `next` 2026-11-13 from `claude/plugin-chains-into-next`:
     [api-outage smoke test § #31](api-outage-smoke-test.md)); with the hub on, the UP transition and the reconnect
     share one runner, so each step still runs once.
 14. **Slower safety nets.** With the hub connected the 5 min domain access sync, the 30 s game settings re-read and the

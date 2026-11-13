@@ -4,7 +4,7 @@
 ([KNG-115](https://linear.app/kngpandi/issue/KNG-115)): knk-web-api `master` `17ee730`, knk-plugin
 `main` `b5eee6e`. All decisions below were accepted by the developer on 2026-10-11.
 2026-10-26: second subscriber, the realtime client (#178 S1, branch `claude/realtime-signalr`; § "Subscribing").
-2026-11-05: the siege startup retry (#31, in the PR into `next` from `claude/plugin-chains-into-next`; § "Subscribing").
+2026-11-05: the siege startup retry (#31, merged into `next` 2026-11-13 from `claude/plugin-chains-into-next`; § "Subscribing").
 2026-10-15: first consumer of the state, [KNG-171](https://linear.app/kngpandi/issue/KNG-171) — reads
 skip the API while it is DOWN (§ "Reads skip the API while DOWN"). Implemented on knk-plugin branch
 `wt/kng-171`; live-tested by the developer and merged 2026-10-17 ([knk-plugin #14](https://github.com/PandiO/knk-plugin/pull/14)).

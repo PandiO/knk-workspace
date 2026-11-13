@@ -96,11 +96,11 @@ Record each step in **Findings** at the end (works / doesn't / accepted).
    Within 30 s the session and its tasks are gone (API log "World task sweep: … abandoned session(s) removed").
 2. The same for a session that has a draft or a Completed task: it stays.
 
-## 7. Temp regions of abandoned drafts (#269, PR into `next`, not merged)
+## 7. Temp regions of abandoned drafts (#269, in `next`)
 
 About 30 minutes. What it checks: a region a form's region task drew (`tempregion_worldtask_<n>`) is removed within
 minutes when its draft is deleted or its task closes without a result, never when something uses it or it was renamed,
-and the 14-day cleanup is untouched. Design: [managed-worldguard-regions.md §7 "Abandoned drafts"](../architecture/managed-worldguard-regions.md#abandoned-drafts-temp-regions-released-early-pandioknk-workspace269-pr-into-next-not-merged).
+and the 14-day cleanup is untouched. Design: [managed-worldguard-regions.md §7 "Abandoned drafts"](../architecture/managed-worldguard-regions.md#abandoned-drafts-temp-regions-released-early-pandioknk-workspace269-in-next).
 
 0. **Setup.** Check out `claude/plugin-chains-into-next` in knk-web-api and knk-plugin (or `next` once it is merged;
    they bring #269 together with #34 and, on the plugin, #184, #31, #261 and #264).

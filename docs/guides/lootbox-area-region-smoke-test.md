@@ -1,6 +1,6 @@
 # Lootbox spawn areas drawn in the web form — smoke test checklist
 
-**Status:** Written 2026-11-05 for #34; API and plugin parts in the PR into `next` from `claude/plugin-chains-into-next` (2026-11-13); not merged, not run
+**Status:** Written 2026-11-05 for #34; API and plugin parts merged into `next` 2026-11-13 from `claude/plugin-chains-into-next` (knk-plugin `next` `745fcf6`, knk-web-api `next` `c20899c`); not run
 **Last updated:** 2026-11-13 (setup: builds from `claude/plugin-chains-into-next`); 2026-11-05
 **Issue:** [PandiO/knk-workspace#34](https://github.com/PandiO/knk-workspace/issues/34)
 **Related:** [managed-worldguard-regions.md](../architecture/managed-worldguard-regions.md) §7 "Lootbox spawn areas", lootbox

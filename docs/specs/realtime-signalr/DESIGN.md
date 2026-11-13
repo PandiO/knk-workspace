@@ -348,7 +348,7 @@ onto the hub" → **later, phase S6**.
   (`SiegeGateController.retryRecovery`; waits while a lockdown of this run is active), runtime config + title
   brackets (`SiegeService.retryStartup`). Each runs at startup as before; one that failed runs again on every hub
   (re)connect (resync step "siege startup work"), in that order, until it got through. With the hub off, unchanged.
-  *2026-11-05 (#31 rest, UX chain 2 link R2; in the PR into `next` from `claude/plugin-chains-into-next`, 2026-11-13):* the same steps also
+  *2026-11-05 (#31 rest, UX chain 2 link R2; merged into `next` 2026-11-13 from `claude/plugin-chains-into-next`):* the same steps also
   run on every API connectivity transition into UP (UNKNOWN→UP included) and on a fallback retry (30 s, 1 min, 2 min,
   then every 5 min while pending and not DOWN), hub on or off, through `core/realtime/StartupWorkRetry`; the resync
   step calls it too, and `PendingStartupWork.runPending` is single-flight (a call during a pass shares one queued pass),
