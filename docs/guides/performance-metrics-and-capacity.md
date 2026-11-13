@@ -5,7 +5,7 @@ endpoints it relies on ([KNG-232](https://linear.app/kngpandi/issue/KNG-232)) ar
 knk-plugin `main` `390d88a4` and knk-web-api `master` `3658cf2`, unit-tested but **not yet run against a live Paper server,
 MySQL or the NAS**; both default off, so they need a new build and the config in § 5 to take effect. § 5 says how to use
 the guide before they are deployed.
-**Last updated:** 2026-11-02 (§ 5.2: `Telemetry__Exporter=prometheus` stops the OTLP export, checked against API `master` `8df59b7` `Program.cs`; [PandiO/knk-workspace#48](https://github.com/PandiO/knk-workspace/issues/48)); 2026-10-22 (§ 4.2/§ 5 aligned with the implemented metric names)
+**Last updated:** 2026-11-13 (§ 4.2: NPC navigation panels, `knk_npc_nav_*`, PandiO/knk-workspace#358; Phase 2 events, #360; Phase 3 rule panels, #361); 2026-11-02 (§ 5.2: `Telemetry__Exporter=prometheus` stops the OTLP export, checked against API `master` `8df59b7` `Program.cs`; [PandiO/knk-workspace#48](https://github.com/PandiO/knk-workspace/issues/48)); 2026-10-22 (§ 4.2/§ 5 aligned with the implemented metric names)
 **Applies to:** the closed-alpha NAS stack ([runbook](closed-alpha-deployment-runbook.md)): Paper 26.3 in a Docker
 container, knk-web-api, MySQL, all on one shared host (Ryzen 7 5700G, ~15 GiB RAM, Frigate also running; see the
 [infrastructure report](../reports/2026-10-11-closed-alpha-infrastructure-progress.md) § 2).
@@ -175,6 +175,25 @@ The target hosts/ports above are placeholders: use the networks and ports of you
 | Plugin → API latency | `histogram_quantile(0.95, sum by (le,route)(rate(knk_api_call_duration_seconds_bucket[5m])))` | slow endpoints that stall features |
 | Plugin task cost | `rate(knk_task_duration_seconds_sum[1m])` per `task` | seconds of work per second = share of one tick thread |
 | GC pause share | `rate(knk_jvm_gc_seconds_total[1m])` | GC stalls show up as tick spikes |
+
+**NPC navigation panels** ([PandiO/knk-workspace#358](https://github.com/PandiO/knk-workspace/issues/358), NAV-16; plugin branch `claude/npc-navigation`, not merged yet; series exist only with `metrics.enabled` and `npc.navigation.enabled` on). Put them in their own row so NPC load can be read next to TPS and tick time:
+
+| Panel | Query | Why |
+|---|---|---|
+| NPCs by state | `sum by (state)(knk_npc_nav_npcs)` (per world: `by (world, state)`) | how many NPCs walk, wait, pause or travel simulated |
+| NPC main-thread cost | `rate(knk_npc_nav_main_thread_seconds_sum[1m])` | seconds per second spent on NPC navigation on the tick thread |
+| Route planning p95 | `histogram_quantile(0.95, sum by (le,kind)(rate(knk_npc_nav_plan_seconds_bucket[5m])))` | road-graph and local planning time |
+| Planning queue wait p95 | `histogram_quantile(0.95, sum by (le)(rate(knk_npc_nav_queue_wait_seconds_bucket[5m])))` | too few plans in flight, or replan bursts |
+| NPC events | `sum by (event)(rate(knk_npc_nav_events_total[5m]))` | arrivals vs stuck (`stuck_engine`, `stuck_no_progress`), recoveries, retries used up, replans |
+| Trespasses | `increase(knk_npc_nav_events_total{event="trespass"}[1h])` | must stay 0: an NPC entered a region the current rules deny it (the trespass guard, Phase 3) |
+| Replans by cause | `sum by (event)(rate(knk_npc_nav_events_total{event=~"replan_recheck\|replan_event"}[5m]))` | `replan_recheck`: the periodic recheck found a denied region or a closed gate ahead; `replan_event`: a gate or access change concerned the NPC. A burst of `replan_event` at every cache refresh means NPCs replan for nothing (Phase 3) |
+| Rule checks | `rate(knk_npc_nav_events_total{event="rule_check"}[1m])` | about walking NPCs ÷ `recheck-ticks` × 20 per second; lower means `rule-checks-per-tick` is too small (Phase 3) |
+| Blocked NPCs | `sum by (event)(increase(knk_npc_nav_events_total{event=~"blocked_walk\|woken"}[15m]))` | `blocked_walk`: NPCs that set out for their blocking element; `woken`: NPCs at a blocking element woken by a gate or access change. Many `no_route_wait` and few `woken` after a gate opened: events do not arrive, the 5-second timer does the work (Phase 3) |
+| Engine block rules removed | `increase(knk_npc_nav_events_total{event="examiner_leak"}[1h])` | must stay 0: Citizens added a block rule of its own to a local search and K&K removed it (Phase 2) |
+| Waiting NPCs by cause | `sum by (event)(rate(knk_npc_nav_events_total{event=~"no_route_wait\|unloaded_wait"}[5m]))` | no allowed route (a closed gate, a denied region) vs the way ahead not loaded (Phase 2) |
+| Failed orders | `increase(knk_npc_nav_events_total{event="failed"}[1h])` | orders that ended as failed: no road connects, or retries and replans used up (Phase 2) |
+| Stretches handed over | `rate(knk_npc_nav_events_total{event="stretch"}[5m])` | how much route following goes on (Phase 2) |
+| Chunks held for NPCs | `knk_npc_nav_chunks_held` | the travel bubble's cost (NAV-12) |
 
 ## 5. What KNG-232 adds (and how to use the guide before it is deployed)
 
