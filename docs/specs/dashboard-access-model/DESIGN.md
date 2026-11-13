@@ -9,14 +9,14 @@ directly into trunk; `next` fast-forwarded). AM4 (docs) done 2026-11-13 in the d
 [web-api architecture § 5.1](../../architecture/web-api-architecture.md#51-dashboard-access-model-pandioknk-workspace280-am1-merged-2026-11-12-am3-2026-11-13),
 [§ 5.2](../../architecture/web-api-architecture.md#52-read-gating-per-area-and-lookups-pandioknk-workspace280-am2-merged-2026-11-12),
 [web-app architecture](../../architecture/web-app-architecture.md#dashboard-access-model-in-the-web-app-pandioknk-workspace280-am3-205-bulk-delete);
-admin view: [dashboard access admin guide](../../guides/admin/dashboard-access-admin-guide.md). **Deviation from this
-design (LAM3-1):** the form wizard routes `/forms/:type` and `/forms/:type/edit/:id` open for **any** area node (§ 4.3
-kept `entitySetup*` on `knk.admin.content`), so area staff create and edit their own types; `/forms`'s lists, the
-builders and the Minecraft catalogue stay `knk.admin.content`. Kept as built pending the developer's answer:
-[#368](https://github.com/PandiO/knk-workspace/issues/368). Known gaps: #352 (material picker in world/lootbox forms),
+admin view: [dashboard access admin guide](../../guides/admin/dashboard-access-admin-guide.md). **AM3's deviation LAM3-1
+is reverted** (developer 2026-11-13, [#371](https://github.com/PandiO/knk-workspace/issues/371), knk-web-app branch
+`claude/form-wizard-content-only-371`, not merged): the form wizard routes `/forms/:type` and `/forms/:type/edit/:id`
+are back on `knk.admin.content` as § 4.3 has it, and in the web app create and edit of every type also need
+`knk.admin.content` (§ 7). Answers [#368](https://github.com/PandiO/knk-workspace/issues/368). Known gaps: #352 (material picker in world/lootbox forms),
 #353 (top bar Create New per area), #369 (Permission Group's list needs `knk.admin.user.perm`). Developer 2026-11-08:
 the backfill (§ 4.5) **skips the Staff group**, and nobody changes a group ranked at or above their own (§ 4.4).
-**Last updated:** 2026-11-13 (status: implemented and merged, AM4 docs, LAM3-1 deviation #368; docs #366); 2026-11-12 (AM3 built; § 4.7 form/display configuration deletes need `knk.admin.delete`, developer
+**Last updated:** 2026-11-13 (LAM3-1 reverted, § 7, #371); 2026-11-13 (status: implemented and merged, AM4 docs, LAM3-1 deviation #368; docs #366); 2026-11-12 (AM3 built; § 4.7 form/display configuration deletes need `knk.admin.delete`, developer
 decision on LV7-8; § 7 addendum); 2026-11-12 (AM1+AM2 merged); 2026-11-08 (AM2 built); 2026-11-08 (AM1 built, Staff decision); 2026-11-08 (decided version, with read gating per area, `knk.admin.export` and the read-endpoint
 appendix); 2026-11-08 (first version, chain 3 link D1)
 **Issue:** [PandiO/knk-workspace#280](https://github.com/PandiO/knk-workspace/issues/280) (blocks the bulk delete part of
@@ -654,6 +654,19 @@ The proposal's questions and the developer's answers. (rec. = what the proposal 
 AM1's LAM1-1 stays); deleting a form or display configuration also needs `knk.admin.delete` (§ 4.7, built in AM3);
 the safety follow-ups #348 (sudo mode), #349 (trash / soft delete), #350 (owner notifications) and #351 (Head Admin
 rank) are separate issues, not part of AM3.
+
+**Later decision (2026-11-13, #371): LAM3-1 reverted.** The developer: "Area staff should not be able to change forms
+at this point. They only work with the content available." AM3 had opened the form wizard routes for any area node
+(LAM3-1, question #368). Now:
+
+1. `/forms/:type` and `/forms/:type/edit/:id` need `knk.admin.content` again (§ 4.3, § 1.5).
+2. In the web app, create and edit of every dashboard type need the type's own create/edit nodes **and**
+   `knk.admin.content`: the dashboard's New, New with and Edit, the detail page's Edit are disabled with "Requires
+   knk.admin.content"; a picker's Create New is hidden (decision 11's pattern). Edit of a user opens the player profile
+   and keeps `knk.admin.user.manage` alone.
+3. Unchanged: view, read, the explorer per area, lookups, delete, bulk delete, export, the player profile.
+4. The API is unchanged: it still accepts writes per area (§ 4.3, `actionNodes.create`/`edit`). Whether the API should
+   also ask for `knk.admin.content` is a separate proposal (see the #371 report).
 
 ## Appendix A — Read endpoints per area and their category
 
