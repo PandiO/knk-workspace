@@ -28,7 +28,7 @@
 |---|---|---|---|---|---|---|
 | L1 Phase 2: one NPC walks a K&K route | #360 | Merged into next 2026-11-13 (knk-plugin `50bf7ff7`, knk-workspace `424f1fa3`); #360 stays `status:in-review` until the developer's live test and the promotion of `next` | `claude/npc-navigation`: knk-plugin `49b5cedb`, knk-workspace `5c8587b` | [knk-plugin#17](https://github.com/PandiO/knk-plugin/pull/17), [knk-workspace#370](https://github.com/PandiO/knk-workspace/pull/370) | knk-plugin `build` green on `49b5cedb` (run 43398822498); knk-workspace has no CI | create_session session_01R1w2Uv2Ze28fr2rkqUz98C (`source_revision` `next`) |
 | L0 Phase 1 follow-ups | #359 | Not started (gate: the developer's Phase 1 result on #359; L1 is merged; runs after L2, one link per repo) | | none | none | |
-| L2 Phase 3: rules stay binding | #361 | Running (started 2026-11-13) | `claude/npc-navigation`: knk-plugin `49b5cedb`, knk-workspace `5c8587b` (L1 heads) | none | none | create_session session_01R1w2Uvt1jBnAv84KX3hf7q (`source_revision` `next`) |
+| L2 Phase 3: rules stay binding | #361 | In review (finished 2026-11-13; live test by the developer open) | `claude/npc-navigation`: knk-plugin `8df2d839`, knk-workspace `a05f7bf` | [knk-plugin#18](https://github.com/PandiO/knk-plugin/pull/18), [knk-workspace#375](https://github.com/PandiO/knk-workspace/pull/375) | knk-plugin `build` green on `8df2d839` (runs 43403427418, 43403523663); knk-workspace has no CI | create_session session_01R1w2Uvt1jBnAv84KX3hf7q (`source_revision` `next`) |
 
 ## 3. Coordinator decisions
 
@@ -208,3 +208,127 @@ _(Each link appends its block here when it finishes.)_
     2. L0: Phase 2 changed no listener. Route NPCs are named `knk-nav-<n>`, test walkers `knk-test-<n>`.
     3. Before merging `next` into a branch in knk-workspace, deepen the clone (`git fetch --depth=1000 origin
        <branches>`): the session's clone is shallow and a shallow merge base gave 14 conflicts instead of 1.
+
+### 4.2 L2 — Phase 3: rules stay binding (#361)
+
+1. **Scope done.**
+    1. knk-plugin, knk-core `core/npc/nav/` (no Bukkit or Citizens types): the ports `AccessRules` (the rules as
+       they are now) and `RuleChangeListener` (the listener port for gate and availability changes);
+       `BlockingElement`; `RoadPlanner.RoadPlan` with the blocking element, the gates on the route
+       (`GateCrossing`) and a still-blocked check; `NpcMover.pathAhead()`. `NpcNavigationService`: rule checks a
+       few NPCs per tick (the recheck of the way ahead and the trespass guard), `onGateChanged` and
+       `onAvailabilityChanged` that mark only the NPCs they concern, the walk along the partial route to the
+       blocking element, the wait there woken by the element's open event with `no-route-wait-ticks` as the
+       fallback, `NavigationResult.Blocked` with the typed element. `NavigationSettings` got `stop-on-trespass`;
+       `NpcNavigationMetrics` got the events `rule_check`, `blocked_walk`, `woken` (`trespass`, `replan_recheck`
+       and `replan_event` are counted now).
+    2. knk-plugin, knk-paper: `NavigationAccess.mayEnter(AccessSubject)`, `gateBlocks`, `edgeBlocked` (the
+       router's rule code, from caches); `NavigationService.accessRules()` and `addRuleChangeListener`, called at
+       the top of `onGateChanged` and `onAvailabilityChanged` (player navigation is otherwise unchanged);
+       `roadPlanOf` fills the gates, the blocking element and the check; `CitizensNpcMover.pathAhead`;
+       `NpcNavigationConfig.ruleChecksPerTick` (`rule-checks-per-tick`); module wiring (the listener is added
+       when route following is built and removed on stop; events hop to the main thread); a `rules:` line in
+       `/knk npc nav stats`; `config.yml` comments. `KnKPlugin` and every listener are untouched.
+    3. knk-workspace: Phase 3 status, known limits and developer test in the implementation plan; configuration
+       reference § 2.1 and § 4.27; metric panels; tests A and B on the production code in the stress test guide;
+       changelog draft.
+    4. Inert while `npc.navigation.enabled` is false: `NpcNavigationModuleDisabledTest` now also verifies that
+       road navigation is never touched (no listener, no rules port) and that no rule check is counted.
+2. **Commits and heads.** knk-plugin `claude/npc-navigation` at `8df2d839` (`4a030786` core, `8df2d839` paper;
+   `origin/next` `50bf7ff7` merged in first, a fast-forward). knk-workspace `claude/npc-navigation` at `a05f7bf`
+   (on `origin/next` `424f1fa`, a fast-forward; `git diff --stat origin/next HEAD` was empty before the change
+   and is 5 files after it).
+3. **PRs.** [knk-plugin#18](https://github.com/PandiO/knk-plugin/pull/18) (`Closes #361`) and
+   [knk-workspace#375](https://github.com/PandiO/knk-workspace/pull/375) (`Part of #361`), base `next`. Not
+   merged.
+4. **Tests, baseline → result.**
+    1. knk-plugin (`./gradlew build -x deployToDevServer`, Gradle on JDK 21, JDK 25 toolchain): baseline at
+       `50bf7ff7` core 2562, api-client 324 (2 skipped), paper 2570 (18 skipped), 0 failures; result at `8df2d839`
+       core 2583 (+21), api-client 324 (2 skipped), paper 2581 (+11, 18 skipped), 0 failures. CI: `build` green on `8df2d839` (push run 43403427418, PR run 43403523663).
+    2. knk-workspace: docs only; the links added were checked by hand.
+    3. Known reds (also red on the base): none.
+5. **Decisions (DESIGN § 4.3).**
+    1. *Where the recheck gets the current rules.* Chosen: a core port `AccessRules` (entry rule per region for
+       a subject, gate rule per door) answered by `NavigationAccess` with the router's own rule classes from
+       caches, because the recheck and the router must agree and a check must not block the main thread.
+       Alternatives: (a) build the subject's full road policy per check: reads every gate of the network per NPC
+       every 40 ticks; (b) the rules re-implemented in the core: two sources of truth.
+    2. *What an availability event does.* Chosen: it replans nobody by itself; every NPC with an order is marked
+       for an early rule check, and only those with something denied ahead, or whose blocking element opened,
+       plan again, because the event names no element and the spike replanned every NPC on every cache refresh
+       for nothing (NAV-13). Alternatives: (a) replan every NPC (the spike); (b) give
+       `NavigationService.onAvailabilityChanged` the changed domain: changes its callers in `KnKPlugin` and the
+       siege code, outside this link.
+    3. *The time slice.* Chosen: one server-wide key `rule-checks-per-tick` (10), NPCs an event concerns first,
+       then round robin over NPCs whose `recheck-ticks` are up; with too few the checks come later, never all at
+       once. Alternatives: (a) a fixed phase per NPC (id modulo `recheck-ticks`): no upper bound per tick;
+       (b) no key, a constant: 500 NPCs would need a code change.
+    4. *`NavigationResult.Blocked`.* Chosen: its `blockingElement` is now a `BlockingElement` record (kind, id,
+       name, the gate doors and regions of the blocked stretch) in place of the string, because behavior needs
+       the kind and the door id for a gate confrontation. Alternatives: (a) keep the string and add fields:
+       two ways to say the same; nothing but the test driver used the string yet.
+    5. *When the caller hears `Blocked`.* Chosen: when the plan arrives, once per element (again when another
+       element blocks), so behavior can decide before the NPC has walked there. Alternatives: (a) on arrival at
+       the element: behavior waits for a walk it may not want; (b) both: two results for one block;
+       `waitsAtBlock(moverId)` answers "is it there yet".
+    6. *Where the partial route ends.* Chosen: the router's partial route, cut before the first point in a
+       region the NPC may not enter, because the router's last reachable node can lie past a district's edge and
+       the NPC would trespass or be turned around by its own recheck. Alternatives: (a) the partial route as it
+       is; (b) walk on along the blocked stretch to the exact boundary or gate: needs the blocked edge's
+       geometry and the gate's position, a later refinement (known limit 1 in the plan).
+    7. *Waking a blocked NPC.* Chosen: on an event the cheap question "does the blocked stretch still block this
+       subject?" (one edge's verdict); a different gate that now lets the NPC through also wakes it; the
+       fallback is a full plan every `no-route-wait-ticks` (100 = 5 s, the existing key). Alternatives: (a) a
+       new key for the safety timer: one more key for the same 5 s; (b) no timer: a missed event would strand
+       the NPC.
+    8. *The trespass guard.* Chosen: entries are counted (a region the NPC stands in now and not at its last
+       check, denied by the current rules judged from where it came from), as in the spike; stopping and
+       replanning is the key `stop-on-trespass`, default false, because a "dev build" cannot be told from a
+       production build at runtime. Alternatives: (a) default true: an NPC stopped inside a region plans from
+       inside, where the entry rule no longer applies, so it changes little and adds stops in production;
+       (b) count every check while inside: one mistake would count for ever.
+    9. *The recheck and the router disagree.* Chosen: the router is the authority; the element is not asked
+       about again for that order until the next gate or availability event, a log line says so, the trespass
+       guard keeps watching. Alternatives: (a) replan at every recheck: the NPC stutters for ever; (b) fail the
+       order: a lane the router knows to be free would end orders.
+    10. *Where a gate is on the route.* Chosen: at the end of the gate's road stretch, so the gate is ahead
+        until the NPC has passed the whole stretch. Alternatives: (a) the gate's real position: needs a gate
+        geometry port; (b) the stretch's middle: an NPC between the middle and the gate would walk into a
+        closing gate.
+    11. *Local legs.* Chosen: the recheck reads the rest of the engine's path through `NpcMover.pathAhead()`
+        (regions only). Alternatives: (a) prepare every local leg again on any gate event: every NPC on a local
+        leg for every gate anywhere; (b) no recheck of local legs: the plan names "the rest of Citizens' path".
+    12. *How far ahead.* Chosen: 96 blocks of the route line (64 points), every gate still to pass.
+        Alternatives: (a) the whole rest of the route: a region lookup per 1.5 blocks of a long route every
+        40 ticks; (b) a key: nobody asked for one.
+    13. *New instruments.* Chosen: `rule_check`, `blocked_walk`, `woken`, for the tuning of
+        `rule-checks-per-tick` and to see whether events or the timer wake NPCs. Alternatives: (a) only the
+        three events L1 left: the developer test could not tell an event wake from a timer wake.
+6. **Out of scope, noted.** No issue filed.
+    1. A road network rebuilt while NPCs walk (`NavigationService.onNetworkChanged`) is not an event for NPCs;
+       they notice at their next plan. Not in Phase 3's text; for Phase 7 or its own issue.
+    2. Exit rules (a domain that forbids leaving) are judged at planning time only, as in the spike.
+    3. No developer result, stair-house dump or trace was on #359, #360, #244 or #361 at the start or at the
+       end, so none was used; L0 stays closed.
+    4. For the docs sub-issue at merge, as L1: `FEATURE_REGISTER.md`, `architecture/plugin-permission-checks.md`,
+       production installation.
+7. **Blockers.** None.
+8. **At merge / what the developer must do.**
+    1. Merge two keys into the dev server's `config.yml` under `npc.navigation`: `rule-checks-per-tick: 10` and
+       `stop-on-trespass: false` (`true` for the Phase 3 test). The YAML is in knk-plugin#18 and in the
+       configuration reference § 4.27.
+    2. Run "Phase 3 → Developer test" in the implementation plan (gate runs, access runs, the refresh that
+       replans nobody, the trespass counter) and post the `stats` output and the run log on #361.
+    3. Look at where NPCs stand at the Keep Gate: at the gate or some blocks before it (known limit 1). If it
+       is too far, the refinement is decision 6 (b).
+9. **Notes for later links.**
+    1. L0: Phase 3 changed no listener and no line of `KnKPlugin`.
+    2. Phase 4 (groups): `NpcNavigationService.blockingOf` and `waitsAtBlock` say what blocks a mover and
+       whether it stands at it; `onGateChanged` and `onAvailabilityChanged` are the only entry points for rule
+       changes, both main thread.
+    3. Phase 5 (permissions of the NPC's subject): a permission change is a third `RuleChangeListener` method
+       and a mark like `eventAvailability`.
+    4. Installing `openjdk-25-jdk-headless` makes `java` point at JDK 25; run Gradle with
+       `JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64`.
+    5. A fresh knk-plugin clone knows only `main`: `git remote set-branches --add origin next
+       claude/npc-navigation` and a `--depth=1000` fetch of both before the checkout.
