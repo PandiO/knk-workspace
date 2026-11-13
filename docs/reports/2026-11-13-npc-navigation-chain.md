@@ -23,7 +23,7 @@
 
 | Link | Issue | Status | Branch heads | PR | CI | How started |
 |---|---|---|---|---|---|---|
-| L1 Phase 2: one NPC walks a K&K route | #360 | Not started | `claude/npc-navigation`: knk-plugin `8b36a942` (Phase 1 head) | none | none | |
+| L1 Phase 2: one NPC walks a K&K route | #360 | Running (started 2026-11-13) | `claude/npc-navigation`: knk-plugin `8b36a942` (Phase 1 head) | none | none | create_session session_01R1w2Uv2Ze28fr2rkqUz98C (`source_revision` `next`) |
 | L0 Phase 1 follow-ups | #359 | Not started (gate: developer's Phase 1 result on #359 and L1 merged into `next`) | `claude/npc-navigation`: knk-plugin `8b36a942` | none | none | |
 | L2 Phase 3: rules stay binding | #361 | Not started (gate: L1 merged into `next`, L0 merged or skipped) | | none | none | |
 
