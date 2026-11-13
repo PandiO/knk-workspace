@@ -1,7 +1,7 @@
 # Plugin configuration reference (`config.yml`)
 
 **Status:** Living document — update in place whenever a `config.yml` key is added, renamed, removed or gets a new default
-**Last updated:** 2026-11-13 (§ 4.27 `npc`, PandiO/knk-workspace#359 and #360; checked against knk-plugin `claude/npc-navigation`, not merged into trunk yet); 2026-11-10 (first version, PandiO/knk-workspace#295; checked against knk-plugin `main` `121030f`)
+**Last updated:** 2026-11-13 (§ 4.27 `npc`: `rule-checks-per-tick`, `stop-on-trespass`, PandiO/knk-workspace#361); 2026-11-13 (§ 4.27 `npc`, PandiO/knk-workspace#359 and #360; checked against knk-plugin `claude/npc-navigation`, not merged into trunk yet); 2026-11-10 (first version, PandiO/knk-workspace#295; checked against knk-plugin `main` `121030f`)
 **Source:** knk-plugin `knk-paper/src/main/resources/config.yml` (1,152 lines at `121030f`), read by
 `knk-paper/.../paper/config/ConfigLoader.java`, `EnchantmentConfigManager.java` and `KnKPlugin.java`
 **Related:** [production installation § 9.5](../production-installation.md#95-install-the-knightsandkings-plugin),
@@ -85,6 +85,7 @@ Newest first. Builds before this list: compare the files with the script.
 
 | Merged | Issue | Added (+), removed (−) or changed | Applies |
 |---|---|---|---|
+| in review, not in `next` yet | [#361](https://github.com/PandiO/knk-workspace/issues/361) | + `npc.navigation.rule-checks-per-tick`, + `npc.navigation.stop-on-trespass`; `recheck-ticks` is used from now on | Restart |
 | in `next`, not on trunk yet | [#359](https://github.com/PandiO/knk-workspace/issues/359), [#360](https://github.com/PandiO/knk-workspace/issues/360) | + `npc.navigation` block (off by default): Phase 1 keys and, with Phase 2, `spawns-per-tick`, `hop-blocks`, `max-retries`, `no-route-wait-ticks`, `walk-only-blocks`, `access-profiles` | Restart |
 | 2026-11-10 | [#259](https://github.com/PandiO/knk-workspace/issues/259) | − `gates.cleaving` (`damage-bonus-per-level`, `charged-hit-multiplier`, `charged-cooldown-seconds`): no longer read. Cleaving's numbers are combat values in the web app now ([combat values guide](custom-enchantment-combat-values-admin-guide.md#1-where-to-edit)). Delete the block. + `custom-enchantments.messages.cmd-info-tuning-gate` | `/ce reload` |
 | 2026-11-10 | [#233](https://github.com/PandiO/knk-workspace/issues/233) | No `config.yml` change. The chat token limits are on the web app's Game Settings page ([chat tokens guide](../chat-tokens.md)) | — |
@@ -614,6 +615,7 @@ Global switches:
 | `enabled` | `false` | NPC navigation on or off. Off: nothing runs, `/knk npc` only reports | Restart | #359 |
 | `max-plans-in-flight` | `4` | Route and leg plans running at once, server-wide; 1–64 | Restart | #359 |
 | `spawns-per-tick` | `2` | NPC spawns per tick at most; 1–20. Twenty player-shaped NPCs spawned in one tick cost a 48.8 ms tick | Restart | #360 |
+| `rule-checks-per-tick` | `10` | NPCs whose way ahead and position are checked against the current gate and access rules per tick at most (the recheck, the trespass guard, wake-ups after a gate or access change); 1–200. 200 walking NPCs at `recheck-ticks: 40` need 5 per tick; with too few, checks come later than `recheck-ticks` | Restart | #361 |
 
 Per-NPC settings. The values under `npc.navigation` are the global layer; `worlds.<world>` and
 `regions.<WorldGuard region or domain id>` (innermost region wins) override single keys, and `/knk npc status` shows
@@ -624,12 +626,13 @@ each value with the layer it came from. A wrong value is reported at startup and
 | `pathfinder` | `citizens` | Citizens' path search for off-road legs and recovery: `citizens` or `citizens_async` | Restart | #359 |
 | `stretch-blocks` | `32` | Blocks of the route handed to the NPC at once; 8–128 | Restart | #359 |
 | `hop-blocks` | `16` | Blocks between the hops of an off-road or recovery leg (one Citizens search each); 4–48 | Restart | #360 |
-| `recheck-ticks` | `40` | Ticks between rechecks of the way ahead against the gate and access rules; 0 = off (used from Phase 3) | Restart | #359 |
+| `recheck-ticks` | `40` | Ticks between rechecks of a walking NPC's way ahead against the current gate and access rules; a denied region or a closed gate ahead plans the route again. 0 = off: gate and access events still reach the NPCs and the trespass guard still looks every 40 ticks; 0–1200 | Restart | #359, used from #361 |
 | `stationary-ticks` | `60` | Ticks without movement before Citizens reports stuck; 10–1200 | Restart | #359 |
 | `no-progress-ticks` | `60` | Ticks without progress along the route before K&K's watchdog steps in; 20–1200 | Restart | #359 |
 | `max-retries` | `3` | Recovery attempts per hop or stretch before the route is planned again (twice at most, then the order fails); 0–10 | Restart | #360 |
-| `no-route-wait-ticks` | `100` | Ticks an NPC waits before asking again while the rules allow no route or the way ahead is not loaded; 20–6000 | Restart | #360 |
+| `no-route-wait-ticks` | `100` | Ticks an NPC waits before asking again while the rules allow no route or the way ahead is not loaded; 20–6000. An NPC waiting at a closed gate or a district edge is woken by the gate or access change itself; this is the fallback | Restart | #360 |
 | `walk-only-blocks` | `64` | With an end too far from a road: the longest trip walked as off-road hops; further, the order fails; 0–256 (0 = never) | Restart | #360 |
+| `stop-on-trespass` | `false` | The trespass guard always logs and counts an NPC that entered a region its current rules deny. `true`: also stop that NPC and plan its route again; for dev servers | Restart | #361 |
 | `collidable` | `false` | Whether NPCs push and block each other | Restart | #359 |
 | `chunk-loading` | `load` | Outside player-loaded areas: `load` or `simulate` (read now, used in Phase 7b) | Restart | #359 |
 
@@ -643,7 +646,7 @@ pass a closed gate.
 | `allow-regions` | `[]` | WorldGuard region ids the NPC may enter and leave whatever the domain says | Restart | #360 |
 | `deny-regions` | `[]` | Region ids the NPC never enters (wins over `allow-regions`) | Restart | #360 |
 
-The block to paste (the Phase 1 keys with the Phase 2 additions):
+The block to paste (the Phase 1 keys with the Phase 2 and Phase 3 additions):
 
 ```yaml
 npc:
@@ -651,6 +654,7 @@ npc:
     enabled: false
     max-plans-in-flight: 4
     spawns-per-tick: 2
+    rule-checks-per-tick: 10
     pathfinder: citizens
     stretch-blocks: 32
     hop-blocks: 16
@@ -660,6 +664,7 @@ npc:
     max-retries: 3
     no-route-wait-ticks: 100
     walk-only-blocks: 64
+    stop-on-trespass: false
     collidable: false
     chunk-loading: load
     worlds: {}

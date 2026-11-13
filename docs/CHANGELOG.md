@@ -4,7 +4,7 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
-- **NPC navigation, Phases 1 and 2: NPCs walk K&K routes (admin testing only)** — no change for players; off by
+- **NPC navigation, Phases 1 to 3: NPCs walk K&K routes (admin testing only)** — no change for players; off by
   default (`npc.navigation.enabled`). In `next` when the pull requests of PandiO/knk-workspace#360 are merged; on the
   trunk when the developer promotes `next`. Parent issue PandiO/knk-workspace#358,
   [implementation plan](specs/npc-platform/IMPLEMENTATION_PLAN.md).
@@ -14,13 +14,19 @@ This is a human-readable record of capabilities merged into the V3 default branc
      watchdog that notices an NPC that makes no progress and sends it on a short recovery leg. NPCs have their own
      access profile instead of a player's rights, wait when the rules allow no route, pause when their chunk unloads
      and are spawned a few per tick. `/knk npc nav` replaces the test command of the Citizens spike.
+  3. **Phase 3** (#361, in review; in `next` when its pull requests are merged): the rules stay binding while NPCs
+     walk. A few NPCs per tick have their way ahead checked against the gate and access rules as they are now; a
+     gate or access change reaches only the NPCs it concerns. An NPC with no allowed route walks to the closed gate
+     or the district's edge and waits there until that gate or rule opens. A trespass guard counts any NPC that
+     enters a region its rules deny (`knk_npc_nav_events_total{event="trespass"}`, must stay 0). New keys:
+     `npc.navigation.rule-checks-per-tick` (10) and `npc.navigation.stop-on-trespass` (false).
   - **Admin steps:**
     1. Install the Citizens plugin (build 4269 for 26.3 or newer) only where NPC navigation is tested; the plugin
        runs without it.
     2. Merge the `npc.navigation` block into `config.yml` by hand
        ([configuration reference § 4.27](guides/admin/plugin-configuration.md#427-npc) has the YAML). It ships with
        `enabled: false`.
-    3. To test: `enabled: true`, restart, then the steps under "Developer test" of Phases 1 and 2 in the
+    3. To test: `enabled: true`, restart, then the steps under "Developer test" of Phases 1, 2 and 3 in the
        implementation plan.
 
 ## 2026-11-13
