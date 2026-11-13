@@ -14,10 +14,6 @@
    is there, L0 stays closed and L2 follows L1.
 2. **Stair-house dump and trace** (spike `/knk npcspike dump|trace`) on #244 or #360, when available. L1 uses them
    but does not wait.
-3. **For review, not blocking (decision 3 below):** the binding documents (implementation plan, BEHAVIOR_MODEL,
-   stress test guide) exist only on knk-workspace `claude/nice-feynman-pvy1j3`, not on `main` or `next`. L1 brings
-   them into `next` with its docs PR (branch `claude/npc-navigation`, cut from that branch). This also brings the
-   behavior-model docs of PR #235 (in review against `main`) into `next`. Say so if they should stay out.
 
 ## 2. Summary
 
@@ -64,6 +60,17 @@
    mechanical.
 6. **Tier labels.** `tier:1`, `tier:2` and `tier:3` existed at the first run (2026-11-13). Applied: #360 and #361
    `tier:3`, #359 `tier:1`. No alternative.
+
+7. **Design docs into trunk, then trunk into `next` (developer, 2026-11-13; replaces decision 3's route).** The
+   developer decided that the docs that sat on a feature branch before the implementation started are merged into
+   `main` and `main` into `next`; everything changed since the implementation started follows the standard link
+   route into `next`. Done by the coordinator: PR #372 merged `claude/nice-feynman-pvy1j3` at `aa6f171f` (the last
+   commit before "implementation started") into `main` (`0f927155`), ten NPC doc files, `main`'s version kept for
+   files the branch did not change; PR #373 merged `main` into `next` (`01bfb265`). The later commits on that branch
+   (Phase 1 status, stair release gate, Phase 1 test steps, metric panels) and L1's own docs stay on knk-workspace
+   `claude/npc-navigation` and reach `next` through L1's docs PR; L1 merges `origin/next` into that branch again.
+   Alternatives: (a) merge the branch head `90991c4a`: it holds docs written after the implementation started,
+   which the developer wants on the link route; (b) leave it to L1's docs PR (decision 3): superseded.
 
 ## 4. Link blocks
 
