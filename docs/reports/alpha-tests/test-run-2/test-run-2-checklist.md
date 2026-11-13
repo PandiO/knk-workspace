@@ -168,6 +168,19 @@ Console during all of it: no `[Siege] Non-member gate view pass failed` warnings
 | 24 | In a running match, A (defender) right-clicks G3 with `/gate passthrough snap` set | Still the animated open + automatic close (#154), whatever A's style | #167 | |
 | 25 | C (prefers snap or animated) repeats step 12 | Still the instant per-player opening (it changes only C's view, so it is never animated) | #167, #216 | |
 
+## 4c. Staff web app: dashboard access and bulk delete (#280, #205) — merged untested
+
+Accepted by the developer 2026-11-13 without a live test and merged (knk-web-app `main` `e02ee79`, knk-web-api
+`master` `45043a7`). Run the [dashboard access smoke test](../../../guides/dashboard-access-smoke-test.md) on the
+deployed alpha: API § 1–7 and web app § 8, with the role accounts of its § 0 (owner, Admin, Staff, content-only,
+world-only, player). Before the deploy check that the Admin group holds `knk.admin.*` and the plugin runs with
+`api.auth.type: apikey` (CHANGELOG 2026-11-12 Admin steps). A developer/staff block; testers are not needed.
+
+| Step | Result |
+|---|---|
+| API § 1–7 | |
+| Web app § 8 (22 steps) | |
+
 ## 5. Results
 
 ### 2026-11-01 (developer, on knk-plugin `main` `c8232607`, knk-web-api `master` `22a28ab`)

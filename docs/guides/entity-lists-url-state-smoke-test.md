@@ -2,7 +2,7 @@
 
 **Status:** Written 2026-11-01 for knk-web-app `claude/entity-lists-url-state`; run by the developer 2026-11-03: every step
 works or is accepted, after one fix (4.2, knk-web-app `d72194b`; Findings below). Merged 2026-11-03 (knk-web-app `main` `44f9395`)
-**Last updated:** 2026-11-12 (§ 7: chain 3 V2 merged into knk-web-app `main` `1371951` with V7; § 7 not run yet); 2026-11-08 (§ 7: checkbox selection and Export CSV, #205 export part, chain 3 V2 — knk-web-app `claude/dashboard-export-205`, not merged, not run yet); 2026-11-03
+**Last updated:** 2026-11-13 (§ 7: since #280 AM3 the rows come from `POST api/Dashboard/export`; steps 6, 7, 12 adjusted, docs #366); 2026-11-12 (§ 7: chain 3 V2 merged into knk-web-app `main` `1371951` with V7; § 7 not run yet); 2026-11-08 (§ 7: checkbox selection and Export CSV, #205 export part, chain 3 V2 — knk-web-app `claude/dashboard-export-205`, not merged, not run yet); 2026-11-03
 **Issues:** [PandiO/knk-workspace#39](https://github.com/PandiO/knk-workspace/issues/39) (page/search/sort and tabs in the
 URL, rows as links, `aria-sort`) · [#177](https://github.com/PandiO/knk-workspace/issues/177) follow-up ("Drafts (n)", "New
 with: {config}")
@@ -102,9 +102,17 @@ Needs a type with a second, non-default form configuration (add one on the Entit
 2's `claude/realtime-web-live-183`; merge or test those first, or test this branch on its own. No API change, no
 migration, no setting. The API trunk is enough. **Accounts:**
 - **A:** the owner (`*`) or an Admin (`knk.admin.*`);
-- **B:** a staff account with `knk.admin.content` but without `knk.admin.*` or `knk.admin.export` (e.g. Staff).
+- **B:** a staff account with the type's area node but without `knk.admin.*` or `knk.admin.export` (since AM3, e.g. a
+  content rank with a user-level deny `knk.admin.export = false`, or Staff on User).
 
-Until link AM1 adds the node to the API, only A can export. Pick a type with more than 10 rows and a published default
+> **Since #280 AM3 (merged 2026-11-13, knk-web-app `main` `e02ee79`)** the export no longer pages through the type's
+> list API: the web app sends **one** `POST api/Dashboard/export` (the selection by id, or the search with its sort),
+> the API checks `knk.admin.export` and the type's area node, and writes a "Dashboard export" audit entry. The file's
+> format is unchanged. Steps 6, 7 and 12 below are adjusted; the
+> [dashboard access smoke test § 8.4](dashboard-access-smoke-test.md#84-export-through-the-endpoint-refused-reads-pickers)
+> checks the endpoint and the audit entry.
+
+The migration of AM1 grants `knk.admin.export` to holders of an explicit area node (not the Staff group). Pick a type with more than 10 rows and a published default
 display configuration (X, as above), and keep a spreadsheet app at hand (Excel or LibreOffice). Time: about 20 minutes.
 
 1. As A, open `/dashboard/X`. Expected:
@@ -134,11 +142,12 @@ display configuration (X, as above), and keep a spreadsheet app at hand (Excel o
    - a success toast "Exported 3 X rows".
 6. Clear the selection. Search a term that matches more than one page, sort a column descending, then **Export CSV**.
    Expected:
-   - the button shows "Exporting… n / N" while it pages;
+   - the button shows "Exporting N…" while the server reads (one request since AM3);
    - the file holds every match, as many rows as "of N results", not only the shown page;
    - the rows are in the table's sort order.
 7. With a slow network (DevTools → Network → Slow 3G) on a type with several pages, click Export CSV and then
-   **Cancel**. Expected: no file, and an "Export cancelled" toast.
+   **Cancel**. Expected: no file, and an "Export cancelled" toast. (Since AM3 Cancel only drops the answer: the server
+   still reads the rows and writes the audit entry.)
 8. (Optional; no type has more than 10,000 rows yet.) The 10,000 cap is covered by the unit tests and the browser check.
    With such a type, expected:
    - the bar says "Only the first 10,000 go into the file (limit)";

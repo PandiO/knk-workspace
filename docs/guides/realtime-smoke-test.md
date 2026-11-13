@@ -3,7 +3,7 @@
 **Status:** All sections run by the developer (WT2 2026-11-04; WT2 follow-ups, S1, S2, S3 2026-11-05) and merged into the
 default branches; S1–S3 issues closed 2026-11-05. `realtime.enabled` stays `false` by default. § S4 (#183) merged
 2026-11-12 (API `master` `bc97b7d`, web app `main` `1371951`), **not run yet**
-**Last updated:** 2026-11-12 (§ S4 merged, not run; accounts and step 6 follow the area nodes of #280 AM1, docs #341); 2026-11-06 (§ S4 step 9: `Realtime:WebLiveUpdatesEnabled` switch, #183, feature branch); 2026-11-05 (§ S4, #183, feature branch); 2026-11-05 (S1, S2, S3 findings; S2 steps 5 and 7 corrected); 2026-11-05 (§ WT2 follow-ups: findings, merged); 2026-11-04 (§ WT2 follow-ups #239/#240, feature branch); 2026-11-04 (WT2 findings; merged); 2026-11-02 (§ S3, #182); 2026-11-02 (§ WT2, #181)
+**Last updated:** 2026-11-13 (§ S4: the dashboard opens for any area node since #280 AM3; a world-only account for step 2, docs #366); 2026-11-12 (§ S4 merged, not run; accounts and step 6 follow the area nodes of #280 AM1, docs #341); 2026-11-06 (§ S4 step 9: `Realtime:WebLiveUpdatesEnabled` switch, #183, feature branch); 2026-11-05 (§ S4, #183, feature branch); 2026-11-05 (S1, S2, S3 findings; S2 steps 5 and 7 corrected); 2026-11-05 (§ WT2 follow-ups: findings, merged); 2026-11-04 (§ WT2 follow-ups #239/#240, feature branch); 2026-11-04 (WT2 findings; merged); 2026-11-02 (§ S3, #182); 2026-11-02 (§ WT2, #181)
 **Design:** [specs/realtime-signalr/DESIGN.md](../specs/realtime-signalr/DESIGN.md) (§4–§5, as built: §4.6) ·
 [IMPLEMENTATION_PLAN.md](../specs/realtime-signalr/IMPLEMENTATION_PLAN.md) ·
 **Issues:** [PandiO/knk-workspace#178](https://github.com/PandiO/knk-workspace/issues/178) (S1),
@@ -245,8 +245,11 @@ from the REST join/quit calls). **People:** staff **A** and **B** in two browser
 both with `knk.admin.content`, `knk.admin.world` and `knk.admin.user.manage`; a third account **C** with
 `knk.admin.content` and `knk.admin.world` only; player **P** who can join the game server. Since #280 AM1 an
 `EntityChanged` goes to holders of the type's **area node** (towns, domains, streets: `knk.admin.world`; items,
-categories: `knk.admin.content`; see [the access model](../specs/dashboard-access-model/DESIGN.md) § 4.2), and the
-web app still needs `knk.admin.content` to open the dashboard at all (until #280 AM3). Design: [DESIGN §6.9](../specs/realtime-signalr/DESIGN.md).
+categories: `knk.admin.content`; see [the access model](../specs/dashboard-access-model/DESIGN.md) § 4.2). Since #280
+AM3 (merged 2026-11-13) any area node opens the dashboard, which lists only the account's areas, so C can also be a
+**world-only** account (`knk.admin.world` only): it then sees town saves live and never category saves
+([dashboard access smoke test § 8.4 step 22](dashboard-access-smoke-test.md#84-export-through-the-endpoint-refused-reads-pickers)).
+A bulk delete sends one event per row; an open table refreshes once (debounced). Design: [DESIGN §6.9](../specs/realtime-signalr/DESIGN.md).
 
 1. **Dashboard refresh.** A and B open `/dashboard/Town` (or any type both can edit). B edits a town's description
    and saves. Within about 1 s A's table shows the new text without a spinner or a page jump, and above the table

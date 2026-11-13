@@ -1,7 +1,7 @@
 # Closed alpha test run 2 — preparation
 
 **Status:** Draft for the developer; date not set
-**Last updated:** 2026-11-10 (§ 0: D15 option A decided; changelog entries added); 2026-11-10 (§ 0: scope and deploy gate for the merges since the 2026-11-01 deploy, draft); 2026-11-03 (folder renamed `27-10-2026/` → `test-run-2/`; process guide linked)
+**Last updated:** 2026-11-13 (§ 0 and checklist § 4c: dashboard access smoke test, #280/#205); 2026-11-10 (§ 0: D15 option A decided; changelog entries added); 2026-11-10 (§ 0: scope and deploy gate for the merges since the 2026-11-01 deploy, draft); 2026-11-03 (folder renamed `27-10-2026/` → `test-run-2/`; process guide linked)
 **Issues:** parent [PandiO/knk-workspace#149](https://github.com/PandiO/knk-workspace/issues/149) (run 1 findings);
 new findings go under a new parent issue "Closed alpha test run 2 (<date>): findings"
 **Checklist:** [test-run-2-checklist.md](test-run-2-checklist.md) (the steps; this file is the session plan around them)
@@ -28,6 +28,7 @@ run 2 deploys the current trunks, so the new areas below are in the run (option 
 | Chat tokens (`#hand`, `#stats`, `#kills@player`, ...) | #233 | yes | **Free play**, with one scripted moment: share a private statistic (the consent prompt) |
 | Realtime channel and world tasks over it, offers to non-op staff | #178–#182, #239, #240 | staff + web | **Separate staff block**, as § 1 already says, or out of scope |
 | Item lore wrap, shield banner patterns and armour trims | #212, #232 | no | Regression only (remove #212 from the known issues in § 6) |
+| Staff web app: dashboard access model and bulk delete (merged 2026-11-13 **without a live test**, developer's acceptance) | #280, #205 | staff + web | **Separate staff block**, checklist § 4c: the dashboard access smoke test with role accounts; deploy gate: Admin holds `knk.admin.*`, plugin `api.auth.type: apikey` |
 | Web app look: themes, page background, entity lists, dashboard, form wizard | #95, #231, #177, #225–#230 | no | Regression only; free play on the web app |
 | Still feature branches: siege pre-game gate view + pass-through styles; Siege Survival S1–S8 | #213 (#214–#217), #167; #41 | yes | **Decision D15**: deploy the branches (needs the non-trunk deploy route, § 2) or leave out |
 
