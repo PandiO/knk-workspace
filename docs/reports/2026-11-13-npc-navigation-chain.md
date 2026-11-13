@@ -1,6 +1,6 @@
 # NPC navigation chain — progress report
 
-**Status:** Running (2026-11-13) · **Last updated:** 2026-11-13
+**Status:** Paused (L1, L2 and L3 merged into `next`; L0 waits for the developer's Phase 1 result on #359) (2026-11-13) · **Last updated:** 2026-11-13
 
 **Issue:** [PandiO/knk-workspace#358](https://github.com/PandiO/knk-workspace/issues/358), links
 [#360](https://github.com/PandiO/knk-workspace/issues/360) (L1),
@@ -11,33 +11,38 @@
 
 ## 1. Waiting for the developer
 
-In test order. Deploy knk-plugin `next` (`f2a50c46`, Phases 1–3) with Citizens build 4269; merge the `npc.navigation`
-block into the dev server's `config.yml` (configuration reference § 4.27; the YAML is also in knk-plugin#17, plus
-`rule-checks-per-tick: 10` and `stop-on-trespass: false` from knk-plugin#18), `enabled: true` only for the tests.
+In test order. Deploy knk-plugin `next` (`0506e691`, Phases 1–4) with Citizens build 4269; merge the `npc.navigation`
+block into the dev server's `config.yml` (the full block is in the configuration reference § 4.27; the pieces are in
+knk-plugin#17, #18 and #19), `enabled: true` only for the tests.
 
 1. **Phase 1 test and audit report on #359** (implementation plan, "Phase 1 → Developer test"). It opens L0, the
    last link: guards on the listeners the audit names. If the audit names nothing, say so on #359 and L0 is skipped.
 2. **Phase 2 test** (plan, "Phase 2 → Developer test"): one NPC, 50 NPCs on the stored route, the stair house
    (release gate; what to look at: block 4.1 § 8.3). Post the `stats` output and the run log on #360.
 3. **Phase 3 test** (plan, "Phase 3 → Developer test"): gate runs, access runs, the refresh that replans nobody, the
-   trespass counter (`stop-on-trespass: true` for this test). Post the `stats` output and the run log on #361. Look at
-   where NPCs stand at the Keep Gate (block 4.2 § 8.3, known limit 1).
-4. **Review of the agent decisions:** block 4.1 § 5 (twelve) and block 4.2 § 5 (thirteen). The ones that change
-   behaviour: 4.1 § 5.1, 5.2, 5.5; 4.2 § 5.4 (`NavigationResult.Blocked` carries a typed element), 5.5 (the caller
-   hears `Blocked` when the plan arrives), 5.6 (the partial route ends before the first forbidden region), 5.8
-   (`stop-on-trespass` default false), 5.9 (the router wins over the recheck).
-5. **Promotion of `next`** in knk-plugin and knk-workspace when the tests pass; the issues stay `status:in-review`
+   trespass counter (`stop-on-trespass: true` for this test). Results on #361. Look at where NPCs stand at the Keep
+   Gate (block 4.2 § 8.3).
+4. **Phase 4 test** (plan, "Phase 4 → Developer test", 14 steps): 20 and 50 NPC groups per formation, the fold at
+   the Keep Gate and in the stair house, a gate closing ahead of and in the middle of a group, a follower pushed off
+   its slot. Results on #377. Look first at: followers halting between waypoint lists, whether the speed factor
+   makes a follower catch up (block 4.3 § 8).
+5. **Review of the agent decisions:** block 4.1 § 5 (twelve), 4.2 § 5 (thirteen), 4.3 § 5 (eighteen). The ones that
+   change behaviour: 4.1 § 5.1, 5.2, 5.5; 4.2 § 5.4, 5.5, 5.6, 5.8, 5.9; 4.3 § 5.1 and 5.6 (followers are not orders
+   in the navigation service: no trespass guard or gate recheck of their own, their lanes are checked before they are
+   sent), 5.4 (a formation folds as a whole into a column), 5.8 (the leader waits by a cancelled and re-given order,
+   one more road plan per wait), 5.11 (no about-face), 5.14 (`Arrived` at most 20 s after the leader).
+6. **Promotion of `next`** in knk-plugin and knk-workspace when the tests pass; the issues stay `status:in-review`
    until then. The `documentation` sub-issue and docs session start when the feature's last link is in `next`
-   (after L0, or now if L0 is skipped).
+   (after L0, or at its skip).
 
 ## 2. Summary
 
 | Link | Issue | Status | Branch heads | PR | CI | How started |
 |---|---|---|---|---|---|---|
 | L1 Phase 2: one NPC walks a K&K route | #360 | Merged into next 2026-11-13 (knk-plugin `50bf7ff7`, knk-workspace `424f1fa3`); #360 stays `status:in-review` until the developer's live test and the promotion of `next` | `claude/npc-navigation`: knk-plugin `49b5cedb`, knk-workspace `5c8587b` | [knk-plugin#17](https://github.com/PandiO/knk-plugin/pull/17), [knk-workspace#370](https://github.com/PandiO/knk-workspace/pull/370) | knk-plugin `build` green on `49b5cedb` (run 43398822498); knk-workspace has no CI | create_session session_01R1w2Uv2Ze28fr2rkqUz98C (`source_revision` `next`) |
-| L0 Phase 1 follow-ups | #359 | Not started (gate: the developer's Phase 1 result on #359, expected the evening of 2026-11-13; runs after L3, one link per repo) | | none | none | |
+| L0 Phase 1 follow-ups | #359 | Not started (gate: the developer's Phase 1 result on #359, expected the evening of 2026-11-13; L1, L2 and L3 are merged) | | none | none | |
 | L2 Phase 3: rules stay binding | #361 | Merged into next 2026-11-13 (knk-plugin `f2a50c46`, knk-workspace `9df8d44c`); #361 stays `status:in-review` until the developer's live test and the promotion of `next` | `claude/npc-navigation`: knk-plugin `8df2d839`, knk-workspace `a05f7bf` | [knk-plugin#18](https://github.com/PandiO/knk-plugin/pull/18), [knk-workspace#375](https://github.com/PandiO/knk-workspace/pull/375) | knk-plugin `build` green on `8df2d839` (runs 43403427418, 43403523663); knk-workspace has no CI | create_session session_01R1w2Uvt1jBnAv84KX3hf7q (`source_revision` `next`) |
-| L3 Phase 4: groups and formations | #377 | Finished by the link 2026-11-13, PRs open against `next`, #377 `status:in-review`; waits for the coordinator's checks | `claude/npc-navigation`: knk-plugin `6fd91127`, knk-workspace `f5dda86` | [knk-plugin#19](https://github.com/PandiO/knk-plugin/pull/19), [knk-workspace#384](https://github.com/PandiO/knk-workspace/pull/384) | knk-plugin `build` green on `6fd91127` (push run 43427733153, PR run 43428361244); knk-workspace has no CI | create_session session_01R1w2UxD3EQaGRrvLbMzz7P (`source_revision` `next`) |
+| L3 Phase 4: groups and formations | #377 | Merged into next 2026-11-13 (knk-plugin `0506e691`, knk-workspace `a45e17b9`); #377 stays `status:in-review` until the developer's live test and the promotion of `next` | `claude/npc-navigation`: knk-plugin `6fd91127`, knk-workspace `f5dda86` | [knk-plugin#19](https://github.com/PandiO/knk-plugin/pull/19), [knk-workspace#384](https://github.com/PandiO/knk-workspace/pull/384) | knk-plugin `build` green on `6fd91127` (push run 43427733153, PR run 43428361244); knk-workspace has no CI | create_session session_01R1w2UxD3EQaGRrvLbMzz7P (`source_revision` `next`) |
 
 ## 3. Coordinator decisions
 
@@ -122,6 +127,18 @@ block into the dev server's `config.yml` (configuration reference § 4.27; the Y
     after L3. Alternatives: (a) pause until the evening (decision 11); (b) Phase 5: needs push access to knk-web-api
     and knk-web-app, which this chain has read-only; (c) Phase 7 (movement quality, stairs): depends on what the
     stair-house test shows.
+
+13. **L3 checked and merged (2026-11-13).** Skill § 6: block 4.3 and heads match, both branches contain `next`, PRs
+    knk-plugin#19 (`Closes #377`) and knk-workspace#384 with the template, CI `build` green on `6fd91127`, tests
+    above the baseline (core 2583 → 2621, paper 2581 → 2587, 0 failures), scope within #377 (23 plugin files: the new
+    `core/npc/nav/group/` package, additive changes in `core/npc/nav/`, `paper/npc/nav/`, `paper/npc/citizens/` and
+    `config.yml`; `NpcNavigationService`, `KnKPlugin` and the listeners untouched; six docs files), flag off in the
+    shipped `config.yml`, #377 `status:in-review`. Merged with merge commits: knk-plugin `0506e691`, knk-workspace
+    `a45e17b9`. L3's own note: it skipped parts of the read-first list (DESIGN § 2/6/7, the spike branch); accepted,
+    because the scope text and the tests it names are covered, and flagged for the developer's review. No alternative
+    to merging (skill § 7.1).
+14. **Chain paused again.** L0's gate is still closed (no Phase 1 result on #359 at 12:55 UTC). Nothing else is in
+    the charter; a further phase needs the developer's go, as L3 did. Alternatives: as decision 11.
 
 ## 4. Link blocks
 
