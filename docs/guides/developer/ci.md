@@ -1,6 +1,6 @@
 # CI: what runs on every push and how to mark a known failure
 
-**Status:** Active · **Last updated:** 2026-11-13 (first version, [PandiO/knk-workspace#362](https://github.com/PandiO/knk-workspace/issues/362), docs follow-up of [#327](https://github.com/PandiO/knk-workspace/issues/327); checked against knk-web-api `master` `210f731`, knk-web-app `main` `33d68f8`, knk-plugin `main` `e8b651d`)
+**Status:** Active · **Last updated:** 2026-11-13 (§ 4 the CI run decides, § 5 reading runs as an agent, § 6 the Node.js 20 warning, [#363](https://github.com/PandiO/knk-workspace/issues/363)); 2026-11-13 (first version, [PandiO/knk-workspace#362](https://github.com/PandiO/knk-workspace/issues/362), docs follow-up of [#327](https://github.com/PandiO/knk-workspace/issues/327); checked against knk-web-api `master` `210f731`, knk-web-app `main` `33d68f8`, knk-plugin `main` `e8b651d`)
 
 The GitHub workflows of the component repos are the automated gate for every change. They run on every push (all
 branches), every pull request and on manual dispatch (`workflow_dispatch`). Under the
@@ -74,9 +74,43 @@ test green.
 3. Fix the cause on the feature branch. Never skip, disable or mark a test to get the change's own pull request green;
    a mark (§ 2) is only for a red test the change didn't cause, with its issue.
 
+## 4. The CI run decides
+
+A GitHub runner is not a developer machine and not the agent container: it runs Ubuntu in UTC with a default
+(non-Dutch) culture, on other hardware. A test that depends on the culture (number and date formats), the time zone or
+timing can be green locally and red in CI, or the other way round; the nl-NL and timing reds recorded by earlier chains
+were green on the runner at the setup. When the two disagree, the **CI run on the branch counts** for merging. Don't
+call a branch green from a local run alone; fix the test so it pins its culture or time zone, or, if the change didn't
+cause it, mark it (§ 2).
+
+## 5. Reading runs as an agent
+
+The `github` MCP server ([agent tooling](agent-tooling.md) § 2, toolset `actions`) reads runs in `PandiO/*`. The
+component repository must be attached to the session (`add_repo`); otherwise the call is refused.
+
+1. `actions_list` with `list_workflow_runs`, `resource_id` `ci.yml` (or `migrations.yml`, `build.yml`) and a `branch`
+   filter: a branch's runs with status and conclusion. For a pull request, `pull_request_read` with `get_check_runs`
+   gives the checks of its head commit.
+2. `actions_get` with `get_workflow_run` and the run id: one run's details.
+3. `actions_list` with `list_workflow_jobs` and the run id: the jobs and their steps, to see which step failed.
+4. `get_job_logs` with `run_id`, `failed_only: true` and `return_content: true` (or a `job_id`): the log tail of the
+   failed job; `tail_lines` sets how much.
+5. For the API, `actions_list` with `list_workflow_run_artifacts` finds `api-test-results` (the TRX file) when the log
+   doesn't make the failing tests clear.
+
+Don't poll in a loop for a run to finish: a session that watches a pull request (`subscribe_pr_activity`) gets CI
+results as events.
+
+## 6. Known warning
+
+Every run is annotated with a warning that `actions/checkout@v4`, `setup-dotnet@v4`, `setup-node@v4` and
+`upload-artifact@v4` target Node.js 20 and are forced onto Node.js 24 (`migrations.yml` too). It doesn't fail a run; a
+later bump to the next major versions of these actions clears it.
+
 ## Related
 
 - [Agent tooling](agent-tooling.md): the Stop hook that compiles changed component repos in a session, before CI runs.
 - [`knk-link` skill](../../../.claude/skills/knk-link/SKILL.md) (baseline tests, the pull request) and
   [`knk-coordinator` skill](../../../.claude/skills/knk-coordinator/SKILL.md) (CI green before merging into `next`).
 - [Documentation maintenance](DOCUMENTATION_MAINTENANCE.md).
+- [Production installation](../production-installation.md) § 10: the release and deploy stages that come after CI (plans, not built).
