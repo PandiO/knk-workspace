@@ -1,10 +1,10 @@
 # Dashboard access model — smoke test
 
-**Status:** Ready to run (API § 1–7, web app § 8). Not run yet. AM1 and AM2 **merged 2026-11-12** into knk-web-api
-`master` `bc97b7d` (with V5–V7). **AM3 built 2026-11-12, not merged:** knk-web-app and knk-web-api
-`claude/dashboard-access-280` (web app part of #280, #205 bulk delete, configuration deletes need `knk.admin.delete`).
+**Status:** Ready to run (API § 1–7, web app § 8). Not run yet: **accepted by the developer 2026-11-13 without a live
+test**, scheduled in closed alpha test run 2 (checklist § 4c). AM1 and AM2 merged 2026-11-12 (knk-web-api `master`
+`bc97b7d`); AM3 merged 2026-11-13 (knk-web-app `main` `e02ee79`, knk-web-api `master` `45043a7`, also on `next`).
 AM4 (living docs, admin guide to the ranks) not built.
-**Last updated:** 2026-11-12 (§ 0 role accounts and deploy, § 2.1 configuration deletes, § 3 refusal codes, § 8 web
+**Last updated:** 2026-11-13 (status: merged, accepted without a live test, in test run 2); 2026-11-12 (§ 0 role accounts and deploy, § 2.1 configuration deletes, § 3 refusal codes, § 8 web
 app, § 9 docs impact; chain 3 link AM3); 2026-11-12 (AM1+AM2 merged); 2026-11-08 (§ 7 read gating and lookups, chain 3 link AM2); 2026-11-08 (draft with the AM1 API steps, chain 3 link AM1)
 **Design:** [specs/dashboard-access-model/DESIGN.md](../specs/dashboard-access-model/DESIGN.md) · as built:
 [web-api architecture § 5.1](../architecture/web-api-architecture.md#51-dashboard-access-model-pandioknk-workspace280-am1--branch-claudedashboard-access-280-not-merged)

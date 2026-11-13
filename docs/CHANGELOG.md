@@ -4,10 +4,12 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+## 2026-11-13
+
 - **Dashboard access in the web app; bulk delete** (PandiO/knk-workspace#280 AM3, #205) — staff now see only the
   dashboard types of the areas they work in, buttons they can't use are greyed out with the permission they need, and
-  owners and Admins can delete many rows at once. Branches (not merged): knk-web-app and knk-web-api
-  `claude/dashboard-access-280`, from `main` `1371951` / `master` `bc97b7d`.
+  owners and Admins can delete many rows at once. Accepted by the developer 2026-11-13 without a live test and merged 2026-11-13 (knk-web-app `main` `e02ee79`, knk-web-api `master` `45043a7`, also on `next`); the smoke test is in closed alpha
+  test run 2 (checklist § 4c).
   - **Web app:** the dashboard, the detail page and the form wizard open for any area node (`knk.admin.content`,
     `knk.admin.world`, `knk.kit.manage`, `knk.admin.lootbox.manage`, `knk.siege.admin.manage`, `knk.admin.road`,
     `knk.admin.user.manage`); the explorer lists only the types of the areas held. New, Edit, Delete and ⚙ are disabled
@@ -26,8 +28,6 @@ This is a human-readable record of capabilities merged into the V3 default branc
     together, **API first** (AM1–AM3 belong together; AM1/AM2 are already on `master`). Accounts that delete form or
     display configurations need `knk.admin.delete` (Admin and the owner have it; backfilled content holders too).
     Smoke test: [dashboard access smoke test § 2.1, § 8](guides/dashboard-access-smoke-test.md).
-
-## 2026-11-13
 
 - **AI agent workflow setup: CI, `next` branches, chain skills, agent tooling and the sessions archive** — no game
   change. Agents now have automatic checks on every push, a `next` integration branch to work on, two project skills
