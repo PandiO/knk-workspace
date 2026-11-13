@@ -4,6 +4,21 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Staff may freeze and unfreeze players** (PandiO/knk-workspace#367) — developer decision 2026-11-13: Staff helps
+  players and enforces the rules (freeze, kick, ban, balances) and doesn't manage the game core. knk-web-api and
+  knk-workspace branches `claude/staff-freeze-nodes-367`, not merged.
+  - **API:** data-only migration `SeedStaffFreezeNodes` gives the **Staff** group `knk.freeze` and `knk.unfreeze`, the
+    nodes `PUT api/Users/{id}/freeze` / `/unfreeze` and the plugin's `/freeze` / `/unfreeze` check (names match, no
+    code change). Idempotent: skipped when there is no Staff group or when Staff or a group it inherits from already
+    has a grant, deny or covering wildcard for the node. Down removes nothing (it can't tell its grant from one given
+    before). Moderator and Admin aren't touched: on the alpha they inherit from Staff.
+  - **Web app, plugin:** no change; the player profile's Freeze/Unfreeze and the in-game commands open up for Staff
+    members by the grant.
+  - **Admin steps:** back up the database, deploy the API, run `dotnet ef database update` (one data-only migration,
+    no setting, no plugin change). The alpha and the dev seed (`knk-dev-db-seed`, Staff holds both nodes already) get
+    no new row. Check: Staff's group page lists `knk.freeze` and `knk.unfreeze`. Smoke test:
+    [player profile smoke test § 4 step 4](guides/player-profile-smoke-test.md#4-without-the-nodes).
+
 - **API: creates, edits and link changes of dashboard types need `knk.admin.content`** (PandiO/knk-workspace#374,
   follow-up of #371) — developer decision 2026-11-13: "Area staff should not be able to change forms at this point.
   They only work with the content available." The API now says what the web app says since #371. knk-web-api and
