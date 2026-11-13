@@ -29,3 +29,7 @@ DEV_SERVER_*/
 node_modules
 
 DbRestore/
+
+# --- Agent tooling output ---
+# Playwright MCP snapshots and screenshots (.mcp.json server "playwright")
+.playwright-mcp/
