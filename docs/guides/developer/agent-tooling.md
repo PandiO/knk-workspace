@@ -1,6 +1,6 @@
 # Agent tooling: MCP servers and the fast-check hook
 
-**Status:** Active · **Last updated:** 2026-11-13 (§ 2.8 restart after setting the variables, § 2.9 Playwright output ignored); 2026-11-13 (§ 1 note: Codex review comments come from the ChatGPT Codex connector app, not CI); 2026-11-13 (fast-check: which clones, JDK 25 detection, only passes cached, § 3.1, § 3.6, § 3.7, trial findings of [#331](https://github.com/PandiO/knk-workspace/issues/331)); 2026-11-12 (`add_repo` guard hook, § 4.2, developer decision 2026-11-12); 2026-11-12 (permission rule for `add_repo`, § 4, developer decision 2026-11-12); 2026-11-12 (first version, [PandiO/knk-workspace#331](https://github.com/PandiO/knk-workspace/issues/331), [DESIGN § 10](../../specs/ai-agent-workflow/DESIGN.md#10-tooling-mcp-servers-and-hooks))
+**Status:** Active · **Last updated:** 2026-11-13 (§ 2.5 token needs Actions write for the Release workflow); 2026-11-13 (§ 2.8 restart after setting the variables, § 2.9 Playwright output ignored); 2026-11-13 (§ 1 note: Codex review comments come from the ChatGPT Codex connector app, not CI); 2026-11-13 (fast-check: which clones, JDK 25 detection, only passes cached, § 3.1, § 3.6, § 3.7, trial findings of [#331](https://github.com/PandiO/knk-workspace/issues/331)); 2026-11-12 (`add_repo` guard hook, § 4.2, developer decision 2026-11-12); 2026-11-12 (permission rule for `add_repo`, § 4, developer decision 2026-11-12); 2026-11-12 (first version, [PandiO/knk-workspace#331](https://github.com/PandiO/knk-workspace/issues/331), [DESIGN § 10](../../specs/ai-agent-workflow/DESIGN.md#10-tooling-mcp-servers-and-hooks))
 
 What knk-workspace configures for Claude Code sessions started in it: three MCP servers in `.mcp.json`, and in
 `.claude/settings.json` a Stop hook that compiles the component repos an agent changed, a permission rule that lets
@@ -48,7 +48,9 @@ check, but agents must handle every finding before a merge into `next` ([global 
    (`export GITHUB_PAT=...`) or on Windows with `setx GITHUB_PAT ...`, then start a new terminal. Never put a token in
    `.mcp.json` or a committed settings file.
 5. **GitHub token.** A fine-grained personal access token for the four `PandiO/knk-*` repositories with: Contents
-   read/write, Issues read/write, Pull requests read/write, Actions read, Metadata read. Give it an expiry date.
+   read/write, Issues read/write, Pull requests read/write, Actions read/write, Metadata read. Give it an expiry date.
+   Actions write lets a session start the "Release" workflow (`actions_run_trigger`, global instructions "Branches"
+   rule 5); every run still waits for your approval in the `release` environment.
 6. **Playwright version.** The package is pinned (`0.0.85`, the current release on 2026-11-12) so a new release does not
    run unreviewed; bump it in `.mcp.json` when needed. The first start downloads it, and a browser has to be installed
    once (`npx playwright install chromium`) if Playwright has none.

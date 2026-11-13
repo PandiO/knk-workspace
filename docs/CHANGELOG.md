@@ -867,6 +867,64 @@ This is a human-readable record of capabilities merged into the V3 default branc
   first and goes on to `/link` verified when it is one. The separator is one constant (`CLAIM_CODE_SEPARATOR`, a dash
   until the testers decide; the API and the disconnect screen use a dash too). The link-code field and its #57 hints are
   unchanged. Live checklist: `guides/invitations-smoke-test.md` step 17.
+- **A menu item that opens `/menu`; no more ghost blocks for Bedrock players** (back-fill, written 2026-11-13) — every
+  player now has a nether star in the right-most hotbar slot that opens the main menu with a click, and on Bedrock
+  (console) a block you may not break no longer disappears on your screen only. knk-plugin `main` `3550cbbe`, merged
+  `--no-ff` from `claude/alpha-run-1-console-nav` on 2026-10-26
+  ([PandiO/knk-workspace#160](https://github.com/PandiO/knk-workspace/issues/160) commit `003cce95`,
+  [#161](https://github.com/PandiO/knk-workspace/issues/161) commit `cb659fd1`; closed alpha test run 1 package D,
+  [report](reports/alpha-tests/test-run-1/2026-10-26-package-d-console-navigation.md)). The same merge carries the
+  Siege gate-approach fix for the compass ([#176](https://github.com/PandiO/knk-workspace/issues/176), commit
+  `ddc74e2c`), which is not part of this entry. Not live-tested yet: the checks are in
+  [test run 2's checklist](reports/alpha-tests/test-run-2/test-run-2-checklist.md) (console block).
+  - **Menu item (#160):** a `Menu (click to open)` nether star is given at every join when missing and back at
+    respawn, in slot 8 by default; a player's own item in that slot is moved to a free slot, and with a full inventory
+    nothing is given. Right-click (in the air, or on a block that does nothing itself; sneak to use it on a door,
+    chest or button), left-click, or a click on it in the player's own inventory opens `/menu`. It never drops (death
+    included), can't be moved, placed or put in a chest, crafting grid or item frame, and is skipped by kit scans.
+    Everyone gets it by default (`give-to: all`); whether it gets in the way for Java players is decision D10 of
+    [test run 2's preparation](reports/alpha-tests/test-run-2/test-run-2-preparation.md). Player side:
+    [menus player guide](guides/users/menus-player-guide.md#the-menu-item).
+  - **Ghost-block resync (#161):** a Bedrock client removes a block as it mines it, before the server answers. When
+    the break is refused (WorldGuard, region rules, the hub, a gate, any plugin), the plugin now sends the real block
+    (and the other half of a door, tall plant or bed) to that player again every `interval-ticks` while they keep
+    swinging, and once more `window-ticks` after the last swing. It catches every refusal in one place (cancelled
+    break or block-damage event, or a denied left-click), so new protections need nothing extra. Needs Floodgate;
+    Java players are left alone unless `all-players` is on (testing only).
+  - **Admin steps:** plugin only; no API change, migration or script. Merge the two new sections into the server's
+    `config.yml` by hand (the plugin never adds keys to an existing file; without them it runs on these defaults) and
+    restart. See [plugin configuration § 4.14](guides/admin/plugin-configuration.md#414-lore-menus-crossplay). Under
+    `menus:`:
+
+    ```yaml
+      menu-item:
+        enabled: true
+        give-to: all              # all | bedrock (Floodgate players only)
+        give-on-join: true
+        keep-on-death: true
+        material: NETHER_STAR
+        name: "&6&lMenu &7(click to open)"
+        lore:
+          - "&7Opens the Knights & Kings menu (&e/menu&7)."
+        slot: 8                   # 0-8 hotbar, 9-35 main inventory
+        open-on: [RIGHT_CLICK, LEFT_CLICK, INVENTORY_CLICK]
+        droppable: false
+        movable: false
+    ```
+
+    And a new top-level section:
+
+    ```yaml
+    crossplay:
+      block-resync:
+        enabled: true
+        all-players: false
+        window-ticks: 30
+        interval-ticks: 5
+    ```
+
+    On start the log shows `Menu item on (NETHER_STAR in slot 8, ...)` and `Bedrock block resync on (Bedrock players,
+    ...)`; the resync only reaches Bedrock players when the log also shows `Floodgate detected`.
 
 ## 2026-10-25
 
