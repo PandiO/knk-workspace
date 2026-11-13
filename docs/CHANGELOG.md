@@ -4,6 +4,32 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **API: creates, edits and link changes of dashboard types need `knk.admin.content`** (PandiO/knk-workspace#374,
+  follow-up of #371) — developer decision 2026-11-13: "Area staff should not be able to change forms at this point.
+  They only work with the content available." The API now says what the web app says since #371. knk-web-api and
+  knk-web-app branches `claude/api-writes-need-content-374`; in `next` when their pull requests are merged, on the
+  trunk when the developer promotes `next`.
+  - **API:** the primary create (`POST`) and update (`PUT {id}`) of every dashboard type need the type's write node
+    **and** `knk.admin.content` (one rule in `DashboardAccess`, enforced by `RequireDashboardChange`); without it 403
+    `NoWriteAccess` "Creating or editing Town requires knk.admin.world and knk.admin.content.". The detail page's
+    Select / Unlink / Add (`POST api/Relationships/{type}/{id}/{property}/link|unlink`) need the same. The metadata's
+    `actionNodes.create`/`edit` and a relationship's `nodes` list the node. **Not changed:** User (player profile) and
+    Permission Group (`knk.admin.user.perm` with the escalation guard), RoadProfile (the roads page), delete, bulk
+    delete, export, reads, lookups, the player profile's freeze, balance, kick and ban, other writes of a type (gate
+    door state, a domain's world backfill, lootbox in-game spawn areas, …) and the plugin (`api.auth.type: apikey`).
+  - **Web app:** the detail page's Select…, Change…, Unlink and Add… are greyed out with "Requires knk.admin.content"
+    without it, like New and Edit since #371.
+  - **Admin steps:** no migration, no setting, no plugin change, no new package; deploy the API and the web app in
+    either order. A rank needs `knk.admin.content` to keep creating or editing anything through the API: Admin
+    (`knk.admin.*`) and the owner keep everything; the **Staff** group (`knk.kit.manage`, `knk.siege.admin.manage`, no
+    `knk.admin.content`) can no longer create or edit kits or siege setup from the web or with `curl`, and a world,
+    lootbox or siege rank only views, deletes (with `knk.admin.delete`) and exports. In-game commands are unaffected
+    (they go through the plugin key). `SeedDashboardActionNodes` (AM1) seeded only `knk.admin.delete` and
+    `knk.admin.export`, so nothing needs a data change; grant `knk.admin.content` by hand to a rank that should keep
+    editing (it opens every content type too). The lootbox page's Enable/Disable toggle saves through the same `PUT`
+    and needs `knk.admin.content` now as well. Smoke test:
+    [dashboard access smoke test § 2.2 and § 8 step 9b](guides/dashboard-access-smoke-test.md#22-create-edit-and-link-changes-need-knkadmincontent-374).
+
 - **Form wizard, New and Edit back on `knk.admin.content`** (PandiO/knk-workspace#371, reverts AM3's LAM3-1, answers
   #368) — developer decision 2026-11-13: area staff work with the content that exists and don't change forms for now.
   knk-web-app branch `claude/form-wizard-content-only-371`, merged into `next` 2026-11-13 (knk-web-app#11, `e6ba115`); on the trunk when the developer promotes `next`.
@@ -12,8 +38,8 @@ This is a human-readable record of capabilities merged into the V3 default branc
     `knk.admin.content`, greyed out with "Requires knk.admin.content"; a picker's Create New is hidden without it.
     Edit of a user still opens the player profile for Staff. View, the explorer per area, lookups, Delete, bulk
     delete, Export and the player profile are unchanged.
-  - **API:** unchanged; it still accepts creates and edits per area node. Proposal to ask for `knk.admin.content` there
-    too: #374.
+  - **API:** unchanged by #371; it still accepts creates and edits per area node. #374 (above) asks for
+    `knk.admin.content` there too.
   - **Admin steps:** no migration, no setting, no plugin change, no new package; deploy the web app only. World, kit,
     lootbox, siege, road and Staff ranks that should keep creating or editing records need `knk.admin.content`.
     Smoke test: [dashboard access smoke test § 8 steps 6, 7, 9, 9a](guides/dashboard-access-smoke-test.md#8-web-app-am3).
