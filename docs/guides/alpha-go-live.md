@@ -55,7 +55,7 @@ Minecraft client ──► play.knightsandkings.net ──► playit.gg tunnel �
 | Paper host | PC or NAS, API on a LAN port | **Paper in the `knk-alpha` stack**: the plugin and API talk over service DNS, and no API port exists on the LAN |
 | MySQL | 8.4 | 9.6.0 (pinned digest, runbook Phase 2) |
 | Worlds | Dev map only | Main gameplay world + the converted hub (`knk_hub`), with a KnK-owned loader and no Multiverse (KNG-114) |
-| Web hostname | `app.knightsandkings.net` | **`app.knightsandkings.net`** (developer decision 2026-10-21). `knightsandkings.net` is already an active Cloudflare zone, so it gets the same free edge certificate as `oldenzeelit.nl`; `oldenzeelit.nl` stays personal (its Microsoft 365 mail is not used for KnK). |
+| Web hostname | `app.knightsandkings.net` | **`app.knightsandkings.net`** (developer decision 2026-10-21). `knightsandkings.net` is already an active Cloudflare zone, so it gets the same free edge certificate as `<personal-domain>`; `<personal-domain>` stays personal (its Microsoft 365 mail is not used for KnK). |
 
 ---
 
@@ -428,7 +428,7 @@ Access never stands in its way. For the probe from outside, add a service token 
 *Service Auth* policy.
 
 **DNS zone:** `knightsandkings.net` is an active Cloudflare zone (public NS `barbara`/`michael.ns.cloudflare.com`,
-the same pair as `oldenzeelit.nl`, checked 2026-10-21); GoDaddy is only the registrar. Confirm in the dashboard that the
+the same pair as `<personal-domain>`, checked 2026-10-21); GoDaddy is only the registrar. Confirm in the dashboard that the
 zone shows *Active* and sits in the same account as the tunnel. The free Universal SSL certificate covers the apex
 and one subdomain level, so keep names one level deep. The apex already serves something through Cloudflare: check what
 before adding zone-wide rules.

@@ -41,10 +41,10 @@ Agent start (12:16:47Z): `Starting playitd … secret_path=Some("/run/secrets/pl
 
 | Step | Result |
 |---|---|
-| Free tunnel (Minecraft Java, local `minecraft:25565`) | Address `vivo-philippines.tun.ply.gg`, port 25565. A join from a phone hotspot (outside the LAN) worked. **Latency from NL: ping 139 ms, in game ~155 ms (peak 221 ms).** The traceroute shows the global anycast address `147.185.221.217` served from **Fremont, California** (AMS → LON → BOS → CHI → `core1.fmt2.he.net` → Developed Methods LLC) |
+| Free tunnel (Minecraft Java, local `minecraft:25565`) | Address `<playit-tunnel-host>`, port 25565. A join from a phone hotspot (outside the LAN) worked. **Latency from NL: ping 139 ms, in game ~155 ms (peak 221 ms).** The traceroute shows the global anycast address `147.185.221.217` served from **Fremont, California** (AMS → LON → BOS → CHI → `core1.fmt2.he.net` → Developed Methods LLC) |
 | Server side at the same time | TPS 20.0, MSPT avg 1.3–1.7 ms (max 24.5), Minecraft 4 % CPU, 4.9 / 6 GiB. Not the bottleneck |
 | **Decision (developer):** playit Premium (~€3/month) | The existing tunnel was moved to the **Germany** region. Address unchanged, now `69.9.185.16` (`fra-eq8`). Ping 12–13 ms, in game **~28 ms** |
-| Custom domain | A Cloudflare **CNAME** `play` → `vivo-philippines.tun.ply.gg` resolved correctly, but Minecraft answered "Can't connect to server". playit's Minecraft Java tunnels share an IP and port and route by the **hostname in the handshake**, so an unknown name isn't routed |
+| Custom domain | A Cloudflare **CNAME** `play` → `<playit-tunnel-host>` resolved correctly, but Minecraft answered "Can't connect to server". playit's Minecraft Java tunnels share an IP and port and route by the **hostname in the handshake**, so an unknown name isn't routed |
 | Fix: playit external domain ([guide](https://playit.gg/support/external-domain-cloudflare/)) | CNAME removed; Cloudflare **NS** `play` → `ns1.playit-dns.com` (and `ns2`); in playit, *Domains → Add External Domain* `play.knightsandkings.net` and on the tunnel *Change domain* → it. That delegates only `play.knightsandkings.net` to playit's DNS; the rest of the zone (incl. `app.`) stays in Cloudflare. Premium includes 3 custom domains |
 | Result | `Resolve-DnsName play.knightsandkings.net -Type NS` → `ns1`/`ns2.playit-dns.com`; a join through **`play.knightsandkings.net`** works, `/spark ping` **27 ms** |
 

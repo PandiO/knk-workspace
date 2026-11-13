@@ -417,7 +417,7 @@ is in the [report](../reports/2026-10-24-alpha-phase-5-playit.md) § 8.)
 - Prefer serving the web app and proxying `/api` to `api:5000` under the same
   public origin. This avoids broad CORS configuration.
 - Route the web application through Cloudflare Tunnel/nginx at
-  `app.knightsandkings.net` (developer decision 2026-10-21; `knk.oldenzeelit.nl`
+  `app.knightsandkings.net` (developer decision 2026-10-21; `knk.<personal-domain>`
   is not used). Zone settings and the WAF rule are per zone, so set them on
   `knightsandkings.net` ([alpha go-live § 6](alpha-go-live.md#6-web-app-and-ingress-runbook-phase-6)).
 - Apply Cloudflare Access to the **whole** web host during the closed alpha

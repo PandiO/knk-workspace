@@ -491,7 +491,7 @@ Weight-10 group at 1.5, ~3h elapsed) paid exactly 90 coins, persisted correctly,
 refused an immediate re-call; expiring that membership correctly dropped the rank multiplier to
 1.0 on the next payout; unknown user 404s; the generic user `PUT` writes `personalSalaryMultiplier`
 while leaving `lastSalaryPayoutAt` untouched (same convention `ActiveMode` already established).
-The LAN dev DB (`192.168.50.119`) was never touched — every command used a
+The LAN dev DB (`<nas-ip>`) was never touched — every command used a
 `ConnectionStrings__MySqlDbConnection` environment-variable override, `appsettings.json` has zero
 diff.
 

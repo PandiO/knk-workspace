@@ -95,7 +95,7 @@ what is specific to this project.
 
 | Environment | Where | Purpose | Data |
 |---|---|---|---|
-| **dev** | your PC, `DEV_SERVER_1.21.10`, dev DB `knightsandkings_dev_v2` on 192.168.50.119 | build and try features | test data plus the **authored content** (forms, menus, items) |
+| **dev** | your PC, `DEV_SERVER_1.21.10`, dev DB `knightsandkings_dev_v2` on `<nas-ip>` | build and try features | test data plus the **authored content** (forms, menus, items) |
 | **staging** (recommended later) | a second, smaller copy of production (another VPS, or the same host with other ports) | rehearse a release (migrations, seed, plugin jar) before it reaches players | a restored copy of the production backup |
 | **production** | the server(s) in this guide | the live game | real players |
 
@@ -853,7 +853,8 @@ Mixing the two (world rows without the world, or the reverse) is the one combina
 ### 7.5 Export (on your PC, against the dev DB)
 
 Create a read-only MySQL user for exports (once, as root on the dev DB), and a MySQL option file so the password is
-never typed on the command line:
+never typed on the command line. `<nas-ip>` below stands for the LAN address of the host with the dev DB (the real value is in your
+local notes, not in this public repo):
 
 ```sql
 CREATE USER 'knk_seed_reader'@'%' IDENTIFIED BY '<password>';
@@ -863,7 +864,7 @@ GRANT SELECT ON knightsandkings_dev_v2.* TO 'knk_seed_reader'@'%';
 ```ini
 # ~/.knk-dev.cnf  (chmod 600; on Windows keep it in your user profile)
 [client]
-host=192.168.50.119
+host=<nas-ip>
 user=knk_seed_reader
 password=<password>
 ```

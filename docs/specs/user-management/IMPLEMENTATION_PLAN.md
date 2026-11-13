@@ -223,7 +223,7 @@ screenshotted and verified the not-found state renders correctly for an unknown 
 pre-existing unrelated failures every prior phase's row already documents
 (`PathResolutionServiceTests`×2, `FormSubmissionProgressRepositoryTests`,
 `FieldValidationServiceTests`, `ClientActivityStoreTests`). The LAN dev DB
-(`192.168.50.119`) was never touched — confirmed via `git diff` on `appsettings.json` showing
+(`<nas-ip>`) was never touched — confirmed via `git diff` on `appsettings.json` showing
 zero changes; every command pointed at the disposable container via a
 `ConnectionStrings__MySqlDbConnection` environment-variable override.
 
@@ -372,7 +372,7 @@ not-found test case itself.
 
 **dotnet test:** 391/396 (13 new — see above), same 5 pre-existing unrelated failures every prior
 phase's row documents (`PathResolutionServiceTests`×2, `FormSubmissionProgressRepositoryTests`,
-`FieldValidationServiceTests`, `ClientActivityStoreTests`). The LAN dev DB (`192.168.50.119`) was
+`FieldValidationServiceTests`, `ClientActivityStoreTests`). The LAN dev DB (`<nas-ip>`) was
 never touched — confirmed via `git diff` on `appsettings.json` showing zero changes; every command
 used a `ConnectionStrings__MySqlDbConnection` environment-variable override.
 
@@ -482,7 +482,7 @@ live verification above exercises the actual cleanup logic, migration, and endpo
 more directly than a mocked unit test would for this particular kind of change). Flagging this as
 a deliberate choice, not an oversight, in case the developer wants
 `AuditLogRetentionConfigurationServiceTests`/`AuditLogRepositoryTests.DeleteOlderThanAsync_...`
-added later for regression coverage. The LAN dev DB (`192.168.50.119`) was never touched —
+added later for regression coverage. The LAN dev DB (`<nas-ip>`) was never touched —
 confirmed via `git diff` on `appsettings.json` showing zero changes; every command used a
 `ConnectionStrings__MySqlDbConnection` environment-variable override against a disposable
 `mysql:8.0` Docker container, removed after this session.
@@ -610,7 +610,7 @@ paragraph (which also contains the word "search") before the actual Search butto
 look like the search feature was silently no-op'ing (0 rows) until the selector was scoped to
 `button:has-text("Search")` — worth noting for whoever next drives this page via a headless
 script. Console clean of anything from this phase's own code (only the same TLS-proxy/cert noise
-prior phases documented). The LAN dev DB (`192.168.50.119`) was never touched — confirmed via
+prior phases documented). The LAN dev DB (`<nas-ip>`) was never touched — confirmed via
 `git diff` on `appsettings.json` showing zero changes throughout this session.
 
 **Closes the Phase 1/2 carried-forward item:** `User` still isn't registered in
