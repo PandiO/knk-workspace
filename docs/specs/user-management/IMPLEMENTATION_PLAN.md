@@ -1,18 +1,11 @@
 # User Management — Implementation Plan (Tailored Admin Module)
 
-**Status:** All three phases shipped 2026-09-24. Phase 1 (composite player-profile view) and
+**Status:** Current · **Last updated:** 2026-11-13 (header converted to the doc header standard, LAN addresses replaced by placeholders, PandiO/knk-workspace#305)
+**Progress:** All three phases shipped 2026-09-24. Phase 1 (composite player-profile view) and
 Phase 2 (quick actions + audit log write path) — see "Phase 1 status" and "Phase 2 status" under
 §5 below. Phase 3 (moderation search/filters) — see "Phase 3 status" under §5. All §5 open items
 resolved: item 2 (presence tracking) and item 3 (audit log retention policy) — see "Audit log
 retention status". This module is feature-complete.
-**Last updated:** 2026-09-24 (Phase 3 implementation session added "Phase 3 status" under §5,
-resolved §5 item 2, and closed the Phase 1/2 carried-forward "no generic-dashboard entry point"
-item). Previously updated 2026-09-24 (audit log retention policy session added "Audit log
-retention status" under §5, resolved §5 item 3). Previously updated 2026-09-24 (Phase 2
-implementation session added "Phase 2 status" under §5). Previously updated 2026-09-24 (Phase 1
-implementation session added "Phase 1 status" under §5, resolved §5 item 4, and flagged a real
-generic-dashboard registration gap as carried-forward item 1 — see that section). Previously
-updated 2026-09-23 (initial draft).
 
 Ref: `DESIGN.md` in this folder. Depends on: `docs/specs/user-features/IMPLEMENTATION_PLAN.md`
 §1 (entities, resolution engine, `permissions/check`/`permissions/effective` endpoints) and,
@@ -631,3 +624,9 @@ live-server join/quit test for the plugin side, from a machine that can reach
 server-wide online roster rather than the shipped group-scoped one (decision 2 above); (c) the
 `AuditLogRetentionConfiguration` 180-day default is still worth a second look (carried from the
 retention-policy session, unrelated to this phase).
+
+## Changes
+
+Header history up to 2026-11-13, as the old `Last updated` line gave it (newer changes: the header and git history):
+
+2026-09-24 (Phase 3 implementation session added "Phase 3 status" under §5, resolved §5 item 2, and closed the Phase 1/2 carried-forward "no generic-dashboard entry point" item). Previously updated 2026-09-24 (audit log retention policy session added "Audit log retention status" under §5, resolved §5 item 3). Previously updated 2026-09-24 (Phase 2 implementation session added "Phase 2 status" under §5). Previously updated 2026-09-24 (Phase 1 implementation session added "Phase 1 status" under §5, resolved §5 item 4, and flagged a real generic-dashboard registration gap as carried-forward item 1 — see that section). Previously updated 2026-09-23 (initial draft).

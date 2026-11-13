@@ -1,6 +1,7 @@
 # User Features — Implementation Plan (Rank/Permission/Progression)
 
-**Status:** Phases 1-6 (§1-§6) shipped on knk-web-api/knk-plugin; rank display in chat/tab list and one
+**Status:** Current · **Last updated:** 2026-11-13 (header converted to the doc header standard, LAN addresses replaced by placeholders, PandiO/knk-workspace#305)
+**Progress:** Phases 1-6 (§1-§6) shipped on knk-web-api/knk-plugin; rank display in chat/tab list and one
 rank per player (KNG-7/KNG-8) merged 2026-09-26, see "§5 follow-up" and [`RANK_DISPLAY.md`](RANK_DISPLAY.md).
 See "§1 status", "§3 status",
 "§4 status", "§5 status", "§6 status" and "§6.1" below (§2's writeup is its `ACTIVE_SESSIONS.md`
@@ -13,19 +14,6 @@ list, which covers every mutating service this plan built (TitleService's derive
 detection, the owner/staff-mode toggle, and the group/grant CRUD services), not just Salary. This
 was the last phase §8 names; see §8 below for what's next — `docs/specs/user-management/` Phase 2
 (a separate feature this plan unblocked) shipped in parallel, see that plan's own status.
-**Last updated:** 2026-09-24 (user-management Phase 2 session closed §6's carried-forward item 4).
-Previously updated 2026-09-24 (§6.1 implementation session added "§6.1" and closed §6's carried-
-forward item 1; earlier the same day, the Phase 6 implementation session added "§6 status";
-earlier still, the Phase 5 implementation session added "§5 status" and the "v1 Titles backup
-search" note under §4 status; earlier still, the Phase 4 session added "§4 status" and a
-branch-hygiene pass added the "Branch convention" section below).
-Previously updated 2026-09-23 (Phase 3 implementation session added "§3 status"; earlier the same
-day, the Phase 1 implementation session and the design revision:
-`PermissionGrant.HolderId` is now a real FK into a shared `PermissionHolder` base table rather
-than polymorphic; salary's personal multiplier is a plain `User` field; title thresholds port
-v1's 5/10/12/15 as-is; owner/staff-mode vanish state persists across a restart; the tailored
-user-management admin module is confirmed a separate feature — see `docs/specs/user-management/`,
-which this plan's Phase 1 now unblocks)
 
 **Branch convention (starting 2026-09-24):** this feature uses exactly **one standing branch per
 repo, `claude/user-features`**, for every remaining phase (§5, §6, and anything after). Do
@@ -628,3 +616,9 @@ folded into `DESIGN.md` §7 (items 8-12) and the sections above. Kept here for t
    controllers exist, same pattern as the Items plan.
 6. `docs/specs/user-management/` (the tailored admin module) starts once §1 ships — it's a
    separate plan from here on, not a further phase of this one.
+
+## Changes
+
+Header history up to 2026-11-13, as the old `Last updated` line gave it (newer changes: the header and git history):
+
+2026-09-24 (user-management Phase 2 session closed §6's carried-forward item 4). Previously updated 2026-09-24 (§6.1 implementation session added "§6.1" and closed §6's carried- forward item 1; earlier the same day, the Phase 6 implementation session added "§6 status"; earlier still, the Phase 5 implementation session added "§5 status" and the "v1 Titles backup search" note under §4 status; earlier still, the Phase 4 session added "§4 status" and a branch-hygiene pass added the "Branch convention" section below). Previously updated 2026-09-23 (Phase 3 implementation session added "§3 status"; earlier the same day, the Phase 1 implementation session and the design revision: `PermissionGrant.HolderId` is now a real FK into a shared `PermissionHolder` base table rather than polymorphic; salary's personal multiplier is a plain `User` field; title thresholds port v1's 5/10/12/15 as-is; owner/staff-mode vanish state persists across a restart; the tailored user-management admin module is confirmed a separate feature — see `docs/specs/user-management/`, which this plan's Phase 1 now unblocks)
