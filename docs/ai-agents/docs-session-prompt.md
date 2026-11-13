@@ -1,6 +1,6 @@
 # Docs session prompt
 
-**Status:** Current · **Last updated:** 2026-11-12 (starts at the merge into `next`; docs PR into `next`, merged by the docs session itself, a developer decision; finished rows go to the sessions archive; PandiO/knk-workspace#330) · 2026-11-10 (first version, PandiO/knk-workspace#292)
+**Status:** Current · **Last updated:** 2026-11-13 (Codex findings handled before the docs PR merges) · 2026-11-12 (starts at the merge into `next`; docs PR into `next`, merged by the docs session itself, a developer decision; finished rows go to the sessions archive; PandiO/knk-workspace#330) · 2026-11-10 (first version, PandiO/knk-workspace#292)
 
 The implementing session uses this prompt when it starts a docs session after a merge: the feature's merge into `next`
 once the global branch model applies, until then the merge into the default branch. The steps are in
@@ -30,8 +30,8 @@ knk-web-api master, knk-web-app main, knk-plugin main).
    decision issue for the difference. Don't document unmerged or unverified behaviour as shipped.
 4. Work on branch claude/docs-<docs issue> from knk-workspace <base: next when the code is in next, else main>. When
    done (docs only, describing merged behaviour): with base next, take next's updates by merge, never rebase, open a
-   docs PR into next and merge it yourself with a merge commit once its checks pass (developer decision 2026-11-12, the
-   exception to PRs into next waiting for the developer), so the docs reach main with the feature's promotion; with
+   docs PR into next and merge it yourself with a merge commit once its checks pass and every Codex review finding
+   on it is fixed or answered on its thread (global instructions, "Branches" rules 3 and 4), so the docs reach main with the feature's promotion; with
    base main, rebase it on main and merge it into main, as before. Close the docs issue as completed with a comment
    that lists the files, and move the tracker row straight into docs/reports/sessions-archive/<YYYY-MM>.md (current
    month, newest first), not to Recently completed.
