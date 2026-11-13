@@ -141,7 +141,7 @@ Claude Code and Codex alike, regardless of where repos are cloned.
 ## Branches, releases and risk tiers
 
 Developer decision 2026-11-12, [AI agent workflow design](../specs/ai-agent-workflow/DESIGN.md) § 2 and § 5; the
-start condition and the coordinator merge were confirmed by the developer the same day (setup chain, PandiO/knk-workspace#327); rules 3, 4 and 10 were changed or added on 2026-11-13 (merging outside a chain, Codex findings, agent workflow files to `main`).
+start condition and the coordinator merge were confirmed by the developer the same day (setup chain, PandiO/knk-workspace#327); rules 3, 4, 10 and 11 were changed or added on 2026-11-13 (merging outside a chain, Codex findings, GitHub rulesets, agent workflow files to `main`).
 **These rules apply as soon as CI runs on the API and web-app default branches** (PandiO/knk-workspace#328:
 `.github/workflows/ci.yml` on knk-web-api `master` and knk-web-app `main`). Until then the current rules hold: feature
 branches start from the default branch, pull requests target it, and only the developer merges.
@@ -183,7 +183,15 @@ branches start from the default branch, pull requests target it, and only the de
    stated in the chain charter.
 9. Chain bookkeeping (progress reports, charters, `docs/ACTIVE_SESSIONS.md` and its archive files) stays on
    knk-workspace `main`, as before.
-10. **Agent workflow files go straight to knk-workspace `main`** (developer decision 2026-11-13), because every new
+10. **GitHub rulesets** (set up by the developer 2026-11-13) enforce part of this. On knk-web-api, knk-web-app and
+    knk-plugin, `master`/`main` and `next` need a pull request (no approvals required), the CI checks
+    (`build-and-test` and `fresh-database` on the API, `build-and-test` on the web app, `build` on the plugin), every
+    review conversation resolved (so Codex threads must be answered and resolved, rule 4), and a merge commit; they
+    cannot be deleted or force-pushed. On knk-workspace, `main` and `next` are only protected against deletion and
+    force pushes, so chain bookkeeping can still be pushed directly to `main` (rule 9); everything else still goes by
+    pull request. Tags `v*` cannot be deleted or moved in any repo. Agents act on GitHub as the developer, so these
+    rules guard against mistakes, not against agents; follow them as written rather than looking for a way around.
+11. **Agent workflow files go straight to knk-workspace `main`** (developer decision 2026-11-13), because every new
     session starts from `main` and a rule that waits in `next` would not reach agents until the next promotion. These
     are `.claude/` (skills, hooks, settings), `.mcp.json`, `docs/ai-agents/`, `AGENTS.md` and `CLAUDE.md` in
     knk-workspace, and `AGENTS.md`/`CLAUDE.md` in the component repos. A change to them goes on its own branch from the
