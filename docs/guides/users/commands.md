@@ -1,6 +1,6 @@
 # In-game commands
 
-**Status:** Current · **Last updated:** 2026-11-10 (rebuilt from the plugin's command catalogue, PandiO/knk-workspace#294)
+**Status:** Current · **Last updated:** 2026-11-13 (`/knk npc`, on the `next` branch, PandiO/knk-workspace#359 and #360); 2026-11-10 (rebuilt from the plugin's command catalogue, PandiO/knk-workspace#294)
 **Checked against:** knk-plugin `main` `121030f` (`knk-paper/src/main/resources/plugin.yml`, `knk-paper/.../paper/commands/`), rank seeds in knk-web-api `master` `b5e57fa`
 **Related:** [plugin permission checks](../../architecture/plugin-permission-checks.md), [command permission scan 2026-10-26](../../reports/2026-10-26-command-permission-scan.md), [COMMAND_CATALOG_V3](../../specs/user-features/COMMAND_CATALOG_V3.md) (design notes), [chat tokens](../chat-tokens.md), [plugin configuration reference](../admin/plugin-configuration.md) (the `config.yml` keys behind warmups, cooldowns and limits), [gate structures player guide](gate-structures-player-guide.md), [v1 commands](../../specs/legacy/commands-v1.md) (history)
 
@@ -293,6 +293,8 @@ answer "Unknown command: <name>". Every node below is held by Admin through `knk
 | `/knk menu open <key>\|page\|search\|filter\|broken` | `knk.admin.menu` | Menu test tools; `broken` lists menus blocked at startup. |
 | `/knk discovery list <player> [page]\|reset <player> <domainId>\|status` | `knk.admin.discovery` (Staff) | A player's discoveries. `reset` forgets one so it can be discovered and rewarded again; the reward isn't taken back. |
 | `/knk road …` | `knk.admin.road` (Staff) | Road network tools: surveys, building tiles, editing nodes and edges, proposals, `why <destination>`. |
+| `/knk npc status\|audit start\|stop\|report\|test spawn <n> [radius]\|test clear` | `knk.admin.npc` (op by default) | NPC navigation (on the `next` branch, off by default: `npc.navigation.enabled`): status and each setting with the layer it came from, the NPC event audit, wandering test NPCs. Without Citizens or with the switch off, `status` says why. |
+| `/knk npc nav from\|to\|route list\|save\|load\|delete <name>\|baseline\|spawn <n> [profile]\|goto\|patrol\|stats [reset]\|trace [npc] [seconds]\|clear` | `knk.admin.npc` | Route following for testing: set a route's ends, spawn NPCs that walk it back and forth (two spawns per tick), read the counters, trace one NPC. Files go to `plugins/KnightsAndKings/npc-logs/`. See the [implementation plan's developer test](../../specs/npc-platform/IMPLEMENTATION_PLAN.md#phase-2--navigate-one-npc-plugin). |
 | `/knk gate …`, `/knk gatedoor …` | as `/gate` | The same as `/gate` and `/gatedoor`. |
 
 ## Known differences from the descriptions
