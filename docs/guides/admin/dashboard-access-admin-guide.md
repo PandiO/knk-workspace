@@ -1,11 +1,13 @@
 # Dashboard access, staff ranks and area nodes — admin guide
 
-**Status:** Living document — update in place. Describes knk-web-api `master` `45043a7` and knk-web-app `main` `e02ee79`
+**Status:** Living document — update in place. Describes knk-web-api `master` `45043a7` and knk-web-app `next` `e6ba115`
 (the dashboard access model, [#280](https://github.com/PandiO/knk-workspace/issues/280) AM1–AM3, and bulk delete,
-[#205](https://github.com/PandiO/knk-workspace/issues/205); merged 2026-11-12/13). **Not live-tested:** the developer
+[#205](https://github.com/PandiO/knk-workspace/issues/205), merged 2026-11-12/13 on `main`; create and edit back on
+`knk.admin.content`, [#371](https://github.com/PandiO/knk-workspace/issues/371), merged into `next` 2026-11-13 and on
+`main` once the developer promotes `next`; until then `main` still opens the forms for any area node). **Not live-tested:** the developer
 accepted it on 2026-11-13 without a live test; the [dashboard access smoke test](../dashboard-access-smoke-test.md) is
 scheduled in closed alpha test run 2 ([checklist § 4c](../../reports/alpha-tests/test-run-2/test-run-2-checklist.md)).
-**Last updated:** 2026-11-13 (first version, PandiO/knk-workspace#366)
+**Last updated:** 2026-11-13 (area ranks view, delete and export but don't create or edit; #371, docs #378); 2026-11-13 (first version, PandiO/knk-workspace#366)
 
 Who may see, create, edit, delete, bulk delete and export what on the web app's **Dashboard**, and how to set a rank
 up for it. For how the pages themselves work see the [staff web app guide](staff-web-app-guide.md); for in-game
@@ -25,8 +27,13 @@ commands and their nodes see the [commands reference](../users/commands.md). The
 
 ## 2. Area nodes: one per part of the dashboard
 
-Each dashboard type belongs to one **area**. The area's node means **view, create and edit** of its types. Holding any
-one area node opens the Dashboard; the explorer then lists only the types of the areas you hold.
+Each dashboard type belongs to one **area**. The area's node means **view** of its types (with delete and export on top,
+§ 3). Holding any one area node opens the Dashboard; the explorer then lists only the types of the areas you hold.
+**Creating and editing** goes through the form wizard, which also needs `knk.admin.content` (developer decision
+2026-11-13, [#371](https://github.com/PandiO/knk-workspace/issues/371): area staff work with the content that exists and
+don't change it through forms for now). So a record needs the area node **and** `knk.admin.content` to be created or
+edited: a world-only rank sees **New Town** and **Edit** greyed out with "Requires knk.admin.content", and a
+content-only rank can't create a Town either (it lacks `knk.admin.world`).
 
 | Area | Area node | Types on the dashboard | Bulk delete possible |
 |---|---|---|---|
@@ -49,7 +56,8 @@ access to Category. Requires one of: …"). Two exceptions keep the other pages 
   (for example `knk.admin.config` reads towns and locations for Game settings; `knk.kit.manage` reads item blueprints,
   grades and categories). The full list is in [the design § 4.6.2](../../specs/dashboard-access-model/DESIGN.md).
 - In a form, a link field to a type of another area searches **by name only** ("Names only: the full Street table
-  needs one of: …"), and that field offers no **Create New**. Any area node allows these name lookups.
+  needs one of: …"), and that field offers no **Create New** (it needs the related type's area node and
+  `knk.admin.content`). Any area node allows these name lookups.
 
 ## 3. Action nodes: delete, bulk delete, export
 
@@ -75,23 +83,33 @@ As seeded on the closed alpha (Staff → Moderator → Admin inherit from each o
 `knk.admin.delete` and `knk.admin.export` to every user and group with an explicit area node, except the Staff group;
 see [the design § 4.5](../../specs/dashboard-access-model/DESIGN.md)).
 
-| Rank | Dashboard | Create, edit | Delete one | Bulk delete | Export | Entity setup lists and builders |
+| Rank | Dashboard | Create, edit (form wizard) | Delete one | Bulk delete | Export | Entity setup lists and builders |
 |---|---|---|---|---|---|---|
 | **Owner** (user 1, `*`) | every type | everything | yes | yes | yes | yes |
 | **Admin** group (`knk.admin.*`) | every type | everything | yes | yes | yes | yes |
-| **Staff** group, and **Moderator** (on the alpha Moderator inherits Staff's nodes) | User, Permission group, Kit, the siege types (its own nodes: `knk.admin.user.manage`, `knk.kit.manage`, `knk.siege.admin.*`, …) | in those areas | **no** (disabled: "Requires knk.admin.delete") | no | **no** (disabled: "Requires knk.admin.export") | no ("Entity setup needs knk.admin.content") |
-| **Area staff** (a builder or content rank with one area node, backfilled) | that area's types | in that area | yes, in that area | no | yes, in that area | only with `knk.admin.content` |
+| **Staff** group, and **Moderator** (on the alpha Moderator inherits Staff's nodes) | User, Permission group, Kit, the siege types (its own nodes: `knk.admin.user.manage`, `knk.kit.manage`, `knk.siege.admin.*`, …) | **no** (New and Edit disabled: "Requires knk.admin.content"); **Edit** on a User still opens the player profile | **no** (disabled: "Requires knk.admin.delete") | no | **no** (disabled: "Requires knk.admin.export") | no ("Staff only") |
+| **Area staff** (a builder or content rank with one area node, backfilled) | that area's types | only with `knk.admin.content` as well (a content rank: the Content types) | yes, in that area | no | yes, in that area | only with `knk.admin.content` |
 | Default, Alpha Tester, premium ranks | no Dashboard link ("Staff only") | — | — | — | — | — |
 
 Staff could delete kits, siege setup, road profiles and users through the API before #280; it can't any more unless a
 Staff member is given `knk.admin.delete` (developer decision 2026-11-08). Freeze, kick, ban and balance changes are
 unchanged.
 
-**Form wizard for every area.** New, New with, Edit and Drafts open the form wizard (`/forms/<Type>`, `/forms/<Type>/edit/<id>`),
-which opens for **any** area node, so area staff create and edit their own types there. The Entity setup lists, the
-form and display builders and the Minecraft catalogue stay `knk.admin.content` only. This differs from the design
-(which kept those routes on `knk.admin.content`) and waits for a developer decision:
-[#368](https://github.com/PandiO/knk-workspace/issues/368).
+**Creating and editing needs `knk.admin.content`.** New, New with, Edit, Drafts, the detail page's **Edit** and a
+form field's **Create New** open the form wizard (`/forms/<Type>`, `/forms/<Type>/edit/<id>`), which needs
+`knk.admin.content` like the Entity setup lists, the form and display builders and the Minecraft catalogue
+([#371](https://github.com/PandiO/knk-workspace/issues/371), developer decision 2026-11-13, which answers
+[#368](https://github.com/PandiO/knk-workspace/issues/368)). Area staff without it view, delete and export their
+area's records but don't create or edit them. **Give `knk.admin.content` to the ranks that should create and edit**
+(together with the area node of the types). Delete, bulk delete and export keep their own nodes (§ 3). Edit on a User
+is unchanged: it opens the player profile, not the wizard.
+
+Two limits: the API still accepts create and edit calls with the area node alone (only the web app asks for
+`knk.admin.content`; proposal [#374](https://github.com/PandiO/knk-workspace/issues/374)). And a few links into the
+wizard on other pages are not greyed out yet: the **Lootboxes** tabs' **New** and **Edit**, **Road network**'s street
+**Rename** and a detail page section's edit and **Create New** open "Staff only" without `knk.admin.content`
+([#380](https://github.com/PandiO/knk-workspace/issues/380)). A lootbox-only or road-only rank therefore can't create
+or edit lootbox types, specials, spawn areas or street names until it gets `knk.admin.content`.
 
 ## 5. Ranks above and below you: the escalation guard
 
@@ -122,7 +140,7 @@ deploy). In game: `/knk user <player> perm grant knk.admin.world`.
 **A builder or content group** (a rank for several people):
 
 1. Pick or create the group. A new group goes in with **Dashboard → Permission group → New** (needs
-   `knk.admin.user.perm`); give it a weight below your own rank.
+   `knk.admin.user.perm` and `knk.admin.content`); give it a weight below your own rank.
 2. Give the group its nodes. There is no web screen for a group's nodes yet
    ([#50](https://github.com/PandiO/knk-workspace/issues/50)): the owner or an Admin sets them through
    the API with the group's id as the holder (holder ids are shared by users and groups):
@@ -132,7 +150,8 @@ deploy). In game: `/knk user <player> perm grant knk.admin.world`.
 3. Add the members: the player profile's **Groups** card (**Select a group…**, optional expiry), or in game
    `/knk user <player> group add <group>`.
 4. Check it: log in as a member (or ask one). The bar shows **Dashboard**, the explorer lists only the area's types,
-   and a type of another area in the address bar falls back to one of theirs.
+   and a type of another area in the address bar falls back to one of theirs. **New** and **Edit** are enabled only if
+   the group also holds `knk.admin.content` (§ 4).
 
 **Taking it away:** revoke the node or remove the membership the same way; the member's reads stop at once, and the
 buttons after a reload.
@@ -155,7 +174,8 @@ delete on test records first: it can't be undone, and each refused row stays sel
 | **Export CSV** disabled: "Requires knk.admin.export" | No export node | Grant `knk.admin.export` |
 | "Only the owner can hand out bulk delete." | The node or group covers `knk.admin.delete.bulk` | Only the owner can do this |
 | "You can only hand out or remove groups ranked below your own." / "… change groups ranked below your own." | The group ranks at or above your highest group | Ask someone ranked higher |
-| "Entity setup needs knk.admin.content" | Area staff open Entity setup's lists | Expected; New/Edit/Drafts still open the form ([#368](https://github.com/PandiO/knk-workspace/issues/368)) |
+| **New** / **Edit** greyed out: "Requires knk.admin.content" | Creating and editing need the content node on top of the area node ([#371](https://github.com/PandiO/knk-workspace/issues/371)) | Expected for area staff; grant `knk.admin.content` if they should create and edit |
+| "Staff only — This page needs the knk.admin.content permission" on `/forms/…` | The form wizard, Entity setup and the builders need the content node; also reached from the Lootboxes tabs, Road network's Rename and detail page sections ([#380](https://github.com/PandiO/knk-workspace/issues/380)) | Expected without `knk.admin.content`; grant it if they should create and edit |
 | Permission group listed, but its table answers "Requires the knk.admin.user.perm permission." | Known bug [#369](https://github.com/PandiO/knk-workspace/issues/369): the list needs `knk.admin.user.perm` | Grant `knk.admin.user.perm`, or wait for the fix |
 | A form's link field has no Create New | No create node for the related type | Expected; ask someone of that area to create the record |
 | The top bar's **Create New** offers a type you can't create | Known gap [#353](https://github.com/PandiO/knk-workspace/issues/353) | Use the dashboard's **New** |
