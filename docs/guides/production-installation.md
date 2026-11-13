@@ -1,6 +1,6 @@
 # Knights and Kings — production installation guide (admin)
 
-**Status:** Draft · **Last updated:** 2026-11-13 (header converted to the doc header standard, LAN addresses replaced by placeholders, PandiO/knk-workspace#305)
+**Status:** Draft · **Last updated:** 2026-11-13 (§ 8.1: the Node note points at the web app testing guide, PandiO/knk-workspace#304)
 **State:** Draft v1 — written for review. Not yet followed on a real production host. The database, API, seed and
 web-server steps were rehearsed in a scratch environment on 2026-10-07 (see [Appendix A](#appendix-a--what-was-verified-and-how)).
 The Paper server steps and the CI/CD workflows are untested drafts.
@@ -958,8 +958,8 @@ CI=false npm run build                         # G3: CI=true fails on existing l
 tar -C build -czf knk-web-app-1.0.0.tar.gz .
 ```
 
-Node 20 or newer is required (react-router 7 declares `engines.node >=20`). The example workflow in `TESTING.md`
-uses Node 18, which is outdated.
+Node 20 or newer is required (react-router 7 declares `engines.node >=20`); the web app's CI uses Node 22 (see
+[web app testing](developer/web-app-testing.md) § 4).
 
 ### 8.2 Install a release (atomic switch, instant rollback)
 

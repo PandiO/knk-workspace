@@ -706,6 +706,6 @@ the plain procedural formula.
 - **Gate World/DB Sync**: [GATE_WORLD_SYNC_DESIGN.md](GATE_WORLD_SYNC_DESIGN.md) — district-load-triggered reconciliation
 - **Backend Entity**: [Models/GateStructure.cs](../../../../Repository/knk-web-api/Models/GateStructure.cs)
 - **Backend Instructions**: [.github/instructions/knk-backend.instructions.md](../../../../.github/instructions/knk-backend.instructions.md)
-- **Plugin Architecture**: [Repository/knk-plugin/ARCHITECTURE_AUDIT.md](../../../../Repository/knk-plugin/ARCHITECTURE_AUDIT.md)
+- **Plugin Architecture**: [archive/knk-plugin/ARCHITECTURE_AUDIT.md](../../archive/knk-plugin/ARCHITECTURE_AUDIT.md)
 - **CODEMAP**: [docs/CODEMAP.md](../../guides/developer/CODEMAP.md)
 
