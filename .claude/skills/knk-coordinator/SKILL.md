@@ -118,10 +118,15 @@ All of these must hold:
 8. Risky or big work (normally `tier:3`) sits behind a config flag that is off by default (DESIGN § 5.3), or the
    charter says why not.
 9. The sub-issue is `status:in-review` with a comment linking the branches and PRs.
+10. **Codex findings handled** (global "Branches" rule 4, developer decision 2026-11-13): every inline finding of the
+    ChatGPT Codex connector on each PR's current head is fixed by the link or answered on its thread with the reason
+    (not a bug, or out of scope with the issue filed), and resolved; the link block lists them. A P1 finding blocks the
+    merge until it is fixed or the developer decides. If the link left findings open, send it back (or fix the small
+    ones yourself before merging) rather than merging over them.
 
 ## 7. Merging into `next` (only once § 1.3 says the branch model applies)
 
-1. Merge as soon as § 6 holds and CI is green, **for every tier** (DESIGN § 5.2). The developer's review gates the
+1. Merge as soon as § 6 holds (Codex findings included, § 6.10) and CI is green, **for every tier** (DESIGN § 5.2). The developer's review gates the
    promotion of `next` to trunk, not this merge.
 2. Merge the link's PR into `next` through the PR with a merge commit (GitHub MCP `merge_pull_request`,
    `merge_method` `merge`), never squash or rebase (developer decision 2026-11-12). A PR into `next` does not close its

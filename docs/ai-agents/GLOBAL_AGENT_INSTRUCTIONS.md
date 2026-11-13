@@ -141,7 +141,7 @@ Claude Code and Codex alike, regardless of where repos are cloned.
 ## Branches, releases and risk tiers
 
 Developer decision 2026-11-12, [AI agent workflow design](../specs/ai-agent-workflow/DESIGN.md) § 2 and § 5; the
-start condition and rule 3 were confirmed by the developer the same day (setup chain, PandiO/knk-workspace#327).
+start condition and the coordinator merge were confirmed by the developer the same day (setup chain, PandiO/knk-workspace#327); rules 3 and 4 were changed or added on 2026-11-13 (merging outside a chain, Codex findings).
 **These rules apply as soon as CI runs on the API and web-app default branches** (PandiO/knk-workspace#328:
 `.github/workflows/ci.yml` on knk-web-api `master` and knk-web-app `main`). Until then the current rules hold: feature
 branches start from the default branch, pull requests target it, and only the developer merges.
@@ -153,24 +153,32 @@ branches start from the default branch, pull requests target it, and only the de
 2. **`next` = integration.** Every repo has one `next` branch that collects finished work. Feature branches start from
    `next` and take its updates by merge, never rebase; their pull requests target `next`. A feature that depends on
    another unreleased feature can then continue the same day.
-3. **Coordinators merge into `next`** as soon as CI and their link checks pass, for every risk tier: link pull
-   requests target `next` and the coordinator merges them through the pull request with a merge commit. Outside a
-   chain, a pull request into `next` waits for the developer unless the developer tells a session to merge it. One
-   exception, also a developer decision of 2026-11-12: a docs session (Shipping a change) branches from knk-workspace
-   `next`, opens its docs pull request into `next` and merges it itself, with a merge commit, once its checks pass. A
-   merge into `next` does not close the issue; it stays `status:in-review` until the developer promotes `next`.
-4. **The developer promotes `next` to trunk** after testing `next` as a whole (the daily digest lists what to test):
+3. **Merging into `next`.** Coordinators merge link pull requests into `next` as soon as CI and their link checks
+   pass, for every risk tier, through the pull request with a merge commit. **Outside a chain** (a one-off fix, a
+   tweak, a docs session), the session that opened the pull request merges it into `next` itself, the same way, once
+   all of these hold (developer decision 2026-11-13; it replaces the 2026-11-12 rule that such pull requests wait for
+   the developer): CI is green on its head; every Codex finding is handled (rule 4); the issue carries a `tier:` label;
+   `tier:3` work is behind a flag that is off by default (rule 6); the essential docs ship with it (Shipping a change).
+   The developer stays the gate at promotion (rule 5), not at the merge into `next`. A merge into `next` does not close
+   the issue; it stays `status:in-review` until the developer promotes `next`.
+4. **Codex review findings are handled before a merge into `next`** (developer decision 2026-11-13). The ChatGPT
+   Codex connector app reviews every pull request and leaves inline findings (P1, P2, …). Before merging, the session
+   that merges (link, coordinator or the session that opened the pull request) reads every finding on the pull
+   request's current head: it fixes what is real and in scope, or answers on the finding's thread why not (not a bug,
+   or out of scope with the issue it filed), and resolves the thread. A P1 finding blocks the merge until it is fixed or
+   the developer decides. Findings are listed in the link's report block.
+5. **The developer promotes `next` to trunk** after testing `next` as a whole (the daily digest lists what to test):
    merge into trunk, then the release tag. Only the developer, or the manager session on the developer's explicit go,
    promotes.
-5. **Flags for risky work.** Big or risky features go into `next` behind a config flag that is off by default, so
+6. **Flags for risky work.** Big or risky features go into `next` behind a config flag that is off by default, so
    unreviewed work is harmless there. A rejected change is reverted or fixed in `next` before the release.
-6. **Risk tiers** are labels on each issue, proposed by intake or design and overridable by the developer:
+7. **Risk tiers** are labels on each issue, proposed by intake or design and overridable by the developer:
    `tier:1` a tweak to existing behaviour (automated tests are the review, the developer does a quick pass); `tier:2` a
    feature change (a short smoke test on `next`); `tier:3` new foundations, schema changes or game feel (a full smoke
    test by the developer).
-7. Stacking a branch directly on another feature's unmerged branch is the exception, for uncertain work, and is
+8. Stacking a branch directly on another feature's unmerged branch is the exception, for uncertain work, and is
    stated in the chain charter.
-8. Chain bookkeeping (progress reports, charters, `docs/ACTIVE_SESSIONS.md` and its archive files) stays on
+9. Chain bookkeeping (progress reports, charters, `docs/ACTIVE_SESSIONS.md` and its archive files) stays on
    knk-workspace `main`, as before.
 
 ## Session chains (multi-link work)
