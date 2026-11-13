@@ -1,7 +1,7 @@
 # Citizens stress test — NPC hybrid navigation
 
 **Status:** Done. 2026-11-11: **go with caveats** (load and rule checks pass, caveats on [#244](https://github.com/PandiO/knk-workspace/issues/244#issuecomment-6806008046)). 2026-11-12: unloaded chunks (pass) and Phase 0: NPCs follow the K&K line in trail mode (implementation plan Q8 decided), travel bubble works.
-**Last updated:** 2026-11-13 (the production commands that replace the spike's, Phase 2); 2026-11-12
+**Last updated:** 2026-11-13 (tests A and B on the production code, Phase 3); 2026-11-13 (the production commands that replace the spike's, Phase 2); 2026-11-12
 **Issue:** [PandiO/knk-workspace#241](https://github.com/PandiO/knk-workspace/issues/241): desk check [#242](https://github.com/PandiO/knk-workspace/issues/242), spike [#243](https://github.com/PandiO/knk-workspace/issues/243), benchmark [#244](https://github.com/PandiO/knk-workspace/issues/244)
 **Branch:** knk-plugin `claude/citizens-spike` `c6b5b46` (throwaway, **never merge**), on `main` `33122cf4`
 **Spec:** [BEHAVIOR_MODEL §2 and §13](../specs/npc-platform/BEHAVIOR_MODEL.md#2-fit-with-the-platform-design), [DESIGN §9](../specs/npc-platform/DESIGN.md#9-navigation-reuse-and-platform-audit)
@@ -208,6 +208,15 @@ The spike's tests are repeated on the production code with `/knk npc nav` (permi
 | `set <key> <value>` | the key in `config.yml` (`npc.navigation.*`), restart |
 | `dump`, `run`, `set keeploaded`, `spawn <n> hop\|dense` | not in the production code |
 | — | `goto` (every NPC walks to you once), `patrol` (back on the route) |
+
+### Tests A and B on the production code (Phase 3, 2026-11-13)
+
+The rule-check reruns (tests A and B above) are repeated with `/knk npc nav` once Phase 3 ([#361](https://github.com/PandiO/knk-workspace/issues/361)) is deployed. The steps are in the implementation plan, ["Phase 3 → Developer test"](../specs/npc-platform/IMPLEMENTATION_PLAN.md#phase-3--rules-stay-binding-plugin). What differs from the spike runs:
+
+1. The NPCs use the default access profile (the domains' rules), not a player as subject.
+2. `stats` has a `rules:` line: `trespasses` (must be 0), `rule checks`, `replans: recheck N, event N`, `walked to the blocking element`, `woken by its event`, `waiting there now`.
+3. Expected against the v2 rows of the results table: 0 trespasses, NPCs standing **at** the gate or the district's edge (the spike's stopped where they were), at most 0.02 ms per waiting NPC (`access-removed-v2` 0.014, `gate-closed-v2` 0.020), and a cache refresh that replans nobody when nothing changed.
+4. The log lines are `… way ahead is closed by gate <id> | region <id> (event | recheck) …` and `TRESPASS <npc> entered <region> at x y z` in `npc-logs/<time>_npc-nav.log`.
 
 ## Later
 
