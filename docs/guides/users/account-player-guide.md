@@ -1,491 +1,262 @@
-# Knights & Kings - Player Account Management Guide
+# Your account: invitation, linking, login and password
 
-**Version**: 1.2  
-**Last Updated**: November 3, 2026 (the Register page's code field shows the dash too, #229, not merged); October 26, 2026 (step 4: the field shows `____-____` from the start, #196, not merged); October 26, 2026 (step 4: the code field adds the dash, #192); October 21, 2026 (KNG-218: "Getting an account" rewritten for invite-only sign-up. **It describes the
-invitations feature ([KNG-205](https://linear.app/kngpandi/issue/KNG-205)), merged 2026-10-24 but not yet switched on
-for the alpha**; until the switch-over, new players follow "Existing players" below.) Before:
-KNG-208, `/account create` and web → game linking removed.  
-**Plugin**: knk-plugin
+**Status:** Current · **Last updated:** 2026-11-13 (rewritten for invite-only sign-up, claim codes, sessions and password reset; renamed from `PLAYER_GUIDE_ACCOUNT_MANAGEMENT.md`, PandiO/knk-workspace#299)
+**Checked against:** knk-web-app `main` `3ba747d`, knk-web-api `master` `75b5a00`, knk-plugin `main` `57884e9`
+**Related:** [player handbook](player-handbook.md), [commands reference](commands.md), [invitations admin guide](../admin/invitations-admin-guide.md), [statistics and public profile](statistics-player-guide.md)
 
----
+Your Knights and Kings account is one thing with two halves: your **Minecraft player** and your **web login** (an
+email and a password on the website). This guide covers getting an account with an invitation, linking your
+Minecraft account, logging in, staying logged in, and changing or resetting your password and email.
 
-## Overview
+The closed alpha has been **invite-only since 2026-10-24**: you can't play or sign up without an invitation from
+staff. Players who played before that keep their accounts (see [Played here before the invitations?](#played-here-before-the-invitations)).
 
-The Knights & Kings Minecraft plugin now supports account management, allowing you to:
-
-- **Get an account with an invitation**: sign up on the website, then join the server and link your Minecraft
-  account with the code it shows you
-- **Create your web login** from the game (players from before the invitations): `/account link` gives you a code to
-  register with on the website
-- **Link your in-game account** with an existing web app account (enter the same code on your Account page)
-- **Sync your progress** between Minecraft and the web app (coins, gems, experience)
-- **View your account status** at any time
-- **Resolve duplicate accounts** if you accidentally created multiple accounts
-
----
-
-## Quick Start
-
-### Getting an account (new players, invite-only)
-
-Knights & Kings is invite-only. You need an **invitation** from staff: either a personal invitation **email**, or a
-**shared code** (`KNK-XXXXX-XXXXX`) posted for your group.
+## Contents
 
-1. **Sign up.** Open the link in your invitation email (your address is filled in), or go to **/join** and enter the
-   shared code with your email. Choose a password and accept the alpha rules.
-2. **Cloudflare sign-in.** Press **Continue to Cloudflare sign-in**. The site is protected by Cloudflare: its page asks
-   for your email — type the **same address** you signed up with — and Cloudflare emails you a **6-digit code** (sender
-   Cloudflare, not Knights & Kings; check spam). Enter it and you're in on this device for 30 days. You then land on
-   **Link your Minecraft account**. If the site ever says "Your Cloudflare sign-in has expired or isn't active on this
-   device", press **Sign in with Cloudflare** and do the same again.
-3. **Join the server** (`play.knightsandkings.net`, Java Edition 26.3). You're stopped with a screen like:
-   *"Knights & Kings is invite-only. Go to …/link and enter `K7QH-M2XA` (valid 15 minutes)."*
-4. **Enter that code** on the website: the field already shows `____-____`; type the 8 letters and digits and they fill
-   the slots around the dash. Your Minecraft name now shows on your account.
-5. **Join again.** You're in, with the first-join welcome and starter kits. The chat confirms which web account
-   (e.g. `st***@gmail.com`) is linked — if that isn't you, tell staff right away.
+1. [What you need](#what-you-need)
+2. [Sign up with an invitation](#sign-up-with-an-invitation)
+3. [Cloudflare sign-in](#cloudflare-sign-in)
+4. [Link your Minecraft account](#link-your-minecraft-account)
+5. [Played here before the invitations?](#played-here-before-the-invitations)
+6. [Logging in and sessions](#logging-in-and-sessions)
+7. [Forgot your password](#forgot-your-password)
+8. [Your Account page](#your-account-page)
+9. [In game: `/account`](#in-game-account)
+10. [Messages and what they mean](#messages-and-what-they-mean)
+11. [Keeping your account safe](#keeping-your-account-safe)
 
-**Joined the server before you had an invitation?** That's fine: note the code from the screen, go to **/link**, and
-the site keeps it for 15 minutes while you sign up with your invitation; your Minecraft account is linked in the same
-step. The same code stays valid for 15 minutes: joining again shows it again, or a new one once it has expired. If you
-end up on **Register** or **Log in** instead, they point you back to the invitation sign-up (typed the server's code into
-the link-code field? the site recognises it and takes you on to **/link**). **Never give the code to anyone; staff never ask for it.**
+## What you need
 
-### Existing players (played before the invitations)
+1. An **invitation** from staff: a personal invitation email, or a shared invitation code `KNK-XXXXX-XXXXX`.
+2. An email address you can read.
+3. Minecraft **Java Edition 26.3**. Bedrock players (Windows, consoles) can join the alpha through its crossplay
+   bridge too; their Minecraft name gets a `BE_` prefix. The landing page still mentions Java only
+   (PandiO/knk-workspace#449).
+4. The server address `play.knightsandkings.net`, shown on the website's home page with a copy button.
 
-Your account was carried over: you keep joining as before, without a code. If you don't have a web login yet:
+## Sign up with an invitation
 
-1. Join the Minecraft server
-2. Type `/account link` to get an 8-character code and the website address
-3. On the website, open **Register**; while sign-ups are invite-only it opens on the invitation step, so click
-   **Already playing and got a code from /account link?** first. Enter the code, your email and a password
-4. You can now log in to the web app! Codes only go from the game to the website, never the other way.
+There are two kinds of invitation. Both create the same kind of account.
 
-On your first join you get a welcome message with a **[Link it now]** button. Clicking it runs `/account link`, which
-gives you a code and the web address to create your web account with. For your first 10 minutes, the places you
-discover are announced together in one summary afterwards (you still get the rewards straight away; `/discoveries`
-lists them). Until you have a web account, every later join shows a one-line reminder with the same button.
+### A personal invitation email
 
-### Existing Web App Users
+1. Open the link in the mail ("You're invited to Knights & Kings"). The page **Accept your invitation** opens; the
+   link disappears from the address bar, so bookmark nothing.
+2. Your email is filled in and locked ("The invitation was sent to this address, so it's already verified").
+3. Choose a **Password** and **Confirm password**, tick the closed-alpha rules (the game is unfinished, progress may
+   be reset, and you keep what you see to yourself), and press **Create account**.
 
-If you already have an account on the web app (email and password, no Minecraft account yet):
+The page says until when the invitation is valid (normally 7 days). If you press **Log in** instead, the login
+page's **Create an account** brings you back to the same invitation, as long as the tab stays open.
 
-1. Join the Minecraft server and type `/account link` to get a code
-2. Log in to the web app
-3. Click the **Account icon** (user profile icon) in the top-right navigation
-4. Select **"Account Settings"** from the dropdown menu
-5. Scroll to the **"Link Minecraft Account"** section and enter the code
-6. Your accounts are now linked! If your Minecraft account already existed on the server, your web login moves
-   onto it and the Minecraft account keeps its stats, groups and balances (you stay logged in as that account).
+### A shared invitation code
 
----
+1. Go to `/join` (**Join the closed alpha**) or open the `/join?code=…` link you were given.
+2. Type the code into **Invitation code**. You type only the 10 letters and digits; the field shows `KNK-` and the
+   dashes itself. Press **Continue**.
+3. "Code KNK-… is valid." Type your **Email**, choose a password, tick the rules and press **Create account**.
 
-## Web App Account Management
+A shared code works for a limited number of people and until a date; staff can also pause or replace it.
 
-### Accessing Your Account Settings
+### Password rules
 
-Once logged in to the web app:
+8 to 128 characters, not a common password and not an obvious pattern (`aaa`, `123`, keyboard rows). On the sign-up
+pages the strength meter must reach at least **Fair** before **Create account** works.
 
-1. Look for the **Account icon** (user profile circle) in the top-right corner of the navigation bar
-2. **Hover over** or **click** the icon to open the dropdown menu
-3. Select **"Account Settings"** to view and manage your account
+### After **Create account**
 
-### Account Settings Page
+You are logged in. Both pages show **What happens next** before you sign up: the Cloudflare step (when the site uses
+it) and then joining the server. You land on **Link your Minecraft account**, or first on Cloudflare's page.
 
-The Account Settings page allows you to:
+If the invitation stopped working while the form was open (used up, revoked, expired), the page shows "This
+invitation is invalid or has expired. Ask whoever invited you for a new one." Every failure looks the same on
+purpose. **This email is already in use by another account** means you already have an account: log in instead.
 
-#### 📋 View Account Information
-- **Username**: Your Minecraft or web app username
-- **Account Created**: When your account was created
-- **Minecraft UUID**: Your unique Minecraft player identifier (if linked)
-- **Coins**: Your premium currency balance
-- **Gems**: Your free currency balance
+## Cloudflare sign-in
 
-#### ✉️ Update Email Address
-1. Click the **"Edit"** button next to your email
-2. Enter your new email address
-3. Click **"Save"** to update
-4. You'll see a success message when complete
+The alpha website sits behind Cloudflare Access. When it is on, signing up ends on **Your account is ready** with
+these steps:
 
-#### 🔑 Change Password
-1. Click **"Change Password"**
-2. Enter your **current password**
-3. Enter your **new password** (minimum 8 characters)
-4. **Confirm** your new password
-5. Click **"Update Password"**
-6. Your password is updated immediately
+1. Press **Continue to Cloudflare sign-in**. Cloudflare's own page opens (the address bar leaves the site).
+2. Type the **same email** you signed up with.
+3. Cloudflare emails you a **6-digit code**, from `noreply@notify.cloudflare.com`, not from Knights and Kings. Check
+   your spam folder. Enter the code.
+4. You are back on the site, on **Link your Minecraft account**. This device stays signed in to Cloudflare for 30 days.
 
-#### 🔗 Link Minecraft Account
-If you created your account on the web app and haven't linked your Minecraft account yet:
+On a new device or browser, or after 30 days, Cloudflare asks again before the site opens ("First time on this
+device? Cloudflare asks for your email…" on the login page). If a page says **Your Cloudflare sign-in has expired or
+isn't active on this device**, press **Sign in with Cloudflare** and do the same again; your Knights and Kings login
+stays.
 
-1. Scroll to the **"Link Minecraft Account"** section
-2. You'll see an input field for the link code
-3. In Minecraft, type `/account link` to generate a code
-4. Copy the code from Minecraft (click the chat line to copy it)
-5. Paste it into the web app (8 characters, shown as XXX-XXXXX)
-6. Click **"Link Account"**
-7. Your Minecraft and web accounts are now connected! Never give this code to anyone; staff never ask for it.
+The pages for signing up (`/invite`, `/join`, `/link`) open without Cloudflare, so you can always start there.
 
-**Note**: This section only appears if you don't have a linked Minecraft account yet.
+## Link your Minecraft account
 
-### Navigation Menu
+Until your web account is linked, you can't play, and every page shows **Link your Minecraft account to play →**.
 
-The account dropdown menu provides quick access to:
+1. In Minecraft, add `play.knightsandkings.net` and join.
+2. The server turns you away with a screen like:
+   *"Knights & Kings is invite-only. Go to …/link and enter* **`K7QH-M2XA`** *(valid 15 minutes). Never give this code
+   to anyone; staff never ask for it."*
+3. On the website, logged in, open **Link your Minecraft account** (`/account/link`). Type the 8 letters and digits
+   into **Code from the server**; the field shows `____-____` and adds the dash itself. Press **Link account**.
+4. Your **Account** page now shows your Minecraft name as your username, and **✓ Minecraft Account Linked**.
+5. Join again. You are in, with the first-join welcome and your starter kits. The chat says *"Your Minecraft account
+   is now linked to the web account st***@…"*. If that isn't your address, tell staff right away. You also get a mail
+   about the link.
 
-- **Account Settings** - Manage your account, email, password, and linking
-- **Logout** - Sign out of the web app (you'll need to log in again)
+About the claim code:
 
----
+1. Joining again within the 15 minutes shows the **same** code; after that, joining gives a new one.
+2. A refused code is not used up: "The same code stays valid for 15 minutes".
+3. Letters that look alike are forgiving: an O is read as 0.
+4. Five wrong codes in a row lock linking for 15 minutes: "Too many attempts. Try again in 15 minutes."
+5. For your first 10 minutes in the game, the places you discover are announced together in one summary afterwards;
+   the rewards come straight away.
+
+### Joined the server before you signed up?
+
+That works too.
 
-## Commands
+1. Note the code from the disconnect screen and open `/link` on the website (no login needed).
+2. Type the code under **Code from the server** and press **Continue**: "Verified: Minecraft account `<name>`".
+3. Then either:
+   - **Log in** if you already have an account, and press **Link `<name>` to my account**; or
+   - under **New here? Create your account with an invitation**, open your invitation mail's link, or type your
+     invitation code and press **Continue**. The sign-up page says "Your Minecraft account `<name>` will be linked to
+     this account", and the link happens when you press **Create account**.
+4. Join again and play.
 
-### `/account`
+The site keeps the verified code in that browser tab for its 15 minutes.
 
-**Description**: View your current account status
+### Typed the code in the wrong place?
 
-**Usage**: `/account`
+The **Create account** page (`/auth/register`) opens on **Sign up with your invitation**. Its field **Invitation code
+or code from the server** takes either an invitation code or the code from the disconnect screen and sends you to the
+right page. The **Log in** page's **Create an account** link also leads to the invitation sign-up.
 
-**Aliases**: `/acc`
-
-**Example**:
-```
-/account
-```
-
-**Output**:
-```
-[KnK] === Your Account ===
-
-  Username: Steve123
-  UUID: a1b2c3d4-e5f6-7890-abcd-ef1234567890
-  Email: steve@example.com
-
-  Coins: 1,250
-  Gems: 45
-  Experience: 3,780
-
-```
-
-**Permissions**: `knk.account.view` (default: all players)
-
----
-
-### `/account link`
-
-**Description**: Generate a link code to connect your Minecraft account with the website
-
-**Usage**: 
-- `/account link` - Generate a new link code
-- `/account link <code>` - Not supported: codes are entered on the website, not in game. The command only
-  tells you where the code goes.
-
-#### Scenario 1: Generate Link Code (Minecraft → Web App)
-
-**Use Case**: You want to link your Minecraft account to the web app
-
-**Steps**:
-1. In Minecraft, type `/account link`
-2. Copy the 6-character code shown
-3. Log in to the web app
-4. Go to Profile → Link Minecraft Account
-5. Enter the code
-6. Accounts are now linked!
-
-**Example**:
-```
-Player: /account link
-
-Server: === Link Code ===
-Server: 
-Server:   ABC-123
-Server: 
-Server: Use this code in the web app to link your account
-Server: Expires in 20 minutes
-```
-
-**Link Code Rules**:
-- ⏱️ Codes expire after 20 minutes
-- 🔒 Codes are single-use (one successful link invalidates the code)
-- 🔄 You can generate a new code at any time
-- 🤫 Never give the code to anyone: whoever has it can register your web login. Staff never ask for it.
-- ❌ Invalid/expired codes show: "This code is invalid or has expired. Use /account link to get a new one."
-
-**Permissions**: `knk.account.link` (default: all players)
-
----
-
-## Account Merging (Duplicate Resolution)
-
-### What is a Duplicate Account?
-
-A duplicate account occurs when:
-- You played Minecraft before creating a web app account (UUID-based account)
-- You created a web app account before playing Minecraft (email-based account)
-- You now have TWO accounts in the system
-
-### How to Detect
-
-When you join the server with a duplicate account, you'll see:
-
-```
-[KnK] You have two accounts. Please choose which one to keep.
-[KnK] Use /account merge to resolve this.
-```
-
-### How to Merge
-
-**Option 1: Automatic Merge (when linking)**
-
-When you use `/account link <code>` and a duplicate is detected, you'll be prompted:
-
-```
-[KnK] === Account Merge Required ===
-
-Account A:
-  Coins: 1,000 | Gems: 20 | XP: 2,500
-  Email: steve@example.com
-
-Account B:
-  Coins: 500 | Gems: 10 | XP: 1,200
-  Email: Not linked
-
-Type A or B to choose which account to keep
-```
-
-**Important**:
-- 💰 The chosen account will receive the **SUM** of coins, gems, and XP from both accounts
-- 📧 The chosen account will keep its email (if set)
-- 🗑️ The other account will be deleted
-
-**Example**:
-```
-Player: A
-
-Server: Merge complete! Your account now has 1,500 coins, 30 gems, and 3,700 XP.
-```
-
----
-
-## Troubleshooting
-
-### "Please rejoin the server and try again"
-
-**Cause**: Your account data isn't cached yet (server might have restarted)
-
-**Solution**: 
-1. Leave the server
-2. Rejoin
-3. Try the command again
-
----
-
-### "Account service temporarily unavailable"
-
-**Cause**: The backend API is down or unreachable
-
-**Solution**: 
-1. Wait a few minutes and try again
-2. If the issue persists, contact a server admin
-
----
-
-### "You already have an email linked!"
-
-**Cause**: You've already set up your account
-
-**Solution**: 
-- Use `/account` to view your current status
-- If you need to change your email/password, use the web app (Profile → Settings)
-
----
-
-### "Invalid email format"
-
-**Cause**: Your email doesn't match the required format
-
-**Valid Examples**:
-- steve@example.com ✅
-- player.name@domain.co.uk ✅
-- user+tag@subdomain.domain.com ✅
-
-**Invalid Examples**:
-- steve (missing @domain)
-- @example.com (missing name)
-- steve@domain (missing .extension)
-
----
-
-### "Password must be at least 8 characters"
-
-**Cause**: Your password is too short
-
-**Solution**: Use a password with 8 or more characters
-
-**Tips for Secure Passwords**:
-- Mix uppercase and lowercase letters
-- Include numbers
-- Include special characters (!@#$%^&*)
-- Example: `MyPass123!`
-
----
-
-### "Passwords don't match"
-
-**Cause**: The password confirmation didn't match the original password
-
-**Solution**: The flow automatically restarts at the password step. Type your password carefully and exactly the same both times.
-
----
-
-### Link Code Expired
-
-**Cause**: You waited more than 20 minutes to use the link code
-
-**Solution**:
-1. Generate a new code with `/account link`
-2. Use it within 20 minutes
-
----
-
-### Can't Find Link Code on Web App
-
-**Cause**: You might be on the wrong page
-
-**Solution**:
-1. Log in to the web app
-2. Click your username (top-right corner)
-3. Select "Profile" or "Account Settings"
-4. Look for "Link Minecraft Account" section
-5. Click "Generate Link Code"
-
----
-
-## Security & Privacy
-
-### Is My Password Safe?
-
-Yes! Here's how we protect your information:
-
-- 🔒 **Passwords are hashed** - We never store your actual password
-- 🔐 **Nothing sensitive in chat** - Your email and password are only ever typed on the website, never in game
-- 🌐 **HTTPS encryption** - All data sent to the API is encrypted
-- ⏱️ **Link codes expire** - Unused codes expire after 20 minutes
-- 🔄 **Automatic logout** - Sessions expire for security
-
-### What Data is Stored?
-
-**In-Game**:
-- Username
-- UUID (Minecraft unique identifier)
-- Coins, Gems, Experience Points
-
-**Web App**:
-- Email address
-- Hashed password
-- Account creation date
-- Email verification status
-
-**Never Stored**:
-- IP addresses (except in temporary server logs)
-- Chat messages
-- Plain-text passwords
-
----
-
-## Frequently Asked Questions (FAQ)
-
-### Can I change my email or password?
-
-Yes! But only through the web app:
-1. Log in to the web app
-2. Go to Profile → Settings
-3. Click "Change Email" or "Change Password"
-
-### Can I delete my account?
-
-Contact a server administrator. Account deletion is permanent and cannot be undone.
-
-### What happens if I lose access to my email?
-
-Contact a server administrator with proof of ownership (account details, transaction history, etc.).
-
-### Can I have multiple Minecraft accounts linked to one email?
-
-No. One email = one account. If you have multiple Minecraft accounts, you'll need separate email addresses for each.
-
-### Do I need to link my account to play?
-
-**New players: yes.** Once the server is invite-only, you play by linking the Minecraft account to the account you
-made with your invitation (see "Getting an account"). **Players from before the invitations: no.** You can play without
-a web login. However, a web login gives you:
-- Access to the web app (view stats, manage resources)
-- Web-based inventory management
-- Future features (leaderboards, events, etc.)
-
-### What if I forget my password?
-
-Use the "Forgot Password" feature on the web app login page. You'll receive a password reset link via email.
-
-### Can I unlink my account?
-
-Not currently supported. Contact a server administrator if you need to unlink.
-
-### Will linking my account affect my in-game progress?
-
-No! Linking only adds web app access. Your in-game progress (coins, gems, XP) stays the same.
-
-If you choose to merge accounts, the **sum** of both accounts' resources is transferred to the chosen account.
-
----
-
-## Tips & Best Practices
-
-### ✅ DO:
-- Use a strong, unique password
-- Use a real email address (for password recovery)
-- Link your account as soon as possible
-- Keep your link code private
-
-### ❌ DON'T:
-- Share your password with anyone (including server admins)
-- Share your link code publicly (anyone can use it)
-- Use the same password as other websites
-- Use simple passwords like "password123"
-- Wait too long to use a link code (20-minute expiry)
-
----
-
-## Support
-
-Need help? Contact the server administrators:
-
-- **In-Game**: Ask a moderator or admin
-- **Discord**: [Server Discord Link]
-- **Email**: [Support Email]
-
----
-
-## Changelog
-
-### Version 1.2 (October 21, 2026)
-- "Getting an account" for invite-only sign-up: invitation → account → Cloudflare PIN → join → code → link (KNG-205;
-  merged 2026-10-24, not yet live)
-- Existing players keep `/account link`
-
-### Version 1.1 (January 30, 2026)
-- Added web app Account Management page
-- Added account dropdown menu in navigation (replaces standalone logout)
-- Players can now edit email and password directly in web app
-- Improved UI for linking Minecraft accounts via web interface
-- Updated authentication to use global state (AuthContext)
-
-### Version 1.0 (January 30, 2026)
-- Initial release of account management system
-- Commands: `/account`, `/account create`, `/account link`
-- Auto-sync on player join
-- Duplicate account detection and merging
-- Secure chat capture for sensitive input
-
----
-
-**Happy gaming!** 🎮⚔️👑
+## Played here before the invitations?
+
+Accounts that existed on 2026-10-24 were carried over: you join without a code. To get a web login:
+
+1. In game, type `/account link`. You get an 8-character code that is valid for **20 minutes**, and the website
+   address. You can ask for a new code once a minute.
+2. On the website open **Create account** (`/auth/register`) and click **Already playing and got a code from /account
+   link?**.
+3. Type the code into **Link code** and press **Check code**. "This code belongs to `<your name>`."
+4. Choose your email and password and press **Create account**. You are logged in.
+
+Codes only go from the game to the website, never the other way: `/account link <code>` in game does nothing but tell
+you to enter it on the website.
+
+**You already have a web login without a Minecraft account** (made before the invitations): get a code with
+`/account link`, log in on the website and enter it on **Link your Minecraft account** (`/account/link`). Your web
+login moves onto your Minecraft account, which keeps its statistics, groups and history; each balance becomes the
+higher of the two. The old web-only account is retired. `/account` in game then shows your email. If the Minecraft
+account already has its own web login, you get "This Minecraft account already has a web account. Log in with it,
+or use Forgot password." and nothing changes.
+
+## Logging in and sessions
+
+**Log in** (`/auth/login`) takes your **Email or Minecraft name** and your **Password**.
+
+1. **Remember me** off (the default): you stay logged in until you close the browser, at most 12 hours.
+2. **Remember me** on: you stay logged in on this device for 30 days. Don't use it on a shared computer.
+3. When a session runs out, the login page says "Your session expired. Log in again to continue" and takes you back
+   to the page you were on.
+
+Five wrong passwords within 15 minutes lock the account for 15 minutes: "Too many attempts. Try again in N minutes."
+A wrong name and a wrong password give the same answer, "Invalid credentials."
+
+### Log out, or log out everywhere
+
+On your **Account** page, under **Session**:
+
+1. **Log out** ends the session in this browser. The account menu (top right) has **Log out** too.
+2. **Log out on all devices** ends every session of your account at once. Use it if you think someone else has
+   access to your account, then change your password.
+
+Changing your password or your email also logs you out everywhere else; the browser you made the change in stays
+logged in. A password reset logs you out everywhere.
+
+## Forgot your password
+
+1. On **Log in**, click **Forgot password?**.
+2. Type your account's email and press **Send Reset Link**. The page always answers "If an account with that email
+   exists, reset instructions have been sent", so it never tells anyone which addresses have accounts.
+3. Open the link in the mail within **30 minutes**. On **Choose New Password**, type and confirm the new password.
+4. You are logged out on every device; log in with the new password.
+
+Limits: one reset mail a minute per address, at most three an hour. A link that has expired or was already used
+answers "Reset token is invalid or expired": ask for a new one.
+
+A Minecraft account without a web login has no password to reset: get a code with `/account link` instead (see
+[above](#played-here-before-the-invitations)). If you no longer have access to your email, ask staff.
+
+## Your Account page
+
+Open it from the account menu (top right) → **Account settings** (the page `/account`). It shows:
+
+1. **Account Information:** username (your Minecraft name once linked; a generated `web-…` name before that), when
+   the account was created, your Minecraft UUID, coins and gems, and **View transaction history**.
+2. Your **discoveries** and **statistics**, once your Minecraft account is linked
+   ([statistics guide](statistics-player-guide.md)).
+3. **Email Address** with **Edit**: type the new email and your **Current Password**, press **Save**. Your other
+   devices are logged out, and your **old** address gets a mail "Your Knights & Kings email was changed". When the
+   site uses Cloudflare, use the new address at Cloudflare's next sign-in. The **Email verified** badge (from a
+   personal invitation) goes away after a change; there is no way to verify a new address yet
+   (PandiO/knk-workspace#139).
+4. **Password** with **Change Password**: current password, new password twice, **Update Password**.
+5. **Link Minecraft Account**, only while your account isn't linked, with a button to the linking page. Once linked:
+   **✓ Minecraft Account Linked**. You can't unlink or switch the Minecraft account yourself: "Changing it is a staff
+   action."
+6. **Delete my data**: request deletion of your data by email confirmation; it runs five days after you confirm
+   unless you cancel. The section lists what is deleted and what is kept without your name.
+7. **Session**: **Log out** and **Log out on all devices**.
+
+When your Minecraft name changes, your username follows it the next time you join.
+
+## In game: `/account`
+
+| Command | What it does |
+|---|---|
+| `/account` (or `/acc`, `/account status`) | Shows your username, UUID, email (or **Not linked**), coins, gems and experience |
+| `/account link` | Gives a code to create or link your web login (valid 20 minutes, once a minute) |
+
+Without a web login, your first join's welcome ends with **[Link it now]**, which runs `/account link`; every later
+join shows a one-line reminder with the same button. Full syntax: [commands reference](commands.md).
+
+## Messages and what they mean
+
+| Where | Message | What to do |
+|---|---|---|
+| Joining the server | "Knights & Kings is invite-only. Go to … and enter `XXXX-XXXX`" | Your Minecraft account isn't linked to an invited account yet: [link it](#link-your-minecraft-account) |
+| Joining the server | "Can't check your access right now. Try again in a minute." | The game's services are down. Players who joined before get in after a few seconds; new players wait |
+| Joining the server | "This account is deactivated. Contact staff if you think this is a mistake." | Staff deactivated the account; ask them |
+| `/link`, `/account/link` | "This code is invalid or has expired." / "This code from the server is invalid or has expired." | Check the code, or join again for the current one |
+| `/account/link` | "You need an invitation before you can link a Minecraft account." | Your web account wasn't created with an invitation; ask staff |
+| `/account/link` | "Your web account is already linked to another Minecraft account. Changing it is a staff action." | Ask staff |
+| `/account/link`, sign-up | "This Minecraft account already has a web account. Log in with it, or use Forgot password." | Log in with that account |
+| Sign-up | "This invitation was sent to a different email address." | Use the address the invitation went to |
+| Sign-up, link page | "You need an invitation to create an account." | The alpha is invite-only; ask staff for an invitation |
+| Anywhere | "Too many attempts. Try again in N minutes." | Wait; it counts wrong passwords and wrong codes |
+| Any page | "Your Cloudflare sign-in has expired or isn't active on this device" | Press **Sign in with Cloudflare** ([Cloudflare sign-in](#cloudflare-sign-in)) |
+
+## Keeping your account safe
+
+1. **Never give a code to anyone**: not the claim code, not an `/account link` code, not a reset link. Staff never
+   ask for codes or passwords. Someone with your code can tie your Minecraft account to their web login.
+2. If the chat names a web account that isn't yours after a link, tell staff right away. Staff can detach a web
+   login from a Minecraft account; you then create your own with `/account link`.
+3. Use **Log out on all devices** and change your password if you think someone else is logged in.
+4. Passwords are stored only as hashes; nobody, staff included, can read them.
+
+## Changes
+
+1. 2026-11-13: rewritten for the invite-only flow and renamed from `PLAYER_GUIDE_ACCOUNT_MANAGEMENT.md` (PandiO/knk-workspace#299).
+   The old guide's sections on `/account create`, merging in game and the account-settings layout of 2026-01 were
+   removed; they described removed behaviour.
+2. 2026-11-03: the register page's code field shows the dash (#229).
+3. 2026-10-26: the claim code field shows `____-____` from the start (#196) and adds the dash (#192).
+4. 2026-10-21: "Getting an account" rewritten for invite-only sign-up (KNG-218).
+5. 2026-01-30: versions 1.0 and 1.1 (account commands, linking, merging).
