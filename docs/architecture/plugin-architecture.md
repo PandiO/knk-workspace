@@ -1,6 +1,6 @@
 ---
 status: active
-last_updated: 2026-11-05
+last_updated: 2026-11-13
 ---
 
 # knk-plugin Architecture
@@ -260,6 +260,12 @@ complete for every entity type the plugin touches.
   catalogue run `realtime.fallback-poll-multiplier` times slower. Resync step "siege startup work"
   (`core/realtime/PendingStartupWork`, #31) re-runs the startup abort, stale gate restore and siege config/title
   brackets that failed at start. Design §6.8.
+  **S5 (#184, plugin part in the PR into `next` from `claude/plugin-chains-into-next`):** `paper/realtime/ErasureRealtimeSync` hands
+  `AccountErased` to `core/privacy/AccountErasureService` (own worker thread): kick (`realtime.erasure.kick-message`),
+  wait `settle-seconds`, then the `core/privacy/LocalDataEraser` steps each feature registered in `KnKPlugin` (offline
+  store, user/permission caches, discovery and statistics spools, PM-log queue and local log, siege vault (given back first to an online player, decision 2026-11-06 on LR1-8; offline ones discarded), hub-outage
+  return point; Minecraft's own player files only listed in `erasure-minecraft-files.txt`). Resync step "account
+  erasures" catches up through `GET api/privacy/erasures?since=` from the position in `erasure-feed.json`. Design §7.5.
 - Everything else (commands, player-triggered lookups) is on-demand via the
   cache-first data access layer.
 
