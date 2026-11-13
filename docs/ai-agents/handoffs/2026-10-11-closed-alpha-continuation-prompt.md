@@ -156,7 +156,7 @@ For historical context only, the obsolete carry-forward procedure checked:
    - Telemetry__Enabled=false
    - no CORS origins because the SPA and /api use one origin
 8. The web hostname is still an explicit user decision: either
-   app.knightsandkings.net or the older knk.oldenzeelit.nl. Do not guess. Ask
+   app.knightsandkings.net or the older `knk.<personal-domain>`. Do not guess. Ask
    before finalizing AllowedHosts, password-reset URL, plugin web.public-url,
    web build, Cloudflare hostname, or Access policy.
 9. Switch the private stack to the new API only after the final database is
