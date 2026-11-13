@@ -1,7 +1,7 @@
 # NAS operations access for agents (`knk-ops`)
 
-**Status:** Stage A (read-only checks) installed on the NAS and verified 2026-10-18 · Stage B (`knk-deploy`, delegated changes) built, tested and **installed 2026-10-25**
-**Last updated:** 2026-11-13 (LAN addresses replaced by placeholders, PandiO/knk-workspace#305)
+**Status:** Current · **Last updated:** 2026-11-13 (LAN addresses replaced by placeholders, PandiO/knk-workspace#305)
+**Installed:** Stage A (read-only checks) installed on the NAS and verified 2026-10-18 · Stage B (`knk-deploy`, delegated changes) built, tested and **installed 2026-10-25**
 **Sources:** wrapper sources and checksums in [`scripts/nas-ops/stage-a/`](../../scripts/nas-ops/stage-a/) ·
 session report [2026-10-18 NAS ops access and alpha check](../reports/2026-10-18-nas-ops-access-and-alpha-check.md) ·
 [closed-alpha deployment runbook](closed-alpha-deployment-runbook.md)
