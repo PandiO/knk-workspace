@@ -5,9 +5,12 @@ in § 7. **AM1 and AM2 merged 2026-11-12** into knk-web-api `master` `bc97b7d` (
 [web-api architecture § 5.1](../../architecture/web-api-architecture.md#51-dashboard-access-model-pandioknk-workspace280-am1--branch-claudedashboard-access-280-not-merged));
 **AM2 built** (same branch: read gating per area, lookups; as built:
 [web-api architecture § 5.2](../../architecture/web-api-architecture.md#52-read-gating-per-area-and-lookups-pandioknk-workspace280-am2--branch-claudedashboard-access-280-not-merged));
-AM3 (web app) and AM4 not built yet (§ 5); until AM3, see the Admin steps of CHANGELOG 2026-11-12 for what staff notice. Developer 2026-11-08: the backfill (§ 4.5) **skips the Staff group**, and nobody changes a group
+**AM3 built 2026-11-12, not merged** (knk-web-app and knk-web-api `claude/dashboard-access-280`; with the LV7-8
+change of § 4.7 and #205 bulk delete); AM4 not built (§ 5). Until AM3 merges, see the Admin steps of CHANGELOG
+2026-11-12 for what staff notice. Developer 2026-11-08: the backfill (§ 4.5) **skips the Staff group**, and nobody changes a group
 ranked at or above their own (§ 4.4).
-**Last updated:** 2026-11-12 (AM1+AM2 merged); 2026-11-08 (AM2 built); 2026-11-08 (AM1 built, Staff decision); 2026-11-08 (decided version, with read gating per area, `knk.admin.export` and the read-endpoint
+**Last updated:** 2026-11-12 (AM3 built; § 4.7 form/display configuration deletes need `knk.admin.delete`, developer
+decision on LV7-8; § 7 addendum); 2026-11-12 (AM1+AM2 merged); 2026-11-08 (AM2 built); 2026-11-08 (AM1 built, Staff decision); 2026-11-08 (decided version, with read gating per area, `knk.admin.export` and the read-endpoint
 appendix); 2026-11-08 (first version, chain 3 link D1)
 **Issue:** [PandiO/knk-workspace#280](https://github.com/PandiO/knk-workspace/issues/280) (blocks the bulk delete part of
 [#205](https://github.com/PandiO/knk-workspace/issues/205)); roadmap [#24](https://github.com/PandiO/knk-workspace/issues/24).
@@ -471,7 +474,10 @@ node** (category R/O), not only `knk.admin.content`:
   - **Other areas:** Kits, LootboxTypes, LootboxSpecialEntries, LootboxSpawnAreas, SiegeScenarios, SiegeTeams,
     SiegeLobbies, SiegeObjectives, SiegeSpawnpoints, RoadProfiles; `DELETE api/Users/{id}`,
     `DELETE api/PermissionGroups/{id}` (decision 5).
-  - **Not covered** (they keep their rules): builder parts, whole form/display configurations, MenuTemplates, your own
+  - **Whole form and display configurations** (developer 2026-11-12, LV7-8 of #71): `DELETE api/FormConfigurations/{id}`
+    and `DELETE api/DisplayConfigurations/{id}` also need `knk.admin.delete`, on top of `knk.admin.content`. Pinned in
+    `DeleteAccessRulesTests.ConfigurationDeletes`; Entity setup shows their Delete disabled with "Requires …" (AM3).
+  - **Not covered** (they keep their rules): builder parts (steps, fields, sections, validation rules), MenuTemplates, your own
     drafts, world-task and workflow lifecycle endpoints, plugin-only deletes, and link deletes (user groups, grants, gate
     snapshots).
 - **Bulk delete:** `POST api/Dashboard/bulk-delete` with `{ entityType, ids[] }` (decision 7).
@@ -636,6 +642,11 @@ The proposal's questions and the developer's answers. (rec. = what the proposal 
 - **Owner-only rule:** it also covers group assignment and inheritance, not only direct grants (§ 4.4).
 
 **Open questions:** none.
+
+**Later decisions (2026-11-12, comment on #280):** the Admin group stays editable only by a higher rank (the owner;
+AM1's LAM1-1 stays); deleting a form or display configuration also needs `knk.admin.delete` (§ 4.7, built in AM3);
+the safety follow-ups #348 (sudo mode), #349 (trash / soft delete), #350 (owner notifications) and #351 (Head Admin
+rank) are separate issues, not part of AM3.
 
 ## Appendix A — Read endpoints per area and their category
 
