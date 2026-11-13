@@ -2,7 +2,7 @@
 
 **Status:** Run by the developer 2026-11-04 on the `claude/realtime-signalr` builds (which contain this branch): all
 steps work or accepted. Merged into the default branches 2026-11-04 (with the realtime branch)
-**Last updated:** 2026-11-09 (§7 temp regions of abandoned drafts, PandiO/knk-workspace#269, feature branch
+**Last updated:** 2026-11-13 (§7: builds from `claude/plugin-chains-into-next`, #269 with R1–R3 and P1); 2026-11-09 (§7 temp regions of abandoned drafts, PandiO/knk-workspace#269, feature branch
 `claude/temp-region-drafts-269`, not merged, not run yet); 2026-11-04 (findings of the developer's run; merged)
 **Issue:** [PandiO/knk-workspace#180](https://github.com/PandiO/knk-workspace/issues/180) (WT1 of #66); design
 [realtime-signalr/DESIGN.md](../specs/realtime-signalr/DESIGN.md) §8.2, §8.7; reference
@@ -96,14 +96,14 @@ Record each step in **Findings** at the end (works / doesn't / accepted).
    Within 30 s the session and its tasks are gone (API log "World task sweep: … abandoned session(s) removed").
 2. The same for a session that has a draft or a Completed task: it stays.
 
-## 7. Temp regions of abandoned drafts (#269, feature branch `claude/temp-region-drafts-269`, not merged)
+## 7. Temp regions of abandoned drafts (#269, PR into `next`, not merged)
 
 About 30 minutes. What it checks: a region a form's region task drew (`tempregion_worldtask_<n>`) is removed within
 minutes when its draft is deleted or its task closes without a result, never when something uses it or it was renamed,
-and the 14-day cleanup is untouched. Design: [managed-worldguard-regions.md §7 "Abandoned drafts"](../architecture/managed-worldguard-regions.md#abandoned-drafts-temp-regions-released-early-pandioknk-workspace269-feature-branch-claudetemp-region-drafts-269-not-merged).
+and the 14-day cleanup is untouched. Design: [managed-worldguard-regions.md §7 "Abandoned drafts"](../architecture/managed-worldguard-regions.md#abandoned-drafts-temp-regions-released-early-pandioknk-workspace269-pr-into-next-not-merged).
 
-0. **Setup.** Check out `claude/temp-region-drafts-269` in knk-web-api and knk-plugin (they contain the unmerged
-   `claude/dashboard-access-280`, `claude/lootbox-area-rename-34` and, on the plugin, `claude/kit-grant-delivery-261`).
+0. **Setup.** Check out `claude/plugin-chains-into-next` in knk-web-api and knk-plugin (or `next` once it is merged;
+   they bring #269 together with #34 and, on the plugin, #184, #31, #261 and #264).
    API first: `dotnet ef database update` (additive migration `AddTempRegionReleases`, one new table; the branch also
    carries the earlier links' migrations), start it with `WorldTasks__TempRegionReleaseGraceMinutes=1` so you don't
    wait 5 minutes per step. Plugin: in `config.yml` set `regions.temp-retention.release-interval-minutes: 1` (default 5),

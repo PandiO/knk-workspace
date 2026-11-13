@@ -1,7 +1,7 @@
 # Lootbox spawn areas drawn in the web form — smoke test checklist
 
-**Status:** **Written 2026-11-05 for `claude/lootbox-area-rename-34`** (knk-web-api, knk-plugin, knk-workspace); not merged, not run
-**Last updated:** 2026-11-05
+**Status:** Written 2026-11-05 for #34; API and plugin parts in the PR into `next` from `claude/plugin-chains-into-next` (2026-11-13); not merged, not run
+**Last updated:** 2026-11-13 (setup: builds from `claude/plugin-chains-into-next`); 2026-11-05
 **Issue:** [PandiO/knk-workspace#34](https://github.com/PandiO/knk-workspace/issues/34)
 **Related:** [managed-worldguard-regions.md](../architecture/managed-worldguard-regions.md) §7 "Lootbox spawn areas", lootbox
 [DESIGN](../specs/lootboxes/DESIGN.md) §3.4
@@ -14,9 +14,9 @@ cleanup. `<id>` is the area's id (shown in the web app's URL or `/knk lootbox ar
 ## 0. Setup
 
 1. Back up `plugins/WorldGuard/worlds/*/regions.yml` and the dev database.
-2. Deploy the API and the plugin from `claude/lootbox-area-rename-34` (both; no migration, no setting). The plugin branch
-   contains R1 (`claude/realtime-erasure-184`) and R2 (`claude/siege-startup-retry-31`), so R1's migration
-   `AddPrivacyErasureEvents` must be applied first.
+2. Deploy the API and the plugin from `claude/plugin-chains-into-next` (or `next` once it is merged; both; no setting for
+   #34). Apply the API's pending migrations first (`dotnet ef database update`: #269's `AddTempRegionReleases` comes
+   with it; #184's `AddPrivacyErasureEvents` is already on `master`).
 3. Import the form seed `LootboxSpawnArea - Default (seed v2)` (`Data/FormConfigurationSeeds/LootboxSpawnArea.json`) and make
    it the default for LootboxSpawnArea (keep or delete v1 by hand).
 

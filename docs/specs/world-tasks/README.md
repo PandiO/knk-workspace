@@ -3,7 +3,7 @@
 **Status:** Living reference for the lifecycle (§ "Lifecycle and endpoints" below, as built by PandiO/knk-workspace#180, merged
 into the default branches 2026-11-04 with #181). The other files in this folder are older design notes:
 where they differ from that section, the section is current.
-**Last updated:** 2026-11-09 (temp regions of abandoned drafts released, #269, feature branch `claude/temp-region-drafts-269`); 2026-11-04 (#239 NoPermission, #240 `POST {id}/offer`, feature branch); 2026-11-04 (#180 and #181 merged); 2026-11-02 (§ "Over the realtime channel": offers, hand-off, busy check, #181, branch `claude/realtime-signalr`); 2026-11-01 (world-task hardening and tasks anchored to the draft, #180; design
+**Last updated:** 2026-11-13 (#269 in the PR into `next` from `claude/plugin-chains-into-next`); 2026-11-09 (temp regions of abandoned drafts released, #269, feature branch `claude/temp-region-drafts-269`); 2026-11-04 (#239 NoPermission, #240 `POST {id}/offer`, feature branch); 2026-11-04 (#180 and #181 merged); 2026-11-02 (§ "Over the realtime channel": offers, hand-off, busy check, #181, branch `claude/realtime-signalr`); 2026-11-01 (world-task hardening and tasks anchored to the draft, #180; design
 [realtime-signalr/DESIGN.md](../realtime-signalr/DESIGN.md) §8.2, §8.7)
 
 ## Overview
@@ -135,7 +135,7 @@ Pending ──claim──► InProgress ──complete──► Completed
   released to Pending; workflow sessions no draft points at and with no activity for 7 days → removed with their tasks,
   except sessions with a Completed task (its output is still read, e.g. a region's world) and catalogue-scan sessions.
   Rows from before #180 without `ExpiresAt`/`LeaseUntil` count from their last update.
-- **Temp regions of abandoned drafts** (#269, feature branch `claude/temp-region-drafts-269`): a deleted draft, a region
+- **Temp regions of abandoned drafts** (#269, in the PR into `next` from `claude/plugin-chains-into-next`): a deleted draft, a region
   task that closes without a result after a game server held it (cancel, fail, expiry) and a session the sweep removes
   release the task's `tempregion_worldtask_<id>` (table `temp_region_releases`); the game server removes it within
   minutes once nothing uses it. `TempRegionReleaseGraceMinutes` 5, `TempRegionReleaseKeepDays` 30. Details:

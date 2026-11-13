@@ -1,8 +1,8 @@
 # API outage — smoke test
 
 **Status:** KNG-171 passed (developer, 2026-10-17), merged 2026-10-17 ([knk-plugin #14](https://github.com/PandiO/knk-plugin/pull/14));
-[#31](https://github.com/PandiO/knk-workspace/issues/31) siege startup retry: in review, not run yet (branch `claude/siege-startup-retry-31`)
-**Last updated:** 2026-11-05
+[#31](https://github.com/PandiO/knk-workspace/issues/31) siege startup retry: in the PR into `next` from `claude/plugin-chains-into-next` (2026-11-13), not run yet
+**Last updated:** 2026-11-13 (§ #31 build: `claude/plugin-chains-into-next`); 2026-11-05
 **Architecture:** [api-connectivity.md](../architecture/api-connectivity.md) (KNG-115 state and its subscribers) ·
 [offline-security-cache.md](../architecture/offline-security-cache.md) (KNG-58/KNG-123 fallback; its § 8 has the
 earlier outage checklists, both passed) ·
@@ -44,8 +44,7 @@ non-op permissions during an outage; that is KNG-58's rule, not a failure here.
 
 ## #31 — siege startup work runs again when the API is back (realtime hub off)
 
-Build: knk-plugin branch `claude/siege-startup-retry-31` (`./gradlew :knk-paper:dev`; it contains the R1 branch
-`claude/realtime-erasure-184`). `config.yml`: `realtime.enabled: false` (the default) and `api.connectivity.enabled:
+Build: knk-plugin branch `claude/plugin-chains-into-next`, or `next` once it is merged (`./gradlew :knk-paper:dev`). `config.yml`: `realtime.enabled: false` (the default) and `api.connectivity.enabled:
 true` (the default). At least one siege lobby in the web app. Watch the server log and the API request log
 (`POST api/siege-matches/abort-unfinished`, `POST api/siege-matches/restore-stale-gates`,
 `GET api/SiegeLobbies/runtime-config`, `GET api/title-brackets`).

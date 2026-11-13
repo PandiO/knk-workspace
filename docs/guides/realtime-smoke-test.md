@@ -231,7 +231,7 @@ INFO shows `Realtime: reloaded gate structure …`; `/knk health` `messages` goe
     "siege startup work": the lobbies appear in `/siege` without `/siege admin reload`, title brackets show on join
     denials, gates a crash left locked are restored, and the previous run's unfinished matches are aborted (API
     `SiegeMatches` with `ServerRestart`). A second reconnect runs none of them again. With `realtime.enabled: false` the
-    same work runs when the API connectivity turns UP (#31 rest, chain 2 link R2, branch `claude/siege-startup-retry-31`:
+    same work runs when the API connectivity turns UP (#31 rest, chain 2 link R2, in the PR into `next` from `claude/plugin-chains-into-next`:
     [api-outage smoke test § #31](api-outage-smoke-test.md)); with the hub on, the UP transition and the reconnect
     share one runner, so each step still runs once.
 14. **Slower safety nets.** With the hub connected the 5 min domain access sync, the 30 s game settings re-read and the

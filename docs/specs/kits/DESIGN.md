@@ -1,7 +1,7 @@
 # Kits — Design
 
 **Status:** Draft, all open questions resolved with the developer — ready for implementation.
-**Last updated:** 2026-11-08 (§4.7: a web-app grant is handed over in game, PandiO/knk-workspace#261); 2026-10-11 (§4.4: first-join grant runs in game, KNG-81 plugin half); 2026-10-10 (§4.4: first-join grant idempotent per player, KNG-81); 2026-09-25 (§0c: removed `/kit manage`'s in-game CRUD logic entirely — it's now
+**Last updated:** 2026-11-13 (§4.7: plugin part in the PR into `next` from `claude/plugin-chains-into-next`); 2026-11-08 (§4.7: a web-app grant is handed over in game, PandiO/knk-workspace#261); 2026-10-11 (§4.4: first-join grant runs in game, KNG-81 plugin half); 2026-10-10 (§4.4: first-join grant idempotent per player, KNG-81); 2026-09-25 (§0c: removed `/kit manage`'s in-game CRUD logic entirely — it's now
 a pure pointer to the FormWizard, kept only as recognized subcommands so `/kit manage <anything>`
 redirects rather than erroring; `Kit` CRUD is FormWizard-only). Previously updated 2026-09-25
 (added §0b/§4.0/§4.5/§4.6: explicit FormWizard-primary/in-game-fallback CRUD hierarchy, and a

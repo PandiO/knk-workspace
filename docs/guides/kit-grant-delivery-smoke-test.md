@@ -1,7 +1,7 @@
 # Kit "Grant" from the web app reaches the player in game (#261) — smoke test
 
-**Status:** Ready for the developer's run; not merged, not deployed
-**Last updated:** 2026-11-08 (written with the fix)
+**Status:** Ready for the developer's run; API part on `master` since 2026-11-12, plugin part in the PR into `next` from `claude/plugin-chains-into-next` (2026-11-13); not deployed
+**Last updated:** 2026-11-13 (setup: builds from `master` and `claude/plugin-chains-into-next`); 2026-11-08 (written with the fix)
 **Issue:** [PandiO/knk-workspace#261](https://github.com/PandiO/knk-workspace/issues/261); design
 [specs/kits/DESIGN.md](../specs/kits/DESIGN.md) §4.6, §4.7
 **Chain:** [UX_CHAIN_3.md](../ai-agents/handoffs/UX_CHAIN_3.md) link P1; report
@@ -26,9 +26,8 @@ servers). `/kit give` in game is unchanged: it places the items itself and leave
 
 ## 0. Setup
 
-1. Check out `claude/kit-grant-delivery-261` in knk-web-api and knk-plugin (the web app is unchanged: use `main`).
-   The plugin branch contains chain 2's `claude/lootbox-area-rename-34` (R1–R3); the API branch contains
-   `claude/realtime-erasure-184` (R1, for its migration).
+1. API: knk-web-api `master` (the API part, migration `AddKitClaimDelivery`, merged 2026-11-12) or `next`. Plugin:
+   knk-plugin `claude/plugin-chains-into-next`, or `next` once it is merged. The web app is unchanged: use `main`.
 2. API: `dotnet ef database update` (one additive migration, `AddKitClaimDelivery`: two nullable `datetime` columns on
    `kit_claims`), then `dotnet run`.
 3. Plugin: `./gradlew :knk-paper:dev`, restart the dev server. No new config keys.
