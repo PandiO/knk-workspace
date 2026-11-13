@@ -11,6 +11,8 @@
 
 A garrison is a cylindrical tower with a cuboid-like house attached at its base, and it has a gate. It should be **one** GateStructure. Today a domain has exactly one WorldGuard region (`Domain.WgRegionId`), and one region has one shape, so this can't be modelled.
 
+**Later decision (developer, 2026-11-05, [#238](https://github.com/PandiO/knk-workspace/issues/238)):** this building becomes a **Garrison** structure that holds its own gate as a separate Gate structure inside it; the existing gate moves under the new garrison. See [BEHAVIOR_MODEL.md §16.3](../npc-platform/BEHAVIOR_MODEL.md#163-garrison-and-quarters). The sub-region model below is unchanged.
+
 Requirements as stated by the developer (2026-10-23):
 
 - **R1.** A domain can have any number of **sub-regions** besides its main region. A sub-region belongs to exactly one domain. Sub-regions are added, edited and removed through a new property of the domain.
