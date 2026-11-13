@@ -1,6 +1,6 @@
 # AI agent workflow setup chain — progress report
 
-**Status:** In review: all five links done 12:25 UTC, nothing merged (coordinator session, 2026-11-12) · **Last updated:** 2026-11-12
+**Status:** In review: all five links done 12:25 UTC, nothing merged (coordinator session, 2026-11-12) · **Last updated:** 2026-11-13 (L4b, § 4.8)
 
 **Issue:** [PandiO/knk-workspace#327](https://github.com/PandiO/knk-workspace/issues/327), links
 [#328](https://github.com/PandiO/knk-workspace/issues/328) (L1),
@@ -23,9 +23,10 @@ or into `next`.
        [knk-plugin#16](https://github.com/PandiO/knk-plugin/pull/16); add the changelog entry proposed in #334.
     3. L4 tooling: [knk-workspace#335](https://github.com/PandiO/knk-workspace/pull/335); add its changelog entry.
     4. L5 sessions archive: [knk-workspace#336](https://github.com/PandiO/knk-workspace/pull/336), **not by merging the
-       branch**: on fresh `main` run `git cherry-pick da40c73 99f0c4a`, then the script with `--dry-run`, for real and
-       with `--check`, commit and push, close #336. (Coordinator dry run on `main` `eab8b6f` + those two commits at
-       12:56 UTC: 239 entries, board 486 KB → 65 KB.)
+       branch**: on fresh `main` run `git cherry-pick da40c73 99f0c4a 99b1a77` (since L4b, § 4.8; skip the generated
+       `9f91251`), then the script with `--dry-run`, for real and with `--check`, commit and push, close #336. (L4b dry
+       run on `main` `fdc4425` + those three commits on 2026-11-13: 240 entries, board 489 KB → 66 KB. A branch merged
+       anyway: archive README, "Merging a branch that ran the script".)
     5. Then bring `next` up to the new tips: `git merge` the default branch into `next` in all four repos, so `next`
        carries CI and the skills.
 2. **Your own steps:**
@@ -33,7 +34,7 @@ or into `next`.
     2. Create the labels `tier:1`, `tier:2`, `tier:3`, `idea` and pin the "Daily digest" issue #333 (values in § 4.2;
        no tool in the cloud sessions can do either).
     3. On the PC: set `GITHUB_PAT` (optionally `CONTEXT7_API_KEY`) and approve the three servers in `/mcp` (§ 4.4).
-3. **Decisions to review:** coordinator decisions § 3.1–3.4; link decisions in § 4.1 item 5, § 4.2, § 4.3 item 5
+3. **Decisions to review:** coordinator decisions § 3.1–3.4; L4b decisions § 4.8 item 5; link decisions in § 4.1 item 5, § 4.2, § 4.3 item 5
    (5.3–5.5 decide how coordinators merge into `next`), § 4.4 item 5, § 4.5.
 
 ## 2. Summary
@@ -43,8 +44,8 @@ or into `next`.
 | L1 CI | #328 | In review (done 11:40 UTC, both workflows green) | `claude/agent-setup-ci`: knk-web-api `81b06d9`, knk-web-app `a7d31a2` | [knk-web-api#12](https://github.com/PandiO/knk-web-api/pull/12), [knk-web-app#9](https://github.com/PandiO/knk-web-app/pull/9) | create_session session_01R1w2UsfbmKqEY1QXSx25id |
 | L2 Branches, labels, digest | #329 | In review (done 11:40 UTC; labels and pin left for the developer) | `next`: knk-workspace `6245c9f`, knk-web-api `b5e57fa`, knk-web-app `9a85238`, knk-plugin `121030f`; digest issue [#333](https://github.com/PandiO/knk-workspace/issues/333) | — (no file changes) | subagent (coordinator decision § 3.2) |
 | L3 Skills and instructions | #330 | In review (done 12:05 UTC; docs only) | `claude/agent-setup-skills`: knk-workspace `d475532` (L3c, § 4.7; L3b `35c554b`, first `8321f0d`), knk-web-api `dbb05c5`, knk-web-app `7a974ac`, knk-plugin `0759d22` | [knk-workspace#334](https://github.com/PandiO/knk-workspace/pull/334), [knk-web-api#13](https://github.com/PandiO/knk-web-api/pull/13), [knk-web-app#10](https://github.com/PandiO/knk-web-app/pull/10), [knk-plugin#16](https://github.com/PandiO/knk-plugin/pull/16) | subagent (coordinator decision § 3.2) |
-| L4 Tooling | #331 | In review (done 12:15 UTC; hook tested end to end) | `claude/agent-setup-tooling`: knk-workspace `f7fad77` (L3c, § 4.7; L3b `c1afaf1`, first `9310d7f`) | [knk-workspace#335](https://github.com/PandiO/knk-workspace/pull/335) | subagent (coordinator decision § 3.3) |
-| L5 Sessions board archive | #332 | In review (done 12:25 UTC; board 486 KB → 65 KB on the branch) | `claude/agent-setup-sessions-archive`: knk-workspace `9f91251` | [knk-workspace#336](https://github.com/PandiO/knk-workspace/pull/336) | create_session session_01R1w2Ux2rKagW6rke2sDnes |
+| L4 Tooling | #331 | In review (done 12:15 UTC; hook tested end to end) | `claude/agent-setup-tooling`: knk-workspace `5787c0e` (L4b, § 4.8; L3c `f7fad77`, L3b `c1afaf1`, first `9310d7f`) | [knk-workspace#335](https://github.com/PandiO/knk-workspace/pull/335) | subagent (coordinator decision § 3.3) |
+| L5 Sessions board archive | #332 | In review (done 12:25 UTC; board 486 KB → 65 KB on the branch) | `claude/agent-setup-sessions-archive`: knk-workspace `99b1a77` (L4b, § 4.8; generated move `9f91251`) | [knk-workspace#336](https://github.com/PandiO/knk-workspace/pull/336) | create_session session_01R1w2Ux2rKagW6rke2sDnes |
 
 ## 3. Coordinator decisions
 
@@ -613,3 +614,131 @@ decisions 5.3 and 5.1 (a) (§ 4.6 item 8.3).
 7. **Blockers.** None.
 8. **Merge notes / what the developer must do.** Merge order unchanged (§ 1 item 1). Decisions 5.3 and 5.1 (a) of
    § 4.6 are now the developer's; review this block's decisions 5.1–5.7.
+
+### 4.8 L4b — trial findings fixed (#331, #332)
+
+Follow-up run as a subagent of the coordinator (2026-11-13), on the open branches #335 and #336 only; no component
+repo branch, no merge, no force-push. Fixes the findings of the trial session of 2026-11-13 on
+`claude/agent-setup-trial` (comments of 07:03 on [#331](https://github.com/PandiO/knk-workspace/issues/331) and
+[#332](https://github.com/PandiO/knk-workspace/issues/332)).
+
+1. **Scope done.**
+    1. Finding #331.1, wrong or missing clone (`.claude/hooks/fast-check.sh`): `KNK_FAST_CHECK_REPOS` (`:`-separated,
+       or `;` on Windows) checks exactly the listed clones. Otherwise the hook finds clones by their `origin` URL
+       (`.../PandiO/<name>[.git]`, any case) under `Repository/`, next to the workspace, and up to three folders deep
+       under the workspace's parent and `$HOME` (skips `node_modules`, `.gradle`, `bin`, `obj`, `build`, `AppData`,
+       `Library`, hidden folders; `find` capped at 3 s; deduped by real path). Of several clones of one repo it checks
+       only the most recently active one: newest of `index`, `logs/HEAD` and up to 200 changed files, read with
+       `GIT_OPTIONAL_LOCKS=0` so looking does not touch an index. The output names the checked and ignored paths
+       whenever there is output, and once each time the pick changes (last pick in the workspace's git dir,
+       `knk-fast-check-pick`).
+    2. Finding #331.2, JDK 25: before the plugin check the hook reads the toolchain version from the build files (25),
+       looks for that JDK by its `release` file and `bin/javac` in `KNK_JDK25_HOME`, `JAVA_HOME`, `/usr/lib/jvm`,
+       `/usr/lib64/jvm`, `/opt/jdk-25*`, `/opt/*jdk*25*`, `/opt/java`, `~/.gradle/jdks` (or `$GRADLE_USER_HOME`),
+       SDKMAN, `~/.jdks`, macOS `/Library/Java/JavaVirtualMachines` and Windows `C:/Program Files/{Java,Eclipse
+       Adoptium,Microsoft}` (each also one folder deeper), and passes the first as
+       `-Porg.gradle.java.installations.paths=<dir>`. It never edits a `gradle.properties` and leaves an existing
+       `org.gradle.java.installations.paths` alone. A toolchain skip now names what is missing and the fix (install
+       command or `KNK_JDK25_HOME`).
+    3. Finding #331.3, cached skips: only passes are stored; skips and timeouts are tried again at the next stop. The
+       JDK folder is part of the command and so of the fingerprint.
+    4. Guide `docs/guides/developer/agent-tooling.md`: § 3.1 (discovery summary, caching rule), § 3.6 (which clones,
+       `KNK_FAST_CHECK_REPOS`, why one clone), § 3.7 (JDK detection, `KNK_JDK25_HOME`, ways to fix a skip, a suggested
+       setup-script line for the cloud environment, left to the developer). PR #335 body updated.
+    5. Finding #332, duplicate guard (`scripts/sessions-archive/archive_sessions.py`): before the line check, the script
+       looks for each entry it would move, verbatim (all its lines as one block at line boundaries), in every archive
+       file of the folder; if found it aborts with exit 2, writes nothing, lists the entries and points to the README;
+       `--check` reports them too. 4 new tests.
+    6. Finding #332, merge procedure: archive README section "Merging a branch that ran the script" (cherry-pick route
+       preferred; the trial's `git apply --3way` route for a branch merged anyway, and that the guard stops the wrong
+       way); rule 6 for the guard. PR #336 Summary, Testing and Admin steps updated with the new cherry-pick list.
+2. **Commits and heads.** `claude/agent-setup-tooling` `f7fad77` → `5787c0e`; `claude/agent-setup-sessions-archive`
+   `9f91251` → `99b1a77`. One commit each, model-free trailer. **Cherry-pick list for #336 is now
+   `da40c73 99f0c4a 99b1a77`** ("Sessions board archive script, tests and index", "Sessions archive: keep file modes
+   on rewrite, word the undated rule", "Sessions archive: refuse entries already archived, document merging"); skip
+   `9f91251` ("Move finished sessions board entries to the monthly archive").
+3. **PRs.** [#335](https://github.com/PandiO/knk-workspace/pull/335) and
+   [#336](https://github.com/PandiO/knk-workspace/pull/336) bodies updated; comments on #331 and #332. Not merged.
+4. **Tests.** Cloud container, Node 22, JDK 21 (Gradle) and JDK 25, worktrees in the scratchpad (deliberate errors
+   never committed; worktrees removed afterwards).
+    1. Hook scenario: a workspace worktree of #335, a stale knk-plugin worktree next to it (untracked Java error,
+       mtimes two days old), an active knk-plugin worktree at `<fake HOME>/pandio/knk-plugin` (fresh valid change), a
+       knk-web-app worktree with `npm ci`; `HOME=<fake HOME>` (and `GRADLE_USER_HOME=/root/.gradle`) for every run.
+        1. Discovery: `knk-plugin compile passed (44s); clones: knk-plugin: checked .../h1/pandio/knk-plugin (most
+           recently active), ignored .../t1/knk-plugin`, exit 0. Same state: silent, 0.59 s.
+        2. `KNK_FAST_CHECK_REPOS=<stale>:<missing>:<workspace>`: exit 2 on the stale clone's `HookStale.java:2: error:
+           incompatible types`; the other two entries named as ignored.
+        3. JDK 25 moved from `/usr/lib/jvm` to `/opt/jdk-25`: plain `./gradlew compileJava` failed with `Cannot find a
+           Java installation ... languageVersion=25` (the trial's case); the hook passed
+           `-Porg.gradle.java.installations.paths=/opt/jdk-25` and blocked on a deliberate Java error (7 s).
+        4. JDK hidden: `knk-plugin skipped (Gradle needs a Java 25 toolchain and the hook found none in KNK_JDK25_HOME,
+           JAVA_HOME, /usr/lib/jvm, /opt, ~/.gradle/jdks, ~/.sdkman or ~/.jdks; install one (Debian/Ubuntu: apt-get
+           install -y openjdk-25-jdk-headless) or set KNK_JDK25_HOME to its folder. Gradle said: ...)`, exit 0, 1.4 s,
+           no state file. No code change, `KNK_JDK25_HOME=<hidden dir>`: the check ran (exit 2 on the Java error). No
+           code change, variable unset, JDK moved back to `/opt/jdk-25`: the check ran (exit 2, 3.6 s).
+        5. Error removed: `knk-plugin compile passed (4s)`; same state: silent, 0.52 s.
+        6. Regression: web-app type error exit 2 with `src/utils/claimCode.ts(132,14): error TS2322` (29 s); a valid
+           web-app change passed (28 s), then silent (0.48 s); `stop_hook_active: true` exit 0 in 0.009 s;
+           `KNK_FAST_CHECK=off` exit 0 in 0.004 s.
+        7. Touching the stale clone's file made it the checked clone (exit 2 on its error), with the other named as
+           ignored.
+        8. Detection functions alone: a JDK one folder down in `~/.gradle/jdks/<vendor>/` was found; a JDK 21 in
+           `JAVA_HOME` and `KNK_JDK25_HOME` was never taken for 25; with `org.gradle.java.installations.paths` in a
+           `gradle.properties` no flag was passed and the hint names that file.
+        9. Cost: clone selection about 250 ms with three clones (`find` 5 ms, `git status` 8-80 ms per clone); a stop
+           with nothing new about 0.5 s. The total budget is unchanged (300 s per check, 540 s overall, 600 s hook).
+           The system JDK was moved back to `/usr/lib/jvm` afterwards.
+    2. Archive script: 15/15 unit tests OK (11 earlier unchanged, 4 new: whole archive already holds the board's
+       entries, `--dry-run` and run abort, `--check` names 8 duplicates; one old entry next to a new one; copy in
+       another month's file; same heading with another body and a prefix-only row are not duplicates). On the branch
+       with `main`'s board: `error: 239 entries are already in the archive verbatim`, `--check`: `240 entries waiting
+       ... 239 of them already in the archive verbatim`.
+    3. Cherry-pick route on `origin/main` `fdc4425`: `git cherry-pick da40c73 99f0c4a 99b1a77` clean (no conflict);
+       `--dry-run` board 488,989 bytes / 496 lines → 66,279 bytes / 84 lines, 240 entries (2026-09: 80, 2026-10: 130,
+       2026-11: 30); run done; `--check` 0 waiting; second run "nothing to archive"; tests 15 OK.
+    4. Merged-branch route: `git merge` of #336 into `origin/main` conflicts on the board; `main`'s board plus the
+       script stops on the guard (239 duplicates); the README route (`git checkout --theirs`, `git apply --3way` of
+       `main`'s board diff since the merge base, one conflict hunk resolved to `main`'s new entry) moved exactly 1
+       entry, `--check` 0, and gave a board byte for byte identical to the cherry-pick route's, with the same entries in
+       all three archive files.
+    5. Checks: `bash -n` on both hooks; `.claude/settings.json` valid JSON; links in the guide and the archive README
+       resolve (0 broken); `git diff --check` clean on both branches. `git merge-tree`: no conflict between
+       `origin/main`, #334, #335 and #336 except the known board conflict of #336's generated `9f91251` with `main`;
+       `main` + #334 + #335 + the three-commit cherry-pick applies cleanly.
+5. **Decisions (DESIGN § 4.3).**
+    1. *One clone per repo, the most recently active.* Chosen: newest `index`, `logs/HEAD` or changed file, ignored
+       paths named, `KNK_FAST_CHECK_REPOS` to override. Alternatives: (a) check every clone, which blocks on errors in
+       stale clones the session never touched and multiplies the time (25-100 s per check); (b) the clones registered
+       with `register_repo_root`, which the Stop input does not list and which do not exist on the developer PC; (c)
+       the clone with changes against its base, which a stale clone on a feature branch also has (the trial's case).
+    2. *Search roots.* Chosen: `Repository/`, siblings, then three levels under the workspace's parent and `$HOME`.
+       The parent is searched because a cloud session's `$HOME` is `/root` while the clones live in `/home/user`.
+       Alternative: `$HOME` only, which would have missed `/home/user/pandio/knk-plugin` in this container.
+    3. *Pick note when nothing else is said.* Chosen: once per pick change, so a wrong pick shows even on a silent stop
+       without repeating at every stop. Alternatives: (a) only with other output, which can hide a wrong pick; (b) at
+       every stop, noise in every session with two clones.
+    4. *JDK on the command line only.* Chosen: `-Porg.gradle.java.installations.paths=<dir>` per run, an existing
+       setting left alone. Alternatives: (a) write it into `~/.gradle/gradle.properties` (the trial's manual fix),
+       which changes the user's machine; (b) append to an existing setting, which needs parsing of escaped values.
+    5. *Toolchain identity in the cache.* Chosen: implicit, the JDK folder is in the command and the command is in the
+       fingerprint. Alternative: add `java -version` output, a JVM start at every stop.
+    6. *Run Gradle when the hook finds no JDK.* Chosen: yes, Gradle may know places the hook does not (Windows
+       registry, asdf); the skip then carries Gradle's error and the hook's fix. Alternative: skip at once, about 1.5 s
+       faster per stop while the plugin has changes, but it could skip where Gradle would succeed.
+    7. *Duplicate test.* Chosen: all lines of the entry as one block at line boundaries, in any archive file; abort the
+       whole run. Alternatives: (a) first line only, which would stop a new entry that repeats an old heading; (b)
+       parsed-entry comparison, which misses a copy in a hand-edited file; (c) drop duplicates and archive the rest,
+       which hides a board taken from the wrong commit.
+6. **Out of scope, noted.**
+    1. Included without a separate finding: the hook's error excerpt also drops `npm notice` lines (one `grep -v`),
+       which showed up between the tsc error lines in the test runs.
+    2. Gradle scans `/usr/lib/jvm` on its own, so the trial's JDK 25 was probably installed somewhere else (for example
+       under `/opt` or `~/.local`); the hook now finds `/opt/jdk-25*` and `/opt/*jdk*25*`, and `KNK_JDK25_HOME` covers
+       any other place.
+7. **Blockers.** None.
+8. **Merge notes / what the developer must do.**
+    1. Merge order unchanged (§ 1 item 1); #336 by cherry-pick of `da40c73 99f0c4a 99b1a77` (§ 1 item 1.4).
+    2. Optional: a JDK 25 in the cloud environment's setup script (guide § 3.7:
+       `ls -d /usr/lib/jvm/*25* >/dev/null 2>&1 || { apt-get update -qq && apt-get install -y -qq openjdk-25-jdk-headless; }`),
+       or `KNK_JDK25_HOME` in its variables. No environment was changed.
+    3. Review decisions 5.1–5.7.
