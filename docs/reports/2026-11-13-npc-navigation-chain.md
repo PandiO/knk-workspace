@@ -19,7 +19,7 @@
 
 | Link | Issue | Status | Branch heads | PR | CI | How started |
 |---|---|---|---|---|---|---|
-| L1 Phase 2: one NPC walks a K&K route | #360 | In review (finished 2026-11-13; live test by the developer open) | `claude/npc-navigation`: knk-plugin `49b5cedb`, knk-workspace `764d64d` | [knk-plugin#17](https://github.com/PandiO/knk-plugin/pull/17), [knk-workspace#370](https://github.com/PandiO/knk-workspace/pull/370) | knk-plugin `build` green on `49b5cedb` (run 43398822498); knk-workspace has no CI | create_session session_01R1w2Uv2Ze28fr2rkqUz98C (`source_revision` `next`) |
+| L1 Phase 2: one NPC walks a K&K route | #360 | In review (finished 2026-11-13; live test by the developer open) | `claude/npc-navigation`: knk-plugin `49b5cedb`, knk-workspace `5c8587b` | [knk-plugin#17](https://github.com/PandiO/knk-plugin/pull/17), [knk-workspace#370](https://github.com/PandiO/knk-workspace/pull/370) | knk-plugin `build` green on `49b5cedb` (run 43398822498); knk-workspace has no CI | create_session session_01R1w2Uv2Ze28fr2rkqUz98C (`source_revision` `next`) |
 | L0 Phase 1 follow-ups | #359 | Not started (gate: developer's Phase 1 result on #359 and L1 merged into `next`) | `claude/npc-navigation`: knk-plugin `8b36a942` | none | none | |
 | L2 Phase 3: rules stay binding | #361 | Not started (gate: L1 merged into `next`, L0 merged or skipped) | | none | none | |
 
@@ -102,10 +102,12 @@ _(Each link appends its block here when it finishes.)_
        shipped `config.yml` and no Bukkit server; any task, listener, Citizens call or world query would fail it.
 2. **Commits and heads.** knk-plugin `claude/npc-navigation` at `49b5cedb` (Phase 1 `83d2bba8`, `8b36a942`; merge
    of `next` `432645f5`; Phase 2 `d216281c`, `f32f7ed1`, `49b5cedb`; base `next` at `e8b651d1`). knk-workspace
-   `claude/npc-navigation` at `764d64d` (merge of `next` `2dd2183`, docs `764d64d`; base `next` at `17748b8`).
+   `claude/npc-navigation` at `5c8587b` (merge of `next` `2dd2183`, docs `764d64d`, second merge of `next`
+   `5c8587b` after the coordinator put the design documents into `next`; base `next` at `01bfb26`; the diff
+   against `next` is 6 files).
 3. **PRs.** [knk-plugin#17](https://github.com/PandiO/knk-plugin/pull/17) (`Closes #360`, `Part of #359`; shows
    Phases 1 and 2 together) and [knk-workspace#370](https://github.com/PandiO/knk-workspace/pull/370) (`Part of
-   #360`; also carries the NPC design documents of #234 and #241), base `next`. Not merged.
+   #360`; the earlier design documents reached `next` through #372 and #373), base `next`. Not merged.
 4. **Tests, baseline → result.**
     1. knk-plugin (`./gradlew build -x deployToDevServer`, Gradle on JDK 21, JDK 25 toolchain): baseline at
        `432645f5` core 2507, api-client 324 (2 skipped), paper 2535 (18 skipped), 0 failures; result at `49b5cedb`
