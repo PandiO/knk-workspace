@@ -141,7 +141,7 @@ Claude Code and Codex alike, regardless of where repos are cloned.
 ## Branches, releases and risk tiers
 
 Developer decision 2026-11-12, [AI agent workflow design](../specs/ai-agent-workflow/DESIGN.md) § 2 and § 5; the
-start condition and the coordinator merge were confirmed by the developer the same day (setup chain, PandiO/knk-workspace#327); rules 3 and 4 were changed or added on 2026-11-13 (merging outside a chain, Codex findings).
+start condition and the coordinator merge were confirmed by the developer the same day (setup chain, PandiO/knk-workspace#327); rules 3, 4 and 10 were changed or added on 2026-11-13 (merging outside a chain, Codex findings, agent workflow files to `main`).
 **These rules apply as soon as CI runs on the API and web-app default branches** (PandiO/knk-workspace#328:
 `.github/workflows/ci.yml` on knk-web-api `master` and knk-web-app `main`). Until then the current rules hold: feature
 branches start from the default branch, pull requests target it, and only the developer merges.
@@ -182,6 +182,14 @@ branches start from the default branch, pull requests target it, and only the de
    stated in the chain charter.
 9. Chain bookkeeping (progress reports, charters, `docs/ACTIVE_SESSIONS.md` and its archive files) stays on
    knk-workspace `main`, as before.
+10. **Agent workflow files go straight to knk-workspace `main`** (developer decision 2026-11-13), because every new
+    session starts from `main` and a rule that waits in `next` would not reach agents until the next promotion. These
+    are `.claude/` (skills, hooks, settings), `.mcp.json`, `docs/ai-agents/`, `AGENTS.md` and `CLAUDE.md` in
+    knk-workspace, and `AGENTS.md`/`CLAUDE.md` in the component repos. A change to them goes on its own branch from the
+    repo's default branch with a pull request into that default branch; the session that opened it merges it with a
+    merge commit once rule 3's checks hold (CI where it exists, Codex findings handled), then merges the default branch
+    into `next` through a pull request, so `next` carries the same rules. Game code, feature docs and guides still go
+    through `next`. A pull request that mixes both is split.
 
 ## Session chains (multi-link work)
 
