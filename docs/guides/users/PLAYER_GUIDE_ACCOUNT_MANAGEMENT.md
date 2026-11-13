@@ -414,14 +414,15 @@ What is deleted: your statistics, privacy settings, discoveries, private-message
 username, email and Minecraft link. Your coin, gem and XP history and Siege match results are kept, without your name.
 This can't be undone. Staff can also file the request for you; it then runs the same way, five days later.
 
-**On the game server**, when the deletion runs:
+**On the game server**, when the deletion runs. This part only happens on a game server that keeps a live connection
+to the website (the server setting `realtime.enabled: true`); without it the game server does none of the steps below:
 
 - If you are online, you are disconnected with the message `Your account data has been deleted.` If you were in a
   siege, your own inventory, stats and position are given back to you first.
 - The game server then deletes what it keeps about you locally: your saved login data, cached ranks and permissions,
   ignore lists (yours, and you on other players' lists), statistics and discoveries not yet sent, private messages you
   sent or received in its logs, a saved siege inventory and a saved return point.
-- If the server was offline or not connected to the website at that moment, it catches up the next time it connects.
+- If such a server was offline or its connection was down at that moment, it catches up the next time it connects.
 
 If you join again later, you start with a new account, as a new player (see Getting an account).
 (PandiO/knk-workspace#184; the game-server part is in the next release, not live yet.)

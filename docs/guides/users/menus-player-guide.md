@@ -72,7 +72,8 @@ anything to receive it, and it doesn't cost you anything:
   siege ends. The kit arrives right after the siege has given your own inventory back.
 
 The items go into your inventory the same way as a claimed kit; if something doesn't fit, you also see `Some of it
-didn't fit and was dropped at your feet.` A kit is handed over once, never twice. A kit staff give you starts that
+didn't fit and was dropped at your feet.` A kit is never handed over twice. In the rare case that the server stops,
+or you log out, at the very moment it is being handed over, it can be lost; then ask staff to give it again. A kit staff give you starts that
 kit's waiting time for your own claim, as if you had claimed it. (Since PandiO/knk-workspace#261; part of the next
 release, not live yet. Kits given from the web app before that release don't arrive by themselves: ask staff to give
 them again.)
