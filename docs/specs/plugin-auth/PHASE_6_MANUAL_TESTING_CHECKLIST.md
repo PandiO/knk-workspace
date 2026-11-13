@@ -1,8 +1,8 @@
 # Manual Testing Checklist - Plugin Auth (Phase 6)
 
-**Status:** Historical (2026-01-30 checklist; the account commands and flows changed since, the current player guide is [docs/guides/users](../../guides/users/)) · **Last updated:** 2026-11-13 (moved into knk-workspace, PandiO/knk-workspace#304)
-
-_Moved from `knk-plugin/docs/ai/plugin-auth/PHASE_6_MANUAL_TESTING_CHECKLIST.md` at `b8aa582f7a` ([source](https://github.com/PandiO/knk-plugin/blob/b8aa582f7a/docs/ai/plugin-auth/PHASE_6_MANUAL_TESTING_CHECKLIST.md)). The text below is unchanged apart from links; it was not rewritten._
+**Status:** Stale · **Last updated:** 2026-11-13 (moved into knk-workspace, PandiO/knk-workspace#304)
+**Moved from:** `knk-plugin/docs/ai/plugin-auth/PHASE_6_MANUAL_TESTING_CHECKLIST.md` at `b8aa582f7a` ([source](https://github.com/PandiO/knk-plugin/blob/b8aa582f7a/docs/ai/plugin-auth/PHASE_6_MANUAL_TESTING_CHECKLIST.md)); the text below is unchanged apart from links.
+**Note:** 2026-01-30 checklist; the account commands and flows changed since, the current player guide is [docs/guides/users](../../guides/users/).
 
 
 **Feature**: User Account Management  

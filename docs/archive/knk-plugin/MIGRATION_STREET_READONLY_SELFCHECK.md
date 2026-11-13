@@ -1,8 +1,8 @@
 # Street Entity Migration - READ-ONLY Self-Check
 
-**Status:** Historical (self-check under the superseded [read-only migration rule](MIGRATION_MODE_READONLY.md)) · **Last updated:** 2026-11-13 (moved into knk-workspace, PandiO/knk-workspace#304)
-
-_Moved from `knk-plugin/MIGRATION_STREET_READONLY_SELFCHECK.md` at `b8aa582f7a` ([source](https://github.com/PandiO/knk-plugin/blob/b8aa582f7a/MIGRATION_STREET_READONLY_SELFCHECK.md)). The text below is unchanged apart from links; it was not rewritten._
+**Status:** Stale · **Last updated:** 2026-11-13 (moved into knk-workspace, PandiO/knk-workspace#304)
+**Moved from:** `knk-plugin/MIGRATION_STREET_READONLY_SELFCHECK.md` at `b8aa582f7a` ([source](https://github.com/PandiO/knk-plugin/blob/b8aa582f7a/MIGRATION_STREET_READONLY_SELFCHECK.md)); the text below is unchanged apart from links.
+**Note:** Self-check under the superseded [read-only migration rule](MIGRATION_MODE_READONLY.md).
 
 
 **Date**: ${new Date().toISOString().split('T')[0]}  

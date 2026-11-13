@@ -1,8 +1,8 @@
 # MIGRATION READ-ONLY AUDIT – Towns & Locations
 
-**Status:** Historical (2025-12 audit under the superseded read-only migration rule; code links point at the commit the file was moved from) · **Last updated:** 2026-11-13 (moved into knk-workspace, PandiO/knk-workspace#304)
-
-_Moved from `knk-plugin/docs/MIGRATION_READONLY_AUDIT_TOWN_LOCATION.md` at `b8aa582f7a` ([source](https://github.com/PandiO/knk-plugin/blob/b8aa582f7a/docs/MIGRATION_READONLY_AUDIT_TOWN_LOCATION.md)). The text below is unchanged apart from links; it was not rewritten._
+**Status:** Stale · **Last updated:** 2026-11-13 (moved into knk-workspace, PandiO/knk-workspace#304)
+**Moved from:** `knk-plugin/docs/MIGRATION_READONLY_AUDIT_TOWN_LOCATION.md` at `b8aa582f7a` ([source](https://github.com/PandiO/knk-plugin/blob/b8aa582f7a/docs/MIGRATION_READONLY_AUDIT_TOWN_LOCATION.md)); the text below is unchanged apart from links.
+**Note:** 2025-12 audit under the superseded read-only migration rule; code links point at the commit the file was moved from.
 
 
 Scope: confirm Town and Location flows remain read-only (no create/update/delete, no world-binding). Items are classified as KEEP (read), REMOVE (write/hybrid), or TBD (unclear).

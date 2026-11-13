@@ -1,10 +1,7 @@
----
-status: stale
-last_updated: 2020-03-25
-related_repo: knk-v1-archive
----
-
 # Legacy schema sketch (pre-Hibernate, 2020)
+
+**Status:** Stale · **Last updated:** 2026-11-13 (front matter converted to the header standard, PandiO/knk-workspace#305; the sketch dates from 2020-03-25)
+**Related:** `knk-v1-archive`
 
 > `K&K_Database` — a hand-written pre-Hibernate schema sketch from the v1→v2 transition period. Notable for schema-archaeology value: the current gate-structure work (see `docs/specs/gate-structure-animation/`) traces back to a `Gate` table this old.
 

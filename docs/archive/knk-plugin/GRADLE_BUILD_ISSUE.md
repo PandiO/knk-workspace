@@ -1,8 +1,8 @@
 # Gradle Build Issue - getUserAccountApi() Not Compiling
 
-**Status:** Historical (2026-01 Gradle compile-cache problem during plugin-auth Phase 1) · **Last updated:** 2026-11-13 (moved into knk-workspace, PandiO/knk-workspace#304)
-
-_Moved from `knk-plugin/GRADLE_BUILD_ISSUE.md` at `b8aa582f7a` ([source](https://github.com/PandiO/knk-plugin/blob/b8aa582f7a/GRADLE_BUILD_ISSUE.md)). The text below is unchanged apart from links; it was not rewritten._
+**Status:** Stale · **Last updated:** 2026-11-13 (moved into knk-workspace, PandiO/knk-workspace#304)
+**Moved from:** `knk-plugin/GRADLE_BUILD_ISSUE.md` at `b8aa582f7a` ([source](https://github.com/PandiO/knk-plugin/blob/b8aa582f7a/GRADLE_BUILD_ISSUE.md)); the text below is unchanged apart from links.
+**Note:** 2026-01 Gradle compile-cache problem during plugin-auth Phase 1.
 
 
 ## Problem

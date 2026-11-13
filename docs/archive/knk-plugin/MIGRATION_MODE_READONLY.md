@@ -1,8 +1,8 @@
 # Migration Mode: READ-ONLY (Default)
 
-**Status:** Superseded (the 2025-12 read-only migration rule; the plugin has since gained create/update flows, world tasks and WorldGuard region writes. knk-plugin `.github/copilot-instructions.md` still points here; whether that rule stays is [PandiO/knk-workspace#442](https://github.com/PandiO/knk-workspace/issues/442)) · **Last updated:** 2026-11-13 (moved into knk-workspace, PandiO/knk-workspace#304)
-
-_Moved from `knk-plugin/docs/MIGRATION_MODE_READONLY.md` at `b8aa582f7a` ([source](https://github.com/PandiO/knk-plugin/blob/b8aa582f7a/docs/MIGRATION_MODE_READONLY.md)). The text below is unchanged apart from links; it was not rewritten._
+**Status:** Superseded · **Last updated:** 2026-11-13 (moved into knk-workspace, PandiO/knk-workspace#304)
+**Moved from:** `knk-plugin/docs/MIGRATION_MODE_READONLY.md` at `b8aa582f7a` ([source](https://github.com/PandiO/knk-plugin/blob/b8aa582f7a/docs/MIGRATION_MODE_READONLY.md)); the text below is unchanged apart from links.
+**Note:** The 2025-12 read-only migration rule; the plugin has since gained create/update flows, world tasks and WorldGuard region writes. knk-plugin `.github/copilot-instructions.md` still points here; whether that rule stays is [PandiO/knk-workspace#442](https://github.com/PandiO/knk-workspace/issues/442).
 
 
 ## Scope

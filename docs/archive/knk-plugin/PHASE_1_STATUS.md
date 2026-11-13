@@ -1,8 +1,8 @@
 # Phase 1 - User Account Management API Client - FINAL STATUS REPORT
 
-**Status:** Historical (plugin-auth Phase 1 status, 2026-01-29) · **Last updated:** 2026-11-13 (moved into knk-workspace, PandiO/knk-workspace#304)
-
-_Moved from `knk-plugin/PHASE_1_STATUS.md` at `b8aa582f7a` ([source](https://github.com/PandiO/knk-plugin/blob/b8aa582f7a/PHASE_1_STATUS.md)). The text below is unchanged apart from links; it was not rewritten._
+**Status:** Stale · **Last updated:** 2026-11-13 (moved into knk-workspace, PandiO/knk-workspace#304)
+**Moved from:** `knk-plugin/PHASE_1_STATUS.md` at `b8aa582f7a` ([source](https://github.com/PandiO/knk-plugin/blob/b8aa582f7a/PHASE_1_STATUS.md)); the text below is unchanged apart from links.
+**Note:** Plugin-auth Phase 1 status, 2026-01-29.
 
 
 ## 🎉 PHASE 1 COMPLETE

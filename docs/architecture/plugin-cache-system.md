@@ -1,8 +1,8 @@
 # Cache System Implementation
 
-**Status:** Partly stale (written for the first Town/District/Structure caches; the plugin now also has `UserCache`, `StreetCache`, per-entity `cache.entities.*` settings and the `dataaccess/` fetch policies. The current overview is [plugin architecture](plugin-architecture.md) § data access; `/knk cache` now also takes `refresh` and `reload`) · **Last updated:** 2026-11-13 (moved into knk-workspace, PandiO/knk-workspace#304)
-
-_Moved from `knk-plugin/docs/CACHE_SYSTEM.md` at `b8aa582f7a` ([source](https://github.com/PandiO/knk-plugin/blob/b8aa582f7a/docs/CACHE_SYSTEM.md)). The text below is unchanged apart from links; it was not rewritten._
+**Status:** Stale · **Last updated:** 2026-11-13 (moved into knk-workspace, PandiO/knk-workspace#304)
+**Moved from:** `knk-plugin/docs/CACHE_SYSTEM.md` at `b8aa582f7a` ([source](https://github.com/PandiO/knk-plugin/blob/b8aa582f7a/docs/CACHE_SYSTEM.md)); the text below is unchanged apart from links.
+**Note:** Written for the first Town/District/Structure caches; the plugin now also has `UserCache`, `StreetCache`, per-entity `cache.entities.*` settings and the `dataaccess/` fetch policies. The current overview is [plugin architecture § Data access / caching](plugin-architecture.md#data-access--caching-dataaccessfactory); `/knk cache` now also takes `refresh` and `reload`.
 
 
 ## Overview

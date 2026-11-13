@@ -9,7 +9,7 @@
 # The defaults file is a MySQL option file, so the password stays out of the
 # command line and shell history:
 #   [client]
-#   host=192.168.50.119
+#   host=<nas-ip>
 #   user=knk_seed_reader
 #   password=...
 #

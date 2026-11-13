@@ -1,8 +1,8 @@
 # API Error Fixes - Region Enter/Exit System
 
-**Status:** Historical (fix report for the region enter/exit lookups while the API is down; the current outage behaviour is in [offline security cache](../../architecture/offline-security-cache.md) and [API connectivity](../../architecture/api-connectivity.md)) · **Last updated:** 2026-11-13 (moved into knk-workspace, PandiO/knk-workspace#304)
-
-_Moved from `knk-plugin/docs/API_ERROR_FIXES.md` at `b8aa582f7a` ([source](https://github.com/PandiO/knk-plugin/blob/b8aa582f7a/docs/API_ERROR_FIXES.md)). The text below is unchanged apart from links; it was not rewritten._
+**Status:** Stale · **Last updated:** 2026-11-13 (moved into knk-workspace, PandiO/knk-workspace#304)
+**Moved from:** `knk-plugin/docs/API_ERROR_FIXES.md` at `b8aa582f7a` ([source](https://github.com/PandiO/knk-plugin/blob/b8aa582f7a/docs/API_ERROR_FIXES.md)); the text below is unchanged apart from links.
+**Note:** Fix report for the region enter/exit lookups while the API is down; the current outage behaviour is in [offline security cache](../../architecture/offline-security-cache.md) and [API connectivity](../../architecture/api-connectivity.md).
 
 
 ## Problem

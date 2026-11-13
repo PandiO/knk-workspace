@@ -1,8 +1,8 @@
 # API Client Pattern (knk-plugin)
 
-**Status:** Active (the module split and threading rules still hold; the Health examples date from 2025-12 and the implementations now extend `BaseApiImpl`; config keys: see the [plugin configuration reference](../guides/admin/plugin-configuration.md)) · **Last updated:** 2026-11-13 (moved into knk-workspace, PandiO/knk-workspace#304)
-
-_Moved from `knk-plugin/docs/API_CLIENT_PATTERN.md` at `b8aa582f7a` ([source](https://github.com/PandiO/knk-plugin/blob/b8aa582f7a/docs/API_CLIENT_PATTERN.md)). The text below is unchanged apart from links; it was not rewritten._
+**Status:** Current · **Last updated:** 2026-11-13 (moved into knk-workspace, PandiO/knk-workspace#304)
+**Moved from:** `knk-plugin/docs/API_CLIENT_PATTERN.md` at `b8aa582f7a` ([source](https://github.com/PandiO/knk-plugin/blob/b8aa582f7a/docs/API_CLIENT_PATTERN.md)); the text below is unchanged apart from links.
+**Note:** The module split and threading rules still hold; the Health examples date from 2025-12 and the implementations now extend `BaseApiImpl`; config keys: see the [plugin configuration reference](../guides/admin/plugin-configuration.md).
 
 
 Guideline for adding a new HTTP endpoint across modules.

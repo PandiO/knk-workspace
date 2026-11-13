@@ -1,8 +1,8 @@
 # Running Tests for Registration Flow
 
-**Status:** Superseded by [web app testing](../../guides/developer/web-app-testing.md) and the knk-web-app README · **Last updated:** 2026-11-13 (moved into knk-workspace, PandiO/knk-workspace#304)
-
-_Moved from `knk-web-app/TEST_README.md` at `ff9db4ba32` ([source](https://github.com/PandiO/knk-web-app/blob/ff9db4ba32/TEST_README.md)). The text below is unchanged apart from links; it was not rewritten._
+**Status:** Superseded · **Last updated:** 2026-11-13 (moved into knk-workspace, PandiO/knk-workspace#304)
+**Moved from:** `knk-web-app/TEST_README.md` at `ff9db4ba32` ([source](https://github.com/PandiO/knk-web-app/blob/ff9db4ba32/TEST_README.md)); the text below is unchanged apart from links.
+**Note:** Superseded by [web app testing](../../guides/developer/web-app-testing.md) and the knk-web-app README.
 
 
 ## Quick Start

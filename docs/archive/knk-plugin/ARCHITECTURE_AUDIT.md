@@ -1,8 +1,8 @@
 # Architecture Audit: Health Vertical Slice
 
-**Status:** Historical (2025-12-14 audit of the Health vertical slice) · **Last updated:** 2026-11-13 (moved into knk-workspace, PandiO/knk-workspace#304)
-
-_Moved from `knk-plugin/ARCHITECTURE_AUDIT.md` at `b8aa582f7a` ([source](https://github.com/PandiO/knk-plugin/blob/b8aa582f7a/ARCHITECTURE_AUDIT.md)). The text below is unchanged apart from links; it was not rewritten._
+**Status:** Stale · **Last updated:** 2026-11-13 (moved into knk-workspace, PandiO/knk-workspace#304)
+**Moved from:** `knk-plugin/ARCHITECTURE_AUDIT.md` at `b8aa582f7a` ([source](https://github.com/PandiO/knk-plugin/blob/b8aa582f7a/ARCHITECTURE_AUDIT.md)); the text below is unchanged apart from links.
+**Note:** 2025-12-14 audit of the Health vertical slice.
 
 
 **Date**: 2025-12-14  

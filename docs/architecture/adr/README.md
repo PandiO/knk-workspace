@@ -1,6 +1,6 @@
 # Architecture decision records
 
-**Status:** Active · **Last updated:** 2026-11-13 (created from knk-plugin `docs/adr/README.md` at `b8aa582f7a`, PandiO/knk-workspace#304)
+**Status:** Current · **Last updated:** 2026-11-13 (created from knk-plugin `docs/adr/README.md` at `b8aa582f7a`, PandiO/knk-workspace#304)
 
 Architecture decision records (ADRs) for all Knights and Kings components. Most decisions are recorded in the feature
 specs (`docs/specs/<feature>/DESIGN.md`) and in the issues; an ADR is for a decision that cuts across features.

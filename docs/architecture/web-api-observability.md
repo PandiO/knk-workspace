@@ -1,8 +1,7 @@
 # Web API observability and client registry
 
-**Status:** Active · **Last updated:** 2026-11-13 (moved into knk-workspace and checked against knk-web-api `next` `51c3086e26`, PandiO/knk-workspace#304)
-
-_Moved from `knk-web-api/OBSERVABILITY.md` at `51c3086e26` ([source](https://github.com/PandiO/knk-web-api/blob/51c3086e26/OBSERVABILITY.md)). Corrected on the move: the admin endpoints are gated by the `knk.admin.config` node (there is no `RequireAdmin` policy), the lootbox meter is `Knk.Lootboxes`, and the `Knk.Realtime` meter was missing. How to use the numbers: [performance metrics and capacity](../guides/performance-metrics-and-capacity.md); the bigger picture: [web API architecture](web-api-architecture.md)._
+**Status:** Current · **Last updated:** 2026-11-13 (moved into knk-workspace and checked against knk-web-api `next` `51c3086e26`, PandiO/knk-workspace#304)
+**Moved from:** `knk-web-api/OBSERVABILITY.md` at `51c3086e26` ([source](https://github.com/PandiO/knk-web-api/blob/51c3086e26/OBSERVABILITY.md)). Corrected on the move: the admin endpoints are gated by the `knk.admin.config` node (there is no `RequireAdmin` policy), the lootbox meter is `Knk.Lootboxes`, and the `Knk.Realtime` meter was missing. How to use the numbers: [performance metrics and capacity](../guides/performance-metrics-and-capacity.md); the bigger picture: [web API architecture](web-api-architecture.md).
 
 ## Header Contract
 - **X-Knk-Client-Id**: unique app instance id (GUID/string)

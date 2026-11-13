@@ -1,8 +1,8 @@
 # Test Failure Analysis - Plugin User Account Management Feature
 
-**Status:** Historical (2026-01-30 test failure analysis for plugin-auth) · **Last updated:** 2026-11-13 (moved into knk-workspace, PandiO/knk-workspace#304)
-
-_Moved from `knk-plugin/TEST_FAILURE_ANALYSIS.md` at `b8aa582f7a` ([source](https://github.com/PandiO/knk-plugin/blob/b8aa582f7a/TEST_FAILURE_ANALYSIS.md)). The text below is unchanged apart from links; it was not rewritten._
+**Status:** Stale · **Last updated:** 2026-11-13 (moved into knk-workspace, PandiO/knk-workspace#304)
+**Moved from:** `knk-plugin/TEST_FAILURE_ANALYSIS.md` at `b8aa582f7a` ([source](https://github.com/PandiO/knk-plugin/blob/b8aa582f7a/TEST_FAILURE_ANALYSIS.md)); the text below is unchanged apart from links.
+**Note:** 2026-01-30 test failure analysis for plugin-auth.
 
 
 **Date**: January 30, 2026  

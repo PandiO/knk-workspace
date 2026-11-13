@@ -1,12 +1,11 @@
 # Web app testing
 
-**Status:** Active · **Last updated:** 2026-11-13 (moved into knk-workspace from knk-web-app `TESTING.md` and checked against knk-web-app `next` `ff9db4b`, PandiO/knk-workspace#304)
-
-_Moved from `knk-web-app/TESTING.md` at `ff9db4b` ([source](https://github.com/PandiO/knk-web-app/blob/ff9db4b/TESTING.md)) and rewritten against the
+**Status:** Current · **Last updated:** 2026-11-13 (moved from knk-web-app `TESTING.md`, rewritten against knk-web-app `next` `ff9db4b`, PandiO/knk-workspace#304)
+**Moved from:** `knk-web-app/TESTING.md` at `ff9db4b` ([source](https://github.com/PandiO/knk-web-app/blob/ff9db4b/TESTING.md)) and rewritten against the
 current code: that file described only the first registration tests (2026-01), a `mockAuthClient.ts` that no longer
 exists, E2E tests that wrote real users to the database, and an example GitHub workflow with Node 18 that was never the
 real CI. The two companion files are in the archive: [TEST_README.md](../../archive/knk-web-app/TEST_README.md) and
-[TESTING_IMPLEMENTATION_SUMMARY.md](../../archive/knk-web-app/TESTING_IMPLEMENTATION_SUMMARY.md)._
+[TESTING_IMPLEMENTATION_SUMMARY.md](../../archive/knk-web-app/TESTING_IMPLEMENTATION_SUMMARY.md).
 
 This guide covers the automated tests of `knk-web-app` (React + TypeScript, Create React App). The README of the repo
 keeps a short quick start; the API and plugin tests are described in their repos' `CLAUDE.md` / `AGENTS.md`.

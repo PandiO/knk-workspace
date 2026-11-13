@@ -1,8 +1,8 @@
 # KNK Plugin Test Fixes Summary
 
-**Status:** Historical (test fixes for the plugin-auth suite; the `requires-bukkit` / `integration` tags it introduced are still excluded by default) · **Last updated:** 2026-11-13 (moved into knk-workspace, PandiO/knk-workspace#304)
-
-_Moved from `knk-plugin/TEST_FIXES_SUMMARY.md` at `b8aa582f7a` ([source](https://github.com/PandiO/knk-plugin/blob/b8aa582f7a/TEST_FIXES_SUMMARY.md)). The text below is unchanged apart from links; it was not rewritten._
+**Status:** Stale · **Last updated:** 2026-11-13 (moved into knk-workspace, PandiO/knk-workspace#304)
+**Moved from:** `knk-plugin/TEST_FIXES_SUMMARY.md` at `b8aa582f7a` ([source](https://github.com/PandiO/knk-plugin/blob/b8aa582f7a/TEST_FIXES_SUMMARY.md)); the text below is unchanged apart from links.
+**Note:** Test fixes for the plugin-auth suite; the `requires-bukkit` / `integration` tags it introduced are still excluded by default.
 
 
 ## Problems Identified & Fixed

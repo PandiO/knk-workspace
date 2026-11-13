@@ -1,8 +1,8 @@
 # ADR: Towns Implementation Plan (Vertical Slice)
 
-**Status:** Superseded (proposed 2025-12-14; towns, world tasks and the hybrid create flow were since built, see [docs/specs/towns](../../specs/towns/) and [docs/specs/world-tasks](../../specs/world-tasks/)) · **Last updated:** 2026-11-13 (moved into knk-workspace, PandiO/knk-workspace#304)
-
-_Moved from `knk-plugin/docs/adr/ADR_TOWNS_IMPLEMENTATION.md` at `b8aa582f7a` ([source](https://github.com/PandiO/knk-plugin/blob/b8aa582f7a/docs/adr/ADR_TOWNS_IMPLEMENTATION.md)). The text below is unchanged apart from links; it was not rewritten._
+**Status:** Superseded · **Last updated:** 2026-11-13 (moved into knk-workspace, PandiO/knk-workspace#304)
+**Moved from:** `knk-plugin/docs/adr/ADR_TOWNS_IMPLEMENTATION.md` at `b8aa582f7a` ([source](https://github.com/PandiO/knk-plugin/blob/b8aa582f7a/docs/adr/ADR_TOWNS_IMPLEMENTATION.md)); the text below is unchanged apart from links.
+**Note:** Proposed 2025-12-14; towns, world tasks and the hybrid create flow were since built, see [docs/specs/towns](../../specs/towns/) and [docs/specs/world-tasks](../../specs/world-tasks/).
 
 
 Date: 2025-12-14

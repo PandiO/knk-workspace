@@ -1,8 +1,8 @@
 # V2 Baseline Status — knk-plugin
 
-**Status:** Historical (2025-12-14 baseline; the build now uses Java 25, Gradle 8.14 and Paper 26.3) · **Last updated:** 2026-11-13 (moved into knk-workspace, PandiO/knk-workspace#304)
-
-_Moved from `knk-plugin/STATUS_V2_BASELINE.md` at `b8aa582f7a` ([source](https://github.com/PandiO/knk-plugin/blob/b8aa582f7a/STATUS_V2_BASELINE.md)). The text below is unchanged apart from links; it was not rewritten._
+**Status:** Stale · **Last updated:** 2026-11-13 (moved into knk-workspace, PandiO/knk-workspace#304)
+**Moved from:** `knk-plugin/STATUS_V2_BASELINE.md` at `b8aa582f7a` ([source](https://github.com/PandiO/knk-plugin/blob/b8aa582f7a/STATUS_V2_BASELINE.md)); the text below is unchanged apart from links.
+**Note:** 2025-12-14 baseline; the build now uses Java 25, Gradle 8.14 and Paper 26.3.
 
 
 **Date**: 2025-12-14  

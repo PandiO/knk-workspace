@@ -1,8 +1,8 @@
 # Phase 6 Implementation: Testing - Completion Report
 
-**Status:** Historical (plugin-side Phase 6 report of 2026-01-30, next to the Phase 1–5 reports of this feature) · **Last updated:** 2026-11-13 (moved into knk-workspace, PandiO/knk-workspace#304)
-
-_Moved from `knk-plugin/docs/ai/plugin-auth/PHASE_6_COMPLETION_REPORT.md` at `b8aa582f7a` ([source](https://github.com/PandiO/knk-plugin/blob/b8aa582f7a/docs/ai/plugin-auth/PHASE_6_COMPLETION_REPORT.md)). The text below is unchanged apart from links; it was not rewritten._
+**Status:** Stale · **Last updated:** 2026-11-13 (moved into knk-workspace, PandiO/knk-workspace#304)
+**Moved from:** `knk-plugin/docs/ai/plugin-auth/PHASE_6_COMPLETION_REPORT.md` at `b8aa582f7a` ([source](https://github.com/PandiO/knk-plugin/blob/b8aa582f7a/docs/ai/plugin-auth/PHASE_6_COMPLETION_REPORT.md)); the text below is unchanged apart from links.
+**Note:** Plugin-side Phase 6 report of 2026-01-30, next to the Phase 1–5 reports of this feature.
 
 
 **Feature**: User Account Management (plugin-auth)  

@@ -1,9 +1,6 @@
----
-status: active
-last_updated: 2026-09-21
----
-
 # knk-plugin Reading Guide
+
+**Status:** Needs review · **Last updated:** 2026-11-13 (front matter converted to the header standard; last content update 2026-09-21, so check it against knk-plugin `main` before relying on it, PandiO/knk-workspace#305)
 
 Practical onboarding for a new session or contributor picking up
 `knk-plugin` cold. Pairs with `docs/architecture/plugin-architecture.md`

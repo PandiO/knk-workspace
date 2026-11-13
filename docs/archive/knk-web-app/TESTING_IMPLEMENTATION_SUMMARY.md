@@ -1,8 +1,8 @@
 # Automated Testing Setup - Implementation Summary
 
-**Status:** Historical (summary of the first registration test setup; `src/test-utils/mockAuthClient.ts` no longer exists and the Cypress spec now stubs the API. Current guide: [web app testing](../../guides/developer/web-app-testing.md)) · **Last updated:** 2026-11-13 (moved into knk-workspace, PandiO/knk-workspace#304)
-
-_Moved from `knk-web-app/TESTING_IMPLEMENTATION_SUMMARY.md` at `ff9db4ba32` ([source](https://github.com/PandiO/knk-web-app/blob/ff9db4ba32/TESTING_IMPLEMENTATION_SUMMARY.md)). The text below is unchanged apart from links; it was not rewritten._
+**Status:** Stale · **Last updated:** 2026-11-13 (moved into knk-workspace, PandiO/knk-workspace#304)
+**Moved from:** `knk-web-app/TESTING_IMPLEMENTATION_SUMMARY.md` at `ff9db4ba32` ([source](https://github.com/PandiO/knk-web-app/blob/ff9db4ba32/TESTING_IMPLEMENTATION_SUMMARY.md)); the text below is unchanged apart from links.
+**Note:** Summary of the first registration test setup; `src/test-utils/mockAuthClient.ts` no longer exists and the Cypress spec now stubs the API. Current guide: [web app testing](../../guides/developer/web-app-testing.md).
 
 
 ## Overview

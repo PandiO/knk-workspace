@@ -1,9 +1,6 @@
----
-status: active
-last_updated: 2026-11-05
----
-
 # knk-plugin Architecture
+
+**Status:** Current · **Last updated:** 2026-11-13 (front matter converted to the header standard, PandiO/knk-workspace#305; last content update 2026-11-05)
 
 Spigot/Paper Minecraft plugin for Knights and Kings V3. Multi-module Gradle
 (Kotlin DSL), Java 25 toolchain, targets Paper API 26.3 (`gradle.properties`; corrected 2026-10-25, the 2026-09-21 scan said Java 21 / 1.21.10).

@@ -1,6 +1,6 @@
 # knk-plugin archive
 
-**Status:** Archived · **Last updated:** 2026-11-13 (created, PandiO/knk-workspace#304)
+**Status:** Current · **Last updated:** 2026-11-13 (created, PandiO/knk-workspace#304)
 
 Status, audit and fix reports that sat in the knk-plugin repo (root and `docs/`) until 2026-11-13. They were moved
 here unchanged apart from a header and their links (code links point at knk-plugin `b8aa582f7a`, the commit they were

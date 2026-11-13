@@ -1,8 +1,8 @@
 # WgRegionId WorldTask Requirements (from legacy CreationStageRegion)
 
-**Status:** Implemented (requirements for the `WgRegionId` world task, built as `WgRegionIdTaskHandler` in knk-plugin; kept as the requirement record) · **Last updated:** 2026-11-13 (moved into knk-workspace, PandiO/knk-workspace#304)
-
-_Moved from `knk-plugin/spec/WG_REGION_ID_WORLD_TASK_REQUIREMENTS.md` at `b8aa582f7a` ([source](https://github.com/PandiO/knk-plugin/blob/b8aa582f7a/spec/WG_REGION_ID_WORLD_TASK_REQUIREMENTS.md)). The text below is unchanged apart from links; it was not rewritten._
+**Status:** Needs review · **Last updated:** 2026-11-13 (moved into knk-workspace, PandiO/knk-workspace#304)
+**Moved from:** `knk-plugin/spec/WG_REGION_ID_WORLD_TASK_REQUIREMENTS.md` at `b8aa582f7a` ([source](https://github.com/PandiO/knk-plugin/blob/b8aa582f7a/spec/WG_REGION_ID_WORLD_TASK_REQUIREMENTS.md)); the text below is unchanged apart from links.
+**Note:** Requirements for the `WgRegionId` world task, built as `WgRegionIdTaskHandler` in knk-plugin; kept as the requirement record.
 
 
 ## Purpose
