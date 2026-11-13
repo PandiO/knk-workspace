@@ -11,14 +11,15 @@ directly into trunk; `next` fast-forwarded). AM4 (docs) done 2026-11-13 in the d
 [web-app architecture](../../architecture/web-app-architecture.md#dashboard-access-model-in-the-web-app-pandioknk-workspace280-am3-205-bulk-delete);
 admin view: [dashboard access admin guide](../../guides/admin/dashboard-access-admin-guide.md). **AM3's deviation LAM3-1
 is reverted** (developer 2026-11-13, [#371](https://github.com/PandiO/knk-workspace/issues/371), knk-web-app branch
-`claude/form-wizard-content-only-371`, not merged): the form wizard routes `/forms/:type` and `/forms/:type/edit/:id`
+`claude/form-wizard-content-only-371`, merged into `next` 2026-11-13, `e6ba115`): the form wizard routes `/forms/:type` and `/forms/:type/edit/:id`
 are back on `knk.admin.content` as § 4.3 has it, and in the web app create and edit of every type also need
 `knk.admin.content` (§ 7). **#374** (developer 2026-11-13, knk-web-api and knk-web-app branches
-`claude/api-writes-need-content-374`, not merged): the API asks for `knk.admin.content` on create, edit and link changes
+`claude/api-writes-need-content-374`, merged into `next` 2026-11-13: API `b65e66d`, web app `ca1959d`; on trunk when
+`next` is promoted; guides in docs [#385](https://github.com/PandiO/knk-workspace/issues/385)): the API asks for `knk.admin.content` on create, edit and link changes
 too (§ 4.3, § 7). Answers [#368](https://github.com/PandiO/knk-workspace/issues/368). Known gaps: #352 (material picker in world/lootbox forms),
 #353 (top bar Create New per area), #369 (Permission Group's list needs `knk.admin.user.perm`). Developer 2026-11-08:
 the backfill (§ 4.5) **skips the Staff group**, and nobody changes a group ranked at or above their own (§ 4.4).
-**Last updated:** 2026-11-13 (the API asks for `knk.admin.content` on create, edit and link changes, § 4.3, § 4.7,
+**Last updated:** 2026-11-13 (status: #371 and #374 merged into `next`, docs #385); 2026-11-13 (the API asks for `knk.admin.content` on create, edit and link changes, § 4.3, § 4.7,
 § 7, #374); 2026-11-13 (LAM3-1 reverted, § 7, #371); 2026-11-13 (status: implemented and merged, AM4 docs, LAM3-1 deviation #368; docs #366); 2026-11-12 (AM3 built; § 4.7 form/display configuration deletes need `knk.admin.delete`, developer
 decision on LV7-8; § 7 addendum); 2026-11-12 (AM1+AM2 merged); 2026-11-08 (AM2 built); 2026-11-08 (AM1 built, Staff decision); 2026-11-08 (decided version, with read gating per area, `knk.admin.export` and the read-endpoint
 appendix); 2026-11-08 (first version, chain 3 link D1)
