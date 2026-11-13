@@ -1,7 +1,7 @@
 # Staff player profile: status strip, tabs, freeze/unfreeze, timeline, paged audit, player search (#119) — smoke test
 
 **Status:** Written 2026-11-08 for knk-web-app `claude/player-profile-119` (chain 3 link V3); **merged 2026-11-12** (knk-web-app `main` `1371951`, with V7); not run by the developer
-**Last updated:** 2026-11-12 (merged with V7); 2026-11-08
+**Last updated:** 2026-11-13 (Staff holds `knk.freeze`/`knk.unfreeze`, #367: § 4 step 4); 2026-11-12 (merged with V7); 2026-11-08
 **Issues:** [PandiO/knk-workspace#119](https://github.com/PandiO/knk-workspace/issues/119) (MOD-3 part 1, MOD-4, MOD-5 of
 the [2026-10-08 assessment](../reports/2026-10-08-web-app-ux-assessment.md))
 
@@ -12,7 +12,9 @@ You need:
 - **A** — the owner or an Admin account (holds `*` or `knk.admin.*`, `knk.freeze`, `knk.unfreeze`,
   `knk.admin.currency.history`).
 - **S** — a staff account with `knk.admin.user.manage` but **without** `knk.freeze`, `knk.unfreeze`,
-  `knk.admin.user.group` and `knk.kit.give` (a test account; take the nodes away for the test if Staff holds them).
+  `knk.admin.user.group` and `knk.kit.give` (a test account outside the Staff group: since #367 Staff holds
+  `knk.freeze` and `knk.unfreeze`).
+- **T** — a member of the Staff group (for § 4 step 4, #367).
 - **P** — a test player who can join the game server, with some balance history.
 - Realtime on (`Realtime:Enabled`) for steps 1.4 and 3.6; everything else works without it.
 
@@ -67,6 +69,9 @@ You need:
    `knk.admin.currency.lock` the payment lock is greyed out with its hint.
 3. **Activity**: the timeline says "Balance changes need knk.admin.currency.history." when S lacks that node, and shows
    only audit entries.
+4. *(#367, after `SeedStaffFreezeNodes`)* Log in as **T** (Staff group) and open **P**: **Freeze** is enabled without a
+   "Requires" hint. Freeze P with a reason, then Unfreeze: both succeed as in § 2. In game, T runs
+   `/freeze {P} <reason>` and `/unfreeze {P}`: both work (P ranks below Staff; the plugin refuses an equal or higher rank).
 
 ## 5. Player search (Moderation → All players)
 
