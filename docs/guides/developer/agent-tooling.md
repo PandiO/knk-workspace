@@ -54,8 +54,10 @@ Project skills live next to these under `.claude/skills/`; they need no settings
    `CONTEXT7_API_KEY` from your user environment only when it starts. If you set them while it runs, quit it completely
    (tray icon → Quit) and start it again; otherwise `github` fails with "Authorization header is badly formatted"
    (an empty `Bearer`) and Context7 silently runs without its key (seen on the developer PC, 2026-11-13).
-9. **Playwright output:** the server saves page snapshots and screenshots in `.playwright-mcp/` in the repo root,
-   which `.gitignore` ignores. It opens a visible browser window; add `--headless` to its `args` if you don't want that.
+9. **Playwright output:** the server saves page snapshots and unnamed screenshots in `.playwright-mcp/` in the repo
+   root, which `.gitignore` ignores. A screenshot taken with an explicit `filename` is saved relative to the repo root
+   instead and is not ignored: give it a path under `.playwright-mcp/` (for example `.playwright-mcp/home.png`) or
+   delete it before committing. It opens a visible browser window; add `--headless` to its `args` if you don't want that.
 10. **Later** (DESIGN § 10.1.2): a MySQL MCP with a read-only user for the dev database, and a Docker MCP for the homelab.
 
 ## 3. The fast-check Stop hook
