@@ -4,6 +4,20 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Form wizard, New and Edit back on `knk.admin.content`** (PandiO/knk-workspace#371, reverts AM3's LAM3-1, answers
+  #368) — developer decision 2026-11-13: area staff work with the content that exists and don't change forms for now.
+  knk-web-app branch `claude/form-wizard-content-only-371`, merged into `next` 2026-11-13 (knk-web-app#11, `e6ba115`); on the trunk when the developer promotes `next`.
+  - **Web app:** `/forms/:type` and `/forms/:type/edit/:id` need `knk.admin.content` again ("Staff only" otherwise).
+    The dashboard's New, New with and Edit and the detail page's Edit need the type's own nodes **and**
+    `knk.admin.content`, greyed out with "Requires knk.admin.content"; a picker's Create New is hidden without it.
+    Edit of a user still opens the player profile for Staff. View, the explorer per area, lookups, Delete, bulk
+    delete, Export and the player profile are unchanged.
+  - **API:** unchanged; it still accepts creates and edits per area node. Proposal to ask for `knk.admin.content` there
+    too: #374.
+  - **Admin steps:** no migration, no setting, no plugin change, no new package; deploy the web app only. World, kit,
+    lootbox, siege, road and Staff ranks that should keep creating or editing records need `knk.admin.content`.
+    Smoke test: [dashboard access smoke test § 8 steps 6, 7, 9, 9a](guides/dashboard-access-smoke-test.md#8-web-app-am3).
+
 - **NPC navigation, Phases 1 to 3: NPCs walk K&K routes (admin testing only)** — no change for players; off by
   default (`npc.navigation.enabled`). In `next` when the pull requests of PandiO/knk-workspace#360 are merged; on the
   trunk when the developer promotes `next`. Parent issue PandiO/knk-workspace#358,

@@ -4,9 +4,11 @@
 test**, scheduled in closed alpha test run 2 (checklist § 4c). AM1 and AM2 merged 2026-11-12 (knk-web-api `master`
 `bc97b7d`); AM3 merged 2026-11-13 (knk-web-app `main` `e02ee79`, knk-web-api `master` `45043a7`, also on `next`).
 AM4 (living docs, the [admin guide to the ranks](admin/dashboard-access-admin-guide.md)) done 2026-11-13 (#366).
-Known: the wizard routes for any area node are a deviation waiting for a decision (#368); a `knk.admin.user.manage`-only
+**#371 (developer 2026-11-13, knk-web-app `claude/form-wizard-content-only-371`, not merged):** the form wizard and
+create/edit are back on `knk.admin.content` (LAM3-1 reverted, answers #368); § 8 steps 6, 7, 9, 19 describe that.
+Known: a `knk.admin.user.manage`-only
 rank can't load the Permission Group list (#369, § 8.1 step 4).
-**Last updated:** 2026-11-13 (AM4 docs done, #368/#369 noted, architecture anchors; docs #366); 2026-11-13 (status: merged, accepted without a live test, in test run 2); 2026-11-12 (§ 0 role accounts and deploy, § 2.1 configuration deletes, § 3 refusal codes, § 8 web
+**Last updated:** 2026-11-13 (§ 8 steps 6, 7, 9, 19 and 9a: create/edit need `knk.admin.content`, #371); 2026-11-13 (AM4 docs done, #368/#369 noted, architecture anchors; docs #366); 2026-11-13 (status: merged, accepted without a live test, in test run 2); 2026-11-12 (§ 0 role accounts and deploy, § 2.1 configuration deletes, § 3 refusal codes, § 8 web
 app, § 9 docs impact; chain 3 link AM3); 2026-11-12 (AM1+AM2 merged); 2026-11-08 (§ 7 read gating and lookups, chain 3 link AM2); 2026-11-08 (draft with the AM1 API steps, chain 3 link AM1)
 **Design:** [specs/dashboard-access-model/DESIGN.md](../specs/dashboard-access-model/DESIGN.md) · as built:
 [web-api architecture § 5.1](../architecture/web-api-architecture.md#51-dashboard-access-model-pandioknk-workspace280-am1-merged-2026-11-12-am3-2026-11-13)
@@ -172,14 +174,20 @@ and at 390 px width (phone): nothing scrolls sideways, the bulk dialogs fit.
 ### 8.2 Disabled actions with "Requires <node>" (decision 11)
 
 6. [ ] **Staff** on User: the rows' **Delete** is greyed out; hover says "Requires knk.admin.delete". **Edit** opens
-   the player profile. In the bar **Export CSV** is disabled with "Requires knk.admin.export" next to it. No
+   the player profile (enabled without `knk.admin.content`, #371). **New** is greyed out with "Requires
+   knk.admin.content" under the header. In the bar **Export CSV** is disabled with "Requires knk.admin.export" next to it. No
    **Delete (n)** appears when rows are ticked. The ⚙ (Entity setup) is disabled with "Requires knk.admin.content".
-7. [ ] **Staff** on Permission Group: **New** and **Edit** follow `knk.admin.user.perm` (disabled with "Requires
-   knk.admin.user.perm" if the Staff group doesn't hold it).
+7. [ ] **Staff** on Permission Group: **New** and **Edit** need `knk.admin.user.perm` **and** `knk.admin.content`
+   (#371): disabled with "Requires …" naming the ones the Staff group doesn't hold.
 8. [ ] **content-only** on Category: New, Edit, Delete and Export enabled; ticking rows shows **no** Delete (n).
-9. [ ] **world-only:** open `/forms/Town` directly: "Entity setup needs knk.admin.content" with **Back to the
-   dashboard**. From the dashboard, **New Town** opens the Town form and a draft saves (the wizard works for any area
-   node); **Edit** on a town opens its form.
+9. [ ] **world-only** (#371, LAM3-1 reverted): on Town, **New Town** is greyed out; hover and the line under the
+   header say "Requires knk.admin.content"; no **New with** menu. A row's **Edit** is greyed out with "Requires
+   knk.admin.content"; **View**, **Delete** (with `knk.admin.delete`) and **Export CSV** (with `knk.admin.export`)
+   work as before. A town's detail page: **Edit** greyed out with the same hint. Open `/forms/Town`,
+   `/forms/Town?autoOpen=true` and `/forms/Town/edit/<id>` directly: each is refused with "Staff only" naming
+   `knk.admin.content`.
+   9a. [ ] **world + content** (an account holding both): New Town, New with and Edit open the Town form; a draft
+   saves; the edit saves.
 10. [ ] **content-only**, Entity setup of a type (⚙): a form configuration's ⋯ → **Delete** works as before. With a
     user-level deny `knk.admin.delete = false` on that account (reload after the change): the Delete item is greyed out
     with "Requires knk.admin.delete", for form and display configurations alike (LV7-8).
@@ -210,10 +218,10 @@ and at 390 px width (phone): nothing scrolls sideways, the bulk dialogs fit.
     "(search)").
 18. [ ] Tick three rows in a different order than the table shows, export: the file lists them **in the order you
     ticked them**, with their current values ("(selection)" in the audit entry).
-19. [ ] **world-only**, form of a Town (or Structure) with a field that picks a content record (for example a clan): the
-    picker shows "Names only: the full … table needs one of: …" and still finds records by name (lookup mode, V6);
-    **Create New** for that field is not offered (it needs that type's create node). A picker of a world type keeps
-    the full table and Create New.
+19. [ ] **content-only**, a form of a content type with a field that picks a record of another area (for example a
+    world type; world-only accounts no longer open forms, #371): the picker shows "Names only: the full … table needs
+    one of: …" and still finds records by name (lookup mode, V6); **Create New** for that field is not offered (it
+    needs that type's create node). A picker of a content type keeps the full table and Create New.
 20. [ ] **world-only**, a refused read shows words instead of "Failed to load data": open `/display/Category/<id>` →
     "You don't have access to this Category." with "Requires one of: knk.admin.content, …" (V5's detail page); a table
     of another area's type (for example a picker's **Open full table** if one is offered) says "You don't have access
