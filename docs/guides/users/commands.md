@@ -13,12 +13,14 @@ can use them (`/minecraft:<command>`).
 - **Ranks.** Your rank (permission group) decides which commands you can use. The game asks the web API for your
   permissions when you join and keeps them for 30 seconds. A rank change made in the web app reaches the game within
   that time. The "Who" columns below name the lowest rank that holds the command **on the closed alpha's seed data**. A
-  rank also gets everything from the ranks it inherits from: Staff → Moderator → Admin. The premium ranks chain
-  Dragon Blood → Royal → Noble → Default, so Royal and Dragon Blood also have Noble's perks, such as `/siege skip`;
-  Alpha Tester inherits from Default. That is the dev seed (knk-dev-db-seed `4b71f23`, `seed/knk_seed.sql`, table
-  `permission_groups`), and so the alpha built from it. A fresh database built by the migrations alone doesn't chain
-  them: there each premium rank inherits only from Default (`PremiumRanksInheritDefault`), so Noble's perks stay
-  Noble's. Which of the two is meant is PandiO/knk-workspace#430. A rank's own grants come from
+  rank also gets everything from the ranks it inherits from: Staff → Moderator → Admin. How the premium ranks
+  inherit depends on the database. In the dev seed (knk-dev-db-seed `4b71f23`, the 2026-11-01 export,
+  `seed/knk_seed.sql`, table `permission_groups`) they chain Dragon Blood → Royal → Noble → Default, so Royal and
+  Dragon Blood also have Noble's perks, such as `/siege skip`. A fresh database built by the migrations alone doesn't
+  chain them: each premium rank inherits only from Default (`PremiumRanksInheritDefault`), so Noble's perks stay
+  Noble's. The alpha was loaded from the earlier seed `4abf42c` ([import report](../../reports/2026-10-24-alpha-seed-import.md));
+  its chain is still to be checked (PandiO/knk-workspace#316). Which way is meant is PandiO/knk-workspace#430.
+  Alpha Tester inherits from Default. A rank's own grants come from
   the seed data for now (editing them in the web app is PandiO/knk-workspace#50); staff give one player an extra
   permission with `/knk user <player> perm grant <node>`. "Everyone" means the Default rank. "Ops only" means no
   rank holds it yet.
@@ -322,5 +324,6 @@ These came up while checking this page against the code. The page above describe
   perks), the migrations don't (each inherits only from Default).
 
 The rank columns were checked on 2026-11-13 against the seed migrations and the dev seed (knk-dev-db-seed `4b71f23`,
-the 2026-11-01 export) (PandiO/knk-workspace#316), not yet in game. Whether the alpha's live database still matches
-the dev seed is still to be checked.
+the 2026-11-01 export) (PandiO/knk-workspace#316), not yet in game. The alpha was loaded from the earlier seed
+`4abf42c` (2026-10-24); whether its live database matches the dev seed, the premium rank chain included, is still to
+be checked.
