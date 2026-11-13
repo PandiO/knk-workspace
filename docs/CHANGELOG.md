@@ -4,6 +4,55 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Form builder: step conditions; form wizard: click a step to jump to it** (PandiO/knk-workspace#88, #68) — staff
+  who build forms can now say in the builder what must be filled in before a step may be left or opened, and staff who
+  fill in a form can click a step in the progress strip instead of pressing Next many times. No change for players.
+  Pull requests into `next` from `claude/issues-68-88-readiness-wapo57` (knk-web-app, knk-web-api, knk-workspace);
+  [smoke test](guides/form-step-conditions-and-step-jump-smoke-test.md), not run.
+  - **Form builder (#88):** a **Step conditions** card in the step editor: "before leaving this step" (Completion) or
+    "before entering this step" (Entry), active toggle, message, and rules over the step's fields or the fields of
+    earlier steps (is, is not, greater / less than, contains, is empty, is not empty; all / any with two or more
+    rules). Values keep the field's type (a tick box stores `true`, not text). Conditions are part of the draft and go
+    live on Publish; Publish refuses a "before leaving" condition without a message. JSON that was not made with the
+    editor is shown as text and saved unchanged. A rule whose field is gone is red in the editor and a warning in
+    the configuration health panel (`StepConditionHealth` in knk-web-api).
+  - **Form wizard (#88):** Next also checks the next step's Entry conditions (they were stored but never checked). A
+    failed condition is shown above the Next/Submit button as well as in the toast.
+  - **Form wizard (#68):** the steps in the progress strip, and in the narrow-screen list, are buttons. Back is always
+    allowed. Forward checks the current step and every visible step up to the clicked one with the checks of Next
+    (required fields, lists, field validations, conditions, blocking rules, the entries of a many-to-many step) and
+    stops at the first step that fails: a dialog names the step, the fields and the messages, with **Go to <step>**.
+    Warnings never stop a jump. A rule that could not run because the game server is unreachable does not stop it
+    either; a dialog says which checks were skipped. A form opened with values (an entity being edited, a resumed
+    draft) runs its rules once when it has loaded.
+  - **Admin steps:** none (no migration, no setting, no plugin change). Deploy the API and the web app in either order.
+- **Staff may freeze and unfreeze players** (PandiO/knk-workspace#367) — developer decision 2026-11-13: Staff helps
+  players and enforces the rules (freeze, kick, ban, balances) and doesn't manage the game core. knk-web-api and
+  knk-workspace branches `claude/staff-freeze-nodes-367`, not merged.
+  - **API:** data-only migration `SeedStaffFreezeNodes` gives the **Staff** group `knk.freeze` and `knk.unfreeze`, the
+    nodes `PUT api/Users/{id}/freeze` / `/unfreeze` and the plugin's `/freeze` / `/unfreeze` check (names match, no
+    code change). Idempotent: skipped when there is no Staff group or when Staff or a group it inherits from already
+    has a grant, deny or covering wildcard for the node. Down removes nothing (it can't tell its grant from one given
+    before). Moderator and Admin aren't touched: on the alpha they inherit from Staff.
+  - **Web app, plugin:** no change; the player profile's Freeze/Unfreeze and the in-game commands open up for Staff
+    members by the grant.
+  - **Admin steps:** back up the database, deploy the API, run `dotnet ef database update` (one data-only migration,
+    no setting, no plugin change). The alpha and the dev seed (`knk-dev-db-seed`, Staff holds both nodes already) get
+    no new row. Check: Staff's group page lists `knk.freeze` and `knk.unfreeze`. Smoke test:
+    [player profile smoke test § 4 step 4](guides/player-profile-smoke-test.md#4-without-the-nodes).
+- **Web app: lootbox Enable/Disable, Create New Street and hot edit greyed out without `knk.admin.content`**
+  (PandiO/knk-workspace#383, follow-up of #374) — developer decision 2026-11-13: grey them out. knk-web-app branch
+  `claude/content-gate-toggles-383` (PR into `next`, not merged).
+  - **Web app:** three writes outside the form wizard save through a create or update that #374 gates. The Lootboxes
+    page's Types tab **Enabled/Disabled** toggle (`PUT api/LootboxTypes/{id}`), the roads page's road-edge Street
+    dropdown **Create New Street** (`POST api/Streets`) and the detail page's ✎ hot edit of a field (the type's `PUT`)
+    are greyed out with "Requires knk.admin.content" (and any missing area node) for accounts without it, from the
+    metadata's `actionNodes.create`/`edit`. **Not changed:** the roads page's Road profiles card (RoadProfile is
+    exempt), road-edge edits (`knk.admin.road`), hot edit of a user (`knk.admin.user.manage`), lootbox tokens and
+    settings.
+  - **Admin steps:** none; deploy the web app (no migration, no setting, no API change). Smoke test:
+    [dashboard access smoke test § 8 step 9c](guides/dashboard-access-smoke-test.md#82-disabled-actions-with-requires-node-decision-11).
+
 - **API: creates, edits and link changes of dashboard types need `knk.admin.content`** (PandiO/knk-workspace#374,
   follow-up of #371) — developer decision 2026-11-13: "Area staff should not be able to change forms at this point.
   They only work with the content available." The API now says what the web app says since #371. knk-web-api and
@@ -29,7 +78,7 @@ This is a human-readable record of capabilities merged into the V3 default branc
     (they go through the plugin key). `SeedDashboardActionNodes` (AM1) seeded only `knk.admin.delete` and
     `knk.admin.export`, so nothing needs a data change; grant `knk.admin.content` by hand to a rank that should keep
     editing (it opens every content type too). The lootbox page's Enable/Disable toggle saves through the same `PUT`
-    and needs `knk.admin.content` now as well. Smoke test:
+    and needs `knk.admin.content` now as well (greyed out without it since #383). Smoke test:
     [dashboard access smoke test § 2.2 and § 8 step 9b](guides/dashboard-access-smoke-test.md#22-create-edit-and-link-changes-need-knkadmincontent-374).
 
 - **Form wizard, New and Edit back on `knk.admin.content`** (PandiO/knk-workspace#371, reverts AM3's LAM3-1, answers
