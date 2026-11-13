@@ -1,7 +1,7 @@
 # Realtime channel (SignalR) between knk-web-api, knk-plugin and knk-web-app
 
-**Status:** Accepted design (developer decisions 2026-10-26, §12). S1 (§4–§5), S2 (§6.1), WT1 (§8.2, §8.7, #180; as built: [world-tasks/README.md § Lifecycle](../world-tasks/README.md#lifecycle-and-endpoints-pandioknk-workspace180)), WT2 (§8.3–§8.6, #181; as built: §8.8) and S3 (§6.2–§6.4, #182; as built: §6.8) **merged into the default branches 2026-11-04** (API `master` `2258df5`, plugin `main` `e1b6a7a9`, web app `main` `d0c2ba8`) after the developer's smoke tests of #180 and WT2; `realtime.enabled: false` by default in the plugin. **S4** (#183, chain 2 X1, web live updates) **merged 2026-11-12** (API `master` `bc97b7d`, web app `main` `1371951`; smoke test § S4 not run); as built: §6.9; since #280 AM1 (same merge) the audience is the type's area node. **S5** (#184, chain 2 R1, account erasure): API part merged 2026-11-12 in `bc97b7d` (migration `AddPrivacyErasureEvents`), plugin part and § 7.5 not merged.
-**Last updated:** 2026-11-12 (§6.9 as built brought over from `claude/realtime-web-live-183` and marked merged, audience per area node since #280 AM1 — docs #341); 2026-11-12 (status: S4 merged, S5 API part merged); 2026-11-06 (§6.9: `Realtime:WebLiveUpdatesEnabled`, decision on LX1-10); 2026-11-05 (S4 built: §6.9, §6.5 table, §9); 2026-11-05 (#239 offer permission check, #240 Send again merged); 2026-11-04 (#239, #240 on a feature branch); 2026-11-02 (S3 built: §6.8); 2026-11-02 (WT2 built: §8.8); 2026-11-01 (status: WT1 built, #180); 2026-10-26 (S2 built: implementation notes in §6.7; S1 built: §4.6; decisions recorded; §8.3 delivery and busy flow, §8.7 tasks anchored to the draft, §4.3 publishing path)
+**Status:** Accepted design (developer decisions 2026-10-26, §12). S1 (§4–§5), S2 (§6.1), WT1 (§8.2, §8.7, #180; as built: [world-tasks/README.md § Lifecycle](../world-tasks/README.md#lifecycle-and-endpoints-pandioknk-workspace180)), WT2 (§8.3–§8.6, #181; as built: §8.8) and S3 (§6.2–§6.4, #182; as built: §6.8) **merged into the default branches 2026-11-04** (API `master` `2258df5`, plugin `main` `e1b6a7a9`, web app `main` `d0c2ba8`) after the developer's smoke tests of #180 and WT2; `realtime.enabled: false` by default in the plugin. **S4** (#183, chain 2 X1, web live updates) **merged 2026-11-12** (API `master` `bc97b7d`, web app `main` `1371951`; smoke test § S4 not run); as built: §6.9; since #280 AM1 (same merge) the audience is the type's area node. **S5** (#184, chain 2 R1, account erasure): API part merged 2026-11-12 in `bc97b7d` (migration `AddPrivacyErasureEvents`), plugin part and § 7.5 in the PR into `next` from `claude/plugin-chains-into-next` (2026-11-13).
+**Last updated:** 2026-11-13 (§7.5: a failed erasure step keeps the feed position, a feed reset forgets this run's ids, review of knk-plugin#20); 2026-11-13 (#31 rest: §6.8 note brought into `claude/plugin-chains-into-next`, PR into `next`); 2026-11-13 (S5 #184 plugin part: R1 docs brought into `claude/plugin-chains-into-next`, PR into `next`, §7.5 as built); 2026-11-12 (§6.9 as built brought over from `claude/realtime-web-live-183` and marked merged, audience per area node since #280 AM1 — docs #341); 2026-11-12 (status: S4 merged, S5 API part merged); 2026-11-06 (§6.9: `Realtime:WebLiveUpdatesEnabled`, decision on LX1-10); 2026-11-05 (S4 built: §6.9, §6.5 table, §9); 2026-11-05 (#239 offer permission check, #240 Send again merged); 2026-11-04 (#239, #240 on a feature branch); 2026-11-02 (S3 built: §6.8); 2026-11-02 (WT2 built: §8.8); 2026-11-01 (status: WT1 built, #180); 2026-10-26 (S2 built: implementation notes in §6.7; S1 built: §4.6; decisions recorded; §8.3 delivery and busy flow, §8.7 tasks anchored to the draft, §4.3 publishing path)
 **Issue:** [PandiO/knk-workspace#66](https://github.com/PandiO/knk-workspace/issues/66) (KNG-57, priority high); phase issues in
 [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md). Related: #76 (KNG-170, rank changes don't reach the server),
 #121 (KNG-262, cache TTLs), #31 (KNG-202, startup-only siege work), #35 (KNG-176), #34 (KNG-246), #145 (KNG-249), #75.
@@ -348,6 +348,11 @@ onto the hub" → **later, phase S6**.
   (`SiegeGateController.retryRecovery`; waits while a lockdown of this run is active), runtime config + title
   brackets (`SiegeService.retryStartup`). Each runs at startup as before; one that failed runs again on every hub
   (re)connect (resync step "siege startup work"), in that order, until it got through. With the hub off, unchanged.
+  *2026-11-05 (#31 rest, UX chain 2 link R2; in the PR into `next` from `claude/plugin-chains-into-next`, 2026-11-13):* the same steps also
+  run on every API connectivity transition into UP (UNKNOWN→UP included) and on a fallback retry (30 s, 1 min, 2 min,
+  then every 5 min while pending and not DOWN), hub on or off, through `core/realtime/StartupWorkRetry`; the resync
+  step calls it too, and `PendingStartupWork.runPending` is single-flight (a call during a pass shares one queued pass),
+  so two triggers never run a step twice.
 - **Slower re-syncs (Q4).** While connected these now run `realtime.fallback-poll-multiplier` times less often: domain
   access sync, game settings re-read, lootbox runtime refresh, road tiles and meta, telemetry config poll, grade
   catalogue. The entity cache TTLs (#121) and the permission/user TTLs are unchanged.
@@ -435,6 +440,48 @@ the player with a neutral message if online and deletes local data (offline stor
 lists. Because SignalR is at-most-once, erasures are also persisted (a small `privacy_erasure_events` table with a
 sequence, or reuse the deletion request rows) and the plugin calls `GET /api/privacy/erasures?since={lastId}` on every
 (re)connect and stores `lastId` on disk. The hourly verifier and KNG-58's max age stay as backstop. Separate phase (S5).
+
+### 7.5 S5 as built (2026-11-05, #184)
+
+- **Feed (API).** New table `privacy_erasure_events` (migration `AddPrivacyErasureEvents`, additive): `Id` (bigint,
+  the sequence), `UserId`, `FormerUuid`, `DeletionRequestId`, `ErasedAt`, `UuidClearedAt`. `PrivacyDeletionService.
+  ExecuteAsync` adds one row per erased account (the player and every account merged into them) with the UUID it has
+  *before* the pseudonymization clears it, inside the erasure's own transaction. The deletion-request rows were not
+  reused: they are numbered in request order, not execution order, one request erases several accounts, and the UUID is
+  gone after the erasure. The hourly GDPR job clears a row's `FormerUuid` after `Privacy:ErasureFeedUuidRetentionDays`
+  (35, at least 31: past the plugin's own 30-day maximum age); the row stays, so the ids have no holes.
+- **Push.** After the commit (through `IRealtimeEventSink`, so an outer transaction holds it and a rollback drops it)
+  `AccountErased {userId, formerUuid, erasureId}` (`Realtime/Contracts/PrivacyContracts.cs`) goes to every game server,
+  one per erased account; accounts without a UUID too (the plugin then deletes by user id).
+- **Catch-up endpoint.** `GET api/privacy/erasures?since={id}&limit={1-500, default 100}` (`PrivacyErasuresController`,
+  `[RequirePluginService]`: the rows carry UUIDs) → `{items: [{erasureId, userId, formerUuid, erasedAt}], lastId,
+  hasMore, latestId}`, oldest first. `latestId` below the caller's `since` means the position came from another
+  database (a reset). A row whose former UUID now belongs to another account (a returning player got a fresh account)
+  is served with `formerUuid: null`, so a late catch-up never touches the new account.
+- **Plugin.** `core/privacy/AccountErasureService` on its own worker thread: give back, then kick (main thread, one
+  task, `realtime.erasure.kick-message`; the `BEFORE_KICK` steps run right before the kick while the player is online:
+  the siege vault, developer decision 2026-11-06 on LR1-8), wait `settle-seconds` (2) so the quit handlers ran and Minecraft saved the player, then the
+  `LocalDataEraser` steps each feature registered at start: offline security store (account, permission answers, ignore
+  lists, the player on others' lists; written at once), user/permission caches and `UserManager`, discovery spool (by
+  UUID or user id), statistics spool (their entries and PvP kills either way; emptied batches deleted), PM-log queue
+  and the local PM log lines they sent or received, siege vault (main thread; an online player's vault was given back before the kick — inventory, stats and return
+  point, like `/siege admin kick`, and forgotten at once so nothing is given twice — so this removes offline vaults),
+  hub-outage return point,
+  and Minecraft's own player files (`players/data|stats|advancements`, the pre-26.1 folders too) **listed** in
+  `erasure-minecraft-files.txt` for the owner, never deleted. A UUID the server last knew under another user id (user
+  cache, offline store) is treated as "no UUID": only the user-id steps run, no kick. The push applies at once and then
+  starts a catch-up; only the catch-up moves the position on disk (`erasure-feed.json`), so a missed earlier erasure is
+  never skipped. Resync step "account erasures" runs the catch-up on every (re)connect (off the main thread); API
+  unreachable = stop, next connect retries; a position past `latestId` starts again from 0 and forgets which ids this
+  run applied (the new feed's ids may repeat). One erasure is applied once per run; a restart re-applies from the
+  stored position (every step is idempotent). An erasure with a failed step (a return before the kick, the main-thread
+  steps, a worker step) is not counted as applied: the catch-up stops before it, so the position stays and the next
+  catch-up (connect or push) runs it again; later ones wait behind it in the feed (a push still applies them at once).
+  Review fix 2026-11-13 on knk-plugin#20. Logs name the erasure id and
+  counts only.
+- **Not deleted locally:** statistics and telemetry still in memory, an in-flight PM batch (the API drops statistics of
+  erased accounts, D16), Paper's own server logs. **Hub off (`realtime.enabled: false`):** nothing of this runs; the
+  hourly offline-identity check (KNG-58) is the only path, as before, and stays the backstop with the hub on.
 
 ## 8. World tasks over SignalR (R3–R5)
 

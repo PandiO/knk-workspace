@@ -1,9 +1,10 @@
 # API connectivity (plugin ↔ knk-web-api)
 
-**Status:** Live · **Last updated:** 2026-10-11 — merged after a developer live test
+**Status:** Live · **Last updated:** 2026-11-13 (#31 subscriber row in the PR into `next` from `claude/plugin-chains-into-next`); 2026-11-05 (#31 subscriber row, branch); 2026-10-11 — merged after a developer live test
 ([KNG-115](https://linear.app/kngpandi/issue/KNG-115)): knk-web-api `master` `17ee730`, knk-plugin
 `main` `b5eee6e`. All decisions below were accepted by the developer on 2026-10-11.
 2026-10-26: second subscriber, the realtime client (#178 S1, branch `claude/realtime-signalr`; § "Subscribing").
+2026-11-05: the siege startup retry (#31, in the PR into `next` from `claude/plugin-chains-into-next`; § "Subscribing").
 2026-10-15: first consumer of the state, [KNG-171](https://linear.app/kngpandi/issue/KNG-171) — reads
 skip the API while it is DOWN (§ "Reads skip the API while DOWN"). Implemented on knk-plugin branch
 `wt/kng-171`; live-tested by the developer and merged 2026-10-17 ([knk-plugin #14](https://github.com/PandiO/knk-plugin/pull/14)).
@@ -143,6 +144,7 @@ Subscribers of the state:
 |---|---|---|
 | `DataAccessExecutor` gateway reads, incl. permission checks (KNG-171) | synchronous `ApiOutageSignal`, not the event: while DOWN no call, answer from the caches and the offline store | branch `wt/kng-171`, not merged |
 | `RealtimeService` (#178 S1, only with `realtime.enabled`) | the event: on DOWN no more hub reconnect attempts (a live connection is left alone), on UP one attempt right away with a fresh backoff | branch `claude/realtime-signalr`, not merged |
+| Siege startup work (`StartupWorkRetryListener` → `core/realtime/StartupWorkRetry`, #31) | the event: **any** transition into UP (UNKNOWN→UP too, not only `isRecovery()`) re-runs the startup steps that failed (abort unfinished matches, restore stale gates, runtime config + title brackets); DOWN pauses its fallback retry; the state (`connectivity().state()`) decides whether the fallback runs | in the PR into `next` from `claude/plugin-chains-into-next`, not merged |
 
 Not subscribed yet (by design, KNG-115 scope):
 
