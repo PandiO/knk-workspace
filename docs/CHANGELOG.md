@@ -26,7 +26,76 @@ This is a human-readable record of capabilities merged into the V3 default branc
     either; a dialog says which checks were skipped. A form opened with values (an entity being edited, a resumed
     draft) runs its rules once when it has loaded.
   - **Admin steps:** none (no migration, no setting, no plugin change). Deploy the API and the web app in either order.
-- **NPC navigation, Phases 1 and 2: NPCs walk K&K routes (admin testing only)** — no change for players; off by
+- **Staff may freeze and unfreeze players** (PandiO/knk-workspace#367) — developer decision 2026-11-13: Staff helps
+  players and enforces the rules (freeze, kick, ban, balances) and doesn't manage the game core. knk-web-api and
+  knk-workspace branches `claude/staff-freeze-nodes-367`, not merged.
+  - **API:** data-only migration `SeedStaffFreezeNodes` gives the **Staff** group `knk.freeze` and `knk.unfreeze`, the
+    nodes `PUT api/Users/{id}/freeze` / `/unfreeze` and the plugin's `/freeze` / `/unfreeze` check (names match, no
+    code change). Idempotent: skipped when there is no Staff group or when Staff or a group it inherits from already
+    has a grant, deny or covering wildcard for the node. Down removes nothing (it can't tell its grant from one given
+    before). Moderator and Admin aren't touched: on the alpha they inherit from Staff.
+  - **Web app, plugin:** no change; the player profile's Freeze/Unfreeze and the in-game commands open up for Staff
+    members by the grant.
+  - **Admin steps:** back up the database, deploy the API, run `dotnet ef database update` (one data-only migration,
+    no setting, no plugin change). The alpha and the dev seed (`knk-dev-db-seed`, Staff holds both nodes already) get
+    no new row. Check: Staff's group page lists `knk.freeze` and `knk.unfreeze`. Smoke test:
+    [player profile smoke test § 4 step 4](guides/player-profile-smoke-test.md#4-without-the-nodes).
+- **Web app: lootbox Enable/Disable, Create New Street and hot edit greyed out without `knk.admin.content`**
+  (PandiO/knk-workspace#383, follow-up of #374) — developer decision 2026-11-13: grey them out. knk-web-app branch
+  `claude/content-gate-toggles-383` (PR into `next`, not merged).
+  - **Web app:** three writes outside the form wizard save through a create or update that #374 gates. The Lootboxes
+    page's Types tab **Enabled/Disabled** toggle (`PUT api/LootboxTypes/{id}`), the roads page's road-edge Street
+    dropdown **Create New Street** (`POST api/Streets`) and the detail page's ✎ hot edit of a field (the type's `PUT`)
+    are greyed out with "Requires knk.admin.content" (and any missing area node) for accounts without it, from the
+    metadata's `actionNodes.create`/`edit`. **Not changed:** the roads page's Road profiles card (RoadProfile is
+    exempt), road-edge edits (`knk.admin.road`), hot edit of a user (`knk.admin.user.manage`), lootbox tokens and
+    settings.
+  - **Admin steps:** none; deploy the web app (no migration, no setting, no API change). Smoke test:
+    [dashboard access smoke test § 8 step 9c](guides/dashboard-access-smoke-test.md#82-disabled-actions-with-requires-node-decision-11).
+
+- **API: creates, edits and link changes of dashboard types need `knk.admin.content`** (PandiO/knk-workspace#374,
+  follow-up of #371) — developer decision 2026-11-13: "Area staff should not be able to change forms at this point.
+  They only work with the content available." The API now says what the web app says since #371. knk-web-api and
+  knk-web-app branches `claude/api-writes-need-content-374`, merged into `next` 2026-11-13 (knk-web-api#15 `b65e66d`,
+  knk-web-app#13 `ca1959d`); on the trunk when the developer promotes `next`. Guides: [dashboard access admin guide
+  § 2, § 4, § 8](guides/admin/dashboard-access-admin-guide.md), [staff web app guide](guides/admin/staff-web-app-guide.md)
+  (docs #385).
+  - **API:** the primary create (`POST`) and update (`PUT {id}`) of every dashboard type need the type's write node
+    **and** `knk.admin.content` (one rule in `DashboardAccess`, enforced by `RequireDashboardChange`); without it 403
+    `NoWriteAccess` "Creating or editing Town requires knk.admin.world and knk.admin.content.". The detail page's
+    Select / Unlink / Add (`POST api/Relationships/{type}/{id}/{property}/link|unlink`) need the same. The metadata's
+    `actionNodes.create`/`edit` and a relationship's `nodes` list the node. **Not changed:** User (player profile) and
+    Permission Group (`knk.admin.user.perm` with the escalation guard), RoadProfile (the roads page), delete, bulk
+    delete, export, reads, lookups, the player profile's freeze, balance, kick and ban, other writes of a type (gate
+    door state, a domain's world backfill, lootbox in-game spawn areas, …) and the plugin (`api.auth.type: apikey`).
+  - **Web app:** the detail page's Select…, Change…, Unlink and Add… are greyed out with "Requires knk.admin.content"
+    without it, like New and Edit since #371.
+  - **Admin steps:** no migration, no setting, no plugin change, no new package; deploy the API and the web app in
+    either order. A rank needs `knk.admin.content` to keep creating or editing anything through the API: Admin
+    (`knk.admin.*`) and the owner keep everything; the **Staff** group (`knk.kit.manage`, `knk.siege.admin.manage`, no
+    `knk.admin.content`) can no longer create or edit kits or siege setup from the web or with `curl`, and a world,
+    lootbox or siege rank only views, deletes (with `knk.admin.delete`) and exports. In-game commands are unaffected
+    (they go through the plugin key). `SeedDashboardActionNodes` (AM1) seeded only `knk.admin.delete` and
+    `knk.admin.export`, so nothing needs a data change; grant `knk.admin.content` by hand to a rank that should keep
+    editing (it opens every content type too). The lootbox page's Enable/Disable toggle saves through the same `PUT`
+    and needs `knk.admin.content` now as well (greyed out without it since #383). Smoke test:
+    [dashboard access smoke test § 2.2 and § 8 step 9b](guides/dashboard-access-smoke-test.md#22-create-edit-and-link-changes-need-knkadmincontent-374).
+
+- **Form wizard, New and Edit back on `knk.admin.content`** (PandiO/knk-workspace#371, reverts AM3's LAM3-1, answers
+  #368) — developer decision 2026-11-13: area staff work with the content that exists and don't change forms for now.
+  knk-web-app branch `claude/form-wizard-content-only-371`, merged into `next` 2026-11-13 (knk-web-app#11, `e6ba115`); on the trunk when the developer promotes `next`.
+  - **Web app:** `/forms/:type` and `/forms/:type/edit/:id` need `knk.admin.content` again ("Staff only" otherwise).
+    The dashboard's New, New with and Edit and the detail page's Edit need the type's own nodes **and**
+    `knk.admin.content`, greyed out with "Requires knk.admin.content"; a picker's Create New is hidden without it.
+    Edit of a user still opens the player profile for Staff. View, the explorer per area, lookups, Delete, bulk
+    delete, Export and the player profile are unchanged.
+  - **API:** unchanged by #371; it still accepts creates and edits per area node. #374 (above) asks for
+    `knk.admin.content` there too.
+  - **Admin steps:** no migration, no setting, no plugin change, no new package; deploy the web app only. World, kit,
+    lootbox, siege, road and Staff ranks that should keep creating or editing records need `knk.admin.content`.
+    Smoke test: [dashboard access smoke test § 8 steps 6, 7, 9, 9a](guides/dashboard-access-smoke-test.md#8-web-app-am3).
+
+- **NPC navigation, Phases 1 to 4: NPCs walk K&K routes, alone and in groups (admin testing only)** — no change for players; off by
   default (`npc.navigation.enabled`). In `next` when the pull requests of PandiO/knk-workspace#360 are merged; on the
   trunk when the developer promotes `next`. Parent issue PandiO/knk-workspace#358,
   [implementation plan](specs/npc-platform/IMPLEMENTATION_PLAN.md).
@@ -36,13 +105,29 @@ This is a human-readable record of capabilities merged into the V3 default branc
      watchdog that notices an NPC that makes no progress and sends it on a short recovery leg. NPCs have their own
      access profile instead of a player's rights, wait when the rules allow no route, pause when their chunk unloads
      and are spawned a few per tick. `/knk npc nav` replaces the test command of the Citizens spike.
+  3. **Phase 3** (#361, in review; in `next` when its pull requests are merged): the rules stay binding while NPCs
+     walk. A few NPCs per tick have their way ahead checked against the gate and access rules as they are now; a
+     gate or access change reaches only the NPCs it concerns. An NPC with no allowed route walks to the closed gate
+     or the district's edge and waits there until that gate or rule opens. A trespass guard counts any NPC that
+     enters a region its rules deny (`knk_npc_nav_events_total{event="trespass"}`, must stay 0). New keys:
+     `npc.navigation.rule-checks-per-tick` (10) and `npc.navigation.stop-on-trespass` (false).
+  4. **Phase 4** (#377, in review; in `next` when its pull requests are merged): groups plan once. A group's leader
+     plans the route; the followers walk the same path in formation slots (`column`, `ranks`, `cluster`,
+     `escort-ring`), fold into a column where the road is too narrow (gates, stairs) and reform after. A gate or
+     access change costs a group one route plan whatever its size (the Citizens spike planned 50 NPCs separately:
+     1.3 s queue wait at p95), and a group has one blocked state and one wake-up. A follower that leaves its lane
+     or gets stuck plans one short leg back; the leader waits for followers that fell far behind.
+     `/knk npc nav group <n> [formation] [profile]` starts a test group. New keys under `npc.navigation`:
+     `group-formation` (column), `group-spacing` (2.0), `group-ranks-width` (2), `group-rejoin-blocks` (4.0),
+     `group-regroup-blocks` (24.0), `group-catch-up-speed` (1.3). New metric events `group_fold`, `group_reform`,
+     `group_rejoin`, `group_regroup`, `group_lost`.
   - **Admin steps:**
     1. Install the Citizens plugin (build 4269 for 26.3 or newer) only where NPC navigation is tested; the plugin
        runs without it.
     2. Merge the `npc.navigation` block into `config.yml` by hand
        ([configuration reference § 4.27](guides/admin/plugin-configuration.md#427-npc) has the YAML). It ships with
        `enabled: false`.
-    3. To test: `enabled: true`, restart, then the steps under "Developer test" of Phases 1 and 2 in the
+    3. To test: `enabled: true`, restart, then the steps under "Developer test" of Phases 1, 2, 3 and 4 in the
        implementation plan.
 
 ## 2026-11-13

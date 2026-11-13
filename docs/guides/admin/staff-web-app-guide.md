@@ -1,11 +1,13 @@
 # Staff web app — admin guide
 
-**Status:** Living document — update in place. Describes knk-web-app `main` `e02ee79` and knk-web-api `master` `45043a7`
-(merged 2026-11-12/13). Only the builders (§ 7) were smoke-tested by the developer (2026-11-11/12, all pass); navigation,
+**Status:** Living document — update in place. Describes knk-web-app `next` `e6ba115` and knk-web-api `master` `45043a7`
+(merged 2026-11-12/13; `next` adds #371, create and edit back on `knk.admin.content`, and #374, the same for the detail
+page's link buttons and in the API, knk-web-app `next` `ca1959d` and knk-web-api `next` `b65e66d`; both reach `main`
+when the developer promotes `next`). Only the builders (§ 7) were smoke-tested by the developer (2026-11-11/12, all pass); navigation,
 Entity setup without a nav link, the detail page, the relation picker, live updates, the settings pages and the
 dashboard access model with bulk delete (§ 1, § 3) are **not live-tested** yet: their smoke tests are linked in each
 section (the access model's is in closed alpha test run 2, checklist § 4c).
-**Last updated:** 2026-11-13 (dashboard per area, disabled actions with "Requires …", bulk delete, export through the
+**Last updated:** 2026-11-13 (Select / Change / Unlink / Add need `knk.admin.content`, the API refuses creates and edits without it, #374, docs #385); 2026-11-13 (New, Edit and the forms need `knk.admin.content` again, #371, docs #378); 2026-11-13 (dashboard per area, disabled actions with "Requires …", bulk delete, export through the
 API, names-only pickers, readable refusals; #280 AM3 and #205, docs #366); 2026-11-12 (first version,
 PandiO/knk-workspace#337, #338, #340–#345)
 
@@ -21,11 +23,14 @@ does not repeat the feature guides (siege, game settings, menus, …); it links 
 - **The dashboard is per area** ([#280](https://github.com/PandiO/knk-workspace/issues/280), merged 2026-11-13). Each
   type belongs to an area with its own node: `knk.admin.content` (items, categories, tags, …), `knk.admin.world`
   (domains, towns, districts, streets, …), `knk.kit.manage`, `knk.admin.lootbox.manage`, `knk.siege.admin.manage`,
-  `knk.admin.road` and `knk.admin.user.manage` (users, permission groups). **Any one** of them opens the Dashboard,
-  the detail pages and the forms; you see and change only the types of the areas you hold. Deleting needs
+  `knk.admin.road` and `knk.admin.user.manage` (users, permission groups). **Any one** of them opens the Dashboard
+  and the detail pages; you see only the types of the areas you hold. **Creating and editing** (New, Edit, the
+  forms) and changing a record's links on its detail page need `knk.admin.content` as well as the type's area node
+  ([#371](https://github.com/PandiO/knk-workspace/issues/371), [#374](https://github.com/PandiO/knk-workspace/issues/374),
+  developer decisions 2026-11-13); the API refuses a create or edit without it too. Deleting needs
   `knk.admin.delete` on top, exporting `knk.admin.export`, and deleting several rows at once
   `knk.admin.delete.bulk`, which only the owner hands out. Entity setup's lists, the builders and the Minecraft
-  catalogue still need `knk.admin.content`. Which rank holds what, and how to give someone an area node:
+  catalogue need `knk.admin.content` too. Which rank holds what, and how to give someone an area node:
   [dashboard access admin guide](dashboard-access-admin-guide.md). The [changelog entries of 2026-11-12 and
   2026-11-13](../../CHANGELOG.md) list what changed for existing groups.
 - **Buttons you can't use** are greyed out with what they need, on hover and next to them: "Requires
@@ -84,14 +89,14 @@ lists only the types of your areas (§ 1); an address with a type of another are
 link to the record's **detail page** (§ 4); middle-click opens it in a new tab. Next to the type's title:
 
 - **New {Type}** opens the type's default form; **Drafts (n)** lists your saved, unfinished forms of this type and
-  **New with** offers its other published forms. These open the form for any area's staff.
+  **New with** offers its other published forms. These open the form wizard, which needs `knk.admin.content` on top of
+  the type's area node; without it they are greyed out with "Requires knk.admin.content".
 - **⚙ Configure {Type}** opens **Entity setup** for that type (`/forms/{Type}`): its form configurations, display
   configurations, Default Table Columns and saved progress. It needs `knk.admin.content` (greyed out otherwise; opening
-  the address says "Entity setup needs knk.admin.content" with **Back to the dashboard**). That the forms open for
-  every area while Entity setup stays content-only is waiting for a developer decision,
-  [#368](https://github.com/PandiO/knk-workspace/issues/368).
-- Without the type's create or edit node, **New** and **Edit** are greyed out with "Requires …"; without
-  `knk.admin.delete`, so is **Delete**.
+  the address says "Staff only — This page needs the knk.admin.content permission").
+- Without the type's create or edit node, or without `knk.admin.content`, **New** and **Edit** are greyed out with
+  "Requires …"; without `knk.admin.delete`, so is **Delete**. **Edit** on a User opens the player profile and doesn't
+  need `knk.admin.content`.
 
 **Delete one row.** A row's **Delete** asks "Delete Street "Main Street"?" in a red dialog; after **Delete** a short
 message says it was deleted. If it is still in use, the refusal offers **Show what uses it** (§ 4).
@@ -130,7 +135,8 @@ test run 2 § 4c) (not run).
 
 The detail page (`/display/{Type}/{id}`, **View** on a dashboard row) shows one record with the sections of the type's
 published display configuration. The header has the record's name and type, **Back** (to where you came from), **Edit**
-and **Delete**.
+and **Delete**. **Edit** needs the type's edit node and `knk.admin.content` (greyed out with "Requires …" otherwise;
+a User's Edit opens the player profile instead).
 
 **Reading it** ([#189](https://github.com/PandiO/knk-workspace/issues/189)):
 - Values are plain text; an empty value is "-". A related record (a street's town, an item's category) is a link to its
@@ -150,7 +156,11 @@ and **Delete**.
   question that names it.
 - A link that can't change here says why under the buttons, for example "A District always belongs to a town" or
   "An icon is required". A button you lack the node for is disabled with "Requires …" (for example "Delete: Requires
-  knk.admin.delete", or "Requires knk.admin.world" on a town's links).
+  knk.admin.delete").
+- **Select…, Change…, Unlink and Add… need the type's area node and `knk.admin.content`**
+  ([#374](https://github.com/PandiO/knk-workspace/issues/374)): changing a link is an edit. Without the content node
+  they are greyed out with "Requires knk.admin.content", and the hint line under the section says so. A world-only rank
+  can still open a town and delete one of its streets (with `knk.admin.delete`), but not add or unlink one.
 - Edits by others and a delete of the open record show live (§ 6).
 
 **A delete that is refused because the record is still in use** (a street that structures point at) shows the API's
@@ -178,7 +188,7 @@ Without read access to the related type (its area node), the box searches **by n
 so: "Names only: the full Street table needs one of: …". A type that can't be searched that way says "can't be searched
 here. Requires one of: …"; a field with a narrowing filter says why it can't offer the list
 ([#288](https://github.com/PandiO/knk-workspace/issues/288)). **Create New** for a link field is offered only with
-the related type's create node. A table you can't read (for example a picker's **Open full table**) says "You don't
+the related type's create node and `knk.admin.content`. A table you can't read (for example a picker's **Open full table**) says "You don't
 have access to Category. Requires one of: …" instead of "Failed to load data".
 
 Smoke test: [relation picker and delete details](../relation-picker-and-delete-details-smoke-test.md) (not run).
@@ -305,7 +315,10 @@ get the new version at once.
 | A button disabled with "Requires …" | That action's node is missing | Add the named node, or ask someone who has it |
 | No **Delete (n)** when rows are ticked | No `knk.admin.delete.bulk` (owner-only), or users and permission groups | Ask the owner; delete users and groups one at a time |
 | After **Delete (n)** some rows are still ticked | Those were refused; the dialog gave each reason | Fix the reason (**Show what uses it**), then delete again |
-| "Entity setup needs knk.admin.content" | Entity setup's lists need the content node | Use the dashboard's New / Edit / Drafts, or ask for `knk.admin.content` |
+| **New** / **Edit** greyed out: "Requires knk.admin.content" | Creating and editing need the content node on top of the area node (#371) | Ask for `knk.admin.content` if you should create and edit |
+| "Staff only — This page needs the knk.admin.content permission" on a form | Entity setup, the forms and the builders need the content node. The Lootboxes tabs' New/Edit, Road network's Rename and a detail page section's edit and Create New still lead there instead of being greyed out ([#380](https://github.com/PandiO/knk-workspace/issues/380)) | Ask for `knk.admin.content` |
+| **Select…** / **Add…** / **Unlink** greyed out: "Requires knk.admin.content" | Changing links is an edit and needs the content node (#374) | Ask for `knk.admin.content` if you should change links |
+| A save answers "Creating or editing … requires … and knk.admin.content." (for example the Lootboxes **Enable/Disable** toggle or Road network's **New street**) | The API asks for the content node on every create and edit (#374); these two buttons aren't greyed out beforehand yet ([#383](https://github.com/PandiO/knk-workspace/issues/383)) | Ask for `knk.admin.content` |
 | Delete refused with **Show what uses it** | Other records still point at it | Unlink or delete those first |
 | Staff don't see a builder change | It is saved as a draft, not published | **Publish…** |
 | A validation rule change applies before Publish | Known limit #291 | Change rules outside play hours |
