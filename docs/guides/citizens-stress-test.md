@@ -1,7 +1,7 @@
 # Citizens stress test — NPC hybrid navigation
 
 **Status:** Done. 2026-11-11: **go with caveats** (load and rule checks pass, caveats on [#244](https://github.com/PandiO/knk-workspace/issues/244#issuecomment-6806008046)). 2026-11-12: unloaded chunks (pass) and Phase 0: NPCs follow the K&K line in trail mode (implementation plan Q8 decided), travel bubble works.
-**Last updated:** 2026-11-12
+**Last updated:** 2026-11-13 (the production commands that replace the spike's, Phase 2); 2026-11-12
 **Issue:** [PandiO/knk-workspace#241](https://github.com/PandiO/knk-workspace/issues/241): desk check [#242](https://github.com/PandiO/knk-workspace/issues/242), spike [#243](https://github.com/PandiO/knk-workspace/issues/243), benchmark [#244](https://github.com/PandiO/knk-workspace/issues/244)
 **Branch:** knk-plugin `claude/citizens-spike` `c6b5b46` (throwaway, **never merge**), on `main` `33122cf4`
 **Spec:** [BEHAVIOR_MODEL §2 and §13](../specs/npc-platform/BEHAVIOR_MODEL.md#2-fit-with-the-platform-design), [DESIGN §9](../specs/npc-platform/DESIGN.md#9-navigation-reuse-and-platform-audit)
@@ -191,6 +191,23 @@ Waypoint lists skip the K&K examiner, so only the recheck and the events keep th
 Watch: `chunks held` and chunks per NPC, `ms_per_npc`, `not generated` (must stay 0 on built terrain), server memory (the performance dashboard or `/spark` if installed), and whether NPCs stop at chunk borders.
 
 Send the `npcspike-logs/` folder (the run files and `results.csv`).
+
+## Production code (Phase 2, 2026-11-13)
+
+The spike's tests are repeated on the production code with `/knk npc nav` (permission `knk.admin.npc`) on knk-plugin `claude/npc-navigation`. The steps and the numbers to compare are in the implementation plan, ["Phase 2 → Developer test"](../specs/npc-platform/IMPLEMENTATION_PLAN.md#phase-2--navigate-one-npc-plugin). The spike build stays the place for `dump` and for the hop and dense modes.
+
+| Spike `/knk npcspike …` | Production `/knk npc nav …` |
+|---|---|
+| `from`, `to`, `route list\|save\|load\|delete` | the same; the spike's `npcspike-routes.yml` is taken over once into `npc-routes.yml` |
+| `baseline` | `baseline` |
+| `spawn <n> trail` | `spawn <n> [access profile]` (trail mode only; two spawns per tick) |
+| `stats [label]`, `reset` | `stats`, `stats reset` (also written to `npc-logs/<time>_npc-nav.log`) |
+| `trace [npc] [seconds]` | `trace [npc] [seconds]` (to `npc-logs/`) |
+| `clear` | `clear` |
+| `set subject <player>` | an access profile in `npc.navigation.access-profiles` |
+| `set <key> <value>` | the key in `config.yml` (`npc.navigation.*`), restart |
+| `dump`, `run`, `set keeploaded`, `spawn <n> hop\|dense` | not in the production code |
+| — | `goto` (every NPC walks to you once), `patrol` (back on the route) |
 
 ## Later
 

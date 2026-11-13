@@ -6,6 +6,25 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 Nothing listed right now. Feature branches keep their draft entry on their own workspace branch until they merge.
 
+- **NPC navigation, Phases 1 and 2: NPCs walk K&K routes (admin testing only)** — no change for players; off by
+  default (`npc.navigation.enabled`). In `next` when the pull requests of PandiO/knk-workspace#360 are merged; on the
+  trunk when the developer promotes `next`. Parent issue PandiO/knk-workspace#358,
+  [implementation plan](specs/npc-platform/IMPLEMENTATION_PLAN.md).
+  1. **Phase 1** (#359): the Citizens plugin as an optional dependency, an engine-neutral core with layered
+     settings, NPC metrics (`knk_npc_nav_*`), the NPC event audit and a guard that keeps NPCs out of region tracking.
+  2. **Phase 2** (#360): an NPC follows the road route K&K plans, one stretch of the road line at a time, with a
+     watchdog that notices an NPC that makes no progress and sends it on a short recovery leg. NPCs have their own
+     access profile instead of a player's rights, wait when the rules allow no route, pause when their chunk unloads
+     and are spawned a few per tick. `/knk npc nav` replaces the test command of the Citizens spike.
+  - **Admin steps:**
+    1. Install the Citizens plugin (build 4269 for 26.3 or newer) only where NPC navigation is tested; the plugin
+       runs without it.
+    2. Merge the `npc.navigation` block into `config.yml` by hand
+       ([configuration reference § 4.27](guides/admin/plugin-configuration.md#427-npc) has the YAML). It ships with
+       `enabled: false`.
+    3. To test: `enabled: true`, restart, then the steps under "Developer test" of Phases 1 and 2 in the
+       implementation plan.
+
 ## 2026-11-13
 
 - **AI agent workflow setup: CI, `next` branches, chain skills, agent tooling and the sessions archive** — no game
