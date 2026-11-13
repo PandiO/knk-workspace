@@ -1587,7 +1587,7 @@ dependencies {
 - **Backend Specification**: [docs/specs/users/SPEC_USER_ACCOUNT_MANAGEMENT.md](../../specs/users/SPEC_USER_ACCOUNT_MANAGEMENT.md)
 - **Backend Roadmap**: [docs/specs/users/USER_ACCOUNT_MANAGEMENT_IMPLEMENTATION_ROADMAP.md](../../specs/users/USER_ACCOUNT_MANAGEMENT_IMPLEMENTATION_ROADMAP.md)
 - **Frontend Roadmap**: [docs/ai/frontend-auth/FRONTEND_USER_ACCOUNT_MANAGEMENT_IMPLEMENTATION_ROADMAP.md](../frontend-auth/FRONTEND_USER_ACCOUNT_MANAGEMENT_IMPLEMENTATION_ROADMAP.md)
-- **Plugin Architecture**: [Repository/knk-plugin/docs/ARCHITECTURE_AUDIT.md](../../../Repository/knk-plugin/docs/ARCHITECTURE_AUDIT.md)
+- **Plugin Architecture**: [archive/knk-plugin/ARCHITECTURE_AUDIT.md](../../archive/knk-plugin/ARCHITECTURE_AUDIT.md)
 
 ---
 

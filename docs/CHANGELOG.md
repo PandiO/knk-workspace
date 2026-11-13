@@ -55,6 +55,16 @@ This is a human-readable record of capabilities merged into the V3 default branc
        plugin there (guide § 3.7).
     3. No deploy, migration, `config.yml` key or API setting changes.
 
+- **Deployment log and deploy records** (PandiO/knk-workspace#303) — no game change; the project now records which
+  version runs on the closed alpha. New [`DEPLOYMENTS.md`](DEPLOYMENTS.md): one row per deploy (commits and release
+  tags, seed or patch, migrations, config keys merged, scripts, checks, rollback), back-filled from the deploy reports
+  of 2026-10-11 to 2026-11-02, the alpha's current state marked "to be confirmed by the developer". The
+  [closed-alpha runbook § Every deploy](guides/closed-alpha-deployment-runbook.md#every-deploy-gate-tags-release-and-log)
+  adds the deploy gate (open `documentation` issues), release tags through the components' Release workflow, the
+  log row and a GitHub Release on knk-workspace per deploy ("What's new" and "Admin steps"). Tag naming for the deploy
+  release is open in #444.
+  - **Admin steps:** none.
+
 ## 2026-11-12
 
 - **Admin web app: chain 3 (V1–V7) and chain 2's web app merged, with the access model's API part** — staff get a
