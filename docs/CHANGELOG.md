@@ -4,8 +4,6 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
-Nothing listed right now. Feature branches keep their draft entry on their own workspace branch until they merge.
-
 - **NPC navigation, Phases 1 and 2: NPCs walk K&K routes (admin testing only)** — no change for players; off by
   default (`npc.navigation.enabled`). In `next` when the pull requests of PandiO/knk-workspace#360 are merged; on the
   trunk when the developer promotes `next`. Parent issue PandiO/knk-workspace#358,
@@ -26,6 +24,29 @@ Nothing listed right now. Feature branches keep their draft entry on their own w
        implementation plan.
 
 ## 2026-11-13
+
+- **Dashboard access in the web app; bulk delete** (PandiO/knk-workspace#280 AM3, #205) — staff now see only the
+  dashboard types of the areas they work in, buttons they can't use are greyed out with the permission they need, and
+  owners and Admins can delete many rows at once. Accepted by the developer 2026-11-13 without a live test and merged 2026-11-13 (knk-web-app `main` `e02ee79`, knk-web-api `master` `45043a7`, also on `next`); the smoke test is in closed alpha
+  test run 2 (checklist § 4c).
+  - **Web app:** the dashboard, the detail page and the form wizard open for any area node (`knk.admin.content`,
+    `knk.admin.world`, `knk.kit.manage`, `knk.admin.lootbox.manage`, `knk.siege.admin.manage`, `knk.admin.road`,
+    `knk.admin.user.manage`); the explorer lists only the types of the areas held. New, Edit, Delete and ⚙ are disabled
+    with "Requires <node>" from the metadata's `actionNodes`; the bulk **Delete (n)** is hidden without
+    `knk.admin.delete.bulk` and for users and permission groups. Bulk delete confirms with the count and type, calls
+    `POST api/Dashboard/bulk-delete` in chunks of 100, keeps refused rows selected and lists them with their reasons
+    ("Show what uses it" for rows still in use). Export CSV reads through `POST api/Dashboard/export` (audited; CSV
+    format unchanged). Players no longer request `api/Metadata` (a 403 on every page since AM2). Refused reads say
+    "You don't have access to …"; labels and join entries fall back to `api/Lookup`; a picker's Create New needs the
+    related type's create node. Entity setup's lists stay `knk.admin.content`; its configuration Delete also needs
+    `knk.admin.delete`. Audit entries `DashboardBulkDelete` / `DashboardExport` have labels.
+  - **API:** `DELETE api/FormConfigurations/{id}` and `api/DisplayConfigurations/{id}` need `knk.admin.delete` too
+    (developer decision 2026-11-12 on LV7-8); bulk-delete refusals carry a `code` (`InUse`, `NotFound`, `Refused`,
+    `Failed`).
+  - **Admin steps:** no migration, no setting, no plugin change, no new package. Deploy the AM3 API and web app
+    together, **API first** (AM1–AM3 belong together; AM1/AM2 are already on `master`). Accounts that delete form or
+    display configurations need `knk.admin.delete` (Admin and the owner have it; backfilled content holders too).
+    Smoke test: [dashboard access smoke test § 2.1, § 8](guides/dashboard-access-smoke-test.md).
 
 - **AI agent workflow setup: CI, `next` branches, chain skills, agent tooling and the sessions archive** — no game
   change. Agents now have automatic checks on every push, a `next` integration branch to work on, two project skills

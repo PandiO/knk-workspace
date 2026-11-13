@@ -1,25 +1,41 @@
 # Dashboard access model — smoke test
 
-**Status:** Draft (AM1 and AM2, API part). AM4 finishes it once AM3 (web app) is built; until then the steps run
-against the API with `curl` or Swagger. Not run yet. AM1 and AM2 **merged 2026-11-12** into knk-web-api `master` `bc97b7d` (with V5–V7); AM3 (web app) and AM4 not built.
-**Last updated:** 2026-11-12 (AM1+AM2 merged); 2026-11-08 (§ 7 read gating and lookups, chain 3 link AM2); 2026-11-08 (draft with the AM1 API steps, chain 3 link AM1)
+**Status:** Ready to run (API § 1–7, web app § 8). Not run yet: **accepted by the developer 2026-11-13 without a live
+test**, scheduled in closed alpha test run 2 (checklist § 4c). AM1 and AM2 merged 2026-11-12 (knk-web-api `master`
+`bc97b7d`); AM3 merged 2026-11-13 (knk-web-app `main` `e02ee79`, knk-web-api `master` `45043a7`, also on `next`).
+AM4 (living docs, the [admin guide to the ranks](admin/dashboard-access-admin-guide.md)) done 2026-11-13 (#366).
+Known: the wizard routes for any area node are a deviation waiting for a decision (#368); a `knk.admin.user.manage`-only
+rank can't load the Permission Group list (#369, § 8.1 step 4).
+**Last updated:** 2026-11-13 (AM4 docs done, #368/#369 noted, architecture anchors; docs #366); 2026-11-13 (status: merged, accepted without a live test, in test run 2); 2026-11-12 (§ 0 role accounts and deploy, § 2.1 configuration deletes, § 3 refusal codes, § 8 web
+app, § 9 docs impact; chain 3 link AM3); 2026-11-12 (AM1+AM2 merged); 2026-11-08 (§ 7 read gating and lookups, chain 3 link AM2); 2026-11-08 (draft with the AM1 API steps, chain 3 link AM1)
 **Design:** [specs/dashboard-access-model/DESIGN.md](../specs/dashboard-access-model/DESIGN.md) · as built:
-[web-api architecture § 5.1](../architecture/web-api-architecture.md#51-dashboard-access-model-pandioknk-workspace280-am1--branch-claudedashboard-access-280-not-merged)
-and [§ 5.2](../architecture/web-api-architecture.md#52-read-gating-per-area-and-lookups-pandioknk-workspace280-am2--branch-claudedashboard-access-280-not-merged)
+[web-api architecture § 5.1](../architecture/web-api-architecture.md#51-dashboard-access-model-pandioknk-workspace280-am1-merged-2026-11-12-am3-2026-11-13)
+and [§ 5.2](../architecture/web-api-architecture.md#52-read-gating-per-area-and-lookups-pandioknk-workspace280-am2-merged-2026-11-12)
 **Issue:** [PandiO/knk-workspace#280](https://github.com/PandiO/knk-workspace/issues/280)
-**Branches:** knk-web-api `claude/dashboard-access-280` (contains P1 `claude/kit-grant-delivery-261` with chain 2's R1,
-and chain 2's X1 API `claude/realtime-web-live-183`)
+**Branches (AM3):** knk-web-app `claude/dashboard-access-280` and knk-web-api `claude/dashboard-access-280`, both fresh
+from their trunks (`main` `1371951`, `master` `bc97b7d`); AM1 and AM2 are already in `master`.
 
 ## 0. Before you start
 
-- **Deploy AM1–AM3 together, API first** (design § 5). AM1 alone changes behaviour already: every dashboard delete now
-  needs `knk.admin.delete`, and Staff loses delete (developer decision). Run the API part on a dev database first.
-- **Back up** the database: the migration `SeedDashboardActionNodes` is data only and has a Down, but a backup is the
-  quick way back.
-- **Five accounts** (AM4 uses the same): the owner (`*`), an Admin (Admin group), a Staff member (Staff group only), a
-  content-only rank (a group with `knk.admin.content`), a world-only rank (a group with `knk.admin.world`). For § 7
-  also a config-only rank (`knk.admin.config`), a kit-only rank (`knk.kit.manage`) and a player without staff nodes. Log in with
-  each in its own browser profile and copy its access token for `curl` (`Authorization: Bearer …`).
+- **Deploy AM1–AM3 together, API first** (design § 5). AM1 and AM2 are on `master` already; AM3 adds a small API
+  change (configuration deletes, a refusal code) and the web app. Deploy the AM3 API branch, then the AM3 web app, in
+  the same window: the merged web app (`main` `1371951`) still loads `GET api/Metadata` for players (a 403 on every
+  page) and shows Delete buttons the API refuses. No migration, no setting, no plugin change in AM3.
+- **Back up** the database: the migration `SeedDashboardActionNodes` (AM1) is data only and has a Down, but a backup is
+  the quick way back.
+- **Role accounts** (AM4 uses the same). Log in with each in its own browser profile; for the API steps copy its access
+  token for `curl` (`Authorization: Bearer …`).
+
+  | Account | How | Expect in the web app |
+  |---|---|---|
+  | **owner** | user 1 (`*`) | everything, also bulk delete and handing out `knk.admin.delete.bulk` |
+  | **Admin** | Admin group (`knk.admin.*` on the alpha) | every area, delete, bulk delete, export |
+  | **Staff** | Staff group only (`knk.admin.user.manage`, `knk.kit.manage`, `knk.siege.admin.*`, freeze, …) | dashboard with users, permission groups, kits and siege types; no Delete, no Export, no bulk Delete |
+  | **content-only** | a test group with only `knk.admin.content` (the migration backfills `knk.admin.delete` + `knk.admin.export`) | content types; Delete and Export; no bulk Delete |
+  | **world-only** | a test group with only `knk.admin.world` (backfilled the same way) | world types; Delete and Export; no bulk Delete; no Entity setup lists |
+  | **player** | Default group only | no Dashboard link; no 403 on `api/Metadata` in the network tab |
+
+  For § 7 also a config-only rank (`knk.admin.config`) and a kit-only rank (`knk.kit.manage`).
 - The plugin runs with `api.auth.type: apikey` (design § 6).
 
 ## 1. Migration (API)
@@ -47,12 +63,23 @@ For each role, `DELETE` one test record per area it holds (`api/Categories/{id}`
 - [ ] a refusal by a database constraint still answers 409 with "… is still used by …".
 - [ ] the plugin (apikey) still syncs: `/knk` commands that write (road edits, user groups, discovery reset) work.
 
+### 2.1 Form and display configuration deletes (AM3, LV7-8)
+
+Developer decision 2026-11-12: deleting a whole form or display configuration needs `knk.admin.delete` on top of
+`knk.admin.content`.
+
+- [ ] Admin: `DELETE api/FormConfigurations/{id}` and `DELETE api/DisplayConfigurations/{id}` of a test configuration
+  answer 204 (or the existing "still used" refusal).
+- [ ] A rank with `knk.admin.content` but a deny of `knk.admin.delete` (`knk.admin.delete = false`): 403 "Requires the
+  knk.admin.delete permission." on both; saving, publishing and duplicating configurations still work.
+- [ ] Deleting a step, field, section or validation rule inside the builder is unchanged (no `knk.admin.delete`).
+
 ## 3. Bulk delete (API)
 
 `POST api/Dashboard/bulk-delete` with `{ "entityType": "Category", "ids": [ … ] }`:
 
-- [ ] owner: 200 `{ deleted, refused }`; a still-used row is in `refused` with the "still used by" reason, the others
-  are gone. One audit entry `DashboardBulkDelete` on the owner's audit log (player profile → audit).
+- [ ] owner: 200 `{ deleted, refused }`; a still-used row is in `refused` with the "still used by" reason and
+  `"code": "InUse"` (AM3; other refusals `Refused`, `NotFound` or `Failed`), the others are gone. One audit entry `DashboardBulkDelete` on the owner's audit log (player profile → audit).
 - [ ] Admin on the alpha: 200 (bulk through `knk.admin.*`).
 - [ ] content-only rank: 403 "Requires the knk.admin.delete.bulk permission."
 - [ ] `"entityType": "User"` or `"PermissionGroup"` as the owner: 400 `BulkDeleteNotAllowed`.
@@ -127,7 +154,96 @@ No migration, no setting. With the accounts of § 0 (plus the config-only, kit-o
 
 ## 8. Web app (AM3)
 
-To be written by AM4: open the dashboard per role and see only your area's types; full read vs lookup in pickers ("You
-don't have access to <type>" on a refused read); New/Edit/Delete disabled with "Requires <node>"; bulk "Delete (n)"
-hidden without the nodes; export through the endpoint; Game settings, discovery, roads and lootbox pages still load for
-their own nodes.
+Deploy the AM3 web app with the AM3 API. Themes: run 8.1–8.4 once in `current`, then glance at 8.2 and 8.4 in `brand`
+and at 390 px width (phone): nothing scrolls sideways, the bulk dialogs fit.
+
+### 8.1 Who opens the dashboard (decision 8)
+
+1. [ ] **player:** the bar shows Home, Leaderboards, Guides only. Open any page with the network tab open: no request to
+   `api/Metadata/entities` or `api/EntityTypeConfiguration` (before AM3 each page load got a 403 there). `/dashboard`
+   shows "Staff only — This page needs one of these permissions: knk.admin.content, knk.admin.world, …".
+2. [ ] **world-only:** the bar shows **Dashboard**; the explorer lists only world types (Domain, Town, District,
+   Structure, Street, Location, gates, sub-regions). Typing `/dashboard/Category` in the address bar falls back to a
+   world type. The sidebar has no Minecraft catalogue.
+3. [ ] **content-only:** only content types; `/dashboard/Town` falls back to a content type.
+4. [ ] **Staff:** Dashboard opens with User, Permission Group, Kit and the siege types; no world or content types.
+5. [ ] **Admin / owner:** every type, as before.
+
+### 8.2 Disabled actions with "Requires <node>" (decision 11)
+
+6. [ ] **Staff** on User: the rows' **Delete** is greyed out; hover says "Requires knk.admin.delete". **Edit** opens
+   the player profile. In the bar **Export CSV** is disabled with "Requires knk.admin.export" next to it. No
+   **Delete (n)** appears when rows are ticked. The ⚙ (Entity setup) is disabled with "Requires knk.admin.content".
+7. [ ] **Staff** on Permission Group: **New** and **Edit** follow `knk.admin.user.perm` (disabled with "Requires
+   knk.admin.user.perm" if the Staff group doesn't hold it).
+8. [ ] **content-only** on Category: New, Edit, Delete and Export enabled; ticking rows shows **no** Delete (n).
+9. [ ] **world-only:** open `/forms/Town` directly: "Entity setup needs knk.admin.content" with **Back to the
+   dashboard**. From the dashboard, **New Town** opens the Town form and a draft saves (the wizard works for any area
+   node); **Edit** on a town opens its form.
+10. [ ] **content-only**, Entity setup of a type (⚙): a form configuration's ⋯ → **Delete** works as before. With a
+    user-level deny `knk.admin.delete = false` on that account (reload after the change): the Delete item is greyed out
+    with "Requires knk.admin.delete", for form and display configurations alike (LV7-8).
+
+### 8.3 Single and bulk delete (#205)
+
+11. [ ] **Admin**, single delete: a row's Delete asks "Delete Street "Main Street"?" in a red dialog; Delete → toast
+    "Street "Main Street" was deleted."; the row is gone. A street that is still used → "Delete Failed" with the reason
+    and **Show what uses it** (as before, V6).
+12. [ ] **Admin**, bulk: tick three streets, one of them still used by a structure. The bar shows **Delete (3)** (red)
+    before Export. Click → "Delete 3 Streets?" (count and type named). Confirm → toast "Deleted 2 of 3 Streets; 1
+    weren't deleted." and a dialog "Deleted 2 of 3 Streets" listing the used street with its reason and **Show what
+    uses it** (opens the list of structures; a link opens the structure). Close: the refused street is still ticked, the
+    two deleted ones are gone from the table and the selection.
+13. [ ] **Admin**, all deletable: tick three unused rows → Delete (3) → toast "Deleted 3 …", no dialog, selection empty.
+14. [ ] **owner**, a large selection: tick rows on several pages (more than 100 if the test data has them) → one
+    confirm; the button shows "Deleting… n / N" while it runs in chunks of 100; the audit log of the owner (player
+    profile → Activity) has one "Bulk delete on the dashboard" entry per chunk with the type, counts and ids.
+15. [ ] **Admin** on User or Permission Group: no Delete (n) at all (one at a time only, decision 6).
+16. [ ] A **user-level deny** `knk.admin.delete.bulk = false` on the Admin account (reload): no Delete (n) anywhere;
+    single Delete still works.
+
+### 8.4 Export through the endpoint, refused reads, pickers
+
+17. [ ] **content-only**, Category, nothing ticked: Export CSV → one `POST api/Dashboard/export` in the network tab, the
+    file `Category-<date>.csv` with the table's columns in table order and the current sort (V2's format unchanged:
+    comma, UTF-8 with BOM, `'` before formula-like text). The owner's audit log has "Dashboard export" (type, rows,
+    "(search)").
+18. [ ] Tick three rows in a different order than the table shows, export: the file lists them **in the order you
+    ticked them**, with their current values ("(selection)" in the audit entry).
+19. [ ] **world-only**, form of a Town (or Structure) with a field that picks a content record (for example a clan): the
+    picker shows "Names only: the full … table needs one of: …" and still finds records by name (lookup mode, V6);
+    **Create New** for that field is not offered (it needs that type's create node). A picker of a world type keeps
+    the full table and Create New.
+20. [ ] **world-only**, a refused read shows words instead of "Failed to load data": open `/display/Category/<id>` →
+    "You don't have access to this Category." with "Requires one of: knk.admin.content, …" (V5's detail page); a table
+    of another area's type (for example a picker's **Open full table** if one is offered) says "You don't have access
+    to Category. Requires one of: …".
+21. [ ] **Unchanged pages:** Game settings for a config-only rank (spawn and hub options list towns and locations),
+    Domain discovery, Road network, Lootboxes, a player profile's kits for Staff — each loads for its own node.
+22. [ ] **Live updates:** with two browsers (Admin and world-only) on Town, a save by Admin refreshes the world-only
+    table ("Updated by …"); a bulk delete of towns refreshes it once, not once per row.
+
+## 9. Docs impact (AM3)
+
+Written before merge; the rest went to the `documentation` sub-issue #366 at merge (with AM4's list) and was done there
+on 2026-11-13: the admin guide to the ranks, the staff web app guide, both architecture docs, the design status, entity
+lists § 7, realtime § S4, the register and the guides index.
+
+- **This guide:** § 0 role accounts and deploy, § 2.1, § 3 refusal codes, § 8 (done on the AM3 branch).
+- **Design** (`specs/dashboard-access-model/DESIGN.md`): status line (AM3 built); § 4.7 "not covered" now leaves out
+  whole form/display configurations (LV7-8); § 7 the 2026-11-12 decisions (done on the AM3 branch).
+- **CHANGELOG:** Unreleased entry for AM3 with Admin steps (done on the AM3 branch; moves under the merge date).
+- **web-app architecture** (`architecture/web-app-architecture.md`): `useEntityAccess` / `useViewableTypes`,
+  `RouteAccess` `staffAny` and `AREA_NODES`, metadata only for area-node holders (`useAnyAreaNode`,
+  `loadedEntityMetadata`), bulk delete (`dashboardClient`, `utils/bulkDelete.ts`, `BulkDeleteResultDialog`), export via
+  `POST api/Dashboard/export` (`readExportRows`), `readRefusalMessage`, `fetchByIdOrLookup`, Entity setup for
+  non-content staff, configuration Delete gate. (AM4)
+- **web-api architecture** § 5.1: configuration deletes need `knk.admin.delete`; bulk-delete refusals carry `code`. (AM4)
+- **Staff web app guide** (`guides/admin/staff-web-app-guide.md`): § 1 dashboard per area (no longer "every type for
+  `knk.admin.content`"), hidden/disabled Delete and bulk Delete, § 3 Export through the API (audited), § 10
+  troubleshooting rows (missing area node, refused Delete, "You don't have access to …"). (AM4 / docs issue)
+- **Admin guide to the ranks** (new, AM4): which node does what, owner-only bulk, Staff without delete/export,
+  configuration deletes.
+- **Entity lists smoke test § 7** (V2 export): the rows now come from the export endpoint (one request, audited).
+- **Realtime smoke test § S4**: accounts per area (comment on #280).
+- **Feature register** row for #280/#205: AM3 built; merge column at merge.

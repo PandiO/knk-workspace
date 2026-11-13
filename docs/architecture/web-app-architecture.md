@@ -1,7 +1,7 @@
 # knk-web-app — Architecture
 
 **Status:** Living document — reflects actual code, updated in place on each rescan
-**Last updated:** 2026-11-12 (chain 2 W1–W4 and X1 and chain 3 V1–V7 merged into `main` `1371951`; their sections below brought over and marked merged — docs issues #337–#345); 2026-11-05 (live updates on the dashboard, detail page, moderation list and profile — #183, branch `claude/realtime-web-live-183`, merged 2026-11-12); 2026-11-09 (form and display builders: Save keeps the builder open and stores a draft, Save and close, explicit Publish with what changes for staff, Duplicate, Generate from metadata, live preview, "Leave without saving?" — #71, branch `claude/builders-71`, not merged); 2026-11-09 (form wizard search-as-you-type relation picker with Open full table and a lookup mode for viewers without the type's read node, #191; FeedbackModal "Show details" and "Show what uses it" on a delete refused as in use, #44 — branch `claude/picker-details-191-44`, not merged); 2026-11-09 (entity detail page: real Select / Unlink / Add through `api/Relationships`, a separate Delete, actions disabled with "Requires …", values as text, related values as links, paged collections, readable load errors — #188, #189, branch `claude/entity-detail-188-189`, not merged); 2026-11-08 (settings pages: Lootbox settings tab, Currency policy and Road network on the SettingsPage shell, units and help, confirms on risky switches, lootbox announcement preview — #26, branch `claude/settings-pages-26`, not merged); 2026-11-08 (staff player profile: status strip, tabs, freeze/unfreeze, per-player timeline, paged audit log; moderation search by dashless UUID, sort, search in the URL, recently opened — #119, branch `claude/player-profile-119`, not merged); 2026-11-08 (dashboard checkbox selection and Export CSV behind `knk.admin.export` — #205 export part, branch `claude/dashboard-export-205`, not merged); 2026-11-08 (Entity setup at phone width, raw colours checked in `test:ci`, landing slideshow fade out → in, `usePrefersReducedMotion` — #266, #263, #258, branch `claude/web-fixes-266-263-258`, not merged); 2026-11-06 (Dashboard kept in the top bar — LW4-1, #30); 2026-11-06 (numbers in the viewer's locale — LW3-1, #187); 2026-11-06 (child form asks before closing with unsaved changes — LW2-2, #33); 2026-11-05 (admin information architecture: route-meta table, public/player/admin layout routes, grouped admin sidebar, breadcrumbs, `/admin` overview — #30, branch `claude/admin-ia-30`, stacked on #197 and #187 (which contains #33), not merged); 2026-11-05 (no "Entity setup" nav link, the Dashboard link is current on the content-tool pages — #197, branch `claude/nav-entity-setup-197`, not merged); 2026-11-05 (data and format primitives: `DataTable`/`Pager`, `utils/format.ts`, `Field`, `SettingsPage` shell with dirty state — #187, branch `claude/data-primitives-187`, stacked on #33, not merged); 2026-11-05 (feedback primitives: one accessible `Dialog`, `ConfirmDialog` with danger and a reason, general toasts, all overlays moved — #33, branch `claude/feedback-primitives-33`, not merged); 2026-11-05 (#239 offer permission check, #240 Send again merged); 2026-11-04 (#239, #240 on a feature branch); 2026-11-02 (`src/realtime/RealtimeProvider`, world tasks and catalogue scans over the web hub — #181, branch `claude/realtime-signalr`); 2026-11-01 (world tasks anchored to the draft, cancel/expired states, task code, builder task types — #180, branch `claude/world-task-hardening`); 2026-09-18 (scan basis: `knk-web-app` @ `4ff5dc6`, branch `claude/web-app-codebase-scan-4yqibi`); spot edits 2026-10-09 (ObjectTypeExplorer, KNG-61), 2026-10-10 (FormWizard Boolean fields, KNG-53), 2026-10-12 (FormWizard child forms, KNG-133, KNG-134; List edit load, step header, List validation, KNG-135, KNG-137, KNG-164; form session registry, KNG-136; cancel / delete-draft prompt, KNG-162; form configuration export/import, KNG-138); 2026-10-17 (form wizard chain merged to `main`; smoke-test follow-ups KNG-166..169, KNG-172, KNG-173: step strip, confirmations and refusals, rule builder parent forms, picker columns, metadata refresh); 2026-10-22 (display configuration export/import; KNG-195 hybrid picker submit); 2026-10-23 (step completion conditions run, KNG-186); 2026-10-23 (validation result log, batch validate, Re-check, KNG-269); 2026-10-25 (toast region, world-task polling; UX re-evaluation in `reports/2026-10-25-web-app-ux-reevaluation.md`); 2026-10-26 (dashboard type in the URL, `returnTo`, submit pending state, success toast — PandiO/knk-workspace#177 link 1, #58); 2026-10-26 (dashboard header New/Configure, flat explorer with marker, open form without the explorer + breadcrumb, detail page header, metadata-driven Create New, "Entity setup" — #177 link 2, #81, #39); 2026-10-26 (dashboard explorer: one scrollbar, favourite types — #194, branch `claude/dashboard-explorer-194`, merged into `main` `c3c0c9f`), 2026-10-26 (dashboard header row spacing — #195, branch `claude/dashboard-header-195`, merged into `main` `c3c0c9f`); 2026-10-26 (data router, unsaved-changes guard, sticky footer, blur validation + error summary, Save on any step in edit mode, single-line input, drafts owned by the login — #109, #186, #64 FormWizard part); 2026-10-27 (unsaved changes compared by value across all steps, Next's progress save no longer counts as saved — #109 fix round); 2026-11-01 (dashboard table state in the URL, rows as links, `aria-sort`, lootbox/moderation tab in the URL, "Drafts (n)" and "New with" — PandiO/knk-workspace#39, #177 follow-up, merged 2026-11-03); 2026-11-02 (design tokens and switchable themes — #95, merged 2026-11-03); 2026-11-03 (fix round after the live comparison: orange brand primary, heading font on player pages only, full-bleed auth pages); 2026-11-03 (explorer favourites are copies — #225, branch `claude/explorer-favourite-copies-225`, not merged); 2026-11-03 (explorer filter: display / form configuration — #226, merged 2026-11-04); 2026-11-03 (open form without the type overview card — #227, merged 2026-11-04)
+**Last updated:** 2026-11-13 (dashboard access model in the web app and bulk delete, #280 AM3 and #205, merged into `main` `e02ee79`: new section, export through `POST api/Dashboard/export`, `staffAny` routes, Dashboard link for any area node — docs #366); 2026-11-12 (chain 2 W1–W4 and X1 and chain 3 V1–V7 merged into `main` `1371951`; their sections below brought over and marked merged — docs issues #337–#345); 2026-11-05 (live updates on the dashboard, detail page, moderation list and profile — #183, branch `claude/realtime-web-live-183`, merged 2026-11-12); 2026-11-09 (form and display builders: Save keeps the builder open and stores a draft, Save and close, explicit Publish with what changes for staff, Duplicate, Generate from metadata, live preview, "Leave without saving?" — #71, branch `claude/builders-71`, not merged); 2026-11-09 (form wizard search-as-you-type relation picker with Open full table and a lookup mode for viewers without the type's read node, #191; FeedbackModal "Show details" and "Show what uses it" on a delete refused as in use, #44 — branch `claude/picker-details-191-44`, not merged); 2026-11-09 (entity detail page: real Select / Unlink / Add through `api/Relationships`, a separate Delete, actions disabled with "Requires …", values as text, related values as links, paged collections, readable load errors — #188, #189, branch `claude/entity-detail-188-189`, not merged); 2026-11-08 (settings pages: Lootbox settings tab, Currency policy and Road network on the SettingsPage shell, units and help, confirms on risky switches, lootbox announcement preview — #26, branch `claude/settings-pages-26`, not merged); 2026-11-08 (staff player profile: status strip, tabs, freeze/unfreeze, per-player timeline, paged audit log; moderation search by dashless UUID, sort, search in the URL, recently opened — #119, branch `claude/player-profile-119`, not merged); 2026-11-08 (dashboard checkbox selection and Export CSV behind `knk.admin.export` — #205 export part, branch `claude/dashboard-export-205`, not merged); 2026-11-08 (Entity setup at phone width, raw colours checked in `test:ci`, landing slideshow fade out → in, `usePrefersReducedMotion` — #266, #263, #258, branch `claude/web-fixes-266-263-258`, not merged); 2026-11-06 (Dashboard kept in the top bar — LW4-1, #30); 2026-11-06 (numbers in the viewer's locale — LW3-1, #187); 2026-11-06 (child form asks before closing with unsaved changes — LW2-2, #33); 2026-11-05 (admin information architecture: route-meta table, public/player/admin layout routes, grouped admin sidebar, breadcrumbs, `/admin` overview — #30, branch `claude/admin-ia-30`, stacked on #197 and #187 (which contains #33), not merged); 2026-11-05 (no "Entity setup" nav link, the Dashboard link is current on the content-tool pages — #197, branch `claude/nav-entity-setup-197`, not merged); 2026-11-05 (data and format primitives: `DataTable`/`Pager`, `utils/format.ts`, `Field`, `SettingsPage` shell with dirty state — #187, branch `claude/data-primitives-187`, stacked on #33, not merged); 2026-11-05 (feedback primitives: one accessible `Dialog`, `ConfirmDialog` with danger and a reason, general toasts, all overlays moved — #33, branch `claude/feedback-primitives-33`, not merged); 2026-11-05 (#239 offer permission check, #240 Send again merged); 2026-11-04 (#239, #240 on a feature branch); 2026-11-02 (`src/realtime/RealtimeProvider`, world tasks and catalogue scans over the web hub — #181, branch `claude/realtime-signalr`); 2026-11-01 (world tasks anchored to the draft, cancel/expired states, task code, builder task types — #180, branch `claude/world-task-hardening`); 2026-09-18 (scan basis: `knk-web-app` @ `4ff5dc6`, branch `claude/web-app-codebase-scan-4yqibi`); spot edits 2026-10-09 (ObjectTypeExplorer, KNG-61), 2026-10-10 (FormWizard Boolean fields, KNG-53), 2026-10-12 (FormWizard child forms, KNG-133, KNG-134; List edit load, step header, List validation, KNG-135, KNG-137, KNG-164; form session registry, KNG-136; cancel / delete-draft prompt, KNG-162; form configuration export/import, KNG-138); 2026-10-17 (form wizard chain merged to `main`; smoke-test follow-ups KNG-166..169, KNG-172, KNG-173: step strip, confirmations and refusals, rule builder parent forms, picker columns, metadata refresh); 2026-10-22 (display configuration export/import; KNG-195 hybrid picker submit); 2026-10-23 (step completion conditions run, KNG-186); 2026-10-23 (validation result log, batch validate, Re-check, KNG-269); 2026-10-25 (toast region, world-task polling; UX re-evaluation in `reports/2026-10-25-web-app-ux-reevaluation.md`); 2026-10-26 (dashboard type in the URL, `returnTo`, submit pending state, success toast — PandiO/knk-workspace#177 link 1, #58); 2026-10-26 (dashboard header New/Configure, flat explorer with marker, open form without the explorer + breadcrumb, detail page header, metadata-driven Create New, "Entity setup" — #177 link 2, #81, #39); 2026-10-26 (dashboard explorer: one scrollbar, favourite types — #194, branch `claude/dashboard-explorer-194`, merged into `main` `c3c0c9f`), 2026-10-26 (dashboard header row spacing — #195, branch `claude/dashboard-header-195`, merged into `main` `c3c0c9f`); 2026-10-26 (data router, unsaved-changes guard, sticky footer, blur validation + error summary, Save on any step in edit mode, single-line input, drafts owned by the login — #109, #186, #64 FormWizard part); 2026-10-27 (unsaved changes compared by value across all steps, Next's progress save no longer counts as saved — #109 fix round); 2026-11-01 (dashboard table state in the URL, rows as links, `aria-sort`, lootbox/moderation tab in the URL, "Drafts (n)" and "New with" — PandiO/knk-workspace#39, #177 follow-up, merged 2026-11-03); 2026-11-02 (design tokens and switchable themes — #95, merged 2026-11-03); 2026-11-03 (fix round after the live comparison: orange brand primary, heading font on player pages only, full-bleed auth pages); 2026-11-03 (explorer favourites are copies — #225, branch `claude/explorer-favourite-copies-225`, not merged); 2026-11-03 (explorer filter: display / form configuration — #226, merged 2026-11-04); 2026-11-03 (open form without the type overview card — #227, merged 2026-11-04)
 **Source scan:** `docs/reports/web-app-scan-2026-09-18.md`
 
 ## Stack
@@ -454,7 +454,7 @@ detail page (middle-click, Ctrl/Cmd-click, keyboard), a plain click still goes t
 Ctrl-click or middle-click elsewhere on the row opens a new tab; only for types whose View works, and not while a row
 click selects (the wizard pickers). Sortable headers are buttons (keyboard) with `aria-sort`.
 
-**Checkbox selection and Export CSV** (#205 export part, merged 2026-11-12; it reads the type's own list API, `POST api/Dashboard/export` replaces that with #280 AM3, not built):
+**Checkbox selection and Export CSV** (#205 export part, merged 2026-11-12; since #280 AM3, merged 2026-11-13, the rows come from `POST api/Dashboard/export`, see the bullet **Export** below and [the access model section](#dashboard-access-model-in-the-web-app-pandioknk-workspace280-am3-205-bulk-delete)):
 - **Selection:** the dashboard passes `selectionConfig={{ mode: 'multiple' }}` with `selectionStyle="checkbox"`, so
   `DataTable` draws a checkbox column (`selection` prop) and a header box for the rows shown (mixed when some are).
   Clicks in that cell never reach the row, so the row link, the row click and middle-click keep working. The pickers
@@ -462,24 +462,22 @@ click selects (the wizard pickers). Sortable headers are buttons (keyboard) with
   pages and searches of the type; changing the type clears them, and a single Delete removes its row.
 - **Bulk bar:** `PagedEntityTable`'s `renderSelectionBar` hands `ObjectDashboard/DashboardSelectionBar` the
   selection, the table's columns in table order (`effectiveColumns`), the query and the total. The bar shows
-  "n selected" with Clear, or "None selected · Export takes all N results", and **Export CSV**. It has a slot
-  (`actions`) before Export for link AM3's "Delete (n)".
-- **Export:** the selected rows (in selection order), or with nothing selected the current search across all pages
-  in the current sort (`utils/tableExport.ts` `readSearchRows`: pages of 100 through the type's list API, follows an
-  endpoint that clamps the page size, skips a repeated id). The cap is 10,000 rows (`EXPORT_ROW_LIMIT`, the same as
-  the planned endpoint): the bar says so beforehand, and a toast afterwards. While it pages, the button shows the
-  progress and Cancel stops it.
+  "n selected" with Clear, or "None selected · Export takes all N results", and **Export CSV**. Its `actions` slot
+  before Export holds AM3's "Delete (n)".
+- **Export (AM3):** `utils/tableExport.ts` `readExportRows` makes **one** `POST api/Dashboard/export`
+  (`apiClients/dashboardClient.ts`, 120 s timeout, LAM3-9): with a selection the ids without the query, then reorders
+  the answer into **tick order** with current values (LV2-3, LAM3-4); with none the search in the table's sort. The cap
+  is 10,000 rows (`EXPORT_ROW_LIMIT`, the endpoint's): the bar says so beforehand, and a toast afterwards (`truncated`).
+  The button shows "Exporting N…"; Cancel drops the answer (the server still reads and audits it). V2's paging reader
+  `readSearchRows` (pages of 100 through the type's list API) is gone.
 - **CSV:** `buildTableCsv` writes the column labels, then each row's cell text (`utils/tableCells.tsx` `cellText`):
   a column's `render` read as text (`reactNodeToText`), Yes/No for booleans, an object's name, and empty for a
   missing value. `utils/csv.ts` does RFC 4180 quoting with CRLF, puts `'` before formula-like texts
   (`=`, `+`, `@`, `-` not followed by a number), and saves UTF-8 with a BOM as `<Type>-<yyyy-mm-dd>.csv`
   (local date, entity name).
-- **Permission:** Export is enabled only with `knk.admin.export` (`EXPORT_PERMISSION_NODE`, through `usePermissions`).
-  Without it, the button is disabled with "Requires knk.admin.export". Until the API declares the node (link AM1),
-  only `*` and `knk.admin.*` match it, so only the owner and Admin. The list reads stay the real limit (#280 DESIGN
-  § 4.8).
-- **AM3** switches the data source to `POST api/Dashboard/export`. `readSearchRows` already returns that endpoint's
-  `{ items, total, truncated }`, so `buildTableCsv` stays as it is.
+- **Permission:** Export follows `useEntityAccess(meta).export` (the metadata's `actionNodes.export`: the area node and
+  `knk.admin.export`); without it the button is disabled with "Requires …". The endpoint checks the same nodes and
+  writes a `DashboardExport` audit entry.
 
 **"Drafts (n)" and "New with"** (#177 follow-up): next to "New {Type}" a chevron lists the type's form
 configurations other than the default ("New with"), and a "Drafts (n)" chip lists the caller's open drafts of the
@@ -618,8 +616,8 @@ are plain text with "Opening … requires one of: …" otherwise, "… and n mor
 show its reason.
 
 **Navigation** (`components/Navigation.tsx`, since #30): the bar's links come from the route-meta table
-(`topNav`): **Home**, **Leaderboards**, **Guides**, **Dashboard** for holders of the dashboard route's node
-(`knk.admin.content`, `TOP_NAV_NODES`; LW4-1, developer's decision 2026-11-06) and, last, for anyone holding the node
+(`topNav`): **Home**, **Leaderboards**, **Guides**, **Dashboard** for holders of the dashboard route's nodes
+(any area node since #280 AM3, `TOP_NAV_NODES`; LW4-1, developer's decision 2026-11-06) and, last, for anyone holding the node
 of at least one admin page, **Admin** (`/admin`). `navLayout.ts` picks labels, icons or a menu button by measured width. A link is the current
 one (`aria-current="page"`, also in the menu panel) on its page and the pages below it in the table (`parent`: a
 public profile lights up Leaderboards, the enchantment guide Guides; Dashboard on the dashboard, Entity setup, the
@@ -630,6 +628,64 @@ map (which missed the invitations node, #262) and #197's `DASHBOARD_ACTIVE_ALSO`
 Dashboard is the current bar and sidebar link there (LW1-1, LW4-1). Pages reached only from inside other pages: the account pages
 (account menu), transaction details, siege matches and public profiles (links in lists), Entity setup (the
 dashboard's ⚙ per type, "All saved progress").
+
+## Dashboard access model in the web app (PandiO/knk-workspace#280 AM3, #205 bulk delete)
+
+Merged 2026-11-13 (knk-web-app `main` `e02ee79`, with knk-web-api `master` `45043a7`; also on `next`). **Not
+live-tested:** [dashboard access smoke test § 8](../guides/dashboard-access-smoke-test.md#8-web-app-am3), closed alpha
+test run 2 checklist § 4c. Design: [DESIGN § 4.3, § 4.7, § 4.8](../specs/dashboard-access-model/DESIGN.md); API side:
+[web-api architecture § 5.1, § 5.2](web-api-architecture.md#51-dashboard-access-model-pandioknk-workspace280-am1-merged-2026-11-12-am3-2026-11-13).
+Decisions LAM3-1…12 in the [chain 3 report](../reports/2026-11-08-ux-chain-3.md). The web app only decides what it
+offers; the API checks every call.
+
+- **Nodes** (`hooks/useStaffAccess.ts`): `DELETE_PERMISSION_NODE` (`knk.admin.delete`), `DELETE_BULK_PERMISSION_NODE`
+  (`knk.admin.delete.bulk`), `EXPORT_PERMISSION_NODE` (`knk.admin.export`) and `AREA_NODES`, the API's seven area
+  nodes (`DashboardAccess.AreaNodes`; the API doesn't list them, keep both in step). `anyNodeStatus(statuses, nodes)`
+  folds several answers; `useAnyAreaNode()` answers whether any area node is held (one cached check per node, shared
+  with the nav and the route gates).
+- **Per type from metadata** (`hooks/useEntityAccess.ts`): `entityAccessOf(meta, statuses)` / `useEntityAccess(meta)`
+  turn the metadata's `actionNodes`, `readNodes`, `deletable`, `bulkDeletable` and `exportable` into gates `view`
+  (area node), `read` (any read node), `create`, `edit`, `delete`, `bulkDelete`, `export` (all-of), each with
+  `allowed`, `checking` and a `hint` ("Requires knk.admin.world and knk.admin.delete"; "Couldn't check …" on an error).
+  Nothing is hard-coded per type. Metadata without the access fields (an API before #280): every action open (the API
+  decides) except bulk delete and export. `accessNodesOf(metas)` lists every node to ask, including the global action
+  nodes the gates fall back to.
+- **Metadata only for staff** (LAM2-9 fixed, LAM3-2): `useEntityMetadata` loads `GET api/Metadata` and the entity type
+  configurations only once an area node answered yes (or the check failed; the API decides), not for "denied"; players
+  never request them. `hooks/loadedEntityMetadata.ts` reads the already loaded metadata without asking (the picker's
+  Create New gate, LAM3-10).
+- **Dashboard** (`ObjectDashboard`): the explorer lists only types whose `view` gate is allowed (`useViewableTypes`), plus types whose check
+  failed or that have no access fields (LAM3-6); a type of another area in the URL falls back to an allowed one. New /
+  New with / Edit / Delete are disabled with the gate's hint; the ⚙ is disabled with "Requires knk.admin.content"
+  for other area holders (LAM3-11). A single Delete asks with `useConfirm` (danger), a refusal keeps V6's error dialog
+  with "Show what uses it", success is a toast and the row also leaves the bulk selection.
+- **Bulk delete** (#205): "Delete (n)" (`btn-danger`) in `DashboardSelectionBar`'s `actions`, rendered only when the
+  `bulkDelete` gate is allowed (hidden, not disabled; never for User and PermissionGroup). Confirm "Delete 3 Streets?"
+  (no reason asked, LAM3-3), then `utils/bulkDelete.ts` sends the ids to `POST api/Dashboard/bulk-delete`
+  (`dashboardClient.bulkDelete`, 120 s timeout) in chunks of 100 (`Deleting… n / N`), stops at the first failed call
+  (429, network) and records the rest as not tried. Deleted ids leave the table and the selection; refused rows stay
+  selected. `BulkDeleteResultDialog` (only when a row was refused or not tried) lists each refused row with its reason;
+  `code: "InUse"` rows offer "Show what uses it" (V6's `ReferenceDetails`, LAM3-5). A toast in every case. The API
+  sends one `EntityChanged` per deleted row; other open tables refresh once, because the live refresh is debounced
+  (`realtime/liveUpdates.ts`, X1).
+- **Routes and nav:** `staffAny` (see Routes below): the Dashboard link, the dashboard, the detail page and the form
+  wizard routes open for any area node; "Staff only" lists the nodes. `Navigation` and `routes/useAdminNav.ts` decide
+  with `routeAllowed`, so any one node of a `staffAny` route shows its link. The top bar's **Create New** menu is unchanged (content holders, every type): #353.
+- **Reads across areas:** a refused table read (`code: "NoReadAccess"`) says "You don't have access to Town. Requires one
+  of: …" (`utils/readRefusal.ts` `readRefusalMessage`) in every `PagedEntityTable`, pickers' full tables included
+  (LAM3-12). The open form's breadcrumb label (`useEntityLabel`) and the wizard's join-entry labels fall back to
+  `GET api/Lookup/{type}/{id}` when the full read is refused (`utils/fetchOrLookup.ts` `fetchByIdOrLookup`). A
+  picker's **Create New** shows only with the related type's create node (hidden on a "no", LAM3-8); the wizard pickers'
+  lookup mode is V6's (`relationAccess`). Other pickers (Minecraft material and enchantment, the category filter) keep
+  the full read; the material picker in the GateStructure and LootboxType forms needs the content read nodes (#352).
+- **Entity setup** (`FormWizardPage`): without `knk.admin.content` and without a wizard request (`?configId`,
+  `?resume`, an edit), `/forms/:type` shows "Entity setup needs knk.admin.content" with **Back to the dashboard**
+  instead of the lists. Both configuration tables disable **Delete** with "Requires knk.admin.delete" without it
+  (LV7-8; the API refuses it too).
+- **Audit labels** (`auditDetails`): "Bulk delete on the dashboard" and "Dashboard export" with type, counts and ids.
+- **Tests:** `useEntityAccess` (8), `bulkDelete` (5), `readRefusal` (2), `fetchOrLookup` (2), `ObjectDashboard` (#280
+  per-type access, bulk flow, chunks, cancel), `DashboardSelectionBar` (endpoint), `tableExport`, `useEntityMetadata`,
+  `routeTable`, `AdminLayout`, `FormWizardPage.deleteConfig`, `auditDetails`, the nav tests for area nodes.
 
 ## Routes, layouts and the admin sidebar
 
@@ -646,7 +702,12 @@ PandiO/knk-workspace#30 (chain 2 link W4; merged 2026-11-12 in `main` `1371951`;
   had (pinned in `routes/__tests__/routeTable.test.ts`); a new page is one entry here plus its element in `App.tsx`
   (`RouteElements` is typed by the table's ids, so a missing page fails `tsc`).
 - **Gates** (`routes/RouteGate.tsx`): `login` → `ProtectedRoute`, `staff` → `StaffRoute` (the node; "Staff only"
-  without it), `owner` → `OwnerRoute` (exact grants, D24). Display only: the API checks the same node.
+  without it), `staffAny` → `StaffRoute` with a list (any one opens it; "Staff only" lists the nodes; #280 AM3),
+  `owner` → `OwnerRoute` (exact grants, D24). Display only: the API checks the same node. `nodesOf(access)` gives
+  every node a route asks about, `routeAllowed(access, statuses)` the answer; `nodeOf` the first node (sidebar).
+  `staffAny(AREA_NODES)` (`DASHBOARD_ACCESS`) is on `dashboard`, `dashboardType`, `entityDetail` and the form wizard
+  routes `entitySetupType` (`/forms/:entityName`) and `entityEdit` (LAM3-1, decision open: #368); `entitySetup`
+  (`/forms`), the builders and the Minecraft catalogue stay `staff(knk.admin.content)`.
 - **Layout routes** (`src/layouts/`, built by `routes/AppRoutes.tsx`): `PublicLayout` (landing, auth pages,
   invites, leaderboards, guides, public profiles, siege matches, the deletion confirmation, 404), `PlayerLayout`
   (`/account`, `/account/link`, `/account/transactions`), `AdminLayout` (`/admin`, the dashboard, Entity setup,
