@@ -10,18 +10,25 @@
 
 ## 1. Waiting for the developer
 
-1. **Phase 1 test and audit report on #359** (implementation plan, "Phase 1 → Developer test"). It opens L0. Until it
-   is there, L0 stays closed and L2 follows L1.
-2. **Stair-house dump and trace** (spike `/knk npcspike dump|trace`) on #244 or #360, when available. L1 uses them
-   but does not wait.
+1. **Phase 1 test and audit report on #359** (implementation plan, "Phase 1 → Developer test"; the steps are in `next`
+   now). It opens L0, which runs after L2.
+2. **Phase 2 test on the dev server** (implementation plan, "Phase 2 → Developer test", in `next`): one NPC, 50 NPCs
+   on the stored route, the stair house (release gate). Deploy knk-plugin `next` (`50bf7ff7`), merge the
+   `npc.navigation` block into the server's `config.yml` (YAML in knk-plugin#17 and the configuration reference
+   § 4.27), `enabled: true` only for the test, Citizens build 4269 installed. Post the `stats` output and the run log
+   on #360. What to look at in the stair house: block 4.1 § 8.3.
+3. **Review of L1's agent decisions** (block 4.1 § 5, twelve entries); the ones that change behaviour: 5.1 (replan
+   twice after the retries, then fail), 5.2 (walk-only trips up to 64 blocks, else fail), 5.5 (access profile
+   fields; NPCs pass open gates only).
+4. **Stair-house dump and trace** on #244 or #360, when available; L2 looks for them but does not wait.
 
 ## 2. Summary
 
 | Link | Issue | Status | Branch heads | PR | CI | How started |
 |---|---|---|---|---|---|---|
-| L1 Phase 2: one NPC walks a K&K route | #360 | In review (finished 2026-11-13; live test by the developer open) | `claude/npc-navigation`: knk-plugin `49b5cedb`, knk-workspace `5c8587b` | [knk-plugin#17](https://github.com/PandiO/knk-plugin/pull/17), [knk-workspace#370](https://github.com/PandiO/knk-workspace/pull/370) | knk-plugin `build` green on `49b5cedb` (run 43398822498); knk-workspace has no CI | create_session session_01R1w2Uv2Ze28fr2rkqUz98C (`source_revision` `next`) |
-| L0 Phase 1 follow-ups | #359 | Not started (gate: developer's Phase 1 result on #359 and L1 merged into `next`) | `claude/npc-navigation`: knk-plugin `8b36a942` | none | none | |
-| L2 Phase 3: rules stay binding | #361 | Not started (gate: L1 merged into `next`, L0 merged or skipped) | | none | none | |
+| L1 Phase 2: one NPC walks a K&K route | #360 | Merged into next 2026-11-13 (knk-plugin `50bf7ff7`, knk-workspace `424f1fa3`); #360 stays `status:in-review` until the developer's live test and the promotion of `next` | `claude/npc-navigation`: knk-plugin `49b5cedb`, knk-workspace `5c8587b` | [knk-plugin#17](https://github.com/PandiO/knk-plugin/pull/17), [knk-workspace#370](https://github.com/PandiO/knk-workspace/pull/370) | knk-plugin `build` green on `49b5cedb` (run 43398822498); knk-workspace has no CI | create_session session_01R1w2Uv2Ze28fr2rkqUz98C (`source_revision` `next`) |
+| L0 Phase 1 follow-ups | #359 | Not started (gate: the developer's Phase 1 result on #359; L1 is merged; runs after L2, one link per repo) | | none | none | |
+| L2 Phase 3: rules stay binding | #361 | Running (started 2026-11-13) | `claude/npc-navigation`: knk-plugin `49b5cedb`, knk-workspace `5c8587b` (L1 heads) | none | none | create_session session_01R1w2Uvt1jBnAv84KX3hf7q (`source_revision` `next`) |
 
 ## 3. Coordinator decisions
 
@@ -71,6 +78,19 @@
    `claude/npc-navigation` and reach `next` through L1's docs PR; L1 merges `origin/next` into that branch again.
    Alternatives: (a) merge the branch head `90991c4a`: it holds docs written after the implementation started,
    which the developer wants on the link route; (b) leave it to L1's docs PR (decision 3): superseded.
+
+8. **L1 checked and merged (2026-11-13).** Skill § 6: block and heads match, both branches contain `next`, PRs
+   knk-plugin#17 and knk-workspace#370 with the template, CI `build` green on `49b5cedb`, tests above the baseline
+   (core 2507 → 2562, paper 2535 → 2570, 0 failures), scope within #360 and Phase 1 (outside the NPC packages only
+   `KnKPlugin` +18 lines, the `WorldGuardRegionListener` guard with its test, `gradle.properties`,
+   `build.gradle.kts`), flag `npc.navigation.enabled` false in the shipped `config.yml`, #360 `status:in-review`.
+   Merged with merge commits: knk-plugin `50bf7ff7`, knk-workspace `424f1fa3`. Accepted as is: three docs files
+   beyond the coordinator's list (L1 decision 5.12, essential docs). Small defects, not fixed: knk-workspace#370's
+   body lacks the `---` / generated-by footer and both PR bodies use dashes inside template sections. No alternative
+   to merging: tier:3 work behind an off flag merges once the checks hold (skill § 7.1).
+9. **L2 before L0.** Chosen: start L2 (#361) now, because the developer's Phase 1 result is not on #359 and the
+   charter § 2 says L2 then starts and L0 runs after it. Alternatives: (a) wait for the Phase 1 result: idles the
+   chain for a tier:1 link.
 
 ## 4. Link blocks
 
