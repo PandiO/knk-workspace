@@ -1300,8 +1300,15 @@ convention and how to read a run:
 Still open from this stage:
 
 - Change `migrations.yml`'s service image from `mysql:8.0` to `mysql:8.4` (§ 5.1).
-- **Protect trunk:** GitHub → Settings → Branches → a rule for `master`/`main` (and `next`) that requires the CI checks
-  (`CI / build-and-test`, and `Build / build` for the plugin) to pass before merging. Optional; the developer decides.
+- **Protect trunk: done 2026-11-13** (GitHub → Settings → Rules → Rulesets, set up by the developer):
+  1. knk-web-api, knk-web-app, knk-plugin, ruleset "Trunk and next" on `master`/`main` and `next`: restrict
+     deletions, block force pushes, require a pull request (0 approvals, conversation resolution required, merge
+     commits only) and the status checks `build-and-test` + `fresh-database` (API), `build-and-test` (web app),
+     `build` (plugin). "Require branches to be up to date" is off. Checks are matched by the job name, which the
+     2026-11-13 workflow rename ("CI" → "Build and test") did not change.
+  2. knk-workspace, ruleset "Trunk and next": restrict deletions and block force pushes only, so chain bookkeeping
+     can still be pushed directly to `main`; no status checks (no CI there).
+  3. All four repos, a tag ruleset on `v*`: restrict deletions and block force pushes, so release tags cannot move.
 
 ### 10.4 Stage 2 — release artifacts on a tag
 

@@ -1,7 +1,7 @@
 # NPC navigation chain — charter
 
 **Status:** Ready to start (2026-11-13); first chain under the `next` branch model (agent workflow setup #327, merged 2026-11-13).
-**Last updated:** 2026-11-13 (rewritten for the `next` branch model after the setup chain merged)
+**Last updated:** 2026-11-13 (L3, Phase 4, added on the developer's go; rewritten for the `next` branch model after the setup chain merged)
 **Issues:** parent [PandiO/knk-workspace#358](https://github.com/PandiO/knk-workspace/issues/358); sub-issues per link below. Reference issues as `PandiO/knk-workspace#n` in component repos.
 **Progress report:** [reports/2026-11-13-npc-navigation-chain.md](../../reports/2026-11-13-npc-navigation-chain.md) (the coordinator creates it from the template).
 **Skills:** coordinator `.claude/skills/knk-coordinator/`, links `.claude/skills/knk-link/` (knk-workspace `next`).
@@ -22,6 +22,7 @@ Phase 1 (#359) was built by the design session and is in review; the chain conti
 | L1 | [#360](https://github.com/PandiO/knk-workspace/issues/360) | tier:3 | Phase 2: one NPC walks a K&K route in trail mode: `AccessSubject` port and NPC access profile, `RouteFollower` one stretch ahead with floor continuity, `HopPlanner` for recovery, `NpcNavigationService` (state machine, planning queue, bounded retries, results), progress watchdog, `KnkBlockExaminer`, road planning with the NPC's position, waiting only on rule blocks, pause/resume, spawns spread over ticks, `/knk npc nav` replacing the spike command. | knk-plugin (knk-workspace for docs) | `claude/npc-navigation` (continue it; head `8b36a942` at charter time, cut from `main` `121030fe`: merge `origin/next` into it first) | `next` | `npc.navigation.enabled` (default off) | now |
 | L0 | [#359](https://github.com/PandiO/knk-workspace/issues/359) | tier:1 | Phase 1 follow-ups: guards (with a test each) on the listeners the developer's NPC event audit names, and anything else the Phase 1 test finds. Small; skipped if the audit names nothing. | knk-plugin | `claude/npc-navigation` | `next` | same | the developer's Phase 1 test result is on #359 **and** L1 merged into `next` (one link per component repo) |
 | L2 | [#361](https://github.com/PandiO/knk-workspace/issues/361) | tier:3 | Phase 3: rules stay binding: time-sliced recheck of the way ahead, gate and availability events through a listener port with targeted replans, partial route to the blocking element then waiting woken by its open event, trespass guard and metric, `NavigationResult.Blocked` with the blocking element. | knk-plugin (knk-workspace for docs) | `claude/npc-navigation` | `next` | same | L1 merged into `next`, and L0 merged or skipped |
+| L3 | [#377](https://github.com/PandiO/knk-workspace/issues/377) | tier:3 | Phase 4: groups plan once: `NavGroup` (a leader or a few scouts plans the road route, followers get the same hops with a formation offset and follow the leader's progress, one blocked state and one wake-up for the group), `Formation` (Bukkit-free, configurable per group, template or assignment: column as default, pairs/ranks, loose cluster, escort ring; folds into a column where the road or walk grid is too narrow and reforms after), a follower that falls behind or gets stuck plans its own bounded leg back to its slot, event replans per group and not per NPC. | knk-plugin (knk-workspace for docs) | `claude/npc-navigation` | `next` | same | L2 merged into `next`, and the developer's go for Phase 4 (given 2026-11-13) |
 
 ## 2. Gates
 
@@ -29,7 +30,7 @@ Phase 1 (#359) was built by the design session and is in review; the chain conti
 2. "L<n> done": L<n>'s block is in the progress report, its heads match `git ls-remote`, its checks passed (skill § 6), the full plugin suite is at or above the baseline (Phase 1 baseline: core 2507, api-client 324 with 2 skipped, paper 2535 with 18 skipped, 0 failures).
 3. The developer's gates, recorded on the sub-issues: the Phase 1 test and audit report on #359 (opens L0); the dev-server runs of the Phase 2 "Done when" (50 NPCs on a stored route, the stair-house route without visible jumping in circles) on #360; the gate and access runs of the Phase 3 "Done when" on #361. A link writes the test checklist for its phase (the plan's "Developer test" style); it never waits for the live test itself.
 
-Order and parallelism: one link at a time (one component repo). L0 slots in between L1 and L2 when the developer's Phase 1 result is in; if it is not in by the time L1 is done, L2 starts and L0 runs after it.
+Order and parallelism: one link at a time (one component repo). L3 was added by the developer on 2026-11-13, after L1 and L2 were merged and while the Phase 1 test was still open; L0 then runs after L3. L0 slots in between L1 and L2 when the developer's Phase 1 result is in; if it is not in by the time L1 is done, L2 starts and L0 runs after it.
 
 ## 3. Chain notes
 

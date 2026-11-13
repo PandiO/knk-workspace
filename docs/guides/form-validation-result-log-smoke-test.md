@@ -1,7 +1,7 @@
 # Form validation: step completion conditions (KNG-186) and the rule result log (KNG-269) — smoke test
 
 **Status:** Passed 2026-10-24 (run 1, developer): every step passed or was accepted after the four fixes recorded in Findings; **merged** to trunk 2026-10-24 (knk-web-api `master` `a38c8ee`, knk-web-app `main` `00e4af6`)
-**Last updated:** 2026-10-24 (passed and merged); 2026-10-26 nav label "Forms" → "Entity setup" (PandiO/knk-workspace#177); 2026-11-05 no Entity setup nav link (#197, branch `claude/nav-entity-setup-197`, merged 2026-11-12)
+**Last updated:** 2026-11-13 § 1 points to the builder (#88, in `next`); 2026-10-24 (passed and merged); 2026-10-26 nav label "Forms" → "Entity setup" (PandiO/knk-workspace#177); 2026-11-05 no Entity setup nav link (#197, branch `claude/nav-entity-setup-197`, merged 2026-11-12)
 **Linear:** [KNG-186](https://linear.app/kngpandi/issue/KNG-186) · [KNG-269](https://linear.app/kngpandi/issue/KNG-269)
 **Branches:** merged to trunk 2026-10-24 (knk-web-api `master` `a38c8ee`, knk-web-app `main` `00e4af6`); the test branches `claude/kng-186-269-form-validation`, `claude/kng-186-form-condition-isactive` and `claude/kng-269-validation-result-log` are history.
 
@@ -19,7 +19,7 @@ Run on the dev server with trunk (knk-web-api `master`, knk-web-app `main`) chec
 
 ## 1. KNG-186 — step completion conditions run
 
-The builder has no UI for step conditions yet (filed as [KNG-274](https://linear.app/kngpandi/issue/KNG-274)), so they are authored through the API. You don't need to hand-write requests: open the web app in the browser **logged in as an admin**, press F12 → **Console**, paste the helper below once, then call it.
+**Since PandiO/knk-workspace#88 (in `next` since 2026-11-13, knk-web-app `1f848f7`) the form builder authors step conditions: use [the step conditions smoke test § 1](form-step-conditions-and-step-jump-smoke-test.md#1-author-a-before-leaving-condition-88) instead of the console helper below.** The helper is kept as the record of how this run was done: at the time the builder had no UI for step conditions (filed as [KNG-274](https://linear.app/kngpandi/issue/KNG-274)), so they were authored through the API. You don't need to hand-write requests: open the web app in the browser **logged in as an admin**, press F12 → **Console**, paste the helper below once, then call it.
 
 ```js
 // KNG-186 test helper: adds / switches / removes a Completion condition on the District form's
