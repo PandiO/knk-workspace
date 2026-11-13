@@ -1,7 +1,7 @@
 # Kits — Design
 
 **Status:** Draft, all open questions resolved with the developer — ready for implementation.
-**Last updated:** 2026-11-13 (§4.7: plugin part in the PR into `next` from `claude/plugin-chains-into-next`); 2026-11-08 (§4.7: a web-app grant is handed over in game, PandiO/knk-workspace#261); 2026-10-11 (§4.4: first-join grant runs in game, KNG-81 plugin half); 2026-10-10 (§4.4: first-join grant idempotent per player, KNG-81); 2026-09-25 (§0c: removed `/kit manage`'s in-game CRUD logic entirely — it's now
+**Last updated:** 2026-11-13 (§4.7: a delivery taken as the player entered a siege is placed after it, review of knk-plugin#20); 2026-11-13 (§4.7: plugin part in the PR into `next` from `claude/plugin-chains-into-next`); 2026-11-08 (§4.7: a web-app grant is handed over in game, PandiO/knk-workspace#261); 2026-10-11 (§4.4: first-join grant runs in game, KNG-81 plugin half); 2026-10-10 (§4.4: first-join grant idempotent per player, KNG-81); 2026-09-25 (§0c: removed `/kit manage`'s in-game CRUD logic entirely — it's now
 a pure pointer to the FormWizard, kept only as recognized subcommands so `/kit manage <anything>`
 redirects rather than erroring; `Kit` CRUD is FormWizard-only). Previously updated 2026-09-25
 (added §0b/§4.0/§4.5/§4.6: explicit FormWizard-primary/in-game-fallback CRUD hierarchy, and a
@@ -561,7 +561,10 @@ flows (`KitGrantFlow`: `/kit get|give|purchase`, the kits menu), which place str
 - **At most once.** Taking before placing means no path (push, poll, join, two servers, a failed confirmation) can
   place a grant twice. The cost: a crash or logout in the instant between the take and the placement loses that one
   hand-over (logged with the claim id; staff grant again).
-- **Held back** while the player is in a siege (hub or match): the siege inventory is replaced afterwards.
+- **Held back** while the player is in a siege (hub or match): the siege inventory is replaced afterwards. A delivery
+  taken in the instant the player entered a siege (the take was in flight) is kept in memory with its items and
+  placed after the siege or on the next join; a server restart in between loses it (logged with the claim id). Review
+  fix 2026-11-13 on knk-plugin#20.
 - Unchanged: a grant still starts the kit's cooldown (§2.3) and issues its lootbox tokens (own delivery,
   `LootboxTokensIssued`). The web app doesn't yet say "delivered" / "on the next join" (follow-up).
 
