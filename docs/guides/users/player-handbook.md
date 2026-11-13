@@ -94,8 +94,9 @@ If you were in a siege match, that match is stopped.
 
 ## The menu
 
-Most things have a menu. You always carry a **nether star called `Menu (click to open)`** in the right-most hotbar
-slot: click it, or type `/menu`. You can't drop or lose it. The main menu has a tile for your profile (your head),
+Most things have a menu. When you join and when you respawn you get a **nether star called `Menu (click to open)`**
+in the right-most hotbar slot: click it, or type `/menu`. You can't drop it and you keep it when you die. With a
+completely full inventory you only get the star once there is room (rejoin or respawn); `/menu` always works. The main menu has a tile for your profile (your head),
 kits, sieges, the item catalogue, premium tiers, discoveries and teleports.
 
 Full guide: [Menus](menus-player-guide.md). Every command: [commands reference](commands.md).
