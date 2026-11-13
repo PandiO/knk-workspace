@@ -97,7 +97,9 @@ something different from this skill, the prompt and charter win.
    reviewed the PR (its "Codex Review Summary" comment shows the review completed for your head commit), read every
    inline finding: fix what is real and in scope and push; otherwise answer on the finding's thread why not (not a bug,
    or out of scope with the issue you filed); resolve the thread. A P1 finding you cannot fix is a blocker. List the
-   findings and what you did in your report block. A push starts a new review: check the new head too.
+   findings and what you did in your report block. Codex reviews only when a PR is opened or marked ready (or on a
+   `@codex review` comment), not on every push: after pushes that change code, comment `@codex review` and handle the
+   new findings before you finish.
 5. **Sub-issue:** a comment with branches, heads, PRs, tests vs baseline and decisions to review; swap
    `status:in-progress` for `status:in-review`.
 6. **Report block** in the chain's progress report on knk-workspace `main`: append it under "## 4. Link blocks" in the

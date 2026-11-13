@@ -163,9 +163,11 @@ branches start from the default branch, pull requests target it, and only the de
    the issue; it stays `status:in-review` until the developer promotes `next`.
 4. **Codex review findings are handled before a merge into `next`** (developer decision 2026-11-13). The ChatGPT
    Codex connector app reviews every pull request and leaves inline findings (P1, P2, …). Before merging, the session
-   that merges (link, coordinator or the session that opened the pull request) reads every finding on the pull
-   request's current head: it fixes what is real and in scope, or answers on the finding's thread why not (not a bug,
-   or out of scope with the issue it filed), and resolves the thread. A P1 finding blocks the merge until it is fixed or
+   that merges (link, coordinator or the session that opened the pull request) reads every finding. Codex reviews
+   when a pull request is opened or marked ready, not on later pushes; after pushes that change code, comment
+   `@codex review` and wait for that review before merging. For each finding, the session fixes what is real and in
+   scope, or answers on the finding's thread why not (not a bug, or out of scope with the issue it filed), and resolves
+   the thread. A P1 finding blocks the merge until it is fixed or
    the developer decides. Findings are listed in the link's report block.
 5. **The developer promotes `next` to trunk** after testing `next` as a whole (the daily digest lists what to test):
    merge into trunk, then the release tag. Only the developer, or the manager session on the developer's explicit go,
