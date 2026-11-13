@@ -76,6 +76,17 @@ Sub-issue: [#359](https://github.com/PandiO/knk-workspace/issues/359). Branch: k
 
 **Tests:** settings layering and precedence; `NpcNavigationMetrics` output; runtime absent without Citizens (plugin loads, status says unavailable); one test per guarded listener (an NPC event does not reach it); the audit counts NPC events and ignores player events.
 
+**Status (2026-11-13):** built on knk-plugin `claude/npc-navigation` `8b36a942` (core `83d2bba8`); full suite green (core 2507, api-client 324, paper 2535). The listener guard so far: `WorldGuardRegionListener` (the known one); the audit run decides the rest. The Grafana row is the PromQL table in `guides/performance-metrics-and-capacity.md` § 4.2. Not yet run on a server.
+
+**Developer test (Phase 1):**
+1. Deploy `claude/npc-navigation`; in `config.yml` set `npc.navigation.enabled: true` (and `metrics.enabled: true` to see `/metrics`). Startup log: `[NPC] navigation: Citizens 2.0.44-SNAPSHOT (build 4269), override scopes {…}`. Without Citizens, or disabled: `[NPC] navigation unavailable: <reason>`.
+2. `/knk npc status`: running, and every setting with its layer (`default`, `global`, `world …`, `region …`). Optional: add a `regions.<region id>.recheck-ticks: 20` override, restart, stand in that region: status shows `20 (region <id>)`.
+3. `/knk npc audit start`, then `/knk npc test spawn 50 24` somewhere with regions (inside a town), let them walk 5 minutes, then `/knk npc audit report`. The report (also in `plugins/KnightsAndKings/npc-logs/`) lists each event type NPCs triggered and which K&K listeners received it. Expected: `WorldGuardRegionListener` listed for `PlayerMoveEvent` but no `[KnK Resolver] resolveRegionsFromApi` flood in the server log (the guard).
+4. With metrics on: `curl <metrics address>/metrics | grep knk_npc_nav` shows `knk_npc_nav_npcs{world,state}` and the event counters.
+5. `/knk npc test clear`; restart without Citizens (or `enabled: false`): plugin loads, status says why it's off.
+
+Send the audit report file; the listeners it names get guards (with tests) before Phase 1 closes.
+
 **Done when:** the plugin loads with and without Citizens; `/knk npc test spawn 50` NPCs walking about for 5 minutes make no region API calls and no player-system side effects (audit report clean after the guards); `/metrics` shows the `knk_npc_nav_*` series; settings show the layer they came from.
 
 ## Phase 2 — Navigate one NPC (plugin)
