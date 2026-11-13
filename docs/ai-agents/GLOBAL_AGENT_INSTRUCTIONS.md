@@ -180,7 +180,9 @@ branches start from the default branch, pull requests target it, and only the de
    (`.github/workflows/release.yml`), because cloud sessions cannot push tags (a tag push answers 403): run it with
    GitHub MCP `actions_run_trigger` (workflow `release.yml`, ref = the default branch, inputs `tag` such as `v0.2` and
    `sha` = the full 40-character trunk commit). It checks the input, then creates the tag and a GitHub release with
-   generated notes. Sessions may run it as part of a promotion the developer asked for (developer decision 2026-11-13).
+   generated notes. Sessions may run it as part of a promotion the developer asked for; the job runs in the GitHub
+   environment `release`, so every run waits until the developer approves it on GitHub (developer decisions
+   2026-11-13).
 6. **Flags for risky work.** Big or risky features go into `next` behind a config flag that is off by default, so
    unreviewed work is harmless there. A rejected change is reverted or fixed in `next` before the release.
 7. **Risk tiers** are labels on each issue, proposed by intake or design and overridable by the developer:
