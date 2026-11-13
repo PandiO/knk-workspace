@@ -1,7 +1,7 @@
 # Plugin configuration reference (`config.yml`)
 
 **Status:** Living document — update in place whenever a `config.yml` key is added, renamed, removed or gets a new default
-**Last updated:** 2026-11-13 (§ 4.27 `npc`: six `group-*` keys, PandiO/knk-workspace#377); 2026-11-13 (§ 4.27 `npc`: `rule-checks-per-tick`, `stop-on-trespass`, PandiO/knk-workspace#361); 2026-11-13 (§ 4.27 `npc`, PandiO/knk-workspace#359 and #360; checked against knk-plugin `claude/npc-navigation`, not merged into trunk yet); 2026-11-10 (first version, PandiO/knk-workspace#295; checked against knk-plugin `main` `121030f`)
+**Last updated:** 2026-11-13 (§ 4.3 `realtime.erasure` (#184) and the regions `temp-retention.release-interval-minutes` (#269), PR into `next` from `claude/plugin-chains-into-next`); 2026-11-13 (§ 4.27 `npc`: six `group-*` keys, PandiO/knk-workspace#377); 2026-11-13 (§ 4.27 `npc`: `rule-checks-per-tick`, `stop-on-trespass`, PandiO/knk-workspace#361); 2026-11-13 (§ 4.27 `npc`, PandiO/knk-workspace#359 and #360; checked against knk-plugin `claude/npc-navigation`, not merged into trunk yet); 2026-11-10 (first version, PandiO/knk-workspace#295; checked against knk-plugin `main` `121030f`)
 **Source:** knk-plugin `knk-paper/src/main/resources/config.yml` (1,152 lines at `121030f`), read by
 `knk-paper/.../paper/config/ConfigLoader.java`, `EnchantmentConfigManager.java` and `KnKPlugin.java`
 **Related:** [production installation § 9.5](../production-installation.md#95-install-the-knightsandkings-plugin),
@@ -85,6 +85,7 @@ Newest first. Builds before this list: compare the files with the script.
 
 | Merged | Issue | Added (+), removed (−) or changed | Applies |
 |---|---|---|---|
+| in review, not in `next` yet (`claude/plugin-chains-into-next`) | [#184](https://github.com/PandiO/knk-workspace/issues/184), [#269](https://github.com/PandiO/knk-workspace/issues/269) | + `realtime.erasure` (`kick-message`, `settle-seconds`, `feed-file`, `minecraft-files-list`; optional, defaults apply when missing), + `regions.temp-retention.release-interval-minutes` (5, 0 = off) | Restart |
 | in review, not in `next` yet | [#377](https://github.com/PandiO/knk-workspace/issues/377) | + `npc.navigation.group-formation`, + `group-spacing`, + `group-ranks-width`, + `group-rejoin-blocks`, + `group-regroup-blocks`, + `group-catch-up-speed` (NPC groups; nothing uses them unless a group is started) | Restart |
 | in `next`, not on trunk yet | [#361](https://github.com/PandiO/knk-workspace/issues/361) | + `npc.navigation.rule-checks-per-tick`, + `npc.navigation.stop-on-trespass`; `recheck-ticks` is used from now on | Restart |
 | in `next`, not on trunk yet | [#359](https://github.com/PandiO/knk-workspace/issues/359), [#360](https://github.com/PandiO/knk-workspace/issues/360) | + `npc.navigation` block (off by default): Phase 1 keys and, with Phase 2, `spawns-per-tick`, `hop-blocks`, `max-retries`, `no-route-wait-ticks`, `walk-only-blocks`, `access-profiles` | Restart |
@@ -186,6 +187,10 @@ One SignalR connection to the API's game hub ([design](../../specs/realtime-sign
 | `hub-path` | `"/api/hubs/game"` | Hub path used when `hub-url` is empty | Restart | #178 |
 | `backoff-seconds` | `[1, 2, 5, 10, 30]` | Delays between reconnect attempts; the last repeats. No attempts while the connectivity probe says DOWN | Restart | #178 |
 | `backoff-jitter` | `0.2` | Random spread of each delay (0.2 = ±20 %), so servers don't retry in step | Restart | #178 |
+| `erasure.kick-message` | `"Your account data has been deleted."` | GDPR erasure push (only while `enabled`): the kick text for an online player whose account the API erased. A siege vault they hold is given back before the kick | Restart | #184 |
+| `erasure.settle-seconds` | `2` | Wait between the kick and the deletion of what this server keeps about the account (quit handlers, Minecraft saving the player), 0-30 | Restart | #184 |
+| `erasure.feed-file` | `"erasure-feed.json"` | File in the plugin folder that keeps the position in the API's erasure feed; every (re)connect catches up from it | Restart | #184 |
+| `erasure.minecraft-files-list` | `"erasure-minecraft-files.txt"` | Minecraft's own player files (`.dat`, stats, advancements) of erased accounts are listed here for the owner, never deleted | Restart | #184 |
 | `fallback-poll-multiplier` | `4` | While connected, re-syncs that the hub now pushes run this many times less often (social spy re-check 60 s → 4 min); the player notification poll stops while connected. `1` = no slowdown | Restart | #179 |
 
 ### 4.4 `metrics`
@@ -541,6 +546,7 @@ Every key applies after `/knk lootbox reload`; a key left out uses the built-in 
 | Key | Default | What it does, safe values | Applies | Added by |
 |---|---|---|---|---|
 | `temp-retention.days` | `14` | The daily cleanup deletes an unused `tempregion_worldtask_*` region and an orphaned domain sub-region this many days later (at least 1) | Restart | KNG-103, KNG-258 |
+| `temp-retention.release-interval-minutes` | `5` | How often the server removes temp regions the API released (deleted draft, region task cancelled, failed or expired after a server held it, session removed by the sweep), with the same "used by a domain or lootbox area" checks, without the age. `0` = off; set `0` while the API has no release route yet (it logs a warning per pass otherwise) | Restart | #269 |
 | `global.protection` | `true` | Where only WorldGuard's `__global__` applies, default players can't build, use crafting blocks or break decorations, and explosions break nothing. Doors, gates and storage stay usable. `knk.region.bypass` and ops pass | Any reload | QOL hotfix 2026-10-25 |
 | `global.crafting-blocks` | (16 materials, `CRAFTING_TABLE` … `FLETCHING_TABLE`) | The blocked crafting blocks; empty = the built-in list | Restart | QOL hotfix 2026-10-25 |
 | `effect-damage.enabled` | `true` | Players inside a domain take no damage from the causes below, unless the region flag `knk-effect-damage` is `allow`, or it is unset and `pvp` is `allow`. Siege members in a match keep the siege's rules | Any reload | #162 |
