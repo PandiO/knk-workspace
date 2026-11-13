@@ -63,7 +63,11 @@ something different from this skill, the prompt and charter win.
    proposal, not a silent change. Details the documents leave open: take the most reversible default and log it as an
    agent decision (§ 5).
 3. **Branches:** push only to your link's branch. Never push to a default branch or to `next`, never merge into them,
-   never force-push, never delete branches. The one exception is chain bookkeeping on knk-workspace `main` (§ 3.6).
+   never force-push, never delete branches. The exceptions are chain bookkeeping on knk-workspace `main` (§ 3.6) and changes to agent workflow
+   files (`.claude/`, `.mcp.json`, `docs/ai-agents/`, `AGENTS.md`, `CLAUDE.md`): those go on a separate branch from
+   the repo's default branch, with their own PR into the default branch (global instructions, "Branches" rule 11).
+   You open it and handle its Codex findings like your other PRs and list it in your report block; the coordinator
+   merges it (coordinator skill § 7.10). Don't merge it yourself.
 4. **Behaviour-neutral where the charter says so.** Big or risky work (normally `tier:3`) goes behind the charter's
    config flag, off by default, so it is harmless in `next`.
 5. **Migrations:** only where the charter allows, at most one per link, additive, made with `dotnet ef migrations add`.
@@ -98,8 +102,8 @@ something different from this skill, the prompt and charter win.
    inline finding: fix what is real and in scope and push; otherwise answer on the finding's thread why not (not a bug,
    or out of scope with the issue you filed); resolve the thread. A P1 finding you cannot fix is a blocker. List the
    findings and what you did in your report block. Codex reviews only when a PR is opened or marked ready (or on a
-   `@codex review` comment), not on every push: after pushes that change code, comment `@codex review` and handle the
-   new findings before you finish.
+   `@codex review` comment), not on every push: after any push that changes the PR's content (code or docs), comment
+   `@codex review` and handle the new findings before you finish.
 5. **Sub-issue:** a comment with branches, heads, PRs, tests vs baseline and decisions to review; swap
    `status:in-progress` for `status:in-review`.
 6. **Report block** in the chain's progress report on knk-workspace `main`: append it under "## 4. Link blocks" in the

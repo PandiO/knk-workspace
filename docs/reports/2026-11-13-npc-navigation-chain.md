@@ -1,31 +1,48 @@
 # NPC navigation chain — progress report
 
-**Status:** Running (2026-11-13) · **Last updated:** 2026-11-13
+**Status:** Paused (L1, L2 and L3 merged into `next`; L0 waits for the developer's Phase 1 result on #359) (2026-11-13) · **Last updated:** 2026-11-13
 
 **Issue:** [PandiO/knk-workspace#358](https://github.com/PandiO/knk-workspace/issues/358), links
 [#360](https://github.com/PandiO/knk-workspace/issues/360) (L1),
 [#359](https://github.com/PandiO/knk-workspace/issues/359) (L0),
-[#361](https://github.com/PandiO/knk-workspace/issues/361) (L2).
+[#361](https://github.com/PandiO/knk-workspace/issues/361) (L2),
+[#377](https://github.com/PandiO/knk-workspace/issues/377) (L3).
 **Charter:** [handoffs/NPC_NAVIGATION_CHAIN.md](../ai-agents/handoffs/NPC_NAVIGATION_CHAIN.md).
 
 ## 1. Waiting for the developer
 
-1. **Phase 1 test and audit report on #359** (implementation plan, "Phase 1 → Developer test"). It opens L0. Until it
-   is there, L0 stays closed and L2 follows L1.
-2. **Stair-house dump and trace** (spike `/knk npcspike dump|trace`) on #244 or #360, when available. L1 uses them
-   but does not wait.
-3. **For review, not blocking (decision 3 below):** the binding documents (implementation plan, BEHAVIOR_MODEL,
-   stress test guide) exist only on knk-workspace `claude/nice-feynman-pvy1j3`, not on `main` or `next`. L1 brings
-   them into `next` with its docs PR (branch `claude/npc-navigation`, cut from that branch). This also brings the
-   behavior-model docs of PR #235 (in review against `main`) into `next`. Say so if they should stay out.
+In test order. Deploy knk-plugin `next` (`0506e691`, Phases 1–4) with Citizens build 4269; merge the `npc.navigation`
+block into the dev server's `config.yml` (the full block is in the configuration reference § 4.27; the pieces are in
+knk-plugin#17, #18 and #19), `enabled: true` only for the tests.
+
+1. **Phase 1 test and audit report on #359** (implementation plan, "Phase 1 → Developer test"). It opens L0, the
+   last link: guards on the listeners the audit names. If the audit names nothing, say so on #359 and L0 is skipped.
+2. **Phase 2 test** (plan, "Phase 2 → Developer test"): one NPC, 50 NPCs on the stored route, the stair house
+   (release gate; what to look at: block 4.1 § 8.3). Post the `stats` output and the run log on #360.
+3. **Phase 3 test** (plan, "Phase 3 → Developer test"): gate runs, access runs, the refresh that replans nobody, the
+   trespass counter (`stop-on-trespass: true` for this test). Results on #361. Look at where NPCs stand at the Keep
+   Gate (block 4.2 § 8.3).
+4. **Phase 4 test** (plan, "Phase 4 → Developer test", 14 steps): 20 and 50 NPC groups per formation, the fold at
+   the Keep Gate and in the stair house, a gate closing ahead of and in the middle of a group, a follower pushed off
+   its slot. Results on #377. Look first at: followers halting between waypoint lists, whether the speed factor
+   makes a follower catch up (block 4.3 § 8).
+5. **Review of the agent decisions:** block 4.1 § 5 (twelve), 4.2 § 5 (thirteen), 4.3 § 5 (eighteen). The ones that
+   change behaviour: 4.1 § 5.1, 5.2, 5.5; 4.2 § 5.4, 5.5, 5.6, 5.8, 5.9; 4.3 § 5.1 and 5.6 (followers are not orders
+   in the navigation service: no trespass guard or gate recheck of their own, their lanes are checked before they are
+   sent), 5.4 (a formation folds as a whole into a column), 5.8 (the leader waits by a cancelled and re-given order,
+   one more road plan per wait), 5.11 (no about-face), 5.14 (`Arrived` at most 20 s after the leader).
+6. **Promotion of `next`** in knk-plugin and knk-workspace when the tests pass; the issues stay `status:in-review`
+   until then. The `documentation` sub-issue and docs session start when the feature's last link is in `next`
+   (after L0, or at its skip).
 
 ## 2. Summary
 
 | Link | Issue | Status | Branch heads | PR | CI | How started |
 |---|---|---|---|---|---|---|
-| L1 Phase 2: one NPC walks a K&K route | #360 | In review (finished 2026-11-13; live test by the developer open) | `claude/npc-navigation`: knk-plugin `49b5cedb`, knk-workspace `764d64d` | [knk-plugin#17](https://github.com/PandiO/knk-plugin/pull/17), [knk-workspace#370](https://github.com/PandiO/knk-workspace/pull/370) | knk-plugin `build` green on `49b5cedb` (run 43398822498); knk-workspace has no CI | create_session session_01R1w2Uv2Ze28fr2rkqUz98C (`source_revision` `next`) |
-| L0 Phase 1 follow-ups | #359 | Not started (gate: developer's Phase 1 result on #359 and L1 merged into `next`) | `claude/npc-navigation`: knk-plugin `8b36a942` | none | none | |
-| L2 Phase 3: rules stay binding | #361 | Not started (gate: L1 merged into `next`, L0 merged or skipped) | | none | none | |
+| L1 Phase 2: one NPC walks a K&K route | #360 | Merged into next 2026-11-13 (knk-plugin `50bf7ff7`, knk-workspace `424f1fa3`); #360 stays `status:in-review` until the developer's live test and the promotion of `next` | `claude/npc-navigation`: knk-plugin `49b5cedb`, knk-workspace `5c8587b` | [knk-plugin#17](https://github.com/PandiO/knk-plugin/pull/17), [knk-workspace#370](https://github.com/PandiO/knk-workspace/pull/370) | knk-plugin `build` green on `49b5cedb` (run 43398822498); knk-workspace has no CI | create_session session_01R1w2Uv2Ze28fr2rkqUz98C (`source_revision` `next`) |
+| L0 Phase 1 follow-ups | #359 | Not started (gate: the developer's Phase 1 result on #359, expected the evening of 2026-11-13; L1, L2 and L3 are merged) | | none | none | |
+| L2 Phase 3: rules stay binding | #361 | Merged into next 2026-11-13 (knk-plugin `f2a50c46`, knk-workspace `9df8d44c`); #361 stays `status:in-review` until the developer's live test and the promotion of `next` | `claude/npc-navigation`: knk-plugin `8df2d839`, knk-workspace `a05f7bf` | [knk-plugin#18](https://github.com/PandiO/knk-plugin/pull/18), [knk-workspace#375](https://github.com/PandiO/knk-workspace/pull/375) | knk-plugin `build` green on `8df2d839` (runs 43403427418, 43403523663); knk-workspace has no CI | create_session session_01R1w2Uvt1jBnAv84KX3hf7q (`source_revision` `next`) |
+| L3 Phase 4: groups and formations | #377 | Merged into next 2026-11-13 (knk-plugin `0506e691`, knk-workspace `a45e17b9`); #377 stays `status:in-review` until the developer's live test and the promotion of `next` | `claude/npc-navigation`: knk-plugin `6fd91127`, knk-workspace `f5dda86` | [knk-plugin#19](https://github.com/PandiO/knk-plugin/pull/19), [knk-workspace#384](https://github.com/PandiO/knk-workspace/pull/384) | knk-plugin `build` green on `6fd91127` (push run 43427733153, PR run 43428361244); knk-workspace has no CI | create_session session_01R1w2UxD3EQaGRrvLbMzz7P (`source_revision` `next`) |
 
 ## 3. Coordinator decisions
 
@@ -65,6 +82,64 @@
 6. **Tier labels.** `tier:1`, `tier:2` and `tier:3` existed at the first run (2026-11-13). Applied: #360 and #361
    `tier:3`, #359 `tier:1`. No alternative.
 
+7. **Design docs into trunk, then trunk into `next` (developer, 2026-11-13; replaces decision 3's route).** The
+   developer decided that the docs that sat on a feature branch before the implementation started are merged into
+   `main` and `main` into `next`; everything changed since the implementation started follows the standard link
+   route into `next`. Done by the coordinator: PR #372 merged `claude/nice-feynman-pvy1j3` at `aa6f171f` (the last
+   commit before "implementation started") into `main` (`0f927155`), ten NPC doc files, `main`'s version kept for
+   files the branch did not change; PR #373 merged `main` into `next` (`01bfb265`). The later commits on that branch
+   (Phase 1 status, stair release gate, Phase 1 test steps, metric panels) and L1's own docs stay on knk-workspace
+   `claude/npc-navigation` and reach `next` through L1's docs PR; L1 merges `origin/next` into that branch again.
+   Alternatives: (a) merge the branch head `90991c4a`: it holds docs written after the implementation started,
+   which the developer wants on the link route; (b) leave it to L1's docs PR (decision 3): superseded.
+
+8. **L1 checked and merged (2026-11-13).** Skill § 6: block and heads match, both branches contain `next`, PRs
+   knk-plugin#17 and knk-workspace#370 with the template, CI `build` green on `49b5cedb`, tests above the baseline
+   (core 2507 → 2562, paper 2535 → 2570, 0 failures), scope within #360 and Phase 1 (outside the NPC packages only
+   `KnKPlugin` +18 lines, the `WorldGuardRegionListener` guard with its test, `gradle.properties`,
+   `build.gradle.kts`), flag `npc.navigation.enabled` false in the shipped `config.yml`, #360 `status:in-review`.
+   Merged with merge commits: knk-plugin `50bf7ff7`, knk-workspace `424f1fa3`. Accepted as is: three docs files
+   beyond the coordinator's list (L1 decision 5.12, essential docs). Small defects, not fixed: knk-workspace#370's
+   body lacks the `---` / generated-by footer and both PR bodies use dashes inside template sections. No alternative
+   to merging: tier:3 work behind an off flag merges once the checks hold (skill § 7.1).
+9. **L2 before L0.** Chosen: start L2 (#361) now, because the developer's Phase 1 result is not on #359 and the
+   charter § 2 says L2 then starts and L0 runs after it. Alternatives: (a) wait for the Phase 1 result: idles the
+   chain for a tier:1 link.
+
+10. **L2 checked and merged (2026-11-13).** Skill § 6: block 4.2 and heads match, both branches contain `next`,
+    PRs knk-plugin#18 (`Closes #361`) and knk-workspace#375 with the template, CI `build` green on `8df2d839`, tests
+    above the baseline (core 2562 → 2583, paper 2570 → 2581, 0 failures), scope within #361 (26 plugin files in the
+    NPC and navigation packages plus `config.yml`; no listener, no `KnKPlugin` line; five docs files), flag off in the
+    shipped `config.yml`, #361 `status:in-review`. Merged with merge commits: knk-plugin `f2a50c46`, knk-workspace
+    `9df8d44c`. The check ran about 2.5 hours after L2 finished (09:45 UTC): the coordinator session's worker was
+    down and three check-ins queued up. No alternative to merging (skill § 7.1).
+11. **Chain paused, not ended.** Chosen: stop with L0 open, because its gate (the developer's Phase 1 result on #359)
+    is closed and nothing else is startable; the coordinator looks at #359 at its check-ins. The "At merge" docs
+    steps wait for L0 or its skip, since L0 is a link of this feature. Alternatives: (a) start the docs session now:
+    L0 may still add guards and docs; (b) run L0 without the audit: it would have nothing to guard.
+
+12. **L3 added: Phase 4, groups and formations (developer, 2026-11-13; replaces decision 11's pause).** The
+    developer can only run the Phase 1–3 tests and the audit in the evening and chose to go on with Phase 4 as L3
+    meanwhile. Done by the coordinator: sub-issue #377 (`tier:3`, `priority:high`, child of #358), the L3 row in the
+    charter, L3 started. CI on knk-plugin `next` after the L2 merge is green (run 43422663378 on `f2a50c46`). Known
+    risk, accepted by the developer: L3 builds on Phases 2 and 3 before their first server run; the L3 prompt asks for
+    the group layer on top of `NpcNavigationService`'s public surface so a later fix below it stays cheap. L0 now runs
+    after L3. Alternatives: (a) pause until the evening (decision 11); (b) Phase 5: needs push access to knk-web-api
+    and knk-web-app, which this chain has read-only; (c) Phase 7 (movement quality, stairs): depends on what the
+    stair-house test shows.
+
+13. **L3 checked and merged (2026-11-13).** Skill § 6: block 4.3 and heads match, both branches contain `next`, PRs
+    knk-plugin#19 (`Closes #377`) and knk-workspace#384 with the template, CI `build` green on `6fd91127`, tests
+    above the baseline (core 2583 → 2621, paper 2581 → 2587, 0 failures), scope within #377 (23 plugin files: the new
+    `core/npc/nav/group/` package, additive changes in `core/npc/nav/`, `paper/npc/nav/`, `paper/npc/citizens/` and
+    `config.yml`; `NpcNavigationService`, `KnKPlugin` and the listeners untouched; six docs files), flag off in the
+    shipped `config.yml`, #377 `status:in-review`. Merged with merge commits: knk-plugin `0506e691`, knk-workspace
+    `a45e17b9`. L3's own note: it skipped parts of the read-first list (DESIGN § 2/6/7, the spike branch); accepted,
+    because the scope text and the tests it names are covered, and flagged for the developer's review. No alternative
+    to merging (skill § 7.1).
+14. **Chain paused again.** L0's gate is still closed (no Phase 1 result on #359 at 12:55 UTC). Nothing else is in
+    the charter; a further phase needs the developer's go, as L3 did. Alternatives: as decision 11.
+
 ## 4. Link blocks
 
 _(Each link appends its block here when it finishes.)_
@@ -95,10 +170,12 @@ _(Each link appends its block here when it finishes.)_
        shipped `config.yml` and no Bukkit server; any task, listener, Citizens call or world query would fail it.
 2. **Commits and heads.** knk-plugin `claude/npc-navigation` at `49b5cedb` (Phase 1 `83d2bba8`, `8b36a942`; merge
    of `next` `432645f5`; Phase 2 `d216281c`, `f32f7ed1`, `49b5cedb`; base `next` at `e8b651d1`). knk-workspace
-   `claude/npc-navigation` at `764d64d` (merge of `next` `2dd2183`, docs `764d64d`; base `next` at `17748b8`).
+   `claude/npc-navigation` at `5c8587b` (merge of `next` `2dd2183`, docs `764d64d`, second merge of `next`
+   `5c8587b` after the coordinator put the design documents into `next`; base `next` at `01bfb26`; the diff
+   against `next` is 6 files).
 3. **PRs.** [knk-plugin#17](https://github.com/PandiO/knk-plugin/pull/17) (`Closes #360`, `Part of #359`; shows
    Phases 1 and 2 together) and [knk-workspace#370](https://github.com/PandiO/knk-workspace/pull/370) (`Part of
-   #360`; also carries the NPC design documents of #234 and #241), base `next`. Not merged.
+   #360`; the earlier design documents reached `next` through #372 and #373), base `next`. Not merged.
 4. **Tests, baseline → result.**
     1. knk-plugin (`./gradlew build -x deployToDevServer`, Gradle on JDK 21, JDK 25 toolchain): baseline at
        `432645f5` core 2507, api-client 324 (2 skipped), paper 2535 (18 skipped), 0 failures; result at `49b5cedb`
@@ -179,3 +256,276 @@ _(Each link appends its block here when it finishes.)_
     2. L0: Phase 2 changed no listener. Route NPCs are named `knk-nav-<n>`, test walkers `knk-test-<n>`.
     3. Before merging `next` into a branch in knk-workspace, deepen the clone (`git fetch --depth=1000 origin
        <branches>`): the session's clone is shallow and a shallow merge base gave 14 conflicts instead of 1.
+
+### 4.2 L2 — Phase 3: rules stay binding (#361)
+
+1. **Scope done.**
+    1. knk-plugin, knk-core `core/npc/nav/` (no Bukkit or Citizens types): the ports `AccessRules` (the rules as
+       they are now) and `RuleChangeListener` (the listener port for gate and availability changes);
+       `BlockingElement`; `RoadPlanner.RoadPlan` with the blocking element, the gates on the route
+       (`GateCrossing`) and a still-blocked check; `NpcMover.pathAhead()`. `NpcNavigationService`: rule checks a
+       few NPCs per tick (the recheck of the way ahead and the trespass guard), `onGateChanged` and
+       `onAvailabilityChanged` that mark only the NPCs they concern, the walk along the partial route to the
+       blocking element, the wait there woken by the element's open event with `no-route-wait-ticks` as the
+       fallback, `NavigationResult.Blocked` with the typed element. `NavigationSettings` got `stop-on-trespass`;
+       `NpcNavigationMetrics` got the events `rule_check`, `blocked_walk`, `woken` (`trespass`, `replan_recheck`
+       and `replan_event` are counted now).
+    2. knk-plugin, knk-paper: `NavigationAccess.mayEnter(AccessSubject)`, `gateBlocks`, `edgeBlocked` (the
+       router's rule code, from caches); `NavigationService.accessRules()` and `addRuleChangeListener`, called at
+       the top of `onGateChanged` and `onAvailabilityChanged` (player navigation is otherwise unchanged);
+       `roadPlanOf` fills the gates, the blocking element and the check; `CitizensNpcMover.pathAhead`;
+       `NpcNavigationConfig.ruleChecksPerTick` (`rule-checks-per-tick`); module wiring (the listener is added
+       when route following is built and removed on stop; events hop to the main thread); a `rules:` line in
+       `/knk npc nav stats`; `config.yml` comments. `KnKPlugin` and every listener are untouched.
+    3. knk-workspace: Phase 3 status, known limits and developer test in the implementation plan; configuration
+       reference § 2.1 and § 4.27; metric panels; tests A and B on the production code in the stress test guide;
+       changelog draft.
+    4. Inert while `npc.navigation.enabled` is false: `NpcNavigationModuleDisabledTest` now also verifies that
+       road navigation is never touched (no listener, no rules port) and that no rule check is counted.
+2. **Commits and heads.** knk-plugin `claude/npc-navigation` at `8df2d839` (`4a030786` core, `8df2d839` paper;
+   `origin/next` `50bf7ff7` merged in first, a fast-forward). knk-workspace `claude/npc-navigation` at `a05f7bf`
+   (on `origin/next` `424f1fa`, a fast-forward; `git diff --stat origin/next HEAD` was empty before the change
+   and is 5 files after it).
+3. **PRs.** [knk-plugin#18](https://github.com/PandiO/knk-plugin/pull/18) (`Closes #361`) and
+   [knk-workspace#375](https://github.com/PandiO/knk-workspace/pull/375) (`Part of #361`), base `next`. Not
+   merged.
+4. **Tests, baseline → result.**
+    1. knk-plugin (`./gradlew build -x deployToDevServer`, Gradle on JDK 21, JDK 25 toolchain): baseline at
+       `50bf7ff7` core 2562, api-client 324 (2 skipped), paper 2570 (18 skipped), 0 failures; result at `8df2d839`
+       core 2583 (+21), api-client 324 (2 skipped), paper 2581 (+11, 18 skipped), 0 failures. CI: `build` green on `8df2d839` (push run 43403427418, PR run 43403523663).
+    2. knk-workspace: docs only; the links added were checked by hand.
+    3. Known reds (also red on the base): none.
+5. **Decisions (DESIGN § 4.3).**
+    1. *Where the recheck gets the current rules.* Chosen: a core port `AccessRules` (entry rule per region for
+       a subject, gate rule per door) answered by `NavigationAccess` with the router's own rule classes from
+       caches, because the recheck and the router must agree and a check must not block the main thread.
+       Alternatives: (a) build the subject's full road policy per check: reads every gate of the network per NPC
+       every 40 ticks; (b) the rules re-implemented in the core: two sources of truth.
+    2. *What an availability event does.* Chosen: it replans nobody by itself; every NPC with an order is marked
+       for an early rule check, and only those with something denied ahead, or whose blocking element opened,
+       plan again, because the event names no element and the spike replanned every NPC on every cache refresh
+       for nothing (NAV-13). Alternatives: (a) replan every NPC (the spike); (b) give
+       `NavigationService.onAvailabilityChanged` the changed domain: changes its callers in `KnKPlugin` and the
+       siege code, outside this link.
+    3. *The time slice.* Chosen: one server-wide key `rule-checks-per-tick` (10), NPCs an event concerns first,
+       then round robin over NPCs whose `recheck-ticks` are up; with too few the checks come later, never all at
+       once. Alternatives: (a) a fixed phase per NPC (id modulo `recheck-ticks`): no upper bound per tick;
+       (b) no key, a constant: 500 NPCs would need a code change.
+    4. *`NavigationResult.Blocked`.* Chosen: its `blockingElement` is now a `BlockingElement` record (kind, id,
+       name, the gate doors and regions of the blocked stretch) in place of the string, because behavior needs
+       the kind and the door id for a gate confrontation. Alternatives: (a) keep the string and add fields:
+       two ways to say the same; nothing but the test driver used the string yet.
+    5. *When the caller hears `Blocked`.* Chosen: when the plan arrives, once per element (again when another
+       element blocks), so behavior can decide before the NPC has walked there. Alternatives: (a) on arrival at
+       the element: behavior waits for a walk it may not want; (b) both: two results for one block;
+       `waitsAtBlock(moverId)` answers "is it there yet".
+    6. *Where the partial route ends.* Chosen: the router's partial route, cut before the first point in a
+       region the NPC may not enter, because the router's last reachable node can lie past a district's edge and
+       the NPC would trespass or be turned around by its own recheck. Alternatives: (a) the partial route as it
+       is; (b) walk on along the blocked stretch to the exact boundary or gate: needs the blocked edge's
+       geometry and the gate's position, a later refinement (known limit 1 in the plan).
+    7. *Waking a blocked NPC.* Chosen: on an event the cheap question "does the blocked stretch still block this
+       subject?" (one edge's verdict); a different gate that now lets the NPC through also wakes it; the
+       fallback is a full plan every `no-route-wait-ticks` (100 = 5 s, the existing key). Alternatives: (a) a
+       new key for the safety timer: one more key for the same 5 s; (b) no timer: a missed event would strand
+       the NPC.
+    8. *The trespass guard.* Chosen: entries are counted (a region the NPC stands in now and not at its last
+       check, denied by the current rules judged from where it came from), as in the spike; stopping and
+       replanning is the key `stop-on-trespass`, default false, because a "dev build" cannot be told from a
+       production build at runtime. Alternatives: (a) default true: an NPC stopped inside a region plans from
+       inside, where the entry rule no longer applies, so it changes little and adds stops in production;
+       (b) count every check while inside: one mistake would count for ever.
+    9. *The recheck and the router disagree.* Chosen: the router is the authority; the element is not asked
+       about again for that order until the next gate or availability event, a log line says so, the trespass
+       guard keeps watching. Alternatives: (a) replan at every recheck: the NPC stutters for ever; (b) fail the
+       order: a lane the router knows to be free would end orders.
+    10. *Where a gate is on the route.* Chosen: at the end of the gate's road stretch, so the gate is ahead
+        until the NPC has passed the whole stretch. Alternatives: (a) the gate's real position: needs a gate
+        geometry port; (b) the stretch's middle: an NPC between the middle and the gate would walk into a
+        closing gate.
+    11. *Local legs.* Chosen: the recheck reads the rest of the engine's path through `NpcMover.pathAhead()`
+        (regions only). Alternatives: (a) prepare every local leg again on any gate event: every NPC on a local
+        leg for every gate anywhere; (b) no recheck of local legs: the plan names "the rest of Citizens' path".
+    12. *How far ahead.* Chosen: 96 blocks of the route line (64 points), every gate still to pass.
+        Alternatives: (a) the whole rest of the route: a region lookup per 1.5 blocks of a long route every
+        40 ticks; (b) a key: nobody asked for one.
+    13. *New instruments.* Chosen: `rule_check`, `blocked_walk`, `woken`, for the tuning of
+        `rule-checks-per-tick` and to see whether events or the timer wake NPCs. Alternatives: (a) only the
+        three events L1 left: the developer test could not tell an event wake from a timer wake.
+6. **Out of scope, noted.** No issue filed.
+    1. A road network rebuilt while NPCs walk (`NavigationService.onNetworkChanged`) is not an event for NPCs;
+       they notice at their next plan. Not in Phase 3's text; for Phase 7 or its own issue.
+    2. Exit rules (a domain that forbids leaving) are judged at planning time only, as in the spike.
+    3. No developer result, stair-house dump or trace was on #359, #360, #244 or #361 at the start or at the
+       end, so none was used; L0 stays closed.
+    4. For the docs sub-issue at merge, as L1: `FEATURE_REGISTER.md`, `architecture/plugin-permission-checks.md`,
+       production installation.
+7. **Blockers.** None.
+8. **At merge / what the developer must do.**
+    1. Merge two keys into the dev server's `config.yml` under `npc.navigation`: `rule-checks-per-tick: 10` and
+       `stop-on-trespass: false` (`true` for the Phase 3 test). The YAML is in knk-plugin#18 and in the
+       configuration reference § 4.27.
+    2. Run "Phase 3 → Developer test" in the implementation plan (gate runs, access runs, the refresh that
+       replans nobody, the trespass counter) and post the `stats` output and the run log on #361.
+    3. Look at where NPCs stand at the Keep Gate: at the gate or some blocks before it (known limit 1). If it
+       is too far, the refinement is decision 6 (b).
+9. **Notes for later links.**
+    1. L0: Phase 3 changed no listener and no line of `KnKPlugin`.
+    2. Phase 4 (groups): `NpcNavigationService.blockingOf` and `waitsAtBlock` say what blocks a mover and
+       whether it stands at it; `onGateChanged` and `onAvailabilityChanged` are the only entry points for rule
+       changes, both main thread.
+    3. Phase 5 (permissions of the NPC's subject): a permission change is a third `RuleChangeListener` method
+       and a mark like `eventAvailability`.
+    4. Installing `openjdk-25-jdk-headless` makes `java` point at JDK 25; run Gradle with
+       `JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64`.
+    5. A fresh knk-plugin clone knows only `main`: `git remote set-branches --add origin next
+       claude/npc-navigation` and a `--depth=1000` fetch of both before the checkout.
+
+### 4.3 L3 — Phase 4: groups plan once, formations (#377)
+
+1. **Scope done.**
+    1. knk-plugin, knk-core `core/npc/nav/group/` (new, no Bukkit or Citizens types): `Formation` (column, ranks,
+       cluster, escort ring, and the column each one folds into), `GroupSettings`, `NavGroup`, `NavGroupService`,
+       `GroupPath`. Only a group's leader has an order in `NpcNavigationService`; the followers walk the group's path
+       (the leader's route line plus 12 blocks ahead, off the road its footsteps) as waypoint lists in formation
+       slots. One blocked state and one wake-up (the leader's); an event replan is one plan per group. The group
+       folds into a column where the path is too narrow and reforms after; a follower behind its slot walks faster,
+       one off its lane or stuck plans one local leg back (three failures: the group goes on without it, it keeps
+       trying); the leader waits for followers far behind; lanes never leave the path's regions and followers are
+       asked about with the current rules before they are sent on.
+    2. knk-plugin, additions to Phase 1–3 code (all additive, `NpcNavigationService` itself is unchanged):
+       `NavigationSettings` got `group-formation`, `group-spacing`, `group-ranks-width`, `group-rejoin-blocks`,
+       `group-regroup-blocks`, `group-catch-up-speed`; `NpcNavigationMetrics` got the events `group_fold`,
+       `group_reform`, `group_rejoin`, `group_regroup`, `group_lost`; `NpcMover` got `setSpeedFactor` (default
+       no-op), `CitizensNpcMover` implements it with Citizens' speed modifier; `NpcNavRunner` got group runs (the old
+       constructor stays) and a `groups` line in the report; `NpcNavigationModule` builds the group service with
+       route following, forwards gate and availability events to it and has
+       `/knk npc nav group <n> [formation] [profile]`; `config.yml` has the six keys with comments. `KnKPlugin` and
+       every listener are untouched.
+    3. knk-workspace: Phase 4 status, known limits and developer test in the implementation plan; configuration
+       reference § 2.1 and § 4.27; metric panels; commands guide; stress test guide; changelog draft.
+    4. Inert while `npc.navigation.enabled` is false: the group service is built with route following (the first
+       `/knk npc nav` use); `NpcNavigationModuleDisabledTest` now also refuses `nav group`, completes its formations
+       without a server and counts no group event. No new task: the test driver ticks the groups in its own tick.
+2. **Commits and heads.** knk-plugin `claude/npc-navigation` at `6fd91127` (`be9621cc` core, `6fd91127` paper;
+   `origin/next` `f2a50c46` merged in first, a fast-forward; merged again before the final push: up to date).
+   knk-workspace `claude/npc-navigation` at `f5dda86` (docs `3bbbd7b` on `origin/next` `7341ac4`, a fast-forward
+   with an empty diff before the change; `origin/next` merged again before the final push, `f5dda86`; the diff
+   against `next` is 6 files).
+3. **PRs.** [knk-plugin#19](https://github.com/PandiO/knk-plugin/pull/19) (`Closes #377`) and
+   [knk-workspace#384](https://github.com/PandiO/knk-workspace/pull/384) (`Part of #377`), base `next`. Not merged.
+4. **Tests, baseline → result.**
+    1. knk-plugin (`./gradlew build -x deployToDevServer`, Gradle on JDK 21, JDK 25 toolchain): baseline at
+       `f2a50c46` core 2583, api-client 324 (2 skipped), paper 2581 (18 skipped), 0 failures; result at `6fd91127`
+       core 2621 (+38), api-client 324 (2 skipped), paper 2587 (+6, 18 skipped), 0 failures. CI: `build` green on
+       `6fd91127` (push run 43427733153, PR run 43428361244).
+    2. The tests #377 names run against the real `NpcNavigationService` with simulated movers that walk their
+       orders (`NavGroupTest`, `GroupSim`): a 20-NPC group plans once (1 road plan, 0 local plans); a gate closing
+       ahead blocks a 50-NPC group with one replan in one planning slot, one `Blocked`, one wake-up; a stuck
+       follower rejoins with one local leg and no road plan.
+    3. knk-workspace: docs only; the links added were checked by hand.
+    4. Known reds (also red on the base): none. The first baseline run failed on a 429 from Maven Central while
+       resolving plugins; the rerun passed.
+5. **Decisions (DESIGN § 4.3).**
+    1. *Where the group logic sits.* Chosen: a layer on top of `NpcNavigationService`'s public surface
+       (`navigate`, `cancel`, `state`, `followerOf`, `blockingOf`); only the leader is an order there, followers
+       are moved by the group through `NpcMover.follow`. Because the coordinator asked for it (Phases 2 and 3 are
+       untested on a server) and because it gives "one plan, one blocked state, one wake-up" for free.
+       Alternatives: (a) a group order type inside the service with followers as its own entries: one code path
+       and the service's rule checks for followers, but it rewrites the state machine before its first server run;
+       (b) an order per follower to its slot, stretch by stretch: N plans, which NAV-05 forbids.
+    2. *What the followers walk.* Chosen: the leader's route line while it is on it (with 12 blocks of it ahead
+       of the leader, so followers do not halt at every hand-over) and the leader's footsteps off the road.
+       Alternatives: (a) footsteps only: one code path, but no look-ahead (stop and go) and no slot ahead of the
+       leader; (b) the route line only: nothing to follow on off-road and recovery legs.
+    3. *Package.* Chosen: `core/npc/nav/group/`, inside the navigation package the charter keeps the chain to and
+       named by concern as decision Q1 asks. Alternatives: (a) `core/npc/group/` as Q1 words it: outside
+       `core/npc/nav/`, next to the Siege Survival branch's files; (b) flat in `core/npc/nav/`: not grouped.
+    4. *How a formation folds.* Chosen: as a whole into a column when its widest slot does not fit anywhere under
+       the group, back when the leader is a formation's depth past the narrow place (the plan's words). Lanes also
+       fold point by point for followers still catching up. Alternatives: (a) squeeze into narrower ranks first:
+       better on medium roads, more states, not what the plan says; (b) only point by point: row mates would
+       share one spot.
+    5. *When a lane point is usable.* Chosen: a floor within one block of the path's height there and at every
+       block out from the path's centre, a loaded chunk, the same WorldGuard regions as the path's own point, and
+       the same at the path points before and after. Looked up once per path point and side. Alternatives: (a) a
+       walk capture per stretch per follower: a planning slot per follower again; (b) no region condition: a lane
+       could run through a denied region beside the road.
+    6. *Rules for followers.* Chosen: the lane condition of 5, plus the current entry rules asked for every
+       region ahead a follower does not stand in, before it is sent on, again after a gate or availability event
+       and every `recheck-ticks`; no trespass guard and no gate recheck for followers. Alternatives: (a) the
+       service's rule checks for followers: needs an order per follower or a change to the service; (b) nothing:
+       a follower would walk into a region denied after the leader went in.
+    7. *Catching up.* Chosen: a new port method `NpcMover.setSpeedFactor` (default no-op) and the key
+       `group-catch-up-speed` (1.3), because at equal speed a follower that fell behind never reaches its slot
+       while the leader walks. Alternatives: (a) no speed change, the leader waits for every gap: a halting
+       group; (b) slow the leader instead: the same port, and the group loses time.
+    8. *The leader waits.* Chosen: `group-regroup-blocks` (24; walk on at half of it, 30 seconds at most), done
+       by cancelling the leader's order and giving it again (one more road plan per wait). Alternatives: (a) a
+       pause and resume in the service: no extra plan, but a change to Phase 2 code; (b) never wait: a group
+       loses its tail at every fold and every stuck follower.
+    9. *A follower's own leg.* Chosen: one order in the service to the path point nearest its slot within
+       `hop-blocks` minus 2 (so the service walks one local leg and plans no road); three failures in a row: the
+       group goes on without it, it tries again every `no-route-wait-ticks` and at once after a rule change.
+       Alternatives: (a) an order to the slot itself: a road plan per straggler; (b) give up for good: NPCs left
+       standing on the road.
+    10. *Leader and scouts.* Chosen: one leader, the first member; when it leaves the next follower leads and the
+        order is given again; no scouts. Alternatives: (a) a few scouts that plan alternatives: the plan names it
+        as an option, and there is nothing to choose between before detours exist (Phase 6).
+    11. *An order back the way the group came.* Chosen: nothing special: the leader walks back past its column
+        and each follower turns in behind it. Alternatives: (a) about-face, the rearmost NPC leads: needs a new
+        leader per order; a choice for behavior later.
+    12. *Formation numbers.* Chosen: spacing 2.0; ranks of 2 (pairs); cluster rows of three with each slot nudged
+        up to a quarter spacing; escort rings of 8, 16, 24 at 1.25 spacings per ring, the first escorts ahead,
+        behind, right, left. Alternatives: (a) ring radius 1.5 spacings: needs a 7-wide road at spacing 2; (b) a
+        random cluster per order: slots would jump about.
+    13. *Settings.* Chosen: six flat keys in `NavigationSettings`, resolved once per group for its leader, so
+        every layer including template and assignment can set a formation (Q4). Alternatives: (a) a `groups:`
+        section with named formations: more config before templates exist; (b) constants: Q4 says configurable.
+    14. *What the caller hears.* Chosen: `Blocked` once per blocking element; `Arrived` when the leader arrived
+        and the followers reached their slots, 20 seconds after the leader at the latest; `Failed` and
+        `Cancelled` as the leader's. Alternatives: (a) `Arrived` with the leader: the caller turns the group
+        while its tail still walks; (b) wait for every follower without a limit: one stuck follower holds the
+        order for ever.
+    15. *Test command.* Chosen: `/knk npc nav group <n> [formation] [profile]`; the formation named there is the
+        group's assignment layer. Alternatives: (a) a flag on `spawn`: its second argument is the profile already.
+    16. *Instruments.* Chosen: five events; the groups' main-thread time is in `/knk npc nav stats` only.
+        Alternatives: (a) a second observation per tick in `knk_npc_nav_main_thread_seconds`: the histogram is
+        per tick and would count ticks twice.
+    17. *Tuning numbers that are not keys.* Chosen: constants for the group's look every 5 ticks, the 12-block
+        look-ahead, the hand-over at 4 blocks, three own legs, the 20 and 30 second limits. Alternatives: (a)
+        keys: nobody asked for them, easy to add.
+    18. *How it is tested.* Chosen: simulated movers that really walk their orders, against the real navigation
+        service (`GroupSim`). Alternatives: (a) the scripted fake mover of the Phase 2 and 3 tests: formations
+        and catching up cannot be shown without movement.
+6. **Out of scope, noted.** No issue filed.
+    1. No developer result, stair-house dump or trace was on #359, #360, #361 or #244 at the start or at the
+       end (2026-11-13), so none was used.
+    2. Known limits of Phase 4 are in the plan (seven): the one to look at first is a gate that closes between
+       the leader and its followers (the leader is not told; the followers wait at the gate on their own legs).
+    3. A pause and resume on `NpcNavigationService` would save the extra road plan of decision 8; a follower's
+       trespass guard would need followers known to the service (decision 6 a). Both are for after the Phase 2
+       and 3 server runs.
+    4. For the docs sub-issue at merge, as L1 and L2: `FEATURE_REGISTER.md`,
+       `architecture/plugin-permission-checks.md`, production installation.
+7. **Blockers.** None.
+8. **At merge / what the developer must do.**
+    1. Merge six keys into the dev server's `config.yml` under `npc.navigation`: `group-formation: column`,
+       `group-spacing: 2.0`, `group-ranks-width: 2`, `group-rejoin-blocks: 4.0`, `group-regroup-blocks: 24.0`,
+       `group-catch-up-speed: 1.3` (the YAML is in knk-plugin#19 and the configuration reference § 4.27).
+    2. Run "Phase 4 → Developer test" in the implementation plan after the Phase 2 and 3 tests and post the
+       `stats` output and the run log on #377.
+    3. Look first at: (a) whether followers walk smoothly behind the leader or halt at every waypoint list
+       (they are handed a new list every few blocks); (b) whether Citizens' speed modifier makes a follower
+       catch up; (c) the fold at the Keep Gate and in the stair house; (d) `own legs back` per trip on stairs.
+    4. Review the decisions above; the ones that shape behaviour are 1, 4, 6, 7, 8 and 11.
+9. **Notes for later links.**
+    1. L0: Phase 4 changed no listener and no line of `KnKPlugin`.
+    2. Phase 5 and later: a group is created over movers already registered with `NpcNavigationService`
+       (`NavGroupService.create(leader, followers, profile, settings)`); the members share one access profile.
+       `NavGroupService.onRulesChanged()` must be called for every rule change next to the service's own entry
+       points (a permission change in Phase 5 included).
+    3. Phase 7 (movement quality): followers walk waypoint lists without a recovery leg of the leader's kind;
+       their fallback is the own leg (decision 9). Walked lines help followers as they help single NPCs.
+    4. A fix to route following below the groups needs no change here as long as `followerOf(moverId).line()`
+       and `nearestIndex` keep their meaning.

@@ -135,13 +135,17 @@ Claude Code and Codex alike, regardless of where repos are cloned.
    conflict, then reread before publishing a resolution.
 5. Use PRs for review where appropriate. Do not merge or deploy merely
    because a patch or test passed; follow the feature's live validation and
-   developer sign-off requirements. The one standing exception is a chain
-   coordinator merging into `next` under the branch model below.
+   developer sign-off requirements. The standing exceptions are the merges the
+   branch model below allows once its checks hold: a coordinator merging link
+   pull requests into `next`, a session merging its own pull request into
+   `next` outside a chain ("Branches" rule 3), and an agent-workflow-file pull
+   request merged into the default branch by the session that opened it, or in
+   a chain by the coordinator ("Branches" rule 11). Merging `next` into trunk (promotion) stays the developer's.
 
 ## Branches, releases and risk tiers
 
 Developer decision 2026-11-12, [AI agent workflow design](../specs/ai-agent-workflow/DESIGN.md) § 2 and § 5; the
-start condition and the coordinator merge were confirmed by the developer the same day (setup chain, PandiO/knk-workspace#327); rules 3 and 4 were changed or added on 2026-11-13 (merging outside a chain, Codex findings).
+start condition and the coordinator merge were confirmed by the developer the same day (setup chain, PandiO/knk-workspace#327); rules 3, 4, 10 and 11 were changed or added on 2026-11-13 (merging outside a chain, Codex findings, GitHub rulesets, agent workflow files to `main`).
 **These rules apply as soon as CI runs on the API and web-app default branches** (PandiO/knk-workspace#328:
 `.github/workflows/ci.yml` on knk-web-api `master` and knk-web-app `main`). Until then the current rules hold: feature
 branches start from the default branch, pull requests target it, and only the developer merges.
@@ -157,15 +161,16 @@ branches start from the default branch, pull requests target it, and only the de
    pass, for every risk tier, through the pull request with a merge commit. **Outside a chain** (a one-off fix, a
    tweak, a docs session), the session that opened the pull request merges it into `next` itself, the same way, once
    all of these hold (developer decision 2026-11-13; it replaces the 2026-11-12 rule that such pull requests wait for
-   the developer): CI is green on its head; every Codex finding is handled (rule 4); the issue carries a `tier:` label;
+   the developer): CI is green on its head; every Codex finding is handled (rule 4); the issue carries a `tier:` label (a `documentation`
+   issue counts as `tier:1` and gets that label when it is created);
    `tier:3` work is behind a flag that is off by default (rule 6); the essential docs ship with it (Shipping a change).
    The developer stays the gate at promotion (rule 5), not at the merge into `next`. A merge into `next` does not close
    the issue; it stays `status:in-review` until the developer promotes `next`.
 4. **Codex review findings are handled before a merge into `next`** (developer decision 2026-11-13). The ChatGPT
    Codex connector app reviews every pull request and leaves inline findings (P1, P2, …). Before merging, the session
    that merges (link, coordinator or the session that opened the pull request) reads every finding. Codex reviews
-   when a pull request is opened or marked ready, not on later pushes; after pushes that change code, comment
-   `@codex review` and wait for that review before merging. For each finding, the session fixes what is real and in
+   when a pull request is opened or marked ready, not on later pushes; after any push that changes the pull
+   request's content (code or docs), comment `@codex review` and wait for that review before merging. For each finding, the session fixes what is real and in
    scope, or answers on the finding's thread why not (not a bug, or out of scope with the issue it filed), and resolves
    the thread. A P1 finding blocks the merge until it is fixed or
    the developer decides. Findings are listed in the link's report block.
@@ -182,6 +187,23 @@ branches start from the default branch, pull requests target it, and only the de
    stated in the chain charter.
 9. Chain bookkeeping (progress reports, charters, `docs/ACTIVE_SESSIONS.md` and its archive files) stays on
    knk-workspace `main`, as before.
+10. **GitHub rulesets** (set up by the developer 2026-11-13) enforce part of this. On knk-web-api, knk-web-app and
+    knk-plugin, `master`/`main` and `next` need a pull request (no approvals required), the CI checks
+    (`build-and-test` and `fresh-database` on the API, `build-and-test` on the web app, `build` on the plugin), every
+    review conversation resolved (so Codex threads must be answered and resolved, rule 4), and a merge commit; they
+    cannot be deleted or force-pushed. On knk-workspace, `main` and `next` are only protected against deletion and
+    force pushes, so chain bookkeeping can still be pushed directly to `main` (rule 9); everything else still goes by
+    pull request. Tags `v*` cannot be deleted or moved in any repo. Agents act on GitHub as the developer, so these
+    rules guard against mistakes, not against agents; follow them as written rather than looking for a way around.
+11. **Agent workflow files go straight to knk-workspace `main`** (developer decision 2026-11-13), because every new
+    session starts from `main` and a rule that waits in `next` would not reach agents until the next promotion. These
+    are `.claude/` (skills, hooks, settings), `.mcp.json`, `docs/ai-agents/`, `AGENTS.md` and `CLAUDE.md` in
+    knk-workspace, and `AGENTS.md`/`CLAUDE.md` in the component repos. A change to them goes on its own branch from the
+    repo's default branch with a pull request into that default branch; the session that opened it merges it with a
+    merge commit once rule 3's checks hold (CI where it exists, Codex findings handled), then merges the default branch
+    into `next` through a pull request, so `next` carries the same rules. In a chain, the link opens that pull request
+    and the coordinator merges it the same way (coordinator skill § 7.10). Game code, feature docs and guides still go
+    through `next`. A pull request that mixes both is split.
 
 ## Session chains (multi-link work)
 
@@ -254,7 +276,7 @@ Until the branch model applies it means the merge into the default branch, and a
 
 1. Close the feature issue as completed and drop its status label, as usual.
 2. If the docs impact list has anything not done before merge, create one `documentation` sub-issue under the
-   feature issue, titled `Docs: <feature>`. Copy the list into it, link the merged commits and PRs, and say which
+   feature issue, titled `Docs: <feature>`, labelled `documentation` and `tier:1`. Copy the list into it, link the merged commits and PRs, and say which
    items are player/admin guides (these gate deploys, see below).
 3. **Start a new session for it right away.** Use `create_session` (claude-code-remote) with `source_url`
    `https://github.com/PandiO/knk-workspace` and the prompt in
