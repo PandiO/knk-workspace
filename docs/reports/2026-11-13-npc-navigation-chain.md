@@ -37,7 +37,7 @@ block into the dev server's `config.yml` (configuration reference § 4.27; the Y
 | L1 Phase 2: one NPC walks a K&K route | #360 | Merged into next 2026-11-13 (knk-plugin `50bf7ff7`, knk-workspace `424f1fa3`); #360 stays `status:in-review` until the developer's live test and the promotion of `next` | `claude/npc-navigation`: knk-plugin `49b5cedb`, knk-workspace `5c8587b` | [knk-plugin#17](https://github.com/PandiO/knk-plugin/pull/17), [knk-workspace#370](https://github.com/PandiO/knk-workspace/pull/370) | knk-plugin `build` green on `49b5cedb` (run 43398822498); knk-workspace has no CI | create_session session_01R1w2Uv2Ze28fr2rkqUz98C (`source_revision` `next`) |
 | L0 Phase 1 follow-ups | #359 | Not started (gate: the developer's Phase 1 result on #359, expected the evening of 2026-11-13; runs after L3, one link per repo) | | none | none | |
 | L2 Phase 3: rules stay binding | #361 | Merged into next 2026-11-13 (knk-plugin `f2a50c46`, knk-workspace `9df8d44c`); #361 stays `status:in-review` until the developer's live test and the promotion of `next` | `claude/npc-navigation`: knk-plugin `8df2d839`, knk-workspace `a05f7bf` | [knk-plugin#18](https://github.com/PandiO/knk-plugin/pull/18), [knk-workspace#375](https://github.com/PandiO/knk-workspace/pull/375) | knk-plugin `build` green on `8df2d839` (runs 43403427418, 43403523663); knk-workspace has no CI | create_session session_01R1w2Uvt1jBnAv84KX3hf7q (`source_revision` `next`) |
-| L3 Phase 4: groups and formations | #377 | Finished by the link 2026-11-13, PRs open against `next`, #377 `status:in-review`; waits for the coordinator's checks | `claude/npc-navigation`: knk-plugin `6fd91127`, knk-workspace `f5dda86` | [knk-plugin#19](https://github.com/PandiO/knk-plugin/pull/19), [knk-workspace#384](https://github.com/PandiO/knk-workspace/pull/384) | knk-plugin `build` green on `6fd91127` (push run 43427733153; PR run 43428361244 started); knk-workspace has no CI | create_session session_01R1w2UxD3EQaGRrvLbMzz7P (`source_revision` `next`) |
+| L3 Phase 4: groups and formations | #377 | Finished by the link 2026-11-13, PRs open against `next`, #377 `status:in-review`; waits for the coordinator's checks | `claude/npc-navigation`: knk-plugin `6fd91127`, knk-workspace `f5dda86` | [knk-plugin#19](https://github.com/PandiO/knk-plugin/pull/19), [knk-workspace#384](https://github.com/PandiO/knk-workspace/pull/384) | knk-plugin `build` green on `6fd91127` (push run 43427733153, PR run 43428361244); knk-workspace has no CI | create_session session_01R1w2UxD3EQaGRrvLbMzz7P (`source_revision` `next`) |
 
 ## 3. Coordinator decisions
 
@@ -401,7 +401,7 @@ _(Each link appends its block here when it finishes.)_
     1. knk-plugin (`./gradlew build -x deployToDevServer`, Gradle on JDK 21, JDK 25 toolchain): baseline at
        `f2a50c46` core 2583, api-client 324 (2 skipped), paper 2581 (18 skipped), 0 failures; result at `6fd91127`
        core 2621 (+38), api-client 324 (2 skipped), paper 2587 (+6, 18 skipped), 0 failures. CI: `build` green on
-       `6fd91127` (push run 43427733153); the PR run 43428361244 had started when this block was written.
+       `6fd91127` (push run 43427733153, PR run 43428361244).
     2. The tests #377 names run against the real `NpcNavigationService` with simulated movers that walk their
        orders (`NavGroupTest`, `GroupSim`): a 20-NPC group plans once (1 road plan, 0 local plans); a gate closing
        ahead blocks a 50-NPC group with one replan in one planning slot, one `Blocked`, one wake-up; a stuck
