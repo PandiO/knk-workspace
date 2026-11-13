@@ -1,10 +1,13 @@
 # Staff web app — admin guide
 
-**Status:** Living document — update in place. Describes knk-web-app `main` `1371951` and knk-web-api `master` `bc97b7d`
-(merged 2026-11-12). Only the builders (§ 7) were smoke-tested by the developer (2026-11-11/12, all pass); navigation,
-Entity setup without a nav link, the detail page, the relation picker, live updates and the settings pages are
-**not live-tested** yet: their smoke tests are linked in each section.
-**Last updated:** 2026-11-12 (first version, PandiO/knk-workspace#337, #338, #340–#345)
+**Status:** Living document — update in place. Describes knk-web-app `main` `e02ee79` and knk-web-api `master` `45043a7`
+(merged 2026-11-12/13). Only the builders (§ 7) were smoke-tested by the developer (2026-11-11/12, all pass); navigation,
+Entity setup without a nav link, the detail page, the relation picker, live updates, the settings pages and the
+dashboard access model with bulk delete (§ 1, § 3) are **not live-tested** yet: their smoke tests are linked in each
+section (the access model's is in closed alpha test run 2, checklist § 4c).
+**Last updated:** 2026-11-13 (dashboard per area, disabled actions with "Requires …", bulk delete, export through the
+API, names-only pickers, readable refusals; #280 AM3 and #205, docs #366); 2026-11-12 (first version,
+PandiO/knk-workspace#337, #338, #340–#345)
 
 How staff find their way around the web app's admin pages and use the content tools: the dashboard, Entity setup, the
 detail page, the relation picker in forms, live updates, the form and display builders, and the settings pages. It
@@ -15,20 +18,23 @@ does not repeat the feature guides (siege, game settings, menus, …); it links 
 - You need a web account that is linked to your Minecraft account and in a staff group. What you see depends on the
   **permission nodes** of your groups: each admin page is shown only to holders of its node, and the API checks the
   same node again on every request. `*` and `knk.admin.*` match every admin node.
-- The content tools (Dashboard, Entity setup, the builders, detail pages) need `knk.admin.content` to open. Since the
-  access model of 2026-11-12 ([#280](https://github.com/PandiO/knk-workspace/issues/280) AM1+AM2), the API also checks
-  the type's **area node** when it reads or changes a type: for example `knk.admin.world` for towns, districts, streets
-  and domains, `knk.admin.content` for items, categories and tags; the full list is in
-  [the access model § 4.2](../../specs/dashboard-access-model/DESIGN.md). Deleting needs `knk.admin.delete` on top,
-  exporting `knk.admin.export`. Until the web app part of the access model (AM3) is built, the web app still shows
-  every dashboard type and every Delete button to `knk.admin.content` holders: without the type's area node its list
-  and detail page can't be read (the API answers 403; a detail page says "You don't have access to …"), and without
-  `knk.admin.delete` a Delete is refused with the API's reason. Give the area node to whoever works on that type. The [2026-11-12 changelog entry](../../CHANGELOG.md)
-  lists what changed for existing groups.
+- **The dashboard is per area** ([#280](https://github.com/PandiO/knk-workspace/issues/280), merged 2026-11-13). Each
+  type belongs to an area with its own node: `knk.admin.content` (items, categories, tags, …), `knk.admin.world`
+  (domains, towns, districts, streets, …), `knk.kit.manage`, `knk.admin.lootbox.manage`, `knk.siege.admin.manage`,
+  `knk.admin.road` and `knk.admin.user.manage` (users, permission groups). **Any one** of them opens the Dashboard,
+  the detail pages and the forms; you see and change only the types of the areas you hold. Deleting needs
+  `knk.admin.delete` on top, exporting `knk.admin.export`, and deleting several rows at once
+  `knk.admin.delete.bulk`, which only the owner hands out. Entity setup's lists, the builders and the Minecraft
+  catalogue still need `knk.admin.content`. Which rank holds what, and how to give someone an area node:
+  [dashboard access admin guide](dashboard-access-admin-guide.md). The [changelog entries of 2026-11-12 and
+  2026-11-13](../../CHANGELOG.md) list what changed for existing groups.
+- **Buttons you can't use** are greyed out with what they need, on hover and next to them: "Requires
+  knk.admin.delete", "Requires knk.admin.export", "Requires knk.admin.content". Bulk **Delete (n)** is hidden instead.
+  After a node change, reload the page.
 
 ## 2. Finding your way: the bar, the admin sidebar and breadcrumbs
 
-**The top bar** has **Home**, **Leaderboards**, **Guides**, **Dashboard** (only with `knk.admin.content`) and, last,
+**The top bar** has **Home**, **Leaderboards**, **Guides**, **Dashboard** (only with an area node, § 1) and, last,
 **Admin** (only when you hold the node of at least one admin page). A narrow window shows icons only, then a menu button.
 The current link is highlighted: **Dashboard** also on Entity setup, the builders and every detail page; **Admin** on
 the other admin pages.
@@ -40,7 +46,7 @@ closes it).
 
 | Group | Page | Node |
 |---|---|---|
-| Content | Dashboard | `knk.admin.content` |
+| Content | Dashboard | any area node (§ 1) |
 | Content | Minecraft catalogue | `knk.admin.content` |
 | World | Lootboxes | `knk.admin.lootbox.manage` |
 | World | Domain discovery | `knk.admin.discovery` |
@@ -73,21 +79,52 @@ Smoke test: [admin navigation](../admin-navigation-smoke-test.md) (not run).
 ## 3. Dashboard and Entity setup
 
 The **Dashboard** (`/dashboard/{Type}`) lists the records of one type: pick the type in the explorer on the left, then
-search, sort and page; all of it is in the address, so Back and a shared link return to the same view. A row is a
+search, sort and page; all of it is in the address, so Back and a shared link return to the same view. The explorer
+lists only the types of your areas (§ 1); an address with a type of another area opens one of yours instead. A row is a
 link to the record's **detail page** (§ 4); middle-click opens it in a new tab. Next to the type's title:
 
 - **New {Type}** opens the type's default form; **Drafts (n)** lists your saved, unfinished forms of this type and
-  **New with** offers its other published forms.
+  **New with** offers its other published forms. These open the form for any area's staff.
 - **⚙ Configure {Type}** opens **Entity setup** for that type (`/forms/{Type}`): its form configurations, display
-  configurations, Default Table Columns and saved progress.
-- With `knk.admin.export`: tick rows (or none, for the whole search) and **Export CSV**.
+  configurations, Default Table Columns and saved progress. It needs `knk.admin.content` (greyed out otherwise; opening
+  the address says "Entity setup needs knk.admin.content" with **Back to the dashboard**). That the forms open for
+  every area while Entity setup stays content-only is waiting for a developer decision,
+  [#368](https://github.com/PandiO/knk-workspace/issues/368).
+- Without the type's create or edit node, **New** and **Edit** are greyed out with "Requires …"; without
+  `knk.admin.delete`, so is **Delete**.
+
+**Delete one row.** A row's **Delete** asks "Delete Street "Main Street"?" in a red dialog; after **Delete** a short
+message says it was deleted. If it is still in use, the refusal offers **Show what uses it** (§ 4).
+
+**Select rows.** Tick the boxes in the first column (the header box ticks the rows shown); the selection stays across
+pages and searches of the type and is cleared when you pick another type. The bar above the table says "n selected"
+with **Clear**, or "None selected · Export takes all N results".
+
+**Delete (n)** ([#205](https://github.com/PandiO/knk-workspace/issues/205); red, before Export; only with
+`knk.admin.delete.bulk`, and never for users and permission groups, which are deleted one at a time):
+- It asks "Delete 3 Streets?" with the count and type. Nothing is deleted before you confirm, and it can't be undone.
+- The rows are deleted one by one, 100 per request; a large selection shows "Deleting… n / N".
+- Deleted rows leave the table and the selection. A row that couldn't be deleted **stays selected**, and a dialog
+  "Deleted 2 of 3 Streets" lists it with the reason; a row still in use offers **Show what uses it**. If a request
+  fails (network, too many requests), the run stops and the dialog lists the rows not tried.
+- A short message sums it up ("Deleted 3 Streets.", or "Deleted 2 of 3 Streets; 1 weren't deleted."). Each request
+  is one "Bulk delete on the dashboard" entry in your audit log (player profile → Activity).
+
+**Export CSV** (needs `knk.admin.export`): with rows ticked it exports those, **in the order you ticked them**, with
+their current values; with none it exports the whole search in its current sort, at most 10,000 rows (the bar says so
+beforehand). The file `<Type>-<date>.csv` has the table's columns in table order (comma-separated, UTF-8, with `'`
+before text that looks like a formula). The server reads the rows in one request ("Exporting N…"); each export is a
+"Dashboard export" entry in the audit log with the type, the number of rows and "(selection)" or "(search)".
 
 **There is no "Entity setup" link in the bar** ([#197](https://github.com/PandiO/knk-workspace/issues/197)). Reach it
 with the dashboard's **⚙** on a type, with **Drafts (n)** → **All saved progress (Entity setup)**, or by typing
 `/forms` in the address bar (the old `/admin/form-configurations` address still goes there). A type without a display
 configuration has a muted marker in the explorer ("No display configuration – set one up via ⚙").
 
-Smoke test: [dashboard return § 14a](../dashboard-return-smoke-test.md#14a-no-entity-setup-nav-link-197) (not run).
+Smoke tests: [dashboard return § 14a](../dashboard-return-smoke-test.md#14a-no-entity-setup-nav-link-197),
+[entity lists § 7](../entity-lists-url-state-smoke-test.md#7-checkbox-selection-and-export-csv-205-export-part-chain-3-v2) (selection and export),
+[dashboard access § 8](../dashboard-access-smoke-test.md#8-web-app-am3) (areas, disabled actions, bulk delete, export;
+test run 2 § 4c) (not run).
 
 ## 4. The detail page
 
@@ -137,9 +174,12 @@ line. Arrow keys and Enter, or a click, pick one; Escape closes the list. In a l
 record, up to the field's maximum. When there are more matches, keep typing, or press **Open full table** for the
 full table with paging, sorting and filters.
 
-Without read access to the related type (its area node), the box searches **by name only** (no full table). A type
-that can't be searched that way says "can't be searched here. Requires one of: …"; a field with a narrowing filter says
-why it can't offer the list ([#288](https://github.com/PandiO/knk-workspace/issues/288)).
+Without read access to the related type (its area node), the box searches **by name only** (no full table) and says
+so: "Names only: the full Street table needs one of: …". A type that can't be searched that way says "can't be searched
+here. Requires one of: …"; a field with a narrowing filter says why it can't offer the list
+([#288](https://github.com/PandiO/knk-workspace/issues/288)). **Create New** for a link field is offered only with
+the related type's create node. A table you can't read (for example a picker's **Open full table**) says "You don't
+have access to Category. Requires one of: …" instead of "Failed to load data".
 
 Smoke test: [relation picker and delete details](../relation-picker-and-delete-details-smoke-test.md) (not run).
 
@@ -260,10 +300,12 @@ get the new version at once.
 
 | You see | Why | What to do |
 |---|---|---|
-| No **Dashboard** in the bar, or "Staff only" | No `knk.admin.content` | Add the node to the staff member's group |
-| A dashboard type's table doesn't load, or "You don't have access to Town …" | The type's area node is missing (AM2) | Add the area node (for towns `knk.admin.world`) |
-| Delete refused although the button is enabled | `knk.admin.delete` is missing (the web app doesn't hide the button until AM3) | Add the node, or ask someone who has it |
+| No **Dashboard** in the bar, or "Staff only" listing nodes | No area node | Add the area node of their work ([admin guide § 6](dashboard-access-admin-guide.md#6-giving-someone-an-area-node)) |
+| A type isn't in the explorer, or "You don't have access to Town …" | The type's area node is missing | Add the area node (for towns `knk.admin.world`) |
 | A button disabled with "Requires …" | That action's node is missing | Add the named node, or ask someone who has it |
+| No **Delete (n)** when rows are ticked | No `knk.admin.delete.bulk` (owner-only), or users and permission groups | Ask the owner; delete users and groups one at a time |
+| After **Delete (n)** some rows are still ticked | Those were refused; the dialog gave each reason | Fix the reason (**Show what uses it**), then delete again |
+| "Entity setup needs knk.admin.content" | Entity setup's lists need the content node | Use the dashboard's New / Edit / Drafts, or ask for `knk.admin.content` |
 | Delete refused with **Show what uses it** | Other records still point at it | Unlink or delete those first |
 | Staff don't see a builder change | It is saved as a draft, not published | **Publish…** |
 | A validation rule change applies before Publish | Known limit #291 | Change rules outside play hours |

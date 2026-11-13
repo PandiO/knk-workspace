@@ -3,12 +3,14 @@
 **Status:** Ready to run (API § 1–7, web app § 8). Not run yet: **accepted by the developer 2026-11-13 without a live
 test**, scheduled in closed alpha test run 2 (checklist § 4c). AM1 and AM2 merged 2026-11-12 (knk-web-api `master`
 `bc97b7d`); AM3 merged 2026-11-13 (knk-web-app `main` `e02ee79`, knk-web-api `master` `45043a7`, also on `next`).
-AM4 (living docs, admin guide to the ranks) not built.
-**Last updated:** 2026-11-13 (status: merged, accepted without a live test, in test run 2); 2026-11-12 (§ 0 role accounts and deploy, § 2.1 configuration deletes, § 3 refusal codes, § 8 web
+AM4 (living docs, the [admin guide to the ranks](admin/dashboard-access-admin-guide.md)) done 2026-11-13 (#366).
+Known: the wizard routes for any area node are a deviation waiting for a decision (#368); a `knk.admin.user.manage`-only
+rank can't load the Permission Group list (#369, § 8.1 step 4).
+**Last updated:** 2026-11-13 (AM4 docs done, #368/#369 noted, architecture anchors; docs #366); 2026-11-13 (status: merged, accepted without a live test, in test run 2); 2026-11-12 (§ 0 role accounts and deploy, § 2.1 configuration deletes, § 3 refusal codes, § 8 web
 app, § 9 docs impact; chain 3 link AM3); 2026-11-12 (AM1+AM2 merged); 2026-11-08 (§ 7 read gating and lookups, chain 3 link AM2); 2026-11-08 (draft with the AM1 API steps, chain 3 link AM1)
 **Design:** [specs/dashboard-access-model/DESIGN.md](../specs/dashboard-access-model/DESIGN.md) · as built:
-[web-api architecture § 5.1](../architecture/web-api-architecture.md#51-dashboard-access-model-pandioknk-workspace280-am1--branch-claudedashboard-access-280-not-merged)
-and [§ 5.2](../architecture/web-api-architecture.md#52-read-gating-per-area-and-lookups-pandioknk-workspace280-am2--branch-claudedashboard-access-280-not-merged)
+[web-api architecture § 5.1](../architecture/web-api-architecture.md#51-dashboard-access-model-pandioknk-workspace280-am1-merged-2026-11-12-am3-2026-11-13)
+and [§ 5.2](../architecture/web-api-architecture.md#52-read-gating-per-area-and-lookups-pandioknk-workspace280-am2-merged-2026-11-12)
 **Issue:** [PandiO/knk-workspace#280](https://github.com/PandiO/knk-workspace/issues/280)
 **Branches (AM3):** knk-web-app `claude/dashboard-access-280` and knk-web-api `claude/dashboard-access-280`, both fresh
 from their trunks (`main` `1371951`, `master` `bc97b7d`); AM1 and AM2 are already in `master`.
@@ -223,7 +225,9 @@ and at 390 px width (phone): nothing scrolls sideways, the bulk dialogs fit.
 
 ## 9. Docs impact (AM3)
 
-Written before merge; the rest goes to the `documentation` sub-issue at merge (with AM4's list).
+Written before merge; the rest went to the `documentation` sub-issue #366 at merge (with AM4's list) and was done there
+on 2026-11-13: the admin guide to the ranks, the staff web app guide, both architecture docs, the design status, entity
+lists § 7, realtime § S4, the register and the guides index.
 
 - **This guide:** § 0 role accounts and deploy, § 2.1, § 3 refusal codes, § 8 (done on the AM3 branch).
 - **Design** (`specs/dashboard-access-model/DESIGN.md`): status line (AM3 built); § 4.7 "not covered" now leaves out
