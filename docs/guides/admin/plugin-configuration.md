@@ -1,7 +1,7 @@
 # Plugin configuration reference (`config.yml`)
 
 **Status:** Living document — update in place whenever a `config.yml` key is added, renamed, removed or gets a new default
-**Last updated:** 2026-11-13 (§ 4.27 `npc`: `rule-checks-per-tick`, `stop-on-trespass`, PandiO/knk-workspace#361); 2026-11-13 (§ 4.27 `npc`, PandiO/knk-workspace#359 and #360; checked against knk-plugin `claude/npc-navigation`, not merged into trunk yet); 2026-11-10 (first version, PandiO/knk-workspace#295; checked against knk-plugin `main` `121030f`)
+**Last updated:** 2026-11-13 (§ 4.27 `npc`: six `group-*` keys, PandiO/knk-workspace#377); 2026-11-13 (§ 4.27 `npc`: `rule-checks-per-tick`, `stop-on-trespass`, PandiO/knk-workspace#361); 2026-11-13 (§ 4.27 `npc`, PandiO/knk-workspace#359 and #360; checked against knk-plugin `claude/npc-navigation`, not merged into trunk yet); 2026-11-10 (first version, PandiO/knk-workspace#295; checked against knk-plugin `main` `121030f`)
 **Source:** knk-plugin `knk-paper/src/main/resources/config.yml` (1,152 lines at `121030f`), read by
 `knk-paper/.../paper/config/ConfigLoader.java`, `EnchantmentConfigManager.java` and `KnKPlugin.java`
 **Related:** [production installation § 9.5](../production-installation.md#95-install-the-knightsandkings-plugin),
@@ -85,7 +85,8 @@ Newest first. Builds before this list: compare the files with the script.
 
 | Merged | Issue | Added (+), removed (−) or changed | Applies |
 |---|---|---|---|
-| in review, not in `next` yet | [#361](https://github.com/PandiO/knk-workspace/issues/361) | + `npc.navigation.rule-checks-per-tick`, + `npc.navigation.stop-on-trespass`; `recheck-ticks` is used from now on | Restart |
+| in review, not in `next` yet | [#377](https://github.com/PandiO/knk-workspace/issues/377) | + `npc.navigation.group-formation`, + `group-spacing`, + `group-ranks-width`, + `group-rejoin-blocks`, + `group-regroup-blocks`, + `group-catch-up-speed` (NPC groups; nothing uses them unless a group is started) | Restart |
+| in `next`, not on trunk yet | [#361](https://github.com/PandiO/knk-workspace/issues/361) | + `npc.navigation.rule-checks-per-tick`, + `npc.navigation.stop-on-trespass`; `recheck-ticks` is used from now on | Restart |
 | in `next`, not on trunk yet | [#359](https://github.com/PandiO/knk-workspace/issues/359), [#360](https://github.com/PandiO/knk-workspace/issues/360) | + `npc.navigation` block (off by default): Phase 1 keys and, with Phase 2, `spawns-per-tick`, `hop-blocks`, `max-retries`, `no-route-wait-ticks`, `walk-only-blocks`, `access-profiles` | Restart |
 | 2026-11-10 | [#259](https://github.com/PandiO/knk-workspace/issues/259) | − `gates.cleaving` (`damage-bonus-per-level`, `charged-hit-multiplier`, `charged-cooldown-seconds`): no longer read. Cleaving's numbers are combat values in the web app now ([combat values guide](custom-enchantment-combat-values-admin-guide.md#1-where-to-edit)). Delete the block. + `custom-enchantments.messages.cmd-info-tuning-gate` | `/ce reload` |
 | 2026-11-10 | [#233](https://github.com/PandiO/knk-workspace/issues/233) | No `config.yml` change. The chat token limits are on the web app's Game Settings page ([chat tokens guide](../chat-tokens.md)) | — |
@@ -635,6 +636,16 @@ each value with the layer it came from. A wrong value is reported at startup and
 | `stop-on-trespass` | `false` | The trespass guard always logs and counts an NPC that entered a region its current rules deny. `true`: also stop that NPC and plan its route again; for dev servers | Restart | #361 |
 | `collidable` | `false` | Whether NPCs push and block each other | Restart | #359 |
 | `chunk-loading` | `load` | Outside player-loaded areas: `load` or `simulate` (read now, used in Phase 7b) | Restart | #359 |
+| `group-formation` | `column` | The formation of a group of NPCs (a leader plans the route once, the followers walk it in slots): `column` (single file), `ranks` (rows behind the leader), `cluster` (a loose crowd) or `escort-ring` (an octagon around the leader, then wider rings). Where the road is too narrow for it a group walks as a column and takes up its formation again after | Restart | #377 |
+| `group-spacing` | `2.0` | Blocks between neighbouring formation slots; 1–8. Pairs need a road 1 + spacing blocks wide, a cluster and an escort ring 1 + 2.5 × spacing | Restart | #377 |
+| `group-ranks-width` | `2` | NPCs per row in the `ranks` formation (2 = pairs); 2–8 | Restart | #377 |
+| `group-rejoin-blocks` | `4.0` | A follower further than this from its lane, or without progress for `no-progress-ticks`, plans its own leg back to the group's path (one local leg, never the whole route); 2–16 | Restart | #377 |
+| `group-regroup-blocks` | `24.0` | The leader waits when a follower is this many blocks behind its slot, until the group has closed up to half of it (30 seconds at most); 0–256, 0 = the leader never waits | Restart | #377 |
+| `group-catch-up-speed` | `1.3` | Walking speed, as a factor, of a follower that is behind its slot; 1–2, 1 = followers never walk faster | Restart | #377 |
+
+The six `group-*` keys are per-NPC settings like the others, but a group takes them once, for its leader: a world, a
+region, an NPC template or an assignment can give groups their own formation. `/knk npc nav group <n> [formation]`
+starts a test group.
 
 Access profiles, `access-profiles.<id>` (until NPCs have their own permissions). `default` always exists. NPCs never
 pass a closed gate.
@@ -646,7 +657,8 @@ pass a closed gate.
 | `allow-regions` | `[]` | WorldGuard region ids the NPC may enter and leave whatever the domain says | Restart | #360 |
 | `deny-regions` | `[]` | Region ids the NPC never enters (wins over `allow-regions`) | Restart | #360 |
 
-The block to paste (the Phase 1 keys with the Phase 2 and Phase 3 additions):
+The block to paste (the Phase 1 keys with the Phase 2, 3 and 4 additions; Phase 4, #377, adds the six `group-*`
+lines):
 
 ```yaml
 npc:
@@ -667,6 +679,12 @@ npc:
     stop-on-trespass: false
     collidable: false
     chunk-loading: load
+    group-formation: column
+    group-spacing: 2.0
+    group-ranks-width: 2
+    group-rejoin-blocks: 4.0
+    group-regroup-blocks: 24.0
+    group-catch-up-speed: 1.3
     worlds: {}
     regions: {}
     access-profiles:

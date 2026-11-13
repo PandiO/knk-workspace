@@ -5,7 +5,7 @@ endpoints it relies on ([KNG-232](https://linear.app/kngpandi/issue/KNG-232)) ar
 knk-plugin `main` `390d88a4` and knk-web-api `master` `3658cf2`, unit-tested but **not yet run against a live Paper server,
 MySQL or the NAS**; both default off, so they need a new build and the config in § 5 to take effect. § 5 says how to use
 the guide before they are deployed.
-**Last updated:** 2026-11-13 (§ 4.2: NPC navigation panels, `knk_npc_nav_*`, PandiO/knk-workspace#358; Phase 2 events, #360; Phase 3 rule panels, #361); 2026-11-02 (§ 5.2: `Telemetry__Exporter=prometheus` stops the OTLP export, checked against API `master` `8df59b7` `Program.cs`; [PandiO/knk-workspace#48](https://github.com/PandiO/knk-workspace/issues/48)); 2026-10-22 (§ 4.2/§ 5 aligned with the implemented metric names)
+**Last updated:** 2026-11-13 (§ 4.2: NPC group panels, `group_*` events, PandiO/knk-workspace#377); 2026-11-13 (§ 4.2: NPC navigation panels, `knk_npc_nav_*`, PandiO/knk-workspace#358; Phase 2 events, #360; Phase 3 rule panels, #361); 2026-11-02 (§ 5.2: `Telemetry__Exporter=prometheus` stops the OTLP export, checked against API `master` `8df59b7` `Program.cs`; [PandiO/knk-workspace#48](https://github.com/PandiO/knk-workspace/issues/48)); 2026-10-22 (§ 4.2/§ 5 aligned with the implemented metric names)
 **Applies to:** the closed-alpha NAS stack ([runbook](closed-alpha-deployment-runbook.md)): Paper 26.3 in a Docker
 container, knk-web-api, MySQL, all on one shared host (Ryzen 7 5700G, ~15 GiB RAM, Frigate also running; see the
 [infrastructure report](../reports/2026-10-11-closed-alpha-infrastructure-progress.md) § 2).
@@ -193,6 +193,9 @@ The target hosts/ports above are placeholders: use the networks and ports of you
 | Waiting NPCs by cause | `sum by (event)(rate(knk_npc_nav_events_total{event=~"no_route_wait\|unloaded_wait"}[5m]))` | no allowed route (a closed gate, a denied region) vs the way ahead not loaded (Phase 2) |
 | Failed orders | `increase(knk_npc_nav_events_total{event="failed"}[1h])` | orders that ended as failed: no road connects, or retries and replans used up (Phase 2) |
 | Stretches handed over | `rate(knk_npc_nav_events_total{event="stretch"}[5m])` | how much route following goes on (Phase 2) |
+| Group folds | `sum by (event)(increase(knk_npc_nav_events_total{event=~"group_fold\|group_reform"}[15m]))` | groups that walked as a column where the road is too narrow for their formation, and took it up again. Many folds on a road that looks wide: `group-spacing` is too large for it (Phase 4) |
+| Followers' own legs | `sum by (event)(increase(knk_npc_nav_events_total{event=~"group_rejoin\|group_lost"}[15m]))` | `group_rejoin`: a follower left its lane or made no progress and planned one leg back; `group_lost`: its legs kept failing and the group went on without it (should stay near 0). Many rejoins at the same places point at stairs or corners followers cannot walk as waypoints (Phase 4) |
+| Leaders waiting | `increase(knk_npc_nav_events_total{event="group_regroup"}[15m])` | a leader stopped for followers more than `group-regroup-blocks` behind; each wait costs the group one more road plan (Phase 4) |
 | Chunks held for NPCs | `knk_npc_nav_chunks_held` | the travel bubble's cost (NAV-12) |
 
 ## 5. What KNG-232 adds (and how to use the guide before it is deployed)
