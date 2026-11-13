@@ -1,7 +1,7 @@
 # Lootboxes — Design
 
 **Status:** Decided — merged to trunk 2026-09-27 (round-2 smoke test and follow-ups: IMPLEMENTATION_PLAN "Open TODOs", Linear KNG-31)
-**Last updated:** 2026-10-23 (KNG-266: WorldGuard listener in §3.4)
+**Last updated:** 2026-11-05 (PandiO/knk-workspace#34 in §3.4: regions drawn in the web form renamed to `lootbox_area_<id>`; feature branch, not merged); 2026-10-23 (KNG-266: WorldGuard listener in §3.4)
 **Linear:** [KNG-19](https://linear.app/kngpandi/issue/KNG-19/lootboxes-per-category-world-lootboxes-with-grade-weighted-rolls-v1)
 **Sources:** `knk-v1-archive` (single commit `4117e7e`): `src/Products/{Product,SpecialItemEvents,Enchantment}.java`,
 `src/Treasure/*`, `src/Main/Main.java`, `src/KillsDeaths/KillDeathStat.java`, `src/Minigames/{BanditAmbushes,OcelotSpawn}.java`,
@@ -447,6 +447,12 @@ players, lifetime, excluded regions, allowed types) are edited in the web app.
   active boxes. It removes the WG region **only if its id starts with `lootbox_`**; regions the area borrowed (a town/district
   `Domain` region picked in the web app) are never deleted. A delete from the web app runs the same service logic but can't reach
   WorldGuard, so it leaves a `lootbox_` region behind (`/rg remove` it, or delete in game instead).
+- **Regions drawn in the web form** (PandiO/knk-workspace#34, feature branch `claude/lootbox-area-rename-34`, not merged): the
+  form's region world task draws `tempregion_worldtask_<n>`; on save the API renames it to `lootbox_area_<id>` and the plugin
+  stretches it to full build height, so the 14-day temp-region cleanup keeps it (and the cleanup now asks the areas too). A
+  re-run of the region step replaces the area's previous drawn region. `lootbox_area_<id>` is a `lootbox_` region: it belongs to
+  that one area and an in-game delete removes it. Area names `area_<number>` are reserved. Details:
+  [managed-worldguard-regions.md](../../architecture/managed-worldguard-regions.md) §7 "Lootbox spawn areas".
 
 `config.yml`:
 ```yaml

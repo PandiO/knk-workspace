@@ -2,7 +2,8 @@
 
 **Status:** Run by the developer 2026-11-04 on the `claude/realtime-signalr` builds (which contain this branch): all
 steps work or accepted. Merged into the default branches 2026-11-04 (with the realtime branch)
-**Last updated:** 2026-11-04 (findings of the developer's run; merged)
+**Last updated:** 2026-11-09 (§7 temp regions of abandoned drafts, PandiO/knk-workspace#269, feature branch
+`claude/temp-region-drafts-269`, not merged, not run yet); 2026-11-04 (findings of the developer's run; merged)
 **Issue:** [PandiO/knk-workspace#180](https://github.com/PandiO/knk-workspace/issues/180) (WT1 of #66); design
 [realtime-signalr/DESIGN.md](../specs/realtime-signalr/DESIGN.md) §8.2, §8.7; reference
 [specs/world-tasks/README.md § Lifecycle](../specs/world-tasks/README.md#lifecycle-and-endpoints-pandioknk-workspace180)
@@ -95,6 +96,48 @@ Record each step in **Findings** at the end (works / doesn't / accepted).
    Within 30 s the session and its tasks are gone (API log "World task sweep: … abandoned session(s) removed").
 2. The same for a session that has a draft or a Completed task: it stays.
 
+## 7. Temp regions of abandoned drafts (#269, feature branch `claude/temp-region-drafts-269`, not merged)
+
+About 30 minutes. What it checks: a region a form's region task drew (`tempregion_worldtask_<n>`) is removed within
+minutes when its draft is deleted or its task closes without a result, never when something uses it or it was renamed,
+and the 14-day cleanup is untouched. Design: [managed-worldguard-regions.md §7 "Abandoned drafts"](../architecture/managed-worldguard-regions.md#abandoned-drafts-temp-regions-released-early-pandioknk-workspace269-feature-branch-claudetemp-region-drafts-269-not-merged).
+
+0. **Setup.** Check out `claude/temp-region-drafts-269` in knk-web-api and knk-plugin (they contain the unmerged
+   `claude/dashboard-access-280`, `claude/lootbox-area-rename-34` and, on the plugin, `claude/kit-grant-delivery-261`).
+   API first: `dotnet ef database update` (additive migration `AddTempRegionReleases`, one new table; the branch also
+   carries the earlier links' migrations), start it with `WorldTasks__TempRegionReleaseGraceMinutes=1` so you don't
+   wait 5 minutes per step. Plugin: in `config.yml` set `regions.temp-retention.release-interval-minutes: 1` (default 5),
+   `./gradlew :knk-paper:dev`, restart. The server log shows "Temp regions of abandoned drafts are removed every 1
+   minutes…". Keep a SQL client open:
+   `SELECT Id, WorldTaskId, RegionId, World, ServerId, Reason, RequestedAt FROM temp_region_releases ORDER BY Id DESC LIMIT 8;`
+   Each step: wait up to 3 minutes (1 grace + 1 pass + the first pass 2 minutes after a restart).
+1. **Draft deleted.** New Town (or Lootbox spawn area), fill the Region step with "Send to Minecraft", draw a selection
+   in game and `save`. `/rg info tempregion_worldtask_<n>` shows it. Save the draft and leave the form (the wizard's
+   Cancel). Nothing happens: leaving keeps the draft (wait one pass; the region stays). Open Saved Progress and delete
+   the draft. A row `DraftDeleted` with the task id, world and server appears; within minutes the server log says
+   `Removed temp region <world>/tempregion_worldtask_<n> (its draft was deleted; no domain or lootbox area uses it)`,
+   `/rg info` finds no region, and the row is gone.
+2. **Renamed regions are never touched.** Draw a region in a new Lootbox spawn area form and **submit** it: the region
+   becomes `lootbox_area_<id>` (R3). Delete that (completed) draft from Saved Progress if it is listed, or any draft of
+   a domain you saved with a drawn region. The release is settled as missing (row gone, no "Removed" line);
+   `lootbox_area_<id>` / `domain_<id>` is still there.
+3. **A region another draft names is kept.** Draw a region in draft A (Town, `save` in game), note
+   `tempregion_worldtask_<n>`. In draft B (another Town) run the Region step and type `select tempregion_worldtask_<n>`
+   in game; save draft B. Delete draft A: the row appears and **stays** (draft B names the region), the region stays.
+   Delete draft B: within minutes A's region is removed (B's own task picked an existing region, so B releases nothing).
+4. **Draft deleted while the task runs.** Start a Region step, claim it in game but don't `save`. Delete the draft in
+   Saved Progress: the row appears and waits (the task is InProgress). Now `save` in game (the task completes for the
+   deleted draft). After the grace minute the region is removed. (Flag LP3-3: the task is not cancelled.)
+5. **Cancelled from the web.** Start a Region step, claim it in game, then "Cancel task" in the web app. #180 already
+   stops the handler; a `TaskCancelled` row appears and is settled within minutes (nothing drawn, so no "Removed" line).
+   Cancel a task nobody claimed: no row.
+6. **Unreachable checks keep the region.** Repeat step 1 but stop the API right after deleting the draft (before the
+   pass). The server logs nothing removed; start the API again and the next pass removes it. With
+   `release-interval-minutes: 0` and a restart, no pass runs and step 1 leaves the region (the 14-day cleanup decides).
+7. **Backstop unchanged.** `/knk regions temp` lists the remaining temp regions as before (too recent / in use / …);
+   the daily cleanup's log line is unchanged. Afterwards set `release-interval-minutes` back to 5 (or remove the line)
+   and drop the API override.
+
 ## Findings
 
 | Step | Result | Notes |
@@ -106,3 +149,4 @@ Record each step in **Findings** at the end (works / doesn't / accepted).
 | 4 | Accepted | |
 | 5 | Works | |
 | 6 | Accepted | |
+| 7.0–7.7 | not run | #269, feature branch |
