@@ -13,7 +13,7 @@ list, which covers every mutating service this plan built (TitleService's derive
 detection, the owner/staff-mode toggle, and the group/grant CRUD services), not just Salary. This
 was the last phase §8 names; see §8 below for what's next — `docs/specs/user-management/` Phase 2
 (a separate feature this plan unblocked) shipped in parallel, see that plan's own status.
-**Last updated:** 2026-09-24 (user-management Phase 2 session closed §6's carried-forward item 4).
+**Last updated:** 2026-11-13 (links to the finished-session rows now in the sessions archive, PandiO/knk-workspace#362); 2026-09-24 (user-management Phase 2 session closed §6's carried-forward item 4).
 Previously updated 2026-09-24 (§6.1 implementation session added "§6.1" and closed §6's carried-
 forward item 1; earlier the same day, the Phase 6 implementation session added "§6 status";
 earlier still, the Phase 5 implementation session added "§5 status" and the "v1 Titles backup
@@ -40,7 +40,7 @@ ancestor) Phase 3 tip; `knk-web-api`/`knk-plugin`/`knk-workspace`'s old phase1/p
 docs-scan branches are redundant and should be deleted once repo push permissions allow it (blocked
 this session by a destructive-git-operation guard — flagged to the developer). `knk-web-app` has no
 `claude/user-features` branch yet; create one only when a future phase actually needs to touch
-that repo. The historical "Recently completed" rows below for Phases 1-3 are left as-is — they
+that repo. The historical "Recently completed" rows for Phases 1-3 (now in the [sessions archive, 2026-09](../../reports/sessions-archive/2026-09.md)) are left as-is — they
 correctly record which branch existed at the time work was done — this is a forward-looking policy
 note, not a rewrite of history.
 
@@ -120,8 +120,8 @@ document is sequencing and per-repo scope only. If something below conflicts wit
 
 Both repo bullets above are done. knk-web-api: `PermissionHolder`/`PermissionGroup`/
 `PermissionGrant`/`UserPermissionGroup` entities, the TPT migration (verified end-to-end against
-a real local MySQL 8.0 copy with pre-existing data — see the full writeup in `ACTIVE_SESSIONS.md`
-under "User features Phase 1" in the "Recently completed" table), `PermissionResolutionService`
+a real local MySQL 8.0 copy with pre-existing data — see the full writeup
+under "User features Phase 1" in the [sessions archive, 2026-09](../../reports/sessions-archive/2026-09.md)), `PermissionResolutionService`
 (22 unit tests + a live 4-level group-chain smoke test), `PermissionGroupsController`/
 `PermissionGrantsController`, and the `permissions/check`/`permissions/effective` endpoints.
 knk-plugin: knk-core domain types + `PermissionsApi` port + `PermissionsDataAccess` gateway,
@@ -191,8 +191,8 @@ not v1's in-memory-only maps:
 
 Both repo bullets are done, on branch `claude/user-features-phase3-v8rmws` in knk-web-api (forked
 from §1's unmerged `claude/user-features-phase1-sg4rjw`) and knk-plugin (forked from §2's unmerged
-`claude/user-features-phase2-fvx5qj`). Full verification writeup: `ACTIVE_SESSIONS.md`, "User
-features Phase 3" in the "Recently completed" table.
+`claude/user-features-phase2-fvx5qj`). Full verification writeup: "User
+features Phase 3" in the [sessions archive, 2026-09](../../reports/sessions-archive/2026-09.md).
 
 **Field shape decided (DESIGN.md §6.1 left it open):** a single `User.ActiveMode` enum
 (`None`/`Staff`/`Owner`, `int` column, default `0`) — no separate `IsVanished` flag. v1 never

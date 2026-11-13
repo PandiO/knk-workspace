@@ -1,7 +1,7 @@
 #!/bin/bash
 # generate-prompt.sh
 #
-# Generates AI prompts from the AI_FEATURE_IMPLEMENTATION_WORKFLOW.md templates.
+# Generates AI prompts from the docs/archive/AI_FEATURE_IMPLEMENTATION_WORKFLOW.md templates (archived 2026-11-13, PandiO/knk-workspace#362).
 #
 # Usage: ./scripts/generate-prompt.sh <feature-name> <phase-number> <step>
 #
@@ -305,4 +305,4 @@ echo ""
 echo "💡 Tip: Copy the prompt above and paste it into your AI chat."
 echo "   Replace [feature-name], [phase], etc. with actual values."
 echo ""
-echo "📚 Reference: docs/AI_FEATURE_IMPLEMENTATION_WORKFLOW.md"
+echo "📚 Reference: docs/archive/AI_FEATURE_IMPLEMENTATION_WORKFLOW.md (archived; current: .claude/skills/knk-coordinator, knk-link)"
