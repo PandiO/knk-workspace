@@ -196,7 +196,8 @@ Full guide: [Gate structures](gate-structures-player-guide.md).
 Sieges are team matches: attackers try to take a castle's objectives, defenders try to hold them. Type `/siege` or
 click the **Siege Minigame** tile to see the lobbies, and `/siege join` to join one. In the lobby you can vote for the
 next scenario with `/siege vote` and choose where you start with `/siege spawn`. Sieges that use it give you a navigation
-compass that points the way to the objectives. Only siege commands work during a match; `/siege leave` leaves it (you
+compass that points the way to the objectives. During a match only `/siege`, `/siegemenu`, `/navigate` and the commands the
+siege allows work; `/siege leave` leaves it (you
 get your items and position back, but no rewards). After a match, `/siege history` shows your results with a link to
 the match page on the website.
 
