@@ -1,11 +1,12 @@
 # NPC navigation chain — progress report
 
-**Status:** Paused (L1 and L2 merged into `next`; L0 waits for the developer's Phase 1 result on #359) (2026-11-13) · **Last updated:** 2026-11-13
+**Status:** Running (2026-11-13) · **Last updated:** 2026-11-13
 
 **Issue:** [PandiO/knk-workspace#358](https://github.com/PandiO/knk-workspace/issues/358), links
 [#360](https://github.com/PandiO/knk-workspace/issues/360) (L1),
 [#359](https://github.com/PandiO/knk-workspace/issues/359) (L0),
-[#361](https://github.com/PandiO/knk-workspace/issues/361) (L2).
+[#361](https://github.com/PandiO/knk-workspace/issues/361) (L2),
+[#377](https://github.com/PandiO/knk-workspace/issues/377) (L3).
 **Charter:** [handoffs/NPC_NAVIGATION_CHAIN.md](../ai-agents/handoffs/NPC_NAVIGATION_CHAIN.md).
 
 ## 1. Waiting for the developer
@@ -34,8 +35,9 @@ block into the dev server's `config.yml` (configuration reference § 4.27; the Y
 | Link | Issue | Status | Branch heads | PR | CI | How started |
 |---|---|---|---|---|---|---|
 | L1 Phase 2: one NPC walks a K&K route | #360 | Merged into next 2026-11-13 (knk-plugin `50bf7ff7`, knk-workspace `424f1fa3`); #360 stays `status:in-review` until the developer's live test and the promotion of `next` | `claude/npc-navigation`: knk-plugin `49b5cedb`, knk-workspace `5c8587b` | [knk-plugin#17](https://github.com/PandiO/knk-plugin/pull/17), [knk-workspace#370](https://github.com/PandiO/knk-workspace/pull/370) | knk-plugin `build` green on `49b5cedb` (run 43398822498); knk-workspace has no CI | create_session session_01R1w2Uv2Ze28fr2rkqUz98C (`source_revision` `next`) |
-| L0 Phase 1 follow-ups | #359 | Not started (gate: the developer's Phase 1 result on #359; L1 and L2 are merged) | | none | none | |
+| L0 Phase 1 follow-ups | #359 | Not started (gate: the developer's Phase 1 result on #359, expected the evening of 2026-11-13; runs after L3, one link per repo) | | none | none | |
 | L2 Phase 3: rules stay binding | #361 | Merged into next 2026-11-13 (knk-plugin `f2a50c46`, knk-workspace `9df8d44c`); #361 stays `status:in-review` until the developer's live test and the promotion of `next` | `claude/npc-navigation`: knk-plugin `8df2d839`, knk-workspace `a05f7bf` | [knk-plugin#18](https://github.com/PandiO/knk-plugin/pull/18), [knk-workspace#375](https://github.com/PandiO/knk-workspace/pull/375) | knk-plugin `build` green on `8df2d839` (runs 43403427418, 43403523663); knk-workspace has no CI | create_session session_01R1w2Uvt1jBnAv84KX3hf7q (`source_revision` `next`) |
+| L3 Phase 4: groups and formations | #377 | Running (started 2026-11-13) | `claude/npc-navigation`: knk-plugin `8df2d839`, knk-workspace `a05f7bf` (L2 heads) | none | none | create_session session_01R1w2UxD3EQaGRrvLbMzz7P (`source_revision` `next`) |
 
 ## 3. Coordinator decisions
 
@@ -110,6 +112,16 @@ block into the dev server's `config.yml` (configuration reference § 4.27; the Y
     is closed and nothing else is startable; the coordinator looks at #359 at its check-ins. The "At merge" docs
     steps wait for L0 or its skip, since L0 is a link of this feature. Alternatives: (a) start the docs session now:
     L0 may still add guards and docs; (b) run L0 without the audit: it would have nothing to guard.
+
+12. **L3 added: Phase 4, groups and formations (developer, 2026-11-13; replaces decision 11's pause).** The
+    developer can only run the Phase 1–3 tests and the audit in the evening and chose to go on with Phase 4 as L3
+    meanwhile. Done by the coordinator: sub-issue #377 (`tier:3`, `priority:high`, child of #358), the L3 row in the
+    charter, L3 started. CI on knk-plugin `next` after the L2 merge is green (run 43422663378 on `f2a50c46`). Known
+    risk, accepted by the developer: L3 builds on Phases 2 and 3 before their first server run; the L3 prompt asks for
+    the group layer on top of `NpcNavigationService`'s public surface so a later fix below it stays cheap. L0 now runs
+    after L3. Alternatives: (a) pause until the evening (decision 11); (b) Phase 5: needs push access to knk-web-api
+    and knk-web-app, which this chain has read-only; (c) Phase 7 (movement quality, stairs): depends on what the
+    stair-house test shows.
 
 ## 4. Link blocks
 
