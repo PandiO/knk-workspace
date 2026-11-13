@@ -78,7 +78,7 @@ Read this before Phase 4.
   - the Minecraft container needs an egress network next to the internal `backend`.
 
   See [alpha-go-live § 5](../../guides/alpha-go-live.md#5-minecraft-and-plugin-runbook-phases-45).
-- **The web hostname is open:** `app.knightsandkings.net` (KNG-64 plan) or the earlier `knk.oldenzeelit.nl`. It is
+- **The web hostname is open:** `app.knightsandkings.net` (KNG-64 plan) or the earlier `knk.<personal-domain>`. It is
   used by `web.public-url`, `Security__PasswordResetFrontendBaseUrl`, `AllowedHosts` and the Access application.
 - **Email:** the `backend` network has no egress, so use `Email__Provider=Log` for the alpha unless the API gets one.
 
@@ -188,7 +188,7 @@ Repository and live NAS refresh on 2026-10-12:
    final alpha baseline.
 5. Confirm the web hostname with the user before finalizing API/web/plugin
    settings. The open choices are `app.knightsandkings.net` and the older
-   `knk.oldenzeelit.nl`; do not guess.
+   `knk.<personal-domain>`; do not guess.
 6. Coordinate with the active `claude/blissful-fermat-b7ihrz` session before
    touching the multiworld loader. Inspect the exact pushed/merged plugin
    revision and do not duplicate its work.
