@@ -18,7 +18,7 @@ This is a human-readable record of capabilities merged into the V3 default branc
     lootbox, siege, road and Staff ranks that should keep creating or editing records need `knk.admin.content`.
     Smoke test: [dashboard access smoke test § 8 steps 6, 7, 9, 9a](guides/dashboard-access-smoke-test.md#8-web-app-am3).
 
-- **NPC navigation, Phases 1 to 3: NPCs walk K&K routes (admin testing only)** — no change for players; off by
+- **NPC navigation, Phases 1 to 4: NPCs walk K&K routes, alone and in groups (admin testing only)** — no change for players; off by
   default (`npc.navigation.enabled`). In `next` when the pull requests of PandiO/knk-workspace#360 are merged; on the
   trunk when the developer promotes `next`. Parent issue PandiO/knk-workspace#358,
   [implementation plan](specs/npc-platform/IMPLEMENTATION_PLAN.md).
@@ -34,13 +34,23 @@ This is a human-readable record of capabilities merged into the V3 default branc
      or the district's edge and waits there until that gate or rule opens. A trespass guard counts any NPC that
      enters a region its rules deny (`knk_npc_nav_events_total{event="trespass"}`, must stay 0). New keys:
      `npc.navigation.rule-checks-per-tick` (10) and `npc.navigation.stop-on-trespass` (false).
+  4. **Phase 4** (#377, in review; in `next` when its pull requests are merged): groups plan once. A group's leader
+     plans the route; the followers walk the same path in formation slots (`column`, `ranks`, `cluster`,
+     `escort-ring`), fold into a column where the road is too narrow (gates, stairs) and reform after. A gate or
+     access change costs a group one route plan whatever its size (the Citizens spike planned 50 NPCs separately:
+     1.3 s queue wait at p95), and a group has one blocked state and one wake-up. A follower that leaves its lane
+     or gets stuck plans one short leg back; the leader waits for followers that fell far behind.
+     `/knk npc nav group <n> [formation] [profile]` starts a test group. New keys under `npc.navigation`:
+     `group-formation` (column), `group-spacing` (2.0), `group-ranks-width` (2), `group-rejoin-blocks` (4.0),
+     `group-regroup-blocks` (24.0), `group-catch-up-speed` (1.3). New metric events `group_fold`, `group_reform`,
+     `group_rejoin`, `group_regroup`, `group_lost`.
   - **Admin steps:**
     1. Install the Citizens plugin (build 4269 for 26.3 or newer) only where NPC navigation is tested; the plugin
        runs without it.
     2. Merge the `npc.navigation` block into `config.yml` by hand
        ([configuration reference § 4.27](guides/admin/plugin-configuration.md#427-npc) has the YAML). It ships with
        `enabled: false`.
-    3. To test: `enabled: true`, restart, then the steps under "Developer test" of Phases 1, 2 and 3 in the
+    3. To test: `enabled: true`, restart, then the steps under "Developer test" of Phases 1, 2, 3 and 4 in the
        implementation plan.
 
 ## 2026-11-13
