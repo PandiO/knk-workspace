@@ -1,6 +1,6 @@
 # NPC navigation chain — progress report
 
-**Status:** Running (2026-11-13) · **Last updated:** 2026-11-13
+**Status:** Paused (L1 and L2 merged into `next`; L0 waits for the developer's Phase 1 result on #359) (2026-11-13) · **Last updated:** 2026-11-13
 
 **Issue:** [PandiO/knk-workspace#358](https://github.com/PandiO/knk-workspace/issues/358), links
 [#360](https://github.com/PandiO/knk-workspace/issues/360) (L1),
@@ -10,25 +10,32 @@
 
 ## 1. Waiting for the developer
 
-1. **Phase 1 test and audit report on #359** (implementation plan, "Phase 1 → Developer test"; the steps are in `next`
-   now). It opens L0, which runs after L2.
-2. **Phase 2 test on the dev server** (implementation plan, "Phase 2 → Developer test", in `next`): one NPC, 50 NPCs
-   on the stored route, the stair house (release gate). Deploy knk-plugin `next` (`50bf7ff7`), merge the
-   `npc.navigation` block into the server's `config.yml` (YAML in knk-plugin#17 and the configuration reference
-   § 4.27), `enabled: true` only for the test, Citizens build 4269 installed. Post the `stats` output and the run log
-   on #360. What to look at in the stair house: block 4.1 § 8.3.
-3. **Review of L1's agent decisions** (block 4.1 § 5, twelve entries); the ones that change behaviour: 5.1 (replan
-   twice after the retries, then fail), 5.2 (walk-only trips up to 64 blocks, else fail), 5.5 (access profile
-   fields; NPCs pass open gates only).
-4. **Stair-house dump and trace** on #244 or #360, when available; L2 looks for them but does not wait.
+In test order. Deploy knk-plugin `next` (`f2a50c46`, Phases 1–3) with Citizens build 4269; merge the `npc.navigation`
+block into the dev server's `config.yml` (configuration reference § 4.27; the YAML is also in knk-plugin#17, plus
+`rule-checks-per-tick: 10` and `stop-on-trespass: false` from knk-plugin#18), `enabled: true` only for the tests.
+
+1. **Phase 1 test and audit report on #359** (implementation plan, "Phase 1 → Developer test"). It opens L0, the
+   last link: guards on the listeners the audit names. If the audit names nothing, say so on #359 and L0 is skipped.
+2. **Phase 2 test** (plan, "Phase 2 → Developer test"): one NPC, 50 NPCs on the stored route, the stair house
+   (release gate; what to look at: block 4.1 § 8.3). Post the `stats` output and the run log on #360.
+3. **Phase 3 test** (plan, "Phase 3 → Developer test"): gate runs, access runs, the refresh that replans nobody, the
+   trespass counter (`stop-on-trespass: true` for this test). Post the `stats` output and the run log on #361. Look at
+   where NPCs stand at the Keep Gate (block 4.2 § 8.3, known limit 1).
+4. **Review of the agent decisions:** block 4.1 § 5 (twelve) and block 4.2 § 5 (thirteen). The ones that change
+   behaviour: 4.1 § 5.1, 5.2, 5.5; 4.2 § 5.4 (`NavigationResult.Blocked` carries a typed element), 5.5 (the caller
+   hears `Blocked` when the plan arrives), 5.6 (the partial route ends before the first forbidden region), 5.8
+   (`stop-on-trespass` default false), 5.9 (the router wins over the recheck).
+5. **Promotion of `next`** in knk-plugin and knk-workspace when the tests pass; the issues stay `status:in-review`
+   until then. The `documentation` sub-issue and docs session start when the feature's last link is in `next`
+   (after L0, or now if L0 is skipped).
 
 ## 2. Summary
 
 | Link | Issue | Status | Branch heads | PR | CI | How started |
 |---|---|---|---|---|---|---|
 | L1 Phase 2: one NPC walks a K&K route | #360 | Merged into next 2026-11-13 (knk-plugin `50bf7ff7`, knk-workspace `424f1fa3`); #360 stays `status:in-review` until the developer's live test and the promotion of `next` | `claude/npc-navigation`: knk-plugin `49b5cedb`, knk-workspace `5c8587b` | [knk-plugin#17](https://github.com/PandiO/knk-plugin/pull/17), [knk-workspace#370](https://github.com/PandiO/knk-workspace/pull/370) | knk-plugin `build` green on `49b5cedb` (run 43398822498); knk-workspace has no CI | create_session session_01R1w2Uv2Ze28fr2rkqUz98C (`source_revision` `next`) |
-| L0 Phase 1 follow-ups | #359 | Not started (gate: the developer's Phase 1 result on #359; L1 is merged; runs after L2, one link per repo) | | none | none | |
-| L2 Phase 3: rules stay binding | #361 | In review (finished 2026-11-13; live test by the developer open) | `claude/npc-navigation`: knk-plugin `8df2d839`, knk-workspace `a05f7bf` | [knk-plugin#18](https://github.com/PandiO/knk-plugin/pull/18), [knk-workspace#375](https://github.com/PandiO/knk-workspace/pull/375) | knk-plugin `build` green on `8df2d839` (runs 43403427418, 43403523663); knk-workspace has no CI | create_session session_01R1w2Uvt1jBnAv84KX3hf7q (`source_revision` `next`) |
+| L0 Phase 1 follow-ups | #359 | Not started (gate: the developer's Phase 1 result on #359; L1 and L2 are merged) | | none | none | |
+| L2 Phase 3: rules stay binding | #361 | Merged into next 2026-11-13 (knk-plugin `f2a50c46`, knk-workspace `9df8d44c`); #361 stays `status:in-review` until the developer's live test and the promotion of `next` | `claude/npc-navigation`: knk-plugin `8df2d839`, knk-workspace `a05f7bf` | [knk-plugin#18](https://github.com/PandiO/knk-plugin/pull/18), [knk-workspace#375](https://github.com/PandiO/knk-workspace/pull/375) | knk-plugin `build` green on `8df2d839` (runs 43403427418, 43403523663); knk-workspace has no CI | create_session session_01R1w2Uvt1jBnAv84KX3hf7q (`source_revision` `next`) |
 
 ## 3. Coordinator decisions
 
@@ -91,6 +98,18 @@
 9. **L2 before L0.** Chosen: start L2 (#361) now, because the developer's Phase 1 result is not on #359 and the
    charter § 2 says L2 then starts and L0 runs after it. Alternatives: (a) wait for the Phase 1 result: idles the
    chain for a tier:1 link.
+
+10. **L2 checked and merged (2026-11-13).** Skill § 6: block 4.2 and heads match, both branches contain `next`,
+    PRs knk-plugin#18 (`Closes #361`) and knk-workspace#375 with the template, CI `build` green on `8df2d839`, tests
+    above the baseline (core 2562 → 2583, paper 2570 → 2581, 0 failures), scope within #361 (26 plugin files in the
+    NPC and navigation packages plus `config.yml`; no listener, no `KnKPlugin` line; five docs files), flag off in the
+    shipped `config.yml`, #361 `status:in-review`. Merged with merge commits: knk-plugin `f2a50c46`, knk-workspace
+    `9df8d44c`. The check ran about 2.5 hours after L2 finished (09:45 UTC): the coordinator session's worker was
+    down and three check-ins queued up. No alternative to merging (skill § 7.1).
+11. **Chain paused, not ended.** Chosen: stop with L0 open, because its gate (the developer's Phase 1 result on #359)
+    is closed and nothing else is startable; the coordinator looks at #359 at its check-ins. The "At merge" docs
+    steps wait for L0 or its skip, since L0 is a link of this feature. Alternatives: (a) start the docs session now:
+    L0 may still add guards and docs; (b) run L0 without the audit: it would have nothing to guard.
 
 ## 4. Link blocks
 
