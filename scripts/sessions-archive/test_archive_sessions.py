@@ -248,6 +248,67 @@ class ArchiveTestCase(unittest.TestCase):
         with mock.patch.object(A, "plan", tamper):
             self._assert_aborts()
 
+    def _assert_duplicate_abort(self, argv: list[str], count: int) -> str:
+        before = self.snapshot()
+        rc, out, err = run(self.args + argv)
+        self.assertEqual(rc, 2, out + err)
+        self.assertIn(f"{count} entr", err)
+        self.assertIn("already in the archive verbatim", err)
+        self.assertIn("Merging a branch that ran the script", err)
+        self.assertIn("nothing written", err)
+        self.assertNotIn("line check failed", err)
+        self.assertEqual(self.snapshot(), before)
+        return err
+
+    def test_abort_when_entries_are_already_archived(self) -> None:
+        # The archive already holds every entry (an earlier run), but the board
+        # still lists them: the state after merging an archive branch and
+        # keeping the other side's board. A run must not archive them again.
+        self.assertEqual(run(self.args)[0], 0)
+        self.board.write_text(BOARD, encoding="utf-8")
+        self._assert_duplicate_abort(["--dry-run"], 8)
+        self._assert_duplicate_abort([], 8)
+        rc, out, _ = run(self.args + ["--check"])
+        self.assertEqual(rc, 1)
+        self.assertIn("8 of them already in the archive verbatim", out)
+
+    def test_abort_when_one_new_entry_is_already_archived(self) -> None:
+        # One old entry slipped back onto the board next to a really new one:
+        # the run still aborts and names only the old one.
+        self.assertEqual(run(self.args)[0], 0)
+        board = self.board.read_text(encoding="utf-8").replace(
+            "## Recently completed\n",
+            "## Recently completed\n\n### 2026-11-13 — Really new\n\nNew body.\n"
+            "\n### 2026-10-30 — Heading entry B (#1)\n\nBody of B.\n",
+        )
+        self.board.write_text(board, encoding="utf-8")
+        err = self._assert_duplicate_abort([], 1)
+        self.assertIn("2026-10.md: '### 2026-10-30 — Heading entry B (#1)'", err)
+        self.assertNotIn("Really new", err)
+
+    def test_duplicate_found_in_any_archive_file(self) -> None:
+        # The copy sits in another month's file than the entry's date picks.
+        (self.arch / "2026-08.md").write_text(
+            "# Sessions archive — 2026-08\n\n## Table rows\n\n"
+            f"{HEADER}\n{SEP}\n| Row one | knk-web-api `a|b` | 2026-11-10 | note one |\n",
+            encoding="utf-8",
+        )
+        err = self._assert_duplicate_abort([], 1)
+        self.assertIn("2026-08.md: '| Row one", err)
+
+    def test_same_first_line_with_other_text_is_not_a_duplicate(self) -> None:
+        # Only a verbatim copy counts: an archived entry whose body differs
+        # from the board's (and a mere prefix of a line) does not block.
+        (self.arch / "2026-08.md").write_text(
+            "# Sessions archive — 2026-08\n\n## Entries\n\n"
+            "### 2026-10-30 — Heading entry B (#1)\n\nAn older, different body.\n\n"
+            "## Table rows\n\n"
+            f"{HEADER}\n{SEP}\n| Row one | knk-web-api `a|b` | 2026-11-10 | note one | extra |\n",
+            encoding="utf-8",
+        )
+        rc, _, err = run(self.args)
+        self.assertEqual(rc, 0, err)
+
     def test_missing_section_is_an_error(self) -> None:
         self.board.write_text("# Board\n\n## In progress\n", encoding="utf-8")
         rc, _, err = run(self.args)

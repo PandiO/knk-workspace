@@ -48,6 +48,17 @@ Safety check ("every line exactly once")
        entries keep their text and order.
     4. The board outside the "Recently completed" section is unchanged.
 
+Duplicate guard ("already archived")
+    The line check only compares the board with the lines this run adds, so
+    it cannot see an entry that an earlier run already archived. Before
+    anything else the script therefore looks for each entry it would move,
+    verbatim (all its lines, as one block at line boundaries), in every
+    archive file of the folder, whatever its month. If one is found it aborts
+    (exit 2, nothing written) and lists them. This happens when the board was
+    taken from a commit older than the archive files, for example after
+    merging an archive branch and keeping the other side's board; see the
+    archive README, "Merging a branch that ran the script".
+
 Modes
     (default)   move the entries and write the files.
     --dry-run   plan and verify, print what would change, write nothing.
@@ -344,6 +355,7 @@ class Plan:
     archives_old: dict[Path, str | None]
     archives_new: dict[Path, str]
     moved: Counter
+    duplicates: list[tuple[str, str]] = field(default_factory=list)
 
     @property
     def changed(self) -> bool:
@@ -352,6 +364,24 @@ class Plan:
 
 def read(path: Path) -> str | None:
     return path.read_text(encoding="utf-8") if path.exists() else None
+
+
+def already_archived(entries: list[Entry], archive_dir: Path) -> list[tuple[str, str]]:
+    """Return (first line, archive file name) for every entry that an archive
+    file of the folder already holds verbatim, as a block at line boundaries."""
+    files = sorted(archive_dir.glob("*.md")) if archive_dir.is_dir() else []
+    texts = [
+        (p.name, "\n" + p.read_text(encoding="utf-8") + "\n")
+        for p in files
+        if p.name != "README.md"
+    ]
+    found = []
+    for e in entries:
+        block = "\n" + "\n".join(e.lines) + "\n"
+        name = next((n for n, t in texts if block in t), None)
+        if name:
+            found.append((e.lines[0], name))
+    return found
 
 
 def plan(board_path: Path, archive_dir: Path, today: str) -> Plan:
@@ -363,6 +393,7 @@ def plan(board_path: Path, archive_dir: Path, today: str) -> Plan:
     archives_new: dict[Path, str] = {}
     if not entries:
         return Plan(board_old, board_old, archives_old, archives_new, moved)
+    duplicates = already_archived(entries, archive_dir)
 
     for month in sorted(moved):
         path = archive_dir / f"{month}.md"
@@ -380,7 +411,25 @@ def plan(board_path: Path, archive_dir: Path, today: str) -> Plan:
 
     new_section = render_board_section([section[0], ""] + kept)
     board_new = "\n".join(before + new_section + after)
-    return Plan(board_old, board_new, archives_old, archives_new, moved)
+    return Plan(board_old, board_new, archives_old, archives_new, moved, duplicates)
+
+
+def check_duplicates(p: Plan) -> None:
+    """Raise ArchiveError if an entry to move is already in an archive file."""
+    if not p.duplicates:
+        return
+    n = len(p.duplicates)
+    shown = "\n  ".join(f"{name}: {line[:90]!r}" for line, name in p.duplicates[:10])
+    more = f"\n  ... and {n - 10} more" if n > 10 else ""
+    raise ArchiveError(
+        f"{n} entr{'y is' if n == 1 else 'ies are'} already in the archive verbatim; "
+        f"archiving {'it' if n == 1 else 'them'} again would duplicate {'it' if n == 1 else 'them'}:\n  "
+        f"{shown}{more}\n"
+        "The board probably comes from a commit older than the archive files (for example after a merge "
+        "that kept the other side's board). Take the board that matches the archive files and apply only "
+        "the newer board changes; see docs/reports/sessions-archive/README.md, "
+        '"Merging a branch that ran the script".'
+    )
 
 
 def _nonblank(text: str | None) -> Counter:
@@ -408,6 +457,7 @@ def _is_subsequence(small: list[tuple], big: list[tuple]) -> bool:
 
 def verify(p: Plan) -> None:
     """Raise ArchiveError unless every board line ends up exactly once."""
+    check_duplicates(p)
     problems: list[str] = []
 
     # 4. Board outside the section unchanged.
@@ -519,6 +569,8 @@ def main(argv: list[str] | None = None) -> int:
         if args.check:
             n = sum(p.moved.values())
             print(f"{n} entr{'y' if n == 1 else 'ies'} waiting to be archived")
+            if p.duplicates:
+                print(f"{len(p.duplicates)} of them already in the archive verbatim (a run would abort)")
             return 1 if n else 0
         if not p.changed:
             print("nothing to archive")
