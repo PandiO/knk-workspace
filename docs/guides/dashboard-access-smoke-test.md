@@ -10,9 +10,11 @@ create/edit are back on `knk.admin.content` (LAM3-1 reverted, answers #368); § 
 2026-11-13: API `b65e66d`, web app `ca1959d`; not live-tested; guides in docs #385):** the API
 refuses creates, edits and link changes without `knk.admin.content` too, and the detail page's Select / Unlink / Add
 need it; § 2.2 and § 8 step 9b.
+**#383 (developer 2026-11-13, knk-web-app `claude/content-gate-toggles-383`, not merged):** the lootbox Types tab's
+Enable/Disable, the roads page's Create New Street and the detail page's hot edit are greyed out without it; § 8 step 9c.
 Known: a `knk.admin.user.manage`-only
 rank can't load the Permission Group list (#369, § 8.1 step 4).
-**Last updated:** 2026-11-13 (§ 2.2 and § 8 step 9b: the API asks for `knk.admin.content` on create, edit and link changes, #374); 2026-11-13 (§ 8 steps 6, 7, 9, 19 and 9a: create/edit need `knk.admin.content`, #371); 2026-11-13 (AM4 docs done, #368/#369 noted, architecture anchors; docs #366); 2026-11-13 (status: merged, accepted without a live test, in test run 2); 2026-11-12 (§ 0 role accounts and deploy, § 2.1 configuration deletes, § 3 refusal codes, § 8 web
+**Last updated:** 2026-11-13 (§ 8 step 9c: lootbox toggle, Create New Street and hot edit greyed out without `knk.admin.content`, #383); 2026-11-13 (§ 2.2 and § 8 step 9b: the API asks for `knk.admin.content` on create, edit and link changes, #374); 2026-11-13 (§ 8 steps 6, 7, 9, 19 and 9a: create/edit need `knk.admin.content`, #371); 2026-11-13 (AM4 docs done, #368/#369 noted, architecture anchors; docs #366); 2026-11-13 (status: merged, accepted without a live test, in test run 2); 2026-11-12 (§ 0 role accounts and deploy, § 2.1 configuration deletes, § 3 refusal codes, § 8 web
 app, § 9 docs impact; chain 3 link AM3); 2026-11-12 (AM1+AM2 merged); 2026-11-08 (§ 7 read gating and lookups, chain 3 link AM2); 2026-11-08 (draft with the AM1 API steps, chain 3 link AM1)
 **Design:** [specs/dashboard-access-model/DESIGN.md](../specs/dashboard-access-model/DESIGN.md) · as built:
 [web-api architecture § 5.1](../architecture/web-api-architecture.md#51-dashboard-access-model-pandioknk-workspace280-am1-merged-2026-11-12-am3-2026-11-13)
@@ -220,6 +222,13 @@ and at 390 px width (phone): nothing scrolls sideways, the bulk dialogs fit.
    Location's **Change…** / **Unlink** are greyed out with "Requires knk.admin.content" (the hint line under the
    section says so); **Delete** of a street (with `knk.admin.delete`) still works. **world + content**: Add… links a
    street, Unlink removes the link.
+   9c. [ ] **Pages outside the form wizard** (#383). **lootbox-only** (`knk.admin.lootbox.manage`, no
+   `knk.admin.content`), Lootboxes → Types: each type's **Enabled/Disabled** toggle is greyed out; hover and the line
+   above the table say "Requires knk.admin.content". **world-only**, Roads → road edges, a row's Edit → Street
+   dropdown: **Create New Street** is greyed out with the same hint; the street pick, Save and the **Road profiles**
+   card's Add / Edit (`knk.admin.road`) still work. **world-only**, a town's detail page: a field's ✎ (hot edit, only
+   where the display configuration marks a field "editable in display") is greyed out with the same hint. **With `knk.admin.content` added:** the toggle switches the type (confirm dialog),
+   Create New Street creates and selects the street, ✎ saves.
 10. [ ] **content-only**, Entity setup of a type (⚙): a form configuration's ⋯ → **Delete** works as before. With a
     user-level deny `knk.admin.delete = false` on that account (reload after the change): the Delete item is greyed out
     with "Requires knk.admin.delete", for form and display configurations alike (LV7-8).
@@ -264,6 +273,11 @@ and at 390 px width (phone): nothing scrolls sideways, the bulk dialogs fit.
     table ("Updated by …"); a bulk delete of towns refreshes it once, not once per row.
 
 ## 9. Docs impact
+
+**#383:** this guide step 9c and the CHANGELOG entry ship with the branch. At merge, for the `documentation`
+sub-issue: the staff web app guide (lootbox Types toggle, roads Create New Street and hot edit greyed out without
+`knk.admin.content`), web-app architecture (`changeNodesOf` / `useTypeChangeGate` in `useEntityAccess`) and the admin
+guide to the ranks (lootbox and road ranks need `knk.admin.content` for those).
 
 **#374:** this guide § 2.2 and step 9b, the design (status, § 4.3, § 4.7, § 7) and the CHANGELOG entry ship with the
 branch. At merge, for the `documentation` sub-issue: web-api architecture § 5.1 (`ChangeNodes`,

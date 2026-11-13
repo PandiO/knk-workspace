@@ -18,6 +18,18 @@ This is a human-readable record of capabilities merged into the V3 default branc
     no setting, no plugin change). The alpha and the dev seed (`knk-dev-db-seed`, Staff holds both nodes already) get
     no new row. Check: Staff's group page lists `knk.freeze` and `knk.unfreeze`. Smoke test:
     [player profile smoke test § 4 step 4](guides/player-profile-smoke-test.md#4-without-the-nodes).
+- **Web app: lootbox Enable/Disable, Create New Street and hot edit greyed out without `knk.admin.content`**
+  (PandiO/knk-workspace#383, follow-up of #374) — developer decision 2026-11-13: grey them out. knk-web-app branch
+  `claude/content-gate-toggles-383` (PR into `next`, not merged).
+  - **Web app:** three writes outside the form wizard save through a create or update that #374 gates. The Lootboxes
+    page's Types tab **Enabled/Disabled** toggle (`PUT api/LootboxTypes/{id}`), the roads page's road-edge Street
+    dropdown **Create New Street** (`POST api/Streets`) and the detail page's ✎ hot edit of a field (the type's `PUT`)
+    are greyed out with "Requires knk.admin.content" (and any missing area node) for accounts without it, from the
+    metadata's `actionNodes.create`/`edit`. **Not changed:** the roads page's Road profiles card (RoadProfile is
+    exempt), road-edge edits (`knk.admin.road`), hot edit of a user (`knk.admin.user.manage`), lootbox tokens and
+    settings.
+  - **Admin steps:** none; deploy the web app (no migration, no setting, no API change). Smoke test:
+    [dashboard access smoke test § 8 step 9c](guides/dashboard-access-smoke-test.md#82-disabled-actions-with-requires-node-decision-11).
 
 - **API: creates, edits and link changes of dashboard types need `knk.admin.content`** (PandiO/knk-workspace#374,
   follow-up of #371) — developer decision 2026-11-13: "Area staff should not be able to change forms at this point.
@@ -44,7 +56,7 @@ This is a human-readable record of capabilities merged into the V3 default branc
     (they go through the plugin key). `SeedDashboardActionNodes` (AM1) seeded only `knk.admin.delete` and
     `knk.admin.export`, so nothing needs a data change; grant `knk.admin.content` by hand to a rank that should keep
     editing (it opens every content type too). The lootbox page's Enable/Disable toggle saves through the same `PUT`
-    and needs `knk.admin.content` now as well. Smoke test:
+    and needs `knk.admin.content` now as well (greyed out without it since #383). Smoke test:
     [dashboard access smoke test § 2.2 and § 8 step 9b](guides/dashboard-access-smoke-test.md#22-create-edit-and-link-changes-need-knkadmincontent-374).
 
 - **Form wizard, New and Edit back on `knk.admin.content`** (PandiO/knk-workspace#371, reverts AM3's LAM3-1, answers
