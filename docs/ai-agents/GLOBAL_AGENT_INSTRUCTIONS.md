@@ -135,8 +135,12 @@ Claude Code and Codex alike, regardless of where repos are cloned.
    conflict, then reread before publishing a resolution.
 5. Use PRs for review where appropriate. Do not merge or deploy merely
    because a patch or test passed; follow the feature's live validation and
-   developer sign-off requirements. The one standing exception is a chain
-   coordinator merging into `next` under the branch model below.
+   developer sign-off requirements. The standing exceptions are the merges the
+   branch model below allows once its checks hold: a coordinator merging link
+   pull requests into `next`, a session merging its own pull request into
+   `next` outside a chain ("Branches" rule 3), and a session merging its own
+   agent-workflow-file pull request into the default branch ("Branches" rule
+   11). Merging `next` into trunk (promotion) stays the developer's.
 
 ## Branches, releases and risk tiers
 
@@ -197,7 +201,8 @@ branches start from the default branch, pull requests target it, and only the de
     knk-workspace, and `AGENTS.md`/`CLAUDE.md` in the component repos. A change to them goes on its own branch from the
     repo's default branch with a pull request into that default branch; the session that opened it merges it with a
     merge commit once rule 3's checks hold (CI where it exists, Codex findings handled), then merges the default branch
-    into `next` through a pull request, so `next` carries the same rules. Game code, feature docs and guides still go
+    into `next` through a pull request, so `next` carries the same rules. In a chain, the link opens that pull request
+    and the coordinator merges it the same way (coordinator skill § 7.10). Game code, feature docs and guides still go
     through `next`. A pull request that mixes both is split.
 
 ## Session chains (multi-link work)

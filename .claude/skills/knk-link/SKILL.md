@@ -64,8 +64,10 @@ something different from this skill, the prompt and charter win.
    agent decision (§ 5).
 3. **Branches:** push only to your link's branch. Never push to a default branch or to `next`, never merge into them,
    never force-push, never delete branches. The exceptions are chain bookkeeping on knk-workspace `main` (§ 3.6) and changes to agent workflow
-   files (`.claude/`, `.mcp.json`, `docs/ai-agents/`, `AGENTS.md`, `CLAUDE.md`), which go to the default branch by
-   their own PR (global instructions, "Branches" rule 11).
+   files (`.claude/`, `.mcp.json`, `docs/ai-agents/`, `AGENTS.md`, `CLAUDE.md`): those go on a separate branch from
+   the repo's default branch, with their own PR into the default branch (global instructions, "Branches" rule 11).
+   You open it and handle its Codex findings like your other PRs and list it in your report block; the coordinator
+   merges it (coordinator skill § 7.10). Don't merge it yourself.
 4. **Behaviour-neutral where the charter says so.** Big or risky work (normally `tier:3`) goes behind the charter's
    config flag, off by default, so it is harmless in `next`.
 5. **Migrations:** only where the charter allows, at most one per link, additive, made with `dotnet ef migrations add`.
