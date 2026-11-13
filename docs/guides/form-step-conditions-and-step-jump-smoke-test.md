@@ -1,11 +1,11 @@
 # Form builder step conditions (#88) and clickable wizard steps (#68) — smoke test
 
-**Status:** Written 2026-11-13 for the branches `claude/issues-68-88-readiness-wapo57` (knk-web-app, knk-web-api, knk-workspace), pull requests into `next`; **not run by the developer, not merged**
-**Last updated:** 2026-11-13
+**Status:** Written 2026-11-13; **merged into `next` 2026-11-13** (knk-web-app `next` `1f848f7` (knk-web-app#12), knk-web-api `next` `31abe2d` (knk-web-api#14), knk-workspace `next` `c68df65` (#379); branches `claude/issues-68-88-readiness-wapo57`), on the trunk when the developer promotes `next`; **not run by the developer**. Run it on `next`.
+**Last updated:** 2026-11-13 (merged into `next`; § 3 step 5, § 4 steps 2, 3, 5 and 6 from the merged code: list fields, emptied lists, health check in step order and on the working copy, what the form does with hand-written JSON; docs #395)
 **Issues:** [PandiO/knk-workspace#88](https://github.com/PandiO/knk-workspace/issues/88) (KNG-274: step conditions in
 the step editor, Entry conditions enforced) ·
 [PandiO/knk-workspace#68](https://github.com/PandiO/knk-workspace/issues/68) (KNG-184: click a step to jump to it,
-rules run on pre-filled forms)
+rules run on pre-filled forms) · staff guide: [§ 5.1](admin/staff-web-app-guide.md#51-the-steps-of-a-form-next-clicking-a-step-and-what-stops-you) and [§ 7.1](admin/staff-web-app-guide.md#71-step-conditions)
 
 About 25 minutes. **No migration, no setting, no plugin change.** The API change is one extra check in the
 configuration health panel; the web app works against an API without it.
@@ -53,18 +53,30 @@ You need:
 3. Wizard: leave Name empty, Next to step 2, **Next**. Expected: refused on step 2 with the message (toast and above
    the button). Go back, fill in the Name, Next twice: step 3 opens.
 4. Add a second rule to any condition. Expected: a **match all / any** switch appears; with one rule it is hidden.
+5. A list field: on a form with a list field or a linked record (for example SiegeScenario), add a
+   "before leaving" rule on that field. Expected: only **is empty** and **is not empty** are offered, no value box. With
+   "is not empty" published: add an entry to the list in the wizard and remove it again, **Next**. Expected: refused
+   (an emptied list counts as empty).
 
 ## 4. Guard rails in the builder (#88)
 
 1. Rename or remove the field a rule reads (e.g. remove **Allow entry** from the step, in a draft). Expected: the
    rule's field box is red, shows the stored name with "(missing)" and says the rule can never hold.
-2. **Configuration health** panel: after Save it lists a warning `Step 'Region and access': a "before leaving"
-   condition reads the field 'AllowEntry', which is not on this step.` Saving and publishing still work. Put the
-   field back (or Discard the draft).
+2. **Configuration health** panel (under the builder, section General): it lists a warning `Step 'Region and
+   access': a "before leaving" condition reads the field 'AllowEntry', which is not on this step. The condition can
+   never hold; pick another field or remove the rule.` It checks the working copy, so it shows before Save too.
+   Saving and publishing still work. Untick **active** on the condition. Expected: the line ends with "The condition
+   is switched off, so the form skips it." Put the field back (or Discard the draft).
 3. Hand-written JSON: with the API, store a condition whose `conditionJson` is not the rule shape (for example
    `{"anyOf":[{"field":"AllowEntry","eq":true}]}`). Expected: the builder shows it as text in a box with a note, and
-   saving the step leaves the JSON unchanged.
+   saving the step leaves the JSON unchanged. In the wizard this condition is not checked: Next passes
+   ([#397](https://github.com/PandiO/knk-workspace/issues/397)).
 4. Operators offered: is, is not, is greater than, is less than, contains, is empty, is not empty — nothing else.
+5. Step order: in a draft, reorder the steps so the step with the condition's field comes **after** the step whose rule reads it
+   "from an earlier step". Expected: the rule turns red and the health panel warns `… which is not on an earlier
+   step.` (the check follows the order of the steps as shown, not the order they were created in). Move it back.
+6. The same rule pointed at a field of a **later** step is not offered: the field list of "from an earlier step" only
+   holds the fields of the steps before this one.
 
 ## 5. Clickable steps (#68)
 
