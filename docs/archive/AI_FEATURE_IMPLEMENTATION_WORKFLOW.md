@@ -1,6 +1,6 @@
 # AI-Assisted Feature Implementation Workflow
 
-> **Current paths and merge checklist:** use [`DOCUMENTATION_MAINTENANCE.md`](DOCUMENTATION_MAINTENANCE.md), `docs/specs/<feature>/` and the feature's current plan. This older template still contains `docs/features/`, `feature/*` branch and generic CI examples from January 2026; those examples are historical and do not override `docs/ACTIVE_SESSIONS.md`, the standing feature branch, or today's repository setup. Update the [feature register](../../FEATURE_REGISTER.md), player/admin guides and [changelog](../../CHANGELOG.md) during the documented merge process.
+> **Archived 2026-11-13** ([PandiO/knk-workspace#362](https://github.com/PandiO/knk-workspace/issues/362), [AI agent workflow design § 9.3](../specs/ai-agent-workflow/DESIGN.md)): not maintained, kept for history. Multi-link work now follows the project skills [`knk-coordinator`](../../.claude/skills/knk-coordinator/SKILL.md) and [`knk-link`](../../.claude/skills/knk-link/SKILL.md) and the [global instructions](../ai-agents/GLOBAL_AGENT_INSTRUCTIONS.md); documentation follows [documentation maintenance](../guides/developer/DOCUMENTATION_MAINTENANCE.md); CI is described in [CI](../guides/developer/ci.md). This template's `docs/features/` paths, `feature/*` branches and generic CI examples from January 2026 are superseded. The helper scripts in `scripts/` (`create-feature`, `generate-prompt`, `phase-checklist`) belong to this template and are equally historical.
 
 ## Overview
 
@@ -743,9 +743,9 @@ Copy this before starting each phase:
 
 ## References
 
-- [Git Commit Conventions](GIT_COMMIT_CONVENTIONS.md)
-- [CODEMAP](CODEMAP.md) (for architecture reference)
-- [Data Access Unification Example](../../specs/data-access-unification/) (reference implementation)
+- [Git Commit Conventions](../guides/developer/GIT_COMMIT_CONVENTIONS.md)
+- [CODEMAP](../guides/developer/CODEMAP.md) (for architecture reference)
+- [Data Access Unification Example](../specs/data-access-unification/) (reference implementation)
 
 ---
 
