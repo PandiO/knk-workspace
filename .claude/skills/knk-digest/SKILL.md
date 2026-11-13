@@ -14,13 +14,15 @@ scheduled task starts a fresh session for this at 16:40 Europe/Amsterdam on week
 
 1. **Read and report only.** Do not merge, push, close, label, comment anywhere else or start sessions. The one write
    is the digest comment on #333. A blocker you find goes into section 3; you do not fix it.
-2. **Exactly one comment per run.** Before posting, read #333's comments: if one from today (Europe/Amsterdam date)
-   already exists, post nothing and stop.
+2. **Exactly one digest per weekday.** Before posting, read #333's comments: if a digest comment from today
+   (Europe/Amsterdam date) already exists, one whose body starts with `## Daily digest <today's date>`, post nothing
+   and stop. Other comments, such as the developer's replies, don't count.
 3. **A quiet day still gets a comment:** "Nothing new since the last digest" plus the Health section. A missing
    comment means the run failed (developer decision 2026-11-13).
 4. **Every list is numbered** (DESIGN § 4.6), so the developer can answer "2.3: yes". Link every issue, PR and report
    you mention. Keep it short: one line per item, details behind the link.
-5. **Since the last digest** means since the creation time of the latest digest comment on #333; for the first digest,
+5. **Since the last digest** means since the creation time of the latest digest comment (`## Daily digest …`) on
+   #333; for the first digest,
    the last 24 hours.
 6. Commit messages and the comment never name the AI model.
 
