@@ -37,7 +37,7 @@ block into the dev server's `config.yml` (configuration reference § 4.27; the Y
 | L1 Phase 2: one NPC walks a K&K route | #360 | Merged into next 2026-11-13 (knk-plugin `50bf7ff7`, knk-workspace `424f1fa3`); #360 stays `status:in-review` until the developer's live test and the promotion of `next` | `claude/npc-navigation`: knk-plugin `49b5cedb`, knk-workspace `5c8587b` | [knk-plugin#17](https://github.com/PandiO/knk-plugin/pull/17), [knk-workspace#370](https://github.com/PandiO/knk-workspace/pull/370) | knk-plugin `build` green on `49b5cedb` (run 43398822498); knk-workspace has no CI | create_session session_01R1w2Uv2Ze28fr2rkqUz98C (`source_revision` `next`) |
 | L0 Phase 1 follow-ups | #359 | Not started (gate: the developer's Phase 1 result on #359, expected the evening of 2026-11-13; runs after L3, one link per repo) | | none | none | |
 | L2 Phase 3: rules stay binding | #361 | Merged into next 2026-11-13 (knk-plugin `f2a50c46`, knk-workspace `9df8d44c`); #361 stays `status:in-review` until the developer's live test and the promotion of `next` | `claude/npc-navigation`: knk-plugin `8df2d839`, knk-workspace `a05f7bf` | [knk-plugin#18](https://github.com/PandiO/knk-plugin/pull/18), [knk-workspace#375](https://github.com/PandiO/knk-workspace/pull/375) | knk-plugin `build` green on `8df2d839` (runs 43403427418, 43403523663); knk-workspace has no CI | create_session session_01R1w2Uvt1jBnAv84KX3hf7q (`source_revision` `next`) |
-| L3 Phase 4: groups and formations | #377 | Running (started 2026-11-13) | `claude/npc-navigation`: knk-plugin `8df2d839`, knk-workspace `a05f7bf` (L2 heads) | none | none | create_session session_01R1w2UxD3EQaGRrvLbMzz7P (`source_revision` `next`) |
+| L3 Phase 4: groups and formations | #377 | Finished by the link 2026-11-13, PRs open against `next`, #377 `status:in-review`; waits for the coordinator's checks | `claude/npc-navigation`: knk-plugin `6fd91127`, knk-workspace `f5dda86` | [knk-plugin#19](https://github.com/PandiO/knk-plugin/pull/19), [knk-workspace#384](https://github.com/PandiO/knk-workspace/pull/384) | knk-plugin `build` green on `6fd91127` (push run 43427733153; PR run 43428361244 started); knk-workspace has no CI | create_session session_01R1w2UxD3EQaGRrvLbMzz7P (`source_revision` `next`) |
 
 ## 3. Coordinator decisions
 
@@ -363,3 +363,152 @@ _(Each link appends its block here when it finishes.)_
        `JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64`.
     5. A fresh knk-plugin clone knows only `main`: `git remote set-branches --add origin next
        claude/npc-navigation` and a `--depth=1000` fetch of both before the checkout.
+
+### 4.3 L3 — Phase 4: groups plan once, formations (#377)
+
+1. **Scope done.**
+    1. knk-plugin, knk-core `core/npc/nav/group/` (new, no Bukkit or Citizens types): `Formation` (column, ranks,
+       cluster, escort ring, and the column each one folds into), `GroupSettings`, `NavGroup`, `NavGroupService`,
+       `GroupPath`. Only a group's leader has an order in `NpcNavigationService`; the followers walk the group's path
+       (the leader's route line plus 12 blocks ahead, off the road its footsteps) as waypoint lists in formation
+       slots. One blocked state and one wake-up (the leader's); an event replan is one plan per group. The group
+       folds into a column where the path is too narrow and reforms after; a follower behind its slot walks faster,
+       one off its lane or stuck plans one local leg back (three failures: the group goes on without it, it keeps
+       trying); the leader waits for followers far behind; lanes never leave the path's regions and followers are
+       asked about with the current rules before they are sent on.
+    2. knk-plugin, additions to Phase 1–3 code (all additive, `NpcNavigationService` itself is unchanged):
+       `NavigationSettings` got `group-formation`, `group-spacing`, `group-ranks-width`, `group-rejoin-blocks`,
+       `group-regroup-blocks`, `group-catch-up-speed`; `NpcNavigationMetrics` got the events `group_fold`,
+       `group_reform`, `group_rejoin`, `group_regroup`, `group_lost`; `NpcMover` got `setSpeedFactor` (default
+       no-op), `CitizensNpcMover` implements it with Citizens' speed modifier; `NpcNavRunner` got group runs (the old
+       constructor stays) and a `groups` line in the report; `NpcNavigationModule` builds the group service with
+       route following, forwards gate and availability events to it and has
+       `/knk npc nav group <n> [formation] [profile]`; `config.yml` has the six keys with comments. `KnKPlugin` and
+       every listener are untouched.
+    3. knk-workspace: Phase 4 status, known limits and developer test in the implementation plan; configuration
+       reference § 2.1 and § 4.27; metric panels; commands guide; stress test guide; changelog draft.
+    4. Inert while `npc.navigation.enabled` is false: the group service is built with route following (the first
+       `/knk npc nav` use); `NpcNavigationModuleDisabledTest` now also refuses `nav group`, completes its formations
+       without a server and counts no group event. No new task: the test driver ticks the groups in its own tick.
+2. **Commits and heads.** knk-plugin `claude/npc-navigation` at `6fd91127` (`be9621cc` core, `6fd91127` paper;
+   `origin/next` `f2a50c46` merged in first, a fast-forward; merged again before the final push: up to date).
+   knk-workspace `claude/npc-navigation` at `f5dda86` (docs `3bbbd7b` on `origin/next` `7341ac4`, a fast-forward
+   with an empty diff before the change; `origin/next` merged again before the final push, `f5dda86`; the diff
+   against `next` is 6 files).
+3. **PRs.** [knk-plugin#19](https://github.com/PandiO/knk-plugin/pull/19) (`Closes #377`) and
+   [knk-workspace#384](https://github.com/PandiO/knk-workspace/pull/384) (`Part of #377`), base `next`. Not merged.
+4. **Tests, baseline → result.**
+    1. knk-plugin (`./gradlew build -x deployToDevServer`, Gradle on JDK 21, JDK 25 toolchain): baseline at
+       `f2a50c46` core 2583, api-client 324 (2 skipped), paper 2581 (18 skipped), 0 failures; result at `6fd91127`
+       core 2621 (+38), api-client 324 (2 skipped), paper 2587 (+6, 18 skipped), 0 failures. CI: `build` green on
+       `6fd91127` (push run 43427733153); the PR run 43428361244 had started when this block was written.
+    2. The tests #377 names run against the real `NpcNavigationService` with simulated movers that walk their
+       orders (`NavGroupTest`, `GroupSim`): a 20-NPC group plans once (1 road plan, 0 local plans); a gate closing
+       ahead blocks a 50-NPC group with one replan in one planning slot, one `Blocked`, one wake-up; a stuck
+       follower rejoins with one local leg and no road plan.
+    3. knk-workspace: docs only; the links added were checked by hand.
+    4. Known reds (also red on the base): none. The first baseline run failed on a 429 from Maven Central while
+       resolving plugins; the rerun passed.
+5. **Decisions (DESIGN § 4.3).**
+    1. *Where the group logic sits.* Chosen: a layer on top of `NpcNavigationService`'s public surface
+       (`navigate`, `cancel`, `state`, `followerOf`, `blockingOf`); only the leader is an order there, followers
+       are moved by the group through `NpcMover.follow`. Because the coordinator asked for it (Phases 2 and 3 are
+       untested on a server) and because it gives "one plan, one blocked state, one wake-up" for free.
+       Alternatives: (a) a group order type inside the service with followers as its own entries: one code path
+       and the service's rule checks for followers, but it rewrites the state machine before its first server run;
+       (b) an order per follower to its slot, stretch by stretch: N plans, which NAV-05 forbids.
+    2. *What the followers walk.* Chosen: the leader's route line while it is on it (with 12 blocks of it ahead
+       of the leader, so followers do not halt at every hand-over) and the leader's footsteps off the road.
+       Alternatives: (a) footsteps only: one code path, but no look-ahead (stop and go) and no slot ahead of the
+       leader; (b) the route line only: nothing to follow on off-road and recovery legs.
+    3. *Package.* Chosen: `core/npc/nav/group/`, inside the navigation package the charter keeps the chain to and
+       named by concern as decision Q1 asks. Alternatives: (a) `core/npc/group/` as Q1 words it: outside
+       `core/npc/nav/`, next to the Siege Survival branch's files; (b) flat in `core/npc/nav/`: not grouped.
+    4. *How a formation folds.* Chosen: as a whole into a column when its widest slot does not fit anywhere under
+       the group, back when the leader is a formation's depth past the narrow place (the plan's words). Lanes also
+       fold point by point for followers still catching up. Alternatives: (a) squeeze into narrower ranks first:
+       better on medium roads, more states, not what the plan says; (b) only point by point: row mates would
+       share one spot.
+    5. *When a lane point is usable.* Chosen: a floor within one block of the path's height there and at every
+       block out from the path's centre, a loaded chunk, the same WorldGuard regions as the path's own point, and
+       the same at the path points before and after. Looked up once per path point and side. Alternatives: (a) a
+       walk capture per stretch per follower: a planning slot per follower again; (b) no region condition: a lane
+       could run through a denied region beside the road.
+    6. *Rules for followers.* Chosen: the lane condition of 5, plus the current entry rules asked for every
+       region ahead a follower does not stand in, before it is sent on, again after a gate or availability event
+       and every `recheck-ticks`; no trespass guard and no gate recheck for followers. Alternatives: (a) the
+       service's rule checks for followers: needs an order per follower or a change to the service; (b) nothing:
+       a follower would walk into a region denied after the leader went in.
+    7. *Catching up.* Chosen: a new port method `NpcMover.setSpeedFactor` (default no-op) and the key
+       `group-catch-up-speed` (1.3), because at equal speed a follower that fell behind never reaches its slot
+       while the leader walks. Alternatives: (a) no speed change, the leader waits for every gap: a halting
+       group; (b) slow the leader instead: the same port, and the group loses time.
+    8. *The leader waits.* Chosen: `group-regroup-blocks` (24; walk on at half of it, 30 seconds at most), done
+       by cancelling the leader's order and giving it again (one more road plan per wait). Alternatives: (a) a
+       pause and resume in the service: no extra plan, but a change to Phase 2 code; (b) never wait: a group
+       loses its tail at every fold and every stuck follower.
+    9. *A follower's own leg.* Chosen: one order in the service to the path point nearest its slot within
+       `hop-blocks` minus 2 (so the service walks one local leg and plans no road); three failures in a row: the
+       group goes on without it, it tries again every `no-route-wait-ticks` and at once after a rule change.
+       Alternatives: (a) an order to the slot itself: a road plan per straggler; (b) give up for good: NPCs left
+       standing on the road.
+    10. *Leader and scouts.* Chosen: one leader, the first member; when it leaves the next follower leads and the
+        order is given again; no scouts. Alternatives: (a) a few scouts that plan alternatives: the plan names it
+        as an option, and there is nothing to choose between before detours exist (Phase 6).
+    11. *An order back the way the group came.* Chosen: nothing special: the leader walks back past its column
+        and each follower turns in behind it. Alternatives: (a) about-face, the rearmost NPC leads: needs a new
+        leader per order; a choice for behavior later.
+    12. *Formation numbers.* Chosen: spacing 2.0; ranks of 2 (pairs); cluster rows of three with each slot nudged
+        up to a quarter spacing; escort rings of 8, 16, 24 at 1.25 spacings per ring, the first escorts ahead,
+        behind, right, left. Alternatives: (a) ring radius 1.5 spacings: needs a 7-wide road at spacing 2; (b) a
+        random cluster per order: slots would jump about.
+    13. *Settings.* Chosen: six flat keys in `NavigationSettings`, resolved once per group for its leader, so
+        every layer including template and assignment can set a formation (Q4). Alternatives: (a) a `groups:`
+        section with named formations: more config before templates exist; (b) constants: Q4 says configurable.
+    14. *What the caller hears.* Chosen: `Blocked` once per blocking element; `Arrived` when the leader arrived
+        and the followers reached their slots, 20 seconds after the leader at the latest; `Failed` and
+        `Cancelled` as the leader's. Alternatives: (a) `Arrived` with the leader: the caller turns the group
+        while its tail still walks; (b) wait for every follower without a limit: one stuck follower holds the
+        order for ever.
+    15. *Test command.* Chosen: `/knk npc nav group <n> [formation] [profile]`; the formation named there is the
+        group's assignment layer. Alternatives: (a) a flag on `spawn`: its second argument is the profile already.
+    16. *Instruments.* Chosen: five events; the groups' main-thread time is in `/knk npc nav stats` only.
+        Alternatives: (a) a second observation per tick in `knk_npc_nav_main_thread_seconds`: the histogram is
+        per tick and would count ticks twice.
+    17. *Tuning numbers that are not keys.* Chosen: constants for the group's look every 5 ticks, the 12-block
+        look-ahead, the hand-over at 4 blocks, three own legs, the 20 and 30 second limits. Alternatives: (a)
+        keys: nobody asked for them, easy to add.
+    18. *How it is tested.* Chosen: simulated movers that really walk their orders, against the real navigation
+        service (`GroupSim`). Alternatives: (a) the scripted fake mover of the Phase 2 and 3 tests: formations
+        and catching up cannot be shown without movement.
+6. **Out of scope, noted.** No issue filed.
+    1. No developer result, stair-house dump or trace was on #359, #360, #361 or #244 at the start or at the
+       end (2026-11-13), so none was used.
+    2. Known limits of Phase 4 are in the plan (seven): the one to look at first is a gate that closes between
+       the leader and its followers (the leader is not told; the followers wait at the gate on their own legs).
+    3. A pause and resume on `NpcNavigationService` would save the extra road plan of decision 8; a follower's
+       trespass guard would need followers known to the service (decision 6 a). Both are for after the Phase 2
+       and 3 server runs.
+    4. For the docs sub-issue at merge, as L1 and L2: `FEATURE_REGISTER.md`,
+       `architecture/plugin-permission-checks.md`, production installation.
+7. **Blockers.** None.
+8. **At merge / what the developer must do.**
+    1. Merge six keys into the dev server's `config.yml` under `npc.navigation`: `group-formation: column`,
+       `group-spacing: 2.0`, `group-ranks-width: 2`, `group-rejoin-blocks: 4.0`, `group-regroup-blocks: 24.0`,
+       `group-catch-up-speed: 1.3` (the YAML is in knk-plugin#19 and the configuration reference § 4.27).
+    2. Run "Phase 4 → Developer test" in the implementation plan after the Phase 2 and 3 tests and post the
+       `stats` output and the run log on #377.
+    3. Look first at: (a) whether followers walk smoothly behind the leader or halt at every waypoint list
+       (they are handed a new list every few blocks); (b) whether Citizens' speed modifier makes a follower
+       catch up; (c) the fold at the Keep Gate and in the stair house; (d) `own legs back` per trip on stairs.
+    4. Review the decisions above; the ones that shape behaviour are 1, 4, 6, 7, 8 and 11.
+9. **Notes for later links.**
+    1. L0: Phase 4 changed no listener and no line of `KnKPlugin`.
+    2. Phase 5 and later: a group is created over movers already registered with `NpcNavigationService`
+       (`NavGroupService.create(leader, followers, profile, settings)`); the members share one access profile.
+       `NavGroupService.onRulesChanged()` must be called for every rule change next to the service's own entry
+       points (a permission change in Phase 5 included).
+    3. Phase 7 (movement quality): followers walk waypoint lists without a recovery leg of the leader's kind;
+       their fallback is the own leg (decision 9). Walked lines help followers as they help single NPCs.
+    4. A fix to route following below the groups needs no change here as long as `followerOf(moverId).line()`
+       and `nearestIndex` keep their meaning.
