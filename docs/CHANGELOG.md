@@ -6,6 +6,34 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 Nothing listed right now. Feature branches keep their draft entry on their own workspace branch until they merge.
 
+## 2026-11-13
+
+- **AI agent workflow setup: CI, `next` branches, chain skills, agent tooling and the sessions archive** — no game
+  change. Agents now have automatic checks on every push, a `next` integration branch to work on, two project skills
+  for running feature chains, a fast compile check before they stop, and a slimmer sessions board. Merged 2026-11-13
+  on the developer's request (PandiO/knk-workspace#327, setup chain of
+  [DESIGN § 12](specs/ai-agent-workflow/DESIGN.md); [report](reports/2026-11-12-agent-workflow-setup-chain.md)).
+  1. **CI** (#328): `.github/workflows/ci.yml` in knk-web-api (restore, build, test on .NET 8; MySQL tests skip
+     themselves) and knk-web-app (Node 22: `npm ci`, tests, `tsc`, build), on every push and pull request. No test was
+     red, so nothing is marked as a known failure. knk-web-api#12, knk-web-app#9.
+  2. **`next` branches, labels, digest** (#329): `next` in all four repos; the "Daily digest" issue #333.
+  3. **Chain skills and the branch model** (#330): `.claude/skills/knk-coordinator/` and `knk-link/`; the global
+     instructions describe trunk = production, `next` = integration (in force now that CI runs on both trunks), risk
+     tiers, coordinators merging link PRs into `next`, docs sessions merging their own docs PR into `next`, and the
+     platform-independence principle in the vision. knk-workspace#334, knk-web-api#13, knk-web-app#10, knk-plugin#16.
+  4. **Agent tooling** (#331): `.mcp.json` (GitHub, Playwright, Context7), a fast-check Stop hook, a permission rule for
+     `add_repo` with a guard that allows only the seven PandiO knk repositories. Guide:
+     [agent-tooling](guides/developer/agent-tooling.md). knk-workspace#335.
+  5. **Sessions board archive** (#332): `scripts/sessions-archive/archive_sessions.py` moved 240 finished entries to
+     [monthly archive files](reports/sessions-archive/README.md); the board drops from 489 KB to 65 KB. Finished rows
+     now go straight to the current month's archive file. knk-workspace#336 (applied by cherry-pick and a script run).
+  - **Admin steps:**
+    1. On the developer PC: set `GITHUB_PAT` (fine-grained, the knk repositories) and optionally `CONTEXT7_API_KEY`,
+       start Claude Code in knk-workspace and approve the three MCP servers in `/mcp`.
+    2. Optional: a JDK 25 in the cloud environment's setup script, or `KNK_JDK25_HOME`, so the hook can compile the
+       plugin there (guide § 3.7).
+    3. No deploy, migration, `config.yml` key or API setting changes.
+
 ## 2026-11-12
 
 - **Admin web app: chain 3 (V1–V7) and chain 2's web app merged, with the access model's API part** — staff get a
