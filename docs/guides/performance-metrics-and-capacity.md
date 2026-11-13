@@ -1,11 +1,11 @@
 # Performance metrics, capacity and the NAS-vs-cloud decision
 
-**Status:** Draft v1 (2026-10-22) — written for review, **not yet followed on the NAS**. The plugin and API metric
+**Status:** Draft · **Last updated:** 2026-11-13 (§ 5.2 links the moved [web API observability](../architecture/web-api-observability.md) doc, PandiO/knk-workspace#304)
+**State:** Draft v1 (2026-10-22) — written for review, **not yet followed on the NAS**. The plugin and API metric
 endpoints it relies on ([KNG-232](https://linear.app/kngpandi/issue/KNG-232)) are **merged** (2026-10-22) into
 knk-plugin `main` `390d88a4` and knk-web-api `master` `3658cf2`, unit-tested but **not yet run against a live Paper server,
 MySQL or the NAS**; both default off, so they need a new build and the config in § 5 to take effect. § 5 says how to use
 the guide before they are deployed.
-**Last updated:** 2026-11-02 (§ 5.2: `Telemetry__Exporter=prometheus` stops the OTLP export, checked against API `master` `8df59b7` `Program.cs`; [PandiO/knk-workspace#48](https://github.com/PandiO/knk-workspace/issues/48)); 2026-10-22 (§ 4.2/§ 5 aligned with the implemented metric names)
 **Applies to:** the closed-alpha NAS stack ([runbook](closed-alpha-deployment-runbook.md)): Paper 26.3 in a Docker
 container, knk-web-api, MySQL, all on one shared host (Ryzen 7 5700G, ~15 GiB RAM, Frigate also running; see the
 [infrastructure report](../reports/2026-10-11-closed-alpha-infrastructure-progress.md) § 2).
@@ -230,7 +230,7 @@ nginx/Cloudflare. Metrics (Prometheus names): ASP.NET Core `http_server_request_
 `knk_cgroup_cpu_*`, `knk_db_command_duration_seconds_*{kind,outcome}` (reader time ends when the reader is
 returned), plus the existing `Knk.Currency/Lootbox/Statistics/Telemetry` meters. The shipped `Telemetry:Exporter` is
 `otlp`, which sends metrics and traces to `localhost:4317`; without a collector set `Telemetry__Exporter=prometheus`
-(stops both; `Telemetry__Otlp__EnableMetrics=false` alone leaves the trace export on). See `knk-web-api/OBSERVABILITY.md`.
+(stops both; `Telemetry__Otlp__EnableMetrics=false` alone leaves the trace export on). See [web API observability](../architecture/web-api-observability.md).
 
 ### 5.3 Before those branches are deployed
 Use § 3 plus cAdvisor/node-exporter from § 4 (they need no KnK code) and record players online by hand. That is
@@ -312,3 +312,9 @@ Decision procedure (about one evening of data):
 - Dashboards-as-code and alert rules (disk, working set > 90%, TPS < 18 for 5 min): out of scope for KNG-232.
 - The `knk-web-api/CLAUDE.md` `/metrics` claim and `production-installation.md` G10/§ 12.3 are corrected once the
   API branch merges.
+
+## Changes
+
+Header history up to 2026-11-13, as the old `Last updated` line gave it (newer changes: the header and git history):
+
+2026-11-02 (§ 5.2: `Telemetry__Exporter=prometheus` stops the OTLP export, checked against API `master` `8df59b7` `Program.cs`; [PandiO/knk-workspace#48](https://github.com/PandiO/knk-workspace/issues/48)); 2026-10-22 (§ 4.2/§ 5 aligned with the implemented metric names)

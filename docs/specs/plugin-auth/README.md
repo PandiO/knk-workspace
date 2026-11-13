@@ -1,9 +1,11 @@
 # Expanded Plugin Auth Documentation - Summary
 
-**Date**: January 29, 2026  
-**Status**: Complete - Ready for Phase 2 Implementation
+**Status:** Stale · **Last updated:** 2026-11-13 (pointer to the Phase 6 files moved from knk-plugin, PandiO/knk-workspace#304)
+**State:** written 2026-01-29 as "Complete - Ready for Phase 2 Implementation"; the phases were built since, so the plan and status below are a record, not the current state.
 
 ---
+
+> **2026-11-13:** the plugin-side Phase 6 files, [PHASE_6_COMPLETION_REPORT.md](PHASE_6_COMPLETION_REPORT.md) and [PHASE_6_MANUAL_TESTING_CHECKLIST.md](PHASE_6_MANUAL_TESTING_CHECKLIST.md), moved here from knk-plugin `docs/ai/plugin-auth/`; the Phase 1 status files are in [archive/knk-plugin](../../archive/knk-plugin/) (PandiO/knk-workspace#304).
 
 ## Documentation Structure
 
