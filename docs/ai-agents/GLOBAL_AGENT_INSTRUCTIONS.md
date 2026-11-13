@@ -138,9 +138,9 @@ Claude Code and Codex alike, regardless of where repos are cloned.
    developer sign-off requirements. The standing exceptions are the merges the
    branch model below allows once its checks hold: a coordinator merging link
    pull requests into `next`, a session merging its own pull request into
-   `next` outside a chain ("Branches" rule 3), and a session merging its own
-   agent-workflow-file pull request into the default branch ("Branches" rule
-   11). Merging `next` into trunk (promotion) stays the developer's.
+   `next` outside a chain ("Branches" rule 3), and an agent-workflow-file pull
+   request merged into the default branch by the session that opened it, or in
+   a chain by the coordinator ("Branches" rule 11). Merging `next` into trunk (promotion) stays the developer's.
 
 ## Branches, releases and risk tiers
 
