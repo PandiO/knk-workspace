@@ -1,7 +1,7 @@
 # API outage — smoke test
 
 **Status:** KNG-171 passed (developer, 2026-10-17), merged 2026-10-17 ([knk-plugin #14](https://github.com/PandiO/knk-plugin/pull/14));
-[#31](https://github.com/PandiO/knk-workspace/issues/31) siege startup retry: in the PR into `next` from `claude/plugin-chains-into-next` (2026-11-13), not run yet
+[#31](https://github.com/PandiO/knk-workspace/issues/31) siege startup retry: merged into `next` 2026-11-13 from `claude/plugin-chains-into-next` (knk-plugin `next` `745fcf6`), not run yet
 **Last updated:** 2026-11-13 (§ #31 build: `claude/plugin-chains-into-next`); 2026-11-05
 **Architecture:** [api-connectivity.md](../architecture/api-connectivity.md) (KNG-115 state and its subscribers) ·
 [offline-security-cache.md](../architecture/offline-security-cache.md) (KNG-58/KNG-123 fallback; its § 8 has the

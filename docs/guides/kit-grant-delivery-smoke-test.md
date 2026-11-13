@@ -1,6 +1,6 @@
 # Kit "Grant" from the web app reaches the player in game (#261) — smoke test
 
-**Status:** Ready for the developer's run; API part on `master` since 2026-11-12, plugin part in the PR into `next` from `claude/plugin-chains-into-next` (2026-11-13); not deployed
+**Status:** Ready for the developer's run; API part on `master` since 2026-11-12, plugin part merged into `next` 2026-11-13 from `claude/plugin-chains-into-next` (knk-plugin `next` `745fcf6`); not deployed, not run
 **Last updated:** 2026-11-13 (setup: builds from `master` and `claude/plugin-chains-into-next`); 2026-11-08 (written with the fix)
 **Issue:** [PandiO/knk-workspace#261](https://github.com/PandiO/knk-workspace/issues/261); design
 [specs/kits/DESIGN.md](../specs/kits/DESIGN.md) §4.6, §4.7

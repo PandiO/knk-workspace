@@ -259,12 +259,12 @@ complete for every entity type the plugin touches.
   (`ReportWorlds`), and the domain access sync, game settings, lootbox runtime, road and telemetry timers and the grade
   catalogue run `realtime.fallback-poll-multiplier` times slower. Resync step "siege startup work"
   (`core/realtime/PendingStartupWork`, #31) re-runs the startup abort, stale gate restore and siege config/title
-  brackets that failed at start. Design §6.8. *#31 rest (in the PR into `next` from `claude/plugin-chains-into-next`):* the same
+  brackets that failed at start. Design §6.8. *#31 rest (merged into `next` 2026-11-13 from `claude/plugin-chains-into-next`):* the same
   steps also run with the hub off, through `core/realtime/StartupWorkRetry`: on any API connectivity transition into UP
   (`paper/connectivity/StartupWorkRetryListener`, UNKNOWN→UP included) and on a fallback retry (30 s, 1 min, 2 min,
   then every 5 min while pending and not DOWN). The resync step goes through it as well; `runPending` is single-flight,
   so the hub and the connectivity trigger run each step once.
-  **S5 (#184, plugin part in the PR into `next` from `claude/plugin-chains-into-next`):** `paper/realtime/ErasureRealtimeSync` hands
+  **S5 (#184, plugin part merged into `next` 2026-11-13 from `claude/plugin-chains-into-next`):** `paper/realtime/ErasureRealtimeSync` hands
   `AccountErased` to `core/privacy/AccountErasureService` (own worker thread): kick (`realtime.erasure.kick-message`),
   wait `settle-seconds`, then the `core/privacy/LocalDataEraser` steps each feature registered in `KnKPlugin` (offline
   store, user/permission caches, discovery and statistics spools, PM-log queue and local log, siege vault (given back first to an online player, decision 2026-11-06 on LR1-8; offline ones discarded), hub-outage

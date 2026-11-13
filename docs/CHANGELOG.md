@@ -5,8 +5,8 @@ This is a human-readable record of capabilities merged into the V3 default branc
 ## Unreleased — on feature branches, not merged
 
 - **Plugin parts of UX chains 2 and 3 into `next`** (PandiO/knk-workspace#184, #31, #34, #261, #264, #269) — knk-plugin,
-  knk-web-api and knk-workspace branches `claude/plugin-chains-into-next` (PRs into `next`, not merged; developer's go
-  2026-11-13). The plugin branch merges chain 3 P3 `claude/temp-region-drafts-269` (which contains P1, R3, R2 and R1)
+  knk-web-api and knk-workspace branches `claude/plugin-chains-into-next` (PRs into `next`, merged 2026-11-13: knk-plugin#20 `745fcf6`, knk-web-api#18 `c20899c`,
+  knk-workspace#393 `6250d12`; developer's go 2026-11-13). The plugin branch merges chain 3 P3 `claude/temp-region-drafts-269` (which contains P1, R3, R2 and R1)
   and P2 `claude/realtime-client-flaky-264`; the API branch merges P3's API branch (contains R3) and is merged into
   `next` 2026-11-13 (knk-web-api#18 `c20899c`). The API parts of #184 and #261 are on `master` since 2026-11-12. **Deploy order:** back up the database, deploy the API and run
   `dotnet ef database update` (one new migration here, `AddTempRegionReleases`), then the plugin. One entry per feature
@@ -75,7 +75,7 @@ This is a human-readable record of capabilities merged into the V3 default branc
   removes its session; the game server removes it every few minutes once no domain, sub-region, lootbox area, road edge
   or draft names it and it isn't renamed. The daily 14-day cleanup stays the backstop. See
   [managed-worldguard-regions.md](architecture/managed-worldguard-regions.md) §7 and the
-  [world-task smoke test § 7](guides/world-task-hardening-smoke-test.md#7-temp-regions-of-abandoned-drafts-269-pr-into-next-not-merged).
+  [world-task smoke test § 7](guides/world-task-hardening-smoke-test.md#7-temp-regions-of-abandoned-drafts-269-in-next).
   - **Admin steps:** API first: `dotnet ef database update` (additive migration `AddTempRegionReleases`, one table);
     optional `WorldTasks__TempRegionReleaseGraceMinutes` (5) and `WorldTasks__TempRegionReleaseKeepDays` (30). Then the
     plugin, with one new optional key (a plugin on an API without the route logs a warning per pass and removes

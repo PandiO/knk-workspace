@@ -1,7 +1,7 @@
 # Knights & Kings - Player Account Management Guide
 
-**Version**: 1.2  
-**Last Updated**: November 3, 2026 (the Register page's code field shows the dash too, #229, not merged); October 26, 2026 (step 4: the field shows `____-____` from the start, #196, not merged); October 26, 2026 (step 4: the code field adds the dash, #192); October 21, 2026 (KNG-218: "Getting an account" rewritten for invite-only sign-up. **It describes the
+**Version**: 1.3  
+**Last Updated**: November 13, 2026 ("Can I delete my account?": the **Delete my data** request on the Account page and what happens on the game server, PandiO/knk-workspace#184, in knk-plugin `next` `745fcf6`, not yet released); November 3, 2026 (the Register page's code field shows the dash too, #229, not merged); October 26, 2026 (step 4: the field shows `____-____` from the start, #196, not merged); October 26, 2026 (step 4: the code field adds the dash, #192); October 21, 2026 (KNG-218: "Getting an account" rewritten for invite-only sign-up. **It describes the
 invitations feature ([KNG-205](https://linear.app/kngpandi/issue/KNG-205)), merged 2026-10-24 but not yet switched on
 for the alpha**; until the switch-over, new players follow "Existing players" below.) Before:
 KNG-208, `/account create` and web → game linking removed.  
@@ -403,7 +403,28 @@ Yes! But only through the web app:
 
 ### Can I delete my account?
 
-Contact a server administrator. Account deletion is permanent and cannot be undone.
+Yes, on the web app's **Account** page, under **Delete my data**:
+
+1. Press **Delete my data…**, then **Email me the confirmation link** (you need an email address on your account).
+2. Open the link in the email to confirm. Nothing is deleted until you confirm.
+3. Your data is deleted **five days** after you confirm. Until then the Account page shows the date, and you can press
+   **Cancel deletion** to keep everything.
+
+What is deleted: your statistics, privacy settings, discoveries, private-message logs, ranks and permissions, and your
+username, email and Minecraft link. Your coin, gem and XP history and Siege match results are kept, without your name.
+This can't be undone. Staff can also file the request for you; it then runs the same way, five days later.
+
+**On the game server**, when the deletion runs:
+
+- If you are online, you are disconnected with the message `Your account data has been deleted.` If you were in a
+  siege, your own inventory, stats and position are given back to you first.
+- The game server then deletes what it keeps about you locally: your saved login data, cached ranks and permissions,
+  ignore lists (yours, and you on other players' lists), statistics and discoveries not yet sent, private messages you
+  sent or received in its logs, a saved siege inventory and a saved return point.
+- If the server was offline or not connected to the website at that moment, it catches up the next time it connects.
+
+If you join again later, you start with a new account, as a new player (see Getting an account).
+(PandiO/knk-workspace#184; the game-server part is in the next release, not live yet.)
 
 ### What happens if I lose access to my email?
 
@@ -466,6 +487,10 @@ Need help? Contact the server administrators:
 ---
 
 ## Changelog
+
+### Version 1.3 (November 13, 2026)
+- "Can I delete my account?": the **Delete my data** request on the Account page, and what the game server does when
+  the deletion runs (disconnect, local data deleted; PandiO/knk-workspace#184, next release)
 
 ### Version 1.2 (October 21, 2026)
 - "Getting an account" for invite-only sign-up: invitation → account → Cloudflare PIN → join → code → link (KNG-205;

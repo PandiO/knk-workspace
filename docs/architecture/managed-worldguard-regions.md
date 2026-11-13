@@ -149,7 +149,7 @@ A domain can have extra regions besides its main `WgRegionId` ([design](../specs
 - **Orphans.** A `_sub_` region no domain lists on two syncs in a row is orphaned (`OrphanedSubRegions`): its access flags, `knk-domain-id` and parent are removed, and it gets `knk-orphaned-since`. The daily cleanup deletes it after `regions.temp-retention.days` (default 14) counted from that mark (`TempRegionCleanupPolicy.decideOrphanedSubRegion`). `/knk regions temp [purge [hours]]` lists and purges them; they are no longer reported among the orphaned `domain_<id>` regions.
 - **Shapes.** Every region a world task draws (main or sub) turns a `//sel cyl`, ellipsoid or convex selection into a polygon (`SelectionShapes`). Before, it became the box around the selection.
 
-### Lootbox spawn areas (PandiO/knk-workspace#34; PR into `next`, not merged)
+### Lootbox spawn areas (PandiO/knk-workspace#34; in `next`)
 
 A `LootboxSpawnArea` form's Region field uses the same region world task (`ReagionCreate`, `WgRegionIdTaskHandler`), so a drawn region is `tempregion_worldtask_<n>` too. Before #34 nothing renamed it and the daily cleanup deleted it after 14 days: the area silently stopped spawning. Spawn areas are **not managed regions** (no category, parent, priority or flags from §4–§5; the repair never sees them).
 
@@ -160,7 +160,7 @@ A `LootboxSpawnArea` form's Region field uses the same region world task (`Reagi
 - **Cleanup:** `TempRegionRetentionTask`'s fresh lookup asks the lootbox areas too (`GET api/LootboxSpawns/runtime-config`, every area, disabled ones included; `TempRegionCleanupPolicy.inUseByAny`): a temp region an area stands on is kept, and one is deleted only when neither a domain nor an area uses it. An unreachable API keeps it, as before. Not world-qualified (like the domain lookup). A domain's or sub-region's re-run no longer removes a previous temp region an area stands on.
 - **Not changed:** a web delete still can't reach WorldGuard and leaves `lootbox_area_<id>` behind (as it does `lootbox_<name>`, lootbox DESIGN §3.4). A region task that completed for a form that was then abandoned kept its temp region for the 14 days (#180 note on #34) until #269 (next section).
 
-### Abandoned drafts: temp regions released early (PandiO/knk-workspace#269; PR into `next`, not merged)
+### Abandoned drafts: temp regions released early (PandiO/knk-workspace#269; in `next`)
 
 Before #269 a `tempregion_worldtask_<n>` whose form was abandoned waited for the daily cleanup's 14 days. #180 already removed it at once when the region task itself was cancelled while the game server still ran it (the handler's 409 / heartbeat path). Now the API **releases** the region and the game server removes it within minutes, after the same checks as the cleanup minus the age.
 

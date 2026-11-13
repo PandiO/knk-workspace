@@ -375,7 +375,7 @@ Contrary to what both this repo's and knk-plugin's CLAUDE.md currently say ("no 
   also sends `Domain`) carries the base type's own area node; ledger and game-server-only types are never sent. The profile
   summary gains `presence {online, lastSeenAt}`. `Realtime:WebLiveUpdatesEnabled` (default `true`) switches the web
   events off (none built or sent; game-server events and the profile's `presence` stay; decision 2026-11-06). DESIGN §6.9.
-  **S5 (#184, API part merged 2026-11-12, `master` `bc97b7d`; plugin part in the PR into `next` from `claude/plugin-chains-into-next`):** an executed GDPR erasure
+  **S5 (#184, API part merged 2026-11-12, `master` `bc97b7d`; plugin part merged into `next` 2026-11-13 from `claude/plugin-chains-into-next`):** an executed GDPR erasure
   (`PrivacyDeletionService.ExecuteAsync`) writes one `privacy_erasure_events` row per erased account (former UUID,
   cleared after `Privacy:ErasureFeedUuidRetentionDays`, 35) in its transaction and, after the commit, sends
   `AccountErased {userId, formerUuid, erasureId}` to every game server; `GET api/privacy/erasures?since=&limit=`

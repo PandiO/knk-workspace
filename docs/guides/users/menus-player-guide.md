@@ -1,7 +1,8 @@
 # Menus — Player Guide
 
 **Status:** Living document — update in place as the game changes
-**Last updated:** 2026-11-11 (first version, PandiO/knk-workspace#302; checked against knk-plugin `main` `121030f`; menu
+**Last updated:** 2026-11-13 (§ Kits: kits a staff member gives you from the web app, PandiO/knk-workspace#261, in
+knk-plugin `next` `745fcf6`, not yet released); 2026-11-11 (first version, PandiO/knk-workspace#302; checked against knk-plugin `main` `121030f`; menu
 texts are the seed defaults of knk-web-api `master` `b5e57fa`, staff can change them)
 
 Most of what you do in Knights and Kings beyond walking and fighting has a menu: kits, your profile and titles, the
@@ -61,6 +62,20 @@ Each kit shows what is in it, its cost and whether you can claim it now: `Click 
 (counting down), or a red reason. A **premium kit** is bought once with gems: click it, then **Confirm** (or
 **Cancel**) — the chat asks `Buy the kit "<name>" for N gems? Click Confirm or Cancel.` After buying you claim it like
 any other kit. Claimed items go into your inventory; what doesn't fit is **dropped at your feet**. (When that happens you may see a technical line like `placed=… dropped=…` in chat; it will be replaced by a readable message, [#321](https://github.com/PandiO/knk-workspace/issues/321).)
+
+**Kits a staff member gives you.** Staff can give you a kit from the web app as well as in game. You don't need to do
+anything to receive it, and it doesn't cost you anything:
+
+- **Online:** the items arrive within a few seconds, with the chat line `A staff member gave you the "<kit>" kit.`
+- **Offline:** they arrive a few seconds after your next join, one chat line per kit, in the order they were given.
+- **In a siege** (lobby or match): nothing arrives while you play, because your siege inventory is replaced when the
+  siege ends. The kit arrives right after the siege has given your own inventory back.
+
+The items go into your inventory the same way as a claimed kit; if something doesn't fit, you also see `Some of it
+didn't fit and was dropped at your feet.` A kit is handed over once, never twice. A kit staff give you starts that
+kit's waiting time for your own claim, as if you had claimed it. (Since PandiO/knk-workspace#261; part of the next
+release, not live yet. Kits given from the web app before that release don't arrive by themselves: ask staff to give
+them again.)
 
 ### Profile and titles
 
