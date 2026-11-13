@@ -1,13 +1,17 @@
 # NPC navigation adapter (Citizens) — Implementation Plan
 
-**Status:** Proposed 2026-11-11, not started. Plans the shared NPC navigation capability only (K&K plans, Citizens moves); behavior, guards, garrisons and combat are separate work. Developer answers to Q1–Q7 on 2026-11-12; see "Decisions".
-**Last updated:** 2026-11-12 (Phase 0 done, Q8 decided, NAV-17 in Phase 2, NAV-18 walked lines in Phase 7); 2026-11-12 (Phase 0 route-following spike, metrics and config layering in Phase 1, NAV-14/15/16, Q8; Q4 formations decided; Phase 7b travel bubble first; Phase 7b abstract movement outside loaded areas, spread spawns and targeted replans, from the unloaded-chunk runs; developer answers Q1–Q7; road network components and the router's BLOCKED result from the unloaded-chunk test)
-**Issue:** [PandiO/knk-workspace#241](https://github.com/PandiO/knk-workspace/issues/241) (verification: desk check #242, spike #243, benchmark #244); parent [KNG-36](https://linear.app/kngpandi/issue/KNG-36/design-shared-npc-traits-and-pathfinding-platform), [#146](https://github.com/PandiO/knk-workspace/issues/146), [#234](https://github.com/PandiO/knk-workspace/issues/234)
-**Sources:** [BEHAVIOR_MODEL.md §2](BEHAVIOR_MODEL.md#2-fit-with-the-platform-design) (requirements NAV-01–NAV-11) and §13; [DESIGN.md](DESIGN.md) §2, §6, §7, §9; [desk check and spike report](../../reports/2026-11-10-citizens-desk-check-and-spike.md); [Citizens stress test guide](../../guides/citizens-stress-test.md); [verdict on #244](https://github.com/PandiO/knk-workspace/issues/244#issuecomment-6806008046); code read at knk-plugin `main` `33122cf` and the spike `claude/citizens-spike` `ac3c356`.
+**Status:** In progress since 2026-11-13 (Phase 1, developer go-ahead; parent issue [#358](https://github.com/PandiO/knk-workspace/issues/358)). Proposed 2026-11-11. Plans the shared NPC navigation capability only (K&K plans, Citizens moves); behavior, guards, garrisons and combat are separate work. Developer answers to Q1–Q7 on 2026-11-12; see "Decisions".
+**Last updated:** 2026-11-13 (implementation started: parent issue #358, stair release gate, Phase 1 breakdown with the NPC event audit, CitizensAPI pin, coexistence with the Siege Survival NPC core); 2026-11-12 (Phase 0 done, Q8 decided, NAV-17 in Phase 2, NAV-18 walked lines in Phase 7); 2026-11-12 (Phase 0 route-following spike, metrics and config layering in Phase 1, NAV-14/15/16, Q8; Q4 formations decided; Phase 7b travel bubble first; Phase 7b abstract movement outside loaded areas, spread spawns and targeted replans, from the unloaded-chunk runs; developer answers Q1–Q7; road network components and the router's BLOCKED result from the unloaded-chunk test)
+**Issue:** implementation [PandiO/knk-workspace#358](https://github.com/PandiO/knk-workspace/issues/358) (one sub-issue per phase); verification [#241](https://github.com/PandiO/knk-workspace/issues/241) ( desk check #242, spike #243, benchmark #244); parent [KNG-36](https://linear.app/kngpandi/issue/KNG-36/design-shared-npc-traits-and-pathfinding-platform), [#146](https://github.com/PandiO/knk-workspace/issues/146), [#234](https://github.com/PandiO/knk-workspace/issues/234)
+**Sources:** [BEHAVIOR_MODEL.md §2](BEHAVIOR_MODEL.md#2-fit-with-the-platform-design) (requirements NAV-01–NAV-11) and §13; [DESIGN.md](DESIGN.md) §2, §6, §7, §9; [desk check and spike report](../../reports/2026-11-10-citizens-desk-check-and-spike.md); [Citizens stress test guide](../../guides/citizens-stress-test.md); [verdict on #244](https://github.com/PandiO/knk-workspace/issues/244#issuecomment-6806008046); code read at knk-plugin `main` `33122cf` and `121030fe` (2026-11-13), the spike `claude/citizens-spike` `ac3c356`…`4060870`, and the Siege Survival branch `claude/siege-survival` `f6db7a36` (NPC core).
 
 **Branches:** one standing branch per repo, `claude/npc-navigation`, created only when a phase first touches that repo (knk-plugin from `main`; knk-web-api from `master` and knk-web-app from `main` from Phase 5). Claim the work in `ACTIVE_SESSIONS.md` first. The spike branch `claude/citizens-spike` is **never merged**: port its pieces with tests, don't cherry-pick.
 
 **Build notes:** `./gradlew build -x deployToDevServer` in knk-plugin (plain `build` deploys). Gradle runs on Java 21 and compiles with the Java 25 toolchain. CitizensAPI stays `compileOnly`, non-transitive, never shaded (OSL-3.0); Citizens is a `softdepend`, and the plugin must load and run without it (NPC navigation then reports "unavailable").
+
+**Release gate: stairs (developer, 2026-11-12/13).** NPCs must not visibly jump in circles or stall on stairs; erratic jumping on easy stairs is unacceptable for production. Reference: the stair house on the `quarry-to-keep` route (two U-turn flights, 1408–1416, y 49–62, z −489…−503) and the staircase at 1399–1421, y 73–85. Gate: on that route, no NPC stalls in a staircase longer than one watchdog period (3 s), no visible jumping in circles, and stuck events per trip in the stair house well below the spike's (2026-11-12: 86 stuck in 67 trips, mostly the stair house). The gate is checked in Phase 8 and must pass before guards ship; stair quality is tested alongside implementation from Phase 2 on.
+
+**Next to the Siege Survival NPC core:** `claude/siege-survival` (not merged) has a Bukkit-free NPC core in `core/npc/` (stats, profiles, modifiers) and `paper/npc/` (mob goals, `NpcPlatform`). Navigation lives in its own subpackages, `core/npc/nav/…` and `paper/npc/citizens/…`, so the two merge without touching each other's files.
 
 | Phase | Repos | Size | Depends on | Shippable alone | Requirements |
 |---|---|---|---|---|---|
@@ -40,25 +44,39 @@ Goal: prove how NPCs follow the K&K route as the trail draws it (NAV-15) before 
 
 ## Phase 1 — Runtime, guard rails and metrics (plugin)
 
-Goal: Citizens is wired in safely, and NPCs can exist without touching player systems. No navigation yet.
+Goal: Citizens is wired in safely, NPCs can exist without touching player systems, and NPC navigation is measurable from the start. No route following yet (Phase 2).
 
-**knk-core** (Bukkit-free, new package `net/knightsandkings/knk/core/npc/nav/`):
-- `NpcMover` port: spawn/despawn a mover, set a hop target with an examiner, cancel, position, "is navigating". The behavior and navigation layers only see this port (DESIGN §2 platform-adapter boundary); no Citizens type in knk-core.
-- `NavigationResult` (ARRIVED, BLOCKED with reason and blocking element, FAILED with reason, CANCELLED) for DESIGN §6's failure policy.
+Sub-issue: [#359](https://github.com/PandiO/knk-workspace/issues/359). Branch: knk-plugin `claude/npc-navigation` from `main` `121030fe`.
 
-**knk-paper** (new package `paper/npc/`):
-- `CitizensNpcRuntime`: in-memory registry (`CitizensAPI.createInMemoryNPCRegistry`, `SHOULD_SAVE = false`), created only when Citizens is enabled; shutdown removes it. Per-NPC defaults from NAV-10: pathfinder `CITIZENS` (configurable `CITIZENS_ASYNC`), `destinationTeleportMargin(-1)`, a K&K stuck action (never teleport), stationary ticks, `pathDistanceMargin(1.5)`, `PATHFINDER_OPEN_DOORS = false`.
-- `CitizensNpcMover` implements `NpcMover`.
-- `NpcEntities.isNpc(Entity)` (`hasMetadata("NPC")`), and an **audit of every player listener** (NAV-08). At least `listeners/WorldGuardRegionListener` (the 10 API calls per second in the 200-NPC run), session/telemetry tracking, player notifications, permissions sync, combat tag, vanish and chat. `HubRulesListener` already filters NPCs. Each one: skip NPCs, with a test.
-- Config `npc.navigation.*` in `config.yml`: enabled (default off), pathfinder, max plans in flight, hop spacing (16), recheck ticks (40), stationary ticks (60).
-- Startup log line: Citizens version or "Citizens not present: NPC navigation unavailable".
+**1.1 Dependency and runtime** (knk-paper `paper/npc/citizens/`)
+- CitizensAPI `2.0.44-20261020.020503-8` (`citizensApiVersion` in `gradle.properties`; the newest build for 26.3 on 2026-11-13, Q7), `compileOnly`, non-transitive, never shaded; repository `maven.citizensnpcs.co/repo`; Citizens as `softdepend` in `plugin.yml`.
+- `CitizensNpcRuntime`: created only when Citizens is enabled and `npc.navigation.enabled`; in-memory registry (`createInMemoryNPCRegistry`, `SHOULD_SAVE = false`), removed on disable. Per-NPC defaults (NAV-10): pathfinder from config (`CITIZENS`), `destinationTeleportMargin(-1)`, a K&K stuck action that never teleports, stationary ticks, `pathDistanceMargin(1.5)`, `PATHFINDER_OPEN_DOORS = false`, `COLLIDABLE` from config. The only class that names Citizens types besides the mover.
+- `CitizensNpcMover` implements the knk-core `NpcMover` port.
+- Startup line: `NPC navigation: Citizens <version>` or `NPC navigation unavailable: <reason>` (no Citizens, disabled in config).
 
-- **Metrics foundation (NAV-16)** from the start, through `PluginMetrics` (KNG-232): NPC tick time, NPCs by state, chunks held by NPC tickets, plans per second and plan time (road graph and local), queue wait, stuck per trip, trespasses, per world (and per region where useful). Every later phase adds its instruments here; a Grafana dashboard next to the existing performance one (`guides/performance-metrics-and-capacity.md`).
-- **Config layering** for navigation settings: global default → world → region/domain → NPC template → assignment (BEHAVIOR_MODEL §15.3 precedence). First user: the chunk-loading switch (NAV-12, Phase 7b).
+**1.2 Engine-neutral core** (knk-core `core/npc/nav/`, Bukkit-free, per Q1)
+- `NpcMover` port: spawn and despawn, follow a waypoint list, walk to a point (local search), cancel, position, on-ground, "is moving", listeners for arrived / cancelled / despawned. Positions as plain records, no engine types.
+- `NavigationResult` (ARRIVED, BLOCKED with reason and blocking element, FAILED with reason, CANCELLED) and `NpcNavState` (IDLE, QUEUED, PLANNING, MOVING, WAITING, PAUSED) for DESIGN §6's failure policy and the metrics.
+- `NavigationSettings` with **layered overrides**: global default → world → region/domain → NPC template → assignment (BEHAVIOR_MODEL §15.3), each layer sparse; resolution returns the value and the layer it came from (for diagnostics). First settings: pathfinder, max plans in flight, stretch blocks, recheck ticks, stationary ticks, no-progress ticks, collidable, and the chunk-loading switch (NAV-12; read now, used in Phase 7b).
 
-**Tests:** runtime off without Citizens; listener audit tests (an NPC `PlayerMoveEvent` does not reach the region resolver); config defaults and override precedence.
+**1.3 NPCs out of player systems (NAV-08): measure, then guard**
+- `NpcEntities.isNpc(Entity)` (`hasMetadata("NPC")`), the one check every guard uses.
+- **NPC event audit** (`/knk npc audit start|stop|report`): while on, a monitor on every registered event type counts events whose player or entity is an NPC, by event type, and writes the report to `plugins/KnightsAndKings/npc-logs/`. Run with test NPCs walking a route (1.5), then guard exactly the listeners that react to the event types it finds, with a test each. Expected from the spike: the region tracking behind `listeners/WorldGuardRegionListener` (10 region lookups per second for 200 NPCs). 79 listener files react to player events on `main`; most likely never see an NPC, which the audit confirms instead of guessing. Combat events (damage, death, combat tag, statistics) are guarded when NPCs fight (later work); the audit lists them now.
+- Related: #317 (no negative cache for regions without a domain) makes every lookup cost an API call; not fixed here, but the guard removes the NPC share.
 
-**Done when:** the plugin loads with and without Citizens, and a spawned test NPC walking about makes no API calls and no player-system side effects.
+**1.4 Metrics foundation (NAV-16)** (knk-core `core/npc/nav/NpcNavigationMetrics`, a `MetricsCollector` registered by `MetricsService`)
+- Gauges: NPCs by state and world; chunks held for NPCs (Phase 7b fills it).
+- Counters: arrivals, stuck (by kind: Citizens stuck, no progress), recoveries, retries used up, trespasses, replans (by cause).
+- Histograms: route plan time (road graph), local plan time, queue wait, main-thread time spent on NPC navigation per tick.
+- Names `knk_npc_nav_*`; a Grafana panel row next to the existing performance dashboard, with a section in `guides/performance-metrics-and-capacity.md`.
+
+**1.5 Test command** (admin, `knk.admin.npc`): `/knk npc test spawn <n> [radius]` (player-shaped NPCs that walk to random points nearby with Citizens' own pathfinding, enough to exercise events and metrics), `/knk npc test clear`, `/knk npc status` (runtime, NPC counts by state, settings with their layer). Not a gameplay feature; Phase 2 replaces the walking with route following.
+
+**1.6 Config** `npc.navigation.*` in `config.yml`: `enabled` (default false), the global layer of the settings above, `worlds.<world>.*` and `regions.<domain or region id>.*` override sections. Template and assignment layers come from code until templates exist.
+
+**Tests:** settings layering and precedence; `NpcNavigationMetrics` output; runtime absent without Citizens (plugin loads, status says unavailable); one test per guarded listener (an NPC event does not reach it); the audit counts NPC events and ignores player events.
+
+**Done when:** the plugin loads with and without Citizens; `/knk npc test spawn 50` NPCs walking about for 5 minutes make no region API calls and no player-system side effects (audit report clean after the guards); `/metrics` shows the `knk_npc_nav_*` series; settings show the layer they came from.
 
 ## Phase 2 — Navigate one NPC (plugin)
 
@@ -160,6 +178,7 @@ Goal: NPCs keep travelling where no player keeps the world loaded (NAV-12; BEHAV
 - Repeat the spike scenarios with the production code: 50, 100 and 200 NPCs walking; gate closed and reopened; access removed and restored; groups; unloaded chunks.
 - Metrics through `PluginMetrics` (KNG-232): ms per NPC, plans per second, queue wait, stuck per trip, trespasses (must be 0), waiting NPCs.
 - Confirm BEHAVIOR_MODEL §13's proposed budgets (≤ 10 ms per tick at 100 active guards) and write them into §13 as decided; recheck later on the live host.
+- **Stair release gate** (see the top of this plan): the stair house and the upper staircase on `quarry-to-keep` with 50 NPCs, both directions, 10 minutes; no stall longer than one watchdog period, no visible jumping in circles. Guards don't ship before it passes.
 
 ## Decisions (developer, 2026-11-12)
 
