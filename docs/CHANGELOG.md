@@ -6,7 +6,7 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 - **Plugin: the 52 tests that CI skipped now run, with MockBukkit**
   ([PandiO/knk-workspace#499](https://github.com/PandiO/knk-workspace/issues/499); developer-facing, nothing changes
-  in game). knk-plugin branch `claude/tagged-tests-499` (PR into `next`, in review).
+  in game). Merged into `next` 2026-11-14 (knk-plugin#32, merge `0810a6c7`; docs knk-workspace#539); on the trunk when the developer promotes `next`.
   - The seven `requires-bukkit` test files of `knk-paper` pass and run in `./gradlew test` and CI; the tag exclusion and
     the `taggedTest` task are gone. knk-paper: 2,690 tests before, 2,735 after (all green; 18 skipped as before).
   - MockBukkit (`mockbukkit-v26.3` 4.120.0) is a test-only dependency (developer decision 2026-11-14) for tests that need
