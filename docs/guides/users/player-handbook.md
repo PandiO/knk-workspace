@@ -164,8 +164,7 @@ announced together in one summary afterwards; you get the rewards straight away.
 5. `/afk` marks you away. You also go AFK after 5 minutes idle (if the server has AFK on).
 
 <!-- Guide link (PandiO/knk-workspace#301): add the ranks and chat player guide link on the next line. -->
-> **Full guide:** coming soon (ranks and chat). Until then, see
-> [commands reference § Chat and private messages](commands.md#chat-and-private-messages).
+> **Full guide:** [Ranks, titles and chat](ranks-and-chat-player-guide.md).
 
 ## Statistics and leaderboards
 
