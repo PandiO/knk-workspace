@@ -137,8 +137,8 @@ This is a human-readable record of capabilities merged into the V3 default branc
 - **Form wizard: the step-jump dialog works again after Go to and back; one set of validation messages**
   (PandiO/knk-workspace#413 retest, #488, developer's retest on `next` 2026-11-14) — staff forms only. When a form step
   can't be left, every problem is listed once at the top of the form and shown once on its field, with one pop-up
-  message; nothing is said above the Next button any more. knk-web-app branch `claude/wizard-messages-413-488`, PR into
-  `next` (not merged; the developer reviews).
+  message; nothing is said above the Next button any more. knk-web-app branch `claude/wizard-messages-413-488`, merged into
+  `next` 2026-11-14 (knk-web-app#22 `c54ebac`); on the trunk when the developer promotes `next`.
   - **#413:** after **Go to**, going back to step 1 and clicking step 3 again opened the dialog with ×, Close and Go to
     all disabled. Cause: `FeedbackModal` cleared its busy state only while a "mounted" ref was true, and React's
     StrictMode (the dev server) left that ref false after its extra mount, so busy stayed set after the first action.
