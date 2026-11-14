@@ -4,6 +4,26 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Fairer chance for on-hit custom enchantments** (PandiO/knk-workspace#476) — Poison, Wither, Freeze, Blindness,
+  Confusion and Strength still go off as often as before on average, but long unlucky (or lucky) streaks no longer
+  happen. Each player has a "marble bag" per enchantment: it holds hits and misses in the enchantment's ratio (25 % =
+  2 hits in a bag of 8), is drawn from without putting back and refilled when empty. With independent rolls a 25 %
+  chance misses eight times in a row one time in ten; with the bag the longest run without a hit is twelve. A changed
+  chance (another level, new combat values) starts a new bag; a 100 % chance and right-click abilities are untouched.
+  The code is reusable for other rolls: knk-plugin `knk-core/.../core/random/` (`MarbleBag<T>`, `ChanceBag`,
+  `ChanceRoll`, `MarbleBagChanceRoll`). On knk-plugin `claude/eager-cannon-h8dtum` `a91d65e` (from `next`), not merged,
+  not live-tested. Tests: core 2693, api-client 336, paper 2635, 0 failures.
+  - **Admin steps:** optional. The new keys run on these defaults until they are in the server's `config.yml`
+    (under `custom-enchantments`, restart to apply):
+    ```yaml
+    custom-enchantments:
+      fair-chance:
+        # false = every hit is an independent roll, as before
+        enabled: true
+        min-bag-size: 8
+        max-bag-size: 20
+    ```
+
 ## 2026-11-13
 
 - **Account and invitation guides** (PandiO/knk-workspace#299) — no game change; players now have one guide for

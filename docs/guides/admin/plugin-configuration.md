@@ -1,6 +1,6 @@
 # Plugin configuration reference (`config.yml`)
 
-**Status:** Current · **Last updated:** 2026-11-13 (§ 4.11 gates are discovered too; § 4.21 realtime push; § 4.26 the kit cache, PandiO/knk-workspace#300)
+**Status:** Current · **Last updated:** 2026-11-14 (§ 4.20 `fair-chance`, PandiO/knk-workspace#476, on a branch; before that 2026-11-13: § 4.11 gates are discovered too; § 4.21 realtime push; § 4.26 the kit cache, PandiO/knk-workspace#300)
 **Checked against:** knk-plugin `main` `121030f`; § 4.11, § 4.21 and § 4.26 against `57884e9`. Update this page in place whenever a `config.yml` key is added, renamed, removed or gets a new default.
 **Source:** knk-plugin `knk-paper/src/main/resources/config.yml` (1,152 lines at `121030f`), read by
 `knk-paper/.../paper/config/ConfigLoader.java`, `EnchantmentConfigManager.java` and `KnKPlugin.java`
@@ -85,6 +85,7 @@ Newest first. Builds before this list: compare the files with the script.
 
 | Merged | Issue | Added (+), removed (−) or changed | Applies |
 |---|---|---|---|
+| not merged (branch `claude/eager-cannon-h8dtum`) | [#476](https://github.com/PandiO/knk-workspace/issues/476) | + `custom-enchantments.fair-chance` (`enabled`, `min-bag-size`, `max-bag-size`) | Restart |
 | 2026-11-10 | [#259](https://github.com/PandiO/knk-workspace/issues/259) | − `gates.cleaving` (`damage-bonus-per-level`, `charged-hit-multiplier`, `charged-cooldown-seconds`): no longer read. Cleaving's numbers are combat values in the web app now ([combat values guide](custom-enchantment-combat-values-admin-guide.md#1-where-to-edit)). Delete the block. + `custom-enchantments.messages.cmd-info-tuning-gate` | `/ce reload` |
 | 2026-11-10 | [#233](https://github.com/PandiO/knk-workspace/issues/233) | No `config.yml` change. The chat token limits are on the web app's Game Settings page ([chat tokens guide](../chat-tokens.md)) | — |
 | 2026-11-04 | [#178](https://github.com/PandiO/knk-workspace/issues/178), [#179](https://github.com/PandiO/knk-workspace/issues/179) | + `realtime` block (off by default) | Restart |
@@ -482,6 +483,9 @@ applies an edit; the other keys need a restart.
 | `disable-for-creative` | `false` | `true`: custom enchantments don't trigger in creative mode | Restart | — |
 | `cooldown-message` | `"&c%seconds% seconds remaining"` | Shown when an ability is on cooldown. `%seconds%`; blank = this default | Restart | — |
 | `tuning-refresh-minutes` | `5` | How often combat values are re-read from the API (at least 1; also at `/ce reload`). While the API is down the last values stay | Restart | #151 |
+| `fair-chance.enabled` | `true` | On-hit chances (Poison, Wither, Freeze, Blindness, Confusion, Strength) are drawn from a marble bag per player and enchantment: hits and misses in the enchantment's ratio, drawn without putting back, refilled when empty. Same average, no long streaks. `false`: every hit is an independent roll, as before #476 | Restart | #476 |
+| `fair-chance.min-bag-size` | `8` | Smallest bag (at least 1). The bag is the smallest size from here to `max-bag-size` in which the chance is a whole number of hits: 25 % = 2 hits in 8, 10 % = 1 in 10 | Restart | #476 |
+| `fair-chance.max-bag-size` | `20` | Largest bag (at least `min-bag-size`). A chance that fits no size in whole hits (1 %, 33 %) uses this one and carries the fraction of a hit to the next bag. Larger = more room for streaks; `1` and `1` = independent rolls | Restart | #476 |
 | `death-messages.enabled` | `true` | The death message of a player killed by Chaos or Flash Chaos names the ability, its user and item. Only a death inside the ability's own hit; other deaths keep vanilla's text; a siege match still shows none | `/ce reload` | #222 |
 | `death-messages.default` | `"%victim% was killed with %enchantment% by %player% using %item%"` | The pattern. `%victim%`, `%player%` (the user), `%enchantment%`, `%item%` (shown like vanilla's `using [Sword]` with its hover; ` using %item%` is left out when unknown); `&` colour codes | `/ce reload` | #222 |
 | `death-messages.overrides` | `{}` | Optional pattern per enchantment id, e.g. `chaos: "%victim% was blown apart by %player%'s %enchantment% using %item%"` (ids: `chaos`, `flash_chaos`) | `/ce reload` | #222 |
@@ -612,3 +616,4 @@ kits menu after `ttl-seconds`, or at once with `realtime.enabled: true`; claims 
 ## Changes
 
 1. 2026-11-10: first version, PandiO/knk-workspace#295; checked against knk-plugin `main` `121030f`
+- 2026-11-14: § 2.1 and § 4.20 `custom-enchantments.fair-chance` (PandiO/knk-workspace#476), against knk-plugin `claude/eager-cannon-h8dtum` `a91d65e`; not merged
