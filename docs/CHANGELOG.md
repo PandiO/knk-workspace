@@ -4,6 +4,24 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Plugin features can prove themselves on a real server in CI: in-plugin test scenarios**
+  ([PandiO/knk-workspace#421](https://github.com/PandiO/knk-workspace/issues/421); developer-facing, nothing changes for
+  players). Merged into `next` 2026-11-14 (knk-plugin#30, merge `309d3580`; docs knk-workspace#532); on the trunk when the developer promotes `next`.
+  - A scenario builds a small scene on a test server (blocks, a WorldGuard region, mobs, fake API data), plays it out
+    over server ticks and asserts the result. The runner is platform-free in `knk-core` (`core/scenario/`), the Bukkit
+    glue and the scenarios in `knk-paper` (`paper/scenario/`). Each scenario logs `KNK-SCENARIO PASS|FAIL <name>`, then
+    a summary line.
+  - `/knk scenario list | run <name|all>` (node `knk.admin.scenario`) exists **only** with the new
+    `testing.scenarios.enabled: true`; off by default, so every real server behaves exactly as before.
+  - Three scenarios: a portcullis opens and closes (`gate-open-close`), a closing door moves a mob out of its doorway
+    without suffocating it (`gate-closing-moves-entity-out`, KNG-106), TNT breaks nothing outside every region but does
+    inside one (`global-region-explosion`).
+  - CI: the Paper boot test (`paper-boot.yml`) runs every scenario after the boot check and fails on a failed or
+    missing scenario or a missing summary; the result table is in the job summary. About 4 s of scenarios in a
+    1.5-minute job.
+  - Guide: [writing a plugin scenario](guides/developer/plugin-scenarios.md); [CI § 7.1](guides/developer/ci.md#71-in-plugin-scenarios).
+  - **Admin steps:** none. Don't add the `testing` block to dev, alpha or production configs; a missing block is off
+    ([plugin configuration § 4.28](guides/admin/plugin-configuration.md#428-testing)).
 - **Smoke tests: the web app's checks move into the automated suites** ([PandiO/knk-workspace#511](https://github.com/PandiO/knk-workspace/issues/511))
   — no game or player change; developer-facing. Playwright specs with a mocked API in knk-web-app `e2e/` now check what
   the developer did by hand in the smoke tests of features already on the trunk, and each guide marks those steps
