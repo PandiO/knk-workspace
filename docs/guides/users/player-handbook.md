@@ -1,6 +1,6 @@
 # Knights and Kings — Player Handbook
 
-**Status:** Current · **Last updated:** 2026-11-14 (Your account: link to the account player guide, PandiO/knk-workspace#299)
+**Status:** Current · **Last updated:** 2026-11-14 (Money, kits and lootboxes: link to the economy player guide, lootbox pickup corrected, PandiO/knk-workspace#300)
 **Checked against:** knk-plugin `main` `57884e9`, knk-web-api `master` `f445d21`, knk-web-app `main` `3ba747d`
 **Related:** [commands reference](commands.md), [menus](menus-player-guide.md), [guides index](../README.md)
 
@@ -143,12 +143,12 @@ announced together in one summary afterwards; you get the rewards straight away.
 2. **Kits** are bundles of items. `/kit list` shows them, `/kit get <name>` claims one (each kit has its own rules,
    such as a cooldown, a cost or a rank), and `/kit purchase <name>` buys a premium kit once with gems. New players
    get starter kits on their first join. The **Kits** tile in the menu does the same with clicks.
-3. **Lootboxes** appear in the world: right-click one to open it. `/lootbox odds <category>` shows what a box can
-   give. There may be a daily limit, which resets at 00:00 UTC.
+3. **Lootboxes** appear in the world: click one to pick it up as a token, then right-click the token to open it.
+   `/lootbox odds <category>` shows what a box can give. Pickups and opens each have a daily limit, which resets at
+   00:00 UTC.
 
 <!-- Guide link (PandiO/knk-workspace#300): add the economy player guide link on the next line. -->
-> **Full guide:** coming soon (currency, kits, lootboxes and discoveries). Until then, see
-> [commands reference § Money](commands.md#money).
+> **Full guide:** [coins, gems, kits, lootboxes and discoveries](economy-player-guide.md): earning and paying, limits, kit rules and cooldowns, opening lootboxes, discovery rewards.
 
 ## Ranks and chat
 

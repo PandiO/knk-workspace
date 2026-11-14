@@ -1,7 +1,7 @@
 # Plugin configuration reference (`config.yml`)
 
-**Status:** Living document — update in place whenever a `config.yml` key is added, renamed, removed or gets a new default
-**Last updated:** 2026-11-10 (first version, PandiO/knk-workspace#295; checked against knk-plugin `main` `121030f`)
+**Status:** Current · **Last updated:** 2026-11-13 (§ 4.11 gates are discovered too; § 4.21 realtime push; § 4.26 the kit cache, PandiO/knk-workspace#300)
+**Checked against:** knk-plugin `main` `121030f`; § 4.11, § 4.21 and § 4.26 against `57884e9`. Update this page in place whenever a `config.yml` key is added, renamed, removed or gets a new default.
 **Source:** knk-plugin `knk-paper/src/main/resources/config.yml` (1,152 lines at `121030f`), read by
 `knk-paper/.../paper/config/ConfigLoader.java`, `EnchantmentConfigManager.java` and `KnKPlugin.java`
 **Related:** [production installation § 9.5](../production-installation.md#95-install-the-knightsandkings-plugin),
@@ -291,8 +291,8 @@ are instant and skip all of this ([teleport design § 3.11](../../specs/teleport
 
 ### 4.11 `discovery`
 
-The first entry into a Town, District or Structure is recorded and rewarded once; the API decides the rewards and
-caps ([design § 3.6](../../specs/domain-discovery/DESIGN.md)).
+The first entry into a Town, District, Structure or gate is recorded and rewarded once; the API decides the rewards and
+caps ([design § 3.6](../../specs/domain-discovery/DESIGN.md), [economy admin guide § 5](economy-admin-guide.md#5-discoveries)).
 
 | Key | Default | What it does, safe values | Applies | Added by |
 |---|---|---|---|---|
@@ -504,7 +504,8 @@ In `config.yml` at `121030f` the `# PandiO/knk-workspace#223` comment sits above
 
 Areas, limits, odds, the daily cap and announcements are set in the web app (`/admin/lootboxes`,
 [design § 3.4](../../specs/lootboxes/DESIGN.md)). This section is how this server places, shows and opens boxes.
-Every key applies after `/knk lootbox reload`; a key left out uses the built-in default.
+Every key applies after `/knk lootbox reload`; a key left out uses the built-in default. Web-app changes arrive at the
+next `runtime-refresh-seconds`, or at once with `realtime.enabled: true` ([economy admin guide § 4](economy-admin-guide.md#4-lootboxes)).
 
 | Key | Default | What it does, safe values | Applies | Added by |
 |---|---|---|---|---|
@@ -596,7 +597,8 @@ Entity defaults (`ttl` / `max-ttl`, all `CACHE_FIRST`, `allow-stale: true`, 3 re
 
 The file's own comment (KNG-262) says that for most entities `ttl-minutes` isn't used and the global
 `ttl-seconds` applies; `itemBlueprints` does use its own TTL. A web-app edit shows in game after at most that TTL,
-or at once after `/knk cache refresh`.
+or at once after `/knk cache refresh`. Kits are not among the caches `/knk cache refresh` drops: a kit edit shows in the
+kits menu after `ttl-seconds`, or at once with `realtime.enabled: true`; claims always read the API.
 
 ## 5. Maintaining this page
 
@@ -606,3 +608,7 @@ or at once after `/knk cache refresh`.
 - Re-check the **Applies** column against the code when a key's reader moves: `ConfigLoader` and code that reads
   `getConfig()` once are Restart; `EnchantmentConfigManager` and `() -> getConfig()…` suppliers are reload-safe.
 - Record the knk-plugin commit you checked in the header.
+
+## Changes
+
+1. 2026-11-10: first version, PandiO/knk-workspace#295; checked against knk-plugin `main` `121030f`

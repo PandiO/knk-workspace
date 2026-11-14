@@ -1,17 +1,14 @@
 # Staff web app — admin guide
 
-**Status:** Living document — update in place. Describes knk-web-app `main` `3ba747d` and knk-web-api `master` `f445d21`
-(AM3 of #280 merged 2026-11-13 as `e02ee79` / `45043a7`; #371, #374 and #383, create, edit and link changes on
-`knk.admin.content`, reached the default branches with the promotion of `next` on 2026-11-13). Step conditions in the
-form builder and clickable form steps (#88, #68) are in `next`, not yet released (§ 7). Only the builders (§ 7) were
-smoke-tested by the developer (2026-11-11/12, all pass); navigation, Entity setup without a nav link, the detail page,
-the relation picker, live updates, the settings pages and the dashboard access model with bulk delete (§ 1, § 3) are
-**not live-tested** yet: their smoke tests are linked in each section (the access model's is in closed alpha test run 2,
-checklist § 4c). · **Last updated:** 2026-11-13 (§ 1, § 3, § 4, § 5, § 9, § 10 checked against the default branches:
-New, Edit, the forms, link changes, hot edit, the lootbox toggle and Create New Street need `knk.admin.content`, #371,
-#374, #383; known gap #380; docs #347); 2026-11-13 (dashboard per area, disabled actions with "Requires …", bulk
-delete, export through the API, names-only pickers, readable refusals; #280 AM3 and #205, docs #366); 2026-11-12 (first
-version, PandiO/knk-workspace#337, #338, #340–#345)
+**Status:** Current · **Last updated:** 2026-11-13 (§ 9: lootbox tab and column names corrected, lootbox and currency
+points link the economy admin guide, PandiO/knk-workspace#300)
+**Checked against:** knk-web-app `main` `3ba747d` and knk-web-api `master` `f445d21` (AM3 of #280 merged 2026-11-13 as
+`e02ee79` / `45043a7`; #371, #374 and #383, create, edit and link changes on `knk.admin.content`, reached the default
+branches with the promotion of `next` on 2026-11-13). Step conditions in the form builder and clickable form steps
+(#88, #68) are in `next`, not yet released (§ 7). Only the builders (§ 7) were smoke-tested by the developer
+(2026-11-11/12, all pass); navigation, Entity setup without a nav link, the detail page, the relation picker, live
+updates, the settings pages and the dashboard access model with bulk delete (§ 1, § 3) are **not live-tested** yet:
+their smoke tests are linked in each section (the access model's is in closed alpha test run 2, checklist § 4c).
 
 How staff find their way around the web app's admin pages and use the content tools: the dashboard, Entity setup, the
 detail page, the relation picker in forms, live updates, the form and display builders, and the settings pages. It
@@ -299,8 +296,8 @@ a percentage, × for multipliers.
   better" or **Never** (specials are always announced; a type can override it), with a preview of both announcements
   as the game shows them. The Odds tab shows small chances as "1 in N". Switching lootboxes off or on asks first
   ("Switch lootboxes off? Nothing spawns and no box can be claimed until they are switched on again …"); so do a
-  type's **Enabled** on the Types tab (it needs `knk.admin.content` too, greyed out with "Requires …" without it,
-  [#383](https://github.com/PandiO/knk-workspace/issues/383)) (boxes already in the world stay) and a token grant rule on the Tokens tab (tokens
+  type's **Spawns** chip (Enabled/Disabled) on the Types tab (it needs `knk.admin.content` too, greyed out with "Requires …" without it,
+  [#383](https://github.com/PandiO/knk-workspace/issues/383)) (boxes already in the world stay) and a token grant rule on the Token items tab (tokens
   already issued stay; switching on doesn't grant retroactively). Changes reach the game server at its next runtime
   refresh.
 - **Currency policy** (`knk.admin.currency.policy`): coins and gems in two sections with **one Save**. The **lowest
@@ -316,8 +313,9 @@ a percentage, × for multipliers.
   Specials and Areas tabs and a stretch's street **Rename** open the form wizard and are not greyed out without
   `knk.admin.content`; without it they lead to "Staff only".
 
-Detailed lootbox, currency and road guides are still to be written ([#300](https://github.com/PandiO/knk-workspace/issues/300),
-[#298](https://github.com/PandiO/knk-workspace/issues/298)).
+Lootboxes and currency in detail (every tab and field, what a switch does to boxes and tokens already out, the
+policy's limits, corrections and reversals): [economy admin guide § 2 and § 4](economy-admin-guide.md#2-currency).
+The road guide is still to be written ([#298](https://github.com/PandiO/knk-workspace/issues/298)).
 
 Smoke tests: [settings pages](../settings-pages-smoke-test.md), [data primitives](../data-primitives-smoke-test.md)
 (not run).
@@ -343,3 +341,12 @@ get the new version at once.
 | Staff don't see a builder change | It is saved as a draft, not published | **Publish…** |
 | A validation rule change applies before Publish | Known limit #291 | Change rules outside play hours |
 | No "Updated by …" lines | Live updates off on the server, the connection is blocked, or you lack the type's area node | Reload; check `Realtime__WebLiveUpdatesEnabled` and the proxy's `/api/hubs/web` |
+
+## Changes
+
+1. 2026-11-13: § 1, § 3, § 4, § 5, § 9, § 10 checked against the default branches: New, Edit, the forms, link changes,
+   hot edit, the lootbox toggle and Create New Street need `knk.admin.content`, #371, #374, #383; known gap #380; docs
+   #347
+2. 2026-11-13: dashboard per area, disabled actions with "Requires …", bulk delete, export through the API, names-only
+   pickers, readable refusals; #280 AM3 and #205, docs #366
+3. 2026-11-12: first version, PandiO/knk-workspace#337, #338, #340–#345

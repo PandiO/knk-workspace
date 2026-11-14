@@ -1,6 +1,6 @@
 # In-game commands
 
-**Status:** Current · **Last updated:** 2026-11-13 (desk check of the rank columns, `/lb` and `/pay` against the code and the dev seed, PandiO/knk-workspace#316; not yet checked in game); 2026-11-10 (rebuilt from the plugin's command catalogue, PandiO/knk-workspace#294)
+**Status:** Current · **Last updated:** 2026-11-13 (money, kit and lootbox rows corrected against the code and linked to the economy guides, PandiO/knk-workspace#300)
 **Checked against:** knk-plugin `main` `57884e9` (`knk-paper/src/main/resources/plugin.yml`, `knk-paper/.../paper/commands/`), rank seed migrations in knk-web-api `master` `f445d21`, dev seed knk-dev-db-seed `4b71f23`
 **Related:** [plugin permission checks](../../architecture/plugin-permission-checks.md), [command permission scan 2026-10-26](../../reports/2026-10-26-command-permission-scan.md), [COMMAND_CATALOG_V3](../../specs/user-features/COMMAND_CATALOG_V3.md) (design notes), [chat tokens](../chat-tokens.md), [plugin configuration reference](../admin/plugin-configuration.md) (the `config.yml` keys behind warmups, cooldowns and limits), [gate structures player guide](gate-structures-player-guide.md), [v1 commands](../../specs/legacy/commands-v1.md) (history)
 
@@ -102,27 +102,31 @@ How player teleports work:
 
 ### Money
 
+How to earn and spend coins and gems, and every `/pay` refusal: [economy player guide](economy-player-guide.md).
+
 | Command | Who | What it does |
 |---|---|---|
 | `/balance [player]` (`/bal`, `/money`) | Everyone | Shows your coins and gems, or another player's. |
 | `/pay <player> <amount> [coins\|gems]` | Everyone | Pays a player coins. They can be offline. A large amount (100,000 coins or more unless the server changed it) asks you to click [Confirm] or [Cancel], or type `/pay confirm` / `/pay cancel`; the question expires after 60 seconds. Gems can't be paid. |
 | `/baltop [coins\|gems] [page]` | Everyone | The richest players, 10 a page. |
-| `/transactions [coins\|gems\|xp] [page]` (`/tx`) | Everyone (another player's: Staff) | Your coin, gem and XP history, newest first. |
+| `/transactions [player] [coins\|gems\|xp] [page]` (`/tx`) | Everyone (another player's: Staff) | Your coin, gem and XP history, newest first. |
 
 The server sets the payment limits. Unless staff changed them: at least 10 and at most 1,000,000 coins a payment,
 2,000,000 coins sent a day, 5 seconds between payments and 20 an hour, and your account must be 48 hours old with at
-least the first title. The refusal says which limit you hit, for example "Daily limit reached - you can send N more
+least the title Peasant (2,500 XP). The refusal says which limit you hit, for example "Daily limit reached - you can send N more
 coins (resets in …)." or "You only have N coins." The amount must be a whole number from 1 to 999,999,999, with no separators. If a
 payment can't be confirmed: "We couldn't confirm the payment. Check /transactions before trying again."
 
 ### Kits, lootboxes and custom enchantments
+
+Kits, lootboxes and discoveries in detail: [economy player guide § 4–6](economy-player-guide.md#4-kits).
 
 | Command | Who | What it does |
 |---|---|---|
 | `/kit list` | Everyone | Lists the kits, whether you can claim each one, and its cost or premium price. |
 | `/kit get <name>` | Everyone | Claims a kit. The kit's own rules (rank, title, cooldown, cost) apply. |
 | `/kit purchase <name>` (`/kit buy`) | Everyone | Buys a premium kit once with gems. After that you claim it with `/kit get`. |
-| `/lootbox` | Everyone | How lootboxes work: right-click one in the world to open it. There may be a daily limit, which resets at 00:00 UTC. |
+| `/lootbox` | Everyone | How lootboxes work. Click a box in the world to pick it up as a token, then right-click the token to open it (the help text still says "right-click one to open it", PandiO/knk-workspace#458). Pickups and opens each have a daily limit, which resets at 00:00 UTC. |
 | `/lootbox odds <category> [stars]` | Everyone | What a box of that category can give, with chances. |
 | `/ce info` (`/customench info`) | Everyone | Lists the custom enchantments on the item in your hand. See below. |
 
@@ -227,6 +231,8 @@ owner's override moves them one by one. Rank perks for player teleports: `knk.te
 
 ### Money, kits and lootboxes (staff)
 
+Setting these up in the web app: [economy admin guide](../admin/economy-admin-guide.md).
+
 | Command | Node | Who | What it does |
 |---|---|---|---|
 | `/transactions <player>` | `knk.transactions.others` | Staff | Another player's coin, gem and XP history. (`/balance <player>` needs `knk.balance.others`, which every player has.) |
@@ -327,3 +333,9 @@ The rank columns were checked on 2026-11-13 against the seed migrations and the 
 the 2026-11-01 export) (PandiO/knk-workspace#316), not yet in game. The alpha was loaded from the earlier seed
 `4abf42c` (2026-10-24); whether its live database matches the dev seed, the premium rank chain included, is still to
 be checked.
+
+## Changes
+
+1. 2026-11-13: desk check of the rank columns, `/lb` and `/pay` against the code and the dev seed,
+   PandiO/knk-workspace#316; not yet checked in game
+2. 2026-11-10: rebuilt from the plugin's command catalogue, PandiO/knk-workspace#294
