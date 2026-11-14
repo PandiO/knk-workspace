@@ -204,6 +204,12 @@ This is a human-readable record of capabilities merged into the V3 default branc
   [implementation plan](specs/npc-platform/IMPLEMENTATION_PLAN.md).
   1. **Phase 1** (#359): the Citizens plugin as an optional dependency, an engine-neutral core with layered
      settings, NPC metrics (`knk_npc_nav_*`), the NPC event audit and a guard that keeps NPCs out of region tracking.
+     Follow-up (#490, in `next` when its pull requests are merged): NPCs are kept out of the damage handlers of the
+     player systems the developer's audit named (statistics, telemetry, combat tag, siege combat rules, admin freeze,
+     join loading, teleport warmups, weapon enchantments, AFK activity, domain effect damage), for any entity with
+     Citizens' `NPC` metadata, whether or not NPC navigation is on; gate, hub and decoration protection still apply
+     to NPCs. The test walkers no longer pick spots under water, where they stood drowning, and the audit report
+     lists damage causes.
   2. **Phase 2** (#360): an NPC follows the road route K&K plans, one stretch of the road line at a time, with a
      watchdog that notices an NPC that makes no progress and sends it on a short recovery leg. NPCs have their own
      access profile instead of a player's rights, wait when the rules allow no route, pause when their chunk unloads
