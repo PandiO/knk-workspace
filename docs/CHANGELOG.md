@@ -241,6 +241,18 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## 2026-11-14
 
+- **Web app end-to-end tests on Playwright, in CI** ([PandiO/knk-workspace#423](https://github.com/PandiO/knk-workspace/issues/423))
+  — no player change; developer-facing. knk-web-app replaces Cypress with Playwright Test (`@playwright/test` 1.64.1,
+  pinned): the specs run in Chromium against the production build with a mocked API (no API or database), and the
+  mocks are typed with the app's DTOs (`npm run typecheck:e2e`). The Cypress registration spec is ported; new specs
+  cover login with the expired-token refresh and retry, the dashboard town list with search, and the first form
+  wizard step. New CI workflow `e2e.yml` (job `e2e`, 10-minute timeout) uploads the HTML report and, on failure, the
+  traces. `npm run test:e2e` now builds and runs Playwright; the `cypress:*` scripts are gone.
+  [Web app testing § 3](guides/developer/web-app-testing.md#3-end-to-end-tests-playwright),
+  [CI § 1.1](guides/developer/ci.md#11-tests-that-ci-does-not-run).
+  - **Admin steps:** none to deploy. Optional: make `e2e` a required check of the knk-web-app rulesets on `main` and
+    `next`. Locally run `npx playwright install chromium` once.
+
 - **Plugin CI: Paper boot test** ([PandiO/knk-workspace#420](https://github.com/PandiO/knk-workspace/issues/420)) — no
   game change. knk-plugin's new `paper-boot.yml` workflow builds the shaded jar, starts a real Paper 26.3 server with it,
   WorldGuard 7.0.20 and WorldEdit 7.4.6 (pinned downloads with SHA-256 checks) and no API, and fails unless KnK logs its
