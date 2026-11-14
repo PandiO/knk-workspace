@@ -4,6 +4,16 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Dashboard: the PermissionGrant table loads** ([PandiO/knk-workspace#408](https://github.com/PandiO/knk-workspace/issues/408);
+  API and staff web app). knk-web-api and knk-web-app branches `claude/permission-grant-table-408` (PRs into `next`, in
+  review, not merged). Dashboard → Permission Grant lists every grant and deny (node, Granted/Denied, holder, expiry)
+  and pages, sorts and searches by node; it is read-only (no New, Edit or Delete that saves: grants are still changed
+  on the player profile and with `/knk user … perm`; #50 adds the group editor).
+  - **API:** `POST api/PermissionGrants/search` now needs `knk.admin.user.manage`, like `GET` and `GET {id}` (it needed
+    `knk.admin.user.perm`), so whoever the dashboard lists the type for can read it. Writes still need
+    `knk.admin.user.perm`. The search sorts by the column asked (`id`, `holderId`, `value`, `expiresAt`, `node`).
+  - **Admin steps:** none; deploy the API and the web app together (no migration, no settings). Smoke test:
+    [dashboard access smoke test § 8.6](guides/dashboard-access-smoke-test.md) (mostly automated in CI).
 - **Town streets from districts: design note and data check** ([PandiO/knk-workspace#409](https://github.com/PandiO/knk-workspace/issues/409), L1 [#514](https://github.com/PandiO/knk-workspace/issues/514); knk-workspace only, docs) — knk-workspace branch
   `claude/town-streets-409` (PR into `next`, in review). Proposed design
   [specs/towns/DESIGN_TOWN_STREETS.md](specs/towns/DESIGN_TOWN_STREETS.md) and the read-only check
