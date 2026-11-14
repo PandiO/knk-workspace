@@ -73,6 +73,18 @@ branch model applies, merges into `next`. Links follow the `knk-link` skill.
     3. History: on 2026-11-12, before the rule existed, a `create_session` link's `add_repo` calls were refused by
        its permission check (the § 0 block in a prompt written by another session was not accepted) and the developer
        had to approve the attach; the setup chain then ran multi-repo links as subagents.
+    4. **Auto mode decides `add_repo` with its classifier, not the rule** (observed 2026-11-14): in a link session that
+       runs in Auto mode (the default for `create_session`), the `add_repo` call was decided by Auto mode's safety
+       classifier (`reason_type: classifier` in the session's events), not by the allow rule. It approved one attach in
+       each of three sessions (#420, #421, #423) and refused one ("[Unauthorized Access]", #511): the § 0 grant reaches
+       the link as a message from another session, which is marked as not the developer's own input. Treat
+       an attach as likely but not certain:
+       1. Ask for only the repositories the link needs, with plain `push` or `read` access (no qualifiers such as
+          "tests only"; put limits in the scope instead). The refused prompt asked for four, two with qualifiers.
+       2. A link that needs two or more repositories besides knk-workspace goes the subagent route from the start.
+       3. On a refusal, don't retry the attach in that session: rerun the link as a subagent (2. above) and tell the
+          refused session to stop. Starting the link in a mode without the classifier would let the rule decide, but
+          such a session asks the developer before other tool calls, so it doesn't suit unattended links.
 2. **`create_session`:** `source_url` `https://github.com/PandiO/knk-workspace` (the skills and the `add_repo` rule
    live there); `source_revision` `main` is fine (the link creates its own branches from its base); `model` always
    explicit (the charter's, else your own from `get_session` → `session_context.model`); `title`

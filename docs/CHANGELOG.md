@@ -10,6 +10,73 @@ This is a human-readable record of capabilities merged into the V3 default branc
   `scripts/maintenance/town-street-orphans-409.sql` (orphan `TownStreet` rows, counts, Town configurations naming
   Streets). Nothing changes in the API, web app or plugin yet (that is L2).
   - **Admin steps:** none; run the check on dev and alpha when the coordinator asks (read only).
+- **Plugin: the 52 tests that CI skipped now run, with MockBukkit**
+  ([PandiO/knk-workspace#499](https://github.com/PandiO/knk-workspace/issues/499); developer-facing, nothing changes
+  in game). Merged into `next` 2026-11-14 (knk-plugin#32, merge `0810a6c7`; docs knk-workspace#539); on the trunk when the developer promotes `next`.
+  - The seven `requires-bukkit` test files of `knk-paper` pass and run in `./gradlew test` and CI; the tag exclusion and
+    the `taggedTest` task are gone. knk-paper: 2,690 tests before, 2,735 after (all green; 18 skipped as before).
+  - MockBukkit (`mockbukkit-v26.3` 4.120.0) is a test-only dependency (developer decision 2026-11-14) for tests that need
+    Bukkit statics; its JUnit 6 dependency is excluded, the project stays on JUnit 5.
+  - Stale tests were brought up to date, none deleted or skipped: the removed in-game account creation flow (KNG-67,
+    KNG-208), `/account link` argument handling, Component messages, existing users looked up by UUID.
+  - **Admin steps:** none.
+- **Plugin features can prove themselves on a real server in CI: in-plugin test scenarios**
+  ([PandiO/knk-workspace#421](https://github.com/PandiO/knk-workspace/issues/421); developer-facing, nothing changes for
+  players). Merged into `next` 2026-11-14 (knk-plugin#30, merge `309d3580`; docs knk-workspace#532); on the trunk when the developer promotes `next`.
+  - A scenario builds a small scene on a test server (blocks, a WorldGuard region, mobs, fake API data), plays it out
+    over server ticks and asserts the result. The runner is platform-free in `knk-core` (`core/scenario/`), the Bukkit
+    glue and the scenarios in `knk-paper` (`paper/scenario/`). Each scenario logs `KNK-SCENARIO PASS|FAIL <name>`, then
+    a summary line.
+  - `/knk scenario list | run <name|all>` (node `knk.admin.scenario`) exists **only** with the new
+    `testing.scenarios.enabled: true`; off by default, so every real server behaves exactly as before.
+  - Three scenarios: a portcullis opens and closes (`gate-open-close`), a closing door moves a mob out of its doorway
+    without suffocating it (`gate-closing-moves-entity-out`, KNG-106), TNT breaks nothing outside every region but does
+    inside one (`global-region-explosion`).
+  - CI: the Paper boot test (`paper-boot.yml`) runs every scenario after the boot check and fails on a failed or
+    missing scenario or a missing summary; the result table is in the job summary. About 4 s of scenarios in a
+    1.5-minute job.
+  - Guide: [writing a plugin scenario](guides/developer/plugin-scenarios.md); [CI § 7.1](guides/developer/ci.md#71-in-plugin-scenarios).
+  - **Admin steps:** none. Don't add the `testing` block to dev, alpha or production configs; a missing block is off
+    ([plugin configuration § 4.28](guides/admin/plugin-configuration.md#428-testing)).
+- **Smoke tests: the web app's checks move into the automated suites** ([PandiO/knk-workspace#511](https://github.com/PandiO/knk-workspace/issues/511))
+  — no game or player change; developer-facing. Playwright specs with a mocked API in knk-web-app `e2e/` now check what
+  the developer did by hand in the smoke tests of features already on the trunk, and each guide marks those steps
+  `[automated]` with the test, so the evening check covers only what is left (game server, real client, themes).
+  Batch 1 (knk-web-app branch `claude/test-backfill-511`, PR into `next`): `e2e/player-profile.spec.ts` (player
+  profile and player search, 21 of 26 steps) and `e2e/settings-pages.spec.ts` (settings pages, 22 of 26 steps), new
+  helpers `e2e/support/layout.ts` (no sideways scroll at phone width), `e2e/fixtures/players.ts` and
+  `e2e/fixtures/settings.ts`; `mockSession` keeps the realtime hub offline. Guides:
+  [player profile](guides/player-profile-smoke-test.md), [settings pages](guides/settings-pages-smoke-test.md);
+  [web app testing § 3](guides/developer/web-app-testing.md#3-end-to-end-tests-playwright). Merged into `next`
+  2026-11-14 (knk-web-app#28, knk-workspace#528).
+  Batch 2: `e2e/admin-navigation.spec.ts` (admin navigation, 20 of 24 steps) and `e2e/dashboard-access.spec.ts`
+  (dashboard access § 8, with the API's xUnit tests marked in § 2.2, § 3, § 4 and § 7; 31 checks), fixture
+  `e2e/fixtures/dashboardAccess.ts`. Found: Mail log and Invitations scroll sideways at phone width
+  ([#535](https://github.com/PandiO/knk-workspace/issues/535)). Guides: [admin navigation](guides/admin-navigation-smoke-test.md),
+  [dashboard access](guides/dashboard-access-smoke-test.md). Merged 2026-11-14 (knk-web-app#30, knk-workspace#537).
+  Batch 3: `e2e/entity-detail.spec.ts` (entity detail, 14 of 21 steps) and "Show what uses it" in
+  `e2e/dashboard-access.spec.ts`; the relation picker's Jest tests marked in its guide (19 of 24 steps), fixture
+  `e2e/fixtures/entityDetail.ts`. Guides: [entity detail](guides/entity-detail-smoke-test.md),
+  [relation picker and delete details](guides/relation-picker-and-delete-details-smoke-test.md). Merged 2026-11-14
+  (knk-web-app#31, knk-workspace#538).
+  Batch 4: `e2e/data-table.spec.ts` (shared table, pager and confirm; numbers in a Dutch browser) and the existing Jest
+  and API tests marked in [data primitives](guides/data-primitives-smoke-test.md) (20 of 28 steps),
+  [feedback primitives](guides/feedback-primitives-smoke-test.md) (15 of 28) and
+  [form step conditions and step jump](guides/form-step-conditions-and-step-jump-smoke-test.md) (29 of 36).
+  - **Admin steps:** none (tests and docs only).
+- **Dashboard tables: every row looks the same, the row actions stay in view, and a right-click menu**
+  (PandiO/knk-workspace#404, #405, #406; staff web app only). knk-web-app branch `claude/dashboard-table-actions-404-406`,
+  merged into `next` 2026-11-14 (knk-web-app#17); on the trunk when the developer promotes `next`.
+  - **#404:** rows from the second on no longer show a thick grey left edge; every row has the same 1px line.
+  - **#405:** View / Edit / Delete sit in a column pinned to the table's right edge (the checkbox column to the left),
+    so they stay in view on types with many columns and at phone width; a shadow shows on the pinned edge only while
+    columns scroll under it.
+  - **#406:** a right-click on a row (or Shift+F10 / the context-menu key on a focused row) opens View, Edit, Delete and
+    Export as CSV. Items follow the same permission nodes as the buttons and are greyed out with "Requires <node>",
+    not hidden. On a ticked row Delete and Export act on the whole selection (bulk delete needs
+    `knk.admin.delete.bulk`). Ctrl/Cmd + right-click keeps the browser's menu.
+  - **Admin steps:** none; deploy the web app. Smoke test:
+    [dashboard access smoke test § 8.5](guides/dashboard-access-smoke-test.md) (mostly automated in CI).
 - **Smoke-test fixes on `next` from 2026-11-14** (PandiO/knk-workspace#484, #485, #487) — knk-web-api, knk-plugin and
   knk-workspace branches `claude/smoke-fixes-484-485-487` (PRs into `next`, in review, not merged). **Deploy order:**
   API and plugin together (no migration). One entry per issue follows.
