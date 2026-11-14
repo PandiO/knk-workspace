@@ -1,6 +1,6 @@
 # Plugin configuration reference (`config.yml`)
 
-**Status:** Current · **Last updated:** 2026-11-13 (§ 4.11 gates are discovered too; § 4.21 realtime push; § 4.26 the kit cache, PandiO/knk-workspace#300)
+**Status:** Current · **Last updated:** 2026-11-14 (§ 2.1: the #377 `group-*` keys are in `next` since 2026-11-13, PandiO/knk-workspace#496); 2026-11-13 (§ 4.11 gates are discovered too; § 4.21 realtime push; § 4.26 the kit cache, PandiO/knk-workspace#300)
 **Checked against:** knk-plugin `main` `121030f`; § 4.11, § 4.21 and § 4.26 against `57884e9`; § 4.27 `npc`, the `realtime.erasure` block and `regions.temp-retention.release-interval-minutes` against knk-plugin `next` (not on trunk yet). Update this page in place whenever a `config.yml` key is added, renamed, removed or gets a new default.
 **Source:** knk-plugin `knk-paper/src/main/resources/config.yml` (1,152 lines at `121030f`), read by
 `knk-paper/.../paper/config/ConfigLoader.java`, `EnchantmentConfigManager.java` and `KnKPlugin.java`
@@ -86,7 +86,7 @@ Newest first. Builds before this list: compare the files with the script.
 | Merged | Issue | Added (+), removed (−) or changed | Applies |
 |---|---|---|---|
 | in `next` (`745fcf6`, 2026-11-13), not on trunk yet | [#184](https://github.com/PandiO/knk-workspace/issues/184), [#269](https://github.com/PandiO/knk-workspace/issues/269) | + `realtime.erasure` (`kick-message`, `settle-seconds`, `feed-file`, `minecraft-files-list`; optional, defaults apply when missing), + `regions.temp-retention.release-interval-minutes` (5, 0 = off) | Restart |
-| in review, not in `next` yet | [#377](https://github.com/PandiO/knk-workspace/issues/377) | + `npc.navigation.group-formation`, + `group-spacing`, + `group-ranks-width`, + `group-rejoin-blocks`, + `group-regroup-blocks`, + `group-catch-up-speed` (NPC groups; nothing uses them unless a group is started) | Restart |
+| in `next` (`0506e691`, 2026-11-13), not on trunk yet | [#377](https://github.com/PandiO/knk-workspace/issues/377) | + `npc.navigation.group-formation`, + `group-spacing`, + `group-ranks-width`, + `group-rejoin-blocks`, + `group-regroup-blocks`, + `group-catch-up-speed` (NPC groups; nothing uses them unless a group is started) | Restart |
 | in `next`, not on trunk yet | [#361](https://github.com/PandiO/knk-workspace/issues/361) | + `npc.navigation.rule-checks-per-tick`, + `npc.navigation.stop-on-trespass`; `recheck-ticks` is used from now on | Restart |
 | in `next`, not on trunk yet | [#359](https://github.com/PandiO/knk-workspace/issues/359), [#360](https://github.com/PandiO/knk-workspace/issues/360) | + `npc.navigation` block (off by default): Phase 1 keys and, with Phase 2, `spawns-per-tick`, `hop-blocks`, `max-retries`, `no-route-wait-ticks`, `walk-only-blocks`, `access-profiles` | Restart |
 | 2026-11-10 | [#259](https://github.com/PandiO/knk-workspace/issues/259) | − `gates.cleaving` (`damage-bonus-per-level`, `charged-hit-multiplier`, `charged-cooldown-seconds`): no longer read. Cleaving's numbers are combat values in the web app now ([combat values guide](custom-enchantment-combat-values-admin-guide.md#1-where-to-edit)). Delete the block. + `custom-enchantments.messages.cmd-info-tuning-gate` | `/ce reload` |

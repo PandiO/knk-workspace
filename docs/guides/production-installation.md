@@ -1,6 +1,6 @@
 # Knights and Kings — production installation guide (admin)
 
-**Status:** Draft · **Last updated:** 2026-11-14 (knk-web-api's trunk renamed from `master` to `main`); 2026-11-13 (§ 8.1: the Node note points at the web app testing guide, PandiO/knk-workspace#304)
+**Status:** Draft · **Last updated:** 2026-11-14 (§ 9.2 and § 9.5: Citizens as an optional plugin and the `npc.navigation` block, knk-plugin `next`, PandiO/knk-workspace#496); 2026-11-14 (knk-web-api's trunk renamed from `master` to `main`); 2026-11-13 (§ 8.1: the Node note points at the web app testing guide, PandiO/knk-workspace#304)
 **State:** Draft v1 — written for review. Not yet followed on a real production host. The database, API, seed and
 web-server steps were rehearsed in a scratch environment on 2026-10-07 (see [Appendix A](#appendix-a--what-was-verified-and-how)).
 The Paper server steps and the release and deploy workflows are untested drafts; the CI workflows (§ 10.3) run on GitHub.
@@ -1092,7 +1092,13 @@ deliberately; don't auto-update.
   WorldGuard 7.0.10 APIs, but the runtime jars must be versions that support 1.21.10, which the dev server already
   proves. Copy them from the dev server's `plugins/` folder, or download the same versions from EngineHub /
   Modrinth, and record the versions in the release manifest (§ 10.2).
-- No Vault, LuckPerms, ProtocolLib or Citizens. **Don't install a permissions plugin:** permissions come from the web
+- **Citizens** (`softdepend`, optional; from knk-plugin `next`, not on trunk yet): only for NPC navigation
+  (`npc.navigation.enabled`, off by default; [#358](https://github.com/PandiO/knk-workspace/issues/358)). The plugin
+  runs without it, and `/knk npc status` then says NPC navigation is unavailable. Install it only on a server that
+  turns NPC navigation on, and use the build that matches the plugin's CitizensAPI (`citizensApiVersion` in
+  knk-plugin's `gradle.properties`: Citizens 2.0.44, server build 4269 for Minecraft 26.3). Pin the jar, record it in
+  the release manifest (§ 10.2), and upgrade it together with that version.
+- No Vault, LuckPerms or ProtocolLib. **Don't install a permissions plugin:** permissions come from the web
   API (`KnkPermissible`), and a second system would conflict with it.
 
 ### 9.3 First start, EULA and `server.properties`
@@ -1193,6 +1199,10 @@ mcrcon -H 127.0.0.1 -P 25575 -p '<rcon password>' "list"   # console commands ov
        settle-seconds: 2                       # wait between the kick and the deletion
        feed-file: "erasure-feed.json"          # the handled erasure position (no personal data)
        minecraft-files-list: "erasure-minecraft-files.txt"   # Minecraft's own player files, for the owner to decide
+   npc:                                        # [#358, knk-plugin next] NPC navigation on Citizens; off by default
+     navigation:
+       enabled: false                          # keep false in production until the developer tests pass; the other
+                                               # keys: plugin configuration reference § 4.27
    ```
 
    ```bash
