@@ -6,6 +6,14 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## 2026-11-13
 
+- **Navigation and teleport guides (docs)** — players now have one page on finding the way with `/navigate` and on
+  every way to teleport (spawn, hub, warps, requests, `/back`), and staff one page on building the road network and
+  setting up warps, spawn and teleport prices. No game change. New: [player guide](guides/users/navigation-and-teleports-player-guide.md),
+  [admin guide](guides/admin/navigation-and-teleports-admin-guide.md) (road setup, upkeep and the reset script, the Road
+  network page, warps, group prices and cooldowns, staff teleports, `all` forms and exemptions), written against
+  knk-plugin `main` `57884e9`, knk-web-api `master` `75b5a00` and knk-web-app `main` `3ba747d`
+  (PandiO/knk-workspace#298). Filed: #447 (decision: player homes). Admin steps: none.
+
 - **Dashboard access in the web app; bulk delete** (PandiO/knk-workspace#280 AM3, #205) — staff now see only the
   dashboard types of the areas they work in, buttons they can't use are greyed out with the permission they need, and
   owners and Admins can delete many rows at once. Accepted by the developer 2026-11-13 without a live test and merged 2026-11-13 (knk-web-app `main` `e02ee79`, knk-web-api `master` `45043a7`, also on `next`); the smoke test is in closed alpha
