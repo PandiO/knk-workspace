@@ -4,6 +4,12 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Town streets from districts: design note and data check** ([PandiO/knk-workspace#409](https://github.com/PandiO/knk-workspace/issues/409), L1 [#514](https://github.com/PandiO/knk-workspace/issues/514); knk-workspace only, docs) — knk-workspace branch
+  `claude/town-streets-409` (PR into `next`, in review). Proposed design
+  [specs/towns/DESIGN_TOWN_STREETS.md](specs/towns/DESIGN_TOWN_STREETS.md) and the read-only check
+  `scripts/maintenance/town-street-orphans-409.sql` (orphan `TownStreet` rows, counts, Town configurations naming
+  Streets). Nothing changes in the API, web app or plugin yet (that is L2).
+  - **Admin steps:** none; run the check on dev and alpha when the coordinator asks (read only).
 - **Smoke-test fixes on `next` from 2026-11-14** (PandiO/knk-workspace#484, #485, #487) — knk-web-api, knk-plugin and
   knk-workspace branches `claude/smoke-fixes-484-485-487` (PRs into `next`, in review, not merged). **Deploy order:**
   API and plugin together (no migration). One entry per issue follows.
