@@ -4,6 +4,28 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **NPC groups: followers keep to the rules and out of closing gates**
+  ([PandiO/knk-workspace#506](https://github.com/PandiO/knk-workspace/issues/506), part of
+  [#507](https://github.com/PandiO/knk-workspace/issues/507); link L2 of the NPC navigation follow-ups chain,
+  [#520](https://github.com/PandiO/knk-workspace/issues/520)) — knk-plugin and knk-workspace branches
+  `claude/npc-followups-l2` (PRs into `next`, in review, not merged). No change for players or with
+  `npc.navigation.enabled: false` (the default).
+  1. **Access change in the middle of a group (#506).** A gate or availability event hands every follower its
+     waypoints again in the next tick; the followers outside a district whose entry was removed stop at its edge, the
+     ones inside walk on, and all follow once entry is allowed again. After `/knk cache refresh` the region → domain
+     map is warmed again for the roads' regions and the NPCs hear of the change a second time: before, the NPC checks
+     saw every district as open right after a refresh, and the group walked in. Followers have a trespass guard of
+     their own, so `rules: trespasses` and `knk_npc_nav_events_total{event="trespass"}` count them too (log line
+     `TRESPASS <npc> entered <region> … (a follower of group <n>)`).
+  2. **No push by a closing gate (#507, the push only).** The gate's state event comes when the close starts. A
+     follower that still has to pass the door stops a block short of the door's box (its closed footprint and its
+     captured closed and opened regions); one already in it walks on out. The leader walks on and the rest follows
+     when the gate opens, as before (developer decision 2026-11-14 on #507; the followers-finish-trip toggle comes
+     with link L4).
+  3. Follow-ups filed: #533 (a realtime domain change empties the map without warming it again), #534 (a single NPC
+     or leader in a door's box when it starts closing).
+  - **Admin steps:** none; no new `config.yml` key, no migration. Deploy the plugin. To test: the Phase 4 developer
+    test steps 9 and 10 in the [implementation plan](specs/npc-platform/IMPLEMENTATION_PLAN.md).
 - **Smoke-test fixes on `next` from 2026-11-14** (PandiO/knk-workspace#484, #485, #487) — knk-web-api, knk-plugin and
   knk-workspace branches `claude/smoke-fixes-484-485-487` (PRs into `next`, in review, not merged). **Deploy order:**
   API and plugin together (no migration). One entry per issue follows.
