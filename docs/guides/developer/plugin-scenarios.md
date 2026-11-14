@@ -1,6 +1,6 @@
 # Writing a plugin scenario
 
-**Status:** Active (in knk-plugin `next` since `309d3580`, 2026-11-14; not on trunk yet) · **Last updated:** 2026-11-14 (first version, [PandiO/knk-workspace#421](https://github.com/PandiO/knk-workspace/issues/421))
+**Status:** Active (in knk-plugin `next` since `309d3580`, 2026-11-14; not on trunk yet) · **Last updated:** 2026-11-14 (§ 5 links #540); 2026-11-14 (first version, [PandiO/knk-workspace#421](https://github.com/PandiO/knk-workspace/issues/421))
 **Related:** [CI § 7.1](ci.md#71-in-plugin-scenarios) (how CI runs them), [plugin architecture § Testing](../../architecture/plugin-architecture.md#testing),
 [`knk-test-writer` skill](../../../.claude/skills/knk-test-writer/SKILL.md) (which suite a behaviour belongs in),
 [AI agent workflow design § 6.3](../../specs/ai-agent-workflow/DESIGN.md#6-testing-and-ci),
@@ -112,8 +112,8 @@ calls) and hand them the data the API would have sent:
 
 ## 5. Players
 
-There are no players yet. Paper 26.3 has no supported fake-player API, and a fake network connection is out of scope
-for now. What works without one: blocks, regions, mobs and other entities, plugin state, events, console commands.
+There are no players yet ([#540](https://github.com/PandiO/knk-workspace/issues/540) tracks simulated players). Paper
+26.3 has no supported fake-player API, and a fake network connection is out of scope for now. What works without one: blocks, regions, mobs and other entities, plugin state, events, console commands.
 What needs simulated players later (keep these steps manual, "scenario later", in the smoke-test guide): commands run
 by a player and their permission checks, menus and clicks, chat, joining and leaving, a player being moved, damaged or
 teleported. A mob often stands in for a player's body (the gate scenarios use a pig), but not for anything a player
