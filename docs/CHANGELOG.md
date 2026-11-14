@@ -13,7 +13,13 @@ This is a human-readable record of capabilities merged into the V3 default branc
   helpers `e2e/support/layout.ts` (no sideways scroll at phone width), `e2e/fixtures/players.ts` and
   `e2e/fixtures/settings.ts`; `mockSession` keeps the realtime hub offline. Guides:
   [player profile](guides/player-profile-smoke-test.md), [settings pages](guides/settings-pages-smoke-test.md);
-  [web app testing § 3](guides/developer/web-app-testing.md#3-end-to-end-tests-playwright).
+  [web app testing § 3](guides/developer/web-app-testing.md#3-end-to-end-tests-playwright). Merged into `next`
+  2026-11-14 (knk-web-app#28, knk-workspace#528).
+  Batch 2: `e2e/admin-navigation.spec.ts` (admin navigation, 20 of 24 steps) and `e2e/dashboard-access.spec.ts`
+  (dashboard access § 8, with the API's xUnit tests marked in § 2.2, § 3, § 4 and § 7; 31 checks), fixture
+  `e2e/fixtures/dashboardAccess.ts`. Found: Mail log and Invitations scroll sideways at phone width
+  ([#535](https://github.com/PandiO/knk-workspace/issues/535)). Guides: [admin navigation](guides/admin-navigation-smoke-test.md),
+  [dashboard access](guides/dashboard-access-smoke-test.md).
   - **Admin steps:** none (tests and docs only).
 - **Dashboard tables: every row looks the same, the row actions stay in view, and a right-click menu**
   (PandiO/knk-workspace#404, #405, #406; staff web app only). knk-web-app branch `claude/dashboard-table-actions-404-406`,

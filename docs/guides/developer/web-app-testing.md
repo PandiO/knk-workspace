@@ -75,7 +75,7 @@ Playwright Test (`@playwright/test`, pinned in `package.json`) replaced Cypress 
    (`allowed(node)` decides each node) and refuses the realtime hub's negotiate call, so pages run with realtime off.
    `expectNoSidewaysScroll(page)` (`e2e/support/layout.ts`) checks that nothing scrolls the page sideways, for the
    smoke tests' "at 390 px" steps (set the size with `page.setViewportSize`).
-5. **The specs** (40 tests in knk-web-app `next` with batch 1 of #511, about 30 seconds after the build):
+5. **The specs** (66 tests in knk-web-app `next` with batches 1 and 2 of #511, about 45 seconds after the build):
    1. `registration.spec.ts`, ported from the Cypress spec: an invalid link code, registering and landing on
       `/account` (the exact request body is checked), a duplicate email shown on the email field.
    2. `login.spec.ts`: a player logs in and lands on `/account`; a wrong password shows the generic message; an
@@ -106,6 +106,13 @@ Playwright Test (`@playwright/test`, pinned in `package.json`) replaced Cypress 
    7. `settings-pages.spec.ts` (#511): Lootboxes → Settings, Currency policy, Road network and Siege settings in the
       admin layout: the unsaved-changes count, the leave question from a sidebar link and from the browser's Back, the
       browser's own question on close or reload, Save with its toast, a refused and a stale save, units, phone width.
+   8. `admin-navigation.spec.ts` (#511): the top bar per role, the `/admin` overview, the grouped sidebar and its
+      "Admin pages" menu below 1280 px, breadcrumbs, tab titles, the old builder URLs, a staff account with only some
+      nodes and a player.
+   9. `dashboard-access.spec.ts` (#511): the explorer per area (typed metadata with the API's area and action nodes in
+      `e2e/fixtures/dashboardAccess.ts`), actions greyed out with "Requires <node>", the form routes refused without
+      `knk.admin.content`, single and bulk delete with a refused row, a user-level bulk deny, export through
+      `POST api/Dashboard/export`.
 6. **Writing a spec.** Use role-based locators (`getByRole`, `getByLabel`, `getByTestId` where a test id exists) and
    web-first assertions (`await expect(locator).toBeVisible()`, `toHaveURL`); never `waitForTimeout`. To find the calls
    a page makes, open it in a spec and look at the "unmocked API requests" annotation or `api.requests`.
