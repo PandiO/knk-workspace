@@ -1,7 +1,7 @@
 # Staff web app — admin guide
 
-**Status:** Current · **Last updated:** 2026-11-14 (§ 5.1 and § 7.1: "Go to …" opens the step at once, a failed step
-condition marks its fields; #413, #414, docs #482)
+**Status:** Current · **Last updated:** 2026-11-14 (§ 3: pinned row actions and the right-click menu; #404, #405, #406,
+docs #526)
 **Checked against:** knk-web-app `main` `3ba747d` and knk-web-api `master` `f445d21` (AM3 of #280 merged 2026-11-13 as
 `e02ee79` / `45043a7`; #371, #374 and #383, create, edit and link changes on `knk.admin.content`, reached the default
 branches with the promotion of `next` on 2026-11-13). Step conditions in the form builder and clickable form steps
@@ -101,6 +101,33 @@ link to the record's **detail page** (§ 4); middle-click opens it in a new tab.
   "Requires …"; without `knk.admin.delete`, so is **Delete**. **Edit** on a User opens the player profile and doesn't
   need `knk.admin.content`.
 
+**Row actions** ([#405](https://github.com/PandiO/knk-workspace/issues/405)). Each row ends with three icon buttons,
+**View** (eye), **Edit** (pencil) and **Delete** (bin); hover one for its name. Their column is pinned to the table's
+right edge, and the checkbox column to the left edge, so on a wide type or a phone the other columns scroll sideways
+under them and the buttons stay in reach; a soft shadow on a pinned column's inner edge shows that something is
+scrolled under it. A greyed-out button says why on hover: "Requires …" for a missing node, or for **View** "No display
+configuration – set one up via ⚙". Every row has the same thin line under it; a selected row is green with a green bar
+on its left edge ([#404](https://github.com/PandiO/knk-workspace/issues/404)).
+
+**Right-click menu** ([#406](https://github.com/PandiO/knk-workspace/issues/406)). Right-click a row for **View**,
+**Edit**, **Delete** and **Export as CSV**. From the keyboard, Tab to the row's link or one of its buttons and press
+**Shift+F10** or the context-menu key; the menu opens under it.
+
+- Arrow keys move through the items (Home and End jump to the first and last), Enter or Space chooses, Escape closes
+  the menu and puts you back where you were. A click outside, scrolling or resizing the window also closes it.
+- The items follow the same nodes as the buttons and the bar: an item you may not use stays in the menu, greyed out,
+  with the reason under it ("Requires knk.admin.delete", "Requires knk.admin.export"; "Checking permission…" for a
+  moment after the page opens). Delete from the menu asks the same question as the row's Delete button; Export as CSV
+  on one row downloads a file with that row only (the same file as **Export CSV** below).
+- **On a selection:** right-click a row that is ticked while other rows are ticked too, and **Delete** and **Export**
+  take the whole selection: "Delete 3 Towns" and "Export 3 Towns as CSV". That Delete needs
+  `knk.admin.delete.bulk`, like **Delete (n)**, and asks the same question; for users and permission groups it is
+  greyed out with "… records can only be deleted one at a time.", and while a bulk delete runs with "A delete is
+  running". View and Edit still open the row you clicked. On a row that isn't
+  ticked, the menu acts on that row only.
+- **Ctrl + right-click** (Cmd + right-click on a Mac) opens the browser's own menu instead, for "Open link in new tab",
+  copy or inspect.
+
 **Delete one row.** A row's **Delete** asks "Delete Street "Main Street"?" in a red dialog; after **Delete** a short
 message says it was deleted. If it is still in use, the refusal offers **Show what uses it** (§ 4).
 
@@ -132,7 +159,9 @@ configuration has a muted marker in the explorer ("No display configuration – 
 Smoke tests: [dashboard return § 14a](../dashboard-return-smoke-test.md#14a-no-entity-setup-nav-link-197),
 [entity lists § 7](../entity-lists-url-state-smoke-test.md#7-checkbox-selection-and-export-csv-205-export-part-chain-3-v2) (selection and export),
 [dashboard access § 8](../dashboard-access-smoke-test.md#8-web-app-am3) (areas, disabled actions, bulk delete, export;
-test run 2 § 4c) (not run).
+test run 2 § 4c) (not run); row actions and the right-click menu in
+[§ 8.5](../dashboard-access-smoke-test.md#85-row-actions-in-view-and-the-right-click-menu-404-405-406) (automated in CI;
+the manual look in both themes and the export with real data not run).
 
 ## 4. The detail page
 
@@ -459,16 +488,19 @@ get the new version at once.
 
 ## Changes
 
-1. 2026-11-14: § 5.1 "Go to …" opens at once and saves in the background, a failed save shows in the banner;
+1. 2026-11-14: § 3 pinned View / Edit / Delete column, same row lines, right-click menu with Shift+F10 and the
+   context-menu key, greyed-out items, selection, Ctrl/Cmd + right-click; #404, #405, #406, knk-web-app#17, docs #526
+   (in `next`)
+2. 2026-11-14: § 5.1 "Go to …" opens at once and saves in the background, a failed save shows in the banner;
    § 5.1 and § 7.1 a failed step condition marks its fields; #413, #414, knk-web-app#20, docs #482 (in `next`)
-2. 2026-11-13: § 5.1 the steps of a form: clicking a step, what stops you; § 7.1 step conditions in the form builder;
+3. 2026-11-13: § 5.1 the steps of a form: clicking a step, what stops you; § 7.1 step conditions in the form builder;
    #68, #88, docs #395 (in `next`)
-3. 2026-11-13: Select / Change / Unlink / Add need `knk.admin.content`, the API refuses creates and edits without it,
+4. 2026-11-13: Select / Change / Unlink / Add need `knk.admin.content`, the API refuses creates and edits without it,
    #374, docs #385
-4. 2026-11-13: New, Edit and the forms need `knk.admin.content` again, #371, docs #378
-5. 2026-11-13: § 1, § 3, § 4, § 5, § 9, § 10 checked against the default branches: New, Edit, the forms, link changes,
+5. 2026-11-13: New, Edit and the forms need `knk.admin.content` again, #371, docs #378
+6. 2026-11-13: § 1, § 3, § 4, § 5, § 9, § 10 checked against the default branches: New, Edit, the forms, link changes,
    hot edit, the lootbox toggle and Create New Street need `knk.admin.content`, #371, #374, #383; known gap #380; docs
    #347
-6. 2026-11-13: dashboard per area, disabled actions with "Requires …", bulk delete, export through the API, names-only
+7. 2026-11-13: dashboard per area, disabled actions with "Requires …", bulk delete, export through the API, names-only
    pickers, readable refusals; #280 AM3 and #205, docs #366
-7. 2026-11-12: first version, PandiO/knk-workspace#337, #338, #340–#345
+8. 2026-11-12: first version, PandiO/knk-workspace#337, #338, #340–#345

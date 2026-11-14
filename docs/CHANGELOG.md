@@ -15,6 +15,19 @@ This is a human-readable record of capabilities merged into the V3 default branc
   [player profile](guides/player-profile-smoke-test.md), [settings pages](guides/settings-pages-smoke-test.md);
   [web app testing § 3](guides/developer/web-app-testing.md#3-end-to-end-tests-playwright).
   - **Admin steps:** none (tests and docs only).
+- **Dashboard tables: every row looks the same, the row actions stay in view, and a right-click menu**
+  (PandiO/knk-workspace#404, #405, #406; staff web app only). knk-web-app branch `claude/dashboard-table-actions-404-406`,
+  merged into `next` 2026-11-14 (knk-web-app#17); on the trunk when the developer promotes `next`.
+  - **#404:** rows from the second on no longer show a thick grey left edge; every row has the same 1px line.
+  - **#405:** View / Edit / Delete sit in a column pinned to the table's right edge (the checkbox column to the left),
+    so they stay in view on types with many columns and at phone width; a shadow shows on the pinned edge only while
+    columns scroll under it.
+  - **#406:** a right-click on a row (or Shift+F10 / the context-menu key on a focused row) opens View, Edit, Delete and
+    Export as CSV. Items follow the same permission nodes as the buttons and are greyed out with "Requires <node>",
+    not hidden. On a ticked row Delete and Export act on the whole selection (bulk delete needs
+    `knk.admin.delete.bulk`). Ctrl/Cmd + right-click keeps the browser's menu.
+  - **Admin steps:** none; deploy the web app. Smoke test:
+    [dashboard access smoke test § 8.5](guides/dashboard-access-smoke-test.md) (mostly automated in CI).
 - **Smoke-test fixes on `next` from 2026-11-14** (PandiO/knk-workspace#484, #485, #487) — knk-web-api, knk-plugin and
   knk-workspace branches `claude/smoke-fixes-484-485-487` (PRs into `next`, in review, not merged). **Deploy order:**
   API and plugin together (no migration). One entry per issue follows.
