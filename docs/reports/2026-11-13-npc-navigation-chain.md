@@ -1,6 +1,6 @@
 # NPC navigation chain — progress report
 
-**Status:** Paused (L1, L2 and L3 merged into `next`; L0 waits for the developer's Phase 1 result on #359) (2026-11-13) · **Last updated:** 2026-11-13
+**Status:** Running (2026-11-14) · **Last updated:** 2026-11-13
 
 **Issue:** [PandiO/knk-workspace#358](https://github.com/PandiO/knk-workspace/issues/358), links
 [#360](https://github.com/PandiO/knk-workspace/issues/360) (L1),
@@ -15,8 +15,8 @@ In test order. Deploy knk-plugin `next` (`0506e691`, Phases 1–4) with Citizens
 block into the dev server's `config.yml` (the full block is in the configuration reference § 4.27; the pieces are in
 knk-plugin#17, #18 and #19), `enabled: true` only for the tests.
 
-1. **Phase 1 test and audit report on #359** (implementation plan, "Phase 1 → Developer test"). It opens L0, the
-   last link: guards on the listeners the audit names. If the audit names nothing, say so on #359 and L0 is skipped.
+1. **Phase 1 test:** done 2026-11-14 (steps 1–3; step 4 not read, the command was Linux-only). The audit named 14
+   damage listeners (#490); L0 is guarding them. Step 4 and an audit re-run follow L0.
 2. **Phase 2 test** (plan, "Phase 2 → Developer test"): one NPC, 50 NPCs on the stored route, the stair house
    (release gate; what to look at: block 4.1 § 8.3). Post the `stats` output and the run log on #360.
 3. **Phase 3 test** (plan, "Phase 3 → Developer test"): gate runs, access runs, the refresh that replans nobody, the
@@ -40,7 +40,7 @@ knk-plugin#17, #18 and #19), `enabled: true` only for the tests.
 | Link | Issue | Status | Branch heads | PR | CI | How started |
 |---|---|---|---|---|---|---|
 | L1 Phase 2: one NPC walks a K&K route | #360 | Merged into next 2026-11-13 (knk-plugin `50bf7ff7`, knk-workspace `424f1fa3`); #360 stays `status:in-review` until the developer's live test and the promotion of `next` | `claude/npc-navigation`: knk-plugin `49b5cedb`, knk-workspace `5c8587b` | [knk-plugin#17](https://github.com/PandiO/knk-plugin/pull/17), [knk-workspace#370](https://github.com/PandiO/knk-workspace/pull/370) | knk-plugin `build` green on `49b5cedb` (run 43398822498); knk-workspace has no CI | create_session session_01R1w2Uv2Ze28fr2rkqUz98C (`source_revision` `next`) |
-| L0 Phase 1 follow-ups | #359 | Not started (gate: the developer's Phase 1 result on #359, expected the evening of 2026-11-13; L1, L2 and L3 are merged) | | none | none | |
+| L0 Phase 1 follow-ups | #359, #490 | Running (started 2026-11-14) | `claude/npc-navigation`: knk-plugin `6fd91127`, knk-workspace `f5dda86` (L3 heads) | none | none | create_session session_01R1w2UvFV2fU42xMRjPmo4T (`source_revision` `next`) |
 | L2 Phase 3: rules stay binding | #361 | Merged into next 2026-11-13 (knk-plugin `f2a50c46`, knk-workspace `9df8d44c`); #361 stays `status:in-review` until the developer's live test and the promotion of `next` | `claude/npc-navigation`: knk-plugin `8df2d839`, knk-workspace `a05f7bf` | [knk-plugin#18](https://github.com/PandiO/knk-plugin/pull/18), [knk-workspace#375](https://github.com/PandiO/knk-workspace/pull/375) | knk-plugin `build` green on `8df2d839` (runs 43403427418, 43403523663); knk-workspace has no CI | create_session session_01R1w2Uvt1jBnAv84KX3hf7q (`source_revision` `next`) |
 | L3 Phase 4: groups and formations | #377 | Merged into next 2026-11-13 (knk-plugin `0506e691`, knk-workspace `a45e17b9`); #377 stays `status:in-review` until the developer's live test and the promotion of `next` | `claude/npc-navigation`: knk-plugin `6fd91127`, knk-workspace `f5dda86` | [knk-plugin#19](https://github.com/PandiO/knk-plugin/pull/19), [knk-workspace#384](https://github.com/PandiO/knk-workspace/pull/384) | knk-plugin `build` green on `6fd91127` (push run 43427733153, PR run 43428361244); knk-workspace has no CI | create_session session_01R1w2UxD3EQaGRrvLbMzz7P (`source_revision` `next`) |
 
@@ -139,6 +139,17 @@ knk-plugin#17, #18 and #19), `enabled: true` only for the tests.
     to merging (skill § 7.1).
 14. **Chain paused again.** L0's gate is still closed (no Phase 1 result on #359 at 12:55 UTC). Nothing else is in
     the charter; a further phase needs the developer's go, as L3 did. Alternatives: as decision 11.
+
+15. **L0 started (2026-11-14).** The developer's Phase 1 test (#359, comment of 2026-11-14 15:08 UTC): startup and
+    layered settings pass; the audit shows the region guard works, but `EntityDamageEvent` (615 in 3 minutes for 50
+    NPCs) reaches 14 K&K listeners, most without an NPC guard, filed by the developer as #490 (tier:1, sub-issue of
+    #359); 18,420 `EntityAirChangeEvent` with no K&K listener. L0's gate is open (L1–L3 merged). Scope: #490, plus the
+    cause of the damage (fixed in L0 if it is a Phase 1 runtime setting, an issue under #358 if it is the route), plus
+    a Windows line for the metrics step. Model: the coordinator's current model (the session was switched by the
+    developer). Overlap: `claude/arena-duels` and `claude/siege-survival` (unmerged) also change
+    `statistics/CombatStatisticsListener.java`; not a blocker, L0 keeps to one guard line at the top of each handler.
+    Alternatives: (a) skip L0 and leave #490 to a separate session: #490 is the Phase 1 exit condition and this
+    chain's scope; (b) block on the overlap until those branches merge: the change is additive.
 
 ## 4. Link blocks
 
