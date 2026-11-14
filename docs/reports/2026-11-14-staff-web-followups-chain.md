@@ -17,8 +17,8 @@
 
 | Link | Issue | Status | Branch heads | PR | CI | How started | Test rule |
 |---|---|---|---|---|---|---|---|
-| L1 PermissionGrant table | #408 | Done, in review (2026-11-14) | api `6e34af5`, app `e2ad8c1`, ws `74d85691` | knk-web-api#30, knk-web-app#29, knk-workspace#529 | green (api, app) | create_session session_01R1w2Ut6UjJQM8QpXM4o6co | automated first, `main` `aa4208b3` (unchanged at start) |
-| L2 Group grants panel | #50 | Not started (gate: L1 merged) | — | — | — | — | — |
+| L1 PermissionGrant table | #408 | Merged into next (2026-11-14) | api `6e34af5`, app `110d5f2`, ws `b6547485`; next: api `2425f181`, app `9a29623a`, ws `aef2f99f` | knk-web-api#30, knk-web-app#29, knk-workspace#529 | green on the PRs; next running | create_session session_01R1w2Ut6UjJQM8QpXM4o6co | automated first, `main` `aa4208b3` (unchanged at start) |
+| L2 Group grants panel | #50 | Running (2026-11-14) | — | — | — | subagent (coordinator skill § 4.1.4: two component repos) | automated first, `main` `aa4208b3` |
 | L3 Profile Permissions tab | #407 | Not started (gate: L2 merged) | — | — | — | — | — |
 
 ## 3. Coordinator decisions
@@ -43,6 +43,10 @@
    keep to separate lines if they must touch one. Alternatives: (a) wait for PR #17 to merge: unnecessary for
    additive, non-overlapping edits; (b) stack on its branch: only for uncertain work (DESIGN § 5.4).
 7. **Route.** Chosen: `create_session` (variant A) per link with model `claude-opus-5-5`, fallback a subagent.
+
+8. **L1 check and merge (2026-11-14).** Chosen: merge after bringing `origin/next` into the L1 branches myself, because `next` moved during the link (#404–#406, #511 and town streets merged): knk-web-app merged cleanly (`110d5f2`), knk-workspace had a mechanical CHANGELOG conflict twice (both sides add entries; kept both, `9f6bf898`, `b6547485`). CI green on the PR heads (web app `build-and-test` and `e2e` after the merge), Codex at its usage limit on all three PRs (rule 4, noted on each), scope inside #408, decisions logged, automated proof present (Playwright, Jest, xUnit). Alternatives: (a) send L1 back to merge `next`: slower for a mechanical merge; (b) merge without bringing in `next`: the web-app PR's CI had not run against the new e2e helpers.
+9. **Route for L2.** Chosen: a subagent of this coordinator from the start, because L2 needs knk-web-api and knk-web-app and the coordinator skill (`main` `ffbc7176`, § 4.1.4) sends links with two or more component repos that way (Auto mode's classifier can refuse `add_repo`). L3 (web app only) goes back to `create_session`. Alternatives: (a) `create_session` and fall back on a refusal: what the skill now advises against.
+10. **Rule recheck before L2.** No change to "Testing: automated first", the knk-test-writer or knk-link skills or `web-app-testing.md` since `aa4208b3`; #421 (plugin scenarios) and #511 (backfill) are done and archived; #387 still open, not merged, so today's nodes hold for L2.
 
 ## 4. Link blocks
 
