@@ -616,4 +616,4 @@ kits menu after `ttl-seconds`, or at once with `realtime.enabled: true`; claims 
 ## Changes
 
 1. 2026-11-10: first version, PandiO/knk-workspace#295; checked against knk-plugin `main` `121030f`
-- 2026-11-14: § 2.1 and § 4.20 `custom-enchantments.fair-chance` (PandiO/knk-workspace#476), against knk-plugin `claude/eager-cannon-h8dtum` `a91d65e`; not merged
+2. 2026-11-14: § 2.1 and § 4.20 `custom-enchantments.fair-chance` (PandiO/knk-workspace#476), against knk-plugin `claude/eager-cannon-h8dtum` `a91d65e`; not merged
