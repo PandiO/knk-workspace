@@ -30,7 +30,7 @@ scheduled task starts a fresh session for this at 16:40 Europe/Amsterdam on week
 
 ## 2. Gather
 
-Repos: PandiO/knk-workspace, knk-web-api (trunk `master`), knk-web-app, knk-plugin (trunk `main`). Use the GitHub MCP
+Repos: PandiO/knk-workspace, knk-web-api, knk-web-app, knk-plugin (trunk `main` in each). Use the GitHub MCP
 tools (`list_pull_requests`, `list_issues`, `issue_read`, `pull_request_read`, `actions_list`, `list_commits`) and,
 for search, `gh api -X GET search/issues -f q='…'`. Clone knk-workspace if you need its files (it is your session's
 repository).

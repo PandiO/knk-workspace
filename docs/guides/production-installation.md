@@ -1,9 +1,9 @@
 # Knights and Kings — production installation guide (admin)
 
-**Status:** Draft v1 — written for review. Not yet followed on a real production host. The database, API, seed and
+**Status:** Draft · **Last updated:** 2026-11-14 (knk-web-api's trunk renamed from `master` to `main`); 2026-11-13 (§ 8.1: the Node note points at the web app testing guide, PandiO/knk-workspace#304)
+**State:** Draft v1 — written for review. Not yet followed on a real production host. The database, API, seed and
 web-server steps were rehearsed in a scratch environment on 2026-10-07 (see [Appendix A](#appendix-a--what-was-verified-and-how)).
 The Paper server steps and the release and deploy workflows are untested drafts; the CI workflows (§ 10.3) run on GitHub.
-**Last updated:** 2026-11-13 (§ 9.5 plugin `realtime.erasure` block — GDPR erasure push, siege vault given back before the kick, #184, brought into `claude/plugin-chains-into-next`); 2026-11-13 (§ 10.1 and § 10.3: CI shipped in knk-web-api and knk-web-app; G2, G3, § 8.1 build commands, Appendix A and B updated — #363); 2026-11-12 (header and § 5.3: latest migration `AddConfigurationDrafts`; § 4.3: optional `Realtime__WebLiveUpdatesEnabled` and `Realtime__WebPermissionCacheSeconds` — #341, #345); 2026-11-10 (§ 9.5 and § 13: the [plugin configuration reference](admin/plugin-configuration.md) and its per-deploy merge checklist; stale `config.yml` notes corrected, #295); 2026-11-10 (header and § 5.3: latest migration `AddCleavingCombatValues`, #259/#306); 2026-10-26 (§nginx: `/api/hubs/` without access log; § 9.5 plugin `realtime:` block — SignalR S1, #178, feature branch); 2026-11-02 (G10, § 12.3: the KNG-232 Prometheus endpoints of the API and the plugin, both off by default, [PandiO/knk-workspace#48](https://github.com/PandiO/knk-workspace/issues/48)); 2026-10-25 (§1/§3.4 G6: RegionHttpServer is loopback + `X-API-Key` since KNG-64; §nginx: WebSocket upgrade headers for the planned SignalR hub, #66); 2026-10-24 (§4.3, §9.3, §11 F/G: KNG-205 invitations merged, the feature-branch notes replaced); 2026-10-22 (§7.7: DisplayConfiguration export/import and the priority 2/3 form seeds and display seeds merged, KNG-139); 2026-10-21 (§4.3, §9.3, §11 F/G: invite-only sign-up, admission gate and Access sync — KNG-205/KNG-218); 2026-10-21 (§4.3 mail: the KNG-206 email engine on the invitations feature branch — `Email__Transport`, relay option, `App__PublicBaseUrl`, Log guard); 2026-10-17 (§7.7: FormConfiguration export/import and bundled seeds merged, KNG-138/139; two new migrations, see the note in §7.7); 2026-10-12 (§7.7: KNG-138 on a feature branch); 2026-10-08 (security and alpha-hosting update for KNG-64)
 **Applies to:** trunk only. knk-web-api `master` `1805cf9`, knk-web-app `main`, knk-plugin `main` `c7d5a1e`; 61 EF
 migrations, the latest being `20261006193103_UniquePermissionGrantHolderNode`. Feature branches that haven't been
 merged, such as road navigation, are not covered. Re-check § 2 and the seed table manifest after each trunk merge.
@@ -95,7 +95,7 @@ what is specific to this project.
 
 | Environment | Where | Purpose | Data |
 |---|---|---|---|
-| **dev** | your PC, `DEV_SERVER_1.21.10`, dev DB `knightsandkings_dev_v2` on 192.168.50.119 | build and try features | test data plus the **authored content** (forms, menus, items) |
+| **dev** | your PC, `DEV_SERVER_1.21.10`, dev DB `knightsandkings_dev_v2` on `<nas-ip>` | build and try features | test data plus the **authored content** (forms, menus, items) |
 | **staging** (recommended later) | a second, smaller copy of production (another VPS, or the same host with other ports) | rehearse a release (migrations, seed, plugin jar) before it reaches players | a restored copy of the production backup |
 | **production** | the server(s) in this guide | the live game | real players |
 
@@ -140,8 +140,8 @@ private network or VPN and add TLS.
 > a YAML file that says which containers to run with which settings. `docker compose up -d` makes reality match the
 > file. Data that must survive container replacement lives in a *volume*.
 
-> **KnK — the version to deploy.** Deploy only commits that are on trunk (`master` for knk-web-api, `main` for the
-> other two), are green in CI, and are tagged (§ 10.2). The developer's standing feature branches, such as
+> **KnK — the version to deploy.** Deploy only commits that are on trunk (`main` in every repo; knk-web-api's was `master` until
+> 2026-11-14), are green in CI, and are tagged (§ 10.2). The developer's standing feature branches, such as
 > `claude/road-navigation`, are pre-release.
 
 ### 1.5 Alternative for the closed alpha: NAS + Cloudflare Tunnel
@@ -853,7 +853,8 @@ Mixing the two (world rows without the world, or the reverse) is the one combina
 ### 7.5 Export (on your PC, against the dev DB)
 
 Create a read-only MySQL user for exports (once, as root on the dev DB), and a MySQL option file so the password is
-never typed on the command line:
+never typed on the command line. `<nas-ip>` below stands for the LAN address of the host with the dev DB (the real value is in your
+local notes, not in this public repo):
 
 ```sql
 CREATE USER 'knk_seed_reader'@'%' IDENTIFIED BY '<password>';
@@ -863,7 +864,7 @@ GRANT SELECT ON knightsandkings_dev_v2.* TO 'knk_seed_reader'@'%';
 ```ini
 # ~/.knk-dev.cnf  (chmod 600; on Windows keep it in your user profile)
 [client]
-host=192.168.50.119
+host=<nas-ip>
 user=knk_seed_reader
 password=<password>
 ```
@@ -957,8 +958,8 @@ CI=true npm run build                          # as the CI does (§ 10.3); G3's 
 tar -C build -czf knk-web-app-1.0.0.tar.gz .
 ```
 
-Node 20 or newer is required (react-router 7 declares `engines.node >=20`). The example workflow in `TESTING.md`
-uses Node 18, which is outdated.
+Node 20 or newer is required (react-router 7 declares `engines.node >=20`); the web app's CI uses Node 22 (see
+[web app testing](developer/web-app-testing.md) § 4).
 
 ### 8.2 Install a release (atomic switch, instant rollback)
 
@@ -1301,7 +1302,7 @@ Still open from this stage:
 
 - Change `migrations.yml`'s service image from `mysql:8.0` to `mysql:8.4` (§ 5.1).
 - **Protect trunk: done 2026-11-13** (GitHub → Settings → Rules → Rulesets, set up by the developer):
-  1. knk-web-api, knk-web-app, knk-plugin, ruleset "Trunk and next" on `master`/`main` and `next`: restrict
+  1. knk-web-api, knk-web-app, knk-plugin, ruleset "Trunk and next" on `main` and `next`: restrict
      deletions, block force pushes, require a pull request (0 approvals, conversation resolution required, merge
      commits only) and the status checks `build-and-test` + `fresh-database` (API), `build-and-test` (web app),
      `build` (plugin). "Require branches to be up to date" is off. Checks are matched by the job name, which the
@@ -1605,3 +1606,9 @@ throwaway credentials. Nothing touched the dev DB or any real server.
 | knk-web-app `src/config/appConfig.ts` | the compiled-in API URL (G1) |
 | knk-plugin `knk-paper/src/main/resources/config.yml`, `plugin.yml` | plugin settings, commands and permission nodes |
 | knk-plugin `.github/workflows/build.yml` | plugin CI |
+
+## Changes
+
+Header history up to 2026-11-13, as the old `Last updated` line gave it (newer changes: the header and git history):
+
+2026-11-13 (§ 9.5 plugin `realtime.erasure` block — GDPR erasure push, siege vault given back before the kick, #184, brought into `claude/plugin-chains-into-next`); 2026-11-13 (§ 10.1 and § 10.3: CI shipped in knk-web-api and knk-web-app; G2, G3, § 8.1 build commands, Appendix A and B updated — #363); 2026-11-12 (header and § 5.3: latest migration `AddConfigurationDrafts`; § 4.3: optional `Realtime__WebLiveUpdatesEnabled` and `Realtime__WebPermissionCacheSeconds` — #341, #345); 2026-11-10 (§ 9.5 and § 13: the [plugin configuration reference](admin/plugin-configuration.md) and its per-deploy merge checklist; stale `config.yml` notes corrected, #295); 2026-11-10 (header and § 5.3: latest migration `AddCleavingCombatValues`, #259/#306); 2026-10-26 (§nginx: `/api/hubs/` without access log; § 9.5 plugin `realtime:` block — SignalR S1, #178, feature branch); 2026-11-02 (G10, § 12.3: the KNG-232 Prometheus endpoints of the API and the plugin, both off by default, [PandiO/knk-workspace#48](https://github.com/PandiO/knk-workspace/issues/48)); 2026-10-25 (§1/§3.4 G6: RegionHttpServer is loopback + `X-API-Key` since KNG-64; §nginx: WebSocket upgrade headers for the planned SignalR hub, #66); 2026-10-24 (§4.3, §9.3, §11 F/G: KNG-205 invitations merged, the feature-branch notes replaced); 2026-10-22 (§7.7: DisplayConfiguration export/import and the priority 2/3 form seeds and display seeds merged, KNG-139); 2026-10-21 (§4.3, §9.3, §11 F/G: invite-only sign-up, admission gate and Access sync — KNG-205/KNG-218); 2026-10-21 (§4.3 mail: the KNG-206 email engine on the invitations feature branch — `Email__Transport`, relay option, `App__PublicBaseUrl`, Log guard); 2026-10-17 (§7.7: FormConfiguration export/import and bundled seeds merged, KNG-138/139; two new migrations, see the note in §7.7); 2026-10-12 (§7.7: KNG-138 on a feature branch); 2026-10-08 (security and alpha-hosting update for KNG-64)

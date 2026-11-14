@@ -1,10 +1,10 @@
 # Knights and Kings — closed alpha go-live (KNG-64 layer on the NAS runbook)
 
-**Status:** v2, aligned 2026-10-11 with the [closed-alpha deployment runbook](closed-alpha-deployment-runbook.md)
+**Status:** Current · **Last updated:** 2026-11-14 (knk-web-api's trunk renamed from `master` to `main`); 2026-11-13 (header converted to the doc header standard, LAN addresses replaced by placeholders, PandiO/knk-workspace#305)
+**State:** v2, aligned 2026-10-11 with the [closed-alpha deployment runbook](closed-alpha-deployment-runbook.md)
 (the Codex NAS rollout). Not yet followed end to end. 2026-10-21: web hostname decided (`app.knightsandkings.net`),
 DNS in Cloudflare, Minecraft console/autostart/plugin updates ([KNG-225](https://linear.app/kngpandi/issue/KNG-225)).
 2026-10-22: § 3 (API upgrade) done on the NAS ([KNG-227](https://linear.app/kngpandi/issue/KNG-227)); § 3–4 corrected from that run.
-**Last updated:** 2026-11-13 (§ 5: plugin `realtime.erasure` block, GDPR erasure push #184, brought into `claude/plugin-chains-into-next`); 2026-11-12 (§ 5 checks: web live updates merged, `Realtime__WebLiveUpdatesEnabled` and `Realtime__WebPermissionCacheSeconds`, #341); 2026-11-06 (§ 5 checks: `Realtime__WebLiveUpdatesEnabled` switch for the web live updates, #183, feature branch); 2026-11-04 (§ 6: page background on by default, `REACT_APP_PAGE_BACKGROUND=off`, #231, feature branch); 2026-10-26 (§ 5: plugin `realtime:` block and checks, SignalR S1 #178, feature branch); 2026-11-01 (§ 6.1 step 5: `/brand/*` and `/images/*` in the bypass app, #209); 2026-10-26 (§ 4.3: the #186 user-1 drafts cleanup script, feature branch `claude/form-wizard-edit-mode`); 2026-10-25 (§ 4, § 4.2: `Seeding__IncludeExamples=false` and the one-time example cleanup script, not deployed yet); 2026-10-24 (§ 9 checklist ticked after Phase 9; Phase 9 done: invite-only live, § 10 invite text, § 11.1; Phase 9 E0: the mail relay is live, § 4 mail block is SMTP; KNG-205 invitations merged: the feature-branch notes replaced; settings as before, all off until § 11.1); 2026-10-22; 2026-10-21 (KNG-218, invitations chain link 7: § 4.1 settings after the invite-only switch-over, § 5.1 admission gate instead of the whitelist, § 9 F2, § 10 invite mail, § 11 kill switches and **§ 11.1 the switch-over steps**, § 12); 2026-10-21 (§ 6.1: Cloudflare Access sync, `cfproxy`, the sign-up bypass — KNG-216, feature branch; § 4: `Email__AllowLogTransport` for API builds with the KNG-206 email engine; notes pointing to the KNG-205 invitations plan); 2026-10-18
 **Applies to:** builds that **include KNG-64**: knk-web-api `master` ≥ `30c5dc5`, knk-web-app `main` ≥ `98c0a76`,
 knk-plugin `main` ≥ `34c9261`. **Never expose an older API.**
 **Linear:** [KNG-64](https://linear.app/kngpandi/issue/KNG-64) (parent), [KNG-68](https://linear.app/kngpandi/issue/KNG-68) (this guide)
@@ -55,7 +55,7 @@ Minecraft client ──► play.knightsandkings.net ──► playit.gg tunnel �
 | Paper host | PC or NAS, API on a LAN port | **Paper in the `knk-alpha` stack**: the plugin and API talk over service DNS, and no API port exists on the LAN |
 | MySQL | 8.4 | 9.6.0 (pinned digest, runbook Phase 2) |
 | Worlds | Dev map only | Main gameplay world + the converted hub (`knk_hub`), with a KnK-owned loader and no Multiverse (KNG-114) |
-| Web hostname | `app.knightsandkings.net` | **`app.knightsandkings.net`** (developer decision 2026-10-21). `knightsandkings.net` is already an active Cloudflare zone, so it gets the same free edge certificate as `oldenzeelit.nl`; `oldenzeelit.nl` stays personal (its Microsoft 365 mail is not used for KnK). |
+| Web hostname | `app.knightsandkings.net` | **`app.knightsandkings.net`** (developer decision 2026-10-21). `knightsandkings.net` is already an active Cloudflare zone, so it gets the same free edge certificate as `<personal-domain>`; `<personal-domain>` stays personal (its Microsoft 365 mail is not used for KnK). |
 
 ---
 
@@ -88,7 +88,7 @@ rate limits or the permission-escalation guard. Do this before the plugin connec
    per row until `clashes_left` is 0. Afterwards the user keeps its id and memberships, the group moves to a new
    id with its grants, and the user has no direct grants. Without the repair, assigning a group to `admin` fails
    with a 500 error (`InvalidCastException`), and Staff's grants also apply to `admin`.
-3. **Build** from a source archive of `master` ≥ `30c5dc5`. Use the deployment build files in
+3. **Build** from a source archive of `main` (knk-web-api's `master` until 2026-11-14) ≥ `30c5dc5`. Use the deployment build files in
    [`scripts/alpha-api/`](../../scripts/alpha-api/): the Phase 3.1 Dockerfile with the `KNK_RUNTIME_UID`/`KNK_RUNTIME_GID`
    fix (now UID/GID 2002, no host account) and a `migrator` target (the SDK stage plus `dotnet-ef` 9.0.10, entrypoint
    `dotnet ef database update`, [production guide § 6.1](production-installation.md#61-the-container-image)). Tag them
@@ -431,7 +431,7 @@ Access never stands in its way. For the probe from outside, add a service token 
 *Service Auth* policy.
 
 **DNS zone:** `knightsandkings.net` is an active Cloudflare zone (public NS `barbara`/`michael.ns.cloudflare.com`,
-the same pair as `oldenzeelit.nl`, checked 2026-10-21); GoDaddy is only the registrar. Confirm in the dashboard that the
+the same pair as `<personal-domain>`, checked 2026-10-21); GoDaddy is only the registrar. Confirm in the dashboard that the
 zone shows *Active* and sits in the same account as the tunnel. The free Universal SSL certificate covers the apex
 and one subdomain level, so keep names one level deep. The apex already serves something through Cloudflare: check what
 before adding zone-wide rules.
@@ -705,3 +705,9 @@ Before an **open beta**:
 - Add email verification (plan § 12; [KNG-159](https://linear.app/kngpandi/issue/KNG-159): invite mails already verify the address, shared-code sign-ups don't) and CI-built images (guide § 10).
 - Move mail from Gmail to a provider on `knightsandkings.net` with SPF/DKIM/DMARC (decision E1; [email guide](email.md)).
 - Decide on a public static site at `knightsandkings.net`.
+
+## Changes
+
+Header history up to 2026-11-13, as the old `Last updated` line gave it (newer changes: the header and git history):
+
+2026-11-13 (§ 5: plugin `realtime.erasure` block, GDPR erasure push #184, brought into `claude/plugin-chains-into-next`); 2026-11-12 (§ 5 checks: web live updates merged, `Realtime__WebLiveUpdatesEnabled` and `Realtime__WebPermissionCacheSeconds`, #341); 2026-11-06 (§ 5 checks: `Realtime__WebLiveUpdatesEnabled` switch for the web live updates, #183, feature branch); 2026-11-04 (§ 6: page background on by default, `REACT_APP_PAGE_BACKGROUND=off`, #231, feature branch); 2026-10-26 (§ 5: plugin `realtime:` block and checks, SignalR S1 #178, feature branch); 2026-11-01 (§ 6.1 step 5: `/brand/*` and `/images/*` in the bypass app, #209); 2026-10-26 (§ 4.3: the #186 user-1 drafts cleanup script, feature branch `claude/form-wizard-edit-mode`); 2026-10-25 (§ 4, § 4.2: `Seeding__IncludeExamples=false` and the one-time example cleanup script, not deployed yet); 2026-10-24 (§ 9 checklist ticked after Phase 9; Phase 9 done: invite-only live, § 10 invite text, § 11.1; Phase 9 E0: the mail relay is live, § 4 mail block is SMTP; KNG-205 invitations merged: the feature-branch notes replaced; settings as before, all off until § 11.1); 2026-10-22; 2026-10-21 (KNG-218, invitations chain link 7: § 4.1 settings after the invite-only switch-over, § 5.1 admission gate instead of the whitelist, § 9 F2, § 10 invite mail, § 11 kill switches and **§ 11.1 the switch-over steps**, § 12); 2026-10-21 (§ 6.1: Cloudflare Access sync, `cfproxy`, the sign-up bypass — KNG-216, feature branch; § 4: `Email__AllowLogTransport` for API builds with the KNG-206 email engine; notes pointing to the KNG-205 invitations plan); 2026-10-18

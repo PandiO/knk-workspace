@@ -1,10 +1,9 @@
 # WorldTask Feature Documentation
 
-**Status:** Living reference for the lifecycle (§ "Lifecycle and endpoints" below, as built by PandiO/knk-workspace#180, merged
+**Status:** Current · **Last updated:** 2026-11-13 (link to the `WgRegionId` requirements moved from knk-plugin, PandiO/knk-workspace#304)
+**State:** Living reference for the lifecycle (§ "Lifecycle and endpoints" below, as built by PandiO/knk-workspace#180, merged
 into the default branches 2026-11-04 with #181). The other files in this folder are older design notes:
 where they differ from that section, the section is current.
-**Last updated:** 2026-11-13 (#269 merged into `next` 2026-11-13 from `claude/plugin-chains-into-next`); 2026-11-09 (temp regions of abandoned drafts released, #269, feature branch `claude/temp-region-drafts-269`); 2026-11-04 (#239 NoPermission, #240 `POST {id}/offer`, feature branch); 2026-11-04 (#180 and #181 merged); 2026-11-02 (§ "Over the realtime channel": offers, hand-off, busy check, #181, branch `claude/realtime-signalr`); 2026-11-01 (world-task hardening and tasks anchored to the draft, #180; design
-[realtime-signalr/DESIGN.md](../realtime-signalr/DESIGN.md) §8.2, §8.7)
 
 ## Overview
 
@@ -44,6 +43,7 @@ This documentation covers:
 - [ARCHITECTURE.md](ARCHITECTURE.md) - System architecture and data flow
 - [HANDLER_DEVELOPMENT_GUIDE.md](HANDLER_DEVELOPMENT_GUIDE.md) - Creating custom task handlers
 - [API_CONTRACT.md](API_CONTRACT.md) - Complete API endpoint reference
+- [WG_REGION_ID_WORLD_TASK_REQUIREMENTS.md](WG_REGION_ID_WORLD_TASK_REQUIREMENTS.md) - Requirements of the `WgRegionId` task (from legacy CreationStageRegion), moved from knk-plugin `spec/` (PandiO/knk-workspace#304)
 
 ## Quick Start
 
@@ -211,3 +211,14 @@ With the plugin's `realtime.enabled: true` (off by default; DESIGN §8.8 has the
 
 The form builder offers only task types with a handler: `LocationSelection` (the default), `ReagionCreate` and
 `RegionClaim` (on a `WgRegionId` field), `ItemScan`, `KitScan`, `GateBlockScan`, `GateOpenedBlockScan`.
+
+## Changes
+
+Header history up to 2026-11-13, as the old `Last updated` line gave it, newest first (newer changes: the header and git history):
+
+- 2026-11-13 (#269 merged into `next` 2026-11-13 from `claude/plugin-chains-into-next`)
+- 2026-11-09 (temp regions of abandoned drafts released, #269, feature branch `claude/temp-region-drafts-269`)
+- 2026-11-04 (#239 NoPermission, #240 `POST {id}/offer`, feature branch)
+- 2026-11-04 (#180 and #181 merged)
+- 2026-11-02 (§ "Over the realtime channel": offers, hand-off, busy check, #181, branch `claude/realtime-signalr`)
+- 2026-11-01 (world-task hardening and tasks anchored to the draft, #180; design [realtime-signalr/DESIGN.md](../realtime-signalr/DESIGN.md) §8.2, §8.7)

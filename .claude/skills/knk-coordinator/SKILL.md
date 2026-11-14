@@ -19,7 +19,7 @@ branch model applies, merges into `next`. Links follow the `knk-link` skill.
    [charter-template.md](charter-template.md), [report-template.md](report-template.md).
 3. **Branch model check.** The `next` rules (links branch from `next`, PRs target `next`, you merge into `next`) apply
    as soon as CI runs on the API and web-app default branches (developer decision 2026-11-12). Check, after `git fetch`:
-   `git -C <knk-web-api> ls-tree --name-only origin/master .github/workflows/ci.yml` and
+   `git -C <knk-web-api> ls-tree --name-only origin/main .github/workflows/ci.yml` and
    `git -C <knk-web-app> ls-tree --name-only origin/main .github/workflows/ci.yml` must both print the path.
    Until then the old rules hold: links branch from the default branch, PRs target it, **nobody in the chain merges**;
    the developer merges. Write which rule set the chain uses in the progress report's first coordinator decision.
@@ -122,7 +122,9 @@ All of these must hold:
     ChatGPT Codex connector on each PR's current head is fixed by the link or answered on its thread with the reason
     (not a bug, or out of scope with the issue filed), and resolved; the link block lists them. A P1 finding blocks the
     merge until it is fixed or the developer decides. If the link left findings open, send it back (or fix the small
-    ones yourself before merging) rather than merging over them.
+    ones yourself before merging) rather than merging over them. When Codex is at its usage limit (its comment says
+    so), merge without its review once the other checks hold and note on the PR that Codex was skipped for the limit
+    (developer decision 2026-11-14).
 
 ## 7. Merging into `next` (only once § 1.3 says the branch model applies)
 

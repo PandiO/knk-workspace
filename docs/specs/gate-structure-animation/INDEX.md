@@ -147,7 +147,7 @@ See [DECISIONS.md](./DECISIONS.md) for detailed rationale.
 
 ### External Resources
 - **Minecraft Materials**: [minecraft-materials.json](../../../../Repository/knk-minecraft-data/minecraft-materials.json)
-- **Plugin Architecture**: [Repository/knk-plugin/ARCHITECTURE_AUDIT.md](../../../../Repository/knk-plugin/ARCHITECTURE_AUDIT.md)
+- **Plugin Architecture**: [archive/knk-plugin/ARCHITECTURE_AUDIT.md](../../archive/knk-plugin/ARCHITECTURE_AUDIT.md)
 
 ---
 

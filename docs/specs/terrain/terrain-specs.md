@@ -1,9 +1,6 @@
----
-status: active
-last_updated: 2020-03-09
----
-
 # Terrain specs — reference locations
+
+**Status:** Current · **Last updated:** 2026-11-13 (front matter converted to the header standard, PandiO/knk-workspace#305; the list dates from 2020-03-09)
 
 Reference list of 13 waterfalls and 8 castles, used as visual/terrain-generation targets for the desired world look.
 

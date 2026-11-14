@@ -1,7 +1,7 @@
 # In-game commands
 
-**Status:** Current · **Last updated:** 2026-11-13 (`/knk npc`, on the `next` branch, PandiO/knk-workspace#359 and #360); 2026-11-13 (desk check of the rank columns, `/lb` and `/pay` against the code, PandiO/knk-workspace#316; not yet checked in game); 2026-11-10 (rebuilt from the plugin's command catalogue, PandiO/knk-workspace#294)
-**Checked against:** knk-plugin `main` `57884e9` (`knk-paper/src/main/resources/plugin.yml`, `knk-paper/.../paper/commands/`), rank seed migrations in knk-web-api `master` `f445d21`; `/knk npc` against knk-plugin `next`
+**Status:** Current · **Last updated:** 2026-11-13 (money, kit and lootbox rows corrected against the code and linked to the economy guides, PandiO/knk-workspace#300)
+**Checked against:** knk-plugin `main` `57884e9` (`knk-paper/src/main/resources/plugin.yml`, `knk-paper/.../paper/commands/`), rank seed migrations in knk-web-api `master` `f445d21`, dev seed knk-dev-db-seed `4b71f23`; `/knk npc` against knk-plugin `next`
 **Related:** [plugin permission checks](../../architecture/plugin-permission-checks.md), [command permission scan 2026-10-26](../../reports/2026-10-26-command-permission-scan.md), [COMMAND_CATALOG_V3](../../specs/user-features/COMMAND_CATALOG_V3.md) (design notes), [chat tokens](../chat-tokens.md), [plugin configuration reference](../admin/plugin-configuration.md) (the `config.yml` keys behind warmups, cooldowns and limits), [gate structures player guide](gate-structures-player-guide.md), [v1 commands](../../specs/legacy/commands-v1.md) (history)
 
 This page lists every Knights and Kings command on the game server: what it does, who can use it and what the main
@@ -13,11 +13,14 @@ can use them (`/minecraft:<command>`).
 - **Ranks.** Your rank (permission group) decides which commands you can use. The game asks the web API for your
   permissions when you join and keeps them for 30 seconds. A rank change made in the web app reaches the game within
   that time. The "Who" columns below name the lowest rank that holds the command **on the closed alpha's seed data**. A
-  rank also gets everything from the ranks it inherits from: Staff → Moderator → Admin. The premium ranks (Noble,
-  Royal, Dragon Blood) and Alpha Tester each inherit from Default, **not from each other** (seed migration
-  `PremiumRanksInheritDefault`; the alpha's database is still to be checked, PandiO/knk-workspace#316): a command
-  marked Noble or Dragon Blood is that rank's alone. Whether Royal and Dragon Blood should get Noble's perks is
-  PandiO/knk-workspace#430. A rank's own grants come from
+  rank also gets everything from the ranks it inherits from: Staff → Moderator → Admin. How the premium ranks
+  inherit depends on the database. In the dev seed (knk-dev-db-seed `4b71f23`, the 2026-11-01 export,
+  `seed/knk_seed.sql`, table `permission_groups`) they chain Dragon Blood → Royal → Noble → Default, so Royal and
+  Dragon Blood also have Noble's perks, such as `/siege skip`. A fresh database built by the migrations alone doesn't
+  chain them: each premium rank inherits only from Default (`PremiumRanksInheritDefault`), so Noble's perks stay
+  Noble's. The alpha was loaded from the earlier seed `4abf42c` ([import report](../../reports/2026-10-24-alpha-seed-import.md));
+  its chain is still to be checked (PandiO/knk-workspace#316). Which way is meant is PandiO/knk-workspace#430.
+  Alpha Tester inherits from Default. A rank's own grants come from
   the seed data for now (editing them in the web app is PandiO/knk-workspace#50); staff give one player an extra
   permission with `/knk user <player> perm grant <node>`. "Everyone" means the Default rank. "Ops only" means no
   rank holds it yet.
@@ -99,27 +102,31 @@ How player teleports work:
 
 ### Money
 
+How to earn and spend coins and gems, and every `/pay` refusal: [economy player guide](economy-player-guide.md).
+
 | Command | Who | What it does |
 |---|---|---|
 | `/balance [player]` (`/bal`, `/money`) | Everyone | Shows your coins and gems, or another player's. |
 | `/pay <player> <amount> [coins\|gems]` | Everyone | Pays a player coins. They can be offline. A large amount (100,000 coins or more unless the server changed it) asks you to click [Confirm] or [Cancel], or type `/pay confirm` / `/pay cancel`; the question expires after 60 seconds. Gems can't be paid. |
 | `/baltop [coins\|gems] [page]` | Everyone | The richest players, 10 a page. |
-| `/transactions [coins\|gems\|xp] [page]` (`/tx`) | Everyone (another player's: Staff) | Your coin, gem and XP history, newest first. |
+| `/transactions [player] [coins\|gems\|xp] [page]` (`/tx`) | Everyone (another player's: Staff) | Your coin, gem and XP history, newest first. |
 
 The server sets the payment limits. Unless staff changed them: at least 10 and at most 1,000,000 coins a payment,
 2,000,000 coins sent a day, 5 seconds between payments and 20 an hour, and your account must be 48 hours old with at
-least the first title. The refusal says which limit you hit, for example "Daily limit reached - you can send N more
+least the title Peasant (2,500 XP). The refusal says which limit you hit, for example "Daily limit reached - you can send N more
 coins (resets in …)." or "You only have N coins." The amount must be a whole number from 1 to 999,999,999, with no separators. If a
 payment can't be confirmed: "We couldn't confirm the payment. Check /transactions before trying again."
 
 ### Kits, lootboxes and custom enchantments
+
+Kits, lootboxes and discoveries in detail: [economy player guide § 4–6](economy-player-guide.md#4-kits).
 
 | Command | Who | What it does |
 |---|---|---|
 | `/kit list` | Everyone | Lists the kits, whether you can claim each one, and its cost or premium price. |
 | `/kit get <name>` | Everyone | Claims a kit. The kit's own rules (rank, title, cooldown, cost) apply. |
 | `/kit purchase <name>` (`/kit buy`) | Everyone | Buys a premium kit once with gems. After that you claim it with `/kit get`. |
-| `/lootbox` | Everyone | How lootboxes work: right-click one in the world to open it. There may be a daily limit, which resets at 00:00 UTC. |
+| `/lootbox` | Everyone | How lootboxes work. Click a box in the world to pick it up as a token, then right-click the token to open it (the help text still says "right-click one to open it", PandiO/knk-workspace#458). Pickups and opens each have a daily limit, which resets at 00:00 UTC. |
 | `/lootbox odds <category> [stars]` | Everyone | What a box of that category can give, with chances. |
 | `/ce info` (`/customench info`) | Everyone | Lists the custom enchantments on the item in your hand. See below. |
 
@@ -144,7 +151,7 @@ Note: `/lb` opens the leaderboards, not the lootboxes. Both commands declare it,
 | `/siege vote [number\|name\|random]` | Everyone | Votes for the next scenario. Without a choice it lists them. Voting for your current choice again withdraws your vote. |
 | `/siege spawn [option]` | Everyone | Chooses where you start and respawn. An objective that is being captured can't be picked. |
 | `/siege history` | Everyone | Your last finished matches, with links to the website. |
-| `/siege skip [lobby]` | Noble (only; PandiO/knk-workspace#430) | Skips a lobby's cooldown so matchmaking starts, or shortens matchmaking. |
+| `/siege skip [lobby]` | Noble | Skips a lobby's cooldown so matchmaking starts, or shortens matchmaking. |
 
 - **Commands during a match.** In the hub and during a match only `/siege`, `/siegemenu`, `/navigate` and the
   commands the siege allows work: "You can't use that command during a siege. Allowed: …"
@@ -223,6 +230,8 @@ owner's override moves them one by one. Rank perks for player teleports: `knk.te
 | `/inventory clear <player> confirm` | `knk.inventory.clear` | Admin | Empties the whole inventory, armour included. Without `confirm` it only explains what it will do. Outrank. |
 
 ### Money, kits and lootboxes (staff)
+
+Setting these up in the web app: [economy admin guide](../admin/economy-admin-guide.md).
 
 | Command | Node | Who | What it does |
 |---|---|---|---|
@@ -319,9 +328,17 @@ These came up while checking this page against the code. The page above describe
 - PandiO/knk-workspace#314: `/gatedoor health 0` doesn't destroy the door; `/gate override active|destroyed` fires
   no state change.
 - PandiO/knk-workspace#315 (decision): `/siege skip` works on any lobby; `/knk user … coins|gems|xp` has no rank check.
-- PandiO/knk-workspace#430 (decision): the premium ranks each inherit from Default, so Royal and Dragon Blood don't get
-  Noble's `/siege skip`, although the teleport design expects Noble's perks to reach the higher tiers.
+- PandiO/knk-workspace#430 (decision): the dev seed chains the premium ranks (Royal and Dragon Blood get Noble's
+  perks), the migrations don't (each inherits only from Default).
 
-The rank columns were checked against the seed migrations on 2026-11-13 (PandiO/knk-workspace#316), not yet in game.
-The grants made by hand in the alpha's seed database (for example Dragon Blood's `/tpahere` and `/back`, and the
-Staff → Moderator → Admin chain) still need that check.
+The rank columns were checked on 2026-11-13 against the seed migrations and the dev seed (knk-dev-db-seed `4b71f23`,
+the 2026-11-01 export) (PandiO/knk-workspace#316), not yet in game. The alpha was loaded from the earlier seed
+`4abf42c` (2026-10-24); whether its live database matches the dev seed, the premium rank chain included, is still to
+be checked.
+
+## Changes
+
+1. 2026-11-13: `/knk npc`, on the `next` branch, PandiO/knk-workspace#359 and #360
+2. 2026-11-13: desk check of the rank columns, `/lb` and `/pay` against the code and the dev seed,
+   PandiO/knk-workspace#316; not yet checked in game
+3. 2026-11-10: rebuilt from the plugin's command catalogue, PandiO/knk-workspace#294

@@ -95,7 +95,7 @@ keeps private show as `Hidden`.
 
 You can ask for your data to be deleted on the web app's **Account** page (**Delete my data…**), confirmed by email,
 with a few days to change your mind. What is deleted, and what happens if you are online when it runs, is in the
-[account guide](PLAYER_GUIDE_ACCOUNT_MANAGEMENT.md#can-i-delete-my-account).
+[account guide](account-player-guide.md#delete-my-data).
 
 ## Messages
 

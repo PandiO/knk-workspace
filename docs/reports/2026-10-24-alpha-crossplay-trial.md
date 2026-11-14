@@ -23,8 +23,8 @@ The developer ran every command and test. Claude Code (cloud session) did the re
 | Item | Value |
 |---|---|
 | Plugins | `Geyser-Spigot.jar` 2.12.0 b1270 (`6acaff23…`), `floodgate-spigot.jar` 2.2.5 b141 (`21570aff…`), from download.geysermc.org, hashes checked, `2001:2001 644` in `plugins/` |
-| playit | Tunnel TCP+UDP, region Europe, public `209.25.141.16:29517` (`vivo-organizer.tun.ply.gg`), local `minecraft:29517`, Proxy Protocol off |
-| Geyser `config.yml` | `bedrock.port: 29517`, `transport: nethernet`, `webrtc-port: 0` (same port), `signaling.mode: builtin`, `advertise-addresses: ["209.25.141.16:29517"]`, **`stun-discovery: false`** (it would announce the home IP, unreachable and a privacy leak), `java.auth-type: floodgate`, MOTD/server name "Knights and Kings"/"Closed alpha", **`advanced.java.use-haproxy-protocol: true`** (Paper has `proxies.proxy-protocol: true`; without the header Paper drops Geyser's connection silently and the client says "End of stream"), `use-direct-connection: true` |
+| playit | Tunnel TCP+UDP, region Europe, public `<playit-ip>:29517` (`<playit-tunnel-host>`), local `minecraft:29517`, Proxy Protocol off |
+| Geyser `config.yml` | `bedrock.port: 29517`, `transport: nethernet`, `webrtc-port: 0` (same port), `signaling.mode: builtin`, `advertise-addresses: ["<playit-ip>:29517"]`, **`stun-discovery: false`** (it would announce the home IP, unreachable and a privacy leak), `java.auth-type: floodgate`, MOTD/server name "Knights and Kings"/"Closed alpha", **`advanced.java.use-haproxy-protocol: true`** (Paper has `proxies.proxy-protocol: true`; without the header Paper drops Geyser's connection silently and the client says "End of stream"), `use-direct-connection: true` |
 | Floodgate `config.yml` | `username-prefix: "BE_"` |
 | Compose | unchanged (Geyser listens inside the `minecraft` container; the playit agent reaches it over `egress`) |
 
@@ -32,7 +32,7 @@ Backups of both configs are in `backups/<TS>/` and `backups/geyser-config-<TS>.y
 
 ## 3. Results (Windows Bedrock, developer)
 
-- Add server `209.25.141.16` port `29517` → join → Xbox sign-in OK.
+- Add server `<playit-ip>` port `29517` → join → Xbox sign-in OK.
 - First try: "End of stream" (Proxy Protocol, § 2) → fixed.
 - Stranger → the KnK disconnect screen with a claim code; sign-up with an invite + link on `/account/link` → rejoin →
   plays.
@@ -52,10 +52,10 @@ developer, 2026-10-24), `session.remote-address/remote-port` set to the playit a
 
 | Step | Result |
 |---|---|
-| Extension | `MCXboxBroadcastExtension.jar` build 159 (`5220fca2…`, made for Bedrock 26.50) in `plugins/Geyser-Spigot/extensions/`; config `session.remote-address: 209.25.141.16`, `remote-port: 29517` (`auto` would look up the NAS's public IP via icanhazip.com and announce the home IP) |
+| Extension | `MCXboxBroadcastExtension.jar` build 159 (`5220fca2…`, made for Bedrock 26.50) in `plugins/Geyser-Spigot/extensions/`; config `session.remote-address: <playit-ip>`, `remote-port: 29517` (`auto` would look up the NAS's public IP via icanhazip.com and announce the home IP) |
 | Sign-in | Device code at microsoft.com/link with the developer's dedicated alt account (`MrKnK8949`). The extension waits only ~5 minutes for the code (`Login timed out` twice). `cache.json` now holds the alt's sign-in: it's in `minecraft-data` and in every snapshot |
 | PlayStation friend (NAT type 2, home Wi-Fi) | Friend added automatically; the session "Knights and Kings – Closed alpha's world" shows under *Worlds* (1/100); *Trust* → join → `Transferred … to target server` → Geyser: `could not connect over NetherNet: no network path … needs to reach UDP port 29517` → back to *Worlds*. Three attempts, same result |
-| Capture on the `egress` bridge | Test packets from the developer's Mac on a phone hotspot reach `minecraft:29517` through playit (the tunnel passes UDP from outside). During the console join: **no UDP from the console at all**; Geyser sends six checks to the console's private address only. Signaling (plain HTTP): Geyser offers `172.27.0.3`/`172.23.0.2` (host, internal) and **`209.25.141.16 29517 typ srflx`** (correct); the console, after the transfer, offers only its host candidate `192.168.1.70` and never tries the public candidate |
+| Capture on the `egress` bridge | Test packets from the developer's Mac on a phone hotspot reach `minecraft:29517` through playit (the tunnel passes UDP from outside). During the console join: **no UDP from the console at all**; Geyser sends six checks to the console's private address only. Signaling (plain HTTP): Geyser offers `172.27.0.3`/`172.23.0.2` (host, internal) and **`<playit-ip> 29517 typ srflx`** (correct); the console, after the transfer, offers only its host candidate `<console-ip>` and never tries the public candidate |
 | Cause | Known bug: [MCXboxBroadcast #402](https://github.com/MCXboxBroadcast/Broadcaster/issues/402) (open since 2026-10-05): joins through the broadcaster fail when the server uses NetherNet, direct joins work. The maintainer expects the fix in the 26.60 release; the RakNet workaround is useless once 26.60 drops RakNet. A donor-only preview build exists; not used on the alpha |
 | Note | The Windows success (§ 3) went over the LAN: Geyser could reach the PC's private address directly. A direct join from another network is not proven yet, though Geyser's srflx candidate and the tunnel's UDP path are right |
 

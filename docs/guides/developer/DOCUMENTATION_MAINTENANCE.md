@@ -1,6 +1,6 @@
 # Documentation maintenance and release notes
 
-**Status:** Active · **Last updated:** 2026-11-13 (docs sessions merge like any session outside a chain; agent workflow files go to `main`); 2026-11-13 (the phase template archived, pointers to the chain skills and the CI guide, PandiO/knk-workspace#362); 2026-11-12 ("at merge" under the `next` branch model; docs sessions merge their own docs PR into `next`; finished board rows go to the sessions archive; PandiO/knk-workspace#330); 2026-11-10 (link to the plugin configuration reference, #295); 2026-11-10 (essential docs before merge, the rest in a `documentation` follow-up issue and session, PandiO/knk-workspace#292)
+**Status:** Current · **Last updated:** 2026-11-13 (§ Document headers and § Addresses and hostnames added; header history moved to [Changes](#changes), PandiO/knk-workspace#305)
 
 This guide applies to features and fixes in `knk-workspace`, `knk-plugin`, `knk-web-api` and `knk-web-app`. Documentation is part of implementation. Keep user promises in sync with code and verification. See [the feature register](../../FEATURE_REGISTER.md) for current coverage and [the changelog](../../CHANGELOG.md) for shipped changes.
 
@@ -40,9 +40,48 @@ The `docs/specs/` layout is current. Multi-link work follows the project skills 
 
 **Changelog:** one entry per coherent shipped capability or correction, dated by merge. Start with one sentence a player understands, then plain behaviour, relevant limitations and **Admin steps** (config keys to merge, migrations, scripts). Keep unreleased design/branch work out of shipped entries. Older merges can be backfilled with evidence and labeled as such; never infer a precise release or live-test date from an old branch name.
 
+## Document headers
+
+Living documents (guides, architecture, specs, plans, the register) start with the title and then one header line:
+
+`**Status:** Current · **Last updated:** YYYY-MM-DD (one-line reason)`
+
+1. The status is one of these five:
+   - **Draft:** written but not yet checked against the merged code or a test.
+   - **Current:** matches the default branches (or says which branch it describes).
+   - **Needs review:** may have drifted from the code; check before relying on it.
+   - **Stale:** known to be out of date, kept for reference.
+   - **Superseded:** replaced; link the replacement.
+2. The header names only the latest change. Older history stays in git, or in a `## Changes` list at the bottom of the
+   file, newest first.
+3. Fields a document type needs (`**Checked against:**`, `**Applies to:**`, `**Sources:**`, `**Related:**`) go on their
+   own lines below the header line.
+4. No YAML front matter. Old values map as: `active`, `Active` and "Living document" → Current; `stale` → Stale.
+5. Dated reports (`docs/reports/`) and `docs/archive/` keep their headers as written.
+6. Don't sweep other files only to fix their header: that collides with parallel sessions. Fix a header when you edit
+   the file anyway.
+
+## Addresses and hostnames
+
+knk-workspace is public. Keep LAN and other private addresses, personal domains, tunnel addresses and secrets out of
+the docs and out of comments in `scripts/`. Use placeholders: `<nas-ip>` (the NAS), `<pc-ip>` (the developer's PC),
+`<console-ip>`, `<playit-ip>`, `<playit-tunnel-host>`, `<personal-domain>`; the real values belong in the developer's
+local notes. In a Markdown table or sentence, put a placeholder in backticks, or it renders as an empty HTML tag.
+These stay because they are public by decision: the `knightsandkings.net` hostnames (`app.`, `play.`, and `db-dev.`, a
+decided name behind Cloudflare Access that isn't set up yet), the project's sending mail address, and the Docker-internal subnets of the alpha stack
+(`172.x`, which the compose files in `scripts/` define).
+
 ## Consistency checks
 
 - Search the repo for the previous feature or command name before finishing docs; link or correct stale current guides, leaving dated reports and archives intact.
 - Validate local relative links and names against files. Review the register's implementation, merge and verification columns against code and documented tests rather than just an issue's closed state.
 - If the vision, spec and code disagree, distinguish **intended**, **implemented** and **verified** states; create a follow-up decision or bug issue instead of silently rewriting history.
 - Capture safe, shareable feature descriptions and screenshots only after behavior is verified. The register and changelog provide a factual basis for later marketing content, not a promise that every vision item is live.
+
+## Changes
+
+1. 2026-11-13: docs sessions merge like any session outside a chain; agent workflow files go to `main`
+2. 2026-11-13: the phase template archived, pointers to the chain skills and the CI guide, PandiO/knk-workspace#362
+3. 2026-11-12: "at merge" under the `next` branch model; docs sessions merge their own docs PR into `next`; finished board rows go to the sessions archive; PandiO/knk-workspace#330
+4. 2026-11-10: link to the plugin configuration reference, #295
+5. 2026-11-10: essential docs before merge, the rest in a `documentation` follow-up issue and session, PandiO/knk-workspace#292

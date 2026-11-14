@@ -241,7 +241,7 @@ Record the times of 2, 4, 5 and 8 under **Findings**.
 
 ## S4 — live updates in the web app (#183)
 
-**Builds:** knk-web-api `master` and knk-web-app `main` from 2026-11-12 on (merged with the admin IA, W1–W4, and #280
+**Builds:** knk-web-api `main` (named `master` until 2026-11-14) and knk-web-app `main` from 2026-11-12 on (merged with the admin IA, W1–W4, and #280
 AM1+AM2). **API:** no migration; optional settings `Realtime:WebPermissionCacheSeconds`
 (default 30) and `Realtime:WebLiveUpdatesEnabled` (default `true`; step 9). **Plugin:** none; the web part works with the plugin's `realtime.enabled` on or off (presence then comes
 from the REST join/quit calls). **People:** staff **A** and **B** in two browsers (or a normal and a private window),
@@ -293,7 +293,7 @@ Record under **Findings**: the delay of steps 1, 4 and 5, and the results of ste
 
 ## S5 — account erasure pushed to the game server (#184)
 
-**Builds:** knk-web-api `master` from 2026-11-12 on (API part merged) and knk-plugin `next` once `claude/plugin-chains-into-next` is merged (before that, that branch). **API:** back up the database, then run the
+**Builds:** knk-web-api `main` from 2026-11-12 on (API part merged) and knk-plugin `next` once `claude/plugin-chains-into-next` is merged (before that, that branch). **API:** back up the database, then run the
 additive migration `AddPrivacyErasureEvents` (new table `privacy_erasure_events`). For this test only, set
 `Privacy__GraceDays=0` on the dev API so a filed request can be executed at once (put it back afterwards; default 5).
 **Plugin:** `realtime.enabled: true`; the bundled `realtime.erasure` block (kick message, `settle-seconds: 2`) needs no

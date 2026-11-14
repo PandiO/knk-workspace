@@ -265,7 +265,7 @@ also needs:
 - **A media folder** (`docs/media/<feature>/`) for screenshots and clips from test runs, with a note on what may be
   shown publicly.
 - **Public-repo hygiene:** `knk-workspace` is public. `nas-ops-access.md` and `production-installation.md` contain
-  LAN addresses (`192.168.50.x`). The maintenance guide already says live hostnames stay out of public docs, so replace
+  LAN addresses (private `192.168.x.x` addresses). The maintenance guide already says live hostnames stay out of public docs, so replace
   them with placeholders as part of § 3.8.
 
 ### 6.6 Asynchronous docs (developer decision 2026-11-10)
