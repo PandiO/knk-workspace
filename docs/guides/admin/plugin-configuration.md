@@ -1,6 +1,6 @@
 # Plugin configuration reference (`config.yml`)
 
-**Status:** Current · **Last updated:** 2026-11-13 (§ 4.11 gates are discovered too; § 4.21 realtime push; § 4.26 the kit cache, PandiO/knk-workspace#300)
+**Status:** Current · **Last updated:** 2026-11-14 (§ 4.18 `messages.web-account-registered`, #485, in review); 2026-11-13 (§ 4.11 gates are discovered too; § 4.21 realtime push; § 4.26 the kit cache, PandiO/knk-workspace#300)
 **Checked against:** knk-plugin `main` `121030f`; § 4.11, § 4.21 and § 4.26 against `57884e9`; § 4.27 `npc`, the `realtime.erasure` block and `regions.temp-retention.release-interval-minutes` against knk-plugin `next` (not on trunk yet). Update this page in place whenever a `config.yml` key is added, renamed, removed or gets a new default.
 **Source:** knk-plugin `knk-paper/src/main/resources/config.yml` (1,152 lines at `121030f`), read by
 `knk-paper/.../paper/config/ConfigLoader.java`, `EnchantmentConfigManager.java` and `KnKPlugin.java`
@@ -85,6 +85,7 @@ Newest first. Builds before this list: compare the files with the script.
 
 | Merged | Issue | Added (+), removed (−) or changed | Applies |
 |---|---|---|---|
+| in review, not in `next` yet (`claude/smoke-fixes-484-485-487`) | [#485](https://github.com/PandiO/knk-workspace/issues/485) | + `messages.web-account-registered` (optional: a missing key uses the jar's text) | Restart |
 | in `next` (`745fcf6`, 2026-11-13), not on trunk yet | [#184](https://github.com/PandiO/knk-workspace/issues/184), [#269](https://github.com/PandiO/knk-workspace/issues/269) | + `realtime.erasure` (`kick-message`, `settle-seconds`, `feed-file`, `minecraft-files-list`; optional, defaults apply when missing), + `regions.temp-retention.release-interval-minutes` (5, 0 = off) | Restart |
 | in review, not in `next` yet | [#377](https://github.com/PandiO/knk-workspace/issues/377) | + `npc.navigation.group-formation`, + `group-spacing`, + `group-ranks-width`, + `group-rejoin-blocks`, + `group-regroup-blocks`, + `group-catch-up-speed` (NPC groups; nothing uses them unless a group is started) | Restart |
 | in `next`, not on trunk yet | [#361](https://github.com/PandiO/knk-workspace/issues/361) | + `npc.navigation.rule-checks-per-tick`, + `npc.navigation.stop-on-trespass`; `recheck-ticks` is used from now on | Restart |
@@ -459,7 +460,8 @@ block.
 | Key | Default | What it does, safe values | Applies | Added by |
 |---|---|---|---|---|
 | `prefix` | `"&8[&6KnK&8] &r"` | Prefix of plugin messages | Restart | — |
-| `account-created` / `account-linked` / `duplicate-account` | (text) | Account flow messages | Restart | — |
+| `account-created` / `account-linked` / `duplicate-account` | (text) | Account flow messages (`account-linked` is read but shown nowhere; the in-game link notice is `admission.account-linked` § 4.5, a game-first registration's is `web-account-registered` below) | Restart | — |
+| `web-account-registered` | `"&aYour website account is ready and linked to this Minecraft account.\n&aLog in at &e{url} &awith &e{maskedEmail} &aor your Minecraft name &e{name}&a.\n&cNot you? Tell staff right away."` | Shown once after a game-first registration (registered on the website with the `/account link` code): within seconds when online (realtime push or the notification poll), else about 2 s after the next join. Placeholders `{maskedEmail}`, `{name}` (the Minecraft name), `{url}` (`web.public-url`; lines with it are dropped while that is empty). A missing key uses the jar's text. An Account-page link or a claim shows `admission.account-linked` instead | Restart | [#485](https://github.com/PandiO/knk-workspace/issues/485) |
 | `link-code-generated` | (text) | `/account link`. Placeholders `{code}`, `{minutes}`, `{url}`; lines with `{url}` are dropped while `web.public-url` is empty. Take the current default from the jar: an older file keeps its old text | Restart | KNG-208 |
 | `link-code-entered-in-game` | (text) | `/account link <code>`: codes go on the website | Restart | KNG-208 |
 | `invalid-link-code` | (text) | Invalid or expired code | Restart | — |
@@ -714,8 +716,9 @@ npc:
 
 ## Changes
 
-1. 2026-11-13: § 4.3 `realtime.erasure` (#184) and the regions `temp-retention.release-interval-minutes` (#269), PR into `next` from `claude/plugin-chains-into-next`
-2. 2026-11-13: § 4.27 `npc`: six `group-*` keys, PandiO/knk-workspace#377
-3. 2026-11-13: § 4.27 `npc`: `rule-checks-per-tick`, `stop-on-trespass`, PandiO/knk-workspace#361
-4. 2026-11-13: § 4.27 `npc`, PandiO/knk-workspace#359 and #360; checked against knk-plugin `claude/npc-navigation`, not merged into trunk yet
-5. 2026-11-10: first version, PandiO/knk-workspace#295; checked against knk-plugin `main` `121030f`
+1. 2026-11-14: § 4.18 `messages.web-account-registered` (#485), § 2.1 row; checked against knk-plugin `claude/smoke-fixes-484-485-487`, not merged into `next` yet
+2. 2026-11-13: § 4.3 `realtime.erasure` (#184) and the regions `temp-retention.release-interval-minutes` (#269), PR into `next` from `claude/plugin-chains-into-next`
+3. 2026-11-13: § 4.27 `npc`: six `group-*` keys, PandiO/knk-workspace#377
+4. 2026-11-13: § 4.27 `npc`: `rule-checks-per-tick`, `stop-on-trespass`, PandiO/knk-workspace#361
+5. 2026-11-13: § 4.27 `npc`, PandiO/knk-workspace#359 and #360; checked against knk-plugin `claude/npc-navigation`, not merged into trunk yet
+6. 2026-11-10: first version, PandiO/knk-workspace#295; checked against knk-plugin `main` `121030f`
