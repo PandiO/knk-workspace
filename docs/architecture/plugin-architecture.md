@@ -1,6 +1,6 @@
 # knk-plugin Architecture
 
-**Status:** Current · **Last updated:** 2026-11-14 (§ Testing: Paper boot test, PandiO/knk-workspace#420); 2026-11-13 (front matter converted to the header standard, PandiO/knk-workspace#305; last content update 2026-11-13 on `next`: GDPR erasure push #184, siege startup retry #31)
+**Status:** Current · **Last updated:** 2026-11-14 (§ Testing: Paper boot test, PandiO/knk-workspace#420); 2026-11-14 (link to the NPC navigation page, knk-plugin `next`, PandiO/knk-workspace#496); 2026-11-13 (front matter converted to the header standard, PandiO/knk-workspace#305; last content update 2026-11-13 on `next`: GDPR erasure push #184, siege startup retry #31)
 
 Spigot/Paper Minecraft plugin for Knights and Kings V3. Multi-module Gradle
 (Kotlin DSL), Java 25 toolchain, targets Paper API 26.3 (`gradle.properties`; corrected 2026-10-25, the 2026-09-21 scan said Java 21 / 1.21.10).
@@ -269,6 +269,15 @@ complete for every entity type the plugin touches.
   erasures" catches up through `GET api/privacy/erasures?since=` from the position in `erasure-feed.json`. Design §7.5.
 - Everything else (commands, player-triggered lookups) is on-demand via the
   cache-first data access layer.
+
+## NPC navigation (on `next`, off by default)
+
+NPC navigation on Citizens (PandiO/knk-workspace#358, Phases 1–4 merged into knk-plugin `next`, not on trunk; off
+unless `npc.navigation.enabled`): the engine-neutral core in `knk-core/.../core/npc/nav/` and `core/npc/nav/group/`,
+the Citizens adapter in `knk-paper/.../paper/npc/citizens/` (the only package with Citizens types; Citizens is a
+`softdepend` and the plugin runs without it) and the wiring in `knk-paper/.../paper/npc/nav/`
+(`NpcNavigationModule`, started from `KnKPlugin`). `NpcEntities.isNpc` guards the player listeners against
+player-shaped NPCs. See [npc-navigation.md](npc-navigation.md).
 
 ## Gate-structure subsystem (the most mature feature in the repo)
 

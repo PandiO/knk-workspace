@@ -5,7 +5,7 @@
 **Status:** Implemented — all MVP phases (1–9) merged into the default branches on 2026-09-26 and smoke-tested live
 by the developer; Phase 10 (Scheduled lobbies) is post-MVP, not started. Seven decisions with the developer (§0; D6
 changed after the smoke test); remaining open questions in §13.
-**Last updated:** 2026-11-02 (D6, §8.1, §8.5, §13 Q2: non-members keep every siege-area gate's **pre-game**
+**Last updated:** 2026-11-14 (§6.7: hits by or on NPCs are ignored, PandiO/knk-workspace#496); 2026-11-02 (D6, §8.1, §8.5, §13 Q2: non-members keep every siege-area gate's **pre-game**
 state — per-player blocks, server-side crossing checks, per-player virtual opening, per-player hover text via
 PacketEvents; code complete on knk-plugin `claude/siege-pregame-gate-view`, **not merged, not live-tested**, plan Phase 11); 2026-11-02 (§11: plugin write auth is the fail-closed `[RequirePluginService]`, CRUD writes are permission-gated; [PandiO/knk-workspace#135](https://github.com/PandiO/knk-workspace/issues/135)); 2026-10-27 (§5.4, §6.5, §6.10, §7.6, §11: alpha test run 1 package F — member-only scoreboards
 with a ` [Siege]` tag for everyone else, post-match phase at the hub, result hover, final countdown, `/siege history` and the
@@ -466,7 +466,7 @@ at start (v2 formula, now configurable per scenario).
   spawnpoint). *(Updated 2026-09-26, smoke test: the picker no longer opens after every respawn.)*
 
 ### 6.7 Combat rules (`SiegeCombatListener`, `EntityDamageByEntityEvent` at `HIGHEST`)
-Resolve the real attacker (projectile shooter). Then:
+Resolve the real attacker (projectile shooter). A hit by or on an NPC (`NpcEntities.isNpc`) is left alone (PandiO/knk-workspace#490, knk-plugin `next` `bd7b78a8`, not on trunk yet; [NPC navigation § 7](../../architecture/npc-navigation.md#7-npcs-and-the-player-listeners)): NPC combat in a siege (Siege Survival) needs its own rule. Then:
 - Both members of the same running match: allowed only between **different alliance groups**, and
   denied (cancel + warning sound) when either is inside their own team's spawnpoint safe zone (v2
   rule). The listener un-cancels allowed hits so region PvP flags don't interfere — **no WorldGuard PVP
