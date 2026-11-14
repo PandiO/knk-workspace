@@ -1,6 +1,6 @@
 # Knights and Kings — Player Handbook
 
-**Status:** Current · **Last updated:** 2026-11-13 (first version, replaces the archived Dutch v1 manual, PandiO/knk-workspace#296)
+**Status:** Current · **Last updated:** 2026-11-14 (Siege: link to the Siege player guide, PandiO/knk-workspace#297)
 **Checked against:** knk-plugin `main` `57884e9`, knk-web-api `master` `f445d21`, knk-web-app `main` `3ba747d`
 **Related:** [commands reference](commands.md), [menus](menus-player-guide.md), [guides index](../README.md)
 
@@ -205,7 +205,7 @@ get your items and position back, but no rewards). After a match, `/siege histor
 the match page on the website.
 
 <!-- Guide link (PandiO/knk-workspace#297): add the Siege player guide link on the next line. -->
-> **Full guide:** coming soon (Siege). Until then, see [commands reference § Sieges](commands.md#sieges).
+> **Full guide:** [Siege player guide](siege-player-guide.md): joining, teams, objectives, gates, rewards and match history.
 
 ## Building and protection
 
@@ -223,3 +223,9 @@ allowed there.
 3. **Something went wrong?** Tell staff what you did, what you expected and what happened instead. Messages like
    "the KnK service is unreachable" mean the game's services are briefly down; wait a moment and try again.
 4. **Stay safe.** Never share your password or a code from the server or `/account link`. Staff never ask for them.
+
+## Changes
+
+1. 2026-11-14: Siege: link to the Siege player guide (PandiO/knk-workspace#297)
+2. 2026-11-14: Getting around: link to the navigation and teleports player guide (PandiO/knk-workspace#298)
+3. 2026-11-13: first version, replaces the archived Dutch v1 manual (PandiO/knk-workspace#296)

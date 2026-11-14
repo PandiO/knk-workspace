@@ -1,7 +1,6 @@
 # Gate Structures — Player Guide
 
-**Status:** Living document — update in place as the game changes
-**Last updated:** 2026-11-10 (§ Cleaving: the siege enchantment for gate doors; its numbers are set by staff and shown on the web app's Guides page, PandiO/knk-workspace#259/#306); 2026-10-25 (invincible gates can't be set on fire either)
+**Status:** Current · **Last updated:** 2026-11-13 (Notes: siege gates are live, link to the Siege player guide, PandiO/knk-workspace#297)
 
 Gates, drawbridges, and portcullises are animated, damageable barriers built into walls around towns and districts — and a central part of sieges. Here's what you'll actually experience with them.
 
@@ -59,4 +58,10 @@ above are only the starting values. To see the numbers that apply now:
 
 - Only Survival-mode players can damage or interact with gates for combat purposes — Creative/Spectator/Adventure doesn't count, so you won't accidentally damage a gate while flying around in Creative.
 - Snow that settles on top of a gate's blocks (from natural weather) is cleared automatically as the gate moves, so you won't see snow left floating in mid-air after a gate opens or closes.
-- Siege-specific gate behavior (capturing a gate as an objective, guard NPCs defending it) is planned but **not live yet** — if you see references to it, that's forward-looking design, not something you can do in-game today.
+- In a siege, gates belong to a side: only that side opens them, only its enemies can damage them, and capturing an objective with a gate hands the gate to the capturing team. See the [Siege player guide](siege-player-guide.md#gates). Guard NPCs defending gates are planned, **not live yet**.
+
+## Changes
+
+1. 2026-11-13: Notes: siege gates are live, link to the Siege player guide (PandiO/knk-workspace#297)
+2. 2026-11-10: § Cleaving: the siege enchantment for gate doors; its numbers are set by staff and shown on the web app's Guides page (PandiO/knk-workspace#259/#306)
+3. 2026-10-25: invincible gates can't be set on fire either

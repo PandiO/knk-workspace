@@ -6,6 +6,14 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## 2026-11-13
 
+- **Siege player guide** (PandiO/knk-workspace#297) — no game change; players now have one guide to sieges: how to
+  join and vote, the hub and team split, spawn choice, objectives and how a match is won, fighting, siege gates, the
+  navigation compass, gear and enchantment books, leaving and rejoining, the end of a match, rewards and match history.
+  [guides/users/siege-player-guide.md](guides/users/siege-player-guide.md), written from knk-plugin `main` `57884e97`,
+  knk-web-api `master` `75b5a00` and knk-web-app `main` `3ba747d`. The gate structures player guide no longer calls
+  gate objectives "not live". Filed while writing it: #451 (a kit claimed from the menu during a match is lost at the
+  restore) and #453 (changelog entries for the alpha run 1 Siege packages merged 2026-11-01).
+  - **Admin steps:** none.
 - **Navigation and teleport guides (docs)** — players now have one page on finding the way with `/navigate` and on
   every way to teleport (spawn, hub, warps, requests, `/back`), and staff one page on building the road network and
   setting up warps, spawn and teleport prices. No game change. New: [player guide](guides/users/navigation-and-teleports-player-guide.md),
