@@ -51,7 +51,12 @@ This is a human-readable record of capabilities merged into the V3 default branc
   Batch 3: `e2e/entity-detail.spec.ts` (entity detail, 14 of 21 steps) and "Show what uses it" in
   `e2e/dashboard-access.spec.ts`; the relation picker's Jest tests marked in its guide (19 of 24 steps), fixture
   `e2e/fixtures/entityDetail.ts`. Guides: [entity detail](guides/entity-detail-smoke-test.md),
-  [relation picker and delete details](guides/relation-picker-and-delete-details-smoke-test.md).
+  [relation picker and delete details](guides/relation-picker-and-delete-details-smoke-test.md). Merged 2026-11-14
+  (knk-web-app#31, knk-workspace#538).
+  Batch 4: `e2e/data-table.spec.ts` (shared table, pager and confirm; numbers in a Dutch browser) and the existing Jest
+  and API tests marked in [data primitives](guides/data-primitives-smoke-test.md) (20 of 28 steps),
+  [feedback primitives](guides/feedback-primitives-smoke-test.md) (15 of 28) and
+  [form step conditions and step jump](guides/form-step-conditions-and-step-jump-smoke-test.md) (29 of 36).
   - **Admin steps:** none (tests and docs only).
 - **Dashboard tables: every row looks the same, the row actions stay in view, and a right-click menu**
   (PandiO/knk-workspace#404, #405, #406; staff web app only). knk-web-app branch `claude/dashboard-table-actions-404-406`,

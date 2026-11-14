@@ -1,6 +1,6 @@
 # Dashboard access model — smoke test
 
-**Status:** automated in CI; manual steps not run. 2026-11-14 ([#511](https://github.com/PandiO/knk-workspace/issues/511)): 34 checks marked `[automated]` with their test (web app § 8 in Playwright and Jest, API § 2.2, § 3, § 4 and § 7 in the API's xUnit tests); the rest is manual (migration on a real database, the plugin, live realtime, the Staff group's real metadata). Earlier: ready to run (API § 1–7, web app § 8). Not run yet: **accepted by the developer 2026-11-13 without a live
+**Status:** automated in CI; manual steps not run. 2026-11-14 ([#511](https://github.com/PandiO/knk-workspace/issues/511)): 35 checks marked `[automated]` with their test (web app § 8 in Playwright and Jest, API § 2.2, § 3, § 4 and § 7 in the API's xUnit tests); the rest is manual (migration on a real database, the plugin, live realtime, the Staff group's real metadata). Earlier: ready to run (API § 1–7, web app § 8). Not run yet: **accepted by the developer 2026-11-13 without a live
 test**, scheduled in closed alpha test run 2 (checklist § 4c). AM1 and AM2 merged 2026-11-12 (knk-web-api `master`
 `bc97b7d`); AM3 merged 2026-11-13 (knk-web-app `main` `e02ee79`, knk-web-api `master` `45043a7`, also on `next`).
 AM4 (living docs, the [admin guide to the ranks](admin/dashboard-access-admin-guide.md)) done 2026-11-13 (#366).
@@ -229,7 +229,7 @@ and at 390 px width (phone): nothing scrolls sideways, the bulk dialogs fit.
    card's Add / Edit (`knk.admin.road`) still work. **world-only**, a town's detail page: a field's ✎ (hot edit, only
    where the display configuration marks a field "editable in display") is greyed out with the same hint. **With `knk.admin.content` added:** the toggle switches the type (confirm dialog),
    Create New Street creates and selects the street, ✎ saves.
-10. [ ] **content-only**, Entity setup of a type (⚙): a form configuration's ⋯ → **Delete** works as before. With a
+10. [automated] `src/pages/__tests__/FormWizardPage.deleteConfig.test.tsx` ("disables a configuration's Delete with Requires knk.admin.delete"), `FormConfigurationTable.delete.test.tsx` **content-only**, Entity setup of a type (⚙): a form configuration's ⋯ → **Delete** works as before. With a
     user-level deny `knk.admin.delete = false` on that account (reload after the change): the Delete item is greyed out
     with "Requires knk.admin.delete", for form and display configurations alike (LV7-8).
 
