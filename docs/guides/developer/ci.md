@@ -1,6 +1,6 @@
 # CI: what runs on every push and how to mark a known failure
 
-**Status:** Active · **Last updated:** 2026-11-14 (plugin scenarios in `paper-boot.yml`, § 7.1, [#421](https://github.com/PandiO/knk-workspace/issues/421), in knk-plugin `next`); 2026-11-14 (web app end-to-end tests: `e2e.yml`, § 1.1.3, [#423](https://github.com/PandiO/knk-workspace/issues/423)); 2026-11-14 (plugin Paper boot test `paper-boot.yml`, § 1, § 1.1.2 and § 7, [#420](https://github.com/PandiO/knk-workspace/issues/420)); 2026-11-13 (workflows renamed "Build and test"; Codex review comments are not CI, § 1); 2026-11-13 (§ 4 the CI run decides, § 5 reading runs as an agent, § 6 the Node.js 20 warning, [#363](https://github.com/PandiO/knk-workspace/issues/363)); 2026-11-13 (first version, [PandiO/knk-workspace#362](https://github.com/PandiO/knk-workspace/issues/362), docs follow-up of [#327](https://github.com/PandiO/knk-workspace/issues/327); checked against knk-web-api `master` `210f731`, knk-web-app `main` `33d68f8`, knk-plugin `main` `e8b651d`)
+**Status:** Active · **Last updated:** 2026-11-14 (§ 1.1.2: the `requires-bukkit` tests run in CI with MockBukkit, [#499](https://github.com/PandiO/knk-workspace/issues/499), in knk-plugin `next`); 2026-11-14 (plugin scenarios in `paper-boot.yml`, § 7.1, [#421](https://github.com/PandiO/knk-workspace/issues/421), in knk-plugin `next`); 2026-11-14 (web app end-to-end tests: `e2e.yml`, § 1.1.3, [#423](https://github.com/PandiO/knk-workspace/issues/423)); 2026-11-14 (plugin Paper boot test `paper-boot.yml`, § 1, § 1.1.2 and § 7, [#420](https://github.com/PandiO/knk-workspace/issues/420)); 2026-11-13 (workflows renamed "Build and test"; Codex review comments are not CI, § 1); 2026-11-13 (§ 4 the CI run decides, § 5 reading runs as an agent, § 6 the Node.js 20 warning, [#363](https://github.com/PandiO/knk-workspace/issues/363)); 2026-11-13 (first version, [PandiO/knk-workspace#362](https://github.com/PandiO/knk-workspace/issues/362), docs follow-up of [#327](https://github.com/PandiO/knk-workspace/issues/327); checked against knk-web-api `master` `210f731`, knk-web-app `main` `33d68f8`, knk-plugin `main` `e8b651d`)
 
 The GitHub workflows of the component repos are the automated gate for every change. They run on every push (all
 branches), every pull request and on manual dispatch (`workflow_dispatch`). Under the
@@ -38,13 +38,14 @@ Both `ci.yml` workflows cancel an earlier run of the same branch and event when 
    `KNK_TEST_MYSQL="Server=localhost;User=knk_test;Password=…" dotnet test …`; the user needs the right to create and
    drop databases named `KNK_TEST_MYSQL_DB_PREFIX`* (default `knk_test_`). Fresh-database migration bugs are caught by
    `migrations.yml` instead.
-2. **Plugin tests tagged `requires-bukkit`.** Seven test files in `knk-paper` are excluded by `excludeTags` in
-   `knk-paper/build.gradle.kts` (no test uses the `integration` tag), and a few are `@Disabled` because
-   WorldEdit/WorldGuard are not on the test classpath. They are Mockito unit tests in the Gradle JVM, not tests that
-   talk to a server, so the boot test (§ 7) can't run them. `./gradlew :knk-paper:taggedTest` runs them (52 tests,
-   32 failing on 2026-11-14: Bukkit statics without a server, stale stubs and expectations). Making them pass, and the
-   choice between plain Mockito fixes, MockBukkit and in-plugin scenarios, is
-   [#499](https://github.com/PandiO/knk-workspace/issues/499).
+2. **Plugin tests tagged `requires-bukkit`: none any more** ([#499](https://github.com/PandiO/knk-workspace/issues/499),
+   in knk-plugin `next` since `0810a6c7`, 2026-11-14). The seven test files that `excludeTags` kept out of `test`
+   (52 tests, 32 failing on 2026-11-14: Bukkit statics without a server, stale stubs and expectations) pass and run in
+   `test`, so `build.yml` runs them; the tags, `excludeTags` and the `taggedTest` task are gone. Tests that need Bukkit
+   statics (`Registry`, `Material.isSolid()`, `Bukkit.getScheduler()`) start a MockBukkit server themselves
+   (`MockBukkit.mock()` / `unmock()`, test-only dependency, developer decision 2026-11-14;
+   [plugin architecture § Testing](../../architecture/plugin-architecture.md#testing)). A few tests are still
+   `@Disabled` because WorldEdit/WorldGuard are not on the test classpath (the 18 skipped).
 3. **Web app end-to-end tests** run in CI since 2026-11-14 ([#423](https://github.com/PandiO/knk-workspace/issues/423)):
    the workflow `.github/workflows/e2e.yml` (job `e2e`, Chromium only, timeout 10 minutes) installs with npm 11, type
    checks the specs and mocks (`npm run typecheck:e2e`), installs Chromium (`npx playwright install --with-deps

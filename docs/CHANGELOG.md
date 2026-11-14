@@ -4,6 +4,16 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Plugin: the 52 tests that CI skipped now run, with MockBukkit**
+  ([PandiO/knk-workspace#499](https://github.com/PandiO/knk-workspace/issues/499); developer-facing, nothing changes
+  in game). Merged into `next` 2026-11-14 (knk-plugin#32, merge `0810a6c7`; docs knk-workspace#539); on the trunk when the developer promotes `next`.
+  - The seven `requires-bukkit` test files of `knk-paper` pass and run in `./gradlew test` and CI; the tag exclusion and
+    the `taggedTest` task are gone. knk-paper: 2,690 tests before, 2,735 after (all green; 18 skipped as before).
+  - MockBukkit (`mockbukkit-v26.3` 4.120.0) is a test-only dependency (developer decision 2026-11-14) for tests that need
+    Bukkit statics; its JUnit 6 dependency is excluded, the project stays on JUnit 5.
+  - Stale tests were brought up to date, none deleted or skipped: the removed in-game account creation flow (KNG-67,
+    KNG-208), `/account link` argument handling, Component messages, existing users looked up by UUID.
+  - **Admin steps:** none.
 - **Plugin features can prove themselves on a real server in CI: in-plugin test scenarios**
   ([PandiO/knk-workspace#421](https://github.com/PandiO/knk-workspace/issues/421); developer-facing, nothing changes for
   players). Merged into `next` 2026-11-14 (knk-plugin#30, merge `309d3580`; docs knk-workspace#532); on the trunk when the developer promotes `next`.
