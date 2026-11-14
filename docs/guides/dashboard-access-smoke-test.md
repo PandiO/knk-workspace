@@ -294,6 +294,33 @@ not run.
 8. Manual (real data): Export as CSV from the menu on an unticked row gives a file with that row only; with two rows
    ticked, the menu's export has both. Delete from the menu asks the same confirmation as the row button.
 
+### 8.6 The PermissionGrant table (#408)
+
+knk-web-api and knk-web-app branches `claude/permission-grant-table-408` (PRs into `next`, not merged). Automated in
+CI (knk-web-app `e2e/permission-grants.spec.ts`, Jest `permissionGrantClient.test.ts`; knk-web-api
+`PermissionGrantReadGateTests`, `PermissionGrantRepositoryTests`); manual steps not run. Deploy the API and the web app
+together: an old API refuses the table's search without `knk.admin.user.perm`.
+
+1. [automated] Owner/Admin: Dashboard → Permission Grant lists the grants with ID, Node, Effect (Granted/Denied),
+   Holder and Expires (UTC): `e2e/permission-grants.spec.ts`.
+2. [automated] Next shows page 2; a column header sorts through the API (ascending, then descending); the search box
+   finds grants by node: `e2e/permission-grants.spec.ts`, `PermissionGrantRepositoryTests`.
+3. [automated] `POST api/PermissionGrants/search`, `GET` and `GET {id}` need `knk.admin.user.manage` (the type's view
+   node); a web user with only `knk.admin.user.perm` gets 403; writes stay on `knk.admin.user.perm`:
+   `PermissionGrantReadGateTests`.
+4. [automated] A rank with `knk.admin.user.manage` but not `knk.admin.user.perm` reads the table; New and Edit are
+   disabled with "Requires knk.admin.user.perm"; there is no Delete action: `e2e/permission-grants.spec.ts`.
+5. [automated] A rank without `knk.admin.user.manage` isn't offered the type (the URL falls back to a type it may see);
+   when the API refuses the read anyway, the table says "You don't have access to … Requires …" instead of "Failed to
+   load data": `e2e/permission-grants.spec.ts`.
+6. Manual (real data, deployed together): as the owner on `next`, open Permission Grant: the rows match the grants of a
+   player you know (their profile's Permissions tab) and of the Staff group, a group row shows "Group #<id>", and
+   sorting by Expires puts never-expiring grants first ascending. Why manual: the real database and deploy, not the
+   mocked API.
+7. Manual (real rank): with a test rank that holds `knk.admin.user.manage` but not `knk.admin.user.perm` (the alpha's
+   Staff, if it lacks `perm`), open the table: it loads and New / Edit are greyed out. Why manual: real permission
+   resolution and the deployed API's gate.
+
 ## 9. Docs impact
 
 **#383:** this guide step 9c and the CHANGELOG entry ship with the branch. At merge, for the `documentation`
