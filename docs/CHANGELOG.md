@@ -6,7 +6,7 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 - **Plugin features can prove themselves on a real server in CI: in-plugin test scenarios**
   ([PandiO/knk-workspace#421](https://github.com/PandiO/knk-workspace/issues/421); developer-facing, nothing changes for
-  players). knk-plugin and knk-workspace branches `claude/plugin-scenarios-421` (PRs into `next`, not merged).
+  players). Merged into `next` 2026-11-14 (knk-plugin#30, merge `309d3580`; docs knk-workspace#532); on the trunk when the developer promotes `next`.
   - A scenario builds a small scene on a test server (blocks, a WorldGuard region, mobs, fake API data), plays it out
     over server ticks and asserts the result. The runner is platform-free in `knk-core` (`core/scenario/`), the Bukkit
     glue and the scenarios in `knk-paper` (`paper/scenario/`). Each scenario logs `KNK-SCENARIO PASS|FAIL <name>`, then

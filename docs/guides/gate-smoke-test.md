@@ -1,7 +1,7 @@
 # Gates — smoke test checklist
 
 **Status:** Living checklist. Section 2 (gate safety, [KNG-105](https://linear.app/kngpandi/issue/KNG-105) / [KNG-106](https://linear.app/kngpandi/issue/KNG-106)) **passed 2026-10-10** (developer live test, all steps 1-20 accepted) and is **merged**: knk-plugin `main` merge `8457657` (`b95b1c6` KNG-105, `f157372` KNG-106; [handoff](../ai-agents/handoffs/2026-10-10-gate-safety-kng-105-106.md)).
-**Last updated:** 2026-11-14 (§ 2 steps 11 and 20: the automated parts, plugin scenarios, [#421](https://github.com/PandiO/knk-workspace/issues/421), on a branch); 2026-10-19 (section 3, drawbridges, [KNG-193](https://linear.app/kngpandi/issue/KNG-193): passed on gate door 14; merged)
+**Last updated:** 2026-11-14 (§ 2 steps 11 and 20: the automated parts, plugin scenarios, [#421](https://github.com/PandiO/knk-workspace/issues/421), in knk-plugin `next`); 2026-10-19 (section 3, drawbridges, [KNG-193](https://linear.app/kngpandi/issue/KNG-193): passed on gate door 14; merged)
 **Related:** [gate commands](../architecture/gate-commands.md) (its §6 is the KNG-77/78/79 command checklist, passed 2026-10-09), [gate specs](../specs/gate-structure-animation/)
 
 Run these on the dev server after deploying the plugin (`./gradlew :knk-paper:dev`). Use a test gate with at least
