@@ -4,7 +4,7 @@
 default branches; S1–S3 issues closed 2026-11-05. `realtime.enabled` stays `false` by default. § S4 (#183) merged
 2026-11-12 (API `master` `bc97b7d`, web app `main` `1371951`), **not run yet**. § S5 (#184): API part merged 2026-11-12, plugin part merged into `next`
 2026-11-13 (knk-plugin `next` `745fcf6`), **not run yet**
-**Last updated:** 2026-11-13 (§ S5 account erasure push, #184, brought into `claude/plugin-chains-into-next`, not run); 2026-11-13 (§ S4: the dashboard opens for any area node since #280 AM3; a world-only account for step 2, docs #366); 2026-11-12 (§ S4 merged, not run; accounts and step 6 follow the area nodes of #280 AM1, docs #341); 2026-11-06 (§ S4 step 9: `Realtime:WebLiveUpdatesEnabled` switch, #183, feature branch); 2026-11-05 (§ S4, #183, feature branch); 2026-11-05 (S1, S2, S3 findings; S2 steps 5 and 7 corrected); 2026-11-05 (§ WT2 follow-ups: findings, merged); 2026-11-04 (§ WT2 follow-ups #239/#240, feature branch); 2026-11-04 (WT2 findings; merged); 2026-11-02 (§ S3, #182); 2026-11-02 (§ WT2, #181)
+**Last updated:** 2026-11-14 (§ S5 steps 4, 5, 5a and 7 after the #486 retest: the `First join:` log line, realtime off, the feed in PascalCase); 2026-11-13 (§ S5 account erasure push, #184, brought into `claude/plugin-chains-into-next`, not run); 2026-11-13 (§ S4: the dashboard opens for any area node since #280 AM3; a world-only account for step 2, docs #366); 2026-11-12 (§ S4 merged, not run; accounts and step 6 follow the area nodes of #280 AM1, docs #341); 2026-11-06 (§ S4 step 9: `Realtime:WebLiveUpdatesEnabled` switch, #183, feature branch); 2026-11-05 (§ S4, #183, feature branch); 2026-11-05 (S1, S2, S3 findings; S2 steps 5 and 7 corrected); 2026-11-05 (§ WT2 follow-ups: findings, merged); 2026-11-04 (§ WT2 follow-ups #239/#240, feature branch); 2026-11-04 (WT2 findings; merged); 2026-11-02 (§ S3, #182); 2026-11-02 (§ WT2, #181)
 **Design:** [specs/realtime-signalr/DESIGN.md](../specs/realtime-signalr/DESIGN.md) (§4–§5, as built: §4.6) ·
 [IMPLEMENTATION_PLAN.md](../specs/realtime-signalr/IMPLEMENTATION_PLAN.md) ·
 **Issues:** [PandiO/knk-workspace#178](https://github.com/PandiO/knk-workspace/issues/178) (S1),
@@ -326,22 +326,36 @@ Plugin log lines start with `[KnK Privacy]` and name only the erasure number.
 4. **Returning player.** T1 joins again with the same Minecraft account: the server treats them as a new player (a new
    account, or the admission gate's answer for a new player), with nothing of the old account (balances, ranks). Since
    #486 this holds even when Minecraft's own player files are kept (don't delete them for this step): the first-join
-   welcome, not "Welcome back", and the discovery messages stay quiet for the new-player minutes. The `First-join kits:`
-   log line names the signal (`erased`).
+   welcome, not "Welcome back", and the discovery messages stay quiet for the new-player minutes. After
+   `Player T1 joined, syncing account data...` the log shows `First join: T1 (user <id>) ...` naming the signal
+   (`has a new account` or `returns after their previous account was erased`). There is no
+   `First-join kits: no cached user ... skipped` line any more (the #486 retest: the decision waited for a cached user,
+   which the erasure had dropped).
+   **Realtime off.** Repeat with `realtime.enabled: false` and a fresh test account: erase it while the player is
+   offline, restart, and join. Nothing is erased on the server, but the API creates a fresh account while the player
+   connects, so the log shows `First join: ... has a new account` and the player gets the first-join welcome and the
+   quiet minutes. (A player who got their account back on the website before joining is not new with realtime off:
+   only the erasure mark tells, and that needs the push or the catch-up.)
 5. **Caught up after the server was down.** Stop the Minecraft server. O erases T2. Start the server: on the hub
    connect the resync step "account erasures" logs `Erasure #N+1 applied: ...` (T2's offline-store entry and spool
    files gone) and `erasure-feed.json` moves to N+1. Restart once more: nothing is applied again. Then T2 joins: greeted
-   as a **new** player (first-join welcome, quiet discovery minutes), not "Welcome back" (#486; the developer's run of
-   2026-11-14 failed here before the fix). `plugins/KnightsAndKings/erasure-first-joins.json` held one entry (a hash,
-   no UUID or name) until the join took it.
+   as a **new** player (first-join welcome, quiet discovery minutes), not "Welcome back" (#486; the developer's runs of
+   2026-11-14 failed here: first the join wasn't marked, then the catch-up read nothing because the feed comes in
+   PascalCase). `plugins/KnightsAndKings/erasure-first-joins.json` held one entry (a hash, no UUID or name) until the
+   join took it. On the first start with the fixed plugin, `erasure-feed.json` may still say `"lastId":0`: the first
+   catch-up then applies the older erasures too (harmless, every step is idempotent) and moves to the newest id.
    5a. **Join right after the start (#486).** Stop the server, O erases T6, start the server and let T6 join at once
    (before or while the catch-up runs): the join waits at most 5 s for the first catch-up, then T6 is greeted as new as
-   in step 5. With the API stopped the join is not held up longer than that.
+   in step 5 (`First join: T6 (user <id>) returns after their previous account was erased` or `has a new account`).
+   With the API stopped the join is not held up longer than that.
 6. **API down during the catch-up.** Stop the API, erase nobody, start the Minecraft server, then start the API: the
    catch-up runs at the hub connect and applies nothing new; no errors beyond the connection messages.
 7. **Feed endpoint.** `curl -s https://<api>/api/privacy/erasures?since=0` without a key: 401; with a web login: 403;
-   with `X-API-Key: <plugin key>`: the rows with `erasureId`, `userId`, `formerUuid`, `erasedAt`, and `lastId`,
-   `hasMore`, `latestId`.
+   with `X-API-Key: <plugin key>`: the rows in PascalCase, as the API serializes this DTO (`Program.cs`
+   `PropertyNamingPolicy = null`, no `[JsonPropertyName]` on `PrivacyErasureFeedDto`):
+   `{"Items":[{"ErasureId":…,"UserId":…,"FormerUuid":"…","ErasedAt":"…"}],"LastId":…,"HasMore":…,"LatestId":…}`.
+   The plugin reads both casings since the #486 retest; `LastId` must match the `lastId` in `erasure-feed.json` after
+   step 5.
 8. **Settle time.** Put `Privacy__GraceDays` back to 5 (or remove it) and restart the API.
 
 Record under **Findings** how long 2 took and the counts the log showed (2 and 2a).
