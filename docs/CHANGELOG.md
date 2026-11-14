@@ -47,7 +47,11 @@ This is a human-readable record of capabilities merged into the V3 default branc
   (dashboard access § 8, with the API's xUnit tests marked in § 2.2, § 3, § 4 and § 7; 31 checks), fixture
   `e2e/fixtures/dashboardAccess.ts`. Found: Mail log and Invitations scroll sideways at phone width
   ([#535](https://github.com/PandiO/knk-workspace/issues/535)). Guides: [admin navigation](guides/admin-navigation-smoke-test.md),
-  [dashboard access](guides/dashboard-access-smoke-test.md).
+  [dashboard access](guides/dashboard-access-smoke-test.md). Merged 2026-11-14 (knk-web-app#30, knk-workspace#537).
+  Batch 3: `e2e/entity-detail.spec.ts` (entity detail, 14 of 21 steps) and "Show what uses it" in
+  `e2e/dashboard-access.spec.ts`; the relation picker's Jest tests marked in its guide (19 of 24 steps), fixture
+  `e2e/fixtures/entityDetail.ts`. Guides: [entity detail](guides/entity-detail-smoke-test.md),
+  [relation picker and delete details](guides/relation-picker-and-delete-details-smoke-test.md).
   - **Admin steps:** none (tests and docs only).
 - **Dashboard tables: every row looks the same, the row actions stay in view, and a right-click menu**
   (PandiO/knk-workspace#404, #405, #406; staff web app only). knk-web-app branch `claude/dashboard-table-actions-404-406`,

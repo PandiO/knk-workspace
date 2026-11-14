@@ -1,6 +1,6 @@
 # Dashboard access model — smoke test
 
-**Status:** automated in CI; manual steps not run. 2026-11-14 ([#511](https://github.com/PandiO/knk-workspace/issues/511)): 31 checks marked `[automated]` with their test (web app § 8 in Playwright and Jest, API § 2.2, § 3, § 4 and § 7 in the API's xUnit tests); the rest is manual (migration on a real database, the plugin, live realtime, the Staff group's real metadata). Earlier: ready to run (API § 1–7, web app § 8). Not run yet: **accepted by the developer 2026-11-13 without a live
+**Status:** automated in CI; manual steps not run. 2026-11-14 ([#511](https://github.com/PandiO/knk-workspace/issues/511)): 34 checks marked `[automated]` with their test (web app § 8 in Playwright and Jest, API § 2.2, § 3, § 4 and § 7 in the API's xUnit tests); the rest is manual (migration on a real database, the plugin, live realtime, the Staff group's real metadata). Earlier: ready to run (API § 1–7, web app § 8). Not run yet: **accepted by the developer 2026-11-13 without a live
 test**, scheduled in closed alpha test run 2 (checklist § 4c). AM1 and AM2 merged 2026-11-12 (knk-web-api `master`
 `bc97b7d`); AM3 merged 2026-11-13 (knk-web-app `main` `e02ee79`, knk-web-api `master` `45043a7`, also on `next`).
 AM4 (living docs, the [admin guide to the ranks](admin/dashboard-access-admin-guide.md)) done 2026-11-13 (#366).
@@ -218,7 +218,7 @@ and at 390 px width (phone): nothing scrolls sideways, the bulk dialogs fit.
    `knk.admin.content`.
    9a. [automated] `ObjectDashboard.test.tsx` ("enables New and Edit for the area node plus knk.admin.content"); the saved draft and edit are the form wizard's own tests **world + content** (an account holding both): New Town, New with and Edit open the Town form; a draft
    saves; the edit saves.
-   9b. [ ] **world-only** (#374), a town's detail page: the Streets section's **Add…**, a street's **Unlink** and the
+   9b. [automated] `e2e/entity-detail.spec.ts` ("world-only (#374)"), `src/components/DisplayWizard/__tests__/DisplayWizard.relationships.test.tsx` **world-only** (#374), a town's detail page: the Streets section's **Add…**, a street's **Unlink** and the
    Location's **Change…** / **Unlink** are greyed out with "Requires knk.admin.content" (the hint line under the
    section says so); **Delete** of a street (with `knk.admin.delete`) still works. **world + content**: Add… links a
    street, Unlink removes the link.
@@ -259,11 +259,11 @@ and at 390 px width (phone): nothing scrolls sideways, the bulk dialogs fit.
     "(search)").
 18. [automated] `src/components/ObjectDashboard/__tests__/DashboardSelectionBar.test.tsx`, `tableExport.test.tsx` ("keeps the order it was ticked in") Tick three rows in a different order than the table shows, export: the file lists them **in the order you
     ticked them**, with their current values ("(selection)" in the audit entry).
-19. [ ] **content-only**, a form of a content type with a field that picks a record of another area (for example a
+19. [automated] `src/components/FormWizard/__tests__/RelationPicker.test.tsx` ("searches api/Lookup without a read node") **content-only**, a form of a content type with a field that picks a record of another area (for example a
     world type; world-only accounts no longer open forms, #371): the picker shows "Names only: the full … table needs
     one of: …" and still finds records by name (lookup mode, V6); **Create New** for that field is not offered (it
     needs that type's create node). A picker of a content type keeps the full table and Create New.
-20. [ ] **world-only**, a refused read shows words instead of "Failed to load data": open `/display/Category/<id>` →
+20. [automated] for the detail page's words: `e2e/entity-detail.spec.ts` ("You don't have access" with the nodes), `DisplayWizard.relationships.test.tsx`; the full table's refusal stays manual **world-only**, a refused read shows words instead of "Failed to load data": open `/display/Category/<id>` →
     "You don't have access to this Category." with "Requires one of: knk.admin.content, …" (V5's detail page); a table
     of another area's type (for example a picker's **Open full table** if one is offered) says "You don't have access
     to Category. Requires one of: …".
