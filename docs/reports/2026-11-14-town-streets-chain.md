@@ -17,7 +17,7 @@
 
 | Link | Issue | Status | Branch heads | PR | CI | How started | Test rule |
 |---|---|---|---|---|---|---|---|
-| L1 Design note and data check | #514 | Not started | — | — | — | — | automated first, `main` `aa4208b3` |
+| L1 Design note and data check | #514 | Running | — | — | — | create_session session_01R1w2UsgcJBhVZofGWWe6wN (`source_revision` `main`) | automated first, `main` `aa4208b3` |
 | L2 Implementation | #515 | Not started | — | — | — | — | — |
 | L3 Smoke tests and changelog | #516 | Not started | — | — | — | — | — |
 
@@ -47,6 +47,10 @@
 7. **Developer gate after L1.** Chosen: the coordinator asks the developer with AskUserQuestion once L1's note and
    SQL are on the branch, and records the answer on #515, because a link session's question may go unseen.
    Alternatives: (a) the L1 link asks itself.
+8. **Overlap with the #511 test backfill** (row added 2026-11-14, branch `claude/test-backfill-511`): it marks
+   automated steps in `docs/guides/*smoke-test*.md`, possibly `dashboard-access-smoke-test.md`, which L3 edits
+   (§ 2.2 step 2, § 8 step 9b). Chosen: not a blocker; L3 keeps to those two steps and merges `origin/next` first, so
+   any conflict stays mechanical. Alternatives: (a) wait for #511 to finish before L3; (b) ask #511 to make the edit.
 
 ## 4. Link blocks
 
