@@ -140,7 +140,7 @@ This is a human-readable record of capabilities merged into the V3 default branc
   follows.
 - **Erasure retest fixes: first join without a cached user, erasure feed in PascalCase, test walkers out of the
   water** (PandiO/knk-workspace#486 retest, #490 remainder; plugin only). knk-plugin branch
-  `claude/erasure-first-join-486-retest` (PR into `next`, in review, not merged). The developer's retest of 2026-11-14
+  `claude/erasure-first-join-486-retest`, merged into `next` 2026-11-14 (knk-plugin#29, `058f93a`); on the trunk when the developer promotes `next`. The developer's retest of 2026-11-14
   (plugin `0.1.0+a760c4a4`) still got "Welcome back" in § S5 steps 1, 4, 5 and 5a. Two causes, both fixed:
   1. **The first join was decided from the user cache at `PlayerJoinEvent`**, which an erasure empties (and so does a
      website account that has no UUID yet), so the decision was skipped (`First-join kits: no cached user ... skipped`).
