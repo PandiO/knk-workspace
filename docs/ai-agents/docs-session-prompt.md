@@ -1,6 +1,6 @@
 # Docs session prompt
 
-**Status:** Current · **Last updated:** 2026-11-13 (Codex findings handled before the docs PR merges) · 2026-11-12 (starts at the merge into `next`; docs PR into `next`, merged by the docs session itself, a developer decision; finished rows go to the sessions archive; PandiO/knk-workspace#330) · 2026-11-10 (first version, PandiO/knk-workspace#292)
+**Status:** Current · **Last updated:** 2026-11-14 (knk-web-api's trunk renamed from `master` to `main`) · 2026-11-13 (Codex findings handled before the docs PR merges) · 2026-11-12 (starts at the merge into `next`; docs PR into `next`, merged by the docs session itself, a developer decision; finished rows go to the sessions archive; PandiO/knk-workspace#330) · 2026-11-10 (first version, PandiO/knk-workspace#292)
 
 The implementing session uses this prompt when it starts a docs session after a merge: the feature's merge into `next`
 once the global branch model applies, until then the merge into the default branch. The steps are in
@@ -17,7 +17,7 @@ branch model applies> <commit>, ... (PRs: <links>).
 
 Setup: knk-workspace is attached. The code repos are public and readable without attaching: clone what you need with
 `git clone --depth 1 -b <branch> https://github.com/PandiO/<repo>` (the branch named above; default branches:
-knk-web-api master, knk-web-app main, knk-plugin main).
+`main` in every repo).
 <Only if the seed is affected:> Attach PandiO/knk-dev-db-seed with add_repo (access read) and clone it.
 
 1. Read AGENTS.md, docs/ai-agents/GLOBAL_AGENT_INSTRUCTIONS.md, docs/guides/developer/DOCUMENTATION_MAINTENANCE.md

@@ -19,7 +19,7 @@ branch model applies, merges into `next`. Links follow the `knk-link` skill.
    [charter-template.md](charter-template.md), [report-template.md](report-template.md).
 3. **Branch model check.** The `next` rules (links branch from `next`, PRs target `next`, you merge into `next`) apply
    as soon as CI runs on the API and web-app default branches (developer decision 2026-11-12). Check, after `git fetch`:
-   `git -C <knk-web-api> ls-tree --name-only origin/master .github/workflows/ci.yml` and
+   `git -C <knk-web-api> ls-tree --name-only origin/main .github/workflows/ci.yml` and
    `git -C <knk-web-app> ls-tree --name-only origin/main .github/workflows/ci.yml` must both print the path.
    Until then the old rules hold: links branch from the default branch, PRs target it, **nobody in the chain merges**;
    the developer merges. Write which rule set the chain uses in the progress report's first coordinator decision.

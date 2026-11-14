@@ -28,8 +28,8 @@ something different from this skill, the prompt and charter win.
    lines or the claim is active on the same area (stop and flag it, § 4); additive edits elsewhere in the file go ahead
    and are logged as an agent decision with alternatives (§ 5).
 3. **Base branch.** Your prompt names it. Without one: `next` once the branch model applies (CI workflow
-   `.github/workflows/ci.yml` on knk-web-api `master` and knk-web-app `main`), otherwise the repo's default branch
-   (`master` for knk-web-api, `main` for the others). Never start from another feature's unmerged branch unless the
+   `.github/workflows/ci.yml` on knk-web-api `main` and knk-web-app `main`), otherwise the repo's default branch
+   (`main` in every repo). Never start from another feature's unmerged branch unless the
    charter stacks you on it.
 4. **Branch.** The link's feature branch in every repo you change. Missing: create it from `origin/<base>`. Existing
    (a later link of the same feature): check it out, pull, and **merge** (never rebase) `origin/<base>` into it, at the

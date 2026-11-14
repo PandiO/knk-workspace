@@ -147,10 +147,10 @@ Claude Code and Codex alike, regardless of where repos are cloned.
 Developer decision 2026-11-12, [AI agent workflow design](../specs/ai-agent-workflow/DESIGN.md) § 2 and § 5; the
 start condition and the coordinator merge were confirmed by the developer the same day (setup chain, PandiO/knk-workspace#327); rules 3, 4, 10 and 11 were changed or added on 2026-11-13 (merging outside a chain, Codex findings, GitHub rulesets, agent workflow files to `main`).
 **These rules apply as soon as CI runs on the API and web-app default branches** (PandiO/knk-workspace#328:
-`.github/workflows/ci.yml` on knk-web-api `master` and knk-web-app `main`). Until then the current rules hold: feature
+`.github/workflows/ci.yml` on knk-web-api `main` and knk-web-app `main`). Until then the current rules hold: feature
 branches start from the default branch, pull requests target it, and only the developer merges.
 
-1. **Trunk = production.** The default branches (`master` for knk-web-api, `main` for the others) move only when the
+1. **Trunk = production.** The default branches (`main` in every repo; knk-web-api's was `master` until 2026-11-14) move only when the
    developer accepts a release. Releases are numbered tags on trunk (for example `v0.12`); deploys use the tag and a
    rollback deploys the previous tag. A release branch is cut from a tag only for a hotfix while `next` holds
    unfinished work.
@@ -194,7 +194,7 @@ branches start from the default branch, pull requests target it, and only the de
 9. Chain bookkeeping (progress reports, charters, `docs/ACTIVE_SESSIONS.md` and its archive files) stays on
    knk-workspace `main`, as before.
 10. **GitHub rulesets** (set up by the developer 2026-11-13) enforce part of this. On knk-web-api, knk-web-app and
-    knk-plugin, `master`/`main` and `next` need a pull request (no approvals required), the CI checks
+    knk-plugin, `main` and `next` need a pull request (no approvals required), the CI checks
     (`build-and-test` and `fresh-database` on the API, `build-and-test` on the web app, `build` on the plugin), every
     review conversation resolved (so Codex threads must be answered and resolved, rule 4), and a merge commit; they
     cannot be deleted or force-pushed. On knk-workspace, `main` and `next` are only protected against deletion and

@@ -1,6 +1,6 @@
 # AI agent workflow: roles, branches, skills and testing
 
-**Status:** Decided 2026-11-12 (developer, voice discussion) · **Last updated:** 2026-11-12
+**Status:** Decided 2026-11-12 (developer, voice discussion) · **Last updated:** 2026-11-14 (knk-web-api's trunk renamed from `master` to `main`) · 2026-11-12
 
 This design adds a delegation layer (intake, design, manager and coordinator roles), a `next` integration branch with
 risk tiers, project skills in knk-workspace, and CI as the gate agents must pass. It builds on the
@@ -39,7 +39,7 @@ Aims:
 
 ## 2. Branches, releases and risk tiers
 
-1. **Trunk = production.** The default branches (`master` for knk-web-api, `main` for the others) move only when the
+1. **Trunk = production.** The default branches (`main` in every repo; knk-web-api's was `master` until 2026-11-14) move only when the
    developer accepts a release.
 2. **`next` = integration.** One `next` branch per repo collects finished work. Feature branches start from `next`, so a
    feature that depends on another unreviewed feature can continue the same day.

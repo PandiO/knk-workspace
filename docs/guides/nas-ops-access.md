@@ -1,6 +1,6 @@
 # NAS operations access for agents (`knk-ops`)
 
-**Status:** Current · **Last updated:** 2026-11-13 (LAN addresses replaced by placeholders, PandiO/knk-workspace#305)
+**Status:** Current · **Last updated:** 2026-11-14 (knk-web-api's trunk renamed from `master` to `main`); 2026-11-13 (LAN addresses replaced by placeholders, PandiO/knk-workspace#305)
 **Installed:** Stage A (read-only checks) installed on the NAS and verified 2026-10-18 · Stage B (`knk-deploy`, delegated changes) built, tested and **installed 2026-10-25**
 **Sources:** wrapper sources and checksums in [`scripts/nas-ops/stage-a/`](../../scripts/nas-ops/stage-a/) ·
 session report [2026-10-18 NAS ops access and alpha check](../reports/2026-10-18-nas-ops-access-and-alpha-check.md) ·
@@ -205,7 +205,7 @@ knk-deploy`); backups in `/var/lib/knk-deploy/backups/<time>-<what>/`.
   didn't mount before; an internal network can't become external and a service without internet can't gain it.
 - Secret values never leave the NAS: reads replace them with `<<secret:NAME>>`, applies put them back; an unknown
   token is refused. New or rotated secrets stay a developer step (`read -rs`).
-- Trunk-only is enforced on the PC (`knk-release.sh` checks `merge-base --is-ancestor` against `origin/master|main`),
+- Trunk-only is enforced on the PC (`knk-release.sh` checks `merge-base --is-ancestor` against `origin/main`),
   not on the NAS, which has no GitHub access. The Claude Code `ask` rules make the developer confirm each change.
 
 ### 7.3 For agents using it
