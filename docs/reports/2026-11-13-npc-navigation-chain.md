@@ -30,8 +30,10 @@ chains' work) with Citizens build 4269 and the `npc.navigation` block from the c
    own rule.
 7. **Promotion of `next`** in knk-plugin and knk-workspace when the tests pass; #359, #360, #361, #377 and #490 stay
    `status:in-review` until then. #358 stays open for Phases 5–8.
-8. **Docs:** #496 (Docs: NPC navigation Phases 1–4) runs in its own docs session; it merges its docs PR into `next`
-   itself.
+8. **Docs:** #496 done 2026-11-14 (knk-workspace#498 merged into `next` as `acf2aaf9`: new
+   `architecture/npc-navigation.md`, permission checks, production installation § 9, register row, listener notes in
+   the siege, teleport and statistics specs). Leftover #497 (NPC navigation admin guide) is needed before a deploy
+   turns `npc.navigation.enabled` on.
 
 ## 2. Summary
 
