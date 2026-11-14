@@ -4,6 +4,50 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Smoke-test fixes on `next` from 2026-11-14** (PandiO/knk-workspace#484, #485, #487) — knk-web-api, knk-plugin and
+  knk-workspace branches `claude/smoke-fixes-484-485-487` (PRs into `next`, in review, not merged). **Deploy order:**
+  API and plugin together (no migration). One entry per issue follows.
+- **The link code reads XXXX-XXXX in game**
+  ([PandiO/knk-workspace#484](https://github.com/PandiO/knk-workspace/issues/484); API only). The code from
+  `/account link` is shown with the dash after four characters, as the website's code field and the claim code show it
+  (it was `7KL-MZU0T`). `LinkCodeResponseDto.formattedCode` now comes from `LinkCodeService.FormatClaimCode`, the one
+  formatter; the plugin shows that field unchanged, and the web app's field already ignored the dash when pasting.
+  Checklist: [link code and registration confirmation smoke test § 1](guides/link-code-and-registration-confirmation-smoke-test.md).
+  - **Admin steps:** none; deploy the API.
+- **The game confirms a registration made with the link code**
+  ([PandiO/knk-workspace#485](https://github.com/PandiO/knk-workspace/issues/485); API and plugin). After a player
+  registers on the website with the code from `/account link`, the game tells them once that their website account is
+  ready and linked, with the masked email and their Minecraft name to log in with: within seconds when online (realtime
+  push, or the 2 s poll with realtime off), else about 2 s after the next join. A failed or expired code says nothing.
+  The API queues an `AccountLinked` notification at registration (it already did for Account-page links and claims),
+  now with `via` (`register`, `link`, `claim`); the plugin shows the new `messages.web-account-registered` for
+  `register` and keeps `admission.account-linked` for the others. Fixed in passing: with the realtime hub connected the
+  notification poll is paused, so a notice queued for an offline player only showed after the next hub reconnect; a
+  join now drains the queue (`NotificationJoinDrain`). Checklist:
+  [smoke test §§ 2–5](guides/link-code-and-registration-confirmation-smoke-test.md); key reference
+  [plugin configuration § 4.18](guides/admin/plugin-configuration.md#418-messages).
+  - **Admin steps:** deploy API and plugin. Plugin `config.yml`, optional (a missing key uses the jar's text):
+
+    ```yaml
+    messages:
+      # PandiO/knk-workspace#485: shown once after a game-first registration. Placeholders: {maskedEmail}, {name},
+      # {url} (web.public-url; lines that use it are left out while it is empty).
+      web-account-registered: "&aYour website account is ready and linked to this Minecraft account.\n&aLog in at &e{url} &awith &e{maskedEmail} &aor your Minecraft name &e{name}&a.\n&cNot you? Tell staff right away."
+    ```
+- **Lootbox spawn areas keep the region exactly as drawn**
+  ([PandiO/knk-workspace#487](https://github.com/PandiO/knk-workspace/issues/487), developer decision 2026-11-14;
+  API and plugin; changes #34 below). A spawn area's region drawn in the web form keeps its outline and its height
+  (e.g. Y 64–68) when it is renamed to `lootbox_area_<id>` on save or on a re-run of the region step; it is no longer
+  stretched to the world's full build height. Boxes spawn on the ground inside it, also when the region is under a roof
+  or an overhang (the spawner looks for good ground with two air blocks inside the region's Y range when the column's
+  surface is above it). The rename, in-place replacement, reserved `area_<number>` names, cleanup protection and
+  `finalize-temp-names` are unchanged; `/knk lootbox area create` still makes full-height regions. The API no longer
+  sends `fullHeight=true` and the plugin ignores it. See
+  [managed-worldguard-regions.md](architecture/managed-worldguard-regions.md) §7 and the
+  [smoke test](guides/lootbox-area-region-smoke-test.md) § 1 step 4 and § 2 step 2.
+  - **Admin steps:** deploy API and plugin together (no migration, no setting, no `config.yml` key). Import form seed
+    `LootboxSpawnArea - Default (seed v3)` (`Data/FormConfigurationSeeds/LootboxSpawnArea.json`, descriptions only) and
+    make it the default. Areas saved under #34 keep their full-height region until their region step is run again.
 - **Plugin parts of UX chains 2 and 3 into `next`** (PandiO/knk-workspace#184, #31, #34, #261, #264, #269) — knk-plugin,
   knk-web-api and knk-workspace branches `claude/plugin-chains-into-next` (PRs into `next`, merged 2026-11-13: knk-plugin#20 `745fcf6`, knk-web-api#18 `c20899c`,
   knk-workspace#393 `6250d12`; developer's go 2026-11-13). The plugin branch merges chain 3 P3 `claude/temp-region-drafts-269` (which contains P1, R3, R2 and R1)
@@ -45,14 +89,16 @@ This is a human-readable record of capabilities merged into the V3 default branc
 - **Lootbox spawn areas keep a region drawn in the web form**
   ([PandiO/knk-workspace#34](https://github.com/PandiO/knk-workspace/issues/34), chain 2 R3; API and plugin). A region
   drawn through the LootboxSpawnArea form's region task is renamed from `tempregion_worldtask_<n>` to
-  `lootbox_area_<id>` when the area is saved and stretched to the world's full build height; before, the 14-day
+  `lootbox_area_<id>` when the area is saved (stretched to the world's full build height until #487, above, which
+  keeps the drawn height); before, the 14-day
   temp-region cleanup deleted it and the area stopped spawning. Re-running the region step replaces the previous region
   in place. The cleanup also asks the lootbox areas before deleting a temp region, `POST /api/Regions/finalize-temp-names`
   renames temp-named areas, and area names `area_<number>` are reserved. See
   [managed-worldguard-regions.md](architecture/managed-worldguard-regions.md) §7 and the
   [smoke test](guides/lootbox-area-region-smoke-test.md).
   - **Admin steps:** deploy API and plugin together (no migration, no setting, no `config.yml` key). Import form seed
-    `LootboxSpawnArea - Default (seed v2)` (`Data/FormConfigurationSeeds/LootboxSpawnArea.json`). Areas still on a temp
+    `LootboxSpawnArea - Default (seed v2)` (`Data/FormConfigurationSeeds/LootboxSpawnArea.json`; with #487, seed v3
+    instead). Areas still on a temp
     name: run `POST /api/Regions/finalize-temp-names` once.
 - **Kit "Grant" from the web app reaches the player in game**
   ([PandiO/knk-workspace#261](https://github.com/PandiO/knk-workspace/issues/261), chain 3 P1; plugin part). The plugin

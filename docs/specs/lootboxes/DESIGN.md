@@ -418,7 +418,7 @@ Components (new unless noted):
 | knk-core | `core/lootbox/ClaimGuard` | In-flight map `spawnId → uuid`: a second click while a claim is in flight is ignored |
 | knk-core | ports `LootboxesQueryApi`, `LootboxesCommandApi`; records `KnkLootboxSpawn`, `KnkLootboxType`, `KnkLootboxClaimResult` | |
 | knk-api-client | `LootboxDtos`, `LootboxMapper`, `Lootboxes{Query,Command}ApiImpl` | |
-| knk-paper | `lootbox/LootboxSpawnScheduler` | Runs every `scheduler-tick-seconds`. Picks a surface via `getChunkAtAsync(x, z, false)`, which **never generates terrain** (missing chunks are skipped). Rejects liquids, leaves, non-solid ground and places without 2 air blocks above. Requires the point to be inside the area's WG region and outside `ExcludedRegionIds`, and ≥ `MinDistanceFromPlayers` from every player. Then POSTs the spawn and renders it if the chunk is loaded. |
+| knk-paper | `lootbox/LootboxSpawnScheduler` | Runs every `scheduler-tick-seconds`. Picks a surface via `getChunkAtAsync(x, z, false)`, which **never generates terrain** (missing chunks are skipped). Rejects liquids, leaves, non-solid ground and places without 2 air blocks above. When the area's region stops below the column's surface (a drawn region keeps its Y range, #487), takes the highest such spot inside the region's Y range instead (`LootboxSpawnPlanner.standY`). Requires the point to be inside the area's WG region and outside `ExcludedRegionIds`, and ≥ `MinDistanceFromPlayers` from every player. Then POSTs the spawn and renders it if the chunk is loaded. |
 | knk-paper | `lootbox/LootboxPresenter` | Spawns and removes the entities |
 | knk-paper | `listeners/LootboxChunkListener` | `ChunkLoadEvent` renders cached spawns in that chunk; `EntitiesLoadEvent` removes any entity carrying `knk_lootbox` whose token isn't active (belt and braces) |
 | knk-paper | `listeners/LootboxInteractListener` | `PlayerInteractEntityEvent` on the `Interaction`. Checks `knk.lootbox.open`, not in staff/owner/vanish mode (unless configured), distance ≤ `claim-max-distance`, a free slot (else "Your inventory is full — make room to open this lootbox", **no API call**), and `ClaimGuard`. Then claims async and delivers on the main thread. |
@@ -448,8 +448,9 @@ players, lifetime, excluded regions, allowed types) are edited in the web app.
   `Domain` region picked in the web app) are never deleted. A delete from the web app runs the same service logic but can't reach
   WorldGuard, so it leaves a `lootbox_` region behind (`/rg remove` it, or delete in game instead).
 - **Regions drawn in the web form** (PandiO/knk-workspace#34, merged into `next` 2026-11-13 from `claude/plugin-chains-into-next`): the
-  form's region world task draws `tempregion_worldtask_<n>`; on save the API renames it to `lootbox_area_<id>` and the plugin
-  stretches it to full build height, so the 14-day temp-region cleanup keeps it (and the cleanup now asks the areas too). A
+  form's region world task draws `tempregion_worldtask_<n>`; on save the API renames it to `lootbox_area_<id>`, keeping exactly
+  the drawn outline and Y range (PandiO/knk-workspace#487, developer decision 2026-11-14; #34 stretched it to full build height),
+  so the 14-day temp-region cleanup keeps it (and the cleanup now asks the areas too). A
   re-run of the region step replaces the area's previous drawn region. `lootbox_area_<id>` is a `lootbox_` region: it belongs to
   that one area and an in-game delete removes it. Area names `area_<number>` are reserved. Details:
   [managed-worldguard-regions.md](../../architecture/managed-worldguard-regions.md) §7 "Lootbox spawn areas".

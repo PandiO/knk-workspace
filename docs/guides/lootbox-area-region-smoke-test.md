@@ -1,43 +1,50 @@
 # Lootbox spawn areas drawn in the web form — smoke test checklist
 
-**Status:** Written 2026-11-05 for #34; API and plugin parts merged into `next` 2026-11-13 from `claude/plugin-chains-into-next` (knk-plugin `next` `745fcf6`, knk-web-api `next` `c20899c`); not run
-**Last updated:** 2026-11-13 (setup: builds from `claude/plugin-chains-into-next`); 2026-11-05
-**Issue:** [PandiO/knk-workspace#34](https://github.com/PandiO/knk-workspace/issues/34)
+**Status:** Written 2026-11-05 for #34; API and plugin parts merged into `next` 2026-11-13 from `claude/plugin-chains-into-next` (knk-plugin `next` `745fcf6`, knk-web-api `next` `c20899c`); smoke-tested by the developer on `next` 2026-11-14, which led to #487 (drawn bounds kept). § 0, § 1 step 4 and § 2 step 2 updated for #487, in review on `claude/smoke-fixes-484-485-487`; not run again
+**Last updated:** 2026-11-14 (#487: the region keeps its drawn Y range; seed v3; spawning in a region below the surface); 2026-11-13; 2026-11-05
+**Issue:** [PandiO/knk-workspace#34](https://github.com/PandiO/knk-workspace/issues/34), [PandiO/knk-workspace#487](https://github.com/PandiO/knk-workspace/issues/487)
 **Related:** [managed-worldguard-regions.md](../architecture/managed-worldguard-regions.md) §7 "Lootbox spawn areas", lootbox
 [DESIGN](../specs/lootboxes/DESIGN.md) §3.4
 
 A region drawn through the LootboxSpawnArea form's region task is renamed from `tempregion_worldtask_<n>` to
-`lootbox_area_<id>` when the form is saved, stretched to the world's full build height, and kept by the 14-day temp-region
-cleanup. `<id>` is the area's id (shown in the web app's URL or `/knk lootbox area info <name>`). Use an op or the console for
+`lootbox_area_<id>` when the form is saved, keeps exactly the drawn outline and Y range (#487; it was stretched to the
+world's full build height before), and is kept by the 14-day temp-region cleanup. `<id>` is the area's id (shown in the web app's URL or `/knk lootbox area info <name>`). Use an op or the console for
 `/rg` and `/knk` commands. Write down any step that fails, with its server and API log lines.
 
 ## 0. Setup
 
 1. Back up `plugins/WorldGuard/worlds/*/regions.yml` and the dev database.
-2. Deploy the API and the plugin from `claude/plugin-chains-into-next` (or `next` once it is merged; both; no setting for
-   #34). Apply the API's pending migrations first (`dotnet ef database update`: #269's `AddTempRegionReleases` comes
-   with it; #184's `AddPrivacyErasureEvents` is already on `master`).
-3. Import the form seed `LootboxSpawnArea - Default (seed v2)` (`Data/FormConfigurationSeeds/LootboxSpawnArea.json`) and make
-   it the default for LootboxSpawnArea (keep or delete v1 by hand).
+2. Deploy the API and the plugin from `next` with #487 (branch `claude/smoke-fixes-484-485-487` until it is merged; both;
+   no setting). Apply the API's pending migrations first (`dotnet ef database update`: #269's `AddTempRegionReleases`
+   comes with `next`; #184's `AddPrivacyErasureEvents` is already on `master`).
+3. Import the form seed `LootboxSpawnArea - Default (seed v3)` (`Data/FormConfigurationSeeds/LootboxSpawnArea.json`) and make
+   it the default for LootboxSpawnArea (keep or delete v1 and v2 by hand).
 
 ## 1. New area on a drawn region
 
-1. Web app: new LootboxSpawnArea with the v2 form. "Area and region" says a drawn region becomes `lootbox_area_<id>`.
-2. Region field: Send to Minecraft; in game make a WorldEdit selection a few blocks high (e.g. Y 64–68) and complete the task.
-   `/rg list` shows `tempregion_worldtask_<n>`.
+1. Web app: new LootboxSpawnArea with the v3 form. "Area and region" says a drawn region becomes `lootbox_area_<id>` and
+   keeps the outline and height you drew.
+2. Region field: Send to Minecraft; in game make a WorldEdit selection a few blocks high on open, flat ground (e.g. ground
+   at Y 63, selection Y 64–68) and complete the task. `/rg list` shows `tempregion_worldtask_<n>`.
 3. Fill World, finish the form and save.
 4. Expected: the area's region in the web app is `lootbox_area_<id>`; `/rg info lootbox_area_<id>` exists, the temp region is
-   gone, and its bounds reach the world's min and max build height (e.g. Y -64 to 319) with the drawn outline. The server log
-   shows `Successfully renamed region from tempregion_worldtask_<n> to lootbox_area_<id> in <world>: renamed (Y … to …)`.
-5. Enable the area with an allowed type; `/knk lootbox area info <name>` lists the region and its bounds; a box spawns there
-   (or `/knk lootbox spawn` in it).
+   gone, and its bounds are **exactly the drawn ones**: the same outline and the same Y range (e.g. Y 64 to 68), not the
+   world's build height. The server log shows `Successfully renamed region from tempregion_worldtask_<n> to lootbox_area_<id>
+   in <world>: renamed (Y 64 to 68)`.
+5. Enable the area with an allowed type; `/knk lootbox area info <name>` lists the region and its bounds; boxes spawn on the
+   ground inside it (or `/knk lootbox spawn` in it). With a short interval and a high chance, wait for a few: each box
+   stands at Y 64 here.
+6. Optional (#487, a region below the surface): draw a second area inside a building or under an overhang, Y range from
+   the floor's air layer up to below the roof (e.g. floor at Y 63, selection Y 64–66, roof at Y 70). Boxes spawn on the
+   floor inside it, never on the roof.
 
 ## 2. Re-run the region step
 
 1. Edit the area, "Replace via Minecraft" on the Region field, draw a visibly different shape, save.
-2. Expected: still `lootbox_area_<id>` with the new shape at full height; no `tempregion_worldtask_*` and no second region left
-   behind; the log says `replaced the previous lootbox_area_<id> in place`. A flag set on it before (`/rg flag lootbox_area_<id>
-   greeting hi`) is still there.
+2. Expected: still `lootbox_area_<id>` with exactly the new drawn shape and Y range (not full height); no
+   `tempregion_worldtask_*` and no second region left behind; the log says `replaced the previous lootbox_area_<id> in place
+   (Y <min> to <max>)` with the drawn range. A flag set on it before (`/rg flag lootbox_area_<id> greeting hi`) is still
+   there. An area saved before #487 (its region at full height) gets the new drawn range the same way.
 3. Edit and save only a limit (Max active): the region is not touched (no rename line in the log).
 
 ## 3. Selected regions are left alone
