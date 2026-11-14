@@ -1,6 +1,6 @@
 # Knights and Kings — production installation guide (admin)
 
-**Status:** Draft · **Last updated:** 2026-11-14 (§ 9.2 and § 9.5: Citizens as an optional plugin and the `npc.navigation` block, knk-plugin `next`, PandiO/knk-workspace#496); 2026-11-14 (knk-web-api's trunk renamed from `master` to `main`); 2026-11-13 (§ 8.1: the Node note points at the web app testing guide, PandiO/knk-workspace#304)
+**Status:** Draft · **Last updated:** 2026-11-14 (§ 8.1: the web app install no longer skips a Cypress binary, Playwright replaced it, PandiO/knk-workspace#504); 2026-11-14 (§ 9.2 and § 9.5: Citizens as an optional plugin and the `npc.navigation` block, knk-plugin `next`, PandiO/knk-workspace#496); 2026-11-14 (knk-web-api's trunk renamed from `master` to `main`); 2026-11-13 (§ 8.1: the Node note points at the web app testing guide, PandiO/knk-workspace#304)
 **State:** Draft v1 — written for review. Not yet followed on a real production host. The database, API, seed and
 web-server steps were rehearsed in a scratch environment on 2026-10-07 (see [Appendix A](#appendix-a--what-was-verified-and-how)).
 The Paper server steps and the release and deploy workflows are untested drafts; the CI workflows (§ 10.3) run on GitHub.
@@ -948,7 +948,8 @@ import refuses to run anyway once users exist. Content changes after launch reac
 
 ```bash
 # knk-web-app at the release tag
-CYPRESS_INSTALL_BINARY=0 npx npm@11 ci       # npm 11 (G2), as the CI does; skip the Cypress binary on servers
+npx npm@11 ci                                # npm 11 (G2), as the CI does; no browser download (Playwright, #423)
+# A tag from before PandiO/knk-workspace#423 still lists Cypress: prefix that ci with CYPRESS_INSTALL_BINARY=0
 # G1 workaround: same-origin API path. Do this in CI, never by editing a prod server.
 sed -i "s#baseUrl: 'http://localhost:5294/api'#baseUrl: '/api'#" src/config/appConfig.ts
 grep -n "baseUrl" src/config/appConfig.ts      # must show: baseUrl: '/api',
