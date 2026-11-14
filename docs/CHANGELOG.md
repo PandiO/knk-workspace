@@ -14,6 +14,12 @@ This is a human-readable record of capabilities merged into the V3 default branc
     `knk.admin.user.perm`. The search sorts by the column asked (`id`, `holderId`, `value`, `expiresAt`, `node`).
   - **Admin steps:** none; deploy the API and the web app together (no migration, no settings). Smoke test:
     [dashboard access smoke test § 8.6](guides/dashboard-access-smoke-test.md) (mostly automated in CI).
+- **Town streets from districts: design note and data check** ([PandiO/knk-workspace#409](https://github.com/PandiO/knk-workspace/issues/409), L1 [#514](https://github.com/PandiO/knk-workspace/issues/514); knk-workspace only, docs) — knk-workspace branch
+  `claude/town-streets-409` (PR into `next`, in review). Proposed design
+  [specs/towns/DESIGN_TOWN_STREETS.md](specs/towns/DESIGN_TOWN_STREETS.md) and the read-only check
+  `scripts/maintenance/town-street-orphans-409.sql` (orphan `TownStreet` rows, counts, Town configurations naming
+  Streets). Nothing changes in the API, web app or plugin yet (that is L2).
+  - **Admin steps:** none; run the check on dev and alpha when the coordinator asks (read only).
 - **Plugin: the 52 tests that CI skipped now run, with MockBukkit**
   ([PandiO/knk-workspace#499](https://github.com/PandiO/knk-workspace/issues/499); developer-facing, nothing changes
   in game). Merged into `next` 2026-11-14 (knk-plugin#32, merge `0810a6c7`; docs knk-workspace#539); on the trunk when the developer promotes `next`.
