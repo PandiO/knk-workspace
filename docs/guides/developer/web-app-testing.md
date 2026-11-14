@@ -1,6 +1,6 @@
 # Web app testing
 
-**Status:** Current · **Last updated:** 2026-11-14 (end-to-end tests on Playwright instead of Cypress, in CI, [PandiO/knk-workspace#423](https://github.com/PandiO/knk-workspace/issues/423)); 2026-11-13 (moved from knk-web-app `TESTING.md`, rewritten against knk-web-app `next` `ff9db4b`, PandiO/knk-workspace#304)
+**Status:** Current · **Last updated:** 2026-11-14 (§ 3: `dashboard-row-actions.spec.ts` listed, 16 tests; #404–#406, docs [#526](https://github.com/PandiO/knk-workspace/issues/526))
 **Moved from:** `knk-web-app/TESTING.md` at `ff9db4b` ([source](https://github.com/PandiO/knk-web-app/blob/ff9db4b/TESTING.md)) and rewritten against the
 current code: that file described only the first registration tests (2026-01), a `mockAuthClient.ts` that no longer
 exists, E2E tests that wrote real users to the database, and an example GitHub workflow with Node 18 that was never the
@@ -72,7 +72,7 @@ Playwright Test (`@playwright/test`, pinned in `package.json`) replaced Cypress 
 4. **Helpers.** `startLoggedIn(page, token)` puts an access token in `sessionStorage` before the first page load (a
    login without remember-me); `mockSession(api, user, allowed)` answers `Auth/me` and the permission checks
    (`allowed(node)` decides each node).
-5. **The specs** (11 tests, about 11 seconds after the build):
+5. **The specs** (16 tests in knk-web-app `next` `3f8ad46`):
    1. `registration.spec.ts`, ported from the Cypress spec: an invalid link code, registering and landing on
       `/account` (the exact request body is checked), a duplicate email shown on the email field.
    2. `login.spec.ts`: a player logs in and lands on `/account`; a wrong password shows the generic message; an
@@ -88,6 +88,14 @@ Playwright Test (`@playwright/test`, pinned in `package.json`) replaced Cypress 
       the error summary and the field error and saves nothing; a filled step saves the draft
       (`POST FormSubmissionProgress` with the step's values and the workflow session) and opens step 2; "Previous"
       keeps the values.
+   5. `dashboard-row-actions.spec.ts` (PandiO/knk-workspace#404, #405, #406): on `/dashboard/town`, every row has the
+      same 1px row line and no left border; at 390 px wide the row's Edit button stays in the viewport (sticky actions
+      column); a right-click on a row opens View, Edit, Delete and Export as CSV and Escape closes it; without
+      `knk.admin.delete` / `knk.admin.export` (the Town metadata's `actionNodes` are mocked) those items are
+      `aria-disabled` with "Requires <node>", like the row's Delete button; Shift+F10 on the focused row link opens the
+      menu with the focus on its first item, ArrowDown moves, Escape gives the focus back to the link. The Jest tests
+      `components/__tests__/DataTable.rowsAndMenu.test.tsx` and the #406 block in `ObjectDashboard.test.tsx` cover the
+      rest (Ctrl/Cmd + right-click, rows without items, the selection's Delete and Export).
 6. **Writing a spec.** Use role-based locators (`getByRole`, `getByLabel`, `getByTestId` where a test id exists) and
    web-first assertions (`await expect(locator).toBeVisible()`, `toHaveURL`); never `waitForTimeout`. To find the calls
    a page makes, open it in a spec and look at the "unmocked API requests" annotation or `api.requests`.
@@ -124,3 +132,9 @@ describes all three repos' workflows (in knk-workspace `next`, not yet on `main`
 6. **Playwright: port 4173 is taken** by another program: set `E2E_PORT`, for example `E2E_PORT=4180 npm run test:e2e`.
 7. **An end-to-end test fails in CI only:** download the `playwright-traces` artifact of the run and open the trace
    with `npx playwright show-trace`.
+
+## Changes
+
+1. 2026-11-14: § 3 lists `dashboard-row-actions.spec.ts` (#404–#406), docs #526
+2. 2026-11-14: end-to-end tests on Playwright instead of Cypress, in CI, #423
+3. 2026-11-13: moved from knk-web-app `TESTING.md`, rewritten against knk-web-app `next` `ff9db4b`, #304
