@@ -321,6 +321,13 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## 2026-11-14
 
+- **Agents test automatically first** — no game change; feature sessions now put each behaviour they change into the
+  automated suites (Playwright for web pages, unit tests, MockBukkit/Mockito for plugin code, plugin scenarios on a real
+  Paper server), and smoke-test guides list only what no suite can check (developer decision 2026-11-14). New skill
+  `.claude/skills/knk-test-writer/`; global instructions "Testing: automated first"; the link and coordinator skills
+  check it, the digest counts only manual steps. Backfill of features already in `next`: PandiO/knk-workspace#511.
+  - **Admin steps:** none.
+
 - **Web app end-to-end tests on Playwright, in CI** ([PandiO/knk-workspace#423](https://github.com/PandiO/knk-workspace/issues/423))
   — no player change; developer-facing. knk-web-app replaces Cypress with Playwright Test (`@playwright/test` 1.64.1,
   pinned): the specs run in Chromium against the production build with a mocked API (no API or database), and the

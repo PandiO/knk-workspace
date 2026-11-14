@@ -1,6 +1,6 @@
 # NPC navigation chain — progress report
 
-**Status:** Paused (L1, L2 and L3 merged into `next`; L0 waits for the developer's Phase 1 result on #359) (2026-11-13) · **Last updated:** 2026-11-13
+**Status:** Done, in review (all links merged into `next`; developer tests and promotion open) (2026-11-14) · **Last updated:** 2026-11-13
 
 **Issue:** [PandiO/knk-workspace#358](https://github.com/PandiO/knk-workspace/issues/358), links
 [#360](https://github.com/PandiO/knk-workspace/issues/360) (L1),
@@ -11,36 +11,36 @@
 
 ## 1. Waiting for the developer
 
-In test order. Deploy knk-plugin `next` (`0506e691`, Phases 1–4) with Citizens build 4269; merge the `npc.navigation`
-block into the dev server's `config.yml` (the full block is in the configuration reference § 4.27; the pieces are in
-knk-plugin#17, #18 and #19), `enabled: true` only for the tests.
+Every link is merged into `next` (2026-11-14). Deploy knk-plugin `next` (`bd7b78a8` or later; it also carries other
+chains' work) with Citizens build 4269 and the `npc.navigation` block from the configuration reference § 4.27
+(`enabled: true` only for the tests). In test order:
 
-1. **Phase 1 test and audit report on #359** (implementation plan, "Phase 1 → Developer test"). It opens L0, the
-   last link: guards on the listeners the audit names. If the audit names nothing, say so on #359 and L0 is skipped.
-2. **Phase 2 test** (plan, "Phase 2 → Developer test"): one NPC, 50 NPCs on the stored route, the stair house
-   (release gate; what to look at: block 4.1 § 8.3). Post the `stats` output and the run log on #360.
-3. **Phase 3 test** (plan, "Phase 3 → Developer test"): gate runs, access runs, the refresh that replans nobody, the
-   trespass counter (`stop-on-trespass: true` for this test). Results on #361. Look at where NPCs stand at the Keep
-   Gate (block 4.2 § 8.3).
-4. **Phase 4 test** (plan, "Phase 4 → Developer test", 14 steps): 20 and 50 NPC groups per formation, the fold at
-   the Keep Gate and in the stair house, a gate closing ahead of and in the middle of a group, a follower pushed off
-   its slot. Results on #377. Look first at: followers halting between waypoint lists, whether the speed factor
-   makes a follower catch up (block 4.3 § 8).
-5. **Review of the agent decisions:** block 4.1 § 5 (twelve), 4.2 § 5 (thirteen), 4.3 § 5 (eighteen). The ones that
-   change behaviour: 4.1 § 5.1, 5.2, 5.5; 4.2 § 5.4, 5.5, 5.6, 5.8, 5.9; 4.3 § 5.1 and 5.6 (followers are not orders
-   in the navigation service: no trespass guard or gate recheck of their own, their lanes are checked before they are
-   sent), 5.4 (a formation folds as a whole into a column), 5.8 (the leader waits by a cancelled and re-given order,
-   one more road plan per wait), 5.11 (no about-face), 5.14 (`Arrived` at most 20 s after the leader).
-6. **Promotion of `next`** in knk-plugin and knk-workspace when the tests pass; the issues stay `status:in-review`
-   until then. The `documentation` sub-issue and docs session start when the feature's last link is in `next`
-   (after L0, or at its skip).
+1. **Phase 1 (#359, #490):** step 4 with the new PowerShell line, then "Audit re-run after the guards" (plan, Phase 1).
+   The 14 listeners may still be listed as receivers; read the counts and the new `causes:` line. Post the report on
+   #490.
+2. **Phase 2 (#360):** one NPC, 50 NPCs on the stored route, the stair house (release gate; block 4.1 § 8.3).
+3. **Phase 3 (#361):** gate and access runs, trespass counter (`stop-on-trespass: true` for the test; block 4.2 § 8).
+4. **Phase 4 (#377):** groups per formation, folds at the Keep Gate and in the stair house (block 4.3 § 8).
+5. **Review of the agent decisions:** blocks 4.1–4.4 § 5. Behaviour-changing ones: 4.1 § 5.1, 5.2, 5.5; 4.2 § 5.4,
+   5.5, 5.6, 5.8, 5.9; 4.3 § 5.1, 5.4, 5.6, 5.8, 5.11, 5.14; 4.4 § 5.2 (`GateSuffocationGuard`, `HubRulesListener`,
+   `GlobalRegionProtectionListener` left unguarded on purpose), 5.3 (hits by or on NPCs are not counted in combat
+   statistics), 5.5 (the guards apply with the flag off too, and to other plugins' NPCs).
+6. **Follow-ups filed:** #494 (a player killed by an NPC counts as killed by a player in the death statistics). Note
+   for the Siege Survival chain: `SiegeCombatListener` now ignores hits by or on NPCs, so NPC siege combat needs its
+   own rule.
+7. **Promotion of `next`** in knk-plugin and knk-workspace when the tests pass; #359, #360, #361, #377 and #490 stay
+   `status:in-review` until then. #358 stays open for Phases 5–8.
+8. **Docs:** #496 done 2026-11-14 (knk-workspace#498 merged into `next` as `acf2aaf9`: new
+   `architecture/npc-navigation.md`, permission checks, production installation § 9, register row, listener notes in
+   the siege, teleport and statistics specs). Leftover #497 (NPC navigation admin guide) is needed before a deploy
+   turns `npc.navigation.enabled` on.
 
 ## 2. Summary
 
 | Link | Issue | Status | Branch heads | PR | CI | How started |
 |---|---|---|---|---|---|---|
 | L1 Phase 2: one NPC walks a K&K route | #360 | Merged into next 2026-11-13 (knk-plugin `50bf7ff7`, knk-workspace `424f1fa3`); #360 stays `status:in-review` until the developer's live test and the promotion of `next` | `claude/npc-navigation`: knk-plugin `49b5cedb`, knk-workspace `5c8587b` | [knk-plugin#17](https://github.com/PandiO/knk-plugin/pull/17), [knk-workspace#370](https://github.com/PandiO/knk-workspace/pull/370) | knk-plugin `build` green on `49b5cedb` (run 43398822498); knk-workspace has no CI | create_session session_01R1w2Uv2Ze28fr2rkqUz98C (`source_revision` `next`) |
-| L0 Phase 1 follow-ups | #359 | Not started (gate: the developer's Phase 1 result on #359, expected the evening of 2026-11-13; L1, L2 and L3 are merged) | | none | none | |
+| L0 Phase 1 follow-ups | #359, #490 | Merged into next 2026-11-14 (knk-plugin `bd7b78a8`, knk-workspace `d767f55a`); #490 and #359 stay open, `status:in-review`, until the audit re-run and the promotion of `next` | `claude/npc-navigation`: knk-plugin `6c844d24`, knk-workspace `5851d88` | [knk-plugin#27](https://github.com/PandiO/knk-plugin/pull/27), [knk-workspace#495](https://github.com/PandiO/knk-workspace/pull/495) | knk-plugin `build` green on `6c844d24` (push run 43614739292, PR run 43614896665); knk-workspace has no CI | create_session session_01R1w2UvFV2fU42xMRjPmo4T (`source_revision` `next`) |
 | L2 Phase 3: rules stay binding | #361 | Merged into next 2026-11-13 (knk-plugin `f2a50c46`, knk-workspace `9df8d44c`); #361 stays `status:in-review` until the developer's live test and the promotion of `next` | `claude/npc-navigation`: knk-plugin `8df2d839`, knk-workspace `a05f7bf` | [knk-plugin#18](https://github.com/PandiO/knk-plugin/pull/18), [knk-workspace#375](https://github.com/PandiO/knk-workspace/pull/375) | knk-plugin `build` green on `8df2d839` (runs 43403427418, 43403523663); knk-workspace has no CI | create_session session_01R1w2Uvt1jBnAv84KX3hf7q (`source_revision` `next`) |
 | L3 Phase 4: groups and formations | #377 | Merged into next 2026-11-13 (knk-plugin `0506e691`, knk-workspace `a45e17b9`); #377 stays `status:in-review` until the developer's live test and the promotion of `next` | `claude/npc-navigation`: knk-plugin `6fd91127`, knk-workspace `f5dda86` | [knk-plugin#19](https://github.com/PandiO/knk-plugin/pull/19), [knk-workspace#384](https://github.com/PandiO/knk-workspace/pull/384) | knk-plugin `build` green on `6fd91127` (push run 43427733153, PR run 43428361244); knk-workspace has no CI | create_session session_01R1w2UxD3EQaGRrvLbMzz7P (`source_revision` `next`) |
 
@@ -139,6 +139,29 @@ knk-plugin#17, #18 and #19), `enabled: true` only for the tests.
     to merging (skill § 7.1).
 14. **Chain paused again.** L0's gate is still closed (no Phase 1 result on #359 at 12:55 UTC). Nothing else is in
     the charter; a further phase needs the developer's go, as L3 did. Alternatives: as decision 11.
+
+15. **L0 started (2026-11-14).** The developer's Phase 1 test (#359, comment of 2026-11-14 15:08 UTC): startup and
+    layered settings pass; the audit shows the region guard works, but `EntityDamageEvent` (615 in 3 minutes for 50
+    NPCs) reaches 14 K&K listeners, most without an NPC guard, filed by the developer as #490 (tier:1, sub-issue of
+    #359); 18,420 `EntityAirChangeEvent` with no K&K listener. L0's gate is open (L1–L3 merged). Scope: #490, plus the
+    cause of the damage (fixed in L0 if it is a Phase 1 runtime setting, an issue under #358 if it is the route), plus
+    a Windows line for the metrics step. Model: the coordinator's current model (the session was switched by the
+    developer). Overlap: `claude/arena-duels` and `claude/siege-survival` (unmerged) also change
+    `statistics/CombatStatisticsListener.java`; not a blocker, L0 keeps to one guard line at the top of each handler.
+    Alternatives: (a) skip L0 and leave #490 to a separate session: #490 is the Phase 1 exit condition and this
+    chain's scope; (b) block on the overlap until those branches merge: the change is additive.
+
+16. **L0 checked and merged; chain done (2026-11-14).** Skill § 6: block 4.4 and heads match, both branches contain
+    `next` (fast-forward merges), PRs knk-plugin#27 (`Closes #490`, `Part of #359`) and knk-workspace#495, CI `build`
+    green on `6c844d24`, tests above the baseline (paper 2638 → 2672, core and api-client unchanged, 0 failures), scope
+    within #490 (one early-return guard plus import per handler in 11 listeners, `CombatStatisticsListener` four
+    handler guards and nothing else, so the arena-duels and siege-survival overlap stays mechanical; the
+    `NpcTestWalkers` water fix and the audit's `causes:` line; two docs files). Merged with merge commits: knk-plugin
+    `bd7b78a8`, knk-workspace `d767f55a`. Codex did not review (usage limit), noted on both PRs by the link.
+    "At merge" steps: documentation sub-issue #496 under #358 (tier:1, documentation, priority:high) and its docs
+    session session_01R1w2UvgjKbGE2HzaGvrvHR. #358 is not closed: it is the parent of Phases 1–8 and Phases 5–8 remain.
+    Alternatives: (a) close #358 now: it would hide the remaining phases; (b) write the docs in this session: the
+    global instructions want a separate session.
 
 ## 4. Link blocks
 
@@ -529,3 +552,90 @@ _(Each link appends its block here when it finishes.)_
        their fallback is the own leg (decision 9). Walked lines help followers as they help single NPCs.
     4. A fix to route following below the groups needs no change here as long as `followerOf(moverId).line()`
        and `nearestIndex` keep their meaning.
+
+### 4.4 L0 — Phase 1 follow-ups: NPC guards on the damage listeners (#359, #490)
+
+1. **Scope done.**
+    1. knk-plugin, guards (`NpcEntities.isNpc`, one early return at the top of a handler plus its import, nothing
+       reordered): NPC victim in `AdminFreezeListener`, `TeleportWarmupListener`, `DomainEffectDamageListener`,
+       `FallStatisticsListener`; NPC victim or attacker in `CombatTagListener`, `SiegeCombatListener`,
+       `TelemetryListener`, `CombatStatisticsListener.onDamage`; also `CombatStatisticsListener.onPlayerDeath` (NPC
+       victim), `onEntityDeath` (mob killed by an NPC), `onShoot` (NPC shooter); NPC attacker in
+       `EnchantmentCombatListener`, `JoinLoadingRestrictionListener`, `AfkActivityListener`. Not guarded:
+       `GateSuffocationGuard`, `HubRulesListener`, `GlobalRegionProtectionListener` (decision 5.2).
+    2. knk-plugin, the damage cause: `NpcTestWalkers.randomFloor` took water and lava as room for a body; a spot now
+       needs two passable, dry, not waterlogged blocks above the floor (`roomForBody`).
+    3. knk-plugin, `NpcEventAudit`: a `causes:` line under each damage event type in the report; the class Javadoc
+       says the receiver list is the handler list, not proof that a listener acts.
+    4. knk-workspace: plan Phase 1 (1.3 sentence, status of 2026-11-14, PowerShell line for step 4, "Audit re-run
+       after the guards"), changelog line under Phase 1. `KnKPlugin`, `config.yml` and every NPC navigation class
+       other than the two above are untouched.
+2. **Commits and heads.** knk-plugin `claude/npc-navigation` at `6c844d24` (2 commits: `186ea6fc` guards, `6c844d24`
+   walkers and audit; `origin/next` `0012ff9c` merged in first, a fast-forward; still up to date before the PR).
+   knk-workspace `claude/npc-navigation` at `5851d88` (1 commit on `origin/next` `8fc81a8`, a fast-forward with an
+   empty diff before the change).
+3. **PRs.** [knk-plugin#27](https://github.com/PandiO/knk-plugin/pull/27) (`Closes #490`, `Part of #359`) and
+   [knk-workspace#495](https://github.com/PandiO/knk-workspace/pull/495) (`Part of #359`), base `next`. Not merged.
+   Codex did not review either (usage limit reached; said so on both PRs).
+4. **Tests, baseline → result.**
+    1. knk-plugin (`./gradlew build -x deployToDevServer`, Gradle on JDK 21, JDK 25 toolchain): baseline at
+       `0012ff9c` core 2676, api-client 337 (2 skipped), paper 2638 (18 skipped), 0 failures; result at `6c844d24`
+       core 2676, api-client 337 (2 skipped), paper 2672 (+34, 18 skipped), 0 failures. New: `NpcDamageGuardsTest`
+       13, `StatisticsListenersNpcTest` 12, `DomainEffectDamageListenerNpcTest` 2, `TelemetryListenerNpcTest` 2,
+       `NpcTestWalkersTest` 4, `NpcEventAuditTest` +1. With the listener guards removed, all 14 NPC cases fail.
+       CI `build` green on `6c844d24` (push run 43614739292, PR run 43614896665: green).
+    2. knk-workspace: docs only; links checked by hand.
+    3. Known reds (also red on the base): none.
+5. **Decisions (DESIGN § 4.3).**
+    1. *Guard sides per listener.* Chosen: victim, attacker or both as listed in 1.1, from what each handler does to
+       a player. `EnchantmentCombatListener` keeps effects on an NPC victim (like on a mob); `JoinLoadingRestriction`
+       keeps refusing a loading player's hit on an NPC; only the NPC attacker is let through like a mob.
+       Alternatives: (a) both sides everywhere (the coordinator's wording): a loading player could hit NPCs and
+       enchantments would behave differently on NPCs than on mobs; (b) victim only: NPC attackers would still tag,
+       count and run enchantments.
+    2. *Listeners left unguarded.* Chosen: `GateSuffocationGuard` (moves an NPC out of a gate door, as #490 says),
+       `HubRulesListener` (hub damage rules protect NPCs and stop NPC hits on players in the hub, as for any entity),
+       `GlobalRegionProtectionListener` (decorations; an NPC victim is never a decoration, an NPC attacker breaking
+       an item frame is still stopped). Alternatives: (a) guard them too: NPCs would suffocate in gates and could
+       break protected item frames; (b) guard the NPC attacker only in the hub: an NPC could then hurt players in a
+       no-PvP hub.
+    3. *Combat statistics for hits by or on NPCs.* Chosen: not counted at all (one guard line, as the coordinator
+       asked). Alternatives: (a) count them as mob damage: needs changes inside the handler, filed as #494 with the
+       NPC killer case.
+    4. *Death handlers.* Chosen: guard `CombatStatisticsListener.onPlayerDeath` (an NPC death would reach streaks
+       and counters), leave `CombatTagListener.onDeath` and `TeleportWarmupListener.onDeath` (clearing an unknown
+       UUID is a no-op). Alternatives: (a) guard every death handler: more lines in files other chains change, no
+       effect.
+    5. *Guards and the flag.* Chosen: unconditional, like L1's `WorldGuardRegionListener` guard; they hold for any
+       entity with the `NPC` metadata, also other plugins' NPCs. Alternatives: (a) only with
+       `npc.navigation.enabled`: other NPCs (Siege Survival, shop NPCs) would stay in player systems.
+    6. *The damage cause.* Chosen: fix the Phase 1 test walkers' spot search (water and lava are passable) and add
+       damage causes to the audit, because all 615 events were plain `EntityDamageEvent` (no attacker), Citizens'
+       `isProtected()` defaults to true in CitizensAPI 2.0.44 (read from the jar), and 18,420 / 615 ≈ 30 air
+       changes per damage event fits drowning (about 20 per drowning tick plus refills). Not a route issue: the
+       test walkers do not follow routes, so no issue under #358. Alternatives: (a) set Citizens' `protected` or
+       turn off drowning per NPC: hides the symptom, NPCs would still stand under water; (b) file it under #358 as a
+       Phase 2 issue: the Phase 2 code was not involved; (c) change nothing until the re-run: the cause shows in
+       the code.
+    7. *Waterlogged blocks.* Chosen: also reject a waterlogged block (`Waterlogged.isWaterlogged()`). Alternatives:
+       (a) a list of water plants by `Material`: needs the server's registries in tests; kelp and seagrass under
+       open water are caught by the water block above them anyway.
+    8. *Tests.* Chosen: one test class per package with an NPC case and a player case per guarded handler, mocked
+       events (they need the server's registries). Alternatives: (a) one file per listener: 11 files for 2–4 tests
+       each.
+6. **Out of scope, noted.** #494 (priority:high, under #358): a player killed by an NPC counts as killed by a player
+   in death statistics; hits by NPCs could count as mob damage.
+7. **Blockers.** None.
+8. **At merge / what the developer must do.**
+    1. No config key, command or permission changed.
+    2. After the merge into `next`: Phase 1 developer test step 4 with the new PowerShell line, then the audit re-run
+       (plan, Phase 1, "Audit re-run after the guards (#490)"): the 14 listeners can still be listed as receivers;
+       look at the much smaller damage and air counts and the `causes:` line (expected: no `DROWNING`). Post the
+       report on #490.
+    3. Review decisions 5.1, 5.2, 5.3 and 5.5 (they decide what NPCs still do in player-facing rules).
+9. **Notes for later links.**
+    1. Siege Survival chain: `SiegeCombatListener` now returns for any NPC victim or attacker, so siege rules
+       (spawn safety, not started, allies) no longer cancel hits between players and NPCs; NPC combat in a siege
+       needs its own rule.
+    2. The docs sub-issue at merge: as L1–L3 (`FEATURE_REGISTER.md`, `architecture/plugin-permission-checks.md`,
+       production installation); nothing new from L0.
