@@ -6,6 +6,19 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## 2026-11-13
 
+- **Account and invitation guides** (PandiO/knk-workspace#299) — no game change; players now have one guide for
+  getting an account with an invitation, linking Minecraft, logging in and resetting a password, and staff have one for
+  issuing invitations and running the invite-only switches. The player guide
+  [`users/account-player-guide.md`](guides/users/account-player-guide.md) replaces `PLAYER_GUIDE_ACCOUNT_MANAGEMENT.md`
+  (renamed and rewritten against the trunks of 2026-11-13). The new
+  [invitations admin guide](guides/admin/invitations-admin-guide.md) covers personal invites and shared codes, their
+  actions and limits, mails, the four switches, the admission gate and the Access card, the Cloudflare Access sync,
+  kill switches and troubleshooting. The 2026-01 account developer guide moved to
+  [`archive/`](archive/DEVELOPER_GUIDE_ACCOUNT_INTEGRATION.md) (Kotlin examples, removed `/account create`). The guides
+  index now gives the email guide and the invitations smoke test their real state (merged, run, live on the alpha).
+  Filed: #449 (landing page says Java only), #450 (Rotate on an expired shared code), #452 (plugin leftovers of
+  `/account create`).
+  - **Admin steps:** none.
 - **Siege player guide** (PandiO/knk-workspace#297) — no game change; players now have one guide to sieges: how to
   join and vote, the hub and team split, spawn choice, objectives and how a match is won, fighting, siege gates, the
   navigation compass, gear and enchantment books, leaving and rejoining, the end of a match, rewards and match history.

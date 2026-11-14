@@ -1,6 +1,6 @@
 # Knights and Kings — Player Handbook
 
-**Status:** Current · **Last updated:** 2026-11-14 (Siege: link to the Siege player guide, PandiO/knk-workspace#297)
+**Status:** Current · **Last updated:** 2026-11-14 (Your account: link to the account player guide, PandiO/knk-workspace#299)
 **Checked against:** knk-plugin `main` `57884e9`, knk-web-api `master` `f445d21`, knk-web-app `main` `3ba747d`
 **Related:** [commands reference](commands.md), [menus](menus-player-guide.md), [guides index](../README.md)
 
@@ -110,7 +110,7 @@ once your Minecraft account is linked, your discoveries and statistics, and lets
 all devices. Forgot your password? Use **Forgot password** on the **Log in** page.
 
 <!-- Guide link (PandiO/knk-workspace#299): add the account player guide link on the next line. -->
-> **Full guide:** coming soon (account, invitations and linking).
+> **Full guide:** [Your account: invitation, linking, login and password](account-player-guide.md).
 
 ## Getting around
 
