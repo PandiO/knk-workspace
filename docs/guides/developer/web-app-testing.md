@@ -75,7 +75,7 @@ Playwright Test (`@playwright/test`, pinned in `package.json`) replaced Cypress 
    (`allowed(node)` decides each node) and refuses the realtime hub's negotiate call, so pages run with realtime off.
    `expectNoSidewaysScroll(page)` (`e2e/support/layout.ts`) checks that nothing scrolls the page sideways, for the
    smoke tests' "at 390 px" steps (set the size with `page.setViewportSize`).
-5. **The specs** (82 tests in knk-web-app `next` with batches 1–3 of #511, about 50 seconds after the build):
+5. **The specs** (89 tests in knk-web-app `next` with batches 1–4 of #511, about a minute after the build):
    1. `registration.spec.ts`, ported from the Cypress spec: an invalid link code, registering and landing on
       `/account` (the exact request body is checked), a duplicate email shown on the email field.
    2. `login.spec.ts`: a player logs in and lands on `/account`; a wrong password shows the generic message; an
@@ -117,6 +117,9 @@ Playwright Test (`@playwright/test`, pinned in `package.json`) replaced Cypress 
       with a hot-edit field and a Streets collection, relationship and lookup mocks that change the town): links,
       counts and paging, hot edit, Unlink that never deletes, Add from the lookup, Delete as its own question, the
       gates without `knk.admin.delete` / `knk.admin.content`, readable errors, phone width.
+   11. `data-table.spec.ts` (#511): the shared table and confirm on the dashboard: sorting and paging in the URL, the
+      row link and row click with Back, the confirm's focus (Cancel first, Tab kept inside, Escape back to its
+      button), and numbers in the browser's language (`test.use({ locale: 'nl-NL' })`).
 6. **Writing a spec.** Use role-based locators (`getByRole`, `getByLabel`, `getByTestId` where a test id exists) and
    web-first assertions (`await expect(locator).toBeVisible()`, `toHaveURL`); never `waitForTimeout`. To find the calls
    a page makes, open it in a spec and look at the "unmocked API requests" annotation or `api.requests`.
