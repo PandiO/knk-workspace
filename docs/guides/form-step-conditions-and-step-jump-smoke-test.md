@@ -1,7 +1,7 @@
 # Form builder step conditions (#88) and clickable wizard steps (#68) — smoke test
 
 **Status:** Written 2026-11-13; **merged into `next` 2026-11-13** (knk-web-app `next` `1f848f7` (knk-web-app#12), knk-web-api `next` `31abe2d` (knk-web-api#14), knk-workspace `next` `c68df65` (#379); branches `claude/issues-68-88-readiness-wapo57`), on the trunk when the developer promotes `next`; **not run by the developer**. Run it on `next`.
-**Last updated:** 2026-11-13 (merged into `next`; § 3 step 5, § 4 steps 2, 3, 5 and 6 from the merged code: list fields, emptied lists, health check in step order and on the working copy, what the form does with hand-written JSON; docs #395)
+**Last updated:** 2026-11-14 (§ 2 step 1 and § 5 step 2: field mark and Go to after the #413/#414 fix; § 3 steps 1–3 use a field the metadata doesn't require, developer run 2026-11-13); 2026-11-13 (merged into `next`; § 3 step 5, § 4 steps 2, 3, 5 and 6 from the merged code: list fields, emptied lists, health check in step order and on the working copy, what the form does with hand-written JSON; docs #395)
 **Issues:** [PandiO/knk-workspace#88](https://github.com/PandiO/knk-workspace/issues/88) (KNG-274: step conditions in
 the step editor, Entry conditions enforced) ·
 [PandiO/knk-workspace#68](https://github.com/PandiO/knk-workspace/issues/68) (KNG-184: click a step to jump to it,
@@ -38,7 +38,8 @@ You need:
 
 1. Dashboard → District → **New District**, fill step 1, go to **Region and access**, leave **Allow entry** unticked,
    **Next**. Expected: a toast with the message, the same message in red **above the Next button** (it stays after
-   the toast is gone), and you stay on the step.
+   the toast is gone), and you stay on the step. Since #414 the **Allow entry** field itself also shows the message in
+   red with the field's error styling, like a field validation rule.
 2. Tick **Allow entry**, **Next**. Expected: the next step opens and the red note is gone.
 3. Builder: untick **active** on the condition (the card says "1 condition, 1 off"), Save, Publish. Wizard (new
    form): Next passes with Allow entry unticked. Switch it back on and publish.
@@ -46,12 +47,13 @@ You need:
 ## 3. Entry conditions (#88)
 
 1. Builder, on the **third** step of the District form: **Add condition**, *When* = "Before entering this step", tick
-   **from an earlier step**, field **Name**, operator **is not empty**, message `Give the district a name first.`
-   Expected: no value box ("no value needed"); "In words: Name (earlier step) is not empty". An Entry condition
-   publishes without a message too.
-2. For this test only, make **Name** not required (or use a form whose first step can be left empty). Publish.
-3. Wizard: leave Name empty, Next to step 2, **Next**. Expected: refused on step 2 with the message (toast and above
-   the button). Go back, fill in the Name, Next twice: step 3 opens.
+   **from an earlier step**, a field **F** of step 1 that is **not required**, operator **is not empty**, message
+   `Fill in F first.` (Name can't be used: the entity's metadata requires it, so it can't be made optional; developer
+   run 2026-11-13.) Expected: no value box ("no value needed"); "In words: F (earlier step) is not empty". An Entry
+   condition publishes without a message too.
+2. Publish. If step 1 has no optional field, use another form whose first step has one.
+3. Wizard: leave F empty, Next to step 2, **Next**. Expected: refused on step 2 with the message (toast and above
+   the button). Go back, fill in F, Next twice: step 3 opens.
 4. Add a second rule to any condition. Expected: a **match all / any** switch appears; with one rule it is hidden.
 5. A list field: on a form with a list field or a linked record (for example SiegeScenario), add a
    "before leaving" rule on that field. Expected: only **is empty** and **is not empty** are offered, no value box. With
@@ -83,8 +85,10 @@ You need:
 1. **New District**, step 1 empty: click step 3 in the strip. Expected: a dialog `Can't go to "<step 3>" yet`,
    "Finish "<step 1>" first:" with "Name is required"; the field shows its message; no "Go to" button.
 2. Fill step 1, leave **Allow entry** unticked on step 2 (don't open it), click step 3. Expected: the dialog names
-   **Region and access** with the condition's message and a button **Go to Region and access**. Press it: step 2
-   opens with the message above the Next button.
+   **Region and access** with the condition's message and a button **Go to Region and access**. ×, Close and Go to
+   all respond (#413: before the fix the dialog locked while the progress saved). Press Go to: step 2 opens at once
+   with the message above the Next button and on the Allow entry field (#414); the progress saves in the background,
+   and a failed save shows in the wizard's banner (the next Next saves again).
 3. A blocking rule in between: edit a District whose region is **outside** its town (or change the region in a
    draft), then from step 1 click the last step. Expected: the dialog names the step with the region rule and the
    rule's message; **Go to** opens it with the message on the field.

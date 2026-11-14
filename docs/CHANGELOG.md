@@ -88,6 +88,19 @@ This is a human-readable record of capabilities merged into the V3 default branc
         release-interval-minutes: 5     # new: pass that removes released temp regions; 0 = off
     ```
 
+- **Form wizard: the step-jump dialog can always be closed; a failed step condition marks its fields**
+  (PandiO/knk-workspace#413, #414, follow-ups of #68/#88 from the developer's smoke test 2026-11-13) — staff forms only.
+  knk-web-app branch from the fix session, PR into `next` (knk-web-app#20, merged 2026-11-14); on the trunk when the
+  developer promotes `next`.
+  - **#413:** the "Can't go to … yet" dialog locked (×, Close and Go to disabled) while "Go to" waited for the progress
+    save. "Go to" now opens the stopped step at once with its issues shown and saves in the background; a failed save
+    shows in the wizard's banner and the next Next saves again. A jump with nothing to stop it still saves first.
+  - **#414:** when a "before leaving" condition, or the next step's "before entering" condition, stops Next or a jump,
+    the fields its failing rules read show the condition's message in red, like a field validation rule (one rule: its
+    field; all: the failing rules' fields; any: every field). The mark clears as soon as the condition holds. The
+    message above Next stays.
+  - **Admin steps:** none; deploy the web app. Smoke test:
+    [form step conditions smoke test § 2 step 1 and § 5 step 2](guides/form-step-conditions-and-step-jump-smoke-test.md).
 - **Form builder: step conditions; form wizard: click a step to jump to it** (PandiO/knk-workspace#88, #68) — staff
   who build forms can now say in the builder what must be filled in before a step may be left or opened, and staff who
   fill in a form can click a step in the progress strip instead of pressing Next many times. No change for players.
