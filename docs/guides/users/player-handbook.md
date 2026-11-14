@@ -126,8 +126,7 @@ By default, teleports have a **warmup** (5 seconds: don't move or take damage), 
 the same kind) and are blocked for 10 seconds after a PvP hit and during a siege. Your rank can shorten these.
 
 <!-- Guide link (PandiO/knk-workspace#298): add the navigation and teleports player guide link on the next line. -->
-> **Full guide:** coming soon (navigation and teleports). Until then, see
-> [commands reference § Travel and teleporting](commands.md#travel-and-teleporting).
+> **Full guide:** [navigation and teleports player guide](navigation-and-teleports-player-guide.md).
 
 ## Discoveries
 
@@ -228,4 +227,5 @@ allowed there.
 ## Changes
 
 1. 2026-11-14: Siege: link to the Siege player guide (PandiO/knk-workspace#297)
-2. 2026-11-13: first version, replaces the archived Dutch v1 manual (PandiO/knk-workspace#296)
+2. 2026-11-14: Getting around: link to the navigation and teleports player guide (PandiO/knk-workspace#298)
+3. 2026-11-13: first version, replaces the archived Dutch v1 manual (PandiO/knk-workspace#296)
