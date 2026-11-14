@@ -1,6 +1,6 @@
 # Web app testing
 
-**Status:** Current · **Last updated:** 2026-11-14 (end-to-end tests on Playwright instead of Cypress, in CI, [PandiO/knk-workspace#423](https://github.com/PandiO/knk-workspace/issues/423)); 2026-11-13 (moved from knk-web-app `TESTING.md`, rewritten against knk-web-app `next` `ff9db4b`, PandiO/knk-workspace#304)
+**Status:** Current · **Last updated:** 2026-11-14 (smoke-test backfill specs and helpers, [PandiO/knk-workspace#511](https://github.com/PandiO/knk-workspace/issues/511)); 2026-11-14 (end-to-end tests on Playwright instead of Cypress, in CI, [PandiO/knk-workspace#423](https://github.com/PandiO/knk-workspace/issues/423)); 2026-11-13 (moved from knk-web-app `TESTING.md`, rewritten against knk-web-app `next` `ff9db4b`, PandiO/knk-workspace#304)
 **Moved from:** `knk-web-app/TESTING.md` at `ff9db4b` ([source](https://github.com/PandiO/knk-web-app/blob/ff9db4b/TESTING.md)) and rewritten against the
 current code: that file described only the first registration tests (2026-01), a `mockAuthClient.ts` that no longer
 exists, E2E tests that wrote real users to the database, and an example GitHub workflow with Node 18 that was never the
@@ -66,13 +66,16 @@ Playwright Test (`@playwright/test`, pinned in `package.json`) replaced Cypress 
    `{ error: 'NoMock' }` and is listed on the test as the annotation "unmocked API requests" in the HTML report; run a
    spec with `test.use({ strictApi: true })` to make such a request fail the test.
 3. **Mocks typed with the DTOs.** The fixtures in `e2e/fixtures/` (`auth.ts` users and login responses, `content.ts`
-   the empty lookups every content page makes, `forms.ts` a two-step form configuration) and the mock bodies in the
+   the empty lookups every content page makes, `forms.ts` a two-step form configuration, `players.ts` the staff player
+   profile and the moderation search, `settings.ts` the settings pages) and the mock bodies in the
    specs are typed with the DTOs in `src/types/`. `npm run typecheck:e2e` (and the CI job) fails when a DTO changes and
    a mock no longer matches; Playwright itself only strips the types.
 4. **Helpers.** `startLoggedIn(page, token)` puts an access token in `sessionStorage` before the first page load (a
    login without remember-me); `mockSession(api, user, allowed)` answers `Auth/me` and the permission checks
-   (`allowed(node)` decides each node).
-5. **The specs** (11 tests, about 11 seconds after the build):
+   (`allowed(node)` decides each node) and refuses the realtime hub's negotiate call, so pages run with realtime off.
+   `expectNoSidewaysScroll(page)` (`e2e/support/layout.ts`) checks that nothing scrolls the page sideways, for the
+   smoke tests' "at 390 px" steps (set the size with `page.setViewportSize`).
+5. **The specs** (35 tests, about 25 seconds after the build):
    1. `registration.spec.ts`, ported from the Cypress spec: an invalid link code, registering and landing on
       `/account` (the exact request body is checked), a duplicate email shown on the email field.
    2. `login.spec.ts`: a player logs in and lands on `/account`; a wrong password shows the generic message; an
@@ -88,9 +91,22 @@ Playwright Test (`@playwright/test`, pinned in `package.json`) replaced Cypress 
       the error summary and the field error and saves nothing; a filled step saves the draft
       (`POST FormSubmissionProgress` with the step's values and the workflow session) and opens step 2; "Previous"
       keeps the values.
+   5. `player-profile.spec.ts` (smoke-test backfill [#511](https://github.com/PandiO/knk-workspace/issues/511)): the
+      staff player profile's header and tabs (tab in the URL, kept on reload, arrow keys), freeze with a required
+      reason and unfreeze, the Activity timeline and paged audit log, actions greyed out without their node, and
+      Moderation → All players (UUID search, server sort and paging in the URL, Back, Recently opened).
+   6. `settings-pages.spec.ts` (#511): Lootboxes → Settings, Currency policy, Road network and Siege settings in the
+      admin layout: the unsaved-changes count, the leave question from a sidebar link and from the browser's Back, the
+      browser's own question on close or reload, Save with its toast, a refused and a stale save, units, phone width.
 6. **Writing a spec.** Use role-based locators (`getByRole`, `getByLabel`, `getByTestId` where a test id exists) and
    web-first assertions (`await expect(locator).toBeVisible()`, `toHaveURL`); never `waitForTimeout`. To find the calls
    a page makes, open it in a spec and look at the "unmocked API requests" annotation or `api.requests`.
+   Two browser-only cases from the backfill: the browser's own "leave site?" question is checked with
+   `page.on('dialog')` and `page.close({ runBeforeUnload: true })` after the page shows its unsaved change (the
+   handler is attached on that render); a test of the app's leave question on **Back** must arrive by a click in the
+   app, not a second `page.goto`, so Back stays a client-side navigation.
+   When a spec automates a smoke-test step, mark the step in its guide (`N. [automated] <what>: <test path>`,
+   [knk-test-writer skill](../../../.claude/skills/knk-test-writer/SKILL.md) § 4).
 7. **Browser.** Install Chromium once with `npx playwright install chromium`. With a Chromium that is already
    installed (a cloud session has one at `/opt/pw-browsers/chromium`), set `PLAYWRIGHT_CHROMIUM_PATH` to it instead;
    do not run `playwright install` in a cloud session. Pass `--trace off` to skip traces locally unless you are

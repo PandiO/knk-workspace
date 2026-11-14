@@ -4,6 +4,17 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Smoke tests: the web app's checks move into the automated suites** ([PandiO/knk-workspace#511](https://github.com/PandiO/knk-workspace/issues/511))
+  — no game or player change; developer-facing. Playwright specs with a mocked API in knk-web-app `e2e/` now check what
+  the developer did by hand in the smoke tests of features already on the trunk, and each guide marks those steps
+  `[automated]` with the test, so the evening check covers only what is left (game server, real client, themes).
+  Batch 1 (knk-web-app branch `claude/test-backfill-511`, PR into `next`): `e2e/player-profile.spec.ts` (player
+  profile and player search, 21 of 26 steps) and `e2e/settings-pages.spec.ts` (settings pages, 22 of 26 steps), new
+  helpers `e2e/support/layout.ts` (no sideways scroll at phone width), `e2e/fixtures/players.ts` and
+  `e2e/fixtures/settings.ts`; `mockSession` keeps the realtime hub offline. Guides:
+  [player profile](guides/player-profile-smoke-test.md), [settings pages](guides/settings-pages-smoke-test.md);
+  [web app testing § 3](guides/developer/web-app-testing.md#3-end-to-end-tests-playwright).
+  - **Admin steps:** none (tests and docs only).
 - **Smoke-test fixes on `next` from 2026-11-14** (PandiO/knk-workspace#484, #485, #487) — knk-web-api, knk-plugin and
   knk-workspace branches `claude/smoke-fixes-484-485-487` (PRs into `next`, in review, not merged). **Deploy order:**
   API and plugin together (no migration). One entry per issue follows.
