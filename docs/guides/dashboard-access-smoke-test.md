@@ -272,6 +272,28 @@ and at 390 px width (phone): nothing scrolls sideways, the bulk dialogs fit.
 22. [ ] **Live updates:** with two browsers (Admin and world-only) on Town, a save by Admin refreshes the world-only
     table ("Updated by …"); a bulk delete of towns refreshes it once, not once per row.
 
+### 8.5 Row actions in view and the right-click menu (#404, #405, #406)
+
+knk-web-app PR knk-web-app#17 (merged into `next` 2026-11-14). Automated in CI (`e2e/dashboard-row-actions.spec.ts`,
+plus the Jest tests `DataTable.rowsAndMenu.test.tsx` and the #406 block in `ObjectDashboard.test.tsx`); manual steps
+not run.
+
+1. [automated] Every row has the same edge and row line, no grey left edge from the second row on (#404):
+   `dashboard-row-actions.spec.ts`.
+2. [automated] At 390 px the row's Edit button stays in view (#405): `dashboard-row-actions.spec.ts`.
+3. [automated] A right-click on a row opens View, Edit, Delete and Export as CSV; Escape closes it (#406).
+4. [automated] Without `knk.admin.delete` / `knk.admin.export` those items are greyed out with "Requires <node>", like
+   the row's buttons.
+5. [automated] Shift+F10 on a focused row link opens the menu, ArrowDown moves, Escape gives the focus back.
+6. [automated, Jest] Ctrl/Cmd + right-click and rows without items keep the browser's menu; a ticked row's menu says
+   "Delete N Towns" / "Export N Towns as CSV" and acts on the selection; bulk Delete needs `knk.admin.delete.bulk`.
+7. Manual (looks, both themes): on a type with many columns (Town, Structure), scroll the table sideways at desktop
+   width and at 390 px: the checkbox column stays left and View / Edit / Delete stay right, the columns scroll under
+   them with a soft shadow on the edge only while something is under it, and nothing shows through the sticky cells
+   on hover or when a row is selected. Run once in `current` and once in `brand`.
+8. Manual (real data): Export as CSV from the menu on an unticked row gives a file with that row only; with two rows
+   ticked, the menu's export has both. Delete from the menu asks the same confirmation as the row button.
+
 ## 9. Docs impact
 
 **#383:** this guide step 9c and the CHANGELOG entry ship with the branch. At merge, for the `documentation`
