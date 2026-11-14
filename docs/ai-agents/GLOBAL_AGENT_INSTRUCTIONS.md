@@ -145,7 +145,7 @@ Claude Code and Codex alike, regardless of where repos are cloned.
 ## Branches, releases and risk tiers
 
 Developer decision 2026-11-12, [AI agent workflow design](../specs/ai-agent-workflow/DESIGN.md) § 2 and § 5; the
-start condition and the coordinator merge were confirmed by the developer the same day (setup chain, PandiO/knk-workspace#327); rule 4 gained the Codex usage-limit exception on 2026-11-14; rules 3, 4, 10 and 11 were changed or added on 2026-11-13 (merging outside a chain, Codex findings, GitHub rulesets, agent workflow files to `main`).
+start condition and the coordinator merge were confirmed by the developer the same day (setup chain, PandiO/knk-workspace#327); rule 4 gained the Codex usage-limit exception and rules 3 and 7 the automated-first testing rule on 2026-11-14; rules 3, 4, 10 and 11 were changed or added on 2026-11-13 (merging outside a chain, Codex findings, GitHub rulesets, agent workflow files to `main`).
 **These rules apply as soon as CI runs on the API and web-app default branches** (PandiO/knk-workspace#328:
 `.github/workflows/ci.yml` on knk-web-api `main` and knk-web-app `main`). Until then the current rules hold: feature
 branches start from the default branch, pull requests target it, and only the developer merges.
@@ -161,7 +161,7 @@ branches start from the default branch, pull requests target it, and only the de
    pass, for every risk tier, through the pull request with a merge commit. **Outside a chain** (a one-off fix, a
    tweak, a docs session), the session that opened the pull request merges it into `next` itself, the same way, once
    all of these hold (developer decision 2026-11-13; it replaces the 2026-11-12 rule that such pull requests wait for
-   the developer): CI is green on its head; every Codex finding is handled (rule 4); the issue carries a `tier:` label (a `documentation`
+   the developer): CI is green on its head; the change brings its automated tests ("Testing: automated first"); every Codex finding is handled (rule 4); the issue carries a `tier:` label (a `documentation`
    issue counts as `tier:1` and gets that label when it is created);
    `tier:3` work is behind a flag that is off by default (rule 6); the essential docs ship with it (Shipping a change).
    The developer stays the gate at promotion (rule 5), not at the merge into `next`. A merge into `next` does not close
@@ -190,8 +190,9 @@ branches start from the default branch, pull requests target it, and only the de
    unreviewed work is harmless there. A rejected change is reverted or fixed in `next` before the release.
 7. **Risk tiers** are labels on each issue, proposed by intake or design and overridable by the developer:
    `tier:1` a tweak to existing behaviour (automated tests are the review, the developer does a quick pass); `tier:2` a
-   feature change (a short smoke test on `next`); `tier:3` new foundations, schema changes or game feel (a full smoke
-   test by the developer).
+   feature change (automated tests plus a short manual check of what no suite covers); `tier:3` new foundations, schema
+   changes or game feel (automated tests plus a full manual check of what no suite covers). See "Testing: automated
+   first".
 8. Stacking a branch directly on another feature's unmerged branch is the exception, for uncertain work, and is
    stated in the chain charter.
 9. Chain bookkeeping (progress reports, charters, `docs/ACTIVE_SESSIONS.md` and its archive files) stays on
@@ -254,6 +255,26 @@ short:
 - When a fix package for a run leaves an open decision, a live check that needs several players, or a known issue,
   add it to the **next** run's preparation plan (scope, decisions table or known issues), not only to the package
   report or handoff.
+
+## Testing: automated first
+
+Developer decision 2026-11-14: every change ships its proof in the automated suites, so the developer's evening check
+covers only what no suite can check and the developer's time goes to designing features.
+
+1. **Every behaviour change brings tests in the right suite**, chosen with the
+   [knk-test-writer skill](../../.claude/skills/knk-test-writer/SKILL.md): web-app pages in Playwright (knk-web-app
+   `e2e/`, mocked API, CI job `e2e`), logic in unit tests (Jest, the API's xUnit project, plugin `knk-core`), Bukkit-facing
+   plugin code with MockBukkit or Mockito (test-only), world behaviour over ticks in a plugin scenario on a real Paper
+   server (CI job `paper-boot`, PandiO/knk-workspace#421). Unit tests alone don't cover a change to what a page shows or
+   what happens in the world.
+2. **The smoke-test guide lists only what is left:** game feel, visuals, a real client, real data. Automated steps
+   appear as one `[automated]` line naming the test. A change with nothing manual left needs no guide section.
+3. **The PR's Testing section** names the tests per suite and the behaviour each covers, the manual steps left, and any
+   world step waiting for the scenario framework.
+4. **Not ready without it:** a behaviour change without a test in the right suite is sent back by the coordinator
+   (knk-coordinator § 6) and is not merged by the session that opened it (rule 3 of "Branches").
+5. **Backfill:** when you touch a feature whose smoke-test guide still has automatable manual steps, automate the ones
+   in your scope. PandiO/knk-workspace#511 tracks the backfill of features already in `next`.
 
 ## Shipping a change: documentation
 

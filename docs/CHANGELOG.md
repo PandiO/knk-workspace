@@ -6,6 +6,12 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## 2026-11-14
 
+- **Agents test automatically first** — no game change; feature sessions now put each behaviour they change into the
+  automated suites (Playwright for web pages, unit tests, MockBukkit/Mockito for plugin code, plugin scenarios on a real
+  Paper server), and smoke-test guides list only what no suite can check (developer decision 2026-11-14). New skill
+  `.claude/skills/knk-test-writer/`; global instructions "Testing: automated first"; the link and coordinator skills
+  check it, the digest counts only manual steps. Backfill of features already in `next`: PandiO/knk-workspace#511.
+  - **Admin steps:** none.
 - **knk-web-api trunk renamed to `main`** — no game change; knk-web-api's default branch is now `main`, like the other
   repos (developer, 2026-11-14). GitHub redirects the old name and moved the open pull requests. The agent rules and
   skills, the docs-session prompt, the deploy guides and `scripts/nas-ops/stage-b/pc/knk-release.sh` now say `main`;
