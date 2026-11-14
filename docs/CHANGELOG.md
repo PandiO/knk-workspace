@@ -138,6 +138,31 @@ This is a human-readable record of capabilities merged into the V3 default branc
   `next` 2026-11-13 (knk-web-api#18 `c20899c`). The API parts of #184 and #261 are on `master` since 2026-11-12. **Deploy order:** back up the database, deploy the API and run
   `dotnet ef database update` (one new migration here, `AddTempRegionReleases`), then the plugin. One entry per feature
   follows.
+- **Erasure retest fixes: first join without a cached user, erasure feed in PascalCase, test walkers out of the
+  water** (PandiO/knk-workspace#486 retest, #490 remainder; plugin only). knk-plugin branch
+  `claude/erasure-first-join-486-retest`, merged into `next` 2026-11-14 (knk-plugin#29, `058f93a`); on the trunk when the developer promotes `next`. The developer's retest of 2026-11-14
+  (plugin `0.1.0+a760c4a4`) still got "Welcome back" in § S5 steps 1, 4, 5 and 5a. Two causes, both fixed:
+  1. **The first join was decided from the user cache at `PlayerJoinEvent`**, which an erasure empties (and so does a
+     website account that has no UUID yet), so the decision was skipped (`First-join kits: no cached user ... skipped`).
+     It is now made once the join's account sync knows the account (`UserAccountListener`), with the erasure mark taken
+     there whatever the cache holds, and an account the API created while the player connected (pre-login or the
+     join's sync) counts as new, also with realtime off. One decision drives the welcome, the quiet discovery minutes
+     and the first-join kit request. The log line is now `First join: <name> (user <id>) ...`.
+  2. **The catch-up never read the feed:** the API sends `GET api/privacy/erasures` in PascalCase (`Items`,
+     `ErasureId`, `LastId`, ...), the plugin read camelCase only, so every page parsed empty, nothing was applied and
+     `erasure-feed.json` never moved. The plugin now reads both casings (no API change). The other REST DTOs of
+     realtime #178 to #184 were checked: the API's world-task DTOs name their fields in camelCase explicitly; only the
+     erasure feed lacked the attributes.
+  3. **#490:** the test walkers (`/knk npc test spawn`) still drowned (audit: `DROWNING 1088`): Citizens' path search
+     walks through and over water to reach a dry target, and seagrass, kelp and bubble columns passed the dry-spot
+     check. Their own path search now never enters water or lava, and a spot needs a body's room with no fluid at all.
+     No K&K listener records anything for an NPC's drowning damage.
+  Design [realtime DESIGN §7.5](specs/realtime-signalr/DESIGN.md); smoke test
+  [§ S5 steps 4, 5, 5a and 7](guides/realtime-smoke-test.md).
+  - **Admin steps:** none (no `config.yml` key, no API change); deploy the plugin. With the fix, the first hub connect
+    applies the erasures the feed holds that this server has not applied yet (`erasure-feed.json` starts at
+    `"lastId":0` because no page was ever read): expect `Erasure #N applied` lines for older erasures, which are
+    harmless (every step is idempotent; a UUID now in use by a fresh account comes with `formerUuid: null`).
 - **An erased account's player is greeted as new, also after a restart** (PandiO/knk-workspace#486, follow-up of
   #184 from the developer's smoke test 2026-11-14; plugin only). knk-plugin branch `claude/erasure-first-join-486`,
   merged into `next` 2026-11-14 (knk-plugin#25); on the trunk when the developer promotes `next`. Before, a player whose
@@ -372,7 +397,8 @@ This is a human-readable record of capabilities merged into the V3 default branc
      join loading, teleport warmups, weapon enchantments, AFK activity, domain effect damage), for any entity with
      Citizens' `NPC` metadata, whether or not NPC navigation is on; gate, hub and decoration protection still apply
      to NPCs. The test walkers no longer pick spots under water, where they stood drowning, and the audit report
-     lists damage causes.
+     lists damage causes; since the #486 retest PR their own path search never enters water either (the audit after
+     the first fix still counted `DROWNING 1088`).
   2. **Phase 2** (#360): an NPC follows the road route K&K plans, one stretch of the road line at a time, with a
      watchdog that notices an NPC that makes no progress and sends it on a short recovery leg. NPCs have their own
      access profile instead of a player's rights, wait when the rules allow no route, pause when their chunk unloads
