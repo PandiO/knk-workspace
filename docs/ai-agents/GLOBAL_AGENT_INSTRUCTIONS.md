@@ -145,7 +145,7 @@ Claude Code and Codex alike, regardless of where repos are cloned.
 ## Branches, releases and risk tiers
 
 Developer decision 2026-11-12, [AI agent workflow design](../specs/ai-agent-workflow/DESIGN.md) § 2 and § 5; the
-start condition and the coordinator merge were confirmed by the developer the same day (setup chain, PandiO/knk-workspace#327); rules 3, 4, 10 and 11 were changed or added on 2026-11-13 (merging outside a chain, Codex findings, GitHub rulesets, agent workflow files to `main`).
+start condition and the coordinator merge were confirmed by the developer the same day (setup chain, PandiO/knk-workspace#327); rule 4 gained the Codex usage-limit exception on 2026-11-14; rules 3, 4, 10 and 11 were changed or added on 2026-11-13 (merging outside a chain, Codex findings, GitHub rulesets, agent workflow files to `main`).
 **These rules apply as soon as CI runs on the API and web-app default branches** (PandiO/knk-workspace#328:
 `.github/workflows/ci.yml` on knk-web-api `main` and knk-web-app `main`). Until then the current rules hold: feature
 branches start from the default branch, pull requests target it, and only the developer merges.
@@ -173,7 +173,10 @@ branches start from the default branch, pull requests target it, and only the de
    request's content (code or docs), comment `@codex review` and wait for that review before merging. For each finding, the session fixes what is real and in
    scope, or answers on the finding's thread why not (not a bug, or out of scope with the issue it filed), and resolves
    the thread. A P1 finding blocks the merge until it is fixed or
-   the developer decides. Findings are listed in the link's report block.
+   the developer decides. Findings are listed in the link's report block. **When Codex is at its usage limit** (its
+   comment on the pull request says the Codex usage limit for code reviews is reached), don't wait for it: continue
+   without its review once the other checks hold, and say on the pull request (and in the report block) that Codex
+   was skipped for its usage limit (developer decision 2026-11-14).
 5. **The developer promotes `next` to trunk** after testing `next` as a whole (the daily digest lists what to test):
    merge into trunk, then the release tag. Only the developer, or the manager session on the developer's explicit go,
    promotes. **Release tags** go through the "Release" workflow in knk-web-api, knk-web-app and knk-plugin

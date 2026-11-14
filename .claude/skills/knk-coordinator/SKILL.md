@@ -122,7 +122,9 @@ All of these must hold:
     ChatGPT Codex connector on each PR's current head is fixed by the link or answered on its thread with the reason
     (not a bug, or out of scope with the issue filed), and resolved; the link block lists them. A P1 finding blocks the
     merge until it is fixed or the developer decides. If the link left findings open, send it back (or fix the small
-    ones yourself before merging) rather than merging over them.
+    ones yourself before merging) rather than merging over them. When Codex is at its usage limit (its comment says
+    so), merge without its review once the other checks hold and note on the PR that Codex was skipped for the limit
+    (developer decision 2026-11-14).
 
 ## 7. Merging into `next` (only once § 1.3 says the branch model applies)
 
