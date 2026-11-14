@@ -1,6 +1,6 @@
 # knk-plugin Architecture
 
-**Status:** Current · **Last updated:** 2026-11-13 (front matter converted to the header standard, PandiO/knk-workspace#305; last content update 2026-11-13 on `next`: GDPR erasure push #184, siege startup retry #31)
+**Status:** Current · **Last updated:** 2026-11-14 (§ Testing: Paper boot test, PandiO/knk-workspace#420); 2026-11-13 (front matter converted to the header standard, PandiO/knk-workspace#305; last content update 2026-11-13 on `next`: GDPR erasure push #184, siege startup retry #31)
 
 Spigot/Paper Minecraft plugin for Knights and Kings V3. Multi-module Gradle
 (Kotlin DSL), Java 25 toolchain, targets Paper API 26.3 (`gradle.properties`; corrected 2026-10-25, the 2026-09-21 scan said Java 21 / 1.21.10).
@@ -310,6 +310,17 @@ Siege-specific fields exist on the model (`CachedGateStructure.currentSiegeId`,
 siege service, capture logic, or team/scoring system anywhere in the repo.
 See the parity table in `docs/reports/plugin-scan-2026-09-21.md` for the
 full picture.
+
+## Testing
+
+1. Unit tests per module (`./gradlew test`): JUnit 5 and Mockito, no server. `knk-paper`'s `test` task excludes the
+   tests tagged `integration` / `requires-bukkit` (seven files, Mockito tests that fail without a Bukkit `Server`);
+   `./gradlew :knk-paper:taggedTest` runs them. Making them pass is
+   [PandiO/knk-workspace#499](https://github.com/PandiO/knk-workspace/issues/499).
+2. Boot test (`.github/workflows/paper-boot.yml`, `tools/paper-boot/`, PandiO/knk-workspace#420): CI starts a real
+   Paper 26.3 server with the shaded jar, WorldGuard and WorldEdit and no API, and fails unless the plugin enables
+   without errors. See [CI § 7](../guides/developer/ci.md#7-plugin-the-paper-boot-test). In-plugin scenarios
+   (PandiO/knk-workspace#421) will hook into the same script.
 
 ## Talks to
 
