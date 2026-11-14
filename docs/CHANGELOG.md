@@ -55,6 +55,16 @@ This is a human-readable record of capabilities merged into the V3 default branc
   `next` 2026-11-13 (knk-web-api#18 `c20899c`). The API parts of #184 and #261 are on `master` since 2026-11-12. **Deploy order:** back up the database, deploy the API and run
   `dotnet ef database update` (one new migration here, `AddTempRegionReleases`), then the plugin. One entry per feature
   follows.
+- **An erased account's player is greeted as new, also after a restart** (PandiO/knk-workspace#486, follow-up of
+  #184 from the developer's smoke test 2026-11-14; plugin only). knk-plugin branch `claude/erasure-first-join-486`,
+  merged into `next` 2026-11-14 (knk-plugin#25); on the trunk when the developer promotes `next`. Before, a player whose
+  account was erased while the server was down got "Welcome back" and no quiet discovery minutes on their next join:
+  Minecraft's own player files are kept by design, and nothing marked the join as new. Now every applied erasure marks
+  "next join is a first join" (`erasure-first-joins.json`, a hash and a time, no UUID or name; taken at the next join,
+  dropped after 90 days), and a join right after a start waits at most 5 s for the first catch-up. Design
+  [realtime DESIGN §7.5](specs/realtime-signalr/DESIGN.md); smoke test [§ S5 steps 4, 5 and 5a](guides/realtime-smoke-test.md).
+  - **Admin steps:** none (no `config.yml` key, no API change); deploy the plugin. The file
+    `plugins/KnightsAndKings/erasure-first-joins.json` appears after the first erasure.
 - **GDPR account erasure reaches the game server at once (realtime S5)**
   ([PandiO/knk-workspace#184](https://github.com/PandiO/knk-workspace/issues/184), chain 2 R1; plugin part). With
   `realtime.enabled: true` the plugin acts on the API's `AccountErased` push: an online player is kicked with a neutral

@@ -298,7 +298,7 @@ additive migration `AddPrivacyErasureEvents` (new table `privacy_erasure_events`
 `Privacy__GraceDays=0` on the dev API so a filed request can be executed at once (put it back afterwards; default 5).
 **Plugin:** `realtime.enabled: true`; the bundled `realtime.erasure` block (kick message, `settle-seconds: 2`) needs no
 change. **People:** the owner **O** (`knk.owner.privacy.manage`, the owner privacy page) and throwaway test accounts
-**T1**, **T2**, **T3** (and **T4**, **T5** for step 2a) linked to Minecraft accounts you can play. Erasure is irreversible: never use a real player.
+**T1**, **T2**, **T3** (and **T4**, **T5** for step 2a, **T6** for step 5a) linked to Minecraft accounts you can play. Erasure is irreversible: never use a real player.
 Plugin log lines start with `[KnK Privacy]` and name only the erasure number.
 
 1. **Off changes nothing.** With `realtime.enabled: false` erase T3 while they are online (O files the request on the
@@ -324,10 +324,19 @@ Plugin log lines start with `[KnK Privacy]` and name only the erasure number.
    that file lists T1's `players/data/<uuid>.dat` (and stats/advancements). The files themselves are still there: delete
    them by hand if you decide to, then clear the list.
 4. **Returning player.** T1 joins again with the same Minecraft account: the server treats them as a new player (a new
-   account, or the admission gate's answer for a new player), with nothing of the old account (balances, ranks).
+   account, or the admission gate's answer for a new player), with nothing of the old account (balances, ranks). Since
+   #486 this holds even when Minecraft's own player files are kept (don't delete them for this step): the first-join
+   welcome, not "Welcome back", and the discovery messages stay quiet for the new-player minutes. The `First-join kits:`
+   log line names the signal (`erased`).
 5. **Caught up after the server was down.** Stop the Minecraft server. O erases T2. Start the server: on the hub
    connect the resync step "account erasures" logs `Erasure #N+1 applied: ...` (T2's offline-store entry and spool
-   files gone) and `erasure-feed.json` moves to N+1. Restart once more: nothing is applied again.
+   files gone) and `erasure-feed.json` moves to N+1. Restart once more: nothing is applied again. Then T2 joins: greeted
+   as a **new** player (first-join welcome, quiet discovery minutes), not "Welcome back" (#486; the developer's run of
+   2026-11-14 failed here before the fix). `plugins/KnightsAndKings/erasure-first-joins.json` held one entry (a hash,
+   no UUID or name) until the join took it.
+   5a. **Join right after the start (#486).** Stop the server, O erases T6, start the server and let T6 join at once
+   (before or while the catch-up runs): the join waits at most 5 s for the first catch-up, then T6 is greeted as new as
+   in step 5. With the API stopped the join is not held up longer than that.
 6. **API down during the catch-up.** Stop the API, erase nobody, start the Minecraft server, then start the API: the
    catch-up runs at the hub connect and applies nothing new; no errors beyond the connection messages.
 7. **Feed endpoint.** `curl -s https://<api>/api/privacy/erasures?since=0` without a key: 401; with a web login: 403;
