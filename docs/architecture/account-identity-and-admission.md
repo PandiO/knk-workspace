@@ -1,10 +1,7 @@
 # Account identity and admission — who an account is, how it is created, who may play
 
-**Status:** Describes the **invite-only design as merged to every trunk on 2026-10-24** (knk-web-api, knk-web-app,
-knk-plugin; invitations chain links 1–7, smoke-tested on dev). **Off by default until the alpha switch-over**
-([alpha go-live § 11.1](../guides/alpha-go-live.md)); until then the live behaviour is "Before the feature" below. Living document: update it in place when the
-code changes.
-**Last updated:** 2026-11-03 (§ 4: the register page's link-code field is the masked claim-code field, #229, branch `claude/register-code-mask-229`, not merged); 2026-10-26 (§ 4: the claim code field shows the dash from the start, #196, branch `claude/claim-code-dash-196`, merged into `main` `c3c0c9f`); 2026-10-26 (§ 4: claim code fields, #192, merged to knk-web-app `main` `7ba0f4b`); 2026-10-25 (§ 4: the anonymous `onboarding-info` call, the mode-aware sign-up and login pages; § 7: the Cloudflare step after sign-up, the missing-session banner, the bypass row — branch `claude/invite-only-register-page`, not merged); 2026-10-21 (written by invitations chain link 7, KNG-218)
+**Status:** Current · **Last updated:** 2026-11-13 (status: merged 2026-10-24 and live on the alpha since the 2026-10-24 switch-over; player and admin guide links, PandiO/knk-workspace#299)
+**Applies to:** the invite-only design as merged to every trunk on 2026-10-24 (knk-web-api, knk-web-app, knk-plugin; invitations chain links 1–7, smoke-tested on dev); switched on for the alpha 2026-10-24 ([report](../reports/2026-10-24-alpha-phase-9-invite-only.md)). "Before the feature" at the end is history: the behaviour with every switch off.
 **Linear:** [KNG-205](https://linear.app/kngpandi/issue/KNG-205) (parent), [KNG-206](https://linear.app/kngpandi/issue/KNG-206),
 [KNG-207](https://linear.app/kngpandi/issue/KNG-207), [KNG-208](https://linear.app/kngpandi/issue/KNG-208),
 [KNG-212](https://linear.app/kngpandi/issue/KNG-212), [KNG-214](https://linear.app/kngpandi/issue/KNG-214),
@@ -12,7 +9,7 @@ code changes.
 **Design (binding, decisions § 8):** [invitations DESIGN.md](../specs/invitations/DESIGN.md) ·
 **Plan and as-built notes:** [IMPLEMENTATION_PLAN.md](../specs/invitations/IMPLEMENTATION_PLAN.md) ·
 **Operations:** [alpha go-live § 4–6.1, § 11.1](../guides/alpha-go-live.md), [email guide](../guides/email.md),
-[smoke test](../guides/invitations-smoke-test.md) · **Players:** [account guide](../guides/users/PLAYER_GUIDE_ACCOUNT_MANAGEMENT.md)
+[smoke test](../guides/invitations-smoke-test.md), [invitations admin guide](../guides/admin/invitations-admin-guide.md) · **Players:** [account guide](../guides/users/account-player-guide.md)
 **Related:** [offline-security-cache.md](offline-security-cache.md) (the gate's outage fallback),
 [api-connectivity.md](api-connectivity.md), [web-api-architecture.md](web-api-architecture.md)
 
@@ -256,3 +253,8 @@ On trunk today: anyone with a whitelisted Minecraft account joins; the plugin cr
 `/account link` gives a code to register a web login (KNG-67); mail is `System.Net.Mail` through
 `AccountMailQueue` (or the Log provider); the Cloudflare Access list is edited by hand; web-first sign-up is off
 (`AllowWebFirst=false`).
+
+## Changes
+
+1. 2026-11-13: header to the standard; live on the alpha since 2026-10-24; links to the account player guide and the invitations admin guide (PandiO/knk-workspace#299).
+2. Earlier (from the old header, newest first): 2026-11-03 (§ 4: the register page's link-code field is the masked claim-code field, #229, branch `claude/register-code-mask-229`, not merged); 2026-10-26 (§ 4: the claim code field shows the dash from the start, #196, branch `claude/claim-code-dash-196`, merged into `main` `c3c0c9f`); 2026-10-26 (§ 4: claim code fields, #192, merged to knk-web-app `main` `7ba0f4b`); 2026-10-25 (§ 4: the anonymous `onboarding-info` call, the mode-aware sign-up and login pages; § 7: the Cloudflare step after sign-up, the missing-session banner, the bypass row — branch `claude/invite-only-register-page`, not merged); 2026-10-21 (written by invitations chain link 7, KNG-218)
