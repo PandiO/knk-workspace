@@ -1,18 +1,11 @@
 # User Management — Implementation Plan (Tailored Admin Module)
 
-**Status:** All three phases shipped 2026-09-24. Phase 1 (composite player-profile view) and
+**Status:** Current · **Last updated:** 2026-11-13 (header converted to the doc header standard, LAN addresses replaced by placeholders, PandiO/knk-workspace#305)
+**Progress:** All three phases shipped 2026-09-24. Phase 1 (composite player-profile view) and
 Phase 2 (quick actions + audit log write path) — see "Phase 1 status" and "Phase 2 status" under
 §5 below. Phase 3 (moderation search/filters) — see "Phase 3 status" under §5. All §5 open items
 resolved: item 2 (presence tracking) and item 3 (audit log retention policy) — see "Audit log
 retention status". This module is feature-complete.
-**Last updated:** 2026-09-24 (Phase 3 implementation session added "Phase 3 status" under §5,
-resolved §5 item 2, and closed the Phase 1/2 carried-forward "no generic-dashboard entry point"
-item). Previously updated 2026-09-24 (audit log retention policy session added "Audit log
-retention status" under §5, resolved §5 item 3). Previously updated 2026-09-24 (Phase 2
-implementation session added "Phase 2 status" under §5). Previously updated 2026-09-24 (Phase 1
-implementation session added "Phase 1 status" under §5, resolved §5 item 4, and flagged a real
-generic-dashboard registration gap as carried-forward item 1 — see that section). Previously
-updated 2026-09-23 (initial draft).
 
 Ref: `DESIGN.md` in this folder. Depends on: `docs/specs/user-features/IMPLEMENTATION_PLAN.md`
 §1 (entities, resolution engine, `permissions/check`/`permissions/effective` endpoints) and,
@@ -223,7 +216,7 @@ screenshotted and verified the not-found state renders correctly for an unknown 
 pre-existing unrelated failures every prior phase's row already documents
 (`PathResolutionServiceTests`×2, `FormSubmissionProgressRepositoryTests`,
 `FieldValidationServiceTests`, `ClientActivityStoreTests`). The LAN dev DB
-(`192.168.50.119`) was never touched — confirmed via `git diff` on `appsettings.json` showing
+(`<nas-ip>`) was never touched — confirmed via `git diff` on `appsettings.json` showing
 zero changes; every command pointed at the disposable container via a
 `ConnectionStrings__MySqlDbConnection` environment-variable override.
 
@@ -372,7 +365,7 @@ not-found test case itself.
 
 **dotnet test:** 391/396 (13 new — see above), same 5 pre-existing unrelated failures every prior
 phase's row documents (`PathResolutionServiceTests`×2, `FormSubmissionProgressRepositoryTests`,
-`FieldValidationServiceTests`, `ClientActivityStoreTests`). The LAN dev DB (`192.168.50.119`) was
+`FieldValidationServiceTests`, `ClientActivityStoreTests`). The LAN dev DB (`<nas-ip>`) was
 never touched — confirmed via `git diff` on `appsettings.json` showing zero changes; every command
 used a `ConnectionStrings__MySqlDbConnection` environment-variable override.
 
@@ -482,7 +475,7 @@ live verification above exercises the actual cleanup logic, migration, and endpo
 more directly than a mocked unit test would for this particular kind of change). Flagging this as
 a deliberate choice, not an oversight, in case the developer wants
 `AuditLogRetentionConfigurationServiceTests`/`AuditLogRepositoryTests.DeleteOlderThanAsync_...`
-added later for regression coverage. The LAN dev DB (`192.168.50.119`) was never touched —
+added later for regression coverage. The LAN dev DB (`<nas-ip>`) was never touched —
 confirmed via `git diff` on `appsettings.json` showing zero changes; every command used a
 `ConnectionStrings__MySqlDbConnection` environment-variable override against a disposable
 `mysql:8.0` Docker container, removed after this session.
@@ -610,7 +603,7 @@ paragraph (which also contains the word "search") before the actual Search butto
 look like the search feature was silently no-op'ing (0 rows) until the selector was scoped to
 `button:has-text("Search")` — worth noting for whoever next drives this page via a headless
 script. Console clean of anything from this phase's own code (only the same TLS-proxy/cert noise
-prior phases documented). The LAN dev DB (`192.168.50.119`) was never touched — confirmed via
+prior phases documented). The LAN dev DB (`<nas-ip>`) was never touched — confirmed via
 `git diff` on `appsettings.json` showing zero changes throughout this session.
 
 **Closes the Phase 1/2 carried-forward item:** `User` still isn't registered in
@@ -631,3 +624,9 @@ live-server join/quit test for the plugin side, from a machine that can reach
 server-wide online roster rather than the shipped group-scoped one (decision 2 above); (c) the
 `AuditLogRetentionConfiguration` 180-day default is still worth a second look (carried from the
 retention-policy session, unrelated to this phase).
+
+## Changes
+
+Header history up to 2026-11-13, as the old `Last updated` line gave it (newer changes: the header and git history):
+
+2026-09-24 (Phase 3 implementation session added "Phase 3 status" under §5, resolved §5 item 2, and closed the Phase 1/2 carried-forward "no generic-dashboard entry point" item). Previously updated 2026-09-24 (audit log retention policy session added "Audit log retention status" under §5, resolved §5 item 3). Previously updated 2026-09-24 (Phase 2 implementation session added "Phase 2 status" under §5). Previously updated 2026-09-24 (Phase 1 implementation session added "Phase 1 status" under §5, resolved §5 item 4, and flagged a real generic-dashboard registration gap as carried-forward item 1 — see that section). Previously updated 2026-09-23 (initial draft).

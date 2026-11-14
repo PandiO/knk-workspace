@@ -1,16 +1,14 @@
 # Staff web app — admin guide
 
-**Status:** Living document — update in place. Describes knk-web-app `next` `e6ba115` and knk-web-api `master` `45043a7`
-(merged 2026-11-12/13; `next` adds #371, create and edit back on `knk.admin.content`, and #374, the same for the detail
-page's link buttons and in the API, knk-web-app `next` `ca1959d` and knk-web-api `next` `b65e66d`; both reach `main`
-when the developer promotes `next`; `next` also adds step conditions in the form builder, #88, and clickable form steps,
-#68, knk-web-app `next` `1f848f7` and knk-web-api `next` `31abe2d`, § 5.1 and § 7.1, **not live-tested**). Only the builders (§ 7) were smoke-tested by the developer (2026-11-11/12, all pass); navigation,
-Entity setup without a nav link, the detail page, the relation picker, live updates, the settings pages and the
-dashboard access model with bulk delete (§ 1, § 3) are **not live-tested** yet: their smoke tests are linked in each
-section (the access model's is in closed alpha test run 2, checklist § 4c).
-**Last updated:** 2026-11-13 (§ 5.1 the steps of a form: clicking a step, what stops you; § 7.1 step conditions in the form builder; #68, #88, docs #395); 2026-11-13 (Select / Change / Unlink / Add need `knk.admin.content`, the API refuses creates and edits without it, #374, docs #385); 2026-11-13 (New, Edit and the forms need `knk.admin.content` again, #371, docs #378); 2026-11-13 (dashboard per area, disabled actions with "Requires …", bulk delete, export through the
-API, names-only pickers, readable refusals; #280 AM3 and #205, docs #366); 2026-11-12 (first version,
-PandiO/knk-workspace#337, #338, #340–#345)
+**Status:** Current · **Last updated:** 2026-11-13 (§ 9: lootbox tab and column names corrected, lootbox and currency
+points link the economy admin guide, PandiO/knk-workspace#300)
+**Checked against:** knk-web-app `main` `3ba747d` and knk-web-api `master` `f445d21` (AM3 of #280 merged 2026-11-13 as
+`e02ee79` / `45043a7`; #371, #374 and #383, create, edit and link changes on `knk.admin.content`, reached the default
+branches with the promotion of `next` on 2026-11-13). Step conditions in the form builder and clickable form steps
+(#88, #68) are in `next`, not yet released (§ 7). Only the builders (§ 7) were smoke-tested by the developer
+(2026-11-11/12, all pass); navigation, Entity setup without a nav link, the detail page, the relation picker, live
+updates, the settings pages and the dashboard access model with bulk delete (§ 1, § 3) are **not live-tested** yet:
+their smoke tests are linked in each section (the access model's is in closed alpha test run 2, checklist § 4c).
 
 How staff find their way around the web app's admin pages and use the content tools: the dashboard, Entity setup, the
 detail page, the relation picker in forms, live updates, the form and display builders, and the settings pages. It
@@ -26,9 +24,12 @@ does not repeat the feature guides (siege, game settings, menus, …); it links 
   (domains, towns, districts, streets, …), `knk.kit.manage`, `knk.admin.lootbox.manage`, `knk.siege.admin.manage`,
   `knk.admin.road` and `knk.admin.user.manage` (users, permission groups). **Any one** of them opens the Dashboard
   and the detail pages; you see only the types of the areas you hold. **Creating and editing** (New, Edit, the
-  forms) and changing a record's links on its detail page need `knk.admin.content` as well as the type's area node
-  ([#371](https://github.com/PandiO/knk-workspace/issues/371), [#374](https://github.com/PandiO/knk-workspace/issues/374),
-  developer decisions 2026-11-13); the API refuses a create or edit without it too. Deleting needs
+  forms, a value edited in place) and changing a record's links on its detail page need `knk.admin.content` as well
+  as the type's area node ([#371](https://github.com/PandiO/knk-workspace/issues/371),
+  [#374](https://github.com/PandiO/knk-workspace/issues/374), developer decisions 2026-11-13); the API refuses a create
+  or edit without it too. Three types are exempt and keep only their own node: users (Edit opens the player profile,
+  `knk.admin.user.manage`), permission groups, and road profiles (edited in Road network's own card,
+  `knk.admin.road`). Deleting needs
   `knk.admin.delete` on top, exporting `knk.admin.export`, and deleting several rows at once
   `knk.admin.delete.bulk`, which only the owner hands out. Entity setup's lists, the builders and the Minecraft
   catalogue need `knk.admin.content` too. Which rank holds what, and how to give someone an area node:
@@ -109,7 +110,7 @@ with **Clear**, or "None selected · Export takes all N results".
 **Delete (n)** ([#205](https://github.com/PandiO/knk-workspace/issues/205); red, before Export; only with
 `knk.admin.delete.bulk`, and never for users and permission groups, which are deleted one at a time):
 - It asks "Delete 3 Streets?" with the count and type. Nothing is deleted before you confirm, and it can't be undone.
-- The rows are deleted one by one, 100 per request; a large selection shows "Deleting… n / N".
+- The rows are sent 100 per request, one request after the other; a large selection shows "Deleting… n / N".
 - Deleted rows leave the table and the selection. A row that couldn't be deleted **stays selected**, and a dialog
   "Deleted 2 of 3 Streets" lists it with the reason; a row still in use offers **Show what uses it**. If a request
   fails (network, too many requests), the run stops and the dialog lists the rows not tried.
@@ -145,7 +146,9 @@ a User's Edit opens the player profile instead).
 - Collections show a count in their title ("Streets 14") and 12 items per page with Previous / Next.
 - A page that can't load says why: "You don't have access to Town "Cinix"." with the nodes that would allow it, "doesn't
   exist", "no detail page set up yet" (no display configuration), or "couldn't be loaded" with **Try again**.
-- A value you can edit in place saves with Enter and cancels with Escape.
+- A value you can edit in place saves with Enter and cancels with Escape. Editing in place needs the type's edit node
+  and `knk.admin.content` ([#383](https://github.com/PandiO/knk-workspace/issues/383); a user's values need
+  `knk.admin.user.manage`); without them the field is greyed out with "Requires …".
 
 **Changing links** ([#188](https://github.com/PandiO/knk-workspace/issues/188)):
 - **Select… / Change…** (a single link) and **Add…** (a collection) open a search dialog of existing records: type
@@ -162,6 +165,9 @@ a User's Edit opens the player profile instead).
   ([#374](https://github.com/PandiO/knk-workspace/issues/374)): changing a link is an edit. Without the content node
   they are greyed out with "Requires knk.admin.content", and the hint line under the section says so. A world-only rank
   can still open a town and delete one of its streets (with `knk.admin.delete`), but not add or unlink one.
+- Known gap ([#380](https://github.com/PandiO/knk-workspace/issues/380)): a section's edit action on a related record
+  and its **Create New** are not greyed out without `knk.admin.content`; they open the form, which then says "Staff
+  only — This page needs the knk.admin.content permission".
 - Edits by others and a delete of the open record show live (§ 6).
 
 **A delete that is refused because the record is still in use** (a street that structures point at) shows the API's
@@ -284,6 +290,11 @@ applied in a form preview, and buttons and links do nothing in a display preview
 
 Saving, publishing, duplicating, discarding and generating need `knk.admin.content`.
 
+**In `next`, not yet released** ([#88](https://github.com/PandiO/knk-workspace/issues/88),
+[#68](https://github.com/PandiO/knk-workspace/issues/68)): a **Step conditions** card in the form builder (what must
+hold before a step may be left or opened) and form steps you can click to jump. The `main` web app has neither; this
+guide describes them once `next` is promoted.
+
 > **Known limit ([#291](https://github.com/PandiO/knk-workspace/issues/291)):** a field's **validation rules** are saved
 > at once, outside the draft: a rule you add, change or remove applies to the published form straight away, before
 > Publish.
@@ -377,7 +388,8 @@ a percentage, × for multipliers.
   better" or **Never** (specials are always announced; a type can override it), with a preview of both announcements
   as the game shows them. The Odds tab shows small chances as "1 in N". Switching lootboxes off or on asks first
   ("Switch lootboxes off? Nothing spawns and no box can be claimed until they are switched on again …"); so do a
-  type's **Enabled** on the Types tab (boxes already in the world stay) and a token grant rule on the Tokens tab (tokens
+  type's **Spawns** chip (Enabled/Disabled) on the Types tab (it needs `knk.admin.content` too, greyed out with "Requires …" without it,
+  [#383](https://github.com/PandiO/knk-workspace/issues/383)) (boxes already in the world stay) and a token grant rule on the Token items tab (tokens
   already issued stay; switching on doesn't grant retroactively). Changes reach the game server at its next runtime
   refresh.
 - **Currency policy** (`knk.admin.currency.policy`): coins and gems in two sections with **one Save**. The **lowest
@@ -387,10 +399,15 @@ a percentage, × for multipliers.
   section says so and offers **Reload current policy**.
 - **Road network** (`knk.admin.road`): the header's Save saves the navigation defaults per domain type together with
   the compass settings (a choice no longer saves on its own). Road profiles and stretches keep their own Save ("Save
-  stretch #n") and are not counted in the header.
+  stretch #n") and are not counted in the header. A stretch's **Create New Street** needs `knk.admin.content`
+  (shown greyed out with the reason without it, #383).
+- Known gap ([#380](https://github.com/PandiO/knk-workspace/issues/380)): **New** and **Edit** on the Lootboxes Types,
+  Specials and Areas tabs and a stretch's street **Rename** open the form wizard and are not greyed out without
+  `knk.admin.content`; without it they lead to "Staff only".
 
-Detailed lootbox, currency and road guides are still to be written ([#300](https://github.com/PandiO/knk-workspace/issues/300),
-[#298](https://github.com/PandiO/knk-workspace/issues/298)).
+Lootboxes and currency in detail (every tab and field, what a switch does to boxes and tokens already out, the
+policy's limits, corrections and reversals): [economy admin guide § 2 and § 4](economy-admin-guide.md#2-currency).
+The road guide is still to be written ([#298](https://github.com/PandiO/knk-workspace/issues/298)).
 
 Smoke tests: [settings pages](../settings-pages-smoke-test.md), [data primitives](../data-primitives-smoke-test.md)
 (not run).
@@ -410,8 +427,8 @@ get the new version at once.
 | After **Delete (n)** some rows are still ticked | Those were refused; the dialog gave each reason | Fix the reason (**Show what uses it**), then delete again |
 | **New** / **Edit** greyed out: "Requires knk.admin.content" | Creating and editing need the content node on top of the area node (#371) | Ask for `knk.admin.content` if you should create and edit |
 | "Staff only — This page needs the knk.admin.content permission" on a form | Entity setup, the forms and the builders need the content node. The Lootboxes tabs' New/Edit, Road network's Rename and a detail page section's edit and Create New still lead there instead of being greyed out ([#380](https://github.com/PandiO/knk-workspace/issues/380)) | Ask for `knk.admin.content` |
-| **Select…** / **Add…** / **Unlink** greyed out: "Requires knk.admin.content" | Changing links is an edit and needs the content node (#374) | Ask for `knk.admin.content` if you should change links |
-| A save answers "Creating or editing … requires … and knk.admin.content." (for example the Lootboxes **Enable/Disable** toggle or Road network's **New street**) | The API asks for the content node on every create and edit (#374); these two buttons aren't greyed out beforehand yet ([#383](https://github.com/PandiO/knk-workspace/issues/383)) | Ask for `knk.admin.content` |
+| **Select…** / **Add…** / **Unlink**, a value edited in place, the Lootboxes **Enabled** toggle or **Create New Street** greyed out: "Requires knk.admin.content" | Changing a record is an edit and needs the content node (#374, #383) | Ask for `knk.admin.content` if you should change records |
+| A save answers "Creating or editing … requires … and knk.admin.content." | The API asks for the type's write node and the content node on every create and edit (#374), except for users, permission groups and road profiles | Ask for `knk.admin.content` |
 | Delete refused with **Show what uses it** | Other records still point at it | Unlink or delete those first |
 | Staff don't see a builder change | It is saved as a draft, not published | **Publish…** |
 | **Publish…** refused: `Step "…" has a "before leaving" condition without a message` | A step condition checked on Next has no message (§ 7.1) | Type the message, or remove the condition |
@@ -419,3 +436,17 @@ get the new version at once.
 | Clicking a step opens **Can't go to "…" yet** | A step before it is unfinished (§ 5.1) | Fix the listed fields, or **Go to <step>** |
 | A validation rule change applies before Publish | Known limit #291 | Change rules outside play hours |
 | No "Updated by …" lines | Live updates off on the server, the connection is blocked, or you lack the type's area node | Reload; check `Realtime__WebLiveUpdatesEnabled` and the proxy's `/api/hubs/web` |
+
+## Changes
+
+1. 2026-11-13: § 5.1 the steps of a form: clicking a step, what stops you; § 7.1 step conditions in the form builder;
+   #68, #88, docs #395 (in `next`)
+2. 2026-11-13: Select / Change / Unlink / Add need `knk.admin.content`, the API refuses creates and edits without it,
+   #374, docs #385
+3. 2026-11-13: New, Edit and the forms need `knk.admin.content` again, #371, docs #378
+4. 2026-11-13: § 1, § 3, § 4, § 5, § 9, § 10 checked against the default branches: New, Edit, the forms, link changes,
+   hot edit, the lootbox toggle and Create New Street need `knk.admin.content`, #371, #374, #383; known gap #380; docs
+   #347
+5. 2026-11-13: dashboard per area, disabled actions with "Requires …", bulk delete, export through the API, names-only
+   pickers, readable refusals; #280 AM3 and #205, docs #366
+6. 2026-11-12: first version, PandiO/knk-workspace#337, #338, #340–#345

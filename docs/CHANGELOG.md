@@ -220,7 +220,47 @@ This is a human-readable record of capabilities merged into the V3 default branc
     3. To test: `enabled: true`, restart, then the steps under "Developer test" of Phases 1, 2, 3 and 4 in the
        implementation plan.
 
+## 2026-11-14
+
+- **knk-web-api trunk renamed to `main`** — no game change; knk-web-api's default branch is now `main`, like the other
+  repos (developer, 2026-11-14). GitHub redirects the old name and moved the open pull requests. The agent rules and
+  skills, the docs-session prompt, the deploy guides and `scripts/nas-ops/stage-b/pc/knk-release.sh` now say `main`;
+  older docs that name knk-web-api `master` with a commit hash still point at the right commit.
+  - **Admin steps:** in a local clone, `git branch -m master main`, `git fetch origin`,
+    `git branch -u origin/main main`, `git remote set-head origin -a`. Pull the updated `knk-release.sh` on the PC
+    before the next API release. Check that the API's rulesets and the `release` environment's deployment-branch rule
+    name `main` (or the default branch).
+
 ## 2026-11-13
+
+- **Account and invitation guides** (PandiO/knk-workspace#299) — no game change; players now have one guide for
+  getting an account with an invitation, linking Minecraft, logging in and resetting a password, and staff have one for
+  issuing invitations and running the invite-only switches. The player guide
+  [`users/account-player-guide.md`](guides/users/account-player-guide.md) replaces `PLAYER_GUIDE_ACCOUNT_MANAGEMENT.md`
+  (renamed and rewritten against the trunks of 2026-11-13). The new
+  [invitations admin guide](guides/admin/invitations-admin-guide.md) covers personal invites and shared codes, their
+  actions and limits, mails, the four switches, the admission gate and the Access card, the Cloudflare Access sync,
+  kill switches and troubleshooting. The 2026-01 account developer guide moved to
+  [`archive/`](archive/DEVELOPER_GUIDE_ACCOUNT_INTEGRATION.md) (Kotlin examples, removed `/account create`). The guides
+  index now gives the email guide and the invitations smoke test their real state (merged, run, live on the alpha).
+  Filed: #449 (landing page says Java only), #450 (Rotate on an expired shared code), #452 (plugin leftovers of
+  `/account create`).
+  - **Admin steps:** none.
+- **Siege player guide** (PandiO/knk-workspace#297) — no game change; players now have one guide to sieges: how to
+  join and vote, the hub and team split, spawn choice, objectives and how a match is won, fighting, siege gates, the
+  navigation compass, gear and enchantment books, leaving and rejoining, the end of a match, rewards and match history.
+  [guides/users/siege-player-guide.md](guides/users/siege-player-guide.md), written from knk-plugin `main` `57884e97`,
+  knk-web-api `master` `75b5a00` and knk-web-app `main` `3ba747d`. The gate structures player guide no longer calls
+  gate objectives "not live". Filed while writing it: #451 (a kit claimed from the menu during a match is lost at the
+  restore) and #453 (changelog entries for the alpha run 1 Siege packages merged 2026-11-01).
+  - **Admin steps:** none.
+- **Navigation and teleport guides (docs)** — players now have one page on finding the way with `/navigate` and on
+  every way to teleport (spawn, hub, warps, requests, `/back`), and staff one page on building the road network and
+  setting up warps, spawn and teleport prices. No game change. New: [player guide](guides/users/navigation-and-teleports-player-guide.md),
+  [admin guide](guides/admin/navigation-and-teleports-admin-guide.md) (road setup, upkeep and the reset script, the Road
+  network page, warps, group prices and cooldowns, staff teleports, `all` forms and exemptions), written against
+  knk-plugin `main` `57884e9`, knk-web-api `master` `75b5a00` and knk-web-app `main` `3ba747d`
+  (PandiO/knk-workspace#298). Filed: #447 (decision: player homes). Admin steps: none.
 
 - **Dashboard access in the web app; bulk delete** (PandiO/knk-workspace#280 AM3, #205) — staff now see only the
   dashboard types of the areas they work in, buttons they can't use are greyed out with the permission they need, and
@@ -270,6 +310,16 @@ This is a human-readable record of capabilities merged into the V3 default branc
     2. Optional: a JDK 25 in the cloud environment's setup script, or `KNK_JDK25_HOME`, so the hook can compile the
        plugin there (guide § 3.7).
     3. No deploy, migration, `config.yml` key or API setting changes.
+
+- **Deployment log and deploy records** (PandiO/knk-workspace#303) — no game change; the project now records which
+  version runs on the closed alpha. New [`DEPLOYMENTS.md`](DEPLOYMENTS.md): one row per deploy (commits and release
+  tags, seed or patch, migrations, config keys merged, scripts, checks, rollback), back-filled from the deploy reports
+  of 2026-10-11 to 2026-11-02, the alpha's current state marked "to be confirmed by the developer". The
+  [closed-alpha runbook § Every deploy](guides/closed-alpha-deployment-runbook.md#every-deploy-gate-tags-release-and-log)
+  adds the deploy gate (open `documentation` issues), release tags through the components' Release workflow, the
+  log row and a GitHub Release on knk-workspace per deploy ("What's new" and "Admin steps"). Tag naming for the deploy
+  release is open in #444.
+  - **Admin steps:** none.
 
 ## 2026-11-12
 

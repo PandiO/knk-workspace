@@ -26,7 +26,7 @@ servers). `/kit give` in game is unchanged: it places the items itself and leave
 
 ## 0. Setup
 
-1. API: knk-web-api `master` (the API part, migration `AddKitClaimDelivery`, merged 2026-11-12) or `next`. Plugin:
+1. API: knk-web-api `main` (the API part, migration `AddKitClaimDelivery`, merged 2026-11-12) or `next`. Plugin:
    knk-plugin `claude/plugin-chains-into-next`, or `next` once it is merged. The web app is unchanged: use `main`.
 2. API: `dotnet ef database update` (one additive migration, `AddKitClaimDelivery`: two nullable `datetime` columns on
    `kit_claims`), then `dotnet run`.

@@ -1,9 +1,6 @@
----
-status: active
-last_updated: 2026-09-21
----
-
 # knk-plugin Reading Guide
+
+**Status:** Needs review · **Last updated:** 2026-11-13 (front matter converted to the header standard; last content update 2026-09-21, so check it against knk-plugin `main` before relying on it, PandiO/knk-workspace#305)
 
 Practical onboarding for a new session or contributor picking up
 `knk-plugin` cold. Pairs with `docs/architecture/plugin-architecture.md`
@@ -144,8 +141,9 @@ shadow jar to the local dev server (path set by `devServerDirectory` in
 - `docs/ACTIVE_SESSIONS.md` before starting — most features here span
   `knk-web-api` and sometimes `knk-web-app` too, so check for overlapping
   in-flight work before claiming a task.
-- The plugin repo's own root-level status docs (`ARCHITECTURE_AUDIT.md`,
-  `PHASE_1_COMPLETION.md`, `STATUS_V2_BASELINE.md`, etc.) are self-authored
+- The plugin repo's old root-level status docs (`ARCHITECTURE_AUDIT.md`,
+  `PHASE_1_COMPLETION.md`, `STATUS_V2_BASELINE.md`, etc., moved to
+  [archive/knk-plugin](../archive/knk-plugin/README.md) on 2026-11-13) are self-authored
   progress notes — useful for history, but treat their claims as claims to
   verify against current code rather than ground truth (this scan found at
   least one stale doc, `.github/copilot-instructions.md`, making that

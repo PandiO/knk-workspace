@@ -1,10 +1,7 @@
----
-status: active
-last_updated: 2026-09-13
-related_repo: knk-v1-archive, knk-v2-archive
----
-
 # Legacy codebase locations
+
+**Status:** Current · **Last updated:** 2026-11-13 (front matter converted to the header standard, PandiO/knk-workspace#305; last content update 2026-09-13)
+**Related:** `knk-v1-archive`, `knk-v2-archive`
 
 > `Legacy_codebase_locations.docx` — the user's own map of where legacy v1/v2 codebases might live, written to cross-reference against filesystem scans like [the SMB share inventory](../reports/2026-09-15-smb-share-inventory.md). Kept as-is; not verified against current repo state in this pass.
 

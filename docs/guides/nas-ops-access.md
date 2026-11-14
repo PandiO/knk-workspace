@@ -1,10 +1,12 @@
 # NAS operations access for agents (`knk-ops`)
 
-**Status:** Stage A (read-only checks) installed on the NAS and verified 2026-10-18 · Stage B (`knk-deploy`, delegated changes) built, tested and **installed 2026-10-25**
-**Last updated:** 2026-11-02 (§ 7: source extraction fix for #210 installed); 2026-10-25 (§ 7 Stage B rebuilt for delegated changes)
+**Status:** Current · **Last updated:** 2026-11-14 (knk-web-api's trunk renamed from `master` to `main`); 2026-11-13 (LAN addresses replaced by placeholders, PandiO/knk-workspace#305)
+**Installed:** Stage A (read-only checks) installed on the NAS and verified 2026-10-18 · Stage B (`knk-deploy`, delegated changes) built, tested and **installed 2026-10-25**
 **Sources:** wrapper sources and checksums in [`scripts/nas-ops/stage-a/`](../../scripts/nas-ops/stage-a/) ·
 session report [2026-10-18 NAS ops access and alpha check](../reports/2026-10-18-nas-ops-access-and-alpha-check.md) ·
 [closed-alpha deployment runbook](closed-alpha-deployment-runbook.md)
+**Placeholders:** `<nas-ip>` is the NAS's LAN address and `<pc-ip>` the developer's PC. This repo is public, so the
+real values live in the developer's local notes.
 
 ## 1. What this is
 
@@ -151,7 +153,7 @@ sudo journalctl -t knk-ops --since today --no-pager -o short-iso
 **Status:** built and tested 2026-10-25 (72 end-to-end checks after the hardening of the same evening on a mock stack:
 [`scripts/nas-ops/stage-b/tests/`](../../scripts/nas-ops/stage-b/tests/test_knk_deploy.py)); **installed on the NAS
 2026-10-25** (files match `SHA256SUMS` of `1f23251`; key `SHA256:P6YDRiBC9wxhevkpJnd2aDjcKKUaox4De2Cw0rC732E`
-`knk-deploy@pc`, `from="192.168.50.208"`; `_files` copied from the `6f08383d`/`0d612702` build folders). PC test:
+`knk-deploy@pc`, `from="<pc-ip>"`; `_files` copied from the `6f08383d`/`0d612702` build folders). PC test:
 `status` ok, `status; id` denied, `restart mysql` refused, `config-get knk` shows the plugin key as a token.
 Archive the files with `git -c core.autocrlf=false archive` on Windows, or the line endings change. Hardening update `a6d59a6` (`knk-deploy` `1f1aad31…`, dispatcher unchanged `e6f9c1e9…`) installed the same evening; the previous program is kept as `/var/lib/knk-deploy/knk-deploy.before-a6d59a6`.
 
@@ -203,7 +205,7 @@ knk-deploy`); backups in `/var/lib/knk-deploy/backups/<time>-<what>/`.
   didn't mount before; an internal network can't become external and a service without internet can't gain it.
 - Secret values never leave the NAS: reads replace them with `<<secret:NAME>>`, applies put them back; an unknown
   token is refused. New or rotated secrets stay a developer step (`read -rs`).
-- Trunk-only is enforced on the PC (`knk-release.sh` checks `merge-base --is-ancestor` against `origin/master|main`),
+- Trunk-only is enforced on the PC (`knk-release.sh` checks `merge-base --is-ancestor` against `origin/main`),
   not on the NAS, which has no GitHub access. The Claude Code `ask` rules make the developer confirm each change.
 
 ### 7.3 For agents using it
@@ -224,13 +226,13 @@ Sources: [`scripts/nas-ops/stage-b/`](../../scripts/nas-ops/stage-b/) (`SHA256SU
 | `/usr/local/libexec/knk-deploy/knk-deploy` | 0755 | `stage-b/knk-deploy` |
 | `/etc/ssh/sshd_config.d/61-knk-deploy.conf` | 0644 | `stage-b/61-knk-deploy.conf` |
 | `/etc/sudoers.d/knk-deploy` | 0440 | `stage-b/knk-deploy.sudoers` |
-| `/etc/ssh/knk-deploy/authorized_keys` | 0644 | `restrict,from="192.168.50.208",command="/usr/local/libexec/knk-deploy/dispatch" ssh-ed25519 … knk-deploy@pc` |
+| `/etc/ssh/knk-deploy/authorized_keys` | 0644 | `restrict,from="<pc-ip>",command="/usr/local/libexec/knk-deploy/dispatch" ssh-ed25519 … knk-deploy@pc` |
 | `/var/lib/knk-deploy/` | 0700 | state, inbox, backups, log |
 | `/srv/docker/build/knk-web-api/_files/`, `/srv/docker/build/knk-web-app/_files/` | 0700 | the current build files (copied from the last build folders) |
 
 Account `knk-deploy`: system account, password locked, shell `/bin/sh`, home `/var/lib/knk-deploy-home` (empty,
 root-owned), not in `docker` or `sudo`. PC: key `~/.ssh/knk-deploy_ed25519`, `~/.ssh/config` host `knk-deploy`
-(`HostName 192.168.50.119`, `User knk-deploy`, `IdentitiesOnly yes`, `BatchMode yes`), Claude Code `ask` rules for
+(`HostName <nas-ip>`, `User knk-deploy`, `IdentitiesOnly yes`, `BatchMode yes`), Claude Code `ask` rules for
 `upload`, `deploy-*`, `compose-apply`, `config-apply`, `snapshot`, `restart`, `rollback` and `knk-release.sh`; `allow`
 for `status`, `compose-get`, `config-get`, `logs`.
 
@@ -246,3 +248,8 @@ for `status`, `compose-get`, `config-get`, `logs`.
 - Docker's log size limit may keep less than 24 hours of API logs, which
   limits `secret-scan` and `log-errors`.
 - Works only from the developer PC on the LAN.
+
+## Changes
+
+1. 2026-11-02: § 7, source extraction fix for #210 installed.
+2. 2026-10-25: § 7, Stage B rebuilt for delegated changes.

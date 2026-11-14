@@ -372,7 +372,7 @@ public class GateBlockSnapshot
 - **Project Structure**: [docs/specs/project-overview/SOURCES_LOCATION.md](../../specs/project-overview/SOURCES_LOCATION.md)
 - **Minecraft Data**: [Repository/knk-minecraft-data/minecraft-materials.json](../../../../Repository/knk-minecraft-data/minecraft-materials.json)
 - **Backend Instructions**: [.github/instructions/knk-backend.instructions.md](../../../../.github/instructions/knk-backend.instructions.md)
-- **Plugin Architecture**: [Repository/knk-plugin/ARCHITECTURE_AUDIT.md](../../../../Repository/knk-plugin/ARCHITECTURE_AUDIT.md)
+- **Plugin Architecture**: [archive/knk-plugin/ARCHITECTURE_AUDIT.md](../../archive/knk-plugin/ARCHITECTURE_AUDIT.md)
 
 ---
 

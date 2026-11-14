@@ -5,7 +5,7 @@
 The GitHub workflows of the component repos are the automated gate for every change. They run on every push (all
 branches), every pull request and on manual dispatch (`workflow_dispatch`). Under the
 [branch model](../../ai-agents/GLOBAL_AGENT_INSTRUCTIONS.md#branches-releases-and-risk-tiers) a link or feature pull
-request goes into `next` only with these checks green, and `ci.yml` on knk-web-api `master` and knk-web-app `main` is
+request goes into `next` only with these checks green, and `ci.yml` on knk-web-api `main` and knk-web-app `main` is
 the start condition of that branch model (developer decision 2026-11-12,
 [AI agent workflow design § 6](../../specs/ai-agent-workflow/DESIGN.md#6-testing-and-ci)).
 

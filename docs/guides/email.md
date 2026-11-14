@@ -1,13 +1,15 @@
 # Email — admin guide
 
-**Status:** Current for knk-web-api `master` and knk-web-app `main` since the KNG-206 merge on 2026-10-24 (smoke-tested on
-dev with the Pickup transport, [invitations smoke test § 1](invitations-smoke-test.md)); not yet live on the alpha.
-**Last updated:** 2026-10-21 (written by invitations chain link 2)
+**Status:** Current · **Last updated:** 2026-11-13 (status: live on the alpha through the relay since 2026-10-24; § 6 step 3 goes through the staff user form; invitation mails, PandiO/knk-workspace#299)
+**Applies to:** knk-web-api `master` and knk-web-app `main` since the KNG-206 merge on 2026-10-24; smoke-tested on dev
+with the Pickup transport ([invitations smoke test § 1](invitations-smoke-test.md)); the alpha sends through the
+`mailrelay` container since 2026-10-24 ([report](../reports/2026-10-24-alpha-phase-9-invite-only.md))
 **Linear:** [KNG-206](https://linear.app/kngpandi/issue/KNG-206) (engine), [KNG-211](https://linear.app/kngpandi/issue/KNG-211) (relay on the alpha)
 **Design:** [invitations DESIGN § 4](../specs/invitations/DESIGN.md), [IMPLEMENTATION_PLAN § 3](../specs/invitations/IMPLEMENTATION_PLAN.md)
 
 The API sends every mail through one engine: password resets, the "your email was changed" notice, the data-deletion
-mails and, later, invitations and welcome mails. This guide says how it works, how to configure it, how to check that
+mails, and the invitation, welcome, "Minecraft linked" and finish-linking mails of the invite-only sign-up
+([invitations admin guide § 5](admin/invitations-admin-guide.md#5-mails)). This guide says how it works, how to configure it, how to check that
 it works, and what to do when it doesn't.
 
 ## 1. How it works
@@ -135,8 +137,8 @@ Run on dev (or the alpha after a deploy). Use a tester account whose mailbox you
 2. **Reset mail.** Log out → *Forgot password* for the tester → the mail arrives with a working link → reset → old
    sessions end. The row is a Sent `PasswordReset` with no content left.
 3. **Email-change notice.** Change the tester's email on the account page → the **old** address gets "Your Knights &
-   Kings email was changed". Then change it back from the staff user page (`update-email`) → the old address gets it
-   again (new in KNG-206).
+   Kings email was changed". Then, as staff, change it back through the user form on `/admin/users/<id>` (there is no
+   separate "update email" button; the form calls the staff endpoint) → the old address gets it again.
 4. **Privacy confirm.** As the tester, request data deletion on the account page → the confirm mail arrives. Cancel
    the request afterwards.
 5. **Relay down.** Stop the relay (`docker stop mailrelay`) → *Forgot password* still answers the usual message → the
@@ -159,3 +161,8 @@ Run on dev (or the alpha after a deploy). Use a tester account whose mailbox you
 | Rows are Suppressed | The throttle or the daily cap (see the last error). Expected for repeated requests; raise `Email__DailyCap` only for a real need. |
 | Links in mails point to localhost | Set `App__PublicBaseUrl`. |
 | Row Expired | It couldn't be sent before its link expired; the player asks again. Look at why sending was stuck. |
+
+## Changes
+
+1. 2026-11-13: header to the standard; live on the alpha since 2026-10-24; § 6 step 3 through the staff user form (PandiO/knk-workspace#299).
+2. 2026-10-21: written by invitations chain link 2.
