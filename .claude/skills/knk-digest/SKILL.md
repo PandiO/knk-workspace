@@ -38,7 +38,8 @@ repository).
 1. **What is in `next` but not on trunk**, per repo: PRs merged into `next` since the last promotion (base `next`,
    merged, merge commit not on trunk: compare with `git log origin/<trunk>..origin/next --merges --first-parent`).
    For each, its issue (`Closes`/`Part of` line), the issue's `tier:` label and its smoke-test guide (a
-   `docs/guides/*smoke-test*.md` section or the PR's Testing section).
+   `docs/guides/*smoke-test*.md` section or the PR's Testing section). Count only the manual steps left; steps marked
+   `[automated]` run in CI and are not the developer's test (global instructions, "Testing: automated first").
 2. **Decisions:** in each chain progress report changed since the last digest (`docs/reports/*chain*.md` on
    knk-workspace `main`), the "Waiting for the developer" section and agent decisions in new link blocks; open issues
    with a decision or design question waiting on the developer (search `is:open` for "decision" in titles, and
@@ -69,7 +70,7 @@ Post with `add_issue_comment` on PandiO/knk-workspace#333, in this layout (secti
 <only if red: **Red build:** <repo> <branch> <workflow>, <run link>>
 
 ### 1. Ready for your test in `next`
-1. <tier> <title> (<repo>#<pr>, issue #<n>): smoke steps <link>
+1. <tier> <title> (<repo>#<pr>, issue #<n>): <m> manual steps <link> (<a> automated)
 ### 2. Decisions needed
 1. <what, where it is asked, the options in a few words> (<link>)
 ### 3. Blocked
