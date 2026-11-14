@@ -1,6 +1,6 @@
 # Deployment log
 
-**Status:** Current · **Last updated:** 2026-11-13 (first version: structure, back-fill of the knk-alpha deploys the dated reports record, PandiO/knk-workspace#303)
+**Status:** Current · **Last updated:** 2026-11-14 (knk-web-api's trunk renamed from `master` to `main`); 2026-11-13 (first version: structure, back-fill of the knk-alpha deploys the dated reports record, PandiO/knk-workspace#303)
 **Sources:** the dated deploy reports in [`reports/`](reports/) (cited per row), the component repos' git history and tags
 **Related:** [changelog](CHANGELOG.md) (what was merged) · [closed-alpha deployment runbook § Every deploy](guides/closed-alpha-deployment-runbook.md#every-deploy-gate-tags-release-and-log) (how a deploy is recorded) · [NAS operations access § 7](guides/nas-ops-access.md#7-stage-b-delegated-changes-knk-deploy) (`knk-deploy`)
 
@@ -90,6 +90,6 @@ decision: [PandiO/knk-workspace#444](https://github.com/PandiO/knk-workspace/iss
 ## Merged but not deployed
 
 What is on trunk and not on the alpha: compare the current state above with the trunk heads, for example
-`git log --first-parent --oneline 8df59b75..origin/master` in knk-web-api, and read the [changelog](CHANGELOG.md)
+`git log --first-parent --oneline 8df59b75..origin/main` in knk-web-api, and read the [changelog](CHANGELOG.md)
 entries dated after the last deploy. On 2026-11-13 that was 19 first-parent commits in knk-web-api, 37 in knk-web-app
 and 17 in knk-plugin.

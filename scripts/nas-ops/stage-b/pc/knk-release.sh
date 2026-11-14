@@ -5,7 +5,7 @@
 #   knk-release.sh web    [commit]   git archive of knk-web-app  -> ssh knk-deploy upload web-src <commit>
 #   knk-release.sh plugin [commit]   :knk-paper:shadowJar of knk-plugin in a clean worktree -> upload plugin-jar
 #
-# Without a commit it takes the trunk head (origin/master for the API, origin/main otherwise). Any commit must be on
+# Without a commit it takes the trunk head (origin/main). Any commit must be on
 # that trunk: the NAS can't check this itself (it has no GitHub access), so this script is where it's enforced.
 # It only uploads; the deploy itself is a separate `ssh knk-deploy deploy-<x> <commit>`, which Claude Code asks
 # before running. Repos are looked up in $KNK_REPOS (default ~/Documents/Werk/KnightsAndKings/Repository).
@@ -14,7 +14,7 @@ set -euo pipefail
 kind="${1:-}"; want="${2:-}"
 REPOS="${KNK_REPOS:-$HOME/Documents/Werk/KnightsAndKings/Repository}"
 case "$kind" in
-  api)    repo=knk-web-api; trunk=master; up=api-src ;;
+  api)    repo=knk-web-api; trunk=main;   up=api-src ;;
   web)    repo=knk-web-app; trunk=main;   up=web-src ;;
   plugin) repo=knk-plugin;  trunk=main;   up=plugin-jar ;;
   *) echo "usage: $0 api|web|plugin [commit]" >&2; exit 64 ;;

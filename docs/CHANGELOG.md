@@ -4,6 +4,17 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+## 2026-11-14
+
+- **knk-web-api trunk renamed to `main`** — no game change; knk-web-api's default branch is now `main`, like the other
+  repos (developer, 2026-11-14). GitHub redirects the old name and moved the open pull requests. The agent rules and
+  skills, the docs-session prompt, the deploy guides and `scripts/nas-ops/stage-b/pc/knk-release.sh` now say `main`;
+  older docs that name knk-web-api `master` with a commit hash still point at the right commit.
+  - **Admin steps:** in a local clone, `git branch -m master main`, `git fetch origin`,
+    `git branch -u origin/main main`, `git remote set-head origin -a`. Pull the updated `knk-release.sh` on the PC
+    before the next API release. Check that the API's rulesets and the `release` environment's deployment-branch rule
+    name `main` (or the default branch).
+
 ## 2026-11-13
 
 - **Account and invitation guides** (PandiO/knk-workspace#299) — no game change; players now have one guide for

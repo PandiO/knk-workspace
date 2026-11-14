@@ -25,7 +25,7 @@ Fill in:
    `knk-dev-db-seed`) get `read`.
 3. `<branch>`: the link's feature branch.
 4. `<base>` (variant B): `next` once the branch model applies (SKILL.md § 1.3), otherwise the repo's default branch
-   (`master` for knk-web-api, `main` for the others). `<scratchpad>` and `<link>`: a folder in the subagent's
+   (`main` in every repo). `<scratchpad>` and `<link>`: a folder in the subagent's
    scratchpad and the link's short name.
 5. Pick variant A or B (below) by how the link is started.
 

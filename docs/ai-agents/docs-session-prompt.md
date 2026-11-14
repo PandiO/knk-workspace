@@ -1,6 +1,6 @@
 # Docs session prompt
 
-**Status:** Current · **Last updated:** 2026-11-13 (Codex findings handled before the docs PR merges) · 2026-11-12 (starts at the merge into `next`; docs PR into `next`, merged by the docs session itself, a developer decision; finished rows go to the sessions archive; PandiO/knk-workspace#330) · 2026-11-10 (first version, PandiO/knk-workspace#292)
+**Status:** Current · **Last updated:** 2026-11-14 (knk-web-api's trunk renamed from `master` to `main`; Codex at its usage limit: merge without it) · 2026-11-13 (Codex findings handled before the docs PR merges) · 2026-11-12 (starts at the merge into `next`; docs PR into `next`, merged by the docs session itself, a developer decision; finished rows go to the sessions archive; PandiO/knk-workspace#330) · 2026-11-10 (first version, PandiO/knk-workspace#292)
 
 The implementing session uses this prompt when it starts a docs session after a merge: the feature's merge into `next`
 once the global branch model applies, until then the merge into the default branch. The steps are in
@@ -17,7 +17,7 @@ branch model applies> <commit>, ... (PRs: <links>).
 
 Setup: knk-workspace is attached. The code repos are public and readable without attaching: clone what you need with
 `git clone --depth 1 -b <branch> https://github.com/PandiO/<repo>` (the branch named above; default branches:
-knk-web-api master, knk-web-app main, knk-plugin main).
+`main` in every repo).
 <Only if the seed is affected:> Attach PandiO/knk-dev-db-seed with add_repo (access read) and clone it.
 
 1. Read AGENTS.md, docs/ai-agents/GLOBAL_AGENT_INSTRUCTIONS.md, docs/guides/developer/DOCUMENTATION_MAINTENANCE.md
@@ -31,7 +31,8 @@ knk-web-api master, knk-web-app main, knk-plugin main).
 4. Work on branch claude/docs-<docs issue> from knk-workspace <base: next when the code is in next, else main>. When
    done (docs only, describing merged behaviour): with base next, take next's updates by merge, never rebase, open a
    docs PR into next and merge it yourself with a merge commit once its checks pass and every Codex review finding
-   on it is fixed or answered on its thread (global instructions, "Branches" rules 3 and 4; the docs issue counts as
+   on it is fixed or answered on its thread, or Codex answered that its usage limit is reached (then merge without
+   it and say so on the PR) (global instructions, "Branches" rules 3 and 4; the docs issue counts as
    tier:1), so the docs reach main with the feature's promotion. Changes to agent workflow files (.claude/,
    .mcp.json, docs/ai-agents/, AGENTS.md, CLAUDE.md) don't go into that PR: put them on their own branch from main with
    a PR into main, merge it after the same checks, then merge main into next by a PR ("Branches" rule 11); with

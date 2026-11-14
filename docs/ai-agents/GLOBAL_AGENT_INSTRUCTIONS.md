@@ -145,12 +145,12 @@ Claude Code and Codex alike, regardless of where repos are cloned.
 ## Branches, releases and risk tiers
 
 Developer decision 2026-11-12, [AI agent workflow design](../specs/ai-agent-workflow/DESIGN.md) § 2 and § 5; the
-start condition and the coordinator merge were confirmed by the developer the same day (setup chain, PandiO/knk-workspace#327); rules 3, 4, 10 and 11 were changed or added on 2026-11-13 (merging outside a chain, Codex findings, GitHub rulesets, agent workflow files to `main`).
+start condition and the coordinator merge were confirmed by the developer the same day (setup chain, PandiO/knk-workspace#327); rule 4 gained the Codex usage-limit exception on 2026-11-14; rules 3, 4, 10 and 11 were changed or added on 2026-11-13 (merging outside a chain, Codex findings, GitHub rulesets, agent workflow files to `main`).
 **These rules apply as soon as CI runs on the API and web-app default branches** (PandiO/knk-workspace#328:
-`.github/workflows/ci.yml` on knk-web-api `master` and knk-web-app `main`). Until then the current rules hold: feature
+`.github/workflows/ci.yml` on knk-web-api `main` and knk-web-app `main`). Until then the current rules hold: feature
 branches start from the default branch, pull requests target it, and only the developer merges.
 
-1. **Trunk = production.** The default branches (`master` for knk-web-api, `main` for the others) move only when the
+1. **Trunk = production.** The default branches (`main` in every repo; knk-web-api's was `master` until 2026-11-14) move only when the
    developer accepts a release. Releases are numbered tags on trunk (for example `v0.12`); deploys use the tag and a
    rollback deploys the previous tag. A release branch is cut from a tag only for a hotfix while `next` holds
    unfinished work.
@@ -173,7 +173,10 @@ branches start from the default branch, pull requests target it, and only the de
    request's content (code or docs), comment `@codex review` and wait for that review before merging. For each finding, the session fixes what is real and in
    scope, or answers on the finding's thread why not (not a bug, or out of scope with the issue it filed), and resolves
    the thread. A P1 finding blocks the merge until it is fixed or
-   the developer decides. Findings are listed in the link's report block.
+   the developer decides. Findings are listed in the link's report block. **When Codex is at its usage limit** (its
+   comment on the pull request says the Codex usage limit for code reviews is reached), don't wait for it: continue
+   without its review once the other checks hold, and say on the pull request (and in the report block) that Codex
+   was skipped for its usage limit (developer decision 2026-11-14).
 5. **The developer promotes `next` to trunk** after testing `next` as a whole (the daily digest lists what to test):
    merge into trunk, then the release tag. Only the developer, or the manager session on the developer's explicit go,
    promotes. **Release tags** go through the "Release" workflow in knk-web-api, knk-web-app and knk-plugin
@@ -194,7 +197,7 @@ branches start from the default branch, pull requests target it, and only the de
 9. Chain bookkeeping (progress reports, charters, `docs/ACTIVE_SESSIONS.md` and its archive files) stays on
    knk-workspace `main`, as before.
 10. **GitHub rulesets** (set up by the developer 2026-11-13) enforce part of this. On knk-web-api, knk-web-app and
-    knk-plugin, `master`/`main` and `next` need a pull request (no approvals required), the CI checks
+    knk-plugin, `main` and `next` need a pull request (no approvals required), the CI checks
     (`build-and-test` and `fresh-database` on the API, `build-and-test` on the web app, `build` on the plugin), every
     review conversation resolved (so Codex threads must be answered and resolved, rule 4), and a merge commit; they
     cannot be deleted or force-pushed. On knk-workspace, `main` and `next` are only protected against deletion and

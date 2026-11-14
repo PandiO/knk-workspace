@@ -1,6 +1,6 @@
 # Performance metrics, capacity and the NAS-vs-cloud decision
 
-**Status:** Draft · **Last updated:** 2026-11-13 (§ 5.2 links the moved [web API observability](../architecture/web-api-observability.md) doc, PandiO/knk-workspace#304)
+**Status:** Draft · **Last updated:** 2026-11-14 (knk-web-api's trunk renamed from `master` to `main`); 2026-11-13 (§ 5.2 links the moved [web API observability](../architecture/web-api-observability.md) doc, PandiO/knk-workspace#304)
 **State:** Draft v1 (2026-10-22) — written for review, **not yet followed on the NAS**. The plugin and API metric
 endpoints it relies on ([KNG-232](https://linear.app/kngpandi/issue/KNG-232)) are **merged** (2026-10-22) into
 knk-plugin `main` `390d88a4` and knk-web-api `master` `3658cf2`, unit-tested but **not yet run against a live Paper server,
@@ -178,7 +178,7 @@ The target hosts/ports above are placeholders: use the networks and ports of you
 
 ## 5. What KNG-232 adds (and how to use the guide before it is deployed)
 
-Both are merged but unverified live; build current plugin `main` / API `master` to try them, and read the numbers
+Both are merged but unverified live; build current plugin `main` / API `main` to try them, and read the numbers
 critically on the first run (compare `knk_mc_tps` with `/tps`, `knk_cgroup_memory_*` with `docker stats`).
 
 ### 5.1 knk-plugin — `metrics:` section (default **off**)

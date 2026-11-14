@@ -1,6 +1,6 @@
 # Knights and Kings — production installation guide (admin)
 
-**Status:** Draft · **Last updated:** 2026-11-13 (§ 8.1: the Node note points at the web app testing guide, PandiO/knk-workspace#304)
+**Status:** Draft · **Last updated:** 2026-11-14 (knk-web-api's trunk renamed from `master` to `main`); 2026-11-13 (§ 8.1: the Node note points at the web app testing guide, PandiO/knk-workspace#304)
 **State:** Draft v1 — written for review. Not yet followed on a real production host. The database, API, seed and
 web-server steps were rehearsed in a scratch environment on 2026-10-07 (see [Appendix A](#appendix-a--what-was-verified-and-how)).
 The Paper server steps and the CI/CD workflows are untested drafts.
@@ -140,8 +140,8 @@ private network or VPN and add TLS.
 > a YAML file that says which containers to run with which settings. `docker compose up -d` makes reality match the
 > file. Data that must survive container replacement lives in a *volume*.
 
-> **KnK — the version to deploy.** Deploy only commits that are on trunk (`master` for knk-web-api, `main` for the
-> other two), are green in CI, and are tagged (§ 10.2). The developer's standing feature branches, such as
+> **KnK — the version to deploy.** Deploy only commits that are on trunk (`main` in every repo; knk-web-api's was `master` until
+> 2026-11-14), are green in CI, and are tagged (§ 10.2). The developer's standing feature branches, such as
 > `claude/road-navigation`, are pre-release.
 
 ### 1.5 Alternative for the closed alpha: NAS + Cloudflare Tunnel
@@ -1317,7 +1317,7 @@ Also change `migrations.yml`'s service image to `mysql:8.4` (§ 5.1).
 
 **knk-plugin:** `build.yml` already does this stage.
 
-**Then protect trunk:** GitHub → Settings → Branches → a rule for `master`/`main` that requires the CI checks to pass
+**Then protect trunk:** GitHub → Settings → Branches → a rule for `main` that requires the CI checks to pass
 before merging.
 
 ### 10.4 Stage 2 — release artifacts on a tag

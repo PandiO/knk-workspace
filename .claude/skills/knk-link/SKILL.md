@@ -28,8 +28,8 @@ something different from this skill, the prompt and charter win.
    lines or the claim is active on the same area (stop and flag it, § 4); additive edits elsewhere in the file go ahead
    and are logged as an agent decision with alternatives (§ 5).
 3. **Base branch.** Your prompt names it. Without one: `next` once the branch model applies (CI workflow
-   `.github/workflows/ci.yml` on knk-web-api `master` and knk-web-app `main`), otherwise the repo's default branch
-   (`master` for knk-web-api, `main` for the others). Never start from another feature's unmerged branch unless the
+   `.github/workflows/ci.yml` on knk-web-api `main` and knk-web-app `main`), otherwise the repo's default branch
+   (`main` in every repo). Never start from another feature's unmerged branch unless the
    charter stacks you on it.
 4. **Branch.** The link's feature branch in every repo you change. Missing: create it from `origin/<base>`. Existing
    (a later link of the same feature): check it out, pull, and **merge** (never rebase) `origin/<base>` into it, at the
@@ -103,7 +103,9 @@ something different from this skill, the prompt and charter win.
    or out of scope with the issue you filed); resolve the thread. A P1 finding you cannot fix is a blocker. List the
    findings and what you did in your report block. Codex reviews only when a PR is opened or marked ready (or on a
    `@codex review` comment), not on every push: after any push that changes the PR's content (code or docs), comment
-   `@codex review` and handle the new findings before you finish.
+   `@codex review` and handle the new findings before you finish. When Codex is at its usage limit (its comment says
+   the code-review usage limit is reached), don't wait for it: finish without its review, and say so on the PR and in
+   your report block (developer decision 2026-11-14).
 5. **Sub-issue:** a comment with branches, heads, PRs, tests vs baseline and decisions to review; swap
    `status:in-progress` for `status:in-review`.
 6. **Report block** in the chain's progress report on knk-workspace `main`: append it under "## 4. Link blocks" in the

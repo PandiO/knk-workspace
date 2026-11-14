@@ -1,6 +1,6 @@
 # Closed-alpha deployment runbook
 
-**Status:** Current · **Last updated:** 2026-11-13 (§ Every deploy: deploy gate, release tags, deployment log row and GitHub Release, PandiO/knk-workspace#303)
+**Status:** Current · **Last updated:** 2026-11-14 (knk-web-api's trunk renamed from `master` to `main`); 2026-11-13 (§ Every deploy: deploy gate, release tags, deployment log row and GitHub Release, PandiO/knk-workspace#303)
 **Progress:** In progress — phases 0–3 complete; phase 3b (API upgrade to the KNG-64 build, [KNG-227](https://linear.app/kngpandi/issue/KNG-227)) complete 2026-10-22 ([report](../reports/2026-10-22-alpha-api-kng64-upgrade.md)); API updated to `4aeb794` ([KNG-275](https://linear.app/kngpandi/issue/KNG-275)) and phase 4 Stage 2 (KnK plugin `d56e41da`, [KNG-225](https://linear.app/kngpandi/issue/KNG-225)) done 2026-10-24 ([report](../reports/2026-10-24-alpha-api-4aeb794-and-plugin-stage-2.md)); `/hub` waits for a hub selection in the approved seed. Phase 5 (playit.gg, `play.knightsandkings.net`) done 2026-10-24 ([report](../reports/2026-10-24-alpha-phase-5-playit.md)). Phase 6 (web app, `app.knightsandkings.net`, own tunnel, Access; API `a38c8ee9`) done 2026-10-24 ([report](../reports/2026-10-24-alpha-phase-6-web-ingress.md)). Security probe (go-live § 8) passed 2026-10-24 privately and through Cloudflare ([report](../reports/2026-10-24-alpha-security-probe.md)). HSTS and the apex redirect done the same day. Phase 7 deferred to beta (developer, 2026-10-24); the alpha uses manual snapshots (`scripts/alpha-snapshot/`). Phase 9 done 2026-10-24: mail relay, Access sync and bypass, sign-up by invitation, admission gate with the whitelist off ([report](../reports/2026-10-24-alpha-phase-9-invite-only.md)). Approved seed and fresh world imported 2026-10-24 ([report](../reports/2026-10-24-alpha-seed-import.md)); `/hub` works. Next: the first alpha run. Web hostname decided 2026-10-21: `app.knightsandkings.net`
 **Progress report:** [2026-10-11 closed-alpha infrastructure progress](../reports/2026-10-11-closed-alpha-infrastructure-progress.md)
 **Handoff:** [2026-10-11 closed-alpha infrastructure](../ai-agents/handoffs/2026-10-11-closed-alpha-infrastructure.md)
@@ -45,7 +45,7 @@ procedure itself ([NAS operations access § 7](nas-ops-access.md#7-stage-b-deleg
    2026-11-13):
    - Run it from the repo's Actions tab ("Release" → "Run workflow"), or a session runs it with GitHub MCP
      `actions_run_trigger` as part of a promotion the developer asked for: workflow `release.yml`, ref = the default
-     branch (`master` for knk-web-api, `main` for the others), inputs `tag` and `sha`.
+     branch (`main`), inputs `tag` and `sha`.
    - `tag` is `v<major>.<minor>` or `v<major>.<minor>.<patch>` (for example `v0.2`, a hotfix `v0.2.1`); `sha` is the
      full 40-character commit, which must be on the default branch. The workflow refuses anything else, and an
      existing tag.

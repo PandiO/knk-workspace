@@ -1,6 +1,6 @@
 # Knights and Kings — closed alpha go-live (KNG-64 layer on the NAS runbook)
 
-**Status:** Current · **Last updated:** 2026-11-13 (header converted to the doc header standard, LAN addresses replaced by placeholders, PandiO/knk-workspace#305)
+**Status:** Current · **Last updated:** 2026-11-14 (knk-web-api's trunk renamed from `master` to `main`); 2026-11-13 (header converted to the doc header standard, LAN addresses replaced by placeholders, PandiO/knk-workspace#305)
 **State:** v2, aligned 2026-10-11 with the [closed-alpha deployment runbook](closed-alpha-deployment-runbook.md)
 (the Codex NAS rollout). Not yet followed end to end. 2026-10-21: web hostname decided (`app.knightsandkings.net`),
 DNS in Cloudflare, Minecraft console/autostart/plugin updates ([KNG-225](https://linear.app/kngpandi/issue/KNG-225)).
@@ -88,7 +88,7 @@ rate limits or the permission-escalation guard. Do this before the plugin connec
    per row until `clashes_left` is 0. Afterwards the user keeps its id and memberships, the group moves to a new
    id with its grants, and the user has no direct grants. Without the repair, assigning a group to `admin` fails
    with a 500 error (`InvalidCastException`), and Staff's grants also apply to `admin`.
-3. **Build** from a source archive of `master` ≥ `30c5dc5`. Use the deployment build files in
+3. **Build** from a source archive of `main` (knk-web-api's `master` until 2026-11-14) ≥ `30c5dc5`. Use the deployment build files in
    [`scripts/alpha-api/`](../../scripts/alpha-api/): the Phase 3.1 Dockerfile with the `KNK_RUNTIME_UID`/`KNK_RUNTIME_GID`
    fix (now UID/GID 2002, no host account) and a `migrator` target (the SDK stage plus `dotnet-ef` 9.0.10, entrypoint
    `dotnet ef database update`, [production guide § 6.1](production-installation.md#61-the-container-image)). Tag them
