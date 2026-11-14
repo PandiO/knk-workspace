@@ -1,11 +1,12 @@
 # Staff web app — admin guide
 
-**Status:** Current · **Last updated:** 2026-11-13 (§ 9: lootbox tab and column names corrected, lootbox and currency
-points link the economy admin guide, PandiO/knk-workspace#300)
+**Status:** Current · **Last updated:** 2026-11-14 (§ 5.1 and § 7.1: "Go to …" opens the step at once, a failed step
+condition marks its fields; #413, #414, docs #482)
 **Checked against:** knk-web-app `main` `3ba747d` and knk-web-api `master` `f445d21` (AM3 of #280 merged 2026-11-13 as
 `e02ee79` / `45043a7`; #371, #374 and #383, create, edit and link changes on `knk.admin.content`, reached the default
 branches with the promotion of `next` on 2026-11-13). Step conditions in the form builder and clickable form steps
-(#88, #68) are in `next`, not yet released (§ 7). Only the builders (§ 7) were smoke-tested by the developer
+(#88, #68) are in `next`, not yet released (§ 7), with their fixes #413 and #414 (knk-web-app `next` `399722d`,
+2026-11-14). Only the builders (§ 7) were smoke-tested by the developer
 (2026-11-11/12, all pass); navigation, Entity setup without a nav link, the detail page, the relation picker, live
 updates, the settings pages and the dashboard access model with bulk delete (§ 1, § 3) are **not live-tested** yet:
 their smoke tests are linked in each section (the access model's is in closed alpha test run 2, checklist § 4c).
@@ -203,7 +204,9 @@ Smoke test: [relation picker and delete details](../relation-picker-and-delete-d
 ### 5.1 The steps of a form: Next, clicking a step, and what stops you
 
 In `next` since 2026-11-13 ([#68](https://github.com/PandiO/knk-workspace/issues/68),
-[#88](https://github.com/PandiO/knk-workspace/issues/88)); not live-tested.
+[#88](https://github.com/PandiO/knk-workspace/issues/88)); the developer's first run on 2026-11-13 found
+[#413](https://github.com/PandiO/knk-workspace/issues/413) and [#414](https://github.com/PandiO/knk-workspace/issues/414),
+fixed in `next` on 2026-11-14 (knk-web-app#20); the fixes are not live-tested.
 
 A form shows its steps in a strip above the fields; at phone width the label "Step x of n" opens the same steps as a
 list. You move with **Next** and **Back**, or by **clicking a step** (Tab reaches every step, Enter or Space
@@ -214,20 +217,32 @@ opens it). A step that a display condition hides is not in the strip and is neve
    checks as Next: required fields, list sizes, field validations, the step's conditions (§ 7.1), the blocking
    validation rules, and on a step with linked entries (for example a siege scenario's Gates) the required fields of
    every entry. The step you clicked is not checked itself, only whether it may be opened.
-3. **The first step that fails stops you.** A dialog **Can't go to "<step>" yet** names that step and lists the
+3. **The first step that fails stops you.** A dialog `Can't go to "<step>" yet` names that step and lists the
    fields and messages. When it is the step you are on, it says `Finish "<step>" first:` and the messages are also
    on the fields. When it is a step in between, it says `"<step>" needs your attention first:` and has a button
-   **Go to <step>**, which opens that step with the messages in place. A later step that can't be opened yet is
-   listed as `"<step>" can't be opened yet: <message>`.
+   `Go to <step>`, which opens that step at once with the messages in place. A later step that can't be opened yet
+   is listed as `"<step>" can't be opened yet: <message>`. **×** and **Close** always close the dialog.
 4. **Warnings don't stop you.** A validation rule that only warns lets the jump through. After you land, a dialog
-   **Now on "<step>"** lists them under "Warnings (these don't stop you)".
+   `Now on "<step>"` lists them under "Warnings (these don't stop you)".
 5. **A check that could not run doesn't stop you either.** When a rule needs the game server and the server can't be
    reached, the jump goes through and the same dialog lists the rule under "Not checked: the game server could not be
    reached". Check those again on their step before you submit. (Any rule that could not run is listed under that
    heading, also when the cause was something else, [#396](https://github.com/PandiO/knk-workspace/issues/396).)
-6. **A failed step condition stays visible.** When Next or Submit is refused by a step condition, the message shows
-   as a toast and in red **above the Next button**, where it stays until you try again or go back.
-7. **A jump saves like Next.** Landing on a later step saves your progress as a draft, the same as pressing Next.
+6. **A failed step condition stays visible.** When Next, Submit or a jump is refused by a step condition (this step's
+   "before leaving" condition or the next step's "before entering" one, § 7.1), the message shows as a toast and in red
+   **above the Next button**, where it stays until you try again or go back. The fields the condition's failing rules
+   read are **marked** too: the message in red under the field, with the field's error styling, like a field
+   validation rule ([#414](https://github.com/PandiO/knk-workspace/issues/414)). With one rule its field is marked;
+   with "match all" each field whose rule fails; with "match any" every field of the condition (it only fails when
+   all of them do). A mark goes away as soon as the condition holds, while the message above Next stays until you
+   try again. Only fields on the step you are on are marked: a rule on a field of an earlier step keeps the message
+   above Next only. A field that already shows its own error keeps that error. A condition in hand-written JSON
+   (§ 7.1) marks no field.
+7. **A jump saves like Next.** Landing on a later step saves your progress as a draft, the same as pressing Next, and
+   the jump waits for that save: if it fails, you stay where you are and the reason shows in the red banner at the
+   top of the form. **Go to …** in the dialog doesn't wait: it opens the step straight away and
+   saves the progress in the background ([#413](https://github.com/PandiO/knk-workspace/issues/413)). If that save
+   fails, the reason shows in the red banner at the top of the form, and the next Next saves again.
 8. **An edit form or a resumed draft checks itself once.** When you edit an existing record or continue a saved
    draft, the form runs the validation rules of every step once after loading, before you touch a field, so a step
    already shows what its rules say when you open it. Nothing is saved by that run. A new, empty form doesn't do it.
@@ -349,6 +364,11 @@ field '<field>', which is not on this step.` (a note instead of a warning when t
 panel checks your working copy, in the order the steps have in the form. It never stops a save or a publish, so fix
 the rule before you publish: a form with such an active condition can't get past that step.
 
+**What the person filling in the form sees.** When a condition fails, its message shows in a toast and above the
+Next button, and the fields its failing rules read on that step show the message in red, like a field validation rule
+(§ 5.1 item 6, [#414](https://github.com/PandiO/knk-workspace/issues/414)). So name in the message what has to change,
+for example `Tick Allow entry first.`
+
 **Hand-written JSON.** A condition whose stored JSON was not made with this editor is shown as text in a **Condition
 JSON** box and saved unchanged. The form only understands the editor's shape: JSON in another shape is not checked
 (the condition always passes), and text that is not valid JSON always fails, so the step can't be left
@@ -433,20 +453,22 @@ get the new version at once.
 | Staff don't see a builder change | It is saved as a draft, not published | **Publish…** |
 | **Publish…** refused: `Step "…" has a "before leaving" condition without a message` | A step condition checked on Next has no message (§ 7.1) | Type the message, or remove the condition |
 | A form can't get past a step and shows a condition's message whatever you fill in | The condition reads a field that is gone or has moved (red rule in the builder, Configuration health warning), or its JSON is not valid | Fix or remove the rule in the builder (§ 7.1) and publish |
-| Clicking a step opens **Can't go to "…" yet** | A step before it is unfinished (§ 5.1) | Fix the listed fields, or **Go to <step>** |
+| Clicking a step opens **Can't go to "…" yet** | A step before it is unfinished (§ 5.1) | Fix the listed fields, or **Go to …** |
 | A validation rule change applies before Publish | Known limit #291 | Change rules outside play hours |
 | No "Updated by …" lines | Live updates off on the server, the connection is blocked, or you lack the type's area node | Reload; check `Realtime__WebLiveUpdatesEnabled` and the proxy's `/api/hubs/web` |
 
 ## Changes
 
-1. 2026-11-13: § 5.1 the steps of a form: clicking a step, what stops you; § 7.1 step conditions in the form builder;
+1. 2026-11-14: § 5.1 "Go to …" opens at once and saves in the background, a failed save shows in the banner;
+   § 5.1 and § 7.1 a failed step condition marks its fields; #413, #414, knk-web-app#20, docs #482 (in `next`)
+2. 2026-11-13: § 5.1 the steps of a form: clicking a step, what stops you; § 7.1 step conditions in the form builder;
    #68, #88, docs #395 (in `next`)
-2. 2026-11-13: Select / Change / Unlink / Add need `knk.admin.content`, the API refuses creates and edits without it,
+3. 2026-11-13: Select / Change / Unlink / Add need `knk.admin.content`, the API refuses creates and edits without it,
    #374, docs #385
-3. 2026-11-13: New, Edit and the forms need `knk.admin.content` again, #371, docs #378
-4. 2026-11-13: § 1, § 3, § 4, § 5, § 9, § 10 checked against the default branches: New, Edit, the forms, link changes,
+4. 2026-11-13: New, Edit and the forms need `knk.admin.content` again, #371, docs #378
+5. 2026-11-13: § 1, § 3, § 4, § 5, § 9, § 10 checked against the default branches: New, Edit, the forms, link changes,
    hot edit, the lootbox toggle and Create New Street need `knk.admin.content`, #371, #374, #383; known gap #380; docs
    #347
-5. 2026-11-13: dashboard per area, disabled actions with "Requires …", bulk delete, export through the API, names-only
+6. 2026-11-13: dashboard per area, disabled actions with "Requires …", bulk delete, export through the API, names-only
    pickers, readable refusals; #280 AM3 and #205, docs #366
-6. 2026-11-12: first version, PandiO/knk-workspace#337, #338, #340–#345
+7. 2026-11-12: first version, PandiO/knk-workspace#337, #338, #340–#345
