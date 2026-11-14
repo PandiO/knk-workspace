@@ -4,6 +4,17 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Smoke tests: the web app's checks move into the automated suites** ([PandiO/knk-workspace#511](https://github.com/PandiO/knk-workspace/issues/511))
+  — no game or player change; developer-facing. Playwright specs with a mocked API in knk-web-app `e2e/` now check what
+  the developer did by hand in the smoke tests of features already on the trunk, and each guide marks those steps
+  `[automated]` with the test, so the evening check covers only what is left (game server, real client, themes).
+  Batch 1 (knk-web-app branch `claude/test-backfill-511`, PR into `next`): `e2e/player-profile.spec.ts` (player
+  profile and player search, 21 of 26 steps) and `e2e/settings-pages.spec.ts` (settings pages, 22 of 26 steps), new
+  helpers `e2e/support/layout.ts` (no sideways scroll at phone width), `e2e/fixtures/players.ts` and
+  `e2e/fixtures/settings.ts`; `mockSession` keeps the realtime hub offline. Guides:
+  [player profile](guides/player-profile-smoke-test.md), [settings pages](guides/settings-pages-smoke-test.md);
+  [web app testing § 3](guides/developer/web-app-testing.md#3-end-to-end-tests-playwright).
+  - **Admin steps:** none (tests and docs only).
 - **Dashboard tables: every row looks the same, the row actions stay in view, and a right-click menu**
   (PandiO/knk-workspace#404, #405, #406; staff web app only). knk-web-app branch `claude/dashboard-table-actions-404-406`,
   merged into `next` 2026-11-14 (knk-web-app#17); on the trunk when the developer promotes `next`.
