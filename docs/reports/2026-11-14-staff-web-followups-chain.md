@@ -17,7 +17,7 @@
 
 | Link | Issue | Status | Branch heads | PR | CI | How started | Test rule |
 |---|---|---|---|---|---|---|---|
-| L1 PermissionGrant table | #408 | Running (2026-11-14) | — | — | — | create_session session_01R1w2Ut6UjJQM8QpXM4o6co | automated first, `main` `aa4208b3` |
+| L1 PermissionGrant table | #408 | Done, in review (2026-11-14) | api `6e34af5`, app `e2ad8c1`, ws `74d85691` | knk-web-api#30, knk-web-app#29, knk-workspace#529 | green (api, app) | create_session session_01R1w2Ut6UjJQM8QpXM4o6co | automated first, `main` `aa4208b3` (unchanged at start) |
 | L2 Group grants panel | #50 | Not started (gate: L1 merged) | — | — | — | — | — |
 | L3 Profile Permissions tab | #407 | Not started (gate: L2 merged) | — | — | — | — | — |
 
@@ -47,3 +47,71 @@
 ## 4. Link blocks
 
 _(Each link appends its block here when it finishes.)_
+
+### 4.1 L1 — The dashboard PermissionGrant table loads (#408)
+
+1. **Scope done.**
+    1. knk-web-api: `Controllers/PermissionGrantsController.cs`: `POST search` on `knk.admin.user.manage` (was
+       `knk.admin.user.perm`), like `GET` and `GET {id}`; writes unchanged. `Repositories/PermissionGrantRepository.cs`:
+       sort by `id`, `holderId`, `value`, `expiresAt` or `node` (default), node and id as tie-breakers.
+    2. knk-web-app: new `src/apiClients/permissionGrantClient.ts` (`searchPaged`, `getById`),
+       `src/types/dtos/userManagement/PermissionGrantListDto.ts`, `Controllers.PermissionGrants`; `permissiongrant`
+       search and fetch-by-id in `src/utils/entityApiMapping.ts` (no create/update/delete); table columns in
+       `src/config/objectConfigs.tsx`. None of PR #17's files touched.
+    3. knk-workspace: `docs/CHANGELOG.md` entry; `docs/guides/dashboard-access-smoke-test.md` § 8.6 (5 automated
+       lines, 2 manual steps), nothing else in the guide.
+2. **Commits and heads.** knk-web-api `claude/permission-grant-table-408` at `6e34af5` (1 commit, base `next` at
+   `b9ce7f0`); knk-web-app at `e2ad8c1` (1 commit, base `next` at `8918eba`); knk-workspace at `74d85691` (1 commit,
+   base `next` at `2fb10456`).
+3. **PRs.** https://github.com/PandiO/knk-web-api/pull/30, https://github.com/PandiO/knk-web-app/pull/29,
+   https://github.com/PandiO/knk-workspace/pull/529 (`Closes #408`), base `next`. Not merged. **Codex:** at its usage
+   limit on all three (no findings to handle); said so on each PR.
+4. **Tests, baseline → result.** Test rule: "Testing: automated first", knk-workspace `main` `aa4208b3` (PR #512);
+   checked `origin/main` at start, the rule files had not changed since.
+    1. knk-web-api: baseline on `next` `dotnet build` green, `dotnet test` 4094 passed / 97 skipped / 0 failed; result
+       4114 / 97 / 0. New: `Security/PermissionGrantReadGateTests` (12), `Repositories/PermissionGrantRepositoryTests`
+       (8 cases), both checked failing against the old gate and sort. CI `build-and-test` and `fresh-database` green.
+    2. knk-web-app: baseline `npm run test:ci` 299 suites / 2569 tests, `tsc` clean, CI build compiled,
+       `typecheck:e2e` clean, e2e 11 passed; result 300 / 2574, clean, compiled, clean, e2e 18 passed. New: Jest
+       `permissionGrantClient.test.ts` (5), Playwright `e2e/permission-grants.spec.ts` (7, strict mocks, fixtures in
+       the new `e2e/fixtures/permissionGrants.ts`); the table tests fail without the mapping. CI `build-and-test` and
+       `e2e` green.
+    3. Known reds: none. MySQL tests skipped (no `KNK_TEST_MYSQL`). Local e2e needs
+       `PLAYWRIGHT_CHROMIUM_PATH=/opt/pw-browsers/chromium` in a cloud session (noted on #511).
+5. **Decisions (DESIGN § 4.3).**
+    1. *Read gate.* Chosen: put the search on `knk.admin.user.manage` in the API, because the type's view node in
+       `DashboardAccess` is `manage`, full reads need the type's read nodes (§ 4.6.1), and `GET` already returns every
+       grant to `manage`. Alternatives: (a) keep `perm` and show the refusal in the table: the type stays listed for
+       `manage`-only viewers who can never open it (#369's bug); (b) make the type's view node `perm`: reads would need
+       the write node, against § 4.6 and the `GET` routes.
+    2. *Delete in the dashboard.* Chosen: none, because the API registers the type `ViewOnly` (no delete) and grants
+       are removed through the by-node routes. Alternatives: (a) a client `delete` on `DELETE {id}`: the dashboard
+       would not offer it anyway, and it would bypass #50's blast-radius confirmation.
+    3. *Sorting.* Chosen: the API search sorts by the column asked, because #408's acceptance asks the table to sort
+       and it sorted by node only. Alternatives: (a) mark only Node sortable: a table where four of five columns can't
+       sort; (b) sort on the client: wrong across pages.
+    4. *Generic form create/edit.* Chosen: stays off by leaving out create/update mappings. Alternatives: (a) hide
+       New/Edit in the dashboard: touches `ObjectDashboard.tsx` (PR #17) and every view-only type; filed as #530.
+6. **Out of scope, noted.** #530 (view-only types still offer New/Edit), #531 (refusal label "Permissiongrant" from a
+   lower-case URL), comment on #369 (same fix fits PermissionGroups search), comment on #511 (hub negotiate not mocked
+   by `mockSession`; Chromium path in cloud sessions).
+7. **Blockers.** None.
+8. **At merge / what the developer must do.**
+    1. Deploy the API and the web app together (no migration, no settings, no config keys).
+    2. Manual test steps (smoke test § 8.6):
+        1. As the owner on `next`, open Dashboard → Permission Grant: the rows match a known player's Permissions tab
+           and the Staff group's grants, group rows read "Group #<id>", and sorting by Expires ascending puts
+           never-expiring grants first.
+        2. With a test rank holding `knk.admin.user.manage` but not `knk.admin.user.perm`, open the table: it loads,
+           New and Edit are greyed out with "Requires knk.admin.user.perm".
+    3. Covered by automated tests (no manual step): listing and columns, paging, sorting, search, the read gate per
+       node, read without the write node, no table without the read node, the "Requires …" refusal
+       (`e2e/permission-grants.spec.ts`, `permissionGrantClient.test.ts`, `PermissionGrantReadGateTests`,
+       `PermissionGrantRepositoryTests`).
+    4. At merge: `documentation` sub-issue with DESIGN Appendix A.8 rows, web-api architecture § 5.2, web-app
+       architecture, admin guide to the ranks, staff web app guide, feature register.
+9. **Notes for later links.**
+    1. L2 (#50): `PermissionGrantClient` is read-only on purpose; add the group editor's writes on the by-node routes
+       (`PUT`/`DELETE api/PermissionGrants/by-node`, `perm`), and reuse `searchPaged` with filter `holderId` for a
+       group's grants (the API supports it).
+    2. Strict e2e specs need `POST hubs/web/negotiate` mocked (see `e2e/permission-grants.spec.ts`).
