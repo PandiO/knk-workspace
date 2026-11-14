@@ -2,7 +2,7 @@
 
 **Status:** Planned; date not set. Carries over the steps the developer's pre-checks of 2026-10-27 left for the tester run.
 **Preparation:** [test-run-2-preparation.md](test-run-2-preparation.md) (agenda, decisions and tester questions)
-**Last updated:** 2026-11-03 (§ 4b added: siege pre-game gate view #213 and gate pass-through styles #167, on feature branches); 2026-11-03 (renumbered from "run 3" to run 2: the 2026-10-27 check was a developer pre-check, not a tester run; preparation doc linked); 2026-11-02 (#193 accepted, § 4 and § 5); 2026-11-01 (G and I tested, § 5; packages F, G, I and #193 merged; § 4 now part of the run, § 4a added)
+**Last updated:** 2026-11-14 (§ 4d added: kit grant delivery during a siege, #261); 2026-11-03 (§ 4b added: siege pre-game gate view #213 and gate pass-through styles #167, on feature branches); 2026-11-03 (renumbered from "run 3" to run 2: the 2026-10-27 check was a developer pre-check, not a tester run; preparation doc linked); 2026-11-02 (#193 accepted, § 4 and § 5); 2026-11-01 (G and I tested, § 5; packages F, G, I and #193 merged; § 4 now part of the run, § 4a added)
 **Issues:** parent [PandiO/knk-workspace#149](https://github.com/PandiO/knk-workspace/issues/149)
 **Previous run:** [test run 1 findings](../test-run-1/test-run-1-findings.md) · fixes in the
 [alpha run 1 handoff](../../../ai-agents/handoffs/2026-10-25-alpha-run-1-p0-p1.md) (packages A–D, merged 2026-10-26)
@@ -180,6 +180,17 @@ world-only, player). Before the deploy check that the Admin group holds `knk.adm
 |---|---|
 | API § 1–7 | |
 | Web app § 8 (22 steps) | |
+
+## 4d. Kit grant from the web app during a siege (#261) — in `next`
+
+The developer accepted [#261](https://github.com/PandiO/knk-workspace/issues/261) on 2026-11-14 without running the
+siege step; run it here with a real match ([kit grant delivery smoke test § 5](../../../guides/kit-grant-delivery-smoke-test.md#5-in-a-siege)).
+Needs knk-plugin with #261 (in `next` since 2026-11-13) and the API migration `AddKitClaimDelivery`.
+
+| Step | Expected | Result |
+|---|---|---|
+| Player A joins a siege lobby or plays a match; staff grants a kit K to A from A's player profile (Kits → **Grant**) | Nothing arrives during the siege; `kit_claims.DeliveredAt` of the new row stays NULL | |
+| The siege ends and gives A's own inventory back | About a second later K arrives once, with the chat line *A staff member gave you the "K" kit.*; `DeliveredAt` set | |
 
 ## 5. Results
 
