@@ -1,6 +1,6 @@
 # CI: what runs on every push and how to mark a known failure
 
-**Status:** Active · **Last updated:** 2026-11-14 (web app end-to-end tests: `e2e.yml`, § 1.1.3, [#423](https://github.com/PandiO/knk-workspace/issues/423)); 2026-11-13 (workflows renamed "Build and test"; Codex review comments are not CI, § 1); 2026-11-13 (§ 4 the CI run decides, § 5 reading runs as an agent, § 6 the Node.js 20 warning, [#363](https://github.com/PandiO/knk-workspace/issues/363)); 2026-11-13 (first version, [PandiO/knk-workspace#362](https://github.com/PandiO/knk-workspace/issues/362), docs follow-up of [#327](https://github.com/PandiO/knk-workspace/issues/327); checked against knk-web-api `master` `210f731`, knk-web-app `main` `33d68f8`, knk-plugin `main` `e8b651d`)
+**Status:** Active · **Last updated:** 2026-11-14 (web app end-to-end tests: `e2e.yml`, § 1.1.3, [#423](https://github.com/PandiO/knk-workspace/issues/423)); 2026-11-14 (plugin Paper boot test `paper-boot.yml`, § 1, § 1.1.2 and § 7, [#420](https://github.com/PandiO/knk-workspace/issues/420)); 2026-11-13 (workflows renamed "Build and test"; Codex review comments are not CI, § 1); 2026-11-13 (§ 4 the CI run decides, § 5 reading runs as an agent, § 6 the Node.js 20 warning, [#363](https://github.com/PandiO/knk-workspace/issues/363)); 2026-11-13 (first version, [PandiO/knk-workspace#362](https://github.com/PandiO/knk-workspace/issues/362), docs follow-up of [#327](https://github.com/PandiO/knk-workspace/issues/327); checked against knk-web-api `master` `210f731`, knk-web-app `main` `33d68f8`, knk-plugin `main` `e8b651d`)
 
 The GitHub workflows of the component repos are the automated gate for every change. They run on every push (all
 branches), every pull request and on manual dispatch (`workflow_dispatch`). Under the
@@ -18,6 +18,7 @@ the start condition of that branch model (developer decision 2026-11-12,
 | knk-web-app | `.github/workflows/ci.yml` ("Build and test", named "CI" until 2026-11-13; added by [knk-web-app#9](https://github.com/PandiO/knk-web-app/pull/9)) | Node 22 with the npm cache: `npx --yes npm@11 ci` (the lock file is valid for npm 11 only), `npm run test:ci` (`react-scripts test --watchAll=false --passWithNoTests`), `npx tsc --noEmit`, and `npm run build` with `CI=true`, so build warnings fail the job. Timeout 20 minutes. |
 | knk-web-app | `.github/workflows/e2e.yml` ("End-to-end tests", job `e2e`; added by [#423](https://github.com/PandiO/knk-workspace/issues/423)) | Playwright end-to-end tests in Chromium against the production build with a mocked API (§ 1.1.3). Not a required check. Timeout 10 minutes. |
 | knk-plugin | `.github/workflows/build.yml` ("Build") | Older than this setup. Java 25 compiles and tests, Java 21 runs Gradle: `./gradlew build` with the dev-server deploy pointed at a throwaway folder. |
+| knk-plugin | `.github/workflows/paper-boot.yml` ("Paper boot test", [#420](https://github.com/PandiO/knk-workspace/issues/420)) | Builds the shaded jar, starts a real Paper 26.3 server with it, WorldGuard and WorldEdit, and fails unless KnK enables without errors. Details in § 7. Timeout 10 minutes. |
 | knk-workspace | none | Docs and configuration only. |
 
 The "Codex Review Summary" comments on pull requests come from the ChatGPT Codex connector app, set up in the
@@ -37,10 +38,13 @@ Both `ci.yml` workflows cancel an earlier run of the same branch and event when 
    `KNK_TEST_MYSQL="Server=localhost;User=knk_test;Password=…" dotnet test …`; the user needs the right to create and
    drop databases named `KNK_TEST_MYSQL_DB_PREFIX`* (default `knk_test_`). Fresh-database migration bugs are caught by
    `migrations.yml` instead.
-2. **Plugin tests that need a real server.** Tests tagged `integration` or `requires-bukkit` are excluded by
-   `excludeTags` in `knk-paper/build.gradle.kts`, and a few are `@Disabled` because WorldEdit/WorldGuard are not on the
-   test classpath. They stay out until the boot test of
-   [DESIGN § 6.3](../../specs/ai-agent-workflow/DESIGN.md#6-testing-and-ci) exists.
+2. **Plugin tests tagged `requires-bukkit`.** Seven test files in `knk-paper` are excluded by `excludeTags` in
+   `knk-paper/build.gradle.kts` (no test uses the `integration` tag), and a few are `@Disabled` because
+   WorldEdit/WorldGuard are not on the test classpath. They are Mockito unit tests in the Gradle JVM, not tests that
+   talk to a server, so the boot test (§ 7) can't run them. `./gradlew :knk-paper:taggedTest` runs them (52 tests,
+   32 failing on 2026-11-14: Bukkit statics without a server, stale stubs and expectations). Making them pass, and the
+   choice between plain Mockito fixes, MockBukkit and in-plugin scenarios, is
+   [#499](https://github.com/PandiO/knk-workspace/issues/499).
 3. **Web app end-to-end tests** run in CI since 2026-11-14 ([#423](https://github.com/PandiO/knk-workspace/issues/423)):
    the workflow `.github/workflows/e2e.yml` (job `e2e`, Chromium only, timeout 10 minutes) installs with npm 11, type
    checks the specs and mocks (`npm run typecheck:e2e`), installs Chromium (`npx playwright install --with-deps
@@ -123,6 +127,51 @@ results as events.
 Every run is annotated with a warning that `actions/checkout@v4`, `setup-dotnet@v4`, `setup-node@v4` and
 `upload-artifact@v4` target Node.js 20 and are forced onto Node.js 24 (`migrations.yml` too). It doesn't fail a run; a
 later bump to the next major versions of these actions clears it.
+
+## 7. Plugin: the Paper boot test
+
+`paper-boot.yml` in knk-plugin ([#420](https://github.com/PandiO/knk-workspace/issues/420),
+[DESIGN § 6.3](../../specs/ai-agent-workflow/DESIGN.md#6-testing-and-ci)) proves on every push and pull request that the
+shaded plugin starts on a real server. The job takes about 1.5 minutes (2026-11-14: jar build 44 s, server boot,
+15 s settle, stop and log check 34 s).
+
+1. **Build:** `./gradlew :knk-paper:shadowJar -PgitCommit=<8-character commit>` (JDK 25 toolchain, Gradle on JDK 21,
+   as `build.yml`). The script refuses a jar without `knk-core` classes: `build -x deployToDevServer` leaves the
+   unshaded jar under the same name ([#500](https://github.com/PandiO/knk-workspace/issues/500)).
+2. **Downloads, pinned and SHA-256 checked** in the workflow's `env`: Paper 26.3 build 205 (the `paperApiVersion` of
+   `gradle.properties`) from PaperMC's Fill API, WorldEdit 7.4.6 and WorldGuard 7.0.20 (the versions `knk-paper`
+   compiles against) from Modrinth. The downloads and Paper's Minecraft files are cached by those hashes. When
+   `paperApiVersion` or the WorldEdit/WorldGuard versions change, update the URL and hash here too: the build's
+   number and `sha256` are at `https://fill.papermc.io/v3/projects/paper/versions/<version>/builds/<build>`, Modrinth
+   lists each file's hashes (`sha512`, compare it, then take `sha256sum` of the file).
+3. **Server** (`tools/paper-boot/boot-test.sh`): accepted EULA, offline mode, bound to 127.0.0.1, a superflat world
+   without structures, view distance 2. KnK runs with its shipped `config.yml`, changed in one place:
+   `api.auth.api-key` gets a dummy value (KnK refuses to start with `type: apikey` and an empty key). **No API runs:**
+   `api.base-url` stays `http://localhost:5294/api`, so the plugin starts in its API-down state. Startup behaviour on
+   real servers is unchanged; no plugin code changed for this.
+4. **Pass/fail** (`tools/paper-boot/check_log.py`, checked by its own unit tests in the same job). After "Done", the
+   script waits 15 seconds for asynchronous startup work, sends `stop` and checks `logs/latest.log`. It fails when:
+    1. the version-stamp line (`KnightsAndKings 0.1.0+<commit> (commit <commit>)`,
+       [#136](https://github.com/PandiO/knk-workspace/issues/136)) is missing or names another commit;
+    2. `KnightsAndKings Plugin Enabled!` is missing, WorldGuard or WorldEdit wasn't enabled, or the server didn't
+       reach "Done";
+    3. a log entry from KnK, WorldGuard or WorldEdit is an `ERROR` or carries a stack trace. Entries caused by the
+       unreachable API (`Failed to connect to localhost/<address>:5294`, whatever address `localhost` resolves to)
+       are excused and counted: 5 to 7 per run on 2026-11-14 (menu template validation, siege recovery, world tasks,
+       compass settings);
+    4. the server doesn't stop within 90 seconds, or `KnightsAndKings Plugin Disabled!` is missing.
+5. **On failure** read the annotations of the "Boot the server and check the log" step, then the `paper-boot-log`
+   artifact (`latest.log` and the server's stdout; uploaded on every run, kept 14 days).
+6. **Run it locally** (needs JDK 25, `unzip`, `python3`): put `paper.jar` and the two plugin jars in an empty folder
+   (`plugins/`), build the shaded jar, then
+   `tools/paper-boot/boot-test.sh --server-dir <folder> --plugin-jar knk-paper/build/libs/knk-paper-0.1.0-SNAPSHOT.jar --java <jdk25>/bin/java`.
+   The folder is a throwaway: the script writes `eula.txt`, `server.properties` and the KnK config.
+7. **Hook for in-plugin scenarios** ([#421](https://github.com/PandiO/knk-workspace/issues/421)): `--console-command`
+   sends a console command once the server is up, `--expect-line <regex>` waits for a log line (for example a
+   scenario's pass line), and `--fail-line <regex>` fails at once on a matching line. Add them to the workflow's boot
+   step.
+8. **Required check:** not yet. Once it is stable, the developer adds the check `paper-boot` (the job of "Paper boot
+   test") to knk-plugin's "Trunk and next" ruleset.
 
 ## Related
 

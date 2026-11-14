@@ -253,6 +253,16 @@ This is a human-readable record of capabilities merged into the V3 default branc
   - **Admin steps:** none to deploy. Optional: make `e2e` a required check of the knk-web-app rulesets on `main` and
     `next`. Locally run `npx playwright install chromium` once.
 
+- **Plugin CI: Paper boot test** ([PandiO/knk-workspace#420](https://github.com/PandiO/knk-workspace/issues/420)) — no
+  game change. knk-plugin's new `paper-boot.yml` workflow builds the shaded jar, starts a real Paper 26.3 server with it,
+  WorldGuard 7.0.20 and WorldEdit 7.4.6 (pinned downloads with SHA-256 checks) and no API, and fails unless KnK logs its
+  version stamp and "Plugin Enabled!" without errors or stack traces from KnK, WorldGuard or WorldEdit (errors caused
+  by the unreachable API are excused). The log is uploaded as an artifact. `./gradlew :knk-paper:taggedTest` runs the
+  excluded `requires-bukkit` tests; they are Mockito tests, not server tests, and making them pass is #499. See
+  [CI § 7](guides/developer/ci.md#7-plugin-the-paper-boot-test).
+  - **Admin steps:** none for servers. When it has been stable for a while, add the check `paper-boot` (workflow "Paper boot
+    test") as a required check to knk-plugin's "Trunk and next" ruleset.
+
 - **knk-web-api trunk renamed to `main`** — no game change; knk-web-api's default branch is now `main`, like the other
   repos (developer, 2026-11-14). GitHub redirects the old name and moved the open pull requests. The agent rules and
   skills, the docs-session prompt, the deploy guides and `scripts/nas-ops/stage-b/pc/knk-release.sh` now say `main`;
