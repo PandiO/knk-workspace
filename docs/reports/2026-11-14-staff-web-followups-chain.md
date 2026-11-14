@@ -17,7 +17,7 @@
 
 | Link | Issue | Status | Branch heads | PR | CI | How started | Test rule |
 |---|---|---|---|---|---|---|---|
-| L1 PermissionGrant table | #408 | Not started | — | — | — | — | automated first, `main` `aa4208b3` |
+| L1 PermissionGrant table | #408 | Running (2026-11-14) | — | — | — | create_session session_01R1w2Ut6UjJQM8QpXM4o6co | automated first, `main` `aa4208b3` |
 | L2 Group grants panel | #50 | Not started (gate: L1 merged) | — | — | — | — | — |
 | L3 Profile Permissions tab | #407 | Not started (gate: L2 merged) | — | — | — | — | — |
 
