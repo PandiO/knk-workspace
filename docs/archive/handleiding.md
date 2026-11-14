@@ -6,6 +6,9 @@ related_repo: knk-v1-archive
 
 # Handleiding (v1 manual)
 
+> **Archived 2026-11-13** (PandiO/knk-workspace#296). Replaced by the English V3
+> [player handbook](../guides/users/player-handbook.md). This v1 staff procedure doesn't describe the current game.
+
 > `Handleiding.docx` — a short v1-era procedure guide (Dutch), covering how staff registered items as sellable in shops. Likely no longer accurate against the current v3 item/shop system; kept as historical reference for how the mechanic used to work.
 
 ---
