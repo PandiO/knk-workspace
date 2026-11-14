@@ -134,6 +134,30 @@ This is a human-readable record of capabilities merged into the V3 default branc
         release-interval-minutes: 5     # new: pass that removes released temp regions; 0 = off
     ```
 
+- **Form wizard: the step-jump dialog works again after Go to and back; one set of validation messages**
+  (PandiO/knk-workspace#413 retest, #488, developer's retest on `next` 2026-11-14) — staff forms only. When a form step
+  can't be left, every problem is listed once at the top of the form and shown once on its field, with one pop-up
+  message; nothing is said above the Next button any more. knk-web-app branch `claude/wizard-messages-413-488`, PR into
+  `next` (not merged; the developer reviews).
+  - **#413:** after **Go to**, going back to step 1 and clicking step 3 again opened the dialog with ×, Close and Go to
+    all disabled. Cause: `FeedbackModal` cleared its busy state only while a "mounted" ref was true, and React's
+    StrictMode (the dev server) left that ref false after its extra mount, so busy stayed set after the first action.
+    The ref is set again on mount, and each opening of a dialog resets busy (an action from an earlier opening no
+    longer closes or un-busies a later one). Fixed in the shared dialog, so every `FeedbackModal` gets it.
+  - **#488:** for every kind of failure on Next, Submit, Save or a stopped jump (required field, field validation,
+    blocking rule incl. "could not be checked", "before leaving" condition with one/all/any rules or a field of an
+    earlier step, the next step's "before entering" condition, many-to-many entries, list fields): one entry in the
+    summary at the top (a link to its field; text when the field is not on this step; many-to-many entries link to the
+    entries), one message under the field in the same style (a checkbox's message moved from beside its label to under
+    it), and one toast on Next/Submit ("Fix the N problems on this step to continue." for more than one). The message
+    above Next/Submit (#88) is removed, and a refused Next no longer fills the red banner (kept for a failed save).
+    The checks that need no request run together, so "Region is required" and a failed Allow entry condition are both
+    listed. Next on a many-to-many step now checks its entries' required values, as a jump already did. A blocking
+    rule's text is no longer repeated under a field that shows it; warnings keep their own line and stay out of the
+    summary. After **Go to** the step shows the same summary and marks as after Next; the jump dialog keeps its own
+    list.
+  - **Admin steps:** none; deploy the web app. Smoke test:
+    [form step conditions smoke test § 2 step 1, § 3 step 3 and § 5 steps 2–2a](guides/form-step-conditions-and-step-jump-smoke-test.md).
 - **Form wizard: the step-jump dialog can always be closed; a failed step condition marks its fields**
   (PandiO/knk-workspace#413, #414, follow-ups of #68/#88 from the developer's smoke test 2026-11-13) — staff forms only.
   knk-web-app branch from the fix session, PR into `next` (knk-web-app#20, merged 2026-11-14); on the trunk when the

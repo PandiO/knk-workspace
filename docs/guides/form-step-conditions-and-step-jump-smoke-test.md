@@ -1,7 +1,7 @@
 # Form builder step conditions (#88) and clickable wizard steps (#68) — smoke test
 
 **Status:** Written 2026-11-13; **merged into `next` 2026-11-13** (knk-web-app `next` `1f848f7` (knk-web-app#12), knk-web-api `next` `31abe2d` (knk-web-api#14), knk-workspace `next` `c68df65` (#379); branches `claude/issues-68-88-readiness-wapo57`), on the trunk when the developer promotes `next`; **not run by the developer**. Run it on `next`.
-**Last updated:** 2026-11-14 (§ 2 step 1 and § 5 step 2: field mark and Go to after the #413/#414 fix; § 3 steps 1–3 use a field the metadata doesn't require, developer run 2026-11-13); 2026-11-13 (merged into `next`; § 3 step 5, § 4 steps 2, 3, 5 and 6 from the merged code: list fields, emptied lists, health check in step order and on the working copy, what the form does with hand-written JSON; docs #395)
+**Last updated:** 2026-11-14 (#413 retest and #488, knk-web-app `claude/wizard-messages-413-488`, not merged yet: § 2 step 1, § 3 step 3 and § 5 step 2 — no message above Next, summary and field mark; new § 5 step 2a, Go to → back → jump again); 2026-11-14 (§ 2 step 1 and § 5 step 2: field mark and Go to after the #413/#414 fix; § 3 steps 1–3 use a field the metadata doesn't require, developer run 2026-11-13); 2026-11-13 (merged into `next`; § 3 step 5, § 4 steps 2, 3, 5 and 6 from the merged code: list fields, emptied lists, health check in step order and on the working copy, what the form does with hand-written JSON; docs #395)
 **Issues:** [PandiO/knk-workspace#88](https://github.com/PandiO/knk-workspace/issues/88) (KNG-274: step conditions in
 the step editor, Entry conditions enforced) ·
 [PandiO/knk-workspace#68](https://github.com/PandiO/knk-workspace/issues/68) (KNG-184: click a step to jump to it,
@@ -37,10 +37,14 @@ You need:
 ## 2. The wizard enforces it, and says so where you look (#88)
 
 1. Dashboard → District → **New District**, fill step 1, go to **Region and access**, leave **Allow entry** unticked,
-   **Next**. Expected: a toast with the message, the same message in red **above the Next button** (it stays after
-   the toast is gone), and you stay on the step. Since #414 the **Allow entry** field itself also shows the message in
-   red with the field's error styling, like a field validation rule.
-2. Tick **Allow entry**, **Next**. Expected: the next step opens and the red note is gone.
+   **Next**. Expected (#488): you stay on the step, and the message shows in three places, each once: the summary
+   at the top ("Fix this problem to continue", the message as a link that puts the focus on Allow entry), **under**
+   the Allow entry checkbox in red with the field's red box (#414), and one toast. **Nothing above the Next button**
+   and no red banner. Also leave **Region** empty: the summary says "Fix these 2 problems to continue" and lists
+   "Region is required" and the condition's message, each field shows its own message, and the toast says "Fix the 2
+   problems on this step to continue."
+2. Tick **Allow entry** (and fill Region), **Next**. Expected: the condition's line leaves the summary and the field
+   as soon as you tick it; Next opens the next step.
 3. Builder: untick **active** on the condition (the card says "1 condition, 1 off"), Save, Publish. Wizard (new
    form): Next passes with Allow entry unticked. Switch it back on and publish.
 
@@ -52,8 +56,9 @@ You need:
    run 2026-11-13.) Expected: no value box ("no value needed"); "In words: F (earlier step) is not empty". An Entry
    condition publishes without a message too.
 2. Publish. If step 1 has no optional field, use another form whose first step has one.
-3. Wizard: leave F empty, Next to step 2, **Next**. Expected: refused on step 2 with the message (toast and above
-   the button). Go back, fill in F, Next twice: step 3 opens.
+3. Wizard: leave F empty, Next to step 2, **Next**. Expected: refused on step 2 with the message in the summary at
+   the top (as text, not a link: F is not on this step) and one toast; nothing above the button (#488). Go back, fill
+   in F, Next twice: step 3 opens.
 4. Add a second rule to any condition. Expected: a **match all / any** switch appears; with one rule it is hidden.
 5. A list field: on a form with a list field or a linked record (for example SiegeScenario), add a
    "before leaving" rule on that field. Expected: only **is empty** and **is not empty** are offered, no value box. With
@@ -87,8 +92,15 @@ You need:
 2. Fill step 1, leave **Allow entry** unticked on step 2 (don't open it), click step 3. Expected: the dialog names
    **Region and access** with the condition's message and a button **Go to Region and access**. ×, Close and Go to
    all respond (#413: before the fix the dialog locked while the progress saved). Press Go to: step 2 opens at once
-   with the message above the Next button and on the Allow entry field (#414); the progress saves in the background,
-   and a failed save shows in the wizard's banner (the next Next saves again).
+   with the same summary at the top and the same message under the Allow entry field as after Next (§ 2 step 1), no
+   toast and nothing above the Next button (#488); the progress saves in the background, and a failed save shows in
+   the wizard's banner (the next Next saves again).
+
+   **2a.** Go to → back → jump again (#413 retest 2026-11-14; run it on the dev server, `npm start`, where it locked, and
+   on the deployed build). From step 2 after Go to, go back to step 1 with **Previous**, click step 3. Expected: the
+   dialog opens with ×, **Close** and **Go to Region and access** all enabled; Close closes it. Click step 3 again,
+   **Go to**, then click step 1 **in the strip** and step 3 again: the buttons work again. At 390 px do the same
+   through the "Step x of n" list.
 3. A blocking rule in between: edit a District whose region is **outside** its town (or change the region in a
    draft), then from step 1 click the last step. Expected: the dialog names the step with the region rule and the
    rule's message; **Go to** opens it with the message on the field.
