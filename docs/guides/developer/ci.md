@@ -121,7 +121,8 @@ later bump to the next major versions of these actions clears it.
 
 `paper-boot.yml` in knk-plugin ([#420](https://github.com/PandiO/knk-workspace/issues/420),
 [DESIGN § 6.3](../../specs/ai-agent-workflow/DESIGN.md#6-testing-and-ci)) proves on every push and pull request that the
-shaded plugin starts on a real server. It runs in about 2 to 3 minutes; the server part takes about 35 seconds.
+shaded plugin starts on a real server. The job takes about 1.5 minutes (2026-11-14: jar build 44 s, server boot,
+15 s settle, stop and log check 34 s).
 
 1. **Build:** `./gradlew :knk-paper:shadowJar -PgitCommit=<8-character commit>` (JDK 25 toolchain, Gradle on JDK 21,
    as `build.yml`). The script refuses a jar without `knk-core` classes: `build -x deployToDevServer` leaves the
