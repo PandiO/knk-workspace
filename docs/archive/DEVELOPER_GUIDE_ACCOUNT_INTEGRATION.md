@@ -1,5 +1,13 @@
 # Knights & Kings - Developer Guide: Account Integration
 
+> **Archived 2026-11-13** ([PandiO/knk-workspace#299](https://github.com/PandiO/knk-workspace/issues/299)); moved from
+> `docs/guides/users/`. Written 2026-01-30 for the first plugin account phases. It is out of date: its examples are
+> Kotlin with coroutines (the plugin is Java), it describes `/account create` and the in-game merge flow (both
+> removed with KNG-208), and it predates invite-only sign-up, claim codes and the admission gate. For the current
+> design read [account identity and admission](../architecture/account-identity-and-admission.md) and the
+> [invitations design](../specs/invitations/DESIGN.md); for code, the plugin's `commands/Account*Command.java` and
+> `core/admission/`.
+
 **Version**: 1.0  
 **Last Updated**: January 30, 2026  
 **Plugin**: knk-plugin  
