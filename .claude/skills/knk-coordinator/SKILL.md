@@ -125,6 +125,10 @@ All of these must hold:
     ones yourself before merging) rather than merging over them. When Codex is at its usage limit (its comment says
     so), merge without its review once the other checks hold and note on the PR that Codex was skipped for the limit
     (developer decision 2026-11-14).
+11. **Automated proof** (global instructions, "Testing: automated first", developer decision 2026-11-14): each
+    behaviour the link changes has a test in the right suite (knk-test-writer skill § 2), the PR's Testing section
+    lists them, and the smoke-test guide holds only manual steps. A page change with only unit tests, or a manual step
+    a suite could run, sends the link back.
 
 ## 7. Merging into `next` (only once § 1.3 says the branch model applies)
 
