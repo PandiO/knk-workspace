@@ -1,11 +1,13 @@
 # Staff player profile: status strip, tabs, freeze/unfreeze, timeline, paged audit, player search (#119) — smoke test
 
-**Status:** Written 2026-11-08 for knk-web-app `claude/player-profile-119` (chain 3 link V3); **merged 2026-11-12** (knk-web-app `main` `1371951`, with V7); not run by the developer
-**Last updated:** 2026-11-13 (Staff holds `knk.freeze`/`knk.unfreeze`, #367: § 4 step 4); 2026-11-12 (merged with V7); 2026-11-08
+**Status:** automated in CI; manual steps not run. Written 2026-11-08 for knk-web-app `claude/player-profile-119` (chain 3 link V3); **merged 2026-11-12** (knk-web-app `main` `1371951`, with V7); 21 of 26 steps automated 2026-11-14, 4 manual left ([#511](https://github.com/PandiO/knk-workspace/issues/511))
+**Last updated:** 2026-11-14 (steps marked `[automated]` with their test, backfill #511); 2026-11-13 (Staff holds `knk.freeze`/`knk.unfreeze`, #367: § 4 step 4); 2026-11-12 (merged with V7); 2026-11-08
 **Issues:** [PandiO/knk-workspace#119](https://github.com/PandiO/knk-workspace/issues/119) (MOD-3 part 1, MOD-4, MOD-5 of
 the [2026-10-08 assessment](../reports/2026-10-08-web-app-ux-assessment.md))
 
-About 25 minutes. **No API change, no migration, no setting.** The web-app branch contains chain 3's V2
+About 10 minutes for the manual steps left (in game, with realtime). Steps marked `[automated]` run in CI: the Playwright
+specs in knk-web-app `e2e/` (CI job `e2e`, mocked API) and the Jest tests next to the page (CI job `build-and-test`); you
+don't repeat them. **No API change, no migration, no setting.** The web-app branch contains chain 3's V2
 (`claude/dashboard-export-205`), V1 and chain 2's X1, so test it on a build of `claude/player-profile-119`.
 
 You need:
@@ -20,69 +22,66 @@ You need:
 
 ## 1. Status strip and tabs
 
-1. As **A**, open Moderation → **P**. The header shows P's name, `User #`, UUID and email, then a row of chips: Online or
-   "Offline · last seen …", the mode when P is in Staff/Owner mode, the premium tier with its end date, and flags where
-   they apply (Deactivated, Not admitted, Minecraft-only, Email not verified). **Freeze** and **Reload** are on the right.
-2. Below the header there are six tabs: Overview, Economy, Permissions, Moderation, Activity, Privacy. Overview is open;
-   the address has no `?tab=`. Click **Economy**: the address ends in `?tab=economy` and the page shows Payments, Adjust
-   balance, Salary, Kits and Balance history. Reload the browser: Economy is still open.
-3. Click the Economy tab, then press **→** and **End** on the keyboard: the focus and the open tab move along. The
-   breadcrumb above the page (Players & support › Player moderation › Player profile) leads back to Moderation.
-4. *(Realtime on)* Have **P** join and quit the game: the Online chip follows within a second or two.
-5. At **phone width** (390 px, or the browser's device mode) the page doesn't scroll sideways on any tab; the tab row
-   scrolls on its own.
+1. [automated] Header with name, `User #`, the Online chip and Freeze; the strip's mode, premium, Frozen and flag
+   chips: `e2e/player-profile.spec.ts`, `src/pages/admin/__tests__/PlayerProfilePage.v3.test.tsx`
+2. [automated] Six tabs, Overview first without `?tab=`; Economy writes `?tab=economy` and survives a reload:
+   `e2e/player-profile.spec.ts`
+3. [automated] → and End move the focus and the open tab; the breadcrumb leads back to Player moderation:
+   `e2e/player-profile.spec.ts`
+4. *(Realtime on, manual: needs a real player joining the game server.)* Have **P** join and quit the game: the Online
+   chip follows within a second or two. The page side (the chip follows `PresenceChanged`) is automated in
+   `src/pages/admin/__tests__/PlayerProfilePage.test.tsx`.
+5. [automated] At 390 px no tab scrolls the page sideways: `e2e/player-profile.spec.ts`
 
 ## 2. Freeze and unfreeze
 
-1. As **A**, click **Freeze**. A red dialog "Freeze {P}?" explains what freezing does and asks a **Reason**. Click
-   Freeze with an empty reason: "Enter a reason." and nothing happens.
-2. Type a reason (e.g. "Smoke test #119") and click **Freeze**. A toast "{P} is frozen" appears; the strip shows a red
-   **Frozen** chip and a banner "Frozen since {time} by {A} · Reason: Smoke test #119"; the button is now **Unfreeze**.
-3. In game, **P** can't move, chat or use commands (at once, #179).
-4. Open the **Moderation** tab: the Freeze card says the same, with Unfreeze.
-5. Click **Unfreeze**: a confirm without a reason field (the API doesn't store an unfreeze reason yet). Confirm: toast
-   "{P} is unfrozen", the chip and banner go, P can move again in game.
-6. Freeze P **in game** with `/freeze {P} <reason>` while the profile is open. *(Realtime on)* Within a few seconds the
-   profile shows Frozen with that reason; without realtime, after **Reload**. Unfreeze again.
+1. [automated] Freeze opens "Freeze {P}?" with a Reason; an empty reason says "Enter a reason." and sends nothing:
+   `e2e/player-profile.spec.ts`
+2. [automated] With a reason: toast "{P} is frozen", the Frozen chip and the reason, the button turns into Unfreeze, the
+   API gets the reason: `e2e/player-profile.spec.ts`
+3. *(Manual: needs the game.)* In game, **P** can't move, chat or use commands (at once, #179).
+4. [automated] The Moderation tab holds the same freeze card: `e2e/player-profile.spec.ts`
+5. [automated] Unfreeze confirms without a reason field; toast "{P} is unfrozen", the chip goes:
+   `e2e/player-profile.spec.ts` (that P can move again in game is step 3's check)
+6. *(Realtime on, manual: an in-game command.)* Freeze P **in game** with `/freeze {P} <reason>` while the profile is
+   open. Within a few seconds the profile shows Frozen with that reason; without realtime, after **Reload**. Unfreeze
+   again. The page's re-read on the push is automated in `PlayerProfilePage.v3.test.tsx` ("live updates").
 
 ## 3. Activity: timeline and audit log
 
-1. Open **Activity**. **Timeline** lists P's history newest first: the freeze and unfreeze from step 2, group and grant
-   changes, kit grants, and (A holds `knk.admin.currency.history`) every balance change, e.g. "+500 coins" with the
-   reason, before → after and the transaction id. The line under the heading says "From the audit log and the balance
-   history. Game sessions are not in it yet."
-2. Click the **Economy** chip: the coin lines and balance adjustments disappear; click it again to bring them back.
-3. Click **Load older** until it disappears; the dates keep going down, no row shows twice.
-4. **Audit log** below: a table with When, Action, By, Details and a pager ("Showing 1 to 25 of N entries") when P has
-   more than 25 entries. Next/Previous page through them. Pick **Player frozen** in *Action*: only the freezes show,
-   from page 1.
-5. An admin balance adjustment shows in the timeline twice — as "Balances adjusted" (audit log) and as "+n coins"
-   (ledger). That is expected (LV3-4).
-6. *(Realtime on)* Keep the Activity tab open and, from another browser as a second staff account, assign P a group:
-   the timeline and audit log reload by themselves.
+1. [automated] The timeline merges audit entries and balance changes ("+500 coins" with the reason) newest first, with
+   the line about where it comes from: `e2e/player-profile.spec.ts`, `PlayerProfilePage.v3.test.tsx`
+2. [automated] The **Economy** chip hides the coin lines and brings them back: `e2e/player-profile.spec.ts`
+3. [automated] **Load older** pages back without duplicates: `PlayerProfilePage.v3.test.tsx`
+4. [automated] The audit log pages on the server ("Showing 1 to 25 of N entries", Next) and the *Action* filter starts
+   from page 1: `e2e/player-profile.spec.ts`
+5. Note, nothing to check: an admin balance adjustment shows twice, as "Balances adjusted" and as "+n coins" (LV3-4).
+6. [automated] The timeline and audit log reload by themselves when another staff member changes P (realtime push):
+   `PlayerProfilePage.v3.test.tsx` ("live updates")
 
 ## 4. Without the nodes
 
-1. Log in as **S** and open **P**. **Freeze** is greyed out with "Requires knk.freeze" next to it (hover shows it too).
-2. **Permissions**: Assign, Save and the remove buttons are greyed out with "Requires knk.admin.user.group" /
-   "Requires knk.admin.user.perm". **Economy**: Grant on the kits is greyed out with "Requires knk.kit.give"; without
-   `knk.admin.currency.lock` the payment lock is greyed out with its hint.
-3. **Activity**: the timeline says "Balance changes need knk.admin.currency.history." when S lacks that node, and shows
-   only audit entries.
-4. *(#367, after `SeedStaffFreezeNodes`)* Log in as **T** (Staff group) and open **P**: **Freeze** is enabled without a
+1. [automated] Without `knk.freeze`: Freeze greyed out with "Requires knk.freeze": `e2e/player-profile.spec.ts`
+2. [automated] Permissions (Assign, Save, remove) greyed out with "Requires knk.admin.user.group" / "Requires
+   knk.admin.user.perm"; Grant on kits with "Requires knk.kit.give"; the payment lock without
+   `knk.admin.currency.lock`: `e2e/player-profile.spec.ts`, `PlayerProfilePage.v3.test.tsx`
+3. [automated] Without `knk.admin.currency.history` the timeline says "Balance changes need
+   knk.admin.currency.history." and asks no balance history: `e2e/player-profile.spec.ts`
+4. *(Manual: the Staff group's nodes come from the `SeedStaffFreezeNodes` seed on a real database, and the in-game
+   commands need the game.)* *(#367)* Log in as **T** (Staff group) and open **P**: **Freeze** is enabled without a
    "Requires" hint. Freeze P with a reason, then Unfreeze: both succeed as in § 2. In game, T runs
    `/freeze {P} <reason>` and `/unfreeze {P}`: both work (P ranks below Staff; the plugin refuses an equal or higher rank).
 
 ## 5. Player search (Moderation → All players)
 
-1. Copy P's UUID, remove the dashes, paste it in the search box: under the box "Searching by UUID."; press Enter: P is
-   found. The address now has `?q=…`.
-2. Click the **Coins** header: sorted by coins ascending, again: descending (the arrow shows it). **Username** and
-   **Email** sort too. The address has `sort=coins&dir=desc`. Go to page 2.
-3. Open a player, then the browser's **Back**: the same search, sort and page come back.
-4. Above the search, **Recently opened:** lists the profiles you opened last (newest first, links). **Clear** empties
-   it. Log in as another account in the same browser: that account has its own list.
-5. The new **Last seen** column shows "Now" for online players.
+1. [automated] A dashless UUID says "Searching by UUID.", is searched with its dashes and Enter writes `?q=…`:
+   `e2e/player-profile.spec.ts`, `src/pages/admin/__tests__/UserModerationPage.search.test.tsx`
+2. [automated] Coins (and Username, Email) sort on the server, ascending then descending; the URL has
+   `sort=coins&dir=desc` and the page: `e2e/player-profile.spec.ts`, `UserModerationPage.search.test.tsx`
+3. [automated] Back from a profile brings the same search, sort and page back: `e2e/player-profile.spec.ts`
+4. [automated] **Recently opened** lists the profiles you opened, newest first, and **Clear** empties it; each viewer has
+   their own list: `e2e/player-profile.spec.ts`, `UserModerationPage.search.test.tsx`
+5. [automated] **Last seen** says "Now" for online players: `e2e/player-profile.spec.ts`
 
 ## Findings
 

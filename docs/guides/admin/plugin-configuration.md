@@ -1,6 +1,6 @@
 # Plugin configuration reference (`config.yml`)
 
-**Status:** Current · **Last updated:** 2026-11-14 (§ 4.18 `messages.web-account-registered`, #485); 2026-11-14 (§ 2.1: the #377 `group-*` keys are in `next` since 2026-11-13, PandiO/knk-workspace#496); 2026-11-13 (§ 4.11 gates are discovered too; § 4.21 realtime push; § 4.26 the kit cache, PandiO/knk-workspace#300)
+**Status:** Current · **Last updated:** 2026-11-14 (§ 4.28 `testing.scenarios`, test servers only, #421); 2026-11-14 (§ 4.18 `messages.web-account-registered`, #485); 2026-11-14 (§ 2.1: the #377 `group-*` keys are in `next` since 2026-11-13, PandiO/knk-workspace#496); 2026-11-13 (§ 4.11 gates are discovered too; § 4.21 realtime push; § 4.26 the kit cache, PandiO/knk-workspace#300)
 **Checked against:** knk-plugin `main` `121030f`; § 4.11, § 4.21 and § 4.26 against `57884e9`; § 4.27 `npc`, the `realtime.erasure` block and `regions.temp-retention.release-interval-minutes` against knk-plugin `next` (not on trunk yet). Update this page in place whenever a `config.yml` key is added, renamed, removed or gets a new default.
 **Source:** knk-plugin `knk-paper/src/main/resources/config.yml` (1,152 lines at `121030f`), read by
 `knk-paper/.../paper/config/ConfigLoader.java`, `EnchantmentConfigManager.java` and `KnKPlugin.java`
@@ -85,6 +85,7 @@ Newest first. Builds before this list: compare the files with the script.
 
 | Merged | Issue | Added (+), removed (−) or changed | Applies |
 |---|---|---|---|
+| in `next` (`309d3580`, 2026-11-14), not on trunk yet | [#421](https://github.com/PandiO/knk-workspace/issues/421) | + `testing.scenarios` (`enabled` false, `world`, `origin.x/y/z`). **Don't merge it into real servers:** a missing block means off, which is what they need | Restart |
 | in review, not in `next` yet (`claude/smoke-fixes-484-485-487`) | [#485](https://github.com/PandiO/knk-workspace/issues/485) | + `messages.web-account-registered` (optional: a missing key uses the jar's text) | Restart |
 | in `next` (`745fcf6`, 2026-11-13), not on trunk yet | [#184](https://github.com/PandiO/knk-workspace/issues/184), [#269](https://github.com/PandiO/knk-workspace/issues/269) | + `realtime.erasure` (`kick-message`, `settle-seconds`, `feed-file`, `minecraft-files-list`; optional, defaults apply when missing), + `regions.temp-retention.release-interval-minutes` (5, 0 = off) | Restart |
 | in `next` (`0506e691`, 2026-11-13), not on trunk yet | [#377](https://github.com/PandiO/knk-workspace/issues/377) | + `npc.navigation.group-formation`, + `group-spacing`, + `group-ranks-width`, + `group-rejoin-blocks`, + `group-regroup-blocks`, + `group-catch-up-speed` (NPC groups; nothing uses them unless a group is started) | Restart |
@@ -139,6 +140,7 @@ Newest first. Builds before this list: compare the files with the script.
 | 4.25 | `offline-cache` | Offline security cache |
 | 4.26 | `cache` | API response cache per entity |
 | 4.27 | `npc` | NPC navigation on Citizens (off by default) |
+| 4.28 | `testing` | In-plugin test scenarios, test servers only (off by default) |
 
 ## 4. Key reference
 
@@ -705,6 +707,30 @@ npc:
         deny-regions: []
 ```
 
+### 4.28 `testing`
+
+In-plugin test scenarios ([#421](https://github.com/PandiO/knk-workspace/issues/421);
+[writing a plugin scenario](../developer/plugin-scenarios.md)). **Test servers only:** the CI boot test and a
+developer's throwaway server. Keep it off on dev worlds with builds, the alpha and production; a server without the
+block is off, so there is nothing to merge at a deploy.
+
+| Key | Default | What it does, safe values | Applies | Added by |
+|---|---|---|---|---|
+| `scenarios.enabled` | `false` | `true` registers `/knk scenario list \| run <name\|all>` (node `knk.admin.scenario`) and logs a warning at startup. `false`: no command, nothing changes | Restart | #421 |
+| `scenarios.world` | `""` | World the scenes are built in; blank = the main world | Restart | #421 |
+| `scenarios.origin.x`, `.y`, `.z` | `30000`, `100`, `30000` | Lowest corner of the first scene. Each scene is a 32 × 24 × 32 box that is **cleared to air** before and after its scenario; scene *n* sits 64 × *n* blocks further along x. Pick a place far from anything built; `y` + 24 must fit in the world's height | Restart | #421 |
+
+```yaml
+testing:
+  scenarios:
+    enabled: false
+    world: ""
+    origin:
+      x: 30000
+      y: 100
+      z: 30000
+```
+
 ## 5. Maintaining this page
 
 - A change that adds, renames or removes a key, or changes a default, updates § 2.1 and the section's table in the
@@ -716,9 +742,10 @@ npc:
 
 ## Changes
 
-1. 2026-11-14: § 4.18 `messages.web-account-registered` (#485), § 2.1 row; checked against knk-plugin `claude/smoke-fixes-484-485-487`, not merged into `next` yet
-2. 2026-11-13: § 4.3 `realtime.erasure` (#184) and the regions `temp-retention.release-interval-minutes` (#269), PR into `next` from `claude/plugin-chains-into-next`
-3. 2026-11-13: § 4.27 `npc`: six `group-*` keys, PandiO/knk-workspace#377
-4. 2026-11-13: § 4.27 `npc`: `rule-checks-per-tick`, `stop-on-trespass`, PandiO/knk-workspace#361
-5. 2026-11-13: § 4.27 `npc`, PandiO/knk-workspace#359 and #360; checked against knk-plugin `claude/npc-navigation`, not merged into trunk yet
-6. 2026-11-10: first version, PandiO/knk-workspace#295; checked against knk-plugin `main` `121030f`
+1. 2026-11-14: § 4.28 `testing.scenarios` (#421), § 2.1 and § 3 rows; checked against knk-plugin `next` `309d3580`
+2. 2026-11-14: § 4.18 `messages.web-account-registered` (#485), § 2.1 row; checked against knk-plugin `claude/smoke-fixes-484-485-487`, not merged into `next` yet
+3. 2026-11-13: § 4.3 `realtime.erasure` (#184) and the regions `temp-retention.release-interval-minutes` (#269), PR into `next` from `claude/plugin-chains-into-next`
+4. 2026-11-13: § 4.27 `npc`: six `group-*` keys, PandiO/knk-workspace#377
+5. 2026-11-13: § 4.27 `npc`: `rule-checks-per-tick`, `stop-on-trespass`, PandiO/knk-workspace#361
+6. 2026-11-13: § 4.27 `npc`, PandiO/knk-workspace#359 and #360; checked against knk-plugin `claude/npc-navigation`, not merged into trunk yet
+7. 2026-11-10: first version, PandiO/knk-workspace#295; checked against knk-plugin `main` `121030f`

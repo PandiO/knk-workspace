@@ -1,6 +1,6 @@
 # knk-plugin Architecture
 
-**Status:** Current · **Last updated:** 2026-11-14 (§ Testing: Paper boot test, PandiO/knk-workspace#420); 2026-11-14 (link to the NPC navigation page, knk-plugin `next`, PandiO/knk-workspace#496); 2026-11-13 (front matter converted to the header standard, PandiO/knk-workspace#305; last content update 2026-11-13 on `next`: GDPR erasure push #184, siege startup retry #31)
+**Status:** Current · **Last updated:** 2026-11-14 (§ Testing item 1: MockBukkit, no tagged tests, in knk-plugin `next`, PandiO/knk-workspace#499); 2026-11-14 (§ Testing: in-plugin scenarios, in knk-plugin `next`, PandiO/knk-workspace#421); 2026-11-14 (§ Testing: Paper boot test, PandiO/knk-workspace#420); 2026-11-14 (link to the NPC navigation page, knk-plugin `next`, PandiO/knk-workspace#496); 2026-11-13 (front matter converted to the header standard, PandiO/knk-workspace#305; last content update 2026-11-13 on `next`: GDPR erasure push #184, siege startup retry #31)
 
 Spigot/Paper Minecraft plugin for Knights and Kings V3. Multi-module Gradle
 (Kotlin DSL), Java 25 toolchain, targets Paper API 26.3 (`gradle.properties`; corrected 2026-10-25, the 2026-09-21 scan said Java 21 / 1.21.10).
@@ -322,14 +322,23 @@ full picture.
 
 ## Testing
 
-1. Unit tests per module (`./gradlew test`): JUnit 5 and Mockito, no server. `knk-paper`'s `test` task excludes the
-   tests tagged `integration` / `requires-bukkit` (seven files, Mockito tests that fail without a Bukkit `Server`);
-   `./gradlew :knk-paper:taggedTest` runs them. Making them pass is
-   [PandiO/knk-workspace#499](https://github.com/PandiO/knk-workspace/issues/499).
+1. Unit tests per module (`./gradlew test`, all of them, also in CI): JUnit 5 and Mockito. Code that needs Bukkit
+   statics (`Registry`, `Material.isSolid()`, `Bukkit.getScheduler()`) is tested on a MockBukkit server
+   (`org.mockbukkit.mockbukkit:mockbukkit-v26.3`, test-only, version `mockBukkitVersion` in `gradle.properties`, bumped
+   with `paperApiVersion`): call `MockBukkit.mock()` in `@BeforeEach` and `MockBukkit.unmock()` in `@AfterEach`, and
+   use a `WorldMock` rather than a mocked `World` (see `GatePassThroughServiceTest`, `AccountCommandIntegrationTest`).
+   MockBukkit's JUnit 6 dependency is excluded, so don't use its JUnit extension. No test is tagged out of `test` any
+   more (PandiO/knk-workspace#499; in knk-plugin `next` since `0810a6c7`, not on trunk yet).
 2. Boot test (`.github/workflows/paper-boot.yml`, `tools/paper-boot/`, PandiO/knk-workspace#420): CI starts a real
    Paper 26.3 server with the shaded jar, WorldGuard and WorldEdit and no API, and fails unless the plugin enables
-   without errors. See [CI § 7](../guides/developer/ci.md#7-plugin-the-paper-boot-test). In-plugin scenarios
-   (PandiO/knk-workspace#421) will hook into the same script.
+   without errors. See [CI § 7](../guides/developer/ci.md#7-plugin-the-paper-boot-test).
+3. In-plugin scenarios (PandiO/knk-workspace#421; in knk-plugin `next` (`309d3580`, 2026-11-14), not on trunk yet): world behaviour
+   over ticks on the same booted server. The runner is platform-free in `knk-core/.../core/scenario/`
+   (`ScenarioPlan` steps, `ScenarioRun` one tick at a time, `ScenarioSuiteRun`, the `KNK-SCENARIO` report lines; on
+   the `ArchitectureGuardTest` Bukkit-free list); the Bukkit glue and the scenarios are in
+   `knk-paper/.../paper/scenario/` (`ScenarioScene`, `PaperScenarioHost`, `/knk scenario`, registered only with
+   `testing.scenarios.enabled`). Scenarios drive the live services (gate manager, animation task, listeners) and feed
+   them fake data instead of the API. Guide: [writing a plugin scenario](../guides/developer/plugin-scenarios.md).
 
 ## Talks to
 

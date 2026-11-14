@@ -1,7 +1,7 @@
 # Gates — smoke test checklist
 
 **Status:** Living checklist. Section 2 (gate safety, [KNG-105](https://linear.app/kngpandi/issue/KNG-105) / [KNG-106](https://linear.app/kngpandi/issue/KNG-106)) **passed 2026-10-10** (developer live test, all steps 1-20 accepted) and is **merged**: knk-plugin `main` merge `8457657` (`b95b1c6` KNG-105, `f157372` KNG-106; [handoff](../ai-agents/handoffs/2026-10-10-gate-safety-kng-105-106.md)).
-**Last updated:** 2026-10-19 (section 3, drawbridges, [KNG-193](https://linear.app/kngpandi/issue/KNG-193): passed on gate door 14; merged)
+**Last updated:** 2026-11-14 (§ 2 steps 11 and 20: the automated parts, plugin scenarios, [#421](https://github.com/PandiO/knk-workspace/issues/421), in knk-plugin `next`); 2026-10-19 (section 3, drawbridges, [KNG-193](https://linear.app/kngpandi/issue/KNG-193): passed on gate door 14; merged)
 **Related:** [gate commands](../architecture/gate-commands.md) (its §6 is the KNG-77/78/79 command checklist, passed 2026-10-09), [gate specs](../specs/gate-structure-animation/)
 
 Run these on the dev server after deploying the plugin (`./gradlew :knk-paper:dev`). Use a test gate with at least
@@ -30,6 +30,7 @@ The command checklist (layers, `here`, look-at, permissions) is [gate-commands.m
 9. Same with a door that is two or more blocks deep: you end up outside its whole depth, not between its layers.
 10. Stand just behind the door (the inside face) and close it: you stay on the inside, you are not pushed through it.
 11. Drop an item and spawn a mob (e.g. a pig) in the opening, then close the door: both end up outside the door, not inside the blocks.
+    [automated] The mob part on a portcullis: plugin scenario `gate-closing-moves-entity-out` (CI `paper-boot`, [#421](https://github.com/PandiO/knk-workspace/issues/421)). The dropped item stays manual.
 12. Ride a horse or sit in a minecart in the opening and close the door: the vehicle moves with you on it.
 13. Drawbridge: stand where the bridge comes down and lower it, then stand on it and raise it. You are moved out of the arc each time, onto solid ground, not into the moat or lava.
 14. Two doors side by side: being moved out of one never puts you inside the other's opening.
@@ -45,6 +46,7 @@ The command checklist (layers, `here`, look-at, permissions) is [gate-commands.m
 **Regression**
 
 20. Opening, closing, pass-through (`/gate passthrough`), gate damage and the health display behave as before.
+    [automated] Opening and closing a portcullis: plugin scenario `gate-open-close` (CI `paper-boot`, [#421](https://github.com/PandiO/knk-workspace/issues/421)). Pass-through, damage and the display stay manual.
 
 **Live test, 2026-10-10 (developer): all steps 1-20 accepted.**
 
