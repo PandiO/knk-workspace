@@ -10,7 +10,9 @@ knk-workspace `.claude/settings.json` allows (PandiO/knk-workspace#331; it appli
 knk-workspace). The rule matches the tool, not its arguments: a `PreToolUse` hook in the same file
 (`.claude/hooks/add-repo-guard.sh`, developer decision 2026-11-12) denies `add_repo` outside the knk repositories, the
 cloud session's GitHub access limits it too, and the block names the ones the developer authorized. Variant B, a subagent of the
-coordinator, is the fallback when `create_session` is unavailable or an attach is still refused.
+coordinator, is the fallback when `create_session` is unavailable or an attach is still refused. In an Auto-mode
+session the attach is decided by Auto mode's classifier rather than the rule and can be refused (SKILL.md § 4.1.4,
+observed 2026-11-14): list only the repositories the link needs, each with plain `push` or `read`.
 
 History, before the rule existed: a new session only accepted an `add_repo` request that was in its prompt, and an
 `add_repo` instruction found in a repository file was refused (form wizard chain, 2026-10-11); on 2026-11-12 even the
