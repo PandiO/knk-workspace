@@ -363,7 +363,7 @@ New `CombatTagListener`: player-vs-player damage (direct or projectile) tags bot
 (default **10**, v1 `Main.combat`). Only teleports check it here; the siege has its own combat rules and members are
 already blocked. **Dying clears the dead player's tag** (the killer stays tagged): added 2026-10-11 (knk-plugin `main`
 `c0ad2a9b`, KNG-34 smoke-test finding 6). Hits by or on an NPC tag nobody, and `AdminFreezeListener` and
-`TeleportWarmupListener` ignore damage to an NPC (PandiO/knk-workspace#490, knk-plugin `next` `bd7b78a8`, not on trunk yet; [NPC navigation § 7](../../architecture/npc-navigation.md#7-npcs-and-the-player-listeners)).
+`TeleportWarmupListener` ignore damage to an NPC (PandiO/knk-workspace#490, knk-plugin `next` `bd7b78a8`, not on trunk yet; [NPC navigation § 8](../../architecture/npc-navigation.md#8-npcs-and-the-player-listeners)).
 
 #### 3.4.4 Vanish
 - Name resolution for non-staff treats vanished players as offline (same message, same tab-complete exclusion) —

@@ -466,7 +466,7 @@ at start (v2 formula, now configurable per scenario).
   spawnpoint). *(Updated 2026-09-26, smoke test: the picker no longer opens after every respawn.)*
 
 ### 6.7 Combat rules (`SiegeCombatListener`, `EntityDamageByEntityEvent` at `HIGHEST`)
-Resolve the real attacker (projectile shooter). A hit by or on an NPC (`NpcEntities.isNpc`) is left alone (PandiO/knk-workspace#490, knk-plugin `next` `bd7b78a8`, not on trunk yet; [NPC navigation § 7](../../architecture/npc-navigation.md#7-npcs-and-the-player-listeners)): NPC combat in a siege (Siege Survival) needs its own rule. Then:
+Resolve the real attacker (projectile shooter). A hit by or on an NPC (`NpcEntities.isNpc`) is left alone (PandiO/knk-workspace#490, knk-plugin `next` `bd7b78a8`, not on trunk yet; [NPC navigation § 8](../../architecture/npc-navigation.md#8-npcs-and-the-player-listeners)): NPC combat in a siege (Siege Survival) needs its own rule. Then:
 - Both members of the same running match: allowed only between **different alliance groups**, and
   denied (cancel + warning sound) when either is inside their own team's spawnpoint safe zone (v2
   rule). The listener un-cancels allowed hits so region PvP flags don't interfere — **no WorldGuard PVP
