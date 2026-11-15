@@ -37,8 +37,8 @@ This is a human-readable record of capabilities merged into the V3 default branc
      the door walks on out.
   6. **Tests.** knk-core unit tests for every formation's widths, the per-point cache, step-down, hysteresis, the
      toggle, the queue and the door rule; three plugin scenarios on a real Paper server with Citizens
-     (`npc-group-narrows`, `npc-group-gate-finish-trip`, `npc-group-access-change`); with #543's three, CI's
-     `paper-boot` now expects 25 scenarios.
+     (`npc-group-narrows`, `npc-group-gate-finish-trip`, `npc-group-access-change`); with #543's three and #540's
+     six player scenarios, CI's `paper-boot` now expects 31 scenarios.
   7. **Admin steps** (restart): merge the three new keys and set `group-spacing: 1.5` where `config.yml` still says 2.0:
 
      ```yaml
@@ -52,6 +52,25 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
      Then run the developer test steps of plan 4b.3 (posted on #522), which include the #490 audit re-run.
 
+- **Form builder: field validation rules are part of the draft and go live on Publish; add-from-template endpoints removed**
+  ([PandiO/knk-workspace#291](https://github.com/PandiO/knk-workspace/issues/291); link L4 of the Chain 3 follow-ups
+  chain, [#564](https://github.com/PandiO/knk-workspace/issues/564)) — knk-web-api, knk-web-app and knk-workspace
+  branches `claude/builder-draft-rules-291` (PRs into `next`, in review, not merged). No change for players.
+  1. **Rules in the draft.** In the form builder a field's cross-field validation rules are kept in the draft (keyed by
+     field GUID) with **Save Field** and **Save**, marked *Not published*, and applied on **Publish** (adds, edits and
+     deletes); the form wizard keeps the published rules until then. **Discard** drops rule changes.
+  2. **Draft-only fields** (added but not published yet) can get rules; a dependency on a field of the same form is
+     chosen by GUID, on a parent form's field by id.
+  3. **Publish** names rule changes ("Validation rules: 1 added, 1 changed, 1 removed.") and is refused when a rule's
+     field or dependency left the form, or rules depend on each other in a circle.
+  4. A draft saved before this change (no rules in it) keeps the published rules, unchanged.
+  5. API: `GET api/FormConfigurations/{id}/builder` and the draft carry `validationRules`; `POST
+     api/FormConfigurations/{configId}/steps/add-from-template` and `steps/{stepId}/fields/add-from-template` are
+     **removed** (they wrote into the published rows; no caller since #71).
+  6. Docs: [smoke test § 11](guides/form-display-builders-smoke-test.md), web-api architecture § 5.5, web-app
+     architecture (builders).
+  - **Admin steps:** none (no migration, no setting, no new node). Deploy API and web app together, **API first**: an
+    older API ignores the rules in the draft, so they would be lost on Save.
 - **Plugin scenarios: scripted players (server-side fake players), headless bot tests kept off**
   ([PandiO/knk-workspace#540](https://github.com/PandiO/knk-workspace/issues/540); developer decision 2026-11-15:
   build both). knk-plugin and knk-workspace branches `claude/scripted-players-540` (PRs into `next`). No change for

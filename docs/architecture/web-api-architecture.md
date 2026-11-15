@@ -1,6 +1,6 @@
 # knk-web-api — Architecture
 
-**Status:** Current · **Last updated:** 2026-11-15 (§5.4: "Show what uses it" for form configurations and `?all=true`, #289, knk-web-api#34 in `next`); 2026-11-15 (§5.2 grant reads, §5.6 permission grants, group member count and the generic audit subject; #408, #50 in `next`, docs #576)
+**Status:** Current · **Last updated:** 2026-11-15 (§5.5: validation rules in the builder draft, add-from-template endpoints removed; #291 in review); 2026-11-15 (§5.4: "Show what uses it" for form configurations and `?all=true`, #289, knk-web-api#34 in `next`); 2026-11-15 (§5.2 grant reads, §5.6 permission grants, group member count and the generic audit subject; #408, #50 in `next`, docs #576)
 
 ## 1. Stack & shape
 
@@ -330,8 +330,23 @@ saved wizard drafts and detail pages read. The builder's working copy waits besi
   (`defaultOnly`) and `entity-names` skip them in the repository. `GET {id}` still returns the row (empty steps for a
   never-published one). A legacy `PUT {id}` refuses to make a never-published form the default and keeps the saved copy's
   default flag in step (`SyncDraftDefaultAsync`, also for display).
-- **Templates**: the web app no longer calls `{configId}/steps/add-from-template` / `steps/{stepId}/fields/add-from-template`
-  (they wrote into the published rows); the endpoints stay for other callers.
+- **Templates**: `{configId}/steps/add-from-template` and `steps/{stepId}/fields/add-from-template` (they wrote into the
+  published rows) and `FormTemplateReusableService` were **removed** in
+  [#291](https://github.com/PandiO/knk-workspace/issues/291) (in `next`): since #71 the web app copies templates into the
+  working copy, and no caller was left (web app, plugin, scripts checked 2026-11-15). The display builder never had
+  such endpoints.
+- **Field validation rules in the copy** ([#291](https://github.com/PandiO/knk-workspace/issues/291), in `next`): the
+  form copy carries `validationRules` (`FormDraftValidationRuleDto`: `id` of the published rule or none, `fieldGuid`,
+  `dependsOnFieldGuid` for a field of this form or `dependsOnFieldId` for another form's field, and the rule's values).
+  `GET {id}/builder` fills `configuration.validationRules` from the copy, or with the published rules when the copy has
+  no list (none saved, or saved before #291), and `published.validationRules` with the published ones. *Publish*
+  first checks the list (every field and dependency GUID in the copy, a parent form's field still there, no rule on its
+  own field, no circle; refused as "Can't publish: …"), then in its transaction deletes the published rules the copy
+  dropped and clears the kept ones' dependency (so a removed or moved field isn't held by `Restrict`), runs
+  `UpdateAsync`, and writes the list by field GUID (kept ids updated, the rest created). A copy without the list keeps
+  the published rules. `api/field-validation-rules` (the wizard's reads, the old writes) is unchanged; the builder no
+  longer writes through it. The health check's draft variant still reads the published rules
+  ([#582](https://github.com/PandiO/knk-workspace/issues/582)).
 - **Consumers checked**: the plugin's `knk-api-client` reads no form or display configuration (world tasks carry their
   own input JSON); API-side `FormSubmissionProgressService`, `FieldValidationRuleService`/`DependencyResolutionService`
   (health checks by id), `WorldTaskRepository` (form name), portability export/seeds and the realtime map all read the rows,
