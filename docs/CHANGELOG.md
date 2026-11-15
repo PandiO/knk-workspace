@@ -85,9 +85,12 @@ This is a human-readable record of capabilities merged into the V3 default branc
        from the backup.
     5. A Town form with a `Streets` / `StreetIds` field or step (the API ignores it) can be removed in the form builder;
        the read-only check `scripts/maintenance/town-street-orphans-409.sql` (result set 3) lists such configurations.
-    6. Smoke test: follows with L3 ([#516](https://github.com/PandiO/knk-workspace/issues/516)); the read-only section
-       and the refused link are automated (knk-web-app `e2e/town-detail.spec.ts`, knk-web-api
-       `TownStreetsDerivedTests`, `RelationshipsControllerTests`).
+    6. Smoke test: [town streets smoke test](guides/town-streets-smoke-test.md) (L3
+       [#516](https://github.com/PandiO/knk-workspace/issues/516)): the manual steps are the deploy and migration on dev
+       and alpha and a look at a real town's Streets; the read-only section, the refused link, the derived list and the
+       migration are automated (knk-web-app `e2e/town-detail.spec.ts`, knk-web-api `TownStreetsDerivedTests`,
+       `RelationshipsControllerTests`, `DropTownStreetMigrationTests`). The dashboard access smoke test § 2.2 step 2
+       and § 8 step 9b now use a district's streets as the link example.
 - **Plugin: the 52 tests that CI skipped now run, with MockBukkit**
   ([PandiO/knk-workspace#499](https://github.com/PandiO/knk-workspace/issues/499); developer-facing, nothing changes
   in game). Merged into `next` 2026-11-14 (knk-plugin#32, merge `0810a6c7`; docs knk-workspace#539); on the trunk when the developer promotes `next`.

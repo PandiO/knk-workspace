@@ -85,13 +85,15 @@ Developer decision 2026-11-12: deleting a whole form or display configuration ne
 ### 2.2 Create, edit and link changes need `knk.admin.content` (#374)
 
 Developer decision 2026-11-13: area staff work with the content available. Use the world-only rank (no
-`knk.admin.content`), a world + content account and the Staff group; `{town}`, `{street}` are test records.
+`knk.admin.content`), a world + content account and the Staff group; `{town}`, `{district}`, `{street}` are test records.
 
 1. [automated] (`Tests/knkwebapi_v2.Tests/Security/DashboardChangeAccessRulesTests.cs`, `AreaNodeWithoutContent_Is403_WithTheNodes`) world-only, `POST api/Towns` with a minimal town and `PUT api/Towns/{town}` with the town as read: 403,
    `code: "NoWriteAccess"`, `nodes: ["knk.admin.world", "knk.admin.content"]`, message "Creating or editing Town
    requires knk.admin.world and knk.admin.content.".
-2. [ ] world-only, `POST api/Relationships/Town/{town}/streets/link` with `{ "relatedId": {street} }` (and `…/unlink`):
-   403 `NoWriteAccess` "Changing links of Town requires knk.admin.world and knk.admin.content.".
+2. [ ] world-only, `POST api/Relationships/District/{district}/streets/link` with `{ "relatedId": {street} }` (and
+   `…/unlink`): 403 `NoWriteAccess` "Changing links of District requires knk.admin.world and knk.admin.content.".
+   (#409: a town's streets come from its districts; `Town/{town}/streets` link and unlink answer 400
+   `RelationshipNotEditable`, see the [town streets smoke test](town-streets-smoke-test.md).)
 3. [automated] (`DashboardChangeAccessRulesTests.cs`, `AreaNodeAndContent_Passes`) world + content: steps 1 and 2 succeed (201 / 200 / 200).
 4. [automated] (`DashboardChangeAccessRulesTests.cs`, `ContentWithoutTheAreaNode_Is403`) content-only: `POST api/Towns` → 403 "Requires the knk.admin.world permission." (the area node still counts).
 5. [ ] Staff: `PUT api/Kits/{id}` and `POST api/SiegeScenarios` → 403 naming `knk.admin.content`; the Staff player
@@ -218,7 +220,7 @@ and at 390 px width (phone): nothing scrolls sideways, the bulk dialogs fit.
    `knk.admin.content`.
    9a. [automated] `ObjectDashboard.test.tsx` ("enables New and Edit for the area node plus knk.admin.content"); the saved draft and edit are the form wizard's own tests **world + content** (an account holding both): New Town, New with and Edit open the Town form; a draft
    saves; the edit saves.
-   9b. [automated] `e2e/entity-detail.spec.ts` ("world-only (#374)"), `src/components/DisplayWizard/__tests__/DisplayWizard.relationships.test.tsx` **world-only** (#374), a town's detail page: the Streets section's **Add…**, a street's **Unlink** and the
+   9b. [automated] `e2e/entity-detail.spec.ts` ("world-only (#374)", on District 1 "Old Quarter" since #409), `src/components/DisplayWizard/__tests__/DisplayWizard.relationships.test.tsx` **world-only** (#374), a district's detail page (#409: a town's Streets are read-only): the Streets section's **Add…**, a street's **Unlink** and the
    Location's **Change…** / **Unlink** are greyed out with "Requires knk.admin.content" (the hint line under the
    section says so); **Delete** of a street (with `knk.admin.delete`) still works. **world + content**: Add… links a
    street, Unlink removes the link.
