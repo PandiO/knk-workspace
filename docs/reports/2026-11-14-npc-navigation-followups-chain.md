@@ -44,7 +44,7 @@ Every link is merged into `next` (2026-11-15). Build knk-plugin from `next` `deb
 | L5 Fix: stair corner, ranks row at the landing | #592 | Merged into next (2026-11-15) | knk-plugin `011b1745` → `next` `8ad9df66`; knk-workspace `4a819546` → `next` `8bad205a` | PandiO/knk-plugin#43, PandiO/knk-workspace#599 | PR CI green on `011b1745` (build, paper-boot with 34 scenarios, both runs); Codex at its usage limit | create_session session_01R1w2UxAFomY5DQ18vRtAH6 (2026-11-15) |
 | L6 Fix: follower access with overlapping gate region | #593 | Running | — | — | — | create_session session_01R1w2UuimaZUvf6HRSGtpmp (2026-11-15) |
 | L7 Fix: test walkers drown (#490) | #594 | Dropped (#490 audit clean on the right build; #594 closed) | — | — | — | — |
-| L8 Design: movement quality (steering, formation keeping, crowding, plaza road lines) | #603 | Running (developer approves before implementation) | — | — | — | create_session session_01R1w2Uv7BDN1HKCV2gWe5Mz (2026-11-15) |
+| L8 Design: movement quality (steering, formation keeping, crowding, plaza road lines) | #603 | In review (PR open; the developer approves before implementation) | knk-workspace `939ebd8` | PandiO/knk-workspace#605 | docs only (no CI) | create_session session_01R1w2Uv7BDN1HKCV2gWe5Mz (2026-11-15) |
 
 ## 3. Coordinator decisions
 
@@ -462,3 +462,56 @@ _(Each link appends its block here when it finishes.)_
     1. L6 and L7: nothing of theirs touched (no access-rule or test-walker code).
     2. `WaypointChain.bridged(world, from, waypoints)` is reusable for any waypoint list.
     3. `NpcMover.verticalSpeed()` is the fall signal for Citizens.
+
+### 4.8 L8 — Design: movement quality (steering, formation keeping, crowding, plaza road lines) (#603)
+
+1. **Scope done** (docs only, on knk-workspace `claude/npc-followups-l8`).
+    1. `IMPLEMENTATION_PLAN.md` Phase 7 "Movement quality" reworked: 7.1 what the code on knk-plugin `next` `8ad9df66` does today, 7.2 approaches, 7.3 proposed decisions, 7.4 links M1–M5 (scope, tier, repos, keys off by default, automated-first tests, done-when) and a short developer test on `quarry-to-keep` and `south-gate-short`, 7.5 the real places as scenarios, 7.6 the earlier Phase 7 items, 7.7 fifteen questions; the phase-table row (depends on 4b, size L, NAV-24–NAV-28).
+    2. `BEHAVIOR_MODEL.md` § 2: NAV-24 (steering with look-ahead; amends NAV-19's "straights may hug a wall"), NAV-25 (formation keeping), NAV-26 (situational awareness), NAV-27 (plaza lines), NAV-28 (tick budget), all "proposed".
+    3. `docs/CHANGELOG.md`: one line.
+    4. **Code findings** (knk-plugin `next` `8ad9df66`):
+        1. Folds outnumber narrowings because in `NavGroup.decideWidth` the column skips the hysteresis while narrower widths need it; a width must fit at every point under the whole group (about 12 blocks for 20 in ranks of 3); many points are column-only (`GroupPath.stair` at every full-block step, lanes whose WorldGuard region set differs from the path's, `LANE_CLEARANCE` failures at jagged walls with half-block shifts only); there is no squeeze, no look-ahead and no hold on re-forming (folds and re-forms in pairs, 26 and 26).
+        2. On a width change follower *i* keeps index *i* in the new slot list (`levelSlots.get(level).get(i)`), so followers cross each other's lines on a fold.
+        3. Straights get no clearance (corner clearance acts at turns of 30° or more only), and the skeleton line wanders towards indentations; all singles walk the same line, so they catch the same jutting piece.
+        4. `collidable: false` by default, so a doorway jam is K&K's logic (no ordering at an open doorway, waiting not told from stuck), not bodies pushing.
+        5. The road-graph builder is knk-plugin `knk-core/.../core/roads/build/` (`TileBuilder`, `SkeletonGraph`, `Rdp`); `SkeletonGraph` collapses a plaza into one junction, so routes cross a plaza through its middle. NPC lines are `Route.polyline()` as is (knk-paper `paper/navigation/NavigationService`); `TrailCentring` (KNG-76) is applied to the player trail only.
+2. **Commits and heads.** knk-workspace `claude/npc-followups-l8` at `939ebd8`: 1 docs commit on `next` `8bad205a`.
+3. **PRs.** PandiO/knk-workspace#605 (`Closes #603`, `Part of` #508, #493, #521, #522), base `next`. Not merged.
+4. **Tests, baseline → result.**
+    1. knk-workspace: docs only. The relative links I added resolve (navigation DESIGN, configuration reference § 4.27, the knk-test-writer skill, the charter, the BEHAVIOR_MODEL anchor).
+    2. Known reds: none. Codex: no review comment yet when this block was written; any finding is handled on the PR.
+5. **Decisions (DESIGN § 4.3).**
+    1. *Where the design goes.* Chosen: Phase 7 "Movement quality" reworked in place, the earlier outline kept as 7.6, because the prompt names it and the work is movement quality. Alternatives: (a) a new Phase 4c (4b is closed scope); (b) a separate design file (the charter binds the plan).
+    2. *Steering.* Chosen: corridor shaping of each ~32-block stretch (clearance by distance transform, look-ahead with body width plus clearance, string pulling, doorway alignment) before Citizens walks it: per-stretch cost, shared by NPCs on the same stretch, pure knk-core over `NavWorld`. Alternatives: (a) a K&K step controller (per-tick steering, new port; kept as the fallback in 7.6); (b) ORCA or velocity obstacles (per-tick velocity control, doorway deadlocks, built for colliding agents); (c) flow fields (one per goal); (d) more corner rules (straights and funnels stay unsolved).
+    3. *Formation keeping.* Chosen: fit from the corridor's free width, squeeze to minimum spacings before narrowing, look-ahead of the formation's depth plus 4 blocks, the same hysteresis for every change with lane merging for short spots, stairs 2 abreast with a step per lane, lanes judged by access rules, slots re-assigned by place on every change, fold reasons counted. Alternatives: (a) only make the column wait for the hysteresis; (b) flocking without slots; (c) the Hungarian method (same answer here at more cost).
+    4. *Crowding.* Chosen: an occupancy hash every 5 ticks, chokepoints taken in turns (in it, column order, group before single, first come), yielding on narrow stretches, waiting not counted as stuck, `collidable: false` kept. Alternatives: (a) ORCA; (b) first come only; (c) separation only; (d) `collidable: true`.
+    5. *Plaza lines.* Chosen: string pulling across the plaza's footprint on the NPC side (M5), the graph unchanged. Alternatives: (a) through-edges in `SkeletonGraph` (players' trail too; more edges, a builder version bump and rebuilds); (b) a plaza mesh in the road data (API schema change); (c) walked lines (NAV-18).
+    6. *Flags.* Chosen: one key per link, off by default. Alternatives: (a) one master key.
+    7. *Evidence.* Chosen: a scenario scene loaded from a WorldEdit schematic (WorldEdit is on `paper-boot`), with synthetic stand-ins for the jagged straight, the doorway and the plaza, and M1's scenarios in report mode until the later links turn their checks into assertions. Alternatives: (a) hand-built approximations only (L5's way; the stair house is too irregular to rebuild from a description); (b) a block-dump command.
+    8. *Link order.* Chosen: M1 evidence, M2 corridor, M3 formations and M5 plazas (both need the corridor), M4 crowding. Alternatives: (a) formations first (they need the corridor's fit); (b) crowding before formations.
+6. **Out of scope, noted.** None filed. L6's passages (plan Phase 4 step 10 and known limit 4) untouched.
+7. **Blockers.** None.
+8. **At merge / what the developer must do.**
+    1. Approve the design and answer the questions (on #603 or with the coordinator). No `config.yml` key or migration in this link.
+    2. Optional, for M1: the evidence on #603 (comment 6896780713): the stair-house schematic with exact WorldEdit commands, a trace at 1414 49 -503, a trace and the fold lines at the entrance, the plaza to test, the `collidable` value.
+    3. Questions (proposed defaults with alternatives):
+        1. **Where the work goes:** Phase 7 "Movement quality" reworked (proposed). Alternatives: (a) a new Phase 4c; (b) a separate design file.
+        2. **Steering:** corridor shaping of the waypoint line before it is handed over, Citizens keeps walking it (proposed). Alternatives: (a) a K&K step controller now (per-tick steering); (b) ORCA or velocity obstacles.
+        3. **`corridor-half-width`:** 4 blocks (proposed). Alternatives: (a) 3; (b) 6.
+        4. **`wall-clearance`:** 0.8 block from the body's centre to a wall, on straights too where the road allows, which changes NAV-19's "straights may hug a wall" (proposed). Alternatives: (a) 0.6; (b) 1.0; (c) turns only, as today.
+        5. **Squeeze limits:** `group-lateral-spacing-min` 0.75 and `group-spacing-min` 1.0 (proposed). Alternatives: (a) 0.8 and 1.25; (b) no squeeze.
+        6. **Fold rule:** a column only where 2 abreast squeezed does not fit for longer than `group-width-hysteresis-blocks`; shorter places are passed by lanes merging (proposed). Alternatives: (a) fold at once, as today; (b) fold at once only at gate doors.
+        7. **Stairs:** 2 abreast on flights wide enough where each lane has its own steps, else a column (proposed). Alternatives: (a) always a column (L4 decision 4); (b) also 3 abreast on wide flights.
+        8. **`group-lookahead-blocks`:** the formation's depth plus 4 blocks (proposed). Alternatives: (a) a fixed 8; (b) a fixed 12.
+        9. **Lanes and regions:** a lane needs the follower's access rules to allow it, not the same region set as the path (proposed). Alternatives: (a) keep the region equality; (b) ignore regions for lanes.
+        10. **Turn order at a chokepoint:** in it, then the group's column order, a group before a single, then first come (proposed). Alternatives: (a) first come only; (b) singles before groups.
+        11. **Bodies:** `collidable: false` stays the default (proposed). Which value does the dev server run? Alternatives: (a) `true`.
+        12. **Plaza lines:** string pulling across plazas on the NPC side now, link M5 (proposed). Which plaza and route should the test use? Alternatives: (a) also through-edges in the road-graph builder later, for the players' trail; (b) only the builder change.
+        13. **Flags:** one key per link, off by default, turned on by a later PR after your test (proposed). Alternatives: (a) one master key `movement-quality`.
+        14. **Evidence:** a WorldEdit schematic of the stair house and its surroundings, with the commands in the comment on #603 (proposed). Alternatives: (a) synthetic scenes only; (b) a block-dump command in M1 instead.
+        15. **Order:** M1 → M2 → M3 → M5 → M4 (proposed). Alternatives: (a) M3 before M2; (b) M4 before M3.
+9. **Notes for later links.**
+    1. M1: `/knk npc nav trace` gets `# corridor:` lines next to L5's `# waypoints:`; the fold-reason counters are counting only, no behaviour.
+    2. M2: build the corridor where the stretch is prepared (NAV-14) and cache it per route stretch, so 50 singles on `quarry-to-keep` share it; keep `CornerClearance` and `WaypointChain` as safety nets after the shaped line.
+    3. M3: `GroupPath.levels/widest/shift` and `NavGroup.decideWidth`/`firstMisfit`/`narrowLasts` are the places to change; L3's lane continuity (`continuous`) and L4's `LANE_RETURN`, door queue and step back stay.
+    4. L6 (#593) and its access code are not touched by this design; M3's lane rule (access verdicts) must use whatever L6 settles for overlapping regions.
