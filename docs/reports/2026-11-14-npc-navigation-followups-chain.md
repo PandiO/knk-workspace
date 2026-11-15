@@ -33,6 +33,9 @@ Every link is merged into `next` (2026-11-15). Build knk-plugin from `next` `deb
 5. **Promotion of `next`** once the tests pass; then the issues #519–#522, #506, #507, #508, #491, #492, #493 close.
 6. Docs: #589, in its own docs session (session_01R1w2UvjZEQ5uyXDYDCqAfs).
 
+3. M6 decision 6.1 (#623): local legs search a corridor grid instead of `WalkSearch` (reversible). Confirm or ask
+   for alternative (a).
+
 ## 2. Summary
 
 | Link | Issue | Status | Branch heads | PR | CI | How started |
@@ -47,8 +50,8 @@ Every link is merged into `next` (2026-11-15). Build knk-plugin from `next` `deb
 | L8 Design: movement quality (steering, formation keeping, crowding, plaza road lines) | #603 | Merged into next (2026-11-15; design decided by the developer, 15 questions) | knk-workspace `e8836db0` → `next` `61c29c16` | PandiO/knk-workspace#605 | docs only (no CI); Codex at its usage limit | create_session session_01R1w2Uv7BDN1HKCV2gWe5Mz (2026-11-15) |
 | M1 Evidence and diagnostics | #621 | Merged into next (2026-11-15) | knk-plugin `3ce748e0` → `next` `a527c980`; knk-workspace `1310c3d9` → `next` `a8dbfa80` | PandiO/knk-plugin#47, PandiO/knk-workspace#632 | PR head green (build, paper-boot with 45 scenarios, both runs); Codex at its usage limit | create_session session_01R1w2Uv6Untjy5RbmJTDd1T (2026-11-15) |
 | M2 Corridor steering (option A) | #622 | Merged into next (2026-11-15) | knk-plugin `4e247835` → `next` `0fa74a67`; knk-workspace `a837776d` → `next` `8927eab2` | PandiO/knk-plugin#48, PandiO/knk-workspace#633 | PR head green (build, paper-boot with 45 scenarios, both runs); Codex at its usage limit | create_session session_01R1w2UszyqgMVxpBHaUa2oH (2026-11-15) |
-| M6 Clearance-aware local legs (add-on D) | #623 | In review (PRs open, not merged) | knk-plugin `8fa83e09`; knk-workspace `f65d3c6` | PandiO/knk-plugin#49, PandiO/knk-workspace#634 | PR head green (build, paper-boot with 45 scenarios); Codex at its usage limit | create_session session_01R1w2UuwfDNhwngWZJue8wZ (2026-11-15) |
-| M3 Formation keeping | #624 | Not started (gate: M6 merged) | — | — | — | — |
+| M6 Clearance-aware local legs (add-on D) | #623 | Merged into next (2026-11-15) | knk-plugin `8fa83e09` → `next` `625c2c9c`; knk-workspace `f65d3c69` → `next` `e0783664` | PandiO/knk-plugin#49, PandiO/knk-workspace#634 | PR head green (build, paper-boot with 45 scenarios); Codex at its usage limit | create_session session_01R1w2UuwfDNhwngWZJue8wZ (2026-11-15) |
+| M3 Formation keeping | #624 | Running | — | — | — | create_session session_01R1w2UufiGFpPfGevZxvtVD (2026-11-15) |
 | M5 Plaza lines | #625 | Not started (gate: M3 merged) | — | — | — | — |
 | M4 Crowd awareness | #626 | Not started (gate: M5 merged); then the option-B checkpoint | — | — | — | — |
 | M7 Collision with push resistance | #627 | Not started (gate: B checkpoint) | — | — | — | — |
@@ -202,6 +205,13 @@ Every link is merged into `next` (2026-11-15). Build knk-plugin from `next` `deb
     stair-house and jagged singles asserting (12/12, 0 stuck spells, longest still at most 0.6 s), corridor share about
     0.005 ms per NPC per tick, behind `corridor-steering` (off). Codex at its usage limit. Merged PandiO/knk-plugin#48 →
     `0fa74a67` and PandiO/knk-workspace#633 → `8927eab2`. M6 started.
+
+26. **M6 checked and merged** (2026-11-15). § 6 held: tests 2853/2852 → 2866/2853, 45 scenarios green, the ladder
+    freed by K&K's own leg, all stair-house legs K&K's, behind `local-legs-clearance` (off). Merged PandiO/knk-plugin#49 →
+    `625c2c9c` and PandiO/knk-workspace#634 → `e0783664`. M6 decision 6.1 (the leg searches a corridor grid instead of
+    the plan's `WalkPathfinder`/`WalkSearch`) is put to the developer for confirmation. Chosen: merge without waiting,
+    because it is reversible behind the key and § 7.1 merges on the checks. Alternatives: (a) hold the merge for the
+    developer (blocks M3 on a reversible detail). M3 started.
 
 ## 4. Link blocks
 
