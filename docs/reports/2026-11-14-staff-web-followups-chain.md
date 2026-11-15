@@ -48,6 +48,8 @@
 9. **Route for L2.** Chosen: a subagent of this coordinator from the start, because L2 needs knk-web-api and knk-web-app and the coordinator skill (`main` `ffbc7176`, § 4.1.4) sends links with two or more component repos that way (Auto mode's classifier can refuse `add_repo`). L3 (web app only) goes back to `create_session`. Alternatives: (a) `create_session` and fall back on a refusal: what the skill now advises against.
 10. **Rule recheck before L2.** No change to "Testing: automated first", the knk-test-writer or knk-link skills or `web-app-testing.md` since `aa4208b3`; #421 (plugin scenarios) and #511 (backfill) are done and archived; #387 still open, not merged, so today's nodes hold for L2.
 
+11. **L2 restarted after the developer's #50 decisions (2026-11-15).** L2's first subagent stopped before coding with "DECISIONS NEEDED" (no AskUserQuestion tool in a subagent); nothing was changed. I asked the developer: (1) audit: a generic audit subject (`SubjectType` + `SubjectId`, one additive migration, History list in the group panel), chosen with future clans that run towns and hold treasuries in mind; (2) plugin freshness: rely on the existing `PermissionGroupChanged` event (#179), plugin follow-up for inheriting groups. Recorded on #50. Then a new subagent with the same prompt plus the answers. Lesson: subagent links can't ask the developer; the coordinator asks before starting such a link. Alternatives: (a) `create_session` for L2 so the link could ask itself: against coordinator skill § 4.1.4 for two component repos.
+
 ## 4. Link blocks
 
 _(Each link appends its block here when it finishes.)_
