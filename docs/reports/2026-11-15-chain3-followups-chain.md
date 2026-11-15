@@ -23,8 +23,8 @@
 | L1 Temp region releases | #399 | Merged into next (2026-11-15) | knk-web-api `a0b5ff3f`, knk-workspace `86adf724`; next: api `3b36edc6`, ws `5dafabac` | [knk-web-api#33](https://github.com/PandiO/knk-web-api/pull/33), [knk-workspace#572](https://github.com/PandiO/knk-workspace/pull/572) | green (runs 43702385149, 43702462646) | create_session session_01R1w2Uvbubw539aKYxgnvjR |
 | L2 List field cards at 390 px | #290 | Merged into next (2026-11-15) | web-app `8cb616b`, workspace `080a4bdf`; next: app `9b5f9ddf`, ws `9eeb29ff` | [web-app#38](https://github.com/PandiO/knk-web-app/pull/38), [#571](https://github.com/PandiO/knk-workspace/pull/571) | green (PR run; push-run e2e flake #573, re-run green) | create_session session_01R1w2UswAebrDAEEFqUHA3e |
 | L3 "Show what uses it" for more refusals | #289 | Merged into next (2026-11-15) | api `98f0c91`, web-app `41c75ca`, workspace `d833cb0a`; next: api `378921c6`, app `2dfd5883`, ws `e8a4e1e8` | [web-api#34](https://github.com/PandiO/knk-web-api/pull/34), [web-app#39](https://github.com/PandiO/knk-web-app/pull/39), [#579](https://github.com/PandiO/knk-workspace/pull/579) | green (PR runs); next: app run 43707033299 pending | subagent (decision 13) |
-| L4 Builder rules and templates into the draft | #291 | Done, in review (2026-11-15) | api `a851436`, web-app `0d604fe`, workspace `4fa25605` | [web-api#35](https://github.com/PandiO/knk-web-api/pull/35), [web-app#40](https://github.com/PandiO/knk-web-app/pull/40), [#583](https://github.com/PandiO/knk-workspace/pull/583) | green (PR runs 43711458740/43711458686 api, 43711488807/43711488760 web) | subagent of the coordinator |
-| L5 Lookup applies picker filters | #288 | Not started | — | — | — | — |
+| L4 Builder rules and templates into the draft | #291 | Merged into next (2026-11-15) | api `a851436`, web-app `0d604fe`, workspace `4fa25605`; next: api `93c3d50f`, app `cd730f29`, ws `0ca9b1b6` | [web-api#35](https://github.com/PandiO/knk-web-api/pull/35), [web-app#40](https://github.com/PandiO/knk-web-app/pull/40), [#583](https://github.com/PandiO/knk-workspace/pull/583) | green (PR runs 43711458740/43711458686 api, 43711488807/43711488760 web) | subagent (two component repos, § 4.1.4); resumed once after a usage-limit stop |
+| L5 Lookup applies picker filters | #288 | Running (2026-11-15) | — | — | — | subagent (two component repos, § 4.1.4) |
 | L6 Player profile API part | #565 | Not started | — | — | — | — |
 | L7 Plugin carries out web kick/ban | #574 | Not started | — | — | — | — |
 
@@ -100,6 +100,21 @@
 16. **L4 start.** Gate open (L1 and L3 0 commits ahead of `next` in every repo they changed). Subagent route (knk-web-api
     and knk-web-app). The developer's #291 decision is in the prompt. Started while knk-web-app `next` CI after L3 was
     still running; a red result would stop the next merge, not the link.
+17. **L4 usage-limit stop (2026-11-15).** The L4 subagent stopped at the 5-hour usage limit after pushing its API and
+    web-app commits; I resumed it with a message after the reset (11:56 UTC) instead of starting a new one, so it kept
+    its context. Alternatives: (a) a fresh subagent continuing from the pushed branches: loses the link's decisions.
+18. **L4 check and merge (2026-11-15).** Chosen: merge knk-web-api#35, knk-web-app#40 and knk-workspace#583 into `next`,
+    because § 6 held: heads match, all three branches contain `next`, CI green on both code PRs, no review threads,
+    Codex at its usage limit (noted), scope inside #291 and the developer's decision (rules in `DraftJson` by field
+    GUID, applied on Publish; add-from-template removed after checking web app, knk-plugin `next` and scripts for
+    callers, which the decision allowed), 12 new xUnit tests, 9 Jest, a Playwright spec. I read the Publish apply:
+    rule ids from the draft only match rules of this form's own published fields (no cross-form update), refusals for
+    dangling fields and circular dependencies, old drafts without the list keep the published rules. One knk-workspace
+    merge commit (`4fa25605`) lacks the session trailers (git's default message); not rewritten, since that needs a
+    force push. Filed by L4: #582 (draft health check reads published rules). Deploy: API first or together.
+    Alternatives: (a) send L4 back to keep the endpoints writing into the draft: no caller exists.
+19. **L5 start.** Gate open (L4 0 commits ahead of `next` in all three repos). #387's PR #553 is still open, so today's
+    nodes hold. Subagent route.
 
 ## 4. Link blocks
 
