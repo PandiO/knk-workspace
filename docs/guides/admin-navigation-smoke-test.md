@@ -1,7 +1,7 @@
 # Web app admin navigation: route table, admin sidebar, breadcrumbs (#30) — smoke test
 
-**Status:** automated in CI; manual steps not run. Written 2026-11-05 for knk-web-app `claude/admin-ia-30` (chain 2 link W4); **merged 2026-11-12** (knk-web-app `main` `1371951`); 20 of 24 steps automated 2026-11-14 ([#511](https://github.com/PandiO/knk-workspace/issues/511)); found there: [#535](https://github.com/PandiO/knk-workspace/issues/535) (Mail log and Invitations scroll sideways at 390 px)
-**Last updated:** 2026-11-14 (steps marked `[automated]` with their test, backfill #511); 2026-11-12 (merged; run on `main`, docs #340); 2026-11-06 (§ 1: Dashboard kept in the bar, LW4-1)
+**Status:** automated in CI; manual steps not run. Written 2026-11-05 for knk-web-app `claude/admin-ia-30` (chain 2 link W4); **merged 2026-11-12** (knk-web-app `main` `1371951`); 20 of 24 steps automated 2026-11-14 ([#511](https://github.com/PandiO/knk-workspace/issues/511)), § 2.4 and § 4.4 of them partly; every step can still be run by hand. Found there and fixed 2026-11-15: [#535](https://github.com/PandiO/knk-workspace/issues/535) (Mail log and Invitations scrolled sideways at 390 px)
+**Last updated:** 2026-11-15 (§ 2.4 and § 4.4: full steps with `[partly automated: …]` tags, #535 fixed); 2026-11-14 (steps marked `[automated]` with their test, backfill #511); 2026-11-12 (merged; run on `main`, docs #340); 2026-11-06 (§ 1: Dashboard kept in the bar, LW4-1)
 **Issues:** [PandiO/knk-workspace#30](https://github.com/PandiO/knk-workspace/issues/30) (layout routes, route-meta
 table, grouped admin sidebar, breadcrumbs; sub-issue of [#24](https://github.com/PandiO/knk-workspace/issues/24));
 [#262](https://github.com/PandiO/knk-workspace/issues/262) (Invitations link never showed)
@@ -46,9 +46,13 @@ layout, CI job `build-and-test`); you don't repeat them. Left for you: the theme
    sidebar stays put when the page scrolls.)*
 3. [automated] Pages below a sidebar page keep its link current (player profile → Player moderation, a transaction →
    Balance event log, the dashboard → Dashboard): `e2e/admin-navigation.spec.ts`, `src/layouts/__tests__/AdminLayout.test.tsx`
-4. [automated] Below 1280 px the **Admin pages** button opens the list; Escape, a click outside and a choice close it; at
-   390 px nothing scrolls sideways on Game settings: `e2e/admin-navigation.spec.ts`. Mail log and Invitations do scroll sideways at 390 px:
-   [#535](https://github.com/PandiO/knk-workspace/issues/535).
+4. [partly automated: `e2e/admin-navigation.spec.ts` ("below 1280 px the "Admin pages" button opens the list…", "at 390 px Mail
+   log and Invitations scroll their table inside its box…", "at 390 px the Lootboxes tables and the catalogue audit…");
+   by hand: no sideways scroll at 390 px on the other admin pages] Below 1280 px (and at 390 px): an **Admin pages**
+   button above the page opens the same list; a choice, Escape or a click outside closes it. Nothing scrolls sideways
+   (except Entity setup at 390 px, which already did on `main`: see the W4 block). Mail log, Invitations, the Lootboxes
+   tables and the Minecraft catalogue audit scroll their table inside its box (fixed in
+   [#535](https://github.com/PandiO/knk-workspace/issues/535)).
 5. [automated] **Invitations** is in the sidebar (#262): `e2e/admin-navigation.spec.ts`
 
 ## 3. Breadcrumbs and titles
@@ -76,7 +80,9 @@ layout, CI job `build-and-test`); you don't repeat them. Left for you: the theme
    Balance event log, Game settings, Mail log: `e2e/admin-navigation.spec.ts`, `src/layouts/__tests__/AdminLayout.test.tsx`
 2. [automated] **Balance event log** and **Orphaned Locations** open from the sidebar: `e2e/admin-navigation.spec.ts`
 3. [automated] `/admin/users` and `/admin/siege-configuration` say "Staff only" with the node, the sidebar stays: `e2e/admin-navigation.spec.ts`
-4. [automated] At 390 px **Admin pages** lists the same five pages: `e2e/admin-navigation.spec.ts`
+4. [partly automated: `e2e/admin-navigation.spec.ts` ("at 390 px "Admin pages" lists the same five pages", on Mail log,
+   also with no sideways scroll); by hand: the trail sits under the button] At 390 px: **Admin pages** lists the same
+   five pages; the trail sits under the button.
 
 ## 5. Themes, background and errors
 

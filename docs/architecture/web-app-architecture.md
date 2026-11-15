@@ -1,6 +1,6 @@
 # knk-web-app — Architecture
 
-**Status:** Current · **Last updated:** 2026-11-14 (dashboard row actions pinned, `DataTable.rowContextMenu` and `ContextMenu`, shared `dashboardExport.ts`; #404, #405, #406, knk-web-app `next` `3f8ad46`, docs #526)
+**Status:** Current · **Last updated:** 2026-11-15 (table scroll boxes `relative` on the admin pages, #535); 2026-11-14 (dashboard row actions pinned, `DataTable.rowContextMenu` and `ContextMenu`, shared `dashboardExport.ts`; #404, #405, #406, knk-web-app `next` `3f8ad46`, docs #526)
 **Checked against:** knk-web-app `next` (per section; each section names its commit). Updated in place on each rescan.
 **Source scan:** `docs/reports/web-app-scan-2026-09-18.md`
 
@@ -532,6 +532,10 @@ Progress rows; the tables scroll inside their card. A table's scroll box is `rel
 positioned element without a positioned ancestor (the head's `sr-only` "Actions" label) is placed in page coordinates
 and widens the whole page even inside an `overflow-x-auto` box; `.dashboard-content` (`ObjectDashboard.css`) is
 `position: relative` for the same reason.
+The same holds for every admin table with a visually hidden head cell: Mail log, Invitations, the Lootboxes
+Types/Specials/Areas/Active tabs and the Minecraft catalogue audit got `relative` on their scroll box in #535
+(knk-web-app `e2e/admin-navigation.spec.ts` checks them at 390 px); `DataTable`'s hidden head cells sit in sticky,
+so positioned, cells and need nothing. A new table in an `overflow-x-auto` box takes `relative overflow-x-auto`.
 
 **Tabs in the URL** (#39): `/admin/lootboxes?tab=odds` and `/admin/users?tab=demoted` (`hooks/useTabParam.ts`;
 the default tab is left out, an unknown value reads as the default, switching replaces the history entry). On the
