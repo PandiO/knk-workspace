@@ -45,8 +45,8 @@ Every link is merged into `next` (2026-11-15). Build knk-plugin from `next` `deb
 | L6 Fix: follower access with overlapping gate region | #593 | Merged into next (2026-11-15) | knk-plugin `736b91c2` → `next` `3c3d481e`; knk-workspace `fed2b672` → `next` `a63d76ba` | PandiO/knk-plugin#45, PandiO/knk-workspace#604 | PR head green (build, paper-boot with 35 scenarios); the push run's log check hit #586 and was re-run; Codex at its usage limit | create_session session_01R1w2UuimaZUvf6HRSGtpmp (2026-11-15) |
 | L7 Fix: test walkers drown (#490) | #594 | Dropped (#490 audit clean on the right build; #594 closed) | — | — | — | — |
 | L8 Design: movement quality (steering, formation keeping, crowding, plaza road lines) | #603 | Merged into next (2026-11-15; design decided by the developer, 15 questions) | knk-workspace `e8836db0` → `next` `61c29c16` | PandiO/knk-workspace#605 | docs only (no CI); Codex at its usage limit | create_session session_01R1w2Uv7BDN1HKCV2gWe5Mz (2026-11-15) |
-| M1 Evidence and diagnostics | #621 | In review (PRs open, not merged; the stair house on the developer's schematic) | knk-plugin `3ce748e0`; knk-workspace `1310c3d9` | PandiO/knk-plugin#47, PandiO/knk-workspace#632 | PR head green (build, paper-boot with 45 scenarios, both runs); Codex at its usage limit | create_session session_01R1w2Uv6Untjy5RbmJTDd1T (2026-11-15) |
-| M2 Corridor steering (option A) | #622 | Not started (gate: M1 merged) | — | — | — | — |
+| M1 Evidence and diagnostics | #621 | Merged into next (2026-11-15) | knk-plugin `3ce748e0` → `next` `a527c980`; knk-workspace `1310c3d9` → `next` `a8dbfa80` | PandiO/knk-plugin#47, PandiO/knk-workspace#632 | PR head green (build, paper-boot with 45 scenarios, both runs); Codex at its usage limit | create_session session_01R1w2Uv6Untjy5RbmJTDd1T (2026-11-15) |
+| M2 Corridor steering (option A) | #622 | Running | — | — | — | create_session session_01R1w2UszyqgMVxpBHaUa2oH (2026-11-15) |
 | M6 Clearance-aware local legs (add-on D) | #623 | Not started (gate: M2 merged) | — | — | — | — |
 | M3 Formation keeping | #624 | Not started (gate: M6 merged) | — | — | — | — |
 | M5 Plaza lines | #625 | Not started (gate: M3 merged) | — | — | — | — |
@@ -191,6 +191,12 @@ Every link is merged into `next` (2026-11-15). Build knk-plugin from `next` `deb
     formations first); collision off for now, designed for (M7, push resistance; future: collision on); plaza lines on
     the NPC side, builder later; one key per link; WorldEdit schematic as evidence; order M1 → M2 → M6 → M3 → M5 →
     M4 → B checkpoint → M7. Merged PandiO/knk-workspace#605 → `61c29c16`. Sub-issues #621–#627 created; M1 started.
+
+24. **Schematic delivered and M1 merged** (2026-11-15). Cloud sessions can't download GitHub attachment URLs (proxy
+    403), so the developer uploaded the zip to the coordinator session. The coordinator pushed the .schem as data to
+    knk-plugin `evidence/stairhouse-schematic` (`8438ce87`, no PR), and M1 took it from there. M1's § 6 check held:
+    tests 2816/2832 → 2830/2851, 45 scenarios green in CI (timeouts raised), the developer's entrance jam reproduced as
+    a baseline. Merged PandiO/knk-plugin#47 → `a527c980` and PandiO/knk-workspace#632 → `a8dbfa80`. M2 started.
 
 ## 4. Link blocks
 
