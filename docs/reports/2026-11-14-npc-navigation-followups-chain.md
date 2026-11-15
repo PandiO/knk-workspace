@@ -42,7 +42,7 @@ Every link is merged into `next` (2026-11-15). Build knk-plugin from `next` `deb
 | L3 Wall-corner steering and recovery | #521 | Merged into next (2026-11-15) | knk-plugin `51072e94` → `next` `5dc88cfd`; knk-workspace `4308aaf1` → `next` `51bf5952` | PandiO/knk-plugin#36, PandiO/knk-workspace#557 | PR head green (build, paper-boot with Citizens, 19 scenarios); Codex at its usage limit | create_session session_01R1w2Uv1rEnwPko4Tq83xyL (2026-11-15) |
 | L4 Narrowed formations, followers-finish-trip toggle | #522 | Merged into next (2026-11-15) | knk-plugin `f965af06` → `next` `deb7ff49`; knk-workspace `bce76405` → `next` `ee9894ef` | PandiO/knk-plugin#39, PandiO/knk-workspace#584 | `build` green on `f965af06`; `paper-boot` green on one run, the other failed only the log check (#586, re-run); 31 scenarios; Codex at its usage limit | create_session session_01R1w2Uur6M3a3CaVDWJWCw7 (2026-11-15) |
 | L5 Fix: stair corner, ranks row at the landing | #592 | Merged into next (2026-11-15) | knk-plugin `011b1745` → `next` `8ad9df66`; knk-workspace `4a819546` → `next` `8bad205a` | PandiO/knk-plugin#43, PandiO/knk-workspace#599 | PR CI green on `011b1745` (build, paper-boot with 34 scenarios, both runs); Codex at its usage limit | create_session session_01R1w2UxAFomY5DQ18vRtAH6 (2026-11-15) |
-| L6 Fix: follower access with overlapping gate region | #593 | Running | — | — | — | create_session session_01R1w2UuimaZUvf6HRSGtpmp (2026-11-15) |
+| L6 Fix: follower access with overlapping gate region | #593 | In review (PRs open; cause: the realtime path, #533; the gate region is not the cause) | knk-plugin `736b91c2`; knk-workspace `fed2b672` | PandiO/knk-plugin#45, PandiO/knk-workspace#604 | PR head green (build, paper-boot with 35 scenarios); the push run's log check hit #586 and was re-run; Codex at its usage limit | create_session session_01R1w2UuimaZUvf6HRSGtpmp (2026-11-15) |
 | L7 Fix: test walkers drown (#490) | #594 | Dropped (#490 audit clean on the right build; #594 closed) | — | — | — | — |
 | L8 Design: movement quality (steering, formation keeping, crowding, plaza road lines) | #603 | In review (PR open; the developer approves before implementation) | knk-workspace `939ebd8` | PandiO/knk-workspace#605 | docs only (no CI); Codex at its usage limit | create_session session_01R1w2Uv7BDN1HKCV2gWe5Mz (2026-11-15) |
 
@@ -462,6 +462,53 @@ _(Each link appends its block here when it finishes.)_
     1. L6 and L7: nothing of theirs touched (no access-rule or test-walker code).
     2. `WaypointChain.bridged(world, from, waypoints)` is reusable for any waypoint list.
     3. `NpcMover.verticalSpeed()` is the fall signal for Citizens.
+
+### 4.6 L6 — Followers enter a district whose entry was removed, with a gate region over its entry (#593: #506, #533)
+
+1. **Scope done** (behind `npc.navigation.enabled`, no new config key).
+    1. **Candidate 1, the realtime path, is the cause.** A district's AllowEntry changed in the web app arrives as `EntityChanged` (KnKPlugin's handler clears the region → domain map) and `DomainAccessChanged` (only `DomainAccessFlagSync`). Neither told NPC navigation. `NavGroup` kept its per-region verdicts from before the change (cleared only by `rulesChanged`), the NPC checks count a region missing from the map as open, and the followers walked in with `trespasses 0`. The new `NavGroupDomainRulesTest`, run with the event left out of the realtime path (`next`'s behaviour), fails: `npc-11 entered the district at x=50.17`.
+    2. **Why the refresh didn't stop them either.** On the right jar the refresh path works with the gate region (tested). The likely reason is that it came after the outside followers had walked in under the stale verdicts. The developer's log is not in the issue, so this is inferred from the code and the tests.
+    3. **Candidate 2, the overlapping gate region, is not the cause.** `DomainAvailability.mayEnter` judges each region on its own, and `DomainAccessEvaluator` has no priority, so a step into `district_1000004` and `gate_2000131` at once needs both allowed. The API's parent decisions carry their own `allowEntry` (swagger `DomainRegionDecisionDto`), so warming the gate region after the district keeps the district's deny (tested). A gate region without a domain is open but does not hide the district's deny (tested).
+    4. **Candidate 3, the group recheck:** correct once the event arrives. The leader inside replans nobody, and the followers' lanes are rechecked in the next tick.
+    5. **knk-plugin.**
+        1. `RegionDomainResolver.refreshRegions(world, regions)`: re-asks each region now, keeping the cached entry until the answer is in.
+        2. `paper/navigation/NavigationDomainChanges`: the four domain types' `EntityChanged` and `DomainAccessChanged` ask, coalesced under one key, for a second `DomainCacheRewarm` over `refreshRegions`, which then sends the availability event (only while NPC navigation runs). It is wired in `KnKPlugin.registerConfigSync` (field `navigationDomainRewarm` set in `initializeNavigation`).
+        3. `core/npc/nav/DomainEntryRule`: `NavigationAccess.mayEnter(AccessSubject)` moved to core, unchanged.
+        4. `NpcNavigationService.onAvailabilityChanged`: the NPC's own trespass guard takes a fresh look, as L2 did for followers. The new scenario had caught `TRESPASS` for a leader that crossed in the second before the denial arrived.
+        5. Scenario `npc-group-realtime-entry`, `MIN_SCENARIOS` 35.
+    6. **knk-workspace.** Changelog entry; plan Phase 4 known limit 4 and step 10 (realtime on, no refresh, partly automated); `ci.md` § 7.1. No new key, so configuration reference § 4.27 is unchanged. Developer test steps are posted on #593.
+2. **Commits and heads.**
+    1. knk-plugin `claude/npc-followups-l6` at `736b91c2`: 2 commits on `next` `8ad9df66`.
+    2. knk-workspace `claude/npc-followups-l6` at `fed2b672`: 2 docs commits on `next`.
+3. **PRs.** PandiO/knk-plugin#45 (`Closes` #593 and #533, `Part of` #506) and PandiO/knk-workspace#604 (`Part of`), base `next`. Not merged.
+4. **Tests, baseline → result.**
+    1. knk-plugin `./gradlew build -x deployToDevServer`: baseline on `next` `8ad9df66` core 2806, api-client 344 (2 skipped), paper 2824 (18 skipped). Result on `736b91c2`: core 2816 (+10), api-client 344, paper 2830 (+6). 0 failures.
+    2. New tests:
+        1. `NavGroupDomainRulesTest` (5): realtime, `DomainAccessChanged` and refresh paths with the gate region, a gate region without a domain, the per-region step.
+        2. `RegionDomainResolverTest` +3.
+        3. `NpcNavigationRulesTest` +2.
+        4. `NavigationDomainChangesTest` (6).
+        5. `PaperScenariosTest` updated for 35.
+    3. Scenarios, locally (Paper 26.3 b205, WorldEdit, WorldGuard, Citizens b4269, `--min-scenarios 35 --npc-navigation`): on `57cadeb4`, 34/35, with `npc-group-realtime-entry` failing `trespasses 1` (the leader, fixed in `736b91c2`). On `736b91c2`, 35/35, log check passed.
+    4. CI on `736b91c2`: the PR runs `build` 43729074620 and `paper-boot` 43729074545 are green. The push run's `paper-boot` 43728303099 passed 35/35 scenarios but its log check hit #586 (`ScnRejoiner … Failed to check duplicate`), so its failed job was re-run.
+    5. Known reds: none. Codex: at its usage limit (said on the PR).
+5. **Decisions (DESIGN § 4.3).**
+    1. *How the realtime path reaches the NPCs.* Chosen: re-ask the roads' regions in place (`refreshRegions`) after the coalescer's delay, then the availability event, because the last known rule keeps serving until the answer is in. Alternatives: (a) `warmCache` after the existing clear only (the `DomainAccessChanged` path does not clear, so a stale "allowed" would stay); (b) also clear on `DomainAccessChanged` (changes the map for players too); (c) an immediate event before the re-warm, as the refresh path does (answers from an empty map, all open, which is no better than the stale verdicts).
+    2. *Which events.* Chosen: `EntityChanged` for Town, District, Structure and DomainSubRegion, and `DomainAccessChanged`, all under one coalescer key, so one save gives one re-warm. Alternatives: (a) `EntityChanged` only (misses a change that arrives only as `DomainAccessChanged`); (b) per-event keys (two re-warms per save).
+    3. *Leader's guard.* Chosen: an availability event resets an NPC's guard regions to where it stands, as `NavGroup.rulesChanged` does for followers. Alternatives: (a) leave it (a false trespass for any NPC crossing in the second before the change arrives); (b) make the scenario start the change earlier (hides a real guard flaw).
+    4. *Shared entry rule.* Chosen: move `NavigationAccess.mayEnter(AccessSubject)` into core `DomainEntryRule`, so the group tests read the rules as the server does. Alternatives: (a) a copy in the test sim (could drift); (b) knk-paper tests over the core `GroupSim` (test fixtures are not shared between modules).
+    5. *Scenario API.* Chosen: the real router, coalescer, `NavigationDomainChanges` and `DomainCacheRewarm`, with a fake API answering 10 ticks later and the outside/inside split taken at the event. Alternatives: (a) `ScenarioNpcRules.deny` (does not exercise the realtime wiring); (b) the split at the web-app change (counts followers who enter during the API's second as failures).
+6. **Out of scope, noted.**
+    1. The re-warm covers the road network's regions only. A region the group's path passes that no road edge lists, and that is not a parent of one, stays unknown (open) after a realtime clear. Not filed: not seen, and the gate region's answer registers its parent district anyway.
+    2. If step 10 still fails, check the district's road rule ("Ignored" for roads skips its rule on roads, rev. 7 Part C). This is noted in the #593 test steps.
+7. **Blockers.** None.
+8. **At merge / what the developer must do.**
+    1. Nothing in `config.yml`, no migration. Deploy the plugin and check the startup line `0.1.0+<sha>`.
+    2. Run the developer test steps on #593 (plan Phase 4 step 10: realtime on, without `/knk cache refresh`, then once with it) and post the stats and the log there.
+9. **Notes for later links.**
+    1. `RegionDomainResolver.refreshRegions` and `NavigationDomainChanges` are reusable for any realtime rule change that NPC navigation must hear of.
+    2. `NpcNavigationService.onAvailabilityChanged` now reads each NPC's regions (one WorldGuard query per NPC per event).
+    3. L8 and the movement links: nothing of theirs touched (`RouteFollower`, `HopPlanner`, `WaypointChain`, `CornerClearance`, formations, lanes).
 
 ### 4.8 L8 — Design: movement quality (steering, formation keeping, crowding, plaza road lines) (#603)
 
