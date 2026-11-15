@@ -14,16 +14,14 @@
 ## 1. Waiting for the developer
 
 1. Phase 4 test steps 9 and 10 for L2 (#520), on a plugin built from `next` `11e07d64` or later (steps on #520).
-2. **Approve the L1 design** (PandiO/knk-workspace#546, plan Phase 4b, questions 4b.4 1–12, also on #519). The
-   coordinator merges #546 into `next` after the approval; that and L2 (merged) open L3. No running link until then.
 
 ## 2. Summary
 
 | Link | Issue | Status | Branch heads | PR | CI | How started |
 |---|---|---|---|---|---|---|
-| L1 Design: corners, narrowed formations, toggle | #519 | In review (PR open, waits for the developer's approval and answers) | knk-workspace `b2d586a` | PandiO/knk-workspace#546 | docs only (no CI); Codex at its usage limit | create_session session_01R1w2UwysEMwCYnxwCpkx3p (2026-11-15) |
+| L1 Design: corners, narrowed formations, toggle | #519 | Merged into next (2026-11-15, design approved by the developer) | knk-workspace `96f47820` → `next` `4a97fd3b` | PandiO/knk-workspace#546 | docs only (no CI); Codex at its usage limit | create_session session_01R1w2UwysEMwCYnxwCpkx3p (2026-11-15) |
 | L2 Follower recheck and guard, no gate push | #520 | Merged into next (2026-11-15, by the manager session) | knk-plugin `651d8bff` → `next` `11e07d64`; knk-workspace → `next` `43a2328c` | PandiO/knk-plugin#31, PandiO/knk-workspace#536 | PR head green (build, paper-boot); `next` runs 43662028862, 43662028855 pending at the coordinator check | create_session session_01R1w2Ux2KpS7H3FidwDEZmp (2026-11-14) |
-| L3 Wall-corner steering and recovery | #521 | Not started (gate: L1 approved and merged, L2 merged) | — | — | — | — |
+| L3 Wall-corner steering and recovery | #521 | Running | — | — | — | create_session session_01R1w2Uv1rEnwPko4Tq83xyL (2026-11-15) |
 | L4 Narrowed formations, followers-finish-trip toggle | #522 | Not started (gate: L3 merged) | — | — | — | — |
 
 ## 3. Coordinator decisions
@@ -85,6 +83,11 @@
     approval. Alternatives: (a) merge now as "proposed" (skill § 7.1 merges every tier at once; but the design would
     then sit in `next` with twelve unconfirmed defaults, and a change to them is a second PR). CI on knk-plugin `next`
     after L2: `build` and `paper-boot` green (runs 43662028862, 43662028855).
+
+13. **L1 approved and merged** (2026-11-15). The developer approved the design with all twelve proposed defaults
+    (coordinator session; recorded on #519). L1 marked them decided (`96f47820`), and the coordinator merged
+    PandiO/knk-workspace#546 into `next` (`4a97fd3b`, merge commit). L3's gate is open: L1 and L2 are in `next`
+    (rev-list counts 0) and no knk-plugin PR is open. L3 started with create_session.
 
 ## 4. Link blocks
 
