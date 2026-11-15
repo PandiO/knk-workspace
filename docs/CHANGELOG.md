@@ -4,7 +4,6 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
-<<<<<<< HEAD
 - **Plugin: the plain `/heal` is K&K's also on servers with WorldGuard**
   ([PandiO/knk-workspace#580](https://github.com/PandiO/knk-workspace/issues/580); developer decision 2026-11-15:
   option 1) — knk-plugin and knk-workspace branches `claude/heal-takeover-580` (PRs into `next`).
@@ -22,7 +21,6 @@ This is a human-readable record of capabilities merged into the V3 default branc
      [smoke test](guides/heal-takeover-smoke-test.md), [writing a plugin scenario § 1](guides/developer/plugin-scenarios.md),
      [CI § 7.1](guides/developer/ci.md).
   - **Admin steps:** none (no `config.yml` key, no new node, no API change).
-=======
 - **NPC navigation: formations narrow before they fold, followers can finish their trip**
   ([PandiO/knk-workspace#522](https://github.com/PandiO/knk-workspace/issues/522) for
   [#493](https://github.com/PandiO/knk-workspace/issues/493) and [#507](https://github.com/PandiO/knk-workspace/issues/507);
@@ -91,7 +89,6 @@ This is a human-readable record of capabilities merged into the V3 default branc
      (lookups), web-app architecture (relation picker), [access model § 4.6.3](specs/dashboard-access-model/DESIGN.md).
   - **Admin steps:** none (no migration, no setting, no new node). Deploy the **API first** (or together): an older API
      ignores `filters` and would answer with the unfiltered list, which the old web app refused to show.
->>>>>>> origin/next
 - **Form builder: field validation rules are part of the draft and go live on Publish; add-from-template endpoints removed**
   ([PandiO/knk-workspace#291](https://github.com/PandiO/knk-workspace/issues/291); link L4 of the Chain 3 follow-ups
   chain, [#564](https://github.com/PandiO/knk-workspace/issues/564)) — knk-web-api, knk-web-app and knk-workspace
