@@ -1,7 +1,7 @@
 # NPC navigation follow-ups chain — charter
 
-**Status:** Running (2026-11-14)
-**Last updated:** 2026-11-14
+**Status:** Done (2026-11-15): all links merged into `next`; developer tests and promotion open
+**Last updated:** 2026-11-15
 **Issues:** parent [PandiO/knk-workspace#358](https://github.com/PandiO/knk-workspace/issues/358); link sub-issues
 [#519](https://github.com/PandiO/knk-workspace/issues/519) (L1),
 [#520](https://github.com/PandiO/knk-workspace/issues/520) (L2),

@@ -1,6 +1,6 @@
 # NPC navigation follow-ups chain — progress report
 
-**Status:** Running (2026-11-14) · **Last updated:** 2026-11-14
+**Status:** Done, in review (all links merged into `next`; developer tests and promotion open) (2026-11-15) · **Last updated:** 2026-11-15
 
 **Issue:** [PandiO/knk-workspace#358](https://github.com/PandiO/knk-workspace/issues/358), links
 [#519](https://github.com/PandiO/knk-workspace/issues/519) (L1),
@@ -13,10 +13,21 @@
 
 ## 1. Waiting for the developer
 
-1. Phase 4 test steps 9 and 10 for L2 (#520), on a plugin built from `next` `11e07d64` or later (steps on #520).
+Every link is merged into `next` (2026-11-15). Build knk-plugin from `next` `deb7ff49` or later, merge the new
+`config.yml` keys (YAML in the changelog and the configuration reference § 4.27; `stationary-ticks` and
+`no-progress-ticks` 40, `group-spacing` 1.5), restart. In test order:
 
-2. L3 test steps on #521, on a plugin built from `next` `5dc88cfd` or later, after merging the new `config.yml` keys
-   (YAML in the changelog and the configuration reference § 4.27; `stationary-ticks` and `no-progress-ticks` 40).
+1. **L2 (#520):** Phase 4 steps 9 and 10 (gate closing mid-group, access change mid-group).
+2. **L3 (#521):** the corner and recovery steps on `quarry-to-keep` (the stair corner 1411 73 -537, the 1433 44 -517
+   landing) and the short south-gate route.
+3. **L4 (#522):** narrowed formations, the followers-finish-trip toggle, and the #490 audit re-run
+   (`/knk npc test spawn 50 24`, no `DROWNING` in `causes:`).
+4. **Review of the agent decisions:** blocks 4.2 § 5, 4.3 § 5 (13), 4.4 § 5 (8). Behaviour-changing: 4.2 decisions 1–3
+   (followers stop short of a door; cache re-warm; the follower guard counts but does not stop); 4.3 decisions 1, 5, 6,
+   8; 4.4 decisions 2 (stairs as a column), 5 (toggle off: a held follower waits on the leader's new route), 6 (a
+   follower in the margin before a moving door steps back, changing L2's rule).
+5. **Promotion of `next`** once the tests pass; then the issues #519–#522, #506, #507, #508, #491, #492, #493 close.
+6. Docs: #589, in its own docs session (session_01R1w2UvjZEQ5uyXDYDCqAfs).
 
 ## 2. Summary
 
@@ -25,7 +36,7 @@
 | L1 Design: corners, narrowed formations, toggle | #519 | Merged into next (2026-11-15, design approved by the developer) | knk-workspace `96f47820` → `next` `4a97fd3b` | PandiO/knk-workspace#546 | docs only (no CI); Codex at its usage limit | create_session session_01R1w2UwysEMwCYnxwCpkx3p (2026-11-15) |
 | L2 Follower recheck and guard, no gate push | #520 | Merged into next (2026-11-15, by the manager session) | knk-plugin `651d8bff` → `next` `11e07d64`; knk-workspace → `next` `43a2328c` | PandiO/knk-plugin#31, PandiO/knk-workspace#536 | PR head green (build, paper-boot); `next` runs 43662028862, 43662028855 pending at the coordinator check | create_session session_01R1w2Ux2KpS7H3FidwDEZmp (2026-11-14) |
 | L3 Wall-corner steering and recovery | #521 | Merged into next (2026-11-15) | knk-plugin `51072e94` → `next` `5dc88cfd`; knk-workspace `4308aaf1` → `next` `51bf5952` | PandiO/knk-plugin#36, PandiO/knk-workspace#557 | PR head green (build, paper-boot with Citizens, 19 scenarios); Codex at its usage limit | create_session session_01R1w2Uv1rEnwPko4Tq83xyL (2026-11-15) |
-| L4 Narrowed formations, followers-finish-trip toggle | #522 | In review (2026-11-15) | knk-plugin `f965af06`, knk-workspace `59f5f3b2` (`next` merged again 2026-11-15) | PandiO/knk-plugin#39, PandiO/knk-workspace#584 | `build` green on `f965af06`; `paper-boot` green on one run, the other failed only the log check (#586, re-run); 31 scenarios; Codex at its usage limit | create_session session_01R1w2Uur6M3a3CaVDWJWCw7 (2026-11-15) |
+| L4 Narrowed formations, followers-finish-trip toggle | #522 | Merged into next (2026-11-15) | knk-plugin `f965af06` → `next` `deb7ff49`; knk-workspace `bce76405` → `next` `ee9894ef` | PandiO/knk-plugin#39, PandiO/knk-workspace#584 | `build` green on `f965af06`; `paper-boot` green on one run, the other failed only the log check (#586, re-run); 31 scenarios; Codex at its usage limit | create_session session_01R1w2Uur6M3a3CaVDWJWCw7 (2026-11-15) |
 
 ## 3. Coordinator decisions
 
@@ -99,6 +110,15 @@
     entries at the top): mechanical, so the coordinator merged `origin/next` into it keeping both (`4308aaf1`, skill
     § 7.3). Merged PandiO/knk-plugin#36 → `5dc88cfd` and PandiO/knk-workspace#557 → `51bf5952`. L4's gate opened;
     L4 started.
+
+15. **L4 checked and merged; chain done** (2026-11-15). L4 was sent back once to merge `next` (knk-plugin#38 / #540
+    conflicted in `paper-boot.yml` and the scenario count test). After that the plugin branch contained `next`, CI
+    `build` and `paper-boot` green on `f965af06`, no Codex findings (usage limit), tests 2756 → 2777 core and 2782 →
+    2789 paper, the three L4 scenarios in the run. `next` in knk-workspace moved again during the check (changelog
+    conflict, both sides added entries): mechanical, the coordinator merged `origin/next` into the docs branch
+    (`bce76405`). Merged PandiO/knk-plugin#39 → `deb7ff49` and PandiO/knk-workspace#584 → `ee9894ef`, at the
+    manager's request so #522 could join the developer's test round. Documentation sub-issue #589 opened and its docs
+    session started (session_01R1w2UvjZEQ5uyXDYDCqAfs).
 
 ## 4. Link blocks
 
