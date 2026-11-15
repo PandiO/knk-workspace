@@ -1,12 +1,13 @@
-# Form wizard relation picker and "Show what uses it" on refused deletes (#191, #44, #289) — smoke test
+# Form wizard relation picker and "Show what uses it" on refused deletes (#191, #44, #289, #288) — smoke test
 
-**Status:** 27 of 32 steps automated in CI (tagged `[automated: …]`, one of them `[partly automated: …]`; § 4.8–4.12 and § 5.3 "Show what uses it" on Entity setup, bulk delete rows and skipped created entities in `e2e/entity-setup-delete-details.spec.ts`, `e2e/dashboard-access.spec.ts` and Jest, #289, 2026-11-15; [#511](https://github.com/PandiO/knk-workspace/issues/511), 2026-11-14: the picker in its Jest tests, "Show what uses it" in `e2e/dashboard-access.spec.ts` and Jest; § 6.2–6.3 list field cards in `e2e/form-wizard-list-field.spec.ts`, #290, 2026-11-15); every step can still be run by hand; manual steps not run. Untagged, by hand only: the unchanged-pages check § 3, the collection item's Delete § 4.5, themes § 6.1. Written 2026-11-09 for knk-web-app and knk-web-api `claude/picker-details-191-44` (chain 3 link V6); **merged 2026-11-12** (knk-web-api `master` `bc97b7d` and knk-web-app `main` `1371951`, with V7); written before the backfill
-**Last updated:** 2026-11-15 (§ 4.8–4.12, § 5.3: "Show what uses it" for a refused form configuration delete, bulk delete rows and "skipped: in use", #289, knk-web-app and knk-web-api `claude/show-what-uses-it-289`, PRs into `next`, automated); 2026-11-15 (§ 6.2–6.3 list field cards at 390 px, #290, automated); 2026-11-15 (every step in full again, covered steps tagged `[automated: …]` or `[partly automated: …]`, developer decision 2026-11-15, #511); 2026-11-15 (§ 4.5 on a district's Streets: a town's Streets have no Delete since #409, docs #559); 2026-11-14 (steps marked `[automated]` with their test, backfill #511); 2026-11-12 (test on the default branches, docs #344); 2026-11-12 (merged with V7); 2026-11-09
+**Status:** 28 of 33 steps automated in CI (tagged `[automated: …]`, one of them `[partly automated: …]`; § 2.4–2.5 lookup mode with a filtered field in `e2e/relation-picker-lookup-filters.spec.ts`, Jest and knk-web-api `Api/LookupFiltersTests.cs`, #288, 2026-11-15; § 4.8–4.12 and § 5.3 "Show what uses it" on Entity setup, bulk delete rows and skipped created entities in `e2e/entity-setup-delete-details.spec.ts`, `e2e/dashboard-access.spec.ts` and Jest, #289, 2026-11-15; [#511](https://github.com/PandiO/knk-workspace/issues/511), 2026-11-14: the picker in its Jest tests, "Show what uses it" in `e2e/dashboard-access.spec.ts` and Jest; § 6.2–6.3 list field cards in `e2e/form-wizard-list-field.spec.ts`, #290, 2026-11-15); every step can still be run by hand; manual steps not run. Untagged, by hand only: the unchanged-pages check § 3, the collection item's Delete § 4.5, themes § 6.1. Written 2026-11-09 for knk-web-app and knk-web-api `claude/picker-details-191-44` (chain 3 link V6); **merged 2026-11-12** (knk-web-api `master` `bc97b7d` and knk-web-app `main` `1371951`, with V7); written before the backfill
+**Last updated:** 2026-11-15 (§ 2.4–2.5: lookup mode applies the field's narrowing filters, a refused filter says so, #288, knk-web-app and knk-web-api `claude/lookup-picker-filters-288`, PRs into `next`, automated); 2026-11-15 (§ 4.8–4.12, § 5.3: "Show what uses it" for a refused form configuration delete, bulk delete rows and "skipped: in use", #289, knk-web-app and knk-web-api `claude/show-what-uses-it-289`, PRs into `next`, automated); 2026-11-15 (§ 6.2–6.3 list field cards at 390 px, #290, automated); 2026-11-15 (every step in full again, covered steps tagged `[automated: …]` or `[partly automated: …]`, developer decision 2026-11-15, #511); 2026-11-15 (§ 4.5 on a district's Streets: a town's Streets have no Delete since #409, docs #559); 2026-11-14 (steps marked `[automated]` with their test, backfill #511); 2026-11-12 (test on the default branches, docs #344); 2026-11-12 (merged with V7); 2026-11-09
 **Issues:** [PandiO/knk-workspace#191](https://github.com/PandiO/knk-workspace/issues/191) (search-as-you-type relation
 picker), [PandiO/knk-workspace#44](https://github.com/PandiO/knk-workspace/issues/44) (FeedbackModal "Show details");
-access model [#280](https://github.com/PandiO/knk-workspace/issues/280); more refusals [#289](https://github.com/PandiO/knk-workspace/issues/289)
+access model [#280](https://github.com/PandiO/knk-workspace/issues/280); more refusals [#289](https://github.com/PandiO/knk-workspace/issues/289);
+lookup filters [#288](https://github.com/PandiO/knk-workspace/issues/288)
 
-About 35 minutes for a full manual run, about 5 for the untagged steps. **One new API endpoint (`GET api/EntityReferences/{type}/{id}/rows`), no migration, no setting.** Since the
+About 40 minutes for a full manual run, about 5 for the untagged steps. **One new API endpoint (`GET api/EntityReferences/{type}/{id}/rows`), no migration, no setting.** Since the
 2026-11-12 merge, test it on knk-web-api `master` (from `bc97b7d`) and knk-web-app `main` (from `1371951`). The feature
 branches were `claude/picker-details-191-44` in both repos.
 
@@ -50,9 +51,23 @@ You need:
    the line "Names only: the full Street table needs one of: knk.admin.world, knk.road.manage."
 3. [automated: `src/components/FormWizard/__tests__/RelationPicker.test.tsx`, "picks a bare reference"] Pick one: the card shows the name and ID. (Saving a Structure needs `knk.admin.world`, so Submit is refused by the
    API for C; that is the write rule, not the picker. A form of C's own area with a field to another area saves the id.)
-4. [automated: `src/components/FormWizard/__tests__/RelationPicker.test.tsx`, "refuses filters that would narrow the list"; `src/utils/forms/__tests__/relationPicker.test.ts`] A field whose picker filters narrow the list (e.g. a siege team scoped to a scenario) says "This list is narrowed by
-   … which only the full … search can do. Requires one of: …" instead of offering every row. (A `prefer…` filter only
-   ordered the list and is ignored.)
+4. [automated: `e2e/relation-picker-lookup-filters.spec.ts`, "a filtered relation field in lookup mode offers only the narrowed list"; `src/components/FormWizard/__tests__/RelationPicker.test.tsx`, "sends the narrowing and prefer filters to the lookup"; `src/utils/forms/__tests__/relationPicker.test.ts`; knk-web-api `Api/LookupFiltersTests.cs`] Lookup mode with a filtered field (#288). Give C `knk.admin.content` but not
+   `knk.siege.admin.manage`, and have a siege scenario with two teams plus a second scenario with another team. As C,
+   open the first scenario's edit form (Dashboard → Siege scenario → the scenario → Edit, or `/forms/SiegeScenario`
+   with it), go to its Objectives step and add or edit an objective. Click into the **Initial holder team** box (its
+   picker filters scope it to the scenario's teams): the list shows only that scenario's two teams, names with the role
+   as the detail line, and "Names only: the full Siege team table needs one of: knk.siege.admin.manage."; the other
+   scenario's team is not offered, and there is no "This list is narrowed by …" message. In the network tab the request
+   is `POST api/Lookup/SiegeTeam/search` with `"filters": { "siegeScenarioId": "<id>" }` and the answer holds only
+   `id`, `label` and `detail` per row. A `prefer…` filter (a team's Clan picker prefers the scenario's town) only orders
+   the list; `excludeIds` is still applied in the browser.
+5. [automated: `e2e/relation-picker-lookup-filters.spec.ts`, "a filter the lookup refuses shows which filter only the full search can apply"; `src/components/FormWizard/__tests__/RelationPicker.test.tsx`, "says which filter only the full search can apply"; knk-web-api `Api/LookupFiltersTests.cs`, "AFilterTheLookupDoesNotTake_Is400_AndTheSearchDoesNotRun"] A filter the type's lookup doesn't take (#288). As A, in the form builder give a
+   Gate structure field of a test form the settings JSON `{"pickerFilters":{"gateType":"DRAWBRIDGE"}}` (Save, Publish;
+   revert it afterwards). As C (without `knk.admin.world`), open that form and click into the field: the picker says
+   "This list is narrowed by gateType, which only the full … search can do. Requires one of: knk.admin.world." (the
+   type's display name in place of …) in red and offers no rows. The network tab shows `POST api/Lookup/GateStructure/search`
+   answered 400 `LookupFilterNotAllowed` with `"filters": ["gateType"]`. As A the same field uses the full search and
+   lists the drawbridge gates.
 
 ## 3. Nothing else changed
 

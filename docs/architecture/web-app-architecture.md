@@ -1,6 +1,6 @@
 # knk-web-app — Architecture
 
-**Status:** Current · **Last updated:** 2026-11-15 (form builder: validation rules in the draft, #291 in review); 2026-11-15 ("Show what uses it" on Entity setup's configuration delete, bulk delete rows and a cancelled form's "skipped: in use", #289, knk-web-app#39 in `next`); 2026-11-15 (§ Staff permission screens: PermissionGrant table, group Permissions panel, profile Effective Permissions card; #408, #50, #407 in knk-web-app `next`, docs #576)
+**Status:** Current · **Last updated:** 2026-11-15 (relation picker: lookup mode sends the field's filters, #288 in review); 2026-11-15 (form builder: validation rules in the draft, #291 in review); 2026-11-15 ("Show what uses it" on Entity setup's configuration delete, bulk delete rows and a cancelled form's "skipped: in use", #289, knk-web-app#39 in `next`); 2026-11-15 (§ Staff permission screens: PermissionGrant table, group Permissions panel, profile Effective Permissions card; #408, #50, #407 in knk-web-app `next`, docs #576)
 **Checked against:** knk-web-app `next` (per section; each section names its commit). Updated in place on each rescan.
 **Source scan:** `docs/reports/web-app-scan-2026-09-18.md`
 
@@ -935,9 +935,13 @@ ignores a handled Escape). Single: a pick replaces the value and closes the list
 filter, pinned rows, selection; a single pick closes it). **Access** (#280, `relationAccess`): with one of the related
 type's metadata `readNodes` (or when the metadata names none) the type's own search; without one `lookupClient.search`
 (`api/Lookup`, names and one detail line, no full table, picked as `{ id, name }` like an edit-loaded reference); a
-type without a lookup says "can't be searched here. Requires one of: …". A lookup takes no filters: `prefer…` filters
-are dropped, `excludeIds` is applied on the page, any other pickerFilter makes the picker say why instead of offering an
-unfiltered list (`lookupFilterPlan`).
+type without a lookup says "can't be searched here. Requires one of: …". **Lookup filters** (PandiO/knk-workspace#288,
+knk-web-app branch `claude/lookup-picker-filters-288`, in review): the lookup gets the field's pickerFilters
+(`lookupFilterPlan`: every filter with a value, `prefer…` ones included; `excludeIds` stays on the page), so a filtered
+field (a siege team scoped to its scenario) offers the narrowed list. Only a 400 `LookupFilterNotAllowed` (a filter the
+type's lookup doesn't take, `lookupFilterRefusal`) makes the picker say "This list is narrowed by …, which only the full
+… search can do. Requires one of: …" instead of offering records the form would not accept; an unusable value shows the
+API's reason. Tests: `RelationPicker.test.tsx`, `relationPicker.test.ts`, `e2e/relation-picker-lookup-filters.spec.ts`.
 
 **Picker columns** (KNG-166): `PagedEntityTable` shows the entity's saved default table columns
 (Entity setup page → Default Table Columns) or else the built-in columns of
