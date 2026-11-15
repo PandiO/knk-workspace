@@ -334,3 +334,4 @@ _(Each link appends its block here when it finishes.)_
     2. knk-workspace: merged `origin/next` → `59f5f3b2`. The changelog conflict was additive; the L4 entry now says 31 scenarios.
     3. Tests after the merge: core 2788, api-client 340 (2 skipped), paper 2796 (18 skipped), 0 failures. Locally 31/31 scenarios passed.
     4. CI on `f965af06`: `build` green twice. `paper-boot` green on one run (43713989156). On the other run (43713985090) all 31 scenarios passed but the server-log check failed on an error from a #540 player scenario's fake player against the unreachable API; I filed #586 and re-ran that failed job.
+    5. The re-run went green (job 132813641643): `build` and `paper-boot` green on both runs at `f965af06`. The coordinator merged PandiO/knk-plugin#39 into `next` (`deb7ff49`) and resolves the workspace changelog conflict and PandiO/knk-workspace#584 itself; L4 pushes nothing more to `claude/npc-followups-l4`.
