@@ -234,8 +234,9 @@ Each scenario gets a `ScenarioScene`: an empty box of 32 × 24 × 32 blocks (x, 
       the same format (deterministic bytes: rerun it after a change and commit the files). `NpcMovementScene` holds the
       points the scenarios use for each scene (the road line, starts, goals, watched areas), and
       `NpcMovementSceneTest` checks that each of them stands on a floor of its schematic.
-   5. **The developer's stair house:** until `knk-stairhouse.schem` is posted on
-      [#603](https://github.com/PandiO/knk-workspace/issues/603), the stair-house scenarios use the stand-in
+   5. **The developer's stair house:** the developer's `knk-stairhouse.schem` is attached (zipped) to
+      [#603](https://github.com/PandiO/knk-workspace/issues/603), which a cloud session cannot download; until it is
+      committed to a repository, the stair-house scenarios use the stand-in
       `npc-stairhouse-standin.schem`, built from the plan's description in the real place (lowest corner
       1400 46 -515, copied standing in the entrance 1413 49 -508). When the file arrives, commit it next to the
       stand-in, take the road line and the points from its geometry (and the developer's trace) into
