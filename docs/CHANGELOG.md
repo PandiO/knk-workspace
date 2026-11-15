@@ -4,6 +4,28 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **NPC navigation: movement evidence and diagnostics** ([PandiO/knk-workspace#621](https://github.com/PandiO/knk-workspace/issues/621),
+  link M1 of the NPC navigation follow-ups chain, implementation plan Phase 4c.4 item 1 and 4c.5). knk-plugin and
+  knk-workspace branches `claude/npc-movement-m1` (PRs into `next`, in review). No behaviour change, no new
+  `config.yml` key; nothing changes for players or with `npc.navigation.enabled: false` (the default).
+  1. **Why a group folded.** Every fold and narrowing now names its cause in the log line ("folds into a column: the
+     path is too narrow for 2 abreast (stair) at …") and counts it: `stair` (a step on the path), `narrow` (no floor
+     where a lane would stand), `door` (a gate door on the route), `rules` (a lane in other WorldGuard regions) and
+     `edge` (a lane with floor but no room at its shoulder, a jutting wall piece). The groups line of
+     `/knk npc nav stats` shows them ("folds 3 (stair 2, door 1)") and the metrics have
+     `knk_npc_nav_group_width_reasons_total{change, reason}`. Counting only: the widths are chosen as before.
+  2. **How much room the line has.** `/knk npc nav trace` writes a `# corridor:` line after each `# waypoints:` line:
+     each waypoint's free width across the line (total, left, right in blocks, to the nearest wall, post, full-block
+     step or drop, at most 4 per side).
+  3. **Real places as test scenes.** Plugin scenarios can paste a WorldEdit schematic (`.schem`, the format
+     `//schem save` writes) from the plugin's `scenario-scenes/` resources into their box. Five new scenarios, each run
+     with `npc.navigation.collidable` off and on, measure today's movement in report mode (they log a
+     `KNK-NPC-REPORT` line and pass; later links turn the numbers into checks): `npc-stairhouse-singles`,
+     `npc-stairhouse-group`, `npc-jagged-straight`, `npc-doorway-crowd` and `npc-plaza-line`. The stair house is
+     the developer's own schematic (attached to [#603](https://github.com/PandiO/knk-workspace/issues/603)); the
+     other three scenes are synthetic by design. On it, a group of 20 folds at the first step and a follower stands
+     about 24 s in the entrance, the developer's jam. CI's
+     `paper-boot` job runs 45 scenarios now and copies the report lines into its summary.
 - **NPC navigation: movement-quality design (decided)** ([PandiO/knk-workspace#603](https://github.com/PandiO/knk-workspace/issues/603), link L8): implementation plan Phase 4c (steering options from a [research report](reports/2026-11-15-npc-movement-research.md) on how games handle obstacle avoidance and stuck recovery, formations that tighten before they fold, turns at chokepoints, natural lines on plazas; links M1–M5) and BEHAVIOR_MODEL NAV-24–NAV-28; docs only; decided by the developer 2026-11-15 (all fifteen questions).
 - **NPC navigation: entry removed in the web app with realtime on stops a group at the district's edge**
   ([PandiO/knk-workspace#593](https://github.com/PandiO/knk-workspace/issues/593), the developer's retest of
