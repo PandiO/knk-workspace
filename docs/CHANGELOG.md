@@ -522,6 +522,21 @@ This is a human-readable record of capabilities merged into the V3 default branc
   [feedback primitives](guides/feedback-primitives-smoke-test.md) (15 of 28) and
   [form step conditions and step jump](guides/form-step-conditions-and-step-jump-smoke-test.md) (29 of 36).
   - **Admin steps:** none (tests and docs only).
+- **Dashboard tables: the row actions scroll with the table again, and Export as CSV downloads at once**
+  ([PandiO/knk-workspace#606](https://github.com/PandiO/knk-workspace/issues/606),
+  [#607](https://github.com/PandiO/knk-workspace/issues/607), from the developer's smoke test of `next` on 2026-11-15;
+  staff web app only). knk-web-app and knk-workspace branches `claude/dashboard-fixes-606-607` (PRs in review, not
+  merged).
+  - **#606:** View / Edit / Delete are the last column of the row again and scroll with the table; the pinned actions
+    column of #405 cut off the table's other columns. The right-click / Shift+F10 row menu (#406) stays and is the fast
+    way to view or edit a row at any width. The checkbox column stays pinned on the left and the row lines (#404) are
+    unchanged.
+  - **#607:** checked first: Export as CSV (the row menu and the bar above the table) already downloads the file
+    straight away through a `Blob` and an `<a download>` link, named `<type>-<yyyy-mm-dd>.csv`, with no dialog or save
+    picker of the app's own. A browser set to ask where to save each file still asks; that is the browser's setting.
+    New Playwright tests catch the download and check the file name and the CSV header row.
+  - **Admin steps:** none; deploy the web app. Smoke test:
+    [dashboard access smoke test § 8.5](guides/dashboard-access-smoke-test.md) (9 of 11 steps automated in CI).
 - **Dashboard tables: every row looks the same, the row actions stay in view, and a right-click menu**
   (PandiO/knk-workspace#404, #405, #406; staff web app only). knk-web-app branch `claude/dashboard-table-actions-404-406`,
   merged into `next` 2026-11-14 (knk-web-app#17); on the trunk when the developer promotes `next`.
@@ -529,6 +544,8 @@ This is a human-readable record of capabilities merged into the V3 default branc
   - **#405:** View / Edit / Delete sit in a column pinned to the table's right edge (the checkbox column to the left),
     so they stay in view on types with many columns and at phone width; a shadow shows on the pinned edge only while
     columns scroll under it.
+    Reverted for the actions column by #606 (2026-11-15): they scroll with the table again; the checkbox column stays
+    pinned.
   - **#406:** a right-click on a row (or Shift+F10 / the context-menu key on a focused row) opens View, Edit, Delete and
     Export as CSV. Items follow the same permission nodes as the buttons and are greyed out with "Requires <node>",
     not hidden. On a ticked row Delete and Export act on the whole selection (bulk delete needs

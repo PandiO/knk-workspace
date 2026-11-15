@@ -1,6 +1,6 @@
 # Dashboard access model — smoke test
 
-**Status:** 66 of 106 steps (§ 1–8) automated in CI (tagged, 5 of them partly; [#511](https://github.com/PandiO/knk-workspace/issues/511), 2026-11-14, and the § 8.5–8.7 features: web app § 8 in Playwright and Jest, API § 2.2, § 3, § 4, § 7, § 8.6 and § 8.7 in the API's xUnit tests); every step can still be run by hand; manual steps not run. Untagged, by hand only (migration on a real database, the plugin, live realtime, the Staff group's real metadata). Earlier: ready to run (API § 1–7, web app § 8). Not run yet: **accepted by the developer 2026-11-13 without a live
+**Status:** 69 of 109 steps (§ 1–8) automated in CI (tagged, 5 of them partly; [#511](https://github.com/PandiO/knk-workspace/issues/511), 2026-11-14, and the § 8.5–8.7 features: web app § 8 in Playwright and Jest, API § 2.2, § 3, § 4, § 7, § 8.6 and § 8.7 in the API's xUnit tests); every step can still be run by hand; manual steps not run. Untagged, by hand only (migration on a real database, the plugin, live realtime, the Staff group's real metadata). Earlier: ready to run (API § 1–7, web app § 8). Not run yet: **accepted by the developer 2026-11-13 without a live
 test**, scheduled in closed alpha test run 2 (checklist § 4c). AM1 and AM2 merged 2026-11-12 (knk-web-api `master`
 `bc97b7d`); AM3 merged 2026-11-13 (knk-web-app `main` `e02ee79`, knk-web-api `master` `45043a7`, also on `next`).
 AM4 (living docs, the [admin guide to the ranks](admin/dashboard-access-admin-guide.md)) done 2026-11-13 (#366).
@@ -14,7 +14,7 @@ need it; § 2.2 and § 8 step 9b.
 Enable/Disable, the roads page's Create New Street and the detail page's hot edit are greyed out without it; § 8 step 9c.
 Known: a `knk.admin.user.manage`-only
 rank can't load the Permission Group list (#369, § 8.1 step 4).
-**Last updated:** 2026-11-15 (every step in full again, covered steps tagged `[automated: …]` or `[partly automated: …]`, developer decision 2026-11-15, #511); 2026-11-14 (`[automated]` marks with their tests, backfill #511); 2026-11-13 (§ 8 step 9c: lootbox toggle, Create New Street and hot edit greyed out without `knk.admin.content`, #383); 2026-11-13 (§ 2.2 and § 8 step 9b: the API asks for `knk.admin.content` on create, edit and link changes, #374); 2026-11-13 (§ 8 steps 6, 7, 9, 19 and 9a: create/edit need `knk.admin.content`, #371); 2026-11-13 (AM4 docs done, #368/#369 noted, architecture anchors; docs #366); 2026-11-13 (status: merged, accepted without a live test, in test run 2); 2026-11-12 (§ 0 role accounts and deploy, § 2.1 configuration deletes, § 3 refusal codes, § 8 web
+**Last updated:** 2026-11-15 (§ 8.5: the row actions are a plain last column again and Export as CSV downloads at once, steps 2, 3, 8–10, #606/#607); 2026-11-15 (every step in full again, covered steps tagged `[automated: …]` or `[partly automated: …]`, developer decision 2026-11-15, #511); 2026-11-14 (`[automated]` marks with their tests, backfill #511); 2026-11-13 (§ 8 step 9c: lootbox toggle, Create New Street and hot edit greyed out without `knk.admin.content`, #383); 2026-11-13 (§ 2.2 and § 8 step 9b: the API asks for `knk.admin.content` on create, edit and link changes, #374); 2026-11-13 (§ 8 steps 6, 7, 9, 19 and 9a: create/edit need `knk.admin.content`, #371); 2026-11-13 (AM4 docs done, #368/#369 noted, architecture anchors; docs #366); 2026-11-13 (status: merged, accepted without a live test, in test run 2); 2026-11-12 (§ 0 role accounts and deploy, § 2.1 configuration deletes, § 3 refusal codes, § 8 web
 app, § 9 docs impact; chain 3 link AM3); 2026-11-12 (AM1+AM2 merged); 2026-11-08 (§ 7 read gating and lookups, chain 3 link AM2); 2026-11-08 (draft with the AM1 API steps, chain 3 link AM1)
 **Design:** [specs/dashboard-access-model/DESIGN.md](../specs/dashboard-access-model/DESIGN.md) · as built:
 [web-api architecture § 5.1](../architecture/web-api-architecture.md#51-dashboard-access-model-pandioknk-workspace280-am1-merged-2026-11-12-am3-2026-11-13)
@@ -274,31 +274,66 @@ and at 390 px width (phone): nothing scrolls sideways, the bulk dialogs fit.
 22. [ ] [partly automated: `ObjectDashboard.test.tsx` ("bumps the table's live key once per burst"); by hand: two browsers on a live hub] **Live updates:** with two browsers (Admin and world-only) on Town, a save by Admin refreshes the world-only
     table ("Updated by …"); a bulk delete of towns refreshes it once, not once per row.
 
-### 8.5 Row actions in view and the right-click menu (#404, #405, #406)
+### 8.5 Row actions and the right-click menu (#404, #405, #406, #606, #607)
 
-knk-web-app PR knk-web-app#17 (merged into `next` 2026-11-14). Automated in CI (`e2e/dashboard-row-actions.spec.ts`,
-plus the Jest tests `DataTable.rowsAndMenu.test.tsx` and the #406 block in `ObjectDashboard.test.tsx`); manual steps
-not run.
+**Status:** 9 of 11 steps automated in CI (tagged); every step can still be run by hand; manual steps not run. A full
+manual run takes about 20 minutes, the untagged steps (10, 11) about 10. #404–#406: knk-web-app#17, merged into `next`
+2026-11-14. #606 (the pinned actions column of #405 reverted: the actions are the row's last plain column again) and
+#607 (Export as CSV downloads at once, checked and tested): knk-web-app branch `claude/dashboard-fixes-606-607`, in
+review. Tests: `e2e/dashboard-row-actions.spec.ts`, the Jest tests `src/components/__tests__/DataTable.rowsAndMenu.test.tsx`
+and the #406 block in `src/components/ObjectDashboard/__tests__/ObjectDashboard.test.tsx`.
 
-1. [automated: `e2e/dashboard-row-actions.spec.ts`] As the owner, Dashboard → Town (a type with a few rows): every row has the same edge and row line; from the
-   second row on there is no grey left edge (#404).
-2. [automated: `e2e/dashboard-row-actions.spec.ts`] At 390 px width (phone or the browser's device mode), the same table: each row's **Edit** button stays in view
-   without scrolling the table sideways (#405).
-3. [automated: `e2e/dashboard-row-actions.spec.ts`, `src/components/__tests__/DataTable.rowsAndMenu.test.tsx`] Right-click a row: a menu opens with **View**, **Edit**, **Delete** and **Export as CSV** for that row. Press
-   Escape: it closes (#406).
-4. [automated: `e2e/dashboard-row-actions.spec.ts`, the #406 block in `src/components/ObjectDashboard/__tests__/ObjectDashboard.test.tsx`] With an account without `knk.admin.delete` / `knk.admin.export` (the world-only or Staff rank of § 0), right-click a
-   row: those items are greyed out with "Requires <node>", like the row's buttons.
-5. [automated: `e2e/dashboard-row-actions.spec.ts`, `DataTable.rowsAndMenu.test.tsx`] Tab to a row's first cell (its link) and press Shift+F10: the menu opens; ArrowDown moves through the items;
-   Escape closes it and the focus is back on the row link.
-6. [automated: `DataTable.rowsAndMenu.test.tsx`, the #406 block in `ObjectDashboard.test.tsx` (Jest only)] Ctrl/Cmd + right-click on a row, and a right-click on a row without menu items, show the browser's own menu.
-   Tick two towns and right-click one of them: the menu says "Delete 2 Towns" / "Export 2 Towns as CSV" and acts on
-   the selection. Without `knk.admin.delete.bulk` the bulk Delete is greyed out.
-7. Manual (looks, both themes): on a type with many columns (Town, Structure), scroll the table sideways at desktop
-   width and at 390 px: the checkbox column stays left and View / Edit / Delete stay right, the columns scroll under
-   them with a soft shadow on the edge only while something is under it, and nothing shows through the sticky cells
-   on hover or when a row is selected. Run once in `current` and once in `brand`.
-8. Manual (real data): Export as CSV from the menu on an unticked row gives a file with that row only; with two rows
-   ticked, the menu's export has both. Delete from the menu asks the same confirmation as the row button.
+1. [automated: `e2e/dashboard-row-actions.spec.ts` ("every row has the same left edge and row line (#404)"), `DataTable.rowsAndMenu.test.tsx`]
+   As the owner, open Dashboard → Town (`/dashboard/town`, a type with a few rows). Look down the table: every row has
+   the same left edge and the same thin line under it; from the second row on there is no grey left edge (#404).
+2. [automated: `e2e/dashboard-row-actions.spec.ts` ("the row actions are the last cell of the row and scroll with the table (#606)"), `DataTable.rowsAndMenu.test.tsx`]
+   Make the window 390 px wide (a phone, or the browser's device mode at 390 × 800) and reload the same table. The
+   View / Edit / Delete buttons are the last cell of each row, after all the other columns; they are not pinned to the
+   right edge, so at this width they may be off screen. Scroll the table sideways: the buttons move with the other
+   columns (no column passes under them and there is no shadow on the right edge). The checkbox column stays on the
+   left (#405, unchanged) (#606).
+3. [automated: `e2e/dashboard-row-actions.spec.ts` ("at phone width the row menu's View and Edit open the row (#406, #606)")]
+   Still at 390 px, without scrolling the table: right-click the row Brightwater (in device mode, right-click with the
+   mouse) and choose **View**: the town's detail page opens (`/display/town/<id>`). Go back to the dashboard,
+   right-click another row and choose **Edit**: its edit form opens (`/forms/town/edit/<id>`). This is the fast way to
+   view or edit a row at any width (#606).
+4. [automated: `e2e/dashboard-row-actions.spec.ts` ("a right-click opens View, Edit, Delete and Export for that row (#406)"), `DataTable.rowsAndMenu.test.tsx`]
+   At desktop width, right-click a row: a menu opens with **View**, **Edit**, **Delete** and **Export as CSV** for that
+   row; Delete and Export as CSV are not greyed out for the owner. Press Escape: the menu closes (#406).
+5. [automated: `e2e/dashboard-row-actions.spec.ts` ("a menu item without its node is greyed out …"), the #406 block in `ObjectDashboard.test.tsx`]
+   Log in with an account without `knk.admin.delete` and `knk.admin.export` (the world-only or Staff rank of § 0), open
+   Town and right-click a row: Delete is greyed out with "Requires knk.admin.delete" and Export as CSV with "Requires
+   knk.admin.export", like the row's own buttons. Press Escape: the row's Delete button is greyed out with the same
+   hint.
+6. [automated: `e2e/dashboard-row-actions.spec.ts` ("Shift+F10 on a focused row …"), `DataTable.rowsAndMenu.test.tsx`]
+   As the owner, press Tab until a row's first cell (its link) has the focus and press Shift+F10 (or the context-menu
+   key): the menu opens with the focus on its first item; ArrowDown moves to Edit; Escape closes the menu and the
+   focus is back on the row link.
+7. [automated: `DataTable.rowsAndMenu.test.tsx`, the #406 block in `ObjectDashboard.test.tsx` (Jest only)] Ctrl/Cmd +
+   right-click on a row, and a right-click on a row without menu items, show the browser's own menu. Tick two towns
+   and right-click one of them: the menu says "Delete 2 Towns" / "Export 2 Towns as CSV" and acts on the selection.
+   With an account without `knk.admin.delete.bulk` the bulk Delete is greyed out.
+8. [automated: `e2e/dashboard-row-actions.spec.ts` ("the row menu's Export as CSV downloads <Type>-<date>.csv at once …")]
+   As the owner, with no row ticked, right-click the row Brightwater and choose **Export as CSV**. The file downloads
+   straight away into the browser's downloads folder: no dialog or save picker of the app's own opens in between. The
+   file is named `town-<yyyy-mm-dd>.csv` (the type as in the address, then today's date); its first line is the
+   table's column headers in table order, and it holds one row, Brightwater. A toast says "Exported 1 Town row". If the
+   browser still asks where to save, that is the browser's own setting ("Ask where to save each file before
+   downloading" in Chrome / Edge, "Always ask you where to save files" in Firefox): turn it off to get the file at once
+   (#607).
+9. [automated: `e2e/dashboard-row-actions.spec.ts` ("the toolbar's Export CSV downloads the whole search at once …"), `e2e/dashboard-access.spec.ts` (one `POST api/Dashboard/export`)]
+   With no row ticked, press **Export CSV** in the bar above the table: the file `town-<yyyy-mm-dd>.csv` downloads
+   straight away, again with no dialog in between; its first line is the column headers and it holds every row of the
+   current search (#607).
+10. Manual (looks, both themes): on a type with many columns (Town, Structure), scroll the table sideways at desktop
+    width and at 390 px. The checkbox column stays on the left with a soft shadow on its right edge only while columns
+    are under it, and nothing shows through the checkbox cells on hover or when a row is selected. View / Edit /
+    Delete scroll with the other columns and are reached at the end of the row. Run once in `current` and once in
+    `brand`. Why manual: how it looks, in both themes.
+11. Manual (real data): Export as CSV from the menu on an unticked row gives a file with that row only; with two rows
+    ticked, the menu's export has both. Open the file in a spreadsheet: the columns line up and accents read
+    correctly. Delete from the menu asks the same confirmation as the row button. Why manual: the deployed API's
+    real rows and a real spreadsheet program.
 
 ### 8.6 The PermissionGrant table (#408)
 
@@ -399,6 +434,12 @@ knk-web-app#35). Before testing: back up the database, deploy the API, run `dotn
     change groups ranked below your own." Why manual: real ranks and the deployed escalation guard.
 
 ## 9. Docs impact
+
+**#606 / #607:** this guide § 8.5 and the CHANGELOG entry ship with the branch. At merge, for the `documentation`
+sub-issue: the staff web app guide (`guides/admin/staff-web-app-guide.md`: the row actions are the row's last column and
+scroll with the table, the right-click / Shift+F10 menu reaches View and Edit at any width, Export as CSV downloads at
+once and a browser set to ask where to save still asks) and web-app architecture (`DataTable`: only the checkbox column
+is sticky). No other doc names the pinned actions column.
 
 **#383:** this guide step 9c and the CHANGELOG entry ship with the branch. At merge, for the `documentation`
 sub-issue: the staff web app guide (lootbox Types toggle, roads Create New Street and hot edit greyed out without
