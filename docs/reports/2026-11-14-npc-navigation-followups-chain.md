@@ -45,7 +45,7 @@ Every link is merged into `next` (2026-11-15). Build knk-plugin from `next` `deb
 | L6 Fix: follower access with overlapping gate region | #593 | Merged into next (2026-11-15) | knk-plugin `736b91c2` → `next` `3c3d481e`; knk-workspace `fed2b672` → `next` `a63d76ba` | PandiO/knk-plugin#45, PandiO/knk-workspace#604 | PR head green (build, paper-boot with 35 scenarios); the push run's log check hit #586 and was re-run; Codex at its usage limit | create_session session_01R1w2UuimaZUvf6HRSGtpmp (2026-11-15) |
 | L7 Fix: test walkers drown (#490) | #594 | Dropped (#490 audit clean on the right build; #594 closed) | — | — | — | — |
 | L8 Design: movement quality (steering, formation keeping, crowding, plaza road lines) | #603 | Merged into next (2026-11-15; design decided by the developer, 15 questions) | knk-workspace `e8836db0` → `next` `61c29c16` | PandiO/knk-workspace#605 | docs only (no CI); Codex at its usage limit | create_session session_01R1w2Uv7BDN1HKCV2gWe5Mz (2026-11-15) |
-| M1 Evidence and diagnostics | #621 | In review (PRs open, not merged; stand-in stair house, the developer's schematic is attached to #603 but unreachable from cloud sessions) | knk-plugin `0cf7ea1a`; knk-workspace `4c40ad77` | PandiO/knk-plugin#47, PandiO/knk-workspace#632 | PR head green (build, paper-boot with 45 scenarios, both runs); Codex at its usage limit | create_session session_01R1w2Uv6Untjy5RbmJTDd1T (2026-11-15) |
+| M1 Evidence and diagnostics | #621 | In review (PRs open, not merged; the stair house on the developer's schematic) | knk-plugin `3ce748e0`; knk-workspace `1310c3d9` | PandiO/knk-plugin#47, PandiO/knk-workspace#632 | PR head green (build, paper-boot with 45 scenarios, both runs); Codex at its usage limit | create_session session_01R1w2Uv6Untjy5RbmJTDd1T (2026-11-15) |
 | M2 Corridor steering (option A) | #622 | Not started (gate: M1 merged) | — | — | — | — |
 | M6 Clearance-aware local legs (add-on D) | #623 | Not started (gate: M2 merged) | — | — | — | — |
 | M3 Formation keeping | #624 | Not started (gate: M6 merged) | — | — | — | — |
@@ -590,17 +590,24 @@ _(Each link appends its block here when it finishes.)_
     5. Agent decisions: (a) *Option set.* Chosen: three options that all share the clearance map, plus D as an add-on, because the research shows the layers are separable. Alternatives: a flat list of techniques (harder to choose from); flow fields or ORCA as options (they fail K&K's many-goal routes and doorways, per the report § 3.7–3.8). (b) *Matrix reading.* Chosen: state that the matrix leans to A first, then B, and leave the choice to the developer, as the coordinator asked.
 11. **Final (2026-11-15): all fifteen questions decided by the developer.** Q2 option A with add-on D (B at a checkpoint on the real-spot scenarios); Q3 corridor half width 4; Q4 wall clearance 0.8, hard minimum 0.35; Q5 squeeze 0.6 lateral and 1.0 rows; Q6 fold last; Q7 stairs as wide as the formation fits with a step per lane; Q8 look-ahead depth + 4; Q9 lanes by access rules; Q10 first come (authority and closed formations as future updates); Q11 collision off for now, on after M7; Q12 plaza lines NPC side now, builder through-edges later; Q13 one key per link; Q14 WorldEdit schematic; Q15 M1 → M2 → M6 → M3 → M5 → M4 → B checkpoint → M7. New links M6 (clearance-aware local legs) and M7 (push resistance; research report § 6). Plan 4c, BEHAVIOR_MODEL NAV-24–NAV-28 and the changelog say "decided 2026-11-15". Head knk-workspace `claude/npc-followups-l8` `e8836db0`, contains `next`; PR #605 description updated; the coordinator merges.
 
-### 4.9 M1 — Evidence and diagnostics: schematic scenes, report-mode scenarios, fold reasons, corridor trace (#621)
+### 4.9 M1 — Evidence and diagnostics: schematic scenes (the developer's stair house), report-mode scenarios, fold reasons, corridor trace (#621)
 
 1. **Scope done** (plan 4c.4 item 1 and 4c.5; no behaviour change, no new key, `npc.navigation.enabled` stays off by default).
     1. **Scene loader** (knk-paper `paper/scenario/SceneSchematic`). It reads WorldEdit's Sponge schematics (v3, v2) from `knk-paper/src/main/resources/scenario-scenes/` without WorldEdit and pastes them into a scenario box (air skipped, blocks outside the box counted). `worldMin()`, `origin()` and `local()` map real coordinates. I checked it against a file saved by WorldEdit 7.4.6 on the paper-boot server, which is now a test resource.
-    2. **Scenes.** The developer attached `knk-stairhouse-schem.zip` to #603 at 20:20, while this link was under way (it was not there at the start). This session cannot download it: the session's GitHub proxy allows only repository endpoints, and the `user-attachments` URL returns 403. So the stair house is a **stand-in** built from the plan in the real place (corner 1400 46 -515, origin the entrance 1413 49 -508, a one-block doorway, the 3-wide straight with notches at 1414 -503, two 3-wide stair flights with a landing). The jagged straight, the doorway (two 9 × 9 rooms) and the plaza (15 × 15, four 3-wide roads, a 2 × 2 well on the W→N chord) are synthetic by design. `tools/scenario-scenes/make_standins.py` writes them, with the same bytes on every run. `NpcMovementScene` holds the lines, starts, goals and watched areas, and `NpcMovementSceneTest` checks that each stands on its schematic's floor.
+    2. **Scenes.**
+        1. The developer attached `knk-stairhouse-schem.zip` to #603 at 20:20, while this link was under way. This session could not download it (the GitHub proxy allows only repository endpoints; the `user-attachments` URL returns 403), so I first built a stand-in from the plan.
+        2. The coordinator then put the file on knk-plugin `evidence/stairhouse-schematic` `8438ce87`. The stair house now runs on the **developer's schematic** and the stand-in is removed.
+        3. The file covers 1407 49 -549 to 1418 79 -487 (12 × 31 × 63), not the requested 1400 46 -515 to 1424 66 -482, and its copy origin lies outside it.
+        4. It is pasted in the frame box = real − (1400, 46, −515) at box (7, 3, −34). The rows north of −515 and the blocks above y 69 are left out (8,501 blocks). It gets a stone floor at real y 48 under its footprint, because the copy starts at y 49, one block above the street's floor.
+        5. The road line is hand-drawn on the walkable middle: the street → the entrance 1413 −508 (4 wide at feet height) → the straight at 1414 −503 (6 wide there) → the 3-wide passage 1411–1413 −502…−500 → two steps (−499, −495) → the hall at feet 51. It stops there; the upper flights are not walked yet.
+        6. The jagged straight, the doorway (two 9 × 9 rooms) and the plaza (15 × 15, four 3-wide roads, a 2 × 2 well on the W→N chord) are synthetic by design. `tools/scenario-scenes/make_standins.py` writes them, with the same bytes on every run.
+        7. `NpcMovementScene` holds the lines, starts, goals and watched areas, and `NpcMovementSceneTest` checks that each stands on its schematic's floor, the developer's included.
     3. **Scenarios.** `npc-stairhouse-singles`, `npc-stairhouse-group`, `npc-jagged-straight`, `npc-doorway-crowd` and `npc-plaza-line` run in report mode: one `KNK-NPC-REPORT` line per phase, then pass. Each is registered twice, with `collidable` off and on (`…-collision-on`), so there are 45 scenarios. `ScenarioNpcs` gained additive code: K&K's tick cost per NPC and the removal of singles.
     4. **Fold reasons** (decision 2.8, counting only). `NpcNavigationMetrics.FoldReason` has `stair`, `narrow`, `door`, `rules` and `edge`. The reason is judged at the first path point where the width given up fails (`GroupPath.misfitReason`: the lane try nearest to fitting names it; `NavGroup.foldReason`: a route gate door's box first). It appears in the log line ("… too narrow for 2 abreast (stair) at …"), in the groups line of `/knk npc nav stats` and in the metric `knk_npc_nav_group_width_reasons_total{change,reason}`.
     5. **Trace.** A `# corridor:` line follows each `# waypoints:` line: `x y z total left right` per waypoint (knk-core `npc/nav/corridor/FreeWidth`, an exact grid walk across the line to a body-stopping face or a drop, at most 4 a side).
-    6. **CI** (`paper-boot.yml`). `MIN_SCENARIOS` 45, `--expect-timeout 1200`, job timeout 30 minutes (was 20), and a step that copies the report lines into the job summary. I chose to raise the timeouts instead of adding a second step. A whole local run took 9 min 40 s, against 6 min 40 s for the 35 before. The ten runs walk 3,866 ticks (about 3.2 min).
+    6. **CI** (`paper-boot.yml`). `MIN_SCENARIOS` 45, `--expect-timeout 1200`, job timeout 30 minutes (was 20), and a step that copies the report lines into the job summary. I chose to raise the timeouts instead of adding a second step. A whole local run takes 9.5 minutes, against 6 min 40 s for the 35 before. The ten runs walk 3,632 ticks (about 3 min).
     7. **knk-workspace.** Changelog, plan 4c.4 item 1.5 (status), plugin-scenarios.md § 1, § 3 item 7 and § 7, ci.md § 7 and § 7.1.
-2. **Commits and heads.** knk-plugin `claude/npc-movement-m1` at `0cf7ea1a` (4 commits, base `next` `3c3d481e`, still the head of `next`). knk-workspace `claude/npc-movement-m1` at `4c40ad77` (2 commits plus a merge of `origin/next` `35454b3`, an unrelated siege PR, no conflicts; base `next` `61c29c16`).
+2. **Commits and heads.** knk-plugin `claude/npc-movement-m1` at `3ce748e0` (5 commits, base `next` `3c3d481e`, still the head of `next`). knk-workspace `claude/npc-movement-m1` at `1310c3d9` (3 commits plus a merge of `origin/next` `35454b3`, an unrelated siege PR, no conflicts; base `next` `61c29c16`).
 3. **PRs.** PandiO/knk-plugin#47 (`Closes` #621) and PandiO/knk-workspace#632 (`Part of` #621), base `next`. Not merged.
 4. **Tests, baseline → result.**
     1. knk-plugin `./gradlew build -x deployToDevServer`: baseline on `next` `3c3d481e` was core 2816, api-client 344 (2 skipped), paper 2832 (18 skipped). Result: core 2830 (+14), api-client 344, paper 2851 (+19), 0 failures. New tests:
@@ -614,23 +621,23 @@ _(Each link appends its block here when it finishes.)_
         8. `NavGroupWidthsTest` with the reason in the text
         9. `PaperScenariosTest` for 45
     2. Scenarios, run locally (Paper 26.3 b205, WorldEdit 7.4.6, WorldGuard 7.0.20, Citizens b4269): baseline on `next` 35/35. On the branch 45/45 with `--min-scenarios 45 --npc-navigation --expect-timeout 1200`, and the log check passed.
-    3. CI on PandiO/knk-plugin#47: `build` and `paper-boot` green on both runs at `0cf7ea1a` (runs 43758587514 and 43758550071; `paper-boot` 45/45 in about 11 minutes, log check passed, the report step wrote the summary); #586 did not hit.
-    4. Known reds: none. Codex: at its usage limit on both PRs (review "Failed", limit comment); said on both PRs, finished without it (developer decision 2026-11-14).
-5. **Today's numbers, the baseline M2–M4 must improve on** (local run on `0175719`, stand-in stair house; collision off → on; "still" means standing in one block while it should walk; K&K nav is K&K's main-thread time per NPC per tick).
-    1. `npc-stairhouse-singles` (12 both ways)
+    3. CI on PandiO/knk-plugin#47: `build` and `paper-boot` green on both runs at `0cf7ea1a` (stand-in; runs 43758587514, 43758550071) and at `3ce748e0` (the developer's schematic; runs 43760374130, 43760369908), 45/45 each, log check passed, the report step wrote the summary; #586 did not hit.
+    4. Known reds: none. Codex: at its usage limit on both PRs, also for the `@codex review` asked after the schematic push; said on both PRs, finished without it (developer decision 2026-11-14).
+5. **Today's numbers, the baseline M2–M4 must improve on** (local run on `3ce748e0`, the stair house on the developer's schematic; collision off → on; "still" means standing in one block while it should walk; K&K nav is K&K's main-thread time per NPC per tick).
+    1. `npc-stairhouse-singles` (12 both ways, street ↔ hall)
         1. Arrived 12/12 → 12/12.
-        2. Trips: mean 16.0 s, longest 22.2 s → mean 20.4 s, longest 39.0 s.
-        3. Stuck spells: 2 (near a wall 2, all freed) → 8 (near a wall 4, all freed).
-        4. Longest still single: 2.4 s → 2.4 s, both just inside the entrance at box 14 2 6 (real 1414 48 -509).
-        5. On the straight 1414 -503: 0.5 s → 0.5 s.
-        6. Falls 0. K&K nav 0.005 → 0.050 ms.
-    2. `npc-stairhouse-group` (20 in ranks of 3, one trip up)
-        1. Leader arrived after 13.0 s → 13.2 s.
-        2. Width changes: 1 fold, reason `narrow`, at the doorway (box 13 2 7 = 1413 -508). The group stayed a column all the way up: 0 narrows, 0 reforms.
-        3. Longest follower still in the entrance: 1.9 s → 1.7 s.
-        4. Furthest behind its slot 0.8 → 0.9 blocks; lost 0; rejoins 8 → 8.
-        5. Stuck spells 0. K&K nav 0.024 → 0.014 ms.
-        6. The developer's 2-minute jam does not show on the stand-in, with collision on or off. One earlier run of mine, still with `ranks` 2 wide, had a follower stand 20.5 s in the entrance with collision on.
+        2. Trips: mean 8.3 s, longest 9.6 s → mean 9.3 s, longest 12.2 s.
+        3. Stuck spells: 0 → 0.
+        4. Longest still single: 0.5 s → 1.4 s.
+        5. On the straight 1414 −503: 0.5 s → 0.5 s. In the entrance: 0.3 s → 0.4 s.
+        6. Falls 0. K&K nav 0.19 → 0.014 ms (the first run's figure includes Citizens' start-up on few NPC ticks).
+        7. The developer's 50 singles stuck at 1414 −503 do not show with 12 NPCs on this line.
+    2. `npc-stairhouse-group` (20 in ranks of 3, street → hall, once)
+        1. Leader arrived after 27.0 s → 27.0 s.
+        2. Width changes: **1 fold, reason `stair`**, at box 12 2 15 (real 1412 −500, the foot of the first step). The group stayed a column from there: 0 narrows, 0 reforms.
+        3. **Longest follower still in the entrance 1413 −508: 23.7 s → 23.5 s.** That is the developer's jam, reproduced: the column waits in the entrance while the front climbs the steps.
+        4. Furthest behind its slot 0.8 → 0.6 blocks; lost 0; rejoins 0.
+        5. Stuck spells 0 (waiting is not counted as stuck). K&K nav 0.003 → 0.002 ms.
     3. `npc-jagged-straight`
         1. 12 singles: arrived 12/12 → 12/12, mean 12.3 → 13.8 s, stuck spells 0 → 0, longest still 0.4 → 1.1 s.
         2. Group of 9 in ranks of 3: leader 17.3 s → 9.5 s.
@@ -653,7 +660,7 @@ _(Each link appends its block here when it finishes.)_
     1. *Reading schematics.* Chosen: a small Sponge v2/v3 reader of our own (gzip NBT, palette, varints), with Bukkit's `createBlockData` for the paste, so the loader runs in MockBukkit and unit tests without WorldEdit's platform. Alternatives: (a) WorldEdit's `ClipboardFormats` reader (needs the WorldEdit platform; MockBukkit can't test it); (b) only a block dump of our own (the developer would need a new command instead of `//schem save`).
     2. *Where the scenes live.* Chosen: `knk-paper/src/main/resources/scenario-scenes/`, because the scenarios ship in the main jar; the files are small (299–577 bytes each). Alternatives: (a) `src/test/resources` (not in the jar the server runs); (b) downloading them at run time (network in CI).
     3. *Stand-ins as schematics.* Chosen: the synthetic scenes are `.schem` files written by a Python generator, so the loader runs in every scenario and the developer's file drops in the same way. Alternatives: (a) Java scene builders as L5's `NpcLedgeScene` (the loader would go untested in Paper); (b) hand-edited files (not reviewable).
-    4. *The developer's schematic.* Chosen: ship the stand-in and ask the developer to commit the file (a developer step), because the attachment is unreachable from cloud sessions. Alternatives: (a) wait for it (blocks M1 on a manual step); (b) ask the developer to re-post it elsewhere (same problem for any URL outside the repositories).
+    4. *The developer's schematic: placement, floor and line.* Chosen: the same frame as the plan's coordinates (box = real − (1400, 46, −515)), with the rows outside the box dropped. A stone floor at y 48 under the footprint, since the copy starts at y 49. A hand-drawn line on the walkable middle from the street into the hall, checked point by point against the file. Alternatives: (a) ask for a new copy of the requested box (waits on the developer); (b) shift the file to fit more of the house (the plan's coordinates would no longer map); (c) the road graph's real line (needs the developer's trace or road data, which the scenario road does not have); (d) the upper flights too (needs more line through a multi-storey house; left for M2 with the developer's trace).
     5. *Collision variants.* Chosen: each scenario registered twice (`…-collision-on`), so both run in CI and fail or report separately. Alternatives: (a) a scenario option on `run` (CI runs `all` only); (b) both settings inside one scenario (twice the run time in one step, harder to read).
     6. *Report mode output.* Chosen: a `KNK-NPC-REPORT` line per phase in the server log, copied into the job summary, ignored by `check_scenarios.py`. Alternatives: (a) put the numbers in the PASS line (would change the `KNK-SCENARIO` contract); (b) a separate file artifact only (not visible at a glance).
     7. *Ranks width.* Chosen: `group-ranks-width` 3 in these scenarios, matching the plan's "20 in ranks of 3" and the developer's runs. The code default is 2. Alternatives: (a) the default 2 (folds nothing on the jagged straight, so it says nothing about 3 abreast).
@@ -663,12 +670,12 @@ _(Each link appends its block here when it finishes.)_
 7. **Out of scope, noted.**
     1. The trace's tick cost reads high in crowded scenarios because it includes Citizens port calls (see 5.6). This is for M2–M4 to watch; nothing was filed.
     2. A `citizens-stress-test.md` anchor that `IMPLEMENTATION_PLAN.md` links to does not resolve. It was there before this link and is left as it is.
-8. **Blockers.** None. The developer's schematic is the exception named in 1.2: it is posted but unreachable, so the stand-ins ship, as the prompt allows.
+8. **Blockers.** None. The schematic attachment could not be downloaded from a cloud session (403 from the GitHub proxy); the coordinator put the file on a knk-plugin branch and the scenarios now use it.
 9. **At merge / what the developer must do.**
     1. Nothing in `config.yml`, no migration.
-    2. Commit the stair-house schematic into a repository so the agents can read it. Unzip it and upload `knk-stairhouse.schem` to knk-plugin `knk-paper/src/main/resources/scenario-scenes/` on `claude/npc-movement-m1` (or on `next` after the merge), for example with GitHub's "Add file → Upload files". The steps are posted on #621.
+    2. Optional: a `/knk npc nav trace` of an NPC walking from the street into the stair house's upper flights, so the next link can take the real road line and extend the scene up the flights.
 10. **Notes for later links.**
-    1. M2 (and whoever switches the stair house): once `knk-stairhouse.schem` is committed, use `SceneSchematic.local(1413, 49, -508)` and `local(1414, 49, -503)` to place the house line, starts, goals and watched areas in `NpcMovementScene`, then switch `stairHouse()` to it. `NpcMovementSceneTest` checks that the points stand on its floor. The schematic is 25 × 21 × 34; `paste` drops the 2 rows over the box's 32 and counts them (paste at z -1 to keep the house).
+    1. The stair-house scene (`NpcMovementScene.stairHouse`) is the developer's file, walked only to the hall at feet 51. M2 can extend `houseLine()` up the flights (the house goes up to about real 64; the box keeps up to real 69), and `NpcMovementSceneTest` checks the new points. The scene's starts are on the street north of the entrance (real −515 to −511, 1409–1418), the only open ground in the box.
     2. Turning a report into a check: replace the scenario's `check("report …", … return null)` with real checks, and keep the `KNK-NPC-REPORT` line so the numbers stay visible.
     3. `FreeWidth` is the first piece of the corridor (`core/npc/nav/corridor/`); M2 can replace or reuse it.
     4. `GroupPath.misfitReason` gives `edge` for lanes that fail only on `LANE_CLEARANCE`. When M3 merges lanes, a merge counts as a reason too (decision 2.8).
