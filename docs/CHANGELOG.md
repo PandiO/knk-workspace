@@ -4,6 +4,28 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Plugin CI: Citizens on the Paper boot test, NPC navigation scenarios on a fake road network**
+  ([PandiO/knk-workspace#543](https://github.com/PandiO/knk-workspace/issues/543); developer decision 2026-11-15:
+  pinned download). knk-plugin and knk-workspace branches `claude/citizens-ci-543` (PRs into `next`). No change for
+  players or real servers: `npc.navigation.enabled` and `testing.scenarios.enabled` stay off by default.
+  1. **Citizens on the CI server.** `paper-boot.yml` installs Citizens 2.0.44 build 4269, the server jar of
+     `citizensApiVersion`, pinned by URL and SHA-256 (the pin came with #521; this change caches Citizens' downloaded
+     libraries and documents bumping it, [CI § 7.2](guides/developer/ci.md#72-citizens-on-the-ci-server)). Bump it
+     together with `citizensApiVersion`; if Citizens' Jenkins prunes the build, pin a newer build and its API snapshot
+     at once.
+  2. **NPC navigation checked at boot.** `boot-test.sh --npc-navigation` turns on `npc.navigation.enabled`, and the log
+     check requires Citizens enabled and `[NPC] navigation: Citizens …`; a Citizens `ERROR` or stack trace fails the
+     job like a KnK one (no Citizens line needed an excuse).
+  3. **Three NPC scenarios** (`MIN_SCENARIOS` 22 with the three corner scenarios of #521): `npc-walks-road-route` (an
+     NPC walks a road route and arrives), `npc-keeps-to-road-around-obstacle` (it keeps within 2 blocks of the road
+     where open ground round an obstacle would be shorter) and `npc-group-keeps-spacing` (a column of three keeps its
+     2-block spacing). The road is a `RoadNetworkSnapshot` routed through the navigator's own adapter
+     (`NavigationService.planRoadFor`); the NPCs come from the running Citizens adapter. Each was seen failing with its
+     behaviour broken (road graph ignored, formation slots shortened, waypoints never walked).
+  4. Docs: [CI § 7](guides/developer/ci.md#7-plugin-the-paper-boot-test),
+     [writing a plugin scenario](guides/developer/plugin-scenarios.md), the NPC implementation plan's developer tests
+     (Phase 1 step 1, Phase 2 steps 3 and 4, Phase 4 step 3 tagged `[partly automated: …]`).
+  - **Admin steps:** none (CI only; the plugin's `config.yml` is unchanged).
 - **Form wizard: list field cards stay readable on a phone**
   ([PandiO/knk-workspace#290](https://github.com/PandiO/knk-workspace/issues/290); link L2 of the Chain 3 follow-ups
   chain, [#564](https://github.com/PandiO/knk-workspace/issues/564)) — knk-web-app and knk-workspace
