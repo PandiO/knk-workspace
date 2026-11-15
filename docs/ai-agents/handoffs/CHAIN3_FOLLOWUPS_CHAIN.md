@@ -1,7 +1,7 @@
 # Chain 3 follow-ups chain — charter
 
 **Status:** Running (2026-11-15)
-**Last updated:** 2026-11-15 (first version, coordinator)
+**Last updated:** 2026-11-15 (L7 added after the developer's kick/ban decisions)
 **Issues:** parent [PandiO/knk-workspace#564](https://github.com/PandiO/knk-workspace/issues/564); sub-issues per
 link below. Reference issues as `PandiO/knk-workspace#n` in component repos.
 **Progress report:** [reports/2026-11-15-chain3-followups-chain.md](../../reports/2026-11-15-chain3-followups-chain.md)
@@ -38,18 +38,20 @@ link below. Reference issues as `PandiO/knk-workspace#n` in component repos.
 | L3 | #289 | tier:1 | "Show what uses it" (V6 `GET api/EntityReferences/{type}/{id}/rows`, `FeedbackModal` details) also for a refused form configuration delete (Entity setup), `POST api/Dashboard/bulk-delete` per-row refusals and the cancelled-form / deleted-draft "skipped: in use". API only if the endpoint must cover non-dashboard references (form fields/steps, sessions). | knk-web-app, knk-web-api (only if needed), knk-workspace (docs) | `claude/show-what-uses-it-289` | `next` | none | L2 merged into `next` |
 | L4 | #291 | tier:2 | Form builder (#71): field validation rules carried in the draft (keyed by field GUID) and applied on Publish; draft-only fields can get rules; the API's `add-from-template` endpoints (steps, fields, display equivalents) write into the draft, not the published rows (or are removed if no caller, logged). | knk-web-app, knk-web-api, knk-workspace (docs) | `claude/builder-draft-rules-291` | `next` | none (tier 2, staff-only builder) | L3 merged into `next`; L1 merged into `next` |
 | L5 | #288 | tier:2 | Relation picker lookup mode: `POST api/Lookup/{type}/search` applies the narrowing `pickerFilters` the type's own search accepts (labels only); the picker stops refusing filtered fields in lookup mode. `Services/LookupService.cs`, `Dtos/LookupDtos.cs`, `utils/forms/relationPicker.ts`, `RelationPicker.tsx`. | knk-web-api, knk-web-app, knk-workspace (docs) | `claude/lookup-picker-filters-288` | `next` | none | L4 merged into `next` |
-| L6 | #565 (part of #119) | tier:2 | Player profile API part: unfreeze reason, frozen state in `ProfileAccountDto`, game sessions endpoint + third timeline source, search filters / list fields / sort keys; kick/ban from the web only after the developer's decision (§ 2.3). | knk-web-api, knk-web-app, knk-workspace (docs) | `claude/player-profile-api-119` | `next` | none (kick/ban, if decided, gets its own config key) | L5 merged into `next` |
+| L6 | #565 (part of #119) | tier:2 | Player profile API part: unfreeze reason, frozen state in `ProfileAccountDto`, game sessions endpoint + third timeline source, search filters / list fields / sort keys; kick and ban from the web (decisions on #565): new nodes `knk.kick`, `knk.ban` seeded on Staff, audited endpoints that publish realtime `PlayerKick` / `PlayerBan` (with reason), Kick/Ban buttons on the profile. | knk-web-api, knk-web-app, knk-workspace (docs) | `claude/player-profile-api-119` | `next` | none | L5 merged into `next` |
+| L7 | #574 | tier:2 | knk-plugin handles L6's `PlayerKick` / `PlayerBan`: kick with reason; ban = Paper's ban list (permanent, reason, staff as source) plus kick if online; unban stays `/pardon`; idempotent handlers in the `UserStateSync` pattern. | knk-plugin, knk-workspace (docs) | `claude/web-kick-ban-574` | `next` | none | L6 merged into `next` |
 
 ## 2. Gates
 
 1. "L<n> merged into `next`": `git rev-list --count origin/next..origin/<branch>` is 0 in every repo L<n> changed.
 2. "L<n> done": L<n>'s block is in the progress report, its heads match `git ls-remote`, its checks passed
    (knk-coordinator § 6, automated proof included).
-3. L6 kick/ban: the coordinator asks the developer before L6 starts (subagent links cannot ask). Without an answer, L6
-   builds items 1–4 of #565 and leaves kick/ban out.
+3. L6 kick/ban: settled by the developer on 2026-11-15 (#565 comment): yes; ban like in-game `/ban` (Paper's ban list,
+   permanent, unban by `/pardon`); nodes `knk.kick` and `knk.ban`, both seeded on Staff; plugin handler in L7.
 
 Order and parallelism: at most one running link per component repo. L1 (knk-web-api) and L2 (knk-web-app) run
-together; L3 after L2 (knk-web-app); L4, L5 and L6 each change both component repos and run one after another.
+together; L3 after L2 (knk-web-app); L4, L5 and L6 each change both component repos and run one after another; L7
+(knk-plugin) after L6.
 
 ## 3. Chain notes
 
@@ -60,5 +62,9 @@ together; L3 after L2 (knk-web-app); L4, L5 and L6 each change both component re
    review on other files. The coordinator rechecks the board before each link.
 2. **Route:** L1–L3 by `create_session` (knk-workspace plus one component repo; L3 falls back to a subagent if it needs
    the API). L4–L6 need two component repos: subagents of the coordinator from the start (coordinator skill § 4.1.4).
-3. Migrations: none expected. L6 may add one only if a sessions read needs an index (additive).
+   L7 (knk-plugin only) by `create_session`, JDK 25.
+5. **Repository access:** knk-plugin is `read` for the chain, and `push` for L7 only (developer decision 2026-11-15,
+   "Separate link L7").
+3. Migrations: L6 adds one, additive: seed `knk.kick` and `knk.ban` on the Staff group (as `SeedStaffFreezeNodes`), and
+   an index only if the sessions read needs one.
 4. Model for link sessions: `claude-opus-5-5` (passed explicitly).

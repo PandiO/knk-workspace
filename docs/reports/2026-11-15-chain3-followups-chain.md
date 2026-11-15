@@ -8,14 +8,13 @@
 [#289](https://github.com/PandiO/knk-workspace/issues/289) (L3),
 [#291](https://github.com/PandiO/knk-workspace/issues/291) (L4),
 [#288](https://github.com/PandiO/knk-workspace/issues/288) (L5),
-[#565](https://github.com/PandiO/knk-workspace/issues/565) (L6, part of #119)
+[#565](https://github.com/PandiO/knk-workspace/issues/565) (L6, part of #119),
+[#574](https://github.com/PandiO/knk-workspace/issues/574) (L7)
 **Charter:** [handoffs/CHAIN3_FOLLOWUPS_CHAIN.md](../ai-agents/handoffs/CHAIN3_FOLLOWUPS_CHAIN.md).
 
 ## 1. Waiting for the developer
 
-1. **Before L6 (#565): kick and ban from the web?** Optional item 5 of the #119 API needs: a staff command relay to the
-   game server (realtime `PlayerKick`/`PlayerBan` with reason, audited, with nodes). It changes moderation behaviour,
-   so it needs your yes/no. Without an answer, L6 builds items 1–4 only.
+1. Nothing. (Kick/ban decided 2026-11-15, see decision 10.)
 
 ## 2. Summary
 
@@ -27,6 +26,7 @@
 | L4 Builder rules and templates into the draft | #291 | Not started | — | — | — | — |
 | L5 Lookup applies picker filters | #288 | Not started | — | — | — | — |
 | L6 Player profile API part | #565 | Not started | — | — | — | — |
+| L7 Plugin carries out web kick/ban | #574 | Not started | — | — | — | — |
 
 ## 3. Coordinator decisions
 
@@ -57,6 +57,13 @@
 8. **Route.** Chosen: `create_session` (variant A) for L1 and L2 with model `claude-opus-5-5`, because each needs one
    component repo; subagents for L4–L6 (two component repos, coordinator skill § 4.1.4). Fallback a subagent.
 9. **#387.** Not merged (PR #553 into `next` open): links use today's nodes and say so.
+10. **Kick and ban from the web (developer, 2026-11-15).** The developer said yes. Checking knk-plugin `next`
+    (`5dc88cf`) showed no handler for a kick or ban sent from the API (in-game `users.kick`/`users.ban` run Paper's
+    `/kick`/`/ban` as the viewer), so I asked three questions. Answers: a separate plugin link L7 (#574) with push to
+    knk-plugin for that link only; a web ban works like in-game `/ban` (Paper's ban list, permanent, unban by
+    `/pardon`); new nodes `knk.kick` and `knk.ban`, both seeded on Staff. Recorded on #565 and in the charter.
+    Alternatives offered: (a) all inside L6; (b) no plugin part now; (c) a timed, API-stored ban; (d) `knk.ban`
+    Admin-only or both Admin-only.
 
 ## 4. Link blocks
 
