@@ -4,6 +4,15 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Temp region releases: no server left out, no release stuck behind waiting ones**
+  ([PandiO/knk-workspace#399](https://github.com/PandiO/knk-workspace/issues/399); link L1 of the Chain 3 follow-ups
+  chain, [#564](https://github.com/PandiO/knk-workspace/issues/564)) — knk-web-api and knk-workspace branches
+  `claude/temp-region-releases-399` (PRs into `next`, in review). No change for players.
+  1. `GET api/WorldTasks/temp-region-releases` answers 400 for a blank or missing `serverId`, as `GET open` does.
+     The plugin always sends `realtime.server-id`, so it is not affected.
+  2. Unused temp regions of abandoned drafts are no longer kept past their release when more than 200 older releases
+     wait on a region that is still in use: the API reads the due releases in pages until it has `max` to give.
+  3. Admin steps: none (no settings, no migration, no plugin `config.yml` change).
 - **NPC navigation design: wall corners, stuck recovery, narrowed formations, followers that finish their trip**
   ([PandiO/knk-workspace#519](https://github.com/PandiO/knk-workspace/issues/519); design only, docs, nothing changes in game).
   knk-workspace `claude/npc-followups-l1` (PR into `next`, in review). BEHAVIOR_MODEL § 2 NAV-19–NAV-23 and

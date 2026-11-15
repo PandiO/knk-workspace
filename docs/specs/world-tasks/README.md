@@ -1,6 +1,6 @@
 # WorldTask Feature Documentation
 
-**Status:** Current · **Last updated:** 2026-11-13 (link to the `WgRegionId` requirements moved from knk-plugin, PandiO/knk-workspace#304)
+**Status:** Current · **Last updated:** 2026-11-15 (`GET temp-region-releases` needs `serverId`, PandiO/knk-workspace#399); 2026-11-13 (link to the `WgRegionId` requirements moved from knk-plugin, PandiO/knk-workspace#304)
 **State:** Living reference for the lifecycle (§ "Lifecycle and endpoints" below, as built by PandiO/knk-workspace#180, merged
 into the default branches 2026-11-04 with #181). The other files in this folder are older design notes:
 where they differ from that section, the section is current.
@@ -148,7 +148,7 @@ Pending ──claim──► InProgress ──complete──► Completed
 | `POST /` | `knk.admin.world` or game server | create; the creator is the JWT caller (the session owner for the game server); body may name `formSubmissionProgressId`; a field's previous open task is cancelled |
 | `GET {id}`, `GET by-link-code/{code}`, `GET status/{status}`, `GET session/{id}` | logged in or game server | reads (`by-link-code` finds open tasks only) |
 | `GET session/{id}/open` | logged in or game server | the session's open tasks |
-| `GET temp-region-releases?serverId=`, `POST temp-region-releases/{id}/settle` | game server only | #269 (feature branch): the temp regions released for removal, and the server's answer (Removed / Missing / Kept) |
+| `GET temp-region-releases?serverId=`, `POST temp-region-releases/{id}/settle` | game server only | #269 (feature branch): the temp regions released for removal, and the server's answer (Removed / Missing / Kept); `serverId` is required on the list (400 when blank, #399, branch `claude/temp-region-releases-399`) |
 | `POST {id}/claim` | game server | `{taskCode, claimedByServerId, claimedByMinecraftUsername, claimedByUuid, claimMode}` |
 | `POST {id}/complete`, `{id}/fail` | game server | `{outputJson \| errorMessage, serverId}` |
 | `POST {id}/release` | game server | InProgress → Pending (in-game `cancel`, quit, restart, plugin disable) |
