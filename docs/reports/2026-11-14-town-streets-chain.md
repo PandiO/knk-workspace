@@ -20,7 +20,7 @@
 |---|---|---|---|---|---|---|---|
 | L1 Design note and data check | #514 | Merged into next 2026-11-14 (knk-workspace `2d4418d2`, PR #525); #514 stays `status:in-review` until the developer promotes `next` | knk-workspace `claude/town-streets-409` `a24dcd2b` | [#525](https://github.com/PandiO/knk-workspace/pull/525) | n/a (docs) | create_session session_01R1w2UsgcJBhVZofGWWe6wN (`source_revision` `main`) | automated first, `main` `aa4208b3` |
 | L2 Implementation | #515 | Merged into next 2026-11-15 (knk-web-api `de741909`, knk-web-app `d3d7152b`, knk-workspace `66c7c910`); #515 stays `status:in-review` until the developer promotes `next` | knk-web-api `claude/town-streets-409` `f26d966`; knk-web-app `1a7c2a7` (corrected 2026-11-15); knk-workspace `87ee436e` | [api#31](https://github.com/PandiO/knk-web-api/pull/31), [app#33](https://github.com/PandiO/knk-web-app/pull/33), [ws#554](https://github.com/PandiO/knk-workspace/pull/554) | api runs 43695899575 / 43695899524 green; app runs 43696786714 / 43696786710 green | subagent of the coordinator (knk-coordinator § 4.1.4: two component repos besides knk-workspace) | automated first, `main` `aa4208b3` |
-| L3 Smoke tests and changelog | #516 | Running | — | — | — | create_session session_01R1w2UtELGKcTZrWFhqdpxa (`source_revision` `main`) | automated first, `main` `aa4208b3` |
+| L3 Smoke tests and changelog | #516 | Done, PR open into `next` (not merged), #516 `status:in-review` | knk-workspace `claude/town-streets-409` `2db5a064` | [#556](https://github.com/PandiO/knk-workspace/pull/556) | n/a (docs) | create_session session_01R1w2UtELGKcTZrWFhqdpxa (`source_revision` `main`) | automated first, `main` `aa4208b3` |
 
 ## 3. Coordinator decisions
 
@@ -242,3 +242,42 @@ _(Each link appends its block here when it finishes.)_
        (runs 43696786710, 43696786714). New knk-web-app head `1a7c2a7`. Codex asked again with `@codex review`.
     3. Noted on #511: `e2e/zz-e.spec.ts` on `next` looks like a leftover debug spec (no assertions, `waitForTimeout`).
 
+
+### 4.3 L3 — Smoke tests and changelog (#516)
+
+1. **Scope done.**
+    1. `docs/guides/dashboard-access-smoke-test.md` § 2.2 step 2 (still manual) and § 8 step 9b (still `[automated]`) use
+       `District/{district}/streets`; step 2 notes the 400 `RelationshipNotEditable` for town streets, 9b names the moved
+       e2e case (District 1 "Old Quarter").
+    2. New `docs/guides/town-streets-smoke-test.md`: manual deploy and migration on dev and alpha, a look at a real
+       town's Streets, optional Town form clean-up, rollback; `[automated]` lines naming `e2e/town-detail.spec.ts`,
+       the `entity-detail.spec.ts` derived case, `DisplayWizard.relationships.test.tsx`, `TownStreetsDerivedTests`,
+       `RelationshipsControllerTests.TownStreets_AreDerived_400WithTheReason_ForStaffWithTheNodes_403Without`,
+       `MetadataTownStreetsTests`, `DropTownStreetMigrationTests`, `DropTownStreetMySqlTests`,
+       `PlaceholderResolutionServiceTests` (two town-streets tests). Status "automated in CI; manual steps not run".
+    3. `docs/CHANGELOG.md` admin step 6 links the guide; `docs/guides/README.md` index row.
+2. **Commits and heads.** knk-workspace `claude/town-streets-409` at `2db5a064` (1 commit; the branch fast-forwarded to
+   `next` `66c7c91` first, so no merge commit was needed).
+3. **PRs.** [knk-workspace#556](https://github.com/PandiO/knk-workspace/pull/556), base `next`, `Closes #516`. Not
+   merged. No CI in knk-workspace.
+4. **Tests, baseline → result.** Docs only; the new links resolve; test names checked on knk-web-api `next` `de74190`
+   and knk-web-app `next` `d3d7152`. Known reds: none.
+5. **Decisions (DESIGN § 4.3).**
+    1. *Where the #409 section lives.* Chosen: a new `docs/guides/town-streets-smoke-test.md`, because the manual steps
+       are a deploy, a migration on two databases and a rollback, which do not fit a page guide. Alternatives: (a) a
+       § 6 in `entity-detail-smoke-test.md` (that guide still describes town streets as editable, see #555, and has no
+       deploy steps); (b) a section in the dashboard access guide (about access, not data).
+    2. *§ 2.2 step 2 stays manual.* Chosen: `[ ]` kept, because the API gate tests (`RelationshipsControllerTests`) still
+       call the filter with `Town`/`streets` and no API test sends a District link as world-only. Alternatives: (a) mark
+       it `[automated]` with `TheAreaNodeWithoutContent_Is403` (claims District coverage the test does not have).
+    3. *Dashboard guide header.* Chosen: no status-line change, because other sessions edit that header and the steps
+       carry the #409 note themselves. Alternatives: (a) a dated clause in the status line (likely conflict).
+6. **Out of scope, filed.** [#555](https://github.com/PandiO/knk-workspace/issues/555): the entity detail smoke test
+   still uses Town streets as its link example and lists a town's streets as changeable.
+7. **Blockers.** None.
+8. **At merge / what the developer must do.**
+    1. Run the manual steps of the town streets smoke test: back up, deploy API and web app together, apply
+       `DropTownStreet` on dev then alpha, open a real town with several districts and compare its Streets with the
+       districts' streets (hint, no Add…/Unlink); optionally remove Town form `Streets`/`StreetIds` fields; rollback
+       only if needed.
+    2. Codex: see PR #556.
