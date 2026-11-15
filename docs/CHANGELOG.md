@@ -8,7 +8,7 @@ This is a human-readable record of capabilities merged into the V3 default branc
   ([PandiO/knk-workspace#506](https://github.com/PandiO/knk-workspace/issues/506), part of
   [#507](https://github.com/PandiO/knk-workspace/issues/507); link L2 of the NPC navigation follow-ups chain,
   [#520](https://github.com/PandiO/knk-workspace/issues/520)) — knk-plugin and knk-workspace branches
-  `claude/npc-followups-l2` (PRs into `next`, in review, not merged). No change for players or with
+  `claude/npc-followups-l2`, merged into `next` 2026-11-15 (knk-plugin#31, docs knk-workspace#536); on the trunk when the developer promotes `next`. No change for players or with
   `npc.navigation.enabled: false` (the default).
   1. **Access change in the middle of a group (#506).** A gate or availability event hands every follower its
      waypoints again in the next tick; the followers outside a district whose entry was removed stop at its edge, the
@@ -26,6 +26,66 @@ This is a human-readable record of capabilities merged into the V3 default branc
      or leader in a door's box when it starts closing).
   - **Admin steps:** none; no new `config.yml` key, no migration. Deploy the plugin. To test: the Phase 4 developer
     test steps 9 and 10 in the [implementation plan](specs/npc-platform/IMPLEMENTATION_PLAN.md).
+- **Plugin: 13 more plugin scenarios and a freeze test replace evening checks in game**
+  ([PandiO/knk-workspace#511](https://github.com/PandiO/knk-workspace/issues/511), plugin part; developer-facing, nothing
+  changes in game). Merged into `next` 2026-11-15 (knk-plugin#35, merge `b2c5dff0`; docs knk-workspace#544); on the trunk when the developer promotes `next`.
+  - **Scenarios** (CI `paper-boot`, a real Paper server with fake API data; 3 → 16, `MIN_SCENARIOS` 16): gate safety
+    with mobs, a dropped item and a minecart standing in for players (moved out on their own side, out of a two-deep
+    door, never into the next door's opening, opening leaves neighbours alone, door blocks never suffocate while a wall
+    does); a lootbox area's region renamed and replaced in place over the region callback with its drawn bounds and
+    flags; the temp-region sweep keeping an area's temp region; boxes asked for on the ground inside an area's Y range,
+    under a roof, and none after lootboxes are switched off.
+  - **Unit test:** `AdminFreezeListenerTest` (a frozen player can't walk, chat or run commands other than `/msg` and
+    `/r`; teleports and damage).
+  - **Smoke tests:** the automated steps are marked in the gate, lootbox area region, settings pages, player profile,
+    kit grant delivery, link code and realtime § S5 guides; steps that need a player wait for simulated players
+    ([#540](https://github.com/PandiO/knk-workspace/issues/540)). No plugin behaviour changed; `testing.scenarios.enabled`
+    stays off by default.
+  - **Admin steps:** none.
+- **Dashboard: the PermissionGrant table loads** ([PandiO/knk-workspace#408](https://github.com/PandiO/knk-workspace/issues/408);
+  API and staff web app). knk-web-api and knk-web-app branches `claude/permission-grant-table-408` (PRs into `next`, in
+  review, not merged). Dashboard → Permission Grant lists every grant and deny (node, Granted/Denied, holder, expiry)
+  and pages, sorts and searches by node; it is read-only (no New, Edit or Delete that saves: grants are still changed
+  on the player profile and with `/knk user … perm`; #50 adds the group editor).
+  - **API:** `POST api/PermissionGrants/search` now needs `knk.admin.user.manage`, like `GET` and `GET {id}` (it needed
+    `knk.admin.user.perm`), so whoever the dashboard lists the type for can read it. Writes still need
+    `knk.admin.user.perm`. The search sorts by the column asked (`id`, `holderId`, `value`, `expiresAt`, `node`).
+  - **Admin steps:** none; deploy the API and the web app together (no migration, no settings). Smoke test:
+    [dashboard access smoke test § 8.6](guides/dashboard-access-smoke-test.md) (mostly automated in CI).
+- **Town streets from districts: design note and data check** ([PandiO/knk-workspace#409](https://github.com/PandiO/knk-workspace/issues/409), L1 [#514](https://github.com/PandiO/knk-workspace/issues/514); knk-workspace only, docs) — knk-workspace branch
+  `claude/town-streets-409` (PR into `next`, in review). Proposed design
+  [specs/towns/DESIGN_TOWN_STREETS.md](specs/towns/DESIGN_TOWN_STREETS.md) and the read-only check
+  `scripts/maintenance/town-street-orphans-409.sql` (orphan `TownStreet` rows, counts, Town configurations naming
+  Streets). Nothing changes in the API, web app or plugin yet (that is L2).
+  - **Admin steps:** none; run the check on dev and alpha when the coordinator asks (read only).
+- **Plugin: the 52 tests that CI skipped now run, with MockBukkit**
+  ([PandiO/knk-workspace#499](https://github.com/PandiO/knk-workspace/issues/499); developer-facing, nothing changes
+  in game). Merged into `next` 2026-11-14 (knk-plugin#32, merge `0810a6c7`; docs knk-workspace#539); on the trunk when the developer promotes `next`.
+  - The seven `requires-bukkit` test files of `knk-paper` pass and run in `./gradlew test` and CI; the tag exclusion and
+    the `taggedTest` task are gone. knk-paper: 2,690 tests before, 2,735 after (all green; 18 skipped as before).
+  - MockBukkit (`mockbukkit-v26.3` 4.120.0) is a test-only dependency (developer decision 2026-11-14) for tests that need
+    Bukkit statics; its JUnit 6 dependency is excluded, the project stays on JUnit 5.
+  - Stale tests were brought up to date, none deleted or skipped: the removed in-game account creation flow (KNG-67,
+    KNG-208), `/account link` argument handling, Component messages, existing users looked up by UUID.
+  - **Admin steps:** none.
+- **Plugin features can prove themselves on a real server in CI: in-plugin test scenarios**
+  ([PandiO/knk-workspace#421](https://github.com/PandiO/knk-workspace/issues/421); developer-facing, nothing changes for
+  players). Merged into `next` 2026-11-14 (knk-plugin#30, merge `309d3580`; docs knk-workspace#532); on the trunk when the developer promotes `next`.
+  - A scenario builds a small scene on a test server (blocks, a WorldGuard region, mobs, fake API data), plays it out
+    over server ticks and asserts the result. The runner is platform-free in `knk-core` (`core/scenario/`), the Bukkit
+    glue and the scenarios in `knk-paper` (`paper/scenario/`). Each scenario logs `KNK-SCENARIO PASS|FAIL <name>`, then
+    a summary line.
+  - `/knk scenario list | run <name|all>` (node `knk.admin.scenario`) exists **only** with the new
+    `testing.scenarios.enabled: true`; off by default, so every real server behaves exactly as before.
+  - Three scenarios: a portcullis opens and closes (`gate-open-close`), a closing door moves a mob out of its doorway
+    without suffocating it (`gate-closing-moves-entity-out`, KNG-106), TNT breaks nothing outside every region but does
+    inside one (`global-region-explosion`).
+  - CI: the Paper boot test (`paper-boot.yml`) runs every scenario after the boot check and fails on a failed or
+    missing scenario or a missing summary; the result table is in the job summary. About 4 s of scenarios in a
+    1.5-minute job.
+  - Guide: [writing a plugin scenario](guides/developer/plugin-scenarios.md); [CI § 7.1](guides/developer/ci.md#71-in-plugin-scenarios).
+  - **Admin steps:** none. Don't add the `testing` block to dev, alpha or production configs; a missing block is off
+    ([plugin configuration § 4.28](guides/admin/plugin-configuration.md#428-testing)).
 - **Smoke tests: the web app's checks move into the automated suites** ([PandiO/knk-workspace#511](https://github.com/PandiO/knk-workspace/issues/511))
   — no game or player change; developer-facing. Playwright specs with a mocked API in knk-web-app `e2e/` now check what
   the developer did by hand in the smoke tests of features already on the trunk, and each guide marks those steps
@@ -35,7 +95,22 @@ This is a human-readable record of capabilities merged into the V3 default branc
   helpers `e2e/support/layout.ts` (no sideways scroll at phone width), `e2e/fixtures/players.ts` and
   `e2e/fixtures/settings.ts`; `mockSession` keeps the realtime hub offline. Guides:
   [player profile](guides/player-profile-smoke-test.md), [settings pages](guides/settings-pages-smoke-test.md);
-  [web app testing § 3](guides/developer/web-app-testing.md#3-end-to-end-tests-playwright).
+  [web app testing § 3](guides/developer/web-app-testing.md#3-end-to-end-tests-playwright). Merged into `next`
+  2026-11-14 (knk-web-app#28, knk-workspace#528).
+  Batch 2: `e2e/admin-navigation.spec.ts` (admin navigation, 20 of 24 steps) and `e2e/dashboard-access.spec.ts`
+  (dashboard access § 8, with the API's xUnit tests marked in § 2.2, § 3, § 4 and § 7; 31 checks), fixture
+  `e2e/fixtures/dashboardAccess.ts`. Found: Mail log and Invitations scroll sideways at phone width
+  ([#535](https://github.com/PandiO/knk-workspace/issues/535)). Guides: [admin navigation](guides/admin-navigation-smoke-test.md),
+  [dashboard access](guides/dashboard-access-smoke-test.md). Merged 2026-11-14 (knk-web-app#30, knk-workspace#537).
+  Batch 3: `e2e/entity-detail.spec.ts` (entity detail, 14 of 21 steps) and "Show what uses it" in
+  `e2e/dashboard-access.spec.ts`; the relation picker's Jest tests marked in its guide (19 of 24 steps), fixture
+  `e2e/fixtures/entityDetail.ts`. Guides: [entity detail](guides/entity-detail-smoke-test.md),
+  [relation picker and delete details](guides/relation-picker-and-delete-details-smoke-test.md). Merged 2026-11-14
+  (knk-web-app#31, knk-workspace#538).
+  Batch 4: `e2e/data-table.spec.ts` (shared table, pager and confirm; numbers in a Dutch browser) and the existing Jest
+  and API tests marked in [data primitives](guides/data-primitives-smoke-test.md) (20 of 28 steps),
+  [feedback primitives](guides/feedback-primitives-smoke-test.md) (15 of 28) and
+  [form step conditions and step jump](guides/form-step-conditions-and-step-jump-smoke-test.md) (29 of 36).
   - **Admin steps:** none (tests and docs only).
 - **Dashboard tables: every row looks the same, the row actions stay in view, and a right-click menu**
   (PandiO/knk-workspace#404, #405, #406; staff web app only). knk-web-app branch `claude/dashboard-table-actions-404-406`,
@@ -101,6 +176,31 @@ This is a human-readable record of capabilities merged into the V3 default branc
   `next` 2026-11-13 (knk-web-api#18 `c20899c`). The API parts of #184 and #261 are on `master` since 2026-11-12. **Deploy order:** back up the database, deploy the API and run
   `dotnet ef database update` (one new migration here, `AddTempRegionReleases`), then the plugin. One entry per feature
   follows.
+- **Erasure retest fixes: first join without a cached user, erasure feed in PascalCase, test walkers out of the
+  water** (PandiO/knk-workspace#486 retest, #490 remainder; plugin only). knk-plugin branch
+  `claude/erasure-first-join-486-retest`, merged into `next` 2026-11-14 (knk-plugin#29, `058f93a`); on the trunk when the developer promotes `next`. The developer's retest of 2026-11-14
+  (plugin `0.1.0+a760c4a4`) still got "Welcome back" in § S5 steps 1, 4, 5 and 5a. Two causes, both fixed:
+  1. **The first join was decided from the user cache at `PlayerJoinEvent`**, which an erasure empties (and so does a
+     website account that has no UUID yet), so the decision was skipped (`First-join kits: no cached user ... skipped`).
+     It is now made once the join's account sync knows the account (`UserAccountListener`), with the erasure mark taken
+     there whatever the cache holds, and an account the API created while the player connected (pre-login or the
+     join's sync) counts as new, also with realtime off. One decision drives the welcome, the quiet discovery minutes
+     and the first-join kit request. The log line is now `First join: <name> (user <id>) ...`.
+  2. **The catch-up never read the feed:** the API sends `GET api/privacy/erasures` in PascalCase (`Items`,
+     `ErasureId`, `LastId`, ...), the plugin read camelCase only, so every page parsed empty, nothing was applied and
+     `erasure-feed.json` never moved. The plugin now reads both casings (no API change). The other REST DTOs of
+     realtime #178 to #184 were checked: the API's world-task DTOs name their fields in camelCase explicitly; only the
+     erasure feed lacked the attributes.
+  3. **#490:** the test walkers (`/knk npc test spawn`) still drowned (audit: `DROWNING 1088`): Citizens' path search
+     walks through and over water to reach a dry target, and seagrass, kelp and bubble columns passed the dry-spot
+     check. Their own path search now never enters water or lava, and a spot needs a body's room with no fluid at all.
+     No K&K listener records anything for an NPC's drowning damage.
+  Design [realtime DESIGN §7.5](specs/realtime-signalr/DESIGN.md); smoke test
+  [§ S5 steps 4, 5, 5a and 7](guides/realtime-smoke-test.md).
+  - **Admin steps:** none (no `config.yml` key, no API change); deploy the plugin. With the fix, the first hub connect
+    applies the erasures the feed holds that this server has not applied yet (`erasure-feed.json` starts at
+    `"lastId":0` because no page was ever read): expect `Erasure #N applied` lines for older erasures, which are
+    harmless (every step is idempotent; a UUID now in use by a fresh account comes with `formerUuid: null`).
 - **An erased account's player is greeted as new, also after a restart** (PandiO/knk-workspace#486, follow-up of
   #184 from the developer's smoke test 2026-11-14; plugin only). knk-plugin branch `claude/erasure-first-join-486`,
   merged into `next` 2026-11-14 (knk-plugin#25); on the trunk when the developer promotes `next`. Before, a player whose
@@ -335,7 +435,8 @@ This is a human-readable record of capabilities merged into the V3 default branc
      join loading, teleport warmups, weapon enchantments, AFK activity, domain effect damage), for any entity with
      Citizens' `NPC` metadata, whether or not NPC navigation is on; gate, hub and decoration protection still apply
      to NPCs. The test walkers no longer pick spots under water, where they stood drowning, and the audit report
-     lists damage causes.
+     lists damage causes; since the #486 retest PR their own path search never enters water either (the audit after
+     the first fix still counted `DROWNING 1088`).
   2. **Phase 2** (#360): an NPC follows the road route K&K plans, one stretch of the road line at a time, with a
      watchdog that notices an NPC that makes no progress and sends it on a short recovery leg. NPCs have their own
      access profile instead of a player's rights, wait when the rules allow no route, pause when their chunk unloads

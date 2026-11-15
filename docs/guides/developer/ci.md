@@ -1,6 +1,6 @@
 # CI: what runs on every push and how to mark a known failure
 
-**Status:** Active · **Last updated:** 2026-11-14 (web app end-to-end tests: `e2e.yml`, § 1.1.3, [#423](https://github.com/PandiO/knk-workspace/issues/423)); 2026-11-14 (plugin Paper boot test `paper-boot.yml`, § 1, § 1.1.2 and § 7, [#420](https://github.com/PandiO/knk-workspace/issues/420)); 2026-11-13 (workflows renamed "Build and test"; Codex review comments are not CI, § 1); 2026-11-13 (§ 4 the CI run decides, § 5 reading runs as an agent, § 6 the Node.js 20 warning, [#363](https://github.com/PandiO/knk-workspace/issues/363)); 2026-11-13 (first version, [PandiO/knk-workspace#362](https://github.com/PandiO/knk-workspace/issues/362), docs follow-up of [#327](https://github.com/PandiO/knk-workspace/issues/327); checked against knk-web-api `master` `210f731`, knk-web-app `main` `33d68f8`, knk-plugin `main` `e8b651d`)
+**Status:** Active · **Last updated:** 2026-11-14 (§ 7 and § 7.1: 16 scenarios, `MIN_SCENARIOS` 16, plugin backfill [#511](https://github.com/PandiO/knk-workspace/issues/511), in knk-plugin `next`); 2026-11-14 (§ 1.1.2: the `requires-bukkit` tests run in CI with MockBukkit, [#499](https://github.com/PandiO/knk-workspace/issues/499), in knk-plugin `next`); 2026-11-14 (plugin scenarios in `paper-boot.yml`, § 7.1, [#421](https://github.com/PandiO/knk-workspace/issues/421), in knk-plugin `next`); 2026-11-14 (web app end-to-end tests: `e2e.yml`, § 1.1.3, [#423](https://github.com/PandiO/knk-workspace/issues/423)); 2026-11-14 (plugin Paper boot test `paper-boot.yml`, § 1, § 1.1.2 and § 7, [#420](https://github.com/PandiO/knk-workspace/issues/420)); 2026-11-13 (workflows renamed "Build and test"; Codex review comments are not CI, § 1); 2026-11-13 (§ 4 the CI run decides, § 5 reading runs as an agent, § 6 the Node.js 20 warning, [#363](https://github.com/PandiO/knk-workspace/issues/363)); 2026-11-13 (first version, [PandiO/knk-workspace#362](https://github.com/PandiO/knk-workspace/issues/362), docs follow-up of [#327](https://github.com/PandiO/knk-workspace/issues/327); checked against knk-web-api `master` `210f731`, knk-web-app `main` `33d68f8`, knk-plugin `main` `e8b651d`)
 
 The GitHub workflows of the component repos are the automated gate for every change. They run on every push (all
 branches), every pull request and on manual dispatch (`workflow_dispatch`). Under the
@@ -18,7 +18,7 @@ the start condition of that branch model (developer decision 2026-11-12,
 | knk-web-app | `.github/workflows/ci.yml` ("Build and test", named "CI" until 2026-11-13; added by [knk-web-app#9](https://github.com/PandiO/knk-web-app/pull/9)) | Node 22 with the npm cache: `npx --yes npm@11 ci` (the lock file is valid for npm 11 only), `npm run test:ci` (`react-scripts test --watchAll=false --passWithNoTests`), `npx tsc --noEmit`, and `npm run build` with `CI=true`, so build warnings fail the job. Timeout 20 minutes. |
 | knk-web-app | `.github/workflows/e2e.yml` ("End-to-end tests", job `e2e`; added by [#423](https://github.com/PandiO/knk-workspace/issues/423)) | Playwright end-to-end tests in Chromium against the production build with a mocked API (§ 1.1.3). Not a required check. Timeout 10 minutes. |
 | knk-plugin | `.github/workflows/build.yml` ("Build") | Older than this setup. Java 25 compiles and tests, Java 21 runs Gradle: `./gradlew build` with the dev-server deploy pointed at a throwaway folder. |
-| knk-plugin | `.github/workflows/paper-boot.yml` ("Paper boot test", [#420](https://github.com/PandiO/knk-workspace/issues/420)) | Builds the shaded jar, starts a real Paper 26.3 server with it, WorldGuard and WorldEdit, and fails unless KnK enables without errors. Details in § 7. Timeout 10 minutes. |
+| knk-plugin | `.github/workflows/paper-boot.yml` ("Paper boot test", [#420](https://github.com/PandiO/knk-workspace/issues/420)) | Builds the shaded jar, starts a real Paper 26.3 server with it, WorldGuard and WorldEdit, and fails unless KnK enables without errors; then runs every in-plugin scenario on that server and fails on any failed or missing one ([#421](https://github.com/PandiO/knk-workspace/issues/421)). Details in § 7. Timeout 10 minutes. |
 | knk-workspace | none | Docs and configuration only. |
 
 The "Codex Review Summary" comments on pull requests come from the ChatGPT Codex connector app, set up in the
@@ -38,13 +38,14 @@ Both `ci.yml` workflows cancel an earlier run of the same branch and event when 
    `KNK_TEST_MYSQL="Server=localhost;User=knk_test;Password=…" dotnet test …`; the user needs the right to create and
    drop databases named `KNK_TEST_MYSQL_DB_PREFIX`* (default `knk_test_`). Fresh-database migration bugs are caught by
    `migrations.yml` instead.
-2. **Plugin tests tagged `requires-bukkit`.** Seven test files in `knk-paper` are excluded by `excludeTags` in
-   `knk-paper/build.gradle.kts` (no test uses the `integration` tag), and a few are `@Disabled` because
-   WorldEdit/WorldGuard are not on the test classpath. They are Mockito unit tests in the Gradle JVM, not tests that
-   talk to a server, so the boot test (§ 7) can't run them. `./gradlew :knk-paper:taggedTest` runs them (52 tests,
-   32 failing on 2026-11-14: Bukkit statics without a server, stale stubs and expectations). Making them pass, and the
-   choice between plain Mockito fixes, MockBukkit and in-plugin scenarios, is
-   [#499](https://github.com/PandiO/knk-workspace/issues/499).
+2. **Plugin tests tagged `requires-bukkit`: none any more** ([#499](https://github.com/PandiO/knk-workspace/issues/499),
+   in knk-plugin `next` since `0810a6c7`, 2026-11-14). The seven test files that `excludeTags` kept out of `test`
+   (52 tests, 32 failing on 2026-11-14: Bukkit statics without a server, stale stubs and expectations) pass and run in
+   `test`, so `build.yml` runs them; the tags, `excludeTags` and the `taggedTest` task are gone. Tests that need Bukkit
+   statics (`Registry`, `Material.isSolid()`, `Bukkit.getScheduler()`) start a MockBukkit server themselves
+   (`MockBukkit.mock()` / `unmock()`, test-only dependency, developer decision 2026-11-14;
+   [plugin architecture § Testing](../../architecture/plugin-architecture.md#testing)). A few tests are still
+   `@Disabled` because WorldEdit/WorldGuard are not on the test classpath (the 18 skipped).
 3. **Web app end-to-end tests** run in CI since 2026-11-14 ([#423](https://github.com/PandiO/knk-workspace/issues/423)):
    the workflow `.github/workflows/e2e.yml` (job `e2e`, Chromium only, timeout 10 minutes) installs with npm 11, type
    checks the specs and mocks (`npm run typecheck:e2e`), installs Chromium (`npx playwright install --with-deps
@@ -132,8 +133,11 @@ later bump to the next major versions of these actions clears it.
 
 `paper-boot.yml` in knk-plugin ([#420](https://github.com/PandiO/knk-workspace/issues/420),
 [DESIGN § 6.3](../../specs/ai-agent-workflow/DESIGN.md#6-testing-and-ci)) proves on every push and pull request that the
-shaded plugin starts on a real server. The job takes about 1.5 minutes (2026-11-14: jar build 44 s, server boot,
-15 s settle, stop and log check 34 s).
+shaded plugin starts on a real server, then runs the in-plugin scenarios on it (§ 7.1). The job takes about
+1.5 minutes with three scenarios (2026-11-14: jar build 33 s; server boot, 15 s settle, scenarios, stop and both
+checks 33 s; the scenarios themselves took about 4 s of it). The 16 scenarios since the backfill of
+[#511](https://github.com/PandiO/knk-workspace/issues/511) take about 45 s on a local run, most of it the three lootbox
+spawn scenarios, which wait for the spawn scheduler's one-second tries.
 
 1. **Build:** `./gradlew :knk-paper:shadowJar -PgitCommit=<8-character commit>` (JDK 25 toolchain, Gradle on JDK 21,
    as `build.yml`). The script refuses a jar without `knk-core` classes: `build -x deployToDevServer` leaves the
@@ -160,18 +164,44 @@ shaded plugin starts on a real server. The job takes about 1.5 minutes (2026-11-
        are excused and counted: 5 to 7 per run on 2026-11-14 (menu template validation, siege recovery, world tasks,
        compass settings);
     4. the server doesn't stop within 90 seconds, or `KnightsAndKings Plugin Disabled!` is missing.
-5. **On failure** read the annotations of the "Boot the server and check the log" step, then the `paper-boot-log`
-   artifact (`latest.log` and the server's stdout; uploaded on every run, kept 14 days).
+5. **On failure** read the annotations of the "Boot the server, check the log and run the plugin scenarios" step (and
+   the scenario table in the job summary), then the `paper-boot-log` artifact (`latest.log` and the server's stdout;
+   uploaded on every run, kept 14 days).
 6. **Run it locally** (needs JDK 25, `unzip`, `python3`): put `paper.jar` and the two plugin jars in an empty folder
    (`plugins/`), build the shaded jar, then
    `tools/paper-boot/boot-test.sh --server-dir <folder> --plugin-jar knk-paper/build/libs/knk-paper-0.1.0-SNAPSHOT.jar --java <jdk25>/bin/java`.
-   The folder is a throwaway: the script writes `eula.txt`, `server.properties` and the KnK config.
-7. **Hook for in-plugin scenarios** ([#421](https://github.com/PandiO/knk-workspace/issues/421)): `--console-command`
-   sends a console command once the server is up, `--expect-line <regex>` waits for a log line (for example a
-   scenario's pass line), and `--fail-line <regex>` fails at once on a matching line. Add them to the workflow's boot
-   step.
+   The folder is a throwaway: the script writes `eula.txt`, `server.properties` and the KnK config. Add `--scenarios`
+   to run the scenarios as CI does.
+7. **Console hooks:** `--console-command` sends a console command once the server is up, `--expect-line <regex>` waits
+   for a log line (the run stops waiting once every expected line is there), and `--fail-line <regex>` fails at once on
+   a matching line. `--scenarios` (§ 7.1) is built on them.
 8. **Required check:** not yet. Once it is stable, the developer adds the check `paper-boot` (the job of "Paper boot
    test") to knk-plugin's "Trunk and next" ruleset.
+
+### 7.1 In-plugin scenarios
+
+[#421](https://github.com/PandiO/knk-workspace/issues/421), [DESIGN § 6.3.2](../../specs/ai-agent-workflow/DESIGN.md#6-testing-and-ci);
+in knk-plugin `next` (`309d3580`, 2026-11-14), not on trunk yet. How to write one:
+[writing a plugin scenario](plugin-scenarios.md).
+
+1. **What runs:** the boot step passes `--scenarios --min-scenarios "$MIN_SCENARIOS" --expect-timeout 180`. The script
+   sets `testing.scenarios.enabled: true` in the KnK config (off in the shipped `config.yml`), and after the 15 s
+   settle sends `knk scenario run all` to the console. The plugin runs every scenario one after the other and logs
+   `KNK-SCENARIO START <name>`, then `KNK-SCENARIO PASS <name> (<n> ticks)` or `KNK-SCENARIO FAIL <name>: <reason>`,
+   and finally `KNK-SCENARIO SUMMARY passed=<p> failed=<f> total=<t>`. The script waits for the summary line (at most
+   180 s), stops the server and runs both checks.
+2. **Pass/fail** (`tools/paper-boot/check_scenarios.py`, with its own unit tests in the "Test the log check" step): the
+   job fails on any `FAIL` line, a scenario that started without a result, a missing summary line, a summary that
+   doesn't match the lines, or fewer than `MIN_SCENARIOS` scenarios (16 since the #511 backfill, 2026-11-14; raise it in the workflow's boot
+   step when you add one, so a scenario that silently stops registering is caught). A failed scenario doesn't stop the
+   run: every result is in the log and in the table the check writes to the job summary. The boot check of § 7 item 4
+   still applies, so an `ERROR` a scenario causes fails the job too.
+3. **The scenarios** (2026-11-14): `gate-open-close` (a portcullis from fake API data opens and closes through the live
+   animation task), `gate-closing-moves-entity-out` (KNG-106: a pig in the doorway is moved out by the closing door
+   and never suffocates), `global-region-explosion` (TNT breaks nothing outside every region, but does inside a
+   temporary WorldGuard region). Each was checked to fail with its behaviour broken.
+4. **Server setting:** `server.properties` gets `pause-when-empty-seconds=-1`, so the server keeps ticking with nobody
+   online (vanilla pauses an empty server after 60 s).
 
 ## Related
 

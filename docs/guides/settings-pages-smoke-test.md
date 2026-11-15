@@ -1,7 +1,7 @@
 # Settings pages: units and help, confirms on risky switches, lootbox preview, three pages on the settings shell (#26) — smoke test
 
-**Status:** automated in CI; manual steps not run. Written 2026-11-08 for knk-web-app `claude/settings-pages-26` (chain 3 link V4); **merged 2026-11-12** (knk-web-app `main` `1371951`, with V7); 22 of 26 steps automated 2026-11-14 ([#511](https://github.com/PandiO/knk-workspace/issues/511)); left: the game-server halves of 1.6, 2.5, 3.4, steps 3.5, 3.6, 4.2 and the themes
-**Last updated:** 2026-11-14 (steps marked `[automated]` with their test, backfill #511); 2026-11-12 (test on `main`, docs #342); 2026-11-12 (merged with V7); 2026-11-08
+**Status:** automated in CI; manual steps not run. Written 2026-11-08 for knk-web-app `claude/settings-pages-26` (chain 3 link V4); **merged 2026-11-12** (knk-web-app `main` `1371951`, with V7); 22 of 26 steps automated 2026-11-14 ([#511](https://github.com/PandiO/knk-workspace/issues/511)); left: the game-server halves of 2.5 and 3.4 (1.6's runs as a plugin scenario since 2026-11-14), steps 3.5, 3.6, 4.2 and the themes
+**Last updated:** 2026-11-14 (§ 1 step 6's game half: plugin scenario, plugin backfill #511); 2026-11-14 (steps marked `[automated]` with their test, backfill #511); 2026-11-12 (test on `main`, docs #342); 2026-11-12 (merged with V7); 2026-11-08
 **Issues:** [PandiO/knk-workspace#26](https://github.com/PandiO/knk-workspace/issues/26) (SET-5, SET-6 and #38's
 lootbox preview / "1 in N" odds); the shell is [#187](https://github.com/PandiO/knk-workspace/issues/187)'s `SettingsPage`
 
@@ -32,8 +32,9 @@ Each migrated page has the same header: title, "Last saved …", "n unsaved chan
    filled in: `LootboxSettingsTab.v4.test.tsx`
 6. [automated] Unticking **Lootboxes enabled** asks "Switch lootboxes off?" (red); Cancel saves nothing; **Switch off and
    save** saves with the toast "Lootbox settings saved." and a clean header: `e2e/settings-pages.spec.ts`,
-   `LootboxSettingsTab.v4.test.tsx`. *(Game, manual: needs the game server.)* After the next runtime refresh nothing
-   spawns; switch it on again.
+   `LootboxSettingsTab.v4.test.tsx`. [automated] The game half: after the runtime refresh reads lootboxes switched off, the
+   plugin's spawn scheduler asks for no more boxes (it did while they were on): knk-plugin plugin scenario
+   `lootbox-switched-off-spawns-nothing` (CI `paper-boot`). *(Manual)* against the real API: switch it on again.
 7. [automated] A refused save shows the API's reason in red in the header and keeps the value:
    `e2e/settings-pages.spec.ts`
 8. [automated] A type's Enabled/Disabled chip asks "Disable {type}?" / "Enable {type}?"; the action switches it:
@@ -55,8 +56,9 @@ Each migrated page has the same header: title, "Last saved …", "n unsaved chan
    both; Save (2) sends both and shows "Saved the coins and gems policies.": `e2e/settings-pages.spec.ts`,
    `CurrencyPolicyPage.leave.test.tsx`
 5. [automated] Unticking the coins kill switch asks "Switch coins payments off?" in red; Cancel saves nothing; the
-   question is worded by direction: `CurrencyPolicyPage.test.tsx`. *(Game, manual: needs the game server.)* With
-   payments off, `/pay` with coins answers that transfers are switched off; switch it on again.
+   question is worded by direction: `CurrencyPolicyPage.test.tsx`. *(Game, manual: a player's command, simulated
+   players [#540](https://github.com/PandiO/knk-workspace/issues/540).)* With payments off, `/pay` with coins answers
+   that transfers are switched off; switch it on again.
 6. [automated] A policy changed since loading: the header says "Coins: This policy was changed since you loaded it …",
    Save stays off, **Reload current policy** shows the current values: `e2e/settings-pages.spec.ts`,
    `CurrencyPolicyPage.test.tsx`
@@ -70,8 +72,9 @@ Each migrated page has the same header: title, "Last saved …", "n unsaved chan
 3. [automated] A compass change makes "2 unsaved changes."; leaving asks (Stay keeps both); **Discard** puts both back:
    `e2e/settings-pages.spec.ts`, `RoadsAdminPage.settings.test.tsx`
 4. [automated] Save (2): toast "Saved 2 changes. The game server picks them up within a minute." and both requests:
-   `e2e/settings-pages.spec.ts`. *(Game, manual: needs the game server.)* Within a minute `/navigate <town>` without
-   spawn/region uses the new default; the new compass material works.
+   `e2e/settings-pages.spec.ts`. *(Game, manual: a player's command and compass,
+   simulated players #540.)* Within a minute `/navigate <town>` without spawn/region uses the new default; the new
+   compass material works.
 5. *(Manual, not automated yet.)* Records keep their own Save: a stretch's **Save stretch #n**, a profile's **Save
    profile**; not counted in the header, no question before leaving (LV4-4).
 6. *(Manual, not automated yet.)* Switch world to one that doesn't exist: the error shows under Overview and the World

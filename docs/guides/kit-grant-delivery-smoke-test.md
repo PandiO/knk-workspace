@@ -1,13 +1,17 @@
 # Kit "Grant" from the web app reaches the player in game (#261) — smoke test
 
-**Status:** Ready for the developer's run; API part on `master` since 2026-11-12, plugin part merged into `next` 2026-11-13 from `claude/plugin-chains-into-next` (knk-plugin `next` `745fcf6`); not deployed, not run
-**Last updated:** 2026-11-13 (setup: builds from `master` and `claude/plugin-chains-into-next`); 2026-11-08 (written with the fix)
+**Status:** Ready for the developer's run; API part on `master` since 2026-11-12, plugin part merged into `next` 2026-11-13 from `claude/plugin-chains-into-next` (knk-plugin `next` `745fcf6`); not deployed; automated in CI; manual steps not run (the delivery rules are knk-plugin unit tests; the hand-over to a real player waits for simulated players, [#540](https://github.com/PandiO/knk-workspace/issues/540))
+**Last updated:** 2026-11-14 (steps marked `[automated]` where a knk-plugin or API test covers them, plugin backfill [#511](https://github.com/PandiO/knk-workspace/issues/511)); 2026-11-13 (setup: builds from `master` and `claude/plugin-chains-into-next`); 2026-11-08 (written with the fix)
 **Issue:** [PandiO/knk-workspace#261](https://github.com/PandiO/knk-workspace/issues/261); design
 [specs/kits/DESIGN.md](../specs/kits/DESIGN.md) §4.6, §4.7
 **Chain:** [UX_CHAIN_3.md](../ai-agents/handoffs/UX_CHAIN_3.md) link P1; report
 [2026-11-08-ux-chain-3.md](../reports/2026-11-08-ux-chain-3.md).
 
 Record each step in **Findings** at the end (works / doesn't / accepted). About 20 minutes.
+
+Steps marked `[automated]` run in CI (knk-plugin `KitGrantDeliveryTest`, `KitGrantFlowTest`; the API's xUnit tests).
+What is left by hand needs a player in game: items landing in a real inventory, the chat line, a join and a siege.
+These are no plugin scenario yet, because scenarios have no players ([#540](https://github.com/PandiO/knk-workspace/issues/540)).
 
 ## What changed
 
@@ -38,6 +42,11 @@ servers). `/kit give` in game is unchanged: it places the items itself and leave
 
 ## 1. Online player, realtime on (`realtime.enabled: true`)
 
+0. [automated] The delivery rules for an online player: each pending kit is taken at the API before its items are
+   placed, a delivery taken elsewhere is never placed again, a failed take places nothing and goes on with the next,
+   items that can't be resolved stay pending: `KitGrantDeliveryTest` (`anOnlinePlayerGetsEachPendingKit_AfterItWasTaken`,
+   `aDeliveryTakenElsewhere_IsNeverPlacedAgain`, `aFailedTake_PlacesNothing_AndGoesOnWithTheNextOne`,
+   `itemsThatCantBeResolved_AreNotTaken_SoTheyStayPending`). Manual (steps 1–4): a real player and inventory (#540).
 1. A is online. Web: `/admin/users/<A>` → Kits → **Grant** on K.
 2. In game, within about a second: A gets K's items (helmet on, slot items in their slots, the rest merged or
    displaced as with `/kit give`) and the chat line *A staff member gave you the "K" kit.*
@@ -51,26 +60,38 @@ servers). `/kit give` in game is unchanged: it places the items itself and leave
 
 ## 3. Offline player
 
-1. A logs out. Grant K twice from the web (two rows with `DeliveredAt` NULL).
+1. [automated] A player who left before the take keeps the delivery pending for the next join; a player without a
+   cached account is skipped: `KitGrantDeliveryTest.aPlayerWhoLeftBeforeTheTake_KeepsTheDeliveryPending`,
+   `aPlayerWithoutACachedAccount_IsSkipped`. Manual (steps 2–4): the join itself (#540).
+   A logs out. Grant K twice from the web (two rows with `DeliveredAt` NULL).
 2. A joins. About 5 s later both kits arrive, one chat line each, in the order granted. SQL: both rows delivered.
 3. A logs out and in again: nothing more arrives (no second hand-over).
 
 ## 4. Never twice
 
+0. [automated] Calls never run twice at once (a call during a run runs once more after it):
+   `KitGrantDeliveryTest.aCallDuringARun_RunsOnceMoreAfterIt_NeverTwiceAtOnce`. Manual: the restart race below.
 1. With A online, grant K, then right away `/reload confirm` or restart the server before the items arrive (or stop the
    API between the grant and the delivery and start it again). Whatever happens, A ends up with **one** copy of K's
    items per grant, never two. SQL: `DeliveredAt` set once.
-2. Optional, two terminals: `curl -X POST -H "X-API-Key: <key>" "<api>/api/Kits/deliveries/<claimId>/delivered?userId=<A>"`
+2. [automated] in the API's xUnit tests (409 `AlreadyDelivered`, 404), see the comment on
+   [#511](https://github.com/PandiO/knk-workspace/issues/511#issuecomment-6885534999). Optional, two terminals: `curl -X POST -H "X-API-Key: <key>" "<api>/api/Kits/deliveries/<claimId>/delivered?userId=<A>"`
    on an already delivered claim → `409 {"code":"AlreadyDelivered"}`; on an unknown one → `404`.
 
 ## 5. In a siege
 
+0. [automated] In a siege nothing is read or taken; a kit taken while the player entered a siege is kept and placed
+   after it: `KitGrantDeliveryTest.inASiege_NothingIsReadOrTaken`,
+   `aSiegeEnteredWhileTheTakeIsInFlight_KeepsTheKit_AndPlacesItAfterTheSiege`. Manual (steps 1–2): a real siege (#540).
 1. A joins a siege lobby and waits in the hub (or plays a match). Grant K from the web: nothing arrives during the
    siege (SQL: `DeliveredAt` stays NULL).
 2. The siege ends and gives A's own inventory back: about a second later K arrives.
 
 ## 6. In game `/kit give` is unchanged
 
+0. [automated] `/kit give` names the sender as the actor and places the items itself:
+   `KitGrantFlowTest.giveNamesTheSenderAsTheActor`, `successfulClaimPlacesAndConfirms`. Manual: the command run by a
+   staff player (#540).
 1. Staff in game: `/kit give A K`. A gets the items once, as before; SQL: the new row has `DeliveryRequestedAt` NULL (no
    pending delivery, nothing arrives a second time on the next join).
 
