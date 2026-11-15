@@ -18,7 +18,7 @@
 | Link | Issue | Status | Branch heads | PR | CI | How started | Test rule |
 |---|---|---|---|---|---|---|---|
 | L1 Design note and data check | #514 | Merged into next 2026-11-14 (knk-workspace `2d4418d2`, PR #525); #514 stays `status:in-review` until the developer promotes `next` | knk-workspace `claude/town-streets-409` `a24dcd2b` | [#525](https://github.com/PandiO/knk-workspace/pull/525) | n/a (docs) | create_session session_01R1w2UsgcJBhVZofGWWe6wN (`source_revision` `main`) | automated first, `main` `aa4208b3` |
-| L2 Implementation | #515 | Done, PRs open into `next` (not merged), #515 `status:in-review` | knk-web-api `claude/town-streets-409` `f26d966`; knk-web-app `9d578bb`; knk-workspace `87ee436e` | [api#31](https://github.com/PandiO/knk-web-api/pull/31), [app#33](https://github.com/PandiO/knk-web-app/pull/33), [ws#554](https://github.com/PandiO/knk-workspace/pull/554) | api runs 43695899575 / 43695899524 green; app runs 43695923370 / 43695923371 green | subagent of the coordinator (knk-coordinator § 4.1.4: two component repos besides knk-workspace) | automated first, `main` `aa4208b3` |
+| L2 Implementation | #515 | Done, PRs open into `next` (not merged), #515 `status:in-review` | knk-web-api `claude/town-streets-409` `f26d966`; knk-web-app `1a7c2a7` (corrected 2026-11-15); knk-workspace `87ee436e` | [api#31](https://github.com/PandiO/knk-web-api/pull/31), [app#33](https://github.com/PandiO/knk-web-app/pull/33), [ws#554](https://github.com/PandiO/knk-workspace/pull/554) | api runs 43695899575 / 43695899524 green; app runs 43696786714 / 43696786710 green | subagent of the coordinator (knk-coordinator § 4.1.4: two component repos besides knk-workspace) | automated first, `main` `aa4208b3` |
 | L3 Smoke tests and changelog | #516 | Not started | — | — | — | — | — |
 
 ## 3. Coordinator decisions
@@ -218,4 +218,15 @@ _(Each link appends its block here when it finishes.)_
        `RelationshipsControllerTests.TownStreets_AreDerived_400WithTheReason_ForStaffWithTheNodes_403Without`;
        `TownStreetsDerivedTests`.
     2. L3: the CHANGELOG entry already has the admin steps; L3 only adds the smoke-test link to step 6.
+10. **Correction 2026-11-15 (coordinator check, knk-web-app PR #33 sent back).**
+    1. `next` brought `e2e/entity-detail.spec.ts` (#511 backfill), which used Town streets as the link-table example. I merged
+       `origin/next` `9a29623` into the branch (`10903f5`, no rebase) and committed `1a7c2a7`:
+       1. pagination, empty state, Unlink, Add…, Delete and both node gates moved to `/display/District/1`
+          (`storage: 'many'`, `Relationships/District/1/streets/*`, fixture `mockDistrictDetail`);
+       2. rename, errors, 390 px and no-access stay on Town;
+       3. a new case checks that Town streets are read-only with the hint;
+       4. the shared `dashboardAccess.ts` metadata sends Town `streets` as `derived`.
+    2. Results: Jest 302 / 2603 passed, `tsc` and `typecheck:e2e` ok, Playwright 100 passed, build ok. CI green
+       (runs 43696786710, 43696786714). New knk-web-app head `1a7c2a7`. Codex asked again with `@codex review`.
+    3. Noted on #511: `e2e/zz-e.spec.ts` on `next` looks like a leftover debug spec (no assertions, `waitForTimeout`).
 
