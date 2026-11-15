@@ -1,6 +1,6 @@
 # CI: what runs on every push and how to mark a known failure
 
-**Status:** Active · **Last updated:** 2026-11-14 (§ 1.1.2: the `requires-bukkit` tests run in CI with MockBukkit, [#499](https://github.com/PandiO/knk-workspace/issues/499), in knk-plugin `next`); 2026-11-14 (plugin scenarios in `paper-boot.yml`, § 7.1, [#421](https://github.com/PandiO/knk-workspace/issues/421), in knk-plugin `next`); 2026-11-14 (web app end-to-end tests: `e2e.yml`, § 1.1.3, [#423](https://github.com/PandiO/knk-workspace/issues/423)); 2026-11-14 (plugin Paper boot test `paper-boot.yml`, § 1, § 1.1.2 and § 7, [#420](https://github.com/PandiO/knk-workspace/issues/420)); 2026-11-13 (workflows renamed "Build and test"; Codex review comments are not CI, § 1); 2026-11-13 (§ 4 the CI run decides, § 5 reading runs as an agent, § 6 the Node.js 20 warning, [#363](https://github.com/PandiO/knk-workspace/issues/363)); 2026-11-13 (first version, [PandiO/knk-workspace#362](https://github.com/PandiO/knk-workspace/issues/362), docs follow-up of [#327](https://github.com/PandiO/knk-workspace/issues/327); checked against knk-web-api `master` `210f731`, knk-web-app `main` `33d68f8`, knk-plugin `main` `e8b651d`)
+**Status:** Active · **Last updated:** 2026-11-14 (§ 7 and § 7.1: 16 scenarios, `MIN_SCENARIOS` 16, plugin backfill [#511](https://github.com/PandiO/knk-workspace/issues/511), in knk-plugin `next`); 2026-11-14 (§ 1.1.2: the `requires-bukkit` tests run in CI with MockBukkit, [#499](https://github.com/PandiO/knk-workspace/issues/499), in knk-plugin `next`); 2026-11-14 (plugin scenarios in `paper-boot.yml`, § 7.1, [#421](https://github.com/PandiO/knk-workspace/issues/421), in knk-plugin `next`); 2026-11-14 (web app end-to-end tests: `e2e.yml`, § 1.1.3, [#423](https://github.com/PandiO/knk-workspace/issues/423)); 2026-11-14 (plugin Paper boot test `paper-boot.yml`, § 1, § 1.1.2 and § 7, [#420](https://github.com/PandiO/knk-workspace/issues/420)); 2026-11-13 (workflows renamed "Build and test"; Codex review comments are not CI, § 1); 2026-11-13 (§ 4 the CI run decides, § 5 reading runs as an agent, § 6 the Node.js 20 warning, [#363](https://github.com/PandiO/knk-workspace/issues/363)); 2026-11-13 (first version, [PandiO/knk-workspace#362](https://github.com/PandiO/knk-workspace/issues/362), docs follow-up of [#327](https://github.com/PandiO/knk-workspace/issues/327); checked against knk-web-api `master` `210f731`, knk-web-app `main` `33d68f8`, knk-plugin `main` `e8b651d`)
 
 The GitHub workflows of the component repos are the automated gate for every change. They run on every push (all
 branches), every pull request and on manual dispatch (`workflow_dispatch`). Under the
@@ -134,8 +134,10 @@ later bump to the next major versions of these actions clears it.
 `paper-boot.yml` in knk-plugin ([#420](https://github.com/PandiO/knk-workspace/issues/420),
 [DESIGN § 6.3](../../specs/ai-agent-workflow/DESIGN.md#6-testing-and-ci)) proves on every push and pull request that the
 shaded plugin starts on a real server, then runs the in-plugin scenarios on it (§ 7.1). The job takes about
-1.5 minutes (2026-11-14 with three scenarios: jar build 33 s; server boot, 15 s settle, scenarios, stop and both checks
-33 s; the scenarios themselves take about 4 s of it).
+1.5 minutes with three scenarios (2026-11-14: jar build 33 s; server boot, 15 s settle, scenarios, stop and both
+checks 33 s; the scenarios themselves took about 4 s of it). The 16 scenarios since the backfill of
+[#511](https://github.com/PandiO/knk-workspace/issues/511) take about 45 s on a local run, most of it the three lootbox
+spawn scenarios, which wait for the spawn scheduler's one-second tries.
 
 1. **Build:** `./gradlew :knk-paper:shadowJar -PgitCommit=<8-character commit>` (JDK 25 toolchain, Gradle on JDK 21,
    as `build.yml`). The script refuses a jar without `knk-core` classes: `build -x deployToDevServer` leaves the
@@ -190,7 +192,7 @@ in knk-plugin `next` (`309d3580`, 2026-11-14), not on trunk yet. How to write on
    180 s), stops the server and runs both checks.
 2. **Pass/fail** (`tools/paper-boot/check_scenarios.py`, with its own unit tests in the "Test the log check" step): the
    job fails on any `FAIL` line, a scenario that started without a result, a missing summary line, a summary that
-   doesn't match the lines, or fewer than `MIN_SCENARIOS` scenarios (3 on 2026-11-14; raise it in the workflow's boot
+   doesn't match the lines, or fewer than `MIN_SCENARIOS` scenarios (16 since the #511 backfill, 2026-11-14; raise it in the workflow's boot
    step when you add one, so a scenario that silently stops registering is caught). A failed scenario doesn't stop the
    run: every result is in the log and in the table the check writes to the job summary. The boot check of § 7 item 4
    still applies, so an `ERROR` a scenario causes fails the job too.

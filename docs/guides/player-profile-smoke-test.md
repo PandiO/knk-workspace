@@ -1,7 +1,7 @@
 # Staff player profile: status strip, tabs, freeze/unfreeze, timeline, paged audit, player search (#119) — smoke test
 
 **Status:** automated in CI; manual steps not run. Written 2026-11-08 for knk-web-app `claude/player-profile-119` (chain 3 link V3); **merged 2026-11-12** (knk-web-app `main` `1371951`, with V7); 21 of 26 steps automated 2026-11-14, 4 manual left ([#511](https://github.com/PandiO/knk-workspace/issues/511))
-**Last updated:** 2026-11-14 (steps marked `[automated]` with their test, backfill #511); 2026-11-13 (Staff holds `knk.freeze`/`knk.unfreeze`, #367: § 4 step 4); 2026-11-12 (merged with V7); 2026-11-08
+**Last updated:** 2026-11-14 (§ 2 step 3: the game's freeze lock in a knk-plugin unit test, plugin backfill #511); 2026-11-14 (steps marked `[automated]` with their test, backfill #511); 2026-11-13 (Staff holds `knk.freeze`/`knk.unfreeze`, #367: § 4 step 4); 2026-11-12 (merged with V7); 2026-11-08
 **Issues:** [PandiO/knk-workspace#119](https://github.com/PandiO/knk-workspace/issues/119) (MOD-3 part 1, MOD-4, MOD-5 of
 the [2026-10-08 assessment](../reports/2026-10-08-web-app-ux-assessment.md))
 
@@ -39,7 +39,11 @@ You need:
    `e2e/player-profile.spec.ts`
 2. [automated] With a reason: toast "{P} is frozen", the Frozen chip and the reason, the button turns into Unfreeze, the
    API gets the reason: `e2e/player-profile.spec.ts`
-3. *(Manual: needs the game.)* In game, **P** can't move, chat or use commands (at once, #179).
+3. [automated] The game's lock on a frozen player: walking to another block is undone, chat and commands other than
+   `/msg` and `/r` are refused with their message, self-made teleports and damage are cancelled, a player who isn't
+   frozen keeps all of it: knk-plugin `AdminFreezeListenerTest`. *(Manual: needs the game.)* That the freeze from the
+   web app reaches the online player at once (#179) and how the refusals read in a real client (simulated players,
+   [#540](https://github.com/PandiO/knk-workspace/issues/540)).
 4. [automated] The Moderation tab holds the same freeze card: `e2e/player-profile.spec.ts`
 5. [automated] Unfreeze confirms without a reason field; toast "{P} is unfrozen", the chip goes:
    `e2e/player-profile.spec.ts` (that P can move again in game is step 3's check)
