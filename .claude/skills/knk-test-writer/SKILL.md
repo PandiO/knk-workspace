@@ -1,6 +1,6 @@
 ---
 name: knk-test-writer
-description: Write the automated tests for a Knights and Kings (K&K) change and keep the developer's manual check short. Use when you implement or fix a K&K feature, write or update a smoke-test guide, fill in a PR's Testing section, or backfill tests for an existing smoke test. Covers sorting each behaviour or smoke step into a suite (Playwright e2e with a mocked API in knk-web-app, Jest, API xUnit tests, plugin knk-core JUnit, plugin MockBukkit/Mockito, plugin scenarios on a real Paper server, or manual only), where each suite lives and how to run it, the smoke-guide format with automated steps marked, and the PR Testing section.
+description: Write the automated tests for a Knights and Kings (K&K) change and keep the developer's manual check short. Use when you implement or fix a K&K feature, write or update a smoke-test guide, fill in a PR's Testing section, or backfill tests for an existing smoke test. Covers sorting each behaviour or smoke step into a suite (Playwright e2e with a mocked API in knk-web-app, Jest, API xUnit tests, plugin knk-core JUnit, plugin MockBukkit/Mockito, plugin scenarios on a real Paper server, or manual only), where each suite lives and how to run it, the smoke-guide format (every step in full, automated steps tagged), and the PR Testing section.
 ---
 
 # K&K test writer: automated first
@@ -51,13 +51,20 @@ the guide and name it in the PR so a later backfill picks it up.
    don't fix behaviour. In a feature, fix it if it is in scope.
 5. Run each new test once failing (break the behaviour or invert the assertion) so you know it can fail, then green.
 
-## 4. Smoke-test guide: only what is left
+## 4. Smoke-test guide: every step, tagged
 
-1. A guide lists the manual steps of a change. Automated steps stay in the guide as one line each, so the developer
-   sees the coverage: `3. [automated] Delete is greyed out without the node: e2e/dashboard-access.spec.ts`.
-2. A change whose steps are all automated needs no guide section; the PR says so.
-3. Each manual step says why it is manual (game feel, real client, …) in a few words.
-4. Keep the guide's status line honest: "automated in CI; manual steps not run" until the developer runs them.
+Developer decision 2026-11-15: a guide keeps every step with its full manual instructions, so the developer can still
+test everything by hand; steps a suite covers carry a tag, so they can also be skipped.
+
+1. Write each step in full, as if no test existed. Never shorten or drop a step because it is automated.
+2. Put the tag at the start of a step a suite covers, naming the test:
+   `3. [automated: e2e/dashboard-access.spec.ts] As Staff without knk.admin.delete, open …` or, when only part of the
+   step is covered, `[partly automated: <test>; by hand: <what is left>]`.
+3. A step without a tag is manual only; add a few words on why (game feel, real client, needs a player, …).
+4. Status line: how many steps are automated, that every step can still be run by hand, and whether the developer ran
+   the rest, e.g. "12 of 20 steps automated in CI (tagged); every step can still be run by hand; manual steps not run".
+   Give the time for a full manual run and for the untagged steps only.
+5. A change whose steps are all automated still gets its guide section, all steps tagged.
 
 ## 5. PR Testing section
 
