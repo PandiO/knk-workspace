@@ -86,6 +86,50 @@ You need:
    it. Log in as another account in the same browser: that account has its own list.
 5. [automated: `e2e/player-profile.spec.ts`] The new **Last seen** column shows "Now" for online players.
 
+## 6. Permissions tab: grant form on top, search, sortable columns (#407)
+
+**Status:** 10 of 12 steps automated in CI (tagged); every step can still be run by hand; manual steps not run. A full
+manual run takes about 15 minutes, the untagged steps (11, 12) about 5. Added 2026-11-15 for knk-web-app
+`claude/profile-permissions-407` ([PandiO/knk-workspace#407](https://github.com/PandiO/knk-workspace/issues/407),
+merged into `next` 2026-11-15, knk-web-app#37). No API change, no migration, no setting. Log in as **A**, open **P**'s
+profile, tab **Permissions** (`/admin/users/<id>?tab=permissions`), card Effective Permissions.
+
+1. [automated: `e2e/player-profile.spec.ts`] The grant/deny form (Grant/deny node, Value, Expires, **Save**) sits above
+   the list. The list shows P's nodes in the order the API gives them, and none of the Node, Value and Source headers
+   shows an up or down arrow (`aria-sort="none"`).
+2. [automated: `e2e/player-profile.spec.ts`] Type `knk.test.profile`, leave Value on Grant and Expires on its default (a
+   day from now, label "(clear for permanent)"), **Save**. The node field empties, the expiry goes back to a day ahead,
+   and the list reloads with `knk.test.profile`, Granted, Direct grant. In the network tab `POST api/Users/<id>/grants`
+   carries an `expiresAt` about 24 hours ahead.
+3. [automated: `e2e/player-profile.spec.ts`] Type `knk.test.deny`, choose Deny, click **Clear** next to the expiry: the
+   label says "(permanent)". **Save**: the row shows Denied and Direct grant, the request carries `expiresAt: null`, and
+   the expiry field is back to a day ahead for the next grant.
+4. [automated: `e2e/player-profile.spec.ts`] On `knk.test.profile` press × ("Remove direct grant of knk.test.profile"):
+   after the reload the row is gone (`DELETE api/Users/<id>/grants?node=knk.test.profile`). Rows a group gives say
+   "Inherited" and have no ×. Remove `knk.test.deny` the same way.
+5. [automated: `e2e/player-profile.spec.ts`, `src/pages/admin/playerProfile/__tests__/effectivePermissions.test.ts`]
+   Type part of a node in the search box (for example `GATE`; case doesn't matter): only the matching rows stay, and
+   "n of N nodes" shows next to the box.
+6. [automated: `e2e/player-profile.spec.ts`, `effectivePermissions.test.ts`] Type the name of one of P's groups (for
+   example `staff`): the rows that group gives stay. Type `direct`: only the direct grants stay.
+7. [automated: `e2e/player-profile.spec.ts`, `effectivePermissions.test.ts`] Type text no node or source has: the table
+   says "No permissions match “…”." and "0 of N nodes" shows. Empty the box: every row comes back in the API's order.
+8. [automated: `e2e/player-profile.spec.ts`, `effectivePermissions.test.ts`] Click **Node**: A to Z with an up arrow
+   (`aria-sort="ascending"`). Click again: Z to A with a down arrow (`descending`). Click a third time: the API's order,
+   no arrow. Do the same on **Value** (Denied before Granted ascending, ties by node) and **Source** (by the name shown,
+   "Direct grant" sorted among the group names, ties by node).
+9. [automated: `e2e/player-profile.spec.ts`] Sort Node descending, search `direct`, then grant a new node with the form:
+   the new row appears in its sorted place among the searched rows and the Node header stays descending. Remove it
+   again.
+10. [automated: `e2e/player-profile.spec.ts`] Log in as **S** (no `knk.admin.user.perm`) and open the same tab: Grant/deny
+    node, Value, Expires and **Save** are greyed out with "Requires knk.admin.user.perm" next to Save, and each × is
+    greyed out. Search and sorting still work, and nothing is sent.
+11. Manual (a real API and a real player's list; the suite mocks both): on a player with many nodes from several groups,
+    grant `knk.test.profile` with the default expiry. The form is in view without scrolling, the new row appears with
+    "Direct grant", and searching `knk.test` or the group's name finds what you expect. Remove the node again.
+12. Manual (how it looks): at phone width and on a desktop, the search box, the sort arrows and the "Inherited" labels
+    read well in both light and dark themes.
+
 ## Findings
 
 _Fill in while testing: step, what happened, expected._
