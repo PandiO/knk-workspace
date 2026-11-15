@@ -42,9 +42,16 @@ Every link is merged into `next` (2026-11-15). Build knk-plugin from `next` `deb
 | L3 Wall-corner steering and recovery | #521 | Merged into next (2026-11-15) | knk-plugin `51072e94` → `next` `5dc88cfd`; knk-workspace `4308aaf1` → `next` `51bf5952` | PandiO/knk-plugin#36, PandiO/knk-workspace#557 | PR head green (build, paper-boot with Citizens, 19 scenarios); Codex at its usage limit | create_session session_01R1w2Uv1rEnwPko4Tq83xyL (2026-11-15) |
 | L4 Narrowed formations, followers-finish-trip toggle | #522 | Merged into next (2026-11-15) | knk-plugin `f965af06` → `next` `deb7ff49`; knk-workspace `bce76405` → `next` `ee9894ef` | PandiO/knk-plugin#39, PandiO/knk-workspace#584 | `build` green on `f965af06`; `paper-boot` green on one run, the other failed only the log check (#586, re-run); 31 scenarios; Codex at its usage limit | create_session session_01R1w2Uur6M3a3CaVDWJWCw7 (2026-11-15) |
 | L5 Fix: stair corner, ranks row at the landing | #592 | Merged into next (2026-11-15) | knk-plugin `011b1745` → `next` `8ad9df66`; knk-workspace `4a819546` → `next` `8bad205a` | PandiO/knk-plugin#43, PandiO/knk-workspace#599 | PR CI green on `011b1745` (build, paper-boot with 34 scenarios, both runs); Codex at its usage limit | create_session session_01R1w2UxAFomY5DQ18vRtAH6 (2026-11-15) |
-| L6 Fix: follower access with overlapping gate region | #593 | In review (PRs open; cause: the realtime path, #533; the gate region is not the cause) | knk-plugin `736b91c2`; knk-workspace `fed2b672` | PandiO/knk-plugin#45, PandiO/knk-workspace#604 | PR head green (build, paper-boot with 35 scenarios); the push run's log check hit #586 and was re-run; Codex at its usage limit | create_session session_01R1w2UuimaZUvf6HRSGtpmp (2026-11-15) |
+| L6 Fix: follower access with overlapping gate region | #593 | Merged into next (2026-11-15) | knk-plugin `736b91c2` → `next` `3c3d481e`; knk-workspace `fed2b672` → `next` `a63d76ba` | PandiO/knk-plugin#45, PandiO/knk-workspace#604 | PR head green (build, paper-boot with 35 scenarios); the push run's log check hit #586 and was re-run; Codex at its usage limit | create_session session_01R1w2UuimaZUvf6HRSGtpmp (2026-11-15) |
 | L7 Fix: test walkers drown (#490) | #594 | Dropped (#490 audit clean on the right build; #594 closed) | — | — | — | — |
-| L8 Design: movement quality (steering, formation keeping, crowding, plaza road lines) | #603 | In review, design decided by the developer (2026-11-15); waits for the coordinator's merge | knk-workspace `e8836db0` | PandiO/knk-workspace#605 | docs only (no CI); Codex at its usage limit | create_session session_01R1w2Uv7BDN1HKCV2gWe5Mz (2026-11-15) |
+| L8 Design: movement quality (steering, formation keeping, crowding, plaza road lines) | #603 | Merged into next (2026-11-15; design decided by the developer, 15 questions) | knk-workspace `e8836db0` → `next` `61c29c16` | PandiO/knk-workspace#605 | docs only (no CI); Codex at its usage limit | create_session session_01R1w2Uv7BDN1HKCV2gWe5Mz (2026-11-15) |
+| M1 Evidence and diagnostics | #621 | Running | — | — | — | create_session session_01R1w2Uv6Untjy5RbmJTDd1T (2026-11-15) |
+| M2 Corridor steering (option A) | #622 | Not started (gate: M1 merged) | — | — | — | — |
+| M6 Clearance-aware local legs (add-on D) | #623 | Not started (gate: M2 merged) | — | — | — | — |
+| M3 Formation keeping | #624 | Not started (gate: M6 merged) | — | — | — | — |
+| M5 Plaza lines | #625 | Not started (gate: M3 merged) | — | — | — | — |
+| M4 Crowd awareness | #626 | Not started (gate: M5 merged); then the option-B checkpoint | — | — | — | — |
+| M7 Collision with push resistance | #627 | Not started (gate: B checkpoint) | — | — | — | — |
 
 ## 3. Coordinator decisions
 
@@ -171,6 +178,19 @@ Every link is merged into `next` (2026-11-15). Build knk-plugin from `next` `deb
     and implementation links planned in the plan's Phase 7. It replaces further patch links for the formation and stuck
     problems. L8 runs alongside L6 (no shared files). Alternatives: (a) targeted fix links first; (b) pause the movement
     work after L6. The #522 issue and the docs session #589 wait for the design.
+
+22. **L6 checked and merged** (2026-11-15). The realtime path was the cause (#533); the gate-region overlap was ruled
+    out by tests. The new scenario fails on `next` without the fix. Tests 2806/2824 → 2816/2830, CI green (35
+    scenarios; one #586 re-run). `next` had moved by an unrelated teleport-audit fix that merged cleanly. Merged
+    PandiO/knk-plugin#45 → `3c3d481e`, PandiO/knk-workspace#604 → `a63d76ba`.
+23. **L8 design decided and merged** (2026-11-15). The developer went through the 15 questions one by one in the
+    coordinator session and asked for industry research before the steering decision (L8's research report). Decided:
+    Phase 4c (not Phase 7); option A with add-on D, B only after a checkpoint; corridor-half-width 4; wall-clearance
+    0.8 / 0.35; squeeze minimums 0.6 / 1.0; fold only as a last resort; stairs as wide as they fit with a step per
+    lane; look-ahead depth + 4; lanes by access rules; first come at chokepoints (future: authority values, closed
+    formations first); collision off for now, designed for (M7, push resistance; future: collision on); plaza lines on
+    the NPC side, builder later; one key per link; WorldEdit schematic as evidence; order M1 → M2 → M6 → M3 → M5 →
+    M4 → B checkpoint → M7. Merged PandiO/knk-workspace#605 → `61c29c16`. Sub-issues #621–#627 created; M1 started.
 
 ## 4. Link blocks
 
