@@ -1,6 +1,6 @@
 # knk-web-api — Architecture
 
-**Status:** Current · **Last updated:** 2026-11-15 (§5.5: validation rules in the builder draft, add-from-template endpoints removed; #291 in review); 2026-11-15 (§5.4: "Show what uses it" for form configurations and `?all=true`, #289, knk-web-api#34 in `next`); 2026-11-15 (§5.2 grant reads, §5.6 permission grants, group member count and the generic audit subject; #408, #50 in `next`, docs #576)
+**Status:** Current · **Last updated:** 2026-11-15 (lookups take the picker's narrowing filters, #288 in review); 2026-11-15 (§5.5: validation rules in the builder draft, add-from-template endpoints removed; #291 in review); 2026-11-15 (§5.4: "Show what uses it" for form configurations and `?all=true`, #289, knk-web-api#34 in `next`); 2026-11-15 (§5.2 grant reads, §5.6 permission grants, group member count and the generic audit subject; #408, #50 in `next`, docs #576)
 
 ## 1. Stack & shape
 
@@ -205,9 +205,21 @@ pinned):
   `PermissionGroupService` (everyone) drop the cached answers at the calls that publish S2's `UserPermissionsChanged` /
   `PermissionGroupChanged`, also without a realtime sink. Anything else (an expiring grant) shows within 30 s.
 - **Lookups** (`Controllers/LookupController.cs`, `Services/LookupService.cs`, `Attributes/DashboardLookups.cs`):
-  - `POST api/Lookup/{entityType}/search` `{ searchTerm, page, pageSize ≤ 50 }` → `{ items: [{ id, label, detail? }],
-    total }` through the type's own search (no filters, no sort); `GET api/Lookup/{entityType}/{id}` → `{ id, label,
+  - `POST api/Lookup/{entityType}/search` `{ searchTerm, page, pageSize ≤ 50, filters? }` → `{ items: [{ id, label,
+    detail? }], total }` through the type's own search (no sort); `GET api/Lookup/{entityType}/{id}` → `{ id, label,
     detail? }` through its own get by id.
+  - **Filters** (PandiO/knk-workspace#288, developer decision 2026-11-15; knk-web-api branch
+    `claude/lookup-picker-filters-288`, in review): a relation field's narrowing pickerFilters, passed to the type's own
+    search, which applies them as for its `POST …/search`. Each type's lookup lists the keys it takes
+    (`DashboardLookup.Filters` in `DashboardLookups.cs`, a subset of what its search reads, in its spelling, kind `Id`,
+    `Flag` or `Prefer`): Category `parentCategoryId`; ItemBlueprint `CategoryId`; Clan `preferTownId`; District
+    `townId`; Structure `streetId`, `districtId`; GateStructure `streetId`, `districtId`, `townId`, `siegeScenarioId`,
+    `isActive`, `isOpened`; GateDoor `gateStructureId`, `isActive`; SiegeScenario `townId`; SiegeTeam
+    `siegeScenarioId`; PermissionGroup `parentGroupId`, `isPremiumTier`; users none. Keys match without case. Another
+    key → 400 `LookupFilterNotAllowed`; an id that isn't a positive number, a flag that isn't true/false or a blank
+    value → 400 `LookupFilterInvalid` (both with `filters`), because the searches skip such values and would list more
+    than asked. A `prefer…` key the type doesn't take, or with an unusable value, is left out (it only orders).
+    `excludeIds` is not a lookup filter (the web app applies it). Pinned by `Api/LookupFiltersTests.cs`.
   - Label and detail are read by property name from what the service returns (one short line: a domain's parent and
     world, a location's world and coordinates, an item's category and grade, …; at most 120 characters).
   - **Users:** the label is the username, no detail; the search term goes to the `username` filter, so a lookup never
