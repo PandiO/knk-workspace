@@ -41,7 +41,7 @@ Every link is merged into `next` (2026-11-15). Build knk-plugin from `next` `deb
 | L2 Follower recheck and guard, no gate push | #520 | Merged into next (2026-11-15, by the manager session) | knk-plugin `651d8bff` → `next` `11e07d64`; knk-workspace → `next` `43a2328c` | PandiO/knk-plugin#31, PandiO/knk-workspace#536 | PR head green (build, paper-boot); `next` runs 43662028862, 43662028855 pending at the coordinator check | create_session session_01R1w2Ux2KpS7H3FidwDEZmp (2026-11-14) |
 | L3 Wall-corner steering and recovery | #521 | Merged into next (2026-11-15) | knk-plugin `51072e94` → `next` `5dc88cfd`; knk-workspace `4308aaf1` → `next` `51bf5952` | PandiO/knk-plugin#36, PandiO/knk-workspace#557 | PR head green (build, paper-boot with Citizens, 19 scenarios); Codex at its usage limit | create_session session_01R1w2Uv1rEnwPko4Tq83xyL (2026-11-15) |
 | L4 Narrowed formations, followers-finish-trip toggle | #522 | Merged into next (2026-11-15) | knk-plugin `f965af06` → `next` `deb7ff49`; knk-workspace `bce76405` → `next` `ee9894ef` | PandiO/knk-plugin#39, PandiO/knk-workspace#584 | `build` green on `f965af06`; `paper-boot` green on one run, the other failed only the log check (#586, re-run); 31 scenarios; Codex at its usage limit | create_session session_01R1w2Uur6M3a3CaVDWJWCw7 (2026-11-15) |
-| L5 Fix: stair corner, ranks row at the landing | #592 | Running | — | — | — | create_session session_01R1w2UxAFomY5DQ18vRtAH6 (2026-11-15) |
+| L5 Fix: stair corner, ranks row at the landing | #592 | In review (PRs open, not merged) | knk-plugin `011b1745`; knk-workspace `4a819546` | PandiO/knk-plugin#43, PandiO/knk-workspace#599 | local: build green, 34/34 scenarios (log check: #586's intermittent WARN); PR CI pending | create_session session_01R1w2UxAFomY5DQ18vRtAH6 (2026-11-15) |
 | L6 Fix: follower access with overlapping gate region | #593 | On hold (developer's rerun on the current jar; then gate: L5 merged) | — | — | — | — |
 | L7 Fix: test walkers drown (#490) | #594 | On hold (developer's rerun on the current jar; then gate: L6 merged) | — | — | — | — |
 
@@ -385,3 +385,58 @@ _(Each link appends its block here when it finishes.)_
     3. Tests after the merge: core 2788, api-client 340 (2 skipped), paper 2796 (18 skipped), 0 failures. Locally 31/31 scenarios passed.
     4. CI on `f965af06`: `build` green twice. `paper-boot` green on one run (43713989156). On the other run (43713985090) all 31 scenarios passed but the server-log check failed on an error from a #540 player scenario's fake player against the unreachable API; I filed #586 and re-ran that failed job.
     5. The re-run went green (job 132813641643): `build` and `paper-boot` green on both runs at `f965af06`. The coordinator merged PandiO/knk-plugin#39 into `next` (`deb7ff49`) and resolves the workspace changelog conflict and PandiO/knk-workspace#584 itself; L4 pushes nothing more to `claude/npc-followups-l4`.
+
+### 4.5 L5 — Stair corner and the ranks row at the landing, retest fix (#592: #491, #492, #508)
+
+1. **Scope done** (behind `npc.navigation.enabled`, no new config key).
+    1. **Evidence on `next`, not on the developer's trace.** The coordinator found that the retest probably ran an older jar. I rebuilt both spots in their real geometry (`NpcLedgeScene`, one scenario box each) and ran them on `next` `8cbf5b32` with only the scenario files added:
+        1. `npc-ledge-corner` fails on `next`. With a road line that cuts the turn, a waypoint lands on the ground below the corner. With that check skipped, 4 NPCs walk off: 0 arrivals, all pinned under the east flight. A line through the cells' centres does not fail, which is why L3's scene missed it.
+        2. `npc-landing-ranks` (12 in `ranks`, one trip up) **passes** on `next` with a line along the flights' middle and a flat approach (not reproduced). It **fails** with a line that cuts the inside of the landing's turn: the trip ends `Failed` in the pit, with 5 spells not freed. In the scene the leader is caught too, unlike on the dev server. Whether this is the cause at 1433 44 -518 waits for the developer's rerun.
+        3. On `next` the `falls` counter stays 0 for Citizens NPCs even after 7-block falls.
+    2. **Cause (the 4 questions of the prompt).**
+        1. Line points cutting the corner: yes, that is the trigger. Over the drop, `HopPlanner.snapNear` found no floor within 2 blocks and fell back to the nearest floor within 12, the ground, and the next waypoints chained along the ground.
+        2. The best-index jump: not causal. `bestIndex` only feeds the watchdog. Citizens follows the waypoint list as given and skips no point.
+        3. `straightWalkable` does see the ledge, but it only guarded waypoints that corner clearance moved; nothing checked the steps between waypoints.
+        4. L3's scenes passed because their line runs through the cells' centres, so no line point lies over air.
+    3. **knk-core.**
+        1. `HopPlanner.surfaceNear`: a route point's floor is its own column near the previous floor or the line's height, else the nearest walkable column within a block, else none.
+        2. `RouteFollower` skips a point with no walk beside it.
+        3. `WaypointChain.bridged` makes every step (and the join from the last stretch) a straight walk, inserting the turns of a breadth-first search over the cells in a box round the two waypoints.
+        4. `CornerClearance` counts a drop on the inside of a turn as a wall.
+        5. `GroupPath.addSnapped` follows the same rule, repeating the point before when there is no walk.
+        6. `NavGroup` passes lane waypoints (and a finishing trip's) through `WaypointChain`.
+    4. **Falls.** New port `NpcMover.verticalSpeed()` (Citizens: entity velocity). In `RecentSteps`, a look in the air at 0.55 blocks per tick or faster downwards counts as falling in one go. Verified on `next`: `falls 4`, "fell 6.0 blocks".
+    5. **knk-paper.** `NpcLedgeScene`, `npc-ledge-corner`, `npc-landing-ranks`, `ScenarioNpcs.group` (additive), trace `# waypoints:` lines, `MIN_SCENARIOS` 34.
+    6. **knk-workspace.** Changelog entry, plan 4b.2 (L5 status, L3 test steps 3–5, automated steps 12–13), CI guide § 7.1.
+2. **Commits and heads.**
+    1. knk-plugin `claude/npc-followups-l5` at `011b1745`: 4 commits plus a merge of `origin/next` (#41, #42; no conflicts). Base `next` `8cbf5b32`.
+    2. knk-workspace `claude/npc-followups-l5` at `4a819546`: 2 docs commits plus a merge of `origin/next` (#595, #596). The changelog conflict was additive and both entries are kept.
+3. **PRs.** PandiO/knk-plugin#43 (`Closes` #592, `Part of` #491, #492, #508) and PandiO/knk-workspace#599 (`Part of`), base `next`. Not merged.
+4. **Tests, baseline → result.**
+    1. knk-plugin `./gradlew build -x deployToDevServer`: baseline on `next` `8cbf5b32` core 2788, api-client 340 (2 skipped), paper 2804 (18 skipped). On `6d292dbb`: core 2802, paper 2804. After the merge on `011b1745`: core 2806, api-client 344 (2 skipped), paper 2824 (18 skipped). 0 failures each time.
+    2. New tests: `LedgeCornerTest` (5), `WaypointChainTest` (6), `GroupPathTest` +1, `RecentStepsTest` +2, `CitizensNpcMoverPathTest` +1; trace assertion in `NpcNavRunnerTest`.
+    3. Scenarios, locally (Paper 26.3 b205, WorldEdit, WorldGuard, Citizens b4269), with `boot-test.sh --scenarios --min-scenarios 34 --npc-navigation` on `6d292dbb`: 34/34 passed, all L3, L4 and #543 NPC scenarios included. The log check flagged one stack-traced WARN from a #540 fake player's teleport audit against the unreachable API: #586's intermittent, not from this change.
+    4. CI on PandiO/knk-plugin#43: pending at the time of writing.
+    5. Known reds: none.
+5. **Decisions (DESIGN § 4.3).**
+    1. *A route point over a drop.* Chosen: the nearest walkable column within a block, else leave the point out (`surfaceNear`), because a waypoint on another level is never right. Alternatives: (a) keep `snapNear`'s 12-block fallback but refuse beyond 2 (the point stays in the air at the line's height and Citizens walks off towards it); (b) only drop the point (loses the turn on a cutting line).
+    2. *Steps that are no straight walk.* Chosen: a breadth-first search over the cells in a box 3 blocks round the two waypoints (side at most 24, steps of 1 up or down, the body's headroom), its turns as waypoints, and the step left alone without a path. Alternatives: (a) try only the two L-shaped corners (fails on a long gap such as the cutting line's 5 blocks over air); (b) a local leg through the engine's search (a plan per stretch, asynchronous).
+    3. *Drops in corner clearance.* Chosen: a cell on the inside of a turn with no floor within 2 blocks counts as a wall. Alternatives: (a) walls only, relying on the bridge (the body still brushes the ledge's edge at the turn); (b) a separate clearance for ledges (a new config key).
+    4. *Group path over a drop.* Chosen: repeat the point before, because `trackLeader` maps line indexes to path indexes one to one. Alternatives: (a) skip the point (breaks that mapping).
+    5. *Telling a fall from a stair step.* Chosen: vertical speed of 0.55 blocks per tick or faster at a look in the air. Alternatives: (a) feet 1.5 below the last ground look (counts full-block staircases: `RecentStepsTest`'s stair case); (b) look every tick while airborne (main-thread cost); (c) file it instead (the developer's `falls 0` check stays meaningless).
+    6. *The landing scene's line.* Chosen: a line that cuts the inside of the turn, the variant that fails on `next`. Variants with a centre line, a flat approach and 20 members passed on `next`. Alternatives: (a) no failing landing scenario until the developer's schematic (the prompt asks for a failing reproduction); (b) claim the centre-line variant reproduces #492 (it does not).
+    7. *Landing scenario shape.* Chosen: 12 in `ranks`, one trip up. Checks: the leader arrives, `maxLag` ≤ 2.5 and nobody lost, nobody still at the landing for over 3 s while the leader walks, spells freed within 2 steps, rejoins ≤ 6 (spawned followers rejoin once at the start). Alternatives: (a) patrol both ways (the leader's turnaround through its own column holds followers: noise); (b) 20 members (a column of 20 does not fit past the landing in a 32-block box).
+    8. *Trace waypoint lines.* Chosen: add them (diagnostic, additive), so a trace shows whether a waypoint cuts a turn. Alternatives: (a) none (the question of #592 could not be answered from a trace).
+6. **Out of scope, noted.**
+    1. A request on #592 for WorldEdit schematics of both spots (optional, nothing waits on it).
+    2. A correction on #592: the earlier reading of the trace may concern an older jar.
+    3. Nothing posted on #491, #492 or #521.
+7. **Blockers.** None.
+8. **At merge / what the developer must do.**
+    1. Nothing in `config.yml`.
+    2. Retest on a jar whose version line shows the deployed commit: the L3 steps 3–5 as posted on #592, with the traces' `# waypoints:` lines and the stats.
+    3. If the landing still stops the group, the trace next to it shows whether the road line cuts that turn.
+9. **Notes for later links.**
+    1. L6 and L7: nothing of theirs touched (no access-rule or test-walker code).
+    2. `WaypointChain.bridged(world, from, waypoints)` is reusable for any waypoint list.
+    3. `NpcMover.verticalSpeed()` is the fall signal for Citizens.
