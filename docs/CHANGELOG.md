@@ -30,10 +30,16 @@ This is a human-readable record of capabilities merged into the V3 default branc
      again`; events `group_narrow`, `group_widen`, `group_fold`, `group_reform`, `group_finish_trip`; the groups line of
      `/knk npc nav stats` has `widths: narrows N, widens N | folds N, reforms N, folded now N | abreast now k |
      finished trips N (finishing now N)`.
-  5. **Tests.** knk-core unit tests for every formation's widths, the per-point cache, step-down, hysteresis and the
-     toggle; three plugin scenarios on a real Paper server with Citizens (`npc-group-narrows`,
-     `npc-group-gate-finish-trip`, `npc-group-access-change`); CI's `paper-boot` now expects 22 scenarios.
-  6. **Admin steps** (restart): merge the three new keys and set `group-spacing: 1.5` where `config.yml` still says 2.0:
+  5. **Found on a real server and fixed.** Lanes keep clear of wall edges and are back on the road's centre 2 blocks
+     before a narrow opening; flights of stairs are walked as a column; followers stopped at a door or a district edge
+     queue a spacing apart instead of crowding one spot; a follower a block short of a door that starts closing steps
+     back instead of walking into it (a portcullis blocks a body long before it is shut), and only one standing under
+     the door walks on out.
+  6. **Tests.** knk-core unit tests for every formation's widths, the per-point cache, step-down, hysteresis, the
+     toggle, the queue and the door rule; three plugin scenarios on a real Paper server with Citizens
+     (`npc-group-narrows`, `npc-group-gate-finish-trip`, `npc-group-access-change`); with #543's three, CI's
+     `paper-boot` now expects 25 scenarios.
+  7. **Admin steps** (restart): merge the three new keys and set `group-spacing: 1.5` where `config.yml` still says 2.0:
 
      ```yaml
      npc:
