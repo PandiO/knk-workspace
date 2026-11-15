@@ -1,6 +1,6 @@
 # knk-web-app — Architecture
 
-**Status:** Current · **Last updated:** 2026-11-15 ("Show what uses it" on Entity setup's configuration delete, bulk delete rows and a cancelled form's "skipped: in use", #289, knk-web-app#39 in `next`); 2026-11-15 (§ Staff permission screens: PermissionGrant table, group Permissions panel, profile Effective Permissions card; #408, #50, #407 in knk-web-app `next`, docs #576)
+**Status:** Current · **Last updated:** 2026-11-15 (form builder: validation rules in the draft, #291 in review); 2026-11-15 ("Show what uses it" on Entity setup's configuration delete, bulk delete rows and a cancelled form's "skipped: in use", #289, knk-web-app#39 in `next`); 2026-11-15 (§ Staff permission screens: PermissionGrant table, group Permissions panel, profile Effective Permissions card; #408, #50, #407 in knk-web-app `next`, docs #576)
 **Checked against:** knk-web-app `next` (per section; each section names its commit). Updated in place on each rescan.
 **Source scan:** `docs/reports/web-app-scan-2026-09-18.md`
 
@@ -447,8 +447,16 @@ entity. Two parallel generic engines carry most of the CRUD surface:
   `beforeunload`, the toolbar's Close), the `SettingsPage` question.
 - **Access**: the routes stay behind `knk.admin.content` (W4); inside, Save, Save and close, Publish, Duplicate, Discard and
   Generate are disabled with "Requires knk.admin.content" (`useAllNodesGate`) when the node is missing.
-- **Templates** ("Add from template") are copied into the working copy with new GUIDs; the builder no longer calls the
-  API's add-from-template, which wrote into the published version.
+- **Templates** ("Add from template") are copied into the working copy with new GUIDs; the API's add-from-template
+  endpoints and the client methods for them were removed in #291.
+- **Validation rules** ([#291](https://github.com/PandiO/knk-workspace/issues/291), in `next`) are part of the working
+  copy: `config.validationRules`, keyed by field GUID (`utils/forms/draftValidationRules.ts`). The field editor keeps its
+  field's rules (`rulesOfField`) and hands them back with **Save Field** (`onSaveRules` → `withFieldRules`); a new rule
+  shows *Not published*. `ValidationRuleBuilder` picks a dependency of this form by GUID (draft-only fields included)
+  and a parent form's field by id. `formConfigForSave` drops rules of fields that left the form; Publish is refused
+  client-side when a rule's dependency left (`validationRulesPublishProblem`, the API checks the same) and the Publish
+  question adds "Validation rules: n added, n changed, n removed." Nothing is written to `api/field-validation-rules`
+  before Publish, so the wizard keeps the published rules.
 - **Entity setup** lists never-published forms (`getByEntityTypeName(entity, false, true)`) with a *Draft* badge: Use and
   Set Default are off and `?configId=` never opens one; published ones with saved changes show *Unpublished changes*
   (display: "+ unpublished changes"); both menus have *Duplicate*. Everything else (the wizard, "New with", child forms,
