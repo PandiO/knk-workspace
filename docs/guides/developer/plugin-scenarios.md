@@ -1,6 +1,6 @@
 # Writing a plugin scenario
 
-**Status:** Active (in knk-plugin `next` since `309d3580`, 2026-11-14; not on trunk yet) · **Last updated:** 2026-11-15 (§ 5 rewritten: scripted players, `scene.player(...)`, six player scenarios; § 1, § 3.5, § 4.8, § 6 `run player-*`, new § 8 headless bot tests kept off, [#540](https://github.com/PandiO/knk-workspace/issues/540)); 2026-11-15 (§ 1, § 3.5, § 4.6, § 4.7 and § 6: NPC navigation scenarios on Citizens and a fake road network, `ScenarioRoadNpcs`, [#543](https://github.com/PandiO/knk-workspace/issues/543)); 2026-11-15 (§ 1 "Then" step 4: smoke-guide tag format, every step kept in full); 2026-11-14 (§ 1, § 3 and § 4: the scenarios and helpers of the plugin backfill, [#511](https://github.com/PandiO/knk-workspace/issues/511)); 2026-11-14 (§ 5 links #540); 2026-11-14 (first version, [PandiO/knk-workspace#421](https://github.com/PandiO/knk-workspace/issues/421))
+**Status:** Active (in knk-plugin `next` since `309d3580`, 2026-11-14; not on trunk yet) · **Last updated:** 2026-11-15 (§ 1 and § 4.7: the six NPC follow-up scenarios on the corner scene, `ScenarioNpcs` with access rules and gate crossings, `ScenarioNpcRules`, the short-trip rule; checked against knk-plugin `next` `deb7ff49`, [#589](https://github.com/PandiO/knk-workspace/issues/589)); 2026-11-15 (§ 5 rewritten: scripted players, `scene.player(...)`, six player scenarios; § 1, § 3.5, § 4.8, § 6 `run player-*`, new § 8 headless bot tests kept off, [#540](https://github.com/PandiO/knk-workspace/issues/540)); 2026-11-15 (§ 1, § 3.5, § 4.6, § 4.7 and § 6: NPC navigation scenarios on Citizens and a fake road network, `ScenarioRoadNpcs`, [#543](https://github.com/PandiO/knk-workspace/issues/543)); 2026-11-15 (§ 1 "Then" step 4: smoke-guide tag format, every step kept in full); 2026-11-14 (§ 1, § 3 and § 4: the scenarios and helpers of the plugin backfill, [#511](https://github.com/PandiO/knk-workspace/issues/511)); 2026-11-14 (§ 5 links #540); 2026-11-14 (first version, [PandiO/knk-workspace#421](https://github.com/PandiO/knk-workspace/issues/421))
 **Related:** [CI § 7.1](ci.md#71-in-plugin-scenarios) (how CI runs them), [plugin architecture § Testing](../../architecture/plugin-architecture.md#testing),
 [`knk-test-writer` skill](../../../.claude/skills/knk-test-writer/SKILL.md) (which suite a behaviour belongs in),
 [AI agent workflow design § 6.3](../../specs/ai-agent-workflow/DESIGN.md#6-testing-and-ci),
@@ -58,11 +58,30 @@ control inside a region) came with the framework; the backfill of
 and the others named `Gate…Scenario`: mobs, a dropped item and a minecart as stand-ins for players), two region-callback
 scenarios (`LootboxAreaRenameScenario`, `LootboxAreaReplaceScenario`), the temp-region sweep
 (`TempRegionSweepScenario`) and three lootbox spawn scenarios (`LootboxSpawnOnGroundScenario`,
-`LootboxSpawnUnderRoofScenario`, `LootboxSwitchedOffScenario`). The NPC follow-ups of
-[#521](https://github.com/PandiO/knk-workspace/issues/521) added three corner scenarios on a generated scene
-(`NpcCornersLineScenario`, `NpcCornersWalkScenario`, `NpcStuckLadderScenario` with `NpcCornerScene` and the helper
-`ScenarioNpcs`, which starts a Citizens registry of its own and follows the scene's route line;
-[implementation plan 4b.2 item 18](../../specs/npc-platform/IMPLEMENTATION_PLAN.md)).
+`LootboxSpawnUnderRoofScenario`, `LootboxSwitchedOffScenario`). The NPC navigation follow-ups added six scenarios on
+the corner test scene (`NpcCornerScene`, § 4.7), walked by real Citizens NPCs through the helper `ScenarioNpcs`
+([implementation plan 4b.2 item 18 and 4b.3 item 14](../../specs/npc-platform/IMPLEMENTATION_PLAN.md)):
+
+1. `npc-corners-line` (`NpcCornersLineScenario`, [#521](https://github.com/PandiO/knk-workspace/issues/521); needs no
+   Citizens): K&K's half on the real blocks: stretches with corner clearance, recovery targets on the NPC's own floor,
+   the shortcut check at the stair corner.
+2. `npc-corners-walk` (`NpcCornersWalkScenario`, #521): 6 single NPCs and a group of 6 in `ranks` walk the scene for
+   90 s; no NPC stands still longer than 3 s, every stuck spell is freed within 2 steps, nobody falls or trespasses,
+   and the stuck counters add up.
+3. `npc-stuck-ladder` (`NpcStuckLadderScenario`, #521): an NPC pushed into a corner walled in on three sides frees
+   itself within the cap, the run log's count never passes it, and no two tries come within `recovery-wait-ticks`.
+4. `npc-group-narrows` (`NpcGroupNarrowsScenario`, [#522](https://github.com/PandiO/knk-workspace/issues/522)): a group
+   of 9 in `cluster` walks the scene's 3-, 2- and 1-wide passages: 3 abreast, 2 abreast, a column and 3 abreast again,
+   in that order; a one-block post on the north road changes nothing; no trespass, no fall, no stuck spell left open.
+5. `npc-group-gate-finish-trip` (`NpcGroupGateFinishTripScenario`, #522): a scenario portcullis across the east road
+   closes behind the leader of a group of 6 and opens after the group turned back. With `group-followers-finish-trip:
+   true` the held followers reach their slots at the goal first (the member listener once each); with `false` they
+   follow the leader at once. Nobody is moved by the door; no trespass.
+6. `npc-group-access-change` (`NpcGroupAccessChangeScenario`, #522; [#520](https://github.com/PandiO/knk-workspace/issues/520)'s
+   behaviour, now in CI): a group of 6 walks into a scenario WorldGuard region; entry is removed when half the column
+   is inside. The followers outside stop at the edge, the ones inside walk on, all follow when entry returns; no
+   trespass.
+
 [#543](https://github.com/PandiO/knk-workspace/issues/543) added three NPC navigation scenarios on a fake road graph
 (§ 4.6, § 4.7), from the NPC developer tests of the [implementation plan](../../specs/npc-platform/IMPLEMENTATION_PLAN.md):
 
@@ -160,7 +179,9 @@ Each scenario gets a `ScenarioScene`: an empty box of 32 × 24 × 32 blocks (x, 
    asks for boxes); `ScenarioRoadNpcs` (NPC navigation on a fake road network, § 4.7: lays grass and a 3-wide dirt-path
    road along the scene (x, z) points you give, spawns Citizens NPCs, sends one or a group, measures the distance from
    the road's centre line and counts the navigation's events; `close()` as a cleanup, because NPCs are player
-   entities the scene does not remove). Scripted players come from the scene itself: `scene.player(name, …)` (§ 5).
+   entities the scene does not remove); `ScenarioNpcs` and `ScenarioNpcRules` (real NPCs walking the corner scene,
+   with access rules and gate crossings of their own, § 4.7). Scripted players come from the scene itself:
+   `scene.player(name, …)` (§ 5).
 6. **Where:** `testing.scenarios.origin` (default 30000, 100, 30000) in the main world (or `testing.scenarios.world`);
    scene *n* of a run sits 64 × *n* blocks further along x. Keep it far from anything built.
 
@@ -198,8 +219,30 @@ calls) and hand them the data the API would have sent:
    prepared by the live walk capture (`navigation.enabled` and `navigation.walk.enabled`, both on by default). The
    state machine (`NpcNavigationService`) and the groups (`NavGroupService`) are the plugin's classes, built inside the
    scenario with the code defaults of every per-NPC setting (a test server's `npc.navigation` keys don't change the
-   result) and ticked every server tick, groups first, as the live module does. Access rules are open: these
-   scenarios test movement; rules (a closed gate, a denied district) are a later scenario on the same helper.
+   result) and ticked every server tick, groups first, as the live module does. The #543 road scenarios
+   (`ScenarioRoadNpcs`) use open access rules: they test movement.
+   1. **The corner scene** (`NpcCornerScene` in knk-paper `scenario/`): one loop of about 60 blocks with a 3-wide road
+      and an inside 90° corner between walls, an outside corner, 2-wide and 1-wide passages, a staircase with a 90°
+      turn at a ledge (slabs before and beside the corner, a 7-block drop outside) and a landing with 2.5 blocks of
+      headroom. On a test server, `/knk npc nav scene corners` builds it at `testing.scenarios.origin` (only while
+      `testing.scenarios.enabled` is true) and saves the route `corner-scene`; the scene has no road, so NPCs walk that
+      route as off-road legs.
+   2. **`ScenarioNpcs`** starts K&K's navigation service and groups on Citizens' movers (a registry of its own, beside
+      the module's) with a fake road: the scene's route line, walked forward round its loop. Local legs get open cell
+      access in a box round them. It keeps a run log with ticks, watches how long each NPC stands in one block
+      (`longestStillTicks`), checks that the stuck counters add up (`countersAddUp`), can `push` an NPC into a corner
+      and `trace` one. `ScenarioNpcs.start` fails the step with the reason when Citizens is missing.
+   3. **Rules and gates.** `ScenarioNpcs.start(scene, loop, settings, rules, gates)` takes access rules of its own and
+      the gate crossings on the scene's road (a plan whose line passes one names its door). `ScenarioNpcRules` is
+      those rules: fake region data (`deny(regionId)`, `allow(regionId)`; an NPC already in the region may stay) and a
+      scenario gate's real state and box from the plugin's gate cache (a door that is not open blocks NPCs). After a
+      rule changes, send the event yourself: `rulesChanged()` (availability) or `gateChanged(doorId)`.
+   4. **An order within `hop-blocks` (16) of the start is a short trip:** one local leg, and a scenario's local legs
+      know no gates (open cell access). A scenario that tests a gate puts the goal further away, so the leader walks
+      a road route with the gate crossing on it.
+   5. **Citizens on CI:** `paper-boot` downloads a pinned Citizens build (URL and SHA-256 in the workflow's `env`, the
+      build that matches `citizensApiVersion`) and turns `npc.navigation.enabled` on
+      ([CI § 7.2](ci.md#72-citizens-on-the-ci-server)). Bump the pin together with `citizensApiVersion`.
 
 8. **Primed caches** (#540): where a live service reads a cache in front of the API, a scenario may put fake data
    into that cache as if the API had just answered, and take it out again in a cleanup.

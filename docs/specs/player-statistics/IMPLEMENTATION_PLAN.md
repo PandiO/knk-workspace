@@ -418,7 +418,7 @@ world-analytics:                       # link 7
 | `C/analytics/MovementCellGrid`, `C/analytics/DomainInteractionCounter`, `P/analytics/MovementSampler`, `P/analytics/MenuFunnelRecorder` (a `MenuObserver`), `P/analytics/DomainInteractionRecorder` (`OnRegionEnterEvent`/`OnRegionLeaveEvent` + discovery grants), `P/analytics/WorldAnalyticsFlushTask`, `C/ports/api/WorldAnalyticsApi` + impl | 7 | Analytics |
 
 NPCs (`NpcEntities.isNpc`) are skipped by `FallStatisticsListener`, `CombatStatisticsListener` (hits by or on an NPC,
-an NPC's death, a mob killed by an NPC, an NPC's shot), `AfkActivityListener` (hits by an NPC) and `TelemetryListener` (PandiO/knk-workspace#490, knk-plugin `next` `bd7b78a8`, not on trunk yet; [NPC navigation § 7](../../architecture/npc-navigation.md#7-npcs-and-the-player-listeners)). A player killed by an NPC still counts as killed by a player:
+an NPC's death, a mob killed by an NPC, an NPC's shot), `AfkActivityListener` (hits by an NPC) and `TelemetryListener` (PandiO/knk-workspace#490, knk-plugin `next` `bd7b78a8`, not on trunk yet; [NPC navigation § 8](../../architecture/npc-navigation.md#8-npcs-and-the-player-listeners)). A player killed by an NPC still counts as killed by a player:
 [#494](https://github.com/PandiO/knk-workspace/issues/494).
 
 ### 5.3 Menus (seeded by knk-web-api `Models/Menu/MenuTemplateSeed.Statistics.cs`, chained into `CanonicalTemplates()`; test mirror `content-seeds.json` regenerated)
