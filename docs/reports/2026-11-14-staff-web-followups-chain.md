@@ -18,8 +18,8 @@
 | Link | Issue | Status | Branch heads | PR | CI | How started | Test rule |
 |---|---|---|---|---|---|---|---|
 | L1 PermissionGrant table | #408 | Merged into next (2026-11-14) | api `6e34af5`, app `110d5f2`, ws `b6547485`; next: api `2425f181`, app `9a29623a`, ws `aef2f99f` | knk-web-api#30, knk-web-app#29, knk-workspace#529 | green on the PRs; next running | create_session session_01R1w2Ut6UjJQM8QpXM4o6co | automated first, `main` `aa4208b3` (unchanged at start) |
-| L2 Group grants panel | #50 | In review (2026-11-15) | api `00b8060`, app `28c0d47`, ws `da034e05` | knk-web-api#32, knk-web-app#35, knk-workspace#560 | green on the code PRs; Codex at its usage limit | subagent (coordinator skill § 4.1.4: two component repos) | automated first, `main` `aa4208b3` (unchanged at start) |
-| L3 Profile Permissions tab | #407 | Not started (gate: L2 merged) | — | — | — | — | — |
+| L2 Group grants panel | #50 | Merged into next (2026-11-15) | api `00b8060`, app `28c0d47`, ws `da034e05`; next: api `dcbb1f82`, app `42781025`, ws `685a4677` | knk-web-api#32, knk-web-app#35, knk-workspace#560 | green on the code PRs; Codex at its usage limit | subagent (coordinator skill § 4.1.4: two component repos) | automated first, `main` `aa4208b3` (unchanged at start) |
+| L3 Profile Permissions tab | #407 | Running (2026-11-15) | — | — | — | create_session session_01R1w2Uu4cu227Le97QQaG5U | automated first, `main` `aa4208b3` (unchanged) |
 
 ## 3. Coordinator decisions
 
@@ -49,6 +49,9 @@
 10. **Rule recheck before L2.** No change to "Testing: automated first", the knk-test-writer or knk-link skills or `web-app-testing.md` since `aa4208b3`; #421 (plugin scenarios) and #511 (backfill) are done and archived; #387 still open, not merged, so today's nodes hold for L2.
 
 11. **L2 restarted after the developer's #50 decisions (2026-11-15).** L2's first subagent stopped before coding with "DECISIONS NEEDED" (no AskUserQuestion tool in a subagent); nothing was changed. I asked the developer: (1) audit: a generic audit subject (`SubjectType` + `SubjectId`, one additive migration, History list in the group panel), chosen with future clans that run towns and hold treasuries in mind; (2) plugin freshness: rely on the existing `PermissionGroupChanged` event (#179), plugin follow-up for inheriting groups. Recorded on #50. Then a new subagent with the same prompt plus the answers. Lesson: subagent links can't ask the developer; the coordinator asks before starting such a link. Alternatives: (a) `create_session` for L2 so the link could ask itself: against coordinator skill § 4.1.4 for two component repos.
+
+12. **L2 check and merge (2026-11-15).** Chosen: merge knk-web-api#32, knk-web-app#35, knk-workspace#560 into `next` with merge commits, because every § 6 check held: heads match, the API branch contains `next`, the web-app and workspace branches were 2 and 4 commits behind but merge cleanly (a removed debug spec; town streets docs), CI green on both code PRs (incl. `fresh-database` for the migration), no review threads, Codex at its usage limit (rule 4, noted on each PR), scope inside #50 plus the developer's audit decision, automated proof (31 xUnit, Jest, 11 Playwright tests). The migration `AddAuditLogSubject` is additive (nullable columns, index, `TargetUserId` nullable); its Down maps null targets to 0, documented. Alternatives: (a) send L2 back to merge `next` first: the missing commits touch no file L2 changed; `next` CI covers the merge result.
+13. **L3 route and recheck.** Chosen: `create_session` (knk-web-app only besides knk-workspace), after rechecking: no rule change since `aa4208b3` (only coordinator skill `ffbc7176`), #387 still open, no open knk-web-app PRs, the only other web-app claim (#535) is on `EmailLogPage`/`InvitationsPage`. Alternatives: (a) subagent: not needed for one component repo, and a session can ask the developer.
 
 ## 4. Link blocks
 
