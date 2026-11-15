@@ -1,9 +1,10 @@
 # Link code format and in-game registration confirmation — smoke test checklist
 
 **Status:** Written 2026-11-14 for #484 and #485; in review on `claude/smoke-fixes-484-485-487` (knk-web-api and
-knk-plugin, PRs into `next`); automated in CI; manual steps not run (the plugin's message choice and join drain are
-unit tests; the chat in game waits for simulated players, [#540](https://github.com/PandiO/knk-workspace/issues/540))
-**Last updated:** 2026-11-14 (steps marked `[automated]` where a knk-plugin test covers them, plugin backfill
+knk-plugin, PRs into `next`); 3 of 18 steps partly automated in CI (tagged: the plugin's message
+choice and join drain are unit tests; the chat in game waits for simulated players, [#540](https://github.com/PandiO/knk-workspace/issues/540)); every step can still be run by hand; manual steps not
+run
+**Last updated:** 2026-11-15 (every step in full again, covered steps tagged `[automated: …]` or `[partly automated: …]`, developer decision 2026-11-15, #511); 2026-11-14 (steps marked `[automated]` where a knk-plugin test covers them, plugin backfill
 [#511](https://github.com/PandiO/knk-workspace/issues/511)); 2026-11-14
 **Issues:** [PandiO/knk-workspace#484](https://github.com/PandiO/knk-workspace/issues/484) (link code `XXXX-XXXX`),
 [PandiO/knk-workspace#485](https://github.com/PandiO/knk-workspace/issues/485) (confirmation in game)
@@ -39,15 +40,8 @@ notice the same way. Write down any step that fails, with the server and API log
 
 ## 2. Game-first registration, player online (#485)
 
-0. [automated] An `AccountLinked` notice with `via` = `register` shows `messages.web-account-registered` (masked
-   address, the login line with `web.public-url`, left out without one; the template is configurable and ships in the
-   bundled config): knk-plugin `AccountLinkedNotifierTest` (`aGameFirstRegistrationShowsTheRegisteredMessage`,
-   `withoutAPublicUrlTheLoginLineIsLeftOut`, `theRegisteredTemplateIsConfigurable`,
-   `theBundledConfigShipsTheDefaultRegisteredMessage`). Manual (steps 1–5): the push or poll reaching a real player and
-   the chat in a real client (#540).
-
 1. Stay in game. On the website register with the code from § 1, an email and a password.
-2. Expected within a few seconds, once, in chat:
+2. [partly automated: knk-plugin `AccountLinkedNotifierTest` (an `AccountLinked` notice with `via` = `register` shows `messages.web-account-registered`: masked address, the login line with `web.public-url`, left out without one, the template configurable and in the bundled config; `aGameFirstRegistrationShowsTheRegisteredMessage`, `withoutAPublicUrlTheLoginLineIsLeftOut`, `theRegisteredTemplateIsConfigurable`, `theBundledConfigShipsTheDefaultRegisteredMessage`); by hand: the push or poll reaching a real player and the chat in a real client (simulated players, [#540](https://github.com/PandiO/knk-workspace/issues/540))] Expected within a few seconds, once, in chat:
    `Your website account is ready and linked to this Minecraft account.`,
    `Log in at <web.public-url> with jo***@example.com or your Minecraft name <name>.` (your address masked),
    `Not you? Tell staff right away.`
@@ -58,25 +52,18 @@ notice the same way. Write down any step that fails, with the server and API log
 
 ## 3. Game-first registration, player offline (#485)
 
-0. [automated] A join while the hub is connected schedules one notification drain; while it is down the poll covers
-   it: knk-plugin `NotificationJoinDrainTest`. Manual (steps 1–4): a real join (#540).
-
 1. In game `/account link`, note the code, log out of the server.
 2. Register on the website with it.
-3. Join the server. Expected: the three lines from § 2 about two seconds after the join messages, once.
+3. [partly automated: knk-plugin `NotificationJoinDrainTest` (a join while the hub is connected schedules one notification drain; while it is down the poll covers it); by hand: a real join (#540)] Join the server. Expected: the three lines from § 2 about two seconds after the join messages, once.
 4. Run this with realtime **on** too: before this change, a notice for an offline player waited for the next hub
    reconnect while the hub was connected; now a join drains it (`NotificationJoinDrain`).
 
 ## 4. Link on the Account page (#485)
 
-0. [automated] A link on the Account page or a claim keeps the `admission.account-linked` notice, not the registration
-   text: knk-plugin `AccountLinkedNotifierTest.aLinkOnTheAccountPageOrAClaimKeepsTheAdmissionMessage`,
-   `showsTheMaskedAddressAndTheWarning`. Manual (steps 1–3): the link in the web app and the chat in game (#540).
-
 1. A web-only account (registered with an invite, no Minecraft account), logged in on the website.
 2. A Minecraft account without a web login runs `/account link`; enter that code on the website's Account page (link
    Minecraft account).
-3. Expected in game, online or on the next join: the existing notice
+3. [partly automated: knk-plugin `AccountLinkedNotifierTest` (`aLinkOnTheAccountPageOrAClaimKeepsTheAdmissionMessage`, `showsTheMaskedAddressAndTheWarning`); by hand: the link in the web app and the chat in game (#540)] Expected in game, online or on the next join: the existing notice
    `Your Minecraft account is now linked to the web account jo***@example.com.` / `Not you? Tell staff right away.`
    (`admission.account-linked`), not the registration text.
 
