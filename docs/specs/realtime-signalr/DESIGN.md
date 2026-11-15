@@ -1,7 +1,7 @@
 # Realtime channel (SignalR) between knk-web-api, knk-plugin and knk-web-app
 
 **Status:** Accepted design (developer decisions 2026-10-26, §12). S1 (§4–§5), S2 (§6.1), WT1 (§8.2, §8.7, #180; as built: [world-tasks/README.md § Lifecycle](../world-tasks/README.md#lifecycle-and-endpoints-pandioknk-workspace180)), WT2 (§8.3–§8.6, #181; as built: §8.8) and S3 (§6.2–§6.4, #182; as built: §6.8) **merged into the default branches 2026-11-04** (API `master` `2258df5`, plugin `main` `e1b6a7a9`, web app `main` `d0c2ba8`) after the developer's smoke tests of #180 and WT2; `realtime.enabled: false` by default in the plugin. **S4** (#183, chain 2 X1, web live updates) **merged 2026-11-12** (API `master` `bc97b7d`, web app `main` `1371951`; smoke test § S4 not run); as built: §6.9; since #280 AM1 (same merge) the audience is the type's area node. **S5** (#184, chain 2 R1, account erasure): API part merged 2026-11-12 in `bc97b7d` (migration `AddPrivacyErasureEvents`), plugin part and § 7.5 in the PR into `next` from `claude/plugin-chains-into-next` (2026-11-13).
-**Last updated:** 2026-11-14 (§7.5 corrections after the #486 retest: the feed is PascalCase, the first join is decided after the account sync); 2026-11-14 (§7.5: the returning player is new, #486); 2026-11-13 (§7.5: a failed erasure step keeps the feed position, a feed reset forgets this run's ids, review of knk-plugin#20); 2026-11-13 (#31 rest: §6.8 note brought into `claude/plugin-chains-into-next`, PR into `next`); 2026-11-13 (S5 #184 plugin part: R1 docs brought into `claude/plugin-chains-into-next`, PR into `next`, §7.5 as built); 2026-11-12 (§6.9 as built brought over from `claude/realtime-web-live-183` and marked merged, audience per area node since #280 AM1 — docs #341); 2026-11-12 (status: S4 merged, S5 API part merged); 2026-11-06 (§6.9: `Realtime:WebLiveUpdatesEnabled`, decision on LX1-10); 2026-11-05 (S4 built: §6.9, §6.5 table, §9); 2026-11-05 (#239 offer permission check, #240 Send again merged); 2026-11-04 (#239, #240 on a feature branch); 2026-11-02 (S3 built: §6.8); 2026-11-02 (WT2 built: §8.8); 2026-11-01 (status: WT1 built, #180); 2026-10-26 (S2 built: implementation notes in §6.7; S1 built: §4.6; decisions recorded; §8.3 delivery and busy flow, §8.7 tasks anchored to the draft, §4.3 publishing path)
+**Last updated:** 2026-11-15 (§6.10: `PlayerKick` / `PlayerBan` v1 for kick and ban from the web app, #565 in review); 2026-11-14 (§7.5 corrections after the #486 retest: the feed is PascalCase, the first join is decided after the account sync); 2026-11-14 (§7.5: the returning player is new, #486); 2026-11-13 (§7.5: a failed erasure step keeps the feed position, a feed reset forgets this run's ids, review of knk-plugin#20); 2026-11-13 (#31 rest: §6.8 note brought into `claude/plugin-chains-into-next`, PR into `next`); 2026-11-13 (S5 #184 plugin part: R1 docs brought into `claude/plugin-chains-into-next`, PR into `next`, §7.5 as built); 2026-11-12 (§6.9 as built brought over from `claude/realtime-web-live-183` and marked merged, audience per area node since #280 AM1 — docs #341); 2026-11-12 (status: S4 merged, S5 API part merged); 2026-11-06 (§6.9: `Realtime:WebLiveUpdatesEnabled`, decision on LX1-10); 2026-11-05 (S4 built: §6.9, §6.5 table, §9); 2026-11-05 (#239 offer permission check, #240 Send again merged); 2026-11-04 (#239, #240 on a feature branch); 2026-11-02 (S3 built: §6.8); 2026-11-02 (WT2 built: §8.8); 2026-11-01 (status: WT1 built, #180); 2026-10-26 (S2 built: implementation notes in §6.7; S1 built: §4.6; decisions recorded; §8.3 delivery and busy flow, §8.7 tasks anchored to the draft, §4.3 publishing path)
 **Issue:** [PandiO/knk-workspace#66](https://github.com/PandiO/knk-workspace/issues/66) (KNG-57, priority high); phase issues in
 [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md). Related: #76 (KNG-170, rank changes don't reach the server),
 #121 (KNG-262, cache TTLs), #31 (KNG-202, startup-only siege work), #35 (KNG-176), #34 (KNG-246), #145 (KNG-249), #75.
@@ -409,6 +409,55 @@ and knk-workspace; **merged 2026-11-12** (API `master` `bc97b7d`, web app `main`
   (folded into the "web connection open" check in `RealtimeSetup`, read through `IOptionsMonitor` on every save), so
   none is sent and the pages behave as with the hub down. The game servers' events, the web hub itself (the user's own
   events) and the profile summary's `presence` field stay.
+
+### 6.10 Kick and ban from the web app: `PlayerKick` / `PlayerBan` v1 (PandiO/knk-workspace#565, in review)
+
+The contract the game server's handler (knk-plugin, link L7, [#574](https://github.com/PandiO/knk-workspace/issues/574))
+implements. Developer decisions 2026-11-15 on [#565](https://github.com/PandiO/knk-workspace/issues/565#issuecomment-6892821566):
+staff kick and ban from the web app; a web ban works like in-game `/ban` (Paper's ban list, permanent, with the reason)
+and unban stays `/pardon` in game; every kick and ban is audited in the API.
+
+1. **Published from** `Services/PlayerModerationService.cs` (`POST api/Users/{id}/kick`, node `knk.kick`;
+   `POST api/Users/{id}/ban`, node `knk.ban`), through the scoped `IRealtimeEventSink` like `UserFrozenChanged`, after
+   the audit entry (`PlayerKicked` 63 / `PlayerBanned` 64) is written. No transaction is open, so it is sent at once.
+2. **To:** every connected game server (`servers` group, `ServerId` null). Each server acts only on what concerns it
+   (kick: only when the player is online on it; ban: every server adds the ban to its own ban list).
+3. **Envelope:** the usual `{ v, seq, type, at, actor, payload }` (§4.2) with `type` `PlayerKick` or `PlayerBan`, `v` 1,
+   `actor` `{ userId: <staff id>, source: "web" }`.
+4. **Payload** (`PlayerModerationPayload`, camelCase), the same for both types:
+
+   | Field | Type | Meaning |
+   |---|---|---|
+   | `actionId` | string (GUID) | Unique per staff action, also in the audit entry's details. A receiver that sees the same id twice acts once. |
+   | `userId` | int | The knk user. |
+   | `uuid` | string | Their Minecraft UUID with dashes (events are only sent for users with one). Act on this. |
+   | `username` | string | Their username (for messages and logs; use `uuid` to find the player or profile). |
+   | `reason` | string or null | Shown to the player. Always set for `PlayerBan` (1–200 characters). Null for a `PlayerKick` without a reason: use the plugin's default kick message. |
+   | `staffUserId` | int | The staff member. |
+   | `staffUsername` | string | Their username: the ban list's `source`. |
+   | `at` | string (UTC, ISO 8601) | When the API accepted it. |
+
+   Example: `{"actionId":"5b0c…","userId":42,"uuid":"069a79f4-44e9-4726-a5be-fca90e38aaf5","username":"Steve","reason":"X-ray","staffUserId":7,"staffUsername":"Mod","at":"2026-11-15T12:00:00Z"}`.
+5. **What the receiver does** (L7): `PlayerKick`: if the player with `uuid` is online on this server, kick them with
+   `reason` (or the default message) on the main thread; otherwise nothing. `PlayerBan`: add the profile `uuid`
+   (with `username`) to Paper's profile ban list, permanent (no expiry), with `reason` and `staffUsername` as source,
+   whether the player is online or not; then kick them with the ban message if online. Already banned: nothing more
+   (idempotent). Unban is `/pardon` in game; the API has no unban and no ban state.
+6. **Delivery and its limits** (the realtime channel is a doorbell, P2/P5; no outbox):
+   1. The API refuses with **503 `NoGameServerConnected`** while no game server is connected to `/api/hubs/game`, so a
+      kick or ban is never reported as done when nothing could carry it out. This also covers a plugin with
+      `realtime.enabled: false` (no hub connection): web kick/ban then needs the hub on.
+   2. A kick is refused with **409 `PlayerNotOnline`** when `User.IsOnline` is false (nothing to kick); nothing is
+      audited or sent. A ban of an offline player is accepted and sent; the game server bans the profile.
+   3. Not replayed: an event is sent to the servers connected at that moment. A server that connects later, or one
+      whose message was lost (disconnect while sending, or the bounded queue dropping its oldest message, §4.3),
+      does not get it, and a resync has nothing to re-read (the ban lives in the game server's ban list, not in the
+      API). Staff then repeat the action (idempotent by design) or use `/ban` in game. With several game servers, a
+      server that was down misses the ban; an outbox (option C of §4.3) would close this and is not built.
+   4. Other refusals: 400 `ValidationFailed` (ban without a reason, a reason over 200 characters), 400
+      `CannotModerateSelf`, 400 `NoMinecraftAccount`, 403 `EscalationRefused` (the player ranks at or above the
+      caller: highest group weight, `*` holders exempt and protected), 404 `UserNotFound`; 401/403 without login or node.
+7. **Answer:** 202 `{ actionId, userId, gameServers }` (`gameServers` = connected game servers when sent).
 
 ## 7. Reliability
 
