@@ -5,6 +5,36 @@ This is a human-readable record of capabilities merged into the V3 default branc
 ## Unreleased — on feature branches, not merged
 
 - **NPC navigation: movement-quality design (proposed)** ([PandiO/knk-workspace#603](https://github.com/PandiO/knk-workspace/issues/603), link L8): implementation plan Phase 4c (steering options from a [research report](reports/2026-11-15-npc-movement-research.md) on how games handle obstacle avoidance and stuck recovery, formations that tighten before they fold, turns at chokepoints, natural lines on plazas; links M1–M5) and BEHAVIOR_MODEL NAV-24–NAV-28; docs only, on `claude/npc-followups-l8`, awaiting the developer's answers.
+- **NPC navigation: entry removed in the web app with realtime on stops a group at the district's edge**
+  ([PandiO/knk-workspace#593](https://github.com/PandiO/knk-workspace/issues/593), the developer's retest of
+  [#506](https://github.com/PandiO/knk-workspace/issues/506) (Phase 4 developer test step 10); also
+  [#533](https://github.com/PandiO/knk-workspace/issues/533); link L6 of the NPC navigation follow-ups chain).
+  knk-plugin and knk-workspace branches `claude/npc-followups-l6` (PRs into `next`, in review). No change for players
+  or with `npc.navigation.enabled: false` (the default).
+  1. **Why the whole group walked in.** A district's entry changed in the web app arrives over realtime as
+     `EntityChanged` (the plugin clears its region → domain map) and `DomainAccessChanged` (the WorldGuard flag sync).
+     Neither told NPC navigation. The group kept its "may enter" answers from before the change, and the NPC checks
+     count a region missing from the map as open, so every follower outside walked in and the trespass guard counted
+     nothing. A `/knk cache refresh` afterwards came too late for the followers who were already inside.
+  2. **The fix.** Both realtime events now ask, coalesced into one run after half a second, for the roads' regions to
+     be asked about again in place (the last known rule is kept until the API answers) and then send the availability
+     event the refresh sends. Followers outside stop at the edge within about a second, without a refresh. Only while
+     NPC navigation runs.
+  3. **The gate region over the district's entry is not the cause.** The NPC entry rule judges each region on its own:
+     a step into `district_1000004` and `gate_2000131` at once is allowed only when both may be entered, so a gate
+     region that allows entry (or has no domain) never hides the district's denial. There is no region priority in
+     the entry rule. The rule is now one core class (`DomainEntryRule`) shared by the server and the tests.
+  4. **No false trespass for an NPC that crossed just before the change arrived.** An NPC's own trespass guard (the
+     leader's, and any NPC with an order of its own) now takes a fresh look when an availability event comes, as the
+     followers' guard already did. An entry made under the old rules is not judged by the new ones. Entries made after
+     the plugin knew still count.
+  5. **Tests.** New plugin scenario `npc-group-realtime-entry`: a district under a gate region on a real server, entry
+     removed and restored through the plugin's realtime classes mid-group (CI `paper-boot` now has `MIN_SCENARIOS` 35).
+     New knk-core `NavGroupDomainRulesTest` covers the realtime, `DomainAccessChanged` and refresh paths with the gate
+     region; on `next` the realtime path fails it (followers enter). There are also new resolver tests, two
+     `NpcNavigationRulesTest` cases and the knk-paper `NavigationDomainChangesTest`.
+  - **Admin steps:** none (no `config.yml` key, no new node, no API change). Developer retest: Phase 4 step 10 as
+    changed in the implementation plan (realtime on, no `/knk cache refresh`), posted on #593.
 - **NPC navigation: NPCs stay on the stair at a turn over a ledge, and falls are counted**
   ([PandiO/knk-workspace#592](https://github.com/PandiO/knk-workspace/issues/592), the developer's L3 retest of
   [#491](https://github.com/PandiO/knk-workspace/issues/491) and [#492](https://github.com/PandiO/knk-workspace/issues/492);
