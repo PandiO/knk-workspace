@@ -47,6 +47,29 @@ This is a human-readable record of capabilities merged into the V3 default branc
     ([#540](https://github.com/PandiO/knk-workspace/issues/540)). No plugin behaviour changed; `testing.scenarios.enabled`
     stays off by default.
   - **Admin steps:** none.
+- **Staff web app: edit a permission group's own nodes, with a History**
+  ([PandiO/knk-workspace#50](https://github.com/PandiO/knk-workspace/issues/50); link L2 of the staff web app follow-ups
+  chain, [#517](https://github.com/PandiO/knk-workspace/issues/517)). knk-web-api, knk-web-app and knk-workspace
+  branches `claude/group-grants-50` (PRs into `next`, in review, not merged). A permission group's detail page
+  (Dashboard → Permission Group → a group) has a **Permissions** panel: the group's own nodes (Granted/Denied, expiry),
+  a grant/deny form whose expiry is empty (permanent) by default, Edit, change Granted/Denied and Remove per row.
+  Changing Granted/Denied or removing asks first with the blast radius ("This affects N players", members of groups
+  that inherit from it included; online players get the change within seconds). A **History** list shows each change
+  to the group's nodes. Without `knk.admin.user.perm` the panel is read-only with "Requires knk.admin.user.perm".
+  1. **API:** the audit log has a generic subject (developer decision 2026-11-15): `audit_log_entries` gets nullable
+     `SubjectType` and `SubjectId` and `TargetUserId` becomes optional. A change to a group's own grants (added,
+     updated, removed) leaves one entry with the group as subject (`PermissionGroup`), the staff member as actor and the
+     node, before/after value and expiry in the details; player grant audits are unchanged. `GET api/audit-log` takes
+     `subjectType` and `subjectId` (`knk.admin.user.manage`). New `GET api/PermissionGroups/{id}/member-count`
+     (`knk.admin.user.manage` or the plugin key): active members of the group and of every group inheriting from it,
+     each player once. Writes stay on the by-node routes and `knk.admin.user.perm`; nobody changes a group ranked at or
+     above their own.
+  2. **Follow-up:** [#558](https://github.com/PandiO/knk-workspace/issues/558) (plugin: members of inheriting groups
+     and changes while realtime is down).
+  - **Admin steps:** one additive migration, `AddAuditLogSubject` (two nullable columns, one index, `TargetUserId`
+    nullable). The API does not migrate on start: back up the database, deploy the API, run `dotnet ef database update`,
+    then deploy the web app (it needs the new endpoints). No settings, no `config.yml` key, no plugin change. Smoke
+    test: [dashboard access smoke test § 8.7](guides/dashboard-access-smoke-test.md) (mostly automated in CI).
 - **Dashboard: the PermissionGrant table loads** ([PandiO/knk-workspace#408](https://github.com/PandiO/knk-workspace/issues/408);
   API and staff web app). knk-web-api and knk-web-app branches `claude/permission-grant-table-408` (PRs into `next`, in
   review, not merged). Dashboard → Permission Grant lists every grant and deny (node, Granted/Denied, holder, expiry)
