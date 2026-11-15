@@ -1,6 +1,6 @@
 # Your account: invitation, linking, login and password
 
-**Status:** Current · **Last updated:** 2026-11-13 (rewritten for invite-only sign-up, claim codes, sessions and password reset; renamed from `PLAYER_GUIDE_ACCOUNT_MANAGEMENT.md`, PandiO/knk-workspace#299)
+**Status:** Current · **Last updated:** 2026-11-13 (§ Delete my data: the request and what the game server does, PandiO/knk-workspace#184, game-server part in `next`; brought over from the old guide on `next`)
 **Checked against:** knk-web-app `main` `3ba747d`, knk-web-api `master` `75b5a00`, knk-plugin `main` `57884e9`
 **Related:** [player handbook](player-handbook.md), [commands reference](commands.md), [invitations admin guide](../admin/invitations-admin-guide.md), [statistics and public profile](statistics-player-guide.md)
 
@@ -211,10 +211,38 @@ Open it from the account menu (top right) → **Account settings** (the page `/a
    **✓ Minecraft Account Linked**. You can't unlink or switch the Minecraft account yourself: "Changing it is a staff
    action."
 6. **Delete my data**: request deletion of your data by email confirmation; it runs five days after you confirm
-   unless you cancel. The section lists what is deleted and what is kept without your name.
+   unless you cancel. The section lists what is deleted and what is kept without your name. See
+   [Delete my data](#delete-my-data).
 7. **Session**: **Log out** and **Log out on all devices**.
 
 When your Minecraft name changes, your username follows it the next time you join.
+
+### Delete my data
+
+On the **Account** page, under **Delete my data**:
+
+1. Press **Delete my data…**, then **Email me the confirmation link** (you need an email address on your account).
+2. Open the link in the email to confirm. Nothing is deleted until you confirm.
+3. Your data is deleted **five days** after you confirm. Until then the Account page shows the date, and you can press
+   **Cancel deletion** to keep everything.
+
+What is deleted: your statistics, privacy settings, discoveries, private-message logs, ranks and permissions, and your
+username, email and Minecraft link. Your coin, gem and XP history and Siege match results are kept, without your name.
+This can't be undone. Staff can also file the request for you; it then runs the same way, five days later.
+
+**On the game server**, when the deletion runs. This part only happens on a game server that keeps a live connection
+to the website (the server setting `realtime.enabled: true`); without it the game server does none of the steps below:
+
+1. If you are online, you are disconnected with the message `Your account data has been deleted.` If you were in a
+   siege, your own inventory, stats and position are given back to you first.
+2. The game server then deletes what it keeps about you locally: your saved login data, cached ranks and permissions,
+   ignore lists (yours, and you on other players' lists), statistics and discoveries not yet sent, private messages you
+   sent or received in its logs, a saved siege inventory and a saved return point.
+3. If such a server was offline or its connection was down at that moment, it catches up the next time it connects.
+
+If you join again later, you start with a new account, as a new player (see
+[Sign up with an invitation](#sign-up-with-an-invitation)). The game-server part (PandiO/knk-workspace#184) is in
+knk-plugin `next` `745fcf6` and reaches the game server with the next release.
 
 ## In game: `/account`
 
@@ -253,10 +281,13 @@ join shows a one-line reminder with the same button. Full syntax: [commands refe
 
 ## Changes
 
-1. 2026-11-13: rewritten for the invite-only flow and renamed from `PLAYER_GUIDE_ACCOUNT_MANAGEMENT.md` (PandiO/knk-workspace#299).
+1. 2026-11-13: § Delete my data: the **Delete my data** request and what the game server does when it runs
+   (PandiO/knk-workspace#184, docs #400; game-server part in knk-plugin `next`), brought over from
+   `PLAYER_GUIDE_ACCOUNT_MANAGEMENT.md` on `next`.
+2. 2026-11-13: rewritten for the invite-only flow and renamed from `PLAYER_GUIDE_ACCOUNT_MANAGEMENT.md` (PandiO/knk-workspace#299).
    The old guide's sections on `/account create`, merging in game and the account-settings layout of 2026-01 were
    removed; they described removed behaviour.
-2. 2026-11-03: the register page's code field shows the dash (#229).
-3. 2026-10-26: the claim code field shows `____-____` from the start (#196) and adds the dash (#192).
+3. 2026-11-03: the register page's code field shows the dash (#229).
+4. 2026-10-26: the claim code field shows `____-____` from the start (#196) and adds the dash (#192).
 4. 2026-10-21: "Getting an account" rewritten for invite-only sign-up (KNG-218).
 5. 2026-01-30: versions 1.0 and 1.1 (account commands, linking, merging).

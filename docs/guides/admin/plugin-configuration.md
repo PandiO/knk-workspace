@@ -1,7 +1,7 @@
 # Plugin configuration reference (`config.yml`)
 
-**Status:** Current · **Last updated:** 2026-11-13 (§ 4.11 gates are discovered too; § 4.21 realtime push; § 4.26 the kit cache, PandiO/knk-workspace#300)
-**Checked against:** knk-plugin `main` `121030f`; § 4.11, § 4.21 and § 4.26 against `57884e9`. Update this page in place whenever a `config.yml` key is added, renamed, removed or gets a new default.
+**Status:** Current · **Last updated:** 2026-11-15 (§ 4.3 `realtime.moderation` and § 2.1, web kick/ban, #574); 2026-11-15 (§ 2.1: #522 merged into `next` `deb7ff49`, #589); 2026-11-15 (§ 4.27 `npc`: `group-lateral-spacing`, `group-width-hysteresis-blocks`, `group-followers-finish-trip`, `group-spacing` 2.0 → 1.5, `group-formation` and `group-ranks-width` texts, #522); 2026-11-15 (§ 4.27 `npc`: `corner-clearance`, `waypoint-margin`, `recovery-wait-ticks`, `stationary-ticks` and `no-progress-ticks` 40, `max-retries` reworded, #521); 2026-11-14 (§ 4.28 `testing.scenarios`, test servers only, #421); 2026-11-14 (§ 4.18 `messages.web-account-registered`, #485); 2026-11-14 (§ 2.1: the #377 `group-*` keys are in `next` since 2026-11-13, PandiO/knk-workspace#496); 2026-11-13 (§ 4.11 gates are discovered too; § 4.21 realtime push; § 4.26 the kit cache, PandiO/knk-workspace#300)
+**Checked against:** knk-plugin `main` `121030f`; § 4.11, § 4.21 and § 4.26 against `57884e9`; § 4.27 `npc`, the `realtime.erasure` and `realtime.moderation` blocks and `regions.temp-retention.release-interval-minutes` against knk-plugin `next` (not on trunk yet). Update this page in place whenever a `config.yml` key is added, renamed, removed or gets a new default.
 **Source:** knk-plugin `knk-paper/src/main/resources/config.yml` (1,152 lines at `121030f`), read by
 `knk-paper/.../paper/config/ConfigLoader.java`, `EnchantmentConfigManager.java` and `KnKPlugin.java`
 **Related:** [production installation § 9.5](../production-installation.md#95-install-the-knightsandkings-plugin),
@@ -85,6 +85,15 @@ Newest first. Builds before this list: compare the files with the script.
 
 | Merged | Issue | Added (+), removed (−) or changed | Applies |
 |---|---|---|---|
+| in review, not in `next` yet (`claude/web-kick-ban-574`) | [#574](https://github.com/PandiO/knk-workspace/issues/574) | + `realtime.moderation` (`kick-default-reason`, `ban-message`; optional, defaults apply when missing) | Restart |
+| in `next` (`deb7ff49`, 2026-11-15), not on trunk yet | [#522](https://github.com/PandiO/knk-workspace/issues/522) | + `npc.navigation.group-lateral-spacing` (1.0), + `group-width-hysteresis-blocks` (3), + `group-followers-finish-trip` (false); `group-spacing` default 2.0 → 1.5 (now the gap between rows and in the column). A server whose `config.yml` still says `group-spacing: 2.0` keeps 2.0: change it to 1.5 | Restart |
+| in `next` (`5dc88cfd`, 2026-11-15), not on trunk yet | [#521](https://github.com/PandiO/knk-workspace/issues/521) | + `npc.navigation.corner-clearance` (1.0), + `waypoint-margin` (0.5), + `recovery-wait-ticks` (20); `stationary-ticks` and `no-progress-ticks` default 60 → 40; `max-retries` now counts the recovery steps (back-off, side-step, local leg ahead). A server whose `config.yml` still says 60 keeps 60: change the two lines to 40 | Restart |
+| in `next` (`309d3580`, 2026-11-14), not on trunk yet | [#421](https://github.com/PandiO/knk-workspace/issues/421) | + `testing.scenarios` (`enabled` false, `world`, `origin.x/y/z`). **Don't merge it into real servers:** a missing block means off, which is what they need | Restart |
+| in review, not in `next` yet (`claude/smoke-fixes-484-485-487`) | [#485](https://github.com/PandiO/knk-workspace/issues/485) | + `messages.web-account-registered` (optional: a missing key uses the jar's text) | Restart |
+| in `next` (`745fcf6`, 2026-11-13), not on trunk yet | [#184](https://github.com/PandiO/knk-workspace/issues/184), [#269](https://github.com/PandiO/knk-workspace/issues/269) | + `realtime.erasure` (`kick-message`, `settle-seconds`, `feed-file`, `minecraft-files-list`; optional, defaults apply when missing), + `regions.temp-retention.release-interval-minutes` (5, 0 = off) | Restart |
+| in `next` (`0506e691`, 2026-11-13), not on trunk yet | [#377](https://github.com/PandiO/knk-workspace/issues/377) | + `npc.navigation.group-formation`, + `group-spacing`, + `group-ranks-width`, + `group-rejoin-blocks`, + `group-regroup-blocks`, + `group-catch-up-speed` (NPC groups; nothing uses them unless a group is started) | Restart |
+| in `next`, not on trunk yet | [#361](https://github.com/PandiO/knk-workspace/issues/361) | + `npc.navigation.rule-checks-per-tick`, + `npc.navigation.stop-on-trespass`; `recheck-ticks` is used from now on | Restart |
+| in `next`, not on trunk yet | [#359](https://github.com/PandiO/knk-workspace/issues/359), [#360](https://github.com/PandiO/knk-workspace/issues/360) | + `npc.navigation` block (off by default): Phase 1 keys and, with Phase 2, `spawns-per-tick`, `hop-blocks`, `max-retries`, `no-route-wait-ticks`, `walk-only-blocks`, `access-profiles` | Restart |
 | 2026-11-10 | [#259](https://github.com/PandiO/knk-workspace/issues/259) | − `gates.cleaving` (`damage-bonus-per-level`, `charged-hit-multiplier`, `charged-cooldown-seconds`): no longer read. Cleaving's numbers are combat values in the web app now ([combat values guide](custom-enchantment-combat-values-admin-guide.md#1-where-to-edit)). Delete the block. + `custom-enchantments.messages.cmd-info-tuning-gate` | `/ce reload` |
 | 2026-11-10 | [#233](https://github.com/PandiO/knk-workspace/issues/233) | No `config.yml` change. The chat token limits are on the web app's Game Settings page ([chat tokens guide](../chat-tokens.md)) | — |
 | 2026-11-04 | [#178](https://github.com/PandiO/knk-workspace/issues/178), [#179](https://github.com/PandiO/knk-workspace/issues/179) | + `realtime` block (off by default) | Restart |
@@ -133,6 +142,8 @@ Newest first. Builds before this list: compare the files with the script.
 | 4.24 | `command-visibility` | What `/` suggests |
 | 4.25 | `offline-cache` | Offline security cache |
 | 4.26 | `cache` | API response cache per entity |
+| 4.27 | `npc` | NPC navigation on Citizens (off by default) |
+| 4.28 | `testing` | In-plugin test scenarios, test servers only (off by default) |
 
 ## 4. Key reference
 
@@ -182,6 +193,12 @@ One SignalR connection to the API's game hub ([design](../../specs/realtime-sign
 | `hub-path` | `"/api/hubs/game"` | Hub path used when `hub-url` is empty | Restart | #178 |
 | `backoff-seconds` | `[1, 2, 5, 10, 30]` | Delays between reconnect attempts; the last repeats. No attempts while the connectivity probe says DOWN | Restart | #178 |
 | `backoff-jitter` | `0.2` | Random spread of each delay (0.2 = ±20 %), so servers don't retry in step | Restart | #178 |
+| `erasure.kick-message` | `"Your account data has been deleted."` | GDPR erasure push (only while `enabled`): the kick text for an online player whose account the API erased. A siege vault they hold is given back before the kick | Restart | #184 |
+| `erasure.settle-seconds` | `2` | Wait between the kick and the deletion of what this server keeps about the account (quit handlers, Minecraft saving the player), 0-30 | Restart | #184 |
+| `erasure.feed-file` | `"erasure-feed.json"` | File in the plugin folder that keeps the position in the API's erasure feed; every (re)connect catches up from it | Restart | #184 |
+| `erasure.minecraft-files-list` | `"erasure-minecraft-files.txt"` | Minecraft's own player files (`.dat`, stats, advancements) of erased accounts are listed here for the owner, never deleted | Restart | #184 |
+| `moderation.kick-default-reason` | `"You were kicked by a member of staff."` | Kick and ban from the web app (only while `enabled`): the kick text when staff kick a player from the profile page without a reason. A kick with a reason shows the reason as typed. `&` colour codes; `{player}`, `{staff}` | Restart | #574 |
+| `moderation.ban-message` | `"You are banned from this server.\nReason: {reason}"` | The kick text of an online player banned from the web app. The ban itself goes on this server's ban list (`banned-players.json`: permanent, the reason, the staff member's username as source; lifted with `/pardon`). `&` colour codes; `{reason}`, `{player}`, `{staff}` | Restart | #574 |
 | `fallback-poll-multiplier` | `4` | While connected, re-syncs that the hub now pushes run this many times less often (social spy re-check 60 s → 4 min); the player notification poll stops while connected. `1` = no slowdown | Restart | #179 |
 
 ### 4.4 `metrics`
@@ -450,7 +467,8 @@ block.
 | Key | Default | What it does, safe values | Applies | Added by |
 |---|---|---|---|---|
 | `prefix` | `"&8[&6KnK&8] &r"` | Prefix of plugin messages | Restart | — |
-| `account-created` / `account-linked` / `duplicate-account` | (text) | Account flow messages | Restart | — |
+| `account-created` / `account-linked` / `duplicate-account` | (text) | Account flow messages (`account-linked` is read but shown nowhere; the in-game link notice is `admission.account-linked` § 4.5, a game-first registration's is `web-account-registered` below) | Restart | — |
+| `web-account-registered` | `"&aYour website account is ready and linked to this Minecraft account.\n&aLog in at &e{url} &awith &e{maskedEmail} &aor your Minecraft name &e{name}&a.\n&cNot you? Tell staff right away."` | Shown once after a game-first registration (registered on the website with the `/account link` code): within seconds when online (realtime push or the notification poll), else about 2 s after the next join. Placeholders `{maskedEmail}`, `{name}` (the Minecraft name), `{url}` (`web.public-url`; lines with it are dropped while that is empty). A missing key uses the jar's text. An Account-page link or a claim shows `admission.account-linked` instead | Restart | [#485](https://github.com/PandiO/knk-workspace/issues/485) |
 | `link-code-generated` | (text) | `/account link`. Placeholders `{code}`, `{minutes}`, `{url}`; lines with `{url}` are dropped while `web.public-url` is empty. Take the current default from the jar: an older file keeps its old text | Restart | KNG-208 |
 | `link-code-entered-in-game` | (text) | `/account link <code>`: codes go on the website | Restart | KNG-208 |
 | `invalid-link-code` | (text) | Invalid or expired code | Restart | — |
@@ -538,6 +556,7 @@ next `runtime-refresh-seconds`, or at once with `realtime.enabled: true` ([econo
 | Key | Default | What it does, safe values | Applies | Added by |
 |---|---|---|---|---|
 | `temp-retention.days` | `14` | The daily cleanup deletes an unused `tempregion_worldtask_*` region and an orphaned domain sub-region this many days later (at least 1) | Restart | KNG-103, KNG-258 |
+| `temp-retention.release-interval-minutes` | `5` | How often the server removes temp regions the API released (deleted draft, region task cancelled, failed or expired after a server held it, session removed by the sweep), with the same "used by a domain or lootbox area" checks, without the age. `0` = off; set `0` while the API has no release route yet (it logs a warning per pass otherwise) | Restart | #269 |
 | `global.protection` | `true` | Where only WorldGuard's `__global__` applies, default players can't build, use crafting blocks or break decorations, and explosions break nothing. Doors, gates and storage stay usable. `knk.region.bypass` and ops pass | Any reload | QOL hotfix 2026-10-25 |
 | `global.crafting-blocks` | (16 materials, `CRAFTING_TABLE` … `FLETCHING_TABLE`) | The blocked crafting blocks; empty = the built-in list | Restart | QOL hotfix 2026-10-25 |
 | `effect-damage.enabled` | `true` | Players inside a domain take no damage from the causes below, unless the region flag `knk-effect-damage` is `allow`, or it is unset and `pvp` is `allow`. Siege members in a match keep the siege's rules | Any reload | #162 |
@@ -600,6 +619,138 @@ The file's own comment (KNG-262) says that for most entities `ttl-minutes` isn't
 or at once after `/knk cache refresh`. Kits are not among the caches `/knk cache refresh` drops: a kit edit shows in the
 kits menu after `ttl-seconds`, or at once with `realtime.enabled: true`; claims always read the API.
 
+### 4.27 `npc`
+
+NPC navigation ([implementation plan](../../specs/npc-platform/IMPLEMENTATION_PLAN.md), parent issue
+[#358](https://github.com/PandiO/knk-workspace/issues/358)): K&K plans routes, the Citizens plugin moves the NPCs.
+Everything is under `npc.navigation`. Off by default; without the Citizens plugin, `/knk npc status` says why it is
+off. Route following also needs `navigation.enabled` and `navigation.walk.enabled` (§ 4.15).
+
+Global switches:
+
+| Key | Default | What it does, safe values | Applies | Added by |
+|---|---|---|---|---|
+| `enabled` | `false` | NPC navigation on or off. Off: nothing runs, `/knk npc` only reports | Restart | #359 |
+| `max-plans-in-flight` | `4` | Route and leg plans running at once, server-wide; 1–64 | Restart | #359 |
+| `spawns-per-tick` | `2` | NPC spawns per tick at most; 1–20. Twenty player-shaped NPCs spawned in one tick cost a 48.8 ms tick | Restart | #360 |
+| `rule-checks-per-tick` | `10` | NPCs whose way ahead and position are checked against the current gate and access rules per tick at most (the recheck, the trespass guard, wake-ups after a gate or access change); 1–200. 200 walking NPCs at `recheck-ticks: 40` need 5 per tick; with too few, checks come later than `recheck-ticks` | Restart | #361 |
+
+Per-NPC settings. The values under `npc.navigation` are the global layer; `worlds.<world>` and
+`regions.<WorldGuard region or domain id>` (innermost region wins) override single keys, and `/knk npc status` shows
+each value with the layer it came from. A wrong value is reported at startup and skipped.
+
+| Key | Default | What it does, safe values | Applies | Added by |
+|---|---|---|---|---|
+| `pathfinder` | `citizens` | Citizens' path search for off-road legs and recovery: `citizens` or `citizens_async` | Restart | #359 |
+| `stretch-blocks` | `32` | Blocks of the route handed to the NPC at once; 8–128 | Restart | #359 |
+| `hop-blocks` | `16` | Blocks between the hops of an off-road or recovery leg (one Citizens search each); 4–48 | Restart | #360 |
+| `recheck-ticks` | `40` | Ticks between rechecks of a walking NPC's way ahead against the current gate and access rules; a denied region or a closed gate ahead plans the route again. 0 = off: gate and access events still reach the NPCs and the trespass guard still looks every 40 ticks; 0–1200 | Restart | #359, used from #361 |
+| `stationary-ticks` | `40` | Ticks in one block before Citizens reports stuck; the first recovery step starts then; 10–1200 (60 before #521) | Restart | #359, #521 |
+| `no-progress-ticks` | `40` | Ticks without progress along the route before K&K's watchdog steps in; 20–1200 (60 before #521) | Restart | #359, #521 |
+| `max-retries` | `3` | Recovery steps of a stuck NPC before its route is planned again: 1 back-off (walk back along its last footsteps), 2 side-step (one block away from the wall), 3 local leg ahead (one Citizens search to a point ahead on its own floor). Steps that cannot be taken are skipped and not counted; after two replans without getting free the order fails; 0–10 | Restart | #360, #521 |
+| `recovery-wait-ticks` | `20` | Ticks between two recovery steps of a stuck NPC (back-off, side-step, local leg, replan); 0–200 | Restart | #521 |
+| `corner-clearance` | `1.0` | Blocks an NPC keeps between itself and a wall on the inside of a turn of its route, as far as the road allows; straight stretches may run along a wall; 0–2, 0 = off | Restart | #521 |
+| `waypoint-margin` | `0.5` | How close an NPC comes to a route waypoint before it heads for the next one; smaller walks turns through the corner point instead of cutting it (Citizens' own default is 1); 0.2–1.5 | Restart | #521 |
+| `no-route-wait-ticks` | `100` | Ticks an NPC waits before asking again while the rules allow no route or the way ahead is not loaded; 20–6000. An NPC waiting at a closed gate or a district edge is woken by the gate or access change itself; this is the fallback | Restart | #360 |
+| `walk-only-blocks` | `64` | With an end too far from a road: the longest trip walked as off-road hops; further, the order fails; 0–256 (0 = never) | Restart | #360 |
+| `stop-on-trespass` | `false` | The trespass guard always logs and counts an NPC that entered a region its current rules deny. `true`: also stop that NPC and plan its route again; for dev servers | Restart | #361 |
+| `collidable` | `false` | Whether NPCs push and block each other | Restart | #359 |
+| `chunk-loading` | `load` | Outside player-loaded areas: `load` or `simulate` (read now, used in Phase 7b) | Restart | #359 |
+| `group-formation` | `column` | The formation of a group of NPCs (a leader plans the route once, the followers walk it in slots): `column` (single file), `ranks` (rows behind the leader), `cluster` (a loose crowd, 3 abreast) or `escort-ring` (an octagon around the leader, then wider rings). Where the road is too narrow a formation narrows before it folds: `ranks` one fewer abreast at a time down to 2, a `cluster` 3 then 2, the `escort-ring` rows of 3 with the leader in the middle of the second row, then 2 abreast; only where 2 abreast do not fit (a gate, stairs, a wall walk) the group walks as a column, and it takes up the widest width that fits again after | Restart | #377, #522 |
+| `group-spacing` | `1.5` | Blocks between the rows of a formation and between NPCs in a column; 1–8 (was 2.0 and also the gap in a row before #522) | Restart | #377, #522 |
+| `group-lateral-spacing` | `1.0` | Blocks between neighbours in a row of a group's formation (1 = shoulder to shoulder); 1–8. 3 abreast need a road 1 + 2 × this wide, rounded down to whole blocks (3 at 1.0 and 1.25, 4 at 1.5); the escort ring's first ring has a radius of 1.25 × this | Restart | #522 |
+| `group-ranks-width` | `2` | NPCs per row in the `ranks` formation (2 = pairs), its widest width; it narrows one by one down to 2 before it folds into a column; 2–8 | Restart | #377, #522 |
+| `group-width-hysteresis-blocks` | `3` | A group changes to a narrower width (still 2 abreast or more) or a wider one only when it lasts this many blocks along the path; a column at a gate or a stair is taken at once; 0–16 | Restart | #522 |
+| `group-followers-finish-trip` | `false` | When the leader has arrived and the group turns back, followers still on their way (held at a gate or a district edge, behind) finish their trip to the goal first and then rejoin the group (couriers); `false`: they follow the leader at once | Restart | #522 |
+| `group-rejoin-blocks` | `4.0` | A follower further than this from its lane plans its own leg back to the group's path (one local leg, never the whole route). A follower without progress for `no-progress-ticks` takes the recovery steps first (back-off, side-step), then its own leg back to a point ahead of it on its own floor; 2–16 | Restart | #377, #521 |
+| `group-regroup-blocks` | `24.0` | The leader waits when a follower is this many blocks behind its slot, until the group has closed up to half of it (30 seconds at most); 0–256, 0 = the leader never waits | Restart | #377 |
+| `group-catch-up-speed` | `1.3` | Walking speed, as a factor, of a follower that is behind its slot; 1–2, 1 = followers never walk faster | Restart | #377 |
+
+The `group-*` keys are per-NPC settings like the others, but a group takes them once, for its leader: a world, a
+region, an NPC template or an assignment can give groups their own formation and toggle.
+`/knk npc nav group <n> [formation] [profile] [finish-trip|follow-leader]` starts a test group; `finish-trip` or
+`follow-leader` sets `group-followers-finish-trip` for that group (the assignment layer).
+
+Access profiles, `access-profiles.<id>` (until NPCs have their own permissions). `default` always exists. NPCs never
+pass a closed gate.
+
+| Key | Default | What it does | Applies | Added by |
+|---|---|---|---|---|
+| `bypass-domain-rules` | `false` | Ignore every domain's entry and exit rule | Restart | #360 |
+| `open-doors` | `true` | May open hand-openable doors on off-road legs | Restart | #360 |
+| `allow-regions` | `[]` | WorldGuard region ids the NPC may enter and leave whatever the domain says | Restart | #360 |
+| `deny-regions` | `[]` | Region ids the NPC never enters (wins over `allow-regions`) | Restart | #360 |
+
+The block to paste (the Phase 1 keys with the Phase 2, 3 and 4 additions; Phase 4, #377, adds the six `group-*`
+lines; #521 adds `recovery-wait-ticks`, `corner-clearance` and `waypoint-margin` and sets `stationary-ticks` and
+`no-progress-ticks` to 40; #522 adds `group-lateral-spacing`, `group-width-hysteresis-blocks` and
+`group-followers-finish-trip` and sets `group-spacing` to 1.5):
+
+```yaml
+npc:
+  navigation:
+    enabled: false
+    max-plans-in-flight: 4
+    spawns-per-tick: 2
+    rule-checks-per-tick: 10
+    pathfinder: citizens
+    stretch-blocks: 32
+    hop-blocks: 16
+    recheck-ticks: 40
+    stationary-ticks: 40
+    no-progress-ticks: 40
+    max-retries: 3
+    recovery-wait-ticks: 20
+    corner-clearance: 1.0
+    waypoint-margin: 0.5
+    no-route-wait-ticks: 100
+    walk-only-blocks: 64
+    stop-on-trespass: false
+    collidable: false
+    chunk-loading: load
+    group-formation: column
+    group-spacing: 1.5
+    group-lateral-spacing: 1.0
+    group-ranks-width: 2
+    group-width-hysteresis-blocks: 3
+    group-followers-finish-trip: false
+    group-rejoin-blocks: 4.0
+    group-regroup-blocks: 24.0
+    group-catch-up-speed: 1.3
+    worlds: {}
+    regions: {}
+    access-profiles:
+      default:
+        bypass-domain-rules: false
+        open-doors: true
+        allow-regions: []
+        deny-regions: []
+```
+
+### 4.28 `testing`
+
+In-plugin test scenarios ([#421](https://github.com/PandiO/knk-workspace/issues/421);
+[writing a plugin scenario](../developer/plugin-scenarios.md)). **Test servers only:** the CI boot test and a
+developer's throwaway server. Keep it off on dev worlds with builds, the alpha and production; a server without the
+block is off, so there is nothing to merge at a deploy.
+
+| Key | Default | What it does, safe values | Applies | Added by |
+|---|---|---|---|---|
+| `scenarios.enabled` | `false` | `true` registers `/knk scenario list \| run <name\|all>` (node `knk.admin.scenario`) and logs a warning at startup. `false`: no command, nothing changes | Restart | #421 |
+| `scenarios.world` | `""` | World the scenes are built in; blank = the main world | Restart | #421 |
+| `scenarios.origin.x`, `.y`, `.z` | `30000`, `100`, `30000` | Lowest corner of the first scene. Each scene is a 32 × 24 × 32 box that is **cleared to air** before and after its scenario; scene *n* sits 64 × *n* blocks further along x. Pick a place far from anything built; `y` + 24 must fit in the world's height | Restart | #421 |
+
+```yaml
+testing:
+  scenarios:
+    enabled: false
+    world: ""
+    origin:
+      x: 30000
+      y: 100
+      z: 30000
+```
+
 ## 5. Maintaining this page
 
 - A change that adds, renames or removes a key, or changes a default, updates § 2.1 and the section's table in the
@@ -611,4 +762,12 @@ kits menu after `ttl-seconds`, or at once with `realtime.enabled: true`; claims 
 
 ## Changes
 
-1. 2026-11-10: first version, PandiO/knk-workspace#295; checked against knk-plugin `main` `121030f`
+1. 2026-11-15: § 4.27 `npc`: `group-lateral-spacing`, `group-width-hysteresis-blocks`, `group-followers-finish-trip`, `group-spacing` 2.0 → 1.5, the `group-formation` and `group-ranks-width` texts (#522), § 2.1 row (and the #521 row now in `next`); checked against knk-plugin `claude/npc-followups-l4`, not merged into `next` yet
+2. 2026-11-15: § 4.27 `npc`: `corner-clearance`, `waypoint-margin`, `recovery-wait-ticks`, `stationary-ticks` and `no-progress-ticks` 40, `max-retries` and `group-rejoin-blocks` reworded (#521), § 2.1 row; checked against knk-plugin `claude/npc-followups-l3`, not merged into `next` yet
+3. 2026-11-14: § 4.28 `testing.scenarios` (#421), § 2.1 and § 3 rows; checked against knk-plugin `next` `309d3580`
+4. 2026-11-14: § 4.18 `messages.web-account-registered` (#485), § 2.1 row; checked against knk-plugin `claude/smoke-fixes-484-485-487`, not merged into `next` yet
+5. 2026-11-13: § 4.3 `realtime.erasure` (#184) and the regions `temp-retention.release-interval-minutes` (#269), PR into `next` from `claude/plugin-chains-into-next`
+6. 2026-11-13: § 4.27 `npc`: six `group-*` keys, PandiO/knk-workspace#377
+7. 2026-11-13: § 4.27 `npc`: `rule-checks-per-tick`, `stop-on-trespass`, PandiO/knk-workspace#361
+8. 2026-11-13: § 4.27 `npc`, PandiO/knk-workspace#359 and #360; checked against knk-plugin `claude/npc-navigation`, not merged into trunk yet
+9. 2026-11-10: first version, PandiO/knk-workspace#295; checked against knk-plugin `main` `121030f`

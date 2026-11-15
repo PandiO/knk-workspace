@@ -1,6 +1,6 @@
 # generate-prompt.ps1
 #
-# Generates AI prompts from the AI_FEATURE_IMPLEMENTATION_WORKFLOW.md templates.
+# Generates AI prompts from the docs/archive/AI_FEATURE_IMPLEMENTATION_WORKFLOW.md templates (archived 2026-11-13, PandiO/knk-workspace#362).
 #
 # Usage: .\scripts\generate-prompt.ps1 -FeatureName "my-feature-name" -Phase 1 -Step "impl"
 #
@@ -286,4 +286,4 @@ Write-Host ""
 Write-Host "Tip: Copy the prompt above and paste it into your AI chat." -ForegroundColor Yellow
 Write-Host "   Replace [feature-name], [phase], etc. with actual values." -ForegroundColor Yellow
 Write-Host ""
-Write-Host "Reference: docs/AI_FEATURE_IMPLEMENTATION_WORKFLOW.md" -ForegroundColor Cyan
+Write-Host "Reference: docs/archive/AI_FEATURE_IMPLEMENTATION_WORKFLOW.md (archived; current: .claude/skills/knk-coordinator, knk-link)" -ForegroundColor Cyan

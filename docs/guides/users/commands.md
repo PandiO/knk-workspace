@@ -1,7 +1,7 @@
 # In-game commands
 
-**Status:** Current · **Last updated:** 2026-11-13 (money, kit and lootbox rows corrected against the code and linked to the economy guides, PandiO/knk-workspace#300)
-**Checked against:** knk-plugin `main` `57884e9` (`knk-paper/src/main/resources/plugin.yml`, `knk-paper/.../paper/commands/`), rank seed migrations in knk-web-api `master` `f445d21`, dev seed knk-dev-db-seed `4b71f23`
+**Status:** Current · **Last updated:** 2026-11-15 (`/heal` is K&K's on servers with WorldGuard, knk-plugin `next`, PandiO/knk-workspace#580); 2026-11-15 (`/knk npc nav group … [finish-trip|follow-leader]` and `scene corners`, checked against knk-plugin `next` `deb7ff49`, PandiO/knk-workspace#589); 2026-11-14 (`/knk scenario`, test servers only, in knk-plugin `next`, PandiO/knk-workspace#421); 2026-11-13 (money, kit and lootbox rows corrected against the code and linked to the economy guides, PandiO/knk-workspace#300)
+**Checked against:** knk-plugin `main` `57884e9` (`knk-paper/src/main/resources/plugin.yml`, `knk-paper/.../paper/commands/`), rank seed migrations in knk-web-api `master` `f445d21`, dev seed knk-dev-db-seed `4b71f23`; `/knk npc` against knk-plugin `next`
 **Related:** [plugin permission checks](../../architecture/plugin-permission-checks.md), [command permission scan 2026-10-26](../../reports/2026-10-26-command-permission-scan.md), [COMMAND_CATALOG_V3](../../specs/user-features/COMMAND_CATALOG_V3.md) (design notes), [chat tokens](../chat-tokens.md), [plugin configuration reference](../admin/plugin-configuration.md) (the `config.yml` keys behind warmups, cooldowns and limits), [gate structures player guide](gate-structures-player-guide.md), [v1 commands](../../specs/legacy/commands-v1.md) (history)
 
 This page lists every Knights and Kings command on the game server: what it does, who can use it and what the main
@@ -224,10 +224,19 @@ owner's override moves them one by one. Rank perks for player teleports: `knk.te
 |---|---|---|---|
 | `/gamemode <mode> [player]` (`/gm`; modes `s`/`c`/`a`/`sp` or `0`–`3`) | `knk.gamemode.<mode>`, `knk.gamemode.others` | survival and spectator: Staff; others: Moderator; all modes: Admin | Sets your game mode, or a player's (that also needs the mode's node). |
 | `/fly [on\|off] [player]` | `knk.fly`, `knk.fly.others` | Staff; others: Moderator | Toggles or sets flight. |
-| `/heal [player\|all]`, `/feed [player\|all]` | `knk.heal`, `.others`, `.all` (and `knk.feed…`) | Ops only | Full health and fire out, or full food. |
+| `/heal [player\|all]`, `/feed [player\|all]` | `knk.heal`, `.others`, `.all` (and `knk.feed…`) | Ops only | Full health and fire out, or full food. `/heal` is K&K's own command also on a server with WorldGuard (see below the table). |
 | `/enderchest [player]` (`/ec`) | `knk.enderchest`, `knk.enderchest.open` | own: ops only; others: Moderator | Opens your ender chest, or a player's. Offline players' saved chests are written back when you close it. Outrank. |
 | `/inventory open <player>` (`/inv`, `/invsee`) | `knk.inventory.open` | Moderator | Opens a player's inventory, which you can edit. Works offline. Outrank. |
 | `/inventory clear <player> confirm` | `knk.inventory.clear` | Admin | Empties the whole inventory, armour included. Without `confirm` it only explains what it will do. Outrank. |
+
+**`/heal` and WorldGuard** (PandiO/knk-workspace#580, developer decision 2026-11-15). WorldGuard has a `/heal` of its
+own. K&K takes the plain `/heal` over when it starts, so `/heal` always checks K&K's `knk.heal` nodes, also for a
+player who got them with `/knk user <player> perm grant`. `/knightsandkings:heal` works too. WorldGuard's command is
+still there as `/worldguard:heal` (it checks `worldguard.heal`). The server log says so at startup: "/heal now runs
+KnightsAndKings's command instead of WorldGuard's". No other K&K command shares a name with a WorldGuard command
+(WorldGuard's `/god`, `/ungod`, `/slay`, `/locate`, `/stack`, `/stopfire`, `/allowfire`, `/stoplag`, `/region` and
+`/worldguard` have no K&K twin). If another plugin ever holds a K&K command's name, the startup log warns: "These KnK
+command labels belong to another plugin, …", and that K&K command is then only reachable as `/knightsandkings:<name>`.
 
 ### Money, kits and lootboxes (staff)
 
@@ -307,6 +316,9 @@ answer "Unknown command: <name>". Every node below is held by Admin through `knk
 | `/knk menu open <key>\|page\|search\|filter\|broken` | `knk.admin.menu` | Menu test tools; `broken` lists menus blocked at startup. |
 | `/knk discovery list <player> [page]\|reset <player> <domainId>\|status` | `knk.admin.discovery` (Staff) | A player's discoveries. `reset` forgets one so it can be discovered and rewarded again; the reward isn't taken back. |
 | `/knk road …` | `knk.admin.road` (Staff) | Road network tools: surveys, building tiles, editing nodes and edges, proposals, `why <destination>`. |
+| `/knk npc status\|audit start\|stop\|report\|test spawn <n> [radius]\|test clear` | `knk.admin.npc` (op by default) | NPC navigation (on the `next` branch, off by default: `npc.navigation.enabled`): status and each setting with the layer it came from, the NPC event audit, wandering test NPCs. Without Citizens or with the switch off, `status` says why. |
+| `/knk npc nav from\|to\|route list\|save\|load\|delete <name>\|baseline\|spawn <n> [profile]\|group <n> [formation] [profile] [finish-trip\|follow-leader]\|goto\|patrol\|stats [reset]\|trace [npc] [seconds]\|clear\|scene corners` | `knk.admin.npc` | Route following for testing: set a route's ends, spawn NPCs that walk it back and forth (two spawns per tick), read the counters, trace one NPC. `group` spawns the NPCs as one group that walks the route in a formation (`column`, `ranks`, `cluster` or `escort-ring`; without one, the `group-formation` setting): the first NPC leads and plans the route, the others follow in their slots, narrowing to fewer abreast and to a column where the road is narrow. `finish-trip` or `follow-leader` sets `group-followers-finish-trip` for that group: whether followers still on their way when the leader turns back finish their trip first. `scene corners` builds the corner test scene of the plugin scenarios at `testing.scenarios.origin` (only while `testing.scenarios.enabled` is true) and saves the route `corner-scene`. `stats` shows the stuck spells and how each was freed, and the groups' width changes and finished trips ([NPC navigation architecture § 10](../../architecture/npc-navigation.md#10-counters-and-the-stats-lines-phase-4b)). Files go to `plugins/KnightsAndKings/npc-logs/`. See the implementation plan's developer tests for [single NPCs](../../specs/npc-platform/IMPLEMENTATION_PLAN.md#phase-2--navigate-one-npc-plugin) and [groups](../../specs/npc-platform/IMPLEMENTATION_PLAN.md#phase-4--groups-plugin). |
+| `/knk scenario list\|run <name\|all>` | `knk.admin.scenario` (ops and the console; not in `plugin.yml`) | **Test servers only:** exists only with `testing.scenarios.enabled: true` (off by default, so not on dev, alpha or production). Runs the in-plugin test scenarios, which build and clear test scenes; see [writing a plugin scenario](../developer/plugin-scenarios.md). In knk-plugin `next` since 2026-11-14 ([#421](https://github.com/PandiO/knk-workspace/issues/421)), not on trunk yet. |
 | `/knk gate …`, `/knk gatedoor …` | as `/gate` | The same as `/gate` and `/gatedoor`. |
 
 ## Known differences from the descriptions
@@ -336,6 +348,7 @@ be checked.
 
 ## Changes
 
-1. 2026-11-13: desk check of the rank columns, `/lb` and `/pay` against the code and the dev seed,
+1. 2026-11-13: `/knk npc`, on the `next` branch, PandiO/knk-workspace#359 and #360
+2. 2026-11-13: desk check of the rank columns, `/lb` and `/pay` against the code and the dev seed,
    PandiO/knk-workspace#316; not yet checked in game
-2. 2026-11-10: rebuilt from the plugin's command catalogue, PandiO/knk-workspace#294
+3. 2026-11-10: rebuilt from the plugin's command catalogue, PandiO/knk-workspace#294

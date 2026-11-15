@@ -18,7 +18,7 @@ This guide applies to features and fixes in `knk-workspace`, `knk-plugin`, `knk-
 | What shipped? | [`docs/CHANGELOG.md`](../../CHANGELOG.md) | Merge to all required default branches; include follow-up correction on later merge. |
 | What happened during an investigation? | Dated `docs/reports/` file | A new scan or audit; never silently rewrite a historical report. |
 
-The `docs/specs/` layout is current. [AI_FEATURE_IMPLEMENTATION_WORKFLOW.md](AI_FEATURE_IMPLEMENTATION_WORKFLOW.md) contains older `docs/features/` examples; use its useful phase ideas but follow this guide's paths, the current feature plan, and active branch convention.
+The `docs/specs/` layout is current. Multi-link work follows the project skills [`knk-coordinator`](../../../.claude/skills/knk-coordinator/SKILL.md) and [`knk-link`](../../../.claude/skills/knk-link/SKILL.md); the older phase template `AI_FEATURE_IMPLEMENTATION_WORKFLOW.md` with its `docs/features/` paths is [archived](../../archive/AI_FEATURE_IMPLEMENTATION_WORKFLOW.md) (2026-11-13, PandiO/knk-workspace#362). What CI runs on every push and how to mark a known failure: [CI](ci.md).
 
 ## Feature lifecycle
 
@@ -81,6 +81,7 @@ decided name behind Cloudflare Access that isn't set up yet), the project's send
 ## Changes
 
 1. 2026-11-13: docs sessions merge like any session outside a chain; agent workflow files go to `main`
-2. 2026-11-12: "at merge" under the `next` branch model; docs sessions merge their own docs PR into `next`; finished board rows go to the sessions archive; PandiO/knk-workspace#330
-3. 2026-11-10: link to the plugin configuration reference, #295
-4. 2026-11-10: essential docs before merge, the rest in a `documentation` follow-up issue and session, PandiO/knk-workspace#292
+2. 2026-11-13: the phase template archived, pointers to the chain skills and the CI guide, PandiO/knk-workspace#362
+3. 2026-11-12: "at merge" under the `next` branch model; docs sessions merge their own docs PR into `next`; finished board rows go to the sessions archive; PandiO/knk-workspace#330
+4. 2026-11-10: link to the plugin configuration reference, #295
+5. 2026-11-10: essential docs before merge, the rest in a `documentation` follow-up issue and session, PandiO/knk-workspace#292

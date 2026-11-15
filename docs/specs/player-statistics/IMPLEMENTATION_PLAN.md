@@ -1,7 +1,7 @@
 # Player statistics — Implementation Plan
 
 **Status:** Implemented — all links done 2026-10-03 (written by link 1; knk-web-api `45d9925`, knk-plugin `66d9292`, knk-web-app `8c27421` on `claude/kind-dijkstra-y9d279`), plus the review follow-up D14-D20 (knk-web-api `fdf9c13`, knk-web-app `089039f`). **Merged 2026-10-11** after the live smoke test ([guide](../../guides/player-statistics-smoke-test.md), findings 1-12, D24): knk-web-api `master` `34b8f9b`, knk-plugin `main` `aa5df70a`, knk-web-app `main` `5f40f93`.
-**Last updated:** 2026-10-11 (merged after the smoke test)
+**Last updated:** 2026-11-14 (note under the plugin class table: NPCs are not counted, PandiO/knk-workspace#496); 2026-10-11 (merged after the smoke test)
 **Linear:** [KNG-34](https://linear.app/kngpandi/issue/KNG-34) (with [KNG-14](https://linear.app/kngpandi/issue/KNG-14), [KNG-23](https://linear.app/kngpandi/issue/KNG-23), [KNG-9](https://linear.app/kngpandi/issue/KNG-9), [KNG-21](https://linear.app/kngpandi/issue/KNG-21))
 **Sources:** [DESIGN.md](DESIGN.md) (§F = "Finalized design (link 1)"), [source audit](../../reports/2026-10-03-player-statistics-source-audit.md),
 chain charter [`PLAYER_STATISTICS_CHAIN.md`](../../ai-agents/handoffs/PLAYER_STATISTICS_CHAIN.md), progress report
@@ -416,6 +416,10 @@ world-analytics:                       # link 7
 | `UserCommand.statisticsLines` / `ProfileView.getStatisticsLines()` | 5 | Visible statistics lines (viewer-filtered by the API) |
 | `C/telemetry/TelemetryEvent`, `C/telemetry/TelemetryBuffer` (bounded, drop-oldest, drop counter), `C/telemetry/TelemetrySequence`, `C/ports/api/TelemetryApi` + impl, `P/telemetry/TelemetryEmitter`, `P/telemetry/TelemetryFlushTask`, `P/telemetry/TelemetryConfigPoller`; hook interfaces `P/menu/MenuObserver` (called from `MenuService.openMenu`/`goBack`/close and `ActionRegistry.execute` result; default no-op) and new default-no-op methods on `SiegeMatchObserver` for lobby join/vote/team events; `BaseApiImpl` sends `X-Correlation-Id` when a correlation is active | 6 | Telemetry |
 | `C/analytics/MovementCellGrid`, `C/analytics/DomainInteractionCounter`, `P/analytics/MovementSampler`, `P/analytics/MenuFunnelRecorder` (a `MenuObserver`), `P/analytics/DomainInteractionRecorder` (`OnRegionEnterEvent`/`OnRegionLeaveEvent` + discovery grants), `P/analytics/WorldAnalyticsFlushTask`, `C/ports/api/WorldAnalyticsApi` + impl | 7 | Analytics |
+
+NPCs (`NpcEntities.isNpc`) are skipped by `FallStatisticsListener`, `CombatStatisticsListener` (hits by or on an NPC,
+an NPC's death, a mob killed by an NPC, an NPC's shot), `AfkActivityListener` (hits by an NPC) and `TelemetryListener` (PandiO/knk-workspace#490, knk-plugin `next` `bd7b78a8`, not on trunk yet; [NPC navigation § 8](../../architecture/npc-navigation.md#8-npcs-and-the-player-listeners)). A player killed by an NPC still counts as killed by a player:
+[#494](https://github.com/PandiO/knk-workspace/issues/494).
 
 ### 5.3 Menus (seeded by knk-web-api `Models/Menu/MenuTemplateSeed.Statistics.cs`, chained into `CanonicalTemplates()`; test mirror `content-seeds.json` regenerated)
 

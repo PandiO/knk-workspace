@@ -3,7 +3,7 @@
 **Status**: Planning  
 **Created**: January 25, 2026
 
-This roadmap completes the missing authentication endpoints expected by the web app (authClient.ts) and aligns with frontend-auth requirements. It follows the structure of USER_ACCOUNT_MANAGEMENT_IMPLEMENTATION_ROADMAP.md and the workflow in AI_FEATURE_IMPLEMENTATION_WORKFLOW.md.
+This roadmap completes the missing authentication endpoints expected by the web app (authClient.ts) and aligns with frontend-auth requirements. It follows the structure of USER_ACCOUNT_MANAGEMENT_IMPLEMENTATION_ROADMAP.md and the workflow in [AI_FEATURE_IMPLEMENTATION_WORKFLOW.md](../../archive/AI_FEATURE_IMPLEMENTATION_WORKFLOW.md) (archived 2026-11-13).
 
 ---
 

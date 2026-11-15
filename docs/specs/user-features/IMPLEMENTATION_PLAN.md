@@ -28,7 +28,7 @@ ancestor) Phase 3 tip; `knk-web-api`/`knk-plugin`/`knk-workspace`'s old phase1/p
 docs-scan branches are redundant and should be deleted once repo push permissions allow it (blocked
 this session by a destructive-git-operation guard — flagged to the developer). `knk-web-app` has no
 `claude/user-features` branch yet; create one only when a future phase actually needs to touch
-that repo. The historical "Recently completed" rows below for Phases 1-3 are left as-is — they
+that repo. The historical "Recently completed" rows for Phases 1-3 (now in the [sessions archive, 2026-09](../../reports/sessions-archive/2026-09.md)) are left as-is — they
 correctly record which branch existed at the time work was done — this is a forward-looking policy
 note, not a rewrite of history.
 
@@ -108,8 +108,8 @@ document is sequencing and per-repo scope only. If something below conflicts wit
 
 Both repo bullets above are done. knk-web-api: `PermissionHolder`/`PermissionGroup`/
 `PermissionGrant`/`UserPermissionGroup` entities, the TPT migration (verified end-to-end against
-a real local MySQL 8.0 copy with pre-existing data — see the full writeup in `ACTIVE_SESSIONS.md`
-under "User features Phase 1" in the "Recently completed" table), `PermissionResolutionService`
+a real local MySQL 8.0 copy with pre-existing data — see the full writeup
+under "User features Phase 1" in the [sessions archive, 2026-09](../../reports/sessions-archive/2026-09.md)), `PermissionResolutionService`
 (22 unit tests + a live 4-level group-chain smoke test), `PermissionGroupsController`/
 `PermissionGrantsController`, and the `permissions/check`/`permissions/effective` endpoints.
 knk-plugin: knk-core domain types + `PermissionsApi` port + `PermissionsDataAccess` gateway,
@@ -179,8 +179,8 @@ not v1's in-memory-only maps:
 
 Both repo bullets are done, on branch `claude/user-features-phase3-v8rmws` in knk-web-api (forked
 from §1's unmerged `claude/user-features-phase1-sg4rjw`) and knk-plugin (forked from §2's unmerged
-`claude/user-features-phase2-fvx5qj`). Full verification writeup: `ACTIVE_SESSIONS.md`, "User
-features Phase 3" in the "Recently completed" table.
+`claude/user-features-phase2-fvx5qj`). Full verification writeup: "User
+features Phase 3" in the [sessions archive, 2026-09](../../reports/sessions-archive/2026-09.md).
 
 **Field shape decided (DESIGN.md §6.1 left it open):** a single `User.ActiveMode` enum
 (`None`/`Staff`/`Owner`, `int` column, default `0`) — no separate `IsVanished` flag. v1 never
@@ -620,5 +620,7 @@ folded into `DESIGN.md` §7 (items 8-12) and the sections above. Kept here for t
 ## Changes
 
 Header history up to 2026-11-13, as the old `Last updated` line gave it (newer changes: the header and git history):
+
+2026-11-13 (links to the finished-session rows now in the sessions archive, PandiO/knk-workspace#362).
 
 2026-09-24 (user-management Phase 2 session closed §6's carried-forward item 4). Previously updated 2026-09-24 (§6.1 implementation session added "§6.1" and closed §6's carried- forward item 1; earlier the same day, the Phase 6 implementation session added "§6 status"; earlier still, the Phase 5 implementation session added "§5 status" and the "v1 Titles backup search" note under §4 status; earlier still, the Phase 4 session added "§4 status" and a branch-hygiene pass added the "Branch convention" section below). Previously updated 2026-09-23 (Phase 3 implementation session added "§3 status"; earlier the same day, the Phase 1 implementation session and the design revision: `PermissionGrant.HolderId` is now a real FK into a shared `PermissionHolder` base table rather than polymorphic; salary's personal multiplier is a plain `User` field; title thresholds port v1's 5/10/12/15 as-is; owner/staff-mode vanish state persists across a restart; the tailored user-management admin module is confirmed a separate feature — see `docs/specs/user-management/`, which this plan's Phase 1 now unblocks)

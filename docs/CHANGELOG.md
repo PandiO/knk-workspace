@@ -4,6 +4,878 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **NPC navigation: NPCs stay on the stair at a turn over a ledge, and falls are counted**
+  ([PandiO/knk-workspace#592](https://github.com/PandiO/knk-workspace/issues/592), the developer's L3 retest of
+  [#491](https://github.com/PandiO/knk-workspace/issues/491) and [#492](https://github.com/PandiO/knk-workspace/issues/492);
+  link L5 of the NPC navigation follow-ups chain, implementation plan 4b.2). knk-plugin and knk-workspace branches
+  `claude/npc-followups-l5` (PRs into `next`, in review). No change for players or with `npc.navigation.enabled: false`
+  (the default).
+  1. **What makes NPCs fall at a stair corner like 1411 73 -537** (shown on `next` by a new scenario; the developer's
+     retest probably ran an older jar). A road line that cuts a 90° turn at a ledge puts route points over
+     the drop on the inside of the turn. K&K moved such a point onto a floor, and when there was none within 2 blocks of
+     the stair it took the nearest floor within 12 blocks: the ground 7 blocks below. The NPC got a waypoint with its
+     feet on the ground and walked off the corner (the same 74 → 67 as the developer's trace), and the next waypoints chained along the ground. Corner
+     clearance did not help because it only kept away from walls, and the inside of this turn is a drop.
+  2. **The fix, for any turn at a ledge.** A route point over a drop moves onto the walkable cell beside it (within a
+     block, floor continuity kept), or is left out when there is none. It never goes to a floor further away. Every step
+     between two waypoints must be a straight walk on floor; where one is not (a diagonal across a drop or round a wall
+     corner), the cells between go in as extra waypoints. Corner clearance keeps clear of a drop on the inside of a turn
+     as it does of a wall. The group's path and the followers' lanes follow the same rules, so a lane never points at the
+     floor below a landing's corner. At the #492 landing this is reproduced only with a road line that cuts
+     the inside of the turn; whether it is the cause at 1433 44 -518 waits for the developer's rerun.
+  3. **Falls are counted.** `falls` in `/knk npc nav stats` (the `fell` event) stayed 0 for Citizens NPCs: the check
+     needed the engine's fall distance, which stays near 0 for them. A fall is now told from a stair step by the body's
+     speed (0.55 blocks per tick or faster downwards). On the corner scene on `next` it now reports the 7-block falls it
+     missed.
+  4. **Traces show the waypoints.** `/knk npc nav trace` writes a `# waypoints:` line each time the traced NPC gets a new
+     stretch, so a trace shows whether a waypoint cuts a turn.
+  5. **Tests.** New plugin scenarios `npc-ledge-corner` and `npc-landing-ranks` on a new scene with both spots in their
+     real geometry. `npc-ledge-corner` failed on `next`, and `npc-landing-ranks` failed there with the cutting line
+     (it passes on `next` with a line along the flights' middle). Both pass with the fix. CI `paper-boot` now has `MIN_SCENARIOS` 34. New knk-core
+     tests are `LedgeCornerTest` and `WaypointChainTest`, with more cases in `GroupPathTest` and `RecentStepsTest`.
+  - **Admin steps:** none (no `config.yml` key, no new node, no API change). Developer retest: the L3 steps 3–5 on
+    [#521](https://github.com/PandiO/knk-workspace/issues/521), changed as posted on #592.
+- **Plugin: kick and ban sent from the web app are carried out in game**
+  ([PandiO/knk-workspace#574](https://github.com/PandiO/knk-workspace/issues/574); developer decisions 2026-11-15 on
+  [#565](https://github.com/PandiO/knk-workspace/issues/565); link L7 of the Chain 3 follow-ups chain,
+  [#564](https://github.com/PandiO/knk-workspace/issues/564)) — knk-plugin and knk-workspace branches
+  `claude/web-kick-ban-574`, merged into `next` 2026-11-15 (knk-plugin#42 `1adcb497`, docs knk-workspace#596); on the
+  trunk when the developer promotes `next`. For players: a kick from the web app disconnects
+  them with the staff member's reason; a web ban puts them on the server's ban list like `/ban` (permanent, lifted with
+  `/pardon`) and disconnects them if online.
+  1. **Handlers.** The plugin handles the realtime `PlayerKick` / `PlayerBan` v1 events
+     ([contract](specs/realtime-signalr/DESIGN.md), § 6.10): kick if online here; ban = permanent entry on Paper's
+     profile ban list with the reason and the staff member as source (an existing entry is kept), then the kick. A
+     repeated `actionId` is skipped; a malformed payload is logged and ignored. Bukkit calls on the main thread.
+  2. **Texts.** New `config.yml` keys `realtime.moderation.kick-default-reason` and `realtime.moderation.ban-message`
+     ([configuration reference § 4.3](guides/admin/plugin-configuration.md#43-realtime)).
+  3. Docs: [smoke test § 7](guides/player-profile-smoke-test.md) steps 8–10 and 18 tagged with the plugin tests,
+     realtime DESIGN § 6.10 item 8, configuration reference.
+  - **Admin steps:** merge the `realtime.moderation` block into the dev and alpha `config.yml` (optional: defaults
+     apply when missing). Needs `realtime.enabled: true`. Deploy order: the API with L6 (#565) first or together; a
+     plugin without L7 ignores the events ("no handler"), so staff would see the action accepted without effect.
+- **Staff player profile, API part: frozen state in the summary, unfreeze reason, game sessions, search filters; kick and ban from the web**
+  ([PandiO/knk-workspace#565](https://github.com/PandiO/knk-workspace/issues/565), part of #119; developer decisions
+  2026-11-15 on kick and ban; link L6 of the Chain 3 follow-ups chain, [#564](https://github.com/PandiO/knk-workspace/issues/564))
+  — knk-web-api, knk-web-app and knk-workspace branches `claude/player-profile-api-119`, merged into `next` 2026-11-15
+  (knk-web-api#37 `5e10185f`, knk-web-app#42 `98e108f0`, docs knk-workspace#595); on the trunk when the developer
+  promotes `next`. For players: staff can now kick and ban them from the web app (carried out by the game server once
+  knk-plugin link L7, [#574](https://github.com/PandiO/knk-workspace/issues/574), is in).
+  1. **Frozen state from the summary.** `GET api/users/{id}/profile-summary` carries `frozenAt`, `frozenByUserId` and
+     `frozenByUsername` next to `isFrozen` / `frozenReason`; the profile's frozen banner reads them and no longer
+     reads the user and the audit log on every load.
+  2. **Unfreeze reason.** `PUT api/Users/{id}/unfreeze` takes an optional `{ "reason" }`, written into the
+     `PlayerUnfrozen` audit entry; the profile's unfreeze confirm asks for it (optional).
+  3. **Game sessions in the timeline.** New `GET api/statistics/users/{id}/sessions?page=&pageSize=`
+     (`knk.admin.user.manage`), newest first; the profile timeline shows them ("Played on {server}", end reason, active
+     time) with a **Game sessions** chip.
+  4. **Moderation search.** `POST api/Users/search` takes `online`, `frozen` and `paymentsLocked` filters, sorts by
+     `lastseenat` and `experiencepoints`, and matches a UUID with or without dashes; list rows carry `isFrozen`,
+     `paymentsLocked` and `createdAt`. Moderation → All players has Online / Frozen / Payments selects (in the URL),
+     sortable Last seen and XP, Frozen / Payments locked chips and a Created column.
+  5. **Kick and ban from the web.** `POST api/Users/{id}/kick` (`knk.kick`, reason optional, player must be online) and
+     `POST api/Users/{id}/ban` (`knk.ban`, reason required; permanent on the game server's ban list, unban is `/pardon`
+     in game). Audited (`PlayerKicked`, `PlayerBanned`) and sent to the game servers as realtime `PlayerKick` /
+     `PlayerBan` v1 ([contract](specs/realtime-signalr/DESIGN.md)); refused for oneself, an account without
+     Minecraft, a player ranked at or above the caller, a kick of an offline player (409) and while no game server is
+     connected (503). Kick and Ban buttons on the profile (status strip and Moderation tab), greyed out with
+     "Requires knk.kick / knk.ban" without the node.
+  6. Docs: [smoke test § 7](guides/player-profile-smoke-test.md) (and § 2.2, 2.5, 3.1), realtime DESIGN § 6.10 (the
+     event contract for L7), web-api architecture § 5.7, web-app architecture (staff player profile, moderation search).
+  - **Admin steps:** apply the migration `SeedStaffKickBanNodes` (gives the Staff group `knk.kick` and `knk.ban`; data
+     only). Deploy the **API first** (or together): an older API has no sessions, kick or ban endpoints (the web app's
+     timeline then names the sessions as not loaded, and Kick/Ban answer 404). Kick and ban only take effect in game
+     once knk-plugin with L7 (#574) is deployed with `realtime.enabled: true`.
+- **Plugin: the plain `/heal` is K&K's also on servers with WorldGuard**
+  ([PandiO/knk-workspace#580](https://github.com/PandiO/knk-workspace/issues/580); developer decision 2026-11-15:
+  option 1) — knk-plugin and knk-workspace branches `claude/heal-takeover-580` (PRs into `next`).
+  1. **What players notice.** A player given `knk.heal` in-house (a rank or `/knk user <player> perm grant knk.heal`)
+     can now use `/heal`; before, WorldGuard's own `/heal` answered "You don't have permission to do that." Ops are
+     healed by K&K's command too ("Replenished <n> health."). `/knightsandkings:heal` keeps working, and WorldGuard's
+     command stays reachable as `/worldguard:heal`.
+  2. **How.** WorldGuard enables before K&K and registers its `/heal` first, so K&K's was left as
+     `/knightsandkings:heal` only. At startup K&K now points the plain `heal` label at its own command
+     (`CommandLabelTakeover`), and again once every plugin is enabled. The startup log says "/heal now runs
+     KnightsAndKings's command instead of WorldGuard's" and warns if any other K&K command name is held by another
+     plugin (none today: WorldGuard's other player commands have no K&K twin).
+  3. **Tests.** New plugin scenario `player-heal-needs-grant` (CI `paper-boot`, `MIN_SCENARIOS` 32 with the NPC group scenarios of #522; failed before the
+     fix, passes with it) and unit tests `CommandLabelTakeoverTest`. Docs: [in-game commands](guides/users/commands.md),
+     [smoke test](guides/heal-takeover-smoke-test.md), [writing a plugin scenario § 1](guides/developer/plugin-scenarios.md),
+     [CI § 7.1](guides/developer/ci.md).
+  - **Admin steps:** none (no `config.yml` key, no new node, no API change).
+- **NPC navigation: formations narrow before they fold, followers can finish their trip**
+  ([PandiO/knk-workspace#522](https://github.com/PandiO/knk-workspace/issues/522) for
+  [#493](https://github.com/PandiO/knk-workspace/issues/493) and [#507](https://github.com/PandiO/knk-workspace/issues/507);
+  link L4 of the NPC navigation follow-ups chain, implementation plan 4b.3). knk-plugin and knk-workspace branches
+  `claude/npc-followups-l4` (PRs into `next`, in review). No change for players or with `npc.navigation.enabled: false`
+  (the default).
+  1. **Narrowed formations (#493).** A group steps down 3 → 2 abreast before it folds into a column, and folds only
+     where 2 abreast do not fit (gates, stairs): `ranks` from `group-ranks-width` down to 2, `cluster` 3 then 2, the
+     `escort-ring` as its rings, then rows of 3 with the leader in the middle of the second row, then 2 abreast, then a
+     column with one escort ahead. NPCs in a row walk shoulder to shoulder (`group-lateral-spacing` 1.0) and rows are
+     1.5 blocks apart (`group-spacing`, was 2.0), so 3 abreast fit a 3-wide road and 2 abreast a 2-wide one; where a
+     road's line runs along one side, the lanes shift half a block at a time to fit.
+  2. **No switching at every lamp post.** A narrower width (still 2 abreast or more) or a wider one is taken only when
+     it lasts `group-width-hysteresis-blocks` (3) along the path; a gate or a stair makes a column at once. The width
+     that fits is worked out once per path point, so the tick cost per NPC stays as it was.
+  3. **Followers that finish their trip (#507).** `group-followers-finish-trip` (default `false`, per world, region,
+     template, assignment and `/knk npc nav group <n> … finish-trip|follow-leader`): when it is on and the leader has
+     arrived, followers still on their way (held at a gate or a district edge) walk on to their place at the goal first,
+     report (`… finished its trip at x y z`, event `group_finish_trip`, a member listener for later behaviour such as a
+     courier handing over goods), then follow the group. Off, they follow the leader: a follower held at a gate when the
+     group turned back now waits beside the road for the column instead of walking on to the old goal.
+  4. **Logs and stats.** `group <n> … narrows to 2 abreast: the path is too narrow for 3 abreast at x y z`,
+     `… widens to 3 abreast`, `… folds into a column: the path is too narrow for 2 abreast`, `… takes up 3 abreast
+     again`; events `group_narrow`, `group_widen`, `group_fold`, `group_reform`, `group_finish_trip`; the groups line of
+     `/knk npc nav stats` has `widths: narrows N, widens N | folds N, reforms N, folded now N | abreast now k |
+     finished trips N (finishing now N)`.
+  5. **Found on a real server and fixed.** Lanes keep clear of wall edges and are back on the road's centre 2 blocks
+     before a narrow opening; flights of stairs are walked as a column; followers stopped at a door or a district edge
+     queue a spacing apart instead of crowding one spot; a follower a block short of a door that starts closing steps
+     back instead of walking into it (a portcullis blocks a body long before it is shut), and only one standing under
+     the door walks on out.
+  6. **Tests.** knk-core unit tests for every formation's widths, the per-point cache, step-down, hysteresis, the
+     toggle, the queue and the door rule; three plugin scenarios on a real Paper server with Citizens
+     (`npc-group-narrows`, `npc-group-gate-finish-trip`, `npc-group-access-change`); with #543's three and #540's
+     six player scenarios, CI's `paper-boot` now expects 31 scenarios.
+  7. **Admin steps** (restart): merge the three new keys and set `group-spacing: 1.5` where `config.yml` still says 2.0:
+
+     ```yaml
+     npc:
+       navigation:
+         group-spacing: 1.5
+         group-lateral-spacing: 1.0
+         group-width-hysteresis-blocks: 3
+         group-followers-finish-trip: false
+     ```
+
+     Then run the developer test steps of plan 4b.3 (posted on #522), which include the #490 audit re-run.
+
+- **Relation picker: lookup mode applies the field's narrowing filters**
+  ([PandiO/knk-workspace#288](https://github.com/PandiO/knk-workspace/issues/288), developer decision 2026-11-15; link
+  L5 of the Chain 3 follow-ups chain, [#564](https://github.com/PandiO/knk-workspace/issues/564)) — knk-web-api,
+  knk-web-app and knk-workspace branches `claude/lookup-picker-filters-288`, merged into `next` 2026-11-15 (knk-web-api#36
+  `d8514ed4`, knk-web-app#41 `990af482`, docs knk-workspace#587); on the trunk when the developer promotes `next`.
+  No change for players.
+  1. **Filtered fields work without the read node.** Staff who search a related type through `api/Lookup` (no read
+     node of that type) can now use a relation field whose picker filters narrow the list, e.g. a siege objective's
+     holder team scoped to its scenario: the picker offers the narrowed list, names only, instead of "This list is
+     narrowed by …, which only the full … search can do".
+  2. **API:** `POST api/Lookup/{type}/search` takes `filters` and passes those the type's lookup lists to the type's own
+     search (one list per type in `DashboardLookups.cs`; users take none). Results stay `{ id, label, detail? }`.
+     Another key answers 400 `LookupFilterNotAllowed`, an unusable value (an id that isn't a positive number, a flag
+     that isn't true/false) 400 `LookupFilterInvalid`, so a lookup never lists more than the form asked for.
+     `prefer…` filters only order; `excludeIds` stays in the browser. Access rule unchanged (any area node or the
+     plugin key).
+  3. **Web app:** the picker sends the filters and only shows the "narrowed by" refusal when the API refuses a filter.
+  4. Docs: [smoke test § 2.4–2.5](guides/relation-picker-and-delete-details-smoke-test.md), web-api architecture
+     (lookups), web-app architecture (relation picker), [access model § 4.6.3](specs/dashboard-access-model/DESIGN.md).
+  - **Admin steps:** none (no migration, no setting, no new node). Deploy the **API first** (or together): an older API
+     ignores `filters` and would answer with the unfiltered list, which the old web app refused to show.
+- **Form builder: field validation rules are part of the draft and go live on Publish; add-from-template endpoints removed**
+  ([PandiO/knk-workspace#291](https://github.com/PandiO/knk-workspace/issues/291); link L4 of the Chain 3 follow-ups
+  chain, [#564](https://github.com/PandiO/knk-workspace/issues/564)) — knk-web-api, knk-web-app and knk-workspace
+  branches `claude/builder-draft-rules-291`, merged into `next` 2026-11-15 (knk-web-api#35 `93c3d50f`, knk-web-app#40
+  `cd730f29`, docs knk-workspace#583); on the trunk when the developer promotes `next`. No change for players.
+  1. **Rules in the draft.** In the form builder a field's cross-field validation rules are kept in the draft (keyed by
+     field GUID) with **Save Field** and **Save**, marked *Not published*, and applied on **Publish** (adds, edits and
+     deletes); the form wizard keeps the published rules until then. **Discard** drops rule changes.
+  2. **Draft-only fields** (added but not published yet) can get rules; a dependency on a field of the same form is
+     chosen by GUID, on a parent form's field by id.
+  3. **Publish** names rule changes ("Validation rules: 1 added, 1 changed, 1 removed.") and is refused when a rule's
+     field or dependency left the form, or rules depend on each other in a circle.
+  4. A draft saved before this change (no rules in it) keeps the published rules, unchanged.
+  5. API: `GET api/FormConfigurations/{id}/builder` and the draft carry `validationRules`; `POST
+     api/FormConfigurations/{configId}/steps/add-from-template` and `steps/{stepId}/fields/add-from-template` are
+     **removed** (they wrote into the published rows; no caller since #71).
+  6. Docs: [smoke test § 11](guides/form-display-builders-smoke-test.md), web-api architecture § 5.5, web-app
+     architecture (builders).
+  - **Admin steps:** none (no migration, no setting, no new node). Deploy API and web app together, **API first**: an
+    older API ignores the rules in the draft, so they would be lost on Save.
+- **Plugin scenarios: scripted players (server-side fake players), headless bot tests kept off**
+  ([PandiO/knk-workspace#540](https://github.com/PandiO/knk-workspace/issues/540); developer decision 2026-11-15:
+  build both). knk-plugin and knk-workspace branches `claude/scripted-players-540` (PRs into `next`). No change for
+  players or real servers: everything runs only with `testing.scenarios.enabled` (off by default), and no
+  `config.yml` key was added.
+  1. **Fake players in scenarios.** `scene.player(name, …)` joins a fake player through the server's player list (an
+     NMS `ServerPlayer` on an in-memory connection, all NMS code by reflection in `scenario/NmsFakePlayer`), so join
+     and quit events, permission attachments and the plugin's join handling run. A scenario gives it a fake account
+     and in-house grants (primed into the live caches), runs commands and chat through the server's real paths,
+     clicks menu slots and moves with client packets, teleports it and reads every message it was sent
+     ([writing a plugin scenario § 5](guides/developer/plugin-scenarios.md#5-players)).
+  2. **Six player scenarios** in CI's `paper-boot` (28 scenarios, `MIN_SCENARIOS` 28): a command refused without and
+     allowed with an in-house grant (`/feed`), chat with title and group colours and the `[STAFF]` tag, the join's
+     loading hold (an owner never held, a rejoin held again), an InventoryMenu click (a locked button, opening the
+     next menu, closing it), and gate smoke test § 2 steps 16 and 17 for players (`/tp` into a closed door, a rejoin
+     inside a door that closed meanwhile). `knk scenario run player-*` runs a group by prefix.
+  3. **Found on the way:** on a server with WorldGuard the plain `/heal` is WorldGuard's command, so in-house
+     `knk.heal` grants never apply ([#580](https://github.com/PandiO/knk-workspace/issues/580)).
+  4. **Headless bot tests, off.** `tools/bot-tests` (Mineflayer 4.39.0, pinned with a lock file) joins bots through
+     the real protocol; the example `first-join` covers the real login path. CI runs them only with the repository
+     variable `BOT_TESTS_ENABLED` set to `true`, and reports on every run whether the pinned and the newest Mineflayer
+     list Minecraft 26.3 (today both stop at 26.1). How to switch them on: [CI § 7.3](guides/developer/ci.md#73-headless-bot-tests-off-until-mineflayer-supports-263).
+  5. **Boot log check:** errors printed with `printStackTrace()` (one timestamped line per frame) are now joined to
+     their entry, so the join's unreachable-API error is excused like the others.
+
+- **"Show what uses it" for more refusals: form configuration delete, bulk delete rows, "skipped: in use"**
+  ([PandiO/knk-workspace#289](https://github.com/PandiO/knk-workspace/issues/289); link L3 of the Chain 3 follow-ups
+  chain, [#564](https://github.com/PandiO/knk-workspace/issues/564)) — knk-web-api, knk-web-app and knk-workspace
+  branches `claude/show-what-uses-it-289`, merged into `next` 2026-11-15 (knk-web-api#34 `378921c6`, knk-web-app#39
+  `2dfd5883`); on the trunk when the developer promotes `next`. No change for players.
+  1. **Entity setup.** A form configuration whose delete is refused because another form opens it as a sub-form offers
+     **Show what uses it**: the form fields and steps, each with the form (and step) it sits in. Not links: they have
+     no page of their own.
+  2. **Bulk delete.** Each row refused as in use keeps its **Show what uses it** (from #205), now through one shared
+     component; covered end to end.
+  3. **Cancelled form / deleted draft.** An entity skipped as in use after **Delete them** / **Delete draft and them**
+     offers **Show what uses it** with every reference, as the in-use check counted them.
+  4. API: `GET api/EntityReferences/{type}/{id}/rows` also takes `FormConfiguration` (needs `knk.admin.content`) and
+     `?all=true` (every reference, cascades included); the read rules per referencing type stay as in #44.
+  5. Docs: [smoke test § 4.8–4.12, § 5.3](guides/relation-picker-and-delete-details-smoke-test.md),
+     [web-api architecture § 5.4](architecture/web-api-architecture.md), web-app architecture ("Show details").
+  - **Admin steps:** none (no migration, no setting, no new node; deploy API and web app together, API first: an older
+    API answers 404 for a form configuration, shown as an error line under the button).
+- **Staff web app: the player profile's Permissions tab gets the grant form on top, a search and sortable columns**
+  ([PandiO/knk-workspace#407](https://github.com/PandiO/knk-workspace/issues/407); link L3 of the staff web app
+  follow-ups chain, [#517](https://github.com/PandiO/knk-workspace/issues/517)). knk-web-app and knk-workspace
+  branches `claude/profile-permissions-407` (PRs into `next`, in review, not merged). On a player's profile
+  (`/admin/users/<id>?tab=permissions`), Effective Permissions now has the grant/deny form above the list, a search box
+  that filters by node and by source (a group's name, or "direct" for direct grants) and says when nothing matches,
+  and Node, Value and Source headers that sort ascending, descending and back to the original order, with an arrow and
+  `aria-sort`. The 1-day default expiry for direct grants and the `knk.admin.user.perm` gate are unchanged.
+  - **Admin steps:** none; web app only (no API change, no migration, no setting). To test: § 6 of the
+    [player profile smoke test](guides/player-profile-smoke-test.md).
+- **Plugin CI: Citizens on the Paper boot test, NPC navigation scenarios on a fake road network**
+  ([PandiO/knk-workspace#543](https://github.com/PandiO/knk-workspace/issues/543); developer decision 2026-11-15:
+  pinned download). knk-plugin and knk-workspace branches `claude/citizens-ci-543` (PRs into `next`). No change for
+  players or real servers: `npc.navigation.enabled` and `testing.scenarios.enabled` stay off by default.
+  1. **Citizens on the CI server.** `paper-boot.yml` installs Citizens 2.0.44 build 4269, the server jar of
+     `citizensApiVersion`, pinned by URL and SHA-256 (the pin came with #521; this change caches Citizens' downloaded
+     libraries and documents bumping it, [CI § 7.2](guides/developer/ci.md#72-citizens-on-the-ci-server)). Bump it
+     together with `citizensApiVersion`; if Citizens' Jenkins prunes the build, pin a newer build and its API snapshot
+     at once.
+  2. **NPC navigation checked at boot.** `boot-test.sh --npc-navigation` turns on `npc.navigation.enabled`, and the log
+     check requires Citizens enabled and `[NPC] navigation: Citizens …`; a Citizens `ERROR` or stack trace fails the
+     job like a KnK one (no Citizens line needed an excuse).
+  3. **Three NPC scenarios** (`MIN_SCENARIOS` 22 with the three corner scenarios of #521): `npc-walks-road-route` (an
+     NPC walks a road route and arrives), `npc-keeps-to-road-around-obstacle` (it keeps within 2 blocks of the road
+     where open ground round an obstacle would be shorter) and `npc-group-keeps-spacing` (a column of three keeps its
+     2-block spacing). The road is a `RoadNetworkSnapshot` routed through the navigator's own adapter
+     (`NavigationService.planRoadFor`); the NPCs come from the running Citizens adapter. Each was seen failing with its
+     behaviour broken (road graph ignored, formation slots shortened, waypoints never walked).
+  4. Docs: [CI § 7](guides/developer/ci.md#7-plugin-the-paper-boot-test),
+     [writing a plugin scenario](guides/developer/plugin-scenarios.md), the NPC implementation plan's developer tests
+     (Phase 1 step 1, Phase 2 steps 3 and 4, Phase 4 step 3 tagged `[partly automated: …]`).
+  - **Admin steps:** none (CI only; the plugin's `config.yml` is unchanged).
+- **Form wizard: list field cards stay readable on a phone**
+  ([PandiO/knk-workspace#290](https://github.com/PandiO/knk-workspace/issues/290); link L2 of the Chain 3 follow-ups
+  chain, [#564](https://github.com/PandiO/knk-workspace/issues/564)) — knk-web-app and knk-workspace
+  `claude/list-field-cards-290`, merged into `next` 2026-11-15 (knk-web-app#38 `9b5f9ddf`, docs knk-workspace#571); on the
+  trunk when the developer promotes `next`. In an Object List field the cards under "Selected (n):"
+  wrap at narrow widths: the name keeps the card's width (a long name wraps instead of being cut to one letter) and ×
+  and **Edit instance** move to their own line. Desktop layout unchanged. Playwright spec
+  `e2e/form-wizard-list-field.spec.ts`.
+- **Temp region releases: no server left out, no release stuck behind waiting ones**
+  ([PandiO/knk-workspace#399](https://github.com/PandiO/knk-workspace/issues/399); link L1 of the Chain 3 follow-ups
+  chain, [#564](https://github.com/PandiO/knk-workspace/issues/564)) — knk-web-api and knk-workspace branches
+  `claude/temp-region-releases-399`, merged into `next` 2026-11-15 (knk-web-api#33 `3b36edc6`, docs knk-workspace#572);
+  on the trunk when the developer promotes `next`. No change for players.
+  1. `GET api/WorldTasks/temp-region-releases` answers 400 for a blank or missing `serverId`, as `GET open` does.
+     The plugin always sends `realtime.server-id`, so it is not affected.
+  2. Unused temp regions of abandoned drafts are no longer kept past their release when more than 200 older releases
+     wait on a region that is still in use: the API reads the due releases in pages until it has `max` to give.
+  3. Admin steps: none (no settings, no migration, no plugin `config.yml` change).
+- **Web app: admin tables no longer scroll the page sideways at phone width**
+  ([PandiO/knk-workspace#535](https://github.com/PandiO/knk-workspace/issues/535); staff web app only). knk-web-app
+  branch `claude/admin-mobile-overflow-535`, merged into `next` 2026-11-15 (knk-web-app#36 `5b87473`, docs
+  knk-workspace#567); on the trunk when the developer promotes `next`.
+  1. At 390 px Mail log, Invitations, the Lootboxes Types, Specials, Areas and Active boxes tabs and the Minecraft
+     catalogue audit made the whole page 70 to 450 px wider than the screen. The tables scroll inside their own box
+     again. The cause was the visually hidden "Actions" head cell, positioned outside the table's scroll box; each box
+     is now `relative` (the fix the form and display configuration tables got in #266).
+  2. Tests: `e2e/admin-navigation.spec.ts` checks Mail log and Invitations (staff with some nodes) and the four
+     Lootboxes tables plus the catalogue audit (owner) at 390 px; fixtures `e2e/fixtures/adminTables.ts`. Guide:
+     [admin navigation § 2.4 and § 4.4](guides/admin-navigation-smoke-test.md).
+  - **Admin steps:** none (web app only, no setting).
+- **NPC navigation: wall corners, stuck recovery on the NPC's own floor, stuck counted per spell**
+  ([PandiO/knk-workspace#521](https://github.com/PandiO/knk-workspace/issues/521) for
+  [#508](https://github.com/PandiO/knk-workspace/issues/508), [#491](https://github.com/PandiO/knk-workspace/issues/491)
+  and [#492](https://github.com/PandiO/knk-workspace/issues/492); link L3 of the NPC navigation follow-ups chain,
+  implementation plan 4b.2). knk-plugin and knk-workspace branches `claude/npc-followups-l3` (PRs into `next`, in
+  review). No change for players or with `npc.navigation.enabled: false` (the default).
+  1. **Wall corners (#508).** At a turn of its route an NPC keeps `corner-clearance` (1 block) from walls on the
+     inside of the turn, as far as the road allows; straight stretches may still run along a wall. Citizens moves on to
+     the next waypoint within `waypoint-margin` (0.5 block, Citizens' own default is 1), so the NPC walks into the
+     corner square and turns there instead of cutting the corner.
+  2. **The stair corner (#491).** The 7-block fall at 1411 73 -537 came from Citizens' 1-block margin: the NPC turned
+     a block before the corner and walked the diagonal over the drop. With the margin and the corner kept in the
+     stretch, and a shortcut only where every cell under the body's width is standable floor, it walks round.
+  3. **Recovery on the NPC's own floor (#492).** A stuck NPC and a group's follower aim at a point ahead along the
+     path on the floor they stand on, never at the flight above or below (the old targets 1421 84 -516 and
+     1424 48 -520). A leader below the route's end (37 blocks up, 4 across) plans the road instead of a short trip.
+  4. **The recovery ladder.** A stuck NPC takes one step per try: back-off along its last footsteps, side-step away
+     from the wall, one local leg ahead, then a replan; 1 s (`recovery-wait-ticks`) between tries, at most
+     `max-retries` steps, the log's count never past the cap (no more "retry 4 of 3", no four lines in one second).
+     Stuck is noticed after 2 s instead of 3 (`stationary-ticks`, `no-progress-ticks` 40). A follower takes the same
+     ladder inside its group, never holds up the ones behind, and a left-behind follower's tries double from 5 s up to
+     60 s (the 481 `group_rejoin` of #492 become tens).
+  5. **What the counters meant (#491) and mean now.** `stuck_engine 14456` against `recovered 0` was not 14456 stuck
+     NPCs: `stuck_engine` counted every Citizens cancel while an NPC moved, its stationary check and every failed path
+     search of a retry (four per burst, a burst every 5 s), and `recovered` counted only a recovery leg that arrived;
+     none did, because each aimed at another floor. The NPCs got free on the 5-second replan, the "second try" seen in
+     game. Now `stuck_engine` and `stuck_no_progress` count stuck spells (one per spell, by what noticed it first),
+     `freed_back_off`, `freed_side_step`, `freed_local_leg`, `freed_replan` and `not_freed` end them, `recovered` is
+     their sum, `recovery_no_path` counts failed engine searches and `fell` counts falls of 3 blocks or more.
+     `/knk npc nav stats` shows `stuck near a wall: N, freed by: …` and `stuck elsewhere`, steps per stuck, the
+     longest still and falls; the group line shows `road plans per group event` and `local legs at once` instead of
+     `most plans at once`.
+  6. **Tests.** knk-core unit tests for corners, own-floor targets, the ladder and the counters; three plugin
+     scenarios on a generated corner test scene (`npc-corners-line`, `npc-corners-walk` with 6 NPCs and a group of 6
+     in `ranks` for 90 s, `npc-stuck-ladder`); CI's `paper-boot` server now has a pinned Citizens build (2.0.44
+     build 4269, SHA-256 checked). `/knk npc nav scene corners` builds the scene on a test server.
+  - **Admin steps:** merge the new and changed keys into `config.yml` (restart), from the
+    [configuration reference § 4.27](guides/admin/plugin-configuration.md#427-npc):
+
+    ```yaml
+    npc:
+      navigation:
+        stationary-ticks: 40
+        no-progress-ticks: 40
+        max-retries: 3
+        recovery-wait-ticks: 20
+        corner-clearance: 1.0
+        waypoint-margin: 0.5
+    ```
+
+    A server whose `config.yml` still says 60 for the two `*-ticks` keys keeps 60. To test: the Phase 4b developer
+    test (L3) in the [implementation plan](specs/npc-platform/IMPLEMENTATION_PLAN.md#4b2-link-l3-521-wall-corners-and-stuck-recovery-508-491-492).
+- **Smoke-test guides: every step in full again, automated steps tagged**
+  ([PandiO/knk-workspace#511](https://github.com/PandiO/knk-workspace/issues/511); docs only, developer decision
+  2026-11-15). knk-workspace `claude/smoke-guides-full-steps` (PR into `next`). The #511 backfill had shortened
+  automated steps to one line; the 15 guides it touched (admin navigation, dashboard access, data and feedback
+  primitives, entity detail, form step conditions, gate, kit grant delivery, link code, lootbox area region, player
+  profile, realtime § S5, relation picker, settings pages, town streets) have their full manual instructions back, so
+  every step can still be run by hand. A step a suite covers starts with `[automated: <test>]`, or
+  `[partly automated: <test>; by hand: <what is left>]`; status lines count the tagged steps. What is automated did not
+  change. The developer guides on plugin scenarios and web app testing describe the tag.
+- **NPC navigation design: wall corners, stuck recovery, narrowed formations, followers that finish their trip**
+  ([PandiO/knk-workspace#519](https://github.com/PandiO/knk-workspace/issues/519); design only, docs, nothing changes in game).
+  knk-workspace `claude/npc-followups-l1` (PR into `next`, in review). BEHAVIOR_MODEL § 2 NAV-19–NAV-23 and
+  implementation plan Phase 4b for links L3 (#521: #508, #491, #492) and L4 (#522: #493, #507); defaults approved by
+  the developer 2026-11-15.
+- **NPC groups: followers keep to the rules and out of closing gates**
+  ([PandiO/knk-workspace#506](https://github.com/PandiO/knk-workspace/issues/506), part of
+  [#507](https://github.com/PandiO/knk-workspace/issues/507); link L2 of the NPC navigation follow-ups chain,
+  [#520](https://github.com/PandiO/knk-workspace/issues/520)) — knk-plugin and knk-workspace branches
+  `claude/npc-followups-l2`, merged into `next` 2026-11-15 (knk-plugin#31, docs knk-workspace#536); on the trunk when the developer promotes `next`. No change for players or with
+  `npc.navigation.enabled: false` (the default).
+  1. **Access change in the middle of a group (#506).** A gate or availability event hands every follower its
+     waypoints again in the next tick; the followers outside a district whose entry was removed stop at its edge, the
+     ones inside walk on, and all follow once entry is allowed again. After `/knk cache refresh` the region → domain
+     map is warmed again for the roads' regions and the NPCs hear of the change a second time: before, the NPC checks
+     saw every district as open right after a refresh, and the group walked in. Followers have a trespass guard of
+     their own, so `rules: trespasses` and `knk_npc_nav_events_total{event="trespass"}` count them too (log line
+     `TRESPASS <npc> entered <region> … (a follower of group <n>)`).
+  2. **No push by a closing gate (#507, the push only).** The gate's state event comes when the close starts. A
+     follower that still has to pass the door stops a block short of the door's box (its closed footprint and its
+     captured closed and opened regions); one already in it walks on out. The leader walks on and the rest follows
+     when the gate opens, as before (developer decision 2026-11-14 on #507; the followers-finish-trip toggle comes
+     with link L4).
+  3. Follow-ups filed: #533 (a realtime domain change empties the map without warming it again), #534 (a single NPC
+     or leader in a door's box when it starts closing).
+  - **Admin steps:** none; no new `config.yml` key, no migration. Deploy the plugin. To test: the Phase 4 developer
+    test steps 9 and 10 in the [implementation plan](specs/npc-platform/IMPLEMENTATION_PLAN.md).
+- **Plugin: 13 more plugin scenarios and a freeze test replace evening checks in game**
+  ([PandiO/knk-workspace#511](https://github.com/PandiO/knk-workspace/issues/511), plugin part; developer-facing, nothing
+  changes in game). Merged into `next` 2026-11-15 (knk-plugin#35, merge `b2c5dff0`; docs knk-workspace#544); on the trunk when the developer promotes `next`.
+  - **Scenarios** (CI `paper-boot`, a real Paper server with fake API data; 3 → 16, `MIN_SCENARIOS` 16): gate safety
+    with mobs, a dropped item and a minecart standing in for players (moved out on their own side, out of a two-deep
+    door, never into the next door's opening, opening leaves neighbours alone, door blocks never suffocate while a wall
+    does); a lootbox area's region renamed and replaced in place over the region callback with its drawn bounds and
+    flags; the temp-region sweep keeping an area's temp region; boxes asked for on the ground inside an area's Y range,
+    under a roof, and none after lootboxes are switched off.
+  - **Unit test:** `AdminFreezeListenerTest` (a frozen player can't walk, chat or run commands other than `/msg` and
+    `/r`; teleports and damage).
+  - **Smoke tests:** the automated steps are marked in the gate, lootbox area region, settings pages, player profile,
+    kit grant delivery, link code and realtime § S5 guides; steps that need a player wait for simulated players
+    ([#540](https://github.com/PandiO/knk-workspace/issues/540)). No plugin behaviour changed; `testing.scenarios.enabled`
+    stays off by default.
+  - **Admin steps:** none.
+- **Staff web app: edit a permission group's own nodes, with a History**
+  ([PandiO/knk-workspace#50](https://github.com/PandiO/knk-workspace/issues/50); link L2 of the staff web app follow-ups
+  chain, [#517](https://github.com/PandiO/knk-workspace/issues/517)). knk-web-api, knk-web-app and knk-workspace
+  branches `claude/group-grants-50` (PRs into `next`, in review, not merged). A permission group's detail page
+  (Dashboard → Permission Group → a group) has a **Permissions** panel: the group's own nodes (Granted/Denied, expiry),
+  a grant/deny form whose expiry is empty (permanent) by default, Edit, change Granted/Denied and Remove per row.
+  Changing Granted/Denied or removing asks first with the blast radius ("This affects N players", members of groups
+  that inherit from it included; online players get the change within seconds). A **History** list shows each change
+  to the group's nodes. Without `knk.admin.user.perm` the panel is read-only with "Requires knk.admin.user.perm".
+  1. **API:** the audit log has a generic subject (developer decision 2026-11-15): `audit_log_entries` gets nullable
+     `SubjectType` and `SubjectId` and `TargetUserId` becomes optional. A change to a group's own grants (added,
+     updated, removed) leaves one entry with the group as subject (`PermissionGroup`), the staff member as actor and the
+     node, before/after value and expiry in the details; player grant audits are unchanged. `GET api/audit-log` takes
+     `subjectType` and `subjectId` (`knk.admin.user.manage`). New `GET api/PermissionGroups/{id}/member-count`
+     (`knk.admin.user.manage` or the plugin key): active members of the group and of every group inheriting from it,
+     each player once. Writes stay on the by-node routes and `knk.admin.user.perm`; nobody changes a group ranked at or
+     above their own.
+  2. **Follow-up:** [#558](https://github.com/PandiO/knk-workspace/issues/558) (plugin: members of inheriting groups
+     and changes while realtime is down).
+  - **Admin steps:** one additive migration, `AddAuditLogSubject` (two nullable columns, one index, `TargetUserId`
+    nullable). The API does not migrate on start: back up the database, deploy the API, run `dotnet ef database update`,
+    then deploy the web app (it needs the new endpoints). No settings, no `config.yml` key, no plugin change. Smoke
+    test: [dashboard access smoke test § 8.7](guides/dashboard-access-smoke-test.md) (mostly automated in CI).
+- **Dashboard: the PermissionGrant table loads** ([PandiO/knk-workspace#408](https://github.com/PandiO/knk-workspace/issues/408);
+  API and staff web app). knk-web-api and knk-web-app branches `claude/permission-grant-table-408` (PRs into `next`, in
+  review, not merged). Dashboard → Permission Grant lists every grant and deny (node, Granted/Denied, holder, expiry)
+  and pages, sorts and searches by node; it is read-only (no New, Edit or Delete that saves: grants are still changed
+  on the player profile and with `/knk user … perm`; #50 adds the group editor).
+  - **API:** `POST api/PermissionGrants/search` now needs `knk.admin.user.manage`, like `GET` and `GET {id}` (it needed
+    `knk.admin.user.perm`), so whoever the dashboard lists the type for can read it. Writes still need
+    `knk.admin.user.perm`. The search sorts by the column asked (`id`, `holderId`, `value`, `expiresAt`, `node`).
+  - **Admin steps:** none; deploy the API and the web app together (no migration, no settings). Smoke test:
+    [dashboard access smoke test § 8.6](guides/dashboard-access-smoke-test.md) (mostly automated in CI).
+- **Town streets come from their districts; the `TownStreet` table is dropped**
+  ([PandiO/knk-workspace#409](https://github.com/PandiO/knk-workspace/issues/409), L1
+  [#514](https://github.com/PandiO/knk-workspace/issues/514) design, L2
+  [#515](https://github.com/PandiO/knk-workspace/issues/515) implementation) — knk-web-api, knk-web-app and
+  knk-workspace branches `claude/town-streets-409` (PRs into `next`, in review). Design
+  [specs/towns/DESIGN_TOWN_STREETS.md](specs/towns/DESIGN_TOWN_STREETS.md) (approved 2026-11-14 with its defaults).
+  1. **API.** A town's streets (`TownDto.streets` / `streetIds` of `GET api/Towns/{id}`) are the distinct streets of
+     its districts, ordered by name then id, read-only; they follow every street linked to or unlinked from a district
+     at once. Metadata lists Town `streets` as `storage: "derived"`; `POST api/Relationships/Town/{id}/streets/link`
+     and `/unlink` answer 400 `RelationshipNotEditable` "Streets are managed on the district: open a district to add or
+     remove them." (403 without the nodes, as before). `GET api/Towns` still carries no streets. Saving a town no
+     longer writes its districts back.
+  2. **Web app.** The Streets section of a town's detail page lists the streets with View and Edit, without Add…,
+     Unlink, Create New or Delete (whatever the stored display configuration says), and shows the hint above. Streets
+     are added to a town on a district's detail page (District → Streets → Add…).
+  3. **Plugin:** no change (the JSON shape stays; `/knk towns` debug output shows the derived list).
+  - **Admin steps:**
+    1. Back up the database before deploying (the migration drops a table).
+    2. Deploy the API and the web app together.
+    3. Apply the migration `DropTownStreet` (dev: `dotnet ef database update`; alpha: the migrator image, runbook
+       [§ API updates with migrations](guides/closed-alpha-deployment-runbook.md)). It drops `TownStreet` with **all**
+       its rows, including streets no district of the town has (developer decision 2026-11-14 on #515). Such a street
+       no longer shows on the town; link it to one of the town's districts to bring it back.
+    4. Rollback: the migration's `Down` (`dotnet ef database update SeedStaffFreezeNodes`, the migration before it)
+       recreates `TownStreet` and refills it from the districts; the dropped rows no district covered come back only
+       from the backup.
+    5. A Town form with a `Streets` / `StreetIds` field or step (the API ignores it) can be removed in the form builder;
+       the read-only check `scripts/maintenance/town-street-orphans-409.sql` (result set 3) lists such configurations.
+    6. Smoke test: [town streets smoke test](guides/town-streets-smoke-test.md) (L3
+       [#516](https://github.com/PandiO/knk-workspace/issues/516)): the manual steps are the deploy and migration on dev
+       and alpha and a look at a real town's Streets; the read-only section, the refused link, the derived list and the
+       migration are automated (knk-web-app `e2e/town-detail.spec.ts`, knk-web-api `TownStreetsDerivedTests`,
+       `RelationshipsControllerTests`, `DropTownStreetMigrationTests`). The dashboard access smoke test § 2.2 step 2
+       and § 8 step 9b now use a district's streets as the link example.
+- **Plugin: the 52 tests that CI skipped now run, with MockBukkit**
+  ([PandiO/knk-workspace#499](https://github.com/PandiO/knk-workspace/issues/499); developer-facing, nothing changes
+  in game). Merged into `next` 2026-11-14 (knk-plugin#32, merge `0810a6c7`; docs knk-workspace#539); on the trunk when the developer promotes `next`.
+  - The seven `requires-bukkit` test files of `knk-paper` pass and run in `./gradlew test` and CI; the tag exclusion and
+    the `taggedTest` task are gone. knk-paper: 2,690 tests before, 2,735 after (all green; 18 skipped as before).
+  - MockBukkit (`mockbukkit-v26.3` 4.120.0) is a test-only dependency (developer decision 2026-11-14) for tests that need
+    Bukkit statics; its JUnit 6 dependency is excluded, the project stays on JUnit 5.
+  - Stale tests were brought up to date, none deleted or skipped: the removed in-game account creation flow (KNG-67,
+    KNG-208), `/account link` argument handling, Component messages, existing users looked up by UUID.
+  - **Admin steps:** none.
+- **Plugin features can prove themselves on a real server in CI: in-plugin test scenarios**
+  ([PandiO/knk-workspace#421](https://github.com/PandiO/knk-workspace/issues/421); developer-facing, nothing changes for
+  players). Merged into `next` 2026-11-14 (knk-plugin#30, merge `309d3580`; docs knk-workspace#532); on the trunk when the developer promotes `next`.
+  - A scenario builds a small scene on a test server (blocks, a WorldGuard region, mobs, fake API data), plays it out
+    over server ticks and asserts the result. The runner is platform-free in `knk-core` (`core/scenario/`), the Bukkit
+    glue and the scenarios in `knk-paper` (`paper/scenario/`). Each scenario logs `KNK-SCENARIO PASS|FAIL <name>`, then
+    a summary line.
+  - `/knk scenario list | run <name|all>` (node `knk.admin.scenario`) exists **only** with the new
+    `testing.scenarios.enabled: true`; off by default, so every real server behaves exactly as before.
+  - Three scenarios: a portcullis opens and closes (`gate-open-close`), a closing door moves a mob out of its doorway
+    without suffocating it (`gate-closing-moves-entity-out`, KNG-106), TNT breaks nothing outside every region but does
+    inside one (`global-region-explosion`).
+  - CI: the Paper boot test (`paper-boot.yml`) runs every scenario after the boot check and fails on a failed or
+    missing scenario or a missing summary; the result table is in the job summary. About 4 s of scenarios in a
+    1.5-minute job.
+  - Guide: [writing a plugin scenario](guides/developer/plugin-scenarios.md); [CI § 7.1](guides/developer/ci.md#71-in-plugin-scenarios).
+  - **Admin steps:** none. Don't add the `testing` block to dev, alpha or production configs; a missing block is off
+    ([plugin configuration § 4.28](guides/admin/plugin-configuration.md#428-testing)).
+- **Smoke tests: the web app's checks move into the automated suites** ([PandiO/knk-workspace#511](https://github.com/PandiO/knk-workspace/issues/511))
+  — no game or player change; developer-facing. Playwright specs with a mocked API in knk-web-app `e2e/` now check what
+  the developer did by hand in the smoke tests of features already on the trunk, and each guide marks those steps
+  `[automated]` with the test, so the evening check covers only what is left (game server, real client, themes).
+  Batch 1 (knk-web-app branch `claude/test-backfill-511`, PR into `next`): `e2e/player-profile.spec.ts` (player
+  profile and player search, 21 of 26 steps) and `e2e/settings-pages.spec.ts` (settings pages, 22 of 26 steps), new
+  helpers `e2e/support/layout.ts` (no sideways scroll at phone width), `e2e/fixtures/players.ts` and
+  `e2e/fixtures/settings.ts`; `mockSession` keeps the realtime hub offline. Guides:
+  [player profile](guides/player-profile-smoke-test.md), [settings pages](guides/settings-pages-smoke-test.md);
+  [web app testing § 3](guides/developer/web-app-testing.md#3-end-to-end-tests-playwright). Merged into `next`
+  2026-11-14 (knk-web-app#28, knk-workspace#528).
+  Batch 2: `e2e/admin-navigation.spec.ts` (admin navigation, 20 of 24 steps) and `e2e/dashboard-access.spec.ts`
+  (dashboard access § 8, with the API's xUnit tests marked in § 2.2, § 3, § 4 and § 7; 31 checks), fixture
+  `e2e/fixtures/dashboardAccess.ts`. Found: Mail log and Invitations scroll sideways at phone width
+  ([#535](https://github.com/PandiO/knk-workspace/issues/535)). Guides: [admin navigation](guides/admin-navigation-smoke-test.md),
+  [dashboard access](guides/dashboard-access-smoke-test.md). Merged 2026-11-14 (knk-web-app#30, knk-workspace#537).
+  Batch 3: `e2e/entity-detail.spec.ts` (entity detail, 14 of 21 steps) and "Show what uses it" in
+  `e2e/dashboard-access.spec.ts`; the relation picker's Jest tests marked in its guide (19 of 24 steps), fixture
+  `e2e/fixtures/entityDetail.ts`. Guides: [entity detail](guides/entity-detail-smoke-test.md),
+  [relation picker and delete details](guides/relation-picker-and-delete-details-smoke-test.md). Merged 2026-11-14
+  (knk-web-app#31, knk-workspace#538).
+  Batch 4: `e2e/data-table.spec.ts` (shared table, pager and confirm; numbers in a Dutch browser) and the existing Jest
+  and API tests marked in [data primitives](guides/data-primitives-smoke-test.md) (20 of 28 steps),
+  [feedback primitives](guides/feedback-primitives-smoke-test.md) (15 of 28) and
+  [form step conditions and step jump](guides/form-step-conditions-and-step-jump-smoke-test.md) (29 of 36).
+  - **Admin steps:** none (tests and docs only).
+- **Dashboard tables: every row looks the same, the row actions stay in view, and a right-click menu**
+  (PandiO/knk-workspace#404, #405, #406; staff web app only). knk-web-app branch `claude/dashboard-table-actions-404-406`,
+  merged into `next` 2026-11-14 (knk-web-app#17); on the trunk when the developer promotes `next`.
+  - **#404:** rows from the second on no longer show a thick grey left edge; every row has the same 1px line.
+  - **#405:** View / Edit / Delete sit in a column pinned to the table's right edge (the checkbox column to the left),
+    so they stay in view on types with many columns and at phone width; a shadow shows on the pinned edge only while
+    columns scroll under it.
+  - **#406:** a right-click on a row (or Shift+F10 / the context-menu key on a focused row) opens View, Edit, Delete and
+    Export as CSV. Items follow the same permission nodes as the buttons and are greyed out with "Requires <node>",
+    not hidden. On a ticked row Delete and Export act on the whole selection (bulk delete needs
+    `knk.admin.delete.bulk`). Ctrl/Cmd + right-click keeps the browser's menu.
+  - **Admin steps:** none; deploy the web app. Smoke test:
+    [dashboard access smoke test § 8.5](guides/dashboard-access-smoke-test.md) (mostly automated in CI).
+- **Smoke-test fixes on `next` from 2026-11-14** (PandiO/knk-workspace#484, #485, #487) — knk-web-api, knk-plugin and
+  knk-workspace branches `claude/smoke-fixes-484-485-487` (PRs into `next`, in review, not merged). **Deploy order:**
+  API and plugin together (no migration). One entry per issue follows.
+- **The link code reads XXXX-XXXX in game**
+  ([PandiO/knk-workspace#484](https://github.com/PandiO/knk-workspace/issues/484); API only). The code from
+  `/account link` is shown with the dash after four characters, as the website's code field and the claim code show it
+  (it was `7KL-MZU0T`). `LinkCodeResponseDto.formattedCode` now comes from `LinkCodeService.FormatClaimCode`, the one
+  formatter; the plugin shows that field unchanged, and the web app's field already ignored the dash when pasting.
+  Checklist: [link code and registration confirmation smoke test § 1](guides/link-code-and-registration-confirmation-smoke-test.md).
+  - **Admin steps:** none; deploy the API.
+- **The game confirms a registration made with the link code**
+  ([PandiO/knk-workspace#485](https://github.com/PandiO/knk-workspace/issues/485); API and plugin). After a player
+  registers on the website with the code from `/account link`, the game tells them once that their website account is
+  ready and linked, with the masked email and their Minecraft name to log in with: within seconds when online (realtime
+  push, or the 2 s poll with realtime off), else about 2 s after the next join. A failed or expired code says nothing.
+  The API queues an `AccountLinked` notification at registration (it already did for Account-page links and claims),
+  now with `via` (`register`, `link`, `claim`); the plugin shows the new `messages.web-account-registered` for
+  `register` and keeps `admission.account-linked` for the others. Fixed in passing: with the realtime hub connected the
+  notification poll is paused, so a notice queued for an offline player only showed after the next hub reconnect; a
+  join now drains the queue (`NotificationJoinDrain`). Checklist:
+  [smoke test §§ 2–5](guides/link-code-and-registration-confirmation-smoke-test.md); key reference
+  [plugin configuration § 4.18](guides/admin/plugin-configuration.md#418-messages).
+  - **Admin steps:** deploy API and plugin. Plugin `config.yml`, optional (a missing key uses the jar's text):
+
+    ```yaml
+    messages:
+      # PandiO/knk-workspace#485: shown once after a game-first registration. Placeholders: {maskedEmail}, {name},
+      # {url} (web.public-url; lines that use it are left out while it is empty).
+      web-account-registered: "&aYour website account is ready and linked to this Minecraft account.\n&aLog in at &e{url} &awith &e{maskedEmail} &aor your Minecraft name &e{name}&a.\n&cNot you? Tell staff right away."
+    ```
+- **Lootbox spawn areas keep the region exactly as drawn**
+  ([PandiO/knk-workspace#487](https://github.com/PandiO/knk-workspace/issues/487), developer decision 2026-11-14;
+  API and plugin; changes #34 below). A spawn area's region drawn in the web form keeps its outline and its height
+  (e.g. Y 64–68) when it is renamed to `lootbox_area_<id>` on save or on a re-run of the region step; it is no longer
+  stretched to the world's full build height. Boxes spawn on the ground inside it, also when the region is under a roof
+  or an overhang (the spawner looks for good ground with two air blocks inside the region's Y range when the column's
+  surface is above it). The rename, in-place replacement, reserved `area_<number>` names, cleanup protection and
+  `finalize-temp-names` are unchanged; `/knk lootbox area create` still makes full-height regions. The API no longer
+  sends `fullHeight=true` and the plugin ignores it. See
+  [managed-worldguard-regions.md](architecture/managed-worldguard-regions.md) §7 and the
+  [smoke test](guides/lootbox-area-region-smoke-test.md) § 1 step 4 and § 2 step 2.
+  - **Admin steps:** deploy API and plugin together (no migration, no setting, no `config.yml` key). Import form seed
+    `LootboxSpawnArea - Default (seed v3)` (`Data/FormConfigurationSeeds/LootboxSpawnArea.json`, descriptions only) and
+    make it the default. Areas saved under #34 keep their full-height region until their region step is run again.
+- **Plugin parts of UX chains 2 and 3 into `next`** (PandiO/knk-workspace#184, #31, #34, #261, #264, #269) — knk-plugin,
+  knk-web-api and knk-workspace branches `claude/plugin-chains-into-next` (PRs into `next`, merged 2026-11-13: knk-plugin#20 `745fcf6`, knk-web-api#18 `c20899c`,
+  knk-workspace#393 `6250d12`; developer's go 2026-11-13). The plugin branch merges chain 3 P3 `claude/temp-region-drafts-269` (which contains P1, R3, R2 and R1)
+  and P2 `claude/realtime-client-flaky-264`; the API branch merges P3's API branch (contains R3) and is merged into
+  `next` 2026-11-13 (knk-web-api#18 `c20899c`). The API parts of #184 and #261 are on `master` since 2026-11-12. **Deploy order:** back up the database, deploy the API and run
+  `dotnet ef database update` (one new migration here, `AddTempRegionReleases`), then the plugin. One entry per feature
+  follows.
+- **Erasure retest fixes: first join without a cached user, erasure feed in PascalCase, test walkers out of the
+  water** (PandiO/knk-workspace#486 retest, #490 remainder; plugin only). knk-plugin branch
+  `claude/erasure-first-join-486-retest`, merged into `next` 2026-11-14 (knk-plugin#29, `058f93a`); on the trunk when the developer promotes `next`. The developer's retest of 2026-11-14
+  (plugin `0.1.0+a760c4a4`) still got "Welcome back" in § S5 steps 1, 4, 5 and 5a. Two causes, both fixed:
+  1. **The first join was decided from the user cache at `PlayerJoinEvent`**, which an erasure empties (and so does a
+     website account that has no UUID yet), so the decision was skipped (`First-join kits: no cached user ... skipped`).
+     It is now made once the join's account sync knows the account (`UserAccountListener`), with the erasure mark taken
+     there whatever the cache holds, and an account the API created while the player connected (pre-login or the
+     join's sync) counts as new, also with realtime off. One decision drives the welcome, the quiet discovery minutes
+     and the first-join kit request. The log line is now `First join: <name> (user <id>) ...`.
+  2. **The catch-up never read the feed:** the API sends `GET api/privacy/erasures` in PascalCase (`Items`,
+     `ErasureId`, `LastId`, ...), the plugin read camelCase only, so every page parsed empty, nothing was applied and
+     `erasure-feed.json` never moved. The plugin now reads both casings (no API change). The other REST DTOs of
+     realtime #178 to #184 were checked: the API's world-task DTOs name their fields in camelCase explicitly; only the
+     erasure feed lacked the attributes.
+  3. **#490:** the test walkers (`/knk npc test spawn`) still drowned (audit: `DROWNING 1088`): Citizens' path search
+     walks through and over water to reach a dry target, and seagrass, kelp and bubble columns passed the dry-spot
+     check. Their own path search now never enters water or lava, and a spot needs a body's room with no fluid at all.
+     No K&K listener records anything for an NPC's drowning damage.
+  Design [realtime DESIGN §7.5](specs/realtime-signalr/DESIGN.md); smoke test
+  [§ S5 steps 4, 5, 5a and 7](guides/realtime-smoke-test.md).
+  - **Admin steps:** none (no `config.yml` key, no API change); deploy the plugin. With the fix, the first hub connect
+    applies the erasures the feed holds that this server has not applied yet (`erasure-feed.json` starts at
+    `"lastId":0` because no page was ever read): expect `Erasure #N applied` lines for older erasures, which are
+    harmless (every step is idempotent; a UUID now in use by a fresh account comes with `formerUuid: null`).
+- **An erased account's player is greeted as new, also after a restart** (PandiO/knk-workspace#486, follow-up of
+  #184 from the developer's smoke test 2026-11-14; plugin only). knk-plugin branch `claude/erasure-first-join-486`,
+  merged into `next` 2026-11-14 (knk-plugin#25); on the trunk when the developer promotes `next`. Before, a player whose
+  account was erased while the server was down got "Welcome back" and no quiet discovery minutes on their next join:
+  Minecraft's own player files are kept by design, and nothing marked the join as new. Now every applied erasure marks
+  "next join is a first join" (`erasure-first-joins.json`, a hash and a time, no UUID or name; taken at the next join,
+  dropped after 90 days), and a join right after a start waits at most 5 s for the first catch-up. Design
+  [realtime DESIGN §7.5](specs/realtime-signalr/DESIGN.md); smoke test [§ S5 steps 4, 5 and 5a](guides/realtime-smoke-test.md).
+  - **Admin steps:** none (no `config.yml` key, no API change); deploy the plugin. The file
+    `plugins/KnightsAndKings/erasure-first-joins.json` appears after the first erasure.
+- **GDPR account erasure reaches the game server at once (realtime S5)**
+  ([PandiO/knk-workspace#184](https://github.com/PandiO/knk-workspace/issues/184), chain 2 R1; plugin part). With
+  `realtime.enabled: true` the plugin acts on the API's `AccountErased` push: an online player is kicked with a neutral
+  message (a siege vault they hold is given back first, once), then everything the server keeps about the account is
+  deleted (offline security store, user and permission caches, discovery and statistics spools, PM-log queue and local
+  log lines, offline siege vaults, hub-outage return point). Minecraft's own player files are listed for the owner, not
+  deleted. Every hub (re)connect catches up through `GET api/privacy/erasures?since=`; an erasure with a failed step
+  keeps the feed position before it and runs again at the next catch-up. With realtime off nothing new
+  runs; the hourly offline-cache re-check stays the backstop. Checklist: [realtime smoke test § S5](guides/realtime-smoke-test.md);
+  design: [DESIGN §7.5](specs/realtime-signalr/DESIGN.md).
+  - **Admin steps:** API part already on `master` (migration `AddPrivacyErasureEvents`, optional
+    `Privacy__ErasureFeedUuidRetentionDays`, default 35). Plugin: new optional block under `realtime:` in `config.yml`
+    (defaults below; a missing block uses them). The push needs `realtime.enabled: true` and `api.auth.type: apikey`.
+    For the smoke test only: `Privacy__GraceDays=0` on the dev API (put it back afterwards).
+
+    ```yaml
+    realtime:
+      erasure:
+        kick-message: "Your account data has been deleted."
+        settle-seconds: 2          # wait between kick and deletion, 0-30
+        feed-file: "erasure-feed.json"
+        minecraft-files-list: "erasure-minecraft-files.txt"
+    ```
+- **Siege startup work retried when the API is back, also with the realtime hub off**
+  ([PandiO/knk-workspace#31](https://github.com/PandiO/knk-workspace/issues/31), chain 2 R2; plugin only). When the API
+  was down at server start, the siege's startup-only work (abort the previous run's unfinished matches, restore gates a
+  crash left locked, fetch the runtime config with its lobbies and the title brackets) runs again by itself once the API
+  connectivity turns UP, in that order, and on a fallback retry (30 s, 1 min, 2 min, then every 5 min) while anything is
+  left and the API is not DOWN. `/siege admin reload` is no longer needed. With the hub on, the reconnect and the UP
+  transition share one runner (each step runs once). Checklist: [API outage smoke test § #31](guides/api-outage-smoke-test.md).
+  - **Admin steps:** none (no migration, no setting, no `config.yml` key); deploy the plugin.
+- **Lootbox spawn areas keep a region drawn in the web form**
+  ([PandiO/knk-workspace#34](https://github.com/PandiO/knk-workspace/issues/34), chain 2 R3; API and plugin). A region
+  drawn through the LootboxSpawnArea form's region task is renamed from `tempregion_worldtask_<n>` to
+  `lootbox_area_<id>` when the area is saved (stretched to the world's full build height until #487, above, which
+  keeps the drawn height); before, the 14-day
+  temp-region cleanup deleted it and the area stopped spawning. Re-running the region step replaces the previous region
+  in place. The cleanup also asks the lootbox areas before deleting a temp region, `POST /api/Regions/finalize-temp-names`
+  renames temp-named areas, and area names `area_<number>` are reserved. See
+  [managed-worldguard-regions.md](architecture/managed-worldguard-regions.md) §7 and the
+  [smoke test](guides/lootbox-area-region-smoke-test.md).
+  - **Admin steps:** deploy API and plugin together (no migration, no setting, no `config.yml` key). Import form seed
+    `LootboxSpawnArea - Default (seed v2)` (`Data/FormConfigurationSeeds/LootboxSpawnArea.json`; with #487, seed v3
+    instead). Areas still on a temp
+    name: run `POST /api/Regions/finalize-temp-names` once.
+- **Kit "Grant" from the web app reaches the player in game**
+  ([PandiO/knk-workspace#261](https://github.com/PandiO/knk-workspace/issues/261), chain 3 P1; plugin part). The plugin
+  hands a web grant's items over with the `/kit give` placement: online within seconds (realtime push, or the 2 s poll
+  with realtime off), offline on the next join, after a siege when granted during one (also when the player entered
+  the siege while the delivery was being taken). It takes each delivery at the
+  API before placing it, so a grant is never handed over twice. `/kit give` in game is unchanged; earlier web grants
+  are not delivered retroactively (grant again). Design [kits DESIGN §4.7](specs/kits/DESIGN.md); checklist
+  [kit grant delivery smoke test](guides/kit-grant-delivery-smoke-test.md).
+  - **Admin steps:** API part already on `master` (migration `AddKitClaimDelivery`); deploy the plugin. No setting, no
+    `config.yml` key.
+- **Realtime client: flaky stop test fixed** ([PandiO/knk-workspace#264](https://github.com/PandiO/knk-workspace/issues/264),
+  chain 3 P2; plugin). `RealtimeClient.stop()` asks the transport to close before it reports STOPPED, which removes the
+  race behind the flaky `RealtimeClientTest.stopClosesAndNeverReconnects`. No visible change in game.
+  - **Admin steps:** none.
+- **Temp regions of abandoned drafts go within minutes, not after 14 days**
+  ([PandiO/knk-workspace#269](https://github.com/PandiO/knk-workspace/issues/269), chain 3 P3; API and plugin). A region
+  drawn through a form's region task (`tempregion_worldtask_<n>`) is released when its draft is deleted in Saved
+  Progress, when its task is cancelled, fails or expires after a game server held it, or when the world-task sweep
+  removes its session; the game server removes it every few minutes once no domain, sub-region, lootbox area, road edge
+  or draft names it and it isn't renamed. The daily 14-day cleanup stays the backstop. See
+  [managed-worldguard-regions.md](architecture/managed-worldguard-regions.md) §7 and the
+  [world-task smoke test § 7](guides/world-task-hardening-smoke-test.md#7-temp-regions-of-abandoned-drafts-269-in-next).
+  - **Admin steps:** API first: `dotnet ef database update` (additive migration `AddTempRegionReleases`, one table);
+    optional `WorldTasks__TempRegionReleaseGraceMinutes` (5) and `WorldTasks__TempRegionReleaseKeepDays` (30). Then the
+    plugin, with one new optional key (a plugin on an API without the route logs a warning per pass and removes
+    nothing; set it to 0 until the API is deployed):
+
+    ```yaml
+    regions:
+      temp-retention:
+        days: 14                        # unchanged
+        release-interval-minutes: 5     # new: pass that removes released temp regions; 0 = off
+    ```
+
+- **Form wizard: the step-jump dialog works again after Go to and back; one set of validation messages**
+  (PandiO/knk-workspace#413 retest, #488, developer's retest on `next` 2026-11-14) — staff forms only. When a form step
+  can't be left, every problem is listed once at the top of the form and shown once on its field, with one pop-up
+  message; nothing is said above the Next button any more. knk-web-app branch `claude/wizard-messages-413-488`, merged into
+  `next` 2026-11-14 (knk-web-app#22 `c54ebac`); on the trunk when the developer promotes `next`.
+  - **#413:** after **Go to**, going back to step 1 and clicking step 3 again opened the dialog with ×, Close and Go to
+    all disabled. Cause: `FeedbackModal` cleared its busy state only while a "mounted" ref was true, and React's
+    StrictMode (the dev server) left that ref false after its extra mount, so busy stayed set after the first action.
+    The ref is set again on mount, and each opening of a dialog resets busy (an action from an earlier opening no
+    longer closes or un-busies a later one). Fixed in the shared dialog, so every `FeedbackModal` gets it.
+  - **#488:** for every kind of failure on Next, Submit, Save or a stopped jump (required field, field validation,
+    blocking rule incl. "could not be checked", "before leaving" condition with one/all/any rules or a field of an
+    earlier step, the next step's "before entering" condition, many-to-many entries, list fields): one entry in the
+    summary at the top (a link to its field; text when the field is not on this step; many-to-many entries link to the
+    entries), one message under the field in the same style (a checkbox's message moved from beside its label to under
+    it), and one toast on Next/Submit ("Fix the N problems on this step to continue." for more than one). The message
+    above Next/Submit (#88) is removed, and a refused Next no longer fills the red banner (kept for a failed save).
+    The checks that need no request run together, so "Region is required" and a failed Allow entry condition are both
+    listed. Next on a many-to-many step now checks its entries' required values, as a jump already did. A blocking
+    rule's text is no longer repeated under a field that shows it; warnings keep their own line and stay out of the
+    summary. After **Go to** the step shows the same summary and marks as after Next; the jump dialog keeps its own
+    list.
+  - **Admin steps:** none; deploy the web app. Smoke test:
+    [form step conditions smoke test § 2 step 1, § 3 step 3 and § 5 steps 2–2a](guides/form-step-conditions-and-step-jump-smoke-test.md).
+- **Form wizard: the step-jump dialog can always be closed; a failed step condition marks its fields**
+  (PandiO/knk-workspace#413, #414, follow-ups of #68/#88 from the developer's smoke test 2026-11-13) — staff forms only.
+  knk-web-app branch from the fix session, PR into `next` (knk-web-app#20, merged 2026-11-14); on the trunk when the
+  developer promotes `next`.
+  - **#413:** the "Can't go to … yet" dialog locked (×, Close and Go to disabled) while "Go to" waited for the progress
+    save. "Go to" now opens the stopped step at once with its issues shown and saves in the background; a failed save
+    shows in the wizard's banner and the next Next saves again. A jump with nothing to stop it still saves first.
+  - **#414:** when a "before leaving" condition, or the next step's "before entering" condition, stops Next or a jump,
+    the fields its failing rules read show the condition's message in red, like a field validation rule (one rule: its
+    field; all: the failing rules' fields; any: every field). The mark clears as soon as the condition holds. The
+    message above Next stays.
+  - **Admin steps:** none; deploy the web app. Smoke test:
+    [form step conditions smoke test § 2 step 1 and § 5 step 2](guides/form-step-conditions-and-step-jump-smoke-test.md).
+- **Form builder: step conditions; form wizard: click a step to jump to it** (PandiO/knk-workspace#88, #68) — staff
+  who build forms can now say in the builder what must be filled in before a step may be left or opened, and staff who
+  fill in a form can click a step in the progress strip instead of pressing Next many times. No change for players.
+  Branches `claude/issues-68-88-readiness-wapo57`, merged into `next` 2026-11-13 (knk-web-app `next` `1f848f7` (knk-web-app#12), knk-web-api `next` `31abe2d` (knk-web-api#14), knk-workspace `next` `c68df65` (#379));
+  on the trunk when the developer promotes `next`. [Smoke test](guides/form-step-conditions-and-step-jump-smoke-test.md),
+  not run. Staff guide: [§ 5.1 and § 7.1](guides/admin/staff-web-app-guide.md#51-the-steps-of-a-form-next-clicking-a-step-and-what-stops-you)
+  (docs #395). Found while documenting: #396 (every rule that could not run is listed as "game server could not be
+  reached"), #397 (hand-written condition JSON is ignored by the form, or blocks the step when it is not valid JSON).
+  - **Form builder (#88):** a **Step conditions** card in the step editor: "before leaving this step" (Completion) or
+    "before entering this step" (Entry), active toggle, message, and rules over the step's fields or the fields of
+    earlier steps (is, is not, greater / less than, contains, is empty, is not empty; all / any with two or more
+    rules). Values keep the field's type (a tick box stores `true`, not text). A field that holds a record or a list
+    (a linked entity, a list, a material or enchantment picker, banner layers) only offers "is empty" and "is not
+    empty" (`stepConditionOperatorsFor`), and a list with every entry removed counts as empty. Conditions are part of the draft and go
+    live on Publish; Publish refuses a "before leaving" condition without a message. JSON that was not made with the
+    editor is shown as text and saved unchanged. A rule whose field is gone is red in the editor and a warning in
+    the configuration health panel (`StepConditionHealth` in knk-web-api, which walks the steps in the form's step
+    order, `StepOrderJson`; an info line instead of a warning for a switched-off condition).
+  - **Form wizard (#88):** Next also checks the next step's Entry conditions (they were stored but never checked). A
+    failed condition is shown above the Next/Submit button as well as in the toast.
+  - **Form wizard (#68):** the steps in the progress strip, and in the narrow-screen list, are buttons. Back is always
+    allowed. Forward checks the current step and every visible step up to the clicked one with the checks of Next
+    (required fields, lists, field validations, conditions, blocking rules, the entries of a many-to-many step) and
+    stops at the first step that fails: a dialog names the step, the fields and the messages, with **Go to <step>**.
+    Warnings never stop a jump. A rule that could not run because the game server is unreachable does not stop it
+    either; a dialog says which checks were skipped. A form opened with values (an entity being edited, a resumed
+    draft) runs its rules once when it has loaded.
+  - **Admin steps:** none (no migration, no setting, no plugin change). Deploy the API and the web app in either order.
+- **Staff may freeze and unfreeze players** (PandiO/knk-workspace#367) — developer decision 2026-11-13: Staff helps
+  players and enforces the rules (freeze, kick, ban, balances) and doesn't manage the game core. knk-web-api and
+  knk-workspace branches `claude/staff-freeze-nodes-367`, not merged.
+  - **API:** data-only migration `SeedStaffFreezeNodes` gives the **Staff** group `knk.freeze` and `knk.unfreeze`, the
+    nodes `PUT api/Users/{id}/freeze` / `/unfreeze` and the plugin's `/freeze` / `/unfreeze` check (names match, no
+    code change). Idempotent: skipped when there is no Staff group or when Staff or a group it inherits from already
+    has a grant, deny or covering wildcard for the node. Down removes nothing (it can't tell its grant from one given
+    before). Moderator and Admin aren't touched: on the alpha they inherit from Staff.
+  - **Web app, plugin:** no change; the player profile's Freeze/Unfreeze and the in-game commands open up for Staff
+    members by the grant.
+  - **Admin steps:** back up the database, deploy the API, run `dotnet ef database update` (one data-only migration,
+    no setting, no plugin change). The alpha and the dev seed (`knk-dev-db-seed`, Staff holds both nodes already) get
+    no new row. Check: Staff's group page lists `knk.freeze` and `knk.unfreeze`. Smoke test:
+    [player profile smoke test § 4 step 4](guides/player-profile-smoke-test.md#4-without-the-nodes).
+- **Web app: lootbox Enable/Disable, Create New Street and hot edit greyed out without `knk.admin.content`**
+  (PandiO/knk-workspace#383, follow-up of #374) — developer decision 2026-11-13: grey them out. knk-web-app branch
+  `claude/content-gate-toggles-383` (PR into `next`, not merged).
+  - **Web app:** three writes outside the form wizard save through a create or update that #374 gates. The Lootboxes
+    page's Types tab **Enabled/Disabled** toggle (`PUT api/LootboxTypes/{id}`), the roads page's road-edge Street
+    dropdown **Create New Street** (`POST api/Streets`) and the detail page's ✎ hot edit of a field (the type's `PUT`)
+    are greyed out with "Requires knk.admin.content" (and any missing area node) for accounts without it, from the
+    metadata's `actionNodes.create`/`edit`. **Not changed:** the roads page's Road profiles card (RoadProfile is
+    exempt), road-edge edits (`knk.admin.road`), hot edit of a user (`knk.admin.user.manage`), lootbox tokens and
+    settings.
+  - **Admin steps:** none; deploy the web app (no migration, no setting, no API change). Smoke test:
+    [dashboard access smoke test § 8 step 9c](guides/dashboard-access-smoke-test.md#82-disabled-actions-with-requires-node-decision-11).
+
+- **API: creates, edits and link changes of dashboard types need `knk.admin.content`** (PandiO/knk-workspace#374,
+  follow-up of #371) — developer decision 2026-11-13: "Area staff should not be able to change forms at this point.
+  They only work with the content available." The API now says what the web app says since #371. knk-web-api and
+  knk-web-app branches `claude/api-writes-need-content-374`, merged into `next` 2026-11-13 (knk-web-api#15 `b65e66d`,
+  knk-web-app#13 `ca1959d`); on the trunk when the developer promotes `next`. Guides: [dashboard access admin guide
+  § 2, § 4, § 8](guides/admin/dashboard-access-admin-guide.md), [staff web app guide](guides/admin/staff-web-app-guide.md)
+  (docs #385).
+  - **API:** the primary create (`POST`) and update (`PUT {id}`) of every dashboard type need the type's write node
+    **and** `knk.admin.content` (one rule in `DashboardAccess`, enforced by `RequireDashboardChange`); without it 403
+    `NoWriteAccess` "Creating or editing Town requires knk.admin.world and knk.admin.content.". The detail page's
+    Select / Unlink / Add (`POST api/Relationships/{type}/{id}/{property}/link|unlink`) need the same. The metadata's
+    `actionNodes.create`/`edit` and a relationship's `nodes` list the node. **Not changed:** User (player profile) and
+    Permission Group (`knk.admin.user.perm` with the escalation guard), RoadProfile (the roads page), delete, bulk
+    delete, export, reads, lookups, the player profile's freeze, balance, kick and ban, other writes of a type (gate
+    door state, a domain's world backfill, lootbox in-game spawn areas, …) and the plugin (`api.auth.type: apikey`).
+  - **Web app:** the detail page's Select…, Change…, Unlink and Add… are greyed out with "Requires knk.admin.content"
+    without it, like New and Edit since #371.
+  - **Admin steps:** no migration, no setting, no plugin change, no new package; deploy the API and the web app in
+    either order. A rank needs `knk.admin.content` to keep creating or editing anything through the API: Admin
+    (`knk.admin.*`) and the owner keep everything; the **Staff** group (`knk.kit.manage`, `knk.siege.admin.manage`, no
+    `knk.admin.content`) can no longer create or edit kits or siege setup from the web or with `curl`, and a world,
+    lootbox or siege rank only views, deletes (with `knk.admin.delete`) and exports. In-game commands are unaffected
+    (they go through the plugin key). `SeedDashboardActionNodes` (AM1) seeded only `knk.admin.delete` and
+    `knk.admin.export`, so nothing needs a data change; grant `knk.admin.content` by hand to a rank that should keep
+    editing (it opens every content type too). The lootbox page's Enable/Disable toggle saves through the same `PUT`
+    and needs `knk.admin.content` now as well (greyed out without it since #383). Smoke test:
+    [dashboard access smoke test § 2.2 and § 8 step 9b](guides/dashboard-access-smoke-test.md#22-create-edit-and-link-changes-need-knkadmincontent-374).
+
+- **Form wizard, New and Edit back on `knk.admin.content`** (PandiO/knk-workspace#371, reverts AM3's LAM3-1, answers
+  #368) — developer decision 2026-11-13: area staff work with the content that exists and don't change forms for now.
+  knk-web-app branch `claude/form-wizard-content-only-371`, merged into `next` 2026-11-13 (knk-web-app#11, `e6ba115`); on the trunk when the developer promotes `next`.
+  - **Web app:** `/forms/:type` and `/forms/:type/edit/:id` need `knk.admin.content` again ("Staff only" otherwise).
+    The dashboard's New, New with and Edit and the detail page's Edit need the type's own nodes **and**
+    `knk.admin.content`, greyed out with "Requires knk.admin.content"; a picker's Create New is hidden without it.
+    Edit of a user still opens the player profile for Staff. View, the explorer per area, lookups, Delete, bulk
+    delete, Export and the player profile are unchanged.
+  - **API:** unchanged by #371; it still accepts creates and edits per area node. #374 (above) asks for
+    `knk.admin.content` there too.
+  - **Admin steps:** no migration, no setting, no plugin change, no new package; deploy the web app only. World, kit,
+    lootbox, siege, road and Staff ranks that should keep creating or editing records need `knk.admin.content`.
+    Smoke test: [dashboard access smoke test § 8 steps 6, 7, 9, 9a](guides/dashboard-access-smoke-test.md#8-web-app-am3).
+
+- **NPC navigation, Phases 1 to 4: NPCs walk K&K routes, alone and in groups (admin testing only)** — no change for players; off by
+  default (`npc.navigation.enabled`). In `next` when the pull requests of PandiO/knk-workspace#360 are merged; on the
+  trunk when the developer promotes `next`. Parent issue PandiO/knk-workspace#358,
+  [implementation plan](specs/npc-platform/IMPLEMENTATION_PLAN.md).
+  1. **Phase 1** (#359): the Citizens plugin as an optional dependency, an engine-neutral core with layered
+     settings, NPC metrics (`knk_npc_nav_*`), the NPC event audit and a guard that keeps NPCs out of region tracking.
+     Follow-up (#490, in `next` when its pull requests are merged): NPCs are kept out of the damage handlers of the
+     player systems the developer's audit named (statistics, telemetry, combat tag, siege combat rules, admin freeze,
+     join loading, teleport warmups, weapon enchantments, AFK activity, domain effect damage), for any entity with
+     Citizens' `NPC` metadata, whether or not NPC navigation is on; gate, hub and decoration protection still apply
+     to NPCs. The test walkers no longer pick spots under water, where they stood drowning, and the audit report
+     lists damage causes; since the #486 retest PR their own path search never enters water either (the audit after
+     the first fix still counted `DROWNING 1088`).
+  2. **Phase 2** (#360): an NPC follows the road route K&K plans, one stretch of the road line at a time, with a
+     watchdog that notices an NPC that makes no progress and sends it on a short recovery leg. NPCs have their own
+     access profile instead of a player's rights, wait when the rules allow no route, pause when their chunk unloads
+     and are spawned a few per tick. `/knk npc nav` replaces the test command of the Citizens spike.
+  3. **Phase 3** (#361, in review; in `next` when its pull requests are merged): the rules stay binding while NPCs
+     walk. A few NPCs per tick have their way ahead checked against the gate and access rules as they are now; a
+     gate or access change reaches only the NPCs it concerns. An NPC with no allowed route walks to the closed gate
+     or the district's edge and waits there until that gate or rule opens. A trespass guard counts any NPC that
+     enters a region its rules deny (`knk_npc_nav_events_total{event="trespass"}`, must stay 0). New keys:
+     `npc.navigation.rule-checks-per-tick` (10) and `npc.navigation.stop-on-trespass` (false).
+  4. **Phase 4** (#377, in review; in `next` when its pull requests are merged): groups plan once. A group's leader
+     plans the route; the followers walk the same path in formation slots (`column`, `ranks`, `cluster`,
+     `escort-ring`), fold into a column where the road is too narrow (gates, stairs) and reform after. A gate or
+     access change costs a group one route plan whatever its size (the Citizens spike planned 50 NPCs separately:
+     1.3 s queue wait at p95), and a group has one blocked state and one wake-up. A follower that leaves its lane
+     or gets stuck plans one short leg back; the leader waits for followers that fell far behind.
+     `/knk npc nav group <n> [formation] [profile]` starts a test group. New keys under `npc.navigation`:
+     `group-formation` (column), `group-spacing` (2.0), `group-ranks-width` (2), `group-rejoin-blocks` (4.0),
+     `group-regroup-blocks` (24.0), `group-catch-up-speed` (1.3). New metric events `group_fold`, `group_reform`,
+     `group_rejoin`, `group_regroup`, `group_lost`.
+  - **Admin steps:**
+    1. Install the Citizens plugin (build 4269 for 26.3 or newer) only where NPC navigation is tested; the plugin
+       runs without it.
+    2. Merge the `npc.navigation` block into `config.yml` by hand
+       ([configuration reference § 4.27](guides/admin/plugin-configuration.md#427-npc) has the YAML). It ships with
+       `enabled: false`.
+    3. To test: `enabled: true`, restart, then the steps under "Developer test" of Phases 1, 2, 3 and 4 in the
+       implementation plan.
+
 ## 2026-11-15
 
 - **Smoke-test guides keep every step** — no game change; smoke-test guides keep each step's full manual instructions
@@ -21,6 +893,29 @@ This is a human-readable record of capabilities merged into the V3 default branc
   `.claude/skills/knk-test-writer/`; global instructions "Testing: automated first"; the link and coordinator skills
   check it, the digest counts only manual steps. Backfill of features already in `next`: PandiO/knk-workspace#511.
   - **Admin steps:** none.
+
+- **Web app end-to-end tests on Playwright, in CI** ([PandiO/knk-workspace#423](https://github.com/PandiO/knk-workspace/issues/423))
+  — no player change; developer-facing. knk-web-app replaces Cypress with Playwright Test (`@playwright/test` 1.64.1,
+  pinned): the specs run in Chromium against the production build with a mocked API (no API or database), and the
+  mocks are typed with the app's DTOs (`npm run typecheck:e2e`). The Cypress registration spec is ported; new specs
+  cover login with the expired-token refresh and retry, the dashboard town list with search, and the first form
+  wizard step. New CI workflow `e2e.yml` (job `e2e`, 10-minute timeout) uploads the HTML report and, on failure, the
+  traces. `npm run test:e2e` now builds and runs Playwright; the `cypress:*` scripts are gone.
+  [Web app testing § 3](guides/developer/web-app-testing.md#3-end-to-end-tests-playwright),
+  [CI § 1.1](guides/developer/ci.md#11-tests-that-ci-does-not-run).
+  - **Admin steps:** none to deploy. Optional: make `e2e` a required check of the knk-web-app rulesets on `main` and
+    `next`. Locally run `npx playwright install chromium` once.
+
+- **Plugin CI: Paper boot test** ([PandiO/knk-workspace#420](https://github.com/PandiO/knk-workspace/issues/420)) — no
+  game change. knk-plugin's new `paper-boot.yml` workflow builds the shaded jar, starts a real Paper 26.3 server with it,
+  WorldGuard 7.0.20 and WorldEdit 7.4.6 (pinned downloads with SHA-256 checks) and no API, and fails unless KnK logs its
+  version stamp and "Plugin Enabled!" without errors or stack traces from KnK, WorldGuard or WorldEdit (errors caused
+  by the unreachable API are excused). The log is uploaded as an artifact. `./gradlew :knk-paper:taggedTest` runs the
+  excluded `requires-bukkit` tests; they are Mockito tests, not server tests, and making them pass is #499. See
+  [CI § 7](guides/developer/ci.md#7-plugin-the-paper-boot-test).
+  - **Admin steps:** none for servers. When it has been stable for a while, add the check `paper-boot` (workflow "Paper boot
+    test") as a required check to knk-plugin's "Trunk and next" ruleset.
+
 - **knk-web-api trunk renamed to `main`** — no game change; knk-web-api's default branch is now `main`, like the other
   repos (developer, 2026-11-14). GitHub redirects the old name and moved the open pull requests. The agent rules and
   skills, the docs-session prompt, the deploy guides and `scripts/nas-ops/stage-b/pc/knk-release.sh` now say `main`;
