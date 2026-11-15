@@ -121,6 +121,15 @@ Properties:
 - `districtIds: array<integer(int32)>, nullable: true`
 - `districts: array<TownDistrictDto>, nullable: true`
 
+`streetIds` and `streets` are **read-only and derived** (PandiO/knk-workspace#409, since the migration
+`DropTownStreet`): the distinct streets of the town's districts (`DistrictStreet`), ordered by name (case-insensitive)
+then id. They are filled by `GET /api/Towns/{id}` only (`GET /api/Towns` sends them empty, `POST /api/Towns/search`
+returns `TownListDto`), and ignored on `POST` / `PUT`. A street is added to or removed from a town by linking it to
+one of the town's districts (`POST /api/Relationships/District/{id}/streets/link|unlink` or the district's
+`streetIds`); `POST /api/Relationships/Town/{id}/streets/link|unlink` answers 400 `RelationshipNotEditable` ("Streets
+are managed on the district: open a district to add or remove them."), and metadata lists the relationship with
+`storage: "derived"`.
+
 Required: NOT IN CONTRACT (no `required` array provided in excerpt)
 
 ### TownListDto
@@ -136,6 +145,7 @@ Required: NOT IN CONTRACT (no `required` array provided in excerpt)
 - `pageSize: integer(int32)`
 
 ### TownStreetDto
+One street of a town, derived from its districts (#409).
 - `id: integer(int32), nullable: true`
 - `name: string, nullable: true`
 

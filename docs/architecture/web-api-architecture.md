@@ -1,6 +1,6 @@
 # knk-web-api — Architecture
 
-**Status:** Current · **Last updated:** 2026-11-13 (§7: the Prometheus debt line is outdated, observability doc moved here, #304)
+**Status:** Current · **Last updated:** 2026-11-15 (§4, §5.3: `TownStreet` dropped, a town's streets are derived, #409)
 
 ## 1. Stack & shape
 
@@ -48,7 +48,7 @@ Cross-cutting pieces that sit beside this pipeline:
 
 ## 4. EF Core / database layer
 
-`Properties/KnKDbContext.cs` declares 35 `DbSet<T>` entities plus 4 many-to-many/composite join tables configured inline (`TownStreet`, `DistrictStreet`, `gate_structure_guard_spawn_locations`, `ItemBlueprintDefaultEnchantment`). Charset/collation: `utf8mb4_general_ci`/`utf8mb4`.
+`Properties/KnKDbContext.cs` declares 35 `DbSet<T>` entities plus 3 many-to-many/composite join tables configured inline (`DistrictStreet`, `gate_structure_guard_spawn_locations`, `ItemBlueprintDefaultEnchantment`). `TownStreet` was dropped by migration `DropTownStreet` (PandiO/knk-workspace#409): `Town.Streets` is a `[NotMapped]` read-only list, the distinct streets of the town's districts by name then id, loaded through `Districts.Streets` (`TownRepository.GetDetailAsync`, no-tracking split query, serves `GET api/Towns/{id}`; `GET api/Towns` carries no streets) and not usable in an EF query. `PlaceholderResolutionService.DerivedIncludes` loads a placeholder path through `Town.Streets` as `Districts.Streets`. Charset/collation: `utf8mb4_general_ci`/`utf8mb4`.
 
 Key structural facts worth knowing before touching the model:
 
@@ -224,11 +224,16 @@ The entity detail page changes a link without editing the rest of the record and
 record.
 - **Catalog** (`Services/RelationshipService.cs` `RelationshipCatalog`): every navigation of every `DashboardAccess` type,
   read from the EF model once per model, with its storage: `ForeignKey` (a column on the record), `Children` (the related
-  row's column), `Many` (a hidden link table such as `TownStreet`), `LinkRow` (a link entity whose key is the two ids and
+  row's column), `Many` (a hidden link table such as `DistrictStreet`), `LinkRow` (a link entity whose key is the two ids and
   that stores nothing else, e.g. `ItemBlueprintTag`; one with a level or weight is a record of its own) or `Other`.
+  `Derived` (#409): a read-only collection computed from other links, listed in `RelationshipCatalog.Derived` with the
+  reason (`Town.Streets`: "Streets are managed on the district: open a district to add or remove them."); metadata
+  `storage: "derived"`, `canLink`/`canUnlink` false, the reason as `linkReason`/`unlinkReason`; link and unlink pass the
+  node gate (403 without the nodes) and then answer 400 `RelationshipNotEditable` with the reason. The web app hides
+  Add…, Unlink, Create New and Delete on such a section and shows the reason as a hint.
 - **What may change** is a reviewed list, `RelationshipCatalog.Supported` (pinned by `RelationshipServiceTests`): category
-  parent / child categories / tags / icon, item blueprint category / grade / tags / icon, town and district streets, a
-  street's districts and town. Their update services only check that the related row exists (reviewed 2026-11-09).
+  parent / child categories / tags / icon, item blueprint category / grade / tags / icon, district streets and a
+  street's districts (a town's streets are derived, #409). Their update services only check that the related row exists (reviewed 2026-11-09).
   Everything else answers with a reason: required parents ("A District always belongs to one Town: …"), domain
   locations and teleport settings (the world is resolved from them), gates, kits, lootbox and siege setup, the players
   area (escalation guard). Icons can be replaced, not removed. Adding a pair is one line after a look at the type's
