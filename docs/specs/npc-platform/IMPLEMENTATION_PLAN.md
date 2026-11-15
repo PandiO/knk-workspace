@@ -1,7 +1,7 @@
 # NPC navigation adapter (Citizens) — Implementation Plan
 
 **Status:** In progress since 2026-11-13 (Phase 1, developer go-ahead; parent issue [#358](https://github.com/PandiO/knk-workspace/issues/358)). Proposed 2026-11-11. Plans the shared NPC navigation capability only (K&K plans, Citizens moves); behavior, guards, garrisons and combat are separate work. Developer answers to Q1–Q7 on 2026-11-12; see "Decisions".
-**Last updated:** 2026-11-14 (Phase 1 follow-ups, sub-issue #490: damage listener guards, the damage cause, the Windows metrics check, the audit re-run); 2026-11-13 (Phase 4 built on `claude/npc-navigation`, sub-issue #377: status, known limits, developer test); 2026-11-13 (Phase 3 built on `claude/npc-navigation`, sub-issue #361: status, known limits, developer test); 2026-11-13 (Phase 2 built on `claude/npc-navigation`, sub-issue #360: status, what differs from the spike, developer test); 2026-11-13 (implementation started: parent issue #358, stair release gate, Phase 1 breakdown with the NPC event audit, CitizensAPI pin, coexistence with the Siege Survival NPC core); 2026-11-12 (Phase 0 done, Q8 decided, NAV-17 in Phase 2, NAV-18 walked lines in Phase 7); 2026-11-12 (Phase 0 route-following spike, metrics and config layering in Phase 1, NAV-14/15/16, Q8; Q4 formations decided; Phase 7b travel bubble first; Phase 7b abstract movement outside loaded areas, spread spawns and targeted replans, from the unloaded-chunk runs; developer answers Q1–Q7; road network components and the router's BLOCKED result from the unloaded-chunk test)
+**Last updated:** 2026-11-15 (Phase 4b designed, sub-issue [#519](https://github.com/PandiO/knk-workspace/issues/519): wall corners and the stuck recovery ladder for link L3 (#521), narrowed formations and the followers-finish-trip toggle for link L4 (#522), what the code does today, proposed defaults awaiting the developer); 2026-11-14 (Phase 1 follow-ups, sub-issue #490: damage listener guards, the damage cause, the Windows metrics check, the audit re-run); 2026-11-13 (Phase 4 built on `claude/npc-navigation`, sub-issue #377: status, known limits, developer test); 2026-11-13 (Phase 3 built on `claude/npc-navigation`, sub-issue #361: status, known limits, developer test); 2026-11-13 (Phase 2 built on `claude/npc-navigation`, sub-issue #360: status, what differs from the spike, developer test); 2026-11-13 (implementation started: parent issue #358, stair release gate, Phase 1 breakdown with the NPC event audit, CitizensAPI pin, coexistence with the Siege Survival NPC core); 2026-11-12 (Phase 0 done, Q8 decided, NAV-17 in Phase 2, NAV-18 walked lines in Phase 7); 2026-11-12 (Phase 0 route-following spike, metrics and config layering in Phase 1, NAV-14/15/16, Q8; Q4 formations decided; Phase 7b travel bubble first; Phase 7b abstract movement outside loaded areas, spread spawns and targeted replans, from the unloaded-chunk runs; developer answers Q1–Q7; road network components and the router's BLOCKED result from the unloaded-chunk test)
 **Issue:** implementation [PandiO/knk-workspace#358](https://github.com/PandiO/knk-workspace/issues/358) (one sub-issue per phase); verification [#241](https://github.com/PandiO/knk-workspace/issues/241) ( desk check #242, spike #243, benchmark #244); parent [KNG-36](https://linear.app/kngpandi/issue/KNG-36/design-shared-npc-traits-and-pathfinding-platform), [#146](https://github.com/PandiO/knk-workspace/issues/146), [#234](https://github.com/PandiO/knk-workspace/issues/234)
 **Sources:** [BEHAVIOR_MODEL.md §2](BEHAVIOR_MODEL.md#2-fit-with-the-platform-design) (requirements NAV-01–NAV-11) and §13; [DESIGN.md](DESIGN.md) §2, §6, §7, §9; [desk check and spike report](../../reports/2026-11-10-citizens-desk-check-and-spike.md); [Citizens stress test guide](../../guides/citizens-stress-test.md); [verdict on #244](https://github.com/PandiO/knk-workspace/issues/244#issuecomment-6806008046); code read at knk-plugin `main` `33122cf` and `121030fe` (2026-11-13), the spike `claude/citizens-spike` `ac3c356`…`4060870`, and the Siege Survival branch `claude/siege-survival` `f6db7a36` (NPC core).
 
@@ -20,6 +20,7 @@
 | 2 — Navigate one NPC | plugin | L | 0, 1; Q3 | yes (admin command) | NAV-01, NAV-03, NAV-11, NAV-14, NAV-15, NAV-17 |
 | 3 — Rules stay binding | plugin | M | 2 | yes | NAV-02, NAV-03, NAV-04 |
 | 4 — Groups | plugin | M | 3; Q4 | yes | NAV-05 |
+| 4b — Wall corners, narrowed formations, finish-trip toggle | plugin | M | 4 (with #520) | yes | NAV-19–NAV-23 |
 | 5 — NPC access identity | web-api, plugin, web-app | L | 2; Q5, DESIGN O06 | yes | NAV-09 |
 | 6 — Detours and hidden routes | web-api, plugin, web-app | L | 3; hidden-routes issue (Q6) | yes | NAV-06 |
 | 7 — Movement quality | plugin | M | 2 | yes | NAV-07, NAV-11, NAV-18 |
@@ -290,6 +291,209 @@ Sub-issue: [#377](https://github.com/PandiO/knk-workspace/issues/377). Branch: k
 14. **Off.** `npc.navigation.enabled: false` and restart: `/knk npc nav group 20` answers `NPC navigation unavailable: npc.navigation.enabled is false`.
 
 Post the `stats` output of steps 3, 4, 5, 7 and 8, your notes on steps 6, 9 and 11, and the run log on [#377](https://github.com/PandiO/knk-workspace/issues/377).
+
+## Phase 4b — Wall corners, narrowed formations, followers that finish their trip (plugin, follow-ups)
+
+Goal: NPCs and groups get round the wall corners, stair corners and landings of a medieval town without getting stuck or falling, free themselves in a few cheap steps when they do get stuck, and walk in formations that fit the road; groups can be told to let their followers finish the trip.
+
+Sources: the developer's Phase 2 and Phase 4 tests on `next` (2026-11-14, results on [#360](https://github.com/PandiO/knk-workspace/issues/360) and [#377](https://github.com/PandiO/knk-workspace/issues/377)); [#508](https://github.com/PandiO/knk-workspace/issues/508) (wall corners), [#491](https://github.com/PandiO/knk-workspace/issues/491) (stair corner), [#492](https://github.com/PandiO/knk-workspace/issues/492) (with its three comments), [#493](https://github.com/PandiO/knk-workspace/issues/493) (with the developer's two comments), [#507](https://github.com/PandiO/knk-workspace/issues/507) (developer decision 2026-11-14). Requirements: [BEHAVIOR_MODEL.md § 2](BEHAVIOR_MODEL.md#navigation-adapter-requirements-from-the-spike-2026-11-11) NAV-19–NAV-23. Built by the [NPC navigation follow-ups chain](../../ai-agents/handoffs/NPC_NAVIGATION_FOLLOWUPS_CHAIN.md): link L3 ([#521](https://github.com/PandiO/knk-workspace/issues/521)) does 4b.2, link L4 ([#522](https://github.com/PandiO/knk-workspace/issues/522)) does 4b.3, each behind `npc.navigation.enabled` (off by default). It builds on Phase 4 with link L2 ([#520](https://github.com/PandiO/knk-workspace/issues/520): the followers' recheck and trespass guard, the door box, `DomainCacheRewarm`).
+
+**Status (2026-11-15):** design (link L1, [#519](https://github.com/PandiO/knk-workspace/issues/519)); not built. The defaults marked "proposed" wait for the developer (4b.4); L3 and L4 start after the developer approves this design.
+
+### 4b.1 What the code does today
+
+Read on knk-plugin `next` at `b2c5dff0` (2026-11-15, without L2's branch) and in Citizens2 / CitizensAPI `master` (the navigator, the A* strategy and `NavigatorParameters`).
+
+1. **Why NPCs cut the stair corner (#491).** K&K's line keeps the corner (`HopPlanner.resampleKeepingCorners`, points every 1.5 blocks, `RouteFollower.STEP`). Citizens follows a waypoint list with `AStarNavigationStrategy` and moves on to the next waypoint as soon as the NPC is within `distanceMargin` of the current one horizontally and less than a block from it vertically (`NavigatorParameters.withinMargin`). K&K never sets that margin, so it is Citizens' default of 1 block (`npc.pathfinding.default-distance-margin`); K&K only sets `pathDistanceMargin(1.5)`, the goal of a path search. The NPC therefore turns towards the point after the corner a block before it, walks the diagonal, and on a ledge the diagonal crosses air: point 267 → 270 in the trace, then the 7-block fall. The trace's best index stays at 267 because the watchdog updates it every 20 ticks only; the shortcut is the engine's, not K&K's.
+2. **Why the recovery target lies on another floor (#492).** Three places pick a target by horizontal distance or snap it to the nearest floor at any height:
+    1. `NpcNavigationService.planRoad` treats an order whose goal is within `hop-blocks` (16) horizontally as a short trip: one local leg to the goal, no road (`direct = from.horizontalDistance(to)`). The leader at 1425 48 -516, at the bottom of the stair house, had the route's end 1421 85 -516 four blocks away horizontally and 37 blocks up, so its leg aimed at 1421 84 -516 (the goal's floor), which no path search reaches. A group leader gets a fresh order after every regroup wait (`NavGroup.closeUp` → `orderLeader`), which is how it got there. This is the "hop floor 1421 84 -516".
+    2. `NavGroup.rejoin` aims a follower's own leg at the first group path point, counted back from its slot, within `hop-blocks − 2` blocks horizontally and 6 blocks up or down: nothing about the follower's floor or whether a body gets there. From 1433 44 -518 that was 1424 48 -520 (9–10 blocks across, 4 up, past the landing's corner). The order then takes path 1 as a short trip, with the same failing leg.
+    3. `RouteFollower.recoveryTarget` takes the line point nearest the NPC by horizontal distance (not the height-weighted `nearestIndex` the watchdog uses) and snaps the point 4 further along with `HopPlanner.snapToFloor` (the nearest floor up to 12 blocks above or below the line point's own height). On stacked flights both can pick the flight above or below. `HopPlanner.hops` (off-road legs) also snaps without floor continuity.
+3. **Why "retry 4 of 3", four in one second, every 5 s (#492).** `onStuck` logs `retries + 1` before it checks the cap: the fourth line is the moment the retries are used up, not a fourth try (the off-by-one is in the log; the cap itself holds at 3). There is no wait between tries: each one is queued at once, and when the local leg's target is unreachable Citizens' search ends in its first ticks with `CancelReason.STUCK` (`AStarNavigationStrategy` returns STUCK for an empty open set or the iteration limit), which K&K takes as a new stuck. Four lines in a second. Then the NPC waits `no-route-wait-ticks` (5 s) and plans again: the same short trip, the same failing leg, twice (`MAX_REPLANS`); the order fails, and the test driver orders again (`FAILED_RETRY_TICKS`). So the burst repeats every 5 s for as long as the run lasts.
+4. **What `stuck_engine 14456` and `recovered 0` count (#491).** `stuck_engine` counts every Citizens STUCK cancel while an NPC is MOVING: Citizens' stationary check (`stationary-ticks`, 60 ticks in one block) **and** every failed path search of a retry. `stationary-ticks` and `no-progress-ticks` are both 60 and the watchdog looks every 20 ticks, so Citizens nearly always reports first (`stuck_no_progress 0`). `recovered` counts only a recovery leg started from the line that arrives; a retry of an off-road hop and an NPC that the 5-second replan got going again are not counted. Most of the 14456 are therefore failed searches of recovery legs (four per burst), and `recovered 0` says that no recovery leg from the line reached its target: the NPCs walked the corner on the replan, the "second try" the developer saw. L3 confirms this reading with the split counters of 4b.2 item 7, on the same route, before and after its change.
+5. **What `most plans at once 2–3` measures (#492).** The stats line shows the server-wide maximum of queued plus running plans (`NpcNavRunner.sampleService`): road plans, local legs, followers' own legs and their retries alike. 2–3 is the leader's new order after a regroup wait plus followers' failing legs at the same moment. A group event still costs one road plan: step 8 passed with `replans: event 1`. The stat is wrong for the question, not the group.
+6. **What `group_rejoin 481` counts (#492).** Each own leg back that fails (four instant retries, two replans 5 s apart) ends in `rejoinFailed`, the next one starts 40 ticks later, and after `MAX_REJOINS` (3) the follower is left behind but keeps trying every `no-route-wait-ticks`, without end, each try a new `group_rejoin`. Eight followers at the landing for a whole session give hundreds.
+7. **Why the followers turned back with the leader (#507).** The test driver turns the group round at the route's end with a new order. `NavGroup.navigate` ends the old order (`finish`), clears the group's path (`resetPath`) and releases every follower; the new path starts where the leader stands. Followers that had not reached the end (held at the gate) stand ahead of their slots on the new path, wait until the leader passes them and fall in behind it. Turning back is a side effect of the reset, not a rule.
+8. **Why formations fold so early (#493).** `Formation.rows` uses `group-spacing` both between rows and between neighbours in a row, and the group knows one width only (`Formation.halfWidth`): it fits or the group walks as a column. `GroupPath.wide` caches the answer for one half width per path point.
+
+### 4b.2 Link L3 (#521): wall corners and stuck recovery (#508, #491, #492)
+
+**Steering (NAV-19):**
+1. **Corner clearance** (knk-core `RouteFollower.next`, new port method `NavWorld.freeHeight(world, x, floorY, z)` and `NavWorld.blocksBody(world, x, y, z)`, answered on Paper by `BukkitNavWorld` with the examiner's block rules). A turn is a line point where the heading changes by 30° or more over the next three points. For the turn point and the two points either side of it, the waypoint keeps at least `corner-clearance` (proposed 1.0 block) between the NPC's centre and the face of any cell that stops a body at feet or head height on the inside of the turn: it moves outwards, at most `corner-clearance` blocks, to a cell that is standable, keeps floor continuity with its neighbours and lies in the same WorldGuard regions as the line point. Where the road is too narrow for the full clearance, the waypoint goes as far out as the road allows. Straight stretches are left alone: a road line may run along a wall. Waypoints stay at block centres.
+2. **Turns through the corner point.** The mover follows a stretch with `waypoint-margin` (proposed 0.5 block): Citizens moves on to the next waypoint only within that distance of the current one. New port method `NpcMover.follow(waypoints, margin)`; Paper sets `distanceMargin` on the navigator's local parameters right after `setTarget`, so local legs keep Citizens' default.
+3. **Shortcuts.** K&K never leaves a corner point out of a stretch unless every cell the body's width (0.6 block) crosses on the straight line between its neighbours is standable, has the body's headroom and keeps floor continuity with both ends. (Today K&K drops only points that snap into the same block; the shortcut came from the engine's margin, item 2.)
+4. **Low headroom.** A waypoint where the body must rise a full block (not a slab or stair step, which it steps up) needs 3 free blocks above the take-off cell for the jump; corner clearance and recovery never pick a cell that lacks it as a turn or recovery point. The landing at 1433 44 -517 has 2.5 (a slab in the upper half of the third block). L3 checks in a trace there whether Citizens jumps anyway (`JUMP` lines with no rise of a full block) and reports it.
+
+**Targets on the NPC's own floor (NAV-20; fixes 4b.1 item 2):**
+
+5. One rule, in a new knk-core helper (`PathTargets`), for the recovery leg, a follower's own leg back and the short-trip test:
+    1. A target is a point **along the path** (the route line for an NPC with an order, the group's path for a follower), searched forward from the NPC's place on it (its `nearestIndex`, height counted), never backwards past the place.
+    2. Floors are chained point by point from the floor the NPC stands on with `HopPlanner.snapNear` (continuity 2 blocks per point, as stretches do), so the chain stays on the NPC's floor; a point with no floor within continuity ends the search.
+    3. The target is the first such point at least 3 blocks along the path ahead of the NPC whose cell is standable, has the body's headroom and lies in regions the current rules let it enter; at most `hop-blocks` along the path.
+    4. The short trip of `planRoad` needs both `horizontal ≤ hop-blocks` **and** a height difference of at most `HopPlanner.CONTINUITY_RANGE` (2); otherwise the road plans the trip.
+    5. Off-road hops (`HopPlanner.hops`) chain their floors with `snapNear` from the NPC's floor too.
+
+**The recovery ladder (NAV-20; fixes 4b.1 item 3):**
+
+6. A stuck spell starts when Citizens reports stuck while the body has not moved (stationary) or the watchdog sees no progress along the path (NAV-17); further reports during the spell join it. The NPC takes these steps in order, one per try:
+    1. **Back-off:** walk back along its own last footsteps (K&K keeps the NPC's last 8 block positions with floor continuity) 2 blocks, then the rest of the stretch again from there, corner clearance applied.
+    2. **Side-step:** the blocking face is the nearest cell within 1 block that stops a body at feet or head height, looked for in the walking direction first; the NPC steps one block straight away from it (diagonally back if that cell is not standable), then the rest of the stretch again.
+    3. **Local leg ahead:** one Citizens A* leg under K&K's rules (`LocalLeg`) to the point item 5 picks, then back on the line after it.
+    4. **Replan:** the route is dropped and planned again from where the NPC stands, through the planning queue (`MAX_REPLANS` per order as today; then the order fails and the caller decides).
+7. **Spacing, cap and counting.**
+    1. Between two tries the NPC waits `recovery-wait-ticks` (proposed 20); a try has worked when the NPC has come at least 1 block further along the path within `no-progress-ticks` of its start, and the spell ends there.
+    2. Steps 1–3 count against `max-retries` (3, unchanged): with 3 every step is tried once, with 1 only the back-off, then the replan. A step that cannot be taken (no footsteps behind, no free cell to the side, no target ahead) is skipped without a wait and not counted.
+    3. A failed engine path search ends that try (`recovery_no_path`): it is not a new stuck spell and starts no new count. Paper tells the two apart: new port signal `NpcMover.Listener.stuck(mover, StuckKind)` with `STATIONARY` (Citizens' stationary check) and `NO_PATH` (`CancelReason.STUCK` while the strategy has no path yet).
+    4. A new stuck within 2 blocks of the last spell's spot within 30 s continues that spell's ladder where it stopped instead of starting again at the back-off.
+    5. Log, one line per try and one when the spell ends, the count never past the cap: `<npc> stuck (stationary|no progress 40 ticks) at x y z, wall at x y z (north): step 1 of 3 back-off`; `<npc> freed at x y z by side-step (2 steps, 1.4 s)`; `<npc> not freed at x y z: replanning (steps used up)`.
+8. **Faster detection** (proposed): `stationary-ticks` and `no-progress-ticks` from 60 to 40, so a stuck NPC starts its first step after 2 s and the acceptance's "no NPC still for more than 3 s" can hold.
+
+**Followers (NAV-20):**
+
+9. A follower that is stuck (no progress for `no-progress-ticks`, or Citizens' stationary stuck) runs the same ladder inside the group: back-off along its own footsteps, side-step, then its own leg back (today's `rejoin`) aimed at the group path's nearest reachable point **ahead** of it by item 5's rule (on its floor, never past its slot), then a replan of that leg. A follower off its lane (`group-rejoin-blocks`) skips straight to the own leg.
+10. A follower never holds up the ones behind it: the followers behind keep their slots and walk on; a side-step goes to the side away from the path's centre; a follower whose ladder is used up or that is left behind waits on a free standable cell beside the lane (within 2 blocks), not on it. With `collidable: false` (the default) NPCs pass through each other anyway; this matters with `collidable: true` and for the stats.
+11. A left-behind follower's tries are spaced out (proposed: doubling from `no-route-wait-ticks` up to 60 s, back to the start after any progress or a gate or access event), and a try never aims again at a target that failed from the same spot.
+
+**Accounting (NAV-21; fixes 4b.1 items 4 and 5):**
+
+12. Events (`NpcNavigationMetrics`, `knk_npc_nav_events_total{event=…}`): `stuck_engine` and `stuck_no_progress` count spells (one per spell, by what reported it first); `freed_back_off`, `freed_side_step`, `freed_local_leg`, `freed_replan` and `not_freed` end them; `recovered` stays as their sum (old dashboards keep working); `recovery_no_path` counts failed engine searches; `fell` counts a navigating NPC whose feet dropped 3 or more blocks below the path's floor there (Paper reports the fall distance on landing). Invariant, checked by a test: `stuck_engine + stuck_no_progress = recovered + not_freed + open spells`.
+13. "Near a wall": a cell that stops a body at feet or head height touches the NPC's cell or the next cell in its walking direction.
+14. `/knk npc nav stats`, replacing today's `stuck:` part: `stuck near a wall: N, freed by: back-off a / side-step b / local leg c / replan d, not freed e | stuck elsewhere: M (same split) | steps per stuck: mean x, max k | engine found no path n | longest still s.s s at x y z | falls f`. The group line's `most plans at once` becomes `road plans per group event: max r | local legs at once: max l` (a group event's road plans counted per group; local legs server-wide).
+15. The run log has every stuck spell with position, wall face, the steps taken and the outcome, so positions that repeat show the hard spots.
+
+**Config keys** (per-NPC settings in `NavigationSettings`, layers global → world → region → template → assignment, read at restart; L3 adds each to `config.yml` with a comment, a layer test, the [configuration reference § 4.27](../../guides/admin/plugin-configuration.md#427-npc) per-NPC table and its YAML block, and the PR's deploy notes):
+
+| Key | Default | Range | § 4.27 entry to add |
+|---|---|---|---|
+| `corner-clearance` | `1.0` (proposed) | 0–2; 0 = off | "Blocks an NPC keeps between itself and a wall on the inside of a turn of its route, as far as the road allows; straight stretches may run along a wall" |
+| `waypoint-margin` | `0.5` (proposed) | 0.2–1.5 | "How close an NPC comes to a route waypoint before it heads for the next one; smaller walks turns through the corner point, Citizens' own default is 1" |
+| `recovery-wait-ticks` | `20` (proposed) | 0–200 | "Ticks between two recovery steps of a stuck NPC (back-off, side-step, local leg, replan)" |
+| `stationary-ticks` | `60` → `40` (proposed) | 10–1200 | changed default and text: "Ticks in one block before Citizens reports stuck; the first recovery step starts then" |
+| `no-progress-ticks` | `60` → `40` (proposed) | 20–1200 | changed default |
+| `max-retries` | `3` | 0–10 | changed text: "Recovery steps of a stuck NPC before its route is planned again: 1 back-off, 2 side-step, 3 local leg ahead" |
+
+**Tests (knk-test-writer; the suite that proves each behaviour):**
+
+16. knk-core JUnit (fake `NavWorld`, fake `NpcMover`):
+    1. Corner clearance: an inside corner against a wall moves the turn's waypoints out by the clearance; a 2-wide stair keeps them as far out as it can; a straight stretch along a wall is untouched; the moved waypoint keeps floor continuity and its regions.
+    2. The #491 geometry (three corner blocks at one height, a slab before, a slab beside, a 7-block drop outside): the stretch keeps the corner point, and the shortcut check refuses the diagonal.
+    3. `PathTargets`: the #492 cases as fake worlds: a leader below the route's end (1425 48 -516 under 1421 85 -516) gets a road plan, not a short trip; a follower beside a landing gets a target ahead on its own floor, never the flight above; stacked flights never give a target on another floor.
+    4. The ladder: the order back-off → side-step → local leg → replan; one step per try with `recovery-wait-ticks` between them (fake clock); the log's count never passes the cap; `NO_PATH` ends a try without a new spell; a stuck at the same spot within 30 s continues the ladder; skipped steps are not counted.
+    5. Accounting: the invariant of item 12 over a scripted run; `freed_*` by the step that worked; the stats line.
+    6. Followers: the same ladder; the own leg aims ahead on the follower's floor; the followers behind keep walking; a left-behind follower's tries double up to 60 s and reset on progress or an event; `group_rejoin` stays bounded in a scripted hour.
+17. knk-paper MockBukkit/Mockito: `BukkitNavWorld.freeHeight` and `blocksBody` (a slab overhead gives 2.5; a fence blocks); `CitizensNpcMover.follow` sets the margin on the local parameters only; the mover reports `STATIONARY` and `NO_PATH` from the cancel event; the new keys and their layers.
+18. Plugin scenario on a real Paper server (#421; the framework is on `next`): the corner test scene, item 19. CI's `paper-boot` server has no Citizens today: L3 adds a pinned Citizens build to `.github/workflows/paper-boot.yml` like WorldGuard (URL plus SHA-256; proposed, 4b.4 question 9). With Citizens, `npc-corners-walk`: 6 single NPCs and a group of 6 in `ranks` walk the scene for 90 s; assert no NPC still for more than 3 s, every stuck spell freed in at most 2 steps, no falls, trespasses 0. Without it (or until it is pinned), `npc-corners-line`: the K&K half on the real blocks (stretches with corner clearance, `PathTargets` targets, the shortcut check), and the walking stays a developer step.
+19. **The corner test scene** (`NpcCornerScene` in knk-paper `scenario/`, used by the scenarios and by a dev command `/knk npc nav scene corners`, which builds it at `testing.scenarios.origin` in `testing.scenarios.world` only while `testing.scenarios.enabled` is true and saves the route `corner-scene`). One loop, about 60 blocks: a 3-wide road with an inside 90° corner against walls on both sides and a wall-hugging straight; an outside corner round a building's corner; a 2-wide and a 1-wide passage (also L4's narrowing test); a staircase with a 90° turn at a ledge, a slab before the corner and a slab beside it and a 7-block drop on the outside (the 1411 73 -537 corner); a landing beside a wall with 2.5 blocks of headroom under an overhanging floor and a slab step before it (the 1433 44 -517 landing); a U-turn flight like the stair house.
+20. Manual only (developer): the 10-minute load with 50 singles and a group of 20 on `quarry-to-keep` and on the scene (game feel and the real stair house), below.
+
+**Known limits:**
+
+21. Corner clearance needs room: on a 1-wide stair the NPC still walks next to the wall, and the ladder is what gets it free.
+22. The waypoint margin applies to whole stretches; Citizens has no margin per waypoint.
+23. Walked lines from players (NAV-18) and a K&K step controller stay Phase 7.
+
+**Developer test (L3):**
+1. Deploy the build with L3. In `config.yml` merge the keys above (the YAML in the [configuration reference § 4.27](../../guides/admin/plugin-configuration.md#427-npc)). `/knk npc status` lists `corner-clearance 1.0`, `waypoint-margin 0.5`, `recovery-wait-ticks 20`, `stationary-ticks 40`, `no-progress-ticks 40`, each with its layer.
+2. With no NPCs out, wait a minute, then `/knk npc nav baseline`.
+3. **The stair corner (#491).** `/knk npc nav route load quarry-to-keep`, `/knk npc nav clear`, `/knk npc nav stats reset`, `/knk npc nav spawn 50`, 10 minutes, both directions. Stand at the upper stair house corner 1411 73 -537 and run `/knk npc nav trace 60` once. Look:
+    1. Nobody falls at the corner: each NPC walks into the corner square and then turns (the trace shows the corner cell between points 267 and 270).
+    2. `/knk npc nav stats`: `falls 0`; `longest still` under 3.0 s; `steps per stuck: max` 2 or less; `not freed 0`; `orders failed 0`.
+    3. The run log has a line for every stuck spell with its wall face and the step that freed it.
+4. **The landing and the stair house (#492, #508).** Same run, at 1433 44 -517 and in the stair house (1408–1416, y 49–62, z −489…−503; 1418 49 -519). Look: no NPC stays at the landing; no log line aims at another floor (`step 3 of 3 local leg to x y z` with y within 2 blocks of the NPC's); no "retry 4 of 3" and no burst of lines in one second; `stuck near a wall` against `trips`.
+5. **A group of 20 in `ranks`.** `/knk npc nav clear`, `/knk npc nav stats reset`, `/knk npc nav group 20 ranks`, 10 minutes on `quarry-to-keep`. Look: the group completes trips (`groups … trips` above 0); followers stuck at the landing get free in two steps and walk on, the ones behind them pass; `own legs back` and `left behind` low; `road plans per group event: max 1`; `group_rejoin` in the tens at most, not hundreds (`curl … | grep group_rejoin`).
+6. **The leader below the route's end (#492, third comment).** In the same run, watch the leader when it waits for its group at the bottom of the stair house: after the wait it walks on up the stairs; the log has no local leg to 1421 84 -516.
+7. **The corner scene.** With `testing.scenarios.enabled: true` on the dev server: `/knk npc nav scene corners`, `/knk npc nav route load corner-scene`, `/knk npc nav spawn 50`, 10 minutes, then `/knk npc nav clear`, `/knk npc nav group 20 ranks`, 10 minutes. After each: `/knk npc nav stats` with `longest still` under 3.0 s, `steps per stuck: max` 2 or less, `falls 0`, `trespasses 0`.
+8. **The short route through the south gate.** `/knk npc nav route load south-gate-short` (saved in Phase 4 step 9), `/knk npc nav spawn 20`, 3 minutes: the gate posts and the wall beside the gate get no stuck spells (`stuck near a wall` 0 or freed by back-off).
+9. **Off.** `npc.navigation.enabled: false` and restart: as in Phase 2 step 10.
+
+Post the `stats` output of steps 3, 5 and 7, a trace from step 3 and the run log on #521.
+
+**Done when:** the acceptance of #508 holds on the corner scene and on `quarry-to-keep`: 50 singles and a group of 20 in `ranks` for 10 minutes each, no NPC still for more than 3 s, every stuck freed within 2 recovery steps, no falls; nobody falls at 1411 73 -537 (#491); the group completes trips on `quarry-to-keep` (#492); the counters add up (item 12).
+
+### 4b.3 Link L4 (#522): narrowed formations and followers that finish their trip (#493, #507)
+
+**Spacing (NAV-22):**
+1. `group-lateral-spacing` (new, proposed 1.0): blocks between neighbours in a row, shoulder to shoulder. At 1.0, 3 abreast need a road 3 blocks wide and 2 abreast one 2 wide; at 1.25 the same; at 1.5, 3 abreast need 4 blocks.
+2. `group-spacing` keeps its name and becomes the gap between rows and in the column (proposed default 1.5, today 2.0).
+
+**Widths (NAV-22):**
+
+3. Each formation has a list of widths (NPCs abreast), widest first; the group walks in the widest one that fits and becomes a column only where 2 abreast doesn't fit:
+    1. `ranks`: `group-ranks-width`, then one fewer, down to 2, then the column.
+    2. `cluster`: 3, 2, column. The loose nudge is at most a quarter of the lateral spacing and points inwards for the outer lanes, so it never makes a width wider than it fits.
+    3. `escort-ring` (proposed shape, 4b.4 question 3): the rings while the road is wide enough for the rings in use (the first ring's radius 1.25 × the lateral spacing, so at 1.0 eight escorts fit a 3-wide road); then rows of 3 with the leader in the middle of the second row (a row of three ahead of it, one escort either side of it, rows of three behind); then 2 abreast (a pair ahead, the leader, pairs behind); then a column with one escort ahead of the leader and the rest behind.
+    4. `column`: one width.
+4. **Fit.** A width fits at a path point when its outermost lanes (± its half width) have a standable floor within one block of the path's height in the same regions (today's `GroupPath.wide` rule). The group's width is the narrowest fit over the stretch under it (rearmost slot to foremost, plus one block), as today.
+5. **Hysteresis** (`group-width-hysteresis-blocks`, proposed 3):
+    1. Narrowing to a column is immediate (gates, doors, stairs).
+    2. A narrower width that is still 2 abreast or more is taken only when it lasts longer than the hysteresis along the path; a shorter bump (a lamp post, a market stall) is passed by the lanes that don't fit stepping onto the lane next to them for those points (today's `lanePoint` already falls back), and the group keeps its width.
+    3. A wider width is taken only when it fits over the stretch under the group plus the hysteresis ahead of the foremost slot.
+6. **Tick cost unchanged.** Each path point stores the widest width that fits there, worked out once (lazily, for the group's lateral spacing) instead of one cached half width; the window scan stays one pass. A knk-core test counts the world queries per path point (at most one per width, once). `/knk npc nav stats` compares with Phase 4: `K&K navigation on the main thread … ms per NPC` within noise of 0.0021 ms.
+7. **Events and logs:** `group_narrow` (to a narrower width, still 2 abreast or more), `group_widen` (to a wider one from 2 abreast or more), `group_fold` (to the column) and `group_reform` (from the column to 2 abreast or more). Log lines: `group <n> (<leader>, <size> NPCs) narrows to 2 abreast: the path is 2 wide at x y z`, `… widens to 3 abreast at x y z`, `… folds into a column: the path is too narrow for 2 abreast at x y z`, `… takes up 2 abreast again at x y z`. The stats line: `widths: narrows N, widens N | folds N, reforms N, folded now N | abreast now k`.
+
+**Followers that finish their trip (NAV-23, developer decision 2026-11-14 on #507):**
+
+8. `group-followers-finish-trip` (new, proposed default `false`; a group setting resolved for the leader like the other `group-*` keys, so a world, region, NPC template or assignment can set it; the test command takes it as `/knk npc nav group <n> [formation] [profile] [finish-trip|follow-leader]`).
+9. `false` (today's behaviour, now a rule): when the group's order ends and the next one starts, every follower takes its place on the new path; followers that had not reached the goal skip the rest of the trip. The new path's search for a follower's place starts at the new order's first point, so it never depends on where the old path lay (4b.1 item 7).
+10. `true`: when the leader has arrived, every follower that has not reached its slot at the goal keeps the old path from its place to that slot as its own trip (a short list of path points; state `FINISHING`). It walks it with the same lanes, rule checks, trespass guard, door box and recovery as a following follower, waits at a door or district edge that stops it and walks on when the rule allows (L2's held followers), and when it reaches its slot it reports (`NavGroup` member listener `onMemberArrived(npc, goal)`, for behaviour such as a courier handing over goods), logs `<npc> (group <n>) finished its trip at x y z` and counts `group_finish_trip`. Then it follows the group's current order from wherever the group is (an own leg back if it is further than `group-rejoin-blocks`). The leader does not wait for finishing followers (they count like held followers, not in its regroup wait), and the group's result for the old order comes as today.
+11. Scope (proposed, 4b.4 question 7): the toggle applies to a follower that is still on its way when the leader has arrived; an order that replaces a running order before the leader arrived, `Cancelled` and `Failed` release followers as today.
+
+**Config keys** (L4 adds each to `NavigationSettings`, `config.yml` with a comment, a layer test, the [configuration reference § 4.27](../../guides/admin/plugin-configuration.md#427-npc) per-NPC table and YAML block, and the PR's deploy notes; restart):
+
+| Key | Default | Range | § 4.27 entry to add |
+|---|---|---|---|
+| `group-lateral-spacing` | `1.0` (proposed) | 1–8 | "Blocks between neighbours in a row of a group's formation (1 = shoulder to shoulder); 3 abreast need a road 1 + 2 × this wide, rounded down to whole blocks" |
+| `group-spacing` | `2.0` → `1.5` (proposed) | 1–8 | changed text: "Blocks between the rows of a formation and between NPCs in a column" |
+| `group-width-hysteresis-blocks` | `3` (proposed) | 0–16 | "A group changes to a narrower width (still 2 abreast or more) or a wider one only when it lasts this many blocks along the path; a column at a gate or a stair is taken at once" |
+| `group-followers-finish-trip` | `false` (proposed) | true/false | "When the leader turns back, followers still on their way finish their trip to the goal first and then rejoin the group (couriers); false: they follow the leader at once" |
+
+Also § 4.27's `group-formation` and `group-ranks-width` texts: the formations narrow before they fold.
+
+**Tests (knk-test-writer):**
+
+12. knk-core JUnit:
+    1. `Formation`: every width of every formation (slot positions, half widths, depth, front) at lateral spacing 1.0 and row spacing 1.5; the narrowed `escort-ring` shapes; the cluster nudge never widens a width.
+    2. `NavGroup` on fake worlds: a road 3 → 2 → 1 → 3 wide gives narrow, fold, reform, widen in that order with the logs and events; a one-block bump changes nothing; a 2-block widening changes nothing; a gate one block long folds at once; world queries per path point bounded.
+    3. The toggle: off, a follower held at a gate when the leader turns back follows the new order; on, it finishes to its slot at the goal after the gate opens, `onMemberArrived` fires once, then it follows; the leader does not wait for it; a replaced order before the leader arrived releases it; held by a region (L2) behaves the same.
+13. knk-paper MockBukkit/Mockito: the new keys and their layers; the group command's `finish-trip` argument.
+14. Plugin scenario (with Citizens in `paper-boot`, as in 4b.2 item 18): `npc-group-narrows`, a group of 9 in `cluster` on the corner scene's 3-, 2- and 1-wide passages: 3 abreast, 2 abreast, column and back, trespasses 0, no stuck spell left open. Without Citizens in CI: scenario later, developer step 3 below.
+15. Manual only: how it looks (game feel), developer steps below.
+
+**Known limits:**
+
+16. Slots ahead of the leader still exist on the road line only (Phase 4 known limit 6).
+17. A group narrows as a whole; single lanes stepping aside for a short bump is the only per-lane squeeze.
+
+**Developer test (L4):**
+1. Deploy the build with L3 and L4. Merge the four keys above. `/knk npc status`: `group-lateral-spacing 1.0`, `group-spacing 1.5`, `group-width-hysteresis-blocks 3`, `group-followers-finish-trip false`, each with its layer.
+2. With no NPCs out, wait a minute, then `/knk npc nav baseline`.
+3. **Narrowing on the corner scene.** `/knk npc nav scene corners`, `/knk npc nav route load corner-scene`, `/knk npc nav group 20 cluster`, three trips; then `escort-ring`; then `ranks` with `group-ranks-width: 3` (restart). Look: 3 abreast on the 3-wide road, 2 abreast in the 2-wide passage, a column in the 1-wide passage and on the stairs, the widest width again after; the log has `narrows`, `folds`, `takes up`, `widens` lines in that order; no switching on the scene's one-block bump.
+4. **`quarry-to-keep` and the south gate.** `/knk npc nav route load quarry-to-keep`, `/knk npc nav stats reset`, `/knk npc nav group 20 escort-ring`, 10 minutes; then `ranks` and `cluster`. Look: the bridge and the 3-wide roads 3 abreast, the stair house a column; `widths: narrows …, folds …`; `trips` rising; `stuck near a wall` no higher than with L3 alone; `trespasses 0`; `tick … ms per NPC` and `K&K navigation on the main thread` within noise of the Phase 4 numbers. Then `south-gate-short` with `ranks`: pairs through the gate without folding (#493 comment 1).
+5. **Spacing.** On the open road the rows are 1.5 blocks apart and the NPCs in a row shoulder to shoulder; compare with `group-lateral-spacing: 1.25` and `group-spacing: 2.0` (restart) and say which looks right.
+6. **Followers finish their trip (#507).** `/knk npc nav route load south-gate-short`, `/knk npc nav group 20 ranks finish-trip`. When the leader is past the gate, `/gate toggle` the south gate; when the leader has turned back at the route's end, `/gate toggle` again. Look: the held followers walk through to the route's end first (`… finished its trip at x y z` lines, `group_finish_trip` up by their number), then turn and follow the group. Repeat without `finish-trip`: they follow the leader at once (Phase 4 step 9).
+7. **The #490 audit re-run** (once the #486 session's walker fix is in `next`, charter note 6): Phase 1 "Audit re-run after the guards", and post the report on #490.
+8. With metrics on: `curl <metrics address>/metrics | grep 'knk_npc_nav_events_total{event="group_'` shows `group_narrow`, `group_widen`, `group_fold`, `group_reform`, `group_finish_trip`.
+
+Post the `stats` output of steps 3, 4 and 6, your notes on step 5 and the run log on #522.
+
+**Done when:** on 3-wide roads `cluster`, `escort-ring` and `ranks` (width 3) walk 3 abreast, on 2-wide roads 2 abreast, at gates and on stairs a column, reformed after; no more trespasses or stuck spells than with today's fold; tick cost per NPC unchanged (#493); the toggle behaves as decided and is covered by tests (#507).
+
+### 4b.4 Proposed defaults, awaiting the developer
+
+The developer was away when this design was written; each value below is proposed, with its alternatives. The answers go on [#519](https://github.com/PandiO/knk-workspace/issues/519) and into this section before L3 and L4 start.
+
+1. **`group-lateral-spacing` 1.0** (shoulder to shoulder; 3 abreast fit a 3-wide road). Alternatives: (a) 1.25 (still fits 3 abreast on a 3-wide road, a little looser); (b) 1.5 (3 abreast need 4 blocks).
+2. **`group-spacing` (rows and column) from 2.0 to 1.5.** Alternatives: (a) 1.0 (tightest; a column of 20 is 20 blocks long); (b) keep 2.0.
+3. **Narrowed `escort-ring`:** rows of 3 with the leader in the middle of the second row, then 2 abreast and a column as the road narrows (4b.3 item 3.3). Alternatives: (a) the leader in the front row; (b) fold straight to a column.
+4. **Toggle `npc.navigation.group-followers-finish-trip: false`**, overridable per group (world, region, template and assignment layers, and the group command). Alternatives: (a) the shorter name `group-finish-trip`; (b) default `true`.
+5. **`corner-clearance` 1.0 block.** Alternatives: (a) 0.5 (only the cell next to the wall, waypoints at block centres move rarely); (b) 1.5; (c) 0 (off: rely on the margin and the ladder).
+6. **`waypoint-margin` 0.5 block.** Alternatives: (a) 0.35 (closer to the corner point, more risk of circling a waypoint on a slab); (b) 0.75; (c) keep Citizens' 1.0 and only densify waypoints at turns.
+7. **Retry spacing and the toggle's scope.** `recovery-wait-ticks` 20 (1 s). Alternatives: (a) 10; (b) 40. Toggle scope: only followers still on their way when the leader has arrived. Alternative: (c) also when an order replaces a running one before the leader arrived.
+8. **Stuck detection** `stationary-ticks` and `no-progress-ticks` from 60 to 40 (2 s), so "no NPC still for more than 3 s" can hold. Alternatives: (a) 30; (b) keep 60 and read the acceptance as "freed within 3 s after the stuck is noticed".
+9. **Citizens in CI's `paper-boot` server** (a pinned build with its SHA-256, compile-only use unchanged, never shaded) so the NPC scenarios walk real NPCs. Alternatives: (a) only the K&K half as a scenario (no Citizens), the walking stays a developer step; (b) a separate, optional CI job with Citizens.
+10. **`group-width-hysteresis-blocks` 3.** Alternatives: (a) 0 (switch at every change); (b) 5.
+11. **A left-behind follower's tries:** doubling from 5 s up to 60 s, reset by progress or an event. Alternatives: (a) every 5 s as today (the 481 rejoins); (b) a fixed 30 s.
+12. **Escort ring size:** the first ring's radius 1.25 × the lateral spacing (eight escorts fit a 3-wide road at 1.0). Alternative: (a) 1.25 × `group-spacing`, as today (a 5-wide road at 1.5).
 
 ## Phase 5 — NPC access identity (web-api, plugin, web-app)
 

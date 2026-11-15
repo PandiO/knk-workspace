@@ -4,6 +4,11 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **NPC navigation design: wall corners, stuck recovery, narrowed formations, followers that finish their trip**
+  ([PandiO/knk-workspace#519](https://github.com/PandiO/knk-workspace/issues/519); design only, docs, nothing changes in game).
+  knk-workspace `claude/npc-followups-l1` (PR into `next`, in review). BEHAVIOR_MODEL § 2 NAV-19–NAV-23 and
+  implementation plan Phase 4b for links L3 (#521: #508, #491, #492) and L4 (#522: #493, #507); proposed defaults await
+  the developer.
 - **Plugin: 13 more plugin scenarios and a freeze test replace evening checks in game**
   ([PandiO/knk-workspace#511](https://github.com/PandiO/knk-workspace/issues/511), plugin part; developer-facing, nothing
   changes in game). Merged into `next` 2026-11-15 (knk-plugin#35, merge `b2c5dff0`; docs knk-workspace#544); on the trunk when the developer promotes `next`.
