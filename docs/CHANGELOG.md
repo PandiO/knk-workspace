@@ -4,6 +4,31 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **NPC navigation: corridor steering, off by default** ([PandiO/knk-workspace#622](https://github.com/PandiO/knk-workspace/issues/622),
+  link M2 of the NPC navigation follow-ups chain, implementation plan Phase 4c.4 item 2, decision 1 option A).
+  knk-plugin and knk-workspace branches `claude/npc-movement-m2` (PRs into `next`, in review). Nothing changes with
+  `corridor-steering: false` (the default) or with `npc.navigation.enabled: false`.
+  1. **What it does.** Before an NPC walks a stretch of its route (about 32 blocks), K&K builds the walkable corridor
+     around the road line (`corridor-half-width` blocks each side, the NPC's own floor and the road's regions), works
+     out each spot's clearance from walls, posts and drops, and moves the line: `wall-clearance` (0.8) off walls
+     where the road is wide enough, on straights too; through the middle where it is narrower, so one-block doors
+     stay open; straightened where the corridor allows; and through the middle of a doorway or entrance on its axis,
+     with a waypoint 1.5 blocks before it, one in it and one after it (walked with waypoint margin 0.35). The shaped
+     stretch is built once and shared by every NPC that gets it. Corner clearance and the waypoint chain still run on
+     it. Group members keep today's line until link M3 fits formations to the corridor.
+  2. **Checked.** With the key on, `npc-stairhouse-singles` and `npc-jagged-straight` (collision off and on) now
+     assert: all 12 singles arrive, 0 stuck spells, nobody still longer than 3 s, no fall, corridor steering's own cost
+     at most 0.03 ms per NPC per tick (the plan's budget; about 0.005 ms warm).
+  3. **Deploy.** Add the three keys to `npc.navigation` in `config.yml` (configuration reference § 4.27) and restart:
+
+     ```yaml
+     npc:
+       navigation:
+         corridor-steering: false
+         corridor-half-width: 4
+         wall-clearance: 0.8
+     ```
+
 - **NPC navigation: movement evidence and diagnostics** ([PandiO/knk-workspace#621](https://github.com/PandiO/knk-workspace/issues/621),
   link M1 of the NPC navigation follow-ups chain, implementation plan Phase 4c.4 item 1 and 4c.5). knk-plugin and
   knk-workspace branches `claude/npc-movement-m1` (PRs into `next`, in review). No behaviour change, no new
