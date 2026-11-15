@@ -25,7 +25,7 @@
 | L1 Design: corners, narrowed formations, toggle | #519 | Merged into next (2026-11-15, design approved by the developer) | knk-workspace `96f47820` → `next` `4a97fd3b` | PandiO/knk-workspace#546 | docs only (no CI); Codex at its usage limit | create_session session_01R1w2UwysEMwCYnxwCpkx3p (2026-11-15) |
 | L2 Follower recheck and guard, no gate push | #520 | Merged into next (2026-11-15, by the manager session) | knk-plugin `651d8bff` → `next` `11e07d64`; knk-workspace → `next` `43a2328c` | PandiO/knk-plugin#31, PandiO/knk-workspace#536 | PR head green (build, paper-boot); `next` runs 43662028862, 43662028855 pending at the coordinator check | create_session session_01R1w2Ux2KpS7H3FidwDEZmp (2026-11-14) |
 | L3 Wall-corner steering and recovery | #521 | Merged into next (2026-11-15) | knk-plugin `51072e94` → `next` `5dc88cfd`; knk-workspace `4308aaf1` → `next` `51bf5952` | PandiO/knk-plugin#36, PandiO/knk-workspace#557 | PR head green (build, paper-boot with Citizens, 19 scenarios); Codex at its usage limit | create_session session_01R1w2Uv1rEnwPko4Tq83xyL (2026-11-15) |
-| L4 Narrowed formations, followers-finish-trip toggle | #522 | In review (2026-11-15) | knk-plugin `becf379c`, knk-workspace `95ff61c0` | PandiO/knk-plugin#39, PandiO/knk-workspace#584 | `build` and `paper-boot` green on `becf379c` (25 scenarios); Codex at its usage limit | create_session session_01R1w2Uur6M3a3CaVDWJWCw7 (2026-11-15) |
+| L4 Narrowed formations, followers-finish-trip toggle | #522 | In review (2026-11-15) | knk-plugin `f965af06`, knk-workspace `59f5f3b2` (`next` merged again 2026-11-15) | PandiO/knk-plugin#39, PandiO/knk-workspace#584 | `build` green on `f965af06`; `paper-boot` green on one run, the other failed only the log check (#586, re-run); 31 scenarios; Codex at its usage limit | create_session session_01R1w2Uur6M3a3CaVDWJWCw7 (2026-11-15) |
 
 ## 3. Coordinator decisions
 
@@ -324,7 +324,12 @@ _(Each link appends its block here when it finishes.)_
 8. **At merge / what the developer must do.**
     1. Merge the `config.yml` keys (YAML in the changelog and § 4.27) and set `group-spacing: 1.5` where 2.0 is still written. Restart.
     2. Run the developer test steps posted on #522 (they include the #490 audit re-run with `/knk npc test spawn 50 24`; check that `causes:` shows no `DROWNING`) and post the stats, notes and run log there, the audit report on #490.
-9. **For the docs session** (the chain's last link; the `documentation` sub-issue).
+10. **Merge of `next`, 2026-11-15 (coordinator's § 6 check).**
+    1. knk-plugin: merged `origin/next` with PandiO/knk-plugin#38 (#540, six player scenarios) into `claude/npc-followups-l4` → `f965af06`. Conflicts in `paper-boot.yml` and `PaperScenariosTest`, both sides kept: 31 scenarios, `MIN_SCENARIOS` 31, `--expect-timeout` 600 with #540's bot-tests line, job timeout 20 min.
+    2. knk-workspace: merged `origin/next` → `59f5f3b2`. The changelog conflict was additive; the L4 entry now says 31 scenarios.
+    3. Tests after the merge: core 2788, api-client 340 (2 skipped), paper 2796 (18 skipped), 0 failures. Locally 31/31 scenarios passed.
+    4. CI on `f965af06`: `build` green twice. `paper-boot` green on one run (43713989156). On the other run (43713985090) all 31 scenarios passed but the server-log check failed on an error from a #540 player scenario's fake player against the unreachable API; I filed #586 and re-ran that failed job.
+11. **For the docs session** (the chain's last link; the `documentation` sub-issue).
     1. Plugin scenarios guide: the six NPC scenarios (L3, #543, L4), `ScenarioNpcs` with rules and gate crossings, `ScenarioNpcRules`, and the rule that an order under `hop-blocks` is a short trip without gates.
     2. Admin/NPC guide: formations and their widths, the hysteresis, the toggle and `onMemberArrived` for later behaviour (couriers), the queue and the step back at doors, and the stats line.
     3. Feature register and guides index: NPC navigation Phase 4b (L3, L4) status after the developer's tests.
