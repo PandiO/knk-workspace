@@ -1,6 +1,7 @@
 # Dashboard access, staff ranks and area nodes — admin guide
 
-**Status:** Living document — update in place. Describes knk-web-api `master` `45043a7` and knk-web-app `next` `e6ba115`
+**Status:** Current · **Last updated:** 2026-11-15 (§ 6: a group's nodes in the group's Permissions panel, #50 in `next`, docs #576)
+**Checked against:** knk-web-api `master` `45043a7` and knk-web-app `next` `e6ba115`
 (the dashboard access model, [#280](https://github.com/PandiO/knk-workspace/issues/280) AM1–AM3, and bulk delete,
 [#205](https://github.com/PandiO/knk-workspace/issues/205), merged 2026-11-12/13 on `main`; create and edit back on
 `knk.admin.content`, [#371](https://github.com/PandiO/knk-workspace/issues/371), merged into `next` 2026-11-13 and on
@@ -9,7 +10,6 @@
 knk-web-api `next` `b65e66d` and knk-web-app `next` `ca1959d`, merged into `next` 2026-11-13). **Not live-tested:** the developer
 accepted it on 2026-11-13 without a live test; the [dashboard access smoke test](../dashboard-access-smoke-test.md) is
 scheduled in closed alpha test run 2 ([checklist § 4c](../../reports/alpha-tests/test-run-2/test-run-2-checklist.md)).
-**Last updated:** 2026-11-15 (§ 8: a town's Streets have no Add…/Unlink because they come from the districts; #409, docs #559); 2026-11-13 (the API refuses creates, edits and link changes without `knk.admin.content`; Staff no longer edits kits or siege setup on the web; #374, docs #385); 2026-11-13 (area ranks view, delete and export but don't create or edit; #371, docs #378); 2026-11-13 (first version, PandiO/knk-workspace#366)
 
 Who may see, create, edit, delete, bulk delete and export what on the web app's **Dashboard**, and how to set a rank
 up for it. For how the pages themselves work see the [staff web app guide](staff-web-app-guide.md); for in-game
@@ -167,8 +167,10 @@ deploy). In game: `/knk user <player> perm grant knk.admin.world`.
 
 1. Pick or create the group. A new group goes in with **Dashboard → Permission group → New** (needs
    `knk.admin.user.perm` and `knk.admin.content`); give it a weight below your own rank.
-2. Give the group its nodes. There is no web screen for a group's nodes yet
-   ([#50](https://github.com/PandiO/knk-workspace/issues/50)): the owner or an Admin sets them through
+2. Give the group its nodes. With [#50](https://github.com/PandiO/knk-workspace/issues/50) (in `next`, not yet
+   released) that is the group's **Permissions** panel: **Dashboard → Permission Group** → the group → **View**, then
+   **Node**, **Grant**, **Save** (details in the [ranks guide § 3.3](ranks-permissions-moderation-admin-guide.md#33-a-groups-own-nodes-and-new-groups)).
+   On trunk until `next` is promoted, the owner or an Admin sets them through
    the API with the group's id as the holder (holder ids are shared by users and groups):
    `PUT api/PermissionGrants/by-node` with `{ "holderId": <group id>, "node": "knk.admin.world", "value": true }`, and
    the same for `knk.admin.delete` and `knk.admin.export`. Never add `knk.admin.delete.bulk` unless the owner does it
@@ -208,3 +210,10 @@ delete on test records first: it can't be undone, and each refused row stays sel
 | Permission group listed, but its table answers "Requires the knk.admin.user.perm permission." | Known bug [#369](https://github.com/PandiO/knk-workspace/issues/369): the list needs `knk.admin.user.perm` | Grant `knk.admin.user.perm`, or wait for the fix |
 | A form's link field has no Create New | No create node for the related type | Expected; ask someone of that area to create the record |
 | The top bar's **Create New** offers a type you can't create | Known gap [#353](https://github.com/PandiO/knk-workspace/issues/353) | Use the dashboard's **New** |
+
+## Changes
+
+1. 2026-11-15: § 8: a town's Streets have no Add…/Unlink because they come from the districts; #409, docs #559
+2. 2026-11-13: the API refuses creates, edits and link changes without `knk.admin.content`; Staff no longer edits kits or siege setup on the web; #374, docs #385
+3. 2026-11-13: area ranks view, delete and export but don't create or edit; #371, docs #378
+4. 2026-11-13: first version, PandiO/knk-workspace#366

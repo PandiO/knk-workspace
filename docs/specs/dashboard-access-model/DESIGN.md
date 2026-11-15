@@ -17,7 +17,7 @@ are back on `knk.admin.content` as § 4.3 has it, and in the web app create and 
 `claude/api-writes-need-content-374`, merged into `next` 2026-11-13: API `b65e66d`, web app `ca1959d`; on trunk when
 `next` is promoted; guides in docs [#385](https://github.com/PandiO/knk-workspace/issues/385)): the API asks for `knk.admin.content` on create, edit and link changes
 too (§ 4.3, § 7). Answers [#368](https://github.com/PandiO/knk-workspace/issues/368). Known gaps: #352 (material picker in world/lootbox forms),
-#353 (top bar Create New per area), #369 (Permission Group's list needs `knk.admin.user.perm`). Developer 2026-11-08:
+#353 (top bar Create New per area), #369 (Permission Group's list needs `knk.admin.user.perm`). **Staff web app follow-ups** (#408, #50, in `next` since 2026-11-14/15, on trunk when the developer promotes `next`; docs [#576](https://github.com/PandiO/knk-workspace/issues/576)): the PermissionGrant reads, a group's member count and the audit log's subject filter are in Appendix A.8. Developer 2026-11-08:
 the backfill (§ 4.5) **skips the Staff group**, and nobody changes a group ranked at or above their own (§ 4.4).
 **Last updated:** 2026-11-13 (status: #371 and #374 merged into `next`, docs #385); 2026-11-13 (the API asks for `knk.admin.content` on create, edit and link changes, § 4.3, § 4.7,
 § 7, #374); 2026-11-13 (LAM3-1 reverted, § 7, #371); 2026-11-13 (status: implemented and merged, AM4 docs, LAM3-1 deviation #368; docs #366); 2026-11-12 (AM3 built; § 4.7 form/display configuration deletes need `knk.admin.delete`, developer
@@ -811,6 +811,9 @@ report), and the link's own choices:
 | Users | `GET check-duplicate`, `POST validate-link-code/{code}` | P |
 | PermissionGroups | `GET /`, `GET {id}`, `GET {id}/permissions/check`, `GET {id}/expiring-memberships` | U (`knk.admin.user.manage`) |
 | PermissionGroups | `POST search` | U (`knk.admin.user.perm`) |
+| PermissionGroups | `GET {id}/member-count` (added by [#50](https://github.com/PandiO/knk-workspace/issues/50), in knk-web-api `next` `dcbb1f82`): the active members of the group and of every group inheriting from it, each player once, plus the number of inheriting groups | U (`knk.admin.user.manage`) |
+| PermissionGrants | `GET /`, `GET {id}`, `POST search` (search moved from `knk.admin.user.perm` to the type's view node by [#408](https://github.com/PandiO/knk-workspace/issues/408), knk-web-api `next` `2425f181`; it sorts by `id`, `holderId`, `value`, `expiresAt` or `node`, the default, and filters on `holderId`) | U (`knk.admin.user.manage`); every write stays `knk.admin.user.perm` |
+| AuditLog (`api/audit-log`) | `GET` with `targetUserId`, `actorUserId`, `action`, `direction` and, since [#50](https://github.com/PandiO/knk-workspace/issues/50) (`next` `dcbb1f82`), `subjectType` + `subjectId` (one subject's history, for example `PermissionGroup` and a group id) | U (`knk.admin.user.manage`) |
 
 ### A.9 New endpoints
 

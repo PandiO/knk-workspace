@@ -7,7 +7,8 @@ This is a human-readable record of capabilities merged into the V3 default branc
 - **"Show what uses it" for more refusals: form configuration delete, bulk delete rows, "skipped: in use"**
   ([PandiO/knk-workspace#289](https://github.com/PandiO/knk-workspace/issues/289); link L3 of the Chain 3 follow-ups
   chain, [#564](https://github.com/PandiO/knk-workspace/issues/564)) — knk-web-api, knk-web-app and knk-workspace
-  branches `claude/show-what-uses-it-289` (PRs into `next`, in review). No change for players.
+  branches `claude/show-what-uses-it-289`, merged into `next` 2026-11-15 (knk-web-api#34 `378921c6`, knk-web-app#39
+  `2dfd5883`); on the trunk when the developer promotes `next`. No change for players.
   1. **Entity setup.** A form configuration whose delete is refused because another form opens it as a sub-form offers
      **Show what uses it**: the form fields and steps, each with the form (and step) it sits in. Not links: they have
      no page of their own.
@@ -21,6 +22,16 @@ This is a human-readable record of capabilities merged into the V3 default branc
      [web-api architecture § 5.4](architecture/web-api-architecture.md), web-app architecture ("Show details").
   - **Admin steps:** none (no migration, no setting, no new node; deploy API and web app together, API first: an older
     API answers 404 for a form configuration, shown as an error line under the button).
+- **Staff web app: the player profile's Permissions tab gets the grant form on top, a search and sortable columns**
+  ([PandiO/knk-workspace#407](https://github.com/PandiO/knk-workspace/issues/407); link L3 of the staff web app
+  follow-ups chain, [#517](https://github.com/PandiO/knk-workspace/issues/517)). knk-web-app and knk-workspace
+  branches `claude/profile-permissions-407` (PRs into `next`, in review, not merged). On a player's profile
+  (`/admin/users/<id>?tab=permissions`), Effective Permissions now has the grant/deny form above the list, a search box
+  that filters by node and by source (a group's name, or "direct" for direct grants) and says when nothing matches,
+  and Node, Value and Source headers that sort ascending, descending and back to the original order, with an arrow and
+  `aria-sort`. The 1-day default expiry for direct grants and the `knk.admin.user.perm` gate are unchanged.
+  - **Admin steps:** none; web app only (no API change, no migration, no setting). To test: § 6 of the
+    [player profile smoke test](guides/player-profile-smoke-test.md).
 - **Plugin CI: Citizens on the Paper boot test, NPC navigation scenarios on a fake road network**
   ([PandiO/knk-workspace#543](https://github.com/PandiO/knk-workspace/issues/543); developer decision 2026-11-15:
   pinned download). knk-plugin and knk-workspace branches `claude/citizens-ci-543` (PRs into `next`). No change for

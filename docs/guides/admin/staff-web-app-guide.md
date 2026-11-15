@@ -1,7 +1,7 @@
 # Staff web app — admin guide
 
-**Status:** Current · **Last updated:** 2026-11-15 (§ 4: a town's Streets are read-only, managed on the district;
-#409, docs #559)
+**Status:** Current · **Last updated:** 2026-11-15 (§ 3: the read-only Permission Grant table; § 4: a permission
+group's Permissions panel and History; #408, #50 in `next`, docs #576)
 **Checked against:** knk-web-app `main` `3ba747d` and knk-web-api `master` `f445d21` (AM3 of #280 merged 2026-11-13 as
 `e02ee79` / `45043a7`; #371, #374 and #383, create, edit and link changes on `knk.admin.content`, reached the default
 branches with the promotion of `next` on 2026-11-13). Step conditions in the form builder and clickable form steps
@@ -151,6 +151,16 @@ beforehand). The file `<Type>-<date>.csv` has the table's columns in table order
 before text that looks like a formula). The server reads the rows in one request ("Exporting N…"); each export is a
 "Dashboard export" entry in the audit log with the type, the number of rows and "(selection)" or "(search)".
 
+**Permission Grant** ([#408](https://github.com/PandiO/knk-workspace/issues/408), in `next`, not yet released;
+needs `knk.admin.user.manage`): every grant and deny of every player and group in one table: **ID**, **Node**,
+**Effect** ("Granted" or "Denied"), **Holder** ("Group #<id>" for a group, "User #<id>" for a player) and **Expires
+(UTC)** ("Never" for a permanent one; expired rows stay listed). Search by part of the node; every column sorts.
+The table is **read-only**: change a player's grants on their profile (Permissions tab) and a group's in the group's
+Permissions panel (§ 4). **New** and **Edit** are still shown (greyed out with "Requires knk.admin.user.perm" without
+that node) but can't save a grant ([#530](https://github.com/PandiO/knk-workspace/issues/530)); there is no Delete.
+Without `knk.admin.user.manage` the explorer doesn't list the type. The ranks guide explains the nodes:
+[ranks, permissions and moderation § 3](ranks-permissions-moderation-admin-guide.md#3-giving-someone-a-group-a-rank-or-a-node).
+
 **There is no "Entity setup" link in the bar** ([#197](https://github.com/PandiO/knk-workspace/issues/197)). Reach it
 with the dashboard's **⚙** on a type, with **Drafts (n)** → **All saved progress (Entity setup)**, or by typing
 `/forms` in the address bar (the old `/admin/form-configurations` address still goes there). A type without a display
@@ -161,7 +171,8 @@ Smoke tests: [dashboard return § 14a](../dashboard-return-smoke-test.md#14a-no-
 [dashboard access § 8](../dashboard-access-smoke-test.md#8-web-app-am3) (areas, disabled actions, bulk delete, export;
 test run 2 § 4c) (not run); row actions and the right-click menu in
 [§ 8.5](../dashboard-access-smoke-test.md#85-row-actions-in-view-and-the-right-click-menu-404-405-406) (automated in CI;
-the manual look in both themes and the export with real data not run).
+the manual look in both themes and the export with real data not run); the Permission Grant table in
+[§ 8.6](../dashboard-access-smoke-test.md#86-the-permissiongrant-table-408) (automated in CI; manual steps not run).
 
 ## 4. The detail page
 
@@ -206,6 +217,27 @@ a User's Edit opens the player profile instead).
   and its **Create New** are not greyed out without `knk.admin.content`; they open the form, which then says "Staff
   only — This page needs the knk.admin.content permission".
 - Edits by others and a delete of the open record show live (§ 6).
+
+**A permission group's Permissions panel** ([#50](https://github.com/PandiO/knk-workspace/issues/50), in `next`, not
+yet released). On a permission group's detail page (**Dashboard → Permission Group** → **View**), below the details:
+
+1. **Permissions** lists the group's own nodes with **Effect** (Granted/Denied) and **Expires** ("Never", or a date
+   with "expired" once it has passed), and how many players the group reaches, members of groups that inherit from it
+   included. Reading needs `knk.admin.user.manage`; without it the page says "Staff only".
+2. The form under the list (**Node**, **Grant**/**Deny**, **Expires**, **Save**) adds a node or changes one the group
+   already has; **Expires** is empty by default (permanent). The pencil on a row puts it in the form. Saving needs
+   `knk.admin.user.perm`, the node yourself, and a group ranked below your own; without `knk.admin.user.perm` the form
+   and the row buttons are greyed out with "Requires knk.admin.user.perm", and a refusal from the API shows under the
+   list ("You can only change groups ranked below your own.").
+3. Changing a node between Granted and Denied (the row's change button, or **Save** with the other value) and
+   **Remove** (the X) ask first, with how many players it affects and that online players get the change within
+   seconds. **Cancel** changes nothing. Adding a node or changing only its expiry doesn't ask.
+4. **History** lists every change to the group's nodes, newest first, 10 per page: When, Change ("Permission granted",
+   "Permission updated", "Permission removed"), By and Details.
+
+Node rules and what a change does in game: [ranks, permissions and moderation § 3.3](ranks-permissions-moderation-admin-guide.md#33-a-groups-own-nodes-and-new-groups).
+Smoke test: [dashboard access § 8.7](../dashboard-access-smoke-test.md#87-a-permission-groups-own-grants-50)
+(automated in CI; manual steps not run).
 
 **A delete that is refused because the record is still in use** (a street that structures point at) shows the API's
 message with **Show what uses it** ([#44](https://github.com/PandiO/knk-workspace/issues/44)): the records per kind
@@ -495,19 +527,20 @@ get the new version at once.
 
 ## Changes
 
-1. 2026-11-14: § 3 pinned View / Edit / Delete column, same row lines, right-click menu with Shift+F10 and the
+1. 2026-11-15: § 4 a town's Streets are read-only, managed on the district; #409, docs #559 (in `next`)
+2. 2026-11-14: § 3 pinned View / Edit / Delete column, same row lines, right-click menu with Shift+F10 and the
    context-menu key, greyed-out items, selection, Ctrl/Cmd + right-click; #404, #405, #406, knk-web-app#17, docs #526
    (in `next`)
-2. 2026-11-14: § 5.1 "Go to …" opens at once and saves in the background, a failed save shows in the banner;
+3. 2026-11-14: § 5.1 "Go to …" opens at once and saves in the background, a failed save shows in the banner;
    § 5.1 and § 7.1 a failed step condition marks its fields; #413, #414, knk-web-app#20, docs #482 (in `next`)
-3. 2026-11-13: § 5.1 the steps of a form: clicking a step, what stops you; § 7.1 step conditions in the form builder;
+4. 2026-11-13: § 5.1 the steps of a form: clicking a step, what stops you; § 7.1 step conditions in the form builder;
    #68, #88, docs #395 (in `next`)
-4. 2026-11-13: Select / Change / Unlink / Add need `knk.admin.content`, the API refuses creates and edits without it,
+5. 2026-11-13: Select / Change / Unlink / Add need `knk.admin.content`, the API refuses creates and edits without it,
    #374, docs #385
-5. 2026-11-13: New, Edit and the forms need `knk.admin.content` again, #371, docs #378
-6. 2026-11-13: § 1, § 3, § 4, § 5, § 9, § 10 checked against the default branches: New, Edit, the forms, link changes,
+6. 2026-11-13: New, Edit and the forms need `knk.admin.content` again, #371, docs #378
+7. 2026-11-13: § 1, § 3, § 4, § 5, § 9, § 10 checked against the default branches: New, Edit, the forms, link changes,
    hot edit, the lootbox toggle and Create New Street need `knk.admin.content`, #371, #374, #383; known gap #380; docs
    #347
-7. 2026-11-13: dashboard per area, disabled actions with "Requires …", bulk delete, export through the API, names-only
+8. 2026-11-13: dashboard per area, disabled actions with "Requires …", bulk delete, export through the API, names-only
    pickers, readable refusals; #280 AM3 and #205, docs #366
-8. 2026-11-12: first version, PandiO/knk-workspace#337, #338, #340–#345
+9. 2026-11-12: first version, PandiO/knk-workspace#337, #338, #340–#345

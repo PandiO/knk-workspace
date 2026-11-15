@@ -1,6 +1,6 @@
 # knk-web-api — Architecture
 
-**Status:** Current · **Last updated:** 2026-11-15 (§5.4: "Show what uses it" for form configurations and `?all=true`, #289, knk-web-api `claude/show-what-uses-it-289`, PR into `next`); 2026-11-15 (§4, §5.3: `TownStreet` dropped, a town's streets are derived, #409)
+**Status:** Current · **Last updated:** 2026-11-15 (§5.4: "Show what uses it" for form configurations and `?all=true`, #289, knk-web-api#34 in `next`); 2026-11-15 (§5.2 grant reads, §5.6 permission grants, group member count and the generic audit subject; #408, #50 in `next`, docs #576)
 
 ## 1. Stack & shape
 
@@ -217,6 +217,11 @@ pinned):
     No rate limit (like the searches it replaces).
 - **The plugin** passes every gated read with its key (`api.auth.type: apikey`); `ReadAccessRulesTests` lists every
   GET and search POST of knk-plugin's `knk-api-client` and runs them through the filters.
+- **Permission grants** (#408, knk-web-api `next` `2425f181`): `GET api/PermissionGrants`, `GET {id}` and `POST
+  search` are all U on `knk.admin.user.manage`, the PermissionGrant type's view node; the search was on
+  `knk.admin.user.perm` before, so a `manage`-only rank saw the type listed and couldn't open it. The writes stay on
+  `knk.admin.user.perm` (§ 5.6). `GET api/PermissionGroups/{id}/member-count` (#50) is U on `knk.admin.user.manage`
+  too, like the group's other reads.
 
 ### 5.3 Relationships: Select / Unlink / Add (PandiO/knk-workspace#188, merged 2026-11-12)
 
@@ -337,6 +342,58 @@ saved wizard drafts and detail pages read. The builder's working copy waits besi
   calls it for the saved configuration (`GET api/field-validation-rules/health-check/configuration/{configId}`) and for the
   builder's working copy (`POST …/health-check/configuration/draft`). Severity `Warning`, or `Info` when the condition is
   switched off; it never blocks a save or a publish. Only JSON in the builder's shape is judged.
+
+### 5.6 Permission grants, group member count and the generic audit subject (PandiO/knk-workspace#408, #50; in `next`)
+
+Merged into knk-web-api `next`: #408 at `2425f181` (2026-11-14), #50 at `dcbb1f82` (2026-11-15); on `master` when the
+developer promotes `next`. Covered by the API tests named below; the developer's manual steps of the
+[dashboard access smoke test § 8.6 and § 8.7](../guides/dashboard-access-smoke-test.md#86-the-permissiongrant-table-408)
+have not run yet. Web app side: [web-app architecture § Staff permission screens](web-app-architecture.md#staff-permission-screens-pandioknk-workspace408-50-407-in-next).
+
+- **Grant search** (`PermissionGrantsController.Search`, `PermissionGrantRepository.SearchAsync`): `searchTerm`
+  matches the node (case-insensitive substring); filter `holderId` limits to one holder (a user or a group: holder ids
+  are shared). `sortBy` is `id`, `holderId` (or `holder`), `value`, `expiresAt` or `node` (the default, also for an
+  unknown key), then node and id as tie-breakers so paging stays stable. Returns `PermissionGrantListDto` rows with
+  `holderType` (`User` or `PermissionGroup`). Expired rows are included: the table keeps one row per holder and node
+  (KNG-59).
+- **Writes** are unchanged: `POST`, `PUT {id}`, `DELETE {id}`, `PUT by-node` (upsert by holder and node, revives an
+  expired row) and `DELETE by-node?holderId=&node=` on `knk.admin.user.perm`, each through the escalation guard
+  (`PermissionEscalationGuard.CanGrantNodeAsync`): not on yourself (unless `*`); a **group** holder ranked at or above
+  the actor's own heaviest group is refused with "You can only change groups ranked below your own."; the actor must
+  hold the node (a deny too); bulk delete is owner-only. `*` skips the guard. After every write the service publishes
+  `UserPermissionsChanged` (user holder) or `PermissionGroupChanged` (group holder) and drops the read cache (§ 5.2).
+- **Member count** (`GET api/PermissionGroups/{id}/member-count` → `PermissionGroupMemberCountDto { groupId,
+  directMembers, totalMembers, inheritingGroups }`, 404 for an unknown group): `PermissionGroupRepository.CountMembersAsync`
+  loads every group's parent link once and walks down from the group in memory (breadth first), then counts active
+  memberships (no expiry, or one in the future) in the group itself (`directMembers`) and distinct users across the
+  group and all its descendants at any depth (`totalMembers`). The web app's blast-radius confirmation reads it.
+- **The generic audit subject** (developer decision 2026-11-15 on #50; migration `20261115092735_AddAuditLogSubject`):
+  - `AuditLogEntry` has nullable `SubjectType` (`varchar(64)`) and `SubjectId`, and `TargetUserId` is nullable. A
+    player entry keeps its target and has no subject; an entry about something that is not one player has a subject and
+    no target. Index (`SubjectType`, `SubjectId`, `Timestamp`), next to the existing (`TargetUserId`, `Timestamp`).
+  - The type names are string constants in `Enums/AuditSubjectTypes.cs` (today only `PermissionGroup`; `MaxLength`
+    64), not an enum column and not a foreign key: a later subject needs a constant, no migration, and the trail
+    outlives the record. It is meant for later group-like subjects too, such as clans that run towns and their
+    treasuries.
+  - Write through `AuditLogService.RecordForSubjectAsync(actor, subjectType, subjectId, action, details)` (rejects a
+    blank or too long type and an id ≤ 0). `PermissionGrantService.AuditGrantChangeAsync` audits a **user** holder's
+    grant change against the player as before, and a **group** holder's once per change with the group as subject:
+    the same actions `GrantAdded`, `GrantUpdated` (from/to node, value, expiry) and `GrantRemoved` (a group removal
+    also carries `expiresAt`). Before #50 a group's grant changes left no audit row (#464; group definition changes —
+    name, weight, parent, delete — are still not audited, #464 stays open for those).
+  - Read: `GET api/audit-log?subjectType=PermissionGroup&subjectId=<id>` (U `knk.admin.user.manage`); a blank or
+    over-long `subjectType` answers 400 "subjectType is invalid.". Results are newest first, ties by id descending.
+    `AuditLogEntryDto` carries `subjectType`, `subjectId` and `targetUserId` as `int?`.
+  - GDPR erasure (`PrivacyRepository`) removes a player's rows by target only, so a group's history survives a
+    member's erasure.
+  - Deploy: back up, deploy the API, run `dotnet ef database update` (the API does not migrate on start), then the
+    web app. The migration is additive; its `Down` turns a null target into 0.
+- **Tests:** `Security/PermissionGrantReadGateTests`, `Repositories/PermissionGrantRepositoryTests` (#408);
+  `Services/GroupGrantAuditTests`, `Api/GroupGrantsPanelApiTests`, `Migrations/AddAuditLogSubjectMigrationTests`,
+  `PermissionGrantServiceTests`, `AuditLogServiceTests`, and the `ReadAccessRulesTests` pins (#50).
+- **Known gaps:** members of groups inheriting from the changed group and changes made while realtime is down reach
+  the plugin late ([#558](https://github.com/PandiO/knk-workspace/issues/558)); effective permissions carry no expiry
+  ([#568](https://github.com/PandiO/knk-workspace/issues/568)).
 
 ## 6. Talks to knk-plugin
 
