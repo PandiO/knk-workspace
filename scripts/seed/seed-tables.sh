@@ -32,8 +32,10 @@ GROUP_FILTERED_TABLES="permission_holders permission_grants"
 # Rows tied to the Minecraft world map: domains and their WorldGuard region ids,
 # coordinates, gates, siege scenarios, lootbox areas. Ship them only together
 # with a copy of the matching world folder (export-seed.sh --with-world).
+# TownStreet is gone (migration DropTownStreet, PandiO/knk-workspace#409): a town's
+# streets are derived from DistrictStreet.
 WORLD_TABLES="
-domains towns districts structures streets locations DistrictStreet TownStreet
+domains towns districts structures streets locations DistrictStreet
 domain_discovery_overrides item_blueprint_origins
 gate_structures gate_structure_guard_spawn_locations gate_doors gate_block_snapshots
 gate_opened_block_snapshots

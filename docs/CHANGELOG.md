@@ -57,12 +57,37 @@ This is a human-readable record of capabilities merged into the V3 default branc
     `knk.admin.user.perm`. The search sorts by the column asked (`id`, `holderId`, `value`, `expiresAt`, `node`).
   - **Admin steps:** none; deploy the API and the web app together (no migration, no settings). Smoke test:
     [dashboard access smoke test § 8.6](guides/dashboard-access-smoke-test.md) (mostly automated in CI).
-- **Town streets from districts: design note and data check** ([PandiO/knk-workspace#409](https://github.com/PandiO/knk-workspace/issues/409), L1 [#514](https://github.com/PandiO/knk-workspace/issues/514); knk-workspace only, docs) — knk-workspace branch
-  `claude/town-streets-409` (PR into `next`, in review). Proposed design
-  [specs/towns/DESIGN_TOWN_STREETS.md](specs/towns/DESIGN_TOWN_STREETS.md) and the read-only check
-  `scripts/maintenance/town-street-orphans-409.sql` (orphan `TownStreet` rows, counts, Town configurations naming
-  Streets). Nothing changes in the API, web app or plugin yet (that is L2).
-  - **Admin steps:** none; run the check on dev and alpha when the coordinator asks (read only).
+- **Town streets come from their districts; the `TownStreet` table is dropped**
+  ([PandiO/knk-workspace#409](https://github.com/PandiO/knk-workspace/issues/409), L1
+  [#514](https://github.com/PandiO/knk-workspace/issues/514) design, L2
+  [#515](https://github.com/PandiO/knk-workspace/issues/515) implementation) — knk-web-api, knk-web-app and
+  knk-workspace branches `claude/town-streets-409` (PRs into `next`, in review). Design
+  [specs/towns/DESIGN_TOWN_STREETS.md](specs/towns/DESIGN_TOWN_STREETS.md) (approved 2026-11-14 with its defaults).
+  1. **API.** A town's streets (`TownDto.streets` / `streetIds` of `GET api/Towns/{id}`) are the distinct streets of
+     its districts, ordered by name then id, read-only; they follow every street linked to or unlinked from a district
+     at once. Metadata lists Town `streets` as `storage: "derived"`; `POST api/Relationships/Town/{id}/streets/link`
+     and `/unlink` answer 400 `RelationshipNotEditable` "Streets are managed on the district: open a district to add or
+     remove them." (403 without the nodes, as before). `GET api/Towns` still carries no streets. Saving a town no
+     longer writes its districts back.
+  2. **Web app.** The Streets section of a town's detail page lists the streets with View and Edit, without Add…,
+     Unlink, Create New or Delete (whatever the stored display configuration says), and shows the hint above. Streets
+     are added to a town on a district's detail page (District → Streets → Add…).
+  3. **Plugin:** no change (the JSON shape stays; `/knk towns` debug output shows the derived list).
+  - **Admin steps:**
+    1. Back up the database before deploying (the migration drops a table).
+    2. Deploy the API and the web app together.
+    3. Apply the migration `DropTownStreet` (dev: `dotnet ef database update`; alpha: the migrator image, runbook
+       [§ API updates with migrations](guides/closed-alpha-deployment-runbook.md)). It drops `TownStreet` with **all**
+       its rows, including streets no district of the town has (developer decision 2026-11-14 on #515). Such a street
+       no longer shows on the town; link it to one of the town's districts to bring it back.
+    4. Rollback: the migration's `Down` (`dotnet ef database update SeedStaffFreezeNodes`, the migration before it)
+       recreates `TownStreet` and refills it from the districts; the dropped rows no district covered come back only
+       from the backup.
+    5. A Town form with a `Streets` / `StreetIds` field or step (the API ignores it) can be removed in the form builder;
+       the read-only check `scripts/maintenance/town-street-orphans-409.sql` (result set 3) lists such configurations.
+    6. Smoke test: follows with L3 ([#516](https://github.com/PandiO/knk-workspace/issues/516)); the read-only section
+       and the refused link are automated (knk-web-app `e2e/town-detail.spec.ts`, knk-web-api
+       `TownStreetsDerivedTests`, `RelationshipsControllerTests`).
 - **Plugin: the 52 tests that CI skipped now run, with MockBukkit**
   ([PandiO/knk-workspace#499](https://github.com/PandiO/knk-workspace/issues/499); developer-facing, nothing changes
   in game). Merged into `next` 2026-11-14 (knk-plugin#32, merge `0810a6c7`; docs knk-workspace#539); on the trunk when the developer promotes `next`.
