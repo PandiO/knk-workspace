@@ -46,7 +46,7 @@ Every link is merged into `next` (2026-11-15). Build knk-plugin from `next` `deb
 | L7 Fix: test walkers drown (#490) | #594 | Dropped (#490 audit clean on the right build; #594 closed) | — | — | — | — |
 | L8 Design: movement quality (steering, formation keeping, crowding, plaza road lines) | #603 | Merged into next (2026-11-15; design decided by the developer, 15 questions) | knk-workspace `e8836db0` → `next` `61c29c16` | PandiO/knk-workspace#605 | docs only (no CI); Codex at its usage limit | create_session session_01R1w2Uv7BDN1HKCV2gWe5Mz (2026-11-15) |
 | M1 Evidence and diagnostics | #621 | Merged into next (2026-11-15) | knk-plugin `3ce748e0` → `next` `a527c980`; knk-workspace `1310c3d9` → `next` `a8dbfa80` | PandiO/knk-plugin#47, PandiO/knk-workspace#632 | PR head green (build, paper-boot with 45 scenarios, both runs); Codex at its usage limit | create_session session_01R1w2Uv6Untjy5RbmJTDd1T (2026-11-15) |
-| M2 Corridor steering (option A) | #622 | Running | — | — | — | create_session session_01R1w2UszyqgMVxpBHaUa2oH (2026-11-15) |
+| M2 Corridor steering (option A) | #622 | In review (PRs open, CI green) | knk-plugin `4e247835`; knk-workspace `a837776` | PandiO/knk-plugin#48, PandiO/knk-workspace#633 | PR head green (build, paper-boot with 45 scenarios, both runs); Codex at its usage limit | create_session session_01R1w2UszyqgMVxpBHaUa2oH (2026-11-15) |
 | M6 Clearance-aware local legs (add-on D) | #623 | Not started (gate: M2 merged) | — | — | — | — |
 | M3 Formation keeping | #624 | Not started (gate: M6 merged) | — | — | — | — |
 | M5 Plaza lines | #625 | Not started (gate: M3 merged) | — | — | — | — |
@@ -685,3 +685,103 @@ _(Each link appends its block here when it finishes.)_
     2. Turning a report into a check: replace the scenario's `check("report …", … return null)` with real checks, and keep the `KNK-NPC-REPORT` line so the numbers stay visible.
     3. `FreeWidth` is the first piece of the corridor (`core/npc/nav/corridor/`); M2 can replace or reuse it.
     4. `GroupPath.misfitReason` gives `edge` for lanes that fail only on `LANE_CLEARANCE`. When M3 merges lanes, a merge counts as a reason too (decision 2.8).
+
+### 4.10 M2 — Corridor steering on a clearance map, option A (#622)
+
+1. **Scope done** (plan 4c.4 item 2 and decision 1, option A; behind the new key `corridor-steering: false`, and `npc.navigation.enabled` stays off by default; with the key off nothing changes).
+    1. **knk-core `corridor/Corridor`.**
+        1. It covers the cells within `corridor-half-width` (4) of a stretch's waypoints. They are flooded from the line's own cells with floor continuity (a step of at most a block, the body's headroom) and must be in a region set one of the line's points has.
+        2. Everything else inside the strip is an obstacle: walls, fences, posts, drops, cells two or more blocks above or below, other regions. Cells beyond the strip are not looked at.
+        3. Clearance is the distance to the nearest obstacle's square, capped at 2: a capped Euclidean distance transform. It is judged from the floor of the point's own cell, so a staircase works. Each cell centre's value is kept once asked.
+        4. A line that passes the same column on two levels gets a corridor per piece. The corridor reads the world only through `NavWorld` while it is built.
+    2. **knk-core `corridor/CorridorShaper`.**
+        1. The line is looked at every 0.5 block. Each point moves square to the line, on its own floor, to the place nearest the road line that keeps `wall-clearance` (0.8). The places allowed over ±2 blocks are intersected first, so an indentation doesn't pull the line into it and a jutting piece is seen before it is reached.
+        2. Where the road is narrower than twice the clearance, a point goes to the place with the most clearance, its middle. One-block doors stay open (the hard minimum 0.35 is the key's lower bound).
+        3. **Chokepoints.** A chokepoint is a place where the narrowest width through a point, over 12 directions, is under 2 blocks for at most 3 blocks, with wider road before and after it. It gets three pinned waypoints on its axis: 1.5 blocks before, in its middle (both across and along), and 1.5 after. That stretch is walked with waypoint margin 0.35.
+        4. **String pulling.** From each anchor, the furthest point whose straight step stays in the corridor is taken. The step must also keep floor continuity, keep the body's corners in the corridor, and keep the least clearance of the points it passes (at most `wall-clearance`). The search gallops then halves, and every step taken is checked.
+        5. The route's last point stays where it is.
+        6. **Cache.** Shaped stretches are cached for 600 ticks, at most 512, keyed by the stretch's waypoints and the options. Every NPC whose stretch has the same waypoints shares one. Counters: `shaped`, `shared`, nanoseconds and reads.
+    3. **Wiring.**
+        1. `RouteFollower.next(world, blocks, floorY, cornerClearance, Steering)` shapes a stretch before corner clearance and the waypoint chain, which stay as the safety net (decision 4). The shaper starts from the road line's own position inside each waypoint's block, not the block centre.
+        2. `Stretch.chokepoints` carries the count, and `Settings.marginFor` picks 0.35 when there is one.
+        3. `NpcNavigationService` holds one shaper (`corridors()`).
+        4. `NavigationSettings` gets `corridor-steering` (false), `corridor-half-width` (4, 1–8) and `wall-clearance` (0.8, 0.35–2), with `config.yml` comments and layer tests.
+    4. **Groups keep today's line.** `NavGroupService` tells the service which movers are group members (`setUnshapedMembers`).
+    5. **Scenarios.**
+        1. The singles of `npc-stairhouse-singles` and `npc-jagged-straight` (collision off and on) run with the key on and check: all 12 arrive, 0 stuck spells, nobody still longer than 3 s, no fall, corridor steering really shaped, and its cost at most 0.03 ms per NPC per tick (`NpcMovementReport.singlesFailures`).
+        2. The report lines gain `corridor shaped N, shared N, X ms per NPC per tick`.
+        3. The jagged straight's group phase stays in report mode (M3). The scenario count stays 45.
+    6. **knk-workspace.**
+        1. Changelog entry with the YAML.
+        2. Configuration reference § 4.27: the three keys, the `corner-clearance` and `waypoint-margin` texts, the YAML block and the § 2.1 row.
+        3. Plan 4c.4 item 2.4: status, before/after and the developer test.
+        4. `plugin-scenarios.md` § 7 and `ci.md` § 7.
+2. **Commits and heads.**
+    1. knk-plugin `claude/npc-movement-m2` at `4e247835`: 4 commits on `next` `a527c980`, which is still the head of `next`.
+    2. knk-workspace `claude/npc-movement-m2` at `a837776`: 1 docs commit on `next`, still its head.
+3. **PRs.** PandiO/knk-plugin#48 (`Closes` #622) and PandiO/knk-workspace#633 (`Part of` #622), base `next`. Not merged.
+4. **Tests, baseline → result.**
+    1. knk-plugin `./gradlew build -x deployToDevServer`.
+        1. Baseline on `next` `a527c980`: core 2830, api-client 344 (2 skipped), paper 2851 (18 skipped).
+        2. Result: core 2853 (+23), api-client 344, paper 2852 (+1), 0 failures.
+        3. New tests:
+            1. `CorridorTest` 8: a 3-wide road, a jutting wall piece, a post, a one-block doorway, a drop, a step with a wall two up, another region, the strip's end.
+            2. `CorridorShaperTest` 10: off a wall, the jagged straight straightened with the clearance, the chord on an open square (within 2 %), the doorway's three waypoints, a one-block passage through its middle, a ledge, a flight of stairs, the route's end, two levels, the cost (reads bounded per stretch; a second NPC reads nothing; rebuilt after the reuse time).
+            3. `RouteFollowerCorridorTest` 5.
+            4. `NpcNavigationConfigTest` +1.
+    2. Scenarios, local (Paper 26.3 b205, WorldEdit 7.4.6, WorldGuard 7.0.20, Citizens b4269, `--min-scenarios 45 --npc-navigation --expect-timeout 1200`).
+        1. Baseline on `next`: 45/45.
+        2. On the branch, every movement check held in all four runs.
+        3. The last local run failed only the cost check, then set at 0.01 ms: 0.0105 ms on the server's first, cold run, 0.004–0.005 ms warm. The bound is now the plan's 0.03 ms budget (decision 5.7).
+    3. CI on PandiO/knk-plugin#48 at `4e247835`: `build` and `paper-boot` green on both runs (43765936833, 43765936845, 43766089003, 43766089025), 45/45 scenarios, log check passed; #586 did not hit.
+    4. Known reds: none. Codex: at its usage limit on both PRs (said on both); finished without it.
+5. **Before (M1's baseline, block 4.9 § 5, reproduced on `next` here) → after (key on); collision off → on.**
+    1. `npc-stairhouse-singles` (12 both ways).
+        1. Arrived: 12/12 → 12/12, both settings.
+        2. Trips, mean and longest: 8.3 s and 9.6 s → 6.8 s and 7.6 s (off); 9.3 s and 12.2 s → 7.2 s and 8.1 s (on).
+        3. Stuck spells: 0 → 0.
+        4. Longest still single: 0.5 → 0.5 s (off); 1.4 → 0.6 s (on).
+        5. On the straight 1414 −503: 0.5 → 0.4 s (off); 0.5 → 0.5 s (on).
+        6. In the entrance: 0.3 → 0.3 s, both settings.
+        7. Falls: 0.
+        8. Corridor: 18 shaped, 6 shared; 0.0105 ms (first run) and 0.0051 ms per NPC per tick.
+    2. `npc-jagged-straight`, singles.
+        1. Arrived: 12/12 → 12/12.
+        2. Trips, mean: 12.3 → 7.7 s (off); 13.8 → 8.0 s (on).
+        3. Stuck spells: 0 → 0.
+        4. Longest still: 0.4 → 0.3 s (off); 1.1 → 0.4 s (on).
+        5. Corridor: 19 shaped, 17 shared; 0.0046 and 0.0042 ms per NPC per tick.
+    3. `npc-jagged-straight`, group of 9 (not shaped, report mode).
+        1. Collision on: exactly the baseline. Leader 9.5 s, 0 folds, 0 stuck spells.
+        2. Collision off: leader 17.3 → 23.4 s, stuck spells 3 → 5, lost 0 → 1.
+        3. The group's stretches are not shaped: the corridor counts don't rise in that phase. The singles before it are faster, so the group starts on a different tick, and this group was already unsteady at baseline (3 spells). M3 owns it.
+    4. Whole K&K nav figure: stair house 0.094 / 0.041 → 0.114 / 0.054 ms; jagged 0.0078 / 0.0047 → 0.0121 / 0.0104 ms. That is the baseline's start-up noise plus the corridor's share, over shorter trips (fewer NPC ticks to spread the shaping over).
+6. **Decisions (DESIGN § 4.3).**
+    1. *Obstacles.* Chosen: a cell is an obstacle when a body can't reach it from the line with floor continuity, or its floor is more than a step from the point's floor. Full-block steps on the walk are floor, not walls. Alternatives: (a) `blocksBody` at feet height as the wall test (counts every full-block stair step as a wall, so lines on stairs would be pushed sideways); (b) faces only across the heading (misses jutting pieces between samples).
+    2. *Regions.* Chosen: a cell must carry a region set that one of the line's points has, so the corridor is shareable between NPCs. Alternatives: (a) each NPC's access verdicts (a corridor per NPC, no sharing; M3's lane rule uses verdicts); (b) ignore regions (a line could move into a region the NPC may not enter).
+    3. *Indentations.* Chosen: intersect the allowed places over ±2 blocks, then take the one nearest the road line. Alternatives: (a) the medial position everywhere (pulls the line into every notch on wide roads); (b) a moving average of offsets (softens the move a jutting piece needs).
+    4. *Chokepoint width.* Chosen: the narrowest width through a point over 12 directions (a door taken diagonally is still one block wide), and the middle along the axis too. Alternatives: (a) the width square to the line (misses doors crossed at an angle; caught by the doorway test).
+    5. *Margin.* Chosen: 0.35 for the whole stretch that has an aligned chokepoint, because the mover port has one margin per list. Alternatives: (a) a per-waypoint margin (a new port method, and Citizens has one margin per target list).
+    6. *Groups.* Chosen: group members keep today's line until M3. Alternatives: (a) shape the leader too. In the first local run the collision-on group's leader took 26.3 s instead of 9.5 s and had 6 stuck spells, because the group path follows the raw route line.
+    7. *Cost check.* Chosen: the corridor's own share at most the plan's 0.03 ms per NPC per tick. Alternatives: (a) 0.01 ms (failed at 0.0105 ms on a cold first run; would be flaky on CI); (b) the whole K&K figure under 0.03 (already above it on `next` in these short runs, M1 § 5.6).
+    8. *Cache.* Chosen: 600 ticks, at most 512 stretches, keyed by the exact waypoints. Alternatives: (a) per route and stretch index (NPCs that start elsewhere have other stretch bounds); (b) no expiry (a door or a build changes the corridor).
+    9. *Scenario variants.* Chosen: the two scenarios run with the key on in both collision variants (45 scenarios, no extra CI time); "before" numbers come from M1's baseline, reproduced locally. Alternatives: (a) four more key-off variants (about 1.5 minutes more CI).
+7. **Out of scope, noted.**
+    1. `/knk npc nav stats` has no corridor line yet (the counts are in `NpcNavigationService.corridors()` and the scenario reports). Nothing filed; a later link can add it with M3's or M4's stats.
+    2. The collision-off group of 9 on the jagged straight is unsteady with or without this link (§ 5.3), and is M3's to check.
+8. **Blockers.** None.
+9. **At merge / what the developer must do.**
+    1. `config.yml`: add `corridor-steering: false`, `corridor-half-width: 4`, `wall-clearance: 0.8` under `npc.navigation` (YAML in the changelog and § 4.27). No migration.
+    2. The developer test is on #622: `quarry-to-keep` with 50 singles and the key on.
+10. **Notes for later links.**
+    1. **M6 (local legs):**
+        1. `Corridor.cellClearance(x, z)` is the clearance per cell.
+        2. `clearanceAt(x, z[, cap])` gives it for any point.
+        3. `floorAt(x, z)` gives the floor; `reach(x, z, dx, dz, max)` gives line of sight with floor continuity, to the exact face.
+        4. A corridor for any line comes from `Corridor.build(world, feet, halfWidth)`. The shaped stretch's corridors are `ShapedLine.corridors()`; `corridorAt(feet)` finds the one under an NPC.
+        5. The shared shaper is `NpcNavigationService.corridors()`.
+    2. **M3 (formations):**
+        1. `Corridor.freeWidth(feet, heading)` gives the free width across the path at any point (left, right, to the exact face).
+        2. `ShapedLine.freeWidths()` has it per shaped waypoint.
+        3. Group members are kept off the corridor by `NavGroupService` → `NpcNavigationService.setUnshapedMembers`. Remove that when the group path uses the corridor; then build the group path from the leader's shaped line.
+    3. `FreeWidth.at` (M1's trace) still uses its own grid walk. `Corridor.freeWidth` gives the same answer inside a corridor.
