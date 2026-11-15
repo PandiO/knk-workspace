@@ -1,9 +1,9 @@
 # Gates — smoke test checklist
 
-**Status:** Living checklist; automated in CI; manual steps not run (the § 2 steps automated on 2026-11-14 for
-[#511](https://github.com/PandiO/knk-workspace/issues/511) passed in the developer's live test of 2026-10-10 and now run as plugin
-scenarios in CI `paper-boot`; their player halves wait for simulated players, [#540](https://github.com/PandiO/knk-workspace/issues/540)). Section 2 (gate safety, [KNG-105](https://linear.app/kngpandi/issue/KNG-105) / [KNG-106](https://linear.app/kngpandi/issue/KNG-106)) **passed 2026-10-10** (developer live test, all steps 1-20 accepted) and is **merged**: knk-plugin `main` merge `8457657` (`b95b1c6` KNG-105, `f157372` KNG-106; [handoff](../ai-agents/handoffs/2026-10-10-gate-safety-kng-105-106.md)).
-**Last updated:** 2026-11-14 (§ 2 steps 8, 9, 10, 11, 12, 14, 15, 16 and 18: the mob, item and vehicle parts as plugin
+**Status:** Living checklist. 10 of 31 steps automated in CI (tagged, 9 of them partly: the mob, item and vehicle
+parts run as plugin scenarios in CI `paper-boot` since 2026-11-14, [#511](https://github.com/PandiO/knk-workspace/issues/511); the player halves wait for simulated players,
+[#540](https://github.com/PandiO/knk-workspace/issues/540)); every step can still be run by hand. The tagged § 2 steps passed in the developer's live test of 2026-10-10. Section 2 (gate safety, [KNG-105](https://linear.app/kngpandi/issue/KNG-105) / [KNG-106](https://linear.app/kngpandi/issue/KNG-106)) **passed 2026-10-10** (developer live test, all steps 1-20 accepted) and is **merged**: knk-plugin `main` merge `8457657` (`b95b1c6` KNG-105, `f157372` KNG-106; [handoff](../ai-agents/handoffs/2026-10-10-gate-safety-kng-105-106.md)).
+**Last updated:** 2026-11-15 (every step in full again, covered steps tagged `[automated: …]` or `[partly automated: …]`, developer decision 2026-11-15, #511); 2026-11-14 (§ 2 steps 8, 9, 10, 11, 12, 14, 15, 16 and 18: the mob, item and vehicle parts as plugin
 scenarios, [#511](https://github.com/PandiO/knk-workspace/issues/511), in knk-plugin `next`); 2026-11-14 (§ 2 steps 11 and 20: the automated parts, plugin scenarios, [#421](https://github.com/PandiO/knk-workspace/issues/421), in knk-plugin `next`); 2026-10-19 (section 3, drawbridges, [KNG-193](https://linear.app/kngpandi/issue/KNG-193): passed on gate door 14; merged)
 **Related:** [gate commands](../architecture/gate-commands.md) (its §6 is the KNG-77/78/79 command checklist, passed 2026-10-09), [gate specs](../specs/gate-structure-animation/)
 
@@ -29,41 +29,25 @@ The command checklist (layers, `here`, look-at, permissions) is [gate-commands.m
 
 **Moving doors (KNG-106)**
 
-8. [automated] A mob in each half of a closing portcullis's opening is moved out on the side it stood on, unharmed and
-   never caught by the door, also when a wall makes the other side nearer: plugin scenario
-   `gate-closing-keeps-mobs-on-their-side`. Manual: the same as a survival player (a player's own movement and view;
-   simulated players, [#540](https://github.com/PandiO/knk-workspace/issues/540)).
-9. [automated] A mob across both layers of a door two blocks deep ends up outside its whole depth, unharmed: plugin
-   scenario `gate-deep-door-moves-mob-out`. Manual: the same as a player (#540).
-10. [automated] A mob in the inside half of the opening stays on the inside, not pushed through: plugin scenario
-    `gate-closing-keeps-mobs-on-their-side` (its south pig). Manual: the same as a player (#540).
-11. [automated] A mob in the opening ends up outside the door: plugin scenario `gate-closing-moves-entity-out`
-    ([#421](https://github.com/PandiO/knk-workspace/issues/421)). [automated] A dropped item in the opening is moved out
-    before the door's blocks land on it and still exists: plugin scenario `gate-closing-moves-item-out`.
-12. [automated] A minecart with a mob in it is moved out of the opening with the mob still riding it: plugin scenario
-    `gate-closing-moves-vehicle-with-rider`. Manual: a player on a horse or in a minecart (#540).
-13. Drawbridge: stand where the bridge comes down and lower it, then stand on it and raise it. You are moved out of the arc each time, onto solid ground, not into the moat or lava.
-    Manual: the scenarios have no fake drawbridge (`ROTATION`) door yet, and the player part needs #540.
-14. [automated] Two portcullises side by side: a mob moved out of one is never put into the other's opening, even when
-    that opening is the nearest free spot: plugin scenario `gate-side-by-side-doors`. Manual: the same as a player (#540).
-15. [automated] Opening a portcullis doesn't move the mobs standing right in front of and behind it: plugin scenario
-    `gate-opening-leaves-neighbours`. Manual: the same as a player (#540).
+8. [partly automated: plugin scenario `gate-closing-keeps-mobs-on-their-side` (a mob in each half of the opening is moved out on the side it stood on, unharmed, also when a wall makes the other side nearer); by hand: the same as a survival player (a player's own movement and view; simulated players, [#540](https://github.com/PandiO/knk-workspace/issues/540))] Survival: stand in the opening of an open portcullis and close it. Before the bottom row reaches you, you are moved to the side of the door you were standing on (or to the other side when yours has no room), on the ground, unharmed.
+9. [partly automated: plugin scenario `gate-deep-door-moves-mob-out` (a mob across both layers); by hand: the same as a player (#540)] Same with a door that is two or more blocks deep: you end up outside its whole depth, not between its layers.
+10. [partly automated: plugin scenario `gate-closing-keeps-mobs-on-their-side` (its south pig); by hand: the same as a player (#540)] Stand just behind the door (the inside face) and close it: you stay on the inside, you are not pushed through it.
+11. [automated: plugin scenarios `gate-closing-moves-entity-out` ([#421](https://github.com/PandiO/knk-workspace/issues/421)) and `gate-closing-moves-item-out` (the item is moved out before the door's blocks land on it and still exists)] Drop an item and spawn a mob (e.g. a pig) in the opening, then close the door: both end up outside the door, not inside the blocks.
+12. [partly automated: plugin scenario `gate-closing-moves-vehicle-with-rider` (a minecart with a mob riding it); by hand: a player on a horse or in a minecart (#540)] Ride a horse or sit in a minecart in the opening and close the door: the vehicle moves with you on it.
+13. *(Manual: the scenarios have no fake drawbridge (`ROTATION`) door yet, and the player part needs #540.)* Drawbridge: stand where the bridge comes down and lower it, then stand on it and raise it. You are moved out of the arc each time, onto solid ground, not into the moat or lava.
+14. [partly automated: plugin scenario `gate-side-by-side-doors` (a mob, even when the other opening is the nearest free spot); by hand: the same as a player (#540)] Two doors side by side: being moved out of one never puts you inside the other's opening.
+15. [partly automated: plugin scenario `gate-opening-leaves-neighbours` (mobs in front of and behind the door); by hand: the same as a player (#540)] Opening a door with you standing next to it doesn't move you.
 
 **Already inside door blocks (KNG-106)**
 
-16. [automated] A mob put into the middle of a closed door's blocks is moved out within two seconds at full health (its
-    suffocation damage cancelled): plugin scenario `gate-blocks-never-suffocate`. Manual: `/tp` as a survival player
-    (the teleport hook only runs for players, #540).
-17. Log out while standing in an opening, have someone close the door, log back in: you are moved out on join, without damage.
-    Manual: needs a player who joins (#540).
-18. [automated] A mob in an ordinary stone block still takes suffocation damage (the control in the same scenario):
-    plugin scenario `gate-blocks-never-suffocate`. Manual: the same as a player (#540).
+16. [partly automated: plugin scenario `gate-blocks-never-suffocate` (a mob put into a closed door's blocks is moved out within two seconds at full health); by hand: `/tp` as a survival player and the log line (the teleport hook only runs for players, #540)] Survival: `/tp` yourself into the blocks of a closed door (e.g. `/tp @s <x> <y> <z>` at the door's middle). You are moved out within a tick and take no suffocation damage. The server log shows `[GateSafety] Moved player … out of the blocks of gate door …`.
+17. *(Manual: needs a player who joins, #540.)* Log out while standing in an opening, have someone close the door, log back in: you are moved out on join, without damage.
+18. [partly automated: plugin scenario `gate-blocks-never-suffocate` (a mob in an ordinary stone block, the control in the same scenario); by hand: the same as a player (#540)] Suffocating in a normal wall (not a gate) still hurts as usual.
 19. Optional: set `gates.safety.door-suffocation-damage: true`, restart, repeat step 16: you are still moved out, but take the vanilla suffocation damage first.
 
 **Regression**
 
-20. Opening, closing, pass-through (`/gate passthrough`), gate damage and the health display behave as before.
-    [automated] Opening and closing a portcullis: plugin scenario `gate-open-close` (CI `paper-boot`, [#421](https://github.com/PandiO/knk-workspace/issues/421)). Pass-through, damage and the display stay manual.
+20. [partly automated: plugin scenario `gate-open-close` (opening and closing a portcullis, CI `paper-boot`, [#421](https://github.com/PandiO/knk-workspace/issues/421)); by hand: pass-through, gate damage and the health display] Opening, closing, pass-through (`/gate passthrough`), gate damage and the health display behave as before.
 
 **Live test, 2026-10-10 (developer): all steps 1-20 accepted.**
 
