@@ -22,8 +22,8 @@
 |---|---|---|---|---|---|---|
 | L1 Temp region releases | #399 | Merged into next (2026-11-15) | knk-web-api `a0b5ff3f`, knk-workspace `86adf724`; next: api `3b36edc6`, ws `5dafabac` | [knk-web-api#33](https://github.com/PandiO/knk-web-api/pull/33), [knk-workspace#572](https://github.com/PandiO/knk-workspace/pull/572) | green (runs 43702385149, 43702462646) | create_session session_01R1w2Uvbubw539aKYxgnvjR |
 | L2 List field cards at 390 px | #290 | Merged into next (2026-11-15) | web-app `8cb616b`, workspace `080a4bdf`; next: app `9b5f9ddf`, ws `9eeb29ff` | [web-app#38](https://github.com/PandiO/knk-web-app/pull/38), [#571](https://github.com/PandiO/knk-workspace/pull/571) | green (PR run; push-run e2e flake #573, re-run green) | create_session session_01R1w2UswAebrDAEEFqUHA3e |
-| L3 "Show what uses it" for more refusals | #289 | Done, in review (2026-11-15) | api `98f0c91`, web-app `41c75ca`, workspace `42f40e3d` | [web-api#34](https://github.com/PandiO/knk-web-api/pull/34), [web-app#39](https://github.com/PandiO/knk-web-app/pull/39), [#579](https://github.com/PandiO/knk-workspace/pull/579) | green (PR runs 43706535991/43706535990 api, 43706550931/43706550951 web) | subagent of the coordinator |
-| L4 Builder rules and templates into the draft | #291 | Not started | — | — | — | — |
+| L3 "Show what uses it" for more refusals | #289 | Merged into next (2026-11-15) | api `98f0c91`, web-app `41c75ca`, workspace `d833cb0a`; next: api `378921c6`, app `2dfd5883`, ws `e8a4e1e8` | [web-api#34](https://github.com/PandiO/knk-web-api/pull/34), [web-app#39](https://github.com/PandiO/knk-web-app/pull/39), [#579](https://github.com/PandiO/knk-workspace/pull/579) | green (PR runs); next: app run 43707033299 pending | subagent (decision 13) |
+| L4 Builder rules and templates into the draft | #291 | Running (2026-11-15) | — | — | — | subagent (two component repos, § 4.1.4) |
 | L5 Lookup applies picker filters | #288 | Not started | — | — | — | — |
 | L6 Player profile API part | #565 | Not started | — | — | — | — |
 | L7 Plugin carries out web kick/ban | #574 | Not started | — | — | — | — |
@@ -87,6 +87,19 @@
     knk-workspace#571 (`9eeb29ff`) into `next`. CI on knk-web-api `next` after L1 (`3b36edc6`) is green (build and
     test, fresh-database migrations). Gate for L3 open (both L2 branches 0 commits ahead of `next`). L3 started as a
     subagent.
+15. **L3 check and merge (2026-11-15).** Chosen: merge knk-web-api#34, knk-web-app#39 and knk-workspace#579 into `next`
+    with merge commits, because § 6 held: heads match; the API branch contains `next`; the web-app branch was 2 commits
+    behind (`next` gained the staff chain's #407 on `PlayerProfilePage.tsx`, no shared file) and merged cleanly; CI
+    green on both code PRs; no review threads; Codex at its usage limit (noted on the PRs); scope inside #289 (the API
+    part was needed: form configurations are not dashboard types); 12 new xUnit, 7 Jest and 5 Playwright tests. I read
+    the API access change: `FormConfiguration` references need `knk.admin.content` (Entity setup's node), the per-type
+    trimming of V6 is kept, `?all=true` only widens to cascades. Docs PR conflicted (CHANGELOG, two architecture
+    headers): merged `origin/next` into it (`d833cb0a`), kept both sides, marked the code as in `next`. Deploy note
+    from L3: API before or with the web app (an older API answers 404 for a form configuration). Alternatives: (a) send
+    L3 back for the docs merge: slower for a mechanical conflict.
+16. **L4 start.** Gate open (L1 and L3 0 commits ahead of `next` in every repo they changed). Subagent route (knk-web-api
+    and knk-web-app). The developer's #291 decision is in the prompt. Started while knk-web-app `next` CI after L3 was
+    still running; a red result would stop the next merge, not the link.
 
 ## 4. Link blocks
 
