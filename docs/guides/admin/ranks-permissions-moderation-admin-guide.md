@@ -1,10 +1,14 @@
 # Ranks, permissions and moderation — admin guide
 
-**Status:** Current · **Last updated:** 2026-11-15 (§ 3.1, § 3.3, § 7: a group's nodes in the web app with History, the PermissionGrant table, search and sort on the profile's Permissions tab; #50, #408, #407 in `next`, docs #576)
+**Status:** Current · **Last updated:** 2026-11-15 (§ 5.1, § 5.4, § 5.6, § 7–10: kick and ban from the web app, unfreeze reason, game sessions in the timeline, the moderation search's filters; #565, #574 in `next`, docs #597)
 **Checked against:** knk-web-api `master` `75b5a00`, knk-web-app `main` `3ba747d`, knk-plugin `main` `57884e97`; not
 live-tested as a whole (the parts' own smoke tests are linked in § 9). The group Permissions panel, the PermissionGrant
 table and the profile's permission search (#50, #408, #407) are in `next` (knk-web-api `dcbb1f82`, knk-web-app
-`b2589eb4`), not yet released; covered by automated tests, their manual smoke-test steps not run yet
+`b2589eb4`), not yet released; covered by automated tests, their manual smoke-test steps not run yet. Kick and ban
+from the web app, the unfreeze reason, game sessions and the search filters (#565, #574) are in `next` (knk-web-api
+`5e10185f`, knk-web-app `98e108f0`, knk-plugin `1adcb497`), not yet released; automated in CI, the in-game steps of
+[player profile smoke test § 7](../player-profile-smoke-test.md#7-profile-api-part-frozen-state-unfreeze-reason-sessions-search-filters-kick-and-ban-565)
+not run
 **Related:** [ranks, titles and chat (player guide)](../users/ranks-and-chat-player-guide.md) (what players see),
 [dashboard access and ranks](dashboard-access-admin-guide.md) (area nodes, delete/export nodes, the escalation guard's
 rank rule), [commands reference](../users/commands.md) (every command and node), [staff web app](staff-web-app-guide.md),
@@ -20,8 +24,8 @@ of all this is in the [player guide](../users/ranks-and-chat-player-guide.md); t
 
 1. **Web app:** a web account linked to your Minecraft account with `knk.admin.user.manage` opens **Players & support →
    Player moderation** (`/admin/users`) and the player profiles. Changing groups needs `knk.admin.user.group`, changing
-   nodes `knk.admin.user.perm`; freezing `knk.freeze` / `knk.unfreeze`. A button you lack the node for is greyed out with
-   "Requires <node>".
+   nodes `knk.admin.user.perm`; freezing `knk.freeze` / `knk.unfreeze`; kicking and banning `knk.kick` / `knk.ban`
+   (§ 5.4, in `next`). A button you lack the node for is greyed out with "Requires <node>".
 2. **In game:** the same nodes, through `/knk user …`, `/freeze`, `/unfreeze` and the Player manager (`/menu` →
    **Player manager**, shown with `knk.admin.user.manage`).
 3. **When changes arrive in game:** a change made in game (`/knk user`, Player manager) applies at once. A change made in
@@ -184,7 +188,7 @@ they don't hold (PandiO/knk-workspace#469, not yet checked live). Until that is 
 
 | Where | How |
 |---|---|
-| Web app | Player profile → **Freeze** (top right, or the **Moderation** tab's Freeze card) → type a **Reason** (required, up to 200 characters) → **Freeze**. **Unfreeze** asks no reason. |
+| Web app | Player profile → **Freeze** (top right, or the **Moderation** tab's Freeze card) → type a **Reason** (required, up to 200 characters) → **Freeze**. **Unfreeze** asks "Unfreeze <player>?" with an optional **Reason (optional)**, saved in the audit log's **Player unfrozen** entry (in `next`, #565; before, it asked no reason). |
 | In game | `/freeze <player> <reason…>`, `/unfreeze <player>` |
 | Player manager | the Freeze / Unfreeze button; the reason is always "Frozen by a member of staff" |
 
@@ -200,8 +204,10 @@ they don't hold (PandiO/knk-workspace#469, not yet checked live). Until that is 
    attack (PandiO/knk-workspace#463). Staff teleports still move a frozen player (PandiO/knk-workspace#309).
 5. The player sees "You have been frozen: <reason>" and a red bar "Frozen by <you> for: <reason>". The bar says "staff"
    for the console, a vanished staff member and the web app, and sometimes for a named freeze too (#463).
-6. The profile shows **Frozen** with "Frozen since … by …" and the reason; the audit log records **Player frozen** with
-   the reason and **Player unfrozen**.
+6. The profile shows **Frozen** with "Frozen since <time> by <staff member>" and "Reason: <reason>" ("none recorded"
+   without one). A freeze with no known staff member (from the console, or older data) says "by the game server or
+   the system". The audit log records **Player frozen** with the reason and **Player unfrozen** with the unfreeze
+   reason, if one was typed.
 
 ### 5.2 Staff mode and owner mode
 
@@ -233,13 +239,46 @@ they don't hold (PandiO/knk-workspace#469, not yet checked live). Until that is 
 
 ### 5.4 Kick and ban
 
+**From the web app** (in `next` since 2026-11-15, [#565](https://github.com/PandiO/knk-workspace/issues/565) and
+[#574](https://github.com/PandiO/knk-workspace/issues/574); not yet released, the in-game steps not live-tested):
+
+1. **Where:** the player profile's status strip (**Kick**, **Ban**, next to Freeze) or the **Moderation** tab's **Kick
+   and ban** card (**Kick…**, **Ban…**). Only for an account with a Minecraft account; otherwise the card says "This
+   account has no Minecraft account, so there is nothing to kick or ban in game."
+2. **Nodes:** `knk.kick` and `knk.ban`, seeded on Staff (migration `SeedStaffKickBanNodes`), so Moderator and Admin
+   have them on the alpha. Without the node the button is greyed out with "Requires knk.kick" / "Requires knk.ban". You
+   must outrank the player.
+3. **Kick:** "Kick <player>?" asks an optional reason (up to 200 characters, "Shown to the player and saved in the
+   audit log."). The game server disconnects the player with that reason, or with "You were kicked by a member of
+   staff." without one; they can join again straight away. Only works while the player is online.
+4. **Ban:** "Ban <player> permanently?" needs a reason (up to 200 characters). The game server puts the player on its
+   ban list (Paper's `banned-players.json`), permanent, with the reason and you as the source, and kicks them if they
+   are online with "You are banned from this server." and the reason. A player who is already on the ban list keeps
+   the existing entry. Offline players can be banned too.
+5. **There is no unban in the web app.** Lift a ban in game with `/pardon <player>` (an op, #460).
+6. **Audit:** **Kicked from the game** and **Banned from the game** ("Permanent; lifted with /pardon in game") with the
+   reason, on the player's **Activity** tab (§ 7).
+7. **Every game server** that is connected to the API carries it out; one that isn't connected at that moment never
+   gets it. The texts are in the plugin's `config.yml`, `realtime.moderation.kick-default-reason` and
+   `realtime.moderation.ban-message` ([plugin configuration § 4.3](plugin-configuration.md#43-realtime)); they need
+   `realtime.enabled: true`.
+8. **Refusals** (an error toast "Could not kick/ban <player>: …"; nothing is sent or audited):
+   - "You can't kick yourself." / "You can't ban yourself."
+   - "You can only kick or ban players ranked below you."
+   - "<player> is not online, so there is nothing to kick."
+   - "No game server is connected, so the kick can't be carried out now. Try again when the game server is up, or use
+     /kick in game." (the same for a ban)
+   - "<player> has no Minecraft account, so there is nothing to kick in game."
+
+**In game:**
+
 1. The Player manager's **Kick** and **Ban** buttons (after **Confirm**) run the server's own `/kick` and `/ban` as you,
    with the text "You were kicked by a member of staff." / "You were banned by a member of staff.". You can also type
    `/kick` and `/ban` yourself.
 2. They need the vanilla permissions `minecraft.command.kick` / `minecraft.command.ban`, which KnK groups can't grant:
-   **in practice only ops can kick or ban** (PandiO/knk-workspace#460). A non-op gets the server's own refusal.
-3. They have no KnK node, no KnK rank check and no KnK audit entry (#460). The web app can't kick or ban: the
-   profile's **Kick and ban** card says so. Lift a ban with the server's `/pardon`.
+   **in practice only ops can kick or ban in game** (PandiO/knk-workspace#460). A non-op gets the server's own
+   refusal. Staff without op use the web app (above).
+3. They have no KnK node, no KnK rank check and no KnK audit entry (#460).
 4. A staff member with `knk.notify.joinattempt` gets a chat line when a banned player tries to join.
 5. There is no mute; freeze is the way to stop someone chatting (PandiO/knk-workspace#466).
 
@@ -248,6 +287,24 @@ they don't hold (PandiO/knk-workspace#469, not yet checked live). Until that is 
 Balances, XP and titles, salary payouts, kits, inventories, teleports and game mode are in the [commands
 reference § Staff and admin commands](../users/commands.md#staff-and-admin-commands). In the Player manager, balance
 clicks are collected until you close the menu and type the reason in chat.
+
+### 5.6 Finding a player: Player moderation → All players
+
+**Player moderation** (`/admin/users`, `knk.admin.user.manage`) → **All players** lists every account, 20 per page.
+
+1. **Search username / email / UUID**: part of a name or email, or part of a UUID with or without dashes (in `next`,
+   #565; before, only a whole dashless UUID matched). Leave it blank to list everyone.
+2. **Online**, **Frozen** and **Payments** (in `next`, #565): each is *Any*, or yes or no (*Online* / *Offline*,
+   *Frozen* / *Not frozen*, *Locked* / *Not locked*). Choosing one searches at once.
+3. **Sort** by Username, Email, Last seen, Coins or XP: click the header, again for the other direction. Last seen
+   ascending puts players who were never seen first.
+4. The **Status** column shows **Online** / **Offline** (live) and **Frozen** and **Payments locked** chips; **Created**
+   is when the account was made.
+5. The search, the filters and the sort are in the address, so Back from a profile and a shared link return to the
+   same list.
+
+The other tabs: **By group / online** (members of one group, optionally only those online), **Premium expiring soon**
+and **Recently demoted** (§ 7).
 
 ## 6. The Player manager (in game)
 
@@ -269,19 +326,25 @@ clicks are collected until you close the menu and type the reason in chat.
 
 ## 7. The audit log
 
-1. **Where:** the player profile's **Activity** tab: **Timeline** (audit entries and, with `knk.admin.currency.history`,
-   balance changes, newest first, with filter chips) and **Audit log** (a table: When, Action, By, Details, 25 per
+1. **Where:** the player profile's **Activity** tab: **Timeline** (audit entries, the player's game sessions and, with
+   `knk.admin.currency.history`, balance changes, newest first, with filter chips) and **Audit log** (a table: When, Action, By, Details, 25 per
    page, an **Action** filter). **Player moderation → Recently demoted** lists title demotions. There is no audit page
    across all players. Reading needs `knk.admin.user.manage`. Entries are kept 180 days.
 2. **Recorded, with who did it:** group assigned and removed (also by the one-rank rule), grants added, changed and
    removed **on a player**, title changes, balance adjustments with the reason, salary payouts, freeze and unfreeze
    with the reason, mode changes, kit grants, staff teleports, lootbox spawns and grants, discovery resets, currency
    reversals and payment locks, private-message log reads, invitations, Minecraft link changes, admissions, dashboard
-   bulk deletes and exports. A change made by the system (an expiry) has no actor ("system").
-3. **A group's node changes** (#50, in `next`) are recorded with the group as subject, not on a player: they show in
+   bulk deletes and exports, and kicks and bans from the web app (§ 5.4, in `next`). A change made by the system (an
+   expiry) has no actor ("system").
+3. **Game sessions** (in `next`, #565): each visit to a game server is a timeline entry at its start, "Played on
+   <server>" with "Until <time>", how it ended ("Left the game", "Server stopped", "Kicked", "Closed without a
+   heartbeat (timeout)") and "Active <time>"; "In game on <server>" with "Still open" while it lasts. The **Game
+   sessions** chip shows or hides them. They are not audit entries, so the **Audit log** table doesn't list them. If
+   they can't be read, the timeline says "Could not load the game sessions." and shows the rest.
+4. **A group's node changes** (#50, in `next`) are recorded with the group as subject, not on a player: they show in
    the group's **History** (§ 3.3), not in the members' audit logs. They survive a member's data deletion.
-4. **Not recorded:** changes to a group's settings and group deletes (#464), kick and ban (#460), staff chat, social spy
-   toggles and ignore lists (#466).
+5. **Not recorded:** changes to a group's settings and group deletes (#464), kick and ban **in game** (#460), staff
+   chat, social spy toggles and ignore lists (#466).
 
 ## 8. Nodes in this guide
 
@@ -294,6 +357,7 @@ clicks are collected until you close the menu and type the reason in chat.
 | `knk.admin.user.perm` | Grant, deny and revoke nodes, on players and on groups ranked below you; create and edit groups | Staff |
 | `knk.admin.user.mode`, `knk.admin.user.salary`, `knk.admin.user.coins`, `.gems`, `.xp`, `.info`, `.history` | The Player manager and `/knk user` actions of that name | Staff |
 | `knk.freeze`, `knk.unfreeze` | Freeze and unfreeze | Staff |
+| `knk.kick`, `knk.ban` | Kick and ban from the web app (in `next`, § 5.4); in game kick and ban stay op-only (#460) | Staff |
 | `knk.mode.staff`, `knk.mode.owner` | Staff mode, owner mode; seeing vanished staff; `[STAFF]` / `[OWNER]` in chat | Staff; the owner |
 | `knk.staffchat`, `knk.socialspy` | Staff chat, social spy | Staff |
 | `knk.socialspy.exempt` | Your private messages stay hidden from spies without it | the owner |
@@ -322,6 +386,9 @@ On the dev server, with test accounts: the owner, an Admin, a Staff member, a De
    seconds. Check the **Privacy** tab as the owner.
 6. **Staff mode:** as Staff, `/sm on`: the player no longer sees you in the tab list or the server list; `/sm off
    onquit`, relog: no join message.
+7. **Kick and ban from the web app:** with a test player online and the plugin's `realtime.enabled: true`, follow
+   the [player profile smoke test § 7](../player-profile-smoke-test.md#7-profile-api-part-frozen-state-unfreeze-reason-sessions-search-filters-kick-and-ban-565)
+   steps 8–11; lift the ban with `/pardon` afterwards.
 
 Never test kick and ban on a real player. For dashboard rights use the [dashboard access smoke test](../dashboard-access-smoke-test.md).
 
@@ -344,9 +411,18 @@ Never test kick and ban on a real player. For dashboard rights use the [dashboar
 | A node change in the web app doesn't work in game yet | The 30-second permission cache | Wait, or `/knk cache refresh` |
 | A grant you made is gone the next day | The web app's expiry defaults to one day | Grant again with **Clear** on the expiry |
 | Colours of a Staff group don't show | Only Default and premium tiers' colours are used | PandiO/knk-workspace#260 |
-| "The /kick command isn't available." or the server's own refusal | Kick and ban need vanilla op permissions | Ask an op (#460) |
+| "The /kick command isn't available." or the server's own refusal | Kick and ban **in game** need vanilla op permissions | Use the web profile's Kick / Ban (§ 5.4), or ask an op (#460) |
+| "You can only kick or ban players ranked below you." | The player ranks as high as you or higher | Ask someone ranked higher |
+| "… is not online, so there is nothing to kick." | A kick needs the player online | Ban instead, or wait |
+| "No game server is connected, so the kick (ban) can't be carried out now. …" | No game server is connected to the API | Start the game server, check `realtime.enabled` and the hub, or use `/kick` / `/ban` in game |
+| The web app says "<player> is banned" but they can still join | The plugin on that server is older than #574 or has `realtime.enabled: false`, or that server wasn't connected at that moment | Deploy the plugin with #574 and realtime on; ban again or use `/ban` in game |
+| A banned player must be let back in | There is no unban in the web app | `/pardon <player>` in game |
 | Frozen player still breaks blocks | Freeze doesn't cover building and interaction | Known gap #463 |
 
 ## Changes
 
-1. 2026-11-13: first version, PandiO/knk-workspace#301
+1. 2026-11-15: § 5.4 kick and ban from the web app, § 5.1 unfreeze reason and frozen since/by, § 5.6 the moderation
+   search's filters and sort, § 7 game sessions in the timeline, § 8–10; #565, #574 in `next`, docs #597
+2. 2026-11-15: § 3.1, § 3.3, § 7: a group's nodes with History, the PermissionGrant table, the profile's permission
+   search; #50, #408, #407 in `next`, docs #576
+3. 2026-11-13: first version, PandiO/knk-workspace#301

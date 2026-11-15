@@ -8,7 +8,8 @@ This is a human-readable record of capabilities merged into the V3 default branc
   ([PandiO/knk-workspace#574](https://github.com/PandiO/knk-workspace/issues/574); developer decisions 2026-11-15 on
   [#565](https://github.com/PandiO/knk-workspace/issues/565); link L7 of the Chain 3 follow-ups chain,
   [#564](https://github.com/PandiO/knk-workspace/issues/564)) — knk-plugin and knk-workspace branches
-  `claude/web-kick-ban-574` (PRs into `next`, in review, not merged). For players: a kick from the web app disconnects
+  `claude/web-kick-ban-574`, merged into `next` 2026-11-15 (knk-plugin#42 `1adcb497`, docs knk-workspace#596); on the
+  trunk when the developer promotes `next`. For players: a kick from the web app disconnects
   them with the staff member's reason; a web ban puts them on the server's ban list like `/ban` (permanent, lifted with
   `/pardon`) and disconnects them if online.
   1. **Handlers.** The plugin handles the realtime `PlayerKick` / `PlayerBan` v1 events
@@ -25,8 +26,9 @@ This is a human-readable record of capabilities merged into the V3 default branc
 - **Staff player profile, API part: frozen state in the summary, unfreeze reason, game sessions, search filters; kick and ban from the web**
   ([PandiO/knk-workspace#565](https://github.com/PandiO/knk-workspace/issues/565), part of #119; developer decisions
   2026-11-15 on kick and ban; link L6 of the Chain 3 follow-ups chain, [#564](https://github.com/PandiO/knk-workspace/issues/564))
-  — knk-web-api, knk-web-app and knk-workspace branches `claude/player-profile-api-119` (PRs into `next`, in review,
-  not merged). For players: staff can now kick and ban them from the web app (carried out by the game server once
+  — knk-web-api, knk-web-app and knk-workspace branches `claude/player-profile-api-119`, merged into `next` 2026-11-15
+  (knk-web-api#37 `5e10185f`, knk-web-app#42 `98e108f0`, docs knk-workspace#595); on the trunk when the developer
+  promotes `next`. For players: staff can now kick and ban them from the web app (carried out by the game server once
   knk-plugin link L7, [#574](https://github.com/PandiO/knk-workspace/issues/574), is in).
   1. **Frozen state from the summary.** `GET api/users/{id}/profile-summary` carries `frozenAt`, `frozenByUserId` and
      `frozenByUsername` next to `isFrozen` / `frozenReason`; the profile's frozen banner reads them and no longer
@@ -121,7 +123,8 @@ This is a human-readable record of capabilities merged into the V3 default branc
 - **Relation picker: lookup mode applies the field's narrowing filters**
   ([PandiO/knk-workspace#288](https://github.com/PandiO/knk-workspace/issues/288), developer decision 2026-11-15; link
   L5 of the Chain 3 follow-ups chain, [#564](https://github.com/PandiO/knk-workspace/issues/564)) — knk-web-api,
-  knk-web-app and knk-workspace branches `claude/lookup-picker-filters-288` (PRs into `next`, in review, not merged).
+  knk-web-app and knk-workspace branches `claude/lookup-picker-filters-288`, merged into `next` 2026-11-15 (knk-web-api#36
+  `d8514ed4`, knk-web-app#41 `990af482`, docs knk-workspace#587); on the trunk when the developer promotes `next`.
   No change for players.
   1. **Filtered fields work without the read node.** Staff who search a related type through `api/Lookup` (no read
      node of that type) can now use a relation field whose picker filters narrow the list, e.g. a siege objective's
@@ -141,7 +144,8 @@ This is a human-readable record of capabilities merged into the V3 default branc
 - **Form builder: field validation rules are part of the draft and go live on Publish; add-from-template endpoints removed**
   ([PandiO/knk-workspace#291](https://github.com/PandiO/knk-workspace/issues/291); link L4 of the Chain 3 follow-ups
   chain, [#564](https://github.com/PandiO/knk-workspace/issues/564)) — knk-web-api, knk-web-app and knk-workspace
-  branches `claude/builder-draft-rules-291` (PRs into `next`, in review, not merged). No change for players.
+  branches `claude/builder-draft-rules-291`, merged into `next` 2026-11-15 (knk-web-api#35 `93c3d50f`, knk-web-app#40
+  `cd730f29`, docs knk-workspace#583); on the trunk when the developer promotes `next`. No change for players.
   1. **Rules in the draft.** In the form builder a field's cross-field validation rules are kept in the draft (keyed by
      field GUID) with **Save Field** and **Save**, marked *Not published*, and applied on **Publish** (adds, edits and
      deletes); the form wizard keeps the published rules until then. **Discard** drops rule changes.
@@ -235,14 +239,16 @@ This is a human-readable record of capabilities merged into the V3 default branc
 - **Form wizard: list field cards stay readable on a phone**
   ([PandiO/knk-workspace#290](https://github.com/PandiO/knk-workspace/issues/290); link L2 of the Chain 3 follow-ups
   chain, [#564](https://github.com/PandiO/knk-workspace/issues/564)) — knk-web-app and knk-workspace
-  `claude/list-field-cards-290` (PRs into `next`, in review). In an Object List field the cards under "Selected (n):"
+  `claude/list-field-cards-290`, merged into `next` 2026-11-15 (knk-web-app#38 `9b5f9ddf`, docs knk-workspace#571); on the
+  trunk when the developer promotes `next`. In an Object List field the cards under "Selected (n):"
   wrap at narrow widths: the name keeps the card's width (a long name wraps instead of being cut to one letter) and ×
   and **Edit instance** move to their own line. Desktop layout unchanged. Playwright spec
   `e2e/form-wizard-list-field.spec.ts`.
 - **Temp region releases: no server left out, no release stuck behind waiting ones**
   ([PandiO/knk-workspace#399](https://github.com/PandiO/knk-workspace/issues/399); link L1 of the Chain 3 follow-ups
   chain, [#564](https://github.com/PandiO/knk-workspace/issues/564)) — knk-web-api and knk-workspace branches
-  `claude/temp-region-releases-399` (PRs into `next`, in review). No change for players.
+  `claude/temp-region-releases-399`, merged into `next` 2026-11-15 (knk-web-api#33 `3b36edc6`, docs knk-workspace#572);
+  on the trunk when the developer promotes `next`. No change for players.
   1. `GET api/WorldTasks/temp-region-releases` answers 400 for a blank or missing `serverId`, as `GET open` does.
      The plugin always sends `realtime.server-id`, so it is not affected.
   2. Unused temp regions of abandoned drafts are no longer kept past their release when more than 200 older releases
