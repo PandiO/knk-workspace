@@ -24,7 +24,7 @@
 | L2 List field cards at 390 px | #290 | Merged into next (2026-11-15) | web-app `8cb616b`, workspace `080a4bdf`; next: app `9b5f9ddf`, ws `9eeb29ff` | [web-app#38](https://github.com/PandiO/knk-web-app/pull/38), [#571](https://github.com/PandiO/knk-workspace/pull/571) | green (PR run; push-run e2e flake #573, re-run green) | create_session session_01R1w2UswAebrDAEEFqUHA3e |
 | L3 "Show what uses it" for more refusals | #289 | Merged into next (2026-11-15) | api `98f0c91`, web-app `41c75ca`, workspace `d833cb0a`; next: api `378921c6`, app `2dfd5883`, ws `e8a4e1e8` | [web-api#34](https://github.com/PandiO/knk-web-api/pull/34), [web-app#39](https://github.com/PandiO/knk-web-app/pull/39), [#579](https://github.com/PandiO/knk-workspace/pull/579) | green (PR runs); next: app run 43707033299 pending | subagent (decision 13) |
 | L4 Builder rules and templates into the draft | #291 | Merged into next (2026-11-15) | api `a851436`, web-app `0d604fe`, workspace `4fa25605`; next: api `93c3d50f`, app `cd730f29`, ws `0ca9b1b6` | [web-api#35](https://github.com/PandiO/knk-web-api/pull/35), [web-app#40](https://github.com/PandiO/knk-web-app/pull/40), [#583](https://github.com/PandiO/knk-workspace/pull/583) | green (PR runs 43711458740/43711458686 api, 43711488807/43711488760 web) | subagent (two component repos, § 4.1.4); resumed once after a usage-limit stop |
-| L5 Lookup applies picker filters | #288 | Running (2026-11-15) | — | — | — | subagent (two component repos, § 4.1.4) |
+| L5 Lookup applies picker filters | #288 | Done, in review (2026-11-15) | api `95a2954`, web-app `9d82786`, workspace `b1d270f1` | [web-api#36](https://github.com/PandiO/knk-web-api/pull/36), [web-app#41](https://github.com/PandiO/knk-web-app/pull/41), [#587](https://github.com/PandiO/knk-workspace/pull/587) | green (PR runs 43714699624/43714699597 api, 43714715547/43714715574 web) | subagent (two component repos, § 4.1.4) |
 | L6 Player profile API part | #565 | Not started | — | — | — | — |
 | L7 Plugin carries out web kick/ban | #574 | Not started | — | — | — | — |
 
@@ -283,3 +283,67 @@ _(Each link appends its block here when it finishes.)_
        trailers; it was pushed before I noticed and is not rewritten (no force push).
 9. **Notes for later links.** L5 does not touch the builder. `FormConfigurationsController`'s constructor lost four
    parameters (tests build it with five now).
+
+### 4.5 L5 — Lookup applies picker filters (#288)
+
+1. **Scope done.**
+    1. knk-web-api: `LookupSearchRequestDto.Filters`; `DashboardLookup.Filters` (`LookupFilter` key + kind `Id`/`Flag`/`Prefer`)
+       declared per type in `DashboardLookups.cs` (a subset of the keys each type's repository reads, in its spelling);
+       `LookupService.CheckFilters` checks keys (case-insensitive) and values and passes them to the type's own search;
+       `LookupController.Search` answers 400 `LookupFilterNotAllowed` / `LookupFilterInvalid` with `filters`. Results stay
+       `{ id, label, detail? }`; access rule unchanged.
+    2. knk-web-app: `lookupFilterPlan` returns the filters to send (all with a value, `prefer…` included; `excludeIds` kept
+       for the page), new `lookupFilterRefusal`; `lookupClient.search(…, filters?)`; `RelationPicker` searches the lookup
+       with the filters and shows "This list is narrowed by …" only on a 400 `LookupFilterNotAllowed`.
+    3. knk-workspace (docs branch): smoke test § 2.4–2.5, CHANGELOG, web-api and web-app architecture, access model DESIGN
+       § 4.6.3.
+2. **Commits and heads.** knk-web-api `claude/lookup-picker-filters-288` at `95a2954` (1 commit, base `next` at `93c3d50`);
+   knk-web-app at `9d82786` (1 commit, base `next` at `cd730f2`); knk-workspace at `b1d270f1` (1 commit, base `next` at
+   `0ca9b1b6`, `next` unchanged since, no merge needed).
+3. **PRs.** [knk-web-api#36](https://github.com/PandiO/knk-web-api/pull/36), [knk-web-app#41](https://github.com/PandiO/knk-web-app/pull/41),
+   [knk-workspace#587](https://github.com/PandiO/knk-workspace/pull/587) (closes #288), base `next`. Not merged.
+4. **Tests, baseline → result.**
+    1. knk-web-api: baseline on `next` 4199 passed / 98 skipped (MySQL tests skipped, no `KNK_TEST_MYSQL`); branch 4215 / 98;
+       16 new in `Api/LookupFiltersTests.cs` (siege teams narrowed by `siegeScenarioId` on the real repository; labels only;
+       case-insensitive keys forwarded in the search's spelling; unknown key 400 and no search, e.g. a user's `email`;
+       `excludeIds` refused; invalid ids/flags 400; `prefer…`; users still username-only; filter list pinned per type;
+       access rule unchanged), 3 checked failing with the filters dropped. CI: PR runs 43714699624 / 43714699597, push
+       runs 43713637449 / 43713637401.
+    2. knk-web-app: baseline Jest 307 suites / 2640, tsc clean, Playwright 133; branch Jest 307 / 2645, tsc clean,
+       `typecheck:e2e` ok, build ok, Playwright 135 incl. new `e2e/relation-picker-lookup-filters.spec.ts` (strict API, 2
+       tests; the first fails on the old picker). CI: PR runs 43714715547 / 43714715574, push runs 43714471627 / 43714471565.
+    3. Known reds: none. Smoke guide: 28 of 33 steps automated.
+5. **Decisions (DESIGN § 4.3).**
+    1. *Unknown filter key.* Chosen: 400 `LookupFilterNotAllowed` naming the keys, because ignoring it would hand the
+       picker a wider list than the form accepts (what LV6-3 avoided). Alternatives: (a) ignore it: silent widening.
+    2. *Which keys per type.* Chosen: an explicit allowlist per type next to its label (one place, the search still applies
+       the filter), ids and flags only. Alternatives: (a) pass every key to the search: `email`/`uuid` would let a lookup
+       find a user by what a label never shows; (b) also enum/text keys (`gateType`, `openedState`, `world`, `name`): a
+       search skips an unparsable enum, so they need their own check; easy to add when a form uses them.
+    3. *Unusable values.* Chosen: 400 `LookupFilterInvalid` for a non-positive/non-numeric id, a non-boolean flag or a
+       blank value, because the searches skip those and would list every row. Alternatives: (a) pass through: widening.
+    4. *`prefer…` filters.* Chosen: passed on where the type's search takes them (Clan `preferTownId`), otherwise left out
+       without an error (they only order). Alternatives: (a) 400: refuses a picker over an ordering hint; (b) drop all as
+       before: loses the town ordering for no reason.
+    5. *`excludeIds`.* Chosen: not a lookup filter; the picker keeps applying it on the page. Alternatives: (a) send it:
+       only Category's search reads it, so it would 400 elsewhere.
+    6. *Refusal in the web app.* Chosen: send all filters and show the old "narrowed by" message only on the API's 400,
+       so the API stays the single source of truth. Alternatives: (a) publish the allowlist in the metadata and refuse
+       before calling: a second copy of the list and a metadata change.
+    7. *Rate limit.* The charter assumed `[EnableRateLimiting("lookup")]` on the lookup; `LookupController` has none on
+       `next` (the architecture doc says "No rate limit"). Left as it was ("stay as they are"). Alternatives: (a) add it:
+       outside the scope.
+    8. *Permission nodes.* Today's (#387 not merged); no new node or endpoint.
+6. **Out of scope, noted.** [#585](https://github.com/PandiO/knk-workspace/issues/585): the picker runs the type's full
+   search once before the metadata is loaded (an extra 403 for lookup-mode viewers; the answer is never shown). #570 lines
+   not touched.
+7. **Blockers.** None. Codex at its usage limit on all three PRs (said on each PR); no findings to handle.
+8. **At merge / what the developer must do.**
+    1. Deploy knk-web-api **first** (or together): an older API ignores `filters` and would answer with the unfiltered
+       list, which the new picker would show. No migration, no setting, no node.
+    2. Optional by-hand check: smoke test § 2.4 with a real siege scenario as staff without `knk.siege.admin.manage`.
+    3. Follow-up docs (documentation sub-issue): `guides/admin/staff-web-app-guide.md` relation picker paragraph,
+       `guides/README.md` row of the smoke test.
+9. **Notes for later links.** L6 (player profile API): the lookup's filter list lives in `DashboardLookups.cs`
+   (`filters:` on `Of<…>`); `LookupFiltersTests.LookupFilters_ArePinnedPerType_AndNeverOnUsers` must change with it. L5
+   did not touch `PlayerProfilePage.tsx` or the user search.
