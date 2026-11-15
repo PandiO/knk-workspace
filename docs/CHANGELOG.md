@@ -4,6 +4,15 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Smoke-test guides: every step in full again, automated steps tagged**
+  ([PandiO/knk-workspace#511](https://github.com/PandiO/knk-workspace/issues/511); docs only, developer decision
+  2026-11-15). knk-workspace `claude/smoke-guides-full-steps` (PR into `next`). The #511 backfill had shortened
+  automated steps to one line; the 15 guides it touched (admin navigation, dashboard access, data and feedback
+  primitives, entity detail, form step conditions, gate, kit grant delivery, link code, lootbox area region, player
+  profile, realtime § S5, relation picker, settings pages, town streets) have their full manual instructions back, so
+  every step can still be run by hand. A step a suite covers starts with `[automated: <test>]`, or
+  `[partly automated: <test>; by hand: <what is left>]`; status lines count the tagged steps. What is automated did not
+  change. The developer guides on plugin scenarios and web app testing describe the tag.
 - **NPC navigation design: wall corners, stuck recovery, narrowed formations, followers that finish their trip**
   ([PandiO/knk-workspace#519](https://github.com/PandiO/knk-workspace/issues/519); design only, docs, nothing changes in game).
   knk-workspace `claude/npc-followups-l1` (PR into `next`, in review). BEHAVIOR_MODEL § 2 NAV-19–NAV-23 and
