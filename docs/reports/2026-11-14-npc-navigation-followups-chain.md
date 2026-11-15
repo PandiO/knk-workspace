@@ -145,6 +145,11 @@ Every link is merged into `next` (2026-11-15). Build knk-plugin from `next` `deb
     Alternatives: (a) interrupt L5 entirely (loses the scenario work, which is valid on any jar); (b) carry on as
     scoped (risks fixing code that isn't broken).
 
+18. **Old jar confirmed** (manager, 2026-11-15 13:52). The developer's server ran `0.1.0+a760c4a4`, which is
+    knk-plugin `next` from before #29, L2 (#31), L3 (#36) and L4 (#39). None of the 2026-11-15 NPC retest results is
+    evidence against L2–L4. Corrections are posted on #520, #521 and #490. Decision 17 stands until the developer's rerun
+    on `028504d` or later.
+
 ## 4. Link blocks
 
 _(Each link appends its block here when it finishes.)_
