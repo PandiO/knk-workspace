@@ -4,6 +4,48 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **NPC navigation: formations narrow before they fold, followers can finish their trip**
+  ([PandiO/knk-workspace#522](https://github.com/PandiO/knk-workspace/issues/522) for
+  [#493](https://github.com/PandiO/knk-workspace/issues/493) and [#507](https://github.com/PandiO/knk-workspace/issues/507);
+  link L4 of the NPC navigation follow-ups chain, implementation plan 4b.3). knk-plugin and knk-workspace branches
+  `claude/npc-followups-l4` (PRs into `next`, in review). No change for players or with `npc.navigation.enabled: false`
+  (the default).
+  1. **Narrowed formations (#493).** A group steps down 3 → 2 abreast before it folds into a column, and folds only
+     where 2 abreast do not fit (gates, stairs): `ranks` from `group-ranks-width` down to 2, `cluster` 3 then 2, the
+     `escort-ring` as its rings, then rows of 3 with the leader in the middle of the second row, then 2 abreast, then a
+     column with one escort ahead. NPCs in a row walk shoulder to shoulder (`group-lateral-spacing` 1.0) and rows are
+     1.5 blocks apart (`group-spacing`, was 2.0), so 3 abreast fit a 3-wide road and 2 abreast a 2-wide one; where a
+     road's line runs along one side, the lanes shift half a block at a time to fit.
+  2. **No switching at every lamp post.** A narrower width (still 2 abreast or more) or a wider one is taken only when
+     it lasts `group-width-hysteresis-blocks` (3) along the path; a gate or a stair makes a column at once. The width
+     that fits is worked out once per path point, so the tick cost per NPC stays as it was.
+  3. **Followers that finish their trip (#507).** `group-followers-finish-trip` (default `false`, per world, region,
+     template, assignment and `/knk npc nav group <n> … finish-trip|follow-leader`): when it is on and the leader has
+     arrived, followers still on their way (held at a gate or a district edge) walk on to their place at the goal first,
+     report (`… finished its trip at x y z`, event `group_finish_trip`, a member listener for later behaviour such as a
+     courier handing over goods), then follow the group. Off, they follow the leader: a follower held at a gate when the
+     group turned back now waits beside the road for the column instead of walking on to the old goal.
+  4. **Logs and stats.** `group <n> … narrows to 2 abreast: the path is too narrow for 3 abreast at x y z`,
+     `… widens to 3 abreast`, `… folds into a column: the path is too narrow for 2 abreast`, `… takes up 3 abreast
+     again`; events `group_narrow`, `group_widen`, `group_fold`, `group_reform`, `group_finish_trip`; the groups line of
+     `/knk npc nav stats` has `widths: narrows N, widens N | folds N, reforms N, folded now N | abreast now k |
+     finished trips N (finishing now N)`.
+  5. **Tests.** knk-core unit tests for every formation's widths, the per-point cache, step-down, hysteresis and the
+     toggle; three plugin scenarios on a real Paper server with Citizens (`npc-group-narrows`,
+     `npc-group-gate-finish-trip`, `npc-group-access-change`); CI's `paper-boot` now expects 22 scenarios.
+  6. **Admin steps** (restart): merge the three new keys and set `group-spacing: 1.5` where `config.yml` still says 2.0:
+
+     ```yaml
+     npc:
+       navigation:
+         group-spacing: 1.5
+         group-lateral-spacing: 1.0
+         group-width-hysteresis-blocks: 3
+         group-followers-finish-trip: false
+     ```
+
+     Then run the developer test steps of plan 4b.3 (posted on #522), which include the #490 audit re-run.
+
 - **NPC navigation: wall corners, stuck recovery on the NPC's own floor, stuck counted per spell**
   ([PandiO/knk-workspace#521](https://github.com/PandiO/knk-workspace/issues/521) for
   [#508](https://github.com/PandiO/knk-workspace/issues/508), [#491](https://github.com/PandiO/knk-workspace/issues/491)
