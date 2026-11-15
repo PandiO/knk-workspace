@@ -1,6 +1,6 @@
 # knk-web-app — Architecture
 
-**Status:** Current · **Last updated:** 2026-11-15 (table scroll boxes `relative` on the admin pages, #535, knk-web-app `next` `5b87473`); 2026-11-15 (detail page: `derived` relationships are read-only sections with a hint; #409, knk-web-app `next` `d3d7152`, docs #559)
+**Status:** Current · **Last updated:** 2026-11-15 ("Show what uses it" on Entity setup's configuration delete, bulk delete rows and a cancelled form's "skipped: in use", #289, knk-web-app `claude/show-what-uses-it-289`, PR into `next`); 2026-11-15 (table scroll boxes `relative` on the admin pages, #535, knk-web-app `next` `5b87473`); 2026-11-15 (detail page: `derived` relationships are read-only sections with a hint; #409, knk-web-app `next` `d3d7152`, docs #559)
 **Checked against:** knk-web-app `next` (per section; each section names its commit). Updated in place on each rescan.
 **Source scan:** `docs/reports/web-app-scan-2026-09-18.md`
 
@@ -666,7 +666,11 @@ again); Hide/Show keeps the answer; focus still starts on the footer's first but
 refusal is now a dialog instead of a toast) and an item's Delete on the detail page. Each group reads like the message
 ("23 structures", `referenceNoun`); rows link to their detail page when the API says `readable` (the dialog closes),
 are plain text with "Opening … requires one of: …" otherwise, "… and n more" past 20, and groups the API only counts
-show its reason.
+show its reason. Since #289 also: Entity setup's form configuration Delete (`pages/FormWizardPage.tsx`; the form fields and steps that
+open it as a sub-form, named with their form, never linked) and, through `useReferenceDetailsToggle` (one row's button
+and panel inside a list), each `InUse` row of `BulkDeleteResultDialog` and each "skipped: in use" line of
+`FormWizard/CreatedEntitiesPrompt.tsx` (a cancelled form or a draft deleted with its entities; `?all=true`, so the
+list matches the in-use check; following a row ends the prompt as Done does).
 
 **Navigation** (`components/Navigation.tsx`, since #30): the bar's links come from the route-meta table
 (`topNav`): **Home**, **Leaderboards**, **Guides**, **Dashboard** for holders of the dashboard route's nodes

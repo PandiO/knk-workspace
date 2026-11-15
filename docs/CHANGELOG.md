@@ -4,6 +4,23 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **"Show what uses it" for more refusals: form configuration delete, bulk delete rows, "skipped: in use"**
+  ([PandiO/knk-workspace#289](https://github.com/PandiO/knk-workspace/issues/289); link L3 of the Chain 3 follow-ups
+  chain, [#564](https://github.com/PandiO/knk-workspace/issues/564)) — knk-web-api, knk-web-app and knk-workspace
+  branches `claude/show-what-uses-it-289` (PRs into `next`, in review). No change for players.
+  1. **Entity setup.** A form configuration whose delete is refused because another form opens it as a sub-form offers
+     **Show what uses it**: the form fields and steps, each with the form (and step) it sits in. Not links: they have
+     no page of their own.
+  2. **Bulk delete.** Each row refused as in use keeps its **Show what uses it** (from #205), now through one shared
+     component; covered end to end.
+  3. **Cancelled form / deleted draft.** An entity skipped as in use after **Delete them** / **Delete draft and them**
+     offers **Show what uses it** with every reference, as the in-use check counted them.
+  4. API: `GET api/EntityReferences/{type}/{id}/rows` also takes `FormConfiguration` (needs `knk.admin.content`) and
+     `?all=true` (every reference, cascades included); the read rules per referencing type stay as in #44.
+  5. Docs: [smoke test § 4.8–4.12, § 5.3](guides/relation-picker-and-delete-details-smoke-test.md),
+     [web-api architecture § 5.4](architecture/web-api-architecture.md), web-app architecture ("Show details").
+  - **Admin steps:** none (no migration, no setting, no new node; deploy API and web app together, API first: an older
+    API answers 404 for a form configuration, shown as an error line under the button).
 - **Plugin CI: Citizens on the Paper boot test, NPC navigation scenarios on a fake road network**
   ([PandiO/knk-workspace#543](https://github.com/PandiO/knk-workspace/issues/543); developer decision 2026-11-15:
   pinned download). knk-plugin and knk-workspace branches `claude/citizens-ci-543` (PRs into `next`). No change for

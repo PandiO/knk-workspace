@@ -1,6 +1,6 @@
 # knk-web-api — Architecture
 
-**Status:** Current · **Last updated:** 2026-11-15 (§4, §5.3: `TownStreet` dropped, a town's streets are derived, #409)
+**Status:** Current · **Last updated:** 2026-11-15 (§5.4: "Show what uses it" for form configurations and `?all=true`, #289, knk-web-api `claude/show-what-uses-it-289`, PR into `next`); 2026-11-15 (§4, §5.3: `TownStreet` dropped, a town's streets are derived, #409)
 
 ## 1. Stack & shape
 
@@ -268,17 +268,25 @@ A delete the database refuses answers 409 `{ code: "DbConstraint", message, refe
   `?referencedBy=Structure.StreetId&take=20` → `{ entityTypeName, id, groups: [{ referencedBy, entityType, count, listed,
   readable, nodes, reason?, rows: [{ id, label, detail? }], more }] }`. Only the references that stop a delete (the
   refusal message's own rule, `EntityReferenceService.BlocksDelete`); `take` 1–50 per group (default 20), sorted by id.
-  Read-only.
+  Read-only. `{entityType}` is a dashboard type or, since #289, `FormConfiguration` (`Services/ReferenceRecordTypes.cs`).
+  `?all=true` (#289) lists every reference, cascades included: what the KNG-162 "in use" check
+  (`GET api/FormSubmissionProgress/entity-references/...`) counts before the web app deletes a cancelled form's created
+  entities, so its "skipped: in use" rows show the same references.
 - **Access** (`Attributes/RequireReferenceReadAttribute.cs`, an `IKnkAccessRule`, read category **U** in
   `ReadAccessRulesTests`): one of the route type's `ReadNodes`, web users only (anonymous 401, the plugin key alone 403,
-  no read node 403 `NoReadAccess`, a type outside `DashboardAccess` 404 `UnknownEntityType`). A custom rule because the
-  nodes depend on the route's type.
+  no read node 403 `NoReadAccess`, a type that isn't listed 404 `UnknownEntityType`). A form configuration's read node is
+  `knk.admin.content` (Entity setup's node; its delete also needs `knk.admin.delete`). A custom rule because the nodes
+  depend on the route's type.
 - **What a group shows** (`Services/EntityReferenceRowsService.cs`): never more than the lookup label
   (`ILookupService.GetAsync`, a user's username only):
   - rows of a type the caller reads in full (any of its read nodes): labels, `readable: true` (the web app links them);
   - rows of another dashboard type: labels when the caller holds any area node (what `api/Lookup` gives them anyway),
     `readable: false`; otherwise only `count`, `listed: false` and the nodes that would read them;
-  - rows that aren't a dashboard type (drafts, form fields, workflow sessions) and rows without a single id: counted only
+  - form fields and form steps that open a form configuration as a sub-form (#289): with `knk.admin.content`, labels
+    from `Services/ConfigurationReferenceLabelService.cs` (the field's label or the step's name, detail "Field of the
+    form "Kingdom form" (Kingdom), step "Towns"", "Reusable field template", ", draft" for a builder draft),
+    `readable: false` and no nodes (they have no page of their own); without it only counted;
+  - other rows that aren't a dashboard type (drafts, workflow sessions) and rows without a single id: counted only
     ("These records aren't listed here."), so other users' drafts never show.
 - `EntityReferenceService.GetReferencingRowsAsync` shares the loop with the counts (the ids of the referencing rows, for a
   join row the other side's id); counts and rows always agree.
