@@ -10,15 +10,15 @@
 
 ## 1. Waiting for the developer
 
-1. After L1: approve the design note and decide what happens to each orphan `TownStreet` row (run the SQL check on
-   the dev and alpha databases). The coordinator will ask.
+1. Nothing right now. The L1 note was approved with all defaults and the orphan rows are to be dropped (developer,
+   2026-11-14, recorded on #515). L2 is running; the developer's test steps follow after L2 and L3.
 
 ## 2. Summary
 
 | Link | Issue | Status | Branch heads | PR | CI | How started | Test rule |
 |---|---|---|---|---|---|---|---|
-| L1 Design note and data check | #514 | In review | knk-workspace `claude/town-streets-409` `a24dcd2b` | [#525](https://github.com/PandiO/knk-workspace/pull/525) | n/a (docs) | create_session session_01R1w2UsgcJBhVZofGWWe6wN (`source_revision` `main`) | automated first, `main` `aa4208b3` |
-| L2 Implementation | #515 | Not started | — | — | — | — | — |
+| L1 Design note and data check | #514 | Merged into next 2026-11-14 (knk-workspace `2d4418d2`, PR #525); #514 stays `status:in-review` until the developer promotes `next` | knk-workspace `claude/town-streets-409` `a24dcd2b` | [#525](https://github.com/PandiO/knk-workspace/pull/525) | n/a (docs) | create_session session_01R1w2UsgcJBhVZofGWWe6wN (`source_revision` `main`) | automated first, `main` `aa4208b3` |
+| L2 Implementation | #515 | Running | — | — | — | subagent of the coordinator (knk-coordinator § 4.1.4: two component repos besides knk-workspace) | automated first, `main` `aa4208b3` |
 | L3 Smoke tests and changelog | #516 | Not started | — | — | — | — | — |
 
 ## 3. Coordinator decisions
@@ -51,6 +51,21 @@
    automated steps in `docs/guides/*smoke-test*.md`, possibly `dashboard-access-smoke-test.md`, which L3 edits
    (§ 2.2 step 2, § 8 step 9b). Chosen: not a blocker; L3 keeps to those two steps and merges `origin/next` first, so
    any conflict stays mechanical. Alternatives: (a) wait for #511 to finish before L3; (b) ask #511 to make the edit.
+
+9. **L1 checked and merged (2026-11-14).** § 6 checks held: block 4.1 and row present, head `a24dcd2b` matched,
+   docs-only scope (note, SQL, specs index, changelog), decisions logged. The branch was 30 commits behind `next` with a
+   changelog conflict; I merged `origin/next` into it (`b48a0d61`, both entries kept) and merged PR #525 with a merge
+   commit (`2d4418d2`). Codex skipped for its usage limit (noted on the PR). No CI in knk-workspace.
+10. **Developer gate after L1.** Asked with AskUserQuestion: the note is approved with all six defaults, and all
+    orphan `TownStreet` rows are dropped with the table without running the check first (backup is the way back).
+    Recorded on #515.
+11. **L2 route: subagent from the start.** Chosen because the coordinator skill on `main` (since 2026-11-14,
+    § 4.1.4) says a link needing two or more repositories besides knk-workspace goes the subagent route, after Auto
+    mode's classifier refused an `add_repo` in another chain. Alternatives: (a) `create_session` and fall back on a
+    refusal (costs a failed session).
+12. **Test rule for L2:** unchanged, "automated first" `aa4208b3`; knk-workspace `main` had no changes to the global
+    instructions, the skills' testing parts or `web-app-testing.md` since. #421's scenario framework is now in
+    knk-plugin `next`, but L2 does not change the plugin (L1 note § 5).
 
 ## 4. Link blocks
 
