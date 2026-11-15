@@ -23,7 +23,7 @@
 | L1 Temp region releases | #399 | Merged into next (2026-11-15) | knk-web-api `a0b5ff3f`, knk-workspace `86adf724`; next: api `3b36edc6`, ws `5dafabac` | [knk-web-api#33](https://github.com/PandiO/knk-web-api/pull/33), [knk-workspace#572](https://github.com/PandiO/knk-workspace/pull/572) | green (runs 43702385149, 43702462646) | create_session session_01R1w2Uvbubw539aKYxgnvjR |
 | L2 List field cards at 390 px | #290 | Merged into next (2026-11-15) | web-app `8cb616b`, workspace `080a4bdf`; next: app `9b5f9ddf`, ws `9eeb29ff` | [web-app#38](https://github.com/PandiO/knk-web-app/pull/38), [#571](https://github.com/PandiO/knk-workspace/pull/571) | green (PR run; push-run e2e flake #573, re-run green) | create_session session_01R1w2UswAebrDAEEFqUHA3e |
 | L3 "Show what uses it" for more refusals | #289 | Merged into next (2026-11-15) | api `98f0c91`, web-app `41c75ca`, workspace `d833cb0a`; next: api `378921c6`, app `2dfd5883`, ws `e8a4e1e8` | [web-api#34](https://github.com/PandiO/knk-web-api/pull/34), [web-app#39](https://github.com/PandiO/knk-web-app/pull/39), [#579](https://github.com/PandiO/knk-workspace/pull/579) | green (PR runs); next: app run 43707033299 pending | subagent (decision 13) |
-| L4 Builder rules and templates into the draft | #291 | Running (2026-11-15) | — | — | — | subagent (two component repos, § 4.1.4) |
+| L4 Builder rules and templates into the draft | #291 | Done, in review (2026-11-15) | api `a851436`, web-app `0d604fe`, workspace `4fa25605` | [web-api#35](https://github.com/PandiO/knk-web-api/pull/35), [web-app#40](https://github.com/PandiO/knk-web-app/pull/40), [#583](https://github.com/PandiO/knk-workspace/pull/583) | green (PR runs 43711458740/43711458686 api, 43711488807/43711488760 web) | subagent of the coordinator |
 | L5 Lookup applies picker filters | #288 | Not started | — | — | — | — |
 | L6 Player profile API part | #565 | Not started | — | — | — | — |
 | L7 Plugin carries out web kick/ban | #574 | Not started | — | — | — | — |
@@ -205,3 +205,66 @@ _(Each link appends its block here when it finishes.)_
     2. No settings, migrations, nodes or plugin `config.yml` keys. Permission nodes of #387 not needed.
     3. Optional by hand: smoke guide § 4.11 against a real database (the only path where cascade references appear) and § 5.3.
 9. **Notes for later links.** `ReferenceRecordTypes.Find` is the place to add another record type to "Show what uses it"; `useReferenceDetailsToggle` gives a per-row button and panel for any list. L4 (#291) touches the builder's draft: `ConfigurationReferenceLabelService` names published rows only (draft-only fields in `DraftJson` are not rows and never block a delete).
+
+### 4.4 L4 — Builder rules and templates into the draft (#291)
+
+1. **Scope done.**
+    1. knk-web-api: `FormConfigurationDto.validationRules` (`FormDraftValidationRuleDto`, keyed by field GUID) stored in
+       `DraftJson`; `FormConfigurationDraftService` fills it in the builder state (draft list, else the published rules)
+       and applies it on Publish (checks first, then delete dropped / clear kept dependencies, `UpdateAsync`, write by GUID,
+       all in Publish's transaction); a draft without the list keeps the published rules. Removed the two
+       add-from-template endpoints, `FormTemplateReusableService` and the request DTOs.
+    2. knk-web-app: `utils/forms/draftValidationRules.ts`; `FieldEditor` keeps the field's rules locally and hands them back
+       with Save Field (no `api/field-validation-rules` writes); `ValidationRuleBuilder` picks dependencies by GUID (parent
+       form fields by id); `FormConfigBuilder` holds `config.validationRules`, prunes rules of removed fields on save, refuses
+       Publish on a dangling dependency; the Publish question names rule changes; dead add-from-template client methods and
+       types removed; field edit button gets an accessible name.
+    3. knk-workspace (docs branch): smoke test § 11, CHANGELOG, web-api architecture § 5.5, web-app architecture, guides
+       index.
+2. **Commits and heads.** knk-web-api `claude/builder-draft-rules-291` at `a851436` (1 commit, base `next` at `378921c`);
+   knk-web-app at `0d604fe` (1 commit, base `next` at `2dfd588`); knk-workspace at `4fa25605` (docs commit `0ceb9574` plus a
+   merge of `origin/next`, base `next` at `e8a4e1e8`).
+3. **PRs.** [knk-web-api#35](https://github.com/PandiO/knk-web-api/pull/35), [knk-web-app#40](https://github.com/PandiO/knk-web-app/pull/40),
+   [knk-workspace#583](https://github.com/PandiO/knk-workspace/pull/583) (closes #291), base `next`. Not merged.
+4. **Tests, baseline → result.**
+    1. knk-web-api: baseline on `next` 4187 passed / 98 skipped (MySQL tests skipped, no `KNK_TEST_MYSQL`); branch 4199 /
+       98; 12 new in `Services/FormConfigurationDraftRulesTests.cs` (draft carries rules; Publish adds/updates/deletes by
+       GUID incl. a draft-only field; published-only form keeps its rules; draft without rules keeps the published ones;
+       Discard drops rule changes; refusals; parent-form dependency by id; add-from-template gone), checked failing with
+       the apply step removed. CI runs 43711458740, 43711458686 green.
+    2. knk-web-app: baseline Jest 306 suites / 2631, tsc clean; branch 307 / 2640, tsc clean, build ok, `typecheck:e2e` ok;
+       Playwright 133 passed incl. new `e2e/form-builder-draft-rules.spec.ts` (strict API, 2 tests). CI runs 43711488807,
+       43711488760 green.
+    3. Known reds: none.
+5. **Decisions (DESIGN § 4.3).**
+    1. *add-from-template.* Chosen: remove the two form endpoints (and the service), because no caller exists in the web
+       app (since #71), knk-plugin `next` or scripts; the API has no display equivalents (only dead web-app client
+       methods, also removed). Alternatives: (a) rewrite them to write into the draft: code for no caller; (b) keep them:
+       they still wrote straight into the published rows, against the decision.
+    2. *When a rule change reaches the working copy.* Chosen: with the field editor's Save Field (Cancel drops it), like the
+       field's other edits in that dialog. Alternatives: (a) apply each rule change at once: Cancel would not undo it.
+    3. *Rules of removed fields / dangling dependencies.* Chosen: rules of a field no longer in the form are dropped on save
+       (they could not be seen); a rule whose dependency left stays and blocks Publish with a message (web and API).
+       Alternatives: (a) drop those silently too: loses a rule without saying so; (b) clear the dependency: the rule's
+       path would no longer make sense.
+    4. *Draft rule shape.* Chosen: GUIDs for the field and same-form dependencies, an id for a parent form's field, the
+       published rule's `id` to edit in place (rule ids stay stable). Alternatives: (a) recreate every rule on Publish:
+       simpler, but ids change on every Publish; (b) a rule GUID column: needs a migration.
+    5. *Restrict on `DependsOnFieldId`.* Chosen: before `UpdateAsync`, delete dropped rules and clear kept rules'
+       dependency, set again after (inside Publish's transaction), so a removed or moved field is never held. Alternatives:
+       (a) only clear dependencies that point at removed fields: the repository also re-creates moved fields, so the
+       exact set is fragile.
+    6. *Missing list.* Chosen: `validationRules` absent in `DraftJson` = the published rules, unchanged; the builder state
+       then shows the published rules. Alternatives: none that keep old drafts working.
+    7. *Permission nodes.* Today's: form content is `knk.admin.content` (#387 not merged); no new node, no new endpoint.
+6. **Out of scope, noted.** [#582](https://github.com/PandiO/knk-workspace/issues/582): the builder's draft health check
+   still reads the published rules.
+7. **Blockers.** None. Codex at its usage limit on all three PRs (said on each PR); no findings to handle.
+8. **At merge / what the developer must do.**
+    1. Deploy knk-web-api and knk-web-app together, **API first** (an older API ignores the draft's rules, so they would be
+       lost on Save). No migration, no setting.
+    2. Optional by-hand check: the real-wizard parts of smoke test § 11.2 and § 11.4.
+    3. The knk-workspace merge commit `4fa25605` (merge of `origin/next`) has git's default message without the session
+       trailers; it was pushed before I noticed and is not rewritten (no force push).
+9. **Notes for later links.** L5 does not touch the builder. `FormConfigurationsController`'s constructor lost four
+   parameters (tests build it with five now).
