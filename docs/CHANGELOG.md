@@ -4,6 +4,22 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Plugin: 13 more plugin scenarios and a freeze test replace evening checks in game**
+  ([PandiO/knk-workspace#511](https://github.com/PandiO/knk-workspace/issues/511), plugin part; developer-facing, nothing
+  changes in game). knk-plugin and knk-workspace branches `claude/scenario-backfill-511` (PRs into `next`: knk-plugin#35 and the docs PR).
+  - **Scenarios** (CI `paper-boot`, a real Paper server with fake API data; 3 → 16, `MIN_SCENARIOS` 16): gate safety
+    with mobs, a dropped item and a minecart standing in for players (moved out on their own side, out of a two-deep
+    door, never into the next door's opening, opening leaves neighbours alone, door blocks never suffocate while a wall
+    does); a lootbox area's region renamed and replaced in place over the region callback with its drawn bounds and
+    flags; the temp-region sweep keeping an area's temp region; boxes asked for on the ground inside an area's Y range,
+    under a roof, and none after lootboxes are switched off.
+  - **Unit test:** `AdminFreezeListenerTest` (a frozen player can't walk, chat or run commands other than `/msg` and
+    `/r`; teleports and damage).
+  - **Smoke tests:** the automated steps are marked in the gate, lootbox area region, settings pages, player profile,
+    kit grant delivery, link code and realtime § S5 guides; steps that need a player wait for simulated players
+    ([#540](https://github.com/PandiO/knk-workspace/issues/540)). No plugin behaviour changed; `testing.scenarios.enabled`
+    stays off by default.
+  - **Admin steps:** none.
 - **Dashboard: the PermissionGrant table loads** ([PandiO/knk-workspace#408](https://github.com/PandiO/knk-workspace/issues/408);
   API and staff web app). knk-web-api and knk-web-app branches `claude/permission-grant-table-408` (PRs into `next`, in
   review, not merged). Dashboard → Permission Grant lists every grant and deny (node, Granted/Denied, holder, expiry)

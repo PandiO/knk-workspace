@@ -4,7 +4,7 @@
 default branches; S1–S3 issues closed 2026-11-05. `realtime.enabled` stays `false` by default. § S4 (#183) merged
 2026-11-12 (API `master` `bc97b7d`, web app `main` `1371951`), **not run yet**. § S5 (#184): API part merged 2026-11-12, plugin part merged into `next`
 2026-11-13 (knk-plugin `next` `745fcf6`), **not run yet**
-**Last updated:** 2026-11-14 (§ S5 steps 4, 5, 5a and 7 after the #486 retest: the `First join:` log line, realtime off, the feed in PascalCase); 2026-11-13 (§ S5 account erasure push, #184, brought into `claude/plugin-chains-into-next`, not run); 2026-11-13 (§ S4: the dashboard opens for any area node since #280 AM3; a world-only account for step 2, docs #366); 2026-11-12 (§ S4 merged, not run; accounts and step 6 follow the area nodes of #280 AM1, docs #341); 2026-11-06 (§ S4 step 9: `Realtime:WebLiveUpdatesEnabled` switch, #183, feature branch); 2026-11-05 (§ S4, #183, feature branch); 2026-11-05 (S1, S2, S3 findings; S2 steps 5 and 7 corrected); 2026-11-05 (§ WT2 follow-ups: findings, merged); 2026-11-04 (§ WT2 follow-ups #239/#240, feature branch); 2026-11-04 (WT2 findings; merged); 2026-11-02 (§ S3, #182); 2026-11-02 (§ WT2, #181)
+**Last updated:** 2026-11-14 (§ S5: the unit tests behind steps 4, 5 and 5a named, plugin backfill #511); 2026-11-14 (§ S5 steps 4, 5, 5a and 7 after the #486 retest: the `First join:` log line, realtime off, the feed in PascalCase); 2026-11-13 (§ S5 account erasure push, #184, brought into `claude/plugin-chains-into-next`, not run); 2026-11-13 (§ S4: the dashboard opens for any area node since #280 AM3; a world-only account for step 2, docs #366); 2026-11-12 (§ S4 merged, not run; accounts and step 6 follow the area nodes of #280 AM1, docs #341); 2026-11-06 (§ S4 step 9: `Realtime:WebLiveUpdatesEnabled` switch, #183, feature branch); 2026-11-05 (§ S4, #183, feature branch); 2026-11-05 (S1, S2, S3 findings; S2 steps 5 and 7 corrected); 2026-11-05 (§ WT2 follow-ups: findings, merged); 2026-11-04 (§ WT2 follow-ups #239/#240, feature branch); 2026-11-04 (WT2 findings; merged); 2026-11-02 (§ S3, #182); 2026-11-02 (§ WT2, #181)
 **Design:** [specs/realtime-signalr/DESIGN.md](../specs/realtime-signalr/DESIGN.md) (§4–§5, as built: §4.6) ·
 [IMPLEMENTATION_PLAN.md](../specs/realtime-signalr/IMPLEMENTATION_PLAN.md) ·
 **Issues:** [PandiO/knk-workspace#178](https://github.com/PandiO/knk-workspace/issues/178) (S1),
@@ -323,6 +323,13 @@ Plugin log lines start with `[KnK Privacy]` and name only the erasure number.
 3. **Minecraft's own files.** The log says `N Minecraft player file(s) kept, listed in erasure-minecraft-files.txt`;
    that file lists T1's `players/data/<uuid>.dat` (and stats/advancements). The files themselves are still there: delete
    them by hand if you decide to, then clear the list.
+   *Automation (plugin backfill [#511](https://github.com/PandiO/knk-workspace/issues/511)): the first-join decision of
+   steps 4, 5 and 5a is in knk-plugin unit tests; the joins themselves need simulated players
+   ([#540](https://github.com/PandiO/knk-workspace/issues/540)) and a real API, so the steps stay manual.*
+   [automated] An erased player with an empty user cache gets the first join, an account the API created while
+   connecting is a first join without a mark, a returning player gets "Welcome back", the welcome is taken once:
+   `UserAccountListenerFirstJoinTest`. [automated] An erasure mark is taken once, survives a restart, holds no UUID:
+   `ErasedPlayerMarksTest`. [automated] The catch-up reads the API's PascalCase feed: `PrivacyErasuresApiImplTest`.
 4. **Returning player.** T1 joins again with the same Minecraft account: the server treats them as a new player (a new
    account, or the admission gate's answer for a new player), with nothing of the old account (balances, ranks). Since
    #486 this holds even when Minecraft's own player files are kept (don't delete them for this step): the first-join

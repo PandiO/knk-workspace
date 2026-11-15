@@ -1,6 +1,6 @@
 # Writing a plugin scenario
 
-**Status:** Active (in knk-plugin `next` since `309d3580`, 2026-11-14; not on trunk yet) · **Last updated:** 2026-11-14 (§ 5 links #540); 2026-11-14 (first version, [PandiO/knk-workspace#421](https://github.com/PandiO/knk-workspace/issues/421))
+**Status:** Active (in knk-plugin `next` since `309d3580`, 2026-11-14; not on trunk yet) · **Last updated:** 2026-11-14 (§ 1, § 3 and § 4: the scenarios and helpers of the plugin backfill, [#511](https://github.com/PandiO/knk-workspace/issues/511)); 2026-11-14 (§ 5 links #540); 2026-11-14 (first version, [PandiO/knk-workspace#421](https://github.com/PandiO/knk-workspace/issues/421))
 **Related:** [CI § 7.1](ci.md#71-in-plugin-scenarios) (how CI runs them), [plugin architecture § Testing](../../architecture/plugin-architecture.md#testing),
 [`knk-test-writer` skill](../../../.claude/skills/knk-test-writer/SKILL.md) (which suite a behaviour belongs in),
 [AI agent workflow design § 6.3](../../specs/ai-agent-workflow/DESIGN.md#6-testing-and-ci),
@@ -49,8 +49,21 @@ Then:
    (knk-test-writer § 3.5).
 4. In the smoke-test guide, mark the step it covers: `[automated] … : plugin scenario <name>`.
 
-The three shipped scenarios are fuller examples: `GateOpenCloseScenario`, `GateClosingMovesEntityOutScenario` and
-`GlobalRegionExplosionScenario` (the full version of the example above, with a control inside a region).
+The shipped scenarios are fuller examples (`PaperScenarios` lists all 16): `GateOpenCloseScenario`,
+`GateClosingMovesEntityOutScenario` and `GlobalRegionExplosionScenario` (the full version of the example above, with a
+control inside a region) came with the framework; the backfill of
+[#511](https://github.com/PandiO/knk-workspace/issues/511) added seven gate-safety scenarios (`GateClosingKeepsSidesScenario`
+and the others named `Gate…Scenario`: mobs, a dropped item and a minecart as stand-ins for players), two region-callback
+scenarios (`LootboxAreaRenameScenario`, `LootboxAreaReplaceScenario`), the temp-region sweep
+(`TempRegionSweepScenario`) and three lootbox spawn scenarios (`LootboxSpawnOnGroundScenario`,
+`LootboxSpawnUnderRoofScenario`, `LootboxSwitchedOffScenario`).
+
+A scenario must fail when its behaviour breaks. For the backfill each behaviour was broken once on a local server (the
+side rule, the other-door rule, the suffocation guard, the predictive push, the region rename, the lootbox area lookup,
+the spawn height, the web switch and others) and the matching scenario failed; a scenario that kept passing was changed
+until it didn't (for example `gate-side-by-side-doors` needed walls in front of both doors, or the nearest spot was
+never the other door's opening). Where a fallback could hide a broken behaviour, assert that the fallback never ran:
+the gate scenarios count suffocation events, cancelled ones included, so a mob the guard rescued still fails.
 
 ## 2. Steps
 
@@ -89,7 +102,13 @@ Each scenario gets a `ScenarioScene`: an empty box of 32 × 24 × 32 blocks (x, 
    handler)` listens at MONITOR priority, cancelled events included, until the scene closes; `scene.fakeId(n)` gives
    a negative id for fake API data; `scene.uniqueName(suffix)` a name for a region or other plugin state;
    `scene.services()` the live plugin services (§ 4).
-5. **Where:** `testing.scenarios.origin` (default 30000, 100, 30000) in the main world (or `testing.scenarios.world`);
+5. **Shared helpers** in the scenarios package: `ScenarioGates` (portcullises in up to four id slots and any depth,
+   `stillPig`, `overlaps`, `unharmedProblem`, `countSuffocation`), `ScenarioRegions` (WorldGuard regions in scene
+   coordinates, `shapeProblem`, and `callRename`, the `POST /Regions/rename` knk-web-api sends to the plugin's region
+   callback server, answered on the main thread, so `await` its future), `ScenarioFakes.port` (an in-memory port, § 4)
+   and `ScenarioLootboxes` (the plugin's own lootbox runtime and spawn scheduler on fake API data, recording where it
+   asks for boxes).
+6. **Where:** `testing.scenarios.origin` (default 30000, 100, 30000) in the main world (or `testing.scenarios.world`);
    scene *n* of a run sits 64 × *n* blocks further along x. Keep it far from anything built.
 
 ## 4. Fake data instead of the API
@@ -104,10 +123,16 @@ calls) and hand them the data the API would have sent:
 2. **Data-access ports** (`knk-core/.../core/ports/api/*Api` interfaces, read through `core/dataaccess/*DataAccess`):
    implement the port in memory (a small class or a lambda per method the feature calls) and give that to the service
    under test, built inside the scenario, instead of the plugin's API-backed instance. Swap nothing in the live plugin.
-3. **Ids are negative** (`scene.fakeId(n)`, from -421 000 000 down). A test server may still be connected to the dev
+   `ScenarioFakes.port(LootboxesQueryApi.class, Map.of("getRuntimeConfig", args -> …))` answers the named methods and
+   fails on any other, so a scenario never leans on an answer it didn't define. `ScenarioLootboxes` builds a
+   `LootboxRuntime` and `LootboxSpawnScheduler` this way; `TempRegionSweepScenario` gives a `TempRegionRetentionTask` a
+   fake lootbox lookup and sweeps report-only (a deleting sweep would touch the test server's other temp regions).
+3. **Callbacks the API makes to the plugin** (`RegionHttpServer`): call them over HTTP like the API does
+   (`ScenarioRegions.callRename`, with the plugin's `api.auth.api-key`), never block the main thread on the answer.
+4. **Ids are negative** (`scene.fakeId(n)`, from -421 000 000 down). A test server may still be connected to the dev
    API, and some code writes state back (a gate's open state after its animation); a negative id matches no real row.
    On the CI server those write-backs fail with a warning ("Failed to persist gate state"), which is expected.
-4. **A service a scenario needs** goes into `ScenarioServices` as a supplier (read lazily, because some services start
+5. **A service a scenario needs** goes into `ScenarioServices` as a supplier (read lazily, because some services start
    after the command is registered) and is wired in `KnKPlugin.registerScenarioCommand`.
 
 ## 5. Players
