@@ -315,5 +315,5 @@ _(Each link appends its block here when it finishes.)_
     `player-profile-smoke-test.md` § 6 (10 of 12 steps tagged, 2 manual) and `dashboard-access-smoke-test.md` § 8.6
     (L1: 8 of 10 tagged, 2 manual) and § 8.7 (L2: 14 of 18 tagged, 4 manual; it gains the uncounted blast radius and
     the staff-only detail page, both already in `e2e/group-grants.spec.ts`). No other lines changed. The guide's top
-    status line ("57 of 97 steps (§ 1–8)") now undercounts § 8.6–8.7 (+5 steps, +5 tagged) and was left for the
+    status line ("57 of 97 steps (§ 1–8)") now undercounts § 8.6–8.7 (7 → 10 and 12 → 18 steps: +9 steps, all 9 tagged) and was left for the
     coordinator. `@codex review` requested on knk-workspace#569. knk-web-app#37 merged into `next` by the coordinator.
