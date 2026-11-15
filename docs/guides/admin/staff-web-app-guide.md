@@ -1,18 +1,19 @@
 # Staff web app — admin guide
 
-**Status:** Current · **Last updated:** 2026-11-15 (§ 3, § 4: "Show what uses it" for form configurations, bulk delete
-rows and skipped created records; § 5: lookup pickers keep their narrowing filters; § 7: validation rules in the draft;
-#289, #288, #291 in `next`, docs #597)
+**Status:** Current · **Last updated:** 2026-11-15 (release v0.3: the features of § 3–§ 7 below are released; § 3 row
+actions scroll with the table again and Export as CSV downloads at once, #606, #607; PandiO/knk-workspace#577)
 **Checked against:** knk-web-app `main` `3ba747d` and knk-web-api `master` `f445d21` (AM3 of #280 merged 2026-11-13 as
 `e02ee79` / `45043a7`; #371, #374 and #383, create, edit and link changes on `knk.admin.content`, reached the default
 branches with the promotion of `next` on 2026-11-13). Step conditions in the form builder and clickable form steps
-(#88, #68) are in `next`, not yet released (§ 7), with their fixes #413 and #414 (knk-web-app `next` `399722d`,
-2026-11-14). Only the builders (§ 7) were smoke-tested by the developer
+(#88, #68), with their fixes #413 and #414, were released in `v0.2` (2026-11-14). Release `v0.3` (2026-11-15,
+knk-web-app `main` `947923c`, knk-web-api `main` `2cc8254`) brought the dashboard row actions and row menu (#404–#406,
+#606, #607), the Permission Grant table (#408), a group's Permissions panel (#50), read-only town Streets (#409) and the
+Chain 3 follow-ups (#289, #288, #291). Only the builders (§ 7) were smoke-tested by the developer
 (2026-11-11/12, all pass); navigation, Entity setup without a nav link, the detail page, the relation picker, live
 updates, the settings pages and the dashboard access model with bulk delete (§ 1, § 3) are **not live-tested** yet:
 their smoke tests are linked in each section (the access model's is in closed alpha test run 2, checklist § 4c). The
-Chain 3 follow-ups (#289, #288, #291) are in `next` since 2026-11-15 (knk-web-api `5e10185f`, knk-web-app `98e108f0`),
-not yet released; automated in CI, their manual steps not run.
+v0.3 features are covered by automated tests in CI; the developer smoke-tested `next` before the promotion
+(2026-11-15), and the manual look in both themes is still open in their smoke tests.
 
 How staff find their way around the web app's admin pages and use the content tools: the dashboard, Entity setup, the
 detail page, the relation picker in forms, live updates, the form and display builders, and the settings pages. It
@@ -106,11 +107,12 @@ link to the record's **detail page** (§ 4); middle-click opens it in a new tab.
   "Requires …"; without `knk.admin.delete`, so is **Delete**. **Edit** on a User opens the player profile and doesn't
   need `knk.admin.content`.
 
-**Row actions** ([#405](https://github.com/PandiO/knk-workspace/issues/405)). Each row ends with three icon buttons,
-**View** (eye), **Edit** (pencil) and **Delete** (bin); hover one for its name. Their column is pinned to the table's
-right edge, and the checkbox column to the left edge, so on a wide type or a phone the other columns scroll sideways
-under them and the buttons stay in reach; a soft shadow on a pinned column's inner edge shows that something is
-scrolled under it. A greyed-out button says why on hover: "Requires …" for a missing node, or for **View** "No display
+**Row actions** ([#405](https://github.com/PandiO/knk-workspace/issues/405),
+[#606](https://github.com/PandiO/knk-workspace/issues/606)). Each row ends with three icon buttons, **View** (eye),
+**Edit** (pencil) and **Delete** (bin); hover one for its name. They are the row's last column and scroll sideways with
+the other columns on a wide type or a phone; the right-click menu below reaches View and Edit at any width. The
+checkbox column stays pinned to the left edge; a soft shadow on its right edge shows that columns are scrolled under
+it. A greyed-out button says why on hover: "Requires …" for a missing node, or for **View** "No display
 configuration – set one up via ⚙". Every row has the same thin line under it; a selected row is green with a green bar
 on its left edge ([#404](https://github.com/PandiO/knk-workspace/issues/404)).
 
@@ -123,7 +125,8 @@ on its left edge ([#404](https://github.com/PandiO/knk-workspace/issues/404)).
 - The items follow the same nodes as the buttons and the bar: an item you may not use stays in the menu, greyed out,
   with the reason under it ("Requires knk.admin.delete", "Requires knk.admin.export"; "Checking permission…" for a
   moment after the page opens). Delete from the menu asks the same question as the row's Delete button; Export as CSV
-  on one row downloads a file with that row only (the same file as **Export CSV** below).
+  on one row downloads a file with that row only (the same file as **Export CSV** below), straight away
+  ([#607](https://github.com/PandiO/knk-workspace/issues/607)).
 - **On a selection:** right-click a row that is ticked while other rows are ticked too, and **Delete** and **Export**
   take the whole selection: "Delete 3 Towns" and "Export 3 Towns as CSV". That Delete needs
   `knk.admin.delete.bulk`, like **Delete (n)**, and asks the same question; for users and permission groups it is
@@ -138,7 +141,7 @@ message says it was deleted. If it is still in use, the refusal offers **Show wh
 
 **Delete a form configuration** (Entity setup → a form's **⋯** → **Delete**). A form that another form opens as a
 sub-form can't be deleted: the red "Delete failed" dialog says "This form configuration can't be deleted: it is still
-used by 1 form field that opens it as a sub-form …" with **Show what uses it** (in `next`,
+used by 1 form field that opens it as a sub-form …" with **Show what uses it** (since v0.3,
 [#289](https://github.com/PandiO/knk-workspace/issues/289)). It lists the form fields and steps, each with the form
 (and step) it sits in, for example "Field of the form "Kingdom form" (Kingdom), step "Towns"". They are not links;
 open that form in the builder and clear its **Sub-configuration** first. Saved drafts and form sessions that use it
@@ -162,11 +165,12 @@ with **Clear**, or "None selected · Export takes all N results".
 
 **Export CSV** (needs `knk.admin.export`): with rows ticked it exports those, **in the order you ticked them**, with
 their current values; with none it exports the whole search in its current sort, at most 10,000 rows (the bar says so
-beforehand). The file `<Type>-<date>.csv` has the table's columns in table order (comma-separated, UTF-8, with `'`
+beforehand). The file `<Type>-<date>.csv` downloads straight away, without a dialog of the app's own (a browser set
+to ask where to save each file still asks; that is the browser's setting, #607). It has the table's columns in table order (comma-separated, UTF-8, with `'`
 before text that looks like a formula). The server reads the rows in one request ("Exporting N…"); each export is a
 "Dashboard export" entry in the audit log with the type, the number of rows and "(selection)" or "(search)".
 
-**Permission Grant** ([#408](https://github.com/PandiO/knk-workspace/issues/408), in `next`, not yet released;
+**Permission Grant** ([#408](https://github.com/PandiO/knk-workspace/issues/408), since v0.3;
 needs `knk.admin.user.manage`): every grant and deny of every player and group in one table: **ID**, **Node**,
 **Effect** ("Granted" or "Denied"), **Holder** ("Group #<id>" for a group, "User #<id>" for a player) and **Expires
 (UTC)** ("Never" for a permanent one; expired rows stay listed). Search by part of the node; every column sorts.
@@ -221,8 +225,8 @@ a User's Edit opens the player profile instead).
   ([#374](https://github.com/PandiO/knk-workspace/issues/374)): changing a link is an edit. Without the content node
   they are greyed out with "Requires knk.admin.content", and the hint line under the section says so. A world-only rank
   can still open a district and delete one of its streets (with `knk.admin.delete`), but not add or unlink one.
-- **A town's Streets are read-only** ([#409](https://github.com/PandiO/knk-workspace/issues/409), in `next`, not yet
-  released): they are the streets of the town's districts, each once, by name. The section shows "Streets are managed
+- **A town's Streets are read-only** ([#409](https://github.com/PandiO/knk-workspace/issues/409), since
+  v0.3): they are the streets of the town's districts, each once, by name. The section shows "Streets are managed
   on the district: open a district to add or remove them." and has no **Add…**, **Unlink**, **Create New** or
   **Delete**; **View** and edit on a street still work. To give a town a street, open one of its districts and use
   **Streets → Add…** there; unlinking it from every district of the town removes it from the town. A street no longer
@@ -233,8 +237,8 @@ a User's Edit opens the player profile instead).
   only — This page needs the knk.admin.content permission".
 - Edits by others and a delete of the open record show live (§ 6).
 
-**A permission group's Permissions panel** ([#50](https://github.com/PandiO/knk-workspace/issues/50), in `next`, not
-yet released). On a permission group's detail page (**Dashboard → Permission Group** → **View**), below the details:
+**A permission group's Permissions panel** ([#50](https://github.com/PandiO/knk-workspace/issues/50), since
+v0.3). On a permission group's detail page (**Dashboard → Permission Group** → **View**), below the details:
 
 1. **Permissions** lists the group's own nodes with **Effect** (Granted/Denied) and **Expires** ("Never", or a date
    with "expired" once it has passed), and how many players the group reaches, members of groups that inherit from it
@@ -258,7 +262,7 @@ Smoke test: [dashboard access § 8.7](../dashboard-access-smoke-test.md#87-a-per
 message with **Show what uses it** ([#44](https://github.com/PandiO/knk-workspace/issues/44)): the records per kind
 ("23 structures"), each a link to its detail page when you may read it, "… and n more" past 20. This works for a row's
 Delete on the dashboard, the header's Delete and an item's Delete; since
-[#289](https://github.com/PandiO/knk-workspace/issues/289) (in `next`) also for a form configuration in Entity setup
+[#289](https://github.com/PandiO/knk-workspace/issues/289) (since v0.3) also for a form configuration in Entity setup
 and the rows of a bulk delete (§ 3), and for records skipped when you delete what a form created:
 
 - **Cancel form** → **Delete them**, or Entity setup → Saved Progress → a draft's trash icon → **Delete draft and
@@ -287,7 +291,7 @@ full table with paging, sorting and filters.
 Without read access to the related type (its area node), the box searches **by name only** (no full table) and says
 so: "Names only: the full Street table needs one of: …". A type that can't be searched that way says "can't be searched
 here. Requires one of: …". A field whose picker is narrowed by filters (a siege objective's **Initial holder team**,
-scoped to the scenario's teams) offers the **narrowed** list in this mode too, names only (in `next`,
+scoped to the scenario's teams) offers the **narrowed** list in this mode too, names only (since v0.3,
 [#288](https://github.com/PandiO/knk-workspace/issues/288); before, it refused with "This list is narrowed by …"). Only
 a filter the type's lookup doesn't take still refuses, in red with no rows: "This list is narrowed by <filter>, which
 only the full <type> search can do. Requires one of: …"; ask for the type's area node, or have someone who holds it
@@ -300,10 +304,10 @@ lookup filters automated in CI; manual steps not run).
 
 ### 5.1 The steps of a form: Next, clicking a step, and what stops you
 
-In `next` since 2026-11-13 ([#68](https://github.com/PandiO/knk-workspace/issues/68),
+Released in v0.2 (2026-11-14; [#68](https://github.com/PandiO/knk-workspace/issues/68),
 [#88](https://github.com/PandiO/knk-workspace/issues/88)); the developer's first run on 2026-11-13 found
 [#413](https://github.com/PandiO/knk-workspace/issues/413) and [#414](https://github.com/PandiO/knk-workspace/issues/414),
-fixed in `next` on 2026-11-14 (knk-web-app#20); the fixes are not live-tested.
+fixed before that release (knk-web-app#20, #22).
 
 A form shows its steps in a strip above the fields; at phone width the label "Step x of n" opens the same steps as a
 list. You move with **Next** and **Back**, or by **clicking a step** (Tab reaches every step, Enter or Space
@@ -402,14 +406,13 @@ applied in a form preview, and buttons and links do nothing in a display preview
 
 Saving, publishing, duplicating, discarding and generating need `knk.admin.content`.
 
-**In `next`, not yet released** ([#88](https://github.com/PandiO/knk-workspace/issues/88),
+**Since v0.2** ([#88](https://github.com/PandiO/knk-workspace/issues/88),
 [#68](https://github.com/PandiO/knk-workspace/issues/68)): a **Step conditions** card in the form builder (what must
-hold before a step may be left or opened) and form steps you can click to jump. The `main` web app has neither; this
-guide describes them once `next` is promoted.
+hold before a step may be left or opened) and form steps you can click to jump.
 
-**Validation rules are part of the draft** (in `next` since 2026-11-15,
-[#291](https://github.com/PandiO/knk-workspace/issues/291); on `main` a rule still applies to the published form as
-soon as you save it). A field's **Cross-Field Validation Rules** say "Rules are part of the draft: they are kept when
+**Validation rules are part of the draft** (since v0.3,
+[#291](https://github.com/PandiO/knk-workspace/issues/291); before, a rule applied to the published form as soon as you
+saved it). A field's **Cross-Field Validation Rules** say "Rules are part of the draft: they are kept when
 you save this field and the form, and staff get them when you publish. Until then the form uses the published rules."
 
 1. **Add Rule**, **Edit** → **Save Rule** and **Delete** change the draft only; a new rule shows **Not published**.
@@ -566,7 +569,7 @@ get the new version at once.
 | **Publish…** refused: `Step "…" has a "before leaving" condition without a message` | A step condition checked on Next has no message (§ 7.1) | Type the message, or remove the condition |
 | A form can't get past a step and shows a condition's message whatever you fill in | The condition reads a field that is gone or has moved (red rule in the builder, Configuration health warning), or its JSON is not valid | Fix or remove the rule in the builder (§ 7.1) and publish |
 | Clicking a step opens **Can't go to "…" yet** | A step before it is unfinished (§ 5.1) | Fix the listed fields, or **Go to …** |
-| A validation rule change applies before Publish | `main` before #291 reaches it: rules were saved outside the draft | Change rules outside play hours; with #291 (`next`) they wait for Publish |
+| A validation rule change applies before Publish | A web app and API older than v0.3 (#291): rules were saved outside the draft | Deploy v0.3; since then rules wait for Publish |
 | **Publish…** refused: "… depends on a field that is no longer in the form." or "… depend on each other in a circle" | A validation rule reads a field you removed, or rules form a loop (§ 7) | Edit or delete the rule, then publish |
 | A form configuration's Delete fails with "still used by … form field that opens it as a sub-form" | Another form opens it as a sub-form | **Show what uses it**, clear that field's or step's Sub-configuration, delete again |
 | A picker says "This list is narrowed by …, which only the full … search can do." | You search by name only and the field's filter isn't one the lookup takes (§ 5) | Ask for the type's area node, or let someone who has it fill in the field |
@@ -574,25 +577,28 @@ get the new version at once.
 
 ## Changes
 
-1. 2026-11-15: § 3 and § 4 "Show what uses it" for a form configuration, bulk delete rows and records skipped as in
+1. 2026-11-15: release v0.3: "in `next`" markers of #404–#406, #408, #409, #50, #289, #288, #291 now "since v0.3", and
+   of #68, #88, #413, #414 "since v0.2"; § 3 row actions are the last column again (#606) and Export as CSV downloads
+   at once (#607); PandiO/knk-workspace#577
+2. 2026-11-15: § 3 and § 4 "Show what uses it" for a form configuration, bulk delete rows and records skipped as in
    use; § 5 lookup pickers keep their narrowing filters; § 7 validation rules in the draft, applied on Publish; § 10;
    pointer to the ranks guide for the player profile; #289, #288, #291, docs #597 (in `next`)
-2. 2026-11-15: § 3 the read-only Permission Grant table; § 4 a permission group's Permissions panel and History; #408,
+3. 2026-11-15: § 3 the read-only Permission Grant table; § 4 a permission group's Permissions panel and History; #408,
    #50, docs #576 (in `next`)
-3. 2026-11-15: § 4 a town's Streets are read-only, managed on the district; #409, docs #559 (in `next`)
-4. 2026-11-14: § 3 pinned View / Edit / Delete column, same row lines, right-click menu with Shift+F10 and the
+4. 2026-11-15: § 4 a town's Streets are read-only, managed on the district; #409, docs #559 (in `next`)
+5. 2026-11-14: § 3 pinned View / Edit / Delete column, same row lines, right-click menu with Shift+F10 and the
    context-menu key, greyed-out items, selection, Ctrl/Cmd + right-click; #404, #405, #406, knk-web-app#17, docs #526
    (in `next`)
-5. 2026-11-14: § 5.1 "Go to …" opens at once and saves in the background, a failed save shows in the banner;
+6. 2026-11-14: § 5.1 "Go to …" opens at once and saves in the background, a failed save shows in the banner;
    § 5.1 and § 7.1 a failed step condition marks its fields; #413, #414, knk-web-app#20, docs #482 (in `next`)
-6. 2026-11-13: § 5.1 the steps of a form: clicking a step, what stops you; § 7.1 step conditions in the form builder;
+7. 2026-11-13: § 5.1 the steps of a form: clicking a step, what stops you; § 7.1 step conditions in the form builder;
    #68, #88, docs #395 (in `next`)
-7. 2026-11-13: Select / Change / Unlink / Add need `knk.admin.content`, the API refuses creates and edits without it,
+8. 2026-11-13: Select / Change / Unlink / Add need `knk.admin.content`, the API refuses creates and edits without it,
    #374, docs #385
-8. 2026-11-13: New, Edit and the forms need `knk.admin.content` again, #371, docs #378
-9. 2026-11-13: § 1, § 3, § 4, § 5, § 9, § 10 checked against the default branches: New, Edit, the forms, link changes,
+9. 2026-11-13: New, Edit and the forms need `knk.admin.content` again, #371, docs #378
+10. 2026-11-13: § 1, § 3, § 4, § 5, § 9, § 10 checked against the default branches: New, Edit, the forms, link changes,
    hot edit, the lootbox toggle and Create New Street need `knk.admin.content`, #371, #374, #383; known gap #380; docs
    #347
-10. 2026-11-13: dashboard per area, disabled actions with "Requires …", bulk delete, export through the API, names-only
+11. 2026-11-13: dashboard per area, disabled actions with "Requires …", bulk delete, export through the API, names-only
    pickers, readable refusals; #280 AM3 and #205, docs #366
-11. 2026-11-12: first version, PandiO/knk-workspace#337, #338, #340–#345
+12. 2026-11-12: first version, PandiO/knk-workspace#337, #338, #340–#345

@@ -1,6 +1,6 @@
 # Deployment log
 
-**Status:** Current · **Last updated:** 2026-11-14 (knk-web-api's trunk renamed from `master` to `main`); 2026-11-13 (first version: structure, back-fill of the knk-alpha deploys the dated reports record, PandiO/knk-workspace#303)
+**Status:** Current · **Last updated:** 2026-11-15 (release tags `v0.2` and `v0.3` added, PandiO/knk-workspace#577)
 **Sources:** the dated deploy reports in [`reports/`](reports/) (cited per row), the component repos' git history and tags
 **Related:** [changelog](CHANGELOG.md) (what was merged) · [closed-alpha deployment runbook § Every deploy](guides/closed-alpha-deployment-runbook.md#every-deploy-gate-tags-release-and-log) (how a deploy is recorded) · [NAS operations access § 7](guides/nas-ops-access.md#7-stage-b-delegated-changes-knk-deploy) (`knk-deploy`)
 
@@ -78,10 +78,13 @@ report usually names the branch heads; link it).
 ## Release tags
 
 Release tags are numbered tags on trunk (global instructions, "Branches" rules 1 and 5), created through each
-component repo's Release workflow; a deploy uses the tag. Tags that exist on 2026-11-13:
+component repo's Release workflow; a deploy uses the tag. Tags that exist on 2026-11-15, newest first (what each
+release contains: the [changelog](CHANGELOG.md); its migrations: [production installation § 5.3](guides/production-installation.md#53-apply-the-migrations)):
 
 | Tag | knk-web-api | knk-web-app | knk-plugin | Deployed to knk-alpha |
 |---|---|---|---|---|
+| `v0.3` (2026-11-15, promotion of `next`) | `2cc8254f` | `947923cf` | no tag (plugin not in this release) | not on record |
+| `v0.2` (2026-11-14 API and web app; 2026-11-15 plugin) | `58e32188` | `a01d553d` | `f8f7fb2e` | not on record |
 | `v0.1` (2026-11-13, promotion of `next`) | `6d5e9c17` | `8da55ea7` | no tag (its `next` isn't promoted yet) | not on record |
 
 Earlier alpha deploys are not tagged. How deploy tags and the per-deploy release on knk-workspace are named is an open
@@ -93,3 +96,9 @@ What is on trunk and not on the alpha: compare the current state above with the 
 `git log --first-parent --oneline 8df59b75..origin/main` in knk-web-api, and read the [changelog](CHANGELOG.md)
 entries dated after the last deploy. On 2026-11-13 that was 19 first-parent commits in knk-web-api, 37 in knk-web-app
 and 17 in knk-plugin.
+
+## Changes
+
+1. 2026-11-15: release tags `v0.2` and `v0.3` added, PandiO/knk-workspace#577
+2. 2026-11-14: knk-web-api's trunk renamed from `master` to `main`
+3. 2026-11-13: first version: structure, back-fill of the knk-alpha deploys the dated reports record, PandiO/knk-workspace#303
