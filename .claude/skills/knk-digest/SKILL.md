@@ -39,7 +39,7 @@ repository).
    merged, merge commit not on trunk: compare with `git log origin/<trunk>..origin/next --merges --first-parent`).
    For each, its issue (`Closes`/`Part of` line), the issue's `tier:` label and its smoke-test guide (a
    `docs/guides/*smoke-test*.md` section or the PR's Testing section). Count only the manual steps left; steps marked
-   `[automated]` run in CI and are not the developer's test (global instructions, "Testing: automated first").
+   `[automated: …]` run in CI and the developer may skip them (global instructions, "Testing: automated first").
 2. **Decisions:** in each chain progress report changed since the last digest (`docs/reports/*chain*.md` on
    knk-workspace `main`), the "Waiting for the developer" section and agent decisions in new link blocks; open issues
    with a decision or design question waiting on the developer (search `is:open` for "decision" in titles, and

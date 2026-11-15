@@ -1,7 +1,7 @@
 # Town streets from districts chain — charter
 
-**Status:** Running (2026-11-14)
-**Last updated:** 2026-11-14
+**Status:** Done, in review (2026-11-15): L1–L3 merged into `next`; developer test and promotion open
+**Last updated:** 2026-11-15
 **Issues:** parent [PandiO/knk-workspace#409](https://github.com/PandiO/knk-workspace/issues/409); sub-issues per
 link below. Reference issues as `PandiO/knk-workspace#n` in component repos.
 **Progress report:** [reports/2026-11-14-town-streets-chain.md](../../reports/2026-11-14-town-streets-chain.md)

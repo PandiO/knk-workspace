@@ -18,8 +18,8 @@
 | Link | Issue | Status | Branch heads | PR | CI | How started | Test rule |
 |---|---|---|---|---|---|---|---|
 | L1 PermissionGrant table | #408 | Merged into next (2026-11-14) | api `6e34af5`, app `110d5f2`, ws `b6547485`; next: api `2425f181`, app `9a29623a`, ws `aef2f99f` | knk-web-api#30, knk-web-app#29, knk-workspace#529 | green on the PRs; next running | create_session session_01R1w2Ut6UjJQM8QpXM4o6co | automated first, `main` `aa4208b3` (unchanged at start) |
-| L2 Group grants panel | #50 | Running (2026-11-14) | — | — | — | subagent (coordinator skill § 4.1.4: two component repos) | automated first, `main` `aa4208b3` |
-| L3 Profile Permissions tab | #407 | Not started (gate: L2 merged) | — | — | — | — | — |
+| L2 Group grants panel | #50 | Merged into next (2026-11-15) | api `00b8060`, app `28c0d47`, ws `da034e05`; next: api `dcbb1f82`, app `42781025`, ws `685a4677` | knk-web-api#32, knk-web-app#35, knk-workspace#560 | green on the code PRs; Codex at its usage limit | subagent (coordinator skill § 4.1.4: two component repos) | automated first, `main` `aa4208b3` (unchanged at start) |
+| L3 Profile Permissions tab | #407 | Running (2026-11-15) | — | — | — | create_session session_01R1w2Uu4cu227Le97QQaG5U | automated first, `main` `aa4208b3` (unchanged) |
 
 ## 3. Coordinator decisions
 
@@ -47,6 +47,11 @@
 8. **L1 check and merge (2026-11-14).** Chosen: merge after bringing `origin/next` into the L1 branches myself, because `next` moved during the link (#404–#406, #511 and town streets merged): knk-web-app merged cleanly (`110d5f2`), knk-workspace had a mechanical CHANGELOG conflict twice (both sides add entries; kept both, `9f6bf898`, `b6547485`). CI green on the PR heads (web app `build-and-test` and `e2e` after the merge), Codex at its usage limit on all three PRs (rule 4, noted on each), scope inside #408, decisions logged, automated proof present (Playwright, Jest, xUnit). Alternatives: (a) send L1 back to merge `next`: slower for a mechanical merge; (b) merge without bringing in `next`: the web-app PR's CI had not run against the new e2e helpers.
 9. **Route for L2.** Chosen: a subagent of this coordinator from the start, because L2 needs knk-web-api and knk-web-app and the coordinator skill (`main` `ffbc7176`, § 4.1.4) sends links with two or more component repos that way (Auto mode's classifier can refuse `add_repo`). L3 (web app only) goes back to `create_session`. Alternatives: (a) `create_session` and fall back on a refusal: what the skill now advises against.
 10. **Rule recheck before L2.** No change to "Testing: automated first", the knk-test-writer or knk-link skills or `web-app-testing.md` since `aa4208b3`; #421 (plugin scenarios) and #511 (backfill) are done and archived; #387 still open, not merged, so today's nodes hold for L2.
+
+11. **L2 restarted after the developer's #50 decisions (2026-11-15).** L2's first subagent stopped before coding with "DECISIONS NEEDED" (no AskUserQuestion tool in a subagent); nothing was changed. I asked the developer: (1) audit: a generic audit subject (`SubjectType` + `SubjectId`, one additive migration, History list in the group panel), chosen with future clans that run towns and hold treasuries in mind; (2) plugin freshness: rely on the existing `PermissionGroupChanged` event (#179), plugin follow-up for inheriting groups. Recorded on #50. Then a new subagent with the same prompt plus the answers. Lesson: subagent links can't ask the developer; the coordinator asks before starting such a link. Alternatives: (a) `create_session` for L2 so the link could ask itself: against coordinator skill § 4.1.4 for two component repos.
+
+12. **L2 check and merge (2026-11-15).** Chosen: merge knk-web-api#32, knk-web-app#35, knk-workspace#560 into `next` with merge commits, because every § 6 check held: heads match, the API branch contains `next`, the web-app and workspace branches were 2 and 4 commits behind but merge cleanly (a removed debug spec; town streets docs), CI green on both code PRs (incl. `fresh-database` for the migration), no review threads, Codex at its usage limit (rule 4, noted on each PR), scope inside #50 plus the developer's audit decision, automated proof (31 xUnit, Jest, 11 Playwright tests). The migration `AddAuditLogSubject` is additive (nullable columns, index, `TargetUserId` nullable); its Down maps null targets to 0, documented. Alternatives: (a) send L2 back to merge `next` first: the missing commits touch no file L2 changed; `next` CI covers the merge result.
+13. **L3 route and recheck.** Chosen: `create_session` (knk-web-app only besides knk-workspace), after rechecking: no rule change since `aa4208b3` (only coordinator skill `ffbc7176`), #387 still open, no open knk-web-app PRs, the only other web-app claim (#535) is on `EmailLogPage`/`InvitationsPage`. Alternatives: (a) subagent: not needed for one component repo, and a session can ask the developer.
 
 ## 4. Link blocks
 
@@ -119,3 +124,112 @@ _(Each link appends its block here when it finishes.)_
        (`PUT`/`DELETE api/PermissionGrants/by-node`, `perm`), and reuse `searchPaged` with filter `holderId` for a
        group's grants (the API supports it).
     2. Strict e2e specs need `POST hubs/web/negotiate` mocked (see `e2e/permission-grants.spec.ts`).
+
+### 4.2 L2 — Edit a permission group's own grants in the web app (#50)
+
+1. **Scope done.**
+    1. knk-web-api: generic audit subject (developer decision 2026-11-15): `Models/AuditLogEntry.cs` nullable
+       `SubjectType`/`SubjectId`, `TargetUserId` nullable, `Enums/AuditSubjectTypes.cs`, one additive migration
+       `AddAuditLogSubject` (`20261115092735`, index `SubjectType, SubjectId, Timestamp`). `PermissionGrantService`
+       audits a group's grant changes once per change with the group as subject (`AuditLogService.RecordForSubjectAsync`;
+       node, before/after value and expiry); user-holder audits unchanged. `GET api/audit-log` takes
+       `subjectType`/`subjectId` (`AuditLogController`, repository, service). New `GET api/PermissionGroups/{id}/member-count`
+       (`RequireServiceOrPermission(knk.admin.user.manage)`): active members of the group and of every inheriting group,
+       each player once. `PrivacyRepository` erasure skips null targets. Writes stay on the by-node routes and the
+       escalation guard.
+    2. knk-web-app: `src/components/admin/permissionGroups/GroupPermissionsPanel.tsx` on the group's detail page
+       (`DisplayWizardPage.tsx`, permissiongroup only): own nodes (Granted/Denied, expiry), member count, grant/deny form
+       with an empty expiry by default, Edit / change Granted-Denied / Remove per row, blast-radius confirmation on flips
+       and removals, History list (audit log by subject), read-only with "Requires knk.admin.user.perm".
+       `PermissionGrantClient.getForHolder` (searchPaged on `holderId`), `upsertByNode`, `revokeByNode`;
+       `PermissionGroupClient.getMemberCount`; `userManagementClient.getAuditLog` subject filter; `AuditLogEntryDto`
+       `targetUserId: number | null`, `subjectType`, `subjectId`. None of PR #17's files touched; no e2e helper changed.
+    3. knk-workspace: `docs/CHANGELOG.md` entry (admin steps: the migration); `docs/guides/dashboard-access-smoke-test.md`
+       § 8.7 (8 automated lines, 4 manual steps), nothing else in the guide.
+2. **Commits and heads.** knk-web-api `claude/group-grants-50` at `00b8060` (3 commits incl. a merge of `next` `de74190`,
+   base `next` at `2425f18`); knk-web-app at `28c0d47` (2 commits incl. a merge of `next` `d3d7152`, base `next` at
+   `9a29623`); knk-workspace at `da034e05` (1 commit, base `next` at `66c7c910`).
+3. **PRs.** https://github.com/PandiO/knk-web-api/pull/32, https://github.com/PandiO/knk-web-app/pull/35,
+   https://github.com/PandiO/knk-workspace/pull/560 (`Closes #50`), base `next`. Not merged. **Codex:** at its usage
+   limit on all three (no findings to handle); said so on each PR.
+4. **Tests, baseline → result.** Test rule: "Testing: automated first", knk-workspace `main` `aa4208b3` (PR #512);
+   checked `origin/main` at start (`1583de67`): the rule files had not changed since.
+    1. knk-web-api: baseline `dotnet build` green, `dotnet test` on `next` `2425f18` 4114 passed / 97 skipped / 0
+       failed, on `next` `de74190` (after #409) 4138 / 98 / 0; result 4169 / 98 / 0 (+31). New:
+       `Services/GroupGrantAuditTests` (6), `Api/GroupGrantsPanelApiTests` (12), `Migrations/AddAuditLogSubjectMigrationTests`
+       (4), `PermissionGrantServiceTests` (+4, the group test now expects the subject entry), `AuditLogServiceTests` (+4),
+       `ReadAccessRulesTests` pin for `GetMemberCount`. 13 fail with the group audit or the inheritance walk broken.
+       CI `build-and-test` and `fresh-database` green.
+    2. knk-web-app: baseline on `next` `9a29623` `npm run test:ci` 301 suites / 2595 tests, `tsc` clean,
+       `typecheck:e2e` clean, e2e 96 passed (`next` `d3d7152` adds 1 suite, 8 tests, 4 e2e); result 304 / 2615, clean,
+       clean, CI build compiled, e2e 111 passed. New: Playwright `e2e/group-grants.spec.ts` (11, strict, fixtures
+       `e2e/fixtures/groupGrants.ts`); Jest `permissionGrantClient.test.ts` (+3), `permissionGroupClient.test.ts` (1),
+       `userManagementClient.test.ts` (+2), `groupPermissionsHelpers.test.ts` (6). The flip tests fail without the
+       confirmations. CI `build-and-test` and `e2e` green.
+    3. Known reds: none. MySQL tests skipped (no `KNK_TEST_MYSQL`).
+5. **Decisions (DESIGN § 4.3).**
+    1. *Where the panel lives.* Chosen: the group's detail page (`/display/PermissionGroup/{id}`, below the details),
+       because it needs only the type's view node, like the grants it shows. Alternatives: (a) next to the edit form:
+       the form wizard needs `knk.admin.content` (#371), which a ranks admin may lack; (b) a new page: one more route
+       for one panel.
+    2. *Audit actions.* Chosen: reuse GrantAdded/GrantUpdated/GrantRemoved with the subject, because the existing
+       detail lines render them and the action already says what changed. Alternatives: (a) new values (e.g.
+       GroupGrantAdded): duplicates the meaning; the subject already tells group from player.
+    3. *SubjectType.* Chosen: a string column (max 64) with constants in `AuditSubjectTypes`, because a later subject
+       (a clan, a treasury) then needs no migration. Alternatives: (a) an enum stored as string: a code change per
+       subject anyway, same column; (b) an int enum: unreadable in the database.
+    4. *Index.* Chosen: (`SubjectType`, `SubjectId`, `Timestamp`), because the History reads one subject newest first,
+       like the existing (`TargetUserId`, `Timestamp`) index. Alternatives: (a) (`SubjectType`, `SubjectId`) only: a
+       sort step per read.
+    5. *Group removal details.* Chosen: a group's GrantRemoved also carries `expiresAt` (the decision asks for the
+       expiry); player removals keep their old shape. Alternatives: (a) add it to player entries too: changes
+       user-holder audits, which were to stay as they are.
+    6. *When to confirm.* Chosen: on a Granted/Denied flip and a removal (row button or form), not on a new node or an
+       expiry change, as #50 and the charter list. Alternatives: (a) confirm every save: friction on additive changes;
+       (b) confirm expiry changes too: an expiry far ahead is harmless, one in the past is still visible as "expired".
+    7. *Without `knk.admin.user.perm`.* Chosen: read-only, controls disabled with "Requires knk.admin.user.perm", because
+       that is the #280 rule (decision 11: shown disabled, not hidden). Alternatives: (a) hide the panel: staff can't
+       see what exists.
+    8. *Member count.* Chosen: distinct active members of the group and all its descendants, plus the inheriting group
+       count, in one endpoint on `knk.admin.user.manage`. Alternatives: (a) only direct members: undersells the blast
+       radius (#50 asks for inheriting groups); (b) count in the web app: needs every membership.
+    9. *Inherited nodes.* Chosen: not shown (optional in #50), because the profile's Effective Permissions already
+       shows sources and the group's parent is one click away. Alternatives: (a) read the parent chain's grants per
+       group: more calls and tests for an optional item; can follow later.
+    10. *Migration after `next` moved.* Chosen: generate `AddAuditLogSubject` again after merging #409's
+        `DropTownStreet`, so the designer model matches; the snapshot change stays the audit columns and index only.
+        Alternatives: (a) keep the first migration: its designer still carried the dropped TownStreet table.
+6. **Out of scope, noted.** #558 filed (plugin: members of inheriting groups and changes while realtime is down,
+   developer decision 2 on #50); comment on #511 (`dotnet ef migrations add` without MySQL; regenerating a migration
+   after `next` gains one).
+7. **Blockers.** None.
+8. **At merge / what the developer must do.**
+    1. Deploy: back up the database, deploy the API, run `dotnet ef database update` (one additive migration,
+       `AddAuditLogSubject`; the API does not migrate on start), then the web app. No settings, no `config.yml` key, no
+       plugin change. If #409's `DropTownStreet` is not applied yet, it runs first (earlier timestamp).
+    2. Manual test steps (smoke test § 8.7):
+        1. On a copy of the alpha database, `dotnet ef database update` applies `AddAuditLogSubject`; a known player's
+           Audit log on the profile still lists the old entries.
+        2. As the owner, grant `knk.test.group` on a test group with one member; on the member's profile, refresh:
+           Effective Permissions lists it with the group as source. Deny it, then remove it, refreshing each time; the
+           group's History lists the three changes with you as "By".
+        3. With that member online, grant and remove a node they can try in game: it applies within seconds without a
+           relog.
+        4. With a staff rank ranked below a group, open that group and save a node: "You can only change groups ranked
+           below your own."
+    3. Covered by automated tests (no manual step): listing, grant, deny, permanent default, expiry change on the same
+       row, flip and remove confirmations with the blast radius and Cancel, the uncounted case, API refusal shown,
+       read-only without `perm`, nothing read without `manage`, member count with inheritance, audit entry per change
+       with the group as subject, audit search by subject, player audits unchanged, erasure, migration shape
+       (`e2e/group-grants.spec.ts`, Jest client and helper tests, `GroupGrantAuditTests`, `GroupGrantsPanelApiTests`,
+       `PermissionGrantServiceTests`, `AuditLogServiceTests`, `AddAuditLogSubjectMigrationTests`).
+    4. At merge: `documentation` sub-issue with: web-api architecture (the generic audit subject, built for later
+       group-like subjects such as clans that run towns and their treasuries; the member-count endpoint and audit
+       filters), dashboard access DESIGN Appendix A rows (`GET api/PermissionGroups/{id}/member-count`, audit-log
+       subject filters), web-app architecture (group Permissions panel, by-node client writes), the admin guide to the
+       ranks and the staff web app guide (editing a group's nodes, the confirmation, History), the feature register.
+9. **Notes for later links.**
+    1. L3 (#407): `AuditLogEntryDto.targetUserId` is `number | null` now; the profile's Permissions tab can keep using
+       `userManagementClient.grantNode`/`revokeNode`; `GroupPermissionsPanel` shows one way to do a grant form with
+       gates and a confirmation.
+    2. `mockSession` already answers `hubs/` with 404, so strict specs need no extra negotiate mock.
