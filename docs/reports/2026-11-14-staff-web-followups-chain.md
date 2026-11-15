@@ -309,3 +309,11 @@ _(Each link appends its block here when it finishes.)_
        web app guide (search and sort on the Permissions tab) and the feature register row.
 9. **Notes for later links.** None (last link). `DataTable` with `density="compact"` and a client-side
    `sortEffectivePermissions`-style helper is a quick way to make a small in-card list sortable.
+10. **Correction 2026-11-15 (after the coordinator's check).** Test rule version changed to `main` `4effca89` (developer
+    decision 2026-11-15: smoke-test guides keep every step in full and tag the automated ones). On knk-workspace
+    `claude/profile-permissions-407` (head `9b361028`, after the coordinator's merge of `next` at `51a98449`) I rewrote
+    `player-profile-smoke-test.md` § 6 (10 of 12 steps tagged, 2 manual) and `dashboard-access-smoke-test.md` § 8.6
+    (L1: 8 of 10 tagged, 2 manual) and § 8.7 (L2: 14 of 18 tagged, 4 manual; it gains the uncounted blast radius and
+    the staff-only detail page, both already in `e2e/group-grants.spec.ts`). No other lines changed. The guide's top
+    status line ("57 of 97 steps (§ 1–8)") now undercounts § 8.6–8.7 (+5 steps, +5 tagged) and was left for the
+    coordinator. `@codex review` requested on knk-workspace#569. knk-web-app#37 merged into `next` by the coordinator.
