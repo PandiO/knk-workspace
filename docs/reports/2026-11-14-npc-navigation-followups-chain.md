@@ -25,7 +25,7 @@
 | L1 Design: corners, narrowed formations, toggle | #519 | Merged into next (2026-11-15, design approved by the developer) | knk-workspace `96f47820` → `next` `4a97fd3b` | PandiO/knk-workspace#546 | docs only (no CI); Codex at its usage limit | create_session session_01R1w2UwysEMwCYnxwCpkx3p (2026-11-15) |
 | L2 Follower recheck and guard, no gate push | #520 | Merged into next (2026-11-15, by the manager session) | knk-plugin `651d8bff` → `next` `11e07d64`; knk-workspace → `next` `43a2328c` | PandiO/knk-plugin#31, PandiO/knk-workspace#536 | PR head green (build, paper-boot); `next` runs 43662028862, 43662028855 pending at the coordinator check | create_session session_01R1w2Ux2KpS7H3FidwDEZmp (2026-11-14) |
 | L3 Wall-corner steering and recovery | #521 | Merged into next (2026-11-15) | knk-plugin `51072e94` → `next` `5dc88cfd`; knk-workspace `4308aaf1` → `next` `51bf5952` | PandiO/knk-plugin#36, PandiO/knk-workspace#557 | PR head green (build, paper-boot with Citizens, 19 scenarios); Codex at its usage limit | create_session session_01R1w2Uv1rEnwPko4Tq83xyL (2026-11-15) |
-| L4 Narrowed formations, followers-finish-trip toggle | #522 | In review (2026-11-15) | knk-plugin `becf379c`, knk-workspace `95ff61c0` | PandiO/knk-plugin#39, PandiO/knk-workspace#584 | `build` green; `paper-boot` running at writing; 25/25 scenarios locally | create_session session_01R1w2Uur6M3a3CaVDWJWCw7 (2026-11-15) |
+| L4 Narrowed formations, followers-finish-trip toggle | #522 | In review (2026-11-15) | knk-plugin `becf379c`, knk-workspace `95ff61c0` | PandiO/knk-plugin#39, PandiO/knk-workspace#584 | `build` and `paper-boot` green on `becf379c` (25 scenarios); Codex at its usage limit | create_session session_01R1w2Uur6M3a3CaVDWJWCw7 (2026-11-15) |
 
 ## 3. Coordinator decisions
 
@@ -300,9 +300,9 @@ _(Each link appends its block here when it finishes.)_
         1. `NavGroupTest` uses a 2.0 column (the default is 1.5 now). Its yard test expects a shift instead of a fold, and the gate test expects the step back.
         2. The `NpcNavRunnerTest` stats line, and 25 scenarios in `PaperScenariosTest`.
     4. **Plugin scenarios on a real server**, run locally: Paper 26.3 build 205 with WorldEdit, WorldGuard and Citizens build 4269, through `tools/paper-boot/boot-test.sh --scenarios --npc-navigation --min-scenarios 25`: 25/25 passed (`npc-group-narrows` 327 ticks, `npc-group-gate-finish-trip` 841, `npc-group-access-change` 232; L3's `npc-corners-walk` passes too).
-    5. CI on PandiO/knk-plugin#39: `build` green; `paper-boot` see the coordinator message.
+    5. CI on PandiO/knk-plugin#39 at `becf379c`: `build` and `paper-boot` green (25 scenarios).
     6. Known reds: none.
-    7. Codex: no review yet at writing; handled on the PRs if one comes.
+    7. Codex: at its usage limit on both PRs, so no review (said on both PRs).
 5. **Decisions (DESIGN § 4.3).**
     1. *Fit with a lane shift.* Chosen: lanes may shift half a block at a time up to the width's half width, and each lane point needs a floor 0.2 block to either side across the path. Alternatives: (a) today's rule only (the corner scene's 2-wide passage and wall-hugging north road never fit 2 or 3 abreast); (b) shift the whole formation by the road's measured centre (more world queries per point).
     2. *Cost per point.* Chosen: the widest width and the shift per width cached per point. The world looks per point and width are bounded and asked once, but there are more than one per width because of the shifts. Alternatives: (a) exactly one look per width without shifts (see 1).
