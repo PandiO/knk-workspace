@@ -4,6 +4,15 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+## 2026-11-15
+
+- **Smoke-test guides keep every step** — no game change; smoke-test guides keep each step's full manual instructions
+  again, and a step an automated test covers gets a tag `[automated: <test>]`, so the developer can test everything by
+  hand or skip what CI covers (developer decision 2026-11-15). Global instructions "Testing: automated first" item 2,
+  the `knk-test-writer` skill § 4 and the link, coordinator and digest skills say so; the guides shortened on 2026-11-14
+  are restored on `next`.
+  - **Admin steps:** none.
+
 ## 2026-11-14
 
 - **Agents test automatically first** — no game change; feature sessions now put each behaviour they change into the
