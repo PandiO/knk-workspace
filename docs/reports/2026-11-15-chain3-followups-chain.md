@@ -26,7 +26,7 @@
 | L4 Builder rules and templates into the draft | #291 | Merged into next (2026-11-15) | api `a851436`, web-app `0d604fe`, workspace `4fa25605`; next: api `93c3d50f`, app `cd730f29`, ws `0ca9b1b6` | [web-api#35](https://github.com/PandiO/knk-web-api/pull/35), [web-app#40](https://github.com/PandiO/knk-web-app/pull/40), [#583](https://github.com/PandiO/knk-workspace/pull/583) | green (PR runs 43711458740/43711458686 api, 43711488807/43711488760 web) | subagent (two component repos, § 4.1.4); resumed once after a usage-limit stop |
 | L5 Lookup applies picker filters | #288 | Merged into next (2026-11-15) | api `95a2954`, web-app `9d82786`, workspace `b1d270f1`; next: api `d8514ed4`, app `990af482`, ws `c6e017ad` | [web-api#36](https://github.com/PandiO/knk-web-api/pull/36), [web-app#41](https://github.com/PandiO/knk-web-app/pull/41), [#587](https://github.com/PandiO/knk-workspace/pull/587) | green (PR runs 43714699624/43714699597 api, 43714715547/43714715574 web) | subagent (two component repos, § 4.1.4) |
 | L6 Player profile API part | #565 | Merged into next (2026-11-15) | api `9442502`, web-app `7051b52`, workspace `27d3065a`; next: api `5e10185f`, app `98e108f0`, ws `9c1c06f2` | [web-api#37](https://github.com/PandiO/knk-web-api/pull/37), [web-app#42](https://github.com/PandiO/knk-web-app/pull/42), [#595](https://github.com/PandiO/knk-workspace/pull/595) | green (PR runs 43720314230/43720314231 api, 43720332163/43720332129 web) | subagent (two component repos, § 4.1.4) |
-| L7 Plugin carries out web kick/ban | #574 | Running (2026-11-15) | — | — | — | create_session session_01R1w2Uu1AmsiThCTqfZPnFG |
+| L7 Plugin carries out web kick/ban | #574 | In review (2026-11-15) | plugin `8c44338c`, workspace `58a8abbc` | [knk-plugin#42](https://github.com/PandiO/knk-plugin/pull/42), [#596](https://github.com/PandiO/knk-workspace/pull/596) | green `build` (PR run 43721731604); `paper-boot` running | create_session session_01R1w2Uu1AmsiThCTqfZPnFG |
 
 ## 3. Coordinator decisions
 
@@ -466,3 +466,37 @@ _(Each link appends its block here when it finishes.)_
    `actionId`). Kick: kick the online player with the reason or the default message. Ban: add the profile to Paper's
    profile ban list, permanent, reason, `staffUsername` as source, online or not; kick if online; idempotent. Register
    both with max version 1 in the `UserStateSync` pattern (`knk-api-client` `UserStateEvents` constants + parse records).
+
+### 4.7 L7 — Plugin carries out web kick/ban (#574)
+
+1. **Scope done.**
+    1. knk-plugin: `api/realtime/ModerationEvents` (payload parser); `core/realtime/RecentActionIds` (action ids handled, bounded at 1000, in memory); `paper/realtime/ModerationRealtimeSync` (`PlayerKick` / `PlayerBan` v1 handlers; Bukkit calls on the main thread like `UserStateSync`); `paper/realtime/BukkitProfileBans` (Paper's profile ban list, permanent entry with the reason and `staffUsername` as source); `paper/realtime/ModerationSettings` and `config.yml` `realtime.moderation` (`kick-default-reason`, `ban-message`); `KnKPlugin.initializeRealtime`: one `registerModerationSync()` call plus that method (additive).
+    2. knk-workspace (docs): CHANGELOG entry, plugin configuration reference § 4.3 and § 2.1, realtime DESIGN § 6.10 item 8 (as built), player-profile smoke test § 7 steps 8–10 and 18 tagged with the plugin tests (16 of 18 automated, 6 partly).
+2. **Commits and heads.** knk-plugin `claude/web-kick-ban-574` at `8c44338c` (1 commit, base `next` at `028504de`); knk-workspace `claude/web-kick-ban-574` at `58a8abbc` (1 commit, base `next` at `9c1c06f2`).
+3. **PRs.** [knk-plugin#42](https://github.com/PandiO/knk-plugin/pull/42) (closes #574), [#596](https://github.com/PandiO/knk-workspace/pull/596) (part of #574), base `next`. Not merged.
+4. **Tests, baseline → result.**
+    1. knk-plugin (`./gradlew build -x deployToDevServer`, JDK 25): baseline on `next` 5932 tests, 0 failures, 20 skipped; result 5959 tests, 0 failures, 20 skipped. The 27 new tests: `ModerationEventsTest` 4, `RecentActionIdsTest` 4, `ModerationRealtimeSyncTest` 12, `ModerationSettingsTest` 5, `BukkitProfileBansTest` 2. CI `build` green (push run 43721589526, PR run 43721731604); `paper-boot` still running when this block was written (runs 43721589519, 43721731607).
+    3. Codex: at its usage limit on both PRs (noted on each), no review.
+    2. Known reds: none. No Paper scenario: the scenario suite does not cover realtime events.
+5. **Decisions (DESIGN § 4.3).**
+    1. *Where the texts live.* Chosen: `realtime.moderation.kick-default-reason` / `ban-message`, next to `realtime.erasure.kick-message`, because the plugin keeps realtime-only kick texts there and the handler only runs with realtime on. Alternatives: (a) `messages.*`: holds chat texts, not the kick texts of realtime or admission; (b) hard-coded texts: the prompt asks for config keys.
+    2. *Default texts.* Chosen: kick "You were kicked by a member of staff." (the same as the in-game user manager's `KICK_REASON`); ban "You are banned from this server.\nReason: {reason}", with no staff name by default (`{staff}` is available). Alternatives: (a) Minecraft's vanilla ban screen text: not configurable from a plugin kick; (b) naming the staff member by default: exposes staff to the banned player.
+    3. *Ban of an already banned profile.* Chosen: keep the existing entry (no new reason or source) and still kick if online, because a banned player should never stay online. Alternatives: (a) overwrite the entry with the web reason: loses the original `/ban` record; (b) do nothing at all: leaves a banned player online.
+    4. *Idempotency store.* Chosen: in memory, the last 1000 ids, marked before the main-thread task. A restart forgets them, which is safe because a kick needs the player online and a second ban keeps the entry. Alternatives: (a) a file on disk like `erasure-feed.json`: no replay exists to need it; (b) mark after the main-thread task: a failed task would then be retried only by the same id, which the API never resends.
+    5. *Ban list write fails.* Chosen: log SEVERE and still kick an online player. Alternatives: (a) no kick: leaves them online.
+    6. *Malformed payload.* Chosen: `actionId`, `userId` and a usable `uuid` are required (warning, ignored); a blank `reason` counts as none; a ban without a reason (never sent by the API) still bans, with "You were banned by a member of staff."; a missing `staffUsername` gives source `knk-web`. Alternatives: (a) ignore a ban without a reason: drops a staff action over a field the API always sets.
+    7. *Payload parser location.* Chosen: knk-api-client `ModerationEvents` (JUnit there), like `UserStateEvents` / `PrivacyEvents`, with the pure dedup logic in knk-core. Alternatives: (a) parser in knk-core as the prompt's "knk-core JUnit" suggested: knk-core has no Jackson and no envelope type.
+    8. *Ban list test.* Chosen: Mockito `BanList` behind a package-private constructor, because MockBukkit 26.3 throws `UnimplementedOperationException` for `getBanList(BanListType)`. Alternatives: (a) static mocking of `Bukkit`: not used elsewhere in the repo.
+    9. *Kick causes.* Chosen: `PlayerKickEvent.Cause.KICK_COMMAND` for a kick, `BANNED` for a ban, so other listeners see them like `/kick` and `/ban`. Alternatives: (a) `kick(Component)` (cause `PLUGIN`).
+6. **Out of scope, noted.** None.
+7. **Blockers.** None. Sub-issue #574 was already `status:in-progress` at the start; now `status:in-review`.
+8. **At merge / what the developer must do.**
+    1. Merge into the `realtime:` block of the dev and alpha `config.yml` (optional; the defaults apply when it is missing):
+       ```yaml
+         moderation:
+           kick-default-reason: "You were kicked by a member of staff."
+           ban-message: "You are banned from this server.\nReason: {reason}"
+       ```
+    2. `realtime.enabled: true` on the game server. Deploy knk-web-api with L6 first or together with the plugin. With an older plugin, the API answers 202 but the server logs "no handler for event type PlayerKick" and nothing happens.
+    3. Smoke test: player-profile smoke test § 7 steps 8–10, 13 and 18 (by-hand parts: the real kick, `/banlist`, rejoin refused, `/pardon`, the console lines).
+9. **Notes for later links.** Web unban does not exist (by design: `/pardon` in game). A server that was down misses a ban (no replay, DESIGN § 6.10 item 6.3).
