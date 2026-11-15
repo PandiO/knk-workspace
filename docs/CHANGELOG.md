@@ -21,10 +21,10 @@ This is a human-readable record of capabilities merged into the V3 default branc
      `//schem save` writes) from the plugin's `scenario-scenes/` resources into their box. Five new scenarios, each run
      with `npc.navigation.collidable` off and on, measure today's movement in report mode (they log a
      `KNK-NPC-REPORT` line and pass; later links turn the numbers into checks): `npc-stairhouse-singles`,
-     `npc-stairhouse-group`, `npc-jagged-straight`, `npc-doorway-crowd` and `npc-plaza-line`. The stair house is a
-     stand-in built from the plan's description until the developer's schematic (attached to
-     [#603](https://github.com/PandiO/knk-workspace/issues/603)) is committed to a repository; the other three scenes
-     are synthetic by design. CI's
+     `npc-stairhouse-group`, `npc-jagged-straight`, `npc-doorway-crowd` and `npc-plaza-line`. The stair house is
+     the developer's own schematic (attached to [#603](https://github.com/PandiO/knk-workspace/issues/603)); the
+     other three scenes are synthetic by design. On it, a group of 20 folds at the first step and a follower stands
+     about 24 s in the entrance, the developer's jam. CI's
      `paper-boot` job runs 45 scenarios now and copies the report lines into its summary.
 - **NPC navigation: movement-quality design (decided)** ([PandiO/knk-workspace#603](https://github.com/PandiO/knk-workspace/issues/603), link L8): implementation plan Phase 4c (steering options from a [research report](reports/2026-11-15-npc-movement-research.md) on how games handle obstacle avoidance and stuck recovery, formations that tighten before they fold, turns at chokepoints, natural lines on plazas; links M1–M5) and BEHAVIOR_MODEL NAV-24–NAV-28; docs only; decided by the developer 2026-11-15 (all fifteen questions).
 - **NPC navigation: entry removed in the web app with realtime on stops a group at the district's edge**

@@ -1,6 +1,6 @@
 # Writing a plugin scenario
 
-**Status:** Active (in knk-plugin `next` since `309d3580`, 2026-11-14; not on trunk yet) · **Last updated:** 2026-11-15 (§ 1, § 3 item 7 and § 7: scenes pasted from WorldEdit schematics (`SceneSchematic`), the five NPC movement scenarios in report mode with collision off and on, `KNK-NPC-REPORT` lines, 45 scenarios, [#621](https://github.com/PandiO/knk-workspace/issues/621)); 2026-11-15 (§ 1: `player-heal-needs-grant`, 32 scenarios with #522's, [#580](https://github.com/PandiO/knk-workspace/issues/580)); 2026-11-15 (§ 1 and § 4.7: the six NPC follow-up scenarios on the corner scene, `ScenarioNpcs` with access rules and gate crossings, `ScenarioNpcRules`, the short-trip rule; checked against knk-plugin `next` `deb7ff49`, [#589](https://github.com/PandiO/knk-workspace/issues/589)); 2026-11-15 (§ 5 rewritten: scripted players, `scene.player(...)`, six player scenarios; § 1, § 3.5, § 4.8, § 6 `run player-*`, new § 8 headless bot tests kept off, [#540](https://github.com/PandiO/knk-workspace/issues/540)); 2026-11-15 (§ 1, § 3.5, § 4.6, § 4.7 and § 6: NPC navigation scenarios on Citizens and a fake road network, `ScenarioRoadNpcs`, [#543](https://github.com/PandiO/knk-workspace/issues/543)); 2026-11-15 (§ 1 "Then" step 4: smoke-guide tag format, every step kept in full); 2026-11-14 (§ 1, § 3 and § 4: the scenarios and helpers of the plugin backfill, [#511](https://github.com/PandiO/knk-workspace/issues/511)); 2026-11-14 (§ 5 links #540); 2026-11-14 (first version, [PandiO/knk-workspace#421](https://github.com/PandiO/knk-workspace/issues/421))
+**Status:** Active (in knk-plugin `next` since `309d3580`, 2026-11-14; not on trunk yet) · **Last updated:** 2026-11-15 (§ 1, § 3 item 7 and § 7: scenes pasted from WorldEdit schematics (`SceneSchematic`, the developer's stair house), the five NPC movement scenarios in report mode with collision off and on, `KNK-NPC-REPORT` lines, 45 scenarios, [#621](https://github.com/PandiO/knk-workspace/issues/621)); 2026-11-15 (§ 1: `player-heal-needs-grant`, 32 scenarios with #522's, [#580](https://github.com/PandiO/knk-workspace/issues/580)); 2026-11-15 (§ 1 and § 4.7: the six NPC follow-up scenarios on the corner scene, `ScenarioNpcs` with access rules and gate crossings, `ScenarioNpcRules`, the short-trip rule; checked against knk-plugin `next` `deb7ff49`, [#589](https://github.com/PandiO/knk-workspace/issues/589)); 2026-11-15 (§ 5 rewritten: scripted players, `scene.player(...)`, six player scenarios; § 1, § 3.5, § 4.8, § 6 `run player-*`, new § 8 headless bot tests kept off, [#540](https://github.com/PandiO/knk-workspace/issues/540)); 2026-11-15 (§ 1, § 3.5, § 4.6, § 4.7 and § 6: NPC navigation scenarios on Citizens and a fake road network, `ScenarioRoadNpcs`, [#543](https://github.com/PandiO/knk-workspace/issues/543)); 2026-11-15 (§ 1 "Then" step 4: smoke-guide tag format, every step kept in full); 2026-11-14 (§ 1, § 3 and § 4: the scenarios and helpers of the plugin backfill, [#511](https://github.com/PandiO/knk-workspace/issues/511)); 2026-11-14 (§ 5 links #540); 2026-11-14 (first version, [PandiO/knk-workspace#421](https://github.com/PandiO/knk-workspace/issues/421))
 **Related:** [CI § 7.1](ci.md#71-in-plugin-scenarios) (how CI runs them), [plugin architecture § Testing](../../architecture/plugin-architecture.md#testing),
 [`knk-test-writer` skill](../../../.claude/skills/knk-test-writer/SKILL.md) (which suite a behaviour belongs in),
 [AI agent workflow design § 6.3](../../specs/ai-agent-workflow/DESIGN.md#6-testing-and-ci),
@@ -139,10 +139,10 @@ phase (§ 7) and pass whatever the numbers are; the later movement links turn th
 is registered twice, with `npc.navigation.collidable` off (its name) and on (the name with `-collision-on`), with
 `group-ranks-width` 3, on a scene pasted from a schematic (§ 3 item 7):
 
-8. `npc-stairhouse-singles`: 12 singles at once, 6 up from the road through the stair house's entrance (1413 49 -508),
-   along the 3-wide straight (1414 49 -503) and up both flights, 6 down. Reports arrivals, stuck spells, the longest
+8. `npc-stairhouse-singles`: on the developer's schematic, 12 singles at once, 6 from the street through the stair
+   house's entrance (1413 49 -508), along the straight (1414 49 -503) and up two steps into the hall, 6 back out. Reports arrivals, stuck spells, the longest
    still single and the longest stand on the straight and in the entrance.
-9. `npc-stairhouse-group`: a group of 20 in `ranks` through the entrance and up, once. Reports the leader's result,
+9. `npc-stairhouse-group`: a group of 20 in `ranks` from the street through the entrance into the hall, once. Reports the leader's result,
    the folds and narrowings with their reasons and places, the longest a follower stood in the entrance, lag and
    rejoins.
 10. `npc-jagged-straight`: 12 singles both ways on a 3-wide straight with one-block notches, a lantern on a post and a
@@ -234,13 +234,12 @@ Each scenario gets a `ScenarioScene`: an empty box of 32 × 24 × 32 blocks (x, 
       the same format (deterministic bytes: rerun it after a change and commit the files). `NpcMovementScene` holds the
       points the scenarios use for each scene (the road line, starts, goals, watched areas), and
       `NpcMovementSceneTest` checks that each of them stands on a floor of its schematic.
-   5. **The developer's stair house:** the developer's `knk-stairhouse.schem` is attached (zipped) to
-      [#603](https://github.com/PandiO/knk-workspace/issues/603), which a cloud session cannot download; until it is
-      committed to a repository, the stair-house scenarios use the stand-in
-      `npc-stairhouse-standin.schem`, built from the plan's description in the real place (lowest corner
-      1400 46 -515, copied standing in the entrance 1413 49 -508). When the file arrives, commit it next to the
-      stand-in, take the road line and the points from its geometry (and the developer's trace) into
-      `NpcMovementScene`, and switch `NpcMovementScene.stairHouse` to it.
+   5. **The developer's stair house:** `knk-stairhouse.schem` (copied in the dev world, 1407 49 -549 to
+      1418 79 -487) is pasted in the frame box = real − (1400, 46, −515) at box (7, 3, −34), with a stone floor at
+      real y 48 under its footprint (the copy starts one block above the street's floor). Rows outside the box are
+      left out. `NpcMovementScene` draws its road line by hand from the street through the entrance (1413 −508) and
+      the straight (1414 −503) up two steps into the hall. When the developer posts a trace, put its waypoints in.
+      MockBukkit can't paste it (it knows no lantern properties), so only the Paper scenarios do.
 
 ## 4. Fake data instead of the API
 
