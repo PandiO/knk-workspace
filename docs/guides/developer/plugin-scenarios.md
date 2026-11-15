@@ -1,6 +1,6 @@
 # Writing a plugin scenario
 
-**Status:** Active (in knk-plugin `next` since `309d3580`, 2026-11-14; not on trunk yet) · **Last updated:** 2026-11-15 (§ 5 rewritten: scripted players, `scene.player(...)`, six player scenarios; § 1, § 3.5, § 4.8, § 6 `run player-*`, new § 8 headless bot tests kept off, [#540](https://github.com/PandiO/knk-workspace/issues/540)); 2026-11-15 (§ 1, § 3.5, § 4.6, § 4.7 and § 6: NPC navigation scenarios on Citizens and a fake road network, `ScenarioRoadNpcs`, [#543](https://github.com/PandiO/knk-workspace/issues/543)); 2026-11-15 (§ 1 "Then" step 4: smoke-guide tag format, every step kept in full); 2026-11-14 (§ 1, § 3 and § 4: the scenarios and helpers of the plugin backfill, [#511](https://github.com/PandiO/knk-workspace/issues/511)); 2026-11-14 (§ 5 links #540); 2026-11-14 (first version, [PandiO/knk-workspace#421](https://github.com/PandiO/knk-workspace/issues/421))
+**Status:** Active (in knk-plugin `next` since `309d3580`, 2026-11-14; not on trunk yet) · **Last updated:** 2026-11-15 (§ 1: `player-heal-needs-grant`, 29 scenarios, [#580](https://github.com/PandiO/knk-workspace/issues/580)); 2026-11-15 (§ 5 rewritten: scripted players, `scene.player(...)`, six player scenarios; § 1, § 3.5, § 4.8, § 6 `run player-*`, new § 8 headless bot tests kept off, [#540](https://github.com/PandiO/knk-workspace/issues/540)); 2026-11-15 (§ 1, § 3.5, § 4.6, § 4.7 and § 6: NPC navigation scenarios on Citizens and a fake road network, `ScenarioRoadNpcs`, [#543](https://github.com/PandiO/knk-workspace/issues/543)); 2026-11-15 (§ 1 "Then" step 4: smoke-guide tag format, every step kept in full); 2026-11-14 (§ 1, § 3 and § 4: the scenarios and helpers of the plugin backfill, [#511](https://github.com/PandiO/knk-workspace/issues/511)); 2026-11-14 (§ 5 links #540); 2026-11-14 (first version, [PandiO/knk-workspace#421](https://github.com/PandiO/knk-workspace/issues/421))
 **Related:** [CI § 7.1](ci.md#71-in-plugin-scenarios) (how CI runs them), [plugin architecture § Testing](../../architecture/plugin-architecture.md#testing),
 [`knk-test-writer` skill](../../../.claude/skills/knk-test-writer/SKILL.md) (which suite a behaviour belongs in),
 [AI agent workflow design § 6.3](../../specs/ai-agent-workflow/DESIGN.md#6-testing-and-ci),
@@ -51,7 +51,7 @@ Then:
    `[automated: plugin scenario <name>] <the step as written>`, or `[partly automated: plugin scenario <name>; by hand:
    <what is left>]` when a player still has to check part of it (developer decision 2026-11-15).
 
-The shipped scenarios are fuller examples (`PaperScenarios` lists all 28): `GateOpenCloseScenario`,
+The shipped scenarios are fuller examples (`PaperScenarios` lists all 29): `GateOpenCloseScenario`,
 `GateClosingMovesEntityOutScenario` and `GlobalRegionExplosionScenario` (the full version of the example above, with a
 control inside a region) came with the framework; the backfill of
 [#511](https://github.com/PandiO/knk-workspace/issues/511) added seven gate-safety scenarios (`GateClosingKeepsSidesScenario`
@@ -102,8 +102,16 @@ scenarios (`LootboxAreaRenameScenario`, `LootboxAreaReplaceScenario`), the temp-
 Each was seen failing with its behaviour broken: the in-house check always allowing (the refused player was fed),
 the brackets in the primary colour, `JoinLoadingGuard.hold` skipped, `MenuClickListener` not cancelling the click (the
 button landed in the inventory) and the gate guard's teleport/join check skipped (one suffocation event each).
-`player-command-needs-grant` first used `/heal` and found that on a server with WorldGuard the plain `/heal` is
-WorldGuard's command ([#580](https://github.com/PandiO/knk-workspace/issues/580)).
+`player-command-needs-grant` first used `/heal` and found that on a server with WorldGuard the plain `/heal` was
+WorldGuard's command ([#580](https://github.com/PandiO/knk-workspace/issues/580)). K&K now takes that label over at
+startup (`CommandLabelTakeover`), and #580 added a seventh player scenario:
+
+7. `player-heal-needs-grant` (`PlayerHealNeedsGrantScenario`): the server's plain `heal` label is K&K's and
+   `worldguard:heal` stays WorldGuard's; three players with fake accounts and 4 health type `/heal`: the one without
+   `knk.heal` in-house is refused by K&K ("You don't have permission to use this command.", not WorldGuard's "You
+   don't have permission to do that.") and stays hurt, the one granted it and an op without it are healed with
+   "Replenished 16 health.", and the granted one is healed again with `/knightsandkings:heal`. It failed on CI
+   before the takeover (WorldGuard's refusal, and an op healed by WorldGuard) and passes with it.
 
 A scenario must fail when its behaviour breaks. For the backfill each behaviour was broken once on a local server (the
 side rule, the other-door rule, the suffocation guard, the predictive push, the region rename, the lootbox area lookup,
