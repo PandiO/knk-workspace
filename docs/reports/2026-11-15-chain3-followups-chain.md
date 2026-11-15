@@ -24,8 +24,8 @@
 | L2 List field cards at 390 px | #290 | Merged into next (2026-11-15) | web-app `8cb616b`, workspace `080a4bdf`; next: app `9b5f9ddf`, ws `9eeb29ff` | [web-app#38](https://github.com/PandiO/knk-web-app/pull/38), [#571](https://github.com/PandiO/knk-workspace/pull/571) | green (PR run; push-run e2e flake #573, re-run green) | create_session session_01R1w2UswAebrDAEEFqUHA3e |
 | L3 "Show what uses it" for more refusals | #289 | Merged into next (2026-11-15) | api `98f0c91`, web-app `41c75ca`, workspace `d833cb0a`; next: api `378921c6`, app `2dfd5883`, ws `e8a4e1e8` | [web-api#34](https://github.com/PandiO/knk-web-api/pull/34), [web-app#39](https://github.com/PandiO/knk-web-app/pull/39), [#579](https://github.com/PandiO/knk-workspace/pull/579) | green (PR runs); next: app run 43707033299 pending | subagent (decision 13) |
 | L4 Builder rules and templates into the draft | #291 | Merged into next (2026-11-15) | api `a851436`, web-app `0d604fe`, workspace `4fa25605`; next: api `93c3d50f`, app `cd730f29`, ws `0ca9b1b6` | [web-api#35](https://github.com/PandiO/knk-web-api/pull/35), [web-app#40](https://github.com/PandiO/knk-web-app/pull/40), [#583](https://github.com/PandiO/knk-workspace/pull/583) | green (PR runs 43711458740/43711458686 api, 43711488807/43711488760 web) | subagent (two component repos, § 4.1.4); resumed once after a usage-limit stop |
-| L5 Lookup applies picker filters | #288 | Done, in review (2026-11-15) | api `95a2954`, web-app `9d82786`, workspace `b1d270f1` | [web-api#36](https://github.com/PandiO/knk-web-api/pull/36), [web-app#41](https://github.com/PandiO/knk-web-app/pull/41), [#587](https://github.com/PandiO/knk-workspace/pull/587) | green (PR runs 43714699624/43714699597 api, 43714715547/43714715574 web) | subagent (two component repos, § 4.1.4) |
-| L6 Player profile API part | #565 | Not started | — | — | — | — |
+| L5 Lookup applies picker filters | #288 | Merged into next (2026-11-15) | api `95a2954`, web-app `9d82786`, workspace `b1d270f1`; next: api `d8514ed4`, app `990af482`, ws `c6e017ad` | [web-api#36](https://github.com/PandiO/knk-web-api/pull/36), [web-app#41](https://github.com/PandiO/knk-web-app/pull/41), [#587](https://github.com/PandiO/knk-workspace/pull/587) | green (PR runs 43714699624/43714699597 api, 43714715547/43714715574 web) | subagent (two component repos, § 4.1.4) |
+| L6 Player profile API part | #565 | Running (2026-11-15) | — | — | — | subagent (two component repos, § 4.1.4) |
 | L7 Plugin carries out web kick/ban | #574 | Not started | — | — | — | — |
 
 ## 3. Coordinator decisions
@@ -115,6 +115,17 @@
     Alternatives: (a) send L4 back to keep the endpoints writing into the draft: no caller exists.
 19. **L5 start.** Gate open (L4 0 commits ahead of `next` in all three repos). #387's PR #553 is still open, so today's
     nodes hold. Subagent route.
+20. **L5 check and merge (2026-11-15).** Chosen: merge knk-web-api#36, knk-web-app#41 and knk-workspace#587 into
+    `next`, because § 6 held (heads match, branches contain `next`, CI green on both code PRs, no review threads, Codex
+    at its usage limit, scope inside #288, 16 xUnit, 5 Jest, 2 Playwright tests) and `next` was green after L4 in both
+    repos. I read the filter check: per-type allow-list of keys in the type's spelling, ids and flags only, unknown keys
+    400 `LookupFilterNotAllowed`, `prefer…` passed only where configured; results stay labels. The charter's note on
+    `[EnableRateLimiting("lookup")]` was wrong (none on `LookupController`); L5 left it. Filed by L5: #585. Deploy:
+    API first or together. Alternatives: none needed.
+21. **L6 start.** Gate open (L5 0 commits ahead of `next`). Overlap recheck: no open PRs in either repo; the group
+    colours branch (#260), which claims `UsersController`/`UserService`/`UserDtos`, is fully in `next` (0 ahead), and
+    the staff chain's #407 is merged. Subagent route; the developer's kick/ban decisions are in the prompt, and L6 must
+    write the realtime event contract for L7.
 
 ## 4. Link blocks
 
