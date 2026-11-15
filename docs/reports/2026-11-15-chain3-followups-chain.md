@@ -21,7 +21,7 @@
 
 | Link | Issue | Status | Branch heads | PR | CI | How started |
 |---|---|---|---|---|---|---|
-| L1 Temp region releases | #399 | Running (2026-11-15) | — | — | — | create_session session_01R1w2Uvbubw539aKYxgnvjR |
+| L1 Temp region releases | #399 | Done, in review (2026-11-15) | knk-web-api `a0b5ff3f`, knk-workspace `aca7f01d` | [knk-web-api#33](https://github.com/PandiO/knk-web-api/pull/33), [knk-workspace#572](https://github.com/PandiO/knk-workspace/pull/572) | green (runs 43702385149, 43702462646) | create_session session_01R1w2Uvbubw539aKYxgnvjR |
 | L2 List field cards at 390 px | #290 | Done, in review (2026-11-15) | web-app `8cb616b`, workspace `b61c6456` | [web-app#38](https://github.com/PandiO/knk-web-app/pull/38), [#571](https://github.com/PandiO/knk-workspace/pull/571) | green (PR run); push-run flake #573 | create_session session_01R1w2UswAebrDAEEFqUHA3e |
 | L3 "Show what uses it" for more refusals | #289 | Not started | — | — | — | — |
 | L4 Builder rules and templates into the draft | #291 | Not started | — | — | — | — |
@@ -61,6 +61,28 @@
 ## 4. Link blocks
 
 _(Each link appends its block here when it finishes.)_
+
+### 4.1 L1 — Temp region releases: serverId required, no starvation (#399)
+
+1. **Scope done.**
+    1. knk-web-api `Controllers/WorldTasksController.cs`: `GET api/WorldTasks/temp-region-releases` answers 400 `{ error: "serverId is required." }` for a blank or missing `serverId`, as `GET open` does.
+    2. knk-web-api `Services/TempRegionReleaseService.cs`: `ListDueAsync` reads the due rows by id in pages of `ScanLimit` (200) until `max` are listed or no due row is left; an Information log when more than a page waited. `ScanLimit` is now `public const` for the tests.
+    3. knk-workspace docs: `architecture/managed-worldguard-regions.md` §7, `specs/world-tasks/README.md` endpoint table, `CHANGELOG.md` "Unreleased" entry. Plugin contract unchanged.
+2. **Commits and heads.** knk-web-api `claude/temp-region-releases-399` at `a0b5ff3f` (1 commit, base `next` at `dcbb1f8`); knk-workspace `claude/temp-region-releases-399` at `aca7f01d` (1 commit, base `next`).
+3. **PRs.** [knk-web-api#33](https://github.com/PandiO/knk-web-api/pull/33) (Part of #399), [knk-workspace#572](https://github.com/PandiO/knk-workspace/pull/572) (Closes #399), base `next`. Not merged.
+4. **Tests, baseline → result.**
+    1. knk-web-api: baseline on `next` `dcbb1f8`: build 0 errors, 4169 passed, 98 skipped (MySQL, no `KNK_TEST_MYSQL`); result: 4175 passed, 98 skipped, 0 failed (6 new: `ListTempRegionReleases_NeedsAServerId` ×3, `ListTempRegionReleases_PassesTheServerAndMax`, `ListDue_MoreThanAPageOfWaitingRows_DoesNotHideALaterRelease` (checked red on the old service), `ListDue_StopsAtMax_AcrossPages`; own/unassigned releases still covered by `ListDue_ReleasesOfAnotherServerAreLeftOut_UnknownServerGoesToAll`). CI runs 43702385149 / 43702462646 (build-and-test, fresh-database) green.
+    2. Known reds: none.
+    3. Smoke guide: no step changes.
+    4. Codex: at its code-review usage limit on both PRs (said so on each); no findings to handle.
+5. **Decisions (DESIGN § 4.3).**
+    1. *Starvation fix.* Chosen: page by id past the rows looked at, in one call, because it needs no migration and keeps the oldest-first order. Alternatives: (a) "last checked" column ordering: a migration and a write per poll; (b) an in-memory cursor across calls: a release can still wait several polls, lost on restart.
+    2. *Cost bound.* Chosen: no page cap, because the 30-day keep period bounds the table. Alternatives: (a) a cap of N pages: starvation again past N×200 waiting rows.
+    3. *Where the 400 lives.* Chosen: the controller only, like `GET open`. Alternatives: (a) throw in the service: no other caller, more churn.
+6. **Out of scope, noted.** None.
+7. **Blockers.** None.
+8. **At merge / what the developer must do.** Nothing beyond merging (no settings, migrations or plugin `config.yml` keys).
+9. **Notes for later links.** None; permission nodes not needed (#387 not merged).
 
 ### 4.2 L2 — List field cards at 390 px (#290)
 
