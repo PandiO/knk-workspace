@@ -21,7 +21,7 @@
 |---|---|---|---|---|---|---|
 | L1 Design: corners, narrowed formations, toggle | #519 | Merged into next (2026-11-15, design approved by the developer) | knk-workspace `96f47820` → `next` `4a97fd3b` | PandiO/knk-workspace#546 | docs only (no CI); Codex at its usage limit | create_session session_01R1w2UwysEMwCYnxwCpkx3p (2026-11-15) |
 | L2 Follower recheck and guard, no gate push | #520 | Merged into next (2026-11-15, by the manager session) | knk-plugin `651d8bff` → `next` `11e07d64`; knk-workspace → `next` `43a2328c` | PandiO/knk-plugin#31, PandiO/knk-workspace#536 | PR head green (build, paper-boot); `next` runs 43662028862, 43662028855 pending at the coordinator check | create_session session_01R1w2Ux2KpS7H3FidwDEZmp (2026-11-14) |
-| L3 Wall-corner steering and recovery | #521 | Running | — | — | — | create_session session_01R1w2Uv1rEnwPko4Tq83xyL (2026-11-15) |
+| L3 Wall-corner steering and recovery | #521 | In review (2026-11-15) | knk-plugin `51072e94`; knk-workspace `81569658` | PandiO/knk-plugin#36, PandiO/knk-workspace#557 | PR head green (build, paper-boot with Citizens, 19 scenarios); Codex at its usage limit | create_session session_01R1w2Uv1rEnwPko4Tq83xyL (2026-11-15) |
 | L4 Narrowed formations, followers-finish-trip toggle | #522 | Not started (gate: L3 merged) | — | — | — | — |
 
 ## 3. Coordinator decisions
@@ -184,3 +184,68 @@ _(Each link appends its block here when it finishes.)_
     1. L3 and L4: `NavGroup` now has `routeDoors`, `doorBoxes`, `doorVerdicts`, `rulesPending`, `Follower.regions`, `guardTick` and `leavingDoor`. A follower with `leavingDoor` is not stopped until its waypoints end, and `rulesChanged()` reads each follower's regions.
     2. L4 toggle: followers held by a door or region are not counted in `maxLag` or `settled`, so the group's order arrives without them. A "finish the trip" toggle must decide what a held follower does after the order ends.
     3. KnKPlugin: one additive block after the "navigation routes" hook (line about 1924), away from the #486 branch's hunk.
+
+### 4.3 L3 — Wall-corner steering and stuck recovery (#521: #508, #491, #492)
+
+1. **Scope done** (implementation plan 4b.2 items 1–19, behind `npc.navigation.enabled`, decided defaults of 4b.4).
+    1. **Steering (knk-core).**
+        1. `CornerClearance` and `RouteFollower.next(…, clearance)`: at turns, waypoints keep `corner-clearance` 1.0 from walls on the inside.
+        2. `NavGeometry.straightWalkable`: the shortcut check.
+        3. `NavGeometry.jumpFits`: the low-headroom rule.
+        4. `NpcMover.follow(waypoints, margin)` with `waypoint-margin` 0.5 (Paper: set on Citizens' local parameters right after `setTarget`).
+    2. **Own-floor targets.** `PathTargets` is used for the recovery leg, a follower's own leg back (never past its slot, never again at a target that failed from the same spot) and the short trip (it now also needs a height difference of at most 2). `HopPlanner.hops` chains floors with `snapNear`, and `HopPlanner.floorNear` is the strict chain.
+    3. **The ladder.** `RecoveryLadder` (pure, fake clock), `RecoveryMoves` (blocking face, near a wall, side-step) and `RecentSteps` (footsteps, falls). The order is back-off → side-step → local leg → replan, with `recovery-wait-ticks` between tries and the cap counted the same way in the log. A `NO_PATH` report ends a try without opening a new spell, and a stuck within 2 blocks and 30 s continues the ladder.
+    4. **Followers.** The same ladder runs in `NavGroup`. The side-step goes away from the path's centre, a left-behind follower waits beside its lane, and its tries double up to 60 s. Citizens' stuck reports for followers reach the group through `NpcNavigationService.setIdleStuckListener`.
+    5. **Accounting.**
+        1. Stuck is counted per spell. New events: `freed_back_off`, `freed_side_step`, `freed_local_leg`, `freed_replan`, `not_freed`, `recovery_no_path`, `fell`.
+        2. `recovered` is now the sum of the `freed_*` events, and the gauge `knk_npc_nav_stuck_spells_open` counts open spells.
+        3. `NpcNavigationMetrics.SpellStats` makes the new stats line. The group line shows `road plans per group event` and `local legs at once`.
+    6. **Ports** (engine-neutral): `NavWorld.freeHeight`/`blocksBody` (Paper: `BukkitNavWorld`), `NpcMover.follow(…, margin)`, `NpcMover.fallDistance()`, `MoverListener.stuck(mover, StuckKind)` (Paper: from the strategy's path in Citizens' cancel event).
+    7. **Config.** `corner-clearance`, `waypoint-margin` and `recovery-wait-ticks` are new; `stationary-ticks` and `no-progress-ticks` default to 40; `max-retries` is reworded. All are in `config.yml` with comments, with a layer test.
+    8. **Scenarios.**
+        1. `NpcCornerScene` and the scenarios `npc-corners-line`, `npc-corners-walk` and `npc-stuck-ladder`, run through `ScenarioNpcs`: its own navigation service on a Citizens registry of its own, with the scene's loop line as a fake road.
+        2. `paper-boot.yml`: pinned Citizens 2.0.44 build 4269 (URL plus SHA-256 `e6b0a0e3…`), `MIN_SCENARIOS` 19, `--expect-timeout` 360, job timeout 15 min.
+        3. `/knk npc nav scene corners` builds the scene on a test server.
+    9. **knk-workspace docs.**
+        1. `docs/CHANGELOG.md`: the entry with the #491 metrics explanation and the admin YAML.
+        2. Configuration reference § 4.27 and § 2.1.
+        3. Plan 4b.2: status, differences, developer test steps limited to what no scenario checks.
+    10. **The metrics of #491.** `stuck_engine 14456` counted every Citizens STUCK cancel while an NPC moved: its stationary check and every failed path search of a retry (four per burst, a burst every 5 s). `recovered 0` counted only recovery legs that arrived, and none did, because each aimed at another floor. The NPCs got free on the 5-second replan (the "second try"). The same numbers now read as spells and the steps that freed them.
+2. **Commits and heads.**
+    1. knk-plugin `claude/npc-followups-l3` at `51072e94`: 3 commits on base `next` `11e07d64`.
+    2. knk-workspace `claude/npc-followups-l3` at `81569658`: 1 docs commit plus a merge of `origin/next` (`66c7c910`, town streets). The changelog merged automatically; the merge commit has git's default message.
+3. **PRs.** PandiO/knk-plugin#36 (`Closes` #521, #508, #491, #492) and PandiO/knk-workspace#557 (`Part of` them), base `next`. Not merged.
+4. **Tests, baseline → result.**
+    1. knk-plugin `./gradlew build -x deployToDevServer`: baseline on `next` 5839 tests, 0 failed, 20 skipped. Result 5878, 0 failed, 20 skipped.
+    2. Three old service tests asserted the old retry loop and were rewritten for the ladder. `NpcNavRunnerTest` and `PaperScenariosTest` were updated for the new stats line and the 19 scenarios.
+    3. New tests:
+        1. knk-core: `CornerClearanceTest`, `PathTargetsTest`, `RecoveryLadderTest` and `RecentStepsTest`; ladder, counter-invariant and continuation tests in `NpcNavigationServiceTest`; follower-ladder, left-behind spacing and own-leg-ahead tests in `NavGroupTest`; the stats line in `NpcNavigationMetricsTest`.
+        2. knk-paper: `BukkitNavWorldBlocksTest` (Mockito blocks, because MockBukkit's `BlockMock.isPassable()` is not implemented and a `WorldMock` test is skipped); margin and stuck-kind tests in `CitizensNpcMoverPathTest`; the new keys in every layer in `NpcNavigationConfigTest`.
+    4. **Plugin scenarios on a real server, run locally.** Paper 26.3 build 205 with WorldEdit, WorldGuard and Citizens build 4269, through `tools/paper-boot/boot-test.sh --scenarios`: 19/19 passed. `npc-corners-walk`: 0 stuck spells, 56 arrivals, longest still 0.45 s, 0 falls. `npc-stuck-ladder`: 324 ticks.
+    5. CI on PandiO/knk-plugin#36 at `51072e94`: `build` and `paper-boot` passed (the pinned Citizens build was fetched and checked; 19 scenarios).
+    6. Known reds: none.
+5. **Decisions (DESIGN § 4.3).**
+    1. *Inside of a turn.* Chosen: the direction from the incoming to the outgoing heading. A waypoint moves to the whole block within the clearance that keeps the most distance from walls on that side, only when straight walks to its neighbours stay standable. Alternatives: (a) offset along the bisector by a fixed amount (ignores where the walls are); (b) move every waypoint near any wall (would move the straight along the wall, which the design forbids).
+    2. *What stops a body* (`blocksBody`). Chosen: not passable, except a bottom slab or an upright stair (steps). Alternatives: (a) Bukkit collision shapes (not available in MockBukkit, harder to test); (b) only full solid blocks (fences would not count).
+    3. *Continuation spot.* Chosen: within 2 blocks of where the last spell **started**. Alternatives: (a) where it ended (a freed NPC is already past the spot, so the next stuck there would start over).
+    4. *A follower's own leg with nothing ahead.* Chosen: start over with the excluded targets; if there is still only the point it stands on, count a failed try without an order. Alternatives: (a) an order to its own place (it "arrived" at once and reset the left-behind spacing: found by the 20-minute `NavGroupTest`).
+    5. *Lane continuity.* Chosen: a lane waypoint more than a block above or below the waypoint before it (or the follower's feet) becomes the path's centre. Alternatives: (a) leave the lanes to L4 (the `npc-corners-walk` scenario fails with a fall); (b) tighten `GroupPath.wide` (L4's fit rule, 4b.3 item 4).
+    6. *Falls.* Chosen: a drop of 3 or more counts only when the engine's fall distance reached 1.5 at one look (new port `NpcMover.fallDistance()`, NaN for engines that cannot tell). Alternatives: (a) only the drop between two looks (counted a flight walked between two looks as a fall: seen on the server); (b) look every tick (more main-thread work for every NPC).
+    7. *Back-off after a push.* Chosen: footsteps break at a jump of more than 2.5 blocks, and the first back step must be a straight walk. Alternatives: (a) any footstep (it walked into the wall behind the pocket: seen on the server).
+    8. *`npc-stuck-ladder`'s check.* Chosen: "freed by a step of the ladder within the cap, no back-off through the wall", not "freed by back-off or side-step". On a real server a body pushed into a pocket walled on three sides is pinned in its inside corner. A one-block side-step does not reach a straight line out; the local leg does. Alternatives: (a) a geometry the side-step solves (not "walled in on three sides"); (b) a simulated stuck (no real body).
+    9. *Scenario road.* Chosen: the scenarios drive their own navigation service with the scene's loop line as the road, and open cell access for local legs. Alternatives: (a) draw a road in the road graph per scene (needs the API and road tables); (b) use the navigation module (off in CI, needs `navigation.walk.enabled`).
+    10. *`/knk npc nav scene corners`.* Chosen: build the scene and save the route `corner-scene` (start to the stair corner); the 10-minute scene load is not a developer step because the scene has no road (the scenarios walk its loop). Alternatives: (a) add a scene road to the test driver (a second planner in `NpcNavRunner`).
+    11. *Scene without a U-turn flight.* Chosen: leave it out (the box is 32 × 32); stacked flights are covered by `PathTargetsTest`. Alternatives: (a) a second scene box.
+    12. *`road plans per group event`.* Chosen: the most road plans one group's members had waiting or running at once. Alternatives: (a) count plans in a window after each group event (more state for the same answer: a group event's plans start together).
+    13. *Framework changes* (coordinator note 2). `CitizensBootstrap.start(plugin, registryName)` and `CitizensBootstrap.teleport` (additive), `CitizensNpcRuntime` with a registry name, the workflow's Citizens download and timeouts. The scenario framework's own code is unchanged.
+6. **Out of scope, noted.** Followers in `ranks` repeatedly plan "off its lane" own legs on the scene's flights (seen in the `npc-corners-walk` log: x 4, z 9–14 and the south flight). They get back without a stuck spell, but it is group/lane behaviour for L4 (4b.3 fit and widths). Item 4: whether Citizens jumps at the 1433 44 -517 landing is developer step 4 (no dev world in CI).
+7. **Blockers.** None. The pinned Citizens build is fetched and SHA-256 checked in CI.
+8. **At merge / what the developer must do.**
+    1. Merge the `config.yml` keys (YAML in the changelog and § 4.27), and set `stationary-ticks` and `no-progress-ticks` to 40 where the old 60 is still written. Restart.
+    2. Run the developer test (L3) steps posted on #521 and post the stats, the traces and the run log there.
+    3. Codex: at its usage limit on both PRs, so no review (noted on both PRs).
+9. **Notes for L4.**
+    1. `NavGroup` now has per-follower `ladder`, `steps`, `recoveryMove`, `tryMark`, `engineStuck`, `lostRetryTicks`, `failedTarget` and `failedFrom`. `send()` puts lane points through `continuous(…)` (the lane continuity guard); keep it when widths change.
+    2. `GroupSettings` has `maxRetries`, `recoveryWaitTicks` and `waypointMargin` (an 8-argument constructor is kept). Formation and slot code is unchanged.
+    3. The `npc-corners-walk` scene has 3-, 2- and 1-wide parts (east side, z 4–27) for `npc-group-narrows`; `ScenarioNpcs.patrolGroup` takes a formation.
+    4. The "off its lane" loops on flights (item 6) are worth a look with the new width rule.
