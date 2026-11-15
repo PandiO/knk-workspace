@@ -87,6 +87,35 @@ You need:
    their own list: `e2e/player-profile.spec.ts`, `UserModerationPage.search.test.tsx`
 5. [automated] **Last seen** says "Now" for online players: `e2e/player-profile.spec.ts`
 
+## 6. Permissions tab: grant form on top, search, sortable columns (#407)
+
+Added 2026-11-15 for knk-web-app `claude/profile-permissions-407`
+([PandiO/knk-workspace#407](https://github.com/PandiO/knk-workspace/issues/407)). No API change, no migration, no
+setting. Open **P**'s profile as **A**, tab **Permissions** (`/admin/users/<id>?tab=permissions`), Effective
+Permissions.
+
+1. [automated] The grant/deny form sits above the list; without a sort the list keeps the API's order and no header is
+   marked sorted: `e2e/player-profile.spec.ts` ("the grant/deny form sits above the list …")
+2. [automated] Save grants a node with the 1-day default expiry, clears the node field and the list refreshes:
+   `e2e/player-profile.spec.ts`
+3. [automated] A permanent deny needs **Clear** on the expiry, shows as Denied / Direct grant after the refresh, and the
+   next grant starts from 1 day again: `e2e/player-profile.spec.ts`
+4. [automated] Removing a direct grant refreshes the list; inherited rows say "Inherited" and have no remove button:
+   `e2e/player-profile.spec.ts`
+5. [automated] The search narrows the list as you type, by node and by source (a group's name, "direct" for direct
+   grants), shows "n of N nodes", and says "No permissions match “…”." when nothing matches:
+   `e2e/player-profile.spec.ts`, `src/pages/admin/playerProfile/__tests__/effectivePermissions.test.ts`
+6. [automated] Node, Value and Source sort ascending, then descending, then back to the API's order, with the sort icon
+   and `aria-sort`; a sort applies to the searched rows and stays after a change: `e2e/player-profile.spec.ts`,
+   `effectivePermissions.test.ts`
+7. [automated] Without `knk.admin.user.perm` the form and the remove buttons are greyed out with "Requires
+   knk.admin.user.perm"; search and sort still work: `e2e/player-profile.spec.ts`
+8. *(Manual: a real API and a real player's list; the suite mocks both.)* On a player with many nodes from several
+   groups, grant `knk.test.profile` with the default expiry: the form is in view without scrolling, the new row appears
+   with "Direct grant", and searching `knk.test` or the group's name finds what you expect. Remove the node again.
+9. *(Manual: how it looks.)* At phone width and on a desktop, the search box, the sort arrows and the "Inherited" labels
+   read well in both light and dark themes.
+
 ## Findings
 
 _Fill in while testing: step, what happened, expected._
