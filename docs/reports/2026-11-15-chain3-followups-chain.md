@@ -170,7 +170,7 @@
     (logged SEVERE). I attached knk-plugin with push in this session to check and merge (the developer's L7
     authorization). Alternatives: none needed.
 25. **Chain end (2026-11-15).** All seven links are in `next`; CI on knk-web-api and knk-web-app `next` green after
-    L6; knk-plugin `next` after L7 was running at the time of writing (checked at the next check-in). Documentation
+    L6; knk-plugin `next` after L7 (`1adcb497`) green too (Build 43722964858, Paper boot test 43722964921, checked 14:23 UTC). Documentation
     sub-issue #597 created and its docs session started (session_01R1w2UuEk6oqBt5bGgpxKfz). The feature issues stay
     open until the developer promotes `next`; the tracker row stays "In review" until the developer accepts.
 
