@@ -22,7 +22,7 @@
 | Link | Issue | Status | Branch heads | PR | CI | How started |
 |---|---|---|---|---|---|---|
 | L1 Temp region releases | #399 | Running (2026-11-15) | — | — | — | create_session session_01R1w2Uvbubw539aKYxgnvjR |
-| L2 List field cards at 390 px | #290 | Running (2026-11-15) | — | — | — | create_session session_01R1w2UswAebrDAEEFqUHA3e |
+| L2 List field cards at 390 px | #290 | Done, in review (2026-11-15) | web-app `8cb616b`, workspace `b61c6456` | [web-app#38](https://github.com/PandiO/knk-web-app/pull/38), [#571](https://github.com/PandiO/knk-workspace/pull/571) | green (PR run); push-run flake #573 | create_session session_01R1w2UswAebrDAEEFqUHA3e |
 | L3 "Show what uses it" for more refusals | #289 | Not started | — | — | — | — |
 | L4 Builder rules and templates into the draft | #291 | Not started | — | — | — | — |
 | L5 Lookup applies picker filters | #288 | Not started | — | — | — | — |
@@ -61,3 +61,52 @@
 ## 4. Link blocks
 
 _(Each link appends its block here when it finishes.)_
+
+### 4.2 L2 — List field cards at 390 px (#290)
+
+1. **Scope done.**
+    1. knk-web-app `components/FormWizard/FieldRenderers.tsx` `ListField`: the "Selected (n):" cards wrap at narrow
+       widths. The name block keeps at least 12rem and the first line; × and **Edit instance** move to their own line
+       under it; a long name wraps (`break-words`) instead of being truncated. Desktop: one row as before. The cards
+       are a labelled list (`<ul aria-label="Selected <field label>">`); the name uses `text-success-strong` instead
+       of the raw `text-green-900`.
+    2. knk-web-app `e2e/form-wizard-list-field.spec.ts` (new, mocked API) and `structureForm` / `structureMetadata`
+       in `e2e/fixtures/forms.ts`: 390 px (name fully visible, buttons on screen and not over the name, no sideways
+       scroll, × still removes) and 1280 px (one row: name, ×, Edit instance).
+    3. knk-workspace: smoke guide `relation-picker-and-delete-details-smoke-test.md` § 6.2–6.3 (both `[automated]`),
+       `docs/CHANGELOG.md` entry under Unreleased.
+2. **Commits and heads.** knk-web-app `claude/list-field-cards-290` at `8cb616b` (1 commit, base `next` at
+   `4278102`); knk-workspace `claude/list-field-cards-290` at `b61c6456` (1 commit, base `next`).
+3. **PRs.** [PandiO/knk-web-app#38](https://github.com/PandiO/knk-web-app/pull/38) (Part of #290),
+   [PandiO/knk-workspace#571](https://github.com/PandiO/knk-workspace/pull/571) (Closes #290), base `next`. Not merged.
+4. **Tests, baseline → result.**
+    1. knk-web-app: baseline on `next` `4278102` Jest 304 suites / 2615 tests passed, `tsc` clean, build compiled,
+       Playwright 110 passed, `lint:colors` 2389; result on the branch Jest 2615 passed, `tsc` and `typecheck:e2e`
+       clean, build compiled, Playwright 112 passed (2 new), `lint:colors` 2388. The new 390 px test fails on the old
+       layout (name 26 px wide for 187 px of text); the desktop test passes on old and new. CI: PR run [43702120631](https://github.com/PandiO/knk-web-app/actions/runs/43702120631) e2e and
+       build-and-test green; the push run [43702068462](https://github.com/PandiO/knk-web-app/actions/runs/43702068462) e2e red in the
+       untouched `e2e/data-table.spec.ts:36` (Enter on a header, try and retry), green in the PR run of the same commit
+       and 15/15 locally: a flake, filed as [#573](https://github.com/PandiO/knk-workspace/issues/573).
+    2. Known reds (also red on the base): none.
+5. **Decisions (DESIGN § 4.3).**
+    1. *Wrap or icon button.* Chosen: wrap (buttons on their own line), because the "Edit instance" label stays
+       readable and the Jest tests that find it by name keep working. Alternatives: (a) icon-only Edit button: hides
+       the label, needs an aria-label, changes desktop too; (b) hide the ID line on phones: frees no width.
+    2. *Long names.* Chosen: wrap instead of truncate at every width, because a typical name looks the same and a
+       long one stays readable. Alternatives: (a) keep `truncate`: a name longer than the row is still cut;
+       (b) wrap on phones only: a breakpoint rule for no gain.
+    3. *Colour.* Chosen: `text-success-strong` (text on success tints) for the name. Alternatives: (a) keep
+       `text-green-900`: a raw colour in a line already changed.
+    4. *Picker list in the spec.* Chosen: the spec presses Escape to close the picker's result list before using the
+       card, and #570 tracks the picker bug. Alternatives: (a) fix the picker here: `RelationPicker.tsx` is outside the
+       charter's `ListField` scope; (b) click × twice: hides the bug in the test.
+6. **Out of scope, noted.** [#570](https://github.com/PandiO/knk-workspace/issues/570): in a relation picker, the first
+   tap outside the open result list misses (the in-flow list closes on blur, the page shrinks and moves under the
+   pointer).
+7. **Blockers.** None. Codex: at its code-review usage limit on both PRs (said so on each); no findings handled.
+8. **At merge / what the developer must do.** Nothing beyond merging. No settings, migrations or permission nodes
+   (#387 not needed).
+9. **Notes for later links.** L3 (knk-web-app): `FieldRenderers.tsx` `ListField` changed only in the selected-cards
+   block; the e2e fixture `structureForm` (Structure form with a Districts list field) and the `Districts/search` mock
+   in `e2e/form-wizard-list-field.spec.ts` can be reused. Open the picker list and press Escape before clicking near it
+   (#570).
