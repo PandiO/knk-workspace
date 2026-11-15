@@ -1,7 +1,7 @@
 # Form wizard relation picker and "Show what uses it" on refused deletes (#191, #44) — smoke test
 
-**Status:** automated in CI; manual steps not run: 19 of 24 steps automated 2026-11-14 ([#511](https://github.com/PandiO/knk-workspace/issues/511): the picker in its Jest tests, "Show what uses it" in `e2e/dashboard-access.spec.ts` and Jest; left: the unchanged-pages check § 3, the collection item's Delete § 4.5, themes § 6). Written 2026-11-09 for knk-web-app and knk-web-api `claude/picker-details-191-44` (chain 3 link V6); **merged 2026-11-12** (knk-web-api `master` `bc97b7d` and knk-web-app `main` `1371951`, with V7); written before the backfill
-**Last updated:** 2026-11-15 (§ 4.5 on a district's Streets: a town's Streets have no Delete since #409, docs #559); 2026-11-14 (steps marked `[automated]` with their test, backfill #511); 2026-11-12 (test on the default branches, docs #344); 2026-11-12 (merged with V7); 2026-11-09
+**Status:** automated in CI; manual steps not run: 21 of 26 steps automated (19 on 2026-11-14, § 6.2–6.3 with #290 on 2026-11-15) ([#511](https://github.com/PandiO/knk-workspace/issues/511): the picker in its Jest tests, "Show what uses it" in `e2e/dashboard-access.spec.ts` and Jest; left: the unchanged-pages check § 3, the collection item's Delete § 4.5, themes § 6). Written 2026-11-09 for knk-web-app and knk-web-api `claude/picker-details-191-44` (chain 3 link V6); **merged 2026-11-12** (knk-web-api `master` `bc97b7d` and knk-web-app `main` `1371951`, with V7); written before the backfill
+**Last updated:** 2026-11-15 (§ 6.2–6.3 list field cards at 390 px, #290, automated); 2026-11-15 (§ 4.5 on a district's Streets: a town's Streets have no Delete since #409, docs #559); 2026-11-14 (steps marked `[automated]` with their test, backfill #511); 2026-11-12 (test on the default branches, docs #344); 2026-11-12 (merged with V7); 2026-11-09
 **Issues:** [PandiO/knk-workspace#191](https://github.com/PandiO/knk-workspace/issues/191) (search-as-you-type relation
 picker), [PandiO/knk-workspace#44](https://github.com/PandiO/knk-workspace/issues/44) (FeedbackModal "Show details");
 access model [#280](https://github.com/PandiO/knk-workspace/issues/280)
@@ -84,3 +84,13 @@ You need:
 
 1. Repeat § 1.2, § 1.6 and § 4.2 with `?theme=brand` and with `?bg=off`, and at 390 px: the list fits the screen
    (no sideways scrolling), long names wrap, the dialog's Close stays visible.
+2. [automated] (`e2e/form-wizard-list-field.spec.ts`, "at 390 px › the selected card keeps the name readable and both
+   buttons reachable", [#290](https://github.com/PandiO/knk-workspace/issues/290)) At 390 px, in Districts (a list field)
+   of § 1.5, pick a district with a long name (e.g. "Old Harbour Market Quarter"), then press Escape to close the list.
+   The card under "Selected (1):" shows the initial, the whole name (it wraps onto a second line instead of being cut to
+   one letter) and the ID; × and **Edit instance** sit on their own line under the name, both fully on screen, and the
+   page does not scroll sideways. Press ×: the card goes. (Without Escape the first tap outside the open list only closes
+   it, [#570](https://github.com/PandiO/knk-workspace/issues/570).)
+3. [automated] (`e2e/form-wizard-list-field.spec.ts`, "at desktop width › the selected card stays one row: name, ×, Edit
+   instance") At desktop width the same card stays one row: initial, name with its ID under it, then × and **Edit
+   instance** on the right, as before.
