@@ -1,6 +1,6 @@
 # knk-web-app — Architecture
 
-**Status:** Current · **Last updated:** 2026-11-14 (dashboard row actions pinned, `DataTable.rowContextMenu` and `ContextMenu`, shared `dashboardExport.ts`; #404, #405, #406, knk-web-app `next` `3f8ad46`, docs #526)
+**Status:** Current · **Last updated:** 2026-11-15 (detail page: `derived` relationships are read-only sections with a hint; #409, knk-web-app `next` `d3d7152`, docs #559)
 **Checked against:** knk-web-app `next` (per section; each section names its commit). Updated in place on each rescan.
 **Source scan:** `docs/reports/web-app-scan-2026-09-18.md`
 
@@ -618,6 +618,16 @@ merged 2026-11-12):
   type's `relationships` entry for its `relatedEntityPropertyName` (`detailPage.ts` `findRelationship`); a link row
   (`storage: linkRow`, e.g. `ItemBlueprintTag`) stands for its other side (`relatedType` `Tag`, id from
   `relatedIdField` / `relatedNavigation`).
+- **Derived relationships** (#409, knk-web-app `next` `d3d7152`, not yet on `main`): `storage: derived` in the
+  metadata (`MetadataModels.ts`; today only `Town.Streets`, the distinct streets of the town's districts) is a
+  read-only collection computed from other links, with `canLink`/`canUnlink` false and the reason in `linkReason`
+  ("Streets are managed on the district: open a district to add or remove them."). `detailPage.ts` `isDerived` drives
+  three things: `ActionButtons` renders only View and Edit, whatever the display configuration's flags say (Add…,
+  Unlink, Create New and Delete are hidden, not greyed out); `DisplaySection` shows `linkReason` once under the
+  section title (`data-testid="derived-hint"`); `CollectionSection` drops the per-item "Unlink: …" / "Delete: …"
+  hints. The API refuses a link or unlink on it with 400 `RelationshipNotEditable` (web-api architecture § 4/§ 5.3).
+  Tests: `DisplayWizard.relationships.test.tsx` ("derived relationships (#409)"), `e2e/town-detail.spec.ts`,
+  `e2e/entity-detail.spec.ts` (the link-table cases run on District 1 "Old Quarter").
 - **Buttons** (`ActionButtons`): Select…/Change… (single), Add… (collection header), Unlink (single, and the
   configuration's "Remove" on items: never a delete), a separate red **Delete** on items (`showDeleteButton`, also in
   the section editor as "Delete item"), View, Edit, Create New (section only). Without a relationship entry (older

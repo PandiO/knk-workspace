@@ -1,7 +1,7 @@
 # Entity detail page: real Select / Unlink / Add, separate Delete, readable values and errors (#188, #189) — smoke test
 
 **Status:** Written 2026-11-09 for knk-web-app and knk-web-api `claude/entity-detail-188-189` (chain 3 link V5); **merged 2026-11-12** (knk-web-api `master` `bc97b7d` and knk-web-app `main` `1371951`, with V7); not run by the developer
-**Last updated:** 2026-11-14 (steps marked `[automated]` with their test, backfill #511); 2026-11-12 (test on the default branches, docs #343); 2026-11-12 (merged with V7); 2026-11-09
+**Last updated:** 2026-11-15 (link-table steps moved from a town's Streets to a district's Streets: a town's Streets are read-only since [#409](https://github.com/PandiO/knk-workspace/issues/409), docs [#559](https://github.com/PandiO/knk-workspace/issues/559)); 2026-11-14 (steps marked `[automated]` with their test, backfill #511); 2026-11-12 (test on the default branches, docs #343); 2026-11-12 (merged with V7); 2026-11-09
 **Issues:** [PandiO/knk-workspace#188](https://github.com/PandiO/knk-workspace/issues/188) (relationship actions),
 [PandiO/knk-workspace#189](https://github.com/PandiO/knk-workspace/issues/189) (readability); access model
 [#280](https://github.com/PandiO/knk-workspace/issues/280)
@@ -17,19 +17,25 @@ You need:
 - **S** — a staff account with `knk.admin.content` and `knk.admin.world` but **without** `knk.admin.delete` (the Staff
   group after AM1's migration, which skips Staff for delete).
 - **C** — optional: a staff account with `knk.admin.content` only (no world node).
-- A test database with a town that has a few streets and districts, a category tree, and an item blueprint with tags.
+- A test database with a district that has a few streets and structures, a category tree, and an item blueprint with
+  tags.
   The detail page's route still needs `knk.admin.content` (W4's route table; AM3 opens it to any area node).
 
 Which links can change here (the API's reviewed list, `RelationshipCatalog.Supported`): a category's parent, child
-categories, tags and icon; an item blueprint's category, grade, tags and icon; a town's and a district's streets, and a
-street's districts and town. Everything else shows its buttons disabled with the reason (usually "Change this on the Edit
+categories, tags and icon; an item blueprint's category, grade, tags and icon; a district's streets and a street's districts.
+Everything else shows its buttons disabled with the reason (usually "Change this on the Edit
 page."). A section only shows the buttons its display configuration switches on (Entity setup → Display → section →
 Action Buttons; "Unlink item (Remove)" and the new "Delete item").
 
+A town's **Streets** are not on that list since [#409](https://github.com/PandiO/knk-workspace/issues/409) (merged into
+`next`): they are the streets of the town's districts, shown read-only with the hint "Streets are managed on the
+district: open a district to add or remove them." and no Add…, Unlink, Create New or Delete. Their checks are in the
+[town streets smoke test](town-streets-smoke-test.md); this guide uses a district's Streets for the link steps.
+
 ## 1. Reading the page (#189)
 
-1. *(Manual, a look: plain text under small grey labels, not boxes that look disabled.)* As **A**, open a town's detail
-   page. An empty value is a grey "-" (automated in `src/components/DisplayWizard/__tests__/DisplayField.readable.test.tsx`).
+1. *(Manual, a look: plain text under small grey labels, not boxes that look disabled.)* As **A**, open a district's
+   detail page. An empty value is a grey "-" (automated in `src/components/DisplayWizard/__tests__/DisplayField.readable.test.tsx`).
 2. [automated] Each collection item links to its own detail page, Back returns; a related value links too: `e2e/entity-detail.spec.ts`, `src/components/DisplayWizard/__tests__/DisplayWizard.relationships.test.tsx`
 3. [automated] Counts and paging: "Showing 1 to 12 of 14 streets", Previous / Next; an empty collection says "No
    streets yet." and still offers Add…: `e2e/entity-detail.spec.ts`, `src/components/DisplayWizard/__tests__/CollectionSection.test.tsx`
@@ -40,16 +46,18 @@ Action Buttons; "Unlink item (Remove)" and the new "Delete item").
 
 ## 2. Unlink never deletes (#188)
 
-1. [automated] Unlink asks a plain (not red) question "Unlink "Main Street"?" naming the town; Cancel does nothing:
+1. [automated] On a district's **Streets**, Unlink asks a plain (not red) question "Unlink "Main Street"?" naming the
+   district ("only its link to District "Old Quarter" is removed"); Cancel does nothing:
    `e2e/entity-detail.spec.ts`, `src/components/DisplayWizard/__tests__/DisplayWizard.relationships.test.tsx`
 2. [automated] Unlink → toast ""Main Street" unlinked.", the street leaves the list, and no delete request is sent:
    `e2e/entity-detail.spec.ts`
-3. [automated] **Districts** of the town: Unlink and Add… disabled with "A District always belongs to one Town: …":
-   `src/components/DisplayWizard/__tests__/DisplayWizard.relationships.test.tsx` ("shows a link the API refuses (a required parent) disabled, with the reason")
+3. [automated] **Structures** of the district: Unlink and Add… disabled with "A Structure always belongs to one
+   District: …": `src/components/DisplayWizard/__tests__/DisplayWizard.relationships.test.tsx` ("shows a link the API
+   refuses (a required parent) disabled, with the reason")
 
 ## 3. Add and Select (#188)
 
-1. [automated] **Streets → Add…**: "Add a Street to "Cinix"" with the focus in the search, already linked streets say
+1. [automated] On a district, **Streets → Add…**: "Add a Street to "Old Quarter"" with the focus in the search, already linked streets say
    **Linked**, the list follows the typing: `e2e/entity-detail.spec.ts`, `src/components/DisplayWizard/__tests__/DisplayWizard.relationships.test.tsx`
 2. [automated] **Add** on a street: toast ""Market Lane" added.", the street is in the list: `e2e/entity-detail.spec.ts`
 3. [automated] **Move:** a category that has another parent asks "Move "Axes" here?"; Move here links it with move: `src/components/DisplayWizard/__tests__/DisplayWizard.relationships.test.tsx`
@@ -62,7 +70,7 @@ Action Buttons; "Unlink item (Remove)" and the new "Delete item").
 
 ## 4. Delete is separate and gated (#188, #280)
 
-1. [automated] An item's red **Delete** asks "Delete Street "Harbour Road"?" … "This can't be undone."; Cancel deletes
+1. [automated] An item's red **Delete** asks "Delete Street "Harbour Road"?", naming the district, … "This can't be undone."; Cancel deletes
    nothing: `e2e/entity-detail.spec.ts`, `src/components/DisplayWizard/__tests__/DisplayWizard.relationships.test.tsx`
 2. *(Manual, not automated yet.)* A category with children: Delete → refused; the dialog offers **View children** and
    **Reassign parent** as before.
