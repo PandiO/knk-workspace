@@ -1,6 +1,6 @@
 # Writing a plugin scenario
 
-**Status:** Active (in knk-plugin `next` since `309d3580`, 2026-11-14; not on trunk yet) · **Last updated:** 2026-11-15 (§ 1: `player-heal-needs-grant`, 32 scenarios with #522's, [#580](https://github.com/PandiO/knk-workspace/issues/580)); 2026-11-15 (§ 1 and § 4.7: the six NPC follow-up scenarios on the corner scene, `ScenarioNpcs` with access rules and gate crossings, `ScenarioNpcRules`, the short-trip rule; checked against knk-plugin `next` `deb7ff49`, [#589](https://github.com/PandiO/knk-workspace/issues/589)); 2026-11-15 (§ 5 rewritten: scripted players, `scene.player(...)`, six player scenarios; § 1, § 3.5, § 4.8, § 6 `run player-*`, new § 8 headless bot tests kept off, [#540](https://github.com/PandiO/knk-workspace/issues/540)); 2026-11-15 (§ 1, § 3.5, § 4.6, § 4.7 and § 6: NPC navigation scenarios on Citizens and a fake road network, `ScenarioRoadNpcs`, [#543](https://github.com/PandiO/knk-workspace/issues/543)); 2026-11-15 (§ 1 "Then" step 4: smoke-guide tag format, every step kept in full); 2026-11-14 (§ 1, § 3 and § 4: the scenarios and helpers of the plugin backfill, [#511](https://github.com/PandiO/knk-workspace/issues/511)); 2026-11-14 (§ 5 links #540); 2026-11-14 (first version, [PandiO/knk-workspace#421](https://github.com/PandiO/knk-workspace/issues/421))
+**Status:** Active (in knk-plugin `next` since `309d3580`, 2026-11-14; not on trunk yet) · **Last updated:** 2026-11-15 (§ 1, § 3 item 7 and § 7: scenes pasted from WorldEdit schematics (`SceneSchematic`), the five NPC movement scenarios in report mode with collision off and on, `KNK-NPC-REPORT` lines, 45 scenarios, [#621](https://github.com/PandiO/knk-workspace/issues/621)); 2026-11-15 (§ 1: `player-heal-needs-grant`, 32 scenarios with #522's, [#580](https://github.com/PandiO/knk-workspace/issues/580)); 2026-11-15 (§ 1 and § 4.7: the six NPC follow-up scenarios on the corner scene, `ScenarioNpcs` with access rules and gate crossings, `ScenarioNpcRules`, the short-trip rule; checked against knk-plugin `next` `deb7ff49`, [#589](https://github.com/PandiO/knk-workspace/issues/589)); 2026-11-15 (§ 5 rewritten: scripted players, `scene.player(...)`, six player scenarios; § 1, § 3.5, § 4.8, § 6 `run player-*`, new § 8 headless bot tests kept off, [#540](https://github.com/PandiO/knk-workspace/issues/540)); 2026-11-15 (§ 1, § 3.5, § 4.6, § 4.7 and § 6: NPC navigation scenarios on Citizens and a fake road network, `ScenarioRoadNpcs`, [#543](https://github.com/PandiO/knk-workspace/issues/543)); 2026-11-15 (§ 1 "Then" step 4: smoke-guide tag format, every step kept in full); 2026-11-14 (§ 1, § 3 and § 4: the scenarios and helpers of the plugin backfill, [#511](https://github.com/PandiO/knk-workspace/issues/511)); 2026-11-14 (§ 5 links #540); 2026-11-14 (first version, [PandiO/knk-workspace#421](https://github.com/PandiO/knk-workspace/issues/421))
 **Related:** [CI § 7.1](ci.md#71-in-plugin-scenarios) (how CI runs them), [plugin architecture § Testing](../../architecture/plugin-architecture.md#testing),
 [`knk-test-writer` skill](../../../.claude/skills/knk-test-writer/SKILL.md) (which suite a behaviour belongs in),
 [AI agent workflow design § 6.3](../../specs/ai-agent-workflow/DESIGN.md#6-testing-and-ci),
@@ -132,7 +132,31 @@ startup (`CommandLabelTakeover`), and #580 added a seventh player scenario:
    "Replenished 16 health.", and the granted one is healed again with `/knightsandkings:heal`. It failed on CI
    before the takeover (WorldGuard's refusal, and an op healed by WorldGuard) and passes with it.
 
-A scenario must fail when its behaviour breaks. For the backfill each behaviour was broken once on a local server (the
+[#621](https://github.com/PandiO/knk-workspace/issues/621) (link M1 of the NPC navigation follow-ups chain,
+[implementation plan 4c.5](../../specs/npc-platform/IMPLEMENTATION_PLAN.md#4c5-evidence-the-real-places-as-scenarios))
+added five NPC movement scenarios in **report mode**: they measure today's movement, log one `KNK-NPC-REPORT` line per
+phase (§ 7) and pass whatever the numbers are; the later movement links turn the numbers they fix into checks. Each
+is registered twice, with `npc.navigation.collidable` off (its name) and on (the name with `-collision-on`), with
+`group-ranks-width` 3, on a scene pasted from a schematic (§ 3 item 7):
+
+8. `npc-stairhouse-singles`: 12 singles at once, 6 up from the road through the stair house's entrance (1413 49 -508),
+   along the 3-wide straight (1414 49 -503) and up both flights, 6 down. Reports arrivals, stuck spells, the longest
+   still single and the longest stand on the straight and in the entrance.
+9. `npc-stairhouse-group`: a group of 20 in `ranks` through the entrance and up, once. Reports the leader's result,
+   the folds and narrowings with their reasons and places, the longest a follower stood in the entrance, lag and
+   rejoins.
+10. `npc-jagged-straight`: 12 singles both ways on a 3-wide straight with one-block notches, a lantern on a post and a
+    stair block beside it, then a group of 9 in `ranks`.
+11. `npc-doorway-crowd`: 6 singles from each of two rooms through a one-block doorway at once. Reports the ticks with
+    two or more NPCs in the doorway's cell and the longest still near it.
+12. `npc-plaza-line`: 3 singles cross a 15 × 15 plaza from the west road to the north road on the road graph's line
+    (to the junction in the middle and out). Reports the walked length on the plaza against the chord and how close
+    they came to the well.
+
+Every line also has falls, trespasses, `recovery no path` and K&K's navigation time per NPC per tick. The first
+numbers are the baseline in the chain report's M1 block.
+
+A scenario must fail when its behaviour breaks (report-mode scenarios excepted until a link gives them checks). For the backfill each behaviour was broken once on a local server (the
 side rule, the other-door rule, the suffocation guard, the predictive push, the region rename, the lootbox area lookup,
 the spawn height, the web switch and others) and the matching scenario failed; for the NPC scenarios (#543) the road
 graph ignored (the planner answering "no road network": all three failed), the column formation's slots at a third of
@@ -192,6 +216,30 @@ Each scenario gets a `ScenarioScene`: an empty box of 32 × 24 × 32 blocks (x, 
    `scene.player(name, …)` (§ 5).
 6. **Where:** `testing.scenarios.origin` (default 30000, 100, 30000) in the main world (or `testing.scenarios.world`);
    scene *n* of a run sits 64 × *n* blocks further along x. Keep it far from anything built.
+7. **A scene from a WorldEdit schematic** ([#621](https://github.com/PandiO/knk-workspace/issues/621)): put the
+   `.schem` file in knk-paper `src/main/resources/scenario-scenes/` (it ships in the plugin jar, as the scenarios
+   do), then `SceneSchematic.fromResource("name.schem").paste(scene, x, y, z)` pastes it with its lowest corner at
+   box position (x, y, z), without physics. Air is not placed (the box starts empty) and blocks outside the box are
+   left out and counted (`Pasted(placed, outsideTheBox)`), so a place a little larger than 32 × 24 × 32 still fits.
+   1. **Making one:** in the world, as an op with WorldEdit, `//pos1 x,y,z`, `//pos2 x,y,z`, stand where the scene's
+      reference point should be, `//copy`, `//schem save <name>`; the file is in `plugins/WorldEdit/schematics/`.
+      `SceneSchematic` reads WorldEdit's Sponge format (version 3, which WorldEdit 7.3 and later save, and version 2)
+      without WorldEdit itself, so it also runs in unit tests. It keeps the block states and leaves out block
+      entities (sign texts, chest contents), entities and biomes.
+   2. **Real coordinates:** `worldMin()` is the real position of the schematic's lowest corner and `origin()` the
+      local position of the player who copied it; `local(realX, realY, realZ)` turns a place someone named (1414 49
+      -503) into schematic coordinates.
+   3. **A block the server doesn't know** (a schematic from a newer Minecraft) fails the paste with its name.
+   4. **Synthetic scenes:** `tools/scenario-scenes/make_standins.py` in knk-plugin writes the NPC movement scenes in
+      the same format (deterministic bytes: rerun it after a change and commit the files). `NpcMovementScene` holds the
+      points the scenarios use for each scene (the road line, starts, goals, watched areas), and
+      `NpcMovementSceneTest` checks that each of them stands on a floor of its schematic.
+   5. **The developer's stair house:** until `knk-stairhouse.schem` is posted on
+      [#603](https://github.com/PandiO/knk-workspace/issues/603), the stair-house scenarios use the stand-in
+      `npc-stairhouse-standin.schem`, built from the plan's description in the real place (lowest corner
+      1400 46 -515, copied standing in the entrance 1413 49 -508). When the file arrives, commit it next to the
+      stand-in, take the road line and the points from its geometry (and the developer's trace) into
+      `NpcMovementScene`, and switch `NpcMovementScene.stairHouse` to it.
 
 ## 4. Fake data instead of the API
 
@@ -390,6 +438,16 @@ KNK-SCENARIO SUMMARY passed=2 failed=1 total=3
 ```
 
 Names are lower-case words joined by hyphens; `all` is reserved. A reason is always one line.
+
+Report-mode scenarios ([#621](https://github.com/PandiO/knk-workspace/issues/621)) log their numbers in a line of
+their own, which `check_scenarios.py` ignores and the `paper-boot` job copies into its summary:
+
+```text
+KNK-NPC-REPORT npc-doorway-crowd | 6 + 6 singles through the doorway | scene npc-doorway.schem, 2253 blocks | arrived 12/12 | ...
+```
+
+The scenario's name, the phase, then `key value` pairs separated by `|`. Positions are box coordinates with the
+floor's height (`13 2 7`).
 
 ## 8. Headless bot tests
 
