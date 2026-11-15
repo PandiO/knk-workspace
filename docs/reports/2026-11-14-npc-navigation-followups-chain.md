@@ -46,8 +46,8 @@ Every link is merged into `next` (2026-11-15). Build knk-plugin from `next` `deb
 | L7 Fix: test walkers drown (#490) | #594 | Dropped (#490 audit clean on the right build; #594 closed) | — | — | — | — |
 | L8 Design: movement quality (steering, formation keeping, crowding, plaza road lines) | #603 | Merged into next (2026-11-15; design decided by the developer, 15 questions) | knk-workspace `e8836db0` → `next` `61c29c16` | PandiO/knk-workspace#605 | docs only (no CI); Codex at its usage limit | create_session session_01R1w2Uv7BDN1HKCV2gWe5Mz (2026-11-15) |
 | M1 Evidence and diagnostics | #621 | Merged into next (2026-11-15) | knk-plugin `3ce748e0` → `next` `a527c980`; knk-workspace `1310c3d9` → `next` `a8dbfa80` | PandiO/knk-plugin#47, PandiO/knk-workspace#632 | PR head green (build, paper-boot with 45 scenarios, both runs); Codex at its usage limit | create_session session_01R1w2Uv6Untjy5RbmJTDd1T (2026-11-15) |
-| M2 Corridor steering (option A) | #622 | In review (PRs open, CI green) | knk-plugin `4e247835`; knk-workspace `a837776` | PandiO/knk-plugin#48, PandiO/knk-workspace#633 | PR head green (build, paper-boot with 45 scenarios, both runs); Codex at its usage limit | create_session session_01R1w2UszyqgMVxpBHaUa2oH (2026-11-15) |
-| M6 Clearance-aware local legs (add-on D) | #623 | Not started (gate: M2 merged) | — | — | — | — |
+| M2 Corridor steering (option A) | #622 | Merged into next (2026-11-15) | knk-plugin `4e247835` → `next` `0fa74a67`; knk-workspace `a837776d` → `next` `8927eab2` | PandiO/knk-plugin#48, PandiO/knk-workspace#633 | PR head green (build, paper-boot with 45 scenarios, both runs); Codex at its usage limit | create_session session_01R1w2UszyqgMVxpBHaUa2oH (2026-11-15) |
+| M6 Clearance-aware local legs (add-on D) | #623 | Running | — | — | — | create_session session_01R1w2UuwfDNhwngWZJue8wZ (2026-11-15) |
 | M3 Formation keeping | #624 | Not started (gate: M6 merged) | — | — | — | — |
 | M5 Plaza lines | #625 | Not started (gate: M3 merged) | — | — | — | — |
 | M4 Crowd awareness | #626 | Not started (gate: M5 merged); then the option-B checkpoint | — | — | — | — |
@@ -197,6 +197,11 @@ Every link is merged into `next` (2026-11-15). Build knk-plugin from `next` `deb
     knk-plugin `evidence/stairhouse-schematic` (`8438ce87`, no PR), and M1 took it from there. M1's § 6 check held:
     tests 2816/2832 → 2830/2851, 45 scenarios green in CI (timeouts raised), the developer's entrance jam reproduced as
     a baseline. Merged PandiO/knk-plugin#47 → `a527c980` and PandiO/knk-workspace#632 → `a8dbfa80`. M2 started.
+
+25. **M2 checked and merged** (2026-11-15). § 6 held: tests 2830/2851 → 2853/2852, 45 scenarios green in CI with the
+    stair-house and jagged singles asserting (12/12, 0 stuck spells, longest still at most 0.6 s), corridor share about
+    0.005 ms per NPC per tick, behind `corridor-steering` (off). Codex at its usage limit. Merged PandiO/knk-plugin#48 →
+    `0fa74a67` and PandiO/knk-workspace#633 → `8927eab2`. M6 started.
 
 ## 4. Link blocks
 
