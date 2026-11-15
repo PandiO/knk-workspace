@@ -302,74 +302,100 @@ not run.
 
 ### 8.6 The PermissionGrant table (#408)
 
-knk-web-api and knk-web-app branches `claude/permission-grant-table-408` (PRs into `next`, not merged). Automated in
-CI (knk-web-app `e2e/permission-grants.spec.ts`, Jest `permissionGrantClient.test.ts`; knk-web-api
-`PermissionGrantReadGateTests`, `PermissionGrantRepositoryTests`); manual steps not run. Deploy the API and the web app
-together: an old API refuses the table's search without `knk.admin.user.perm`.
+**Status:** 8 of 10 steps automated in CI (tagged); every step can still be run by hand; manual steps not run. A full
+manual run takes about 20 minutes, the untagged steps (9, 10) about 10. Merged into `next` 2026-11-14 (knk-web-api#30,
+knk-web-app#29). Deploy the API and the web app together: an old API refuses the table's search without
+`knk.admin.user.perm`.
 
-1. [automated: `e2e/permission-grants.spec.ts`] As the owner or an Admin: Dashboard → **Permission Grant** lists the grants with ID, Node, Effect
-   (Granted/Denied), Holder and Expires (UTC).
-2. [automated: `e2e/permission-grants.spec.ts`, knk-web-api `Tests/knkwebapi_v2.Tests/Repositories/PermissionGrantRepositoryTests.cs`] Click **Next**: page 2 shows. Click a column header: the table sorts through the API (ascending, then descending;
-   the network tab shows the sort in the search request). Type part of a node in the search box: the grants with that
-   node show.
-3. [automated: knk-web-api `Tests/knkwebapi_v2.Tests/Security/PermissionGrantReadGateTests.cs`] API: `POST api/PermissionGrants/search`, `GET api/PermissionGrants` and `GET api/PermissionGrants/{id}` as a web
-   user with only `knk.admin.user.perm`: 403; with `knk.admin.user.manage` (the type's view node): 200. Writes still
-   need `knk.admin.user.perm`.
-4. [automated: `e2e/permission-grants.spec.ts`] As a rank with `knk.admin.user.manage` but not `knk.admin.user.perm`: Dashboard → Permission Grant loads the
-   table; **New** and **Edit** are greyed out with "Requires knk.admin.user.perm"; there is no Delete action.
-5. [automated: `e2e/permission-grants.spec.ts`] As a rank without `knk.admin.user.manage`: the explorer doesn't offer Permission Grant, and
-   `/dashboard/PermissionGrant` falls back to a type the rank may see. When the API refuses the read anyway, the table
-   says "You don't have access to … Requires …" instead of "Failed to load data".
-6. Manual (real data, deployed together): as the owner on `next`, open Permission Grant: the rows match the grants of a
+1. [automated: `e2e/permission-grants.spec.ts`] As the owner or an Admin, open Dashboard → **Permission Grant**
+   (`/dashboard/PermissionGrant`). The heading reads "Permission Grant" and the table has the columns ID, Node, Effect,
+   Holder and Expires (UTC). A deny shows "Denied", a group's grant shows "Group #<id>" as its holder, a grant with an
+   expiry shows its date and time and one without shows "Never". Ten rows a page, with "Page 1 of N" under the table.
+2. [automated: `e2e/permission-grants.spec.ts`] Click **Next**: "Page 2 of N" shows other grants than page 1. In the
+   network tab the search request (`POST api/PermissionGrants/search`) carries `pageNumber: 2`.
+3. [automated: `e2e/permission-grants.spec.ts`, knk-web-api `Tests/knkwebapi_v2.Tests/Repositories/PermissionGrantRepositoryTests.cs`] Click the
+   **Expires** header: it shows the ascending arrow and the request carries `sortBy: "expiresAt"`, `sortDescending:
+   false`. Click it again: descending, the latest expiry on top. The API sorts by
+   `id`, `holderId`, `value`, `expiresAt` or `node` (the default), with node and id breaking ties.
+4. [automated: `e2e/permission-grants.spec.ts`] Type part of a node (for example `gate`) in the **Search...** box: only
+   the grants with that node stay, and the request carries the search term.
+5. [automated: knk-web-api `Tests/knkwebapi_v2.Tests/Security/PermissionGrantReadGateTests.cs`] API: call `POST api/PermissionGrants/search`,
+   `GET api/PermissionGrants` and `GET api/PermissionGrants/{id}` as a web user with only `knk.admin.user.perm`: each
+   answers 403. With `knk.admin.user.manage` (the type's view node): 200. Writes (`PUT`/`DELETE
+   api/PermissionGrants/by-node`) still need `knk.admin.user.perm`.
+6. [automated: `e2e/permission-grants.spec.ts`, `src/apiClients/__tests__/permissionGrantClient.test.ts`] As a rank with
+   `knk.admin.user.manage` but not `knk.admin.user.perm`, open Dashboard → Permission Grant: the table loads, **New** is
+   greyed out with "Requires knk.admin.user.perm" beside it, each row's **Edit** is greyed out with the same hint, and
+   there is no Delete action (the web app registers no create, update or delete for grants).
+7. [automated: `e2e/permission-grants.spec.ts`] As a rank without `knk.admin.user.manage`: the explorer doesn't offer
+   Permission Grant, and opening `/dashboard/PermissionGrant` falls back to a type the rank may see (for example Town);
+   no grant search is sent.
+8. [automated: `e2e/permission-grants.spec.ts`] When the API refuses the read anyway (an old API, or the node removed
+   while the page is open), the table says "You don't have access to … Requires …" instead of "Failed to load data".
+9. Manual (real data, deployed together): as the owner on `next`, open Permission Grant: the rows match the grants of a
    player you know (their profile's Permissions tab) and of the Staff group, a group row shows "Group #<id>", and
    sorting by Expires puts never-expiring grants first ascending. Why manual: the real database and deploy, not the
    mocked API.
-7. Manual (real rank): with a test rank that holds `knk.admin.user.manage` but not `knk.admin.user.perm` (the alpha's
-   Staff, if it lacks `perm`), open the table: it loads and New / Edit are greyed out. Why manual: real permission
-   resolution and the deployed API's gate.
+10. Manual (real rank): with a test rank that holds `knk.admin.user.manage` but not `knk.admin.user.perm` (the alpha's
+    Staff, if it lacks `perm`), open the table: it loads and New / Edit are greyed out. Why manual: real permission
+    resolution and the deployed API's gate.
 
 ### 8.7 A permission group's own grants (#50)
 
-knk-web-api and knk-web-app branches `claude/group-grants-50` (PRs into `next`, not merged). Automated in CI
-(knk-web-app `e2e/group-grants.spec.ts`, Jest `permissionGrantClient.test.ts`, `permissionGroupClient.test.ts`,
-`userManagementClient.test.ts`, `groupPermissionsHelpers.test.ts`; knk-web-api `GroupGrantAuditTests`,
-`GroupGrantsPanelApiTests`, `PermissionGrantServiceTests`, `AuditLogServiceTests`,
-`AddAuditLogSubjectMigrationTests`); manual steps not run. Before testing: back up the database, deploy the API, run
-`dotnet ef database update` (migration `AddAuditLogSubject`), then deploy the web app.
+**Status:** 14 of 18 steps automated in CI (tagged); every step can still be run by hand; manual steps not run. A full
+manual run takes about 45 minutes, the untagged steps (15–18) about 20. Merged into `next` 2026-11-15 (knk-web-api#32,
+knk-web-app#35). Before testing: back up the database, deploy the API, run `dotnet ef database update` (migration
+`AddAuditLogSubject`), then deploy the web app.
 
-1. [automated: `e2e/group-grants.spec.ts`] As the owner: Dashboard → Permission Group → a group → View. The detail page shows a **Permissions** panel with
-   the group's own nodes (Granted or Denied, and the expiry), how many players it reaches, and a **History** list.
-2. [automated: `e2e/group-grants.spec.ts`] In the panel, grant a new node, then deny another new one: each is added at once, the expiry field is empty
-   (permanent) by default and no confirmation is asked.
-3. [automated: `e2e/group-grants.spec.ts`, knk-web-api `Tests/knkwebapi_v2.Tests/Services/GroupGrantAuditTests.cs`] On a node: **Edit**, set an expiry, **Save**: the same row now shows the expiry (one row per group and node, never
-   a second row).
-4. [automated: `e2e/group-grants.spec.ts`] Switch a node between Granted and Denied (the row button, or in the form), and **Remove** one: each asks first
-   "This affects N players (members of … and of N groups that inherit from it). Online players get the change within
-   seconds."; **Cancel** sends nothing (network tab), confirm applies it.
-5. [automated: knk-web-api `Tests/knkwebapi_v2.Tests/Api/GroupGrantsPanelApiTests.cs`] API: `GET api/PermissionGroups/{id}/member-count` counts the active members of the group and of every group
-   inheriting from it, each player once (compare with the members you know); a web user without
-   `knk.admin.user.manage` gets 403.
-6. [automated: `GroupGrantAuditTests.cs`, knk-web-api `Tests/knkwebapi_v2.Tests/Services/PermissionGrantServiceTests.cs`, knk-web-api `Tests/knkwebapi_v2.Tests/Services/AuditLogServiceTests.cs`, `GroupGrantsPanelApiTests.cs`] After steps 2–4, the group's **History** lists one entry per change, with the group as subject and no target
-   player (`GET api/audit-log?subjectType=PermissionGroup&subjectId=<id>`); a member's own audit log (player profile →
-   Activity) does not list them. A grant on a player is audited as before. Erasing a test player's data keeps the
-   group's history.
-7. [automated: `e2e/group-grants.spec.ts`] As a rank without `knk.admin.user.perm`: the panel is read-only with "Requires knk.admin.user.perm" and the
-   History still shows. As staff trying to change a group ranked at or above their own: the API's refusal shows in the
-   panel.
-8. [automated: knk-web-api `Tests/knkwebapi_v2.Tests/Migrations/AddAuditLogSubjectMigrationTests.cs`] After `dotnet ef database update` on the dev database: the audit log table has the two new nullable subject
-   columns and their index, `TargetUserId` is nullable, and nothing else changed (`SHOW CREATE TABLE` before and
-   after).
-9. Manual (real database): `dotnet ef database update` applies `AddAuditLogSubject` on a copy of the alpha database;
-   the player profile's Audit log of a known player still lists its old entries. Why manual: a real MySQL with real
-   data (CI's fresh-database job starts empty).
-10. Manual (real data, deployed together): as the owner, grant a test node (for example `knk.test.group`) on a test
+1. [automated: `e2e/group-grants.spec.ts`] As the owner: Dashboard → Permission Group → a group → View. The detail page
+   shows a **Permissions** panel with the group's own nodes (Granted or Denied, and the expiry), how many players it
+   reaches, and a **History** list of earlier changes.
+2. [automated: `e2e/group-grants.spec.ts`] In the panel's form, type a new node, leave the effect on Grant and the expiry
+   field empty (permanent, the default), **Save**: the node is added at once without a confirmation, and the History
+   shows "Permission granted".
+3. [automated: `e2e/group-grants.spec.ts`] Type another new node, choose Deny, **Save**: it is added as Denied, again
+   without a confirmation.
+4. [automated: `e2e/group-grants.spec.ts`, knk-web-api `Tests/knkwebapi_v2.Tests/Services/GroupGrantAuditTests.cs`] On a node: **Edit**, set an
+   expiry, **Save**: the same row now shows the expiry (one row per group and node, never a second row).
+5. [automated: `e2e/group-grants.spec.ts`] On a Granted node, press the row's change button (**Change <node> to
+   Denied**): a confirmation asks first, "This affects N players (members of … and of N groups that inherit from it).
+   Online players get the change within seconds." **Cancel** sends nothing (network tab); doing it again and confirming
+   applies it.
+6. [automated: `e2e/group-grants.spec.ts`] In the form, save Grant on a node the group denies: the same confirmation
+   asks first.
+7. [automated: `e2e/group-grants.spec.ts`] **Remove** a node: the confirmation asks with the blast radius; confirm, and
+   the node is gone and the History shows the removal.
+8. [automated: `e2e/group-grants.spec.ts`] When the players can't be counted (the member-count call fails), the
+   confirmation says "Couldn't count the players this affects."
+9. [automated: knk-web-api `Tests/knkwebapi_v2.Tests/Api/GroupGrantsPanelApiTests.cs`] API: `GET api/PermissionGroups/{id}/member-count` counts
+   the active members of the group and of every group inheriting from it, each player once (compare with the members you
+   know); a web user without `knk.admin.user.manage` gets 403.
+10. [automated: `GroupGrantAuditTests.cs`, knk-web-api `Tests/knkwebapi_v2.Tests/Services/PermissionGrantServiceTests.cs`, knk-web-api `Tests/knkwebapi_v2.Tests/Services/AuditLogServiceTests.cs`, `GroupGrantsPanelApiTests.cs`] After steps 2–7, the group's **History**
+    lists one entry per change, with the group as subject and no target player (`GET
+    api/audit-log?subjectType=PermissionGroup&subjectId=<id>`); a member's own audit log (player profile → Activity) does
+    not list them. A grant on a player is audited as before. Erasing a test player's data keeps the group's history.
+11. [automated: `e2e/group-grants.spec.ts`] As a rank with `knk.admin.user.manage` but without `knk.admin.user.perm`,
+    open the group: the nodes show, but the form's Node field, **Save**, and each row's Remove and change buttons are
+    greyed out with "Requires knk.admin.user.perm"; the History still shows; nothing is sent.
+12. [automated: `e2e/group-grants.spec.ts`] As staff saving a node on a group ranked at or above their own, the API's
+    refusal shows in the panel ("You can only change groups ranked below your own.") and the node is not added.
+13. [automated: `e2e/group-grants.spec.ts`] As a rank with `knk.admin.user.perm` but without `knk.admin.user.manage`,
+    open the group's detail page: it says "Staff only", no Permissions panel shows, and the page asks for none of the
+    group's grants, History or member count.
+14. [automated: knk-web-api `Tests/knkwebapi_v2.Tests/Migrations/AddAuditLogSubjectMigrationTests.cs`] After `dotnet ef database update` on the
+    dev database: the audit log table has the two new nullable subject columns and their index, `TargetUserId` is
+    nullable, and nothing else changed (`SHOW CREATE TABLE` before and after).
+15. Manual (real database): `dotnet ef database update` applies `AddAuditLogSubject` on a copy of the alpha database;
+    the player profile's Audit log of a known player still lists its old entries. Why manual: a real MySQL with real
+    data (CI's fresh-database job starts empty).
+16. Manual (real data, deployed together): as the owner, grant a test node (for example `knk.test.group`) on a test
     group with one member, open that member's profile and refresh: Effective Permissions lists the node with the group
     as its source; deny it, then remove it, and refresh again each time. The group's History lists the three changes
     with you as "By". Why manual: real permission resolution on the deployed API.
-11. Manual (real plugin): with the member online, grant and remove a node they can try in game (for example a command
+17. Manual (real plugin): with the member online, grant and remove a node they can try in game (for example a command
     node): the change applies within seconds without a relog. Why manual: the game server and its realtime
     connection (members of groups inheriting from the changed group: follow-up [#558](https://github.com/PandiO/knk-workspace/issues/558)).
-12. Manual (real rank): with a staff rank ranked below a group, open that group: saving a node shows "You can only
+18. Manual (real rank): with a staff rank ranked below a group, open that group: saving a node shows "You can only
     change groups ranked below your own." Why manual: real ranks and the deployed escalation guard.
 
 ## 9. Docs impact
