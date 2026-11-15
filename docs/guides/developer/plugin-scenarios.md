@@ -1,6 +1,6 @@
 # Writing a plugin scenario
 
-**Status:** Active (in knk-plugin `next` since `309d3580`, 2026-11-14; not on trunk yet) · **Last updated:** 2026-11-15 (§ 1 "Then" step 4: smoke-guide tag format, every step kept in full); 2026-11-14 (§ 1, § 3 and § 4: the scenarios and helpers of the plugin backfill, [#511](https://github.com/PandiO/knk-workspace/issues/511)); 2026-11-14 (§ 5 links #540); 2026-11-14 (first version, [PandiO/knk-workspace#421](https://github.com/PandiO/knk-workspace/issues/421))
+**Status:** Active (in knk-plugin `next` since `309d3580`, 2026-11-14; not on trunk yet) · **Last updated:** 2026-11-15 (§ 1, § 3.5, § 4.6, § 4.7 and § 6: NPC navigation scenarios on Citizens and a fake road network, `ScenarioRoadNpcs`, [#543](https://github.com/PandiO/knk-workspace/issues/543)); 2026-11-15 (§ 1 "Then" step 4: smoke-guide tag format, every step kept in full); 2026-11-14 (§ 1, § 3 and § 4: the scenarios and helpers of the plugin backfill, [#511](https://github.com/PandiO/knk-workspace/issues/511)); 2026-11-14 (§ 5 links #540); 2026-11-14 (first version, [PandiO/knk-workspace#421](https://github.com/PandiO/knk-workspace/issues/421))
 **Related:** [CI § 7.1](ci.md#71-in-plugin-scenarios) (how CI runs them), [plugin architecture § Testing](../../architecture/plugin-architecture.md#testing),
 [`knk-test-writer` skill](../../../.claude/skills/knk-test-writer/SKILL.md) (which suite a behaviour belongs in),
 [AI agent workflow design § 6.3](../../specs/ai-agent-workflow/DESIGN.md#6-testing-and-ci),
@@ -51,18 +51,39 @@ Then:
    `[automated: plugin scenario <name>] <the step as written>`, or `[partly automated: plugin scenario <name>; by hand:
    <what is left>]` when a player still has to check part of it (developer decision 2026-11-15).
 
-The shipped scenarios are fuller examples (`PaperScenarios` lists all 16): `GateOpenCloseScenario`,
+The shipped scenarios are fuller examples (`PaperScenarios` lists all 22): `GateOpenCloseScenario`,
 `GateClosingMovesEntityOutScenario` and `GlobalRegionExplosionScenario` (the full version of the example above, with a
 control inside a region) came with the framework; the backfill of
 [#511](https://github.com/PandiO/knk-workspace/issues/511) added seven gate-safety scenarios (`GateClosingKeepsSidesScenario`
 and the others named `Gate…Scenario`: mobs, a dropped item and a minecart as stand-ins for players), two region-callback
 scenarios (`LootboxAreaRenameScenario`, `LootboxAreaReplaceScenario`), the temp-region sweep
 (`TempRegionSweepScenario`) and three lootbox spawn scenarios (`LootboxSpawnOnGroundScenario`,
-`LootboxSpawnUnderRoofScenario`, `LootboxSwitchedOffScenario`).
+`LootboxSpawnUnderRoofScenario`, `LootboxSwitchedOffScenario`). The NPC follow-ups of
+[#521](https://github.com/PandiO/knk-workspace/issues/521) added three corner scenarios on a generated scene
+(`NpcCornersLineScenario`, `NpcCornersWalkScenario`, `NpcStuckLadderScenario` with `NpcCornerScene` and the helper
+`ScenarioNpcs`, which starts a Citizens registry of its own and follows the scene's route line;
+[implementation plan 4b.2 item 18](../../specs/npc-platform/IMPLEMENTATION_PLAN.md)).
+[#543](https://github.com/PandiO/knk-workspace/issues/543) added three NPC navigation scenarios on a fake road graph
+(§ 4.6, § 4.7), from the NPC developer tests of the [implementation plan](../../specs/npc-platform/IMPLEMENTATION_PLAN.md):
+
+1. `npc-walks-road-route` (`NpcWalksRoadRouteScenario`): one NPC is sent along a straight road of 25 blocks; it
+   arrives within 1.5 blocks of the goal, the road route was handed to it in stretches (not walked as off-road hops),
+   and no stuck event fired.
+2. `npc-keeps-to-road-around-obstacle` (`NpcKeepsToRoadScenario`): a stone block stands on the straight line between
+   start and goal, the road makes a wide U around it; the NPC is never more than 2 blocks from the road's centre line
+   (the open grass between block and road is shorter) and arrives. Measured: 0.37 blocks at most (0.08 with the
+   #521 corner clearance on `next`).
+3. `npc-group-keeps-spacing` (`NpcGroupSpacingScenario`): a leader and two followers in a column, 2 blocks apart, walk
+   a straight road; neighbours stay between 1 and 4 blocks apart while walking (half and twice the spacing; measured
+   1.64 to 2.72) and end within 1 block of the 2-block spacing (measured 1.94 and 2.0; 2.5 and 2.0 on `next` with
+   #521).
 
 A scenario must fail when its behaviour breaks. For the backfill each behaviour was broken once on a local server (the
 side rule, the other-door rule, the suffocation guard, the predictive push, the region rename, the lootbox area lookup,
-the spawn height, the web switch and others) and the matching scenario failed; a scenario that kept passing was changed
+the spawn height, the web switch and others) and the matching scenario failed; for the NPC scenarios (#543) the road
+graph ignored (the planner answering "no road network": all three failed), the column formation's slots at a third of
+their distance (the group scenario failed with gaps of 0.14 blocks) and the road line never walked (the mover ignoring
+its waypoints: all three failed, the obstacle one with the NPC 4 blocks off the road); a scenario that kept passing was changed
 until it didn't (for example `gate-side-by-side-doors` needed walls in front of both doors, or the nearest spot was
 never the other door's opening). Where a fallback could hide a broken behaviour, assert that the fallback never ran:
 the gate scenarios count suffocation events, cancelled ones included, so a mob the guard rescued still fails.
@@ -109,7 +130,10 @@ Each scenario gets a `ScenarioScene`: an empty box of 32 × 24 × 32 blocks (x, 
    coordinates, `shapeProblem`, and `callRename`, the `POST /Regions/rename` knk-web-api sends to the plugin's region
    callback server, answered on the main thread, so `await` its future), `ScenarioFakes.port` (an in-memory port, § 4)
    and `ScenarioLootboxes` (the plugin's own lootbox runtime and spawn scheduler on fake API data, recording where it
-   asks for boxes).
+   asks for boxes); `ScenarioRoadNpcs` (NPC navigation on a fake road network, § 4.7: lays grass and a 3-wide dirt-path
+   road along the scene (x, z) points you give, spawns Citizens NPCs, sends one or a group, measures the distance from
+   the road's centre line and counts the navigation's events; `close()` as a cleanup, because NPCs are player
+   entities the scene does not remove).
 6. **Where:** `testing.scenarios.origin` (default 30000, 100, 30000) in the main world (or `testing.scenarios.world`);
    scene *n* of a run sits 64 × *n* blocks further along x. Keep it far from anything built.
 
@@ -135,7 +159,20 @@ calls) and hand them the data the API would have sent:
    API, and some code writes state back (a gate's open state after its animation); a negative id matches no real row.
    On the CI server those write-backs fail with a warning ("Failed to persist gate state"), which is expected.
 5. **A service a scenario needs** goes into `ScenarioServices` as a supplier (read lazily, because some services start
-   after the command is registered) and is wired in `KnKPlugin.registerScenarioCommand`.
+   after the command is registered) and is wired in `KnKPlugin.registerScenarioCommand`. Since #543 it has the live
+   road navigation service (`roadNavigation()`, for its walk capture) and the Citizens mover factory (`npcMovers()`,
+   which fails the step with the reason `/knk npc status` gives when NPC navigation is off).
+6. **A road network** (#543) is the road graph the router reads, a `RoadNetworkSnapshot` built in scene coordinates
+   (floor points, one edge with an endpoint node at each end), and it reaches the NPCs through the navigator's own
+   adapter: `NavigationService.planRoadFor` on a road navigation service the scenario builds with that snapshot as its
+   network and every road open. Snapping, network components, the A* router and the route line are the live code.
+7. **NPC navigation** (#543): the NPCs are spawned and moved by the live Citizens adapter, so the server needs Citizens
+   and `npc.navigation.enabled: true` (CI sets both, [CI § 7.2](ci.md#72-citizens-on-the-ci-server)). Local legs are
+   prepared by the live walk capture (`navigation.enabled` and `navigation.walk.enabled`, both on by default). The
+   state machine (`NpcNavigationService`) and the groups (`NavGroupService`) are the plugin's classes, built inside the
+   scenario with the code defaults of every per-NPC setting (a test server's `npc.navigation` keys don't change the
+   result) and ticked every server tick, groups first, as the live module does. Access rules are open: these
+   scenarios test movement; rules (a closed gate, a denied district) are a later scenario on the same helper.
 
 ## 5. Players
 
@@ -157,15 +194,17 @@ does.
        enabled: true
    ```
 
-   restart, then from the console (or as an op): `knk scenario list`, `knk scenario run all` or
+   (and, for the NPC scenarios, `npc.navigation.enabled: true` with the Citizens jar in `plugins/`), restart, then
+   from the console (or as an op): `knk scenario list`, `knk scenario run all` or
    `knk scenario run <name>`. Results are in the console and `logs/latest.log`; a player who starts a run sees them in
    chat too. The startup log warns while the switch is on. One run at a time. With the switch off the command doesn't
    exist ("Unknown command: scenario"). With nobody online, set `pause-when-empty-seconds=-1` in `server.properties`,
    or vanilla stops ticking the server after 60 s.
-2. **Like CI, on your machine** (JDK 25, `python3`, `unzip`): put `paper.jar` and the WorldEdit and WorldGuard jars in
-   an empty folder (`plugins/`), build with `./gradlew :knk-paper:shadowJar`, then
-   `tools/paper-boot/boot-test.sh --server-dir <folder> --plugin-jar knk-paper/build/libs/knk-paper-0.1.0-SNAPSHOT.jar --java <jdk25>/bin/java --scenarios`.
-   About 35 seconds; it prints the result table. Details: [CI § 7](ci.md#7-plugin-the-paper-boot-test).
+2. **Like CI, on your machine** (JDK 25, `python3`, `unzip`): put `paper.jar` and the WorldEdit, WorldGuard and
+   Citizens jars in an empty folder (`plugins/`; the pinned URLs are in the workflow's `env`), build with
+   `./gradlew :knk-paper:shadowJar`, then
+   `tools/paper-boot/boot-test.sh --server-dir <folder> --plugin-jar knk-paper/build/libs/knk-paper-0.1.0-SNAPSHOT.jar --java <jdk25>/bin/java --scenarios --npc-navigation`.
+   About three minutes with the NPC scenarios (the #521 corner walk alone takes 90 s); it prints the result table. Details: [CI § 7](ci.md#7-plugin-the-paper-boot-test).
 3. **In CI:** every push and pull request runs all scenarios in the `paper-boot` job ([CI § 7.1](ci.md#71-in-plugin-scenarios)).
    The job summary shows the table; the `paper-boot-log` artifact has the full log.
 
