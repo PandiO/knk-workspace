@@ -323,6 +323,47 @@ together: an old API refuses the table's search without `knk.admin.user.perm`.
    Staff, if it lacks `perm`), open the table: it loads and New / Edit are greyed out. Why manual: real permission
    resolution and the deployed API's gate.
 
+### 8.7 A permission group's own grants (#50)
+
+knk-web-api and knk-web-app branches `claude/group-grants-50` (PRs into `next`, not merged). Automated in CI
+(knk-web-app `e2e/group-grants.spec.ts`, Jest `permissionGrantClient.test.ts`, `permissionGroupClient.test.ts`,
+`userManagementClient.test.ts`, `groupPermissionsHelpers.test.ts`; knk-web-api `GroupGrantAuditTests`,
+`GroupGrantsPanelApiTests`, `PermissionGrantServiceTests`, `AuditLogServiceTests`,
+`AddAuditLogSubjectMigrationTests`); manual steps not run. Before testing: back up the database, deploy the API, run
+`dotnet ef database update` (migration `AddAuditLogSubject`), then deploy the web app.
+
+1. [automated] Dashboard → Permission Group → a group's detail page shows a Permissions panel with the group's own nodes
+   (Granted/Denied, expiry), how many players it reaches and a History list: `e2e/group-grants.spec.ts`.
+2. [automated] Grant and deny a new node; the expiry is empty (permanent) by default and no confirmation is asked:
+   `e2e/group-grants.spec.ts`.
+3. [automated] Edit then Save changes the expiry of the same row (one row per group and node, never a second):
+   `e2e/group-grants.spec.ts`, `GroupGrantAuditTests`.
+4. [automated] Changing Granted/Denied (row button or form) and Remove ask first with "This affects N players (members
+   of … and of N groups that inherit from it). Online players get the change within seconds."; Cancel sends nothing:
+   `e2e/group-grants.spec.ts`.
+5. [automated] `GET api/PermissionGroups/{id}/member-count` counts active members of the group and of every group
+   inheriting from it, each player once, and needs `knk.admin.user.manage`: `GroupGrantsPanelApiTests`.
+6. [automated] Each change leaves one audit entry with the group as subject and no target player; the group's History
+   (`GET api/audit-log?subjectType=PermissionGroup&subjectId=`) lists it, a player's audit log does not; player grant
+   audits are unchanged; erasing a player's data keeps the group's history: `GroupGrantAuditTests`,
+   `PermissionGrantServiceTests`, `AuditLogServiceTests`, `GroupGrantsPanelApiTests`.
+7. [automated] Without `knk.admin.user.perm` the panel is read-only with "Requires knk.admin.user.perm" and the History
+   still shows; the API's refusal (a group ranked at or above your own) is shown: `e2e/group-grants.spec.ts`.
+8. [automated] The migration only adds two nullable columns and an index and makes `TargetUserId` nullable:
+   `AddAuditLogSubjectMigrationTests`.
+9. Manual (real database): `dotnet ef database update` applies `AddAuditLogSubject` on a copy of the alpha database;
+   the player profile's Audit log of a known player still lists its old entries. Why manual: a real MySQL with real
+   data (CI's fresh-database job starts empty).
+10. Manual (real data, deployed together): as the owner, grant a test node (for example `knk.test.group`) on a test
+    group with one member, open that member's profile and refresh: Effective Permissions lists the node with the group
+    as its source; deny it, then remove it, and refresh again each time. The group's History lists the three changes
+    with you as "By". Why manual: real permission resolution on the deployed API.
+11. Manual (real plugin): with the member online, grant and remove a node they can try in game (for example a command
+    node): the change applies within seconds without a relog. Why manual: the game server and its realtime
+    connection (members of groups inheriting from the changed group: follow-up [#558](https://github.com/PandiO/knk-workspace/issues/558)).
+12. Manual (real rank): with a staff rank ranked below a group, open that group: saving a node shows "You can only
+    change groups ranked below your own." Why manual: real ranks and the deployed escalation guard.
+
 ## 9. Docs impact
 
 **#383:** this guide step 9c and the CHANGELOG entry ship with the branch. At merge, for the `documentation`
