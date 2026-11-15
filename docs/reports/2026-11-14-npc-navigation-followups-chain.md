@@ -44,7 +44,7 @@ Every link is merged into `next` (2026-11-15). Build knk-plugin from `next` `deb
 | L5 Fix: stair corner, ranks row at the landing | #592 | Merged into next (2026-11-15) | knk-plugin `011b1745` → `next` `8ad9df66`; knk-workspace `4a819546` → `next` `8bad205a` | PandiO/knk-plugin#43, PandiO/knk-workspace#599 | PR CI green on `011b1745` (build, paper-boot with 34 scenarios, both runs); Codex at its usage limit | create_session session_01R1w2UxAFomY5DQ18vRtAH6 (2026-11-15) |
 | L6 Fix: follower access with overlapping gate region | #593 | Running | — | — | — | create_session session_01R1w2UuimaZUvf6HRSGtpmp (2026-11-15) |
 | L7 Fix: test walkers drown (#490) | #594 | Dropped (#490 audit clean on the right build; #594 closed) | — | — | — | — |
-| L8 Design: movement quality (steering, formation keeping, crowding, plaza road lines) | #603 | In review (PR open; the developer approves before implementation) | knk-workspace `939ebd8` | PandiO/knk-workspace#605 | docs only (no CI) | create_session session_01R1w2Uv7BDN1HKCV2gWe5Mz (2026-11-15) |
+| L8 Design: movement quality (steering, formation keeping, crowding, plaza road lines) | #603 | In review (PR open; the developer approves before implementation) | knk-workspace `939ebd8` | PandiO/knk-workspace#605 | docs only (no CI); Codex at its usage limit | create_session session_01R1w2Uv7BDN1HKCV2gWe5Mz (2026-11-15) |
 
 ## 3. Coordinator decisions
 
@@ -479,7 +479,7 @@ _(Each link appends its block here when it finishes.)_
 3. **PRs.** PandiO/knk-workspace#605 (`Closes #603`, `Part of` #508, #493, #521, #522), base `next`. Not merged.
 4. **Tests, baseline → result.**
     1. knk-workspace: docs only. The relative links I added resolve (navigation DESIGN, configuration reference § 4.27, the knk-test-writer skill, the charter, the BEHAVIOR_MODEL anchor).
-    2. Known reds: none. Codex: no review comment yet when this block was written; any finding is handled on the PR.
+    2. Known reds: none. Codex: at its usage limit, so no review (said on the PR).
 5. **Decisions (DESIGN § 4.3).**
     1. *Where the design goes.* Chosen: Phase 7 "Movement quality" reworked in place, the earlier outline kept as 7.6, because the prompt names it and the work is movement quality. Alternatives: (a) a new Phase 4c (4b is closed scope); (b) a separate design file (the charter binds the plan).
     2. *Steering.* Chosen: corridor shaping of each ~32-block stretch (clearance by distance transform, look-ahead with body width plus clearance, string pulling, doorway alignment) before Citizens walks it: per-stretch cost, shared by NPCs on the same stretch, pure knk-core over `NavWorld`. Alternatives: (a) a K&K step controller (per-tick steering, new port; kept as the fallback in 7.6); (b) ORCA or velocity obstacles (per-tick velocity control, doorway deadlocks, built for colliding agents); (c) flow fields (one per goal); (d) more corner rules (straights and funnels stay unsolved).
