@@ -47,7 +47,7 @@ Every link is merged into `next` (2026-11-15). Build knk-plugin from `next` `deb
 | L8 Design: movement quality (steering, formation keeping, crowding, plaza road lines) | #603 | Merged into next (2026-11-15; design decided by the developer, 15 questions) | knk-workspace `e8836db0` → `next` `61c29c16` | PandiO/knk-workspace#605 | docs only (no CI); Codex at its usage limit | create_session session_01R1w2Uv7BDN1HKCV2gWe5Mz (2026-11-15) |
 | M1 Evidence and diagnostics | #621 | Merged into next (2026-11-15) | knk-plugin `3ce748e0` → `next` `a527c980`; knk-workspace `1310c3d9` → `next` `a8dbfa80` | PandiO/knk-plugin#47, PandiO/knk-workspace#632 | PR head green (build, paper-boot with 45 scenarios, both runs); Codex at its usage limit | create_session session_01R1w2Uv6Untjy5RbmJTDd1T (2026-11-15) |
 | M2 Corridor steering (option A) | #622 | Merged into next (2026-11-15) | knk-plugin `4e247835` → `next` `0fa74a67`; knk-workspace `a837776d` → `next` `8927eab2` | PandiO/knk-plugin#48, PandiO/knk-workspace#633 | PR head green (build, paper-boot with 45 scenarios, both runs); Codex at its usage limit | create_session session_01R1w2UszyqgMVxpBHaUa2oH (2026-11-15) |
-| M6 Clearance-aware local legs (add-on D) | #623 | Running | — | — | — | create_session session_01R1w2UuwfDNhwngWZJue8wZ (2026-11-15) |
+| M6 Clearance-aware local legs (add-on D) | #623 | In review (PRs open, not merged) | knk-plugin `8fa83e09`; knk-workspace `f65d3c6` | PandiO/knk-plugin#49, PandiO/knk-workspace#634 | PR head green (build, paper-boot with 45 scenarios); Codex at its usage limit | create_session session_01R1w2UuwfDNhwngWZJue8wZ (2026-11-15) |
 | M3 Formation keeping | #624 | Not started (gate: M6 merged) | — | — | — | — |
 | M5 Plaza lines | #625 | Not started (gate: M3 merged) | — | — | — | — |
 | M4 Crowd awareness | #626 | Not started (gate: M5 merged); then the option-B checkpoint | — | — | — | — |
@@ -790,3 +790,82 @@ _(Each link appends its block here when it finishes.)_
         2. `ShapedLine.freeWidths()` has it per shaped waypoint.
         3. Group members are kept off the corridor by `NavGroupService` → `NpcNavigationService.setUnshapedMembers`. Remove that when the group path uses the corridor; then build the group path from the leader's shaped line.
     3. `FreeWidth.at` (M1's trace) still uses its own grid walk. `Corridor.freeWidth` gives the same answer inside a corridor.
+
+### 4.11 M6 — Clearance-aware local legs and recovery, add-on D (#623)
+
+1. **Scope done** (plan 4c.4 item 6 and decision 8, add-on D; behind the new key `local-legs-clearance: false`, and `npc.navigation.enabled` stays off by default; with the key off nothing changes but three new counters).
+    1. **One place for every local leg.** Short trips, the hops to and from the road, a follower's own leg back (`NavGroup.rejoin` is a navigation order of its own) and the ladder's local leg all go through `NpcNavigationService.planHop`. Once the leg's capture and access are ready (`LocalLegPreparer`), K&K searches the leg itself when the key is on.
+    2. **knk-core `corridor/LocalLegSearch`.**
+        1. *Grid.* A `Corridor` round the straight line from the NPC to the hop, flooded from both ends with floor continuity. It is 6 blocks either side; a longer leg gets half its length plus 2, at most 12, so a turn round a corner fits. WorldGuard regions don't shape it: `Corridor.build(world, feet, halfWidth, anyRegion)` is a new, additive overload, and the leg's `CellAccess` decides where the NPC may go.
+        2. *Search.* A* over the corridor cells: 8 directions, a diagonal only past two open flanking cells within a step, at most 2048 cells expanded. A cell is entered only when `LocalLeg.allows` it (the subject's gate, door and region verdicts, the captured box) and its centre keeps the body's half width (0.3; a one-block door keeps 0.5). Entering costs the length, the access's own extra cost, and 5 per block of clearance the cell lacks to `wall-clearance`.
+        3. *Smoothing* (Theta*-style, on the result). From each anchor, take the furthest path cell whose straight step stays in the corridor with floor continuity (`Corridor.reach`), keeps L5's rule (`NavGeometry.straightWalkable`), passes only allowed cells (the body's corners too), and keeps the least clearance of the cells it replaces (at most `wall-clearance`; within 0.75 block of its ends, the end cell's own, so a leg can start beside a wall). The last waypoint is the hop's own point.
+    3. **Wiring.**
+        1. The mover walks a found leg as a waypoint list (`follow`, `waypoint-margin`).
+        2. A watchdog watches progress along it every 20 ticks, because waypoint lists report no stuck (NAV-17). It opens a stuck spell after `no-progress-ticks`; while a recovery try runs, `supervise` judges it as before.
+        3. The rule recheck reads the leg's waypoints instead of the engine's `pathAhead`.
+        4. When K&K finds nothing, the engine's search walks the leg as before, with a log line `… local leg from … to …: K&K found no path (reason, cells), the engine searches`.
+    4. **Counts.** Events `LOCAL_LEG_KNK`, `LOCAL_LEG_ENGINE` and `LOCAL_LEG_NONE` (an engine leg is counted `engine` once its search answered, `none` when it reported no path). `/knk npc nav stats` has `local legs: k&k N, engine N, none N`; `NpcNavigationService.localLegs()` has the search counters (searches, found, cells, nanoseconds, reads).
+    5. **Key.** `local-legs-clearance` (false) in `NavigationSettings` with its `config.yml` comment; `NpcNavigationService.Settings` gains the component, and a 14-argument constructor keeps the old callers.
+    6. **Scenarios** (no existing check lowered).
+        1. `npc-stuck-ladder` runs with the key on. A new check: freed by the local leg, `LOCAL_LEG_KNK ≥ 1`, no engine leg, no `none`, no `recovery_no_path`. A new report line.
+        2. `npc-stairhouse-singles` runs with the key on, collision off and on. A new check: no `none`, no `recovery_no_path`.
+        3. Every movement report line gains `local legs k&k N, engine N, none N`. The scenario count stays 45.
+    7. **knk-workspace.**
+        1. The changelog entry with the YAML.
+        2. Configuration reference § 4.27 and § 2.1 (the #622 row now says in `next`).
+        3. Plan 4c.4 item 6.4: status, before → after and the developer test.
+        4. `plugin-scenarios.md` § 2 item 3 and § 7, `ci.md` § 7.
+2. **Commits and heads.**
+    1. knk-plugin `claude/npc-movement-m6` at `8fa83e09`: 3 commits on `next` `0fa74a67`, which is still the head of `next`.
+    2. knk-workspace `claude/npc-movement-m6` at `f65d3c6`: 1 docs commit on `next` `8927eab`, still its head.
+3. **PRs.** PandiO/knk-plugin#49 (`Closes` #623) and PandiO/knk-workspace#634 (`Part of` #623), base `next`. Not merged.
+4. **Tests, baseline → result.**
+    1. knk-plugin `./gradlew build -x deployToDevServer`.
+        1. Baseline on `next` `0fa74a67`: core 2853, api-client 344 (2 skipped), paper 2852 (18 skipped).
+        2. Result: core 2866 (+13), api-client 344, paper 2853 (+1), 0 failures.
+        3. New tests:
+            1. `LocalLegSearchTest` 7: the margin past a jagged wall, a one-block door, floor continuity round a ledge corner, a step up and down, a denied region (no leg into it, a detour round a denied patch), the leg's box, the cell budget and the reads.
+            2. `NpcNavigationLocalLegsTest` 6: key off is the engine's; key on walks K&K's waypoints round a post; the fallback and `none`; `engine` counted once; the watchdog opens a spell without progress, and none with progress.
+            3. `NpcNavigationConfigTest` +1: the key in every layer.
+    2. Scenarios, local (Paper 26.3 b205, WorldEdit 7.4.6, WorldGuard 7.0.20, Citizens b4269, `--min-scenarios 45 --npc-navigation`).
+        1. Baseline on `next`: 45/45.
+        2. Branch: 45/45 on two runs.
+        3. A key-off run of the same build (the two scenarios' key set to false locally, not committed) failed only the new `npc-stuck-ladder` check, with `engine 1`. The check tells the two apart.
+    3. CI on PandiO/knk-plugin#49: `build` and `paper-boot` green on the PR head `8fa83e09` (runs 43771719471, 43771719446; 45/45 scenarios, log check passed), and on the earlier push of `claude/npc-movement-m6` (43769751783, 43769751784); #586 did not hit.
+    4. Known reds: none. Codex: at its usage limit on both PRs (said on both); finished without it.
+5. **Before (key off) → after (key on)**, the same build, local runs; collision off / on where the scenario has both.
+    1. `npc-stuck-ladder` (no collision variant).
+        1. Freed: by the local leg both times (back-off 0, side-step 0, local leg 1, replan 0, not freed 0); 2 steps per spell.
+        2. The ladder's local leg: `engine 1` → `k&k 1, engine 0, none 0`.
+        3. `recovery_no_path`: 0 → 0.
+        4. K&K's search: 1 search, found, 3 cells expanded, 6.6 ms (the first search in the server, JIT included).
+    2. `npc-stairhouse-singles` (12 both ways).
+        1. Local legs: `engine 4` → `k&k 4, engine 0, none 0`, both settings.
+        2. `recovery_no_path`: 0 → 0. Stuck spells: 0 → 0.
+        3. Arrived: 12/12 → 12/12.
+        4. Trips, mean and longest: 6.8 s and 7.6 s → 6.8 s and 7.3 s (off); 7.2 s and 8.1 s → 7.2 s and 8.1 s (on).
+        5. Longest still single: 0.5 → 0.4 s (off); 0.6 → 0.8 s (on). The check allows 3 s.
+        6. Whole K&K nav figure: 0.158 / 0.075 → 0.027 / 0.014 ms per NPC per tick. This is mostly start-up noise of the first runs in a server, not this link.
+    3. Unchanged elsewhere (key off): `npc-doorway-crowd` gives exactly the baseline's numbers in every run, including its one failed trip with collision off (11/12, report mode, M4's). It walks 17 / 13 engine legs, a place where the key could be tried later.
+6. **Decisions (DESIGN § 4.3).**
+    1. *The walk grid.* Chosen: the leg's `Corridor` cells, the NPC's walk grid on the `NavWorld` port, with the same floor rules as M2 and L5. The leg's `CellAccess` is the same verdict object `WalkSearch` reads. Alternatives: (a) `core/roads/walk/WalkSearch` on the walk capture's `WalkTerrain` with a clearance `CellAccess`. That needs the terrain carried in `LocalLeg` and a second world model next to `NavWorld`, and the scenarios' leg preparer (`ScenarioNpcs`) has no capture, so the scenarios couldn't run it. (b) A new grid of its own (duplicates the corridor's distance transform). The plan names `WalkPathfinder`; this is for the developer to confirm.
+    2. *Where it runs.* Chosen: the main thread, when the prepared leg is handed over, bounded by the cell budget (2048). Alternatives: (a) the walk executor (needs the corridor's world reads taken on the main thread first; more moving parts); (b) no budget (an unreachable target would search the whole corridor).
+    3. *Corridor width.* Chosen: 6 either side, half the leg's length plus 2 for longer legs, at most 12. At a fixed 6, an L-shaped leg round a corner failed in a test. Alternatives: (a) `corridor-half-width` (4, too narrow for a detour); (b) the whole capture box (more reads for every leg).
+    4. *Regions.* Chosen: the corridor ignores regions (`anyRegion`) and the leg's access decides. Alternatives: (a) M2's rule, a region set one of the line's ends has, which would block legs that cross a third region the NPC may enter.
+    5. *Clearance cost.* Chosen: 5 per block lacking to `wall-clearance`, so only cells right beside a wall cost more (+1.5 at 0.8), and a leg moves a block off a wall where there is room. Alternatives: (a) WalkSearch's flat `wallCost` (ignores how close); (b) a hard `wall-clearance` minimum (closes 1-wide doors and 2-wide passages).
+    6. *Drops.* Chosen: none; a step is at most one block up or down (L5's floor continuity). Alternatives: (a) drops of 2–3 blocks like player navigation (L5 keeps NPCs on their floor).
+    7. *Counting `none`.* Chosen: an engine leg counts `none` when the engine reports no path, else `engine` once it arrived, got stuck otherwise or the order moved on. Alternatives: (a) count `engine` at hand-over and `none` as a subset (the three would not add up to the legs).
+    8. *Watchdog.* Chosen: progress means the leg's remaining length (nearest point, then along it) shrinks by 0.5 block between looks; after `no-progress-ticks` without, a spell opens like on the line. Alternatives: (a) distance to the hop only (a detour round a wall looks like no progress).
+    9. *Scenario variants.* Chosen: the two named scenarios turn the key on in place; the "before" numbers come from a local key-off run of the same build. Alternatives: (a) key-off variants in CI (more CI time, the job is near its timeout).
+7. **Out of scope, noted.**
+    1. `npc-doorway-crowd` walks 13–17 engine legs with the key off; trying the key there belongs to M4 (crowding), whose scenario it is.
+    2. The group of 9 on the jagged straight with collision off is still unsteady (5 stuck spells, 1 lost, as in M2's runs); it walks no local legs, so it is M3's (as M2 noted).
+8. **Blockers.** None.
+9. **At merge / what the developer must do.**
+    1. `config.yml`: add `local-legs-clearance: false` under `npc.navigation` (YAML in the changelog and § 4.27). No migration.
+    2. The developer test is on #623 (comment 6902738383): `quarry-to-keep` with 50 singles and a group of 20, with the key on.
+    3. Confirm decision 6.1 (the corridor grid instead of `WalkSearch`), or ask for alternative (a).
+10. **Notes for later links.**
+    1. **M3 (formations):** the corridor API is unchanged apart from the additive `Corridor.build(…, anyRegion)`. Group members still walk the unshaped line; a follower's own leg back is a K&K leg when the key is on.
+    2. **M4 (crowding):** `LocalLegSearch.Grid.extra` is where an occupancy cost per cell would go; the leg avoids a cell when its access cost rises.
+    3. **M7 (collision):** a pushed NPC's walk back can use `LocalLegSearch` directly (it needs only `NavWorld`, a `LocalLeg` and `wall-clearance`).
