@@ -25,8 +25,8 @@
 | L3 "Show what uses it" for more refusals | #289 | Merged into next (2026-11-15) | api `98f0c91`, web-app `41c75ca`, workspace `d833cb0a`; next: api `378921c6`, app `2dfd5883`, ws `e8a4e1e8` | [web-api#34](https://github.com/PandiO/knk-web-api/pull/34), [web-app#39](https://github.com/PandiO/knk-web-app/pull/39), [#579](https://github.com/PandiO/knk-workspace/pull/579) | green (PR runs); next: app run 43707033299 pending | subagent (decision 13) |
 | L4 Builder rules and templates into the draft | #291 | Merged into next (2026-11-15) | api `a851436`, web-app `0d604fe`, workspace `4fa25605`; next: api `93c3d50f`, app `cd730f29`, ws `0ca9b1b6` | [web-api#35](https://github.com/PandiO/knk-web-api/pull/35), [web-app#40](https://github.com/PandiO/knk-web-app/pull/40), [#583](https://github.com/PandiO/knk-workspace/pull/583) | green (PR runs 43711458740/43711458686 api, 43711488807/43711488760 web) | subagent (two component repos, § 4.1.4); resumed once after a usage-limit stop |
 | L5 Lookup applies picker filters | #288 | Merged into next (2026-11-15) | api `95a2954`, web-app `9d82786`, workspace `b1d270f1`; next: api `d8514ed4`, app `990af482`, ws `c6e017ad` | [web-api#36](https://github.com/PandiO/knk-web-api/pull/36), [web-app#41](https://github.com/PandiO/knk-web-app/pull/41), [#587](https://github.com/PandiO/knk-workspace/pull/587) | green (PR runs 43714699624/43714699597 api, 43714715547/43714715574 web) | subagent (two component repos, § 4.1.4) |
-| L6 Player profile API part | #565 | Done, in review (2026-11-15) | api `9442502`, web-app `7051b52`, workspace `27d3065a` | [web-api#37](https://github.com/PandiO/knk-web-api/pull/37), [web-app#42](https://github.com/PandiO/knk-web-app/pull/42), [#595](https://github.com/PandiO/knk-workspace/pull/595) | green (PR runs 43720314230/43720314231 api, 43720332163/43720332129 web) | subagent (two component repos, § 4.1.4) |
-| L7 Plugin carries out web kick/ban | #574 | Not started | — | — | — | — |
+| L6 Player profile API part | #565 | Merged into next (2026-11-15) | api `9442502`, web-app `7051b52`, workspace `27d3065a`; next: api `5e10185f`, app `98e108f0`, ws `9c1c06f2` | [web-api#37](https://github.com/PandiO/knk-web-api/pull/37), [web-app#42](https://github.com/PandiO/knk-web-app/pull/42), [#595](https://github.com/PandiO/knk-workspace/pull/595) | green (PR runs 43720314230/43720314231 api, 43720332163/43720332129 web) | subagent (two component repos, § 4.1.4) |
+| L7 Plugin carries out web kick/ban | #574 | Running (2026-11-15) | — | — | — | create_session session_01R1w2Uu1AmsiThCTqfZPnFG |
 
 ## 3. Coordinator decisions
 
@@ -126,6 +126,20 @@
     colours branch (#260), which claims `UsersController`/`UserService`/`UserDtos`, is fully in `next` (0 ahead), and
     the staff chain's #407 is merged. Subagent route; the developer's kick/ban decisions are in the prompt, and L6 must
     write the realtime event contract for L7.
+22. **L6 check and merge (2026-11-15).** Chosen: merge knk-web-api#37, knk-web-app#42 and knk-workspace#595 into
+    `next`, because § 6 held: heads match, branches contain `next`, CI green on both code PRs (incl. `fresh-database`
+    for the data-only migration `SeedStaffKickBanNodes`), no review threads, Codex at its usage limit, scope inside
+    #565 and the developer's kick/ban decisions, 62 new xUnit, 27 Jest, 11 Playwright tests. I read the moderation
+    controller and the rank guard: `RequirePermission` per node, web users only, self/no-account/rank refusals, the
+    migration reuses the freeze seed helper. L6's own moderation choices beyond the decisions (logged in § 4.6, listed
+    for the developer): offline kick refused (409); kick/ban refused while no game server is connected (503, the
+    realtime layer has no replay); a new rank check for kick/ban only (freeze unchanged); `knk.kick`/`knk.ban` are not
+    under `knk.admin`, so Admin gets them through Staff inheritance or `*`, not `knk.admin.*` as my #565 comment said.
+    All are reversible. Alternatives: (a) hold the merge and ask the developer first: they are conservative
+    (refusing, not acting) and the developer reviews at promotion.
+23. **L7 start.** Gate open (L6 0 commits ahead of `next`). Route `create_session` (knk-workspace plus knk-plugin, one
+    component repo; § 4.1.4 allows it); knk-plugin push for this link only. Overlap: no unmerged recent plugin branch
+    changes `paper/realtime/` or `KnKPlugin.java`; the NPC follow-ups chain is in `paper/npc/`.
 
 ## 4. Link blocks
 
