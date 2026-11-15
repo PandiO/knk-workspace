@@ -4,6 +4,37 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Staff player profile, API part: frozen state in the summary, unfreeze reason, game sessions, search filters; kick and ban from the web**
+  ([PandiO/knk-workspace#565](https://github.com/PandiO/knk-workspace/issues/565), part of #119; developer decisions
+  2026-11-15 on kick and ban; link L6 of the Chain 3 follow-ups chain, [#564](https://github.com/PandiO/knk-workspace/issues/564))
+  — knk-web-api, knk-web-app and knk-workspace branches `claude/player-profile-api-119` (PRs into `next`, in review,
+  not merged). For players: staff can now kick and ban them from the web app (carried out by the game server once
+  knk-plugin link L7, [#574](https://github.com/PandiO/knk-workspace/issues/574), is in).
+  1. **Frozen state from the summary.** `GET api/users/{id}/profile-summary` carries `frozenAt`, `frozenByUserId` and
+     `frozenByUsername` next to `isFrozen` / `frozenReason`; the profile's frozen banner reads them and no longer
+     reads the user and the audit log on every load.
+  2. **Unfreeze reason.** `PUT api/Users/{id}/unfreeze` takes an optional `{ "reason" }`, written into the
+     `PlayerUnfrozen` audit entry; the profile's unfreeze confirm asks for it (optional).
+  3. **Game sessions in the timeline.** New `GET api/statistics/users/{id}/sessions?page=&pageSize=`
+     (`knk.admin.user.manage`), newest first; the profile timeline shows them ("Played on {server}", end reason, active
+     time) with a **Game sessions** chip.
+  4. **Moderation search.** `POST api/Users/search` takes `online`, `frozen` and `paymentsLocked` filters, sorts by
+     `lastseenat` and `experiencepoints`, and matches a UUID with or without dashes; list rows carry `isFrozen`,
+     `paymentsLocked` and `createdAt`. Moderation → All players has Online / Frozen / Payments selects (in the URL),
+     sortable Last seen and XP, Frozen / Payments locked chips and a Created column.
+  5. **Kick and ban from the web.** `POST api/Users/{id}/kick` (`knk.kick`, reason optional, player must be online) and
+     `POST api/Users/{id}/ban` (`knk.ban`, reason required; permanent on the game server's ban list, unban is `/pardon`
+     in game). Audited (`PlayerKicked`, `PlayerBanned`) and sent to the game servers as realtime `PlayerKick` /
+     `PlayerBan` v1 ([contract](specs/realtime-signalr/DESIGN.md)); refused for oneself, an account without
+     Minecraft, a player ranked at or above the caller, a kick of an offline player (409) and while no game server is
+     connected (503). Kick and Ban buttons on the profile (status strip and Moderation tab), greyed out with
+     "Requires knk.kick / knk.ban" without the node.
+  6. Docs: [smoke test § 7](guides/player-profile-smoke-test.md) (and § 2.2, 2.5, 3.1), realtime DESIGN § 6.10 (the
+     event contract for L7), web-api architecture § 5.7, web-app architecture (staff player profile, moderation search).
+  - **Admin steps:** apply the migration `SeedStaffKickBanNodes` (gives the Staff group `knk.kick` and `knk.ban`; data
+     only). Deploy the **API first** (or together): an older API has no sessions, kick or ban endpoints (the web app's
+     timeline then names the sessions as not loaded, and Kick/Ban answer 404). Kick and ban only take effect in game
+     once knk-plugin with L7 (#574) is deployed with `realtime.enabled: true`.
 - **Plugin: the plain `/heal` is K&K's also on servers with WorldGuard**
   ([PandiO/knk-workspace#580](https://github.com/PandiO/knk-workspace/issues/580); developer decision 2026-11-15:
   option 1) — knk-plugin and knk-workspace branches `claude/heal-takeover-580` (PRs into `next`).

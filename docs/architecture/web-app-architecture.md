@@ -1,6 +1,6 @@
 # knk-web-app — Architecture
 
-**Status:** Current · **Last updated:** 2026-11-15 (relation picker: lookup mode sends the field's filters, #288 in review); 2026-11-15 (form builder: validation rules in the draft, #291 in review); 2026-11-15 ("Show what uses it" on Entity setup's configuration delete, bulk delete rows and a cancelled form's "skipped: in use", #289, knk-web-app#39 in `next`); 2026-11-15 (§ Staff permission screens: PermissionGrant table, group Permissions panel, profile Effective Permissions card; #408, #50, #407 in knk-web-app `next`, docs #576)
+**Status:** Current · **Last updated:** 2026-11-15 (staff player profile: frozen state from the summary, unfreeze reason, game sessions, Kick and Ban, moderation search filters; #565 in review); 2026-11-15 (relation picker: lookup mode sends the field's filters, #288 in review); 2026-11-15 (form builder: validation rules in the draft, #291 in review); 2026-11-15 ("Show what uses it" on Entity setup's configuration delete, bulk delete rows and a cancelled form's "skipped: in use", #289, knk-web-app#39 in `next`); 2026-11-15 (§ Staff permission screens: PermissionGrant table, group Permissions panel, profile Effective Permissions card; #408, #50, #407 in knk-web-app `next`, docs #576)
 **Checked against:** knk-web-app `next` (per section; each section names its commit). Updated in place on each rescan.
 **Source scan:** `docs/reports/web-app-scan-2026-09-18.md`
 
@@ -582,36 +582,47 @@ Stay) and a reload or closing the tab gets the browser's question; success is a 
   are not counted.
 
 **Staff player profile** (`pages/admin/PlayerProfilePage.tsx` + `pages/admin/playerProfile/`, `/admin/users/:id`; #119,
-web part merged 2026-11-12; the API part of #119 is not merged):
+web part merged 2026-11-12; the API part, #565, in review on `claude/player-profile-api-119`):
 - **Status strip** (`PlayerStatusStrip`): chips for online / last seen (live through `PresenceChanged`, #183), no
   Minecraft account, mode, **Frozen**, **Payments locked**, premium tier, Deactivated, Not admitted, Minecraft-only and
-  Email not verified, with **Freeze** / **Unfreeze** and Reload. While frozen a banner says since when, by whom (the latest
-  `PlayerFrozen` audit entry) and why (`frozenReason`).
-- **Freeze** (`usePlayerFreeze`): the frozen state comes from `GET api/Users/{id}` (`isFrozen`, `frozenReason`; the
-  profile summary doesn't carry it). Freeze asks a required reason (max 200) in `confirmWithReason` and calls
-  `PUT api/Users/{id}/freeze` (`knk.freeze`); Unfreeze is a plain confirm and `PUT …/unfreeze` (`knk.unfreeze`), which
-  takes no reason yet. `UNFREEZE_TAKES_REASON` switches the confirm to an optional reason once the API stores one.
+  Email not verified, with **Freeze** / **Unfreeze**, **Kick**, **Ban** (#565, only for an account with a UUID) and
+  Reload. While frozen a banner says since when, by whom and why (`frozenAt`, `frozenByUsername`, `frozenReason` of the
+  summary's account; an older API without `frozenAt` shows the reason only).
+- **Freeze** (`usePlayerFreeze`): since #565 the frozen state comes with the profile summary (`freezeStateOf(account)`),
+  so a profile load makes no `GET api/Users/{id}` and no `PlayerFrozen` audit lookup; `reload` re-reads the summary.
+  Freeze asks a required reason (max 200) in `confirmWithReason` and calls `PUT api/Users/{id}/freeze` (`knk.freeze`);
+  Unfreeze asks an optional reason (`UNFREEZE_TAKES_REASON = true`) and calls `PUT …/unfreeze` (`knk.unfreeze`) with
+  `{ reason }` or no body.
+- **Kick and Ban** (`usePlayerKickBan`, #565): `confirmWithReason` with an optional reason (kick) or a required one
+  (ban, the dialog says it is permanent and lifted with `/pardon` in game), max 200; `POST api/Users/{id}/kick`
+  (`knk.kick`) / `…/ban` (`knk.ban`); a toast on success, the API's refusal (409 not online, 503 no game server, 403
+  rank) in an error toast. The game server carries it out (knk-plugin, #574).
 - **Tabs** (`ProfileTabs`, an ARIA tablist with arrow keys; `?tab=` through `useTabParam`, default Overview): Overview
   (account, title, premium, statistics), Economy (payment lock, Adjust balance, salary, kits, balance history),
-  Permissions (groups, effective permissions: § Staff permission screens), Moderation (freeze, mode, admission/web login, a note that kick and ban are
-  game commands), Activity (timeline, audit log, discoveries), Privacy (private messages, data deletion). Only the open tab
+  Permissions (groups, effective permissions: § Staff permission screens), Moderation (freeze, mode, admission/web login,
+  Kick and ban with Kick… / Ban…), Activity (timeline, audit log, discoveries), Privacy (private messages, data deletion). Only the open tab
   is mounted, so a panel's requests run when its tab opens.
 - **Timeline** (`PlayerTimeline`, `utils/playerTimeline.ts`): `TimelineMerger` merges the audit log about the player
-  (`GET api/audit-log?targetUserId=`) and, with `knk.admin.currency.history`, the balance ledger
+  (`GET api/audit-log?targetUserId=`), the game sessions (`GET api/statistics/users/{id}/sessions`, #565; placed at
+  their start, "Played on <server>" / "In game on <server>") and, with `knk.admin.currency.history`, the balance ledger
   (`GET api/currency/admin/ledger?userId=`), newest first, 25 per "Load older"; an event is shown only once every source
   that has rows left has one at least as old. Filter chips per category (Moderation, Economy, Permissions, Progress,
-  Account). Game sessions are not in it (no read endpoint).
+  Game sessions, Account).
 - **Audit log** (`PlayerAuditLog`): `DataTable` + `Pager`, paged by the server (25 per page) with an action filter.
 - **Actions without their node** are disabled with "Requires <node>" (`hooks/useActionGate.ts`, #280's rule):
-  `knk.freeze`, `knk.unfreeze`, `knk.admin.user.group`, `knk.admin.user.perm`, `knk.kit.give`, `knk.admin.currency.lock`.
+  `knk.freeze`, `knk.unfreeze`, `knk.kick`, `knk.ban`, `knk.admin.user.group`, `knk.admin.user.perm`, `knk.kit.give`,
+  `knk.admin.currency.lock`.
 - **Live:** an `EntityChanged` for this `User` from someone else (a freeze in game, another staff member) re-reads the
-  summary, the frozen state, the payment lock and the activity.
+  summary (with the frozen state), the payment lock and the activity.
 - **Robustness:** `normalizeProfileSummary` fills in a summary without groups, permissions, title or salary (an older
   API, a thin account) instead of crashing; "Back" is the layout's breadcrumb (no `navigate(-1)`).
 
 **Moderation player search** (#119 MOD-5, `UserModerationPage` "All players"): the term (username, email or UUID, a
 substring on the server) is sent trimmed, and a whole UUID without dashes gets its dashes (`utils/playerSearch.ts`).
-Username, Email and Coins sort on the server (`sortBy`/`sortDescending`; `aria-sort`). Term, page and sort are in the URL
+Username, Email, Last seen, Coins and XP sort on the server (`sortBy`/`sortDescending`, keys `lastseenat` and
+`experiencepoints` since #565; `aria-sort`). Since #565: **Online**, **Frozen** and **Payments** selects (Any / yes / no)
+send the API's `online`, `frozen`, `paymentsLocked` filters and stay in the URL (`?online=true&frozen=false`); rows show
+Frozen and Payments locked chips and a Created column. Term, page and sort are in the URL
 (`?q=&page=&sort=&dir=`, replace) so Back from a profile returns to them. **Recently opened** lists this viewer's last 8
 profiles (`utils/recentPlayers.ts`, localStorage per account, this browser only).
 

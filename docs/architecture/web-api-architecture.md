@@ -1,6 +1,6 @@
 # knk-web-api — Architecture
 
-**Status:** Current · **Last updated:** 2026-11-15 (lookups take the picker's narrowing filters, #288 in review); 2026-11-15 (§5.5: validation rules in the builder draft, add-from-template endpoints removed; #291 in review); 2026-11-15 (§5.4: "Show what uses it" for form configurations and `?all=true`, #289, knk-web-api#34 in `next`); 2026-11-15 (§5.2 grant reads, §5.6 permission grants, group member count and the generic audit subject; #408, #50 in `next`, docs #576)
+**Status:** Current · **Last updated:** 2026-11-15 (§5.7: player profile API part, kick and ban from the web, #565 in review); 2026-11-15 (lookups take the picker's narrowing filters, #288 in review); 2026-11-15 (§5.5: validation rules in the builder draft, add-from-template endpoints removed; #291 in review); 2026-11-15 (§5.4: "Show what uses it" for form configurations and `?all=true`, #289, knk-web-api#34 in `next`); 2026-11-15 (§5.2 grant reads, §5.6 permission grants, group member count and the generic audit subject; #408, #50 in `next`, docs #576)
 
 ## 1. Stack & shape
 
@@ -421,6 +421,43 @@ have not run yet. Web app side: [web-app architecture § Staff permission screen
 - **Known gaps:** members of groups inheriting from the changed group and changes made while realtime is down reach
   the plugin late ([#558](https://github.com/PandiO/knk-workspace/issues/558)); effective permissions carry no expiry
   ([#568](https://github.com/PandiO/knk-workspace/issues/568)).
+
+### 5.7 Player profile API part, kick and ban from the web (PandiO/knk-workspace#565; in review)
+
+Link L6 of the Chain 3 follow-ups chain, branch `claude/player-profile-api-119` (PR into `next`).
+
+1. **Unfreeze reason:** `PUT api/Users/{id}/unfreeze` takes an optional body `{ "reason" }`
+   (`EmptyBodyBehavior.Allow`, so the plugin's body-less call still works); `UserService.SetFrozenAsync` writes the
+   trimmed reason (blank = null) into the `PlayerUnfrozen` audit details. The user row keeps no reason once unfrozen;
+   `UserFrozenChanged` is unchanged (reason null on unfreeze).
+2. **Profile summary:** `UserProfileSummaryDto.Account` is a `ProfileAccountDto` (a copy of `UserDto` plus
+   `frozenAt`, `frozenByUserId`, `frozenByUsername`), filled from the `User` row; the three fields are always written
+   (null while not frozen) so a client can tell this API from an older one. `GET api/Users/{id}` (`UserDto`) is
+   unchanged.
+3. **Game sessions:** `GET api/statistics/users/{id}/sessions?page=&pageSize=` (`RequirePermission(knk.admin.user.manage)`,
+   read category U) returns `PagedResultDto<PlayerSessionDto>` (`sessionKey`, `startedAt`, `endedAt`, `endReason`
+   `Quit`/`ServerStop`/`Kick`/`Timeout`, `serverId` = `PlayerStatSession.ServerName`, `activeSeconds`), newest start
+   first, merged accounts included (`StatisticsQueryService.GetSessionsAsync`, the `(UserId, StartedAt)` index), page
+   size 1–100. The player's visibility settings don't apply (staff only).
+4. **Player search** (`POST api/Users/search`, `UserRepository.SearchAsync`): filters `online`, `frozen`,
+   `paymentsLocked` (`"true"`/`"false"`, anything else ignored; payments locked = `TransferLockedAt` set); sort keys
+   `lastseenat` and `experiencepoints` (id as tie-break); the `uuid` filter and the search term match a UUID with or
+   without dashes (`REPLACE(Uuid, '-', '')` on MySQL). `UserListDto` adds `isFrozen`, `paymentsLocked`, `createdAt`.
+5. **Kick and ban** (developer decisions 2026-11-15): `Controllers/PlayerModerationController.cs` (route `api/Users`)
+   `POST {id}/kick` (`RequirePermission(knk.kick)`, reason optional) and `POST {id}/ban` (`RequirePermission(knk.ban)`,
+   reason required), at most 200 characters, web users only. `Services/PlayerModerationService.cs` checks, in order:
+   reason, user exists (404), not oneself (400 `CannotModerateSelf`), has a UUID (400 `NoMinecraftAccount`), rank
+   (`PermissionEscalationGuard.CanModerateUserAsync`: the target's highest group weight must be below the caller's; a
+   player in no group can always be acted on; `*` holders act on anyone and can't be acted on by others; 403
+   `EscalationRefused`), kick only: online (`User.IsOnline`, else 409 `PlayerNotOnline`), at least one game server
+   connected to the hub (`RealtimeConnections`, else 503 `NoGameServerConnected`). Then it audits `PlayerKicked` (63)
+   / `PlayerBanned` (64) with `{ reason, actionId, uuid, username, permanent?, gameServers }` and publishes
+   `PlayerKick` / `PlayerBan` v1 to every game server; answer 202 `{ actionId, userId, gameServers }`. The event
+   contract and its delivery limits: [realtime DESIGN § 6.10](../specs/realtime-signalr/DESIGN.md). The API keeps no
+   ban state; the game server's ban list does (knk-plugin, #574).
+6. **Nodes and seed:** `StaffPermissions.Kick` = `knk.kick`, `StaffPermissions.Ban` = `knk.ban` (not children of
+   `knk.admin`). Migration `20261115125459_SeedStaffKickBanNodes` grants both to the **Staff** group, skipping what
+   the group's chain already decides (as `SeedStaffFreezeNodes`); data only, Down removes nothing.
 
 ## 6. Talks to knk-plugin
 
