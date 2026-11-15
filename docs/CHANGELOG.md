@@ -4,6 +4,32 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **NPC navigation: clearance-aware local legs, off by default** ([PandiO/knk-workspace#623](https://github.com/PandiO/knk-workspace/issues/623),
+  link M6 of the NPC navigation follow-ups chain, implementation plan Phase 4c.4 item 6, decision 8, add-on D).
+  knk-plugin and knk-workspace branches `claude/npc-movement-m6` (PRs into `next`, in review). Nothing changes with
+  `local-legs-clearance: false` (the default) or with `npc.navigation.enabled: false`.
+  1. **What it does.** A local leg is the part of a trip an NPC walks without the road line: a short trip, a group
+     follower's own leg back to its group, the recovery ladder's local leg when an NPC is stuck. Until now Citizens'
+     own path search found the way, which knows the body's size but keeps no margin from walls, and its failed
+     searches cost main-thread time before they came back with no path. With the key on, K&K searches the leg itself:
+     on the walkable corridor around it (its own floor, steps of at most a block), with K&K's access rules for the
+     NPC (gates, doors, regions it may not enter), keeping `wall-clearance` (0.8) from walls where the gap allows and
+     never less than the body's width, so one-block doors stay open. The found way is smoothed into a few straight
+     steps that keep the floor under the NPC and is walked as waypoints. When K&K finds nothing within its cell budget,
+     Citizens' search walks the leg as before.
+  2. **Stats.** `/knk npc nav stats` has a new line `local legs: k&k N, engine N, none N`: legs K&K's search found,
+     legs Citizens' search walked, and legs neither found a way for.
+  3. **Checked.** `npc-stuck-ladder` (now with the key on) checks that the ladder's local leg frees the pushed NPC as a
+     K&K leg without an engine search; `npc-stairhouse-singles` (key on, collision off and on) checks that no local
+     leg ends without a path. The other movement scenarios report the counts.
+  4. **Deploy.** Add the key to `npc.navigation` in `config.yml` (configuration reference § 4.27) and restart:
+
+     ```yaml
+     npc:
+       navigation:
+         local-legs-clearance: false
+     ```
+
 - **NPC navigation: corridor steering, off by default** ([PandiO/knk-workspace#622](https://github.com/PandiO/knk-workspace/issues/622),
   link M2 of the NPC navigation follow-ups chain, implementation plan Phase 4c.4 item 2, decision 1 option A).
   knk-plugin and knk-workspace branches `claude/npc-movement-m2` (PRs into `next`, in review). Nothing changes with
