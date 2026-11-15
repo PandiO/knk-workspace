@@ -26,6 +26,13 @@ This is a human-readable record of capabilities merged into the V3 default branc
      [writing a plugin scenario](guides/developer/plugin-scenarios.md), the NPC implementation plan's developer tests
      (Phase 1 step 1, Phase 2 steps 3 and 4, Phase 4 step 3 tagged `[partly automated: …]`).
   - **Admin steps:** none (CI only; the plugin's `config.yml` is unchanged).
+- **Form wizard: list field cards stay readable on a phone**
+  ([PandiO/knk-workspace#290](https://github.com/PandiO/knk-workspace/issues/290); link L2 of the Chain 3 follow-ups
+  chain, [#564](https://github.com/PandiO/knk-workspace/issues/564)) — knk-web-app and knk-workspace
+  `claude/list-field-cards-290` (PRs into `next`, in review). In an Object List field the cards under "Selected (n):"
+  wrap at narrow widths: the name keeps the card's width (a long name wraps instead of being cut to one letter) and ×
+  and **Edit instance** move to their own line. Desktop layout unchanged. Playwright spec
+  `e2e/form-wizard-list-field.spec.ts`.
 - **Temp region releases: no server left out, no release stuck behind waiting ones**
   ([PandiO/knk-workspace#399](https://github.com/PandiO/knk-workspace/issues/399); link L1 of the Chain 3 follow-ups
   chain, [#564](https://github.com/PandiO/knk-workspace/issues/564)) — knk-web-api and knk-workspace branches
