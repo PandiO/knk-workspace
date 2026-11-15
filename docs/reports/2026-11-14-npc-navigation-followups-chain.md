@@ -13,7 +13,7 @@
 
 ## 1. Waiting for the developer
 
-**Rerun needed first:** the 2026-11-15 retest probably ran an old jar (decision 17). Check the plugin's startup line `0.1.0+<sha>` names `028504d` or later, then rerun #521 steps 3–5, #520 step 10 and the #490 audit.
+**Rerun needed first:** the 2026-11-15 retest ran an old jar (`0.1.0+a760c4a4`, decisions 17–18). Check the plugin's startup line `0.1.0+<sha>` names `8ad9df66` or later (L5 is in it), then rerun #521 steps 3–5, #520 step 10 and the #490 audit.
 
 **Retest 2026-11-15 (manager's relay, comments on #520, #521, #490):** L3 fails at the #491 stair corner and the #492 landing; L2 step 10 fails (#506, overlapping gate region); the #490 audit still shows DROWNING 809. Fix links L5–L7 run one at a time. #522 (L4) is not tested yet. The steps below stay valid for what isn't being fixed.
 
@@ -41,7 +41,7 @@ Every link is merged into `next` (2026-11-15). Build knk-plugin from `next` `deb
 | L2 Follower recheck and guard, no gate push | #520 | Merged into next (2026-11-15, by the manager session) | knk-plugin `651d8bff` → `next` `11e07d64`; knk-workspace → `next` `43a2328c` | PandiO/knk-plugin#31, PandiO/knk-workspace#536 | PR head green (build, paper-boot); `next` runs 43662028862, 43662028855 pending at the coordinator check | create_session session_01R1w2Ux2KpS7H3FidwDEZmp (2026-11-14) |
 | L3 Wall-corner steering and recovery | #521 | Merged into next (2026-11-15) | knk-plugin `51072e94` → `next` `5dc88cfd`; knk-workspace `4308aaf1` → `next` `51bf5952` | PandiO/knk-plugin#36, PandiO/knk-workspace#557 | PR head green (build, paper-boot with Citizens, 19 scenarios); Codex at its usage limit | create_session session_01R1w2Uv1rEnwPko4Tq83xyL (2026-11-15) |
 | L4 Narrowed formations, followers-finish-trip toggle | #522 | Merged into next (2026-11-15) | knk-plugin `f965af06` → `next` `deb7ff49`; knk-workspace `bce76405` → `next` `ee9894ef` | PandiO/knk-plugin#39, PandiO/knk-workspace#584 | `build` green on `f965af06`; `paper-boot` green on one run, the other failed only the log check (#586, re-run); 31 scenarios; Codex at its usage limit | create_session session_01R1w2Uur6M3a3CaVDWJWCw7 (2026-11-15) |
-| L5 Fix: stair corner, ranks row at the landing | #592 | In review (PRs open, not merged) | knk-plugin `011b1745`; knk-workspace `4a819546` | PandiO/knk-plugin#43, PandiO/knk-workspace#599 | PR CI green on `011b1745` (build, paper-boot with 34 scenarios, both runs); Codex at its usage limit | create_session session_01R1w2UxAFomY5DQ18vRtAH6 (2026-11-15) |
+| L5 Fix: stair corner, ranks row at the landing | #592 | Merged into next (2026-11-15) | knk-plugin `011b1745` → `next` `8ad9df66`; knk-workspace `4a819546` → `next` `8bad205a` | PandiO/knk-plugin#43, PandiO/knk-workspace#599 | PR CI green on `011b1745` (build, paper-boot with 34 scenarios, both runs); Codex at its usage limit | create_session session_01R1w2UxAFomY5DQ18vRtAH6 (2026-11-15) |
 | L6 Fix: follower access with overlapping gate region | #593 | On hold (developer's rerun on the current jar; then gate: L5 merged) | — | — | — | — |
 | L7 Fix: test walkers drown (#490) | #594 | On hold (developer's rerun on the current jar; then gate: L6 merged) | — | — | — | — |
 
@@ -149,6 +149,14 @@ Every link is merged into `next` (2026-11-15). Build knk-plugin from `next` `deb
     knk-plugin `next` from before #29, L2 (#31), L3 (#36) and L4 (#39). None of the 2026-11-15 NPC retest results is
     evidence against L2–L4. Corrections are posted on #520, #521 and #490. Decision 17 stands until the developer's rerun
     on `028504d` or later.
+
+19. **L5 checked and merged** (2026-11-15). § 6 held. The new scenario `npc-ledge-corner` fails on `next` (a line point
+    over the drop was snapped 7 blocks down by `HopPlanner.snapNear`'s fallback) and passes with the fix, which is valid
+    evidence on any jar. `npc-landing-ranks` fails on `next` only with a line that cuts the turn, so #492 is not
+    confirmed reproduced, as the PR and block 4.5 say. Tests 2788/2804 → 2806/2824, 0 failed. CI `build` and `paper-boot`
+    green with 34 scenarios. No Codex findings (usage limit). Merged PandiO/knk-plugin#43 → `8ad9df66` and
+    PandiO/knk-workspace#599 → `8bad205a`. The `ci.md` change in the docs PR is the scenario count, which is in scope.
+    L6 and L7 stay on hold until the developer's rerun (decisions 17 and 18).
 
 ## 4. Link blocks
 
