@@ -10,9 +10,31 @@
 
 ## 1. Waiting for the developer
 
-1. Nothing right now. The L1 note was approved with all defaults and the orphan rows are to be dropped (developer,
-   2026-11-14, recorded on #515). L1 and L2 are merged into `next`; L3 (smoke tests, changelog) is running. The
-   developer's test steps follow at the end of the chain.
+All three links are merged into `next` (2026-11-15): knk-web-api `de741909`, knk-web-app `d3d7152b`, knk-workspace
+`a49c0f84`. CI on `next` green (API build-and-test and fresh-database migrations, web-app build-and-test and e2e).
+Guide: [town streets smoke test](../guides/town-streets-smoke-test.md). In test order:
+
+1. **Deploy (dev, then alpha):** back up the database; deploy the API and the web app **together** (an old web app
+   against the new API would offer Add…/Unlink that the API refuses); apply the migration `DropTownStreet` (dev:
+   `dotnet ef database update`; alpha: the migrator image as in the runbook). It drops `TownStreet` with all its rows
+   (your decision 2026-11-14).
+2. **Town page:** open a real town with several districts: its Streets section lists exactly the distinct streets of
+   its districts, shows the hint "Streets are managed on the district: open a district to add or remove them." and
+   has no Add…, Unlink, Create New or Delete; View/Edit of a street still open the street.
+3. **District page:** on one of its districts, Add… a street and check the town's Streets shows it; Unlink it again
+   and check it disappears from the town.
+4. **Dashboard access smoke test § 2.2 step 2** (manual): world-only account, link/unlink on
+   `District/{district}/streets` → 403 "Changing links of District requires knk.admin.world and knk.admin.content."
+5. Optional: remove a Town form field on `Streets`/`StreetIds` in the form builder (the API ignores it). Rollback only
+   if needed: `dotnet ef database update SeedStaffFreezeNodes` refills `TownStreet` from the districts; rows no
+   district covered come back only from the backup.
+6. **Review the agent decisions:** block 4.1 § 5 (design defaults, approved), block 4.2 § 5 — in particular
+   `UpdateTownAsync` only calls `Update()` for a detached town (a town save writes only changed town fields), and
+   `Street.Town` removed from the relationship catalog with the table.
+7. **Promotion of `next`** in knk-web-api, knk-web-app and knk-workspace when the test passes; #409, #514, #515, #516
+   stay open (`status:in-review`) until then.
+8. **Docs:** #559 (Docs: Town streets from districts, absorbs #555) has a docs session running
+   (session_01R1w2UtA8zbwLFcDY1RR18R). It holds the admin guide items, which gate a deploy to alpha.
 
 ## 2. Summary
 
@@ -20,7 +42,7 @@
 |---|---|---|---|---|---|---|---|
 | L1 Design note and data check | #514 | Merged into next 2026-11-14 (knk-workspace `2d4418d2`, PR #525); #514 stays `status:in-review` until the developer promotes `next` | knk-workspace `claude/town-streets-409` `a24dcd2b` | [#525](https://github.com/PandiO/knk-workspace/pull/525) | n/a (docs) | create_session session_01R1w2UsgcJBhVZofGWWe6wN (`source_revision` `main`) | automated first, `main` `aa4208b3` |
 | L2 Implementation | #515 | Merged into next 2026-11-15 (knk-web-api `de741909`, knk-web-app `d3d7152b`, knk-workspace `66c7c910`); #515 stays `status:in-review` until the developer promotes `next` | knk-web-api `claude/town-streets-409` `f26d966`; knk-web-app `1a7c2a7` (corrected 2026-11-15); knk-workspace `87ee436e` | [api#31](https://github.com/PandiO/knk-web-api/pull/31), [app#33](https://github.com/PandiO/knk-web-app/pull/33), [ws#554](https://github.com/PandiO/knk-workspace/pull/554) | api runs 43695899575 / 43695899524 green; app runs 43696786714 / 43696786710 green | subagent of the coordinator (knk-coordinator § 4.1.4: two component repos besides knk-workspace) | automated first, `main` `aa4208b3` |
-| L3 Smoke tests and changelog | #516 | Done, PR open into `next` (not merged), #516 `status:in-review` | knk-workspace `claude/town-streets-409` `2db5a064` | [#556](https://github.com/PandiO/knk-workspace/pull/556) | n/a (docs) | create_session session_01R1w2UtELGKcTZrWFhqdpxa (`source_revision` `main`) | automated first, `main` `aa4208b3` |
+| L3 Smoke tests and changelog | #516 | Merged into next 2026-11-15 (knk-workspace `a49c0f84`, PR #556); #516 stays `status:in-review` until the developer promotes `next` | knk-workspace `claude/town-streets-409` `2db5a064` | [#556](https://github.com/PandiO/knk-workspace/pull/556) | n/a (docs) | create_session session_01R1w2UtELGKcTZrWFhqdpxa (`source_revision` `main`) | automated first, `main` `aa4208b3` |
 
 ## 3. Coordinator decisions
 
@@ -78,6 +100,14 @@
     has one without the other. Codex skipped on all three for its usage limit (noted on each PR). The L2 agent flagged
     `e2e/zz-e.spec.ts` in knk-web-app `next` (a leftover debug spec from #511, asserts nothing) on #511.
 14. **L3 route:** `create_session`, knk-workspace only, so the § 4.1.4 subagent rule does not apply.
+15. **L3 checked and merged (2026-11-15).** § 6 held: docs only, 0 behind `next`, § 2.2 step 2 and § 8 step 9b moved
+    to District streets, new guide with `[automated]` lines for L2's tests, block 4.3 and row present. Codex skipped
+    for its usage limit. Merged with a merge commit (`a49c0f84`).
+16. **Developer request: remove `e2e/zz-e.spec.ts`** (2026-11-15). Done as knk-web-app PR #34 into `next` (branch
+    `claude/remove-zz-e-spec`), merged after CI.
+17. **End of chain.** `documentation` sub-issue #559 (absorbs #555), docs session started with `create_session`
+    (session_01R1w2UtA8zbwLFcDY1RR18R). #409 stays open until the developer promotes `next` (branch model). Tracker row
+    set to "In review".
 
 ## 4. Link blocks
 
