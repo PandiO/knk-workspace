@@ -52,6 +52,26 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
      Then run the developer test steps of plan 4b.3 (posted on #522), which include the #490 audit re-run.
 
+- **Relation picker: lookup mode applies the field's narrowing filters**
+  ([PandiO/knk-workspace#288](https://github.com/PandiO/knk-workspace/issues/288), developer decision 2026-11-15; link
+  L5 of the Chain 3 follow-ups chain, [#564](https://github.com/PandiO/knk-workspace/issues/564)) — knk-web-api,
+  knk-web-app and knk-workspace branches `claude/lookup-picker-filters-288` (PRs into `next`, in review, not merged).
+  No change for players.
+  1. **Filtered fields work without the read node.** Staff who search a related type through `api/Lookup` (no read
+     node of that type) can now use a relation field whose picker filters narrow the list, e.g. a siege objective's
+     holder team scoped to its scenario: the picker offers the narrowed list, names only, instead of "This list is
+     narrowed by …, which only the full … search can do".
+  2. **API:** `POST api/Lookup/{type}/search` takes `filters` and passes those the type's lookup lists to the type's own
+     search (one list per type in `DashboardLookups.cs`; users take none). Results stay `{ id, label, detail? }`.
+     Another key answers 400 `LookupFilterNotAllowed`, an unusable value (an id that isn't a positive number, a flag
+     that isn't true/false) 400 `LookupFilterInvalid`, so a lookup never lists more than the form asked for.
+     `prefer…` filters only order; `excludeIds` stays in the browser. Access rule unchanged (any area node or the
+     plugin key).
+  3. **Web app:** the picker sends the filters and only shows the "narrowed by" refusal when the API refuses a filter.
+  4. Docs: [smoke test § 2.4–2.5](guides/relation-picker-and-delete-details-smoke-test.md), web-api architecture
+     (lookups), web-app architecture (relation picker), [access model § 4.6.3](specs/dashboard-access-model/DESIGN.md).
+  - **Admin steps:** none (no migration, no setting, no new node). Deploy the **API first** (or together): an older API
+     ignores `filters` and would answer with the unfiltered list, which the old web app refused to show.
 - **Form builder: field validation rules are part of the draft and go live on Publish; add-from-template endpoints removed**
   ([PandiO/knk-workspace#291](https://github.com/PandiO/knk-workspace/issues/291); link L4 of the Chain 3 follow-ups
   chain, [#564](https://github.com/PandiO/knk-workspace/issues/564)) — knk-web-api, knk-web-app and knk-workspace
