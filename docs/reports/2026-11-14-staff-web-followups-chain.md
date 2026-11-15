@@ -1,6 +1,6 @@
 # Staff web app follow-ups chain — progress report
 
-**Status:** Running (2026-11-14) · **Last updated:** 2026-11-15
+**Status:** Done, in review (2026-11-15): all three links in `next`; waiting for the developer's test and promotion · **Last updated:** 2026-11-15
 
 **Issue:** [PandiO/knk-workspace#517](https://github.com/PandiO/knk-workspace/issues/517), links
 [#408](https://github.com/PandiO/knk-workspace/issues/408) (L1),
@@ -10,8 +10,12 @@
 
 ## 1. Waiting for the developer
 
-1. Nothing yet. L2 (#50) will ask the developer two questions inside the link before coding (group-level audit,
-   plugin freshness).
+1. **Test `next` and promote** (merge order already done; deploy order: DB backup, API, `dotnet ef database update`, web app):
+    1. L1 #408: dashboard access smoke test § 8.6, untagged steps (owner view with real data; a `knk.admin.user.manage`-only rank).
+    2. L2 #50: § 8.7, untagged steps (migration on an alpha copy; group source on a member's Effective Permissions and History; in-game freshness; rank refusal).
+    3. L3 #407: player profile smoke test § 6, untagged steps (real player with many nodes; phone/desktop, light/dark).
+2. Docs: #576, docs session session_01R1w2UwNAdyiXgxPZJbXqdo (merges its own docs PR into `next`).
+3. Follow-ups filed by the links: #530, #531, #558 (plugin: inheriting groups refresh), #568 (expiry on effective permissions).
 
 ## 2. Summary
 
@@ -19,7 +23,7 @@
 |---|---|---|---|---|---|---|---|
 | L1 PermissionGrant table | #408 | Merged into next (2026-11-14) | api `6e34af5`, app `110d5f2`, ws `b6547485`; next: api `2425f181`, app `9a29623a`, ws `aef2f99f` | knk-web-api#30, knk-web-app#29, knk-workspace#529 | green on the PRs; next running | create_session session_01R1w2Ut6UjJQM8QpXM4o6co | automated first, `main` `aa4208b3` (unchanged at start) |
 | L2 Group grants panel | #50 | Merged into next (2026-11-15) | api `00b8060`, app `28c0d47`, ws `da034e05`; next: api `dcbb1f82`, app `42781025`, ws `685a4677` | knk-web-api#32, knk-web-app#35, knk-workspace#560 | green on the code PRs; Codex at its usage limit | subagent (coordinator skill § 4.1.4: two component repos) | automated first, `main` `aa4208b3` (unchanged at start) |
-| L3 Profile Permissions tab | #407 | Done, in review (2026-11-15) | app `567f15d`, ws `c5de65d5` | knk-web-app#37, knk-workspace#569 | green on knk-web-app#37; Codex at its usage limit | create_session session_01R1w2Uu4cu227Le97QQaG5U | automated first, `main` `aa4208b3` (unchanged) |
+| L3 Profile Permissions tab | #407 | Merged into next (2026-11-15) | app `567f15d`, ws `c5de65d5`; next: app `b2589eb4`, ws `02ab9c05` (guides rewritten, head `807e7ff2`) | knk-web-app#37, knk-workspace#569 | green on knk-web-app#37; Codex at its usage limit | create_session session_01R1w2Uu4cu227Le97QQaG5U | automated first, `main` `aa4208b3` (unchanged) |
 
 ## 3. Coordinator decisions
 
@@ -54,6 +58,8 @@
 13. **L3 route and recheck.** Chosen: `create_session` (knk-web-app only besides knk-workspace), after rechecking: no rule change since `aa4208b3` (only coordinator skill `ffbc7176`), #387 still open, no open knk-web-app PRs, the only other web-app claim (#535) is on `EmailLogPage`/`InvitationsPage`. Alternatives: (a) subagent: not needed for one component repo, and a session can ask the developer.
 
 14. **L3 check (2026-11-15): code merged, guides sent back.** knk-web-app#37 merged into `next` (`b2589eb4`): CI green on the PR, the 5 commits it lacked (#535, #290) don't touch `DataTable` or its files, scope inside #407 (the Expires column left out because `EffectivePermissionEntryDto` has no expiry, #568 filed: accepted as a logged decision), Codex at its usage limit. `next` CI green in both repos at heads containing L2. knk-workspace#569 held back: the test rule changed on `main` at 09:38 (`4effca89`, developer decision 2026-11-15: smoke guides keep every step in full, automated steps tagged), after L3 read `aa4208b3`. I merged `next` into the branch (CHANGELOG, kept both) and sent L3 back to rewrite its § 6 and this chain's merged § 8.6 (L1) and § 8.7 (L2) in the new format. Rule versions: L1 and L2 `aa4208b3`; L3 code `aa4208b3`, guides `4effca89`. Alternatives: (a) merge #569 and leave the three sections to a later backfill: the rule applies to every guide at once; (b) rewrite them myself: links write docs, the coordinator does bookkeeping.
+
+15. **End of chain (2026-11-15).** knk-workspace#569 merged into `next` (`02ab9c05`) after L3's rewrite (`9b361028`) and the status-line recount (`807e7ff2`, 66 of 106 steps tagged); Codex at its usage limit. One `documentation` sub-issue for the whole chain (#576 under #517) instead of one per feature, because the three features share the same guides and architecture sections. Docs session started with create_session. Issues #408, #50, #407 stay `status:in-review` until promotion. Alternatives: (a) three docs issues: three sessions editing the same admin guides at once.
 
 ## 4. Link blocks
 
