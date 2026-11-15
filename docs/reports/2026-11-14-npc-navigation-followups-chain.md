@@ -25,7 +25,7 @@
 | L1 Design: corners, narrowed formations, toggle | #519 | Merged into next (2026-11-15, design approved by the developer) | knk-workspace `96f47820` → `next` `4a97fd3b` | PandiO/knk-workspace#546 | docs only (no CI); Codex at its usage limit | create_session session_01R1w2UwysEMwCYnxwCpkx3p (2026-11-15) |
 | L2 Follower recheck and guard, no gate push | #520 | Merged into next (2026-11-15, by the manager session) | knk-plugin `651d8bff` → `next` `11e07d64`; knk-workspace → `next` `43a2328c` | PandiO/knk-plugin#31, PandiO/knk-workspace#536 | PR head green (build, paper-boot); `next` runs 43662028862, 43662028855 pending at the coordinator check | create_session session_01R1w2Ux2KpS7H3FidwDEZmp (2026-11-14) |
 | L3 Wall-corner steering and recovery | #521 | Merged into next (2026-11-15) | knk-plugin `51072e94` → `next` `5dc88cfd`; knk-workspace `4308aaf1` → `next` `51bf5952` | PandiO/knk-plugin#36, PandiO/knk-workspace#557 | PR head green (build, paper-boot with Citizens, 19 scenarios); Codex at its usage limit | create_session session_01R1w2Uv1rEnwPko4Tq83xyL (2026-11-15) |
-| L4 Narrowed formations, followers-finish-trip toggle | #522 | Running | — | — | — | create_session session_01R1w2Uur6M3a3CaVDWJWCw7 (2026-11-15) |
+| L4 Narrowed formations, followers-finish-trip toggle | #522 | In review (2026-11-15) | knk-plugin `becf379c`, knk-workspace `95ff61c0` | PandiO/knk-plugin#39, PandiO/knk-workspace#584 | `build` green; `paper-boot` running at writing; 25/25 scenarios locally | create_session session_01R1w2Uur6M3a3CaVDWJWCw7 (2026-11-15) |
 
 ## 3. Coordinator decisions
 
@@ -260,3 +260,72 @@ _(Each link appends its block here when it finishes.)_
     2. `GroupSettings` has `maxRetries`, `recoveryWaitTicks` and `waypointMargin` (an 8-argument constructor is kept). Formation and slot code is unchanged.
     3. The `npc-corners-walk` scene has 3-, 2- and 1-wide parts (east side, z 4–27) for `npc-group-narrows`; `ScenarioNpcs.patrolGroup` takes a formation.
     4. The "off its lane" loops on flights (item 6) are worth a look with the new width rule.
+
+### 4.4 L4 — Narrowed formations and the followers-finish-trip toggle (#522: #493, #507)
+
+1. **Scope done** (implementation plan 4b.3 items 1–15, behind `npc.navigation.enabled`, decided defaults of 4b.4).
+    1. **Widths (knk-core `group/`).**
+        1. `Formation(type, spacing, lateralSpacing, ranksWidth)` and `Formation.Width`; `widths()` lists them widest first. `ranks` goes from `group-ranks-width` down to 2, `cluster` 3 then 2, `escort-ring` as its rings (radius 1.25 × lateral), then rows of 3 with the leader in the middle of the second row, then 2 abreast, then a column with one escort ahead.
+        2. The cluster nudge is at most a quarter spacing and points inwards for the outer lanes.
+    2. **Fit and cache.** `GroupPath.levels`, `widest(i)` and `shift(i, level)` work out the widest fitting width and the lane shift per width once per path point. `stair(i)` makes a step point fit only the column. Lane points keep `LANE_CLEARANCE` 0.2 from a block edge without a floor.
+    3. **Hysteresis.** `NavGroup.decideWidth` makes one pass over the stretch from the rearmost slot to the foremost plus the hysteresis. A column is taken at once; a narrower width (2 abreast or more) only when the narrow part lasts longer than `group-width-hysteresis-blocks`; a wider one only when it fits the stretch plus the hysteresis ahead. A new order takes the fitting width at once.
+    4. **Lanes.** The slot side plus the point's shift. A lane is back on the centre `LANE_RETURN` (2 blocks) before a point where it has no floor, and it must also exist at the neighbouring points with this point's offset.
+    5. **Events, logs, stats.** `GROUP_NARROW`, `GROUP_WIDEN`, `GROUP_FINISH_TRIP` (with `GROUP_FOLD`/`GROUP_REFORM`); the log lines of 4b.3 item 7; the groups line has `widths: narrows N, widens N | folds N, reforms N, folded now N | abreast now k | finished trips N (finishing now N)`.
+    6. **The toggle.** `group-followers-finish-trip` in `NavigationSettings` and `GroupSettings`, the group command's `finish-trip|follow-leader`, and the state `FINISHING`.
+        1. When an order ends with Arrived, followers still on their way keep the old path's lanes to their slot as a trip, with region and door checks, the trespass guard and their old order's doors.
+        2. `NavGroup.MemberListener.onMemberArrived`, the log `finished its trip at`, then the follower follows the group.
+        3. The leader does not wait for finishing followers; a replaced, cancelled or failed order releases them.
+        4. Off: a follower on the leader's new route beyond the known path waits for the column (no own leg to the old goal).
+    7. **Config.** `group-lateral-spacing` 1.0, `group-width-hysteresis-blocks` 3, `group-followers-finish-trip` false and `group-spacing` 1.5 in `config.yml` with comments.
+    8. **Scenarios.** `npc-group-narrows`, `npc-group-gate-finish-trip` and `npc-group-access-change` on the L3 corner scene; `ScenarioNpcRules` (fake region data, the scenario gate's real state and box); `MIN_SCENARIOS` 25 (with #543's three); `--expect-timeout` 600, job timeout 20 min.
+    9. **Docs** (knk-workspace `claude/npc-followups-l4`).
+        1. `CHANGELOG.md` entry with the admin YAML.
+        2. Configuration reference § 4.27 and § 2.1.
+        3. Plan: Phase 4 known limits 1 and 3, the 4b.3 status and differences, and the L4 developer test steps including the #490 audit re-run.
+2. **Commits and heads.**
+    1. knk-plugin `claude/npc-followups-l4` at `becf379c`: 3 commits and a merge of `origin/next` `8e3f82c7` (#543; conflicts in `PaperScenarios`, its test and `paper-boot.yml`, resolved by keeping both sides). Base `next` `5dc88cfd`.
+    2. knk-workspace `claude/npc-followups-l4` at `95ff61c0`: 2 docs commits and a merge of `origin/next` `e7c40f54` (the changelog and the plan header, both kept). The merge commits have git's default message.
+3. **PRs.** PandiO/knk-plugin#39 (`Closes` #522, #493, #507) and PandiO/knk-workspace#584 (`Part of` them), base `next`. Not merged.
+4. **Tests, baseline → result.**
+    1. knk-plugin `./gradlew build -x deployToDevServer`:
+        1. Baseline on `next` `5dc88cfd`: core 2756, api-client 340 (2 skipped), paper 2782 (18 skipped).
+        2. Result after merging `next` `8e3f82c7`: core 2777, api-client 340 (2 skipped), paper 2789 (18 skipped).
+        3. 0 failures both times.
+    2. New tests:
+        1. knk-core: `FormationTest` (widths, layouts, narrowed ring, nudge) and `GroupPathTest` (cache looked up once, shifts, stairs, edge clearance).
+        2. knk-core: `NavGroupWidthsTest` (3 → 2 → 1 → 2 → 3, bump, short widening, 1-block gate, cluster and ring on 3-wide) and `NavGroupFinishTripTest` (off, on, door still opening, replaced order, district edge).
+        3. knk-core: `NavGroupTest` (under-door rule); `NavigationSettingsTest` (keys, layers).
+        4. knk-paper: `NpcNavigationConfigTest` (keys in every layer, shipped `config.yml`) and `NpcNavGroupArgsTest`.
+    3. Changed tests:
+        1. `NavGroupTest` uses a 2.0 column (the default is 1.5 now). Its yard test expects a shift instead of a fold, and the gate test expects the step back.
+        2. The `NpcNavRunnerTest` stats line, and 25 scenarios in `PaperScenariosTest`.
+    4. **Plugin scenarios on a real server**, run locally: Paper 26.3 build 205 with WorldEdit, WorldGuard and Citizens build 4269, through `tools/paper-boot/boot-test.sh --scenarios --npc-navigation --min-scenarios 25`: 25/25 passed (`npc-group-narrows` 327 ticks, `npc-group-gate-finish-trip` 841, `npc-group-access-change` 232; L3's `npc-corners-walk` passes too).
+    5. CI on PandiO/knk-plugin#39: `build` green; `paper-boot` see the coordinator message.
+    6. Known reds: none.
+    7. Codex: no review yet at writing; handled on the PRs if one comes.
+5. **Decisions (DESIGN § 4.3).**
+    1. *Fit with a lane shift.* Chosen: lanes may shift half a block at a time up to the width's half width, and each lane point needs a floor 0.2 block to either side across the path. Alternatives: (a) today's rule only (the corner scene's 2-wide passage and wall-hugging north road never fit 2 or 3 abreast); (b) shift the whole formation by the road's measured centre (more world queries per point).
+    2. *Cost per point.* Chosen: the widest width and the shift per width cached per point. The world looks per point and width are bounded and asked once, but there are more than one per width because of the shifts. Alternatives: (a) exactly one look per width without shifts (see 1).
+    3. *Narrowing log text.* Chosen: `narrows to 2 abreast: the path is too narrow for 3 abreast` (the width that no longer fits). Alternatives: (a) `the path is 2 wide` (wrong at a lateral spacing other than 1).
+    4. *Stairs.* Chosen: a path point where the floor steps a block is walked as a column, however wide the flight (plan item 3 names stairs with gates; lanes on the scene's 2-wide flight left a follower stuck). Alternatives: (a) 2 abreast on wide flights (failed on the server).
+    5. *Lane return.* Chosen: back on the centre 2 blocks before a place without a floor for the lane. Alternatives: (a) one path point before (followers cut a 1-wide opening's wall corner: `npc-corners-walk` and `npc-group-narrows` failed).
+    6. *Finishing follower's recovery.* Chosen: waypoints again after a stuck report or `no-progress-ticks`; it gives the trip up after `max-retries` tries and follows the group. Alternatives: (a) the full ladder (its steps are tied to the group path and the slot, a large change for a rare case).
+    7. *Who finishes.* Chosen: followers in `FOLLOWING` that are not left behind and not in a stuck spell; ones on an own leg back are released as before. Alternatives: (a) every follower (an own leg's order would have to be cancelled and turned into a trip).
+    8. *Toggle off.* Chosen: a held follower that stands on the leader's new route beyond the known path waits for the column. Alternatives: (a) today's own leg to the leader, i.e. to the old goal (the #507 symptom, found by `NavGroupFinishTripTest`).
+    9. *Door margin before a moving door* (changes L2's rule). Chosen: a follower in the 1-block margin before a door that starts moving steps back out of it and is held; only one under the door walks on out. Alternatives: (a) L2's "walk on out" for both (on the server a closing portcullis blocks a body a third of the way in, and followers a block short were pressed against it); (b) only a slower scenario door (hides it).
+    10. *Queue.* Chosen: followers stopped by a door or an edge stop a spacing behind each other, counted from the last point before it; a follower that already stands too close does not step back. Alternatives: (a) all to the same point (bodies pressed together, stuck spells); (b) step back too (moving held followers count as lag and the leader waited).
+    11. *Held finishing follower.* Chosen: it looks again every group turn. Alternatives: (a) only on events (a door still opening at its event blocked it for good).
+    12. *Scenario harness* (coordinator note 3). Chosen: additive hooks in `ScenarioNpcs` (rules and gate crossings in `start`, `rulesChanged`, `gateChanged`, `everyTick`, `dismiss`, `groupSettings`, `patrolGroup` with settings), with regions seen only by scenarios with rules of their own; the scenario framework's own code is unchanged. Alternatives: (a) the real navigation module (off in CI, needs the API's road tables).
+    13. *Gate scenario.* Chosen: a 3 s portcullis, a goal past `hop-blocks` (a shorter order is one local leg without gates), the close when the leader is 4.5 blocks past (closer, the service still counts the crossing as ahead and replans), and for follow-leader the check "no follower finishes a trip". Alternatives: (a) "never past the goal's z" (wrong: the group's new route runs past it).
+6. **Out of scope, noted.**
+    1. A follower within about a step of the margin when a door starts closing may walk on into it before it steps back (Phase 4 known limit 1).
+    2. The navigation service's progress index lags the leader by up to 20 ticks, so a gate event right after the leader passed a door replans its route (seen in the gate scenario; harmless but one plan). Not filed: it is the 4b.1 item 1 watchdog spacing, no wrong behaviour was seen.
+7. **Blockers.** None.
+8. **At merge / what the developer must do.**
+    1. Merge the `config.yml` keys (YAML in the changelog and § 4.27) and set `group-spacing: 1.5` where 2.0 is still written. Restart.
+    2. Run the developer test steps posted on #522 (they include the #490 audit re-run with `/knk npc test spawn 50 24`; check that `causes:` shows no `DROWNING`) and post the stats, notes and run log there, the audit report on #490.
+9. **For the docs session** (the chain's last link; the `documentation` sub-issue).
+    1. Plugin scenarios guide: the six NPC scenarios (L3, #543, L4), `ScenarioNpcs` with rules and gate crossings, `ScenarioNpcRules`, and the rule that an order under `hop-blocks` is a short trip without gates.
+    2. Admin/NPC guide: formations and their widths, the hysteresis, the toggle and `onMemberArrived` for later behaviour (couriers), the queue and the step back at doors, and the stats line.
+    3. Feature register and guides index: NPC navigation Phase 4b (L3, L4) status after the developer's tests.
+    4. `BEHAVIOR_MODEL.md` NAV-22/NAV-23: mark them built once tested.
