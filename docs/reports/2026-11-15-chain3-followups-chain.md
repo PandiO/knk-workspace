@@ -1,6 +1,6 @@
 # Chain 3 follow-ups chain — progress report
 
-**Status:** Running (2026-11-15) · **Last updated:** 2026-11-15
+**Status:** In review: all links merged into `next`, waiting for the developer's test and promotion (2026-11-15) · **Last updated:** 2026-11-15
 
 **Issue:** [PandiO/knk-workspace#564](https://github.com/PandiO/knk-workspace/issues/564), links
 [#399](https://github.com/PandiO/knk-workspace/issues/399) (L1),
@@ -14,7 +14,29 @@
 
 ## 1. Waiting for the developer
 
-1. Nothing. (Kick/ban decided 2026-11-15, see decision 10.)
+1. **Deploy to a test server from `next`, in this order:** knk-web-api (applies migration `SeedStaffKickBanNodes`:
+   Staff gets `knk.kick`, `knk.ban`), then knk-web-app, then knk-plugin (optional `config.yml` block below; the game
+   server needs `realtime.enabled: true`). L3, L4, L5 and L6 need the API before or with the web app.
+
+   ```yaml
+   realtime:
+     moderation:
+       kick-default-reason: "You were kicked by a member of staff."
+       ban-message: "You are banned from this server.\nReason: {reason}"
+   ```
+2. **Smoke test (by hand; everything else is automated and green in CI):**
+   1. Player profile, `guides/player-profile-smoke-test.md` § 7 steps 3, 8–10, 12, 13, 17, 18 (real kick, `/banlist`,
+      rejoin refused, `/pardon`, console lines), plus § 2.2, 2.5, 3.1 if you want to see the frozen banner, the
+      unfreeze reason and sessions in the timeline on real data. About 15 minutes, one Staff account and a test player.
+   2. Optional: `relation-picker-and-delete-details-smoke-test.md` § 2.4 (lookup filters with a real siege scenario),
+      § 4.11 and § 5.3 (Show what uses it on a real database); `form-display-builders-smoke-test.md` § 11.2 and § 11.4
+      (draft rules in the real wizard).
+3. **Review L6's own moderation choices** (decision 22; all reversible): ban reason required, kick reason optional
+   (≤ 200 characters); offline kick refused (409); kick/ban refused while no game server is connected (503); a rank
+   check for kick/ban only; `knk.kick`/`knk.ban` not under `knk.admin.*` (Admin gets them through Staff or `*`).
+4. **Promote `next` to trunk** after the test (yours). The sub-issues stay `status:in-review` until then.
+5. Docs follow-up #597 runs in its own session (session_01R1w2UuEk6oqBt5bGgpxKfz); its admin and player guide items
+   gate a deploy to knk-alpha.
 
 ## 2. Summary
 
@@ -26,7 +48,7 @@
 | L4 Builder rules and templates into the draft | #291 | Merged into next (2026-11-15) | api `a851436`, web-app `0d604fe`, workspace `4fa25605`; next: api `93c3d50f`, app `cd730f29`, ws `0ca9b1b6` | [web-api#35](https://github.com/PandiO/knk-web-api/pull/35), [web-app#40](https://github.com/PandiO/knk-web-app/pull/40), [#583](https://github.com/PandiO/knk-workspace/pull/583) | green (PR runs 43711458740/43711458686 api, 43711488807/43711488760 web) | subagent (two component repos, § 4.1.4); resumed once after a usage-limit stop |
 | L5 Lookup applies picker filters | #288 | Merged into next (2026-11-15) | api `95a2954`, web-app `9d82786`, workspace `b1d270f1`; next: api `d8514ed4`, app `990af482`, ws `c6e017ad` | [web-api#36](https://github.com/PandiO/knk-web-api/pull/36), [web-app#41](https://github.com/PandiO/knk-web-app/pull/41), [#587](https://github.com/PandiO/knk-workspace/pull/587) | green (PR runs 43714699624/43714699597 api, 43714715547/43714715574 web) | subagent (two component repos, § 4.1.4) |
 | L6 Player profile API part | #565 | Merged into next (2026-11-15) | api `9442502`, web-app `7051b52`, workspace `27d3065a`; next: api `5e10185f`, app `98e108f0`, ws `9c1c06f2` | [web-api#37](https://github.com/PandiO/knk-web-api/pull/37), [web-app#42](https://github.com/PandiO/knk-web-app/pull/42), [#595](https://github.com/PandiO/knk-workspace/pull/595) | green (PR runs 43720314230/43720314231 api, 43720332163/43720332129 web) | subagent (two component repos, § 4.1.4) |
-| L7 Plugin carries out web kick/ban | #574 | In review (2026-11-15) | plugin `8c44338c`, workspace `58a8abbc` | [knk-plugin#42](https://github.com/PandiO/knk-plugin/pull/42), [#596](https://github.com/PandiO/knk-workspace/pull/596) | green `build` (PR run 43721731604); `paper-boot` running | create_session session_01R1w2Uu1AmsiThCTqfZPnFG |
+| L7 Plugin carries out web kick/ban | #574 | Merged into next (2026-11-15) | plugin `8c44338c`, workspace `58a8abbc`; next: plugin `1adcb497`, ws `5f0751c1` | [knk-plugin#42](https://github.com/PandiO/knk-plugin/pull/42), [#596](https://github.com/PandiO/knk-workspace/pull/596) | green (PR runs 43721731604 build, 43721731607 paper-boot) | create_session session_01R1w2Uu1AmsiThCTqfZPnFG |
 
 ## 3. Coordinator decisions
 
@@ -140,6 +162,17 @@
 23. **L7 start.** Gate open (L6 0 commits ahead of `next`). Route `create_session` (knk-workspace plus knk-plugin, one
     component repo; § 4.1.4 allows it); knk-plugin push for this link only. Overlap: no unmerged recent plugin branch
     changes `paper/realtime/` or `KnKPlugin.java`; the NPC follow-ups chain is in `paper/npc/`.
+24. **L7 check and merge (2026-11-15).** Chosen: merge knk-plugin#42 and knk-workspace#596 into `next`, because § 6
+    held: heads match, branches contain `next`, `build` and `paper-boot` green on the PR, no review threads, Codex at
+    its usage limit, scope inside #574 (a new `ModerationRealtimeSync`, settings, parser, action-id memory, one
+    registration in `KnKPlugin.java`), 27 new tests (5932 → 5959). I read the handler: Bukkit calls on the main
+    thread, repeat `actionId` skipped, ban written even when offline, kick still happens if the ban list write fails
+    (logged SEVERE). I attached knk-plugin with push in this session to check and merge (the developer's L7
+    authorization). Alternatives: none needed.
+25. **Chain end (2026-11-15).** All seven links are in `next`; CI on knk-web-api and knk-web-app `next` green after
+    L6; knk-plugin `next` after L7 was running at the time of writing (checked at the next check-in). Documentation
+    sub-issue #597 created and its docs session started (session_01R1w2UuEk6oqBt5bGgpxKfz). The feature issues stay
+    open until the developer promotes `next`; the tracker row stays "In review" until the developer accepts.
 
 ## 4. Link blocks
 

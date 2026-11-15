@@ -1,7 +1,7 @@
 # Chain 3 follow-ups chain — charter
 
-**Status:** Running (2026-11-15)
-**Last updated:** 2026-11-15 (L7 added after the developer's kick/ban decisions)
+**Status:** Done: all links merged into `next`, in review (2026-11-15)
+**Last updated:** 2026-11-15 (chain end: L1–L7 in `next`, docs #597)
 **Issues:** parent [PandiO/knk-workspace#564](https://github.com/PandiO/knk-workspace/issues/564); sub-issues per
 link below. Reference issues as `PandiO/knk-workspace#n` in component repos.
 **Progress report:** [reports/2026-11-15-chain3-followups-chain.md](../../reports/2026-11-15-chain3-followups-chain.md)
