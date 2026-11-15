@@ -6,7 +6,7 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 - **Plugin: 13 more plugin scenarios and a freeze test replace evening checks in game**
   ([PandiO/knk-workspace#511](https://github.com/PandiO/knk-workspace/issues/511), plugin part; developer-facing, nothing
-  changes in game). knk-plugin and knk-workspace branches `claude/scenario-backfill-511` (PRs into `next`: knk-plugin#35, knk-workspace#544).
+  changes in game). Merged into `next` 2026-11-15 (knk-plugin#35, merge `b2c5dff0`; docs knk-workspace#544); on the trunk when the developer promotes `next`.
   - **Scenarios** (CI `paper-boot`, a real Paper server with fake API data; 3 → 16, `MIN_SCENARIOS` 16): gate safety
     with mobs, a dropped item and a minecart standing in for players (moved out on their own side, out of a two-deep
     door, never into the next door's opening, opening leaves neighbours alone, door blocks never suffocate while a wall
