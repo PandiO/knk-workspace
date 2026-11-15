@@ -3,7 +3,7 @@
 **Status:** Design complete for V1 gameplay (2026-11-15). Placement, operation, aiming, ammunition, damage, limits,
 economy, operator rules and the main engineering choices are decided by the developer. Remaining items are balance
 values and the open questions in §12. No implementation plan, no code.
-**Last updated:** 2026-11-15 (aiming, firing, ammunition, limits, unlocks, siege points, operator rules, defenders,
+**Last updated:** 2026-11-15 (size classes from reference designs, with links; aiming, firing, ammunition, limits, unlocks, siege points, operator rules, defenders,
 siege fire, tactical/targeting map, entities and forms, siege shop, schematic storage, crash safety, token and lease;
 "siege coins" renamed "siege points"); 2026-11-12 (first version)
 **Issue:** [PandiO/knk-workspace#354](https://github.com/PandiO/knk-workspace/issues/354). Sub-issues: #355 aiming,
@@ -134,14 +134,38 @@ An **ammo type** is its own entity, so heavy and light variants are simply diffe
 | Effect radius and duration | Fire area for fire bombs, poison level and duration for carcasses. |
 | Price per shot | Siege points (W20). |
 
-**Size classes (placeholders, W3).** The developer will pick real designs from online references; the final numbers
-come from those.
+**Size classes (W3, updated 2026-11-15 from reference designs).** The developer chose the reference builds below; the
+numbers are estimated by counting blocks in their screenshots (the pages themselves could not be opened from the
+session) and get confirmed when our own schematics are built.
 
 | Class | Footprint W × L × H (blocks) | Fits |
 |---|---|---|
-| Small | ~5 × 5 × 5 | Ballista |
-| Medium | ~7 × 9 × 8 | Catapult |
-| Large | ~11 × 15 × 16 | Trebuchet |
+| Small | 7 × 9 × 5 | Ballista (compact designs) |
+| Medium | 7 × 9 × 8 | Catapult; a large ballista whose bow spans more than 7 |
+| Large | 9 × 15 × 16 | Trebuchet |
+
+Changes from the first placeholders (5 × 5 × 5, 7 × 9 × 8, 11 × 15 × 16): **small** became long and flat, because a
+ballista is a long rail with a wide bow; **large** became narrower, because a trebuchet is long and tall rather than
+wide, which saves room along walls. Height above the footprint matters for the catapult's raised arm and the
+trebuchet's throwing arm.
+
+**Reference designs** (inspiration only):
+
+| Design | Estimated size W × L × H | Fits class |
+|---|---|---|
+| [A simple ballista design](https://www.reddit.com/r/Minecraftbuilds/comments/o1dsrb/a_simple_ballista_design/) (r/Minecraftbuilds; the BrokenPixelSK build) | ~13 × 12 × 4 | Medium or larger: the bow is too wide for small |
+| [Pinterest pin](https://nl.pinterest.com/pin/211174973434805/) | not measured | — |
+| [Medieval siege weapons](https://www.reddit.com/r/DetailCraft/comments/1ssza13/medieval_siege_weapons/) (r/DetailCraft) | see the pack below | — |
+| [Medieval Siege Weapons Pack](https://www.planetminecraft.com/project/medieval-siege-weapons-pack/) (Planet Minecraft): compact ballista | ~5 × 9 × 3 | Small |
+| same pack: catapults and mangonels | ~5–7 × 7–9 × 4–6 | Medium |
+| same pack: counterweight trebuchet | ~7 × 13 × 14 | Large |
+
+The pack also has siege towers and a covered battering ram, which are out of scope (W1).
+
+**Using the designs:** these builds belong to their authors. Before any of them is pasted on the server as-is, check
+its licence or get the author's permission; the default plan is to build our own versions inspired by them and fitted
+to these size classes. Each weapon also needs a **wreck** at the same footprint (W8); simple, low designs make more
+convincing wrecks.
 
 A spot accepts any weapon whose class is the same size or smaller. *Proposal:* schematics are authored facing one
 fixed direction (for example north) so they can be rotated in 90° steps to the spot's facing.
@@ -302,7 +326,7 @@ destroyed gate variants, region snapshots for siege fire restores and resettable
 | # | Question |
 |---|---|
 | Q1 | How a player starts operating a trebuchet or catapult: right-click the schematic, or an NPC standing at it. |
-| Q2 | Final footprint per size class, once real designs are chosen. |
+| Q2 | Confirm the size classes in §3 once our own schematics are built (current numbers are estimates from reference screenshots). |
 | Q3 | Objectives: Siege objectives are capture points without health. Should shots affect them (for example pausing capture progress), or only players, gates and weapons? |
 | Q4 | (#356) Siege-point amounts per action, and whether capture progress still pays points, given the wish to earn from personal play rather than siege progress. |
 | Q5 | Damage fall-off curve per ammo effect and the default numbers per ammo type (balance tests). |
