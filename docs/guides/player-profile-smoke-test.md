@@ -1,7 +1,7 @@
 # Staff player profile: status strip, tabs, freeze/unfreeze, timeline, paged audit, player search (#119) — smoke test
 
-**Status:** § 1–5: 24 of 26 steps automated in CI (tagged, 4 of them partly; [#511](https://github.com/PandiO/knk-workspace/issues/511), 2026-11-14); § 6 and § 7 (#565, 15 of 18) have their own status lines; every step can still be run by hand; manual steps not run. Written 2026-11-08 for knk-web-app `claude/player-profile-119` (chain 3 link V3); **merged 2026-11-12** (knk-web-app `main` `1371951`, with V7)
-**Last updated:** 2026-11-15 (§ 7 added and § 2.2, 2.5, 3.1 adjusted for the API part #565: frozen state from the summary, unfreeze reason, game sessions, search filters, Kick and Ban); 2026-11-15 (every step in full again, covered steps tagged `[automated: …]` or `[partly automated: …]`, developer decision 2026-11-15, #511); 2026-11-14 (§ 2 step 3: the game's freeze lock in a knk-plugin unit test, plugin backfill #511); 2026-11-14 (steps marked `[automated]` with their test, backfill #511); 2026-11-13 (Staff holds `knk.freeze`/`knk.unfreeze`, #367: § 4 step 4); 2026-11-12 (merged with V7); 2026-11-08
+**Status:** § 1–5: 24 of 26 steps automated in CI (tagged, 4 of them partly; [#511](https://github.com/PandiO/knk-workspace/issues/511), 2026-11-14); § 6 and § 7 (#565, 16 of 18) have their own status lines; every step can still be run by hand; manual steps not run. Written 2026-11-08 for knk-web-app `claude/player-profile-119` (chain 3 link V3); **merged 2026-11-12** (knk-web-app `main` `1371951`, with V7)
+**Last updated:** 2026-11-15 (§ 7 steps 8–10 and 18: the game server's part tagged with the knk-plugin tests of L7, #574); 2026-11-15 (§ 7 added and § 2.2, 2.5, 3.1 adjusted for the API part #565: frozen state from the summary, unfreeze reason, game sessions, search filters, Kick and Ban); 2026-11-15 (every step in full again, covered steps tagged `[automated: …]` or `[partly automated: …]`, developer decision 2026-11-15, #511); 2026-11-14 (§ 2 step 3: the game's freeze lock in a knk-plugin unit test, plugin backfill #511); 2026-11-14 (steps marked `[automated]` with their test, backfill #511); 2026-11-13 (Staff holds `knk.freeze`/`knk.unfreeze`, #367: § 4 step 4); 2026-11-12 (merged with V7); 2026-11-08
 **Issues:** [PandiO/knk-workspace#119](https://github.com/PandiO/knk-workspace/issues/119) (MOD-3 part 1, MOD-4, MOD-5 of
 the [2026-10-08 assessment](../reports/2026-10-08-web-app-ux-assessment.md))
 
@@ -133,7 +133,7 @@ profile, tab **Permissions** (`/admin/users/<id>?tab=permissions`), card Effecti
 
 ## 7. Profile API part: frozen state, unfreeze reason, sessions, search filters, kick and ban (#565)
 
-**Status:** 15 of 18 steps automated in CI (tagged, 5 of them partly); every step can still be run by hand; manual
+**Status:** 16 of 18 steps automated in CI (tagged, 6 of them partly; the game server's part of steps 8–10 and 18 by knk-plugin tests since L7, [#574](https://github.com/PandiO/knk-workspace/issues/574)); every step can still be run by hand; manual
 steps not run. A full manual run takes about 25 minutes, the untagged steps and the by-hand parts about 15. Added
 2026-11-15 for the branches `claude/player-profile-api-119` (knk-web-api, knk-web-app; [#565](https://github.com/PandiO/knk-workspace/issues/565),
 link L6 of the Chain 3 follow-ups chain). Needs the migration `SeedStaffKickBanNodes` applied; steps 8–11 and 13 need
@@ -158,15 +158,15 @@ knk-plugin with L7 ([#574](https://github.com/PandiO/knk-workspace/issues/574)) 
    longest-unseen players first (never seen at the top), again: the most recent first.
 7. [automated: xUnit `PlayerProfileApiTests` ("Search_UuidFilterAndTerm_MatchWithOrWithoutDashes"), MySQL `UserSearchFiltersMySqlTests`] In the search box type the first 12 characters of P's UUID **without** dashes (e.g. `069a79f444e9`) and press Enter: P is
    found (before #565 only a whole dashless UUID or a dashed fragment matched).
-8. [partly automated: `e2e/player-profile-moderation.spec.ts`, `usePlayerKickBan.test.ts`, xUnit `PlayerModerationTests` (audit and the `PlayerKick` event); by hand: the game server kicks P, needs L7] With **P** online, click **Kick** in the status strip. The dialog "Kick {P}?" asks an optional reason; type "Smoke 565
+8. [partly automated: `e2e/player-profile-moderation.spec.ts`, `usePlayerKickBan.test.ts`, xUnit `PlayerModerationTests` (audit and the `PlayerKick` event); knk-plugin `ModerationRealtimeSyncTest` (kick with the reason, the default text without one), `ModerationEventsTest` (the payload); by hand: the real kick over the hub] With **P** online, click **Kick** in the status strip. The dialog "Kick {P}?" asks an optional reason; type "Smoke 565
    kick" and click **Kick**: toast "{P} is being kicked". In game P is disconnected with "Smoke 565 kick" and can join
    again at once. Activity shows "Kicked from the game" with the reason, by {A}.
-9. [partly automated: `e2e/player-profile-moderation.spec.ts`, `usePlayerKickBan.test.ts`, xUnit `PlayerModerationTests` (audit, `permanent`, the `PlayerBan` event); by hand: the ban list and the kick, needs L7] With **P** online, open **Moderation** → **Ban…**. The dialog "Ban {P} permanently?" says the ban is permanent and lifted
+9. [partly automated: `e2e/player-profile-moderation.spec.ts`, `usePlayerKickBan.test.ts`, xUnit `PlayerModerationTests` (audit, `permanent`, the `PlayerBan` event); knk-plugin `ModerationRealtimeSyncTest` (ban list entry with reason and source, then the kick with the ban message), `BukkitProfileBansTest` (permanent entry on Paper's profile ban list); by hand: the real ban list and the rejoin] With **P** online, open **Moderation** → **Ban…**. The dialog "Ban {P} permanently?" says the ban is permanent and lifted
    with `/pardon` in game; **Ban permanently** with an empty reason says "Enter a reason.". Type "Smoke 565 ban" and
-   confirm: toast "{P} is banned". In game P is kicked with the ban message, `banned-players.json` (or `/banlist`) lists
+   confirm: toast "{P} is banned". In game P is kicked with "You are banned from this server. Reason: Smoke 565 ban" (`realtime.moderation.ban-message`), `banned-players.json` (or `/banlist`) lists
    P with that reason and {A} as source, and P can't rejoin. Activity shows "Banned from the game", the reason and
    "Permanent; lifted with /pardon in game". Lift it in game with `/pardon {P}`.
-10. [partly automated: xUnit `PlayerModerationTests` ("Ban_OfAnOfflinePlayer_IsAccepted_AndSentToTheGameServers"); by hand: the offline ban on the server, needs L7] With **P** offline, ban P with a reason: toast "{P} is banned"; `/banlist` lists P; P can't join. `/pardon {P}`.
+10. [partly automated: xUnit `PlayerModerationTests` ("Ban_OfAnOfflinePlayer_IsAccepted_AndSentToTheGameServers"); knk-plugin `ModerationRealtimeSyncTest` ("ban_OfflinePlayer_BanListEntryOnly"); by hand: the real ban list] With **P** offline, ban P with a reason: toast "{P} is banned"; `/banlist` lists P; P can't join. `/pardon {P}`.
 11. [automated: `e2e/player-profile-moderation.spec.ts`, xUnit `PlayerModerationTests`] With **P** offline, click **Kick** and confirm: an error toast "Could not kick {P}: {P} is not online, so there is
     nothing to kick." Nothing is added to the audit log.
 12. *(Manual: the Staff group's nodes come from the `SeedStaffKickBanNodes` seed on a real database; the seed's SQL is checked by xUnit `SeedStaffKickBanNodesTests` and MySQL `SeedStaffKickBanNodesMySqlTests`.)* After the migration, the Staff group's
@@ -184,8 +184,10 @@ knk-plugin with L7 ([#574](https://github.com/PandiO/knk-workspace/issues/574)) 
     and restart it) and try to ban **P**: an error toast "Could not ban {P}: No game server is connected, so the ban
     can't be carried out now. …". Nothing is added to the audit log. (xUnit `PlayerModerationTests`
     "NoGameServerConnected_Is503_AndNothingIsAudited" covers the API side.)
-18. *(Manual: the plugin's console.)* With L7 deployed, the game server's log shows one line per `PlayerKick` /
-    `PlayerBan` it handled, and a second identical event (same `actionId`) changes nothing.
+18. [partly automated: knk-plugin `ModerationRealtimeSyncTest` ("repeatedActionId_ActsOnce", "malformedPayload_LoggedIgnoredNoCrash"), `RecentActionIdsTest`; by hand: the plugin's console] With L7 deployed, the game server's log shows one `[KnK Moderation]` line per `PlayerKick` /
+    `PlayerBan` it handled ("Kicked {P} (web, by {A}, action …)", "Banned {P} …", or "… not online on this server"), and a
+    second identical event (same `actionId`) changes nothing. A ban of a player already on the ban list keeps the
+    existing entry ("already banned; entry kept") and still kicks them if online.
 
 ## Findings
 
