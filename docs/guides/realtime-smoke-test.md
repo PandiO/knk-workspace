@@ -3,8 +3,9 @@
 **Status:** All sections run by the developer (WT2 2026-11-04; WT2 follow-ups, S1, S2, S3 2026-11-05) and merged into the
 default branches; S1–S3 issues closed 2026-11-05. `realtime.enabled` stays `false` by default. § S4 (#183) merged
 2026-11-12 (API `master` `bc97b7d`, web app `main` `1371951`), **not run yet**. § S5 (#184): API part merged 2026-11-12, plugin part merged into `next`
-2026-11-13 (knk-plugin `next` `745fcf6`), **not run yet**
-**Last updated:** 2026-11-14 (§ S5: the unit tests behind steps 4, 5 and 5a named, plugin backfill #511); 2026-11-14 (§ S5 steps 4, 5, 5a and 7 after the #486 retest: the `First join:` log line, realtime off, the feed in PascalCase); 2026-11-13 (§ S5 account erasure push, #184, brought into `claude/plugin-chains-into-next`, not run); 2026-11-13 (§ S4: the dashboard opens for any area node since #280 AM3; a world-only account for step 2, docs #366); 2026-11-12 (§ S4 merged, not run; accounts and step 6 follow the area nodes of #280 AM1, docs #341); 2026-11-06 (§ S4 step 9: `Realtime:WebLiveUpdatesEnabled` switch, #183, feature branch); 2026-11-05 (§ S4, #183, feature branch); 2026-11-05 (S1, S2, S3 findings; S2 steps 5 and 7 corrected); 2026-11-05 (§ WT2 follow-ups: findings, merged); 2026-11-04 (§ WT2 follow-ups #239/#240, feature branch); 2026-11-04 (WT2 findings; merged); 2026-11-02 (§ S3, #182); 2026-11-02 (§ WT2, #181)
+2026-11-13 (knk-plugin `next` `745fcf6`), **not run yet**; 3 of its 10 steps partly automated in CI (tagged: the
+first-join decision and the catch-up in knk-plugin unit tests, plugin backfill [#511](https://github.com/PandiO/knk-workspace/issues/511)); every step can still be run by hand
+**Last updated:** 2026-11-15 (every step in full again, covered steps tagged `[automated: …]` or `[partly automated: …]`, developer decision 2026-11-15, #511); 2026-11-14 (§ S5: the unit tests behind steps 4, 5 and 5a named, plugin backfill #511); 2026-11-14 (§ S5 steps 4, 5, 5a and 7 after the #486 retest: the `First join:` log line, realtime off, the feed in PascalCase); 2026-11-13 (§ S5 account erasure push, #184, brought into `claude/plugin-chains-into-next`, not run); 2026-11-13 (§ S4: the dashboard opens for any area node since #280 AM3; a world-only account for step 2, docs #366); 2026-11-12 (§ S4 merged, not run; accounts and step 6 follow the area nodes of #280 AM1, docs #341); 2026-11-06 (§ S4 step 9: `Realtime:WebLiveUpdatesEnabled` switch, #183, feature branch); 2026-11-05 (§ S4, #183, feature branch); 2026-11-05 (S1, S2, S3 findings; S2 steps 5 and 7 corrected); 2026-11-05 (§ WT2 follow-ups: findings, merged); 2026-11-04 (§ WT2 follow-ups #239/#240, feature branch); 2026-11-04 (WT2 findings; merged); 2026-11-02 (§ S3, #182); 2026-11-02 (§ WT2, #181)
 **Design:** [specs/realtime-signalr/DESIGN.md](../specs/realtime-signalr/DESIGN.md) (§4–§5, as built: §4.6) ·
 [IMPLEMENTATION_PLAN.md](../specs/realtime-signalr/IMPLEMENTATION_PLAN.md) ·
 **Issues:** [PandiO/knk-workspace#178](https://github.com/PandiO/knk-workspace/issues/178) (S1),
@@ -323,14 +324,7 @@ Plugin log lines start with `[KnK Privacy]` and name only the erasure number.
 3. **Minecraft's own files.** The log says `N Minecraft player file(s) kept, listed in erasure-minecraft-files.txt`;
    that file lists T1's `players/data/<uuid>.dat` (and stats/advancements). The files themselves are still there: delete
    them by hand if you decide to, then clear the list.
-   *Automation (plugin backfill [#511](https://github.com/PandiO/knk-workspace/issues/511)): the first-join decision of
-   steps 4, 5 and 5a is in knk-plugin unit tests; the joins themselves need simulated players
-   ([#540](https://github.com/PandiO/knk-workspace/issues/540)) and a real API, so the steps stay manual.*
-   [automated] An erased player with an empty user cache gets the first join, an account the API created while
-   connecting is a first join without a mark, a returning player gets "Welcome back", the welcome is taken once:
-   `UserAccountListenerFirstJoinTest`. [automated] An erasure mark is taken once, survives a restart, holds no UUID:
-   `ErasedPlayerMarksTest`. [automated] The catch-up reads the API's PascalCase feed: `PrivacyErasuresApiImplTest`.
-4. **Returning player.** T1 joins again with the same Minecraft account: the server treats them as a new player (a new
+4. [partly automated: knk-plugin `UserAccountListenerFirstJoinTest` (the first-join decision: an erased player with an empty user cache gets the first join, an account the API created while connecting is a first join without a mark, a returning player gets "Welcome back", the welcome is taken once); by hand: the joins themselves, which need a real player (simulated players, [#540](https://github.com/PandiO/knk-workspace/issues/540)) and a real API] **Returning player.** T1 joins again with the same Minecraft account: the server treats them as a new player (a new
    account, or the admission gate's answer for a new player), with nothing of the old account (balances, ranks). Since
    #486 this holds even when Minecraft's own player files are kept (don't delete them for this step): the first-join
    welcome, not "Welcome back", and the discovery messages stay quiet for the new-player minutes. After
@@ -343,7 +337,7 @@ Plugin log lines start with `[KnK Privacy]` and name only the erasure number.
    connects, so the log shows `First join: ... has a new account` and the player gets the first-join welcome and the
    quiet minutes. (A player who got their account back on the website before joining is not new with realtime off:
    only the erasure mark tells, and that needs the push or the catch-up.)
-5. **Caught up after the server was down.** Stop the Minecraft server. O erases T2. Start the server: on the hub
+5. [partly automated: knk-plugin `ErasedPlayerMarksTest` (an erasure mark is taken once, survives a restart, holds no UUID), `PrivacyErasuresApiImplTest` (the catch-up reads the API's PascalCase feed), `UserAccountListenerFirstJoinTest`; by hand: the server stop and start, the catch-up against a real API and the join (#540)] **Caught up after the server was down.** Stop the Minecraft server. O erases T2. Start the server: on the hub
    connect the resync step "account erasures" logs `Erasure #N+1 applied: ...` (T2's offline-store entry and spool
    files gone) and `erasure-feed.json` moves to N+1. Restart once more: nothing is applied again. Then T2 joins: greeted
    as a **new** player (first-join welcome, quiet discovery minutes), not "Welcome back" (#486; the developer's runs of
@@ -351,7 +345,7 @@ Plugin log lines start with `[KnK Privacy]` and name only the erasure number.
    PascalCase). `plugins/KnightsAndKings/erasure-first-joins.json` held one entry (a hash, no UUID or name) until the
    join took it. On the first start with the fixed plugin, `erasure-feed.json` may still say `"lastId":0`: the first
    catch-up then applies the older erasures too (harmless, every step is idempotent) and moves to the newest id.
-   5a. **Join right after the start (#486).** Stop the server, O erases T6, start the server and let T6 join at once
+   5a. [partly automated: knk-plugin `UserAccountListenerFirstJoinTest` (the first-join decision); by hand: the join right after the start, the 5 s wait and the stopped API (#540)] **Join right after the start (#486).** Stop the server, O erases T6, start the server and let T6 join at once
    (before or while the catch-up runs): the join waits at most 5 s for the first catch-up, then T6 is greeted as new as
    in step 5 (`First join: T6 (user <id>) returns after their previous account was erased` or `has a new account`).
    With the API stopped the join is not held up longer than that.

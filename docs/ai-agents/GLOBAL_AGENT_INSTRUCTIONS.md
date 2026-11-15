@@ -267,8 +267,10 @@ covers only what no suite can check and the developer's time goes to designing f
    plugin code with MockBukkit or Mockito (test-only), world behaviour over ticks in a plugin scenario on a real Paper
    server (CI job `paper-boot`, PandiO/knk-workspace#421). Unit tests alone don't cover a change to what a page shows or
    what happens in the world.
-2. **The smoke-test guide lists only what is left:** game feel, visuals, a real client, real data. Automated steps
-   appear as one `[automated]` line naming the test. A change with nothing manual left needs no guide section.
+2. **The smoke-test guide keeps every step in full and tags the automated ones** (developer decision 2026-11-15): each
+   step keeps its complete manual instructions, so the developer can test everything by hand or skip what CI covers; a
+   step a suite covers starts with `[automated: <test>]` (or `[partly automated: <test>; by hand: …]`). Untagged steps
+   are the developer's manual check. Applies to every smoke-test guide and checklist, whichever repo the change is in.
 3. **The PR's Testing section** names the tests per suite and the behaviour each covers, the manual steps left, and any
    world step waiting for the scenario framework.
 4. **Not ready without it:** a behaviour change without a test in the right suite is sent back by the coordinator

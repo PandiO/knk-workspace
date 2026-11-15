@@ -1,7 +1,7 @@
 # Staff web app — admin guide
 
-**Status:** Current · **Last updated:** 2026-11-14 (§ 3: pinned row actions and the right-click menu; #404, #405, #406,
-docs #526)
+**Status:** Current · **Last updated:** 2026-11-15 (§ 4: a town's Streets are read-only, managed on the district;
+#409, docs #559)
 **Checked against:** knk-web-app `main` `3ba747d` and knk-web-api `master` `f445d21` (AM3 of #280 merged 2026-11-13 as
 `e02ee79` / `45043a7`; #371, #374 and #383, create, edit and link changes on `knk.admin.content`, reached the default
 branches with the promotion of `next` on 2026-11-13). Step conditions in the form builder and clickable form steps
@@ -171,7 +171,7 @@ and **Delete**. **Edit** needs the type's edit node and `knk.admin.content` (gre
 a User's Edit opens the player profile instead).
 
 **Reading it** ([#189](https://github.com/PandiO/knk-workspace/issues/189)):
-- Values are plain text; an empty value is "-". A related record (a street's town, an item's category) is a link to its
+- Values are plain text; an empty value is "-". A related record (a district's town, an item's category) is a link to its
   own detail page when you may read that type; otherwise it is plain text with "Opening X requires one of: …".
 - Collections show a count in their title ("Streets 14") and 12 items per page with Previous / Next.
 - A page that can't load says why: "You don't have access to Town "Cinix"." with the nodes that would allow it, "doesn't
@@ -188,13 +188,20 @@ a User's Edit opens the player profile instead).
 - **Unlink** only removes the link; the record itself stays (it asks first, not in red).
 - **Delete** is a separate, red action on items and in the header: it deletes the record everywhere, after a red
   question that names it.
-- A link that can't change here says why under the buttons, for example "A District always belongs to a town" or
-  "An icon is required". A button you lack the node for is disabled with "Requires …" (for example "Delete: Requires
+- A link that can't change here says why under the buttons, for example "A Structure always belongs to one District"
+  or "An icon is required". A button you lack the node for is disabled with "Requires …" (for example "Delete: Requires
   knk.admin.delete").
 - **Select…, Change…, Unlink and Add… need the type's area node and `knk.admin.content`**
   ([#374](https://github.com/PandiO/knk-workspace/issues/374)): changing a link is an edit. Without the content node
   they are greyed out with "Requires knk.admin.content", and the hint line under the section says so. A world-only rank
-  can still open a town and delete one of its streets (with `knk.admin.delete`), but not add or unlink one.
+  can still open a district and delete one of its streets (with `knk.admin.delete`), but not add or unlink one.
+- **A town's Streets are read-only** ([#409](https://github.com/PandiO/knk-workspace/issues/409), in `next`, not yet
+  released): they are the streets of the town's districts, each once, by name. The section shows "Streets are managed
+  on the district: open a district to add or remove them." and has no **Add…**, **Unlink**, **Create New** or
+  **Delete**; **View** and edit on a street still work. To give a town a street, open one of its districts and use
+  **Streets → Add…** there; unlinking it from every district of the town removes it from the town. A street no longer
+  has a town of its own. A Town form's Streets field does nothing any more (the API ignores it); remove it in the form
+  builder if you like (the [town streets smoke test § 3](../town-streets-smoke-test.md) has a check that lists such forms).
 - Known gap ([#380](https://github.com/PandiO/knk-workspace/issues/380)): a section's edit action on a related record
   and its **Create New** are not greyed out without `knk.admin.content`; they open the form, which then says "Staff
   only — This page needs the knk.admin.content permission".
@@ -209,8 +216,8 @@ Delete on the dashboard, the header's Delete and an item's Delete. Other refusal
 Known gaps: some relationship pairs can't be linked here yet, and link-table changes don't update live
 ([#287](https://github.com/PandiO/knk-workspace/issues/287)).
 
-Smoke tests: [entity detail](../entity-detail-smoke-test.md), [relation picker and delete details § 4](../relation-picker-and-delete-details-smoke-test.md)
-(not run).
+Smoke tests: [entity detail](../entity-detail-smoke-test.md), [relation picker and delete details § 4](../relation-picker-and-delete-details-smoke-test.md),
+[town streets](../town-streets-smoke-test.md) (not run).
 
 ## 5. Picking a related record in a form
 

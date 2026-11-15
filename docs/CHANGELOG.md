@@ -56,6 +56,15 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
     A server whose `config.yml` still says 60 for the two `*-ticks` keys keeps 60. To test: the Phase 4b developer
     test (L3) in the [implementation plan](specs/npc-platform/IMPLEMENTATION_PLAN.md#4b2-link-l3-521-wall-corners-and-stuck-recovery-508-491-492).
+- **Smoke-test guides: every step in full again, automated steps tagged**
+  ([PandiO/knk-workspace#511](https://github.com/PandiO/knk-workspace/issues/511); docs only, developer decision
+  2026-11-15). knk-workspace `claude/smoke-guides-full-steps` (PR into `next`). The #511 backfill had shortened
+  automated steps to one line; the 15 guides it touched (admin navigation, dashboard access, data and feedback
+  primitives, entity detail, form step conditions, gate, kit grant delivery, link code, lootbox area region, player
+  profile, realtime § S5, relation picker, settings pages, town streets) have their full manual instructions back, so
+  every step can still be run by hand. A step a suite covers starts with `[automated: <test>]`, or
+  `[partly automated: <test>; by hand: <what is left>]`; status lines count the tagged steps. What is automated did not
+  change. The developer guides on plugin scenarios and web app testing describe the tag.
 - **NPC navigation design: wall corners, stuck recovery, narrowed formations, followers that finish their trip**
   ([PandiO/knk-workspace#519](https://github.com/PandiO/knk-workspace/issues/519); design only, docs, nothing changes in game).
   knk-workspace `claude/npc-followups-l1` (PR into `next`, in review). BEHAVIOR_MODEL § 2 NAV-19–NAV-23 and
@@ -99,6 +108,29 @@ This is a human-readable record of capabilities merged into the V3 default branc
     ([#540](https://github.com/PandiO/knk-workspace/issues/540)). No plugin behaviour changed; `testing.scenarios.enabled`
     stays off by default.
   - **Admin steps:** none.
+- **Staff web app: edit a permission group's own nodes, with a History**
+  ([PandiO/knk-workspace#50](https://github.com/PandiO/knk-workspace/issues/50); link L2 of the staff web app follow-ups
+  chain, [#517](https://github.com/PandiO/knk-workspace/issues/517)). knk-web-api, knk-web-app and knk-workspace
+  branches `claude/group-grants-50` (PRs into `next`, in review, not merged). A permission group's detail page
+  (Dashboard → Permission Group → a group) has a **Permissions** panel: the group's own nodes (Granted/Denied, expiry),
+  a grant/deny form whose expiry is empty (permanent) by default, Edit, change Granted/Denied and Remove per row.
+  Changing Granted/Denied or removing asks first with the blast radius ("This affects N players", members of groups
+  that inherit from it included; online players get the change within seconds). A **History** list shows each change
+  to the group's nodes. Without `knk.admin.user.perm` the panel is read-only with "Requires knk.admin.user.perm".
+  1. **API:** the audit log has a generic subject (developer decision 2026-11-15): `audit_log_entries` gets nullable
+     `SubjectType` and `SubjectId` and `TargetUserId` becomes optional. A change to a group's own grants (added,
+     updated, removed) leaves one entry with the group as subject (`PermissionGroup`), the staff member as actor and the
+     node, before/after value and expiry in the details; player grant audits are unchanged. `GET api/audit-log` takes
+     `subjectType` and `subjectId` (`knk.admin.user.manage`). New `GET api/PermissionGroups/{id}/member-count`
+     (`knk.admin.user.manage` or the plugin key): active members of the group and of every group inheriting from it,
+     each player once. Writes stay on the by-node routes and `knk.admin.user.perm`; nobody changes a group ranked at or
+     above their own.
+  2. **Follow-up:** [#558](https://github.com/PandiO/knk-workspace/issues/558) (plugin: members of inheriting groups
+     and changes while realtime is down).
+  - **Admin steps:** one additive migration, `AddAuditLogSubject` (two nullable columns, one index, `TargetUserId`
+    nullable). The API does not migrate on start: back up the database, deploy the API, run `dotnet ef database update`,
+    then deploy the web app (it needs the new endpoints). No settings, no `config.yml` key, no plugin change. Smoke
+    test: [dashboard access smoke test § 8.7](guides/dashboard-access-smoke-test.md) (mostly automated in CI).
 - **Dashboard: the PermissionGrant table loads** ([PandiO/knk-workspace#408](https://github.com/PandiO/knk-workspace/issues/408);
   API and staff web app). knk-web-api and knk-web-app branches `claude/permission-grant-table-408` (PRs into `next`, in
   review, not merged). Dashboard → Permission Grant lists every grant and deny (node, Granted/Denied, holder, expiry)
@@ -137,9 +169,12 @@ This is a human-readable record of capabilities merged into the V3 default branc
        from the backup.
     5. A Town form with a `Streets` / `StreetIds` field or step (the API ignores it) can be removed in the form builder;
        the read-only check `scripts/maintenance/town-street-orphans-409.sql` (result set 3) lists such configurations.
-    6. Smoke test: follows with L3 ([#516](https://github.com/PandiO/knk-workspace/issues/516)); the read-only section
-       and the refused link are automated (knk-web-app `e2e/town-detail.spec.ts`, knk-web-api
-       `TownStreetsDerivedTests`, `RelationshipsControllerTests`).
+    6. Smoke test: [town streets smoke test](guides/town-streets-smoke-test.md) (L3
+       [#516](https://github.com/PandiO/knk-workspace/issues/516)): the manual steps are the deploy and migration on dev
+       and alpha and a look at a real town's Streets; the read-only section, the refused link, the derived list and the
+       migration are automated (knk-web-app `e2e/town-detail.spec.ts`, knk-web-api `TownStreetsDerivedTests`,
+       `RelationshipsControllerTests`, `DropTownStreetMigrationTests`). The dashboard access smoke test § 2.2 step 2
+       and § 8 step 9b now use a district's streets as the link example.
 - **Plugin: the 52 tests that CI skipped now run, with MockBukkit**
   ([PandiO/knk-workspace#499](https://github.com/PandiO/knk-workspace/issues/499); developer-facing, nothing changes
   in game). Merged into `next` 2026-11-14 (knk-plugin#32, merge `0810a6c7`; docs knk-workspace#539); on the trunk when the developer promotes `next`.
@@ -547,6 +582,15 @@ This is a human-readable record of capabilities merged into the V3 default branc
        `enabled: false`.
     3. To test: `enabled: true`, restart, then the steps under "Developer test" of Phases 1, 2, 3 and 4 in the
        implementation plan.
+
+## 2026-11-15
+
+- **Smoke-test guides keep every step** — no game change; smoke-test guides keep each step's full manual instructions
+  again, and a step an automated test covers gets a tag `[automated: <test>]`, so the developer can test everything by
+  hand or skip what CI covers (developer decision 2026-11-15). Global instructions "Testing: automated first" item 2,
+  the `knk-test-writer` skill § 4 and the link, coordinator and digest skills say so; the guides shortened on 2026-11-14
+  are restored on `next`.
+  - **Admin steps:** none.
 
 ## 2026-11-14
 
