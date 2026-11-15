@@ -23,6 +23,31 @@ This is a human-readable record of capabilities merged into the V3 default branc
      architecture (builders).
   - **Admin steps:** none (no migration, no setting, no new node). Deploy API and web app together, **API first**: an
     older API ignores the rules in the draft, so they would be lost on Save.
+- **Plugin scenarios: scripted players (server-side fake players), headless bot tests kept off**
+  ([PandiO/knk-workspace#540](https://github.com/PandiO/knk-workspace/issues/540); developer decision 2026-11-15:
+  build both). knk-plugin and knk-workspace branches `claude/scripted-players-540` (PRs into `next`). No change for
+  players or real servers: everything runs only with `testing.scenarios.enabled` (off by default), and no
+  `config.yml` key was added.
+  1. **Fake players in scenarios.** `scene.player(name, …)` joins a fake player through the server's player list (an
+     NMS `ServerPlayer` on an in-memory connection, all NMS code by reflection in `scenario/NmsFakePlayer`), so join
+     and quit events, permission attachments and the plugin's join handling run. A scenario gives it a fake account
+     and in-house grants (primed into the live caches), runs commands and chat through the server's real paths,
+     clicks menu slots and moves with client packets, teleports it and reads every message it was sent
+     ([writing a plugin scenario § 5](guides/developer/plugin-scenarios.md#5-players)).
+  2. **Six player scenarios** in CI's `paper-boot` (28 scenarios, `MIN_SCENARIOS` 28): a command refused without and
+     allowed with an in-house grant (`/feed`), chat with title and group colours and the `[STAFF]` tag, the join's
+     loading hold (an owner never held, a rejoin held again), an InventoryMenu click (a locked button, opening the
+     next menu, closing it), and gate smoke test § 2 steps 16 and 17 for players (`/tp` into a closed door, a rejoin
+     inside a door that closed meanwhile). `knk scenario run player-*` runs a group by prefix.
+  3. **Found on the way:** on a server with WorldGuard the plain `/heal` is WorldGuard's command, so in-house
+     `knk.heal` grants never apply ([#580](https://github.com/PandiO/knk-workspace/issues/580)).
+  4. **Headless bot tests, off.** `tools/bot-tests` (Mineflayer 4.39.0, pinned with a lock file) joins bots through
+     the real protocol; the example `first-join` covers the real login path. CI runs them only with the repository
+     variable `BOT_TESTS_ENABLED` set to `true`, and reports on every run whether the pinned and the newest Mineflayer
+     list Minecraft 26.3 (today both stop at 26.1). How to switch them on: [CI § 7.3](guides/developer/ci.md#73-headless-bot-tests-off-until-mineflayer-supports-263).
+  5. **Boot log check:** errors printed with `printStackTrace()` (one timestamped line per frame) are now joined to
+     their entry, so the join's unreachable-API error is excused like the others.
+
 - **"Show what uses it" for more refusals: form configuration delete, bulk delete rows, "skipped: in use"**
   ([PandiO/knk-workspace#289](https://github.com/PandiO/knk-workspace/issues/289); link L3 of the Chain 3 follow-ups
   chain, [#564](https://github.com/PandiO/knk-workspace/issues/564)) — knk-web-api, knk-web-app and knk-workspace

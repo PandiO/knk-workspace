@@ -1,6 +1,6 @@
 # CI: what runs on every push and how to mark a known failure
 
-**Status:** Active · **Last updated:** 2026-11-15 (§ 1, § 7, § 7.1 and the new § 7.2: Citizens on the boot-test server (pinned by [#521](https://github.com/PandiO/knk-workspace/issues/521)), NPC navigation on and checked, six NPC scenarios, `MIN_SCENARIOS` 22, [#543](https://github.com/PandiO/knk-workspace/issues/543), in knk-plugin `next`); 2026-11-14 (§ 7 and § 7.1: 16 scenarios, `MIN_SCENARIOS` 16, plugin backfill [#511](https://github.com/PandiO/knk-workspace/issues/511), in knk-plugin `next`); 2026-11-14 (§ 1.1.2: the `requires-bukkit` tests run in CI with MockBukkit, [#499](https://github.com/PandiO/knk-workspace/issues/499), in knk-plugin `next`); 2026-11-14 (plugin scenarios in `paper-boot.yml`, § 7.1, [#421](https://github.com/PandiO/knk-workspace/issues/421), in knk-plugin `next`); 2026-11-14 (web app end-to-end tests: `e2e.yml`, § 1.1.3, [#423](https://github.com/PandiO/knk-workspace/issues/423)); 2026-11-14 (plugin Paper boot test `paper-boot.yml`, § 1, § 1.1.2 and § 7, [#420](https://github.com/PandiO/knk-workspace/issues/420)); 2026-11-13 (workflows renamed "Build and test"; Codex review comments are not CI, § 1); 2026-11-13 (§ 4 the CI run decides, § 5 reading runs as an agent, § 6 the Node.js 20 warning, [#363](https://github.com/PandiO/knk-workspace/issues/363)); 2026-11-13 (first version, [PandiO/knk-workspace#362](https://github.com/PandiO/knk-workspace/issues/362), docs follow-up of [#327](https://github.com/PandiO/knk-workspace/issues/327); checked against knk-web-api `master` `210f731`, knk-web-app `main` `33d68f8`, knk-plugin `main` `e8b651d`)
+**Status:** Active · **Last updated:** 2026-11-15 (§ 7, § 7.1, new § 7.3: player scenarios, the printStackTrace rule of the log check and the headless bot tests kept off, [#540](https://github.com/PandiO/knk-workspace/issues/540)); 2026-11-15 (§ 1, § 7, § 7.1 and the new § 7.2: Citizens on the boot-test server (pinned by [#521](https://github.com/PandiO/knk-workspace/issues/521)), NPC navigation on and checked, six NPC scenarios, `MIN_SCENARIOS` 22, [#543](https://github.com/PandiO/knk-workspace/issues/543), in knk-plugin `next`); 2026-11-14 (§ 7 and § 7.1: 16 scenarios, `MIN_SCENARIOS` 16, plugin backfill [#511](https://github.com/PandiO/knk-workspace/issues/511), in knk-plugin `next`); 2026-11-14 (§ 1.1.2: the `requires-bukkit` tests run in CI with MockBukkit, [#499](https://github.com/PandiO/knk-workspace/issues/499), in knk-plugin `next`); 2026-11-14 (plugin scenarios in `paper-boot.yml`, § 7.1, [#421](https://github.com/PandiO/knk-workspace/issues/421), in knk-plugin `next`); 2026-11-14 (web app end-to-end tests: `e2e.yml`, § 1.1.3, [#423](https://github.com/PandiO/knk-workspace/issues/423)); 2026-11-14 (plugin Paper boot test `paper-boot.yml`, § 1, § 1.1.2 and § 7, [#420](https://github.com/PandiO/knk-workspace/issues/420)); 2026-11-13 (workflows renamed "Build and test"; Codex review comments are not CI, § 1); 2026-11-13 (§ 4 the CI run decides, § 5 reading runs as an agent, § 6 the Node.js 20 warning, [#363](https://github.com/PandiO/knk-workspace/issues/363)); 2026-11-13 (first version, [PandiO/knk-workspace#362](https://github.com/PandiO/knk-workspace/issues/362), docs follow-up of [#327](https://github.com/PandiO/knk-workspace/issues/327); checked against knk-web-api `master` `210f731`, knk-web-app `main` `33d68f8`, knk-plugin `main` `e8b651d`)
 
 The GitHub workflows of the component repos are the automated gate for every change. They run on every push (all
 branches), every pull request and on manual dispatch (`workflow_dispatch`). Under the
@@ -141,7 +141,10 @@ spawn scenarios, which wait for the spawn scheduler's one-second tries. The thre
 [#543](https://github.com/PandiO/knk-workspace/issues/543) add about 27 s of walking (146, 265 and 121 ticks on a
 local run, 2026-11-15), the three corner scenarios of [#521](https://github.com/PandiO/knk-workspace/issues/521)
 about 110 s (`npc-corners-walk` alone walks 90 s), and the first run after a cache change about 5 s for Citizens'
-library downloads. The boot step waits up to 360 s for the summary line and the job's timeout is 15 minutes.
+library downloads. The six player scenarios of [#540](https://github.com/PandiO/knk-workspace/issues/540) take about
+8 s (fake players join, act and quit; about 160 ticks of scenario time on a local run, 2026-11-15). The boot step waits up to
+360 s for the summary line and the job's timeout is 15 minutes. The headless bot tests (§ 7.3) are off and cost a few
+seconds while off (their unit tests and a support report).
 
 1. **Build:** `./gradlew :knk-paper:shadowJar -PgitCommit=<8-character commit>` (JDK 25 toolchain, Gradle on JDK 21,
    as `build.yml`). The script refuses a jar without `knk-core` classes: `build -x deployToDevServer` leaves the
@@ -171,7 +174,11 @@ library downloads. The boot step waits up to 360 s for the summary line and the 
     3. a log entry from KnK, WorldGuard, WorldEdit or Citizens is an `ERROR` or carries a stack trace. Entries caused by the
        unreachable API (`Failed to connect to localhost/<address>:5294`, whatever address `localhost` resolves to)
        are excused and counted: 5 to 7 per run on 2026-11-14 (menu template validation, siege recovery, world tasks,
-       compass settings);
+       compass settings), about 70 since the player scenarios (each fake player's join asks the API several times). A
+       trace printed with `printStackTrace()` arrives one timestamped `WARN` line per frame; since #540 such frames
+       join the latest `WARN` or `ERROR` of the same thread name and second that has no trace of its own (the join's
+       "Failed to sync user data … Failed to check duplicate" error is logged that way), so its cause decides as for
+       any other trace;
     4. the server doesn't stop within 90 seconds, or `KnightsAndKings Plugin Disabled!` is missing;
     5. with `--npc-navigation`: Citizens wasn't enabled, or KnK didn't log
        `[NPC] navigation: Citizens 2.0.44-SNAPSHOT (build 4269), override scopes {…}` (the check names the reason from
@@ -211,7 +218,7 @@ in knk-plugin `next` (`309d3580`, 2026-11-14), not on trunk yet. How to write on
    180 s), stops the server and runs both checks.
 2. **Pass/fail** (`tools/paper-boot/check_scenarios.py`, with its own unit tests in the "Test the log check" step): the
    job fails on any `FAIL` line, a scenario that started without a result, a missing summary line, a summary that
-   doesn't match the lines, or fewer than `MIN_SCENARIOS` scenarios (22 since the NPC scenarios of #521 and #543, 2026-11-15; raise it in the workflow's boot
+   doesn't match the lines, or fewer than `MIN_SCENARIOS` scenarios (28 since the player scenarios of #540, 2026-11-15; raise it in the workflow's boot
    step when you add one, so a scenario that silently stops registering is caught). A failed scenario doesn't stop the
    run: every result is in the log and in the table the check writes to the job summary. The boot check of § 7 item 4
    still applies, so an `ERROR` a scenario causes fails the job too.
@@ -225,6 +232,10 @@ in knk-plugin `next` (`309d3580`, 2026-11-14), not on trunk yet. How to write on
    and [#543](https://github.com/PandiO/knk-workspace/issues/543) three NPC navigation scenarios on a fake road
    network: `npc-walks-road-route`, `npc-keeps-to-road-around-obstacle` and `npc-group-keeps-spacing` (the list and
    what each proves: [writing a plugin scenario § 1](plugin-scenarios.md#1-a-scenario-in-under-30-lines)).
+   [#540](https://github.com/PandiO/knk-workspace/issues/540) added six scenarios with scripted players
+   (`player-command-needs-grant`, `player-chat-group-colours`, `player-join-loading-hold`, `player-menu-click`,
+   `player-tp-into-closed-gate`, `player-rejoin-in-closed-gate`; [writing a plugin scenario § 5](plugin-scenarios.md#5-players)).
+   They need a server without a reachable knk-web-api, which the CI server is.
 4. **Server setting:** `server.properties` gets `pause-when-empty-seconds=-1`, so the server keeps ticking with nobody
    online (vanilla pauses an empty server after 60 s).
 
@@ -254,6 +265,42 @@ does.
    key matches). Pin a newer build in the workflow and its API snapshot in `gradle.properties`, both at once, and run
    the plugin's tests and the boot test on it. The other way out, if Citizens' build server becomes unreliable, is a
    copy of the jar as a release asset of knk-plugin (the alternative named in #543).
+
+### 7.3 Headless bot tests (off until Mineflayer supports 26.3)
+
+Developer decision 2026-11-15 ([#540](https://github.com/PandiO/knk-workspace/issues/540)): besides the in-plugin fake
+players, a headless bot client joins the CI server through the real Minecraft protocol (login, configuration phase,
+spawn), so the real login path (admission, first join, rejoin) is tested too. It is added but **switched off**: the
+pinned Mineflayer 4.39.0 and minecraft-protocol 1.68.0 list Minecraft up to 26.1, the server runs 26.3. Mineflayer is
+working on it.
+
+1. **Where:** knk-plugin `tools/bot-tests/` (Node 22, `package.json` and `package-lock.json` with exact versions;
+   `node_modules/` is ignored). `run.mjs` runs every test in `tests/` against a server and prints
+   `KNK-BOT START|PASS|FAIL|SUMMARY` lines, the same contract as the scenarios with milliseconds instead of ticks;
+   `check_scenarios.py --tag KNK-BOT` reads them. The example test `first-join` logs a new bot in, waits for "Loading
+   your account..." and "You're all set!", quits and joins again. How to write one:
+   [writing a plugin scenario § 8](plugin-scenarios.md#8-headless-bot-tests).
+2. **While off** the `paper-boot` job still runs, in seconds and without installing Mineflayer: the harness unit tests
+   (`node --test tools/bot-tests/test/*.test.mjs`) and "Report whether Mineflayer supports the server's Minecraft
+   version" (`check-support.mjs --latest`, informational, never fails the job). Its result is in the job summary under
+   "Bot tests: off": for the pinned and for the newest Mineflayer and minecraft-protocol on npm, whether they list
+   `BOT_MC_VERSION` (26.3).
+3. **Switching them on**, once that report says the newest versions list 26.3:
+    1. In `tools/bot-tests/package.json` set `mineflayer` and `minecraft-protocol` to those versions and run
+       `npm install` there (Node 22) to update `package-lock.json`; run `npm test` and, against a local 26.3 server
+       started with `tools/paper-boot/boot-test.sh … --bot-tests tools/bot-tests`, see `first-join` pass. Open the PR
+       with both files.
+    2. Set the repository variable `BOT_TESTS_ENABLED` to `true` in knk-plugin (Settings > Secrets and variables >
+       Actions > Variables). The job then installs the client (`npm ci`), fails early with the reason if the pinned
+       client doesn't list 26.3 (`check-support.mjs --require`), and passes `--bot-tests tools/bot-tests --bot-version 26.3`
+       to the boot step: after the scenarios, while the server is up, the bots run and their lines are checked. Their
+       output is `bot-tests.log` in the `paper-boot-log` artifact.
+    3. Tick the enable step on [#540](https://github.com/PandiO/knk-workspace/issues/540) and close it.
+4. **When the server's Minecraft version changes,** change `BOT_MC_VERSION` in the workflow with `paperApiVersion`; the
+   report then says whether the pinned client still speaks it.
+5. **Checked so far:** the harness ran against a Paper 26.1.2 server (no plugins) on 2026-11-15: two bots joined,
+   chatted, whispered and read an unknown-command reply. Against the 26.3 CI server the run fails cleanly with
+   `first-join: Error: unsupported protocol version: 26.3`, which is why it is off.
 
 ## Related
 
