@@ -305,7 +305,7 @@ Sources: the developer's Phase 2 and Phase 4 tests on `next` (2026-11-14, result
 
 ### 4b.1 What the code does today
 
-Read on knk-plugin `next` at `b2c5dff0` (2026-11-15, without L2's branch) and in Citizens2 / CitizensAPI `master` (the navigator, the A* strategy and `NavigatorParameters`).
+Read on knk-plugin `next` at `b2c5dff0` and checked again at `11e07d6` (2026-11-15, L2 merged: the code named here is unchanged) and in Citizens2 / CitizensAPI `master` (the navigator, the A* strategy and `NavigatorParameters`).
 
 1. **Why NPCs cut the stair corner (#491).** K&K's line keeps the corner (`HopPlanner.resampleKeepingCorners`, points every 1.5 blocks, `RouteFollower.STEP`). Citizens follows a waypoint list with `AStarNavigationStrategy` and moves on to the next waypoint as soon as the NPC is within `distanceMargin` of the current one horizontally and less than a block from it vertically (`NavigatorParameters.withinMargin`). K&K never sets that margin, so it is Citizens' default of 1 block (`npc.pathfinding.default-distance-margin`); K&K only sets `pathDistanceMargin(1.5)`, the goal of a path search. The NPC therefore turns towards the point after the corner a block before it, walks the diagonal, and on a ledge the diagonal crosses air: point 267 → 270 in the trace, then the 7-block fall. The trace's best index stays at 267 because the watchdog updates it every 20 ticks only; the shortcut is the engine's, not K&K's.
 2. **Why the recovery target lies on another floor (#492).** Three places pick a target by horizontal distance or snap it to the nearest floor at any height:
