@@ -1,6 +1,6 @@
 # Dashboard access model — smoke test
 
-**Status:** 49 of 85 steps (§ 1–8) automated in CI (tagged, 5 of them partly; [#511](https://github.com/PandiO/knk-workspace/issues/511), 2026-11-14, and the § 8.5/8.6 features: web app § 8 in Playwright and Jest, API § 2.2, § 3, § 4, § 7 and § 8.6 in the API's xUnit tests); every step can still be run by hand; manual steps not run. Untagged, by hand only (migration on a real database, the plugin, live realtime, the Staff group's real metadata). Earlier: ready to run (API § 1–7, web app § 8). Not run yet: **accepted by the developer 2026-11-13 without a live
+**Status:** 57 of 97 steps (§ 1–8) automated in CI (tagged, 5 of them partly; [#511](https://github.com/PandiO/knk-workspace/issues/511), 2026-11-14, and the § 8.5–8.7 features: web app § 8 in Playwright and Jest, API § 2.2, § 3, § 4, § 7, § 8.6 and § 8.7 in the API's xUnit tests); every step can still be run by hand; manual steps not run. Untagged, by hand only (migration on a real database, the plugin, live realtime, the Staff group's real metadata). Earlier: ready to run (API § 1–7, web app § 8). Not run yet: **accepted by the developer 2026-11-13 without a live
 test**, scheduled in closed alpha test run 2 (checklist § 4c). AM1 and AM2 merged 2026-11-12 (knk-web-api `master`
 `bc97b7d`); AM3 merged 2026-11-13 (knk-web-app `main` `e02ee79`, knk-web-api `master` `45043a7`, also on `next`).
 AM4 (living docs, the [admin guide to the ranks](admin/dashboard-access-admin-guide.md)) done 2026-11-13 (#366).
@@ -327,6 +327,50 @@ together: an old API refuses the table's search without `knk.admin.user.perm`.
 7. Manual (real rank): with a test rank that holds `knk.admin.user.manage` but not `knk.admin.user.perm` (the alpha's
    Staff, if it lacks `perm`), open the table: it loads and New / Edit are greyed out. Why manual: real permission
    resolution and the deployed API's gate.
+
+### 8.7 A permission group's own grants (#50)
+
+knk-web-api and knk-web-app branches `claude/group-grants-50` (PRs into `next`, not merged). Automated in CI
+(knk-web-app `e2e/group-grants.spec.ts`, Jest `permissionGrantClient.test.ts`, `permissionGroupClient.test.ts`,
+`userManagementClient.test.ts`, `groupPermissionsHelpers.test.ts`; knk-web-api `GroupGrantAuditTests`,
+`GroupGrantsPanelApiTests`, `PermissionGrantServiceTests`, `AuditLogServiceTests`,
+`AddAuditLogSubjectMigrationTests`); manual steps not run. Before testing: back up the database, deploy the API, run
+`dotnet ef database update` (migration `AddAuditLogSubject`), then deploy the web app.
+
+1. [automated: `e2e/group-grants.spec.ts`] As the owner: Dashboard → Permission Group → a group → View. The detail page shows a **Permissions** panel with
+   the group's own nodes (Granted or Denied, and the expiry), how many players it reaches, and a **History** list.
+2. [automated: `e2e/group-grants.spec.ts`] In the panel, grant a new node, then deny another new one: each is added at once, the expiry field is empty
+   (permanent) by default and no confirmation is asked.
+3. [automated: `e2e/group-grants.spec.ts`, knk-web-api `Tests/knkwebapi_v2.Tests/Services/GroupGrantAuditTests.cs`] On a node: **Edit**, set an expiry, **Save**: the same row now shows the expiry (one row per group and node, never
+   a second row).
+4. [automated: `e2e/group-grants.spec.ts`] Switch a node between Granted and Denied (the row button, or in the form), and **Remove** one: each asks first
+   "This affects N players (members of … and of N groups that inherit from it). Online players get the change within
+   seconds."; **Cancel** sends nothing (network tab), confirm applies it.
+5. [automated: knk-web-api `Tests/knkwebapi_v2.Tests/Api/GroupGrantsPanelApiTests.cs`] API: `GET api/PermissionGroups/{id}/member-count` counts the active members of the group and of every group
+   inheriting from it, each player once (compare with the members you know); a web user without
+   `knk.admin.user.manage` gets 403.
+6. [automated: `GroupGrantAuditTests.cs`, knk-web-api `Tests/knkwebapi_v2.Tests/Services/PermissionGrantServiceTests.cs`, knk-web-api `Tests/knkwebapi_v2.Tests/Services/AuditLogServiceTests.cs`, `GroupGrantsPanelApiTests.cs`] After steps 2–4, the group's **History** lists one entry per change, with the group as subject and no target
+   player (`GET api/audit-log?subjectType=PermissionGroup&subjectId=<id>`); a member's own audit log (player profile →
+   Activity) does not list them. A grant on a player is audited as before. Erasing a test player's data keeps the
+   group's history.
+7. [automated: `e2e/group-grants.spec.ts`] As a rank without `knk.admin.user.perm`: the panel is read-only with "Requires knk.admin.user.perm" and the
+   History still shows. As staff trying to change a group ranked at or above their own: the API's refusal shows in the
+   panel.
+8. [automated: knk-web-api `Tests/knkwebapi_v2.Tests/Migrations/AddAuditLogSubjectMigrationTests.cs`] After `dotnet ef database update` on the dev database: the audit log table has the two new nullable subject
+   columns and their index, `TargetUserId` is nullable, and nothing else changed (`SHOW CREATE TABLE` before and
+   after).
+9. Manual (real database): `dotnet ef database update` applies `AddAuditLogSubject` on a copy of the alpha database;
+   the player profile's Audit log of a known player still lists its old entries. Why manual: a real MySQL with real
+   data (CI's fresh-database job starts empty).
+10. Manual (real data, deployed together): as the owner, grant a test node (for example `knk.test.group`) on a test
+    group with one member, open that member's profile and refresh: Effective Permissions lists the node with the group
+    as its source; deny it, then remove it, and refresh again each time. The group's History lists the three changes
+    with you as "By". Why manual: real permission resolution on the deployed API.
+11. Manual (real plugin): with the member online, grant and remove a node they can try in game (for example a command
+    node): the change applies within seconds without a relog. Why manual: the game server and its realtime
+    connection (members of groups inheriting from the changed group: follow-up [#558](https://github.com/PandiO/knk-workspace/issues/558)).
+12. Manual (real rank): with a staff rank ranked below a group, open that group: saving a node shows "You can only
+    change groups ranked below your own." Why manual: real ranks and the deployed escalation guard.
 
 ## 9. Docs impact
 

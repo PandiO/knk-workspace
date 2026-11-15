@@ -9,7 +9,7 @@
 knk-web-api `next` `b65e66d` and knk-web-app `next` `ca1959d`, merged into `next` 2026-11-13). **Not live-tested:** the developer
 accepted it on 2026-11-13 without a live test; the [dashboard access smoke test](../dashboard-access-smoke-test.md) is
 scheduled in closed alpha test run 2 ([checklist § 4c](../../reports/alpha-tests/test-run-2/test-run-2-checklist.md)).
-**Last updated:** 2026-11-13 (the API refuses creates, edits and link changes without `knk.admin.content`; Staff no longer edits kits or siege setup on the web; #374, docs #385); 2026-11-13 (area ranks view, delete and export but don't create or edit; #371, docs #378); 2026-11-13 (first version, PandiO/knk-workspace#366)
+**Last updated:** 2026-11-15 (§ 8: a town's Streets have no Add…/Unlink because they come from the districts; #409, docs #559); 2026-11-13 (the API refuses creates, edits and link changes without `knk.admin.content`; Staff no longer edits kits or siege setup on the web; #374, docs #385); 2026-11-13 (area ranks view, delete and export but don't create or edit; #371, docs #378); 2026-11-13 (first version, PandiO/knk-workspace#366)
 
 Who may see, create, edit, delete, bulk delete and export what on the web app's **Dashboard**, and how to set a rank
 up for it. For how the pages themselves work see the [staff web app guide](staff-web-app-guide.md); for in-game
@@ -113,7 +113,7 @@ is unchanged: it opens the player profile, not the wizard.
 2026-11-13). Creating (`POST`) or editing (`PUT`) a record of any dashboard type, and changing its links on the detail
 page, needs the type's area node **and** `knk.admin.content`, also from Swagger, `curl` or the browser's tools. Without
 it the answer is 403 "Creating or editing Town requires knk.admin.world and knk.admin.content." (for links: "Changing
-links of Town requires …"). What this means per rank:
+links of District requires …"). What this means per rank:
 
 - **Admin** (`knk.admin.*`) and the **owner** keep everything.
 - The **Staff** group (`knk.kit.manage`, `knk.siege.admin.manage`, no `knk.admin.content`) no longer creates or edits
@@ -202,6 +202,7 @@ delete on test records first: it can't be undone, and each refused row stays sel
 | "You can only hand out or remove groups ranked below your own." / "… change groups ranked below your own." | The group ranks at or above your highest group | Ask someone ranked higher |
 | **New** / **Edit** greyed out: "Requires knk.admin.content" | Creating and editing need the content node on top of the area node ([#371](https://github.com/PandiO/knk-workspace/issues/371)) | Expected for area staff; grant `knk.admin.content` if they should create and edit |
 | **Select…**, **Change…**, **Unlink** or **Add…** on a detail page greyed out: "Requires knk.admin.content" | Changing links is an edit ([#374](https://github.com/PandiO/knk-workspace/issues/374)) | Expected for area staff; grant `knk.admin.content` if they should |
+| A town's **Streets** have no **Add…**, **Unlink**, **Create New** or **Delete**, with "Streets are managed on the district: open a district to add or remove them."; a direct link call answers 400 `RelationshipNotEditable` | Not a permission: a town's streets are the streets of its districts and can't be changed on the town ([#409](https://github.com/PandiO/knk-workspace/issues/409), in `next`) | Open a district of the town and use its **Streets → Add…** or **Unlink** (needs `knk.admin.world` and `knk.admin.content`) |
 | An API call or a page's save answers "Creating or editing Kit requires knk.kit.manage and knk.admin.content." | The API asks for the content node on every create and edit since [#374](https://github.com/PandiO/knk-workspace/issues/374) (also the lootbox Enable/Disable toggle and Road network's New street, [#383](https://github.com/PandiO/knk-workspace/issues/383)) | Grant `knk.admin.content`, or use the in-game command for kits and siege setup |
 | "Staff only — This page needs the knk.admin.content permission" on `/forms/…` | The form wizard, Entity setup and the builders need the content node; also reached from the Lootboxes tabs, Road network's Rename and detail page sections ([#380](https://github.com/PandiO/knk-workspace/issues/380)) | Expected without `knk.admin.content`; grant it if they should create and edit |
 | Permission group listed, but its table answers "Requires the knk.admin.user.perm permission." | Known bug [#369](https://github.com/PandiO/knk-workspace/issues/369): the list needs `knk.admin.user.perm` | Grant `knk.admin.user.perm`, or wait for the fix |
