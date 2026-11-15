@@ -21,7 +21,7 @@
 
 | Link | Issue | Status | Branch heads | PR | CI | How started |
 |---|---|---|---|---|---|---|
-| L1 Temp region releases | #399 | Done, in review (2026-11-15) | knk-web-api `a0b5ff3f`, knk-workspace `aca7f01d` | [knk-web-api#33](https://github.com/PandiO/knk-web-api/pull/33), [knk-workspace#572](https://github.com/PandiO/knk-workspace/pull/572) | green (runs 43702385149, 43702462646) | create_session session_01R1w2Uvbubw539aKYxgnvjR |
+| L1 Temp region releases | #399 | Done, in review (2026-11-15) | knk-web-api `a0b5ff3f`, knk-workspace `86adf724` | [knk-web-api#33](https://github.com/PandiO/knk-web-api/pull/33), [knk-workspace#572](https://github.com/PandiO/knk-workspace/pull/572) | green (runs 43702385149, 43702462646) | create_session session_01R1w2Uvbubw539aKYxgnvjR |
 | L2 List field cards at 390 px | #290 | Done, in review (2026-11-15) | web-app `8cb616b`, workspace `b61c6456` | [web-app#38](https://github.com/PandiO/knk-web-app/pull/38), [#571](https://github.com/PandiO/knk-workspace/pull/571) | green (PR run); push-run flake #573 | create_session session_01R1w2UswAebrDAEEFqUHA3e |
 | L3 "Show what uses it" for more refusals | #289 | Not started | — | — | — | — |
 | L4 Builder rules and templates into the draft | #291 | Not started | — | — | — | — |
@@ -68,7 +68,7 @@ _(Each link appends its block here when it finishes.)_
     1. knk-web-api `Controllers/WorldTasksController.cs`: `GET api/WorldTasks/temp-region-releases` answers 400 `{ error: "serverId is required." }` for a blank or missing `serverId`, as `GET open` does.
     2. knk-web-api `Services/TempRegionReleaseService.cs`: `ListDueAsync` reads the due rows by id in pages of `ScanLimit` (200) until `max` are listed or no due row is left; an Information log when more than a page waited. `ScanLimit` is now `public const` for the tests.
     3. knk-workspace docs: `architecture/managed-worldguard-regions.md` §7, `specs/world-tasks/README.md` endpoint table, `CHANGELOG.md` "Unreleased" entry. Plugin contract unchanged.
-2. **Commits and heads.** knk-web-api `claude/temp-region-releases-399` at `a0b5ff3f` (1 commit, base `next` at `dcbb1f8`); knk-workspace `claude/temp-region-releases-399` at `aca7f01d` (1 commit, base `next`).
+2. **Commits and heads.** knk-web-api `claude/temp-region-releases-399` at `a0b5ff3f` (1 commit, base `next` at `dcbb1f8`); knk-workspace `claude/temp-region-releases-399` at `86adf724` (1 commit plus a merge of `origin/next` for the CHANGELOG, both entries kept).
 3. **PRs.** [knk-web-api#33](https://github.com/PandiO/knk-web-api/pull/33) (Part of #399), [knk-workspace#572](https://github.com/PandiO/knk-workspace/pull/572) (Closes #399), base `next`. Not merged.
 4. **Tests, baseline → result.**
     1. knk-web-api: baseline on `next` `dcbb1f8`: build 0 errors, 4169 passed, 98 skipped (MySQL, no `KNK_TEST_MYSQL`); result: 4175 passed, 98 skipped, 0 failed (6 new: `ListTempRegionReleases_NeedsAServerId` ×3, `ListTempRegionReleases_PassesTheServerAndMax`, `ListDue_MoreThanAPageOfWaitingRows_DoesNotHideALaterRelease` (checked red on the old service), `ListDue_StopsAtMax_AcrossPages`; own/unassigned releases still covered by `ListDue_ReleasesOfAnotherServerAreLeftOut_UnknownServerGoesToAll`). CI runs 43702385149 / 43702462646 (build-and-test, fresh-database) green.
