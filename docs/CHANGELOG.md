@@ -13,6 +13,79 @@ This is a human-readable record of capabilities merged into the V3 default branc
   2. Unused temp regions of abandoned drafts are no longer kept past their release when more than 200 older releases
      wait on a region that is still in use: the API reads the due releases in pages until it has `max` to give.
   3. Admin steps: none (no settings, no migration, no plugin `config.yml` change).
+- **Web app: admin tables no longer scroll the page sideways at phone width**
+  ([PandiO/knk-workspace#535](https://github.com/PandiO/knk-workspace/issues/535); staff web app only). knk-web-app
+  branch `claude/admin-mobile-overflow-535`, merged into `next` 2026-11-15 (knk-web-app#36 `5b87473`, docs
+  knk-workspace#567); on the trunk when the developer promotes `next`.
+  1. At 390 px Mail log, Invitations, the Lootboxes Types, Specials, Areas and Active boxes tabs and the Minecraft
+     catalogue audit made the whole page 70 to 450 px wider than the screen. The tables scroll inside their own box
+     again. The cause was the visually hidden "Actions" head cell, positioned outside the table's scroll box; each box
+     is now `relative` (the fix the form and display configuration tables got in #266).
+  2. Tests: `e2e/admin-navigation.spec.ts` checks Mail log and Invitations (staff with some nodes) and the four
+     Lootboxes tables plus the catalogue audit (owner) at 390 px; fixtures `e2e/fixtures/adminTables.ts`. Guide:
+     [admin navigation § 2.4 and § 4.4](guides/admin-navigation-smoke-test.md).
+  - **Admin steps:** none (web app only, no setting).
+- **NPC navigation: wall corners, stuck recovery on the NPC's own floor, stuck counted per spell**
+  ([PandiO/knk-workspace#521](https://github.com/PandiO/knk-workspace/issues/521) for
+  [#508](https://github.com/PandiO/knk-workspace/issues/508), [#491](https://github.com/PandiO/knk-workspace/issues/491)
+  and [#492](https://github.com/PandiO/knk-workspace/issues/492); link L3 of the NPC navigation follow-ups chain,
+  implementation plan 4b.2). knk-plugin and knk-workspace branches `claude/npc-followups-l3` (PRs into `next`, in
+  review). No change for players or with `npc.navigation.enabled: false` (the default).
+  1. **Wall corners (#508).** At a turn of its route an NPC keeps `corner-clearance` (1 block) from walls on the
+     inside of the turn, as far as the road allows; straight stretches may still run along a wall. Citizens moves on to
+     the next waypoint within `waypoint-margin` (0.5 block, Citizens' own default is 1), so the NPC walks into the
+     corner square and turns there instead of cutting the corner.
+  2. **The stair corner (#491).** The 7-block fall at 1411 73 -537 came from Citizens' 1-block margin: the NPC turned
+     a block before the corner and walked the diagonal over the drop. With the margin and the corner kept in the
+     stretch, and a shortcut only where every cell under the body's width is standable floor, it walks round.
+  3. **Recovery on the NPC's own floor (#492).** A stuck NPC and a group's follower aim at a point ahead along the
+     path on the floor they stand on, never at the flight above or below (the old targets 1421 84 -516 and
+     1424 48 -520). A leader below the route's end (37 blocks up, 4 across) plans the road instead of a short trip.
+  4. **The recovery ladder.** A stuck NPC takes one step per try: back-off along its last footsteps, side-step away
+     from the wall, one local leg ahead, then a replan; 1 s (`recovery-wait-ticks`) between tries, at most
+     `max-retries` steps, the log's count never past the cap (no more "retry 4 of 3", no four lines in one second).
+     Stuck is noticed after 2 s instead of 3 (`stationary-ticks`, `no-progress-ticks` 40). A follower takes the same
+     ladder inside its group, never holds up the ones behind, and a left-behind follower's tries double from 5 s up to
+     60 s (the 481 `group_rejoin` of #492 become tens).
+  5. **What the counters meant (#491) and mean now.** `stuck_engine 14456` against `recovered 0` was not 14456 stuck
+     NPCs: `stuck_engine` counted every Citizens cancel while an NPC moved, its stationary check and every failed path
+     search of a retry (four per burst, a burst every 5 s), and `recovered` counted only a recovery leg that arrived;
+     none did, because each aimed at another floor. The NPCs got free on the 5-second replan, the "second try" seen in
+     game. Now `stuck_engine` and `stuck_no_progress` count stuck spells (one per spell, by what noticed it first),
+     `freed_back_off`, `freed_side_step`, `freed_local_leg`, `freed_replan` and `not_freed` end them, `recovered` is
+     their sum, `recovery_no_path` counts failed engine searches and `fell` counts falls of 3 blocks or more.
+     `/knk npc nav stats` shows `stuck near a wall: N, freed by: …` and `stuck elsewhere`, steps per stuck, the
+     longest still and falls; the group line shows `road plans per group event` and `local legs at once` instead of
+     `most plans at once`.
+  6. **Tests.** knk-core unit tests for corners, own-floor targets, the ladder and the counters; three plugin
+     scenarios on a generated corner test scene (`npc-corners-line`, `npc-corners-walk` with 6 NPCs and a group of 6
+     in `ranks` for 90 s, `npc-stuck-ladder`); CI's `paper-boot` server now has a pinned Citizens build (2.0.44
+     build 4269, SHA-256 checked). `/knk npc nav scene corners` builds the scene on a test server.
+  - **Admin steps:** merge the new and changed keys into `config.yml` (restart), from the
+    [configuration reference § 4.27](guides/admin/plugin-configuration.md#427-npc):
+
+    ```yaml
+    npc:
+      navigation:
+        stationary-ticks: 40
+        no-progress-ticks: 40
+        max-retries: 3
+        recovery-wait-ticks: 20
+        corner-clearance: 1.0
+        waypoint-margin: 0.5
+    ```
+
+    A server whose `config.yml` still says 60 for the two `*-ticks` keys keeps 60. To test: the Phase 4b developer
+    test (L3) in the [implementation plan](specs/npc-platform/IMPLEMENTATION_PLAN.md#4b2-link-l3-521-wall-corners-and-stuck-recovery-508-491-492).
+- **Smoke-test guides: every step in full again, automated steps tagged**
+  ([PandiO/knk-workspace#511](https://github.com/PandiO/knk-workspace/issues/511); docs only, developer decision
+  2026-11-15). knk-workspace `claude/smoke-guides-full-steps` (PR into `next`). The #511 backfill had shortened
+  automated steps to one line; the 15 guides it touched (admin navigation, dashboard access, data and feedback
+  primitives, entity detail, form step conditions, gate, kit grant delivery, link code, lootbox area region, player
+  profile, realtime § S5, relation picker, settings pages, town streets) have their full manual instructions back, so
+  every step can still be run by hand. A step a suite covers starts with `[automated: <test>]`, or
+  `[partly automated: <test>; by hand: <what is left>]`; status lines count the tagged steps. What is automated did not
+  change. The developer guides on plugin scenarios and web app testing describe the tag.
 - **NPC navigation design: wall corners, stuck recovery, narrowed formations, followers that finish their trip**
   ([PandiO/knk-workspace#519](https://github.com/PandiO/knk-workspace/issues/519); design only, docs, nothing changes in game).
   knk-workspace `claude/npc-followups-l1` (PR into `next`, in review). BEHAVIOR_MODEL § 2 NAV-19–NAV-23 and
