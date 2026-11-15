@@ -1,6 +1,6 @@
 # Dashboard access model — smoke test
 
-**Status:** 57 of 97 steps (§ 1–8) automated in CI (tagged, 5 of them partly; [#511](https://github.com/PandiO/knk-workspace/issues/511), 2026-11-14, and the § 8.5–8.7 features: web app § 8 in Playwright and Jest, API § 2.2, § 3, § 4, § 7, § 8.6 and § 8.7 in the API's xUnit tests); every step can still be run by hand; manual steps not run. Untagged, by hand only (migration on a real database, the plugin, live realtime, the Staff group's real metadata). Earlier: ready to run (API § 1–7, web app § 8). Not run yet: **accepted by the developer 2026-11-13 without a live
+**Status:** 66 of 106 steps (§ 1–8) automated in CI (tagged, 5 of them partly; [#511](https://github.com/PandiO/knk-workspace/issues/511), 2026-11-14, and the § 8.5–8.7 features: web app § 8 in Playwright and Jest, API § 2.2, § 3, § 4, § 7, § 8.6 and § 8.7 in the API's xUnit tests); every step can still be run by hand; manual steps not run. Untagged, by hand only (migration on a real database, the plugin, live realtime, the Staff group's real metadata). Earlier: ready to run (API § 1–7, web app § 8). Not run yet: **accepted by the developer 2026-11-13 without a live
 test**, scheduled in closed alpha test run 2 (checklist § 4c). AM1 and AM2 merged 2026-11-12 (knk-web-api `master`
 `bc97b7d`); AM3 merged 2026-11-13 (knk-web-app `main` `e02ee79`, knk-web-api `master` `45043a7`, also on `next`).
 AM4 (living docs, the [admin guide to the ranks](admin/dashboard-access-admin-guide.md)) done 2026-11-13 (#366).
