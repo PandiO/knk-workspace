@@ -4,6 +4,18 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Web app: admin tables no longer scroll the page sideways at phone width**
+  ([PandiO/knk-workspace#535](https://github.com/PandiO/knk-workspace/issues/535); staff web app only). knk-web-app
+  branch `claude/admin-mobile-overflow-535`, merged into `next` 2026-11-15 (knk-web-app#36 `5b87473`, docs
+  knk-workspace#567); on the trunk when the developer promotes `next`.
+  1. At 390 px Mail log, Invitations, the Lootboxes Types, Specials, Areas and Active boxes tabs and the Minecraft
+     catalogue audit made the whole page 70 to 450 px wider than the screen. The tables scroll inside their own box
+     again. The cause was the visually hidden "Actions" head cell, positioned outside the table's scroll box; each box
+     is now `relative` (the fix the form and display configuration tables got in #266).
+  2. Tests: `e2e/admin-navigation.spec.ts` checks Mail log and Invitations (staff with some nodes) and the four
+     Lootboxes tables plus the catalogue audit (owner) at 390 px; fixtures `e2e/fixtures/adminTables.ts`. Guide:
+     [admin navigation § 2.4 and § 4.4](guides/admin-navigation-smoke-test.md).
+  - **Admin steps:** none (web app only, no setting).
 - **NPC navigation: wall corners, stuck recovery on the NPC's own floor, stuck counted per spell**
   ([PandiO/knk-workspace#521](https://github.com/PandiO/knk-workspace/issues/521) for
   [#508](https://github.com/PandiO/knk-workspace/issues/508), [#491](https://github.com/PandiO/knk-workspace/issues/491)
