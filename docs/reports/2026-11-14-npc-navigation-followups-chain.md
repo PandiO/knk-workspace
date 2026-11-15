@@ -13,6 +13,8 @@
 
 ## 1. Waiting for the developer
 
+**Rerun needed first:** the 2026-11-15 retest probably ran an old jar (decision 17). Check the plugin's startup line `0.1.0+<sha>` names `028504d` or later, then rerun #521 steps 3–5, #520 step 10 and the #490 audit.
+
 **Retest 2026-11-15 (manager's relay, comments on #520, #521, #490):** L3 fails at the #491 stair corner and the #492 landing; L2 step 10 fails (#506, overlapping gate region); the #490 audit still shows DROWNING 809. Fix links L5–L7 run one at a time. #522 (L4) is not tested yet. The steps below stay valid for what isn't being fixed.
 
 Every link is merged into `next` (2026-11-15). Build knk-plugin from `next` `deb7ff49` or later, merge the new
@@ -40,8 +42,8 @@ Every link is merged into `next` (2026-11-15). Build knk-plugin from `next` `deb
 | L3 Wall-corner steering and recovery | #521 | Merged into next (2026-11-15) | knk-plugin `51072e94` → `next` `5dc88cfd`; knk-workspace `4308aaf1` → `next` `51bf5952` | PandiO/knk-plugin#36, PandiO/knk-workspace#557 | PR head green (build, paper-boot with Citizens, 19 scenarios); Codex at its usage limit | create_session session_01R1w2Uv1rEnwPko4Tq83xyL (2026-11-15) |
 | L4 Narrowed formations, followers-finish-trip toggle | #522 | Merged into next (2026-11-15) | knk-plugin `f965af06` → `next` `deb7ff49`; knk-workspace `bce76405` → `next` `ee9894ef` | PandiO/knk-plugin#39, PandiO/knk-workspace#584 | `build` green on `f965af06`; `paper-boot` green on one run, the other failed only the log check (#586, re-run); 31 scenarios; Codex at its usage limit | create_session session_01R1w2Uur6M3a3CaVDWJWCw7 (2026-11-15) |
 | L5 Fix: stair corner, ranks row at the landing | #592 | Running | — | — | — | create_session session_01R1w2UxAFomY5DQ18vRtAH6 (2026-11-15) |
-| L6 Fix: follower access with overlapping gate region | #593 | Not started (gate: L5 merged) | — | — | — | — |
-| L7 Fix: test walkers drown (#490) | #594 | Not started (gate: L6 merged) | — | — | — | — |
+| L6 Fix: follower access with overlapping gate region | #593 | On hold (developer's rerun on the current jar; then gate: L5 merged) | — | — | — | — |
+| L7 Fix: test walkers drown (#490) | #594 | On hold (developer's rerun on the current jar; then gate: L6 merged) | — | — | — | — |
 
 ## 3. Coordinator decisions
 
@@ -134,6 +136,14 @@ Every link is merged into `next` (2026-11-15). Build knk-plugin from `next` `deb
     issues track them better); (b) one link for all three (three unrelated areas, a long serial link); (c) L6 first
     (smaller, but the corner blocks the stair release gate). The manager fixes the CRLF config test (knk-plugin#41)
     itself.
+
+17. **Retest may have run an old jar** (manager, 2026-11-15 ~13:25). The developer's 13:33 log still shows a line
+    that knk-plugin#29 removed: `./gradlew :knk-paper:dev` failed on the Windows CRLF test (fixed in knk-plugin#41), so
+    the old jar stayed deployed. Chosen: L5 continues only with the scenarios built from the real geometry against
+    `next`. It fixes what fails there; if they pass, it pushes them as coverage, reports "not reproduced" and stops.
+    L6 and L7 are on hold until the developer confirms the version line and reruns on `028504d` or later.
+    Alternatives: (a) interrupt L5 entirely (loses the scenario work, which is valid on any jar); (b) carry on as
+    scoped (risks fixing code that isn't broken).
 
 ## 4. Link blocks
 
