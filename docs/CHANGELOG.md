@@ -7,8 +7,8 @@ This is a human-readable record of capabilities merged into the V3 default branc
 - **NPC navigation design: wall corners, stuck recovery, narrowed formations, followers that finish their trip**
   ([PandiO/knk-workspace#519](https://github.com/PandiO/knk-workspace/issues/519); design only, docs, nothing changes in game).
   knk-workspace `claude/npc-followups-l1` (PR into `next`, in review). BEHAVIOR_MODEL § 2 NAV-19–NAV-23 and
-  implementation plan Phase 4b for links L3 (#521: #508, #491, #492) and L4 (#522: #493, #507); proposed defaults await
-  the developer.
+  implementation plan Phase 4b for links L3 (#521: #508, #491, #492) and L4 (#522: #493, #507); defaults approved by
+  the developer 2026-11-15.
 - **NPC groups: followers keep to the rules and out of closing gates**
   ([PandiO/knk-workspace#506](https://github.com/PandiO/knk-workspace/issues/506), part of
   [#507](https://github.com/PandiO/knk-workspace/issues/507); link L2 of the NPC navigation follow-ups chain,
