@@ -46,6 +46,109 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
      Then run the developer test steps of plan 4b.3 (posted on #522), which include the #490 audit re-run.
 
+- **Plugin scenarios: scripted players (server-side fake players), headless bot tests kept off**
+  ([PandiO/knk-workspace#540](https://github.com/PandiO/knk-workspace/issues/540); developer decision 2026-11-15:
+  build both). knk-plugin and knk-workspace branches `claude/scripted-players-540` (PRs into `next`). No change for
+  players or real servers: everything runs only with `testing.scenarios.enabled` (off by default), and no
+  `config.yml` key was added.
+  1. **Fake players in scenarios.** `scene.player(name, …)` joins a fake player through the server's player list (an
+     NMS `ServerPlayer` on an in-memory connection, all NMS code by reflection in `scenario/NmsFakePlayer`), so join
+     and quit events, permission attachments and the plugin's join handling run. A scenario gives it a fake account
+     and in-house grants (primed into the live caches), runs commands and chat through the server's real paths,
+     clicks menu slots and moves with client packets, teleports it and reads every message it was sent
+     ([writing a plugin scenario § 5](guides/developer/plugin-scenarios.md#5-players)).
+  2. **Six player scenarios** in CI's `paper-boot` (28 scenarios, `MIN_SCENARIOS` 28): a command refused without and
+     allowed with an in-house grant (`/feed`), chat with title and group colours and the `[STAFF]` tag, the join's
+     loading hold (an owner never held, a rejoin held again), an InventoryMenu click (a locked button, opening the
+     next menu, closing it), and gate smoke test § 2 steps 16 and 17 for players (`/tp` into a closed door, a rejoin
+     inside a door that closed meanwhile). `knk scenario run player-*` runs a group by prefix.
+  3. **Found on the way:** on a server with WorldGuard the plain `/heal` is WorldGuard's command, so in-house
+     `knk.heal` grants never apply ([#580](https://github.com/PandiO/knk-workspace/issues/580)).
+  4. **Headless bot tests, off.** `tools/bot-tests` (Mineflayer 4.39.0, pinned with a lock file) joins bots through
+     the real protocol; the example `first-join` covers the real login path. CI runs them only with the repository
+     variable `BOT_TESTS_ENABLED` set to `true`, and reports on every run whether the pinned and the newest Mineflayer
+     list Minecraft 26.3 (today both stop at 26.1). How to switch them on: [CI § 7.3](guides/developer/ci.md#73-headless-bot-tests-off-until-mineflayer-supports-263).
+  5. **Boot log check:** errors printed with `printStackTrace()` (one timestamped line per frame) are now joined to
+     their entry, so the join's unreachable-API error is excused like the others.
+
+- **"Show what uses it" for more refusals: form configuration delete, bulk delete rows, "skipped: in use"**
+  ([PandiO/knk-workspace#289](https://github.com/PandiO/knk-workspace/issues/289); link L3 of the Chain 3 follow-ups
+  chain, [#564](https://github.com/PandiO/knk-workspace/issues/564)) — knk-web-api, knk-web-app and knk-workspace
+  branches `claude/show-what-uses-it-289`, merged into `next` 2026-11-15 (knk-web-api#34 `378921c6`, knk-web-app#39
+  `2dfd5883`); on the trunk when the developer promotes `next`. No change for players.
+  1. **Entity setup.** A form configuration whose delete is refused because another form opens it as a sub-form offers
+     **Show what uses it**: the form fields and steps, each with the form (and step) it sits in. Not links: they have
+     no page of their own.
+  2. **Bulk delete.** Each row refused as in use keeps its **Show what uses it** (from #205), now through one shared
+     component; covered end to end.
+  3. **Cancelled form / deleted draft.** An entity skipped as in use after **Delete them** / **Delete draft and them**
+     offers **Show what uses it** with every reference, as the in-use check counted them.
+  4. API: `GET api/EntityReferences/{type}/{id}/rows` also takes `FormConfiguration` (needs `knk.admin.content`) and
+     `?all=true` (every reference, cascades included); the read rules per referencing type stay as in #44.
+  5. Docs: [smoke test § 4.8–4.12, § 5.3](guides/relation-picker-and-delete-details-smoke-test.md),
+     [web-api architecture § 5.4](architecture/web-api-architecture.md), web-app architecture ("Show details").
+  - **Admin steps:** none (no migration, no setting, no new node; deploy API and web app together, API first: an older
+    API answers 404 for a form configuration, shown as an error line under the button).
+- **Staff web app: the player profile's Permissions tab gets the grant form on top, a search and sortable columns**
+  ([PandiO/knk-workspace#407](https://github.com/PandiO/knk-workspace/issues/407); link L3 of the staff web app
+  follow-ups chain, [#517](https://github.com/PandiO/knk-workspace/issues/517)). knk-web-app and knk-workspace
+  branches `claude/profile-permissions-407` (PRs into `next`, in review, not merged). On a player's profile
+  (`/admin/users/<id>?tab=permissions`), Effective Permissions now has the grant/deny form above the list, a search box
+  that filters by node and by source (a group's name, or "direct" for direct grants) and says when nothing matches,
+  and Node, Value and Source headers that sort ascending, descending and back to the original order, with an arrow and
+  `aria-sort`. The 1-day default expiry for direct grants and the `knk.admin.user.perm` gate are unchanged.
+  - **Admin steps:** none; web app only (no API change, no migration, no setting). To test: § 6 of the
+    [player profile smoke test](guides/player-profile-smoke-test.md).
+- **Plugin CI: Citizens on the Paper boot test, NPC navigation scenarios on a fake road network**
+  ([PandiO/knk-workspace#543](https://github.com/PandiO/knk-workspace/issues/543); developer decision 2026-11-15:
+  pinned download). knk-plugin and knk-workspace branches `claude/citizens-ci-543` (PRs into `next`). No change for
+  players or real servers: `npc.navigation.enabled` and `testing.scenarios.enabled` stay off by default.
+  1. **Citizens on the CI server.** `paper-boot.yml` installs Citizens 2.0.44 build 4269, the server jar of
+     `citizensApiVersion`, pinned by URL and SHA-256 (the pin came with #521; this change caches Citizens' downloaded
+     libraries and documents bumping it, [CI § 7.2](guides/developer/ci.md#72-citizens-on-the-ci-server)). Bump it
+     together with `citizensApiVersion`; if Citizens' Jenkins prunes the build, pin a newer build and its API snapshot
+     at once.
+  2. **NPC navigation checked at boot.** `boot-test.sh --npc-navigation` turns on `npc.navigation.enabled`, and the log
+     check requires Citizens enabled and `[NPC] navigation: Citizens …`; a Citizens `ERROR` or stack trace fails the
+     job like a KnK one (no Citizens line needed an excuse).
+  3. **Three NPC scenarios** (`MIN_SCENARIOS` 22 with the three corner scenarios of #521): `npc-walks-road-route` (an
+     NPC walks a road route and arrives), `npc-keeps-to-road-around-obstacle` (it keeps within 2 blocks of the road
+     where open ground round an obstacle would be shorter) and `npc-group-keeps-spacing` (a column of three keeps its
+     2-block spacing). The road is a `RoadNetworkSnapshot` routed through the navigator's own adapter
+     (`NavigationService.planRoadFor`); the NPCs come from the running Citizens adapter. Each was seen failing with its
+     behaviour broken (road graph ignored, formation slots shortened, waypoints never walked).
+  4. Docs: [CI § 7](guides/developer/ci.md#7-plugin-the-paper-boot-test),
+     [writing a plugin scenario](guides/developer/plugin-scenarios.md), the NPC implementation plan's developer tests
+     (Phase 1 step 1, Phase 2 steps 3 and 4, Phase 4 step 3 tagged `[partly automated: …]`).
+  - **Admin steps:** none (CI only; the plugin's `config.yml` is unchanged).
+- **Form wizard: list field cards stay readable on a phone**
+  ([PandiO/knk-workspace#290](https://github.com/PandiO/knk-workspace/issues/290); link L2 of the Chain 3 follow-ups
+  chain, [#564](https://github.com/PandiO/knk-workspace/issues/564)) — knk-web-app and knk-workspace
+  `claude/list-field-cards-290` (PRs into `next`, in review). In an Object List field the cards under "Selected (n):"
+  wrap at narrow widths: the name keeps the card's width (a long name wraps instead of being cut to one letter) and ×
+  and **Edit instance** move to their own line. Desktop layout unchanged. Playwright spec
+  `e2e/form-wizard-list-field.spec.ts`.
+- **Temp region releases: no server left out, no release stuck behind waiting ones**
+  ([PandiO/knk-workspace#399](https://github.com/PandiO/knk-workspace/issues/399); link L1 of the Chain 3 follow-ups
+  chain, [#564](https://github.com/PandiO/knk-workspace/issues/564)) — knk-web-api and knk-workspace branches
+  `claude/temp-region-releases-399` (PRs into `next`, in review). No change for players.
+  1. `GET api/WorldTasks/temp-region-releases` answers 400 for a blank or missing `serverId`, as `GET open` does.
+     The plugin always sends `realtime.server-id`, so it is not affected.
+  2. Unused temp regions of abandoned drafts are no longer kept past their release when more than 200 older releases
+     wait on a region that is still in use: the API reads the due releases in pages until it has `max` to give.
+  3. Admin steps: none (no settings, no migration, no plugin `config.yml` change).
+- **Web app: admin tables no longer scroll the page sideways at phone width**
+  ([PandiO/knk-workspace#535](https://github.com/PandiO/knk-workspace/issues/535); staff web app only). knk-web-app
+  branch `claude/admin-mobile-overflow-535`, merged into `next` 2026-11-15 (knk-web-app#36 `5b87473`, docs
+  knk-workspace#567); on the trunk when the developer promotes `next`.
+  1. At 390 px Mail log, Invitations, the Lootboxes Types, Specials, Areas and Active boxes tabs and the Minecraft
+     catalogue audit made the whole page 70 to 450 px wider than the screen. The tables scroll inside their own box
+     again. The cause was the visually hidden "Actions" head cell, positioned outside the table's scroll box; each box
+     is now `relative` (the fix the form and display configuration tables got in #266).
+  2. Tests: `e2e/admin-navigation.spec.ts` checks Mail log and Invitations (staff with some nodes) and the four
+     Lootboxes tables plus the catalogue audit (owner) at 390 px; fixtures `e2e/fixtures/adminTables.ts`. Guide:
+     [admin navigation § 2.4 and § 4.4](guides/admin-navigation-smoke-test.md).
+  - **Admin steps:** none (web app only, no setting).
 - **NPC navigation: wall corners, stuck recovery on the NPC's own floor, stuck counted per spell**
   ([PandiO/knk-workspace#521](https://github.com/PandiO/knk-workspace/issues/521) for
   [#508](https://github.com/PandiO/knk-workspace/issues/508), [#491](https://github.com/PandiO/knk-workspace/issues/491)

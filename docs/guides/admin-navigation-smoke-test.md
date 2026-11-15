@@ -1,7 +1,7 @@
 # Web app admin navigation: route table, admin sidebar, breadcrumbs (#30) — smoke test
 
-**Status:** 20 of 24 steps automated in CI (tagged, 4 of them partly; [#511](https://github.com/PandiO/knk-workspace/issues/511), 2026-11-14); every step can still be run by hand; manual steps not run. Written 2026-11-05 for knk-web-app `claude/admin-ia-30` (chain 2 link W4); **merged 2026-11-12** (knk-web-app `main` `1371951`); found by the backfill: [#535](https://github.com/PandiO/knk-workspace/issues/535) (Mail log and Invitations scroll sideways at 390 px)
-**Last updated:** 2026-11-15 (every step in full again, covered steps tagged `[automated: …]` or `[partly automated: …]`, developer decision 2026-11-15, #511); 2026-11-14 (steps marked `[automated]` with their test, backfill #511); 2026-11-12 (merged; run on `main`, docs #340); 2026-11-06 (§ 1: Dashboard kept in the bar, LW4-1)
+**Status:** 20 of 24 steps automated in CI (tagged, 5 of them partly; [#511](https://github.com/PandiO/knk-workspace/issues/511), 2026-11-14); every step can still be run by hand; manual steps not run. Written 2026-11-05 for knk-web-app `claude/admin-ia-30` (chain 2 link W4); **merged 2026-11-12** (knk-web-app `main` `1371951`); found by the backfill and fixed 2026-11-15: [#535](https://github.com/PandiO/knk-workspace/issues/535) (Mail log and Invitations scrolled sideways at 390 px)
+**Last updated:** 2026-11-15 (#535 fixed: § 2.4 partly automated with the 390 px checks of Mail log, Invitations, Lootboxes and the catalogue audit, § 4.4 on Mail log); 2026-11-15 (every step in full again, covered steps tagged `[automated: …]` or `[partly automated: …]`, developer decision 2026-11-15, #511); 2026-11-14 (steps marked `[automated]` with their test, backfill #511); 2026-11-12 (merged; run on `main`, docs #340); 2026-11-06 (§ 1: Dashboard kept in the bar, LW4-1)
 **Issues:** [PandiO/knk-workspace#30](https://github.com/PandiO/knk-workspace/issues/30) (layout routes, route-meta
 table, grouped admin sidebar, breadcrumbs; sub-issue of [#24](https://github.com/PandiO/knk-workspace/issues/24));
 [#262](https://github.com/PandiO/knk-workspace/issues/262) (Invitations link never showed)
@@ -57,9 +57,13 @@ names what CI doesn't check. Untagged, by hand only: the themes, the error bound
 3. [automated: `e2e/admin-navigation.spec.ts`, `src/layouts/__tests__/AdminLayout.test.tsx`] Pages below a sidebar page keep its link highlighted: a player profile (Moderation → a row) → **Player
    moderation**; a transaction (Balance event log → a row) → **Balance event log**; Entity setup (Dashboard → ⚙), a
    form builder (Create Form) and a detail page (View) → **Dashboard**.
-4. [automated: `e2e/admin-navigation.spec.ts` (at 390 px it checks Game settings)] Below 1280 px (and at 390 px): an **Admin pages** button above the page opens the same list; a choice, Escape or a
-   click outside closes it. Nothing scrolls sideways (except Entity setup at 390 px, which already did on `main`:
-   see the W4 block). Found by the backfill: Mail log and Invitations do scroll sideways at 390 px, [#535](https://github.com/PandiO/knk-workspace/issues/535).
+4. [partly automated: `e2e/admin-navigation.spec.ts` ("below 1280 px the "Admin pages" button opens the list…", "at 390 px Mail
+   log and Invitations scroll their table inside its box…", "at 390 px the Lootboxes tables and the catalogue audit…");
+   by hand: no sideways scroll at 390 px on the other admin pages] Below 1280 px (and at 390 px): an **Admin pages**
+   button above the page opens the same list; a choice, Escape or a click outside closes it. Nothing scrolls sideways
+   (except Entity setup at 390 px, which already did on `main`: see the W4 block). Mail log, Invitations, the Lootboxes
+   tables and the Minecraft catalogue audit scroll their table inside its box (fixed in
+   [#535](https://github.com/PandiO/knk-workspace/issues/535)).
 5. [automated: `e2e/admin-navigation.spec.ts`] **Invitations** is in the sidebar (#262: the old nav link never showed, not even for the owner).
 
 ## 3. Breadcrumbs and titles
@@ -90,7 +94,7 @@ names what CI doesn't check. Untagged, by hand only: the themes, the error bound
    Moderation only, which this account can't open).
 3. [automated: `e2e/admin-navigation.spec.ts`] Type `/admin/users` (Moderation): "Staff only … needs the `knk.admin.user.manage` permission", with the sidebar
    still there. Type `/admin/siege-configuration`: the same for `knk.siege.admin.manage`.
-4. [partly automated: `e2e/admin-navigation.spec.ts` (the five pages); by hand: the trail sits under the button] At 390 px: **Admin pages** lists the same five pages; the trail sits under the button.
+4. [partly automated: `e2e/admin-navigation.spec.ts` (the five pages, on Mail log with no sideways scroll); by hand: the trail sits under the button] At 390 px: **Admin pages** lists the same five pages; the trail sits under the button.
 
 ## 5. Themes, background and errors
 
