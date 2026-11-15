@@ -4,6 +4,37 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **NPC navigation: NPCs stay on the stair at a turn over a ledge, and falls are counted**
+  ([PandiO/knk-workspace#592](https://github.com/PandiO/knk-workspace/issues/592), the developer's L3 retest of
+  [#491](https://github.com/PandiO/knk-workspace/issues/491) and [#492](https://github.com/PandiO/knk-workspace/issues/492);
+  link L5 of the NPC navigation follow-ups chain, implementation plan 4b.2). knk-plugin and knk-workspace branches
+  `claude/npc-followups-l5` (PRs into `next`, in review). No change for players or with `npc.navigation.enabled: false`
+  (the default).
+  1. **What makes NPCs fall at a stair corner like 1411 73 -537** (shown on `next` by a new scenario; the developer's
+     retest probably ran an older jar). A road line that cuts a 90° turn at a ledge puts route points over
+     the drop on the inside of the turn. K&K moved such a point onto a floor, and when there was none within 2 blocks of
+     the stair it took the nearest floor within 12 blocks: the ground 7 blocks below. The NPC got a waypoint with its
+     feet on the ground and walked off the corner (the same 74 → 67 as the developer's trace), and the next waypoints chained along the ground. Corner
+     clearance did not help because it only kept away from walls, and the inside of this turn is a drop.
+  2. **The fix, for any turn at a ledge.** A route point over a drop moves onto the walkable cell beside it (within a
+     block, floor continuity kept), or is left out when there is none. It never goes to a floor further away. Every step
+     between two waypoints must be a straight walk on floor; where one is not (a diagonal across a drop or round a wall
+     corner), the cells between go in as extra waypoints. Corner clearance keeps clear of a drop on the inside of a turn
+     as it does of a wall. The group's path and the followers' lanes follow the same rules, so a lane never points at the
+     floor below a landing's corner. At the #492 landing this is reproduced only with a road line that cuts
+     the inside of the turn; whether it is the cause at 1433 44 -518 waits for the developer's rerun.
+  3. **Falls are counted.** `falls` in `/knk npc nav stats` (the `fell` event) stayed 0 for Citizens NPCs: the check
+     needed the engine's fall distance, which stays near 0 for them. A fall is now told from a stair step by the body's
+     speed (0.55 blocks per tick or faster downwards). On the corner scene on `next` it now reports the 7-block falls it
+     missed.
+  4. **Traces show the waypoints.** `/knk npc nav trace` writes a `# waypoints:` line each time the traced NPC gets a new
+     stretch, so a trace shows whether a waypoint cuts a turn.
+  5. **Tests.** New plugin scenarios `npc-ledge-corner` and `npc-landing-ranks` on a new scene with both spots in their
+     real geometry. `npc-ledge-corner` failed on `next`, and `npc-landing-ranks` failed there with the cutting line
+     (it passes on `next` with a line along the flights' middle). Both pass with the fix. CI `paper-boot` now has `MIN_SCENARIOS` 34. New knk-core
+     tests are `LedgeCornerTest` and `WaypointChainTest`, with more cases in `GroupPathTest` and `RecentStepsTest`.
+  - **Admin steps:** none (no `config.yml` key, no new node, no API change). Developer retest: the L3 steps 3–5 on
+    [#521](https://github.com/PandiO/knk-workspace/issues/521), changed as posted on #592.
 - **Plugin: kick and ban sent from the web app are carried out in game**
   ([PandiO/knk-workspace#574](https://github.com/PandiO/knk-workspace/issues/574); developer decisions 2026-11-15 on
   [#565](https://github.com/PandiO/knk-workspace/issues/565); link L7 of the Chain 3 follow-ups chain,
