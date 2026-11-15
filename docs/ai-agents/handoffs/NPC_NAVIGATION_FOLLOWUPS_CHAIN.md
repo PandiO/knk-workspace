@@ -1,12 +1,15 @@
 # NPC navigation follow-ups chain — charter
 
-**Status:** Done (2026-11-15): all links merged into `next`; developer tests and promotion open
-**Last updated:** 2026-11-15
+**Status:** Running (2026-11-15): fix links L5–L7 after the developer's retest
+**Last updated:** 2026-11-15 (fix links L5–L7)
 **Issues:** parent [PandiO/knk-workspace#358](https://github.com/PandiO/knk-workspace/issues/358); link sub-issues
 [#519](https://github.com/PandiO/knk-workspace/issues/519) (L1),
 [#520](https://github.com/PandiO/knk-workspace/issues/520) (L2),
 [#521](https://github.com/PandiO/knk-workspace/issues/521) (L3),
-[#522](https://github.com/PandiO/knk-workspace/issues/522) (L4). Reference issues as `PandiO/knk-workspace#n` in
+[#522](https://github.com/PandiO/knk-workspace/issues/522) (L4); fix links
+[#592](https://github.com/PandiO/knk-workspace/issues/592) (L5),
+[#593](https://github.com/PandiO/knk-workspace/issues/593) (L6),
+[#594](https://github.com/PandiO/knk-workspace/issues/594) (L7). Reference issues as `PandiO/knk-workspace#n` in
 component repos.
 **Progress report:** [reports/2026-11-14-npc-navigation-followups-chain.md](../../reports/2026-11-14-npc-navigation-followups-chain.md)
 **History:** the first NPC navigation chain (Phases 1–4 and #490, all merged into `next`):
@@ -45,6 +48,9 @@ component repos.
 | L2 | #520 | tier:3 | #506 follower recheck and trespass guard; #507 no gate push on NPCs; tests | knk-plugin, knk-workspace | `claude/npc-followups-l2` | `next` | `npc.navigation.enabled` (off) | now (no other knk-plugin link or session on the same files) |
 | L3 | #521 | tier:3 | #508 with #491 and #492 per the L1 design; corner test scene | knk-plugin, knk-workspace | `claude/npc-followups-l3` | `next` | `npc.navigation.enabled` (off) | L1 approved and merged into `next`; L2 merged into `next` |
 | L4 | #522 | tier:3 | #493 narrowed formations and tighter spacing; #507 toggle; #490 audit re-run in its test steps | knk-plugin, knk-workspace | `claude/npc-followups-l4` | `next` | `npc.navigation.enabled` (off) | L3 merged into `next` |
+| L5 | #592 | tier:3 | Fix L3's retest failures: the #491 stair corner is still cut (route points 216–221), the `ranks` right row stuck at 1433 44 -518 (#492); scenarios from the real geometry | knk-plugin, knk-workspace | `claude/npc-followups-l5` | `next` | `npc.navigation.enabled` (off) | developer retest 2026-11-15 (now) |
+| L6 | #593 | tier:3 | Fix L2's retest failure (#506 step 10): followers enter a district whose entry was removed where a gate region overlaps the district entry | knk-plugin, knk-workspace | `claude/npc-followups-l6` | `next` | `npc.navigation.enabled` (off) | L5 merged into `next` |
+| L7 | #594 | tier:2 | #490: test walkers still drown (DROWNING 809 with the dry walkers) | knk-plugin, knk-workspace | `claude/npc-followups-l7` | `next` | none (test walkers only) | L6 merged into `next` |
 
 ## 2. Gates
 
@@ -56,7 +62,7 @@ component repos.
    the sessions board, checked at start. See chain note 1.
 
 Order and parallelism: L1 (knk-workspace only) and L2 run together. At most one running link in knk-plugin, so L3 and L4
-run after L2, one at a time.
+run after L2, one at a time. The fix links L5, L6, L7 run in that order, one knk-plugin link at a time (priority: the stair-release gate first).
 
 ## 3. Chain notes
 

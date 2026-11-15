@@ -1,17 +1,19 @@
 # NPC navigation follow-ups chain — progress report
 
-**Status:** Done, in review (all links merged into `next`; developer tests and promotion open) (2026-11-15) · **Last updated:** 2026-11-15
+**Status:** Running: fix links after the developer's retest (2026-11-15) · **Last updated:** 2026-11-15
 
 **Issue:** [PandiO/knk-workspace#358](https://github.com/PandiO/knk-workspace/issues/358), links
 [#519](https://github.com/PandiO/knk-workspace/issues/519) (L1),
 [#520](https://github.com/PandiO/knk-workspace/issues/520) (L2),
 [#521](https://github.com/PandiO/knk-workspace/issues/521) (L3),
-[#522](https://github.com/PandiO/knk-workspace/issues/522) (L4).
+[#522](https://github.com/PandiO/knk-workspace/issues/522) (L4), fix links #592 (L5), #593 (L6), #594 (L7).
 **Charter:** [handoffs/NPC_NAVIGATION_FOLLOWUPS_CHAIN.md](../ai-agents/handoffs/NPC_NAVIGATION_FOLLOWUPS_CHAIN.md).
 **History:** [first NPC navigation chain report](2026-11-13-npc-navigation-chain.md) (Phases 1–4 and #490 merged into
 `next`; developer tests done 2026-11-14).
 
 ## 1. Waiting for the developer
+
+**Retest 2026-11-15 (manager's relay, comments on #520, #521, #490):** L3 fails at the #491 stair corner and the #492 landing; L2 step 10 fails (#506, overlapping gate region); the #490 audit still shows DROWNING 809. Fix links L5–L7 run one at a time. #522 (L4) is not tested yet. The steps below stay valid for what isn't being fixed.
 
 Every link is merged into `next` (2026-11-15). Build knk-plugin from `next` `deb7ff49` or later, merge the new
 `config.yml` keys (YAML in the changelog and the configuration reference § 4.27; `stationary-ticks` and
@@ -37,6 +39,9 @@ Every link is merged into `next` (2026-11-15). Build knk-plugin from `next` `deb
 | L2 Follower recheck and guard, no gate push | #520 | Merged into next (2026-11-15, by the manager session) | knk-plugin `651d8bff` → `next` `11e07d64`; knk-workspace → `next` `43a2328c` | PandiO/knk-plugin#31, PandiO/knk-workspace#536 | PR head green (build, paper-boot); `next` runs 43662028862, 43662028855 pending at the coordinator check | create_session session_01R1w2Ux2KpS7H3FidwDEZmp (2026-11-14) |
 | L3 Wall-corner steering and recovery | #521 | Merged into next (2026-11-15) | knk-plugin `51072e94` → `next` `5dc88cfd`; knk-workspace `4308aaf1` → `next` `51bf5952` | PandiO/knk-plugin#36, PandiO/knk-workspace#557 | PR head green (build, paper-boot with Citizens, 19 scenarios); Codex at its usage limit | create_session session_01R1w2Uv1rEnwPko4Tq83xyL (2026-11-15) |
 | L4 Narrowed formations, followers-finish-trip toggle | #522 | Merged into next (2026-11-15) | knk-plugin `f965af06` → `next` `deb7ff49`; knk-workspace `bce76405` → `next` `ee9894ef` | PandiO/knk-plugin#39, PandiO/knk-workspace#584 | `build` green on `f965af06`; `paper-boot` green on one run, the other failed only the log check (#586, re-run); 31 scenarios; Codex at its usage limit | create_session session_01R1w2Uur6M3a3CaVDWJWCw7 (2026-11-15) |
+| L5 Fix: stair corner, ranks row at the landing | #592 | Running | — | — | — | create_session session_01R1w2UxAFomY5DQ18vRtAH6 (2026-11-15) |
+| L6 Fix: follower access with overlapping gate region | #593 | Not started (gate: L5 merged) | — | — | — | — |
+| L7 Fix: test walkers drown (#490) | #594 | Not started (gate: L6 merged) | — | — | — | — |
 
 ## 3. Coordinator decisions
 
@@ -119,6 +124,16 @@ Every link is merged into `next` (2026-11-15). Build knk-plugin from `next` `deb
     (`bce76405`). Merged PandiO/knk-plugin#39 → `deb7ff49` and PandiO/knk-workspace#584 → `ee9894ef`, at the
     manager's request so #522 could join the developer's test round. Documentation sub-issue #589 opened and its docs
     session started (session_01R1w2UvjZEQ5uyXDYDCqAfs).
+
+16. **Fix links after the developer's retest** (2026-11-15, relayed by the manager). Chosen: three fix links,
+    L5 (#592: #491 corner, #492 ranks row), L6 (#593: #506 step 10 with overlapping district/gate regions), L7 (#594:
+    #490 drowning walkers), one knk-plugin link at a time, in that order, because the stair corner is the release gate
+    and the most users' problem. Each link reproduces the real geometry or setup in a scenario first, since L2's and
+    L3's green suites missed these failures. Alternatives: (a) rerun L3 and L2 as subagents with what failed (skill
+    § 8.2; the failures are new findings with the real geometry rather than a failed check, so new links with their own
+    issues track them better); (b) one link for all three (three unrelated areas, a long serial link); (c) L6 first
+    (smaller, but the corner blocks the stair release gate). The manager fixes the CRLF config test (knk-plugin#41)
+    itself.
 
 ## 4. Link blocks
 
