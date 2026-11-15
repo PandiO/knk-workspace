@@ -87,8 +87,8 @@ something different from this skill, the prompt and charter win.
     suggests a model-named trailer (developer rule, reconfirmed 2026-11-12).
 11. **Docs:** the essential docs ship with your branch (global instructions, "Shipping a change"): the docs impact
     list, deploy notes (plugin `config.yml` keys with the YAML, API settings, migrations), spec and smoke-test status,
-    and a smoke-test section in `docs/guides/` with only the steps no suite can check (automated ones as one
-    `[automated]` line each).
+    and a smoke-test section in `docs/guides/` with every step in full, the automated ones tagged `[automated: <test>]`
+    (knk-test-writer § 4).
 
 ## 3. Finishing
 
