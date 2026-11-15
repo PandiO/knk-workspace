@@ -14,8 +14,8 @@
 ## 1. Waiting for the developer
 
 1. Phase 4 test steps 9 and 10 for L2 (#520), on a plugin built from `next` `11e07d64` or later (steps on #520).
-2. The L1 design questions (proposed defaults in L1's design, questions on #519 once L1 posts them); then the approval
-   of the L1 design, which opens L3 and L4.
+2. **Approve the L1 design** (PandiO/knk-workspace#546, plan Phase 4b, questions 4b.4 1–12, also on #519). The
+   coordinator merges #546 into `next` after the approval; that and L2 (merged) open L3. No running link until then.
 
 ## 2. Summary
 
@@ -77,6 +77,14 @@
 11. **Scenario framework on `next`** (#421 and the #511 scenarios, knk-plugin#35, 2026-11-15). L3 and L4 write their
     world steps (corner scene, gate and access group tests) as plugin scenarios, not "scenario later". Told L1 so its
     test sections plan for them.
+
+12. **L1 checked, merge held for the developer's approval** (2026-11-15). § 6 held: PR #546 into `next` contains
+    `next` (`43a2328`), docs only (changelog, BEHAVIOR_MODEL § 2 NAV-19–NAV-23, plan Phase 4b), 12 questions with
+    proposed defaults and alternatives, Codex skipped for its usage limit. Chosen: hold the merge until the developer
+    approves, because the charter's L3 gate is "L1 approved and merged" and L1 was told the coordinator merges after
+    approval. Alternatives: (a) merge now as "proposed" (skill § 7.1 merges every tier at once; but the design would
+    then sit in `next` with twelve unconfirmed defaults, and a change to them is a second PR). CI on knk-plugin `next`
+    after L2: `build` and `paper-boot` green (runs 43662028862, 43662028855).
 
 ## 4. Link blocks
 
