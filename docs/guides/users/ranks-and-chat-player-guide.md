@@ -1,6 +1,6 @@
 # Ranks, titles and chat — player guide
 
-**Status:** Current · **Last updated:** 2026-11-13 (first version, PandiO/knk-workspace#301)
+**Status:** Current · **Last updated:** 2026-11-15 (§ 8, § 9: kick and ban by staff on the website; #565, #574 in `next`, docs #597)
 **Checked against:** knk-plugin `main` `57884e97`, knk-web-api `master` `75b5a00`, knk-web-app `main` `3ba747d`; not
 yet checked in game
 **Related:** [player handbook](player-handbook.md), [commands reference](commands.md), [chat tokens](../chat-tokens.md),
@@ -139,7 +139,13 @@ So you know what to expect:
    damage, and a red bar shows who froze you and why ("You have been frozen: <reason>"). You can still message staff
    with `/msg` and `/r` ("You can only message staff while frozen."). A freeze lasts until a staff member lifts it, also
    across a relog ("You have been unfrozen.").
-4. **Kick and ban** are the server's own `/kick` and `/ban`.
+4. **Kick and ban.** Staff can kick or ban you in game or from the website.
+   - **Kicked:** you are disconnected with the reason staff gave, or "You were kicked by a member of staff." You can
+     join again straight away.
+   - **Banned:** you are disconnected with "You are banned from this server." and the reason, and you can't join
+     again. A ban is permanent until staff lift it; there is no time limit.
+   - The texts can differ per server. *Kick and ban from the website are new and reach the servers with the next
+     release (PandiO/knk-workspace#565, #574).*
 5. There is no mute: a player who must stop chatting is frozen (PandiO/knk-workspace#466).
 
 ## 9. Messages you may see
@@ -155,3 +161,10 @@ So you know what to expect:
 | "Your ignore list is still loading - try again in a moment." | You've only just joined |
 | "Statistics tokens can be used again in Ns; they were sent as text." | Chat token cooldown ([chat tokens](../chat-tokens.md)) |
 | "That command is disabled." | `/me` and `/teammsg` are turned off on this server |
+| Disconnected with a reason, or "You were kicked by a member of staff." | Staff kicked you; you can join again (§ 8.4) |
+| "You are banned from this server." with a reason | Staff banned you; you can't join until they lift it (§ 8.4) |
+
+## Changes
+
+1. 2026-11-15: § 8, § 9 kick and ban by staff on the website, #565, #574, docs #597
+2. 2026-11-13: first version, PandiO/knk-workspace#301

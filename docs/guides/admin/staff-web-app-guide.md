@@ -1,7 +1,8 @@
 # Staff web app — admin guide
 
-**Status:** Current · **Last updated:** 2026-11-15 (§ 3: the read-only Permission Grant table; § 4: a permission
-group's Permissions panel and History; #408, #50 in `next`, docs #576)
+**Status:** Current · **Last updated:** 2026-11-15 (§ 3, § 4: "Show what uses it" for form configurations, bulk delete
+rows and skipped created records; § 5: lookup pickers keep their narrowing filters; § 7: validation rules in the draft;
+#289, #288, #291 in `next`, docs #597)
 **Checked against:** knk-web-app `main` `3ba747d` and knk-web-api `master` `f445d21` (AM3 of #280 merged 2026-11-13 as
 `e02ee79` / `45043a7`; #371, #374 and #383, create, edit and link changes on `knk.admin.content`, reached the default
 branches with the promotion of `next` on 2026-11-13). Step conditions in the form builder and clickable form steps
@@ -9,11 +10,15 @@ branches with the promotion of `next` on 2026-11-13). Step conditions in the for
 2026-11-14). Only the builders (§ 7) were smoke-tested by the developer
 (2026-11-11/12, all pass); navigation, Entity setup without a nav link, the detail page, the relation picker, live
 updates, the settings pages and the dashboard access model with bulk delete (§ 1, § 3) are **not live-tested** yet:
-their smoke tests are linked in each section (the access model's is in closed alpha test run 2, checklist § 4c).
+their smoke tests are linked in each section (the access model's is in closed alpha test run 2, checklist § 4c). The
+Chain 3 follow-ups (#289, #288, #291) are in `next` since 2026-11-15 (knk-web-api `5e10185f`, knk-web-app `98e108f0`),
+not yet released; automated in CI, their manual steps not run.
 
 How staff find their way around the web app's admin pages and use the content tools: the dashboard, Entity setup, the
 detail page, the relation picker in forms, live updates, the form and display builders, and the settings pages. It
-does not repeat the feature guides (siege, game settings, menus, …); it links to them.
+does not repeat the feature guides (siege, game settings, menus, …); it links to them. **Player moderation** and the
+**player profile** (freeze, kick and ban, permissions, the timeline) are in the
+[ranks, permissions and moderation guide](ranks-permissions-moderation-admin-guide.md) § 3 and § 5–7.
 
 ## 1. Before you start
 
@@ -131,6 +136,14 @@ on its left edge ([#404](https://github.com/PandiO/knk-workspace/issues/404)).
 **Delete one row.** A row's **Delete** asks "Delete Street "Main Street"?" in a red dialog; after **Delete** a short
 message says it was deleted. If it is still in use, the refusal offers **Show what uses it** (§ 4).
 
+**Delete a form configuration** (Entity setup → a form's **⋯** → **Delete**). A form that another form opens as a
+sub-form can't be deleted: the red "Delete failed" dialog says "This form configuration can't be deleted: it is still
+used by 1 form field that opens it as a sub-form …" with **Show what uses it** (in `next`,
+[#289](https://github.com/PandiO/knk-workspace/issues/289)). It lists the form fields and steps, each with the form
+(and step) it sits in, for example "Field of the form "Kingdom form" (Kingdom), step "Towns"". They are not links;
+open that form in the builder and clear its **Sub-configuration** first. Saved drafts and form sessions that use it
+are only counted. Reading the list needs `knk.admin.content`.
+
 **Select rows.** Tick the boxes in the first column (the header box ticks the rows shown); the selection stays across
 pages and searches of the type and is cleared when you pick another type. The bar above the table says "n selected"
 with **Clear**, or "None selected · Export takes all N results".
@@ -140,7 +153,9 @@ with **Clear**, or "None selected · Export takes all N results".
 - It asks "Delete 3 Streets?" with the count and type. Nothing is deleted before you confirm, and it can't be undone.
 - The rows are sent 100 per request, one request after the other; a large selection shows "Deleting… n / N".
 - Deleted rows leave the table and the selection. A row that couldn't be deleted **stays selected**, and a dialog
-  "Deleted 2 of 3 Streets" lists it with the reason; a row still in use offers **Show what uses it**. If a request
+  "Deleted 2 of 3 Streets" lists it with the reason; a row still in use offers **Show what uses it** beside its name,
+  which loads that row's list under its reason (**Hide** folds it again; a link closes the dialog and opens the
+  record). A row refused for another reason has no such button. If a request
   fails (network, too many requests), the run stops and the dialog lists the rows not tried.
 - A short message sums it up ("Deleted 3 Streets.", or "Deleted 2 of 3 Streets; 1 weren't deleted."). Each request
   is one "Bulk delete on the dashboard" entry in your audit log (player profile → Activity).
@@ -242,8 +257,17 @@ Smoke test: [dashboard access § 8.7](../dashboard-access-smoke-test.md#87-a-per
 **A delete that is refused because the record is still in use** (a street that structures point at) shows the API's
 message with **Show what uses it** ([#44](https://github.com/PandiO/knk-workspace/issues/44)): the records per kind
 ("23 structures"), each a link to its detail page when you may read it, "… and n more" past 20. This works for a row's
-Delete on the dashboard, the header's Delete and an item's Delete. Other refusals don't have it yet
-([#289](https://github.com/PandiO/knk-workspace/issues/289)).
+Delete on the dashboard, the header's Delete and an item's Delete; since
+[#289](https://github.com/PandiO/knk-workspace/issues/289) (in `next`) also for a form configuration in Entity setup
+and the rows of a bulk delete (§ 3), and for records skipped when you delete what a form created:
+
+- **Cancel form** → **Delete them**, or Entity setup → Saved Progress → a draft's trash icon → **Delete draft and
+  them**, deletes the records created while filling in the form, newest first. One that something else now uses is
+  skipped: the report says, for example, "Deleted 1 of 2." and "District '…': skipped: in use (used by
+  Structure.DistrictId)" with **Show what uses it**. Its list has every reference the in-use check counted, also links
+  that would have been removed with the record. A link closes the report and opens that record.
+
+A delete that fails for another reason (the API is down) has no **Show what uses it**.
 
 Known gaps: some relationship pairs can't be linked here yet, and link-table changes don't update live
 ([#287](https://github.com/PandiO/knk-workspace/issues/287)).
@@ -262,12 +286,17 @@ full table with paging, sorting and filters.
 
 Without read access to the related type (its area node), the box searches **by name only** (no full table) and says
 so: "Names only: the full Street table needs one of: …". A type that can't be searched that way says "can't be searched
-here. Requires one of: …"; a field with a narrowing filter says why it can't offer the list
-([#288](https://github.com/PandiO/knk-workspace/issues/288)). **Create New** for a link field is offered only with
+here. Requires one of: …". A field whose picker is narrowed by filters (a siege objective's **Initial holder team**,
+scoped to the scenario's teams) offers the **narrowed** list in this mode too, names only (in `next`,
+[#288](https://github.com/PandiO/knk-workspace/issues/288); before, it refused with "This list is narrowed by …"). Only
+a filter the type's lookup doesn't take still refuses, in red with no rows: "This list is narrowed by <filter>, which
+only the full <type> search can do. Requires one of: …"; ask for the type's area node, or have someone who holds it
+fill in that field. **Create New** for a link field is offered only with
 the related type's create node and `knk.admin.content`. A table you can't read (for example a picker's **Open full table**) says "You don't
 have access to Category. Requires one of: …" instead of "Failed to load data".
 
-Smoke test: [relation picker and delete details](../relation-picker-and-delete-details-smoke-test.md) (not run).
+Smoke test: [relation picker and delete details](../relation-picker-and-delete-details-smoke-test.md) § 1–2 (§ 2.4–2.5
+lookup filters automated in CI; manual steps not run).
 
 ### 5.1 The steps of a form: Next, clicking a step, and what stops you
 
@@ -378,11 +407,26 @@ Saving, publishing, duplicating, discarding and generating need `knk.admin.conte
 hold before a step may be left or opened) and form steps you can click to jump. The `main` web app has neither; this
 guide describes them once `next` is promoted.
 
-> **Known limit ([#291](https://github.com/PandiO/knk-workspace/issues/291)):** a field's **validation rules** are saved
-> at once, outside the draft: a rule you add, change or remove applies to the published form straight away, before
-> Publish.
+**Validation rules are part of the draft** (in `next` since 2026-11-15,
+[#291](https://github.com/PandiO/knk-workspace/issues/291); on `main` a rule still applies to the published form as
+soon as you save it). A field's **Cross-Field Validation Rules** say "Rules are part of the draft: they are kept when
+you save this field and the form, and staff get them when you publish. Until then the form uses the published rules."
 
-Smoke test: [form and display builders](../form-display-builders-smoke-test.md) (run 2026-11-11/12, all pass).
+1. **Add Rule**, **Edit** → **Save Rule** and **Delete** change the draft only; a new rule shows **Not published**.
+   Deleting asks "The rule is removed from the draft; the published form keeps it until you publish." **Save Field**
+   and then **Save** keep the changes.
+2. A field you added in this draft can get rules before its first Publish. **Depends On Field** offers this form's
+   fields, the new ones too.
+3. **Publish…** lists the rule changes under "What changes for staff", for example "Validation rules: 1 added, 1
+   changed, 1 removed.", and applies them with the rest. **More → Discard unpublished changes…** drops them.
+4. Publish is refused, with nothing published, when a rule depends on a field that is no longer in the form ("The <type>
+   rule on "<label>" depends on a field that is no longer in the form. Edit or delete the rule."), when a rule's own
+   field is gone, or when rules depend on each other in a circle. Edit or delete the rule, then publish.
+5. A draft saved before this change has no rules in it: its fields show the published rules, and Publish leaves them
+   as they are.
+
+Smoke test: [form and display builders](../form-display-builders-smoke-test.md) (run 2026-11-11/12, all pass; § 11, the
+rules in the draft, automated in CI, manual steps not run).
 
 ### 7.1 Step conditions
 
@@ -522,25 +566,33 @@ get the new version at once.
 | **Publish…** refused: `Step "…" has a "before leaving" condition without a message` | A step condition checked on Next has no message (§ 7.1) | Type the message, or remove the condition |
 | A form can't get past a step and shows a condition's message whatever you fill in | The condition reads a field that is gone or has moved (red rule in the builder, Configuration health warning), or its JSON is not valid | Fix or remove the rule in the builder (§ 7.1) and publish |
 | Clicking a step opens **Can't go to "…" yet** | A step before it is unfinished (§ 5.1) | Fix the listed fields, or **Go to …** |
-| A validation rule change applies before Publish | Known limit #291 | Change rules outside play hours |
+| A validation rule change applies before Publish | `main` before #291 reaches it: rules were saved outside the draft | Change rules outside play hours; with #291 (`next`) they wait for Publish |
+| **Publish…** refused: "… depends on a field that is no longer in the form." or "… depend on each other in a circle" | A validation rule reads a field you removed, or rules form a loop (§ 7) | Edit or delete the rule, then publish |
+| A form configuration's Delete fails with "still used by … form field that opens it as a sub-form" | Another form opens it as a sub-form | **Show what uses it**, clear that field's or step's Sub-configuration, delete again |
+| A picker says "This list is narrowed by …, which only the full … search can do." | You search by name only and the field's filter isn't one the lookup takes (§ 5) | Ask for the type's area node, or let someone who has it fill in the field |
 | No "Updated by …" lines | Live updates off on the server, the connection is blocked, or you lack the type's area node | Reload; check `Realtime__WebLiveUpdatesEnabled` and the proxy's `/api/hubs/web` |
 
 ## Changes
 
-1. 2026-11-15: § 4 a town's Streets are read-only, managed on the district; #409, docs #559 (in `next`)
-2. 2026-11-14: § 3 pinned View / Edit / Delete column, same row lines, right-click menu with Shift+F10 and the
+1. 2026-11-15: § 3 and § 4 "Show what uses it" for a form configuration, bulk delete rows and records skipped as in
+   use; § 5 lookup pickers keep their narrowing filters; § 7 validation rules in the draft, applied on Publish; § 10;
+   pointer to the ranks guide for the player profile; #289, #288, #291, docs #597 (in `next`)
+2. 2026-11-15: § 3 the read-only Permission Grant table; § 4 a permission group's Permissions panel and History; #408,
+   #50, docs #576 (in `next`)
+3. 2026-11-15: § 4 a town's Streets are read-only, managed on the district; #409, docs #559 (in `next`)
+4. 2026-11-14: § 3 pinned View / Edit / Delete column, same row lines, right-click menu with Shift+F10 and the
    context-menu key, greyed-out items, selection, Ctrl/Cmd + right-click; #404, #405, #406, knk-web-app#17, docs #526
    (in `next`)
-3. 2026-11-14: § 5.1 "Go to …" opens at once and saves in the background, a failed save shows in the banner;
+5. 2026-11-14: § 5.1 "Go to …" opens at once and saves in the background, a failed save shows in the banner;
    § 5.1 and § 7.1 a failed step condition marks its fields; #413, #414, knk-web-app#20, docs #482 (in `next`)
-4. 2026-11-13: § 5.1 the steps of a form: clicking a step, what stops you; § 7.1 step conditions in the form builder;
+6. 2026-11-13: § 5.1 the steps of a form: clicking a step, what stops you; § 7.1 step conditions in the form builder;
    #68, #88, docs #395 (in `next`)
-5. 2026-11-13: Select / Change / Unlink / Add need `knk.admin.content`, the API refuses creates and edits without it,
+7. 2026-11-13: Select / Change / Unlink / Add need `knk.admin.content`, the API refuses creates and edits without it,
    #374, docs #385
-6. 2026-11-13: New, Edit and the forms need `knk.admin.content` again, #371, docs #378
-7. 2026-11-13: § 1, § 3, § 4, § 5, § 9, § 10 checked against the default branches: New, Edit, the forms, link changes,
+8. 2026-11-13: New, Edit and the forms need `knk.admin.content` again, #371, docs #378
+9. 2026-11-13: § 1, § 3, § 4, § 5, § 9, § 10 checked against the default branches: New, Edit, the forms, link changes,
    hot edit, the lootbox toggle and Create New Street need `knk.admin.content`, #371, #374, #383; known gap #380; docs
    #347
-8. 2026-11-13: dashboard per area, disabled actions with "Requires …", bulk delete, export through the API, names-only
+10. 2026-11-13: dashboard per area, disabled actions with "Requires …", bulk delete, export through the API, names-only
    pickers, readable refusals; #280 AM3 and #205, docs #366
-9. 2026-11-12: first version, PandiO/knk-workspace#337, #338, #340–#345
+11. 2026-11-12: first version, PandiO/knk-workspace#337, #338, #340–#345
