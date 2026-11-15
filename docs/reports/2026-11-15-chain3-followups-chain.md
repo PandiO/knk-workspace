@@ -25,7 +25,7 @@
 | L3 "Show what uses it" for more refusals | #289 | Merged into next (2026-11-15) | api `98f0c91`, web-app `41c75ca`, workspace `d833cb0a`; next: api `378921c6`, app `2dfd5883`, ws `e8a4e1e8` | [web-api#34](https://github.com/PandiO/knk-web-api/pull/34), [web-app#39](https://github.com/PandiO/knk-web-app/pull/39), [#579](https://github.com/PandiO/knk-workspace/pull/579) | green (PR runs); next: app run 43707033299 pending | subagent (decision 13) |
 | L4 Builder rules and templates into the draft | #291 | Merged into next (2026-11-15) | api `a851436`, web-app `0d604fe`, workspace `4fa25605`; next: api `93c3d50f`, app `cd730f29`, ws `0ca9b1b6` | [web-api#35](https://github.com/PandiO/knk-web-api/pull/35), [web-app#40](https://github.com/PandiO/knk-web-app/pull/40), [#583](https://github.com/PandiO/knk-workspace/pull/583) | green (PR runs 43711458740/43711458686 api, 43711488807/43711488760 web) | subagent (two component repos, § 4.1.4); resumed once after a usage-limit stop |
 | L5 Lookup applies picker filters | #288 | Merged into next (2026-11-15) | api `95a2954`, web-app `9d82786`, workspace `b1d270f1`; next: api `d8514ed4`, app `990af482`, ws `c6e017ad` | [web-api#36](https://github.com/PandiO/knk-web-api/pull/36), [web-app#41](https://github.com/PandiO/knk-web-app/pull/41), [#587](https://github.com/PandiO/knk-workspace/pull/587) | green (PR runs 43714699624/43714699597 api, 43714715547/43714715574 web) | subagent (two component repos, § 4.1.4) |
-| L6 Player profile API part | #565 | Running (2026-11-15) | — | — | — | subagent (two component repos, § 4.1.4) |
+| L6 Player profile API part | #565 | Done, in review (2026-11-15) | api `9442502`, web-app `7051b52`, workspace `27d3065a` | [web-api#37](https://github.com/PandiO/knk-web-api/pull/37), [web-app#42](https://github.com/PandiO/knk-web-app/pull/42), [#595](https://github.com/PandiO/knk-workspace/pull/595) | green (PR runs 43720314230/43720314231 api, 43720332163/43720332129 web) | subagent (two component repos, § 4.1.4) |
 | L7 Plugin carries out web kick/ban | #574 | Not started | — | — | — | — |
 
 ## 3. Coordinator decisions
@@ -358,3 +358,97 @@ _(Each link appends its block here when it finishes.)_
 9. **Notes for later links.** L6 (player profile API): the lookup's filter list lives in `DashboardLookups.cs`
    (`filters:` on `Of<…>`); `LookupFiltersTests.LookupFilters_ArePinnedPerType_AndNeverOnUsers` must change with it. L5
    did not touch `PlayerProfilePage.tsx` or the user search.
+
+### 4.6 L6 — Player profile API part, kick and ban from the web (#565)
+
+1. **Scope done.**
+    1. knk-web-api: `PUT api/Users/{id}/unfreeze` optional `{ reason }` into the `PlayerUnfrozen` audit entry (empty body
+       still allowed for the plugin); `ProfileAccountDto` (`UserDto` + `frozenAt`, `frozenByUserId`, `frozenByUsername`)
+       as the profile summary's account; `GET api/statistics/users/{id}/sessions` (`knk.admin.user.manage`, newest first,
+       paged, merged accounts included); `POST api/Users/search` filters `online` / `frozen` / `paymentsLocked`, sort keys
+       `lastseenat` / `experiencepoints`, UUID with or without dashes, `UserListDto.isFrozen` / `paymentsLocked` /
+       `createdAt`; `PlayerModerationController` + `PlayerModerationService`: `POST api/Users/{id}/kick` (`knk.kick`) and
+       `/ban` (`knk.ban`), audited (`PlayerKicked` 63, `PlayerBanned` 64), realtime `PlayerKick` / `PlayerBan` v1 to every
+       game server; `PermissionEscalationGuard.CanModerateUserAsync`; `StaffPermissions.Kick` / `.Ban`; migration
+       `20261115125459_SeedStaffKickBanNodes` (Staff gets both, data only).
+    2. knk-web-app: `usePlayerFreeze` reads the frozen state from the summary (no `GET api/Users/{id}`, no audit lookup),
+       `UNFREEZE_TAKES_REASON = true`; game sessions as the third `TimelineSource` (chip "Game sessions");
+       `usePlayerKickBan` with Kick / Ban in the status strip and a Kick and ban card on the Moderation tab (replaces the
+       LV3-7 note), "Requires knk.kick / knk.ban" without the node; moderation search: Online / Frozen / Payments selects
+       (in the URL), Last seen and XP sortable, Frozen / Payments locked chips, Created column.
+    3. knk-workspace (docs branch): smoke test § 7 (18 steps, 15 tagged, 5 partly) and § 2.2, 2.5, 3.1; realtime DESIGN
+       § 6.10 (the event contract); web-api architecture § 5.7; web-app architecture; CHANGELOG.
+2. **Commits and heads.** knk-web-api `claude/player-profile-api-119` at `9442502` (1 commit, base `next` at `d8514ed`);
+   knk-web-app at `7051b52` (1 commit, base `next` at `990af48`); knk-workspace at `27d3065a` (2 commits incl. a merge of
+   `origin/next` at `fd53a7d6`, CHANGELOG both sides kept; base `next` at `c6e017ad`).
+3. **PRs.** [knk-web-api#37](https://github.com/PandiO/knk-web-api/pull/37), [knk-web-app#42](https://github.com/PandiO/knk-web-app/pull/42),
+   [knk-workspace#595](https://github.com/PandiO/knk-workspace/pull/595) (closes #565), base `next`. Not merged.
+4. **Tests, baseline → result.**
+    1. knk-web-api: baseline on `next` 4215 passed / 98 skipped; branch 4277 / 100 (MySQL tests skipped without
+       `KNK_TEST_MYSQL`). New: `Api/PlayerModerationTests.cs` (incl. `ModerateRankGuardTests`), `Api/PlayerProfileApiTests.cs`,
+       `Migrations/SeedStaffKickBanNodesTests.cs`, MySQL `SeedStaffKickBanNodesMySqlTests`, `UserSearchFiltersMySqlTests`
+       (both run locally on MySQL 8.0 and green; the whole `requires-mysql` category 99/100). New tests checked failing with
+       the behaviour broken. CI: push runs 43718315480 / 43718315464 green; PR runs 43720314230 / 43720314231 green.
+    2. knk-web-app: baseline Jest 307 suites / 2645, tsc clean, Playwright 135; branch Jest 308 / 2672, tsc clean,
+       `typecheck:e2e` ok, `CI=true npm run build` ok, Playwright 146 (new `e2e/player-profile-moderation.spec.ts`, 11
+       tests). CI: push runs 43719938142 / 43719938215 green; PR runs 43720332163 / 43720332129 green.
+    3. Known reds: MySQL `MinecraftCatalogMySqlTests.UpgradePath…` (also red on `next`, issue #285; CI does not run MySQL tests).
+5. **Decisions (DESIGN § 4.3).**
+    1. *Kick and ban reasons.* Chosen: kick reason optional, ban reason required (both at most 200 characters), because a
+       ban is permanent and shown on the ban screen, a kick is a quick removal. Alternatives: (a) both required, as
+       freeze: slows a routine kick; (b) both optional: a permanent ban without a reason.
+    2. *Kick of an offline player.* Chosen: 409 `PlayerNotOnline` (by `User.IsOnline`), nothing audited or sent, because
+       there is nothing to kick and an audited no-op misleads. Alternatives: (a) accept and audit: an entry for an action
+       that did nothing.
+    3. *Delivery when no game server is connected.* Chosen: 503 `NoGameServerConnected` (counted on `RealtimeConnections`),
+       nothing audited, because the realtime layer has no outbox and does not replay events on reconnect, and a ban lives
+       only in the game server's ban list, so a resync cannot recover it. A server that connects later or a lost message
+       still misses the event (documented in DESIGN § 6.10.6); staff repeat the action or use `/ban`. Alternatives: (a)
+       accept and audit anyway: silent loss; (b) also queue it in the player notification queue (polled while the hub is
+       down): a second delivery path L7 must acknowledge, not offered by the realtime layer as designed; (c) store ban
+       state on the user and apply on join: a schema change and a second ban list; (d) an outbox (§ 4.3 option C): new
+       mechanism, not built.
+    4. *Rank check.* Chosen: `CanModerateUserAsync`: the target's highest group weight must be below the caller's; a
+       player in no group can always be acted on; `*` holders may act on anyone and nobody else may act on them; 403
+       `EscalationRefused`. Freeze has no rank check, so this follows the group escalation rules (#280) and the plugin's
+       in-game freeze rank rule. Alternatives: (a) no rank check, as the API's freeze: Staff could ban an Admin from the
+       web; (b) also require holding every node the target holds: too strict for moderation.
+    5. *Who may call kick/ban.* Chosen: web users only (`RequirePermission`), because the game server has its own
+       `/kick` and `/ban`, and an echo would loop. Alternatives: (a) `RequireServiceOrPermission` like freeze: no caller.
+    6. *Event targets.* Chosen: both events to every game server (`ServerId` null): each bans in its own ban list, a kick
+       is a no-op where the player is not online. Alternatives: (a) kick only to the presence registry's server: misses a
+       stale presence; still possible later in v1 (receivers ignore what is not theirs).
+    7. *Idempotency key.* Chosen: `actionId` (GUID) in the payload and the audit details, so L7 can act once on a
+       duplicate. Alternatives: (a) the audit entry id: `RecordAsync` returns none.
+    8. *Frozen fields shape.* Chosen: a `ProfileAccountDto : UserDto` only on the profile summary, the three fields always
+       written (null while not frozen), so `GET api/Users/{id}` and the player's own reads do not expose who froze them.
+       Web fallback for an older API: none needed (it still sends `isFrozen` / `frozenReason`; the banner then has no
+       since/by), logged here. Alternatives: (a) add the fields to `UserDto`: every user read would carry the staff name;
+       (b) keep the old `GET api/Users/{id}` + audit lookup as fallback: two extra calls the API-first deploy avoids.
+    9. *Sessions `serverId`.* Chosen: `PlayerStatSession.ServerName` (the plugin's server name), the only server field
+       the table has. Alternatives: (a) a new column: no source for another id.
+    10. *Sessions and merged accounts.* Chosen: include merged identities (`IdentityIdsAsync`), as every statistics
+        read. Alternatives: (a) the account only: loses history after a merge.
+    11. *Search `lastseenat` order.* Chosen: id as tie-break; never-seen players first ascending, last descending (MySQL
+        NULL order). Alternatives: (a) NULLs always last: needs a computed sort column.
+    12. *Unfreeze reason in `UserFrozenChanged`.* Chosen: unchanged (null on unfreeze); the reason is only audited.
+        Alternatives: (a) send it: a contract change for no game-side use.
+    13. *Permission nodes.* Today's nodes plus `knk.kick` / `knk.ban` (#387 not merged). They are not children of
+        `knk.admin`, so `knk.admin.*` does not match them; Admin gets them by inheriting from Staff or through `*`
+        (the developer's note said "through knk.admin.* / *"; on the alpha Admin inherits Staff, so the effect is the same).
+6. **Out of scope, noted.** Known red #285 (MySQL upgrade-path test) unchanged. No new issue.
+7. **Blockers.** None. Codex at its usage limit on all three PRs (review "Failed", said on each PR); no inline findings.
+8. **At merge / what the developer must do.**
+    1. Apply the migration `SeedStaffKickBanNodes` (Staff gets `knk.kick`, `knk.ban`; data only).
+    2. Deploy knk-web-api **first** (or together): an older API has no sessions, kick or ban endpoints.
+    3. Kick and ban only take effect in game once L7 (#574) is in `next` and deployed, with the plugin's
+       `realtime.enabled: true` (the API answers 503 while no game server is connected to the hub).
+    4. By hand: smoke test § 7 steps 3, 8–10, 12, 13, 17, 18 (real game server; 8–10, 13, 18 need L7).
+    5. Follow-up docs (documentation sub-issue): staff web app guide (Kick/Ban, search filters), guides index row.
+9. **Notes for later links.** L7 (#574): the contract is realtime DESIGN § 6.10 on knk-workspace
+   `claude/player-profile-api-119` (and in the report block above). Summary: types `PlayerKick` and `PlayerBan`, `v` 1,
+   to every game server, `actor { userId, source: "web" }`; payload `{ actionId, userId, uuid, username, reason,
+   staffUserId, staffUsername, at }` (camelCase; `reason` null only on a kick without one; act on `uuid`; dedupe by
+   `actionId`). Kick: kick the online player with the reason or the default message. Ban: add the profile to Paper's
+   profile ban list, permanent, reason, `staffUsername` as source, online or not; kick if online; idempotent. Register
+   both with max version 1 in the `UserStateSync` pattern (`knk-api-client` `UserStateEvents` constants + parse records).
