@@ -21,8 +21,8 @@
 | Link | Issue | Status | Branch heads | PR | CI | How started |
 |---|---|---|---|---|---|---|
 | L1 Temp region releases | #399 | Merged into next (2026-11-15) | knk-web-api `a0b5ff3f`, knk-workspace `86adf724`; next: api `3b36edc6`, ws `5dafabac` | [knk-web-api#33](https://github.com/PandiO/knk-web-api/pull/33), [knk-workspace#572](https://github.com/PandiO/knk-workspace/pull/572) | green (runs 43702385149, 43702462646) | create_session session_01R1w2Uvbubw539aKYxgnvjR |
-| L2 List field cards at 390 px | #290 | Done, in review (2026-11-15) | web-app `8cb616b`, workspace `b61c6456` | [web-app#38](https://github.com/PandiO/knk-web-app/pull/38), [#571](https://github.com/PandiO/knk-workspace/pull/571) | green (PR run); push-run flake #573 | create_session session_01R1w2UswAebrDAEEFqUHA3e |
-| L3 "Show what uses it" for more refusals | #289 | Not started | — | — | — | — |
+| L2 List field cards at 390 px | #290 | Merged into next (2026-11-15) | web-app `8cb616b`, workspace `080a4bdf`; next: app `9b5f9ddf`, ws `9eeb29ff` | [web-app#38](https://github.com/PandiO/knk-web-app/pull/38), [#571](https://github.com/PandiO/knk-workspace/pull/571) | green (PR run; push-run e2e flake #573, re-run green) | create_session session_01R1w2UswAebrDAEEFqUHA3e |
+| L3 "Show what uses it" for more refusals | #289 | Running (2026-11-15) | — | — | — | subagent (decision 13) |
 | L4 Builder rules and templates into the draft | #291 | Not started | — | — | — | — |
 | L5 Lookup applies picker filters | #288 | Not started | — | — | — | — |
 | L6 Player profile API part | #565 | Not started | — | — | — | — |
@@ -83,6 +83,10 @@
     well as knk-web-app (coordinator skill § 4.1.4). L3 has no open developer decision. Alternatives: (a)
     `create_session` and fall back on an `add_repo` refusal: the charter's first plan, changed now that the API part
     looks needed.
+14. **L2 merged (2026-11-15).** The re-run of the failed `e2e` job passed; merged knk-web-app#38 (`9b5f9ddf`) and
+    knk-workspace#571 (`9eeb29ff`) into `next`. CI on knk-web-api `next` after L1 (`3b36edc6`) is green (build and
+    test, fresh-database migrations). Gate for L3 open (both L2 branches 0 commits ahead of `next`). L3 started as a
+    subagent.
 
 ## 4. Link blocks
 
