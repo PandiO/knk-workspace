@@ -1,6 +1,6 @@
 # Town streets from districts — design note
 
-**Status:** Approved 2026-11-14 (defaults), implemented in L2 · **Last updated:** 2026-11-15
+**Status:** Current (implemented in `next`: knk-web-api `de74190`, knk-web-app `d3d7152`, merged 2026-11-15; on trunk once the developer promotes `next`) · **Last updated:** 2026-11-15 (status after the merge into `next`, docs #559)
 
 **Developer decisions (2026-11-14, on [#515](https://github.com/PandiO/knk-workspace/issues/515)):** all six
 recommended defaults of § 8 approved; orphan `TownStreet` rows are all dropped with the table (no per-row linking, the

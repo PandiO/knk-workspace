@@ -1,6 +1,6 @@
 # Web app testing
 
-**Status:** Current · **Last updated:** 2026-11-14 (smoke-test backfill specs and helpers, [PandiO/knk-workspace#511](https://github.com/PandiO/knk-workspace/issues/511)); 2026-11-14 (§ 3: `dashboard-row-actions.spec.ts` listed, 16 tests; #404–#406, docs [#526](https://github.com/PandiO/knk-workspace/issues/526)); 2026-11-14 (end-to-end tests on Playwright instead of Cypress, in CI, [PandiO/knk-workspace#423](https://github.com/PandiO/knk-workspace/issues/423)); 2026-11-13 (moved from knk-web-app `TESTING.md`, rewritten against knk-web-app `next` `ff9db4b`, PandiO/knk-workspace#304)
+**Status:** Current · **Last updated:** 2026-11-15 (smoke-guide tag format, every step kept in full); 2026-11-14 (smoke-test backfill specs and helpers, [PandiO/knk-workspace#511](https://github.com/PandiO/knk-workspace/issues/511)); 2026-11-14 (§ 3: `dashboard-row-actions.spec.ts` listed, 16 tests; #404–#406, docs [#526](https://github.com/PandiO/knk-workspace/issues/526)); 2026-11-14 (end-to-end tests on Playwright instead of Cypress, in CI, [PandiO/knk-workspace#423](https://github.com/PandiO/knk-workspace/issues/423)); 2026-11-13 (moved from knk-web-app `TESTING.md`, rewritten against knk-web-app `next` `ff9db4b`, PandiO/knk-workspace#304)
 **Moved from:** `knk-web-app/TESTING.md` at `ff9db4b` ([source](https://github.com/PandiO/knk-web-app/blob/ff9db4b/TESTING.md)) and rewritten against the
 current code: that file described only the first registration tests (2026-01), a `mockAuthClient.ts` that no longer
 exists, E2E tests that wrote real users to the database, and an example GitHub workflow with Node 18 that was never the
@@ -127,8 +127,9 @@ Playwright Test (`@playwright/test`, pinned in `package.json`) replaced Cypress 
    `page.on('dialog')` and `page.close({ runBeforeUnload: true })` after the page shows its unsaved change (the
    handler is attached on that render); a test of the app's leave question on **Back** must arrive by a click in the
    app, not a second `page.goto`, so Back stays a client-side navigation.
-   When a spec automates a smoke-test step, mark the step in its guide (`N. [automated] <what>: <test path>`,
-   [knk-test-writer skill](../../../.claude/skills/knk-test-writer/SKILL.md) § 4).
+   When a spec automates a smoke-test step, tag the step in its guide and keep its full manual text
+   (`N. [automated: <test path>] <the step as written>`, or `[partly automated: <test path>; by hand: <what is left>]`;
+   developer decision 2026-11-15, [knk-test-writer skill](../../../.claude/skills/knk-test-writer/SKILL.md) § 4).
 7. **Browser.** Install Chromium once with `npx playwright install chromium`. With a Chromium that is already
    installed (a cloud session has one at `/opt/pw-browsers/chromium`), set `PLAYWRIGHT_CHROMIUM_PATH` to it instead;
    do not run `playwright install` in a cloud session. Pass `--trace off` to skip traces locally unless you are

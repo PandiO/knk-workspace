@@ -139,7 +139,8 @@ All of these must hold:
     (developer decision 2026-11-14).
 11. **Automated proof** (global instructions, "Testing: automated first", developer decision 2026-11-14): each
     behaviour the link changes has a test in the right suite (knk-test-writer skill § 2), the PR's Testing section
-    lists them, and the smoke-test guide holds only manual steps. A page change with only unit tests, or a manual step
+    lists them, and the smoke-test guide keeps every step in full with the automated ones tagged (knk-test-writer § 4). A
+    page change with only unit tests, a shortened or dropped guide step, or an untagged step
     a suite could run, sends the link back.
 
 ## 7. Merging into `next` (only once § 1.3 says the branch model applies)
