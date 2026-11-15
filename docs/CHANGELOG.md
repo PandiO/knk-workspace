@@ -4,6 +4,23 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Plugin: the plain `/heal` is K&K's also on servers with WorldGuard**
+  ([PandiO/knk-workspace#580](https://github.com/PandiO/knk-workspace/issues/580); developer decision 2026-11-15:
+  option 1) — knk-plugin and knk-workspace branches `claude/heal-takeover-580` (PRs into `next`).
+  1. **What players notice.** A player given `knk.heal` in-house (a rank or `/knk user <player> perm grant knk.heal`)
+     can now use `/heal`; before, WorldGuard's own `/heal` answered "You don't have permission to do that." Ops are
+     healed by K&K's command too ("Replenished <n> health."). `/knightsandkings:heal` keeps working, and WorldGuard's
+     command stays reachable as `/worldguard:heal`.
+  2. **How.** WorldGuard enables before K&K and registers its `/heal` first, so K&K's was left as
+     `/knightsandkings:heal` only. At startup K&K now points the plain `heal` label at its own command
+     (`CommandLabelTakeover`), and again once every plugin is enabled. The startup log says "/heal now runs
+     KnightsAndKings's command instead of WorldGuard's" and warns if any other K&K command name is held by another
+     plugin (none today: WorldGuard's other player commands have no K&K twin).
+  3. **Tests.** New plugin scenario `player-heal-needs-grant` (CI `paper-boot`, `MIN_SCENARIOS` 32 with the NPC group scenarios of #522; failed before the
+     fix, passes with it) and unit tests `CommandLabelTakeoverTest`. Docs: [in-game commands](guides/users/commands.md),
+     [smoke test](guides/heal-takeover-smoke-test.md), [writing a plugin scenario § 1](guides/developer/plugin-scenarios.md),
+     [CI § 7.1](guides/developer/ci.md).
+  - **Admin steps:** none (no `config.yml` key, no new node, no API change).
 - **NPC navigation: formations narrow before they fold, followers can finish their trip**
   ([PandiO/knk-workspace#522](https://github.com/PandiO/knk-workspace/issues/522) for
   [#493](https://github.com/PandiO/knk-workspace/issues/493) and [#507](https://github.com/PandiO/knk-workspace/issues/507);
