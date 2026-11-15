@@ -1,7 +1,7 @@
 # Form wizard relation picker and "Show what uses it" on refused deletes (#191, #44) — smoke test
 
 **Status:** automated in CI; manual steps not run: 19 of 24 steps automated 2026-11-14 ([#511](https://github.com/PandiO/knk-workspace/issues/511): the picker in its Jest tests, "Show what uses it" in `e2e/dashboard-access.spec.ts` and Jest; left: the unchanged-pages check § 3, the collection item's Delete § 4.5, themes § 6). Written 2026-11-09 for knk-web-app and knk-web-api `claude/picker-details-191-44` (chain 3 link V6); **merged 2026-11-12** (knk-web-api `master` `bc97b7d` and knk-web-app `main` `1371951`, with V7); written before the backfill
-**Last updated:** 2026-11-14 (steps marked `[automated]` with their test, backfill #511); 2026-11-12 (test on the default branches, docs #344); 2026-11-12 (merged with V7); 2026-11-09
+**Last updated:** 2026-11-15 (§ 4.5 on a district's Streets: a town's Streets have no Delete since #409, docs #559); 2026-11-14 (steps marked `[automated]` with their test, backfill #511); 2026-11-12 (test on the default branches, docs #344); 2026-11-12 (merged with V7); 2026-11-09
 **Issues:** [PandiO/knk-workspace#191](https://github.com/PandiO/knk-workspace/issues/191) (search-as-you-type relation
 picker), [PandiO/knk-workspace#44](https://github.com/PandiO/knk-workspace/issues/44) (FeedbackModal "Show details");
 access model [#280](https://github.com/PandiO/knk-workspace/issues/280)
@@ -67,7 +67,9 @@ You need:
    again.
 3. [automated] (`e2e/dashboard-access.spec.ts`) Click the structure's link: the dialog closes and its detail page opens; Back returns to the dashboard.
 4. [automated] (`src/pages/__tests__/DisplayWizardPage.header.test.tsx`, "a delete refused because the town is in use") Detail page of the same street → header **Delete** → the same dialog (no longer a short toast) with the same list.
-5. Town detail page → Streets section → an item's red **Delete** on that street → the same dialog.
+5. Detail page of a district that has that street → Streets section → an item's red **Delete** on that street → the
+   same dialog. (A town's Streets section has no Delete since [#409](https://github.com/PandiO/knk-workspace/issues/409):
+   its streets come from the districts.)
 6. [automated] (`src/components/__tests__/ReferenceDetails.test.tsx`, "says how many more there are") A street with more than 20 structures (if you have one): "… and n more." under the list.
 7. [automated] (`e2e/dashboard-access.spec.ts`, `ReferenceDetails.test.tsx` ("recognises only the still in use refusal")) A delete that fails for another reason (e.g. stop the API: "An error occurred while deleting.") has no Show button.
 
